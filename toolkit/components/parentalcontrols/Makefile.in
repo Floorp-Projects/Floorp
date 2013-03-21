@@ -10,8 +10,6 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = parentalcontrols
-
 ifndef MOZ_DISABLE_PARENTAL_CONTROLS
 ifeq (WINNT,$(OS_ARCH))
 LIBRARY_NAME = parentalcontrols_s

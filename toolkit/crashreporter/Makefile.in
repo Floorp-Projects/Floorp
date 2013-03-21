@@ -9,7 +9,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = crashreporter
 LIBXUL_LIBRARY = 1
 LIBRARY_NAME = exception_handler_s
 

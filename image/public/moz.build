@@ -16,3 +16,5 @@ XPIDL_SOURCES += [
     'imgITools.idl',
 ]
 
+MODULE = 'imglib2'
+

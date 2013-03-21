@@ -74,6 +74,7 @@ let SocialUI = {
           this._updateActiveUI();
           this._updateMenuItems();
 
+          SocialFlyout.unload();
           SocialChatBar.update();
           SocialSidebar.update();
           SocialShareButton.update();
@@ -457,6 +458,7 @@ let SocialFlyout = {
     iframe.setAttribute("type", "content");
     iframe.setAttribute("class", "social-panel-frame");
     iframe.setAttribute("flex", "1");
+    iframe.setAttribute("tooltip", "aHTMLTooltip");
     iframe.setAttribute("origin", Social.provider.origin);
     panel.appendChild(iframe);
   },
@@ -897,6 +899,7 @@ var SocialToolbar = {
             "mozbrowser": "true",
             "class": "social-panel-frame",
             "id": notificationFrameId,
+            "tooltip": "aHTMLTooltip",
 
             // work around bug 793057 - by making the panel roughly the final size
             // we are more likely to have the anchor in the correct position.

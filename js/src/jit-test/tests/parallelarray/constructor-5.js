@@ -1,3 +1,7 @@
+// |jit-test| slow;
+// ^^ This test is slow when --no-ion is used, specifically,
+//    as part of TBPL.
+
 function testCopyBigArray() {
   // Don't crash
   var a = new Array(1000 * 1000);

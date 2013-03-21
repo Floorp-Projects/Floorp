@@ -19,24 +19,37 @@ SimpleTest.waitForExplicitFinish();
 
 var image = document.getElementById("image");
 var lastPaintCount;
+var utils = SpecialPowers.getDOMWindowUtils(window);
 
 function changeImage() {
-  lastPaintCount = window.mozPaintCount;
-  
-  var utils = SpecialPowers.getDOMWindowUtils(window);
   utils.checkAndClearPaintedState(image);
 
   image.src = "./image_rrgg-256x256.png";
+  image.onload = function() {
+    lastPaintCount = window.mozPaintCount;
+    checkDonePainting();
+  }
+}
+
+// Wait until we've painted after the image loads, then force a paint and make
+// sure the image doesn't get drawn.
+function checkDonePainting() {
+  if (window.mozPaintCount == lastPaintCount || utils.isMozAfterPaintPending) {
+    setTimeout(checkDonePainting, 30);
+    return;
+  }
+
+  lastPaintCount = window.mozPaintCount;
+  document.body.style.background = "black";
   checkDone();
 }
 
 function checkDone() {
-  if (window.mozPaintCount == lastPaintCount) {
+  if (window.mozPaintCount == lastPaintCount || utils.isMozAfterPaintPending) {
     setTimeout(checkDone, 30);
     return;
   }
 
-  var utils = SpecialPowers.getDOMWindowUtils(window);
   ok(!utils.checkAndClearPaintedState(image), "Should not paint any thebes layers for our image!");
   SimpleTest.finish();
 }

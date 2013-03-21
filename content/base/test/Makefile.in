@@ -11,8 +11,6 @@ relativesrcdir  = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = content
-
 CPP_UNIT_TESTS = \
                  TestNativeXMLHttpRequest.cpp \
                  TestGetURL.cpp \

@@ -9,7 +9,6 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = accessibility
 LIBRARY_NAME = accessibility_generic_s
 LIBXUL_LIBRARY = 1
 

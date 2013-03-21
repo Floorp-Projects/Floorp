@@ -10,8 +10,6 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = urlformatter
-
 EXTRA_COMPONENTS = \
   nsURLFormatter.manifest \
   nsURLFormatter.js \

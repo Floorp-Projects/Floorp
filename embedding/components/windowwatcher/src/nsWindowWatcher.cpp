@@ -805,11 +805,13 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
   /* allow a window that we found by name to keep its name (important for cases
      like _self where the given name is different (and invalid)).  Also, _blank
      is not a window name. */
-  if (windowNeedsName)
-    newDocShellItem->SetName(nameSpecified &&
-                             !name.LowerCaseEqualsLiteral("_blank") ?
-                             name.get() : nullptr);
-
+  if (windowNeedsName) {
+    if (nameSpecified && !name.LowerCaseEqualsLiteral("_blank")) {
+      newDocShellItem->SetName(name);
+    } else {
+      newDocShellItem->SetName(EmptyString());
+    }
+  }
 
   // Inherit the right character set into the new window to use as a fallback
   // in the event the document being loaded does not specify a charset.  When

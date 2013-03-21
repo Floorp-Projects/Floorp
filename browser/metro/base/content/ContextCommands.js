@@ -100,24 +100,20 @@ var ContextCommands = {
   },
 
   select: function cc_select() {
-    let contextInfo = { name: "",
-                        json: ContextMenuUI.popupState,
-                        target: ContextMenuUI.popupState.target };
-    SelectionHelperUI.openEditSession(contextInfo);
+    SelectionHelperUI.openEditSession(ContextMenuUI.popupState.target,
+                                      ContextMenuUI.popupState.xPos,
+                                      ContextMenuUI.popupState.yPos);
   },
 
   selectAll: function cc_selectAll() {
     let target = ContextMenuUI.popupState.target;
     if (target.localName == "browser") {
       // content
-      let x = ContextMenuUI.popupState.x;
-      let y = ContextMenuUI.popupState.y;
+      let x = ContextMenuUI.popupState.xPos;
+      let y = ContextMenuUI.popupState.yPos;
       let json = {x: x, y: y, command: "select-all" };
       target.messageManager.sendAsyncMessage("Browser:ContextCommand", json);
-      let contextInfo = { name: "",
-                          json: ContextMenuUI.popupState,
-                          target: ContextMenuUI.popupState.target };
-      SelectionHelperUI.attachEditSession(contextInfo);
+      SelectionHelperUI.attachEditSession(target, x, y);
     } else {
       // chrome
       target.editor.selectAll();

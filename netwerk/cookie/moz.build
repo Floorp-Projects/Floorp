@@ -14,3 +14,5 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'necko_cookie'
 
+MODULE = 'necko'
+

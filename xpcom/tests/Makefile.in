@@ -10,7 +10,6 @@ relativesrcdir = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= xpcom
 FAIL_ON_WARNINGS = 1
 
 VPATH += $(topsrcdir)/build

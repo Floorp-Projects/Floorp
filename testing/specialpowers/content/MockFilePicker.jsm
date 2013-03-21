@@ -97,6 +97,7 @@ MockFilePickerInstance.prototype = {
   init: function(aParent, aTitle, aMode) {
     MockFilePicker.mode = aMode;
     this.filterIndex = MockFilePicker.filterIndex;
+    this.parent = aParent;
   },
   appendFilter: function(aTitle, aFilter) {
     if (typeof MockFilePicker.appendFilterCallback == "function")
@@ -108,11 +109,20 @@ MockFilePickerInstance.prototype = {
   },
   defaultString: "",
   defaultExtension: "",
+  parent: null,
   filterIndex: 0,
   displayDirectory: null,
   get file() {
     if (MockFilePicker.returnFiles.length >= 1)
       return MockFilePicker.returnFiles[0];
+    return null;
+  },
+  get domfile()  {
+    if (MockFilePicker.returnFiles.length >= 1) {
+      let utils = this.parent.QueryInterface(Ci.nsIInterfaceRequestor)
+                             .getInterface(Ci.nsIDOMWindowUtils);
+      return utils.wrapDOMFile(MockFilePicker.returnFiles[0]);
+    }
     return null;
   },
   get fileURL() {
@@ -129,6 +139,20 @@ MockFilePickerInstance.prototype = {
       },
       getNext: function() {
         return MockFilePicker.returnFiles[this.index++];
+      }
+    };
+  },
+  get domfiles()  {
+    let utils = this.parent.QueryInterface(Ci.nsIInterfaceRequestor)
+                      .getInterface(Ci.nsIDOMWindowUtils);
+    return {
+      index: 0,
+      QueryInterface: XPCOMUtils.generateQI([Ci.nsISimpleEnumerator]),
+      hasMoreElements: function() {
+        return this.index < MockFilePicker.returnFiles.length;
+      },
+      getNext: function() {
+        return utils.wrapDOMFile(MockFilePicker.returnFiles[this.index++]);
       }
     };
   },

@@ -9,7 +9,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= libpixman
 LIBRARY_NAME	= mozlibpixman
 LIBXUL_LIBRARY = 1
 

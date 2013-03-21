@@ -5,3 +5,6 @@
 
 DIRS += ['idl']
 TEST_TOOL_DIRS += ['test']
+
+MODULE = 'jsdebug'
+

@@ -9,7 +9,6 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = fastfind
 LIBRARY_NAME = fastfind_s
 GRE_MODULE = 1
 FORCE_STATIC_LIB = 1

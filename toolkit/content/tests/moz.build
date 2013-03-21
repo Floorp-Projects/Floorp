@@ -5,3 +5,5 @@
 
 DIRS += ['chrome', 'widgets', 'browser']
 
+MODULE = 'test_toolkit_general'
+

@@ -7,3 +7,5 @@ XPIDL_SOURCES += [
     'nsIShellService.idl',
 ]
 
+MODULE = 'browsercomps'
+

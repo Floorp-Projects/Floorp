@@ -27,8 +27,6 @@ MOCHITEST_FILES = \
   $(NULL)
 endif
 
-MODULE = test_dom_socket
-
 XPCSHELL_TESTS = unit unit_ipc
 
 ifdef MOZ_B2G_RIL

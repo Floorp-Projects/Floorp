@@ -287,7 +287,7 @@ ArenaHeader::checkSynchronizedWithFreeList() const
 bool
 js::gc::Cell::isTenured() const
 {
-    return true;
+    return !IsInsideNursery(runtime(), this);
 }
 #endif
 

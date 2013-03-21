@@ -32,7 +32,6 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE         = harfbuzz
 LIBRARY_NAME   = mozharfbuzz
 ifneq ($(OS_ARCH),WINNT)
 LIBXUL_LIBRARY = 1

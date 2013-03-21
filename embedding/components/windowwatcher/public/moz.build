@@ -13,3 +13,5 @@ XPIDL_SOURCES += [
     'nsPIWindowWatcher.idl',
 ]
 
+MODULE = 'windowwatcher'
+

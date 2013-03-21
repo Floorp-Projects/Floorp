@@ -32,3 +32,5 @@ XPIDL_FLAGS += [
     '-I$(topsrcdir)/dom/network/interfaces',
 ]
 
+MODULE = 'dom'
+

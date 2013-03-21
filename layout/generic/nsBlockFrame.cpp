@@ -3869,12 +3869,8 @@ nsBlockFrame::CreateContinuationFor(nsBlockReflowState& aState,
   aMadeNewFrame = false;
 
   if (!aFrame->GetNextInFlow()) {
-    nsIFrame* newFrame;
-    nsresult rv = aState.mPresContext->PresShell()->FrameConstructor()->
-      CreateContinuingFrame(aState.mPresContext, aFrame, this, &newFrame);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
+    nsIFrame* newFrame = aState.mPresContext->PresShell()->FrameConstructor()->
+      CreateContinuingFrame(aState.mPresContext, aFrame, this);
 
     mFrames.InsertFrame(nullptr, aFrame, newFrame);
 
@@ -3905,9 +3901,8 @@ nsBlockFrame::SplitFloat(nsBlockReflowState& aState,
       ReparentFrame(nextInFlow, oldParent, this);
     }
   } else {
-    nsresult rv = aState.mPresContext->PresShell()->FrameConstructor()->
-      CreateContinuingFrame(aState.mPresContext, aFloat, this, &nextInFlow);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nextInFlow = aState.mPresContext->PresShell()->FrameConstructor()->
+      CreateContinuingFrame(aState.mPresContext, aFloat, this);
   }
   if (NS_FRAME_OVERFLOW_IS_INCOMPLETE(aFloatStatus))
     aFloat->GetNextInFlow()->AddStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
@@ -6455,7 +6450,7 @@ nsBlockFrame::ChildIsDirty(nsIFrame* aChild)
   nsBlockFrameSuper::ChildIsDirty(aChild);
 }
 
-NS_IMETHODIMP
+void
 nsBlockFrame::Init(nsIContent*      aContent,
                    nsIFrame*        aParent,
                    nsIFrame*        aPrevInFlow)
@@ -6466,7 +6461,7 @@ nsBlockFrame::Init(nsIContent*      aContent,
              (NS_BLOCK_FLAGS_MASK & ~NS_BLOCK_FLAGS_NON_INHERITED_MASK));
   }
 
-  nsresult rv = nsBlockFrameSuper::Init(aContent, aParent, aPrevInFlow);
+  nsBlockFrameSuper::Init(aContent, aParent, aPrevInFlow);
 
   if (!aPrevInFlow ||
       aPrevInFlow->GetStateBits() & NS_BLOCK_NEEDS_BIDI_RESOLUTION)
@@ -6477,8 +6472,6 @@ nsBlockFrame::Init(nsIContent*      aContent,
       (NS_FRAME_FONT_INFLATION_CONTAINER | NS_BLOCK_FLOAT_MGR)) {
     AddStateBits(NS_FRAME_FONT_INFLATION_FLOW_ROOT);
   }
-
-  return rv;
 }
 
 NS_IMETHODIMP

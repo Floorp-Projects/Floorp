@@ -7,3 +7,6 @@ if CONFIG['MOZ_METRO']:
     DIRS += ['winrt']
 
 TEST_DIRS += ['tests']
+
+MODULE = 'widget'
+

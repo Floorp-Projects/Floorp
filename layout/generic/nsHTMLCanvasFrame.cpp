@@ -90,19 +90,17 @@ NS_NewHTMLCanvasFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsHTMLCanvasFrame)
 
-NS_IMETHODIMP
+void
 nsHTMLCanvasFrame::Init(nsIContent* aContent,
                         nsIFrame*   aParent,
                         nsIFrame*   aPrevInFlow)
 {
-  nsresult rv = nsSplittableFrame::Init(aContent, aParent, aPrevInFlow);
+  nsSplittableFrame::Init(aContent, aParent, aPrevInFlow);
 
   // We can fill in the canvas before the canvas frame is created, in
   // which case we never get around to marking the layer active. Therefore,
   // we mark it active here when we create the frame.
   MarkLayersActive(nsChangeHint(0));
-
-  return rv;
 }
 
 nsHTMLCanvasFrame::~nsHTMLCanvasFrame()

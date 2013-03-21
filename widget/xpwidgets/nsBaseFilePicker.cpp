@@ -16,6 +16,7 @@
 #include "nsIServiceManager.h"
 #include "nsCOMArray.h"
 #include "nsIFile.h"
+#include "nsDOMFile.h"
 #include "nsEnumeratorUtils.h"
 #include "mozilla/Services.h"
 #include "WidgetUtils.h"
@@ -66,6 +67,51 @@ private:
   nsRefPtr<nsIFilePicker> mFilePicker;
   nsRefPtr<nsIFilePickerShownCallback> mCallback;
 };
+
+class nsBaseFilePickerEnumerator : public nsISimpleEnumerator
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  nsBaseFilePickerEnumerator(nsISimpleEnumerator* iterator)
+    : mIterator(iterator)
+  {}
+
+  virtual ~nsBaseFilePickerEnumerator()
+  {}
+
+  NS_IMETHOD
+  GetNext(nsISupports** aResult)
+  {
+    nsCOMPtr<nsISupports> tmp;
+    nsresult rv = mIterator->GetNext(getter_AddRefs(tmp));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!tmp) {
+      return NS_OK;
+    }
+
+    nsCOMPtr<nsIFile> localFile = do_QueryInterface(tmp);
+    if (!localFile) {
+      return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<nsIDOMFile> domFile = new nsDOMFileFile(localFile);
+    domFile.forget(aResult);
+    return NS_OK;
+  }
+
+  NS_IMETHOD
+  HasMoreElements(bool* aResult)
+  {
+    return mIterator->HasMoreElements(aResult);
+  }
+
+private:
+  nsCOMPtr<nsISimpleEnumerator> mIterator;
+};
+
+NS_IMPL_ISUPPORTS1(nsBaseFilePickerEnumerator, nsISimpleEnumerator)
 
 nsBaseFilePicker::nsBaseFilePicker() :
   mAddToRecentDocs(true)
@@ -201,8 +247,6 @@ NS_IMETHODIMP nsBaseFilePicker::GetFiles(nsISimpleEnumerator **aFiles)
   return NS_NewArrayEnumerator(aFiles, files);
 }
 
-#ifdef BASEFILEPICKER_HAS_DISPLAYDIRECTORY
-
 // Set the display directory
 NS_IMETHODIMP nsBaseFilePicker::SetDisplayDirectory(nsIFile *aDirectory)
 {
@@ -230,7 +274,6 @@ NS_IMETHODIMP nsBaseFilePicker::GetDisplayDirectory(nsIFile **aDirectory)
     return rv;
   return CallQueryInterface(directory, aDirectory);
 }
-#endif
 
 NS_IMETHODIMP
 nsBaseFilePicker::GetAddToRecentDocs(bool *aFlag)
@@ -245,3 +288,35 @@ nsBaseFilePicker::SetAddToRecentDocs(bool aFlag)
   mAddToRecentDocs = aFlag;
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsBaseFilePicker::GetDomfile(nsIDOMFile** aDomfile)
+{
+  nsCOMPtr<nsIFile> localFile;
+  nsresult rv = GetFile(getter_AddRefs(localFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!localFile) {
+    *aDomfile = nullptr;
+    return NS_OK;
+  }
+
+  nsRefPtr<nsDOMFileFile> domFile = new nsDOMFileFile(localFile);
+  domFile.forget(aDomfile);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBaseFilePicker::GetDomfiles(nsISimpleEnumerator** aDomfiles)
+{
+  nsCOMPtr<nsISimpleEnumerator> iter;
+  nsresult rv = GetFiles(getter_AddRefs(iter));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsRefPtr<nsBaseFilePickerEnumerator> retIter =
+    new nsBaseFilePickerEnumerator(iter);
+
+  retIter.forget(aDomfiles);
+  return NS_OK;
+}
+

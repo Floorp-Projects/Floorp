@@ -9,7 +9,6 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = test_plugins
 relativesrcdir  = @relativesrcdir@
 TESTROOT = $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
 USE_STATIC_LIBS = 1

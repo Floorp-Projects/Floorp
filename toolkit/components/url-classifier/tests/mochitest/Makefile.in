@@ -9,8 +9,6 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 relativesrcdir  = @relativesrcdir@
 
-MODULE = test_url-classifier
-
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES = \

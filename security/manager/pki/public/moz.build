@@ -8,3 +8,5 @@ XPIDL_SOURCES += [
     'nsIPKIParamBlock.idl',
 ]
 
+MODULE = 'pippki'
+

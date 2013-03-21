@@ -35,9 +35,9 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
 #ifdef DEBUG
-  NS_IMETHOD Init(nsIContent* aContent,
-                  nsIFrame*   aParent,
-                  nsIFrame*   aPrevInFlow);
+  virtual void Init(nsIContent* aContent,
+                    nsIFrame*   aParent,
+                    nsIFrame*   aPrevInFlow) MOZ_OVERRIDE;
 #endif
 
   virtual bool IsFrameOfType(uint32_t aFlags) const
@@ -78,7 +78,7 @@ NS_NewSVGViewFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 NS_IMPL_FRAMEARENA_HELPERS(SVGViewFrame)
 
 #ifdef DEBUG
-NS_IMETHODIMP
+void
 SVGViewFrame::Init(nsIContent* aContent,
                    nsIFrame* aParent,
                    nsIFrame* aPrevInFlow)
@@ -86,7 +86,7 @@ SVGViewFrame::Init(nsIContent* aContent,
   NS_ASSERTION(aContent->IsSVG(nsGkAtoms::view),
                "Content is not an SVG view");
 
-  return SVGViewFrameBase::Init(aContent, aParent, aPrevInFlow);
+  SVGViewFrameBase::Init(aContent, aParent, aPrevInFlow);
 }
 #endif /* DEBUG */
 

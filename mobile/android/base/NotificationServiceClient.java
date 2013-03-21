@@ -85,13 +85,11 @@ public class NotificationServiceClient {
      * @see NotificationService#add(int, String, String, String, PendingIntent, PendingIntent)
      */
     public synchronized void add(final int notificationID, final String aImageUrl,
-            final String aAlertTitle, final String aAlertText, final PendingIntent contentIntent,
-            final PendingIntent clearIntent) {
+            final String aAlertTitle, final String aAlertText, final PendingIntent contentIntent) {
         mTaskQueue.add(new Runnable() {
             @Override
             public void run() {
-                mService.add(notificationID, aImageUrl, aAlertTitle, aAlertText,
-                        contentIntent, clearIntent);
+                mService.add(notificationID, aImageUrl, aAlertTitle, aAlertText, contentIntent);
             }
         });
         notify();

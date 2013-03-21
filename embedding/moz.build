@@ -5,3 +5,6 @@
 
 DIRS += ['base', 'components', 'browser']
 TEST_DIRS += ['test']
+
+MODULE = 'embed'
+

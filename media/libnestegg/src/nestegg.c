@@ -275,6 +275,7 @@ struct saved_state {
   struct list_node * ancestor;
   uint64_t last_id;
   uint64_t last_size;
+  int last_valid;
 };
 
 struct frame {
@@ -290,6 +291,7 @@ struct nestegg {
   struct pool_ctx * alloc_pool;
   uint64_t last_id;
   uint64_t last_size;
+  int last_valid;
   struct list_node * ancestor;
   struct ebml ebml;
   struct segment segment;
@@ -810,6 +812,7 @@ ne_ctx_save(nestegg * ctx, struct saved_state * s)
   s->ancestor = ctx->ancestor;
   s->last_id = ctx->last_id;
   s->last_size = ctx->last_size;
+  s->last_valid = ctx->last_valid;
   return 0;
 }
 
@@ -824,6 +827,7 @@ ne_ctx_restore(nestegg * ctx, struct saved_state * s)
   ctx->ancestor = s->ancestor;
   ctx->last_id = s->last_id;
   ctx->last_size = s->last_size;
+  ctx->last_valid = s->last_valid;
   return 0;
 }
 
@@ -832,7 +836,7 @@ ne_peek_element(nestegg * ctx, uint64_t * id, uint64_t * size)
 {
   int r;
 
-  if (ctx->last_id && ctx->last_size) {
+  if (ctx->last_valid) {
     if (id)
       *id = ctx->last_id;
     if (size)
@@ -853,6 +857,8 @@ ne_peek_element(nestegg * ctx, uint64_t * id, uint64_t * size)
   if (size)
     *size = ctx->last_size;
 
+  ctx->last_valid = 1;
+
   return 1;
 }
 
@@ -865,8 +871,7 @@ ne_read_element(nestegg * ctx, uint64_t * id, uint64_t * size)
   if (r != 1)
     return r;
 
-  ctx->last_id = 0;
-  ctx->last_size = 0;
+  ctx->last_valid = 0;
 
   return 1;
 }
@@ -965,7 +970,7 @@ ne_parse(nestegg * ctx, struct ebml_element_desc * top_level, int64_t max_offset
 {
   int r;
   int64_t * data_offset;
-  uint64_t id, size;
+  uint64_t id, size, peeked_id;
   struct ebml_element_desc * element;
 
   if (!ctx->ancestor)
@@ -980,6 +985,7 @@ ne_parse(nestegg * ctx, struct ebml_element_desc * top_level, int64_t max_offset
     r = ne_peek_element(ctx, &id, &size);
     if (r != 1)
       break;
+    peeked_id = id;
 
     element = ne_find_element(id, ctx->ancestor->node);
     if (element) {
@@ -993,6 +999,7 @@ ne_parse(nestegg * ctx, struct ebml_element_desc * top_level, int64_t max_offset
       r = ne_read_element(ctx, &id, &size);
       if (r != 1)
         break;
+      assert(id == peeked_id);
 
       if (element->flags & DESC_FLAG_OFFSET) {
         data_offset = (int64_t *) (ctx->ancestor->data + element->data_offset);
@@ -1465,8 +1472,7 @@ ne_init_cue_points(nestegg * ctx, int64_t max_offset)
     r = ne_io_seek(ctx->io, ctx->segment_offset + seek_pos, NESTEGG_SEEK_SET);
     if (r != 0)
       return -1;
-    ctx->last_id = 0;
-    ctx->last_size = 0;
+    ctx->last_valid = 0;
 
     r = ne_read_element(ctx, &id, NULL);
     if (r != 1)
@@ -1808,8 +1814,7 @@ nestegg_offset_seek(nestegg * ctx, uint64_t offset)
   r = ne_io_seek(ctx->io, offset, NESTEGG_SEEK_SET);
   if (r != 0)
     return -1;
-  ctx->last_id = 0;
-  ctx->last_size = 0;
+  ctx->last_valid = 0;
 
   while (ctx->ancestor)
     ne_ctx_pop(ctx);

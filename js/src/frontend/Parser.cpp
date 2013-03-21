@@ -334,23 +334,24 @@ template <typename ParseHandler>
 bool
 Parser<ParseHandler>::report(ParseReportKind kind, bool strict, Node pn, unsigned errorNumber, ...)
 {
-    TokenPos pos = pn ? handler.getPosition(pn) : tokenStream.currentToken().pos;
+    uint32_t offset = (pn ? handler.getPosition(pn) : tokenStream.currentToken().pos).begin;
 
     va_list args;
     va_start(args, errorNumber);
     bool result = false;
     switch (kind) {
       case ParseError:
-        result = tokenStream.reportCompileErrorNumberVA(pos, JSREPORT_ERROR, errorNumber, args);
+        result = tokenStream.reportCompileErrorNumberVA(offset, JSREPORT_ERROR, errorNumber, args);
         break;
       case ParseWarning:
-        result = tokenStream.reportCompileErrorNumberVA(pos, JSREPORT_WARNING, errorNumber, args);
+        result =
+            tokenStream.reportCompileErrorNumberVA(offset, JSREPORT_WARNING, errorNumber, args);
         break;
       case ParseStrictWarning:
-        result = tokenStream.reportStrictWarningErrorNumberVA(pos, errorNumber, args);
+        result = tokenStream.reportStrictWarningErrorNumberVA(offset, errorNumber, args);
         break;
       case ParseStrictError:
-        result = tokenStream.reportStrictModeErrorNumberVA(pos, strict, errorNumber, args);
+        result = tokenStream.reportStrictModeErrorNumberVA(offset, strict, errorNumber, args);
         break;
     }
     va_end(args);
@@ -394,6 +395,13 @@ Parser<ParseHandler>::~Parser()
     JSContext *cx = context;
     cx->tempLifoAlloc().release(tempPoolMark);
     cx->activeCompilations--;
+
+    /*
+     * The parser can allocate enormous amounts of memory for large functions.
+     * Eagerly free the memory now (which otherwise won't be freed until the
+     * next GC) to avoid unnecessary OOMs.
+     */
+    cx->tempLifoAlloc().freeAllIfHugeAndUnused();
 }
 
 template <typename ParseHandler>
@@ -1505,7 +1513,7 @@ Parser<ParseHandler>::functionArguments(FunctionSyntaxKind kind, Node *listp, No
 
         // Record the start of function source (for FunctionToString). If we
         // are parenFreeArrow, we will set this below, after consuming the NAME.
-        funbox->bufStart = tokenStream.offsetOfToken(tokenStream.currentToken());
+        funbox->bufStart = tokenStream.currentToken().pos.begin;
     }
 
     hasRest = false;
@@ -1606,7 +1614,7 @@ Parser<ParseHandler>::functionArguments(FunctionSyntaxKind kind, Node *listp, No
               case TOK_NAME:
               {
                 if (parenFreeArrow)
-                    funbox->bufStart = tokenStream.offsetOfToken(tokenStream.currentToken());
+                    funbox->bufStart = tokenStream.currentToken().pos.begin;
 
                 RootedPropertyName name(context, tokenStream.currentToken().name());
                 bool disallowDuplicateArgs = destructuringArg || hasDefaults;
@@ -1973,13 +1981,12 @@ Parser<ParseHandler>::functionArgsAndBody(Node pn, HandleFunction fun, HandlePro
             report(ParseError, false, null(), JSMSG_CURLY_AFTER_BODY);
             return false;
         }
-        funbox->bufEnd = tokenStream.offsetOfToken(tokenStream.currentToken()) + 1;
+        funbox->bufEnd = tokenStream.currentToken().pos.begin + 1;
 #if JS_HAS_EXPR_CLOSURES
     } else {
-        // We shouldn't call endOffset if the tokenizer got an error.
         if (tokenStream.hadError())
             return false;
-        funbox->bufEnd = tokenStream.endOffset(tokenStream.currentToken());
+        funbox->bufEnd = tokenStream.currentToken().pos.end;
         if (kind == Statement && !MatchOrInsertSemicolon(context, &tokenStream))
             return false;
     }
@@ -2090,8 +2097,7 @@ IsEscapeFreeStringLiteral(const TokenPos &pos, JSAtom *str)
      * accounting for the quotes, then it must not contain any escape
      * sequences or line continuations.
      */
-    return (pos.begin.lineno == pos.end.lineno &&
-            pos.begin.index + str->length() + 2 == pos.end.index);
+    return pos.begin + str->length() + 2 == pos.end;
 }
 
 /*
@@ -3019,7 +3025,7 @@ Parser<ParseHandler>::letBlock(LetContext letContext)
     if (!blockObj)
         return null();
 
-    TokenPtr begin = tokenStream.currentToken().pos.begin;
+    uint32_t begin = tokenStream.currentToken().pos.begin;
 
     MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_LET);
 
@@ -3774,7 +3780,7 @@ typename ParseHandler::Node
 Parser<ParseHandler>::tryStatement()
 {
     JS_ASSERT(tokenStream.isCurrentTokenType(TOK_TRY));
-    TokenPtr begin = tokenStream.currentToken().pos.begin;
+    uint32_t begin = tokenStream.currentToken().pos.begin;
 
     /*
      * try nodes are ternary.
@@ -3944,7 +3950,7 @@ typename ParseHandler::Node
 Parser<ParseHandler>::withStatement()
 {
     JS_ASSERT(tokenStream.isCurrentTokenType(TOK_WITH));
-    TokenPtr begin = tokenStream.currentToken().pos.begin;
+    uint32_t begin = tokenStream.currentToken().pos.begin;
 
     // In most cases, we want the constructs forbidden in strict mode code to be
     // a subset of those that JSOPTION_STRICT warns about, and we should use
@@ -4181,7 +4187,7 @@ Parser<ParseHandler>::statement()
 
       case TOK_IF:
       {
-        TokenPtr begin = tokenStream.currentToken().pos.begin;
+        uint32_t begin = tokenStream.currentToken().pos.begin;
 
         /* An IF node has three kids: condition, then, and optional else. */
         Node cond = condition();
@@ -4223,7 +4229,7 @@ Parser<ParseHandler>::statement()
 
       case TOK_WHILE:
       {
-        TokenPtr begin = tokenStream.currentToken().pos.begin;
+        uint32_t begin = tokenStream.currentToken().pos.begin;
         StmtInfoPC stmtInfo(context);
         PushStatementPC(pc, &stmtInfo, STMT_WHILE_LOOP);
         Node cond = condition();
@@ -4242,7 +4248,7 @@ Parser<ParseHandler>::statement()
 
       case TOK_DO:
       {
-        TokenPtr begin = tokenStream.currentToken().pos.begin;
+        uint32_t begin = tokenStream.currentToken().pos.begin;
         StmtInfoPC stmtInfo(context);
         PushStatementPC(pc, &stmtInfo, STMT_DO_LOOP);
         Node body = statement();
@@ -4279,7 +4285,7 @@ Parser<ParseHandler>::statement()
 
       case TOK_THROW:
       {
-        TokenPtr begin = tokenStream.currentToken().pos.begin;
+        uint32_t begin = tokenStream.currentToken().pos.begin;
 
         /* ECMA-262 Edition 3 says 'throw [no LineTerminator here] Expr'. */
         TokenKind tt = tokenStream.peekTokenSameLine(TSF_OPERAND);
@@ -4312,11 +4318,11 @@ Parser<ParseHandler>::statement()
 
       case TOK_BREAK:
       {
-        TokenPtr begin = tokenStream.currentToken().pos.begin;
+        uint32_t begin = tokenStream.currentToken().pos.begin;
         RootedPropertyName label(context);
         if (!MatchLabel(context, &tokenStream, &label))
             return null();
-        TokenPtr end = tokenStream.currentToken().pos.end;
+        uint32_t end = tokenStream.currentToken().pos.end;
         pn = handler.newBreak(label, begin, end);
         if (!pn)
             return null();
@@ -4345,11 +4351,11 @@ Parser<ParseHandler>::statement()
 
       case TOK_CONTINUE:
       {
-        TokenPtr begin = tokenStream.currentToken().pos.begin;
+        uint32_t begin = tokenStream.currentToken().pos.begin;
         RootedPropertyName label(context);
         if (!MatchLabel(context, &tokenStream, &label))
             return null();
-        TokenPtr end = tokenStream.currentToken().pos.begin;
+        uint32_t end = tokenStream.currentToken().pos.end;
         pn = handler.newContinue(label, begin, end);
         if (!pn)
             return null();
@@ -4958,7 +4964,7 @@ Parser<ParseHandler>::assignExpr()
 
         if (tokenStream.getToken() == TOK_ERROR)
             return null();
-        size_t offset = tokenStream.offsetOfToken(tokenStream.currentToken());
+        size_t offset = tokenStream.currentToken().pos.begin;
         tokenStream.ungetToken();
 
         return functionDef(NullPtr(), start, offset, Normal, Arrow);
@@ -5132,7 +5138,7 @@ Parser<ParseHandler>::unaryExpr()
       case TOK_INC:
       case TOK_DEC:
       {
-        TokenPtr begin = tokenStream.currentToken().pos.begin;
+        uint32_t begin = tokenStream.currentToken().pos.begin;
         pn2 = memberExpr(true);
         if (!pn2)
             return null();
@@ -5147,7 +5153,7 @@ Parser<ParseHandler>::unaryExpr()
 
       case TOK_DELETE:
       {
-        TokenPtr begin = tokenStream.currentToken().pos.begin;
+        uint32_t begin = tokenStream.currentToken().pos.begin;
         pn2 = unaryExpr();
         if (!pn2)
             return null();
@@ -6061,7 +6067,7 @@ Parser<ParseHandler>::memberExpr(bool allowCallSyntax)
                 return null();
             if (tt == TOK_NAME) {
                 PropertyName *field = tokenStream.currentToken().name();
-                TokenPtr end = tokenStream.currentToken().pos.end;
+                uint32_t end = tokenStream.currentToken().pos.end;
                 nextMember = handler.newPropertyAccess(lhs, field, end);
                 if (!nextMember)
                     return null();
@@ -6085,7 +6091,7 @@ Parser<ParseHandler>::memberExpr(bool allowCallSyntax)
 
             PropertyName *name = foldPropertyByValue(propExpr);
 
-            TokenPtr end = tokenStream.currentToken().pos.end;
+            uint32_t end = tokenStream.currentToken().pos.end;
             if (name)
                 nextMember = handler.newPropertyAccess(lhs, name, end);
             else
@@ -6688,7 +6694,7 @@ typename ParseHandler::Node
 Parser<ParseHandler>::parenExpr(bool *genexp)
 {
     JS_ASSERT(tokenStream.currentToken().type == TOK_LP);
-    TokenPtr begin = tokenStream.currentToken().pos.begin;
+    uint32_t begin = tokenStream.currentToken().pos.begin;
 
     if (genexp)
         *genexp = false;

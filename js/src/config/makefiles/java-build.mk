@@ -30,6 +30,9 @@ endif #}
 
 ifdef JAVAFILES #{
 GENERATED_DIRS += classes
+
+export:: classes
+classes: $(call mkdir_deps,classes)
 endif #}
 
 INCLUDED_JAVA_BUILD_MK := 1

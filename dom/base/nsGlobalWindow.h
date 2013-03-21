@@ -14,7 +14,6 @@
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsWeakReference.h"
-#include "nsHashtable.h"
 #include "nsDataHashtable.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDOMScriptObjectHolder.h"

@@ -9,8 +9,6 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = testing_mozbase
-
 include $(topsrcdir)/config/rules.mk
 
 # Harness packages from the srcdir;

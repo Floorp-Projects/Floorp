@@ -238,25 +238,21 @@ public:
   nsWeakFrame mWeakFrame;
 };
 
-NS_IMETHODIMP
+void
 nsMenuFrame::Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIFrame*        aPrevInFlow)
 {
-  nsresult  rv = nsBoxFrame::Init(aContent, aParent, aPrevInFlow);
+  nsBoxFrame::Init(aContent, aParent, aPrevInFlow);
 
   // Set up a mediator which can be used for callbacks on this frame.
   mTimerMediator = new nsMenuTimerMediator(this);
-  if (MOZ_UNLIKELY(!mTimerMediator))
-    return NS_ERROR_OUT_OF_MEMORY;
 
   InitMenuParent(aParent);
 
   BuildAcceleratorText(false);
   nsIReflowCallback* cb = new nsASyncMenuInitialization(this);
-  NS_ENSURE_TRUE(cb, NS_ERROR_OUT_OF_MEMORY);
   PresContext()->PresShell()->PostReflowCallback(cb);
-  return rv;
 }
 
 const nsFrameList&

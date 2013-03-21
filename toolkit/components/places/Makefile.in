@@ -9,8 +9,6 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = places
-
 ifdef MOZ_PLACES
 LIBRARY_NAME  = places
 LIBXUL_LIBRARY = 1

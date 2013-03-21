@@ -9,8 +9,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= breakpad_dwarf
-
 ifdef MOZ_CRASHREPORTER
 HOST_LIBRARY_NAME = host_breakpad_dwarf_s
 

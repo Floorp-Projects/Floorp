@@ -260,15 +260,13 @@ nsSplitterFrame::AttributeChanged(int32_t aNameSpaceID,
 /**
  * Initialize us. If we are in a box get our alignment so we know what direction we are
  */
-NS_IMETHODIMP
+void
 nsSplitterFrame::Init(nsIContent*      aContent,
                       nsIFrame*        aParent,
                       nsIFrame*        aPrevInFlow)
 {
-  NS_ENSURE_FALSE(mInner, NS_ERROR_ALREADY_INITIALIZED);
+  MOZ_ASSERT(!mInner);
   mInner = new nsSplitterFrameInner(this);
-  if (!mInner)
-    return NS_ERROR_OUT_OF_MEMORY;
 
   mInner->AddRef();
   mInner->mChildInfosAfter = nullptr;
@@ -294,13 +292,11 @@ nsSplitterFrame::Init(nsIContent*      aContent,
     }
   }
 
-  nsresult  rv = nsBoxFrame::Init(aContent, aParent, aPrevInFlow);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsBoxFrame::Init(aContent, aParent, aPrevInFlow);
 
   mInner->mState = nsSplitterFrameInner::Open;
   mInner->AddListener(PresContext());
   mInner->mParentBox = nullptr;
-  return rv;
 }
 
 NS_IMETHODIMP

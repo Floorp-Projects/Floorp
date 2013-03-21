@@ -16,6 +16,7 @@
       </xul:hbox>
       <xul:iframe anonid="iframe" class="chat-frame" flex="1"
                   context="contentAreaContextMenu"
+                  tooltip="aHTMLTooltip"
                   xbl:inherits="src,origin,collapsed=minimized" type="content"/>
     </content>
 
@@ -161,6 +162,7 @@
         this.cachedWidthOpen = 0;
         this.cachedWidthMinimized = 0;
         this.cachedWidthNub = 0;
+        this._selectedChat = null;
       </constructor>
 
       <field name="innerbox" readonly="true">

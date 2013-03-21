@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= content
 LIBRARY_NAME	= gkcontentsvg_s
 LIBXUL_LIBRARY	= 1
 ifndef _MSC_VER
@@ -84,6 +83,7 @@ CPPSRCS		= \
 		SVGFECompositeElement.cpp \
 		SVGFEDistantLightElement.cpp \
 		SVGFEFloodElement.cpp \
+		SVGFEGaussianBlurElement.cpp \
 		SVGFEImageElement.cpp \
 		SVGFEMergeElement.cpp \
 		SVGFEMergeNodeElement.cpp \
@@ -189,6 +189,7 @@ EXPORTS_mozilla/dom = \
 	SVGFECompositeElement.h \
 	SVGFEDistantLightElement.h \
 	SVGFEFloodElement.h \
+	SVGFEGaussianBlurElement.h \
 	SVGFEImageElement.h \
 	SVGFEMergeElement.h \
 	SVGFEMergeNodeElement.h \

@@ -34,14 +34,14 @@ exports.testGetOwnerWindow = function(assert, done) {
     onOpen: function(tab) {
       // test that getOwnerWindow works as expected
       if (is('Fennec')) {
-        assert.notStrictEqual(chromeWindow, getOwnerWindow(tab)); 
-        assert.ok(getOwnerWindow(tab) instanceof Ci.nsIDOMWindow); 
+        assert.notStrictEqual(chromeWindow, getOwnerWindow(tab));
+        assert.ok(getOwnerWindow(tab) instanceof Ci.nsIDOMWindow);
       }
       else {
         if (isWindowPBSupported) {
           assert.notStrictEqual(chromeWindow,
                                 getOwnerWindow(tab),
-                                'associated window is not the same for window and window\'s tab'); 
+                                'associated window is not the same for window and window\'s tab');
         }
         else {
           assert.strictEqual(chromeWindow,
@@ -164,7 +164,12 @@ if (!is('Fennec')) {
   }
 }
 
-merge(module.exports, require('./windows'));
-merge(module.exports, require('./tabs'));
+merge(module.exports,
+  require('./test-windows'),
+  require('./test-tabs'),
+  require('./test-page-mod'),
+  require('./test-selection'),
+  require('./test-panel')
+);
 
 require('sdk/test/runner').runTestsFromModule(module);

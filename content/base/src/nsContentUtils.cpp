@@ -3355,6 +3355,20 @@ nsContentUtils::IsChildOfSameType(nsIDocument* aDoc)
 }
 
 bool
+nsContentUtils::IsPlainTextType(const nsACString& aContentType)
+{
+  return aContentType.EqualsLiteral(TEXT_PLAIN) ||
+         aContentType.EqualsLiteral(TEXT_CSS) ||
+         aContentType.EqualsLiteral(TEXT_CACHE_MANIFEST) ||
+         aContentType.EqualsLiteral(APPLICATION_JAVASCRIPT) ||
+         aContentType.EqualsLiteral(APPLICATION_XJAVASCRIPT) ||
+         aContentType.EqualsLiteral(TEXT_ECMASCRIPT) ||
+         aContentType.EqualsLiteral(APPLICATION_ECMASCRIPT) ||
+         aContentType.EqualsLiteral(TEXT_JAVASCRIPT) ||
+         aContentType.EqualsLiteral(APPLICATION_JSON);
+}
+
+bool
 nsContentUtils::GetWrapperSafeScriptFilename(nsIDocument *aDocument,
                                              nsIURI *aURI,
                                              nsACString& aScriptURI)

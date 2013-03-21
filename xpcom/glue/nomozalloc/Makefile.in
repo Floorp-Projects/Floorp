@@ -13,7 +13,6 @@ include $(srcdir)/../objs.mk
 
 EXTRA_DEPS += $(srcdir)/../objs.mk
 
-MODULE		= xpcom
 LIBRARY_NAME	= xpcomglue_s_nomozalloc
 DIST_INSTALL	= 1
 

@@ -13,3 +13,5 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'toolkitprofile'
 
+MODULE = 'xulapp'
+

@@ -11,3 +11,5 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'services-crypto-component'
 
+MODULE = 'services-crypto'
+

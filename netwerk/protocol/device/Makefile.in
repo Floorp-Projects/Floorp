@@ -10,7 +10,6 @@ FAIL_ON_WARNINGS = 1
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = deviceprotocol
 LIBRARY_NAME = nkdevice_s
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1

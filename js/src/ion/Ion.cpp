@@ -1502,9 +1502,13 @@ Compile(JSContext *cx, HandleScript script, HandleFunction fun, jsbytecode *osrP
     JS_ASSERT(ion::IsEnabled(cx));
     JS_ASSERT_IF(osrPc != NULL, (JSOp)*osrPc == JSOP_LOOPENTRY);
 
-    if (IsBaselineEnabled(cx) && !script->hasBaselineScript()) {
-        IonSpew(IonSpew_Abort, "Aborted compilation of %s:%d (has no baseline script)",
-                script->filename(), script->lineno);
+    ExecutionMode executionMode = compileContext.executionMode();
+
+    if (executionMode == SequentialExecution &&
+        IsBaselineEnabled(cx) && !script->hasBaselineScript())
+    {
+        //IonSpew(IonSpew_Abort, "Aborted compilation of %s:%d (has no baseline script)",
+        //        script->filename(), script->lineno);
         return Method_Skipped;
     }
 
@@ -1524,7 +1528,6 @@ Compile(JSContext *cx, HandleScript script, HandleFunction fun, jsbytecode *osrP
         return status;
     }
 
-    ExecutionMode executionMode = compileContext.executionMode();
     IonScript *scriptIon = GetIonScript(script, executionMode);
     if (scriptIon) {
         if (!scriptIon->method())
@@ -2264,8 +2267,17 @@ ion::Invalidate(types::TypeCompartment &types, FreeOp *fop,
         co.invalidate();
 
         // Wait for the scripts to get warm again before doing another
-        // compile, unless we are recompiling *because* a script got hot.
-        if (resetUses)
+        // compile, unless either:
+        // (1) we are recompiling *because* a script got hot;
+        //     (resetUses is false); or,
+        // (2) we are invalidating a parallel script.  This is because
+        //     the useCount only applies to sequential uses.  Parallel
+        //     execution *requires* ion, and so we don't limit it to
+        //     methods with a high usage count (though we do check that
+        //     the useCount is at least 1 when compiling the transitive
+        //     closure of potential callees, to avoid compiling things
+        //     that are never run at all).
+        if (resetUses && executionMode != ParallelExecution)
             script->resetUseCount();
     }
 }

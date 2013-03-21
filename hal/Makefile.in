@@ -19,7 +19,6 @@ VPATH       = \
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE         = hal
 LIBRARY_NAME   = hal_s
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1

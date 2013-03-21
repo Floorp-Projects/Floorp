@@ -20,7 +20,6 @@
  * to record in the log.
  */
 
-#include "prlock.h"
 #include "nscore.h"
 #include "mozilla/GuardObjects.h"
 

@@ -6,8 +6,10 @@
 'use strict';
 
 var core = require('sdk/core/promise'),
-    defer = core.defer, resolve = core.resolve, reject = core.reject,
-    promised = core.promised
+    defer = core.defer, resolve = core.resolve, reject = core.reject, all = core.all,
+    promised = core.promised;
+
+var { setTimeout } = require('sdk/timers');
 
 exports['test all observers are notified'] = function(assert, done) {
   var expected = 'Taram pam param!'
@@ -323,5 +325,69 @@ exports['test arrays should not flatten'] = function(assert, done) {
   a.resolve('Hello')
   b.resolve([ 'my', 'friend' ])
 }
+
+exports['test `all` for all promises'] = function (assert, done) {
+  all([
+    resolve(5), resolve(7), resolve(10)
+  ]).then(function (val) {
+    assert.equal(
+      val[0] === 5 &&
+      val[1] === 7 &&
+      val[2] === 10
+    , true, 'return value contains resolved promises values');
+    done();
+  }, function () {
+    assert.fail('should not call reject function');
+  });
+};
+
+exports['test `all` aborts upon first reject'] = function (assert, done) {
+  all([
+    resolve(5), reject('error'), delayedResolve()
+  ]).then(function (val) {
+    assert.fail('Successful resolve function should not be called');
+  }, function (reason) {
+    assert.equal(reason, 'error', 'should reject the `all` promise');
+    done();
+  });
+
+  function delayedResolve () {
+    var deferred = defer();
+    setTimeout(deferred.resolve, 50);
+    return deferred.promise;
+  }
+};
+
+exports['test `all` with array containing non-promise'] = function (assert, done) {
+  all([
+    resolve(5), resolve(10), 925
+  ]).then(function (val) {
+    assert.equal(val[2], 925, 'non-promises should pass-through value');
+    done();
+  }, function () {
+    assert.fail('should not be rejected');
+  });
+};
+
+exports['test `all` should resolve with an empty array'] = function (assert, done) {
+  all([]).then(function (val) {
+    assert.equal(Array.isArray(val), true, 'should return array in resolved');
+    assert.equal(val.length, 0, 'array should be empty in resolved');
+    done();
+  }, function () {
+    assert.fail('should not be rejected');
+  });
+};
+
+exports['test `all` with multiple rejected'] = function (assert, done) {
+  all([
+    reject('error1'), reject('error2'), reject('error3')
+  ]).then(function (value) {
+    assert.fail('should not be successful');
+  }, function (reason) {
+    assert.equal(reason, 'error1', 'should reject on first promise reject');
+    done();
+  });
+};
 
 require("test").run(exports)

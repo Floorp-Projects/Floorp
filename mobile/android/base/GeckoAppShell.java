@@ -1060,7 +1060,16 @@ public class GeckoAppShell
         }
 
         final String scheme = uri.getScheme();
-        final Intent intent = getIntentForActionString(action);
+
+        final Intent intent;
+        if ("vnd.youtube".equals(scheme) && getHandlersForURL(targetURI, action).length == 0) {
+            // Special case youtube to fallback to our own player
+            intent = new Intent(VideoPlayer.VIDEO_ACTION);
+            intent.setClassName(GeckoApp.mAppContext.getPackageName(),
+                                "org.mozilla.gecko.VideoPlayer");
+        } else {
+            intent = getIntentForActionString(action);
+        }
 
         // Start with the original URI. If we end up modifying it,
         // we'll overwrite it.
@@ -1184,34 +1193,27 @@ public class GeckoAppShell
             "- name = '" + aAlertName + "'");
 
         // The intent to launch when the user clicks the expanded notification
-        Intent notificationIntent = new Intent(GeckoApp.ACTION_ALERT_CLICK);
-        notificationIntent.setClassName(GeckoApp.mAppContext,
-            GeckoApp.mAppContext.getPackageName() + ".NotificationHandler");
+        String app = GeckoApp.mAppContext.getClass().getName();
+        Intent notificationIntent = new Intent(GeckoApp.ACTION_ALERT_CALLBACK);
+        notificationIntent.setClassName(GeckoApp.mAppContext, app);
+        notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
         int notificationID = aAlertName.hashCode();
 
         // Put the strings into the intent as an URI "alert:?name=<alertName>&app=<appName>&cookie=<cookie>"
         Uri.Builder b = new Uri.Builder();
-        String app = GeckoApp.mAppContext.getClass().getName();
         Uri dataUri = b.scheme("alert").path(Integer.toString(notificationID))
                                        .appendQueryParameter("name", aAlertName)
-                                       .appendQueryParameter("app", app)
                                        .appendQueryParameter("cookie", aAlertCookie)
                                        .build();
         notificationIntent.setData(dataUri);
-        PendingIntent contentIntent = PendingIntent.getBroadcast(GeckoApp.mAppContext, 0, notificationIntent, 0);
-
-        // The intent to execute when the status entry is deleted by the user with the "Clear All Notifications" button
-        Intent clearNotificationIntent = new Intent(GeckoApp.ACTION_ALERT_CLEAR);
-        clearNotificationIntent.setClassName(GeckoApp.mAppContext,
-            GeckoApp.mAppContext.getPackageName() + ".NotificationHandler");
-        clearNotificationIntent.setData(dataUri);
-        PendingIntent clearIntent = PendingIntent.getBroadcast(GeckoApp.mAppContext, 0, clearNotificationIntent, 0);
+        PendingIntent contentIntent = PendingIntent.getActivity(
+                GeckoApp.mAppContext, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         mAlertCookies.put(aAlertName, aAlertCookie);
         callObserver(aAlertName, "alertshow", aAlertCookie);
 
-        sNotificationClient.add(notificationID, aImageUrl, aAlertTitle, aAlertText, contentIntent, clearIntent);
+        sNotificationClient.add(notificationID, aImageUrl, aAlertTitle, aAlertText, contentIntent);
     }
 
     public static void alertsProgressListener_OnProgress(String aAlertName, long aProgress, long aProgressMax, String aAlertText) {

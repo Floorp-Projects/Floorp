@@ -9,7 +9,6 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = jsperf
 MODULE_NAME = jsperf
 GRE_MODULE = 1
 

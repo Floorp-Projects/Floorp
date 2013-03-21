@@ -9,7 +9,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= handler
 LIBRARY_NAME	= exception_handler_s
 XPI_NAME 	= crashreporter
 

@@ -55,24 +55,6 @@ function rejected(reason) {
 }
 
 /**
- * Internal utility: Decorates given `f` function, so that on exception promise
- * rejected with thrown error is returned.
- */
-function attempt(f) {
-  return function effort(input) {
-    try {
-      return f(input);
-    }
-    catch(error) {
-      if (exports._reportErrors && typeof(console) === 'object') {
-        console.error(error)
-      }
-      return rejected(error)
-    }
-  };
-}
-
-/**
  * Internal utility: Returns `true` if given `value` is a promise. Value is
  * assumed to be a promise if it implements method `then`.
  */
@@ -130,20 +112,35 @@ function defer(prototype) {
     then: { value: function then(onFulfill, onError) {
       var deferred = defer(prototype);
 
-      // Decorate `onFulfill` / `onError` handlers with `attempt`, that
-      // way if wrapped handler throws exception decorator will catch and
-      // return promise rejected with it, which will cause rejection of
-      // `deferred.promise`. If handler is missing, substitute it with an
-      // utility function that takes one argument and returns promise
-      // fulfilled / rejected with it. This takes care of propagation
-      // through the rest of the promise chain.
-      onFulfill = onFulfill ? attempt(onFulfill) : fulfilled;
-      onError = onError ? attempt(onError) : rejected;
+      function resolve(value) {
+        // If `onFulfill` handler is provided resolve `deferred.promise` with
+        // result of invoking it with a resolution value. If handler is not
+        // provided propagate value through.
+        try {
+          deferred.resolve(onFulfill ? onFulfill(value) : value);
+        }
+        // `onFulfill` may throw exception in which case resulting promise
+        // is rejected with thrown exception.
+        catch(error) {
+          if (exports._reportErrors && typeof(console) === 'object')
+            console.error(error);
+          // Note: Following is equivalent of `deferred.reject(error)`,
+          // we use this shortcut to reduce a stack.
+          deferred.resolve(rejected(error));
+        }
+      }
 
-      // Create a pair of observers that invoke given handlers & propagate
-      // results to `deferred.promise`.
-      function resolveDeferred(value) { deferred.resolve(onFulfill(value)); }
-      function rejectDeferred(reason) { deferred.resolve(onError(reason)); }
+      function reject(reason) {
+        try {
+          if (onError) deferred.resolve(onError(reason));
+          else deferred.resolve(rejected(reason));
+        }
+        catch(error) {
+          if (exports._reportErrors && typeof(console) === 'object')
+            console.error(error)
+          deferred.resolve(rejected(error));
+        }
+      }
 
       // If enclosed promise (`this.promise`) observers queue is still alive
       // enqueue a new observer pair into it. Note that this does not
@@ -151,11 +148,11 @@ function defer(prototype) {
       // but we still have to queue observers to guarantee an order of
       // propagation.
       if (observers) {
-        observers.push({ resolve: resolveDeferred, reject: rejectDeferred });
+        observers.push({ resolve: resolve, reject: reject });
       }
       // Otherwise just forward observer pair right to a `result` promise.
       else {
-        result.then(resolveDeferred, rejectDeferred);
+        result.then(resolve, reject);
       }
 
       return deferred.promise;
@@ -288,5 +285,8 @@ var promised = (function() {
   }
 })()
 exports.promised = promised;
+
+var all = promised(Array);
+exports.all = all;
 
 });

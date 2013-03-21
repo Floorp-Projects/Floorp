@@ -143,8 +143,8 @@ parser_groups = (
                                     help="display test output in a parseable format",
                                     action="store_true",
                                     default=False,
-                                    cmds=['test', 'testex', 'testpkgs',
-                                          'testall'])),
+                                    cmds=['run', 'test', 'testex', 'testpkgs',
+                                          'testaddons', 'testall'])),
         ]
      ),
 
@@ -660,7 +660,7 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
     # a Mozilla application (which includes running tests).
 
     use_main = False
-    inherited_options = ['verbose', 'enable_e10s']
+    inherited_options = ['verbose', 'enable_e10s', 'parseable']
     enforce_timeouts = False
 
     if command == "xpi":
@@ -669,7 +669,7 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
         if 'tests' not in target_cfg:
             target_cfg['tests'] = []
         inherited_options.extend(['iterations', 'filter', 'profileMemory',
-                                  'stopOnError', 'parseable'])
+                                  'stopOnError'])
         enforce_timeouts = True
     elif command == "run":
         use_main = True

@@ -158,7 +158,6 @@ class FunctionBox;
 class ObjectBox;
 struct Token;
 struct TokenPos;
-struct TokenPtr;
 class TokenStream;
 class ParseMapPool;
 struct ParseNode;
@@ -218,7 +217,7 @@ struct IdValuePair
 
     IdValuePair() {}
     IdValuePair(jsid idArg)
-      : id(idArg)
+      : id(idArg), value(UndefinedValue())
     {}
 };
 

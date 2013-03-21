@@ -5,3 +5,6 @@
 
 DIRS += ['src', 'public']
 TEST_DIRS += ['tests']
+
+MODULE = 'pipnss'
+

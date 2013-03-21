@@ -9,7 +9,6 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE           = gl
 LIBRARY_NAME     = gl
 LIBXUL_LIBRARY   = 1
 EXPORT_LIBRARY   = 1

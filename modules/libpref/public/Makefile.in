@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= pref
 GRE_MODULE	= 1
 
 EXPORTS_NAMESPACES = mozilla

@@ -10,7 +10,6 @@ VPATH		= $(srcdir) $(srcdir)/src/src
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = jemalloc
 LIBRARY_NAME = jemalloc
 FORCE_STATIC_LIB = 1
 

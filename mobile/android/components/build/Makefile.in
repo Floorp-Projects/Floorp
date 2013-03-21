@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE_NAME     = nsBrowserCompsModule
-MODULE          = browsercomps
 LIBRARY_NAME    = browsercomps
 LIBXUL_LIBRARY  = 1
 

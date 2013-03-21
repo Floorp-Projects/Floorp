@@ -143,7 +143,7 @@ nsSVGOuterSVGFrame::nsSVGOuterSVGFrame(nsStyleContext* aContext)
   RemoveStateBits(NS_FRAME_SVG_LAYOUT);
 }
 
-NS_IMETHODIMP
+void
 nsSVGOuterSVGFrame::Init(nsIContent* aContent,
                          nsIFrame* aParent,
                          nsIFrame* aPrevInFlow)
@@ -168,7 +168,7 @@ nsSVGOuterSVGFrame::Init(nsIContent* aContent,
     AddStateBits(NS_STATE_SVG_NONDISPLAY_CHILD);
   }
 
-  nsresult rv = nsSVGOuterSVGFrameBase::Init(aContent, aParent, aPrevInFlow);
+  nsSVGOuterSVGFrameBase::Init(aContent, aParent, aPrevInFlow);
 
   nsIDocument* doc = mContent->GetCurrentDoc();
   if (doc) {
@@ -180,8 +180,6 @@ nsSVGOuterSVGFrame::Init(nsIContent* aContent,
     // not need to be removed
     doc->AddMutationObserverUnlessExists(&sSVGMutationObserver);
   }
-
-  return rv;
 }
 
 //----------------------------------------------------------------------
@@ -921,14 +919,14 @@ NS_NewSVGOuterSVGAnonChildFrame(nsIPresShell* aPresShell,
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGOuterSVGAnonChildFrame)
 
 #ifdef DEBUG
-NS_IMETHODIMP
+void
 nsSVGOuterSVGAnonChildFrame::Init(nsIContent* aContent,
                                   nsIFrame* aParent,
                                   nsIFrame* aPrevInFlow)
 {
   NS_ABORT_IF_FALSE(aParent->GetType() == nsGkAtoms::svgOuterSVGFrame,
                     "Unexpected parent");
-  return nsSVGOuterSVGAnonChildFrameBase::Init(aContent, aParent, aPrevInFlow);
+  nsSVGOuterSVGAnonChildFrameBase::Init(aContent, aParent, aPrevInFlow);
 }
 #endif
 

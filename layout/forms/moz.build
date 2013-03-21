@@ -11,3 +11,5 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'layout_forms'
 
+MODULE = 'layout'
+

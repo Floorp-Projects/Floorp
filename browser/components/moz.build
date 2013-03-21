@@ -33,3 +33,5 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'browsercompsbase'
 
+MODULE = 'browsercomps'
+

@@ -17,3 +17,5 @@ XPIDL_FLAGS += [
     '-I$(topsrcdir)/dom/media',
 ]
 
+MODULE = 'dom'
+

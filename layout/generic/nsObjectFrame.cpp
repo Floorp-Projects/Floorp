@@ -288,7 +288,7 @@ NS_IMETHODIMP nsObjectFrame::GetPluginPort(HWND *aPort)
 #endif
 #endif
 
-NS_IMETHODIMP 
+void
 nsObjectFrame::Init(nsIContent*      aContent,
                     nsIFrame*        aParent,
                     nsIFrame*        aPrevInFlow)
@@ -296,9 +296,7 @@ nsObjectFrame::Init(nsIContent*      aContent,
   PR_LOG(GetObjectFrameLog(), PR_LOG_DEBUG,
          ("Initializing nsObjectFrame %p for content %p\n", this, aContent));
 
-  nsresult rv = nsObjectFrameSuper::Init(aContent, aParent, aPrevInFlow);
-
-  return rv;
+  nsObjectFrameSuper::Init(aContent, aParent, aPrevInFlow);
 }
 
 void
