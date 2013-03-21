@@ -28,21 +28,20 @@ XPCVariant::XPCVariant(JSContext* cx, jsval aJSVal)
 {
     nsVariant::Initialize(&mData);
     if (!JSVAL_IS_PRIMITIVE(mJSVal)) {
+        // XXXbholley - The innerization here was from bug 638026. Blake says
+        // the basic problem was that we were storing the C++ inner but the JS
+        // outer, which meant that, after navigation, the JS inner could be
+        // collected, which would cause us to try to recreate the JS inner at
+        // some later point after teardown, which would crash. This is shouldn't
+        // be a problem anymore because SetParentToWindow will do the right
+        // thing, but I'm saving the cleanup here for another day. Blake thinks
+        // that we should just not store the WN if we're creating a variant for
+        // an outer window.
         JSObject *obj = JS_ObjectToInnerObject(cx, JSVAL_TO_OBJECT(mJSVal));
-
         mJSVal = OBJECT_TO_JSVAL(obj);
 
-        // If the incoming object is an XPCWrappedNative, then it could be a
-        // double-wrapped object, and we should return the double-wrapped
-        // object back out to script.
-
-        JSObject* proto;
-        XPCWrappedNative* wn =
-            XPCWrappedNative::GetWrappedNativeOfJSObject(cx,
-                                                         JSVAL_TO_OBJECT(mJSVal),
-                                                         nullptr,
-                                                         &proto);
-        mReturnRawObject = !wn && !proto;
+        JSObject *unwrapped = js::UnwrapObjectChecked(obj, /* stopAtOuter = */ false);
+        mReturnRawObject = !(unwrapped && IS_WN_WRAPPER(unwrapped));
     } else
         mReturnRawObject = false;
 }
