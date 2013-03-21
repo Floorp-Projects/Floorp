@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
-    <emItem  blockID="s1" id="bad.com@services.mozilla.org"></emItem>
+    <emItem  blockID="s1" id="test1.example.com@services.mozilla.org"></emItem>
   </emItems>
 </blocklist>
