@@ -83,6 +83,16 @@ intl_CompareStrings(JSContext *cx, unsigned argc, Value *vp);
 /******************** NumberFormat ********************/
 
 /**
+ * Returns a new instance of the standard built-in NumberFormat constructor.
+ * Self-hosted code cannot cache this constructor (as it does for others in
+ * Utilities.js) because it is initialized after self-hosted code is compiled.
+ *
+ * Usage: numberFormat = intl_NumberFormat(locales, options)
+ */
+extern JSBool
+intl_NumberFormat(JSContext *cx, unsigned argc, Value *vp);
+
+/**
  * Returns an object indicating the supported locales for number formatting
  * by having a true-valued property for each such locale with the
  * canonicalized language tag as the property name. The object has no

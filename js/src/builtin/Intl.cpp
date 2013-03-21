@@ -1101,14 +1101,11 @@ static JSFunctionSpec numberFormat_methods[] = {
  * NumberFormat constructor.
  * Spec: ECMAScript Internationalization API Specification, 11.1
  */
-static JSBool
-NumberFormat(JSContext *cx, unsigned argc, Value *vp)
+static bool
+NumberFormat(JSContext *cx, CallArgs args, bool construct)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-
     RootedObject obj(cx);
 
-    bool construct = IsConstructing(args);
     if (!construct) {
         // 11.1.2.1 step 3
         JSObject *intl = cx->global()->getOrCreateIntlObject(cx);
@@ -1154,10 +1151,26 @@ NumberFormat(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+static JSBool
+NumberFormat(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return NumberFormat(cx, args, IsConstructing(args));
+}
+
+JSBool
+js::intl_NumberFormat(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JS_ASSERT(args.length() == 2);
+    return NumberFormat(cx, args, true);
+}
+
 static void
 numberFormat_finalize(FreeOp *fop, JSObject *obj)
 {
-    UNumberFormat *nf = static_cast<UNumberFormat *>(obj->getReservedSlot(UNUMBER_FORMAT_SLOT).toPrivate());
+    UNumberFormat *nf =
+        static_cast<UNumberFormat*>(obj->getReservedSlot(UNUMBER_FORMAT_SLOT).toPrivate());
     if (nf)
         unum_close(nf);
 }

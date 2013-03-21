@@ -963,6 +963,7 @@ selfhosting_srcs := \
   $(srcdir)/builtin/Array.js \
   $(srcdir)/builtin/Intl.js \
   $(srcdir)/builtin/IntlData.js \
+  $(srcdir)/builtin/Number.js \
   $(srcdir)/builtin/ParallelArray.js \
   $(srcdir)/builtin/String.js \
   $(NULL)
