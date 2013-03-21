@@ -54,31 +54,20 @@ function onParentMessage(event) {
   var profilerMessage = document.getElementById("profilerMessage");
   var msg = JSON.parse(event.data);
 
+  if (msg.task !== "receiveProfileData" && !msg.isCurrent) {
+    return;
+  }
+
   switch (msg.task) {
     case "onStarted":
-      if (msg.isCurrent) {
-        start.style.display = "none";
-        start.querySelector("button").removeAttribute("disabled");
-        stop.style.display = "inline";
-      } else {
-        start.querySelector("button").setAttribute("disabled", true);
-        var text = gStrings.getFormatStr("profiler.alreadyRunning", [msg.uid]);
-        profilerMessage.textContent = text;
-        profilerMessage.style.display = "block";
-        notifyParent("disabled");
-      }
+      start.style.display = "none";
+      start.querySelector("button").removeAttribute("disabled");
+      stop.style.display = "inline";
       break;
     case "onStopped":
-      if (msg.isCurrent) {
-        stop.style.display = "none";
-        stop.querySelector("button").removeAttribute("disabled");
-        start.style.display = "inline";
-      } else {
-        start.querySelector("button").removeAttribute("disabled");
-        profilerMessage.textContent = "";
-        profilerMessage.style.display = "none";
-        notifyParent("enabled");
-      }
+      stop.style.display = "none";
+      stop.querySelector("button").removeAttribute("disabled");
+      start.style.display = "inline";
       break;
     case "receiveProfileData":
       loadProfile(JSON.stringify(msg.rawProfile));
