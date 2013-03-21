@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=851445
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 851445</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=851445">Mozilla Bug 851445</a>
+<p id="display"></p>
+<iframe id="f" style="width:400px; height:400px;"></iframe>
+<script>
+SimpleTest.waitForExplicitFinish();
+
+function handleLoad() {
+  f.contentWindow.scrollTo(0,100);
+  function handleLoad2() {
+    // Verify that the scroll position was retained
+    is(f.contentWindow.scrollY, 100);
+    SimpleTest.finish();
+  }
+  f.onload = handleLoad2;
+  f.contentWindow.location.reload();
+}
+
+f.src = "bug851445_helper.html?" + Math.random();
+f.onload = handleLoad;
+</script>
+</body>
+</html>
