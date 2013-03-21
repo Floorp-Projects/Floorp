@@ -12,7 +12,6 @@ relativesrcdir = @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 # export required interfaces, even if --disable-cookies has been given
-GRE_MODULE   = 1
 FAIL_ON_WARNINGS := 1
 
 ifdef NECKO_COOKIES

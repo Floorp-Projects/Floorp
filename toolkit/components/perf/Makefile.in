@@ -10,7 +10,6 @@ VPATH = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE_NAME = jsperf
-GRE_MODULE = 1
 
 EXTRA_JS_MODULES = \
     PerfMeasurement.jsm \
