@@ -1135,6 +1135,24 @@ MmsService.prototype = {
     debug("handleDeliveryIndication: got delivery report for " + messageId);
   },
 
+  /**
+   * A utility function to convert the MmsParameters dictionary object
+   * to a database-savable message.
+   *
+   * @param aParams
+   *        The MmsParameters dictionay object.
+   *
+   * Notes:
+   *
+   * OMA-TS-MMS-CONF-V1_3-20110913-A section 10.2.2 "Message Content Encoding":
+   *
+   * A name for multipart object SHALL be encoded using name-parameter for Content-Type
+   * header in WSP multipart headers. In decoding, name-parameter of Content-Type SHALL
+   * be used if available. If name-parameter of Content-Type is not available, filename
+   * parameter of Content-Disposition header SHALL be used if available. If neither
+   * name-parameter of Content-Type header nor filename parameter of Content-Disposition
+   * header is available, Content-Location header SHALL be used if available.
+   */
   createSavableFromParams: function createSavableFromParams(aParams) {
     debug("createSavableFromParams: aParams: " + JSON.stringify(aParams));
     let message = {};
@@ -1181,13 +1199,17 @@ MmsService.prototype = {
       for (let i = 0; i < attachments.length; i++) {
         let attachment = attachments[i];
         let content = attachment.content;
+        let location = attachment.location;
         let part = {
           "headers": {
             "content-type": {
-              "media": content.type
+              "media": content.type,
+              "params": {
+                "name": location
+              }
             },
             "content-length": content.size,
-            "content-location": attachment.location,
+            "content-location": location,
             "content-id": attachment.id
           },
           "content": content
