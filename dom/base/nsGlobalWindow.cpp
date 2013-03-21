@@ -551,7 +551,8 @@ public:
                               JS::Handle<JSObject *> proxy,
                               JS::Handle<jsid> id,
                               JSPropertyDescriptor* desc) MOZ_OVERRIDE;
-  virtual bool getOwnPropertyNames(JSContext *cx, JSObject *proxy,
+  virtual bool getOwnPropertyNames(JSContext *cx,
+                                   JS::Handle<JSObject *> proxy,
                                    JS::AutoIdVector &props) MOZ_OVERRIDE;
   virtual bool delete_(JSContext *cx, JSObject *proxy, jsid id,
                        bool *bp) MOZ_OVERRIDE;
@@ -567,7 +568,7 @@ public:
                    jsid id, JS::Value *vp) MOZ_OVERRIDE;
   virtual bool set(JSContext *cx, JSObject *proxy, JSObject *receiver,
                    jsid id, bool strict, JS::Value *vp) MOZ_OVERRIDE;
-  virtual bool keys(JSContext *cx, JSObject *proxy,
+  virtual bool keys(JSContext *cx, JS::Handle<JSObject *> proxy,
                     JS::AutoIdVector &props) MOZ_OVERRIDE;
   virtual bool iterate(JSContext *cx, JSObject *proxy, unsigned flags,
                        JS::Value *vp) MOZ_OVERRIDE;
@@ -675,7 +676,7 @@ nsOuterWindowProxy::defineProperty(JSContext* cx,
 }
 
 bool
-nsOuterWindowProxy::getOwnPropertyNames(JSContext *cx, JSObject *proxy,
+nsOuterWindowProxy::getOwnPropertyNames(JSContext *cx, JS::Handle<JSObject *> proxy,
                                         JS::AutoIdVector &props)
 {
   // Just our indexed stuff followed by our "normal" own property names.
@@ -788,7 +789,7 @@ nsOuterWindowProxy::set(JSContext *cx, JSObject *proxy, JSObject *receiver,
 }
 
 bool
-nsOuterWindowProxy::keys(JSContext *cx, JSObject *proxy,
+nsOuterWindowProxy::keys(JSContext *cx, JS::Handle<JSObject *> proxy,
                          JS::AutoIdVector &props)
 {
   // BaseProxyHandler::keys seems to do what we want here: call

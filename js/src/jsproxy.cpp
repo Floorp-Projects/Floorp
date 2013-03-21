@@ -278,12 +278,10 @@ BaseProxyHandler::set(JSContext *cx, JSObject *proxy_, JSObject *receiver_, jsid
 }
 
 bool
-BaseProxyHandler::keys(JSContext *cx, JSObject *proxyArg, AutoIdVector &props)
+BaseProxyHandler::keys(JSContext *cx, HandleObject proxy, AutoIdVector &props)
 {
-    assertEnteredPolicy(cx, proxyArg, JSID_VOID);
+    assertEnteredPolicy(cx, proxy, JSID_VOID);
     JS_ASSERT(props.length() == 0);
-
-    RootedObject proxy(cx, proxyArg);
 
     if (!getOwnPropertyNames(cx, proxy, props))
         return false;
@@ -491,7 +489,7 @@ DirectProxyHandler::defineProperty(JSContext *cx, HandleObject proxy, HandleId i
 }
 
 bool
-DirectProxyHandler::getOwnPropertyNames(JSContext *cx, JSObject *proxy,
+DirectProxyHandler::getOwnPropertyNames(JSContext *cx, HandleObject proxy,
                                         AutoIdVector &props)
 {
     assertEnteredPolicy(cx, proxy, JSID_VOID);
@@ -661,10 +659,11 @@ DirectProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiverArg,
 }
 
 bool
-DirectProxyHandler::keys(JSContext *cx, JSObject *proxy, AutoIdVector &props)
+DirectProxyHandler::keys(JSContext *cx, HandleObject proxy, AutoIdVector &props)
 {
     assertEnteredPolicy(cx, proxy, JSID_VOID);
-    return GetPropertyNames(cx, GetProxyTargetObject(proxy), JSITER_OWNONLY, &props);
+    RootedObject target(cx, GetProxyTargetObject(proxy));
+    return GetPropertyNames(cx, target, JSITER_OWNONLY, &props);
 }
 
 bool
@@ -810,7 +809,7 @@ class ScriptedIndirectProxyHandler : public BaseProxyHandler {
                                           PropertyDescriptor *desc, unsigned flags) MOZ_OVERRIDE;
     virtual bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
                                 PropertyDescriptor *desc) MOZ_OVERRIDE;
-    virtual bool getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoIdVector &props);
+    virtual bool getOwnPropertyNames(JSContext *cx, HandleObject proxy, AutoIdVector &props);
     virtual bool delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp) MOZ_OVERRIDE;
     virtual bool enumerate(JSContext *cx, JSObject *proxy, AutoIdVector &props) MOZ_OVERRIDE;
 
@@ -821,7 +820,7 @@ class ScriptedIndirectProxyHandler : public BaseProxyHandler {
                      Value *vp) MOZ_OVERRIDE;
     virtual bool set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, bool strict,
                      Value *vp) MOZ_OVERRIDE;
-    virtual bool keys(JSContext *cx, JSObject *proxy, AutoIdVector &props) MOZ_OVERRIDE;
+    virtual bool keys(JSContext *cx, HandleObject proxy, AutoIdVector &props) MOZ_OVERRIDE;
     virtual bool iterate(JSContext *cx, JSObject *proxy, unsigned flags, Value *vp) MOZ_OVERRIDE;
 
     /* Spidermonkey extensions. */
@@ -902,7 +901,7 @@ ScriptedIndirectProxyHandler::defineProperty(JSContext *cx, HandleObject proxy, 
 }
 
 bool
-ScriptedIndirectProxyHandler::getOwnPropertyNames(JSContext *cx, JSObject *proxy,
+ScriptedIndirectProxyHandler::getOwnPropertyNames(JSContext *cx, HandleObject proxy,
                                                   AutoIdVector &props)
 {
     RootedObject handler(cx, GetIndirectProxyHandlerObject(proxy));
@@ -1006,9 +1005,8 @@ ScriptedIndirectProxyHandler::set(JSContext *cx, JSObject *proxy_, JSObject *rec
 }
 
 bool
-ScriptedIndirectProxyHandler::keys(JSContext *cx, JSObject *proxy_, AutoIdVector &props)
+ScriptedIndirectProxyHandler::keys(JSContext *cx, HandleObject proxy, AutoIdVector &props)
 {
-    RootedObject proxy(cx, proxy_);
     RootedObject handler(cx, GetIndirectProxyHandlerObject(proxy));
     RootedValue value(cx);
     if (!GetDerivedTrap(cx, handler, cx->names().keys, &value))
@@ -1071,7 +1069,7 @@ class ScriptedDirectProxyHandler : public DirectProxyHandler {
                                           PropertyDescriptor *desc, unsigned flags) MOZ_OVERRIDE;
     virtual bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
                                 PropertyDescriptor *desc) MOZ_OVERRIDE;
-    virtual bool getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoIdVector &props);
+    virtual bool getOwnPropertyNames(JSContext *cx, HandleObject proxy, AutoIdVector &props);
     virtual bool delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp) MOZ_OVERRIDE;
     virtual bool enumerate(JSContext *cx, JSObject *proxy, AutoIdVector &props) MOZ_OVERRIDE;
 
@@ -1082,7 +1080,7 @@ class ScriptedDirectProxyHandler : public DirectProxyHandler {
                      Value *vp) MOZ_OVERRIDE;
     virtual bool set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, bool strict,
                      Value *vp) MOZ_OVERRIDE;
-    virtual bool keys(JSContext *cx, JSObject *proxy, AutoIdVector &props) MOZ_OVERRIDE;
+    virtual bool keys(JSContext *cx, HandleObject proxy, AutoIdVector &props) MOZ_OVERRIDE;
     virtual bool iterate(JSContext *cx, JSObject *proxy, unsigned flags, Value *vp) MOZ_OVERRIDE;
 
     virtual bool call(JSContext *cx, JSObject *proxy, unsigned argc, Value *vp) MOZ_OVERRIDE;
@@ -1689,11 +1687,9 @@ ScriptedDirectProxyHandler::defineProperty(JSContext *cx, HandleObject proxy, Ha
 }
 
 bool
-ScriptedDirectProxyHandler::getOwnPropertyNames(JSContext *cx, JSObject *proxy_,
+ScriptedDirectProxyHandler::getOwnPropertyNames(JSContext *cx, HandleObject proxy,
                                                 AutoIdVector &props)
 {
-    RootedObject proxy(cx, proxy_);
-
     // step a
     RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
 
@@ -2110,10 +2106,8 @@ ScriptedDirectProxyHandler::set(JSContext *cx, JSObject *proxy_, JSObject *recei
 
 // 15.2.3.14 Object.keys (O), step 2
 bool
-ScriptedDirectProxyHandler::keys(JSContext *cx, JSObject *proxy_, AutoIdVector &props)
+ScriptedDirectProxyHandler::keys(JSContext *cx, HandleObject proxy, AutoIdVector &props)
 {
-    RootedObject proxy(cx, proxy_);
-
     // step a
     RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
 
@@ -2331,11 +2325,10 @@ Proxy::defineProperty(JSContext *cx, HandleObject proxy, HandleId id, HandleValu
 }
 
 bool
-Proxy::getOwnPropertyNames(JSContext *cx, JSObject *proxy_, AutoIdVector &props)
+Proxy::getOwnPropertyNames(JSContext *cx, HandleObject proxy, AutoIdVector &props)
 {
     JS_CHECK_RECURSION(cx, return false);
-    BaseProxyHandler *handler = GetProxyHandler(proxy_);
-    RootedObject proxy(cx, proxy_);
+    BaseProxyHandler *handler = GetProxyHandler(proxy);
     AutoEnterPolicy policy(cx, handler, proxy, JS::JSID_VOIDHANDLE, BaseProxyHandler::GET, true);
     if (!policy.allowed())
         return policy.returnValue();
@@ -2520,10 +2513,9 @@ Proxy::set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id
 }
 
 bool
-Proxy::keys(JSContext *cx, JSObject *proxy_, AutoIdVector &props)
+Proxy::keys(JSContext *cx, HandleObject proxy, AutoIdVector &props)
 {
     JS_CHECK_RECURSION(cx, return false);
-    RootedObject proxy(cx, proxy_);
     BaseProxyHandler *handler = GetProxyHandler(proxy);
     AutoEnterPolicy policy(cx, handler, proxy, JS::JSID_VOIDHANDLE, BaseProxyHandler::GET, true);
     if (!policy.allowed())
