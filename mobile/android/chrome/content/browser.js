@@ -90,20 +90,6 @@ const kStateActive = 0x00000001; // :active pseudoclass for elements
 
 const kXLinkNamespace = "http://www.w3.org/1999/xlink";
 
-// The element tag names that are considered to receive input. Mouse-down
-// events directed to one of these are allowed to go through.
-const kElementsReceivingInput = {
-    applet: true,
-    audio: true,
-    button: true,
-    embed: true,
-    input: true,
-    map: true,
-    select: true,
-    textarea: true,
-    video: true
-};
-
 const kDefaultCSSViewportWidth = 980;
 const kDefaultCSSViewportHeight = 480;
 
@@ -2008,6 +1994,7 @@ var SelectionHandler = {
     Services.obs.addObserver(this, "after-viewport-change", false);
     Services.obs.addObserver(this, "TextSelection:Move", false);
     Services.obs.addObserver(this, "TextSelection:Position", false);
+    BrowserApp.deck.addEventListener("compositionend", this, false);
   },
 
   uninit: function sh_uninit() {
@@ -2017,6 +2004,7 @@ var SelectionHandler = {
     Services.obs.removeObserver(this, "after-viewport-change");
     Services.obs.removeObserver(this, "TextSelection:Move");
     Services.obs.removeObserver(this, "TextSelection:Position");
+    BrowserApp.deck.removeEventListener("compositionend", this);
   },
 
   observe: function sh_observe(aSubject, aTopic, aData) {
@@ -2101,6 +2089,13 @@ var SelectionHandler = {
       case "blur":
         if (this._activeType == this.TYPE_CURSOR)
           this.hideThumb();
+        break;
+
+      case "compositionend":
+        // If the handles are displayed during user input, hide them.
+        if (this._activeType == this.TYPE_CURSOR) {
+          this.hideThumb();
+        }
         break;
     }
   },
@@ -4653,26 +4648,6 @@ var BrowserEventHandler = {
     return elem;
   },
 
-  _elementReceivesInput: function(aElement) {
-    return aElement instanceof Element &&
-        kElementsReceivingInput.hasOwnProperty(aElement.tagName.toLowerCase()) ||
-        this._isEditable(aElement);
-  },
-
-  _isEditable: function(aElement) {
-    let canEdit = false;
-
-    if (aElement.isContentEditable || aElement.designMode == "on") {
-      canEdit = true;
-    } else if (aElement instanceof HTMLIFrameElement && (aElement.contentDocument.body.isContentEditable || aElement.contentDocument.designMode == "on")) {
-      canEdit = true;
-    } else {
-      canEdit = aElement.ownerDocument && aElement.ownerDocument.designMode == "on";
-    }
-
-    return canEdit;
-  },
-
   _scrollElementBy: function(elem, x, y) {
     elem.scrollTop = elem.scrollTop + y;
     elem.scrollLeft = elem.scrollLeft + x;
@@ -5234,6 +5209,7 @@ var FormAssistant = {
         if (!this._showAutoCompleteSuggestions(currentElement))
           this._hideFormAssistPopup();
         break;
+
       case "input":
         currentElement = aEvent.target;
 
