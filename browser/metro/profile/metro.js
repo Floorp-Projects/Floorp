@@ -198,7 +198,6 @@ pref("privacy.popups.showBrowserMessage", true);
 pref("dom.disable_window_open_dialog_feature", true);
 
 pref("keyword.enabled", true);
-pref("keyword.URL", "http://www.bing.com/search?q=");
 
 pref("accessibility.typeaheadfind", false);
 pref("accessibility.typeaheadfind.timeout", 5000);
