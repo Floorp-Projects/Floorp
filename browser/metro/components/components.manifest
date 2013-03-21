@@ -93,8 +93,3 @@ category app-startup SafeBrowsing service,@mozilla.org/safebrowsing/application;
 component {88b3eb21-d072-4e3b-886d-f89d8c49fe59} UpdatePrompt.js
 contract @mozilla.org/updates/update-prompt;1 {88b3eb21-d072-4e3b-886d-f89d8c49fe59}
 #endif
-
-# CapturePicker.js
-component {cb5a47f0-b58c-4fc3-b61a-358ee95f8238} CapturePicker.js
-contract @mozilla.org/capturepicker;1 {cb5a47f0-b58c-4fc3-b61a-358ee95f8238}
-
