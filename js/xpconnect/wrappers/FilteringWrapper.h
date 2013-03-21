@@ -19,6 +19,9 @@ class FilteringWrapper : public Base {
     FilteringWrapper(unsigned flags);
     virtual ~FilteringWrapper();
 
+    // This is potentially dynamic until XBL scopes are no longer behind a pref.
+    virtual bool isSafeToUnwrap();
+
     virtual bool getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id, js::PropertyDescriptor *desc, unsigned flags) MOZ_OVERRIDE;
     virtual bool getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id, js::PropertyDescriptor *desc, unsigned flags) MOZ_OVERRIDE;
     virtual bool getOwnPropertyNames(JSContext *cx, JSObject *wrapper, js::AutoIdVector &props) MOZ_OVERRIDE;
