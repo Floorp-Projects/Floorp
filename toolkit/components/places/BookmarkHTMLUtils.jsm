@@ -534,12 +534,8 @@ BookmarkImporter.prototype = {
 
     // Import last charset.
     if (lastCharset) {
-      try {
-        PlacesUtils.history.setCharsetForURI(frame.previousLink, lastCharset);
-      } catch(e) {
-      }
+      PlacesUtils.setCharsetForURI(frame.previousLink, lastCharset);
     }
-
   },
 
   _handleContainerBegin: function handleContainerBegin() {

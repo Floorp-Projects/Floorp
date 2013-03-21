@@ -1355,7 +1355,7 @@ this.PlacesUtils = {
             this.tagging.tagURI(this._uri(aData.uri), tags);
         }
         if (aData.charset) {
-            this.history.setCharsetForURI(this._uri(aData.uri), aData.charset);
+            this.setCharsetForURI(this._uri(aData.uri), aData.charset);
         }
         if (aData.uri.substr(0, 6) == "place:")
           searchIds.push(id);
