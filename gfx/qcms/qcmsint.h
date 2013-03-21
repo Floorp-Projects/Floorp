@@ -284,6 +284,24 @@ void qcms_transform_data_rgba_out_lut_altivec(qcms_transform *transform,
 
 extern qcms_bool qcms_supports_iccv4;
 
+#ifdef _MSC_VER
+
+long __cdecl _InterlockedIncrement(long volatile *);
+long __cdecl _InterlockedDecrement(long volatile *);
+#pragma intrinsic(_InterlockedIncrement)
+#pragma intrinsic(_InterlockedDecrement)
+
+#define qcms_atomic_increment(x) _InterlockedIncrement((long volatile *)&x)
+#define qcms_atomic_decrement(x) _InterlockedDecrement((long volatile*)&x)
+
+#else
+
+#define qcms_atomic_increment(x) __sync_add_and_fetch(&x, 1)
+#define qcms_atomic_decrement(x) __sync_sub_and_fetch(&x, 1)
+
+#endif
+
+
 #ifdef NATIVE_OUTPUT
 # define RGB_OUTPUT_COMPONENTS 4
 # define RGBA_OUTPUT_COMPONENTS 4
