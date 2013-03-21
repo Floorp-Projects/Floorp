@@ -441,11 +441,7 @@ BufferedAudioStream::Init(int32_t aNumChannels, int32_t aRate,
   params.rate = aRate;
   params.channels = aNumChannels;
 #if defined(__ANDROID__)
-#if defined(MOZ_B2G)
   params.stream_type = ConvertChannelToCubebType(aAudioChannelType);
-#else
-  params.stream_type = CUBEB_STREAM_TYPE_MUSIC;
-#endif
 
   if (params.stream_type == CUBEB_STREAM_TYPE_MAX) {
     return NS_ERROR_INVALID_ARG;
