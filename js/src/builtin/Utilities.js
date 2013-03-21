@@ -18,7 +18,7 @@
          ParallelTestsShouldPass: false,
          Dump: false,
          callFunction: false,
-         IS_UNDEFINED: false, TO_UINT32: false,
+         TO_UINT32: false,
          JSMSG_NOT_FUNCTION: false, JSMSG_MISSING_FUN_ARG: false,
          JSMSG_EMPTY_ARRAY_REDUCE: false,
 */
@@ -68,7 +68,7 @@ var std_WeakMap_set = WeakMap.prototype.set;
 
 /* Spec: ECMAScript Language Specification, 5.1 edition, 8.8 */
 function List() {
-    if (IS_UNDEFINED(List.prototype)) {
+    if (List.prototype === undefined) {
         var proto = std_Object_create(null);
         proto.indexOf = std_Array_indexOf;
         proto.join = std_Array_join;
