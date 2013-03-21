@@ -1399,14 +1399,24 @@ XPCNativeScriptableShared::PopulateJSClass()
 // work on the derived object, which we really don't want to support. But we
 // handle it anyway, for now, to minimize regression risk on an already-risky
 // landing.
+//
+// This hack is mainly useful for the NoHelper JSClass. We also fix up
+// Components.utils because it implements nsIXPCScriptable (giving it a custom
+// JSClass) but not nsIClassInfo (which would put the methods on a prototype).
+
+#define IS_NOHELPER_CLASS(clasp) (clasp == &XPC_WN_NoHelper_JSClass.base)
+#define IS_CU_CLASS(clasp) (clasp->name[0] == 'n' && !strcmp(clasp->name, "nsXPCComponents_Utils"))
+
 MOZ_ALWAYS_INLINE JSObject*
 FixUpThisIfBroken(JSObject *obj, JSObject *funobj)
 {
-    if (MOZ_UNLIKELY(funobj &&
-        (js::GetObjectClass(js::GetObjectParent(funobj)) == &XPC_WN_NoHelper_JSClass.base) &&
-        (js::GetObjectClass(obj) != &XPC_WN_NoHelper_JSClass.base)))
-    {
-        return js::GetObjectParent(funobj);
+    if (funobj) {
+        js::Class *parentClass = js::GetObjectClass(js::GetObjectParent(funobj));
+        if (MOZ_UNLIKELY((IS_NOHELPER_CLASS(parentClass) || IS_CU_CLASS(parentClass)) &&
+                         (js::GetObjectClass(obj) != parentClass)))
+        {
+            return js::GetObjectParent(funobj);
+        }
     }
     return obj;
 }
