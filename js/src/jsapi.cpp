@@ -177,6 +177,11 @@ const jsval JSVAL_FALSE = IMPL_TO_JSVAL(BUILD_JSVAL(JSVAL_TAG_BOOLEAN,   JS_FALS
 const jsval JSVAL_TRUE  = IMPL_TO_JSVAL(BUILD_JSVAL(JSVAL_TAG_BOOLEAN,   JS_TRUE));
 const jsval JSVAL_VOID  = IMPL_TO_JSVAL(BUILD_JSVAL(JSVAL_TAG_UNDEFINED, 0));
 
+const jsid voidIdValue = JSID_VOID;
+const jsid emptyIdValue = JSID_EMPTY;
+const HandleId JS::JSID_VOIDHANDLE = HandleId::fromMarkedLocation(&voidIdValue);
+const HandleId JS::JSID_EMPTYHANDLE = HandleId::fromMarkedLocation(&emptyIdValue);
+
 /* Make sure that jschar is two bytes unsigned integer */
 JS_STATIC_ASSERT((jschar)-1 > 0);
 JS_STATIC_ASSERT(sizeof(jschar) == 2);
