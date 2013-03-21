@@ -52,6 +52,7 @@ FENNEC_JAVA_FILES = \
   AndroidImportPreference.java \
   AnimatorProxy.java \
   AnimatedHeightLayout.java \
+  AppNotificationClient.java \
   AwesomeBar.java \
   AwesomebarResultHandler.java \
   AwesomeBarTabs.java \
@@ -119,8 +120,9 @@ FENNEC_JAVA_FILES = \
   MenuPanel.java \
   MenuPopup.java \
   MultiChoicePreference.java \
+  NotificationClient.java \
+  NotificationHandler.java \
   NotificationService.java \
-  NotificationServiceClient.java \
   NSSBridge.java \
   CustomEditText.java \
   OnInterceptTouchListener.java \
@@ -137,6 +139,7 @@ FENNEC_JAVA_FILES = \
   ReaderModeUtils.java \
   RemoteTabs.java \
   RobocopAPI.java \
+  ServiceNotificationClient.java \
   SessionParser.java \
   SetupScreen.java \
   ShapedButton.java \
