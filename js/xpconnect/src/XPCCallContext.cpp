@@ -60,6 +60,8 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
          nullptr, nullptr);
 }
 
+#define IS_TEAROFF_CLASS(clazz) ((clazz) == &XPC_WN_Tearoff_JSClass)
+
 void
 XPCCallContext::Init(XPCContext::LangType callerLanguage,
                      JSBool callBeginRequest,
@@ -144,10 +146,10 @@ XPCCallContext::Init(XPCContext::LangType callerLanguage,
 
     mTearOff = nullptr;
     if (wrapperInitOptions == INIT_SHOULD_LOOKUP_WRAPPER) {
-
         // If the object is a security wrapper, GetWrappedNativeOfJSObject can't
         // handle it. Do special handling here to make cross-origin Xrays work.
-        if (WrapperFactory::IsSecurityWrapper(obj)) {
+        JSObject *unwrapped = js::UnwrapObjectChecked(obj, /* stopAtOuter = */ false);
+        if (!unwrapped) {
             mWrapper = UnwrapThisIfAllowed(obj, funobj, argc);
             if (!mWrapper) {
                 JS_ReportError(mJSContext, "Permission denied to call method on |this|");
@@ -155,10 +157,16 @@ XPCCallContext::Init(XPCContext::LangType callerLanguage,
                 return;
             }
         } else {
-            mWrapper = XPCWrappedNative::GetWrappedNativeOfJSObject(mJSContext,
-                                                                    obj, funobj,
-                                                                    &mFlattenedJSObject,
-                                                                    &mTearOff);
+            js::Class *clasp = js::GetObjectClass(unwrapped);
+            if (IS_WRAPPER_CLASS(clasp)) {
+                if (IS_SLIM_WRAPPER_OBJECT(unwrapped))
+                    mFlattenedJSObject = unwrapped;
+                else
+                    mWrapper = XPCWrappedNative::Get(unwrapped);
+            } else if (IS_TEAROFF_CLASS(clasp)) {
+                mTearOff = (XPCWrappedNativeTearOff*)js::GetObjectPrivate(unwrapped);
+                mWrapper = XPCWrappedNative::Get(js::GetObjectParent(unwrapped));
+            }
         }
         if (mWrapper) {
             mFlattenedJSObject = mWrapper->GetFlatJSObject();

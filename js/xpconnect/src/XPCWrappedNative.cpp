@@ -1751,48 +1751,6 @@ XPCWrappedNative::RescueOrphans(XPCCallContext& ccx)
     return ::RescueOrphans(ccx, mFlatJSObject);
 }
 
-#define IS_TEAROFF_CLASS(clazz)                                               \
-          ((clazz) == &XPC_WN_Tearoff_JSClass)
-
-// static
-XPCWrappedNative*
-XPCWrappedNative::GetWrappedNativeOfJSObject(JSContext* cx,
-                                             JSObject* obj,
-                                             JSObject* funobj,
-                                             JSObject** pobj2,
-                                             XPCWrappedNativeTearOff** pTearOff)
-{
-    NS_PRECONDITION(obj, "bad param");
-
-    // fubobj must be null if called without cx.
-    NS_PRECONDITION(cx || !funobj, "bad param");
-
-    // *pTeaorOff must be null if pTearOff is given
-    NS_PRECONDITION(!pTearOff || !*pTearOff, "bad param");
-    if (pobj2)
-        *pobj2 = nullptr;
-
-    obj = js::UnwrapObjectChecked(obj, /* stopAtOuter = */ false);
-    if (!obj)
-        return nullptr;
-    js::Class *clasp = js::GetObjectClass(obj);
-    if (IS_WRAPPER_CLASS(clasp)) {
-        if (IS_WN_WRAPPER_OBJECT(obj)) {
-            return (XPCWrappedNative*)js::GetObjectPrivate(obj);
-        } else {
-            MOZ_ASSERT(IS_SLIM_WRAPPER_OBJECT(obj));
-            if (pobj2)
-                *pobj2 = obj;
-            return nullptr;
-        }
-    } else if (IS_TEAROFF_CLASS(clasp)) {
-        if (pTearOff)
-            *pTearOff = (XPCWrappedNativeTearOff*)js::GetObjectPrivate(obj);
-        return (XPCWrappedNative*)js::GetObjectPrivate(js::GetObjectParent(obj));
-    }
-    return nullptr;
-}
-
 JSBool
 XPCWrappedNative::ExtendSet(XPCCallContext& ccx, XPCNativeInterface* aInterface)
 {
