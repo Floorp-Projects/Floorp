@@ -141,8 +141,10 @@ DOMProxyHandler::delete_(JSContext* cx, JSObject* proxy, jsid id, bool* bp)
 }
 
 bool
-DOMProxyHandler::enumerate(JSContext* cx, JSObject* proxy, AutoIdVector& props)
+DOMProxyHandler::enumerate(JSContext* cx, JSObject* proxy_, AutoIdVector& props)
 {
+  JS::Rooted<JSObject *> proxy(cx, proxy_);
+
   JSObject* proto;
   if (!JS_GetPrototype(cx, proxy, &proto)) {
     return false;

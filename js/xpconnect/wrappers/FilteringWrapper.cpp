@@ -92,7 +92,8 @@ FilteringWrapper<Base, Policy>::getOwnPropertyDescriptor(JSContext *cx, JS::Hand
 
 template <typename Base, typename Policy>
 bool
-FilteringWrapper<Base, Policy>::getOwnPropertyNames(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
+FilteringWrapper<Base, Policy>::getOwnPropertyNames(JSContext *cx, JS::Handle<JSObject *> wrapper,
+                                                    AutoIdVector &props)
 {
     assertEnteredPolicy(cx, wrapper, JSID_VOID);
     return Base::getOwnPropertyNames(cx, wrapper, props) &&
@@ -110,7 +111,8 @@ FilteringWrapper<Base, Policy>::enumerate(JSContext *cx, JSObject *wrapper, Auto
 
 template <typename Base, typename Policy>
 bool
-FilteringWrapper<Base, Policy>::keys(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
+FilteringWrapper<Base, Policy>::keys(JSContext *cx, JS::Handle<JSObject *> wrapper,
+                                     AutoIdVector &props)
 {
     assertEnteredPolicy(cx, wrapper, JSID_VOID);
     return Base::keys(cx, wrapper, props) &&

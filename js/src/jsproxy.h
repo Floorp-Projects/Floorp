@@ -111,7 +111,7 @@ class JS_FRIEND_API(BaseProxyHandler) {
                                           unsigned flags) = 0;
     virtual bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
                                 PropertyDescriptor *desc) = 0;
-    virtual bool getOwnPropertyNames(JSContext *cx, JSObject *proxy,
+    virtual bool getOwnPropertyNames(JSContext *cx, HandleObject proxy,
                                      AutoIdVector &props) = 0;
     virtual bool delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp) = 0;
     virtual bool enumerate(JSContext *cx, JSObject *proxy,
@@ -124,7 +124,7 @@ class JS_FRIEND_API(BaseProxyHandler) {
                      jsid id, Value *vp);
     virtual bool set(JSContext *cx, JSObject *proxy, JSObject *receiver,
                      jsid id, bool strict, Value *vp);
-    virtual bool keys(JSContext *cx, JSObject *proxy, AutoIdVector &props);
+    virtual bool keys(JSContext *cx, HandleObject proxy, AutoIdVector &props);
     virtual bool iterate(JSContext *cx, JSObject *proxy, unsigned flags,
                          Value *vp);
 
@@ -165,7 +165,7 @@ public:
                                           unsigned flags) MOZ_OVERRIDE;
     virtual bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
                                 PropertyDescriptor *desc) MOZ_OVERRIDE;
-    virtual bool getOwnPropertyNames(JSContext *cx, JSObject *proxy,
+    virtual bool getOwnPropertyNames(JSContext *cx, HandleObject proxy,
                                      AutoIdVector &props) MOZ_OVERRIDE;
     virtual bool delete_(JSContext *cx, JSObject *proxy, jsid id,
                          bool *bp) MOZ_OVERRIDE;
@@ -181,7 +181,7 @@ public:
                      jsid id, Value *vp) MOZ_OVERRIDE;
     virtual bool set(JSContext *cx, JSObject *proxy, JSObject *receiver,
                      jsid id, bool strict, Value *vp) MOZ_OVERRIDE;
-    virtual bool keys(JSContext *cx, JSObject *proxy,
+    virtual bool keys(JSContext *cx, HandleObject proxy,
                       AutoIdVector &props) MOZ_OVERRIDE;
     virtual bool iterate(JSContext *cx, JSObject *proxy, unsigned flags,
                          Value *vp) MOZ_OVERRIDE;
@@ -217,7 +217,7 @@ class Proxy {
                                          MutableHandleValue vp);
     static bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id, PropertyDescriptor *desc);
     static bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id, HandleValue v);
-    static bool getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoIdVector &props);
+    static bool getOwnPropertyNames(JSContext *cx, HandleObject proxy, AutoIdVector &props);
     static bool delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
     static bool enumerate(JSContext *cx, JSObject *proxy, AutoIdVector &props);
 
@@ -229,7 +229,7 @@ class Proxy {
                                     uint32_t index, MutableHandleValue vp, bool *present);
     static bool set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id, bool strict,
                     MutableHandleValue vp);
-    static bool keys(JSContext *cx, JSObject *proxy, AutoIdVector &props);
+    static bool keys(JSContext *cx, HandleObject proxy, AutoIdVector &props);
     static bool iterate(JSContext *cx, HandleObject proxy, unsigned flags, MutableHandleValue vp);
 
     /* Spidermonkey extensions. */
