@@ -50,7 +50,7 @@ IsEvalCacheCandidate(RawScript script)
 EvalCacheHashPolicy::hash(const EvalCacheLookup &l)
 {
     return AddToHash(HashString(l.str->chars(), l.str->length()),
-                     l.caller,
+                     l.caller.get(),
                      l.staticLevel,
                      l.version,
                      l.compartment);
@@ -93,10 +93,7 @@ class EvalScriptGuard
 
   public:
     EvalScriptGuard(JSContext *cx)
-      : cx_(cx), script_(cx), lookupStr_(cx)
-    {
-        lookup_.str = NULL;
-    }
+        : cx_(cx), script_(cx), lookup_(cx), lookupStr_(cx) {}
 
     ~EvalScriptGuard() {
         if (script_) {
