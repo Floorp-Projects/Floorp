@@ -626,21 +626,6 @@ nsAppShell::PostEvent(AndroidGeckoEvent *ae)
         MutexAutoLock lock(mQueueLock);
         EVLOG("nsAppShell::PostEvent %p %d", ae, ae->Type());
         switch (ae->Type()) {
-        case AndroidGeckoEvent::SURFACE_DESTROYED:
-            // Give priority to this event, and discard any pending
-            // SURFACE_CREATED events.
-            mEventQueue.InsertElementAt(0, ae);
-            AndroidGeckoEvent *event;
-            for (int i = mEventQueue.Length() - 1; i >= 1; i--) {
-                event = mEventQueue[i];
-                if (event->Type() == AndroidGeckoEvent::SURFACE_CREATED) {
-                    EVLOG("nsAppShell: Dropping old SURFACE_CREATED event at %p %d", event, i);
-                    mEventQueue.RemoveElementAt(i);
-                    delete event;
-                }
-            }
-            break;
-
         case AndroidGeckoEvent::COMPOSITOR_CREATE:
         case AndroidGeckoEvent::COMPOSITOR_PAUSE:
         case AndroidGeckoEvent::COMPOSITOR_RESUME:
