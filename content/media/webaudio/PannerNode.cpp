@@ -117,7 +117,8 @@ public:
   }
 
   void ComputeAzimuthAndElevation(float& aAzimuth, float& aElevation);
-  void DistanceGain(AudioChunk* aChunk, float aGain);
+  void DistanceAndConeGain(AudioChunk* aChunk, float aGain);
+  float ComputeConeGain();
 
   void GainMonoToStereo(const AudioChunk& aInput, AudioChunk* aOutput,
                         float aGainL, float aGainR);
@@ -226,7 +227,7 @@ void
 PannerNodeEngine::EqualPowerPanningFunction(const AudioChunk& aInput,
                                             AudioChunk* aOutput)
 {
-  float azimuth, elevation, gainL, gainR, normalizedAzimuth, distance, distanceGain;
+  float azimuth, elevation, gainL, gainR, normalizedAzimuth, distance, distanceGain, coneGain;
   int inputChannels = aInput.mChannelData.Length();
   ThreeDPoint distanceVec;
 
@@ -242,6 +243,7 @@ PannerNodeEngine::EqualPowerPanningFunction(const AudioChunk& aInput,
   AllocateAudioBlock(2, aOutput);
 
   ComputeAzimuthAndElevation(azimuth, elevation);
+  coneGain = ComputeConeGain();
 
   // The following algorithm is described in the spec.
   // Clamp azimuth in the [-90, 90] range.
@@ -281,7 +283,7 @@ PannerNodeEngine::EqualPowerPanningFunction(const AudioChunk& aInput,
     GainStereoToStereo(aInput, aOutput, gainL, gainR, azimuth);
   }
 
-  DistanceGain(aOutput, distanceGain);
+  DistanceAndConeGain(aOutput, distanceGain * coneGain);
 }
 
 void
@@ -308,7 +310,7 @@ PannerNodeEngine::GainStereoToStereo(const AudioChunk& aInput, AudioChunk* aOutp
 }
 
 void
-PannerNodeEngine::DistanceGain(AudioChunk* aChunk, float aGain)
+PannerNodeEngine::DistanceAndConeGain(AudioChunk* aChunk, float aGain)
 {
   float* samples = static_cast<float*>(const_cast<void*>(*aChunk->mChannelData.Elements()));
   uint32_t channelCount = aChunk->mChannelData.Length();
@@ -369,6 +371,48 @@ PannerNodeEngine::ComputeAzimuthAndElevation(float& aAzimuth, float& aElevation)
   } else if (aElevation < -90) {
     aElevation = -180 - aElevation;
   }
+}
+
+// This algorithm is described in the WebAudio spec.
+float
+PannerNodeEngine::ComputeConeGain()
+{
+  // Omnidirectional source
+  if (mOrientation.IsZero() || ((mConeInnerAngle == 360) && (mConeOuterAngle == 360))) {
+    return 1;
+  }
+
+  // Normalized source-listener vector
+  ThreeDPoint sourceToListener = mListenerPosition - mPosition;
+  sourceToListener.Normalize();
+
+  ThreeDPoint normalizedSourceOrientation = mOrientation;
+  normalizedSourceOrientation.Normalize();
+
+  // Angle between the source orientation vector and the source-listener vector
+  double dotProduct = sourceToListener.DotProduct(normalizedSourceOrientation);
+  double angle = 180 * acos(dotProduct) / M_PI;
+  double absAngle = fabs(angle);
+
+  // Divide by 2 here since API is entire angle (not half-angle)
+  double absInnerAngle = fabs(mConeInnerAngle) / 2;
+  double absOuterAngle = fabs(mConeOuterAngle) / 2;
+  double gain = 1;
+
+  if (absAngle <= absInnerAngle) {
+    // No attenuation
+    gain = 1;
+  } else if (absAngle >= absOuterAngle) {
+    // Max attenuation
+    gain = mConeOuterGain;
+  } else {
+    // Between inner and outer cones
+    // inner -> outer, x goes from 0 -> 1
+    double x = (absAngle - absInnerAngle) / (absOuterAngle - absInnerAngle);
+    gain = (1 - x) + mConeOuterGain * x;
+  }
+
+  return gain;
 }
 
 }
