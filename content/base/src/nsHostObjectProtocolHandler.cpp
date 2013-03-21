@@ -190,9 +190,17 @@ nsHostObjectProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 
   nsCOMPtr<nsISupports> owner = do_QueryInterface(info->mPrincipal);
 
-  nsAutoString type;
+  nsString type;
   rv = blob->GetType(type);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMFile> file = do_QueryInterface(info->mObject);
+  if (file) {
+    nsString filename;
+    rv = file->GetName(filename);
+    NS_ENSURE_SUCCESS(rv, rv);
+    channel->SetContentDispositionFilename(filename);
+  }
 
   uint64_t size;
   rv = blob->GetSize(&size);
