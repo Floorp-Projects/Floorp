@@ -11,7 +11,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES := \
   test_CharacterData-remove.html.json \
-  test_DOMImplementation-createHTMLDocument.html.json \
   test_Document-createElementNS.html.json \
   test_Document-getElementsByTagName.html.json \
   test_DocumentType-remove.html.json \
