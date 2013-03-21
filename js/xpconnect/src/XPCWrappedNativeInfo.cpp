@@ -14,8 +14,7 @@
 
 // static
 JSBool
-XPCNativeMember::GetCallInfo(XPCCallContext& ccx,
-                             JSObject* funobj,
+XPCNativeMember::GetCallInfo(JSObject* funobj,
                              XPCNativeInterface** pInterface,
                              XPCNativeMember**    pMember)
 {
