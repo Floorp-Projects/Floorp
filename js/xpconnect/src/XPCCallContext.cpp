@@ -455,8 +455,9 @@ XPCLazyCallContext::AssertContextIsTopOfStack(JSContext* cx)
 #endif
 
 XPCWrappedNative*
-XPCCallContext::UnwrapThisIfAllowed(JSObject *obj, JSObject *fun, unsigned argc)
+XPCCallContext::UnwrapThisIfAllowed(JSObject *object, JSObject *fun, unsigned argc)
 {
+    JS::Rooted<JSObject *> obj(mJSContext, object);
     // We should only get here for objects that aren't safe to unwrap.
     MOZ_ASSERT(!js::UnwrapObjectChecked(obj));
     MOZ_ASSERT(js::IsObjectInContextCompartment(obj, mJSContext));
@@ -501,7 +502,8 @@ XPCCallContext::UnwrapThisIfAllowed(JSObject *obj, JSObject *fun, unsigned argc)
     js::Wrapper::Action act = set ? js::Wrapper::SET : js::Wrapper::GET;
     js::Wrapper *handler = js::Wrapper::wrapperHandler(obj);
     bool ignored;
-    if (!handler->enter(mJSContext, obj, member->GetName(), act, &ignored))
+    JS::Rooted<jsid> id(mJSContext, member->GetName());
+    if (!handler->enter(mJSContext, obj, id, act, &ignored))
         return nullptr;
 
     // Ok, this call is safe.
