@@ -3,7 +3,6 @@
 <head>
   <meta charset="utf-8">
   <title>Test for Bug 341604</title>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 
@@ -14,7 +13,6 @@
 
 <script>
   function doStuff() {
-    console.log("file_iframe_sandbox_window_open_fail.html");
     window.opener.ok(false, "sandboxed documents should NOT be able to open windows");
     self.close();
   }

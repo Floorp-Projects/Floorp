@@ -9,7 +9,7 @@
 <script type="application/javascript">
 function doTest() {
   sendMouseEvent({type:'click'}, 'anchor');
-  window.parent.postMessage("test attempted", "*");
+  window.parent.postMessage({type: "attempted"}, "*");
 }
 </script>
 <body onload="doTest()">

@@ -1,0 +1,156 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=766282
+Implement HTML5 sandbox allow-popuos directive for IFRAMEs - inheritance tests
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Tests for Bug 766282</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+
+<script type="application/javascript">
+
+SimpleTest.expectAssertions(0, 5);
+SimpleTest.waitForExplicitFinish();
+
+// A postMessage handler that is used by sandboxed iframes without
+// 'allow-same-origin' to communicate pass/fail back to this main page.
+window.addEventListener("message", receiveMessage, false);
+
+function receiveMessage(event) {
+  switch (event.data.type) {
+    case "attempted":
+      testAttempted();
+      break;
+    case "ok":
+      ok_wrapper(event.data.ok, event.data.desc, event.data.addToAttempted);
+      break;
+    default:
+      // allow for old style message
+      if (event.data.ok != undefined) {
+        ok_wrapper(event.data.ok, event.data.desc, event.data.addToAttempted);
+      }
+  }
+}
+
+var iframesWithWindowsToClose = new Array();
+
+var attemptedTests = 0;
+var passedTests = 0;
+var totalTestsToPass = 15;
+var totalTestsToAttempt = 21;
+
+function ok_wrapper(result, desc, addToAttempted = true) {
+  ok(result, desc);
+
+  if (result) {
+    passedTests++;
+  }
+
+  if (addToAttempted) {
+    testAttempted();
+  }
+}
+
+// Added so that tests that don't register unless they fail,
+// can at least notify that they've attempted to run.
+function testAttempted() {
+  attemptedTests++;
+  if (attemptedTests == totalTestsToAttempt) {
+    // Make sure all tests have had a chance to complete.
+    setTimeout(function() {finish();}, 1000);
+  }
+}
+
+var finishCalled = false;
+
+function finish() {
+  if (!finishCalled) {
+    finishCalled = true;
+    is(passedTests, totalTestsToPass, "There are " + totalTestsToPass + " inheritance tests that should pass");
+
+    closeWindows();
+
+    SimpleTest.finish();
+  }
+}
+
+function checkTestsFinished() {
+  // If our own finish() has not been called, probably failed due to a timeout, so close remaining windows.
+  if (!finishCalled) {
+    closeWindows();
+  }
+}
+
+function closeWindows() {
+  for (var i = 0; i < iframesWithWindowsToClose.length; i++) {
+    document.getElementById(iframesWithWindowsToClose[i]).contentWindow.postMessage({type: "closeWindows"}, "*");
+  }
+}
+
+function doTest() {
+  // passes if good and fails if bad
+  // 1,2,3) A window opened from inside an iframe that has sandbox = "allow-scripts allow-popups
+  // allow-same-origin" should not have its origin sandbox flag set and be able to access document.cookie.
+  // (Done by file_iframe_sandbox_k_if5.html opened from file_iframe_sandbox_k_if4.html)
+  // This is repeated for 3 different ways of opening the window,
+  // see file_iframe_sandbox_k_if4.html for details.
+
+  // passes if good
+  // 4,5,6) A window opened from inside an iframe that has sandbox = "allow-scripts allow-popups
+  // allow-top-navigation" should not have its top-level navigation sandbox flag set and be able to
+  // navigate top. (Done by file_iframe_sandbox_k_if5.html (and if6) opened from
+  // file_iframe_sandbox_k_if4.html).  This is repeated for 3 different ways of opening the window,
+  // see file_iframe_sandbox_k_if4.html for details.
+
+  // passes if good
+  // 7,8,9) A window opened from inside an iframe that has sandbox = "allow-scripts allow-popups
+  // all-forms" should not have its forms sandbox flag set and be able to submit forms.
+  // (Done by file_iframe_sandbox_k_if7.html opened from file_iframe_sandbox_k_if4.html)
+  // This is repeated for 3 different ways of opening the window,
+  // see file_iframe_sandbox_k_if4.html for details.
+
+  // passes if good
+  // 10,11,12) Make sure that the sandbox flags copied to a new browsing context are taken from the
+  // current active document not the browsing context (iframe / docShell).
+  // This is done by removing allow-same-origin and calling doSubOpens from file_iframe_sandbox_k_if8.html,
+  // which opens file_iframe_sandbox_k_if9.html in 3 different ways.
+  // It then navigates to file_iframe_sandbox_k_if1.html to run tests 13 - 21 below.
+  var if_8_1 = document.getElementById('if_8_1');
+  if_8_1.sandbox = 'allow-scripts allow-popups';
+  if_8_1.contentWindow.doSubOpens();
+
+  // passes if good and fails if bad
+  // 13,14,15) A window opened from inside an iframe that has sandbox = "allow-scripts allow-popups"
+  // should have its origin sandbox flag set and not be able to access document.cookie.
+  // This is done by file_iframe_sandbox_k_if8.html navigating to file_iframe_sandbox_k_if1.html
+  // after allow-same-origin has been removed from iframe if_8_1.  file_iframe_sandbox_k_if1.html
+  // opens file_iframe_sandbox_k_if2.html in 3 different ways to perform the tests.
+  iframesWithWindowsToClose.push("if_8_1");
+
+  // fails if bad
+  // 16,17,18) A window opened from inside an iframe that has sandbox = "allow-scripts allow-popups"
+  // should have its forms sandbox flag set and not be able to submit forms.
+  // This is done by file_iframe_sandbox_k_if2.html, see test 10 for details of how this is opened.
+
+  // fails if bad
+  // 19,20,21) A window opened from inside an iframe that has sandbox = "allow-scripts allow-popups"
+  // should have its top-level navigation sandbox flag set and not be able to navigate top.
+  // This is done by file_iframe_sandbox_k_if2.html, see test 10 for details of how this is opened.
+}
+
+addLoadEvent(doTest);
+</script>
+
+<body onunload="checkTestsFinished()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=766282">Mozilla Bug 766282</a> - Implement HTML5 sandbox allow-popups directive for IFRAMEs
+<p id="display"></p>
+<div id="content">
+<iframe sandbox="allow-scripts allow-popups allow-same-origin allow-forms allow-top-navigation" id="if_4" src="file_iframe_sandbox_k_if4.html" height="10" width="10"></iframe>
+<iframe sandbox="allow-scripts allow-popups allow-same-origin" id="if_8_1" src="file_iframe_sandbox_k_if8.html" height="10" width="10"></iframe>
+</div>
+</body>
+</html>
