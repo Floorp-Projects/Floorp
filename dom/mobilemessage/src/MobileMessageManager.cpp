@@ -337,6 +337,23 @@ MobileMessageManager::GetThreads(nsIDOMDOMCursor** aCursor)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+MobileMessageManager::RetrieveMMS(int32_t id,
+                                  nsIDOMDOMRequest** aRequest)
+{
+    nsCOMPtr<nsIMmsService> mmsService = do_GetService(RIL_MMSSERVICE_CONTRACTID);
+    NS_ENSURE_TRUE(mmsService, NS_ERROR_FAILURE);
+
+    nsRefPtr<DOMRequest> request = new DOMRequest(GetOwner());
+    nsCOMPtr<nsIMobileMessageCallback> msgCallback = new MobileMessageCallback(request);
+
+    nsresult rv = mmsService->Retrieve(id, msgCallback);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    request.forget(aRequest);
+    return NS_OK;
+}
+
 nsresult
 MobileMessageManager::DispatchTrustedSmsEventToSelf(const nsAString& aEventName,
                                                     nsIDOMMozSmsMessage* aMessage)
