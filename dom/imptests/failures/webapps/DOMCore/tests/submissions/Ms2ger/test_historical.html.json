@@ -10,7 +10,6 @@
   "Historical DOM features must be removed: setAttributeNode": true,
   "Historical DOM features must be removed: removeAttributeNode": true,
   "DocumentType member must be nuked: internalSubset": true,
-  "Node member must be nuked: hasAttributes": true,
   "Node member must be nuked: getUserData": true,
   "Node member must be nuked: setUserData": true
 }
