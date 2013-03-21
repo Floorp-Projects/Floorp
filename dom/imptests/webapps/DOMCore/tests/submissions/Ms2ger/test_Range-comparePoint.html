@@ -8,7 +8,7 @@
 test(function() {
   var r = document.createRange();
   r.detach()
-  assert_throws("INVALID_STATE_ERR", function() { r.comparePoint(document.body, 0) })
+  assert_equals(r.comparePoint(document.body, 0), 1)
 })
 test(function() {
   var r = document.createRange();
