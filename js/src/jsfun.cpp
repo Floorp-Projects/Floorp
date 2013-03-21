@@ -1060,11 +1060,11 @@ JSFunction::initializeLazyScript(JSContext *cx)
 {
     JS_ASSERT(isInterpretedLazy());
     JSFunctionSpec *fs = static_cast<JSFunctionSpec *>(getExtendedSlot(0).toPrivate());
+    Rooted<JSFunction*> self(cx, this);
     RootedAtom funAtom(cx, Atomize(cx, fs->selfHostedName, strlen(fs->selfHostedName)));
     if (!funAtom)
         return false;
     Rooted<PropertyName *> funName(cx, funAtom->asPropertyName());
-    Rooted<JSFunction*> self(cx, this);
     return cx->runtime->cloneSelfHostedFunctionScript(cx, funName, self);
 }
 
