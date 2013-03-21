@@ -3117,8 +3117,8 @@ nsDOMClassInfo::ResolveConstructor(JSContext *cx, JSObject *obj,
     // window.classname, just fall through and let the JS engine
     // return the Object constructor.
 
-    if (!::JS_DefinePropertyById(cx, obj, sConstructor_id, val, nullptr, nullptr,
-                                 JSPROP_ENUMERATE)) {
+    if (!::JS_DefinePropertyById(cx, obj, sConstructor_id, val, JS_PropertyStub,
+                                 JS_StrictPropertyStub, JSPROP_ENUMERATE)) {
       return NS_ERROR_UNEXPECTED;
     }
 
@@ -3687,7 +3687,7 @@ nsWindowSH::GlobalScopePolluterNewResolve(JSContext *cx, JSHandleObject obj,
     NS_ENSURE_SUCCESS(rv, JS_FALSE);
 
     if (!JS_WrapValue(cx, &v) ||
-        !JS_DefinePropertyById(cx, obj, id, v, nullptr, nullptr, 0)) {
+        !JS_DefinePropertyById(cx, obj, id, v, JS_PropertyStub, JS_StrictPropertyStub, 0)) {
       return JS_FALSE;
     }
 
@@ -4011,7 +4011,8 @@ DefineInterfaceConstants(JSContext *cx, JSObject *obj, const nsIID *aIID)
       }
     }
 
-    if (!::JS_DefineProperty(cx, obj, c->GetName(), v, nullptr, nullptr,
+    if (!::JS_DefineProperty(cx, obj, c->GetName(), v,
+                             JS_PropertyStub, JS_StrictPropertyStub,
                              JSPROP_ENUMERATE | JSPROP_READONLY |
                              JSPROP_PERMANENT)) {
       return NS_ERROR_UNEXPECTED;
@@ -4120,7 +4121,8 @@ IDBConstantGetter(JSContext *cx, JSHandleObject obj, JSHandleId id, JSMutableHan
   if (!xpc::StringToJsval(cx, valStr, &value)) {
     return JS_FALSE;
   }
-  if (!::JS_DefineProperty(cx, obj, c.name, value, nullptr, nullptr,
+  if (!::JS_DefineProperty(cx, obj, c.name, value,
+                           JS_PropertyStub, JS_StrictPropertyStub,
                            JSPROP_ENUMERATE)) {
     return JS_FALSE;
   }
@@ -4154,7 +4156,7 @@ DefineIDBInterfaceConstants(JSContext *cx, JSObject *obj, const nsIID *aIID)
     }
 
     if (!JS_DefineProperty(cx, obj, c.name, JSVAL_VOID,
-                           IDBConstantGetter, nullptr,
+                           IDBConstantGetter, JS_StrictPropertyStub,
                            JSPROP_ENUMERATE)) {
       return NS_ERROR_UNEXPECTED;
     }
@@ -4202,8 +4204,8 @@ public:
     JSBool ok = JS_WrapValue(cx, &thisAsVal) &&
       ::JS_DefineUCProperty(cx, target,
                             reinterpret_cast<const jschar *>(mClassName),
-                            NS_strlen(mClassName), thisAsVal, nullptr,
-                            nullptr, 0);
+                            NS_strlen(mClassName), thisAsVal, JS_PropertyStub,
+                            JS_StrictPropertyStub, 0);
 
     return ok ? NS_OK : NS_ERROR_UNEXPECTED;
   }
@@ -4811,7 +4813,8 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
 
   // Per ECMA, the prototype property is {DontEnum, DontDelete, ReadOnly}
   if (!JS_WrapValue(cx, &v) ||
-      !JS_DefineProperty(cx, class_obj, "prototype", v, nullptr, nullptr,
+      !JS_DefineProperty(cx, class_obj, "prototype", v,
+                         JS_PropertyStub, JS_StrictPropertyStub,
                          JSPROP_PERMANENT | JSPROP_READONLY)) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -4918,8 +4921,8 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
           ac.destroy();
           if (!JS_WrapObject(cx, &interfaceObject) ||
               !JS_DefinePropertyById(cx, obj, id,
-                                     JS::ObjectValue(*interfaceObject), nullptr,
-                                     nullptr, 0)) {
+                                     JS::ObjectValue(*interfaceObject), JS_PropertyStub,
+                                     JS_StrictPropertyStub, 0)) {
             return NS_ERROR_FAILURE;
           }
         }
@@ -5103,7 +5106,8 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
       return NS_ERROR_UNEXPECTED;
     }
 
-    JSBool ok = ::JS_DefinePropertyById(cx, obj, id, prop_val, nullptr, nullptr,
+    JSBool ok = ::JS_DefinePropertyById(cx, obj, id, prop_val,
+                                        JS_PropertyStub, JS_StrictPropertyStub,
                                         JSPROP_ENUMERATE);
 
     *did_resolve = true;
@@ -5325,7 +5329,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     NS_ENSURE_SUCCESS(rv, rv);
 
     JSBool ok = JS_WrapValue(cx, &v) &&
-                JS_DefinePropertyById(cx, obj, id, v, nullptr,
+                JS_DefinePropertyById(cx, obj, id, v, JS_PropertyStub,
                                       LocationSetterUnwrapper,
                                       JSPROP_PERMANENT | JSPROP_ENUMERATE);
 
@@ -5351,7 +5355,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
     // Hold on to the top window object as a global property so we
     // don't need to worry about losing expando properties etc.
-    if (!JS_DefinePropertyById(cx, obj, id, v, nullptr, nullptr,
+    if (!JS_DefinePropertyById(cx, obj, id, v, JS_PropertyStub, JS_StrictPropertyStub,
                                JSPROP_READONLY | JSPROP_PERMANENT |
                                JSPROP_ENUMERATE)) {
       return NS_ERROR_FAILURE;
@@ -5405,7 +5409,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
     if (!::JS_DefinePropertyById(cx, windowObj, id, JSVAL_VOID,
                                  JS_DATA_TO_FUNC_PTR(JSPropertyOp, funObj),
-                                 nullptr,
+                                 JS_StrictPropertyStub,
                                  JSPROP_ENUMERATE | JSPROP_GETTER |
                                  JSPROP_SHARED)) {
       return NS_ERROR_FAILURE;
@@ -5446,7 +5450,8 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
       // Hold on to the navigator object as a global property so we
       // don't need to worry about losing expando properties etc.
-      if (!::JS_DefinePropertyById(cx, obj, id, v, nullptr, nullptr,
+      if (!::JS_DefinePropertyById(cx, obj, id, v,
+                                   JS_PropertyStub, JS_StrictPropertyStub,
                                    JSPROP_READONLY | JSPROP_PERMANENT |
                                    JSPROP_ENUMERATE)) {
         return NS_ERROR_FAILURE;
@@ -5475,7 +5480,8 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
         // define it ourselves.
 
         *_retval = JS_WrapValue(cx, &v) &&
-                   JS_DefineProperty(cx, obj, "document", v, NULL, NULL,
+                   JS_DefineProperty(cx, obj, "document", v,
+                                     JS_PropertyStub, JS_StrictPropertyStub,
                                      JSPROP_READONLY | JSPROP_ENUMERATE);
         if (!*_retval) {
           return NS_ERROR_UNEXPECTED;
@@ -5738,7 +5744,8 @@ nsNavigatorSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return NS_ERROR_UNEXPECTED;
   }
 
-  JSBool ok = ::JS_DefinePropertyById(cx, obj, id, prop_val, nullptr, nullptr,
+  JSBool ok = ::JS_DefinePropertyById(cx, obj, id, prop_val,
+                                      JS_PropertyStub, JS_StrictPropertyStub,
                                       JSPROP_ENUMERATE);
 
   *_retval = true;
@@ -6548,7 +6555,7 @@ nsDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                     getter_AddRefs(holder));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    JSBool ok = ::JS_DefinePropertyById(cx, obj, id, v, nullptr,
+    JSBool ok = ::JS_DefinePropertyById(cx, obj, id, v, JS_PropertyStub,
                                         LocationSetter<nsIDOMDocument>,
                                         JSPROP_PERMANENT | JSPROP_ENUMERATE);
 
