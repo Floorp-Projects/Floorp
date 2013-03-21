@@ -7,7 +7,6 @@
 #include "DecoderTraits.h"
 #include "MediaDecoder.h"
 #include "nsCharSeparatedTokenizer.h"
-#include "nsIPrincipal.h"
 
 #ifdef MOZ_MEDIA_PLUGINS
 #include "MediaPluginHost.h"
@@ -196,10 +195,9 @@ IsGStreamerSupportedType(const nsACString& aMimeType)
 #endif
 
 #ifdef MOZ_WIDGET_GONK
-static const char* const gOmxTypes[7] = {
+static const char* const gOmxTypes[6] = {
   "audio/mpeg",
   "audio/mp4",
-  "audio/amr",
   "video/mp4",
   "video/3gpp",
   "video/quicktime",
@@ -401,21 +399,6 @@ DecoderTraits::CreateDecoder(const nsACString& aType, MediaDecoderOwner* aOwner)
 #endif
 #ifdef MOZ_WIDGET_GONK
   if (IsOmxSupportedType(aType)) {
-    // AMR audio is enabled for MMS, but we are discouraging Web and App
-    // developers from using AMR, thus we only allow AMR to be played on WebApps.
-    if (aType.EqualsASCII("audio/amr") || aType.EqualsASCII("video/3gpp")) {
-      nsHTMLMediaElement* element = aOwner->GetMediaElement();
-      if (!element) {
-        return nullptr;
-      }
-      nsIPrincipal* principal = element->NodePrincipal();
-      if (!principal) {
-        return nullptr;
-      }
-      if (principal->GetAppStatus() < nsIPrincipal::APP_STATUS_PRIVILEGED) {
-        return nullptr;
-      }
-    }
     decoder = new MediaOmxDecoder();
   }
 #endif
