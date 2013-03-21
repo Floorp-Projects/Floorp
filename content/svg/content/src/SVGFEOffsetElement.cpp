@@ -4,19 +4,27 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/SVGFEOffsetElement.h"
+#include "mozilla/dom/SVGFEOffsetElementBinding.h"
+#include "nsSVGFilterInstance.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEOffset)
 
 namespace mozilla {
 namespace dom {
 
-nsSVGElement::NumberInfo nsSVGFEOffsetElement::sNumberInfo[2] =
+JSObject*
+SVGFEOffsetElement::WrapNode(JSContext* aCx, JSObject* aScope)
+{
+  return SVGFEOffsetElementBinding::Wrap(aCx, aScope, this);
+}
+
+nsSVGElement::NumberInfo SVGFEOffsetElement::sNumberInfo[2] =
 {
   { &nsGkAtoms::dx, 0, false },
   { &nsGkAtoms::dy, 0, false }
 };
 
-nsSVGElement::StringInfo nsSVGFEOffsetElement::sStringInfo[2] =
+nsSVGElement::StringInfo SVGFEOffsetElement::sStringInfo[2] =
 {
   { &nsGkAtoms::result, kNameSpaceID_None, true },
   { &nsGkAtoms::in, kNameSpaceID_None, true }
@@ -25,49 +33,43 @@ nsSVGElement::StringInfo nsSVGFEOffsetElement::sStringInfo[2] =
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ADDREF_INHERITED(nsSVGFEOffsetElement,nsSVGFEOffsetElementBase)
-NS_IMPL_RELEASE_INHERITED(nsSVGFEOffsetElement,nsSVGFEOffsetElementBase)
+NS_IMPL_ADDREF_INHERITED(SVGFEOffsetElement,SVGFEOffsetElementBase)
+NS_IMPL_RELEASE_INHERITED(SVGFEOffsetElement,SVGFEOffsetElementBase)
 
-DOMCI_NODE_DATA(SVGFEOffsetElement, nsSVGFEOffsetElement)
-
-NS_INTERFACE_TABLE_HEAD(nsSVGFEOffsetElement)
-  NS_NODE_INTERFACE_TABLE5(nsSVGFEOffsetElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement,
-                           nsIDOMSVGFilterPrimitiveStandardAttributes,
-                           nsIDOMSVGFEOffsetElement)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEOffsetElement)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGFEOffsetElementBase)
+NS_INTERFACE_TABLE_HEAD(SVGFEOffsetElement)
+  NS_NODE_INTERFACE_TABLE3(SVGFEOffsetElement, nsIDOMNode, nsIDOMElement,
+                           nsIDOMSVGElement)
+NS_INTERFACE_MAP_END_INHERITING(SVGFEOffsetElementBase)
 
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
 
-NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEOffsetElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEOffsetElement)
 
 
 //----------------------------------------------------------------------
-// nsIDOMSVGFEOffsetElement methods
 
-/* readonly attribute nsIDOMSVGAnimatedString in1; */
-NS_IMETHODIMP nsSVGFEOffsetElement::GetIn1(nsIDOMSVGAnimatedString * *aIn)
+already_AddRefed<nsIDOMSVGAnimatedString>
+SVGFEOffsetElement::In1()
 {
-  return mStringAttributes[IN1].ToDOMAnimatedString(aIn, this);
+  return mStringAttributes[IN1].ToDOMAnimatedString(this);
 }
 
-/* readonly attribute nsIDOMSVGAnimatedNumber dx; */
-NS_IMETHODIMP nsSVGFEOffsetElement::GetDx(nsIDOMSVGAnimatedNumber * *aDx)
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGFEOffsetElement::Dx()
 {
-  return mNumberAttributes[DX].ToDOMAnimatedNumber(aDx, this);
+  return mNumberAttributes[DX].ToDOMAnimatedNumber(this);
 }
 
-/* readonly attribute nsIDOMSVGAnimatedNumber dy; */
-NS_IMETHODIMP nsSVGFEOffsetElement::GetDy(nsIDOMSVGAnimatedNumber * *aDy)
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGFEOffsetElement::Dy()
 {
-  return mNumberAttributes[DY].ToDOMAnimatedNumber(aDy, this);
+  return mNumberAttributes[DY].ToDOMAnimatedNumber(this);
 }
 
 nsIntPoint
-nsSVGFEOffsetElement::GetOffset(const nsSVGFilterInstance& aInstance)
+SVGFEOffsetElement::GetOffset(const nsSVGFilterInstance& aInstance)
 {
   return nsIntPoint(int32_t(aInstance.GetPrimitiveNumber(
                               SVGContentUtils::X, &mNumberAttributes[DX])),
@@ -76,10 +78,10 @@ nsSVGFEOffsetElement::GetOffset(const nsSVGFilterInstance& aInstance)
 }
 
 nsresult
-nsSVGFEOffsetElement::Filter(nsSVGFilterInstance *instance,
-                             const nsTArray<const Image*>& aSources,
-                             const Image* aTarget,
-                             const nsIntRect& rect)
+SVGFEOffsetElement::Filter(nsSVGFilterInstance* instance,
+                           const nsTArray<const Image*>& aSources,
+                           const Image* aTarget,
+                           const nsIntRect& rect)
 {
   nsIntPoint offset = GetOffset(*instance);
 
@@ -95,10 +97,10 @@ nsSVGFEOffsetElement::Filter(nsSVGFilterInstance *instance,
 }
 
 bool
-nsSVGFEOffsetElement::AttributeAffectsRendering(int32_t aNameSpaceID,
-                                                nsIAtom* aAttribute) const
+SVGFEOffsetElement::AttributeAffectsRendering(int32_t aNameSpaceID,
+                                              nsIAtom* aAttribute) const
 {
-  return nsSVGFEOffsetElementBase::AttributeAffectsRendering(aNameSpaceID, aAttribute) ||
+  return SVGFEOffsetElementBase::AttributeAffectsRendering(aNameSpaceID, aAttribute) ||
          (aNameSpaceID == kNameSpaceID_None &&
           (aAttribute == nsGkAtoms::in ||
            aAttribute == nsGkAtoms::dx ||
@@ -106,27 +108,27 @@ nsSVGFEOffsetElement::AttributeAffectsRendering(int32_t aNameSpaceID,
 }
 
 void
-nsSVGFEOffsetElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
+SVGFEOffsetElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
 {
   aSources.AppendElement(nsSVGStringInfo(&mStringAttributes[IN1], this));
 }
 
 nsIntRect
-nsSVGFEOffsetElement::ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBoxes,
+SVGFEOffsetElement::ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBoxes,
         const nsSVGFilterInstance& aInstance)
 {
   return aSourceBBoxes[0] + GetOffset(aInstance);
 }
 
 nsIntRect
-nsSVGFEOffsetElement::ComputeChangeBBox(const nsTArray<nsIntRect>& aSourceChangeBoxes,
-                                        const nsSVGFilterInstance& aInstance)
+SVGFEOffsetElement::ComputeChangeBBox(const nsTArray<nsIntRect>& aSourceChangeBoxes,
+                                      const nsSVGFilterInstance& aInstance)
 {
   return aSourceChangeBoxes[0] + GetOffset(aInstance);
 }
 
 void
-nsSVGFEOffsetElement::ComputeNeededSourceBBoxes(const nsIntRect& aTargetBBox,
+SVGFEOffsetElement::ComputeNeededSourceBBoxes(const nsIntRect& aTargetBBox,
           nsTArray<nsIntRect>& aSourceBBoxes, const nsSVGFilterInstance& aInstance)
 {
   aSourceBBoxes[0] = aTargetBBox - GetOffset(aInstance);
@@ -136,14 +138,14 @@ nsSVGFEOffsetElement::ComputeNeededSourceBBoxes(const nsIntRect& aTargetBBox,
 // nsSVGElement methods
 
 nsSVGElement::NumberAttributesInfo
-nsSVGFEOffsetElement::GetNumberInfo()
+SVGFEOffsetElement::GetNumberInfo()
 {
   return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
                               ArrayLength(sNumberInfo));
 }
 
 nsSVGElement::StringAttributesInfo
-nsSVGFEOffsetElement::GetStringInfo()
+SVGFEOffsetElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               ArrayLength(sStringInfo));
