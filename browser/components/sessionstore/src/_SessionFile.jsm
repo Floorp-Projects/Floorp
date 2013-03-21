@@ -204,13 +204,20 @@ let SessionFileInternal = {
     let self = this;
     return TaskUtils.spawn(function task() {
       TelemetryStopwatch.start("FX_SESSION_RESTORE_WRITE_FILE_MS", refObj);
+      TelemetryStopwatch.start("FX_SESSION_RESTORE_WRITE_FILE_LONGEST_OP_MS", refObj);
 
       let bytes = gEncoder.encode(aData);
 
       try {
-        yield OS.File.writeAtomic(self.path, bytes, {tmpPath: self.path + ".tmp"});
+        let promise = OS.File.writeAtomic(self.path, bytes, {tmpPath: self.path + ".tmp"});
+        // At this point, we measure how long we stop the main thread
+        TelemetryStopwatch.finish("FX_SESSION_RESTORE_WRITE_FILE_LONGEST_OP_MS", refObj);
+
+        // Now wait for the result and measure how long we had to wait for the result
+        yield promise;
         TelemetryStopwatch.finish("FX_SESSION_RESTORE_WRITE_FILE_MS", refObj);
       } catch (ex) {
+        TelemetryStopwatch.cancel("FX_SESSION_RESTORE_WRITE_FILE_LONGEST_OP_MS", refObj);
         TelemetryStopwatch.cancel("FX_SESSION_RESTORE_WRITE_FILE_MS", refObj);
         Cu.reportError("Could not write session state file " + self.path
                        + ": " + aReason);

@@ -13,6 +13,10 @@ let CssHtmlTree = tempScope.CssHtmlTree;
 let gDevTools = tempScope.gDevTools;
 Cu.import("resource:///modules/devtools/Target.jsm", tempScope);
 let TargetFactory = tempScope.TargetFactory;
+let {
+  editableField,
+  getInplaceEditorForSpan: inplaceEditor
+} = Cu.import("resource:///modules/devtools/InplaceEditor.jsm", {});
 Components.utils.import("resource://gre/modules/devtools/Console.jsm", tempScope);
 let console = tempScope.console;
 
