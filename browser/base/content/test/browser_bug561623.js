@@ -8,15 +8,15 @@ function test() {
     let tooltip = document.getElementById("aHTMLTooltip");
     let i = doc.getElementById("i");
 
-    ok(!FillInHTMLTooltip(i),
+    ok(!tooltip.fillInPageTooltip(i),
        "No tooltip should be shown when @title is null");
 
     i.title = "foo";
-    ok(FillInHTMLTooltip(i),
+    ok(tooltip.fillInPageTooltip(i),
        "A tooltip should be shown when @title is not the empty string");
 
     i.pattern = "bar";
-    ok(FillInHTMLTooltip(i),
+    ok(tooltip.fillInPageTooltip(i),
        "A tooltip should be shown when @title is not the empty string");
 
     gBrowser.removeCurrentTab();
