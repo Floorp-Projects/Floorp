@@ -89,7 +89,6 @@ TARGET_DEPTH = ..
 include $(srcdir)/automation-build.mk
 
 _LEAKTEST_DIR = $(DEPTH)/_leaktest
-GARBAGE_DIRS += $(_LEAKTEST_DIR)
 
 _LEAKTEST_FILES =    \
 		automation.py \
