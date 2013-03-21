@@ -17,7 +17,6 @@ VPATH = \
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = gtest
 MODULE_NAME = gtest
 LIBRARY_NAME = gtest
 EXPORT_LIBRARY = 1

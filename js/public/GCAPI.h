@@ -43,7 +43,8 @@ namespace JS {
     D(INTER_SLICE_GC)                           \
     D(REFRESH_FRAME)                            \
     D(FULL_GC_TIMER)                            \
-    D(SHUTDOWN_CC)
+    D(SHUTDOWN_CC)                              \
+    D(FINISH_LARGE_EVALUTE)
 
 namespace gcreason {
 

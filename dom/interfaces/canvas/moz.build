@@ -10,3 +10,5 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'dom_canvas'
 
+MODULE = 'dom'
+

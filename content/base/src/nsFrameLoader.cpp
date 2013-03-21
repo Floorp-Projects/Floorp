@@ -1572,7 +1572,7 @@ nsFrameLoader::MaybeCreateDocShell()
   }
 
   if (!frameName.IsEmpty()) {
-    mDocShell->SetName(frameName.get());
+    mDocShell->SetName(frameName);
   }
 
   // If our container is a web-shell, inform it that it has a new

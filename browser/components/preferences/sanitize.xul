@@ -20,15 +20,18 @@
             dlgbuttons="accept,cancel,help"
             ondialoghelp="openPrefsHelp()"
             style="width: &dialog.width;;"
-            title="&sanitizePrefs2.title;">
+            title="&sanitizePrefs2.title;"
+            onload="gSanitizeDialog.init();">
 
   <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
+  <script type="application/javascript" src="chrome://browser/content/preferences/sanitize.js"/>
 
   <prefpane id="SanitizeDialogPane"
             helpTopic="prefs-clear-private-data">
 
     <preferences>
-      <preference id="privacy.clearOnShutdown.history"               name="privacy.clearOnShutdown.history"               type="bool"/>
+      <preference id="privacy.clearOnShutdown.history"               name="privacy.clearOnShutdown.history"               type="bool"
+                  onchange="return gSanitizeDialog.onClearHistoryChanged();"/>
       <preference id="privacy.clearOnShutdown.formdata"              name="privacy.clearOnShutdown.formdata"              type="bool"/>
       <preference id="privacy.clearOnShutdown.passwords"             name="privacy.clearOnShutdown.passwords"             type="bool"/>
       <preference id="privacy.clearOnShutdown.downloads"             name="privacy.clearOnShutdown.downloads"             type="bool"/>

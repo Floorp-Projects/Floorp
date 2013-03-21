@@ -10,3 +10,5 @@ XPIDL_SOURCES += [
     'nsISecurityWarningDialogs.idl',
 ]
 
+MODULE = 'pipboot'
+

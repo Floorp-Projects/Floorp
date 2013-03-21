@@ -30,3 +30,5 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'content_base'
 
+MODULE = 'content'
+

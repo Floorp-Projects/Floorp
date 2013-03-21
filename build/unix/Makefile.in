@@ -11,8 +11,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE       = build
-
 SDK_BINARY = run-mozilla.sh
 
 include $(topsrcdir)/config/rules.mk

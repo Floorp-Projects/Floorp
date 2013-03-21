@@ -16,3 +16,5 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
         'nsIMacShellService.idl',
     ]
 
+MODULE = 'shellservice'
+

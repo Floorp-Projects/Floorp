@@ -9,3 +9,5 @@ XPIDL_SOURCES += [
     'nsICaptivePortalDetector.idl',
 ]
 
+MODULE = 'captivedetect'
+

@@ -5,3 +5,6 @@
 
 if CONFIG['OS_ARCH'] in ('Darwin', 'Linux'):
     DIRS += ['dwarf']
+
+MODULE = 'breakpad_common'
+

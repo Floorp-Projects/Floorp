@@ -10,3 +10,5 @@ DIRS += [
 
 TEST_DIRS += ['testing']
 
+MODULE = 'metro'
+

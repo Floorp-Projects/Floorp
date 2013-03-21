@@ -10,8 +10,6 @@ relativesrcdir = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = toolkitShared
-
 EXTRA_PP_JS_MODULES = \
   CertUtils.jsm \
   $(NULL)

@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= simple
 XPI_NAME	= simple
 
 PREF_JS_EXPORTS	= $(srcdir)/simple-prefs.js

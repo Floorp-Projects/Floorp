@@ -21,7 +21,6 @@ relativesrcdir   = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE           = dom
 LIBRARY_NAME     = domsystemgonk_s
 LIBXUL_LIBRARY   = 1
 FORCE_STATIC_LIB = 1
@@ -60,8 +59,6 @@ CPPSRCS += \
   VolumeServiceIOThread.cpp \
   VolumeServiceTest.cpp \
   $(NULL)
-# for our local copy of AudioSystem.h
-LOCAL_INCLUDES += -I$(topsrcdir)/media/libsydneyaudio/src
 EXPORTS = \
   GonkGPSGeolocationProvider.h \
   nsVolume.h \

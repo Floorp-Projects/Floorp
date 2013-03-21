@@ -11,3 +11,5 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'xpautocomplete'
 
+MODULE = 'appcomps'
+

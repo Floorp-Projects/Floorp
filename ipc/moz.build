@@ -16,9 +16,10 @@ if CONFIG['MOZ_B2G_RIL']:
 if CONFIG['MOZ_B2G_BT']:
     DIRS += ['dbus']
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    DIRS += ['netd', 'unixsocket']
-elif CONFIG['OS_ARCH'] == 'Linux':
+if CONFIG['MOZ_B2G_RIL'] or CONFIG['MOZ_B2G_BT']:
     DIRS += ['unixsocket']
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+    DIRS += ['netd']
 
 TOOL_DIRS += ['app']

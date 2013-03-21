@@ -19,15 +19,14 @@ NS_IMPL_FRAMEARENA_HELPERS(nsSVGGeometryFrame)
 //----------------------------------------------------------------------
 // nsIFrame methods
 
-NS_IMETHODIMP
+void
 nsSVGGeometryFrame::Init(nsIContent* aContent,
                          nsIFrame* aParent,
                          nsIFrame* aPrevInFlow)
 {
   AddStateBits(aParent->GetStateBits() &
                (NS_STATE_SVG_NONDISPLAY_CHILD | NS_STATE_SVG_CLIPPATH_CHILD));
-  nsresult rv = nsSVGGeometryFrameBase::Init(aContent, aParent, aPrevInFlow);
-  return rv;
+  nsSVGGeometryFrameBase::Init(aContent, aParent, aPrevInFlow);
 }
 
 //----------------------------------------------------------------------

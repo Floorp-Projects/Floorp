@@ -9,8 +9,6 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = test_signaling
-
 LIBS = \
   $(EXTRA_DSO_LIBS) \
   $(XPCOM_LIBS) \
@@ -26,7 +24,7 @@ LIBS = \
   $(DEPTH)/netwerk/srtp/src/$(LIB_PREFIX)nksrtp_s.$(LIB_SUFFIX) \
   $(NULL)
 
-ifneq (,$(MOZ_CUBEB)$(MOZ_SYDNEYAUDIO))
+ifdef MOZ_CUBEB
 ifdef MOZ_ALSA
 LIBS += \
   $(MOZ_ALSA_LIBS) \
@@ -142,6 +140,7 @@ LOCAL_INCLUDES += \
  $(NULL)
 
 ifneq ($(OS_TARGET),WINNT)
+ifneq (gonk,$(MOZ_WIDGET_TOOLKIT))
 ifdef JS_SHARED_LIBRARY
 LIBS += $(MOZ_ZLIB_LIBS)
 endif
@@ -151,6 +150,7 @@ CPP_UNIT_TESTS = \
   mediapipeline_unittest.cpp \
   mediaconduit_unittests.cpp \
   $(NULL)
+endif
 endif
 
 include $(topsrcdir)/config/config.mk

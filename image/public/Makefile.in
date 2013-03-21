@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= imglib2
 GRE_MODULE	= 1
 
 EXPORTS		= ImageLogging.h

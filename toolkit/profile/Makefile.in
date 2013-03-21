@@ -10,7 +10,6 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = xulapp
 LIBRARY_NAME = profile_s
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1

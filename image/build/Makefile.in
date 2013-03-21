@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= imglib2
 LIBRARY_NAME	= imglib2
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1

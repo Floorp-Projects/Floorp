@@ -11,8 +11,6 @@ relativesrcdir = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = test_storage
-
 XPCSHELL_TESTS = unit
 
 CPP_UNIT_TESTS = \

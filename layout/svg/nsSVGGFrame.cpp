@@ -28,7 +28,7 @@ NS_NewSVGGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGGFrame)
 
 #ifdef DEBUG
-NS_IMETHODIMP
+void
 nsSVGGFrame::Init(nsIContent* aContent,
                   nsIFrame* aParent,
                   nsIFrame* aPrevInFlow)
@@ -37,7 +37,7 @@ nsSVGGFrame::Init(nsIContent* aContent,
   NS_ASSERTION(transformable,
                "The element doesn't support nsIDOMSVGTransformable\n");
 
-  return nsSVGGFrameBase::Init(aContent, aParent, aPrevInFlow);
+  nsSVGGFrameBase::Init(aContent, aParent, aPrevInFlow);
 }
 #endif /* DEBUG */
 

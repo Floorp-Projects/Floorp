@@ -10,7 +10,6 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = url-classifier
 LIBRARY_NAME = urlclassifier_s
 LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1

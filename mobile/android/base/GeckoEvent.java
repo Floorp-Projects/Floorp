@@ -184,9 +184,9 @@ public class GeckoEvent {
         return new GeckoEvent(NOOP);
     }
 
-    public static GeckoEvent createKeyEvent(KeyEvent k) {
+    public static GeckoEvent createKeyEvent(KeyEvent k, int metaState) {
         GeckoEvent event = new GeckoEvent(KEY_EVENT);
-        event.initKeyEvent(k);
+        event.initKeyEvent(k, metaState);
         return event;
     }
 
@@ -198,10 +198,14 @@ public class GeckoEvent {
         return new GeckoEvent(COMPOSITOR_RESUME);
     }
 
-    private void initKeyEvent(KeyEvent k) {
+    private void initKeyEvent(KeyEvent k, int metaState) {
         mAction = k.getAction();
         mTime = k.getEventTime();
-        mMetaState = k.getMetaState();
+        // Normally we expect k.getMetaState() to reflect the current meta-state; however,
+        // some software-generated key events may not have k.getMetaState() set, e.g. key
+        // events from Swype. Therefore, it's necessary to combine the key's meta-states
+        // with the meta-states that we keep separately in KeyListener
+        mMetaState = k.getMetaState() | metaState;
         mFlags = k.getFlags();
         mKeyCode = k.getKeyCode();
         mUnicodeChar = k.getUnicodeChar();

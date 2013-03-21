@@ -150,6 +150,11 @@
       #'WEBRTC_SVNREVISION="<!(python <(webrtc_root)/build/version.py)"',
     ],
     'conditions': [
+      ['moz_widget_toolkit_gonk==1', {
+        'defines' : [
+          'WEBRTC_GONK',
+        ],
+      }],
       ['enable_tracing==1', {
         'defines': ['WEBRTC_LOGGING',],
       }],
@@ -219,6 +224,13 @@
         ],
       }],
       ['OS=="linux"', {
+        'conditions': [
+          ['have_clock_monotonic==1', {
+            'defines': [
+              'WEBRTC_CLOCK_TYPE_REALTIME',
+            ],
+          }],
+        ],
         'defines': [
           'WEBRTC_LINUX',
           'WEBRTC_THREAD_RR',

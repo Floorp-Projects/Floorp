@@ -16,3 +16,5 @@ if not CONFIG['MOZ_XUL']:
 
 XPIDL_MODULE = 'layout_base'
 
+MODULE = 'layout'
+

@@ -20,7 +20,7 @@ function goOffline() {
     BrowserOffline.toggleOfflineStatus();
   Services.prefs.setIntPref('network.proxy.type', 0);
   // LOAD_FLAGS_BYPASS_CACHE isn't good enough. So clear the cache.
-  Services.cache.evictEntries(Services.cache.STORE_ANYWHERE);
+  Services.cache.evictEntries(Components.interfaces.nsICache.STORE_ANYWHERE);
 }
 
 function goOnline(callback) {

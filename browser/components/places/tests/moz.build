@@ -4,3 +4,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += ['browser', 'chrome']
+
+MODULE = 'test_browser_places'
+

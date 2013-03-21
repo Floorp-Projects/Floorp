@@ -15,13 +15,13 @@ interface nsIDocShellTreeOwner;
  * node or a leaf. 
  */
 
-[scriptable, uuid(09b54ec1-d98a-49a9-bc95-3219e8b55089)]
+[scriptable, uuid(e35bbb39-985b-4d62-81da-73c330222e5f)]
 interface nsIDocShellTreeItem : nsIDocShellTreeNode
 {
 	/*
 	name of the DocShellTreeItem
 	*/
-	attribute wstring name;
+	attribute AString name;
 
         /**
          * Compares the provided name against the item's name and

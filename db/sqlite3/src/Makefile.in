@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE           = sqlite3
 LIBRARY_NAME     = mozsqlite3
 SHORT_LIBNAME    = mozsqlt3
 ifdef MOZ_FOLD_LIBS

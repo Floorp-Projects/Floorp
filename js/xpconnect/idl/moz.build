@@ -21,3 +21,5 @@ XPIDL_SOURCES += [
     'xpcjsid.idl',
 ]
 
+MODULE = 'xpconnect'
+

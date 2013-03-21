@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= uriloader
 LIBRARY_NAME	= uriloaderbase_s
 GRE_MODULE	= 1
 LIBXUL_LIBRARY  = 1

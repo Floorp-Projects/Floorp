@@ -5,8 +5,11 @@
 
 EXTERNAL_MAKE_DIRS += [
     'trunk',
-    'trunk/testing',
     'signaling',
-    'signalingtest',
 ]
 
+if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
+    EXTERNAL_MAKE_DIRS += [
+        'trunk/testing',
+        'signalingtest',
+    ]

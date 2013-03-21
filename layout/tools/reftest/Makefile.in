@@ -10,8 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= reftest
-
 EXTRA_COMPONENTS= \
 		reftest-cmdline.js \
 		$(NULL)

@@ -8,7 +8,6 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 relativesrcdir = @relativesrcdir@
 
-MODULE		= pipnss
 XPCSHELL_TESTS  = unit
 
 include $(topsrcdir)/config/rules.mk

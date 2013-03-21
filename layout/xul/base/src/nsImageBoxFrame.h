@@ -12,13 +12,15 @@
 #include "imgIRequest.h"
 #include "imgIContainer.h"
 #include "imgINotificationObserver.h"
+#include "imgIOnloadBlocker.h"
 
 class imgRequestProxy;
 class nsImageBoxFrame;
 
 class nsDisplayXULImage;
 
-class nsImageBoxListener : public imgINotificationObserver
+class nsImageBoxListener : public imgINotificationObserver,
+                           public imgIOnloadBlocker
 {
 public:
   nsImageBoxListener();
@@ -26,6 +28,7 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_IMGINOTIFICATIONOBSERVER
+  NS_DECL_IMGIONLOADBLOCKER
 
   void SetFrame(nsImageBoxFrame *frame) { mFrame = frame; }
 
@@ -50,9 +53,9 @@ public:
 
   friend nsIFrame* NS_NewImageBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-  NS_IMETHOD  Init(nsIContent*      aContent,
-                   nsIFrame*        aParent,
-                   nsIFrame*        asPrevInFlow) MOZ_OVERRIDE;
+  virtual void Init(nsIContent*      aContent,
+                    nsIFrame*        aParent,
+                    nsIFrame*        asPrevInFlow) MOZ_OVERRIDE;
 
   NS_IMETHOD AttributeChanged(int32_t aNameSpaceID,
                               nsIAtom* aAttribute,
@@ -118,6 +121,7 @@ private:
 
   bool mUseSrcAttr; ///< Whether or not the image src comes from an attribute.
   bool mSuppressStyleCheck;
+  bool mFireEventOnDecode;
 }; // class nsImageBoxFrame
 
 class nsDisplayXULImage : public nsDisplayImageContainer {

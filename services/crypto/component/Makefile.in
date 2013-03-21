@@ -11,7 +11,6 @@ include $(DEPTH)/config/autoconf.mk
 
 FAIL_ON_WARNINGS := 1
 
-MODULE := services-crypto
 LIBRARY_NAME := services-crypto
 EXPORT_LIBRARY := 1
 IS_COMPONENT := 1

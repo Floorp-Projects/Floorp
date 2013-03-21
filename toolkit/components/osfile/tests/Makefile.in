@@ -8,8 +8,6 @@ srcdir           = @srcdir@
 VPATH            = @srcdir@
 relativesrcdir   = @relativesrcdir@
 
-MODULE           = test_osfile
-
 XPCSHELL_TESTS = xpcshell
 
 include $(DEPTH)/config/autoconf.mk

@@ -5,3 +5,6 @@
 
 DIRS += ['public', 'idl', 'src']
 TEST_DIRS += ['tests']
+
+MODULE = 'locale'
+

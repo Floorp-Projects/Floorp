@@ -4211,7 +4211,6 @@ MOZ_JSDEBUGGER=1
 MOZ_AUTH_EXTENSION=1
 MOZ_OGG=1
 MOZ_RAW=
-MOZ_SYDNEYAUDIO=
 MOZ_SPEEX_RESAMPLER=1
 MOZ_SOUNDTOUCH=1
 MOZ_CUBEB=
@@ -5261,8 +5260,12 @@ dnl the master list above.
 if test -n "$MOZ_WEBRTC"; then
     case "$target" in
     *-android*|*-linuxandroid*)
-        dnl Make sure doesn't get matched by *-linux*
-        MOZ_WEBRTC=
+        if test -n "$MOZ_B2G"; then
+            MOZ_WEBRTC=1
+        else
+            dnl Make sure doesn't get matched by *-linux*
+            MOZ_WEBRTC=
+        fi
         ;;
     *-linux*|*-mingw*|*-darwin*)
         dnl Leave enabled
@@ -5290,18 +5293,20 @@ if test -n "$MOZ_WEBRTC"; then
     MOZ_VP8_ENCODER=1
     MOZ_VP8_ERROR_CONCEALMENT=1
 
-    dnl OpenSLES is only available in Android 2.3 and later; we'll change this
-    dnl hard dependency to a dynamic load with graceful runtime failure before
-    dnl we make --enable-webrtc on by default in Android (bug 815905)
-    dnl
-    if test "$OS_TARGET" = "Android"; then
-       LDFLAGS="$LDFLAGS -lOpenSLES"
+    if test "$MOZ_WIDGET_TOOLKIT" != "gonk"; then
+       dnl OpenSLES is only available in Android 2.3 and later; we'll change this
+       dnl hard dependency to a dynamic load with graceful runtime failure before
+       dnl we make --enable-webrtc on by default in Android (bug 815905)
+       dnl
+       if test "$OS_TARGET" = "Android"; then
+          LDFLAGS="$LDFLAGS -lOpenSLES"
+       fi
+       case "$target" in
+          *-android*|*-linuxandroid*)
+          LDFLAGS="$LDFLAGS -lOpenSLES"
+          ;;
+       esac
     fi
-    case "$target" in
-    *-android*|*-linuxandroid*)
-       LDFLAGS="$LDFLAGS -lOpenSLES"
-       ;;
-    esac
 
 dnl enable once Signaling lands
     MOZ_WEBRTC_SIGNALING=1
@@ -5364,7 +5369,6 @@ MOZ_ARG_DISABLE_BOOL(ogg,
 
 if test -n "$MOZ_OGG"; then
     AC_DEFINE(MOZ_OGG)
-    MOZ_SYDNEYAUDIO=1
     MOZ_CUBEB=1
     MOZ_MEDIA=1
 
@@ -5447,7 +5451,6 @@ MOZ_ARG_DISABLE_BOOL(wmf,
 
 if test -n "$MOZ_WMF"; then
     AC_DEFINE(MOZ_WMF)
-    MOZ_SYDNEYAUDIO=1
     MOZ_CUBEB=1
     MOZ_MEDIA=1
 fi;
@@ -5544,7 +5547,6 @@ AC_SUBST(MOZ_LIBVPX_CFLAGS)
 AC_SUBST(MOZ_LIBVPX_LIBS)
 
 if test "$MOZ_WEBM"; then
-    MOZ_SYDNEYAUDIO=1
     MOZ_CUBEB=1
     MOZ_MEDIA=1
     if test "$MOZ_SAMPLE_TYPE_FLOAT32"; then
@@ -5648,18 +5650,13 @@ MOZ_ARG_DISABLE_BOOL(wave,
 
 if test -n "$MOZ_WAVE"; then
     AC_DEFINE(MOZ_WAVE)
-    MOZ_SYDNEYAUDIO=1
     MOZ_CUBEB=1
     MOZ_MEDIA=1
 fi
 
 dnl ========================================================
-dnl = Handle dependent SYDNEYAUDIO, CUBEB, and MEDIA defines
+dnl = Handle dependent CUBEB and MEDIA defines
 dnl ========================================================
-
-if test -n "$MOZ_SYDNEYAUDIO"; then
-    AC_DEFINE(MOZ_SYDNEYAUDIO)
-fi
 
 if test -n "$MOZ_SPEEX_RESAMPLER"; then
     AC_DEFINE(MOZ_SPEEX_RESAMPLER)
@@ -5670,26 +5667,7 @@ if test -n "$MOZ_SOUNDTOUCH"; then
 fi
 
 if test -n "$MOZ_CUBEB"; then
-    case "$target" in
-    *-android*|*-linuxandroid*)
-        AC_DEFINE(MOZ_CUBEB)
-        ;;
-    *-linux*)
-        AC_DEFINE(MOZ_CUBEB)
-        ;;
-    *-mingw*)
-        AC_DEFINE(MOZ_CUBEB)
-        ;;
-    *-darwin*)
-        AC_DEFINE(MOZ_CUBEB)
-        ;;
-    *-openbsd*)
-        AC_DEFINE(MOZ_CUBEB)
-        ;;
-    *)
-        dnl Other targets will be enabled soon.
-        ;;
-    esac
+    AC_DEFINE(MOZ_CUBEB)
 fi
 
 if test -n "$MOZ_MEDIA"; then
@@ -5721,7 +5699,7 @@ dnl = Check alsa availability on Linux if using sydneyaudio
 dnl ========================================================
 
 dnl If using sydneyaudio with Linux, ensure that the alsa library is available
-if test -n "$MOZ_SYDNEYAUDIO" -a "$OS_TARGET" = "Linux"; then
+if test -n "$MOZ_CUBEB" -a "$OS_TARGET" = "Linux"; then
     MOZ_ALSA=1
 fi
 
@@ -8845,7 +8823,6 @@ AC_SUBST(MOZ_APP_COMPONENT_LIBS)
 AC_SUBST(MOZ_APP_EXTRA_LIBS)
 
 AC_SUBST(MOZ_MEDIA)
-AC_SUBST(MOZ_SYDNEYAUDIO)
 AC_SUBST(MOZ_SPEEX_RESAMPLER)
 AC_SUBST(MOZ_SOUNDTOUCH)
 AC_SUBST(MOZ_CUBEB)
@@ -9056,7 +9033,11 @@ if test "${OS_TARGET}" = "WINNT"; then
    EXTRA_GYP_DEFINES="-D MSVS_VERSION=${_MSVS_VERSION} -D MSVS_OS_BITS=${OS_BITS}"
 
 elif test "${OS_TARGET}" = "Android"; then
-   EXTRA_GYP_DEFINES="-D gtest_target_type=executable -D android_toolchain=${android_toolchain} -G os=android "
+   if test "${MOZ_WIDGET_TOOLKIT}" = "gonk"; then
+      EXTRA_GYP_DEFINES="-G os=linux "
+   else
+      EXTRA_GYP_DEFINES="-D gtest_target_type=executable -D android_toolchain=${android_toolchain} -G os=android "
+   fi
 fi
 
 if test -n "$ARM_ARCH"; then
@@ -9081,9 +9062,19 @@ fi
 if test -n "$MOZ_WEBRTC"; then
    AC_MSG_RESULT("generating WebRTC Makefiles...")
 
+   if test "${MOZ_WIDGET_TOOLKIT}" = "gonk"; then
+      EXTRA_GYP_DEFINES="${EXTRA_GYP_DEFINES} -D build_with_gonk=1 -D include_internal_audio_device=0"
+   fi
+
 dnl Any --include files must also appear in -D FORCED_INCLUDE_FILE= entries
 dnl so that regeneration via dependencies works correctly
    WEBRTC_CONFIG="-D build_with_mozilla=1 -D build_with_chromium=0 --include ${srcdir}/media/webrtc/webrtc_config.gypi -D FORCED_INCLUDE_FILE=${srcdir}/media/webrtc/webrtc_config.gypi"
+
+   if test -n HAVE_CLOCK_MONOTONIC; then
+      WEBRTC_CONFIG="${WEBRTC_CONFIG} -D have_clock_monotonic=1"
+   else
+      WEBRTC_CONFIG="${WEBRTC_CONFIG} -D have_clock_monotonic=0"
+   fi
 
    GYP_WEBRTC_OPTIONS="--format=mozmake ${WEBRTC_CONFIG} -D target_arch=${WEBRTC_TARGET_ARCH} ${EXTRA_GYP_DEFINES} --depth=${srcdir}/media/webrtc/trunk --toplevel-dir=${srcdir} -G OBJDIR=${_objdir}"
 

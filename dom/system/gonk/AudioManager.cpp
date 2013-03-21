@@ -17,7 +17,7 @@
 
 #include "mozilla/Hal.h"
 #include "AudioManager.h"
-#include "gonk/AudioSystem.h"
+#include "android_audio/AudioSystem.h"
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
 #include "AudioChannelService.h"

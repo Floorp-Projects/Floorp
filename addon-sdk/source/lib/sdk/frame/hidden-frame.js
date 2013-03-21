@@ -17,23 +17,10 @@ const { List, addListItem, removeListItem } = require("../util/list");
 const { EventTarget } = require("../event/target");
 const { emit } = require("../event/core");
 const { create: makeFrame } = require("./utils");
-const { defer, resolve } = require("../core/promise");
+const { defer } = require("../core/promise");
 const { when: unload } = require("../system/unload");
 const { validateOptions, getTypeOf } = require("../deprecated/api-utils");
-
-
-let appShellService = Cc["@mozilla.org/appshell/appShellService;1"].
-                        getService(Ci.nsIAppShellService);
-
-let hiddenWindow = appShellService.hiddenDOMWindow;
-
-if (!hiddenWindow) {
-  throw new Error([
-    "The hidden-frame module needs an app that supports a hidden window. ",
-    "We would like it to support other applications, however. Please see ",
-    "https://bugzilla.mozilla.org/show_bug.cgi?id=546740 for more information."
-  ].join(""));
-}
+const { window } = require("../addon/window");
 
 // This cache is used to access friend properties between functions
 // without exposing them on the public API.
@@ -52,33 +39,6 @@ function contentLoaded(target) {
   }, false);
   return deferred.promise;
 }
-
-function makeHostFrame() {
-  // Check if we can use the hidden window itself to host our iframes.
-  // If it's not a suitable host, the hostFrame will be lazily created
-  // by the first HiddenFrame instance.
-  if (hiddenWindow.location.protocol == "chrome:" &&
-      (hiddenWindow.document.contentType == "application/vnd.mozilla.xul+xml" ||
-      hiddenWindow.document.contentType == "application/xhtml+xml")) {
-
-    // Resolve to an object with a shape similar to iframe.
-    return resolve({ contentDocument: hiddenWindow.document });
-  }
-  else {
-    return contentLoaded(makeFrame(hiddenWindow.document, {
-      // Ugly ugly hack. This is the most lightweight "chrome:" file I could
-      // find on the tree.
-      // This hack should be removed by proper platform support on bug 565388
-      uri: "chrome://global/content/mozilla.xhtml",
-      namespaceURI: hiddenWindow.document.documentElement.namespaceURI,
-      nodeName: "iframe",
-      allowJavascript: true,
-      allowPlugins: true,
-      allowAuth: true
-    }));
-  }
-}
-var hostFrame = makeHostFrame();
 
 function FrameOptions(options) {
   options = options || {}
@@ -130,17 +90,16 @@ function addHidenFrame(frame) {
   if (isFrameCached(frame)) return frame;
   else cache.push(frame);
 
-  hostFrame.then(function({ contentDocument }) {
-    let element = makeFrame(contentDocument, {
-      nodeName: "iframe",
-      type: "content",
-      allowJavascript: true,
-      allowPlugins: true,
-      allowAuth: true,
-    });
-    elements.set(frame, element);
-    return contentLoaded(element);
-  }).then(function onFrameReady(element) {
+  let element = makeFrame(window.document, {
+    nodeName: "iframe",
+    type: "content",
+    allowJavascript: true,
+    allowPlugins: true,
+    allowAuth: true,
+  });
+  elements.set(frame, element);
+
+  contentLoaded(element).then(function onFrameReady(element) {
     emit(frame, "ready");
   }, console.exception);
 
@@ -162,10 +121,4 @@ function removeHiddenFrame(frame) {
 }
 exports.remove = removeHiddenFrame;
 
-unload(function () {
-  cache.splice(0).forEach(removeHiddenFrame);
-
-  hostFrame.then(function(host) {
-    if (hast.parentNode) frame.parentNode.removeChild(frame);
-  });
-});
+unload(function() cache.splice(0).forEach(removeHiddenFrame));

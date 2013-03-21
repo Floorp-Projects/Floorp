@@ -496,9 +496,8 @@ nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
       NS_ASSERTION(nextFrame || aStatus & NS_FRAME_REFLOW_NEXTINFLOW,
         "If it's incomplete and has no nif yet, it must flag a nif reflow.");
       if (!nextFrame) {
-        nsresult rv = aPresContext->PresShell()->FrameConstructor()->
-          CreateContinuingFrame(aPresContext, kidFrame, this, &nextFrame);
-        NS_ENSURE_SUCCESS(rv, rv);
+        nextFrame = aPresContext->PresShell()->FrameConstructor()->
+          CreateContinuingFrame(aPresContext, kidFrame, this);
         SetOverflowFrames(aPresContext, nsFrameList(nextFrame, nextFrame));
         // Root overflow containers will be normal children of
         // the canvas frame, but that's ok because there

@@ -12,3 +12,5 @@ XPIDL_SOURCES += [
     '$(MODULES_LIBJAR_LXPIDLSRCS)',
 ]
 
+MODULE = 'jar'
+

@@ -14,7 +14,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= xremoteclient
 LIBRARY_NAME = xremote_client_s
 FORCE_STATIC_LIB = 1
 

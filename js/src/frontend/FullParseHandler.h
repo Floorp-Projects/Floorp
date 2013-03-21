@@ -135,19 +135,19 @@ class FullParseHandler
         return new_<TernaryNode>(kind, op, first, second, third);
     }
 
-    ParseNode *newBreak(PropertyName *label, const TokenPtr &begin, const TokenPtr &end) {
+    ParseNode *newBreak(PropertyName *label, uint32_t begin, uint32_t end) {
         return new_<BreakStatement>(label, begin, end);
     }
-    ParseNode *newContinue(PropertyName *label, const TokenPtr &begin, const TokenPtr &end) {
+    ParseNode *newContinue(PropertyName *label, uint32_t begin, uint32_t end) {
         return new_<ContinueStatement>(label, begin, end);
     }
     ParseNode *newDebuggerStatement(const TokenPos &pos) {
         return new_<DebuggerStatement>(pos);
     }
-    ParseNode *newPropertyAccess(ParseNode *pn, PropertyName *name, const TokenPtr &end) {
+    ParseNode *newPropertyAccess(ParseNode *pn, PropertyName *name, uint32_t end) {
         return new_<PropertyAccess>(pn, name, pn->pn_pos.begin, end);
     }
-    ParseNode *newPropertyByValue(ParseNode *pn, ParseNode *kid, const TokenPtr &end) {
+    ParseNode *newPropertyByValue(ParseNode *pn, ParseNode *kid, uint32_t end) {
         return new_<PropertyByValue>(pn, kid, pn->pn_pos.begin, end);
     }
 
@@ -177,7 +177,7 @@ class FullParseHandler
     void setBeginPosition(ParseNode *pn, ParseNode *oth) {
         setBeginPosition(pn, oth->pn_pos.begin);
     }
-    void setBeginPosition(ParseNode *pn, const TokenPtr &begin) {
+    void setBeginPosition(ParseNode *pn, uint32_t begin) {
         pn->pn_pos.begin = begin;
         JS_ASSERT(pn->pn_pos.begin <= pn->pn_pos.end);
     }
@@ -185,7 +185,7 @@ class FullParseHandler
     void setEndPosition(ParseNode *pn, ParseNode *oth) {
         setEndPosition(pn, oth->pn_pos.end);
     }
-    void setEndPosition(ParseNode *pn, const TokenPtr &end) {
+    void setEndPosition(ParseNode *pn, uint32_t end) {
         pn->pn_pos.end = end;
         JS_ASSERT(pn->pn_pos.begin <= pn->pn_pos.end);
     }

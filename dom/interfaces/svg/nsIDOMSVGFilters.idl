@@ -21,16 +21,6 @@ interface nsIDOMSVGFilterPrimitiveStandardAttributes : nsIDOMSVGElement
     readonly attribute nsIDOMSVGAnimatedString      result;
 };
 
-[scriptable, uuid(08f2d7e5-b79f-405c-8140-7faa72c53ead)]
-interface nsIDOMSVGFEGaussianBlurElement : nsIDOMSVGFilterPrimitiveStandardAttributes
-{ 
-    readonly attribute nsIDOMSVGAnimatedString in1;
-    readonly attribute nsIDOMSVGAnimatedNumber stdDeviationX;
-    readonly attribute nsIDOMSVGAnimatedNumber stdDeviationY;
-
-    void setStdDeviation ( in float stdDeviationX, in float stdDeviationY );
-};
-
 [scriptable, uuid(4fa9fbbe-482c-418a-afd1-d51b003f5a04)]
 interface nsIDOMSVGFEOffsetElement : nsIDOMSVGFilterPrimitiveStandardAttributes { 
     readonly attribute nsIDOMSVGAnimatedString in1;

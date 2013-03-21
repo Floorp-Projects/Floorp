@@ -101,14 +101,14 @@ nsSVGPatternFrame::AttributeChanged(int32_t         aNameSpaceID,
 }
 
 #ifdef DEBUG
-NS_IMETHODIMP
+void
 nsSVGPatternFrame::Init(nsIContent* aContent,
                         nsIFrame* aParent,
                         nsIFrame* aPrevInFlow)
 {
   NS_ASSERTION(aContent->IsSVG(nsGkAtoms::pattern), "Content is not an SVG pattern");
 
-  return nsSVGPatternFrameBase::Init(aContent, aParent, aPrevInFlow);
+  nsSVGPatternFrameBase::Init(aContent, aParent, aPrevInFlow);
 }
 #endif /* DEBUG */
 

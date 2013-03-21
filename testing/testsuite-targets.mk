@@ -372,7 +372,8 @@ jetpack-tests:
 leaktest:
 	$(PYTHON) _leaktest/leaktest.py $(LEAKTEST_ARGS)
 
-
+pgo-profile-run:
+	$(PYTHON) $(DEPTH)/_profile/pgo/profileserver.py $(EXTRA_TEST_ARGS)
 
 # Package up the tests and test harnesses
 include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk

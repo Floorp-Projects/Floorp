@@ -10,7 +10,6 @@ VPATH		=  $(srcdir) $(srcdir)/unittest
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= gfx2d
 LIBRARY_NAME	= gfx2d
 LIBXUL_LIBRARY	= 1
 EXPORT_LIBRARY	= 1

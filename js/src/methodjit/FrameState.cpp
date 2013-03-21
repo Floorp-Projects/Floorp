@@ -362,10 +362,7 @@ FrameState::bestEvictReg(uint32_t mask, bool includePinned) const
 static inline bool
 CanFakeSync(FrameEntry *fe)
 {
-    return fe->isNotType(JSVAL_TYPE_OBJECT)
-        && fe->isNotType(JSVAL_TYPE_STRING)
-        && fe->isNotType(JSVAL_TYPE_DOUBLE)
-        && fe->isNotType(JSVAL_TYPE_MAGIC);
+    return fe->isType(JSVAL_TYPE_INT32) || fe->isType(JSVAL_TYPE_BOOLEAN);
 }
 
 void

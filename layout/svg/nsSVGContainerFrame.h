@@ -125,9 +125,9 @@ public:
                           nsFrameList&    aFrameList) MOZ_OVERRIDE;
   NS_IMETHOD RemoveFrame(ChildListID     aListID,
                          nsIFrame*       aOldFrame) MOZ_OVERRIDE;
-  NS_IMETHOD Init(nsIContent*      aContent,
-                  nsIFrame*        aParent,
-                  nsIFrame*        aPrevInFlow) MOZ_OVERRIDE;
+ virtual void Init(nsIContent*      aContent,
+                   nsIFrame*        aParent,
+                   nsIFrame*        aPrevInFlow) MOZ_OVERRIDE;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,

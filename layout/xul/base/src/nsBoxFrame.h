@@ -83,9 +83,9 @@ public:
 
   // ----- public methods -------
   
-  NS_IMETHOD  Init(nsIContent*      aContent,
-                   nsIFrame*        aParent,
-                   nsIFrame*        asPrevInFlow) MOZ_OVERRIDE;
+  virtual void Init(nsIContent*      aContent,
+                    nsIFrame*        aParent,
+                    nsIFrame*        asPrevInFlow) MOZ_OVERRIDE;
 
  
   NS_IMETHOD AttributeChanged(int32_t         aNameSpaceID,
@@ -218,7 +218,7 @@ protected:
     bool GetEventPoint(nsGUIEvent *aEvent, nsIntPoint &aPoint);
 
 protected:
-    nsresult RegUnregAccessKey(bool aDoReg);
+    void RegUnregAccessKey(bool aDoReg);
 
   NS_HIDDEN_(void) CheckBoxOrder();
 

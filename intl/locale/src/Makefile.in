@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= locale
 LIBRARY_NAME	= nslocale_s
 LIBXUL_LIBRARY  = 1
 

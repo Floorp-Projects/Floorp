@@ -12,7 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/rdf/util/src/objs.mk
 include $(topsrcdir)/intl/unicharutil/util/objs.mk
 
-MODULE = libxul
 LIBRARY_NAME = xul
 FORCE_SHARED_LIB = 1
 MOZILLA_INTERNAL_API = 1
@@ -426,7 +425,7 @@ endif
 endif
 
 
-ifneq (,$(MOZ_CUBEB)$(MOZ_SYDNEYAUDIO))
+ifdef MOZ_CUBEB
 ifdef MOZ_ALSA
 EXTRA_DSO_LDOPTS += $(MOZ_ALSA_LIBS)
 endif
@@ -518,27 +517,6 @@ OS_LIBS += \
   -F/System/Library/PrivateFrameworks -framework CoreUI \
   $(TK_LIBS) \
   $(NULL)
-endif
-
-ifeq ($(OS_ARCH),Darwin)
-ifdef MOZ_SYDNEYAUDIO
-OS_LIBS += \
-  -framework Carbon \
-  -framework CoreAudio \
-  -framework AudioToolbox \
-  -framework AudioUnit \
-  -framework IOKit \
-  -framework Foundation \
-  -framework AppKit \
-  -framework Security \
-  $(NULL)
-endif
-endif
-
-ifneq (,$(filter NetBSD OpenBSD,$(OS_ARCH)))
-ifdef MOZ_SYDNEYAUDIO
-EXTRA_DSO_LDOPTS += -lossaudio
-endif
 endif
 
 ifeq (OpenBSD,$(OS_ARCH))

@@ -10,8 +10,6 @@ relativesrcdir  = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= test_privatebrowsing
-
 MOCHITEST_BROWSER_FILES =  \
 		head.js \
 		browser_privatebrowsing_certexceptionsui.js \

@@ -6,3 +6,6 @@
 # libEGL depends on (links against!) libGLESv2!
 if CONFIG['MOZ_ANGLE_RENDERER']:
     DIRS += ['src/libGLESv2', 'src/libEGL']
+
+MODULE = 'angle'
+

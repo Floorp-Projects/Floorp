@@ -7,3 +7,6 @@ DIRS += ['testplugin']
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk2', 'cocoa', 'windows'):
     TEST_DIRS += ['mochitest']
+
+MODULE = 'test_plugin'
+

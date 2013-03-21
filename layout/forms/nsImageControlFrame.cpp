@@ -41,9 +41,9 @@ public:
   ~nsImageControlFrame();
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot);
-  NS_IMETHOD Init(nsIContent*      aContent,
-                  nsIFrame*        aParent,
-                  nsIFrame*        aPrevInFlow);
+  virtual void Init(nsIContent*      aContent,
+                    nsIFrame*        aParent,
+                    nsIFrame*        aPrevInFlow) MOZ_OVERRIDE;
 
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
@@ -104,23 +104,20 @@ NS_NewImageControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsImageControlFrame)
 
-NS_IMETHODIMP
+void
 nsImageControlFrame::Init(nsIContent*      aContent,
                           nsIFrame*        aParent,
                           nsIFrame*        aPrevInFlow)
 {
-  nsresult rv = nsImageControlFrameSuper::Init(aContent, aParent, aPrevInFlow);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsImageControlFrameSuper::Init(aContent, aParent, aPrevInFlow);
 
-  // nsIntPoint allocation can fail, in which case we just set the property 
-  // to null, which is safe
   if (aPrevInFlow) {
-    return NS_OK;
+    return;
   }
   
-  return  mContent->SetProperty(nsGkAtoms::imageClickedPoint,
-                                 new nsIntPoint(0, 0),
-                                 IntPointDtorFunc);
+  mContent->SetProperty(nsGkAtoms::imageClickedPoint,
+                        new nsIntPoint(0, 0),
+                        IntPointDtorFunc);
 }
 
 NS_QUERYFRAME_HEAD(nsImageControlFrame)

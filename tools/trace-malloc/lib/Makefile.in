@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= tracemalloc
 LIBRARY_NAME	= tracemalloc
 EXPORT_LIBRARY	= 1
 DEFFILE		= $(win_srcdir)/tm.def

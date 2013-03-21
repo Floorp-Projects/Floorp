@@ -7,3 +7,5 @@ XPIDL_SOURCES += [
     'nsIProfileUnlocker.idl',
 ]
 
+MODULE = 'profile'
+

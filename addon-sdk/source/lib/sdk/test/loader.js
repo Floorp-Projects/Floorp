@@ -6,12 +6,16 @@
 
 const { Loader, resolveURI, Require,
         unload, override, descriptor  } = require('../loader/cuddlefish');
+const addonWindow = require('../addon/window');
 const { PlainTextConsole } = require("sdk/console/plain-text");
 
 function CustomLoader(module, globals, packaging) {
   let options = packaging || require("@loader/options");
   options = override(options, {
-    globals: override(require('../system/globals'), globals || {})
+    globals: override(require('../system/globals'), globals || {}),
+    modules: override(options.modules || {}, {
+      'sdk/addon/window': addonWindow
+     })
   });
 
   let loader = Loader(options);

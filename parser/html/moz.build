@@ -8,3 +8,5 @@ XPIDL_SOURCES += [
     'nsIScriptableUnescapeHTML.idl',
 ]
 
+MODULE = 'html5'
+

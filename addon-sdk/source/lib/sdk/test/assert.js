@@ -60,8 +60,14 @@ AssertionError.prototype = Object.create(Error.prototype, {
 exports.AssertionError = AssertionError;
 
 function Assert(logger) {
-  return Object.create(Assert.prototype, { _log: { value: logger }});
+  let assert = Object.create(Assert.prototype, { _log: { value: logger }});
+
+  assert.fail = assert.fail.bind(assert);
+  assert.pass = assert.pass.bind(assert);
+
+  return assert;
 }
+
 Assert.prototype = {
   fail: function fail(e) {
     if (!e || typeof(e) !== 'object') {

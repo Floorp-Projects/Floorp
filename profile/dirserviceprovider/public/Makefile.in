@@ -9,8 +9,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= profdirserviceprovider
-
 EXPORTS		= \
 		nsProfileDirServiceProvider.h   \
 		$(NULL)

@@ -9,7 +9,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= thebes
 LIBRARY_NAME	= thebes
 LIBXUL_LIBRARY	= 1
 EXPORT_LIBRARY	= 1

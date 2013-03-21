@@ -7,7 +7,6 @@ topsrcdir        = @top_srcdir@
 srcdir           = @srcdir@
 VPATH            = @srcdir@
 
-MODULE           = dom
 LIBRARY_NAME     = dombindings_s
 LIBXUL_LIBRARY   = 1
 FORCE_STATIC_LIB = 1
@@ -188,7 +187,7 @@ $(binding_cpp_files): %Binding.cpp: $(bindinggen_dependencies) \
 $(globalgen_targets): ParserResults.pkl
 
 %-example: $(bindinggen_dependencies) \
-           $(all_webidl_files) \
+           ParserResults.pkl \
            $(NULL)
 	PYTHONDONTWRITEBYTECODE=1 $(PYTHON) $(topsrcdir)/config/pythonpath.py \
 	  $(PLY_INCLUDE) -I$(srcdir)/parser \

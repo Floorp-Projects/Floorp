@@ -10,7 +10,6 @@ VPATH       = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE         = gfx
 MODULE_NAME    = nsGfxModule
 LIBRARY_NAME   = gkgfx
 EXPORT_LIBRARY = 1

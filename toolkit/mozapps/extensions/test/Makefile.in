@@ -14,8 +14,6 @@ TESTXPI = $(TESTROOT)/xpcshell/addons
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = test_extensionmanager
-
 XPCSHELL_TESTS = \
   xpcshell \
   xpcshell-unpack \

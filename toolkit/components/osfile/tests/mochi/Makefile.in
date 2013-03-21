@@ -10,8 +10,6 @@ relativesrcdir  = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE          = osfile
-
 MOCHITEST_CHROME_FILES := \
   test_osfile_back.xul \
   worker_handler.js \

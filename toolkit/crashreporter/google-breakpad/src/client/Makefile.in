@@ -9,7 +9,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= minidump_file_writer
 LIBRARY_NAME	= minidump_file_writer_s
 XPI_NAME 	= crashreporter
 

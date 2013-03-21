@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= ucvibm
 LIBRARY_NAME	= ucvibm_s
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1

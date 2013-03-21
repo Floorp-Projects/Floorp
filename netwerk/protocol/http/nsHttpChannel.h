@@ -365,6 +365,10 @@ private:
     void PushRedirectAsyncFunc(nsContinueRedirectionFunc func);
     void PopRedirectAsyncFunc(nsContinueRedirectionFunc func);
 
+
+    // perform experiment to determine efficiency of cache strategy
+    // vs pure network
+    mozilla::TimeStamp                mCacheEffectExperimentAsyncOpenTime;
 protected:
     virtual void DoNotifyListenerCleanup();
 

@@ -18,10 +18,10 @@ const { Ci, Cc } = require("chrome"),
     { EventTarget } = require("./event/target"),
     { ns } = require("./core/namespace"),
     { when: unload } = require("./system/unload"),
+    { ignoreWindow } = require('./private-browsing/utils'),
     { getTabs, getTabContentWindow, getTabForContentWindow,
       getAllTabContentWindows } = require('./tabs/utils'),
-    { getMostRecentBrowserWindow,
-      windows, getFocusedWindow, getFocusedElement } = require("./window/utils"),
+    winUtils = require("./window/utils"),
     events = require("./system/events");
 
 // The selection types
@@ -101,7 +101,10 @@ const selectionListener = {
  */
 function iterator() {
     let selection = getSelection(DOM);
-    let count = selection.rangeCount || (getElementWithSelection() ? 1 : 0);
+    let count = 0;
+
+    if (selection)
+      count = selection.rangeCount || (getElementWithSelection() ? 1 : 0);
 
     for (let i = 0; i < count; i++) {
       let sel = Selection(i);
@@ -115,6 +118,33 @@ const selectionIterator = obscure({
   __iterator__: iterator, // for...in; for each...in
   iterator: iterator // for....of
 });
+
+/**
+ * Returns the most recent focused window.
+ * if private browsing window is most recent and not supported,
+ * then ignore it and return `null`, because the focused window
+ * can't be targeted.
+ */
+function getFocusedWindow() {
+  let window = winUtils.getFocusedWindow();
+
+  return ignoreWindow(window) ? null : window;
+}
+
+/**
+ * Returns the focused element in the most recent focused window
+ * if private browsing window is most recent and not supported,
+ * then ignore it and return `null`, because the focused element
+ * can't be targeted.
+ */
+function getFocusedElement() {
+  let element = winUtils.getFocusedElement();
+
+  if (!element || ignoreWindow(element.ownerDocument.defaultView))
+    return null;
+
+  return element;
+}
 
 /**
  * Returns the current selection from most recent content window. Depending on
@@ -348,10 +378,11 @@ function removeSelectionListener(window) {
 function onContent(event) {
   let window = event.subject.defaultView;
 
-  // We are not interested in documents without valid defaultView (e.g. XML), or
-  // not in a tab (e.g. Panel).
-   if (window && getTabForContentWindow(window))
+  // We are not interested in documents without valid defaultView (e.g. XML)
+  // that aren't in a tab (e.g. Panel); or in private windows
+   if (window && getTabForContentWindow(window) && !ignoreWindow(window)) {
     addSelectionListener(window);
+  }
 }
 
 // Adds Selection listener to new documents

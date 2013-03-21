@@ -54,7 +54,7 @@ nsFirstLetterFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   BuildDisplayListForInline(aBuilder, aDirtyRect, aLists);
 }
 
-NS_IMETHODIMP
+void
 nsFirstLetterFrame::Init(nsIContent*      aContent,
                          nsIFrame*        aParent,
                          nsIFrame*        aPrevInFlow)
@@ -73,7 +73,7 @@ nsFirstLetterFrame::Init(nsIContent*      aContent,
     }
   }
 
-  return nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
+  nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
 }
 
 NS_IMETHODIMP
@@ -316,12 +316,8 @@ nsFirstLetterFrame::CreateContinuationForFloatingParent(nsPresContext* aPresCont
     presShell->FrameManager()->GetPlaceholderFrameFor(this);
   nsIFrame* parent = placeholderFrame->GetParent();
 
-  nsIFrame* continuation;
-  rv = presShell->FrameConstructor()->
-    CreateContinuingFrame(aPresContext, aChild, parent, &continuation, aIsFluid);
-  if (NS_FAILED(rv) || !continuation) {
-    return rv;
-  }
+  nsIFrame* continuation = presShell->FrameConstructor()->
+    CreateContinuingFrame(aPresContext, aChild, parent, aIsFluid);
 
   // The continuation will have gotten the first letter style from it's
   // prev continuation, so we need to repair the style context so it

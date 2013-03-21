@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= content
 EXPORTS		= \
 		nsMutationEvent.h \
 		nsIPrivateTextEvent.h \

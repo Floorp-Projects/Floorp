@@ -10,7 +10,6 @@ relativesrcdir = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = test_services_common
 XPCSHELL_TESTS = unit
 
 include $(topsrcdir)/config/rules.mk

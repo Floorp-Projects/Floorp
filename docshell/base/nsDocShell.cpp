@@ -2816,17 +2816,16 @@ nsDocShell::GetCurrentDocChannel()
 //*****************************************************************************   
 
 NS_IMETHODIMP
-nsDocShell::GetName(PRUnichar ** aName)
+nsDocShell::GetName(nsAString& aName)
 {
-    NS_ENSURE_ARG_POINTER(aName);
-    *aName = ToNewUnicode(mName);
+    aName = mName;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDocShell::SetName(const PRUnichar * aName)
+nsDocShell::SetName(const nsAString& aName)
 {
-    mName = aName;              // this does a copy of aName
+    mName = aName;
     return NS_OK;
 }
 

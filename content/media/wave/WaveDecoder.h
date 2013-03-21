@@ -12,9 +12,9 @@
  * The decoder implementation is currently limited to Linear PCM encoded
  * audio data with one or two channels of 8- or 16-bit samples at sample
  * rates from 100 Hz to 96 kHz.  The number of channels is limited by what
- * the audio backend (sydneyaudio via AudioStream) currently supports.  The
- * supported sample rate is artificially limited to arbitrarily selected sane
- * values.  Support for additional channels (and other new features) would
+ * the audio backend (via AudioStream) currently supports.  The supported
+ * sample rate is artificially limited to arbitrarily selected sane values.
+ * Support for additional channels (and other new features) would
  * require extending WaveDecoder to support parsing the newer
  * WAVE_FORMAT_EXTENSIBLE chunk format.
 **/

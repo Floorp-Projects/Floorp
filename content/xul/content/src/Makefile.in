@@ -11,8 +11,6 @@ FAIL_ON_WARNINGS = 1
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= xul
-
 ifdef MOZ_XUL
 LIBRARY_NAME	= gkconxulcon_s
 LIBXUL_LIBRARY	= 1

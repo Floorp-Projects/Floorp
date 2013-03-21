@@ -10,7 +10,6 @@ VPATH       = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE      = htmlparser
 GRE_MODULE	= 1
 
 EXPORTS = \

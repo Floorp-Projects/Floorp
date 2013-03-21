@@ -218,7 +218,7 @@ private:
   /**
    * Address struct of the socket currently in use
    */
-  sockaddr mAddr;
+  sockaddr_any mAddr;
 };
 
 template<class T>
@@ -441,9 +441,12 @@ UnixSocketImpl::Accept()
 
   // This will set things we don't particularly care about, but it will hand
   // back the correct structure size which is what we do care about.
-  mConnector->CreateAddr(true, mAddrSize, &mAddr, nullptr);
+  if (!mConnector->CreateAddr(true, mAddrSize, mAddr, nullptr)) {
+    NS_WARNING("Cannot create socket address!");
+    return;
+  }
 
-  if(mFd.get() < 0)
+  if (mFd.get() < 0)
   {
     mFd = mConnector->Create();
     if (mFd.get() < 0) {
@@ -454,7 +457,7 @@ UnixSocketImpl::Accept()
       return;
     }
 
-    if (bind(mFd.get(), &mAddr, mAddrSize)) {
+    if (bind(mFd.get(), (struct sockaddr*)&mAddr, mAddrSize)) {
 #ifdef DEBUG
       LOG("...bind(%d) gave errno %d", mFd.get(), errno);
 #endif
@@ -493,9 +496,12 @@ UnixSocketImpl::Connect()
 
   int ret;
 
-  mConnector->CreateAddr(false, mAddrSize, &mAddr, mAddress.get());
+  if (!mConnector->CreateAddr(false, mAddrSize, mAddr, mAddress.get())) {
+    NS_WARNING("Cannot create socket address!");
+    return;
+  }
 
-  ret = connect(mFd.get(), &mAddr, mAddrSize);
+  ret = connect(mFd.get(), (struct sockaddr*)&mAddr, mAddrSize);
 
   if (ret) {
 #if DEBUG
@@ -660,7 +666,7 @@ UnixSocketImpl::OnFileCanReadWithoutBlocking(int aFd)
   }
 
   if (status == SOCKET_LISTENING) {
-    int client_fd = accept(mFd.get(), &mAddr, &mAddrSize);
+    int client_fd = accept(mFd.get(), (struct sockaddr*)&mAddr, &mAddrSize);
 
     if (client_fd < 0) {
       return;

@@ -3,13 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 'use strict';
 
-const { Loader } = require('sdk/test/loader');
+const { Loader, LoaderWithHookedConsole } = require("sdk/test/loader");
 const { browserWindows } = require('sdk/windows');
 const tabs = require('sdk/tabs');
 const { isPrivate } = require('sdk/private-browsing');
 const { openDialog } = require('sdk/window/utils');
 const pbUtils = require('sdk/private-browsing/utils');
 const { isWindowPrivate } = require('sdk/window/utils');
+const { setTimeout } = require('sdk/timers');
 
 const URL = 'data:text/html;charset=utf-8,<html><head><title>#title#</title></head></html>';
 
@@ -350,5 +351,39 @@ exports.testPrivateAreNotListed = function (test) {
       test.done();
     });
     win.close();
+  });
+}
+
+// If we close the tab while being in `onOpen` listener,
+// we end up synchronously consuming TabOpen, closing the tab and still
+// synchronously consuming the related TabClose event before the second
+// loader have a change to process the first TabOpen event!
+exports.testImmediateClosing = function (test) {
+  test.waitUntilDone();
+  let { loader, messages } = LoaderWithHookedConsole(module, onMessage);
+  let concurrentTabs = loader.require("sdk/tabs");
+  concurrentTabs.on("open", function () {
+    test.fail("Concurrent loader manager receive a tabs `open` event");
+    // It shouldn't receive such event as the other loader will just open
+    // and destroy the tab without giving a change to other loader to even know
+    // about the existance of this tab.
+  });
+  function onMessage(type, msg) {
+    test.fail("Unexpected mesage on concurrent loader: " + msg);
+  }
+
+  tabs.open({
+    url: 'about:blank',
+    onOpen: function(tab) {
+      tab.close(function () {
+        test.pass("Tab succesfully removed");
+        // Let a chance to the concurrent loader to receive a TabOpen event
+        // on the next event loop turn
+        setTimeout(function () {
+          loader.unload();
+          test.done();
+        }, 0);
+      });
+    }
   });
 }

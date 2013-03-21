@@ -11,7 +11,6 @@ include $(DEPTH)/config/autoconf.mk
 
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/crashreporter
 
-MODULE = ipc
 LIBRARY_NAME = mozipc_s
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1

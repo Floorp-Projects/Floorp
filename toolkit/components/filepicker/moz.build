@@ -5,7 +5,7 @@
 
 if CONFIG['MOZ_XUL'] and \
     CONFIG['MOZ_WIDGET_TOOLKIT'] not in ('android', 'qt', 'os2', 'cocoa', 'windows'):
-
+        MODULE = 'filepicker'
         XPIDL_SOURCES += [
             'nsIFileView.idl',
         ]

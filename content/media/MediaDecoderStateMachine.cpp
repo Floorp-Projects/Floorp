@@ -986,7 +986,6 @@ void MediaDecoderStateMachine::AudioLoop()
   bool setPlaybackRate;
   bool preservesPitch;
   bool setPreservesPitch;
-  int32_t minWriteFrames = -1;
   AudioChannelType audioChannelType;
 
   {
@@ -1089,9 +1088,6 @@ void MediaDecoderStateMachine::AudioLoop()
         NS_WARNING("Setting the pitch preservation failed in AudioLoop.");
       }
     }
-    if (minWriteFrames == -1) {
-      minWriteFrames = mAudioStream->GetMinWriteSize();
-    }
     NS_ASSERTION(mReader->AudioQueue().GetSize() > 0,
                  "Should have data to play");
     // See if there's a gap in the audio. If there is, push silence into the
@@ -1149,23 +1145,6 @@ void MediaDecoderStateMachine::AudioLoop()
       // before the audio thread terminates.
       bool seeking = false;
       {
-        int64_t unplayedFrames = audioDuration % minWriteFrames;
-        if (minWriteFrames > 1 && unplayedFrames > 0) {
-          // Sound is written by libsydneyaudio to the hardware in blocks of
-          // frames of size minWriteFrames. So if the number of frames we've
-          // written isn't an exact multiple of minWriteFrames, we'll have
-          // left over audio data which hasn't yet been written to the hardware,
-          // and so that audio will not start playing. Write silence to ensure
-          // the last block gets pushed to hardware, so that playback starts.
-          int64_t framesToWrite = minWriteFrames - unplayedFrames;
-          if (framesToWrite < UINT32_MAX / channels) {
-            // Write silence manually rather than using PlaySilence(), so that
-            // the AudioAPI doesn't get a copy of the audio frames.
-            ReentrantMonitorAutoExit exit(mDecoder->GetReentrantMonitor());
-            WriteSilence(mAudioStream, framesToWrite);
-          }
-        }
-
         int64_t oldPosition = -1;
         int64_t position = GetMediaTime();
         while (oldPosition != position &&

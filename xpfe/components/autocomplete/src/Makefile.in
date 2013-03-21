@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= appcomps
 MODULE_NAME	= xpAutoComplete
 LIBRARY_NAME	= xpautocomplete
 SHORT_LIBNAME	= xpautoc
