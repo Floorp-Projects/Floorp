@@ -1752,8 +1752,7 @@ private:
 class XPCNativeMember
 {
 public:
-    static JSBool GetCallInfo(XPCCallContext& ccx,
-                              JSObject* funobj,
+    static JSBool GetCallInfo(JSObject* funobj,
                               XPCNativeInterface** pInterface,
                               XPCNativeMember**    pMember);
 
