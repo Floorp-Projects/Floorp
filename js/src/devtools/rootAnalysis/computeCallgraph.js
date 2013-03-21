@@ -75,6 +75,9 @@ function memo(name)
     return memoized[name];
 }
 
+var seenCallees = null;
+var seenSuppressedCallees = null;
+
 function processBody(caller, body)
 {
     if (!('PEdge' in body))
@@ -83,29 +86,43 @@ function processBody(caller, body)
         if (edge.Kind != "Call")
             continue;
         var callee = edge.Exp[0];
-        var suppressText = (edge.Index[0] in body.suppressed) ? "SUPPRESS_GC " : "";
+        var suppressText = "";
+        var seen = seenCallees;
+        if (edge.Index[0] in body.suppressed) {
+            suppressText = "SUPPRESS_GC ";
+            seen = seenSuppressedCallees;
+        }
         var prologue = suppressText + memo(caller) + " ";
         if (callee.Kind == "Var") {
             assert(callee.Variable.Kind == "Func");
             var name = callee.Variable.Name[0];
-            print("D " + prologue + memo(name));
+            if (!(name in seen)) {
+                print("D " + prologue + memo(name));
+                seen[name] = true;
+            }
             var otherName = otherDestructorName(name);
-            if (otherName)
+            if (otherName && !(otherName in seen)) {
                 print("D " + prologue + memo(otherName));
+                seen[otherName] = true;
+            }
         } else {
             assert(callee.Kind == "Drf");
             if (callee.Exp[0].Kind == "Fld") {
                 var field = callee.Exp[0].Field;
-                if ("FieldInstanceFunction" in field) {
+                var fieldName = field.Name[0];
+                var csuName = field.FieldCSU.Type.Name;
+                if ("FieldInstanceFunction" in field && csuName != "nsISupports") {
                     // virtual function call.
-                    var functions = findVirtualFunctions(field.FieldCSU.Type.Name, field.Name[0]);
-                    for (var name of functions)
-                        print("D " + prologue + memo(name));
-                } else {
+                    var functions = findVirtualFunctions(csuName, fieldName);
+                    for (var name of functions) {
+                        if (!(name in seen)) {
+                            print("D " + prologue + memo(name));
+                            seen[name] = true;
+                        }
+                    }
+                } else if (csuName != "nsISupports" || fieldName == "QueryInterface") {
                     // indirect call through a field.
-                    print("F " + prologue +
-                          "CLASS " + field.FieldCSU.Type.Name +
-                          " FIELD " + field.Name[0]);
+                    print("F " + prologue + "CLASS " + csuName + " FIELD " + fieldName);
                 }
             } else if (callee.Exp[0].Kind == "Var") {
                 // indirect call through a variable.
@@ -150,6 +167,10 @@ for (var nameIndex = minStream; nameIndex <= maxStream; nameIndex++) {
         body.suppressed = [];
     for (var body of functionBodies)
         computeSuppressedPoints(body);
+
+    seenCallees = {};
+    seenSuppressedCallees = {};
+
     for (var body of functionBodies)
         processBody(name.readString(), body);
 
