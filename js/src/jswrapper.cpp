@@ -231,24 +231,25 @@ bool CrossCompartmentWrapper::finalizeInBackground(HandleValue priv)
 #define NOTHING (true)
 
 bool
-CrossCompartmentWrapper::getPropertyDescriptor(JSContext *cx, JSObject *wrapperArg, jsid id,
+CrossCompartmentWrapper::getPropertyDescriptor(JSContext *cx, HandleObject wrapper, HandleId id,
                                                PropertyDescriptor *desc, unsigned flags)
 {
-    RootedObject wrapper(cx, wrapperArg);
+    RootedId idCopy(cx, id);
     PIERCE(cx, wrapper,
-           cx->compartment->wrapId(cx, &id),
-           Wrapper::getPropertyDescriptor(cx, wrapper, id, desc, flags),
+           cx->compartment->wrapId(cx, idCopy.address()),
+           Wrapper::getPropertyDescriptor(cx, wrapper, idCopy, desc, flags),
            cx->compartment->wrap(cx, desc));
 }
 
 bool
-CrossCompartmentWrapper::getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapperArg, jsid id,
-                                                  PropertyDescriptor *desc, unsigned flags)
+CrossCompartmentWrapper::getOwnPropertyDescriptor(JSContext *cx, HandleObject wrapper,
+                                                  HandleId id, PropertyDescriptor *desc,
+                                                  unsigned flags)
 {
-    RootedObject wrapper(cx, wrapperArg);
+    RootedId idCopy(cx, id);
     PIERCE(cx, wrapper,
-           cx->compartment->wrapId(cx, &id),
-           Wrapper::getOwnPropertyDescriptor(cx, wrapper, id, desc, flags),
+           cx->compartment->wrapId(cx, idCopy.address()),
+           Wrapper::getOwnPropertyDescriptor(cx, wrapper, idCopy, desc, flags),
            cx->compartment->wrap(cx, desc));
 }
 
@@ -702,7 +703,7 @@ DeadObjectProxy::DeadObjectProxy()
 }
 
 bool
-DeadObjectProxy::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
+DeadObjectProxy::getPropertyDescriptor(JSContext *cx, HandleObject wrapper, HandleId id,
                                        PropertyDescriptor *desc, unsigned flags)
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEAD_OBJECT);
@@ -710,7 +711,7 @@ DeadObjectProxy::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id
 }
 
 bool
-DeadObjectProxy::getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
+DeadObjectProxy::getOwnPropertyDescriptor(JSContext *cx, HandleObject wrapper, HandleId id,
                                           PropertyDescriptor *desc, unsigned flags)
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEAD_OBJECT);

@@ -3477,7 +3477,7 @@ LookupPropertyById(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
 #define AUTO_NAMELEN(s,n)   (((n) == (size_t)-1) ? js_strlen(s) : (n))
 
 static JSBool
-LookupResult(JSContext *cx, HandleObject obj, HandleObject obj2, jsid id,
+LookupResult(JSContext *cx, HandleObject obj, HandleObject obj2, HandleId id,
              HandleShape shape, Value *vp)
 {
     if (!shape) {

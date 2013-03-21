@@ -67,7 +67,8 @@ FilterSetter(JSContext *cx, JSObject *wrapper, jsid id, js::PropertyDescriptor *
 
 template <typename Base, typename Policy>
 bool
-FilteringWrapper<Base, Policy>::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
+FilteringWrapper<Base, Policy>::getPropertyDescriptor(JSContext *cx, JS::Handle<JSObject *> wrapper,
+                                                      JS::Handle<jsid> id,
                                                       js::PropertyDescriptor *desc, unsigned flags)
 {
     assertEnteredPolicy(cx, wrapper, id);
@@ -78,7 +79,8 @@ FilteringWrapper<Base, Policy>::getPropertyDescriptor(JSContext *cx, JSObject *w
 
 template <typename Base, typename Policy>
 bool
-FilteringWrapper<Base, Policy>::getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
+FilteringWrapper<Base, Policy>::getOwnPropertyDescriptor(JSContext *cx, JS::Handle<JSObject *> wrapper,
+                                                         JS::Handle<jsid> id,
                                                          js::PropertyDescriptor *desc,
                                                          unsigned flags)
 {

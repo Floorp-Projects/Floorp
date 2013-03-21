@@ -537,11 +537,15 @@ public:
   virtual void finalize(JSFreeOp *fop, JSObject *proxy) MOZ_OVERRIDE;
 
   // Fundamental traps
-  virtual bool getPropertyDescriptor(JSContext* cx, JSObject* proxy,
-                                     jsid id, JSPropertyDescriptor* desc,
+  virtual bool getPropertyDescriptor(JSContext* cx,
+                                     JS::Handle<JSObject *> proxy,
+                                     JS::Handle<jsid> id,
+                                     JSPropertyDescriptor* desc,
                                      unsigned flags) MOZ_OVERRIDE;
-  virtual bool getOwnPropertyDescriptor(JSContext* cx, JSObject* proxy,
-                                        jsid id, JSPropertyDescriptor* desc,
+  virtual bool getOwnPropertyDescriptor(JSContext* cx,
+                                        JS::Handle<JSObject *> proxy,
+                                        JS::Handle<jsid> id,
+                                        JSPropertyDescriptor* desc,
                                         unsigned flags) MOZ_OVERRIDE;
   virtual bool defineProperty(JSContext* cx, JSObject* proxy,
                               jsid id, JSPropertyDescriptor* desc) MOZ_OVERRIDE;
@@ -609,8 +613,9 @@ nsOuterWindowProxy::finalize(JSFreeOp *fop, JSObject *proxy)
 }
 
 bool
-nsOuterWindowProxy::getPropertyDescriptor(JSContext* cx, JSObject* proxy,
-                                          jsid id,
+nsOuterWindowProxy::getPropertyDescriptor(JSContext* cx,
+                                          JS::Handle<JSObject *> proxy,
+                                          JS::Handle<jsid> id,
                                           JSPropertyDescriptor* desc,
                                           unsigned flags)
 {
@@ -630,8 +635,9 @@ nsOuterWindowProxy::getPropertyDescriptor(JSContext* cx, JSObject* proxy,
 }
 
 bool
-nsOuterWindowProxy::getOwnPropertyDescriptor(JSContext* cx, JSObject* proxy,
-                                             jsid id,
+nsOuterWindowProxy::getOwnPropertyDescriptor(JSContext* cx,
+                                             JS::Handle<JSObject *> proxy,
+                                             JS::Handle<jsid> id,
                                              JSPropertyDescriptor* desc,
                                              unsigned flags)
 {

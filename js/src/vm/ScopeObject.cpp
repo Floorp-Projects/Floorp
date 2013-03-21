@@ -1305,18 +1305,17 @@ class DebugScopeProxy : public BaseProxyHandler
 
     DebugScopeProxy() : BaseProxyHandler(&family) {}
 
-    bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, PropertyDescriptor *desc,
+    bool getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id, PropertyDescriptor *desc,
                                unsigned flags) MOZ_OVERRIDE
     {
         return getOwnPropertyDescriptor(cx, proxy, id, desc, flags);
     }
 
-    bool getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid idArg,
+    bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
                                   PropertyDescriptor *desc, unsigned flags) MOZ_OVERRIDE
     {
         Rooted<DebugScopeObject*> debugScope(cx, &proxy->asDebugScope());
         Rooted<ScopeObject*> scope(cx, &debugScope->scope());
-        RootedId id(cx, idArg);
 
         ArgumentsObject *maybeArgsObj;
         if (!checkForMissingArguments(cx, id, *scope, &maybeArgsObj))

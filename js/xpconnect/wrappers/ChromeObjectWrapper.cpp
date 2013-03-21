@@ -40,8 +40,11 @@ PropIsFromStandardPrototype(JSContext *cx, JSPropertyDescriptor *desc)
 // This lets us determine whether the property we would have found (given a
 // transparent wrapper) would have come off a standard prototype.
 static bool
-PropIsFromStandardPrototype(JSContext *cx, JSObject *wrapper, jsid id)
+PropIsFromStandardPrototype(JSContext *cx, JSObject *wrapperArg, jsid idArg)
 {
+    JS::Rooted<JSObject *> wrapper(cx, wrapperArg);
+    JS::Rooted<jsid> id(cx, idArg);
+
     MOZ_ASSERT(js::Wrapper::wrapperHandler(wrapper) ==
                &ChromeObjectWrapper::singleton);
     JSPropertyDescriptor desc;
@@ -56,8 +59,10 @@ PropIsFromStandardPrototype(JSContext *cx, JSObject *wrapper, jsid id)
 }
 
 bool
-ChromeObjectWrapper::getPropertyDescriptor(JSContext *cx, JSObject *wrapper,
-                                           jsid id, js::PropertyDescriptor *desc,
+ChromeObjectWrapper::getPropertyDescriptor(JSContext *cx,
+                                           JS::Handle<JSObject *> wrapper,
+                                           JS::Handle<jsid> id,
+                                           js::PropertyDescriptor *desc,
                                            unsigned flags)
 {
     assertEnteredPolicy(cx, wrapper, id);
