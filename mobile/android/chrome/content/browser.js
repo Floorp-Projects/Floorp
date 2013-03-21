@@ -3501,13 +3501,19 @@ Tab.prototype = {
 
     // If the page size has changed so that it might or might not fit on the
     // screen with the margins included, run updateViewportSize to resize the
-    // browser accordingly. The -1 is to account for rounding errors.
+    // browser accordingly.
+    // A page will receive the smaller viewport when its page size fits
+    // within the screen size, so remeasure when the page size remains within
+    // the threshold of screen + margins, in case it's sizing itself relative
+    // to the viewport.
     if (!this.updatingViewportForPageSizeChange) {
       this.updatingViewportForPageSizeChange = true;
-      if (((viewport.pageBottom - viewport.pageTop <= gScreenHeight - 1) !=
-           this.viewportExcludesVerticalMargins) ||
-          ((viewport.pageRight - viewport.pageLeft <= gScreenWidth - 1) !=
-           this.viewportExcludesHorizontalMargins)) {
+      if (((viewport.pageBottom - viewport.pageTop
+              < gScreenHeight + gViewportMargins.top + gViewportMargins.bottom)
+             != this.viewportExcludesVerticalMargins) ||
+          ((viewport.pageRight - viewport.pageLeft
+              < gScreenWidth + gViewportMargins.left + gViewportMargins.right)
+             != this.viewportExcludesHorizontalMargins)) {
         this.updateViewportSize(gScreenWidth);
       }
       this.updatingViewportForPageSizeChange = false;
@@ -4000,15 +4006,14 @@ Tab.prototype = {
 
       minScale = screenW / pageWidth;
 
-      // In the situation the page size exceeds the screen size minus the
-      // viewport margins on either axis, lengthen the viewport on the
-      // corresponding axis to include the margins.
-      // The +1 is to account for rounding errors.
-      if (pageWidth * this._zoom >= screenW + 1) {
+      // In the situation the page size equals or exceeds the screen size,
+      // lengthen the viewport on the corresponding axis to include the margins.
+      // The -1 is to account for rounding errors.
+      if (pageWidth * this._zoom > gScreenWidth - 1) {
         screenW = gScreenWidth;
         this.viewportExcludesHorizontalMargins = false;
       }
-      if (pageHeight * this._zoom >= screenH + 1) {
+      if (pageHeight * this._zoom > gScreenHeight - 1) {
         screenH = gScreenHeight;
         this.viewportExcludesVerticalMargins = false;
       }
