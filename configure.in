@@ -4393,7 +4393,7 @@ if test -f "${srcdir}/${MOZ_BUILD_APP}/configure.in" ; then
     _subconfigure_subdir="$1"
     _subconfigure_config_args="$ac_configure_args"
   }
-  tmpscript=`mktemp -t subscript.XXXXXX` || exit 1
+  tmpscript=`python -c 'import os, tempfile; print tempfile.mktemp(prefix="subscript.").replace(os.sep, "/")'` || exit 1
   m4 "${srcdir}/build/autoconf/subconfigure.m4" \
      "${srcdir}/build/autoconf/altoptions.m4" \
      "${srcdir}/${MOZ_BUILD_APP}/configure.in" > $tmpscript
