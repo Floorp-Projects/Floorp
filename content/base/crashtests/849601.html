@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+
+function addEmptyMutationObserver()
+{
+  var m = new MutationObserver(function () {});
+  var e = document.createElement('i');
+  m.observe(e, { childList: true });
+}
+
+function addPointlessMutationListener()
+{
+  var a = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+  a.appendChild(document.createTextNode("1"));
+
+  function f() {
+    window.removeEventListener("DOMSubtreeModified", f, false);
+    a.insertAdjacentHTML("afterBegin", "<span></span>");
+  };
+
+  window.addEventListener("DOMSubtreeModified", f, false);
+}
+
+function boom()
+{
+  addEmptyMutationObserver();
+  addPointlessMutationListener();
+  document.body.outerHTML = "";
+}
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+</html>

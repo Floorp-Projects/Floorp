@@ -3387,7 +3387,6 @@ Element::SetOuterHTML(const nsAString& aOuterHTML, ErrorResult& aError)
                                       OwnerDoc()->GetCompatibilityMode() ==
                                         eCompatibility_NavQuirks,
                                       true);
-    nsAutoMutationBatch mb(parent, true, false);
     parent->ReplaceChild(*fragment, *this, aError);
     return;
   }
@@ -3415,7 +3414,6 @@ Element::SetOuterHTML(const nsAString& aOuterHTML, ErrorResult& aError)
     return;
   }
   nsCOMPtr<nsINode> fragment = do_QueryInterface(df);
-  nsAutoMutationBatch mb(parent, true, false);
   parent->ReplaceChild(*fragment, *this, aError);
 }
 
