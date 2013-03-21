@@ -1,4 +1,5 @@
 {
-  "Document.getElementsByTagName 2": true,
-  "Document.getElementsByTagName 3": true
+  "Shouldn't be able to set unsigned properties on a HTMLCollection (strict mode)": true,
+  "Document.getElementsByTagName 1": true,
+  "Document.getElementsByTagName 2": true
 }
