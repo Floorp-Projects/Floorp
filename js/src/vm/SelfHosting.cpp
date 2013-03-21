@@ -541,6 +541,12 @@ JSRuntime::initSelfHosting(JSContext *cx)
 }
 
 void
+JSRuntime::finishSelfHosting()
+{
+    selfHostingGlobal_ = NULL;
+}
+
+void
 JSRuntime::markSelfHostingGlobal(JSTracer *trc)
 {
     MarkObjectRoot(trc, &selfHostingGlobal_, "self-hosting global");
