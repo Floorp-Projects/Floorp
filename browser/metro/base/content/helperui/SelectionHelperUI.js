@@ -227,6 +227,7 @@ var SelectionHelperUI = {
   _activeSelectionRect: null,
   _selectionHandlerActive: false,
   _selectionMarkIds: [],
+  _targetIsEditable: false,
 
   /*
    * Properties
@@ -366,12 +367,16 @@ var SelectionHelperUI = {
 
   /*
    * closeEditSessionAndClear
-   * 
+   *
    * Closes an active edit session and shuts down. Clears any selection region
    * associated with the edit session.
+   *
+   * @param aClearFocus bool indicating if the selection handler should also
+   * clear the focus element. optional, the default is false.
    */
-  closeEditSessionAndClear: function closeEditSessionAndClear() {
-    this._sendAsyncMessage("Browser:SelectionClear");
+  closeEditSessionAndClear: function closeEditSessionAndClear(aClearFocus) {
+    let clearFocus = aClearFocus || false;
+    this._sendAsyncMessage("Browser:SelectionClear", { clearFocus: clearFocus });
     this.closeEditSession();
   },
 
@@ -387,6 +392,10 @@ var SelectionHelperUI = {
     this._selectionMarkIds = ["selectionhandle-mark1",
                               "selectionhandle-mark2",
                               "selectionhandle-mark3"];
+
+    // Init selection rect info
+    this._activeSelectionRect = Util.getCleanRect();
+    this._targetElementRect = Util.getCleanRect();
 
     // SelectionHandler messages
     messageManager.addMessageListener("Content:SelectionRange", this);
@@ -587,34 +596,53 @@ var SelectionHelperUI = {
   /*
    * _onTap
    * 
-   * Handles taps that move the current caret around text text
-   * edits. Also will clear active selection if it is present.
-   * Future: changing slection modes by tapping on a monocle.
+   * Handles taps that move the current caret around in text edits,
+   * clear active selection and focus when neccessary, or change
+   * modes.
+   * Future: changing selection modes by tapping on a monocle.
    */
   _onTap: function _onTap(aEvent) {
+    // Check for a tap on a monocle
     if (this.startMark.hitTest(aEvent.clientX, aEvent.clientY) ||
         this.endMark.hitTest(aEvent.clientX, aEvent.clientY)) {
+      aEvent.stopPropagation();
+      aEvent.preventDefault();
       return;
     }
 
-    // If the tap is within the target element and the caret monocle is
+    // Is the tap point within the bound of the target element? This
+    // is useful if we are dealing with some sort of input control.
+    // Not so much if the target is a page or div.
+    let pointInTargetElement =
+      Util.pointWithinRect(aEvent.clientX, aEvent.clientY,
+                           this._targetElementRect);
+
+    // If the tap is within an editable element and the caret monocle is
     // active, update the caret.
-    if (this.caretMark.visible &&
-        Util.pointWithinRect(aEvent.clientX, aEvent.clientY,
-                             this._targetElementRect)) {
+    if (this.caretMark.visible && pointInTargetElement) {
       // Move the caret
       this._setCaretPositionAtPoint(aEvent.clientX, aEvent.clientY);
       return;
     }
 
+    // if the target is editable and the user clicks off the target
+    // clear selection and remove focus from the input.
     if (this.caretMark.visible) {
-      // shutdown selection
-      this.closeEditSessionAndClear();
+      // shutdown and clear selection and remove focus
+      this.closeEditSessionAndClear(true);
       return;
     }
 
-    // If we have active selection w/monocles, don't let random taps
-    // kill selection.
+    // If the target is editable, we have active selection, and
+    // the user taps off the input, clear selection and shutdown.
+    if (this.startMark.visible && !pointInTargetElement &&
+        this._targetIsEditable) {
+      this.closeEditSessionAndClear(true);
+      return;
+    }
+
+    // If we have active selection in anything else don't let the event get
+    // to content. Prevents random taps from killing active selection.
     aEvent.stopPropagation();
     aEvent.preventDefault();
   },
@@ -660,6 +688,7 @@ var SelectionHelperUI = {
     }
     this._activeSelectionRect = json.selection;
     this._targetElementRect = json.element;
+    this._targetIsEditable = json.targetIsEditable;
   },
 
   _onSelectionFail: function _onSelectionFail() {
