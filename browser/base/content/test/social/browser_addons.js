@@ -17,10 +17,10 @@ let manifest = { // normal provider
 };
 let manifest2 = { // used for testing install
   name: "provider 2",
-  origin: "https://example1.com",
-  sidebarURL: "https://example1.com/browser/browser/base/content/test/social/social_sidebar.html",
-  workerURL: "https://example1.com/browser/browser/base/content/test/social/social_worker.js",
-  iconURL: "https://example1.com/browser/browser/base/content/test/moz.png"
+  origin: "https://test1.example.com",
+  sidebarURL: "https://test1.example.com/browser/browser/base/content/test/social/social_sidebar.html",
+  workerURL: "https://test1.example.com/browser/browser/base/content/test/social/social_worker.js",
+  iconURL: "https://test1.example.com/browser/browser/base/content/test/moz.png"
 };
 
 function test() {
@@ -174,62 +174,73 @@ var tests = {
 
     // we expect the addon install dialog to appear, we need to accept the
     // install from the dialog.
-    let windowListener = {
+    info("Waiting for install dialog");
+    Services.wm.addListener({
       onWindowTitleChange: function() {},
       onCloseWindow: function() {},
-      onOpenWindow: function(window) {
-        var domwindow = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+      onOpenWindow: function(xulwindow) {
+        Services.wm.removeListener(this);
+        var domwindow = xulwindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                               .getInterface(Components.interfaces.nsIDOMWindow);
-        var self = this;
         waitForFocus(function() {
-          self.windowReady(domwindow);
-        }, domwindow);
-      },
-      windowReady: function(window) {
-        if (window.document.location.href == XPINSTALL_URL) {
+          info("Saw install dialog");
+          is(domwindow.document.location.href, XPINSTALL_URL, "Should have seen the right window open");
           // Initially the accept button is disabled on a countdown timer
-          var button = window.document.documentElement.getButton("accept");
+          var button = domwindow.document.documentElement.getButton("accept");
           button.disabled = false;
-          window.document.documentElement.acceptDialog();
-          Services.wm.removeListener(windowListener);
-        }
+          domwindow.document.documentElement.acceptDialog();
+        }, domwindow);
       }
-    };
-    Services.wm.addListener(windowListener);
+    });
 
-    let installFrom = "https://example1.com";
-    Services.prefs.setCharPref("social.whitelist", "");
-    is(SocialService.getOriginActivationType(installFrom), "foreign", "testing foriegn install");
-    Social.installProvider(installFrom, manifest2, function(addonManifest) {
-      Services.prefs.clearUserPref("social.whitelist");
-      SocialService.addBuiltinProvider(addonManifest.origin, function(provider) {
-        Social.uninstallProvider(addonManifest.origin);
+    let activationURL = manifest2.origin + "/browser/browser/base/content/test/social/social_activate.html"
+    addTab(activationURL, function(tab) {
+      let doc = tab.linkedBrowser.contentDocument;
+      let installFrom = doc.nodePrincipal.origin;
+      Services.prefs.setCharPref("social.whitelist", "");
+      is(SocialService.getOriginActivationType(installFrom), "foreign", "testing foriegn install");
+      Social.installProvider(doc, manifest2, function(addonManifest) {
+        Services.prefs.clearUserPref("social.whitelist");
+        SocialService.addBuiltinProvider(addonManifest.origin, function(provider) {
+          Social.uninstallProvider(addonManifest.origin);
+          gBrowser.removeTab(tab);
+        });
       });
     });
   },
   testWhitelistInstall: function(next) {
     AddonManager.addAddonListener(installListener(next));
 
-    let installFrom = "https://example1.com";
-    Services.prefs.setCharPref("social.whitelist", installFrom);
-    is(SocialService.getOriginActivationType(installFrom), "whitelist", "testing whitelist install");
-    Social.installProvider(installFrom, manifest2, function(addonManifest) {
-      Services.prefs.clearUserPref("social.whitelist");
-      SocialService.addBuiltinProvider(addonManifest.origin, function(provider) {
-        Social.uninstallProvider(addonManifest.origin);
+    let activationURL = manifest2.origin + "/browser/browser/base/content/test/social/social_activate.html"
+    addTab(activationURL, function(tab) {
+      let doc = tab.linkedBrowser.contentDocument;
+      let installFrom = doc.nodePrincipal.origin;
+      Services.prefs.setCharPref("social.whitelist", installFrom);
+      is(SocialService.getOriginActivationType(installFrom), "whitelist", "testing whitelist install");
+      Social.installProvider(doc, manifest2, function(addonManifest) {
+        Services.prefs.clearUserPref("social.whitelist");
+        SocialService.addBuiltinProvider(addonManifest.origin, function(provider) {
+          Social.uninstallProvider(addonManifest.origin);
+          gBrowser.removeTab(tab);
+        });
       });
     });
   },
   testDirectoryInstall: function(next) {
     AddonManager.addAddonListener(installListener(next));
 
-    let installFrom = "https://addons.allizom.org";
-    Services.prefs.setCharPref("social.directories", installFrom);
-    is(SocialService.getOriginActivationType(installFrom), "directory", "testing directory install");
-    Social.installProvider(installFrom, manifest2, function(addonManifest) {
-      Services.prefs.clearUserPref("social.directories");
-      SocialService.addBuiltinProvider(addonManifest.origin, function(provider) {
-        Social.uninstallProvider(addonManifest.origin);
+    let activationURL = manifest2.origin + "/browser/browser/base/content/test/social/social_activate.html"
+    addTab(activationURL, function(tab) {
+      let doc = tab.linkedBrowser.contentDocument;
+      let installFrom = doc.nodePrincipal.origin;
+      Services.prefs.setCharPref("social.directories", installFrom);
+      is(SocialService.getOriginActivationType(installFrom), "directory", "testing directory install");
+      Social.installProvider(doc, manifest2, function(addonManifest) {
+        Services.prefs.clearUserPref("social.directories");
+        SocialService.addBuiltinProvider(addonManifest.origin, function(provider) {
+          Social.uninstallProvider(addonManifest.origin);
+          gBrowser.removeTab(tab);
+        });
       });
     });
   }
