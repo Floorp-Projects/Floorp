@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=853283
+-->
+<window title="Mozilla Bug 853283"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=853283"
+     target="_blank">Mozilla Bug 853283</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test nsNavigatorSH::NewResolve in conjunction with Xrays.**/
+  SimpleTest.waitForExplicitFinish();
+  const Cu = Components.utils;
+
+  function go() {
+    // This chrome document already has Xrays to the content scope, but we use a
+    // a sandbox anyway to make sure that the global in play here isn't an
+    // nsIDOMWindow. Otherwise, the resolve hook might just end up squeaking by
+    // with the chrome window.
+    var iwin = $('ifr').contentWindow;
+    var sb = new Cu.Sandbox(window);
+    sb.iwin = iwin;
+    sb.ok = ok;
+    Cu.evalInSandbox('try {iwin.navigator.mozApps; ok(true, "Didnt throw"); } catch (e) { ok(false, "Threw: " + e);}', sb);
+    SimpleTest.finish();
+  }
+
+
+  ]]>
+  </script>
+  <iframe id="ifr" onload="go();" src="http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html" />
+</window>
