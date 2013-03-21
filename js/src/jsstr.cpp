@@ -762,6 +762,7 @@ str_toLocaleUpperCase(JSContext *cx, unsigned argc, Value *vp)
     return ToUpperCaseHelper(cx, args);
 }
 
+#if !ENABLE_INTL_API
 static JSBool
 str_localeCompare(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -791,6 +792,7 @@ str_localeCompare(JSContext *cx, unsigned argc, Value *vp)
     args.rval().setInt32(result);
     return true;
 }
+#endif
 
 JSBool
 js_str_charAt(JSContext *cx, unsigned argc, Value *vp)
@@ -3374,7 +3376,6 @@ static JSFunctionSpec string_methods[] = {
     JS_FN("trimRight",         str_trimRight,         0,JSFUN_GENERIC_NATIVE),
     JS_FN("toLocaleLowerCase", str_toLocaleLowerCase, 0,JSFUN_GENERIC_NATIVE),
     JS_FN("toLocaleUpperCase", str_toLocaleUpperCase, 0,JSFUN_GENERIC_NATIVE),
-    JS_FN("localeCompare",     str_localeCompare,     1,JSFUN_GENERIC_NATIVE),
 
     /* Perl-ish methods (search is actually Python-esque). */
     JS_FN("match",             str_match,             1,JSFUN_GENERIC_NATIVE),
@@ -3405,6 +3406,15 @@ static JSFunctionSpec string_methods[] = {
 #endif
 
     JS_FN("iterator",          JS_ArrayIterator,      0,0),
+
+    // This must be at the end because of bug 853075: functions listed after
+    // self-hosted methods aren't available in self-hosted code.
+#if ENABLE_INTL_API
+         {"localeCompare",     {NULL, NULL},          1,0, "String_localeCompare"},
+#else
+    JS_FN("localeCompare",     str_localeCompare,     1,JSFUN_GENERIC_NATIVE),
+#endif
+
     JS_FS_END
 };
 
@@ -3474,6 +3484,12 @@ js::str_fromCharCode(JSContext *cx, unsigned argc, Value *vp)
 
 static JSFunctionSpec string_static_methods[] = {
     JS_FN("fromCharCode", js::str_fromCharCode, 1, 0),
+
+    // This must be at the end because of bug 853075: functions listed after
+    // self-hosted methods aren't available in self-hosted code.
+#if ENABLE_INTL_API
+         {"localeCompare",     {NULL, NULL},          2,0, "String_static_localeCompare"},
+#endif
     JS_FS_END
 };
 

@@ -471,6 +471,7 @@ JSFunctionSpec intrinsic_functions[] = {
     JS_FN("ParallelTestsShouldPass", intrinsic_ParallelTestsShouldPass, 0,0),
 
     // See builtin/Intl.h for descriptions of the intl_* functions.
+    JS_FN("intl_Collator", intl_Collator, 2,0),
     JS_FN("intl_Collator_availableLocales", intl_Collator_availableLocales, 0,0),
     JS_FN("intl_availableCollations", intl_availableCollations, 1,0),
     JS_FN("intl_CompareStrings", intl_CompareStrings, 3,0),

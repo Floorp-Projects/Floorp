@@ -20,7 +20,7 @@
          callFunction: false,
          TO_UINT32: false,
          JSMSG_NOT_FUNCTION: false, JSMSG_MISSING_FUN_ARG: false,
-         JSMSG_EMPTY_ARRAY_REDUCE: false,
+         JSMSG_EMPTY_ARRAY_REDUCE: false, JSMSG_CANT_CONVERT_TO: false,
 */
 
 /* Utility macros */
@@ -117,6 +117,13 @@ function ToNumber(v) {
 function ToString(v) {
     assert(arguments.length > 0, "__toString");
     return Std_String(v);
+}
+
+
+/* Spec: ECMAScript Language Specification, 5.1 edition, 9.10 */
+function CheckObjectCoercible(v) {
+    if (v === undefined || v === null)
+        ThrowError(JSMSG_CANT_CONVERT_TO, ToString(v), "object");
 }
 
 
