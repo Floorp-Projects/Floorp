@@ -2356,10 +2356,6 @@
     "n_buckets": 20,
     "description": "Firefox: Time in ms spent on switching tabs in response to a tab click"
   },
-  "FX_KEYWORD_URL_USERSET": {
-    "kind": "boolean",
-    "description": "Firefox: keyword.URL has a user-set value"
-  },
   "FX_IDENTITY_POPUP_OPEN_MS": {
     "kind": "exponential",
     "high": "1000",
