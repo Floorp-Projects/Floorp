@@ -135,7 +135,7 @@ nsBoxObject::GetPresShell(bool aFlushLayout)
     return nullptr;
   }
 
-  nsIDocument* doc = mContent->GetCurrentDoc();
+  nsCOMPtr<nsIDocument> doc = mContent->GetCurrentDoc();
   if (!doc) {
     return nullptr;
   }
