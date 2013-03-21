@@ -19,7 +19,7 @@ dictionary MmsParameters
   jsval      attachments; // MmsAttachment[]
 };
 
-[scriptable, builtinclass, uuid(645161ca-b009-461b-bd13-45c3075cdfba)]
+[scriptable, builtinclass, uuid(4ed1f928-360d-4767-b02b-f74cdc58727d)]
 interface nsIDOMMozMobileMessageManager : nsIDOMEventTarget
 {
   nsIDOMMozSmsSegmentInfo getSegmentInfoForText(in DOMString text);
@@ -43,6 +43,8 @@ interface nsIDOMMozMobileMessageManager : nsIDOMEventTarget
   nsIDOMDOMRequest markMessageRead(in long id, in boolean aValue);
 
   nsIDOMMozSmsRequest getThreadList();
+
+  nsIDOMDOMRequest retrieveMMS(in long id);
 
   [implicit_jscontext] attribute jsval onreceived;
   [implicit_jscontext] attribute jsval onsending;
