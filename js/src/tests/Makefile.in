@@ -19,13 +19,13 @@ TEST_FILES = \
   browser.js \
   js-test-driver-end.js \
   user.js \
-  e4x/ \
   ecma/ \
   ecma_2/ \
   ecma_3/ \
   ecma_3_1/ \
   ecma_5/ \
   ecma_6/ \
+  Intl/ \
   js1_1/ \
   js1_2/ \
   js1_3/ \
