@@ -5718,14 +5718,9 @@ nsNavigatorSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   nsCOMPtr<nsIDOMGlobalPropertyInitializer> gpi(do_QueryInterface(native));
 
   if (gpi) {
-    JSObject *global = JS_GetGlobalForObject(cx, obj);
-
-    nsISupports *globalNative = XPConnect()->GetNativeOfWrapper(cx, global);
-    nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(globalNative);
-
-    if (!window) {
-      return NS_ERROR_UNEXPECTED;
-    }
+    nsCOMPtr<nsIDOMNavigator> navigator = do_QueryWrappedNative(wrapper);
+    nsIDOMWindow *window = static_cast<Navigator*>(navigator.get())->GetWindow();
+    NS_ENSURE_TRUE(window, NS_ERROR_UNEXPECTED);
 
     rv = gpi->Init(window, &prop_val);
     NS_ENSURE_SUCCESS(rv, rv);
