@@ -15,6 +15,7 @@
 #include "nsGUIEvent.h"
 #include "nsGlobalWindow.h"
 #include "nsFocusManager.h"
+#include "nsIContent.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIControllers.h"

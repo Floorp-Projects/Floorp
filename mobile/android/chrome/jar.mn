@@ -35,6 +35,7 @@ chrome.jar:
   content/downloads.js                 (content/downloads.js)
   content/netError.xhtml               (content/netError.xhtml)
   content/SelectHelper.js              (content/SelectHelper.js)
+  content/SelectionHandler.js          (content/SelectionHandler.js)
   content/HelperApps.js                (content/HelperApps.js)
   content/dbg-browser-actors.js        (content/dbg-browser-actors.js)
 * content/WebAppRT.js                  (content/WebAppRT.js)

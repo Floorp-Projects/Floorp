@@ -6,8 +6,8 @@
 #ifndef nsTreeContentView_h__
 #define nsTreeContentView_h__
 
+#include "nsCycleCollectionParticipant.h"
 #include "nsTArray.h"
-#include "nsIDocument.h"
 #include "nsStubDocumentObserver.h"
 #include "nsITreeBoxObject.h"
 #include "nsITreeColumns.h"
@@ -16,6 +16,7 @@
 #include "nsITreeSelection.h"
 #include "mozilla/Attributes.h"
 
+class nsIDocument;
 class Row;
 
 nsresult NS_NewTreeContentView(nsITreeView** aResult);
