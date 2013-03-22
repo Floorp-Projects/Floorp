@@ -73,7 +73,7 @@ template <size_t N> struct NBitMask {
     // triggers divide-by-zero at compile time: a guaranteed compile error in
     // C++11, and usually one in C++98.  Add this value to |result| to assure
     // its computation.
-    static const size_t checkPrecondition = 0 / (N < BitSize<size_t>::result);
+    static const size_t checkPrecondition = 0 / size_t(N < BitSize<size_t>::result);
     static const size_t result = (size_t(1) << N) - 1 + checkPrecondition;
 };
 template <> struct NBitMask<BitSize<size_t>::result> {
