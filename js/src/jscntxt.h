@@ -1146,6 +1146,10 @@ struct JSRuntime : js::RuntimeFriendFields,
 
     js::GCHelperThread  gcHelperThread;
 
+#ifdef XP_MACOSX
+    js::AsmJSMachExceptionHandler asmJSMachExceptionHandler;
+#endif
+
 #ifdef JS_THREADSAFE
 # ifdef JS_ION
     js::WorkerThreadState *workerThreadState;
