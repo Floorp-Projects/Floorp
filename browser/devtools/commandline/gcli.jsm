@@ -3440,17 +3440,20 @@ function Command(commandSpec) {
   // prevents nesting.
   paramSpecs.forEach(function(spec) {
     if (!spec.group) {
-      if (usingGroups) {
+      var param = new Parameter(spec, this, null);
+      this.params.push(param);
+
+      if (!param.isPositionalAllowed) {
+        this.hasNamedParameters = true;
+      }
+
+      if (usingGroups && param.groupName == null) {
         throw new Error('Parameters can\'t come after param groups.' +
                         ' Ignoring ' + this.name + '/' + spec.name);
       }
-      else {
-        var param = new Parameter(spec, this, null);
-        this.params.push(param);
 
-        if (!param.isPositionalAllowed) {
-          this.hasNamedParameters = true;
-        }
+      if (param.groupName != null) {
+        usingGroups = true;
       }
     }
     else {
@@ -3480,7 +3483,20 @@ function Parameter(paramSpec, command, groupName) {
   this.paramSpec = paramSpec;
   this.name = this.paramSpec.name;
   this.type = this.paramSpec.type;
+
   this.groupName = groupName;
+  if (this.groupName != null) {
+    if (this.paramSpec.option != null) {
+      throw new Error('Can\'t have a "option" property in a nested parameter');
+    }
+  }
+  else {
+    if (this.paramSpec.option != null) {
+      this.groupName = this.paramSpec.option === true ?
+              l10n.lookup('canonDefaultGroupName') :
+              '' + this.paramSpec.option;
+    }
+  }
 
   if (!this.name) {
     throw new Error('In ' + this.command.name +
@@ -9381,7 +9397,8 @@ var prefShowCmdSpec = {
     }
   ],
   exec: function Command_prefShow(args, context) {
-    return l10n.lookupFormat('prefShowSettingValue', [ args.setting.name, args.setting.value ]);
+    return l10n.lookupFormat('prefShowSettingValue',
+                             [ args.setting.name, args.setting.value ]);
   }
 };
 
