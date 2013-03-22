@@ -6,6 +6,7 @@
 #ifndef nsBindingManager_h_
 #define nsBindingManager_h_
 
+#include "nsIContent.h"
 #include "nsStubMutationObserver.h"
 #include "pldhash.h"
 #include "nsInterfaceHashtable.h"
@@ -17,7 +18,6 @@
 #include "nsThreadUtils.h"
 
 struct ElementDependentRuleProcessorData;
-class nsIContent;
 class nsIXPConnectWrappedJS;
 class nsIAtom;
 class nsIDOMNodeList;
