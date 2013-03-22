@@ -51,9 +51,10 @@ public:
                               nsIAtom*        aAttribute,
                               int32_t         aModType) MOZ_OVERRIDE;
   virtual void ContentStatesChanged(nsEventStates aStates);
-  virtual bool IsLeaf() const;
-
-
+  virtual bool IsLeaf() const
+  {
+    return true;
+  }
 
   // nsIAnonymousContentCreator
   virtual nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) MOZ_OVERRIDE;
@@ -154,6 +155,4 @@ protected:
   void UpdateDisplayedValue(const nsAString& aValue, bool aNotify);
 };
 
-#endif
-
-
+#endif // nsFileControlFrame_h___
