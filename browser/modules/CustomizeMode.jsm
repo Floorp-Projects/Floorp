@@ -68,6 +68,7 @@ CustomizeMode.prototype = {
     // Same goes for the menu button - if we're customizing, a click to the
     // menu button means a quick exit from customization mode.
     window.PanelUI.menuButton.addEventListener("click", this, false);
+    window.PanelUI.menuButton.disabled = true;
 
     // Let everybody in this window know that we're about to customize.
     let evt = document.createEvent("CustomEvent");
@@ -120,6 +121,7 @@ CustomizeMode.prototype = {
     let tabViewDeck = this.document.getElementById("tab-view-deck");
     tabViewDeck.removeEventListener("keypress", this, false);
     this.window.PanelUI.menuButton.removeEventListener("click", this, false);
+    this.window.PanelUI.menuButton.disabled = false;
 
     this.depopulatePalette();
 
