@@ -25,7 +25,7 @@ interface nsIURI;
  * interface to mirror this interface when changing it.
  */
 
-[scriptable, uuid(24a35de3-40e4-498e-9c1b-2fd0a2d4cae5)]
+[scriptable, uuid(070bfc7f-f8b8-4e84-aa31-a0bfaffa8e8e)]
 interface nsIObjectLoadingContent : nsISupports
 {
   /**
@@ -86,6 +86,13 @@ interface nsIObjectLoadingContent : nsISupports
    * TYPE_NULL will be returned.
    */
   unsigned long getContentTypeForMIMEType(in AUTF8String aMimeType);
+
+  /**
+   * Returns the base URI of the object as seen by plugins. This differs from
+   * the normal codebase in that it takes <param> tags and plugin-specific
+   * quirks into account.
+   */
+  [noscript] readonly attribute nsIURI baseURI;
 
   /**
    * Returns the plugin instance if it has already been instantiated. This

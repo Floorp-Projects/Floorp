@@ -1067,6 +1067,13 @@ nsObjectLoadingContent::GetContentTypeForMIMEType(const nsACString& aMIMEType,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsObjectLoadingContent::GetBaseURI(nsIURI **aResult)
+{
+  NS_IF_ADDREF(*aResult = mBaseURI);
+  return NS_OK;
+}
+
 // nsIInterfaceRequestor
 // We use a shim class to implement this so that JS consumers still
 // see an interface requestor even though WebIDL bindings don't expose
