@@ -489,6 +489,13 @@ gfxPlatformGtk::GetPlatformCMSOutputProfile()
 
     Atom edidAtom, iccAtom;
     Display *dpy = GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
+    // In xpcshell tests, we never initialize X and hence don't have a Display.
+    // In this case, there's no output colour management to be done, so we just
+    // return NULL.
+    if (!dpy) {
+        return NULL;
+    }
+
     Window root = gdk_x11_get_default_root_xwindow();
 
     Atom retAtom;
