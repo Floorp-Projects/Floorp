@@ -17,6 +17,8 @@
 
 namespace mozilla {
 
+/* 20.9.3 Helper classes */
+
 /**
  * Helper class used as a base for various type traits, exposed publicly
  * because <type_traits> exposes it as well.
@@ -32,6 +34,32 @@ struct IntegralConstant
 /** Convenient aliases. */
 typedef IntegralConstant<bool, true> TrueType;
 typedef IntegralConstant<bool, false> FalseType;
+
+/* 20.9.4 Unary type traits */
+
+/* 20.9.4.1 Primary type categories */
+
+/* 20.9.4.2 Composite type traits */
+
+/* 20.9.4.3 Type properties */
+
+/* 20.9.5 Type property queries */
+
+/* 20.9.6 Relationships between types */
+
+/* 20.9.7 Transformations between types */
+
+/* 20.9.7.1 Const-volatile modifications */
+
+/* 20.9.7.2 Reference modifications */
+
+/* 20.9.7.3 Sign modifications */
+
+/* 20.9.7.4 Array modifications */
+
+/* 20.9.7.5 Pointer modifications */
+
+/* 20.9.7.6 Other transformations */
 
 namespace detail {
 
