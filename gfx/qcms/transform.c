@@ -886,9 +886,17 @@ static void qcms_transform_data_rgb_out_linear(qcms_transform *transform, unsign
 }
 #endif
 
+/*
+ * If users create and destroy objects on different threads, even if the same
+ * objects aren't used on different threads at the same time, we can still run
+ * in to trouble with refcounts if they aren't atomic.
+ *
+ * This can lead to us prematurely deleting the precache if threads get unlucky
+ * and write the wrong value to the ref count.
+ */
 static struct precache_output *precache_reference(struct precache_output *p)
 {
-	p->ref_count++;
+	qcms_atomic_increment(p->ref_count);
 	return p;
 }
 
@@ -902,7 +910,7 @@ static struct precache_output *precache_create()
 
 void precache_release(struct precache_output *p)
 {
-	if (--p->ref_count == 0) {
+	if (qcms_atomic_decrement(p->ref_count) == 0) {
 		free(p);
 	}
 }
