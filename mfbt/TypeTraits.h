@@ -151,20 +151,6 @@ struct IsBaseOf
   : Conditional<detail::BaseOfTester<Base, Derived>::value, TrueType, FalseType>::Type
 {};
 
-/* 20.9.7 Transformations between types */
-
-/* 20.9.7.1 Const-volatile modifications */
-
-/* 20.9.7.2 Reference modifications */
-
-/* 20.9.7.3 Sign modifications */
-
-/* 20.9.7.4 Array modifications */
-
-/* 20.9.7.5 Pointer modifications */
-
-/* 20.9.7.6 Other transformations */
-
 namespace detail {
 
 template<typename From, typename To>
@@ -211,6 +197,20 @@ template<typename From, typename To>
 struct IsConvertible
   : Conditional<detail::ConvertibleTester<From, To>::value, TrueType, FalseType>::Type
 {};
+
+/* 20.9.7 Transformations between types */
+
+/* 20.9.7.1 Const-volatile modifications */
+
+/* 20.9.7.2 Reference modifications */
+
+/* 20.9.7.3 Sign modifications */
+
+/* 20.9.7.4 Array modifications */
+
+/* 20.9.7.5 Pointer modifications */
+
+/* 20.9.7.6 Other transformations */
 
 /**
  * Conditional selects a class between two, depending on a given boolean value.
