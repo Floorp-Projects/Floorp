@@ -409,7 +409,7 @@ CustomizeMode.prototype = {
         CustomizableUI.removeWidgetFromArea(draggedItemId);
         draggedWrapper = this.wrapToolbarItem(widget, "palette");
       }
-      this.visiblePalette.appendChild(draggedWrapper);
+      this.visiblePalette.insertBefore(draggedWrapper, targetNode);
       return;
     }
 
