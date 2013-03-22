@@ -60,40 +60,9 @@ BrowserStartup.prototype = {
         return; // no need to do initial import
     }
 
-    Cu.import("resource://gre/modules/PlacesUtils.jsm");
+    Cu.import("resource://gre/modules/BookmarkJSONUtils.jsm");
 
-    try {
-      let observer = {
-        onStreamComplete : function(aLoader, aContext, aStatus, aLength, aResult) {
-          let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
-                          createInstance(Ci.nsIScriptableUnicodeConverter);
-          let jsonStr = "";
-          try {
-            converter.charset = "UTF-8";
-            jsonStr = converter.convertFromByteArray(aResult, aResult.length);
-
-            // aReplace=false since this may be called when there are existing
-            // bookmarks that we don't want to overwrite ("no mobile root"
-            // case from above)
-            PlacesUtils.restoreBookmarksFromJSONString(jsonStr, false);
-          } catch (err) {
-            Cu.reportError("Failed to parse default bookmarks from bookmarks.json: " + err);
-          }
-        }
-      };
-
-      let ioSvc = Cc["@mozilla.org/network/io-service;1"].
-                  getService(Ci.nsIIOService);
-      let uri = ioSvc.newURI("chrome://browser/locale/bookmarks.json", null, null);
-      let channel = ioSvc.newChannelFromURI(uri);
-      let sl = Cc["@mozilla.org/network/stream-loader;1"].
-               createInstance(Ci.nsIStreamLoader);
-      sl.init(observer);
-      channel.asyncOpen(sl, channel);
-    } catch (err) {
-      // Report the error, but ignore it.
-      Cu.reportError("Failed to load default bookmarks from bookmarks.json: " + err);
-    }
+    BookmarkJSONUtils.importFromURL("chrome://browser/locale/bookmarks.json", false);
   },
 
   _startupActions: function() {
