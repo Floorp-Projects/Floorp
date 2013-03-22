@@ -351,7 +351,7 @@ SVGTransformListSMILType::AppendTransforms(const SVGTransformList& aList,
 // static
 bool
 SVGTransformListSMILType::GetTransforms(const nsSMILValue& aValue,
-                                        nsTArray<SVGTransform>& aTransforms)
+                                        FallibleTArray<SVGTransform>& aTransforms)
 {
   NS_PRECONDITION(aValue.mType == &sSingleton, "Unexpected SMIL value type");
 
