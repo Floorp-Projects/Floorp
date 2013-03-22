@@ -5155,14 +5155,12 @@ var PopupBlockerObserver = {
     if (!browser.pageReport.reported) {
       if (Services.prefs.getBoolPref("privacy.popups.showBrowserMessage")) {
         let brandShortName = Strings.brand.GetStringFromName("brandShortName");
-        let message;
         let popupCount = browser.pageReport.length;
 
         let strings = Strings.browser;
-        if (popupCount > 1)
-          message = strings.formatStringFromName("popup.warningMultiple", [brandShortName, popupCount], 2);
-        else
-          message = strings.formatStringFromName("popup.warning", [brandShortName], 1);
+        let message = PluralForm.get(popupCount, strings.GetStringFromName("popup.message"))
+                                .replace("#1", brandShortName)
+                                .replace("#2", popupCount);
 
         let buttons = [
           {
