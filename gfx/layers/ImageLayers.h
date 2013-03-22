@@ -66,6 +66,7 @@ public:
    */
   void SetForceSingleTile(bool aForceSingleTile)
   {
+    MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) ForceSingleTile", this));
     mForceSingleTile = aForceSingleTile;
     Mutated();
   }
