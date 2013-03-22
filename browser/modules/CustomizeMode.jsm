@@ -55,10 +55,10 @@ CustomizeMode.prototype = {
   _stowedPalette: null,
 
   enter: function() {
-    CustomizableUI.addListener(this);
-
     let window = this.window;
     let document = this.document;
+
+    CustomizableUI.addListener(this);
 
     // Let everybody in this window know that we're about to customize.
     let evt = document.createEvent("CustomEvent");
@@ -220,7 +220,14 @@ CustomizeMode.prototype = {
 
   wrapToolbarItem: function(aNode, aPlace) {
     let wrapper = this.createWrapper(aNode, aPlace);
-    aNode = aNode.parentNode.replaceChild(wrapper, aNode);
+    // It's possible that this toolbar node is "mid-flight" and doesn't have
+    // a parent, in which case we skip replacing it. This can happen if a
+    // toolbar item has been dragged into the palette. In that case, we tell
+    // CustomizableUI to remove the widget from its area before putting the
+    // widget in the palette - so the node will have no parent.
+    if (aNode.parentNode) {
+      aNode = aNode.parentNode.replaceChild(wrapper, aNode);
+    }
     wrapper.appendChild(aNode);
     return wrapper;
   },
@@ -289,7 +296,9 @@ CustomizeMode.prototype = {
       }
     }
 
-    aWrapper.parentNode.replaceChild(toolbarItem, aWrapper);
+    if (aWrapper.parentNode) {
+      aWrapper.parentNode.replaceChild(toolbarItem, aWrapper);
+    }
     return toolbarItem;
   },
 
@@ -409,7 +418,13 @@ CustomizeMode.prototype = {
         CustomizableUI.removeWidgetFromArea(draggedItemId);
         draggedWrapper = this.wrapToolbarItem(widget, "palette");
       }
-      this.visiblePalette.insertBefore(draggedWrapper, targetNode);
+
+      // If the targetNode is the palette itself, just append
+      if (targetNode == this.visiblePalette) {
+        this.visiblePalette.appendChild(draggedWrapper);
+      } else {
+        this.visiblePalette.insertBefore(draggedWrapper, targetNode);
+      }
       return;
     }
 
@@ -432,7 +447,6 @@ CustomizeMode.prototype = {
     // then we re-wrap the widget.
     let widget = this.unwrapToolbarItem(draggedWrapper);
     CustomizableUI.addWidgetToArea(draggedItemId, targetArea.id, position);
-    LOG("Re-wrapping " + draggedItemId);
     draggedWrapper = this.wrapToolbarItem(widget, "");
 
     // If necessary, add flex to accomodate new child.

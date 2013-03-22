@@ -401,6 +401,14 @@ let CustomizableUIInternal = {
 
     let widget = gPalette.get(aWidgetId);
     if (widget) {
+      // If we have an instance of this widget already, just use that.
+      if (widget.instances.has(aDocument)) {
+        LOG("An instance of widget " + aWidgetId + " already exists in this "
+            + "document. Reusing.");
+        return [ CustomizableUI.PROVIDER_API,
+                 widget.instances.get(aDocument) ];
+      }
+
       return [ CustomizableUI.PROVIDER_API,
                this.buildWidget(aDocument, null, widget) ];
     }
@@ -489,7 +497,7 @@ let CustomizableUIInternal = {
     if (!areaNodes) {
       return;
     }
-    
+
     for (let areaNode of areaNodes) {
       let container = areaNode.customizationTarget;
       let widgetNode = container.ownerDocument.getElementById(aWidgetId);
