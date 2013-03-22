@@ -370,21 +370,18 @@ mockCommands.tsg = {
       ]
     },
     {
-      group: 'Second',
-      params: [
-        {
-          name: 'txt2',
-          type: 'string',
-          defaultValue: 'd',
-          description: 'txt2 param'
-        },
-        {
-          name: 'num',
-          type: { name: 'number', min: 40 },
-          defaultValue: 42,
-          description: 'num param'
-        }
-      ]
+      name: 'txt2',
+      type: 'string',
+      defaultValue: 'd',
+      description: 'txt2 param',
+      option: 'Second'
+    },
+    {
+      name: 'num',
+      type: { name: 'number', min: 40 },
+      defaultValue: 42,
+      description: 'num param',
+      option: 'Second'
     }
   ],
   exec: createExec('tsg')
