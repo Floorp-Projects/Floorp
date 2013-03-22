@@ -1881,10 +1881,7 @@ nsHTMLInputElement::GetDisplayFileName(nsAString& aValue) const
   aValue.Truncate();
   for (int32_t i = 0; i < mFiles.Count(); ++i) {
     nsString str;
-    mFiles[i]->GetMozFullPathInternal(str);
-    if (str.IsEmpty()) {
-      mFiles[i]->GetName(str);
-    }
+    mFiles[i]->GetName(str);
     if (i == 0) {
       aValue.Append(str);
     }
