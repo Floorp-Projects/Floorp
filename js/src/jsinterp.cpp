@@ -450,9 +450,7 @@ js::InvokeConstructorKernel(JSContext *cx, CallArgs args)
         RootedFunction fun(cx, callee.toFunction());
 
         if (fun->isNativeConstructor()) {
-            Probes::calloutBegin(cx, fun);
             bool ok = CallJSNativeConstructor(cx, fun->native(), args);
-            Probes::calloutEnd(cx, fun);
             return ok;
         }
 
