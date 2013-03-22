@@ -79,7 +79,8 @@ nsProfiler::StartProfiler(uint32_t aEntries, uint32_t aInterval,
 
   profiler_start(aEntries, aInterval, aFeatures, aFeatureCount);
 #ifdef MOZ_INSTRUMENT_EVENT_LOOP
-  mozilla::InitEventTracing();
+  bool printToConsole = false;
+  mozilla::InitEventTracing(printToConsole);
 #endif
   return NS_OK;
 }
