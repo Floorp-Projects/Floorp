@@ -8,6 +8,9 @@ const BOUNDARY_LINE_START = nsIAccessibleText.BOUNDARY_LINE_START;
 const BOUNDARY_LINE_END = nsIAccessibleText.BOUNDARY_LINE_END;
 const BOUNDARY_ATTRIBUTE_RANGE = nsIAccessibleText.BOUNDARY_ATTRIBUTE_RANGE;
 
+const kTextEndOffset = nsIAccessibleText.TEXT_OFFSET_END_OF_TEXT;
+const kCaretOffset = nsIAccessibleText.TEXT_OFFSET_CARET;
+
 const kTodo = 1;
 const kOk = 2;
 

@@ -1097,6 +1097,9 @@ function synthKey(aNodeOrID, aKey, aArgs, aCheckerOrEventSeq)
       case "VK_HOME":
         key = "home";
         break;
+      case "VK_END":
+        key = "end";
+        break;
       case "VK_ESCAPE":
         key = "escape";
         break;
@@ -1180,6 +1183,14 @@ function synthRightKey(aNodeOrID, aCheckerOrEventSeq)
 function synthHomeKey(aNodeOrID, aCheckerOrEventSeq)
 {
   this.__proto__ = new synthKey(aNodeOrID, "VK_HOME", null, aCheckerOrEventSeq);
+}
+
+/**
+ * End key invoker.
+ */
+function synthEndKey(aNodeOrID, aCheckerOrEventSeq)
+{
+  this.__proto__ = new synthKey(aNodeOrID, "VK_END", null, aCheckerOrEventSeq);
 }
 
 /**
@@ -1404,6 +1415,63 @@ function synthSelectAll(aNodeOrID, aCheckerOrEventSeq)
   this.getID = function synthSelectAll_getID()
   {
     return aNodeOrID + " selectall";
+  }
+}
+
+/**
+ * Move the caret to the end of line.
+ */
+function moveToLineEnd(aID, aCaretOffset)
+{
+  if (MAC) {
+    this.__proto__ = new synthKey(aID, "VK_RIGHT", { metaKey: true },
+                                  new caretMoveChecker(aCaretOffset, aID));
+  } else {
+    this.__proto__ = new synthEndKey(aID,
+                                     new caretMoveChecker(aCaretOffset, aID));
+  }
+
+  this.getID = function moveToLineEnd_getID()
+  {
+    return "move to line end in " + prettyName(aID);
+  }
+}
+
+/**
+ * Move the caret to begining of the line.
+ */
+function moveToLineStart(aID, aCaretOffset)
+{
+  if (MAC) {
+    this.__proto__ = new synthKey(aID, "VK_LEFT", { metaKey: true },
+                                  new caretMoveChecker(aCaretOffset, aID));
+  } else {
+    this.__proto__ = new synthHomeKey(aID,
+                                      new caretMoveChecker(aCaretOffset, aID));
+  }
+
+  this.getID = function moveToLineEnd_getID()
+  {
+    return "move to line start in " + prettyName(aID);
+  }
+}
+
+/**
+ * Move the caret to begining of the text.
+ */
+function moveToTextStart(aID)
+{
+  if (MAC) {
+    this.__proto__ = new synthKey(aID, "VK_UP", { metaKey: true },
+                                  new caretMoveChecker(0, aID));
+  } else {
+    this.__proto__ = new synthKey(aID, "VK_HOME", { ctrlKey: true },
+                                  new caretMoveChecker(0, aID));
+  }
+
+  this.getID = function moveToTextStart_getID()
+  {
+    return "move to text start in " + prettyName(aID);
   }
 }
 
