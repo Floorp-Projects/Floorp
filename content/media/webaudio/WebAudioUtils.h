@@ -8,8 +8,11 @@
 #define WebAudioUtils_h_
 
 #include <cmath>
+#include "AudioParamTimeline.h"
 
 namespace mozilla {
+
+class AudioNodeStream;
 
 namespace dom {
 
@@ -24,6 +27,19 @@ struct WebAudioUtils {
     using namespace std;
     return fabs(v1 - v2) < 1e-7;
   }
+
+  /**
+   * Converts AudioParamTimeline floating point time values to tick values
+   * with respect to a source and a destination AudioNodeStream.
+   *
+   * This needs to be called for each AudioParamTimeline that gets sent to an
+   * AudioNodeEngine on the engine side where the AudioParamTimeline is
+   * received.  This means that such engines need to be aware of their source
+   * and destination streams as well.
+   */
+  static void ConvertAudioParamToTicks(AudioParamTimeline& aParam,
+                                       AudioNodeStream* aSource,
+                                       AudioNodeStream* aDest);
 };
 
 }
