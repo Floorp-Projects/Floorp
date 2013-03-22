@@ -8,6 +8,7 @@
 #include "DOMCameraPreview.h"
 #include "CameraCommon.h"
 #include "nsGlobalWindow.h"
+#include "nsIDocument.h"
 #include "nsPIDOMWindow.h"
 
 using namespace mozilla;

@@ -9,6 +9,7 @@
 #include "nsCRT.h"
 #include "nsIAtom.h"
 #include "nsINameSpaceManager.h"
+#include "nsISupportsArray.h"
 #include "nsGkAtoms.h"
 #include "nsINodeInfo.h"
 

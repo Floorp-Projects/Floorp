@@ -10,8 +10,9 @@
 #include "nsSVGElement.h"
 #include "nsCOMPtr.h"
 #include "nsSVGString.h"
-#include "nsIDocument.h"
 #include "nsScriptElement.h"
+
+class nsIDocument;
 
 nsresult NS_NewSVGScriptElement(nsIContent **aResult,
                                 already_AddRefed<nsINodeInfo> aNodeInfo,
