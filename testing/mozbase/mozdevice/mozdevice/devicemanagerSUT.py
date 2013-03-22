@@ -4,19 +4,24 @@
 
 import select
 import socket
-import SocketServer
 import time
 import os
 import re
 import posixpath
 import subprocess
-from threading import Thread
 import StringIO
 from devicemanager import DeviceManager, DMError, NetworkTools, _pop_last_line
 import errno
 from distutils.version import StrictVersion
 
 class DeviceManagerSUT(DeviceManager):
+    """
+    Implementation of DeviceManager interface that speaks to a device over
+    TCP/IP using the "system under test" protocol. A software agent such as
+    Negatus (http://github.com/mozilla/Negatus) or the Mozilla Android SUTAgent
+    app must be present and listening for connections for this to work.
+    """
+
     debug = 2
     _base_prompt = '$>'
     _base_prompt_re = '\$\>'
@@ -24,6 +29,9 @@ class DeviceManagerSUT(DeviceManager):
     _prompt_regex = '.*(' + _base_prompt_re + _prompt_sep + ')'
     _agentErrorRE = re.compile('^##AGENT-WARNING##\ ?(.*)')
     default_timeout = 300
+
+    reboot_timeout = 600
+    reboot_settling_time = 60
 
     def __init__(self, host, port = 20701, retryLimit = 5, deviceRoot = None, **kwargs):
         self.host = host
@@ -38,7 +46,9 @@ class DeviceManagerSUT(DeviceManager):
 
         # Get version
         verstring = self._runCmds([{ 'cmd': 'ver' }])
-        self.agentVersion = re.sub('SUTAgentAndroid Version ', '', verstring)
+        ver_re = re.match('(\S+) Version (\S+)', verstring)
+        self.agentProductName = ver_re.group(1)
+        self.agentVersion = ver_re.group(2)
 
     def _cmdNeedsResponse(self, cmd):
         """ Not all commands need a response from the agent:
@@ -160,17 +170,23 @@ class DeviceManagerSUT(DeviceManager):
                 raise DMError("Automation Error: unable to create socket: "+str(msg))
 
             try:
+                self._sock.settimeout(float(timeout))
                 self._sock.connect((self.host, int(self.port)))
-                if select.select([self._sock], [], [], timeout)[0]:
-                    self._sock.recv(1024)
-                else:
-                    raise DMError("Remote Device Error: Timeout in connecting", fatal=True)
-                    return False
                 self._everConnected = True
+            except socket.error, msg:
+                self._sock = None
+                raise DMError("Remote Device Error: Unable to connect socket: "+str(msg))
+
+            # consume prompt
+            try:
+                self._sock.recv(1024)
             except socket.error, msg:
                 self._sock.close()
                 self._sock = None
-                raise DMError("Remote Device Error: Unable to connect socket: "+str(msg))
+                raise DMError("Remote Device Error: Did not get prompt after connecting: " + str(msg), fatal=True)
+
+            # future recv() timeouts are handled by select() calls
+            self._sock.settimeout(None)
 
         for cmd in cmdlist:
             cmdline = '%s\r\n' % cmd['cmd']
@@ -278,21 +294,16 @@ class DeviceManagerSUT(DeviceManager):
                 raise DMError("Automation Error: Error closing socket")
 
     def shell(self, cmd, outputfile, env=None, cwd=None, timeout=None, root=False):
-        """
-        Executes shell command on device. Returns exit code.
-
-        cmd - Command string to execute
-        outputfile - File to store output
-        env - Environment to pass to exec command
-        cwd - Directory to execute command from
-        timeout - specified in seconds, defaults to 'default_timeout'
-        root - Specifies whether command requires root privileges
-        """
         cmdline = self._escapedCommandLine(cmd)
         if env:
             cmdline = '%s %s' % (self._formatEnvString(env), cmdline)
 
-        haveExecSu = (StrictVersion(self.agentVersion) >= StrictVersion('1.13'))
+        # execcwd/execcwdsu currently unsupported in Negatus; see bug 824127.
+        if cwd and self.agentProductName == 'SUTAgentNegatus':
+            raise DMError("Negatus does not support execcwd/execcwdsu")
+
+        haveExecSu = (self.agentProductName == 'SUTAgentNegatus' or
+                      StrictVersion(self.agentVersion) >= StrictVersion('1.13'))
 
         # Depending on agent version we send one of the following commands here:
         # * exec (run as normal user)
@@ -330,9 +341,6 @@ class DeviceManagerSUT(DeviceManager):
         raise DMError("Automation Error: Error finding end of line/return value when running '%s'" % cmdline)
 
     def pushFile(self, localname, destname, retryLimit = None):
-        """
-        Copies localname from the host to destname on the device
-        """
         retryLimit = retryLimit or self.retryLimit
         self.mkDirs(destname)
 
@@ -345,7 +353,7 @@ class DeviceManagerSUT(DeviceManager):
             raise DMError("DeviceManager: Error reading file to push")
 
         if (self.debug >= 3):
-            print "push returned: %s" % hash
+            print "push returned: %s" % remoteHash
 
         localHash = self._getLocalHash(localname)
 
@@ -354,16 +362,10 @@ class DeviceManagerSUT(DeviceManager):
                           "remotehash: %s)" % (localHash, remoteHash))
 
     def mkDir(self, name):
-        """
-        Creates a single directory on the device file system
-        """
         if not self.dirExists(name):
             self._runCmds([{ 'cmd': 'mkdr ' + name }])
 
     def pushDir(self, localDir, remoteDir, retryLimit = None):
-        """
-        Push localDir from host to remoteDir on the device
-        """
         retryLimit = retryLimit or self.retryLimit
         if (self.debug >= 2):
             print "pushing directory: %s to %s" % (localDir, remoteDir)
@@ -390,9 +392,6 @@ class DeviceManagerSUT(DeviceManager):
 
 
     def dirExists(self, remotePath):
-        """
-        Return True if remotePath is an existing directory on the device.
-        """
         ret = self._runCmds([{ 'cmd': 'isdir ' + remotePath }]).strip()
         if not ret:
             raise DMError('Automation Error: DeviceManager isdir returned null')
@@ -400,9 +399,6 @@ class DeviceManagerSUT(DeviceManager):
         return ret == 'TRUE'
 
     def fileExists(self, filepath):
-        """
-        Return True if filepath exists and is a file on the device file system
-        """
         # Because we always have / style paths we make this a lot easier with some
         # assumptions
         s = filepath.split('/')
@@ -410,11 +406,6 @@ class DeviceManagerSUT(DeviceManager):
         return s[-1] in self.listFiles(containingpath)
 
     def listFiles(self, rootdir):
-        """
-        Lists files on the device rootdir
-
-        returns array of filenames, ['file1', 'file2', ...]
-        """
         rootdir = rootdir.rstrip('/')
         if (self.dirExists(rootdir) == False):
             return []
@@ -427,27 +418,16 @@ class DeviceManagerSUT(DeviceManager):
         return files
 
     def removeFile(self, filename):
-        """
-        Removes filename from the device
-        """
         if (self.debug>= 2):
             print "removing file: " + filename
         if self.fileExists(filename):
             self._runCmds([{ 'cmd': 'rm ' + filename }])
 
     def removeDir(self, remoteDir):
-        """
-        Does a recursive delete of directory on the device: rm -Rf remoteDir
-        """
         if self.dirExists(remoteDir):
             self._runCmds([{ 'cmd': 'rmdr ' + remoteDir }])
 
     def getProcessList(self):
-        """
-        Lists the running processes on the device
-
-        returns: array of process tuples
-        """
         data = self._runCmds([{ 'cmd': 'ps' }])
 
         processTuples = []
@@ -470,7 +450,7 @@ class DeviceManagerSUT(DeviceManager):
 
         return processTuples
 
-    def fireProcess(self, appname, failIfRunning=False):
+    def fireProcess(self, appname, failIfRunning=False, maxWaitTime=30):
         """
         Starts a process
 
@@ -488,11 +468,22 @@ class DeviceManagerSUT(DeviceManager):
             print "WARNING: process %s appears to be running already\n" % appname
             if (failIfRunning):
                 raise DMError("Automation Error: Process is already running")
+
         self._runCmds([{ 'cmd': 'exec ' + appname }])
 
         # The 'exec' command may wait for the process to start and end, so checking
         # for the process here may result in process = None.
-        pid = self.processExist(appname)
+        # The normal case is to launch the process and return right away
+        # There is one case with robotium (am instrument) where exec returns at the end
+        pid = None
+        waited = 0
+        while pid is None and waited < maxWaitTime:
+            pid = self.processExist(appname)
+            if pid:
+                break
+            time.sleep(1)
+            waited += 1
+
         if (self.debug >= 4):
             print "got pid: %s for process: %s" % (pid, appname)
         return pid
@@ -529,34 +520,27 @@ class DeviceManagerSUT(DeviceManager):
         return outputFile
 
     def killProcess(self, appname, forceKill=False):
-        """
-        Kills the process named appname
-
-        If forceKill is True, process is killed regardless of state
-        """
         if forceKill:
             print "WARNING: killProcess(): forceKill parameter unsupported on SUT"
-        if self.processExist(appname):
-            self._runCmds([{ 'cmd': 'kill ' + appname }])
+        retries = 0
+        while retries < self.retryLimit:
+            try:
+                if self.processExist(appname):
+                    self._runCmds([{ 'cmd': 'kill ' + appname }])
+                return
+            except DMError, err:
+                retries +=1
+                print ("WARNING: try %d of %d failed to kill %s" %
+                       (retries, self.retryLimit, appname))
+                if self.debug >= 4:
+                    print err
+                if retries >= self.retryLimit:
+                    raise err
 
     def getTempDir(self):
-        """
-        Return a temporary directory on the device
-
-        Will also ensure that directory exists
-        """
         return self._runCmds([{ 'cmd': 'tmpd' }]).strip()
 
-    def catFile(self, remoteFile):
-        """
-        Returns the contents of remoteFile
-        """
-        return self._runCmds([{ 'cmd': 'cat ' + remoteFile }])
-
     def pullFile(self, remoteFile):
-        """
-        Returns contents of remoteFile using the "pull" command.
-        """
         # The "pull" command is different from other commands in that DeviceManager
         # has to read a certain number of bytes instead of just reading to the
         # next prompt.  This is more robust than the "cat" command, which will be
@@ -654,9 +638,6 @@ class DeviceManagerSUT(DeviceManager):
         return buf[:-len(prompt)]
 
     def getFile(self, remoteFile, localFile):
-        """
-        Copy file from device (remoteFile) to host (localFile)
-        """
         data = self.pullFile(remoteFile)
 
         fhandle = open(localFile, 'wb')
@@ -667,9 +648,6 @@ class DeviceManagerSUT(DeviceManager):
                           remoteFile)
 
     def getDirectory(self, remoteDir, localDir, checkDir=True):
-        """
-        Copy directory structure from device (remoteDir) to host (localDir)
-        """
         if (self.debug >= 2):
             print "getting files in '" + remoteDir + "'"
         if checkDir and not self.dirExists(remoteDir):
@@ -693,9 +671,6 @@ class DeviceManagerSUT(DeviceManager):
                 self.getFile(remotePath, localPath)
 
     def validateFile(self, remoteFile, localFile):
-        """
-        Returns True if remoteFile has the same md5 hash as the localFile
-        """
         remoteHash = self._getRemoteHash(remoteFile)
         localHash = self._getLocalHash(localFile)
 
@@ -708,30 +683,12 @@ class DeviceManagerSUT(DeviceManager):
         return False
 
     def _getRemoteHash(self, filename):
-        """
-        Return the md5 sum of a file on the device
-        """
         data = self._runCmds([{ 'cmd': 'hash ' + filename }]).strip()
         if self.debug >= 3:
             print "remote hash returned: '%s'" % data
         return data
 
     def getDeviceRoot(self):
-        """
-        Gets the device root for the testing area on the device
-
-        For all devices we will use / type slashes and depend on the device-agent
-        to sort those out.  The agent will return us the device location where we
-        should store things, we will then create our /tests structure relative to
-        that returned path.
-        Structure on the device is as follows:
-        /tests
-            /<fennec>|<firefox>  --> approot
-            /profile
-            /xpcshell
-            /reftest
-            /mochitest
-        """
         if not self.deviceRoot:
             data = self._runCmds([{ 'cmd': 'testroot' }])
             self.deviceRoot = data.strip() + '/tests'
@@ -742,88 +699,96 @@ class DeviceManagerSUT(DeviceManager):
         return self.deviceRoot
 
     def getAppRoot(self, packageName):
-        """
-        Returns the app root directory
-
-        E.g /tests/fennec or /tests/firefox
-        """
         data = self._runCmds([{ 'cmd': 'getapproot ' + packageName }])
 
         return data.strip()
 
-    def unpackFile(self, file_path, dest_dir=None):
+    def unpackFile(self, filePath, destDir=None):
         """
-        Unzips a remote bundle to a remote location
+        Unzips a bundle to a location on the device
 
-        If dest_dir is not specified, the bundle is extracted
-        in the same directory
+        If destDir is not specified, the bundle is extracted in the same directory
         """
         devroot = self.getDeviceRoot()
         if (devroot == None):
             return None
 
-        # if no dest_dir is passed in just set it to file_path's folder
-        if not dest_dir:
-            dest_dir = posixpath.dirname(file_path)
+        # if no destDir is passed in just set it to filePath's folder
+        if not destDir:
+            destDir = posixpath.dirname(filePath)
 
-        if dest_dir[-1] != '/':
-            dest_dir += '/'
+        if destDir[-1] != '/':
+            destDir += '/'
 
-        self._runCmds([{ 'cmd': 'unzp %s %s' % (file_path, dest_dir)}])
+        self._runCmds([{ 'cmd': 'unzp %s %s' % (filePath, destDir)}])
+
+    def _wait_for_reboot(self, host, port):
+        if self.debug >= 3:
+            print 'Creating server with %s:%d' % (host, port)
+        timeout_expires = time.time() + self.reboot_timeout
+        conn = None
+        data = ''
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        s.settimeout(60.0)
+        s.bind((host, port))
+        s.listen(1)
+        while not data and time.time() < timeout_expires:
+            try:
+                if not conn:
+                    conn, _ = s.accept()
+                # Receiving any data is good enough.
+                data = conn.recv(1024)
+                if data:
+                    conn.sendall('OK')
+                conn.close()
+            except socket.timeout:
+                print '.'
+            except socket.error, e:
+                if e.errno != errno.EAGAIN and e.errno != errno.EWOULDBLOCK:
+                    raise
+        if data:
+            # Sleep to ensure not only we are online, but all our services are
+            # also up.
+            time.sleep(self.reboot_settling_time)
+        else:
+            print 'Automation Error: Timed out waiting for reboot callback.'
+        s.close()
+        return data
 
     def reboot(self, ipAddr=None, port=30000):
-        """
-        Reboots the device
-        """
         cmd = 'rebt'
 
-        if (self.debug > 3):
+        if self.debug > 3:
             print "INFO: sending rebt command"
 
-        if (ipAddr is not None):
-        #create update.info file:
+        if ipAddr is not None:
+            # The update.info command tells the SUTAgent to send a TCP message
+            # after restarting.
             destname = '/data/data/com.mozilla.SUTAgentAndroid/files/update.info'
             data = "%s,%s\rrebooting\r" % (ipAddr, port)
-            self._runCmds([{ 'cmd': 'push %s %s' % (destname, len(data)), 'data': data }])
+            self._runCmds([{'cmd': 'push %s %s' % (destname, len(data)),
+                            'data': data}])
 
             ip, port = self._getCallbackIpAndPort(ipAddr, port)
             cmd += " %s %s" % (ip, port)
-            # Set up our callback server
-            callbacksvr = callbackServer(ip, port, self.debug)
 
-        status = self._runCmds([{ 'cmd': cmd }])
+        status = self._runCmds([{'cmd': cmd}])
 
-        if (ipAddr is not None):
-            status = callbacksvr.disconnect()
+        if ipAddr is not None:
+            status = self._wait_for_reboot(ipAddr, port)
 
-        if (self.debug > 3):
+        if self.debug > 3:
             print "INFO: rebt- got status back: " + str(status)
 
     def getInfo(self, directive=None):
-        """
-        Returns information about the device
-
-        Directive indicates the information you want to get, your choices are:
-          os - name of the os
-          id - unique id of the device
-          uptime - uptime of the device
-          uptimemillis - uptime of the device in milliseconds (NOT supported on all implementations)
-          systime - system time of the device
-          screen - screen resolution
-          memory - memory stats
-          process - list of running processes (same as ps)
-          disk - total, free, available bytes on disk
-          power - power status (charge, battery temp)
-          all - all of them - or call it with no parameters to get all the information
-
-        returns: dictionary of info strings by directive name
-        """
         data = None
         result = {}
         collapseSpaces = re.compile('  +')
 
         directives = ['os','id','uptime','uptimemillis','systime','screen',
-                                    'rotation','memory','process','disk','power']
+                      'rotation','memory','process','disk','power','sutuserinfo',
+                      'temperature']
         if (directive in directives):
             directives = [directive]
 
@@ -850,12 +815,6 @@ class DeviceManagerSUT(DeviceManager):
         return result
 
     def installApp(self, appBundlePath, destPath=None):
-        """
-        Installs an application onto the device
-
-        appBundlePath - path to the application bundle on the device
-        destPath - destination directory of where application should be installed to (optional)
-        """
         cmd = 'inst ' + appBundlePath
         if destPath:
             cmd += ' ' + destPath
@@ -868,12 +827,6 @@ class DeviceManagerSUT(DeviceManager):
                 raise DMError("Remove Device Error: Error installing app. Error message: %s" % data)
 
     def uninstallApp(self, appName, installPath=None):
-        """
-        Uninstalls the named application from device and DOES NOT cause a reboot
-
-        appName - the name of the application (e.g org.mozilla.fennec)
-        installPath - the path to where the application was installed (optional)
-        """
         cmd = 'uninstall ' + appName
         if installPath:
             cmd += ' ' + installPath
@@ -887,12 +840,6 @@ class DeviceManagerSUT(DeviceManager):
         raise DMError("Remote Device Error: uninstall failed for %s" % appName)
 
     def uninstallAppAndReboot(self, appName, installPath=None):
-        """
-        Uninstalls the named application from device and causes a reboot
-
-        appName - the name of the application (e.g org.mozilla.fennec)
-        installPath - the path to where the application was installed (optional)
-        """
         cmd = 'uninst ' + appName
         if installPath:
             cmd += ' ' + installPath
@@ -903,49 +850,33 @@ class DeviceManagerSUT(DeviceManager):
         return
 
     def updateApp(self, appBundlePath, processName=None, destPath=None, ipAddr=None, port=30000):
-        """
-        Updates the application on the device.
-
-        appBundlePath - path to the application bundle on the device
-        processName - used to end the process if the applicaiton is currently running (optional)
-        destPath - Destination directory to where the application should be installed (optional)
-        ipAddr - IP address to await a callback ping to let us know that the device has updated
-                 properly - defaults to current IP.
-        port - port to await a callback ping to let us know that the device has updated properly
-               defaults to 30000, and counts up from there if it finds a conflict
-        """
         status = None
         cmd = 'updt '
-        if (processName == None):
+        if processName is None:
             # Then we pass '' for processName
             cmd += "'' " + appBundlePath
         else:
             cmd += processName + ' ' + appBundlePath
 
-        if (destPath):
+        if destPath:
             cmd += " " + destPath
 
-        if (ipAddr is not None):
+        if ipAddr is not None:
             ip, port = self._getCallbackIpAndPort(ipAddr, port)
             cmd += " %s %s" % (ip, port)
-            # Set up our callback server
-            callbacksvr = callbackServer(ip, port, self.debug)
 
-        if (self.debug >= 3):
+        if self.debug >= 3:
             print "INFO: updateApp using command: " + str(cmd)
 
-        status = self._runCmds([{ 'cmd': cmd }])
+        status = self._runCmds([{'cmd': cmd}])
 
         if ipAddr is not None:
-            status = callbacksvr.disconnect()
+            status = self._wait_for_reboot(ip, port)
 
-        if (self.debug >= 3):
-            print "INFO: updateApp: got status back: " + str(status)
+        if self.debug >= 3:
+            print "INFO: updateApp: got status back: %s" + str(status)
 
     def getCurrentTime(self):
-        """
-        Returns device time in milliseconds since the epoch
-        """
         return self._runCmds([{ 'cmd': 'clok' }]).strip()
 
     def _getCallbackIpAndPort(self, aIp, aPort):
@@ -984,7 +915,7 @@ class DeviceManagerSUT(DeviceManager):
 
     def adjustResolution(self, width=1680, height=1050, type='hdmi'):
         """
-        adjust the screen resolution on the device, REBOOT REQUIRED
+        Adjust the screen resolution on the device, REBOOT REQUIRED
 
         NOTE: this only works on a tegra ATM
 
@@ -1026,64 +957,4 @@ class DeviceManagerSUT(DeviceManager):
         self._runCmds([{ 'cmd': "exec setprop persist.tegra.dpy%s.mode.height %s" % (screentype, height) }])
 
     def chmodDir(self, remoteDir, **kwargs):
-        """
-        Recursively changes file permissions in a directory
-        """
         self._runCmds([{ 'cmd': "chmod "+remoteDir }])
-
-gCallbackData = ''
-
-class myServer(SocketServer.TCPServer):
-    allow_reuse_address = True
-
-class callbackServer():
-    def __init__(self, ip, port, debuglevel):
-        global gCallbackData
-        if (debuglevel >= 1):
-            print "DEBUG: gCallbackData is: %s on port: %s" % (gCallbackData, port)
-        gCallbackData = ''
-        self.ip = ip
-        self.port = port
-        self.connected = False
-        self.debug = debuglevel
-        if (self.debug >= 3):
-            print "Creating server with " + str(ip) + ":" + str(port)
-        self.server = myServer((ip, port), self.myhandler)
-        self.server_thread = Thread(target=self.server.serve_forever)
-        self.server_thread.setDaemon(True)
-        self.server_thread.start()
-
-    def disconnect(self, step = 60, timeout = 600):
-        t = 0
-        if (self.debug >= 3):
-            print "Calling disconnect on callback server"
-        while t < timeout:
-            if (gCallbackData):
-                # Got the data back
-                if (self.debug >= 3):
-                    print "Got data back from agent: " + str(gCallbackData)
-                break
-            else:
-                if (self.debug >= 0):
-                    print '.',
-            time.sleep(step)
-            t += step
-
-        try:
-            if (self.debug >= 3):
-                print "Shutting down server now"
-            self.server.shutdown()
-        except:
-            if (self.debug >= 1):
-                print "Automation Error: Unable to shutdown callback server - check for a connection on port: " + str(self.port)
-
-        #sleep 1 additional step to ensure not only we are online, but all our services are online
-        time.sleep(step)
-        return gCallbackData
-
-    class myhandler(SocketServer.BaseRequestHandler):
-        def handle(self):
-            global gCallbackData
-            gCallbackData = self.request.recv(1024)
-            #print "Callback Handler got data: " + str(gCallbackData)
-            self.request.send("OK")
