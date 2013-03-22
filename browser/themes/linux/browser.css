@@ -2166,6 +2166,47 @@ chatbox {
   border-top-right-radius: 2.5px;
 }
 
+/* Customization mode */
+#main-window[customizing] {
+  background-image: url("chrome://browser/skin/customization/customization-mode-background.jpg");
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
+#main-window[customizing] #tab-view-deck {
+  transition-property: padding;
+  transition-duration: 300ms;
+  transition-timing-function: ease-out;
+  padding: 8em;
+  -moz-binding: url("chrome://global/content/bindings/general.xml#windowdragbox")
+}
+
+#main-window:not([customizing]) #tab-view-deck {
+  transition-property: padding;
+  transition-duration: 200ms;
+  transition-timing-function: ease-out;
+  padding: 0;
+}
+
+#main-window[customizing] .tabbrowser-tab:not([selected]),
+#main-window[customizing] .tabs-newtab-button {
+  opacity: 0.4;
+}
+
+#main-window[customizing] .customization-target,
+#customization-panelHolder > #PanelUI-mainView {
+  box-shadow: inset 0 0 3px blue;
+  border-radius: 2px;
+}
+
+#customization-palette > toolbarpaletteitem {
+  display: inline-block;
+  -moz-orient: vertical;
+  padding: 1em;
+}
+
+/* end Customization mode */
+
 .click-to-play-plugins-notification-content {
   margin: -10px;
 }
