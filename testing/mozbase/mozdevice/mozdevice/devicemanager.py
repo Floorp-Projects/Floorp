@@ -11,6 +11,7 @@ import StringIO
 import zlib
 
 from Zeroconf import Zeroconf, ServiceBrowser
+from functools import wraps
 
 class DMError(Exception):
     "generic devicemanager exception."
@@ -25,348 +26,57 @@ class DMError(Exception):
 def abstractmethod(method):
     line = method.func_code.co_firstlineno
     filename = method.func_code.co_filename
+    @wraps(method)
     def not_implemented(*args, **kwargs):
         raise NotImplementedError('Abstract method %s at File "%s", line %s '
                                    'should be implemented by a concrete class' %
                                    (repr(method), filename, line))
     return not_implemented
 
-class DeviceManager:
+class DeviceManager(object):
+    """
+    Represents a connection to a device. Once an implementation of this class
+    is successfully instantiated, you may do things like list/copy files to
+    the device, launch processes on the device, and install or remove
+    applications from the device.
+
+    Never instantiate this class directly! Instead, instantiate an
+    implementation of it like DeviceManagerADB or DeviceManagerSUT.
+    """
 
     _logcatNeedsRoot = True
 
     @abstractmethod
-    def shell(self, cmd, outputfile, env=None, cwd=None, timeout=None, root=False):
+    def getInfo(self, directive=None):
         """
-        Executes shell command on device and returns exit code
+        Returns a dictionary of information strings about the device.
 
-        cmd - Command string to execute
-        outputfile - File to store output
-        env - Environment to pass to exec command
-        cwd - Directory to execute command from
-        timeout - specified in seconds, defaults to 'default_timeout'
-        root - Specifies whether command requires root privileges
-        """
+        :param directive: information you want to get. Options are:
 
-    def shellCheckOutput(self, cmd, env=None, cwd=None, timeout=None, root=False):
-        """
-        executes shell command on device and returns the the output
+          - `os` - name of the os
+          - `id` - unique id of the device
+          - `uptime` - uptime of the device
+          - `uptimemillis` - uptime of the device in milliseconds (NOT supported on all implementations)
+          - `systime` - system time of the device
+          - `screen` - screen resolution
+          - `memory` - memory stats
+          - `process` - list of running processes (same as ps)
+          - `disk` - total, free, available bytes on disk
+          - `power` - power status (charge, battery temp)
+          - `temperature` - device temperature
 
-        env - Environment to pass to exec command
-        cwd - Directory to execute command from
-        timeout - specified in seconds, defaults to 'default_timeout'
-        root - Specifies whether command requires root privileges
-        """
-        buf = StringIO.StringIO()
-        retval = self.shell(cmd, buf, env=env, cwd=cwd, timeout=timeout, root=root)
-        output = str(buf.getvalue()[0:-1]).rstrip()
-        buf.close()
-        if retval != 0:
-            raise DMError("Non-zero return code for command: %s (output: '%s', retval: '%s')" % (cmd, output, retval))
-        return output
-
-    @abstractmethod
-    def pushFile(self, localname, destname, retryLimit=1):
-        """
-        Copies localname from the host to destname on the device
+         If `directive` is `None`, will return all available information
         """
 
     @abstractmethod
-    def mkDir(self, name):
+    def getCurrentTime(self):
         """
-        Creates a single directory on the device file system
+        Returns device time in milliseconds since the epoch.
         """
-
-    def mkDirs(self, filename):
-        """
-        Make directory structure on the device
-        WARNING: does not create last part of the path
-        """
-        dirParts = filename.rsplit('/', 1)
-        if not self.dirExists(dirParts[0]):
-            parts = filename.split('/')
-            name = ""
-            for part in parts:
-                if part == parts[-1]:
-                    break
-                if part != "":
-                    name += '/' + part
-                    self.mkDir(name) # mkDir will check previous existence
-
-    @abstractmethod
-    def pushDir(self, localDir, remoteDir, retryLimit=1):
-        """
-        Push localDir from host to remoteDir on the device
-        """
-
-    @abstractmethod
-    def fileExists(self, filepath):
-        """
-        Checks if filepath exists and is a file on the device file system
-
-        returns:
-          success: True
-          failure: False
-        """
-
-    @abstractmethod
-    def listFiles(self, rootdir):
-        """
-        Lists files on the device rootdir
-
-        returns:
-          success: array of filenames, ['file1', 'file2', ...]
-          failure: None
-        """
-
-    @abstractmethod
-    def removeFile(self, filename):
-        """
-        Removes filename from the device
-
-        returns:
-          success: output of telnet
-          failure: None
-        """
-
-    @abstractmethod
-    def removeDir(self, remoteDir):
-        """
-        Does a recursive delete of directory on the device: rm -Rf remoteDir
-
-        returns:
-          success: output of telnet
-          failure: None
-        """
-
-    @abstractmethod
-    def getProcessList(self):
-        """
-        Lists the running processes on the device
-
-        returns:
-          success: array of process tuples
-          failure: []
-        """
-
-    def processExist(self, appname):
-        """
-        Iterates process list and checks if pid exists
-
-        returns:
-          success: pid
-          failure: None
-        """
-        if not isinstance(appname, basestring):
-            raise TypeError("appname %s is not a string" % appname)
-
-        pid = None
-
-        #filter out extra spaces
-        parts = filter(lambda x: x != '', appname.split(' '))
-        appname = ' '.join(parts)
-
-        #filter out the quoted env string if it exists
-        #ex: '"name=value;name2=value2;etc=..." process args' -> 'process args'
-        parts = appname.split('"')
-        if (len(parts) > 2):
-            appname = ' '.join(parts[2:]).strip()
-
-        pieces = appname.split(' ')
-        parts = pieces[0].split('/')
-        app = parts[-1]
-
-        procList = self.getProcessList()
-        if (procList == []):
-            return None
-
-        for proc in procList:
-            procName = proc[1].split('/')[-1]
-            if (procName == app):
-                pid = proc[0]
-                break
-        return pid
-
-
-    @abstractmethod
-    def killProcess(self, appname, forceKill=False):
-        """
-        Kills the process named appname.
-        If forceKill is True, process is killed regardless of state
-
-        returns:
-          success: True
-          failure: False
-        """
-
-    @abstractmethod
-    def catFile(self, remoteFile):
-        """
-        Returns the contents of remoteFile
-
-        returns:
-          success: filecontents, string
-          failure: None
-        """
-
-    @abstractmethod
-    def pullFile(self, remoteFile):
-        """
-        Returns contents of remoteFile using the "pull" command.
-
-        returns:
-          success: output of pullfile, string
-          failure: None
-        """
-
-    @abstractmethod
-    def getFile(self, remoteFile, localFile):
-        """
-        Copy file from device (remoteFile) to host (localFile)
-        """
-
-    @abstractmethod
-    def getDirectory(self, remoteDir, localDir, checkDir=True):
-        """
-        Copy directory structure from device (remoteDir) to host (localDir)
-
-        returns:
-          success: list of files, string
-          failure: None
-        """
-
-    @abstractmethod
-    def validateFile(self, remoteFile, localFile):
-        """
-        Checks if the remoteFile has the same md5 hash as the localFile
-
-        returns:
-          success: True
-          failure: False
-        """
-
-    @abstractmethod
-    def _getRemoteHash(self, filename):
-        """
-        Return the md5 sum of a file on the device
-
-        returns:
-          success: MD5 hash for given filename
-          failure: None
-        """
-
-    @staticmethod
-    def _getLocalHash(filename):
-        """
-        Return the MD5 sum of a file on the host
-
-        returns:
-          success: MD5 hash for given filename
-          failure: None
-        """
-
-        f = open(filename, 'rb')
-        if (f == None):
-            return None
-
-        try:
-            mdsum = hashlib.md5()
-        except:
-            return None
-
-        while 1:
-            data = f.read(1024)
-            if not data:
-                break
-            mdsum.update(data)
-
-        f.close()
-        hexval = mdsum.hexdigest()
-        return hexval
-
-    @abstractmethod
-    def getDeviceRoot(self):
-        """
-        Gets the device root for the testing area on the device
-        For all devices we will use / type slashes and depend on the device-agent
-        to sort those out.  The agent will return us the device location where we
-        should store things, we will then create our /tests structure relative to
-        that returned path.
-        Structure on the device is as follows:
-        /tests
-            /<fennec>|<firefox>  --> approot
-            /profile
-            /xpcshell
-            /reftest
-            /mochitest
-
-        returns:
-          success: path for device root
-          failure: None
-        """
-
-    @abstractmethod
-    def getAppRoot(self, packageName=None):
-        """
-        Returns the app root directory
-        E.g /tests/fennec or /tests/firefox
-
-        returns:
-          success: path for app root
-          failure: None
-        """
-        # TODO Support org.mozilla.firefox and B2G
-
-    def getTestRoot(self, harness):
-        """
-        Gets the directory location on the device for a specific test type
-        Harness is one of: xpcshell|reftest|mochitest
-
-        returns:
-          success: path for test root
-          failure: None
-        """
-
-        devroot = self.getDeviceRoot()
-        if (devroot == None):
-            return None
-
-        if (re.search('xpcshell', harness, re.I)):
-            self.testRoot = devroot + '/xpcshell'
-        elif (re.search('?(i)reftest', harness)):
-            self.testRoot = devroot + '/reftest'
-        elif (re.search('?(i)mochitest', harness)):
-            self.testRoot = devroot + '/mochitest'
-        return self.testRoot
-
-    @abstractmethod
-    def getTempDir(self):
-        """
-        Gets the temporary directory we are using on this device
-        base on our device root, ensuring also that it exists.
-
-        returns:
-          success: path for temporary directory
-          failure: None
-        """
-
-    def signal(self, processID, signalType, signalAction):
-        """
-        Sends a specific process ID a signal code and action.
-        For Example: SIGINT and SIGDFL to process x
-        """
-        #currently not implemented in device agent - todo
-        pass
-
-    def getReturnCode(self, processID):
-        """Get a return code from process ending -- needs support on device-agent"""
-        # TODO: make this real
-
-        return 0
 
     def getIP(self, interfaces=['eth0', 'wlan0']):
         """
-        Gets the IP of the device, or None if no connection exists.
+        Returns the IP of the device, or None if no connection exists.
         """
         for interface in interfaces:
             match = re.match(r"%s: ip (\S+)" % interface,
@@ -374,128 +84,16 @@ class DeviceManager:
             if match:
                 return match.group(1)
 
-    @abstractmethod
-    def unpackFile(self, file_path, dest_dir=None):
-        """
-        Unzips a remote bundle to a remote location
-        If dest_dir is not specified, the bundle is extracted
-        in the same directory
-
-        returns:
-          success: output of unzip command
-          failure: None
-        """
-
-    @abstractmethod
-    def reboot(self, ipAddr=None, port=30000):
-        """
-        Reboots the device
-
-        returns:
-          success: status from test agent
-          failure: None
-        """
-
-    def validateDir(self, localDir, remoteDir):
-        """
-        Validate localDir from host to remoteDir on the device
-
-        returns:
-          success: True
-          failure: False
-        """
-
-        if (self.debug >= 2):
-            print "validating directory: " + localDir + " to " + remoteDir
-        for root, dirs, files in os.walk(localDir):
-            parts = root.split(localDir)
-            for f in files:
-                remoteRoot = remoteDir + '/' + parts[1]
-                remoteRoot = remoteRoot.replace('/', '/')
-                if (parts[1] == ""):
-                    remoteRoot = remoteDir
-                remoteName = remoteRoot + '/' + f
-                if (self.validateFile(remoteName, os.path.join(root, f)) <> True):
-                        return False
-        return True
-
-    @abstractmethod
-    def getInfo(self, directive=None):
-        """
-        Returns information about the device:
-        Directive indicates the information you want to get, your choices are:
-          os - name of the os
-          id - unique id of the device
-          uptime - uptime of the device
-          uptimemillis - uptime of the device in milliseconds (NOT supported on all implementations)
-          systime - system time of the device
-          screen - screen resolution
-          memory - memory stats
-          process - list of running processes (same as ps)
-          disk - total, free, available bytes on disk
-          power - power status (charge, battery temp)
-          all - all of them - or call it with no parameters to get all the information
-
-        returns: dict of info strings by directive name
-        """
-
-    @abstractmethod
-    def installApp(self, appBundlePath, destPath=None):
-        """
-        Installs an application onto the device
-        appBundlePath - path to the application bundle on the device
-        destPath - destination directory of where application should be installed to (optional)
-        """
-
-    @abstractmethod
-    def uninstallApp(self, appName, installPath=None):
-        """
-        Uninstalls the named application from device and DOES NOT cause a reboot
-        appName - the name of the application (e.g org.mozilla.fennec)
-        installPath - the path to where the application was installed (optional)
-        """
-
-    @abstractmethod
-    def uninstallAppAndReboot(self, appName, installPath=None):
-        """
-        Uninstalls the named application from device and causes a reboot
-        appName - the name of the application (e.g org.mozilla.fennec)
-        installPath - the path to where the application was installed (optional)
-        """
-
-    @abstractmethod
-    def updateApp(self, appBundlePath, processName=None, destPath=None, ipAddr=None, port=30000):
-        """
-        Updates the application on the device.
-        appBundlePath - path to the application bundle on the device
-        processName - used to end the process if the applicaiton is currently running (optional)
-        destPath - Destination directory to where the application should be installed (optional)
-        ipAddr - IP address to await a callback ping to let us know that the device has updated
-                 properly - defaults to current IP.
-        port - port to await a callback ping to let us know that the device has updated properly
-               defaults to 30000, and counts up from there if it finds a conflict
-        """
-
-    @abstractmethod
-    def getCurrentTime(self):
-        """
-        Returns device time in milliseconds since the epoch
-
-        returns:
-          success: time in ms
-          failure: None
-        """
-
     def recordLogcat(self):
         """
-        Clears the logcat file making it easier to view specific events
+        Clears the logcat file making it easier to view specific events.
         """
         #TODO: spawn this off in a separate thread/process so we can collect all the logcat information
 
         # Right now this is just clearing the logcat so we can only see what happens after this call.
         self.shellCheckOutput(['/system/bin/logcat', '-c'], root=self._logcatNeedsRoot)
 
-    def getLogcat(self, filterSpecs=["dalvikvm:S", "ConnectivityService:S",
+    def getLogcat(self, filterSpecs=["dalvikvm:I", "ConnectivityService:S",
                                       "WifiMonitor:S", "WifiStateTracker:S",
                                       "wpa_supplicant:S", "NetworkStateTracker:S"],
                   format="time",
@@ -511,23 +109,6 @@ class DeviceManager:
             lines = [line for line in lines if not re.search(regex, line)]
 
         return lines
-
-    @staticmethod
-    def _writePNG(buf, width, height):
-        """
-        Method for writing a PNG from a buffer, used by getScreenshot on older devices
-        Based on: http://code.activestate.com/recipes/577443-write-a-png-image-in-native-python/
-        """
-        width_byte_4 = width * 4
-        raw_data = b"".join(b'\x00' + buf[span:span + width_byte_4] for span in range(0, (height - 1) * width * 4, width_byte_4))
-        def png_pack(png_tag, data):
-            chunk_head = png_tag + data
-            return struct.pack("!I", len(data)) + chunk_head + struct.pack("!I", 0xFFFFFFFF & zlib.crc32(chunk_head))
-        return b"".join([
-                b'\x89PNG\r\n\x1a\n',
-                png_pack(b'IHDR', struct.pack("!2I5B", width, height, 8, 6, 0, 0, 0)),
-                png_pack(b'IDAT', zlib.compress(raw_data, 9)),
-                png_pack(b'IEND', b'')])
 
     def saveScreenshot(self, filename):
         """
@@ -557,18 +138,366 @@ class DeviceManager:
             self.removeFile(tempScreenshotFile)
 
     @abstractmethod
-    def chmodDir(self, remoteDir, mask="777"):
+    def pushFile(self, localFilename, remoteFilename, retryLimit=1):
         """
-        Recursively changes file permissions in a directory
+        Copies localname from the host to destname on the device.
+        """
 
-        returns:
-          success: True
-          failure: False
+    @abstractmethod
+    def pushDir(self, localDirname, remoteDirname, retryLimit=1):
+        """
+        Push local directory from host to remote directory on the device,
+        """
+
+    @abstractmethod
+    def pullFile(self, remoteFilename):
+        """
+        Returns contents of remoteFile using the "pull" command.
+        """
+
+    @abstractmethod
+    def getFile(self, remoteFilename, localFilename):
+        """
+        Copy file from remote device to local file on host.
+        """
+
+    @abstractmethod
+    def getDirectory(self, remoteDirname, localDirname, checkDir=True):
+        """
+        Copy directory structure from device (remoteDirname) to host (localDirname).
+        """
+
+    @abstractmethod
+    def validateFile(self, remoteFilename, localFilename):
+        """
+        Returns True if a file on the remote device has the same md5 hash as a local one.
+        """
+
+    def validateDir(self, localDirname, remoteDirname):
+        """
+        Returns True if remoteDirname on device is same as localDirname on host.
+        """
+
+        if (self.debug >= 2):
+            print "validating directory: " + localDirname + " to " + remoteDirname
+        for root, dirs, files in os.walk(localDirname):
+            parts = root.split(localDirname)
+            for f in files:
+                remoteRoot = remoteDirname + '/' + parts[1]
+                remoteRoot = remoteRoot.replace('/', '/')
+                if (parts[1] == ""):
+                    remoteRoot = remoteDirname
+                remoteName = remoteRoot + '/' + f
+                if (self.validateFile(remoteName, os.path.join(root, f)) <> True):
+                        return False
+        return True
+
+    @abstractmethod
+    def mkDir(self, remoteDirname):
+        """
+        Creates a single directory on the device file system.
+        """
+
+    def mkDirs(self, filename):
+        """
+        Make directory structure on the device.
+
+        WARNING: does not create last part of the path. For example, if asked to
+        create `/mnt/sdcard/foo/bar/baz`, it will only create `/mnt/sdcard/foo/bar`
+        """
+        dirParts = filename.rsplit('/', 1)
+        if not self.dirExists(dirParts[0]):
+            parts = filename.split('/')
+            name = ""
+            for part in parts:
+                if part is parts[-1]:
+                    break
+                if part != "":
+                    name += '/' + part
+                    self.mkDir(name) # mkDir will check previous existence
+
+    @abstractmethod
+    def dirExists(self, dirpath):
+        """
+        Returns whether dirpath exists and is a directory on the device file system.
+        """
+
+    @abstractmethod
+    def fileExists(self, filepath):
+        """
+        Return whether filepath exists and is a file on the device file system.
+        """
+
+    @abstractmethod
+    def listFiles(self, rootdir):
+        """
+        Lists files on the device rootdir.
+
+        Returns array of filenames, ['file1', 'file2', ...]
+        """
+
+    @abstractmethod
+    def removeFile(self, filename):
+        """
+        Removes filename from the device.
+        """
+
+    @abstractmethod
+    def removeDir(self, remoteDirname):
+        """
+        Does a recursive delete of directory on the device: rm -Rf remoteDirname.
+        """
+
+    @abstractmethod
+    def chmodDir(self, remoteDirname, mask="777"):
+        """
+        Recursively changes file permissions in a directory.
+        """
+
+    @abstractmethod
+    def getDeviceRoot(self):
+        """
+        Gets the device root for the testing area on the device.
+
+        For all devices we will use / type slashes and depend on the device-agent
+        to sort those out.  The agent will return us the device location where we
+        should store things, we will then create our /tests structure relative to
+        that returned path.
+
+        Structure on the device is as follows:
+
+        ::
+
+          /tests
+              /<fennec>|<firefox>  --> approot
+              /profile
+              /xpcshell
+              /reftest
+              /mochitest
+        """
+
+    @abstractmethod
+    def getAppRoot(self, packageName=None):
+        """
+        Returns the app root directory.
+
+        E.g /tests/fennec or /tests/firefox
+        """
+        # TODO Support org.mozilla.firefox and B2G
+
+    def getTestRoot(self, harnessName):
+        """
+        Gets the directory location on the device for a specific test type.
+
+        :param harnessName: one of: "xpcshell", "reftest", "mochitest"
+        """
+
+        devroot = self.getDeviceRoot()
+        if (devroot == None):
+            return None
+
+        if (re.search('xpcshell', harnessName, re.I)):
+            self.testRoot = devroot + '/xpcshell'
+        elif (re.search('?(i)reftest', harnessName)):
+            self.testRoot = devroot + '/reftest'
+        elif (re.search('?(i)mochitest', harnessName)):
+            self.testRoot = devroot + '/mochitest'
+        return self.testRoot
+
+    @abstractmethod
+    def getTempDir(self):
+        """
+        Returns a temporary directory we can use on this device, ensuring
+        also that it exists.
+        """
+
+    @abstractmethod
+    def shell(self, cmd, outputfile, env=None, cwd=None, timeout=None, root=False):
+        """
+        Executes shell command on device and returns exit code.
+
+        :param cmd: Command string to execute
+        :param outputfile: File to store output
+        :param env: Environment to pass to exec command
+        :param cwd: Directory to execute command from
+        :param timeout: specified in seconds, defaults to 'default_timeout'
+        :param root: Specifies whether command requires root privileges
+        """
+
+    def shellCheckOutput(self, cmd, env=None, cwd=None, timeout=None, root=False):
+        """
+        Executes shell command on device and returns output as a string.
+
+        :param env: Environment to pass to exec command
+        :param cwd: Directory to execute command from
+        :param timeout: specified in seconds, defaults to 'default_timeout'
+        :param root: Specifies whether command requires root privileges
+        """
+        buf = StringIO.StringIO()
+        retval = self.shell(cmd, buf, env=env, cwd=cwd, timeout=timeout, root=root)
+        output = str(buf.getvalue()[0:-1]).rstrip()
+        buf.close()
+        if retval != 0:
+            raise DMError("Non-zero return code for command: %s (output: '%s', retval: '%s')" % (cmd, output, retval))
+        return output
+
+    @abstractmethod
+    def getProcessList(self):
+        """
+        Returns array of tuples representing running processes on the device.
+
+        Format of tuples is (processId, processName, userId)
+        """
+
+    def processExist(self, processName):
+        """
+        Returns True if process with name processName is running on device.
+        """
+        if not isinstance(processName, basestring):
+            raise TypeError("Process name %s is not a string" % processName)
+
+        pid = None
+
+        #filter out extra spaces
+        parts = filter(lambda x: x != '', processName.split(' '))
+        processName = ' '.join(parts)
+
+        #filter out the quoted env string if it exists
+        #ex: '"name=value;name2=value2;etc=..." process args' -> 'process args'
+        parts = processName.split('"')
+        if (len(parts) > 2):
+            processName = ' '.join(parts[2:]).strip()
+
+        pieces = processName.split(' ')
+        parts = pieces[0].split('/')
+        app = parts[-1]
+
+        procList = self.getProcessList()
+        if (procList == []):
+            return None
+
+        for proc in procList:
+            procName = proc[1].split('/')[-1]
+            if (procName == app):
+                pid = proc[0]
+                break
+        return pid
+
+
+    @abstractmethod
+    def killProcess(self, processName, forceKill=False):
+        """
+        Kills the process named processName. If forceKill is True, process is
+        killed regardless of state.
+        """
+
+    @abstractmethod
+    def reboot(self, ipAddr=None, port=30000):
+        """
+        Reboots the device.
+
+        Some implementations may optionally support waiting for a TCP callback from
+        the device once it has restarted before returning, but this is not
+        guaranteed.
+        """
+
+    @abstractmethod
+    def installApp(self, appBundlePath, destPath=None):
+        """
+        Installs an application onto the device.
+
+        :param appBundlePath: path to the application bundle on the device
+        :param destPath: destination directory of where application should be installed to (optional)
+        """
+
+    @abstractmethod
+    def uninstallApp(self, appName, installPath=None):
+        """
+        Uninstalls the named application from device and DOES NOT cause a reboot.
+
+        :param appName: the name of the application (e.g org.mozilla.fennec)
+        :param installPath: the path to where the application was installed (optional)
+        """
+
+    @abstractmethod
+    def uninstallAppAndReboot(self, appName, installPath=None):
+        """
+        Uninstalls the named application from device and causes a reboot.
+
+        :param appName: the name of the application (e.g org.mozilla.fennec)
+        :param installPath: the path to where the application was installed (optional)
+        """
+
+    @abstractmethod
+    def updateApp(self, appBundlePath, processName=None, destPath=None, ipAddr=None, port=30000):
+        """
+        Updates the application on the device.
+
+        :param appBundlePath: path to the application bundle on the device
+        :param processName: used to end the process if the applicaiton is
+                            currently running (optional)
+        :param destPath: Destination directory to where the application should
+                         be installed (optional)
+        :param ipAddr: IP address to await a callback ping to let us know that
+                       the device has updated properly (defaults to current
+                       IP)
+        :param port: port to await a callback ping to let us know that the
+                     device has updated properly defaults to 30000, and counts
+                     up from there if it finds a conflict
         """
 
     @staticmethod
+    def _writePNG(buf, width, height):
+        """
+        Method for writing a PNG from a buffer, used by getScreenshot on older devices,
+        """
+        # Based on: http://code.activestate.com/recipes/577443-write-a-png-image-in-native-python/
+        width_byte_4 = width * 4
+        raw_data = b"".join(b'\x00' + buf[span:span + width_byte_4] for span in range(0, (height - 1) * width * 4, width_byte_4))
+        def png_pack(png_tag, data):
+            chunk_head = png_tag + data
+            return struct.pack("!I", len(data)) + chunk_head + struct.pack("!I", 0xFFFFFFFF & zlib.crc32(chunk_head))
+        return b"".join([
+                b'\x89PNG\r\n\x1a\n',
+                png_pack(b'IHDR', struct.pack("!2I5B", width, height, 8, 6, 0, 0, 0)),
+                png_pack(b'IDAT', zlib.compress(raw_data, 9)),
+                png_pack(b'IEND', b'')])
+
+    @abstractmethod
+    def _getRemoteHash(self, filename):
+        """
+        Return the md5 sum of a file on the device.
+        """
+
+    @staticmethod
+    def _getLocalHash(filename):
+        """
+        Return the MD5 sum of a file on the host.
+        """
+        f = open(filename, 'rb')
+        if (f == None):
+            return None
+
+        try:
+            mdsum = hashlib.md5()
+        except:
+            return None
+
+        while 1:
+            data = f.read(1024)
+            if not data:
+                break
+            mdsum.update(data)
+
+        f.close()
+        hexval = mdsum.hexdigest()
+        return hexval
+
+    @staticmethod
     def _escapedCommandLine(cmd):
-        """ Utility function to return escaped and quoted version of command line """
+        """
+        Utility function to return escaped and quoted version of command line.
+        """
         quotedCmd = []
 
         for arg in cmd:
@@ -638,7 +567,7 @@ class NetworkTools:
                 except:
                     if seed > maxportnum:
                         print "Automation Error: Could not find open port after checking 5000 ports"
-                    raise
+                        raise
                 seed += 1
         except:
             print "Automation Error: Socket error trying to find open port"

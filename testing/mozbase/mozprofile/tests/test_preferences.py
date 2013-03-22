@@ -1,28 +1,36 @@
 #!/usr/bin/env python
 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
 import os
 import shutil
-import subprocess
 import tempfile
 import unittest
+from mozprofile.cli import MozProfileCLI
 from mozprofile.prefs import Preferences
 from mozprofile.profile import Profile
 
+here = os.path.dirname(os.path.abspath(__file__))
+
 class PreferencesTest(unittest.TestCase):
-    """test mozprofile"""
+    """test mozprofile preference handling"""
 
     def run_command(self, *args):
         """
-        runs mozprofile;
-        returns (stdout, stderr, code)
+        invokes mozprofile command line via the CLI factory
+        - args : command line arguments (equivalent of sys.argv[1:])
         """
-        process = subprocess.Popen(args,
-                                   stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE)
-        stdout, stderr = process.communicate()
-        stdout = stdout.strip()
-        stderr = stderr.strip()
-        return stdout, stderr, process.returncode
+
+        # instantiate the factory
+        cli = MozProfileCLI(list(args))
+
+        # create the profile
+        profile = cli.profile()
+
+        # return path to profile
+        return profile.profile
 
     def compare_generated(self, _prefs, commandline):
         """
@@ -31,7 +39,7 @@ class PreferencesTest(unittest.TestCase):
         compares the results
         cleans up
         """
-        profile, stderr, code = self.run_command(*commandline)
+        profile = self.run_command(*commandline)
         prefs_file = os.path.join(profile, 'user.js')
         self.assertTrue(os.path.exists(prefs_file))
         read = Preferences.read_prefs(prefs_file)
@@ -41,8 +49,10 @@ class PreferencesTest(unittest.TestCase):
         shutil.rmtree(profile)
 
     def test_basic_prefs(self):
+        """test setting a pref from the command line entry point"""
+
         _prefs = {"browser.startup.homepage": "http://planet.mozilla.org/"}
-        commandline = ["mozprofile"]
+        commandline = []
         _prefs = _prefs.items()
         for pref, value in _prefs:
             commandline += ["--pref", "%s:%s" % (pref, value)]
@@ -54,7 +64,7 @@ class PreferencesTest(unittest.TestCase):
                   ("zoom.minPercent", 30),
                   ("zoom.maxPercent", 300),
                   ("webgl.verbose", 'false')]
-        commandline = ["mozprofile"]
+        commandline = []
         for pref, value in _prefs:
             commandline += ["--pref", "%s:%s" % (pref, value)]
         _prefs = [(i, Preferences.cast(j)) for i, j in _prefs]
@@ -69,22 +79,24 @@ browser.startup.homepage = http://planet.mozilla.org/
 [foo]
 browser.startup.homepage = http://github.com/
 """
-        fd, name = tempfile.mkstemp(suffix='.ini')
-        os.write(fd, _ini)
-        os.close(fd)
-        commandline = ["mozprofile", "--preferences", name]
+        try:
+            fd, name = tempfile.mkstemp(suffix='.ini')
+            os.write(fd, _ini)
+            os.close(fd)
+            commandline = ["--preferences", name]
 
-        # test the [DEFAULT] section
-        _prefs = {'browser.startup.homepage': 'http://planet.mozilla.org/'}
-        self.compare_generated(_prefs, commandline)
+            # test the [DEFAULT] section
+            _prefs = {'browser.startup.homepage': 'http://planet.mozilla.org/'}
+            self.compare_generated(_prefs, commandline)
 
-        # test a specific section
-        _prefs = {'browser.startup.homepage': 'http://github.com/'}
-        commandline[-1] = commandline[-1] + ':foo'
-        self.compare_generated(_prefs, commandline)
+            # test a specific section
+            _prefs = {'browser.startup.homepage': 'http://github.com/'}
+            commandline[-1] = commandline[-1] + ':foo'
+            self.compare_generated(_prefs, commandline)
 
-        # cleanup
-        os.remove(name)
+        finally:
+            # cleanup
+            os.remove(name)
 
     def test_reset_should_remove_added_prefs(self):
         """Check that when we call reset the items we expect are updated"""
@@ -109,8 +121,8 @@ browser.startup.homepage = http://github.com/
                               if line.startswith('#MozRunner Prefs End')]))
 
         profile.reset()
-        self.assertNotEqual(prefs1, \
-                    Preferences.read_prefs(os.path.join(profile.profile, 'user.js')),\
+        self.assertNotEqual(prefs1,
+                            Preferences.read_prefs(os.path.join(profile.profile, 'user.js')),
                             "I pity the fool who left my pref")
 
     def test_magic_markers(self):
@@ -192,9 +204,8 @@ user_pref("webgl.force-enabled", true);
             # make sure you have the original preferences
             prefs = Preferences.read_prefs(user_js)
             self.assertTrue(prefs == original_prefs)
-        except:
+        finally:
             shutil.rmtree(tempdir)
-            raise
 
     def test_json(self):
         _prefs = {"browser.startup.homepage": "http://planet.mozilla.org/"}
@@ -205,8 +216,42 @@ user_pref("webgl.force-enabled", true);
         os.write(fd, json)
         os.close(fd)
 
-        commandline = ["mozprofile", "--preferences", name]
+        commandline = ["--preferences", name]
         self.compare_generated(_prefs, commandline)
+
+    def test_prefs_write(self):
+        """test that the Preferences.write() method correctly serializes preferences"""
+
+        _prefs = {'browser.startup.homepage': "http://planet.mozilla.org",
+                  'zoom.minPercent': 30,
+                  'zoom.maxPercent': 300}
+
+        # make a Preferences manager with the testing preferences
+        preferences = Preferences(_prefs)
+
+        # write them to a temporary location
+        path = None
+        try:
+            with tempfile.NamedTemporaryFile(suffix='.js', delete=False) as f:
+                path = f.name
+                preferences.write(f, _prefs)
+
+            # read them back and ensure we get what we put in
+            self.assertEqual(dict(Preferences.read_prefs(path)), _prefs)
+
+        finally:
+            # cleanup
+            os.remove(path)
+
+    def test_read_prefs_with_comments(self):
+        """test reading preferences from a prefs.js file that contains comments"""
+
+        _prefs = {'browser.startup.homepage': 'http://planet.mozilla.org',
+                  'zoom.minPercent': 30,
+                  'zoom.maxPercent': 300,
+                  'webgl.verbose': 'false'}
+        path = os.path.join(here, 'files', 'prefs_with_comments.js')
+        self.assertEqual(dict(Preferences.read_prefs(path)), _prefs)
 
 
 if __name__ == '__main__':
