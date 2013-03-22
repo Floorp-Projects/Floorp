@@ -266,6 +266,15 @@ public:
    */
   nsresult SetSourceSizeHint(uint32_t sizeHint);
 
+  /* Provide a hint for the requested resolution of the resulting image. */
+  void SetRequestedResolution(const nsIntSize requestedResolution) {
+    mRequestedResolution = requestedResolution;
+  }
+
+  nsIntSize GetRequestedResolution() {
+    return mRequestedResolution;
+  }
+
   // "Blend" method indicates how the current image is combined with the
   // previous image.
   enum FrameBlendMethod {
@@ -712,7 +721,6 @@ private:
   NS_IMETHOD RequestDecodeCore(RequestDecodeType aDecodeType);
 
 private: // data
-
   nsIntSize                  mSize;
 
   // Whether mFrames below were decoded using any special flags.
@@ -759,6 +767,9 @@ private: // data
   // How many times we've decoded this image.
   // This is currently only used for statistics
   int32_t                        mDecodeCount;
+
+  // If the image contains multiple resolutions, a hint as to which one should be used
+  nsIntSize                  mRequestedResolution;
 
   // Cached value for GetImageContainer.
   nsRefPtr<mozilla::layers::ImageContainer> mImageContainer;
