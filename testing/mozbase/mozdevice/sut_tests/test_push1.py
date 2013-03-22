@@ -7,11 +7,10 @@ import posixpath
 
 from dmunit import DeviceManagerTestCase
 
-
 class Push1TestCase(DeviceManagerTestCase):
 
     def runTest(self):
-        """ This tests copying a directory structure to the device
+        """This tests copying a directory structure to the device.
         """
         dvroot = self.dm.getDeviceRoot()
         dvpath = posixpath.join(dvroot, 'infratest')
@@ -30,11 +29,9 @@ class Push1TestCase(DeviceManagerTestCase):
         if not os.path.exists(os.path.join(p1, 'sub.1', 'sub.2', 'testfile')):
             file(os.path.join(p1, 'sub.1', 'sub.2', 'testfile'), 'w').close()
 
-        # push the directory
         self.dm.pushDir(p1, posixpath.join(dvpath, 'push1'))
 
-        # verify
-        self.assert_(
+        self.assertTrue(
             self.dm.dirExists(posixpath.join(dvpath, 'push1', 'sub.1')))
-        self.assert_(self.dm.dirExists(
+        self.assertTrue(self.dm.dirExists(
             posixpath.join(dvpath, 'push1', 'sub.1', 'sub.2')))
