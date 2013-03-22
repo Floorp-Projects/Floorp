@@ -16,13 +16,11 @@
 namespace mozilla {
 namespace image {
 
-nsIconDecoder::nsIconDecoder(RasterImage &aImage, imgDecoderObserver* aObserver)
- : Decoder(aImage, aObserver),
+nsIconDecoder::nsIconDecoder(RasterImage &aImage)
+ : Decoder(aImage),
    mWidth(-1),
    mHeight(-1),
    mPixBytesRead(0),
-   mPixBytesTotal(0),
-   mImageData(nullptr),
    mState(iconStateStart)
 {
   // Nothing to do
@@ -39,11 +37,6 @@ nsIconDecoder::WriteInternal(const char *aBuffer, uint32_t aCount)
   // We put this here to avoid errors about crossing initialization with case
   // jumps on linux.
   uint32_t bytesToRead = 0;
-  nsresult rv;
-
-  // Performance isn't critical here, so our update rectangle is 
-  // always the full icon
-  nsIntRect r(0, 0, mWidth, mHeight);
 
   // Loop until the input data is gone
   while (aCount > 0) {
@@ -78,17 +71,10 @@ nsIconDecoder::WriteInternal(const char *aBuffer, uint32_t aCount)
           break;
         }
 
-        // Add the frame and signal
-        rv = mImage.EnsureFrame(0, 0, 0, mWidth, mHeight,
-                                gfxASurface::ImageFormatARGB32,
-                                &mImageData, &mPixBytesTotal);
-        if (NS_FAILED(rv)) {
-          PostDecoderError(rv);
+        if (!mImageData) {
+          PostDecoderError(NS_ERROR_OUT_OF_MEMORY);
           return;
         }
-
-        // Tell the superclass we're starting a frame
-        PostFrameStart();
 
         // Book Keeping
         aBuffer++;
@@ -97,12 +83,17 @@ nsIconDecoder::WriteInternal(const char *aBuffer, uint32_t aCount)
         break;
 
       case iconStateReadPixels:
+      {
 
         // How many bytes are we reading?
-        bytesToRead = std::min(aCount, mPixBytesTotal - mPixBytesRead);
+        bytesToRead = std::min(aCount, mImageDataLength - mPixBytesRead);
 
         // Copy the bytes
         memcpy(mImageData + mPixBytesRead, aBuffer, bytesToRead);
+
+        // Performance isn't critical here, so our update rectangle is
+        // always the full icon
+        nsIntRect r(0, 0, mWidth, mHeight);
 
         // Invalidate
         PostInvalidation(r);
@@ -113,12 +104,13 @@ nsIconDecoder::WriteInternal(const char *aBuffer, uint32_t aCount)
         mPixBytesRead += bytesToRead;
 
         // If we've got all the pixel bytes, we're finished
-        if (mPixBytesRead == mPixBytesTotal) {
+        if (mPixBytesRead == mImageDataLength) {
           PostFrameStop();
           PostDecodeDone();
           mState = iconStateFinished;
         }
         break;
+      }
 
       case iconStateFinished:
 

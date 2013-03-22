@@ -1329,7 +1329,7 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
     Register calleereg = ToRegister(call->getFunction());
     Register objreg    = ToRegister(call->getTempObject());
     uint32_t unusedStack = StackOffsetOfPassedArg(call->argslot());
-    RootedFunction target(cx, call->getSingleTarget());
+    RawFunction target = call->getSingleTarget();
     ExecutionMode executionMode = gen->info().executionMode();
     Label end, uncompiled;
 
@@ -1346,7 +1346,7 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
 
     // If the function is known to be uncompilable, just emit the call to
     // Invoke in sequential mode, else mark as cannot compile.
-    RootedScript targetScript(cx, target->nonLazyScript());
+    RawScript targetScript = target->nonLazyScript();
     if (GetIonScript(targetScript, executionMode) == ION_DISABLED_SCRIPT) {
         if (executionMode == ParallelExecution)
             return false;
@@ -1556,8 +1556,8 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
     // If the function is known to be uncompilable, only emit the call to InvokeFunction.
     ExecutionMode executionMode = gen->info().executionMode();
     if (apply->hasSingleTarget()) {
-        RootedFunction target(cx, apply->getSingleTarget());
-        if (!CanIonCompile(cx, target, executionMode)) {
+        RawFunction target = apply->getSingleTarget();
+        if (!CanIonCompile(target, executionMode)) {
             if (!emitCallInvokeFunction(apply, copyreg))
                 return false;
             emitPopArguments(apply, copyreg);
@@ -4473,14 +4473,14 @@ CodeGenerator::link()
     JSContext *cx = GetIonContext()->cx;
 
     Linker linker(masm);
-    IonCode *code = linker.newCode(cx);
+    IonCode *code = linker.newCode(cx, JSC::ION_CODE);
     if (!code)
         return false;
 
     // We encode safepoints after the OSI-point offsets have been determined.
     encodeSafepoints();
 
-    RootedScript script(cx, gen->info().script());
+    RawScript script = gen->info().script();
     ExecutionMode executionMode = gen->info().executionMode();
     JS_ASSERT(!HasIonScript(script, executionMode));
 

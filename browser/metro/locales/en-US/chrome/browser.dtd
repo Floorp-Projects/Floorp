@@ -63,8 +63,8 @@
 <!ENTITY contextBookmarkLinkHref.label     "Bookmark link">
 
 <!-- IMAGE CONTEXT MENU -->
-<!-- l10n: contextSaveImageLib saves an image to the users "pictures library"
-     (Explorer -> left hand side navigation ppane -> Libraries -> Pictures) -->
+<!-- LOCALIZATION NOTE (contextSaveImageLib.label): saves an image to the users "pictures library"
+     (Explorer -> left hand side navigation pane -> Libraries -> Pictures) -->
 <!ENTITY contextSaveImageLib.label         "Save to picture library">
 <!ENTITY contextCopyImage.label            "Copy image">
 <!ENTITY contextCopyImageLocation.label    "Copy image location">

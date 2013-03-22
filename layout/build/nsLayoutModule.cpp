@@ -217,6 +217,9 @@ static void Shutdown();
 
 #include "nsGeolocation.h"
 #include "nsDeviceSensors.h"
+#ifdef MOZ_GAMEPAD
+#include "mozilla/dom/GamepadService.h"
+#endif
 #include "nsCSPService.h"
 #include "nsISmsService.h"
 #include "nsIMobileMessageService.h"
@@ -316,6 +319,11 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIAlarmHalService,
                                          AlarmHalService::GetInstance)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsITimeService,
                                          TimeService::GetInstance)
+#ifdef MOZ_GAMEPAD
+using mozilla::dom::GamepadServiceTest;
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(GamepadServiceTest,
+                                         GamepadServiceTest::CreateService)
+#endif
 
 #ifdef MOZ_WIDGET_GONK
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIGeolocationProvider,
@@ -839,6 +847,9 @@ NS_DEFINE_NAMED_CID(NS_TIMESERVICE_CID);
 NS_DEFINE_NAMED_CID(GONK_GPS_GEOLOCATION_PROVIDER_CID);
 #endif
 NS_DEFINE_NAMED_CID(NS_MEDIAMANAGERSERVICE_CID);
+#ifdef MOZ_GAMEPAD
+NS_DEFINE_NAMED_CID(NS_GAMEPAD_TEST_CID);
+#endif
 
 static nsresult
 CreateWindowCommandTableConstructor(nsISupports *aOuter,
@@ -1118,6 +1129,9 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kGONK_GPS_GEOLOCATION_PROVIDER_CID, false, NULL, nsIGeolocationProviderConstructor },
 #endif
   { &kNS_MEDIAMANAGERSERVICE_CID, false, NULL, nsIMediaManagerServiceConstructor },
+#ifdef MOZ_GAMEPAD
+  { &kNS_GAMEPAD_TEST_CID, false, NULL, GamepadServiceTestConstructor },
+#endif
   { NULL }
 };
 
@@ -1259,6 +1273,9 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { TIMESERVICE_CONTRACTID, &kNS_TIMESERVICE_CID },
 #ifdef MOZ_WIDGET_GONK
   { GONK_GPS_GEOLOCATION_PROVIDER_CONTRACTID, &kGONK_GPS_GEOLOCATION_PROVIDER_CID },
+#endif
+#ifdef MOZ_GAMEPAD
+  { NS_GAMEPAD_TEST_CONTRACTID, &kNS_GAMEPAD_TEST_CID },
 #endif
   { MEDIAMANAGERSERVICE_CONTRACTID, &kNS_MEDIAMANAGERSERVICE_CID },
   { NULL }

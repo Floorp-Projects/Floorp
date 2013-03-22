@@ -40,7 +40,7 @@ static inline void SetIonScript(RawScript script, ExecutionMode cmode, IonScript
     JS_NOT_REACHED("No such execution mode");
 }
 
-static inline bool CanIonCompile(HandleScript script, ExecutionMode cmode)
+static inline bool CanIonCompile(RawScript script, ExecutionMode cmode)
 {
     switch (cmode) {
       case SequentialExecution: return script->canIonCompile();
@@ -50,12 +50,9 @@ static inline bool CanIonCompile(HandleScript script, ExecutionMode cmode)
     return false;
 }
 
-static inline bool CanIonCompile(JSContext *cx, HandleFunction fun, ExecutionMode cmode)
+static inline bool CanIonCompile(RawFunction fun, ExecutionMode cmode)
 {
-    if (!fun->isInterpreted())
-        return false;
-    RootedScript script(cx, fun->nonLazyScript());
-    return CanIonCompile(script, cmode);
+    return fun->isInterpreted() && CanIonCompile(fun->nonLazyScript(), cmode);
 }
 
 static inline bool CompilingOffThread(RawScript script, ExecutionMode cmode)

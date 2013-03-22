@@ -263,6 +263,13 @@ DisableSensorNotifications(SensorType aSensor) {
   Hal()->SendDisableSensorNotifications(aSensor);
 }
 
+//TODO: bug 852944 - IPC implementations of these
+void StartMonitoringGamepadStatus()
+{}
+
+void StopMonitoringGamepadStatus()
+{}
+
 void
 EnableWakeLockNotifications()
 {

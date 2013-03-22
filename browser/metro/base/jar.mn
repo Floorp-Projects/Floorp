@@ -30,7 +30,6 @@ chrome.jar:
   content/bindings/flyoutpanel.xml             (content/bindings/flyoutpanel.xml)
   content/bindings/selectionoverlay.xml        (content/bindings/selectionoverlay.xml)
 
-  content/prompt/CaptureDialog.xul             (content/prompt/CaptureDialog.xul)
   content/prompt/alert.xul                     (content/prompt/alert.xul)
   content/prompt/confirm.xul                   (content/prompt/confirm.xul)
   content/prompt/prompt.xul                    (content/prompt/prompt.xul)
@@ -41,8 +40,6 @@ chrome.jar:
   content/prompt/removeMasterPassword.xul      (content/prompt/removeMasterPassword.xul)
 
   content/helperui/AlertsHelper.js             (content/helperui/AlertsHelper.js)
-  content/helperui/CaptureDialog.js            (content/helperui/CaptureDialog.js)
-  content/helperui/CapturePickerUI.js          (content/helperui/CapturePickerUI.js)
   content/helperui/IndexedDB.js                (content/helperui/IndexedDB.js)
   content/helperui/MasterPasswordUI.js         (content/helperui/MasterPasswordUI.js)
   content/helperui/MenuUI.js                   (content/helperui/MenuUI.js)

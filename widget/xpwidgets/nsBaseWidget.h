@@ -111,6 +111,7 @@ public:
                                           bool* aAllowRetaining = nullptr);
 
   virtual void            CreateCompositor();
+  virtual void            CreateCompositor(int aWidth, int aHeight);
   virtual void            DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect) {}
   virtual void            DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect) {}
   virtual void            UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries) {}

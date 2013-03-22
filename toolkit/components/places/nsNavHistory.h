@@ -78,7 +78,6 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSINAVHISTORYSERVICE
-  NS_DECL_NSIGLOBALHISTORY2
   NS_DECL_NSIBROWSERHISTORY
   NS_DECL_NSIOBSERVER
   NS_DECL_NSPIPLACESDATABASE
@@ -151,6 +150,7 @@ public:
    * @param _GUID
    *        Will be set to the unique id associated with the page.
    * @note This DOES NOT check for bad URLs other than that they're nonempty.
+   * @note This DOES NOT update frecency of the page.
    */
   nsresult GetOrCreateIdForPage(nsIURI* aURI,
                                 int64_t* _pageId, nsCString& _GUID);
@@ -448,26 +448,6 @@ protected:
   nsresult RemovePagesInternal(const nsCString& aPlaceIdsQueryString);
   nsresult CleanupPlacesOnVisitsDelete(const nsCString& aPlaceIdsQueryString);
 
-  nsresult AddURIInternal(nsIURI* aURI, PRTime aTime, bool aRedirect,
-                          bool aToplevel, nsIURI* aReferrer);
-
-  nsresult AddVisitChain(nsIURI* aURI, PRTime aTime,
-                         bool aToplevel, bool aRedirect,
-                         nsIURI* aReferrer, int64_t* aVisitID,
-                         int64_t* aSessionID);
-  nsresult InternalAddNewPage(nsIURI* aURI, const nsAString& aTitle,
-                              bool aHidden, bool aTyped,
-                              int32_t aVisitCount, bool aCalculateFrecency,
-                              int64_t* aPageID, nsACString& guid);
-  nsresult InternalAddVisit(int64_t aPageID, int64_t aReferringVisit,
-                            int64_t aSessionID, PRTime aTime,
-                            int32_t aTransitionType, int64_t* aVisitID);
-  bool FindLastVisit(nsIURI* aURI,
-                       int64_t* aVisitID,
-                       PRTime* aTime,
-                       int64_t* aSessionID);
-  bool IsURIStringVisited(const nsACString& url);
-
   /**
    * Loads all of the preferences that we use into member variables.
    *
@@ -509,8 +489,6 @@ protected:
                          nsCOMArray<nsNavHistoryResultNode>* aResults);
 
   void TitleForDomain(const nsCString& domain, nsACString& aTitle);
-
-  nsresult SetPageTitleInternal(nsIURI* aURI, const nsAString& aTitle);
 
   nsresult FilterResultSet(nsNavHistoryQueryResultNode *aParentNode,
                            const nsCOMArray<nsNavHistoryResultNode>& aSet,

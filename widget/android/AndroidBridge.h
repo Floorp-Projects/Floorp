@@ -103,10 +103,9 @@ class AndroidBridge
 {
 public:
     enum {
-        NOTIFY_IME_RESETINPUTSTATE = 0,
-        NOTIFY_IME_REPLY_EVENT = 1,
-        NOTIFY_IME_CANCELCOMPOSITION = 2,
-        NOTIFY_IME_FOCUSCHANGE = 3
+        // Values for NotifyIME, in addition to values from the Gecko
+        // NotificationToIME enum; use negative values here to prevent conflict
+        NOTIFY_IME_REPLY_EVENT = -1,
     };
 
     enum {
@@ -152,9 +151,9 @@ public:
     bool SetMainThread(void *thr);
 
     /* These are all implemented in Java */
-    static void NotifyIME(int aType, int aState);
+    static void NotifyIME(int aType);
 
-    static void NotifyIMEEnabled(int aState, const nsAString& aTypeHint,
+    static void NotifyIMEContext(int aState, const nsAString& aTypeHint,
                                  const nsAString& aModeHint, const nsAString& aActionHint);
 
     static void NotifyIMEChange(const PRUnichar *aText, uint32_t aTextLen, int aStart, int aEnd, int aNewEnd);
@@ -405,7 +404,7 @@ protected:
 
     // other things
     jmethodID jNotifyIME;
-    jmethodID jNotifyIMEEnabled;
+    jmethodID jNotifyIMEContext;
     jmethodID jNotifyIMEChange;
     jmethodID jAcknowledgeEvent;
     jmethodID jEnableLocation;

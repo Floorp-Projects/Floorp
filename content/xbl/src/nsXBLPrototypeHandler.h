@@ -14,15 +14,19 @@
 #include "nsXBLEventHandler.h"
 #include "nsIWeakReference.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsDOMScriptObjectHolder.h"
 #include "nsCycleCollectionParticipant.h"
 
+#include "js/RootingAPI.h"
+
+class JSObject;
 class nsIDOMEvent;
 class nsIContent;
 class nsIDOMUIEvent;
 class nsIDOMKeyEvent;
 class nsIDOMMouseEvent;
 class nsIDOMEventTarget;
+class nsIObjectInputStream;
+class nsIObjectOutputStream;
 class nsXBLPrototypeBinding;
 
 #define NS_HANDLER_TYPE_XBL_JS              (1 << 0)
@@ -161,7 +165,7 @@ protected:
   nsresult DispatchXULKeyCommand(nsIDOMEvent* aEvent);
   nsresult EnsureEventHandler(nsIScriptGlobalObject* aGlobal,
                               nsIScriptContext *aBoundContext, nsIAtom *aName,
-                              nsScriptObjectHolder<JSObject>& aHandler);
+                              JS::MutableHandle<JSObject*> aHandler);
   static int32_t KeyToMask(int32_t key);
   
   static int32_t kAccelKey;

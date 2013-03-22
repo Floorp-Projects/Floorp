@@ -698,7 +698,7 @@ nsWindow::GetLayerManager(PLayersChild*, LayersBackend, LayerManagerPersistence,
 }
 
 void
-nsWindow::CreateLayerManager()
+nsWindow::CreateLayerManager(int aCompositorWidth, int aCompositorHeight)
 {
     if (mLayerManager) {
         return;
@@ -716,11 +716,12 @@ nsWindow::CreateLayerManager()
         if (sLayerManager) {
             return;
         }
-        CreateCompositor();
+        CreateCompositor(aCompositorWidth, aCompositorHeight);
         if (mLayerManager) {
             // for OMTC create a single layer manager and compositor that will be
             // used for all windows.
             SetCompositor(mLayerManager, mCompositorParent, mCompositorChild);
+            sCompositorPaused = false;
             return;
         }
 
@@ -875,6 +876,10 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             }
             break;
 
+        case AndroidGeckoEvent::COMPOSITOR_CREATE:
+            win->CreateLayerManager(ae->Width(), ae->Height());
+            break;
+
         case AndroidGeckoEvent::COMPOSITOR_PAUSE:
             // The compositor gets paused when the app is about to go into the
             // background. While the compositor is paused, we need to ensure that
@@ -887,8 +892,6 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             break;
 
         case AndroidGeckoEvent::COMPOSITOR_RESUME:
-            win->CreateLayerManager();
-
             // When we receive this, the compositor has already been told to
             // resume. (It turns out that waiting till we reach here to tell
             // the compositor to resume takes too long, resulting in a black
@@ -1715,10 +1718,10 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             NotifyIMEOfTextChange(0, INT32_MAX / 2, INT32_MAX / 2);
             FlushIMEChanges();
         }
-        AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_REPLY_EVENT, 0);
+        AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_REPLY_EVENT);
         return;
     } else if (ae->Action() == AndroidGeckoEvent::IME_UPDATE_CONTEXT) {
-        AndroidBridge::NotifyIMEEnabled(mInputContext.mIMEState.mEnabled,
+        AndroidBridge::NotifyIMEContext(mInputContext.mIMEState.mEnabled,
                                         mInputContext.mHTMLInputType,
                                         mInputContext.mHTMLInputInputmode,
                                         mInputContext.mActionHint);
@@ -1729,7 +1732,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
         // Still reply to events, but don't do anything else
         if (ae->Action() == AndroidGeckoEvent::IME_SYNCHRONIZE ||
             ae->Action() == AndroidGeckoEvent::IME_REPLACE_TEXT) {
-            AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_REPLY_EVENT, 0);
+            AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_REPLY_EVENT);
         }
         return;
     }
@@ -1742,7 +1745,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
     case AndroidGeckoEvent::IME_SYNCHRONIZE:
         {
             FlushIMEChanges();
-            AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_REPLY_EVENT, 0);
+            AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_REPLY_EVENT);
         }
         break;
     case AndroidGeckoEvent::IME_REPLACE_TEXT:
@@ -1785,7 +1788,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                 DispatchEvent(&event);
             }
             FlushIMEChanges();
-            AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_REPLY_EVENT, 0);
+            AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_REPLY_EVENT);
         }
         break;
     case AndroidGeckoEvent::IME_SET_SELECTION:
@@ -1962,8 +1965,7 @@ nsWindow::NotifyIME(NotificationToIME aNotification)
         case REQUEST_TO_COMMIT_COMPOSITION:
             //ALOGIME("IME: REQUEST_TO_COMMIT_COMPOSITION: s=%d", aState);
             RemoveIMEComposition();
-            AndroidBridge::NotifyIME(
-                AndroidBridge::NOTIFY_IME_RESETINPUTSTATE, 0);
+            AndroidBridge::NotifyIME(REQUEST_TO_COMMIT_COMPOSITION);
             return NS_OK;
         case REQUEST_TO_CANCEL_COMPOSITION:
             ALOGIME("IME: REQUEST_TO_CANCEL_COMPOSITION");
@@ -1981,12 +1983,11 @@ nsWindow::NotifyIME(NotificationToIME aNotification)
                 DispatchEvent(&compEvent);
             }
 
-            AndroidBridge::NotifyIME(
-                AndroidBridge::NOTIFY_IME_CANCELCOMPOSITION, 0);
+            AndroidBridge::NotifyIME(REQUEST_TO_CANCEL_COMPOSITION);
             return NS_OK;
         case NOTIFY_IME_OF_FOCUS:
             ALOGIME("IME: NOTIFY_IME_OF_FOCUS");
-            AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_FOCUSCHANGE, 1);
+            AndroidBridge::NotifyIME(NOTIFY_IME_OF_FOCUS);
             return NS_OK;
         case NOTIFY_IME_OF_BLUR:
             ALOGIME("IME: NOTIFY_IME_OF_BLUR");
@@ -1998,7 +1999,7 @@ nsWindow::NotifyIME(NotificationToIME aNotification)
             mIMEComposing = false;
             mIMEComposingText.Truncate();
 
-            AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_FOCUSCHANGE, 0);
+            AndroidBridge::NotifyIME(NOTIFY_IME_OF_BLUR);
             return NS_OK;
         case NOTIFY_IME_OF_SELECTION_CHANGE:
             if (mIMEMaskSelectionUpdate) {

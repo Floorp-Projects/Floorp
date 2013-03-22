@@ -48,8 +48,10 @@ public:
    * be called on the parent.
    */
   void AddFrame(nsIFrame* aFrame) {
-    if (!mEntryList.contains(Entry(aFrame, true))) {
-      mEntryList.insert(new Entry(aFrame, true));
+    uint32_t depth = aFrame->GetDepthInFrameTree();
+    if (mEntryList.empty() ||
+        !mEntryList.contains(Entry(aFrame, depth, true))) {
+      mEntryList.insert(new Entry(aFrame, depth, true));
     }
   }
 
@@ -57,8 +59,13 @@ public:
    * Remove a frame.
    */
   void RemoveFrame(nsIFrame* aFrame) {
-    if (mEntryList.contains(Entry(aFrame, 0, false))) {
-      delete mEntryList.remove(Entry(aFrame, 0, false));
+    if (mEntryList.empty()) {
+      return;
+    }
+
+    uint32_t depth = aFrame->GetDepthInFrameTree();
+    if (mEntryList.contains(Entry(aFrame, depth, false))) {
+      delete mEntryList.remove(Entry(aFrame, depth, false));
     }
   }
 

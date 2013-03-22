@@ -268,22 +268,34 @@ StyleEditorChrome.prototype = {
   },
 
   /**
+   * Create a new style editor, add to the list of editors, and bind this
+   * object as an action listener.
+   * @param DOMDocument aDocument
+   *        The document that the stylesheet is being referenced in.
+   * @param CSSStyleSheet aSheet
+   *        Optional stylesheet to edit from the document.
+   * @return StyleEditor
+   */
+  _createStyleEditor: function SEC__createStyleEditor(aDocument, aSheet) {
+    let editor = new StyleEditor(aDocument, aSheet);
+    this._editors.push(editor);
+    editor.addActionListener(this);
+    return editor;
+  },
+
+  /**
    * Set up the chrome UI. Install event listeners and so on.
    */
   _setupChrome: function SEC__setupChrome()
   {
     // wire up UI elements
     wire(this._view.rootElement, ".style-editor-newButton", function onNewButton() {
-      let editor = new StyleEditor(this.contentDocument);
-      this._editors.push(editor);
-      editor.addActionListener(this);
+      let editor = this._createStyleEditor(this.contentDocument);
       editor.load();
     }.bind(this));
 
     wire(this._view.rootElement, ".style-editor-importButton", function onImportButton() {
-      let editor = new StyleEditor(this.contentDocument);
-      this._editors.push(editor);
-      editor.addActionListener(this);
+      let editor = this._createStyleEditor(this.contentDocument);
       editor.importFromFile(this._mockImportFile || null, this._window);
     }.bind(this));
   },
@@ -308,6 +320,34 @@ StyleEditorChrome.prototype = {
   },
 
   /**
+   * Add all imported stylesheets to chrome UI, recursively
+   *
+   * @param CSSStyleSheet aSheet
+   *        A stylesheet we're going to browse to look for all imported sheets.
+   */
+  _showImportedStyleSheets: function SEC__showImportedStyleSheets(aSheet)
+  {
+    let document = this.contentDocument;
+    for (let j = 0; j < aSheet.cssRules.length; j++) {
+      let rule = aSheet.cssRules.item(j);
+      if (rule.type == Ci.nsIDOMCSSRule.IMPORT_RULE) {
+        // Associated styleSheet may be null if it has already been seen due to
+        // duplicate @imports for the same URL.
+        if (!rule.styleSheet) {
+          continue;
+        }
+
+        this._createStyleEditor(document, rule.styleSheet);
+
+        this._showImportedStyleSheets(rule.styleSheet);
+      } else if (rule.type != Ci.nsIDOMCSSRule.CHARSET_RULE) {
+        // @import rules must precede all others except @charset
+        return;
+      }
+    }
+  },
+
+  /**
    * Populate the chrome UI according to the content document.
    *
    * @see StyleEditor._setupShadowStyleSheet
@@ -323,9 +363,9 @@ StyleEditorChrome.prototype = {
     for (let i = 0; i < document.styleSheets.length; i++) {
       let styleSheet = document.styleSheets[i];
 
-      let editor = new StyleEditor(document, styleSheet);
-      editor.addActionListener(this);
-      this._editors.push(editor);
+      this._createStyleEditor(document, styleSheet);
+
+      this._showImportedStyleSheets(styleSheet);
     }
 
     // Queue editors loading so that ContentAttach is consistently triggered

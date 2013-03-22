@@ -80,8 +80,8 @@ METHODDEF(void) my_error_exit (j_common_ptr cinfo);
 #define MAX_JPEG_MARKER_LENGTH  (((uint32_t)1 << 16) - 1)
 
 
-nsJPEGDecoder::nsJPEGDecoder(RasterImage& aImage, imgDecoderObserver* aObserver, Decoder::DecodeStyle aDecodeStyle)
- : Decoder(aImage, aObserver)
+nsJPEGDecoder::nsJPEGDecoder(RasterImage& aImage, Decoder::DecodeStyle aDecodeStyle)
+ : Decoder(aImage)
  , mDecodeStyle(aDecodeStyle)
 {
   mState = JPEG_HEADER;
@@ -193,6 +193,11 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, uint32_t aCount)
   mSegmentLen = aCount;
 
   NS_ABORT_IF_FALSE(!HasError(), "Shouldn't call WriteInternal after error!");
+
+  if (IsSizeDecode() && HasSize()) {
+    // More data came in since we found the size. We have nothing to do here.
+    return;
+  }
 
   /* Return here if there is a fatal error within libjpeg. */
   nsresult error_code;
@@ -371,10 +376,7 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, uint32_t aCount)
     /* Used to set up image size so arrays can be allocated */
     jpeg_calc_output_dimensions(&mInfo);
 
-    uint32_t imagelength;
-    if (NS_FAILED(mImage.EnsureFrame(0, 0, 0, mInfo.image_width, mInfo.image_height,
-                                     gfxASurface::ImageFormatRGB24,
-                                     &mImageData, &imagelength))) {
+    if (!mImageData) {
       mState = JPEG_ERROR;
       PostDecoderError(NS_ERROR_OUT_OF_MEMORY);
       PR_LOG(GetJPEGDecoderAccountingLog(), PR_LOG_DEBUG,
@@ -385,9 +387,6 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, uint32_t aCount)
     PR_LOG(GetJPEGDecoderAccountingLog(), PR_LOG_DEBUG,
            ("        JPEGDecoderAccounting: nsJPEGDecoder::Write -- created image frame with %ux%u pixels",
             mInfo.image_width, mInfo.image_height));
-
-    // Tell the superclass we're starting a frame
-    PostFrameStart();
 
     mState = JPEG_START_DECOMPRESS;
   }
@@ -542,7 +541,7 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, uint32_t aCount)
 void
 nsJPEGDecoder::NotifyDone()
 {
-  PostFrameStop();
+  PostFrameStop(RasterImage::kFrameOpaque);
   PostDecodeDone();
 }
 

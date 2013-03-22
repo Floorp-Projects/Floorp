@@ -9,6 +9,7 @@
 #include "RasterImage.h"
 #include "imgDecoderObserver.h"
 #include "mozilla/RefPtr.h"
+#include "ImageMetadata.h"
 
 namespace mozilla {
 namespace image {
@@ -17,30 +18,25 @@ class Decoder
 {
 public:
 
-  Decoder(RasterImage& aImage, imgDecoderObserver* aObserver);
+  Decoder(RasterImage& aImage);
   virtual ~Decoder();
 
   /**
    * Initialize an image decoder. Decoders may not be re-initialized.
    *
-   * @param aContainer The image container to decode to.
-   * @param aObserver The observer for decode notification events.
-   *
    * Notifications Sent: TODO
    */
   void Init();
 
-
   /**
-   * Initializes a decoder whose aImage and aObserver is already being used by a
+   * Initializes a decoder whose image and observer is already being used by a
    * parent decoder. Decoders may not be re-initialized.
-   *
-   * @param aContainer The image container to decode to.
-   * @param aObserver The observer for decode notification events.
    *
    * Notifications Sent: TODO
    */
-  void InitSharedDecoder();
+  void InitSharedDecoder(uint8_t* imageData, uint32_t imageDataLength,
+                         uint32_t* colormap, uint32_t colormapSize,
+                         imgFrame* currentFrame);
 
   /**
    * Writes data to the decoder.
@@ -96,6 +92,17 @@ public:
     mSizeDecode = aSizeDecode;
   }
 
+  void SetSynchronous(bool aSynchronous)
+  {
+    mSynchronous = aSynchronous;
+  }
+
+  void SetObserver(imgDecoderObserver* aObserver)
+  {
+    MOZ_ASSERT(aObserver);
+    mObserver = aObserver;
+  }
+
   // The number of frames we have, including anything in-progress. Thus, this
   // is only 0 if we haven't begun any frames.
   uint32_t GetFrameCount() { return mFrameCount; }
@@ -129,8 +136,31 @@ public:
   void SetDecodeFlags(uint32_t aFlags) { mDecodeFlags = aFlags; }
   uint32_t GetDecodeFlags() { return mDecodeFlags; }
 
+  bool HasSize() const { return mImageMetadata.HasSize(); }
+  void SetSizeOnImage();
+
   // Use HistogramCount as an invalid Histogram ID
   virtual Telemetry::ID SpeedHistogram() { return Telemetry::HistogramCount; }
+
+  ImageMetadata& GetImageMetadata() { return mImageMetadata; }
+
+  // Tell the decoder infrastructure to allocate a frame. By default, frame 0
+  // is created as an ARGB frame with no offset and with size width * height.
+  // If decoders need something different, they must ask for it.
+  // This is called by decoders when they need a new frame. These decoders
+  // must then save the data they have been sent but not yet processed and
+  // return from WriteInternal. When the new frame is created, WriteInternal
+  // will be called again with nullptr and 0 as arguments.
+  void NeedNewFrame(uint32_t frameNum, uint32_t x_offset, uint32_t y_offset,
+                    uint32_t width, uint32_t height,
+                    gfxASurface::gfxImageFormat format,
+                    uint8_t palette_depth = 0);
+
+  virtual bool NeedsNewFrame() const { return mNeedsNewFrame; }
+
+  // Try to allocate a frame as described in mNewFrameData and return the
+  // status code from that attempt. Clears mNewFrameData.
+  virtual nsresult AllocateFrame();
 
 protected:
 
@@ -150,10 +180,19 @@ protected:
   // the image of its size and sends notifications.
   void PostSize(int32_t aWidth, int32_t aHeight);
 
-  // Called by decoders when they begin/end a frame. Informs the image, sends
+  // Called by decoders when they begin a frame. Informs the image, sends
   // notifications, and does internal book-keeping.
   void PostFrameStart();
-  void PostFrameStop();
+
+  // Called by decoders when they end a frame. Informs the image, sends
+  // notifications, and does internal book-keeping.
+  // Specify whether this frame is opaque as an optimization.
+  // For animated images, specify the disposal, blend method and timeout for
+  // this frame.
+  void PostFrameStop(RasterImage::FrameAlpha aFrameAlpha = RasterImage::kFrameHasAlpha,
+                     RasterImage::FrameDisposalMethod aDisposalMethod = RasterImage::kDisposeKeep,
+                     int32_t aTimeout = 0,
+                     RasterImage::FrameBlendMethod aBlendMethod = RasterImage::kBlendOver);
 
   // Called by the decoders when they have a region to invalidate. We may not
   // actually pass these invalidations on right away.
@@ -164,7 +203,10 @@ protected:
   // the stream, or by us calling FinishInternal().
   //
   // May not be called mid-frame.
-  void PostDecodeDone();
+  //
+  // For animated images, specify the loop count. -1 means loop forever, 0
+  // means a single iteration, stopping on the last frame.
+  void PostDecodeDone(int32_t aLoopCount = 0);
 
   // Data errors are the fault of the source data, decoder errors are our fault
   void PostDataError();
@@ -175,7 +217,14 @@ protected:
    *
    */
   RasterImage &mImage;
+  imgFrame* mCurrentFrame;
   RefPtr<imgDecoderObserver> mObserver;
+  ImageMetadata mImageMetadata;
+
+  uint8_t* mImageData;       // Pointer to image data in either Cairo or 8bit format
+  uint32_t mImageDataLength;
+  uint32_t* mColormap;       // Current colormap to be used in Cairo format
+  uint32_t mColormapSize;
 
   uint32_t mDecodeFlags;
   bool mDecodeDone;
@@ -188,10 +237,37 @@ private:
 
   nsresult mFailCode;
 
+  struct NewFrameData
+  {
+    NewFrameData()
+    {}
+
+    NewFrameData(uint32_t num, uint32_t offsetx, uint32_t offsety,
+                 uint32_t width, uint32_t height,
+                 gfxASurface::gfxImageFormat format, uint8_t paletteDepth)
+      : mFrameNum(num)
+      , mOffsetX(offsetx)
+      , mOffsetY(offsety)
+      , mWidth(width)
+      , mHeight(height)
+      , mFormat(format)
+      , mPaletteDepth(paletteDepth)
+    {}
+    uint32_t mFrameNum;
+    uint32_t mOffsetX;
+    uint32_t mOffsetY;
+    uint32_t mWidth;
+    uint32_t mHeight;
+    gfxASurface::gfxImageFormat mFormat;
+    uint8_t mPaletteDepth;
+  };
+  NewFrameData mNewFrameData;
+  bool mNeedsNewFrame;
   bool mInitialized;
   bool mSizeDecode;
   bool mInFrame;
   bool mIsAnimated;
+  bool mSynchronous;
 };
 
 } // namespace image

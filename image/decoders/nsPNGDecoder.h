@@ -9,7 +9,6 @@
 
 #include "Decoder.h"
 
-#include "imgDecoderObserver.h"
 #include "gfxASurface.h"
 
 #include "nsCOMPtr.h"
@@ -25,7 +24,7 @@ class RasterImage;
 class nsPNGDecoder : public Decoder
 {
 public:
-  nsPNGDecoder(RasterImage &aImage, imgDecoderObserver* aObserver);
+  nsPNGDecoder(RasterImage &aImage);
   virtual ~nsPNGDecoder();
 
   virtual void InitInternal();
@@ -35,8 +34,6 @@ public:
   void CreateFrame(png_uint_32 x_offset, png_uint_32 y_offset,
                    int32_t width, int32_t height,
                    gfxASurface::gfxImageFormat format);
-  void SetAnimFrameInfo();
-
   void EndImageFrame();
 
   // Check if PNG is valid ICO (32bpp RGBA)
@@ -62,7 +59,8 @@ public:
     if (png_get_IHDR(mPNG, mInfo, &png_width, &png_height, &png_bit_depth,
                      &png_color_type, NULL, NULL, NULL)) {
 
-      return (png_color_type == PNG_COLOR_TYPE_RGB_ALPHA &&
+      return ((png_color_type == PNG_COLOR_TYPE_RGB_ALPHA ||
+               png_color_type == PNG_COLOR_TYPE_RGB) &&
               png_bit_depth == 8);
     } else {
       return false;
@@ -75,7 +73,6 @@ public:
   nsIntRect mFrameRect;
   uint8_t *mCMSLine;
   uint8_t *interlacebuf;
-  uint8_t *mImageData;
   qcms_profile *mInProfile;
   qcms_transform *mTransform;
 
@@ -92,6 +89,9 @@ public:
   // whether CMS or premultiplied alpha are forced off
   uint32_t mCMSMode;
   bool mDisablePremultipliedAlpha;
+
+  // The number of frames we've finished.
+  uint32_t mNumFrames;
   
   /*
    * libpng callbacks

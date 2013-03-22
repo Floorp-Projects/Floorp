@@ -754,6 +754,29 @@ NON_IDL_EVENT(MozScrolledAreaChanged,
               EventNameType_None,
               NS_SCROLLAREA_EVENT)
 
+#ifdef MOZ_GAMEPAD
+NON_IDL_EVENT(gamepadbuttondown,
+              NS_GAMEPAD_BUTTONDOWN,
+              EventNameType_None,
+              NS_EVENT_NULL)
+NON_IDL_EVENT(gamepadbuttonup,
+              NS_GAMEPAD_BUTTONUP,
+              EventNameType_None,
+              NS_EVENT_NULL)
+NON_IDL_EVENT(gamepadaxismove,
+              NS_GAMEPAD_AXISMOVE,
+              EventNameType_None,
+              NS_EVENT_NULL)
+NON_IDL_EVENT(gamepadconnected,
+              NS_GAMEPAD_CONNECTED,
+              EventNameType_None,
+              NS_EVENT_NULL)
+NON_IDL_EVENT(gamepaddisconnected,
+              NS_GAMEPAD_DISCONNECTED,
+              EventNameType_None,
+              NS_EVENT_NULL)
+#endif
+
 // Simple gesture events
 NON_IDL_EVENT(MozSwipeGesture,
               NS_SIMPLE_GESTURE_SWIPE,

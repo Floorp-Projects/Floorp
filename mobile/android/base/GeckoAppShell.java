@@ -321,21 +321,16 @@ public class GeckoAppShell
     /*
      *  The Gecko-side API: API methods that Gecko calls
      */
-    public static void notifyIME(int type, int state) {
+    public static void notifyIME(int type) {
         if (mEditableListener != null) {
-            mEditableListener.notifyIME(type, state);
+            mEditableListener.notifyIME(type);
         }
     }
 
-    public static void notifyIMEEnabled(int state, String typeHint,
-                                        String modeHint, String actionHint,
-                                        boolean landscapeFS) {
-        // notifyIMEEnabled() still needs the landscapeFS parameter
-        // because it is called from JNI code that assumes it has the
-        // same signature as XUL Fennec's (which does use landscapeFS).
-        // Bug 807124 will eliminate the need for landscapeFS
+    public static void notifyIMEContext(int state, String typeHint,
+                                        String modeHint, String actionHint) {
         if (mEditableListener != null) {
-            mEditableListener.notifyIMEEnabled(state, typeHint,
+            mEditableListener.notifyIMEContext(state, typeHint,
                                                modeHint, actionHint);
         }
     }

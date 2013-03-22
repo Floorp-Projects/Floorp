@@ -35,12 +35,11 @@ GetBMPLog()
 #define LINE(row) ((mBIH.height < 0) ? (-mBIH.height - (row)) : ((row) - 1))
 #define PIXEL_OFFSET(row, col) (LINE(row) * mBIH.width + col)
 
-nsBMPDecoder::nsBMPDecoder(RasterImage &aImage, imgDecoderObserver* aObserver)
- : Decoder(aImage, aObserver)
+nsBMPDecoder::nsBMPDecoder(RasterImage &aImage)
+ : Decoder(aImage)
 {
   mColors = nullptr;
   mRow = nullptr;
-  mImageData = nullptr;
   mCurPos = mPos = mNumColors = mRowBytes = 0;
   mOldLine = mCurLine = 1; // Otherwise decoder will never start
   mState = eRLEStateInitial;
@@ -89,7 +88,7 @@ nsBMPDecoder::GetHeight() const
 uint32_t* 
 nsBMPDecoder::GetImageData() 
 {
-  return mImageData;
+  return reinterpret_cast<uint32_t*>(mImageData);
 }
 
 // Obtains the size of the compressed image resource
@@ -134,13 +133,17 @@ nsBMPDecoder::FinishInternal()
     NS_ABORT_IF_FALSE(GetFrameCount() <= 1, "Multiple BMP frames?");
 
     // Send notifications if appropriate
-    if (!IsSizeDecode() && (GetFrameCount() == 1)) {
+    if (!IsSizeDecode() && HasSize()) {
 
         // Invalidate
         nsIntRect r(0, 0, mBIH.width, GetHeight());
         PostInvalidation(r);
 
-        PostFrameStop();
+        if (mUseAlphaData) {
+          PostFrameStop(RasterImage::kFrameHasAlpha);
+        } else {
+          PostFrameStop(RasterImage::kFrameOpaque);
+        }
         PostDecodeDone();
     }
 }
@@ -194,7 +197,6 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
     if (!aCount || !mCurLine)
         return;
 
-    nsresult rv;
     if (mPos < BFH_INTERNAL_LENGTH) { /* In BITMAPFILEHEADER */
         uint32_t toCopy = BFH_INTERNAL_LENGTH - mPos;
         if (toCopy > aCount)
@@ -223,10 +225,10 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
         aBuffer += toCopy;
     }
 
-    // GetNumFrames is called to ensure that if at this point mPos == mLOH but
+    // HasSize is called to ensure that if at this point mPos == mLOH but
     // we have no data left to process, the next time WriteInternal is called
     // we won't enter this condition again.
-    if (mPos == mLOH && GetFrameCount() == 0) {
+    if (mPos == mLOH && !HasSize()) {
         ProcessInfoHeader();
         PR_LOG(GetBMPLog(), PR_LOG_DEBUG, ("BMP is %lix%lix%lu. compression=%lu\n",
                mBIH.width, mBIH.height, mBIH.bpp, mBIH.compression));
@@ -309,34 +311,19 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
           return;
         }
 
-        uint32_t imageLength;
-        if (mBIH.compression == BI_RLE8 || mBIH.compression == BI_RLE4 || 
-            mBIH.compression == BI_ALPHABITFIELDS) {
-            rv = mImage.EnsureFrame(0, 0, 0, mBIH.width, real_height, 
-                                    gfxASurface::ImageFormatARGB32,
-                                    (uint8_t**)&mImageData, &imageLength);
-        } else {
+        if (mBIH.compression != BI_RLE8 && mBIH.compression != BI_RLE4 &&
+            mBIH.compression != BI_ALPHABITFIELDS) {
             // mRow is not used for RLE encoded images
             mRow = (uint8_t*)moz_malloc((mBIH.width * mBIH.bpp) / 8 + 4);
             // + 4 because the line is padded to a 4 bit boundary, but I don't want
             // to make exact calculations here, that's unnecessary.
             // Also, it compensates rounding error.
             if (!mRow) {
-                PostDecoderError(NS_ERROR_OUT_OF_MEMORY);
-                return;
-            }
-
-            if (mUseAlphaData) {
-              rv = mImage.EnsureFrame(0, 0, 0, mBIH.width, real_height, 
-                                      gfxASurface::ImageFormatARGB32,
-                                      (uint8_t**)&mImageData, &imageLength);
-            } else {
-              rv = mImage.EnsureFrame(0, 0, 0, mBIH.width, real_height, 
-                                      gfxASurface::ImageFormatRGB24,
-                                      (uint8_t**)&mImageData, &imageLength);
+              PostDataError();
+              return;
             }
         }
-        if (NS_FAILED(rv) || !mImageData) {
+        if (!mImageData) {
             PostDecoderError(NS_ERROR_FAILURE);
             return;
         }
@@ -344,11 +331,8 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
         // Prepare for transparency
         if ((mBIH.compression == BI_RLE8) || (mBIH.compression == BI_RLE4)) {
             // Clear the image, as the RLE may jump over areas
-            memset(mImageData, 0, imageLength);
+            memset(mImageData, 0, mImageDataLength);
         }
-
-        // Tell the superclass we're starting a frame
-        PostFrameStart();
     }
 
     if (mColors && mPos >= mLOH) {
@@ -429,7 +413,7 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
                 if (rowSize == mRowBytes) {
                     // Collected a whole row into mRow, process it
                     uint8_t* p = mRow;
-                    uint32_t* d = mImageData + PIXEL_OFFSET(mCurLine, 0);
+                    uint32_t* d = reinterpret_cast<uint32_t*>(mImageData) + PIXEL_OFFSET(mCurLine, 0);
                     uint32_t lpos = mBIH.width;
                     switch (mBIH.bpp) {
                       case 1:
@@ -487,7 +471,7 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
                               // 4 has been right all along.  And we know it
                               // has been set to 0 the whole time, so that 
                               // means that everything is transparent so far.
-                              uint32_t* start = mImageData + GetWidth() * (mCurLine - 1);
+                              uint32_t* start = reinterpret_cast<uint32_t*>(mImageData) + GetWidth() * (mCurLine - 1);
                               uint32_t heightDifference = GetHeight() - mCurLine + 1;
                               uint32_t pixelCount = GetWidth() * heightDifference;
 
@@ -547,7 +531,7 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
                             mState = eRLEStateInitial;
                             uint32_t pixelsNeeded = std::min<uint32_t>(mBIH.width - mCurPos, mStateData);
                             if (pixelsNeeded) {
-                                uint32_t* d = mImageData + PIXEL_OFFSET(mCurLine, mCurPos);
+                                uint32_t* d = reinterpret_cast<uint32_t*>(mImageData) + PIXEL_OFFSET(mCurLine, mCurPos);
                                 mCurPos += pixelsNeeded;
                                 if (mBIH.compression == BI_RLE8) {
                                     do {
@@ -635,7 +619,7 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
                             // represents the number of pixels 
                             // that follow, each of which contains 
                             // the color index of a single pixel.
-                            uint32_t* d = mImageData + PIXEL_OFFSET(mCurLine, mCurPos);
+                            uint32_t* d = reinterpret_cast<uint32_t*>(mImageData) + PIXEL_OFFSET(mCurLine, mCurPos);
                             uint32_t* oldPos = d;
                             if (mBIH.compression == BI_RLE8) {
                                 while (aCount > 0 && mStateData > 0) {

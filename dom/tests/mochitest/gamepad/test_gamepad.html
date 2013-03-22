@@ -1,0 +1,33 @@
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test gamepad</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script type="text/javascript" src="mock_gamepad.js"></script>
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+window.addEventListener("gamepadconnected", connecthandler);
+// Add a gamepad
+var index = GamepadService.addGamepad("test gamepad", // id
+                                      4, // buttons
+                                      2);// axes
+// Press a button
+GamepadService.newButtonEvent(index, 0, true);
+function connecthandler(e) {
+ is(e.gamepad.id, "test gamepad", "correct gamepad name");
+  is(e.gamepad.buttons.length, 4, "correct number of buttons");
+  is(e.gamepad.axes.length, 2, "correct number of axes");
+  SimpleTest.executeSoon(function() {
+    GamepadService.removeGamepad(index);
+    SimpleTest.finish();
+  });
+}
+</script>
+</body>
+</html>
+

@@ -154,13 +154,6 @@ var BrowserUI = {
         Util.dumpLn("Exception in delay load module:", ex.message);
       }
 
-      try {
-        // XXX This is currently failing
-        CapturePickerUI.init();
-      } catch(ex) {
-        Util.dumpLn("Exception in CapturePickerUI:", ex.message);
-      }
-
 #ifdef MOZ_UPDATER
       // Check for updates in progress
       let updatePrompt = Cc["@mozilla.org/updates/update-prompt;1"].createInstance(Ci.nsIUpdatePrompt);

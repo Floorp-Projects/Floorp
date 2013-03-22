@@ -575,8 +575,8 @@ NondeterminsticGetWeakMapKeys(JSContext *cx, unsigned argc, jsval *vp)
                              InformalValueTypeName(args[0]));
         return false;
     }
-    JSObject *arr;
-    if (!JS_NondeterministicGetWeakMapKeys(cx, &args[0].toObject(), &arr))
+    RootedObject arr(cx);
+    if (!JS_NondeterministicGetWeakMapKeys(cx, &args[0].toObject(), arr.address()))
         return false;
     if (!arr) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_EXPECTED_TYPE,

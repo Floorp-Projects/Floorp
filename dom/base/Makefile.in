@@ -37,7 +37,6 @@ EXPORTS = \
   nsDOMClassInfoClasses.h \
   nsDOMClassInfoID.h \
   nsDOMJSUtils.h \
-  nsDOMScriptObjectHolder.h \
   nsDOMString.h \
   nsIDOMClassInfo.h \
   nsIDOMScriptObjectFactory.h \

@@ -208,4 +208,14 @@ JSFunction::initScript(JSScript *script_)
     mutableScript().init(script_);
 }
 
+inline JSObject *
+JSFunction::getBoundFunctionTarget() const
+{
+    JS_ASSERT(isFunction());
+    JS_ASSERT(isBoundFunction());
+
+    /* Bound functions abuse |parent| to store their target function. */
+    return getParent();
+}
+
 #endif /* jsfuninlines_h___ */

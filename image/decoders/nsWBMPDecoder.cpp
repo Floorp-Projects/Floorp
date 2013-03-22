@@ -66,11 +66,10 @@ static WbmpIntDecodeStatus DecodeEncodedInt (uint32_t& aField, const char*& aBuf
   return IntParseInProgress;
 }
 
-nsWBMPDecoder::nsWBMPDecoder(RasterImage &aImage, imgDecoderObserver* aObserver)
- : Decoder(aImage, aObserver),
+nsWBMPDecoder::nsWBMPDecoder(RasterImage &aImage)
+ : Decoder(aImage),
    mWidth(0),
    mHeight(0),
-   mImageData(nullptr),
    mRow(nullptr),
    mRowBytes(0),
    mCurLine(0),
@@ -175,13 +174,7 @@ nsWBMPDecoder::WriteInternal(const char *aBuffer, uint32_t aCount)
             return;
           }
 
-          uint32_t imageLength;
-          // Add the frame and signal
-          nsresult rv = mImage.EnsureFrame(0, 0, 0, mWidth, mHeight,
-                                           gfxASurface::ImageFormatRGB24,
-                                           (uint8_t**)&mImageData, &imageLength);
-
-          if (NS_FAILED(rv) || !mImageData) {
+          if (!mImageData) {
             PostDecoderError(NS_ERROR_FAILURE);
             mState = DecodingFailed;
             return;
@@ -194,9 +187,6 @@ nsWBMPDecoder::WriteInternal(const char *aBuffer, uint32_t aCount)
             mState = DecodingFailed;
             return;
           }
-
-          // Tell the superclass we're starting a frame
-          PostFrameStart();
 
           mState = DecodingImageData;
 
@@ -237,7 +227,7 @@ nsWBMPDecoder::WriteInternal(const char *aBuffer, uint32_t aCount)
           // If there is a filled buffered row of raw data, process the row.
           if (rowSize == mRowBytes) {
             uint8_t *p = mRow;
-            uint32_t *d = mImageData + (mWidth * mCurLine); // position of the first pixel at mCurLine
+            uint32_t *d = reinterpret_cast<uint32_t*>(mImageData) + (mWidth * mCurLine); // position of the first pixel at mCurLine
             uint32_t lpos = 0;
 
             while (lpos < mWidth) {

@@ -58,6 +58,7 @@ GTEST_CPPSRCS = \
         TestBase.cpp \
         TestPoint.cpp \
         TestScaling.cpp \
+        TestCairo.cpp \
         $(NULL)
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))

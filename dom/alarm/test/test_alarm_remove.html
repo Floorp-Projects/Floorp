@@ -1,0 +1,103 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test Adding and Removing Alarms with Alarm API</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+  <script type="application/javascript">
+
+  "use strict";
+
+  function checkNumberOfAlarms(n, cbk) {
+    var domRequest;
+    try {
+      domRequest = navigator.mozAlarms.getAll();
+    } catch (e) {
+      ok(false,
+         "Unexpected exception trying to get all alarms.");
+    }
+    domRequest.onsuccess = function(e) {
+      ok(e.target.result.length === n, "Correct number of alarms set.");
+      cbk();
+    }
+  }
+
+  // Add alarm and then remove it
+  function testAddRemove() {
+    var tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    var domRequest;
+    try {
+      domRequest = navigator.mozAlarms.getAll();
+    } catch (e) {
+      ok(false,
+         "Unexpected exception trying to get all alarms.");
+
+      return SimpleTest.finish();
+    }
+    domRequest.onsuccess = function(e) {
+      var initialAlarmsN = e.target.result.length;
+
+      var dr;
+      try {
+        dr = navigator.mozAlarms.add(tomorrow, "honorTimezone", null);
+      } catch (e) {
+        ok(false,
+           "Unexpected exception trying add alarm.");
+
+        return SimpleTest.finish();
+      }
+      dr.onsuccess = function(ev) {
+        var alarmId = ev.target.result;
+
+        checkNumberOfAlarms(initialAlarmsN + 1, function() {
+          navigator.mozAlarms.remove(alarmId);
+
+          checkNumberOfAlarms(initialAlarmsN, function() {
+            SimpleTest.finish();
+          });
+        });
+      }
+
+    }
+
+  }
+
+  function startTests() {
+
+    SpecialPowers.pushPrefEnv({"set": [["dom.mozAlarms.enabled", true]]}, function() {
+
+      // Currently applicable only on FxOS
+      if (navigator.userAgent.indexOf("Mobile") != -1 &&
+          navigator.appVersion.indexOf("Android") == -1) {
+
+        testAddRemove();
+
+      } else {
+        ok(true, "mozAlarms on Firefox OS only.");
+        SimpleTest.finish();
+      }
+
+    });
+  }
+
+  SimpleTest.expectAssertions(0, 9);
+  SimpleTest.waitForExplicitFinish();
+  if (SpecialPowers.hasPermission("alarms", document)) {
+    startTests();
+  } else {
+    // Add the permission and reload so it's propogated
+    SpecialPowers.addPermission("alarms", true, document);
+    window.location.reload();
+  }
+  </script>
+</pre>
+</body>
+</html>

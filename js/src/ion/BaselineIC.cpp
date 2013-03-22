@@ -473,7 +473,7 @@ ICStubCompiler::getStubCode()
     if (!generateStubCode(masm))
         return NULL;
     Linker linker(masm);
-    Rooted<IonCode *> newStubCode(cx, linker.newCode(cx));
+    Rooted<IonCode *> newStubCode(cx, linker.newCode(cx, JSC::BASELINE_CODE));
     if (!newStubCode)
         return NULL;
 

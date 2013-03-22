@@ -592,7 +592,7 @@ nsXMLHttpRequest::GetResponseXML(ErrorResult& aRv)
 }
 
 /*
- * This piece copied from nsXMLDocument, we try to get the charset
+ * This piece copied from XMLDocument, we try to get the charset
  * from HTTP headers.
  */
 nsresult

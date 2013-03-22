@@ -244,7 +244,14 @@ this.PageThumbs = {
     let utils = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                        .getInterface(Ci.nsIDOMWindowUtils);
     let sbWidth = {}, sbHeight = {};
-    utils.getScrollbarSize(false, sbWidth, sbHeight);
+
+    try {
+      utils.getScrollbarSize(false, sbWidth, sbHeight);
+    } catch (e) {
+      // This might fail if the window does not have a presShell.
+      Cu.reportError("Unable to get scrollbar size in _determineCropSize.");
+      sbWidth.value = sbHeight.value = 0;
+    }
 
     // Even in RTL mode, scrollbars are always on the right.
     // So there's no need to determine a left offset.
