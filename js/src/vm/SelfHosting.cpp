@@ -402,11 +402,7 @@ js::intrinsic_UnsafeSetElement(JSContext *cx, unsigned argc, Value *vp)
 static JSBool
 intrinsic_ParallelTestsShouldPass(JSContext *cx, unsigned argc, Value *vp)
 {
-    //XXX: FIXME: disable parallel array tests for now on the BC branch.
     CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().setBoolean(false);
-    return true;
-
 #if defined(JS_THREADSAFE) && defined(JS_ION)
     args.rval().setBoolean(ion::IsEnabled(cx) &&
                            !ion::js_IonOptions.eagerCompilation);
