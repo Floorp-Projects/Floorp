@@ -66,6 +66,7 @@ public:
 
   void Shutdown()
   {
+    Suspend();
     mDecoder.Shutdown();
   }
 
