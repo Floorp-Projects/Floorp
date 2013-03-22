@@ -47,7 +47,7 @@ foreignObject {
 *|*::-moz-svg-foreign-content {
   display: block !important;
   /* We need to be an absolute and fixed container */
-  -moz-transform: translate(0) !important;
+  transform: translate(0) !important;
   text-indent: 0;
 }
 
@@ -56,7 +56,7 @@ foreignObject {
 */
 *:not(svg),
 *:not(foreignObject) > svg {
-  -moz-transform-origin:0 0;
+  transform-origin:0 0;
 }
 
 *|*::-moz-svg-text {

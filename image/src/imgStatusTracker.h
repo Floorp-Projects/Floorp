@@ -12,6 +12,7 @@ class imgRequestProxy;
 class imgStatusNotifyRunnable;
 class imgRequestNotifyRunnable;
 class imgStatusTrackerObserver;
+class imgStatusTrackerNotifyingObserver;
 struct nsIntRect;
 namespace mozilla {
 namespace image {
@@ -35,7 +36,8 @@ enum {
   stateDecodeStopped     = 1u << 3,
   stateFrameStopped      = 1u << 4,
   stateRequestStopped    = 1u << 5,
-  stateBlockingOnload    = 1u << 6
+  stateBlockingOnload    = 1u << 6,
+  stateImageIsAnimated   = 1u << 7
 };
 
 /*
@@ -56,7 +58,6 @@ public:
   // imgRequestProxys in SyncNotify() and EmulateRequestFinished(), and must be
   // alive as long as this instance is, because we hold a weak reference to it.
   imgStatusTracker(mozilla::image::Image* aImage);
-  imgStatusTracker(const imgStatusTracker& aOther);
   ~imgStatusTracker();
 
   // Image-setter, for imgStatusTrackers created by imgRequest::Init, which
@@ -87,6 +88,11 @@ public:
   // Only use this if you're already servicing an asynchronous call (e.g.
   // OnStartRequest).
   void SyncNotify(imgRequestProxy* proxy);
+
+  // "Replays" all of the decode notifications (i.e., not
+  // OnStartRequest/OnStopRequest) that have happened to us to all of our
+  // non-deferred proxies.
+  void SyncNotifyDecodeState();
 
   // Send some notifications that would be necessary to make |proxy| believe
   // the request is finished downloading and decoding.  We only send
@@ -135,8 +141,8 @@ public:
   void SendStartDecode(imgRequestProxy* aProxy);
   void RecordStartContainer(imgIContainer* aContainer);
   void SendStartContainer(imgRequestProxy* aProxy);
-  void RecordDataAvailable();
-  void SendDataAvailable(imgRequestProxy* aProxy, const nsIntRect* aRect);
+  void RecordStartFrame();
+  // No SendStartFrame since it's not observed below us.
   void RecordFrameChanged(const nsIntRect* aDirtyRect);
   void SendFrameChanged(imgRequestProxy* aProxy, const nsIntRect* aDirtyRect);
   void RecordStopFrame();
@@ -159,6 +165,12 @@ public:
   void OnStartRequest();
   void OnDataAvailable();
   void OnStopRequest(bool aLastPart, nsresult aStatus);
+  void OnDiscard();
+  void FrameChanged(const nsIntRect* aDirtyRect);
+  void OnUnlockedDraw();
+  // This is called only by VectorImage, and only to ensure tests work
+  // properly. Do not use it.
+  void OnStopFrame();
 
   /* non-virtual imgIOnloadBlocker methods */
   // NB: If UnblockOnload is sent, and then we are asked to replay the
@@ -171,6 +183,8 @@ public:
 
   void MaybeUnblockOnload();
 
+  void RecordError();
+
   bool IsMultipart() const { return mIsMultipart; }
 
   // Weak pointer getters - no AddRefs.
@@ -178,14 +192,29 @@ public:
 
   inline imgDecoderObserver* GetDecoderObserver() { return mTrackerObserver.get(); }
 
+  imgStatusTracker* CloneForRecording();
+  void SyncAndSyncNotifyDifference(imgStatusTracker* other);
+
+  nsIntRect GetInvalidRect() const { return mInvalidRect; }
+
 private:
   friend class imgStatusNotifyRunnable;
   friend class imgRequestNotifyRunnable;
   friend class imgStatusTrackerObserver;
+  friend class imgStatusTrackerNotifyingObserver;
+  imgStatusTracker(const imgStatusTracker& aOther);
 
   void FireFailureNotification();
 
+  static void SyncNotifyState(nsTObserverArray<imgRequestProxy*>& proxies,
+                              bool hasImage, uint32_t state,
+                              nsIntRect& dirtyRect, bool hadLastPart);
+
   nsCOMPtr<nsIRunnable> mRequestRunnable;
+
+  // The invalid area of the most recent frame we know about. (All previous
+  // frames are assumed to be fully valid.)
+  nsIntRect mInvalidRect;
 
   // Weak pointer to the image. The image owns the status tracker.
   mozilla::image::Image* mImage;
@@ -200,7 +229,6 @@ private:
   uint32_t mImageStatus;
   bool mIsMultipart    : 1;
   bool mHadLastPart    : 1;
-  bool mBlockingOnload : 1;
 };
 
 #endif

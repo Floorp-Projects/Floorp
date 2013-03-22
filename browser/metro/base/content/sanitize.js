@@ -3,6 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+                                  "resource://gre/modules/PlacesUtils.jsm");
+
 function Sanitizer() {}
 Sanitizer.prototype = {
   // warning to the caller: this one may raise an exception (e.g. bug #265028)
@@ -165,21 +169,20 @@ Sanitizer.prototype = {
     history: {
       clear: function ()
       {
-        var globalHistory = Cc["@mozilla.org/browser/global-history;2"].getService(Ci.nsIBrowserHistory);
-        globalHistory.removeAllPages();
-        
+        PlacesUtils.history.removeAllPages();
+
         try {
           Services.obs.notifyObservers(null, "browser:purge-session-history", "");
         }
         catch (e) { }
-        
+
         // Clear last URL of the Open Web Location dialog
         try {
           Services.prefs.clearUserPref("general.open_location.last_url");
         }
         catch (e) { }
       },
-      
+
       get canClear()
       {
         // bug 347231: Always allow clearing history due to dependencies on
@@ -187,7 +190,7 @@ Sanitizer.prototype = {
         return true;
       }
     },
-    
+
     formdata: {
       clear: function ()
       {

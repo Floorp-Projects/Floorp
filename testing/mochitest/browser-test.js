@@ -92,6 +92,15 @@ Tester.prototype = {
   },
 
   start: function Tester_start() {
+    // Check whether this window is ready to run tests.
+    if (window.BrowserChromeTest) {
+      BrowserChromeTest.runWhenReady(this.actuallyStart.bind(this));
+      return;
+    }
+    this.actuallyStart();
+  },
+
+  actuallyStart: function Tester_actuallyStart() {
     //if testOnLoad was not called, then gConfig is not defined
     if (!gConfig)
       gConfig = readConfig();

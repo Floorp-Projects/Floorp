@@ -2,7 +2,7 @@
 
 # for pgo
 mk_add_options MOZ_PGO=1
-mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) $(MOZ_OBJDIR)/_profile/pgo/profileserver.py'
+mk_add_options PROFILE_GEN_SCRIPT='$(MAKE) -C $(MOZ_OBJDIR) pgo-profile-run'
 
 ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
 ac_add_options --enable-update-packaging

@@ -38,7 +38,7 @@ interface nsIFile;
  *          public methods of the interface may only be called from the main
  *          thread.
  */
-[scriptable, uuid(f2fb4daf-0aba-4b30-9ec0-b7a83ce3b7ab)]
+[scriptable, uuid(17a2ff32-918f-11e2-8fc9-f9626188709b)]
 interface nsIBackgroundFileSaver : nsISupports
 {
   /**

@@ -42,6 +42,19 @@ CPPSRCS = \
   HalWakeLock.cpp \
   $(NULL)
 
+ifeq (stub,$(MOZ_GAMEPAD_BACKEND))
+CPPSRCS += FallbackGamepad.cpp
+endif
+ifeq (cocoa,$(MOZ_GAMEPAD_BACKEND))
+CPPSRCS += CocoaGamepad.cpp
+endif
+ifeq (windows,$(MOZ_GAMEPAD_BACKEND))
+CPPSRCS += WindowsGamepad.cpp
+endif
+ifeq (linux,$(MOZ_GAMEPAD_BACKEND))
+CPPSRCS += LinuxGamepad.cpp
+endif
+
 ifeq (android,$(MOZ_WIDGET_TOOLKIT))
 CPPSRCS += \
   AndroidHal.cpp \
@@ -114,6 +127,10 @@ CPPSRCS += \
   FallbackScreenConfiguration.cpp \
   FallbackAlarm.cpp \
   $(NULL)
+endif
+
+ifdef MOZ_GAMEPAD
+LOCAL_INCLUDES = -I$(topsrcdir)/dom/base
 endif
 
 # Fallbacks for backends implemented on Gonk only.

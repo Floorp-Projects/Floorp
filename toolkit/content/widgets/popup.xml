@@ -511,6 +511,107 @@
       <property name="label"
                 onget="return this.getAttribute('label');"
                 onset="this.setAttribute('label', val); return val;"/>
+
+      <property name="page" onset="if (val) this.setAttribute('page', 'true');
+                                   else this.removeAttribute('page');
+                                   return val;"
+                            onget="return this.getAttribute('page') == 'true';"/>
+
+      <!-- Given the supplied element within a page, set the tooltip's text to the text
+           for that element. Returns true if text was assigned, and false if the no text
+           is set, which normally would be used to cancel tooltip display.
+
+           Note that DefaultTooltipTextProvider::GetNodeText() from nsDocShellTreeOwner.cpp
+           also performs the same function, but for embedded clients that don't use a XUL/JS
+           layer. These two should be kept synchronized.
+        --> 
+      <method name="fillInPageTooltip">
+        <parameter name="tipElement"/>
+        <body>
+        <![CDATA[
+          // Don't show the tooltip if the tooltip node is a document or disconnected.
+          if (!tipElement || !tipElement.ownerDocument ||
+              (tipElement.ownerDocument.compareDocumentPosition(tipElement) & document.DOCUMENT_POSITION_DISCONNECTED)) {
+            return false;
+          }
+
+          var defView = tipElement.ownerDocument.defaultView;
+          // XXX Work around bug 350679:
+          // "Tooltips can be fired in documents with no view".
+          if (!defView)
+            return false;
+
+          const XLinkNS = "http://www.w3.org/1999/xlink";
+          const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+          var titleText = null;
+          var XLinkTitleText = null;
+          var SVGTitleText = null;
+          var lookingForSVGTitle = true;
+          var direction = tipElement.ownerDocument.dir;
+
+          // If the element is invalid per HTML5 Forms specifications and has no title,
+          // show the constraint validation error message.
+          if ((tipElement instanceof HTMLInputElement ||
+               tipElement instanceof HTMLTextAreaElement ||
+               tipElement instanceof HTMLSelectElement ||
+               tipElement instanceof HTMLButtonElement) &&
+              !tipElement.hasAttribute('title') &&
+              (!tipElement.form || !tipElement.form.noValidate)) {
+            // If the element is barred from constraint validation or valid,
+            // the validation message will be the empty string.
+            titleText = tipElement.validationMessage || null;
+          }
+
+          while ((titleText == null) && (XLinkTitleText == null) &&
+                 (SVGTitleText == null) && tipElement) {
+            if (tipElement.nodeType == Node.ELEMENT_NODE &&
+                tipElement.namespaceURI != XULNS) {
+              titleText = tipElement.getAttribute("title");
+
+              if ((tipElement instanceof HTMLAnchorElement ||
+                   tipElement instanceof HTMLAreaElement ||
+                   tipElement instanceof HTMLLinkElement ||
+                   tipElement instanceof SVGAElement) && tipElement.href) {
+                XLinkTitleText = tipElement.getAttributeNS(XLinkNS, "title");
+              }
+              if (lookingForSVGTitle &&
+                  (!(tipElement instanceof SVGElement) ||
+                   tipElement.parentNode.nodeType == Node.DOCUMENT_NODE)) {
+                lookingForSVGTitle = false;
+              }
+              if (lookingForSVGTitle) {
+                for (let childNode of tipElement.childNodes) {
+                  if (childNode instanceof SVGTitleElement) {
+                    SVGTitleText = childNode.textContent;
+                    break;
+                  }
+                }
+              }
+
+              direction = defView.getComputedStyle(tipElement, "")
+                                 .getPropertyValue("direction");
+            }
+
+            tipElement = tipElement.parentNode;
+          }
+
+          this.style.direction = direction;
+
+          return [titleText, XLinkTitleText, SVGTitleText].some(function (t) {
+            if (t && /\S/.test(t)) {
+              // Make CRLF and CR render one line break each.
+              this.label = t.replace(/\r\n?/g, '\n');
+              return true;
+            }
+
+            return false;
+          }, this);
+
+          return false;
+        ]]>
+        </body>
+      </method>
     </implementation>
 
     <handlers>
@@ -559,6 +660,12 @@
         if (rel != this && this._isMouseOver) {
           this.hidePopup();
         }        
+      ]]></handler>
+
+      <handler event="popupshowing"><![CDATA[
+        if (this.page && !this.fillInPageTooltip(this.triggerNode)) {
+          event.preventDefault();
+        }
       ]]></handler>
 
       <handler event="popuphiding"><![CDATA[

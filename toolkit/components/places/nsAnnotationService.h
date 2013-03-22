@@ -62,10 +62,6 @@ public:
    */
   nsresult Init();
 
-  static nsAnnotationService* GetAnnotationServiceIfAvailable() {
-    return gAnnotationService;
-  }
-
   /**
    * Returns a cached pointer to the annotation service for consumers in the
    * places directory.

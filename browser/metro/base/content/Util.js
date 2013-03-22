@@ -179,6 +179,12 @@ let Util = {
    * Rect and nsIDOMRect utilities
    */
 
+  getCleanRect: function getCleanRect() {
+    return {
+      left: 0, top: 0, right: 0, bottom: 0
+    };
+  },
+
   pointWithinRect: function pointWithinRect(aX, aY, aRect) {
     return (aRect.left < aX && aRect.top < aY &&
             aRect.right > aX && aRect.bottom > aY);

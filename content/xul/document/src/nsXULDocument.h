@@ -11,7 +11,7 @@
 #include "nsXULPrototypeCache.h"
 #include "nsTArray.h"
 
-#include "nsXMLDocument.h"
+#include "mozilla/dom/XMLDocument.h"
 #include "nsForwardReference.h"
 #include "nsIContent.h"
 #include "nsIDOMEventTarget.h"
@@ -81,7 +81,7 @@ private:
 /**
  * The XUL document class
  */
-class nsXULDocument : public nsXMLDocument,
+class nsXULDocument : public mozilla::dom::XMLDocument,
                       public nsIXULDocument,
                       public nsIDOMXULDocument,
                       public nsIStreamLoaderObserver,
@@ -140,7 +140,7 @@ public:
     NS_FORWARD_NSIDOMNODE_TO_NSINODE
 
     // nsIDOMDocument interface
-    NS_FORWARD_NSIDOMDOCUMENT(nsXMLDocument::)
+    NS_FORWARD_NSIDOMDOCUMENT(mozilla::dom::XMLDocument::)
     // And explicitly import the things from nsDocument that we just shadowed
     using nsDocument::GetImplementation;
     using nsDocument::GetTitle;
@@ -176,7 +176,8 @@ public:
                    nsIAtom* aAttrName,
                    void* aData);
 
-    NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsXULDocument, nsXMLDocument)
+    NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsXULDocument,
+                                             mozilla::dom::XMLDocument)
 
     virtual nsXPCClassInfo* GetClassInfo();
 

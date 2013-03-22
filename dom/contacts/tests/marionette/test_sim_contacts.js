@@ -20,6 +20,8 @@ function testImportSimContacts() {
   request.onsuccess = function onsuccess() {
     let simContacts = request.result;
 
+    is(Array.isArray(simContacts), true);
+
     // These SIM contacts are harded in external/qemu/telephony/sim_card.c
     is(simContacts[0].name, "Mozilla");
     is(simContacts[0].tel[0].value, "15555218201");

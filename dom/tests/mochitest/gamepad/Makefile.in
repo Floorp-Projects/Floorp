@@ -1,0 +1,23 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH		= ../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+relativesrcdir	= dom/tests/mochitest/gamepad
+
+include $(DEPTH)/config/autoconf.mk
+
+MOCHITEST_FILES = \
+  test_gamepad_basic.html \
+  test_gamepad.html \
+  test_gamepad_frame_state_sync.html \
+  gamepad_frame_state.html \
+  test_gamepad_hidden_frame.html \
+  gamepad_frame.html \
+  mock_gamepad.js \
+  $(NULL)
+
+include $(topsrcdir)/config/rules.mk

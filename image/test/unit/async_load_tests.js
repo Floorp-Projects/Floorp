@@ -48,6 +48,7 @@ function checkClone(other_listener, aRequest)
   var outer = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
                 .createScriptedObserver(listener);
   var clone = aRequest.clone(outer);
+  requests.push(clone);
 }
 
 // Ensure that all the callbacks were called on aRequest.
@@ -73,6 +74,7 @@ function secondLoadDone(oldlistener, aRequest)
     var outer = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
                   .createScriptedObserver(listener);
     var staticrequestclone = staticrequest.clone(outer);
+    requests.push(staticrequestclone);
   } catch(e) {
     // We can't create a static request. Most likely the request we started
     // with didn't load successfully.
@@ -123,10 +125,6 @@ function getChannelLoadImageStartCallback(streamlistener)
 function getChannelLoadImageStopCallback(streamlistener, next)
 {
   return function channelLoadStop(imglistener, aRequest) {
-    // We absolutely must not get imgIScriptedNotificationObserver::onStopRequest
-    // after nsIRequestObserver::onStopRequest has fired. If we do that, we've
-    // broken people's expectations by delaying events from a channel we were given.
-    do_check_eq(streamlistener.requestStatus & STOP_REQUEST, 0);
 
     next();
 
@@ -205,8 +203,17 @@ function startImageCallback(otherCb)
 
 var gCurrentLoader;
 
+function cleanup()
+{
+  for (var i = 0; i < requests.length; ++i) {
+    requests[i].cancelAndForgetObserver(0);
+  }
+}
+
 function run_test()
 {
+  do_register_cleanup(cleanup);
+
   gCurrentLoader = Cc["@mozilla.org/image/loader;1"].createInstance(Ci.imgILoader);
 
   do_test_pending();

@@ -17,7 +17,6 @@ MOCHITEST_FILES := \
   test_Document-getElementsByTagName.html.json \
   test_DocumentType-remove.html.json \
   test_Element-remove.html.json \
-  test_Event-defaultPrevented.html.json \
   test_EventTarget-dispatchEvent.html.json \
   test_Node-isEqualNode.xhtml.json \
   test_NodeFilter-constants.html.json \

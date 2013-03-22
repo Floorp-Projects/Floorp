@@ -657,6 +657,8 @@ public:
     bool CanBeMetered() { return mCanBeMetered; }
     short ScreenOrientation() { return mScreenOrientation; }
     RefCountedJavaObject* ByteBuffer() { return mByteBuffer; }
+    int Width() { return mWidth; }
+    int Height() { return mHeight; }
 
 protected:
     int mAction;
@@ -686,6 +688,7 @@ protected:
     bool mCanBeMetered;
     short mScreenOrientation;
     nsRefPtr<RefCountedJavaObject> mByteBuffer;
+    int mWidth, mHeight;
 
     void ReadIntArray(nsTArray<int> &aVals,
                       JNIEnv *jenv,
@@ -747,6 +750,9 @@ protected:
     static jfieldID jScreenOrientationField;
     static jfieldID jByteBufferField;
 
+    static jfieldID jWidthField;
+    static jfieldID jHeightField;
+
 public:
     enum {
         NATIVE_POKE = 0,
@@ -761,8 +767,6 @@ public:
         ACTIVITY_PAUSING = 10,
         ACTIVITY_SHUTDOWN = 11,
         LOAD_URI = 12,
-        SURFACE_CREATED = 13,   // used by XUL fennec only
-        SURFACE_DESTROYED = 14, // used by XUL fennec only
         NOOP = 15,
         FORCED_RESIZE = 16, // used internally in nsAppShell/nsWindow
         ACTIVITY_START = 17,
@@ -773,9 +777,10 @@ public:
         ACTIVITY_RESUMING = 24,
         THUMBNAIL = 25,
         SCREENORIENTATION_CHANGED = 27,
-        COMPOSITOR_PAUSE = 28,
-        COMPOSITOR_RESUME = 29,
-        NATIVE_GESTURE_EVENT = 30,
+        COMPOSITOR_CREATE = 28,
+        COMPOSITOR_PAUSE = 29,
+        COMPOSITOR_RESUME = 30,
+        NATIVE_GESTURE_EVENT = 31,
         dummy_java_enum_list_end
     };
 

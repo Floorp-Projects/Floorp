@@ -54,6 +54,7 @@ EXPORTS_mozilla/dom := \
 EXPORTS := \
   MediaBufferDecoder.h \
   ThreeDPoint.h \
+  WebAudioUtils.h \
   $(NULL)
 
 FORCE_STATIC_LIB := 1

@@ -2072,7 +2072,7 @@ StackIter::thisv() const
 #ifdef JS_ION
         if (data_.ionFrames_.isOptimizedJS())
             return ObjectValue(*ionInlineFrames_.thisObject());
-        return data_.ionFrames_.baselineThisValue();
+        return data_.ionFrames_.baselineFrame()->thisValue();
 #else
         break;
 #endif

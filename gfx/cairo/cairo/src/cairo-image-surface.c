@@ -1851,6 +1851,10 @@ _cairo_image_surface_fixup_unbounded_boxes (cairo_image_surface_t *dst,
 		int x2 = _cairo_fixed_integer_part (chunk->base[i].p2.x);
 		int y2 = _cairo_fixed_integer_part (chunk->base[i].p2.y);
 
+		x1 = (x1 < 0 ? 0 : x1);
+		y1 = (y1 < 0 ? 0 : y1);
+		if (x2 <= x1 || y2 <= y1)
+		    continue;
 		pixman_fill ((uint32_t *) dst->data, dst->stride / sizeof (uint32_t),
 			     PIXMAN_FORMAT_BPP (dst->pixman_format),
 			     x1, y1, x2 - x1, y2 - y1,
@@ -2674,6 +2678,8 @@ _fill_unaligned_boxes (cairo_image_surface_t *dst,
 	    int x2 = _cairo_fixed_integer_floor (box[i].p2.x);
 	    int y2 = _cairo_fixed_integer_floor (box[i].p2.y);
 
+	    x1 = (x1 < 0 ? 0 : x1);
+	    y1 = (y1 < 0 ? 0 : y1);
 	    if (x2 > x1 && y2 > y1) {
 		cairo_box_t b;
 
@@ -2934,7 +2940,9 @@ _composite_boxes (cairo_image_surface_t *dst,
 		int x2 = _cairo_fixed_integer_round_down (box[i].p2.x);
 		int y2 = _cairo_fixed_integer_round_down (box[i].p2.y);
 
-		if (x2 == x1 || y2 == y1)
+		x1 = (x1 < 0 ? 0 : x1);
+		y1 = (y1 < 0 ? 0 : y1);
+		if (x2 <= x1 || y2 <= y1)
 		    continue;
 
 		pixman_fill ((uint32_t *) dst->data, dst->stride / sizeof (uint32_t),

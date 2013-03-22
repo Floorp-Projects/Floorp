@@ -3,9 +3,6 @@
  http://creativecommons.org/publicdomain/zero/1.0/ */
 
 let doc;
-let tempScope = {};
-Cu.import("resource:///modules/devtools/CssRuleView.jsm", tempScope);
-let inplaceEditor = tempScope._getInplaceEditorForSpan;
 let inspector;
 let win;
 

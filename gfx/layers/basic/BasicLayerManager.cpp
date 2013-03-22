@@ -1153,9 +1153,10 @@ BasicShadowLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
   } else if (mShadowTarget) {
     if (mWidget) {
       if (CompositorChild* remoteRenderer = mWidget->GetRemoteRenderer()) {
-        nsRefPtr<gfxASurface> target = mShadowTarget->OriginalSurface();
+        nsIntRect bounds;
+        mWidget->GetBounds(bounds);
         SurfaceDescriptor inSnapshot, snapshot;
-        if (AllocBuffer(target->GetSize(), target->GetContentType(),
+        if (AllocBuffer(bounds.Size(), gfxASurface::CONTENT_COLOR_ALPHA,
                         &inSnapshot) &&
             // The compositor will usually reuse |snapshot| and return
             // it through |outSnapshot|, but if it doesn't, it's
@@ -1164,8 +1165,6 @@ BasicShadowLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
           AutoOpenSurface opener(OPEN_READ_ONLY, snapshot);
           gfxASurface* source = opener.Get();
 
-          gfxContextAutoSaveRestore restore(mShadowTarget);
-          mShadowTarget->SetOperator(gfxContext::OPERATOR_OVER);
           mShadowTarget->DrawSurface(source, source->GetSize());
         }
         if (IsSurfaceDescriptorValid(snapshot)) {

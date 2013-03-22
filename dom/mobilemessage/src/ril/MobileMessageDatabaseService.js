@@ -575,6 +575,9 @@ MobileMessageDatabaseService.prototype = {
                                                     aMessageRecord.read);
     } else if (aMessageRecord.type == "mms") {
       let headers = aMessageRecord["headers"];
+      if (DEBUG) {
+        debug("MMS: headers: " + JSON.stringify(headers));
+      }
 
       let subject = headers["subject"];
       if (subject == undefined) {
@@ -587,11 +590,15 @@ MobileMessageDatabaseService.prototype = {
       if (parts) {
         for (let i = 0; i < parts.length; i++) {
           let part = parts[i];
+          if (DEBUG) {
+            debug("MMS: part[" + i + "]: " + JSON.stringify(part));
+          }
+
           let partHeaders = part["headers"];
           let partContent = part["content"];
           // Don't need to make the SMIL part if it's present.
           if (partHeaders["content-type"]["media"] == "application/smil") {
-            smil = part.content;
+            smil = partContent;
             continue;
           }
           attachments.push({
@@ -600,20 +607,6 @@ MobileMessageDatabaseService.prototype = {
             "content": partContent
           });
         }
-      }
-      if (DEBUG) {
-        debug("createDomMessageFromRecord: createMmsMessage: " + JSON.stringify({
-          id: aMessageRecord.id,
-          delivery: aMessageRecord.delivery,
-          deliveryStatus: aMessageRecord.deliveryStatus,
-          sender: aMessageRecord.sender,
-          receivers: aMessageRecord.receivers,
-          timestamp: aMessageRecord.timestamp,
-          read: aMessageRecord.read,
-          subject: subject,
-          smil: smil,
-          attachments: attachments
-        }));
       }
       return gMobileMessageService.createMmsMessage(aMessageRecord.id,
                                                     aMessageRecord.delivery,

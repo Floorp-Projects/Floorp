@@ -514,7 +514,7 @@
           </hbox>
           <vbox id="syncpair-simple" class="syncsetup-page" flex="1">
             <scrollbox id="sync-message" class="prompt-message" orient="vertical" flex="1">
-              <description class="syncsetup-desc" flex="1">&sync.pair.description2;</description>
+              <description class="syncsetup-desc" flex="1">&sync.pair.description;</description>
               <description class="link" flex="1" onclick="SyncPairDevice.close(); WeaveGlue.openTutorial();">&sync.setup.tutorial;</description>
               <separator/>
               <vbox align="center" flex="1">
@@ -534,7 +534,8 @@
     </box>
 #endif
 
-    <box id="context-container" class="menu-container" hidden="true">
+    <box onclick="event.stopPropagation();" id="context-container" class="menu-container" hidden="true">
+      <!-- onclick is dom bug 835175 --> 
       <vbox id="context-popup" class="menu-popup">
         <richlistbox id="context-commands" bindingType="contextmenu" flex="1">
           <!-- priority="low" items are hidden by default when a context is being displayed

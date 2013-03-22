@@ -1,0 +1,85 @@
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test hidden frames</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script type="text/javascript" src="mock_gamepad.js"></script>
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+var index = GamepadService.addGamepad("test gamepad", // id
+                                      4, // buttons
+                                      2);// axes
+
+function setFrameVisible(f, visible) {
+  var Ci = SpecialPowers.wrap(Components.interfaces);
+  var docshell = SpecialPowers.wrap(f.contentWindow).QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation).QueryInterface(Ci.nsIDocShell);
+  docshell.isActive = visible;
+}
+
+var frames_loaded = 0;
+var f1, f2;
+function frame_loaded() {
+  frames_loaded++;
+  if (frames_loaded == 2) {
+    f1 = document.getElementById('f1');
+    f2 = document.getElementById('f2');
+    // Now press the button, but don't release it.
+    GamepadService.newButtonEvent(index, 0, true);
+ }
+}
+
+window.addEventListener("gamepadbuttondown", function() {
+  // Wait to ensure that all frames received the button press as well.
+ SpecialPowers.executeSoon(tests[testNum++]);
+});
+
+var testNum = 0;
+var tests = [
+  check_button_pressed,
+  check_second_frame_no_button_press,
+];
+
+function check_button_pressed() {
+  // At this point the both frames should see the button as pressed.
+  is(f1.contentWindow.gamepad.buttons[0], 1, "frame 1 sees button pressed");
+  is(f2.contentWindow.gamepad.buttons[0], 1, "frame 2 sees button pressed");
+
+  // Now release the button, then hide the second frame.
+  GamepadService.newButtonEvent(index, 0, false);
+  setFrameVisible(f2, false);
+  SpecialPowers.executeSoon(function() {
+    // Now press the button, but don't release it.
+    GamepadService.newButtonEvent(index, 0, true);
+  });
+}
+
+function check_second_frame_no_button_press () {
+  /*
+   * At this point the first frame should see the button as pressed,
+   * but the second frame should not, since it's hidden.
+   */
+  is(f1.contentWindow.gamepad.buttons[0], 1, "frame 1 sees button pressed");
+  is(f2.contentWindow.gamepad.buttons[0], 0, "frame 2 should not see button pressed");
+
+  // Now unhide the second frame.
+  setFrameVisible(f2, true);
+  SpecialPowers.executeSoon(function() {
+    // Now that the frame is visible again, it should see the button
+    // that was pressed.
+    is(f2.contentWindow.gamepad.buttons[0], 1, "frame 2 sees button pressed");
+    // cleanup
+    GamepadService.removeGamepad(index);
+    SimpleTest.finish();
+  });
+}
+
+</script>
+<iframe id="f1" src="gamepad_frame_state.html" onload="frame_loaded()"></iframe>
+<iframe id="f2" src="gamepad_frame_state.html" onload="frame_loaded()"></iframe>
+</body>
+</html>

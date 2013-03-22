@@ -21,6 +21,7 @@ EXPORTS		= \
 		nsEventListenerManager.h \
 		nsDOMEventTargetHelper.h \
 		nsDOMEvent.h \
+		nsDOMGamepad.h \
 		nsDOMTouchEvent.h \
 		nsDOMUIEvent.h \
 		$(NULL)
@@ -63,6 +64,12 @@ CPPSRCS		= \
 		DOMWheelEvent.cpp \
 		TextComposition.cpp \
 		$(NULL)
+
+ifdef MOZ_GAMEPAD
+CPPSRCS += \
+  nsDOMGamepad.cpp \
+  $(NULL)
+endif
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1

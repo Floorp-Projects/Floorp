@@ -629,6 +629,16 @@ void StartForceQuitWatchdog(ShutdownMode aMode, int32_t aTimeoutSecs)
   PROXY_IF_SANDBOXED(StartForceQuitWatchdog(aMode, aTimeoutSecs));
 }
 
+void StartMonitoringGamepadStatus()
+{
+  PROXY_IF_SANDBOXED(StartMonitoringGamepadStatus());
+}
+
+void StopMonitoringGamepadStatus()
+{
+  PROXY_IF_SANDBOXED(StopMonitoringGamepadStatus());
+}
+
 void
 RegisterWakeLockObserver(WakeLockObserver* aObserver)
 {

@@ -1474,7 +1474,7 @@ abstract public class GeckoApp
             layerView.initializeView(GeckoAppShell.getEventDispatcher());
             mLayerView = layerView;
             // bind the GeckoEditable instance to the new LayerView
-            GeckoAppShell.notifyIMEEnabled(GeckoEditableListener.IME_STATE_DISABLED, "", "", "", false);
+            GeckoAppShell.notifyIMEContext(GeckoEditableListener.IME_STATE_DISABLED, "", "", "");
         }
     }
 

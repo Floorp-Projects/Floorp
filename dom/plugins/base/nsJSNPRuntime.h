@@ -31,6 +31,8 @@ public:
   const NPP mNpp;
 };
 
+extern JSClass sNPObjectJSWrapperClass;
+
 class nsJSObjWrapper : public NPObject,
                        public nsJSObjWrapperKey
 {

@@ -65,6 +65,8 @@ abstract public class BrowserApp extends GeckoApp
 
     private static final String PREF_CHROME_DYNAMICTOOLBAR = "browser.chrome.dynamictoolbar";
 
+    private static final int TABS_ANIMATION_DURATION = 450;
+
     public static BrowserToolbar mBrowserToolbar;
     private AboutHomeContent mAboutHomeContent;
     private Boolean mAboutHomeShowing = null;
@@ -220,6 +222,14 @@ abstract public class BrowserApp extends GeckoApp
             return super.onInterceptTouchEvent(view, event);
         }
 
+        // Don't let the toolbar scroll at all if the page is shorter than
+        // the screen height.
+        ImmutableViewportMetrics metrics =
+            mLayerView.getLayerClient().getViewportMetrics();
+        if (metrics.getPageHeight() < metrics.getHeight()) {
+            return super.onInterceptTouchEvent(view, event);
+        }
+
         int action = event.getActionMasked();
         int pointerCount = event.getPointerCount();
 
@@ -302,8 +312,6 @@ abstract public class BrowserApp extends GeckoApp
 
             // Don't let the toolbar scroll off the top if it's just exposing
             // overscroll area.
-            ImmutableViewportMetrics metrics =
-                mLayerView.getLayerClient().getViewportMetrics();
             float toolbarMaxY = Math.min(toolbarHeight,
                 Math.max(0, toolbarHeight - (metrics.pageRectTop -
                                              metrics.viewportRectTop)));
@@ -958,13 +966,17 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     public void onTabsLayoutChange(int width, int height) {
-        if (mMainLayoutAnimator != null)
-            mMainLayoutAnimator.stop();
+        int animationLength = TABS_ANIMATION_DURATION;
+
+        if (mMainLayoutAnimator != null) {
+            animationLength = Math.max(1, animationLength - (int)mMainLayoutAnimator.getRemainingTime());
+            mMainLayoutAnimator.stop(false);
+        }
 
         if (mTabsPanel.isShown())
             mTabsPanel.setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
 
-        mMainLayoutAnimator = new PropertyAnimator(450, sTabsInterpolator);
+        mMainLayoutAnimator = new PropertyAnimator(animationLength, sTabsInterpolator);
         mMainLayoutAnimator.setPropertyAnimationListener(this);
 
         boolean usingTextureView = mLayerView.shouldUseTextureView();
@@ -1040,6 +1052,8 @@ abstract public class BrowserApp extends GeckoApp
 
         if (hasTabsSideBar())
             mBrowserToolbar.adjustTabsAnimation(true);
+
+        mMainLayoutAnimator = null;
     }
 
     /* Favicon methods */

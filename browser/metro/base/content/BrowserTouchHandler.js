@@ -16,10 +16,11 @@ const BrowserTouchHandler = {
 
     // Messages sent from content.js
     messageManager.addMessageListener("Content:ContextMenu", this);
+    messageManager.addMessageListener("Content:SelectionCaret", this);
   },
 
   // Content forwarding the contextmenu command
-  onContentContextMenu: function onContentContextMenu(aMessage) {
+  _onContentContextMenu: function _onContentContextMenu(aMessage) {
     // Note, target here is the target of the message manager message,
     // usually the browser.
     // Touch input selection handling
@@ -51,6 +52,16 @@ const BrowserTouchHandler = {
   },
 
   /*
+   * Called when Content wants to initiate selection management
+   * due to a tap in a form input.
+   */
+  _onCaretSelectionStarted: function _onCaretSelectionStarted(aMessage) {
+    SelectionHelperUI.attachToCaret(aMessage.target,
+                                    aMessage.json.xPos,
+                                    aMessage.json.yPos);
+  },
+
+  /*
    * Events
    */
 
@@ -73,7 +84,10 @@ const BrowserTouchHandler = {
     switch (aMessage.name) {
       // Content forwarding the contextmenu command
       case "Content:ContextMenu":
-        this.onContentContextMenu(aMessage);
+        this._onContentContextMenu(aMessage);
+        break;
+      case "Content:SelectionCaret":
+        this._onCaretSelectionStarted(aMessage);
         break;
     }
   },

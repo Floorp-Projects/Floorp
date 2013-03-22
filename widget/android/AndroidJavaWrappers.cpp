@@ -50,6 +50,8 @@ jfieldID AndroidGeckoEvent::jBandwidthField = 0;
 jfieldID AndroidGeckoEvent::jCanBeMeteredField = 0;
 jfieldID AndroidGeckoEvent::jScreenOrientationField = 0;
 jfieldID AndroidGeckoEvent::jByteBufferField = 0;
+jfieldID AndroidGeckoEvent::jWidthField = 0;
+jfieldID AndroidGeckoEvent::jHeightField = 0;
 
 jclass AndroidPoint::jPointClass = 0;
 jfieldID AndroidPoint::jXField = 0;
@@ -242,6 +244,8 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
     jCanBeMeteredField = getField("mCanBeMetered", "Z");
     jScreenOrientationField = getField("mScreenOrientation", "S");
     jByteBufferField = getField("mBuffer", "Ljava/nio/ByteBuffer;");
+    jWidthField = getField("mWidth", "I");
+    jHeightField = getField("mHeight", "I");
 }
 
 void
@@ -626,6 +630,12 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
 
         case SCREENORIENTATION_CHANGED: {
             mScreenOrientation = jenv->GetShortField(jobj, jScreenOrientationField);
+            break;
+        }
+
+        case COMPOSITOR_CREATE: {
+            mWidth = jenv->GetIntField(jobj, jWidthField);
+            mHeight = jenv->GetIntField(jobj, jHeightField);
             break;
         }
 

@@ -613,6 +613,13 @@ ifdef ACCESSIBILITY
 EXTRA_DSO_LDOPTS += -DELAYLOAD:oleacc.dll
 endif
 endif
+ifdef MOZ_GAMEPAD
+DXSDK := $(subst \,/,$(MOZ_DIRECTX_SDK_PATH))/Lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)
+OS_LIBS += \
+  "$(DXSDK)/dxguid.lib" \
+  "$(DXSDK)/dinput8.lib" \
+  $(NULL)
+endif
 endif # WINNT
 
 ifdef MOZ_JPROF
