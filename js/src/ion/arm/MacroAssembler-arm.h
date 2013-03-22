@@ -334,10 +334,48 @@ class MacroAssemblerARM : public Assembler
     // Float registers can only be loaded/stored in continuous runs
     // when using vstm/vldm.
     // This function breaks set into continuous runs and loads/stores
-    // them at [rm]. rm will be modified, but returned to its initial value.
+    // them at [rm]. rm will be modified and left in a state logically
+    // suitable for the next load/store.
     // Returns the offset from [dm] for the logical next load/store.
     int32_t transferMultipleByRuns(FloatRegisterSet set, LoadStore ls,
-                                   Register rm, DTMMode mode);
+                                   Register rm, DTMMode mode)
+    {
+        if (mode == IA) {
+            return transferMultipleByRunsImpl
+                <FloatRegisterForwardIterator>(set, ls, rm, mode, 1);
+        }
+        if (mode == DB) {
+            return transferMultipleByRunsImpl
+                <FloatRegisterIterator>(set, ls, rm, mode, -1);
+        }
+        JS_NOT_REACHED("Invalid data transfer addressing mode");
+    }
+
+private:
+    // Implementation for transferMultipleByRuns so we can use different
+    // iterators for forward/backward traversals.
+    // The sign argument should be 1 if we traverse forwards, -1 if we
+    // traverse backwards.
+    template<typename RegisterIterator> int32_t
+    transferMultipleByRunsImpl(FloatRegisterSet set, LoadStore ls,
+                               Register rm, DTMMode mode, int32_t sign)
+    {
+        int32_t delta = sign * sizeof(double);
+        int32_t offset = 0;
+        RegisterIterator iter(set);
+        while (iter.more()) {
+            startFloatTransferM(ls, rm, mode, WriteBack);
+            int32_t reg = (*iter).code_;
+            do {
+                offset += delta;
+                transferFloatReg(*iter);
+            } while ((++iter).more() && (*iter).code_ == (reg += sign));
+            finishFloatTransfer();
+        }
+
+        JS_ASSERT(offset == set.size() * sizeof(double) * sign);
+        return offset;
+    }
 };
 
 class MacroAssemblerARMCompat : public MacroAssemblerARM
