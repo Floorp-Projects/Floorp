@@ -53,6 +53,7 @@ CustomizeMode.prototype = {
   // restore gNavToolbox.palette to its original state after exiting
   // customization mode.
   _stowedPalette: null,
+  _dragOverItem: null,
 
   enter: function() {
     let window = this.window;
@@ -94,9 +95,10 @@ CustomizeMode.prototype = {
         let target = CustomizableUI.getCustomizeTargetForArea(area, window);
         target.addEventListener("dragstart", self);
         target.addEventListener("dragover", self);
+        target.addEventListener("dragexit", self);
         target.addEventListener("drop", self);
-        for (let toolbarItem of target.children) {
-          self.wrapToolbarItem(toolbarItem, "");
+        for (let child of target.children) {
+          self.wrapToolbarItem(child, getPlaceForItem(child));
         }
         self.areas.push(target);
       }
@@ -106,6 +108,7 @@ CustomizeMode.prototype = {
 
     this.visiblePalette.addEventListener("dragstart", this);
     this.visiblePalette.addEventListener("dragover", this);
+    this.visiblePalette.addEventListener("dragexit", this);
     this.visiblePalette.addEventListener("drop", this);
 
     document.documentElement.setAttribute("customizing", true);
@@ -122,6 +125,7 @@ CustomizeMode.prototype = {
 
     this.visiblePalette.removeEventListener("dragstart", this);
     this.visiblePalette.removeEventListener("dragover", this);
+    this.visiblePalette.removeEventListener("dragexit", this);
     this.visiblePalette.removeEventListener("drop", this);
 
     let window = this.window;
@@ -148,6 +152,7 @@ CustomizeMode.prototype = {
       }
       target.removeEventListener("dragstart", this);
       target.removeEventListener("dragover", this);
+      target.removeEventListener("dragexit", this);
       target.removeEventListener("drop", this);
     }
 
@@ -367,6 +372,9 @@ CustomizeMode.prototype = {
       case "drop":
         this._onDragDrop(aEvent);
         break;
+      case "dragexit":
+        this._onDragExit(aEvent);
+        break;
       case "keypress":
         if (aEvent.keyCode === aEvent.DOM_VK_ESCAPE) {
           this.exit();
@@ -401,11 +409,40 @@ CustomizeMode.prototype = {
   _onDragOver: function(aEvent) {
     __dumpDragData(aEvent);
 
-    let documentId = aEvent.target.ownerDocument.documentElement.id;
+    let document = aEvent.target.ownerDocument;
+    let documentId = document.documentElement.id;
     if (!aEvent.dataTransfer.types.contains("text/toolbarwrapper-id/"
                                             + documentId.toLowerCase())) {
       return;
     }
+
+    let draggedItemId = aEvent.dataTransfer.getData("text/toolbarwrapper-id/" + documentId);
+    let draggedWrapper = document.getElementById("wrapper-" + draggedItemId);
+    let targetNode = aEvent.target;
+    let targetParent = targetNode.parentNode;
+    let targetArea = this._getCustomizableParent(targetNode);
+    let originArea = this._getCustomizableParent(draggedWrapper);
+
+    // Do nothing if the target or origin are not customizable.
+    if (!targetArea || !originArea) {
+      gCurrentDragOverItem = null;
+      return;
+    }
+
+    // We need to determine the place that the widget is being dropped in
+    // the target.
+    let position = Array.indexOf(targetParent.children, targetNode);
+    let dragOverItem = position == -1 ? targetParent.lastChild : targetParent.children[position];
+
+    if (this._dragOverItem && dragOverItem != this._dragOverItem) {
+      this._setDragActive(this._dragOverItem, false);
+    }
+
+    // XXXjaws Only handling the toolbar case first.
+    if (targetArea.localName === "toolbar") {
+      this._setDragActive(dragOverItem, true);
+    }
+    this._dragOverItem = dragOverItem;
 
     aEvent.preventDefault();
     aEvent.stopPropagation();
@@ -413,6 +450,8 @@ CustomizeMode.prototype = {
 
   _onDragDrop: function(aEvent) {
     __dumpDragData(aEvent);
+
+    this._setDragActive(this._dragOverItem, false);
 
     let document = aEvent.target.ownerDocument;
     let documentId = document.documentElement.id;
@@ -458,7 +497,7 @@ CustomizeMode.prototype = {
     if (targetArea === originArea) {
       let widget = this.unwrapToolbarItem(draggedWrapper);
       CustomizableUI.moveWidgetWithinArea(draggedItemId, position);
-      this.wrapToolbarItem(widget);
+      this.wrapToolbarItem(widget, getPlaceForItem(targetNode));
       return;
     }
 
@@ -471,7 +510,7 @@ CustomizeMode.prototype = {
     // then we re-wrap the widget.
     let widget = this.unwrapToolbarItem(draggedWrapper);
     CustomizableUI.addWidgetToArea(draggedItemId, targetArea.id, position);
-    draggedWrapper = this.wrapToolbarItem(widget, "");
+    draggedWrapper = this.wrapToolbarItem(widget, getPlaceForItem(targetNode));
 
     // If necessary, add flex to accomodate new child.
     if (draggedWrapper.hasAttribute("flex")) {
@@ -479,6 +518,36 @@ CustomizeMode.prototype = {
       let parentFlex = parent.hasAttribute("flex") ? parseInt(parent.getAttribute("flex"), 10) : 0;
       let itemFlex = parseInt(draggedWrapper.getAttribute("flex"), 10);
       parent.setAttribute("flex", parentFlex + itemFlex);
+    }
+  },
+
+  _onDragExit: function(aEvent) {
+    if (this._dragOverItem) {
+      this._setDragActive(this._dragOverItem, false);
+    }
+  },
+
+  // XXXjaws Show a ghost image or blank area where the item could be added, instead of black bar
+  _setDragActive: function(aItem, aValue) {
+    let node = aItem;
+    let window = aItem.ownerDocument.defaultView;
+    let direction = window.getComputedStyle(aItem, null).direction;
+    let value = direction == "ltr"? "left" : "right";
+    if (aItem.localName == "toolbar") {
+      node = aItem.lastChild;
+      value = direction == "ltr"? "right" : "left";
+    }
+
+    if (!node) {
+      return;
+    }
+
+    if (aValue) {
+      if (!node.hasAttribute("dragover")) {
+        node.setAttribute("dragover", value);
+      }
+    } else {
+      node.removeAttribute("dragover");
     }
   },
 
@@ -503,6 +572,22 @@ CustomizeMode.prototype = {
     return null;
   }
 };
+
+function getPlaceForItem(aElement) {
+  let place;
+  let node = aElement;
+  while (node && !place) {
+    if (node.localName == "toolbar")
+      place = "toolbar";
+    else if (node.id == CustomizableUI.AREA_PANEL)
+      place = "panel";
+    else if (node.id == kPaletteId)
+      place = "palette";
+
+    node = node.parentNode;
+  }
+  return place;
+}
 
 function __dumpDragData(aEvent, caller) {
   let str = "Dumping drag data (CustomizeMode.jsm) {\n";
