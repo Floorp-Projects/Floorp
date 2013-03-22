@@ -6,13 +6,9 @@
 user preferences
 """
 
-__all__ = ('PreferencesReadError', 'Preferences')
-
 import os
 import re
-import tokenize
 from ConfigParser import SafeConfigParser as ConfigParser
-from StringIO import StringIO
 
 try:
     import json
@@ -33,8 +29,7 @@ class Preferences(object):
 
     def add(self, prefs, cast=False):
         """
-        :param prefs:
-        :param cast: whether to cast strings to value, e.g. '1' -> 1
+        - cast: whether to cast strings to value, e.g. '1' -> 1
         """
         # wants a list of 2-tuples
         if isinstance(prefs, dict):
@@ -44,10 +39,7 @@ class Preferences(object):
         self._prefs += prefs
 
     def add_file(self, path):
-        """a preferences from a file
-        
-        :param path:
-        """
+        """a preferences from a file"""
         self.add(self.read(path))
 
     def __call__(self):
@@ -59,7 +51,6 @@ class Preferences(object):
         interpolate a preference from a string
         from the command line or from e.g. an .ini file, there is no good way to denote
         what type the preference value is, as natively it is a string
-
         - integers will get cast to integers
         - true/false will get cast to True/False
         - anything enclosed in single quotes will be treated as a string with the ''s removed from both sides
@@ -160,26 +151,17 @@ class Preferences(object):
 
         comment = re.compile('/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/', re.MULTILINE)
 
-        marker = '##//' # magical marker
+        token = '##//' # magical token
         lines = [i.strip() for i in file(path).readlines() if i.strip()]
         _lines = []
         for line in lines:
-            if line.startswith(('#', '//')):
+            if line.startswith('#'):
                 continue
             if '//' in line:
-                line = line.replace('//', marker)
+                line = line.replace('//', token)
             _lines.append(line)
         string = '\n'.join(_lines)
         string = re.sub(comment, '', string)
-
-        # skip trailing comments
-        processed_tokens = []
-        f_obj = StringIO(string)
-        for token in tokenize.generate_tokens(f_obj.readline):
-            if token[0] == tokenize.COMMENT:
-                continue
-            processed_tokens.append(token[:2]) # [:2] gets around http://bugs.python.org/issue9974
-        string = tokenize.untokenize(processed_tokens)
 
         retval = []
         def pref(a, b):
@@ -195,15 +177,15 @@ class Preferences(object):
                 print line
                 raise
 
-        # de-magic the marker
+        # de-magic the token
         for index, (key, value) in enumerate(retval):
-            if isinstance(value, basestring) and marker in value:
-                retval[index] = (key, value.replace(marker, '//'))
+            if isinstance(value, basestring) and token in value:
+                retval[index] = (key, value.replace(token, '//'))
 
         return retval
 
     @classmethod
-    def write(cls, _file, prefs, pref_string='user_pref("%s", %s);'):
+    def write(_file, prefs, pref_string='user_pref("%s", %s);'):
         """write preferences to a file"""
 
         if isinstance(_file, basestring):
@@ -220,7 +202,7 @@ class Preferences(object):
             elif value is False:
                 print >> f, pref_string % (key, 'false')
             elif isinstance(value, basestring):
-                print >> f, pref_string % (key, repr(str(value)))
+                print >> f, pref_string % (key, repr(string(value)))
             else:
                 print >> f, pref_string % (key, value) # should be numeric!
 
