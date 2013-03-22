@@ -499,6 +499,14 @@ InitFromBailout(JSContext *cx, HandleFunction fun, HandleScript script, Snapshot
 
     uint32_t flags = 0;
 
+    // If SPS Profiler is enabled, mark the frame as having pushed an SPS entry.
+    // This may be wrong for the last frame of ArgumentCheck bailout, but
+    // that will be fixed later.
+    if (cx->runtime->spsProfiler.enabled()) {
+        IonSpew(IonSpew_BaselineBailouts, "      Setting SPS flag on frame!");
+        flags |= BaselineFrame::HAS_PUSHED_SPS_FRAME;
+    }
+
     // Initialize BaselineFrame::scopeChain
     JSObject *scopeChain = NULL;
     if (iter.bailoutKind() == Bailout_ArgumentCheck) {
@@ -639,7 +647,6 @@ InitFromBailout(JSContext *cx, HandleFunction fun, HandleScript script, Snapshot
 
     // If this was the last inline frame, then unpacking is almost done.
     if (!iter.moreFrames()) {
-
         // If the bailout was a resumeAfter, and the opcode is monitored,
         // then the bailed out state should be in a position to enter
         // into the ICTypeMonitor chain for the op.
@@ -742,6 +749,9 @@ InitFromBailout(JSContext *cx, HandleFunction fun, HandleScript script, Snapshot
                 JS_ASSERT(numUnsynced == 0);
                 opReturnAddr = baselineScript->prologueEntryAddr();
                 IonSpew(IonSpew_BaselineBailouts, "      Resuming into prologue.");
+
+                // If bailing into prologue, HAS_PUSHED_SPS_FRAME should not be set on frame.
+                blFrame->unsetPushedSPSFrame();
             } else {
                 opReturnAddr = nativeCodeForPC;
             }

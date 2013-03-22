@@ -271,6 +271,9 @@ class ICEntry
 #define IC_STUB_KIND_LIST(_)    \
     _(UseCount_Fallback)        \
                                 \
+    _(Profiler_Fallback)        \
+    _(Profiler_PushFunction)    \
+                                \
     _(TypeMonitor_Fallback)     \
     _(TypeMonitor_SingleObject) \
     _(TypeMonitor_TypeObject)   \
@@ -991,6 +994,11 @@ class ICStubCompiler
     void enterStubFrame(MacroAssembler &masm, Register scratch);
     void leaveStubFrame(MacroAssembler &masm, bool calledIntoIon = false);
 
+    // Some stubs need to emit SPS profiler updates.  This emits the guarding
+    // jitcode for those stubs.  If profiling is not enabled, jumps to the
+    // given label.
+    void guardProfilingEnabled(MacroAssembler &masm, Register scratch, Label *skip);
+
     inline GeneralRegisterSet availableGeneralRegs(size_t numInputs) const {
         GeneralRegisterSet regs(GeneralRegisterSet::All());
         JS_ASSERT(!regs.has(BaselineStackReg));
@@ -1081,6 +1089,95 @@ class ICUseCount_Fallback : public ICFallbackStub
         }
     };
 };
+
+// Profiler_Fallback
+
+class ICProfiler_Fallback : public ICFallbackStub
+{
+    friend class ICStubSpace;
+
+    ICProfiler_Fallback(IonCode *stubCode)
+      : ICFallbackStub(ICStub::Profiler_Fallback, stubCode)
+    { }
+
+  public:
+    static inline ICProfiler_Fallback *New(ICStubSpace *space, IonCode *code) {
+        if (!code)
+            return NULL;
+        return space->allocate<ICProfiler_Fallback>(code);
+    }
+
+    // Compiler for this stub kind.
+    class Compiler : public ICStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx)
+          : ICStubCompiler(cx, ICStub::Profiler_Fallback)
+        { }
+
+        ICProfiler_Fallback *getStub(ICStubSpace *space) {
+            return ICProfiler_Fallback::New(space, getStubCode());
+        }
+    };
+};
+
+// Profiler_PushFunction
+
+class ICProfiler_PushFunction : public ICStub
+{
+    friend class ICStubSpace;
+
+    const char *str_;
+    HeapPtrScript script_;
+
+    ICProfiler_PushFunction(IonCode *stubCode, const char *str, HandleScript script)
+      : ICStub(ICStub::Profiler_PushFunction, stubCode),
+        str_(str),
+        script_(script)
+    { }
+
+  public:
+    static inline ICProfiler_PushFunction *New(ICStubSpace *space, IonCode *code,
+                                               const char *str, HandleScript script)
+    {
+        if (!code)
+            return NULL;
+        return space->allocate<ICProfiler_PushFunction>(code, str, script);
+    }
+
+    HeapPtrScript &script() {
+        return script_;
+    }
+
+    static size_t offsetOfStr() {
+        return offsetof(ICProfiler_PushFunction, str_);
+    }
+    static size_t offsetOfScript() {
+        return offsetof(ICProfiler_PushFunction, script_);
+    }
+
+    // Compiler for this stub kind.
+    class Compiler : public ICStubCompiler {
+      protected:
+        const char *str_;
+        RootedScript script_;
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx, const char *str, HandleScript script)
+          : ICStubCompiler(cx, ICStub::Profiler_PushFunction),
+            str_(str),
+            script_(cx, script)
+        { }
+
+        ICProfiler_PushFunction *getStub(ICStubSpace *space) {
+            return ICProfiler_PushFunction::New(space, getStubCode(), str_, script_);
+        }
+    };
+};
+
 
 // TypeCheckPrimitiveSetStub
 //   Base class for IC stubs (TypeUpdate or TypeMonitor) that check that a given
@@ -3893,26 +3990,31 @@ class ICGetProp_CallScripted : public ICMonitoredStub
     // Function to call.
     HeapPtrFunction getter_;
 
+    // PC offset of call
+    uint32_t pcOffset_;
+
     ICGetProp_CallScripted(IonCode *stubCode, ICStub *firstMonitorStub,
                            HandleShape shape, HandleObject holder, HandleShape holderShape,
-                           HandleFunction getter)
+                           HandleFunction getter, uint32_t pcOffset)
       : ICMonitoredStub(GetProp_CallScripted, stubCode, firstMonitorStub),
         shape_(shape),
         holder_(holder),
         holderShape_(holderShape),
-        getter_(getter)
+        getter_(getter),
+        pcOffset_(pcOffset)
     {}
 
   public:
     static inline ICGetProp_CallScripted *New(
                 ICStubSpace *space, IonCode *code, ICStub *firstMonitorStub,
                 HandleShape shape, HandleObject holder, HandleShape holderShape,
-                HandleFunction getter)
+                HandleFunction getter, uint32_t pcOffset)
     {
         if (!code)
             return NULL;
         return space->allocate<ICGetProp_CallScripted>(code, firstMonitorStub,
-                                                           shape, holder, holderShape, getter);
+                                                       shape, holder, holderShape, getter,
+                                                       pcOffset);
     }
 
     HeapPtrShape &shape() {
@@ -3927,6 +4029,7 @@ class ICGetProp_CallScripted : public ICMonitoredStub
     HeapPtrFunction &getter() {
         return getter_;
     }
+
     static size_t offsetOfShape() {
         return offsetof(ICGetProp_CallScripted, shape_);
     }
@@ -3939,31 +4042,35 @@ class ICGetProp_CallScripted : public ICMonitoredStub
     static size_t offsetOfGetter() {
         return offsetof(ICGetProp_CallScripted, getter_);
     }
-
+    static size_t offsetOfPCOffset() {
+        return offsetof(ICGetProp_CallScripted, pcOffset_);
+    }
 
     class Compiler : public ICStubCompiler {
         ICStub *firstMonitorStub_;
         RootedObject obj_;
         RootedObject holder_;
         RootedFunction getter_;
+        uint32_t pcOffset_;
 
         bool generateStubCode(MacroAssembler &masm);
 
       public:
         Compiler(JSContext *cx, ICStub *firstMonitorStub, HandleObject obj,
-                 HandleObject holder, HandleFunction getter)
+                 HandleObject holder, HandleFunction getter, uint32_t pcOffset)
           : ICStubCompiler(cx, ICStub::GetProp_CallScripted),
             firstMonitorStub_(firstMonitorStub),
             obj_(cx, obj),
             holder_(cx, holder),
-            getter_(cx, getter)
+            getter_(cx, getter),
+            pcOffset_(pcOffset)
         {}
 
         ICStub *getStub(ICStubSpace *space) {
             RootedShape shape(cx, obj_->lastProperty());
             RootedShape holderShape(cx, holder_->lastProperty());
-            return ICGetProp_CallScripted::New(space, getStubCode(), firstMonitorStub_,
-                                               shape, holder_, holderShape, getter_); 
+            return ICGetProp_CallScripted::New(space, getStubCode(), firstMonitorStub_, shape,
+                                               holder_, holderShape, getter_, pcOffset_); 
         }
     };
 };
@@ -4260,23 +4367,29 @@ class ICSetProp_CallScripted : public ICStub
     // Function to call.
     HeapPtrFunction setter_;
 
+    // PC of call, for profiler
+    uint32_t pcOffset_;
+
     ICSetProp_CallScripted(IonCode *stubCode, HandleShape shape, HandleObject holder,
-                           HandleShape holderShape, HandleFunction setter)
+                           HandleShape holderShape, HandleFunction setter, uint32_t pcOffset)
       : ICStub(SetProp_CallScripted, stubCode),
         shape_(shape),
         holder_(holder),
         holderShape_(holderShape),
-        setter_(setter)
+        setter_(setter),
+        pcOffset_(pcOffset)
     {}
 
   public:
     static inline ICSetProp_CallScripted *New(ICStubSpace *space, IonCode *code,
                                               HandleShape shape, HandleObject holder,
-                                              HandleShape holderShape, HandleFunction setter)
+                                              HandleShape holderShape, HandleFunction setter,
+                                              uint32_t pcOffset)
     {
         if (!code)
             return NULL;
-        return space->allocate<ICSetProp_CallScripted>(code, shape, holder, holderShape, setter);
+        return space->allocate<ICSetProp_CallScripted>(code, shape, holder, holderShape, setter,
+                                                       pcOffset);
     }
 
     HeapPtrShape &shape() {
@@ -4291,6 +4404,7 @@ class ICSetProp_CallScripted : public ICStub
     HeapPtrFunction &setter() {
         return setter_;
     }
+
     static size_t offsetOfShape() {
         return offsetof(ICSetProp_CallScripted, shape_);
     }
@@ -4303,28 +4417,33 @@ class ICSetProp_CallScripted : public ICStub
     static size_t offsetOfSetter() {
         return offsetof(ICSetProp_CallScripted, setter_);
     }
-
+    static size_t offsetOfPCOffset() {
+        return offsetof(ICSetProp_CallScripted, pcOffset_);
+    }
 
     class Compiler : public ICStubCompiler {
         RootedObject obj_;
         RootedObject holder_;
         RootedFunction setter_;
+        uint32_t pcOffset_;
 
         bool generateStubCode(MacroAssembler &masm);
 
       public:
-        Compiler(JSContext *cx, HandleObject obj, HandleObject holder, HandleFunction setter)
+        Compiler(JSContext *cx, HandleObject obj, HandleObject holder, HandleFunction setter,
+                 uint32_t pcOffset)
           : ICStubCompiler(cx, ICStub::SetProp_CallScripted),
             obj_(cx, obj),
             holder_(cx, holder),
-            setter_(cx, setter)
+            setter_(cx, setter),
+            pcOffset_(pcOffset)
         {}
 
         ICStub *getStub(ICStubSpace *space) {
             RootedShape shape(cx, obj_->lastProperty());
             RootedShape holderShape(cx, holder_->lastProperty());
-            return ICSetProp_CallScripted::New(space, getStubCode(), shape, holder_,
-                                               holderShape, setter_); 
+            return ICSetProp_CallScripted::New(space, getStubCode(), shape, holder_, holderShape,
+                                               setter_, pcOffset_); 
         }
     };
 };
@@ -4420,26 +4539,34 @@ class ICCall_Scripted : public ICMonitoredStub
     friend class ICStubSpace;
 
     HeapPtrScript calleeScript_;
+    uint32_t pcOffset_;
 
-    ICCall_Scripted(IonCode *stubCode, ICStub *firstMonitorStub, HandleScript calleeScript)
+    ICCall_Scripted(IonCode *stubCode, ICStub *firstMonitorStub, HandleScript calleeScript,
+                    uint32_t pcOffset)
       : ICMonitoredStub(ICStub::Call_Scripted, stubCode, firstMonitorStub),
-        calleeScript_(calleeScript)
+        calleeScript_(calleeScript),
+        pcOffset_(pcOffset)
     { }
 
   public:
     static inline ICCall_Scripted *New(
-            ICStubSpace *space, IonCode *code, ICStub *firstMonitorStub, HandleScript calleeScript)
+            ICStubSpace *space, IonCode *code, ICStub *firstMonitorStub, HandleScript calleeScript,
+            uint32_t pcOffset)
     {
         if (!code)
             return NULL;
-        return space->allocate<ICCall_Scripted>(code, firstMonitorStub, calleeScript);
+        return space->allocate<ICCall_Scripted>(code, firstMonitorStub, calleeScript, pcOffset);
+    }
+
+    HeapPtrScript &calleeScript() {
+        return calleeScript_;
     }
 
     static size_t offsetOfCalleeScript() {
         return offsetof(ICCall_Scripted, calleeScript_);
     }
-    HeapPtrScript &calleeScript() {
-        return calleeScript_;
+    static size_t offsetOfPCOffset() {
+        return offsetof(ICCall_Scripted, pcOffset_);
     }
 };
 
@@ -4447,17 +4574,24 @@ class ICCall_AnyScripted : public ICMonitoredStub
 {
     friend class ICStubSpace;
 
-    ICCall_AnyScripted(IonCode *stubCode, ICStub *firstMonitorStub)
-      : ICMonitoredStub(ICStub::Call_AnyScripted, stubCode, firstMonitorStub)
+    uint32_t pcOffset_;
+
+    ICCall_AnyScripted(IonCode *stubCode, ICStub *firstMonitorStub, uint32_t pcOffset)
+      : ICMonitoredStub(ICStub::Call_AnyScripted, stubCode, firstMonitorStub),
+        pcOffset_(pcOffset)
     { }
 
   public:
     static inline ICCall_AnyScripted *New(ICStubSpace *space, IonCode *code,
-                                          ICStub *firstMonitorStub)
+                                          ICStub *firstMonitorStub, uint32_t pcOffset)
     {
         if (!code)
             return NULL;
-        return space->allocate<ICCall_AnyScripted>(code, firstMonitorStub);
+        return space->allocate<ICCall_AnyScripted>(code, firstMonitorStub, pcOffset);
+    }
+
+    static size_t offsetOfPCOffset() {
+        return offsetof(ICCall_AnyScripted, pcOffset_);
     }
 };
 
@@ -4467,6 +4601,7 @@ class ICCallScriptedCompiler : public ICCallStubCompiler {
     ICStub *firstMonitorStub_;
     bool isConstructing_;
     RootedScript calleeScript_;
+    uint32_t pcOffset_;
     bool generateStubCode(MacroAssembler &masm);
 
     virtual int32_t getKey() const {
@@ -4475,24 +4610,30 @@ class ICCallScriptedCompiler : public ICCallStubCompiler {
 
   public:
     ICCallScriptedCompiler(JSContext *cx, ICStub *firstMonitorStub, HandleScript calleeScript,
-                            bool isConstructing)
+                            bool isConstructing, uint32_t pcOffset)
       : ICCallStubCompiler(cx, ICStub::Call_Scripted),
         firstMonitorStub_(firstMonitorStub),
         isConstructing_(isConstructing),
-        calleeScript_(cx, calleeScript)
+        calleeScript_(cx, calleeScript),
+        pcOffset_(pcOffset)
     { }
 
-    ICCallScriptedCompiler(JSContext *cx, ICStub *firstMonitorStub, bool isConstructing)
+    ICCallScriptedCompiler(JSContext *cx, ICStub *firstMonitorStub, bool isConstructing,
+                           uint32_t pcOffset)
       : ICCallStubCompiler(cx, ICStub::Call_AnyScripted),
         firstMonitorStub_(firstMonitorStub),
         isConstructing_(isConstructing),
-        calleeScript_(cx, NULL)
+        calleeScript_(cx, NULL),
+        pcOffset_(pcOffset)
     { }
 
     ICStub *getStub(ICStubSpace *space) {
-        if (calleeScript_)
-            return ICCall_Scripted::New(space, getStubCode(), firstMonitorStub_, calleeScript_);
-        return ICCall_AnyScripted::New(space, getStubCode(), firstMonitorStub_);
+        ICStub *stub = NULL;
+        if (calleeScript_) {
+            return ICCall_Scripted::New(space, getStubCode(), firstMonitorStub_, calleeScript_,
+                                        pcOffset_);
+        }
+        return ICCall_AnyScripted::New(space, getStubCode(), firstMonitorStub_, pcOffset_);
     }
 };
 
@@ -4501,26 +4642,33 @@ class ICCall_Native : public ICMonitoredStub
     friend class ICStubSpace;
 
     HeapPtrFunction callee_;
+    uint32_t pcOffset_;
 
-    ICCall_Native(IonCode *stubCode, ICStub *firstMonitorStub, HandleFunction callee)
+    ICCall_Native(IonCode *stubCode, ICStub *firstMonitorStub, HandleFunction callee,
+                  uint32_t pcOffset)
       : ICMonitoredStub(ICStub::Call_Native, stubCode, firstMonitorStub),
-        callee_(callee)
+        callee_(callee),
+        pcOffset_(pcOffset)
     { }
 
   public:
     static inline ICCall_Native *New(ICStubSpace *space, IonCode *code, ICStub *firstMonitorStub,
-                                     HandleFunction callee)
+                                     HandleFunction callee, uint32_t pcOffset)
     {
         if (!code)
             return NULL;
-        return space->allocate<ICCall_Native>(code, firstMonitorStub, callee);
+        return space->allocate<ICCall_Native>(code, firstMonitorStub, callee, pcOffset);
+    }
+
+    HeapPtrFunction &callee() {
+        return callee_;
     }
 
     static size_t offsetOfCallee() {
         return offsetof(ICCall_Native, callee_);
     }
-    HeapPtrFunction &callee() {
-        return callee_;
+    static size_t offsetOfPCOffset() {
+        return offsetof(ICCall_Native, pcOffset_);
     }
 
     // Compiler for this stub kind.
@@ -4529,6 +4677,7 @@ class ICCall_Native : public ICMonitoredStub
         ICStub *firstMonitorStub_;
         bool isConstructing_;
         RootedFunction callee_;
+        uint32_t pcOffset_;
         bool generateStubCode(MacroAssembler &masm);
 
         virtual int32_t getKey() const {
@@ -4537,15 +4686,16 @@ class ICCall_Native : public ICMonitoredStub
 
       public:
         Compiler(JSContext *cx, ICStub *firstMonitorStub, HandleFunction callee,
-                 bool isConstructing)
+                 bool isConstructing, uint32_t pcOffset)
           : ICCallStubCompiler(cx, ICStub::Call_Native),
             firstMonitorStub_(firstMonitorStub),
             isConstructing_(isConstructing),
-            callee_(cx, callee)
+            callee_(cx, callee),
+            pcOffset_(pcOffset)
         { }
 
         ICStub *getStub(ICStubSpace *space) {
-            return ICCall_Native::New(space, getStubCode(), firstMonitorStub_, callee_);
+            return ICCall_Native::New(space, getStubCode(), firstMonitorStub_, callee_, pcOffset_);
         }
     };
 };

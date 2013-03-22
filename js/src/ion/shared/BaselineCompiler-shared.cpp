@@ -24,9 +24,9 @@ BaselineCompilerShared::BaselineCompilerShared(JSContext *cx, HandleScript scrip
     pcMappingEntries_(),
     icLoadLabels_(),
     pushedBeforeCall_(0),
-    inCall_(false)
-{
-}
+    inCall_(false),
+    spsPushToggleOffset_()
+{ }
 
 bool
 BaselineCompilerShared::callVM(const VMFunction &fun)
