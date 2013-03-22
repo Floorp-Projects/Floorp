@@ -85,7 +85,7 @@ class TestMozbuildObject(unittest.TestCase):
         if sys.platform.startswith('darwin'):
             substs.append(('OS_ARCH', 'Darwin'))
             substs.append(('MOZ_MACBUNDLE_NAME', 'Nightly.app'))
-        elif sys.platform.startswith('win32', 'cygwin'):
+        elif sys.platform.startswith(('win32', 'cygwin')):
             substs.append(('BIN_SUFFIX', '.exe'))
 
         base._config_environment = ConfigEnvironment(base.topsrcdir,
@@ -94,7 +94,7 @@ class TestMozbuildObject(unittest.TestCase):
         p = base.get_binary_path('xpcshell', False)
         if platform.startswith('darwin'):
             self.assertTrue(p.endswith('Contents/MacOS/xpcshell'))
-        elif platform.startswith('win32', 'cygwin'):
+        elif platform.startswith(('win32', 'cygwin')):
             self.assertTrue(p.endswith('xpcshell.exe'))
         else:
             self.assertTrue(p.endswith('dist/bin/xpcshell'))
