@@ -5,11 +5,5 @@
 
 TEST_DIRS += ['test']
 
-XPIDL_SOURCES += [
-    'nsICapturePicker.idl',
-]
-
-XPIDL_MODULE = 'layout_forms'
-
 MODULE = 'layout'
 
