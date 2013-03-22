@@ -20,7 +20,7 @@
 #include "nsIPresShell.h"
 #include "nsIXMLContentSink.h"
 #include "nsContentCID.h"
-#include "nsXMLDocument.h"
+#include "mozilla/dom/XMLDocument.h"
 #include "nsIStreamListener.h"
 
 #include "nsXBLBinding.h"

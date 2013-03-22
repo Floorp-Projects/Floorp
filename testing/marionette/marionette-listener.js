@@ -110,6 +110,7 @@ function startListeners() {
   addMessageListenerId("Marionette:doubleTap", doubleTap);
   addMessageListenerId("Marionette:press", press);
   addMessageListenerId("Marionette:release", release);
+  addMessageListenerId("Marionette:cancelTouch", cancelTouch);
   addMessageListenerId("Marionette:actionChain", actionChain);
   addMessageListenerId("Marionette:multiAction", multiAction);
   addMessageListenerId("Marionette:setSearchTimeout", setSearchTimeout);
@@ -203,6 +204,7 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:doubleTap", doubleTap);
   removeMessageListenerId("Marionette:press", press);
   removeMessageListenerId("Marionette:release", release);
+  removeMessageListenerId("Marionette:cancelTouch", cancelTouch);
   removeMessageListenerId("Marionette:actionChain", actionChain);
   removeMessageListenerId("Marionette:multiAction", multiAction);
   removeMessageListenerId("Marionette:setSearchTimeout", setSearchTimeout);
@@ -892,7 +894,29 @@ function release(msg) {
       sendOk(msg.json.command_id);
     }
     else {
-      sendError("Element has not be pressed: InvalidElementCoordinates", 29, null, command_id);
+      sendError("Element has not been pressed: no such element", 7, null, command_id);
+    }
+  }
+  catch (e) {
+    sendError(e.message, e.code, e.stack, msg.json.command_id);
+  }
+}
+
+/**
+ * Function to cancel a touch event
+ */
+function cancelTouch(msg) {
+  let command_id = msg.json.command_id;
+  try {
+    let id = msg.json.touchId;
+    if (id in touchIds) {
+      let startTouch = touchIds[id];
+      emitTouchEvent('touchcancel', startTouch);
+      delete touchIds[id];
+      sendOk(msg.json.command_id);
+    }
+    else {
+      sendError("Element not previously interacted with", 7, null, command_id);
     }
   }
   catch (e) {
@@ -937,6 +961,7 @@ function actions(finger, touchId, command_id, i){
       break;
     case 'release':
       touch = lastTouch;
+      lastTouch = null;
       emitTouchEvent('touchend', touch);
       actions(finger, touchId, command_id, i);
       break;
@@ -975,6 +1000,12 @@ function actions(finger, touchId, command_id, i){
       else {
         actions(finger, touchId, command_id, i);
       }
+      break;
+    case 'cancel':
+      touch = lastTouch;
+      emitTouchEvent('touchcancel', touch);
+      lastTouch = null;
+      actions(finger, touchId, command_id, i);
       break;
   }
 }

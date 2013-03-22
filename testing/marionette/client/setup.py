@@ -13,7 +13,8 @@ except (OSError, IOError):
 # dependencies
 deps = ['manifestdestiny', 'mozhttpd >= 0.3',
         'mozprocess >= 0.6', 'mozrunner >= 5.11',
-        'mozdevice >= 0.12', 'moznetwork >= 0.21']
+        'mozdevice >= 0.12', 'moznetwork >= 0.21',
+        'mozcrash >= 0.5']
 
 setup(name='marionette_client',
       version=version,

@@ -56,7 +56,7 @@ MobileMessageService::CreateSmsMessage(int32_t aId,
 
 NS_IMETHODIMP
 MobileMessageService::CreateMmsMessage(int32_t               aId,
-                                       const nsAString&      aState,
+                                       const nsAString&      aDelivery,
                                        const JS::Value&      aDeliveryStatus,
                                        const nsAString&      aSender,
                                        const JS::Value&      aReceivers,
@@ -69,7 +69,7 @@ MobileMessageService::CreateMmsMessage(int32_t               aId,
                                        nsIDOMMozMmsMessage** aMessage)
 {
   return MmsMessage::Create(aId,
-                            aState,
+                            aDelivery,
                             aDeliveryStatus,
                             aSender,
                             aReceivers,

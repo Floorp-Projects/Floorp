@@ -26,8 +26,6 @@
 
 class nsAsyncInstantiateEvent;
 class nsStopPluginRunnable;
-class AutoNotifier;
-class AutoFallback;
 class AutoSetInstantiatingToFalse;
 class nsObjectFrame;
 class nsFrameLoader;
@@ -42,7 +40,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
 {
   friend class AutoSetInstantiatingToFalse;
   friend class AutoSetLoadingToFalse;
-  friend class InDocCheckEvent;
+  friend class CheckPluginStopEvent;
   friend class nsStopPluginRunnable;
   friend class nsAsyncInstantiateEvent;
 
@@ -133,12 +131,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     void NotifyOwnerDocumentActivityChanged();
 
     /**
-     * Used by pluginHost to know if we're loading with a channel, so it
-     * will not open its own.
-     */
-    bool SrcStreamLoading() { return mSrcStreamLoading; }
-
-    /**
      * When a plug-in is instantiated, it can create a scriptable
      * object that the page wants to interact with.  We expose this
      * object by placing it on the prototype chain of our element,
@@ -162,6 +154,9 @@ class nsObjectLoadingContent : public nsImageLoadingContent
 
     // Helper for WebIDL node wrapping
     void SetupProtoChain(JSContext* aCx, JSObject* aObject);
+
+    // Remove plugin from protochain
+    void TeardownProtoChain();
 
     // Helper for WebIDL newResolve
     bool DoNewResolve(JSContext* aCx, JSHandleObject aObject, JSHandleId aId,
@@ -454,8 +449,11 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     // Frame loader, for content documents we load.
     nsRefPtr<nsFrameLoader>     mFrameLoader;
 
-    // A pending nsAsyncInstantiateEvent (may be null).  This is a weak ref.
-    nsIRunnable                *mPendingInstantiateEvent;
+    // Track if we have a pending AsyncInstantiateEvent
+    nsCOMPtr<nsIRunnable>       mPendingInstantiateEvent;
+
+    // Tracks if we have a pending CheckPluginStopEvent
+    nsCOMPtr<nsIRunnable>       mPendingCheckPluginStopEvent;
 
     // The content type of our current load target, updated by
     // UpdateObjectParameters(). Takes the channel's type into account once
@@ -522,14 +520,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     // For plugin stand-in types (click-to-play, play preview, ...) tracks
     // whether content js has tried to access the plugin script object.
     bool                        mScriptRequested : 1;
-
-    // Used to track when we might try to instantiate a plugin instance based on
-    // a src data stream being delivered to this object. When this is true we
-    // don't want plugin instance instantiation code to attempt to load src data
-    // again or we'll deliver duplicate streams. Should be cleared when we are
-    // not loading src data.
-    bool                        mSrcStreamLoading : 1;
-
 
     nsWeakFrame                 mPrintFrame;
 

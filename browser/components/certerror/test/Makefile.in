@@ -13,6 +13,7 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _BROWSER_FILES = browser_bug431826.js \
+                 browser_bug633691.js \
     $(NULL)
 
 libs::	$(_BROWSER_FILES)

@@ -230,6 +230,9 @@
 #include "nsIControllers.h"
 #include "nsISelection.h"
 #include "nsIBoxObject.h"
+#ifdef MOZ_GAMEPAD
+#include "nsIDOMGamepad.h"
+#endif
 #ifdef MOZ_XUL
 #include "nsITreeSelection.h"
 #include "nsITreeContentView.h"
@@ -1056,6 +1059,11 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            ARRAY_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(TouchEvent, nsEventSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
+#ifdef MOZ_GAMEPAD
+  NS_DEFINE_CLASSINFO_DATA(Gamepad, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+#endif
 
   NS_DEFINE_CLASSINFO_DATA(MozCSSKeyframeRule, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -2662,6 +2670,12 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
+#ifdef MOZ_GAMEPAD
+  DOM_CLASSINFO_MAP_BEGIN(Gamepad, nsIDOMGamepad)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMGamepad)
+  DOM_CLASSINFO_MAP_END
+#endif
+
   DOM_CLASSINFO_MAP_BEGIN(MozCSSKeyframeRule, nsIDOMMozCSSKeyframeRule)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozCSSKeyframeRule)
   DOM_CLASSINFO_MAP_END
@@ -3606,9 +3620,14 @@ nsWindowSH::GlobalScopePolluterNewResolve(JSContext *cx, JSHandleObject obj,
     return JS_TRUE;
   }
 
+  // Crash reports from the wild seem to get here during shutdown when there's
+  // no more XPConnect singleton.
+  nsIXPConnect *xpc = XPConnect();
+  NS_ENSURE_TRUE(xpc, true);
+
   // Grab the DOM window.
   JSObject *global = JS_GetGlobalForObject(cx, obj);
-  nsISupports *globalNative = XPConnect()->GetNativeOfWrapper(cx, global);
+  nsISupports *globalNative = xpc->GetNativeOfWrapper(cx, global);
   nsCOMPtr<nsPIDOMWindow> piWin = do_QueryInterface(globalNative);
   MOZ_ASSERT(piWin);
   nsGlobalWindow* win = static_cast<nsGlobalWindow*>(piWin.get());

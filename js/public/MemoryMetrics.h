@@ -85,6 +85,20 @@ struct TypeInferenceSizes
     }
 };
 
+// Data for tracking JIT-code memory usage.
+struct CodeSizes
+{
+    size_t jaeger;
+    size_t ion;
+    size_t asmJS;
+    size_t baseline;
+    size_t regexp;
+    size_t other;
+    size_t unused;
+
+    CodeSizes() { memset(this, 0, sizeof(CodeSizes)); }
+};
+
 // Holds data about a huge string (one which uses more HugeStringInfo::MinSize
 // bytes of memory), so we can report it individually.
 struct HugeStringInfo
@@ -118,17 +132,14 @@ struct RuntimeSizes
     size_t contexts;
     size_t dtoa;
     size_t temporary;
-    size_t jaegerCode;
-    size_t ionCode;
-    size_t asmJSCode;
-    size_t regexpCode;
-    size_t unusedCode;
     size_t regexpData;
     size_t stack;
     size_t gcMarker;
     size_t mathCache;
     size_t scriptData;
     size_t scriptSources;
+
+    CodeSizes code;
 };
 
 struct ZoneStats

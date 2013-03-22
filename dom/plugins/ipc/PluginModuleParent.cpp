@@ -194,7 +194,7 @@ PluginModuleParent::WriteExtraDataForMinidump(AnnotationTable& notes)
     nsCString pluginName;
     nsCString pluginVersion;
 
-    nsRefPtr<nsPluginHost> ph = already_AddRefed<nsPluginHost>(nsPluginHost::GetInst());
+    nsRefPtr<nsPluginHost> ph = nsPluginHost::GetInst();
     if (ph) {
         nsPluginTag* tag = ph->TagForPlugin(mPlugin);
         if (tag) {
@@ -536,8 +536,7 @@ PluginModuleParent::EvaluateHangUIState(const bool aReset)
 bool
 PluginModuleParent::GetPluginName(nsAString& aPluginName)
 {
-    nsRefPtr<nsPluginHost> host = 
-        dont_AddRef<nsPluginHost>(nsPluginHost::GetInst());
+    nsRefPtr<nsPluginHost> host = nsPluginHost::GetInst();
     if (!host) {
         return false;
     }

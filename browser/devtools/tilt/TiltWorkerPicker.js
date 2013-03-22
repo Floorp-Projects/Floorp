@@ -14,7 +14,6 @@
 self.onmessage = function TWP_onMessage(event)
 {
   let data = event.data;
-  let thickness = data.thickness;
   let vertices = data.vertices;
   let ray = data.ray;
 
@@ -35,16 +34,16 @@ self.onmessage = function TWP_onMessage(event)
   for (let i = 0, len = vertices.length; i < len; i += 36) {
 
     // the front quad
-    let v0f = [vertices[i],     vertices[i + 1],  vertices[i + 2]];
-    let v1f = [vertices[i + 3], vertices[i + 4],  vertices[i + 5]];
-    let v2f = [vertices[i + 6], vertices[i + 7],  vertices[i + 8]];
-    let v3f = [vertices[i + 9], vertices[i + 10], vertices[i + 11]];
+    let v0f = [vertices[i],      vertices[i + 1],  vertices[i + 2]];
+    let v1f = [vertices[i + 3],  vertices[i + 4],  vertices[i + 5]];
+    let v2f = [vertices[i + 6],  vertices[i + 7],  vertices[i + 8]];
+    let v3f = [vertices[i + 9],  vertices[i + 10], vertices[i + 11]];
 
     // the back quad
-    let v0b = [v0f[0], v0f[1], v0f[2] - thickness];
-    let v1b = [v1f[0], v1f[1], v1f[2] - thickness];
-    let v2b = [v2f[0], v2f[1], v2f[2] - thickness];
-    let v3b = [v3f[0], v3f[1], v3f[2] - thickness];
+    let v0b = [vertices[i + 24], vertices[i + 25], vertices[i + 26]];
+    let v1b = [vertices[i + 27], vertices[i + 28], vertices[i + 29]];
+    let v2b = [vertices[i + 30], vertices[i + 31], vertices[i + 32]];
+    let v3b = [vertices[i + 33], vertices[i + 34], vertices[i + 35]];
 
     // don't do anything with degenerate quads
     if (!v0f[0] && !v1f[0] && !v2f[0] && !v3f[0]) {

@@ -35,7 +35,7 @@ nsSVGGFrame::Init(nsIContent* aContent,
 {
   nsCOMPtr<SVGTransformableElement> transformable = do_QueryInterface(aContent);
   NS_ASSERTION(transformable,
-               "The element doesn't support nsIDOMSVGTransformable\n");
+               "The element doesn't support nsIDOMSVGTransformable");
 
   nsSVGGFrameBase::Init(aContent, aParent, aPrevInFlow);
 }

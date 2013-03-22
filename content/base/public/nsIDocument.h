@@ -2145,6 +2145,10 @@ protected:
     mDirectionality = aDir;
   }
 
+  // All document WrapNode implementations MUST call this method.  A
+  // false return value means an exception was thrown.
+  bool PostCreateWrapper(JSContext* aCx, JSObject *aNewObject);
+
   nsCString mReferrer;
   nsString mLastModified;
 
@@ -2222,7 +2226,7 @@ protected:
   // as scripts and plugins, disabled.
   bool mLoadedAsData;
 
-  // This flag is only set in nsXMLDocument, for e.g. documents used in XBL. We
+  // This flag is only set in XMLDocument, for e.g. documents used in XBL. We
   // don't want animations to play in such documents, so we need to store the
   // flag here so that we can check it in nsDocument::GetAnimationController.
   bool mLoadedAsInteractiveData;

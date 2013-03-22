@@ -9,7 +9,6 @@
 
 #include "nsCOMPtr.h"
 #include "Decoder.h"
-#include "imgDecoderObserver.h"
 
 #include "GIF2.h"
 
@@ -24,7 +23,7 @@ class nsGIFDecoder2 : public Decoder
 {
 public:
 
-  nsGIFDecoder2(RasterImage &aImage, imgDecoderObserver* aObserver);
+  nsGIFDecoder2(RasterImage &aImage);
   ~nsGIFDecoder2();
 
   virtual void WriteInternal(const char* aBuffer, uint32_t aCount);
@@ -36,7 +35,7 @@ private:
    * frame size information, etc. */
 
   void      BeginGIF();
-  nsresult  BeginImageFrame(uint16_t aDepth);
+  void      BeginImageFrame(uint16_t aDepth);
   void      EndImageFrame();
   void      FlushImageData();
   void      FlushImageData(uint32_t fromRow, uint32_t rows);
@@ -44,15 +43,14 @@ private:
   nsresult  GifWrite(const uint8_t * buf, uint32_t numbytes);
   uint32_t  OutputRow();
   bool      DoLzw(const uint8_t *q);
+  bool      SetHold(const uint8_t* buf, uint32_t count,
+                    const uint8_t* buf2 = nullptr, uint32_t count2 = 0);
 
   inline int ClearCode() const { return 1 << mGIFStruct.datasize; }
 
   int32_t mCurrentRow;
   int32_t mLastFlushedRow;
 
-  uint8_t *mImageData;       // Pointer to image data in either Cairo or 8bit format
-  uint32_t *mColormap;       // Current colormap to be used in Cairo format
-  uint32_t mColormapSize;
   uint32_t mOldColor;        // The old value of the transparent pixel
 
   // The frame number of the currently-decoding frame when we're in the middle

@@ -68,7 +68,7 @@ BaselineCompiler::compile()
         return Method_Error;
 
     Linker linker(masm);
-    IonCode *code = linker.newCode(cx);
+    IonCode *code = linker.newCode(cx, JSC::BASELINE_CODE);
     if (!code)
         return Method_Error;
 

@@ -17,6 +17,7 @@
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/Util.h"
 #include "mozilla/ErrorResult.h"
+#include "WebAudioUtils.h"
 
 struct JSContext;
 class nsIDOMWindow;
@@ -65,7 +66,8 @@ public:
   void SetValue(float aValue)
   {
     // Optimize away setting the same value on an AudioParam
-    if (HasSimpleValue() && fabsf(GetValue() - aValue) < 1e-7) {
+    if (HasSimpleValue() &&
+        WebAudioUtils::FuzzyEqual(GetValue(), aValue)) {
       return;
     }
     AudioParamTimeline::SetValue(aValue);

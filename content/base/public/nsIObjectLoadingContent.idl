@@ -101,8 +101,6 @@ interface nsIObjectLoadingContent : nsISupports
    */
   [noscript] void hasNewFrame(in nsIObjectFrame aFrame);
 
-  [noscript] void disconnectFrame();
-
   /**
    * If this object is in going to be printed, this method
    * returns the nsIObjectFrame object which should be used when
@@ -111,6 +109,10 @@ interface nsIObjectLoadingContent : nsISupports
    */
   [noscript] nsIFrame getPrintFrame();
 
+  /*
+   * Notifications from pluginhost that our instance crashed or was destroyed.
+   */
+  [noscript] void pluginDestroyed();
   [noscript] void pluginCrashed(in nsIPluginTag pluginTag,
                                 in AString pluginDumpID,
                                 in AString browserDumpID,

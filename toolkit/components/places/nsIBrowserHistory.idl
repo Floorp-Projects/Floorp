@@ -10,8 +10,8 @@
 #include "nsISupports.idl"
 #include "nsIGlobalHistory2.idl"
 
-[scriptable, uuid(837ea2db-c4c7-4f4c-8982-6c8c73e8f5d3)]
-interface nsIBrowserHistory : nsIGlobalHistory2
+[scriptable, uuid(20d31479-38de-49f4-9300-566d6e834c66)]
+interface nsIBrowserHistory : nsISupports
 {
     /**
      * Removes a page from global history.

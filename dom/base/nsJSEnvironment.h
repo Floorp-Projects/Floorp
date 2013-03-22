@@ -56,7 +56,7 @@ public:
                                  const char *aURL,
                                  uint32_t aLineNo,
                                  uint32_t aVersion,
-                                 nsScriptObjectHolder<JSScript>& aScriptObject,
+                                 JS::MutableHandle<JSScript*> aScriptObject,
                                  bool aSaveSource = false);
   virtual nsresult ExecuteScript(JSScript* aScriptObject,
                                  JSObject* aScopeObject);
@@ -67,7 +67,7 @@ public:
   virtual nsresult BindCompiledEventHandler(nsISupports *aTarget,
                                             JSObject *aScope,
                                             JSObject* aHandler,
-                                            nsScriptObjectHolder<JSObject>& aBoundHandler);
+                                            JS::MutableHandle<JSObject*> aBoundHandler);
 
   virtual nsIScriptGlobalObject *GetGlobalObject();
   inline nsIScriptGlobalObject *GetGlobalObjectRef() { return mGlobalObjectRef; }
@@ -97,7 +97,7 @@ public:
 
   virtual nsresult Serialize(nsIObjectOutputStream* aStream, JSScript* aScriptObject);
   virtual nsresult Deserialize(nsIObjectInputStream* aStream,
-                               nsScriptObjectHolder<JSScript>& aResult);
+                               JS::MutableHandle<JSScript*> aResult);
 
   virtual nsresult DropScriptObject(void *object);
   virtual nsresult HoldScriptObject(void *object);

@@ -126,11 +126,11 @@ nsViewManager::Init(nsDeviceContext* aContext)
 
 nsView*
 nsViewManager::CreateView(const nsRect& aBounds,
-                          const nsView* aParent,
+                          nsView* aParent,
                           nsViewVisibility aVisibilityFlag)
 {
   nsView *v = new nsView(this, aVisibilityFlag);
-  v->SetParent(const_cast<nsView*>(aParent));
+  v->SetParent(aParent);
   v->SetPosition(aBounds.x, aBounds.y);
   nsRect dim(0, 0, aBounds.width, aBounds.height);
   v->SetDimensions(dim, false);

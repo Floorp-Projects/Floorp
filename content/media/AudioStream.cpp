@@ -90,7 +90,7 @@ static uint32_t GetCubebLatency()
 }
 #endif
 
-#if defined(MOZ_CUBEB) && (__ANDROID__)
+#if defined(MOZ_CUBEB) && defined(__ANDROID__) && defined(MOZ_B2G)
 static cubeb_stream_type ConvertChannelToCubebType(dom::AudioChannelType aType)
 {
   switch(aType) {
@@ -441,7 +441,11 @@ BufferedAudioStream::Init(int32_t aNumChannels, int32_t aRate,
   params.rate = aRate;
   params.channels = aNumChannels;
 #if defined(__ANDROID__)
+#if defined(MOZ_B2G)
   params.stream_type = ConvertChannelToCubebType(aAudioChannelType);
+#else
+  params.stream_type = CUBEB_STREAM_TYPE_MUSIC;
+#endif
 
   if (params.stream_type == CUBEB_STREAM_TYPE_MAX) {
     return NS_ERROR_INVALID_ARG;

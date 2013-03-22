@@ -27,6 +27,8 @@ using mozilla::DebugOnly;
 
 void * const js::NullPtr::constNullValue = NULL;
 
+JS_PUBLIC_DATA(void * const) JS::NullPtr::constNullValue = NULL;
+
 /*
  * There are two mostly separate mark paths. The first is a fast path used
  * internally in the GC. The second is a slow path used for root marking and

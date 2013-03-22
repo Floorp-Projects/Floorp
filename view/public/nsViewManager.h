@@ -53,7 +53,7 @@ public:
    * @result The new view.  Never null.
    */
   nsView* CreateView(const nsRect& aBounds,
-                     const nsView* aParent,
+                     nsView* aParent,
                      nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow);
 
   /**

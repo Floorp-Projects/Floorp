@@ -118,6 +118,24 @@ class HandleBase {};
 template <typename T>
 class MutableHandleBase {};
 
+/*
+ * js::NullPtr acts like a NULL pointer in contexts that require a Handle.
+ *
+ * Handle provides an implicit constructor for js::NullPtr so that, given:
+ *   foo(Handle<JSObject*> h);
+ * callers can simply write:
+ *   foo(js::NullPtr());
+ * which avoids creating a Rooted<JSObject*> just to pass NULL.
+ *
+ * This is the SpiderMonkey internal variant. js::NullPtr should be used in
+ * preference to JS::NullPtr to avoid the GOT access required for JS_PUBLIC_API
+ * symbols.
+ */
+struct NullPtr
+{
+    static void * const constNullValue;
+};
+
 } /* namespace js */
 
 namespace JS {
@@ -136,13 +154,15 @@ CheckStackRoots(JSContext *cx);
 #endif
 
 /*
- * Handle provides an implicit constructor for NullPtr so that, given:
+ * JS::NullPtr acts like a NULL pointer in contexts that require a Handle.
+ *
+ * Handle provides an implicit constructor for JS::NullPtr so that, given:
  *   foo(Handle<JSObject*> h);
  * callers can simply write:
- *   foo(NullPtr());
+ *   foo(JS::NullPtr());
  * which avoids creating a Rooted<JSObject*> just to pass NULL.
  */
-struct NullPtr
+struct JS_PUBLIC_API(NullPtr)
 {
     static void * const constNullValue;
 };
@@ -170,9 +190,15 @@ class Handle : public js::HandleBase<T>
     }
 
     /* Create a handle for a NULL pointer. */
-    Handle(NullPtr) {
+    Handle(js::NullPtr) {
         typedef typename js::tl::StaticAssert<mozilla::IsPointer<T>::value>::result _;
-        ptr = reinterpret_cast<const T *>(&NullPtr::constNullValue);
+        ptr = reinterpret_cast<const T *>(&js::NullPtr::constNullValue);
+    }
+
+    /* Create a handle for a NULL pointer. */
+    Handle(JS::NullPtr) {
+        typedef typename js::tl::StaticAssert<mozilla::IsPointer<T>::value>::result _;
+        ptr = reinterpret_cast<const T *>(&JS::NullPtr::constNullValue);
     }
 
     Handle(MutableHandle<T> handle) {
@@ -353,7 +379,7 @@ class InternalHandle<T*>
      * fromMarkedLocation().
      */
     InternalHandle(T *field)
-      : holder(reinterpret_cast<void * const *>(&JS::NullPtr::constNullValue)),
+      : holder(reinterpret_cast<void * const *>(&js::NullPtr::constNullValue)),
         offset(uintptr_t(field))
     {}
 };

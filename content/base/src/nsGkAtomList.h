@@ -1895,6 +1895,13 @@ GK_ATOM(canplaythrough, "canplaythrough")
 GK_ATOM(ratechange, "ratechange")
 GK_ATOM(durationchange, "durationchange")
 GK_ATOM(volumechange, "volumechange")
+#ifdef MOZ_GAMEPAD
+GK_ATOM(ongamepadbuttondown, "ongamepadbuttondown")
+GK_ATOM(ongamepadbuttonup, "ongamepadbuttonup")
+GK_ATOM(ongamepadaxismove, "ongamepadaxismove")
+GK_ATOM(ongamepadconnected, "ongamepadconnected")
+GK_ATOM(ongamepaddisconnected, "ongamepaddisconnected")
+#endif
 
 // Content property names
 GK_ATOM(animationsProperty, "AnimationsProperty")        // FrameAnimations*

@@ -55,7 +55,7 @@ def attributeVariableTypeAndName(a):
         l = ["nsCOMPtr<%s> %s" % (a.realtype.nativeType('in').strip('* '),
                    a.name)]
     elif a.realtype.nativeType('in').count("nsAString"):
-        l = ["nsAutoString %s" % a.name]
+        l = ["nsString %s" % a.name]
     elif a.realtype.nativeType('in').count("JS::Value"):
         l = ["JS::Value %s" % a.name]
     else:

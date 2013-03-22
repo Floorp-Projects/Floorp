@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta name="viewport" content="width=320,height=320" />
   <title>Bug 602580 - Test getting and setting innerWidth and Height after using setCSSViewport</title>
   <script class="testbody" type="text/javascript">
   function runSubTest()
@@ -8,8 +9,8 @@
     // get ability to set innerWidth and height without setting a pref
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
-    // Firefox doesn't support the metaviewport tag, so we force a css viewport
-    // here using nsIDomWindowUtils
+    // Firefox doesn't support the metaviewport tag on desktop, so we force
+    // css viewport here using nsIDomWindowUtils
     var cwu = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
                      getInterface(Components.interfaces.nsIDOMWindowUtils);
     cwu.setCSSViewport(320, 320);

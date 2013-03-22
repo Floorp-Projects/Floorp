@@ -33,8 +33,8 @@ fails-if(Android) == rotatex-perspective-3a.html rotatex-perspective-3-ref.html 
 skip-if(B2G) == preserve3d-4a.html green-rect.html
 == preserve3d-5a.html preserve3d-5-ref.html
 == scale3d-z.html scalez-1-ref.html
-fuzzy-if(winWidget&&!layersGPUAccelerated,102,580) fuzzy-if(d2d,52,681) fails-if(Android) fuzzy-if(OSX==10.8,145,752) == scale3d-all.html scale3d-1-ref.html # subpixel AA
-fuzzy-if(winWidget&&!layersGPUAccelerated,102,580) fuzzy-if(d2d,52,681) fails-if(Android) fuzzy-if(OSX==10.8,145,752) == scale3d-all-separate.html scale3d-1-ref.html # subpixel AA
+fuzzy-if(winWidget&&!layersGPUAccelerated,102,580) fuzzy-if(d2d,143,681) fails-if(Android) fuzzy-if(OSX==10.8,145,752) == scale3d-all.html scale3d-1-ref.html # subpixel AA
+fuzzy-if(winWidget&&!layersGPUAccelerated,102,580) fuzzy-if(d2d,143,681) fails-if(Android) fuzzy-if(OSX==10.8,145,752) == scale3d-all-separate.html scale3d-1-ref.html # subpixel AA
 == scale3d-xz.html scale3d-1-ref.html
 == translatez-1a.html translatez-1-ref.html
 != translatez-1b.html translatez-1-ref.html

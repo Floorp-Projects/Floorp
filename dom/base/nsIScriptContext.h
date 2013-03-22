@@ -23,7 +23,6 @@ class nsIArray;
 class nsIVariant;
 class nsIObjectInputStream;
 class nsIObjectOutputStream;
-template<class> class nsScriptObjectHolder;
 class nsIScriptObjectPrincipal;
 class nsIDOMWindow;
 class nsIURI;
@@ -46,8 +45,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptContextPrincipal,
                               NS_ISCRIPTCONTEXTPRINCIPAL_IID)
 
 #define NS_ISCRIPTCONTEXT_IID \
-{ 0xa2210341, 0x3123, 0x4477, \
-    { 0xb5, 0xa9, 0x91, 0x95, 0xbd, 0x77, 0xb1, 0xe6 } }
+{ 0xf5af1c3c, 0xebad, 0x4d00, \
+  { 0xa2, 0xa4, 0x12, 0x2e, 0x27, 0x16, 0x59, 0x01 } }
 
 /* This MUST match JSVERSION_DEFAULT.  This version stuff if we don't
    know what language we have is a little silly... */
@@ -104,7 +103,7 @@ public:
                                  const char* aURL,
                                  uint32_t aLineNo,
                                  uint32_t aVersion,
-                                 nsScriptObjectHolder<JSScript>& aScriptObject,
+                                 JS::MutableHandle<JSScript*> aScriptObject,
                                  bool aSaveSource = false) = 0;
 
   /**
@@ -164,7 +163,7 @@ public:
   virtual nsresult BindCompiledEventHandler(nsISupports* aTarget,
                                             JSObject* aScope,
                                             JSObject* aHandler,
-                                            nsScriptObjectHolder<JSObject>& aBoundHandler) = 0;
+                                            JS::MutableHandle<JSObject*> aBoundHandler) = 0;
 
   /**
    * Return the global object.
@@ -226,7 +225,7 @@ public:
   /* Deserialize a script from a stream.
    */
   virtual nsresult Deserialize(nsIObjectInputStream* aStream,
-                               nsScriptObjectHolder<JSScript>& aResult) = 0;
+                               JS::MutableHandle<JSScript*> aResult) = 0;
 
   /**
    * JS only - this function need not be implemented by languages other
@@ -285,7 +284,6 @@ public:
    *
    * See also nsIScriptRuntime, which has identical methods and is useful
    * in situations when you do not have an nsIScriptContext.
-   * 
    */
   virtual nsresult DropScriptObject(void *object) = 0;
   virtual nsresult HoldScriptObject(void *object) = 0;

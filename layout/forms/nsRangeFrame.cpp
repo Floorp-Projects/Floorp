@@ -247,7 +247,7 @@ nsRangeFrame::ReflowAnonymousContent(nsPresContext*           aPresContext,
                                        nsSize(aReflowState.ComputedWidth(),
                                               NS_UNCONSTRAINEDSIZE));
 
-    // Where we position of the thumb depends on its size, so we first reflow
+    // Where we position the thumb depends on its size, so we first reflow
     // the thumb at {0,0} to obtain its size, then position it afterwards.
 
     nsReflowStatus frameStatus = NS_FRAME_COMPLETE;

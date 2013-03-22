@@ -45,9 +45,11 @@ function ImageListener(start_callback, stop_callback)
   {
     do_check_false(this.synchronous);
 
-    // We have to cancel the request when we're done with it to break any
-    // reference loops!
-    aRequest.cancelAndForgetObserver(0);
+    try {
+      aRequest.requestDecode();
+    } catch (e) {
+      do_print("requestDecode threw " + e);
+    }
 
     this.state |= LOAD_COMPLETE;
 

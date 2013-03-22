@@ -252,6 +252,8 @@ To see more help for a specific command, run:
 
         if args.command == 'help':
             if args.subcommand is None:
+                parser.usage = \
+                    '%(prog)s [global arguments] command [command arguments]'
                 parser.print_help()
                 return 0
 
@@ -418,7 +420,7 @@ To see more help for a specific command, run:
         """Returns an argument parser for the command-line interface."""
 
         parser = ArgumentParser(add_help=False,
-            usage='%(prog)s [global arguments] command [command arguments]')
+            usage='%(prog)s [global arguments]')
 
         # Order is important here as it dictates the order the auto-generated
         # help messages are printed.
