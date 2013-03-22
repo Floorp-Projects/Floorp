@@ -1180,7 +1180,6 @@ ContainerState::CreateOrRecycleColorLayer(ThebesLayer *aThebes)
       static_cast<ThebesDisplayItemLayerUserData*>(aThebes->GetUserData(&gThebesDisplayItemLayerUserData));
   nsRefPtr<ColorLayer> layer = data->mColorLayer;
   if (layer) {
-    layer->SetClipRect(nullptr);
     layer->SetMaskLayer(nullptr);
   } else {
     // Create a new layer
@@ -1204,7 +1203,6 @@ ContainerState::CreateOrRecycleImageLayer(ThebesLayer *aThebes)
       static_cast<ThebesDisplayItemLayerUserData*>(aThebes->GetUserData(&gThebesDisplayItemLayerUserData));
   nsRefPtr<ImageLayer> layer = data->mImageLayer;
   if (layer) {
-    layer->SetClipRect(nullptr);
     layer->SetMaskLayer(nullptr);
   } else {
     // Create a new layer
@@ -1305,7 +1303,6 @@ ContainerState::CreateOrRecycleThebesLayer(const nsIFrame* aActiveScrolledRoot,
     ++mNextFreeRecycledThebesLayer;
     // Clear clip rect and mask layer so we don't accidentally stay clipped.
     // We will reapply any necessary clipping.
-    layer->SetClipRect(nullptr);
     layer->SetMaskLayer(nullptr);
 
     data = static_cast<ThebesDisplayItemLayerUserData*>
@@ -1572,7 +1569,9 @@ ContainerState::PopThebesLayerData()
       if (data->mItemClip.mHaveClipRect) {
         nsIntRect clip = ScaleToNearestPixels(data->mItemClip.mClipRect);
         clip.MoveBy(mParameters.mOffset);
-        imageLayer->IntersectClipRect(clip);
+        imageLayer->SetClipRect(&clip);
+      } else {
+        imageLayer->SetClipRect(nullptr);
       }
       layer = imageLayer;
       mLayerBuilder->StoreOptimizedLayerForFrame(data->mImage,
@@ -1606,11 +1605,13 @@ ContainerState::PopThebesLayerData()
 
     // Hide the ThebesLayer. We leave it in the layer tree so that we
     // can find and recycle it later.
-    data->mLayer->IntersectClipRect(nsIntRect());
+    nsIntRect emptyRect;
+    data->mLayer->SetClipRect(&emptyRect);
     data->mLayer->SetVisibleRegion(nsIntRegion());
   } else {
     layer = data->mLayer;
     imageContainer = nullptr;
+    layer->SetClipRect(nullptr);
   }
 
   gfxMatrix transform;
