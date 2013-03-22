@@ -1,10 +1,12 @@
 # Register Firefox Health Report providers.
-category healthreport-js-provider AddonsProvider resource://gre/modules/HealthReport.jsm
-category healthreport-js-provider AppInfoProvider resource://gre/modules/HealthReport.jsm
-category healthreport-js-provider CrashesProvider resource://gre/modules/HealthReport.jsm
-category healthreport-js-provider SysInfoProvider resource://gre/modules/HealthReport.jsm
-category healthreport-js-provider ProfileMetadataProvider resource://gre/modules/HealthReport.jsm
-category healthreport-js-provider SearchesProvider resource://gre/modules/HealthReport.jsm
-category healthreport-js-provider SessionsProvider resource://gre/modules/HealthReport.jsm
-category healthreport-js-provider PlacesProvider resource://gre/modules/HealthReport.jsm
+category healthreport-js-provider-default AddonsProvider resource://gre/modules/HealthReport.jsm
+category healthreport-js-provider-default AppInfoProvider resource://gre/modules/HealthReport.jsm
+category healthreport-js-provider-default CrashesProvider resource://gre/modules/HealthReport.jsm
+category healthreport-js-provider-default PlacesProvider resource://gre/modules/HealthReport.jsm
+category healthreport-js-provider-default ProfileMetadataProvider resource://gre/modules/HealthReport.jsm
+category healthreport-js-provider-default SearchesProvider resource://gre/modules/HealthReport.jsm
+category healthreport-js-provider-default SessionsProvider resource://gre/modules/HealthReport.jsm
+category healthreport-js-provider-default SysInfoProvider resource://gre/modules/HealthReport.jsm
 
+# No Aurora or Beta providers yet; use the categories
+# "healthreport-js-provider-aurora", "healthreport-js-provider-beta".
