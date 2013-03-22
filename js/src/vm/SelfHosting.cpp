@@ -605,6 +605,7 @@ CloneProperties(JSContext *cx, HandleObject obj, HandleObject clone, CloneMemory
     }
     return true;
 }
+
 static RawObject
 CloneObject(JSContext *cx, HandleObject srcObj, CloneMemory &clonedObjects)
 {
@@ -638,7 +639,7 @@ CloneObject(JSContext *cx, HandleObject srcObj, CloneMemory &clonedObjects)
     } else {
         JS_ASSERT(srcObj->isNative());
         clone = NewObjectWithClassProto(cx, srcObj->getClass(), NULL, cx->global(),
-                                        srcObj->getAllocKind());
+                                        srcObj->tenuredGetAllocKind());
     }
     if (!clone || !clonedObjects.relookupOrAdd(p, srcObj.get(), clone.get()) ||
         !CloneProperties(cx, srcObj, clone, clonedObjects))

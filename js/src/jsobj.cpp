@@ -1724,7 +1724,7 @@ js::CloneObjectLiteral(JSContext *cx, HandleObject parent, HandleObject srcObj)
     Rooted<TypeObject*> typeObj(cx);
     typeObj = cx->global()->getOrCreateObjectPrototype(cx)->getNewType(cx, &ObjectClass);
     RootedShape shape(cx, srcObj->lastProperty());
-    return NewReshapedObject(cx, typeObj, parent, srcObj->getAllocKind(), shape);
+    return NewReshapedObject(cx, typeObj, parent, srcObj->tenuredGetAllocKind(), shape);
 }
 
 struct JSObject::TradeGutsReserved {
@@ -1794,7 +1794,7 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *aArg, JSObject *bArg,
     if (!SetClassAndProto(cx, b, aClass, aProto, false))
         return false;
 
-    if (a->sizeOfThis() == b->sizeOfThis())
+    if (a->tenuredSizeOfThis() == b->tenuredSizeOfThis())
         return true;
 
     /*
@@ -1890,7 +1890,7 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
     b->type_ = tmp;
 
     /* Don't try to swap a JSFunction for a plain function JSObject. */
-    JS_ASSERT_IF(a->isFunction(), a->sizeOfThis() == b->sizeOfThis());
+    JS_ASSERT_IF(a->isFunction(), a->tenuredSizeOfThis() == b->tenuredSizeOfThis());
 
     /*
      * Regexp guts are more complicated -- we would need to migrate the
@@ -1909,8 +1909,8 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
     JS_ASSERT(!a->isArrayBuffer() && !b->isArrayBuffer());
 
     /* Trade the guts of the objects. */
-    const size_t size = a->sizeOfThis();
-    if (size == b->sizeOfThis()) {
+    const size_t size = a->tenuredSizeOfThis();
+    if (size == b->tenuredSizeOfThis()) {
         /*
          * If the objects are the same size, then we make no assumptions about
          * whether they have dynamically allocated slots and instead just copy
@@ -2009,8 +2009,8 @@ JSObject::swap(JSContext *cx, HandleObject a, HandleObject b)
     AutoMarkInDeadZone adc2(b->zone());
 
     // Ensure swap doesn't cause a finalizer to not be run.
-    JS_ASSERT(IsBackgroundFinalized(a->getAllocKind()) ==
-              IsBackgroundFinalized(b->getAllocKind()));
+    JS_ASSERT(IsBackgroundFinalized(a->tenuredGetAllocKind()) ==
+              IsBackgroundFinalized(b->tenuredGetAllocKind()));
     JS_ASSERT(a->compartment() == b->compartment());
 
     unsigned r = NotifyGCPreSwap(a, b);
