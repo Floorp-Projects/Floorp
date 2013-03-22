@@ -601,6 +601,16 @@ XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
         return;
       }
 
+      // replaces ~ with the home directory path in unix and windows
+      if (dirName.indexOf("~") == 0) {
+        let dirService = Cc["@mozilla.org/file/directory_service;1"]
+                          .getService(Ci.nsIProperties);
+        let homeDirFile = dirService.get("Home", Ci.nsIFile);
+        let homeDir = homeDirFile.path;
+        dirName = dirName.substr(1);
+        dirName = homeDir + dirName;
+      }
+
       let promise = OS.File.stat(dirName);
       promise = promise.then(
         function onSuccess(stat) {
