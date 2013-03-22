@@ -54,6 +54,10 @@ EXTRA_COMPONENTS := \
   HealthReportComponents.manifest \
   $(NULL)
 
+EXTRA_PP_COMPONENTS := \
+  healthreport-prefs.js \
+  $(NULL)
+
 include $(topsrcdir)/config/rules.mk
 
 # Add extra prerequisites until bug 837792 is addressed.
