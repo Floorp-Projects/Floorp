@@ -444,6 +444,7 @@ ShadowCanvasLayerOGL::Swap(const CanvasSurface& aNewFront,
       SurfaceStreamHandle handle = (SurfaceStreamHandle)nullptr;
       mFrontBufferDescriptor = SurfaceStreamDescriptor(handle, false);
     }
+    *aNewBack = mFrontBufferDescriptor;
     mFrontBufferDescriptor = aNewFront;
     mNeedsYFlip = needYFlip;
   } else {

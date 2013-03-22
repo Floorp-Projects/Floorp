@@ -8,7 +8,6 @@
 #include "gfxPoint.h"
 #include "SharedSurface.h"
 #include "SurfaceFactory.h"
-#include "sampler.h"
 
 namespace mozilla {
 namespace gfx {
@@ -21,7 +20,7 @@ SurfaceStream::ChooseGLStreamType(SurfaceStream::OMTC omtc,
         if (preserveBuffer)
             return SurfaceStreamType::TripleBuffer_Copy;
         else
-            return SurfaceStreamType::TripleBuffer_Async;
+            return SurfaceStreamType::TripleBuffer;
     } else {
         if (preserveBuffer)
             return SurfaceStreamType::SingleBuffer;
@@ -38,8 +37,6 @@ SurfaceStream::CreateForType(SurfaceStreamType type, SurfaceStream* prevStream)
             return new SurfaceStream_SingleBuffer(prevStream);
         case SurfaceStreamType::TripleBuffer_Copy:
             return new SurfaceStream_TripleBuffer_Copy(prevStream);
-        case SurfaceStreamType::TripleBuffer_Async:
-            return new SurfaceStream_TripleBuffer_Async(prevStream);
         case SurfaceStreamType::TripleBuffer:
             return new SurfaceStream_TripleBuffer(prevStream);
         default:
@@ -161,18 +158,7 @@ SurfaceStream::SwapConsumer()
     return ret;
 }
 
-SharedSurface*
-SurfaceStream::Resize(SurfaceFactory* factory, const gfxIntSize& size)
-{
-    MonitorAutoLock lock(mMonitor);
 
-    if (mProducer) {
-        Scrap(mProducer);
-    }
-
-    New(factory, size, mProducer);
-    return mProducer;
-}
 
 SurfaceStream_SingleBuffer::SurfaceStream_SingleBuffer(SurfaceStream* prevStream)
     : SurfaceStream(SurfaceStreamType::SingleBuffer, prevStream)
@@ -214,7 +200,7 @@ SharedSurface*
 SurfaceStream_SingleBuffer::SwapProducer(SurfaceFactory* factory,
                                          const gfxIntSize& size)
 {
-    MonitorAutoLock lock(mMonitor);
+    MutexAutoLock lock(mMutex);
     if (mConsumer) {
         Recycle(factory, mConsumer);
     }
@@ -252,7 +238,7 @@ SurfaceStream_SingleBuffer::SwapProducer(SurfaceFactory* factory,
 SharedSurface*
 SurfaceStream_SingleBuffer::SwapConsumer_NoWait()
 {
-    MonitorAutoLock lock(mMonitor);
+    MutexAutoLock lock(mMutex);
 
     // Use Cons, if present.
     // Otherwise, just use Prod directly.
@@ -307,7 +293,7 @@ SharedSurface*
 SurfaceStream_TripleBuffer_Copy::SwapProducer(SurfaceFactory* factory,
                                               const gfxIntSize& size)
 {
-    MonitorAutoLock lock(mMonitor);
+    MutexAutoLock lock(mMutex);
 
     RecycleScraps(factory);
     if (mProducer) {
@@ -337,11 +323,10 @@ SurfaceStream_TripleBuffer_Copy::SwapProducer(SurfaceFactory* factory,
     return mProducer;
 }
 
-
 SharedSurface*
 SurfaceStream_TripleBuffer_Copy::SwapConsumer_NoWait()
 {
-    MonitorAutoLock lock(mMonitor);
+    MutexAutoLock lock(mMutex);
 
     if (mStaging) {
         Scrap(mConsumer);
@@ -395,18 +380,13 @@ SharedSurface*
 SurfaceStream_TripleBuffer::SwapProducer(SurfaceFactory* factory,
                                          const gfxIntSize& size)
 {
-    SAMPLE_LABEL("SurfaceStream_TripleBuffer", "SwapProducer");
-
-    MonitorAutoLock lock(mMonitor);
+    MutexAutoLock lock(mMutex);
     if (mProducer) {
         RecycleScraps(factory);
 
-        // If WaitForCompositor succeeds, mStaging has moved to mConsumer.
-        // If it failed, we might have to scrap it.
-        if (mStaging && !WaitForCompositor())
-            Scrap(mStaging);
+        if (mStaging)
+            Recycle(factory, mStaging);
 
-        MOZ_ASSERT(!mStaging);
         Move(mProducer, mStaging);
         mStaging->Fence();
     }
@@ -420,35 +400,13 @@ SurfaceStream_TripleBuffer::SwapProducer(SurfaceFactory* factory,
 SharedSurface*
 SurfaceStream_TripleBuffer::SwapConsumer_NoWait()
 {
-    MonitorAutoLock lock(mMonitor);
+    MutexAutoLock lock(mMutex);
     if (mStaging) {
         Scrap(mConsumer);
         Move(mStaging, mConsumer);
-        mMonitor.NotifyAll();
     }
 
     return mConsumer;
-}
-
-SurfaceStream_TripleBuffer_Async::SurfaceStream_TripleBuffer_Async(SurfaceStream* prevStream)
-    : SurfaceStream_TripleBuffer(prevStream)
-{
-}
-
-SurfaceStream_TripleBuffer_Async::~SurfaceStream_TripleBuffer_Async()
-{
-}
-
-bool
-SurfaceStream_TripleBuffer_Async::WaitForCompositor()
-{
-    SAMPLE_LABEL("SurfaceStream_TripleBuffer_Async", "WaitForCompositor");
-
-    // We are assumed to be locked
-    while (mStaging)
-        mMonitor.Wait();
-
-    return true;
 }
 
 } /* namespace gfx */

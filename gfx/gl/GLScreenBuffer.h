@@ -265,13 +265,9 @@ protected:
 public:
     bool PublishFrame(const gfxIntSize& size);
 
-    bool Resize(const gfxIntSize& size);
-
     void Readback(SharedSurface_GL* src, gfxImageSurface* dest);
 
 protected:
-    void Attach(SharedSurface* surface, const gfxIntSize& size);
-
     DrawBuffer* CreateDraw(const gfxIntSize& size);
     ReadBuffer* CreateRead(SharedSurface_GL* surf);
 
