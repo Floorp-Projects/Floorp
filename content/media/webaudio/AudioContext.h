@@ -69,6 +69,9 @@ public:
     mDecoder.Shutdown();
   }
 
+  void Suspend();
+  void Resume();
+
   virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 
   static already_AddRefed<AudioContext>
