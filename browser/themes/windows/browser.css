@@ -2968,6 +2968,20 @@ chatbox {
   padding: 1em;
 }
 
+toolbarpaletteitem {
+  cursor: -moz-grab;
+  transition: transform, background-color, border-color, box-shadow;
+  transition-duration: 0.5s, 10ms, 10ms, 10ms;
+  transition-timing-function: ease-in-out, linear, linear, linear;
+}
+
+toolbarpaletteitem[mousedown] {
+  box-shadow: inset 0 0 3px hsl(204,100%,40%);
+  cursor: -moz-grabbing;
+  opacity: 0.8;
+  transform: scale(1.1);
+}
+
 /* end Customization mode */
 
 .click-to-play-plugins-notification-content {

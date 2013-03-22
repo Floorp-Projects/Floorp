@@ -290,10 +290,16 @@ CustomizeMode.prototype = {
       wrapper.setAttribute("flex", aNode.getAttribute("flex"));
     }
 
+    wrapper.addEventListener("mousedown", this);
+    wrapper.addEventListener("mouseup", this);
+
     return wrapper;
   },
 
   unwrapToolbarItem: function(aWrapper) {
+    aWrapper.removeEventListener("mousedown", this);
+    aWrapper.removeEventListener("mouseup", this);
+
     let toolbarItem = aWrapper.firstChild;
 
     if (aWrapper.hasAttribute("itemdisabled")) {
@@ -377,6 +383,12 @@ CustomizeMode.prototype = {
       case "dragexit":
         this._onDragExit(aEvent);
         break;
+      case "mousedown":
+        this._onMouseDown(aEvent);
+        break;
+      case "mouseup":
+        this._onMouseUp(aEvent);
+        break;
       case "keypress":
         if (aEvent.keyCode === aEvent.DOM_VK_ESCAPE) {
           this.exit();
@@ -459,6 +471,8 @@ CustomizeMode.prototype = {
     let documentId = document.documentElement.id;
     let draggedItemId = aEvent.dataTransfer.getData("text/toolbarwrapper-id/" + documentId);
     let draggedWrapper = document.getElementById("wrapper-" + draggedItemId);
+
+    draggedWrapper.removeAttribute("mousedown");
 
     let targetNode = aEvent.target;
     let targetParent = targetNode.parentNode;
@@ -572,6 +586,29 @@ CustomizeMode.prototype = {
       aElement = aElement.parentNode;
     }
     return null;
+  },
+
+  _onMouseDown: function(aEvent) {
+    let item = this._getWrapper(aEvent.target);
+    if (item) {
+      item.setAttribute("mousedown", "true");
+    }
+  },
+
+  _onMouseUp: function(aEvent) {
+    let item = this._getWrapper(aEvent.target);
+    if (item) {
+      item.removeAttribute("mousedown");
+    }
+  },
+
+  _getWrapper: function(aElement) {
+    while (aElement && aElement.localName != "toolbarpaletteitem") {
+      if (aElement.localName == "toolbar")
+        return null;
+      aElement = aElement.parentNode;
+    }
+    return aElement;
   }
 };
 
