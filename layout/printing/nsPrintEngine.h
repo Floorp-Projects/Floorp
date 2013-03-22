@@ -19,7 +19,6 @@
 #include "nsWeakReference.h"
 
 // Interfaces
-#include "nsIDocument.h"
 #include "nsIDOMWindow.h"
 #include "nsIObserver.h"
 
@@ -27,6 +26,7 @@
 class nsPagePrintTimer;
 class nsIDocShellTreeNode;
 class nsDeviceContext;
+class nsIDocument;
 class nsIDocumentViewerPrint;
 class nsPrintObject;
 class nsIDocShell;

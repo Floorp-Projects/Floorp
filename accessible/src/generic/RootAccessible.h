@@ -9,8 +9,9 @@
 #include "HyperTextAccessible.h"
 #include "DocAccessibleWrap.h"
 
-#include "nsIDocument.h"
 #include "nsIDOMEventListener.h"
+
+class nsIDocument;
 
 namespace mozilla {
 namespace a11y {

@@ -8,7 +8,8 @@
 
 #include "AccessibleWrap.h"
 #include "HyperTextAccessibleWrap.h"
-#include "nsIContent.h"
+
+class nsIContent;
 
 /**
   * This file contains a number of classes that are used as base

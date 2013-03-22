@@ -16,8 +16,8 @@
 #include "nsIAccessibleSelectable.h"
 #include "nsIAccessibleValue.h"
 #include "nsIAccessibleStates.h"
-#include "nsIContent.h"
 
+#include "nsIContent.h"
 #include "nsStringGlue.h"
 #include "nsTArray.h"
 #include "nsRefPtrHashtable.h"
@@ -25,7 +25,6 @@
 struct nsRoleMapEntry;
 
 struct nsRect;
-class nsIContent;
 class nsIFrame;
 class nsIAtom;
 class nsView;

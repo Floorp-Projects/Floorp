@@ -10,10 +10,10 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
+#include "nsIContent.h"
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
 #include "mozilla/dom/Nullable.h"
-#include "nsIContent.h"
 
 class nsITransactionManager;
 class nsIMutationObserver;
