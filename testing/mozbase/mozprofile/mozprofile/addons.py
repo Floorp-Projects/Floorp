@@ -16,12 +16,12 @@ AMO_API_VERSION = "1.5"
 
 class AddonManager(object):
     """
-    Handles all operations regarding addons including: installing and cleaning addons
+    Handles all operations regarding addons in a profile including: installing and cleaning addons
     """
 
     def __init__(self, profile):
         """
-        profile - the path to the profile for which we install addons
+        :param profile: the path to the profile for which we install addons
         """
         self.profile = profile
 
@@ -33,11 +33,15 @@ class AddonManager(object):
         # addons that we've installed; needed for cleanup
         self._addon_dirs = []
 
+        # backup dir for already existing addons
+        self.backup_dir = None
+
     def install_addons(self, addons=None, manifests=None):
         """
         Installs all types of addons
-        addons - a list of addon paths to install
-        manifest - a list of addon manifests to install
+
+        :param addons: a list of addon paths to install
+        :param manifest: a list of addon manifests to install
         """
         # install addon paths
         if addons:
@@ -52,12 +56,12 @@ class AddonManager(object):
                 manifests = [manifests]
             for manifest in manifests:
                 self.install_from_manifest(manifest)
-            self.installed_manifests.extended(manifests)
+            self.installed_manifests.extend(manifests)
 
     def install_from_manifest(self, filepath):
         """
         Installs addons from a manifest
-        filepath - path to the manifest of addons to install
+        :param filepath: path to the manifest of addons to install
         """
         manifest = ManifestParser()
         manifest.read(filepath)
@@ -82,9 +86,11 @@ class AddonManager(object):
     @classmethod
     def get_amo_install_path(self, query):
         """
-        Return the addon xpi install path for the specified AMO query.
-        See: https://developer.mozilla.org/en/addons.mozilla.org_%28AMO%29_API_Developers%27_Guide/The_generic_AMO_API
-        for query documentation.
+        Get the addon xpi install path for the specified AMO query.
+
+        :param query: query-documentation_
+
+        .. _query-documentation: https://developer.mozilla.org/en/addons.mozilla.org_%28AMO%29_API_Developers%27_Guide/The_generic_AMO_API
         """
         response = urllib2.urlopen(query)
         dom = minidom.parseString(response.read())
@@ -95,13 +101,16 @@ class AddonManager(object):
     @classmethod
     def addon_details(cls, addon_path):
         """
-        returns a dictionary of details about the addon
-        - addon_path : path to the addon directory
-        Returns:
-        {'id':      u'rainbow@colors.org', # id of the addon
-         'version': u'1.4',                # version of the addon
-         'name':    u'Rainbow',            # name of the addon
-         'unpack':  False } # whether to unpack the addon
+        Returns a dictionary of details about the addon.
+
+        :param addon_path: path to the addon directory
+
+        Returns::
+
+            {'id':      u'rainbow@colors.org', # id of the addon
+             'version': u'1.4',                # version of the addon
+             'name':    u'Rainbow',            # name of the addon
+             'unpack':  False } # whether to unpack the addon
         """
 
         # TODO: We don't use the unpack variable yet, but we should: bug 662683
@@ -152,10 +161,10 @@ class AddonManager(object):
 
     def install_from_path(self, path, unpack=False):
         """
-        Installs addon from a filepath, url
-        or directory of addons in the profile.
-        - path: url, path to .xpi, or directory of addons
-        - unpack: whether to unpack unless specified otherwise in the install.rdf
+        Installs addon from a filepath, url or directory of addons in the profile.
+
+        :param path: url, path to .xpi, or directory of addons
+        :param unpack: whether to unpack unless specified otherwise in the install.rdf
         """
 
         # if the addon is a url, download it
@@ -209,8 +218,16 @@ class AddonManager(object):
             if not unpack and not addon_details['unpack'] and xpifile:
                 if not os.path.exists(extensions_path):
                     os.makedirs(extensions_path)
+                # save existing xpi file to restore later
+                if os.path.exists(addon_path + '.xpi'):
+                    self.backup_dir = self.backup_dir or tempfile.mkdtemp()
+                    shutil.copy(addon_path + '.xpi', self.backup_dir)
                 shutil.copy(xpifile, addon_path + '.xpi')
             else:
+                # save existing dir to restore later
+                if os.path.exists(addon_path):
+                    self.backup_dir = self.backup_dir or tempfile.mkdtemp()
+                    dir_util.copy_tree(addon_path, self.backup_dir, preserve_symlinks=1)
                 dir_util.copy_tree(addon, addon_path, preserve_symlinks=1)
                 self._addon_dirs.append(addon_path)
 
@@ -227,3 +244,14 @@ class AddonManager(object):
         for addon in self._addon_dirs:
             if os.path.isdir(addon):
                 dir_util.remove_tree(addon)
+        # restore backups
+        if self.backup_dir and os.path.isdir(self.backup_dir):
+            extensions_path = os.path.join(self.profile, 'extensions', 'staged')
+            for backup in os.listdir(self.backup_dir):
+                backup_path = os.path.join(self.backup_dir, backup)
+                addon_path = os.path.join(extensions_path, addon)
+                shutil.move(backup_path, addon_path)
+            if not os.listdir(self.backup_dir):
+                shutil.rmtree(self.backup_dir, ignore_errors=True)
+
+    __del__ = clean_addons

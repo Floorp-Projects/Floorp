@@ -7,7 +7,6 @@ import posixpath
 
 from dmunit import DeviceManagerTestCase
 
-
 class PushSmallTextTestCase(DeviceManagerTestCase):
 
     def runTest(self):
@@ -15,6 +14,5 @@ class PushSmallTextTestCase(DeviceManagerTestCase):
         """
         testroot = self.dm.getDeviceRoot()
         self.dm.removeFile(posixpath.join(testroot, 'smalltext.txt'))
-        self.assert_(self.dm.pushFile(
-            os.path.join('test-files', 'smalltext.txt'),
-            posixpath.join(testroot, 'smalltext.txt')))
+        self.dm.pushFile(os.path.join('test-files', 'smalltext.txt'),
+                         posixpath.join(testroot, 'smalltext.txt'))
