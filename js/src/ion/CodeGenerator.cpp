@@ -1539,8 +1539,6 @@ CodeGenerator::emitPopArguments(LApplyArgsGeneric *apply, Register extraStackSpa
 bool
 CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
 {
-    JSContext *cx = GetIonContext()->cx;
-
     // Holds the function object.
     Register calleereg = ToRegister(apply->getFunction());
 
