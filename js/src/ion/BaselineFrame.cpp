@@ -134,6 +134,9 @@ BaselineFrame::initForOsr(StackFrame *fp, uint32_t numStackValues)
         hookData_ = fp->hookData();
     }
 
+    if (fp->hasPushedSPSFrame())
+        flags_ |= BaselineFrame::HAS_PUSHED_SPS_FRAME;
+
     frameSize_ = BaselineFrame::FramePointerOffset +
         BaselineFrame::Size() +
         numStackValues * sizeof(Value);
