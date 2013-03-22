@@ -339,7 +339,7 @@ nsMenuItemIconX::Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* a
     return OnStopFrame(aRequest);
   }
 
-  if (aType == imgINotificationObserver::LOAD_COMPLETE) {
+  if (aType == imgINotificationObserver::DECODE_COMPLETE) {
     if (mIconRequest && mIconRequest == aRequest) {
       mIconRequest->Cancel(NS_BINDING_ABORTED);
       mIconRequest = nullptr;
