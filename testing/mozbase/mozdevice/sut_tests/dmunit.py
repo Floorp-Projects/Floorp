@@ -9,7 +9,6 @@ import unittest
 
 ip = ''
 port = 0
-heartbeat_port = 0
 
 
 class DeviceManagerTestCase(unittest.TestCase):
@@ -27,6 +26,7 @@ class DeviceManagerTestCase(unittest.TestCase):
 
     def setUp(self):
         self.dm = devicemanagerSUT.DeviceManagerSUT(host=ip, port=port)
+        self.dm.debug = 3
         self.dmerror = devicemanager.DMError
         self.nettools = devicemanager.NetworkTools
         self._setUp()
