@@ -39,6 +39,22 @@ typedef IntegralConstant<bool, false> FalseType;
 
 /* 20.9.4.1 Primary type categories */
 
+/**
+ * IsPointer determines whether a type is a pointer type (but not a pointer-to-
+ * member type).
+ *
+ * mozilla::IsPointer<struct S*>::value is true;
+ * mozilla::IsPointer<int**>::value is true;
+ * mozilla::IsPointer<void (*)(void)>::value is true;
+ * mozilla::IsPointer<int>::value is false;
+ * mozilla::IsPointer<struct S>::value is false.
+ */
+template<typename T>
+struct IsPointer : FalseType {};
+
+template<typename T>
+struct IsPointer<T*> : TrueType {};
+
 /* 20.9.4.2 Composite type traits */
 
 /* 20.9.4.3 Type properties */
@@ -47,19 +63,21 @@ typedef IntegralConstant<bool, false> FalseType;
 
 /* 20.9.6 Relationships between types */
 
-/* 20.9.7 Transformations between types */
+/**
+ * IsSame tests whether two types are the same type.
+ *
+ * mozilla::IsSame<int, int>::value is true;
+ * mozilla::IsSame<int*, int*>::value is true;
+ * mozilla::IsSame<int, unsigned int>::value is false;
+ * mozilla::IsSame<void, void>::value is true;
+ * mozilla::IsSame<const int, int>::value is false;
+ * mozilla::IsSame<struct S, struct S>::value is true.
+ */
+template<typename T, typename U>
+struct IsSame : FalseType {};
 
-/* 20.9.7.1 Const-volatile modifications */
-
-/* 20.9.7.2 Reference modifications */
-
-/* 20.9.7.3 Sign modifications */
-
-/* 20.9.7.4 Array modifications */
-
-/* 20.9.7.5 Pointer modifications */
-
-/* 20.9.7.6 Other transformations */
+template<typename T>
+struct IsSame<T, T> : TrueType {};
 
 namespace detail {
 
@@ -132,6 +150,20 @@ template<class Base, class Derived>
 struct IsBaseOf
   : Conditional<detail::BaseOfTester<Base, Derived>::value, TrueType, FalseType>::Type
 {};
+
+/* 20.9.7 Transformations between types */
+
+/* 20.9.7.1 Const-volatile modifications */
+
+/* 20.9.7.2 Reference modifications */
+
+/* 20.9.7.3 Sign modifications */
+
+/* 20.9.7.4 Array modifications */
+
+/* 20.9.7.5 Pointer modifications */
+
+/* 20.9.7.6 Other transformations */
 
 namespace detail {
 
@@ -227,22 +259,6 @@ struct EnableIf<true, T>
 };
 
 /**
- * IsSame tests whether two types are the same type.
- *
- * mozilla::IsSame<int, int>::value is true;
- * mozilla::IsSame<int*, int*>::value is true;
- * mozilla::IsSame<int, unsigned int>::value is false;
- * mozilla::IsSame<void, void>::value is true;
- * mozilla::IsSame<const int, int>::value is false;
- * mozilla::IsSame<struct S, struct S>::value is true.
- */
-template<typename T, typename U>
-struct IsSame : FalseType {};
-
-template<typename T>
-struct IsSame<T, T> : TrueType {};
-
-/**
  * Traits class for identifying POD types.  Until C++11 there's no automatic
  * way to detect PODs, so for the moment this is done manually.  Users may
  * define specializations of this class that inherit from mozilla::TrueType and
@@ -269,22 +285,6 @@ template<> struct IsPod<float>              : TrueType {};
 template<> struct IsPod<double>             : TrueType {};
 template<> struct IsPod<wchar_t>            : TrueType {};
 template<typename T> struct IsPod<T*>       : TrueType {};
-
-/**
- * IsPointer determines whether a type is a pointer type (but not a pointer-to-
- * member type).
- *
- * mozilla::IsPointer<struct S*>::value is true;
- * mozilla::IsPointer<int**>::value is true;
- * mozilla::IsPointer<void (*)(void)>::value is true;
- * mozilla::IsPointer<int>::value is false;
- * mozilla::IsPointer<struct S>::value is false.
- */
-template<typename T>
-struct IsPointer : FalseType {};
-
-template<typename T>
-struct IsPointer<T*> : TrueType {};
 
 } /* namespace mozilla */
 
