@@ -14,9 +14,9 @@
 #include "nsStyleSet.h"
 #include "nsViewManager.h"
 #include "nsIDocShell.h"
-#include "nsIDocument.h"
 #include "nsIDocShellTreeOwner.h"
 
+class nsIDocument;
 class nsPresContext;
 
 // nsPrintObject Document Type
