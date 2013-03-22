@@ -788,7 +788,6 @@ Chunk::allocateArena(Zone *zone, AllocKind thingKind)
     if (JS_UNLIKELY(!hasAvailableArenas()))
         removeFromAvailableList();
 
-    Probes::resizeHeap(zone, rt->gcBytes, rt->gcBytes + ArenaSize);
     rt->gcBytes += ArenaSize;
     zone->gcBytes += ArenaSize;
     if (zone->gcBytes >= zone->gcTriggerBytes)
@@ -819,7 +818,6 @@ Chunk::releaseArena(ArenaHeader *aheader)
     if (rt->gcHelperThread.sweeping())
         maybeLock.lock(rt);
 
-    Probes::resizeHeap(zone, rt->gcBytes, rt->gcBytes - ArenaSize);
     JS_ASSERT(rt->gcBytes >= ArenaSize);
     JS_ASSERT(zone->gcBytes >= ArenaSize);
     if (rt->gcHelperThread.sweeping())

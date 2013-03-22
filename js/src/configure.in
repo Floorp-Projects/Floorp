@@ -3678,24 +3678,6 @@ if test -n "$MOZ_VTUNE"; then
 fi
 
 dnl ========================================================
-dnl ETW - Event Tracing for Windows
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(ETW,
-[  --enable-ETW            Enable ETW (Event Tracing for Windows) event reporting],
-    MOZ_ETW=1,
-    MOZ_ETW= )
-if test -n "$MOZ_ETW"; then
-    AC_DEFINE(MOZ_ETW)
-    WINVER=600
-fi
-
-if test -n "$MOZ_ETW"; then
-    if test -z "$MOZ_WINSDK_TARGETVER"; then
-        AC_MSG_ERROR([--enable-ETW is only valid on Windows])
-    fi
-fi
-
-dnl ========================================================
 dnl Profiling
 dnl ========================================================
 if test -n "$MOZ_PROFILING"; then
@@ -4151,7 +4133,6 @@ AC_SUBST(MOZ_SHARK)
 AC_SUBST(MOZ_INSTRUMENTS)
 AC_SUBST(MOZ_CALLGRIND)
 AC_SUBST(MOZ_VTUNE)
-AC_SUBST(MOZ_ETW)
 AC_SUBST(MOZ_PROFILING)
 AC_SUBST(LIBICONV)
 
