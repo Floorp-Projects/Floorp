@@ -445,26 +445,6 @@ IsNumber(const Value &v)
     return v.isNumber() || (v.isObject() && v.toObject().hasClass(&NumberClass));
 }
 
-JS_ALWAYS_INLINE bool
-num_nop(JSContext *cx, CallArgs args)
-{
-    JS_ASSERT(IsNumber(args.thisv()));
-    args.rval().setUndefined();
-    return true;
-}
-
-JSBool
-js::num_CheckThisNumber(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    // CallNonGenericMethod will handle proxies correctly and throw exceptions
-    // in the right circumstances, but will report date_CheckThisNumber as the
-    // function name in the message. We need a better solution:
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=844677
-    return CallNonGenericMethod<IsNumber, num_nop>(cx, args);
-}
-
 inline double
 Extract(const Value &v)
 {
