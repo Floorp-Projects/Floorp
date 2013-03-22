@@ -208,7 +208,10 @@ IonBuilder::canInlineTarget(JSFunction *target)
     }
 
     // Don't inline functions which don't have baseline scripts compiled for them.
-    if (executionMode == SequentialExecution && !inlineScript->hasBaselineScript()) {
+    if (executionMode == SequentialExecution &&
+        ion::IsBaselineEnabled(cx) &&
+        !inlineScript->hasBaselineScript())
+    {
         IonSpew(IonSpew_Inlining, "Cannot inline target with no baseline jitcode");
         return false;
     }
