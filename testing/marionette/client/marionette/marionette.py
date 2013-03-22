@@ -111,6 +111,7 @@ class Actions(object):
     def __init__(self, marionette):
         self.action_chain = []
         self.marionette = marionette
+        self.current_id = None
 
     def press(self, element, x=None, y=None):
         element=element.id
@@ -139,7 +140,9 @@ class Actions(object):
         return self
 
     def perform(self):
-        return self.marionette._send_message('actionChain', 'ok', value=self.action_chain)
+        self.current_id = self.marionette._send_message('actionChain', 'value', chain=self.action_chain, nextId=self.current_id)
+        self.action_chain = []
+        return self
 
 class MultiActions(object):
     def __init__(self, marionette):
