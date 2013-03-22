@@ -748,16 +748,46 @@ class MacroAssembler : public MacroAssemblerSpecific
         bind(&stackFull);
     }
 
+    void spsUpdatePCIdx(SPSProfiler *p, Register idx, Register temp) {
+        Label stackFull;
+        spsProfileEntryAddress(p, -1, temp, &stackFull);
+        store32(idx, Address(temp, ProfileEntry::offsetOfPCIdx()));
+        bind(&stackFull);
+    }
+
     void spsPushFrame(SPSProfiler *p, const char *str, RawScript s, Register temp) {
         Label stackFull;
         spsProfileEntryAddress(p, 0, temp, &stackFull);
 
         storePtr(ImmWord(str),    Address(temp, ProfileEntry::offsetOfString()));
         storePtr(ImmGCPtr(s),     Address(temp, ProfileEntry::offsetOfScript()));
-        storePtr(ImmWord((void*) NULL),
-                 Address(temp, ProfileEntry::offsetOfStackAddress()));
-        store32(Imm32(ProfileEntry::NullPCIndex),
-                Address(temp, ProfileEntry::offsetOfPCIdx()));
+        storePtr(ImmWord((void*) NULL), Address(temp, ProfileEntry::offsetOfStackAddress()));
+        store32(Imm32(ProfileEntry::NullPCIndex), Address(temp, ProfileEntry::offsetOfPCIdx()));
+
+        /* Always increment the stack size, whether or not we actually pushed. */
+        bind(&stackFull);
+        movePtr(ImmWord(p->sizePointer()), temp);
+        add32(Imm32(1), Address(temp, 0));
+    }
+
+    void spsPushFrame(SPSProfiler *p, const Address &str, const Address &script,
+                      Register temp, Register temp2)
+    {
+        Label stackFull;
+        spsProfileEntryAddress(p, 0, temp, &stackFull);
+
+        loadPtr(str, temp2);
+        storePtr(temp2, Address(temp, ProfileEntry::offsetOfString()));
+
+        loadPtr(script, temp2);
+        storePtr(temp2, Address(temp, ProfileEntry::offsetOfScript()));
+
+        storePtr(ImmWord((void*) 0), Address(temp, ProfileEntry::offsetOfStackAddress()));
+
+        // Store 0 for PCIdx because that's what interpreter does.
+        // (See Probes::enterScript, which calls spsProfiler.enter, which pushes an entry
+        //  with 0 pcIdx).
+        store32(Imm32(0), Address(temp, ProfileEntry::offsetOfPCIdx()));
 
         /* Always increment the stack size, whether or not we actually pushed. */
         bind(&stackFull);
