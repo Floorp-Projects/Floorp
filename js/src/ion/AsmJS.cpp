@@ -4954,7 +4954,7 @@ Warn(JSContext *cx, int code, const char *str = NULL)
 }
 
 extern bool
-EnsureAsmJSSignalHandlersInstalled();
+EnsureAsmJSSignalHandlersInstalled(JSRuntime *rt);
 
 bool
 js::CompileAsmJS(JSContext *cx, TokenStream &ts, ParseNode *fn, HandleScript script)
@@ -4970,7 +4970,7 @@ js::CompileAsmJS(JSContext *cx, TokenStream &ts, ParseNode *fn, HandleScript scr
         return Warn(cx, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by debugger");
 
 #ifdef JS_ASMJS
-    if (!EnsureAsmJSSignalHandlersInstalled())
+    if (!EnsureAsmJSSignalHandlersInstalled(cx->runtime))
         return Warn(cx, JSMSG_USE_ASM_TYPE_FAIL, "Platform missing signal handler support");
 
     ScopedJSDeletePtr<AsmJSModule> module;
