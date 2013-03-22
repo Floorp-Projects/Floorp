@@ -213,24 +213,6 @@ struct IsConvertible
 /* 20.9.7.6 Other transformations */
 
 /**
- * Conditional selects a class between two, depending on a given boolean value.
- *
- * mozilla::Conditional<true, A, B>::Type is A;
- * mozilla::Conditional<false, A, B>::Type is B;
- */
-template<bool Condition, typename A, typename B>
-struct Conditional
-{
-    typedef A Type;
-};
-
-template<class A, class B>
-struct Conditional<false, A, B>
-{
-    typedef B Type;
-};
-
-/**
  * EnableIf is a struct containing a typedef of T if and only if B is true.
  *
  * mozilla::EnableIf<true, int>::Type is int;
@@ -256,6 +238,24 @@ template<typename T>
 struct EnableIf<true, T>
 {
     typedef T Type;
+};
+
+/**
+ * Conditional selects a class between two, depending on a given boolean value.
+ *
+ * mozilla::Conditional<true, A, B>::Type is A;
+ * mozilla::Conditional<false, A, B>::Type is B;
+ */
+template<bool Condition, typename A, typename B>
+struct Conditional
+{
+    typedef A Type;
+};
+
+template<class A, class B>
+struct Conditional<false, A, B>
+{
+    typedef B Type;
 };
 
 /**
