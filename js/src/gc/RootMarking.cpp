@@ -492,8 +492,7 @@ AutoGCRooter::trace(JSTracer *trc)
 
       case SCRIPTVECTOR: {
         AutoScriptVector::VectorImpl &vector = static_cast<AutoScriptVector *>(this)->vector;
-        for (size_t i = 0; i < vector.length(); i++)
-            MarkScriptRoot(trc, &vector[i], "AutoScriptVector element");
+        MarkScriptRootRange(trc, vector.length(), vector.begin(), "js::AutoScriptVector.vector");
         return;
       }
 
