@@ -4932,6 +4932,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 args=[ ExprLiteral.String(md.prettyMsgName(self.protocol.name
                                                            +'::')) ])),
             self.logMessage(md, md.msgCast(msgexpr), 'Received '),
+            self.profilerLabel('Recv', md.decl.progname),
             Whitespace.NL
         ])
 
@@ -4986,13 +4987,13 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         return stmts
 
-
     def sendAsync(self, md, msgexpr, actor=None):
         sendok = ExprVar('__sendok')
         return (
             sendok,
             ([ Whitespace.NL,
-               self.logMessage(md, msgexpr, 'Sending ') ]
+               self.logMessage(md, msgexpr, 'Sending '),
+               self.profilerLabel('AsyncSend', md.decl.progname) ]
             + self.transition(md, 'out', actor)
             + [ Whitespace.NL,
                 StmtDecl(Decl(Type.BOOL, sendok.name),
@@ -5008,7 +5009,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         return (
             sendok,
             ([ Whitespace.NL,
-               self.logMessage(md, msgexpr, 'Sending ') ]
+               self.logMessage(md, msgexpr, 'Sending '),
+               self.profilerLabel('Send', md.decl.progname) ]
             + self.transition(md, 'out', actor)
             + [ Whitespace.NL,
                 StmtDecl(
@@ -5083,6 +5085,11 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 ExprSelect(msgptr, '->', 'Log'),
                 args=[ ExprLiteral.String('['+ actorname +'] '+ pfx),
                        ExprVar('stderr') ])) ])
+
+    def profilerLabel(self, tag, msgname):
+        return StmtExpr(ExprCall(ExprVar('PROFILER_LABEL'),
+                                 [ ExprLiteral.String('IPDL::' + self.protocol.name),
+                                   ExprLiteral.String(tag + msgname) ]))
 
     def saveActorId(self, md):
         idvar = ExprVar('__id')
