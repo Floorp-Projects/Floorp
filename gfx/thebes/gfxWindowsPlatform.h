@@ -28,6 +28,10 @@
 #include <windows.h>
 #include <objbase.h>
 
+#ifdef CAIRO_HAS_D2D_SURFACE
+#include <dxgi.h>
+#endif
+
 class nsIMemoryMultiReporter;
 
 // Utility to get a Windows HDC from a thebes context,
@@ -146,6 +150,10 @@ public:
      * cairo device creation routines.
      */
     void VerifyD2DDevice(bool aAttemptForce);
+
+#ifdef CAIRO_HAS_D2D_SURFACE
+    HRESULT CreateDevice(nsRefPtr<IDXGIAdapter1> &adapter1, int featureLevelIndex);
+#endif
 
     HDC GetScreenDC() { return mScreenDC; }
 
