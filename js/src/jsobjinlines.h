@@ -1082,26 +1082,6 @@ JSObject::hasShapeTable() const
     return lastProperty()->hasTable();
 }
 
-inline size_t
-JSObject::computedSizeOfThisSlotsElements() const
-{
-    size_t n = sizeOfThis();
-
-    if (hasDynamicSlots())
-        n += numDynamicSlots() * sizeof(js::Value);
-
-    if (hasDynamicElements()) {
-        if (isArrayBuffer()) {
-            n += getElementsHeader()->initializedLength;
-        } else {
-            n += (js::ObjectElements::VALUES_PER_HEADER + getElementsHeader()->capacity) *
-                 sizeof(js::Value);
-        }
-    }
-
-    return n;
-}
-
 inline void
 JSObject::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf, JS::ObjectsExtraSizes *sizes)
 {
