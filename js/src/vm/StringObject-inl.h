@@ -15,7 +15,7 @@ namespace js {
 inline bool
 StringObject::init(JSContext *cx, HandleString str)
 {
-    JS_ASSERT(gc::GetGCKindSlots(getAllocKind()) == 2);
+    JS_ASSERT(numFixedSlots() == 2);
 
     Rooted<StringObject *> self(cx, this);
 
