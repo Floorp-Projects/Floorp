@@ -384,8 +384,6 @@ gfxPlatform::Init()
     }
 
     gPlatform->mOrientationSyncMillis = Preferences::GetUint("layers.orientation.sync.timeout", (uint32_t)0);
-
-    CreateCMSOutputProfile();
 }
 
 void
@@ -1430,8 +1428,8 @@ gfxPlatform::GetPlatformCMSOutputProfile()
     return nullptr;
 }
 
-void
-gfxPlatform::CreateCMSOutputProfile()
+qcms_profile *
+gfxPlatform::GetCMSOutputProfile()
 {
     if (!gCMSOutputProfile) {
         /* Determine if we're using the internal override to force sRGB as
@@ -1473,11 +1471,7 @@ gfxPlatform::CreateCMSOutputProfile()
            bug 444661 for details. */
         qcms_profile_precache_output_transform(gCMSOutputProfile);
     }
-}
 
-qcms_profile *
-gfxPlatform::GetCMSOutputProfile()
-{
     return gCMSOutputProfile;
 }
 
