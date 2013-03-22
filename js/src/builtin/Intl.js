@@ -1616,52 +1616,22 @@ function InitializeDateTimeFormat(dateTimeFormat, locales, options) {
         opt[prop] = value;
     }
 
-    // Step 20.
-    var dataLocaleData = localeData(dataLocale);
+    // Steps 20-21 provided by ICU - see comment after this function.
 
-    // Step 21.
-    var formats = dataLocaleData.formats;
-
-    // Steps 22-24.
+    // Step 22.
     matcher = GetOption(options, "formatMatcher", "string", ["basic", "best fit"], "best fit");
-    var bestFormat = (matcher === "basic")
-                     ? BasicFormatMatcher(opt, formats)
-                     : BestFitFormatMatcher(opt, formats);
 
-    // Step 25.
-    for (i = 0; i < dateTimeComponents.length; i++) {
-        prop = dateTimeComponents[i];
-        if (callFunction(std_Object_hasOwnProperty, bestFormat, prop)) {
-            var p = bestFormat[prop];
-            internals[prop] = p;
-        }
-    }
+    // Steps 23-25 provided by ICU, more or less - see comment after this function.
 
     // Step 26.
     var hr12  = GetOption(options, "hour12", "boolean", undefined, undefined);
 
-    // Step 27.
-    var pattern;
-    if (callFunction(std_Object_hasOwnProperty, internals, "hour")) {
-        // Steps 27.a-b.
-        if (hr12 === undefined)
-            hr12 = dataLocaleData.hour12;
-        assert(typeof hr12 === "boolean");
-        internals.hour12 = hr12;
+    // Pass hr12 on to ICU.
+    if (hr12 !== undefined)
+        opt.hour12 = hr12;
 
-        if (hr12) {
-            // Step 27.c.
-            var hourNo0 = dataLocaleData.hourNo0;
-            internals.hourNo0 = hourNo0;
-            pattern = bestFormat.pattern12;
-        } else {
-            // Step 27.d.
-            pattern = bestFormat.pattern;
-        }
-    } else {
-        // Step 28.
-        pattern = bestFormat.pattern;
-    }
+    // Steps 27-28, more or less - see comment after this function.
+    var pattern = toBestICUPattern(dataLocale, opt);
 
     // Step 29.
     internals.pattern = pattern;
@@ -1671,6 +1641,182 @@ function InitializeDateTimeFormat(dateTimeFormat, locales, options) {
 
     // Step 31.
     internals.initializedDateTimeFormat = true;
+}
+
+
+// Intl.DateTimeFormat and ICU skeletons and patterns
+// ==================================================
+//
+// Different locales have different ways to display dates using the same
+// basic components. For example, en-US might use "Sept. 24, 2012" while
+// fr-FR might use "24 Sept. 2012". The intent of Intl.DateTimeFormat is to
+// permit production of a format for the locale that best matches the
+// set of date-time components and their desired representation as specified
+// by the API client.
+//
+// ICU supports specification of date and time formats in three ways:
+//
+// 1) A style is just one of the identifiers FULL, LONG, MEDIUM, or SHORT.
+//    The date-time components included in each style and their representation
+//    are defined by ICU using CLDR locale data (CLDR is the Unicode
+//    Consortium's Common Locale Data Repository).
+//
+// 2) A skeleton is a string specifying which date-time components to include,
+//    and which representations to use for them. For example, "yyyyMMMMdd"
+//    specifies a year with at least four digits, a full month name, and a
+//    two-digit day. It does not specify in which order the components appear,
+//    how they are separated, the localized strings for textual components
+//    (such as weekday or month), whether the month is in format or
+//    stand-alone form¹, or the numbering system used for numeric components.
+//    All that information is filled in by ICU using CLDR locale data.
+//    ¹ The format form is the one used in formatted strings that include a
+//    day; the stand-alone form is used when not including days, e.g., in
+//    calendar headers. The two forms differ at least in some Slavic languages,
+//    e.g. Russian: "22 марта 2013 г." vs. "Март 2013".
+//
+// 3) A pattern is a string specifying which date-time components to include,
+//    in which order, with which separators, in which grammatical case. For
+//    example, "EEEE, d MMMM y" specifies the full localized weekday name,
+//    followed by comma and space, followed by the day, followed by space,
+//    followed by the full month name in format form, followed by space,
+//    followed by the full year. It
+//    still does not specify localized strings for textual components and the
+//    numbering system - these are determined by ICU using CLDR locale data or
+//    possibly API parameters.
+//
+// All actual formatting in ICU is done with patterns; styles and skeletons
+// have to be mapped to patterns before processing.
+//
+// The options of DateTimeFormat most closely correspond to ICU skeletons. This
+// implementation therefore, in the toBestICUPattern function, converts
+// DateTimeFormat options to ICU skeletons, and then lets ICU map skeletons to
+// actual ICU patterns. The pattern may not directly correspond to what the
+// skeleton requests, as the mapper (UDateTimePatternGenerator) is constrained
+// by the available locale data for the locale. The resulting ICU pattern is
+// kept as the DateTimeFormat's [[pattern]] internal property and passed to ICU
+// in the format method.
+//
+// An ICU pattern represents the information of the following DateTimeFormat
+// internal properties described in the specification, which therefore don't
+// exist separately in the implementation:
+// - [[weekday]], [[era]], [[year]], [[month]], [[day]], [[hour]], [[minute]],
+//   [[second]], [[timeZoneName]]
+// - [[hour12]]
+// - [[hourNo0]]
+// When needed for the resolvedOptions method, the resolveICUPattern function
+// maps the instance's ICU pattern back to the specified properties of the
+// object returned by resolvedOptions.
+//
+// ICU date-time skeletons and patterns aren't fully documented in the ICU
+// documentation (see http://bugs.icu-project.org/trac/ticket/9627). The best
+// documentation at this point is in UTR 35:
+// http://unicode.org/reports/tr35/tr35-dates.html#Date_Format_Patterns
+
+
+/**
+ * Returns an ICU pattern string for the given locale and representing the
+ * specified options as closely as possible given available locale data.
+ */
+function toBestICUPattern(locale, options) {
+    // Create an ICU skeleton representing the specified options. See
+    // http://unicode.org/reports/tr35/tr35-dates.html#Date_Field_Symbol_Table
+    var skeleton = "";
+    switch (options.weekday) {
+    case "narrow":
+        skeleton += "EEEEE";
+        break;
+    case "short":
+        skeleton += "E";
+        break;
+    case "long":
+        skeleton += "EEEE";
+    }
+    switch (options.era) {
+    case "narrow":
+        skeleton += "GGGGG";
+        break;
+    case "short":
+        skeleton += "G";
+        break;
+    case "long":
+        skeleton += "GGGG";
+        break;
+    }
+    switch (options.year) {
+    case "2-digit":
+        skeleton += "yy";
+        break;
+    case "numeric":
+        skeleton += "y";
+        break;
+    }
+    switch (options.month) {
+    case "2-digit":
+        skeleton += "MM";
+        break;
+    case "numeric":
+        skeleton += "M";
+        break;
+    case "narrow":
+        skeleton += "MMMMM";
+        break;
+    case "short":
+        skeleton += "MMM";
+        break;
+    case "long":
+        skeleton += "MMMM";
+        break;
+    }
+    switch (options.day) {
+    case "2-digit":
+        skeleton += "dd";
+        break;
+    case "numeric":
+        skeleton += "d";
+        break;
+    }
+    var hourSkeletonChar = "j";
+    if (options.hour12 !== undefined) {
+        if (options.hour12)
+            hourSkeletonChar = "h";
+        else
+            hourSkeletonChar = "H";
+    }
+    switch (options.hour) {
+    case "2-digit":
+        skeleton += hourSkeletonChar + hourSkeletonChar;
+        break;
+    case "numeric":
+        skeleton += hourSkeletonChar;
+        break;
+    }
+    switch (options.minute) {
+    case "2-digit":
+        skeleton += "mm";
+        break;
+    case "numeric":
+        skeleton += "m";
+        break;
+    }
+    switch (options.second) {
+    case "2-digit":
+        skeleton += "ss";
+        break;
+    case "numeric":
+        skeleton += "s";
+        break;
+    }
+    switch (options.timeZoneName) {
+    case "short":
+        skeleton += "z";
+        break;
+    case "long":
+        skeleton += "zzzz";
+        break;
+    }
+
+    // Let ICU convert the ICU skeleton to an ICU pattern for the given locale.
+    return intl_patternForSkeleton(locale, skeleton);
 }
 
 
@@ -1859,43 +2005,16 @@ function Intl_DateTimeFormat_supportedLocalesOf(locales /*, options*/) {
  */
 var dateTimeFormatInternalProperties = {
     localeData: dateTimeFormatLocaleData,
-    availableLocales: runtimeAvailableLocales, // stub
+    availableLocales: addOldStyleLanguageTags(intl_DateTimeFormat_availableLocales()),
     relevantExtensionKeys: ["ca", "nu"]
 };
 
 
 function dateTimeFormatLocaleData(locale) {
-    // the following data may or may not match any actual locale support
-    var localeData = {
-        ca: ["gregory"],
-        nu: ["latn"],
-        hour12: false,
-        hourNo0: false
+    return {
+        ca: intl_availableCalendars(locale),
+        nu: getNumberingSystems(locale)
     };
-
-    var formatDate = {
-        weekday: "short",
-        year: "numeric",
-        month: "short",
-        day: "numeric"
-    };
-    var formatTime = {
-        hour: "numeric",
-        minute: "numeric",
-        second: "numeric"
-    };
-    var formatFull = {
-        weekday: "short",
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "numeric",
-        minute: "numeric",
-        second: "numeric"
-    };
-    localeData.formats = [formatDate, formatTime, formatFull];
-
-    return localeData;
 }
 
 
@@ -1910,7 +2029,7 @@ function dateTimeFormatFormatToBind() {
     var x = (date === undefined) ? std_Date_now() : ToNumber(date);
 
     // Step 1.a.iii.
-    return FormatDateTime(this, x);
+    return intl_FormatDateTime(this, x);
 }
 
 
@@ -1941,35 +2060,6 @@ function Intl_DateTimeFormat_format_get() {
 
 
 /**
- * Returns a String value representing the result of calling ToNumber(date)
- * according to the effective locale and the formatting options of this
- * DateTimeFormat.
- *
- * Spec: ECMAScript Internationalization API Specification, 12.3.2.
- */
-function FormatDateTime(dateTimeFormat, x) {
-    // ??? stub
-    if (!std_isFinite(x))
-        ThrowError(JSMSG_DATE_NOT_FINITE);
-    var X = new Std_Date(x);
-    var internals = getInternals(dateTimeFormat);
-    var wantDate = callFunction(std_Object_hasOwnProperty, internals, "weekday") ||
-        callFunction(std_Object_hasOwnProperty, internals, "year") ||
-        callFunction(std_Object_hasOwnProperty, internals, "month") ||
-        callFunction(std_Object_hasOwnProperty, internals, "day");
-    var wantTime = callFunction(std_Object_hasOwnProperty, internals, "hour") ||
-        callFunction(std_Object_hasOwnProperty, internals, "minute") ||
-        callFunction(std_Object_hasOwnProperty, internals, "second");
-    if (wantDate) {
-        if (wantTime)
-            return X.toLocaleString();
-        return X.toLocaleDateString();
-    }
-    return X.toLocaleTimeString();
-}
-
-
-/**
  * Returns the resolved options for a DateTimeFormat object.
  *
  * Spec: ECMAScript Internationalization API Specification, 12.3.3 and 12.4.
@@ -1984,12 +2074,107 @@ function Intl_DateTimeFormat_resolvedOptions() {
         numberingSystem: internals.numberingSystem,
         timeZone: internals.timeZone
     };
-    for (var i = 0; i < dateTimeComponents.length; i++) {
-        var p = dateTimeComponents[i];
-        if (callFunction(std_Object_hasOwnProperty, internals, p))
-            defineProperty(result, p, internals[p]);
-    }
-    if (callFunction(std_Object_hasOwnProperty, internals, "hour12"))
-        defineProperty(result, "hour12", internals.hour12);
+    resolveICUPattern(internals.pattern, result);
     return result;
+}
+
+
+// Table mapping ICU pattern characters back to the corresponding date-time
+// components of DateTimeFormat. See
+// http://unicode.org/reports/tr35/tr35-dates.html#Date_Field_Symbol_Table
+var icuPatternCharToComponent = {
+    E: "weekday",
+    G: "era",
+    y: "year",
+    M: "month",
+    L: "month",
+    d: "day",
+    h: "hour",
+    H: "hour",
+    k: "hour",
+    K: "hour",
+    m: "minute",
+    s: "second",
+    z: "timeZoneName",
+    v: "timeZoneName",
+    V: "timeZoneName"
+};
+
+
+/**
+ * Maps an ICU pattern string to a corresponding set of date-time components
+ * and their values, and adds properties for these components to the result
+ * object, which will be returned by the resolvedOptions method. For the
+ * interpretation of ICU pattern characters, see
+ * http://unicode.org/reports/tr35/tr35-dates.html#Date_Field_Symbol_Table
+ */
+function resolveICUPattern(pattern, result) {
+    assert(IsObject(result), "resolveICUPattern");
+    var i = 0;
+    while (i < pattern.length) {
+        var c = pattern[i++];
+        if (c === "'") {
+            while (i < pattern.length && pattern[i] !== "'")
+                i++;
+            i++;
+        } else {
+            var count = 1;
+            while (i < pattern.length && pattern[i] === c) {
+                i++;
+                count++;
+            }
+            var value;
+            switch (c) {
+            // "text" cases
+            case "G":
+            case "E":
+            case "z":
+            case "v":
+            case "V":
+                if (count <= 3)
+                    value = "short";
+                else if (count === 4)
+                    value = "long";
+                else
+                    value = "narrow";
+                break;
+            // "number" cases
+            case "y":
+            case "d":
+            case "h":
+            case "H":
+            case "m":
+            case "s":
+            case "k":
+            case "K":
+                if (count === 2)
+                    value = "2-digit";
+                else
+                    value = "numeric";
+                break;
+            // "text & number" cases
+            case "M":
+            case "L":
+                if (count === 1)
+                    value = "numeric";
+                else if (count === 2)
+                    value = "2-digit";
+                else if (count === 3)
+                    value = "short";
+                else if (count === 4)
+                    value = "long";
+                else
+                    value = "narrow";
+                break;
+            default:
+                // skip other pattern characters and literal text
+            }
+            if (callFunction(std_Object_hasOwnProperty, icuPatternCharToComponent, c))
+                defineProperty(result, icuPatternCharToComponent[c], value);
+            if (c === "h" || c === "K")
+                defineProperty(result, "hour12", true);
+            else if (c === "H" || c === "k")
+                defineProperty(result, "hour12", false);
+        }
+    }
 }
