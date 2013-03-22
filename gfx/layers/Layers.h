@@ -735,31 +735,6 @@ public:
 
   /**
    * CONSTRUCTION PHASE ONLY
-   * Set a clip rect which will be applied to this layer as it is
-   * composited to the destination. The coordinates are relative to
-   * the parent layer (i.e. the contents of this layer
-   * are transformed before this clip rect is applied).
-   * For the root layer, the coordinates are relative to the widget,
-   * in device pixels.
-   * The provided rect is intersected with any existing clip rect.
-   */
-  void IntersectClipRect(const nsIntRect& aRect)
-  {
-    if (mUseClipRect) {
-      MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) IntersectClipRect was %d,%d,%d,%d intersecting with %d,%d,%d,%d", this,
-        mClipRect.x, mClipRect.y, mClipRect.width, mClipRect.height, aRect.x, aRect.y, aRect.width, aRect.height));
-      mClipRect.IntersectRect(mClipRect, aRect);
-    } else {
-      MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) IntersectClipRect was <none> intersecting with %d,%d,%d,%d", this,
-        aRect.x, aRect.y, aRect.width, aRect.height));
-      mUseClipRect = true;
-      mClipRect = aRect;
-    }
-    Mutated();
-  }
-
-  /**
-   * CONSTRUCTION PHASE ONLY
    * Set a layer to mask this layer.
    *
    * The mask layer should be applied using its effective transform (after it
