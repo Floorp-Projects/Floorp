@@ -86,19 +86,6 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain,
 {
     RootedString source(cx, source_);
 
-    class ProbesManager
-    {
-        const char* filename;
-        unsigned lineno;
-
-      public:
-        ProbesManager(const char *f, unsigned l) : filename(f), lineno(l) {
-            Probes::compileScriptBegin(filename, lineno);
-        }
-        ~ProbesManager() { Probes::compileScriptEnd(filename, lineno); }
-    };
-    ProbesManager probesManager(options.filename, options.lineno);
-
     /*
      * The scripted callerFrame can only be given for compile-and-go scripts
      * and non-zero static level requires callerFrame.

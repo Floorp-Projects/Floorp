@@ -2362,9 +2362,6 @@ JSObject::growSlots(JSContext *cx, HandleObject obj, uint32_t oldCount, uint32_t
      */
     JS_ASSERT(newCount < NELEMENTS_LIMIT);
 
-    size_t oldSize = Probes::objectResizeActive() ? obj->computedSizeOfThisSlotsElements() : 0;
-    size_t newSize = oldSize + (newCount - oldCount) * sizeof(Value);
-
     /*
      * If we are allocating slots for an object whose type is always created
      * by calling 'new' on a particular script, bump the GC kind for that
@@ -2394,8 +2391,6 @@ JSObject::growSlots(JSContext *cx, HandleObject obj, uint32_t oldCount, uint32_t
         if (!obj->slots)
             return false;
         Debug_SetSlotRangeToCrashOnTouch(obj->slots, newCount);
-        if (Probes::objectResizeActive())
-            Probes::resizeObject(cx, obj, oldSize, newSize);
         return true;
     }
 
@@ -2412,9 +2407,6 @@ JSObject::growSlots(JSContext *cx, HandleObject obj, uint32_t oldCount, uint32_t
     /* Changes in the slots of global objects can trigger recompilation. */
     if (changed && obj->isGlobal())
         types::MarkObjectStateChange(cx, obj);
-
-    if (Probes::objectResizeActive())
-        Probes::resizeObject(cx, obj, oldSize, newSize);
 
     return true;
 }
@@ -2433,14 +2425,9 @@ JSObject::shrinkSlots(JSContext *cx, HandleObject obj, uint32_t oldCount, uint32
     if (obj->isCall())
         return;
 
-    size_t oldSize = Probes::objectResizeActive() ? obj->computedSizeOfThisSlotsElements() : 0;
-    size_t newSize = oldSize - (oldCount - newCount) * sizeof(Value);
-
     if (newCount == 0) {
         js_free(obj->slots);
         obj->slots = NULL;
-        if (Probes::objectResizeActive())
-            Probes::resizeObject(cx, obj, oldSize, newSize);
         return;
     }
 
@@ -2456,9 +2443,6 @@ JSObject::shrinkSlots(JSContext *cx, HandleObject obj, uint32_t oldCount, uint32
     /* Watch for changes in global object slots, as for growSlots. */
     if (changed && obj->isGlobal())
         types::MarkObjectStateChange(cx, obj);
-
-    if (Probes::objectResizeActive())
-        Probes::resizeObject(cx, obj, oldSize, newSize);
 }
 
 /* static */ bool
@@ -2655,15 +2639,10 @@ JSObject::maybeDensifySparseElements(JSContext *cx, HandleObject obj)
 bool
 JSObject::growElements(JSContext *cx, unsigned newcap)
 {
-    size_t oldSize = Probes::objectResizeActive() ? computedSizeOfThisSlotsElements() : 0;
-
     if (!growElements(&cx->zone()->allocator, newcap)) {
         JS_ReportOutOfMemory(cx);
         return false;
     }
-
-    if (Probes::objectResizeActive())
-        Probes::resizeObject(cx, this, oldSize, computedSizeOfThisSlotsElements());
 
     return true;
 }
@@ -2741,8 +2720,6 @@ JSObject::shrinkElements(JSContext *cx, unsigned newcap)
     uint32_t oldcap = getDenseCapacity();
     JS_ASSERT(newcap <= oldcap);
 
-    size_t oldSize = Probes::objectResizeActive() ? computedSizeOfThisSlotsElements() : 0;
-
     /* Don't shrink elements below the minimum capacity. */
     if (oldcap <= SLOT_CAPACITY_MIN || !hasDynamicElements())
         return;
@@ -2758,9 +2735,6 @@ JSObject::shrinkElements(JSContext *cx, unsigned newcap)
 
     newheader->capacity = newcap;
     elements = newheader->elements();
-
-    if (Probes::objectResizeActive())
-        Probes::resizeObject(cx, this, oldSize, computedSizeOfThisSlotsElements());
 }
 
 static JSObject *
