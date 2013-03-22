@@ -170,10 +170,12 @@ let SocialUI = {
   },
 
   _updateMenuItems: function () {
-    let provider = Social.provider || Social.defaultProvider;
+    if (!Social.provider)
+      return;
+
     // The View->Sidebar and Menubar->Tools menu.
     for (let id of ["menu_socialSidebar", "menu_socialAmbientMenu"])
-      document.getElementById(id).setAttribute("label", provider.name);
+      document.getElementById(id).setAttribute("label", Social.provider.name);
   },
 
   // This handles "ActivateSocialFeature" events fired against content documents
