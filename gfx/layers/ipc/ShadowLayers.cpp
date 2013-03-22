@@ -297,16 +297,6 @@ ShadowLayerForwarder::PaintedCanvas(ShadowableLayer* aCanvas,
                                aNeedYFlip));
 }
 
-void
-ShadowLayerForwarder::PaintedCanvasNoSwap(ShadowableLayer* aCanvas,
-                                          bool aNeedYFlip,
-                                          const SurfaceDescriptor& aNewFrontSurface)
-{
-  mTxn->AddNoSwapPaint(OpPaintCanvas(NULL, Shadow(aCanvas),
-                                     aNewFrontSurface,
-                                     aNeedYFlip));
-}
-
 bool
 ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies)
 {
