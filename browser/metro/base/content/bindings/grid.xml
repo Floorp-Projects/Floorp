@@ -494,8 +494,8 @@
 
   <binding id="richgrid-item">
     <content>
-      <xul:vbox anonid="anon-richgrid-item" class="richgrid-item-content" xbl:inherits="customImagePresent">
-        <xul:hbox class="richgrid-icon-container" xbl:inherits="customImagePresent">
+      <xul:vbox anonid="anon-richgrid-item" class="richgrid-item-content" xbl:inherits="customImage">
+        <xul:hbox class="richgrid-icon-container" xbl:inherits="customImage">
           <xul:box class="richgrid-icon-box"><xul:image xbl:inherits="src=iconURI"/></xul:box>
           <xul:box flex="1" />
         </xul:hbox>
@@ -505,15 +505,13 @@
 
     <implementation>
       <property name="_box" onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'anon-richgrid-item');"/>
-      <property name="color" onset="this._color = val; this.setColor();" onget="return this._color;"/>
-      <property name="backgroundimage"
-                onset="this._backgroundimage = val; this.setBackgroundImage();"
-                onget="return this._backgroundimage;" />
-      <property name="selected"
-                onget="return this.getAttribute('selected') == 'true';" />
+
+      <property name="selected" onget="return this.hasAttribute('selected');" />
 
       <constructor>
         <![CDATA[
+          this.color = this.getAttribute("customColor");
+          this.backgroundImage = this.getAttribute("customImage");
         ]]>
       </constructor>
 
@@ -529,32 +527,30 @@
         ]]></getter>
       </property>
 
-      <method name="setColor">
-        <body>
-          <![CDATA[
-            if (this._color != undefined) {
-              this._box.parentNode.setAttribute("customColorPresent", "true");
-              this._box.style.backgroundColor = this.color;
-            } else {
-              this._box.parentNode.removeAttribute("customColorPresent");
-            }
-          ]]>
-        </body>
-      </method>
+      <property name="color" onget="return this.getAttribute('customColor');">
+        <setter><![CDATA[
+          if (val) {
+            this.setAttribute("customColor", val);
+            this._box.style.backgroundColor = val;
+          } else {
+            this.removeAttribute("customColor");
+            this._box.style.removeProperty("background-color");
+          }
+        ]]></setter>
+      </property>
 
-      <method name="setBackgroundImage">
-        <body>
-          <![CDATA[
-            if (this._backgroundImage != undefined) {
-              this._box.parentNode.setAttribute("customImagePresent", "true");
-              this._box.style.backgroundImage = this.backgroundImage;
-            } else {
-              this._box.parentNode.removeAttribute("customImagePresent");
-              this._box.style.removeProperty("background-image");
-            }
-          ]]>
-        </body>
-      </method>
+      <property name="backgroundImage" onget="return this.getAttribute('customImage');">
+        <setter><![CDATA[
+          if (val) {
+            this.setAttribute("customImage", val);
+            this._box.style.backgroundImage = val;
+          } else {
+            this.removeAttribute("customImage");
+            this._box.style.removeProperty("background-image");
+          }
+        ]]></setter>
+      </property>
+
       <method name="refreshBackgroundImage">
         <body><![CDATA[
           if (this.backgroundImage) {
