@@ -325,27 +325,12 @@ GLScreenBuffer::Morph(SurfaceFactory_GL* newFactory, SurfaceStreamType streamTyp
     mStream = newStream;
 }
 
-bool
-GLScreenBuffer::Swap(const gfxIntSize& size)
+void
+GLScreenBuffer::Attach(SharedSurface* surface, const gfxIntSize& size)
 {
     ScopedBindFramebuffer autoFB(mGL);
 
-    SharedSurface* nextSurf = mStream->SwapProducer(mFactory, size);
-    if (!nextSurf) {
-        SurfaceFactory_GL* basicFactory =
-            new SurfaceFactory_Basic(mGL, mFactory->Caps());
-        nextSurf = mStream->SwapProducer(basicFactory, size);
-        if (!nextSurf) {
-            delete basicFactory;
-            return false;
-        }
-
-        // Swap out the apparently defective old factory.
-        delete mFactory;
-        mFactory = basicFactory;
-    }
-
-    SharedSurface_GL* surf = SharedSurface_GL::Cast(nextSurf);
+    SharedSurface_GL* surf = SharedSurface_GL::Cast(surface);
     if (mRead && SharedSurf())
         SharedSurf()->UnlockProd();
 
@@ -376,6 +361,27 @@ GLScreenBuffer::Swap(const gfxIntSize& size)
     if (!PreserveBuffer()) {
         // DiscardFramebuffer here could help perf on some mobile platforms.
     }
+}
+
+bool
+GLScreenBuffer::Swap(const gfxIntSize& size)
+{
+    SharedSurface* nextSurf = mStream->SwapProducer(mFactory, size);
+    if (!nextSurf) {
+        SurfaceFactory_GL* basicFactory =
+            new SurfaceFactory_Basic(mGL, mFactory->Caps());
+        nextSurf = mStream->SwapProducer(basicFactory, size);
+        if (!nextSurf) {
+            delete basicFactory;
+            return false;
+        }
+
+        // Swap out the apparently defective old factory.
+        delete mFactory;
+        mFactory = basicFactory;
+    }
+
+    Attach(nextSurf, size);
 
     return true;
 }
@@ -389,6 +395,16 @@ GLScreenBuffer::PublishFrame(const gfxIntSize& size)
     return good;
 }
 
+bool
+GLScreenBuffer::Resize(const gfxIntSize& size)
+{
+    SharedSurface* surface = mStream->Resize(mFactory, size);
+    if (!surface)
+        return false;
+
+    Attach(surface, size);
+    return true;
+}
 
 DrawBuffer*
 GLScreenBuffer::CreateDraw(const gfxIntSize& size)
