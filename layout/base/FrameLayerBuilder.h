@@ -134,26 +134,30 @@ public:
 
   struct ContainerParameters {
     ContainerParameters() :
-      mXScale(1), mYScale(1),
+      mXScale(1), mYScale(1), mAncestorClipRect(nullptr),
       mInTransformedSubtree(false), mInActiveTransformedSubtree(false),
       mDisableSubpixelAntialiasingInDescendants(false)
     {}
     ContainerParameters(float aXScale, float aYScale) :
-      mXScale(aXScale), mYScale(aYScale),
+      mXScale(aXScale), mYScale(aYScale), mAncestorClipRect(nullptr),
       mInTransformedSubtree(false), mInActiveTransformedSubtree(false),
       mDisableSubpixelAntialiasingInDescendants(false)
     {}
     ContainerParameters(float aXScale, float aYScale,
                         const nsIntPoint& aOffset,
                         const ContainerParameters& aParent) :
-      mXScale(aXScale), mYScale(aYScale),
+      mXScale(aXScale), mYScale(aYScale), mAncestorClipRect(nullptr),
       mOffset(aOffset),
       mInTransformedSubtree(aParent.mInTransformedSubtree),
       mInActiveTransformedSubtree(aParent.mInActiveTransformedSubtree),
       mDisableSubpixelAntialiasingInDescendants(aParent.mDisableSubpixelAntialiasingInDescendants)
     {}
     float mXScale, mYScale;
-
+    /**
+     * An ancestor clip rect that can be applied to restrict the visibility
+     * of this container. Null if none available.
+     */
+    const nsIntRect* mAncestorClipRect;
     /**
      * An offset to append to the transform set on all child layers created.
      */
@@ -173,6 +177,9 @@ public:
       // ThebesLayer to ensure that snapping exactly matches the ideal transform.
       return mInTransformedSubtree && !mInActiveTransformedSubtree;
     }
+  };
+  enum {
+    CONTAINER_NOT_CLIPPED_BY_ANCESTORS = 0x01
   };
   /**
    * Build a container layer for a display item that contains a child
@@ -198,7 +205,8 @@ public:
                          nsDisplayItem* aContainerItem,
                          const nsDisplayList& aChildren,
                          const ContainerParameters& aContainerParameters,
-                         const gfx3DMatrix* aTransform);
+                         const gfx3DMatrix* aTransform,
+                         uint32_t aFlags = 0);
 
   /**
    * Get a retained layer for a display item that needs to create its own
