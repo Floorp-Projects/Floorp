@@ -11,7 +11,6 @@
 #include "nsIFormControlFrame.h"
 #include "nsIDOMEventListener.h"
 #include "nsIAnonymousContentCreator.h"
-#include "nsICapturePicker.h"
 #include "nsCOMPtr.h"
 
 class nsTextControlFrame;
@@ -41,7 +40,7 @@ public:
   virtual void SetFocus(bool aOn, bool aRepaint);
 
   virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
-  
+
   virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
 
 #ifdef DEBUG
@@ -63,27 +62,20 @@ public:
 
 #ifdef ACCESSIBILITY
   virtual mozilla::a11y::AccType AccessibleType() MOZ_OVERRIDE;
-#endif  
+#endif
 
   typedef bool (*AcceptAttrCallback)(const nsAString&, void*);
 
 protected:
-  
-  struct CaptureCallbackData {
-    nsICapturePicker* picker;
-    uint32_t mode;
-  };
-  
-  uint32_t GetCaptureMode(const CaptureCallbackData& aData);
-  
+
   class MouseListener;
   friend class MouseListener;
   class MouseListener : public nsIDOMEventListener {
   public:
     NS_DECL_ISUPPORTS
-    
+
     MouseListener(nsFileControlFrame* aFrame)
-     : mFrame(aFrame) 
+     : mFrame(aFrame)
     {}
     virtual ~MouseListener() {}
 
@@ -116,21 +108,10 @@ protected:
     nsWeakFrame mFrame;
   };
 
-  class CaptureMouseListener: public MouseListener {
-  public:
-    CaptureMouseListener(nsFileControlFrame* aFrame) 
-      : MouseListener(aFrame)
-      , mMode(0) 
-    {}
-
-    NS_DECL_NSIDOMEVENTLISTENER
-    uint32_t mMode;
-  };
-  
   class BrowseMouseListener: public MouseListener {
   public:
-    BrowseMouseListener(nsFileControlFrame* aFrame) 
-      : MouseListener(aFrame) 
+    BrowseMouseListener(nsFileControlFrame* aFrame)
+      : MouseListener(aFrame)
     {}
 
     NS_DECL_NSIDOMEVENTLISTENER
@@ -156,16 +137,9 @@ protected:
   nsCOMPtr<nsIContent> mBrowse;
 
   /**
-   * The capture button input.
-   * @see nsFileControlFrame::CreateAnonymousContent
-   */
-  nsCOMPtr<nsIContent> mCapture;
-
-  /**
    * Our mouse listener.  This makes sure we don't get used after destruction.
    */
   nsRefPtr<BrowseMouseListener> mMouseListener;
-  nsRefPtr<CaptureMouseListener> mCaptureMouseListener;
 
 protected:
   /**

@@ -41,8 +41,6 @@
 #include "nsIVariant.h"
 #include "mozilla/Services.h"
 #include "nsDirectoryServiceDefs.h"
-#include "nsICapturePicker.h"
-#include "nsIFileURL.h"
 #include "nsDOMFile.h"
 #include "nsEventStates.h"
 #include "nsTextControlFrame.h"
@@ -79,7 +77,6 @@ nsFileControlFrame::Init(nsIContent* aContent,
   nsBlockFrame::Init(aContent, aParent, aPrevInFlow);
 
   mMouseListener = new BrowseMouseListener(this);
-  mCaptureMouseListener = new CaptureMouseListener(this);
 }
 
 void
@@ -96,7 +93,6 @@ nsFileControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
   }
 
   // remove mMouseListener as a mouse event listener (bug 40533, bug 355931)
-  nsContentUtils::DestroyAnonymousContent(&mCapture);
 
   if (mBrowse) {
     mBrowse->RemoveSystemEventListener(NS_LITERAL_STRING("click"),
@@ -110,7 +106,6 @@ nsFileControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
   }
   nsContentUtils::DestroyAnonymousContent(&mTextContent);
 
-  mCaptureMouseListener->ForgetFrame();
   mMouseListener->ForgetFrame();
   nsBlockFrame::DestroyFrom(aDestructRoot);
 }
@@ -183,37 +178,6 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   mBrowse->SetAttr(kNameSpaceID_None, nsGkAtoms::type,
                    NS_LITERAL_STRING("button"), false);
 
-  // Create the capture button
-  nsCOMPtr<nsICapturePicker> capturePicker;
-  capturePicker = do_GetService("@mozilla.org/capturepicker;1");
-  if (capturePicker) {
-    CaptureCallbackData data;
-    data.picker = capturePicker;
-    data.mode = GetCaptureMode(data);
-
-    if (data.mode != 0) {
-      mCaptureMouseListener->mMode = data.mode;
-      nodeInfo = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::input, nullptr,
-                                                     kNameSpaceID_XHTML,
-                                                     nsIDOMNode::ELEMENT_NODE);
-      NS_NewHTMLElement(getter_AddRefs(mCapture), nodeInfo.forget(),
-                        dom::NOT_FROM_PARSER);
-      if (!mCapture)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-      // Mark the element to be native anonymous before setting any attributes.
-      mCapture->SetNativeAnonymous();
-
-      mCapture->SetAttr(kNameSpaceID_None, nsGkAtoms::type,
-                        NS_LITERAL_STRING("button"), false);
-
-      mCapture->SetAttr(kNameSpaceID_None, nsGkAtoms::value,
-                        NS_LITERAL_STRING("capture"), false);
-
-      mCapture->AddSystemEventListener(NS_LITERAL_STRING("click"),
-                                       mCaptureMouseListener, false);
-    }
-  }
   nsCOMPtr<nsIDOMHTMLInputElement> fileContent = do_QueryInterface(mContent);
   nsCOMPtr<nsIDOMHTMLInputElement> browseControl = do_QueryInterface(mBrowse);
   if (fileContent && browseControl) {
@@ -227,9 +191,6 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   }
 
   if (!aElements.AppendElement(mBrowse))
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  if (mCapture && !aElements.AppendElement(mCapture))
     return NS_ERROR_OUT_OF_MEMORY;
 
   // Register as an event listener of the button
@@ -249,7 +210,6 @@ nsFileControlFrame::AppendAnonymousContentTo(nsBaseContentList& aElements,
 {
   aElements.MaybeAppendElement(mTextContent);
   aElements.MaybeAppendElement(mBrowse);
-  aElements.MaybeAppendElement(mCapture);
 }
 
 NS_QUERYFRAME_HEAD(nsFileControlFrame)
@@ -284,90 +244,6 @@ bool ShouldProcessMouseClick(nsIDOMEvent* aMouseEvent)
   }
 
   return true;
-}
-
-/**
- * This is called when our capture button is clicked
- */
-NS_IMETHODIMP
-nsFileControlFrame::CaptureMouseListener::HandleEvent(nsIDOMEvent* aMouseEvent)
-{
-  nsresult rv;
-
-  NS_ASSERTION(mFrame, "We should have been unregistered");
-  if (!ShouldProcessMouseClick(aMouseEvent))
-    return NS_OK;
-
-  // Get parent nsPIDOMWindow object.
-  nsIContent* content = mFrame->GetContent();
-  nsHTMLInputElement* inputElement =
-    nsHTMLInputElement::FromContentOrNull(content);
-  if (!inputElement)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDocument> doc = content->GetDocument();
-  if (!doc)
-    return NS_ERROR_FAILURE;
-
-  // Get Loc title
-  nsXPIDLString title;
-  nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
-                                     "MediaUpload", title);
-
-  nsPIDOMWindow* win = doc->GetWindow();
-  if (!win) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsICapturePicker> capturePicker;
-  capturePicker = do_CreateInstance("@mozilla.org/capturepicker;1");
-  if (!capturePicker)
-    return NS_ERROR_FAILURE;
-
-  rv = capturePicker->Init(win, title, mMode);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Show dialog
-  uint32_t result;
-  rv = capturePicker->Show(&result);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (result == nsICapturePicker::RETURN_CANCEL)
-    return NS_OK;
-
-  if (!mFrame) {
-    // The frame got destroyed while the filepicker was up.  Don't do
-    // anything here.
-    // (This listener itself can't be destroyed because the event listener
-    // manager holds a strong reference to us while it fires the event.)
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIDOMFile> domFile;
-  rv = capturePicker->GetFile(getter_AddRefs(domFile));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMArray<nsIDOMFile> newFiles;
-  if (domFile) {
-    newFiles.AppendObject(domFile);
-  } else {
-    return NS_ERROR_FAILURE;
-  }
-
-  // XXXkhuey we really should have a better UI story than the tired old
-  // uneditable text box with the file name inside.
-  // Set new selected files
-  if (newFiles.Count()) {
-    // Tell our input element that this update of the value is a user
-    // initiated change. Otherwise it'll think that the value is being set by
-    // a script and not fire onchange when it should.
-
-    inputElement->SetFiles(newFiles, true);
-    nsContentUtils::DispatchTrustedEvent(content->OwnerDoc(), content,
-                                         NS_LITERAL_STRING("change"), true,
-                                         false);
-  }
-
-  return NS_OK;
 }
 
 /**
@@ -618,51 +494,6 @@ nsFileControlFrame::AccessibleType()
 }
 #endif
 
-uint32_t
-nsFileControlFrame::GetCaptureMode(const CaptureCallbackData& aData)
-{
-  int32_t filters = nsHTMLInputElement::FromContent(mContent)->GetFilterFromAccept();
-  nsresult rv;
-  bool captureEnabled;
-
-  if (filters == nsIFilePicker::filterImages) {
-    rv = aData.picker->ModeMayBeAvailable(nsICapturePicker::MODE_STILL,
-                                             &captureEnabled);
-    NS_ENSURE_SUCCESS(rv, 0);
-    if (captureEnabled) {
-      return nsICapturePicker::MODE_STILL;
-    }
-    return 0;
-  }
-
-  if (filters == nsIFilePicker::filterAudio) {
-    rv = aData.picker->ModeMayBeAvailable(nsICapturePicker::MODE_AUDIO_CLIP,
-                                             &captureEnabled);
-    NS_ENSURE_SUCCESS(rv, 0);
-    if (captureEnabled) {
-      return nsICapturePicker::MODE_AUDIO_CLIP;
-    }
-    return 0;
-  }
-
-  if (filters == nsIFilePicker::filterVideo) {
-    rv = aData.picker->ModeMayBeAvailable(nsICapturePicker::MODE_VIDEO_CLIP,
-                                             &captureEnabled);
-    NS_ENSURE_SUCCESS(rv, 0);
-    if (captureEnabled) {
-      return nsICapturePicker::MODE_VIDEO_CLIP;
-    }
-    rv = aData.picker->ModeMayBeAvailable(nsICapturePicker::MODE_VIDEO_NO_SOUND_CLIP,
-                                             &captureEnabled);
-    NS_ENSURE_SUCCESS(rv, 0);
-    if (captureEnabled) {
-      return nsICapturePicker::MODE_VIDEO_NO_SOUND_CLIP;
-    }
-    return 0;
-  }
-  
-  return 0;
-}
 ////////////////////////////////////////////////////////////
 // Mouse listener implementation
 
