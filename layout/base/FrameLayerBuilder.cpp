@@ -2179,7 +2179,9 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
       if (aClip.mHaveClipRect) {
         nsIntRect clip = ScaleToNearestPixels(aClip.NonRoundedIntersection());
         clip.MoveBy(mParameters.mOffset);
-        ownLayer->IntersectClipRect(clip);
+        ownLayer->SetClipRect(&clip);
+      } else {
+        ownLayer->SetClipRect(nullptr);
       }
       ThebesLayerData* data = GetTopThebesLayerData();
       if (data) {
@@ -2884,8 +2886,6 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
         NS_ASSERTION(oldLayer->GetType() == Layer::TYPE_CONTAINER,
                      "Wrong layer type");
         containerLayer = static_cast<ContainerLayer*>(oldLayer);
-        // Clear clip rect; the caller will set it if necessary.
-        containerLayer->SetClipRect(nullptr);
         containerLayer->SetMaskLayer(nullptr);
       }
     }
@@ -3012,8 +3012,6 @@ FrameLayerBuilder::GetLeafLayerFor(nsDisplayListBuilder* aBuilder,
     // layer rendering.
     return nullptr;
   }
-  // Clear clip rect; the caller is responsible for setting it.
-  layer->SetClipRect(nullptr);
   layer->SetMaskLayer(nullptr);
   return layer;
 }
