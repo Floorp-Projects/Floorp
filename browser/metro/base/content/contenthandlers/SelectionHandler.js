@@ -64,6 +64,7 @@ var SelectionHandler = {
     addMessageListener("Browser:CaretAttach", this);
     addMessageListener("Browser:CaretMove", this);
     addMessageListener("Browser:CaretUpdate", this);
+    addMessageListener("Browser:SelectionSwitchMode", this);
   },
 
   shutdown: function shutdown() {
@@ -81,6 +82,7 @@ var SelectionHandler = {
     removeMessageListener("Browser:CaretAttach", this);
     removeMessageListener("Browser:CaretMove", this);
     removeMessageListener("Browser:CaretUpdate", this);
+    removeMessageListener("Browser:SelectionSwitchMode", this);
   },
 
   /*************************************************
@@ -135,6 +137,39 @@ var SelectionHandler = {
 
     // Update the position of our selection monocles
     this._updateSelectionUI(true, true);
+  },
+
+  /*
+   * Switch selection modes. Currently we only support switching
+   * from "caret" to "selection".
+   */
+  _onSwitchMode: function _onSwitchMode(aMode, aMarker, aX, aY) {
+    if (aMode != "selection") {
+      this._onFail("unsupported mode switch");
+      return;
+    }
+    
+    // Sanity check to be sure we are initialized
+    if (!this._targetElement) {
+      this._onFail("not initialized");
+      return;
+    }
+
+    // Similar to _onSelectionStart - we need to create initial selection
+    // but without the initialization bits.
+    let framePoint = this._clientPointToFramePoint({ xPos: aX, yPos: aY });
+    if (!this._domWinUtils.selectAtPoint(framePoint.xPos, framePoint.yPos,
+                                         Ci.nsIDOMWindowUtils.SELECT_CHARACTER)) {
+      this._onFail("failed to set selection at point");
+      return;
+    }
+
+    // We bail if things get out of sync here implying we missed a message.
+    this._selectionMoveActive = true;
+
+    // Update the position of the selection marker that is *not*
+    // being dragged.
+    this._updateSelectionUI(aMarker == "end", aMarker == "start");
   },
 
   /*
@@ -1000,19 +1035,23 @@ var SelectionHandler = {
 
       case "Browser:SelectionAttach":
         this._onSelectionAttach(json.xPos, json.yPos);
-      break;
+        break;
 
       case "Browser:CaretAttach":
         this._onCaretAttach(json.xPos, json.yPos);
-      break;
+        break;
 
       case "Browser:CaretMove":
         this._onCaretMove(json.caret.xPos, json.caret.yPos);
-      break;
+        break;
 
       case "Browser:CaretUpdate":
         this._onCaretPositionUpdate(json.caret.xPos, json.caret.yPos);
-      break;
+        break;
+
+      case "Browser:SelectionSwitchMode":
+        this._onSwitchMode(json.newMode, json.change, json.xPos, json.yPos);
+        break;
 
       case "Browser:SelectionClose":
         this._onSelectionClose();
