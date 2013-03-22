@@ -53,9 +53,7 @@ const PanelUI = {
       this.container.style.height = this.subViews.scrollHeight + "px";
     } else {
       this.viewStack.setAttribute("view", "main");
-      let springHeight = this.mainViewSpring.getBoundingClientRect().height;
-      this.container.style.height = (this.mainView.scrollHeight - springHeight) + "px";
-      this.mainViewSpring.style.height = "";
+      this._syncContainerWithMainView();
     }
 
     return aVal;
@@ -99,6 +97,7 @@ const PanelUI = {
    */
   replaceMainView: function(aMainView) {
     this.viewStack.insertBefore(aMainView, this.viewStack.firstChild);
+    this._syncContainerWithMainView();
   },
 
   /**
@@ -207,6 +206,17 @@ const PanelUI = {
   },
 
   /**
+   * Ensures that the container has the same height as the main view, minus
+   * any spring height. This is usually done after customization completes, or
+   * when switching back from a subview.
+   */
+  _syncContainerWithMainView: function() {
+    let springHeight = this.mainViewSpring.getBoundingClientRect().height;
+    this.container.style.height = (this.mainView.scrollHeight - springHeight) + "px";
+    this.mainViewSpring.style.height = "";
+  },
+
+  /**
    * Sets the anchor node into the open or closed state, depending
    * on the state of the panel.
    */
@@ -237,6 +247,10 @@ const PanelUI = {
     }
   },
 
+  /**
+   * When viewing a subview, any click on the main view gets intercepted by our
+   * capturer, and then we switch to the main view.
+   */
   _onCapturerClick: function(aEvent) {
     PanelUI.showMainView();
   },
