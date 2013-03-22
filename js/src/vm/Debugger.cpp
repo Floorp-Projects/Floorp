@@ -493,11 +493,6 @@ Debugger::slowPathOnEnterFrame(JSContext *cx, AbstractFramePtr frame, MutableHan
     AutoValueVector triggered(cx);
     Handle<GlobalObject*> global = cx->global();
 
-#ifdef DEBUG
-    ScriptFrameIter iter(cx);
-    JS_ASSERT(iter.abstractFramePtr() == frame);
-#endif
-
     if (GlobalObject::DebuggerVector *debuggers = global->getDebuggers()) {
         for (Debugger **p = debuggers->begin(); p != debuggers->end(); p++) {
             Debugger *dbg = *p;
@@ -531,11 +526,6 @@ DebuggerFrame_freeStackIterData(FreeOp *fop, RawObject obj);
 bool
 Debugger::slowPathOnLeaveFrame(JSContext *cx, AbstractFramePtr frame, bool frameOk)
 {
-#ifdef DEBUG
-    ScriptFrameIter iter(cx);
-    JS_ASSERT(iter.abstractFramePtr() == frame);
-#endif
-
     Handle<GlobalObject*> global = cx->global();
 
     /* Save the frame's completion value. */
