@@ -1390,6 +1390,9 @@ abstract public class BrowserApp extends GeckoApp
 
         if (!mBrowserToolbar.openOptionsMenu())
             super.openOptionsMenu();
+
+        if (mDynamicToolbarEnabled)
+            mBrowserToolbar.animateVisibility(true);
     }
 
     @Override
