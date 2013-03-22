@@ -59,6 +59,34 @@ struct IsPointer<T*> : TrueType {};
 
 /* 20.9.4.3 Type properties */
 
+/**
+ * Traits class for identifying POD types.  Until C++11 there's no automatic
+ * way to detect PODs, so for the moment this is done manually.  Users may
+ * define specializations of this class that inherit from mozilla::TrueType and
+ * mozilla::FalseType (or equivalently mozilla::IntegralConstant<bool, true or
+ * false>, or conveniently from mozilla::IsPod for composite types) as needed to
+ * ensure correct IsPod behavior.
+ */
+template<typename T>
+struct IsPod : public FalseType {};
+
+template<> struct IsPod<char>               : TrueType {};
+template<> struct IsPod<signed char>        : TrueType {};
+template<> struct IsPod<unsigned char>      : TrueType {};
+template<> struct IsPod<short>              : TrueType {};
+template<> struct IsPod<unsigned short>     : TrueType {};
+template<> struct IsPod<int>                : TrueType {};
+template<> struct IsPod<unsigned int>       : TrueType {};
+template<> struct IsPod<long>               : TrueType {};
+template<> struct IsPod<unsigned long>      : TrueType {};
+template<> struct IsPod<long long>          : TrueType {};
+template<> struct IsPod<unsigned long long> : TrueType {};
+template<> struct IsPod<bool>               : TrueType {};
+template<> struct IsPod<float>              : TrueType {};
+template<> struct IsPod<double>             : TrueType {};
+template<> struct IsPod<wchar_t>            : TrueType {};
+template<typename T> struct IsPod<T*>       : TrueType {};
+
 /* 20.9.5 Type property queries */
 
 /* 20.9.6 Relationships between types */
@@ -257,34 +285,6 @@ struct Conditional<false, A, B>
 {
     typedef B Type;
 };
-
-/**
- * Traits class for identifying POD types.  Until C++11 there's no automatic
- * way to detect PODs, so for the moment this is done manually.  Users may
- * define specializations of this class that inherit from mozilla::TrueType and
- * mozilla::FalseType (or equivalently mozilla::IntegralConstant<bool, true or
- * false>, or conveniently from mozilla::IsPod for composite types) as needed to
- * ensure correct IsPod behavior.
- */
-template<typename T>
-struct IsPod : public FalseType {};
-
-template<> struct IsPod<char>               : TrueType {};
-template<> struct IsPod<signed char>        : TrueType {};
-template<> struct IsPod<unsigned char>      : TrueType {};
-template<> struct IsPod<short>              : TrueType {};
-template<> struct IsPod<unsigned short>     : TrueType {};
-template<> struct IsPod<int>                : TrueType {};
-template<> struct IsPod<unsigned int>       : TrueType {};
-template<> struct IsPod<long>               : TrueType {};
-template<> struct IsPod<unsigned long>      : TrueType {};
-template<> struct IsPod<long long>          : TrueType {};
-template<> struct IsPod<unsigned long long> : TrueType {};
-template<> struct IsPod<bool>               : TrueType {};
-template<> struct IsPod<float>              : TrueType {};
-template<> struct IsPod<double>             : TrueType {};
-template<> struct IsPod<wchar_t>            : TrueType {};
-template<typename T> struct IsPod<T*>       : TrueType {};
 
 } /* namespace mozilla */
 
