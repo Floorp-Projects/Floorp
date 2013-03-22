@@ -9,7 +9,6 @@
 #include "nsIAtom.h"
 #include "nsString.h"
 #include "jsapi.h"
-#include "nsIContent.h"
 #include "nsString.h"
 #include "nsXBLSerialize.h"
 #include "nsXBLProtoImplMember.h"

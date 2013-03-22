@@ -22,10 +22,10 @@
 #include "nsIListControlFrame.h"
 #include "nsISelectControlFrame.h"
 #include "nsIDOMEventListener.h"
-#include "nsIContent.h"
 #include "nsAutoPtr.h"
 #include "nsSelectsAreaFrame.h"
 
+class nsIContent;
 class nsIDOMHTMLSelectElement;
 class nsIDOMHTMLOptionsCollection;
 class nsIDOMHTMLOptionElement;
