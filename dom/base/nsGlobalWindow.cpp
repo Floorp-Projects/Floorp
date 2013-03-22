@@ -10870,6 +10870,11 @@ nsGlobalWindow::SuspendTimeouts(uint32_t aIncrease,
         t->Release();
       }
     }
+
+    // Suspend all of the AudioContexts for this window
+    for (uint32_t i = 0; i < mAudioContexts.Length(); ++i) {
+      mAudioContexts[i]->Suspend();
+    }
   }
 
   // Suspend our children as well.
@@ -10925,6 +10930,11 @@ nsGlobalWindow::ResumeTimeouts(bool aThawChildren)
         ac->AddWindowListener(mEnabledSensors[i], this);
     }
     EnableGamepadUpdates();
+
+    // Resume all of the AudioContexts for this window
+    for (uint32_t i = 0; i < mAudioContexts.Length(); ++i) {
+      mAudioContexts[i]->Resume();
+    }
 
     // Resume all of the workers for this window.
     nsIScriptContext *scx = GetContextInternal();
