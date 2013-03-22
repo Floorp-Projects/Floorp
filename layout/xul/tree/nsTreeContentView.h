@@ -6,6 +6,7 @@
 #ifndef nsTreeContentView_h__
 #define nsTreeContentView_h__
 
+#include "nsCycleCollectionParticipant.h"
 #include "nsTArray.h"
 #include "nsStubDocumentObserver.h"
 #include "nsITreeBoxObject.h"

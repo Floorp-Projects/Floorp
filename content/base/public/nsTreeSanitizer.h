@@ -5,10 +5,11 @@
 #ifndef nsTreeSanitizer_h_
 #define nsTreeSanitizer_h_
 
-#include "nsIContent.h"
 #include "mozilla/css/StyleRule.h"
 #include "nsIPrincipal.h"
 #include "mozilla/dom/Element.h"
+
+class nsIContent;
 
 /**
  * See the documentation of nsIParserUtils::sanitize for documentation

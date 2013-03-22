@@ -77,14 +77,14 @@
 #define DASHWEBMODPARSER_H_
 
 #include "nsCOMPtr.h"
-#include "nsIContent.h"
-#include "nsIDOMElement.h"
 #include "IMPDParser.h"
 #include "MPD.h"
 #include "Period.h"
 #include "AdaptationSet.h"
 #include "Representation.h"
 #include "SegmentBase.h"
+
+class nsIDOMElement;
 
 namespace mozilla {
 namespace net {

@@ -7,7 +7,8 @@
 #define mozilla_a11y_TreeWalker_h_
 
 #include "nsAutoPtr.h"
-#include "nsIContent.h"
+
+class nsIContent;
 
 namespace mozilla {
 namespace a11y {

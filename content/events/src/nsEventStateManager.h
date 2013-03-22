@@ -10,7 +10,6 @@
 
 #include "nsEvent.h"
 #include "nsGUIEvent.h"
-#include "nsIContent.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "nsITimer.h"
@@ -26,6 +25,7 @@
 #include "nsIFrame.h"
 
 class nsIPresShell;
+class nsIContent;
 class nsIDocument;
 class nsIDocShell;
 class nsIDocShellTreeNode;
