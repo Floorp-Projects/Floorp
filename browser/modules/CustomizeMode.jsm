@@ -60,6 +60,14 @@ CustomizeMode.prototype = {
 
     CustomizableUI.addListener(this);
 
+    // Add a keypress listener to the tab-view-deck so that we can quickly
+    // exit customization mode when pressing ESC
+    let tabViewDeck = document.getElementById("tab-view-deck");
+    tabViewDeck.addEventListener("keypress", this, false);
+    // Same goes for the menu button - if we're customizing, a click to the
+    // menu button means a quick exit from customization mode.
+    window.PanelUI.menuButton.addEventListener("click", this, false);
+
     // Let everybody in this window know that we're about to customize.
     let evt = document.createEvent("CustomEvent");
     evt.initCustomEvent("CustomizationStart", true, true, window);
@@ -105,6 +113,10 @@ CustomizeMode.prototype = {
 
   exit: function(aToolboxChanged) {
     CustomizableUI.removeListener(this);
+
+    let tabViewDeck = this.document.getElementById("tab-view-deck");
+    tabViewDeck.removeEventListener("keypress", this, false);
+    this.window.PanelUI.menuButton.removeEventListener("click", this, false);
 
     this.depopulatePalette();
 
@@ -354,6 +366,18 @@ CustomizeMode.prototype = {
         break;
       case "drop":
         this._onDragDrop(aEvent);
+        break;
+      case "keypress":
+        if (aEvent.keyCode === aEvent.DOM_VK_ESCAPE) {
+          this.exit();
+        }
+        break;
+      case "click":
+        if (aEvent.button == 0 &&
+            aEvent.originalTarget == this.window.PanelUI.menuButton) {
+          this.exit();
+          aEvent.preventDefault();
+        }
         break;
     }
   },
