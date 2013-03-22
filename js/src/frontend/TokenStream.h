@@ -34,23 +34,12 @@ enum TokenKind {
     TOK_SEMI,                      /* semicolon */
     TOK_COMMA,                     /* comma operator */
     TOK_HOOK, TOK_COLON,           /* conditional (?:) */
-    TOK_OR,                        /* logical or (||) */
-    TOK_AND,                       /* logical and (&&) */
-    TOK_BITOR,                     /* bitwise-or (|) */
-    TOK_BITXOR,                    /* bitwise-xor (^) */
-    TOK_BITAND,                    /* bitwise-and (&) */
-    TOK_PLUS,                      /* plus */
-    TOK_MINUS,                     /* minus */
-    TOK_STAR,                      /* multiply */
-    TOK_DIV,                       /* divide */
-    TOK_MOD,                       /* modulus */
     TOK_INC, TOK_DEC,              /* increment/decrement (++ --) */
     TOK_DOT,                       /* member operator (.) */
     TOK_TRIPLEDOT,                 /* for rest arguments (...) */
     TOK_LB, TOK_RB,                /* left and right brackets */
     TOK_LC, TOK_RC,                /* left and right curlies (braces) */
     TOK_LP, TOK_RP,                /* left and right parentheses */
-    TOK_ARROW,                     /* function arrow (=>) */
     TOK_NAME,                      /* identifier */
     TOK_NUMBER,                    /* numeric constant */
     TOK_STRING,                    /* string constant */
@@ -70,7 +59,6 @@ enum TokenKind {
     TOK_FOR,                       /* for keyword */
     TOK_BREAK,                     /* break keyword */
     TOK_CONTINUE,                  /* continue keyword */
-    TOK_IN,                        /* in keyword */
     TOK_VAR,                       /* var keyword */
     TOK_CONST,                     /* const keyword */
     TOK_WITH,                      /* with keyword */
@@ -81,7 +69,6 @@ enum TokenKind {
     TOK_CATCH,                     /* catch keyword */
     TOK_FINALLY,                   /* finally keyword */
     TOK_THROW,                     /* throw keyword */
-    TOK_INSTANCEOF,                /* instanceof keyword */
     TOK_DEBUGGER,                  /* debugger keyword */
     TOK_YIELD,                     /* yield from generator function */
     TOK_LEXICALSCOPE,              /* block scope AST node label */
@@ -96,6 +83,17 @@ enum TokenKind {
      * range-testing.
      */
 
+    /*
+     * Binary operators tokens, TOK_OR thru TOK_MOD. These must be in the same
+     * order as F(OR) and friends in FOR_EACH_PARSE_NODE_KIND in ParseNode.h.
+     */
+    TOK_OR,                        /* logical or (||) */
+    TOK_BINOP_FIRST = TOK_OR,
+    TOK_AND,                       /* logical and (&&) */
+    TOK_BITOR,                     /* bitwise-or (|) */
+    TOK_BITXOR,                    /* bitwise-xor (^) */
+    TOK_BITAND,                    /* bitwise-and (&) */
+
     /* Equality operation tokens, per TokenKindIsEquality */
     TOK_STRICTEQ,
     TOK_EQUALITY_START = TOK_STRICTEQ,
@@ -103,12 +101,6 @@ enum TokenKind {
     TOK_STRICTNE,
     TOK_NE,
     TOK_EQUALITY_LAST = TOK_NE,
-
-    /* Unary operation tokens */
-    TOK_TYPEOF,
-    TOK_VOID,
-    TOK_NOT,
-    TOK_BITNOT,
 
     /* Relational ops (< <= > >=), per TokenKindIsRelational */
     TOK_LT,
@@ -118,12 +110,30 @@ enum TokenKind {
     TOK_GE,
     TOK_RELOP_LAST = TOK_GE,
 
+    TOK_INSTANCEOF,                /* instanceof keyword */
+    TOK_IN,                        /* in keyword */
+
     /* Shift ops (<< >> >>>), per TokenKindIsShift */
     TOK_LSH,
     TOK_SHIFTOP_START = TOK_LSH,
     TOK_RSH,
     TOK_URSH,
     TOK_SHIFTOP_LAST = TOK_URSH,
+
+    TOK_PLUS,                      /* plus */
+    TOK_MINUS,                     /* minus */
+    TOK_STAR,                      /* multiply */
+    TOK_DIV,                       /* divide */
+    TOK_MOD,                       /* modulus */
+    TOK_BINOP_LAST = TOK_MOD,
+
+    /* Unary operation tokens */
+    TOK_TYPEOF,
+    TOK_VOID,
+    TOK_NOT,
+    TOK_BITNOT,
+
+    TOK_ARROW,                     /* function arrow (=>) */
 
     /* Assignment ops (= += -= etc.), per TokenKindIsAssignment */
     TOK_ASSIGN,                    /* assignment ops (= += -= etc.) */
@@ -143,6 +153,12 @@ enum TokenKind {
 
     TOK_LIMIT                      /* domain size */
 };
+
+inline bool
+TokenKindIsBinaryOp(TokenKind tt)
+{
+    return TOK_BINOP_FIRST <= tt && tt <= TOK_BINOP_LAST;
+}
 
 inline bool
 TokenKindIsEquality(TokenKind tt)
