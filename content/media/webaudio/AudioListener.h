@@ -121,7 +121,6 @@ private:
   void SendThreeDPointParameterToStream(uint32_t aIndex, const ThreeDPoint& aValue);
 
 private:
-  friend class PannerNode;
   nsRefPtr<AudioContext> mContext;
   ThreeDPoint mPosition;
   ThreeDPoint mOrientation;

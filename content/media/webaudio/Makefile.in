@@ -31,7 +31,6 @@ CPPSRCS := \
   GainNode.cpp \
   MediaBufferDecoder.cpp \
   PannerNode.cpp \
-  ThreeDPoint.cpp \
   $(NULL)
 
 EXPORTS_NAMESPACES := mozilla/dom
