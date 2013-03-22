@@ -21,6 +21,7 @@ browser.jar:
   skin/classic/browser/appmenu.png
 * skin/classic/browser/browser.css                          (browser.css)
   skin/classic/browser/click-to-play-warning-stripes.png
+  skin/classic/browser/customization/customization-mode-background.jpg (customization/customization-mode-background.jpg)
 * skin/classic/browser/engineManager.css                    (engineManager.css)
   skin/classic/browser/Geolocation-16.png
   skin/classic/browser/Geolocation-16@2x.png

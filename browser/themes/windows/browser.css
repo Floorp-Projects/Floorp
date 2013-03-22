@@ -2931,21 +2931,23 @@ chatbox {
 
 /* Customization mode */
 #main-window[customizing] {
-  background-image: linear-gradient(to bottom, #3A75AD, #134F94);
+  background-image: url("chrome://browser/skin/customization/customization-mode-background.jpg");
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
 }
 
 #main-window[customizing] #tab-view-deck {
   transition-property: padding;
-  transition-duration: 150ms;
-  transition-timing-function: ease-in-out;
-  padding: 3em;
+  transition-duration: 300ms;
+  transition-timing-function: ease-out;
+  padding: 8em;
   -moz-binding: url("chrome://global/content/bindings/general.xml#windowdragbox")
 }
 
 #main-window:not([customizing]) #tab-view-deck {
   transition-property: padding;
-  transition-duration: 150ms;
-  transition-timing-function: ease-in-out;
+  transition-duration: 200ms;
+  transition-timing-function: ease-out;
   padding: 0;
 }
 
