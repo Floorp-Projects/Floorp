@@ -195,7 +195,7 @@ ion::EnterBaselineAtBranch(JSContext *cx, StackFrame *fp, jsbytecode *pc)
 }
 
 static MethodStatus
-BaselineCompile(JSContext *cx, HandleScript script, StackFrame *fp)
+BaselineCompile(JSContext *cx, HandleScript script)
 {
     JS_ASSERT(!script->baseline);
 
@@ -261,7 +261,23 @@ ion::CanEnterBaselineJIT(JSContext *cx, JSScript *scriptArg, StackFrame *fp, boo
     if (scriptArg->incUseCount() <= js_IonOptions.baselineUsesBeforeCompile && !IsJSDEnabled(cx))
         return Method_Skipped;
 
-    return BaselineCompile(cx, script, fp);
+    if (script->isCallsiteClone) {
+        // Ensure the original function is compiled too, so that bailouts from
+        // Ion code have a BaselineScript to resume into.
+        RootedScript original(cx, script->originalFunction()->nonLazyScript());
+        JS_ASSERT(original != script);
+
+        if (original->baseline == BASELINE_DISABLED_SCRIPT)
+            return Method_CantCompile;
+
+        if (!original->hasBaselineScript()) {
+            MethodStatus status = BaselineCompile(cx, original);
+            if (status != Method_Compiled)
+                return status;
+        }
+    }
+
+    return BaselineCompile(cx, script);
 }
 
 // Be safe, align IC entry list to 8 in all cases.
