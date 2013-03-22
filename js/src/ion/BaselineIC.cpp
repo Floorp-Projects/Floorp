@@ -5351,6 +5351,9 @@ TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, JSO
         if (!calleeScript->hasBaselineScript() && !calleeScript->hasIonScript())
             return true;
 
+        if (calleeScript->shouldCloneAtCallsite)
+            return true;
+
         // Check if this stub chain has already generalized scripted calls.
         if (stub->scriptedStubsAreGeneralized()) {
             IonSpew(IonSpew_BaselineIC, "  Chain already has generalized scripted call stub!");
@@ -5416,6 +5419,28 @@ TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, JSO
 }
 
 static bool
+MaybeCloneFunctionAtCallsite(JSContext *cx, MutableHandleValue callee, HandleScript script,
+                             jsbytecode *pc)
+{
+    RootedFunction fun(cx);
+    if (!IsFunctionObject(callee, fun.address()))
+        return true;
+
+    if (!fun->hasScript() || !fun->nonLazyScript()->shouldCloneAtCallsite)
+        return true;
+
+    if (!cx->typeInferenceEnabled())
+        return true;
+
+    fun = CloneFunctionAtCallsite(cx, fun, script, pc);
+    if (!fun)
+        return false;
+
+    callee.setObject(*fun);
+    return true;
+}
+
+static bool
 DoCallFallback(JSContext *cx, BaselineFrame *frame, ICCall_Fallback *stub, uint32_t argc,
                Value *vp, MutableHandleValue res)
 {
@@ -5448,6 +5473,9 @@ DoCallFallback(JSContext *cx, BaselineFrame *frame, ICCall_Fallback *stub, uint3
 
     // Try attaching a call stub.
     if (!TryAttachCallStub(cx, stub, script, op, argc, vp, constructing, newType))
+        return false;
+
+    if (!MaybeCloneFunctionAtCallsite(cx, &callee, script, pc))
         return false;
 
     if (op == JSOP_NEW) {
