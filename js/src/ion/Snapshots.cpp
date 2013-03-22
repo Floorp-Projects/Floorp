@@ -300,7 +300,6 @@ void
 SnapshotWriter::startFrame(JSFunction *fun, RawScript script, jsbytecode *pc, uint32_t exprStack)
 {
     JS_ASSERT(CountArgSlots(fun) < SNAPSHOT_MAX_NARGS);
-    JS_ASSERT(exprStack < SNAPSHOT_MAX_STACK);
 
     uint32_t formalArgs = CountArgSlots(fun);
 
