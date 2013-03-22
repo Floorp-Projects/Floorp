@@ -13,6 +13,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_A11Y_FILES = \
 		doc.html \
+		test_atcaretoffset.html \
 		test_doc.html \
 		test_hypertext.html \
 		test_label.xul \
