@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test: nsIAccessibleText getText* functions at caret offset</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+  <script type="application/javascript"
+          src="../text.js"></script>
+
+  <script type="application/javascript">
+    //gA11yEventDumpToConsole = true; // debugging
+
+    // __a__w__o__r__d__\n
+    //  0  1  2  3  4  5
+    // __t__w__o__ (soft line break)
+    //  6  7  8  9
+    // __w__o__r__d__s
+    // 10 11 12 13 14 15
+
+    function moveToLastLineEnd()
+    {
+      this.__proto__ = new synthFocus("textarea");
+
+      this.finalCheck = function moveToLastLineEnd_finalCheck()
+      {
+        testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_START, "", 15, 15,
+                            "textarea", kTodo, kOk, kTodo);
+
+        testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_END, "", 15, 15,
+                            "textarea", kOk, kTodo, kTodo);
+
+        testTextAtOffset(kCaretOffset, BOUNDARY_LINE_START, "", 15, 15,
+                         "textarea", kTodo, kTodo, kTodo);
+
+        testTextAtOffset(kCaretOffset, BOUNDARY_LINE_END, "words", 10, 15,
+                         "textarea", kTodo, kTodo, kTodo);
+
+        testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_START, "words", 10, 15,
+                             "textarea", kOk, kOk, kOk);
+
+        testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_END, "\ntwo ", 5, 10,
+                             "textarea", kTodo, kTodo, kTodo);
+      }
+
+      this.getID = function moveToLastLineEnd_getID()
+      {
+        return "move to last line end";
+      }
+    }
+
+    function moveToLastLineStart()
+    {
+      this.__proto__ = new moveToLineStart("textarea", 10);
+
+      this.finalCheck = function moveToLastLineStart_finalCheck()
+      {
+        testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_START, "", 15, 15,
+                            "textarea", kTodo, kTodo, kTodo);
+
+        testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_END, "", 15, 15,
+                            "textarea", kTodo, kTodo, kOk);
+
+        testTextAtOffset(kCaretOffset, BOUNDARY_LINE_START, "words", 10, 15,
+                         "textarea", kTodo, kOk, kTodo);
+
+        testTextAtOffset(kCaretOffset, BOUNDARY_LINE_END, "\ntwo ", 5, 10,
+                         "textarea", kTodo, kTodo, kTodo);
+
+        testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_START, "two ", 6, 10,
+                             "textarea", kTodo, kTodo, kOk);
+
+        testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_END, "\ntwo ", 5, 10,
+                             "textarea", kTodo, kTodo, kOk);
+      }
+
+      this.getID = function moveToLastLineStart_getID()
+      {
+        return "move to last line start";
+      }
+    }
+
+    function moveToMiddleLineStart()
+    {
+      this.__proto__ = new synthUpKey("textarea",
+                                      new caretMoveChecker(6, "textarea"));
+
+      this.finalCheck = function moveToMiddleLineStart_finalCheck()
+      {
+        testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_START, "words", 10, 15,
+                            "textarea", kTodo, kTodo, kTodo);
+
+        testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_END, "words", 10, 15,
+                            "textarea", kTodo, kTodo, kTodo);
+
+        testTextAtOffset(kCaretOffset, BOUNDARY_LINE_START, "two ", 6, 10,
+                         "textarea", kOk, kOk, kOk);
+
+        testTextAtOffset(kCaretOffset, BOUNDARY_LINE_END, "\ntwo ", 5, 10,
+                         "textarea", kTodo, kOk, kTodo);
+
+        testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_START, "aword\n", 0, 6,
+                             "textarea", kTodo, kTodo, kOk);
+
+        testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_END, "aword", 0, 5,
+                             "textarea", kTodo, kTodo, kTodo);
+      }
+
+      this.getID = function moveToMiddleLineStart_getID()
+      {
+        return "move to middle line start";
+      }
+    }
+
+    function moveToMiddleLineEnd()
+    {
+      this.__proto__ = new moveToLineEnd("textarea", 10);
+
+      this.finalCheck = function moveToMiddleLineEnd_finalCheck()
+      {
+        testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_START, "words", 10, 15,
+                            "textarea", kTodo, kTodo, kTodo);
+
+        testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_END, "words", 10, 15,
+                            "textarea", kTodo, kTodo, kOk);
+
+        testTextAtOffset(kCaretOffset, BOUNDARY_LINE_START, "two ", 6, 10,
+                         "textarea", kOk, kOk, kOk);
+
+        testTextAtOffset(kCaretOffset, BOUNDARY_LINE_END, "\ntwo ", 5, 10,
+                         "textarea", kTodo, kTodo, kTodo);
+
+        testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_START, "aword\n", 0, 6,
+                             "textarea", kTodo, kTodo, kTodo);
+
+        testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_END, "aword", 0, 5,
+                             "textarea", kTodo, kTodo, kTodo);
+      }
+
+      this.getID = function moveToMiddleLineEnd_getID()
+      {
+        return "move to middle line end";
+      }
+    }
+
+    function moveToFirstLineStart()
+    {
+      this.__proto__ = new moveToTextStart("textarea");
+
+      this.finalCheck = function moveToFirstLineStart_finalCheck()
+      {
+        testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_START, "two ", 6, 10,
+                            "textarea", kTodo, kTodo, kTodo);
+
+        testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_END, "aword", 0, 5,
+                            "textarea", kTodo, kOk, kTodo);
+
+        testTextAtOffset(kCaretOffset, BOUNDARY_LINE_START, "aword\n", 0, 6,
+                         "textarea", kTodo, kOk, kTodo);
+
+        testTextAtOffset(kCaretOffset, BOUNDARY_LINE_END, "", 0, 0,
+                         "textarea", kTodo, kOk, kTodo);
+
+        testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_START, "", 0, 0,
+                             "textarea", kOk, kOk, kOk);
+
+        testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_END, "", 0, 0,
+                             "textarea", kOk, kOk, kOk);
+      }
+
+      this.getID = function moveToFirstLineStart_getID()
+      {
+        return "move to first line start";
+      }
+    }
+
+    function moveToFirstLineEnd()
+    {
+      this.__proto__ = new moveToLineEnd("textarea", 5);
+
+      this.finalCheck = function moveToFirstLineStart_finalCheck()
+      {
+        testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_START, "two ", 6, 10,
+                            "textarea", kTodo, kTodo, kTodo);
+
+        testTextAfterOffset(kCaretOffset, BOUNDARY_LINE_END, "\ntwo ", 5, 10,
+                            "textarea", kTodo, kTodo, kTodo);
+
+        testTextAtOffset(kCaretOffset, BOUNDARY_LINE_START, "aword\n", 0, 6,
+                         "textarea", kTodo, kOk, kTodo);
+
+        testTextAtOffset(kCaretOffset, BOUNDARY_LINE_END, "aword", 0, 5,
+                         "textarea", kOk, kOk, kOk);
+
+        testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_START, "", 0, 0,
+                             "textarea", kTodo, kOk, kTodo);
+
+        testTextBeforeOffset(kCaretOffset, BOUNDARY_LINE_END, "", 0, 0,
+                             "textarea", kTodo, kOk, kTodo);
+      }
+
+      this.getID = function moveToFirstLineEnd_getID()
+      {
+        return "move to first line end";
+      }
+    }
+
+    var gQueue = null;
+    function doTest()
+    {
+      SimpleTest.expectAssertions(5);
+
+      gQueue = new eventQueue();
+      gQueue.push(new moveToLastLineEnd());
+      gQueue.push(new moveToLastLineStart());
+      gQueue.push(new moveToMiddleLineStart());
+      gQueue.push(new moveToMiddleLineEnd());
+      gQueue.push(new moveToFirstLineStart());
+      gQueue.push(new moveToFirstLineEnd());
+      gQueue.invoke(); // will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="nsIAccessibleText getText related functions tests at caret offset"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=852021">
+   Bug 852021
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+
+  <textarea id="textarea" cols="5">aword
+two words</textarea>
+  </pre>
+</body>
+</html>
