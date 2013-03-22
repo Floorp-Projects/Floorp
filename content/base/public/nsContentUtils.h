@@ -334,6 +334,12 @@ public:
    */
   static bool IsHTMLWhitespace(PRUnichar aChar);
 
+  /*
+   * Returns whether the character is an HTML whitespace (see IsHTMLWhitespace)
+   * or a nbsp character (U+00A0).
+   */
+  static bool IsHTMLWhitespaceOrNBSP(PRUnichar aChar);
+
   /**
    * Is the HTML local name a block element?
    */
