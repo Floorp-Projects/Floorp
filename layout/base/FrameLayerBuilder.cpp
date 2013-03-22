@@ -2663,7 +2663,9 @@ ContainerState::Finish(uint32_t* aTextContentFlags, LayerManagerData* aData)
 
     NS_ASSERTION(layer->GetParent() == mContainerLayer,
                  "Layer shouldn't be the child of some other container");
-    mContainerLayer->RepositionChild(layer, prevChild);
+    if (layer->GetPrevSibling() != prevChild) {
+      mContainerLayer->RepositionChild(layer, prevChild);
+    }
   }
 
   // Remove old layers that have become unused.
