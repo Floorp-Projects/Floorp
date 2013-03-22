@@ -941,7 +941,7 @@ function actions(finger, touchId, command_id, i){
     i = 0;
   }
   if (i == finger.length) {
-    sendOk(command_id);
+    sendResponse({value: touchId}, command_id);
     return;
   }
   let pack = finger[i];
@@ -968,12 +968,20 @@ function actions(finger, touchId, command_id, i){
       actions(finger,touchId, command_id, i);
       break;
     case 'release':
+      if (lastTouch == null) {
+        sendError("Element has not been pressed: no such element", 7, null, command_id);
+        return;
+      }
       touch = lastTouch;
       lastTouch = null;
       emitTouchEvent('touchend', touch);
       actions(finger, touchId, command_id, i);
       break;
     case 'move':
+      if (lastTouch == null) {
+        sendError("Element has not been pressed: no such element", 7, null, command_id);
+        return;
+      }
       el = elementManager.getKnownElement(pack[1], curWindow);
       let boxTarget = el.getBoundingClientRect();
       let startElement = lastTouch.target;
@@ -986,6 +994,10 @@ function actions(finger, touchId, command_id, i){
       actions(finger, touchId, command_id, i);
       break;
     case 'moveByOffset':
+      if (lastTouch == null) {
+        sendError("Element has not been pressed: no such element", 7, null, command_id);
+        return;
+      }
       el = lastTouch.target;
       let doc = el.ownerDocument;
       let win = doc.defaultView;
@@ -1023,12 +1035,14 @@ function actions(finger, touchId, command_id, i){
  */
 function actionChain(msg) {
   let command_id = msg.json.command_id;
-  let args = msg.json.value;
+  let args = msg.json.chain;
+  let touchId = msg.json.nextId;
   try {
     let commandArray = elementManager.convertWrappedArguments(args, curWindow);
-    // each finger associates with one touchId
-    let touchId = nextTouchId++;
     // loop the action array [ ['press', id], ['move', id], ['release', id] ]
+    if (touchId == null) {
+      touchId = nextTouchId++;
+    }
     actions(commandArray, touchId, command_id);
   }
   catch (e) {

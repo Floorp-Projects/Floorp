@@ -107,9 +107,15 @@
       var fourth = document.getElementById("mozLinkCopy2");
       var d = new Date();
       fourth.innerHTML = d.getTime();
+      var newButton = document.createElement("button");
+      newButton.id = "delayed";
+      newButton.setAttribute("style", "position:absolute;left:80px;top:105px;");
+      var content = document.createTextNode("Button6");
+      newButton.appendChild(content);
+      document.body.appendChild(newButton);
     }
 
-    function changeTimeRelease() {
+    function changeTimeRelease(event) {
       var fourth = document.getElementById("mozLinkCopy2");
       if (fourth.innerHTML != "Button4") {
         var d = new Date();
@@ -118,6 +124,9 @@
       }
       else {
         fourth.innerHTML = "Error";
+      }
+      if (checkPosition(event, "delayed")) {
+        document.getElementById("delayed").innerHTML = "End";
       }
     }
   </script>
