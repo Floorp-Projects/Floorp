@@ -927,7 +927,7 @@ nsXMLHttpRequest::SetResponseType(nsXMLHttpRequest::ResponseTypeEnum aResponseTy
 
 /* readonly attribute jsval response; */
 NS_IMETHODIMP
-nsXMLHttpRequest::GetResponse(JSContext *aCx, jsval *aResult)
+nsXMLHttpRequest::GetResponse(JSContext *aCx, JS::Value *aResult)
 {
   ErrorResult rv;
   *aResult = GetResponse(aCx, rv);
@@ -2396,7 +2396,7 @@ GetRequestBody(nsIVariant* aBody, nsIInputStream** aResult, uint64_t* aContentLe
     }
 
     // ArrayBuffer?
-    jsval realVal;
+    JS::Value realVal;
 
     nsresult rv = aBody->GetAsJSVal(&realVal);
     if (NS_SUCCEEDED(rv) && !JSVAL_IS_PRIMITIVE(realVal)) {
