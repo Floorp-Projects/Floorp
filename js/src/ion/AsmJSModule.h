@@ -481,8 +481,12 @@ class AsmJSModule
         JS_ASSERT(functionBytes_ % gc::PageSize == 0);
         return functionBytes_;
     }
+    bool containsPC(void *pc) const {
+        uint8_t *code = functionCode();
+        return pc >= code && pc < (code + functionBytes());
+    }
 
-    bool addHeapAccesses(const Vector<ion::AsmJSHeapAccess> &accesses) {
+    bool addHeapAccesses(const ion::AsmJSHeapAccessVector &accesses) {
         if (!heapAccesses_.reserve(heapAccesses_.length() + accesses.length()))
             return false;
         for (size_t i = 0; i < accesses.length(); i++)

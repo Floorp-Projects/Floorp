@@ -273,7 +273,7 @@ class JSFunction : public JSObject
 
     inline bool isExtended() const {
         JS_STATIC_ASSERT(FinalizeKind != ExtendedFinalizeKind);
-        JS_ASSERT(!!(flags & EXTENDED) == (getAllocKind() == ExtendedFinalizeKind));
+        JS_ASSERT_IF(isTenured(), !!(flags & EXTENDED) == (tenuredGetAllocKind() == ExtendedFinalizeKind));
         return !!(flags & EXTENDED);
     }
 
@@ -286,6 +286,15 @@ class JSFunction : public JSObject
     /* Constructs a new type for the function if necessary. */
     static bool setTypeForScriptedFunction(JSContext *cx, js::HandleFunction fun,
                                            bool singleton = false);
+
+    /* GC support. */
+    js::gc::AllocKind getAllocKind() const {
+        js::gc::AllocKind kind = FinalizeKind;
+        if (isExtended())
+            kind = ExtendedFinalizeKind;
+        JS_ASSERT_IF(isTenured(), kind == tenuredGetAllocKind());
+        return kind;
+    }
 
   private:
     /*

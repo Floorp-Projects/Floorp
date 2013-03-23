@@ -99,9 +99,6 @@ public:
   virtual nsresult Deserialize(nsIObjectInputStream* aStream,
                                JS::MutableHandle<JSScript*> aResult);
 
-  virtual nsresult DropScriptObject(void *object);
-  virtual nsresult HoldScriptObject(void *object);
-
   virtual void EnterModalState();
   virtual void LeaveModalState();
 
@@ -291,9 +288,6 @@ public:
   CreateContext(bool aGCOnDestruction,
                 nsIScriptGlobalObject* aGlobalObject);
 
-  virtual nsresult DropScriptObject(void *object);
-  virtual nsresult HoldScriptObject(void *object);
-  
   static void Startup();
   static void Shutdown();
   // Setup all the statics etc - safe to call multiple times after Startup()

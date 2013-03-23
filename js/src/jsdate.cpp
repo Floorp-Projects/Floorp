@@ -1392,26 +1392,6 @@ IsDate(const Value &v)
     return v.isObject() && v.toObject().hasClass(&DateClass);
 }
 
-JS_ALWAYS_INLINE bool
-date_nop(JSContext *cx, CallArgs args)
-{
-    JS_ASSERT(IsDate(args.thisv()));
-    args.rval().setUndefined();
-    return true;
-}
-
-JSBool
-date_CheckThisDate(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    // CallNonGenericMethod will handle proxies correctly and throw exceptions
-    // in the right circumstances, but will report date_CheckThisDate as the
-    // function name in the message. We need a better solution:
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=844677
-    return CallNonGenericMethod<IsDate, date_nop>(cx, args);
-}
-
 /*
  * See ECMA 15.9.5.4 thru 15.9.5.23
  */

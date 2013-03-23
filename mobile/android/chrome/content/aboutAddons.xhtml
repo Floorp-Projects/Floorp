@@ -17,8 +17,9 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <title>&aboutAddons.title2;</title>
-  <meta name="viewport" content="width=480; initial-scale=.6667; user-scalable=0" />
+  <meta name="viewport" content="width=device-width; user-scalable=0" />
   <link rel="icon" type="image/png" sizes="64x64" href="chrome://branding/content/favicon64.png" />
+  <link rel="stylesheet" href="chrome://browser/skin/aboutBase.css" type="text/css"/>
   <link rel="stylesheet" href="chrome://browser/skin/aboutAddons.css" type="text/css"/>
   <style>
     .hide-on-enable,
@@ -58,18 +59,16 @@
     <menuitem id="contextmenu-uninstall" label="&addonAction.uninstall;" onclick="ContextMenus.uninstall();"></menuitem>
   </menu>
 
-  <div id="addons-header">
-    <div>
-      <div>&aboutAddons.header2;</div>
-      <img src="chrome://browser/skin/images/addons-amo-hdpi.png" pref="extensions.getAddons.browseAddons" onclick="openLink(this);"/>
-    </div>
+  <div id="addons-header" class="header">
+    <div>&aboutAddons.header2;</div>
+    <div id="header-button" role="button" pref="extensions.getAddons.browseAddons" onclick="openLink(this);"/>
   </div>
-  <div id="addons-list" style="display: none;">
+  <div id="addons-list" class="list" style="display: none;">
   </div>
 
-  <div id="addons-details" style="display: none">
-    <div class="addon-item">
-      <img class="favicon"/>
+  <div id="addons-details" class="list" style="display: none">
+    <div class="addon-item list-item">
+      <img class="icon"/>
       <div class="inner">
         <div class="details">
           <div class="tag"></div>

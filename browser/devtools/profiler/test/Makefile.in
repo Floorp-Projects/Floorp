@@ -11,14 +11,16 @@ relativesrcdir = @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_BROWSER_TESTS = \
-		browser_profiler_run.js \
-		browser_profiler_controller.js \
 		browser_profiler_profiles.js \
 		browser_profiler_remote.js \
-		browser_profiler_bug_830664_multiple_profiles.js \
 		browser_profiler_bug_834878_source_buttons.js \
 		head.js \
 		$(NULL)
+
+# Naughty corner (bug 822041 & bug 822287)
+#		browser_profiler_run.js \
+#		browser_profiler_controller.js \
+#		browser_profiler_bug_830664_multiple_profiles.js \
 
 MOCHITEST_BROWSER_PAGES = \
 		mock_profiler_bug_834878_page.html \

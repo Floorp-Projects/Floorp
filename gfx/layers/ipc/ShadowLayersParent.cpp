@@ -150,10 +150,7 @@ ShadowLayersParent::RecvUpdateNoSwap(const InfallibleTArray<Edit>& cset,
                                      const TargetConfig& targetConfig,
                                      const bool& isFirstPaint)
 {
-  InfallibleTArray<EditReply> noReplies;
-  bool success = RecvUpdate(cset, targetConfig, isFirstPaint, &noReplies);
-  NS_ABORT_IF_FALSE(noReplies.Length() == 0, "RecvUpdateNoSwap requires a sync Update to carry Edits");
-  return success;
+  return RecvUpdate(cset, targetConfig, isFirstPaint, nullptr);
 }
 
 bool
@@ -425,8 +422,11 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       CanvasSurface newBack;
       canvas->Swap(op.newFrontBuffer(), op.needYFlip(), &newBack);
       canvas->Updated();
-      replyv.push_back(OpBufferSwap(shadow, NULL,
-                                    newBack));
+
+      if (reply) {
+        replyv.push_back(OpBufferSwap(shadow, NULL,
+                                      newBack));
+      }
 
       RenderTraceInvalidateEnd(canvas, "FF00FF");
       break;
@@ -458,9 +458,11 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
 
   layer_manager()->EndTransaction(NULL, NULL, LayerManager::END_NO_IMMEDIATE_REDRAW);
 
-  reply->SetCapacity(replyv.size());
-  if (replyv.size() > 0) {
-    reply->AppendElements(&replyv.front(), replyv.size());
+  if (reply) {
+    reply->SetCapacity(replyv.size());
+    if (replyv.size() > 0) {
+      reply->AppendElements(&replyv.front(), replyv.size());
+    }
   }
 
   // Ensure that any pending operations involving back and front

@@ -512,19 +512,6 @@ const size_t MAX_EMPTY_CHUNK_AGE = 4;
 
 } /* namespace gc */
 
-struct GCPtrHasher
-{
-    typedef void *Lookup;
-
-    static HashNumber hash(void *key) {
-        return HashNumber(uintptr_t(key) >> JS_GCTHING_ZEROBITS);
-    }
-
-    static bool match(void *l, void *k) { return l == k; }
-};
-
-typedef HashMap<void *, uint32_t, GCPtrHasher, SystemAllocPolicy> GCLocks;
-
 typedef enum JSGCRootType {
     JS_GC_ROOT_VALUE_PTR,
     JS_GC_ROOT_STRING_PTR,
@@ -566,18 +553,6 @@ js_InitGC(JSRuntime *rt, uint32_t maxbytes);
 
 extern void
 js_FinishGC(JSRuntime *rt);
-
-/* Table of pointers with count valid members. */
-typedef struct JSPtrTable {
-    size_t      count;
-    void        **array;
-} JSPtrTable;
-
-extern JSBool
-js_LockThing(JSRuntime *rt, void *thing);
-
-extern void
-js_UnlockThing(JSRuntime *rt, void *thing);
 
 namespace js {
 

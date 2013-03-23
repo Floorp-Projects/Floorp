@@ -85,7 +85,7 @@ static const size_t MAX_BACKGROUND_FINALIZE_KINDS = FINALIZE_LIMIT - FINALIZE_OB
 struct Cell
 {
     inline ArenaHeader *arenaHeader() const;
-    inline AllocKind getAllocKind() const;
+    inline AllocKind tenuredGetAllocKind() const;
     MOZ_ALWAYS_INLINE bool isMarked(uint32_t color = BLACK) const;
     MOZ_ALWAYS_INLINE bool markIfUnmarked(uint32_t color = BLACK) const;
     MOZ_ALWAYS_INLINE void unmark(uint32_t color) const;
@@ -950,7 +950,7 @@ Cell::runtime() const
 }
 
 AllocKind
-Cell::getAllocKind() const
+Cell::tenuredGetAllocKind() const
 {
     return arenaHeader()->getAllocKind();
 }

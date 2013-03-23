@@ -69,6 +69,7 @@ public:
 
   nsresult LockImageData();
   nsresult UnlockImageData();
+  void MarkImageDataDirty();
 
   nsresult GetSurface(gfxASurface **aSurface) const
   {
