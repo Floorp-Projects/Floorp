@@ -22,7 +22,7 @@ class nsSVGFilterInstance;
 class nsSVGFilterResource;
 class nsSVGNumberPair;
 
-inline float DOT(float* a, float* b) {
+inline float DOT(const float* a, const float* b) {
   return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 }
 
