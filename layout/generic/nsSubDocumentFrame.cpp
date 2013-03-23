@@ -677,19 +677,28 @@ nsSubDocumentFrame::Reflow(nsPresContext*           aPresContext,
   NS_ASSERTION(mContent->GetPrimaryFrame() == this,
                "Shouldn't happen");
 
-  // XUL <iframe> or <browser>, or HTML <iframe>, <object> or <embed>
-  nsresult rv = nsLeafFrame::DoReflow(aPresContext, aDesiredSize, aReflowState,
-                                      aStatus);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // "offset" is the offset of our content area from our frame's
   // top-left corner.
-  nsPoint offset = nsPoint(aReflowState.mComputedBorderPadding.left,
-                           aReflowState.mComputedBorderPadding.top);
+  nsPoint offset(0, 0);
+  
+  if (IsInline()) {
+    // XUL <iframe> or <browser>, or HTML <iframe>, <object> or <embed>
+    nsresult rv = nsLeafFrame::DoReflow(aPresContext, aDesiredSize, aReflowState,
+                                        aStatus);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    offset = nsPoint(aReflowState.mComputedBorderPadding.left,
+                     aReflowState.mComputedBorderPadding.top);
+  } else {
+    // HTML <frame>
+    SizeToAvailSize(aReflowState, aDesiredSize);
+  }
 
   nsSize innerSize(aDesiredSize.width, aDesiredSize.height);
-  innerSize.width  -= aReflowState.mComputedBorderPadding.LeftRight();
-  innerSize.height -= aReflowState.mComputedBorderPadding.TopBottom();
+  if (IsInline()) {
+    innerSize.width  -= aReflowState.mComputedBorderPadding.LeftRight();
+    innerSize.height -= aReflowState.mComputedBorderPadding.TopBottom();
+  }
 
   if (mInnerView) {
     nsViewManager* vm = mInnerView->GetViewManager();
