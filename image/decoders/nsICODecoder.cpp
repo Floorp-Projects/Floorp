@@ -610,7 +610,9 @@ nsresult
 nsICODecoder::AllocateFrame()
 {
   if (mContainedDecoder) {
-    return mContainedDecoder->AllocateFrame();
+    nsresult rv = mContainedDecoder->AllocateFrame();
+    mCurrentFrame = mContainedDecoder->GetCurrentFrame();
+    return rv;
   }
 
   return Decoder::AllocateFrame();
