@@ -20,23 +20,3 @@ interface nsIDOMSVGFilterPrimitiveStandardAttributes : nsIDOMSVGElement
     readonly attribute nsIDOMSVGAnimatedLength      height;
     readonly attribute nsIDOMSVGAnimatedString      result;
 };
-
-[scriptable, uuid(14eb581d-0e54-42b5-a595-5db6c9490277)]
-interface nsIDOMSVGFETurbulenceElement : nsIDOMSVGFilterPrimitiveStandardAttributes
-{ 
-    // Turbulence Types
-    const unsigned short SVG_TURBULENCE_TYPE_UNKNOWN      = 0;
-    const unsigned short SVG_TURBULENCE_TYPE_FRACTALNOISE = 1;
-    const unsigned short SVG_TURBULENCE_TYPE_TURBULENCE   = 2;
-    // Stitch Options
-    const unsigned short SVG_STITCHTYPE_UNKNOWN  = 0;
-    const unsigned short SVG_STITCHTYPE_STITCH   = 1;
-    const unsigned short SVG_STITCHTYPE_NOSTITCH = 2;
-
-    readonly attribute nsIDOMSVGAnimatedNumber      baseFrequencyX;
-    readonly attribute nsIDOMSVGAnimatedNumber      baseFrequencyY;
-    readonly attribute nsIDOMSVGAnimatedInteger     numOctaves;
-    readonly attribute nsIDOMSVGAnimatedNumber      seed;
-    readonly attribute nsIDOMSVGAnimatedEnumeration stitchTiles;
-    readonly attribute nsIDOMSVGAnimatedEnumeration type;
-};

@@ -209,6 +209,7 @@ webidl_files = \
   SVGFESpecularLightingElement.webidl \
   SVGFESpotLightElement.webidl \
   SVGFETileElement.webidl \
+  SVGFETurbulenceElement.webidl \
   SVGFitToViewBox.webidl \
   SVGForeignObjectElement.webidl \
   SVGGElement.webidl \
