@@ -162,10 +162,6 @@ public:
   // status code from that attempt. Clears mNewFrameData.
   virtual nsresult AllocateFrame();
 
-  // Called when a chunk of decoding has been done and the frame needs to be
-  // marked as dirty. Must be called only on the main thread.
-  void MarkFrameDirty();
-
 protected:
 
   /*

@@ -3399,8 +3399,6 @@ RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_D
   nsresult rv = NS_OK;
 
   if (image->mDecoder) {
-    image->mDecoder->MarkFrameDirty();
-
     if (request && request->mChunkCount && !image->mDecoder->IsSizeDecode()) {
       Telemetry::Accumulate(Telemetry::IMAGE_DECODE_CHUNKS, request->mChunkCount);
     }
