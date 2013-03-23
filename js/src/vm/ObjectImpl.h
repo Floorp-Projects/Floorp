@@ -1112,6 +1112,9 @@ class ObjectImpl : public gc::Cell
 
     inline bool isExtensible() const;
 
+    static bool
+    preventExtensions(JSContext *cx, Handle<ObjectImpl*> obj);
+
     inline HeapSlotArray getDenseElements();
     inline const Value & getDenseElement(uint32_t idx);
     inline bool containsDenseElement(uint32_t idx);
