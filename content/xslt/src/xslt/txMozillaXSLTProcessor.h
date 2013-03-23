@@ -106,7 +106,7 @@ public:
 
     // nsIJSNativeInitializer
     NS_IMETHODIMP Initialize(nsISupports* aOwner, JSContext *cx, JSObject *obj,
-                             uint32_t argc, jsval *argv);
+                             uint32_t argc, JS::Value *argv);
 
     static nsresult Startup();
     static void Shutdown();
