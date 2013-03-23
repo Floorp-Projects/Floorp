@@ -100,47 +100,48 @@ class JS_FRIEND_API(BaseProxyHandler) {
         SET,
         CALL
     };
-    virtual bool enter(JSContext *cx, JSObject *wrapper, jsid id, Action act,
+    virtual bool enter(JSContext *cx, HandleObject wrapper, HandleId id, Action act,
                        bool *bp);
 
     /* ES5 Harmony fundamental proxy traps. */
-    virtual bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id,
+    virtual bool getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
                                        PropertyDescriptor *desc, unsigned flags) = 0;
-    virtual bool getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy,
-                                          jsid id, PropertyDescriptor *desc, unsigned flags) = 0;
-    virtual bool defineProperty(JSContext *cx, JSObject *proxy, jsid id,
+    virtual bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy,
+                                          HandleId id, PropertyDescriptor *desc,
+                                          unsigned flags) = 0;
+    virtual bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
                                 PropertyDescriptor *desc) = 0;
-    virtual bool getOwnPropertyNames(JSContext *cx, JSObject *proxy,
+    virtual bool getOwnPropertyNames(JSContext *cx, HandleObject proxy,
                                      AutoIdVector &props) = 0;
-    virtual bool delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp) = 0;
-    virtual bool enumerate(JSContext *cx, JSObject *proxy,
-                           AutoIdVector &props) = 0;
+    virtual bool delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) = 0;
+    virtual bool enumerate(JSContext *cx, HandleObject proxy, AutoIdVector &props) = 0;
 
     /* ES5 Harmony derived proxy traps. */
-    virtual bool has(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
-    virtual bool hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
-    virtual bool get(JSContext *cx, JSObject *proxy, JSObject *receiver,
-                     jsid id, Value *vp);
-    virtual bool set(JSContext *cx, JSObject *proxy, JSObject *receiver,
-                     jsid id, bool strict, Value *vp);
-    virtual bool keys(JSContext *cx, JSObject *proxy, AutoIdVector &props);
-    virtual bool iterate(JSContext *cx, JSObject *proxy, unsigned flags,
-                         Value *vp);
+    virtual bool has(JSContext *cx, HandleObject proxy, HandleId id, bool *bp);
+    virtual bool hasOwn(JSContext *cx, HandleObject proxy, HandleId id, bool *bp);
+    virtual bool get(JSContext *cx, HandleObject proxy, HandleObject receiver,
+                     HandleId id, MutableHandleValue vp);
+    virtual bool set(JSContext *cx, HandleObject proxy, HandleObject receiver,
+                     HandleId id, bool strict, MutableHandleValue vp);
+    virtual bool keys(JSContext *cx, HandleObject proxy, AutoIdVector &props);
+    virtual bool iterate(JSContext *cx, HandleObject proxy, unsigned flags,
+                         MutableHandleValue vp);
 
     /* Spidermonkey extensions. */
-    virtual bool call(JSContext *cx, JSObject *proxy, unsigned argc, Value *vp);
-    virtual bool construct(JSContext *cx, JSObject *proxy, unsigned argc, Value *argv, Value *rval);
+    virtual bool call(JSContext *cx, HandleObject proxy, unsigned argc, Value *vp);
+    virtual bool construct(JSContext *cx, HandleObject proxy, unsigned argc,
+                           Value *argv, MutableHandleValue rval);
     virtual bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl, CallArgs args);
     virtual bool hasInstance(JSContext *cx, HandleObject proxy, MutableHandleValue v, bool *bp);
-    virtual bool objectClassIs(JSObject *obj, ESClassValue classValue, JSContext *cx);
-    virtual JSString *obj_toString(JSContext *cx, JSObject *proxy);
-    virtual JSString *fun_toString(JSContext *cx, JSObject *proxy, unsigned indent);
-    virtual bool regexp_toShared(JSContext *cx, JSObject *proxy, RegExpGuard *g);
-    virtual bool defaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp);
+    virtual bool objectClassIs(HandleObject obj, ESClassValue classValue, JSContext *cx);
+    virtual JSString *obj_toString(JSContext *cx, HandleObject proxy);
+    virtual JSString *fun_toString(JSContext *cx, HandleObject proxy, unsigned indent);
+    virtual bool regexp_toShared(JSContext *cx, HandleObject proxy, RegExpGuard *g);
+    virtual bool defaultValue(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue vp);
     virtual void finalize(JSFreeOp *fop, JSObject *proxy);
-    virtual bool getElementIfPresent(JSContext *cx, JSObject *obj, JSObject *receiver,
-                                     uint32_t index, Value *vp, bool *present);
-    virtual bool getPrototypeOf(JSContext *cx, JSObject *proxy, JSObject **protop);
+    virtual bool getElementIfPresent(JSContext *cx, HandleObject obj, HandleObject receiver,
+                                     uint32_t index, MutableHandleValue vp, bool *present);
+    virtual bool getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandleObject protop);
 
     /* See comment for weakmapKeyDelegateOp in jsclass.h. */
     virtual JSObject *weakmapKeyDelegate(JSObject *proxy);
@@ -157,48 +158,48 @@ public:
     explicit DirectProxyHandler(void *family);
 
     /* ES5 Harmony fundamental proxy traps. */
-    virtual bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id,
+    virtual bool getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
                                        PropertyDescriptor *desc, unsigned flags) MOZ_OVERRIDE;
-    virtual bool getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy,
-                                          jsid id, PropertyDescriptor *desc,
+    virtual bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy,
+                                          HandleId id, PropertyDescriptor *desc,
                                           unsigned flags) MOZ_OVERRIDE;
-    virtual bool defineProperty(JSContext *cx, JSObject *proxy, jsid id,
+    virtual bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
                                 PropertyDescriptor *desc) MOZ_OVERRIDE;
-    virtual bool getOwnPropertyNames(JSContext *cx, JSObject *proxy,
+    virtual bool getOwnPropertyNames(JSContext *cx, HandleObject proxy,
                                      AutoIdVector &props) MOZ_OVERRIDE;
-    virtual bool delete_(JSContext *cx, JSObject *proxy, jsid id,
+    virtual bool delete_(JSContext *cx, HandleObject proxy, HandleId id,
                          bool *bp) MOZ_OVERRIDE;
-    virtual bool enumerate(JSContext *cx, JSObject *proxy,
+    virtual bool enumerate(JSContext *cx, HandleObject proxy,
                            AutoIdVector &props) MOZ_OVERRIDE;
 
     /* ES5 Harmony derived proxy traps. */
-    virtual bool has(JSContext *cx, JSObject *proxy, jsid id,
+    virtual bool has(JSContext *cx, HandleObject proxy, HandleId id,
                      bool *bp) MOZ_OVERRIDE;
-    virtual bool hasOwn(JSContext *cx, JSObject *proxy, jsid id,
+    virtual bool hasOwn(JSContext *cx, HandleObject proxy, HandleId id,
                         bool *bp) MOZ_OVERRIDE;
-    virtual bool get(JSContext *cx, JSObject *proxy, JSObject *receiver,
-                     jsid id, Value *vp) MOZ_OVERRIDE;
-    virtual bool set(JSContext *cx, JSObject *proxy, JSObject *receiver,
-                     jsid id, bool strict, Value *vp) MOZ_OVERRIDE;
-    virtual bool keys(JSContext *cx, JSObject *proxy,
+    virtual bool get(JSContext *cx, HandleObject proxy, HandleObject receiver,
+                     HandleId id, MutableHandleValue vp) MOZ_OVERRIDE;
+    virtual bool set(JSContext *cx, HandleObject proxy, HandleObject receiver,
+                     HandleId id, bool strict, MutableHandleValue vp) MOZ_OVERRIDE;
+    virtual bool keys(JSContext *cx, HandleObject proxy,
                       AutoIdVector &props) MOZ_OVERRIDE;
-    virtual bool iterate(JSContext *cx, JSObject *proxy, unsigned flags,
-                         Value *vp) MOZ_OVERRIDE;
+    virtual bool iterate(JSContext *cx, HandleObject proxy, unsigned flags,
+                         MutableHandleValue vp) MOZ_OVERRIDE;
 
     /* Spidermonkey extensions. */
     virtual bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
                             CallArgs args) MOZ_OVERRIDE;
     virtual bool hasInstance(JSContext *cx, HandleObject proxy, MutableHandleValue v,
                              bool *bp) MOZ_OVERRIDE;
-    virtual bool objectClassIs(JSObject *obj, ESClassValue classValue,
+    virtual bool objectClassIs(HandleObject obj, ESClassValue classValue,
                                JSContext *cx) MOZ_OVERRIDE;
-    virtual JSString *obj_toString(JSContext *cx, JSObject *proxy) MOZ_OVERRIDE;
-    virtual JSString *fun_toString(JSContext *cx, JSObject *proxy,
+    virtual JSString *obj_toString(JSContext *cx, HandleObject proxy) MOZ_OVERRIDE;
+    virtual JSString *fun_toString(JSContext *cx, HandleObject proxy,
                                    unsigned indent) MOZ_OVERRIDE;
-    virtual bool regexp_toShared(JSContext *cx, JSObject *proxy,
+    virtual bool regexp_toShared(JSContext *cx, HandleObject proxy,
                                  RegExpGuard *g) MOZ_OVERRIDE;
-    virtual bool defaultValue(JSContext *cx, JSObject *obj, JSType hint,
-                              Value *vp) MOZ_OVERRIDE;
+    virtual bool defaultValue(JSContext *cx, HandleObject obj, JSType hint,
+                              MutableHandleValue vp) MOZ_OVERRIDE;
     virtual JSObject *weakmapKeyDelegate(JSObject *proxy);
 };
 
@@ -206,42 +207,44 @@ public:
 class Proxy {
   public:
     /* ES5 Harmony fundamental proxy traps. */
-    static bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id,
+    static bool getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
                                       PropertyDescriptor *desc, unsigned flags);
-    static bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, unsigned flags, jsid id,
-                                      Value *vp);
-    static bool getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id,
+    static bool getPropertyDescriptor(JSContext *cx, HandleObject proxy, unsigned flags, HandleId id,
+                                      MutableHandleValue vp);
+    static bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
                                          PropertyDescriptor *desc, unsigned flags);
-    static bool getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, unsigned flags, jsid id,
-                                         Value *vp);
-    static bool defineProperty(JSContext *cx, JSObject *proxy, jsid id, PropertyDescriptor *desc);
-    static bool defineProperty(JSContext *cx, JSObject *proxy, jsid id, const Value &v);
-    static bool getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoIdVector &props);
-    static bool delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
-    static bool enumerate(JSContext *cx, JSObject *proxy, AutoIdVector &props);
+    static bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, unsigned flags, HandleId id,
+                                         MutableHandleValue vp);
+    static bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id, PropertyDescriptor *desc);
+    static bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id, HandleValue v);
+    static bool getOwnPropertyNames(JSContext *cx, HandleObject proxy, AutoIdVector &props);
+    static bool delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp);
+    static bool enumerate(JSContext *cx, HandleObject proxy, AutoIdVector &props);
 
     /* ES5 Harmony derived proxy traps. */
-    static bool has(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
-    static bool hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
-    static bool get(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id, MutableHandleValue vp);
+    static bool has(JSContext *cx, HandleObject proxy, HandleId id, bool *bp);
+    static bool hasOwn(JSContext *cx, HandleObject proxy, HandleId id, bool *bp);
+    static bool get(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id,
+                    MutableHandleValue vp);
     static bool getElementIfPresent(JSContext *cx, HandleObject proxy, HandleObject receiver,
                                     uint32_t index, MutableHandleValue vp, bool *present);
-    static bool set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id, bool strict,
-                    MutableHandleValue vp);
-    static bool keys(JSContext *cx, JSObject *proxy, AutoIdVector &props);
+    static bool set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id,
+                    bool strict, MutableHandleValue vp);
+    static bool keys(JSContext *cx, HandleObject proxy, AutoIdVector &props);
     static bool iterate(JSContext *cx, HandleObject proxy, unsigned flags, MutableHandleValue vp);
 
     /* Spidermonkey extensions. */
-    static bool call(JSContext *cx, JSObject *proxy, unsigned argc, Value *vp);
-    static bool construct(JSContext *cx, JSObject *proxy, unsigned argc, Value *argv, Value *rval);
+    static bool call(JSContext *cx, HandleObject proxy, unsigned argc, Value *vp);
+    static bool construct(JSContext *cx, HandleObject proxy, unsigned argc, Value *argv,
+                          MutableHandleValue rval);
     static bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl, CallArgs args);
     static bool hasInstance(JSContext *cx, HandleObject proxy, MutableHandleValue v, bool *bp);
-    static bool objectClassIs(JSObject *obj, ESClassValue classValue, JSContext *cx);
-    static JSString *obj_toString(JSContext *cx, JSObject *proxy);
-    static JSString *fun_toString(JSContext *cx, JSObject *proxy, unsigned indent);
-    static bool regexp_toShared(JSContext *cx, JSObject *proxy, RegExpGuard *g);
-    static bool defaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp);
-    static bool getPrototypeOf(JSContext *cx, JSObject *proxy, JSObject **protop);
+    static bool objectClassIs(HandleObject obj, ESClassValue classValue, JSContext *cx);
+    static JSString *obj_toString(JSContext *cx, HandleObject proxy);
+    static JSString *fun_toString(JSContext *cx, HandleObject proxy, unsigned indent);
+    static bool regexp_toShared(JSContext *cx, HandleObject proxy, RegExpGuard *g);
+    static bool defaultValue(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue vp);
+    static bool getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandleObject protop);
 
     static JSObject * const LazyProto;
 };

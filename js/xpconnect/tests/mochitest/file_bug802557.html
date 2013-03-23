@@ -55,17 +55,9 @@ function mergeObjects(a, b) {
 function getAllTests() {
   var innerTests = getTests(false);
   var outerTests = getTests(true);
-  outerTests.getLocationApply1.skipMessageCheck = true;
-  outerTests.getLocationApply2.skipMessageCheck = true;
-  outerTests.getLocationApply3.skipMessageCheck = true;
-  outerTests.getLocationViaPrototype.skipMessageCheck = true;
-  outerTests.getHrefViaApply.skipMessageCheck = true;
-  outerTests.getHrefViaPrototype.skipMessageCheck = true;
   return mergeObjects(mungeNames(innerTests, '_inner'),
                       mungeNames(outerTests, '_outer'));
 }
-
-
 
 </script>
 </head>

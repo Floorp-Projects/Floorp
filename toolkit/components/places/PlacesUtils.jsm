@@ -32,15 +32,17 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "Services", function() {
-  Cu.import("resource://gre/modules/Services.jsm");
-  return Services;
-});
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+                                  "resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
-  Cu.import("resource://gre/modules/NetUtil.jsm");
-  return NetUtil;
-});
+XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
+                                  "resource://gre/modules/NetUtil.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "Task",
+                                  "resource://gre/modules/Task.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "Promise",
+                                  "resource://gre/modules/commonjs/sdk/core/promise.js");
 
 // The minimum amount of transactions before starting a batch. Usually we do
 // do incremental updates, a batch will cause views to completely
@@ -90,6 +92,7 @@ this.PlacesUtils = {
   LMANNO_SITEURI: "livemark/siteURI",
   POST_DATA_ANNO: "bookmarkProperties/POSTData",
   READ_ONLY_ANNO: "placesInternal/READ_ONLY",
+  CHARSET_ANNO: "URIProperties/characterSet",
 
   TOPIC_SHUTDOWN: "places-shutdown",
   TOPIC_INIT_COMPLETE: "places-init-complete",
@@ -1352,7 +1355,7 @@ this.PlacesUtils = {
             this.tagging.tagURI(this._uri(aData.uri), tags);
         }
         if (aData.charset) {
-            this.history.setCharsetForURI(this._uri(aData.uri), aData.charset);
+            this.setCharsetForURI(this._uri(aData.uri), aData.charset);
         }
         if (aData.uri.substr(0, 6) == "place:")
           searchIds.push(id);
@@ -2076,6 +2079,63 @@ this.PlacesUtils = {
     if (index != -1) {
       this._bookmarksServiceObserversQueue.splice(index, 1);
     }
+  },
+
+  /**
+   * Sets the character-set for a URI.
+   *
+   * @param aURI nsIURI
+   * @param aCharset character-set value.
+   * @return {Promise}
+   */
+  setCharsetForURI: function PU_setCharsetForURI(aURI, aCharset) {
+    let deferred = Promise.defer();
+
+    // Delaying to catch issues with asynchronous behavior while waiting
+    // to implement asynchronous annotations in bug 699844.
+    Services.tm.mainThread.dispatch(function() {
+      if (aCharset && aCharset.length > 0) {
+        PlacesUtils.annotations.setPageAnnotation(
+          aURI, PlacesUtils.CHARSET_ANNO, aCharset, 0,
+          Ci.nsIAnnotationService.EXPIRE_NEVER);
+      } else {
+        PlacesUtils.annotations.removePageAnnotation(
+          aURI, PlacesUtils.CHARSET_ANNO);
+      }
+      deferred.resolve();
+    }, Ci.nsIThread.DISPATCH_NORMAL);
+
+    return deferred.promise;
+  },
+
+  /**
+   * Gets the last saved character-set for a URI.
+   *
+   * @param aURI nsIURI
+   * @param [optional] aCallback
+   *        the callback method that reruns a character-set or null.
+   * @return {Promise}
+   * @resolve a character-set or null.
+   */
+  getCharsetForURI: function PU_getCharsetForURI(aURI, aCallback) {
+    let deferred = Promise.defer();
+
+    Services.tm.mainThread.dispatch(function() {
+      let charset = null;
+
+      try {
+        charset = PlacesUtils.annotations.getPageAnnotation(aURI,
+                                                            PlacesUtils.CHARSET_ANNO);
+      } catch (ex) { }
+
+      if (aCallback) {
+        aCallback(charset);
+      }
+      deferred.resolve(charset);
+
+    }, Ci.nsIThread.DISPATCH_NORMAL);
+
+    return deferred.promise;
   }
 };
 

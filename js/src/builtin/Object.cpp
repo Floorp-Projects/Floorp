@@ -288,7 +288,7 @@ obj_toSource(JSContext *cx, unsigned argc, Value *vp)
 #endif /* JS_HAS_TOSOURCE */
 
 JSString *
-js::obj_toStringHelper(JSContext *cx, JSObject *obj)
+js::obj_toStringHelper(JSContext *cx, HandleObject obj)
 {
     if (obj->isProxy())
         return Proxy::obj_toString(cx, obj);

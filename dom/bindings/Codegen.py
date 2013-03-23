@@ -5797,26 +5797,29 @@ class CGClass(CGThing):
 
 class CGResolveOwnProperty(CGAbstractMethod):
     def __init__(self, descriptor):
-        args = [Argument('JSContext*', 'cx'), Argument('JSObject*', 'wrapper'),
-                Argument('JSObject*', 'obj'), Argument('jsid', 'id'),
+        args = [Argument('JSContext*', 'cx'), Argument('JSObject*', 'wrapper_'),
+                Argument('JSObject*', 'obj'), Argument('jsid', 'id_'),
                 Argument('JSPropertyDescriptor*', 'desc'), Argument('unsigned', 'flags'),
                 ]
         CGAbstractMethod.__init__(self, descriptor, "ResolveOwnProperty", "bool", args)
     def definition_body(self):
         return """  // We rely on getOwnPropertyDescriptor not shadowing prototype properties by named
   // properties. If that changes we'll need to filter here.
+  js::RootedObject wrapper(cx, wrapper_);
+  js::RootedId id(cx, id_);
   return js::GetProxyHandler(obj)->getOwnPropertyDescriptor(cx, wrapper, id, desc, flags);
 """
 
 class CGEnumerateOwnProperties(CGAbstractMethod):
     def __init__(self, descriptor):
-        args = [Argument('JSContext*', 'cx'), Argument('JSObject*', 'wrapper'),
+        args = [Argument('JSContext*', 'cx'), Argument('JSObject*', 'wrapper_'),
                 Argument('JSObject*', 'obj'),
                 Argument('JS::AutoIdVector&', 'props')]
         CGAbstractMethod.__init__(self, descriptor, "EnumerateOwnProperties", "bool", args)
     def definition_body(self):
         return """  // We rely on getOwnPropertyNames not shadowing prototype properties by named
   // properties. If that changes we'll need to filter here.
+  JS::Rooted<JSObject*> wrapper(cx, wrapper_);
   return js::GetProxyHandler(obj)->getOwnPropertyNames(cx, wrapper, props);
 """
 
@@ -6069,8 +6072,8 @@ class CGDOMJSProxyHandler_CGDOMJSProxyHandler(ClassConstructor):
 
 class CGDOMJSProxyHandler_getOwnPropertyDescriptor(ClassMethod):
     def __init__(self, descriptor):
-        args = [Argument('JSContext*', 'cx'), Argument('JSObject*', 'proxy'),
-                Argument('jsid', 'id'),
+        args = [Argument('JSContext*', 'cx'), Argument('JS::Handle<JSObject*>', 'proxy'),
+                Argument('JS::Handle<jsid>', 'id'),
                 Argument('JSPropertyDescriptor*', 'desc'), Argument('unsigned', 'flags')]
         ClassMethod.__init__(self, "getOwnPropertyDescriptor", "bool", args)
         self.descriptor = descriptor
@@ -6159,8 +6162,8 @@ return true;"""
 
 class CGDOMJSProxyHandler_defineProperty(ClassMethod):
     def __init__(self, descriptor):
-        args = [Argument('JSContext*', 'cx'), Argument('JSObject*', 'proxy'),
-                Argument('jsid', 'id'),
+        args = [Argument('JSContext*', 'cx'), Argument('JS::Handle<JSObject*>', 'proxy'),
+                Argument('JS::Handle<jsid>', 'id'),
                 Argument('JSPropertyDescriptor*', 'desc')]
         ClassMethod.__init__(self, "defineProperty", "bool", args)
         self.descriptor = descriptor
@@ -6209,8 +6212,8 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
 
 class CGDOMJSProxyHandler_delete(ClassMethod):
     def __init__(self, descriptor):
-        args = [Argument('JSContext*', 'cx'), Argument('JSObject*', 'proxy'),
-                Argument('jsid', 'id'),
+        args = [Argument('JSContext*', 'cx'), Argument('JS::Handle<JSObject*>', 'proxy'),
+                Argument('JS::Handle<jsid>', 'id'),
                 Argument('bool*', 'bp')]
         ClassMethod.__init__(self, "delete_", "bool", args)
         self.descriptor = descriptor
@@ -6277,7 +6280,8 @@ class CGDOMJSProxyHandler_delete(ClassMethod):
 
 class CGDOMJSProxyHandler_getOwnPropertyNames(ClassMethod):
     def __init__(self, descriptor):
-        args = [Argument('JSContext*', 'cx'), Argument('JSObject*', 'proxy'),
+        args = [Argument('JSContext*', 'cx'),
+                Argument('JS::Handle<JSObject*>', 'proxy'),
                 Argument('JS::AutoIdVector&', 'props')]
         ClassMethod.__init__(self, "getOwnPropertyNames", "bool", args)
         self.descriptor = descriptor
@@ -6317,8 +6321,10 @@ return true;"""
 
 class CGDOMJSProxyHandler_hasOwn(ClassMethod):
     def __init__(self, descriptor):
-        args = [Argument('JSContext*', 'cx'), Argument('JSObject*', 'proxy'),
-                Argument('jsid', 'id'), Argument('bool*', 'bp')]
+        args = [Argument('JSContext*', 'cx'),
+                Argument('JS::Handle<JSObject*>', 'proxy'),
+                Argument('JS::Handle<jsid>', 'id'),
+                Argument('bool*', 'bp')]
         ClassMethod.__init__(self, "hasOwn", "bool", args)
         self.descriptor = descriptor
     def getBody(self):
@@ -6359,9 +6365,11 @@ return true;"""
 
 class CGDOMJSProxyHandler_get(ClassMethod):
     def __init__(self, descriptor):
-        args = [Argument('JSContext*', 'cx'), Argument('JSObject*', 'proxy'),
-                Argument('JSObject*', 'receiver'), Argument('jsid', 'id'),
-                Argument('JS::Value*', 'vp')]
+        args = [Argument('JSContext*', 'cx'),
+                Argument('JS::Handle<JSObject*>', 'proxy'),
+                Argument('JS::Handle<JSObject*>', 'receiver'),
+                Argument('JS::Handle<jsid>', 'id'),
+                Argument('JS::MutableHandle<JS::Value>', 'vp')]
         ClassMethod.__init__(self, "get", "bool", args)
         self.descriptor = descriptor
     def getBody(self):
@@ -6373,11 +6381,11 @@ if (expando) {
   }
 
   if (hasProp) {
-    return JS_GetPropertyById(cx, expando, id, vp);
+    return JS_GetPropertyById(cx, expando, id, vp.address());
   }
 }"""
 
-        templateValues = {'jsvalRef': '*vp', 'jsvalPtr': 'vp', 'obj': 'proxy'}
+        templateValues = {'jsvalRef': '*vp.address()', 'jsvalPtr': 'vp.address()', 'obj': 'proxy'}
 
         if self.descriptor.supportsIndexedProperties():
             getIndexedOrExpando = ("int32_t index = GetArrayIndexFromId(cx, id);\n" +
@@ -6407,7 +6415,7 @@ if (expando) {
 %s
 {  // Scope for this "found" so it doesn't leak to things below
   bool found;
-  if (!GetPropertyOnPrototype(cx, proxy, id, &found, vp)) {
+  if (!GetPropertyOnPrototype(cx, proxy, id, &found, vp.address())) {
     return false;
   }
 
@@ -6416,12 +6424,12 @@ if (expando) {
   }
 }
 %s
-vp->setUndefined();
+vp.setUndefined();
 return true;""" % (getIndexedOrExpando, getNamed)
 
 class CGDOMJSProxyHandler_obj_toString(ClassMethod):
     def __init__(self, descriptor):
-        args = [Argument('JSContext*', 'cx'), Argument('JSObject*', 'proxy')]
+        args = [Argument('JSContext*', 'cx'), Argument('JS::Handle<JSObject*>', 'proxy')]
         ClassMethod.__init__(self, "obj_toString", "JSString*", args)
         self.descriptor = descriptor
     def getBody(self):
@@ -6446,16 +6454,18 @@ class CGDOMJSProxyHandler_finalize(ClassMethod):
 
 class CGDOMJSProxyHandler_getElementIfPresent(ClassMethod):
     def __init__(self, descriptor):
-        args = [Argument('JSContext*', 'cx'), Argument('JSObject*', 'proxy'),
-                Argument('JSObject*', 'receiver'),
+        args = [Argument('JSContext*', 'cx'),
+                Argument('JS::Handle<JSObject*>', 'proxy'),
+                Argument('JS::Handle<JSObject*>', 'receiver'),
                 Argument('uint32_t', 'index'),
-                Argument('JS::Value*', 'vp'), Argument('bool*', 'present')]
+                Argument('JS::MutableHandle<JS::Value>', 'vp'),
+                Argument('bool*', 'present')]
         ClassMethod.__init__(self, "getElementIfPresent", "bool", args)
         self.descriptor = descriptor
     def getBody(self):
         successCode = ("*present = found;\n"
                        "return true;")
-        templateValues = {'jsvalRef': '*vp', 'jsvalPtr': 'vp',
+        templateValues = {'jsvalRef': '*vp.address()', 'jsvalPtr': 'vp.address()',
                           'obj': 'proxy', 'successCode': successCode}
         if self.descriptor.supportsIndexedProperties():
             get = (CGProxyIndexedGetter(self.descriptor, templateValues).define() + "\n"
@@ -6471,7 +6481,7 @@ class CGDOMJSProxyHandler_getElementIfPresent(ClassMethod):
 JSObject* expando = GetExpandoObject(proxy);
 if (expando) {
   JSBool isPresent;
-  if (!JS_GetElementIfPresent(cx, expando, index, expando, vp, &isPresent)) {
+  if (!JS_GetElementIfPresent(cx, expando, index, expando, vp.address(), &isPresent)) {
     return false;
   }
   if (isPresent) {
@@ -6491,7 +6501,7 @@ if (!js::GetObjectProto(cx, proxy, &proto)) {
 }
 if (proto) {
   JSBool isPresent;
-  if (!JS_GetElementIfPresent(cx, proto, index, proxy, vp, &isPresent)) {
+  if (!JS_GetElementIfPresent(cx, proto, index, proxy, vp.address(), &isPresent)) {
     return false;
   }
   *present = isPresent;

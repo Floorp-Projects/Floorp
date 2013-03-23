@@ -52,6 +52,7 @@ FENNEC_JAVA_FILES = \
   AndroidImportPreference.java \
   AnimatorProxy.java \
   AnimatedHeightLayout.java \
+  AppNotificationClient.java \
   AwesomeBar.java \
   AwesomebarResultHandler.java \
   AwesomeBarTabs.java \
@@ -119,8 +120,9 @@ FENNEC_JAVA_FILES = \
   MenuPanel.java \
   MenuPopup.java \
   MultiChoicePreference.java \
+  NotificationClient.java \
+  NotificationHandler.java \
   NotificationService.java \
-  NotificationServiceClient.java \
   NSSBridge.java \
   CustomEditText.java \
   OnInterceptTouchListener.java \
@@ -137,6 +139,7 @@ FENNEC_JAVA_FILES = \
   ReaderModeUtils.java \
   RemoteTabs.java \
   RobocopAPI.java \
+  ServiceNotificationClient.java \
   SessionParser.java \
   SetupScreen.java \
   ShapedButton.java \
@@ -236,7 +239,6 @@ FENNEC_PP_JAVA_FILES = \
   WebApps.java \
   GeckoActivity.java \
   GeckoAppInfo.java \
-  GeckoAppWidgetProvider.java \
   LauncherShortcuts.java \
   Restarter.java \
   db/BrowserContract.java \
@@ -397,7 +399,6 @@ RES_LAYOUT = \
   res/layout/find_in_page_content.xml \
   res/layout/font_size_preference.xml \
   res/layout/gecko_app.xml \
-  res/layout/gecko_appwidget.xml \
   res/layout/web_app.xml \
   res/layout/launch_app_list.xml \
   res/layout/launch_app_listitem.xml \
@@ -514,7 +515,6 @@ RES_VALUES_V14 = \
   $(NULL)
 
 RES_XML = \
-  res/xml/gecko_appwidget_info.xml \
 	$(SYNC_RES_XML) \
 	$(NULL)
 
@@ -545,7 +545,6 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/alert_addon.png \
   res/drawable-mdpi/alert_app.png \
   res/drawable-mdpi/alert_download.png \
-  res/drawable-mdpi/appwidget_bg.9.png \
   res/drawable-mdpi/autocomplete_list_bg.9.png \
   res/drawable-mdpi/awesomebar_tab_center.9.png \
   res/drawable-mdpi/awesomebar_tab_left.9.png \
@@ -658,7 +657,6 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/alert_addon.png \
   res/drawable-hdpi/alert_app.png \
   res/drawable-hdpi/alert_download.png \
-  res/drawable-hdpi/appwidget_bg.9.png \
   res/drawable-hdpi/awesomebar_tab_center.9.png \
   res/drawable-hdpi/awesomebar_tab_left.9.png \
   res/drawable-hdpi/awesomebar_tab_right.9.png \
@@ -749,7 +747,6 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/alert_addon.png \
   res/drawable-xhdpi/alert_app.png \
   res/drawable-xhdpi/alert_download.png \
-  res/drawable-xhdpi/appwidget_bg.9.png \
   res/drawable-xhdpi/awesomebar_tab_center.9.png \
   res/drawable-xhdpi/awesomebar_tab_left.9.png \
   res/drawable-xhdpi/awesomebar_tab_right.9.png \
@@ -1028,8 +1025,6 @@ MOZ_ANDROID_DRAWABLES += \
   $(NULL)
 
 MOZ_BRANDING_DRAWABLE_MDPI = $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn; then cat $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn | tr '\n' ' ';  fi)
-MOZ_BRANDING_DRAWABLE_HDPI = $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources-hdpi.mn; then cat $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources-hdpi.mn | tr '\n' ' ';  fi)
-MOZ_BRANDING_DRAWABLE_XHDPI = $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources-xhdpi.mn; then cat $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources-xhdpi.mn | tr '\n' ' ';  fi)
 
 RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_LAND_V14) $(RES_LAYOUT_LARGE_LAND_V11) $(RES_LAYOUT_LARGE_V11) $(RES_LAYOUT_XLARGE_V11) $(RES_LAYOUT_XLARGE_LAND_V11) $(RES_VALUES) $(RES_VALUES_LAND) $(RES_VALUES_V11) $(RES_VALUES_LARGE_V11) $(RES_VALUES_LARGE_LAND_V11) $(RES_VALUES_XLARGE_V11) $(RES_VALUES_LAND_V14) $(RES_VALUES_V14) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_MDPI) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_HDPI) $(RES_DRAWABLE_XHDPI) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LAND_MDPI_V14) $(RES_DRAWABLE_LAND_HDPI_V14) $(RES_DRAWABLE_LAND_XHDPI_V14) $(RES_DRAWABLE_LARGE_LAND_V11) $(RES_DRAWABLE_LARGE_MDPI_V11) $(RES_DRAWABLE_LARGE_HDPI_V11) $(RES_DRAWABLE_LARGE_XHDPI_V11) $(RES_DRAWABLE_XLARGE_MDPI_V11) $(RES_DRAWABLE_XLARGE_HDPI_V11) $(RES_DRAWABLE_XLARGE_XHDPI_V11) $(RES_COLOR) $(RES_MENU)
 
@@ -1213,16 +1208,6 @@ $(RES_BRANDING_DRAWABLE_MDPI): $(addprefix $(topsrcdir)/,$(MOZ_BRANDING_DRAWABLE
 	$(NSINSTALL) -D res/drawable-mdpi
 	$(NSINSTALL) $^ res/drawable-mdpi/
 
-RES_BRANDING_DRAWABLE_HDPI = $(addprefix res/drawable-hdpi/,$(notdir $(MOZ_BRANDING_DRAWABLE_HDPI)))
-$(RES_BRANDING_DRAWABLE_HDPI): $(addprefix $(topsrcdir)/,$(MOZ_BRANDING_DRAWABLE_HDPI))
-	$(NSINSTALL) -D res/drawable-hdpi
-	$(NSINSTALL) $^ res/drawable-hdpi/
-
-RES_BRANDING_DRAWABLE_XHDPI = $(addprefix res/drawable-xhdpi/,$(notdir $(MOZ_BRANDING_DRAWABLE_XHDPI)))
-$(RES_BRANDING_DRAWABLE_XHDPI): $(addprefix $(topsrcdir)/,$(MOZ_BRANDING_DRAWABLE_XHDPI))
-	$(NSINSTALL) -D res/drawable-xhdpi
-	$(NSINSTALL) $^ res/drawable-xhdpi/
-
 $(RES_DIRS):
 	$(RM) -r $@
 	$(NSINSTALL) -D $@
@@ -1232,10 +1217,10 @@ $(RESOURCES): $(RES_DIRS) $(subst res/,$(srcdir)/resources/,$(RESOURCES))
 	$(NSINSTALL) $(subst res/,$(srcdir)/resources/,$@) $(dir $@)
 
 
-R.java: $(MOZ_APP_ICON) $(RESOURCES) $(RES_DRAWABLE) $(RES_BRANDING_DRAWABLE_MDPI) $(RES_BRANDING_DRAWABLE_HDPI) $(RES_BRANDING_DRAWABLE_XHDPI) $(PP_RES_XML) res/drawable-mdpi/icon.png res/drawable-hdpi/icon.png res/drawable-xhdpi/icon.png res/drawable-xxhdpi/icon.png res/values/strings.xml AndroidManifest.xml FORCE
+R.java: $(MOZ_APP_ICON) $(RESOURCES) $(RES_DRAWABLE) $(RES_BRANDING_DRAWABLE_MDPI) $(PP_RES_XML) res/drawable-mdpi/icon.png res/drawable-hdpi/icon.png res/drawable-xhdpi/icon.png res/drawable-xxhdpi/icon.png res/values/strings.xml AndroidManifest.xml FORCE
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar -S res -J . --custom-package org.mozilla.gecko
 
-gecko.ap_: AndroidManifest.xml res/drawable-mdpi/icon.png res/drawable-hdpi/icon.png res/drawable-xhdpi/icon.png res/drawable-xxhdpi/icon.png $(RESOURCES) $(RES_DRAWABLE) $(RES_BRANDING_DRAWABLE_MDPI) $(RES_BRANDING_DRAWABLE_HDPI) $(RES_BRANDING_DRAWABLE_XHDPI) $(PP_RES_XML) res/values/strings.xml FORCE
+gecko.ap_: AndroidManifest.xml res/drawable-mdpi/icon.png res/drawable-hdpi/icon.png res/drawable-xhdpi/icon.png res/drawable-xxhdpi/icon.png $(RESOURCES) $(RES_DRAWABLE) $(RES_BRANDING_DRAWABLE_MDPI) $(PP_RES_XML) res/values/strings.xml FORCE
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar  -S res -F $@
 
 libs:: classes.dex package-name.txt jni-stubs.inc

@@ -1141,15 +1141,18 @@ MobileMessageDatabaseService.prototype = {
     if (aMessage.type == "sms") {
       aMessage.receiver = self;
     } else if (aMessage.type == "mms") {
-      if (!aMessage.receivers.length) {
-        if (self) {
-          aMessage.receivers.push(self);
-        }
+      let receivers = aMessage.receivers;
+      if (!receivers.length) {
+        // We cannot expose empty receivers for an MMS message.
+        // Returns 'myself' when .msisdn is not available.
+        receivers.push(self ? self : "myself");
       } else {
-        let slicedReceivers = aMessage.receivers.slice();
-        let found = slicedReceivers.indexOf(self);
-        if (self && (found !== -1)) {
-          slicedReceivers.splice(found, 1);
+        let slicedReceivers = receivers.slice();
+        if (self) {
+          let found = slicedReceivers.indexOf(self);
+          if (found !== -1) {
+            slicedReceivers.splice(found, 1);
+          }
         }
         threadParticipants = threadParticipants.concat(slicedReceivers);
       }

@@ -623,14 +623,11 @@ static JSFunctionSpec collator_methods[] = {
  * Collator constructor.
  * Spec: ECMAScript Internationalization API Specification, 10.1
  */
-static JSBool
-Collator(JSContext *cx, unsigned argc, Value *vp)
+static bool
+Collator(JSContext *cx, CallArgs args, bool construct)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-
     RootedObject obj(cx);
 
-    bool construct = IsConstructing(args);
     if (!construct) {
         // 10.1.2.1 step 3
         JSObject *intl = cx->global()->getOrCreateIntlObject(cx);
@@ -674,6 +671,21 @@ Collator(JSContext *cx, unsigned argc, Value *vp)
     // 10.1.2.1 steps 3.a and 7
     args.rval().setObject(*obj);
     return true;
+}
+
+static JSBool
+Collator(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return Collator(cx, args, IsConstructing(args));
+}
+
+JSBool
+js::intl_Collator(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JS_ASSERT(args.length() == 2);
+    return Collator(cx, args, true);
 }
 
 static void
@@ -1089,14 +1101,11 @@ static JSFunctionSpec numberFormat_methods[] = {
  * NumberFormat constructor.
  * Spec: ECMAScript Internationalization API Specification, 11.1
  */
-static JSBool
-NumberFormat(JSContext *cx, unsigned argc, Value *vp)
+static bool
+NumberFormat(JSContext *cx, CallArgs args, bool construct)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-
     RootedObject obj(cx);
 
-    bool construct = IsConstructing(args);
     if (!construct) {
         // 11.1.2.1 step 3
         JSObject *intl = cx->global()->getOrCreateIntlObject(cx);
@@ -1142,10 +1151,26 @@ NumberFormat(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+static JSBool
+NumberFormat(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return NumberFormat(cx, args, IsConstructing(args));
+}
+
+JSBool
+js::intl_NumberFormat(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JS_ASSERT(args.length() == 2);
+    return NumberFormat(cx, args, true);
+}
+
 static void
 numberFormat_finalize(FreeOp *fop, JSObject *obj)
 {
-    UNumberFormat *nf = static_cast<UNumberFormat *>(obj->getReservedSlot(UNUMBER_FORMAT_SLOT).toPrivate());
+    UNumberFormat *nf =
+        static_cast<UNumberFormat*>(obj->getReservedSlot(UNUMBER_FORMAT_SLOT).toPrivate());
     if (nf)
         unum_close(nf);
 }
@@ -1521,14 +1546,11 @@ static JSFunctionSpec dateTimeFormat_methods[] = {
  * DateTimeFormat constructor.
  * Spec: ECMAScript Internationalization API Specification, 12.1
  */
-static JSBool
-DateTimeFormat(JSContext *cx, unsigned argc, Value *vp)
+static bool
+DateTimeFormat(JSContext *cx, CallArgs args, bool construct)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-
     RootedObject obj(cx);
 
-    bool construct = IsConstructing(args);
     if (!construct) {
         // 12.1.2.1 step 3
         JSObject *intl = cx->global()->getOrCreateIntlObject(cx);
@@ -1572,6 +1594,21 @@ DateTimeFormat(JSContext *cx, unsigned argc, Value *vp)
     // 12.1.2.1 steps 3.a and 7
     args.rval().setObject(*obj);
     return true;
+}
+
+static JSBool
+DateTimeFormat(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return DateTimeFormat(cx, args, IsConstructing(args));
+}
+
+JSBool
+js::intl_DateTimeFormat(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JS_ASSERT(args.length() == 2);
+    return DateTimeFormat(cx, args, true);
 }
 
 static void
@@ -1856,7 +1893,7 @@ NewUDateFormat(JSContext *cx, HandleObject dateTimeFormat)
 
     // ECMAScript requires the Gregorian calendar to be used from the beginning
     // of ECMAScript time.
-    UCalendar *cal = (UCalendar *) udat_getCalendar(df);
+    UCalendar *cal = const_cast<UCalendar*>(udat_getCalendar(df));
     ucal_setGregorianChange(cal, StartOfTime, &status);
 
     // An error here means the calendar is not Gregorian, so we don't care.

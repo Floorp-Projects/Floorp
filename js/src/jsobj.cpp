@@ -966,8 +966,10 @@ js::DefineProperty(JSContext *cx, HandleObject obj, HandleId id, const PropDesc 
          * FIXME: Once ScriptedIndirectProxies are removed, this code should call
          * TrapDefineOwnProperty directly
          */
-        if (obj->isProxy())
-            return Proxy::defineProperty(cx, obj, id, desc.pd());
+        if (obj->isProxy()) {
+            RootedValue pd(cx, desc.pd());
+            return Proxy::defineProperty(cx, obj, id, pd);
+        }
         return Reject(cx, obj, JSMSG_OBJECT_NOT_EXTENSIBLE, throwError, rval);
     }
 

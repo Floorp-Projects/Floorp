@@ -40,6 +40,12 @@ sale, use or other dealings in this Software without written
 authorization from SunSoft Inc. 
 ******************************************************************/
 
+/*
+ * QCMS, in general, is not threadsafe. However, it should be safe to create
+ * profile and transformation objects on different threads, so long as you
+ * don't use the same objects on different threads at the same time.
+ */
+
 /* 
  * Color Space Signatures
  * Note that only icSigXYZData and icSigLabData are valid

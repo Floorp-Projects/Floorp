@@ -37,8 +37,8 @@
     function loadTab(aURL)
     {
       this.eventSeq = [
-        new invokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE, currentTabDocument),
-        new invokerChecker(EVENT_SCROLLING_START, getAnchorJumpInTabDocument)
+        new asyncInvokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE, currentTabDocument),
+        new asyncInvokerChecker(EVENT_SCROLLING_START, getAnchorJumpInTabDocument)
       ];
 
       this.invoke = function loadTab_invoke()

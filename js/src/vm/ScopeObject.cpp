@@ -1136,7 +1136,7 @@ class DebugScopeProxy : public BaseProxyHandler
      * completed by handleUnaliasedAccess.
      */
     bool handleUnaliasedAccess(JSContext *cx, Handle<DebugScopeObject*> debugScope, Handle<ScopeObject*> scope,
-                               jsid id, Action action, Value *vp)
+                               jsid id, Action action, MutableHandleValue vp)
     {
         JS_ASSERT(&debugScope->scope() == scope);
         AbstractFramePtr maybeframe = DebugScopes::hasLiveFrame(*scope);
@@ -1162,22 +1162,22 @@ class DebugScopeProxy : public BaseProxyHandler
 
                 if (maybeframe) {
                     if (action == GET)
-                        *vp = maybeframe.unaliasedVar(i);
+                        vp.set(maybeframe.unaliasedVar(i));
                     else
-                        maybeframe.unaliasedVar(i) = *vp;
+                        maybeframe.unaliasedVar(i) = vp;
                 } else if (JSObject *snapshot = debugScope->maybeSnapshot()) {
                     if (action == GET)
-                        *vp = snapshot->getDenseElement(bindings.numArgs() + i);
+                        vp.set(snapshot->getDenseElement(bindings.numArgs() + i));
                     else
-                        snapshot->setDenseElement(bindings.numArgs() + i, *vp);
+                        snapshot->setDenseElement(bindings.numArgs() + i, vp);
                 } else {
                     /* The unaliased value has been lost to the debugger. */
                     if (action == GET)
-                        *vp = UndefinedValue();
+                        vp.set(UndefinedValue());
                 }
 
                 if (action == SET)
-                    TypeScript::SetLocal(cx, script, i, *vp);
+                    TypeScript::SetLocal(cx, script, i, vp);
 
             } else {
                 JS_ASSERT(bi->kind() == ARGUMENT);
@@ -1188,28 +1188,28 @@ class DebugScopeProxy : public BaseProxyHandler
                 if (maybeframe) {
                     if (script->argsObjAliasesFormals() && maybeframe.hasArgsObj()) {
                         if (action == GET)
-                            *vp = maybeframe.argsObj().arg(i);
+                            vp.set(maybeframe.argsObj().arg(i));
                         else
-                            maybeframe.argsObj().setArg(i, *vp);
+                            maybeframe.argsObj().setArg(i, vp);
                     } else {
                         if (action == GET)
-                            *vp = maybeframe.unaliasedFormal(i, DONT_CHECK_ALIASING);
+                            vp.set(maybeframe.unaliasedFormal(i, DONT_CHECK_ALIASING));
                         else
-                            maybeframe.unaliasedFormal(i, DONT_CHECK_ALIASING) = *vp;
+                            maybeframe.unaliasedFormal(i, DONT_CHECK_ALIASING) = vp;
                     }
                 } else if (JSObject *snapshot = debugScope->maybeSnapshot()) {
                     if (action == GET)
-                        *vp = snapshot->getDenseElement(i);
+                        vp.set(snapshot->getDenseElement(i));
                     else
-                        snapshot->setDenseElement(i, *vp);
+                        snapshot->setDenseElement(i, vp);
                 } else {
                     /* The unaliased value has been lost to the debugger. */
                     if (action == GET)
-                        *vp = UndefinedValue();
+                        vp.set(UndefinedValue());
                 }
 
                 if (action == SET)
-                    TypeScript::SetArgument(cx, script, i, *vp);
+                    TypeScript::SetArgument(cx, script, i, vp);
             }
 
             return true;
@@ -1230,15 +1230,15 @@ class DebugScopeProxy : public BaseProxyHandler
                 RawScript script = maybeframe.script();
                 unsigned local = block->slotToLocalIndex(script->bindings, shape->slot());
                 if (action == GET)
-                    *vp = maybeframe.unaliasedLocal(local);
+                    vp.set(maybeframe.unaliasedLocal(local));
                 else
-                    maybeframe.unaliasedLocal(local) = *vp;
+                    maybeframe.unaliasedLocal(local) = vp;
                 JS_ASSERT(analyze::LocalSlot(script, local) >= analyze::TotalSlots(script));
             } else {
                 if (action == GET)
-                    *vp = block->var(i, DONT_CHECK_ALIASING);
+                    vp.set(block->var(i, DONT_CHECK_ALIASING));
                 else
-                    block->setVar(i, *vp, DONT_CHECK_ALIASING);
+                    block->setVar(i, vp, DONT_CHECK_ALIASING);
             }
 
             return true;
@@ -1305,18 +1305,17 @@ class DebugScopeProxy : public BaseProxyHandler
 
     DebugScopeProxy() : BaseProxyHandler(&family) {}
 
-    bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, PropertyDescriptor *desc,
+    bool getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id, PropertyDescriptor *desc,
                                unsigned flags) MOZ_OVERRIDE
     {
         return getOwnPropertyDescriptor(cx, proxy, id, desc, flags);
     }
 
-    bool getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid idArg,
+    bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
                                   PropertyDescriptor *desc, unsigned flags) MOZ_OVERRIDE
     {
         Rooted<DebugScopeObject*> debugScope(cx, &proxy->asDebugScope());
         Rooted<ScopeObject*> scope(cx, &debugScope->scope());
-        RootedId id(cx, idArg);
 
         ArgumentsObject *maybeArgsObj;
         if (!checkForMissingArguments(cx, id, *scope, &maybeArgsObj))
@@ -1330,7 +1329,7 @@ class DebugScopeProxy : public BaseProxyHandler
             return true;
         }
 
-        Value v;
+        RootedValue v(cx);
         if (handleUnaliasedAccess(cx, debugScope, scope, id, GET, &v)) {
             PodZero(desc);
             desc->obj = debugScope;
@@ -1342,54 +1341,41 @@ class DebugScopeProxy : public BaseProxyHandler
         return JS_GetPropertyDescriptorById(cx, scope, id, 0, desc);
     }
 
-    bool get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid idArg, Value *vp) MOZ_OVERRIDE
+    bool get(JSContext *cx, HandleObject proxy, HandleObject receiver,  HandleId id,
+             MutableHandleValue vp) MOZ_OVERRIDE
     {
         Rooted<DebugScopeObject*> debugScope(cx, &proxy->asDebugScope());
         Rooted<ScopeObject*> scope(cx, &proxy->asDebugScope().scope());
-        RootedId id(cx, idArg);
 
         ArgumentsObject *maybeArgsObj;
         if (!checkForMissingArguments(cx, id, *scope, &maybeArgsObj))
             return false;
 
         if (maybeArgsObj) {
-            *vp = ObjectValue(*maybeArgsObj);
+            vp.set(ObjectValue(*maybeArgsObj));
             return true;
         }
 
         if (handleUnaliasedAccess(cx, debugScope, scope, id, GET, vp))
             return true;
 
-        RootedValue value(cx);
-        if (!JSObject::getGeneric(cx, scope, scope, id, &value))
-            return false;
-
-        *vp = value;
-        return true;
+        return JSObject::getGeneric(cx, scope, scope, id, vp);
     }
 
-    bool set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid idArg, bool strict,
-                     Value *vp) MOZ_OVERRIDE
+    bool set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id, bool strict,
+             MutableHandleValue vp) MOZ_OVERRIDE
     {
         Rooted<DebugScopeObject*> debugScope(cx, &proxy->asDebugScope());
         Rooted<ScopeObject*> scope(cx, &proxy->asDebugScope().scope());
-        RootedId id(cx, idArg);
-
         if (handleUnaliasedAccess(cx, debugScope, scope, id, SET, vp))
             return true;
-
-        RootedValue value(cx, *vp);
-        if (!JSObject::setGeneric(cx, scope, scope, id, &value, strict))
-            return false;
-
-        *vp = value;
-        return true;
+        return JSObject::setGeneric(cx, scope, scope, id, vp, strict);
     }
 
-    bool defineProperty(JSContext *cx, JSObject *proxy, jsid idArg, PropertyDescriptor *desc) MOZ_OVERRIDE
+    bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
+                        PropertyDescriptor *desc) MOZ_OVERRIDE
     {
         Rooted<ScopeObject*> scope(cx, &proxy->asDebugScope().scope());
-        RootedId id(cx, idArg);
 
         bool found;
         if (!has(cx, proxy, id, &found))
@@ -1401,7 +1387,8 @@ class DebugScopeProxy : public BaseProxyHandler
                                      desc->attrs);
     }
 
-    bool getScopePropertyNames(JSContext *cx, JSObject *proxy, AutoIdVector &props, unsigned flags)
+    bool getScopePropertyNames(JSContext *cx, HandleObject proxy, AutoIdVector &props,
+                               unsigned flags)
     {
         Rooted<ScopeObject*> scope(cx, &proxy->asDebugScope().scope());
 
@@ -1428,17 +1415,17 @@ class DebugScopeProxy : public BaseProxyHandler
         return true;
     }
 
-    bool getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoIdVector &props) MOZ_OVERRIDE
+    bool getOwnPropertyNames(JSContext *cx, HandleObject proxy, AutoIdVector &props) MOZ_OVERRIDE
     {
         return getScopePropertyNames(cx, proxy, props, JSITER_OWNONLY);
     }
 
-    bool enumerate(JSContext *cx, JSObject *proxy, AutoIdVector &props) MOZ_OVERRIDE
+    bool enumerate(JSContext *cx, HandleObject proxy, AutoIdVector &props) MOZ_OVERRIDE
     {
         return getScopePropertyNames(cx, proxy, props, 0);
     }
 
-    bool has(JSContext *cx, JSObject *proxy, jsid id, bool *bp) MOZ_OVERRIDE
+    bool has(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) MOZ_OVERRIDE
     {
         ScopeObject &scopeObj = proxy->asDebugScope().scope();
 
@@ -1470,7 +1457,7 @@ class DebugScopeProxy : public BaseProxyHandler
         return true;
     }
 
-    bool delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp) MOZ_OVERRIDE
+    bool delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) MOZ_OVERRIDE
     {
         RootedValue idval(cx, IdToValue(id));
         return js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_CANT_DELETE,

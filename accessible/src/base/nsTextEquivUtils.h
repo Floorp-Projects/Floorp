@@ -9,10 +9,10 @@
 #define _nsTextEquivUtils_H_
 
 #include "Accessible.h"
+#include "nsIStringBundle.h"
 #include "Role.h"
 
-#include "nsIContent.h"
-#include "nsIStringBundle.h"
+class nsIContent;
 
 /**
  * Text equivalent computation rules (see nsTextEquivUtils::gRoleToNameRulesMap)

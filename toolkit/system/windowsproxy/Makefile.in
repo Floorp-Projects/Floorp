@@ -14,7 +14,6 @@ LIBRARY_NAME    = windowsproxy
 EXPORT_LIBRARY  = 1
 IS_COMPONENT    = 1
 MODULE_NAME     = nsWindowsProxyModule
-GRE_MODULE      = 1
 LIBXUL_LIBRARY  = 1
 
 

@@ -58,7 +58,7 @@ CheckStackRoot(JSRuntime *rt, uintptr_t *w, Rooter *begin, Rooter *end)
         return;
 
     /* Don't check atoms as these will never be subject to generational collection. */
-    if (static_cast<Cell *>(thing)->zone() == rt->atomsCompartment->zone())
+    if (static_cast<Cell *>(thing)->tenuredZone() == rt->atomsCompartment->zone())
         return;
 
     /*
@@ -754,15 +754,13 @@ js::gc::EndVerifyPostBarriers(JSRuntime *rt)
         goto oom;
 
     /* Walk the heap. */
-    for (CompartmentsIter c(rt); !c.done(); c.next()) {
-        if (IsAtomsCompartment(c))
-            continue;
-
-        if (c->watchpointMap)
-            c->watchpointMap->markAll(trc);
-
+    for (CompartmentsIter comp(rt); !comp.done(); comp.next()) {
+        if (comp->watchpointMap)
+            comp->watchpointMap->markAll(trc);
+    }
+    for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
         for (size_t kind = 0; kind < FINALIZE_LIMIT; ++kind) {
-            for (CellIterUnderGC cells(c, AllocKind(kind)); !cells.done(); cells.next()) {
+            for (CellIterUnderGC cells(zone, AllocKind(kind)); !cells.done(); cells.next()) {
                 Cell *src = cells.getCell();
                 if (!rt->gcVerifierNursery.isInside(src))
                     JS_TraceChildren(trc, src, MapAllocToTraceKind(AllocKind(kind)));

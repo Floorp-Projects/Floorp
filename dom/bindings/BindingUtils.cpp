@@ -1328,9 +1328,11 @@ ConcatJSString(JSContext* cx, const char* pre, JSString* str, const char* post)
 }
 
 bool
-NativeToString(JSContext* cx, JSObject* wrapper, JSObject* obj, const char* pre,
+NativeToString(JSContext* cx, JSObject* wrapper, JSObject* object, const char* pre,
                const char* post, JS::Value* v)
 {
+  JS::Rooted<JSObject*> obj(cx, object);
+
   JSPropertyDescriptor toStringDesc;
   toStringDesc.obj = nullptr;
   toStringDesc.attrs = 0;

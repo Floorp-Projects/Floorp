@@ -333,6 +333,7 @@ class BaseShape : public js::gc::Cell
     void setSlotSpan(uint32_t slotSpan) { JS_ASSERT(isOwned()); slotSpan_ = slotSpan; }
 
     JSCompartment *compartment() const { return compartment_; }
+    JS::Zone *zone() const { return tenuredZone(); }
 
     /* Lookup base shapes from the compartment's baseShapes table. */
     static UnownedBaseShape* getUnowned(JSContext *cx, const StackBaseShape &base);
@@ -815,6 +816,8 @@ class Shape : public js::gc::Cell
     void sweep();
     void finalize(FreeOp *fop);
     void removeChild(RawShape child);
+
+    JS::Zone *zone() const { return tenuredZone(); }
 
     static inline void writeBarrierPre(RawShape shape);
     static inline void writeBarrierPost(RawShape shape, void *addr);

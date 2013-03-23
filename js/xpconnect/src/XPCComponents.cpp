@@ -3047,7 +3047,7 @@ NS_IMPL_THREADSAFE_RELEASE(nsXPCComponents_utils_Sandbox)
 xpc::SandboxProxyHandler xpc::sandboxProxyHandler;
 
 bool
-xpc::SandboxCallableProxyHandler::call(JSContext *cx, JSObject *proxy,
+xpc::SandboxCallableProxyHandler::call(JSContext *cx, JS::Handle<JSObject*> proxy,
                                        unsigned argc, Value *vp)
 {
     // We forward the call to our underlying callable. The callable to forward
@@ -3064,12 +3064,37 @@ xpc::SandboxCallableProxyHandler::call(JSContext *cx, JSObject *proxy,
     MOZ_ASSERT(js::GetObjectJSClass(sandboxGlobal) == &SandboxClass);
 
     // If our this object is the sandbox global, we call with this set to the
-    // original proto instead.  Note that we very carefully avoid using JS_THIS
-    // or JS_THIS_OBJECT here, because we do NOT want to box undefined into the
-    // global.  Instead, we just pass it through to our callable, and it will
-    // compute the global based on its own scope chain, which will do the right
-    // thing.
-    JS::Value thisVal = JS_THIS_VALUE(cx, vp);
+    // original proto instead.
+    //
+    // There are two different ways we can compute |this|. If we use
+    // JS_THIS_VALUE, we'll get the bonafide |this| value as passed by the
+    // caller, which may be undefined if a global function was invoked without
+    // an explicit invocant. If we use JS_THIS or JS_THIS_OBJECT, the |this|
+    // in |vp| will be coerced to the global, which is not the correct
+    // behavior in ES5 strict mode. And we have no way to compute strictness
+    // here.
+    //
+    // The naive approach is simply to use JS_THIS_VALUE here. If |this| was
+    // explicit, we can remap it appropriately. If it was implicit, then we
+    // leave it as undefined, and let the callee sort it out. Since the callee
+    // is generally in the same compartment as its global (eg the Window's
+    // compartment, not the Sandbox's), the callee will generally compute the
+    // correct |this|.
+    //
+    // However, this breaks down in the Xray case. If the sandboxPrototype
+    // is an Xray wrapper, then we'll end up reifying the native methods in
+    // the Sandbox's scope, which means that they'll compute |this| to be the
+    // Sandbox, breaking old-style XPC_WN_CallMethod methods.
+    //
+    // Luckily, the intent of Xrays is to provide a vanilla view of a foreign
+    // DOM interface, which means that we don't care about script-enacted
+    // strictness in the prototype's home compartment. Indeed, since DOM
+    // methods are always non-strict, we can just assume non-strict semantics
+    // if the sandboxPrototype is an Xray Wrapper, which lets us appropriately
+    // remap |this|.
+    JS::Value thisVal =
+      WrapperFactory::IsXrayWrapper(sandboxProxy) ? JS_THIS(cx, vp)
+                                                  : JS_THIS_VALUE(cx, vp);
     if (thisVal == ObjectValue(*sandboxGlobal)) {
         thisVal = ObjectValue(*js::GetProxyTargetObject(sandboxProxy));
     }
@@ -3134,13 +3159,13 @@ extern JSBool
 XPC_WN_Helper_SetProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, JSMutableHandleValue vp);
 
 bool
-xpc::SandboxProxyHandler::getPropertyDescriptor(JSContext *cx, JSObject *proxy,
-                                                jsid id_,
+xpc::SandboxProxyHandler::getPropertyDescriptor(JSContext *cx,
+                                                JS::Handle<JSObject*> proxy,
+                                                JS::Handle<jsid> id,
                                                 PropertyDescriptor *desc,
                                                 unsigned flags)
 {
     JS::RootedObject obj(cx, wrappedObject(proxy));
-    JS::RootedId id(cx, id_);
 
     MOZ_ASSERT(js::GetObjectCompartment(obj) == js::GetObjectCompartment(proxy));
     if (!JS_GetPropertyDescriptorById(cx, obj, id,
@@ -3183,8 +3208,8 @@ xpc::SandboxProxyHandler::getPropertyDescriptor(JSContext *cx, JSObject *proxy,
 
 bool
 xpc::SandboxProxyHandler::getOwnPropertyDescriptor(JSContext *cx,
-                                                   JSObject *proxy,
-                                                   jsid id,
+                                                   JS::Handle<JSObject*> proxy,
+                                                   JS::Handle<jsid> id,
                                                    PropertyDescriptor *desc,
                                                    unsigned flags)
 {
@@ -3203,41 +3228,47 @@ xpc::SandboxProxyHandler::getOwnPropertyDescriptor(JSContext *cx,
  */
 
 bool
-xpc::SandboxProxyHandler::has(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
+xpc::SandboxProxyHandler::has(JSContext *cx, JS::Handle<JSObject*> proxy,
+                              JS::Handle<jsid> id, bool *bp)
 {
     return BaseProxyHandler::has(cx, proxy, id, bp);
 }
 bool
-xpc::SandboxProxyHandler::hasOwn(JSContext *cx, JSObject *proxy, jsid id,
-                                 bool *bp)
+xpc::SandboxProxyHandler::hasOwn(JSContext *cx, JS::Handle<JSObject*> proxy,
+                                 JS::Handle<jsid> id, bool *bp)
 {
     return BaseProxyHandler::hasOwn(cx, proxy, id, bp);
 }
 
 bool
-xpc::SandboxProxyHandler::get(JSContext *cx, JSObject *proxy, JSObject *receiver,
-                              jsid id, Value *vp)
+xpc::SandboxProxyHandler::get(JSContext *cx, JS::Handle<JSObject*> proxy,
+                              JS::Handle<JSObject*> receiver,
+                              JS::Handle<jsid> id,
+                              JS::MutableHandle<Value> vp)
 {
     return BaseProxyHandler::get(cx, proxy, receiver, id, vp);
 }
 
 bool
-xpc::SandboxProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver,
-                              jsid id, bool strict, Value *vp)
+xpc::SandboxProxyHandler::set(JSContext *cx, JS::Handle<JSObject*> proxy,
+                              JS::Handle<JSObject*> receiver,
+                              JS::Handle<jsid> id,
+                              bool strict,
+                              JS::MutableHandle<Value> vp)
 {
     return BaseProxyHandler::set(cx, proxy, receiver, id, strict, vp);
 }
 
 bool
-xpc::SandboxProxyHandler::keys(JSContext *cx, JSObject *proxy,
+xpc::SandboxProxyHandler::keys(JSContext *cx, JS::Handle<JSObject*> proxy,
                                AutoIdVector &props)
 {
     return BaseProxyHandler::keys(cx, proxy, props);
 }
 
 bool
-xpc::SandboxProxyHandler::iterate(JSContext *cx, JSObject *proxy, unsigned flags,
-                                  Value *vp)
+xpc::SandboxProxyHandler::iterate(JSContext *cx, JS::Handle<JSObject*> proxy,
+                                  unsigned flags, JS::MutableHandle<Value> vp)
 {
     return BaseProxyHandler::iterate(cx, proxy, flags, vp);
 }

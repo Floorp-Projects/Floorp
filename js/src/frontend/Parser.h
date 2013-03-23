@@ -414,26 +414,8 @@ struct Parser : private AutoGCRooter, public StrictModeGetter
     Node assignExprWithoutYield(unsigned err);
     Node condExpr1();
     Node orExpr1();
-    Node andExpr1i();
-    Node andExpr1n();
-    Node bitOrExpr1i();
-    Node bitOrExpr1n();
-    Node bitXorExpr1i();
-    Node bitXorExpr1n();
-    Node bitAndExpr1i();
-    Node bitAndExpr1n();
-    Node eqExpr1i();
-    Node eqExpr1n();
-    Node relExpr1i();
-    Node relExpr1n();
-    Node shiftExpr1i();
-    Node shiftExpr1n();
-    Node addExpr1i();
-    Node addExpr1n();
-    Node mulExpr1i();
-    Node mulExpr1n();
     Node unaryExpr();
-    Node memberExpr(bool allowCallSyntax);
+    Node memberExpr(TokenKind tt, bool allowCallSyntax);
     Node primaryExpr(TokenKind tt);
     Node parenExpr(bool *genexp = NULL);
 

@@ -258,7 +258,7 @@ JSCompartment::sweepCallsiteClones()
         for (CallsiteCloneTable::Enum e(callsiteClones); !e.empty(); e.popFront()) {
             CallsiteCloneKey key = e.front().key;
             JSFunction *fun = e.front().value;
-            if (!key.script->isMarked() || !fun->isMarked())
+            if (!IsScriptMarked(&key.script) || !IsObjectMarked(&fun))
                 e.removeFront();
         }
     }
@@ -419,6 +419,8 @@ js::DestroyContext(JSContext *cx, DestroyContextMode mode)
 
         /* Clear the statics table to remove GC roots. */
         rt->staticStrings.finish();
+
+        rt->finishSelfHosting();
 
         JS::PrepareForFullGC(rt);
         GC(rt, GC_NORMAL, JS::gcreason::LAST_CONTEXT);

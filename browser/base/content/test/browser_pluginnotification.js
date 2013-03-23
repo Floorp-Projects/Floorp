@@ -683,6 +683,32 @@ function test18e() {
   ok(objLoadingContent.activated, "Test 18e, Plugin should be activated");
 
   Services.perms.remove("127.0.0.1:8888", gPluginHost.getPermissionStringForType("application/x-test"));
+  prepareTest(test18f, gHttpTestRoot + "plugin_test.html");
+}
+
+// clicking the in-content overlay of a vulnerable plugin should bring
+// up the notification and not directly activate the plugin
+function test18f() {
+  var notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  ok(notification, "Test 18f, Should have a click-to-play notification");
+  ok(notification.dismissed, "Test 18f, notification should start dismissed");
+  var plugin = gTestBrowser.contentDocument.getElementById("test");
+  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(!objLoadingContent.activated, "Test 18f, Plugin should not be activated");
+
+  notification.options.eventCallback = function() { executeSoon(test18g); };
+  EventUtils.synthesizeMouseAtCenter(plugin, {}, gTestBrowser.contentWindow);
+}
+
+function test18g() {
+  var notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  ok(notification, "Test 18g, Should have a click-to-play notification");
+  ok(!notification.dismissed, "Test 18g, notification should be open");
+  notification.options.eventCallback = null;
+  var plugin = gTestBrowser.contentDocument.getElementById("test");
+  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(!objLoadingContent.activated, "Test 18g, Plugin should not be activated");
+
   setAndUpdateBlocklist(gHttpTestRoot + "blockNoPlugins.xml",
   function() {
     resetBlocklist();

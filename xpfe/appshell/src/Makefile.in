@@ -15,7 +15,6 @@ MODULE_NAME	= appshell
 LIBRARY_NAME	= nsappshell
 EXPORT_LIBRARY  = 1
 SHORT_LIBNAME	= appshell
-GRE_MODULE	= 1
 LIBXUL_LIBRARY	= 1
 
 

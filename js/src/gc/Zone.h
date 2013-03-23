@@ -113,7 +113,7 @@ struct Zone : private JS::shadow::Zone, public js::gc::GraphNodeBase<JS::Zone>
     bool                         hold;
 
 #ifdef JSGC_GENERATIONAL
-    js::gc::Nursery              gcNursery;
+    js::gc::VerifierNursery      gcNursery;
     js::gc::StoreBuffer          gcStoreBuffer;
 #endif
 
