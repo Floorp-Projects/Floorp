@@ -1147,8 +1147,8 @@ nsHTMLInputElement::ConvertStringToNumber(nsAString& aValue,
           return false;
         }
 
-        jsval rval;
-        jsval fullYear[3];
+        JS::Value rval;
+        JS::Value fullYear[3];
         fullYear[0].setInt32(year);
         fullYear[1].setInt32(month - 1);
         fullYear[2].setInt32(day);
@@ -1157,7 +1157,7 @@ nsHTMLInputElement::ConvertStringToNumber(nsAString& aValue,
           return false;
         }
 
-        jsval timestamp;
+        JS::Value timestamp;
         if (!JS::Call(ctx, date, "getTime", 0, nullptr, &timestamp)) {
           JS_ClearPendingException(ctx);
           return false;
@@ -1312,7 +1312,7 @@ nsHTMLInputElement::ConvertNumberToString(double aValue,
           return false;
         }
 
-        jsval year, month, day;
+        JS::Value year, month, day;
         if (!JS::Call(ctx, date, "getUTCFullYear", 0, nullptr, &year) ||
             !JS::Call(ctx, date, "getUTCMonth", 0, nullptr, &month) ||
             !JS::Call(ctx, date, "getUTCDate", 0, nullptr, &day)) {
@@ -1369,7 +1369,7 @@ nsHTMLInputElement::ConvertNumberToString(double aValue,
 }
 
 NS_IMETHODIMP
-nsHTMLInputElement::GetValueAsDate(JSContext* aCtx, jsval* aDate)
+nsHTMLInputElement::GetValueAsDate(JSContext* aCtx, JS::Value* aDate)
 {
   if (mType != NS_FORM_INPUT_DATE && mType != NS_FORM_INPUT_TIME) {
     aDate->setNull();
@@ -1394,8 +1394,8 @@ nsHTMLInputElement::GetValueAsDate(JSContext* aCtx, jsval* aDate)
         return NS_OK;
       }
 
-      jsval rval;
-      jsval fullYear[3];
+      JS::Value rval;
+      JS::Value fullYear[3];
       fullYear[0].setInt32(year);
       fullYear[1].setInt32(month - 1);
       fullYear[2].setInt32(day);
@@ -1435,7 +1435,7 @@ nsHTMLInputElement::GetValueAsDate(JSContext* aCtx, jsval* aDate)
 }
 
 NS_IMETHODIMP
-nsHTMLInputElement::SetValueAsDate(JSContext* aCtx, const jsval& aDate)
+nsHTMLInputElement::SetValueAsDate(JSContext* aCtx, const JS::Value& aDate)
 {
   if (mType != NS_FORM_INPUT_DATE && mType != NS_FORM_INPUT_TIME) {
     return NS_ERROR_DOM_INVALID_STATE_ERR;
@@ -1453,7 +1453,7 @@ nsHTMLInputElement::SetValueAsDate(JSContext* aCtx, const jsval& aDate)
   }
 
   JSObject& date = aDate.toObject();
-  jsval timestamp;
+  JS::Value timestamp;
   if (!JS::Call(aCtx, &date, "getTime", 0, nullptr, &timestamp) ||
       !timestamp.isNumber() || MOZ_DOUBLE_IS_NaN(timestamp.toNumber())) {
     JS_ClearPendingException(aCtx);
