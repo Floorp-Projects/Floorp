@@ -202,6 +202,7 @@ webidl_files = \
   SVGFEMergeNodeElement.webidl \
   SVGFEOffsetElement.webidl \
   SVGFEPointLightElement.webidl \
+  SVGFESpotLightElement.webidl \
   SVGFETileElement.webidl \
   SVGFitToViewBox.webidl \
   SVGForeignObjectElement.webidl \
