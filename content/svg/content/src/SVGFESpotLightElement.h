@@ -6,27 +6,38 @@
 #ifndef mozilla_dom_SVGFESpotLightElement_h
 #define mozilla_dom_SVGFESpotLightElement_h
 
+#include "nsSVGFilters.h"
+#include "nsSVGNumber2.h"
+
+class nsSVGFELightingElement;
+
+nsresult NS_NewSVGFESpotLightElement(nsIContent **aResult,
+                                     already_AddRefed<nsINodeInfo> aNodeInfo);
+
 namespace mozilla {
 namespace dom {
 
-typedef SVGFEUnstyledElement nsSVGFESpotLightElementBase;
+typedef SVGFEUnstyledElement SVGFESpotLightElementBase;
 
-class nsSVGFESpotLightElement : public nsSVGFESpotLightElementBase,
-                                public nsIDOMSVGFESpotLightElement
+class SVGFESpotLightElement : public SVGFESpotLightElementBase,
+                              public nsIDOMSVGElement
 {
-  friend nsresult NS_NewSVGFESpotLightElement(nsIContent **aResult,
-                                              already_AddRefed<nsINodeInfo> aNodeInfo);
-  friend class nsSVGFELightingElement;
+  friend nsresult (::NS_NewSVGFESpotLightElement(nsIContent **aResult,
+                                                 already_AddRefed<nsINodeInfo> aNodeInfo));
+  friend class ::nsSVGFELightingElement;
 protected:
-  nsSVGFESpotLightElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-    : nsSVGFESpotLightElementBase(aNodeInfo) {}
+  SVGFESpotLightElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+    : SVGFESpotLightElementBase(aNodeInfo)
+  {
+    SetIsDOMBinding();
+  }
+  virtual JSObject* WrapNode(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 
 public:
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGFESPOTLIGHTELEMENT
 
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFESpotLightElementBase::)
+  NS_FORWARD_NSIDOMSVGELEMENT(SVGFESpotLightElementBase::)
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
@@ -35,13 +46,22 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
-  virtual nsXPCClassInfo* GetClassInfo();
-
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+  // WebIDL
+  already_AddRefed<nsIDOMSVGAnimatedNumber> X();
+  already_AddRefed<nsIDOMSVGAnimatedNumber> Y();
+  already_AddRefed<nsIDOMSVGAnimatedNumber> Z();
+  already_AddRefed<nsIDOMSVGAnimatedNumber> PointsAtX();
+  already_AddRefed<nsIDOMSVGAnimatedNumber> PointsAtY();
+  already_AddRefed<nsIDOMSVGAnimatedNumber> PointsAtZ();
+  already_AddRefed<nsIDOMSVGAnimatedNumber> SpecularExponent();
+  already_AddRefed<nsIDOMSVGAnimatedNumber> LimitingConeAngle();
+
 protected:
   virtual NumberAttributesInfo GetNumberInfo();
 
-  enum { X, Y, Z, POINTS_AT_X, POINTS_AT_Y, POINTS_AT_Z,
+  enum { ATTR_X, ATTR_Y, ATTR_Z, POINTS_AT_X, POINTS_AT_Y, POINTS_AT_Z,
          SPECULAR_EXPONENT, LIMITING_CONE_ANGLE };
   nsSVGNumber2 mNumberAttributes[8];
   static NumberInfo sNumberInfo[8];

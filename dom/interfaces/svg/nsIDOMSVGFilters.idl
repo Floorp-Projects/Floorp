@@ -102,18 +102,6 @@ interface nsIDOMSVGFESpecularLightingElement : nsIDOMSVGFilterPrimitiveStandardA
   readonly attribute nsIDOMSVGAnimatedNumber kernelUnitLengthY;
 };
 
-[scriptable, uuid(99068af4-1156-46b6-afcc-4b9f37621d10)]
-interface nsIDOMSVGFESpotLightElement : nsIDOMSVGElement { 
-  readonly attribute nsIDOMSVGAnimatedNumber x;
-  readonly attribute nsIDOMSVGAnimatedNumber y;
-  readonly attribute nsIDOMSVGAnimatedNumber z;
-  readonly attribute nsIDOMSVGAnimatedNumber pointsAtX;
-  readonly attribute nsIDOMSVGAnimatedNumber pointsAtY;
-  readonly attribute nsIDOMSVGAnimatedNumber pointsAtZ;
-  readonly attribute nsIDOMSVGAnimatedNumber specularExponent;
-  readonly attribute nsIDOMSVGAnimatedNumber limitingConeAngle;
-};
-
 [scriptable, uuid(5ab43048-d59a-4e3c-ad2f-6a5d8593f6d0)]
 interface nsIDOMSVGFEDisplacementMapElement : nsIDOMSVGFilterPrimitiveStandardAttributes
 {
