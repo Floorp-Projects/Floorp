@@ -707,7 +707,34 @@ nsresult imgFrame::UnlockImageData()
   if (mQuartzSurface)
     mQuartzSurface->Flush();
 #endif
+
   return NS_OK;
+}
+
+void imgFrame::MarkImageDataDirty()
+{
+  if (mImageSurface)
+    mImageSurface->Flush();
+
+#ifdef USE_WIN_SURFACE
+  if (mWinSurface)
+    mWinSurface->Flush();
+#endif
+
+  if (mImageSurface)
+    mImageSurface->MarkDirty();
+
+#ifdef USE_WIN_SURFACE
+  if (mWinSurface)
+    mWinSurface->MarkDirty();
+#endif
+
+#ifdef XP_MACOSX
+  // The quartz image surface (ab)uses the flush method to get the
+  // cairo_image_surface data into a CGImage, so we have to call Flush() here.
+  if (mQuartzSurface)
+    mQuartzSurface->Flush();
+#endif
 }
 
 int32_t imgFrame::GetTimeout() const
