@@ -227,6 +227,30 @@ bool CrossCompartmentWrapper::finalizeInBackground(Value priv)
 #define NOTHING (true)
 
 bool
+CrossCompartmentWrapper::isExtensible(JSObject *wrapper)
+{
+    // The lack of a context to enter a compartment here is troublesome.  We
+    // don't know anything about the wrapped object (it might even be a
+    // proxy!), and embeddings' proxy handlers could theoretically trigger
+    // compartment mismatches here (because isExtensible wouldn't be called in
+    // the wrapped object's compartment.  But that's probably not very likely.
+    // (Famous last words.)
+    //
+    // Given that we're likely going to make this method take a context and
+    // maybe be fallible at some point, punt on the issue for now.
+    return wrappedObject(wrapper)->isExtensible();
+}
+
+bool
+CrossCompartmentWrapper::preventExtensions(JSContext *cx, HandleObject wrapper)
+{
+    PIERCE(cx, wrapper,
+           NOTHING,
+           Wrapper::preventExtensions(cx, wrapper),
+           NOTHING);
+}
+
+bool
 CrossCompartmentWrapper::getPropertyDescriptor(JSContext *cx, HandleObject wrapper, HandleId id,
                                                PropertyDescriptor *desc, unsigned flags)
 {
@@ -628,6 +652,25 @@ SecurityWrapper<Base>::SecurityWrapper(unsigned flags)
 
 template <class Base>
 bool
+SecurityWrapper<Base>::isExtensible(JSObject *wrapper)
+{
+    // Just like BaseProxyHandler, SecurityWrappers claim by default to always
+    // be extensible, so as not to leak information about the state of the
+    // underlying wrapped thing.
+    return true;
+}
+
+template <class Base>
+bool
+SecurityWrapper<Base>::preventExtensions(JSContext *cx, HandleObject wrapper)
+{
+    // See above.
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNWRAP_DENIED);
+    return false;
+}
+
+template <class Base>
+bool
 SecurityWrapper<Base>::enter(JSContext *cx, HandleObject wrapper, HandleId id,
                              Wrapper::Action act, bool *bp)
 {
@@ -636,8 +679,8 @@ SecurityWrapper<Base>::enter(JSContext *cx, HandleObject wrapper, HandleId id,
     return false;
 }
 
- template <class Base>
- bool
+template <class Base>
+bool
 SecurityWrapper<Base>::nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
                                   CallArgs args)
 {
@@ -681,6 +724,21 @@ template class js::SecurityWrapper<CrossCompartmentWrapper>;
 DeadObjectProxy::DeadObjectProxy()
   : BaseProxyHandler(&sDeadObjectFamily)
 {
+}
+
+bool
+DeadObjectProxy::isExtensible(JSObject *proxy)
+{
+    // This is kind of meaningless, but dead-object semantics aside,
+    // [[Extensible]] always being true is consistent with other proxy types.
+    return true;
+}
+
+bool
+DeadObjectProxy::preventExtensions(JSContext *cx, HandleObject proxy)
+{
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEAD_OBJECT);
+    return false;
 }
 
 bool

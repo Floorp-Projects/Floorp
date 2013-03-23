@@ -1258,9 +1258,9 @@ JSObject::getSpecialAttributes(JSContext *cx, js::HandleObject obj,
 }
 
 inline bool
-JSObject::isProxy() const
+js::ObjectImpl::isProxy() const
 {
-    return js::IsProxy(const_cast<JSObject*>(this));
+    return js::IsProxy(const_cast<JSObject*>(this->asObjectPtr()));
 }
 
 inline bool
