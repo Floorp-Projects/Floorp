@@ -836,7 +836,6 @@ struct JSRuntime : js::RuntimeFriendFields,
     js::gc::ChunkPool   gcChunkPool;
 
     js::RootedValueMap  gcRootsHash;
-    js::GCLocks         gcLocksHash;
     unsigned            gcKeepAtoms;
     volatile size_t     gcBytes;
     size_t              gcMaxBytes;
@@ -1145,6 +1144,10 @@ struct JSRuntime : js::RuntimeFriendFields,
     PRLock              *gcLock;
 
     js::GCHelperThread  gcHelperThread;
+
+#ifdef XP_MACOSX
+    js::AsmJSMachExceptionHandler asmJSMachExceptionHandler;
+#endif
 
 #ifdef JS_THREADSAFE
 # ifdef JS_ION

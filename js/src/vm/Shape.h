@@ -899,6 +899,8 @@ struct EmptyShape : public js::Shape
      * shape if none was found.
      */
     static Shape *getInitialShape(JSContext *cx, Class *clasp, TaggedProto proto,
+                                  JSObject *parent, size_t nfixed, uint32_t objectFlags = 0);
+    static Shape *getInitialShape(JSContext *cx, Class *clasp, TaggedProto proto,
                                   JSObject *parent, gc::AllocKind kind, uint32_t objectFlags = 0);
 
     /*

@@ -13,7 +13,7 @@ Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 let gStrings = Services.strings.createBundle("chrome://browser/locale/aboutDownloads.properties");
 
 let downloadTemplate =
-"<li downloadGUID='{guid}' role='button' state='{state}' contextmenu='downloadmenu'>" +
+"<li downloadGUID='{guid}' class='list-item' role='button' state='{state}' contextmenu='downloadmenu'>" +
   "<img class='icon' src='{icon}'/>" +
   "<div class='details'>" +
      "<div class='row'>" +

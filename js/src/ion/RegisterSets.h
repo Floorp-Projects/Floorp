@@ -10,6 +10,7 @@
 
 #include "Registers.h"
 #include "TypeOracle.h"
+#include "ion/IonAllocPolicy.h"
 
 namespace js {
 namespace ion {
@@ -739,6 +740,8 @@ class AsmJSHeapAccess
 #endif
     void updateOffset(uint32_t offset) { offset_ = offset; }
 };
+
+typedef Vector<AsmJSHeapAccess, 0, IonAllocPolicy> AsmJSHeapAccessVector;
 
 } // namespace ion
 } // namespace js

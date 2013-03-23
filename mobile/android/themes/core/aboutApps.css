@@ -2,39 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
-html {
-  font-family: Roboto,"Droid Sans",helvetica,arial,clean,sans-serif;
-  font-size: 18px;
-  background-color: #ced7de;
-  -moz-text-size-adjust: none;
-}
-
-body {
-  margin: 0;
-}
-
-.header {
-  color: black;
-  padding: 15px 0px 0px;
-  -moz-padding-start: 25px;
-  font-size: 20px;
-  font-weight: bold;
-  border-bottom: 2px solid;
-  min-height: 44px;
-  -moz-border-bottom-colors: #ff9100 #f27900;
-  position: relative;
-}
-
-.header > .icon {
-  position: absolute;
-  top: 5px;
-  right: 15px;
-}
-
-.app:active,
-.header > .icon:active {
+.app:active {
   background-color: #febc2b;
+}
+
+#header-button {
+  background-image: url("chrome://browser/skin/images/addons-amo-hdpi.png");
 }
 
 #main-container {
@@ -43,6 +16,7 @@ body {
   border-radius: 10px;
   border: 1px solid grey;
   background-color: white;
+  width: calc(100% - 4em);
 }
 
 .spacer {
@@ -54,14 +28,14 @@ body {
   cursor: pointer;
   text-align: center;
   margin: 1em;
-  width: 100px;
-  height: 121px;
-  font-size: 14px;
+  width: 5.6em;
+  height: 6.7em;
+  font-size: .8em;
 }
 
 .app img {
-  width: 91px;
-  height: 91px;
+  width: 5em;
+  height: 5em;
   pointer-events: none;
 }
 

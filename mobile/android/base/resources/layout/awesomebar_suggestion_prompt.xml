@@ -7,44 +7,50 @@
       class="org.mozilla.gecko.AwesomeBarTabs$BackgroundLayout"
       android:layout_width="fill_parent"
       android:layout_height="wrap_content"
-      android:orientation="horizontal"
-      android:minHeight="@dimen/awesomebar_row_height"
-      android:gravity="center_vertical"
-      android:padding="10dip"
       android:background="@drawable/address_bar_bg">
 
-    <Gecko.TextView android:id="@+id/suggestions_prompt_title"
-                    android:layout_height="wrap_content"
-                    android:layout_width="wrap_content"
-                    android:textColor="@color/awesome_bar_title"
-                    android:layout_marginLeft="6dip"
-                    android:textSize="13sp"
-                    android:layout_weight="1" />
+    <LinearLayout android:id="@+id/prompt_container"
+                  android:layout_width="fill_parent"
+                  android:layout_height="wrap_content"
+                  android:orientation="horizontal"
+                  android:minHeight="@dimen/awesomebar_row_height"
+                  android:gravity="center_vertical"
+                  android:padding="10dip">
 
-    <TextView android:id="@+id/suggestions_prompt_yes"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:textSize="13sp"
-            android:layout_marginLeft="15dip"
-            android:background="@drawable/suggestion_selector"
-            android:paddingLeft="15dp"
-            android:paddingRight="15dp"
-            android:paddingTop="7dp"
-            android:paddingBottom="7dp"
-            android:clickable="true"
-            android:text="@string/button_yes" />
+        <Gecko.TextView android:id="@+id/suggestions_prompt_title"
+                        android:layout_height="wrap_content"
+                        android:layout_width="wrap_content"
+                        android:textColor="@color/awesome_bar_title"
+                        android:layout_marginLeft="6dip"
+                        android:textSize="13sp"
+                        android:layout_weight="1" />
 
-    <TextView android:id="@+id/suggestions_prompt_no"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:textSize="13sp"
-            android:layout_marginLeft="6dip"
-            android:background="@drawable/suggestion_selector"
-            android:paddingLeft="15dp"
-            android:paddingRight="15dp"
-            android:paddingTop="7dp"
-            android:paddingBottom="7dp"
-            android:clickable="true"
-            android:text="@string/button_no" />
+        <TextView android:id="@+id/suggestions_prompt_yes"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:textSize="13sp"
+                android:layout_marginLeft="15dip"
+                android:background="@drawable/suggestion_selector"
+                android:paddingLeft="15dp"
+                android:paddingRight="15dp"
+                android:paddingTop="7dp"
+                android:paddingBottom="7dp"
+                android:clickable="true"
+                android:text="@string/button_yes" />
+
+        <TextView android:id="@+id/suggestions_prompt_no"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:textSize="13sp"
+                android:layout_marginLeft="6dip"
+                android:background="@drawable/suggestion_selector"
+                android:paddingLeft="15dp"
+                android:paddingRight="15dp"
+                android:paddingTop="7dp"
+                android:paddingBottom="7dp"
+                android:clickable="true"
+                android:text="@string/button_no" />
+
+    </LinearLayout>
 
 </view>

@@ -63,7 +63,7 @@
 #include "TexturePoolOGL.h"
 #endif
 
-#ifdef USE_SKIA
+#ifdef USE_SKIA_GPU
 #include "skia/GrContext.h"
 #include "skia/GrGLInterface.h"
 #include "GLContextSkia.h"
@@ -789,7 +789,7 @@ RefPtr<DrawTarget>
 gfxPlatform::CreateDrawTargetForFBO(unsigned int aFBOID, mozilla::gl::GLContext* aGLContext, const IntSize& aSize, SurfaceFormat aFormat)
 {
   NS_ASSERTION(mPreferredCanvasBackend, "No backend.");
-#ifdef USE_SKIA
+#ifdef USE_SKIA_GPU
   if (mPreferredCanvasBackend == BACKEND_SKIA) {
     static uint8_t sGrContextKey;
     GrContext* ctx = reinterpret_cast<GrContext*>(aGLContext->GetUserData(&sGrContextKey));

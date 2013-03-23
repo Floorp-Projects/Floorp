@@ -17,6 +17,7 @@ from mach.mixin.process import ProcessExecutionMixin
 
 from mozfile.mozfile import rmtree
 
+from .backend.configenvironment import ConfigEnvironment
 from .config import BuildConfig
 from .mozconfig import (
     MozconfigFindException,
@@ -51,6 +52,7 @@ class MozbuildObject(ProcessExecutionMixin):
         self._topobjdir = topobjdir
         self._mozconfig = None
         self._config_guess_output = None
+        self._config_environment = None
 
     @property
     def topobjdir(self):
@@ -73,6 +75,35 @@ class MozbuildObject(ProcessExecutionMixin):
         return self._mozconfig
 
     @property
+    def config_environment(self):
+        """Returns the ConfigEnvironment for the current build configuration.
+
+        This property is only available once configure has executed.
+
+        If configure's output is not available, this will raise.
+        """
+        if self._config_environment:
+            return self._config_environment
+
+        config_status = os.path.join(self.topobjdir, 'config.status')
+
+        if not os.path.exists(config_status):
+            raise Exception('config.status not available. Run configure.')
+
+        self._config_environment = \
+            ConfigEnvironment.from_config_status(config_status)
+
+        return self._config_environment
+
+    @property
+    def defines(self):
+        return self.config_environment.defines
+
+    @property
+    def substs(self):
+        return self.config_environment.substs
+
+    @property
     def distdir(self):
         return os.path.join(self.topobjdir, 'dist')
 
@@ -90,6 +121,42 @@ class MozbuildObject(ProcessExecutionMixin):
         # We use mozfile because it is faster than shutil.rmtree().
         # mozfile doesn't like unicode arguments (bug 818783).
         rmtree(self.topobjdir.encode('utf-8'))
+
+    def get_binary_path(self, what='app', validate_exists=True):
+        """Obtain the path to a compiled binary for this build configuration.
+
+        The what argument is the program or tool being sought after. See the
+        code implementation for supported values.
+
+        If validate_exists is True (the default), we will ensure the found path
+        exists before returning, raising an exception if it doesn't.
+
+        If no arguments are specified, we will return the main binary for the
+        configured XUL application.
+        """
+
+        substs = self.substs
+
+        stem = self.distdir
+        if substs['OS_ARCH'] == 'Darwin':
+            stem = os.path.join(stem, substs['MOZ_MACBUNDLE_NAME'], 'Contents',
+                'MacOS')
+
+        leaf = None
+
+        if what == 'app':
+            leaf = substs['MOZ_APP_NAME'] + substs['BIN_SUFFIX']
+        elif what == 'xpcshell':
+            leaf = 'xpcshell'
+        else:
+            raise Exception("Don't know how to locate binary: %s" % what)
+
+        path = os.path.join(stem, leaf)
+
+        if validate_exists and not os.path.exists(path):
+            raise Exception('Binary expected at %s does not exist.' % path)
+
+        return path
 
     @property
     def _config_guess(self):

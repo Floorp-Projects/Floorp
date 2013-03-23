@@ -21,6 +21,8 @@
 using namespace js;
 using namespace js::types;
 
+typedef Rooted<ArgumentsObject *> RootedArgumentsObject;
+
 /*****************************************************************************/
 
 StaticScopeIter::StaticScopeIter(JSContext *cx, HandleObject objArg)
@@ -1317,8 +1319,8 @@ class DebugScopeProxy : public BaseProxyHandler
         Rooted<DebugScopeObject*> debugScope(cx, &proxy->asDebugScope());
         Rooted<ScopeObject*> scope(cx, &debugScope->scope());
 
-        ArgumentsObject *maybeArgsObj;
-        if (!checkForMissingArguments(cx, id, *scope, &maybeArgsObj))
+        RootedArgumentsObject maybeArgsObj(cx);
+        if (!checkForMissingArguments(cx, id, *scope, maybeArgsObj.address()))
             return false;
 
         if (maybeArgsObj) {
@@ -1347,8 +1349,8 @@ class DebugScopeProxy : public BaseProxyHandler
         Rooted<DebugScopeObject*> debugScope(cx, &proxy->asDebugScope());
         Rooted<ScopeObject*> scope(cx, &proxy->asDebugScope().scope());
 
-        ArgumentsObject *maybeArgsObj;
-        if (!checkForMissingArguments(cx, id, *scope, &maybeArgsObj))
+        RootedArgumentsObject maybeArgsObj(cx);
+        if (!checkForMissingArguments(cx, id, *scope, maybeArgsObj.address()))
             return false;
 
         if (maybeArgsObj) {
@@ -1425,8 +1427,9 @@ class DebugScopeProxy : public BaseProxyHandler
         return getScopePropertyNames(cx, proxy, props, 0);
     }
 
-    bool has(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) MOZ_OVERRIDE
+    bool has(JSContext *cx, HandleObject proxy, HandleId id_, bool *bp) MOZ_OVERRIDE
     {
+        RootedId id(cx, id_);
         ScopeObject &scopeObj = proxy->asDebugScope().scope();
 
         if (isArguments(cx, id) && isFunctionScope(scopeObj)) {

@@ -377,7 +377,8 @@ void XPCJSRuntime::TraceBlackJS(JSTracer* trc, void* data)
             static_cast<XPCJSObjectHolder*>(e)->TraceJS(trc);
     }
 
-    dom::TraceBlackJS(trc, JS_GetGCParameter(self->GetJSRuntime(), JSGC_NUMBER));
+    dom::TraceBlackJS(trc, JS_GetGCParameter(self->GetJSRuntime(), JSGC_NUMBER),
+                      self->GetXPConnect()->IsShuttingDown());
 }
 
 // static

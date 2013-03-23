@@ -4280,9 +4280,9 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay* aDisplay,
                        &nsCSSFrameConstructor::ConstructInline) },
 #ifdef MOZ_FLEXBOX
     { NS_STYLE_DISPLAY_FLEX,
-      FCDATA_DECL(0, NS_NewFlexContainerFrame) },
+      FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewFlexContainerFrame) },
     { NS_STYLE_DISPLAY_INLINE_FLEX,
-      FCDATA_DECL(0, NS_NewFlexContainerFrame) },
+      FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewFlexContainerFrame) },
 #endif // MOZ_FLEXBOX
     { NS_STYLE_DISPLAY_TABLE,
       FULL_CTOR_FCDATA(0, &nsCSSFrameConstructor::ConstructTable) },

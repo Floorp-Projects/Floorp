@@ -219,6 +219,9 @@ public:
   void PaintedCanvas(ShadowableLayer* aCanvas,
                      bool aNeedYFlip,
                      const SurfaceDescriptor& aNewFrontSurface);
+  void PaintedCanvasNoSwap(ShadowableLayer* aCanvas,
+                           bool aNeedYFlip,
+                           const SurfaceDescriptor& aNewFrontSurface);
 
   /**
    * End the current transaction and forward it to ShadowLayerManager.

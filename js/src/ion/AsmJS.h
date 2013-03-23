@@ -8,12 +8,17 @@
 #if !defined(jsion_asmjs_h__)
 #define jsion_asmjs_h__
 
+#ifdef XP_MACOSX
+# include <pthread.h>
+# include <mach/mach.h>
+#endif
+
 // asm.js compilation is only available on desktop x86/x64 at the moment.
 // Don't panic, mobile support is coming soon.
 #if defined(JS_ION) && \
     !defined(ANDROID) && \
     (defined(JS_CPU_X86) || defined(JS_CPU_X64)) &&  \
-    (defined(__linux__) || defined(XP_WIN))
+    (defined(__linux__) || defined(XP_WIN) || defined(XP_MACOSX))
 # define JS_ASMJS
 #endif
 
@@ -22,6 +27,7 @@ namespace js {
 class SPSProfiler;
 class AsmJSModule;
 namespace frontend { struct TokenStream; struct ParseNode; }
+namespace ion { class MIRGenerator; class LIRGraph; }
 
 // Return whether asm.js optimization is inhibitted by the platform or
 // dynamically disabled. (Exposed as JSNative for shell testing.)
@@ -93,12 +99,54 @@ class AsmJSActivation
 // The asm.js spec requires that the ArrayBuffer's byteLength be a multiple of 4096.
 static const size_t AsmJSAllocationGranularity = 4096;
 
+#ifdef JS_CPU_X64
 // On x64, the internal ArrayBuffer data array is inflated to 4GiB (only the
 // byteLength portion of which is accessible) so that out-of-bounds accesses
 // (made using a uint32 index) are guaranteed to raise a SIGSEGV.
-# ifdef JS_CPU_X64
 static const size_t AsmJSBufferProtectedSize = 4 * 1024ULL * 1024ULL * 1024ULL;
-# endif
+#endif
+
+#ifdef XP_MACOSX
+class AsmJSMachExceptionHandler
+{
+    bool installed_;
+    pthread_t thread_;
+    mach_port_t port_;
+
+    void release();
+
+  public:
+    AsmJSMachExceptionHandler();
+    ~AsmJSMachExceptionHandler() { release(); }
+    mach_port_t port() const { return port_; }
+    bool installed() const { return installed_; }
+    bool install(JSRuntime *rt);
+    void clearCurrentThread();
+    void setCurrentThread();
+};
+#endif
+
+// Struct type for passing parallel compilation data between the main thread
+// and compilation workers.
+struct AsmJSParallelTask
+{
+    LifoAlloc lifo;         // Provider of all heap memory used for compilation.
+
+    uint32_t funcNum;       // Index |i| of function in |Module.function(i)|.
+    ion::MIRGenerator *mir; // Passed from main thread to worker.
+    ion::LIRGraph *lir;     // Passed from worker to main thread.
+
+    AsmJSParallelTask(size_t defaultChunkSize)
+      : lifo(defaultChunkSize),
+        funcNum(0), mir(NULL), lir(NULL)
+    { }
+
+    void init(uint32_t newFuncNum, ion::MIRGenerator *newMir) {
+        funcNum = newFuncNum;
+        mir = newMir;
+        lir = NULL;
+    }
+};
 
 } // namespace js
 

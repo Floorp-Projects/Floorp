@@ -11,16 +11,16 @@
   <default remote="caf" revision="refs/tags/android-4.0.4_r2.1" sync-j="4"/>
 
   <!-- Gonk specific things and forks -->
-  <project name="platform_build" path="build" remote="b2g" revision="777bee02feb43f8f29644f9d09ea7fe01d03f127">
+  <project name="platform_build" path="build" remote="b2g" revision="c647d5f967a5f17aaa27c792ea0ee35a2d44b113">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
   <!-- Information: fake-dalvik is tagged with B2G_1_0_0_20130125190500 --><project name="fake-dalvik" path="dalvik" remote="b2g" revision="ca1f327d5acc198bb4be62fa51db2c039032c9ce"/>
-  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="8e68d41728675fc72502dc572dec523c2c8abb8a"/>
+  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="9429d142f7f46add49f4665ce81ac0c0416dd9c1"/>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="f634b3d50effdd42828cc757c01fdbf74e562a36"/>
-  <project name="moztt" path="external/moztt" remote="b2g" revision="e1569feeb10891a55193e36b4a3939742151b05f"/>
+  <project name="moztt" path="external/moztt" remote="b2g" revision="302ab954f16d0ad708e87a1cf5e94f5d93f174c9"/>
 
   <!-- Stock Android things -->
-  <!-- Information: platform/abi/cpp is tagged with AU_LINUX_GECKO_ICS_STRAWBERRY_V1.01.00.01.19.039 --><project name="platform/abi/cpp" path="abi/cpp" revision="6426040f1be4a844082c9769171ce7f5341a5528"/>
+  <!-- Information: platform/abi/cpp is tagged with AU_LINUX_GECKO_ICS_STRAWBERRY.01.01.00.19.035 --><project name="platform/abi/cpp" path="abi/cpp" revision="6426040f1be4a844082c9769171ce7f5341a5528"/>
   <project name="platform/bionic" path="bionic" revision="c7bab8cb8483e7869eabdbd4add7c9e5beeecc80"/>
   <!-- Information: platform/bootable/recovery is tagged with android-4.0.4_r2.1 --><project name="platform/bootable/recovery" path="bootable/recovery" revision="fadc5ac81d6400ebdd041f7d4ea64021596d6b7d"/>
   <!-- Information: device/common is tagged with android-sdk-adt_r20 --><project name="device/common" path="device/common" revision="7d4526582f88808a3194e1a3b304abb369d2745c"/>
@@ -29,54 +29,55 @@
   <!-- Information: platform/external/bluetooth/bluez is tagged with android-4.0.4_r2.1 --><project name="platform/external/bluetooth/bluez" path="external/bluetooth/bluez" revision="966afbd88f0bfc325bf80274ad2723c238883fa1"/>
   <!-- Information: platform/external/bluetooth/glib is tagged with android-cts-4.1_r2 --><project name="platform/external/bluetooth/glib" path="external/bluetooth/glib" revision="1143b9918eab068401b604eb11c3f651f4e38b25"/>
   <!-- Information: platform/external/bluetooth/hcidump is tagged with android-cts-4.1_r2 --><project name="platform/external/bluetooth/hcidump" path="external/bluetooth/hcidump" revision="7322661808c2006b7848e79e6bb72b37fbcf6710"/>
-  <!-- Information: platform/external/bsdiff is tagged with AU_LINUX_GECKO_ICS_STRAWBERRY_V1.01.00.01.19.039 --><project name="platform/external/bsdiff" path="external/bsdiff" revision="81872540236d9bb15cccf963d05b9de48baa5375"/>
+  <!-- Information: platform/external/bsdiff is tagged with AU_LINUX_ANDROID_JB_REL_2.0.3.04.01.02.21.123 --><project name="platform/external/bsdiff" path="external/bsdiff" revision="81872540236d9bb15cccf963d05b9de48baa5375"/>
   <project name="platform/external/busybox" path="external/busybox" remote="linaro" revision="2e461c8029a50d986dfe4ab07ae5a1834b5c40f0"/>
-  <!-- Information: platform/external/bzip2 is tagged with AU_LINUX_GECKO_ICS_STRAWBERRY_V1.01.00.01.19.039 --><project name="platform/external/bzip2" path="external/bzip2" revision="048dacdca43eed1534689ececcf2781c63e1e4ba"/>
+  <!-- Information: platform/external/bzip2 is tagged with AU_LINUX_GECKO_ICS_STRAWBERRY.01.01.00.19.035 --><project name="platform/external/bzip2" path="external/bzip2" revision="048dacdca43eed1534689ececcf2781c63e1e4ba"/>
   <!-- Information: platform/external/dbus is tagged with android-cts-4.1_r2 --><project name="platform/external/dbus" path="external/dbus" revision="537eaff5de9aace3348436166d4cde7adc1e488e"/>
   <!-- Information: platform/external/dhcpcd is tagged with android-sdk-adt_r20 --><project name="platform/external/dhcpcd" path="external/dhcpcd" revision="ddaa48f57b54b2862b3e6dcf18a44c9647f3baaa"/>
-  <!-- Information: platform/external/dnsmasq is tagged with AU_LINUX_GECKO_ICS_STRAWBERRY_V1.01.00.01.19.039 --><project name="platform/external/dnsmasq" path="external/dnsmasq" revision="f621afad94df46204c25fc2593a19d704d2637f5"/>
+  <!-- Information: platform/external/dnsmasq is tagged with AU_LINUX_ANDROID_JB_REL_2.0.3.04.01.02.21.123 --><project name="platform/external/dnsmasq" path="external/dnsmasq" revision="f621afad94df46204c25fc2593a19d704d2637f5"/>
   <project name="platform_external_elfcopy" path="external/elfcopy" remote="b2g" revision="62c1bed1c4505369cac2e72fbe30452a598fb690"/>
   <project name="platform_external_elfutils" path="external/elfutils" remote="b2g" revision="72940dec691fa3255e13df01f8c53b620e446066"/>
-  <!-- Information: platform/external/expat is tagged with AU_LINUX_GECKO_ICS_STRAWBERRY_V1.01.00.01.19.039 --><project name="platform/external/expat" path="external/expat" revision="6df134250feab71edb5915ecaa6268210bca76c5"/>
-  <!-- Information: platform/external/fdlibm is tagged with AU_LINUX_GECKO_ICS_STRAWBERRY_V1.01.00.01.19.039 --><project name="platform/external/fdlibm" path="external/fdlibm" revision="988ffeb12a6e044ae3504838ef1fee3fe0716934"/>
-  <!-- Information: platform/external/flac is tagged with AU_LINUX_GECKO_ICS_STRAWBERRY_V1.01.00.01.19.039 --><project name="platform/external/flac" path="external/flac" revision="5893fbe890f5dab8e4146d2baa4bd2691c0739e0"/>
-  <!-- Information: platform/external/freetype is tagged with AU_LINUX_GECKO_ICS_STRAWBERRY_V1.01.00.01.19.039 --><project name="platform/external/freetype" path="external/freetype" revision="aeb407daf3711a10a27f3bc2223c5eb05158076e"/>
-  <!-- Information: platform/external/giflib is tagged with AU_LINUX_GECKO_ICS_STRAWBERRY_V1.01.00.01.19.039 --><project name="platform/external/giflib" path="external/giflib" revision="b2597268aef084202a8c349d1cc072c03c6e22eb"/>
+  <!-- Information: platform/external/expat is tagged with AU_LINUX_GECKO_ICS_STRAWBERRY.01.01.00.19.035 --><project name="platform/external/expat" path="external/expat" revision="6df134250feab71edb5915ecaa6268210bca76c5"/>
+  <!-- Information: platform/external/fdlibm is tagged with AU_LINUX_GECKO_ICS_STRAWBERRY.01.01.00.19.035 --><project name="platform/external/fdlibm" path="external/fdlibm" revision="988ffeb12a6e044ae3504838ef1fee3fe0716934"/>
+  <!-- Information: platform/external/flac is tagged with AU_LINUX_GECKO_ICS_STRAWBERRY.01.01.00.19.035 --><project name="platform/external/flac" path="external/flac" revision="5893fbe890f5dab8e4146d2baa4bd2691c0739e0"/>
+  <!-- Information: platform/external/freetype is tagged with AU_LINUX_GECKO_ICS_STRAWBERRY.01.01.00.19.035 --><project name="platform/external/freetype" path="external/freetype" revision="aeb407daf3711a10a27f3bc2223c5eb05158076e"/>
+  <!-- Information: platform/external/giflib is tagged with AU_LINUX_ANDROID_JB_REL_2.0.3.04.01.02.21.123 --><project name="platform/external/giflib" path="external/giflib" revision="b2597268aef084202a8c349d1cc072c03c6e22eb"/>
   <project name="platform/external/gtest" path="external/gtest" revision="8c212ebe53bb2baab3575f03069016f1fb11e449"/>
   <!-- Information: platform/external/harfbuzz is tagged with android-sdk-adt_r20 --><project name="platform/external/harfbuzz" path="external/harfbuzz" revision="bae491c03a00757d83ede8d855b7d85d246bde3d"/>
-  <!-- Information: platform/external/icu4c is tagged with AU_LINUX_GECKO_ICS_STRAWBERRY_V1.01.00.01.19.039 --><project name="platform/external/icu4c" path="external/icu4c" revision="0fa67b93b831c6636ca18b152a1b1b14cc99b034"/>
-  <!-- Information: platform/external/iptables is tagged with AU_LINUX_GECKO_ICS_STRAWBERRY_V1.01.00.01.19.039 --><project name="platform/external/iptables" path="external/iptables" revision="3b2deb17f065c5664bb25e1a28489e5792eb63ff"/>
-  <!-- Information: platform/external/jhead is tagged with AU_LINUX_GECKO_ICS_STRAWBERRY_V1.01.00.01.19.039 --><project name="platform/external/jhead" path="external/jhead" revision="754078052c687f6721536009c816644c73e4f145"/>
+  <!-- icu4c is missing the default tag in caf, that's the *only* reason for the hardcode -->
+  <!-- Information: platform/external/icu4c is tagged with AU_LINUX_GECKO_ICS_STRAWBERRY.01.01.00.19.035 --><project name="platform/external/icu4c" path="external/icu4c" revision="0fa67b93b831c6636ca18b152a1b1b14cc99b034"/>
+  <!-- Information: platform/external/iptables is tagged with AU_LINUX_GECKO_ICS_STRAWBERRY.01.01.00.19.035 --><project name="platform/external/iptables" path="external/iptables" revision="3b2deb17f065c5664bb25e1a28489e5792eb63ff"/>
+  <!-- Information: platform/external/jhead is tagged with AU_LINUX_GECKO_ICS_STRAWBERRY.01.01.00.19.035 --><project name="platform/external/jhead" path="external/jhead" revision="754078052c687f6721536009c816644c73e4f145"/>
   <!-- Information: platform/external/jpeg is tagged with android-cts-4.1_r2 --><project name="platform/external/jpeg" path="external/jpeg" revision="d4fad7f50f79626455d88523207e05b868819cd8"/>
-  <!-- Information: platform/external/libgsm is tagged with AU_LINUX_GECKO_ICS_STRAWBERRY_V1.01.00.01.19.039 --><project name="platform/external/libgsm" path="external/libgsm" revision="5e4516958690b9a1b2c98f88eeecba3edd2dbda4"/>
-  <!-- Information: platform/external/liblzf is tagged with AU_LINUX_GECKO_ICS_STRAWBERRY_V1.01.00.01.19.039 --><project name="platform/external/liblzf" path="external/liblzf" revision="6946aa575b0949d045722794850896099d937cbb"/>
+  <!-- Information: platform/external/libgsm is tagged with AU_LINUX_ANDROID_JB_REL_2.0.3.04.01.02.21.123 --><project name="platform/external/libgsm" path="external/libgsm" revision="5e4516958690b9a1b2c98f88eeecba3edd2dbda4"/>
+  <!-- Information: platform/external/liblzf is tagged with AU_LINUX_ANDROID_JB_MR1.04.02.02.49.187 --><project name="platform/external/liblzf" path="external/liblzf" revision="6946aa575b0949d045722794850896099d937cbb"/>
   <!-- Information: platform/external/libnfc-nxp is tagged with android-4.0.4_r2.1 --><project name="platform/external/libnfc-nxp" path="external/libnfc-nxp" revision="533c14450e6239cce8acb74f4e4dea2c89f8f219"/>
-  <!-- Information: platform/external/libnl-headers is tagged with AU_LINUX_GECKO_ICS_STRAWBERRY_V1.01.00.01.19.039 --><project name="platform/external/libnl-headers" path="external/libnl-headers" revision="6ccf7349d61f73ac26a0675d735d903ab919c658"/>
+  <!-- Information: platform/external/libnl-headers is tagged with AU_LINUX_ANDROID_JB_MR1.04.02.02.49.187 --><project name="platform/external/libnl-headers" path="external/libnl-headers" revision="6ccf7349d61f73ac26a0675d735d903ab919c658"/>
   <!-- Information: platform/external/libpng is tagged with android-4.0.4_r2.1 --><project name="platform/external/libpng" path="external/libpng" revision="84d92c718ab9f48faec0f640747c4b6f7a995607"/>
   <!-- Information: platform/external/libvpx is tagged with M8960AAAAANLYA1519349 --><project name="platform/external/libvpx" path="external/libvpx" revision="3a40da0d96da5c520e7707aa14f48a80956e20d7"/>
   <!-- Information: platform/external/mksh is tagged with M8960AAAAANLYA1099D --><project name="platform/external/mksh" path="external/mksh" revision="5155f1c7438ef540d7b25eb70aa1639579795b07"/>
   <!-- Information: platform_external_opensans is tagged with B2G_1_0_0_20130125190500 --><project name="platform_external_opensans" path="external/opensans" remote="b2g" revision="b5b4c226ca1d71e936153cf679dda6d3d60e2354"/>
   <!-- Information: platform/external/openssl is tagged with android-4.0.4_r2.1 --><project name="platform/external/openssl" path="external/openssl" revision="ce96fb211b9a44bbd7fb5ef7ed0e6c1244045c2e"/>
-  <!-- Information: platform/external/protobuf is tagged with AU_LINUX_GECKO_ICS_STRAWBERRY_V1.01.00.01.19.039 --><project name="platform/external/protobuf" path="external/protobuf" revision="e217977611c52bccde7f7c78e1d3c790c6357431"/>
-  <!-- Information: platform/external/safe-iop is tagged with AU_LINUX_GECKO_ICS_STRAWBERRY_V1.01.00.01.19.039 --><project name="platform/external/safe-iop" path="external/safe-iop" revision="07073634e2e3aa4f518e36ed5dec3aabc549d5fb"/>
+  <!-- Information: platform/external/protobuf is tagged with AU_LINUX_ANDROID_JB_REL_2.0.3.04.01.02.21.123 --><project name="platform/external/protobuf" path="external/protobuf" revision="e217977611c52bccde7f7c78e1d3c790c6357431"/>
+  <!-- Information: platform/external/safe-iop is tagged with AU_LINUX_ANDROID_JB_REL_2.0.3.04.01.02.21.123 --><project name="platform/external/safe-iop" path="external/safe-iop" revision="07073634e2e3aa4f518e36ed5dec3aabc549d5fb"/>
   <!-- Information: screencap-gonk is tagged with B2G_1_0_0_20130125190500 --><project name="screencap-gonk" path="external/screencap-gonk" remote="b2g" revision="e6403c71e9eca8cb943739d5a0a192deac60fc51"/>
   <!-- Information: platform/external/skia is tagged with android-4.0.4_r2.1 --><project name="platform/external/skia" path="external/skia" revision="5c67a309e16bffe7013defda8f1217b3ce2420b4"/>
   <!-- Information: platform/external/sonivox is tagged with android-sdk-adt_r20 --><project name="platform/external/sonivox" path="external/sonivox" revision="5f9600971859fe072f31b38a51c38157f5f9b381"/>
-  <!-- Information: platform/external/speex is tagged with AU_LINUX_GECKO_ICS_STRAWBERRY_V1.01.00.01.19.039 --><project name="platform/external/speex" path="external/speex" revision="ebe6230a7f7c69f5a4389f2b09b7b19ef9e94f32"/>
+  <!-- Information: platform/external/speex is tagged with AU_LINUX_ANDROID_JB_REL_2.0.3.04.01.02.21.123 --><project name="platform/external/speex" path="external/speex" revision="ebe6230a7f7c69f5a4389f2b09b7b19ef9e94f32"/>
   <!-- Information: platform/external/sqlite is tagged with android-4.0.4_r2.1 --><project name="platform/external/sqlite" path="external/sqlite" revision="c999ff8c12a4cf81cb9ad628f47b2720effba5e5"/>
-  <!-- Information: platform/external/stlport is tagged with AU_LINUX_GECKO_ICS_STRAWBERRY_V1.01.00.01.19.039 --><project name="platform/external/stlport" path="external/stlport" revision="a6734e0645fce81c9610de0488b729207bfa576e"/>
-  <!-- Information: platform/external/strace is tagged with AU_LINUX_GECKO_ICS_STRAWBERRY_V1.01.00.01.19.039 --><project name="platform/external/strace" path="external/strace" revision="c9fd2e5ef7d002e12e7cf2512506c84a9414b0fd"/>
-  <!-- Information: platform/external/tagsoup is tagged with AU_LINUX_GECKO_ICS_STRAWBERRY_V1.01.00.01.19.039 --><project name="platform/external/tagsoup" path="external/tagsoup" revision="68c2ec9e0acdb3214b7fb91dbab8c9fab8736817"/>
+  <!-- Information: platform/external/stlport is tagged with AU_LINUX_GECKO_ICS_STRAWBERRY.01.01.00.19.035 --><project name="platform/external/stlport" path="external/stlport" revision="a6734e0645fce81c9610de0488b729207bfa576e"/>
+  <!-- Information: platform/external/strace is tagged with AU_LINUX_GECKO_ICS_STRAWBERRY.01.01.00.19.035 --><project name="platform/external/strace" path="external/strace" revision="c9fd2e5ef7d002e12e7cf2512506c84a9414b0fd"/>
+  <!-- Information: platform/external/tagsoup is tagged with AU_LINUX_ANDROID_JB_MR1.04.02.02.49.187 --><project name="platform/external/tagsoup" path="external/tagsoup" revision="68c2ec9e0acdb3214b7fb91dbab8c9fab8736817"/>
   <!-- Information: platform/external/tinyalsa is tagged with android-4.0.4_r2.1 --><project name="platform/external/tinyalsa" path="external/tinyalsa" revision="495239e683a728957c890c124b239f9b7b8ef5a8"/>
-  <!-- Information: platform/external/tremolo is tagged with AU_LINUX_GECKO_ICS_STRAWBERRY_V1.01.00.01.19.039 --><project name="platform/external/tremolo" path="external/tremolo" revision="25bd78d2392dbdc879ae53382cde9d019f79cf6f"/>
-  <!-- Information: platform/external/webp is tagged with AU_LINUX_GECKO_ICS_STRAWBERRY_V1.01.00.01.19.039 --><project name="platform/external/webp" path="external/webp" revision="88fe2b83c4b9232cd08729556fd0485d6a6a92cd"/>
+  <!-- Information: platform/external/tremolo is tagged with AU_LINUX_ANDROID_JB_REL_2.0.3.04.01.02.21.123 --><project name="platform/external/tremolo" path="external/tremolo" revision="25bd78d2392dbdc879ae53382cde9d019f79cf6f"/>
+  <!-- Information: platform/external/webp is tagged with AU_LINUX_ANDROID_JB_REL_2.0.3.04.01.02.21.123 --><project name="platform/external/webp" path="external/webp" revision="88fe2b83c4b9232cd08729556fd0485d6a6a92cd"/>
   <!-- Information: platform/external/webrtc is tagged with android-sdk-adt_r20 --><project name="platform/external/webrtc" path="external/webrtc" revision="4b6dc1ec58105d17dc8c2f550124cc0621dc93b7"/>
-  <!-- Information: platform/external/wpa_supplicant is tagged with AU_LINUX_GECKO_ICS_STRAWBERRY_V1.01.00.01.19.039 --><project name="platform/external/wpa_supplicant" path="external/wpa_supplicant" revision="a01d37870bbf9892d43e792e5de0683ca41c5497"/>
+  <!-- Information: platform/external/wpa_supplicant is tagged with AU_LINUX_GECKO_ICS_STRAWBERRY.01.01.00.19.035 --><project name="platform/external/wpa_supplicant" path="external/wpa_supplicant" revision="a01d37870bbf9892d43e792e5de0683ca41c5497"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="6dd24fc3792d71edccef9b09140f9a44b063a553"/>
   <!-- Information: platform/external/zlib is tagged with android-4.0.4_r2.1 --><project name="platform/external/zlib" path="external/zlib" revision="69e5801bd16a495e1c1666669fe827b1ddb8d56b"/>
   <!-- Information: platform/external/yaffs2 is tagged with android-4.0.4-aah_r1 --><project name="platform/external/yaffs2" path="external/yaffs2" revision="6232e2d5ab34a40d710e4b05ab0ec6e3727804e7"/>
   <!-- Information: platform/frameworks/base is tagged with android-4.0.4_r2.1 --><project name="platform/frameworks/base" path="frameworks/base" revision="df331873c8576e0ae34ae1ee3cc258beed373535"/>
-  <!-- Information: platform/frameworks/opt/emoji is tagged with AU_LINUX_GECKO_ICS_STRAWBERRY_V1.01.00.01.19.039 --><project name="platform/frameworks/opt/emoji" path="frameworks/opt/emoji" revision="a95d8db002770469d72dfaf59ff37ac96db29a87"/>
+  <!-- Information: platform/frameworks/opt/emoji is tagged with AU_LINUX_GECKO_ICS_STRAWBERRY.01.01.00.19.035 --><project name="platform/frameworks/opt/emoji" path="frameworks/opt/emoji" revision="a95d8db002770469d72dfaf59ff37ac96db29a87"/>
   <!-- Information: platform/frameworks/support is tagged with android-4.0.4_r2.1 --><project name="platform/frameworks/support" path="frameworks/support" revision="bfc8e01b7b0d5ea70ce89d0409b72b7f7d540f43"/>
   <!-- Information: platform/hardware/libhardware is tagged with android-4.0.4_r2.1 --><project name="platform/hardware/libhardware" path="hardware/libhardware" revision="a9b677fce432b29ab8f61e13796f34880dc0fe0f"/>
   <!-- Information: platform/hardware/libhardware_legacy is tagged with android-4.0.4_r2.1 --><project name="platform/hardware/libhardware_legacy" path="hardware/libhardware_legacy" revision="153d0f1a27e0a157cabb6ca9d0d88248630f5695"/>

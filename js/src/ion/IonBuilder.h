@@ -496,7 +496,8 @@ class IonBuilder : public MIRGenerator
 
     // If off thread compilation is successful, the final code generator is
     // attached here. Code has been generated, but not linked (there is not yet
-    // an IonScript). This is heap allocated, and must be explicitly destroyed.
+    // an IonScript). This is heap allocated, and must be explicitly destroyed,
+    // performed by FinishOffThreadBuilder().
     CodeGenerator *backgroundCodegen_;
 
   public:

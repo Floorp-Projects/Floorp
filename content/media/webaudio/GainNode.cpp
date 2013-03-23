@@ -9,6 +9,7 @@
 #include "AudioNodeEngine.h"
 #include "AudioNodeStream.h"
 #include "AudioDestinationNode.h"
+#include "WebAudioUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -21,24 +22,6 @@ NS_INTERFACE_MAP_END_INHERITING(AudioNode)
 
 NS_IMPL_ADDREF_INHERITED(GainNode, AudioNode)
 NS_IMPL_RELEASE_INHERITED(GainNode, AudioNode)
-
-struct ConvertTimeToTickHelper
-{
-  AudioNodeStream* mSourceStream;
-  AudioNodeStream* mDestinationStream;
-
-  static int64_t Convert(double aTime, void* aClosure)
-  {
-    TrackRate sampleRate = IdealAudioRate();
-
-    ConvertTimeToTickHelper* This = static_cast<ConvertTimeToTickHelper*> (aClosure);
-    TrackTicks tick = This->mSourceStream->GetCurrentPosition();
-    StreamTime streamTime = TicksToTimeRoundDown(sampleRate, tick);
-    GraphTime graphTime = This->mSourceStream->StreamTimeToGraphTime(streamTime);
-    StreamTime destinationStreamTime = This->mDestinationStream->GraphTimeToStreamTime(graphTime);
-    return TimeToTicksRoundDown(sampleRate, destinationStreamTime + SecondsToMediaTime(aTime));
-  }
-};
 
 class GainNodeEngine : public AudioNodeEngine
 {
@@ -65,10 +48,7 @@ public:
     case GAIN:
       MOZ_ASSERT(mSource && mDestination);
       mGain = aValue;
-      ConvertTimeToTickHelper ctth;
-      ctth.mSourceStream = mSource;
-      ctth.mDestinationStream = mDestination;
-      mGain.ConvertEventTimesToTicks(ConvertTimeToTickHelper::Convert, &ctth);
+      WebAudioUtils::ConvertAudioParamToTicks(mGain, mSource, mDestination);
       break;
     default:
       NS_ERROR("Bad GainNodeEngine TimelineParameter");
