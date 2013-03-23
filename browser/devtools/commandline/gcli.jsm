@@ -213,14 +213,14 @@ function StringType(typeSpec) {
 
 StringType.prototype = Object.create(Type.prototype);
 
-StringType.prototype.stringify = function(value) {
+StringType.prototype.stringify = function(value, context) {
   if (value == null) {
     return '';
   }
   return value.toString();
 };
 
-StringType.prototype.parse = function(arg) {
+StringType.prototype.parse = function(arg, context) {
   if (arg.text == null || arg.text === '') {
     return Promise.resolve(new Conversion(undefined, arg, Status.INCOMPLETE, ''));
   }
@@ -258,7 +258,7 @@ function NumberType(typeSpec) {
 
 NumberType.prototype = Object.create(Type.prototype);
 
-NumberType.prototype.stringify = function(value) {
+NumberType.prototype.stringify = function(value, context) {
   if (value == null) {
     return '';
   }
@@ -289,7 +289,7 @@ NumberType.prototype.getMax = function() {
   return undefined;
 };
 
-NumberType.prototype.parse = function(arg) {
+NumberType.prototype.parse = function(arg, context) {
   if (arg.text.replace(/^\s*-?/, '').length === 0) {
     return Promise.resolve(new Conversion(undefined, arg, Status.INCOMPLETE, ''));
   }
@@ -327,7 +327,7 @@ NumberType.prototype.parse = function(arg) {
   return Promise.resolve(new Conversion(value, arg));
 };
 
-NumberType.prototype.decrement = function(value) {
+NumberType.prototype.decrement = function(value, context) {
   if (typeof value !== 'number' || isNaN(value)) {
     return this.getMax() || 1;
   }
@@ -337,7 +337,7 @@ NumberType.prototype.decrement = function(value) {
   return this._boundsCheck(newValue);
 };
 
-NumberType.prototype.increment = function(value) {
+NumberType.prototype.increment = function(value, context) {
   if (typeof value !== 'number' || isNaN(value)) {
     var min = this.getMin();
     return min != null ? min : 0;
@@ -394,17 +394,17 @@ BooleanType.prototype.lookup = [
   { name: 'true', value: true }
 ];
 
-BooleanType.prototype.parse = function(arg) {
+BooleanType.prototype.parse = function(arg, context) {
   if (arg.type === 'TrueNamedArgument') {
     return Promise.resolve(new Conversion(true, arg));
   }
   if (arg.type === 'FalseNamedArgument') {
     return Promise.resolve(new Conversion(false, arg));
   }
-  return SelectionType.prototype.parse.call(this, arg);
+  return SelectionType.prototype.parse.call(this, arg, context);
 };
 
-BooleanType.prototype.stringify = function(value) {
+BooleanType.prototype.stringify = function(value, context) {
   if (value == null) {
     return '';
   }
@@ -437,33 +437,37 @@ function DelegateType(typeSpec) {
  * Child types should implement this method to return an instance of the type
  * that should be used. If no type is available, or some sort of temporary
  * placeholder is required, BlankType can be used.
+ * @param context An ExecutionContext to allow access to information about the
+ * current state of the command line, or null if one is not available. A
+ * context is available for stringify, parse*, [in|de]crement and getType
+ * functions but not for isImportant
  */
-DelegateType.prototype.delegateType = function() {
+DelegateType.prototype.delegateType = function(context) {
   throw new Error('Not implemented');
 };
 
 DelegateType.prototype = Object.create(Type.prototype);
 
-DelegateType.prototype.stringify = function(value) {
-  return this.delegateType().stringify(value);
+DelegateType.prototype.stringify = function(value, context) {
+  return this.delegateType(context).stringify(value, context);
 };
 
-DelegateType.prototype.parse = function(arg) {
-  return this.delegateType().parse(arg);
+DelegateType.prototype.parse = function(arg, context) {
+  return this.delegateType(context).parse(arg, context);
 };
 
-DelegateType.prototype.decrement = function(value) {
-  var delegated = this.delegateType();
-  return (delegated.decrement ? delegated.decrement(value) : undefined);
+DelegateType.prototype.decrement = function(value, context) {
+  var delegated = this.delegateType(context);
+  return (delegated.decrement ? delegated.decrement(value, context) : undefined);
 };
 
-DelegateType.prototype.increment = function(value) {
-  var delegated = this.delegateType();
-  return (delegated.increment ? delegated.increment(value) : undefined);
+DelegateType.prototype.increment = function(value, context) {
+  var delegated = this.delegateType(context);
+  return (delegated.increment ? delegated.increment(value, context) : undefined);
 };
 
-DelegateType.prototype.getType = function() {
-  return this.delegateType();
+DelegateType.prototype.getType = function(context) {
+  return this.delegateType(context);
 };
 
 Object.defineProperty(DelegateType.prototype, 'isImportant', {
@@ -487,11 +491,11 @@ function BlankType(typeSpec) {
 
 BlankType.prototype = Object.create(Type.prototype);
 
-BlankType.prototype.stringify = function(value) {
+BlankType.prototype.stringify = function(value, context) {
   return '';
 };
 
-BlankType.prototype.parse = function(arg) {
+BlankType.prototype.parse = function(arg, context) {
   return Promise.resolve(new Conversion(undefined, arg));
 };
 
@@ -518,7 +522,7 @@ function ArrayType(typeSpec) {
 
 ArrayType.prototype = Object.create(Type.prototype);
 
-ArrayType.prototype.stringify = function(values) {
+ArrayType.prototype.stringify = function(values, context) {
   if (values == null) {
     return '';
   }
@@ -526,7 +530,7 @@ ArrayType.prototype.stringify = function(values) {
   return values.join(' ');
 };
 
-ArrayType.prototype.parse = function(arg) {
+ArrayType.prototype.parse = function(arg, context) {
   if (arg.type !== 'ArrayArgument') {
     console.error('non ArrayArgument to ArrayType.parse', arg);
     throw new Error('non ArrayArgument to ArrayType.parse');
@@ -537,7 +541,7 @@ ArrayType.prototype.parse = function(arg) {
   // the status of individual conversions in addition to the overall state.
   // |subArg.conversion| allows us to do that easily.
   var subArgParse = function(subArg) {
-    return this.subtype.parse(subArg).then(function(conversion) {
+    return this.subtype.parse(subArg, context).then(function(conversion) {
       subArg.conversion = conversion;
       return conversion;
     }.bind(this));
@@ -1925,8 +1929,10 @@ function Type() {
  * Convert the given <tt>value</tt> to a string representation.
  * Where possible, there should be round-tripping between values and their
  * string representations.
+ * @param value The object to convert into a string
+ * @param context An ExecutionContext to allow basic Requisition access
  */
-Type.prototype.stringify = function(value) {
+Type.prototype.stringify = function(value, context) {
   throw new Error('Not implemented');
 };
 
@@ -1935,9 +1941,10 @@ Type.prototype.stringify = function(value) {
  * Where possible, there should be round-tripping between values and their
  * string representations.
  * @param arg An instance of <tt>Argument</tt> to convert.
+ * @param context An ExecutionContext to allow basic Requisition access
  * @return Conversion
  */
-Type.prototype.parse = function(arg) {
+Type.prototype.parse = function(arg, context) {
   throw new Error('Not implemented');
 };
 
@@ -1946,8 +1953,8 @@ Type.prototype.parse = function(arg) {
  * but instead have a string.
  * @see #parse(arg)
  */
-Type.prototype.parseString = function(str) {
-  return this.parse(new Argument(str));
+Type.prototype.parseString = function(str, context) {
+  return this.parse(new Argument(str), context);
 };
 
 /**
@@ -1962,7 +1969,7 @@ Type.prototype.name = undefined;
  * If there is some concept of a higher value, return it,
  * otherwise return undefined.
  */
-Type.prototype.increment = function(value) {
+Type.prototype.increment = function(value, context) {
   return undefined;
 };
 
@@ -1970,7 +1977,7 @@ Type.prototype.increment = function(value) {
  * If there is some concept of a lower value, return it,
  * otherwise return undefined.
  */
-Type.prototype.decrement = function(value) {
+Type.prototype.decrement = function(value, context) {
   return undefined;
 };
 
@@ -1988,8 +1995,9 @@ Type.prototype.getBlank = function() {
  * This is something of a hack for the benefit of DelegateType which needs to
  * be able to lie about it's type for fields to accept it as one of their own.
  * Sub-types can ignore this unless they're DelegateType.
+ * @param context An ExecutionContext to allow basic Requisition access
  */
-Type.prototype.getType = function() {
+Type.prototype.getType = function(context) {
   return this;
 };
 
@@ -2756,7 +2764,7 @@ function SelectionType(typeSpec) {
 
 SelectionType.prototype = Object.create(Type.prototype);
 
-SelectionType.prototype.stringify = function(value) {
+SelectionType.prototype.stringify = function(value, context) {
   if (value == null) {
     return '';
   }
@@ -2963,18 +2971,12 @@ SelectionType.prototype._addToPredictions = function(predictions, option, arg) {
   predictions.push(option);
 };
 
-SelectionType.prototype.parse = function(arg) {
+SelectionType.prototype.parse = function(arg, context) {
   return this._findPredictions(arg).then(function(predictions) {
     if (predictions.length === 0) {
       var msg = l10n.lookupFormat('typesSelectionNomatch', [ arg.text ]);
       return new Conversion(undefined, arg, Status.ERROR, msg,
                             Promise.resolve(predictions));
-    }
-
-    // This is something of a hack it basically allows us to tell the
-    // setting type to forget its last setting hack.
-    if (this.noMatch) {
-      this.noMatch();
     }
 
     if (predictions[0].name === arg.text) {
@@ -3008,7 +3010,7 @@ SelectionType.prototype.getBlank = function() {
  * for SelectionType, up is down and down is up.
  * Sorry.
  */
-SelectionType.prototype.decrement = function(value) {
+SelectionType.prototype.decrement = function(value, context) {
   var lookup = util.synchronize(this.getLookup());
   var index = this._findValue(lookup, value);
   if (index === -1) {
@@ -3024,7 +3026,7 @@ SelectionType.prototype.decrement = function(value) {
 /**
  * See note on SelectionType.decrement()
  */
-SelectionType.prototype.increment = function(value) {
+SelectionType.prototype.increment = function(value, context) {
   var lookup = util.synchronize(this.getLookup());
   var index = this._findValue(lookup, value);
   if (index === -1) {
@@ -3262,9 +3264,9 @@ ParamType.prototype.lookup = function() {
   return displayedParams;
 };
 
-ParamType.prototype.parse = function(arg) {
+ParamType.prototype.parse = function(arg, context) {
   if (this.isIncompleteName) {
-    return SelectionType.prototype.parse.call(this, arg);
+    return SelectionType.prototype.parse.call(this, arg, context);
   }
   else {
     var message = l10n.lookup('cliUnusedArg');
@@ -3312,7 +3314,7 @@ CommandType.prototype._addToPredictions = function(predictions, option, arg) {
   }
 };
 
-CommandType.prototype.parse = function(arg) {
+CommandType.prototype.parse = function(arg, context) {
   // Especially at startup, predictions live over the time that things change
   // so we provide a completion function rather than completion values
   var predictFunc = function() {
@@ -3553,8 +3555,12 @@ function Parameter(paramSpec, command, groupName) {
   // optional, neither are required to parse and stringify.
   if (this._defaultValue != null) {
     try {
-      var defaultText = this.type.stringify(this.paramSpec.defaultValue);
-      this.type.parseString(defaultText).then(function(defaultConversion) {
+      // Passing null in for a context is bound to get us into trouble some day
+      // in which case we'll need to mock one up in some way
+      var context = null;
+      var defaultText = this.type.stringify(this.paramSpec.defaultValue, context);
+      var parsed = this.type.parseString(defaultText, context);
+      parsed.then(function(defaultConversion) {
         if (defaultConversion.getStatus() !== Status.VALID) {
           console.error('In ' + this.command.name + '/' + this.name +
                         ': Error round tripping defaultValue. status = ' +
@@ -3874,7 +3880,7 @@ function JavascriptType(typeSpec) {
 
 JavascriptType.prototype = Object.create(Type.prototype);
 
-JavascriptType.prototype.stringify = function(value) {
+JavascriptType.prototype.stringify = function(value, context) {
   if (value == null) {
     return '';
   }
@@ -3887,7 +3893,7 @@ JavascriptType.prototype.stringify = function(value) {
  */
 JavascriptType.MAX_COMPLETION_MATCHES = 10;
 
-JavascriptType.prototype.parse = function(arg) {
+JavascriptType.prototype.parse = function(arg, context) {
   var typed = arg.text;
   var scope = globalObject;
 
@@ -4453,14 +4459,14 @@ function NodeType(typeSpec) {
 
 NodeType.prototype = Object.create(Type.prototype);
 
-NodeType.prototype.stringify = function(value) {
+NodeType.prototype.stringify = function(value, context) {
   if (value == null) {
     return '';
   }
   return value.__gcliQuery || 'Error';
 };
 
-NodeType.prototype.parse = function(arg) {
+NodeType.prototype.parse = function(arg, context) {
   if (arg.text === '') {
     return Promise.resolve(new Conversion(undefined, arg, Status.INCOMPLETE));
   }
@@ -4524,14 +4530,14 @@ NodeListType.prototype.getBlank = function() {
   return new Conversion(exports._empty, new BlankArgument(), Status.VALID);
 };
 
-NodeListType.prototype.stringify = function(value) {
+NodeListType.prototype.stringify = function(value, context) {
   if (value == null) {
     return '';
   }
   return value.__gcliQuery || 'Error';
 };
 
-NodeListType.prototype.parse = function(arg) {
+NodeListType.prototype.parse = function(arg, context) {
   if (arg.text === '') {
     return Promise.resolve(new Conversion(undefined, arg, Status.INCOMPLETE));
   }
@@ -4962,18 +4968,6 @@ exports.shutdown = function() {
 };
 
 /**
- * This is a whole new level of nasty. 'setting' and 'settingValue' are a pair
- * for obvious reasons. settingValue is a delegate type - it delegates to the
- * type of the setting, but how do we implement the defer function - how does
- * it work out its paired setting?
- * In another parallel universe we pass the requisition to all the parse
- * methods so we can extract the args in SettingValueType.parse, however that
- * seems like a lot of churn for a simple way to connect 2 things. So we're
- * hacking. SettingType tries to keep 'lastSetting' up to date.
- */
-var lastSetting = null;
-
-/**
  * A type for selecting a known setting
  */
 function SettingType(typeSpec) {
@@ -4990,41 +4984,30 @@ SettingType.prototype.lookup = function() {
   });
 };
 
-SettingType.prototype.noMatch = function() {
-  lastSetting = null;
-};
-
-SettingType.prototype.stringify = function(option) {
-  lastSetting = option;
-  return SelectionType.prototype.stringify.call(this, option);
-};
-
-SettingType.prototype.parse = function(arg) {
-  var promise = SelectionType.prototype.parse.call(this, arg);
-  promise.then(function(conversion) {
-    lastSetting = conversion.value;
-  });
-  return promise;
-};
-
 SettingType.prototype.name = 'setting';
 
 
 /**
  * A type for entering the value of a known setting
+ * @param typeSpec Customization object, can contain the following:
+ * - settingParamName The name of the setting parameter so we can customize the
+ *   type that we are expecting to read
  */
 function SettingValueType(typeSpec) {
+  this.settingParamName = typeSpec.settingParamName || 'setting';
 }
 
 SettingValueType.prototype = Object.create(DelegateType.prototype);
 
-SettingValueType.prototype.delegateType = function() {
-  if (lastSetting != null) {
-    return lastSetting.type;
+SettingValueType.prototype.delegateType = function(context) {
+  if (context != null) {
+    var setting = context.getArgsObject()[this.settingParamName];
+    if (setting != null) {
+      return setting.type;
+    }
   }
-  else {
-    return types.getType('blank');
-  }
+
+  return types.getType('blank');
 };
 
 SettingValueType.prototype.name = 'settingValue';
@@ -5705,31 +5688,6 @@ Assignment.prototype.isInName = function() {
 };
 
 /**
- * Make sure that there is some content for this argument by using an
- * Argument of '' if needed.
- */
-Assignment.prototype.ensureVisibleArgument = function() {
-  // It isn't clear if we should be sending events from this method.
-  // It should only be called when structural changes are happening in which
-  // case we're going to ignore the event anyway. But on the other hand
-  // perhaps this function shouldn't need to know how it is used, and should
-  // do the inefficient thing.
-  if (this.conversion.arg.type !== 'BlankArgument') {
-    return false;
-  }
-
-  var arg = this.conversion.arg.beget({
-    text: '',
-    prefixSpace: this.param instanceof CommandAssignment
-  });
-  // For trivial input like { test: '' }, parse() should be synchronous ...
-  this.conversion = util.synchronize(this.param.type.parse(arg));
-  this.conversion.assign(this);
-
-  return true;
-};
-
-/**
  * Work out what the status of the current conversion is which involves looking
  * not only at the conversion, but also checking if data has been provided
  * where it should.
@@ -5887,7 +5845,8 @@ function UnassignedAssignment(requisition, arg) {
   this.onAssignmentChange = util.createEvent('UnassignedAssignment.onAssignmentChange');
 
   // synchronize is ok because we can be sure that param type is synchronous
-  this.conversion = util.synchronize(this.param.type.parse(arg));
+  var parsed = this.param.type.parse(arg, requisition.context);
+  this.conversion = util.synchronize(parsed);
   this.conversion.assign(this);
 }
 
@@ -6238,7 +6197,8 @@ Requisition.prototype.setAssignment = function(assignment, arg, options) {
     setAssignmentInternal(arg);
   }
   else {
-    return assignment.param.type.parse(arg).then(function(conversion) {
+    var parsed = assignment.param.type.parse(arg, this.context);
+    return parsed.then(function(conversion) {
       setAssignmentInternal(conversion);
     }.bind(this));
   }
@@ -6367,9 +6327,10 @@ Requisition.prototype._addSpace = function(assignment) {
  * Replace the current value with the lower value if such a concept exists.
  */
 Requisition.prototype.decrement = function(assignment) {
-  var replacement = assignment.param.type.decrement(assignment.conversion.value);
+  var replacement = assignment.param.type.decrement(assignment.conversion.value,
+                                                    this.context);
   if (replacement != null) {
-    var str = assignment.param.type.stringify(replacement);
+    var str = assignment.param.type.stringify(replacement, this.context);
     var arg = assignment.conversion.arg.beget({ text: str });
     var promise = this.setAssignment(assignment, arg);
     util.synchronize(promise);
@@ -6380,9 +6341,10 @@ Requisition.prototype.decrement = function(assignment) {
  * Replace the current value with the higher value if such a concept exists.
  */
 Requisition.prototype.increment = function(assignment) {
-  var replacement = assignment.param.type.increment(assignment.conversion.value);
+  var replacement = assignment.param.type.increment(assignment.conversion.value,
+                                                    this.context);
   if (replacement != null) {
-    var str = assignment.param.type.stringify(replacement);
+    var str = assignment.param.type.stringify(replacement, this.context);
     var arg = assignment.conversion.arg.beget({ text: str });
     var promise = this.setAssignment(assignment, arg);
     util.synchronize(promise);
@@ -6408,7 +6370,7 @@ Requisition.prototype.toCanonicalString = function() {
     // named parameters in place of positional params. Both can wait.
     if (assignment.value !== assignment.param.defaultValue) {
       line.push(' ');
-      line.push(type.stringify(assignment.value));
+      line.push(type.stringify(assignment.value, this.context));
     }
   }, this);
 
@@ -6737,7 +6699,7 @@ Requisition.prototype.clear = function() {
   this._args = [ arg ];
 
   var commandType = this.commandAssignment.param.type;
-  var conversion = util.synchronize(commandType.parse(arg));
+  var conversion = util.synchronize(commandType.parse(arg, this.context));
   this.setAssignment(this.commandAssignment, conversion,
                      { skipArgUpdate: true });
 
@@ -7081,7 +7043,7 @@ Requisition.prototype._split = function(args) {
               new MergedArgument(args, 0, argsUsed);
     // Making this promise synchronous is OK because we know that commandType
     // is a synchronous type.
-    conversion = util.synchronize(commandType.parse(arg));
+    conversion = util.synchronize(commandType.parse(arg, this.context));
 
     // We only want to carry on if this command is a parent command,
     // which means that there is a commandAssignment, but not one with
@@ -7351,6 +7313,7 @@ exports.createExecutionContext = function(requisition) {
         type: type
       };
     },
+    getArgsObject: requisition.getArgsObject.bind(requisition),
     defer: function() {
       return Promise.defer();
     },
@@ -7897,10 +7860,10 @@ StringField.prototype.setConversion = function(conversion) {
 StringField.prototype.getConversion = function() {
   // This tweaks the prefix/suffix of the argument to fit
   this.arg = this.arg.beget({ text: this.element.value, prefixSpace: true });
-  return this.type.parse(this.arg);
+  return this.type.parse(this.arg, this.requisition.context);
 };
 
-StringField.claim = function(type) {
+StringField.claim = function(type, context) {
   return type instanceof StringType ? Field.MATCH : Field.BASIC;
 };
 
@@ -7932,7 +7895,7 @@ function NumberField(type, options) {
 
 NumberField.prototype = Object.create(Field.prototype);
 
-NumberField.claim = function(type) {
+NumberField.claim = function(type, context) {
   return type instanceof NumberType ? Field.MATCH : Field.NO_MATCH;
 };
 
@@ -7952,7 +7915,7 @@ NumberField.prototype.setConversion = function(conversion) {
 
 NumberField.prototype.getConversion = function() {
   this.arg = this.arg.beget({ text: this.element.value, prefixSpace: true });
-  return this.type.parse(this.arg);
+  return this.type.parse(this.arg, this.requisition.context);
 };
 
 
@@ -7977,7 +7940,7 @@ function BooleanField(type, options) {
 
 BooleanField.prototype = Object.create(Field.prototype);
 
-BooleanField.claim = function(type) {
+BooleanField.claim = function(type, context) {
   return type instanceof BooleanType ? Field.MATCH : Field.NO_MATCH;
 };
 
@@ -8004,7 +7967,7 @@ BooleanField.prototype.getConversion = function() {
   else {
     arg = new Argument(' ' + this.element.checked);
   }
-  return this.type.parse(arg);
+  return this.type.parse(arg, this.requisition.context);
 };
 
 
@@ -8044,7 +8007,7 @@ DelegateField.prototype.update = function() {
   this.element.appendChild(this.field.element);
 };
 
-DelegateField.claim = function(type) {
+DelegateField.claim = function(type, context) {
   return type instanceof DelegateType ? Field.MATCH : Field.NO_MATCH;
 };
 
@@ -8106,7 +8069,7 @@ function ArrayField(type, options) {
 
 ArrayField.prototype = Object.create(Field.prototype);
 
-ArrayField.claim = function(type) {
+ArrayField.claim = function(type, context) {
   return type instanceof ArrayType ? Field.MATCH : Field.NO_MATCH;
 };
 
@@ -8307,7 +8270,7 @@ Field.prototype.isImportant = false;
  * to a type. This allows claims of various strength to be weighted up.
  * See the Field.*MATCH values.
  */
-Field.claim = function() {
+Field.claim = function(type, context) {
   throw new Error('Field should not be used directly');
 };
 
@@ -8384,7 +8347,7 @@ exports.getField = function(type, options) {
   var ctor;
   var highestClaim = -1;
   fieldCtors.forEach(function(fieldCtor) {
-    var claim = fieldCtor.claim(type);
+    var claim = fieldCtor.claim(type, options.requisition.context);
     if (claim > highestClaim) {
       highestClaim = claim;
       ctor = fieldCtor;
@@ -8418,7 +8381,7 @@ function BlankField(type, options) {
 
 BlankField.prototype = Object.create(Field.prototype);
 
-BlankField.claim = function(type) {
+BlankField.claim = function(type, context) {
   return type instanceof BlankType ? Field.MATCH : Field.NO_MATCH;
 };
 
@@ -8427,7 +8390,7 @@ BlankField.prototype.setConversion = function(conversion) {
 };
 
 BlankField.prototype.getConversion = function() {
-  return this.type.parse(new Argument());
+  return this.type.parse(new Argument(), this.requisition.context);
 };
 
 exports.addField(BlankField);
@@ -8516,7 +8479,7 @@ function JavascriptField(type, options) {
 
 JavascriptField.prototype = Object.create(Field.prototype);
 
-JavascriptField.claim = function(type) {
+JavascriptField.claim = function(type, context) {
   return type instanceof JavascriptType ? Field.TOOLTIP_MATCH : Field.NO_MATCH;
 };
 
@@ -8564,7 +8527,8 @@ JavascriptField.prototype.setConversion = function(conversion) {
 };
 
 JavascriptField.prototype.itemClicked = function(ev) {
-  Promise.resolve(this.type.parse(ev.arg)).then(function(conversion) {
+  var parsed = this.type.parse(ev.arg, this.requisition.context);
+  Promise.resolve(parsed).then(function(conversion) {
     this.onFieldChange({ conversion: conversion });
     this.setMessage(conversion.message);
   }.bind(this), util.errorHandler);
@@ -8581,7 +8545,7 @@ JavascriptField.prototype.onInputChange = function(ev) {
 JavascriptField.prototype.getConversion = function() {
   // This tweaks the prefix/suffix of the argument to fit
   this.arg = new ScriptArgument(this.input.value, '{ ', ' }');
-  return this.type.parse(this.arg);
+  return this.type.parse(this.arg, this.requisition.context);
 };
 
 JavascriptField.DEFAULT_VALUE = '__JavascriptField.DEFAULT_VALUE';
@@ -8914,7 +8878,7 @@ function SelectionField(type, options) {
 
 SelectionField.prototype = Object.create(Field.prototype);
 
-SelectionField.claim = function(type) {
+SelectionField.claim = function(type, context) {
   if (type instanceof BooleanType) {
     return Field.BASIC;
   }
@@ -8976,8 +8940,8 @@ function SelectionTooltipField(type, options) {
 
 SelectionTooltipField.prototype = Object.create(Field.prototype);
 
-SelectionTooltipField.claim = function(type) {
-  return type.getType() instanceof SelectionType ?
+SelectionTooltipField.claim = function(type, context) {
+  return type.getType(context) instanceof SelectionType ?
       Field.TOOLTIP_MATCH :
       Field.NO_MATCH;
 };
@@ -9007,7 +8971,8 @@ SelectionTooltipField.prototype.setConversion = function(conversion) {
 };
 
 SelectionTooltipField.prototype.itemClicked = function(ev) {
-  Promise.resolve(this.type.parse(ev.arg)).then(function(conversion) {
+  var parsed = this.type.parse(ev.arg, this.requisition.context);
+  Promise.resolve(parsed).then(function(conversion) {
     this.onFieldChange({ conversion: conversion });
     this.setMessage(conversion.message);
   }.bind(this), util.errorHandler);
@@ -9024,7 +8989,7 @@ SelectionTooltipField.prototype.onInputChange = function(ev) {
 SelectionTooltipField.prototype.getConversion = function() {
   // This tweaks the prefix/suffix of the argument to fit
   this.arg = this.arg.beget({ text: this.input.value });
-  return this.type.parse(this.arg);
+  return this.type.parse(this.arg, this.requisition.context);
 };
 
 /**
@@ -10425,7 +10390,7 @@ Inputter.prototype.handleKeyUp = function(ev) {
     else {
       // See notes above for the UP key
       if (this.assignment.getStatus() === Status.VALID) {
-        this.requisition.decrement(this.assignment);
+        this.requisition.decrement(this.assignment, this.requisition.context);
         // See notes on focusManager.onInputChange in onKeyDown
         if (this.focusManager) {
           this.focusManager.onInputChange();
