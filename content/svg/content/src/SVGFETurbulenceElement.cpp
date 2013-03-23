@@ -4,125 +4,138 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/SVGFETurbulenceElement.h"
+#include "mozilla/dom/SVGFETurbulenceElementBinding.h"
+#include "nsSVGFilterInstance.h"
+#include "nsSVGUtils.h"
+
+NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FETurbulence)
 
 namespace mozilla {
 namespace dom {
 
-nsSVGElement::NumberInfo nsSVGFETurbulenceElement::sNumberInfo[1] =
+// Turbulence Types
+static const unsigned short SVG_TURBULENCE_TYPE_UNKNOWN = 0;
+static const unsigned short SVG_TURBULENCE_TYPE_FRACTALNOISE = 1;
+static const unsigned short SVG_TURBULENCE_TYPE_TURBULENCE = 2;
+
+// Stitch Options
+static const unsigned short SVG_STITCHTYPE_UNKNOWN = 0;
+static const unsigned short SVG_STITCHTYPE_STITCH = 1;
+static const unsigned short SVG_STITCHTYPE_NOSTITCH = 2;
+
+JSObject*
+SVGFETurbulenceElement::WrapNode(JSContext* aCx, JSObject* aScope)
+{
+  return SVGFETurbulenceElementBinding::Wrap(aCx, aScope, this);
+}
+
+nsSVGElement::NumberInfo SVGFETurbulenceElement::sNumberInfo[1] =
 {
   { &nsGkAtoms::seed, 0, false }
 };
 
-nsSVGElement::NumberPairInfo nsSVGFETurbulenceElement::sNumberPairInfo[1] =
+nsSVGElement::NumberPairInfo SVGFETurbulenceElement::sNumberPairInfo[1] =
 {
   { &nsGkAtoms::baseFrequency, 0, 0 }
 };
 
-nsSVGElement::IntegerInfo nsSVGFETurbulenceElement::sIntegerInfo[1] =
+nsSVGElement::IntegerInfo SVGFETurbulenceElement::sIntegerInfo[1] =
 {
   { &nsGkAtoms::numOctaves, 1 }
 };
 
-nsSVGEnumMapping nsSVGFETurbulenceElement::sTypeMap[] = {
+nsSVGEnumMapping SVGFETurbulenceElement::sTypeMap[] = {
   {&nsGkAtoms::fractalNoise,
-   nsIDOMSVGFETurbulenceElement::SVG_TURBULENCE_TYPE_FRACTALNOISE},
+   SVG_TURBULENCE_TYPE_FRACTALNOISE},
   {&nsGkAtoms::turbulence,
-   nsIDOMSVGFETurbulenceElement::SVG_TURBULENCE_TYPE_TURBULENCE},
+   SVG_TURBULENCE_TYPE_TURBULENCE},
   {nullptr, 0}
 };
 
-nsSVGEnumMapping nsSVGFETurbulenceElement::sStitchTilesMap[] = {
+nsSVGEnumMapping SVGFETurbulenceElement::sStitchTilesMap[] = {
   {&nsGkAtoms::stitch,
-   nsIDOMSVGFETurbulenceElement::SVG_STITCHTYPE_STITCH},
+   SVG_STITCHTYPE_STITCH},
   {&nsGkAtoms::noStitch,
-   nsIDOMSVGFETurbulenceElement::SVG_STITCHTYPE_NOSTITCH},
+   SVG_STITCHTYPE_NOSTITCH},
   {nullptr, 0}
 };
 
-nsSVGElement::EnumInfo nsSVGFETurbulenceElement::sEnumInfo[2] =
+nsSVGElement::EnumInfo SVGFETurbulenceElement::sEnumInfo[2] =
 {
   { &nsGkAtoms::type,
     sTypeMap,
-    nsIDOMSVGFETurbulenceElement::SVG_TURBULENCE_TYPE_TURBULENCE
+    SVG_TURBULENCE_TYPE_TURBULENCE
   },
   { &nsGkAtoms::stitchTiles,
     sStitchTilesMap,
-    nsIDOMSVGFETurbulenceElement::SVG_STITCHTYPE_NOSTITCH
+    SVG_STITCHTYPE_NOSTITCH
   }
 };
 
-nsSVGElement::StringInfo nsSVGFETurbulenceElement::sStringInfo[1] =
+nsSVGElement::StringInfo SVGFETurbulenceElement::sStringInfo[1] =
 {
   { &nsGkAtoms::result, kNameSpaceID_None, true }
 };
 
-NS_IMPL_NS_NEW_SVG_ELEMENT(FETurbulence)
-
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ADDREF_INHERITED(nsSVGFETurbulenceElement,nsSVGFETurbulenceElementBase)
-NS_IMPL_RELEASE_INHERITED(nsSVGFETurbulenceElement,nsSVGFETurbulenceElementBase)
+NS_IMPL_ADDREF_INHERITED(SVGFETurbulenceElement,SVGFETurbulenceElementBase)
+NS_IMPL_RELEASE_INHERITED(SVGFETurbulenceElement,SVGFETurbulenceElementBase)
 
-DOMCI_NODE_DATA(SVGFETurbulenceElement, nsSVGFETurbulenceElement)
-
-NS_INTERFACE_TABLE_HEAD(nsSVGFETurbulenceElement)
-  NS_NODE_INTERFACE_TABLE5(nsSVGFETurbulenceElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement,
-                           nsIDOMSVGFilterPrimitiveStandardAttributes,
-                           nsIDOMSVGFETurbulenceElement)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFETurbulenceElement)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGFETurbulenceElementBase)
+NS_INTERFACE_TABLE_HEAD(SVGFETurbulenceElement)
+  NS_NODE_INTERFACE_TABLE3(SVGFETurbulenceElement, nsIDOMNode, nsIDOMElement,
+                           nsIDOMSVGElement)
+NS_INTERFACE_MAP_END_INHERITING(SVGFETurbulenceElementBase)
 
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFETurbulenceElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFETurbulenceElement)
 
 //----------------------------------------------------------------------
-// nsIDOMSVGFETurbulenceElement methods
 
-/* readonly attribute nsIDOMSVGAnimatedNumber baseFrequencyX; */
-NS_IMETHODIMP nsSVGFETurbulenceElement::GetBaseFrequencyX(nsIDOMSVGAnimatedNumber * *aX)
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGFETurbulenceElement::BaseFrequencyX()
 {
-  return mNumberPairAttributes[BASE_FREQ].ToDOMAnimatedNumber(aX, nsSVGNumberPair::eFirst, this);
+  return mNumberPairAttributes[BASE_FREQ].ToDOMAnimatedNumber(nsSVGNumberPair::eFirst, this);
 }
 
-/* readonly attribute nsIDOMSVGAnimatedNumber baseFrequencyY; */
-NS_IMETHODIMP nsSVGFETurbulenceElement::GetBaseFrequencyY(nsIDOMSVGAnimatedNumber * *aY)
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGFETurbulenceElement::BaseFrequencyY()
 {
-  return mNumberPairAttributes[BASE_FREQ].ToDOMAnimatedNumber(aY, nsSVGNumberPair::eSecond, this);
+  return mNumberPairAttributes[BASE_FREQ].ToDOMAnimatedNumber(nsSVGNumberPair::eSecond, this);
 }
 
-/* readonly attribute nsIDOMSVGAnimatedInteger numOctaves; */
-NS_IMETHODIMP nsSVGFETurbulenceElement::GetNumOctaves(nsIDOMSVGAnimatedInteger * *aNum)
+already_AddRefed<nsIDOMSVGAnimatedInteger>
+SVGFETurbulenceElement::NumOctaves()
 {
-  return mIntegerAttributes[OCTAVES].ToDOMAnimatedInteger(aNum, this);
+  return mIntegerAttributes[OCTAVES].ToDOMAnimatedInteger(this);
 }
 
-/* readonly attribute nsIDOMSVGAnimatedNumber seed; */
-NS_IMETHODIMP nsSVGFETurbulenceElement::GetSeed(nsIDOMSVGAnimatedNumber * *aSeed)
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGFETurbulenceElement::Seed()
 {
-  return mNumberAttributes[SEED].ToDOMAnimatedNumber(aSeed, this);
+  return mNumberAttributes[SEED].ToDOMAnimatedNumber(this);
 }
 
-/* readonly attribute nsIDOMSVGAnimatedEnumeration stitchTiles; */
-NS_IMETHODIMP nsSVGFETurbulenceElement::GetStitchTiles(nsIDOMSVGAnimatedEnumeration * *aStitch)
+already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+SVGFETurbulenceElement::StitchTiles()
 {
-  return mEnumAttributes[STITCHTILES].ToDOMAnimatedEnum(aStitch, this);
+  return mEnumAttributes[STITCHTILES].ToDOMAnimatedEnum(this);
 }
 
-/* readonly attribute nsIDOMSVGAnimatedEnumeration type; */
-NS_IMETHODIMP nsSVGFETurbulenceElement::GetType(nsIDOMSVGAnimatedEnumeration * *aType)
+already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+SVGFETurbulenceElement::Type()
 {
-  return mEnumAttributes[TYPE].ToDOMAnimatedEnum(aType, this);
+  return mEnumAttributes[TYPE].ToDOMAnimatedEnum(this);
 }
 
 nsresult
-nsSVGFETurbulenceElement::Filter(nsSVGFilterInstance *instance,
-                                 const nsTArray<const Image*>& aSources,
-                                 const Image* aTarget,
-                                 const nsIntRect& rect)
+SVGFETurbulenceElement::Filter(nsSVGFilterInstance* instance,
+                               const nsTArray<const Image*>& aSources,
+                               const Image* aTarget,
+                               const nsIntRect& rect)
 {
   uint8_t* targetData = aTarget->mImage->Data();
   uint32_t stride = aTarget->mImage->Stride();
@@ -148,7 +161,7 @@ nsSVGFETurbulenceElement::Filter(nsSVGFilterInstance *instance,
   float filterHeight = instance->GetFilterRegion().Height();
 
   bool doStitch = false;
-  if (stitch == nsIDOMSVGFETurbulenceElement::SVG_STITCHTYPE_STITCH) {
+  if (stitch == SVG_STITCHTYPE_STITCH) {
     doStitch = true;
 
     float lowFreq, hiFreq;
@@ -175,7 +188,7 @@ nsSVGFETurbulenceElement::Filter(nsSVGFilterInstance *instance,
       point[1] = filterY + (filterHeight * (y + instance->GetSurfaceRect().y)) / (filterSubregion.height - 1);
 
       float col[4];
-      if (type == nsIDOMSVGFETurbulenceElement::SVG_TURBULENCE_TYPE_TURBULENCE) {
+      if (type == SVG_TURBULENCE_TYPE_TURBULENCE) {
         for (int i = 0; i < 4; i++)
           col[i] = Turbulence(i, point, fX, fY, octaves, false,
                               doStitch, filterX, filterY, filterWidth, filterHeight) * 255;
@@ -206,10 +219,10 @@ nsSVGFETurbulenceElement::Filter(nsSVGFilterInstance *instance,
 }
 
 bool
-nsSVGFETurbulenceElement::AttributeAffectsRendering(int32_t aNameSpaceID,
+SVGFETurbulenceElement::AttributeAffectsRendering(int32_t aNameSpaceID,
                                                     nsIAtom* aAttribute) const
 {
-  return nsSVGFETurbulenceElementBase::AttributeAffectsRendering(aNameSpaceID, aAttribute) ||
+  return SVGFETurbulenceElementBase::AttributeAffectsRendering(aNameSpaceID, aAttribute) ||
          (aNameSpaceID == kNameSpaceID_None &&
           (aAttribute == nsGkAtoms::seed ||
            aAttribute == nsGkAtoms::baseFrequency ||
@@ -219,7 +232,7 @@ nsSVGFETurbulenceElement::AttributeAffectsRendering(int32_t aNameSpaceID,
 }
 
 void
-nsSVGFETurbulenceElement::InitSeed(int32_t aSeed)
+SVGFETurbulenceElement::InitSeed(int32_t aSeed)
 {
   double s;
   int i, j, k;
@@ -257,8 +270,8 @@ nsSVGFETurbulenceElement::InitSeed(int32_t aSeed)
 #define S_CURVE(t) ( t * t * (3. - 2. * t) )
 #define LERP(t, a, b) ( a + t * (b - a) )
 double
-nsSVGFETurbulenceElement::Noise2(int aColorChannel, double aVec[2],
-                                 StitchInfo *aStitchInfo)
+SVGFETurbulenceElement::Noise2(int aColorChannel, double aVec[2],
+                               StitchInfo *aStitchInfo)
 {
   int bx0, bx1, by0, by1, b00, b10, b01, b11;
   double rx0, rx1, ry0, ry1, *q, sx, sy, a, b, t, u, v;
@@ -312,12 +325,12 @@ nsSVGFETurbulenceElement::Noise2(int aColorChannel, double aVec[2],
 #undef LERP
 
 double
-nsSVGFETurbulenceElement::Turbulence(int aColorChannel, double *aPoint,
-                                     double aBaseFreqX, double aBaseFreqY,
-                                     int aNumOctaves, bool aFractalSum,
-                                     bool aDoStitching,
-                                     double aTileX, double aTileY,
-                                     double aTileWidth, double aTileHeight)
+SVGFETurbulenceElement::Turbulence(int aColorChannel, double* aPoint,
+                                   double aBaseFreqX, double aBaseFreqY,
+                                   int aNumOctaves, bool aFractalSum,
+                                   bool aDoStitching,
+                                   double aTileX, double aTileY,
+                                   double aTileWidth, double aTileHeight)
 {
   StitchInfo stitch;
   StitchInfo *stitchInfo = NULL; // Not stitching when NULL.
@@ -374,7 +387,7 @@ nsSVGFETurbulenceElement::Turbulence(int aColorChannel, double *aPoint,
 }
 
 nsIntRect
-nsSVGFETurbulenceElement::ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBoxes,
+SVGFETurbulenceElement::ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBoxes,
         const nsSVGFilterInstance& aInstance)
 {
   return GetMaxRect();
@@ -384,35 +397,35 @@ nsSVGFETurbulenceElement::ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBB
 // nsSVGElement methods
 
 nsSVGElement::NumberAttributesInfo
-nsSVGFETurbulenceElement::GetNumberInfo()
+SVGFETurbulenceElement::GetNumberInfo()
 {
   return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
                               ArrayLength(sNumberInfo));
 }
 
 nsSVGElement::NumberPairAttributesInfo
-nsSVGFETurbulenceElement::GetNumberPairInfo()
+SVGFETurbulenceElement::GetNumberPairInfo()
 {
   return NumberPairAttributesInfo(mNumberPairAttributes, sNumberPairInfo,
                                  ArrayLength(sNumberPairInfo));
 }
 
 nsSVGElement::IntegerAttributesInfo
-nsSVGFETurbulenceElement::GetIntegerInfo()
+SVGFETurbulenceElement::GetIntegerInfo()
 {
   return IntegerAttributesInfo(mIntegerAttributes, sIntegerInfo,
                                ArrayLength(sIntegerInfo));
 }
 
 nsSVGElement::EnumAttributesInfo
-nsSVGFETurbulenceElement::GetEnumInfo()
+SVGFETurbulenceElement::GetEnumInfo()
 {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
                             ArrayLength(sEnumInfo));
 }
 
 nsSVGElement::StringAttributesInfo
-nsSVGFETurbulenceElement::GetStringInfo()
+SVGFETurbulenceElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               ArrayLength(sStringInfo));
