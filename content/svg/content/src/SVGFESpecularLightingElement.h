@@ -6,33 +6,36 @@
 #ifndef mozilla_dom_SVGFESpecularLightingElement_h
 #define mozilla_dom_SVGFESpecularLightingElement_h
 
-#include "mozilla/dom/SVGFESpecularLightingElement.h"
+#include "nsSVGFilters.h"
+
+nsresult NS_NewSVGFESpecularLightingElement(nsIContent **aResult,
+                                            already_AddRefed<nsINodeInfo> aNodeInfo);
 
 namespace mozilla {
 namespace dom {
 
 //---------------------SpecularLighting------------------------
 
-typedef nsSVGFELightingElement nsSVGFESpecularLightingElementBase;
+typedef nsSVGFELightingElement SVGFESpecularLightingElementBase;
 
-class nsSVGFESpecularLightingElement : public nsSVGFESpecularLightingElementBase,
-                                       public nsIDOMSVGFESpecularLightingElement
+class SVGFESpecularLightingElement : public SVGFESpecularLightingElementBase,
+                                     public nsIDOMSVGElement
 {
-  friend nsresult NS_NewSVGFESpecularLightingElement(nsIContent **aResult,
-                                               already_AddRefed<nsINodeInfo> aNodeInfo);
+  friend nsresult (::NS_NewSVGFESpecularLightingElement(nsIContent **aResult,
+                                                        already_AddRefed<nsINodeInfo> aNodeInfo));
 protected:
-  nsSVGFESpecularLightingElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-    : nsSVGFESpecularLightingElementBase(aNodeInfo) {}
+  SVGFESpecularLightingElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+    : SVGFESpecularLightingElementBase(aNodeInfo)
+  {
+    SetIsDOMBinding();
+  }
+  virtual JSObject* WrapNode(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 
 public:
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
 
-  // DiffuseLighting
-  NS_DECL_NSIDOMSVGFESPECULARLIGHTINGELEMENT
-
-  NS_FORWARD_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES(nsSVGFESpecularLightingElementBase::)
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFESpecularLightingElementBase::)
+  NS_FORWARD_NSIDOMSVGELEMENT(SVGFESpecularLightingElementBase::)
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
@@ -45,9 +48,16 @@ public:
   virtual bool AttributeAffectsRendering(
           int32_t aNameSpaceID, nsIAtom* aAttribute) const;
 
-  virtual nsXPCClassInfo* GetClassInfo();
-
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+  // WebIDL
+  already_AddRefed<nsIDOMSVGAnimatedString> In1();
+  already_AddRefed<nsIDOMSVGAnimatedNumber> SurfaceScale();
+  already_AddRefed<nsIDOMSVGAnimatedNumber> SpecularConstant();
+  already_AddRefed<nsIDOMSVGAnimatedNumber> SpecularExponent();
+  already_AddRefed<nsIDOMSVGAnimatedNumber> KernelUnitLengthX();
+  already_AddRefed<nsIDOMSVGAnimatedNumber> KernelUnitLengthY();
+
 protected:
   virtual void LightPixel(const float *N, const float *L,
                           nscolor color, uint8_t *targetData);
@@ -56,3 +66,5 @@ protected:
 
 } // namespace dom
 } // namespace mozilla
+
+#endif // mozilla_dom_SVGFESpecularLightingElement_h
