@@ -89,6 +89,7 @@ CPPSRCS		= \
 		SVGFEMergeNodeElement.cpp \
 		SVGFEOffsetElement.cpp \
 		SVGFEPointLightElement.cpp \
+		SVGFESpecularLightingElement.cpp \
 		SVGFESpotLightElement.cpp \
 		SVGFETileElement.cpp \
 		SVGFilterElement.cpp \
@@ -197,6 +198,7 @@ EXPORTS_mozilla/dom = \
 	SVGFEMergeNodeElement.h \
 	SVGFEOffsetElement.h \
 	SVGFEPointLightElement.h \
+	SVGFESpecularLightingElement.h \
 	SVGFESpotLightElement.h \
 	SVGFETileElement.h \
 	SVGFilterElement.h \
