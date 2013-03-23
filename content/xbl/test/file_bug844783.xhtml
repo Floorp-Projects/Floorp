@@ -1,0 +1,54 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=844783
+-->
+<head>
+  <bindings xmlns="http://www.mozilla.org/xbl">
+    <binding id="testBinding">
+      <implementation>
+        <constructor>
+          is(windowExpando, 42, "Expandos show up without explicit waiving");
+          someFunction();
+          ok(called, "Function called");
+          go();
+        </constructor>
+      </implementation>
+      <handlers>
+        <handler event="testevent" action="is(boundExpando, 11, 'See expandos on |this|'); SimpleTest.finish();"/>
+      </handlers>
+    </binding>
+  </bindings>
+  <script type="application/javascript">
+  <![CDATA[
+
+  is = parent.is;
+  ok = parent.ok;
+  SimpleTest = parent.SimpleTest;
+  window.windowExpando = 42;
+  window.someFunction = function() { ok(true, "Called"); window.called = true; };
+
+  function go() {
+    var bound = document.getElementById('bound');
+    bound.boundExpando = 11;
+    bound.dispatchEvent(new CustomEvent('testevent'));
+  }
+
+  function setup() {
+    // When the bindings are applied, the constructor will be invoked and the
+    // test will continue.
+    document.getElementById('bound').style.MozBinding = 'url(#testBinding)';
+  }
+
+  ]]>
+</script>
+</head>
+<body onload="setup()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=844783">Mozilla Bug 844783</a>
+<p id="display"></p>
+<div id="content">
+  <div id="bound">Bound element</div>
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

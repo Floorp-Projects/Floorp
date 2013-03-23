@@ -2,13 +2,14 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
- 
+
 #ifndef nsXMLPrettyPrinter_h__
 #define nsXMLPrettyPrinter_h__
 
 #include "nsStubDocumentObserver.h"
-#include "nsIDocument.h"
 #include "nsCOMPtr.h"
+
+class nsIDocument;
 
 class nsXMLPrettyPrinter : public nsStubDocumentObserver
 {

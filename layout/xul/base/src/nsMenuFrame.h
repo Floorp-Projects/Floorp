@@ -19,12 +19,12 @@
 #include "nsMenuParent.h"
 #include "nsXULPopupManager.h"
 #include "nsITimer.h"
-#include "nsIContent.h"
 #include "mozilla/Attributes.h"
 
 nsIFrame* NS_NewMenuFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame* NS_NewMenuItemFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
+class nsIContent;
 class nsMenuBarFrame;
 
 #define NS_STATE_ACCELTEXT_IS_DERIVED  NS_STATE_BOX_CHILD_RESERVED

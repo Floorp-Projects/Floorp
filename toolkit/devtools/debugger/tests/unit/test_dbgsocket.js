@@ -4,6 +4,8 @@
 Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
 Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
 
+let port = 2929;
+
 function run_test()
 {
   // Allow incoming connections.
@@ -28,14 +30,15 @@ function really_long() {
 function test_socket_conn()
 {
   do_check_eq(DebuggerServer._socketConnections, 0);
-  do_check_true(DebuggerServer.openListener(2929));
+  try_open_listener();
+  do_print("Debugger server port is " + port);
   do_check_eq(DebuggerServer._socketConnections, 1);
   // Make sure opening the listener twice does nothing.
-  do_check_true(DebuggerServer.openListener(2929));
+  do_check_true(DebuggerServer.openListener(port));
   do_check_eq(DebuggerServer._socketConnections, 1);
 
   let unicodeString = "(╯°□°）╯︵ ┻━┻";
-  let transport = debuggerSocketConnect("127.0.0.1", 2929);
+  let transport = debuggerSocketConnect("127.0.0.1", port);
   transport.hooks = {
     onPacket: function(aPacket) {
       this.onPacket = function(aPacket) {
@@ -66,7 +69,7 @@ function test_socket_shutdown()
   do_check_false(DebuggerServer.closeListener());
   do_check_eq(DebuggerServer._socketConnections, 0);
 
-  let transport = debuggerSocketConnect("127.0.0.1", 2929);
+  let transport = debuggerSocketConnect("127.0.0.1", port);
   transport.hooks = {
     onPacket: function(aPacket) {
       // Shouldn't reach this, should never connect.
@@ -96,4 +99,15 @@ function test_pipe_conn()
   };
 
   transport.ready();
+}
+
+function try_open_listener()
+{
+  try {
+    do_check_true(DebuggerServer.openListener(port));
+  } catch (e) {
+    // In case the port is unavailable, pick a random one between 2000 and 65000.
+    port = Math.floor(Math.random() * (65000 - 2000 + 1)) + 2000;
+    try_open_listener();
+  }
 }

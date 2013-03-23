@@ -13,7 +13,6 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	    = mozjs
 STATIC_LIBRARY_NAME = js_static
-GRE_MODULE	    = 1
 
 LIBS		= $(NSPR_LIBS)
 
@@ -962,9 +961,12 @@ selfhosting:: selfhosted.out.h
 selfhosting_srcs := \
   $(srcdir)/builtin/Utilities.js \
   $(srcdir)/builtin/Array.js \
+  $(srcdir)/builtin/Date.js \
   $(srcdir)/builtin/Intl.js \
   $(srcdir)/builtin/IntlData.js \
+  $(srcdir)/builtin/Number.js \
   $(srcdir)/builtin/ParallelArray.js \
+  $(srcdir)/builtin/String.js \
   $(NULL)
 
 selfhosted_out_h_deps := \

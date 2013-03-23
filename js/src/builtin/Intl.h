@@ -35,6 +35,16 @@ namespace js {
 /******************** Collator ********************/
 
 /**
+ * Returns a new instance of the standard built-in Collator constructor.
+ * Self-hosted code cannot cache this constructor (as it does for others in
+ * Utilities.js) because it is initialized after self-hosted code is compiled.
+ *
+ * Usage: collator = intl_Collator(locales, options)
+ */
+extern JSBool
+intl_Collator(JSContext *cx, unsigned argc, Value *vp);
+
+/**
  * Returns an object indicating the supported locales for collation
  * by having a true-valued property for each such locale with the
  * canonicalized language tag as the property name. The object has no
@@ -73,6 +83,16 @@ intl_CompareStrings(JSContext *cx, unsigned argc, Value *vp);
 /******************** NumberFormat ********************/
 
 /**
+ * Returns a new instance of the standard built-in NumberFormat constructor.
+ * Self-hosted code cannot cache this constructor (as it does for others in
+ * Utilities.js) because it is initialized after self-hosted code is compiled.
+ *
+ * Usage: numberFormat = intl_NumberFormat(locales, options)
+ */
+extern JSBool
+intl_NumberFormat(JSContext *cx, unsigned argc, Value *vp);
+
+/**
  * Returns an object indicating the supported locales for number formatting
  * by having a true-valued property for each such locale with the
  * canonicalized language tag as the property name. The object has no
@@ -106,6 +126,16 @@ intl_FormatNumber(JSContext *cx, unsigned argc, Value *vp);
 
 
 /******************** DateTimeFormat ********************/
+
+/**
+ * Returns a new instance of the standard built-in DateTimeFormat constructor.
+ * Self-hosted code cannot cache this constructor (as it does for others in
+ * Utilities.js) because it is initialized after self-hosted code is compiled.
+ *
+ * Usage: dateTimeFormat = intl_DateTimeFormat(locales, options)
+ */
+extern JSBool
+intl_DateTimeFormat(JSContext *cx, unsigned argc, Value *vp);
 
 /**
  * Returns an object indicating the supported locales for date and time

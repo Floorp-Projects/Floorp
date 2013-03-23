@@ -861,9 +861,11 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     structuredCloneCallbacks(NULL),
     telemetryCallback(NULL),
     propertyRemovals(0),
+#if !ENABLE_INTL_API
     thousandsSeparator(0),
     decimalSeparator(0),
     numGrouping(0),
+#endif
     mathCache_(NULL),
     dtoaState(NULL),
     trustedPrincipals_(NULL),
@@ -1011,7 +1013,9 @@ JSRuntime::~JSRuntime()
     }
 #endif
 
+#if !ENABLE_INTL_API
     FinishRuntimeNumberState(this);
+#endif
     FinishAtoms(this);
 
     if (dtoaState)
@@ -3477,7 +3481,7 @@ LookupPropertyById(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
 #define AUTO_NAMELEN(s,n)   (((n) == (size_t)-1) ? js_strlen(s) : (n))
 
 static JSBool
-LookupResult(JSContext *cx, HandleObject obj, HandleObject obj2, jsid id,
+LookupResult(JSContext *cx, HandleObject obj, HandleObject obj2, HandleId id,
              HandleShape shape, Value *vp)
 {
     if (!shape) {

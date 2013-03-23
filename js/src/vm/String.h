@@ -414,6 +414,8 @@ class JSString : public js::gc::Cell
         return offsetof(JSString, d.u1.chars);
     }
 
+    JS::Zone *zone() const { return tenuredZone(); }
+
     static inline void writeBarrierPre(JSString *str);
     static inline void writeBarrierPost(JSString *str, void *addr);
     static inline bool needWriteBarrierPre(JS::Zone *zone);

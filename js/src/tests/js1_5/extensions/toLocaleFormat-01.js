@@ -20,7 +20,7 @@ var temp;
 enterFunc ('test');
 printBugNumber(BUGNUMBER);
 printStatus (summary);
- 
+
 var date = new Date("06/05/2005 00:00:00 GMT-0000");
 
 expect = date.getTimezoneOffset() > 0 ? 'Sat' : 'Sun';
@@ -85,11 +85,6 @@ reportCompare(expect, actual, 'Date.toLocaleFormat("%w")');
 expect = '22';
 actual = date.toLocaleFormat('%W');
 reportCompare(expect, actual, 'Date.toLocaleFormat("%W")');
-
-expect = date.toLocaleTimeString();
-actual = date.toLocaleFormat('%X');
-reportCompare(expect, actual, 'Date.toLocaleTimeString() == ' +
-              'Date.toLocaleFormat("%X")');
 
 expect = '05';
 actual = date.toLocaleFormat('%y');

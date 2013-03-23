@@ -14,7 +14,6 @@
 #include "nsPresContext.h" // for nsCompatibility
 #include "nsString.h"
 #include "nsChangeHint.h"
-#include "nsIContent.h"
 #include "nsCSSPseudoElements.h"
 #include "nsRuleWalker.h"
 #include "nsNthIndexCache.h"
@@ -23,10 +22,11 @@
 #include "mozilla/BloomFilter.h"
 #include "mozilla/GuardObjects.h"
 
-class nsIStyleSheet;
-class nsIAtom;
-class nsICSSPseudoComparator;
 class nsAttrValue;
+class nsIAtom;
+class nsIContent;
+class nsICSSPseudoComparator;
+class nsIStyleSheet;
 struct TreeMatchContext;
 
 /**

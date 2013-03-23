@@ -16,7 +16,6 @@ VPATH += $(srcdir)/fallback
 LIBRARY_NAME   = jsdomcontacts_s
 LIBXUL_LIBRARY = 1
 
-GRE_MODULE     = 1
 
 EXTRA_COMPONENTS =        \
   ContactManager.js       \

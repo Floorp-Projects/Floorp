@@ -91,7 +91,7 @@ struct Cell
     MOZ_ALWAYS_INLINE void unmark(uint32_t color) const;
 
     inline JSRuntime *runtime() const;
-    inline Zone *zone() const;
+    inline Zone *tenuredZone() const;
 
 #ifdef DEBUG
     inline bool isAligned() const;
@@ -981,7 +981,7 @@ Cell::unmark(uint32_t color) const
 }
 
 Zone *
-Cell::zone() const
+Cell::tenuredZone() const
 {
     JS_ASSERT(isTenured());
     return arenaHeader()->zone;

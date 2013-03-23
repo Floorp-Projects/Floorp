@@ -4542,7 +4542,7 @@ JS_ResetDefaultLocale(JSRuntime *rt);
 struct JSLocaleCallbacks {
     JSLocaleToUpperCase     localeToUpperCase;
     JSLocaleToLowerCase     localeToLowerCase;
-    JSLocaleCompare         localeCompare;
+    JSLocaleCompare         localeCompare; // not used #if ENABLE_INTL_API
     JSLocaleToUnicode       localeToUnicode;
     JSErrorCallback         localeGetErrorMessage;
 };

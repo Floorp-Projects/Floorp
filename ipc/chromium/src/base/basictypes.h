@@ -11,6 +11,7 @@
 
 #include "base/port.h"    // Types that only need exist on certain systems
 
+#include "mozilla/Assertions.h"
 #include "mozilla/StandardInteger.h"
 
 // A type to represent a Unicode code-point value. As of Unicode 4.0,
@@ -293,7 +294,8 @@ template <class Dest, class Source>
 inline Dest bit_cast(const Source& source) {
   // Compile time assertion: sizeof(Dest) == sizeof(Source)
   // A compile error here means your Dest and Source have different sizes.
-  typedef char VerifySizesAreEqual [sizeof(Dest) == sizeof(Source) ? 1 : -1];
+  MOZ_STATIC_ASSERT(sizeof(Dest) == sizeof(Source),
+                    "Only bit-cast between identically-sized types!");
 
   Dest dest;
   memcpy(&dest, &source, sizeof(dest));

@@ -20,16 +20,21 @@ class WaiveXrayWrapper : public js::CrossCompartmentWrapper {
     WaiveXrayWrapper(unsigned flags);
     virtual ~WaiveXrayWrapper();
 
-    virtual bool getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
-                                       js::PropertyDescriptor *desc, unsigned flags) MOZ_OVERRIDE;
-    virtual bool getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
-                                          js::PropertyDescriptor *desc, unsigned flags) MOZ_OVERRIDE;
-    virtual bool get(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id,
-                     js::Value *vp) MOZ_OVERRIDE;
+    virtual bool getPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*> wrapper,
+                                       JS::Handle<jsid> id, js::PropertyDescriptor *desc,
+                                       unsigned flags) MOZ_OVERRIDE;
+    virtual bool getOwnPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*> wrapper,
+                                          JS::Handle<jsid> id,
+                                          js::PropertyDescriptor *desc,
+                                          unsigned flags) MOZ_OVERRIDE;
+    virtual bool get(JSContext *cx, JS::Handle<JSObject*> wrapper, JS::Handle<JSObject*> receiver,
+                     JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp) MOZ_OVERRIDE;
 
-    virtual bool call(JSContext *cx, JSObject *wrapper, unsigned argc, js::Value *vp) MOZ_OVERRIDE;
-    virtual bool construct(JSContext *cx, JSObject *wrapper,
-                           unsigned argc, js::Value *argv, js::Value *rval) MOZ_OVERRIDE;
+    virtual bool call(JSContext *cx, JS::Handle<JSObject*> wrapper, unsigned argc,
+                      js::Value *vp) MOZ_OVERRIDE;
+    virtual bool construct(JSContext *cx, JS::Handle<JSObject*> wrapper,
+                           unsigned argc, js::Value *argv,
+                           JS::MutableHandle<JS::Value> rval) MOZ_OVERRIDE;
 
     static WaiveXrayWrapper singleton;
 };
