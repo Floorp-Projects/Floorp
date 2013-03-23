@@ -175,7 +175,7 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
   AutoPushJSContext jscontext(aContext->GetNativeContext());
   JSObject* global = sgo->GetGlobalJSObject();
   nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
-  jsval v;
+  JS::Value v;
   rv = nsContentUtils::WrapNative(jscontext, global, aBoundElement, &v,
                                   getter_AddRefs(wrapper));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -302,7 +302,7 @@ nsXBLProtoImpl::ResolveAllFields(JSContext *cx, JSObject *obj) const
     // PRUnichar* for the property name.  Let's just use the public API and
     // all.
     nsDependentString name(f->GetName());
-    jsval dummy;
+    JS::Value dummy;
     if (!::JS_LookupUCProperty(cx, obj,
                                reinterpret_cast<const jschar*>(name.get()),
                                name.Length(), &dummy)) {
@@ -324,7 +324,7 @@ nsXBLProtoImpl::UndefineFields(JSContext *cx, JSObject *obj) const
     JSBool hasProp;
     if (::JS_AlreadyHasOwnUCProperty(cx, obj, s, name.Length(), &hasProp) &&
         hasProp) {
-      jsval dummy;
+      JS::Value dummy;
       ::JS_DeleteUCProperty2(cx, obj, s, name.Length(), &dummy);
     }
   }
