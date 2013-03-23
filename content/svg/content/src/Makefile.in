@@ -90,6 +90,7 @@ CPPSRCS		= \
 		SVGFEImageElement.cpp \
 		SVGFEMergeElement.cpp \
 		SVGFEMergeNodeElement.cpp \
+		SVGFEMorphologyElement.cpp \
 		SVGFEOffsetElement.cpp \
 		SVGFEPointLightElement.cpp \
 		SVGFESpecularLightingElement.cpp \
@@ -202,6 +203,7 @@ EXPORTS_mozilla/dom = \
 	SVGFEImageElement.h \
 	SVGFEMergeElement.h \
 	SVGFEMergeNodeElement.h \
+	SVGFEMorphologyElement.h \
 	SVGFEOffsetElement.h \
 	SVGFEPointLightElement.h \
 	SVGFESpecularLightingElement.h \
