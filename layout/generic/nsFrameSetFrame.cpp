@@ -747,9 +747,7 @@ nsHTMLFramesetFrame::ReflowPlaceChild(nsIFrame*                aChild,
                                       nsIntPoint*              aCellIndex)
 {
   // reflow the child
-  nsHTMLReflowState reflowState(aPresContext, aReflowState, aChild, aSize);
-  reflowState.SetComputedWidth(std::max(0, aSize.width - reflowState.mComputedBorderPadding.LeftRight()));
-  reflowState.SetComputedHeight(std::max(0, aSize.height - reflowState.mComputedBorderPadding.TopBottom()));
+  nsHTMLReflowState  reflowState(aPresContext, aReflowState, aChild, aSize);
   nsHTMLReflowMetrics metrics;
   metrics.width = aSize.width;
   metrics.height= aSize.height;
