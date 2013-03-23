@@ -96,6 +96,7 @@ CPPSRCS		= \
 		SVGFESpecularLightingElement.cpp \
 		SVGFESpotLightElement.cpp \
 		SVGFETileElement.cpp \
+		SVGFETurbulenceElement.cpp \
 		SVGFilterElement.cpp \
 		SVGForeignObjectElement.cpp \
 		SVGFragmentIdentifier.cpp \
@@ -209,6 +210,7 @@ EXPORTS_mozilla/dom = \
 	SVGFESpecularLightingElement.h \
 	SVGFESpotLightElement.h \
 	SVGFETileElement.h \
+	SVGFETurbulenceElement.h \
 	SVGFilterElement.h \
 	SVGForeignObjectElement.h \
 	SVGGElement.h \
