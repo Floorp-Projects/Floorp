@@ -376,7 +376,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
                                                   JSFunction::NATIVE_FUN, self, NullPtr()));
     if (!throwTypeError)
         return NULL;
-    if (!throwTypeError->preventExtensions(cx))
+    if (!JSObject::preventExtensions(cx, throwTypeError))
         return NULL;
     self->setThrowTypeError(throwTypeError);
 
