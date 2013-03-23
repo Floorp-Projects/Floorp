@@ -1124,6 +1124,8 @@ class ObjectImpl : public gc::Cell
         return false;
     }
 
+    inline bool isProxy() const;
+
   protected:
 #ifdef DEBUG
     void checkShapeConsistency();
