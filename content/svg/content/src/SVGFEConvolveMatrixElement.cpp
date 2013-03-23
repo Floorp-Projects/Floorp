@@ -4,168 +4,182 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/SVGFEConvolveMatrixElement.h"
+#include "mozilla/dom/SVGFEConvolveMatrixElementBinding.h"
+#include "DOMSVGAnimatedNumberList.h"
+#include "nsSVGUtils.h"
+
+NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEConvolveMatrix)
 
 namespace mozilla {
 namespace dom {
 
-nsSVGElement::NumberInfo nsSVGFEConvolveMatrixElement::sNumberInfo[2] =
+// Edge Mode Values
+static const unsigned short SVG_EDGEMODE_UNKNOWN = 0;
+static const unsigned short SVG_EDGEMODE_DUPLICATE = 1;
+static const unsigned short SVG_EDGEMODE_WRAP = 2;
+static const unsigned short SVG_EDGEMODE_NONE = 3;
+
+JSObject*
+SVGFEConvolveMatrixElement::WrapNode(JSContext* aCx, JSObject* aScope)
+{
+  return SVGFEConvolveMatrixElementBinding::Wrap(aCx, aScope, this);
+}
+
+nsSVGElement::NumberInfo SVGFEConvolveMatrixElement::sNumberInfo[2] =
 {
   { &nsGkAtoms::divisor, 1, false },
   { &nsGkAtoms::bias, 0, false }
 };
 
-nsSVGElement::NumberPairInfo nsSVGFEConvolveMatrixElement::sNumberPairInfo[1] =
+nsSVGElement::NumberPairInfo SVGFEConvolveMatrixElement::sNumberPairInfo[1] =
 {
   { &nsGkAtoms::kernelUnitLength, 0, 0 }
 };
 
-nsSVGElement::IntegerInfo nsSVGFEConvolveMatrixElement::sIntegerInfo[2] =
+nsSVGElement::IntegerInfo SVGFEConvolveMatrixElement::sIntegerInfo[2] =
 {
   { &nsGkAtoms::targetX, 0 },
   { &nsGkAtoms::targetY, 0 }
 };
 
-nsSVGElement::IntegerPairInfo nsSVGFEConvolveMatrixElement::sIntegerPairInfo[1] =
+nsSVGElement::IntegerPairInfo SVGFEConvolveMatrixElement::sIntegerPairInfo[1] =
 {
   { &nsGkAtoms::order, 3, 3 }
 };
 
-nsSVGElement::BooleanInfo nsSVGFEConvolveMatrixElement::sBooleanInfo[1] =
+nsSVGElement::BooleanInfo SVGFEConvolveMatrixElement::sBooleanInfo[1] =
 {
   { &nsGkAtoms::preserveAlpha, false }
 };
 
-nsSVGEnumMapping nsSVGFEConvolveMatrixElement::sEdgeModeMap[] = {
-  {&nsGkAtoms::duplicate, nsSVGFEConvolveMatrixElement::SVG_EDGEMODE_DUPLICATE},
-  {&nsGkAtoms::wrap, nsSVGFEConvolveMatrixElement::SVG_EDGEMODE_WRAP},
-  {&nsGkAtoms::none, nsSVGFEConvolveMatrixElement::SVG_EDGEMODE_NONE},
+nsSVGEnumMapping SVGFEConvolveMatrixElement::sEdgeModeMap[] = {
+  {&nsGkAtoms::duplicate, SVG_EDGEMODE_DUPLICATE},
+  {&nsGkAtoms::wrap, SVG_EDGEMODE_WRAP},
+  {&nsGkAtoms::none, SVG_EDGEMODE_NONE},
   {nullptr, 0}
 };
 
-nsSVGElement::EnumInfo nsSVGFEConvolveMatrixElement::sEnumInfo[1] =
+nsSVGElement::EnumInfo SVGFEConvolveMatrixElement::sEnumInfo[1] =
 {
   { &nsGkAtoms::edgeMode,
     sEdgeModeMap,
-    nsSVGFEConvolveMatrixElement::SVG_EDGEMODE_DUPLICATE
+    SVG_EDGEMODE_DUPLICATE
   }
 };
 
-nsSVGElement::StringInfo nsSVGFEConvolveMatrixElement::sStringInfo[2] =
+nsSVGElement::StringInfo SVGFEConvolveMatrixElement::sStringInfo[2] =
 {
   { &nsGkAtoms::result, kNameSpaceID_None, true },
   { &nsGkAtoms::in, kNameSpaceID_None, true }
 };
 
-nsSVGElement::NumberListInfo nsSVGFEConvolveMatrixElement::sNumberListInfo[1] =
+nsSVGElement::NumberListInfo SVGFEConvolveMatrixElement::sNumberListInfo[1] =
 {
   { &nsGkAtoms::kernelMatrix }
 };
 
-NS_IMPL_NS_NEW_SVG_ELEMENT(FEConvolveMatrix)
-
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ADDREF_INHERITED(nsSVGFEConvolveMatrixElement,nsSVGFEConvolveMatrixElementBase)
-NS_IMPL_RELEASE_INHERITED(nsSVGFEConvolveMatrixElement,nsSVGFEConvolveMatrixElementBase)
+NS_IMPL_ADDREF_INHERITED(SVGFEConvolveMatrixElement,SVGFEConvolveMatrixElementBase)
+NS_IMPL_RELEASE_INHERITED(SVGFEConvolveMatrixElement,SVGFEConvolveMatrixElementBase)
 
-DOMCI_NODE_DATA(SVGFEConvolveMatrixElement, nsSVGFEConvolveMatrixElement)
-
-NS_INTERFACE_TABLE_HEAD(nsSVGFEConvolveMatrixElement)
-  NS_NODE_INTERFACE_TABLE5(nsSVGFEConvolveMatrixElement, nsIDOMNode,
-                           nsIDOMElement, nsIDOMSVGElement,
-                           nsIDOMSVGFilterPrimitiveStandardAttributes,
-                           nsIDOMSVGFEConvolveMatrixElement)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEConvolveMatrixElement)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGFEConvolveMatrixElementBase)
+NS_INTERFACE_TABLE_HEAD(SVGFEConvolveMatrixElement)
+  NS_NODE_INTERFACE_TABLE3(SVGFEConvolveMatrixElement, nsIDOMNode,
+                           nsIDOMElement, nsIDOMSVGElement)
+NS_INTERFACE_MAP_END_INHERITING(SVGFEConvolveMatrixElementBase)
 
 
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEConvolveMatrixElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEConvolveMatrixElement)
 
 //----------------------------------------------------------------------
-// nsSVGFEConvolveMatrixElement methods
 
-NS_IMETHODIMP nsSVGFEConvolveMatrixElement::GetIn1(nsIDOMSVGAnimatedString * *aIn)
+already_AddRefed<nsIDOMSVGAnimatedString>
+SVGFEConvolveMatrixElement::In1()
 {
-  return mStringAttributes[IN1].ToDOMAnimatedString(aIn, this);
+  return mStringAttributes[IN1].ToDOMAnimatedString(this);
 }
 
-NS_IMETHODIMP nsSVGFEConvolveMatrixElement::GetOrderX(nsIDOMSVGAnimatedInteger * *aOrderX)
+already_AddRefed<nsIDOMSVGAnimatedInteger>
+SVGFEConvolveMatrixElement::OrderX()
 {
-  return mIntegerPairAttributes[ORDER].ToDOMAnimatedInteger(aOrderX, nsSVGIntegerPair::eFirst, this);
+  return mIntegerPairAttributes[ORDER].ToDOMAnimatedInteger(nsSVGIntegerPair::eFirst, this);
 }
 
-NS_IMETHODIMP nsSVGFEConvolveMatrixElement::GetOrderY(nsIDOMSVGAnimatedInteger * *aOrderY)
+already_AddRefed<nsIDOMSVGAnimatedInteger>
+SVGFEConvolveMatrixElement::OrderY()
 {
-  return mIntegerPairAttributes[ORDER].ToDOMAnimatedInteger(aOrderY, nsSVGIntegerPair::eSecond, this);
+  return mIntegerPairAttributes[ORDER].ToDOMAnimatedInteger(nsSVGIntegerPair::eSecond, this);
 }
 
-NS_IMETHODIMP nsSVGFEConvolveMatrixElement::GetKernelMatrix(nsISupports * *aKernelMatrix)
+already_AddRefed<DOMSVGAnimatedNumberList>
+SVGFEConvolveMatrixElement::KernelMatrix()
 {
-  *aKernelMatrix = DOMSVGAnimatedNumberList::GetDOMWrapper(&mNumberListAttributes[KERNELMATRIX],
-                                                           this, KERNELMATRIX).get();
-  return NS_OK;
+  return DOMSVGAnimatedNumberList::GetDOMWrapper(&mNumberListAttributes[KERNELMATRIX],
+                                                 this, KERNELMATRIX);
 }
 
-NS_IMETHODIMP nsSVGFEConvolveMatrixElement::GetTargetX(nsIDOMSVGAnimatedInteger * *aTargetX)
+already_AddRefed<nsIDOMSVGAnimatedInteger>
+SVGFEConvolveMatrixElement::TargetX()
 {
-  return mIntegerAttributes[TARGET_X].ToDOMAnimatedInteger(aTargetX, this);
+  return mIntegerAttributes[TARGET_X].ToDOMAnimatedInteger(this);
 }
 
-NS_IMETHODIMP nsSVGFEConvolveMatrixElement::GetTargetY(nsIDOMSVGAnimatedInteger * *aTargetY)
+already_AddRefed<nsIDOMSVGAnimatedInteger>
+SVGFEConvolveMatrixElement::TargetY()
 {
-  return mIntegerAttributes[TARGET_Y].ToDOMAnimatedInteger(aTargetY, this);
+  return mIntegerAttributes[TARGET_Y].ToDOMAnimatedInteger(this);
 }
 
-NS_IMETHODIMP nsSVGFEConvolveMatrixElement::GetEdgeMode(nsIDOMSVGAnimatedEnumeration * *aEdgeMode)
+already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+SVGFEConvolveMatrixElement::EdgeMode()
 {
-  return mEnumAttributes[EDGEMODE].ToDOMAnimatedEnum(aEdgeMode, this);
+  return mEnumAttributes[EDGEMODE].ToDOMAnimatedEnum(this);
 }
 
-NS_IMETHODIMP nsSVGFEConvolveMatrixElement::GetPreserveAlpha(nsISupports * *aPreserveAlpha)
+already_AddRefed<SVGAnimatedBoolean>
+SVGFEConvolveMatrixElement::PreserveAlpha()
 {
-  return mBooleanAttributes[PRESERVEALPHA].ToDOMAnimatedBoolean(aPreserveAlpha, this);
+  return mBooleanAttributes[PRESERVEALPHA].ToDOMAnimatedBoolean(this);
 }
 
-NS_IMETHODIMP
-nsSVGFEConvolveMatrixElement::GetDivisor(nsIDOMSVGAnimatedNumber **aDivisor)
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGFEConvolveMatrixElement::Divisor()
 {
-  return mNumberAttributes[DIVISOR].ToDOMAnimatedNumber(aDivisor, this);
+  return mNumberAttributes[DIVISOR].ToDOMAnimatedNumber(this);
 }
 
-NS_IMETHODIMP
-nsSVGFEConvolveMatrixElement::GetBias(nsIDOMSVGAnimatedNumber **aBias)
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGFEConvolveMatrixElement::Bias()
 {
-  return mNumberAttributes[BIAS].ToDOMAnimatedNumber(aBias, this);
+  return mNumberAttributes[BIAS].ToDOMAnimatedNumber(this);
 }
 
-NS_IMETHODIMP
-nsSVGFEConvolveMatrixElement::GetKernelUnitLengthX(nsIDOMSVGAnimatedNumber **aKernelX)
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGFEConvolveMatrixElement::KernelUnitLengthX()
 {
-  return mNumberPairAttributes[KERNEL_UNIT_LENGTH].ToDOMAnimatedNumber(aKernelX,
-                                                                       nsSVGNumberPair::eFirst,
+  return mNumberPairAttributes[KERNEL_UNIT_LENGTH].ToDOMAnimatedNumber(nsSVGNumberPair::eFirst,
                                                                        this);
 }
 
-NS_IMETHODIMP
-nsSVGFEConvolveMatrixElement::GetKernelUnitLengthY(nsIDOMSVGAnimatedNumber **aKernelY)
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGFEConvolveMatrixElement::KernelUnitLengthY()
 {
-  return mNumberPairAttributes[KERNEL_UNIT_LENGTH].ToDOMAnimatedNumber(aKernelY,
-                                                                       nsSVGNumberPair::eSecond,
+  return mNumberPairAttributes[KERNEL_UNIT_LENGTH].ToDOMAnimatedNumber(nsSVGNumberPair::eSecond,
                                                                        this);
 }
 
 void
-nsSVGFEConvolveMatrixElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
+SVGFEConvolveMatrixElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
 {
   aSources.AppendElement(nsSVGStringInfo(&mStringAttributes[IN1], this));
 }
 
 nsIntRect
-nsSVGFEConvolveMatrixElement::ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBoxes,
+SVGFEConvolveMatrixElement::ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBoxes,
         const nsSVGFilterInstance& aInstance)
 {
   // XXX A more precise box is possible when 'bias' is zero and 'edgeMode' is
@@ -175,7 +189,7 @@ nsSVGFEConvolveMatrixElement::ComputeTargetBBox(const nsTArray<nsIntRect>& aSour
 }
 
 void
-nsSVGFEConvolveMatrixElement::ComputeNeededSourceBBoxes(const nsIntRect& aTargetBBox,
+SVGFEConvolveMatrixElement::ComputeNeededSourceBBoxes(const nsIntRect& aTargetBBox,
           nsTArray<nsIntRect>& aSourceBBoxes, const nsSVGFilterInstance& aInstance)
 {
   // XXX Precise results are possible but we're going to skip that work
@@ -184,8 +198,8 @@ nsSVGFEConvolveMatrixElement::ComputeNeededSourceBBoxes(const nsIntRect& aTarget
 }
 
 nsIntRect
-nsSVGFEConvolveMatrixElement::ComputeChangeBBox(const nsTArray<nsIntRect>& aSourceChangeBoxes,
-                                                const nsSVGFilterInstance& aInstance)
+SVGFEConvolveMatrixElement::ComputeChangeBBox(const nsTArray<nsIntRect>& aSourceChangeBoxes,
+                                              const nsSVGFilterInstance& aInstance)
 {
   // XXX Precise results are possible but we're going to skip that work
   // for now.
@@ -234,13 +248,13 @@ ConvolvePixel(const uint8_t *aSourceData,
       for (int32_t i = 0; i < channels; i++) {
         if (overscanY || overscanX) {
           switch (aEdgeMode) {
-            case nsSVGFEConvolveMatrixElement::SVG_EDGEMODE_DUPLICATE:
+            case SVG_EDGEMODE_DUPLICATE:
               sum[i] +=
                 aSourceData[BoundInterval(sampleY, aHeight) * aStride +
                             BoundInterval(sampleX, aWidth) * 4 + offsets[i]] *
                 aKernel[aOrderX * y + x];
               break;
-            case nsSVGFEConvolveMatrixElement::SVG_EDGEMODE_WRAP:
+            case SVG_EDGEMODE_WRAP:
               sum[i] +=
                 aSourceData[WrapInterval(sampleY, aHeight) * aStride +
                             WrapInterval(sampleX, aWidth) * 4 + offsets[i]] *
@@ -268,10 +282,10 @@ ConvolvePixel(const uint8_t *aSourceData,
 }
 
 nsresult
-nsSVGFEConvolveMatrixElement::Filter(nsSVGFilterInstance *instance,
-                                     const nsTArray<const Image*>& aSources,
-                                     const Image* aTarget,
-                                     const nsIntRect& rect)
+SVGFEConvolveMatrixElement::Filter(nsSVGFilterInstance* instance,
+                                   const nsTArray<const Image*>& aSources,
+                                   const Image* aTarget,
+                                   const nsIntRect& rect)
 {
   const SVGNumberList &kernelMatrix =
     mNumberListAttributes[KERNELMATRIX].GetAnimValue();
@@ -357,10 +371,10 @@ nsSVGFEConvolveMatrixElement::Filter(nsSVGFilterInstance *instance,
 }
 
 bool
-nsSVGFEConvolveMatrixElement::AttributeAffectsRendering(int32_t aNameSpaceID,
-                                                        nsIAtom* aAttribute) const
+SVGFEConvolveMatrixElement::AttributeAffectsRendering(int32_t aNameSpaceID,
+                                                      nsIAtom* aAttribute) const
 {
-  return nsSVGFEConvolveMatrixElementBase::AttributeAffectsRendering(aNameSpaceID, aAttribute) ||
+  return SVGFEConvolveMatrixElementBase::AttributeAffectsRendering(aNameSpaceID, aAttribute) ||
          (aNameSpaceID == kNameSpaceID_None &&
           (aAttribute == nsGkAtoms::in ||
            aAttribute == nsGkAtoms::divisor ||
@@ -378,56 +392,56 @@ nsSVGFEConvolveMatrixElement::AttributeAffectsRendering(int32_t aNameSpaceID,
 // nsSVGElement methods
 
 nsSVGElement::NumberAttributesInfo
-nsSVGFEConvolveMatrixElement::GetNumberInfo()
+SVGFEConvolveMatrixElement::GetNumberInfo()
 {
   return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
                               ArrayLength(sNumberInfo));
 }
 
 nsSVGElement::NumberPairAttributesInfo
-nsSVGFEConvolveMatrixElement::GetNumberPairInfo()
+SVGFEConvolveMatrixElement::GetNumberPairInfo()
 {
   return NumberPairAttributesInfo(mNumberPairAttributes, sNumberPairInfo,
                                   ArrayLength(sNumberPairInfo));
 }
 
 nsSVGElement::IntegerAttributesInfo
-nsSVGFEConvolveMatrixElement::GetIntegerInfo()
+SVGFEConvolveMatrixElement::GetIntegerInfo()
 {
   return IntegerAttributesInfo(mIntegerAttributes, sIntegerInfo,
                                ArrayLength(sIntegerInfo));
 }
 
 nsSVGElement::IntegerPairAttributesInfo
-nsSVGFEConvolveMatrixElement::GetIntegerPairInfo()
+SVGFEConvolveMatrixElement::GetIntegerPairInfo()
 {
   return IntegerPairAttributesInfo(mIntegerPairAttributes, sIntegerPairInfo,
                                    ArrayLength(sIntegerPairInfo));
 }
 
 nsSVGElement::BooleanAttributesInfo
-nsSVGFEConvolveMatrixElement::GetBooleanInfo()
+SVGFEConvolveMatrixElement::GetBooleanInfo()
 {
   return BooleanAttributesInfo(mBooleanAttributes, sBooleanInfo,
                                ArrayLength(sBooleanInfo));
 }
 
 nsSVGElement::EnumAttributesInfo
-nsSVGFEConvolveMatrixElement::GetEnumInfo()
+SVGFEConvolveMatrixElement::GetEnumInfo()
 {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
                             ArrayLength(sEnumInfo));
 }
 
 nsSVGElement::StringAttributesInfo
-nsSVGFEConvolveMatrixElement::GetStringInfo()
+SVGFEConvolveMatrixElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               ArrayLength(sStringInfo));
 }
 
 nsSVGElement::NumberListAttributesInfo
-nsSVGFEConvolveMatrixElement::GetNumberListInfo()
+SVGFEConvolveMatrixElement::GetNumberListInfo()
 {
   return NumberListAttributesInfo(mNumberListAttributes, sNumberListInfo,
                                   ArrayLength(sNumberListInfo));

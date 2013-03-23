@@ -116,6 +116,13 @@ nsresult
 nsSVGInteger::ToDOMAnimatedInteger(nsIDOMSVGAnimatedInteger **aResult,
                                    nsSVGElement *aSVGElement)
 {
+  *aResult = ToDOMAnimatedInteger(aSVGElement).get();
+  return NS_OK;
+}
+
+already_AddRefed<nsIDOMSVGAnimatedInteger>
+nsSVGInteger::ToDOMAnimatedInteger(nsSVGElement *aSVGElement)
+{
   nsRefPtr<DOMAnimatedInteger> domAnimatedInteger =
     sSVGAnimatedIntegerTearoffTable.GetTearoff(this);
   if (!domAnimatedInteger) {
@@ -123,8 +130,7 @@ nsSVGInteger::ToDOMAnimatedInteger(nsIDOMSVGAnimatedInteger **aResult,
     sSVGAnimatedIntegerTearoffTable.AddTearoff(this, domAnimatedInteger);
   }
 
-  domAnimatedInteger.forget(aResult);
-  return NS_OK;
+  return domAnimatedInteger.forget();
 }
 
 nsSVGInteger::DOMAnimatedInteger::~DOMAnimatedInteger()
