@@ -9,7 +9,7 @@ interface nsIFile;
 interface nsILoginInfo;
 interface nsIPropertyBag;
 
-[scriptable, uuid(32a4f9f1-60a8-4971-b54e-71ad661483ae)]
+[scriptable, uuid(d9fee9e2-c649-4c47-8c85-90fbbb5ccf67)]
 
 /*
  * NOTE: This interface is intended to be implemented by modules
@@ -256,4 +256,10 @@ interface nsILoginManagerStorage : nsISupports {
     * True when a master password prompt is being shown.
     */
     readonly attribute boolean uiBusy;
+
+   /**
+    * True when the master password has already been entered, and so a caller
+    * can ask for decrypted logins without triggering a prompt.
+    */
+    readonly attribute boolean isLoggedIn;
 };

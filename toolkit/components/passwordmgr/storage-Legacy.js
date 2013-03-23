@@ -469,6 +469,10 @@ LoginManagerStorage_legacy.prototype = {
         throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
     },
 
+    get isLoggedIn() {
+        throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+    },
+
 
 
 

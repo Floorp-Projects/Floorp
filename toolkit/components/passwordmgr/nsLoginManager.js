@@ -500,6 +500,14 @@ LoginManager.prototype = {
 
 
     /*
+     * isLoggedIn
+     */
+    get isLoggedIn() {
+        return this._storage.isLoggedIn;
+    },
+
+
+    /*
      * getLoginSavingEnabled
      *
      * Check to see if user has disabled saving logins for the host.
