@@ -40,54 +40,6 @@ using mozilla::crashreporter::LSPAnnotate;
 
 //-------------------------------------------------------------------------
 
-static bool PeekUIMessage(MSG* aMsg)
-{
-  // For avoiding deadlock between our process and plugin process by
-  // mouse wheel messages, we're handling actually when we receive one of
-  // following internal messages which is posted by native mouse wheel message
-  // handler. Any other events, especially native modifier key events, should
-  // not be handled between native message and posted internal message because
-  // it may make different modifier key state or mouse cursor position between
-  // them.
-  if (mozilla::widget::MouseScrollHandler::IsWaitingInternalMessage() &&
-      WinUtils::PeekMessage(aMsg, NULL, MOZ_WM_MOUSEWHEEL_FIRST,
-                            MOZ_WM_MOUSEWHEEL_LAST, PM_REMOVE)) {
-    return true;
-  }
-
-  MSG keyMsg, imeMsg, mouseMsg, *pMsg = 0;
-  bool haveKeyMsg, haveIMEMsg, haveMouseMsg;
-
-  haveKeyMsg = WinUtils::PeekMessage(&keyMsg, NULL, WM_KEYFIRST,
-                                     WM_IME_KEYLAST, PM_NOREMOVE);
-  haveIMEMsg = WinUtils::PeekMessage(&imeMsg, NULL, NS_WM_IMEFIRST,
-                                     NS_WM_IMELAST, PM_NOREMOVE);
-  haveMouseMsg = WinUtils::PeekMessage(&mouseMsg, NULL, WM_MOUSEFIRST,
-                                       WM_MOUSELAST, PM_NOREMOVE);
-
-  if (haveKeyMsg) {
-    pMsg = &keyMsg;
-  }
-  if (haveIMEMsg && (!pMsg || imeMsg.time < pMsg->time)) {
-    pMsg = &imeMsg;
-  }
-
-  if (pMsg && !mozilla::widget::IMEHandler::CanOptimizeKeyAndIMEMessages()) {
-    return false;
-  }
-
-  if (haveMouseMsg && (!pMsg || mouseMsg.time < pMsg->time)) {
-    pMsg = &mouseMsg;
-  }
-
-  if (!pMsg) {
-    return false;
-  }
-
-  return WinUtils::PeekMessage(aMsg, NULL, pMsg->message,
-                               pMsg->message, PM_REMOVE);
-}
-
 /*static*/ LRESULT CALLBACK
 nsAppShell::EventWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -226,12 +178,32 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
 
   do {
     MSG msg;
-    bool uiMessage = PeekUIMessage(&msg);
+    bool uiMessage = false;
 
-    // Give priority to keyboard and mouse messages.
-    if (uiMessage ||
-        WinUtils::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-      gotMessage = true;
+    // For avoiding deadlock between our process and plugin process by
+    // mouse wheel messages, we're handling actually when we receive one of
+    // following internal messages which is posted by native mouse wheel
+    // message handler. Any other events, especially native modifier key
+    // events, should not be handled between native message and posted
+    // internal message because it may make different modifier key state or
+    // mouse cursor position between them.
+    if (mozilla::widget::MouseScrollHandler::IsWaitingInternalMessage()) {
+      gotMessage = WinUtils::PeekMessage(&msg, NULL, MOZ_WM_MOUSEWHEEL_FIRST,
+                                         MOZ_WM_MOUSEWHEEL_LAST, PM_REMOVE);
+      NS_ASSERTION(gotMessage,
+                   "waiting internal wheel message, but it has not come");
+      uiMessage = gotMessage;
+    }
+
+    if (!gotMessage) {
+      gotMessage = WinUtils::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE);
+      uiMessage =
+        (msg.message >= WM_KEYFIRST && msg.message <= WM_IME_KEYLAST) ||
+        (msg.message >= NS_WM_IMEFIRST && msg.message <= NS_WM_IMELAST) ||
+        (msg.message >= WM_MOUSEFIRST && msg.message <= WM_MOUSELAST);
+    }
+
+    if (gotMessage) {
       if (msg.message == WM_QUIT) {
         ::PostQuitMessage(msg.wParam);
         Exit();
