@@ -93,7 +93,6 @@ js::ObjectImpl::isExtensible() const
     return !lastProperty()->hasObjectFlag(BaseShape::NOT_EXTENSIBLE);
 }
 
-
 inline uint32_t
 js::ObjectImpl::getDenseInitializedLength()
 {

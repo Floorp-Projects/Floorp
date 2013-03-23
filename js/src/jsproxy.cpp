@@ -316,6 +316,14 @@ BaseProxyHandler::isExtensible(JSObject *proxy)
 }
 
 bool
+BaseProxyHandler::preventExtensions(JSContext *cx, HandleObject proxy)
+{
+    // See above.
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_CHANGE_EXTENSIBILITY);
+    return false;
+}
+
+bool
 BaseProxyHandler::call(JSContext *cx, HandleObject proxy, unsigned argc,
                        Value *vp)
 {
@@ -649,6 +657,13 @@ bool
 DirectProxyHandler::isExtensible(JSObject *proxy)
 {
     return GetProxyTargetObject(proxy)->isExtensible();
+}
+
+bool
+DirectProxyHandler::preventExtensions(JSContext *cx, HandleObject proxy)
+{
+    RootedObject target(cx, GetProxyTargetObject(proxy));
+    return JSObject::preventExtensions(cx, target);
 }
 
 static bool
@@ -2487,6 +2502,14 @@ Proxy::iterate(JSContext *cx, HandleObject proxy, unsigned flags, MutableHandleV
         return false;
     }
     return EnumeratedIdVectorToIterator(cx, proxy, flags, props, vp);
+}
+
+bool
+Proxy::preventExtensions(JSContext *cx, HandleObject proxy)
+{
+    JS_CHECK_RECURSION(cx, return false);
+    BaseProxyHandler *handler = GetProxyHandler(proxy);
+    return handler->preventExtensions(cx, proxy);
 }
 
 bool

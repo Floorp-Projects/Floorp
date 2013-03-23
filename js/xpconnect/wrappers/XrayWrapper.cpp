@@ -1430,6 +1430,15 @@ XrayWrapper<Base, Traits>::isExtensible(JSObject *wrapper)
 
 template <typename Base, typename Traits>
 bool
+XrayWrapper<Base, Traits>::preventExtensions(JSContext *cx, JS::Handle<JSObject*> wrapper)
+{
+    // See above.
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_CHANGE_EXTENSIBILITY);
+    return false;
+}
+
+template <typename Base, typename Traits>
+bool
 XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*> wrapper,
                                                  JS::Handle<jsid> id,
                                                  js::PropertyDescriptor *desc, unsigned flags)
