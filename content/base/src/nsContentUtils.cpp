@@ -5890,7 +5890,7 @@ nsContentUtils::DispatchXULCommand(nsIContent* aTarget,
 // static
 nsresult
 nsContentUtils::WrapNative(JSContext *cx, JSObject *scope, nsISupports *native,
-                           nsWrapperCache *cache, const nsIID* aIID, jsval *vp,
+                           nsWrapperCache *cache, const nsIID* aIID, JS::Value *vp,
                            nsIXPConnectJSObjectHolder **aHolder,
                            bool aAllowWrapping)
 {
@@ -5977,7 +5977,7 @@ nsContentUtils::CreateArrayBuffer(JSContext *aCx, const nsACString& aData,
 nsresult
 nsContentUtils::CreateBlobBuffer(JSContext* aCx,
                                  const nsACString& aData,
-                                 jsval& aBlob)
+                                 JS::Value& aBlob)
 {
   uint32_t blobLen = aData.Length();
   void* blobData = moz_malloc(blobLen);
