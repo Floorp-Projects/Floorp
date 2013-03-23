@@ -790,12 +790,6 @@ JSObject::setType(js::types::TypeObject *newType)
     type_ = newType;
 }
 
-inline js::TaggedProto
-JSObject::getTaggedProto() const
-{
-    return js::TaggedProto(js::ObjectImpl::getProto());
-}
-
 inline JSObject *
 JSObject::getProto() const
 {
@@ -1325,12 +1319,6 @@ JSObject::global() const
         obj = parent;
 #endif
     return *compartment()->maybeGlobal();
-}
-
-inline JSCompartment *
-JSObject::compartment() const
-{
-    return lastProperty()->base()->compartment();
 }
 
 static inline bool
