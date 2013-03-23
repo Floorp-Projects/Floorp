@@ -497,14 +497,14 @@ HTMLBodyElement::IsEventAttributeName(nsIAtom *aName)
 // EventHandlerNonNull*, so allow passing in the type to use here.
 #define FORWARDED_EVENT_HELPER(name_, forwardto_, type_, getter_type_)         \
   NS_IMETHODIMP                                                                \
-  HTMLBodyElement::GetOn##name_(JSContext *cx, jsval *vp)                      \
+  HTMLBodyElement::GetOn##name_(JSContext *cx, JS::Value *vp)                  \
   {                                                                            \
     getter_type_ h = forwardto_::GetOn##name_();                               \
     vp->setObjectOrNull(h ? h->Callable() : nullptr);                          \
     return NS_OK;                                                              \
   }                                                                            \
   NS_IMETHODIMP                                                                \
-  HTMLBodyElement::SetOn##name_(JSContext *cx, const jsval &v)                 \
+  HTMLBodyElement::SetOn##name_(JSContext *cx, const JS::Value &v)             \
   {                                                                            \
     JSObject *obj = GetWrapper();                                              \
     if (!obj) {                                                                \
