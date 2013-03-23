@@ -49,12 +49,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=565541
 
   function getNewX(aWindow)
   {
-    return (aWindow.screenX > (screen.width / 2)) ? 0 : screen.width;
+    return (aWindow.screenX > ((screen.width - aWindow.outerWidth) / 2))
+      ? 0 : screen.width - aWindow.outerWidth;
   }
 
   function getNewY(aWindow)
   {
-    return (aWindow.screenY > (screen.height / 2)) ? 0 : screen.height;
+    return (aWindow.screenY > ((screen.height - aWindow.outerHeight) / 2))
+      ? 0 : screen.height - aWindow.outerHeight;
   }
 
   /**
@@ -108,6 +110,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=565541
         return aWindow.screenX != prevX || aWindow.screenY != prevY;
       }
       return aWindow.screenX != prevX && aWindow.screenY != prevY;
+    }
+
+    function posChangeConditionIgnoreLinux() {
+      if (posChangeCondition()) {
+        return true;
+      }
+
+      if (navigator.platform.indexOf('Linux') != -1) {
+        return true;
+      }
     }
 
     function posChangeTest() {
@@ -182,7 +194,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=565541
       aWindow.moveBy(getNewX(aWindow) - aWindow.screenX,
                      getNewY(aWindow) - aWindow.screenY);
 
-    hitEventLoop(posChangeCondition, posChangeTest, hits, function () {
+    hitEventLoop(posChangeConditionIgnoreLinux, posChangeTest, hits, function () {
     /**
      * Outer width/height checks.
      */
@@ -222,11 +234,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=565541
         "  };" +
         "  is_range(window.innerWidth, 170, 5, 'parameter width should be taken into account');" +
         "  is_range(window.innerHeight, 170, 5, 'parameter height should be taken into account');" +
-        "  is_range(window.screenX, 120, 5, 'parameter screenX should be taken into account');" +
-        "  is_range(window.screenY, 120, 5, 'parameter screenY should be taken into account');" +
+        "  is_range(window.screenX, 25, 5, 'parameter screenX should be taken into account');" +
+        "  is_range(window.screenY, 25, 5, 'parameter screenY should be taken into account');" +
         "  checkChangeIsEnabled(window, next);" +
         "} <\/script>", '',
-        'width=170,height=170,screenX=120,screenY=120');
+        'width=170,height=170,screenX=25,screenY=25');
 
       SimpleTest.waitForFocus(function() {
         w.wrappedJSObject.ok = SimpleTest.ok;

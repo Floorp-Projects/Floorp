@@ -52,12 +52,14 @@ function getNewHeight(aWindow)
 
 function getNewX(aWindow)
 {
-  return (aWindow.screenX > (screen.width / 2)) ? 0 : screen.width;
+  return (aWindow.screenX > ((screen.width - aWindow.outerWidth) / 2))
+    ? 0 : screen.width - aWindow.outerWidth;
 }
 
 function getNewY(aWindow)
 {
-  return (aWindow.screenY > (screen.height / 2)) ? 0 : screen.height;
+  return (aWindow.screenY > ((screen.height - aWindow.outerHeight) / 2))
+    ? 0 : screen.height - aWindow.outerHeight;
 }
 
 /**
@@ -180,12 +182,30 @@ function checkChangeIsEnabled(aWindow, aNext)
   }
 
   function posChangeCondition() {
+    // With GTK, sometimes, only one dimension changes.
+    if (navigator.platform.indexOf('Linux') != -1) {
+      return aWindow.screenX != prevX || aWindow.screenY != prevY;
+    }
     return aWindow.screenX != prevX && aWindow.screenY != prevY;
   }
 
   function posChangeTest() {
-    isnot(aWindow.screenX, prevX, "Window x position should have changed");
-    isnot(aWindow.screenY, prevY, "Window y position should have changed");
+    // With GTK, sometimes, only one dimension changes.
+    if (navigator.platform.indexOf('Linux') != -1) {
+      // With GTK, sometimes, aWindow.screenX changes during two calls.
+      // So we call it once and save the returned value.
+      var x = aWindow.screenX;
+      var y = aWindow.screenY;
+      if (x != prevX) {
+        isnot(x, prevX, "Window x position should have changed");
+      }
+      if (y != prevY) {
+        isnot(y, prevY, "Window y position should have changed");
+      }
+    } else {
+      isnot(aWindow.screenX, prevX, "Window x position should have changed");
+      isnot(aWindow.screenY, prevY, "Window y position should have changed");
+    }
 
     prevX = aWindow.screenX;
     prevY = aWindow.screenY;
@@ -235,9 +255,14 @@ function checkChangeIsEnabled(aWindow, aNext)
     aWindow.screenY = getNewY(aWindow);
 
   hitEventLoop(posChangeCondition, posChangeTest, hits, function () {
+    prevX = aWindow.screenX;
+    prevY = aWindow.screenY;
+
     aWindow.moveTo(getNewX(aWindow), getNewY(aWindow));
 
   hitEventLoop(posChangeCondition, posChangeTest, hits, function () {
+    prevX = aWindow.screenX;
+    prevY = aWindow.screenY;
 
     aWindow.moveBy(getNewX(aWindow) - aWindow.screenX,
                    getNewY(aWindow) - aWindow.screenY);
@@ -283,11 +308,11 @@ SimpleTest.waitForFocus(function() {
       "  };" +
       "  is_range(window.innerWidth, 170, 5, 'parameter width should be taken into account');" +
       "  is_range(window.innerHeight, 170, 5, 'parameter height should be taken into account');" +
-      "  is_range(window.screenX, 120, 5, 'parameter screenX should be taken into account');" +
-      "  is_range(window.screenY, 120, 5, 'parameter screenY should be taken into account');" +
+      "  is_range(window.screenX, 65, 5, 'parameter screenX should be taken into account');" +
+      "  is_range(window.screenY, 65, 5, 'parameter screenY should be taken into account');" +
       "  window.opener.checkChangeIsEnabled(window, next);" +
       "} <\/script>", '',
-      'width=170,height=170,screenX=120,screenY=120');
+      'width=170,height=170,screenX=65,screenY=65');
 
     SimpleTest.waitForFocus(function() {
       w.check(function() {

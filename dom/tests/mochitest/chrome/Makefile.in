@@ -59,6 +59,7 @@ MOCHITEST_CHROME_FILES = \
 		test_bug830858.xul \
 		file_bug830858.xul \
 		test_indexedSetter.html \
+		test_resize_move_windows.xul \
 		$(NULL)
 
 ifeq (WINNT,$(OS_ARCH))
@@ -66,14 +67,6 @@ MOCHITEST_CHROME_FILES += \
 		test_sizemode_attribute.xul \
 		sizemode_attribute.xul \
 		$(NULL)
-endif
-
-ifneq (Linux,$(OS_ARCH))
-MOCHITEST_CHROME_FILES += \
-		test_resize_move_windows.xul \
-		$(NULL)
-else
-$(filter disabled-on-linux-for-timeouts--bug-834716, test_resize_move_windows.xul)
 endif
 
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
