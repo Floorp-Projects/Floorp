@@ -2,12 +2,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
- /*
- * Markers
+/*
+ * selection management
  */
 
- // Y axis scroll distance that will disable this module and cancel selection
- const kDisableOnScrollDistance = 25;
+/*
+ * Current monocle image:
+ *  dimensions: 32 x 24
+ *  circle center: 16 x 14
+ *  padding top: 6
+ */
+
+// Y axis scroll distance that will disable this module and cancel selection
+const kDisableOnScrollDistance = 25;
+
+/*
+ * Markers
+ */
 
 function MarkerDragger(aMarker) {
   this._marker = aMarker;
@@ -173,7 +184,7 @@ Marker.prototype = {
   moveBy: function moveBy(aDx, aDy, aClientX, aClientY) {
     this._xPos -= aDx;
     this._yPos -= aDy;
-    let direction = (aDx < 0 || aDy < 0 ? "end" : "start");
+    let direction = (aDx >= 0 && aDy >= 0 ? "start" : "end");
     // We may swap markers in markerDragMove. If markerDragMove
     // returns true keep processing, otherwise get out of here.
     if (this._selectionHelperUI.markerDragMove(this, direction)) {
@@ -513,13 +524,21 @@ var SelectionHelperUI = {
       targetMark = this.startMark;
     else
       targetMark = this.endMark;
+
+    // Position both in the same starting location.
+    this.startMark.position(targetMark.xPos, targetMark.yPos);
+    this.endMark.position(targetMark.xPos, targetMark.yPos);
+
     // Start the selection monocle drag. SelectionHandler relies on this
     // for getting initialized. This will also trigger a message back for
     // monocle positioning. Note, markerDragMove is still on the stack in
     // this call!
-    targetMark._setPosition();
-    this.markerDragStart(targetMark);
-    this.markerDragMove(targetMark, aDirection);
+    this._sendAsyncMessage("Browser:SelectionSwitchMode", {
+      newMode: "selection",
+      change: targetMark.tag,
+      xPos: targetMark.xPos,
+      yPos: targetMark.yPos,
+    });
   },
 
   /*
@@ -839,15 +858,15 @@ var SelectionHelperUI = {
   },
 
   markerDragMove: function markerDragMove(aMarker, aDirection) {
-    let json = this._getMarkerBaseMessage();
-    json.change = aMarker.tag;
     if (aMarker.tag == "caret") {
-      // We are going to transition from caret browsing mode to selection mode
-      // on a drag. So swap the caret monocle for a start or end monocle
+      // We are going to transition from caret browsing mode to selection
+      // mode on drag. So swap the caret monocle for a start or end monocle
       // depending on the direction of the drag, and start selecting text.
       this._transitionFromCaretToSelection(aDirection);
       return false;
     }
+    let json = this._getMarkerBaseMessage();
+    json.change = aMarker.tag;
     this._sendAsyncMessage("Browser:SelectionMove", json);
     return true;
   },

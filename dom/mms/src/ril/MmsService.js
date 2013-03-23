@@ -80,6 +80,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "gMobileMessageService",
                                    "@mozilla.org/mobilemessage/mobilemessageservice;1",
                                    "nsIMobileMessageService");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gSystemMessenger",
+                                   "@mozilla.org/system-message-internal;1",
+                                   "nsISystemMessagesInternal");
+
 XPCOMUtils.defineLazyGetter(this, "MMS", function () {
   let MMS = {};
   Cu.import("resource://gre/modules/MmsPduHelper.jsm", MMS);
@@ -348,8 +352,7 @@ XPCOMUtils.defineLazyGetter(this, "gMmsTransactionHelper", function () {
      *        status, the other for wrapped PDU data for further parsing.
      */
     sendRequest: function sendRequest(method, url, istream, callback) {
-      // TODO: bug 810226 - Support of GPRS bearer for MMS transmission and
-      //                     reception
+      // TODO: bug 810226 - Support GPRS bearer for MMS transmission and reception.
 
       gMmsConnection.acquire((function (method, url, istream, callback,
                                         connected) {
@@ -934,7 +937,7 @@ MmsService.prototype = {
     if (intermediate.headers.from) {
       intermediate.sender = intermediate.headers.from.address;
     } else {
-      record.sender = "anonymous";
+      intermediate.sender = "anonymous";
     }
     intermediate.receivers = [];
     return intermediate;
@@ -995,13 +998,41 @@ MmsService.prototype = {
    *        the other parsed MMS message.
    */
   retrieveMessage: function retrieveMessage(contentLocation, callback) {
-    // TODO: bug 839436 - make DB be able to save MMS messages
     // TODO: bug 810099 - support onretrieving event
-    // TODO: bug 809832 - support customizable max incoming/outgoing message
-    //                     size.
+    // TODO: bug 809832 - support customizable max incoming/outgoing message size.
 
     let transaction = new RetrieveTransaction(contentLocation);
     transaction.run(callback);
+  },
+
+  /**
+   * A helper to broadcast the system message to launch registered apps
+   * like Costcontrol, Notification and Message app... etc.
+   *
+   * @param aName
+   *        The system message name.
+   * @param aDomMessage
+   *        The nsIDOMMozMmsMessage object.
+   */
+  broadcastMmsSystemMessage: function broadcastMmsSystemMessage(aName, aDomMessage) {
+    debug("Broadcasting the MMS system message: " + aName);
+
+    // Sadly we cannot directly broadcast the aDomMessage object
+    // because the system message mechamism will rewrap the object
+    // based on the content window, which needs to know the properties.
+    gSystemMessenger.broadcastMessage(aName, {
+      type:           aDomMessage.type,
+      id:             aDomMessage.id,
+      delivery:       aDomMessage.delivery,
+      deliveryStatus: aDomMessage.deliveryStatus,
+      sender:         aDomMessage.sender,
+      receivers:      aDomMessage.receivers,
+      timestamp:      aDomMessage.timestamp.getTime(),
+      read:           aDomMessage.read,
+      subject:        aDomMessage.subject,
+      smil:           aDomMessage.smil,
+      attachments:    aDomMessage.attachments
+    });
   },
 
   /**
@@ -1011,11 +1042,9 @@ MmsService.prototype = {
    *        The parsed MMS message object.
    */
   handleNotificationIndication: function handleNotificationIndication(notification) {
-    // TODO: bug 839436 - make DB be able to save MMS messages
-
     let url = notification.headers["x-mms-content-location"].uri;
-    // TODO: bug 810091 - don't download message twice on receiving duplicated
-    //                     notification
+    // TODO: bug 810091 - don't download message twice when receiving duplicated
+    //                    notification.
 
     let transactionId = notification.headers["x-mms-transaction-id"];
     // For X-Mms-Report-Allowed
@@ -1028,17 +1057,20 @@ MmsService.prototype = {
         let success = Components.isSuccessCode(rv);
         if (!success) {
           // At this point we could send a message to content to notify the
-          // user that storing an incoming MMS notify indication failed,
+          // user that storing an incoming MMS notification indication failed,
           // ost likely due to a full disk.
           debug("Could not store MMS " + JSON.stringify(savableMessage) +
                 ", error code " + rv);
           // Because MMSC will resend the notification indication once we don't
           // response the notification. Hope the end user will clean some space
-          // for the resended notification indication.
+          // for the resent notification indication.
           return;
         }
 
-        // Notifing new comming notification indication through notifyObservers.
+        // Broadcasting an 'sms-received' system message to open apps.
+        this.broadcastMmsSystemMessage("sms-received", domMessage);
+
+        // Notifying observers a new notification indication is coming.
         Services.obs.notifyObservers(domMessage, kMmsReceivedObserverTopic, null);
 
         let retrievalMode = RETRIEVAL_MODE_MANUAL;
@@ -1062,10 +1094,11 @@ MmsService.prototype = {
           return;
         }
 
+        // For RETRIEVAL_MODE_AUTOMATIC, proceed to retrieve MMS.
         this.retrieveMessage(url, (function responseNotify(mmsStatus,
                                                            retrievedMessage) {
-          // `The absence of the field does not indicate any default
-          // value.` So we go checking the same field in retrieved
+          // The absence of the field does not indicate any default
+          // value. So we go check the same field in the retrieved
           // message instead.
           if ((wish == null) && retrievedMessage) {
             wish = retrievedMessage.headers["x-mms-delivery-report"];
@@ -1073,11 +1106,11 @@ MmsService.prototype = {
           let reportAllowed = this.getReportAllowed(this.confSendDeliveryReport,
                                                     wish);
 
-          // Should update the retrievedStatus in databse.
+          // Should update the retrievedStatus in database.
           debug("retrievedMessage = " + JSON.stringify(retrievedMessage));
 
-          // If the mmsStatus is still MMS_PDU_STATUS_DEFERRED after retry, we
-          // should not store into database.
+          // If the mmsStatus is still MMS_PDU_STATUS_DEFERRED after retry,
+          // we should not store it into database.
           if (MMS.MMS_PDU_STATUS_RETRIEVED !== mmsStatus) {
             let transaction =
               new NotifyResponseTransaction(transactionId,
@@ -1108,7 +1141,10 @@ MmsService.prototype = {
                 return;
               }
 
-              // Notifing new retrieved MMS message through notifyObservers.
+              // Broadcasting an 'sms-received' system message to open apps.
+              this.broadcastMmsSystemMessage("sms-received", domMessage);
+
+              // Notifying observers an MMS message is received.
               Services.obs.notifyObservers(domMessage, kMmsReceivedObserverTopic, null);
             }).bind(this)
           );
@@ -1248,11 +1284,14 @@ MmsService.prototype = {
                             aIsSentSuccess ? null : DELIVERY_STATUS_ERROR,
                             function notifySetDeliveryResult(aRv, aDomMessage) {
         debug("Marking the delivery state/staus is done. Notify sent or failed.");
+        // TODO bug 832140 handle !Components.isSuccessCode(aRv)
         if (!aIsSentSuccess) {
           aRequest.notifySendMessageFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
           Services.obs.notifyObservers(aDomMessage, kMmsFailedObserverTopic, null);
           return;
         }
+
+        self.broadcastMmsSystemMessage("sms-sent", aDomMessage);
         aRequest.notifyMessageSent(aDomMessage);
         Services.obs.notifyObservers(aDomMessage, kMmsSentObserverTopic, null);
       });
@@ -1263,6 +1302,7 @@ MmsService.prototype = {
       .saveSendingMessage(savableMessage,
                           function notifySendingResult(aRv, aDomMessage) {
       debug("Saving sending message is done. Start to send.");
+      // TODO bug 832140 handle !Components.isSuccessCode(aRv)
       Services.obs.notifyObservers(aDomMessage, kMmsSendingObserverTopic, null);
       let sendTransaction;
       try {

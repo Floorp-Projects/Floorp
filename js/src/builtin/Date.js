@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/*global date_CheckThisDate: false, intl_DateTimeFormat: false, */
+/*global intl_DateTimeFormat: false, */
 
 
 var dateTimeFormatCache = new Record();
@@ -16,8 +16,7 @@ var dateTimeFormatCache = new Record();
  * Spec: ECMAScript Internationalization API Specification, 13.3.1.
  */
 function Date_toLocaleString() {
-    // Steps 1-2.
-    callFunction(date_CheckThisDate, this);
+    // Steps 1-2.  Note that valueOf enforces "this time value" restrictions.
     var x = callFunction(std_Date_valueOf, this);
     if (std_isNaN(x))
         return "Invalid Date";
@@ -54,8 +53,7 @@ function Date_toLocaleString() {
  * Spec: ECMAScript Internationalization API Specification, 13.3.2.
  */
 function Date_toLocaleDateString() {
-    // Steps 1-2.
-    callFunction(date_CheckThisDate, this);
+    // Steps 1-2.  Note that valueOf enforces "this time value" restrictions.
     var x = callFunction(std_Date_valueOf, this);
     if (std_isNaN(x))
         return "Invalid Date";
@@ -92,8 +90,7 @@ function Date_toLocaleDateString() {
  * Spec: ECMAScript Internationalization API Specification, 13.3.3.
  */
 function Date_toLocaleTimeString() {
-    // Steps 1-2.
-    callFunction(date_CheckThisDate, this);
+    // Steps 1-2.  Note that valueOf enforces "this time value" restrictions.
     var x = callFunction(std_Date_valueOf, this);
     if (std_isNaN(x))
         return "Invalid Date";

@@ -37,10 +37,10 @@ addLoadEvent(function() {
   }
   expectException(function() {
     context.createBuffer(2, 2048, 7999);
-  }, DOMException.DOM_SYNTAX_ERR);
+  }, DOMException.SYNTAX_ERR);
   expectException(function() {
     context.createBuffer(2, 2048, 96001);
-  }, DOMException.DOM_SYNTAX_ERR);
+  }, DOMException.SYNTAX_ERR);
   context.createBuffer(2, 2048, 8000);  // no exception
   context.createBuffer(2, 2048, 96000); // no exception
   SpecialPowers.clearUserPref("media.webaudio.enabled");

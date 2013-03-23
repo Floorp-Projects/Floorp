@@ -37,12 +37,6 @@ public:
   static void* GetNativeData(uint32_t aDataType);
 
   /**
-   * Returns true if our message loop can optimize the message order for
-   * a key message or an IME message.  Otherwise, false.
-   */
-  static bool CanOptimizeKeyAndIMEMessages();
-
-  /**
    * Returns true if the context or IME state is enabled.  Otherwise, false.
    */
   static bool IsIMEEnabled(const InputContext& aInputContext);

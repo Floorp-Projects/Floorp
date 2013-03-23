@@ -95,22 +95,9 @@
     var gQueue = null;
     function doTest()
     {
-      var rootDir = getRootDirectory(window.location.href);
-
-      /*
-       * When tests are packed in a .jar, we need to extract them so we 
-       * can access the specific url with a file:// protocol which appears
-       * to be required by loadURI() (at least a file without an embedded .jar)
-       */
-      var jar = getJar(rootDir);
-      if (jar) {
-        var tmpdir = extractJarToTmp(jar);
-        rootDir = "file://" + tmpdir.path + '/';
-      }
-      var url = rootDir + "scroll.html#link1";
-
       gQueue = new eventQueue();
 
+      var url = "http://mochi.test:8888/a11y/accessible/events/scroll.html#link1";
       gQueue.push(new loadTab(url));
       gQueue.push(new loadTabInBackground(url));
       gQueue.push(new switchToBackgroundTab());
@@ -119,12 +106,8 @@
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
-    if (!MAC) {
-      SimpleTest.waitForExplicitFinish();
-      openBrowserWindow(doTest);
-    } else {
-      todo(false, "Re-enable on Mac after fixing bug 835338");
-    }
+    SimpleTest.waitForExplicitFinish();
+    openBrowserWindow(doTest);
   ]]>
   </script>
 

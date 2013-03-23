@@ -4486,6 +4486,7 @@
       <xul:hbox class="statuspanel-inner">
         <xul:label class="statuspanel-label"
                    role="status"
+                   aria-live="off"
                    xbl:inherits="value=label,crop,mirror"
                    flex="1"
                    crop="end"/>

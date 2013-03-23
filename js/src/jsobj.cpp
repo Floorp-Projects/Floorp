@@ -1075,7 +1075,7 @@ JSObject::sealOrFreeze(JSContext *cx, HandleObject obj, ImmutabilityType it)
         RootedShape last(cx, EmptyShape::getInitialShape(cx, obj->getClass(),
                                                          obj->getTaggedProto(),
                                                          obj->getParent(),
-                                                         obj->getAllocKind(),
+                                                         obj->numFixedSlots(),
                                                          obj->lastProperty()->getObjectFlags()));
         if (!last)
             return false;
@@ -1724,7 +1724,7 @@ js::CloneObjectLiteral(JSContext *cx, HandleObject parent, HandleObject srcObj)
     Rooted<TypeObject*> typeObj(cx);
     typeObj = cx->global()->getOrCreateObjectPrototype(cx)->getNewType(cx, &ObjectClass);
     RootedShape shape(cx, srcObj->lastProperty());
-    return NewReshapedObject(cx, typeObj, parent, srcObj->getAllocKind(), shape);
+    return NewReshapedObject(cx, typeObj, parent, srcObj->tenuredGetAllocKind(), shape);
 }
 
 struct JSObject::TradeGutsReserved {
@@ -1794,7 +1794,7 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *aArg, JSObject *bArg,
     if (!SetClassAndProto(cx, b, aClass, aProto, false))
         return false;
 
-    if (a->sizeOfThis() == b->sizeOfThis())
+    if (a->tenuredSizeOfThis() == b->tenuredSizeOfThis())
         return true;
 
     /*
@@ -1808,7 +1808,7 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *aArg, JSObject *bArg,
             return false;
     } else {
         reserved.newbshape = EmptyShape::getInitialShape(cx, aClass, aProto, a->getParent(),
-                                                         b->getAllocKind());
+                                                         b->numFixedSlots());
         if (!reserved.newbshape)
             return false;
     }
@@ -1817,7 +1817,7 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *aArg, JSObject *bArg,
             return false;
     } else {
         reserved.newashape = EmptyShape::getInitialShape(cx, bClass, bProto, b->getParent(),
-                                                         a->getAllocKind());
+                                                         a->numFixedSlots());
         if (!reserved.newashape)
             return false;
     }
@@ -1890,7 +1890,7 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
     b->type_ = tmp;
 
     /* Don't try to swap a JSFunction for a plain function JSObject. */
-    JS_ASSERT_IF(a->isFunction(), a->sizeOfThis() == b->sizeOfThis());
+    JS_ASSERT_IF(a->isFunction(), a->tenuredSizeOfThis() == b->tenuredSizeOfThis());
 
     /*
      * Regexp guts are more complicated -- we would need to migrate the
@@ -1909,8 +1909,8 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
     JS_ASSERT(!a->isArrayBuffer() && !b->isArrayBuffer());
 
     /* Trade the guts of the objects. */
-    const size_t size = a->sizeOfThis();
-    if (size == b->sizeOfThis()) {
+    const size_t size = a->tenuredSizeOfThis();
+    if (size == b->tenuredSizeOfThis()) {
         /*
          * If the objects are the same size, then we make no assumptions about
          * whether they have dynamically allocated slots and instead just copy
@@ -2009,8 +2009,8 @@ JSObject::swap(JSContext *cx, HandleObject a, HandleObject b)
     AutoMarkInDeadZone adc2(b->zone());
 
     // Ensure swap doesn't cause a finalizer to not be run.
-    JS_ASSERT(IsBackgroundFinalized(a->getAllocKind()) ==
-              IsBackgroundFinalized(b->getAllocKind()));
+    JS_ASSERT(IsBackgroundFinalized(a->tenuredGetAllocKind()) ==
+              IsBackgroundFinalized(b->tenuredGetAllocKind()));
     JS_ASSERT(a->compartment() == b->compartment());
 
     unsigned r = NotifyGCPreSwap(a, b);
@@ -2362,9 +2362,6 @@ JSObject::growSlots(JSContext *cx, HandleObject obj, uint32_t oldCount, uint32_t
      */
     JS_ASSERT(newCount < NELEMENTS_LIMIT);
 
-    size_t oldSize = Probes::objectResizeActive() ? obj->computedSizeOfThisSlotsElements() : 0;
-    size_t newSize = oldSize + (newCount - oldCount) * sizeof(Value);
-
     /*
      * If we are allocating slots for an object whose type is always created
      * by calling 'new' on a particular script, bump the GC kind for that
@@ -2394,8 +2391,6 @@ JSObject::growSlots(JSContext *cx, HandleObject obj, uint32_t oldCount, uint32_t
         if (!obj->slots)
             return false;
         Debug_SetSlotRangeToCrashOnTouch(obj->slots, newCount);
-        if (Probes::objectResizeActive())
-            Probes::resizeObject(cx, obj, oldSize, newSize);
         return true;
     }
 
@@ -2412,9 +2407,6 @@ JSObject::growSlots(JSContext *cx, HandleObject obj, uint32_t oldCount, uint32_t
     /* Changes in the slots of global objects can trigger recompilation. */
     if (changed && obj->isGlobal())
         types::MarkObjectStateChange(cx, obj);
-
-    if (Probes::objectResizeActive())
-        Probes::resizeObject(cx, obj, oldSize, newSize);
 
     return true;
 }
@@ -2433,14 +2425,9 @@ JSObject::shrinkSlots(JSContext *cx, HandleObject obj, uint32_t oldCount, uint32
     if (obj->isCall())
         return;
 
-    size_t oldSize = Probes::objectResizeActive() ? obj->computedSizeOfThisSlotsElements() : 0;
-    size_t newSize = oldSize - (oldCount - newCount) * sizeof(Value);
-
     if (newCount == 0) {
         js_free(obj->slots);
         obj->slots = NULL;
-        if (Probes::objectResizeActive())
-            Probes::resizeObject(cx, obj, oldSize, newSize);
         return;
     }
 
@@ -2456,9 +2443,6 @@ JSObject::shrinkSlots(JSContext *cx, HandleObject obj, uint32_t oldCount, uint32
     /* Watch for changes in global object slots, as for growSlots. */
     if (changed && obj->isGlobal())
         types::MarkObjectStateChange(cx, obj);
-
-    if (Probes::objectResizeActive())
-        Probes::resizeObject(cx, obj, oldSize, newSize);
 }
 
 /* static */ bool
@@ -2655,15 +2639,10 @@ JSObject::maybeDensifySparseElements(JSContext *cx, HandleObject obj)
 bool
 JSObject::growElements(JSContext *cx, unsigned newcap)
 {
-    size_t oldSize = Probes::objectResizeActive() ? computedSizeOfThisSlotsElements() : 0;
-
     if (!growElements(&cx->zone()->allocator, newcap)) {
         JS_ReportOutOfMemory(cx);
         return false;
     }
-
-    if (Probes::objectResizeActive())
-        Probes::resizeObject(cx, this, oldSize, computedSizeOfThisSlotsElements());
 
     return true;
 }
@@ -2741,8 +2720,6 @@ JSObject::shrinkElements(JSContext *cx, unsigned newcap)
     uint32_t oldcap = getDenseCapacity();
     JS_ASSERT(newcap <= oldcap);
 
-    size_t oldSize = Probes::objectResizeActive() ? computedSizeOfThisSlotsElements() : 0;
-
     /* Don't shrink elements below the minimum capacity. */
     if (oldcap <= SLOT_CAPACITY_MIN || !hasDynamicElements())
         return;
@@ -2758,9 +2735,6 @@ JSObject::shrinkElements(JSContext *cx, unsigned newcap)
 
     newheader->capacity = newcap;
     elements = newheader->elements();
-
-    if (Probes::objectResizeActive())
-        Probes::resizeObject(cx, this, oldSize, computedSizeOfThisSlotsElements());
 }
 
 static JSObject *

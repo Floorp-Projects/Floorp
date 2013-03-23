@@ -3375,14 +3375,18 @@ Tab.prototype = {
         viewportW = screenW;
         viewportH = screenH;
       }
+      console.log("Use autosize: " + viewportW + "x" + viewportH);
     } else {
       viewportW = metadata.width;
       viewportH = metadata.height;
 
       // If (scale * width) < device-width, increase the width (bug 561413).
       let maxInitialZoom = metadata.defaultZoom || metadata.maxZoom;
-      if (maxInitialZoom && viewportW)
+      if (maxInitialZoom && viewportW) {
         viewportW = Math.max(viewportW, screenW / maxInitialZoom);
+        console.log("Use max: " + viewportW + " or " + (screenW / maxInitialZoom));
+      }
+      console.log("Use max: " + viewportW + " or " + (screenW / maxInitialZoom));
 
       let validW = viewportW > 0;
       let validH = viewportH > 0;
@@ -5155,14 +5159,12 @@ var PopupBlockerObserver = {
     if (!browser.pageReport.reported) {
       if (Services.prefs.getBoolPref("privacy.popups.showBrowserMessage")) {
         let brandShortName = Strings.brand.GetStringFromName("brandShortName");
-        let message;
         let popupCount = browser.pageReport.length;
 
         let strings = Strings.browser;
-        if (popupCount > 1)
-          message = strings.formatStringFromName("popup.warningMultiple", [brandShortName, popupCount], 2);
-        else
-          message = strings.formatStringFromName("popup.warning", [brandShortName], 1);
+        let message = PluralForm.get(popupCount, strings.GetStringFromName("popup.message"))
+                                .replace("#1", brandShortName)
+                                .replace("#2", popupCount);
 
         let buttons = [
           {

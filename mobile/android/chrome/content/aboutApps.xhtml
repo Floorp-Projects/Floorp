@@ -20,8 +20,9 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <title>&aboutApps.title2;</title>
-    <meta name="viewport" content="width=480; initial-scale=.6667; user-scalable=0" />
+    <meta name="viewport" content="width=device-width; user-scalable=0" />
     <link rel="icon" type="image/png" sizes="64x64" href="chrome://branding/content/favicon64.png" />
+    <link rel="stylesheet" type="text/css" href="chrome://browser/skin/aboutBase.css" media="all" />
     <link rel="stylesheet" type="text/css" href="chrome://browser/skin/aboutApps.css" media="all" />
     <script type="text/javascript;version=1.8" src="chrome://browser/content/aboutApps.js"></script>
   </head>
@@ -35,9 +36,9 @@
   
     <div class="header">
       <div>&aboutApps.header;</div>
-      <img src="chrome://browser/skin/images/addons-amo-hdpi.png" class="icon" pref="app.marketplaceURL" onclick="openLink(this);"/>
+      <div id="header-button" role="button" pref="app.marketplaceURL" onclick="openLink(this);"/>
     </div>
-    <div id="main-container">
+    <div id="main-container" class="list">
       <div id="noapps" class="hidden">
         &aboutApps.noApps.pre;<a id="marketplaceURL" pref="app.marketplaceURL">&aboutApps.noApps.middle3;</a>&aboutApps.noApps.post;
       </div>

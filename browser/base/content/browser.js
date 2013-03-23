@@ -416,7 +416,6 @@ var gPopupBlockerObserver = {
       if (gPrefService.getBoolPref("privacy.popups.showBrowserMessage")) {
         var brandBundle = document.getElementById("bundle_brand");
         var brandShortName = brandBundle.getString("brandShortName");
-        var message;
         var popupCount = gBrowser.pageReport.length;
 #ifdef XP_WIN
         var popupButtonText = gNavigatorBundle.getString("popupWarningButton");
@@ -425,10 +424,10 @@ var gPopupBlockerObserver = {
         var popupButtonText = gNavigatorBundle.getString("popupWarningButtonUnix");
         var popupButtonAccesskey = gNavigatorBundle.getString("popupWarningButtonUnix.accesskey");
 #endif
-        if (popupCount > 1)
-          message = gNavigatorBundle.getFormattedString("popupWarningMultiple", [brandShortName, popupCount]);
-        else
-          message = gNavigatorBundle.getFormattedString("popupWarning", [brandShortName]);
+        var messageBase = gNavigatorBundle.getString("popupWarning.message");
+        var message = PluralForm.get(popupCount, messageBase)
+                                .replace("#1", brandShortName)
+                                .replace("#2", popupCount);
 
         var notificationBox = gBrowser.getNotificationBox();
         var notification = notificationBox.getNotificationWithValue("popup-blocked");

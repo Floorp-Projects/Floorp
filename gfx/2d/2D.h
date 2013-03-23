@@ -919,7 +919,7 @@ public:
 
   static void SetGlobalEventRecorder(DrawEventRecorder *aRecorder);
 
-#ifdef USE_SKIA
+#ifdef USE_SKIA_GPU
   static TemporaryRef<DrawTarget>
     CreateSkiaDrawTargetForFBO(unsigned int aFBOID, GrContext *aContext, const IntSize &aSize, SurfaceFormat aFormat);
 #endif
