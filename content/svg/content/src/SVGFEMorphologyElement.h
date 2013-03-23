@@ -6,28 +6,35 @@
 #ifndef mozilla_dom_SVGFEMorphologyElement_h
 #define mozilla_dom_SVGFEMorphologyElement_h
 
+#include "nsSVGEnum.h"
 #include "nsSVGFilters.h"
+#include "nsSVGNumberPair.h"
+#include "nsSVGString.h"
+
+nsresult NS_NewSVGFEMorphologyElement(nsIContent **aResult,
+                                      already_AddRefed<nsINodeInfo> aNodeInfo);
 
 namespace mozilla {
 namespace dom {
 
-typedef nsSVGFE nsSVGFEMorphologyElementBase;
+typedef nsSVGFE SVGFEMorphologyElementBase;
 
-class nsSVGFEMorphologyElement : public nsSVGFEMorphologyElementBase,
-                                 public nsIDOMSVGFEMorphologyElement
+class SVGFEMorphologyElement : public SVGFEMorphologyElementBase,
+                               public nsIDOMSVGElement
 {
-  friend nsresult NS_NewSVGFEMorphologyElement(nsIContent **aResult,
-                                               already_AddRefed<nsINodeInfo> aNodeInfo);
+  friend nsresult (::NS_NewSVGFEMorphologyElement(nsIContent **aResult,
+                                                  already_AddRefed<nsINodeInfo> aNodeInfo));
 protected:
-  nsSVGFEMorphologyElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-    : nsSVGFEMorphologyElementBase(aNodeInfo) {}
+  SVGFEMorphologyElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+    : SVGFEMorphologyElementBase(aNodeInfo)
+  {
+    SetIsDOMBinding();
+  }
+  virtual JSObject* WrapNode(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 
 public:
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
-
-  // FE Base
-  NS_FORWARD_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES(nsSVGFEMorphologyElementBase::)
 
   virtual nsresult Filter(nsSVGFilterInstance* aInstance,
                           const nsTArray<const Image*>& aSources,
@@ -44,19 +51,22 @@ public:
   virtual nsIntRect ComputeChangeBBox(const nsTArray<nsIntRect>& aSourceChangeBoxes,
           const nsSVGFilterInstance& aInstance);
 
-  // Morphology
-  NS_DECL_NSIDOMSVGFEMORPHOLOGYELEMENT
-
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFEMorphologyElementBase::)
+  NS_FORWARD_NSIDOMSVGELEMENT(SVGFEMorphologyElementBase::)
 
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
-  virtual nsXPCClassInfo* GetClassInfo();
-
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+  // WebIDL
+  already_AddRefed<nsIDOMSVGAnimatedString> In1();
+  already_AddRefed<nsIDOMSVGAnimatedEnumeration> Operator();
+  already_AddRefed<nsIDOMSVGAnimatedNumber> RadiusX();
+  already_AddRefed<nsIDOMSVGAnimatedNumber> RadiusY();
+  void SetRadius(float rx, float ry);
+
 protected:
   void GetRXY(int32_t *aRX, int32_t *aRY, const nsSVGFilterInstance& aInstance);
   nsIntRect InflateRect(const nsIntRect& aRect, const nsSVGFilterInstance& aInstance);
