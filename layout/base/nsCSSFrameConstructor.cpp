@@ -9893,11 +9893,11 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
                       "Why is someone creating garbage anonymous content");
 
     nsRefPtr<nsStyleContext> styleContext;
+    TreeMatchContext::AutoFlexItemStyleFixupSkipper
+      flexItemStyleFixupSkipper(aState.mTreeMatchContext);
     if (anonymousItems[i].mStyleContext) {
       styleContext = anonymousItems[i].mStyleContext.forget();
     } else {
-      TreeMatchContext::AutoFlexItemStyleFixupSkipper
-        flexItemStyleFixupSkipper(aState.mTreeMatchContext);
       styleContext = ResolveStyleContext(aFrame, content, &aState);
     }
 

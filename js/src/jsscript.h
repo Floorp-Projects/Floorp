@@ -952,6 +952,8 @@ class JSScript : public js::gc::Cell
 
     void finalize(js::FreeOp *fop);
 
+    JS::Zone *zone() const { return tenuredZone(); }
+
     static inline void writeBarrierPre(js::RawScript script);
     static inline void writeBarrierPost(js::RawScript script, void *addr);
 

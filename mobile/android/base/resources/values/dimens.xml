@@ -60,7 +60,6 @@
     <dimen name="text_selection_handle_shadow">2dp</dimen>
     <dimen name="validation_message_height">50dp</dimen>
     <dimen name="validation_message_margin_top">6dp</dimen>
-    <dimen name="widget_padding">8dp</dimen>
     <dimen name="forward_default_offset">-11dip</dimen>
     <dimen name="addressbar_offset_left">90dp</dimen>
     <dimen name="addressbar_offset_left_noforward">50dip</dimen>

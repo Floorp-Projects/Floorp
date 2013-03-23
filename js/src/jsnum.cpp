@@ -445,6 +445,26 @@ IsNumber(const Value &v)
     return v.isNumber() || (v.isObject() && v.toObject().hasClass(&NumberClass));
 }
 
+JS_ALWAYS_INLINE bool
+num_nop(JSContext *cx, CallArgs args)
+{
+    JS_ASSERT(IsNumber(args.thisv()));
+    args.rval().setUndefined();
+    return true;
+}
+
+JSBool
+js::num_CheckThisNumber(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    // CallNonGenericMethod will handle proxies correctly and throw exceptions
+    // in the right circumstances, but will report date_CheckThisNumber as the
+    // function name in the message. We need a better solution:
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=844677
+    return CallNonGenericMethod<IsNumber, num_nop>(cx, args);
+}
+
 inline double
 Extract(const Value &v)
 {
@@ -612,6 +632,7 @@ num_toString(JSContext *cx, unsigned argc, Value *vp)
     return CallNonGenericMethod<IsNumber, num_toString_impl>(cx, args);
 }
 
+#if !ENABLE_INTL_API
 JS_ALWAYS_INLINE bool
 num_toLocaleString_impl(JSContext *cx, CallArgs args)
 {
@@ -744,6 +765,7 @@ num_toLocaleString(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     return CallNonGenericMethod<IsNumber, num_toLocaleString_impl>(cx, args);
 }
+#endif
 
 JS_ALWAYS_INLINE bool
 num_valueOf_impl(JSContext *cx, CallArgs args)
@@ -892,11 +914,19 @@ static JSFunctionSpec number_methods[] = {
     JS_FN(js_toSource_str,       num_toSource,          0, 0),
 #endif
     JS_FN(js_toString_str,       num_toString,          1, 0),
-    JS_FN(js_toLocaleString_str, num_toLocaleString,    0, 0),
     JS_FN(js_valueOf_str,        js_num_valueOf,        0, 0),
     JS_FN("toFixed",             num_toFixed,           1, 0),
     JS_FN("toExponential",       num_toExponential,     1, 0),
     JS_FN("toPrecision",         num_toPrecision,       1, 0),
+
+    // This must be at the end because of bug 853075: functions listed after
+    // self-hosted methods aren't available in self-hosted code.
+#if ENABLE_INTL_API
+         {js_toLocaleString_str, {NULL, NULL},           0,0, "Number_toLocaleString"},
+#else
+    JS_FN(js_toLocaleString_str, num_toLocaleString,     0,0),
+#endif
+
     JS_FS_END
 };
 
@@ -1044,6 +1074,10 @@ js::InitRuntimeNumberState(JSRuntime *rt)
 
     number_constants[NC_MIN_VALUE].dval = MOZ_DOUBLE_MIN_VALUE();
 
+    // XXX If ENABLE_INTL_API becomes true all the time at some point,
+    //     js::InitRuntimeNumberState is no longer fallible, and we should
+    //     change its return type.
+#if !ENABLE_INTL_API
     /* Copy locale-specific separators into the runtime strings. */
     const char *thousandsSeparator, *decimalPoint, *grouping;
 #ifdef HAVE_LOCALECONV
@@ -1087,9 +1121,11 @@ js::InitRuntimeNumberState(JSRuntime *rt)
 
     js_memcpy(storage, grouping, groupingSize);
     rt->numGrouping = grouping;
+#endif
     return true;
 }
 
+#if !ENABLE_INTL_API
 void
 js::FinishRuntimeNumberState(JSRuntime *rt)
 {
@@ -1100,6 +1136,7 @@ js::FinishRuntimeNumberState(JSRuntime *rt)
     char *storage = const_cast<char *>(rt->thousandsSeparator);
     js_free(storage);
 }
+#endif
 
 JSObject *
 js_InitNumberClass(JSContext *cx, HandleObject obj)

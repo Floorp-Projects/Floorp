@@ -87,19 +87,9 @@ SettingsLock.prototype = {
                 if (DEBUG) debug("MOZSETTINGS-SET-WARNING: " + key + " is not in the database.\n");
               }
 
-              let setReq;
-              if (typeof(info.settings[key]) != 'object') {
-                let obj = {settingName: key, defaultValue: defaultValue, userValue: userValue};
-                if (DEBUG) debug("store1: " + JSON.stringify(obj));
-                setReq = store.put(obj);
-              } else {
-                //Workaround for cloning issues
-                let defaultVal = JSON.parse(JSON.stringify(defaultValue));
-                let userVal = JSON.parse(JSON.stringify(userValue));
-                let obj = {settingName: key, defaultValue: defaultVal, userValue: userVal};
-                if (DEBUG) debug("store2: " + JSON.stringify(obj));
-                setReq = store.put(obj);
-              }
+              let obj = {settingName: key, defaultValue: defaultValue, userValue: userValue};
+              if (DEBUG) debug("store1: " + JSON.stringify(obj));
+              let setReq = store.put(obj);
 
               setReq.onsuccess = function() {
                 lock._isBusy = false;
@@ -119,7 +109,7 @@ SettingsLock.prototype = {
                   Services.DOMRequest.fireError(request, setReq.error.name)
                 }
               };
-            }
+            };
             checkKeyRequest.onerror = function(event) {
               if (!request.error) {
                 Services.DOMRequest.fireError(request, checkKeyRequest.error.name)
@@ -133,7 +123,7 @@ SettingsLock.prototype = {
 
           getReq.onsuccess = function(event) {
             if (DEBUG) debug("Request for '" + info.name + "' successful. " +
-                  "Record count: " + event.target.result.length);
+                             "Record count: " + event.target.result.length);
 
             if (event.target.result.length == 0) {
               if (DEBUG) debug("MOZSETTINGS-GET-WARNING: " + info.name + " is not in the database.\n");
@@ -200,6 +190,31 @@ SettingsLock.prototype = {
     }
   },
 
+  _serializePreservingBinaries: function _serializePreservingBinaries(aObject) {
+    // We need to serialize settings objects, otherwise they can change between
+    // the set() call and the enqueued request being processed. We can't simply
+    // parse(stringify(obj)) because that breaks things like Blobs, Files and
+    // Dates, so we use stringify's replacer and parse's reviver parameters to
+    // preserve binaries.
+    let binaries = Object.create(null);
+    let stringified = JSON.stringify(aObject, function(key, value) {
+      let kind = ObjectWrapper.getObjectKind(value);
+      if (kind == "file" || kind == "blob" || kind == "date") {
+        let uuid = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator)
+                                                      .generateUUID().toString();
+        binaries[uuid] = value;
+        return uuid;
+      }
+      return value;
+    });
+    return JSON.parse(stringified, function(key, value) {
+      if (value in binaries) {
+        return binaries[value];
+      }
+      return value;
+    });
+  },
+
   set: function set(aSettings) {
     if (!this._open) {
       dump("Settings lock not open!\n");
@@ -209,7 +224,7 @@ SettingsLock.prototype = {
     if (this._settingsManager.hasWritePrivileges) {
       let req = Services.DOMRequest.createRequest(this._settingsManager._window);
       if (DEBUG) debug("send: " + JSON.stringify(aSettings));
-      let settings = JSON.parse(JSON.stringify(aSettings));
+      let settings = this._serializePreservingBinaries(aSettings);
       this._requests.enqueue({request: req, intent: "set", settings: settings});
       this.createTransactionAndProcess();
       return req;
@@ -311,7 +326,6 @@ SettingsManager.prototype = {
 
     switch (aMessage.name) {
       case "Settings:Change:Return:OK":
-        if (DEBUG) debug("Settings:Change:Return:OK");
         if (this._onsettingchange || this._callbacks) {
           if (DEBUG) debug('data:' + msg.key + ':' + msg.value + '\n');
 

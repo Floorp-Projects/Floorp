@@ -8,13 +8,14 @@
 
 #include "txExprResult.h"
 #include "nsIDOMXPathResult.h"
-#include "nsIDocument.h"
 #include "nsStubMutationObserver.h"
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
 #include "nsWeakPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Attributes.h"
+
+class nsIDocument;
 
 // {662f2c9a-c7cd-4cab-9349-e733df5a838c}
 #define NS_IXPATHRESULT_IID \

@@ -533,38 +533,53 @@ public:
     return false;
   }
 
-  virtual JSString *obj_toString(JSContext *cx, JSObject *wrapper) MOZ_OVERRIDE;
+  virtual JSString *obj_toString(JSContext *cx,
+                                 JS::Handle<JSObject*> wrapper) MOZ_OVERRIDE;
   virtual void finalize(JSFreeOp *fop, JSObject *proxy) MOZ_OVERRIDE;
 
   // Fundamental traps
-  virtual bool getPropertyDescriptor(JSContext* cx, JSObject* proxy,
-                                     jsid id, JSPropertyDescriptor* desc,
+  virtual bool getPropertyDescriptor(JSContext* cx,
+                                     JS::Handle<JSObject*> proxy,
+                                     JS::Handle<jsid> id,
+                                     JSPropertyDescriptor* desc,
                                      unsigned flags) MOZ_OVERRIDE;
-  virtual bool getOwnPropertyDescriptor(JSContext* cx, JSObject* proxy,
-                                        jsid id, JSPropertyDescriptor* desc,
+  virtual bool getOwnPropertyDescriptor(JSContext* cx,
+                                        JS::Handle<JSObject*> proxy,
+                                        JS::Handle<jsid> id,
+                                        JSPropertyDescriptor* desc,
                                         unsigned flags) MOZ_OVERRIDE;
-  virtual bool defineProperty(JSContext* cx, JSObject* proxy,
-                              jsid id, JSPropertyDescriptor* desc) MOZ_OVERRIDE;
-  virtual bool getOwnPropertyNames(JSContext *cx, JSObject *proxy,
+  virtual bool defineProperty(JSContext* cx,
+                              JS::Handle<JSObject*> proxy,
+                              JS::Handle<jsid> id,
+                              JSPropertyDescriptor* desc) MOZ_OVERRIDE;
+  virtual bool getOwnPropertyNames(JSContext *cx,
+                                   JS::Handle<JSObject*> proxy,
                                    JS::AutoIdVector &props) MOZ_OVERRIDE;
-  virtual bool delete_(JSContext *cx, JSObject *proxy, jsid id,
+  virtual bool delete_(JSContext *cx, JS::Handle<JSObject*> proxy,
+                       JS::Handle<jsid> id,
                        bool *bp) MOZ_OVERRIDE;
-  virtual bool enumerate(JSContext *cx, JSObject *proxy,
+  virtual bool enumerate(JSContext *cx, JS::Handle<JSObject*> proxy,
                          JS::AutoIdVector &props) MOZ_OVERRIDE;
 
   // Derived traps
-  virtual bool has(JSContext *cx, JSObject *proxy, jsid id,
-                   bool *bp) MOZ_OVERRIDE;
-  virtual bool hasOwn(JSContext *cx, JSObject *proxy, jsid id,
-                      bool *bp) MOZ_OVERRIDE;
-  virtual bool get(JSContext *cx, JSObject *wrapper, JSObject *receiver,
-                   jsid id, JS::Value *vp) MOZ_OVERRIDE;
-  virtual bool set(JSContext *cx, JSObject *proxy, JSObject *receiver,
-                   jsid id, bool strict, JS::Value *vp) MOZ_OVERRIDE;
-  virtual bool keys(JSContext *cx, JSObject *proxy,
+  virtual bool has(JSContext *cx, JS::Handle<JSObject*> proxy,
+                   JS::Handle<jsid> id, bool *bp) MOZ_OVERRIDE;
+  virtual bool hasOwn(JSContext *cx, JS::Handle<JSObject*> proxy,
+                      JS::Handle<jsid> id, bool *bp) MOZ_OVERRIDE;
+  virtual bool get(JSContext *cx, JS::Handle<JSObject*> proxy,
+                   JS::Handle<JSObject*> receiver,
+                   JS::Handle<jsid> id,
+                   JS::MutableHandle<JS::Value> vp) MOZ_OVERRIDE;
+  virtual bool set(JSContext *cx, JS::Handle<JSObject*> proxy,
+                   JS::Handle<JSObject*> receiver,
+                   JS::Handle<jsid> id,
+                   bool strict,
+                   JS::MutableHandle<JS::Value> vp) MOZ_OVERRIDE;
+  virtual bool keys(JSContext *cx, JS::Handle<JSObject*> proxy,
                     JS::AutoIdVector &props) MOZ_OVERRIDE;
-  virtual bool iterate(JSContext *cx, JSObject *proxy, unsigned flags,
-                       JS::Value *vp) MOZ_OVERRIDE;
+  virtual bool iterate(JSContext *cx, JS::Handle<JSObject*> proxy,
+                       unsigned flags,
+                       JS::MutableHandle<JS::Value> vp) MOZ_OVERRIDE;
 
   static nsOuterWindowProxy singleton;
 
@@ -592,7 +607,7 @@ protected:
 
 
 JSString *
-nsOuterWindowProxy::obj_toString(JSContext *cx, JSObject *proxy)
+nsOuterWindowProxy::obj_toString(JSContext *cx, JS::Handle<JSObject*> proxy)
 {
     MOZ_ASSERT(js::IsProxy(proxy));
 
@@ -609,8 +624,9 @@ nsOuterWindowProxy::finalize(JSFreeOp *fop, JSObject *proxy)
 }
 
 bool
-nsOuterWindowProxy::getPropertyDescriptor(JSContext* cx, JSObject* proxy,
-                                          jsid id,
+nsOuterWindowProxy::getPropertyDescriptor(JSContext* cx,
+                                          JS::Handle<JSObject*> proxy,
+                                          JS::Handle<jsid> id,
                                           JSPropertyDescriptor* desc,
                                           unsigned flags)
 {
@@ -630,8 +646,9 @@ nsOuterWindowProxy::getPropertyDescriptor(JSContext* cx, JSObject* proxy,
 }
 
 bool
-nsOuterWindowProxy::getOwnPropertyDescriptor(JSContext* cx, JSObject* proxy,
-                                             jsid id,
+nsOuterWindowProxy::getOwnPropertyDescriptor(JSContext* cx,
+                                             JS::Handle<JSObject*> proxy,
+                                             JS::Handle<jsid> id,
                                              JSPropertyDescriptor* desc,
                                              unsigned flags)
 {
@@ -649,8 +666,10 @@ nsOuterWindowProxy::getOwnPropertyDescriptor(JSContext* cx, JSObject* proxy,
 }
 
 bool
-nsOuterWindowProxy::defineProperty(JSContext* cx, JSObject* proxy,
-                                   jsid id, JSPropertyDescriptor* desc)
+nsOuterWindowProxy::defineProperty(JSContext* cx,
+                                   JS::Handle<JSObject*> proxy,
+                                   JS::Handle<jsid> id,
+                                   JSPropertyDescriptor* desc)
 {
   int32_t index = GetArrayIndexFromId(cx, id);
   if (IsArrayIndex(index)) {
@@ -665,7 +684,8 @@ nsOuterWindowProxy::defineProperty(JSContext* cx, JSObject* proxy,
 }
 
 bool
-nsOuterWindowProxy::getOwnPropertyNames(JSContext *cx, JSObject *proxy,
+nsOuterWindowProxy::getOwnPropertyNames(JSContext *cx,
+                                        JS::Handle<JSObject*> proxy,
                                         JS::AutoIdVector &props)
 {
   // Just our indexed stuff followed by our "normal" own property names.
@@ -681,8 +701,8 @@ nsOuterWindowProxy::getOwnPropertyNames(JSContext *cx, JSObject *proxy,
 }
 
 bool
-nsOuterWindowProxy::delete_(JSContext *cx, JSObject *proxy, jsid id,
-                            bool *bp)
+nsOuterWindowProxy::delete_(JSContext *cx, JS::Handle<JSObject*> proxy,
+                            JS::Handle<jsid> id, bool *bp)
 {
   if (nsCOMPtr<nsIDOMWindow> frame = GetSubframeWindow(cx, proxy, id)) {
     // Reject (which means throw if strict, else return false) the delete.
@@ -702,7 +722,7 @@ nsOuterWindowProxy::delete_(JSContext *cx, JSObject *proxy, jsid id,
 }
 
 bool
-nsOuterWindowProxy::enumerate(JSContext *cx, JSObject *proxy,
+nsOuterWindowProxy::enumerate(JSContext *cx, JS::Handle<JSObject*> proxy,
                               JS::AutoIdVector &props)
 {
   // Just our indexed stuff followed by our "normal" own property names.
@@ -718,7 +738,8 @@ nsOuterWindowProxy::enumerate(JSContext *cx, JSObject *proxy,
 }
 
 bool
-nsOuterWindowProxy::has(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
+nsOuterWindowProxy::has(JSContext *cx, JS::Handle<JSObject*> proxy,
+                        JS::Handle<jsid> id, bool *bp)
 {
   if (nsCOMPtr<nsIDOMWindow> frame = GetSubframeWindow(cx, proxy, id)) {
     *bp = true;
@@ -729,7 +750,8 @@ nsOuterWindowProxy::has(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 }
 
 bool
-nsOuterWindowProxy::hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
+nsOuterWindowProxy::hasOwn(JSContext *cx, JS::Handle<JSObject*> proxy,
+                           JS::Handle<jsid> id, bool *bp)
 {
   if (nsCOMPtr<nsIDOMWindow> frame = GetSubframeWindow(cx, proxy, id)) {
     *bp = true;
@@ -740,17 +762,19 @@ nsOuterWindowProxy::hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 }
 
 bool
-nsOuterWindowProxy::get(JSContext *cx, JSObject *wrapper, JSObject *receiver,
-                        jsid id, JS::Value *vp)
+nsOuterWindowProxy::get(JSContext *cx, JS::Handle<JSObject*> proxy,
+                        JS::Handle<JSObject*> receiver,
+                        JS::Handle<jsid> id,
+                        JS::MutableHandle<JS::Value> vp)
 {
   if (id == nsDOMClassInfo::sWrappedJSObject_id &&
       xpc::AccessCheck::isChrome(js::GetContextCompartment(cx))) {
-    *vp = JS::ObjectValue(*wrapper);
+    vp.set(JS::ObjectValue(*proxy));
     return true;
   }
 
   bool found;
-  if (!GetSubframeWindow(cx, wrapper, id, vp, found)) {
+  if (!GetSubframeWindow(cx, proxy, id, vp.address(), found)) {
     return false;
   }
   if (found) {
@@ -758,12 +782,15 @@ nsOuterWindowProxy::get(JSContext *cx, JSObject *wrapper, JSObject *receiver,
   }
   // Else fall through to js::Wrapper
 
-  return js::Wrapper::get(cx, wrapper, receiver, id, vp);
+  return js::Wrapper::get(cx, proxy, receiver, id, vp);
 }
 
 bool
-nsOuterWindowProxy::set(JSContext *cx, JSObject *proxy, JSObject *receiver,
-                        jsid id, bool strict, JS::Value *vp)
+nsOuterWindowProxy::set(JSContext *cx, JS::Handle<JSObject*> proxy,
+                        JS::Handle<JSObject*> receiver,
+                        JS::Handle<jsid> id,
+                        bool strict,
+                        JS::MutableHandle<JS::Value> vp)
 {
   int32_t index = GetArrayIndexFromId(cx, id);
   if (IsArrayIndex(index)) {
@@ -778,7 +805,7 @@ nsOuterWindowProxy::set(JSContext *cx, JSObject *proxy, JSObject *receiver,
 }
 
 bool
-nsOuterWindowProxy::keys(JSContext *cx, JSObject *proxy,
+nsOuterWindowProxy::keys(JSContext *cx, JS::Handle<JSObject*> proxy,
                          JS::AutoIdVector &props)
 {
   // BaseProxyHandler::keys seems to do what we want here: call
@@ -787,8 +814,8 @@ nsOuterWindowProxy::keys(JSContext *cx, JSObject *proxy,
 }
 
 bool
-nsOuterWindowProxy::iterate(JSContext *cx, JSObject *proxy, unsigned flags,
-                            JS::Value *vp)
+nsOuterWindowProxy::iterate(JSContext *cx, JS::Handle<JSObject*> proxy,
+                            unsigned flags, JS::MutableHandle<JS::Value> vp)
 {
   // BaseProxyHandler::iterate seems to do what we want here: fall
   // back on the property names returned from keys() and enumerate().
@@ -858,13 +885,14 @@ class nsChromeOuterWindowProxy : public nsOuterWindowProxy
 public:
   nsChromeOuterWindowProxy() : nsOuterWindowProxy() {}
 
-  virtual JSString *obj_toString(JSContext *cx, JSObject *wrapper);
+  virtual JSString *obj_toString(JSContext *cx, JS::Handle<JSObject*> wrapper);
 
   static nsChromeOuterWindowProxy singleton;
 };
 
 JSString *
-nsChromeOuterWindowProxy::obj_toString(JSContext *cx, JSObject *proxy)
+nsChromeOuterWindowProxy::obj_toString(JSContext *cx,
+                                       JS::Handle<JSObject*> proxy)
 {
     MOZ_ASSERT(js::IsProxy(proxy));
 

@@ -1634,6 +1634,13 @@ abstract public class BrowserApp extends GeckoApp
         }).execute();
     }
 
+    @Override
+    protected NotificationClient makeNotificationClient() {
+        // The service is local to Fennec, so we can use it to keep
+        // Fennec alive during downloads.
+        return new ServiceNotificationClient(getApplicationContext());
+    }
+
     private void resetFeedbackLaunchCount() {
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override

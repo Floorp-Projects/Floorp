@@ -5625,7 +5625,7 @@ function BrowserSetForcedCharacterSet(aCharset)
   gBrowser.docShell.charset = aCharset;
   // Save the forced character-set
   if (!PrivateBrowsingUtils.isWindowPrivate(window))
-    PlacesUtils.history.setCharsetForURI(getWebNavigation().currentURI, aCharset);
+    PlacesUtils.setCharsetForURI(getWebNavigation().currentURI, aCharset);
   BrowserCharsetReload();
 }
 
@@ -7464,7 +7464,6 @@ function focusNextFrame(event) {
   if (element.ownerDocument == document)
     focusAndSelectUrlBar();
 }
-
 let BrowserChromeTest = {
   _cb: null,
   _ready: false,

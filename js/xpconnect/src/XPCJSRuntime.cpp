@@ -2467,27 +2467,21 @@ PreserveWrapper(JSContext *cx, JSObject *obj)
     if (!ccx.IsValid())
         return false;
 
-    JSObject *obj2 = nullptr;
-    nsIXPConnectWrappedNative *wrapper =
-        XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj, nullptr, &obj2);
+    if (!IS_WRAPPER_CLASS(js::GetObjectClass(obj)))
+        return mozilla::dom::TryPreserveWrapper(obj);
+
     nsISupports *supports = nullptr;
+    if (IS_WN_WRAPPER_OBJECT(obj))
+        supports = XPCWrappedNative::Get(obj)->Native();
+    else
+        supports = static_cast<nsISupports*>(xpc_GetJSPrivate(obj));
 
-    if (wrapper) {
-        supports = wrapper->Native();
-    } else if (obj2) {
-        supports = static_cast<nsISupports*>(xpc_GetJSPrivate(obj2));
+    // For pre-Paris DOM bindings objects, we only support Node.
+    if (nsCOMPtr<nsINode> node = do_QueryInterface(supports)) {
+        nsContentUtils::PreserveWrapper(supports, node);
+        return true;
     }
-
-    if (supports) {
-        // For pre-Paris DOM bindings objects, we only support Node.
-        if (nsCOMPtr<nsINode> node = do_QueryInterface(supports)) {
-            nsContentUtils::PreserveWrapper(supports, node);
-            return true;
-        }
-        return false;
-    }
-
-    return mozilla::dom::TryPreserveWrapper(obj);
+    return false;
 }
 
 static nsresult

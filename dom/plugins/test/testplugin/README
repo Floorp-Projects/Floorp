@@ -421,3 +421,10 @@ x86-only on some OSes:
 
 * The .enableFPExceptions() method will enable floating-point exceptions,
   as evil plugins or extensions might do.
+
+== HiDPI Mode ==
+
+* queryContentsScaleFactor()
+Returns the contents scale factor. On platforms without support for this query
+always returns 1.0 (a double value). Likewise on hardware without HiDPI mode
+support.

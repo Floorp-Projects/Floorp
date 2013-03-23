@@ -151,7 +151,7 @@ public class GeckoAppShell
     private static boolean mLocationHighAccuracy = false;
 
     static ActivityHandlerHelper sActivityHelper = new ActivityHandlerHelper();
-    static NotificationServiceClient sNotificationClient;
+    static NotificationClient sNotificationClient;
 
     /* The Android-side API: API methods that Android calls */
 
@@ -1170,11 +1170,11 @@ public class GeckoAppShell
             }});
     }
 
-    public static void setNotificationClient(NotificationServiceClient client) {
+    public static void setNotificationClient(NotificationClient client) {
         if (sNotificationClient == null) {
             sNotificationClient = client;
         } else {
-            Log.w(LOGTAG, "Notification client already set");
+            Log.d(LOGTAG, "Notification client already set");
         }
     }
 

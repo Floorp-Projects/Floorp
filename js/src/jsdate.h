@@ -65,6 +65,15 @@ js_DateGetMinutes(JSContext *cx, JSRawObject obj);
 extern JS_FRIEND_API(int)
 js_DateGetSeconds(JSRawObject obj);
 
+/**
+ * Checks that the this value provided meets the requirements for "this Date
+ * object" in ES5.1, 15.9.5, and throws a TypeError if not.
+ *
+ * Usage: callFunction(date_CheckThisDate, this)
+ */
+extern JSBool
+date_CheckThisDate(JSContext *cx, unsigned argc, js::Value *vp);
+
 /* Date constructor native. Exposed only so the JIT can know its address. */
 JSBool
 js_Date(JSContext *cx, unsigned argc, js::Value *vp);
