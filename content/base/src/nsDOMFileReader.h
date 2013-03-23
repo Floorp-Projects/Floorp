@@ -48,7 +48,7 @@ public:
 
   // nsIJSNativeInitializer
   NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* cx, JSObject* obj,
-                        uint32_t argc, jsval* argv);
+                        uint32_t argc, JS::Value* argv);
 
   // FileIOObject overrides
   NS_IMETHOD DoAbort(nsAString& aEvent);

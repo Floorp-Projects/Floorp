@@ -202,7 +202,7 @@ public:
   }
 
   nsresult DispatchAsyncMessage(const nsAString& aMessageName,
-                                const jsval& aObject,
+                                const JS::Value& aObject,
                                 JSContext* aCx,
                                 uint8_t aArgc);
   nsresult DispatchAsyncMessageInternal(const nsAString& aMessage,
