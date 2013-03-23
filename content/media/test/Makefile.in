@@ -320,7 +320,7 @@ MOCHITEST_FILES += \
 		test_chaining.html \
 		$(NULL)
 # Temporarily disabled for bug 754860
-#		test_bug726904.html \
+#		test_bug726904.html
 else
 MOCHITEST_FILES += \
 		test_can_play_type_no_ogg.html \
