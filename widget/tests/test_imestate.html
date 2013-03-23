@@ -240,9 +240,20 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription)
           case "MozIMEFocusOut":
             mozIMEFocusOutCount++;
             IMEHasFocus = false;
-            is_not(gUtils.IMEStatus, aTest.expectedEnabled,
-                   aDescription + ": " + aTest.description +
-                     ", MozIMEFocusOut event must be fired before IME state is updated");
+            var changingStatus = !(aIsEditable && aTest.expectedEnabled == gUtils.IME_STATUS_ENABLED);
+            if (aTest.toDesignModeEditor) {
+              is(gUtils.IME_STATUS_ENABLED, aTest.expectedEnabled,
+                 aDescription + ": " + aTest.description +
+                   ", MozIMEFocusOut event must be fired after IME state is updated");
+            } else if (changingStatus) {
+              isnot(gUtils.IMEStatus, aTest.expectedEnabled,
+                    aDescription + ": " + aTest.description +
+                      ", MozIMEFocusOut event must be fired before IME state is updated");
+            } else {
+              is(gUtils.IMEStatus, aTest.expectedEnabled,
+                 aDescription + ": " + aTest.description +
+                   ", MozIMEFocusOut event must be fired with expected IME state if the state isn't being changed");
+            }
             break;
         }
       }
@@ -258,9 +269,7 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription)
           if (aTest.expectedEnabled == gUtils.IME_STATUS_ENABLED || aTest.expectedEnabled == gUtils.IME_STATUS_PASSWORD) {
             ok(mozIMEFocusInCount > 0,
                aDescription + ": " + aTest.description + ", MozIMEFocusIn event should be fired");
-            var toDesignModeEditor = (document.activeElement.contentDocument &&
-                                      (document.activeElement.contentDocument.designMode == "on"));
-            if (aInDesignMode && !toDesignModeEditor) {
+            if (aInDesignMode && !aTest.toDesignModeEditor) {
               is(mozIMEFocusOutCount, 0,
                  aDescription + ": " + aTest.description +
                    ", MozIMEFocusOut event shouldn't be fired in designMode since focus isn't moved from another editor");
@@ -637,6 +646,7 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription)
     { id: "designModeEditor",
       description: "designMode editor",
       focusable: true,
+      toDesignModeEditor: true,
       expectedEnabled: gUtils.IME_STATUS_ENABLED },
   ];
 
