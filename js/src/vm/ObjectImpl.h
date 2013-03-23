@@ -1112,6 +1112,8 @@ class ObjectImpl : public gc::Cell
 
     inline bool isExtensible() const;
 
+    // Attempt to change the [[Extensible]] bit on |obj| to false.  Callers
+    // must ensure that |obj| is currently extensible before calling this!
     static bool
     preventExtensions(JSContext *cx, Handle<ObjectImpl*> obj);
 

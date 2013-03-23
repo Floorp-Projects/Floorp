@@ -1031,7 +1031,14 @@ Shape::setObjectParent(JSContext *cx, JSObject *parent, TaggedProto proto, Shape
 /* static */ bool
 js::ObjectImpl::preventExtensions(JSContext *cx, Handle<ObjectImpl*> obj)
 {
-    JS_ASSERT(obj->isExtensible());
+    MOZ_ASSERT(obj->isExtensible(),
+               "Callers must ensure |obj| is extensible before calling "
+               "preventExtensions");
+
+    if (obj->isProxy()) {
+        RootedObject object(cx, obj->asObjectPtr());
+        return js::Proxy::preventExtensions(cx, object);
+    }
 
     RootedObject self(cx, obj->asObjectPtr());
 
