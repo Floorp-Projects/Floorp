@@ -69,7 +69,7 @@ command. Consider filing a bug for this issue.
 '''.lstrip()
 
 MODULE_ERROR = r'''
-The error occured in code that was called by the mach command. This is either
+The error occurred in code that was called by the mach command. This is either
 a bug in the called code itself or in the way that mach is calling it.
 
 You should consider filing a bug for this issue.
