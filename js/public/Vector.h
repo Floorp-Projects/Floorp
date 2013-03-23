@@ -396,7 +396,7 @@ class Vector : private AllocPolicy
     /* mutators */
 
     /* Given that the Vector is empty and has no inline storage, grow to |capacity|. */
-    bool initCapacity(size_t capacity);
+    bool initCapacity(size_t request);
 
     /* If reserve(length() + N) succeeds, the N next appends are guaranteed to succeed. */
     bool reserve(size_t request);
@@ -704,19 +704,19 @@ Vector<T,N,AP>::growStorageBy(size_t incr)
 
 template <class T, size_t N, class AP>
 inline bool
-Vector<T,N,AP>::initCapacity(size_t capacity)
+Vector<T,N,AP>::initCapacity(size_t request)
 {
     JS_ASSERT(empty());
     JS_ASSERT(usingInlineStorage());
-    if (capacity == 0)
+    if (request == 0)
         return true;
-    T *newbuf = reinterpret_cast<T *>(this->malloc_(capacity * sizeof(T)));
+    T *newbuf = reinterpret_cast<T *>(this->malloc_(request * sizeof(T)));
     if (!newbuf)
         return false;
     mBegin = newbuf;
-    mCapacity = capacity;
+    mCapacity = request;
 #ifdef DEBUG
-    mReserved = capacity;
+    mReserved = request;
 #endif
     return true;
 }
