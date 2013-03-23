@@ -1006,6 +1006,7 @@ struct ObjectOps;
 class Shape;
 
 class NewObjectCache;
+class TaggedProto;
 
 inline Value
 ObjectValue(ObjectImpl &obj);
@@ -1130,6 +1131,20 @@ class ObjectImpl : public gc::Cell
     void checkShapeConsistency() { }
 #endif
 
+    Shape *
+    replaceWithNewEquivalentShape(JSContext *cx, Shape *existingShape, Shape *newShape = NULL);
+
+    enum GenerateShape {
+        GENERATE_NONE,
+        GENERATE_SHAPE
+    };
+
+    bool setFlag(JSContext *cx, /*BaseShape::Flag*/ uint32_t flag,
+                 GenerateShape generateShape = GENERATE_NONE);
+    bool clearFlag(JSContext *cx, /*BaseShape::Flag*/ uint32_t flag);
+
+    bool toDictionaryMode(JSContext *cx);
+
   private:
     /*
      * Get internal pointers to the range of values starting at start and
@@ -1207,10 +1222,18 @@ class ObjectImpl : public gc::Cell
      */
 
   public:
+    inline js::TaggedProto getTaggedProto() const;
+
     Shape * lastProperty() const {
         MOZ_ASSERT(shape_);
         return shape_;
     }
+
+    bool generateOwnShape(JSContext *cx, js::Shape *newShape = NULL) {
+        return replaceWithNewEquivalentShape(cx, lastProperty(), newShape);
+    }
+
+    inline JSCompartment *compartment() const;
 
     inline bool isNative() const;
 
