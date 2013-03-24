@@ -1883,6 +1883,12 @@ public:
   static nsIDocument* GetFullscreenAncestor(nsIDocument* aDoc);
 
   /**
+   * Returns true if aWin and the current pointer lock document
+   * have common scriptable top window.
+   */
+  static bool IsInPointerLockContext(nsIDOMWindow* aWin);
+
+  /**
    * Returns the time limit on handling user input before
    * nsEventStateManager::IsHandlingUserInput() stops returning true.
    * This enables us to detect long running user-generated event handlers.
