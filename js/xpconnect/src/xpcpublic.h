@@ -52,6 +52,9 @@ TransplantObjectWithWrapper(JSContext *cx,
 JSObject *
 GetXBLScope(JSContext *cx, JSObject *contentScope);
 
+bool
+IsSandboxPrototypeProxy(JSObject *obj);
+
 } /* namespace xpc */
 
 #define XPCONNECT_GLOBAL_FLAGS                                                \
