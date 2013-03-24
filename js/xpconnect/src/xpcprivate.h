@@ -1706,6 +1706,7 @@ public:
     nsAutoPtr<JSObject2JSObjectMap> mWaiverWrapperMap;
 
     bool IsXBLScope() { return mIsXBLScope; }
+    bool AllowXBLScope() { return mAllowXBLScope; }
 
 protected:
     virtual ~XPCWrappedNativeScope();
@@ -1743,6 +1744,22 @@ private:
     nsAutoPtr<DOMExpandoMap> mDOMExpandoMap;
 
     bool mIsXBLScope;
+
+    // There are certain cases where we explicitly disallow XBL scopes: they
+    // can be prefed off, or we might be running in a remote XUL domain where
+    // we want to run all XBL in content to maintain compat. We separately
+    // track the result of this decision (mAllowXBLScope), from the decision
+    // of whether to actually _use_ an XBL scope (mUseXBLScope), which depends
+    // on the type of global and whether the compartment is system principal
+    // or not.
+    //
+    // This distinction is useful primarily because it tells us whether we
+    // can infer the XBL-ness of a caller by checking that the caller is
+    // running in an XBL scope, or whether we need to check the XBL bit on the
+    // script. The XBL bit is nasty, so we want to consult it only if we
+    // absolutely have to, which should generally happen only in unsupported
+    // pref configurations.
+    bool mAllowXBLScope;
     bool mUseXBLScope;
 };
 
