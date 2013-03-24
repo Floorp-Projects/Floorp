@@ -6370,8 +6370,23 @@ JSObject* nsGlobalWindow::CallerGlobal()
     return nullptr;
   }
 
-  return JS_GetScriptedGlobal(cx);
+  // If somebody does sameOriginIframeWindow.postMessage(...), they probably
+  // expect the .source attribute of the resulting message event to be |window|
+  // rather than |sameOriginIframeWindow|, even though the transparent wrapper
+  // semantics of same-origin access will cause us to be in the iframe's cx at
+  // the time of the call. So we do some nasty poking in the JS engine and
+  // retrieve the global corresponding to the innermost scripted frame. Then,
+  // we verify that its principal is subsumed by the subject principal. If it
+  // isn't, something is screwy, and we want to clamp to the cx global.
+  JSObject *scriptedGlobal = JS_GetScriptedGlobal(cx);
+  JSObject *cxGlobal = JS_GetGlobalForScopeChain(cx);
+  if (!xpc::AccessCheck::subsumes(cxGlobal, scriptedGlobal)) {
+    NS_WARNING("Something nasty is happening! Applying countermeasures...");
+    return cxGlobal;
+  }
+  return scriptedGlobal;
 }
+
 
 nsGlobalWindow*
 nsGlobalWindow::CallerInnerWindow()
