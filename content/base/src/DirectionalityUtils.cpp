@@ -497,8 +497,11 @@ private:
     // and remove the text node from the map
     nsINode* oldTextNode = static_cast<Element*>(aData);
     Element* rootNode = aEntry->GetKey();
-    nsINode* newTextNode = WalkDescendantsSetDirectionFromText(rootNode, true,
-                                                               oldTextNode);
+    nsINode* newTextNode = nullptr;
+    if (rootNode->HasDirAuto()) {
+      newTextNode = WalkDescendantsSetDirectionFromText(rootNode, true,
+                                                        oldTextNode);
+    }
     if (newTextNode) {
       nsTextNodeDirectionalityMap::AddEntryToMap(newTextNode, rootNode);
     } else {
