@@ -2218,6 +2218,15 @@ JS_GetGlobalForCompartmentOrNull(JSContext *cx, JSCompartment *c);
 extern JS_PUBLIC_API(JSObject *)
 JS_GetGlobalForScopeChain(JSContext *cx);
 
+/*
+ * This method returns the global corresponding to the most recent scripted
+ * frame, which may not match the cx's current compartment. This is extremely
+ * dangerous, because it can bypass compartment security invariants in subtle
+ * ways. To use it safely, the caller must perform a subsequent security
+ * check. There is currently only one consumer of this function in Gecko, and
+ * it should probably stay that way. If you'd like to use it, please consult
+ * the XPConnect module owner first.
+ */
 extern JS_PUBLIC_API(JSObject *)
 JS_GetScriptedGlobal(JSContext *cx);
 
