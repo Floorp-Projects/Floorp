@@ -214,7 +214,7 @@ private:
 
   // Weak refs to our nsISVGPoint items. The items are friends and take care
   // of clearing our pointer to them when they die.
-  nsTArray<nsISVGPoint*> mItems;
+  FallibleTArray<nsISVGPoint*> mItems;
 
   // Strong ref to our element to keep it alive. We hold this not only for
   // ourself, but also for our nsISVGPoint items too.

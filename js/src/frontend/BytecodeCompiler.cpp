@@ -312,8 +312,9 @@ frontend::ParseScript(JSContext *cx, HandleObject scopeChain,
 // Compile a JS function body, which might appear as the value of an event
 // handler attribute in an HTML <INPUT> tag, or in a Function() constructor.
 bool
-frontend::CompileFunctionBody(JSContext *cx, HandleFunction fun, CompileOptions options,
-                              const AutoNameVector &formals, const jschar *chars, size_t length)
+frontend::CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileOptions options,
+                              const AutoNameVector &formals, const jschar *chars, size_t length,
+                              bool isAsmJSRecompile)
 {
     if (!CheckLength(cx, length))
         return false;
@@ -384,12 +385,6 @@ frontend::CompileFunctionBody(JSContext *cx, HandleFunction fun, CompileOptions 
             return false;
     }
 
-    BytecodeEmitter funbce(/* parent = */ NULL, &parser, funbox, script,
-                           /* evalCaller = */ NullPtr(),
-                           /* hasGlobalScope = */ false, options.lineno);
-    if (!funbce.init())
-        return false;
-
     if (!NameFunctions(cx, pn))
         return false;
 
@@ -400,19 +395,36 @@ frontend::CompileFunctionBody(JSContext *cx, HandleFunction fun, CompileOptions 
         pn = fn->pn_body;
     }
 
+    bool generateBytecode = true;
 #ifdef JS_ION
-    /*
-     * Do asm.js compilation once the parse tree has been fully assembled but
-     * before emitting since we need to know whether to emit JSOP_LINKASMJS.
-     */
-    if (fn->pn_funbox->useAsm && !CompileAsmJS(cx, parser.tokenStream, fn, script))
-        return false;
+    JS_ASSERT_IF(isAsmJSRecompile, fn->pn_funbox->useAsm);
+    if (fn->pn_funbox->useAsm && !isAsmJSRecompile) {
+        RootedFunction moduleFun(cx);
+        if (!CompileAsmJS(cx, parser.tokenStream, fn, options,
+                          ss, /* bufStart = */ 0, /* bufEnd = */ length,
+                          &moduleFun))
+            return false;
+
+        if (moduleFun) {
+            funbox->object = moduleFun;
+            fun.set(moduleFun); // replace the existing function with the LinkAsmJS native
+            generateBytecode = false;
+        }
+    }
 #endif
 
-    if (!SetSourceMap(cx, parser.tokenStream, ss, script))
-        return false;
+    if (generateBytecode) {
+        BytecodeEmitter funbce(/* parent = */ NULL, &parser, funbox, script,
+                               /* evalCaller = */ NullPtr(),
+                               /* hasGlobalScope = */ false, options.lineno);
+        if (!funbce.init())
+            return false;
 
-    if (!EmitFunctionScript(cx, &funbce, pn))
+        if (!EmitFunctionScript(cx, &funbce, pn))
+            return false;
+    }
+
+    if (!SetSourceMap(cx, parser.tokenStream, ss, script))
         return false;
 
     if (!sct.complete())

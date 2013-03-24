@@ -437,6 +437,7 @@ FunctionBox::FunctionBox(JSContext *cx, ObjectBox* traceListHead, JSFunction *fu
     bindings(),
     bufStart(0),
     bufEnd(0),
+    asmStart(0),
     ndefaults(0),
     inWith(false),                  // initialized below
     inGenexpLambda(false),
@@ -818,7 +819,7 @@ Parser<FullParseHandler>::standaloneFunctionBody(HandleFunction fun, const AutoN
         return null();
     handler.setFunctionBox(fn, *funbox);
 
-    ParseContext<FullParseHandler> funpc(this, *funbox, 0, /* staticLevel = */ 0);
+    ParseContext<FullParseHandler> funpc(this, *funbox, /* staticLevel = */ 0, /* bodyid = */ 0);
     if (!funpc.init())
         return null();
 
@@ -2166,6 +2167,7 @@ Parser<ParseHandler>::maybeParseDirective(Node pn, bool *cont)
         } else if (directive == context->names().useAsm) {
             if (pc->sc->isFunctionBox()) {
                 pc->sc->asFunctionBox()->useAsm = true;
+                pc->sc->asFunctionBox()->asmStart = handler.getPosition(pn).begin;
             } else {
                 if (!report(ParseWarning, false, pn, JSMSG_USE_ASM_DIRECTIVE_FAIL))
                     return false;

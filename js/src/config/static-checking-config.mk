@@ -26,3 +26,11 @@ DEHYDRA_FLAGS = -fplugin=$(DEHYDRA_PATH) $(DEHYDRA_ARGS)
 ifdef DEHYDRA_PATH
 OS_CXXFLAGS += $(DEHYDRA_FLAGS)
 endif
+
+ifdef ENABLE_CLANG_PLUGIN
+# Load the clang plugin from the mozilla topsrcdir. This implies that the clang
+# plugin is only usable if we're building js/src under mozilla/, though.
+CLANG_PLUGIN := $(DEPTH)/../../build/clang-plugin/$(DLL_PREFIX)clang-plugin$(DLL_SUFFIX)
+OS_CXXFLAGS += -fplugin=$(CLANG_PLUGIN)
+OS_CFLAGS += -fplugin=$(CLANG_PLUGIN)
+endif

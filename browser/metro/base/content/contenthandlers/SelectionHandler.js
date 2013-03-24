@@ -429,8 +429,12 @@ var SelectionHandler = {
     this._clearTimers();
     this._cache = null;
     this._contentWindow = null;
+    this._targetElement = null;
     this.selectedText = "";
     this._selectionMoveActive = false;
+    this._contentOffset = null;
+    this._domWinUtils = null;
+    this._targetIsEditable = false;
   },
 
   /*
@@ -457,11 +461,11 @@ var SelectionHandler = {
     // Updates this._cache content selection position data which we send over
     // to SelectionHelperUI. Note updateUIMarkerRects will fail if there isn't
     // any selection in the page. This can happen when we start a monocle drag
-    // but haven't dragged enough to create selection. Just return. 
+    // but haven't dragged enough to create selection. Just return.
     try {
       this._updateUIMarkerRects(selection);
     } catch (ex) {
-      Util.dumpLn(ex.message);
+      Util.dumpLn("_updateUIMarkerRects:", ex.message);
       return;
     }
 

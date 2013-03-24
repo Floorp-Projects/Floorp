@@ -387,14 +387,6 @@ class JSScript : public js::gc::Cell
     // function; otherwise the enclosing scope
     js::HeapPtrObject   enclosingScopeOrOriginalFunction_;
 
-  public:
-    // We should be able to remove this soon.
-    js::HeapPtr<JSObject> asmJS;
-
-#if JS_BYTES_PER_WORD == 4
-    uint32_t        PADDING32;
-#endif
-
     // 32-bit fields.
 
   public:

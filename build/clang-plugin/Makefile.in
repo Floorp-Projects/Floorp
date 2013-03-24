@@ -1,0 +1,40 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+CXX      := @CXX@
+CXXFLAGS := @CXXFLAGS@
+LDFLAGS  := @LDFLAGS@
+VPATH		 := @srcdir@
+
+# Helper for end
+NULL :=
+
+CPPSRCS := \
+	clang-plugin.cpp \
+	$(NULL)
+
+TESTSRCS := \
+	TestMustOverride.cpp \
+	$(NULL)
+
+OBJS := $(patsubst %.cpp,%.o,$(CPPSRCS))
+TESTS := $(patsubst %.cpp,test-%,$(TESTSRCS))
+
+PLUGIN := libclang-plugin.so
+
+all: $(PLUGIN) $(TESTS)
+
+$(OBJS): %.o: %.cpp Makefile
+	$(CXX) -o $@ -c $(CXXFLAGS) $<
+
+$(PLUGIN): $(OBJS)
+	rm -f $@
+	$(CXX) -shared -o $@ $(CXXFLAGS) $(LDFLAGS) $(OBJS)
+
+TESTFLAGS := -fsyntax-only -Xclang -verify \
+	-Xclang -load -Xclang $(CURDIR)/$(PLUGIN) \
+	-Xclang -add-plugin -Xclang moz-check
+
+$(TESTS): test-%: tests/%.cpp $(PLUGIN)
+	$(CXX) $(TESTFLAGS) $<
