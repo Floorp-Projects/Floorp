@@ -18,6 +18,7 @@
 #define mozilla_imagelib_RasterImage_h_
 
 #include "Image.h"
+#include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "imgIContainer.h"
 #include "nsIProperties.h"
@@ -27,20 +28,18 @@
 #include "imgFrame.h"
 #include "nsThreadUtils.h"
 #include "DiscardTracker.h"
-#include "nsISupportsImpl.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/WeakPtr.h"
-#include "mozilla/Mutex.h"
+#include "mozilla/RefPtr.h"
 #include "gfx2DGlue.h"
 #ifdef DEBUG
   #include "imgIContainerDebug.h"
 #endif
 
 class nsIInputStream;
-class nsIThreadPool;
 
 #define NS_RASTERIMAGE_CID \
 { /* 376ff2c1-9bf6-418a-b143-3340c00112f7 */         \
@@ -388,22 +387,24 @@ private:
   };
 
   /**
+   * DecodeWorker keeps a linked list of DecodeRequests to keep track of the
+   * images it needs to decode.
+   *
    * Each RasterImage has a pointer to one or zero heap-allocated
    * DecodeRequests.
    */
-  struct DecodeRequest
+  struct DecodeRequest : public LinkedListElement<DecodeRequest>,
+                         public RefCounted<DecodeRequest>
   {
     DecodeRequest(RasterImage* aImage)
       : mImage(aImage)
       , mBytesToDecode(0)
-      , mRequestStatus(REQUEST_INACTIVE)
       , mChunkCount(0)
       , mAllocatedNewFrame(false)
+      , mIsASAP(false)
     {
       mStatusTracker = aImage->mStatusTracker->CloneForRecording();
     }
-
-    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DecodeRequest)
 
     // The status tracker that is associated with a given decode request, to
     // ensure their lifetimes are linked.
@@ -412,15 +413,6 @@ private:
     RasterImage* mImage;
 
     uint32_t mBytesToDecode;
-
-    enum DecodeRequestStatus
-    {
-      REQUEST_INACTIVE,
-      REQUEST_PENDING,
-      REQUEST_ACTIVE,
-      REQUEST_WORK_DONE,
-      REQUEST_STOPPED
-    } mRequestStatus;
 
     /* Keeps track of how much time we've burned decoding this particular decode
      * request. */
@@ -432,31 +424,35 @@ private:
     /* True if a new frame has been allocated, but DecodeSomeData hasn't yet
      * been called to flush data to it */
     bool mAllocatedNewFrame;
+
+    /* True if we need to handle this decode as soon as possible. */
+    bool mIsASAP;
   };
 
   /*
-   * DecodePool is a singleton class we use when decoding large images.
+   * DecodeWorker is a singleton class we use when decoding large images.
    *
    * When we wish to decode an image larger than
-   * image.mem.max_bytes_for_sync_decode, we call DecodePool::RequestDecode()
+   * image.mem.max_bytes_for_sync_decode, we call DecodeWorker::RequestDecode()
    * for the image.  This adds the image to a queue of pending requests and posts
-   * the DecodePool singleton to the event queue, if it's not already pending
+   * the DecodeWorker singleton to the event queue, if it's not already pending
    * there.
    *
-   * When the DecodePool is run from the event queue, it decodes the image (and
+   * When the DecodeWorker is run from the event queue, it decodes the image (and
    * all others it's managing) in chunks, periodically yielding control back to
    * the event loop.
+   *
+   * An image being decoded may have one of two priorities: normal or ASAP.  ASAP
+   * images are always decoded before normal images.  (We currently give ASAP
+   * priority to images which appear onscreen but are not yet decoded.)
    */
-  class DecodePool : public nsIObserver
+  class DecodeWorker : public nsRunnable
   {
   public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIOBSERVER
-
-    static DecodePool* Singleton();
+    static DecodeWorker* Singleton();
 
     /**
-     * Ask the DecodePool to asynchronously decode this image.
+     * Ask the DecodeWorker to asynchronously decode this image.
      */
     void RequestDecode(RasterImage* aImg);
 
@@ -467,13 +463,23 @@ private:
     void DecodeABitOf(RasterImage* aImg);
 
     /**
-     * Ask the DecodePool to stop decoding this image.  Internally, we also
+     * Give this image ASAP priority; it will be decoded before all non-ASAP
+     * images.  You can call MarkAsASAP before or after you call RequestDecode
+     * for the image, but if you MarkAsASAP before you call RequestDecode, you
+     * still need to call RequestDecode.
+     *
+     * StopDecoding() resets the image's ASAP flag.
+     */
+    void MarkAsASAP(RasterImage* aImg);
+
+    /**
+     * Ask the DecodeWorker to stop decoding this image.  Internally, we also
      * call this function when we finish decoding an image.
      *
-     * Since the DecodePool keeps raw pointers to RasterImages, make sure you
+     * Since the DecodeWorker keeps raw pointers to RasterImages, make sure you
      * call this before a RasterImage is destroyed!
      */
-    static void StopDecoding(RasterImage* aImg);
+    void StopDecoding(RasterImage* aImg);
 
     /**
      * Synchronously decode the beginning of the image until we run out of
@@ -485,56 +491,56 @@ private:
      */
     nsresult DecodeUntilSizeAvailable(RasterImage* aImg);
 
-    virtual ~DecodePool();
+    NS_IMETHOD Run();
+
+    virtual ~DecodeWorker();
 
   private: /* statics */
-    static StaticRefPtr<DecodePool> sSingleton;
+    static StaticRefPtr<DecodeWorker> sSingleton;
 
   private: /* methods */
-    DecodePool();
+    DecodeWorker()
+      : mPendingInEventLoop(false)
+    {}
+
+    /* Post ourselves to the event loop if we're not currently pending. */
+    void EnsurePendingInEventLoop();
+
+    /* Add the given request to the appropriate list of decode requests, but
+     * don't ensure that we're pending in the event loop. */
+    void AddDecodeRequest(DecodeRequest* aRequest, uint32_t bytesToDecode);
 
     enum DecodeType {
-      DECODE_TYPE_UNTIL_TIME,
-      DECODE_TYPE_UNTIL_SIZE,
-      DECODE_TYPE_UNTIL_DONE_BYTES
+      DECODE_TYPE_NORMAL,
+      DECODE_TYPE_UNTIL_SIZE
     };
 
     /* Decode some chunks of the given image.  If aDecodeType is UNTIL_SIZE,
      * decode until we have the image's size, then stop. If bytesToDecode is
-     * non-0, at most bytesToDecode bytes will be decoded. if aDecodeType is
-     * UNTIL_DONE_BYTES, decode until all bytesToDecode bytes are decoded.
-     */
+     * non-0, at most bytesToDecode bytes will be decoded. */
     nsresult DecodeSomeOfImage(RasterImage* aImg,
-                               DecodeType aDecodeType = DECODE_TYPE_UNTIL_TIME,
+                               DecodeType aDecodeType = DECODE_TYPE_NORMAL,
                                uint32_t bytesToDecode = 0);
 
-    /* A decode job dispatched to a thread pool by DecodePool.
-     */
-    class DecodeJob : public nsRunnable
-    {
-    public:
-      DecodeJob(DecodeRequest* aRequest, RasterImage* aImg)
-        : mRequest(aRequest)
-        , mImage(aImg)
-      {}
-
-      NS_IMETHOD Run();
-
-    private:
-      nsRefPtr<DecodeRequest> mRequest;
-      nsRefPtr<RasterImage> mImage;
-    };
+    /* Create a new DecodeRequest suitable for doing some decoding and set it
+     * as aImg's mDecodeRequest. */
+    void CreateRequestForImage(RasterImage* aImg);
 
   private: /* members */
 
-    nsCOMPtr<nsIThreadPool> mThreadPool;
+    LinkedList<DecodeRequest> mASAPDecodeRequests;
+    LinkedList<DecodeRequest> mNormalDecodeRequests;
+
+    /* True if we've posted ourselves to the event loop and expect Run() to
+     * be called sometime in the future. */
+    bool mPendingInEventLoop;
   };
 
   class DecodeDoneWorker : public nsRunnable
   {
   public:
     /**
-     * Called by the DecodePool with an image when it's done some significant
+     * Called by the DecodeWorker with an image when it's done some significant
      * portion of decoding that needs to be notified about.
      *
      * Ensures the decode state accumulated by the decoding process gets
@@ -557,7 +563,7 @@ private:
   {
   public:
     /**
-     * Called by the DecodeJob with an image when it's been told by the
+     * Called by the DecodeWorker with an image when it's been told by the
      * decoder that it needs a new frame to be allocated on the main thread.
      *
      * Dispatches an event to do so, which will further dispatch a
@@ -748,9 +754,15 @@ private: // data
   DiscardTracker::Node       mDiscardTrackerNode;
 
   // Source data members
+  FallibleTArray<char>       mSourceData;
   nsCString                  mSourceDataMimeType;
 
   friend class DiscardTracker;
+
+  // Decoder and friends
+  nsRefPtr<Decoder>              mDecoder;
+  nsRefPtr<DecodeRequest>        mDecodeRequest;
+  uint32_t                       mBytesDecoded;
 
   // How many times we've decoded this image.
   // This is currently only used for statistics
@@ -766,22 +778,6 @@ private: // data
   uint32_t                       mFramesNotified;
 #endif
 
-  // Below are the pieces of data that can be accessed on more than one thread
-  // at once, and hence need to be locked by mDecodingMutex.
-
-  // BEGIN LOCKED MEMBER VARIABLES
-  mozilla::Mutex             mDecodingMutex;
-
-  FallibleTArray<char>       mSourceData;
-
-  // Decoder and friends
-  nsRefPtr<Decoder>          mDecoder;
-  nsRefPtr<DecodeRequest>    mDecodeRequest;
-  uint32_t                   mBytesDecoded;
-  // END LOCKED MEMBER VARIABLES
-
-  bool                       mInDecoder;
-
   // Boolean flags (clustered together to conserve space):
   bool                       mHasSize:1;       // Has SetSize() been called?
   bool                       mDecodeOnDraw:1;  // Decoding on draw?
@@ -793,6 +789,7 @@ private: // data
   bool                       mDecoded:1;
   bool                       mHasBeenDecoded:1;
 
+  bool                       mInDecoder:1;
 
   // Whether the animation can stop, due to running out
   // of frames, or no more owning request

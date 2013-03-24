@@ -23,11 +23,11 @@ class Image;
 
 #include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 #include "nsTObserverArray.h"
 #include "nsIRunnable.h"
 #include "nscore.h"
 #include "imgDecoderObserver.h"
-#include "nsISupportsImpl.h"
 
 enum {
   stateRequestStarted    = 1u << 0,
@@ -51,11 +51,9 @@ enum {
  * and the notifications will be replayed to the proxy asynchronously.
  */
 
-class imgStatusTracker
+class imgStatusTracker : public mozilla::RefCounted<imgStatusTracker>
 {
 public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(imgStatusTracker)
-
   // aImage is the image that this status tracker will pass to the
   // imgRequestProxys in SyncNotify() and EmulateRequestFinished(), and must be
   // alive as long as this instance is, because we hold a weak reference to it.
@@ -195,22 +193,7 @@ public:
   inline imgDecoderObserver* GetDecoderObserver() { return mTrackerObserver.get(); }
 
   imgStatusTracker* CloneForRecording();
-
-  struct StatusDiff
-  {
-    uint32_t mDiffState;
-    bool mUnblockedOnload;
-    bool mFoundError;
-    nsIntRect mInvalidRect;
-  };
-
-  // Calculate the difference between this and other, apply that difference to
-  // ourselves, and return it for passing to SyncNotifyDifference.
-  StatusDiff CalculateAndApplyDifference(imgStatusTracker* other);
-
-  // Notify for the difference found in CalculateAndApplyDifference. No
-  // decoding locks may be held.
-  void SyncNotifyDifference(StatusDiff diff);
+  void SyncAndSyncNotifyDifference(imgStatusTracker* other);
 
   nsIntRect GetInvalidRect() const { return mInvalidRect; }
 

@@ -388,8 +388,7 @@ VectorImage::OnImageDataComplete(nsIRequest* aRequest,
     nsRefPtr<imgStatusTracker> clone = mStatusTracker->CloneForRecording();
     imgDecoderObserver* observer = clone->GetDecoderObserver();
     observer->OnStopRequest(aLastPart, finalStatus);
-    imgStatusTracker::StatusDiff diff = mStatusTracker->CalculateAndApplyDifference(clone);
-    mStatusTracker->SyncNotifyDifference(diff);
+    mStatusTracker->SyncAndSyncNotifyDifference(clone);
   }
   return finalStatus;
 }
@@ -847,8 +846,7 @@ VectorImage::OnStartRequest(nsIRequest* aRequest, nsISupports* aCtxt)
     nsRefPtr<imgStatusTracker> clone = mStatusTracker->CloneForRecording();
     imgDecoderObserver* observer = clone->GetDecoderObserver();
     observer->OnStartDecode();
-    imgStatusTracker::StatusDiff diff = mStatusTracker->CalculateAndApplyDifference(clone);
-    mStatusTracker->SyncNotifyDifference(diff);
+    mStatusTracker->SyncAndSyncNotifyDifference(clone);
   }
 
   // Create a listener to wait until the SVG document is fully loaded, which
@@ -935,8 +933,7 @@ VectorImage::OnSVGDocumentLoaded()
     observer->OnStopFrame();
     observer->OnStopDecode(NS_OK); // Unblock page load.
 
-    imgStatusTracker::StatusDiff diff = mStatusTracker->CalculateAndApplyDifference(clone);
-    mStatusTracker->SyncNotifyDifference(diff);
+    mStatusTracker->SyncAndSyncNotifyDifference(clone);
   }
 
   EvaluateAnimation();
@@ -958,8 +955,7 @@ VectorImage::OnSVGDocumentError()
 
     // Unblock page load.
     observer->OnStopDecode(NS_ERROR_FAILURE);
-    imgStatusTracker::StatusDiff diff = mStatusTracker->CalculateAndApplyDifference(clone);
-    mStatusTracker->SyncNotifyDifference(diff);
+    mStatusTracker->SyncAndSyncNotifyDifference(clone);
   }
 }
 
