@@ -1647,7 +1647,6 @@ ContentPermissionPrompt.prototype = {
     var browserBundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
 
     var requestingWindow = aRequest.window.top;
-    var topDoc = requestingWindow.document;
     var chromeWin = this._getChromeWindow(requestingWindow).wrappedJSObject;
     var browser = chromeWin.gBrowser.getBrowserForDocument(requestingWindow.document);
     var requestPrincipal = aRequest.principal;
@@ -1701,7 +1700,7 @@ ContentPermissionPrompt.prototype = {
       options = { removeOnDismissal: autoAllow,
                   eventCallback: function (type) {
                                    if (type == "removed") {
-                                     topDoc.removeEventListener("mozfullscreenchange", onFullScreen);
+                                     browser.removeEventListener("mozfullscreenchange", onFullScreen, true);
                                      if (autoAllow)
                                        aRequest.allow();
                                    }
@@ -1716,7 +1715,7 @@ ContentPermissionPrompt.prototype = {
       // upon exit), so if the page enters fullscreen mode after requesting
       // pointerLock (but before the user has granted permission), we should
       // remove the now-impotent notification.
-      topDoc.addEventListener("mozfullscreenchange", onFullScreen);
+      browser.addEventListener("mozfullscreenchange", onFullScreen, true);
     }
   },
 
