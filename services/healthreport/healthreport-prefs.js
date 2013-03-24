@@ -29,5 +29,4 @@ pref("datareporting.healthreport.service.providerCategories",
 #endif
     );
 
-pref("datareporting.healthreport.about.glossaryUrl", "https://services.mozilla.com/healthreport/glossary.html");
-pref("datareporting.healthreport.about.reportUrl",   "https://services.mozilla.com/healthreport/placeholder.html");
+pref("datareporting.healthreport.about.reportUrl",   "https://fhr.cdn.mozilla.net/%LOCALE%/");
