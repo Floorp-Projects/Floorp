@@ -16,7 +16,7 @@
 
     function doTest()
     {
-      SimpleTest.expectAssertions(52);
+      SimpleTest.expectAssertions(54);
 
       // __o__n__e__w__o__r__d__\n
       //  0  1  2  3  4  5  6  7
@@ -129,11 +129,11 @@
                           "editablebr", kTodo, kTodo, kOk,
                           "textarea", kTodo, kTodo, kOk);
       testTextAfterOffset(19, BOUNDARY_LINE_START, "", 19, 19,
-                          "div", undefined, undefined, undefined,
-                          "divbr", undefined, undefined, undefined,
-                          "editable", undefined, undefined, undefined,
-                          "editablebr", undefined, undefined, undefined,
-                          "textarea", kTodo, undefined, kTodo);
+                          "div", kOk, kOk, kTodo,
+                          "divbr", kOk, kOk, kOk,
+                          "editable", kOk, kOk, kTodo,
+                          "editablebr", kOk, kOk, kOk,
+                          "textarea", kOk, kOk, kOk);
 
       // BOUNDARY_LINE_END
       testTextAfterOffset(0, BOUNDARY_LINE_END, "\n", 7, 8,
@@ -161,11 +161,11 @@
                           "editablebr", kTodo, kTodo, kTodo,
                           "textarea", kTodo, kTodo, kTodo);
       testTextAfterOffset(18, BOUNDARY_LINE_END, "\n", 18, 19,
-                          "div", kTodo, kTodo, kTodo,
-                          "divbr", kTodo, kTodo, kTodo,
-                          "editable", kTodo, kTodo, kTodo,
-                          "editablebr", kTodo, kTodo, kTodo,
-                          "textarea", kTodo, kTodo, kTodo);
+                          "div", kTodo, kOk, kTodo,
+                          "divbr", kOk, kOk, kOk,
+                          "editable", kTodo, kOk, kTodo,
+                          "editablebr", kOk, kOk, kOk,
+                          "textarea", kOk, kOk, kOk);
       testTextAfterOffset(19, BOUNDARY_LINE_END, "", 19, 19,
                           "div", kOk, kTodo, kTodo,
                           "divbr", kOk, kTodo, kTodo,
@@ -391,31 +391,21 @@
                        "editablebr", kOk, kOk, kOk,
                        "textarea", kTodo, kOk, kTodo);
       testTextAtOffset(8, BOUNDARY_WORD_START, "oneword\n\n", 0, 9,
-                       "div", kTodo, kTodo, kOk,
-                       "divbr", kOk, kOk, kOk,
-                       "editable", kTodo, kTodo, kOk,
-                       "editablebr", kOk, kOk, kOk,
-                       "textarea", kTodo, kTodo, kOk);
-      testTextAtOffset(9, BOUNDARY_WORD_START, "two ", 9, 13,
-                       "div", kTodo, kTodo, kTodo,
-                       "divbr", kOk, kOk, kOk,
-                       "editable", kTodo, kTodo, kTodo,
-                       "editablebr", kOk, kOk, kOk,
-                       "textarea", kTodo, kTodo, kTodo);
-      testTextAtOffset(13, BOUNDARY_WORD_START, "words\n", 13, 19,
                        "div", kOk, kOk, kOk,
-                       "divbr", kOk, kOk, kOk,
+                       "divbr", kTodo, kTodo, kTodo,
                        "editable", kOk, kOk, kOk,
-                       "editablebr", kOk, kOk, kOk,
+                       "editablebr", kTodo, kTodo, kTodo,
                        "textarea", kOk, kOk, kOk);
+      testTextAtOffset(9, BOUNDARY_WORD_START, "two ", 9, 13, IDs);
+      testTextAtOffset(13, BOUNDARY_WORD_START, "words\n", 13, 19, IDs);
 
       // BOUNDARY_WORD_END
       testTextAtOffset(0, BOUNDARY_WORD_END, "oneword", 0, 7,
-                       "div", kOk, kOk, kOk,
-                       "divbr", kOk, kOk, kOk,
-                       "editable", kOk, kOk, kOk,
-                       "editablebr", kOk, kOk, kOk,
-                       "textarea", kOk, kOk, kOk);
+                       "div", kTodo, kOk, kTodo,
+                       "divbr", kTodo, kOk, kTodo,
+                       "editable", kTodo, kOk, kTodo,
+                       "editablebr", kTodo, kOk, kTodo,
+                       "textarea", kTodo, kOk, kTodo);
       testTextAtOffset(8, BOUNDARY_WORD_END, "\n\ntwo", 7, 12,
                        "div", kOk, kOk, kOk,
                        "divbr", kTodo, kTodo, kTodo,
@@ -429,11 +419,11 @@
                        "editablebr", kTodo, kTodo, kTodo,
                        "textarea", kTodo, kTodo, kOk);
       testTextAtOffset(12, BOUNDARY_WORD_END, "\n\ntwo", 7, 12,
-                       "div", kTodo, kTodo, kTodo,
-                       "divbr", kTodo, kTodo, kTodo,
-                       "editable", kTodo, kTodo, kTodo,
-                       "editablebr", kTodo, kTodo, kTodo,
-                       "textarea", kTodo, kTodo, kTodo);
+                       "div", kTodo, kTodo, kOk,
+                       "divbr", kOk, kOk, kOk,
+                       "editable", kTodo, kTodo, kOk,
+                       "editablebr", kOk, kOk, kOk,
+                       "textarea", kTodo, kTodo, kOk);
       testTextAtOffset(13, BOUNDARY_WORD_END, " words", 12, 18,
                        "div", kOk, kOk, kOk,
                        "divbr", kOk, kOk, kOk,
@@ -517,11 +507,11 @@
                        "editablebr", kOk, kOk, kOk,
                        "textarea", kOk, kOk, kOk);
       testTextAtOffset(18, BOUNDARY_LINE_END, "\ntwo words", 8, 18,
-                       "div", kTodo, kTodo, kTodo,
-                       "divbr", kTodo, kTodo, kTodo,
-                       "editable", kTodo, kTodo, kTodo,
-                       "editablebr", kTodo, kTodo, kTodo,
-                       "textarea", kTodo, kTodo, kTodo);
+                       "div", kTodo, kOk, kTodo,
+                       "divbr", kTodo, kOk, kTodo,
+                       "editable", kTodo, kOk, kTodo,
+                       "editablebr", kTodo, kOk, kTodo,
+                       "textarea", kTodo, kOk, kTodo);
       testTextAtOffset(19, BOUNDARY_LINE_END, "\n", 18, 19,
                        "div", kTodo, kTodo, kTodo,
                        "divbr", kTodo, kTodo, kTodo,
@@ -546,6 +536,7 @@
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
+
   <div id="div">oneword
 
 two words
