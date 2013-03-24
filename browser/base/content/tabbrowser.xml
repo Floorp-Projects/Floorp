@@ -682,7 +682,13 @@
         <body>
           <![CDATA[
             var browser = this.getBrowserForTab(aTab);
-            browser.mIconURL = aURI instanceof Ci.nsIURI ? aURI.spec : aURI;
+            var iconUrl = aURI instanceof Ci.nsIURI ? aURI.spec : aURI;
+            if (iconUrl) {
+              var separator = iconUrl.indexOf("#") > -1 ? "&" : "#";
+              var size = Math.round(16 * window.devicePixelRatio);
+              iconUrl += separator + "-moz-resolution=" + size + "," + size;
+            }
+            browser.mIconURL = iconUrl;
 
             if (aURI && this.mFaviconService) {
               if (!(aURI instanceof Ci.nsIURI))
