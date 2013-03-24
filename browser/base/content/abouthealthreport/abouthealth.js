@@ -29,9 +29,14 @@ let healthReportWrapper = {
 
     let iframe = document.getElementById("remote-report");
     iframe.addEventListener("load", healthReportWrapper.initRemotePage, false);
-    let report = Services.io.newURI(prefs.get("about.reportUrl"), null, null);
+    let report = this._getReportURI();
     iframe.src = report.spec;
     prefs.observe("uploadEnabled", this.updatePrefState, healthReportWrapper);
+  },
+
+  _getReportURI: function () {
+    let url = Services.urlFormatter.formatURLPref("datareporting.healthreport.about.reportUrl");
+    return Services.io.newURI(url, null, null);
   },
 
   onOptIn: function () {
@@ -67,7 +72,7 @@ let healthReportWrapper = {
   },
 
   injectData: function (type, content) {
-    let report = Services.io.newURI(prefs.get("about.reportUrl"), null, null);
+    let report = this._getReportURI();
     
     // file URIs can't be used for targetOrigin, so we use "*" for this special case
     // in all other cases, pass in the URL to the report so we properly restrict the message dispatch
