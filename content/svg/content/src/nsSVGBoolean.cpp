@@ -104,8 +104,9 @@ nsSVGBoolean::SetAnimValue(bool aValue, nsSVGElement *aSVGElement)
   aSVGElement->DidAnimateBoolean(mAttrEnum);
 }
 
-already_AddRefed<SVGAnimatedBoolean>
-nsSVGBoolean::ToDOMAnimatedBoolean(nsSVGElement* aSVGElement)
+nsresult
+nsSVGBoolean::ToDOMAnimatedBoolean(nsISupports **aResult,
+                                   nsSVGElement *aSVGElement)
 {
   nsRefPtr<SVGAnimatedBoolean> domAnimatedBoolean =
     sSVGAnimatedBooleanTearoffTable.GetTearoff(this);
@@ -114,7 +115,8 @@ nsSVGBoolean::ToDOMAnimatedBoolean(nsSVGElement* aSVGElement)
     sSVGAnimatedBooleanTearoffTable.AddTearoff(this, domAnimatedBoolean);
   }
 
-  return domAnimatedBoolean.forget();
+  domAnimatedBoolean.forget(aResult);
+  return NS_OK;
 }
 
 SVGAnimatedBoolean::~SVGAnimatedBoolean()
