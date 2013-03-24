@@ -3839,6 +3839,10 @@ pref("image.high_quality_downscaling.enabled", true);
 // interpreted as a floating-point number / 1000.
 pref("image.high_quality_downscaling.min_factor", 1000);
 
+// The maximum memory size which we'll use high-quality uspcaling on,
+// interpreted as number of decoded bytes.
+pref("image.high_quality_upscaling.max_size", 20971520);
+
 //
 // Image memory management prefs
 //
