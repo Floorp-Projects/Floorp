@@ -78,6 +78,9 @@ static bool gHQDownscaling = false;
 static uint32_t gHQDownscalingMinFactor = 1000;
 static bool gMultithreadedDecoding = true;
 static int32_t gDecodingThreadLimit = -1;
++// The number of pixels in a 5 megapixel decoded image.
++// Equivalent to an example 3125x1600 resolution.
++static uint32_t gHQUpscalingMaxSize = 20971520;
 
 // The maximum number of times any one RasterImage was decoded.  This is only
 // used for statistics.
@@ -98,6 +101,8 @@ InitPrefCaches()
                                "image.multithreaded_decoding.enabled", true);
   Preferences::AddIntVarCache(&gDecodingThreadLimit,
                               "image.multithreaded_decoding.limit", -1);
+  Preferences::AddUintVarCache(&gHQUpscalingMaxSize,
+                               "image.high_quality_upscaling.max_size", 20971520);
 }
 
 /* We define our own error checking macros here for 2 reasons:
@@ -2981,15 +2986,19 @@ RasterImage::SyncDecode()
   return mError ? NS_ERROR_FAILURE : NS_OK;
 }
 
-static inline bool
-IsDownscale(const gfxSize& scale)
+bool
+RasterImage::CanQualityScale(const gfxSize& scale)
 {
-  if (scale.width > 1.0)
-    return false;
-  if (scale.height > 1.0)
-    return false;
+  // If target size is 1:1 with original, don't scale.
   if (scale.width == 1.0 && scale.height == 1.0)
     return false;
+
+  // To save memory don't quality upscale images bigger than the limit.
+  if (scale.width > 1.0 || scale.height > 1.0) {
+    uint32_t scaled_size = static_cast<uint32_t>(mSize.width * mSize.height * scale.width * scale.height);
+    if (scaled_size > gHQUpscalingMaxSize)
+      return false;
+  }
 
   return true;
 }
@@ -3003,8 +3012,9 @@ RasterImage::CanScale(gfxPattern::GraphicsFilter aFilter,
   // We don't use the scaler for animated or multipart images to avoid doing a
   // bunch of work on an image that just gets thrown away.
   if (gHQDownscaling && aFilter == gfxPattern::FILTER_GOOD &&
-      !mAnim && mDecoded && !mMultipart && IsDownscale(aScale)) {
+      !mAnim && mDecoded && !mMultipart && CanQualityScale(aScale)) {
     gfxFloat factor = gHQDownscalingMinFactor / 1000.0;
+
     return (aScale.width < factor || aScale.height < factor);
   }
 #endif
@@ -3081,7 +3091,7 @@ RasterImage::DrawWithPreDownscaleIfNeeded(imgFrame *aFrame,
       frame = mScaleResult.frame;
       userSpaceToImageSpace.Multiply(gfxMatrix().Scale(scale.width, scale.height));
 
-      // Since we're switching to a scaled image, we we need to transform the
+      // Since we're switching to a scaled image, we need to transform the
       // area of the subimage to draw accordingly, since imgFrame::Draw()
       // doesn't know about scaled frames.
       subimage.ScaleRoundOut(scale.width, scale.height);
