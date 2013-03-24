@@ -52,9 +52,7 @@ public:
   // useable, and represents the default base value of the attribute.
   bool IsExplicitlySet() const
     { return mIsAnimated || mIsBaseSet; }
-
-  already_AddRefed<nsIDOMSVGAnimatedInteger>
-    ToDOMAnimatedInteger(nsSVGElement* aSVGElement);
+  
   nsresult ToDOMAnimatedInteger(nsIDOMSVGAnimatedInteger **aResult,
                                 nsSVGElement* aSVGElement);
   // Returns a new nsISMILAttr object that the caller must delete
