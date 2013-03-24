@@ -52,6 +52,11 @@ TransplantObjectWithWrapper(JSContext *cx,
 JSObject *
 GetXBLScope(JSContext *cx, JSObject *contentScope);
 
+// Returns whether XBL scopes have been explicitly disabled for code running
+// in this compartment. See the comment around mAllowXBLScope.
+bool
+AllowXBLScope(JSCompartment *c);
+
 bool
 IsSandboxPrototypeProxy(JSObject *obj);
 
