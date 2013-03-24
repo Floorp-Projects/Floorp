@@ -15,6 +15,7 @@ CPPSRCS := \
 	$(NULL)
 
 TESTSRCS := \
+	TestMustOverride.cpp \
 	$(NULL)
 
 OBJS := $(patsubst %.cpp,%.o,$(CPPSRCS))
