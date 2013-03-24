@@ -3752,6 +3752,23 @@ fi
 AC_SUBST(DEHYDRA_PATH)
 
 dnl ========================================================
+dnl = Enable using the clang plugin to build
+dnl ========================================================
+
+MOZ_ARG_ENABLE_BOOL(clang-plugin,
+[  --enable-clang-plugin   Enable building with the mozilla clang plugin ],
+   ENABLE_CLANG_PLUGIN=1,
+   ENABLE_CLANG_PLUGIN= )
+if test -n "$ENABLE_CLANG_PLUGIN"; then
+    if test -z "$CLANG_CC"; then
+        AC_MSG_ERROR([Can't use clang plugin without clang.])
+    fi
+    AC_DEFINE(MOZ_CLANG_PLUGIN)
+fi
+
+AC_SUBST(ENABLE_CLANG_PLUGIN)
+
+dnl ========================================================
 dnl = Enable static checking using sixgill
 dnl ========================================================
 
