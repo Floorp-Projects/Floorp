@@ -400,9 +400,7 @@ var SelectionHelperUI = {
     this._msgTarget = aMsgTarget;
 
     // Init our list of available monocle ids
-    this._selectionMarkIds = ["selectionhandle-mark1",
-                              "selectionhandle-mark2",
-                              "selectionhandle-mark3"];
+    this._setupMonocleIdArray();
 
     // Init selection rect info
     this._activeSelectionRect = Util.getCleanRect();
@@ -461,16 +459,7 @@ var SelectionHelperUI = {
 
     window.removeEventListener("MozPrecisePointer", this, true);
 
-    if (this.startMark != null)
-      this.startMark.shutdown();
-    if (this.endMark != null)
-      this.endMark.shutdown();
-    if (this._caretMark != null)
-      this._caretMark.shutdown();
-
-    this._startMark = null;
-    this._endMark = null;
-    this._caretMark = null;
+    this._shutdownAllMarkers();
 
     this._selectionMarkIds = [];
     this._msgTarget = null;
@@ -542,6 +531,36 @@ var SelectionHelperUI = {
   },
 
   /*
+   * _transitionFromSelectionToCaret
+   *
+   * Transitions from text selection mode to caret mode.
+   */
+  _transitionFromSelectionToCaret: function _transitionFromSelectionToCaret(aX, aY) {
+    // clear existing selection and shutdown SelectionHandler
+    this._sendAsyncMessage("Browser:SelectionClear", { clearFocus: false });
+    this._sendAsyncMessage("Browser:SelectionClose");
+
+    // Reset some of our state
+    this._selectionHandlerActive = false;
+    this._activeSelectionRect = null;
+
+    // Reset the monocles
+    this._shutdownAllMarkers();
+    this._setupMonocleIdArray();
+
+    // Init SelectionHandler and turn on caret selection. Note the focus caret
+    // will have been removed from the target element due to the shutdown call.
+    // This won't set the caret position on its own.
+    this._sendAsyncMessage("Browser:CaretAttach", {
+      xPos: aX,
+      yPos: aY
+    });
+
+    // Set the caret position
+    this._setCaretPositionAtPoint(aX, aY);
+  },
+
+  /*
    * _setupDebugOptions
    *
    * Sends a message over to content instructing it to
@@ -574,8 +593,9 @@ var SelectionHelperUI = {
   },
 
   /*
-   * _sendAsyncMessage - helper for sending a message to
-   * SelectionHandler.
+   * _sendAsyncMessage
+   *
+   * Helper for sending a message to SelectionHandler.
    */
   _sendAsyncMessage: function _sendAsyncMessage(aMsg, aJson) {
     if (!this._msgTarget) {
@@ -609,12 +629,42 @@ var SelectionHelperUI = {
   },
 
   /*
+   * _shutdownAllMarkers
+   *
+   * Helper for shutting down all markers and
+   * freeing the objects associated with them.
+   */
+  _shutdownAllMarkers: function _shutdownAllMarkers() {
+    if (this._startMark)
+      this._startMark.shutdown();
+    if (this._endMark)
+      this._endMark.shutdown();
+    if (this._caretMark)
+      this._caretMark.shutdown();
+
+    this._startMark = null;
+    this._endMark = null;
+    this._caretMark = null;
+  },
+
+  /*
+   * _setupMonocleIdArray
+   *
+   * Helper for initing the array of monocle ids.
+   */
+  _setupMonocleIdArray: function _setupMonocleIdArray() {
+    this._selectionMarkIds = ["selectionhandle-mark1",
+                              "selectionhandle-mark2",
+                              "selectionhandle-mark3"];
+  },
+
+  /*
    * Event handlers for document events
    */
 
   /*
    * _onTap
-   * 
+   *
    * Handles taps that move the current caret around in text edits,
    * clear active selection and focus when neccessary, or change
    * modes.
@@ -658,6 +708,24 @@ var SelectionHelperUI = {
         this._targetIsEditable) {
       this.closeEditSessionAndClear(true);
       return;
+    }
+
+    let selectionTap = this._hitTestSelection(aEvent);
+
+    // If the tap is in the selection, just ignore it. We disallow this
+    // since we always get a single tap before a double, and double tap
+    // copies selected text.
+    if (selectionTap) {
+      aEvent.stopPropagation();
+      aEvent.preventDefault();
+      return;
+    }
+
+    // A tap within an editable but outside active selection, clear the
+    // selection and flip back to caret mode.
+    if (this.startMark.visible && pointInTargetElement &&
+        this._targetIsEditable) {
+      this._transitionFromSelectionToCaret(aEvent.clientX, aEvent.clientY);
     }
 
     // If we have active selection in anything else don't let the event get
