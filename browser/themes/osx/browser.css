@@ -3155,6 +3155,17 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   }
 }
 
+#pointerLock-notification-icon {
+  list-style-image: url(chrome://browser/skin/pointerLock-16.png);
+}
+@media (min-resolution: 2dppx) {
+  #pointerLock-notification-icon {
+    list-style-image: url(chrome://browser/skin/pointerLock-16@2x.png);
+  }
+}
+
+
+
 .popup-notification-icon {
   width: 64px;
   height: 64px;
@@ -3247,6 +3258,19 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
     list-style-image: url(chrome://browser/skin/mixed-content-blocked-64@2x.png);
   }
 }
+
+.popup-notification-icon[popupid="pointerLock"] {
+  list-style-image: url(chrome://browser/skin/pointerLock-64.png);
+}
+@media (min-resolution: 2dppx) {
+  .popup-notification-icon[popupid="pointerLock"] {
+    list-style-image: url(chrome://browser/skin/pointerLock-64@2x.png);
+  }
+}
+#pointerLock-cancel {
+  margin: 0px;
+}
+
 
 #mixed-content-blocked-helplink {
   margin: 0px;

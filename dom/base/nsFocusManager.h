@@ -481,11 +481,14 @@ private:
                                      bool aWindowShouldShowFocusRing,
                                      bool aGettingFocus);
 
+  void SetFocusedWindowInternal(nsPIDOMWindow* aWindow);
+
   // the currently active and front-most top-most window
   nsCOMPtr<nsPIDOMWindow> mActiveWindow;
 
   // the child or top-level window that is currently focused. This window will
   // either be the same window as mActiveWindow or a descendant of it.
+  // Except during shutdown use SetFocusedWindowInternal to set mFocusedWindow!
   nsCOMPtr<nsPIDOMWindow> mFocusedWindow;
 
   // the currently focused content, which is always inside mFocusedWindow. This
