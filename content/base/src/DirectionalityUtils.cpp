@@ -663,8 +663,13 @@ WalkDescendantsResetAutoDirection(Element* aElement)
 void
 WalkDescendantsSetDirAuto(Element* aElement, bool aNotify)
 {
-  if (!DoesNotParticipateInAutoDirection(aElement) &&
-      !IsBdiWithoutDirAuto(aElement)) {
+  // Only test for DoesNotParticipateInAutoDirection -- in other words, if
+  // aElement is a <bdi> which is having its dir attribute set to auto (or
+  // removed or set to an invalid value, which are equivalent to dir=auto for
+  // <bdi>, we *do* want to set AncestorHasDirAuto on its descendants, unlike
+  // in SetDirOnBind where we don't propagate AncestorHasDirAuto to a <bdi>
+  // being bound to an existing node with dir=auto.
+  if (!DoesNotParticipateInAutoDirection(aElement)) {
 
     bool setAncestorDirAutoFlag =
 #ifdef DEBUG
@@ -685,7 +690,7 @@ WalkDescendantsSetDirAuto(Element* aElement, bool aNotify)
         MOZ_ASSERT(!aElement->AncestorHasDirAuto() ||
                    child->AncestorHasDirAuto(),
                    "AncestorHasDirAuto set on node but not its children");
-        child->SetHasDirAuto();
+        child->SetAncestorHasDirAuto();
         child = child->GetNextNode(aElement);
       }
     }
