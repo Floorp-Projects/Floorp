@@ -11,6 +11,7 @@
 #include "gc/Marking.h"
 #include "ion/RegisterSets.h"
 
+#include "jsscript.h"
 #include "jstypedarrayinlines.h"
 
 namespace js {
@@ -222,7 +223,7 @@ class AsmJSModule
         {}
 
         void initCodeOffset(unsigned off) {
-            JS_ASSERT(!hasCodePtr_); 
+            JS_ASSERT(!hasCodePtr_);
             JS_ASSERT(!u.codeOffset_);
             u.codeOffset_ = off;
         }
@@ -257,6 +258,39 @@ class AsmJSModule
         }
     };
 
+    // If linking fails, we recompile the function as if it's ordinary JS.
+    // This struct holds the data required to do this.
+    struct PostLinkFailureInfo
+    {
+        CompileOptions      options_;
+        ScriptSource *      scriptSource_;
+        uint32_t            bufStart_;      // offset of the function body's start
+        uint32_t            bufEnd_;        // offset of the function body's end
+
+        PostLinkFailureInfo(JSContext *cx)
+          : options_(cx),
+            scriptSource_(),
+            bufStart_(),
+            bufEnd_()
+        { }
+
+        void init(CompileOptions options, ScriptSource *scriptSource,
+                  uint32_t bufStart, uint32_t bufEnd)
+        {
+            options_      = options;
+            scriptSource_ = scriptSource;
+            bufStart_     = bufStart;
+            bufEnd_       = bufEnd;
+
+            scriptSource_->incref();
+        }
+
+        ~PostLinkFailureInfo() {
+            if (scriptSource_)
+                scriptSource_->decref();
+        }
+    };
+
   private:
     typedef Vector<ExportedFunction, 0, SystemAllocPolicy> ExportedFunctionVector;
     typedef Vector<Global, 0, SystemAllocPolicy> GlobalVector;
@@ -282,13 +316,19 @@ class AsmJSModule
     bool                                  linked_;
     HeapPtr<ArrayBufferObject>            maybeHeap_;
 
+    HeapPtrPropertyName                   globalArgumentName_;
+    HeapPtrPropertyName                   importArgumentName_;
+    HeapPtrPropertyName                   bufferArgumentName_;
+
+    PostLinkFailureInfo                   postLinkFailureInfo_;
+
     uint8_t *globalData() const {
         JS_ASSERT(code_);
         return code_ + codeBytes_;
     }
 
   public:
-    AsmJSModule()
+    AsmJSModule(JSContext *cx)
       : numGlobalVars_(0),
         numFFIs_(0),
         numFuncPtrTableElems_(0),
@@ -298,7 +338,9 @@ class AsmJSModule
         functionBytes_(0),
         codeBytes_(0),
         totalBytes_(0),
-        linked_(false)
+        linked_(false),
+        maybeHeap_(),
+        postLinkFailureInfo_(cx)
     {}
 
     void trace(JSTracer *trc) {
@@ -312,6 +354,13 @@ class AsmJSModule
         }
         if (maybeHeap_)
             MarkObject(trc, &maybeHeap_, "asm.js heap");
+
+        if (globalArgumentName_)
+            MarkString(trc, &globalArgumentName_, "asm.js global argument name");
+        if (importArgumentName_)
+            MarkString(trc, &importArgumentName_, "asm.js import argument name");
+        if (bufferArgumentName_)
+            MarkString(trc, &bufferArgumentName_, "asm.js buffer argument name");
     }
 
     bool addGlobalVarInitConstant(const Value &v, uint32_t *globalIndex) {
@@ -540,12 +589,35 @@ class AsmJSModule
         JS_ASSERT(linked_);
         return maybeHeap_ ? maybeHeap_->byteLength() : 0;
     }
+
+    void initGlobalArgumentName(PropertyName *n) { globalArgumentName_ = n; }
+    void initImportArgumentName(PropertyName *n) { importArgumentName_ = n; }
+    void initBufferArgumentName(PropertyName *n) { bufferArgumentName_ = n; }
+
+    PropertyName *globalArgumentName() const { return globalArgumentName_; }
+    PropertyName *importArgumentName() const { return importArgumentName_; }
+    PropertyName *bufferArgumentName() const { return bufferArgumentName_; }
+
+    void initPostLinkFailureInfo(CompileOptions options,
+                                 ScriptSource *scriptSource, uint32_t bufStart, uint32_t bufEnd) {
+        postLinkFailureInfo_.init(options, scriptSource, bufStart, bufEnd);
+    }
+
+    const PostLinkFailureInfo &postLinkFailureInfo() const {
+        return postLinkFailureInfo_;
+    }
 };
 
 // The AsmJSModule C++ object is held by a JSObject that takes care of calling
 // 'trace' and the destructor on finalization.
 extern AsmJSModule &
 AsmJSModuleObjectToModule(JSObject *obj);
+
+extern JSObject &
+AsmJSModuleObject(JSFunction *moduleFun);
+
+extern void
+SetAsmJSModuleObject(JSFunction *moduleFun, JSObject *moduleObj);
 
 }  // namespace js
 

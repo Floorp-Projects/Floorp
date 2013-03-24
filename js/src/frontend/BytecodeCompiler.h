@@ -24,8 +24,9 @@ ParseScript(JSContext *cx, HandleObject scopeChain,
             const CompileOptions &options, StableCharPtr chars, size_t length);
 
 bool
-CompileFunctionBody(JSContext *cx, HandleFunction fun, CompileOptions options,
-                    const AutoNameVector &formals, const jschar *chars, size_t length);
+CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileOptions options,
+                    const AutoNameVector &formals, const jschar *chars, size_t length,
+                    bool isAsmJSRecompile = false);
 
 } /* namespace frontend */
 } /* namespace js */

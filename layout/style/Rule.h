@@ -110,8 +110,8 @@ public:
 
   // This is pure virtual because all of Rule's data members are non-owning and
   // thus measured elsewhere.
-  virtual NS_MUST_OVERRIDE size_t
-    SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const = 0;
+  virtual size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf)
+    const MOZ_MUST_OVERRIDE = 0;
 
   // This is used to measure nsCOMArray<Rule>s.
   static size_t SizeOfCOMArrayElementIncludingThis(css::Rule* aElement,

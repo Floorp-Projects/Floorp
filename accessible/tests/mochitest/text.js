@@ -112,16 +112,29 @@ function testCharAtOffset(aIDs, aOffset, aChar, aStartOffset, aEndOffset)
  * @param aText           [in] expected return text for getTextAtOffset
  * @param aStartOffset    [in] expected return start offset for getTextAtOffset
  * @param aEndOffset      [in] expected return end offset for getTextAtOffset
- * @param ...             [in] list of tuples made of:
+ * @param ...             [in] list of ids or list of tuples made of:
  *                              element identifier
  *                              kTodo or kOk for returned text
  *                              kTodo or kOk for returned start offset
  *                              kTodo or kOk for returned offset result
- *          
  */
 function testTextAtOffset(aOffset, aBoundaryType, aText,
                           aStartOffset, aEndOffset)
 {
+  // List of IDs.
+  if (arguments[5] instanceof Array) {
+    var ids = arguments[5];
+    for (var i = 0; i < ids.length; i++) {
+      var acc = getAccessible(ids[i], nsIAccessibleText);
+      testTextHelper(ids[i], aOffset, aBoundaryType,
+                     aText, aStartOffset, aEndOffset,
+                     kOk, kOk, kOk,
+                     acc.getTextAtOffset, "getTextAtOffset ");
+    }
+
+    return;
+  }
+
   for (var i = 5; i < arguments.length; i = i + 4) {
     var ID = arguments[i];
     var acc = getAccessible(ID, nsIAccessibleText);
@@ -166,7 +179,7 @@ function testCharAfterOffset(aIDs, aOffset, aChar, aStartOffset, aEndOffset)
  * @param aText           [in] expected return text for getTextAfterOffset
  * @param aStartOffset    [in] expected return start offset for getTextAfterOffset
  * @param aEndOffset      [in] expected return end offset for getTextAfterOffset
- * @param ...             [in] list of tuples made of:
+ * @param ...             [in] list of ids or list of tuples made of:
  *                              element identifier
  *                              kTodo or kOk for returned text
  *                              kTodo or kOk for returned start offset
@@ -175,6 +188,21 @@ function testCharAfterOffset(aIDs, aOffset, aChar, aStartOffset, aEndOffset)
 function testTextAfterOffset(aOffset, aBoundaryType,
                              aText, aStartOffset, aEndOffset)
 {
+  // List of IDs.
+  if (arguments[5] instanceof Array) {
+    var ids = arguments[5];
+    for (var i = 0; i < ids.length; i++) {
+      var acc = getAccessible(ids[i], nsIAccessibleText);
+      testTextHelper(ids[i], aOffset, aBoundaryType,
+                     aText, aStartOffset, aEndOffset,
+                     kOk, kOk, kOk,
+                     acc.getTextAfterOffset, "getTextAfterOffset ");
+    }
+
+    return;
+  }
+
+  // List of tuples.
   for (var i = 5; i < arguments.length; i = i + 4) {
     var ID = arguments[i];
     var acc = getAccessible(ID, nsIAccessibleText);
@@ -219,16 +247,29 @@ function testCharBeforeOffset(aIDs, aOffset, aChar, aStartOffset, aEndOffset)
  * @param aText           [in] expected return text for getTextBeforeOffset
  * @param aStartOffset    [in] expected return start offset for getTextBeforeOffset
  * @param aEndOffset      [in] expected return end offset for getTextBeforeOffset
- * @param ...             [in] list of tuples made of:
+ * @param ...             [in] list of ids or list of tuples made of:
  *                              element identifier
  *                              kTodo or kOk for returned text
  *                              kTodo or kOk for returned start offset
  *                              kTodo or kOk for returned offset result
- *          
  */
 function testTextBeforeOffset(aOffset, aBoundaryType,
                               aText, aStartOffset, aEndOffset)
 {
+  // List of IDs.
+  if (arguments[5] instanceof Array) {
+    var ids = arguments[5];
+    for (var i = 0; i < ids.length; i++) {
+      var acc = getAccessible(ids[i], nsIAccessibleText);
+      testTextHelper(ids[i], aOffset, aBoundaryType,
+                     aText, aStartOffset, aEndOffset,
+                     kOk, kOk, kOk,
+                     acc.getTextBeforeOffset, "getTextBeforeOffset ");
+    }
+
+    return;
+  }
+
   for (var i = 5; i < arguments.length; i = i + 4) {
     var ID = arguments[i];
     var acc = getAccessible(ID, nsIAccessibleText);
@@ -267,8 +308,9 @@ function testWordCount(aElement, aCount, aToDoFlag)
     wordCount++;
     offset = endOffsetObj.value;
   }
-  isFunc(wordCount, aCount,  "wrong words count for '" + acc.getText(0, -1) + "': " +
-         wordCount);
+  isFunc(wordCount, aCount,
+        "wrong words count for '" + acc.getText(0, -1) + "': " + wordCount +
+        " in " + prettyName(aElement));
 }
 
 /**
@@ -283,42 +325,47 @@ function testWordAt(aElement, aWordIndex, aText, aToDoFlag)
 {
   var isFunc = (aToDoFlag == kTodo) ? todo_is : is;
   var acc = getAccessible(aElement, nsIAccessibleText);
-  var startOffsetObj = {}, endOffsetObj = {};
-  var length = acc.characterCount;
-  var offset = 0;
-  var wordIndex = -1;
-  var wordFountAtOffset = -1;
-  while (true) {
-    var text = acc.getTextAtOffset(offset, BOUNDARY_WORD_START,
-                                   startOffsetObj, endOffsetObj);
-    if (offset >= length)
+
+  var textLength = acc.characterCount;
+  var wordIdx = aWordIndex;
+  var startOffsetObj = { value: 0 }, endOffsetObj = { value: 0 };
+  for (offset = 0; offset < textLength; offset = endOffsetObj.value) {
+    acc.getTextAtOffset(offset, BOUNDARY_WORD_START,
+                        startOffsetObj, endOffsetObj);
+
+    wordIdx--;
+    if (wordIdx < 0)
       break;
-
-    wordIndex++;
-    offset = endOffsetObj.value;
-    if (wordIndex == aWordIndex) {
-       wordFountAtOffset = startOffsetObj.value;
-       break;
-    }
-  } 
-  if (wordFountAtOffset >= 0) {
-    var text = acc.getTextAtOffset(wordFountAtOffset, BOUNDARY_WORD_END,
-                                   startOffsetObj, endOffsetObj);
-
-    if (endOffsetObj.value < wordFountAtOffset) {
-      todo(false,  "wrong start and end offset for word '" + aWordIndex + "': " +
-           " of text '" + acc.getText(0, -1) + "'");
-      return;
-    }
-
-    text = acc.getText(wordFountAtOffset, endOffsetObj.value);
-    isFunc(text, aText,  "wrong text for word at pos '" + aWordIndex + "': " +
-           " of text '" + acc.getText(0, -1) + "'");
   }
-  else {
-    isFunc(false, "failed to find word " + aText + " at word pos " + aWordIndex +
-           " of text '" + acc.getText(0, -1) + "'");
+
+  if (wordIdx >= 0) {
+    ok(false,
+       "the given word index '" + aWordIndex + "' exceeds words amount in " +
+       prettyName(aElement));
+
+    return;
   }
+
+  var startWordOffset = startOffsetObj.value;
+  var endWordOffset = endOffsetObj.value;
+
+  // Calculate the end word offset.
+  acc.getTextAtOffset(endOffsetObj.value, BOUNDARY_WORD_END,
+                      startOffsetObj, endOffsetObj);
+  if (startOffsetObj.value != textLength)
+    endWordOffset = startOffsetObj.value
+
+  if (endWordOffset <= startWordOffset) {
+    todo(false,
+         "wrong start and end offset for word at index '" + aWordIndex + "': " +
+         " of text '" + acc.getText(0, -1) + "' in " + prettyName(aElement));
+
+    return;
+  }
+
+  text = acc.getText(startWordOffset, endWordOffset);
+  isFunc(text, aText,  "wrong text for word at index '" + aWordIndex + "': " +
+         " of text '" + acc.getText(0, -1) + "' in " + prettyName(aElement));
 }
 
 /**
@@ -463,26 +510,31 @@ function testTextHelper(aID, aOffset, aBoundaryType,
   var exceptionFlag = aToDoFlag1 == undefined ||
                       aToDoFlag2 == undefined ||
                       aToDoFlag3 == undefined;
+
+  var startMsg = aTextFuncName + "(" + boundaryToString(aBoundaryType) + "): ";
+  var endMsg = ", id: " + prettyName(aID) + ";";
+
   try {
     var startOffsetObj = {}, endOffsetObj = {};
     var text = aTextFunc(aOffset, aBoundaryType,
                          startOffsetObj, endOffsetObj);
-    
+
+    if (exceptionFlag) {
+      ok(false, startMsg + "no expected failure at offset " + aOffset + endMsg);
+      return;
+    }
+
     var isFunc1 = (aToDoFlag1 == kTodo) ? todo_is : is;
     var isFunc2 = (aToDoFlag2 == kTodo) ? todo_is : is;
     var isFunc3 = (aToDoFlag3 == kTodo) ? todo_is : is;
 
-    var startMsg = aTextFuncName + "(" + boundaryToString(aBoundaryType) + "): ";
-
-    var endMsg = ", id: '" + prettyName(aID) + "';";
-    
     isFunc1(text, aText,
             startMsg + "wrong text, offset: " + aOffset + endMsg);
     isFunc2(startOffsetObj.value, aStartOffset,
             startMsg + "wrong start offset, offset: " + aOffset + endMsg);
     isFunc3(endOffsetObj.value, aEndOffset,
             startMsg + "wrong end offset, offset: " + aOffset + endMsg);
-    
+
   } catch (e) {
     var okFunc = exceptionFlag ? todo : ok;
     okFunc(false, startMsg + "failed at offset " + aOffset + endMsg);

@@ -141,6 +141,8 @@ class MozbuildObject(ProcessExecutionMixin):
         if substs['OS_ARCH'] == 'Darwin':
             stem = os.path.join(stem, substs['MOZ_MACBUNDLE_NAME'], 'Contents',
                 'MacOS')
+        else:
+            stem = os.path.join(stem, 'bin')
 
         leaf = None
 

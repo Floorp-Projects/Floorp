@@ -84,14 +84,16 @@ js::ScriptDebugPrologue(JSContext *cx, AbstractFramePtr frame)
 {
     JS_ASSERT_IF(frame.isStackFrame(), frame.asStackFrame() == cx->fp());
 
-    if (frame.isFramePushedByExecute()) {
-        if (JSInterpreterHook hook = cx->runtime->debugHooks.executeHook)
-            frame.setHookData(hook(cx, Jsvalify(frame), IsTopFrameConstructing(cx, frame),
-                                   true, 0, cx->runtime->debugHooks.executeHookData));
-    } else {
-        if (JSInterpreterHook hook = cx->runtime->debugHooks.callHook)
-            frame.setHookData(hook(cx, Jsvalify(frame), IsTopFrameConstructing(cx, frame),
-                                   true, 0, cx->runtime->debugHooks.callHookData));
+    if (!frame.script()->selfHosted) {
+        if (frame.isFramePushedByExecute()) {
+            if (JSInterpreterHook hook = cx->runtime->debugHooks.executeHook)
+                frame.setHookData(hook(cx, Jsvalify(frame), IsTopFrameConstructing(cx, frame),
+                                       true, 0, cx->runtime->debugHooks.executeHookData));
+        } else {
+            if (JSInterpreterHook hook = cx->runtime->debugHooks.callHook)
+                frame.setHookData(hook(cx, Jsvalify(frame), IsTopFrameConstructing(cx, frame),
+                                       true, 0, cx->runtime->debugHooks.callHookData));
+        }
     }
 
     RootedValue rval(cx);
@@ -931,7 +933,7 @@ JS_UnwrapObjectAndInnerize(JSObject *obj)
 JS_FRIEND_API(JSBool)
 js_CallContextDebugHandler(JSContext *cx)
 {
-    ScriptFrameIter iter(cx);
+    NonBuiltinScriptFrameIter iter(cx);
     JS_ASSERT(!iter.done());
 
     RootedValue rval(cx);
@@ -955,9 +957,7 @@ JS::DescribeStack(JSContext *cx, unsigned maxFrames)
 {
     Vector<FrameDescription> frames(cx);
 
-    for (ScriptFrameIter i(cx); !i.done(); ++i) {
-        if (i.script()->selfHosted)
-            continue;
+    for (NonBuiltinScriptFrameIter i(cx); !i.done(); ++i) {
         FrameDescription desc;
         desc.script = i.script();
         desc.lineno = PCToLineNumber(i.script(), i.pc());
@@ -1028,7 +1028,7 @@ FormatValue(JSContext *cx, const Value &v, JSAutoByteString &bytes)
 }
 
 static char *
-FormatFrame(JSContext *cx, const ScriptFrameIter &iter, char *buf, int num,
+FormatFrame(JSContext *cx, const NonBuiltinScriptFrameIter &iter, char *buf, int num,
             JSBool showArgs, JSBool showLocals, JSBool showThisProps)
 {
     RootedScript script(cx, iter.script());
@@ -1206,7 +1206,7 @@ JS::FormatStackDump(JSContext *cx, char *buf,
 {
     int num = 0;
 
-    for (ScriptFrameIter i(cx); !i.done(); ++i) {
+    for (NonBuiltinScriptFrameIter i(cx); !i.done(); ++i) {
         buf = FormatFrame(cx, i, buf, num, showArgs, showLocals, showThisProps);
         num++;
     }
@@ -1343,7 +1343,7 @@ JSAbstractFramePtr::evaluateUCInStackFrame(JSContext *cx,
 
 JSBrokenFrameIterator::JSBrokenFrameIterator(JSContext *cx)
 {
-    ScriptFrameIter iter(cx);
+    NonBuiltinScriptFrameIter iter(cx);
     data_ = iter.copyData();
 }
 
@@ -1355,7 +1355,7 @@ JSBrokenFrameIterator::~JSBrokenFrameIterator()
 bool
 JSBrokenFrameIterator::done() const
 {
-    ScriptFrameIter iter(*(StackIter::Data *)data_);
+    NonBuiltinScriptFrameIter iter(*(StackIter::Data *)data_);
     return iter.done();
 }
 
@@ -1363,7 +1363,7 @@ JSBrokenFrameIterator &
 JSBrokenFrameIterator::operator++()
 {
     StackIter::Data *data = (StackIter::Data *)data_;
-    ScriptFrameIter iter(*data);
+    NonBuiltinScriptFrameIter iter(*data);
     ++iter;
     *data = iter.data_;
     return *this;
@@ -1372,20 +1372,20 @@ JSBrokenFrameIterator::operator++()
 JSAbstractFramePtr
 JSBrokenFrameIterator::abstractFramePtr() const
 {
-    ScriptFrameIter iter(*(StackIter::Data *)data_);
+    NonBuiltinScriptFrameIter iter(*(StackIter::Data *)data_);
     return Jsvalify(iter.abstractFramePtr());
 }
 
 jsbytecode *
 JSBrokenFrameIterator::pc() const
 {
-    ScriptFrameIter iter(*(StackIter::Data *)data_);
+    NonBuiltinScriptFrameIter iter(*(StackIter::Data *)data_);
     return iter.pc();
 }
 
 bool
 JSBrokenFrameIterator::isConstructing() const
 {
-    ScriptFrameIter iter(*(StackIter::Data *)data_);
+    NonBuiltinScriptFrameIter iter(*(StackIter::Data *)data_);
     return iter.isConstructing();
 }

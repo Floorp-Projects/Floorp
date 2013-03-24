@@ -24,6 +24,7 @@
 
 namespace js {
 
+class ScriptSource;
 class SPSProfiler;
 class AsmJSModule;
 namespace frontend { struct TokenStream; struct ParseNode; }
@@ -36,23 +37,25 @@ IsAsmJSCompilationAvailable(JSContext *cx, unsigned argc, Value *vp);
 
 // Called after parsing a function 'fn' which contains the "use asm" directive.
 // This function performs type-checking and code-generation. If type-checking
-// succeeds, the generated module is assigned to script->asmJS. Otherwise, a
-// warning will be emitted and script->asmJS is left null. The function returns
-// 'false' only if a real JS semantic error (probably OOM) is pending.
+// succeeds, the generated native function is assigned to |moduleFun|.
+// Otherwise, a warning will be emitted and |moduleFun| is left unchanged. The
+// function returns 'false' only if a real JS semantic error (probably OOM) is
+// pending.
 extern bool
-CompileAsmJS(JSContext *cx, frontend::TokenStream &ts, frontend::ParseNode *fn, HandleScript s);
+CompileAsmJS(JSContext *cx, frontend::TokenStream &ts, frontend::ParseNode *fn,
+             const CompileOptions &options,
+             ScriptSource *scriptSource, uint32_t bufStart, uint32_t bufEnd,
+             MutableHandleFunction moduleFun);
 
-// Called by the JSOP_LINKASMJS opcode (which is emitted as the first opcode of
-// a "use asm" function which successfully typechecks). This function performs
-// the validation and dynamic linking of a module to it's given arguments. If
-// validation succeeds, the module's return value (it's exports) are returned
-// as an object in 'rval' and the interpreter should return 'rval' immediately.
-// Otherwise, there was a validation error and execution should continue
-// normally in the interpreter. The function returns 'false' only if a real JS
-// semantic error (OOM or exception thrown when executing GetProperty on the
-// arguments) is pending.
-extern bool
-LinkAsmJS(JSContext *cx, StackFrame *fp, MutableHandleValue rval);
+// Called for any "use asm" function which successfully typechecks. This
+// function performs the validation and dynamic linking of a module to its
+// given arguments. If validation succeeds, the module's return value (its
+// exports) are returned via |vp|.  Otherwise, there was a validation error and
+// execution fall back to the usual path (bytecode generation, interpretation,
+// etc). The function returns 'false' only if a real JS semantic error (OOM or
+// exception thrown when executing GetProperty on the arguments) is pending.
+extern JSBool
+LinkAsmJS(JSContext *cx, unsigned argc, JS::Value *vp);
 
 // Force any currently-executing asm.js code to call
 // js_HandleExecutionInterrupt.
@@ -147,6 +150,19 @@ struct AsmJSParallelTask
         lir = NULL;
     }
 };
+
+// Returns true if the given native is the one that is used to implement asm.js
+// module functions.
+#ifdef JS_ASMJS
+bool
+IsAsmJSModuleNative(js::Native native);
+#else
+static inline bool
+IsAsmJSModuleNative(js::Native native)
+{
+    return false;
+}
+#endif
 
 } // namespace js
 

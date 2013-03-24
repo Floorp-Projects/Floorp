@@ -1018,6 +1018,14 @@ GetPropertyIC::update(JSContext *cx, size_t cacheIndex,
 }
 
 void
+GetPropertyIC::reset()
+{
+    IonCache::reset();
+    hasArrayLengthStub_ = false;
+    hasTypedArrayLengthStub_ = false;
+}
+
+void
 IonCache::updateBaseAddress(IonCode *code, MacroAssembler &masm)
 {
     initialJump_.repoint(code, &masm);
@@ -1740,6 +1748,13 @@ GetElementIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
 
     types::TypeScript::Monitor(cx, script, pc, res);
     return true;
+}
+
+void
+GetElementIC::reset()
+{
+    IonCache::reset();
+    hasDenseStub_ = false;
 }
 
 bool
