@@ -6706,46 +6706,6 @@ nsContentUtils::TraceWrapper(nsWrapperCache* aCache, TraceCallback aCallback,
   }
 }
 
-nsresult
-nsContentUtils::JSArrayToAtomArray(JSContext* aCx, const JS::Value& aJSArray,
-                                   nsCOMArray<nsIAtom>& aRetVal)
-{
-  JSAutoRequest ar(aCx);
-  if (!aJSArray.isObject()) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-  
-  JSObject* obj = &aJSArray.toObject();
-  JSAutoCompartment ac(aCx, obj);
-  
-  uint32_t length;
-  if (!JS_IsArrayObject(aCx, obj) || !JS_GetArrayLength(aCx, obj, &length)) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-
-  JSString* str = nullptr;
-  JS::Anchor<JSString *> deleteProtector(str);
-  for (uint32_t i = 0; i < length; ++i) {
-    jsval v;
-    if (!JS_GetElement(aCx, obj, i, &v) ||
-        !(str = JS_ValueToString(aCx, v))) {
-      return NS_ERROR_ILLEGAL_VALUE;
-    }
-
-    nsDependentJSString depStr;
-    if (!depStr.init(aCx, str)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    nsCOMPtr<nsIAtom> a = do_GetAtom(depStr);
-    if (!a) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    aRetVal.AppendObject(a);
-  }
-  return NS_OK;
-}
-
 // static
 void
 nsContentUtils::GetSelectionInTextControl(Selection* aSelection,
