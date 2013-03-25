@@ -714,6 +714,11 @@ Toolbox.prototype = {
       outstanding.push(panel.destroy());
     }
 
+    let container = this.doc.getElementById("toolbox-buttons");
+    while(container.firstChild) {
+      container.removeChild(container.firstChild);
+    }
+
     outstanding.push(this._host.destroy());
 
     // Targets need to be notified that the toolbox is being torn down, so that
@@ -726,6 +731,9 @@ Toolbox.prototype = {
 
     Promise.all(outstanding).then(function() {
       this.emit("destroyed");
+      // Free _host after the call to destroyed in order to let a chance
+      // to destroyed listeners to still query toolbox attributes
+      this._host = null;
       deferred.resolve();
     }.bind(this));
 
