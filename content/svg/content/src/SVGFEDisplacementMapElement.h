@@ -6,28 +6,33 @@
 #ifndef mozilla_dom_SVGFEDisplacementMapElement_h
 #define mozilla_dom_SVGFEDisplacementMapElement_h
 
+#include "nsSVGEnum.h"
 #include "nsSVGFilters.h"
+
+nsresult NS_NewSVGFEDisplacementMapElement(nsIContent **aResult,
+                                           already_AddRefed<nsINodeInfo> aNodeInfo);
 
 namespace mozilla {
 namespace dom {
 
-typedef nsSVGFE nsSVGFEDisplacementMapElementBase;
+typedef nsSVGFE SVGFEDisplacementMapElementBase;
 
-class nsSVGFEDisplacementMapElement : public nsSVGFEDisplacementMapElementBase,
-                                      public nsIDOMSVGFEDisplacementMapElement
+class SVGFEDisplacementMapElement : public SVGFEDisplacementMapElementBase,
+                                    public nsIDOMSVGElement
 {
 protected:
-  friend nsresult NS_NewSVGFEDisplacementMapElement(nsIContent **aResult,
-                                                    already_AddRefed<nsINodeInfo> aNodeInfo);
-  nsSVGFEDisplacementMapElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-    : nsSVGFEDisplacementMapElementBase(aNodeInfo) {}
+  friend nsresult (::NS_NewSVGFEDisplacementMapElement(nsIContent **aResult,
+                                                       already_AddRefed<nsINodeInfo> aNodeInfo));
+  SVGFEDisplacementMapElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+    : SVGFEDisplacementMapElementBase(aNodeInfo)
+  {
+    SetIsDOMBinding();
+  }
+  virtual JSObject* WrapNode(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 
 public:
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
-
-  // FE Base
-  NS_FORWARD_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES(nsSVGFEDisplacementMapElementBase::)
 
   virtual nsresult Filter(nsSVGFilterInstance* aInstance,
                           const nsTArray<const Image*>& aSources,
@@ -44,19 +49,22 @@ public:
   virtual nsIntRect ComputeChangeBBox(const nsTArray<nsIntRect>& aSourceChangeBoxes,
           const nsSVGFilterInstance& aInstance);
 
-  // DisplacementMap
-  NS_DECL_NSIDOMSVGFEDISPLACEMENTMAPELEMENT
-
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFEDisplacementMapElementBase::)
+  NS_FORWARD_NSIDOMSVGELEMENT(SVGFEDisplacementMapElementBase::)
 
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
-  virtual nsXPCClassInfo* GetClassInfo();
-
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+  // WebIDL
+  already_AddRefed<nsIDOMSVGAnimatedString> In1();
+  already_AddRefed<nsIDOMSVGAnimatedString> In2();
+  already_AddRefed<nsIDOMSVGAnimatedNumber> Scale();
+  already_AddRefed<nsIDOMSVGAnimatedEnumeration> XChannelSelector();
+  already_AddRefed<nsIDOMSVGAnimatedEnumeration> YChannelSelector();
+
 protected:
   virtual bool OperatesOnSRGB(nsSVGFilterInstance* aInstance,
                               int32_t aInput, Image* aImage) {
@@ -64,8 +72,8 @@ protected:
     case 0:
       return aImage->mColorModel.mColorSpace == ColorModel::SRGB;
     case 1:
-      return nsSVGFEDisplacementMapElementBase::OperatesOnSRGB(aInstance,
-                                                               aInput, aImage);
+      return SVGFEDisplacementMapElementBase::OperatesOnSRGB(aInstance,
+                                                             aInput, aImage);
     default:
       NS_ERROR("Will not give correct output color model");
       return false;
