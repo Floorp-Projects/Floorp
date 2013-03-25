@@ -23,7 +23,6 @@
 #include "nsIAccessible.h"
 #include "nsIAccessibleEvent.h"
 #include "nsIDOMElement.h"
-#include "nsIContent.h"
 #include "nsAccessNode.h"
 #include "oleidl.h"
 #include "oleacc.h"
@@ -42,6 +41,8 @@
                                                           GetExceptionInformation())) \
   { }                                                                                 \
   return E_FAIL;
+
+class nsIContent;
 
 namespace mozilla {
 namespace a11y {

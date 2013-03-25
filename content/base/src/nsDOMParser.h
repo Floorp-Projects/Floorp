@@ -6,14 +6,16 @@
 #ifndef nsDOMParser_h_
 #define nsDOMParser_h_
 
-#include "nsIDOMParser.h"
 #include "nsCOMPtr.h"
-#include "nsWeakReference.h"
 #include "nsIDocument.h"
+#include "nsIDOMParser.h"
+#include "nsWeakReference.h"
 #include "nsWrapperCache.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/DOMParserBinding.h"
 #include "mozilla/dom/TypedArray.h"
+
+class nsIDocument;
 
 class nsDOMParser MOZ_FINAL : public nsIDOMParser,
                               public nsSupportsWeakReference,

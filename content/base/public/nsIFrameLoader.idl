@@ -5,6 +5,7 @@
 
 #include "nsISupports.idl"
 
+interface nsFrameLoader;
 interface nsIDocShell;
 interface nsIURI;
 interface nsIFrame;

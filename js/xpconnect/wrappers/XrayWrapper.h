@@ -66,36 +66,43 @@ class XrayWrapper : public Base {
     virtual ~XrayWrapper();
 
     /* Fundamental proxy traps. */
-    virtual bool getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
-                                       js::PropertyDescriptor *desc, unsigned flags) MOZ_OVERRIDE;
-    virtual bool getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
+    virtual bool getPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*> wrapper, JS::Handle<jsid> id,
+                                       js::PropertyDescriptor *desc, unsigned flags);
+    virtual bool getOwnPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*> wrapper, JS::Handle<jsid> id,
                                           js::PropertyDescriptor *desc,
-                                          unsigned flags) MOZ_OVERRIDE;
-    virtual bool defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
+                                          unsigned flags);
+    virtual bool defineProperty(JSContext *cx, JS::Handle<JSObject*> wrapper, JS::Handle<jsid> id,
                                 js::PropertyDescriptor *desc);
-    virtual bool getOwnPropertyNames(JSContext *cx, JSObject *wrapper,
+    virtual bool getOwnPropertyNames(JSContext *cx, JS::Handle<JSObject*> wrapper,
                                      js::AutoIdVector &props);
-    virtual bool delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp);
-    virtual bool enumerate(JSContext *cx, JSObject *wrapper, js::AutoIdVector &props);
+    virtual bool delete_(JSContext *cx, JS::Handle<JSObject*> wrapper,
+                         JS::Handle<jsid> id, bool *bp);
+    virtual bool enumerate(JSContext *cx, JS::Handle<JSObject*> wrapper, js::AutoIdVector &props);
 
     /* Derived proxy traps. */
-    virtual bool get(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id,
-                     js::Value *vp);
-    virtual bool set(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id,
-                     bool strict, js::Value *vp);
-    virtual bool has(JSContext *cx, JSObject *wrapper, jsid id, bool *bp);
-    virtual bool hasOwn(JSContext *cx, JSObject *wrapper, jsid id, bool *bp);
-    virtual bool keys(JSContext *cx, JSObject *wrapper, js::AutoIdVector &props);
-    virtual bool iterate(JSContext *cx, JSObject *wrapper, unsigned flags, js::Value *vp);
+    virtual bool get(JSContext *cx, JS::Handle<JSObject*> wrapper, JS::Handle<JSObject*> receiver,
+                     JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp);
+    virtual bool set(JSContext *cx, JS::Handle<JSObject*> wrapper, JS::Handle<JSObject*> receiver,
+                     JS::Handle<jsid> id, bool strict, JS::MutableHandle<JS::Value> vp);
+    virtual bool has(JSContext *cx, JS::Handle<JSObject*> wrapper, JS::Handle<jsid> id,
+                     bool *bp);
+    virtual bool hasOwn(JSContext *cx, JS::Handle<JSObject*> wrapper, JS::Handle<jsid> id,
+                        bool *bp);
+    virtual bool keys(JSContext *cx, JS::Handle<JSObject*> wrapper,
+                      js::AutoIdVector &props);
+    virtual bool iterate(JSContext *cx, JS::Handle<JSObject*> wrapper, unsigned flags,
+                         JS::MutableHandle<JS::Value> vp);
 
-    virtual bool call(JSContext *cx, JSObject *wrapper, unsigned argc, js::Value *vp);
-    virtual bool construct(JSContext *cx, JSObject *wrapper,
-                           unsigned argc, js::Value *argv, js::Value *rval);
+    virtual bool call(JSContext *cx, JS::Handle<JSObject*> wrapper, unsigned argc,
+                      js::Value *vp);
+    virtual bool construct(JSContext *cx, JS::Handle<JSObject*> wrapper,
+                           unsigned argc, js::Value *argv,
+                           JS::MutableHandle<JS::Value> rval);
 
     static XrayWrapper singleton;
 
   private:
-    bool enumerate(JSContext *cx, JSObject *wrapper, unsigned flags,
+    bool enumerate(JSContext *cx, JS::Handle<JSObject*> wrapper, unsigned flags,
                    JS::AutoIdVector &props);
 };
 
@@ -113,23 +120,27 @@ public:
     {
     }
 
-    virtual bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id,
-                                       js::PropertyDescriptor *desc, unsigned flags) MOZ_OVERRIDE;
-    virtual bool getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy,
-                                          jsid id, js::PropertyDescriptor *desc,
+    virtual bool getPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*> proxy,
+                                       JS::Handle<jsid> id, js::PropertyDescriptor *desc,
+                                       unsigned flags) MOZ_OVERRIDE;
+    virtual bool getOwnPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*> proxy,
+                                          JS::Handle<jsid> id, js::PropertyDescriptor *desc,
                                           unsigned flags) MOZ_OVERRIDE;
 
     // We just forward the derived traps to the BaseProxyHandler versions which
     // implement them in terms of the fundamental traps.
-    virtual bool has(JSContext *cx, JSObject *proxy, jsid id, bool *bp) MOZ_OVERRIDE;
-    virtual bool hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp) MOZ_OVERRIDE;
-    virtual bool get(JSContext *cx, JSObject *proxy, JSObject *receiver,
-                     jsid id, JS::Value *vp) MOZ_OVERRIDE;
-    virtual bool set(JSContext *cx, JSObject *proxy, JSObject *receiver,
-                     jsid id, bool strict, JS::Value *vp) MOZ_OVERRIDE;
-    virtual bool keys(JSContext *cx, JSObject *proxy, JS::AutoIdVector &props) MOZ_OVERRIDE;
-    virtual bool iterate(JSContext *cx, JSObject *proxy, unsigned flags,
-                         JS::Value *vp) MOZ_OVERRIDE;
+    virtual bool has(JSContext *cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
+                     bool *bp) MOZ_OVERRIDE;
+    virtual bool hasOwn(JSContext *cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
+                        bool *bp) MOZ_OVERRIDE;
+    virtual bool get(JSContext *cx, JS::Handle<JSObject*> proxy, JS::Handle<JSObject*> receiver,
+                     JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp) MOZ_OVERRIDE;
+    virtual bool set(JSContext *cx, JS::Handle<JSObject*> proxy, JS::Handle<JSObject*> receiver,
+                     JS::Handle<jsid> id, bool strict, JS::MutableHandle<JS::Value> vp) MOZ_OVERRIDE;
+    virtual bool keys(JSContext *cx, JS::Handle<JSObject*> proxy,
+                      JS::AutoIdVector &props) MOZ_OVERRIDE;
+    virtual bool iterate(JSContext *cx, JS::Handle<JSObject*> proxy, unsigned flags,
+                         JS::MutableHandle<JS::Value> vp) MOZ_OVERRIDE;
 };
 
 extern SandboxProxyHandler sandboxProxyHandler;
@@ -143,7 +154,7 @@ public:
     {
     }
 
-    virtual bool call(JSContext *cx, JSObject *proxy, unsigned argc,
+    virtual bool call(JSContext *cx, JS::Handle<JSObject*> proxy, unsigned argc,
                       JS::Value *vp);
 };
 

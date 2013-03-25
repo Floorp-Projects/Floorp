@@ -84,11 +84,16 @@ protected:
       }
 
       mVectorImage->InvalidateObserver();
-    }
 
-    // We may have been removed from the observer list by our caller. Rather
-    // than add ourselves back here, we wait until Draw gets called, ensuring
-    // that we coalesce invalidations between Draw calls.
+      // We may have been removed from the observer list by our caller. Rather
+      // than add ourselves back here, we wait until Draw gets called, ensuring
+      // that we coalesce invalidations between Draw calls.
+    } else {
+      // Here we may also have been removed from the observer list, but since
+      // we're not sending an invalidation, Draw won't get called. We need to
+      // add ourselves back immediately.
+      ResumeListening();
+    }
   }
 
   // Private data
@@ -383,7 +388,8 @@ VectorImage::OnImageDataComplete(nsIRequest* aRequest,
     nsRefPtr<imgStatusTracker> clone = mStatusTracker->CloneForRecording();
     imgDecoderObserver* observer = clone->GetDecoderObserver();
     observer->OnStopRequest(aLastPart, finalStatus);
-    mStatusTracker->SyncAndSyncNotifyDifference(clone);
+    imgStatusTracker::StatusDiff diff = mStatusTracker->CalculateAndApplyDifference(clone);
+    mStatusTracker->SyncNotifyDifference(diff);
   }
   return finalStatus;
 }
@@ -841,7 +847,8 @@ VectorImage::OnStartRequest(nsIRequest* aRequest, nsISupports* aCtxt)
     nsRefPtr<imgStatusTracker> clone = mStatusTracker->CloneForRecording();
     imgDecoderObserver* observer = clone->GetDecoderObserver();
     observer->OnStartDecode();
-    mStatusTracker->SyncAndSyncNotifyDifference(clone);
+    imgStatusTracker::StatusDiff diff = mStatusTracker->CalculateAndApplyDifference(clone);
+    mStatusTracker->SyncNotifyDifference(diff);
   }
 
   // Create a listener to wait until the SVG document is fully loaded, which
@@ -928,7 +935,8 @@ VectorImage::OnSVGDocumentLoaded()
     observer->OnStopFrame();
     observer->OnStopDecode(NS_OK); // Unblock page load.
 
-    mStatusTracker->SyncAndSyncNotifyDifference(clone);
+    imgStatusTracker::StatusDiff diff = mStatusTracker->CalculateAndApplyDifference(clone);
+    mStatusTracker->SyncNotifyDifference(diff);
   }
 
   EvaluateAnimation();
@@ -950,7 +958,8 @@ VectorImage::OnSVGDocumentError()
 
     // Unblock page load.
     observer->OnStopDecode(NS_ERROR_FAILURE);
-    mStatusTracker->SyncAndSyncNotifyDifference(clone);
+    imgStatusTracker::StatusDiff diff = mStatusTracker->CalculateAndApplyDifference(clone);
+    mStatusTracker->SyncNotifyDifference(diff);
   }
 }
 

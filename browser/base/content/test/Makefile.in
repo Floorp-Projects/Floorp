@@ -316,6 +316,7 @@ _BROWSER_FILES = \
                  browser_pluginCrashCommentAndURL.js \
                  pluginCrashCommentAndURL.html \
                  browser_private_no_prompt.js \
+                 browser_blob-channelname.js
                  $(NULL)
 
 # Disable test on Windows due to frequent failures (bug 841341)

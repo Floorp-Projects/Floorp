@@ -30,11 +30,8 @@
     <div class="link-box" onclick="switchSection('happy');">
       <a>&intro.happyLink;</a>
     </div>
-    <div class="link-box" onclick="switchSection('sad');">
+    <div class="link-box-bottom" onclick="switchSection('sad');">
       <a>&intro.sadLink;</a>
-    </div>
-    <div class="link-box-bottom" onclick="switchSection('idea');">
-      <a>&intro.ideaLink;</a>
     </div>
     <div id="sumo-message" class="fine-print">&support.pre;<a id="sumo-link">&support.link;</a>&support.post;</div>
   </section>
@@ -66,28 +63,11 @@
     </form>
   </section>
 
-  <section id="idea">
-    <form onsubmit="sendFeedback(event);">
-      <div class="message">&idea.message;</div>
-      <textarea class="description" placeholder="&idea.placeholder;" rows="8" required="true"/>
-      <div class="fine-print">&feedback.privacy;</div>
-      <input class="send-feedback" type="submit" value="&feedback.send;"/>
-    </form>
-  </section>
-
   <section id="thanks-sad">
     <h1 class="header">&sad.thanksHeader;</h1>
     <div class="message-box-bottom">
       <div class="message">&sad.thanksMessageTop;</div>
       <div class="message">&sad.thanksMessageBottom;</div>
-    </div>
-  </section>
-
-  <section id="thanks-idea">
-    <h1 class="header">&idea.thanksHeader;</h1>
-    <div class="message-box-bottom">
-      <div class="message">&idea.thanksMessageTop;</div>
-      <div class="message">&idea.thanksMessageBottom;</div>
     </div>
   </section>
 
@@ -156,7 +136,7 @@
       let section = history.state.section;
 
       // Sanity check.
-      if (section != "sad" && section != "idea") {
+      if (section != "sad") {
         Cu.reportError("Trying to send feedback from an invalid section: " + section);
         return;
       }
@@ -171,24 +151,18 @@
 
       let data = new FormData();
       data.append("description", descriptionElement.value);
+      data.append("_type", 2);
 
-      if (section == "sad") {
-        data.append("_type", 2);
+      let urlElement = document.getElementById("last-url");
+      // Bail if the URL value isn't valid. HTML5 form validation will take care
+      // of showing an error message for us.
+      if (!urlElement.validity.valid)
+        return;
 
-        let urlElement = document.getElementById("last-url");
-        // Bail if the URL value isn't valid. HTML5 form validation will take care
-        // of showing an error message for us.
-        if (!urlElement.validity.valid)
-          return;
-
-        // Only send a URL string if the user provided one.
-        if (urlElement.value) {
-          data.append("add_url", true);
-          data.append("url", urlElement.value);
-        }
-      } else {
-        // Otherwise we're in the "idea" section.
-        data.append("_type", 3);        
+      // Only send a URL string if the user provided one.
+      if (urlElement.value) {
+        data.append("add_url", true);
+        data.append("url", urlElement.value);
       }
 
       let sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);

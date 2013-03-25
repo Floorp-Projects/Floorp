@@ -31,7 +31,6 @@ public class GeckoApplication extends Application {
         GeckoBatteryManager.getInstance().start();
         GeckoNetworkManager.getInstance().init(getApplicationContext());
         MemoryMonitor.getInstance().init(getApplicationContext());
-        GeckoAppShell.setNotificationClient(new NotificationServiceClient(getApplicationContext()));
 
         mInited = true;
     }

@@ -6,6 +6,7 @@
 #include "mozilla/Util.h"
 
 #include "mozilla/dom/HTMLIFrameElement.h"
+#include "mozilla/dom/HTMLIFrameElementBinding.h"
 #include "nsIDOMSVGDocument.h"
 #include "nsMappedAttributes.h"
 #include "nsAttrValueInlines.h"
@@ -25,6 +26,7 @@ HTMLIFrameElement::HTMLIFrameElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                                      FromParser aFromParser)
   : nsGenericHTMLFrameElement(aNodeInfo, aFromParser)
 {
+  SetIsDOMBinding();
 }
 
 HTMLIFrameElement::~HTMLIFrameElement()
@@ -247,6 +249,12 @@ HTMLIFrameElement::GetSandboxFlags()
 
   // No sandbox attribute, no sandbox flags.
   return 0;
+}
+
+JSObject*
+HTMLIFrameElement::WrapNode(JSContext* aCx, JSObject* aScope)
+{
+  return HTMLIFrameElementBinding::Wrap(aCx, aScope, this);
 }
 
 } // namespace dom

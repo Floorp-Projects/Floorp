@@ -100,7 +100,7 @@ add_task(function setup() {
   // Note: we do not empty the db before this import to catch bugs like 380999
   yield BookmarkHTMLUtils.importFromFile(gBookmarksFileOld, true);
   yield promiseAsyncUpdates();
-  testImportedBookmarks();
+  yield testImportedBookmarks();
 
   yield BookmarkHTMLUtils.exportToFile(gBookmarksFileNew);
   yield promiseAsyncUpdates();
@@ -115,7 +115,7 @@ add_task(function test_import_new()
   yield BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, true);
   yield promiseAsyncUpdates();
 
-  testImportedBookmarks();
+  yield testImportedBookmarks();
   yield promiseAsyncUpdates();
 
   remove_all_bookmarks();
@@ -148,7 +148,7 @@ add_task(function test_emptytitle_export()
 
   yield BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, true);
   yield promiseAsyncUpdates();
-  testImportedBookmarks();
+  yield testImportedBookmarks();
 
   // Cleanup.
   test_bookmarks.unfiled.pop();
@@ -214,7 +214,7 @@ add_task(function test_import_chromefavicon()
 
   yield BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, true);
   yield promiseAsyncUpdates();
-  testImportedBookmarks();
+  yield testImportedBookmarks();
 
   // Cleanup.
   test_bookmarks.unfiled.pop();
@@ -239,7 +239,7 @@ add_task(function test_import_ontop()
   yield BookmarkHTMLUtils.exportToFile(gBookmarksFileNew);
   yield BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, true);
   yield promiseAsyncUpdates();
-  testImportedBookmarks();
+  yield testImportedBookmarks();
   yield promiseAsyncUpdates();
   remove_all_bookmarks();
 });
@@ -265,7 +265,9 @@ function testImportedBookmarks()
     let items = test_bookmarks[group];
     do_check_eq(root.childCount, items.length);
 
-    items.forEach(function (item, index) checkItem(item, root.getChild(index)));
+    for (let key in items) {
+      yield checkItem(items[key], root.getChild(key));
+    }
 
     root.containerOpen = false;
   }
@@ -304,87 +306,102 @@ function testImportedBookmarksToFolder(aFolder)
 function checkItem(aExpected, aNode)
 {
   let id = aNode.itemId;
-  for (prop in aExpected) {
-    switch (prop) {
-      case "type":
-        do_check_eq(aNode.type, aExpected.type);
-        break;
-      case "title":
-        do_check_eq(aNode.title, aExpected.title);
-        break;
-      case "description":
-        do_check_eq(PlacesUtils.annotations
-                               .getItemAnnotation(id, DESCRIPTION_ANNO),
-                    aExpected.description);
-        break;
-      case "dateAdded":
+  let deferred = Promise.defer();
+
+  Task.spawn(function() {
+    for (prop in aExpected) {
+      switch (prop) {
+        case "type":
+          do_check_eq(aNode.type, aExpected.type);
+          break;
+        case "title":
+          do_check_eq(aNode.title, aExpected.title);
+          break;
+        case "description":
+          do_check_eq(PlacesUtils.annotations
+                                 .getItemAnnotation(id, DESCRIPTION_ANNO),
+                      aExpected.description);
+          break;
+        case "dateAdded":
           do_check_eq(PlacesUtils.bookmarks.getItemDateAdded(id),
                       aExpected.dateAdded);
-        break;
-      case "lastModified":
+          break;
+        case "lastModified":
           do_check_eq(PlacesUtils.bookmarks.getItemLastModified(id),
                       aExpected.lastModified);
-        break;
-      case "url":
-        PlacesUtils.livemarks.getLivemark(
-          { id: id },
-          function (aStatus, aLivemark) {
-            if (!Components.isSuccessCode(aStatus)) {
-              do_check_eq(aNode.uri, aExpected.url);
-            }
-          }
-        );
-        break;
-      case "icon":
-        let deferred = Promise.defer();
-        PlacesUtils.favicons.getFaviconDataForPage(
-          NetUtil.newURI(aExpected.url),
-          function (aURI, aDataLen, aData, aMimeType) {
-            let base64Icon = "data:image/png;base64," +
-              base64EncodeString(String.fromCharCode.apply(String, aData));
-            do_check_true(base64Icon == aExpected.icon);
-            deferred.resolve();
-        });
-        return deferred.promise;
-        break;
-      case "keyword":
-        break;
-      case "sidebar":
-        do_check_eq(PlacesUtils.annotations
-                               .itemHasAnnotation(id, LOAD_IN_SIDEBAR_ANNO),
-                    aExpected.sidebar);
-        break;
-      case "postData":
-        do_check_eq(PlacesUtils.annotations
-                               .getItemAnnotation(id, PlacesUtils.POST_DATA_ANNO),
-                    aExpected.postData);
-        break;
-      case "charset":
-        do_check_eq(PlacesUtils.history.getCharsetForURI(NetUtil.newURI(aNode.uri)),
-                    aExpected.charset);
-        break;
-      case "feedUrl":
-        PlacesUtils.livemarks.getLivemark(
-          { id: id },
-          function (aStatus, aLivemark) {
-            do_check_true(Components.isSuccessCode(aStatus));
-            do_check_eq(aLivemark.siteURI.spec, aExpected.url);
-            do_check_eq(aLivemark.feedURI.spec, Expected.feedUrl);
-          }
-        );
-        break;
-      case "children":
-        let folder = aNode.QueryInterface(Ci.nsINavHistoryContainerResultNode);
-        do_check_eq(folder.hasChildren, aExpected.children.length > 0);
-        folder.containerOpen = true;
-        do_check_eq(folder.childCount, aExpected.children.length);
+          break;
+        case "url":
+          yield function() {
+            let deferred = Promise.defer();
+            PlacesUtils.livemarks.getLivemark(
+              { id: id },
+              function (aStatus, aLivemark) {
+                if (!Components.isSuccessCode(aStatus)) {
+                  do_check_eq(aNode.uri, aExpected.url);
+                }
+                deferred.resolve();
+              }
+            );
+          return deferred.promise; }();
+          break;
+        case "icon":
+          yield function() {
+            let deferred = Promise.defer();
+            PlacesUtils.favicons.getFaviconDataForPage(
+              NetUtil.newURI(aExpected.url),
+              function (aURI, aDataLen, aData, aMimeType) {
+                let base64Icon = "data:image/png;base64," +
+                  base64EncodeString(String.fromCharCode.apply(String, aData));
+                do_check_true(base64Icon == aExpected.icon);
+                deferred.resolve();
+            });
+            return deferred.promise; }();
+          break;
+        case "keyword":
+          break;
+        case "sidebar":
+          do_check_eq(PlacesUtils.annotations
+                                 .itemHasAnnotation(id, LOAD_IN_SIDEBAR_ANNO),
+                      aExpected.sidebar);
+          break;
+        case "postData":
+          do_check_eq(PlacesUtils.annotations
+                                 .getItemAnnotation(id, PlacesUtils.POST_DATA_ANNO),
+                      aExpected.postData);
+          break;
+        case "charset":
+          let testURI = NetUtil.newURI(aNode.uri);
+          do_check_eq((yield PlacesUtils.getCharsetForURI(testURI)), aExpected.charset);
+          break;
+        case "feedUrl":
+          yield function() {
+            let deferred = Promise.defer();
+            PlacesUtils.livemarks.getLivemark(
+              { id: id },
+              function (aStatus, aLivemark) {
+                do_check_true(Components.isSuccessCode(aStatus));
+                do_check_eq(aLivemark.siteURI.spec, aExpected.url);
+                do_check_eq(aLivemark.feedURI.spec, aExpected.feedUrl);
+                deferred.resolve();
+              }
+            );
+          return deferred.promise; }();
+          break;
+        case "children":
+          let folder = aNode.QueryInterface(Ci.nsINavHistoryContainerResultNode);
+          do_check_eq(folder.hasChildren, aExpected.children.length > 0);
+          folder.containerOpen = true;
+          do_check_eq(folder.childCount, aExpected.children.length);
 
-        aExpected.children.forEach(function (item, index) checkItem(item, folder.getChild(index)));
+          aExpected.children.forEach(function (item, index) checkItem(item, folder.getChild(index)));
 
-        folder.containerOpen = false;
-        break;
-      default:
-        throw new Error("Unknown property");
+          folder.containerOpen = false;
+          break;
+        default:
+          throw new Error("Unknown property");
+      }
     }
-  };
+  }).then(deferred.resolve);
+
+  return deferred.promise;
 }

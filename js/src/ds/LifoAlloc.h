@@ -8,6 +8,7 @@
 #ifndef LifoAlloc_h__
 #define LifoAlloc_h__
 
+#include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/GuardObjects.h"
@@ -33,9 +34,9 @@ JS_ALWAYS_INLINE
 char *
 AlignPtr(void *orig)
 {
-    typedef tl::StaticAssert<
-        tl::FloorLog2<LIFO_ALLOC_ALIGN>::result == tl::CeilingLog2<LIFO_ALLOC_ALIGN>::result
-    >::result _;
+    MOZ_STATIC_ASSERT(tl::FloorLog2<LIFO_ALLOC_ALIGN>::result ==
+                      tl::CeilingLog2<LIFO_ALLOC_ALIGN>::result,
+                      "LIFO_ALLOC_ALIGN must be a power of two");
 
     char *result = (char *) ((uintptr_t(orig) + (LIFO_ALLOC_ALIGN - 1)) & (~LIFO_ALLOC_ALIGN + 1));
     JS_ASSERT(uintptr_t(result) % LIFO_ALLOC_ALIGN == 0);

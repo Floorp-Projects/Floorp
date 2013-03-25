@@ -26,7 +26,6 @@
       </xbl:content>
       <implementation>
 
-      <field name="timeLabel">null</field>
       <constructor>
           <![CDATA[
           this.timeLabel = document.getAnonymousElementByAttribute(this, "class", "timeLabel");
@@ -99,18 +98,14 @@
         </getter>
       </property>
 
-      <!-- Public -->
-      <field name="scrubberNameFormat">"&scrubberScale.nameFormat;"</field>
-      <field name="durationValue">""</field>
-
-      <field name="thumb">null</field>
-      <field name="valueBar">null</field>
-      <field name="isDragging">false</field>
-      <field name="wasPausedBeforeDrag">true</field>
-      <field name="type">null</field>
-      <field name="Utils">null</field>
       <constructor>
           <![CDATA[
+          this.scrubberNameFormat = ]]>"&scrubberScale.nameFormat;"<![CDATA[;
+          this.durationValue = "";
+          this.valueBar = null;
+          this.isDragging = false;
+          this.wasPausedBeforeDrag = true;
+
           this.thumb = document.getAnonymousElementByAttribute(this, "class", "scale-thumb");
           this.type = this.getAttribute("class");
           this.Utils = document.getBindingParent(this.parentNode).Utils;
@@ -312,14 +307,10 @@
 
         <constructor>
             <![CDATA[
-            this.Utils.init(this);
-            ]]>
-        </constructor>
+            this.isTouchControl = false;
+            this.randomID = 0;
 
-        <field name="randomID">0</field>
-
-        <field name="Utils">
-            <![CDATA[ ({
+            this.Utils = {
                 debug : false,
                 video : null,
                 videocontrols : null,
@@ -1436,10 +1427,19 @@
 
                     this.log("--- videocontrols initialized ---");
                 }
-            }) ]]>
-        </field>
-
-        <field readonly="true" name="isTouchControl">false</field>
+            };
+            this.Utils.init(this);
+            ]]>
+        </constructor>
+        <destructor>
+            <![CDATA[
+            // randomID used to be a <field>, which meant that the XBL machinery
+            // undefined the property when the element was unbound. The code in
+            // this file actually depends on this, so now that randomID is an
+            // expando, we need to make sure to explicitly delete it.
+            delete this.randomID;
+            ]]>
+        </destructor>
 
     </implementation>
 
@@ -1513,14 +1513,10 @@
 
     <implementation>
 
-        <field readonly="true" name="isTouchControl">true</field>
-
         <constructor>
-          this.TouchUtils.init(this);
-        </constructor>
-
-        <field name="TouchUtils">
-          <![CDATA[ ({
+          <![CDATA[
+          this.isTouchControl = true;
+          this.TouchUtils = {
             videocontrols: null,
             controlsTimer : null,
             controlsTimeout : 5000,
@@ -1633,8 +1629,17 @@
                 this.delayHideControls(this.Utils.HIDE_CONTROLS_TIMEOUT_MS);
               }
             }
-          }) ]]>
-        </field>
+          };
+          this.TouchUtils.init(this);
+      ]]>
+      </constructor>
+      <destructor>
+          <![CDATA[
+          // XBL destructors don't appear to be inherited properly, so we need
+          // to do this here in addition to the videoControls destructor. :-(
+          delete this.randomID;
+          ]]>
+      </destructor>
 
     </implementation>
 

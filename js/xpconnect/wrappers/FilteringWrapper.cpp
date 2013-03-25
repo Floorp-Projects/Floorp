@@ -29,9 +29,16 @@ FilteringWrapper<Base, Policy>::~FilteringWrapper()
 {
 }
 
+template <typename Base, typename Policy>
+bool
+FilteringWrapper<Base, Policy>::isSafeToUnwrap()
+{
+    return Policy::isSafeToUnwrap();
+}
+
 template <typename Policy>
 static bool
-Filter(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
+Filter(JSContext *cx, JS::Handle<JSObject*> wrapper, AutoIdVector &props)
 {
     size_t w = 0;
     for (size_t n = 0; n < props.length(); ++n) {
@@ -60,7 +67,8 @@ FilterSetter(JSContext *cx, JSObject *wrapper, jsid id, js::PropertyDescriptor *
 
 template <typename Base, typename Policy>
 bool
-FilteringWrapper<Base, Policy>::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
+FilteringWrapper<Base, Policy>::getPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*> wrapper,
+                                                      JS::Handle<jsid> id,
                                                       js::PropertyDescriptor *desc, unsigned flags)
 {
     assertEnteredPolicy(cx, wrapper, id);
@@ -71,7 +79,8 @@ FilteringWrapper<Base, Policy>::getPropertyDescriptor(JSContext *cx, JSObject *w
 
 template <typename Base, typename Policy>
 bool
-FilteringWrapper<Base, Policy>::getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
+FilteringWrapper<Base, Policy>::getOwnPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*> wrapper,
+                                                         JS::Handle<jsid> id,
                                                          js::PropertyDescriptor *desc,
                                                          unsigned flags)
 {
@@ -83,7 +92,8 @@ FilteringWrapper<Base, Policy>::getOwnPropertyDescriptor(JSContext *cx, JSObject
 
 template <typename Base, typename Policy>
 bool
-FilteringWrapper<Base, Policy>::getOwnPropertyNames(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
+FilteringWrapper<Base, Policy>::getOwnPropertyNames(JSContext *cx, JS::Handle<JSObject*> wrapper,
+                                                    AutoIdVector &props)
 {
     assertEnteredPolicy(cx, wrapper, JSID_VOID);
     return Base::getOwnPropertyNames(cx, wrapper, props) &&
@@ -92,7 +102,8 @@ FilteringWrapper<Base, Policy>::getOwnPropertyNames(JSContext *cx, JSObject *wra
 
 template <typename Base, typename Policy>
 bool
-FilteringWrapper<Base, Policy>::enumerate(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
+FilteringWrapper<Base, Policy>::enumerate(JSContext *cx, JS::Handle<JSObject*> wrapper,
+                                          AutoIdVector &props)
 {
     assertEnteredPolicy(cx, wrapper, JSID_VOID);
     return Base::enumerate(cx, wrapper, props) &&
@@ -101,7 +112,8 @@ FilteringWrapper<Base, Policy>::enumerate(JSContext *cx, JSObject *wrapper, Auto
 
 template <typename Base, typename Policy>
 bool
-FilteringWrapper<Base, Policy>::keys(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
+FilteringWrapper<Base, Policy>::keys(JSContext *cx, JS::Handle<JSObject*> wrapper,
+                                     AutoIdVector &props)
 {
     assertEnteredPolicy(cx, wrapper, JSID_VOID);
     return Base::keys(cx, wrapper, props) &&
@@ -110,7 +122,8 @@ FilteringWrapper<Base, Policy>::keys(JSContext *cx, JSObject *wrapper, AutoIdVec
 
 template <typename Base, typename Policy>
 bool
-FilteringWrapper<Base, Policy>::iterate(JSContext *cx, JSObject *wrapper, unsigned flags, Value *vp)
+FilteringWrapper<Base, Policy>::iterate(JSContext *cx, JS::Handle<JSObject*> wrapper,
+                                        unsigned flags, JS::MutableHandle<JS::Value> vp)
 {
     assertEnteredPolicy(cx, wrapper, JSID_VOID);
     // We refuse to trigger the iterator hook across chrome wrappers because
@@ -132,8 +145,8 @@ FilteringWrapper<Base, Policy>::nativeCall(JSContext *cx, JS::IsAcceptableThis t
 
 template <typename Base, typename Policy>
 bool
-FilteringWrapper<Base, Policy>::enter(JSContext *cx, JSObject *wrapper, jsid id,
-                                      Wrapper::Action act, bool *bp)
+FilteringWrapper<Base, Policy>::enter(JSContext *cx, JS::Handle<JSObject*> wrapper,
+                                      JS::Handle<jsid> id, Wrapper::Action act, bool *bp)
 {
     // This is a super ugly hacky to get around Xray Resolve wonkiness.
     //

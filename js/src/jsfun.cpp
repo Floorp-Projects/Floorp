@@ -1462,7 +1462,7 @@ js::Function(JSContext *cx, unsigned argc, Value *vp)
     if (hasRest)
         fun->setHasRest();
 
-    bool ok = frontend::CompileFunctionBody(cx, fun, options, formals, chars, length);
+    bool ok = frontend::CompileFunctionBody(cx, &fun, options, formals, chars, length);
     args.rval().setObject(*fun);
     return ok;
 }
@@ -1489,7 +1489,10 @@ js::NewFunction(JSContext *cx, HandleObject funobjArg, Native native, unsigned n
         JS_ASSERT(funobj->getParent() == parent);
         JS_ASSERT_IF(native && cx->typeInferenceEnabled(), funobj->hasSingletonType());
     } else {
-        if (native)
+        // Don't give asm.js module functions a singleton type since they
+        // are cloned (via CloneFunctionObjectIfNotSingleton) which assumes
+        // that hasSingletonType implies isInterpreted.
+        if (native && !IsAsmJSModuleNative(native))
             newKind = SingletonObject;
         funobj = NewObjectWithClassProto(cx, &FunctionClass, NULL, SkipScopeParent(parent), allocKind, newKind);
         if (!funobj)
@@ -1553,7 +1556,12 @@ js::CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent, 
 
     if (allocKind == JSFunction::ExtendedFinalizeKind) {
         clone->flags |= JSFunction::EXTENDED;
-        clone->initializeExtended();
+        if (fun->isExtended() && fun->compartment() == cx->compartment) {
+            for (unsigned i = 0; i < FunctionExtended::NUM_EXTENDED_SLOTS; i++)
+                clone->setExtendedSlot(i, fun->getExtendedSlot(i));
+        } else {
+            clone->initializeExtended();
+        }
     }
 
     if (useSameScript) {

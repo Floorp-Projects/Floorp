@@ -235,7 +235,7 @@ JSObject::finalize(js::FreeOp *fop)
     js::Probes::finalizeObject(this);
 
 #ifdef DEBUG
-    if (!IsBackgroundFinalized(getAllocKind())) {
+    if (!IsBackgroundFinalized(tenuredGetAllocKind())) {
         /* Assert we're on the main thread. */
         fop->runtime()->assertValidThread();
     }
@@ -808,7 +808,7 @@ JSObject::getProto(JSContext *cx, js::HandleObject obj, js::MutableHandleObject 
 {
     if (obj->getTaggedProto().isLazy()) {
         JS_ASSERT(obj->isProxy());
-        return js::Proxy::getPrototypeOf(cx, obj, protop.address());
+        return js::Proxy::getPrototypeOf(cx, obj, protop);
     } else {
         protop.set(obj->js::ObjectImpl::getProto());
         return true;
@@ -1080,26 +1080,6 @@ inline bool
 JSObject::hasShapeTable() const
 {
     return lastProperty()->hasTable();
-}
-
-inline size_t
-JSObject::computedSizeOfThisSlotsElements() const
-{
-    size_t n = sizeOfThis();
-
-    if (hasDynamicSlots())
-        n += numDynamicSlots() * sizeof(js::Value);
-
-    if (hasDynamicElements()) {
-        if (isArrayBuffer()) {
-            n += getElementsHeader()->initializedLength;
-        } else {
-            n += (js::ObjectElements::VALUES_PER_HEADER + getElementsHeader()->capacity) *
-                 sizeof(js::Value);
-        }
-    }
-
-    return n;
 }
 
 inline void
@@ -1721,7 +1701,7 @@ CopyInitializerObject(JSContext *cx, HandleObject baseobj, NewObjectKind newKind
 
     gc::AllocKind allocKind = gc::GetGCObjectFixedSlotsKind(baseobj->numFixedSlots());
     allocKind = gc::GetBackgroundAllocKind(allocKind);
-    JS_ASSERT(allocKind == baseobj->getAllocKind());
+    JS_ASSERT_IF(baseobj->isTenured(), allocKind == baseobj->tenuredGetAllocKind());
     RootedObject obj(cx);
     obj = NewBuiltinClassInstance(cx, &ObjectClass, allocKind, newKind);
     if (!obj)

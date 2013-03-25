@@ -13,7 +13,6 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME     = storage_s
 MODULE_NAME      = mozStorageModule
 FORCE_STATIC_LIB = 1
-GRE_MODULE       = 1
 LIBXUL_LIBRARY = 1
 
 # TODO: we do this in crashreporter and xpcom/base too, should be centralized

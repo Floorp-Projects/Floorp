@@ -1,0 +1,48 @@
+#!/bin/sh
+
+# Default srcdir to this directory
+srcdir=
+
+for option; do
+  case "$option" in
+  -*=*) optarg=`echo "$option" | sed 's/[-_a-zA-Z0-9]*=//'` ;;
+  *) optarg= ;;
+  esac
+
+  case "$option" in
+  --srcdir=*) srcdir="$optarg";;
+  esac
+done
+
+if test -z "$CXX"; then
+  CXX=`which clang++`
+fi
+
+echo -n "checking for llvm-config... "
+
+if test -z "$LLVMCONFIG"; then
+  LLVMCONFIG=`which llvm-config`
+fi
+
+if test -z "$LLVMCONFIG"; then
+  LLVMCONFIG=`dirname $CXX`/llvm-config
+fi
+
+if test ! -x "$LLVMCONFIG"; then
+  echo "configure: error: Cannot find an llvm-config binary for building a clang plugin" 1>&2
+  exit 1
+fi
+
+echo "$LLVMCONFIG"
+
+LLVMCXXFLAGS=`$LLVMCONFIG --cxxflags`
+LLVMLDFLAGS=`$LLVMCONFIG --ldflags`
+CXXFLAGS="$CXXFLAGS $LLVMCXXFLAGS -fno-rtti -fno-exceptions"
+LDFLAGS="$LDFLAGS $LLVMLDFLAGS"
+
+cat $srcdir/Makefile.in | sed \
+  -e "s%@CXX@%$CXX%" \
+  -e "s%@CXXFLAGS@%$CXXFLAGS%" \
+  -e "s%@LDFLAGS@%$LDFLAGS%" \
+  -e "s%@srcdir@%$srcdir%" \
+  > Makefile

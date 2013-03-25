@@ -2529,7 +2529,8 @@ nsHTMLDocument::GetDesignMode(nsAString & aDesignMode)
 void
 nsHTMLDocument::MaybeEditingStateChanged()
 {
-  if (mUpdateNestLevel == 0 && (mContentEditableCount > 0) != IsEditingOn()) {
+  if (!mPendingMaybeEditingStateChanged &&
+      mUpdateNestLevel == 0 && (mContentEditableCount > 0) != IsEditingOn()) {
     if (nsContentUtils::IsSafeToRunScript()) {
       EditingStateChanged();
     } else if (!mInDestructor) {
@@ -2542,8 +2543,12 @@ nsHTMLDocument::MaybeEditingStateChanged()
 void
 nsHTMLDocument::EndUpdate(nsUpdateType aUpdateType)
 {
+  const bool reset = !mPendingMaybeEditingStateChanged;
+  mPendingMaybeEditingStateChanged = true;
   nsDocument::EndUpdate(aUpdateType);
-
+  if (reset) {
+    mPendingMaybeEditingStateChanged = false;
+  }
   MaybeEditingStateChanged();
 }
 

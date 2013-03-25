@@ -16,8 +16,8 @@ var observer1 = {
       // Stop timer, so it doesn't repeat (if test runs slowly).
       timer.cancel();
 
-      // Actual delay may not be exact, so convert to seconds and round down.
-      do_check_eq(Math.floor((Date.now() - gStartTime1) / 1000),
+      // Actual delay may not be exact, so convert to seconds and round.
+      do_check_eq(Math.round((Date.now() - gStartTime1) / 1000),
                   kExpectedDelay1);
 
       timer = null;
@@ -34,8 +34,8 @@ var observer2 = {
       // Stop timer, so it doesn't repeat (if test runs slowly).
       timer.cancel();
 
-      // Actual delay may not be exact, so convert to seconds and round down.
-      do_check_eq(Math.floor((Date.now() - gStartTime2) / 1000),
+      // Actual delay may not be exact, so convert to seconds and round.
+      do_check_eq(Math.round((Date.now() - gStartTime2) / 1000),
                   kExpectedDelay2);
 
       timer = null;

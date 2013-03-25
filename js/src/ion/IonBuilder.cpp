@@ -6954,6 +6954,8 @@ IonBuilder::jsop_lambda(JSFunction *fun)
     JS_ASSERT(script()->analysis()->usesScopeChain());
     if (fun->isArrow())
         return abort("bound arrow function");
+    if (fun->isNative() && IsAsmJSModuleNative(fun->native()))
+        return abort("asm.js module function");
 
     MLambda *ins = MLambda::New(current->scopeChain(), fun);
     current->add(ins);
@@ -6988,6 +6990,8 @@ bool
 IonBuilder::jsop_deffun(uint32_t index)
 {
     RootedFunction fun(cx, script()->getFunction(index));
+    if (fun->isNative() && IsAsmJSModuleNative(fun->native()))
+        return abort("asm.js module function");
 
     JS_ASSERT(script()->analysis()->usesScopeChain());
 

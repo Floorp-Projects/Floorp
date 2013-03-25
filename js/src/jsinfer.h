@@ -1082,6 +1082,8 @@ struct TypeObject : gc::Cell
      */
     void finalize(FreeOp *fop) {}
 
+    JS::Zone *zone() const { return tenuredZone(); }
+
     static inline void writeBarrierPre(TypeObject *type);
     static inline void writeBarrierPost(TypeObject *type, void *addr);
     static inline void readBarrier(TypeObject *type);

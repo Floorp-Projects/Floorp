@@ -66,6 +66,7 @@
 <!ENTITY  permGeo               "Share Location">
 <!ENTITY  permPlugins           "Activate Plugins">
 <!ENTITY  permFullscreen        "Enter Fullscreen">
+<!ENTITY  permPointerLock       "Hide the Mouse Cursor">
 
 <!ENTITY  permIndexedDB              "Maintain Offline Storage">
 <!ENTITY  permClearStorage           "Clear Storage">

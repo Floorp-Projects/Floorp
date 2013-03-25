@@ -12,8 +12,9 @@
 #include "nsILink.h"
 #include "nsGkAtoms.h"
 #include "nsIURL.h"
-#include "nsIDocument.h"
 #include "Link.h"
+
+class nsIDocument;
 
 namespace mozilla {
 namespace dom {

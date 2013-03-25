@@ -31,6 +31,8 @@ CPPSRCS := \
   GainNode.cpp \
   MediaBufferDecoder.cpp \
   PannerNode.cpp \
+  ThreeDPoint.cpp \
+  WebAudioUtils.cpp \
   $(NULL)
 
 EXPORTS_NAMESPACES := mozilla/dom
@@ -52,6 +54,7 @@ EXPORTS_mozilla/dom := \
   $(NULL)
 
 EXPORTS := \
+  AudioParamTimeline.h \
   MediaBufferDecoder.h \
   ThreeDPoint.h \
   WebAudioUtils.h \

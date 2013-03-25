@@ -789,7 +789,6 @@ Chunk::allocateArena(Zone *zone, AllocKind thingKind)
     if (JS_UNLIKELY(!hasAvailableArenas()))
         removeFromAvailableList();
 
-    Probes::resizeHeap(zone, rt->gcBytes, rt->gcBytes + ArenaSize);
     rt->gcBytes += ArenaSize;
     zone->gcBytes += ArenaSize;
     if (zone->gcBytes >= zone->gcTriggerBytes)
@@ -820,7 +819,6 @@ Chunk::releaseArena(ArenaHeader *aheader)
     if (rt->gcHelperThread.sweeping())
         maybeLock.lock(rt);
 
-    Probes::resizeHeap(zone, rt->gcBytes, rt->gcBytes - ArenaSize);
     JS_ASSERT(rt->gcBytes >= ArenaSize);
     JS_ASSERT(zone->gcBytes >= ArenaSize);
     if (rt->gcHelperThread.sweeping())
@@ -957,9 +955,6 @@ js_InitGC(JSRuntime *rt, uint32_t maxbytes)
     if (!rt->gcRootsHash.init(256))
         return false;
 
-    if (!rt->gcLocksHash.init(256))
-        return false;
-
 #ifdef JS_THREADSAFE
     rt->gcLock = PR_NewLock();
     if (!rt->gcLock)
@@ -1038,7 +1033,6 @@ js_FinishGC(JSRuntime *rt)
     rt->gcChunkPool.expireAndFree(rt, true);
 
     rt->gcRootsHash.clear();
-    rt->gcLocksHash.clear();
 }
 
 template <typename T> struct BarrierOwner {};
@@ -1582,42 +1576,6 @@ js_GetGCThingTraceKind(void *thing)
     return GetGCThingTraceKind(thing);
 }
 
-JSBool
-js_LockThing(JSRuntime *rt, void *thing)
-{
-    if (!thing)
-        return true;
-
-    /*
-     * Sometimes Firefox will hold weak references to objects and then convert
-     * them to strong references by calling AddRoot (e.g., via PreserveWrapper,
-     * or ModifyBusyCount in workers). We need a read barrier to cover these
-     * cases.
-     */
-    if (rt->gcIncrementalState != NO_INCREMENTAL)
-        JS::IncrementalReferenceBarrier(thing, GetGCThingTraceKind(thing));
-
-    if (GCLocks::Ptr p = rt->gcLocksHash.lookupWithDefault(thing, 0)) {
-        p->value++;
-        return true;
-    }
-
-    return false;
-}
-
-void
-js_UnlockThing(JSRuntime *rt, void *thing)
-{
-    if (!thing)
-        return;
-
-    if (GCLocks::Ptr p = rt->gcLocksHash.lookup(thing)) {
-        rt->gcPoke = true;
-        if (--p->value == 0)
-            rt->gcLocksHash.remove(p);
-    }
-}
-
 void
 js::InitTracer(JSTracer *trc, JSRuntime *rt, JSTraceCallback callback)
 {
@@ -1844,7 +1802,8 @@ void
 GCMarker::checkZone(void *p)
 {
     JS_ASSERT(started);
-    JS_ASSERT(static_cast<Cell *>(p)->zone()->isCollecting());
+    DebugOnly<Cell *> cell = static_cast<Cell *>(p);
+    JS_ASSERT_IF(cell->isTenured(), cell->tenuredZone()->isCollecting());
 }
 #endif
 
@@ -1916,7 +1875,7 @@ GCMarker::appendGrayRoot(void *thing, JSGCTraceKind kind)
     root.debugPrintIndex = debugPrintIndex;
 #endif
 
-    Zone *zone = static_cast<Cell *>(thing)->zone();
+    Zone *zone = static_cast<Cell *>(thing)->tenuredZone();
     if (zone->isCollecting()) {
         zone->maybeAlive = true;
         if (!zone->gcGrayRoots.append(root)) {
@@ -2727,8 +2686,8 @@ CheckCompartmentCallback(JSTracer *trcArg, void **thingp, JSGCTraceKind kind)
     if (comp && trc->compartment) {
         CheckCompartment(trc, comp, thing, kind);
     } else {
-        JS_ASSERT(thing->zone() == trc->zone ||
-                  thing->zone() == trc->runtime->atomsCompartment->zone());
+        JS_ASSERT(thing->tenuredZone() == trc->zone ||
+                  thing->tenuredZone() == trc->runtime->atomsCompartment->zone());
     }
 }
 
@@ -2908,7 +2867,7 @@ BeginMarkPhase(JSRuntime *rt)
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
         for (JSCompartment::WrapperEnum e(c); !e.empty(); e.popFront()) {
             Cell *dst = e.front().key.wrapped;
-            dst->zone()->maybeAlive = true;
+            dst->tenuredZone()->maybeAlive = true;
         }
     }
 
@@ -3285,7 +3244,7 @@ JSCompartment::findOutgoingEdges(ComponentFinder<JS::Zone> &finder)
              * after wrapped compartment.
              */
             if (!other->isMarked(BLACK) || other->isMarked(GRAY)) {
-                JS::Zone *w = other->zone();
+                JS::Zone *w = other->tenuredZone();
                 if (w->isGCMarking())
                     finder.addEdgeTo(w);
             }
@@ -3298,7 +3257,7 @@ JSCompartment::findOutgoingEdges(ComponentFinder<JS::Zone> &finder)
              * with call to Debugger::findCompartmentEdges below) that debugger
              * and debuggee objects are always swept in the same group.
              */
-            JS::Zone *w = other->zone();
+            JS::Zone *w = other->tenuredZone();
             if (w->isGCMarking())
                 finder.addEdgeTo(w);
         }

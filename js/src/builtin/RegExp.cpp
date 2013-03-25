@@ -254,7 +254,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
         RegExpFlag flags;
         {
             RegExpGuard g(cx);
-            if (!RegExpToShared(cx, *sourceObj, &g))
+            if (!RegExpToShared(cx, sourceObj, &g))
                 return false;
 
             flags = g->getFlags();

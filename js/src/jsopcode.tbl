@@ -253,7 +253,7 @@ OPDEF(JSOP_LEAVEFORLETIN, 105,"leaveforletin",NULL,   1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_LABEL,     106,"label",     NULL,          5,  0,  0,  0,  JOF_JUMP)
 
 /* Performs the dynamic validation step of type-checked asm.js. */
-OPDEF(JSOP_LINKASMJS, 107,"linkasmjs",  NULL,         1,  0,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_UNUSED107, 107,"unused107",  NULL,         1,  0,  0,  0,  JOF_BYTE)
 
 /* Like JSOP_FUNAPPLY but for f.call instead of f.apply. */
 OPDEF(JSOP_FUNCALL,   108,"funcall",    NULL,         3, -1,  1, 18,  JOF_UINT16|JOF_INVOKE|JOF_TYPESET)

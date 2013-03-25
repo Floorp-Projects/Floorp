@@ -4028,7 +4028,7 @@ static XREMain* xreMainPtr;
 
 // must be called by the thread we want as the main thread
 nsresult
-XRE_metroStartup()
+XRE_metroStartup(bool runXREMain)
 {
   nsresult rv;
 
@@ -4044,8 +4044,10 @@ XRE_metroStartup()
   rv = xreMainPtr->mScopedXPCom->Initialize();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = xreMainPtr->XRE_mainRun();
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (runXREMain) {
+    rv = xreMainPtr->XRE_mainRun();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
   return NS_OK;
 }
 

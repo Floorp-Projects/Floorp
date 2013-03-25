@@ -113,6 +113,7 @@ using namespace mozilla::system;
 #include "nsApplicationCacheService.h"
 #include "mozilla/dom/time/DateCacheCleaner.h"
 #include "nsIMEStateManager.h"
+#include "nsDocument.h"
 
 extern void NS_ShutdownEventTargetChainItemRecyclePool();
 
@@ -387,4 +388,6 @@ nsLayoutStatics::Shutdown()
   ContentParent::ShutDown();
 
   nsRefreshDriver::Shutdown();
+
+  nsDocument::XPCOMShutdown();
 }
