@@ -3375,7 +3375,6 @@ Tab.prototype = {
         viewportW = screenW;
         viewportH = screenH;
       }
-      console.log("Use autosize: " + viewportW + "x" + viewportH);
     } else {
       viewportW = metadata.width;
       viewportH = metadata.height;
@@ -3384,9 +3383,7 @@ Tab.prototype = {
       let maxInitialZoom = metadata.defaultZoom || metadata.maxZoom;
       if (maxInitialZoom && viewportW) {
         viewportW = Math.max(viewportW, screenW / maxInitialZoom);
-        console.log("Use max: " + viewportW + " or " + (screenW / maxInitialZoom));
       }
-      console.log("Use max: " + viewportW + " or " + (screenW / maxInitialZoom));
 
       let validW = viewportW > 0;
       let validH = viewportH > 0;

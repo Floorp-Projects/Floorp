@@ -459,7 +459,6 @@ PlacesController.prototype = {
           nodeData["separator"] = true;
           break;
         case Ci.nsINavHistoryResultNode.RESULT_TYPE_URI:
-        case Ci.nsINavHistoryResultNode.RESULT_TYPE_VISIT:
           nodeData["link"] = true;
           uri = NetUtil.newURI(node.uri);
           if (PlacesUtils.nodeIsBookmark(node)) {
