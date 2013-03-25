@@ -428,10 +428,34 @@
       <settings id="prefs-charencoding" label="&optionsHeader.char.title;">
         <setting pref="browser.menu.showCharacterEncoding" title="&optionsHeader.char.options.label;" type="bool"/>
       </settings>
-      <settings id="prefs-privdata" label="&optionsHeader.privacy.clearPrivateData.title;">
-        <setting title="&optionsHeader.privacy.clearPrivateData.label;" type="control">
-          <button id="prefs-clear-data" label="&optionsHeader.privacy.clearPrivateData.button;" command="cmd_sanitize"/>
-        </setting>
+      <settings id="prefs-privdata" label="&clearPrivateData.title;">
+        <description>&clearPrivateData.label;</description>
+
+        <checkbox id="prefs-privdata-history" itemName="history" label="&clearPrivateData.history;" checked="true" />
+
+        <checkbox id="prefs-privdata-other" label="&clearPrivateData.otherdata;"/>
+        <hbox id="prefs-privdata-subitems" >
+          <checkbox class="privdata-subitem-item" checked="true" itemName="downloads" label="&clearPrivateData.downloadHist;"/>
+          <checkbox class="privdata-subitem-item" checked="true" itemName="formdata" label="&clearPrivateData.formSearchHist;"/>
+          <checkbox class="privdata-subitem-item" checked="true" itemName="cookies" label="&clearPrivateData.cookies;"/>
+          <checkbox class="privdata-subitem-item" checked="true" itemName="passwords" label="&clearPrivateData.passwords;"/>
+          <checkbox class="privdata-subitem-item" checked="true" itemName="cache" label="&clearPrivateData.cache;"/>
+          <checkbox class="privdata-subitem-item" checked="true" itemName="offlineApps" label="&clearPrivateData.offline;"/>
+          <checkbox class="privdata-subitem-item" checked="true" itemName="siteSettings" label="&clearPrivateData.sitePref;"/>
+          <checkbox class="privdata-subitem-item" checked="true" itemName="sessions" label="&clearPrivateData.logins;"/>
+        </hbox>
+
+        <hbox align="center">
+          <button id="prefs-clear-data" label="&clearPrivateData.button;" command="cmd_sanitize" flex="1" />
+          <deck id="clear-notification" flex="2" selectedIndex="0" align="center">
+            <spacer id="clear-notification-empty"/>
+            <hbox id="clear-notification-clearing" align="center">
+              <!-- TODO: we need a more metro-y throbber. See bug 852622 -->
+              <image src="chrome://browser/skin/images/throbber.png" />
+            </hbox>
+            <description id="clear-notification-done">&clearPrivateData.done;</description>
+          </deck>
+        </hbox>
       </settings>
       <setting pref="signon.rememberSignons" title="&optionsHeader.privacy.passwords.label;" type="bool"/>
       <settings id="prefs-donottrack" label="&optionsHeader.privacy.doNotTrack.title;">

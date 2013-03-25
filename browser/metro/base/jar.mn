@@ -72,6 +72,7 @@ chrome.jar:
   content/cursor.css                           (content/cursor.css)
 % content branding %content/branding/
   content/sanitize.js                          (content/sanitize.js)
+  content/sanitizeUI.js                        (content/sanitizeUI.js)
   content/input.js                             (content/input.js)
   content/Util.js                              (content/Util.js)
   content/bookmarks.js                         (content/bookmarks.js)

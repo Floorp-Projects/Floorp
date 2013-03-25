@@ -1024,20 +1024,8 @@ var BrowserUI = {
         this.undoCloseTab();
         break;
       case "cmd_sanitize":
-      {
-        let title = Strings.browser.GetStringFromName("clearPrivateData.title");
-        let message = Strings.browser.GetStringFromName("clearPrivateData.message");
-        let clear = Services.prompt.confirm(window, title, message);
-        if (clear) {
-          // disable the button temporarily to indicate something happened
-          let button = document.getElementById("prefs-clear-data");
-          button.disabled = true;
-          setTimeout(function() { button.disabled = false; }, 5000);
-
-          Sanitizer.sanitize();
-        }
+        SanitizeUI.onSanitize();
         break;
-      }
       case "cmd_flyout_back":
         FlyoutPanelsUI.hide();
         MetroUtils.showSettingsFlyout();
@@ -1444,7 +1432,7 @@ var SyncPanelUI = {
   init: function() {
     // Run some setup code the first time the panel is shown.
     Elements.syncFlyout.addEventListener("PopupChanged", function onShow(aEvent) {
-      if (aEvent.detail && aEvent.popup === Elements.syncFlyout) {
+      if (aEvent.detail && aEvent.target === Elements.syncFlyout) {
         Elements.syncFlyout.removeEventListener("PopupChanged", onShow, false);
         WeaveGlue.init();
       }
@@ -1677,14 +1665,14 @@ var DialogUI = {
     this._hidePopup();
     this._popup =  { "panel": aPanel,
                      "elements": (aElements instanceof Array) ? aElements : [aElements] };
-    this._dispatchPopupChanged(true);
+    this._dispatchPopupChanged(true, aPanel);
   },
 
   popPopup: function popPopup(aPanel) {
     if (!this._popup || aPanel != this._popup.panel)
       return;
     this._popup = null;
-    this._dispatchPopupChanged(false);
+    this._dispatchPopupChanged(false, aPanel);
   },
 
   _hidePopup: function _hidePopup() {
@@ -1710,11 +1698,10 @@ var DialogUI = {
     }
   },
 
-  _dispatchPopupChanged: function _dispatchPopupChanged(aVisible) {
+  _dispatchPopupChanged: function _dispatchPopupChanged(aVisible, aElement) {
     let event = document.createEvent("UIEvents");
     event.initUIEvent("PopupChanged", true, true, window, aVisible);
-    event.popup = this._popup;
-    Elements.stack.dispatchEvent(event);
+    aElement.dispatchEvent(event);
   },
 
   _isEventInsidePopup: function _isEventInsidePopup(aEvent) {

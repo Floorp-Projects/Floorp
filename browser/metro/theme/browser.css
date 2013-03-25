@@ -761,6 +761,31 @@ setting[type="directory"] > .preferences-alignment {
   display: none;
 }
 
+/* Clear private data prefs */
+
+/* hide subitems when other data checkbox is not checked */
+#prefs-privdata-other:not([checked]) + #prefs-privdata-subitems {
+  display: none;
+}
+
+#prefs-privdata-subitems {
+  display: block;
+  padding-left: @metro_spacing_xnormal@;
+  font-size: @metro_font_snormal@;
+}
+
+/* arrange sub-items in two columns */
+.privdata-subitem-item {
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0;
+  width: 50%;
+}
+
+#clear-notification-done {
+  font-weight: bold;
+}
+
 /* Start UI (Autocomplete + New Tab Page) ----------------------------------- */
 
 #start-container {
