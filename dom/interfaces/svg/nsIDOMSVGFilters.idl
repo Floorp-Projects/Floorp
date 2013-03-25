@@ -91,17 +91,6 @@ interface nsIDOMSVGFEDiffuseLightingElement :  nsIDOMSVGFilterPrimitiveStandardA
   readonly attribute nsIDOMSVGAnimatedNumber kernelUnitLengthY;
 };
 
-[scriptable, uuid(bb2bac9f-dfab-4ce3-926a-9cfc11ab7922)]
-interface nsIDOMSVGFESpecularLightingElement : nsIDOMSVGFilterPrimitiveStandardAttributes
-{ 
-  readonly attribute nsIDOMSVGAnimatedString in1;
-  readonly attribute nsIDOMSVGAnimatedNumber surfaceScale;
-  readonly attribute nsIDOMSVGAnimatedNumber specularConstant;
-  readonly attribute nsIDOMSVGAnimatedNumber specularExponent;
-  readonly attribute nsIDOMSVGAnimatedNumber kernelUnitLengthX;
-  readonly attribute nsIDOMSVGAnimatedNumber kernelUnitLengthY;
-};
-
 [scriptable, uuid(5ab43048-d59a-4e3c-ad2f-6a5d8593f6d0)]
 interface nsIDOMSVGFEDisplacementMapElement : nsIDOMSVGFilterPrimitiveStandardAttributes
 {

@@ -126,7 +126,6 @@ DOMCI_CLASS(SVGFEConvolveMatrixElement)
 DOMCI_CLASS(SVGFEDiffuseLightingElement)
 DOMCI_CLASS(SVGFEDisplacementMapElement)
 DOMCI_CLASS(SVGFEMorphologyElement)
-DOMCI_CLASS(SVGFESpecularLightingElement)
 DOMCI_CLASS(SVGFETurbulenceElement)
 DOMCI_CLASS(SVGUnknownElement)
 
