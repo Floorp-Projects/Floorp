@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.TimeUnit;
 
-class ActivityHandlerHelper {
+public class ActivityHandlerHelper {
     private static final String LOGTAG = "GeckoActivityHandlerHelper";
 
     private final SynchronousQueue<String> mFilePickerResult;
@@ -39,7 +39,7 @@ class ActivityHandlerHelper {
     private final CameraImageResultHandler mCameraImageResultHandler;
     private final CameraVideoResultHandler mCameraVideoResultHandler;
 
-    ActivityHandlerHelper() {
+    public ActivityHandlerHelper() {
         mFilePickerResult = new SynchronousQueue<String>();
         mActivityResultHandlerMap = new ActivityResultHandlerMap();
         mFilePickerResultHandlerSync = new FilePickerResultHandlerSync(mFilePickerResult);
@@ -48,11 +48,11 @@ class ActivityHandlerHelper {
         mCameraVideoResultHandler = new CameraVideoResultHandler(mFilePickerResult);
     }
 
-    int makeRequestCodeForAwesomebar() {
+    public int makeRequestCodeForAwesomebar() {
         return mActivityResultHandlerMap.put(mAwesomebarResultHandler);
     }
 
-    int makeRequestCode(ActivityResultHandler aHandler) {
+    public int makeRequestCode(ActivityResultHandler aHandler) {
         return mActivityResultHandlerMap.put(aHandler);
     }
 

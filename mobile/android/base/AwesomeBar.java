@@ -56,13 +56,13 @@ public class AwesomeBar extends GeckoActivity {
                                                                  InputMethods.METHOD_SWYPE_BETA,
                                                                  });
 
-    static final String URL_KEY = "url";
-    static final String CURRENT_URL_KEY = "currenturl";
-    static final String TARGET_KEY = "target";
-    static final String SEARCH_KEY = "search";
-    static final String TITLE_KEY = "title";
-    static final String USER_ENTERED_KEY = "user_entered";
-    static final String READING_LIST_KEY = "reading_list";
+    public static final String URL_KEY = "url";
+    public static final String CURRENT_URL_KEY = "currenturl";
+    public static final String TARGET_KEY = "target";
+    public static final String SEARCH_KEY = "search";
+    public static final String TITLE_KEY = "title";
+    public static final String USER_ENTERED_KEY = "user_entered";
+    public static final String READING_LIST_KEY = "reading_list";
     public static enum Target { NEW_TAB, CURRENT_TAB, PICK_SITE };
 
     private String mTarget;

@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * applied between thumbnail processing. This allows a single thumbnail buffer to
  * be used for all thumbnails.
  */
-final class ThumbnailHelper {
+public final class ThumbnailHelper {
     private static final String LOGTAG = "GeckoThumbnailHelper";
 
     public static final float THUMBNAIL_ASPECT_RATIO = 0.714f;  // this is a 5:7 ratio (as per UX decision)
