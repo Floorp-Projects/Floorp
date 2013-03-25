@@ -2027,9 +2027,10 @@ nsImageFrame::AddInlineMinWidth(nsRenderingContext *aRenderingContext,
 
   NS_ASSERTION(GetParent(), "Must have a parent if we get here!");
   
+  nsIFrame* parent = GetParent();
   bool canBreak =
     !CanContinueTextRun() &&
-    GetParent()->StyleText()->WhiteSpaceCanWrap() &&
+    parent->StyleText()->WhiteSpaceCanWrap(parent) &&
     !IsInAutoWidthTableCellForQuirk(this);
 
   if (canBreak)
