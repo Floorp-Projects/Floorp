@@ -466,6 +466,10 @@ HandleException(ResumeFromException *rfe)
             if (rfe->kind != ResumeFromException::RESUME_ENTRY_FRAME)
                 return;
 
+            // Unwind profiler pseudo-stack
+            RawScript script = iter.script();
+            Probes::exitScript(cx, script, script->function(), NULL);
+
             if (cx->compartment->debugMode() && !calledDebugEpilogue) {
                 // If DebugEpilogue returns |true|, we have to perform a forced
                 // return, e.g. return frame->returnValue() to the caller.

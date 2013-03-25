@@ -32,10 +32,14 @@ PCMappingSlotInfo::ToSlotLocation(const StackValue *stackVal)
     return SlotIgnore;
 }
 
-BaselineScript::BaselineScript(uint32_t prologueOffset)
+BaselineScript::BaselineScript(uint32_t prologueOffset, uint32_t spsPushToggleOffset)
   : method_(NULL),
     fallbackStubSpace_(),
     prologueOffset_(prologueOffset),
+#ifdef DEBUG
+    spsOn_(false),
+#endif
+    spsPushToggleOffset_(spsPushToggleOffset),
     flags_(0)
 { }
 
@@ -284,7 +288,8 @@ ion::CanEnterBaselineJIT(JSContext *cx, JSScript *scriptArg, StackFrame *fp, boo
 static const unsigned DataAlignment = sizeof(uintptr_t);
 
 BaselineScript *
-BaselineScript::New(JSContext *cx, uint32_t prologueOffset, size_t icEntries,
+BaselineScript::New(JSContext *cx, uint32_t prologueOffset,
+                    uint32_t spsPushToggleOffset, size_t icEntries,
                     size_t pcMappingIndexEntries, size_t pcMappingSize)
 {
     size_t paddedBaselineScriptSize = AlignBytes(sizeof(BaselineScript), DataAlignment);
@@ -306,7 +311,7 @@ BaselineScript::New(JSContext *cx, uint32_t prologueOffset, size_t icEntries,
         return NULL;
 
     BaselineScript *script = reinterpret_cast<BaselineScript *>(buffer);
-    new (script) BaselineScript(prologueOffset);
+    new (script) BaselineScript(prologueOffset, spsPushToggleOffset);
 
     size_t offsetCursor = paddedBaselineScriptSize;
 
@@ -614,6 +619,25 @@ BaselineScript::toggleDebugTraps(RawScript script, jsbytecode *pc)
 }
 
 void
+BaselineScript::toggleSPS(bool enable)
+{
+    JS_ASSERT(enable == !(bool)spsOn_);
+
+    IonSpew(IonSpew_BaselineIC, "  toggling SPS %s for BaselineScript %p",
+            enable ? "on" : "off", this);
+
+    // Toggle the jump
+    CodeLocationLabel pushToggleLocation(method_, CodeOffsetLabel(spsPushToggleOffset_));
+    if (enable)
+        Assembler::ToggleToCmp(pushToggleLocation);
+    else
+        Assembler::ToggleToJmp(pushToggleLocation);
+#ifdef DEBUG
+    spsOn_ = enable;
+#endif
+}
+
+void
 BaselineScript::purgeOptimizedStubs(Zone *zone)
 {
     IonSpew(IonSpew_BaselineIC, "Purging optimized stubs");
@@ -712,6 +736,19 @@ ion::SizeOfBaselineData(JSScript *script, JSMallocSizeOfFun mallocSizeOf, size_t
 
     if (script->hasBaselineScript())
         script->baseline->sizeOfIncludingThis(mallocSizeOf, data, fallbackStubs);
+}
+
+void
+ion::ToggleBaselineSPS(JSRuntime *runtime, bool enable)
+{
+    for (ZonesIter zone(runtime); !zone.done(); zone.next()) {
+        for (gc::CellIter i(zone, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
+            JSScript *script = i.get<JSScript>();
+            if (!script->hasBaselineScript())
+                continue;
+            script->baselineScript()->toggleSPS(enable);
+        }
+    }
 }
 
 static void
