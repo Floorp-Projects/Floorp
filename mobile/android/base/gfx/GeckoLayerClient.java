@@ -58,8 +58,9 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     /* Used by robocop for testing purposes */
     private DrawListener mDrawListener;
 
-    /* Used as a temporary ViewTransform by syncViewportInfo */
+    /* Used as temporaries by syncViewportInfo */
     private final ViewTransform mCurrentViewTransform;
+    private final RectF mCurrentViewTransformMargins;
 
     /* Used as the return value of progressiveUpdateCallback */
     private final ProgressiveUpdateData mProgressiveUpdateData;
@@ -102,6 +103,7 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         mRecordDrawTimes = true;
         mDrawTimingQueue = new DrawTimingQueue();
         mCurrentViewTransform = new ViewTransform(0, 0, 1);
+        mCurrentViewTransformMargins = new RectF();
         mProgressiveUpdateData = new ProgressiveUpdateData();
         mProgressiveUpdateDisplayPort = new DisplayPortMetrics();
         mLastProgressiveUpdateWasLowPrecision = false;
@@ -257,22 +259,68 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         });
     }
 
+    private boolean adjustFixedLayerMarginsForOverscroll(ImmutableViewportMetrics metrics, RectF adjustedMargins) {
+        // When the page is in overscroll, we want that to 'eat into' the fixed
+        // margin on that side of the viewport. This is because overscroll
+        // equates to extra visible area and we use the fixed margins to stop
+        // fixed position elements from being obscured by chrome.
+        // In this situation, we also want to do the opposite adjustment to the
+        // other end of the axis, so that when overscroll is cancelled out by
+        // the margin area, the opposite side isn't pushed out of the viewport.
+        boolean changed = false;
+        adjustedMargins.left = metrics.fixedLayerMarginLeft;
+        adjustedMargins.top = metrics.fixedLayerMarginTop;
+        adjustedMargins.right = metrics.fixedLayerMarginRight;
+        adjustedMargins.bottom = metrics.fixedLayerMarginBottom;
+
+        if (metrics.getPageWidth() > metrics.getWidthWithoutMargins()) {
+            // Adjust for left overscroll
+            if (metrics.viewportRectLeft < metrics.pageRectLeft && metrics.fixedLayerMarginLeft > 0) {
+                adjustedMargins.left = Math.max(0, metrics.fixedLayerMarginLeft
+                                                   - (metrics.pageRectLeft - metrics.viewportRectLeft));
+                adjustedMargins.right += metrics.fixedLayerMarginLeft - adjustedMargins.left;
+                changed = true;
+            }
+
+            // Adjust for right overscroll
+            if (metrics.viewportRectRight < metrics.pageRectRight && metrics.fixedLayerMarginRight > 0) {
+                adjustedMargins.right = Math.max(0, metrics.fixedLayerMarginRight
+                                                   - (metrics.pageRectRight - metrics.viewportRectRight));
+                adjustedMargins.left += metrics.fixedLayerMarginRight - adjustedMargins.right;
+                changed = true;
+            }
+        }
+
+        if (metrics.getPageHeight() > metrics.getHeightWithoutMargins()) {
+            // Adjust for top overscroll
+            if (metrics.viewportRectTop < metrics.pageRectTop && metrics.fixedLayerMarginTop > 0) {
+                adjustedMargins.top = Math.max(0, metrics.fixedLayerMarginTop
+                                                   - (metrics.pageRectTop - metrics.viewportRectTop));
+                adjustedMargins.bottom += metrics.fixedLayerMarginTop - adjustedMargins.top;
+                changed = true;
+            }
+
+            // Adjust for bottom overscroll
+            if (metrics.viewportRectBottom < metrics.pageRectBottom && metrics.fixedLayerMarginBottom > 0) {
+                adjustedMargins.bottom = Math.max(0, metrics.fixedLayerMarginBottom
+                                                   - (metrics.pageRectBottom - metrics.viewportRectBottom));
+                adjustedMargins.top += metrics.fixedLayerMarginBottom - adjustedMargins.bottom;
+                changed = true;
+            }
+        }
+
+        return changed;
+    }
+
     private void adjustViewport(DisplayPortMetrics displayPort) {
         ImmutableViewportMetrics metrics = getViewportMetrics();
         ImmutableViewportMetrics clampedMetrics = metrics.clamp();
 
-        // See if we need to alter the fixed margins - Fixed margins would
-        // otherwise be set even when the document is in overscroll and they're
-        // unnecessary.
-        if ((metrics.fixedLayerMarginLeft > 0 && metrics.viewportRectLeft < metrics.pageRectLeft) ||
-            (metrics.fixedLayerMarginTop > 0 && metrics.viewportRectTop < metrics.pageRectTop) ||
-            (metrics.fixedLayerMarginRight > 0 && metrics.viewportRectRight > metrics.pageRectRight) ||
-            (metrics.fixedLayerMarginBottom > 0 && metrics.viewportRectBottom > metrics.pageRectBottom)) {
+        RectF fixedLayerMargins = new RectF();
+        if (adjustFixedLayerMarginsForOverscroll(metrics, fixedLayerMargins)) {
             clampedMetrics = clampedMetrics.setFixedLayerMargins(
-              Math.max(0, metrics.fixedLayerMarginLeft + Math.min(0, metrics.viewportRectLeft - metrics.pageRectLeft)),
-              Math.max(0, metrics.fixedLayerMarginTop + Math.min(0, metrics.viewportRectTop - metrics.pageRectTop)),
-              Math.max(0, metrics.fixedLayerMarginRight + Math.min(0, (metrics.pageRectRight - metrics.viewportRectRight))),
-              Math.max(0, metrics.fixedLayerMarginBottom + Math.min(0, (metrics.pageRectBottom - metrics.viewportRectBottom))));
+                fixedLayerMargins.left, fixedLayerMargins.top,
+                fixedLayerMargins.right, fixedLayerMargins.bottom);
         }
 
         if (displayPort == null) {
@@ -630,18 +678,11 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         mCurrentViewTransform.scale = mFrameMetrics.zoomFactor;
 
         // Adjust the fixed layer margins so that overscroll subtracts from them.
-        mCurrentViewTransform.fixedLayerMarginLeft =
-            Math.max(0, mFrameMetrics.fixedLayerMarginLeft +
-                     Math.min(0, mFrameMetrics.viewportRectLeft - mFrameMetrics.pageRectLeft));
-        mCurrentViewTransform.fixedLayerMarginTop =
-            Math.max(0, mFrameMetrics.fixedLayerMarginTop +
-                     Math.min(0, mFrameMetrics.viewportRectTop - mFrameMetrics.pageRectTop));
-        mCurrentViewTransform.fixedLayerMarginRight =
-            Math.max(0, mFrameMetrics.fixedLayerMarginRight +
-                     Math.min(0, (mFrameMetrics.pageRectRight - mFrameMetrics.viewportRectRight)));
-        mCurrentViewTransform.fixedLayerMarginBottom =
-            Math.max(0, mFrameMetrics.fixedLayerMarginBottom +
-                     Math.min(0, (mFrameMetrics.pageRectBottom - mFrameMetrics.viewportRectBottom)));
+        adjustFixedLayerMarginsForOverscroll(mFrameMetrics, mCurrentViewTransformMargins);
+        mCurrentViewTransform.fixedLayerMarginLeft = mCurrentViewTransformMargins.left;
+        mCurrentViewTransform.fixedLayerMarginTop = mCurrentViewTransformMargins.top;
+        mCurrentViewTransform.fixedLayerMarginRight = mCurrentViewTransformMargins.right;
+        mCurrentViewTransform.fixedLayerMarginBottom = mCurrentViewTransformMargins.bottom;
 
         mRootLayer.setPositionAndResolution(x, y, x + width, y + height, resolution);
 
