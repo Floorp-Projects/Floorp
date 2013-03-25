@@ -17,7 +17,8 @@ print("Note: You must run this test under valgrind to be certain it passes");
 
 var x;
 
-gczeal(2, 1);
+if (typeof gczeal === "function")
+  gczeal(2, 1);
 x = JSON.parse('{"foo":[]}');
 Object.getPrototypeOf(x.foo) == Array.prototype;
 x = JSON.parse('{"foo":[], "bar":[]}');
