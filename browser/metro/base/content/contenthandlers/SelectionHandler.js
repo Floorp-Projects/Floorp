@@ -188,6 +188,14 @@ var SelectionHandler = {
     // We bail if things get out of sync here implying we missed a message.
     this._selectionMoveActive = true;
 
+    if (this._targetIsEditable) {
+      // If we're coming out of an out-of-bounds scroll, the node the user is
+      // trying to drag may be hidden (the monocle will be pegged to the edge
+      // of the edit). Make sure the node the user wants to move is visible
+      // and has focus.
+      this._updateInputFocus(aMsg.change);
+    }
+
     // Update the position of our selection monocles
     this._updateSelectionUI(true, true);
   },
@@ -794,9 +802,9 @@ var SelectionHandler = {
   /*
    * updateTextEditSelection(aPoint, aClientPoint)
    *
-   * Checks to see if the monocle point is outside the bounds of the
-   * target edit. If so, use the selection controller to select and
-   * scroll the edit appropriately.
+   * Checks to see if the monocle point is outside the bounds of the target
+   * edit. If so, use the selection controller to select and scroll the edit
+   * appropriately.
    *
    * @param aClientPoint raw pointer position
    * @return { speed: 0.0 -> 1.0,
@@ -852,7 +860,6 @@ var SelectionHandler = {
    * _addEditSelection - selection control call wrapper for text inputs.
    * Adds selection on the anchor or focus side of selection in a text
    * input. Scrolls the location into view as well.
-   * (TBD: anchor side scrolling is currently broken, see bug 848594)
    *
    * @param const selection node identifier
    */
@@ -860,16 +867,32 @@ var SelectionHandler = {
     let selCtrl = this._getSelectController();
     try {
       if (aLocation == kSelectionNodeAnchor) {
-        this._targetElement.selectionStart = this._targetElement.selectionStart - 1;
-        selCtrl.scrollSelectionIntoView(Ci.nsISelectionController.SELECTION_NORMAL,
-                                        Ci.nsISelectionController.SELECTION_ANCHOR_REGION,
-                                        Ci.nsISelectionController.SCROLL_SYNCHRONOUS);
+        let start = Math.max(this._targetElement.selectionStart - 1, 0);
+        this._targetElement.setSelectionRange(start, this._targetElement.selectionEnd,
+                                              "backward");
       } else {
-        this._targetElement.selectionEnd = this._targetElement.selectionEnd + 1;
-        selCtrl.scrollSelectionIntoView(Ci.nsISelectionController.SELECTION_NORMAL,
-                                        Ci.nsISelectionController.SELECTION_FOCUS_REGION,
-                                        Ci.nsISelectionController.SCROLL_SYNCHRONOUS);
+        let end = Math.min(this._targetElement.selectionEnd + 1,
+                           this._targetElement.textLength);
+        this._targetElement.setSelectionRange(this._targetElement.selectionStart,
+                                              end,
+                                              "forward");
       }
+      selCtrl.scrollSelectionIntoView(Ci.nsISelectionController.SELECTION_NORMAL,
+                                      Ci.nsISelectionController.SELECTION_FOCUS_REGION,
+                                      Ci.nsISelectionController.SCROLL_SYNCHRONOUS);
+    } catch (ex) { Util.dumpLn(ex);}
+  },
+
+  _updateInputFocus: function _updateInputFocus(aMarker) {
+    try {
+      let selCtrl = this._getSelectController();
+      this._targetElement.setSelectionRange(this._targetElement.selectionStart,
+                                            this._targetElement.selectionEnd,
+                                            aMarker == "start" ?
+                                              "backward" : "forward");
+      selCtrl.scrollSelectionIntoView(Ci.nsISelectionController.SELECTION_NORMAL,
+                                      Ci.nsISelectionController.SELECTION_FOCUS_REGION,
+                                      Ci.nsISelectionController.SCROLL_SYNCHRONOUS);
     } catch (ex) {}
   },
 
