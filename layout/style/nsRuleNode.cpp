@@ -4781,7 +4781,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
               NS_STYLE_PAGE_BREAK_AUTO, 0, 0, 0, 0);
 
   // float: enum, inherit, initial
-  SetDiscrete(*aRuleData->ValueForCssFloat(),
+  SetDiscrete(*aRuleData->ValueForFloat(),
               display->mFloats, canStoreInRuleTree,
               SETDSC_ENUMERATED, parentDisplay->mFloats,
               NS_STYLE_FLOAT_NONE, 0, 0, 0, 0);
