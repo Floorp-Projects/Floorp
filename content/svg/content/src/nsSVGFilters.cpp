@@ -42,8 +42,9 @@
 #include "mozilla/dom/SVGFEFuncGElementBinding.h"
 #include "mozilla/dom/SVGFEFuncRElementBinding.h"
 #include "mozilla/dom/SVGFEPointLightElement.h"
+#include "mozilla/dom/SVGFESpotLightElement.h"
 
-#if defined(XP_WIN) 
+#if defined(XP_WIN)
 // Prevent Windows redefining LoadImage
 #undef LoadImage
 #endif
@@ -2359,7 +2360,7 @@ nsSVGFELightingElement::Filter(nsSVGFilterInstance *instance,
     instance->ConvertLocation(lightPos);
     instance->ConvertLocation(pointsAt);
 
-    if (spotLight->mNumberAttributes[nsSVGFESpotLightElement::LIMITING_CONE_ANGLE].
+    if (spotLight->mNumberAttributes[SVGFESpotLightElement::LIMITING_CONE_ANGLE].
                                        IsExplicitlySet()) {
       cosConeAngle = std::max<double>(cos(limitingConeAngle * radPerDeg), 0.0);
     }
