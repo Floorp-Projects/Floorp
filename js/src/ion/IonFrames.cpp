@@ -1410,6 +1410,14 @@ IonFrameIterator::dump() const
         fprintf(stderr, " Entry frame\n");
         fprintf(stderr, "  Frame size: %u\n", unsigned(current()->prevFrameLocalSize()));
         break;
+      case IonFrame_BaselineJS:
+        dumpBaseline();
+        break;
+      case IonFrame_BaselineStub:
+      case IonFrame_Unwound_BaselineStub:
+        fprintf(stderr, " Baseline stub frame\n");
+        fprintf(stderr, "  Frame size: %u\n", unsigned(current()->prevFrameLocalSize()));
+        break;
       case IonFrame_OptimizedJS:
       {
         InlineFrameIterator frames(GetIonContext()->cx, this);

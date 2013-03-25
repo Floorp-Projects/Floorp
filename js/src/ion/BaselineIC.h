@@ -1129,6 +1129,7 @@ class ICProfiler_PushFunction : public ICStub
 {
     friend class ICStubSpace;
 
+  protected:
     const char *str_;
     HeapPtrScript script_;
 
@@ -3155,45 +3156,35 @@ class ICSetElem_Dense : public ICUpdatedStub
     };
 };
 
+template <size_t ProtoChainDepth> class ICSetElem_DenseAddImpl;
+
 class ICSetElem_DenseAdd : public ICUpdatedStub
 {
     friend class ICStubSpace;
 
+  public:
+    static const size_t MAX_PROTO_CHAIN_DEPTH = 4;
+
+  protected:
     HeapPtrShape shape_;
     HeapPtrTypeObject type_;
-    HeapPtrObject lastProto_;
-    HeapPtrShape lastProtoShape_;
 
-    ICSetElem_DenseAdd(IonCode *stubCode, HandleShape shape, HandleTypeObject type,
-                       HandleObject lastProto, HandleShape lastProtoShape)
+    ICSetElem_DenseAdd(IonCode *stubCode, RawShape shape, types::TypeObject *type,
+                       size_t protoChainDepth)
       : ICUpdatedStub(SetElem_DenseAdd, stubCode),
         shape_(shape),
-        type_(type),
-        lastProto_(lastProto),
-        lastProtoShape_(lastProtoShape)
-    {}
-
-  public:
-    static inline ICSetElem_DenseAdd *New(ICStubSpace *space, IonCode *code,
-                                          HandleShape shape, HandleTypeObject type,
-                                          HandleObject lastProto, HandleShape lastProtoShape)
+        type_(type)
     {
-        if (!code)
-            return NULL;
-        return space->allocate<ICSetElem_DenseAdd>(code, shape, type, lastProto, lastProtoShape);
+        JS_ASSERT(protoChainDepth <= MAX_PROTO_CHAIN_DEPTH);
+        extra_ = protoChainDepth;
     }
 
+  public:
     static size_t offsetOfShape() {
         return offsetof(ICSetElem_DenseAdd, shape_);
     }
     static size_t offsetOfType() {
         return offsetof(ICSetElem_DenseAdd, type_);
-    }
-    static size_t offsetOfLastProto() {
-        return offsetof(ICSetElem_DenseAdd, lastProto_);
-    }
-    static size_t offsetOfLastProtoShape() {
-        return offsetof(ICSetElem_DenseAdd, lastProtoShape_);
     }
 
     HeapPtrShape &shape() {
@@ -3202,44 +3193,86 @@ class ICSetElem_DenseAdd : public ICUpdatedStub
     HeapPtrTypeObject &type() {
         return type_;
     }
-    HeapPtrObject &lastProto() {
-        return lastProto_;
-    }
-    HeapPtrShape &lastProtoShape() {
-        return lastProtoShape_;
+    size_t protoChainDepth() const {
+        return extra_;
     }
 
-    class Compiler : public ICStubCompiler {
-        RootedShape shape_;
+    template <size_t ProtoChainDepth>
+    ICSetElem_DenseAddImpl<ProtoChainDepth> *toImpl() {
+        JS_ASSERT(ProtoChainDepth == protoChainDepth());
+        return static_cast<ICSetElem_DenseAddImpl<ProtoChainDepth> *>(this);
+    }
+};
 
-        // Compiler is only live on stack during compilation, it should
-        // outlive any RootedTypeObject it's passed.  So it can just
-        // use the handle.
-        HandleTypeObject type_;
+template <size_t ProtoChainDepth>
+class ICSetElem_DenseAddImpl : public ICSetElem_DenseAdd
+{
+    friend class ICStubSpace;
 
-        RootedObject lastProto_;
-        RootedShape lastProtoShape_;
+    HeapPtrShape protoShapes_[ProtoChainDepth];
 
-        bool generateStubCode(MacroAssembler &masm);
+    ICSetElem_DenseAddImpl(IonCode *stubCode, RawShape shape, types::TypeObject *type,
+                           const AutoShapeVector *protoShapes)
+      : ICSetElem_DenseAdd(stubCode, shape, type, ProtoChainDepth)
+    {
+        JS_ASSERT(protoShapes->length() == ProtoChainDepth);
+        for (size_t i = 0; i < protoChainDepth(); i++)
+            protoShapes_[i].init((*protoShapes)[i]);
+    }
 
-      public:
-        Compiler(JSContext *cx, RawShape shape, HandleTypeObject type,
-                 RawObject lastProto, RawShape lastProtoShape)
-          : ICStubCompiler(cx, ICStub::SetElem_DenseAdd),
-            shape_(cx, shape),
-            type_(type),
-            lastProto_(cx, lastProto),
-            lastProtoShape_(cx, lastProtoShape)
-        {}
+    // Used to silence Clang tautological-compare warning for
+    // ProtoChainDepth == 0.
+    size_t protoChainDepth() const {
+        return ProtoChainDepth;
+    }
 
-        ICUpdatedStub *getStub(ICStubSpace *space) {
-            ICSetElem_DenseAdd *stub = ICSetElem_DenseAdd::New(space, getStubCode(), shape_, type_,
-                                                               lastProto_, lastProtoShape_);
-            if (!stub || !stub->initUpdatingChain(cx, space))
-                return NULL;
-            return stub;
-        }
-    };
+  public:
+    static inline ICSetElem_DenseAddImpl *New(ICStubSpace *space, IonCode *code, RawShape shape,
+                                              types::TypeObject *type,
+                                              const AutoShapeVector *protoShapes)
+    {
+        if (!code)
+            return NULL;
+        return space->allocate<ICSetElem_DenseAddImpl<ProtoChainDepth> >(code, shape, type,
+                                                                         protoShapes);
+    }
+
+    void traceProtoShapes(JSTracer *trc) {
+        for (size_t i = 0; i < protoChainDepth(); i++)
+            MarkShape(trc, &protoShapes_[i], "baseline-setelem-denseadd-stub-protoshape");
+    }
+
+    static size_t offsetOfProtoShape(size_t idx) {
+        return offsetof(ICSetElem_DenseAddImpl, protoShapes_) + idx * sizeof(HeapPtrShape);
+    }
+};
+
+class ICSetElemDenseAddCompiler : public ICStubCompiler {
+    RootedObject obj_;
+    size_t protoChainDepth_;
+
+    bool generateStubCode(MacroAssembler &masm);
+
+  protected:
+    virtual int32_t getKey() const {
+        return static_cast<int32_t>(kind) | (static_cast<int32_t>(protoChainDepth_) << 16);
+    }
+
+  public:
+    ICSetElemDenseAddCompiler(JSContext *cx, HandleObject obj, size_t protoChainDepth)
+        : ICStubCompiler(cx, ICStub::SetElem_DenseAdd),
+          obj_(cx, obj),
+          protoChainDepth_(protoChainDepth)
+    {}
+
+    template <size_t ProtoChainDepth>
+    ICUpdatedStub *getStubSpecific(ICStubSpace *space, const AutoShapeVector *protoShapes) {
+        return ICSetElem_DenseAddImpl<ProtoChainDepth>::New(space, getStubCode(),
+                                                            obj_->lastProperty(), obj_->getType(cx),
+                                                            protoShapes);
+    }
+
+    ICUpdatedStub *getStub(ICStubSpace *space);
 };
 
 class ICSetElem_TypedArray : public ICStub
@@ -3480,7 +3513,7 @@ class ICGetName_Scope : public ICMonitoredStub
     }
 
     void traceScopes(JSTracer *trc) {
-        for (size_t i = 0; i <= NumHops; i++)
+        for (size_t i = 0; i < NumHops + 1; i++)
             MarkShape(trc, &shapes_[i], "baseline-scope-stub-shape");
     }
 
@@ -3980,6 +4013,7 @@ class ICGetProp_CallScripted : public ICMonitoredStub
 {
     friend class ICStubSpace;
 
+  protected:
     // Object shape (lastProperty).
     HeapPtrShape shape_;
 
@@ -4266,9 +4300,16 @@ class ICSetProp_NativeAddImpl : public ICSetProp_NativeAdd
       : ICSetProp_NativeAdd(stubCode, type, oldShape, ProtoChainDepth, newShape, offset)
     {
         JS_ASSERT(protoShapes->length() == ProtoChainDepth);
-        for (size_t i = 0; i < ProtoChainDepth; i++)
+        for (size_t i = 0; i < protoChainDepth(); i++)
             protoShapes_[i].init((*protoShapes)[i]);
     }
+
+    // Used to silence Clang tautological-compare warning for
+    // ProtoChainDepth == 0.
+    size_t protoChainDepth() const {
+        return ProtoChainDepth;
+    }
+
   public:
     static inline ICSetProp_NativeAddImpl *New(
             ICStubSpace *space, IonCode *code, HandleTypeObject type, HandleShape oldShape,
@@ -4281,7 +4322,7 @@ class ICSetProp_NativeAddImpl : public ICSetProp_NativeAdd
     }
 
     void traceProtoShapes(JSTracer *trc) {
-        for (size_t i = 0; i < ProtoChainDepth; i++)
+        for (size_t i = 0; i < protoChainDepth(); i++)
             MarkShape(trc, &protoShapes_[i], "baseline-setpropnativeadd-stub-protoshape");
     }
 
@@ -4328,28 +4369,7 @@ class ICSetPropNativeAddCompiler : public ICStubCompiler {
                     space, getStubCode(), type, oldShape_, protoShapes, newShape, offset_);
     }
 
-    ICUpdatedStub *getStub(ICStubSpace *space) {
-        AutoShapeVector protoShapes(cx);
-        RootedObject curProto(cx, obj_->getProto());
-        for (size_t i = 0; i < protoChainDepth_; i++) {
-            JS_ASSERT(curProto);
-            protoShapes.append(curProto->lastProperty());
-            curProto = curProto->getProto();
-        }
-        JS_STATIC_ASSERT(ICSetProp_NativeAdd::MAX_PROTO_CHAIN_DEPTH == 4);
-        ICUpdatedStub *stub = NULL;
-        switch(protoChainDepth_) {
-          case 0: stub = getStubSpecific<0>(space, &protoShapes); break;
-          case 1: stub = getStubSpecific<1>(space, &protoShapes); break;
-          case 2: stub = getStubSpecific<2>(space, &protoShapes); break;
-          case 3: stub = getStubSpecific<3>(space, &protoShapes); break;
-          case 4: stub = getStubSpecific<4>(space, &protoShapes); break;
-          default: JS_NOT_REACHED("ProtoChainDepth too high.");
-        }
-        if (!stub || !stub->initUpdatingChain(cx, space))
-            return NULL;
-        return stub;
-    }
+    ICUpdatedStub *getStub(ICStubSpace *space);
 };
 
 // Stub for calling a scripted setter on a native object.
@@ -4357,6 +4377,7 @@ class ICSetProp_CallScripted : public ICStub
 {
     friend class ICStubSpace;
 
+  protected:
     // Object shape (lastProperty).
     HeapPtrShape shape_;
 
@@ -4538,6 +4559,7 @@ class ICCall_Scripted : public ICMonitoredStub
 {
     friend class ICStubSpace;
 
+  protected:
     HeapPtrScript calleeScript_;
     uint32_t pcOffset_;
 
@@ -4574,6 +4596,7 @@ class ICCall_AnyScripted : public ICMonitoredStub
 {
     friend class ICStubSpace;
 
+  protected:
     uint32_t pcOffset_;
 
     ICCall_AnyScripted(IonCode *stubCode, ICStub *firstMonitorStub, uint32_t pcOffset)
@@ -4628,7 +4651,6 @@ class ICCallScriptedCompiler : public ICCallStubCompiler {
     { }
 
     ICStub *getStub(ICStubSpace *space) {
-        ICStub *stub = NULL;
         if (calleeScript_) {
             return ICCall_Scripted::New(space, getStubCode(), firstMonitorStub_, calleeScript_,
                                         pcOffset_);
@@ -4641,6 +4663,7 @@ class ICCall_Native : public ICMonitoredStub
 {
     friend class ICStubSpace;
 
+  protected:
     HeapPtrFunction callee_;
     uint32_t pcOffset_;
 
