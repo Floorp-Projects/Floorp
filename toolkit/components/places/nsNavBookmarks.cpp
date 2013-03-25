@@ -50,10 +50,10 @@
 using namespace mozilla;
 
 // These columns sit to the right of the kGetInfoIndex_* columns.
-const int32_t nsNavBookmarks::kGetChildrenIndex_Position = 15;
-const int32_t nsNavBookmarks::kGetChildrenIndex_Type = 16;
-const int32_t nsNavBookmarks::kGetChildrenIndex_PlaceID = 17;
-const int32_t nsNavBookmarks::kGetChildrenIndex_Guid = 18;
+const int32_t nsNavBookmarks::kGetChildrenIndex_Position = 14;
+const int32_t nsNavBookmarks::kGetChildrenIndex_Type = 15;
+const int32_t nsNavBookmarks::kGetChildrenIndex_PlaceID = 16;
+const int32_t nsNavBookmarks::kGetChildrenIndex_Guid = 17;
 
 using namespace mozilla::places;
 
@@ -1061,7 +1061,7 @@ nsNavBookmarks::GetDescendantChildren(int64_t aFolderId,
     // item_child, and folder_child from moz_bookmarks.
     nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
       "SELECT h.id, h.url, IFNULL(b.title, h.title), h.rev_host, h.visit_count, "
-             "h.last_visit_date, f.url, null, b.id, b.dateAdded, b.lastModified, "
+             "h.last_visit_date, f.url, b.id, b.dateAdded, b.lastModified, "
              "b.parent, null, h.frecency, h.hidden, b.position, b.type, b.fk, "
              "b.guid "
       "FROM moz_bookmarks b "
@@ -1765,7 +1765,7 @@ nsNavBookmarks::QueryFolderChildren(
   // item_child, and folder_child from moz_bookmarks.
   nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
     "SELECT h.id, h.url, IFNULL(b.title, h.title), h.rev_host, h.visit_count, "
-           "h.last_visit_date, f.url, null, b.id, b.dateAdded, b.lastModified, "
+           "h.last_visit_date, f.url, b.id, b.dateAdded, b.lastModified, "
            "b.parent, null, h.frecency, h.hidden, b.position, b.type, b.fk, "
            "b.guid "
     "FROM moz_bookmarks b "
@@ -1899,7 +1899,7 @@ nsNavBookmarks::QueryFolderChildrenAsync(
   // item_child, and folder_child from moz_bookmarks.
   nsCOMPtr<mozIStorageAsyncStatement> stmt = mDB->GetAsyncStatement(
     "SELECT h.id, h.url, IFNULL(b.title, h.title), h.rev_host, h.visit_count, "
-           "h.last_visit_date, f.url, null, b.id, b.dateAdded, b.lastModified, "
+           "h.last_visit_date, f.url, b.id, b.dateAdded, b.lastModified, "
            "b.parent, null, h.frecency, h.hidden, b.position, b.type, b.fk, "
            "b.guid "
     "FROM moz_bookmarks b "
