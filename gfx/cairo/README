@@ -204,6 +204,8 @@ win32-gdi-font-cache-no-HFONT.patch: Bug 717178, don't cache GDI font faces when
 
 fix-win32-font-assertion.patch: Bug 838617, fix assertion from bug 717178 that was in the wrong place
 
+xlib-flush-glyphs.patch: bug 839745, flush glyphs when necessary
+
 ==== pixman patches ====
 
 pixman-android-cpu-detect.patch: Add CPU detection support for Android, where we can't reliably access /proc/self/auxv.
