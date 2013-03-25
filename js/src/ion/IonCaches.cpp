@@ -489,6 +489,63 @@ EmitLoadSlot(MacroAssembler &masm, JSObject *holder, Shape *shape, Register hold
 }
 
 static void
+GenerateListBaseChecks(JSContext *cx, MacroAssembler &masm, JSObject *obj,
+                       PropertyName *name, Register object, Label &stubFailure)
+{
+    MOZ_ASSERT(IsCacheableListBase(obj));
+
+    // Guard the following:
+    //      1. The object is a ListBase.
+    //      2. The object does not have expando properties, or has an expando
+    //          which is known to not have the desired property.
+    Address handlerAddr(object, JSObject::getFixedSlotOffset(JSSLOT_PROXY_HANDLER));
+    Address expandoAddr(object, JSObject::getFixedSlotOffset(GetListBaseExpandoSlot()));
+
+    // Check that object is a ListBase.
+    masm.branchPrivatePtr(Assembler::NotEqual, handlerAddr, ImmWord(GetProxyHandler(obj)), &stubFailure);
+
+    // For the remaining code, we need to reserve some registers to load a value.
+    // This is ugly, but unvaoidable.
+    RegisterSet listBaseRegSet(RegisterSet::All());
+    listBaseRegSet.take(AnyRegister(object));
+    ValueOperand tempVal = listBaseRegSet.takeValueOperand();
+    masm.pushValue(tempVal);
+
+    Label failListBaseCheck;
+    Label listBaseOk;
+
+    Value expandoVal = obj->getFixedSlot(GetListBaseExpandoSlot());
+    JSObject *expando = expandoVal.isObject() ? &(expandoVal.toObject()) : NULL;
+    JS_ASSERT_IF(expando, expando->isNative() && expando->getProto() == NULL);
+
+    masm.loadValue(expandoAddr, tempVal);
+
+    // If the incoming object does not have an expando object then we're sure we're not
+    // shadowing.
+    masm.branchTestUndefined(Assembler::Equal, tempVal, &listBaseOk);
+
+    if (expando && !expando->nativeContains(cx, name)) {
+        // Reference object has an expando object that doesn't define the name. Check that
+        // the incoming object has an expando object with the same shape.
+        masm.branchTestObject(Assembler::NotEqual, tempVal, &failListBaseCheck);
+        masm.extractObject(tempVal, tempVal.scratchReg());
+        masm.branchPtr(Assembler::Equal,
+                       Address(tempVal.scratchReg(), JSObject::offsetOfShape()),
+                       ImmGCPtr(expando->lastProperty()),
+                       &listBaseOk);
+    }
+
+    // Failure case: restore the tempVal registers and jump to failures.
+    masm.bind(&failListBaseCheck);
+    masm.popValue(tempVal);
+    masm.jump(&stubFailure);
+
+    // Success case: restore the tempval and proceed.
+    masm.bind(&listBaseOk);
+    masm.popValue(tempVal);
+}
+
+static void
 GenerateReadSlot(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &attacher,
                  JSObject *obj, JSObject *holder, Shape *shape, Register object,
                  TypedOrValueRegister output, Label *failures = NULL)
@@ -618,57 +675,8 @@ GenerateCallGetter(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &
     masm.branchPtr(Assembler::NotEqual, Address(object, JSObject::offsetOfShape()),
                    ImmGCPtr(obj->lastProperty()), &stubFailure);
 
-    // If this is a stub for a ListBase object, guard the following:
-    //      1. The object is a ListBase.
-    //      2. The object does not have expando properties, or has an expando
-    //          which is known to not have the desired property.
-    if (IsCacheableListBase(obj)) {
-        Address handlerAddr(object, JSObject::getFixedSlotOffset(JSSLOT_PROXY_HANDLER));
-        Address expandoAddr(object, JSObject::getFixedSlotOffset(GetListBaseExpandoSlot()));
-
-        // Check that object is a ListBase.
-        masm.branchPrivatePtr(Assembler::NotEqual, handlerAddr, ImmWord(GetProxyHandler(obj)), &stubFailure);
-
-        // For the remaining code, we need to reserve some registers to load a value.
-        // This is ugly, but unvaoidable.
-        RegisterSet listBaseRegSet(RegisterSet::All());
-        listBaseRegSet.take(AnyRegister(object));
-        ValueOperand tempVal = listBaseRegSet.takeValueOperand();
-        masm.pushValue(tempVal);
-
-        Label failListBaseCheck;
-        Label listBaseOk;
-
-        Value expandoVal = obj->getFixedSlot(GetListBaseExpandoSlot());
-        JSObject *expando = expandoVal.isObject() ? &(expandoVal.toObject()) : NULL;
-        JS_ASSERT_IF(expando, expando->isNative() && expando->getProto() == NULL);
-
-        masm.loadValue(expandoAddr, tempVal);
-
-        // If the incoming object does not have an expando object then we're sure we're not
-        // shadowing.
-        masm.branchTestUndefined(Assembler::Equal, tempVal, &listBaseOk);
-
-        if (expando && !expando->nativeContains(cx, name)) {
-            // Reference object has an expando object that doesn't define the name. Check that
-            // the incoming object has an expando object with the same shape.
-            masm.branchTestObject(Assembler::NotEqual, tempVal, &failListBaseCheck);
-            masm.extractObject(tempVal, tempVal.scratchReg());
-            masm.branchPtr(Assembler::Equal,
-                           Address(tempVal.scratchReg(), JSObject::offsetOfShape()),
-                           ImmGCPtr(expando->lastProperty()),
-                           &listBaseOk);
-        }
-
-        // Failure case: restore the tempVal registers and jump to failures.
-        masm.bind(&failListBaseCheck);
-        masm.popValue(tempVal);
-        masm.jump(&stubFailure);
-
-        // Success case: restore the tempval and proceed.
-        masm.bind(&listBaseOk);
-        masm.popValue(tempVal);
-    }
+    if (IsCacheableListBase(obj))
+        GenerateListBaseChecks(cx, masm, obj, name, object, stubFailure);
 
     JS_ASSERT(output.hasValue());
     Register scratchReg = output.valueReg().scratchReg();
