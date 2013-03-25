@@ -12,7 +12,7 @@ interface nsIDOMHTMLInputElement;
 interface nsIDOMHTMLFormElement;
 interface nsIPropertyBag;
 
-[scriptable, uuid(1f02142f-7e3f-4d02-b3e0-495c5f83ad7d)]
+[scriptable, uuid(338c8597-1e32-4682-b5c7-cf8142c0bd1d)]
 
 interface nsILoginManager : nsISupports {
 
@@ -240,6 +240,12 @@ interface nsILoginManager : nsISupports {
     * True when a master password prompt is being displayed.
     */
     readonly attribute boolean uiBusy;
+
+   /**
+    * True when the master password has already been entered, and so a caller
+    * can ask for decrypted logins without triggering a prompt.
+    */
+    readonly attribute boolean isLoggedIn;
 };
 
 %{C++

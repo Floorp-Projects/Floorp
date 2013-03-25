@@ -6,6 +6,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIScriptContext.h"
+#include "nsIDocument.h"
 #include "nsIArray.h"
 #include "nsIScriptTimeoutHandler.h"
 #include "nsIXPConnect.h"

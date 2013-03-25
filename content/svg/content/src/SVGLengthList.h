@@ -160,7 +160,7 @@ protected:
    * It may be worth considering using nsAttrValue for length lists instead of
    * storing them directly on the element.
    */
-  nsTArray<SVGLength> mLengths;
+  FallibleTArray<SVGLength> mLengths;
 };
 
 

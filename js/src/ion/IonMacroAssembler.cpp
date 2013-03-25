@@ -153,10 +153,11 @@ MacroAssembler::PushRegsInMask(RegisterSet set)
     }
     JS_ASSERT(diffG == 0);
 
-    reserveStack(diffF);
 #ifdef JS_CPU_ARM
-    diffF -= transferMultipleByRuns(set.fpus(), IsStore, StackPointer, IA);
+    adjustFrame(diffF);
+    diffF += transferMultipleByRuns(set.fpus(), IsStore, StackPointer, DB);
 #else
+    reserveStack(diffF);
     for (FloatRegisterIterator iter(set.fpus()); iter.more(); iter++) {
         diffF -= sizeof(double);
         storeDouble(*iter, Address(StackPointer, diffF));
@@ -178,6 +179,7 @@ MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore)
     // the registers we previously saved to the stack.
     if (ignore.empty(true)) {
         diffF -= transferMultipleByRuns(set.fpus(), IsLoad, StackPointer, IA);
+        adjustFrame(-reservedF);
     } else
 #endif
     {
@@ -186,8 +188,8 @@ MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore)
             if (!ignore.has(*iter))
                 loadDouble(Address(StackPointer, diffF), *iter);
         }
+        freeStack(reservedF);
     }
-    freeStack(reservedF);
     JS_ASSERT(diffF == 0);
 
 #ifdef JS_CPU_ARM
@@ -396,7 +398,7 @@ MacroAssembler::newGCThing(const Register &result,
 {
     // Inlined equivalent of js::gc::NewGCThing() without failure case handling.
 
-    gc::AllocKind allocKind = templateObject->getAllocKind();
+    gc::AllocKind allocKind = templateObject->tenuredGetAllocKind();
     JS_ASSERT(allocKind >= gc::FINALIZE_OBJECT0 && allocKind <= gc::FINALIZE_OBJECT_LAST);
     int thingSize = (int)gc::Arena::thingSize(allocKind);
 
@@ -443,7 +445,7 @@ MacroAssembler::parNewGCThing(const Register &result,
     // register as `threadContextReg`.  Then we overwrite that
     // register which messed up the OOL code.
 
-    gc::AllocKind allocKind = templateObject->getAllocKind();
+    gc::AllocKind allocKind = templateObject->tenuredGetAllocKind();
     uint32_t thingSize = (uint32_t)gc::Arena::thingSize(allocKind);
 
     // Load the allocator:

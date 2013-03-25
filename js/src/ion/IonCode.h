@@ -28,9 +28,8 @@ namespace ion {
 // bit on offsets.
 static const uint32_t MAX_BUFFER_SIZE = (1 << 30) - 1;
 
-// Maximum number of scripted arg and stack slots.
+// Maximum number of scripted arg slots.
 static const uint32_t SNAPSHOT_MAX_NARGS = 127;
-static const uint32_t SNAPSHOT_MAX_STACK = 127;
 
 class MacroAssembler;
 class CodeOffsetLabel;
@@ -131,6 +130,7 @@ class IonCode : public gc::Cell
     static IonCode *New(JSContext *cx, uint8_t *code, uint32_t bufferSize, JSC::ExecutablePool *pool);
 
   public:
+    JS::Zone *zone() const { return tenuredZone(); }
     static void readBarrier(IonCode *code);
     static void writeBarrierPre(IonCode *code);
     static void writeBarrierPost(IonCode *code, void *addr);

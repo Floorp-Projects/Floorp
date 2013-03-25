@@ -1622,14 +1622,19 @@ class Assembler
         dtmCond = c;
         dtmLastReg = -1;
         dtmMode = mode;
+        dtmDelta = 0;
     }
     void transferFloatReg(VFPRegister rn)
     {
         if (dtmLastReg == -1) {
-            vdtmFirstReg = rn;
+            vdtmFirstReg = rn.code();
         } else {
+            if (dtmDelta == 0) {
+                dtmDelta = rn.code() - dtmLastReg;
+                JS_ASSERT(dtmDelta == 1 || dtmDelta == -1);
+            }
             JS_ASSERT(dtmLastReg >= 0);
-            JS_ASSERT(rn.code() == unsigned(dtmLastReg) + 1);
+            JS_ASSERT(rn.code() == unsigned(dtmLastReg) + dtmDelta);
         }
         dtmLastReg = rn.code();
     }
@@ -1637,16 +1642,20 @@ class Assembler
         JS_ASSERT(dtmActive);
         dtmActive = false;
         JS_ASSERT(dtmLastReg != -1);
+        dtmDelta = dtmDelta ? dtmDelta : 1;
         // fencepost problem.
-        int len = dtmLastReg - vdtmFirstReg.code() + 1;
-        as_vdtm(dtmLoadStore, dtmBase, vdtmFirstReg, len, dtmCond);
+        int len = dtmDelta * (dtmLastReg - vdtmFirstReg) + 1;
+        as_vdtm(dtmLoadStore, dtmBase,
+                VFPRegister(FloatRegister::FromCode(Min(vdtmFirstReg, dtmLastReg))),
+                len, dtmCond);
     }
 
   private:
     int dtmRegBitField;
+    int vdtmFirstReg;
     int dtmLastReg;
+    int dtmDelta;
     Register dtmBase;
-    VFPRegister vdtmFirstReg;
     DTMWriteBack dtmUpdate;
     DTMMode dtmMode;
     LoadStore dtmLoadStore;

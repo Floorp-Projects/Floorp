@@ -130,7 +130,7 @@ var Addons = {
   _createItem: function _createItem(aAddon) {
     let outer = document.createElement("div");
     outer.setAttribute("addonID", aAddon.id);
-    outer.className = "addon-item";
+    outer.className = "addon-item list-item";
     outer.setAttribute("role", "button");
     outer.setAttribute("contextmenu", "addonmenu");
     outer.addEventListener("click", function() {
@@ -139,7 +139,7 @@ var Addons = {
     }.bind(this), true);
 
     let img = document.createElement("img");
-    img.className = "favicon";
+    img.className = "icon";
     img.setAttribute("src", aAddon.iconURL);
     outer.appendChild(img);
 
@@ -291,7 +291,7 @@ var Addons = {
     detailItem.setAttribute("optionsURL", aListItem.getAttribute("optionsURL"));
     let addon = detailItem.addon = aListItem.addon;
 
-    let favicon = document.querySelector("#addons-details > .addon-item .favicon");
+    let favicon = document.querySelector("#addons-details > .addon-item .icon");
     if (addon.iconURL)
       favicon.setAttribute("src", addon.iconURL);
     else

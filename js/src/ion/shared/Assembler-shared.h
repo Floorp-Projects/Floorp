@@ -261,7 +261,7 @@ class Label : public LabelBase
         // Note: the condition is a hack to silence this assert when OOM testing,
         // see bug 756614.
         if (!js_IonOptions.parallelCompilation)
-            JS_ASSERT_IF(!GetIonContext()->cx->runtime->hadOutOfMemory, !used());
+            JS_ASSERT_IF(!GetIonContext()->runtime->hadOutOfMemory, !used());
 #endif
     }
 };

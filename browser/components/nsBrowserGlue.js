@@ -1640,6 +1640,10 @@ ContentPermissionPrompt.prototype = {
    */
   _showPrompt: function CPP_showPrompt(aRequest, aMessage, aPermission, aActions,
                                        aNotificationId, aAnchorId) {
+    function onFullScreen() {
+      popup.remove();
+    }
+
     var browserBundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
 
     var requestingWindow = aRequest.window.top;
@@ -1685,10 +1689,34 @@ ContentPermissionPrompt.prototype = {
       popupNotificationActions.push(action);
     }
 
-    var mainAction = popupNotificationActions[0];
+    var mainAction = popupNotificationActions.length ?
+                       popupNotificationActions[0] : null;
     var secondaryActions = popupNotificationActions.splice(1);
-    chromeWin.PopupNotifications.show(browser, aNotificationId, aMessage, aAnchorId,
-                                      mainAction, secondaryActions);
+    var options = null;
+
+    if (aRequest.type == "pointerLock") {
+      // If there's no mainAction, this is the autoAllow warning prompt.
+      let autoAllow = !mainAction;
+      options = { removeOnDismissal: autoAllow,
+                  eventCallback: function (type) {
+                                   if (type == "removed") {
+                                     browser.removeEventListener("mozfullscreenchange", onFullScreen, true);
+                                     if (autoAllow)
+                                       aRequest.allow();
+                                   }
+                                 },
+                };
+    }
+
+    var popup = chromeWin.PopupNotifications.show(browser, aNotificationId, aMessage, aAnchorId,
+                                                  mainAction, secondaryActions, options);
+    if (aRequest.type == "pointerLock") {
+      // pointerLock is automatically allowed in fullscreen mode (and revoked
+      // upon exit), so if the page enters fullscreen mode after requesting
+      // pointerLock (but before the user has granted permission), we should
+      // remove the now-impotent notification.
+      browser.addEventListener("mozfullscreenchange", onFullScreen, true);
+    }
   },
 
   _promptGeo : function(aRequest) {
@@ -1779,9 +1807,50 @@ ContentPermissionPrompt.prototype = {
                      "web-notifications-notification-icon");
   },
 
+  _promptPointerLock: function CPP_promtPointerLock(aRequest, autoAllow) {
+
+    let browserBundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
+    let requestingURI = aRequest.principal.URI;
+
+    let originString = requestingURI.schemeIs("file") ? requestingURI.path : requestingURI.host;
+    let message = browserBundle.formatStringFromName(autoAllow ?
+                                  "pointerLock.autoLock.title" : "pointerLock.title",
+                                  [originString], 1);
+    // If this is an autoAllow info prompt, offer no actions.
+    // _showPrompt() will allow the request when it's dismissed.
+    let actions = [];
+    if (!autoAllow) {
+      actions = [
+        {
+          stringId: "pointerLock.allow",
+          action: null,
+          expireType: null,
+          callback: function() {},
+        },
+        {
+          stringId: "pointerLock.alwaysAllow",
+          action: Ci.nsIPermissionManager.ALLOW_ACTION,
+          expireType: null,
+          callback: function() {},
+        },
+        {
+          stringId: "pointerLock.neverAllow",
+          action: Ci.nsIPermissionManager.DENY_ACTION,
+          expireType: null,
+          callback: function() {},
+        },
+      ];
+    }
+
+    this._showPrompt(aRequest, message, "pointerLock", actions, "pointerLock", "pointerLock-notification-icon");
+  },
+
   prompt: function CPP_prompt(request) {
+
     const kFeatureKeys = { "geolocation" : "geo",
-                           "desktop-notification" : "desktop-notification" };
+                           "desktop-notification" : "desktop-notification",
+                           "pointerLock" : "pointerLock",
+                         };
 
     // Make sure that we support the request.
     if (!(request.type in kFeatureKeys)) {
@@ -1795,17 +1864,22 @@ ContentPermissionPrompt.prototype = {
     if (!(requestingURI instanceof Ci.nsIStandardURL))
       return;
 
+    var autoAllow = false;
     var permissionKey = kFeatureKeys[request.type];
     var result = Services.perms.testExactPermissionFromPrincipal(requestingPrincipal, permissionKey);
-
-    if (result == Ci.nsIPermissionManager.ALLOW_ACTION) {
-      request.allow();
-      return;
-    }
 
     if (result == Ci.nsIPermissionManager.DENY_ACTION) {
       request.cancel();
       return;
+    }
+
+    if (result == Ci.nsIPermissionManager.ALLOW_ACTION) {
+      autoAllow = true;
+      // For pointerLock, we still want to show a warning prompt.
+      if (request.type != "pointerLock") {
+        request.allow();
+        return;
+      }
     }
 
     // Show the prompt.
@@ -1816,8 +1890,12 @@ ContentPermissionPrompt.prototype = {
     case "desktop-notification":
       this._promptWebNotifications(request);
       break;
+    case "pointerLock":
+      this._promptPointerLock(request, autoAllow);
+      break;
     }
-  }
+  },
+
 };
 
 var components = [BrowserGlue, ContentPermissionPrompt];

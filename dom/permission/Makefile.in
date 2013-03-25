@@ -11,7 +11,6 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME   = jsdompermissionsettings_s
 
-GRE_MODULE     = 1
 
 EXTRA_COMPONENTS =        \
   PermissionSettings.js       \

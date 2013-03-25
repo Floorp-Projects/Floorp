@@ -116,11 +116,11 @@ RegExpShared::isJITRuntimeEnabled(JSContext *cx)
 }
 
 inline bool
-RegExpToShared(JSContext *cx, JSObject &obj, RegExpGuard *g)
+RegExpToShared(JSContext *cx, HandleObject obj, RegExpGuard *g)
 {
-    if (obj.isRegExp())
-        return obj.asRegExp().getShared(cx, g);
-    return Proxy::regexp_toShared(cx, &obj, g);
+    if (obj->isRegExp())
+        return obj->asRegExp().getShared(cx, g);
+    return Proxy::regexp_toShared(cx, obj, g);
 }
 
 inline void

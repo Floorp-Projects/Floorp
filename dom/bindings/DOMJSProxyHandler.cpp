@@ -76,7 +76,7 @@ DOMProxyHandler::EnsureExpandoObject(JSContext* cx, JSObject* obj)
 }
 
 bool
-DOMProxyHandler::getPropertyDescriptor(JSContext* cx, JSObject* proxy, jsid id,
+DOMProxyHandler::getPropertyDescriptor(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
                                        JSPropertyDescriptor* desc, unsigned flags)
 {
   if (!getOwnPropertyDescriptor(cx, proxy, id, desc, flags)) {
@@ -99,7 +99,7 @@ DOMProxyHandler::getPropertyDescriptor(JSContext* cx, JSObject* proxy, jsid id,
 }
 
 bool
-DOMProxyHandler::defineProperty(JSContext* cx, JSObject* proxy, jsid id,
+DOMProxyHandler::defineProperty(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
                                 JSPropertyDescriptor* desc)
 {
   if ((desc->attrs & JSPROP_GETTER) && desc->setter == JS_StrictPropertyStub) {
@@ -124,7 +124,8 @@ DOMProxyHandler::defineProperty(JSContext* cx, JSObject* proxy, jsid id,
 }
 
 bool
-DOMProxyHandler::delete_(JSContext* cx, JSObject* proxy, jsid id, bool* bp)
+DOMProxyHandler::delete_(JSContext* cx, JS::Handle<JSObject*> proxy,
+                         JS::Handle<jsid> id, bool* bp)
 {
   JSBool b = true;
 
@@ -141,7 +142,7 @@ DOMProxyHandler::delete_(JSContext* cx, JSObject* proxy, jsid id, bool* bp)
 }
 
 bool
-DOMProxyHandler::enumerate(JSContext* cx, JSObject* proxy, AutoIdVector& props)
+DOMProxyHandler::enumerate(JSContext* cx, JS::Handle<JSObject*> proxy, AutoIdVector& props)
 {
   JSObject* proto;
   if (!JS_GetPrototype(cx, proxy, &proto)) {
@@ -152,14 +153,7 @@ DOMProxyHandler::enumerate(JSContext* cx, JSObject* proxy, AutoIdVector& props)
 }
 
 bool
-DOMProxyHandler::fix(JSContext* cx, JSObject* proxy, Value* vp)
-{
-  vp->setUndefined();
-  return true;
-}
-
-bool
-DOMProxyHandler::has(JSContext* cx, JSObject* proxy, jsid id, bool* bp)
+DOMProxyHandler::has(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id, bool* bp)
 {
   if (!hasOwn(cx, proxy, id, bp)) {
     return false;

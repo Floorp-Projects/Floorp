@@ -529,14 +529,11 @@ Statistics::beginGC()
     nonincrementalReason = NULL;
 
     preBytes = runtime->gcBytes;
-
-    Probes::GCStart();
 }
 
 void
 Statistics::endGC()
 {
-    Probes::GCEnd();
     crash::SnapshotGCStack();
 
     for (int i = 0; i < PHASE_LIMIT; i++)
@@ -640,11 +637,6 @@ Statistics::beginPhase(Phase phase)
 #endif
 
     phaseStartTimes[phase] = PRMJ_Now();
-
-    if (phase == gcstats::PHASE_MARK)
-        Probes::GCStartMarkPhase();
-    else if (phase == gcstats::PHASE_SWEEP)
-        Probes::GCStartSweepPhase();
 }
 
 void
@@ -656,11 +648,6 @@ Statistics::endPhase(Phase phase)
     slices.back().phaseTimes[phase] += t;
     phaseTimes[phase] += t;
     phaseStartTimes[phase] = 0;
-
-    if (phase == gcstats::PHASE_MARK)
-        Probes::GCEndMarkPhase();
-    else if (phase == gcstats::PHASE_SWEEP)
-        Probes::GCEndSweepPhase();
 }
 
 int64_t

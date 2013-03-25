@@ -130,10 +130,10 @@ private:
 
 protected:
 
-  /* See SVGLengthList for the rationale for using nsTArray<float> instead
-   * of nsTArray<float, 1>.
+  /* See SVGLengthList for the rationale for using FallibleTArray<float> instead
+   * of FallibleTArray<float, 1>.
    */
-  nsTArray<float> mNumbers;
+  FallibleTArray<float> mNumbers;
 };
 
 

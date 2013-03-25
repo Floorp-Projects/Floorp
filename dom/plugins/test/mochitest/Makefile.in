@@ -155,6 +155,7 @@ MOCHITEST_FILES += \
   cocoa_window_focus.html \
   test_cocoa_focus.html \
   cocoa_focus.html \
+  test_queryContentsScaleFactor.html \
   $(NULL)
 endif
 

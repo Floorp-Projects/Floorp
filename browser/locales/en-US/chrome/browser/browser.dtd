@@ -647,3 +647,5 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 
 <!ENTITY mixedContentBlocked.helplink "Learn more">
 <!ENTITY mixedContentBlocked.moreinfo "Most websites will still work properly even when this content is blocked.">
+
+<!ENTITY pointerLock.notification.message "Press ESC at any time to show it again.">

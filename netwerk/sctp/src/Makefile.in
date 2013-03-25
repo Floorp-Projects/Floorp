@@ -16,7 +16,6 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME   = nksctp_s
 LIBXUL_LIBRARY = 1
-GRE_MODULE     = 1
 FORCE_STATIC_LIB = 1
 
 EXPORTS_NAMESPACES = mozilla/net

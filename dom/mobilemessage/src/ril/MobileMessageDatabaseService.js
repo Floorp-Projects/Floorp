@@ -1088,7 +1088,7 @@ MobileMessageDatabaseService.prototype = {
             threadStore.put(threadRecord);
           }
 
-	  insertMessageRecord(threadRecord.id);
+          insertMessageRecord(threadRecord.id);
           return;
         }
 
@@ -1125,11 +1125,12 @@ MobileMessageDatabaseService.prototype = {
    */
 
   saveReceivedMessage: function saveReceivedMessage(aMessage, aCallback) {
-    if (aMessage.type == undefined ||
-        aMessage.sender == undefined ||
+    if ((aMessage.type != "sms" && aMessage.type != "mms") ||
         (aMessage.type == "sms" && aMessage.messageClass == undefined) ||
-        (aMessage.type == "mms" && aMessage.delivery == undefined) ||
-        (aMessage.type == "mms" && aMessage.deliveryStatus == undefined) ||
+        (aMessage.type == "mms" && (aMessage.delivery == undefined ||
+                                    !Array.isArray(aMessage.deliveryStatus) ||
+                                    !Array.isArray(aMessage.receivers))) ||
+        aMessage.sender == undefined ||
         aMessage.timestamp == undefined) {
       if (aCallback) {
         aCallback.notify(Cr.NS_ERROR_FAILURE, null);
@@ -1139,17 +1140,24 @@ MobileMessageDatabaseService.prototype = {
     let self = this.getRilIccInfoMsisdn();
     let threadParticipants = [aMessage.sender];
     if (aMessage.type == "sms") {
+      // TODO Bug 853384 - for some SIMs we cannot retrieve the vaild
+      // phone number, thus setting the SMS' receiver to be null.
       aMessage.receiver = self;
     } else if (aMessage.type == "mms") {
-      if (!aMessage.receivers.length) {
-        if (self) {
-          aMessage.receivers.push(self);
-        }
+      let receivers = aMessage.receivers;
+      if (!receivers.length) {
+        // TODO Bug 853384 - we cannot expose empty receivers for
+        // an MMS message. Returns 'myself' when .msisdn isn't valid.
+        receivers.push(self ? self : "myself");
       } else {
-        let slicedReceivers = aMessage.receivers.slice();
-        let found = slicedReceivers.indexOf(self);
-        if (self && (found !== -1)) {
-          slicedReceivers.splice(found, 1);
+        // TODO Bug 853384 - we cannot correcly exclude the phone number
+        // from the receivers, thus wrongly building the index.
+        let slicedReceivers = receivers.slice();
+        if (self) {
+          let found = slicedReceivers.indexOf(self);
+          if (found !== -1) {
+            slicedReceivers.splice(found, 1);
+          }
         }
         threadParticipants = threadParticipants.concat(slicedReceivers);
       }
@@ -1175,7 +1183,7 @@ MobileMessageDatabaseService.prototype = {
   saveSendingMessage: function saveSendingMessage(aMessage, aCallback) {
     if ((aMessage.type != "sms" && aMessage.type != "mms") ||
         (aMessage.type == "sms" && !aMessage.receiver) ||
-        (aMessage.type == "mms" && !aMessage.receivers) ||
+        (aMessage.type == "mms" && !Array.isArray(aMessage.receivers)) ||
         aMessage.deliveryStatusRequested == undefined ||
         aMessage.timestamp == undefined) {
       if (aCallback) {
@@ -1208,6 +1216,8 @@ MobileMessageDatabaseService.prototype = {
       }
     }
 
+    // TODO Bug 853384 - for some SIMs we cannot retrieve the vaild
+    // phone number, thus setting the message's sender to be null.
     aMessage.sender = this.getRilIccInfoMsisdn();
     let timestamp = aMessage.timestamp;
 

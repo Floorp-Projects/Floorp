@@ -205,7 +205,7 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
 
   mTopEdge = aY;
 
-  psd->mNoWrap = !mStyleText->WhiteSpaceCanWrap();
+  psd->mNoWrap = !mStyleText->WhiteSpaceCanWrap(GetLineContainerFrame());
   psd->mDirection = aDirection;
   psd->mChangedFrameDirection = false;
 
@@ -407,7 +407,8 @@ nsLineLayout::BeginSpan(nsIFrame* aFrame,
   psd->mRightEdge = aRightEdge;
   psd->mBaseline = aBaseline;
 
-  psd->mNoWrap = !aSpanReflowState->frame->StyleText()->WhiteSpaceCanWrap();
+  nsIFrame* frame = aSpanReflowState->frame;
+  psd->mNoWrap = !frame->StyleText()->WhiteSpaceCanWrap(frame);
   psd->mDirection = aSpanReflowState->mStyleVisibility->mDirection;
   psd->mChangedFrameDirection = false;
 

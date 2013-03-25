@@ -14,7 +14,6 @@ LIBRARY_NAME    = unixproxy
 EXPORT_LIBRARY  = 1
 IS_COMPONENT    = 1
 MODULE_NAME     = nsUnixProxyModule
-GRE_MODULE      = 1
 LIBXUL_LIBRARY  = 1
 
 ifdef MOZ_ENABLE_LIBPROXY

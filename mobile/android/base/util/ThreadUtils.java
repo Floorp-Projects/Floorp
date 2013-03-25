@@ -84,6 +84,10 @@ public final class ThreadUtils {
         return isOnThread(getUiThread());
     }
 
+    public static boolean isOnBackgroundThread() {
+        return isOnThread(sBackgroundThread);
+    }
+
     public static boolean isOnThread(Thread thread) {
         return (Thread.currentThread().getId() == thread.getId());
     }

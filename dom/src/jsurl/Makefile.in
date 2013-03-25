@@ -14,7 +14,6 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME	= jsurl_s
 FORCE_STATIC_LIB = 1
 MODULE_NAME	= javascript__protocol
-GRE_MODULE	= 1
 LIBXUL_LIBRARY	= 1
 
 CPPSRCS		= nsJSProtocolHandler.cpp

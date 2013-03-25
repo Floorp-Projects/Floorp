@@ -66,8 +66,12 @@ public:
 
   void Shutdown()
   {
+    Suspend();
     mDecoder.Shutdown();
   }
+
+  void Suspend();
+  void Resume();
 
   virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 

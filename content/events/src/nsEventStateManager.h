@@ -10,24 +10,23 @@
 
 #include "nsEvent.h"
 #include "nsGUIEvent.h"
-#include "nsIContent.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "nsITimer.h"
 #include "nsCOMPtr.h"
-#include "nsIDocument.h"
 #include "nsCOMArray.h"
 #include "nsIFrameLoader.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIScrollableFrame.h"
 #include "nsFocusManager.h"
-#include "nsIDocument.h"
 #include "nsEventStates.h"
 #include "mozilla/TimeStamp.h"
 #include "nsIFrame.h"
 
 class nsIPresShell;
+class nsIContent;
+class nsIDocument;
 class nsIDocShell;
 class nsIDocShellTreeNode;
 class nsIDocShellTreeItem;

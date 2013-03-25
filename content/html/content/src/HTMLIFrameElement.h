@@ -60,9 +60,116 @@ public:
 
   uint32_t GetSandboxFlags();
 
+  // Web IDL binding methods
+  // The XPCOM GetSrc is fine for our purposes
+  void SetSrc(const nsAString& aSrc, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::src, aSrc, aError);
+  }
+  void GetName(DOMString& aName)
+  {
+    GetHTMLAttr(nsGkAtoms::name, aName);
+  }
+  void SetName(const nsAString& aName, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::name, aName, aError);
+  }
+  void GetSandbox(DOMString& aSandbox)
+  {
+    GetHTMLAttr(nsGkAtoms::sandbox, aSandbox);
+  }
+  bool AllowFullscreen() const
+  {
+    return GetBoolAttr(nsGkAtoms::allowfullscreen);
+  }
+  void SetAllowFullscreen(bool aAllow, ErrorResult& aError)
+  {
+    SetHTMLBoolAttr(nsGkAtoms::allowfullscreen, aAllow, aError);
+  }
+  void GetWidth(DOMString& aWidth)
+  {
+    GetHTMLAttr(nsGkAtoms::width, aWidth);
+  }
+  void SetWidth(const nsAString& aWidth, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::width, aWidth, aError);
+  }
+  void GetHeight(DOMString& aHeight)
+  {
+    GetHTMLAttr(nsGkAtoms::height, aHeight);
+  }
+  void SetHeight(const nsAString& aHeight, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::height, aHeight, aError);
+  }
+  using nsGenericHTMLFrameElement::GetContentDocument;
+  using nsGenericHTMLFrameElement::GetContentWindow;
+  void GetAlign(DOMString& aAlign)
+  {
+    GetHTMLAttr(nsGkAtoms::align, aAlign);
+  }
+  void SetAlign(const nsAString& aAlign, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::align, aAlign, aError);
+  }
+  void GetScrolling(DOMString& aScrolling)
+  {
+    GetHTMLAttr(nsGkAtoms::scrolling, aScrolling);
+  }
+  void SetScrolling(const nsAString& aScrolling, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::scrolling, aScrolling, aError);
+  }
+  void GetFrameBorder(DOMString& aFrameBorder)
+  {
+    GetHTMLAttr(nsGkAtoms::frameborder, aFrameBorder);
+  }
+  void SetFrameBorder(const nsAString& aFrameBorder, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::frameborder, aFrameBorder, aError);
+  }
+  // The XPCOM GetLongDesc is fine
+  void SetLongDesc(const nsAString& aLongDesc, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::longdesc, aLongDesc, aError);
+  }
+  void GetMarginWidth(DOMString& aMarginWidth)
+  {
+    GetHTMLAttr(nsGkAtoms::marginwidth, aMarginWidth);
+  }
+  void SetMarginWidth(const nsAString& aMarginWidth, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::marginwidth, aMarginWidth, aError);
+  }
+  void GetMarginHeight(DOMString& aMarginHeight)
+  {
+    GetHTMLAttr(nsGkAtoms::marginheight, aMarginHeight);
+  }
+  void SetMarginHeight(const nsAString& aMarginHeight, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::marginheight, aMarginHeight, aError);
+  }
+  nsIDocument* GetSVGDocument()
+  {
+    return GetContentDocument();
+  }
+  bool Mozbrowser() const
+  {
+    return GetBoolAttr(nsGkAtoms::mozbrowser);
+  }
+  void SetMozbrowser(bool aAllow, ErrorResult& aError)
+  {
+    SetHTMLBoolAttr(nsGkAtoms::mozbrowser, aAllow, aError);
+  }
+  using nsGenericHTMLFrameElement::SetMozbrowser;
+  // nsGenericHTMLFrameElement::GetFrameLoader is fine
+  // nsGenericHTMLFrameElement::GetAppManifestURL is fine
+
 protected:
   virtual void GetItemValueText(nsAString& text);
   virtual void SetItemValueText(const nsAString& text);
+
+  virtual JSObject* WrapNode(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 };
 
 } // namespace dom

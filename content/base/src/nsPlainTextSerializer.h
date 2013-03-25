@@ -12,14 +12,16 @@
 #ifndef nsPlainTextSerializer_h__
 #define nsPlainTextSerializer_h__
 
-#include "nsIContentSerializer.h"
+#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
-#include "nsString.h"
-#include "nsILineBreaker.h"
-#include "nsIContent.h"
 #include "nsIAtom.h"
+#include "nsIContentSerializer.h"
 #include "nsIDocumentEncoder.h"
+#include "nsILineBreaker.h"
+#include "nsString.h"
 #include "nsTArray.h"
+
+class nsIContent;
 
 namespace mozilla {
 namespace dom {

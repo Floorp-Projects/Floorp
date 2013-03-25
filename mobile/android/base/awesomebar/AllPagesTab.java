@@ -668,7 +668,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
         anim1.setDuration(ANIMATION_DURATION);
         anim1.setInterpolator(new AccelerateInterpolator());
         anim1.setFillAfter(true);
-        mSuggestionsOptInPrompt.setAnimation(anim1);
+        mSuggestionsOptInPrompt.findViewById(R.id.prompt_container).setAnimation(anim1);
 
         TranslateAnimation anim2 = new TranslateAnimation(0, 0, 0, -1 * mSuggestionsOptInPrompt.getHeight());
         anim2.setDuration(ANIMATION_DURATION);
