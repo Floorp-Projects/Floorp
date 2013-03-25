@@ -3,8 +3,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko;
+package org.mozilla.gecko.widget;
 
+import org.mozilla.gecko.AwesomeBar;
+import org.mozilla.gecko.BrowserApp;
+import org.mozilla.gecko.Favicons;
+import org.mozilla.gecko.GeckoApp;
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoLinearLayout;
+import org.mozilla.gecko.LightweightTheme;
+import org.mozilla.gecko.LightweightThemeDrawable;
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.SessionParser;
+import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.TabsAccessor;
+import org.mozilla.gecko.ThumbnailHelper;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
 import org.mozilla.gecko.db.BrowserDB;
@@ -84,7 +97,7 @@ public class AboutHomeContent extends ScrollView
         REMOVE_HISTORY
     }
 
-    static enum UpdateFlags {
+    public static enum UpdateFlags {
         TOP_SITES,
         PREVIOUS_TABS,
         RECOMMENDED_ADDONS,
@@ -265,7 +278,7 @@ public class AboutHomeContent extends ScrollView
         }
     }
 
-    void setLastTabsVisibility(boolean visible) {
+    public void setLastTabsVisibility(boolean visible) {
         if (visible)
             mLastTabs.show();
         else
@@ -445,7 +458,7 @@ public class AboutHomeContent extends ScrollView
         }).execute();
     }
 
-    void update(final EnumSet<UpdateFlags> flags) {
+    public void update(final EnumSet<UpdateFlags> flags) {
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {

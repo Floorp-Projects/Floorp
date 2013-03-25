@@ -43,9 +43,6 @@ UTIL_JAVA_FILES := \
   $(NULL)
 
 FENNEC_JAVA_FILES = \
-  AboutHomeContent.java \
-  AboutHomePromoBox.java \
-  AboutHomeSection.java \
   ActivityHandlerHelper.java \
   AlertNotification.java \
   AllCapsTextView.java \
@@ -113,7 +110,6 @@ FENNEC_JAVA_FILES = \
   LightweightTheme.java \
   LightweightThemeDrawable.java \
   LinkPreference.java \
-  LinkTextView.java \
   MemoryMonitor.java \
   MenuButton.java \
   MenuItemActionBar.java \
@@ -201,8 +197,12 @@ FENNEC_JAVA_FILES = \
   gfx/TouchEventHandler.java \
   gfx/ViewTransform.java \
   gfx/VirtualLayer.java \
+  widget/AboutHomeContent.java \
+  widget/AboutHomePromoBox.java \
+  widget/AboutHomeSection.java \
   widget/DateTimePicker.java \
   widget/IconTabWidget.java \
+  widget/LinkTextView.java \
   widget/TabRow.java \
   widget/ThumbnailView.java \
   widget/TwoWayView.java \

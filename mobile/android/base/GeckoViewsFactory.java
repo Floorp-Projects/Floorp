@@ -5,7 +5,11 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.gfx.LayerView;
+import org.mozilla.gecko.widget.AboutHomeContent;
+import org.mozilla.gecko.widget.AboutHomePromoBox;
+import org.mozilla.gecko.widget.AboutHomeSection;
 import org.mozilla.gecko.widget.IconTabWidget;
+import org.mozilla.gecko.widget.LinkTextView;
 import org.mozilla.gecko.widget.TabRow;
 import org.mozilla.gecko.widget.ThumbnailView;
 
