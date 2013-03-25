@@ -56,27 +56,3 @@ interface nsIDOMSVGFEMorphologyElement : nsIDOMSVGFilterPrimitiveStandardAttribu
     
     void setRadius ( in float rx, in float ry );
 };
-
-[scriptable, uuid(7d49f132-5145-4b47-896a-ac5f9e6b6941)]
-interface nsIDOMSVGFEConvolveMatrixElement : nsIDOMSVGFilterPrimitiveStandardAttributes
-{ 
-    // Edge Mode Values
-    const unsigned short SVG_EDGEMODE_UNKNOWN   = 0;
-    const unsigned short SVG_EDGEMODE_DUPLICATE = 1;
-    const unsigned short SVG_EDGEMODE_WRAP      = 2;
-    const unsigned short SVG_EDGEMODE_NONE      = 3;
-
-    readonly attribute nsIDOMSVGAnimatedString      in1;
-    readonly attribute nsIDOMSVGAnimatedInteger     orderX;
-    readonly attribute nsIDOMSVGAnimatedInteger     orderY;
-    // SVGAnimatedNumberList
-    readonly attribute nsISupports                  kernelMatrix;
-    readonly attribute nsIDOMSVGAnimatedNumber      divisor;
-    readonly attribute nsIDOMSVGAnimatedNumber      bias;
-    readonly attribute nsIDOMSVGAnimatedInteger     targetX;
-    readonly attribute nsIDOMSVGAnimatedInteger     targetY;
-    readonly attribute nsIDOMSVGAnimatedEnumeration edgeMode;
-    readonly attribute nsIDOMSVGAnimatedNumber      kernelUnitLengthX;
-    readonly attribute nsIDOMSVGAnimatedNumber      kernelUnitLengthY;
-    readonly attribute nsISupports                  preserveAlpha;
-};
