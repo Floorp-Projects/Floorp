@@ -82,7 +82,7 @@ const RIL_IPC_MSG_NAMES = [
   "RIL:IccOpenChannel",
   "RIL:IccCloseChannel",
   "RIL:IccExchangeAPDU",
-  "RIL:IccUpdateContact"
+  "RIL:UpdateIccContact"
 ];
 
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
@@ -676,7 +676,7 @@ RILContentHelper.prototype = {
       iccContact.number = contact.tel[0].value;
     }
 
-    cpmm.sendAsyncMessage("RIL:IccUpdateContact", {requestId: requestId,
+    cpmm.sendAsyncMessage("RIL:UpdateIccContact", {requestId: requestId,
                                                    contactType: contactType,
                                                    contact: iccContact,
                                                    pin2: pin2});
@@ -1086,8 +1086,8 @@ RILContentHelper.prototype = {
       case "RIL:IccExchangeAPDU":
         this.handleIccExchangeAPDU(msg.json);
         break;
-      case "RIL:IccUpdateContact":
-        this.handleIccUpdateContact(msg.json);
+      case "RIL:UpdateIccContact":
+        this.handleUpdateIccContact(msg.json);
         break;
       case "RIL:DataError":
         this.updateConnectionInfo(msg.json, this.rilContext.dataConnectionInfo);
@@ -1200,7 +1200,7 @@ RILContentHelper.prototype = {
     }
   },
 
-  handleIccUpdateContact: function handleIccUpdateContact(message) {
+  handleUpdateIccContact: function handleUpdateIccContact(message) {
     if (message.errorMsg) {
       this.fireRequestError(message.requestId, message.errorMsg);
     } else {
