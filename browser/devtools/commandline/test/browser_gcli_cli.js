@@ -179,7 +179,7 @@ exports.testTsv = function(options) {
         cursor: 4,
         current: 'optionType',
         status: 'ERROR',
-        predictions: [ 'option1', 'option2' ],
+        predictions: [ 'option1', 'option2', 'option3' ],
         unassigned: [ ],
         tooltipState: 'true:importantFieldFlag',
         args: {
@@ -219,7 +219,7 @@ exports.testTsv = function(options) {
         cursor: 5,
         current: 'optionType',
         status: 'ERROR',
-        predictions: [ 'option1', 'option2' ],
+        predictions: [ 'option1', 'option2', 'option3' ],
         unassigned: [ ],
         tooltipState: 'true:importantFieldFlag',
         args: {
@@ -248,7 +248,7 @@ exports.testTsv = function(options) {
         cursor: 10,
         current: 'optionType',
         status: 'ERROR',
-        predictions: [ 'option1', 'option2' ],
+        predictions: [ 'option1', 'option2', 'option3' ],
         unassigned: [ ],
         tooltipState: 'true:importantFieldFlag',
         args: {
