@@ -12,7 +12,7 @@ function test() {
     gTab = tab;
     gPanel = panel;
 
-    testInactive(testStart);
+    testInactive(startFirstProfile);
   });
 }
 
@@ -32,23 +32,33 @@ function testActive(next=function(){}) {
   });
 }
 
-function testStart() {
-  gPanel.controller.start(function (err) {
-    ok(!err, "Profiler started without errors");
-    testActive(testStop);
+function startFirstProfile() {
+  gPanel.controller.start("Profile 1", function (err) {
+    ok(!err, "Profile 1 started without errors");
+    testActive(startSecondProfile);
   });
 }
 
-function testStop() {
-  gPanel.controller.stop(function (err, data) {
-    ok(!err, "Profiler stopped without errors");
+function startSecondProfile() {
+  gPanel.controller.start("Profile 2", function (err) {
+    ok(!err, "Profile 2 started without errors");
+    testActive(stopFirstProfile);
+  });
+}
+
+function stopFirstProfile() {
+  gPanel.controller.stop("Profile 1", function (err, data) {
+    ok(!err, "Profile 1 stopped without errors");
     ok(data, "Profiler returned some data");
 
-    testInactive(function () {
-      tearDown(gTab, function () {
-        gTab = null;
-        gPanel = null;
-      });
-    });
+    testActive(stopSecondProfile);
+  });
+}
+
+function stopSecondProfile() {
+  gPanel.controller.stop("Profile 2", function (err, data) {
+    ok(!err, "Profile 2 stopped without errors");
+    ok(data, "Profiler returned some data");
+    testInactive(tearDown.call(null, gTab, function () gTab = gPanel = null));
   });
 }
