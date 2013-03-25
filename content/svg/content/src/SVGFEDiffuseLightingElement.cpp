@@ -4,77 +4,75 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/SVGFEDiffuseLightingElement.h"
+#include "mozilla/dom/SVGFEDiffuseLightingElementBinding.h"
+#include "nsSVGUtils.h"
 
-NS_IMPL_NS_NEW_SVG_ELEMENT(FEDiffuseLighting)
+NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEDiffuseLighting)
 
 namespace mozilla {
 namespace dom {
 
+JSObject*
+SVGFEDiffuseLightingElement::WrapNode(JSContext* aCx, JSObject* aScope)
+{
+  return SVGFEDiffuseLightingElementBinding::Wrap(aCx, aScope, this);
+}
+
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ADDREF_INHERITED(nsSVGFEDiffuseLightingElement,nsSVGFEDiffuseLightingElementBase)
-NS_IMPL_RELEASE_INHERITED(nsSVGFEDiffuseLightingElement,nsSVGFEDiffuseLightingElementBase)
+NS_IMPL_ADDREF_INHERITED(SVGFEDiffuseLightingElement,SVGFEDiffuseLightingElementBase)
+NS_IMPL_RELEASE_INHERITED(SVGFEDiffuseLightingElement,SVGFEDiffuseLightingElementBase)
 
-DOMCI_NODE_DATA(SVGFEDiffuseLightingElement, nsSVGFEDiffuseLightingElement)
-
-NS_INTERFACE_TABLE_HEAD(nsSVGFEDiffuseLightingElement)
-  NS_NODE_INTERFACE_TABLE5(nsSVGFEDiffuseLightingElement, nsIDOMNode,
-                           nsIDOMElement, nsIDOMSVGElement,
-                           nsIDOMSVGFilterPrimitiveStandardAttributes,
-                           nsIDOMSVGFEDiffuseLightingElement)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEDiffuseLightingElement)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGFEDiffuseLightingElementBase)
+NS_INTERFACE_TABLE_HEAD(SVGFEDiffuseLightingElement)
+  NS_NODE_INTERFACE_TABLE3(SVGFEDiffuseLightingElement, nsIDOMNode,
+                           nsIDOMElement, nsIDOMSVGElement)
+NS_INTERFACE_MAP_END_INHERITING(SVGFEDiffuseLightingElementBase)
 
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEDiffuseLightingElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEDiffuseLightingElement)
 
 //----------------------------------------------------------------------
-// nsSVGFEDiffuseLightingElement methods
 
-NS_IMETHODIMP
-nsSVGFEDiffuseLightingElement::GetIn1(nsIDOMSVGAnimatedString * *aIn)
+already_AddRefed<nsIDOMSVGAnimatedString>
+SVGFEDiffuseLightingElement::In1()
 {
-  return mStringAttributes[IN1].ToDOMAnimatedString(aIn, this);
+  return mStringAttributes[IN1].ToDOMAnimatedString(this);
 }
 
-NS_IMETHODIMP
-nsSVGFEDiffuseLightingElement::GetSurfaceScale(nsIDOMSVGAnimatedNumber **aScale)
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGFEDiffuseLightingElement::SurfaceScale()
 {
-  return mNumberAttributes[SURFACE_SCALE].ToDOMAnimatedNumber(aScale,
-                                                              this);
+  return mNumberAttributes[SURFACE_SCALE].ToDOMAnimatedNumber(this);
 }
 
-NS_IMETHODIMP
-nsSVGFEDiffuseLightingElement::GetDiffuseConstant(nsIDOMSVGAnimatedNumber **aConstant)
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGFEDiffuseLightingElement::DiffuseConstant()
 {
-  return mNumberAttributes[DIFFUSE_CONSTANT].ToDOMAnimatedNumber(aConstant,
-                                                              this);
+  return mNumberAttributes[DIFFUSE_CONSTANT].ToDOMAnimatedNumber(this);
 }
 
-NS_IMETHODIMP
-nsSVGFEDiffuseLightingElement::GetKernelUnitLengthX(nsIDOMSVGAnimatedNumber **aKernelX)
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGFEDiffuseLightingElement::KernelUnitLengthX()
 {
-  return mNumberPairAttributes[KERNEL_UNIT_LENGTH].ToDOMAnimatedNumber(aKernelX,
-                                                                       nsSVGNumberPair::eFirst,
-                                                                       this);
+  return mNumberPairAttributes[KERNEL_UNIT_LENGTH].ToDOMAnimatedNumber(
+    nsSVGNumberPair::eFirst, this);
 }
 
-NS_IMETHODIMP
-nsSVGFEDiffuseLightingElement::GetKernelUnitLengthY(nsIDOMSVGAnimatedNumber **aKernelY)
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGFEDiffuseLightingElement::KernelUnitLengthY()
 {
-  return mNumberPairAttributes[KERNEL_UNIT_LENGTH].ToDOMAnimatedNumber(aKernelY,
-                                                                       nsSVGNumberPair::eSecond,
-                                                                       this);
+  return mNumberPairAttributes[KERNEL_UNIT_LENGTH].ToDOMAnimatedNumber(
+    nsSVGNumberPair::eSecond, this);
 }
 
 bool
-nsSVGFEDiffuseLightingElement::AttributeAffectsRendering(int32_t aNameSpaceID,
-                                                         nsIAtom* aAttribute) const
+SVGFEDiffuseLightingElement::AttributeAffectsRendering(int32_t aNameSpaceID,
+                                                       nsIAtom* aAttribute) const
 {
-  return nsSVGFEDiffuseLightingElementBase::AttributeAffectsRendering(aNameSpaceID, aAttribute) ||
+  return SVGFEDiffuseLightingElementBase::AttributeAffectsRendering(aNameSpaceID, aAttribute) ||
          (aNameSpaceID == kNameSpaceID_None &&
           aAttribute == nsGkAtoms::diffuseConstant);
 }
@@ -83,8 +81,8 @@ nsSVGFEDiffuseLightingElement::AttributeAffectsRendering(int32_t aNameSpaceID,
 // nsSVGElement methods
 
 void
-nsSVGFEDiffuseLightingElement::LightPixel(const float *N, const float *L,
-                                          nscolor color, uint8_t *targetData)
+SVGFEDiffuseLightingElement::LightPixel(const float *N, const float *L,
+                                        nscolor color, uint8_t *targetData)
 {
   float diffuseNL =
     mNumberAttributes[DIFFUSE_CONSTANT].GetAnimValue() * DOT(N, L);
