@@ -31,6 +31,8 @@ let assert = { ok: ok, is: is, log: info };
 
 var util = require('util/util');
 
+var converters = require('gcli/converters');
+
 /**
  * Warning: For use with Firefox Mochitests only.
  *
@@ -380,7 +382,7 @@ helpers._createDebugCheck = function(options) {
     output += ']);';
 
     return output;
-  }.bind(this), console.error);
+  }.bind(this), util.errorHandler);
 };
 
 /**
@@ -723,32 +725,36 @@ helpers._exec = function(options, name, expected) {
 
   var checkOutput = function() {
     var div = options.window.document.createElement('div');
-    output.toDom(div);
-    var actualOutput = div.textContent.trim();
+    var nodePromise = converters.convert(output.data, output.type, 'dom',
+                                         options.display.requisition.context);
+    nodePromise.then(function(node) {
+      div.appendChild(node);
+      var actualOutput = div.textContent.trim();
 
-    var doTest = function(match, against) {
-      if (!match.test(against)) {
-        assert.ok(false, 'html output for ' + name + ' against ' + match.source);
-        log('Actual textContent');
-        log(against);
+      var doTest = function(match, against) {
+        if (!match.test(against)) {
+          assert.ok(false, 'html output for ' + name + ' against ' + match.source);
+          log('Actual textContent');
+          log(against);
+        }
+      };
+
+      if (typeof expected.output === 'string') {
+        assert.is(actualOutput,
+                  expected.output,
+                  'html output for ' + name);
       }
-    };
+      else if (Array.isArray(expected.output)) {
+        expected.output.forEach(function(match) {
+          doTest(match, actualOutput);
+        });
+      }
+      else {
+        doTest(expected.output, actualOutput);
+      }
 
-    if (typeof expected.output === 'string') {
-      assert.is(actualOutput,
-                expected.output,
-                'html output for ' + name);
-    }
-    else if (Array.isArray(expected.output)) {
-      expected.output.forEach(function(match) {
-        doTest(match, actualOutput);
-      });
-    }
-    else {
-      doTest(expected.output, actualOutput);
-    }
-
-    deferred.resolve();
+      deferred.resolve();
+    });
   };
 
   if (output.completed !== false) {

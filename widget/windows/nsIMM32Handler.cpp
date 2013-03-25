@@ -41,9 +41,6 @@ static UINT sWM_MSIME_MOUSE = 0; // mouse message for MSIME 98/2000
 #define IMEMOUSE_WUP        0x10    // wheel up
 #define IMEMOUSE_WDOWN      0x20    // wheel down
 
-bool nsIMM32Handler::sIsIME = true;
-bool nsIMM32Handler::sIsIMEOpening = false;
-
 UINT nsIMM32Handler::sCodePage = 0;
 DWORD nsIMM32Handler::sIMEProperty = 0;
 
@@ -124,10 +121,10 @@ nsIMM32Handler::InitKeyboardLayout(HKL aKeyboardLayout)
                    LOCALE_IDEFAULTANSICODEPAGE | LOCALE_RETURN_NUMBER,
                    (PWSTR)&sCodePage, sizeof(sCodePage) / sizeof(WCHAR));
   sIMEProperty = ::ImmGetProperty(aKeyboardLayout, IGP_PROPERTY);
-  sIsIME = ::ImmIsIME(aKeyboardLayout);
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
-    ("IMM32: InitKeyboardLayout, aKeyboardLayout=%08x, sCodePage=%lu, sIMEProperty=%08x sIsIME=%s\n",
-     aKeyboardLayout, sCodePage, sIMEProperty, sIsIME ? "TRUE" : "FALSE"));
+    ("IMM32: InitKeyboardLayout, aKeyboardLayout=%08x, sCodePage=%lu, "
+     "sIMEProperty=%08x",
+     aKeyboardLayout, sCodePage, sIMEProperty));
 }
 
 /* static */ UINT
@@ -135,18 +132,6 @@ nsIMM32Handler::GetKeyboardCodePage()
 {
   return sCodePage;
 }
-
-/* static */ bool
-nsIMM32Handler::CanOptimizeKeyAndIMEMessages()
-{
-  // If IME is opening right now, we shouldn't optimize the key and IME message
-  // order because ATOK (Japanese IME of third party) has some problem with the
-  // optimization.  When it finishes opening completely, it eats all key
-  // messages in the message queue.  And it causes starting composition.  So,
-  // we shouldn't eat the key messages before ATOK.
-  return !sIsIMEOpening;
-}
-
 
 // used for checking the lParam of WM_IME_COMPOSITION
 #define IS_COMPOSING_LPARAM(lParam) \
@@ -292,21 +277,6 @@ nsIMM32Handler::ProcessMessage(nsWindow* aWindow, UINT msg,
   // if the new window handle is not focused, probably, we should not start
   // the composition, however, such case should not be, it's just bad scenario.
 
-  if (sIsIMEOpening) {
-    switch (msg) {
-      case WM_INPUTLANGCHANGE:
-      case WM_IME_STARTCOMPOSITION:
-      case WM_IME_COMPOSITION:
-      case WM_IME_ENDCOMPOSITION:
-      case WM_IME_CHAR:
-      case WM_IME_SELECT:
-      case WM_IME_SETCONTEXT:
-        // For safety, we should reset sIsIMEOpening when we receive unexpected
-        // message.
-        sIsIMEOpening = false;
-    }
-  }
-
   // When a plug-in has focus or compsition, we should dispatch the IME events
   // to the plug-in.
   if (aWindow->PluginHasFocus() || IsComposingOnPlugin()) {
@@ -416,20 +386,6 @@ nsIMM32Handler::ProcessMessageForPlugin(nsWindow* aWindow, UINT msg,
     case WM_IME_SETCONTEXT:
       aEatMessage = OnIMESetContextOnPlugin(aWindow, wParam, lParam, aRetValue);
       return true;
-    case WM_IME_NOTIFY:
-      if (wParam == IMN_SETOPENSTATUS) {
-        // finished being opening
-        sIsIMEOpening = false;
-      }
-      return false;
-    case WM_KEYDOWN:
-      if (wParam == VK_PROCESSKEY) {
-        // If we receive when IME isn't open, it means IME is opening right now.
-        nsIMEContext IMEContext(aWindow->GetWindowHandle());
-        sIsIMEOpening = IMEContext.IsValid() &&
-                        ::ImmGetOpenStatus(IMEContext.get());
-      }
-      return false;
     case WM_CHAR:
       if (!gIMM32Handler) {
         return false;
@@ -645,7 +601,6 @@ nsIMM32Handler::OnIMENotify(nsWindow* aWindow,
          aWindow->GetWindowHandle()));
       break;
     case IMN_SETOPENSTATUS:
-      sIsIMEOpening = false;
       PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
         ("IMM32: OnIMENotify, hWnd=%08x, IMN_SETOPENSTATUS\n",
          aWindow->GetWindowHandle()));
@@ -2058,14 +2013,6 @@ nsIMM32Handler::OnKeyDownEvent(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
      aWindow->GetWindowHandle(), wParam, lParam));
   aEatMessage = false;
   switch (wParam) {
-    case VK_PROCESSKEY:
-      // If we receive when IME isn't open, it means IME is opening right now.
-      if (sIsIME) {
-        nsIMEContext IMEContext(aWindow->GetWindowHandle());
-        sIsIMEOpening =
-          IMEContext.IsValid() && !::ImmGetOpenStatus(IMEContext.get());
-      }
-      return false;
     case VK_TAB:
     case VK_PRIOR:
     case VK_NEXT:

@@ -94,6 +94,29 @@ XPCWrappedNativeScope::GetNewOrUsed(JSContext *cx, JSObject* aGlobal)
     return scope;
 }
 
+static bool
+RemoteXULForbidsXBLScope(nsIPrincipal *aPrincipal)
+{
+  // We end up getting called during SSM bootstrapping to create the
+  // SafeJSContext. In that case, nsContentUtils isn't ready for us.
+  //
+  // Also check for random JSD scopes that don't have a principal.
+  if (!nsContentUtils::IsInitialized() || !aPrincipal)
+      return false;
+
+  // AllowXULXBLForPrincipal will return true for system principal, but we
+  // don't want that here.
+  if (nsContentUtils::IsSystemPrincipal(aPrincipal))
+      return false;
+
+  // If this domain isn't whitelisted, we're done.
+  if (!nsContentUtils::AllowXULXBLForPrincipal(aPrincipal))
+      return false;
+
+  // Check the pref to determine how we should behave.
+  return !Preferences::GetBool("dom.use_xbl_scopes_for_remote_xul", false);
+}
+
 XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext *cx,
                                              JSObject* aGlobal)
       : mWrappedNativeMap(Native2WrappedNativeMap::newMap(XPC_NATIVE_MAP_SIZE)),
@@ -129,9 +152,15 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext *cx,
     CompartmentPrivate *priv = EnsureCompartmentPrivate(aGlobal);
     priv->scope = this;
 
-    // Determine whether to use an XBL scope or not.
+    // Determine whether we would allow an XBL scope in this situation.
+    // In addition to being pref-controlled, we also disable XBL scopes for
+    // remote XUL domains, _except_ if we have an additional pref override set.
     nsIPrincipal *principal = GetPrincipal();
-    mUseXBLScope = XPCJSRuntime::Get()->XBLScopesEnabled();
+    mAllowXBLScope = XPCJSRuntime::Get()->XBLScopesEnabled() &&
+                     !RemoteXULForbidsXBLScope(principal);
+
+    // Determine whether to use an XBL scope.
+    mUseXBLScope = mAllowXBLScope;
     if (mUseXBLScope) {
       js::Class *clasp = js::GetObjectClass(mGlobalJSObject);
       mUseXBLScope = !strcmp(clasp->name, "Window") ||
@@ -140,11 +169,6 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext *cx,
     }
     if (mUseXBLScope) {
       mUseXBLScope = principal && !nsContentUtils::IsSystemPrincipal(principal);
-    }
-    if (mUseXBLScope) {
-      mUseXBLScope = !nsContentUtils::AllowXULXBLForPrincipal(principal) ||
-                      Preferences::GetBool("dom.use_xbl_scopes_for_remote_xul",
-                                           false);
     }
 }
 
@@ -247,6 +271,12 @@ JSObject *GetXBLScope(JSContext *cx, JSObject *contentScope)
     scope = js::UnwrapObject(scope);
     xpc_UnmarkGrayObject(scope);
     return scope;
+}
+
+bool AllowXBLScope(JSCompartment *c)
+{
+  XPCWrappedNativeScope *scope = EnsureCompartmentPrivate(c)->scope;
+  return scope && scope->AllowXBLScope();
 }
 } /* namespace xpc */
 

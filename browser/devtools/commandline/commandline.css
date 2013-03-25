@@ -34,6 +34,16 @@
   direction: ltr;
 }
 
+.gcli-cookielist-list {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.gcli-cookielist-detail {
+  padding-left: 20px;
+  padding-bottom: 10px;
+}
+
 .gcli-row-out .nowrap {
   white-space: nowrap;
 }

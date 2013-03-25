@@ -319,12 +319,8 @@ MOCHITEST_FILES += \
 		test_seekable2.html \
 		test_chaining.html \
 		$(NULL)
-# Temporarily disabled on OS X for bug 754860
-ifneq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-MOCHITEST_FILES += \
-		test_bug726904.html \
-		$(NULL)
-endif
+# Temporarily disabled for bug 754860
+#		test_bug726904.html
 else
 MOCHITEST_FILES += \
 		test_can_play_type_no_ogg.html \

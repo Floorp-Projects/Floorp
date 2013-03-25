@@ -20,7 +20,7 @@ namespace layers {
  * to be considered a tap. This also applies to double taps, except that it is
  * used twice.
  */
-static const int MAX_TAP_TIME = 300;
+static const uint32_t MAX_TAP_TIME = 300;
 
 /**
  * Amount of change in span needed to take us from the GESTURE_WAITING_PINCH

@@ -80,8 +80,11 @@ class MacroAssembler : public MacroAssemblerSpecific
         if (cx)
             constructRoot(cx);
 
-        if (!GetIonContext()->temp)
+        if (!GetIonContext()->temp) {
+            JS_ASSERT(cx);
             alloc_.construct(cx);
+        }
+
 #ifdef JS_CPU_ARM
         initWithAllocator();
         m_buffer.id = GetIonContext()->getNextAssemblerId();

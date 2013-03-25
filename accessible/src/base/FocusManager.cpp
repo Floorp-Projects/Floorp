@@ -154,6 +154,10 @@ FocusManager::NotifyOfDOMBlur(nsISupports* aTarget)
     DocAccessible* document =
       GetAccService()->GetDocAccessible(DOMDoc);
     if (document) {
+      // Clear selection listener for previously focused element.
+      if (targetNode->IsElement())
+        SelectionMgr()->ClearControlSelectionListener();
+
       document->HandleNotification<FocusManager, nsINode>
         (this, &FocusManager::ProcessDOMFocus, DOMDoc);
     }

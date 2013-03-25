@@ -601,6 +601,16 @@ XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
         return;
       }
 
+      // replaces ~ with the home directory path in unix and windows
+      if (dirName.indexOf("~") == 0) {
+        let dirService = Cc["@mozilla.org/file/directory_service;1"]
+                          .getService(Ci.nsIProperties);
+        let homeDirFile = dirService.get("Home", Ci.nsIFile);
+        let homeDir = homeDirFile.path;
+        dirName = dirName.substr(1);
+        dirName = homeDir + dirName;
+      }
+
       let promise = OS.File.stat(dirName);
       promise = promise.then(
         function onSuccess(stat) {
@@ -770,69 +780,71 @@ XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
   XPCOMUtils.defineLazyModuleGetter(this, "console",
                                     "resource://gre/modules/devtools/Console.jsm");
 
-  // We should really be using nsICookieManager so we can read more than just the
-  // key/value of cookies. The difficulty is filtering the cookies that are
-  // relevant to the current page. See
-  // https://github.com/firebug/firebug/blob/master/extension/content/firebug/cookies/cookieObserver.js#L123
-  // For details on how this is done with Firebug
+  const cookieMgr = Cc["@mozilla.org/cookiemanager;1"]
+                      .getService(Ci.nsICookieManager2);
 
   /**
-  * 'cookie' command
-  */
-  gcli.addCommand({
-    name: "cookie",
-    description: gcli.lookup("cookieDesc"),
-    manual: gcli.lookup("cookieManual")
-  });
-
-  /**
-  * The template for the 'cookie list' command.
-  */
-  var cookieListHtml = "" +
-    "<table>" +
-    "  <tr>" +
-    "    <th>" + gcli.lookup("cookieListOutKey") + "</th>" +
-    "    <th>" + gcli.lookup("cookieListOutValue") + "</th>" +
-    "    <th>" + gcli.lookup("cookieListOutActions") + "</th>" +
-    "  </tr>" +
-    "  <tr foreach='cookie in ${cookies}'>" +
-    "    <td>${cookie.key}</td>" +
-    "    <td>${cookie.value}</td>" +
-    "    <td>" +
-    "      <span class='gcli-out-shortcut' onclick='${onclick}'" +
-    "          data-command='cookie set ${cookie.key} '" +
-    "          >" + gcli.lookup("cookieListOutEdit") + "</span>" +
-    "      <span class='gcli-out-shortcut'" +
-    "          onclick='${onclick}' ondblclick='${ondblclick}'" +
-    "          data-command='cookie remove ${cookie.key}'" +
-    "          >" + gcli.lookup("cookieListOutRemove") + "</span>" +
-    "    </td>" +
-    "  </tr>" +
-    "</table>" +
+   * The template for the 'cookie list' command.
+   */
+  let cookieListHtml = "" +
+    "<ul class='gcli-cookielist-list'>" +
+    "  <li foreach='cookie in ${cookies}'>" +
+    "    <div>${cookie.name}=${cookie.value}</div>" +
+    "    <table class='gcli-cookielist-detail'>" +
+    "      <tr>" +
+    "        <td>" + gcli.lookup("cookieListOutHost") + "</td>" +
+    "        <td>${cookie.host}</td>" +
+    "      </tr>" +
+    "      <tr>" +
+    "        <td>" + gcli.lookup("cookieListOutPath") + "</td>" +
+    "        <td>${cookie.path}</td>" +
+    "      </tr>" +
+    "      <tr>" +
+    "        <td>" + gcli.lookup("cookieListOutExpires") + "</td>" +
+    "        <td>${cookie.expires}</td>" +
+    "      </tr>" +
+    "      <tr>" +
+    "        <td>" + gcli.lookup("cookieListOutAttributes") + "</td>" +
+    "        <td>${cookie.attrs}</td>" +
+    "      </tr>" +
+    "      <tr><td colspan='2'>" +
+    "        <span class='gcli-out-shortcut' onclick='${onclick}'" +
+    "            data-command='cookie set ${cookie.name} '" +
+    "            >" + gcli.lookup("cookieListOutEdit") + "</span>" +
+    "        <span class='gcli-out-shortcut'" +
+    "            onclick='${onclick}' ondblclick='${ondblclick}'" +
+    "            data-command='cookie remove ${cookie.name}'" +
+    "            >" + gcli.lookup("cookieListOutRemove") + "</span>" +
+    "      </td></tr>" +
+    "    </table>" +
+    "  </li>" +
+    "</ul>" +
     "";
 
-  /**
-  * 'cookie list' command
-  */
-  gcli.addCommand({
-    name: "cookie list",
-    description: gcli.lookup("cookieListDesc"),
-    manual: gcli.lookup("cookieListManual"),
-    returnType: "string",
-    exec: function Command_cookieList(args, context) {
-      // Parse out an array of { key:..., value:... } objects for each cookie
-      var doc = context.environment.contentDocument;
-      var cookies = doc.cookie.split("; ").map(function(cookieStr) {
-        var equalsPos = cookieStr.indexOf("=");
-        return {
-          key: cookieStr.substring(0, equalsPos),
-          value: cookieStr.substring(equalsPos + 1)
-        };
-      });
+  gcli.addConverter({
+    from: "cookies",
+    to: "view",
+    exec: function(cookies, context) {
+      if (cookies.length == 0) {
+        let host = context.environment.document.location.host;
+        let msg = gcli.lookupFormat("cookieListOutNoneHost", [ host ]);
+        return context.createView({ html: "<span>" + msg + "</span>" });
+      }
+
+      for (let cookie of cookies) {
+        cookie.expires = translateExpires(cookie.expires);
+
+        let noAttrs = !cookie.secure && !cookie.httpOnly && !cookie.sameDomain;
+        cookie.attrs = (cookie.secure ? 'secure' : ' ') +
+                       (cookie.httpOnly ? 'httpOnly' : ' ') +
+                       (cookie.sameDomain ? 'sameDomain' : ' ') +
+                       (noAttrs ? gcli.lookup("cookieListOutNone") : ' ');
+      }
 
       return context.createView({
         html: cookieListHtml,
         data: {
+          options: { allowEval: true },
           cookies: cookies,
           onclick: createUpdateHandler(context),
           ondblclick: createExecuteHandler(context),
@@ -842,37 +854,116 @@ XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
   });
 
   /**
-  * 'cookie remove' command
-  */
+   * The cookie 'expires' value needs converting into something more readable
+   */
+  function translateExpires(expires) {
+    if (expires == 0) {
+      return gcli.lookup("cookieListOutSession");
+    }
+    return new Date(expires).toLocaleString();
+  }
+
+  /**
+   * Check if a given cookie matches a given host
+   */
+  function isCookieAtHost(cookie, host) {
+    if (cookie.host == null) {
+      return host == null;
+    }
+    if (cookie.host.startsWith(".")) {
+      return cookie.host === "." + host;
+    }
+    else {
+      return cookie.host == host;
+    }
+  }
+
+  /**
+   * 'cookie' command
+   */
+  gcli.addCommand({
+    name: "cookie",
+    description: gcli.lookup("cookieDesc"),
+    manual: gcli.lookup("cookieManual")
+  });
+
+  /**
+   * 'cookie list' command
+   */
+  gcli.addCommand({
+    name: "cookie list",
+    description: gcli.lookup("cookieListDesc"),
+    manual: gcli.lookup("cookieListManual"),
+    returnType: "cookies",
+    exec: function Command_cookieList(args, context) {
+      let host = context.environment.document.location.host;
+      if (host == null) {
+        throw new Error(gcli.lookup("cookieListOutNonePage"));
+      }
+
+      let enm = cookieMgr.getCookiesFromHost(host);
+
+      let cookies = [];
+      while (enm.hasMoreElements()) {
+        let cookie = enm.getNext().QueryInterface(Ci.nsICookie);
+        if (isCookieAtHost(cookie, host)) {
+          cookies.push({
+            host: cookie.host,
+            name: cookie.name,
+            value: cookie.value,
+            path: cookie.path,
+            expires: cookie.expires,
+            secure: cookie.secure,
+            httpOnly: cookie.httpOnly,
+            sameDomain: cookie.sameDomain
+          });
+        }
+      }
+
+      return cookies;
+    }
+  });
+
+  /**
+   * 'cookie remove' command
+   */
   gcli.addCommand({
     name: "cookie remove",
     description: gcli.lookup("cookieRemoveDesc"),
     manual: gcli.lookup("cookieRemoveManual"),
     params: [
       {
-        name: "key",
+        name: "name",
         type: "string",
         description: gcli.lookup("cookieRemoveKeyDesc"),
       }
     ],
     exec: function Command_cookieRemove(args, context) {
-      let document = context.environment.contentDocument;
-      let expDate = new Date();
-      expDate.setDate(expDate.getDate() - 1);
-      document.cookie = escape(args.key) + "=; expires=" + expDate.toGMTString();
+      let host = context.environment.document.location.host;
+      let enm = cookieMgr.getCookiesFromHost(host);
+
+      let cookies = [];
+      while (enm.hasMoreElements()) {
+        let cookie = enm.getNext().QueryInterface(Components.interfaces.nsICookie);
+        if (isCookieAtHost(cookie, host)) {
+          if (cookie.name == args.name) {
+            cookieMgr.remove(cookie.host, cookie.name, cookie.path, false);
+          }
+        }
+      }
     }
   });
 
   /**
-  * 'cookie set' command
-  */
+   * 'cookie set' command
+   */
   gcli.addCommand({
     name: "cookie set",
     description: gcli.lookup("cookieSetDesc"),
     manual: gcli.lookup("cookieSetManual"),
     params: [
       {
-        name: "key",
+        name: "name",
         type: "string",
         description: gcli.lookup("cookieSetKeyDesc")
       },
@@ -900,26 +991,47 @@ XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
             name: "secure",
             type: "boolean",
             description: gcli.lookup("cookieSetSecureDesc")
-          }
+          },
+          {
+            name: "httpOnly",
+            type: "boolean",
+            description: gcli.lookup("cookieSetHttpOnlyDesc")
+          },
+          {
+            name: "session",
+            type: "boolean",
+            description: gcli.lookup("cookieSetSessionDesc")
+          },
+          {
+            name: "expires",
+            type: "string",
+            defaultValue: "Jan 17, 2038",
+            description: gcli.lookup("cookieSetExpiresDesc")
+          },
         ]
       }
     ],
     exec: function Command_cookieSet(args, context) {
-      let document = context.environment.contentDocument;
+      let host = context.environment.document.location.host;
+      let time = Date.parse(args.expires) / 1000;
 
-      document.cookie = escape(args.key) + "=" + escape(args.value) +
-              (args.domain ? "; domain=" + args.domain : "") +
-              (args.path ? "; path=" + args.path : "") +
-              (args.secure ? "; secure" : ""); 
+      cookieMgr.add(args.domain ? "." + args.domain : host,
+                    args.path ? args.path : "/",
+                    args.name,
+                    args.value,
+                    args.secure,
+                    args.httpOnly,
+                    args.session,
+                    time);
     }
   });
 
   /**
-  * Helper to find the 'data-command' attribute and call some action on it.
-  * @see |updateCommand()| and |executeCommand()|
-  */
+   * Helper to find the 'data-command' attribute and call some action on it.
+   * @see |updateCommand()| and |executeCommand()|
+   */
   function withCommand(element, action) {
-    var command = element.getAttribute("data-command");
+    let command = element.getAttribute("data-command");
     if (!command) {
       command = element.querySelector("*[data-command]")
               .getAttribute("data-command");
@@ -934,11 +1046,11 @@ XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
   }
 
   /**
-  * Create a handler to update the requisition to contain the text held in the
-  * first matching data-command attribute under the currentTarget of the event.
-  * @param context Either a Requisition or an ExecutionContext or another object
-  * that contains an |update()| function that follows a similar contract.
-  */
+   * Create a handler to update the requisition to contain the text held in the
+   * first matching data-command attribute under the currentTarget of the event.
+   * @param context Either a Requisition or an ExecutionContext or another object
+   * that contains an |update()| function that follows a similar contract.
+   */
   function createUpdateHandler(context) {
     return function(ev) {
       withCommand(ev.currentTarget, function(command) {
@@ -948,11 +1060,11 @@ XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
   }
 
   /**
-  * Create a handler to execute the text held in the data-command attribute
-  * under the currentTarget of the event.
-  * @param context Either a Requisition or an ExecutionContext or another object
-  * that contains an |update()| function that follows a similar contract.
-  */
+   * Create a handler to execute the text held in the data-command attribute
+   * under the currentTarget of the event.
+   * @param context Either a Requisition or an ExecutionContext or another object
+   * that contains an |update()| function that follows a similar contract.
+   */
   function createExecuteHandler(context) {
     return function(ev) {
       withCommand(ev.currentTarget, function(command) {

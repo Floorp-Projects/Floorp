@@ -403,9 +403,9 @@ class ParallelIonInvoke
         calleeToken_ = CalleeToToken(callee);
     }
 
-    bool invoke() {
-        Value result;
-        enter_(jitcode_, argc_ + 1, argv_ + 1, NULL, calleeToken_, &result);
+    bool invoke(JSContext *cx) {
+        RootedValue result(cx);
+        enter_(jitcode_, argc_ + 1, argv_ + 1, NULL, calleeToken_, result.address());
         return !result.isMagic();
     }
 };
@@ -414,17 +414,17 @@ class ParallelIonInvoke
 class ParallelDo : public ForkJoinOp
 {
     JSContext *cx_;
-    HeapPtrObject fun_;
+    RootedObject fun_;
 
   public:
     // For tests, make sure to keep this in sync with minItemsTestingThreshold.
     const static uint32_t MAX_BAILOUTS = 3;
     uint32_t bailouts;
-    Vector<JSScript *> pendingInvalidations;
+    AutoScriptVector pendingInvalidations;
 
     ParallelDo(JSContext *cx, HandleObject fun)
       : cx_(cx),
-        fun_(fun),
+        fun_(cx, fun),
         bailouts(0),
         pendingInvalidations(cx)
     { }
@@ -593,10 +593,8 @@ class ParallelDo : public ForkJoinOp
 
         JS_ASSERT(pendingInvalidations[slice.sliceId] == NULL);
 
-        js::PerThreadData *pt = slice.perThreadData;
-        RootedObject fun(pt, fun_);
-        JS_ASSERT(fun->isFunction());
-        RootedFunction callee(cx_, fun->toFunction());
+        JS_ASSERT(fun_->isFunction());
+        RootedFunction callee(cx_, fun_->toFunction());
         if (!callee->nonLazyScript()->hasParallelIonScript()) {
             // Sometimes, particularly with GCZeal, the parallel ion
             // script can be collected between starting the parallel
@@ -612,7 +610,7 @@ class ParallelDo : public ForkJoinOp
         fii.args[1] = Int32Value(slice.numSlices);
         fii.args[2] = BooleanValue(false);
 
-        bool ok = fii.invoke();
+        bool ok = fii.invoke(cx_);
         JS_ASSERT(ok == !slice.abortedScript);
         if (!ok) {
             JSScript *script = slice.abortedScript;

@@ -71,6 +71,18 @@ nsStyleText::GetTextShadow(const nsIFrame* aFrame) const
 }
 
 bool
+nsStyleText::WhiteSpaceCanWrap(const nsIFrame* aFrame) const
+{
+  return WhiteSpaceCanWrapStyle() && !aFrame->IsSVGText();
+}
+
+bool
+nsStyleText::WordCanWrap(const nsIFrame* aFrame) const
+{
+  return WordCanWrapStyle() && !aFrame->IsSVGText();
+}
+
+bool
 nsStyleDisplay::IsBlockInside(const nsIFrame* aFrame) const
 {
   if (aFrame->IsSVGText()) {

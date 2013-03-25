@@ -1466,15 +1466,8 @@ void
 nsListBoxBodyFrame::RemoveChildFrame(nsBoxLayoutState &aState,
                                      nsIFrame         *aFrame)
 {
-  if (!mFrames.ContainsFrame(aFrame)) {
-    NS_ERROR("tried to remove a child frame which isn't our child");
-    return;
-  }
-
-  if (aFrame == GetContentInsertionFrame()) {
-    // Don't touch that one
-    return;
-  }
+  MOZ_ASSERT(mFrames.ContainsFrame(aFrame));
+  MOZ_ASSERT(aFrame != GetContentInsertionFrame());
 
 #ifdef ACCESSIBILITY
   nsAccessibilityService* accService = nsIPresShell::AccService();

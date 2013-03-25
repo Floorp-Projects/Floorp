@@ -83,7 +83,7 @@ class JS_FRIEND_API(CrossCompartmentWrapper) : public Wrapper
 
     virtual ~CrossCompartmentWrapper();
 
-    virtual bool finalizeInBackground(HandleValue priv) MOZ_OVERRIDE;
+    virtual bool finalizeInBackground(Value priv) MOZ_OVERRIDE;
 
     /* ES5 Harmony fundamental wrapper traps. */
     virtual bool getPropertyDescriptor(JSContext *cx, HandleObject wrapper, HandleId id,

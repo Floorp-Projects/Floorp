@@ -517,24 +517,26 @@ imgStatusTracker::SyncNotifyState(nsTObserverArray<imgRequestProxy*>& proxies,
   }
 }
 
-void
-imgStatusTracker::SyncAndSyncNotifyDifference(imgStatusTracker* other)
+imgStatusTracker::StatusDiff
+imgStatusTracker::CalculateAndApplyDifference(imgStatusTracker* other)
 {
-  LOG_SCOPE(GetImgLog(), "imgStatusTracker::SyncAndSyncNotifyDifference");
+  LOG_SCOPE(GetImgLog(), "imgStatusTracker::SyncAndCalculateDifference");
 
   // We must not modify or notify for the start-load state, which happens from Necko callbacks.
   uint32_t loadState = mState & stateRequestStarted;
-  uint32_t diffState = ~mState & other->mState & ~stateRequestStarted;
-  bool unblockedOnload = mState & stateBlockingOnload && !(other->mState & stateBlockingOnload);
-  bool foundError = (mImageStatus != imgIRequest::STATUS_ERROR) && (other->mImageStatus == imgIRequest::STATUS_ERROR);
+
+  StatusDiff diff;
+  diff.mDiffState = ~mState & other->mState & ~stateRequestStarted;
+  diff.mUnblockedOnload = mState & stateBlockingOnload && !(other->mState & stateBlockingOnload);
+  diff.mFoundError = (mImageStatus != imgIRequest::STATUS_ERROR) && (other->mImageStatus == imgIRequest::STATUS_ERROR);
 
   // Now that we've calculated the difference in state, synchronize our state
   // with the other tracker.
 
   // First, actually synchronize our state.
-  mInvalidRect = mInvalidRect.Union(other->mInvalidRect);
-  mState |= diffState | loadState;
-  if (unblockedOnload) {
+  diff.mInvalidRect = mInvalidRect.Union(other->mInvalidRect);
+  mState |= diff.mDiffState | loadState;
+  if (diff.mUnblockedOnload) {
     mState &= ~stateBlockingOnload;
   }
   mImageStatus = other->mImageStatus;
@@ -552,9 +554,21 @@ imgStatusTracker::SyncAndSyncNotifyDifference(imgStatusTracker* other)
     }
   }
 
-  SyncNotifyState(mConsumers, !!mImage, diffState, mInvalidRect, mHadLastPart);
+  // Reset the invalid rectangles for another go.
+  other->mInvalidRect.SetEmpty();
+  mInvalidRect.SetEmpty();
 
-  if (unblockedOnload) {
+  return diff;
+}
+
+void
+imgStatusTracker::SyncNotifyDifference(imgStatusTracker::StatusDiff diff)
+{
+  LOG_SCOPE(GetImgLog(), "imgStatusTracker::SyncNotifyDifference");
+
+  SyncNotifyState(mConsumers, !!mImage, diff.mDiffState, diff.mInvalidRect, mHadLastPart);
+
+  if (diff.mUnblockedOnload) {
     nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mConsumers);
     while (iter.HasMore()) {
       // Hold on to a reference to this proxy, since notifying the state can
@@ -567,11 +581,7 @@ imgStatusTracker::SyncAndSyncNotifyDifference(imgStatusTracker* other)
     }
   }
 
-  // Reset the invalid rectangles for another go.
-  other->mInvalidRect.SetEmpty();
-  mInvalidRect.SetEmpty();
-
-  if (foundError) {
+  if (diff.mFoundError) {
     FireFailureNotification();
   }
 }

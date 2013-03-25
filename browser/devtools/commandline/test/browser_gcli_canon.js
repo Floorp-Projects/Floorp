@@ -199,5 +199,4 @@ exports.testAddRemove3 = function(options) {
   canon.onCanonChange.remove(canonChange);
 };
 
-
 // });

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/*global num_CheckThisNumber: false, intl_NumberFormat: false, */
+/*global intl_NumberFormat: false, */
 
 
 var numberFormatCache = new Record();
@@ -16,8 +16,7 @@ var numberFormatCache = new Record();
  * Spec: ECMAScript Internationalization API Specification, 13.2.1.
  */
 function Number_toLocaleString() {
-    // Step 1.
-    callFunction(num_CheckThisNumber, this);
+    // Steps 1-2.  Note that valueOf enforces "this Number value" restrictions.
     var x = callFunction(std_Number_valueOf, this);
 
     // Steps 2-3.

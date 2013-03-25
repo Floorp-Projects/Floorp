@@ -8,20 +8,27 @@
 #if !defined(jsion_asmjs_h__)
 #define jsion_asmjs_h__
 
+#ifdef XP_MACOSX
+# include <pthread.h>
+# include <mach/mach.h>
+#endif
+
 // asm.js compilation is only available on desktop x86/x64 at the moment.
 // Don't panic, mobile support is coming soon.
 #if defined(JS_ION) && \
     !defined(ANDROID) && \
     (defined(JS_CPU_X86) || defined(JS_CPU_X64)) &&  \
-    (defined(__linux__) || defined(XP_WIN))
+    (defined(__linux__) || defined(XP_WIN) || defined(XP_MACOSX))
 # define JS_ASMJS
 #endif
 
 namespace js {
 
+class ScriptSource;
 class SPSProfiler;
 class AsmJSModule;
 namespace frontend { struct TokenStream; struct ParseNode; }
+namespace ion { class MIRGenerator; class LIRGraph; }
 
 // Return whether asm.js optimization is inhibitted by the platform or
 // dynamically disabled. (Exposed as JSNative for shell testing.)
@@ -30,23 +37,25 @@ IsAsmJSCompilationAvailable(JSContext *cx, unsigned argc, Value *vp);
 
 // Called after parsing a function 'fn' which contains the "use asm" directive.
 // This function performs type-checking and code-generation. If type-checking
-// succeeds, the generated module is assigned to script->asmJS. Otherwise, a
-// warning will be emitted and script->asmJS is left null. The function returns
-// 'false' only if a real JS semantic error (probably OOM) is pending.
+// succeeds, the generated native function is assigned to |moduleFun|.
+// Otherwise, a warning will be emitted and |moduleFun| is left unchanged. The
+// function returns 'false' only if a real JS semantic error (probably OOM) is
+// pending.
 extern bool
-CompileAsmJS(JSContext *cx, frontend::TokenStream &ts, frontend::ParseNode *fn, HandleScript s);
+CompileAsmJS(JSContext *cx, frontend::TokenStream &ts, frontend::ParseNode *fn,
+             const CompileOptions &options,
+             ScriptSource *scriptSource, uint32_t bufStart, uint32_t bufEnd,
+             MutableHandleFunction moduleFun);
 
-// Called by the JSOP_LINKASMJS opcode (which is emitted as the first opcode of
-// a "use asm" function which successfully typechecks). This function performs
-// the validation and dynamic linking of a module to it's given arguments. If
-// validation succeeds, the module's return value (it's exports) are returned
-// as an object in 'rval' and the interpreter should return 'rval' immediately.
-// Otherwise, there was a validation error and execution should continue
-// normally in the interpreter. The function returns 'false' only if a real JS
-// semantic error (OOM or exception thrown when executing GetProperty on the
-// arguments) is pending.
-extern bool
-LinkAsmJS(JSContext *cx, StackFrame *fp, MutableHandleValue rval);
+// Called for any "use asm" function which successfully typechecks. This
+// function performs the validation and dynamic linking of a module to its
+// given arguments. If validation succeeds, the module's return value (its
+// exports) are returned via |vp|.  Otherwise, there was a validation error and
+// execution fall back to the usual path (bytecode generation, interpretation,
+// etc). The function returns 'false' only if a real JS semantic error (OOM or
+// exception thrown when executing GetProperty on the arguments) is pending.
+extern JSBool
+LinkAsmJS(JSContext *cx, unsigned argc, JS::Value *vp);
 
 // Force any currently-executing asm.js code to call
 // js_HandleExecutionInterrupt.
@@ -93,12 +102,67 @@ class AsmJSActivation
 // The asm.js spec requires that the ArrayBuffer's byteLength be a multiple of 4096.
 static const size_t AsmJSAllocationGranularity = 4096;
 
+#ifdef JS_CPU_X64
 // On x64, the internal ArrayBuffer data array is inflated to 4GiB (only the
 // byteLength portion of which is accessible) so that out-of-bounds accesses
 // (made using a uint32 index) are guaranteed to raise a SIGSEGV.
-# ifdef JS_CPU_X64
 static const size_t AsmJSBufferProtectedSize = 4 * 1024ULL * 1024ULL * 1024ULL;
-# endif
+#endif
+
+#ifdef XP_MACOSX
+class AsmJSMachExceptionHandler
+{
+    bool installed_;
+    pthread_t thread_;
+    mach_port_t port_;
+
+    void release();
+
+  public:
+    AsmJSMachExceptionHandler();
+    ~AsmJSMachExceptionHandler() { release(); }
+    mach_port_t port() const { return port_; }
+    bool installed() const { return installed_; }
+    bool install(JSRuntime *rt);
+    void clearCurrentThread();
+    void setCurrentThread();
+};
+#endif
+
+// Struct type for passing parallel compilation data between the main thread
+// and compilation workers.
+struct AsmJSParallelTask
+{
+    LifoAlloc lifo;         // Provider of all heap memory used for compilation.
+
+    uint32_t funcNum;       // Index |i| of function in |Module.function(i)|.
+    ion::MIRGenerator *mir; // Passed from main thread to worker.
+    ion::LIRGraph *lir;     // Passed from worker to main thread.
+
+    AsmJSParallelTask(size_t defaultChunkSize)
+      : lifo(defaultChunkSize),
+        funcNum(0), mir(NULL), lir(NULL)
+    { }
+
+    void init(uint32_t newFuncNum, ion::MIRGenerator *newMir) {
+        funcNum = newFuncNum;
+        mir = newMir;
+        lir = NULL;
+    }
+};
+
+// Returns true if the given native is the one that is used to implement asm.js
+// module functions.
+#ifdef JS_ASMJS
+bool
+IsAsmJSModuleNative(js::Native native);
+#else
+static inline bool
+IsAsmJSModuleNative(js::Native native)
+{
+    return false;
+}
+#endif
 
 } // namespace js
 

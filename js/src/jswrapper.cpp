@@ -200,7 +200,7 @@ CrossCompartmentWrapper::~CrossCompartmentWrapper()
 {
 }
 
-bool CrossCompartmentWrapper::finalizeInBackground(HandleValue priv)
+bool CrossCompartmentWrapper::finalizeInBackground(Value priv)
 {
     if (!priv.isObject())
         return true;
@@ -209,7 +209,9 @@ bool CrossCompartmentWrapper::finalizeInBackground(HandleValue priv)
      * Make the 'background-finalized-ness' of the wrapper the same as the
      * wrapped object, to allow transplanting between them.
      */
-    return IsBackgroundFinalized(priv.toObject().getAllocKind());
+    if (IsInsideNursery(priv.toObject().runtime(), &priv.toObject()))
+        return false;
+    return IsBackgroundFinalized(priv.toObject().tenuredGetAllocKind());
 }
 
 #define PIERCE(cx, wrapper, pre, op, post)                      \
