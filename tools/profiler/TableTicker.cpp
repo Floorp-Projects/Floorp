@@ -8,17 +8,18 @@
 #include <fstream>
 #include <sstream>
 #include "GeckoProfilerImpl.h"
+#include "SaveProfileTask.h"
+#include "ProfileEntry.h"
 #include "platform.h"
-#include "nsXULAppAPI.h"
 #include "nsThreadUtils.h"
 #include "prenv.h"
 #include "shared-libraries.h"
 #include "mozilla/StackWalk.h"
+#include "TableTicker.h"
 
 // JSON
 #include "JSObjectBuilder.h"
 #include "JSCustomObjectBuilder.h"
-#include "nsIJSRuntimeService.h"
 
 // Meta
 #include "nsXPCOM.h"
@@ -56,13 +57,6 @@
 using std::string;
 using namespace mozilla;
 
-#ifdef XP_WIN
- #include <windows.h>
- #define getpid GetCurrentProcessId
-#else
- #include <unistd.h>
-#endif
-
 #ifndef MAXPATHLEN
  #ifdef PATH_MAX
   #define MAXPATHLEN PATH_MAX
@@ -77,525 +71,10 @@ using namespace mozilla;
  #endif
 #endif
 
-#if _MSC_VER
- #define snprintf _snprintf
-#endif
-
-static const int DYNAMIC_MAX_STRING = 512;
-
-static mozilla::ThreadLocal<TableTicker *> tlsTicker;
-
-TimeStamp sLastTracerEvent;
-int sFrameNumber = 0;
-int sLastFrameNumber = 0;
-
-class ThreadProfile;
-
-class ProfileEntry
-{
-public:
-  ProfileEntry()
-    : mTagData(NULL)
-    , mTagName(0)
-  { }
-
-  // aTagData must not need release (i.e. be a string from the text segment)
-  ProfileEntry(char aTagName, const char *aTagData)
-    : mTagData(aTagData)
-    , mTagName(aTagName)
-  { }
-
-  ProfileEntry(char aTagName, void *aTagPtr)
-    : mTagPtr(aTagPtr)
-    , mTagName(aTagName)
-  { }
-
-  ProfileEntry(char aTagName, double aTagFloat)
-    : mTagFloat(aTagFloat)
-    , mTagName(aTagName)
-  { }
-
-  ProfileEntry(char aTagName, uintptr_t aTagOffset)
-    : mTagOffset(aTagOffset)
-    , mTagName(aTagName)
-  { }
-
-  ProfileEntry(char aTagName, Address aTagAddress)
-    : mTagAddress(aTagAddress)
-    , mTagName(aTagName)
-  { }
-
-  ProfileEntry(char aTagName, int aTagLine)
-    : mTagLine(aTagLine)
-    , mTagName(aTagName)
-  { }
-
-  friend std::ostream& operator<<(std::ostream& stream, const ProfileEntry& entry);
-
-  union {
-    const char* mTagData;
-    char mTagChars[sizeof(void*)];
-    void* mTagPtr;
-    double mTagFloat;
-    Address mTagAddress;
-    uintptr_t mTagOffset;
-    int mTagLine;
-  };
-  char mTagName;
-};
-
-typedef void (*IterateTagsCallback)(const ProfileEntry& entry, const char* tagStringData);
-
-#define PROFILE_MAX_ENTRY 100000
-class ThreadProfile
-{
-public:
-  ThreadProfile(int aEntrySize, PseudoStack *aStack)
-    : mWritePos(0)
-    , mLastFlushPos(0)
-    , mReadPos(0)
-    , mEntrySize(aEntrySize)
-    , mStack(aStack)
-  {
-    mEntries = new ProfileEntry[mEntrySize];
-  }
-
-  ~ThreadProfile()
-  {
-    delete[] mEntries;
-  }
-
-  void addTag(ProfileEntry aTag)
-  {
-    // Called from signal, call only reentrant functions
-    mEntries[mWritePos] = aTag;
-    mWritePos = (mWritePos + 1) % mEntrySize;
-    if (mWritePos == mReadPos) {
-      // Keep one slot open
-      mEntries[mReadPos] = ProfileEntry();
-      mReadPos = (mReadPos + 1) % mEntrySize;
-    }
-    // we also need to move the flush pos to ensure we
-    // do not pass it
-    if (mWritePos == mLastFlushPos) {
-      mLastFlushPos = (mLastFlushPos + 1) % mEntrySize;
-    }
-  }
-
-  // flush the new entries
-  void flush()
-  {
-    mLastFlushPos = mWritePos;
-  }
-
-  // discards all of the entries since the last flush()
-  // NOTE: that if mWritePos happens to wrap around past
-  // mLastFlushPos we actually only discard mWritePos - mLastFlushPos entries
-  //
-  // r = mReadPos
-  // w = mWritePos
-  // f = mLastFlushPos
-  //
-  //     r          f    w
-  // |-----------------------------|
-  // |   abcdefghijklmnopq         | -> 'abcdefghijklmnopq'
-  // |-----------------------------|
-  //
-  //
-  // mWritePos and mReadPos have passed mLastFlushPos
-  //                      f
-  //                    w r
-  // |-----------------------------|
-  // |ABCDEFGHIJKLMNOPQRSqrstuvwxyz|
-  // |-----------------------------|
-  //                       w
-  //                       r
-  // |-----------------------------|
-  // |ABCDEFGHIJKLMNOPQRSqrstuvwxyz| -> ''
-  // |-----------------------------|
-  //
-  //
-  // mWritePos will end up the same as mReadPos
-  //                r
-  //              w f
-  // |-----------------------------|
-  // |ABCDEFGHIJKLMklmnopqrstuvwxyz|
-  // |-----------------------------|
-  //                r
-  //                w
-  // |-----------------------------|
-  // |ABCDEFGHIJKLMklmnopqrstuvwxyz| -> ''
-  // |-----------------------------|
-  //
-  //
-  // mWritePos has moved past mReadPos
-  //      w r       f
-  // |-----------------------------|
-  // |ABCDEFdefghijklmnopqrstuvwxyz|
-  // |-----------------------------|
-  //        r       w
-  // |-----------------------------|
-  // |ABCDEFdefghijklmnopqrstuvwxyz| -> 'defghijkl'
-  // |-----------------------------|
-
-  void erase()
-  {
-    mWritePos = mLastFlushPos;
-  }
-
-  char* processDynamicTag(int readPos, int* tagsConsumed, char* tagBuff)
-  {
-    int readAheadPos = (readPos + 1) % mEntrySize;
-    int tagBuffPos = 0;
-
-    // Read the string stored in mTagData until the null character is seen
-    bool seenNullByte = false;
-    while (readAheadPos != mLastFlushPos && !seenNullByte) {
-      (*tagsConsumed)++;
-      ProfileEntry readAheadEntry = mEntries[readAheadPos];
-      for (size_t pos = 0; pos < sizeof(void*); pos++) {
-        tagBuff[tagBuffPos] = readAheadEntry.mTagChars[pos];
-        if (tagBuff[tagBuffPos] == '\0' || tagBuffPos == DYNAMIC_MAX_STRING-2) {
-          seenNullByte = true;
-          break;
-        }
-        tagBuffPos++;
-      }
-      if (!seenNullByte)
-        readAheadPos = (readAheadPos + 1) % mEntrySize;
-    }
-    return tagBuff;
-  }
-
-  friend std::ostream& operator<<(std::ostream& stream, const ThreadProfile& profile);
-
-  void IterateTags(IterateTagsCallback aCallback)
-  {
-    MOZ_ASSERT(aCallback);
-
-    int readPos = mReadPos;
-    while (readPos != mLastFlushPos) {
-      // Number of tag consumed
-      int incBy = 1;
-      const ProfileEntry& entry = mEntries[readPos];
-
-      // Read ahead to the next tag, if it's a 'd' tag process it now
-      const char* tagStringData = entry.mTagData;
-      int readAheadPos = (readPos + 1) % mEntrySize;
-      char tagBuff[DYNAMIC_MAX_STRING];
-      // Make sure the string is always null terminated if it fills up DYNAMIC_MAX_STRING-2
-      tagBuff[DYNAMIC_MAX_STRING-1] = '\0';
-
-      if (readAheadPos != mLastFlushPos && mEntries[readAheadPos].mTagName == 'd') {
-        tagStringData = processDynamicTag(readPos, &incBy, tagBuff);
-      }
-
-      aCallback(entry, tagStringData);
-
-      readPos = (readPos + incBy) % mEntrySize;
-    }
-  }
-
-  void ToStreamAsJSON(std::ostream& stream)
-  {
-    JSCustomObjectBuilder b;
-    JSCustomObject *profile = b.CreateObject();
-    BuildJSObject(b, profile);
-    b.Serialize(profile, stream);
-    b.DeleteObject(profile);
-  }
-
-  JSCustomObject *ToJSObject(JSContext *aCx)
-  {
-    JSObjectBuilder b(aCx);
-    JSCustomObject *profile = b.CreateObject();
-    BuildJSObject(b, profile);
-
-    return profile;
-  }
-
-  void BuildJSObject(JSAObjectBuilder& b, JSCustomObject* profile) {
-    JSCustomArray *samples = b.CreateArray();
-    b.DefineProperty(profile, "samples", samples);
-
-    JSCustomObject *sample = nullptr;
-    JSCustomArray *frames = nullptr;
-    JSCustomArray *marker = nullptr;
-
-    int readPos = mReadPos;
-    while (readPos != mLastFlushPos) {
-      // Number of tag consumed
-      int incBy = 1;
-      ProfileEntry entry = mEntries[readPos];
-
-      // Read ahead to the next tag, if it's a 'd' tag process it now
-      const char* tagStringData = entry.mTagData;
-      int readAheadPos = (readPos + 1) % mEntrySize;
-      char tagBuff[DYNAMIC_MAX_STRING];
-      // Make sure the string is always null terminated if it fills up DYNAMIC_MAX_STRING-2
-      tagBuff[DYNAMIC_MAX_STRING-1] = '\0';
-
-      if (readAheadPos != mLastFlushPos && mEntries[readAheadPos].mTagName == 'd') {
-        tagStringData = processDynamicTag(readPos, &incBy, tagBuff);
-      }
-
-      switch (entry.mTagName) {
-        case 's':
-          sample = b.CreateObject();
-          b.DefineProperty(sample, "name", tagStringData);
-          frames = b.CreateArray();
-          b.DefineProperty(sample, "frames", frames);
-          b.ArrayPush(samples, sample);
-          // Created lazily
-          marker = NULL;
-          break;
-        case 'm':
-          {
-            if (sample) {
-              if (!marker) {
-                marker = b.CreateArray();
-                b.DefineProperty(sample, "marker", marker);
-              }
-              b.ArrayPush(marker, tagStringData);
-            }
-          }
-          break;
-        case 'r':
-          {
-            if (sample) {
-              b.DefineProperty(sample, "responsiveness", entry.mTagFloat);
-            }
-          }
-          break;
-        case 'f':
-          {
-            if (sample) {
-              b.DefineProperty(sample, "frameNumber", entry.mTagLine);
-            }
-          }
-          break;
-        case 't':
-          {
-            if (sample) {
-              b.DefineProperty(sample, "time", entry.mTagFloat);
-            }
-          }
-          break;
-        case 'c':
-        case 'l':
-          {
-            if (sample) {
-              JSCustomObject *frame = b.CreateObject();
-              if (entry.mTagName == 'l') {
-                // Bug 753041
-                // We need a double cast here to tell GCC that we don't want to sign
-                // extend 32-bit addresses starting with 0xFXXXXXX.
-                unsigned long long pc = (unsigned long long)(uintptr_t)entry.mTagPtr;
-                snprintf(tagBuff, DYNAMIC_MAX_STRING, "%#llx", pc);
-                b.DefineProperty(frame, "location", tagBuff);
-              } else {
-                b.DefineProperty(frame, "location", tagStringData);
-                readAheadPos = (readPos + incBy) % mEntrySize;
-                if (readAheadPos != mLastFlushPos &&
-                    mEntries[readAheadPos].mTagName == 'n') {
-                  b.DefineProperty(frame, "line",
-                                   mEntries[readAheadPos].mTagLine);
-                  incBy++;
-                }
-              }
-              b.ArrayPush(frames, frame);
-            }
-          }
-      }
-      readPos = (readPos + incBy) % mEntrySize;
-    }
-  }
-
-  PseudoStack* GetStack()
-  {
-    return mStack;
-  }
-private:
-  // Circular buffer 'Keep One Slot Open' implementation
-  // for simplicity
-  ProfileEntry *mEntries;
-  int mWritePos; // points to the next entry we will write to
-  int mLastFlushPos; // points to the next entry since the last flush()
-  int mReadPos;  // points to the next entry we will read to
-  int mEntrySize;
-  PseudoStack *mStack;
-};
-
-class SaveProfileTask;
-
-static bool
-hasFeature(const char** aFeatures, uint32_t aFeatureCount, const char* aFeature) {
-  for(size_t i = 0; i < aFeatureCount; i++) {
-    if (strcmp(aFeatures[i], aFeature) == 0)
-      return true;
-  }
-  return false;
-}
-
-class TableTicker: public Sampler {
- public:
-  TableTicker(int aInterval, int aEntrySize, PseudoStack *aStack,
-              const char** aFeatures, uint32_t aFeatureCount)
-    : Sampler(aInterval, true)
-    , mPrimaryThreadProfile(aEntrySize, aStack)
-    , mStartTime(TimeStamp::Now())
-    , mSaveRequested(false)
-  {
-    mUseStackWalk = hasFeature(aFeatures, aFeatureCount, "stackwalk");
-
-    //XXX: It's probably worth splitting the jank profiler out from the regular profiler at some point
-    mJankOnly = hasFeature(aFeatures, aFeatureCount, "jank");
-    mProfileJS = hasFeature(aFeatures, aFeatureCount, "js");
-    mAddLeafAddresses = hasFeature(aFeatures, aFeatureCount, "leaf");
-    mPrimaryThreadProfile.addTag(ProfileEntry('m', "Start"));
-  }
-
-  ~TableTicker() { if (IsActive()) Stop(); }
-
-  virtual void SampleStack(TickSample* sample) {}
-
-  // Called within a signal. This function must be reentrant
-  virtual void Tick(TickSample* sample);
-
-  // Called within a signal. This function must be reentrant
-  virtual void RequestSave()
-  {
-    mSaveRequested = true;
-  }
-
-  virtual void HandleSaveRequest();
-
-  ThreadProfile* GetPrimaryThreadProfile()
-  {
-    return &mPrimaryThreadProfile;
-  }
-
-  void ToStreamAsJSON(std::ostream& stream);
-  JSObject *ToJSObject(JSContext *aCx);
-  JSCustomObject *GetMetaJSCustomObject(JSAObjectBuilder& b);
-
-  const bool ProfileJS() { return mProfileJS; }
-
-private:
-  // Not implemented on platforms which do not support backtracing
-  void doBacktrace(ThreadProfile &aProfile, TickSample* aSample);
-
-  void BuildJSObject(JSAObjectBuilder& b, JSCustomObject* profile);
-private:
-  // This represent the application's main thread (SAMPLER_INIT)
-  ThreadProfile mPrimaryThreadProfile;
-  TimeStamp mStartTime;
-  bool mSaveRequested;
-  bool mAddLeafAddresses;
-  bool mUseStackWalk;
-  bool mJankOnly;
-  bool mProfileJS;
-};
+///////////////////////////////////////////////////////////////////////
+// BEGIN SaveProfileTask et al
 
 std::string GetSharedLibraryInfoString();
-
-static JSBool
-WriteCallback(const jschar *buf, uint32_t len, void *data)
-{
-  std::ofstream& stream = *static_cast<std::ofstream*>(data);
-  nsAutoCString profile = NS_ConvertUTF16toUTF8(buf, len);
-  stream << profile.Data();
-  return JS_TRUE;
-}
-
-/**
- * This is an event used to save the profile on the main thread
- * to be sure that it is not being modified while saving.
- */
-class SaveProfileTask : public nsRunnable {
-public:
-  SaveProfileTask() {}
-
-  NS_IMETHOD Run() {
-    TableTicker *t = tlsTicker.get();
-    // Pause the profiler during saving.
-    // This will prevent us from recording sampling
-    // regarding profile saving. This will also
-    // prevent bugs caused by the circular buffer not
-    // being thread safe. Bug 750989.
-    t->SetPaused(true);
-
-    // Get file path
-#ifdef MOZ_WIDGET_ANDROID
-    nsCString tmpPath;
-    tmpPath.AppendPrintf("/sdcard/profile_%i_%i.txt", XRE_GetProcessType(), getpid());
-#else
-    nsCOMPtr<nsIFile> tmpFile;
-    nsAutoCString tmpPath;
-    if (NS_FAILED(NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tmpFile)))) {
-      LOG("Failed to find temporary directory.");
-      return NS_ERROR_FAILURE;
-    }
-    tmpPath.AppendPrintf("profile_%i_%i.txt", XRE_GetProcessType(), getpid());
-
-    nsresult rv = tmpFile->AppendNative(tmpPath);
-    if (NS_FAILED(rv))
-      return rv;
-
-    rv = tmpFile->GetNativePath(tmpPath);
-    if (NS_FAILED(rv))
-      return rv;
-#endif
-
-    // Create a JSContext to run a JSCustomObjectBuilder :(
-    // Based on XPCShellEnvironment
-    JSRuntime *rt;
-    JSContext *cx;
-    nsCOMPtr<nsIJSRuntimeService> rtsvc = do_GetService("@mozilla.org/js/xpc/RuntimeService;1");
-    if (!rtsvc || NS_FAILED(rtsvc->GetRuntime(&rt)) || !rt) {
-      LOG("failed to get RuntimeService");
-      return NS_ERROR_FAILURE;;
-    }
-
-    cx = JS_NewContext(rt, 8192);
-    if (!cx) {
-      LOG("Failed to get context");
-      return NS_ERROR_FAILURE;
-    }
-
-    {
-      JSAutoRequest ar(cx);
-      static JSClass c = {
-          "global", JSCLASS_GLOBAL_FLAGS,
-          JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-          JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub
-      };
-      JSObject *obj = JS_NewGlobalObject(cx, &c, NULL, JS::SystemZone);
-
-      std::ofstream stream;
-      stream.open(tmpPath.get());
-      // Pause the profiler during saving.
-      // This will prevent us from recording sampling
-      // regarding profile saving. This will also
-      // prevent bugs caused by the circular buffer not
-      // being thread safe. Bug 750989.
-      if (stream.is_open()) {
-        JSAutoCompartment autoComp(cx, obj);
-        JSObject* profileObj = mozilla_sampler_get_profile_data1(cx);
-        JS::Value val = OBJECT_TO_JSVAL(profileObj);
-        JS_Stringify(cx, &val, nullptr, JSVAL_NULL, WriteCallback, &stream);
-        stream.close();
-        LOGF("Saved to %s", tmpPath.get());
-      } else {
-        LOG("Fail to open profile log file.");
-      }
-    }
-    JS_EndRequest(cx);
-    JS_DestroyContext(cx);
-
-    return NS_OK;
-  }
-};
 
 void TableTicker::HandleSaveRequest()
 {
@@ -696,11 +175,17 @@ void TableTicker::BuildJSObject(JSAObjectBuilder& b, JSCustomObject* profile)
 
   // For now we only have one thread
   SetPaused(true);
+  ThreadProfile* prof = GetPrimaryThreadProfile();
+  prof->GetMutex()->Lock();
   JSCustomObject* threadSamples = b.CreateObject();
-  GetPrimaryThreadProfile()->BuildJSObject(b, threadSamples);
+  prof->BuildJSObject(b, threadSamples);
   b.ArrayPush(threads, threadSamples);
+  prof->GetMutex()->Unlock();
   SetPaused(false);
 }
+
+// END SaveProfileTask et al
+////////////////////////////////////////////////////////////////////////
 
 static
 void addDynamicTag(ThreadProfile &aProfile, char aTagName, const char *aStr)
@@ -764,7 +249,7 @@ void addProfileEntry(volatile StackEntry &entry, ThreadProfile &aProfile,
 }
 
 #ifdef USE_BACKTRACE
-void TableTicker::doBacktrace(ThreadProfile &aProfile, TickSample* aSample)
+void TableTicker::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample)
 {
   void *array[100];
   int count = backtrace (array, 100);
@@ -797,7 +282,7 @@ void StackWalkCallback(void* aPC, void* aSP, void* aClosure)
   array->count++;
 }
 
-void TableTicker::doBacktrace(ThreadProfile &aProfile, TickSample* aSample)
+void TableTicker::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample)
 {
 #ifndef XP_MACOSX
   uintptr_t thread = GetThreadHandle(platform_data());
@@ -838,7 +323,7 @@ void TableTicker::doBacktrace(ThreadProfile &aProfile, TickSample* aSample)
   if (NS_SUCCEEDED(rv)) {
     aProfile.addTag(ProfileEntry('s', "(root)"));
 
-    PseudoStack* stack = aProfile.GetStack();
+    PseudoStack* stack = aProfile.GetPseudoStack();
     uint32_t pseudoStackPos = 0;
 
     /* We have two stacks, the native C stack we extracted from unwinding,
@@ -896,22 +381,10 @@ void doSampleStackTrace(PseudoStack *aStack, ThreadProfile &aProfile, TickSample
 #endif
 }
 
-/* used to keep track of the last event that we sampled during */
-unsigned int sLastSampledEventGeneration = 0;
-
-/* a counter that's incremented everytime we get responsiveness event
- * note: it might also be worth tracking everytime we go around
- * the event loop */
-unsigned int sCurrentEventGeneration = 0;
-/* we don't need to worry about overflow because we only treat the
- * case of them being the same as special. i.e. we only run into
- * a problem if 2^32 events happen between samples that we need
- * to know are associated with different events */
-
 void TableTicker::Tick(TickSample* sample)
 {
   // Marker(s) come before the sample
-  PseudoStack* stack = mPrimaryThreadProfile.GetStack();
+  PseudoStack* stack = mPrimaryThreadProfile.GetPseudoStack();
   for (int i = 0; stack->getMarker(i) != NULL; i++) {
     addDynamicTag(mPrimaryThreadProfile, 'm', stack->getMarker(i));
   }
@@ -941,7 +414,7 @@ void TableTicker::Tick(TickSample* sample)
 
 #if defined(USE_BACKTRACE) || defined(USE_NS_STACKWALK)
   if (mUseStackWalk) {
-    doBacktrace(mPrimaryThreadProfile, sample);
+    doNativeBacktrace(mPrimaryThreadProfile, sample);
   } else {
     doSampleStackTrace(stack, mPrimaryThreadProfile, mAddLeafAddresses ? sample : nullptr);
   }
@@ -968,290 +441,8 @@ void TableTicker::Tick(TickSample* sample)
   }
 }
 
-std::ostream& operator<<(std::ostream& stream, const ThreadProfile& profile)
-{
-  int readPos = profile.mReadPos;
-  while (readPos != profile.mLastFlushPos) {
-    stream << profile.mEntries[readPos];
-    readPos = (readPos + 1) % profile.mEntrySize;
-  }
-  return stream;
-}
-
-std::ostream& operator<<(std::ostream& stream, const ProfileEntry& entry)
-{
-  if (entry.mTagName == 'r' || entry.mTagName == 't') {
-    stream << entry.mTagName << "-" << std::fixed << entry.mTagFloat << "\n";
-  } else if (entry.mTagName == 'l' || entry.mTagName == 'L') {
-    // Bug 739800 - Force l-tag addresses to have a "0x" prefix on all platforms
-    // Additionally, stringstream seemed to be ignoring formatter flags.
-    char tagBuff[1024];
-    unsigned long long pc = (unsigned long long)(uintptr_t)entry.mTagPtr;
-    snprintf(tagBuff, 1024, "%c-%#llx\n", entry.mTagName, pc);
-    stream << tagBuff;
-  } else if (entry.mTagName == 'd') {
-    // TODO implement 'd' tag for text profile
-  } else {
-    stream << entry.mTagName << "-" << entry.mTagData << "\n";
-  }
-  return stream;
-}
-
-bool sps_version2()
-{
-  static int version = 0; // Raced on, potentially
-
-  if (version == 0) {
-    bool allow2 = false; // Is v2 allowable on this platform?
-#   if defined(SPS_PLAT_amd64_linux) || defined(SPS_PLAT_arm_android) \
-       || defined(SPS_PLAT_x86_linux)
-    allow2 = true;
-#   elif defined(SPS_PLAT_amd64_darwin) || defined(SPS_PLAT_x86_darwin) \
-         || defined(SPS_PLAT_x86_windows) || defined(SPS_PLAT_x86_android) \
-         || defined(SPS_PLAT_amd64_windows)
-    allow2 = false;
-#   else
-#     error "Unknown platform"
-#   endif
-
-    bool req2 = PR_GetEnv("MOZ_PROFILER_NEW") != NULL; // Has v2 been requested?
-
-    bool elfhackd = false;
-#   if defined(USE_ELF_HACK)
-    bool elfhackd = true;
-#   endif
-
-    if (req2 && allow2) {
-      version = 2;
-      LOG("------------------- MOZ_PROFILER_NEW set -------------------");
-    } else if (req2 && !allow2) {
-      version = 1;
-      LOG("--------------- MOZ_PROFILER_NEW requested, ----------------");
-      LOG("---------- but is not available on this platform -----------");
-    } else if (req2 && elfhackd) {
-      version = 1;
-      LOG("--------------- MOZ_PROFILER_NEW requested, ----------------");
-      LOG("--- but this build was not done with --disable-elf-hack ----");
-    } else {
-      version = 1;
-      LOG("----------------- MOZ_PROFILER_NEW not set -----------------");
-    }
-  }
-  return version == 2;
-}
-
-void mozilla_sampler_init1()
-{
-  if (stack_key_initialized)
-    return;
-
-  if (!tlsPseudoStack.init() || !tlsTicker.init()) {
-    LOG("Failed to init.");
-    return;
-  }
-  stack_key_initialized = true;
-
-  PseudoStack *stack = new PseudoStack();
-  tlsPseudoStack.set(stack);
-
-  // Allow the profiler to be started using signals
-  OS::RegisterStartHandler();
-
-  // We can't open pref so we use an environment variable
-  // to know if we should trigger the profiler on startup
-  // NOTE: Default
-  const char *val = PR_GetEnv("MOZ_PROFILER_STARTUP");
-  if (!val || !*val) {
-    return;
-  }
-
-  const char* features[] = {"js", "leaf"
-#if defined(XP_WIN) || defined(XP_MACOSX)
-                         , "stackwalk"
-#endif
-                         };
-  mozilla_sampler_start1(PROFILE_DEFAULT_ENTRY, PROFILE_DEFAULT_INTERVAL,
-                         features, sizeof(features)/sizeof(const char*));
-}
-
-void mozilla_sampler_shutdown1()
-{
-  TableTicker *t = tlsTicker.get();
-  if (t) {
-    const char *val = PR_GetEnv("MOZ_PROFILER_SHUTDOWN");
-    if (val) {
-      std::ofstream stream;
-      stream.open(val);
-      if (stream.is_open()) {
-        t->ToStreamAsJSON(stream);
-        stream.close();
-      }
-    }
-  }
-
-  mozilla_sampler_stop1();
-  // We can't delete the Stack because we can be between a
-  // sampler call_enter/call_exit point.
-  // TODO Need to find a safe time to delete Stack
-}
-
-void mozilla_sampler_save1()
-{
-  TableTicker *t = tlsTicker.get();
-  if (!t) {
-    return;
-  }
-
-  t->RequestSave();
-  // We're on the main thread already so we don't
-  // have to wait to handle the save request.
-  t->HandleSaveRequest();
-}
-
-char* mozilla_sampler_get_profile1()
-{
-  TableTicker *t = tlsTicker.get();
-  if (!t) {
-    return NULL;
-  }
-
-  std::stringstream profile;
-  t->SetPaused(true);
-  profile << *(t->GetPrimaryThreadProfile());
-  t->SetPaused(false);
-
-  std::string profileString = profile.str();
-  char *rtn = (char*)malloc( (profileString.length() + 1) * sizeof(char) );
-  strcpy(rtn, profileString.c_str());
-  return rtn;
-}
-
-JSObject *mozilla_sampler_get_profile_data1(JSContext *aCx)
-{
-  TableTicker *t = tlsTicker.get();
-  if (!t) {
-    return NULL;
-  }
-
-  return t->ToJSObject(aCx);
-}
-
-
-const char** mozilla_sampler_get_features1()
-{
-  static const char* features[] = {
-#if defined(MOZ_PROFILING) && (defined(USE_BACKTRACE) || defined(USE_NS_STACKWALK))
-    "stackwalk",
-#endif
-#if defined(ENABLE_SPS_LEAF_DATA)
-    "leaf",
-#endif
-    "jank",
-    "js",
-    NULL
-  };
-
-  return features;
-}
-
-// Values are only honored on the first start
-void mozilla_sampler_start1(int aProfileEntries, int aInterval,
-                            const char** aFeatures, uint32_t aFeatureCount)
-{
-  if (!stack_key_initialized)
-    mozilla_sampler_init1();
-
-  PseudoStack *stack = tlsPseudoStack.get();
-  if (!stack) {
-    ASSERT(false);
-    return;
-  }
-
-  mozilla_sampler_stop1();
-
-  TableTicker *t = new TableTicker(aInterval ? aInterval : PROFILE_DEFAULT_INTERVAL,
-                                   aProfileEntries ? aProfileEntries : PROFILE_DEFAULT_ENTRY,
-                                   stack, aFeatures, aFeatureCount);
-  tlsTicker.set(t);
-  t->Start();
-  if (t->ProfileJS())
-      stack->enableJSSampling();
-
-  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-  if (os)
-    os->NotifyObservers(nullptr, "profiler-started", nullptr);
-}
-
-void mozilla_sampler_stop1()
-{
-  if (!stack_key_initialized)
-    mozilla_sampler_init1();
-
-  TableTicker *t = tlsTicker.get();
-  if (!t) {
-    return;
-  }
-
-  bool disableJS = t->ProfileJS();
-
-  t->Stop();
-  delete t;
-  tlsTicker.set(NULL);
-  PseudoStack *stack = tlsPseudoStack.get();
-  ASSERT(stack != NULL);
-
-  if (disableJS)
-    stack->disableJSSampling();
-
-  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-  if (os)
-    os->NotifyObservers(nullptr, "profiler-stopped", nullptr);
-}
-
-bool mozilla_sampler_is_active1()
-{
-  if (!stack_key_initialized)
-    mozilla_sampler_init1();
-
-  TableTicker *t = tlsTicker.get();
-  if (!t) {
-    return false;
-  }
-
-  return t->IsActive();
-}
-
-static double sResponsivenessTimes[100];
-static unsigned int sResponsivenessLoc = 0;
-void mozilla_sampler_responsiveness1(const TimeStamp& aTime)
-{
-  if (!sLastTracerEvent.IsNull()) {
-    if (sResponsivenessLoc == 100) {
-      for(size_t i = 0; i < 100-1; i++) {
-        sResponsivenessTimes[i] = sResponsivenessTimes[i+1];
-      }
-      sResponsivenessLoc--;
-    }
-    TimeDuration delta = aTime - sLastTracerEvent;
-    sResponsivenessTimes[sResponsivenessLoc++] = delta.ToMilliseconds();
-  }
-  sCurrentEventGeneration++;
-
-  sLastTracerEvent = aTime;
-}
-
-const double* mozilla_sampler_get_responsiveness1()
-{
-  return sResponsivenessTimes;
-}
-
-void mozilla_sampler_frame_number1(int frameNumber)
-{
-  sFrameNumber = frameNumber;
-}
-
 static void print_callback(const ProfileEntry& entry, const char* tagStringData) {
-  switch (entry.mTagName) {
+  switch (entry.getTagName()) {
     case 's':
     case 'c':
       printf_stderr("  %s\n", tagStringData);
@@ -1261,7 +452,7 @@ static void print_callback(const ProfileEntry& entry, const char* tagStringData)
 void mozilla_sampler_print_location1()
 {
   if (!stack_key_initialized)
-    mozilla_sampler_init1();
+    profiler_init();
 
   PseudoStack *stack = tlsPseudoStack.get();
   if (!stack) {
@@ -1278,17 +469,4 @@ void mozilla_sampler_print_location1()
   threadProfile.IterateTags(print_callback);
 }
 
-void mozilla_sampler_lock1()
-{
-  mozilla_sampler_stop1();
-  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-  if (os)
-    os->NotifyObservers(nullptr, "profiler-locked", nullptr);
-}
 
-void mozilla_sampler_unlock1()
-{
-  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-  if (os)
-    os->NotifyObservers(nullptr, "profiler-unlocked", nullptr);
-}

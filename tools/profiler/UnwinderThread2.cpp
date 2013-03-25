@@ -28,7 +28,7 @@
 #include "platform.h"
 #include <iostream>
 
-#include "ProfileEntry2.h"
+#include "ProfileEntry.h"
 #include "UnwinderThread2.h"
 
 #if !defined(SPS_OS_windows)
@@ -90,7 +90,7 @@ UnwinderThreadBuffer* uwt__acquire_empty_buffer()
 
 // RUNS IN SIGHANDLER CONTEXT
 void
-uwt__release_full_buffer(ThreadProfile2* aProfile,
+uwt__release_full_buffer(ThreadProfile* aProfile,
                          UnwinderThreadBuffer* utb,
                          void* /* ucontext_t*, really */ ucV )
 {
@@ -98,7 +98,7 @@ uwt__release_full_buffer(ThreadProfile2* aProfile,
 
 // RUNS IN SIGHANDLER CONTEXT
 void
-utb__addEntry(/*MODIFIED*/UnwinderThreadBuffer* utb, ProfileEntry2 ent)
+utb__addEntry(/*MODIFIED*/UnwinderThreadBuffer* utb, ProfileEntry ent)
 {
 }
 
@@ -133,12 +133,12 @@ static UnwinderThreadBuffer* acquire_empty_buffer();
 // is the partially-filled-in buffer, containing ProfileEntries.
 // UCV is the ucontext_t* from the signal handler.  If non-NULL, is
 // taken as a cue to request native unwind.
-static void release_full_buffer(ThreadProfile2* aProfile,
+static void release_full_buffer(ThreadProfile* aProfile,
                                 UnwinderThreadBuffer* utb,
                                 void* /* ucontext_t*, really */ ucV );
 
 // RUNS IN SIGHANDLER CONTEXT
-static void utb_add_prof_ent(UnwinderThreadBuffer* utb, ProfileEntry2 ent);
+static void utb_add_prof_ent(UnwinderThreadBuffer* utb, ProfileEntry ent);
 
 // Do a store memory barrier.
 static void do_MBAR();
@@ -175,7 +175,7 @@ UnwinderThreadBuffer* uwt__acquire_empty_buffer()
 
 // RUNS IN SIGHANDLER CONTEXT
 void
-uwt__release_full_buffer(ThreadProfile2* aProfile,
+uwt__release_full_buffer(ThreadProfile* aProfile,
                          UnwinderThreadBuffer* utb,
                          void* /* ucontext_t*, really */ ucV )
 {
@@ -184,7 +184,7 @@ uwt__release_full_buffer(ThreadProfile2* aProfile,
 
 // RUNS IN SIGHANDLER CONTEXT
 void
-utb__addEntry(/*MODIFIED*/UnwinderThreadBuffer* utb, ProfileEntry2 ent)
+utb__addEntry(/*MODIFIED*/UnwinderThreadBuffer* utb, ProfileEntry ent)
 {
   utb_add_prof_ent(utb, ent);
 }
@@ -253,24 +253,24 @@ typedef  struct { uintptr_t val; }  SpinLock;
 #define N_STACK_BYTES 32768
 
 /* CONFIGURABLE */
-/* The number of fixed ProfileEntry2 slots.  If more are required, they
+/* The number of fixed ProfileEntry slots.  If more are required, they
    are placed in mmap'd pages. */
 #define N_FIXED_PROF_ENTS 20
 
 /* CONFIGURABLE */
 /* The number of extra pages of ProfileEntries.  If (on arm) each
-   ProfileEntry2 is 8 bytes, then a page holds 512, and so 100 pages
+   ProfileEntry is 8 bytes, then a page holds 512, and so 100 pages
    is enough to hold 51200. */
 #define N_PROF_ENT_PAGES 100
 
 /* DERIVATIVE */
-#define N_PROF_ENTS_PER_PAGE (SPS_PAGE_SIZE / sizeof(ProfileEntry2))
+#define N_PROF_ENTS_PER_PAGE (SPS_PAGE_SIZE / sizeof(ProfileEntry))
 
-/* A page of ProfileEntry2s.  This might actually be slightly smaller
+/* A page of ProfileEntrys.  This might actually be slightly smaller
    than a page if SPS_PAGE_SIZE is not an exact multiple of
-   sizeof(ProfileEntry2). */
+   sizeof(ProfileEntry). */
 typedef
-  struct { ProfileEntry2 ents[N_PROF_ENTS_PER_PAGE]; }
+  struct { ProfileEntry ents[N_PROF_ENTS_PER_PAGE]; }
   ProfEntsPage;
 
 #define ProfEntsPage_INVALID ((ProfEntsPage*)1)
@@ -289,11 +289,11 @@ struct _UnwinderThreadBuffer {
      fields. */
   /* Sample number, needed to process samples in order */
   uint64_t       seqNo;
-  /* The ThreadProfile2 into which the results are eventually to be
+  /* The ThreadProfile into which the results are eventually to be
      dumped. */
-  ThreadProfile2* aProfile;
+  ThreadProfile* aProfile;
   /* Pseudostack and other info, always present */
-  ProfileEntry2   entsFixed[N_FIXED_PROF_ENTS];
+  ProfileEntry   entsFixed[N_FIXED_PROF_ENTS];
   ProfEntsPage*  entsPages[N_PROF_ENT_PAGES];
   uintptr_t      entsUsed;
   /* Do we also have data to do a native unwind? */
@@ -605,7 +605,7 @@ static UnwinderThreadBuffer* acquire_empty_buffer()
 // RUNS IN SIGHANDLER CONTEXT
 /* The calling thread owns the buffer, as denoted by its state being
    S_FILLING.  So we can mess with it without further locking. */
-static void release_full_buffer(ThreadProfile2* aProfile,
+static void release_full_buffer(ThreadProfile* aProfile,
                                 UnwinderThreadBuffer* buff,
                                 void* /* ucontext_t*, really */ ucV )
 {
@@ -745,13 +745,13 @@ static void munmap_ProfEntsPage(ProfEntsPage* pep)
 
 // RUNS IN SIGHANDLER CONTEXT
 void
-utb_add_prof_ent(/*MODIFIED*/UnwinderThreadBuffer* utb, ProfileEntry2 ent)
+utb_add_prof_ent(/*MODIFIED*/UnwinderThreadBuffer* utb, ProfileEntry ent)
 {
   uintptr_t limit
     = N_FIXED_PROF_ENTS + (N_PROF_ENTS_PER_PAGE * N_PROF_ENT_PAGES);
   if (utb->entsUsed == limit) {
     /* We're full.  Now what? */
-    LOG("BPUnw: utb__addEntry: NO SPACE for ProfileEntry2; ignoring.");
+    LOG("BPUnw: utb__addEntry: NO SPACE for ProfileEntry; ignoring.");
     return;
   }
   MOZ_ASSERT(utb->entsUsed < limit);
@@ -773,7 +773,7 @@ utb_add_prof_ent(/*MODIFIED*/UnwinderThreadBuffer* utb, ProfileEntry2 ent)
     pep = mmap_anon_ProfEntsPage();
     if (pep == ProfEntsPage_INVALID) {
       /* Urr, we ran out of memory.  Now what? */
-      LOG("BPUnw: utb__addEntry: MMAP FAILED for ProfileEntry2; ignoring.");
+      LOG("BPUnw: utb__addEntry: MMAP FAILED for ProfileEntry; ignoring.");
       return;
     }
     utb->entsPages[j_div] = pep;
@@ -784,7 +784,7 @@ utb_add_prof_ent(/*MODIFIED*/UnwinderThreadBuffer* utb, ProfileEntry2 ent)
 
 
 // misc helper
-static ProfileEntry2 utb_get_profent(UnwinderThreadBuffer* buff, uintptr_t i)
+static ProfileEntry utb_get_profent(UnwinderThreadBuffer* buff, uintptr_t i)
 {
   MOZ_ASSERT(i < buff->entsUsed);
   if (i < N_FIXED_PROF_ENTS) {
@@ -949,7 +949,7 @@ static void* unwind_thr_fn(void* exit_nowV)
 
     uintptr_t k;
     for (k = 0; k < buff->entsUsed; k++) {
-      ProfileEntry2 ent = utb_get_profent(buff, k);
+      ProfileEntry ent = utb_get_profent(buff, k);
       if (ent.is_ent_hint('N')) {
         need_native_unw = true;
       }
@@ -981,7 +981,7 @@ static void* unwind_thr_fn(void* exit_nowV)
        Just copy to the output. */
     if (!need_native_unw && !have_P) {
       for (k = 0; k < buff->entsUsed; k++) {
-        ProfileEntry2 ent = utb_get_profent(buff, k);
+        ProfileEntry ent = utb_get_profent(buff, k);
         // action flush-hints
         if (ent.is_ent_hint('F')) { buff->aProfile->flush(); continue; }
         // skip ones we can't copy
@@ -993,17 +993,17 @@ static void* unwind_thr_fn(void* exit_nowV)
     else /* Native only-case. */
     if (need_native_unw && !have_P) {
       for (k = 0; k < buff->entsUsed; k++) {
-        ProfileEntry2 ent = utb_get_profent(buff, k);
+        ProfileEntry ent = utb_get_profent(buff, k);
         // action a native-unwind-now hint
         if (ent.is_ent_hint('N')) {
           MOZ_ASSERT(buff->haveNativeInfo);
           PCandSP* pairs = NULL;
           unsigned int nPairs = 0;
           do_breakpad_unwind_Buffer(&pairs, &nPairs, buff, oldest_ix);
-          buff->aProfile->addTag( ProfileEntry2('s', "(root)") );
+          buff->aProfile->addTag( ProfileEntry('s', "(root)") );
           for (unsigned int i = 0; i < nPairs; i++) {
             buff->aProfile
-                ->addTag( ProfileEntry2('l', reinterpret_cast<void*>(pairs[i].pc)) );
+                ->addTag( ProfileEntry('l', reinterpret_cast<void*>(pairs[i].pc)) );
           }
           if (pairs)
             free(pairs);
@@ -1025,10 +1025,10 @@ static void* unwind_thr_fn(void* exit_nowV)
          stack-pointer tags.  Except, insert a sample-start tag when
          we see the start of the first pseudostack frame. */
       for (k = 0; k < buff->entsUsed; k++) {
-        ProfileEntry2 ent = utb_get_profent(buff, k);
+        ProfileEntry ent = utb_get_profent(buff, k);
         // We need to insert a sample-start tag before the first frame
         if (k == ix_first_hP) {
-          buff->aProfile->addTag( ProfileEntry2('s', "(root)") );
+          buff->aProfile->addTag( ProfileEntry('s', "(root)") );
         }
         // action flush-hints
         if (ent.is_ent_hint('F')) { buff->aProfile->flush(); continue; }
@@ -1056,7 +1056,7 @@ static void* unwind_thr_fn(void* exit_nowV)
 
       // Entries before the pseudostack frames
       for (k = 0; k < ix_first_hP; k++) {
-        ProfileEntry2 ent = utb_get_profent(buff, k);
+        ProfileEntry ent = utb_get_profent(buff, k);
         // action flush-hints
         if (ent.is_ent_hint('F')) { buff->aProfile->flush(); continue; }
         // skip ones we can't copy
@@ -1066,7 +1066,7 @@ static void* unwind_thr_fn(void* exit_nowV)
       }
 
       // BEGIN merge
-      buff->aProfile->addTag( ProfileEntry2('s', "(root)") );
+      buff->aProfile->addTag( ProfileEntry('s', "(root)") );
       unsigned int next_N = 0; // index in pairs[]
       unsigned int next_P = ix_first_hP; // index in buff profent array
       bool last_was_P = false;
@@ -1111,7 +1111,7 @@ static void* unwind_thr_fn(void* exit_nowV)
                input, we must eventually find the hint-Q that marks
                the end of this frame's entries. */
             MOZ_ASSERT(m < buff->entsUsed);
-            ProfileEntry2 ent = utb_get_profent(buff, m);
+            ProfileEntry ent = utb_get_profent(buff, m);
             if (ent.is_ent_hint('Q'))
               break;
             if (ent.is_ent('S')) {
@@ -1136,7 +1136,7 @@ static void* unwind_thr_fn(void* exit_nowV)
           unsigned int m = next_P + 1;
           while (true) {
             MOZ_ASSERT(m < buff->entsUsed);
-            ProfileEntry2 ent = utb_get_profent(buff, m);
+            ProfileEntry ent = utb_get_profent(buff, m);
             if (ent.is_ent_hint('Q')) {
               next_P = m + 1;
               break;
@@ -1151,7 +1151,7 @@ static void* unwind_thr_fn(void* exit_nowV)
           }
         } else {
           buff->aProfile
-              ->addTag( ProfileEntry2('l', reinterpret_cast<void*>(pairs[next_N].pc)) );
+              ->addTag( ProfileEntry('l', reinterpret_cast<void*>(pairs[next_N].pc)) );
           next_N++;
         }
         /* Remember what we chose, for next time. */
@@ -1164,7 +1164,7 @@ static void* unwind_thr_fn(void* exit_nowV)
 
       // Entries after the pseudostack frames
       for (k = ix_last_hQ+1; k < buff->entsUsed; k++) {
-        ProfileEntry2 ent = utb_get_profent(buff, k);
+        ProfileEntry ent = utb_get_profent(buff, k);
         // action flush-hints
         if (ent.is_ent_hint('F')) { buff->aProfile->flush(); continue; }
         // skip ones we can't copy
@@ -1182,7 +1182,7 @@ static void* unwind_thr_fn(void* exit_nowV)
     bool show = true;
     if (show) LOG("----------------");
     for (k = 0; k < buff->entsUsed; k++) {
-      ProfileEntry2 ent = utb_get_profent(buff, k);
+      ProfileEntry ent = utb_get_profent(buff, k);
       if (show) ent.log();
       if (ent.is_ent_hint('F')) {
         /* This is a flush-hint */
@@ -1194,10 +1194,10 @@ static void* unwind_thr_fn(void* exit_nowV)
         PCandSP* pairs = NULL;
         unsigned int nPairs = 0;
         do_breakpad_unwind_Buffer(&pairs, &nPairs, buff, oldest_ix);
-        buff->aProfile->addTag( ProfileEntry2('s', "(root)") );
+        buff->aProfile->addTag( ProfileEntry('s', "(root)") );
         for (unsigned int i = 0; i < nPairs; i++) {
           buff->aProfile
-              ->addTag( ProfileEntry2('l', reinterpret_cast<void*>(pairs[i].pc)) );
+              ->addTag( ProfileEntry('l', reinterpret_cast<void*>(pairs[i].pc)) );
         }
         if (pairs)
           free(pairs);

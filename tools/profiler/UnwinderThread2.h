@@ -7,7 +7,7 @@
 #define MOZ_UNWINDER_THREAD_2_H
 
 #include "GeckoProfilerImpl.h"
-#include "ProfileEntry2.h"
+#include "ProfileEntry.h"
 
 /* Top level exports of UnwinderThread.cpp. */
 
@@ -18,11 +18,11 @@ typedef
   UnwinderThreadBuffer;
 
 // RUNS IN SIGHANDLER CONTEXT
-// Called in the sampled thread (signal) context.  Adds a ProfileEntry2
+// Called in the sampled thread (signal) context.  Adds a ProfileEntry
 // into an UnwinderThreadBuffer that the thread has previously obtained
 // by a call to utb__acquire_empty_buffer.
 void utb__addEntry(/*MOD*/UnwinderThreadBuffer* utb,
-                   ProfileEntry2 ent);
+                   ProfileEntry ent);
 
 // Create the unwinder thread.  At the moment there can be only one.
 void uwt__init();
@@ -53,7 +53,7 @@ UnwinderThreadBuffer* uwt__acquire_empty_buffer();
 // it is assumed to point to a ucontext_t* that holds the initial 
 // register state for the unwind.  The results of all of this are
 // dumped into |aProfile| (by the unwinder thread, not the calling thread).
-void uwt__release_full_buffer(ThreadProfile2* aProfile,
+void uwt__release_full_buffer(ThreadProfile* aProfile,
                               UnwinderThreadBuffer* utb,
                               void* /* ucontext_t*, really */ ucV);
 
