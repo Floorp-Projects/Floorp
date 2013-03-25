@@ -18,7 +18,10 @@
     _(ModPowTwoI)               \
     _(ModMaskI)                 \
     _(PowHalfD)                 \
-    _(UInt32ToDouble)
+    _(UInt32ToDouble)           \
+    _(AsmJSDivOrMod)            \
+    _(AsmJSLoadFuncPtr)
+
 
 #endif // jsion_lir_opcodes_arm_h__
 

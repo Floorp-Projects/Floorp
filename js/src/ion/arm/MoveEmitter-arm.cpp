@@ -86,7 +86,11 @@ MoveEmitterARM::tempReg()
 
     // For now, just pick r12/ip as the eviction point. This is totally
     // random, and if it ends up being bad, we can use actual heuristics later.
-    spilledReg_ = r12;
+    // r12 is actually a bad choice.  it is the scratch register, which is frequently
+    // used for address computations, such as those found when we attempt to access
+    // values more than 4096 off of the stack pointer.
+    // instead, use lr, the LinkRegister.
+    spilledReg_ = r14;
     if (pushedAtSpill_ == -1) {
         masm.Push(spilledReg_);
         pushedAtSpill_ = masm.framePushed();

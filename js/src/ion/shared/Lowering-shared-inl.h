@@ -276,6 +276,16 @@ LIRGeneratorShared::useAnyOrConstant(MDefinition *mir)
 {
     return useRegisterOrConstant(mir);
 }
+LAllocation
+LIRGeneratorShared::useStorable(MDefinition *mir)
+{
+    return useRegister(mir);
+}
+LAllocation
+LIRGeneratorShared::useStorableAtStart(MDefinition *mir)
+{
+    return useRegisterAtStart(mir);
+}
 
 LAllocation
 LIRGeneratorShared::useAny(MDefinition *mir)
@@ -294,6 +304,17 @@ LIRGeneratorShared::useAny(MDefinition *mir)
 {
     return use(mir);
 }
+LAllocation
+LIRGeneratorShared::useStorable(MDefinition *mir)
+{
+    return useRegisterOrConstant(mir);
+}
+LAllocation
+LIRGeneratorShared::useStorableAtStart(MDefinition *mir)
+{
+    return useRegisterOrConstantAtStart(mir);
+}
+
 #endif
 
 LAllocation

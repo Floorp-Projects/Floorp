@@ -372,6 +372,13 @@ MacroAssemblerARM::ma_mov(Imm32 imm, Register dest,
 }
 
 void
+MacroAssemblerARM::ma_mov(ImmWord imm, Register dest,
+                          SetCond_ sc, Assembler::Condition c)
+{
+    ma_alu(InvalidReg, Imm32(imm.value), dest, op_mov, sc, c);
+}
+
+void
 MacroAssemblerARM::ma_mov(const ImmGCPtr &ptr, Register dest)
 {
     // As opposed to x86/x64 version, the data relocation has to be executed
@@ -973,15 +980,25 @@ MacroAssemblerARM::ma_strb(Register rt, DTRAddr addr, Index mode, Condition cc)
 }
 
 // Specialty for moving N bits of data, where n == 8,16,32,64.
-void
+BufferOffset
 MacroAssemblerARM::ma_dataTransferN(LoadStore ls, int size, bool IsSigned,
                           Register rn, Register rm, Register rt,
-                          Index mode, Assembler::Condition cc)
+                                    Index mode, Assembler::Condition cc, unsigned shiftAmount)
 {
-    JS_NOT_REACHED("Feature NYI");
+    if (size == 32 || (size == 8 && !IsSigned)) {
+        return as_dtr(ls, size, mode, rt, DTRAddr(rn, DtrRegImmShift(rm, LSL, shiftAmount)), cc);
+    } else {
+        if (shiftAmount != 0) {
+            JS_ASSERT(rn != ScratchRegister);
+            JS_ASSERT(rt != ScratchRegister);
+            ma_lsl(Imm32(shiftAmount), rm, ScratchRegister);
+            rm = ScratchRegister;
+        }
+        return as_extdtr(ls, size, IsSigned, mode, rt, EDtrAddr(rn, EDtrOffReg(rm)), cc);
+    }
 }
 
-void
+BufferOffset
 MacroAssemblerARM::ma_dataTransferN(LoadStore ls, int size, bool IsSigned,
                                     Register rn, Imm32 offset, Register rt,
                                     Index mode, Assembler::Condition cc)
@@ -992,8 +1009,7 @@ MacroAssemblerARM::ma_dataTransferN(LoadStore ls, int size, bool IsSigned,
         if (off < 4096 && off > -4096) {
             // This encodes as a single instruction, Emulating mode's behavior
             // in a multi-instruction sequence is not necessary.
-            as_dtr(ls, size, mode, rt, DTRAddr(rn, DtrOffImm(off)), cc);
-            return;
+            return as_dtr(ls, size, mode, rt, DTRAddr(rn, DtrOffImm(off)), cc);
         }
 
         // We cannot encode this offset in a a single ldr. For mode == index,
@@ -1031,8 +1047,7 @@ MacroAssemblerARM::ma_dataTransferN(LoadStore ls, int size, bool IsSigned,
         if (rt == pc && mode == PostIndex && ls == IsLoad) {
             ma_mov(rn, ScratchRegister);
             ma_alu(rn, offset, rn, op_add);
-            as_dtr(IsLoad, size, Offset, pc, DTRAddr(ScratchRegister, DtrOffImm(0)), cc);
-            return;
+            return as_dtr(IsLoad, size, Offset, pc, DTRAddr(ScratchRegister, DtrOffImm(0)), cc);
         }
 
         int bottom = off & 0xfff;
@@ -1051,37 +1066,32 @@ MacroAssemblerARM::ma_dataTransferN(LoadStore ls, int size, bool IsSigned,
             Operand2 sub_off = Imm8(-(off-bottom)); // sub_off = bottom - off
             if (!sub_off.invalid) {
                 as_sub(ScratchRegister, rn, sub_off, NoSetCond, cc); // - sub_off = off - bottom
-                as_dtr(ls, size, Offset, rt, DTRAddr(ScratchRegister, DtrOffImm(bottom)), cc);
-                return;
+                return as_dtr(ls, size, Offset, rt, DTRAddr(ScratchRegister, DtrOffImm(bottom)), cc);
             }
             sub_off = Imm8(-(off+neg_bottom));// sub_off = -neg_bottom - off
             if (!sub_off.invalid) {
                 as_sub(ScratchRegister, rn, sub_off, NoSetCond, cc); // - sub_off = neg_bottom + off
-                as_dtr(ls, size, Offset, rt, DTRAddr(ScratchRegister, DtrOffImm(-neg_bottom)), cc);
-                return;
+                return as_dtr(ls, size, Offset, rt, DTRAddr(ScratchRegister, DtrOffImm(-neg_bottom)), cc);
             }
         } else {
             Operand2 sub_off = Imm8(off-bottom); // sub_off = off - bottom
             if (!sub_off.invalid) {
                 as_add(ScratchRegister, rn, sub_off, NoSetCond, cc); //  sub_off = off - bottom
-                as_dtr(ls, size, Offset, rt, DTRAddr(ScratchRegister, DtrOffImm(bottom)), cc);
-                return;
+                return as_dtr(ls, size, Offset, rt, DTRAddr(ScratchRegister, DtrOffImm(bottom)), cc);
             }
             sub_off = Imm8(off+neg_bottom);// sub_off = neg_bottom + off
             if (!sub_off.invalid) {
                 as_add(ScratchRegister, rn, sub_off, NoSetCond,  cc); // sub_off = neg_bottom + off
-                as_dtr(ls, size, Offset, rt, DTRAddr(ScratchRegister, DtrOffImm(-neg_bottom)), cc);
-                return;
+                return as_dtr(ls, size, Offset, rt, DTRAddr(ScratchRegister, DtrOffImm(-neg_bottom)), cc);
             }
         }
         ma_mov(offset, ScratchRegister);
-        as_dtr(ls, size, mode, rt, DTRAddr(rn, DtrRegImmShift(ScratchRegister, LSL, 0)));
+        return as_dtr(ls, size, mode, rt, DTRAddr(rn, DtrRegImmShift(ScratchRegister, LSL, 0)));
     } else {
         // should attempt to use the extended load/store instructions
-        if (off < 256 && off > -256) {
-            as_extdtr(ls, size, IsSigned, mode, rt, EDtrAddr(rn, EDtrOffImm(off)), cc);
-            return;
-        }
+        if (off < 256 && off > -256)
+            return as_extdtr(ls, size, IsSigned, mode, rt, EDtrAddr(rn, EDtrOffImm(off)), cc);
+
         // We cannot encode this offset in a a single extldr.  Try to encode it as
         // an add scratch, base, imm; extldr dest, [scratch, +offset].
         int bottom = off & 0xff;
@@ -1092,41 +1102,38 @@ MacroAssemblerARM::ma_dataTransferN(LoadStore ls, int size, bool IsSigned,
             Operand2 sub_off = Imm8(-(off-bottom)); // sub_off = bottom - off
             if (!sub_off.invalid) {
                 as_sub(ScratchRegister, rn, sub_off, NoSetCond, cc); // - sub_off = off - bottom
-                as_extdtr(ls, size, IsSigned, Offset, rt,
-                          EDtrAddr(ScratchRegister, EDtrOffImm(bottom)),
-                          cc);
-                return;
+                return as_extdtr(ls, size, IsSigned, Offset, rt,
+                                 EDtrAddr(ScratchRegister, EDtrOffImm(bottom)),
+                                 cc);
             }
             sub_off = Imm8(-(off+neg_bottom));// sub_off = -neg_bottom - off
             if (!sub_off.invalid) {
                 as_sub(ScratchRegister, rn, sub_off, NoSetCond, cc); // - sub_off = neg_bottom + off
-                as_extdtr(ls, size, IsSigned, Offset, rt,
-                          EDtrAddr(ScratchRegister, EDtrOffImm(-neg_bottom)),
-                          cc);
-                return;
+                return as_extdtr(ls, size, IsSigned, Offset, rt,
+                                 EDtrAddr(ScratchRegister, EDtrOffImm(-neg_bottom)),
+                                 cc);
             }
         } else {
             Operand2 sub_off = Imm8(off-bottom); // sub_off = off - bottom
             if (!sub_off.invalid) {
                 as_add(ScratchRegister, rn, sub_off, NoSetCond, cc); //  sub_off = off - bottom
-                as_extdtr(ls, size, IsSigned, Offset, rt,
-                          EDtrAddr(ScratchRegister, EDtrOffImm(bottom)),
-                          cc);
-                return;
+                return as_extdtr(ls, size, IsSigned, Offset, rt,
+                                 EDtrAddr(ScratchRegister, EDtrOffImm(bottom)),
+                                 cc);
             }
             sub_off = Imm8(off+neg_bottom);// sub_off = neg_bottom + off
             if (!sub_off.invalid) {
                 as_add(ScratchRegister, rn, sub_off, NoSetCond,  cc); // sub_off = neg_bottom + off
-                as_extdtr(ls, size, IsSigned, Offset, rt,
-                          EDtrAddr(ScratchRegister, EDtrOffImm(-neg_bottom)),
-                          cc);
-                return;
+                return as_extdtr(ls, size, IsSigned, Offset, rt,
+                                 EDtrAddr(ScratchRegister, EDtrOffImm(-neg_bottom)),
+                                 cc);
             }
         }
         ma_mov(offset, ScratchRegister);
-        as_extdtr(ls, size, IsSigned, mode, rt, EDtrAddr(rn, EDtrOffReg(ScratchRegister)), cc);
+        return as_extdtr(ls, size, IsSigned, mode, rt, EDtrAddr(rn, EDtrOffReg(ScratchRegister)), cc);
     }
 }
+
 void
 MacroAssemblerARM::ma_pop(Register r)
 {
@@ -1351,6 +1358,12 @@ MacroAssemblerARM::ma_vxfer(FloatRegister src, Register dest1, Register dest2, C
 }
 
 void
+MacroAssemblerARM::ma_vxfer(Register src1, Register src2, FloatRegister dest, Condition cc)
+{
+    as_vxfer(src1, src2, VFPRegister(dest), CoreToFloat, cc);
+}
+
+void
 MacroAssemblerARM::ma_vxfer(VFPRegister src, Register dest, Condition cc)
 {
     as_vxfer(dest, InvalidReg, src, FloatToCore, cc);
@@ -1362,16 +1375,14 @@ MacroAssemblerARM::ma_vxfer(VFPRegister src, Register dest1, Register dest2, Con
     as_vxfer(dest1, dest2, src, FloatToCore, cc);
 }
 
-void
+BufferOffset
 MacroAssemblerARM::ma_vdtr(LoadStore ls, const Operand &addr, VFPRegister rt, Condition cc)
 {
     int off = addr.disp();
     JS_ASSERT((off & 3) == 0);
     Register base = Register::FromCode(addr.base());
-    if (off > -1024 && off < 1024) {
-        as_vdtr(ls, rt, addr.toVFPAddr(), cc);
-        return;
-    }
+    if (off > -1024 && off < 1024)
+        return as_vdtr(ls, rt, addr.toVFPAddr(), cc);
 
     // We cannot encode this offset in a a single ldr.  Try to encode it as
     // an add scratch, base, imm; ldr dest, [scratch, +offset].
@@ -1383,60 +1394,62 @@ MacroAssemblerARM::ma_vdtr(LoadStore ls, const Operand &addr, VFPRegister rt, Co
         Operand2 sub_off = Imm8(-(off-bottom)); // sub_off = bottom - off
         if (!sub_off.invalid) {
             as_sub(ScratchRegister, base, sub_off, NoSetCond, cc); // - sub_off = off - bottom
-            as_vdtr(ls, rt, VFPAddr(ScratchRegister, VFPOffImm(bottom)), cc);
-            return;
+            return as_vdtr(ls, rt, VFPAddr(ScratchRegister, VFPOffImm(bottom)), cc);
         }
         sub_off = Imm8(-(off+neg_bottom));// sub_off = -neg_bottom - off
         if (!sub_off.invalid) {
             as_sub(ScratchRegister, base, sub_off, NoSetCond, cc); // - sub_off = neg_bottom + off
-            as_vdtr(ls, rt, VFPAddr(ScratchRegister, VFPOffImm(-neg_bottom)), cc);
-            return;
+            return as_vdtr(ls, rt, VFPAddr(ScratchRegister, VFPOffImm(-neg_bottom)), cc);
         }
     } else {
         Operand2 sub_off = Imm8(off-bottom); // sub_off = off - bottom
         if (!sub_off.invalid) {
             as_add(ScratchRegister, base, sub_off, NoSetCond, cc); //  sub_off = off - bottom
-            as_vdtr(ls, rt, VFPAddr(ScratchRegister, VFPOffImm(bottom)), cc);
-            return;
+            return as_vdtr(ls, rt, VFPAddr(ScratchRegister, VFPOffImm(bottom)), cc);
         }
         sub_off = Imm8(off+neg_bottom);// sub_off = neg_bottom + off
         if (!sub_off.invalid) {
             as_add(ScratchRegister, base, sub_off, NoSetCond,  cc); // sub_off = neg_bottom + off
-            as_vdtr(ls, rt, VFPAddr(ScratchRegister, VFPOffImm(-neg_bottom)), cc);
-            return;
+            return as_vdtr(ls, rt, VFPAddr(ScratchRegister, VFPOffImm(-neg_bottom)), cc);
         }
     }
     ma_add(base, Imm32(off), ScratchRegister, NoSetCond, cc);
-    as_vdtr(ls, rt, VFPAddr(ScratchRegister, VFPOffImm(0)), cc);
+    return as_vdtr(ls, rt, VFPAddr(ScratchRegister, VFPOffImm(0)), cc);
 }
 
-void
+BufferOffset
 MacroAssemblerARM::ma_vldr(VFPAddr addr, VFPRegister dest, Condition cc)
 {
-    as_vdtr(IsLoad, dest, addr, cc);
+    return as_vdtr(IsLoad, dest, addr, cc);
 }
-void
+BufferOffset
 MacroAssemblerARM::ma_vldr(const Operand &addr, VFPRegister dest, Condition cc)
 {
-    ma_vdtr(IsLoad, addr, dest, cc);
+    return ma_vdtr(IsLoad, addr, dest, cc);
+}
+BufferOffset
+MacroAssemblerARM::ma_vldr(VFPRegister src, Register base, Register index, int32_t shift, Condition cc)
+{
+    as_add(ScratchRegister, base, lsl(index, shift), NoSetCond, cc);
+    return ma_vldr(Operand(ScratchRegister, 0), src, cc);
 }
 
-void
+BufferOffset
 MacroAssemblerARM::ma_vstr(VFPRegister src, VFPAddr addr, Condition cc)
 {
-    as_vdtr(IsStore, src, addr, cc);
+    return as_vdtr(IsStore, src, addr, cc);
 }
 
-void
+BufferOffset
 MacroAssemblerARM::ma_vstr(VFPRegister src, const Operand &addr, Condition cc)
 {
-    ma_vdtr(IsStore, addr, src, cc);
+    return ma_vdtr(IsStore, addr, src, cc);
 }
-void
+BufferOffset
 MacroAssemblerARM::ma_vstr(VFPRegister src, Register base, Register index, int32_t shift, Condition cc)
 {
     as_add(ScratchRegister, base, lsl(index, shift), NoSetCond, cc);
-    ma_vstr(src, Operand(ScratchRegister, 0), cc);
+    return ma_vstr(src, Operand(ScratchRegister, 0), cc);
 }
 
 bool
@@ -3348,3 +3361,4 @@ MacroAssemblerARMCompat::jumpWithPatch(RepatchLabel *label, Condition cond)
     CodeOffsetJump ret(bo.getOffset(), pe.encode());
     return ret;
 }
+
