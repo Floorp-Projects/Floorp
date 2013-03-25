@@ -16,6 +16,8 @@
 #include "vm/SPSProfiler.h"
 #include "vm/StringBuffer.h"
 
+#include "ion/BaselineJIT.h"
+
 using namespace js;
 
 using mozilla::DebugOnly;
@@ -66,6 +68,15 @@ SPSProfiler::enable(bool enabled)
      * currently instrumented code is discarded
      */
     ReleaseAllJITCode(rt->defaultFreeOp());
+
+#ifdef JS_ION
+    /* Toggle SPS-related jumps on baseline jitcode.
+     * The call to |ReleaseAllJITCode| above will release most baseline jitcode, but not
+     * jitcode for scripts with active frames on the stack.  These scripts need to have
+     * their profiler state toggled so they behave properly.
+     */
+    ion::ToggleBaselineSPS(rt, enabled);
+#endif
 }
 
 /* Lookup the string for the function/script, creating one if necessary */
