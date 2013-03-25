@@ -77,7 +77,7 @@ class JS_FRIEND_API(BaseProxyHandler) {
         return false;
     }
 
-    virtual bool finalizeInBackground(HandleValue priv) {
+    virtual bool finalizeInBackground(Value priv) {
         /*
          * Called on creation of a proxy to determine whether its finalize
          * method can be finalized on the background thread.

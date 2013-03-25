@@ -67,10 +67,9 @@ public:
   virtual bool UseForPresentation(nsPresContext* aPresContext,
                                     nsMediaQueryResultCacheKey& aKey) = 0;
 
-  NS_MUST_OVERRIDE size_t   // non-virtual -- it is only called by subclasses
-    SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
-  virtual size_t
-    SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const = 0;
+  // non-virtual -- it is only called by subclasses
+  size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
+  virtual size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const = 0;
 
 protected:
   // to help implement nsIDOMCSSRule

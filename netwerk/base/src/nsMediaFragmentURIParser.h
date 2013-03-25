@@ -50,6 +50,12 @@ public:
   // True if a valid spatial media fragment indicated a clipping region.
   bool HasClip() const { return !mClip.empty(); }
 
+  // True if a valid spatial media fragment indicated a resolution.
+  bool HasResolution() const { return !mResolution.empty(); }
+
+  // True if a valid spatial media fragment indicated a resolution.
+  nsIntSize GetResolution() const { return mResolution.ref(); }
+
   // If a valid spatial media fragment indicated a clipping region,
   // returns the region. If not, returns an empty region. The unit
   // used depends on the value returned by GetClipUnit().
@@ -80,12 +86,14 @@ private:
   bool ParseNPTMM(nsDependentSubstring& aString, uint32_t& aMinute);
   bool ParseNPTSS(nsDependentSubstring& aString, uint32_t& aSecond);
   bool ParseXYWH(nsDependentSubstring aString);
+  bool ParseMozResolution(nsDependentSubstring aString);
 
   // Media fragment information.
   Maybe<double>    mStart;
   Maybe<double>    mEnd;
   Maybe<nsIntRect> mClip;
   ClipUnit         mClipUnit;
+  Maybe<nsIntSize> mResolution;
 };
 
 }} // namespace mozilla::net

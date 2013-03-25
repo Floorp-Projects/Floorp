@@ -612,6 +612,9 @@ endif
 ifdef ACCESSIBILITY
 EXTRA_DSO_LDOPTS += -DELAYLOAD:oleacc.dll
 endif
+ifdef MOZ_WEBRTC_IN_LIBXUL
+EXTRA_DSO_LDOPTS += -DELAYLOAD:msdmo.dll
+endif
 endif
 ifdef MOZ_GAMEPAD
 DXSDK := $(subst \,/,$(MOZ_DIRECTX_SDK_PATH))/Lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)

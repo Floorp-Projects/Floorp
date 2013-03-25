@@ -81,6 +81,9 @@ CPPSRCS		= \
 		SVGFEColorMatrixElement.cpp \
 		SVGFEComponentTransferElement.cpp \
 		SVGFECompositeElement.cpp \
+		SVGFEConvolveMatrixElement.cpp \
+		SVGFEDiffuseLightingElement.cpp \
+		SVGFEDisplacementMapElement.cpp \
 		SVGFEDistantLightElement.cpp \
 		SVGFEFloodElement.cpp \
 		SVGFEGaussianBlurElement.cpp \
@@ -89,6 +92,8 @@ CPPSRCS		= \
 		SVGFEMergeNodeElement.cpp \
 		SVGFEOffsetElement.cpp \
 		SVGFEPointLightElement.cpp \
+		SVGFESpecularLightingElement.cpp \
+		SVGFESpotLightElement.cpp \
 		SVGFETileElement.cpp \
 		SVGFilterElement.cpp \
 		SVGForeignObjectElement.cpp \
@@ -188,6 +193,9 @@ EXPORTS_mozilla/dom = \
 	SVGFEColorMatrixElement.h \
 	SVGFEComponentTransferElement.h \
 	SVGFECompositeElement.h \
+	SVGFEConvolveMatrixElement.h \
+	SVGFEDiffuseLightingElement.h \
+	SVGFEDisplacementMapElement.h \
 	SVGFEDistantLightElement.h \
 	SVGFEFloodElement.h \
 	SVGFEGaussianBlurElement.h \
@@ -196,6 +204,8 @@ EXPORTS_mozilla/dom = \
 	SVGFEMergeNodeElement.h \
 	SVGFEOffsetElement.h \
 	SVGFEPointLightElement.h \
+	SVGFESpecularLightingElement.h \
+	SVGFESpotLightElement.h \
 	SVGFETileElement.h \
 	SVGFilterElement.h \
 	SVGForeignObjectElement.h \

@@ -334,6 +334,12 @@ public:
    */
   static bool IsHTMLWhitespace(PRUnichar aChar);
 
+  /*
+   * Returns whether the character is an HTML whitespace (see IsHTMLWhitespace)
+   * or a nbsp character (U+00A0).
+   */
+  static bool IsHTMLWhitespaceOrNBSP(PRUnichar aChar);
+
   /**
    * Is the HTML local name a block element?
    */
@@ -1875,6 +1881,12 @@ public:
    * nullptr.
    */
   static nsIDocument* GetFullscreenAncestor(nsIDocument* aDoc);
+
+  /**
+   * Returns true if aWin and the current pointer lock document
+   * have common scriptable top window.
+   */
+  static bool IsInPointerLockContext(nsIDOMWindow* aWin);
 
   /**
    * Returns the time limit on handling user input before

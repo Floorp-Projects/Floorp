@@ -107,6 +107,7 @@ public:
     nsresult HasData(nsIURI* aURI, bool* exists);
 
     static nsXULPrototypeCache* GetInstance();
+    static nsXULPrototypeCache* MaybeGetInstance() { return sInstance; }
 
     static void ReleaseGlobals()
     {
@@ -114,6 +115,8 @@ public:
     }
 
     void MarkInCCGeneration(uint32_t aGeneration);
+    void MarkInGC(JSTracer* aTrc);
+    void FlushScripts();
 protected:
     friend nsresult
     NS_NewXULPrototypeCache(nsISupports* aOuter, REFNSIID aIID, void** aResult);
@@ -123,7 +126,6 @@ protected:
 
     static nsXULPrototypeCache* sInstance;
 
-    void FlushScripts();
     void FlushSkinFiles();
 
     nsRefPtrHashtable<nsURIHashKey,nsXULPrototypeDocument>  mPrototypeTable; // owns the prototypes
@@ -135,7 +137,7 @@ protected:
 
     nsInterfaceHashtable<nsURIHashKey, nsIStorageStream> mOutputStreamTable;
     nsInterfaceHashtable<nsURIHashKey, nsIObjectInputStream> mInputStreamTable;
- 
+
     // Bootstrap caching service
     nsresult BeginCaching(nsIURI* aDocumentURI);
 };

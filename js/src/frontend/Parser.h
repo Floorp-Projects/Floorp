@@ -371,10 +371,7 @@ struct Parser : private AutoGCRooter, public StrictModeGetter
     enum FunctionBodyType { StatementListBody, ExpressionBody };
     Node functionBody(FunctionSyntaxKind kind, FunctionBodyType type);
 
-    virtual bool strictMode()
-    {
-        return pc->sc->strict;
-    }
+    virtual bool strictMode() { return pc->sc->strict; }
 
   private:
     /*

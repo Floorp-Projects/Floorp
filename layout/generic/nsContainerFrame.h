@@ -501,9 +501,9 @@ protected:
    * Set the PresContext-stored nsFrameList named aPropID for this frame
    * to the given aFrameList, which must not be null.
    */
-  nsresult SetPropTableFrames(nsPresContext*                 aPresContext,
-                              nsFrameList*                   aFrameList,
-                              const FramePropertyDescriptor* aProperty);
+  void SetPropTableFrames(nsPresContext*                 aPresContext,
+                          nsFrameList*                   aFrameList,
+                          const FramePropertyDescriptor* aProperty);
 
   /**
    * Safely destroy the frames on the nsFrameList stored on aProp for this

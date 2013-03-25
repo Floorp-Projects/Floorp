@@ -2511,17 +2511,6 @@ frontend::EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *bod
         bce->switchToMain();
     }
 
-    if (bce->script->asmJS) {
-        /* asm.js means no funny stuff. */
-        JS_ASSERT(!funbox->argumentsHasLocalBinding());
-        JS_ASSERT(!funbox->isGenerator());
-
-        bce->switchToProlog();
-        if (Emit1(cx, bce, JSOP_LINKASMJS) < 0)
-            return false;
-        bce->switchToMain();
-    }
-
     if (!EmitTree(cx, bce, body))
         return false;
 
@@ -4368,7 +4357,10 @@ static JS_NEVER_INLINE bool
 EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     RootedFunction fun(cx, pn->pn_funbox->function());
-    JS_ASSERT(fun->isInterpreted());
+    if (fun->isNative()) {
+        JS_ASSERT(IsAsmJSModuleNative(fun->native()));
+        return true;
+    }
     if (fun->hasScript()) {
         JS_ASSERT(pn->functionIsHoisted());
         JS_ASSERT(bce->sc->isFunctionBox());
@@ -4385,7 +4377,6 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
         // Inherit most things (principals, version, etc) from the parent.
         Rooted<JSScript*> parent(cx, bce->script);
-        Rooted<JSObject*> enclosingScope(cx, EnclosingStaticScope(bce));
         CompileOptions options(cx);
         options.setPrincipals(parent->principals())
                .setOriginPrincipals(parent->originPrincipals)
@@ -4394,33 +4385,53 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                .setNoScriptRval(false)
                .setVersion(parent->getVersion())
                .setUserBit(parent->userBit);
-        Rooted<JSScript*> script(cx, JSScript::Create(cx, enclosingScope, false, options,
-                                                      parent->staticLevel + 1,
-                                                      bce->script->scriptSource(),
-                                                      funbox->bufStart, funbox->bufEnd));
-        if (!script)
-            return false;
 
-        script->bindings = funbox->bindings;
-
+        bool generateBytecode = true;
 #ifdef JS_ION
-        // Do asm.js compilation at the beginning of emitting to avoid
-        // compiling twice when JS_BufferIsCompilableUnit and to know whether
-        // to emit JSOP_LINKASMJS. Don't fold constants as this will
-        // misrepresent the source JS as written to the type checker.
-        if (funbox->useAsm && !CompileAsmJS(cx, *bce->tokenStream(), pn, script))
-            return false;
+        if (funbox->useAsm) {
+            RootedFunction moduleFun(cx);
+
+            // In a function like this:
+            //
+            //   function f() { "use asm"; ... }
+            //
+            // funbox->asmStart points to the '"', and funbox->bufEnd points
+            // one past the final '}'.  We need to exclude that final '}',
+            // so we use |funbox->bufEnd - 1| below.
+            //
+            if (!CompileAsmJS(cx, *bce->tokenStream(), pn, options,
+                              bce->script->scriptSource(), funbox->asmStart, funbox->bufEnd - 1,
+                              &moduleFun))
+                return false;
+
+            if (moduleFun) {
+                funbox->object = moduleFun;
+                generateBytecode = false;
+            }
+        }
 #endif
 
-        uint32_t lineNum = bce->parser->tokenStream.srcCoords.lineNum(pn->pn_pos.begin);
-        BytecodeEmitter bce2(bce, bce->parser, funbox, script, bce->evalCaller,
-                             bce->hasGlobalScope, lineNum, bce->selfHostingMode);
-        if (!bce2.init())
-            return false;
+        if (generateBytecode) {
+            Rooted<JSObject*> enclosingScope(cx, EnclosingStaticScope(bce));
+            Rooted<JSScript*> script(cx, JSScript::Create(cx, enclosingScope, false, options,
+                                                          parent->staticLevel + 1,
+                                                          bce->script->scriptSource(),
+                                                          funbox->bufStart, funbox->bufEnd));
+            if (!script)
+                return false;
 
-        /* We measured the max scope depth when we parsed the function. */
-        if (!EmitFunctionScript(cx, &bce2, pn->pn_body))
-            return false;
+            script->bindings = funbox->bindings;
+
+            uint32_t lineNum = bce->parser->tokenStream.srcCoords.lineNum(pn->pn_pos.begin);
+            BytecodeEmitter bce2(bce, bce->parser, funbox, script, bce->evalCaller,
+                                 bce->hasGlobalScope, lineNum, bce->selfHostingMode);
+            if (!bce2.init())
+                return false;
+
+            /* We measured the max scope depth when we parsed the function. */
+            if (!EmitFunctionScript(cx, &bce2, pn->pn_body))
+                return false;
+        }
     }
 
     /* Make the function object a literal in the outer script's pool. */

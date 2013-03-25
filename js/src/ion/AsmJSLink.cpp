@@ -12,6 +12,7 @@
 
 #include "AsmJS.h"
 #include "AsmJSModule.h"
+#include "frontend/BytecodeCompiler.h"
 
 using namespace js;
 using namespace js::ion;
@@ -157,9 +158,8 @@ ValidateGlobalConstant(JSContext *cx, AsmJSModule::Global global, HandleValue gl
 }
 
 static bool
-DynamicallyLinkModule(JSContext *cx, StackFrame *fp, HandleObject moduleObj)
+DynamicallyLinkModule(JSContext *cx, CallArgs args, AsmJSModule &module)
 {
-    AsmJSModule &module = AsmJSModuleObjectToModule(moduleObj);
     if (module.isLinked())
         return LinkFail(cx, "As a temporary limitation, modules cannot be linked more than "
                             "once. This limitation should be removed in a future release. To "
@@ -167,16 +167,16 @@ DynamicallyLinkModule(JSContext *cx, StackFrame *fp, HandleObject moduleObj)
                             "Function constructor).");
 
     RootedValue globalVal(cx, UndefinedValue());
-    if (fp->numActualArgs() > 0)
-        globalVal = fp->unaliasedActual(0);
+    if (args.length() > 0)
+        globalVal = args[0];
 
     RootedValue importVal(cx, UndefinedValue());
-    if (fp->numActualArgs() > 1)
-        importVal = fp->unaliasedActual(1);
+    if (args.length() > 1)
+        importVal = args[1];
 
     RootedValue bufferVal(cx, UndefinedValue());
-    if (fp->numActualArgs() > 2)
-        bufferVal = fp->unaliasedActual(2);
+    if (args.length() > 2)
+        bufferVal = args[2];
 
     Rooted<ArrayBufferObject*> heap(cx);
     if (module.hasArrayView()) {
@@ -186,7 +186,7 @@ DynamicallyLinkModule(JSContext *cx, StackFrame *fp, HandleObject moduleObj)
         heap = &bufferVal.toObject().asArrayBuffer();
 
         if (!IsPowerOfTwo(heap->byteLength()) || heap->byteLength() < AsmJSAllocationGranularity)
-            return LinkFail(cx, "ArrayBuffer byteLength must be a power of two greater than 4096");
+            return LinkFail(cx, "ArrayBuffer byteLength must be a power of two greater than or equal to 4096");
 
         if (!ArrayBufferObject::prepareForAsmJS(cx, heap))
             return LinkFail(cx, "Unable to prepare ArrayBuffer for asm.js use");
@@ -362,14 +362,76 @@ NewExportedFunction(JSContext *cx, const AsmJSModule::ExportedFunction &func,
     return fun;
 }
 
-bool
-js::LinkAsmJS(JSContext *cx, StackFrame *fp, MutableHandleValue rval)
+static bool
+HandleDynamicLinkFailure(JSContext *cx, CallArgs args, AsmJSModule &module, HandlePropertyName name)
 {
-    RootedObject moduleObj(cx, fp->fun()->nonLazyScript()->asmJS);
-    const AsmJSModule &module = AsmJSModuleObjectToModule(moduleObj);
+    if (cx->isExceptionPending())
+        return false;
 
-    if (!DynamicallyLinkModule(cx, fp, moduleObj))
-        return !cx->isExceptionPending();
+    const AsmJSModule::PostLinkFailureInfo &info = module.postLinkFailureInfo();
+
+    uint32_t length = info.bufEnd_ - info.bufStart_;
+    Rooted<JSFlatString*> src(cx, info.scriptSource_->substring(cx, info.bufStart_, info.bufEnd_));
+    const jschar *chars = src->chars();
+
+    RootedFunction fun(cx, NewFunction(cx, NullPtr(), NULL, 0, JSFunction::INTERPRETED,
+                                       cx->global(), name));
+    if (!fun)
+        return false;
+
+    AutoNameVector formals(cx);
+    formals.reserve(3);
+    if (module.globalArgumentName())
+        formals.infallibleAppend(module.globalArgumentName());
+    if (module.importArgumentName())
+        formals.infallibleAppend(module.importArgumentName());
+    if (module.bufferArgumentName())
+        formals.infallibleAppend(module.bufferArgumentName());
+
+    if (!frontend::CompileFunctionBody(cx, &fun, info.options_, formals, chars, length,
+                                       /* isAsmJSRecompile = */ true))
+        return false;
+
+    // Call the function we just recompiled.
+
+    unsigned argc = args.length();
+    JS_ASSERT(argc <= 3);
+
+    InvokeArgsGuard args2;
+    if (!cx->stack.pushInvokeArgs(cx, args.length(), &args2))
+        return false;
+
+    args2.setCallee(ObjectValue(*fun));
+    args2.setThis(args.thisv());
+    if (argc > 0)
+        args2[0] = args[0];
+    if (argc > 1)
+        args2[1] = args[1];
+    if (argc > 2)
+        args2[2] = args[2];
+
+    if (!Invoke(cx, args2))
+        return false;
+
+    args.rval().set(args2.rval());
+
+    return true;
+}
+
+JSBool
+js::LinkAsmJS(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedFunction fun(cx, args.callee().toFunction());
+    RootedObject moduleObj(cx, &AsmJSModuleObject(fun));
+    AsmJSModule &module = AsmJSModuleObjectToModule(moduleObj);
+
+    // If linking fails, recompile the function (including emitting bytecode)
+    // as if it's normal JS code.
+    if (!DynamicallyLinkModule(cx, args, module)) {
+        RootedPropertyName name(cx, fun->name());
+        return HandleDynamicLinkFailure(cx, args, module, name);
+    }
 
     if (module.numExportedFunctions() == 1) {
         const AsmJSModule::ExportedFunction &func = module.exportedFunction(0);
@@ -378,7 +440,7 @@ js::LinkAsmJS(JSContext *cx, StackFrame *fp, MutableHandleValue rval)
             if (!fun)
                 return false;
 
-            rval.set(ObjectValue(*fun));
+            args.rval().set(ObjectValue(*fun));
             return true;
         }
     }
@@ -402,8 +464,14 @@ js::LinkAsmJS(JSContext *cx, StackFrame *fp, MutableHandleValue rval)
             return false;
     }
 
-    rval.set(ObjectValue(*obj));
+    args.rval().set(ObjectValue(*obj));
     return true;
+}
+
+bool
+js::IsAsmJSModuleNative(js::Native native)
+{
+    return native == LinkAsmJS;
 }
 
 #endif  // defined(JS_ASMJS)

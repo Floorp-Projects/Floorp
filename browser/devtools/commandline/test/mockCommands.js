@@ -111,50 +111,34 @@ mockCommands.shutdown = function(opts) {
 
 mockCommands.option1 = { type: types.getType('string') };
 mockCommands.option2 = { type: types.getType('number') };
-
-var lastOption = undefined;
-var debug = false;
+mockCommands.option3 = { type: types.getType({
+  name: 'selection',
+  lookup: [
+    { name: 'one', value: 1 },
+    { name: 'two', value: 2 },
+    { name: 'three', value: 3 }
+  ]
+})};
 
 mockCommands.optionType = new SelectionType({
   name: 'optionType',
   lookup: [
     { name: 'option1', value: mockCommands.option1 },
-    { name: 'option2', value: mockCommands.option2 }
-  ],
-  noMatch: function() {
-    lastOption = undefined;
-    if (debug) {
-      console.log('optionType.noMatch: lastOption = undefined');
-    }
-  },
-  stringify: function(option) {
-    lastOption = option;
-    if (debug) {
-      console.log('optionType.stringify: lastOption = ', lastOption);
-    }
-    return SelectionType.prototype.stringify.call(this, option);
-  },
-  parse: function(arg) {
-    var promise = SelectionType.prototype.parse.call(this, arg);
-    promise.then(function(conversion) {
-      lastOption = conversion.value;
-      if (debug) {
-        console.log('optionType.parse: lastOption = ', lastOption);
-      }
-    });
-    return promise;
-  }
+    { name: 'option2', value: mockCommands.option2 },
+    { name: 'option3', value: mockCommands.option3 }
+  ]
 });
 
 mockCommands.optionValue = new DelegateType({
   name: 'optionValue',
-  delegateType: function() {
-    if (lastOption && lastOption.type) {
-      return lastOption.type;
+  delegateType: function(context) {
+    if (context != null) {
+      var option = context.getArgsObject().optionType;
+      if (option != null) {
+        return option.type;
+      }
     }
-    else {
-      return types.getType('blank');
-    }
+    return types.getType('blank');
   }
 });
 
@@ -370,21 +354,18 @@ mockCommands.tsg = {
       ]
     },
     {
-      group: 'Second',
-      params: [
-        {
-          name: 'txt2',
-          type: 'string',
-          defaultValue: 'd',
-          description: 'txt2 param'
-        },
-        {
-          name: 'num',
-          type: { name: 'number', min: 40 },
-          defaultValue: 42,
-          description: 'num param'
-        }
-      ]
+      name: 'txt2',
+      type: 'string',
+      defaultValue: 'd',
+      description: 'txt2 param',
+      option: 'Second'
+    },
+    {
+      name: 'num',
+      type: { name: 'number', min: 40 },
+      defaultValue: 42,
+      description: 'num param',
+      option: 'Second'
     }
   ],
   exec: createExec('tsg')

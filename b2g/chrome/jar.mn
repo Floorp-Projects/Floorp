@@ -30,6 +30,7 @@ chrome.jar:
 % override chrome://global/skin/media/videocontrols.css chrome://browser/content/touchcontrols.css
 % override chrome://global/content/aboutCertError.xhtml chrome://browser/content/aboutCertError.xhtml
 
+  content/ErrorPage.js                  (content/ErrorPage.js)
   content/netError.xhtml                (content/netError.xhtml)
   content/netError.css                  (content/netError.css)
   content/aboutCertError.xhtml          (content/aboutCertError.xhtml)

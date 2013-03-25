@@ -2028,13 +2028,17 @@ class ScriptFrameIter : public StackIter
 class NonBuiltinScriptFrameIter : public StackIter
 {
     void settle() {
-        while (!done() && (!isScript() || (isFunctionFrame() && callee()->isSelfHostedBuiltin())))
+        while (!done() && (!isScript() || script()->selfHosted))
             StackIter::operator++();
     }
 
   public:
     NonBuiltinScriptFrameIter(JSContext *cx, StackIter::SavedOption opt = StackIter::STOP_AT_SAVED)
         : StackIter(cx, opt) { settle(); }
+
+    NonBuiltinScriptFrameIter(const StackIter::Data &data)
+      : StackIter(data)
+    {}
 
     NonBuiltinScriptFrameIter &operator++() { StackIter::operator++(); settle(); return *this; }
 };
