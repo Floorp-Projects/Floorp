@@ -805,8 +805,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
     // Calculate and write out return address.
     // The icEntry in question MUST have a ICCall_Fallback as its fallback stub.
     ICEntry &icEntry = baselineScript->icEntryFromPCOffset(pcOff);
-    ICFallbackStub *fallbackStub = icEntry.firstStub()->getChainFallback();
-    JS_ASSERT(fallbackStub->isCall_Fallback());
+    JS_ASSERT(icEntry.firstStub()->getChainFallback()->isCall_Fallback());
     if (!builder.writePtr(baselineScript->returnAddressForIC(icEntry), "ReturnAddr"))
         return false;
 
