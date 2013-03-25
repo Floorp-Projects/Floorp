@@ -2942,10 +2942,10 @@ public:
     
     // return storage used by this run, for memory reporter;
     // nsTransformedTextRun needs to override this as it holds additional data
-    virtual NS_MUST_OVERRIDE size_t
-        SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf);
-    virtual NS_MUST_OVERRIDE size_t
-        SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf);
+    virtual size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf)
+      MOZ_MUST_OVERRIDE;
+    virtual size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf)
+      MOZ_MUST_OVERRIDE;
 
     // Get the size, if it hasn't already been gotten, marking as it goes.
     size_t MaybeSizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf)  {

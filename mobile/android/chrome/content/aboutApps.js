@@ -109,7 +109,7 @@ function addApplication(aApp) {
   let manifest = new ManifestHelper(aApp.manifest, aApp.origin);
 
   let container = document.createElement("div");
-  container.className = "app";
+  container.className = "app list-item";
   container.setAttribute("contextmenu", "appmenu");
   container.setAttribute("id", "app-" + aApp.origin);
   container.setAttribute("mozApp", aApp.origin);

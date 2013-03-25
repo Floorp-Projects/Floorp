@@ -2,62 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-html {
-  font-family: Roboto,"Droid Sans",helvetica,arial,clean,sans-serif;
-  font-size: 18px;
-  background-color: #ced7de;
-  -moz-text-size-adjust: none;
-}
-
-body {
-  margin: 0;
-}
-
-#addons-header {
-  color: black;
-  padding: 8px;
-  -moz-padding-start: 25px;
-  font-size: 20px;
-  font-weight: bold;
-  border-bottom: 2px solid;
-  -moz-border-bottom-colors: #ff9100 #f27900;
-}
-
-#addons-header > div {
-  width: 100%;
-  height: 44px;
-  display: -moz-box;
-  -moz-box-align: center;
-}
-
-#addons-header > div > div {
-  -moz-box-flex: 1;
-}
-
-.addon-item {
-  color: black;
-  background-color: #e6e9eb;
-  border-bottom: 2px solid;
-  -moz-border-bottom-colors: #ffffff #bac2ac;
-  position: relative;
-}
-
-.addon-item[isDisabled="true"] {
-  color: #999999;
-}
-
 .inner {
   background-color: #eef2f5;
-  min-height: 70px;
-  padding: 8px;
+  min-height: 3.8em;
+  padding: 0.5em;
 
   /* make room for the favicon */
-  -moz-margin-start: 82px;
-}
-
-.addon-item:active,
-.addon-item:active > .inner {
-  background-image: none;
+  -moz-margin-start: 4.5em;
 }
 
 .details {
@@ -68,23 +19,22 @@ body {
   display: inline;
 }
 
-.title {
-  font-size: 22px;
-  font-weight: bold;
-}
-
 .version {
   /* title is not localized, so keep the margin on the left side */
-  margin-left: 12px;
+  margin-left: .67em;
 }
 
 .tag {
   float: right;
-  margin-left: 12px;
+  margin-left: .67em;
 
   /* compensate for the title baseline */
   position: relative;
   bottom: -3px;
+}
+
+#header-button {
+  background-image: url("chrome://browser/skin/images/addons-amo-hdpi.png");
 }
 
 .description {
@@ -99,65 +49,17 @@ body {
   border-top: 2px solid;
   -moz-border-top-colors: #bac2ac #ffffff;
   font-weight: bold;
-  padding: 8px;
+  padding: 0.5em;
   width: 100%;
-}
-
-.buttons {
-  display: -moz-box;
-  -moz-box-orient: horizontal;
-  width: 100%;
-}
-
-.buttons > button {
-  -moz-appearance: none;
-  color: black;
-  font-size: 18px !important;
-  border: 1px solid transparent;
-  border-top-color: #bac2ac;
-  -moz-border-start-color: #bac2ac;
-  background-image: none;
-  background-color: #edf0f5;
-  border-radius: 0px !important;
-  -moz-box-flex: 1;
-  padding: 20px 8px;
-}
-
-.buttons > button[disabled="true"] {
-  color: #b5b5b5;
-}
-
-.buttons:first-child {
-  -moz-border-start-color: transparent;
-}
-
-body[dir="ltr"] .favicon {
-  left: 25px;
-}
-
-body[dir="ltr"] .favicon {
-  right: 25px;
-}
-
-.favicon {
-  border: none;
-  top: 27px;
-  width: 32px;
-  height: 32px;
-  position: absolute;
-}
-
-.addon-item[isDisabled="true"] .favicon {
-  opacity: 0.3;
 }
 
 .options-header {
   font-weight: bold;
-  padding: 18px 24px;
+  padding: 1em 1.3em;
 }
 
 .options-box {
-  margin: 0 12px;
+  margin: 0 .67em;
 }
 
 .addon-item[isDisabled="true"] .options-header,
@@ -170,7 +72,7 @@ body[dir="ltr"] .favicon {
 }
 
 setting {
-  padding: 18px 12px;
+  padding: 1em .67em;
   border-top: 2px solid;
   -moz-border-top-colors: #bac2ac #ffffff;
   -moz-box-align: center;
@@ -197,13 +99,13 @@ setting > vbox {
 /* Put setting textboxes on a separate row */
 setting[type="integer"],
 setting[type="string"] {
-  -moz-box-align: stretch;
+  -moz-box-align: center;
   -moz-box-orient: vertical;
 }
 
 .preferences-alignment > textbox {
-  margin: 12px 0 0 0;
-  font-size: 22px !important;
+  margin: .67em 0 0 0;
+  font-size: 1.2em !important;
 }
 
 checkbox {
@@ -218,8 +120,8 @@ checkbox:not([label]) > .checkbox-label-box {
 .checkbox-check {
   background: url("chrome://browser/skin/images/checkbox_unchecked.png") no-repeat 50% 50%;
   border: 0 transparent;
-  width: 48px;
-  height: 48px;
+  width: 2.6em;
+  height: 2.6em;
 }
 
 setting:active checkbox > .checkbox-spacer-box > .checkbox-check {
@@ -256,7 +158,7 @@ textbox {
 }
 
 .textbox-input-box {
-  padding: 8px 12px;
+  padding: .4em .67em;
 }
 
 /* Menulist */
@@ -269,7 +171,7 @@ menulist {
   border-radius: 5px;
   border-color: rgb(94,128,153);
   border-style: solid;
-  padding: 8px 12px;
+  padding: .4em .67em;
   background: white;
   border: 1px solid #cacdd5;
   border-style: solid;
@@ -281,14 +183,14 @@ menulist {
   background-color: transparent !important;
 }
 
-menulist > menupopup > menuitem > label{
--moz-padding-start:3px !important;
--moz-padding-end:7px !important;
+menulist > menupopup > menuitem > label {
+  -moz-padding-start: 3px !important;
+  -moz-padding-end: 7px !important;
 }
 
 menulist > dropmarker {
-  height: 32px;
-  width: 32px;
+  height: 1.8em;
+  width: 1.8em;
   margin-left: @margin_snormal@;
   background-color: transparent; /* for windows */
   border: none;                  /* for windows */

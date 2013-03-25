@@ -246,7 +246,7 @@ private:
 
   // Weak refs to our DOMSVGPathSeg items. The items are friends and take care
   // of clearing our pointer to them when they die.
-  nsTArray<ItemProxy> mItems;
+  FallibleTArray<ItemProxy> mItems;
 
   // Strong ref to our element to keep it alive. We hold this not only for
   // ourself, but also for our DOMSVGPathSeg items too.

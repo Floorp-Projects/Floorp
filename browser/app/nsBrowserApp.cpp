@@ -191,6 +191,10 @@ static int do_main(int argc, char* argv[], nsIFile *xreDirectory)
       argv[1] = argv[0];
       argv++;
       argc--;
+    } else if (IsArg(argv[1], "BackgroundSessionClosed")) {
+      // This command line flag is used for indirect shutdowns, the OS
+      // relaunches Metro Firefox with this command line arg.
+      mainFlags = XRE_MAIN_FLAG_USE_METRO;
     } else {
       // This command-line flag is used to test the metro browser in a desktop
       // environment.

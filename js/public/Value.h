@@ -1104,7 +1104,7 @@ class Value
      * Private setters/getters allow the caller to read/write arbitrary types
      * that fit in the 64-bit payload. It is the caller's responsibility, after
      * storing to a value with setPrivateX to read only using getPrivateX.
-     * Privates values are given a type type which ensures they are not marked.
+     * Privates values are given a type which ensures they are not marked.
      */
 
     void setPrivate(void *ptr) {

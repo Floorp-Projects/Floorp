@@ -90,7 +90,7 @@ exports.testDefault = function(options) {
 
 exports.testNullDefault = function(options) {
   forEachType(options, { defaultValue: null }, function(type) {
-    assert.is(type.stringify(null), '', 'stringify(null) for ' + type.name);
+    assert.is(type.stringify(null, null), '', 'stringify(null) for ' + type.name);
   });
 };
 

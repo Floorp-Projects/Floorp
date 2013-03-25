@@ -172,6 +172,14 @@ HTTP(..) == flexbox-intrinsic-sizing-horiz-1b.xhtml flexbox-intrinsic-sizing-hor
 == flexbox-mbp-horiz-3.xhtml             flexbox-mbp-horiz-3-ref.xhtml
 == flexbox-mbp-horiz-3-reverse.xhtml     flexbox-mbp-horiz-3-reverse-ref.xhtml
 
+# Tests for flex containers with the "overflow" property set
+== flexbox-overflow-horiz-1.html flexbox-overflow-horiz-1-ref.html
+== flexbox-overflow-horiz-2.html flexbox-overflow-horiz-2-ref.html
+== flexbox-overflow-horiz-3.html flexbox-overflow-horiz-3-ref.html
+== flexbox-overflow-vert-1.html flexbox-overflow-vert-1-ref.html
+== flexbox-overflow-vert-2.html flexbox-overflow-vert-2-ref.html
+== flexbox-overflow-vert-3.html flexbox-overflow-vert-3-ref.html
+
 # Tests for flexbox in an iframe that gets resized.
 skip-if(B2G) == flexbox-resizeviewport-1.xhtml flexbox-resizeviewport-1-ref.xhtml
 

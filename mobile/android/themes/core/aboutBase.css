@@ -1,0 +1,130 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+html {
+  font-family: Roboto,"Droid Sans",helvetica,arial,clean,sans-serif;
+  font-size: 12px;
+  background-color: #ced7de;
+  -moz-text-size-adjust: none;
+}
+
+body {
+  margin: 0;
+}
+
+.header {
+  color: black;
+  font-size: 1.1em;
+  font-weight: bold;
+  border-bottom: 2px solid;
+  -moz-border-bottom-colors: #ff9100 #f27900;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.header > div {
+  flex: 1;
+  padding: 1em;
+  -moz-padding-start: 1.5em;
+}
+
+#header-button {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: 33px 33px;
+  flex: 0;
+  height: 100%;
+}
+
+.list {
+  padding: 0px;
+  margin: 0px;
+  width: 100%;
+}
+
+.list-item {
+  color: black;
+  background-color: #e6e9eb;
+  border-bottom: 2px solid;
+  -moz-border-bottom-colors: #ffffff #bac2ac;
+  position: relative;
+  list-style-type: none;
+  list-style-image: none;
+  margin: 0px;
+  padding: 0px;
+}
+
+.list-item[isDisabled="true"] {
+  color: #999999;
+}
+
+.list-item:active,
+.list-item:active > .inner {
+  background-image: none;
+}
+
+/* Icons */
+body[dir="ltr"] .icon {
+  left: 1.35em;
+}
+
+body[dir="ltr"] .icon {
+  right: 1.35em;
+}
+
+.icon {
+  border: none;
+  top: 1.35em;
+  width: 1.8em;
+  height: 1.8em;
+  position: absolute;
+  pointer-events: none;
+}
+
+.list-item[isDisabled="true"] .favicon {
+  opacity: 0.3;
+}
+
+/* Buttons */
+.buttons {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+}
+
+.buttons > button {
+  -moz-appearance: none;
+  color: black;
+  font-size: 1em !important;
+  border: 1px solid transparent;
+  border-top-color: #bac2ac;
+  -moz-border-start-color: #bac2ac;
+  background-image: none;
+  background-color: #edf0f5;
+  border-radius: 0px !important;
+
+  flex: 1;
+  padding: 0.75em 0.5em;
+}
+
+.buttons > button[disabled="true"] {
+  color: #b5b5b5;
+}
+
+.buttons:first-child {
+  -moz-border-start-color: transparent;
+}
+
+.row {
+  display: flex;
+  width: 100%;
+}
+
+.title {
+  font-size: 1.2em;
+  font-weight: bold;
+  overflow: hidden;
+  flex: 1;
+}

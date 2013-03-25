@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=853571
+-->
+<window title="Mozilla Bug 853571"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=853571"
+     target="_blank">Mozilla Bug 853571</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 853571 **/
+  SimpleTest.waitForExplicitFinish();
+  const Cu = Components.utils;
+
+  function mainTest() {
+    var iwin = $('ifr').contentWindow;
+
+    // Test with a simple sandbox with no prototype.
+    checkSource(iwin, new Cu.Sandbox(iwin), null, "should get null source with no sandboxPrototype");
+    yield;
+
+    // Test with a sandboxPrototype.
+    checkSource(iwin, new Cu.Sandbox(iwin, { sandboxPrototype: iwin }), iwin, "should be able to impersonate the prototype");
+    yield;
+
+    SimpleTest.finish();
+  }
+
+  let gen = mainTest();
+
+  function checkSource(target, sb, expectedSource, message) {
+    target.addEventListener("message", function listener(event) {
+      target.removeEventListener("message", listener);
+      is(event.source, expectedSource, message);
+      gen.next();
+    });
+
+    sb.target = target;
+    Cu.evalInSandbox("target.postMessage('foo', '*');", sb);
+  }
+
+
+  ]]>
+  </script>
+  <iframe id="ifr" type="content" onload="gen.next();" src="http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html" />
+</window>

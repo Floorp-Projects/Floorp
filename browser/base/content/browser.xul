@@ -450,6 +450,13 @@
       </popupnotificationcontent>
     </popupnotification>
 
+    <popupnotification id="pointerLock-notification" hidden="true">
+      <popupnotificationcontent orient="vertical" align="start">
+        <separator class="thin"/>
+        <label id="pointerLock-cancel" value="&pointerLock.notification.message;"/>
+      </popupnotificationcontent>
+    </popupnotification>
+
     <popupnotification id="mixed-content-blocked-notification" hidden="true">
       <popupnotificationcontent orient="vertical" align="start">
         <separator/>
@@ -580,6 +587,7 @@
             <image id="mixed-content-blocked-notification-icon" class="notification-anchor-icon" role="button"/>
             <image id="webRTC-shareDevices-notification-icon" class="notification-anchor-icon" role="button"/>
             <image id="webRTC-sharingDevices-notification-icon" class="notification-anchor-icon" role="button"/>
+            <image id="pointerLock-notification-icon" class="notification-anchor-icon" role="button"/>
           </box>
           <!-- Use onclick instead of normal popup= syntax since the popup
                code fires onmousedown, and hence eats our favicon drag events.

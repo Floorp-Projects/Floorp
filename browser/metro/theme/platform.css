@@ -485,20 +485,20 @@ richgriditem .richgrid-icon-box {
 }
 
 
-richgriditem[customColorPresent] {
+richgriditem[customColor] {
   color: #f1f1f1;
 }
-richgriditem[customImagePresent] {
+richgriditem[customImage] {
   color: #1a1a1a;
 }
 
 
-richgriditem[customColorPresent] .richgrid-icon-box {
+richgriditem[customColor] .richgrid-icon-box {
   opacity: 0.8;
   background-color: #fff;
 }
 
-.richgrid-item-content[customImagePresent] {
+.richgrid-item-content[customImage] {
   height: 120px;
   width: 200px;
   background-size: cover;
@@ -509,7 +509,7 @@ richgriditem[customColorPresent] .richgrid-icon-box {
 }
 
 /* hide icon if there is an image background */
-.richgrid-icon-container[customImagePresent] {
+.richgrid-icon-container[customImage] {
   visibility: collapse;
 }
 
@@ -520,7 +520,7 @@ richgriditem[customColorPresent] .richgrid-icon-box {
   padding-left: 0px !important;
 }
 
-.richgrid-item-content[customImagePresent] > .richgrid-item-desc {
+.richgrid-item-content[customImage] > .richgrid-item-desc {
   background: hsla(0,2%,98%,.95);
   /*margin-bottom: 0px;
   margin-right: 0px;*/

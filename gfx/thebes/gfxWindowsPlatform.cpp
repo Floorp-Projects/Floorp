@@ -36,9 +36,7 @@
 #endif
 
 #include "gfxUserFontSet.h"
-#ifdef MOZ_METRO
 #include "nsWindowsHelpers.h"
-#endif
 
 #include <string>
 
@@ -49,7 +47,6 @@ using namespace mozilla::gfx;
 #include "gfxD2DSurface.h"
 
 #include <d3d10_1.h>
-#include <dxgi.h>
 
 #include "mozilla/gfx/2D.h"
 
@@ -88,6 +85,12 @@ extern "C" {
 using namespace mozilla;
 
 #ifdef CAIRO_HAS_D2D_SURFACE
+
+static const char *kFeatureLevelPref =
+  "gfx.direct3d.last_used_feature_level_idx";
+static const int kSupportedFeatureLevels[] =
+  { D3D10_FEATURE_LEVEL_10_1, D3D10_FEATURE_LEVEL_10_0,
+    D3D10_FEATURE_LEVEL_9_3 };
 
 NS_MEMORY_REPORTER_IMPLEMENT(
     D2DCache,
@@ -504,6 +507,42 @@ gfxWindowsPlatform::UpdateRenderMode()
     InitBackendPrefs(canvasMask, contentMask);
 }
 
+#ifdef CAIRO_HAS_D2D_SURFACE
+HRESULT
+gfxWindowsPlatform::CreateDevice(nsRefPtr<IDXGIAdapter1> &adapter1,
+                                 int featureLevelIndex)
+{
+  nsModuleHandle d3d10module(LoadLibrarySystem32(L"d3d10_1.dll"));
+  if (!d3d10module)
+    return E_FAIL;
+  D3D10CreateDevice1Func createD3DDevice =
+    (D3D10CreateDevice1Func)GetProcAddress(d3d10module, "D3D10CreateDevice1");
+  if (!createD3DDevice)
+    return E_FAIL;
+
+  nsRefPtr<ID3D10Device1> device;
+  HRESULT hr =
+    createD3DDevice(adapter1, D3D10_DRIVER_TYPE_HARDWARE, NULL,
+                    D3D10_CREATE_DEVICE_BGRA_SUPPORT |
+                    D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
+                    static_cast<D3D10_FEATURE_LEVEL1>(kSupportedFeatureLevels[featureLevelIndex]),
+                    D3D10_1_SDK_VERSION, getter_AddRefs(device));
+
+  // If we fail here, the DirectX version or video card probably
+  // changed.  We previously could use 10.1 but now we can't
+  // anymore.  Revert back to doing a 10.0 check first before
+  // the 10.1 check.
+  if (device) {
+    mD2DDevice = cairo_d2d_create_device_from_d3d10device(device);
+
+    // Setup a pref for future launch optimizaitons
+    Preferences::SetInt(kFeatureLevelPref, featureLevelIndex);
+  }
+
+  return device ? S_OK : hr;
+}
+#endif
+
 void
 gfxWindowsPlatform::VerifyD2DDevice(bool aAttemptForce)
 {
@@ -519,154 +558,67 @@ gfxWindowsPlatform::VerifyD2DDevice(bool aAttemptForce)
 
     mozilla::ScopedGfxFeatureReporter reporter("D2D", aAttemptForce);
 
-    HMODULE d3d10module = LoadLibraryA("d3d10_1.dll");
-    D3D10CreateDevice1Func createD3DDevice = (D3D10CreateDevice1Func)
-        GetProcAddress(d3d10module, "D3D10CreateDevice1");
     nsRefPtr<ID3D10Device1> device;
 
-    if (createD3DDevice) {
-        HMODULE dxgiModule = LoadLibraryA("dxgi.dll");
-        CreateDXGIFactory1Func createDXGIFactory1 = (CreateDXGIFactory1Func)
-            GetProcAddress(dxgiModule, "CreateDXGIFactory1");
+    nsModuleHandle dxgiModule(LoadLibrarySystem32(L"dxgi.dll"));
+    CreateDXGIFactory1Func createDXGIFactory1 = (CreateDXGIFactory1Func)
+        GetProcAddress(dxgiModule, "CreateDXGIFactory1");
 
-        // Try to use a DXGI 1.1 adapter in order to share resources
-        // across processes.
-        nsRefPtr<IDXGIAdapter1> adapter1;
-        if (createDXGIFactory1) {
-            nsRefPtr<IDXGIFactory1> factory1;
-            HRESULT hr = createDXGIFactory1(__uuidof(IDXGIFactory1),
-                                            getter_AddRefs(factory1));
+    int supportedFeatureLevelsCount = ArrayLength(kSupportedFeatureLevels);
+    // If we're not running in Metro don't allow DX9.3
+    if (!IsRunningInWindowsMetro()) {
+      supportedFeatureLevelsCount--;
+    }
 
-            if (FAILED(hr) || !factory1) {
-              // This seems to happen with some people running the iZ3D driver.
-              // They won't get acceleration.
-              return;
-            }
+    // It takes a lot of time (5-10% of startup time or ~100ms) to do both
+    // a createD3DDevice on D3D10_FEATURE_LEVEL_10_0.  We therefore store
+    // the last used feature level to go direct to that.
+    int featureLevelIndex = Preferences::GetInt(kFeatureLevelPref, 0);
+    if (featureLevelIndex >= supportedFeatureLevelsCount || featureLevelIndex < 0)
+      featureLevelIndex = 0;
 
-            bool checkDX10 =
-              Preferences::GetBool("gfx.direct3d.checkDX10", true);
-            hr = factory1->EnumAdapters1(0, getter_AddRefs(adapter1));
-            if (SUCCEEDED(hr) && adapter1) {
-              // We have an adapter, check if we've ever found that
-              // createD3DDevice fails for both DX10 and DX10.1.
-              if (!checkDX10) {
-                // Even if the CheckInterfaceSupport call fails, the
-                // createD3DDevice call may still succeed.
-                // We only check it here to reset the pref which is used to skip
-                // the createD3DDevice calls.  This is done in case hardware
-                // changes.
-                hr = adapter1->CheckInterfaceSupport(__uuidof(ID3D10Device),
-                                                     nullptr);
-                if (SUCCEEDED(hr)) {
-                  checkDX10 = true;
-                  Preferences::SetBool("gfx.direct3d.checkDX10", true);
-                }
-              }
-            } else {
-              // We should return and not accelerate if we can't obtain
-              // an adapter.
-              return;
-            }
+    // Try to use a DXGI 1.1 adapter in order to share resources
+    // across processes.
+    nsRefPtr<IDXGIAdapter1> adapter1;
+    if (createDXGIFactory1) {
+        nsRefPtr<IDXGIFactory1> factory1;
+        HRESULT hr = createDXGIFactory1(__uuidof(IDXGIFactory1),
+                                        getter_AddRefs(factory1));
 
-            // If we know that the DX10 calls have failed in the past, just
-            // bail out early.  This value will be reset if the adapter's
-            // CheckInterfaceSupport call ever succeeds with ID3D10Device
-            if (!checkDX10) {
-              return;
-            }
+        if (FAILED(hr) || !factory1) {
+          // This seems to happen with some people running the iZ3D driver.
+          // They won't get acceleration.
+          return;
         }
 
-        // It takes a lot of time (5-10% of startup time or ~100ms) to do both
-        // a createD3DDevice on D3D10_FEATURE_LEVEL_10_0 and 
-        // D3D10_FEATURE_LEVEL_10_1.  Therefore we set a pref if we ever get
-        // 10.1 to work and we use that first if the pref is set.
-        // Going direct to a 10.1 check only takes 20-30ms.
-        // The initialization of hr doesn't matter here because it will get
-        // overwritten whether or not the preference is set.
-        //   - If the preferD3D10_1 pref is set it gets overwritten immediately.
-        //   - If the preferD3D10_1 pref is not set, the if condition after
-        //     the one that follows us immediately will short circuit before 
-        //     checking FAILED(hr) and will again get overwritten immediately.
-        // We initialize it here just so it does not appear to be an
-        // uninitialized value.
-        HRESULT hr = E_FAIL;
-        bool preferD3D10_1 = 
-          Preferences::GetBool("gfx.direct3d.prefer_10_1", false);
-        if (preferD3D10_1) {
-            hr = createD3DDevice(
-                  adapter1, 
-                  D3D10_DRIVER_TYPE_HARDWARE,
-                  NULL,
-                  D3D10_CREATE_DEVICE_BGRA_SUPPORT |
-                  D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
-                  D3D10_FEATURE_LEVEL_10_1,
-                  D3D10_1_SDK_VERSION,
-                  getter_AddRefs(device));
-
-            // If we fail here, the DirectX version or video card probably
-            // changed.  We previously could use 10.1 but now we can't
-            // anymore.  Revert back to doing a 10.0 check first before
-            // the 10.1 check.
-            if (FAILED(hr)) {
-                Preferences::SetBool("gfx.direct3d.prefer_10_1", false);
-            } else {
-                mD2DDevice = cairo_d2d_create_device_from_d3d10device(device);
-            }
+        hr = factory1->EnumAdapters1(0, getter_AddRefs(adapter1));
+        if (FAILED(hr) || !adapter1) {
+          // We should return and not accelerate if we can't obtain
+          // an adapter.
+          return;
         }
+    }
 
-        if (!preferD3D10_1 || FAILED(hr)) {
-            // If preferD3D10_1 is set and 10.1 failed, fall back to 10.0.
-            // if preferD3D10_1 is not yet set, then first try to create
-            // a 10.0 D3D device, then try to see if 10.1 works.
-            nsRefPtr<ID3D10Device1> device1;
-            hr = createD3DDevice(
-                  adapter1, 
-                  D3D10_DRIVER_TYPE_HARDWARE,
-                  NULL,
-                  D3D10_CREATE_DEVICE_BGRA_SUPPORT |
-                  D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
-                  D3D10_FEATURE_LEVEL_10_0,
-                  D3D10_1_SDK_VERSION,
-                  getter_AddRefs(device1));
+    // Start with the last used feature level, and move to lower DX versions
+    // until we find one that works.
+    HRESULT hr = E_FAIL;
+    for (int i = featureLevelIndex; i < supportedFeatureLevelsCount; i++) {
+      hr = CreateDevice(adapter1, i);
+      // If it succeeded we found the first available feature level
+      if (SUCCEEDED(hr))
+        break;
+    }
 
-            if (SUCCEEDED(hr)) {
-                device = device1;
-                if (preferD3D10_1) {
-                  mD2DDevice = 
-                    cairo_d2d_create_device_from_d3d10device(device);
-                }
-            }
+    // If we succeeded in creating a device, try for a newer device
+    // that we haven't tried yet.
+    if (SUCCEEDED(hr)) {
+      for (int i = featureLevelIndex - 1; i >= 0; i--) {
+        hr = CreateDevice(adapter1, i);
+        // If it failed then we don't have new hardware
+        if (FAILED(hr)) {
+          break;
         }
-
-        // If preferD3D10_1 is not yet set and 10.0 succeeded
-        if (!preferD3D10_1 && SUCCEEDED(hr)) {
-            // We have 10.0, let's try 10.1.  This second check will only
-            // ever be done once if it succeeds.  After that an option
-            // will be set to prefer using 10.1 before trying 10.0.
-            // In the case that 10.1 fails, it won't be a long operation
-            // like it is when 10.1 succeeds, so we don't need to optimize
-            // the case where 10.1 is not supported, but 10.0 is supported.
-            nsRefPtr<ID3D10Device1> device1;
-            hr = createD3DDevice(
-                  adapter1, 
-                  D3D10_DRIVER_TYPE_HARDWARE,
-                  NULL,
-                  D3D10_CREATE_DEVICE_BGRA_SUPPORT |
-                  D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
-                  D3D10_FEATURE_LEVEL_10_1,
-                  D3D10_1_SDK_VERSION,
-                  getter_AddRefs(device1));
-
-            if (SUCCEEDED(hr)) {
-                device = device1;
-                Preferences::SetBool("gfx.direct3d.prefer_10_1", true);
-            }
-            mD2DDevice = cairo_d2d_create_device_from_d3d10device(device);
-        }
-
-        if (FAILED(hr) || !device) {
-          Preferences::SetBool("gfx.direct3d.checkDX10", false);
-        }
+      }
     }
 
     if (!mD2DDevice && aAttemptForce) {

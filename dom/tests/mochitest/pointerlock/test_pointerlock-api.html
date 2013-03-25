@@ -70,6 +70,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         const isWinXP = navigator.userAgent.indexOf("Windows NT 5.1") != -1;
         const isOSXLion = navigator.userAgent.indexOf("Mac OS X 10.7") != -1;
         const isOSXMtnLion = navigator.userAgent.indexOf("Mac OS X 10.8") != -1;
+        const isWin8 = navigator.userAgent.indexOf("Windows NT 6.2") != -1;
 
         function finish() {
           SpecialPowers.clearUserPref("full-screen-api.enabled");
@@ -81,6 +82,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         function nextTest() {
           if (isWinXP) {
             todo(false, "Can't reliably run full-screen tests on Windows XP due to bug 704010");
+            finish();
+            return;
+          }
+          if (isWin8) {
+            todo(false, "Can't reliably run full-screen + pointer lock tests on Windows 8");
             finish();
             return;
           }
