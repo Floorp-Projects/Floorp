@@ -114,8 +114,18 @@ class IonFrameIterator
         return (IonJSFrameLayout *) fp();
     }
 
+    // Returns true iff this exit frame was created using EnsureExitFrame.
+    bool isFakeExitFrame() const {
+        bool res = (prevType() == IonFrame_Unwound_Rectifier ||
+                    prevType() == IonFrame_Unwound_OptimizedJS ||
+                    prevType() == IonFrame_Unwound_BaselineStub);
+        JS_ASSERT_IF(res, type() == IonFrame_Exit || type() == IonFrame_BaselineJS);
+        return res;
+    }
+
     IonExitFrameLayout *exitFrame() const {
         JS_ASSERT(type() == IonFrame_Exit);
+        JS_ASSERT(!isFakeExitFrame());
         return (IonExitFrameLayout *) fp();
     }
 
