@@ -33,42 +33,43 @@ function getCleoControls(doc) {
   ];
 }
 
-function sendFromActiveProfile(msg) {
-  let [win, doc] = getProfileInternals();
-
-  win.parent.postMessage({
-    uid: gPanel.activeProfile.uid,
-    status: msg
-  }, "*");
+function sendFromProfile(uid, msg) {
+  let [win, doc] = getProfileInternals(uid);
+  win.parent.postMessage({ uid: uid, status: msg }, "*");
 }
 
 function startProfiling() {
-  gPanel.profiles.get(gUid).once("disabled", stopProfiling);
-  sendFromActiveProfile("start");
+  gPanel.profiles.get(gPanel.activeProfile.uid).once("started", function () {
+    setTimeout(function () {
+      sendFromProfile(2, "start");
+      gPanel.profiles.get(2).once("started", function () setTimeout(stopProfiling, 50));
+    }, 50);
+  });
+  sendFromProfile(gPanel.activeProfile.uid, "start");
 }
 
 function stopProfiling() {
   let [win, doc] = getProfileInternals(gUid);
   let [btn, msg] = getCleoControls(doc);
 
-  ok(msg.textContent.match("Profile 1") !== null, "Message is visible");
-  ok(btn.hasAttribute("disabled"), "Button is disabled");
-
   is(gPanel.document.querySelector("li#profile-1 > h1").textContent,
     "Profile 1 *", "Profile 1 has a star next to it.");
   is(gPanel.document.querySelector("li#profile-2 > h1").textContent,
-    "Profile 2", "Profile 2 doesn't have a star next to it.");
+    "Profile 2 *", "Profile 2 has a star next to it.");
 
-  gPanel.profiles.get(gUid).once("enabled", confirmAndFinish);
-  sendFromActiveProfile("stop");
+  gPanel.profiles.get(gPanel.activeProfile.uid).once("stopped", function () {
+    is(gPanel.document.querySelector("li#profile-1 > h1").textContent,
+      "Profile 1", "Profile 1 doesn't have a star next to it anymore.");
+
+    sendFromProfile(2, "stop");
+    gPanel.profiles.get(2).once("stopped", confirmAndFinish);
+  });
+  sendFromProfile(gPanel.activeProfile.uid, "stop");
 }
 
-function confirmAndFinish() {
+function confirmAndFinish(ev, data) {
   let [win, doc] = getProfileInternals(gUid);
   let [btn, msg] = getCleoControls(doc);
-
-  ok(msg.style.display === "none", "Message is hidden");
-  ok(!btn.hasAttribute("disabled"), "Button is enabled");
 
   is(gPanel.document.querySelector("li#profile-1 > h1").textContent,
     "Profile 1", "Profile 1 doesn't have a star next to it.");
