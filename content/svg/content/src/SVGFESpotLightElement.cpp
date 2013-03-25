@@ -4,13 +4,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/SVGFESpotLightElement.h"
+#include "mozilla/dom/SVGFESpotLightElementBinding.h"
 
-NS_IMPL_NS_NEW_SVG_ELEMENT(FESpotLight)
+NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FESpotLight)
 
 namespace mozilla {
 namespace dom {
 
-nsSVGElement::NumberInfo nsSVGFESpotLightElement::sNumberInfo[8] =
+JSObject*
+SVGFESpotLightElement::WrapNode(JSContext* aCx, JSObject* aScope)
+{
+  return SVGFESpotLightElementBinding::Wrap(aCx, aScope, this);
+}
+
+nsSVGElement::NumberInfo SVGFESpotLightElement::sNumberInfo[8] =
 {
   { &nsGkAtoms::x, 0, false },
   { &nsGkAtoms::y, 0, false },
@@ -25,29 +32,25 @@ nsSVGElement::NumberInfo nsSVGFESpotLightElement::sNumberInfo[8] =
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ADDREF_INHERITED(nsSVGFESpotLightElement,nsSVGFESpotLightElementBase)
-NS_IMPL_RELEASE_INHERITED(nsSVGFESpotLightElement,nsSVGFESpotLightElementBase)
+NS_IMPL_ADDREF_INHERITED(SVGFESpotLightElement,SVGFESpotLightElementBase)
+NS_IMPL_RELEASE_INHERITED(SVGFESpotLightElement,SVGFESpotLightElementBase)
 
-DOMCI_NODE_DATA(SVGFESpotLightElement, nsSVGFESpotLightElement)
-
-NS_INTERFACE_TABLE_HEAD(nsSVGFESpotLightElement)
-  NS_NODE_INTERFACE_TABLE4(nsSVGFESpotLightElement, nsIDOMNode,
-                           nsIDOMElement, nsIDOMSVGElement,
-                           nsIDOMSVGFESpotLightElement)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFESpotLightElement)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGFESpotLightElementBase)
+NS_INTERFACE_TABLE_HEAD(SVGFESpotLightElement)
+  NS_NODE_INTERFACE_TABLE3(SVGFESpotLightElement, nsIDOMNode,
+                           nsIDOMElement, nsIDOMSVGElement)
+NS_INTERFACE_MAP_END_INHERITING(SVGFESpotLightElementBase)
 
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFESpotLightElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFESpotLightElement)
 
 //----------------------------------------------------------------------
 // nsFEUnstyledElement methods
 
 bool
-nsSVGFESpotLightElement::AttributeAffectsRendering(int32_t aNameSpaceID,
-                                                   nsIAtom* aAttribute) const
+SVGFESpotLightElement::AttributeAffectsRendering(int32_t aNameSpaceID,
+                                                 nsIAtom* aAttribute) const
 {
   return aNameSpaceID == kNameSpaceID_None &&
          (aAttribute == nsGkAtoms::x ||
@@ -61,63 +64,60 @@ nsSVGFESpotLightElement::AttributeAffectsRendering(int32_t aNameSpaceID,
 }
 
 //----------------------------------------------------------------------
-// nsIDOMSVGFESpotLightElement methods
 
-NS_IMETHODIMP
-nsSVGFESpotLightElement::GetX(nsIDOMSVGAnimatedNumber **aX)
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGFESpotLightElement::X()
 {
-  return mNumberAttributes[X].ToDOMAnimatedNumber(aX, this);
+  return mNumberAttributes[ATTR_X].ToDOMAnimatedNumber(this);
 }
 
-NS_IMETHODIMP
-nsSVGFESpotLightElement::GetY(nsIDOMSVGAnimatedNumber **aY)
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGFESpotLightElement::Y()
 {
-  return mNumberAttributes[Y].ToDOMAnimatedNumber(aY, this);
+  return mNumberAttributes[ATTR_Y].ToDOMAnimatedNumber(this);
 }
 
-NS_IMETHODIMP
-nsSVGFESpotLightElement::GetZ(nsIDOMSVGAnimatedNumber **aZ)
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGFESpotLightElement::Z()
 {
-  return mNumberAttributes[Z].ToDOMAnimatedNumber(aZ, this);
+  return mNumberAttributes[ATTR_Z].ToDOMAnimatedNumber(this);
 }
 
-NS_IMETHODIMP
-nsSVGFESpotLightElement::GetPointsAtX(nsIDOMSVGAnimatedNumber **aX)
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGFESpotLightElement::PointsAtX()
 {
-  return mNumberAttributes[POINTS_AT_X].ToDOMAnimatedNumber(aX, this);
+  return mNumberAttributes[POINTS_AT_X].ToDOMAnimatedNumber(this);
 }
 
-NS_IMETHODIMP
-nsSVGFESpotLightElement::GetPointsAtY(nsIDOMSVGAnimatedNumber **aY)
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGFESpotLightElement::PointsAtY()
 {
-  return mNumberAttributes[POINTS_AT_Y].ToDOMAnimatedNumber(aY, this);
+  return mNumberAttributes[POINTS_AT_Y].ToDOMAnimatedNumber(this);
 }
 
-NS_IMETHODIMP
-nsSVGFESpotLightElement::GetPointsAtZ(nsIDOMSVGAnimatedNumber **aZ)
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGFESpotLightElement::PointsAtZ()
 {
-  return mNumberAttributes[POINTS_AT_Z].ToDOMAnimatedNumber(aZ, this);
+  return mNumberAttributes[POINTS_AT_Z].ToDOMAnimatedNumber(this);
 }
 
-NS_IMETHODIMP
-nsSVGFESpotLightElement::GetSpecularExponent(nsIDOMSVGAnimatedNumber **aExponent)
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGFESpotLightElement::SpecularExponent()
 {
-  return mNumberAttributes[SPECULAR_EXPONENT].ToDOMAnimatedNumber(aExponent,
-                                                                  this);
+  return mNumberAttributes[SPECULAR_EXPONENT].ToDOMAnimatedNumber(this);
 }
 
-NS_IMETHODIMP
-nsSVGFESpotLightElement::GetLimitingConeAngle(nsIDOMSVGAnimatedNumber **aAngle)
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGFESpotLightElement::LimitingConeAngle()
 {
-  return mNumberAttributes[LIMITING_CONE_ANGLE].ToDOMAnimatedNumber(aAngle,
-                                                                    this);
+  return mNumberAttributes[LIMITING_CONE_ANGLE].ToDOMAnimatedNumber(this);
 }
 
 //----------------------------------------------------------------------
 // nsSVGElement methods
 
 nsSVGElement::NumberAttributesInfo
-nsSVGFESpotLightElement::GetNumberInfo()
+SVGFESpotLightElement::GetNumberInfo()
 {
   return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
                               ArrayLength(sNumberInfo));
