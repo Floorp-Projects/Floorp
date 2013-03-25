@@ -191,9 +191,6 @@ AudioNodeStream::ObtainInputBlock(AudioChunk* aTmpChunk)
       continue;
     }
     AudioChunk* chunk = &a->mLastChunk;
-    // XXX when we implement DelayNode, this will no longer be true and we'll
-    // need to treat a null chunk (when the DelayNode hasn't had a chance
-    // to produce data yet) as silence here.
     MOZ_ASSERT(chunk);
     if (chunk->IsNull()) {
       continue;
