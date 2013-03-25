@@ -2272,12 +2272,13 @@ BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
     if (!initialBreakController) {
       initialBreakController = mLineContainer;
     }
-    if (!initialBreakController->StyleText()->WhiteSpaceCanWrap()) {
+    if (!initialBreakController->StyleText()->
+                                 WhiteSpaceCanWrap(initialBreakController)) {
       flags |= nsLineBreaker::BREAK_SUPPRESS_INITIAL;
     }
     nsTextFrame* startFrame = mappedFlow->mStartFrame;
     const nsStyleText* textStyle = startFrame->StyleText();
-    if (!textStyle->WhiteSpaceCanWrap()) {
+    if (!textStyle->WhiteSpaceCanWrap(startFrame)) {
       flags |= nsLineBreaker::BREAK_SUPPRESS_INSIDE;
     }
     if (aTextRun->GetFlags() & nsTextFrameUtils::TEXT_NO_BREAKS) {
@@ -3108,7 +3109,7 @@ PropertyProvider::GetHyphenationBreaks(uint32_t aStart, uint32_t aLength,
   NS_PRECONDITION(IsInBounds(mStart, mLength, aStart, aLength), "Range out of bounds");
   NS_PRECONDITION(mLength != INT32_MAX, "Can't call this with undefined length");
 
-  if (!mTextStyle->WhiteSpaceCanWrap() ||
+  if (!mTextStyle->WhiteSpaceCanWrap(mFrame) ||
       mTextStyle->mHyphens == NS_STYLE_HYPHENS_NONE)
   {
     memset(aBreakBefore, false, aLength*sizeof(bool));
@@ -7929,7 +7930,7 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
                                   canTrimTrailingWhitespace ? &trimmedWidth : nullptr,
                                   &textMetrics, boundingBoxType, ctx,
                                   &usedHyphenation, &transformedLastBreak,
-                                  textStyle->WordCanWrap(), &breakPriority);
+                                  textStyle->WordCanWrap(this), &breakPriority);
   if (!length && !textMetrics.mAscent && !textMetrics.mDescent) {
     // If we're measuring a zero-length piece of text, update
     // the height manually.
