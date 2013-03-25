@@ -15,8 +15,8 @@
 #include "nsEventStates.h"
 #include "nsTArray.h"
 #include "nsITimer.h"
+#include "nsIContent.h"
 
-class nsIContent;
 class nsIFrame;
 class nsIPresShell;
 class nsPresContext;
