@@ -1659,7 +1659,7 @@ CSS_PROP_POSITION(
 CSS_PROP_DISPLAY(
     float,
     float,
-    CssFloat,
+    CSS_PROP_PUBLIC_OR_PRIVATE(CssFloat, Float),
     CSS_PROPERTY_PARSE_VALUE |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
     "",
