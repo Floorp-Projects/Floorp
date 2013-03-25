@@ -8,3 +8,10 @@
 menulist:-moz-focusring:not([open="true"]):not(.menulist-compact) > .menulist-label-box {
   border: 1px dotted ThreeDDarkShadow;
 }
+
+@media (-moz-windows-default-theme) {
+  .menulist-label-box {
+    background-color: transparent !important;
+    color: inherit !important;
+  }
+}
