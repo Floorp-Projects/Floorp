@@ -7,32 +7,37 @@
 #define MOZ_PROFILE_ENTRY_H
 
 #include "GeckoProfilerImpl.h"
+#include "JSAObjectBuilder.h"
+#include "platform.h"
 #include "mozilla/Mutex.h"
 
-class ThreadProfile2;
+class ThreadProfile;
+class ThreadProfile;
 
-class ProfileEntry2
+class ProfileEntry
 {
 public:
-  ProfileEntry2();
+  ProfileEntry();
 
   // aTagData must not need release (i.e. be a string from the text segment)
-  ProfileEntry2(char aTagName, const char *aTagData);
-  ProfileEntry2(char aTagName, void *aTagPtr);
-  ProfileEntry2(char aTagName, double aTagFloat);
-  ProfileEntry2(char aTagName, uintptr_t aTagOffset);
-  ProfileEntry2(char aTagName, Address aTagAddress);
-  ProfileEntry2(char aTagName, int aTagLine);
-  ProfileEntry2(char aTagName, char aTagChar);
-  friend std::ostream& operator<<(std::ostream& stream, const ProfileEntry2& entry);
+  ProfileEntry(char aTagName, const char *aTagData);
+  ProfileEntry(char aTagName, void *aTagPtr);
+  ProfileEntry(char aTagName, double aTagFloat);
+  ProfileEntry(char aTagName, uintptr_t aTagOffset);
+  ProfileEntry(char aTagName, Address aTagAddress);
+  ProfileEntry(char aTagName, int aTagLine);
+  ProfileEntry(char aTagName, char aTagChar);
+  friend std::ostream& operator<<(std::ostream& stream, const ProfileEntry& entry);
   bool is_ent_hint(char hintChar);
   bool is_ent_hint();
   bool is_ent(char tagName);
   void* get_tagPtr();
   void log();
 
+  char getTagName() const { return mTagName; }
+
 private:
-  friend class ThreadProfile2;
+  friend class ThreadProfile;
   union {
     const char* mTagData;
     char        mTagChars[sizeof(void*)];
@@ -46,25 +51,29 @@ private:
   char mTagName;
 };
 
+typedef void (*IterateTagsCallback)(const ProfileEntry& entry, const char* tagStringData);
 
-class ThreadProfile2
+class ThreadProfile
 {
 public:
-  ThreadProfile2(int aEntrySize, PseudoStack *aStack);
-  ~ThreadProfile2();
-  void addTag(ProfileEntry2 aTag);
+  ThreadProfile(int aEntrySize, PseudoStack *aStack);
+  ~ThreadProfile();
+  void addTag(ProfileEntry aTag);
   void flush();
   void erase();
   char* processDynamicTag(int readPos, int* tagsConsumed, char* tagBuff);
+  void IterateTags(IterateTagsCallback aCallback);
   friend std::ostream& operator<<(std::ostream& stream,
-                                  const ThreadProfile2& profile);
+                                  const ThreadProfile& profile);
+  void ToStreamAsJSON(std::ostream& stream);
   JSCustomObject *ToJSObject(JSContext *aCx);
   PseudoStack* GetPseudoStack();
   mozilla::Mutex* GetMutex();
+  void BuildJSObject(JSAObjectBuilder& b, JSCustomObject* profile);
 private:
   // Circular buffer 'Keep One Slot Open' implementation
   // for simplicity
-  ProfileEntry2* mEntries;
+  ProfileEntry* mEntries;
   int            mWritePos; // points to the next entry we will write to
   int            mLastFlushPos; // points to the next entry since the last flush()
   int            mReadPos;  // points to the next entry we will read to
@@ -72,5 +81,7 @@ private:
   PseudoStack*   mPseudoStack;
   mozilla::Mutex mMutex;
 };
+
+std::ostream& operator<<(std::ostream& stream, const ThreadProfile& profile);
 
 #endif /* ndef MOZ_PROFILE_ENTRY_H */
