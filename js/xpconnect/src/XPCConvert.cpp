@@ -819,7 +819,6 @@ XPCConvert::NativeInterface2JSObject(jsval* d,
     // object will create (and fill the cache) from its WrapObject call.
     nsWrapperCache *cache = aHelper.GetWrapperCache();
 
-    bool tryConstructSlimWrapper = false;
     RootedObject flat(cx);
     if (cache) {
         flat = cache->GetWrapper();
@@ -840,37 +839,9 @@ XPCConvert::NativeInterface2JSObject(jsval* d,
             }
         }
 
-        if (!dest) {
-            if (!flat) {
-                tryConstructSlimWrapper = true;
-            } else if (IS_SLIM_WRAPPER_OBJECT(flat)) {
-                if (js::IsObjectInContextCompartment(flat, cx)) {
-                    *d = OBJECT_TO_JSVAL(flat);
-                    return true;
-                }
-            }
-        }
+        MOZ_ASSERT_IF(flat, !IS_SLIM_WRAPPER_OBJECT(flat));
     } else {
         flat = nullptr;
-    }
-
-    // If we're not handing this wrapper to an nsIXPConnectJSObjectHolder, and
-    // the object supports slim wrappers, try to create one here.
-    if (tryConstructSlimWrapper) {
-        RootedValue slim(cx);
-        if (ConstructSlimWrapper(aHelper, xpcscope, &slim)) {
-            *d = slim;
-            return true;
-        }
-
-        if (JS_IsExceptionPending(cx))
-            return false;
-
-        // Even if ConstructSlimWrapper returns false it might have created a
-        // wrapper (while calling the PreCreate hook). In that case we need to
-        // fall through because we either have a slim wrapper that needs to be
-        // morphed or an XPCWrappedNative.
-        flat = cache->GetWrapper();
     }
 
     // We can't simply construct a slim wrapper. Go ahead and create an

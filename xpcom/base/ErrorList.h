@@ -599,13 +599,6 @@
    * filename begins with chrome://global/) shoudl return this from their
    * scriptable helper's PreCreate hook. */
   ERROR(NS_SUCCESS_CHROME_ACCESS_ONLY,   SUCCESS(2)),
-  /* Classes that want slim wrappers should return
-   * NS_SUCCESS_ALLOW_SLIM_WRAPPERS from their scriptable helper's PreCreate
-   * hook. They must also force a parent for their wrapper (from the PreCreate
-   * hook), they must implement nsWrapperCache and their scriptable helper must
-   * implement nsXPCClassInfo and must return DONT_ASK_INSTANCE_FOR_SCRIPTABLE
-   * in the flags. */
-  ERROR(NS_SUCCESS_ALLOW_SLIM_WRAPPERS,  SUCCESS(3)),
 #undef MODULE
 
 
