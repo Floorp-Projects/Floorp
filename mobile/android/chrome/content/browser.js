@@ -3375,7 +3375,6 @@ Tab.prototype = {
         viewportW = screenW;
         viewportH = screenH;
       }
-      console.log("Use autosize: " + viewportW + "x" + viewportH);
     } else {
       viewportW = metadata.width;
       viewportH = metadata.height;
