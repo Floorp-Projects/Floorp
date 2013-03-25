@@ -1383,7 +1383,7 @@ HTMLTextAreaElement::GetRows()
 }
 
 NS_IMETHODIMP_(void)
-nsHTMLTextAreaElement::GetDefaultValueFromContent(nsAString& aValue)
+HTMLTextAreaElement::GetDefaultValueFromContent(nsAString& aValue)
 {
   GetDefaultValue(aValue);
 }
