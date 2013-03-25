@@ -344,7 +344,7 @@ public class UpdateService extends IntentService {
     private MessageDigest createMessageDigest(String hashFunction) {
         String javaHashFunction = null;
 
-        if ("sha512".equals(hashFunction)) {
+        if ("sha512".equalsIgnoreCase(hashFunction)) {
             javaHashFunction = "SHA-512";
         } else {
             Log.e(LOGTAG, "Unhandled hash function: " + hashFunction);
