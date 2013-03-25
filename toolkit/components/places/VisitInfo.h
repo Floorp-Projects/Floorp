@@ -21,14 +21,13 @@ public:
   NS_DECL_MOZIVISITINFO
 
   VisitInfo(int64_t aVisitId, PRTime aVisitDate, uint32_t aTransitionType,
-            already_AddRefed<nsIURI> aReferrer, int64_t aSessionId);
+            already_AddRefed<nsIURI> aReferrer);
 
 private:
   const int64_t mVisitId;
   const PRTime mVisitDate;
   const uint32_t mTransitionType;
   nsCOMPtr<nsIURI> mReferrer;
-  const int64_t mSessionId;
 };
 
 } // namespace places

@@ -61,7 +61,7 @@ add_task(function test_execute()
     var node = root.getChild(i);
     // test node properties in RESULTS_AS_VISIT
     do_check_eq(node.uri, testURI.spec);
-    do_check_eq(node.type, options.RESULTS_AS_VISIT);
+    do_check_eq(node.type, Ci.nsINavHistoryResultNode.RESULT_TYPE_URI);
     // TODO: change query type to RESULTS_AS_FULL_VISIT and test this
     //do_check_eq(node.transitionType, histsvc.TRANSITION_TYPED);
   }

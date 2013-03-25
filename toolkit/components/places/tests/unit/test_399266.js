@@ -49,7 +49,7 @@ add_task(function test_execute()
     let node = root.getChild(i);
     let site = "http://www.test-" + (TOTAL_SITES - 1 - i) + ".com/";
     do_check_eq(node.uri, site);
-    do_check_eq(node.type, options.RESULTS_AS_URI);
+    do_check_eq(node.type, Ci.nsINavHistoryResultNode.RESULT_TYPE_URI);
   }
   root.containerOpen = false;
 
@@ -72,7 +72,7 @@ add_task(function test_execute()
     let node = root.getChild(i);
     let site = "http://www.test-" + (TOTAL_SITES - 1 - i) + ".com/";
     do_check_eq(node.uri, site);
-    do_check_eq(node.type, options.RESULTS_AS_URI);
+    do_check_eq(node.type, Ci.nsINavHistoryResultNode.RESULT_TYPE_URI);
   }
   root.containerOpen = false;
 });
