@@ -191,6 +191,7 @@ webidl_files = \
   SVGFEComponentTransferElement.webidl \
   SVGFECompositeElement.webidl \
   SVGFEDiffuseLightingElement.webidl \
+  SVGFEDisplacementMapElement.webidl \
   SVGFEDistantLightElement.webidl \
   SVGFEFloodElement.webidl \
   SVGFEFuncAElement.webidl \
