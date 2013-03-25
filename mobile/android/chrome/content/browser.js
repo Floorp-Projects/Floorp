@@ -5386,8 +5386,7 @@ var ClipboardHelper = {
 
   copy: function(aElement, aX, aY) {
     if (SelectionHandler.shouldShowContextMenu(aX, aY)) {
-      // Passing coordinates to endSelection takes care of copying for us
-      SelectionHandler.endSelection(aX, aY);
+      SelectionHandler.copySelection();
       return;
     }
 
@@ -5410,11 +5409,7 @@ var ClipboardHelper = {
   },
 
   share: function() {
-    let selectedText = SelectionHandler.endSelection();
-    sendMessageToJava({
-      type: "Share:Text",
-      text: selectedText
-    });
+    SelectionHandler.shareSelection();
   },
 
   paste: function(aElement) {
