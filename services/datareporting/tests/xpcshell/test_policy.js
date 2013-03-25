@@ -634,6 +634,7 @@ add_test(function test_delete_remote_data_in_progress_upload() {
 add_test(function test_polling() {
   let [policy, policyPrefs, hrPrefs, listener] = getPolicy("polling");
   let intended = 500;
+  let acceptable = 250;     // Because nsITimer doesn't guarantee times.
 
   // Ensure checkStateAndTrigger is called at a regular interval.
   let then = Date.now();
@@ -650,7 +651,7 @@ add_test(function test_polling() {
       count++;
 
       print("Polled at " + now + " after " + after + "ms, intended " + intended);
-      do_check_true(after >= intended);
+      do_check_true(after >= acceptable);
       DataReportingPolicy.prototype.checkStateAndTrigger.call(policy);
 
       if (count >= 2) {
