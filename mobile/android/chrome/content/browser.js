@@ -64,6 +64,9 @@ XPCOMUtils.defineLazyGetter(this, "Sanitizer", function() {
   ["InputWidgetHelper", "chrome://browser/content/InputWidgetHelper.js"],
   ["AboutReader", "chrome://browser/content/aboutReader.js"],
   ["WebAppRT", "chrome://browser/content/WebAppRT.js"],
+  ["MasterPassword", "chrome://browser/content/MasterPassword.js"],
+  ["PluginHelper", "chrome://browser/content/PluginHelper.js"],
+  ["OfflineApps", "chrome://browser/content/OfflineApps.js"],
 ].forEach(function (aScript) {
   let [name, script] = aScript;
   XPCOMUtils.defineLazyGetter(window, name, function() {
@@ -267,7 +270,6 @@ var BrowserApp = {
     Downloads.init();
     FindHelper.init();
     FormAssistant.init();
-    OfflineApps.init();
     IndexedDB.init();
     XPInstallObserver.init();
     ClipboardHelper.init();
@@ -554,7 +556,6 @@ var BrowserApp = {
     LightWeightThemeWebInstaller.uninit();
     FormAssistant.uninit();
     FindHelper.uninit();
-    OfflineApps.uninit();
     IndexedDB.uninit();
     ViewportHandler.uninit();
     XPInstallObserver.uninit();
@@ -924,7 +925,7 @@ var BrowserApp = {
           pref.value = PluginHelper.getPluginPreference();
           prefs.push(pref);
           continue;
-        } else if (prefName == MasterPassword.pref) {
+        } else if (prefName == "privacy.masterpassword.enabled") {
           // Master password is not a "real" pref
           pref.type = "bool";
           pref.value = MasterPassword.enabled;
@@ -1016,7 +1017,7 @@ var BrowserApp = {
       // we need to handle it differently
       PluginHelper.setPluginPreference(json.value);
       return;
-    } else if (json.name == MasterPassword.pref) {
+    } else if (json.name == "privacy.masterpassword.enabled") {
       // MasterPassword pref is not real, we just need take action and leave
       if (MasterPassword.enabled)
         MasterPassword.removePassword(json.value);
@@ -2416,6 +2417,7 @@ Tab.prototype = {
     // Note that the XBL binding is untrusted
     this.browser.addEventListener("PluginBindingAttached", this, true, true);
     this.browser.addEventListener("pageshow", this, true);
+    this.browser.addEventListener("MozApplicationManifest", this, true);
 
     Services.obs.addObserver(this, "before-first-paint", false);
     Services.prefs.addObserver("browser.ui.zoom.force-user-scalable", this, false);
@@ -2527,6 +2529,7 @@ Tab.prototype = {
     this.browser.removeEventListener("MozScrolledAreaChanged", this, true);
     this.browser.removeEventListener("PluginBindingAttached", this, true);
     this.browser.removeEventListener("pageshow", this, true);
+    this.browser.removeEventListener("MozApplicationManifest", this, true);
 
     Services.obs.removeObserver(this, "before-first-paint");
     Services.prefs.removeObserver("browser.ui.zoom.force-user-scalable", this);
@@ -3172,6 +3175,8 @@ Tab.prototype = {
           });
         }.bind(this));
       }
+      case "MozApplicationManifest":
+        OfflineApps.offlineAppRequested(aEvent.originalTarget.defaultView);
     }
   },
 
@@ -5251,91 +5256,6 @@ var PopupBlockerObserver = {
   }
 };
 
-
-var OfflineApps = {
-  init: function() {
-    BrowserApp.deck.addEventListener("MozApplicationManifest", this, false);
-  },
-
-  uninit: function() {
-    BrowserApp.deck.removeEventListener("MozApplicationManifest", this, false);
-  },
-
-  handleEvent: function(aEvent) {
-    if (aEvent.type == "MozApplicationManifest")
-      this.offlineAppRequested(aEvent.originalTarget.defaultView);
-  },
-
-  offlineAppRequested: function(aContentWindow) {
-    if (!Services.prefs.getBoolPref("browser.offline-apps.notify"))
-      return;
-
-    let tab = BrowserApp.getTabForWindow(aContentWindow);
-    let currentURI = aContentWindow.document.documentURIObject;
-
-    // Don't bother showing UI if the user has already made a decision
-    if (Services.perms.testExactPermission(currentURI, "offline-app") != Services.perms.UNKNOWN_ACTION)
-      return;
-
-    try {
-      if (Services.prefs.getBoolPref("offline-apps.allow_by_default")) {
-        // All pages can use offline capabilities, no need to ask the user
-        return;
-      }
-    } catch(e) {
-      // This pref isn't set by default, ignore failures
-    }
-
-    let host = currentURI.asciiHost;
-    let notificationID = "offline-app-requested-" + host;
-
-    let strings = Strings.browser;
-    let buttons = [{
-      label: strings.GetStringFromName("offlineApps.allow"),
-      callback: function() {
-        OfflineApps.allowSite(aContentWindow.document);
-      }
-    },
-    {
-      label: strings.GetStringFromName("offlineApps.dontAllow2"),
-      callback: function(aChecked) {
-        if (aChecked)
-          OfflineApps.disallowSite(aContentWindow.document);
-      }
-    }];
-
-    let message = strings.formatStringFromName("offlineApps.ask", [host], 1);
-    let options = { checkbox: Strings.browser.GetStringFromName("offlineApps.dontAskAgain") };
-    NativeWindow.doorhanger.show(message, notificationID, buttons, tab.id, options);
-  },
-
-  allowSite: function(aDocument) {
-    Services.perms.add(aDocument.documentURIObject, "offline-app", Services.perms.ALLOW_ACTION);
-
-    // When a site is enabled while loading, manifest resources will
-    // start fetching immediately.  This one time we need to do it
-    // ourselves.
-    this._startFetching(aDocument);
-  },
-
-  disallowSite: function(aDocument) {
-    Services.perms.add(aDocument.documentURIObject, "offline-app", Services.perms.DENY_ACTION);
-  },
-
-  _startFetching: function(aDocument) {
-    if (!aDocument.documentElement)
-      return;
-
-    let manifest = aDocument.documentElement.getAttribute("manifest");
-    if (!manifest)
-      return;
-
-    let manifestURI = Services.io.newURI(manifest, aDocument.characterSet, aDocument.documentURIObject);
-    let updateService = Cc["@mozilla.org/offlinecacheupdate-service;1"].getService(Ci.nsIOfflineCacheUpdateService);
-    updateService.scheduleUpdate(manifestURI, aDocument.documentURIObject, window);
-  }
-};
-
 var IndexedDB = {
   _permissionsPrompt: "indexedDB-permissions-prompt",
   _permissionsResponse: "indexedDB-permissions-response",
@@ -5573,285 +5493,6 @@ var ClipboardHelper = {
   }
 };
 
-var PluginHelper = {
-  showDoorHanger: function(aTab) {
-    if (!aTab.browser)
-      return;
-
-    // Even though we may not end up showing a doorhanger, this flag
-    // lets us know that we've tried to show a doorhanger.
-    aTab.shouldShowPluginDoorhanger = false;
-
-    let uri = aTab.browser.currentURI;
-
-    // If the user has previously set a plugins permission for this website,
-    // either play or don't play the plugins instead of showing a doorhanger.
-    let permValue = Services.perms.testPermission(uri, "plugins");
-    if (permValue != Services.perms.UNKNOWN_ACTION) {
-      if (permValue == Services.perms.ALLOW_ACTION)
-        PluginHelper.playAllPlugins(aTab.browser.contentWindow);
-
-      return;
-    }
-
-    let message = Strings.browser.formatStringFromName("clickToPlayPlugins.message2",
-                                                       [uri.host], 1);
-    let buttons = [
-      {
-        label: Strings.browser.GetStringFromName("clickToPlayPlugins.activate"),
-        callback: function(aChecked) {
-          // If the user checked "Don't ask again", make a permanent exception
-          if (aChecked)
-            Services.perms.add(uri, "plugins", Ci.nsIPermissionManager.ALLOW_ACTION);
-
-          PluginHelper.playAllPlugins(aTab.browser.contentWindow);
-        }
-      },
-      {
-        label: Strings.browser.GetStringFromName("clickToPlayPlugins.dontActivate"),
-        callback: function(aChecked) {
-          // If the user checked "Don't ask again", make a permanent exception
-          if (aChecked)
-            Services.perms.add(uri, "plugins", Ci.nsIPermissionManager.DENY_ACTION);
-
-          // Other than that, do nothing
-        }
-      }
-    ];
-
-    // Add a checkbox with a "Don't ask again" message if the uri contains a
-    // host. Adding a permanent exception will fail if host is not present.
-    let options = uri.host ? { checkbox: Strings.browser.GetStringFromName("clickToPlayPlugins.dontAskAgain") } : {};
-
-    NativeWindow.doorhanger.show(message, "ask-to-play-plugins", buttons, aTab.id, options);
-  },
-
-  delayAndShowDoorHanger: function(aTab) {
-    // To avoid showing the doorhanger if there are also visible plugin
-    // overlays on the page, delay showing the doorhanger to check if
-    // visible plugins get added in the near future.
-    if (!aTab.pluginDoorhangerTimeout) {
-      aTab.pluginDoorhangerTimeout = setTimeout(function() {
-        if (this.shouldShowPluginDoorhanger) {
-          PluginHelper.showDoorHanger(this);
-        }
-      }.bind(aTab), 500);
-    }
-  },
-
-  playAllPlugins: function(aContentWindow) {
-    let cwu = aContentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                            .getInterface(Ci.nsIDOMWindowUtils);
-    // XXX not sure if we should enable plugins for the parent documents...
-    let plugins = cwu.plugins;
-    if (!plugins || !plugins.length)
-      return;
-
-    plugins.forEach(this.playPlugin);
-  },
-
-  playPlugin: function(plugin) {
-    let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-    if (!objLoadingContent.activated)
-      objLoadingContent.playPlugin();
-  },
-
-  stopPlayPreview: function(plugin, playPlugin) {
-    let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-    if (objLoadingContent.activated)
-      return;
-
-    if (playPlugin)
-      objLoadingContent.playPlugin();
-    else
-      objLoadingContent.cancelPlayPreview();
-  },
-
-  getPluginPreference: function getPluginPreference() {
-    let pluginDisable = Services.prefs.getBoolPref("plugin.disable");
-    if (pluginDisable)
-      return "0";
-
-    let clickToPlay = Services.prefs.getBoolPref("plugins.click_to_play");
-    return clickToPlay ? "2" : "1";
-  },
-
-  setPluginPreference: function setPluginPreference(aValue) {
-    switch (aValue) {
-      case "0": // Enable Plugins = No
-        Services.prefs.setBoolPref("plugin.disable", true);
-        Services.prefs.clearUserPref("plugins.click_to_play");
-        break;
-      case "1": // Enable Plugins = Yes
-        Services.prefs.clearUserPref("plugin.disable");
-        Services.prefs.setBoolPref("plugins.click_to_play", false);
-        break;
-      case "2": // Enable Plugins = Tap to Play (default)
-        Services.prefs.clearUserPref("plugin.disable");
-        Services.prefs.clearUserPref("plugins.click_to_play");
-        break;
-    }
-  },
-
-  // Copied from /browser/base/content/browser.js
-  isTooSmall : function (plugin, overlay) {
-    // Is the <object>'s size too small to hold what we want to show?
-    let pluginRect = plugin.getBoundingClientRect();
-    // XXX bug 446693. The text-shadow on the submitted-report text at
-    //     the bottom causes scrollHeight to be larger than it should be.
-    let overflows = (overlay.scrollWidth > pluginRect.width) ||
-                    (overlay.scrollHeight - 5 > pluginRect.height);
-
-    return overflows;
-  },
-
-  getPluginMimeType: function (plugin) {
-    var tagMimetype;
-    if (plugin instanceof HTMLAppletElement) {
-      tagMimetype = "application/x-java-vm";
-    } else {
-      tagMimetype = plugin.QueryInterface(Components.interfaces.nsIObjectLoadingContent)
-                          .actualType;
-
-      if (tagMimetype == "") {
-        tagMimetype = plugin.type;
-      }
-    }
-
-    return tagMimetype;
-  },
-
-  handlePluginBindingAttached: function (aTab, aEvent) {
-    let plugin = aEvent.target;
-    let doc = plugin.ownerDocument;
-    let overlay = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
-    if (!overlay || overlay._bindingHandled) {
-      return;
-    }
-    overlay._bindingHandled = true;
-
-    let eventType = PluginHelper._getBindingType(plugin);
-    if (!eventType) {
-      // Not all bindings have handlers
-      return;
-    }
-
-    switch  (eventType) {
-      case "PluginClickToPlay": {
-        // Check if plugins have already been activated for this page, or if
-        // the user has set a permission to always play plugins on the site
-        if (aTab.clickToPlayPluginsActivated ||
-            Services.perms.testPermission(aTab.browser.currentURI, "plugins") ==
-            Services.perms.ALLOW_ACTION) {
-          PluginHelper.playPlugin(plugin);
-          return;
-        }
-
-        // If the plugin is hidden, or if the overlay is too small, show a 
-        // doorhanger notification
-        if (PluginHelper.isTooSmall(plugin, overlay)) {
-          PluginHelper.delayAndShowDoorHanger(aTab);
-        } else {
-          // There's a large enough visible overlay that we don't need to show
-          // the doorhanger.
-          aTab.shouldShowPluginDoorhanger = false;
-        }
-
-        // Add click to play listener to the overlay
-        overlay.addEventListener("click", function(e) {
-          if (!e.isTrusted)
-            return;
-          e.preventDefault();
-          let win = e.target.ownerDocument.defaultView.top;
-          let tab = BrowserApp.getTabForWindow(win);
-          tab.clickToPlayPluginsActivated = true;
-          PluginHelper.playAllPlugins(win);
-
-          NativeWindow.doorhanger.hide("ask-to-play-plugins", tab.id);
-        }, true);
-        break;
-      }
-
-      case "PluginPlayPreview": {
-        let previewContent = doc.getAnonymousElementByAttribute(plugin, "class", "previewPluginContent");
-        let pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
-        let mimeType = PluginHelper.getPluginMimeType(plugin);
-        let playPreviewInfo = pluginHost.getPlayPreviewInfo(mimeType);
-
-        if (!playPreviewInfo.ignoreCTP) {
-          // Check if plugins have already been activated for this page, or if
-          // the user has set a permission to always play plugins on the site
-          if (aTab.clickToPlayPluginsActivated ||
-              Services.perms.testPermission(aTab.browser.currentURI, "plugins") ==
-              Services.perms.ALLOW_ACTION) {
-            PluginHelper.playPlugin(plugin);
-            return;
-          }
-
-          // Always show door hanger for play preview plugins
-          PluginHelper.delayAndShowDoorHanger(aTab);
-        }
-
-        let iframe = previewContent.getElementsByClassName("previewPluginContentFrame")[0];
-        if (!iframe) {
-          // lazy initialization of the iframe
-          iframe = doc.createElementNS("http://www.w3.org/1999/xhtml", "iframe");
-          iframe.className = "previewPluginContentFrame";
-          previewContent.appendChild(iframe);
-        }
-        iframe.src = playPreviewInfo.redirectURL;
-
-        // MozPlayPlugin event can be dispatched from the extension chrome
-        // code to replace the preview content with the native plugin
-        previewContent.addEventListener("MozPlayPlugin", function playPluginHandler(e) {
-          if (!e.isTrusted)
-            return;
-
-          previewContent.removeEventListener("MozPlayPlugin", playPluginHandler, true);
-
-          let playPlugin = !aEvent.detail;
-          PluginHelper.stopPlayPreview(plugin, playPlugin);
-
-          // cleaning up: removes overlay iframe from the DOM
-          let iframe = previewContent.getElementsByClassName("previewPluginContentFrame")[0];
-          if (iframe)
-            previewContent.removeChild(iframe);
-        }, true);
-        break;
-      }
-
-      case "PluginNotFound": {
-        // On devices where we don't support Flash, there will be a
-        // "Learn More..." link in the missing plugin error message.
-        let learnMoreLink = doc.getAnonymousElementByAttribute(plugin, "class", "unsupportedLearnMoreLink");
-        let learnMoreUrl = Services.urlFormatter.formatURLPref("app.support.baseURL");
-        learnMoreUrl += "why-cant-firefox-mobile-play-flash-on-my-device";
-        learnMoreLink.href = learnMoreUrl;
-        break;
-      }
-    }
-  },
-
-  // Helper to get the binding handler type from a plugin object
-  _getBindingType: function(plugin) {
-    if (!(plugin instanceof Ci.nsIObjectLoadingContent))
-      return null;
-
-    switch (plugin.pluginFallbackType) {
-      case Ci.nsIObjectLoadingContent.PLUGIN_UNSUPPORTED:
-        return "PluginNotFound";
-      case Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY:
-        return "PluginClickToPlay";
-      case Ci.nsIObjectLoadingContent.PLUGIN_PLAY_PREVIEW:
-        return "PluginPlayPreview";
-      default:
-        // Not all states map to a handler
-        return null;
-    }
-  },
-
-};
-
 var PermissionsHelper = {
 
   _permissonTypes: ["password", "geolocation", "popup", "indexedDB",
@@ -6020,84 +5661,6 @@ var PermissionsHelper = {
       // Clear content prefs set in ContentPermissionPrompt.js
       Services.contentPrefs.removePref(aURI, aType + ".request.remember", aContext);
     }
-  }
-};
-
-var MasterPassword = {
-  pref: "privacy.masterpassword.enabled",
-  _tokenName: "",
-
-  get _secModuleDB() {
-    delete this._secModuleDB;
-    return this._secModuleDB = Cc["@mozilla.org/security/pkcs11moduledb;1"].getService(Ci.nsIPKCS11ModuleDB);
-  },
-
-  get _pk11DB() {
-    delete this._pk11DB;
-    return this._pk11DB = Cc["@mozilla.org/security/pk11tokendb;1"].getService(Ci.nsIPK11TokenDB);
-  },
-
-  get enabled() {
-    let slot = this._secModuleDB.findSlotByName(this._tokenName);
-    if (slot) {
-      let status = slot.status;
-      return status != Ci.nsIPKCS11Slot.SLOT_UNINITIALIZED && status != Ci.nsIPKCS11Slot.SLOT_READY;
-    }
-    return false;
-  },
-
-  setPassword: function setPassword(aPassword) {
-    try {
-      let status;
-      let slot = this._secModuleDB.findSlotByName(this._tokenName);
-      if (slot)
-        status = slot.status;
-      else
-        return false;
-
-      let token = this._pk11DB.findTokenByName(this._tokenName);
-
-      if (status == Ci.nsIPKCS11Slot.SLOT_UNINITIALIZED)
-        token.initPassword(aPassword);
-      else if (status == Ci.nsIPKCS11Slot.SLOT_READY)
-        token.changePassword("", aPassword);
-
-      this.updatePref();
-      return true;
-    } catch(e) {
-      dump("MasterPassword.setPassword: " + e);
-    }
-    return false;
-  },
-
-  removePassword: function removePassword(aOldPassword) {
-    try {
-      let token = this._pk11DB.getInternalKeyToken();
-      if (token.checkPassword(aOldPassword)) {
-        token.changePassword(aOldPassword, "");
-        this.updatePref();
-        return true;
-      }
-    } catch(e) {
-      dump("MasterPassword.removePassword: " + e + "\n");
-    }
-    NativeWindow.toast.show(Strings.browser.GetStringFromName("masterPassword.incorrect"), "short");
-    return false;
-  },
-
-  updatePref: function() {
-    var prefs = [];
-    let pref = {
-      name: this.pref,
-      type: "bool",
-      value: this.enabled
-    };
-    prefs.push(pref);
-
-    sendMessageToJava({
-      type: "Preferences:Data",
-      preferences: prefs
-    });
   }
 };
 
