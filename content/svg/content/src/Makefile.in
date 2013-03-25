@@ -82,6 +82,7 @@ CPPSRCS		= \
 		SVGFEComponentTransferElement.cpp \
 		SVGFECompositeElement.cpp \
 		SVGFEDiffuseLightingElement.cpp \
+		SVGFEDisplacementMapElement.cpp \
 		SVGFEDistantLightElement.cpp \
 		SVGFEFloodElement.cpp \
 		SVGFEGaussianBlurElement.cpp \
@@ -192,6 +193,7 @@ EXPORTS_mozilla/dom = \
 	SVGFEComponentTransferElement.h \
 	SVGFECompositeElement.h \
 	SVGFEDiffuseLightingElement.h \
+	SVGFEDisplacementMapElement.h \
 	SVGFEDistantLightElement.h \
 	SVGFEFloodElement.h \
 	SVGFEGaussianBlurElement.h \
