@@ -1565,7 +1565,7 @@ nsGenericHTMLElement::MapImageAlignAttributeInto(const nsMappedAttributes* aAttr
     if (value && value->Type() == nsAttrValue::eEnum) {
       int32_t align = value->GetEnumValue();
       if (aRuleData->mSIDs & NS_STYLE_INHERIT_BIT(Display)) {
-        nsCSSValue* cssFloat = aRuleData->ValueForCssFloat();
+        nsCSSValue* cssFloat = aRuleData->ValueForFloat();
         if (cssFloat->GetUnit() == eCSSUnit_Null) {
           if (align == NS_STYLE_TEXT_ALIGN_LEFT) {
             cssFloat->SetIntValue(NS_STYLE_FLOAT_LEFT, eCSSUnit_Enumerated);

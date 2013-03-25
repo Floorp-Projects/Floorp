@@ -60,7 +60,7 @@ public:
   NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule) MOZ_OVERRIDE = 0;
 
   // WebIDL interface for CSS2Properties
-#define CSS_PROP_DOMPROP_PREFIXED(prop_) Moz ## prop_
+#define CSS_PROP_PUBLIC_OR_PRIVATE(publicname_, privatename_) publicname_
 #define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_,          \
                  kwtable_, stylestruct_, stylestructoffset_, animtype_)      \
   void                                                                       \
@@ -88,7 +88,7 @@ public:
 #undef CSS_PROP_SHORTHAND
 #undef CSS_PROP_LIST_EXCLUDE_INTERNAL
 #undef CSS_PROP
-#undef CSS_PROP_DOMPROP_PREFIXED
+#undef CSS_PROP_PUBLIC_OR_PRIVATE
 
   virtual void IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aPropName);
 

@@ -69,7 +69,6 @@ struct VisitData {
   VisitData()
   : placeId(0)
   , visitId(0)
-  , sessionId(0)
   , hidden(true)
   , typed(false)
   , transitionType(UINT32_MAX)
@@ -85,7 +84,6 @@ struct VisitData {
             nsIURI* aReferrer = NULL)
   : placeId(0)
   , visitId(0)
-  , sessionId(0)
   , hidden(true)
   , typed(false)
   , transitionType(UINT32_MAX)
@@ -138,7 +136,6 @@ struct VisitData {
   int64_t placeId;
   nsCString guid;
   int64_t visitId;
-  int64_t sessionId;
   nsCString spec;
   nsString revHost;
   bool hidden;
@@ -516,9 +513,8 @@ public:
     // to the database, thus cannot be queried and we don't notify them.
     if (mPlace.transitionType != nsINavHistoryService::TRANSITION_EMBED) {
       navHistory->NotifyOnVisit(uri, mPlace.visitId, mPlace.visitTime,
-                                mPlace.sessionId, mReferrer.visitId,
-                                mPlace.transitionType, mPlace.guid,
-                                mPlace.hidden);
+                                mReferrer.visitId, mPlace.transitionType,
+                                mPlace.guid, mPlace.hidden);
     }
 
     nsCOMPtr<nsIObserverService> obsService =
@@ -612,7 +608,7 @@ public:
 
     nsCOMPtr<mozIVisitInfo> visit =
       new VisitInfo(mPlace.visitId, mPlace.visitTime, mPlace.transitionType,
-                    referrerURI.forget(), mPlace.sessionId);
+                    referrerURI.forget());
     PlaceInfo::VisitsArray visits;
     (void)visits.AppendElement(visit);
 
@@ -841,26 +837,6 @@ private:
     for (nsTArray<VisitData>::size_type i = 0; i < mPlaces.Length(); i++) {
       mReferrers[i].spec = mPlaces[i].referrerSpec;
 
-      // If we are inserting a place into an empty mPlaces array, we need to
-      // check to make sure we do not store a bogus session id that is higher
-      // than the current maximum session id.
-      if (i == 0) {
-        int64_t newSessionId = navHistory->GetNewSessionID();
-        if (mPlaces[0].sessionId > newSessionId) {
-          mPlaces[0].sessionId = newSessionId;
-        }
-      }
-
-      // Speculatively get a new session id for our visit if the current session
-      // id is non-valid or if it is larger than the current largest session id.
-      // While it is true that we will use the session id from the referrer if
-      // the visit was "recent" enough, we cannot call this method off of the
-      // main thread, so we have to consume an id now.
-      if (mPlaces[i].sessionId <= 0 ||
-          (i > 0 && mPlaces[i].sessionId >= mPlaces[0].sessionId)) {
-        mPlaces[i].sessionId = navHistory->GetNewSessionID();
-      }
-
 #ifdef DEBUG
       nsCOMPtr<nsIURI> uri;
       (void)NS_NewURI(getter_AddRefs(uri), mPlaces[i].spec);
@@ -953,7 +929,7 @@ private:
     // If we have a visitTime, we want information on that specific visit.
     if (_place.visitTime) {
       stmt = mHistory->GetStatement(
-        "SELECT id, session, visit_date "
+        "SELECT id, visit_date "
         "FROM moz_historyvisits "
         "WHERE place_id = (SELECT id FROM moz_places WHERE url = :page_url) "
         "AND visit_date = :visit_date "
@@ -970,7 +946,7 @@ private:
     // Otherwise, we want information about the most recent visit.
     else {
       stmt = mHistory->GetStatement(
-        "SELECT id, session, visit_date "
+        "SELECT id, visit_date "
         "FROM moz_historyvisits "
         "WHERE place_id = (SELECT id FROM moz_places WHERE url = :page_url) "
         "ORDER BY visit_date DESC "
@@ -992,9 +968,7 @@ private:
 
     rv = stmt->GetInt64(0, &_place.visitId);
     NS_ENSURE_SUCCESS(rv, false);
-    rv = stmt->GetInt64(1, &_place.sessionId);
-    NS_ENSURE_SUCCESS(rv, false);
-    rv = stmt->GetInt64(2, reinterpret_cast<int64_t*>(&_place.visitTime));
+    rv = stmt->GetInt64(1, reinterpret_cast<int64_t*>(&_place.visitTime));
     NS_ENSURE_SUCCESS(rv, false);
 
     // If we have been given a visit threshold start time, go ahead and
@@ -1008,8 +982,8 @@ private:
   }
 
   /**
-   * Fetches information about a referrer and sets the session id for aPlace if
-   * it was a recent visit or not.
+   * Fetches information about a referrer for aPlace if it was a recent
+   * visit or not.
    *
    * @param aReferrer
    *        The VisitData for the referrer.  This will be populated with
@@ -1025,17 +999,7 @@ private:
       return;
     }
 
-    // If we had a referrer, we want to know about its last visit to put this
-    // new visit into the same session.
-    bool recentVisit = FetchVisitInfo(aReferrer, aPlace.visitTime);
-    // At this point, we know the referrer's session id, which this new visit
-    // should also share.
-    if (recentVisit) {
-      aPlace.sessionId = aReferrer.sessionId;
-    }
-    // However, if it isn't recent enough, we don't care to log anything about
-    // the referrer and we'll start a new session.
-    else {
+    if (!FetchVisitInfo(aReferrer, aPlace.visitTime)) {
       // We must change both the place and referrer to indicate that we will
       // not be using the referrer's data. This behavior has test coverage, so
       // if this invariant changes, we'll know.
@@ -1061,7 +1025,7 @@ private:
       stmt = mHistory->GetStatement(
         "INSERT INTO moz_historyvisits "
           "(from_visit, place_id, visit_date, visit_type, session) "
-        "VALUES (:from_visit, :page_id, :visit_date, :visit_type, :session) "
+        "VALUES (:from_visit, :page_id, :visit_date, :visit_type, 0) "
       );
       NS_ENSURE_STATE(stmt);
       rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"), _place.placeId);
@@ -1071,7 +1035,7 @@ private:
       stmt = mHistory->GetStatement(
         "INSERT INTO moz_historyvisits "
           "(from_visit, place_id, visit_date, visit_type, session) "
-        "VALUES (:from_visit, (SELECT id FROM moz_places WHERE url = :page_url), :visit_date, :visit_type, :session) "
+        "VALUES (:from_visit, (SELECT id FROM moz_places WHERE url = :page_url), :visit_date, :visit_type, 0) "
       );
       NS_ENSURE_STATE(stmt);
       rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), _place.spec);
@@ -1089,9 +1053,6 @@ private:
                  "Invalid transition type!");
     rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("visit_type"),
                                transitionType);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("session"),
-                               _place.sessionId);
     NS_ENSURE_SUCCESS(rv, rv);
 
     mozStorageStatementScoper scoper(stmt);
@@ -2643,15 +2604,6 @@ History::UpdatePlaces(const JS::Value& aPlaceInfos,
         StoreAndNotifyEmbedVisit(data, aCallback);
         visitData.RemoveElementAt(visitData.Length() - 1);
         continue;
-      }
-
-      // The session id is optional.
-      rv = GetIntFromJSObject(aCtx, visit, "sessionId", &data.sessionId);
-      if (rv == NS_ERROR_INVALID_ARG) {
-        data.sessionId = 0;
-      }
-      else {
-        NS_ENSURE_SUCCESS(rv, rv);
       }
 
       // The referrer is optional.
