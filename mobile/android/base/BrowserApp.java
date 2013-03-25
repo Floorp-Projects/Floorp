@@ -14,6 +14,7 @@ import org.mozilla.gecko.util.FloatUtils;
 import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
+import org.mozilla.gecko.widget.AboutHomeContent;
 
 import org.json.JSONArray;
 import org.json.JSONException;
