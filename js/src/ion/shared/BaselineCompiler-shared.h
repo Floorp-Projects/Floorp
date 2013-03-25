@@ -12,6 +12,7 @@
 #include "ion/BaselineFrameInfo.h"
 #include "ion/IonSpewer.h"
 #include "ion/BaselineIC.h"
+#include "ion/IonInstrumentation.h"
 #include "ion/IonMacroAssembler.h"
 
 namespace js {
@@ -65,6 +66,8 @@ class BaselineCompilerShared
 
     uint32_t pushedBeforeCall_;
     mozilla::DebugOnly<bool> inCall_;
+
+    CodeOffsetLabel spsPushToggleOffset_;
 
     BaselineCompilerShared(JSContext *cx, HandleScript script);
 

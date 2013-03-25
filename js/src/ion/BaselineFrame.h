@@ -56,7 +56,10 @@ class BaselineFrame
         EVAL             = 1 << 6,
 
         // Frame has hookData_ set.
-        HAS_HOOK_DATA    = 1 << 7
+        HAS_HOOK_DATA    = 1 << 7,
+
+        // Frame has profiler entry pushed.
+        HAS_PUSHED_SPS_FRAME = 1 << 8
     };
 
   protected: // Silence Clang warning about unused private fields.
@@ -294,6 +297,18 @@ class BaselineFrame
     void setHookData(void *v) {
         hookData_ = v;
         flags_ |= HAS_HOOK_DATA;
+    }
+
+    bool hasPushedSPSFrame() const {
+        return flags_ & HAS_PUSHED_SPS_FRAME;
+    }
+
+    void setPushedSPSFrame() {
+        flags_ |= HAS_PUSHED_SPS_FRAME;
+    }
+
+    void unsetPushedSPSFrame() {
+        flags_ &= ~HAS_PUSHED_SPS_FRAME;
     }
 
     void trace(JSTracer *trc);

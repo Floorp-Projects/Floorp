@@ -443,8 +443,10 @@ struct BaselineStackBuilder
 //                      +===============+
 //
 static bool
-InitFromBailout(JSContext *cx, HandleFunction fun, HandleScript script, SnapshotIterator &iter,
-                bool invalidate, BaselineStackBuilder &builder, MutableHandleFunction nextCallee)
+InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
+                HandleFunction fun, HandleScript script, SnapshotIterator &iter,
+                bool invalidate, BaselineStackBuilder &builder,
+                MutableHandleFunction nextCallee, jsbytecode **callPC)
 {
     uint32_t exprStackSlots = iter.slots() - (script->nfixed + CountArgSlots(fun));
 
@@ -499,9 +501,18 @@ InitFromBailout(JSContext *cx, HandleFunction fun, HandleScript script, Snapshot
 
     uint32_t flags = 0;
 
+    // If SPS Profiler is enabled, mark the frame as having pushed an SPS entry.
+    // This may be wrong for the last frame of ArgumentCheck bailout, but
+    // that will be fixed later.
+    if (cx->runtime->spsProfiler.enabled()) {
+        IonSpew(IonSpew_BaselineBailouts, "      Setting SPS flag on frame!");
+        flags |= BaselineFrame::HAS_PUSHED_SPS_FRAME;
+    }
+
     // Initialize BaselineFrame::scopeChain
     JSObject *scopeChain = NULL;
-    if (iter.bailoutKind() == Bailout_ArgumentCheck) {
+    BailoutKind bailoutKind = iter.bailoutKind();
+    if (bailoutKind == Bailout_ArgumentCheck) {
         // Temporary hack -- skip the (unused) scopeChain, because it could be
         // bogus (we can fail before the scope chain slot is set). Strip the
         // hasScopeChain flag and we'll check this later to run prologue().
@@ -634,11 +645,13 @@ InitFromBailout(JSContext *cx, HandleFunction fun, HandleScript script, Snapshot
                 resumeAfter ? "after" : "at", (int) pcOff, js_CodeName[op],
                 PCToLineNumber(script, pc), script->filename(), (int) script->lineno);
     IonSpew(IonSpew_BaselineBailouts, "      Bailout kind: %s",
-            BailoutKindString(iter.bailoutKind()));
+            BailoutKindString(bailoutKind));
 #endif
 
     // If this was the last inline frame, then unpacking is almost done.
     if (!iter.moreFrames()) {
+        // Last frame, so PC for call to next frame is set to NULL.
+        *callPC = NULL;
 
         // If the bailout was a resumeAfter, and the opcode is monitored,
         // then the bailed out state should be in a position to enter
@@ -742,6 +755,35 @@ InitFromBailout(JSContext *cx, HandleFunction fun, HandleScript script, Snapshot
                 JS_ASSERT(numUnsynced == 0);
                 opReturnAddr = baselineScript->prologueEntryAddr();
                 IonSpew(IonSpew_BaselineBailouts, "      Resuming into prologue.");
+
+                // If bailing into prologue, HAS_PUSHED_SPS_FRAME should not be set on frame.
+                blFrame->unsetPushedSPSFrame();
+
+                // Additionally, if SPS is enabled, there are two corner cases to handle:
+                //  1. If resuming into the prologue, and innermost frame is an inlined frame,
+                //     and bailout is because of argument check failure, then:
+                //          Top SPS profiler entry would be for caller frame.
+                //          Ion would not have set the PC index field on that frame
+                //              (since this bailout happens before MFunctionBoundary).
+                //          Make sure that's done now.
+                //  2. If resuming into the prologue, and the bailout is NOT because of an
+                //     argument check, then:
+                //          Top SPS profiler entry would be for callee frame.
+                //          Ion would already have pushed an SPS entry for this frame.
+                //          The pc for this entry would be set to NULL.
+                //          Make sure it's set to script->pc.
+                if (cx->runtime->spsProfiler.enabled()) {
+                    if (caller && bailoutKind == Bailout_ArgumentCheck) {
+                        IonSpew(IonSpew_BaselineBailouts, "      Setting PCidx on innermost "
+                                "inlined frame's parent's SPS entry (%s:%d) (pcIdx=%d)!",
+                                caller->filename(), caller->lineno, callerPC - caller->code);
+                        cx->runtime->spsProfiler.updatePC(caller, callerPC);
+                    } else if (bailoutKind != Bailout_ArgumentCheck) {
+                        IonSpew(IonSpew_BaselineBailouts,
+                                "      Popping SPS entry for innermost inlined frame's SPS entry");
+                        cx->runtime->spsProfiler.exit(cx, script, fun);
+                    }
+                }
             } else {
                 opReturnAddr = nativeCodeForPC;
             }
@@ -751,6 +793,8 @@ InitFromBailout(JSContext *cx, HandleFunction fun, HandleScript script, Snapshot
 
         return true;
     }
+
+    *callPC = pc;
 
     // Write out descriptor of BaselineJS frame.
     size_t baselineFrameDescr = MakeFrameDescriptor((uint32_t) builder.framePushed(),
@@ -1008,18 +1052,29 @@ ion::BailoutIonToBaseline(JSContext *cx, IonActivation *activation, IonBailoutIt
     int frameNo = 0;
 
     // Reconstruct baseline frames using the builder.
+    RootedScript caller(cx);
+    jsbytecode *callerPC = NULL;
     RootedFunction fun(cx, callee);
     RootedScript scr(cx, iter.script());
     while (true) {
         IonSpew(IonSpew_BaselineBailouts, "    FrameNo %d", frameNo);
+        jsbytecode *callPC = NULL;
         RootedFunction nextCallee(cx, NULL);
-        if (!InitFromBailout(cx, fun, scr, snapIter, invalidate, builder, &nextCallee))
+        if (!InitFromBailout(cx, caller, callerPC, fun, scr, snapIter, invalidate, builder,
+                             &nextCallee, &callPC))
+        {
             return BAILOUT_RETURN_FATAL_ERROR;
+        }
 
-        if (!snapIter.moreFrames())
-             break;
+        if (!snapIter.moreFrames()) {
+            JS_ASSERT(!callPC);
+            break;
+        }
 
         JS_ASSERT(nextCallee);
+        JS_ASSERT(callPC);
+        caller = scr;
+        callerPC = callPC;
         fun = nextCallee;
         scr = fun->nonLazyScript();
         snapIter.nextFrame();
