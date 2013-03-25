@@ -159,9 +159,6 @@ struct BaseOfTester<Type, const Type> : TrueType {};
 
 } /* namespace detail */
 
-template<bool Condition, typename A, typename B>
-struct Conditional;
-
 /*
  * IsBaseOf allows to know whether a given class is derived from another.
  *
@@ -176,7 +173,7 @@ struct Conditional;
  */
 template<class Base, class Derived>
 struct IsBaseOf
-  : Conditional<detail::BaseOfTester<Base, Derived>::value, TrueType, FalseType>::Type
+  : IntegralConstant<bool, detail::BaseOfTester<Base, Derived>::value>
 {};
 
 namespace detail {
@@ -223,7 +220,7 @@ struct ConvertibleTester
  */
 template<typename From, typename To>
 struct IsConvertible
-  : Conditional<detail::ConvertibleTester<From, To>::value, TrueType, FalseType>::Type
+  : IntegralConstant<bool, detail::ConvertibleTester<From, To>::value>
 {};
 
 /* 20.9.7 Transformations between types */
