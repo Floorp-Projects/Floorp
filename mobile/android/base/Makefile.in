@@ -198,11 +198,15 @@ FENNEC_JAVA_FILES = \
   gfx/ViewTransform.java \
   gfx/VirtualLayer.java \
   widget/AboutHomeContent.java \
-  widget/AboutHomePromoBox.java \
   widget/AboutHomeSection.java \
+  widget/AddonsSection.java \
   widget/DateTimePicker.java \
   widget/IconTabWidget.java \
+  widget/LastTabsSection.java \
   widget/LinkTextView.java \
+  widget/PromoBox.java \
+  widget/RemoteTabsSection.java \
+  widget/TopSitesView.java \
   widget/TabRow.java \
   widget/ThumbnailView.java \
   widget/TwoWayView.java \

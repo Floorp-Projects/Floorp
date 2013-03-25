@@ -15,6 +15,7 @@ import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
 import org.mozilla.gecko.widget.AboutHomeContent;
+import org.mozilla.gecko.widget.TopSitesView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -1513,7 +1514,7 @@ abstract public class BrowserApp extends GeckoApp
                 return true;
 
             case R.id.abouthome_topsites_unpin:
-                mAboutHomeContent.unpinSite(info, AboutHomeContent.UnpinFlags.REMOVE_PIN);
+                mAboutHomeContent.unpinSite(info, TopSitesView.UnpinFlags.REMOVE_PIN);
                 return true;
 
             case R.id.abouthome_topsites_pin:
@@ -1521,7 +1522,7 @@ abstract public class BrowserApp extends GeckoApp
                 return true;
 
             case R.id.abouthome_topsites_remove:
-                mAboutHomeContent.unpinSite(info, AboutHomeContent.UnpinFlags.REMOVE_HISTORY);
+                mAboutHomeContent.unpinSite(info, TopSitesView.UnpinFlags.REMOVE_HISTORY);
                 return true;
 
         }
