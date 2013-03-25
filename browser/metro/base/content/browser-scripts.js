@@ -128,6 +128,7 @@ let ScriptContexts = {};
   ["TopSitesSnappedView", "chrome://browser/content/TopSites.js"],
   ["TopSitesStartView", "chrome://browser/content/TopSites.js"],
   ["Sanitizer", "chrome://browser/content/sanitize.js"],
+  ["SanitizeUI", "chrome://browser/content/sanitizeUI.js"],
   ["SSLExceptions", "chrome://browser/content/exceptions.js"],
 #ifdef MOZ_SERVICES_SYNC
   ["WeaveGlue", "chrome://browser/content/sync.js"],

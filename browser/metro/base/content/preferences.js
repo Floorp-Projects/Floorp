@@ -7,8 +7,9 @@ var PreferencesPanelView = {
   init: function pv_init() {
     // Run some setup code the first time the panel is shown.
     Elements.prefsFlyout.addEventListener("PopupChanged", function onShow(aEvent) {
-      if (aEvent.detail && aEvent.popup === Elements.prefsFlyout) {
+      if (aEvent.detail && aEvent.target === Elements.prefsFlyout) {
         Elements.prefsFlyout.removeEventListener("PopupChanged", onShow, false);
+        SanitizeUI.init();
       }
     }, false);
   }
