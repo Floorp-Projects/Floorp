@@ -6,6 +6,7 @@
 #ifndef __NS_SVGBOOLEAN_H__
 #define __NS_SVGBOOLEAN_H__
 
+#include "nsCOMPtr.h"
 #include "nsError.h"
 #include "nsISMILAttr.h"
 #include "mozilla/Attributes.h"
@@ -18,6 +19,7 @@ class nsSVGElement;
 namespace mozilla {
 namespace dom {
 class SVGAnimationElement;
+class SVGAnimatedBoolean;
 }
 }
 
@@ -42,8 +44,8 @@ public:
   bool GetAnimValue() const
     { return mAnimVal; }
 
-  nsresult ToDOMAnimatedBoolean(nsISupports **aResult,
-                                nsSVGElement* aSVGElement);
+  already_AddRefed<mozilla::dom::SVGAnimatedBoolean>
+    ToDOMAnimatedBoolean(nsSVGElement* aSVGElement);
   // Returns a new nsISMILAttr object that the caller must delete
   nsISMILAttr* ToSMILAttr(nsSVGElement* aSVGElement);
 
