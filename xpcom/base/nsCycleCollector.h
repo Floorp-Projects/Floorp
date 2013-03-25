@@ -25,7 +25,14 @@ public:
     uint32_t mFreedGCed;
 };
 
-nsresult nsCycleCollector_startup();
+bool nsCycleCollector_init();
+
+enum CCThreadingModel {
+    CCSingleThread,
+    CCWithTraverseThread,
+};
+
+nsresult nsCycleCollector_startup(CCThreadingModel aThreadingModel);
 
 typedef void (*CC_BeforeUnlinkCallback)(void);
 void nsCycleCollector_setBeforeUnlinkCallback(CC_BeforeUnlinkCallback aCB);
