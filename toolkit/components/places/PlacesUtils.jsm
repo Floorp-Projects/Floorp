@@ -44,6 +44,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/commonjs/sdk/core/promise.js");
 
+XPCOMUtils.defineLazyModuleGetter(this, "Deprecated",
+                                  "resource://gre/modules/Deprecated.jsm");
+
 // The minimum amount of transactions before starting a batch. Usually we do
 // do incremental updates, a batch will cause views to completely
 // refresh instead.
@@ -67,7 +70,12 @@ function QI_node(aNode, aIID) {
   }
   return result;
 }
-function asVisit(aNode) QI_node(aNode, Ci.nsINavHistoryVisitResultNode);
+function asVisit(aNode) {
+  Deprecated.warning(
+    "asVisit is deprecated and will be removed in a future version",
+    "https://bugzilla.mozilla.org/show_bug.cgi?id=561450");
+  return aNode;
+};
 function asContainer(aNode) QI_node(aNode, Ci.nsINavHistoryContainerResultNode);
 function asQuery(aNode) QI_node(aNode, Ci.nsINavHistoryQueryResultNode);
 
@@ -171,8 +179,7 @@ this.PlacesUtils = {
    * @returns true if the node is a Bookmark separator, false otherwise
    */
   nodeIsSeparator: function PU_nodeIsSeparator(aNode) {
-
-    return (aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR);
+    return aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR;
   },
 
   /**
@@ -182,8 +189,13 @@ this.PlacesUtils = {
    * @returns true if the node is a visit item, false otherwise
    */
   nodeIsVisit: function PU_nodeIsVisit(aNode) {
-    var type = aNode.type;
-    return type == Ci.nsINavHistoryResultNode.RESULT_TYPE_VISIT;
+    Deprecated.warning(
+      "nodeIsVisit is deprecated ans will be removed in a future version",
+      "https://bugzilla.mozilla.org/show_bug.cgi?id=561450");
+    return this.nodeIsURI(aNode) && aNode.parent &&
+           this.nodeIsQuery(aNode.parent) &&
+           asQuery(aNode.parent).queryOptions.resultType ==
+             Ci.nsINavHistoryQueryOptions.RESULTS_AS_VISIT;
   },
 
   /**
@@ -192,10 +204,14 @@ this.PlacesUtils = {
    *          A result node
    * @returns true if the node is a URL item, false otherwise
    */
-  uriTypes: [Ci.nsINavHistoryResultNode.RESULT_TYPE_URI,
-             Ci.nsINavHistoryResultNode.RESULT_TYPE_VISIT],
+  get uriTypes() {
+    Deprecated.warning(
+      "uriTypes is deprecated ans will be removed in a future version",
+      "https://bugzilla.mozilla.org/show_bug.cgi?id=561450");
+    return [Ci.nsINavHistoryResultNode.RESULT_TYPE_URI];
+  },
   nodeIsURI: function PU_nodeIsURI(aNode) {
-    return this.uriTypes.indexOf(aNode.type) != -1;
+    return aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_URI;
   },
 
   /**

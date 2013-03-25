@@ -75,7 +75,7 @@
           if (PlacesUtils.nodeIsHistoryContainer(queryNode) ||
               options.resultType == options.RESULTS_AS_TAG_QUERY ||
               options.resultType == options.RESULTS_AS_TAG_CONTENTS)
-            options.resultType = options.RESULT_TYPE_URI;
+            options.resultType = options.RESULTS_AS_URI;
 
           var query = PlacesUtils.history.getNewQuery();
           query.searchTerms = filterString;
