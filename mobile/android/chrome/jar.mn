@@ -40,6 +40,9 @@ chrome.jar:
   content/dbg-browser-actors.js        (content/dbg-browser-actors.js)
 * content/WebAppRT.js                  (content/WebAppRT.js)
   content/InputWidgetHelper.js         (content/InputWidgetHelper.js)
+  content/WebrtcUI.js                  (content/WebrtcUI.js)
+  content/MemoryObserver.js            (content/MemoryObserver.js)
+  content/ConsoleAPI.js                (content/ConsoleAPI.js)
 
 % content branding %content/branding/
 
