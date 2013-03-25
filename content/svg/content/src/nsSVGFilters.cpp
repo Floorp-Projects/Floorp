@@ -2038,161 +2038,6 @@ nsSVGFEConvolveMatrixElement::GetNumberListInfo()
                                   ArrayLength(sNumberListInfo));
 }
 
-//---------------------SpotLight------------------------
-
-typedef SVGFEUnstyledElement nsSVGFESpotLightElementBase;
-
-class nsSVGFESpotLightElement : public nsSVGFESpotLightElementBase,
-                                public nsIDOMSVGFESpotLightElement
-{
-  friend nsresult NS_NewSVGFESpotLightElement(nsIContent **aResult,
-                                              already_AddRefed<nsINodeInfo> aNodeInfo);
-  friend class nsSVGFELightingElement;
-protected:
-  nsSVGFESpotLightElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-    : nsSVGFESpotLightElementBase(aNodeInfo) {}
-
-public:
-  // interfaces:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGFESPOTLIGHTELEMENT
-
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFESpotLightElementBase::)
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-
-  virtual bool AttributeAffectsRendering(
-          int32_t aNameSpaceID, nsIAtom* aAttribute) const;
-
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  virtual nsXPCClassInfo* GetClassInfo();
-
-  virtual nsIDOMNode* AsDOMNode() { return this; }
-protected:
-  virtual NumberAttributesInfo GetNumberInfo();
-
-  enum { X, Y, Z, POINTS_AT_X, POINTS_AT_Y, POINTS_AT_Z,
-         SPECULAR_EXPONENT, LIMITING_CONE_ANGLE };
-  nsSVGNumber2 mNumberAttributes[8];
-  static NumberInfo sNumberInfo[8];
-};
-
-NS_IMPL_NS_NEW_SVG_ELEMENT(FESpotLight)
-
-nsSVGElement::NumberInfo nsSVGFESpotLightElement::sNumberInfo[8] =
-{
-  { &nsGkAtoms::x, 0, false },
-  { &nsGkAtoms::y, 0, false },
-  { &nsGkAtoms::z, 0, false },
-  { &nsGkAtoms::pointsAtX, 0, false },
-  { &nsGkAtoms::pointsAtY, 0, false },
-  { &nsGkAtoms::pointsAtZ, 0, false },
-  { &nsGkAtoms::specularExponent, 1, false },
-  { &nsGkAtoms::limitingConeAngle, 0, false }
-};
-
-//----------------------------------------------------------------------
-// nsISupports methods
-
-NS_IMPL_ADDREF_INHERITED(nsSVGFESpotLightElement,nsSVGFESpotLightElementBase)
-NS_IMPL_RELEASE_INHERITED(nsSVGFESpotLightElement,nsSVGFESpotLightElementBase)
-
-DOMCI_NODE_DATA(SVGFESpotLightElement, nsSVGFESpotLightElement)
-
-NS_INTERFACE_TABLE_HEAD(nsSVGFESpotLightElement)
-  NS_NODE_INTERFACE_TABLE4(nsSVGFESpotLightElement, nsIDOMNode,
-                           nsIDOMElement, nsIDOMSVGElement,
-                           nsIDOMSVGFESpotLightElement)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFESpotLightElement)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGFESpotLightElementBase)
-
-//----------------------------------------------------------------------
-// nsIDOMNode methods
-
-NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFESpotLightElement)
-
-//----------------------------------------------------------------------
-// nsFEUnstyledElement methods
-
-bool
-nsSVGFESpotLightElement::AttributeAffectsRendering(int32_t aNameSpaceID,
-                                                   nsIAtom* aAttribute) const
-{
-  return aNameSpaceID == kNameSpaceID_None &&
-         (aAttribute == nsGkAtoms::x ||
-          aAttribute == nsGkAtoms::y ||
-          aAttribute == nsGkAtoms::z ||
-          aAttribute == nsGkAtoms::pointsAtX ||
-          aAttribute == nsGkAtoms::pointsAtY ||
-          aAttribute == nsGkAtoms::pointsAtZ ||
-          aAttribute == nsGkAtoms::specularExponent ||
-          aAttribute == nsGkAtoms::limitingConeAngle);
-}
-
-//----------------------------------------------------------------------
-// nsIDOMSVGFESpotLightElement methods
-
-NS_IMETHODIMP
-nsSVGFESpotLightElement::GetX(nsIDOMSVGAnimatedNumber **aX)
-{
-  return mNumberAttributes[X].ToDOMAnimatedNumber(aX, this);
-}
-
-NS_IMETHODIMP
-nsSVGFESpotLightElement::GetY(nsIDOMSVGAnimatedNumber **aY)
-{
-  return mNumberAttributes[Y].ToDOMAnimatedNumber(aY, this);
-}
-
-NS_IMETHODIMP
-nsSVGFESpotLightElement::GetZ(nsIDOMSVGAnimatedNumber **aZ)
-{
-  return mNumberAttributes[Z].ToDOMAnimatedNumber(aZ, this);
-}
-
-NS_IMETHODIMP
-nsSVGFESpotLightElement::GetPointsAtX(nsIDOMSVGAnimatedNumber **aX)
-{
-  return mNumberAttributes[POINTS_AT_X].ToDOMAnimatedNumber(aX, this);
-}
-
-NS_IMETHODIMP
-nsSVGFESpotLightElement::GetPointsAtY(nsIDOMSVGAnimatedNumber **aY)
-{
-  return mNumberAttributes[POINTS_AT_Y].ToDOMAnimatedNumber(aY, this);
-}
-
-NS_IMETHODIMP
-nsSVGFESpotLightElement::GetPointsAtZ(nsIDOMSVGAnimatedNumber **aZ)
-{
-  return mNumberAttributes[POINTS_AT_Z].ToDOMAnimatedNumber(aZ, this);
-}
-
-NS_IMETHODIMP
-nsSVGFESpotLightElement::GetSpecularExponent(nsIDOMSVGAnimatedNumber **aExponent)
-{
-  return mNumberAttributes[SPECULAR_EXPONENT].ToDOMAnimatedNumber(aExponent,
-                                                                  this);
-}
-
-NS_IMETHODIMP
-nsSVGFESpotLightElement::GetLimitingConeAngle(nsIDOMSVGAnimatedNumber **aAngle)
-{
-  return mNumberAttributes[LIMITING_CONE_ANGLE].ToDOMAnimatedNumber(aAngle,
-                                                                    this);
-}
-
-//----------------------------------------------------------------------
-// nsSVGElement methods
-
-nsSVGElement::NumberAttributesInfo
-nsSVGFESpotLightElement::GetNumberInfo()
-{
-  return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
-                              ArrayLength(sNumberInfo));
-}
-
 //------------------------------------------------------------
 
 typedef nsSVGFE nsSVGFELightingElementBase;
@@ -2454,7 +2299,7 @@ nsSVGFELightingElement::Filter(nsSVGFilterInstance *instance,
 
   SVGFEDistantLightElement* distantLight = nullptr;
   SVGFEPointLightElement* pointLight = nullptr;
-  nsCOMPtr<nsIDOMSVGFESpotLightElement> spotLight;
+  SVGFESpotLightElement* spotLight = nullptr;
 
   nsIFrame* frame = GetPrimaryFrame();
   if (!frame) return NS_ERROR_FAILURE;
@@ -2470,7 +2315,8 @@ nsSVGFELightingElement::Filter(nsSVGFilterInstance *instance,
                      static_cast<SVGFEDistantLightElement*>(child.get()) : nullptr;
     pointLight = child->IsSVG(nsGkAtoms::fePointLight) ?
                    static_cast<SVGFEPointLightElement*>(child.get()) : nullptr;
-    spotLight = do_QueryInterface(child);
+    spotLight = child->IsSVG(nsGkAtoms::feSpotLight) ?
+                   static_cast<SVGFESpotLightElement*>(child.get()) : nullptr;
     if (distantLight || pointLight || spotLight)
       break;
   }
@@ -2501,22 +2347,20 @@ nsSVGFELightingElement::Filter(nsSVGFilterInstance *instance,
   }
   if (spotLight) {
     float limitingConeAngle;
-    nsSVGFESpotLightElement* spot = 
-      static_cast<nsSVGFESpotLightElement*>(spotLight.get());
-    spot->GetAnimatedNumberValues(lightPos,
-                                  lightPos + 1,
-                                  lightPos + 2,
-                                  pointsAt,
-                                  pointsAt + 1,
-                                  pointsAt + 2,
-                                  &specularExponent,
-                                  &limitingConeAngle,
-                                  nullptr);
+    spotLight->GetAnimatedNumberValues(lightPos,
+                                       lightPos + 1,
+                                       lightPos + 2,
+                                       pointsAt,
+                                       pointsAt + 1,
+                                       pointsAt + 2,
+                                       &specularExponent,
+                                       &limitingConeAngle,
+                                       nullptr);
     instance->ConvertLocation(lightPos);
     instance->ConvertLocation(pointsAt);
 
-    if (spot->mNumberAttributes[nsSVGFESpotLightElement::LIMITING_CONE_ANGLE].
-                                  IsExplicitlySet()) {
+    if (spotLight->mNumberAttributes[nsSVGFESpotLightElement::LIMITING_CONE_ANGLE].
+                                       IsExplicitlySet()) {
       cosConeAngle = std::max<double>(cos(limitingConeAngle * radPerDeg), 0.0);
     }
   }
@@ -2529,7 +2373,7 @@ nsSVGFELightingElement::Filter(nsSVGFilterInstance *instance,
   uint8_t *targetData = info.mTarget->Data();
   int32_t surfaceWidth = info.mSource->Width();
   int32_t surfaceHeight = info.mSource->Height();
-  
+
   for (int32_t y = dataRect.y; y < dataRect.YMost(); y++) {
     for (int32_t x = dataRect.x; x < dataRect.XMost(); x++) {
       int32_t index = y * stride + x * 4;
