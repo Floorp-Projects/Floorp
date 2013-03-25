@@ -22,7 +22,7 @@ interface nsISearchSubmission : nsISupports
   readonly attribute nsIURI uri;
 };
 
-[scriptable, uuid(6839f025-2e25-408e-892e-c2c2fa5650c5)]
+[scriptable, uuid(ccf6aa20-10a9-4a0c-a81d-31b10ea846de)]
 interface nsISearchEngine : nsISupports
 {
   /**
@@ -131,6 +131,12 @@ interface nsISearchEngine : nsISupports
    * The search engine type.
    */
   readonly attribute long type;
+
+  /**
+   * An optional unique identifier for this search engine within the context of
+   * the distribution, as provided by the distributing entity.
+   */
+  readonly attribute AString identifier;
 
 };
 
