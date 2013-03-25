@@ -18,8 +18,8 @@ class nsTextControlFrame;
 
 // IID for the nsITextControl interface
 #define NS_ITEXTCONTROLELEMENT_IID    \
-{ 0x3558afa1, 0x6136, 0x4421, \
-  { 0xbd, 0xdc, 0x2c, 0x9d, 0x5f, 0xc1, 0xfb, 0x91 } }
+{ 0x3dd53b59, 0x9d8f, 0x40a3, \
+  { 0x81, 0xd7, 0xb3, 0x43, 0xa0, 0x51, 0xfc, 0xb5 } }
 
 /**
  * This interface is used for the text control frame to get the editor and
@@ -75,6 +75,11 @@ public:
    * @return the number of rows to use
    */
   NS_IMETHOD_(int32_t) GetRows() = 0;
+
+  /**
+   * Get the default value of the text control
+   */
+  NS_IMETHOD_(void) GetDefaultValueFromContent(nsAString& aValue) = 0;
 
   /**
    * Return true if the value of the control has been changed.

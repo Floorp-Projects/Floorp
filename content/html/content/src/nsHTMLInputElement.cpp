@@ -5557,6 +5557,20 @@ nsHTMLInputElement::GetRows()
   return DEFAULT_ROWS;
 }
 
+NS_IMETHODIMP_(void)
+nsHTMLInputElement::GetDefaultValueFromContent(nsAString& aValue)
+{
+  nsTextEditorState *state = GetEditorState();
+  if (state) {
+    GetDefaultValue(aValue);
+    // This is called by the frame to show the value.
+    // We have to sanitize it when needed.
+    if (!mParserCreating) {
+      SanitizeValue(aValue);
+    }
+  }
+}
+
 NS_IMETHODIMP_(bool)
 nsHTMLInputElement::ValueChanged() const
 {
