@@ -4,3 +4,6 @@ function f() {
     }
 }
 f();
+
+// Don't assert (bug 852798).
+Object.getOwnPropertyDescriptor(this, "customNative");
