@@ -33,6 +33,7 @@ static const int32_t INVALID_STACK_SLOT      = -1;
 static const int32_t NUNBOX32_TYPE_OFFSET    = 4;
 static const int32_t NUNBOX32_PAYLOAD_OFFSET = 0;
 
+static const uint32_t ShadowStackSpace = 0;
 ////
 // These offsets are related to bailouts.
 ////

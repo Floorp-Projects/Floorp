@@ -11,6 +11,7 @@
 #include "jsnum.h"
 
 #include "CodeGenerator-arm.h"
+#include "ion/CodeGenerator.h"
 #include "ion/IonCompartment.h"
 #include "ion/IonFrames.h"
 #include "ion/MIR.h"
@@ -36,9 +37,16 @@ CodeGeneratorARM::CodeGeneratorARM(MIRGenerator *gen, LIRGraph *graph, MacroAsse
 bool
 CodeGeneratorARM::generatePrologue()
 {
-    // Note that this automatically sets MacroAssembler::framePushed().
-    masm.reserveStack(frameSize());
-    masm.checkStackAlignment();
+    if (gen->compilingAsmJS()) {
+        masm.Push(lr);
+        // Note that this automatically sets MacroAssembler::framePushed().
+        masm.reserveStack(frameDepth_);
+    } else {
+        // Note that this automatically sets MacroAssembler::framePushed().
+        masm.reserveStack(frameSize());
+        masm.checkStackAlignment();
+    }
+
     // Allocate returnLabel_ on the heap, so we don't run its destructor and
     // assert-not-bound in debug mode on compilation failure.
     returnLabel_ = new HeapLabel();
@@ -49,13 +57,19 @@ CodeGeneratorARM::generatePrologue()
 bool
 CodeGeneratorARM::generateEpilogue()
 {
-    masm.bind(returnLabel_);
-
-    // Pop the stack we allocated at the start of the function.
-    masm.freeStack(frameSize());
-    JS_ASSERT(masm.framePushed() == 0);
-
-    masm.ma_pop(pc);
+    masm.bind(returnLabel_); 
+    if (gen->compilingAsmJS()) {
+        // Pop the stack we allocated at the start of the function.
+        masm.freeStack(frameDepth_);
+        masm.Pop(pc);
+        JS_ASSERT(masm.framePushed() == 0);
+        //masm.as_bkpt();
+    } else {
+        // Pop the stack we allocated at the start of the function.
+        masm.freeStack(frameSize());
+        JS_ASSERT(masm.framePushed() == 0);
+        masm.ma_pop(pc);
+    }
     masm.dumpPool();
     return true;
 }
@@ -479,6 +493,7 @@ CodeGeneratorARM::visitMulI(LMulI *ins)
 
 extern "C" {
     extern int __aeabi_idivmod(int,int);
+    extern int __aeabi_uidivmod(int,int);
 }
 
 bool
@@ -843,7 +858,15 @@ CodeGeneratorARM::toMoveOperand(const LAllocation *a) const
         return MoveOperand(ToRegister(a));
     if (a->isFloatReg())
         return MoveOperand(ToFloatRegister(a));
-    return MoveOperand(StackPointer, ToStackOffset(a));
+    JS_ASSERT((ToStackOffset(a) & 3) == 0);
+    int32_t offset = ToStackOffset(a);
+    
+    // The way the stack slots work, we assume that everything from depth == 0 downwards is writable
+    // however, since our frame is included in this, ensure that the frame gets skipped
+    if (gen->compilingAsmJS())
+        offset -= AlignmentMidPrologue;
+
+    return MoveOperand(StackPointer, offset);
 }
 
 bool
@@ -1178,19 +1201,9 @@ CodeGeneratorARM::visitDouble(LDouble *ins)
 {
 
     const LDefinition *out = ins->getDef(0);
-    const LConstantIndex *cindex = ins->getOperand(0)->toConstantIndex();
-    const Value &v = graph.getConstant(cindex->index());
 
-    masm.ma_vimm(v.toDouble(), ToFloatRegister(out));
+    masm.ma_vimm(ins->getDouble(), ToFloatRegister(out));
     return true;
-#if 0
-    DeferredDouble *d = new DeferredDouble(cindex->index());
-    if (!deferredDoubles_.append(d))
-        return false;
-
-    masm.movsd(d->label(), ToFloatRegister(out));
-    return true;
-#endif
 }
 
 Register
@@ -1614,5 +1627,226 @@ CodeGeneratorARM::generateInvalidateEpilogue()
     // We should never reach this point in JIT code -- the invalidation thunk should
     // pop the invalidated JS frame and return directly to its caller.
     masm.breakpoint();
+    return true;
+}
+
+template <class U>
+Register
+getBase(U *mir)
+{
+    switch (mir->base()) {
+      case U::Heap: return HeapReg;
+      case U::Global: return GlobalReg;
+    }
+    return InvalidReg;
+}
+
+bool
+CodeGeneratorARM::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
+{
+    const MAsmJSLoadHeap *mir = ins->mir();
+    bool isSigned;
+    int size;
+    bool isFloat = false;
+    switch (mir->viewType()) {
+      case ArrayBufferView::TYPE_INT8:    isSigned = true; size = 8; break;
+      case ArrayBufferView::TYPE_UINT8:   isSigned = false; size = 8; break;
+      case ArrayBufferView::TYPE_INT16:   isSigned = true; size = 16; break;
+      case ArrayBufferView::TYPE_UINT16:  isSigned = false; size = 16; break;
+      case ArrayBufferView::TYPE_INT32:
+      case ArrayBufferView::TYPE_UINT32:  isSigned = true;  size = 32; break;
+      case ArrayBufferView::TYPE_FLOAT64: isFloat = true;   size = 64; break;
+      case ArrayBufferView::TYPE_FLOAT32:
+        isFloat = true;
+        size = 32;
+        break;
+      default: JS_NOT_REACHED("unexpected array type");
+    }
+    Register index = ToRegister(ins->ptr());
+    BufferOffset bo = masm.ma_BoundsCheck(index);
+    if (isFloat) {
+        VFPRegister vd(ToFloatRegister(ins->output()));
+        if (size == 32) {
+            masm.ma_vldr(vd.singleOverlay(), HeapReg, index, 0, Assembler::Zero);
+            masm.as_vcvt(vd, vd.singleOverlay(), false, Assembler::Zero);
+        } else {
+            masm.ma_vldr(vd, HeapReg, index, 0, Assembler::Zero);
+        }
+        masm.ma_vmov(NANReg, ToFloatRegister(ins->output()), Assembler::NonZero);
+    }  else {
+        masm.ma_dataTransferN(IsLoad, size, isSigned, HeapReg, index,
+                              ToRegister(ins->output()), Offset, Assembler::Zero);
+        masm.ma_mov(Imm32(0), ToRegister(ins->output()), NoSetCond, Assembler::NonZero);
+    }
+    return gen->noteBoundsCheck(bo.getOffset());
+}
+
+bool
+CodeGeneratorARM::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
+{
+    const MAsmJSStoreHeap *mir = ins->mir();
+    bool isSigned;
+    int size;
+    bool isFloat = false;
+    switch (mir->viewType()) {
+      case ArrayBufferView::TYPE_INT8:
+      case ArrayBufferView::TYPE_UINT8:   isSigned = false; size = 8; break;
+      case ArrayBufferView::TYPE_INT16:
+      case ArrayBufferView::TYPE_UINT16:  isSigned = false; size = 16; break;
+      case ArrayBufferView::TYPE_INT32:
+      case ArrayBufferView::TYPE_UINT32:  isSigned = true;  size = 32; break;
+      case ArrayBufferView::TYPE_FLOAT64: isFloat = true;   size = 64; break;
+      case ArrayBufferView::TYPE_FLOAT32:
+        isFloat = true;
+        size = 32;
+        break;
+      default: JS_NOT_REACHED("unexpected array type");
+    }
+    Register index = ToRegister(ins->ptr());
+
+    BufferOffset bo = masm.ma_BoundsCheck(index);
+    if (isFloat) {
+        VFPRegister vd(ToFloatRegister(ins->value()));
+        if (size == 32) {
+            masm.storeFloat(vd, HeapReg, index, Assembler::Zero);
+        } else {
+            masm.ma_vstr(vd, HeapReg, index, 0, Assembler::Zero);
+        }
+    }  else {
+        masm.ma_dataTransferN(IsStore, size, isSigned, HeapReg, index,
+                              ToRegister(ins->value()), Offset, Assembler::Zero);
+    }
+    return gen->noteBoundsCheck(bo.getOffset());
+}
+
+bool
+CodeGeneratorARM::visitAsmJSPassStackArg(LAsmJSPassStackArg *ins)
+{
+    const MAsmJSPassStackArg *mir = ins->mir();
+    Operand dst(StackPointer, mir->spOffset());
+    if (ins->arg()->isConstant()) {
+        //masm.as_bkpt();
+        masm.ma_storeImm(Imm32(ToInt32(ins->arg())), dst);
+    } else {
+        if (ins->arg()->isGeneralReg())
+            masm.ma_str(ToRegister(ins->arg()), dst);
+        else
+            masm.ma_vstr(ToFloatRegister(ins->arg()), dst);
+    }
+
+    return true;
+}
+
+
+bool
+CodeGeneratorARM::visitAsmJSDivOrMod(LAsmJSDivOrMod *ins)
+{
+    //Register remainder = ToRegister(ins->remainder());
+    Register lhs = ToRegister(ins->lhs());
+    Register rhs = ToRegister(ins->rhs());
+    Register output = ToRegister(ins->output());
+
+    //JS_ASSERT(remainder == edx);
+    //JS_ASSERT(lhs == eax);
+    JS_ASSERT(ins->mirRaw()->isAsmJSUDiv() || ins->mirRaw()->isAsmJSUMod());
+    //JS_ASSERT_IF(ins->mirRaw()->isAsmUDiv(), output == eax);
+    //JS_ASSERT_IF(ins->mirRaw()->isAsmUMod(), output == edx);
+
+    Label afterDiv;
+
+    masm.ma_cmp(rhs, Imm32(0));
+    Label notzero;
+    masm.ma_b(&notzero, Assembler::NonZero);
+    masm.ma_mov(Imm32(0), output);
+    masm.ma_b(&afterDiv);
+    masm.bind(&notzero);
+
+    masm.setupAlignedABICall(2);
+    masm.passABIArg(lhs);
+    masm.passABIArg(rhs);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, __aeabi_uidivmod));
+
+    masm.bind(&afterDiv);
+    return true;
+}
+
+bool
+CodeGeneratorARM::visitEffectiveAddress(LEffectiveAddress *ins)
+{
+    const MEffectiveAddress *mir = ins->mir();
+    Register base = ToRegister(ins->base());
+    Register index = ToRegister(ins->index());
+    Register output = ToRegister(ins->output());
+    masm.as_add(output, base, lsl(index, mir->scale()));
+    masm.ma_add(Imm32(mir->displacement()), output);
+    return true;
+}
+
+bool
+CodeGeneratorARM::visitAsmJSLoadGlobalVar(LAsmJSLoadGlobalVar *ins)
+{
+    const MAsmJSLoadGlobalVar *mir = ins->mir();
+    unsigned addr = mir->globalDataOffset();
+    if (mir->type() == MIRType_Int32)
+        masm.ma_dtr(IsLoad, GlobalReg, Imm32(addr), ToRegister(ins->output()));
+    else
+        masm.ma_vldr(Operand(GlobalReg, addr), ToFloatRegister(ins->output()));
+    return true;
+}
+
+bool
+CodeGeneratorARM::visitAsmJSStoreGlobalVar(LAsmJSStoreGlobalVar *ins)
+{
+    const MAsmJSStoreGlobalVar *mir = ins->mir();
+
+    MIRType type = mir->value()->type();
+    JS_ASSERT(type == MIRType_Int32 || type == MIRType_Double);
+    unsigned addr = mir->globalDataOffset();
+    if (mir->value()->type() == MIRType_Int32)
+        masm.ma_dtr(IsStore, GlobalReg, Imm32(addr), ToRegister(ins->value()));
+    else
+        masm.ma_vstr(ToFloatRegister(ins->value()), Operand(GlobalReg, addr));
+    return true;
+}
+
+bool
+CodeGeneratorARM::visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr *ins)
+{
+    const MAsmJSLoadFuncPtr *mir = ins->mir();
+
+    Register index = ToRegister(ins->index());
+    Register tmp = ToRegister(ins->temp());
+    Register out = ToRegister(ins->output());
+    unsigned addr = mir->globalDataOffset();
+    masm.ma_mov(Imm32(addr), tmp);
+    masm.as_add(tmp, tmp, lsl(index, 2));
+    masm.ma_ldr(DTRAddr(GlobalReg, DtrRegImmShift(tmp, LSL, 0)), out);
+
+    return true;
+}
+
+bool
+CodeGeneratorARM::visitAsmJSLoadFFIFunc(LAsmJSLoadFFIFunc *ins)
+{
+    const MAsmJSLoadFFIFunc *mir = ins->mir();
+
+    masm.ma_ldr(Operand(GlobalReg, mir->globalDataOffset()), ToRegister(ins->output()));
+
+    return true;
+}
+
+bool
+CodeGeneratorARM::visitNegI(LNegI *ins)
+{
+    Register input = ToRegister(ins->input());
+    masm.ma_neg(input, ToRegister(ins->output()));
+    return true;
+}
+
+bool
+CodeGeneratorARM::visitNegD(LNegD *ins)
+{
+    FloatRegister input = ToFloatRegister(ins->input());
+    masm.ma_vneg(input, ToFloatRegister(ins->output()));
     return true;
 }

@@ -111,6 +111,9 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual bool visitAsmJSDivOrMod(LAsmJSDivOrMod *ins);
     virtual bool visitAsmJSPassStackArg(LAsmJSPassStackArg *ins);
 
+    bool visitNegI(LNegI *lir);
+    bool visitNegD(LNegD *lir);
+
     // Out of line visitors.
     bool visitOutOfLineBailout(OutOfLineBailout *ool);
     bool visitOutOfLineUndoALUOperation(OutOfLineUndoALUOperation *ool);

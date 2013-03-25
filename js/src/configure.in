@@ -4370,7 +4370,6 @@ if test "$ACCESSIBILITY" -a "$MOZ_ENABLE_GTK2" ; then
     AC_DEFINE_UNQUOTED(ATK_REV_VERSION, $ATK_REV_VERSION)
 fi
 
-
 dnl ECMAScript Internationalization API Support (uses ICU)
 dnl ========================================================
 

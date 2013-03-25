@@ -48,6 +48,9 @@ class LIRGeneratorARM : public LIRGeneratorShared
     bool lowerModI(MMod *mod);
     bool lowerMulI(MMul *mul, MDefinition *lhs, MDefinition *rhs);
     bool visitPowHalf(MPowHalf *ins);
+    bool visitAsmJSNeg(MAsmJSNeg *ins);
+    bool visitAsmJSUDiv(MAsmJSUDiv *ins);
+    bool visitAsmJSUMod(MAsmJSUMod *ins);
 
     LTableSwitch *newLTableSwitch(const LAllocation &in, const LDefinition &inputCopy,
                                   MTableSwitch *ins);
@@ -62,6 +65,9 @@ class LIRGeneratorARM : public LIRGeneratorShared
     bool visitGuardShape(MGuardShape *ins);
     bool visitStoreTypedArrayElement(MStoreTypedArrayElement *ins);
     bool visitStoreTypedArrayElementHole(MStoreTypedArrayElementHole *ins);
+    bool visitAsmJSUnsignedToDouble(MAsmJSUnsignedToDouble *ins);
+    bool visitAsmJSStoreHeap(MAsmJSStoreHeap *ins);
+    bool visitAsmJSLoadFuncPtr(MAsmJSLoadFuncPtr *ins);
     bool visitInterruptCheck(MInterruptCheck *ins);
 };
 
