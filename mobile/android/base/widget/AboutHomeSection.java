@@ -4,6 +4,7 @@
 
 package org.mozilla.gecko.widget;
 
+import org.mozilla.gecko.Divider;
 import org.mozilla.gecko.GeckoLinearLayout;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.util.GamepadUtils;
@@ -18,8 +19,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 public class AboutHomeSection extends GeckoLinearLayout {
-    private static final String LOGTAG = "GeckoAboutHomeSection";
-
     private TextView mTitle;
     private TextView mSubtitle;
     private LinearLayout mItemsContainer;
@@ -82,7 +81,11 @@ public class AboutHomeSection extends GeckoLinearLayout {
 
     public void addItem(View item) {
         mItemsContainer.addView(item);
-        mItemsContainer.addView(new Divider(getContext(), null));
+        
+        Divider divider = new Divider(getContext(), null);
+        divider.setBackgroundColor(0x3460666E);
+        
+        mItemsContainer.addView(divider);
     }
 
     public void clear() {
@@ -103,15 +106,5 @@ public class AboutHomeSection extends GeckoLinearLayout {
 
     public void hideMoreText() {
         mMoreText.setVisibility(View.GONE);
-    }
-
-    private class Divider extends View {
-        public Divider(Context context, AttributeSet attrs) {
-            super(context, attrs);
-
-            setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT,
-                                                          (int) context.getResources().getDisplayMetrics().density));
-            setBackgroundColor(0x3460666E);
-        }
     }
 }
