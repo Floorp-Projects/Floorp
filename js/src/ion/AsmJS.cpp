@@ -5218,8 +5218,10 @@ js::CompileAsmJS(JSContext *cx, TokenStream &ts, ParseNode *fn, const CompileOpt
         return Warn(cx, JSMSG_USE_ASM_TYPE_FAIL, "Platform missing signal handler support");
 
 # ifdef JS_PARALLEL_COMPILATION
-    if (!EnsureParallelCompilationInitialized(cx->runtime))
-        return Warn(cx, JSMSG_USE_ASM_TYPE_FAIL, "Failed initialization of compilation threads");
+    if (OffThreadCompilationEnabled(cx)) {
+        if (!EnsureParallelCompilationInitialized(cx->runtime))
+            return Warn(cx, JSMSG_USE_ASM_TYPE_FAIL, "Failed compilation thread initialization");
+    }
 # endif
 
     ScopedJSDeletePtr<AsmJSModule> module;
