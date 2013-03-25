@@ -17,7 +17,7 @@ struct PropertyInfo {
 
 const PropertyInfo gLonghandProperties[] = {
 
-#define CSS_PROP_DOMPROP_PREFIXED(prop_) Moz ## prop_
+#define CSS_PROP_PUBLIC_OR_PRIVATE(publicname_, privatename_) publicname_
 #define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, \
                  stylestruct_, stylestructoffset_, animtype_)                 \
     { #name_, #method_, pref_ },
@@ -25,7 +25,7 @@ const PropertyInfo gLonghandProperties[] = {
 #include "nsCSSPropList.h"
 
 #undef CSS_PROP
-#undef CSS_PROP_DOMPROP_PREFIXED
+#undef CSS_PROP_PUBLIC_OR_PRIVATE
 
 };
 
@@ -50,7 +50,7 @@ const char* gLonghandPropertiesWithDOMProp[] = {
 
 const PropertyInfo gShorthandProperties[] = {
 
-#define CSS_PROP_DOMPROP_PREFIXED(prop_) Moz ## prop_
+#define CSS_PROP_PUBLIC_OR_PRIVATE(publicname_, privatename_) publicname_
 // Need an extra level of macro nesting to force expansion of method_
 // params before they get pasted.
 #define LISTCSSPROPERTIES_INNER_MACRO(method_) #method_
@@ -61,7 +61,7 @@ const PropertyInfo gShorthandProperties[] = {
 
 #undef CSS_PROP_SHORTHAND
 #undef LISTCSSPROPERTIES_INNER_MACRO
-#undef CSS_PROP_DOMPROP_PREFIXED
+#undef CSS_PROP_PUBLIC_OR_PRIVATE
 
 #define CSS_PROP_ALIAS(name_, id_, method_, pref_) \
     { #name_, #method_, pref_ },
