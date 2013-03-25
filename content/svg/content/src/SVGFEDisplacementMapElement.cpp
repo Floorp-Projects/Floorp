@@ -4,103 +4,113 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/SVGFEDisplacementMapElement.h"
+#include "mozilla/dom/SVGFEDisplacementMapElementBinding.h"
+#include "nsSVGFilterInstance.h"
+#include "nsSVGUtils.h"
+
+NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEDisplacementMap)
 
 namespace mozilla {
 namespace dom {
 
-nsSVGElement::NumberInfo nsSVGFEDisplacementMapElement::sNumberInfo[1] =
+// Channel Selectors
+static const unsigned short SVG_CHANNEL_UNKNOWN = 0;
+static const unsigned short SVG_CHANNEL_R = 1;
+static const unsigned short SVG_CHANNEL_G = 2;
+static const unsigned short SVG_CHANNEL_B = 3;
+static const unsigned short SVG_CHANNEL_A = 4;
+
+JSObject*
+SVGFEDisplacementMapElement::WrapNode(JSContext* aCx, JSObject* aScope)
+{
+  return SVGFEDisplacementMapElementBinding::Wrap(aCx, aScope, this);
+}
+
+nsSVGElement::NumberInfo SVGFEDisplacementMapElement::sNumberInfo[1] =
 {
   { &nsGkAtoms::scale, 0, false },
 };
 
-nsSVGEnumMapping nsSVGFEDisplacementMapElement::sChannelMap[] = {
-  {&nsGkAtoms::R, nsSVGFEDisplacementMapElement::SVG_CHANNEL_R},
-  {&nsGkAtoms::G, nsSVGFEDisplacementMapElement::SVG_CHANNEL_G},
-  {&nsGkAtoms::B, nsSVGFEDisplacementMapElement::SVG_CHANNEL_B},
-  {&nsGkAtoms::A, nsSVGFEDisplacementMapElement::SVG_CHANNEL_A},
+nsSVGEnumMapping SVGFEDisplacementMapElement::sChannelMap[] = {
+  {&nsGkAtoms::R, SVG_CHANNEL_R},
+  {&nsGkAtoms::G, SVG_CHANNEL_G},
+  {&nsGkAtoms::B, SVG_CHANNEL_B},
+  {&nsGkAtoms::A, SVG_CHANNEL_A},
   {nullptr, 0}
 };
 
-nsSVGElement::EnumInfo nsSVGFEDisplacementMapElement::sEnumInfo[2] =
+nsSVGElement::EnumInfo SVGFEDisplacementMapElement::sEnumInfo[2] =
 {
   { &nsGkAtoms::xChannelSelector,
     sChannelMap,
-    nsSVGFEDisplacementMapElement::SVG_CHANNEL_A
+    SVG_CHANNEL_A
   },
   { &nsGkAtoms::yChannelSelector,
     sChannelMap,
-    nsSVGFEDisplacementMapElement::SVG_CHANNEL_A
+    SVG_CHANNEL_A
   }
 };
 
-nsSVGElement::StringInfo nsSVGFEDisplacementMapElement::sStringInfo[3] =
+nsSVGElement::StringInfo SVGFEDisplacementMapElement::sStringInfo[3] =
 {
   { &nsGkAtoms::result, kNameSpaceID_None, true },
   { &nsGkAtoms::in, kNameSpaceID_None, true },
   { &nsGkAtoms::in2, kNameSpaceID_None, true }
 };
 
-NS_IMPL_NS_NEW_SVG_ELEMENT(FEDisplacementMap)
-
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ADDREF_INHERITED(nsSVGFEDisplacementMapElement,nsSVGFEDisplacementMapElementBase)
-NS_IMPL_RELEASE_INHERITED(nsSVGFEDisplacementMapElement,nsSVGFEDisplacementMapElementBase)
+NS_IMPL_ADDREF_INHERITED(SVGFEDisplacementMapElement,SVGFEDisplacementMapElementBase)
+NS_IMPL_RELEASE_INHERITED(SVGFEDisplacementMapElement,SVGFEDisplacementMapElementBase)
 
-DOMCI_NODE_DATA(SVGFEDisplacementMapElement, nsSVGFEDisplacementMapElement)
-
-NS_INTERFACE_TABLE_HEAD(nsSVGFEDisplacementMapElement)
-  NS_NODE_INTERFACE_TABLE5(nsSVGFEDisplacementMapElement, nsIDOMNode,
-                           nsIDOMElement, nsIDOMSVGElement,
-                           nsIDOMSVGFilterPrimitiveStandardAttributes,
-                           nsIDOMSVGFEDisplacementMapElement)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEDisplacementMapElement)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGFEDisplacementMapElementBase)
+NS_INTERFACE_TABLE_HEAD(SVGFEDisplacementMapElement)
+  NS_NODE_INTERFACE_TABLE3(SVGFEDisplacementMapElement, nsIDOMNode,
+                           nsIDOMElement, nsIDOMSVGElement)
+NS_INTERFACE_MAP_END_INHERITING(SVGFEDisplacementMapElementBase)
 
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEDisplacementMapElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEDisplacementMapElement)
 
 //----------------------------------------------------------------------
-// nsIDOMSVGFEDisplacementMapElement methods
 
-/* readonly attribute nsIDOMSVGAnimatedString in1; */
-NS_IMETHODIMP nsSVGFEDisplacementMapElement::GetIn1(nsIDOMSVGAnimatedString * *aIn)
+already_AddRefed<nsIDOMSVGAnimatedString>
+SVGFEDisplacementMapElement::In1()
 {
-  return mStringAttributes[IN1].ToDOMAnimatedString(aIn, this);
+  return mStringAttributes[IN1].ToDOMAnimatedString(this);
 }
 
-/* readonly attribute nsIDOMSVGAnimatedString in2; */
-NS_IMETHODIMP nsSVGFEDisplacementMapElement::GetIn2(nsIDOMSVGAnimatedString * *aIn)
+already_AddRefed<nsIDOMSVGAnimatedString>
+SVGFEDisplacementMapElement::In2()
 {
-  return mStringAttributes[IN2].ToDOMAnimatedString(aIn, this);
+  return mStringAttributes[IN2].ToDOMAnimatedString(this);
 }
 
-/* readonly attribute nsIDOMSVGAnimatedNumber scale; */
-NS_IMETHODIMP nsSVGFEDisplacementMapElement::GetScale(nsIDOMSVGAnimatedNumber * *aScale)
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGFEDisplacementMapElement::Scale()
 {
-  return mNumberAttributes[SCALE].ToDOMAnimatedNumber(aScale, this);
+  return mNumberAttributes[SCALE].ToDOMAnimatedNumber(this);
 }
 
-/* readonly attribute nsIDOMSVGAnimatedEnumeration xChannelSelector; */
-NS_IMETHODIMP nsSVGFEDisplacementMapElement::GetXChannelSelector(nsIDOMSVGAnimatedEnumeration * *aChannel)
+already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+SVGFEDisplacementMapElement::XChannelSelector()
 {
-  return mEnumAttributes[CHANNEL_X].ToDOMAnimatedEnum(aChannel, this);
+  return mEnumAttributes[CHANNEL_X].ToDOMAnimatedEnum(this);
 }
 
-/* readonly attribute nsIDOMSVGAnimatedEnumeration yChannelSelector; */
-NS_IMETHODIMP nsSVGFEDisplacementMapElement::GetYChannelSelector(nsIDOMSVGAnimatedEnumeration * *aChannel)
+already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+SVGFEDisplacementMapElement::YChannelSelector()
 {
-  return mEnumAttributes[CHANNEL_Y].ToDOMAnimatedEnum(aChannel, this);
+  return mEnumAttributes[CHANNEL_Y].ToDOMAnimatedEnum(this);
 }
 
 nsresult
-nsSVGFEDisplacementMapElement::Filter(nsSVGFilterInstance *instance,
-                                      const nsTArray<const Image*>& aSources,
-                                      const Image* aTarget,
-                                      const nsIntRect& rect)
+SVGFEDisplacementMapElement::Filter(nsSVGFilterInstance* instance,
+                                    const nsTArray<const Image*>& aSources,
+                                    const Image* aTarget,
+                                    const nsIntRect& rect)
 {
   float scale = instance->GetPrimitiveNumber(SVGContentUtils::XY,
                                              &mNumberAttributes[SCALE]);
@@ -161,10 +171,10 @@ nsSVGFEDisplacementMapElement::Filter(nsSVGFilterInstance *instance,
 }
 
 bool
-nsSVGFEDisplacementMapElement::AttributeAffectsRendering(int32_t aNameSpaceID,
-                                                         nsIAtom* aAttribute) const
+SVGFEDisplacementMapElement::AttributeAffectsRendering(int32_t aNameSpaceID,
+                                                       nsIAtom* aAttribute) const
 {
-  return nsSVGFEDisplacementMapElementBase::AttributeAffectsRendering(aNameSpaceID, aAttribute) ||
+  return SVGFEDisplacementMapElementBase::AttributeAffectsRendering(aNameSpaceID, aAttribute) ||
          (aNameSpaceID == kNameSpaceID_None &&
           (aAttribute == nsGkAtoms::in ||
            aAttribute == nsGkAtoms::in2 ||
@@ -174,14 +184,14 @@ nsSVGFEDisplacementMapElement::AttributeAffectsRendering(int32_t aNameSpaceID,
 }
 
 void
-nsSVGFEDisplacementMapElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
+SVGFEDisplacementMapElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
 {
   aSources.AppendElement(nsSVGStringInfo(&mStringAttributes[IN1], this));
   aSources.AppendElement(nsSVGStringInfo(&mStringAttributes[IN2], this));
 }
 
 nsIntRect
-nsSVGFEDisplacementMapElement::ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBoxes,
+SVGFEDisplacementMapElement::ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBoxes,
           const nsSVGFilterInstance& aInstance)
 {
   // XXX we could do something clever here involving analysis of 'scale'
@@ -191,7 +201,7 @@ nsSVGFEDisplacementMapElement::ComputeTargetBBox(const nsTArray<nsIntRect>& aSou
 }
 
 void
-nsSVGFEDisplacementMapElement::ComputeNeededSourceBBoxes(const nsIntRect& aTargetBBox,
+SVGFEDisplacementMapElement::ComputeNeededSourceBBoxes(const nsIntRect& aTargetBBox,
           nsTArray<nsIntRect>& aSourceBBoxes, const nsSVGFilterInstance& aInstance)
 {
   // in2 contains the displacements, which we read for each target pixel
@@ -204,8 +214,8 @@ nsSVGFEDisplacementMapElement::ComputeNeededSourceBBoxes(const nsIntRect& aTarge
 }
 
 nsIntRect
-nsSVGFEDisplacementMapElement::ComputeChangeBBox(const nsTArray<nsIntRect>& aSourceChangeBoxes,
-                                                 const nsSVGFilterInstance& aInstance)
+SVGFEDisplacementMapElement::ComputeChangeBBox(const nsTArray<nsIntRect>& aSourceChangeBoxes,
+                                               const nsSVGFilterInstance& aInstance)
 {
   // XXX we could do something clever here involving analysis of 'scale'
   // to figure out the maximum displacement
@@ -216,22 +226,25 @@ nsSVGFEDisplacementMapElement::ComputeChangeBBox(const nsTArray<nsIntRect>& aSou
 // nsSVGElement methods
 
 nsSVGElement::NumberAttributesInfo
-nsSVGFEDisplacementMapElement::GetNumberInfo()
+SVGFEDisplacementMapElement::GetNumberInfo()
 {
   return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
                               ArrayLength(sNumberInfo));
 }
 
 nsSVGElement::EnumAttributesInfo
-nsSVGFEDisplacementMapElement::GetEnumInfo()
+SVGFEDisplacementMapElement::GetEnumInfo()
 {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
                             ArrayLength(sEnumInfo));
 }
 
 nsSVGElement::StringAttributesInfo
-nsSVGFEDisplacementMapElement::GetStringInfo()
+SVGFEDisplacementMapElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               ArrayLength(sStringInfo));
 }
+
+} // namespace dom
+} // namespace mozilla
