@@ -10,7 +10,7 @@
 #include "LIR.h"
 #include "IonSpewer.h"
 #include "LIR-inl.h"
-
+#include "shared/CodeGenerator-shared.h"
 using namespace js;
 using namespace js::ion;
 

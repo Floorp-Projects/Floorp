@@ -91,6 +91,8 @@ class MacroAssemblerARM : public Assembler
 
     void ma_mov(Imm32 imm, Register dest,
                 SetCond_ sc = NoSetCond, Condition c = Always);
+    void ma_mov(ImmWord imm, Register dest,
+                SetCond_ sc = NoSetCond, Condition c = Always);
 
     void ma_mov(const ImmGCPtr &ptr, Register dest);
 
@@ -262,11 +264,11 @@ class MacroAssemblerARM : public Assembler
     void ma_strh(Register rt, EDtrAddr addr, Index mode = Offset, Condition cc = Always);
     void ma_strd(Register rt, DebugOnly<Register> rt2, EDtrAddr addr, Index mode = Offset, Condition cc = Always);
     // specialty for moving N bits of data, where n == 8,16,32,64
-    void ma_dataTransferN(LoadStore ls, int size, bool IsSigned,
+    BufferOffset ma_dataTransferN(LoadStore ls, int size, bool IsSigned,
                           Register rn, Register rm, Register rt,
-                          Index mode = Offset, Condition cc = Always);
+                          Index mode = Offset, Condition cc = Always, unsigned scale = TimesOne);
 
-    void ma_dataTransferN(LoadStore ls, int size, bool IsSigned,
+    BufferOffset ma_dataTransferN(LoadStore ls, int size, bool IsSigned,
                           Register rn, Imm32 offset, Register rt,
                           Index mode = Offset, Condition cc = Always);
     void ma_pop(Register r);
@@ -319,15 +321,19 @@ class MacroAssemblerARM : public Assembler
     void ma_vxfer(VFPRegister src, Register dest, Condition cc = Always);
     void ma_vxfer(VFPRegister src, Register dest1, Register dest2, Condition cc = Always);
 
-    void ma_vdtr(LoadStore ls, const Operand &addr, VFPRegister dest, Condition cc = Always);
+    void ma_vxfer(Register src1, Register src2, FloatRegister dest, Condition cc = Always);
 
-    void ma_vldr(VFPAddr addr, VFPRegister dest, Condition cc = Always);
-    void ma_vldr(const Operand &addr, VFPRegister dest, Condition cc = Always);
+    BufferOffset ma_vdtr(LoadStore ls, const Operand &addr, VFPRegister dest, Condition cc = Always);
 
-    void ma_vstr(VFPRegister src, VFPAddr addr, Condition cc = Always);
-    void ma_vstr(VFPRegister src, const Operand &addr, Condition cc = Always);
 
-    void ma_vstr(VFPRegister src, Register base, Register index, int32_t shift = defaultShift, Condition cc = Always);
+    BufferOffset ma_vldr(VFPAddr addr, VFPRegister dest, Condition cc = Always);
+    BufferOffset ma_vldr(const Operand &addr, VFPRegister dest, Condition cc = Always);
+    BufferOffset ma_vldr(VFPRegister src, Register base, Register index, int32_t shift = defaultShift, Condition cc = Always);
+
+    BufferOffset ma_vstr(VFPRegister src, VFPAddr addr, Condition cc = Always);
+    BufferOffset ma_vstr(VFPRegister src, const Operand &addr, Condition cc = Always);
+
+    BufferOffset ma_vstr(VFPRegister src, Register base, Register index, int32_t shift = defaultShift, Condition cc = Always);
     // calls an Ion function, assumes that the stack is untouched (8 byte alinged)
     void ma_callIon(const Register reg);
     // callso an Ion function, assuming that sp has already been decremented
@@ -444,7 +450,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         enoughMemory_(true),
         framePushed_(0)
     { }
-
     bool oom() const {
         return Assembler::oom() || !enoughMemory_;
     }
@@ -485,10 +490,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     }
 
     void call(Label *label) {
-        JS_NOT_REACHED("Feature NYI");
-        /* we can blx to it if it close by, otherwise, we need to
-         * set up a branch + link node.
-         */
+        // for now, assume that it'll be nearby?
+        as_bl(label, Always);
     }
     void call(ImmWord word) {
         BufferOffset bo = m_buffer.nextOffset();
@@ -592,6 +595,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     }
 
     void neg32(Register reg) {
+        ma_neg(reg, reg, SetCond);
+    }
+    void negl(Register reg) {
         ma_neg(reg, reg, SetCond);
     }
     void test32(Register lhs, Register rhs) {
@@ -821,8 +827,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void branchTestPtr(Condition cond, const Register &lhs, const Register &rhs, Label *label) {
         branchTest32(cond, lhs, rhs, label);
     }
-    void branchTestPtr(Condition cond, const Register &lhs, Imm32 imm, Label *label) {
-        branchTest32(cond, lhs, imm, label);
+    void branchTestPtr(Condition cond, const Register &lhs, const Imm32 rhs, Label *label) {
+        branchTest32(cond, lhs, rhs, label);
     }
     void branchPtr(Condition cond, Register lhs, Register rhs, Label *label) {
         branch32(cond, lhs, rhs, label);
@@ -910,9 +916,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         storeValue(val, Operand(dest));
     }
     void storeValue(JSValueType type, Register reg, Address dest) {
+        ma_str(reg, dest);
         ma_mov(ImmTag(JSVAL_TYPE_TO_TAG(type)), secondScratchReg_);
         ma_str(secondScratchReg_, Address(dest.base, dest.offset + 4));
-        ma_str(reg, dest);
     }
     void storeValue(const Value &val, Address dest) {
         jsval_layout jv = JSVAL_TO_IMPL(val);
@@ -1148,6 +1154,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void cmp32(const Register &lhs, const Register &rhs);
     void cmp32(const Operand &lhs, const Imm32 &rhs);
     void cmp32(const Operand &lhs, const Register &rhs);
+
     void cmpPtr(const Register &lhs, const ImmWord &rhs);
     void cmpPtr(const Register &lhs, const Register &rhs);
     void cmpPtr(const Register &lhs, const ImmGCPtr &rhs);
@@ -1250,6 +1257,50 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     }
 
     void enterOsr(Register calleeToken, Register code);
+    void memIntToValue(Address Source, Address Dest) {
+        load32(Source, lr);
+        storeValue(JSVAL_TYPE_INT32, lr, Dest);
+    }
+    void memMove32(Address Source, Address Dest) {
+        loadPtr(Source, lr);
+        storePtr(lr, Dest);
+    }
+    void memMove64(Address Source, Address Dest) {
+        loadPtr(Source, lr);
+        storePtr(lr, Dest);
+        loadPtr(Address(Source.base, Source.offset+4), lr);
+        storePtr(lr, Address(Dest.base, Dest.offset+4));
+    }
+
+    void lea(Operand addr, Register dest) {
+        ma_add(addr.baseReg(), Imm32(addr.disp()), dest);
+    }
+
+    void stackCheck(ImmWord limitAddr, Label *label) {
+        int *foo = 0;
+        *foo = 5;
+        movePtr(limitAddr, ScratchRegister);
+        ma_ldr(Address(ScratchRegister, 0), ScratchRegister);
+        ma_cmp(ScratchRegister, StackPointer);
+        ma_b(label, Assembler::AboveOrEqual);
+    }
+    void abiret() {
+        as_bx(lr);
+    }
+
+    void ma_storeImm(Imm32 c, const Operand &dest) {
+        ma_mov(c, lr);
+        ma_str(lr, dest);
+    }
+    BufferOffset ma_BoundsCheck(Register bounded) {
+        return as_mov(ScratchRegister, lsl(bounded, 0), SetCond);
+    }
+
+    void storeFloat(VFPRegister src, Register base, Register index, Condition cond) {
+        as_vcvt(VFPRegister(ScratchFloatReg).singleOverlay(), src, false, cond);
+        ma_vstr(VFPRegister(ScratchFloatReg).singleOverlay(), base, index, 0, cond);
+
+    }
 };
 
 typedef MacroAssemblerARMCompat MacroAssemblerSpecific;

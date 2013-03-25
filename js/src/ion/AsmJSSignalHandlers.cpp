@@ -283,8 +283,13 @@ LookupHeapAccess(const AsmJSModule &module, uint8_t *pc)
 //
 // See: https://chromiumcodereview.appspot.com/10829122/
 // See: http://code.google.com/p/android/issues/detail?id=34784
-# if defined(__ANDROID__) && !defined(__BIONIC_HAVE_UCONTEXT_T)
+# if (defined(ANDROID)) && !defined(__BIONIC_HAVE_UCONTEXT_T)
 #  if defined(__arm__)
+// GLibc on ARM defines mcontext_t has a typedef for 'struct sigcontext'.
+// Old versions of the C library <signal.h> didn't define the type.
+#if !defined(__BIONIC_HAVE_STRUCT_SIGCONTEXT)
+#include <asm/sigcontext.h>
+#endif
 
 typedef struct sigcontext mcontext_t;
 
