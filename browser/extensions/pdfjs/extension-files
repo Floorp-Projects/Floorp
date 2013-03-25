@@ -1,4 +1,5 @@
 chrome.manifest
+components/PdfRedirector.js
 components/PdfStreamConverter.js
 content/build/pdf.js
 content/PdfJs.jsm
