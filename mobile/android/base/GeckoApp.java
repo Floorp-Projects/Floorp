@@ -828,9 +828,21 @@ abstract public class GeckoApp
                 String manifestURL = message.getString("manifestURL");
                 String iconURL = message.getString("iconURL");
                 String origin = message.getString("origin");
-
-                // installWebapp will return a File object pointing to the profile directory of the webapp
-                mCurrentResponse = GeckoAppShell.installWebApp(name, manifestURL, origin, iconURL).toString();
+                // preInstallWebapp will return a File object pointing to the profile directory of the webapp
+                mCurrentResponse = GeckoAppShell.preInstallWebApp(name, manifestURL, origin).toString();
+                GeckoAppShell.postInstallWebApp(name, manifestURL, origin, iconURL);
+            } else if (event.equals("WebApps:PreInstall")) {
+                String name = message.getString("name");
+                String manifestURL = message.getString("manifestURL");
+                String origin = message.getString("origin");
+                // preInstallWebapp will return a File object pointing to the profile directory of the webapp
+                mCurrentResponse = GeckoAppShell.preInstallWebApp(name, manifestURL, origin).toString();
+            } else if (event.equals("WebApps:PostInstall")) {
+                String name = message.getString("name");
+                String manifestURL = message.getString("manifestURL");
+                String iconURL = message.getString("iconURL");
+                String origin = message.getString("origin");
+                GeckoAppShell.postInstallWebApp(name, manifestURL, origin, iconURL);
             } else if (event.equals("WebApps:Uninstall")) {
                 String origin = message.getString("origin");
                 GeckoAppShell.uninstallWebApp(origin);
@@ -1672,6 +1684,8 @@ abstract public class GeckoApp
         registerEventListener("Accessibility:Ready");
         registerEventListener("Shortcut:Remove");
         registerEventListener("WebApps:Open");
+        registerEventListener("WebApps:PreInstall");
+        registerEventListener("WebApps:PostInstall");
         registerEventListener("WebApps:Install");
         registerEventListener("WebApps:Uninstall");
         registerEventListener("Share:Text");
@@ -2055,6 +2069,8 @@ abstract public class GeckoApp
         unregisterEventListener("Accessibility:Ready");
         unregisterEventListener("Shortcut:Remove");
         unregisterEventListener("WebApps:Open");
+        unregisterEventListener("WebApps:PreInstall");
+        unregisterEventListener("WebApps:PostInstall");
         unregisterEventListener("WebApps:Install");
         unregisterEventListener("WebApps:Uninstall");
         unregisterEventListener("Share:Text");

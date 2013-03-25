@@ -6754,55 +6754,76 @@ var WebappsUI = {
   },
 
   doInstall: function doInstall(aData) {
-    let manifest = new ManifestHelper(aData.app.manifest, aData.app.origin);
+    let jsonManifest = aData.isPackage ? aData.app.updateManifest : aData.app.manifest;
+    let manifest = new ManifestHelper(jsonManifest, aData.app.origin);
     let name = manifest.name ? manifest.name : manifest.fullLaunchPath();
     let showPrompt = true;
 
     if (!showPrompt || Services.prompt.confirm(null, Strings.browser.GetStringFromName("webapps.installTitle"), name)) {
-      // Add a homescreen shortcut -- we can't use createShortcut, since we need to pass
-      // a unique ID for Android webapp allocation
-      this.makeBase64Icon(this.getBiggestIcon(manifest.icons, Services.io.newURI(aData.app.origin, null, null)),
-        (function(scaledIcon, fullsizeIcon) {
-          let profilePath = sendMessageToJava({
-            type: "WebApps:Install",
-            name: manifest.name,
-            manifestURL: aData.app.manifestURL,
-            origin: aData.app.origin,
-            iconURL: scaledIcon,
-          });
+      // Get a profile for the app to be installed in. We'll download everything before creating the icons.
+      let profilePath = sendMessageToJava({
+        type: "WebApps:PreInstall",
+        name: manifest.name,
+        manifestURL: aData.app.manifestURL,
+        origin: aData.app.origin
+      });
+      let file = null;
+      if (profilePath) {
+        file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+        file.initWithPath(profilePath);
 
-          // if java returned a profile path to us, try to use it to pre-populate the app cache
-          let file = null;
-          if (profilePath) {
-            file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
-            file.initWithPath(profilePath);
+        // build any app specific default prefs
+        let prefs = [];
+        if (manifest.orientation) {
+          prefs.push({name:"app.orientation.default", value: manifest.orientation});
+        }
 
-            // build any app specific default prefs
-            let prefs = [];
-            if (manifest.orientation)
-              prefs.push({name:"app.orientation.default", value: manifest.orientation});
+        // write them into the app profile
+        let defaultPrefsFile = file.clone();
+        defaultPrefsFile.append(this.DEFAULT_PREFS_FILENAME);
+        this.writeDefaultPrefs(defaultPrefsFile, prefs);
 
-            // write them into the app profile
-            let defaultPrefsFile = file.clone();
-            defaultPrefsFile.append(this.DEFAULT_PREFS_FILENAME);
-            this.writeDefaultPrefs(defaultPrefsFile, prefs);
+        let self = this;
+        DOMApplicationRegistry.confirmInstall(aData, false, file, null,
+          function (manifest) {
+            // the manifest argument is the manifest from within the zip file,
+            // TODO so now would be a good time to ask about permissions.
+            self.makeBase64Icon(self.getBiggestIcon(manifest.icons, Services.io.newURI(aData.app.origin, null, null)),
+              function(scaledIcon, fullsizeIcon) {
+                // if java returned a profile path to us, try to use it to pre-populate the app cache
+                // also save the icon so that it can be used in the splash screen
+                try {
+                  let iconFile = file.clone();
+                  iconFile.append("logo.png");
+                  let persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"].createInstance(Ci.nsIWebBrowserPersist);
+                  persist.persistFlags = Ci.nsIWebBrowserPersist.PERSIST_FLAGS_REPLACE_EXISTING_FILES;
+                  persist.persistFlags |= Ci.nsIWebBrowserPersist.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
 
-            // also save the icon so that it can be used in the splash screen
-            try {
-              let iconFile = file.clone();
-              iconFile.append("logo.png");
-              let persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"].createInstance(Ci.nsIWebBrowserPersist);
-              persist.persistFlags = Ci.nsIWebBrowserPersist.PERSIST_FLAGS_REPLACE_EXISTING_FILES;
-              persist.persistFlags |= Ci.nsIWebBrowserPersist.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
-  
-              let source = Services.io.newURI(fullsizeIcon, "UTF8", null);
-              persist.saveURI(source, null, null, null, null, iconFile, null);
-            } catch(ex) {
-              console.log(ex);
-            }
+                  let source = Services.io.newURI(fullsizeIcon, "UTF8", null);
+                  persist.saveURI(source, null, null, null, null, iconFile, null);
+
+                  sendMessageToJava({
+                    type: "WebApps:PostInstall",
+                    name: manifest.name,
+                    manifestURL: aData.app.manifestURL,
+                    origin: aData.app.origin,
+                    iconURL: fullsizeIcon
+                  });
+                  let message = Strings.browser.GetStringFromName("webapps.alertSuccess");
+                  let alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
+                  alerts.showAlertNotification("drawable://alert_app", manifest.name, message, true, "", {
+                    observe: function () {
+                      self.openURL(aData.app.manifestURL, aData.app.origin);
+                    }
+                  }, "webapp");
+                } catch(ex) {
+                  console.log(ex);
+                }
+              }
+            );
           }
-          DOMApplicationRegistry.confirmInstall(aData, false, file);
-        }).bind(this));
+        );
+      }
     } else {
       DOMApplicationRegistry.denyInstall(aData);
     }

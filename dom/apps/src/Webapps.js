@@ -267,6 +267,8 @@ WebappsRegistry.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.mozIDOMApplicationRegistry,
 #ifdef MOZ_B2G
                                          Ci.mozIDOMApplicationRegistry2,
+#elifdef MOZ_WIDGET_ANDROID
+                                         Ci.mozIDOMApplicationRegistry2,
 #endif
                                          Ci.nsIDOMGlobalPropertyInitializer]),
 
@@ -274,6 +276,8 @@ WebappsRegistry.prototype = {
                                     contractID: "@mozilla.org/webapps;1",
                                     interfaces: [Ci.mozIDOMApplicationRegistry,
 #ifdef MOZ_B2G
+                                                 Ci.mozIDOMApplicationRegistry2,
+#elifdef MOZ_WIDGET_ANDROID
                                                  Ci.mozIDOMApplicationRegistry2,
 #endif
                                                  ],
