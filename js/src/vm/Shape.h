@@ -333,6 +333,7 @@ class BaseShape : public js::gc::Cell
     void setSlotSpan(uint32_t slotSpan) { JS_ASSERT(isOwned()); slotSpan_ = slotSpan; }
 
     JSCompartment *compartment() const { return compartment_; }
+    JS::Zone *zone() const { return tenuredZone(); }
 
     /* Lookup base shapes from the compartment's baseShapes table. */
     static UnownedBaseShape* getUnowned(JSContext *cx, const StackBaseShape &base);
@@ -816,6 +817,8 @@ class Shape : public js::gc::Cell
     void finalize(FreeOp *fop);
     void removeChild(RawShape child);
 
+    JS::Zone *zone() const { return tenuredZone(); }
+
     static inline void writeBarrierPre(RawShape shape);
     static inline void writeBarrierPost(RawShape shape, void *addr);
 
@@ -895,6 +898,8 @@ struct EmptyShape : public js::Shape
      * Lookup an initial shape matching the given parameters, creating an empty
      * shape if none was found.
      */
+    static Shape *getInitialShape(JSContext *cx, Class *clasp, TaggedProto proto,
+                                  JSObject *parent, size_t nfixed, uint32_t objectFlags = 0);
     static Shape *getInitialShape(JSContext *cx, Class *clasp, TaggedProto proto,
                                   JSObject *parent, gc::AllocKind kind, uint32_t objectFlags = 0);
 

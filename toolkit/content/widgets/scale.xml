@@ -61,8 +61,6 @@
       <property name="pageIncrement" onget="return this._getIntegerAttribute('pageincrement', 10);"
                                      onset="return this._setIntegerAttribute('pageincrement', val);"/>
 
-      <field name="_userChanged">false</field>
-      <field name="_sliderElement"/>
       <property name="_slider" readonly="true">
         <getter>
           if (!this._sliderElement)
@@ -73,6 +71,7 @@
 
       <constructor>
         <![CDATA[
+          this._userChanged = false;
           var value = parseInt(this.getAttribute("value"), 10);
           if (!isNaN(value))
             this.value = value;

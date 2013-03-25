@@ -1003,7 +1003,7 @@ public class BrowserProvider extends ContentProvider {
         }
 
         // Returns the number of bookmarks inserted in the db
-        private int createDistributionBookmarks(final SQLiteDatabase db) {
+        private int createDistributionBookmarks(SQLiteDatabase db) {
             JSONArray bookmarks = Distribution.getBookmarks(mContext);
             if (bookmarks == null) {
                 return 0;
@@ -1049,6 +1049,7 @@ public class BrowserProvider extends ContentProvider {
                     ThreadUtils.postToBackgroundThread(new Runnable() {
                         @Override
                         public void run() {
+                            SQLiteDatabase db = getWritableDatabase();
                             try {
                                 String iconData = bookmark.getString("icon");
                                 Bitmap icon = BitmapUtils.getBitmapFromDataURI(iconData);
@@ -1068,7 +1069,7 @@ public class BrowserProvider extends ContentProvider {
         }
 
         // Inserts default bookmarks, starting at a specified position
-        private void createDefaultBookmarks(final SQLiteDatabase db, int pos) {
+        private void createDefaultBookmarks(SQLiteDatabase db, int pos) {
             Class<?> stringsClass = R.string.class;
             Field[] fields = stringsClass.getFields();
             Pattern p = Pattern.compile("^bookmarkdefaults_title_");
@@ -1098,6 +1099,7 @@ public class BrowserProvider extends ContentProvider {
                     ThreadUtils.postToBackgroundThread(new Runnable() {
                         @Override
                         public void run() {
+                            SQLiteDatabase db = getWritableDatabase();
                             Bitmap icon = getDefaultFaviconFromPath(name);
                             if (icon == null) {
                                 icon = getDefaultFaviconFromDrawable(name);

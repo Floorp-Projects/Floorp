@@ -390,14 +390,6 @@ class JSScript : public js::gc::Cell
     // function; otherwise the enclosing scope
     js::HeapPtrObject   enclosingScopeOrOriginalFunction_;
 
-  public:
-    // We should be able to remove this soon.
-    js::HeapPtr<JSObject> asmJS;
-
-#if JS_BYTES_PER_WORD == 4
-    uint32_t        PADDING32;
-#endif
-
     // 32-bit fields.
 
   public:
@@ -967,6 +959,8 @@ class JSScript : public js::gc::Cell
 #endif
 
     void finalize(js::FreeOp *fop);
+
+    JS::Zone *zone() const { return tenuredZone(); }
 
     static inline void writeBarrierPre(js::RawScript script);
     static inline void writeBarrierPost(js::RawScript script, void *addr);

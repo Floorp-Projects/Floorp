@@ -78,4 +78,48 @@ AudioBlockCopyChannelWithScale(const float aInput[WEBAUDIO_BLOCK_SIZE],
   }
 }
 
+void
+AudioBlockInPlaceScale(float aBlock[WEBAUDIO_BLOCK_SIZE],
+                       uint32_t aChannelCount,
+                       float aScale)
+{
+  if (aScale == 1.0f) {
+    return;
+  }
+  for (uint32_t i = 0; i < WEBAUDIO_BLOCK_SIZE * aChannelCount; ++i) {
+    *aBlock++ *= aScale;
+  }
+}
+
+void
+AudioBlockPanMonoToStereo(const float aInput[WEBAUDIO_BLOCK_SIZE],
+                          float aGainL, float aGainR,
+                          float aOutputL[WEBAUDIO_BLOCK_SIZE],
+                          float aOutputR[WEBAUDIO_BLOCK_SIZE])
+{
+  AudioBlockCopyChannelWithScale(aInput, aGainL, aOutputL);
+  AudioBlockCopyChannelWithScale(aInput, aGainR, aOutputR);
+}
+
+void
+AudioBlockPanStereoToStereo(const float aInputL[WEBAUDIO_BLOCK_SIZE],
+                            const float aInputR[WEBAUDIO_BLOCK_SIZE],
+                            float aGainL, float aGainR, bool aIsOnTheLeft,
+                            float aOutputL[WEBAUDIO_BLOCK_SIZE],
+                            float aOutputR[WEBAUDIO_BLOCK_SIZE])
+{
+  uint32_t i;
+
+  if (aIsOnTheLeft) {
+    for (i = 0; i < WEBAUDIO_BLOCK_SIZE; ++i) {
+      *aOutputL++ = *aInputL++ + *aInputR * aGainL;
+      *aOutputR++ = *aInputR++ * aGainR;
+    }
+  } else {
+    for (i = 0; i < WEBAUDIO_BLOCK_SIZE; ++i) {
+      *aOutputL++ = *aInputL * aGainL;
+      *aOutputR++ = *aInputR++ + *aInputL++ * aGainR;
+    }
+  }
+}
 }

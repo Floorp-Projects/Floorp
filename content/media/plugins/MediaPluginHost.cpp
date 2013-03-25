@@ -164,7 +164,16 @@ static const char* GetOmxLibraryName()
     ALOG("Android Device is: %s", NS_LossyConvertUTF16toASCII(device).get());
   }
 
-  if (version == 15 &&
+  nsAutoString manufacturer;
+  rv = infoService->GetPropertyAsAString(NS_LITERAL_STRING("manufacturer"), manufacturer);
+  if (NS_SUCCEEDED(rv)) {
+    ALOG("Android Manufacturer is: %s", NS_LossyConvertUTF16toASCII(manufacturer).get());
+  }
+
+  if (version >= 16 && manufacturer.Find("HTC") == 0) {
+    return "libomxpluginjb-htc.so";
+  }
+  else if (version == 15 &&
       (device.Find("LT28", false) == 0 ||
        device.Find("LT26", false) == 0 ||
        device.Find("LT22", false) == 0 ||

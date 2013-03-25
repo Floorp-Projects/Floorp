@@ -11,14 +11,15 @@
 
 #include "nsISelection.h"
 #include "nsRange.h"
-#include "nsIContent.h"
 #include "nsIDOMTreeWalker.h"
 
-class nsPresContext;
+class nsCaret;
+class nsIContent;
 class nsIPresShell;
+class nsPresContext;
 class nsQueryContentEvent;
 class nsSelectionEvent;
-class nsCaret;
+
 struct nsRect;
 
 /*

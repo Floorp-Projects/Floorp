@@ -130,10 +130,10 @@ private:
 
 protected:
   /*
-   * See SVGLengthList for the rationale for using nsTArray<SVGTransform>
-   * instead of nsTArray<SVGTransform, 1>.
+   * See SVGLengthList for the rationale for using FallibleTArray<SVGTransform>
+   * instead of FallibleTArray<SVGTransform, 1>.
    */
-  nsTArray<SVGTransform> mItems;
+  FallibleTArray<SVGTransform> mItems;
 };
 
 } // namespace mozilla

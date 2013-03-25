@@ -1,0 +1,92 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=658909
+-->
+<window title="Mozilla Bug 658909"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=658909"
+     target="_blank">Mozilla Bug 658909</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for call/apply-ing Xray methods.**/
+  SimpleTest.waitForExplicitFinish();
+
+  gLoadCount = 0;
+  function frameLoaded() {
+    if (++gLoadCount == frames.length)
+      go();
+  }
+
+  function msg(a, b, testName) {
+    return "(" + a.name + ", " + b.name + "): " + testName;
+  }
+
+  var testFunctions = {
+    testDocumentElement: function(a, b, name) {
+      var getter = Object.prototype.__lookupGetter__.call(a.document, 'documentElement');
+      is(getter.call(b.document), b.document.documentElement, msg(a, b, name));
+    },
+
+    testInvalidCall: function(a, b, name) {
+      var getter = Object.prototype.__lookupGetter__.call(a.document, 'documentElement');
+      var threw = false;
+      try { getter.call(b.document.body); } catch (e) { threw = true; };
+      ok(threw, msg(a, b, name));
+    },
+
+    testStatus: function(a, b, name) {
+      var setter = Object.prototype.__lookupSetter__.call(a, 'status');
+      is(b.status, "", "Empty status");
+      setter.call(b, "foopy");
+      is(b.status, "foopy", msg(a, b, name));
+      b.status = "";
+    },
+
+    testCreateElement: function(a, b, name) {
+      is(a.document.createElement.call(b.document, 'div').ownerDocument, b.document, msg(a, b, name));
+    },
+
+    testWindowName: function(a, b, name) {
+      var getter = Object.prototype.__lookupGetter__.call(a, 'name');
+      is(getter.call(b), b.name, msg(a, b, name));
+    },
+
+    testCanvas: function(a, b, name) {
+      var canvasA = a.document.createElement('canvas');
+      var canvasB = b.document.createElement('canvas');
+      var contextA = canvasA.getContext('2d');
+      var contextB = canvasB.getContext('2d');
+      var getter = Object.prototype.__lookupGetter__.call(contextA, 'canvas');
+      is(getter.call(contextB), canvasB, msg(a, b, name));
+    }
+  };
+
+  function go() {
+    for (var i = 0; i < frames.length; ++i)
+        frames[i].name = 'frame' + i;
+    for (var i = 0; i < frames.length; ++i) {
+      for (var j = 0; j < frames.length; ++j) {
+        for (var k in testFunctions)
+          testFunctions[k](frames[i], frames[j], k);
+      }
+    }
+
+    SimpleTest.finish();
+  }
+
+
+  ]]>
+  </script>
+  <iframe id="frame1" onload="frameLoaded();" type="content" src="http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html" />
+  <iframe id="frame2" onload="frameLoaded();" type="content" src="http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html" />
+  <iframe id="frame3" onload="frameLoaded();" type="content" src="http://example.com/tests/js/xpconnect/tests/mochitest/file_empty.html" />
+</window>

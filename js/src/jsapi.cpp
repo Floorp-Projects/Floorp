@@ -62,6 +62,7 @@
 #include "frontend/BytecodeCompiler.h"
 #include "gc/Marking.h"
 #include "gc/Memory.h"
+#include "ion/AsmJS.h"
 #include "js/CharacterEncoding.h"
 #include "js/MemoryMetrics.h"
 #include "vm/Debugger.h"
@@ -861,9 +862,11 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     structuredCloneCallbacks(NULL),
     telemetryCallback(NULL),
     propertyRemovals(0),
+#if !ENABLE_INTL_API
     thousandsSeparator(0),
     decimalSeparator(0),
     numGrouping(0),
+#endif
     mathCache_(NULL),
     dtoaState(NULL),
     trustedPrincipals_(NULL),
@@ -1011,7 +1014,9 @@ JSRuntime::~JSRuntime()
     }
 #endif
 
+#if !ENABLE_INTL_API
     FinishRuntimeNumberState(this);
+#endif
     FinishAtoms(this);
 
     if (dtoaState)
@@ -1050,6 +1055,9 @@ JSRuntime::setOwnerThread()
     nativeStackBase = GetNativeStackBase();
     if (nativeStackQuota)
         JS_SetNativeStackQuota(this, nativeStackQuota);
+#ifdef XP_MACOSX
+    asmJSMachExceptionHandler.setCurrentThread();
+#endif
 }
 
 void
@@ -1065,6 +1073,9 @@ JSRuntime::clearOwnerThread()
     mainThread.nativeStackLimit = UINTPTR_MAX;
 #else
     mainThread.nativeStackLimit = 0;
+#endif
+#ifdef XP_MACOSX
+    asmJSMachExceptionHandler.clearCurrentThread();
 #endif
 }
 
@@ -1143,14 +1154,12 @@ JS_NewRuntime(uint32_t maxbytes, JSUseHelperThreads useHelperThreads)
         return NULL;
     }
 
-    Probes::createRuntime(rt);
     return rt;
 }
 
 JS_PUBLIC_API(void)
 JS_DestroyRuntime(JSRuntime *rt)
 {
-    Probes::destroyRuntime(rt);
     js_free(rt->defaultLocale);
     js_delete(rt);
 }
@@ -1158,7 +1167,6 @@ JS_DestroyRuntime(JSRuntime *rt)
 JS_PUBLIC_API(void)
 JS_ShutDown(void)
 {
-    Probes::shutdown();
     PRMJ_NowShutdown();
 }
 
@@ -2420,19 +2428,6 @@ JS_AnchorPtr(void *p)
 {
 }
 
-JS_PUBLIC_API(JSBool)
-JS_LockGCThingRT(JSRuntime *rt, void *gcthing)
-{
-    return js_LockThing(rt, gcthing);
-}
-
-JS_PUBLIC_API(JSBool)
-JS_UnlockGCThingRT(JSRuntime *rt, void *gcthing)
-{
-    js_UnlockThing(rt, gcthing);
-    return true;
-}
-
 JS_PUBLIC_API(void)
 JS_SetExtraGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
 {
@@ -2987,7 +2982,6 @@ JS_NewExternalString(JSContext *cx, const jschar *chars, size_t length,
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     JSString *s = JSExternalString::new_(cx, chars, length, fin);
-    Probes::createString(cx, s, length);
     return s;
 }
 
@@ -3477,7 +3471,7 @@ LookupPropertyById(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
 #define AUTO_NAMELEN(s,n)   (((n) == (size_t)-1) ? js_strlen(s) : (n))
 
 static JSBool
-LookupResult(JSContext *cx, HandleObject obj, HandleObject obj2, jsid id,
+LookupResult(JSContext *cx, HandleObject obj, HandleObject obj2, HandleId id,
              HandleShape shape, Value *vp)
 {
     if (!shape) {
@@ -4839,7 +4833,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobjArg, JSRawObject parentArg
         return NULL;
     }
 
-    if (fun->hasScript() && fun->nonLazyScript()->asmJS) {
+    if (fun->isNative() && IsAsmJSModuleNative(fun->native())) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_CLONE_OBJECT);
         return NULL;
     }
@@ -5386,7 +5380,7 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, CompileOptions options,
     if (!fun)
         return NULL;
 
-    if (!frontend::CompileFunctionBody(cx, fun, options, formals, chars, length))
+    if (!frontend::CompileFunctionBody(cx, &fun, options, formals, chars, length))
         return NULL;
 
     if (obj && funAtom) {
@@ -7073,7 +7067,7 @@ JS_DescribeScriptedCaller(JSContext *cx, JSScript **script, unsigned *lineno)
     if (lineno)
         *lineno = 0;
 
-    ScriptFrameIter i(cx);
+    NonBuiltinScriptFrameIter i(cx);
     if (i.done())
         return JS_FALSE;
 

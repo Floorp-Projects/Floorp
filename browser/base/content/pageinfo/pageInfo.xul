@@ -64,6 +64,8 @@
     <command id="cmd_geoToggle"     oncommand="onRadioClick('geo');"/>
     <command id="cmd_indexedDBToggle" oncommand="onRadioClick('indexedDB');"/>
     <command id="cmd_pluginsToggle" oncommand="onPluginRadioClick(event);"/>
+    <command id="cmd_pointerLockDef"    oncommand="onCheckboxClick('pointerLock');"/>
+    <command id="cmd_pointerLockToggle" oncommand="onRadioClick('pointerLock');"/>
   </commandset>
 
   <keyset id="pageInfoKeySet">
@@ -410,6 +412,18 @@
               <radio id="fullscreen#0" command="cmd_fullscreenToggle" label="&permAskAlways;"/>
               <radio id="fullscreen#1" command="cmd_fullscreenToggle" label="&permAllow;"/>
               <radio id="fullscreen#2" command="cmd_fullscreenToggle" label="&permBlock;"/>
+            </radiogroup>
+          </hbox>
+        </vbox>
+        <vbox class="permission" id="permPointerLockRow" >
+          <label class="permissionLabel" id="permPointerLockLabel"
+                 value="&permPointerLock;" control="pointerLockRadioGroup"/>
+          <hbox id="permPointerLockBox" role="group" aria-labelledby="permPointerLockLabel">
+            <checkbox id="pointerLockDef" command="cmd_pointerLockDef" label="&permAskAlways;"/>
+            <spacer flex="1"/>
+            <radiogroup id="pointerLockRadioGroup" orient="horizontal">
+              <radio id="pointerLock#1" command="cmd_pointerLockToggle" label="&permAllow;"/>
+              <radio id="pointerLock#2" command="cmd_pointerLockToggle" label="&permBlock;"/>
             </radiogroup>
           </hbox>
         </vbox>

@@ -115,9 +115,29 @@ class Build(MachCommandBase):
         warnings_database.save_to_file(warnings_path)
 
         time_end = time.time()
-        self._handle_finder_cpu_usage(time_end - time_start, finder_start_cpu)
+        time_elapsed = time_end - time_start
+        self._handle_finder_cpu_usage(time_elapsed, finder_start_cpu)
 
-        print('Finished building. Built files are in %s' % self.topobjdir)
+        long_build = time_elapsed > 600
+
+        if status:
+            return status
+
+        if long_build:
+            print('We know it took a while, but your build finally finished successfully!')
+        else:
+            print('Your build was successful!')
+
+        app_path = self.get_binary_path('app')
+        print('To take your build for a test drive, run: %s' % app_path)
+
+        # Only for full builds because incremental builders likely don't
+        # need to be burdened with this.
+        if not what:
+            app = self.substs['MOZ_BUILD_APP']
+            if app in ('browser', 'mobile/android'):
+                print('For more information on what to do now, see '
+                    'https://developer.mozilla.org/docs/Developer_Guide/So_You_Just_Built_Firefox')
 
         return status
 

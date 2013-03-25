@@ -982,7 +982,7 @@ nsFocusManager::WindowHidden(nsIDOMWindow* aWindow)
         parentWindow->SetFocusedNode(nullptr);
     }
 
-    mFocusedWindow = window;
+    SetFocusedWindowInternal(window);
   }
 
   return NS_OK;
@@ -1601,7 +1601,7 @@ nsFocusManager::Blur(nsPIDOMWindow* aWindowToClear,
     if (aAncestorWindowToFocus)
       aAncestorWindowToFocus->SetFocusedNode(nullptr, 0, true);
 
-    mFocusedWindow = nullptr;
+    SetFocusedWindowInternal(nullptr);
     mFocusedContent = nullptr;
 
     // pass 1 for the focus method when calling SendFocusOrBlurEvent just so
@@ -1709,7 +1709,7 @@ nsFocusManager::Focus(nsPIDOMWindow* aWindow,
   if (aWindow->TakeFocus(true, focusMethod))
     aIsNewDocument = true;
 
-  mFocusedWindow = aWindow;
+  SetFocusedWindowInternal(aWindow);
 
   // Update the system focus by focusing the root widget.  But avoid this
   // if 1) aAdjustWidgets is false or 2) aContent is a plugin that has its
@@ -3360,6 +3360,57 @@ nsFocusManager::GetFocusInSelection(nsPIDOMWindow* aWindow,
     } while (true);
   }
   while (selectionNode && selectionNode != endSelectionNode);
+}
+
+class PointerUnlocker : public nsRunnable
+{
+public:
+  PointerUnlocker()
+  {
+    MOZ_ASSERT(!PointerUnlocker::sActiveUnlocker);
+    PointerUnlocker::sActiveUnlocker = this;
+  }
+
+  ~PointerUnlocker()
+  {
+    if (PointerUnlocker::sActiveUnlocker == this) {
+      PointerUnlocker::sActiveUnlocker = nullptr;
+    }
+  }
+
+  NS_IMETHOD Run()
+  {
+    if (PointerUnlocker::sActiveUnlocker == this) {
+      PointerUnlocker::sActiveUnlocker = nullptr;
+    }
+    NS_ENSURE_STATE(nsFocusManager::GetFocusManager());
+    nsPIDOMWindow* focused =
+      nsFocusManager::GetFocusManager()->GetFocusedWindow();
+    nsCOMPtr<nsIDocument> pointerLockedDoc =
+      do_QueryReferent(nsEventStateManager::sPointerLockedDoc);
+    if (pointerLockedDoc &&
+        !nsContentUtils::IsInPointerLockContext(focused)) {
+      nsIDocument::UnlockPointer();
+    }
+    return NS_OK;
+  }
+
+  static PointerUnlocker* sActiveUnlocker;
+};
+
+PointerUnlocker*
+PointerUnlocker::sActiveUnlocker = nullptr;
+
+void
+nsFocusManager::SetFocusedWindowInternal(nsPIDOMWindow* aWindow)
+{
+  if (!PointerUnlocker::sActiveUnlocker &&
+      nsContentUtils::IsInPointerLockContext(mFocusedWindow) &&
+      !nsContentUtils::IsInPointerLockContext(aWindow)) {
+    nsCOMPtr<nsIRunnable> runnable = new PointerUnlocker();
+    NS_DispatchToCurrentThread(runnable);
+  }
+  mFocusedWindow = aWindow;
 }
 
 nsresult

@@ -195,6 +195,7 @@ DOMWifiManager.prototype = {
 
       case "WifiManager:wifiUp":
         this._enabled = true;
+        this._macAddress = msg.macAddress;
         this._fireEnabledOrDisabled(true);
         break;
 

@@ -1487,6 +1487,35 @@ RadioInterfaceLayer.prototype = {
                                      0, options);
   },
 
+  /**
+   * A helper to broadcast the system message to launch registered apps
+   * like Costcontrol, Notification and Message app... etc.
+   *
+   * @param aName
+   *        The system message name.
+   * @param aDomMessage
+   *        The nsIDOMMozSmsMessage object.
+   */
+  broadcastSmsSystemMessage: function broadcastSmsSystemMessage(aName, aDomMessage) {
+    debug("Broadcasting the SMS system message: " + aName);
+
+    // Sadly we cannot directly broadcast the aDomMessage object
+    // because the system message mechamism will rewrap the object
+    // based on the content window, which needs to know the properties.
+    gSystemMessenger.broadcastMessage(aName, {
+      type:           aDomMessage.type,
+      id:             aDomMessage.id,
+      delivery:       aDomMessage.delivery,
+      deliveryStatus: aDomMessage.deliveryStatus,
+      sender:         aDomMessage.sender,
+      receiver:       aDomMessage.receiver,
+      body:           aDomMessage.body,
+      messageClass:   aDomMessage.messageClass,
+      timestamp:      aDomMessage.timestamp.getTime(),
+      read:           aDomMessage.read
+    });
+  },
+
   portAddressedSmsApps: null,
   handleSmsReceived: function handleSmsReceived(message) {
     debug("handleSmsReceived: " + JSON.stringify(message));
@@ -1547,18 +1576,7 @@ RadioInterfaceLayer.prototype = {
         return;
       }
 
-      gSystemMessenger.broadcastMessage("sms-received", {
-        id: message.id,
-        delivery: DOM_MOBILE_MESSAGE_DELIVERY_RECEIVED,
-        deliveryStatus: RIL.GECKO_SMS_DELIVERY_STATUS_SUCCESS,
-        sender: message.sender,
-        receiver: message.receiver,
-        body: message.fullBody,
-        messageClass: message.messageClass,
-        timestamp: message.timestamp,
-        read: false
-      });
-
+      this.broadcastSmsSystemMessage("sms-received", domMessage);
       Services.obs.notifyObservers(domMessage, kSmsReceivedObserverTopic, null);
     }.bind(this);
 
@@ -1617,17 +1635,8 @@ RadioInterfaceLayer.prototype = {
                                                      DOM_MOBILE_MESSAGE_DELIVERY_SENT,
                                                      options.sms.deliveryStatus,
                                                      function notifyResult(rv, domMessage) {
-      //TODO bug 832140 handle !Components.isSuccessCode(rv)
-      gSystemMessenger.broadcastMessage("sms-sent",
-                                        {id: options.sms.id,
-                                         delivery: DOM_MOBILE_MESSAGE_DELIVERY_SENT,
-                                         deliveryStatus: options.sms.deliveryStatus,
-                                         sender: message.sender || null,
-                                         receiver: options.sms.receiver,
-                                         body: options.sms.body,
-                                         messageClass: options.sms.messageClass,
-                                         timestamp: options.sms.timestamp,
-                                         read: true});
+      // TODO bug 832140 handle !Components.isSuccessCode(rv)
+      this.broadcastSmsSystemMessage("sms-sent", domMessage);
 
       if (!options.requestStatusReport) {
         // No more used if STATUS-REPORT not requested.
@@ -1655,7 +1664,7 @@ RadioInterfaceLayer.prototype = {
                                                      options.sms.delivery,
                                                      message.deliveryStatus,
                                                      function notifyResult(rv, domMessage) {
-      //TODO bug 832140 handle !Components.isSuccessCode(rv)
+      // TODO bug 832140 handle !Components.isSuccessCode(rv)
       let topic = (message.deliveryStatus == RIL.GECKO_SMS_DELIVERY_STATUS_SUCCESS)
                   ? kSmsDeliverySuccessObserverTopic
                   : kSmsDeliveryErrorObserverTopic;
@@ -1684,7 +1693,7 @@ RadioInterfaceLayer.prototype = {
                                                      DOM_MOBILE_MESSAGE_DELIVERY_ERROR,
                                                      RIL.GECKO_SMS_DELIVERY_STATUS_ERROR,
                                                      function notifyResult(rv, domMessage) {
-      //TODO bug 832140 handle !Components.isSuccessCode(rv)
+      // TODO bug 832140 handle !Components.isSuccessCode(rv)
       options.request.notifySendMessageFailed(error);
       Services.obs.notifyObservers(domMessage, kSmsFailedObserverTopic, null);
     }.bind(this));
@@ -2686,7 +2695,7 @@ RadioInterfaceLayer.prototype = {
 
     let id = gMobileMessageDatabaseService.saveSendingMessage(sendingMessage,
                                                               function notifyResult(rv, domMessage) {
-      //TODO bug 832140 handle !Components.isSuccessCode(rv)
+      // TODO bug 832140 handle !Components.isSuccessCode(rv)
       Services.obs.notifyObservers(domMessage, kSmsSendingObserverTopic, null);
 
       // Keep current SMS message info for sent/delivered notifications

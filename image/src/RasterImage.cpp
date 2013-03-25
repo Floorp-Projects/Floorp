@@ -16,9 +16,14 @@
 #include "nsAutoPtr.h"
 #include "nsStringStream.h"
 #include "prenv.h"
+#include "prsystem.h"
 #include "ImageContainer.h"
 #include "Layers.h"
 #include "nsPresContext.h"
+#include "nsThread.h"
+#include "nsIThreadPool.h"
+#include "nsXPCOMCIDInternal.h"
+#include "nsIObserverService.h"
 
 #include "nsPNGDecoder.h"
 #include "nsGIFDecoder2.h"
@@ -30,6 +35,7 @@
 
 #include "gfxContext.h"
 
+#include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StandardInteger.h"
 #include "mozilla/Telemetry.h"
@@ -70,6 +76,8 @@ static uint32_t gMaxMSBeforeYield = 0;
 static bool gHQDownscaling = false;
 // This is interpreted as a floating-point value / 1000
 static uint32_t gHQDownscalingMinFactor = 1000;
+static bool gMultithreadedDecoding = true;
+static int32_t gDecodingThreadLimit = -1;
 
 // The maximum number of times any one RasterImage was decoded.  This is only
 // used for statistics.
@@ -86,6 +94,10 @@ InitPrefCaches()
                                "image.high_quality_downscaling.enabled", false);
   Preferences::AddUintVarCache(&gHQDownscalingMinFactor,
                                "image.high_quality_downscaling.min_factor", 1000);
+  Preferences::AddBoolVarCache(&gMultithreadedDecoding,
+                               "image.multithreaded_decoding.enabled", true);
+  Preferences::AddIntVarCache(&gDecodingThreadLimit,
+                              "image.multithreaded_decoding.limit", -1);
 }
 
 /* We define our own error checking macros here for 2 reasons:
@@ -349,14 +361,14 @@ private:
 namespace mozilla {
 namespace image {
 
-/* static */ StaticRefPtr<RasterImage::DecodeWorker> RasterImage::DecodeWorker::sSingleton;
+/* static */ StaticRefPtr<RasterImage::DecodePool> RasterImage::DecodePool::sSingleton;
 static nsCOMPtr<nsIThread> sScaleWorkerThread = nullptr;
 
 #ifndef DEBUG
-NS_IMPL_ISUPPORTS2(RasterImage, imgIContainer, nsIProperties)
+NS_IMPL_THREADSAFE_ISUPPORTS2(RasterImage, imgIContainer, nsIProperties)
 #else
-NS_IMPL_ISUPPORTS3(RasterImage, imgIContainer, nsIProperties,
-                   imgIContainerDebug)
+NS_IMPL_THREADSAFE_ISUPPORTS3(RasterImage, imgIContainer, nsIProperties,
+                              imgIContainerDebug)
 #endif
 
 //******************************************************************************
@@ -368,12 +380,14 @@ RasterImage::RasterImage(imgStatusTracker* aStatusTracker,
   mAnim(nullptr),
   mLoopCount(-1),
   mLockCount(0),
-  mDecoder(nullptr),
-  mBytesDecoded(0),
   mDecodeCount(0),
 #ifdef DEBUG
   mFramesNotified(0),
 #endif
+  mDecodingMutex("RasterImage"),
+  mDecoder(nullptr),
+  mBytesDecoded(0),
+  mInDecoder(false),
   mHasSize(false),
   mDecodeOnDraw(false),
   mMultipart(false),
@@ -381,7 +395,6 @@ RasterImage::RasterImage(imgStatusTracker* aStatusTracker,
   mHasSourceData(false),
   mDecoded(false),
   mHasBeenDecoded(false),
-  mInDecoder(false),
   mAnimationFinished(false),
   mFinishing(false),
   mInUpdateImageContainer(false),
@@ -418,7 +431,8 @@ RasterImage::~RasterImage()
   if (mDecoder) {
     // Kill off our decode request, if it's pending.  (If not, this call is
     // harmless.)
-    DecodeWorker::Singleton()->StopDecoding(this);
+    MutexAutoLock lock(mDecodingMutex);
+    DecodePool::StopDecoding(this);
     mDecoder = nullptr;
 
     // Unlock the last frame (if we have any). Our invariant is that, while we
@@ -452,7 +466,7 @@ RasterImage::Initialize()
 
   // Create our singletons now, so we don't have to worry about what thread
   // they're created on.
-  DecodeWorker::Singleton();
+  DecodePool::Singleton();
 }
 
 nsresult
@@ -779,7 +793,7 @@ RasterImage::GetHeight(int32_t *aHeight)
   *aHeight = mSize.height;
   return NS_OK;
 }
- 
+
 //******************************************************************************
 /* [noscript] readonly attribute nsSize intrinsicSize; */
 NS_IMETHODIMP
@@ -1377,6 +1391,8 @@ RasterImage::ApplyDecodeFlags(uint32_t aNewFlags)
 nsresult
 RasterImage::SetSize(int32_t aWidth, int32_t aHeight)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (mError)
     return NS_ERROR_FAILURE;
 
@@ -1532,6 +1548,8 @@ RasterImage::SetFrameAsNonPremult(uint32_t aFrameNum, bool aIsNonPremult)
 nsresult
 RasterImage::DecodingComplete()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (mError)
     return NS_ERROR_FAILURE;
 
@@ -1660,6 +1678,8 @@ RasterImage::SetLoopCount(int32_t aLoopCount)
 nsresult
 RasterImage::AddSourceData(const char *aBuffer, uint32_t aCount)
 {
+  MutexAutoLock lock(mDecodingMutex);
+
   if (mError)
     return NS_ERROR_FAILURE;
 
@@ -1721,6 +1741,9 @@ RasterImage::AddSourceData(const char *aBuffer, uint32_t aCount)
     mInDecoder = true;
     mDecoder->FlushInvalidations();
     mInDecoder = false;
+
+    rv = FinishedSomeDecoding();
+    CONTAINER_ENSURE_SUCCESS(rv);
   }
 
   // Otherwise, we're storing data in the source buffer
@@ -1731,10 +1754,8 @@ RasterImage::AddSourceData(const char *aBuffer, uint32_t aCount)
     if (!newElem)
       return NS_ERROR_OUT_OF_MEMORY;
 
-    // If there's a decoder open, that means we want to do more decoding.
-    // Wake up the worker.
     if (mDecoder) {
-      DecodeWorker::Singleton()->RequestDecode(this);
+      DecodePool::Singleton()->RequestDecode(this);
     }
   }
 
@@ -1778,6 +1799,8 @@ get_header_str (char *buf, char *data, size_t data_len)
 nsresult
 RasterImage::DoImageDataComplete()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (mError)
     return NS_ERROR_FAILURE;
 
@@ -1786,26 +1809,27 @@ RasterImage::DoImageDataComplete()
     return NS_OK;
   mHasSourceData = true;
 
-  // This call should come straight from necko - no reentrancy allowed
-  NS_ABORT_IF_FALSE(!mInDecoder, "Re-entrant call to AddSourceData!");
-
   // If there's a decoder open, synchronously decode the beginning of the image
   // to check for errors and get the image's size.  (If we already have the
   // image's size, this does nothing.)  Then kick off an async decode of the
   // rest of the image.
   if (mDecoder) {
-    nsresult rv = DecodeWorker::Singleton()->DecodeUntilSizeAvailable(this);
+    nsresult rv = DecodePool::Singleton()->DecodeUntilSizeAvailable(this);
     CONTAINER_ENSURE_SUCCESS(rv);
   }
 
-  // If DecodeUntilSizeAvailable didn't finish the decode, let the decode worker
-  // finish decoding this image.
-  if (mDecoder) {
-    DecodeWorker::Singleton()->RequestDecode(this);
-  }
+  {
+    MutexAutoLock lock(mDecodingMutex);
 
-  // Free up any extra space in the backing buffer
-  mSourceData.Compact();
+    // If DecodeUntilSizeAvailable didn't finish the decode, let the decode worker
+    // finish decoding this image.
+    if (mDecoder) {
+      DecodePool::Singleton()->RequestDecode(this);
+    }
+
+    // Free up any extra space in the backing buffer
+    mSourceData.Compact();
+  }
 
   // Log header information
   if (PR_LOG_TEST(GetCompressedImageAccountingLog(), PR_LOG_DEBUG)) {
@@ -1845,7 +1869,10 @@ RasterImage::OnImageDataComplete(nsIRequest*, nsISupports*, nsresult aStatus, bo
   }
 
   // We just recorded OnStopRequest; we need to inform our listeners.
-  FinishedSomeDecoding();
+  {
+    MutexAutoLock lock(mDecodingMutex);
+    FinishedSomeDecoding();
+  }
 
   return finalStatus;
 }
@@ -1873,6 +1900,8 @@ RasterImage::OnImageDataAvailable(nsIRequest*,
 nsresult
 RasterImage::OnNewSourceData()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   nsresult rv;
 
   if (mError)
@@ -2428,6 +2457,8 @@ RasterImage::GetKeys(uint32_t *count, char ***keys)
 void
 RasterImage::Discard(bool force)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   // We should be ok for discard
   NS_ABORT_IF_FALSE(force ? CanForciblyDiscard() : CanDiscard(), "Asked to discard but can't!");
 
@@ -2653,7 +2684,7 @@ RasterImage::ShutdownDecoder(eShutdownIntent aIntent)
 
   // Kill off our decode request, if it's pending.  (If not, this call is
   // harmless.)
-  DecodeWorker::Singleton()->StopDecoding(this);
+  DecodePool::StopDecoding(this);
 
   nsresult decoderStatus = decoder->GetDecoderError();
   if (NS_FAILED(decoderStatus)) {
@@ -2688,6 +2719,8 @@ RasterImage::ShutdownDecoder(eShutdownIntent aIntent)
 nsresult
 RasterImage::WriteToDecoder(const char *aBuffer, uint32_t aCount)
 {
+  mDecodingMutex.AssertCurrentThreadOwns();
+
   // We should have a decoder
   NS_ABORT_IF_FALSE(mDecoder, "Trying to write to null decoder!");
 
@@ -2751,6 +2784,8 @@ RasterImage::StartDecoding()
 NS_IMETHODIMP
 RasterImage::RequestDecodeCore(RequestDecodeType aDecodeType)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   nsresult rv;
 
   if (mError)
@@ -2781,7 +2816,7 @@ RasterImage::RequestDecodeCore(RequestDecodeType aDecodeType)
 
   // If we have a size decoder open, make sure we get the size
   if (mDecoder && mDecoder->IsSizeDecode()) {
-    nsresult rv = DecodeWorker::Singleton()->DecodeUntilSizeAvailable(this);
+    nsresult rv = DecodePool::Singleton()->DecodeUntilSizeAvailable(this);
     CONTAINER_ENSURE_SUCCESS(rv);
 
     // If we didn't get the size out of the image, we won't until we get more
@@ -2798,6 +2833,8 @@ RasterImage::RequestDecodeCore(RequestDecodeType aDecodeType)
   if (mDecoded)
     return NS_OK;
 
+  MutexAutoLock lock(mDecodingMutex);
+
   // If we have a size decode open, interrupt it and shut it down; or if
   // the decoder has different flags than what we need
   if (mDecoder && mDecoder->GetDecodeFlags() != mFrameDecodeFlags) {
@@ -2805,10 +2842,21 @@ RasterImage::RequestDecodeCore(RequestDecodeType aDecodeType)
     CONTAINER_ENSURE_SUCCESS(rv);
   }
 
-  // If we don't have a decoder, create one 
+  // If we don't have a decoder, create one
   if (!mDecoder) {
     rv = InitDecoder(/* aDoSizeDecode = */ false);
+    CONTAINER_ENSURE_SUCCESS(rv);
 
+    rv = FinishedSomeDecoding();
+    CONTAINER_ENSURE_SUCCESS(rv);
+
+    MOZ_ASSERT(mDecoder);
+  }
+
+  // If we're waiting for decode work to be notified, go ahead and do that.
+  if (mDecodeRequest &&
+      mDecodeRequest->mRequestStatus == DecodeRequest::REQUEST_WORK_DONE) {
+    nsresult rv = FinishedSomeDecoding();
     CONTAINER_ENSURE_SUCCESS(rv);
   }
 
@@ -2823,7 +2871,7 @@ RasterImage::RequestDecodeCore(RequestDecodeType aDecodeType)
     SAMPLE_LABEL_PRINTF("RasterImage", "DecodeABitOf", "%s", GetURIString().get());
     mDecoder->SetSynchronous(true);
 
-    DecodeWorker::Singleton()->DecodeABitOf(this);
+    DecodePool::Singleton()->DecodeABitOf(this);
 
     // DecodeABitOf can destroy mDecoder.
     if (mDecoder) {
@@ -2832,10 +2880,12 @@ RasterImage::RequestDecodeCore(RequestDecodeType aDecodeType)
     return NS_OK;
   }
 
-  // If we get this far, dispatch the worker. We do this instead of starting
-  // any immediate decoding to guarantee that all our decode notifications are
-  // dispatched asynchronously, and to ensure we stay responsive.
-  DecodeWorker::Singleton()->RequestDecode(this);
+  if (!mDecoded) {
+    // If we get this far, dispatch the worker. We do this instead of starting
+    // any immediate decoding to guarantee that all our decode notifications are
+    // dispatched asynchronously, and to ensure we stay responsive.
+    DecodePool::Singleton()->RequestDecode(this);
+  }
 
   return NS_OK;
 }
@@ -2844,6 +2894,16 @@ RasterImage::RequestDecodeCore(RequestDecodeType aDecodeType)
 nsresult
 RasterImage::SyncDecode()
 {
+  MutexAutoLock imgLock(mDecodingMutex);
+
+  if (mDecodeRequest) {
+    // If the image is waiting for decode work to be notified, go ahead and do that.
+    if (mDecodeRequest->mRequestStatus == DecodeRequest::REQUEST_WORK_DONE) {
+      nsresult rv = FinishedSomeDecoding();
+      CONTAINER_ENSURE_SUCCESS(rv);
+    }
+  }
+
   nsresult rv;
 
   SAMPLE_LABEL_PRINTF("RasterImage", "SyncDecode", "%s", GetURIString().get());;
@@ -2856,7 +2916,7 @@ RasterImage::SyncDecode()
 
   // If we have a size decoder open, make sure we get the size
   if (mDecoder && mDecoder->IsSizeDecode()) {
-    nsresult rv = DecodeWorker::Singleton()->DecodeUntilSizeAvailable(this);
+    nsresult rv = DecodePool::Singleton()->DecodeUntilSizeAvailable(this);
     CONTAINER_ENSURE_SUCCESS(rv);
 
     // If we didn't get the size out of the image, we won't until we get more
@@ -2907,17 +2967,14 @@ RasterImage::SyncDecode()
   mDecoder->FlushInvalidations();
   mInDecoder = false;
 
-  // If we finished the decode, shutdown the decoder
-  if (mDecoder && IsDecodeFinished()) {
-    // We have to shut down the decoder *now*, so we explicitly shut down the
-    // decoder, and let FinishedSomeDecoding handle the rest for us.
-    nsRefPtr<DecodeRequest> request = mDecodeRequest;
-    nsresult rv = ShutdownDecoder(eShutdownIntent_Done);
-    CONTAINER_ENSURE_SUCCESS(rv);
-    rv = FinishedSomeDecoding(eShutdownIntent_Done, request);
-    CONTAINER_ENSURE_SUCCESS(rv);
-  } else if (mDecoder) {
+  rv = FinishedSomeDecoding();
+  CONTAINER_ENSURE_SUCCESS(rv);
+
+  if (mDecoder) {
     mDecoder->SetSynchronous(false);
+
+    // If our decoder's still open, there's still work to be done.
+    DecodePool::Singleton()->RequestDecode(this);
   }
 
   // All good if no errors!
@@ -3128,11 +3185,7 @@ RasterImage::Draw(gfxContext *aContext,
 
   // We use !mDecoded && mHasSourceData to mean discarded.
   if (!mDecoded && mHasSourceData) {
-      mDrawStartTime = TimeStamp::Now();
-
-      // We're drawing this image, so indicate that we should decode it as soon
-      // as possible.
-      DecodeWorker::Singleton()->MarkAsASAP(this);
+    mDrawStartTime = TimeStamp::Now();
   }
 
   // If a synchronous draw is requested, flush anything that might be sitting around
@@ -3206,6 +3259,7 @@ RasterImage::UnlockImage()
     PR_LOG(GetCompressedImageAccountingLog(), PR_LOG_DEBUG,
            ("RasterImage[0x%p] canceling decode because image "
             "is now unlocked.", this));
+    MutexAutoLock lock(mDecodingMutex);
     FinishedSomeDecoding(eShutdownIntent_NotNeeded);
     ForceDiscard();
     return NS_OK;
@@ -3240,6 +3294,8 @@ RasterImage::DecodeSomeData(uint32_t aMaxBytes)
   // We should have a decoder if we get here
   NS_ABORT_IF_FALSE(mDecoder, "trying to decode without decoder!");
 
+  mDecodingMutex.AssertCurrentThreadOwns();
+
   // First, if we've just been called because we allocated a frame on the main
   // thread, let the decoder deal with the data it set aside at that time by
   // passing it a null buffer.
@@ -3257,7 +3313,7 @@ RasterImage::DecodeSomeData(uint32_t aMaxBytes)
 
   // write the proper amount of data
   uint32_t bytesToDecode = std::min(aMaxBytes,
-                                  mSourceData.Length() - mBytesDecoded);
+                                    mSourceData.Length() - mBytesDecoded);
   nsresult rv = WriteToDecoder(mSourceData.Elements() + mBytesDecoded,
                                bytesToDecode);
 
@@ -3313,6 +3369,7 @@ RasterImage::DoError()
 
   // If we're mid-decode, shut down the decoder.
   if (mDecoder) {
+    MutexAutoLock lock(mDecodingMutex);
     FinishedSomeDecoding(eShutdownIntent_Error);
   }
 
@@ -3385,6 +3442,8 @@ RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_D
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  mDecodingMutex.AssertCurrentThreadOwns();
+
   nsRefPtr<DecodeRequest> request;
   if (aRequest) {
     request = aRequest;
@@ -3401,6 +3460,8 @@ RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_D
   nsresult rv = NS_OK;
 
   if (image->mDecoder) {
+    image->mDecoder->MarkFrameDirty();
+
     if (request && request->mChunkCount && !image->mDecoder->IsSizeDecode()) {
       Telemetry::Accumulate(Telemetry::IMAGE_DECODE_CHUNKS, request->mChunkCount);
     }
@@ -3444,135 +3505,140 @@ RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_D
     }
   }
 
-  // Then, tell the observers what happened in the decoder.
-  // If we have no request, we have not yet created a decoder, but we still
-  // need to send out notifications.
+  imgStatusTracker::StatusDiff diff;
   if (request) {
-    image->mStatusTracker->SyncAndSyncNotifyDifference(request->mStatusTracker);
-  } else {
-    image->mStatusTracker->SyncNotifyDecodeState();
+    diff = image->mStatusTracker->CalculateAndApplyDifference(request->mStatusTracker);
   }
 
-  // If we were a size decode and a full decode was requested, now's the time.
-  if (NS_SUCCEEDED(rv) && done && wasSize && image->mWantFullDecode) {
-    image->mWantFullDecode = false;
+  {
+    // Notifications can't go out with the decoding lock held.
+    MutexAutoUnlock unlock(mDecodingMutex);
 
-    // If we're not meant to be storing source data and we just got the size,
-    // we need to synchronously flush all the data we got to a full decoder.
-    // When that decoder is shut down, we'll also clear our source data.
-    if (!image->StoringSourceData()) {
-      rv = image->SyncDecode();
+    // Then, tell the observers what happened in the decoder.
+    // If we have no request, we have not yet created a decoder, but we still
+    // need to send out notifications.
+    if (request) {
+      image->mStatusTracker->SyncNotifyDifference(diff);
     } else {
-      rv = image->RequestDecode();
+      image->mStatusTracker->SyncNotifyDecodeState();
     }
+
+    // If we were a size decode and a full decode was requested, now's the time.
+    if (NS_SUCCEEDED(rv) && done && wasSize && image->mWantFullDecode) {
+      image->mWantFullDecode = false;
+
+      // If we're not meant to be storing source data and we just got the size,
+      // we need to synchronously flush all the data we got to a full decoder.
+      // When that decoder is shut down, we'll also clear our source data.
+      if (!image->StoringSourceData()) {
+        rv = image->SyncDecode();
+      } else {
+        rv = image->RequestDecode();
+      }
+    }
+
   }
 
   return rv;
 }
 
-/* static */ RasterImage::DecodeWorker*
-RasterImage::DecodeWorker::Singleton()
+NS_IMPL_THREADSAFE_ISUPPORTS1(RasterImage::DecodePool,
+                              nsIObserver)
+
+/* static */ RasterImage::DecodePool*
+RasterImage::DecodePool::Singleton()
 {
   if (!sSingleton) {
-    sSingleton = new DecodeWorker();
+    MOZ_ASSERT(NS_IsMainThread());
+    sSingleton = new DecodePool();
     ClearOnShutdown(&sSingleton);
   }
 
   return sSingleton;
 }
 
-RasterImage::DecodeWorker::~DecodeWorker()
+RasterImage::DecodePool::DecodePool()
 {
-  MOZ_ASSERT(NS_IsMainThread(), "Must shut down DecodeWorker on main thread!");
+  if (gMultithreadedDecoding) {
+    mThreadPool = do_CreateInstance(NS_THREADPOOL_CONTRACTID);
+    if (mThreadPool) {
+      mThreadPool->SetName(NS_LITERAL_CSTRING("ImageDecoder"));
+      if (gDecodingThreadLimit <= 0) {
+        mThreadPool->SetThreadLimit(std::max(PR_GetNumberOfProcessors() - 1, 1));
+      } else {
+        mThreadPool->SetThreadLimit(static_cast<uint32_t>(gDecodingThreadLimit));
+      }
 
-  // Shut down all the decoders since we're going away.
-  DecodeRequest* request = mASAPDecodeRequests.getFirst();
-  while (request) {
-    request->mImage->FinishedSomeDecoding(eShutdownIntent_NotNeeded);
-
-    request = request->getNext();
-  }
-
-  request = mNormalDecodeRequests.getFirst();
-  while (request) {
-    request->mImage->FinishedSomeDecoding(eShutdownIntent_NotNeeded);
-
-    request = request->getNext();
+      nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
+      if (obsSvc) {
+        obsSvc->AddObserver(this, "xpcom-shutdown-threads", false);
+      }
+    }
   }
 }
 
-void
-RasterImage::DecodeWorker::MarkAsASAP(RasterImage* aImg)
+RasterImage::DecodePool::~DecodePool()
 {
-  // We can be marked as ASAP before we've been asked to decode. If we are,
-  // create the request so we have somewhere to write down our status.
-  if (!aImg->mDecodeRequest) {
-    aImg->mDecodeRequest = new DecodeRequest(aImg);
+  MOZ_ASSERT(NS_IsMainThread(), "Must shut down DecodePool on main thread!");
+}
+
+NS_IMETHODIMP
+RasterImage::DecodePool::Observe(nsISupports *subject, const char *topic,
+                                   const PRUnichar *data)
+{
+  NS_ASSERTION(strcmp(topic, "xpcom-shutdown-threads") == 0, "oops");
+
+  if (mThreadPool) {
+    mThreadPool->Shutdown();
+    mThreadPool = nullptr;
   }
 
-  DecodeRequest* request = aImg->mDecodeRequest;
-
-  // If we're already an ASAP request, there's nothing to do here.
-  if (request->mIsASAP) {
-    return;
-  }
-
-  request->mIsASAP = true;
-
-  if (request->isInList()) {
-    // If the decode request is in a list, it must be in the normal decode
-    // requests list -- if it had been in the ASAP list, then mIsASAP would
-    // have been true above.  Move the request to the ASAP list.
-    request->removeFrom(mNormalDecodeRequests);
-    mASAPDecodeRequests.insertBack(request);
-
-    // Since request is in a list, one of the decode worker's lists is
-    // non-empty, so the worker should be pending in the event loop.
-    //
-    // (Note that this invariant only holds while we are not in Run(), because
-    // DecodeSomeOfImage adds requests to the decode worker using
-    // AddDecodeRequest, not RequestDecode, and AddDecodeRequest does not call
-    // EnsurePendingInEventLoop.  Therefore, it is an error to call MarkAsASAP
-    // from within DecodeWorker::Run.)
-    MOZ_ASSERT(mPendingInEventLoop);
-  }
+  return NS_OK;
 }
 
 void
-RasterImage::DecodeWorker::AddDecodeRequest(DecodeRequest* aRequest, uint32_t bytesToDecode)
-{
-  if (aRequest->isInList()) {
-    // The image is already in our list of images to decode, so we don't have
-    // to do anything here.
-    return;
-  }
-
-  aRequest->mBytesToDecode = bytesToDecode;
-
-  if (aRequest->mIsASAP) {
-    mASAPDecodeRequests.insertBack(aRequest);
-  } else {
-    mNormalDecodeRequests.insertBack(aRequest);
-  }
-}
-
-void
-RasterImage::DecodeWorker::RequestDecode(RasterImage* aImg)
+RasterImage::DecodePool::RequestDecode(RasterImage* aImg)
 {
   MOZ_ASSERT(aImg->mDecoder);
+  MOZ_ASSERT(NS_IsMainThread());
+  aImg->mDecodingMutex.AssertCurrentThreadOwns();
 
   // If we're currently waiting on a new frame for this image, we can't do any
   // decoding.
   if (!aImg->mDecoder->NeedsNewFrame()) {
-    AddDecodeRequest(aImg->mDecodeRequest, aImg->mSourceData.Length() - aImg->mBytesDecoded);
-    EnsurePendingInEventLoop();
+    // No matter whether this is currently being decoded, we need to update the
+    // number of bytes we want it to decode.
+    aImg->mDecodeRequest->mBytesToDecode = aImg->mSourceData.Length() - aImg->mBytesDecoded;
+
+    if (aImg->mDecodeRequest->mRequestStatus == DecodeRequest::REQUEST_PENDING ||
+        aImg->mDecodeRequest->mRequestStatus == DecodeRequest::REQUEST_ACTIVE) {
+      // The image is already in our list of images to decode, or currently being
+      // decoded, so we don't have to do anything else.
+      return;
+    }
+
+    aImg->mDecodeRequest->mRequestStatus = DecodeRequest::REQUEST_PENDING;
+    nsRefPtr<DecodeJob> job = new DecodeJob(aImg->mDecodeRequest, aImg);
+    if (!gMultithreadedDecoding || !mThreadPool) {
+      NS_DispatchToMainThread(job);
+    } else {
+      mThreadPool->Dispatch(job, nsIEventTarget::DISPATCH_NORMAL);
+    }
   }
 }
 
 void
-RasterImage::DecodeWorker::DecodeABitOf(RasterImage* aImg)
+RasterImage::DecodePool::DecodeABitOf(RasterImage* aImg)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  aImg->mDecodingMutex.AssertCurrentThreadOwns();
+
+  if (aImg->mDecodeRequest) {
+    // If the image is waiting for decode work to be notified, go ahead and do that.
+    if (aImg->mDecodeRequest->mRequestStatus == DecodeRequest::REQUEST_WORK_DONE) {
+      aImg->FinishedSomeDecoding();
+    }
+  }
 
   DecodeSomeOfImage(aImg);
 
@@ -3594,97 +3660,97 @@ RasterImage::DecodeWorker::DecodeABitOf(RasterImage* aImg)
   }
 }
 
-void
-RasterImage::DecodeWorker::EnsurePendingInEventLoop()
+/* static */ void
+RasterImage::DecodePool::StopDecoding(RasterImage* aImg)
 {
-  if (!mPendingInEventLoop) {
-    mPendingInEventLoop = true;
-    NS_DispatchToCurrentThread(this);
-  }
-}
+  aImg->mDecodingMutex.AssertCurrentThreadOwns();
 
-void
-RasterImage::DecodeWorker::StopDecoding(RasterImage* aImg)
-{
   // If we haven't got a decode request, we're not currently decoding. (Having
   // a decode request doesn't imply we *are* decoding, though.)
   if (aImg->mDecodeRequest) {
-    if (aImg->mDecodeRequest->isInList()) {
-      aImg->mDecodeRequest->remove();
-    }
+    aImg->mDecodeRequest->mRequestStatus = DecodeRequest::REQUEST_STOPPED;
   }
 }
 
 NS_IMETHODIMP
-RasterImage::DecodeWorker::Run()
+RasterImage::DecodePool::DecodeJob::Run()
 {
-  // We just got called back by the event loop; therefore, we're no longer
-  // pending.
-  mPendingInEventLoop = false;
+  MutexAutoLock imglock(mImage->mDecodingMutex);
 
-  TimeStamp eventStart = TimeStamp::Now();
-
-  // Now decode until we either run out of time or run out of images.
-  do {
-    // Try to get an ASAP request to handle.  If there isn't one, try to get a
-    // normal request.  If no normal request is pending either, then we're done
-    // here.
-    DecodeRequest* request = mASAPDecodeRequests.popFirst();
-    if (!request)
-      request = mNormalDecodeRequests.popFirst();
-    if (!request)
-      break;
-
-    // This has to be a strong pointer, because DecodeSomeOfImage may destroy
-    // image->mDecoder, which may be holding the only other reference to image.
-    nsRefPtr<RasterImage> image = request->mImage;
-    uint32_t oldFrameCount = image->mDecoder->GetFrameCount();
-    uint32_t oldByteCount = image->mBytesDecoded;
-
-    DecodeSomeOfImage(image, DECODE_TYPE_NORMAL, request->mBytesToDecode);
-
-    uint32_t bytesDecoded = image->mBytesDecoded - oldByteCount;
-
-    // If the decoder needs a new frame, enqueue an event to get it; that event
-    // will enqueue another decode request when it's done.
-    if (image->mDecoder && image->mDecoder->NeedsNewFrame()) {
-      FrameNeededWorker::GetNewFrame(image);
-    }
-
-    // If we aren't yet finished decoding and we have more data in hand, add
-    // this request to the back of the list.
-    else if (image->mDecoder &&
-             !image->mError &&
-             !image->IsDecodeFinished() &&
-             bytesDecoded < request->mBytesToDecode) {
-      AddDecodeRequest(request, request->mBytesToDecode - bytesDecoded);
-
-      // If we have a new frame, let everybody know about it.
-      if (image->mDecoder->GetFrameCount() != oldFrameCount) {
-        DecodeDoneWorker::NotifyFinishedSomeDecoding(image, request);
-      }
-    } else {
-      // Nothing more for us to do - let everyone know what happened.
-      DecodeDoneWorker::NotifyFinishedSomeDecoding(image, request);
-    }
-
-  } while ((TimeStamp::Now() - eventStart).ToMilliseconds() <= gMaxMSBeforeYield);
-
-  // If decode requests are pending, re-post ourself to the event loop.
-  if (!mASAPDecodeRequests.isEmpty() || !mNormalDecodeRequests.isEmpty()) {
-    EnsurePendingInEventLoop();
+  // If we were interrupted, we shouldn't do any work.
+  if (mRequest->mRequestStatus == DecodeRequest::REQUEST_STOPPED) {
+    DecodeDoneWorker::NotifyFinishedSomeDecoding(mImage, mRequest);
+    return NS_OK;
   }
 
-  Telemetry::Accumulate(Telemetry::IMAGE_DECODE_LATENCY_US,
-                        uint32_t((TimeStamp::Now() - eventStart).ToMicroseconds()));
+  // If someone came along and synchronously decoded us, there's nothing for us to do.
+  if (!mRequest->mAllocatedNewFrame && (!mImage->mDecoder || mImage->IsDecodeFinished())) {
+    DecodeDoneWorker::NotifyFinishedSomeDecoding(mImage, mRequest);
+    return NS_OK;
+  }
+
+  // If we're a decode job that's been enqueued since a previous decode that
+  // still needs a new frame, we can't do anything. Wait until the
+  // FrameNeededWorker enqueues another frame.
+  if (mImage->mDecoder->NeedsNewFrame()) {
+    return NS_OK;
+  }
+
+  mRequest->mRequestStatus = DecodeRequest::REQUEST_ACTIVE;
+
+  uint32_t oldByteCount = mImage->mBytesDecoded;
+
+  DecodeType type = DECODE_TYPE_UNTIL_DONE_BYTES;
+
+  // Multithreaded decoding can be disabled. If we've done so, we don't want to
+  // monopolize the main thread, and will allow a timeout in DecodeSomeOfImage.
+  if (NS_IsMainThread()) {
+    type = DECODE_TYPE_UNTIL_TIME;
+  }
+
+  DecodePool::Singleton()->DecodeSomeOfImage(mImage, type, mRequest->mBytesToDecode);
+
+  uint32_t bytesDecoded = mImage->mBytesDecoded - oldByteCount;
+
+  mRequest->mRequestStatus = DecodeRequest::REQUEST_WORK_DONE;
+
+  // If the decoder needs a new frame, enqueue an event to get it; that event
+  // will enqueue another decode request when it's done.
+  if (mImage->mDecoder && mImage->mDecoder->NeedsNewFrame()) {
+    FrameNeededWorker::GetNewFrame(mImage);
+  }
+  // If we aren't yet finished decoding and we have more data in hand, add
+  // this request to the back of the list.
+  else if (mImage->mDecoder &&
+           !mImage->mError &&
+           !mImage->IsDecodeFinished() &&
+           bytesDecoded < mRequest->mBytesToDecode) {
+    DecodePool::Singleton()->RequestDecode(mImage);
+  } else {
+    // Nothing more for us to do - let everyone know what happened.
+    DecodeDoneWorker::NotifyFinishedSomeDecoding(mImage, mRequest);
+  }
 
   return NS_OK;
 }
 
 nsresult
-RasterImage::DecodeWorker::DecodeUntilSizeAvailable(RasterImage* aImg)
+RasterImage::DecodePool::DecodeUntilSizeAvailable(RasterImage* aImg)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  MutexAutoLock imgLock(aImg->mDecodingMutex);
+
+  if (aImg->mDecodeRequest) {
+    // If the image is waiting for decode work to be notified, go ahead and do that.
+    if (aImg->mDecodeRequest->mRequestStatus == DecodeRequest::REQUEST_WORK_DONE) {
+      nsresult rv = aImg->FinishedSomeDecoding();
+      if (NS_FAILED(rv)) {
+        aImg->DoError();
+        return rv;
+      }
+    }
+  }
 
   nsresult rv = DecodeSomeOfImage(aImg, DECODE_TYPE_UNTIL_SIZE);
   if (NS_FAILED(rv)) {
@@ -3703,12 +3769,13 @@ RasterImage::DecodeWorker::DecodeUntilSizeAvailable(RasterImage* aImg)
 }
 
 nsresult
-RasterImage::DecodeWorker::DecodeSomeOfImage(RasterImage* aImg,
-                                             DecodeType aDecodeType /* = DECODE_TYPE_NORMAL */,
-                                             uint32_t bytesToDecode /* = 0 */)
+RasterImage::DecodePool::DecodeSomeOfImage(RasterImage* aImg,
+                                           DecodeType aDecodeType /* = DECODE_TYPE_UNTIL_TIME */,
+                                           uint32_t bytesToDecode /* = 0 */)
 {
   NS_ABORT_IF_FALSE(aImg->mInitialized,
                     "Worker active for uninitialized container!");
+  aImg->mDecodingMutex.AssertCurrentThreadOwns();
 
   // If an error is flagged, it probably happened while we were waiting
   // in the event queue.
@@ -3720,9 +3787,17 @@ RasterImage::DecodeWorker::DecodeSomeOfImage(RasterImage* aImg,
   if (!aImg->mDecoder || aImg->mDecoded)
     return NS_OK;
 
-  // If we're currently waiting on a new frame for this image, we can't do any
-  // decoding right now.
-  if (aImg->mDecoder->NeedsNewFrame()) {
+  // If we're doing synchronous decodes, and we're waiting on a new frame for
+  // this image, get it now.
+  if (aImg->mDecoder->IsSynchronous() && aImg->mDecoder->NeedsNewFrame()) {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    aImg->mDecoder->AllocateFrame();
+    aImg->mDecodeRequest->mAllocatedNewFrame = true;
+  }
+
+  // If we're not synchronous, we can't allocate a frame right now.
+  else if (aImg->mDecoder->NeedsNewFrame()) {
     return NS_OK;
   }
 
@@ -3773,7 +3848,7 @@ RasterImage::DecodeWorker::DecodeSomeOfImage(RasterImage* aImg,
 
     // Yield if we've been decoding for too long. We check this _after_ decoding
     // a chunk to ensure that we don't yield without doing any decoding.
-    if (TimeStamp::Now() >= deadline)
+    if (aDecodeType == DECODE_TYPE_UNTIL_TIME && TimeStamp::Now() >= deadline)
       break;
   }
 
@@ -3818,6 +3893,8 @@ RasterImage::DecodeDoneWorker::DecodeDoneWorker(RasterImage* image, DecodeReques
 void
 RasterImage::DecodeDoneWorker::NotifyFinishedSomeDecoding(RasterImage* image, DecodeRequest* request)
 {
+  image->mDecodingMutex.AssertCurrentThreadOwns();
+
   nsCOMPtr<DecodeDoneWorker> worker = new DecodeDoneWorker(image, request);
   NS_DispatchToMainThread(worker);
 }
@@ -3825,12 +3902,14 @@ RasterImage::DecodeDoneWorker::NotifyFinishedSomeDecoding(RasterImage* image, De
 NS_IMETHODIMP
 RasterImage::DecodeDoneWorker::Run()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+  MutexAutoLock lock(mImage->mDecodingMutex);
+
   mImage->FinishedSomeDecoding(eShutdownIntent_Done, mRequest);
 
   // If we didn't finish decoding yet, try again
-  if (mImage->mDecoder && !mImage->IsDecodeFinished() &&
-      mImage->mSourceData.Length() > mImage->mBytesDecoded) {
-    DecodeWorker::Singleton()->RequestDecode(mImage);
+  if (mImage->mDecoder) {
+    DecodePool::Singleton()->RequestDecode(mImage);
   }
 
   return NS_OK;
@@ -3851,6 +3930,7 @@ RasterImage::FrameNeededWorker::GetNewFrame(RasterImage* image)
 NS_IMETHODIMP
 RasterImage::FrameNeededWorker::Run()
 {
+  MutexAutoLock lock(mImage->mDecodingMutex);
   nsresult rv = NS_OK;
 
   // If we got a synchronous decode in the mean time, we don't need to do
@@ -3861,7 +3941,8 @@ RasterImage::FrameNeededWorker::Run()
   }
 
   if (NS_SUCCEEDED(rv) && mImage->mDecoder) {
-    DecodeWorker::Singleton()->RequestDecode(mImage);
+    // By definition, we're not done decoding, so enqueue us for more decoding.
+    DecodePool::Singleton()->RequestDecode(mImage);
   }
 
   return NS_OK;

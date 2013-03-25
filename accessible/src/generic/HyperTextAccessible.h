@@ -294,7 +294,8 @@ protected:
   int32_t GetRelativeOffset(nsIPresShell *aPresShell, nsIFrame *aFromFrame,
                             int32_t aFromOffset, Accessible* aFromAccessible,
                             nsSelectionAmount aAmount, nsDirection aDirection,
-                            bool aNeedsStart);
+                            bool aNeedsStart,
+                            EWordMovementType aWordMovementType);
 
   /**
     * Provides information for substring that is defined by the given start

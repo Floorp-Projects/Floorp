@@ -1032,22 +1032,25 @@ XPCConvert::JSObject2NativeInterface(JSContext* cx,
         // If we're looking at a security wrapper, see now if we're allowed to
         // pass it to C++. If we are, then fall through to the code below. If
         // we aren't, throw an exception eagerly.
-        JSObject* inner = nullptr;
-        if (XPCWrapper::IsSecurityWrapper(src)) {
-            inner = XPCWrapper::Unwrap(cx, src, false);
-            if (!inner) {
-                if (pErr)
-                    *pErr = NS_ERROR_XPC_SECURITY_MANAGER_VETO;
-                return false;
-            }
+        JSObject* inner = js::UnwrapObjectChecked(src, /* stopAtOuter = */ false);
+
+        // Hack - For historical reasons, wrapped chrome JS objects have been
+        // passable as native interfaces. We'd like to fix this, but it
+        // involves fixing the contacts API and PeerConnection to stop using
+        // COWs. This needs to happen, but for now just preserve the old
+        // behavior.
+        if (!inner && MOZ_UNLIKELY(xpc::WrapperFactory::IsCOW(src)))
+            inner = js::UnwrapObject(src);
+        if (!inner) {
+            if (pErr)
+                *pErr = NS_ERROR_XPC_SECURITY_MANAGER_VETO;
+            return false;
         }
 
         // Is this really a native xpcom object with a wrapper?
-        XPCWrappedNative* wrappedNative =
-                    XPCWrappedNative::GetWrappedNativeOfJSObject(cx,
-                                                                 inner
-                                                                 ? inner
-                                                                 : src);
+        XPCWrappedNative* wrappedNative = nullptr;
+        if (IS_WN_WRAPPER(inner))
+            wrappedNative = XPCWrappedNative::Get(inner);
         if (wrappedNative) {
             iface = wrappedNative->GetIdentityObject();
             return NS_SUCCEEDED(iface->QueryInterface(*iid, dest));
@@ -1174,9 +1177,12 @@ XPCConvert::JSValToXPCException(XPCCallContext& ccx,
         }
 
         // is this really a native xpcom object with a wrapper?
-        XPCWrappedNative* wrapper;
-        if (nullptr != (wrapper =
-                       XPCWrappedNative::GetWrappedNativeOfJSObject(cx,obj))) {
+        JSObject *unwrapped = js::UnwrapObjectChecked(obj, /* stopAtOuter = */ false);
+        if (!unwrapped)
+            return NS_ERROR_XPC_SECURITY_MANAGER_VETO;
+        XPCWrappedNative* wrapper = IS_WN_WRAPPER(unwrapped) ? XPCWrappedNative::Get(unwrapped)
+                                                             : nullptr;
+        if (wrapper) {
             nsISupports* supports = wrapper->GetIdentityObject();
             nsCOMPtr<nsIException> iface = do_QueryInterface(supports);
             if (iface) {

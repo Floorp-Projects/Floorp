@@ -10,7 +10,6 @@ VPATH = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE_NAME = jsctypes
-GRE_MODULE = 1
 
 EXTRA_JS_MODULES = \
     ctypes.jsm \

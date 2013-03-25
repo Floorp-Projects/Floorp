@@ -473,7 +473,14 @@ PopupNotifications.prototype = {
         popupnotification.setAttribute("buttoncommand", "PopupNotifications._onButtonCommand(event);");
         popupnotification.setAttribute("menucommand", "PopupNotifications._onMenuCommand(event);");
         popupnotification.setAttribute("closeitemcommand", "PopupNotifications._dismiss();event.stopPropagation();");
+      } else {
+        popupnotification.removeAttribute("buttonlabel");
+        popupnotification.removeAttribute("buttonaccesskey");
+        popupnotification.removeAttribute("buttoncommand");
+        popupnotification.removeAttribute("menucommand");
+        popupnotification.removeAttribute("closeitemcommand");
       }
+
       if (n.options.popupIconURL)
         popupnotification.setAttribute("icon", n.options.popupIconURL);
       popupnotification.notification = n;

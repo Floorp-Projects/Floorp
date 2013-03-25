@@ -15,10 +15,23 @@
 #include "nsSVGString.h"
 #include "nsSVGElement.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
+#include "nsSVGNumber2.h"
+#include "nsSVGNumberPair.h"
 
 class nsSVGFilterInstance;
 class nsSVGFilterResource;
 class nsSVGNumberPair;
+
+inline float DOT(const float* a, const float* b) {
+  return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+}
+
+inline void NORMALIZE(float* vec) {
+  float norm = sqrt(DOT(vec, vec));
+  vec[0] /= norm;
+  vec[1] /= norm;
+  vec[2] /= norm;
+}
 
 struct nsSVGStringInfo {
   nsSVGStringInfo(const nsSVGString* aString,
@@ -234,6 +247,66 @@ public:
   // repaint the filter
   virtual bool AttributeAffectsRendering(
           int32_t aNameSpaceID, nsIAtom* aAttribute) const = 0;
+};
+
+//------------------------------------------------------------
+
+typedef nsSVGFE nsSVGFELightingElementBase;
+
+class nsSVGFELightingElement : public nsSVGFELightingElementBase
+{
+protected:
+  nsSVGFELightingElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+    : nsSVGFELightingElementBase(aNodeInfo) {}
+
+public:
+  // interfaces:
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // FE Base
+  NS_FORWARD_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES(nsSVGFELightingElementBase::)
+
+  virtual nsresult Filter(nsSVGFilterInstance* aInstance,
+                          const nsTArray<const Image*>& aSources,
+                          const Image* aTarget,
+                          const nsIntRect& aDataRect);
+  virtual bool AttributeAffectsRendering(
+          int32_t aNameSpaceID, nsIAtom* aAttribute) const;
+  virtual nsSVGString& GetResultImageName() { return mStringAttributes[RESULT]; }
+  virtual void GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources);
+  // XXX shouldn't we have ComputeTargetBBox here, since the output can
+  // extend beyond the bounds of the inputs thanks to the convolution kernel?
+  virtual void ComputeNeededSourceBBoxes(const nsIntRect& aTargetBBox,
+          nsTArray<nsIntRect>& aSourceBBoxes, const nsSVGFilterInstance& aInstance);
+  virtual nsIntRect ComputeChangeBBox(const nsTArray<nsIntRect>& aSourceChangeBoxes,
+          const nsSVGFilterInstance& aInstance);
+
+  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFELightingElementBase::)
+
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+
+protected:
+  virtual bool OperatesOnSRGB(nsSVGFilterInstance*,
+                              int32_t, Image*) { return true; }
+  virtual void
+  LightPixel(const float *N, const float *L,
+             nscolor color, uint8_t *targetData) = 0;
+
+  virtual NumberAttributesInfo GetNumberInfo();
+  virtual NumberPairAttributesInfo GetNumberPairInfo();
+  virtual StringAttributesInfo GetStringInfo();
+
+  enum { SURFACE_SCALE, DIFFUSE_CONSTANT, SPECULAR_CONSTANT, SPECULAR_EXPONENT };
+  nsSVGNumber2 mNumberAttributes[4];
+  static NumberInfo sNumberInfo[4];
+
+  enum { KERNEL_UNIT_LENGTH };
+  nsSVGNumberPair mNumberPairAttributes[1];
+  static NumberPairInfo sNumberPairInfo[1];
+
+  enum { RESULT, IN1 };
+  nsSVGString mStringAttributes[2];
+  static StringInfo sStringInfo[2];
 };
 
 void

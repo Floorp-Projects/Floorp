@@ -449,7 +449,7 @@ Factory::D2DCleanup()
 
 #endif // XP_WIN
 
-#ifdef USE_SKIA
+#ifdef USE_SKIA_GPU
 TemporaryRef<DrawTarget>
 Factory::CreateSkiaDrawTargetForFBO(unsigned int aFBOID, GrContext *aGrContext, const IntSize &aSize, SurfaceFormat aFormat)
 {
@@ -457,7 +457,7 @@ Factory::CreateSkiaDrawTargetForFBO(unsigned int aFBOID, GrContext *aGrContext, 
   newTarget->InitWithFBO(aFBOID, aGrContext, aSize, aFormat);
   return newTarget;
 }
-#endif // USE_SKIA
+#endif // USE_SKIA_GPU
 
 TemporaryRef<DrawTarget>
 Factory::CreateDrawTargetForCairoSurface(cairo_surface_t* aSurface, const IntSize& aSize)

@@ -194,11 +194,6 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, uint32_t aCount)
 
   NS_ABORT_IF_FALSE(!HasError(), "Shouldn't call WriteInternal after error!");
 
-  if (IsSizeDecode() && HasSize()) {
-    // More data came in since we found the size. We have nothing to do here.
-    return;
-  }
-
   /* Return here if there is a fatal error within libjpeg. */
   nsresult error_code;
   // This cast to nsresult makes sense because setjmp() returns whatever we

@@ -1638,9 +1638,9 @@ SingleLineCrossAxisPositionTracker::
       // in this flex line), so we can use them in computing mLineCrossSize
       // below:
       mCrossStartToFurthestBaseline = std::max(mCrossStartToFurthestBaseline,
-                                             crossStartToBaseline);
+                                               crossStartToBaseline);
       crossEndToFurthestBaseline = std::max(crossEndToFurthestBaseline,
-                                          crossEndToBaseline);
+                                            crossEndToBaseline);
     } else {
       largestOuterCrossSize = std::max(largestOuterCrossSize, curOuterCrossSize);
     }
@@ -1652,8 +1652,8 @@ SingleLineCrossAxisPositionTracker::
   // and
   //  (b) largest cross-size of all other children.
   mLineCrossSize = std::max(mCrossStartToFurthestBaseline +
-                          crossEndToFurthestBaseline,
-                          largestOuterCrossSize);
+                            crossEndToFurthestBaseline,
+                            largestOuterCrossSize);
 }
 
 nscoord

@@ -29,18 +29,18 @@ class ChromeObjectWrapper : public ChromeObjectWrapperBase
     ChromeObjectWrapper() : ChromeObjectWrapperBase(0) {}
 
     /* Custom traps. */
-    virtual bool getPropertyDescriptor(JSContext *cx, JSObject *wrapper,
-                                       jsid id, js::PropertyDescriptor *desc,
+    virtual bool getPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*> wrapper,
+                                       JS::Handle<jsid> id, js::PropertyDescriptor *desc,
                                        unsigned flags) MOZ_OVERRIDE;
-    virtual bool has(JSContext *cx, JSObject *wrapper, jsid id,
-                     bool *bp) MOZ_OVERRIDE;
-    virtual bool get(JSContext *cx, JSObject *wrapper, JSObject *receiver,
-                     jsid id, js::Value *vp) MOZ_OVERRIDE;
+    virtual bool has(JSContext *cx, JS::Handle<JSObject*> wrapper,
+                     JS::Handle<jsid> id, bool *bp) MOZ_OVERRIDE;
+    virtual bool get(JSContext *cx, JS::Handle<JSObject*> wrapper, JS::Handle<JSObject*> receiver,
+                     JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp) MOZ_OVERRIDE;
 
-    virtual bool objectClassIs(JSObject *obj, js::ESClassValue classValue,
+    virtual bool objectClassIs(JS::Handle<JSObject*> obj, js::ESClassValue classValue,
                                JSContext *cx) MOZ_OVERRIDE;
 
-    virtual bool enter(JSContext *cx, JSObject *wrapper, jsid id,
+    virtual bool enter(JSContext *cx, JS::Handle<JSObject*> wrapper, JS::Handle<jsid> id,
                        js::Wrapper::Action act, bool *bp) MOZ_OVERRIDE;
 
     // NB: One might think we'd need to implement enumerate(), keys(), iterate(),

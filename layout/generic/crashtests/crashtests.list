@@ -454,3 +454,4 @@ load 847130.xhtml
 load 847208.html
 asserts(4) load 847209.html # bug 847368
 load 849603.html
+test-pref(layout.css.flexbox.enabled,true) load 851396-1.html
