@@ -13,7 +13,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/devtools/EventEmitter.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
-    "resource://gre/modules/commonjs/sdk/core/promise.js");
+  "resource://gre/modules/commonjs/sdk/core/promise.js");
 
 XPCOMUtils.defineLazyModuleGetter(this, "DebuggerServer",
   "resource://gre/modules/devtools/dbg-server.jsm");
