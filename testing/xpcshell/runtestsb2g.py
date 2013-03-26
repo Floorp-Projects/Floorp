@@ -167,6 +167,8 @@ def main():
             kwargs['logcat_dir'] = options.logcat_dir
         if options.busybox:
             kwargs['busybox'] = options.busybox
+        if options.symbolsPath:
+            kwargs['symbols_path'] = options.symbolsPath
     if options.b2g_path:
         kwargs['homedir'] = options.emu_path or options.b2g_path
     if options.address:
