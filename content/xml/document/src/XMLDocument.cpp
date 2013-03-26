@@ -52,6 +52,7 @@
 #include "nsIScriptError.h"
 #include "nsIHTMLDocument.h"
 #include "mozilla/dom/Element.h" // DOMCI_NODE_DATA
+#include "mozilla/dom/XMLDocumentBinding.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -219,9 +220,10 @@ XMLDocument::XMLDocument(const char* aContentType)
   : nsDocument(aContentType),
     mAsync(true)
 {
-
   // NOTE! nsDocument::operator new() zeroes out all members, so don't
   // bother initializing members to 0.
+
+  SetIsDOMBinding();
 }
 
 XMLDocument::~XMLDocument()
@@ -623,6 +625,16 @@ XMLDocument::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
   clone->mAsync = mAsync;
 
   return CallQueryInterface(clone.get(), aResult);
+}
+
+JSObject*
+XMLDocument::WrapNode(JSContext *aCx, JSObject *aScope)
+{
+  JSObject* obj = XMLDocumentBinding::Wrap(aCx, aScope, this);
+  if (obj && !PostCreateWrapper(aCx, obj)) {
+    return nullptr;
+  }
+  return obj;
 }
 
 } // namespace dom

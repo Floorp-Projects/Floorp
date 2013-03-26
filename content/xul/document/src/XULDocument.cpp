@@ -215,8 +215,6 @@ XULDocument::XULDocument(void)
     mDelayFrameLoaderInitialization = true;
 
     mAllowXULXBL = eTriTrue;
-
-    SetIsDOMBinding();
 }
 
 XULDocument::~XULDocument()

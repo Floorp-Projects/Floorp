@@ -23,7 +23,6 @@ namespace dom {
 
 SVGDocument::SVGDocument()
 {
-  SetIsDOMBinding();
 }
 
 SVGDocument::~SVGDocument()
