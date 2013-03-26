@@ -2731,31 +2731,37 @@ WifiWorker.prototype = {
       return;
     }
 
-    let ssid = network.ssid;
-    let networkKey = getNetworkKey(network);
-
-    if (!(networkKey in this.configuredNetworks)) {
-      this._sendMessage(message, false, "Trying to forget an unknown network", msg);
-      return;
-    }
-
-    let self = this;
-    let configured = this.configuredNetworks[networkKey];
-    this._reconnectOnDisconnect = (this.currentNetwork &&
-                                   (this.currentNetwork.ssid === ssid));
-    WifiManager.removeNetwork(configured.netId, function(ok) {
+    this._reloadConfiguredNetworks((function(ok) {
+      // Give it a chance to remove the network even if reload is failed.
       if (!ok) {
-        self._sendMessage(message, false, "Unable to remove the network", msg);
-        self._reconnectOnDisconnect = false;
+        debug("Warning !!! Failed to reload the configured networks");
+      }
+
+      let ssid = network.ssid;
+      let networkKey = getNetworkKey(network);
+      if (!(networkKey in this.configuredNetworks)) {
+        this._sendMessage(message, false, "Trying to forget an unknown network", msg);
         return;
       }
 
-      WifiManager.saveConfig(function() {
-        self._reloadConfiguredNetworks(function() {
-          self._sendMessage(message, true, true, msg);
+      let self = this;
+      let configured = this.configuredNetworks[networkKey];
+      this._reconnectOnDisconnect = (this.currentNetwork &&
+                                    (this.currentNetwork.ssid === ssid));
+      WifiManager.removeNetwork(configured.netId, function(ok) {
+        if (!ok) {
+          self._sendMessage(message, false, "Unable to remove the network", msg);
+          self._reconnectOnDisconnect = false;
+          return;
+        }
+
+        WifiManager.saveConfig(function() {
+          self._reloadConfiguredNetworks(function() {
+            self._sendMessage(message, true, true, msg);
+          });
         });
       });
-    });
+    }).bind(this));
   },
 
   wps: function(msg) {
