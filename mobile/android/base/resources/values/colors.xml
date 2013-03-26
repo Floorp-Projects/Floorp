@@ -13,17 +13,29 @@
   <color name="highlight_dark">#33FFFFFF</color>
   <color name="highlight_dark_focused">#1AFFFFFF</color>
 
-  <!-- highlight on tabs button: 20% black over background_tabs_dark -->
+  <!-- highlight on tabs button: 20% white over background_tabs_dark -->
   <color name="highlight_tabs">#FF696D71</color>
 
-  <!-- highlight-focused on tabs button: 10% black over background_tabs_dark -->
+  <!-- highlight-focused on tabs button: 10% white over background_tabs_dark -->
   <color name="highlight_tabs_focused">#FF565B60</color>
 
-  <!-- highlight on menu button: 20% black over black -->
+  <!-- highlight on menu button: 20% white over black -->
   <color name="highlight_menu">#FF333333</color>
 
-  <!-- highlight-focused on menu button: 10% black over black -->
+  <!-- highlight-focused on menu button: 10% white over black -->
   <color name="highlight_menu_focused">#FF1A1A1A</color>
+
+  <!-- highlight on nav button: 20% black over background_normal -->
+  <color name="highlight_nav">#FFA5ACB2</color>
+
+  <!-- highlight-focused on nav button: 10% black over background_normal -->
+  <color name="highlight_nav_focused">#FFB9C1C7</color>
+
+  <!-- highlight on private nav button: 20% white over background_private -->
+  <color name="highlight_nav_pb">#FF545654</color>
+
+  <!-- highlight-focused on private nav button: 10% white over background_private -->
+  <color name="highlight_nav_focused_pb">#FF3F423F</color>
 
   <color name="autocomplete_listitem_text">#000000</color>
   <color name="splash_background">#000000</color>
