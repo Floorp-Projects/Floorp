@@ -318,7 +318,6 @@ _BROWSER_FILES = \
                  browser_private_no_prompt.js \
                  browser_blob-channelname.js \
                  browser_aboutHealthReport.js \
-                 healthreport_testPostMessage.html \
                  healthreport_testRemoteCommands.html \
                  $(NULL)
 
