@@ -457,27 +457,31 @@ nsRangeFrame::AttributeChanged(int32_t  aNameSpaceID,
   NS_ASSERTION(mTrackDiv, "The track div must exist!");
   NS_ASSERTION(mThumbDiv, "The thumb div must exist!");
 
-  if (aNameSpaceID == kNameSpaceID_None &&
-      (aAttribute == nsGkAtoms::value ||
-       aAttribute == nsGkAtoms::min ||
-       aAttribute == nsGkAtoms::max ||
-       aAttribute == nsGkAtoms::step)) {
-    // We want to update the position of the thumb, except in one special case:
-    // If the value attribute is being set, it is possible that we are in the
-    // middle of a type change away from type=range, under the
-    // SetAttr(..., nsGkAtoms::value, ...) call in nsHTMLInputElement::
-    // HandleTypeChange. In that case the nsHTMLInputElement's type will
-    // already have changed, and if we call UpdateThumbPositionForValueChange()
-    // we'll fail the asserts under that call that check the type of our
-    // nsHTMLInputElement. Given that we're changing away from being a range
-    // and this frame will shortly be destroyed, there's no point in calling
-    // UpdateThumbPositionForValueChange() anyway.
-    MOZ_ASSERT(mContent->IsHTML(nsGkAtoms::input), "bad cast");
-    bool typeIsRange = static_cast<nsHTMLInputElement*>(mContent)->GetType() ==
-                         NS_FORM_INPUT_RANGE;
-    MOZ_ASSERT(typeIsRange || aAttribute == nsGkAtoms::value, "why?");
-    if (typeIsRange) {
-      UpdateThumbPositionForValueChange();
+  if (aNameSpaceID == kNameSpaceID_None) {
+    if (aAttribute == nsGkAtoms::value ||
+        aAttribute == nsGkAtoms::min ||
+        aAttribute == nsGkAtoms::max ||
+        aAttribute == nsGkAtoms::step) {
+      // We want to update the position of the thumb, except in one special
+      // case: If the value attribute is being set, it is possible that we are
+      // in the middle of a type change away from type=range, under the
+      // SetAttr(..., nsGkAtoms::value, ...) call in nsHTMLInputElement::
+      // HandleTypeChange. In that case the nsHTMLInputElement's type will
+      // already have changed, and if we call UpdateThumbPositionForValueChange()
+      // we'll fail the asserts under that call that check the type of our
+      // nsHTMLInputElement. Given that we're changing away from being a range
+      // and this frame will shortly be destroyed, there's no point in calling
+      // UpdateThumbPositionForValueChange() anyway.
+      MOZ_ASSERT(mContent->IsHTML(nsGkAtoms::input), "bad cast");
+      bool typeIsRange = static_cast<nsHTMLInputElement*>(mContent)->GetType() ==
+                           NS_FORM_INPUT_RANGE;
+      MOZ_ASSERT(typeIsRange || aAttribute == nsGkAtoms::value, "why?");
+      if (typeIsRange) {
+        UpdateThumbPositionForValueChange();
+      }
+    } else if (aAttribute == nsGkAtoms::orient) {
+      PresContext()->PresShell()->FrameNeedsReflow(this, nsIPresShell::eResize,
+                                                   NS_FRAME_IS_DIRTY);
     }
   }
 
@@ -554,7 +558,9 @@ nsRangeFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
 bool
 nsRangeFrame::IsHorizontal(const nsSize *aFrameSizeOverride) const
 {
-  return true; // until we decide how to support vertical range (bug 840820)
+  nsHTMLInputElement* element = static_cast<nsHTMLInputElement*>(mContent);
+  return !element->AttrValueIs(kNameSpaceID_None, nsGkAtoms::orient,
+                               nsGkAtoms::vertical, eCaseMatters);
 }
 
 double
