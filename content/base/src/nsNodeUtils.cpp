@@ -31,6 +31,7 @@
 #include "nsObjectLoadingContent.h"
 #include "nsDOMMutationObserver.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/HTMLTemplateElement.h"
 
 using namespace mozilla::dom;
 
@@ -562,6 +563,29 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
     }
   }
 
+  // Cloning template element.
+  if (aDeep && aClone && IsTemplateElement(aNode)) {
+    DocumentFragment* origContent =
+      static_cast<HTMLTemplateElement*>(aNode)->Content();
+    DocumentFragment* cloneContent =
+      static_cast<HTMLTemplateElement*>(clone.get())->Content();
+
+    // Clone the children into the clone's template content owner
+    // document's nodeinfo manager.
+    nsNodeInfoManager* ownerNodeInfoManager =
+      cloneContent->mNodeInfo->NodeInfoManager();
+
+    for (nsIContent* cloneChild = origContent->GetFirstChild();
+         cloneChild;
+         cloneChild = cloneChild->GetNextSibling()) {
+      nsCOMPtr<nsINode> child;
+      rv = CloneAndAdopt(cloneChild, aClone, aDeep, ownerNodeInfoManager,
+                         aCx, aNewScope, aNodesWithProperties, cloneContent,
+                         getter_AddRefs(child));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+
   // XXX setting document on some nodes not in a document so XBL will bind
   // and chrome won't break. Make XBL bind to document-less nodes!
   // XXXbz Once this is fixed, fix up the asserts in all implementations of
@@ -609,3 +633,22 @@ nsNodeUtils::UnlinkUserData(nsINode *aNode)
   document->PropertyTable(DOM_USER_DATA)->DeleteAllPropertiesFor(aNode);
   document->PropertyTable(DOM_USER_DATA_HANDLER)->DeleteAllPropertiesFor(aNode);
 }
+
+bool
+nsNodeUtils::IsTemplateElement(const nsINode *aNode)
+{
+  return aNode->IsElement() && aNode->AsElement()->IsHTML(nsGkAtoms::_template);
+}
+
+nsIContent*
+nsNodeUtils::GetFirstChildOfTemplateOrNode(nsINode* aNode)
+{
+  if (nsNodeUtils::IsTemplateElement(aNode)) {
+    DocumentFragment* frag =
+      static_cast<HTMLTemplateElement*>(aNode)->Content();
+    return frag->GetFirstChild();
+  }
+
+  return aNode->GetFirstChild();
+}
+

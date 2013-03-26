@@ -211,14 +211,15 @@ class TransportTestPeer : public sigslot::has_slots<> {
     ice_ = new TransportLayerIce(name, ice_ctx_, stream, 1);
 
     // Assemble the stack
-    std::queue<mozilla::TransportLayer *> layers;
-    layers.push(ice_);
-    layers.push(dtls_);
+    nsAutoPtr<std::queue<mozilla::TransportLayer *> > layers(
+      new std::queue<mozilla::TransportLayer *>);
+    layers->push(ice_);
+    layers->push(dtls_);
 
     test_utils->sts_target()->Dispatch(
       WrapRunnableRet(flow_, &TransportFlow::PushLayers, layers, &res),
       NS_DISPATCH_SYNC);
-        
+
     ASSERT_EQ((nsresult)NS_OK, res);
 
     // Listen for media events

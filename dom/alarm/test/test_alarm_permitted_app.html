@@ -28,7 +28,6 @@ SpecialPowers.pushPrefEnv({"set": [["dom.mozAlarms.enabled", true]]}, function()
       "navigator.mozAlarms should be an nsIDOMMozAlarmsManager object");
   }
 
-  SpecialPowers.removePermission("alarms", document);
   SimpleTest.finish();
 });
 

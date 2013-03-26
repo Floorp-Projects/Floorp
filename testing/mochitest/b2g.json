@@ -21,8 +21,6 @@
 	"content/base/test/test_CSP_evalscript.html":"",
 	"content/base/test/test_CSP_frameancestors.html":"",
 	"content/base/test/test_CSP_inlinescript.html":"",
-	"dom/alarm/test/test_alarm_non_permitted_app.html":"",
-	"dom/power/test/test_power_basics.html":"",
 	"content/svg/content/test/test_text_selection.html":"",
 	"content/base/test/test_CSP.html" : "",
 	"content/base/test/test_CrossSiteXHR_origin.html" : "",

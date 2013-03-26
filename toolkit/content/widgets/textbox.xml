@@ -452,15 +452,6 @@
                        xbl:inherits="xbl:text=value,disabled,tabindex,rows,cols,readonly,wrap,placeholder,mozactionhint,spellcheck"><children/></html:textarea>
       </xul:hbox>
     </content>
-
-    <implementation>
-      <constructor><![CDATA[
-        // Given how the anonymous textarea is constructed, the HTMLTextArea
-        // implementation do not hear of the textContent being set. We have to
-        // set it again so the value is properly set.
-        this.inputField.textContent = this.inputField.textContent;
-      ]]></constructor>
-    </implementation>
   </binding>
 
   <binding id="input-box">

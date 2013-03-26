@@ -255,7 +255,7 @@ class RelocatablePtr : public EncapsulatedPtr<T>
         if (v)
             post();
     }
-    explicit RelocatablePtr(const RelocatablePtr<T> &v) : EncapsulatedPtr<T>(v) {
+    RelocatablePtr(const RelocatablePtr<T> &v) : EncapsulatedPtr<T>(v) {
         if (this->value)
             post();
     }
