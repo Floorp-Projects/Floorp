@@ -14,7 +14,7 @@
 
 BEGIN_QUOTA_NAMESPACE
 
-template <class ValueType, class BaseType = ArrayCluster<nsIOfflineStorage*>>
+template <class ValueType, class BaseType = ArrayCluster<nsIOfflineStorage*> >
 class StorageMatcher : public ValueType
 {
   typedef StorageMatcher<ValueType, BaseType> SelfType;
