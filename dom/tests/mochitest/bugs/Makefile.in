@@ -141,14 +141,8 @@ MOCHITEST_FILES	= \
 		test_bug817476.html \
 		test_bug823173.html \
 		test_bug850517.html \
-		$(NULL)
-
-ifneq (Linux,$(OS_ARCH))
-MOCHITEST_FILES += \
+		test_bug848088.html \
 		test_resize_move_windows.html \
 		$(NULL)
-else
-$(filter disabled-on-linux-for-timeouts--bug-677841, test_resize_move_windows.html)
-endif
 
 include $(topsrcdir)/config/rules.mk

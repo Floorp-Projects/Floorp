@@ -292,19 +292,6 @@ nsNavHistoryResultNode::GetGeneratingOptions()
   return nullptr;
 }
 
-
-NS_IMPL_ISUPPORTS_INHERITED1(nsNavHistoryVisitResultNode,
-                             nsNavHistoryResultNode,
-                             nsINavHistoryVisitResultNode)
-
-nsNavHistoryVisitResultNode::nsNavHistoryVisitResultNode(
-    const nsACString& aURI, const nsACString& aTitle, uint32_t aAccessCount,
-    PRTime aTime, const nsACString& aIconURI, int64_t aSession) :
-  nsNavHistoryResultNode(aURI, aTitle, aAccessCount, aTime, aIconURI),
-  mSessionId(aSession)
-{
-}
-
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsNavHistoryContainerResultNode, nsNavHistoryResultNode)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mResult)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mChildren)
@@ -2491,7 +2478,7 @@ nsNavHistoryQueryResultNode::OnVisit(nsIURI* aURI, int64_t aVisitId,
       if (!history->EvaluateQueryForNode(mQueries, mOptions, addition))
         return NS_OK; // don't need to include in our query
 
-      if (addition->IsVisit()) {
+      if (mOptions->ResultType() == nsNavHistoryQueryOptions::RESULTS_AS_VISIT) {
         // If this is a visit type query, just insert the new visit.  We never
         // update visits, only add or remove them.
         rv = InsertSortedChild(addition);

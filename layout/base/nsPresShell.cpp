@@ -174,7 +174,7 @@
 
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
-#include "sampler.h"
+#include "GeckoProfiler.h"
 #include "mozilla/css/ImageLoader.h"
 
 #include "Layers.h"
@@ -3805,7 +3805,7 @@ PresShell::FlushPendingNotifications(mozilla::ChangesToFlush aFlush)
   // Make sure that we don't miss things added to mozFlushType!
   MOZ_ASSERT(static_cast<uint32_t>(flushType) <= ArrayLength(flushTypeNames));
 
-  SAMPLE_LABEL_PRINTF("layout", "Flush", "(Flush_%s)",
+  PROFILER_LABEL_PRINTF("layout", "Flush", "(Flush_%s)",
                       flushTypeNames[flushType - 1]);
 #endif
 
@@ -5496,7 +5496,7 @@ PresShell::Paint(nsView*        aViewToPaint,
                  const nsRegion& aDirtyRegion,
                  uint32_t        aFlags)
 {
-  SAMPLE_LABEL("Paint", "PresShell::Paint");
+  PROFILER_LABEL("Paint", "PresShell::Paint");
   NS_ASSERTION(!mIsDestroying, "painting a destroyed PresShell");
   NS_ASSERTION(aViewToPaint, "null view");
 
@@ -7760,7 +7760,7 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
   nsIURI *uri = mDocument->GetDocumentURI();
   if (uri)
     uri->GetSpec(docURL);
-  SAMPLE_LABEL_PRINTF("layout", "DoReflow", "(%s)", docURL.get());
+  PROFILER_LABEL_PRINTF("layout", "DoReflow", "(%s)", docURL.get());
 
   if (mReflowContinueTimer) {
     mReflowContinueTimer->Cancel();

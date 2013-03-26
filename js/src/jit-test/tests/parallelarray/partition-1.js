@@ -12,4 +12,4 @@ function testPartition() {
   assertEq(ppp.toString(), "<<1,2>,<3,4>>,<<5,6>,<7,8>>");
 }
 
-testPartition();
+if (getBuildConfiguration().parallelJS) testPartition();

@@ -744,7 +744,6 @@ ResolvePath(JSContext *cx, HandleString filenameStr, bool scriptRelative)
         const char *cwd = getcwd(buffer, PATH_MAX);
         if (!cwd)
             return NULL;
-        strcpy(buffer, cwd);
     }
 
     size_t len = strlen(buffer);
@@ -842,13 +841,13 @@ LoadScript(JSContext *cx, unsigned argc, jsval *vp, bool scriptRelative)
 static JSBool
 Load(JSContext *cx, unsigned argc, jsval *vp)
 {
-    return LoadScript(cx, argc, vp, true);
+    return LoadScript(cx, argc, vp, false);
 }
 
 static JSBool
-LoadScriptRelativeToCwd(JSContext *cx, unsigned argc, jsval *vp)
+LoadScriptRelativeToScript(JSContext *cx, unsigned argc, jsval *vp)
 {
-    return LoadScript(cx, argc, vp, false);
+    return LoadScript(cx, argc, vp, true);
 }
 
 class AutoNewContext
@@ -3572,12 +3571,12 @@ static JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("load", Load, 1, 0,
 "load(['foo.js' ...])",
 "  Load files named by string arguments. Filename is relative to the\n"
-"      script calling the load()."),
-
-    JS_FN_HELP("loadRelativeToCwd", LoadScriptRelativeToCwd, 1, 0,
-"loadRelativeToCwd(['foo.js' ...])",
-"  Load files named by string arguments. Filename is relative to the\n"
 "      current working directory."),
+
+    JS_FN_HELP("loadRelativeToScript", LoadScriptRelativeToScript, 1, 0,
+"loadRelativeToScript(['foo.js' ...])",
+"  Load files named by string arguments. Filename is relative to the\n"
+"      calling script."),
 
     JS_FN_HELP("evaluate", Evaluate, 2, 0,
 "evaluate(code[, options])",
@@ -4835,7 +4834,7 @@ NewGlobalObject(JSContext *cx, JSObject *sameZoneAs)
         if (!JS_DefineProperty(cx, glob, "customNative", UndefinedValue(),
                                (JSPropertyOp)its_get_customNative,
                                (JSStrictPropertyOp)its_set_customNative,
-                               JSPROP_READONLY | JSPROP_NATIVE_ACCESSORS))
+                               JSPROP_NATIVE_ACCESSORS))
             return NULL;
 
         /* Initialize FakeDOMObject. */

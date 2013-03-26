@@ -332,9 +332,9 @@ struct nsPresArena::State {
       // LIFO behavior for best cache utilization
       result = list->mEntries.ElementAt(len - 1);
       list->mEntries.RemoveElementAt(len - 1);
-      MOZ_MAKE_MEM_UNDEFINED(result, list->mEntrySize);
 #if defined(DEBUG)
       {
+        MOZ_MAKE_MEM_DEFINED(result, list->mEntrySize);
         char* p = reinterpret_cast<char*>(result);
         char* limit = p + list->mEntrySize;
         for (; p < limit; p += sizeof(uintptr_t)) {
@@ -351,6 +351,7 @@ struct nsPresArena::State {
         }
       }
 #endif
+      MOZ_MAKE_MEM_UNDEFINED(result, list->mEntrySize);
       return result;
     }
 

@@ -123,7 +123,7 @@ function propertyPanelShown(aPanel)
   // NB: We pull the properties off the prototype, rather than off object itself,
   // so that expandos like |constructor|, which the propPanel can't see, are not
   // included.
-  for (let prop in Object.getPrototypeOf(content.document)) {
+  for (let prop in Object.getPrototypeOf(content.document).wrappedObject) {
     if (prop == "inputEncoding") {
       continue;
     }

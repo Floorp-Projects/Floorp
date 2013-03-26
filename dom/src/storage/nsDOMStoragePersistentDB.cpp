@@ -24,7 +24,7 @@
 #include "mozilla/Telemetry.h"
 #include "nsThreadUtils.h"
 
-#include "sampler.h"
+#include "GeckoProfiler.h"
 
 using namespace mozilla;
 
@@ -860,7 +860,7 @@ nsDOMStoragePersistentDB::GetKeyValue(DOMStorageImpl* aStorage,
                                       bool* aSecure)
 {
   Telemetry::AutoTimer<Telemetry::LOCALDOMSTORAGE_GETVALUE_MS> timer;
-  SAMPLE_LABEL("nsDOMStoragePersistentDB", "GetKeyValue");
+  PROFILER_LABEL("nsDOMStoragePersistentDB", "GetKeyValue");
 
   nsresult rv = EnsureScopeLoaded(aStorage);
   NS_ENSURE_SUCCESS(rv, rv);

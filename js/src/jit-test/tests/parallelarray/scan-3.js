@@ -14,4 +14,4 @@ function testScan() {
   }
 }
 
-testScan();
+if (getBuildConfiguration().parallelJS) testScan();

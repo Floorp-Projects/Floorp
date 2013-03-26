@@ -6,7 +6,7 @@
 #ifndef MOZ_UNWINDER_THREAD_2_H
 #define MOZ_UNWINDER_THREAD_2_H
 
-#include "sps_sampler.h"
+#include "GeckoProfilerImpl.h"
 #include "ProfileEntry2.h"
 
 /* Top level exports of UnwinderThread.cpp. */

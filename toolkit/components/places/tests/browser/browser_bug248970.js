@@ -239,7 +239,6 @@ function isBookmarkAltered(aWin){
   let options = aWin.PlacesUtils.history.getNewQueryOptions();
   options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
   options.maxResults = 1; // should only expect a new bookmark
-  options.resultType = options.RESULT_TYPE_VISIT;
 
   let query = aWin.PlacesUtils.history.getNewQuery();
   query.setFolders([aWin.PlacesUtils.bookmarks.bookmarksMenuFolder], 1);

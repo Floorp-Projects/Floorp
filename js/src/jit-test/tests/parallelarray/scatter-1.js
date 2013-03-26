@@ -5,4 +5,4 @@ function testScatter() {
   assertEq(r.length, 10);
 }
 
-testScatter();
+if (getBuildConfiguration().parallelJS) testScatter();

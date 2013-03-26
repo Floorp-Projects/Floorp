@@ -7,4 +7,5 @@ function buildComprehension() {
   assertEqParallelArray(p, a);
 }
 
-buildComprehension();
+if (getBuildConfiguration().parallelJS)
+  buildComprehension();

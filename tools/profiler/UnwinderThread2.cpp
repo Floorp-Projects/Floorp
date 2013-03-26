@@ -25,7 +25,6 @@
 #include "mozilla/StandardInteger.h"
 #include "PlatformMacros.h"
 
-#include "sps_sampler.h"
 #include "platform.h"
 #include <iostream>
 
@@ -67,7 +66,7 @@
 //////////////////////////////////////////////////////////
 //// BEGIN externally visible functions (WINDOWS STUBS)
 
-// On Windows this will all need reworking.  sps_sampler.h
+// On Windows this will all need reworking.  GeckoProfilerImpl.h
 // will ensure these functions are never actually called,
 // so just provide no-op stubs for now.
 

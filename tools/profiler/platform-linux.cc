@@ -59,7 +59,7 @@
 #include <errno.h>
 #include <stdarg.h>
 #include "platform.h"
-#include "sps_sampler.h"
+#include "GeckoProfilerImpl.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -291,8 +291,8 @@ static struct sigaction old_sigstart_signal_handler;
 const int SIGSTART = SIGUSR1;
 
 static void StartSignalHandler(int signal, siginfo_t* info, void* context) {
-  SAMPLER_START(PROFILE_DEFAULT_ENTRY, PROFILE_DEFAULT_INTERVAL,
-                PROFILE_DEFAULT_FEATURES, PROFILE_DEFAULT_FEATURE_COUNT);
+  profiler_start(PROFILE_DEFAULT_ENTRY, PROFILE_DEFAULT_INTERVAL,
+                 PROFILE_DEFAULT_FEATURES, PROFILE_DEFAULT_FEATURE_COUNT);
 }
 
 void OS::RegisterStartHandler()

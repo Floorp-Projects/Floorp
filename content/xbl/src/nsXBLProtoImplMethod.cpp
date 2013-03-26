@@ -294,7 +294,7 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement)
   JSObject* globalObject = global->GetGlobalJSObject();
 
   nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
-  jsval v;
+  JS::Value v;
   nsresult rv =
     nsContentUtils::WrapNative(cx, globalObject, aBoundElement, &v,
                                getter_AddRefs(wrapper));
@@ -331,7 +331,7 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement)
 
   JSBool ok = JS_TRUE;
   if (NS_SUCCEEDED(rv)) {
-    jsval retval;
+    JS::Value retval;
     ok = ::JS_CallFunctionValue(cx, thisObject, OBJECT_TO_JSVAL(method),
                                 0 /* argc */, nullptr /* argv */, &retval);
   }
