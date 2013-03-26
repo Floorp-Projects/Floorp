@@ -9,7 +9,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIContentViewer.h"
 #include "nsIDocument.h"
-#include "nsXULDocument.h"
+#include "XULDocument.h"
 #include "nsIWindowMediator.h"
 #include "nsPIDOMWindow.h"
 #include "nsIWebNavigation.h"
@@ -425,7 +425,7 @@ TraceActiveWindowGlobal(const uint64_t& aId, nsGlobalWindow*& aWindow, void* aCl
 #ifdef MOZ_XUL
     nsIDocument* doc = aWindow->GetExtantDoc();
     if (doc && doc->IsXUL()) {
-      nsXULDocument* xulDoc = static_cast<nsXULDocument*>(doc);
+      XULDocument* xulDoc = static_cast<XULDocument*>(doc);
       xulDoc->TraceProtos(closure->mTrc, closure->mGCNumber);
     }
 #endif
