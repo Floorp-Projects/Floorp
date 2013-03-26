@@ -299,15 +299,23 @@ ReportUseOfDeprecatedMethod(nsIDocument *aDoc, const char* aWarning)
 NS_IMETHODIMP
 XMLDocument::Load(const nsAString& aUrl, bool *aReturn)
 {
+  ErrorResult rv;
+  *aReturn = Load(aUrl, rv);
+  return rv.ErrorCode();
+}
+
+bool
+XMLDocument::Load(const nsAString& aUrl, ErrorResult& aRv)
+{
   bool hasHadScriptObject = true;
   nsIScriptGlobalObject* scriptObject =
     GetScriptHandlingObject(hasHadScriptObject);
-  NS_ENSURE_STATE(scriptObject || !hasHadScriptObject);
+  if (!scriptObject && hasHadScriptObject) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return false;
+  }
 
   ReportUseOfDeprecatedMethod(this, "UseOfDOM3LoadMethodWarning");
-
-  NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = false;
 
   nsCOMPtr<nsIDocument> callingDoc =
     do_QueryInterface(nsContentUtils::GetDocumentFromContext());
@@ -324,7 +332,8 @@ XMLDocument::Load(const nsAString& aUrl, bool *aReturn)
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), aUrl, charset.get(), baseURI);
   if (NS_FAILED(rv)) {
-    return rv;
+    aRv.Throw(rv);
+    return false;
   }
 
   // Check to see whether the current document is allowed to load this URI.
@@ -338,7 +347,10 @@ XMLDocument::Load(const nsAString& aUrl, bool *aReturn)
   nsCOMPtr<nsIPrincipal> principal = NodePrincipal();
   if (!nsContentUtils::IsSystemPrincipal(principal)) {
     rv = principal->CheckMayLoad(uri, false, false);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+      aRv.Throw(rv);
+      return false;
+    }
 
     int16_t shouldLoad = nsIContentPolicy::ACCEPT;
     rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_XMLHTTPREQUEST,
@@ -351,9 +363,13 @@ XMLDocument::Load(const nsAString& aUrl, bool *aReturn)
                                    &shouldLoad,
                                    nsContentUtils::GetContentPolicy(),
                                    nsContentUtils::GetSecurityManager());
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+      aRv.Throw(rv);
+      return false;
+    }
     if (NS_CP_REJECTED(shouldLoad)) {
-      return NS_ERROR_CONTENT_BLOCKED;
+      aRv.Throw(NS_ERROR_CONTENT_BLOCKED);
+      return false;
     }
   } else {
     // We're called from chrome, check to make sure the URI we're
@@ -370,7 +386,10 @@ XMLDocument::Load(const nsAString& aUrl, bool *aReturn)
                           "longer supported. Use XMLHttpRequest instead.");
       nsCOMPtr<nsIScriptError> errorObject =
           do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_FAILED(rv)) {
+        aRv.Throw(rv);
+        return false;
+      }
 
       rv = errorObject->InitWithWindowID(error,
                                          NS_ConvertUTF8toUTF16(spec),
@@ -381,7 +400,10 @@ XMLDocument::Load(const nsAString& aUrl, bool *aReturn)
                                            callingDoc->InnerWindowID() :
                                            this->InnerWindowID());
 
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_FAILED(rv)) {
+        aRv.Throw(rv);
+        return false;
+      }
 
       nsCOMPtr<nsIConsoleService> consoleService =
         do_GetService(NS_CONSOLESERVICE_CONTRACTID);
@@ -389,7 +411,8 @@ XMLDocument::Load(const nsAString& aUrl, bool *aReturn)
         consoleService->LogMessage(errorObject);
       }
 
-      return NS_ERROR_DOM_SECURITY_ERR;
+      aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+      return false;
     }
   }
 
@@ -418,7 +441,10 @@ XMLDocument::Load(const nsAString& aUrl, bool *aReturn)
 
   // Create a channel
   nsCOMPtr<nsIInterfaceRequestor> req = nsContentUtils::GetSameOriginChecker();
-  NS_ENSURE_TRUE(req, NS_ERROR_OUT_OF_MEMORY);  
+  if (!req) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return false;
+  }
 
   nsCOMPtr<nsIChannel> channel;
   // nsIRequest::LOAD_BACKGROUND prevents throbber from becoming active,
@@ -426,7 +452,8 @@ XMLDocument::Load(const nsAString& aUrl, bool *aReturn)
   rv = NS_NewChannel(getter_AddRefs(channel), uri, nullptr, loadGroup, req, 
                      nsIRequest::LOAD_BACKGROUND);
   if (NS_FAILED(rv)) {
-    return rv;
+    aRv.Throw(rv);
+    return false;
   }
 
   // StartDocumentLoad asserts that readyState is uninitialized, so
@@ -444,7 +471,8 @@ XMLDocument::Load(const nsAString& aUrl, bool *aReturn)
                                        getter_AddRefs(listener),
                                        false))) {
     NS_ERROR("XMLDocument::Load: Failed to start the document load.");
-    return rv;
+    aRv.Throw(rv);
+    return false;
   }
 
   // After this point, if we error out of this method we should clear
@@ -454,7 +482,8 @@ XMLDocument::Load(const nsAString& aUrl, bool *aReturn)
   rv = channel->AsyncOpen(listener, nullptr);
   if (NS_FAILED(rv)) {
     mChannelIsPending = false;
-    return rv;
+    aRv.Throw(rv);
+    return false;
   }
 
   if (!mAsync) {
@@ -468,23 +497,21 @@ XMLDocument::Load(const nsAString& aUrl, bool *aReturn)
     }
 
     // We set return to true unless there was a parsing error
-    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(GetRootElement());
-    if (node) {
-      nsAutoString name, ns;      
-      if (NS_SUCCEEDED(node->GetLocalName(name)) &&
-          name.EqualsLiteral("parsererror") &&
-          NS_SUCCEEDED(node->GetNamespaceURI(ns)) &&
-          ns.EqualsLiteral("http://www.mozilla.org/newlayout/xml/parsererror.xml")) {
-        //return is already false
-      } else {
-        *aReturn = true;
+    Element* rootElement = GetRootElement();
+    if (!rootElement) {
+      return false;
+    }
+
+    if (rootElement->LocalName().EqualsLiteral("parsererror")) {
+      nsAutoString ns;
+      rootElement->GetNamespaceURI(ns);
+      if (ns.EqualsLiteral("http://www.mozilla.org/newlayout/xml/parsererror.xml")) {
+        return false;
       }
     }
-  } else {
-    *aReturn = true;
   }
 
-  return NS_OK;
+  return true;
 }
 
 nsresult
