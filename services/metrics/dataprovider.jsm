@@ -331,12 +331,30 @@ Measurement.prototype = Object.freeze({
     return this.storage.deleteLastTextFromFieldID(this.fieldID(field));
   },
 
+  /**
+   * This method is used by the default serializers to control whether a field
+   * is included in the output.
+   *
+   * There could be legacy fields in storage we no longer care about.
+   *
+   * This method is a hook to allow measurements to change this behavior, e.g.,
+   * to implement a dynamic fieldset.
+   *
+   * You will also need to override `fieldType`.
+   *
+   * @return (boolean) true if the specified field should be included in
+   *                   payload output.
+   */
+  shouldIncludeField: function (field) {
+    return field in this._fields;
+  },
+
   _serializeJSONSingular: function (data) {
     let result = {"_v": this.version};
 
     for (let [field, data] of data) {
       // There could be legacy fields in storage we no longer care about.
-      if (!(field in this._fields)) {
+      if (!this.shouldIncludeField(field)) {
         continue;
       }
 
@@ -367,7 +385,7 @@ Measurement.prototype = Object.freeze({
     let result = {"_v": this.version};
 
     for (let [field, data] of data) {
-      if (!(field in this._fields)) {
+      if (!this.shouldIncludeField(field)) {
         continue;
       }
 
