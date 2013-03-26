@@ -17,3 +17,8 @@ default-preferences pref(dom.experimental_forms_range,true)
 # 'direction' property:
 == input-range-direction-unthemed-1.html input-range-direction-unthemed-1-ref.html
 
+# ::-moz-range-progress pseudo-element:
+== input-range-moz-range-progress-1.html input-range-moz-range-progress-1-ref.html
+== input-range-moz-range-progress-2.html input-range-moz-range-progress-2-ref.html
+== input-range-moz-range-progress-3.html input-range-moz-range-progress-3-ref.html
+

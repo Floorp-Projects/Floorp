@@ -2603,7 +2603,7 @@ nsHTMLInputElement::CancelRangeThumbDrag(bool aIsForUserEvent)
     SetValueInternal(val, true, true);
     nsRangeFrame* frame = do_QueryFrame(GetPrimaryFrame());
     if (frame) {
-      frame->UpdateThumbPositionForValueChange();
+      frame->UpdateForValueChange();
     }
   }
   mIsDraggingRange = false;
@@ -2619,7 +2619,7 @@ nsHTMLInputElement::SetValueOfRangeForUserEvent(double aValue)
   SetValueInternal(val, true, true);
   nsRangeFrame* frame = do_QueryFrame(GetPrimaryFrame());
   if (frame) {
-    frame->UpdateThumbPositionForValueChange();
+    frame->UpdateForValueChange();
   }
   nsContentUtils::DispatchTrustedEvent(OwnerDoc(),
                                        static_cast<nsIDOMHTMLInputElement*>(this),
