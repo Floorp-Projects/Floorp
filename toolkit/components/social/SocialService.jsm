@@ -369,10 +369,9 @@ this.SocialService = {
     return data;
   },
 
-  installProvider: function(sourceURI, data, installCallback) {
-    let URI = Services.io.newURI(sourceURI, null, null);
-    let principal = Services.scriptSecurityManager.getNoAppCodebasePrincipal(URI);
-    let installOrigin = principal.origin;
+  installProvider: function(aDOMDocument, data, installCallback) {
+    let sourceURI = aDOMDocument.location.href;
+    let installOrigin = aDOMDocument.nodePrincipal.origin;
 
     let id = getAddonIDFromOrigin(installOrigin);
     let version = data && data.version ? data.version : "0";
@@ -384,7 +383,7 @@ this.SocialService = {
     let manifest;
     if (data) {
       // if we get data, we MUST have a valid manifest generated from the data
-      manifest = this._manifestFromData(installType, data, principal);
+      manifest = this._manifestFromData(installType, data, aDOMDocument.nodePrincipal);
       if (!manifest)
         throw new Error("SocialService.installProvider: service configuration is invalid from " + sourceURI);
     }
@@ -400,7 +399,8 @@ this.SocialService = {
         args.wrappedJSObject = args;
 
         // Bug 836452, get something better than the scary addon dialog
-        Services.ww.openWindow(this.window, "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul",
+        Services.ww.openWindow(aDOMDocument.defaultView,
+                               "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul",
                                null, "chrome,modal,centerscreen", args);
         break;
       case "builtin":

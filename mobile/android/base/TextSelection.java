@@ -89,16 +89,14 @@ class TextSelection extends Layer implements GeckoEventListener {
                             layerView.addLayer(TextSelection.this);
                         }
                     } else if (event.equals("TextSelection:HideHandles")) {
-                        final JSONArray handles = message.getJSONArray("handles");
                         LayerView layerView = mActivity.getLayerView();
                         if (layerView != null) {
                             layerView.removeLayer(TextSelection.this);
                         }
 
-                        for (int i=0; i < handles.length(); i++) {
-                            String handle = handles.getString(i);
-                            getHandle(handle).setVisibility(View.GONE);
-                        }
+                        mStartHandle.setVisibility(View.GONE);
+                        mMiddleHandle.setVisibility(View.GONE);
+                        mEndHandle.setVisibility(View.GONE);
                     } else if (event.equals("TextSelection:PositionHandles")) {
                         final boolean rtl = message.getBoolean("rtl");
                         final JSONArray positions = message.getJSONArray("positions");

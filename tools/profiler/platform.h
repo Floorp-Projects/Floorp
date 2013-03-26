@@ -42,6 +42,7 @@
 #include "mozilla/Util.h"
 #include "mozilla/unused.h"
 #include "mozilla/TimeStamp.h"
+#include "PlatformMacros.h"
 #include "v8-support.h"
 #include <vector>
 #define ASSERT(a) MOZ_ASSERT(a)
@@ -190,7 +191,22 @@ class Thread {
   DISALLOW_COPY_AND_ASSIGN(Thread);
 };
 
+// ----------------------------------------------------------------------------
+// HAVE_NATIVE_UNWIND
+//
+// Pseudo backtraces are available on all platforms.  Native
+// backtraces are available only on selected platforms.  Breakpad is
+// the only supported native unwinder.  HAVE_NATIVE_UNWIND is set at
+// build time to indicate whether native unwinding is possible on this
+// platform.  The actual unwind mode currently in use is stored in
+// sUnwindMode.
 
+#undef HAVE_NATIVE_UNWIND
+#if defined(MOZ_PROFILING) \
+    && (defined(SPS_PLAT_amd64_linux) || defined(SPS_PLAT_arm_android) \
+        || defined(SPS_PLAT_x86_linux))
+# define HAVE_NATIVE_UNWIND
+#endif
 
 // ----------------------------------------------------------------------------
 // Sampler
