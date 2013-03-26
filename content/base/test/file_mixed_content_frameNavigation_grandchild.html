@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests for Mixed Content Blocker - Navigating Grandchild frames when a secure parent doesn't exist
+https://bugzilla.mozilla.org/show_bug.cgi?id=840388
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Tests for Mixed Content Frame Navigation</title>
+</head>
+<body>
+<iframe src="https://example.com/tests/content/base/test/file_mixed_content_frameNavigation_innermost.html?insecurePage_navigate_grandchild" id="child"></iframe>
+
+<script>
+  // For tests that require setTimeout, set the maximum polling time to 50 x 100ms = 5 seconds.
+  var MAX_COUNT = 50;
+  var TIMEOUT_INTERVAL = 100;
+  var counter = 0;
+
+  var child = document.getElementById("child");
+  function navigationStatus(child)
+  {
+    // When the page is navigating, it goes through about:blank and we will get a permission denied for loc.
+    // Catch that specific exception and return
+    try {
+      var loc = child.contentDocument.location;
+    } catch(e) {
+      if (e.message && e.message.indexOf("Permission denied to access property") == -1) {
+        // We received an exception we didn't expect.
+        throw e;
+      }
+      counter++;
+      return;
+    }
+    if (loc == "http://example.com/tests/content/base/test/file_mixed_content_frameNavigation_innermost.html?insecurePage_navigate_grandchild_response") {
+      return;
+    }
+    else {
+      if(counter < MAX_COUNT) {
+        counter++;
+        setTimeout(navigationStatus, TIMEOUT_INTERVAL, child);
+      }
+      else {
+        // After we have called setTimeout the maximum number of times, assume navigating the iframe is blocked
+        parent.parent.postMessage({"test": "insecurePage_navigate_grandchild", "msg": "navigating to insecure grandchild iframe blocked on insecure page"}, "http://mochi.test:8888");
+      }
+    }
+  }
+
+  setTimeout(navigationStatus, TIMEOUT_INTERVAL, child);
+
+</script>
+</body>
+</html>

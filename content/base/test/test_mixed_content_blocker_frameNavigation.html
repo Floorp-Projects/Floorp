@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests for Mixed Content Blocker
+https://bugzilla.mozilla.org/show_bug.cgi?id=840388
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Tests for Bug 840388</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script>
+  var counter = 0;
+  var origBlockActive = SpecialPowers.getBoolPref("security.mixed_content.block_active_content");
+
+  SpecialPowers.setBoolPref("security.mixed_content.block_active_content", true);
+  var blockActive = SpecialPowers.getBoolPref("security.mixed_content.block_active_content");
+
+
+  var testsToRun = {
+    insecurePage_navigate_child: false,
+    insecurePage_navigate_grandchild: false,
+    securePage_navigate_child: false,
+    securePage_navigate_grandchild: false,
+  };
+
+  function log(msg) {
+    document.getElementById("log").textContent += "\n" + msg;
+  }
+
+  function checkTestsCompleted() {
+    for (var prop in testsToRun) {
+      // some test hasn't run yet so we're not done
+      if (!testsToRun[prop])
+        return;
+    }
+    //if the testsToRun are all completed, change the block mixed active content pref and run the tests again.
+    if(counter < 1) {
+       for (var prop in testsToRun) {
+         testsToRun[prop] = false;
+       }
+      //call to change the preferences
+      counter++;
+      SpecialPowers.setBoolPref("security.mixed_content.block_active_content", false);
+      blockActive = SpecialPowers.getBoolPref("security.mixed_content.block_active_content");
+      log("blockActive set to "+blockActive+".");
+      document.getElementById('framediv').innerHTML = '<iframe src="http://example.com/tests/content/base/test/file_mixed_content_frameNavigation.html"></iframe>';
+      document.getElementById('secure_framediv').innerHTML = '<iframe src="https://example.com/tests/content/base/test/file_mixed_content_frameNavigation_secure.html"></iframe>';
+    }
+    else {
+      //set the prefs back to what they were set to originally
+      SpecialPowers.setBoolPref("security.mixed_content.block_active_content", origBlockActive);
+      SimpleTest.finish();
+    }
+  }
+
+  var firstTest = true;
+
+  // listen for a messages from the mixed content test harness
+  window.addEventListener("message", receiveMessage, false);
+  function receiveMessage(event) {
+    if(firstTest) {
+      log("blockActive set to "+blockActive);
+      firstTest = false;
+    }
+
+    log("test: "+event.data.test+", msg: "+event.data.msg + ".");
+    // test that the load type matches the pref for this type of content
+    // (i.e. active vs. display)
+
+    switch(event.data.test) {
+
+      case "insecurePage_navigate_child":
+        ok((event.data.msg == "navigated to insecure iframe on insecure page"), "navigating to insecure iframe blocked on insecure page");
+        testsToRun["insecurePage_navigate_child"] = true;
+        break;
+
+      case "insecurePage_navigate_grandchild":
+        ok((event.data.msg == "navigated to insecure grandchild iframe on insecure page"), "navigating to insecure grandchild iframe blocked on insecure page");
+        testsToRun["insecurePage_navigate_grandchild"] = true;
+        break;
+
+      case "securePage_navigate_child":
+        ok(blockActive == (event.data.msg == "navigating to insecure iframe blocked on secure page"), "navigated to insecure iframe on secure page");
+        testsToRun["securePage_navigate_child"] = true;
+        break;
+
+      case "securePage_navigate_grandchild":
+        ok(blockActive == (event.data.msg == "navigating to insecure grandchild iframe blocked on secure page"), "navigated to insecure granchild iframe on secure page");
+        testsToRun["securePage_navigate_grandchild"] = true;
+        break;
+    }
+    checkTestsCompleted();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  </script>
+</head>
+
+<body>
+  <div id="framediv">
+    <iframe src="http://example.com/tests/content/base/test/file_mixed_content_frameNavigation.html"></iframe>
+  </div>
+  <div id="secure_framediv">
+    <iframe src="https://example.com/tests/content/base/test/file_mixed_content_frameNavigation_secure.html"></iframe>
+  </div>
+
+  <pre id="log"></pre>
+</body>
+</html>
