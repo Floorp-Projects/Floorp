@@ -1184,7 +1184,7 @@ var BrowserApp = {
 
         let delayLoad = ("delayLoad" in data) ? data.delayLoad : false;
         let params = {
-          selected: !delayLoad,
+          selected: ("selected" in data) ? data.selected : !delayLoad,
           parentId: ("parentId" in data) ? data.parentId : -1,
           flags: flags,
           tabID: data.tabID,
