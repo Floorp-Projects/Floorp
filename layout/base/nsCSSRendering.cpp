@@ -30,7 +30,6 @@
 #include "nsIScrollableFrame.h"
 #include "imgIRequest.h"
 #include "imgIContainer.h"
-#include "ImageOps.h"
 #include "nsCSSRendering.h"
 #include "nsCSSColorUtils.h"
 #include "nsITheme.h"
@@ -61,7 +60,6 @@
 
 using namespace mozilla;
 using namespace mozilla::css;
-using mozilla::image::ImageOps;
 
 static int gFrameTreeLockCount = 0;
 
@@ -3316,10 +3314,20 @@ DrawBorderImageComponent(nsRenderingContext&  aRenderingContext,
   if (aFill.IsEmpty() || aSrc.IsEmpty())
     return;
 
+  // Don't bother trying to cache sub images if the border image is animated
+  // We can only sucessfully call GetAnimated() if we are fully decoded, so default to true
+  bool animated = true;
+  aImage->GetAnimated(&animated);
+
   nsCOMPtr<imgIContainer> subImage;
-  if ((subImage = aStyleBorder.GetSubImage(aIndex)) == nullptr) {
-    subImage = ImageOps::Clip(aImage, aSrc);
-    aStyleBorder.SetSubImage(aIndex, subImage);
+  if (animated || (subImage = aStyleBorder.GetSubImage(aIndex)) == 0) {
+    if (NS_FAILED(aImage->ExtractFrame(imgIContainer::FRAME_CURRENT, aSrc,
+                                       imgIContainer::FLAG_SYNC_DECODE,
+                                       getter_AddRefs(subImage))))
+      return;
+
+    if (!animated)
+      aStyleBorder.SetSubImage(aIndex, subImage);
   }
 
   gfxPattern::GraphicsFilter graphicsFilter =
@@ -4285,7 +4293,18 @@ nsImageRenderer::PrepareImage()
           // The cropped image is identical to the source image
           mImageContainer.swap(srcImage);
         } else {
-          nsCOMPtr<imgIContainer> subImage = ImageOps::Clip(srcImage, actualCropRect);
+          nsCOMPtr<imgIContainer> subImage;
+          uint32_t aExtractFlags = (mFlags & FLAG_SYNC_DECODE_IMAGES)
+                                     ? (uint32_t) imgIContainer::FLAG_SYNC_DECODE
+                                     : (uint32_t) imgIContainer::FLAG_NONE;
+          nsresult rv = srcImage->ExtractFrame(imgIContainer::FRAME_CURRENT,
+                                               actualCropRect, aExtractFlags,
+                                               getter_AddRefs(subImage));
+          if (NS_FAILED(rv)) {
+            NS_WARNING("The cropped image contains no pixels to draw; "
+                       "maybe the crop rect is outside the image frame rect");
+            return false;
+          }
           mImageContainer.swap(subImage);
         }
       }
