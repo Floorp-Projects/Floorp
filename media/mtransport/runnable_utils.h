@@ -54,6 +54,7 @@ static inline nsresult RUN_ON_THREAD(nsIEventTarget *thread, nsIRunnable *runnab
   return runnable_ref->Run();
 }
 
+#ifdef MOZ_DEBUG
 #define ASSERT_ON_THREAD(t) do {                \
     if (t) {                                    \
       bool on;                                    \
@@ -63,7 +64,10 @@ static inline nsresult RUN_ON_THREAD(nsIEventTarget *thread, nsIRunnable *runnab
       MOZ_ASSERT(on);                             \
     }                                           \
   } while(0)
-}
-
+#else
+#define ASSERT_ON_THREAD(t)
 #endif
 
+} /* namespace mozilla */
+
+#endif
