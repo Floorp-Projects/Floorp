@@ -273,7 +273,7 @@ TraceProtoAndIfaceCache(JSTracer* trc, JSObject* obj)
   for (size_t i = 0; i < kProtoAndIfaceCacheCount; ++i) {
     JSObject* proto = protoAndIfaceArray[i];
     if (proto) {
-      JS_CALL_OBJECT_TRACER(trc, proto, "protoAndIfaceArray[i]");
+      JS_CallObjectTracer(trc, proto, "protoAndIfaceArray[i]");
     }
   }
 }
