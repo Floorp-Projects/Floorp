@@ -364,6 +364,40 @@ TypeSet::isSubsetIgnorePrimitives(TypeSet *other)
     return true;
 }
 
+bool
+TypeSet::intersectionEmpty(TypeSet *other)
+{
+    // For unknown/unknownObject there is no reason they couldn't intersect.
+    // I.e. we eagerly return their intersection isn't empty.
+    // That's ok, since we can't make predictions that can be checked to not hold.
+    if (unknown() || other->unknown())
+        return false;
+
+    if (unknownObject() && unknownObject())
+        return false;
+
+    if (unknownObject() && other->getObjectCount() > 0)
+        return false;
+
+    if (other->unknownObject() && getObjectCount() > 0)
+        return false;
+
+    // Test if there is an intersection in the baseFlags
+    if ((baseFlags() & other->baseFlags()) != 0)
+        return false;
+
+    // Test if there are object that are in both TypeSets
+    for (unsigned i = 0; i < getObjectCount(); i++) {
+        TypeObjectKey *obj = getObject(i);
+        if (!obj)
+            continue;
+        if (other->hasType(Type::ObjectType(obj)))
+            return false;
+    }
+
+    return true;
+}
+
 inline void
 TypeSet::addTypesToConstraint(JSContext *cx, TypeConstraint *constraint)
 {
