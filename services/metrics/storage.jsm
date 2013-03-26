@@ -1270,6 +1270,19 @@ MetricsStorageSqliteBackend.prototype = Object.freeze({
   },
 
   /**
+   * Checkpoint writes requiring flush to disk.
+   *
+   * This is called to persist queued and non-flushed writes to disk.
+   * It will force an fsync, so it is expensive and should be used
+   * sparingly.
+   */
+  checkpoint: function () {
+    return this.enqueueOperation(function checkpoint() {
+      return this._connection.execute("PRAGMA wal_checkpoint");
+    }.bind(this));
+  },
+
+  /**
    * Ensure a field ID matches a specified type.
    *
    * This is called internally as part of adding values to ensure that
