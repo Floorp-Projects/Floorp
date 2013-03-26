@@ -53,7 +53,7 @@ if test -z $DONT_POPULATE_VIRTUALENV; then
   dnl virtualenv is present and up to date. It sanitizes the environment
   dnl for us, so we don't need to clean anything out.
   $PYTHON $_virtualenv_populate_path \
-    $_virtualenv_topsrcdir $MOZ_BUILD_ROOT/_virtualenv || exit 1
+    $_virtualenv_topsrcdir $MOZ_BUILD_ROOT $MOZ_BUILD_ROOT/_virtualenv || exit 1
 
   case "$host_os" in
   mingw*)

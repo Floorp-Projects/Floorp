@@ -15,3 +15,4 @@ mozilla.pth:config
 mozilla.pth:xpcom/typelib/xpt/tools
 copy:build/buildconfig.py
 packages.txt:testing/mozbase/packages.txt
+objdir:build
