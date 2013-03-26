@@ -195,8 +195,8 @@ ContentPrefService2.prototype = {
     if (context && context.usePrivateBrowsing) {
       this._pbStore.set(group, name, value);
       this._schedule(function () {
-        cbHandleCompletion(callback, Ci.nsIContentPrefCallback2.COMPLETE_OK);
         this._cps._broadcastPrefSet(group, name, value);
+        cbHandleCompletion(callback, Ci.nsIContentPrefCallback2.COMPLETE_OK);
       });
       return;
     }
@@ -258,11 +258,11 @@ ContentPrefService2.prototype = {
 
     this._execStmts(stmts, {
       onDone: function onDone(reason, ok) {
-        if (ok)
+        if (ok) {
           this._cache.setWithCast(group, name, value);
-        cbHandleCompletion(callback, reason);
-        if (ok)
           this._cps._broadcastPrefSet(group, name, value);
+        }
+        cbHandleCompletion(callback, reason);
       },
       onError: function onError(nsresult) {
         cbHandleError(callback, nsresult);
@@ -342,13 +342,11 @@ ContentPrefService2.prototype = {
               this._pbStore.remove(sgroup, name);
             }
           }
-        }
-        cbHandleCompletion(callback, reason);
-        if (ok) {
           for (let [sgroup, , ] in prefs) {
             this._cps._broadcastPrefRemoved(sgroup, name);
           }
         }
+        cbHandleCompletion(callback, reason);
       },
       onError: function onError(nsresult) {
         cbHandleError(callback, nsresult);
@@ -423,18 +421,18 @@ ContentPrefService2.prototype = {
         this._cache.set(grp, name, undefined);
       },
       onDone: function onDone(reason, ok) {
-        if (ok && context && context.usePrivateBrowsing) {
-          for (let [sgroup, sname, ] in this._pbStore) {
-            prefs.set(sgroup, sname);
-            this._pbStore.remove(sgroup, sname);
-          }
-        }
-        cbHandleCompletion(callback, reason);
         if (ok) {
+          if (context && context.usePrivateBrowsing) {
+            for (let [sgroup, sname, ] in this._pbStore) {
+              prefs.set(sgroup, sname);
+              this._pbStore.remove(sgroup, sname);
+            }
+          }
           for (let [sgroup, sname, ] in prefs) {
             this._cps._broadcastPrefRemoved(sgroup, sname);
           }
         }
+        cbHandleCompletion(callback, reason);
       },
       onError: function onError(nsresult) {
         cbHandleError(callback, nsresult);
@@ -475,18 +473,18 @@ ContentPrefService2.prototype = {
         this._cache.set(grp, name, undefined);
       },
       onDone: function onDone(reason, ok) {
-        if (ok && context && context.usePrivateBrowsing) {
-          for (let [sgroup, sname, ] in this._pbStore) {
-            prefs.set(sgroup, sname);
-          }
-          this._pbStore.removeGrouped();
-        }
-        cbHandleCompletion(callback, reason);
         if (ok) {
+          if (context && context.usePrivateBrowsing) {
+            for (let [sgroup, sname, ] in this._pbStore) {
+              prefs.set(sgroup, sname);
+            }
+            this._pbStore.removeGrouped();
+          }
           for (let [sgroup, sname, ] in prefs) {
             this._cps._broadcastPrefRemoved(sgroup, sname);
           }
         }
+        cbHandleCompletion(callback, reason);
       },
       onError: function onError(nsresult) {
         cbHandleError(callback, nsresult);
@@ -546,20 +544,20 @@ ContentPrefService2.prototype = {
         this._cache.set(grp, name, undefined);
       },
       onDone: function onDone(reason, ok) {
-        if (ok && context && context.usePrivateBrowsing) {
-          for (let [sgroup, sname, ] in this._pbStore) {
-            if (sname === name) {
-              prefs.set(sgroup, name);
-              this._pbStore.remove(sgroup, name);
+        if (ok) {
+          if (context && context.usePrivateBrowsing) {
+            for (let [sgroup, sname, ] in this._pbStore) {
+              if (sname === name) {
+                prefs.set(sgroup, name);
+                this._pbStore.remove(sgroup, name);
+              }
             }
           }
-        }
-        cbHandleCompletion(callback, reason);
-        if (ok) {
           for (let [sgroup, , ] in prefs) {
             this._cps._broadcastPrefRemoved(sgroup, name);
           }
         }
+        cbHandleCompletion(callback, reason);
       },
       onError: function onError(nsresult) {
         cbHandleError(callback, nsresult);
@@ -682,10 +680,6 @@ ContentPrefService2.prototype = {
 
   removeObserverForName: function CPS2_removeObserverForName(name, observer) {
     this._cps.removeObserver(name, observer);
-  },
-
-  extractDomain: function CPS2_extractDomain(str) {
-    return this._parseGroup(str);
   },
 
   /**
