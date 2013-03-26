@@ -1513,11 +1513,8 @@ create({ constructor: WatchExpressionsView, proto: MenuContainer.prototype }, {
 function GlobalSearchView() {
   dumpn("GlobalSearchView was instantiated");
 
-  this._cache = new Map();
   this._startSearch = this._startSearch.bind(this);
-  this._onFetchSourceFinished = this._onFetchSourceFinished.bind(this);
-  this._onFetchSourceTimeout = this._onFetchSourceTimeout.bind(this);
-  this._onFetchSourcesFinished = this._onFetchSourcesFinished.bind(this);
+  this._performGlobalSearch = this._performGlobalSearch.bind(this);
   this._createItemView = this._createItemView.bind(this);
   this._onScroll = this._onScroll.bind(this);
   this._onHeaderClick = this._onHeaderClick.bind(this);
@@ -1576,14 +1573,6 @@ create({ constructor: GlobalSearchView, proto: MenuContainer.prototype }, {
   },
 
   /**
-   * Clears all the fetched sources from cache.
-   */
-  clearCache: function DVGS_clearCache() {
-    this._cache = new Map();
-    window.dispatchEvent(document, "Debugger:GlobalSearch:CacheCleared");
-  },
-
-  /**
    * Focuses the next found match in the source editor.
    */
   focusNextMatch: function DVGS_focusNextMatch() {
@@ -1631,7 +1620,7 @@ create({ constructor: GlobalSearchView, proto: MenuContainer.prototype }, {
       this.performSearch(aQuery);
       return;
     }
-    let delay = Math.max(GLOBAL_SEARCH_ACTION_MAX_DELAY / aQuery.length);
+    let delay = Math.max(GLOBAL_SEARCH_ACTION_MAX_DELAY / aQuery.length, 0);
 
     window.clearTimeout(this._searchTimeout);
     this._searchFunction = this._startSearch.bind(this, aQuery);
@@ -1657,98 +1646,16 @@ create({ constructor: GlobalSearchView, proto: MenuContainer.prototype }, {
    *        The string to search for.
    */
   _startSearch: function DVGS__startSearch(aQuery) {
-    let locations = DebuggerView.Sources.values;
-    this._sourcesCount = locations.length;
     this._searchedToken = aQuery;
 
-    this._fetchSources(locations, {
-      onFetch: this._onFetchSourceFinished,
-      onTimeout: this._onFetchSourceTimeout,
-      onFinished: this._onFetchSourcesFinished
+    DebuggerController.SourceScripts.fetchSources(DebuggerView.Sources.values, {
+      onFinished: this._performGlobalSearch
     });
   },
 
   /**
-   * Starts fetching all the sources, silently.
-   *
-   * @param array aLocations
-   *        The locations for the sources to fetch.
-   * @param object aCallbacks
-   *        An object containing the callback functions to invoke:
-   *          - onFetch: called after each source is fetched
-   *          - onTimeout: called when a source's text takes too long to fetch
-   *          - onFinished: called if all the sources were already fetched
-   */
-  _fetchSources:
-  function DVGS__fetchSources(aLocations, { onFetch, onTimeout, onFinished }) {
-    // If all the sources were already fetched, then don't do anything.
-    if (this._cache.size == aLocations.length) {
-      onFinished();
-      return;
-    }
-
-    // Fetch each new source.
-    for (let location of aLocations) {
-      if (this._cache.has(location)) {
-        continue;
-      }
-      let sourceItem = DebuggerView.Sources.getItemByValue(location);
-      let sourceObject = sourceItem.attachment.source;
-      DebuggerController.SourceScripts.getText(sourceObject, onFetch, onTimeout);
-    }
-  },
-
-  /**
-   * Called when a source has been fetched.
-   *
-   * @param string aLocation
-   *        The location of the source.
-   * @param string aContents
-   *        The text contents of the source.
-   */
-  _onFetchSourceFinished: function DVGS__onFetchSourceFinished(aLocation, aContents, aError) {
-    if (aError) {
-      return;
-    }
-
-    // Remember the source in a cache so we don't have to fetch it again.
-    this._cache.set(aLocation, aContents);
-
-    // Check if all sources were fetched and stored in the cache.
-    if (this._cache.size == this._sourcesCount) {
-      this._onFetchSourcesFinished();
-    }
-  },
-
-  /**
-   * Called when a source's text takes too long to fetch.
-   */
-  _onFetchSourceTimeout: function DVGS__onFetchSourceTimeout() {
-    // Remove the source from the load queue.
-    this._sourcesCount--;
-
-    // Check if the remaining sources were fetched and stored in the cache.
-    if (this._cache.size == this._sourcesCount) {
-      this._onFetchSourcesFinished();
-    }
-  },
-
-  /**
-   * Called when all the sources have been fetched.
-   */
-  _onFetchSourcesFinished: function DVGS__onFetchSourcesFinished() {
-    // At least one source needs to be present to perform a global search.
-    if (!this._sourcesCount) {
-      return;
-    }
-    // All sources are fetched and stored in the cache, we can start searching.
-    this._performGlobalSearch();
-    this._sourcesCount = 0;
-  },
-
-  /**
-   * Finds string matches in all the  sources stored in the cache, and groups
-   * them by location and line number.
+   * Finds string matches in all the sources stored in the controller's cache,
+   * and groups them by location and line number.
    */
   _performGlobalSearch: function DVGS__performGlobalSearch() {
     // Get the currently searched token from the filtering input.
@@ -1767,8 +1674,9 @@ create({ constructor: GlobalSearchView, proto: MenuContainer.prototype }, {
 
     // Prepare the results map, containing search details for each line.
     let globalResults = new GlobalResults();
+    let sourcesCache = DebuggerController.SourceScripts.getCache();
 
-    for (let [location, contents] of this._cache) {
+    for (let [location, contents] of sourcesCache) {
       // Verify that the search token is found anywhere in the source.
       if (!contents.toLowerCase().contains(lowerCaseToken)) {
         continue;
@@ -2002,9 +1910,7 @@ create({ constructor: GlobalSearchView, proto: MenuContainer.prototype }, {
   _forceExpandResults: false,
   _searchTimeout: null,
   _searchFunction: null,
-  _searchedToken: "",
-  _sourcesCount: -1,
-  _cache: null
+  _searchedToken: ""
 });
 
 /**
