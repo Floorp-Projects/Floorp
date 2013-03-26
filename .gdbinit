@@ -88,7 +88,7 @@ def pa
 end
 
 # define a "pxul" command to display the type of a XUL element from
-# an nsXULDocument* pointer.
+# an nsXULElement* pointer.
 def pxul
   set $p = $arg0
   print $p->mNodeInfo.mRawPtr->mInner.mName->mStaticAtom->mString

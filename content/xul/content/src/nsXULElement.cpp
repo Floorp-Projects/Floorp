@@ -65,7 +65,7 @@
 #include "nsXULControllers.h"
 #include "nsIBoxObject.h"
 #include "nsPIBoxObject.h"
-#include "nsXULDocument.h"
+#include "XULDocument.h"
 #include "nsXULPopupListener.h"
 #include "nsRuleWalker.h"
 #include "nsIDOMCSSStyleDeclaration.h"
@@ -106,6 +106,7 @@
 #include "mozilla/dom/XULElementBinding.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 //----------------------------------------------------------------------
 
@@ -436,7 +437,7 @@ nsXULElement::GetElementsByAttribute(const nsAString& aAttribute,
     void* attrValue = new nsString(aValue);
     nsRefPtr<nsContentList> list =
         new nsContentList(this,
-                          nsXULDocument::MatchAttribute,
+                          XULDocument::MatchAttribute,
                           nsContentUtils::DestroyMatchString,
                           attrValue,
                           true,
@@ -478,7 +479,7 @@ nsXULElement::GetElementsByAttributeNS(const nsAString& aNamespaceURI,
     void* attrValue = new nsString(aValue);
     nsRefPtr<nsContentList> list =
         new nsContentList(this,
-                          nsXULDocument::MatchAttribute,
+                          XULDocument::MatchAttribute,
                           nsContentUtils::DestroyMatchString,
                           attrValue,
                           true,
@@ -2492,7 +2493,7 @@ nsXULPrototypeScript::DeserializeOutOfLine(nsIObjectInputStream* aInput,
         if (mSrcURI) {
             // NB: we must check the XUL script cache early, to avoid
             // multiple deserialization attempts for a given script.            
-            // Note that nsXULDocument::LoadScript
+            // Note that XULDocument::LoadScript
             // checks the XUL script cache too, in order to handle the
             // serialization case.
             //
@@ -2600,7 +2601,7 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
                                 // protodoc's?
                                 // If we start using the protodoc's, make sure
                                 // the DowngradePrincipalIfNeeded stuff in
-                                // nsXULDocument::OnStreamComplete still works!
+                                // XULDocument::OnStreamComplete still works!
                                 aDocument->NodePrincipal(),
                                 urlspec.get(),
                                 aLineNo,
