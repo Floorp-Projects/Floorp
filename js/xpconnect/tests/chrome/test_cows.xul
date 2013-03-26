@@ -70,8 +70,8 @@ function COWTests() {
           is(obj[propName], value, "getting " + propName + " on " + desc);
           ok(propName in obj,
              propName + " on " + desc + " should exist");
-          //ok(Object.hasOwnProperty.call(obj, propName),
-          //   propName + " on " + desc + " should exist");
+          ok(Object.hasOwnProperty.call(obj, propName),
+             propName + " on " + desc + " should exist");
       } catch (e) {
           ok(false, "getting " + propName + " on " + desc + " threw " + e);
       }
@@ -82,25 +82,23 @@ function COWTests() {
              "getting " + propName + " on " + desc + " should return undefined");
           ok(!(propName in obj),
              propName + " on " + desc + " should act as if it doesn't exist");
-          //ok(!Object.hasOwnProperty.call(obj, propName),
-          //   propName + " on " + desc + " should act as if it doesn't exist");
+          ok(!Object.hasOwnProperty.call(obj, propName),
+             propName + " on " + desc + " should act as if it doesn't exist");
       } catch (e) {
           ok(false, "getting " + propName + " on " + desc + " threw " + e);
       }
     }
 
-    //var cow = getCOW({ foo: "fooval", __exposedProps__: {}});
-    //Math.sin(1);
-    //is(cow.foo, undefined, "one test to rule them all");
-    //return;
-
     const PROPS_TO_TEST = ['foo', 'bar', 'prototype'];
 
     var empty = {};
-    // Once we flip the default for __exposedProps__, this should behave
-    // the same as for function objects below.
+    var nonempty = {foo: 42, bar: 33};
     is(getCOW(empty).foo, undefined,
        "shouldn't throw when accessing exposed properties that doesn't exist");
+
+    PROPS_TO_TEST.forEach(function(name) {
+        isPropHidden(getCOW(nonempty), name, "object without exposedProps");
+    });
 
     // Test function objects without __exposedProps__
     var func = function(x) { return 42; };
@@ -181,7 +179,6 @@ function COWTests() {
     // Test writable property
     var writable = getCOW({ __exposedProps__: {foo: 'w'}});
     try {
-        Math.sin("foo" in writable);
         ok(!("foo" in writable),
            "non-existing write-only property shouldn't exist");
         writable.foo = 5;
