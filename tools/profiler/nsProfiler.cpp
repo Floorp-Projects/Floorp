@@ -103,7 +103,7 @@ nsProfiler::GetProfile(char **aProfile)
 {
   char *profile = profiler_get_profile();
   if (profile) {
-    size_t len = strlen(profile);
+    uint32_t len = strlen(profile);
     char *profileStr = static_cast<char *>
                          (nsMemory::Clone(profile, (len + 1) * sizeof(char)));
     profileStr[len] = '\0';
@@ -233,7 +233,7 @@ nsProfiler::GetFeatures(uint32_t *aCount, char ***aFeatures)
                        (nsMemory::Alloc(len * sizeof(char*)));
 
   for (size_t i = 0; i < len; i++) {
-    size_t strLen = strlen(features[i]);
+    uint32_t strLen = strlen(features[i]);
     featureList[i] = static_cast<char *>
                          (nsMemory::Clone(features[i], (strLen + 1) * sizeof(char)));
   }
