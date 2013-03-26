@@ -38,6 +38,7 @@ EXPORTS		= \
 EXPORTS_mozilla = \
   HangMonitor.h \
   LazyIdleThread.h \
+  SyncRunnable.h \
   $(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
