@@ -379,7 +379,17 @@ gfxPlatform::Init()
         = do_CreateInstance("@mozilla.org/gfx/init;1");
 
     if (Preferences::GetBool("gfx.2d.recording", false)) {
-      gPlatform->mRecorder = Factory::CreateEventRecorderForFile("browserrecording.aer");
+
+      nsAutoCString fileName;
+      nsAdoptingString prefFileName = Preferences::GetString("gfx.2d.recordingfile");
+
+      if (prefFileName) {
+        fileName.Append(NS_ConvertUTF16toUTF8(prefFileName));
+      } else {
+        fileName.AssignLiteral("browserrecording.aer");
+      }
+
+      gPlatform->mRecorder = Factory::CreateEventRecorderForFile(fileName.BeginReading());
       Factory::SetGlobalEventRecorder(gPlatform->mRecorder);
     }
 

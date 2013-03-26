@@ -1097,20 +1097,21 @@ MmsService.prototype = {
         // For RETRIEVAL_MODE_AUTOMATIC, proceed to retrieve MMS.
         this.retrieveMessage(url, (function responseNotify(mmsStatus,
                                                            retrievedMessage) {
+          debug("retrievedMessage = " + JSON.stringify(retrievedMessage));
+
           // The absence of the field does not indicate any default
           // value. So we go check the same field in the retrieved
           // message instead.
-          if ((wish == null) && retrievedMessage) {
+          if (wish == null && retrievedMessage) {
             wish = retrievedMessage.headers["x-mms-delivery-report"];
           }
           let reportAllowed = this.getReportAllowed(this.confSendDeliveryReport,
                                                     wish);
 
-          // Should update the retrievedStatus in database.
-          debug("retrievedMessage = " + JSON.stringify(retrievedMessage));
-
-          // If the mmsStatus is still MMS_PDU_STATUS_DEFERRED after retry,
-          // we should not store it into database.
+          // If the mmsStatus isn't MMS_PDU_STATUS_RETRIEVED after retrieving,
+          // something must be wrong with MMSC, so stop updating the DB record.
+          // We could send a message to content to notify the user the MMS
+          // retrieving failed. The end user has to retrieve the MMS again.
           if (MMS.MMS_PDU_STATUS_RETRIEVED !== mmsStatus) {
             let transaction =
               new NotifyResponseTransaction(transactionId,
@@ -1126,18 +1127,20 @@ MmsService.prototype = {
           gMobileMessageDatabaseService.saveReceivedMessage(savableMessage,
             (function (rv, domMessage) {
               let success = Components.isSuccessCode(rv);
+              let transaction =
+                new NotifyResponseTransaction(transactionId,
+                                              success ? MMS.MMS_PDU_STATUS_RETRIEVED
+                                                      : MMS.MMS_PDU_STATUS_DEFERRED,
+                                              reportAllowed);
+              transaction.run();
+
               if (!success) {
                 // At this point we could send a message to content to
-                // notify the user that storing an incoming MMS failed, most
-                // likely due to a full disk.
+                // notify the user that storing an incoming MMS failed,
+                // most likely due to a full disk. The end user has to
+                // retrieve the MMS again.
                 debug("Could not store MMS " + domMessage.id +
                       ", error code " + rv);
-
-                let transaction =
-                  new NotifyResponseTransaction(transactionId,
-                                                MMS.MMS_PDU_STATUS_DEFERRED,
-                                                reportAllowed);
-                transaction.run();
                 return;
               }
 

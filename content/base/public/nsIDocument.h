@@ -1631,6 +1631,12 @@ public:
   }
 
   /**
+   * Returns the template content owner document that owns the content of
+   * HTMLTemplateElement.
+   */
+  virtual nsIDocument* GetTemplateContentsOwner() = 0;
+
+  /**
    * true when this document is a static clone of a normal document.
    * For example print preview and printing use static documents.
    */

@@ -55,8 +55,10 @@
 #include "cairo-surface-snapshot-private.h"
 #include "cairo-surface-subsurface-private.h"
 #include "cairo-region-private.h"
+#include "cairo-xlib-xrender-private.h"
 
 #include <X11/Xutil.h> /* for XDestroyImage */
+#include <X11/Xlibint.h> /* for access to XDisplay's innards */
 
 #define XLIB_COORD_MAX 32767
 
@@ -73,7 +75,6 @@
 #endif
 
 #if DEBUG
-#include <X11/Xlibint.h>
 static void CAIRO_PRINTF_FORMAT (2, 3)
 _x_bread_crumb (Display *dpy,
 		const char *fmt,
@@ -4317,6 +4318,13 @@ _cairo_xlib_surface_add_glyph (cairo_xlib_display_t *display,
 	break;
     }
     /* XXX assume X server wants pixman padding. Xft assumes this as well */
+
+    struct _XDisplay *dpy = (struct _XDisplay *) display->display;
+    int req_length = sz_xRenderAddGlyphsReq + 4;
+    if (req_length & 3)
+	req_length += 4 - (req_length & 3);
+    if (dpy->bufptr + req_length > dpy->bufmax)
+	XFlush (display->display);
 
     XRenderAddGlyphs (display->display, glyphset_info->glyphset,
 		      &glyph_index, &glyph_info, 1,

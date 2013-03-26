@@ -1,0 +1,22 @@
+<!-- vim: set shiftwidth=4 tabstop=8 autoindent expandtab: -->
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<?xml-stylesheet type="text/css" href="data:text/css,
+
+%23_box_windowsDefaultTheme:-moz-system-metric(windows-default-theme) {
+  display: none;
+}
+
+" ?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        id="recording-window"
+        hidechrome="true"
+        onload="OnRecordingLoad();"
+        onunload="OnRecordingUnload();"
+        style="background:white; overflow:hidden; width:800px; height:600px;"
+        >
+    <script type="application/ecmascript" src="recording.js" />
+  <browser id="browser" type="content-primary" style="min-width: 1024px; min-height: 768px; max-width: 1024px; max-height: 768px"/>
+</window>

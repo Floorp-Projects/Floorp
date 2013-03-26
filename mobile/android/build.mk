@@ -31,7 +31,7 @@ endif
 endif
 
 install::
-	$(ANDROID_PLATFORM_TOOLS)/adb install -r -d $(DIST)/$(PKG_PATH)$(PKG_BASENAME).apk
+	$(ANDROID_PLATFORM_TOOLS)/adb install -r $(DIST)/$(PKG_PATH)$(PKG_BASENAME).apk
 else
 	@echo "Mobile can't be installed directly."
 	@exit 1

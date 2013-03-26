@@ -38,6 +38,7 @@ class TableTicker;
 class JSCustomObject;
 
 extern mozilla::ThreadLocal<PseudoStack *> tlsPseudoStack;
+extern mozilla::ThreadLocal<TableTicker *> tlsTicker;
 extern bool stack_key_initialized;
 
 #ifndef SAMPLE_FUNCTION_NAME
@@ -53,112 +54,68 @@ extern bool stack_key_initialized;
 static inline
 void profiler_init()
 {
-  if (!sps_version2()) {
-    mozilla_sampler_init1();
-  } else {
-    mozilla_sampler_init2();
-  }
+  mozilla_sampler_init();
 }
 
 static inline
 void profiler_shutdown()
 {
-  if (!sps_version2()) {
-    mozilla_sampler_shutdown1();
-  } else {
-    mozilla_sampler_shutdown2();
-  }
+  mozilla_sampler_shutdown();
 }
 
 static inline
 void profiler_start(int aProfileEntries, int aInterval,
                        const char** aFeatures, uint32_t aFeatureCount)
 {
-  if (!sps_version2()) {
-    mozilla_sampler_start1(aProfileEntries, aInterval, aFeatures, aFeatureCount);
-  } else {
-    mozilla_sampler_start2(aProfileEntries, aInterval, aFeatures, aFeatureCount);
-  }
+  mozilla_sampler_start(aProfileEntries, aInterval, aFeatures, aFeatureCount);
 }
 
 static inline
 void profiler_stop()
 {
-  if (!sps_version2()) {
-    mozilla_sampler_stop1();
-  } else {
-    mozilla_sampler_stop2();
-  }
+  mozilla_sampler_stop();
 }
 
 static inline
 bool profiler_is_active()
 {
-  if (!sps_version2()) {
-    return mozilla_sampler_is_active1();
-  } else {
-    return mozilla_sampler_is_active2();
-  }
+  return mozilla_sampler_is_active();
 }
 
 static inline
 void profiler_responsiveness(const TimeStamp& aTime)
 {
-  if (!sps_version2()) {
-    mozilla_sampler_responsiveness1(aTime);
-  } else {
-    mozilla_sampler_responsiveness2(aTime);
-  }
+  mozilla_sampler_responsiveness(aTime);
 }
 
 static inline
 const double* profiler_get_responsiveness()
 {
-  if (!sps_version2()) {
-    return mozilla_sampler_get_responsiveness1();
-  } else {
-    return mozilla_sampler_get_responsiveness2();
-  }
+  return mozilla_sampler_get_responsiveness();
 }
 
 static inline
 void profiler_set_frame_number(int frameNumber)
 {
-  if (!sps_version2()) {
-    return mozilla_sampler_frame_number1(frameNumber);
-  } else {
-    return mozilla_sampler_frame_number2(frameNumber);
-  }
+  return mozilla_sampler_frame_number(frameNumber);
 }
 
 static inline
 char* profiler_get_profile()
 {
-  if (!sps_version2()) {
-    return mozilla_sampler_get_profile1();
-  } else {
-    return mozilla_sampler_get_profile2();
-  }
+  return mozilla_sampler_get_profile();
 }
 
 static inline
 JSObject* profiler_get_profile_jsobject(JSContext* aCx)
 {
-  if (!sps_version2()) {
-    return mozilla_sampler_get_profile_data1(aCx);
-  } else {
-    return mozilla_sampler_get_profile_data2(aCx);
-  }
+  return mozilla_sampler_get_profile_data(aCx);
 }
 
 static inline
 const char** profiler_get_features()
 {
-  if (!sps_version2()) {
-    return mozilla_sampler_get_features1();
-  } else {
-    return mozilla_sampler_get_features2();
-  }
+  return mozilla_sampler_get_features();
 }
 
 static inline
@@ -174,21 +131,13 @@ void profiler_print_location()
 static inline
 void profiler_lock()
 {
-  if (!sps_version2()) {
-    return mozilla_sampler_lock1();
-  } else {
-    return mozilla_sampler_lock2();
-  }
+  return mozilla_sampler_lock();
 }
 
 static inline
 void profiler_unlock()
 {
-  if (!sps_version2()) {
-    return mozilla_sampler_unlock1();
-  } else {
-    return mozilla_sampler_unlock2();
-  }
+  return mozilla_sampler_unlock();
 }
 
 // we want the class and function name but can't easily get that using preprocessor macros
