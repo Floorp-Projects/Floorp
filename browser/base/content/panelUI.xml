@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<bindings id="browserPanelUIBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="toolbarbutton" display="xul:button"
+           extends="chrome://global/content/bindings/button.xml#button-base">
+    <resources>
+      <stylesheet src="chrome://global/skin/toolbarbutton.css"/>
+    </resources>
+    
+    <content>
+      <children includes="observes|template|menupopup|panel|tooltip"/>
+      <xul:hbox align="center" flex="1">
+	      <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,label"/>
+	      <xul:vbox flex="1">
+	  	    <xul:label class="toolbarbutton-text" crop="right" flex="1"
+  	  	             xbl:inherits="value=label,accesskey,crop"/>
+  	  	  <xul:hbox pack="end">
+	  	  	  <xul:label class="toolbarbutton-acceltext" crop="middle"
+  		  	  	         xbl:inherits="value=acceltext"/>
+  		  	</xul:hbox>
+  		  </xul:vbox>
+  		</xul:hbox>
+    </content>
+    
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XULToolbarButton;
+        </getter>
+      </property>
+    </implementation>
+  </binding>
+</bindings>
