@@ -8,7 +8,7 @@ Runs the reftest test harness.
 
 import re, sys, shutil, os, os.path
 SCRIPT_DIRECTORY = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
-sys.path.append(SCRIPT_DIRECTORY)
+sys.path.insert(0, SCRIPT_DIRECTORY)
 
 from automation import Automation
 from automationutils import *
