@@ -38,8 +38,8 @@ Cu.import("resource:///modules/devtools/SideMenuWidget.jsm");
 Cu.import("resource:///modules/devtools/VariablesView.jsm");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this,
-  "Reflect", "resource://gre/modules/reflect.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Parser",
+  "resource:///modules/devtools/Parser.jsm");
 
 /**
  * Object defining the debugger controller components.
@@ -231,6 +231,11 @@ let DebuggerController = {
   _onTabNavigated: function DC__onTabNavigated(aType, aPacket) {
     if (aPacket.state == "start") {
       DebuggerView._handleTabNavigation();
+
+      // Discard all the old sources.
+      DebuggerController.SourceScripts.clearCache();
+      DebuggerController.Parser.clearCache();
+      SourceUtils.clearCache();
       return;
     }
 
@@ -955,9 +960,9 @@ StackFrames.prototype = {
     // faulty expression, simply convert it to a string describing the error.
     // There's no other information necessary to be offered in such cases.
     let sanitizedExpressions = list.map(function(str) {
-      // Reflect.parse throws when encounters a syntax error.
+      // Reflect.parse throws when it encounters a syntax error.
       try {
-        Reflect.parse(str);
+        Parser.reflectionAPI.parse(str);
         return str; // Watch expression can be executed safely.
       } catch (e) {
         return "\"" + e.name + ": " + e.message + "\""; // Syntax error.
@@ -1009,9 +1014,13 @@ StackFrames.prototype = {
  * source script cache.
  */
 function SourceScripts() {
+  this._cache = new Map(); // Can't use a WeakMap because keys are strings.
   this._onNewSource = this._onNewSource.bind(this);
   this._onNewGlobal = this._onNewGlobal.bind(this);
   this._onSourcesAdded = this._onSourcesAdded.bind(this);
+  this._onFetch = this._onFetch.bind(this);
+  this._onTimeout = this._onTimeout.bind(this);
+  this._onFinished = this._onFinished.bind(this);
 }
 
 SourceScripts.prototype = {
@@ -1154,35 +1163,161 @@ SourceScripts.prototype = {
    *        The source object coming from the active thread.
    * @param function aCallback
    *        Function called after the source text has been loaded.
-   * @param function aOnTimeout
+   * @param function aTimeout
    *        Function called when the source text takes too long to fetch.
    */
-  getText: function SS_getText(aSource, aCallback, aOnTimeout) {
+  getText: function SS_getText(aSource, aCallback, aTimeout) {
     // If already loaded, return the source text immediately.
     if (aSource.loaded) {
-      aCallback(aSource.url, aSource.text);
+      aCallback(aSource);
       return;
     }
 
     // If the source text takes too long to fetch, invoke a timeout to
     // avoid blocking any operations.
-    if (aOnTimeout) {
-      var fetchTimeout = window.setTimeout(aOnTimeout, FETCH_SOURCE_RESPONSE_DELAY);
+    if (aTimeout) {
+      var fetchTimeout = window.setTimeout(() => {
+        aSource._fetchingTimedOut = true;
+        aTimeout(aSource);
+      }, FETCH_SOURCE_RESPONSE_DELAY);
     }
 
     // Get the source text from the active thread.
-    this.activeThread.source(aSource).source(function(aResponse) {
-      window.clearTimeout(fetchTimeout);
-
+    this.activeThread.source(aSource).source((aResponse) => {
+      if (aTimeout) {
+        window.clearTimeout(fetchTimeout);
+      }
       if (aResponse.error) {
         Cu.reportError("Error loading: " + aSource.url + "\n" + aResponse.message);
-        return void aCallback(aSource.url, "", aResponse.error);
+        return void aCallback(aSource);
       }
       aSource.loaded = true;
       aSource.text = aResponse.source;
-      aCallback(aSource.url, aResponse.source);
+      aCallback(aSource);
     });
-  }
+  },
+
+  /**
+   * Gets all the fetched sources.
+   *
+   * @return array
+   *         An array containing [url, text] entries for the fetched sources.
+   */
+  getCache: function SS_getCache() {
+    let sources = [];
+    for (let source of this._cache) {
+      sources.push(source);
+    }
+    return sources.sort(([first], [second]) => first > second);
+  },
+
+  /**
+   * Clears all the fetched sources from cache.
+   */
+  clearCache: function SS_clearCache() {
+    this._cache = new Map();
+  },
+
+  /**
+   * Starts fetching all the sources, silently.
+   *
+   * @param array aUrls
+   *        The urls for the sources to fetch.
+   * @param object aCallbacks [optional]
+   *        An object containing the callback functions to invoke:
+   *          - onFetch: optional, called after each source is fetched
+   *          - onTimeout: optional, called when a source takes too long to fetch
+   *          - onFinished: called when all the sources are fetched
+   */
+  fetchSources: function SS_fetchSources(aUrls, aCallbacks = {}) {
+    this._fetchQueue = new Set();
+    this._fetchCallbacks = aCallbacks;
+
+    // Add each new source which needs to be fetched in a queue.
+    for (let url of aUrls) {
+      if (!this._cache.has(url)) {
+        this._fetchQueue.add(url);
+      }
+    }
+
+    // If all the sources were already fetched, don't do anything special.
+    if (this._fetchQueue.size == 0) {
+      this._onFinished();
+      return;
+    }
+
+    // Start fetching each new source.
+    for (let url of this._fetchQueue) {
+      let sourceItem = DebuggerView.Sources.getItemByValue(url);
+      let sourceObject = sourceItem.attachment.source;
+      this.getText(sourceObject, this._onFetch, this._onTimeout);
+    }
+  },
+
+  /**
+   * Called when a source has been fetched via fetchSources().
+   *
+   * @param object aSource
+   *        The source object coming from the active thread.
+   */
+  _onFetch: function SS__onFetch(aSource) {
+    // Remember the source in a cache so we don't have to fetch it again.
+    this._cache.set(aSource.url, aSource.text);
+
+    // Fetch completed before timeout, remove the source from the fetch queue.
+    this._fetchQueue.delete(aSource.url);
+
+    // If this fetch was eventually completed at some point after a timeout,
+    // don't call any subsequent event listeners.
+    if (aSource._fetchingTimedOut) {
+      return;
+    }
+
+    // Invoke the source fetch callback if provided via fetchSources();
+    if (this._fetchCallbacks.onFetch) {
+      this._fetchCallbacks.onFetch(aSource);
+    }
+
+    // Check if all sources were fetched and stored in the cache.
+    if (this._fetchQueue.size == 0) {
+      this._onFinished();
+    }
+  },
+
+  /**
+   * Called when a source's text takes too long to fetch via fetchSources().
+   *
+   * @param object aSource
+   *        The source object coming from the active thread.
+   */
+  _onTimeout: function SS__onTimeout(aSource) {
+    // Remove the source from the fetch queue.
+    this._fetchQueue.delete(aSource.url);
+
+    // Invoke the source timeout callback if provided via fetchSources();
+    if (this._fetchCallbacks.onTimeout) {
+      this._fetchCallbacks.onTimeout(aSource);
+    }
+
+    // Check if the remaining sources were fetched and stored in the cache.
+    if (this._fetchQueue.size == 0) {
+      this._onFinished();
+    }
+  },
+
+  /**
+   * Called when all the sources have been fetched.
+   */
+  _onFinished: function SS__onFinished() {
+    // Invoke the finish callback if provided via fetchSources();
+    if (this._fetchCallbacks.onFinished) {
+      this._fetchCallbacks.onFinished();
+    }
+  },
+
+  _cache: null,
+  _fetchQueue: null,
+  _fetchCallbacks: null
 };
 
 /**
@@ -1637,6 +1772,7 @@ XPCOMUtils.defineLazyGetter(window, "_isChromeDebugger", function() {
  * Preliminary setup for the DebuggerController object.
  */
 DebuggerController.initialize();
+DebuggerController.Parser = new Parser();
 DebuggerController.ThreadState = new ThreadState();
 DebuggerController.StackFrames = new StackFrames();
 DebuggerController.SourceScripts = new SourceScripts();
