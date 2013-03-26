@@ -414,10 +414,7 @@ CPPSRCS += ExecutableAllocatorOS2.cpp \
            $(NONE)
 endif
 
-ifneq (,$(filter arm% sparc %86 x86_64 mips%,$(TARGET_CPU)))
-ENABLE_YARR_JIT = 1
-DEFINES += -DENABLE_YARR_JIT=1
-
+ifneq (,$(ENABLE_METHODJIT)$(ENABLE_ION)$(ENABLE_YARR_JIT))
 VPATH += 	$(srcdir)/assembler/assembler \
 		$(srcdir)/methodjit \
 		$(NONE)
@@ -425,8 +422,11 @@ VPATH += 	$(srcdir)/assembler/assembler \
 CPPSRCS +=	ARMAssembler.cpp \
 		MacroAssemblerARM.cpp \
 		MacroAssemblerX86Common.cpp \
-		YarrJIT.cpp \
 		$(NONE)
+
+ifdef ENABLE_YARR_JIT
+CPPSRCS +=	YarrJIT.cpp
+endif
 
 ifeq (86, $(findstring 86,$(TARGET_CPU)))
 ifeq (x86_64, $(TARGET_CPU))
