@@ -148,7 +148,7 @@ PRLogModuleInfo* XULDocument::gXULLog;
 //----------------------------------------------------------------------
 
 struct BroadcasterMapEntry : public PLDHashEntryHdr {
-    nsIDOMElement*   mBroadcaster; // [WEAK]
+    Element*         mBroadcaster; // [WEAK]
     nsSmallVoidArray mListeners;   // [OWNING] of BroadcastListener objects
 };
 
@@ -687,8 +687,8 @@ struct nsAttrNameInfo
 };
 
 void
-XULDocument::SynchronizeBroadcastListener(nsIDOMElement   *aBroadcaster,
-                                          nsIDOMElement   *aListener,
+XULDocument::SynchronizeBroadcastListener(Element *aBroadcaster,
+                                          Element *aListener,
                                           const nsAString &aAttr)
 {
     if (!nsContentUtils::IsSafeToRunScript()) {
@@ -698,15 +698,13 @@ XULDocument::SynchronizeBroadcastListener(nsIDOMElement   *aBroadcaster,
         MaybeBroadcast();
         return;
     }
-    nsCOMPtr<nsIContent> broadcaster = do_QueryInterface(aBroadcaster);
-    nsCOMPtr<nsIContent> listener = do_QueryInterface(aListener);
     bool notify = mDocumentLoaded || mHandlingDelayedBroadcasters;
 
     if (aAttr.EqualsLiteral("*")) {
-        uint32_t count = broadcaster->GetAttrCount();
+        uint32_t count = aBroadcaster->GetAttrCount();
         nsTArray<nsAttrNameInfo> attributes(count);
         for (uint32_t i = 0; i < count; ++i) {
-            const nsAttrName* attrName = broadcaster->GetAttrNameAt(i);
+            const nsAttrName* attrName = aBroadcaster->GetAttrNameAt(i);
             int32_t nameSpaceID = attrName->NamespaceID();
             nsIAtom* name = attrName->LocalName();
 
@@ -723,9 +721,9 @@ XULDocument::SynchronizeBroadcastListener(nsIDOMElement   *aBroadcaster,
             int32_t nameSpaceID = attributes[count].mNamespaceID;
             nsIAtom* name = attributes[count].mName;
             nsAutoString value;
-            if (broadcaster->GetAttr(nameSpaceID, name, value)) {
-              listener->SetAttr(nameSpaceID, name, attributes[count].mPrefix,
-                                value, notify);
+            if (aBroadcaster->GetAttr(nameSpaceID, name, value)) {
+              aListener->SetAttr(nameSpaceID, name, attributes[count].mPrefix,
+                                 value, notify);
             }
 
 #if 0
@@ -734,7 +732,7 @@ XULDocument::SynchronizeBroadcastListener(nsIDOMElement   *aBroadcaster,
             // |onbroadcast| handler before the |onload| handler,
             // which could define JS properties that mask XBL
             // properties, etc.
-            ExecuteOnBroadcastHandlerFor(broadcaster, aListener, name);
+            ExecuteOnBroadcastHandlerFor(aBroadcaster, aListener, name);
 #endif
         }
     }
@@ -743,10 +741,10 @@ XULDocument::SynchronizeBroadcastListener(nsIDOMElement   *aBroadcaster,
         nsCOMPtr<nsIAtom> name = do_GetAtom(aAttr);
 
         nsAutoString value;
-        if (broadcaster->GetAttr(kNameSpaceID_None, name, value)) {
-            listener->SetAttr(kNameSpaceID_None, name, value, notify);
+        if (aBroadcaster->GetAttr(kNameSpaceID_None, name, value)) {
+            aListener->SetAttr(kNameSpaceID_None, name, value, notify);
         } else {
-            listener->UnsetAttr(kNameSpaceID_None, name, notify);
+            aListener->UnsetAttr(kNameSpaceID_None, name, notify);
         }
 
 #if 0
@@ -754,7 +752,7 @@ XULDocument::SynchronizeBroadcastListener(nsIDOMElement   *aBroadcaster,
         // hookup: doing so would potentially run the |onbroadcast|
         // handler before the |onload| handler, which could define JS
         // properties that mask XBL properties, etc.
-        ExecuteOnBroadcastHandlerFor(broadcaster, aListener, name);
+        ExecuteOnBroadcastHandlerFor(aBroadcaster, aListener, name);
 #endif
     }
 }
@@ -764,19 +762,31 @@ XULDocument::AddBroadcastListenerFor(nsIDOMElement* aBroadcaster,
                                      nsIDOMElement* aListener,
                                      const nsAString& aAttr)
 {
-    NS_ENSURE_ARG(aBroadcaster && aListener);
-    
+    ErrorResult rv;
+    nsCOMPtr<Element> broadcaster = do_QueryInterface(aBroadcaster);
+    nsCOMPtr<Element> listener = do_QueryInterface(aListener);
+    NS_ENSURE_ARG(broadcaster && listener);
+    AddBroadcastListenerFor(*broadcaster, *listener, aAttr, rv);
+    return rv.ErrorCode();
+}
+
+void
+XULDocument::AddBroadcastListenerFor(Element& aBroadcaster, Element& aListener,
+                                     const nsAString& aAttr, ErrorResult& aRv)
+{
     nsresult rv =
-        nsContentUtils::CheckSameOrigin(this, aBroadcaster);
+        nsContentUtils::CheckSameOrigin(this, &aBroadcaster);
 
     if (NS_FAILED(rv)) {
-        return rv;
+        aRv.Throw(rv);
+        return;
     }
 
-    rv = nsContentUtils::CheckSameOrigin(this, aListener);
+    rv = nsContentUtils::CheckSameOrigin(this, &aListener);
 
     if (NS_FAILED(rv)) {
-        return rv;
+        aRv.Throw(rv);
+        return;
     }
 
     static PLDHashTableOps gOps = {
@@ -795,25 +805,29 @@ XULDocument::AddBroadcastListenerFor(nsIDOMElement* aBroadcaster,
             PL_NewDHashTable(&gOps, nullptr, sizeof(BroadcasterMapEntry),
                              PL_DHASH_MIN_SIZE);
 
-        if (! mBroadcasterMap)
-            return NS_ERROR_OUT_OF_MEMORY;
+        if (! mBroadcasterMap) {
+            aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+            return;
+        }
     }
 
     BroadcasterMapEntry* entry =
         static_cast<BroadcasterMapEntry*>
-                   (PL_DHashTableOperate(mBroadcasterMap, aBroadcaster,
+                   (PL_DHashTableOperate(mBroadcasterMap, &aBroadcaster,
                                             PL_DHASH_LOOKUP));
 
     if (PL_DHASH_ENTRY_IS_FREE(entry)) {
         entry =
             static_cast<BroadcasterMapEntry*>
-                       (PL_DHashTableOperate(mBroadcasterMap, aBroadcaster,
+                       (PL_DHashTableOperate(mBroadcasterMap, &aBroadcaster,
                                                 PL_DHASH_ADD));
 
-        if (! entry)
-            return NS_ERROR_OUT_OF_MEMORY;
+        if (! entry) {
+            aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+            return;
+        }
 
-        entry->mBroadcaster = aBroadcaster;
+        entry->mBroadcaster = &aBroadcaster;
 
         // N.B. placement new to construct the nsSmallVoidArray object
         // in-place
@@ -827,23 +841,20 @@ XULDocument::AddBroadcastListenerFor(nsIDOMElement* aBroadcaster,
     for (int32_t i = entry->mListeners.Count() - 1; i >= 0; --i) {
         bl = static_cast<BroadcastListener*>(entry->mListeners[i]);
 
-        nsCOMPtr<nsIDOMElement> blListener = do_QueryReferent(bl->mListener);
+        nsCOMPtr<Element> blListener = do_QueryReferent(bl->mListener);
 
-        if ((blListener == aListener) && (bl->mAttribute == attr))
-            return NS_OK;
+        if (blListener == &aListener && bl->mAttribute == attr)
+            return;
     }
 
     bl = new BroadcastListener;
-    if (! bl)
-        return NS_ERROR_OUT_OF_MEMORY;
 
-    bl->mListener  = do_GetWeakReference(aListener);
+    bl->mListener  = do_GetWeakReference(&aListener);
     bl->mAttribute = attr;
 
     entry->mListeners.AppendElement(bl);
 
-    SynchronizeBroadcastListener(aBroadcaster, aListener, aAttr);
-    return NS_OK;
+    SynchronizeBroadcastListener(&aBroadcaster, &aListener, aAttr);
 }
 
 NS_IMETHODIMP
@@ -851,14 +862,26 @@ XULDocument::RemoveBroadcastListenerFor(nsIDOMElement* aBroadcaster,
                                         nsIDOMElement* aListener,
                                         const nsAString& aAttr)
 {
+    nsCOMPtr<Element> broadcaster = do_QueryInterface(aBroadcaster);
+    nsCOMPtr<Element> listener = do_QueryInterface(aListener);
+    NS_ENSURE_ARG(broadcaster && listener);
+    RemoveBroadcastListenerFor(*broadcaster, *listener, aAttr);
+    return NS_OK;
+}
+
+void
+XULDocument::RemoveBroadcastListenerFor(Element& aBroadcaster,
+                                        Element& aListener,
+                                        const nsAString& aAttr)
+{
     // If we haven't added any broadcast listeners, then there sure
     // aren't any to remove.
     if (! mBroadcasterMap)
-        return NS_OK;
+        return;
 
     BroadcasterMapEntry* entry =
         static_cast<BroadcasterMapEntry*>
-                   (PL_DHashTableOperate(mBroadcasterMap, aBroadcaster,
+                   (PL_DHashTableOperate(mBroadcasterMap, &aBroadcaster,
                                             PL_DHASH_LOOKUP));
 
     if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
@@ -867,35 +890,32 @@ XULDocument::RemoveBroadcastListenerFor(nsIDOMElement* aBroadcaster,
             BroadcastListener* bl =
                 static_cast<BroadcastListener*>(entry->mListeners[i]);
 
-            nsCOMPtr<nsIDOMElement> blListener = do_QueryReferent(bl->mListener);
+            nsCOMPtr<Element> blListener = do_QueryReferent(bl->mListener);
 
-            if ((blListener == aListener) && (bl->mAttribute == attr)) {
+            if (blListener == &aListener && bl->mAttribute == attr) {
                 entry->mListeners.RemoveElementAt(i);
                 delete bl;
 
                 if (entry->mListeners.Count() == 0)
-                    PL_DHashTableOperate(mBroadcasterMap, aBroadcaster,
+                    PL_DHashTableOperate(mBroadcasterMap, &aBroadcaster,
                                          PL_DHASH_REMOVE);
 
                 break;
             }
         }
     }
-
-    return NS_OK;
 }
 
 nsresult
-XULDocument::ExecuteOnBroadcastHandlerFor(nsIContent* aBroadcaster,
-                                          nsIDOMElement* aListener,
+XULDocument::ExecuteOnBroadcastHandlerFor(Element* aBroadcaster,
+                                          Element* aListener,
                                           nsIAtom* aAttr)
 {
     // Now we execute the onchange handler in the context of the
     // observer. We need to find the observer in order to
     // execute the handler.
 
-    nsCOMPtr<nsIContent> listener = do_QueryInterface(aListener);
-    for (nsIContent* child = listener->GetFirstChild();
+    for (nsIContent* child = aListener->GetFirstChild();
          child;
          child = child->GetNextSibling()) {
 
@@ -983,12 +1003,11 @@ XULDocument::AttributeChanged(nsIDocument* aDocument,
     nsresult rv;
 
     // Synchronize broadcast listeners
-    nsCOMPtr<nsIDOMElement> domele = do_QueryInterface(aElement);
-    if (domele && mBroadcasterMap &&
+    if (mBroadcasterMap &&
         CanBroadcast(aNameSpaceID, aAttribute)) {
         BroadcasterMapEntry* entry =
             static_cast<BroadcasterMapEntry*>
-                       (PL_DHashTableOperate(mBroadcasterMap, domele.get(),
+                       (PL_DHashTableOperate(mBroadcasterMap, aElement,
                                                 PL_DHASH_LOOKUP));
 
         if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
@@ -1003,21 +1022,20 @@ XULDocument::AttributeChanged(nsIDocument* aDocument,
 
                 if ((bl->mAttribute == aAttribute) ||
                     (bl->mAttribute == nsGkAtoms::_asterix)) {
-                    nsCOMPtr<nsIDOMElement> listenerEl
+                    nsCOMPtr<Element> listenerEl
                         = do_QueryReferent(bl->mListener);
-                    nsCOMPtr<nsIContent> l = do_QueryInterface(listenerEl);
-                    if (l) {
+                    if (listenerEl) {
                         nsAutoString currentValue;
-                        bool hasAttr = l->GetAttr(kNameSpaceID_None,
-                                                    aAttribute,
-                                                    currentValue);
+                        bool hasAttr = listenerEl->GetAttr(kNameSpaceID_None,
+                                                           aAttribute,
+                                                           currentValue);
                         // We need to update listener only if we're
                         // (1) removing an existing attribute,
                         // (2) adding a new attribute or
                         // (3) changing the value of an attribute.
                         bool needsAttrChange =
                             attrSet != hasAttr || !value.Equals(currentValue);
-                        nsDelayedBroadcastUpdate delayedUpdate(domele,
+                        nsDelayedBroadcastUpdate delayedUpdate(aElement,
                                                                listenerEl,
                                                                aAttribute,
                                                                value,
@@ -1222,10 +1240,16 @@ XULDocument::GetElementsByAttribute(const nsAString& aAttribute,
                                     const nsAString& aValue,
                                     nsIDOMNodeList** aReturn)
 {
+    *aReturn = GetElementsByAttribute(aAttribute, aValue).get();
+    return NS_OK;
+}
+
+already_AddRefed<nsINodeList>
+XULDocument::GetElementsByAttribute(const nsAString& aAttribute,
+                                    const nsAString& aValue)
+{
     nsCOMPtr<nsIAtom> attrAtom(do_GetAtom(aAttribute));
-    NS_ENSURE_TRUE(attrAtom, NS_ERROR_OUT_OF_MEMORY);
     void* attrValue = new nsString(aValue);
-    NS_ENSURE_TRUE(attrValue, NS_ERROR_OUT_OF_MEMORY);
     nsContentList *list = new nsContentList(this,
                                             MatchAttribute,
                                             nsContentUtils::DestroyMatchString,
@@ -1233,10 +1257,9 @@ XULDocument::GetElementsByAttribute(const nsAString& aAttribute,
                                             true,
                                             attrAtom,
                                             kNameSpaceID_Unknown);
-    NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
     
-    NS_ADDREF(*aReturn = list);
-    return NS_OK;
+    NS_ADDREF(list);
+    return list;
 }
 
 NS_IMETHODIMP
@@ -1245,17 +1268,30 @@ XULDocument::GetElementsByAttributeNS(const nsAString& aNamespaceURI,
                                       const nsAString& aValue,
                                       nsIDOMNodeList** aReturn)
 {
+    ErrorResult rv;
+    *aReturn = GetElementsByAttributeNS(aNamespaceURI, aAttribute,
+                                        aValue, rv).get();
+    return rv.ErrorCode();
+}
+
+already_AddRefed<nsINodeList>
+XULDocument::GetElementsByAttributeNS(const nsAString& aNamespaceURI,
+                                      const nsAString& aAttribute,
+                                      const nsAString& aValue,
+                                      ErrorResult& aRv)
+{
     nsCOMPtr<nsIAtom> attrAtom(do_GetAtom(aAttribute));
-    NS_ENSURE_TRUE(attrAtom, NS_ERROR_OUT_OF_MEMORY);
     void* attrValue = new nsString(aValue);
-    NS_ENSURE_TRUE(attrValue, NS_ERROR_OUT_OF_MEMORY);
 
     int32_t nameSpaceId = kNameSpaceID_Wildcard;
     if (!aNamespaceURI.EqualsLiteral("*")) {
       nsresult rv =
         nsContentUtils::NameSpaceManager()->RegisterNameSpace(aNamespaceURI,
                                                               nameSpaceId);
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_FAILED(rv)) {
+          aRv.Throw(rv);
+          return nullptr;
+      }
     }
 
     nsContentList *list = new nsContentList(this,
@@ -1265,10 +1301,8 @@ XULDocument::GetElementsByAttributeNS(const nsAString& aNamespaceURI,
                                             true,
                                             attrAtom,
                                             nameSpaceId);
-    NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
-
-    NS_ADDREF(*aReturn = list);
-    return NS_OK;
+    NS_ADDREF(list);
+    return list;
 }
 
 NS_IMETHODIMP
@@ -1459,6 +1493,14 @@ XULDocument::GetWidth(int32_t* aWidth)
     return GetViewportSize(aWidth, &height);
 }
 
+int32_t
+XULDocument::GetWidth(ErrorResult& aRv)
+{
+    int32_t width;
+    aRv = GetWidth(&width);
+    return width;
+}
+
 NS_IMETHODIMP
 XULDocument::GetHeight(int32_t* aHeight)
 {
@@ -1466,6 +1508,14 @@ XULDocument::GetHeight(int32_t* aHeight)
 
     int32_t width;
     return GetViewportSize(&width, aHeight);
+}
+
+int32_t
+XULDocument::GetHeight(ErrorResult& aRv)
+{
+    int32_t height;
+    aRv = GetHeight(&height);
+    return height;
 }
 
 //----------------------------------------------------------------------
@@ -1496,6 +1546,16 @@ XULDocument::GetPopupNode(nsIDOMNode** aNode)
     return NS_OK;
 }
 
+already_AddRefed<nsINode>
+XULDocument::GetPopupNode()
+{
+    nsCOMPtr<nsIDOMNode> node;
+    DebugOnly<nsresult> rv = GetPopupNode(getter_AddRefs(node));
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    nsCOMPtr<nsINode> retval(do_QueryInterface(node));
+    return retval.forget();
+}
+
 NS_IMETHODIMP
 XULDocument::SetPopupNode(nsIDOMNode* aNode)
 {
@@ -1510,6 +1570,14 @@ XULDocument::SetPopupNode(nsIDOMNode* aNode)
         rootWin->SetPopupNode(aNode); // addref happens here
 
     return NS_OK;
+}
+
+void
+XULDocument::SetPopupNode(nsINode* aNode)
+{
+    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aNode));
+    DebugOnly<nsresult> rv = SetPopupNode(node);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
 // Returns the rangeOffset element from the XUL Popup Manager. This is for
@@ -1535,26 +1603,44 @@ XULDocument::GetPopupRangeParent(nsIDOMNode** aRangeParent)
     return NS_OK;
 }
 
+already_AddRefed<nsINode>
+XULDocument::GetPopupRangeParent(ErrorResult& aRv)
+{
+    nsCOMPtr<nsIDOMNode> node;
+    aRv = GetPopupRangeParent(getter_AddRefs(node));
+    nsCOMPtr<nsINode> retval(do_QueryInterface(node));
+    return retval.forget();
+}
+
+
 // Returns the rangeOffset element from the XUL Popup Manager. We check the
 // rangeParent to determine if the caller has rights to access to the data.
 NS_IMETHODIMP
 XULDocument::GetPopupRangeOffset(int32_t* aRangeOffset)
 {
-    NS_ENSURE_ARG_POINTER(aRangeOffset);
+    ErrorResult rv;
+    *aRangeOffset = GetPopupRangeOffset(rv);
+    return rv.ErrorCode();
+}
 
+int32_t
+XULDocument::GetPopupRangeOffset(ErrorResult& aRv)
+{
     nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-    if (!pm)
-        return NS_ERROR_FAILURE;
+    if (!pm) {
+        aRv.Throw(NS_ERROR_FAILURE);
+        return 0;
+    }
 
     int32_t offset;
     nsCOMPtr<nsIDOMNode> parent;
     pm->GetMouseLocation(getter_AddRefs(parent), &offset);
 
-    if (parent && !nsContentUtils::CanCallerAccess(parent))
-        return NS_ERROR_DOM_SECURITY_ERR;
-
-    *aRangeOffset = offset;
-    return NS_OK;
+    if (parent && !nsContentUtils::CanCallerAccess(parent)) {
+        aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+        return 0;
+    }
+    return offset;
 }
 
 NS_IMETHODIMP
@@ -1570,6 +1656,16 @@ XULDocument::GetTooltipNode(nsIDOMNode** aNode)
     }
 
     return NS_OK;
+}
+
+already_AddRefed<nsINode>
+XULDocument::GetTooltipNode()
+{
+    nsCOMPtr<nsIDOMNode> node;
+    DebugOnly<nsresult> rv = GetTooltipNode(getter_AddRefs(node));
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    nsCOMPtr<nsINode> retval(do_QueryInterface(node));
+    return retval.forget();
 }
 
 NS_IMETHODIMP
@@ -1774,12 +1870,12 @@ XULDocument::RemoveSubtreeFromDocument(nsIContent* aContent)
 
     // 4. Remove the element from our broadcaster map, since it is no longer
     // in the document.
-    nsCOMPtr<nsIDOMElement> broadcaster, listener;
+    nsCOMPtr<Element> broadcaster, listener;
     nsAutoString attribute, broadcasterID;
     rv = FindBroadcaster(aElement, getter_AddRefs(listener),
                          broadcasterID, attribute, getter_AddRefs(broadcaster));
     if (rv == NS_FINDBROADCASTER_FOUND) {
-        RemoveBroadcastListenerFor(broadcaster, listener, attribute);
+        RemoveBroadcastListenerFor(*broadcaster, *listener, attribute);
     }
 
     return NS_OK;
@@ -3232,9 +3328,7 @@ XULDocument::MaybeBroadcast()
                                             true);
                     }
                 }
-                nsCOMPtr<nsIContent> broadcaster =
-                    do_QueryInterface(mDelayedAttrChangeBroadcasts[i].mBroadcaster);
-                ExecuteOnBroadcastHandlerFor(broadcaster,
+                ExecuteOnBroadcastHandlerFor(mDelayedAttrChangeBroadcasts[i].mBroadcaster,
                                              mDelayedAttrChangeBroadcasts[i].mListener,
                                              attrName);
             }
@@ -4140,12 +4234,11 @@ XULDocument::BroadcastAttributeChangeFromOverlay(nsIContent* aNode,
     if (!mBroadcasterMap || !CanBroadcast(aNameSpaceID, aAttribute))
         return rv;
 
-    nsCOMPtr<nsIDOMElement> domele = do_QueryInterface(aNode);
-    if (!domele)
+    if (!aNode->IsElement())
         return rv;
 
     BroadcasterMapEntry* entry = static_cast<BroadcasterMapEntry*>
-        (PL_DHashTableOperate(mBroadcasterMap, domele.get(), PL_DHASH_LOOKUP));
+        (PL_DHashTableOperate(mBroadcasterMap, aNode->AsElement(), PL_DHASH_LOOKUP));
     if (!PL_DHASH_ENTRY_IS_BUSY(entry))
         return rv;
 
@@ -4171,12 +4264,11 @@ XULDocument::BroadcastAttributeChangeFromOverlay(nsIContent* aNode,
 
 nsresult
 XULDocument::FindBroadcaster(Element* aElement,
-                             nsIDOMElement** aListener,
+                             Element** aListener,
                              nsString& aBroadcasterID,
                              nsString& aAttribute,
-                             nsIDOMElement** aBroadcaster)
+                             Element** aBroadcaster)
 {
-    nsresult rv;
     nsINodeInfo *ni = aElement->NodeInfo();
     *aListener = nullptr;
     *aBroadcaster = nullptr;
@@ -4200,8 +4292,8 @@ XULDocument::FindBroadcaster(Element* aElement,
             return NS_FINDBROADCASTER_AWAIT_OVERLAYS;
         }
 
-        if (NS_FAILED(CallQueryInterface(parent, aListener)))
-            *aListener = nullptr;
+        *aListener = parent->IsElement() ? parent->AsElement() : nullptr;
+        NS_IF_ADDREF(*aListener);
 
         aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::element, aBroadcasterID);
         if (aBroadcasterID.IsEmpty()) {
@@ -4235,8 +4327,8 @@ XULDocument::FindBroadcaster(Element* aElement,
             }
         }
 
-        if (NS_FAILED(CallQueryInterface(aElement, aListener)))
-            *aListener = nullptr;
+        *aListener = aElement;
+        NS_ADDREF(*aListener);
 
         aAttribute.AssignLiteral("*");
     }
@@ -4245,8 +4337,7 @@ XULDocument::FindBroadcaster(Element* aElement,
     NS_ENSURE_TRUE(*aListener, NS_ERROR_UNEXPECTED);
 
     // Try to find the broadcaster element in the document.
-    rv = GetElementById(aBroadcasterID, aBroadcaster);
-    if (NS_FAILED(rv)) return rv;
+    *aBroadcaster = GetElementById(aBroadcasterID);
 
     // If we can't find the broadcaster, then we'll need to defer the
     // hookup. We may need to resolve some of the other overlays
@@ -4254,6 +4345,8 @@ XULDocument::FindBroadcaster(Element* aElement,
     if (! *aBroadcaster) {
         return NS_FINDBROADCASTER_AWAIT_OVERLAYS;
     }
+
+    NS_ADDREF(*aBroadcaster);
 
     return NS_FINDBROADCASTER_FOUND;
 }
@@ -4270,10 +4363,10 @@ XULDocument::CheckBroadcasterHookup(Element* aElement,
 
     *aDidResolve = false;
 
-    nsCOMPtr<nsIDOMElement> listener;
+    nsCOMPtr<Element> listener;
     nsAutoString broadcasterID;
     nsAutoString attribute;
-    nsCOMPtr<nsIDOMElement> broadcaster;
+    nsCOMPtr<Element> broadcaster;
 
     rv = FindBroadcaster(aElement, getter_AddRefs(listener),
                          broadcasterID, attribute, getter_AddRefs(broadcaster));
@@ -4290,8 +4383,12 @@ XULDocument::CheckBroadcasterHookup(Element* aElement,
             return rv;
     }
 
-    rv = AddBroadcastListenerFor(broadcaster, listener, attribute);
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_ARG(broadcaster && listener);
+    ErrorResult domRv;
+    AddBroadcastListenerFor(*broadcaster, *listener, attribute, domRv);
+    if (domRv.Failed()) {
+        return domRv.ErrorCode();
+    }
 
 #ifdef PR_LOGGING
     // Tell the world we succeeded
@@ -4640,7 +4737,10 @@ XULDocument::GetDocumentLWTheme()
 NS_IMETHODIMP
 XULDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
 {
-    return nsDocument::GetBoxObjectFor(aElement, aResult);
+    ErrorResult rv;
+    nsCOMPtr<Element> el = do_QueryInterface(aElement);
+    *aResult = GetBoxObjectFor(el, rv).get();
+    return rv.ErrorCode();
 }
 
 } // namespace dom
