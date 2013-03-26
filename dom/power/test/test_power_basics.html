@@ -19,24 +19,24 @@ SimpleTest.waitForExplicitFinish();
 function startTest() {
   window.frames[0].frameElement.setAttribute('onload', 'doTest2()');
   power = window.frames[0].navigator.mozPower;
-  ok(!power, "Shouldn't be able to access power manager without permission.");
-
-  SpecialPowers.addPermission("power", true, window.frames[0].document);
-  window.frames[0].location.reload();
-}
-
-function doTest2() {
-  window.frames[0].frameElement.setAttribute('onload', 'doTest3()');
-  power = window.frames[0].navigator.mozPower;
   ok(power, "Should be able to access power manager with permission.");
 
   SpecialPowers.removePermission("power", window.frames[0].document);
   window.frames[0].location.reload();
 }
 
+function doTest2() {
+  window.frames[0].frameElement.setAttribute('onload', 'doTest3()');
+  power = window.frames[0].navigator.mozPower;
+  ok(!power, "Shouldn't be able to access power manager with permission.");
+
+  SpecialPowers.addPermission("power",true, window.frames[0].document);
+  window.frames[0].location.reload();
+}
+
 function doTest3() {
   power = window.frames[0].navigator.mozPower;
-  ok(!power, "Shouldn't be able to access power manager without permission.");
+  ok(power, "Should be able to access power manager with permission.");
   SimpleTest.finish();
 }
 </script>

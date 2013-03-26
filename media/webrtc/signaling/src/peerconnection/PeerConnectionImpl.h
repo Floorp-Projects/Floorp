@@ -178,6 +178,7 @@ public:
   // ICE events
   void IceGatheringCompleted(NrIceCtx *aCtx);
   void IceCompleted(NrIceCtx *aCtx);
+  void IceFailed(NrIceCtx *aCtx);
   void IceStreamReady(NrIceMediaStream *aStream);
 
   static void ListenThread(void *aData);
@@ -269,8 +270,7 @@ private:
   void ShutdownMedia(bool isSynchronous);
 
   // ICE callbacks run on the right thread.
-  nsresult IceGatheringCompleted_m();
-  nsresult IceCompleted_m();
+  nsresult IceStateChange_m(IceState aState);
 
   // The role we are adopting
   Role mRole;

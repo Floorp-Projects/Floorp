@@ -36,22 +36,24 @@ public abstract class MetaScanner {
     /**
      * Constant for "charset".
      */
-    private static final char[] CHARSET = "harset".toCharArray();
+    private static final char[] CHARSET = { 'h', 'a', 'r', 's', 'e', 't' };
     
     /**
      * Constant for "content".
      */
-    private static final char[] CONTENT = "ontent".toCharArray();
+    private static final char[] CONTENT = { 'o', 'n', 't', 'e', 'n', 't' };
 
     /**
      * Constant for "http-equiv".
      */
-    private static final char[] HTTP_EQUIV = "ttp-equiv".toCharArray();
+    private static final char[] HTTP_EQUIV = { 't', 't', 'p', '-', 'e', 'q',
+            'u', 'i', 'v' };
 
     /**
      * Constant for "content-type".
      */
-    private static final char[] CONTENT_TYPE = "content-type".toCharArray();
+    private static final char[] CONTENT_TYPE = { 'c', 'o', 'n', 't', 'e', 'n',
+            't', '-', 't', 'y', 'p', 'e' };
 
     private static final int NO = 0;
 

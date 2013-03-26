@@ -33,6 +33,9 @@ class MethodHandler(object):
         # the name of the function.
         'method',
 
+        # The argparse subparser for this command's arguments.
+        'parser',
+
         # Arguments passed to add_parser() on the main mach subparser. This is
         # a 2-tuple of positional and named arguments, respectively.
         'parser_args',

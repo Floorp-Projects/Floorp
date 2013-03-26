@@ -3637,7 +3637,7 @@ nsWindowSH::GlobalScopePolluterNewResolve(JSContext *cx, JSHandleObject obj,
   }
 
   if (!result) {
-    document->ResolveName(str, nullptr, getter_AddRefs(result), &cache);
+    result = document->ResolveName(str, &cache);
   }
 
   if (result) {
@@ -6612,7 +6612,8 @@ ResolveImpl(JSContext *cx, nsIXPConnectWrappedNative *wrapper, jsid id,
   nsDependentJSString depStr;
   NS_ENSURE_TRUE(depStr.init(cx, str), NS_ERROR_UNEXPECTED);
 
-  return doc->ResolveName(depStr, nullptr, result, aCache);
+  NS_IF_ADDREF(*result = doc->ResolveName(depStr, aCache));
+  return NS_OK;
 }
 
 
@@ -7218,7 +7219,7 @@ nsHTMLFormElementSH::FindNamedItem(nsIForm *aForm, jsid id,
       do_QueryInterface(content->GetDocument());
 
     if (html_doc && content) {
-      html_doc->ResolveName(name, content, aResult, aCache);
+      *aResult = html_doc->ResolveName(name, content, aCache).get();
     }
   }
 

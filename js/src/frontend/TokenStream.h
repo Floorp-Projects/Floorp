@@ -395,6 +395,46 @@ class StrictModeGetter {
     virtual bool strictMode() = 0;
 };
 
+// TokenStream is the lexical scanner for Javascript source text.
+//
+// It takes a buffer of jschars and linearly scans it into |Token|s.
+// Internally the class uses a four element circular buffer |tokens| of
+// |Token|s. As an index for |tokens|, the member |cursor| points to the
+// current token.
+// Calls to getToken() increase |cursor| by one and return the new current
+// token. If a TokenStream was just created, the current token is initialized
+// with random data (i.e. not initialized). It is therefore important that
+// either of the first four member functions listed below is called first.
+// The circular buffer lets us go back up to two tokens from the last
+// scanned token. Internally, the relative number of backward steps that were
+// taken (via ungetToken()) after the last token was scanned is stored in
+// |lookahead|.
+//
+// The following table lists in which situations it is safe to call each listed
+// function. No checks are made by the functions in non-debug builds.
+//
+// Function Name     | Precondition; changes to |lookahead|
+// ------------------+---------------------------------------------------------
+// getToken          | none; if |lookahead > 0| then |lookahead--|
+// peekToken         | none; none
+// peekTokenSameLine | none; none
+// matchToken        | none; if |lookahead > 0| and the match succeeds then
+//                   |       |lookahead--|
+// consumeKnownToken | none; if |lookahead > 0| then |lookahead--|
+// ungetToken        | 0 <= |lookahead| <= |maxLookahead - 1|; |lookahead++|
+//
+// The behavior of the token scanning process (see getTokenInternal()) can be
+// modified by calling one of the first four above listed member functions with
+// an optional argument of type TokenStreamFlags. The two flags that do
+// influence the scanning process are TSF_OPERAND and TSF_KEYWORD_IS_NAME.
+// However, they will be ignored unless |lookahead == 0| holds.
+// Due to constraints of the grammar, this turns out not to be a problem in
+// practice. See the mozilla.dev.tech.js-engine.internals thread entitled 'Bug
+// in the scanner?' for more details (https://groups.google.com/forum/?
+// fromgroups=#!topic/mozilla.dev.tech.js-engine.internals/2JLH5jRcr7E).
+//
+// The methods seek() and tell() allow to rescan from a previous visited
+// location of the buffer.
 class TokenStream
 {
     /* Unicode separators that are treated as line terminators, in addition to \n, \r */
@@ -535,7 +575,7 @@ class TokenStream
      * Push the last scanned token back into the stream.
      */
     void ungetToken() {
-        JS_ASSERT(lookahead < ntokensMask);
+        JS_ASSERT(lookahead < maxLookahead);
         lookahead++;
         cursor = (cursor - 1) & ntokensMask;
     }

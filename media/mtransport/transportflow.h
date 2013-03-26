@@ -24,8 +24,13 @@ namespace mozilla {
 
 class TransportFlow : public sigslot::has_slots<> {
  public:
-  TransportFlow() : id_("(anonymous)") {}
-  TransportFlow(const std::string id) : id_(id) {}
+  TransportFlow()
+    : id_("(anonymous)"),
+      state_(TransportLayer::TS_NONE) {}
+  TransportFlow(const std::string id)
+    : id_(id),
+      state_(TransportLayer::TS_NONE) {}
+
   ~TransportFlow();
 
   const std::string& id() const { return id_; }
@@ -41,10 +46,10 @@ class TransportFlow : public sigslot::has_slots<> {
 
   // Convenience function to push multiple layers on. Layers
   // are pushed on in the order that they are in the queue.
-  // Any layers which cannot be pushed on are just deleted
-  // and an error is returned.
+  // Any failures cause the flow to become inoperable and
+  // destroys all the layers including those already pushed.
   // TODO(ekr@rtfm.com): Change layers to be ref-counted.
-  nsresult PushLayers(std::queue<TransportLayer *> layers);
+  nsresult PushLayers(nsAutoPtr<std::queue<TransportLayer *> > layers);
 
   TransportLayer *top() const;
   TransportLayer *GetLayer(const std::string& id) const;
@@ -68,11 +73,13 @@ class TransportFlow : public sigslot::has_slots<> {
   DISALLOW_COPY_ASSIGN(TransportFlow);
 
   void StateChange(TransportLayer *layer, TransportLayer::State state);
+  void StateChangeInt(TransportLayer::State state);
   void PacketReceived(TransportLayer* layer, const unsigned char *data,
       size_t len);
 
   std::string id_;
   std::deque<TransportLayer *> layers_;
+  TransportLayer::State state_;
 };
 
 }  // close namespace
