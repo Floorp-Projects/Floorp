@@ -40,7 +40,9 @@ namespace JS {
 struct ObjectsExtraSizes
 {
     size_t slots;
-    size_t elements;
+    size_t elementsNonAsmJS;
+    size_t elementsAsmJSHeap;
+    size_t elementsAsmJSNonHeap;
     size_t argumentsData;
     size_t regExpStatics;
     size_t propertyIteratorData;
@@ -52,7 +54,9 @@ struct ObjectsExtraSizes
 
     void add(ObjectsExtraSizes &sizes) {
         this->slots                += sizes.slots;
-        this->elements             += sizes.elements;
+        this->elementsNonAsmJS     += sizes.elementsNonAsmJS;
+        this->elementsAsmJSHeap    += sizes.elementsAsmJSHeap;
+        this->elementsAsmJSNonHeap += sizes.elementsAsmJSNonHeap;
         this->argumentsData        += sizes.argumentsData;
         this->regExpStatics        += sizes.regExpStatics;
         this->propertyIteratorData += sizes.propertyIteratorData;
