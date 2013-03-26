@@ -31,6 +31,7 @@ public class GeckoAccessibility {
     private static final int VIRTUAL_CURSOR_NEXT = 3;
 
     private static boolean sEnabled = false;
+    // Used to store the JSON message and populate the event later in the code path.
     private static JSONObject sEventMessage = null;
     private static AccessibilityNodeInfo sVirtualCursorNode = null;
 
@@ -160,8 +161,6 @@ public class GeckoAccessibility {
                 sVirtualCursorNode.setBoundsInScreen(screenBounds);
             }
 
-            // Store the JSON message and use it to populate the event later in the code path.
-            sEventMessage = message;
             ThreadUtils.postToUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -169,16 +168,19 @@ public class GeckoAccessibility {
                         // accessibility focus action on the view, and it in turn sends the right events.
                         switch (eventType) {
                         case AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED:
+                            sEventMessage = message;
                             view.performAccessibilityAction(AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS, null);
                             break;
                         case AccessibilityEvent.TYPE_ANNOUNCEMENT:
                         case AccessibilityEvent.TYPE_VIEW_SCROLLED:
+                            sEventMessage = null;
                             final AccessibilityEvent accEvent = AccessibilityEvent.obtain(eventType);
                             view.onInitializeAccessibilityEvent(accEvent);
                             populateEventFromJSON(accEvent, message);
                             view.getParent().requestSendAccessibilityEvent(view, accEvent);
                             break;
                         default:
+                            sEventMessage = message;
                             view.sendAccessibilityEvent(eventType);
                             break;
                         }
