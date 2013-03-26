@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <math.h>
 
 #include "nsThreadUtils.h"
 
@@ -90,6 +91,10 @@ Mutex* OS::CreateMutex() {
 
 void OS::Sleep(int milliseconds) {
   usleep(1000 * milliseconds);
+}
+
+void OS::SleepMicro(int microseconds) {
+  usleep(microseconds);
 }
 
 Thread::Thread(const char* name)
@@ -192,9 +197,14 @@ Sampler::FreePlatformData(PlatformData* aData)
 
 class SamplerThread : public Thread {
  public:
-  explicit SamplerThread(int interval)
+  explicit SamplerThread(double interval)
       : Thread("SamplerThread")
-      , interval_(interval) {}
+      , intervalMicro_(floor(interval * 1000 + 0.5))
+  {
+    if (intervalMicro_ <= 0) {
+      intervalMicro_ = 1;
+    }
+  }
 
   static void AddActiveSampler(Sampler* sampler) {
     mozilla::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
@@ -202,8 +212,6 @@ class SamplerThread : public Thread {
     if (instance_ == NULL) {
       instance_ = new SamplerThread(sampler->interval());
       instance_->Start();
-    } else {
-      ASSERT(instance_->interval_ == sampler->interval());
     }
   }
 
@@ -237,7 +245,7 @@ class SamplerThread : public Thread {
             SampleContext(SamplerRegistry::sampler, thread_profile);
         }
       }
-      OS::Sleep(interval_);
+      OS::SleepMicro(intervalMicro_);
     }
   }
 
@@ -286,7 +294,7 @@ class SamplerThread : public Thread {
     thread_resume(profiled_thread);
   }
 
-  const int interval_;
+  int intervalMicro_;
   //RuntimeProfilerRateLimiter rate_limiter_;
 
   // Protects the process wide state below.
@@ -300,7 +308,7 @@ class SamplerThread : public Thread {
 
 SamplerThread* SamplerThread::instance_ = NULL;
 
-Sampler::Sampler(int interval, bool profiling, int entrySize)
+Sampler::Sampler(double interval, bool profiling, int entrySize)
     : // isolate_(isolate),
       interval_(interval),
       profiling_(profiling),

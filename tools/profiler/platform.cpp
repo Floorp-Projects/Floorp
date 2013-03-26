@@ -436,7 +436,7 @@ const char** mozilla_sampler_get_features()
 }
 
 // Values are only honored on the first start
-void mozilla_sampler_start(int aProfileEntries, int aInterval,
+void mozilla_sampler_start(int aProfileEntries, double aInterval,
                            const char** aFeatures, uint32_t aFeatureCount,
                            const char** aThreadNameFilters, uint32_t aFilterCount)
 
