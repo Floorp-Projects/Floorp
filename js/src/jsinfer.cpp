@@ -731,7 +731,6 @@ class TypeConstraintCall : public TypeConstraint
     const char *kind() { return "call"; }
 
     void newType(JSContext *cx, TypeSet *source, Type type);
-    bool newCallee(JSContext *cx, HandleFunction callee, HandleScript script);
 };
 
 void
@@ -815,7 +814,6 @@ class TypeConstraintPropagateThis : public TypeConstraint
     const char *kind() { return "propagatethis"; }
 
     void newType(JSContext *cx, TypeSet *source, Type type);
-    bool newCallee(JSContext *cx, HandleFunction callee);
 };
 
 void
@@ -1416,35 +1414,14 @@ TypeConstraintCall::newType(JSContext *cx, TypeSet *source, Type type)
      * and the clone.
      */
     if (callee->nonLazyScript()->shouldCloneAtCallsite) {
-        RootedFunction clone(cx, CloneCallee(cx, callee, script, pc));
-        if (!clone)
+        callee = CloneCallee(cx, callee, script, pc);
+        if (!callee)
             return;
-        if (!newCallee(cx, clone, script))
-            return;
-        if (!newCallee(cx, callee, script))
-            return;
-
-        /*
-         * When cloning a callee, we must flow the more specific argument
-         * types of the clone to that of the original, lest we install type
-         * barriers when propagating the original where none is required.
-         */
-        for (unsigned i = 0; i < callsite->argumentCount && i < callee->nargs; i++) {
-            StackTypeSet *cloneTypes = TypeScript::ArgTypes(clone->nonLazyScript(), i);
-            StackTypeSet *originalTypes = TypeScript::ArgTypes(callee->nonLazyScript(), i);
-            cloneTypes->addSubset(cx, originalTypes);
-        }
-    } else {
-        newCallee(cx, callee, script);
     }
-}
 
-bool
-TypeConstraintCall::newCallee(JSContext *cx, HandleFunction callee, HandleScript script)
-{
     RootedScript calleeScript(cx, callee->nonLazyScript());
     if (!calleeScript->ensureHasTypes(cx))
-        return false;
+        return;
 
     unsigned nargs = callee->nargs;
 
@@ -1484,8 +1461,6 @@ TypeConstraintCall::newCallee(JSContext *cx, HandleFunction callee, HandleScript
          */
         returnTypes->addSubset(cx, callsite->returnTypes);
     }
-
-    return true;
 }
 
 void
@@ -1529,29 +1504,19 @@ TypeConstraintPropagateThis::newType(JSContext *cx, TypeSet *source, Type type)
      * and the clone.
      */
     if (callee->nonLazyScript()->shouldCloneAtCallsite) {
-        RootedFunction clone(cx, CloneCallee(cx, callee, script, callpc));
-        if (!clone)
-            return;
-        if (!newCallee(cx, clone))
+        callee = CloneCallee(cx, callee, script, callpc);
+        if (!callee)
             return;
     }
 
-    newCallee(cx, callee);
-}
-
-bool
-TypeConstraintPropagateThis::newCallee(JSContext *cx, HandleFunction callee)
-{
     if (!callee->nonLazyScript()->ensureHasTypes(cx))
-        return false;
+        return;
 
     TypeSet *thisTypes = TypeScript::ThisTypes(callee->nonLazyScript());
     if (this->types)
         this->types->addSubset(cx, thisTypes);
     else
         thisTypes->addType(cx, this->type);
-
-    return true;
 }
 
 void
@@ -5886,6 +5851,25 @@ JSScript::makeTypes(JSContext *cx)
         TypeSet *types = &typeArray[i];
         if (types != returnTypes)
             types->setConstraintsPurged();
+    }
+
+    if (isCallsiteClone) {
+        /*
+         * For callsite clones, flow the types from the specific clone back to
+         * the original function.
+         */
+        JS_ASSERT(function());
+        JS_ASSERT(originalFunction());
+        JS_ASSERT(function()->nargs == originalFunction()->nargs);
+
+        RawScript original = originalFunction()->nonLazyScript();
+        if (!original->ensureHasTypes(cx))
+            return false;
+
+        TypeScript::ReturnTypes(this)->addSubset(cx, TypeScript::ReturnTypes(original));
+        TypeScript::ThisTypes(this)->addSubset(cx, TypeScript::ThisTypes(original));
+        for (unsigned i = 0; i < function()->nargs; i++)
+            TypeScript::ArgTypes(this, i)->addSubset(cx, TypeScript::ArgTypes(original, i));
     }
 
 #ifdef DEBUG
