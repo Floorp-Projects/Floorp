@@ -278,17 +278,19 @@ var BrowserUI = {
     content.focus();
     this._setURI(aURI);
 
-    let postData = {};
-    aURI = Browser.getShortcutOrURI(aURI, postData);
-    Browser.loadURI(aURI, { flags: Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP, postData: postData });
+    Task.spawn(function() {
+      let postData = {};
+      aURI = yield Browser.getShortcutOrURI(aURI, postData);
+      Browser.loadURI(aURI, { flags: Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP, postData: postData });
 
-    // Delay doing the fixup so the raw URI is passed to loadURIWithFlags
-    // and the proper third-party fixup can be done
-    let fixupFlags = Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
-    let uri = gURIFixup.createFixupURI(aURI, fixupFlags);
-    gHistSvc.markPageAsTyped(uri);
+      // Delay doing the fixup so the raw URI is passed to loadURIWithFlags
+      // and the proper third-party fixup can be done
+      let fixupFlags = Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
+      let uri = gURIFixup.createFixupURI(aURI, fixupFlags);
+      gHistSvc.markPageAsTyped(uri);
 
-    this._titleChanged(Browser.selectedBrowser);
+      BrowserUI._titleChanged(Browser.selectedBrowser);
+    });
   },
 
   handleUrlbarEnter: function handleUrlbarEnter(aEvent) {
