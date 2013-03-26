@@ -3316,20 +3316,10 @@ DrawBorderImageComponent(nsRenderingContext&  aRenderingContext,
   if (aFill.IsEmpty() || aSrc.IsEmpty())
     return;
 
-  // Don't bother trying to cache sub images if the border image is animated
-  // We can only sucessfully call GetAnimated() if we are fully decoded, so default to true
-  bool animated = true;
-  aImage->GetAnimated(&animated);
-
   nsCOMPtr<imgIContainer> subImage;
-  if (animated || (subImage = aStyleBorder.GetSubImage(aIndex)) == 0) {
-    if (NS_FAILED(aImage->ExtractFrame(imgIContainer::FRAME_CURRENT, aSrc,
-                                       imgIContainer::FLAG_SYNC_DECODE,
-                                       getter_AddRefs(subImage))))
-      return;
-
-    if (!animated)
-      aStyleBorder.SetSubImage(aIndex, subImage);
+  if ((subImage = aStyleBorder.GetSubImage(aIndex)) == nullptr) {
+    subImage = ImageOps::Clip(aImage, aSrc);
+    aStyleBorder.SetSubImage(aIndex, subImage);
   }
 
   gfxPattern::GraphicsFilter graphicsFilter =
