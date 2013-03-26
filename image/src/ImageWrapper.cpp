@@ -204,15 +204,6 @@ ImageWrapper::GetImageContainer(LayerManager* aManager, ImageContainer** _retval
 }
 
 NS_IMETHODIMP
-ImageWrapper::ExtractFrame(uint32_t aWhichFrame,
-                           const nsIntRect& aRegion,
-                           uint32_t aFlags,
-                           imgIContainer** _retval)
-{
-  return mInnerImage->ExtractFrame(aWhichFrame, aRegion, aFlags, _retval);
-}
-
-NS_IMETHODIMP
 ImageWrapper::Draw(gfxContext* aContext,
                    gfxPattern::GraphicsFilter aFilter,
                    const gfxMatrix& aUserSpaceToImageSpace,
