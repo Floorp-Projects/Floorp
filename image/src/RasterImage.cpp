@@ -78,9 +78,9 @@ static bool gHQDownscaling = false;
 static uint32_t gHQDownscalingMinFactor = 1000;
 static bool gMultithreadedDecoding = true;
 static int32_t gDecodingThreadLimit = -1;
-+// The number of pixels in a 5 megapixel decoded image.
-+// Equivalent to an example 3125x1600 resolution.
-+static uint32_t gHQUpscalingMaxSize = 20971520;
+// The number of pixels in a 5 megapixel decoded image.
+// Equivalent to an example 3125x1600 resolution.
+static uint32_t gHQUpscalingMaxSize = 20971520;
 
 // The maximum number of times any one RasterImage was decoded.  This is only
 // used for statistics.
