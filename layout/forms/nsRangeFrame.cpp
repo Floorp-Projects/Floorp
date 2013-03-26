@@ -58,57 +58,61 @@ nsRangeFrame::DestroyFrom(nsIFrame* aDestructRoot)
                "need to call RegUnregAccessKey only for the first.");
   nsFormControlFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
   nsContentUtils::DestroyAnonymousContent(&mTrackDiv);
+  nsContentUtils::DestroyAnonymousContent(&mProgressDiv);
   nsContentUtils::DestroyAnonymousContent(&mThumbDiv);
   nsContainerFrame::DestroyFrom(aDestructRoot);
 }
 
 nsresult
-nsRangeFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
+nsRangeFrame::MakeAnonymousDiv(nsIContent** aResult,
+                               nsCSSPseudoElements::Type aPseudoType,
+                               nsTArray<ContentInfo>& aElements)
 {
   // Get the NodeInfoManager and tag necessary to create the anonymous divs.
   nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
 
-  // Create the track div:
   nsCOMPtr<nsINodeInfo> nodeInfo;
   nodeInfo = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::div, nullptr,
                                                  kNameSpaceID_XHTML,
                                                  nsIDOMNode::ELEMENT_NODE);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
-  nsresult rv = NS_NewHTMLElement(getter_AddRefs(mTrackDiv), nodeInfo.forget(),
+  nsresult rv = NS_NewHTMLElement(aResult, nodeInfo.forget(),
                                   mozilla::dom::NOT_FROM_PARSER);
   NS_ENSURE_SUCCESS(rv, rv);
-  // Associate ::-moz-range-track pseudo-element to the anonymous child.
-  nsCSSPseudoElements::Type pseudoType =
-    nsCSSPseudoElements::ePseudo_mozRangeTrack;
+  // Associate the pseudo-element with the anonymous child.
   nsRefPtr<nsStyleContext> newStyleContext =
     PresContext()->StyleSet()->ResolvePseudoElementStyle(mContent->AsElement(),
-                                                         pseudoType,
+                                                         aPseudoType,
                                                          StyleContext());
 
-  if (!aElements.AppendElement(ContentInfo(mTrackDiv, newStyleContext))) {
+  if (!aElements.AppendElement(ContentInfo(*aResult, newStyleContext))) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-
-  // Create the thumb div:
-  nodeInfo = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::div, nullptr,
-                                                 kNameSpaceID_XHTML,
-                                                 nsIDOMNode::ELEMENT_NODE);
-  NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
-  rv = NS_NewHTMLElement(getter_AddRefs(mThumbDiv), nodeInfo.forget(),
-                         mozilla::dom::NOT_FROM_PARSER);
-  NS_ENSURE_SUCCESS(rv, rv);
-  // Associate ::-moz-range-thumb pseudo-element to the anonymous child.
-  pseudoType = nsCSSPseudoElements::ePseudo_mozRangeThumb;
-  newStyleContext =
-    PresContext()->StyleSet()->ResolvePseudoElementStyle(mContent->AsElement(),
-                                                         pseudoType,
-                                                         StyleContext());
-
-  if (!aElements.AppendElement(ContentInfo(mThumbDiv, newStyleContext))) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   return NS_OK;
+}
+
+nsresult
+nsRangeFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
+{
+  nsresult rv;
+
+  // Create the ::-moz-range-track pseuto-element (a div):
+  rv = MakeAnonymousDiv(getter_AddRefs(mTrackDiv),
+                        nsCSSPseudoElements::ePseudo_mozRangeTrack,
+                        aElements);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Create the ::-moz-range-progress pseudo-element (a div):
+  rv = MakeAnonymousDiv(getter_AddRefs(mProgressDiv),
+                        nsCSSPseudoElements::ePseudo_mozRangeProgress,
+                        aElements);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Create the ::-moz-range-thumb pseudo-element (a div):
+  rv = MakeAnonymousDiv(getter_AddRefs(mThumbDiv),
+                        nsCSSPseudoElements::ePseudo_mozRangeThumb,
+                        aElements);
+  return rv;
 }
 
 void
@@ -116,6 +120,7 @@ nsRangeFrame::AppendAnonymousContentTo(nsBaseContentList& aElements,
                                        uint32_t aFilter)
 {
   aElements.MaybeAppendElement(mTrackDiv);
+  aElements.MaybeAppendElement(mProgressDiv);
   aElements.MaybeAppendElement(mThumbDiv);
 }
 
@@ -136,8 +141,9 @@ nsRangeFrame::Reflow(nsPresContext*           aPresContext,
   DO_GLOBAL_REFLOW_COUNT("nsRangeFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
-  NS_ASSERTION(mTrackDiv, "Track div must exist!");
-  NS_ASSERTION(mThumbDiv, "Thumb div must exist!");
+  NS_ASSERTION(mTrackDiv, "::-moz-range-track div must exist!");
+  NS_ASSERTION(mProgressDiv, "::-moz-range-progress div must exist!");
+  NS_ASSERTION(mThumbDiv, "::-moz-range-thumb div must exist!");
   NS_ASSERTION(!GetPrevContinuation() && !GetNextContinuation(),
                "nsRangeFrame should not have continuations; if it does we "
                "need to call RegUnregAccessKey only for the first.");
@@ -164,6 +170,11 @@ nsRangeFrame::Reflow(nsPresContext*           aPresContext,
   nsIFrame* trackFrame = mTrackDiv->GetPrimaryFrame();
   if (trackFrame) {
     ConsiderChildOverflow(aDesiredSize.mOverflowAreas, trackFrame);
+  }
+
+  nsIFrame* rangeProgressFrame = mProgressDiv->GetPrimaryFrame();
+  if (rangeProgressFrame) {
+    ConsiderChildOverflow(aDesiredSize.mOverflowAreas, rangeProgressFrame);
   }
 
   nsIFrame* thumbFrame = mThumbDiv->GetPrimaryFrame();
@@ -263,6 +274,34 @@ nsRangeFrame::ReflowAnonymousContent(nsPresContext*           aPresContext,
 
     DoUpdateThumbPosition(thumbFrame, nsSize(aDesiredSize.width,
                                              aDesiredSize.height));
+  }
+
+  nsIFrame* rangeProgressFrame = mProgressDiv->GetPrimaryFrame();
+
+  if (rangeProgressFrame) { // display:none?
+    nsHTMLReflowState progressReflowState(aPresContext, aReflowState,
+                                          rangeProgressFrame,
+                                          nsSize(aReflowState.ComputedWidth(),
+                                                 NS_UNCONSTRAINEDSIZE));
+
+    // We first reflow the range-progress frame at {0,0} to obtain its
+    // unadjusted dimensions, then we adjust it to so that the appropriate edge
+    // ends at the thumb.
+
+    nsReflowStatus frameStatus = NS_FRAME_COMPLETE;
+    nsHTMLReflowMetrics progressDesiredSize;
+    nsresult rv = ReflowChild(rangeProgressFrame, aPresContext,
+                              progressDesiredSize, progressReflowState, 0, 0,
+                              0, frameStatus);
+    NS_ENSURE_SUCCESS(rv, rv);
+    MOZ_ASSERT(NS_FRAME_IS_FULLY_COMPLETE(frameStatus),
+               "We gave our child unconstrained height, so it should be complete");
+    rv = FinishReflowChild(rangeProgressFrame, aPresContext,
+                           &progressReflowState, progressDesiredSize, 0, 0, 0);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    DoUpdateRangeProgressFrame(rangeProgressFrame, nsSize(aDesiredSize.width,
+                                                          aDesiredSize.height));
   }
 
   return NS_OK;
@@ -382,16 +421,22 @@ nsRangeFrame::GetValueAtEventPoint(nsGUIEvent* aEvent)
 }
 
 void
-nsRangeFrame::UpdateThumbPositionForValueChange()
+nsRangeFrame::UpdateForValueChange()
 {
   if (NS_SUBTREE_DIRTY(this)) {
     return; // we're going to be updated when we reflow
   }
+  nsIFrame* rangeProgressFrame = mProgressDiv->GetPrimaryFrame();
   nsIFrame* thumbFrame = mThumbDiv->GetPrimaryFrame();
-  if (!thumbFrame) {
+  if (!rangeProgressFrame && !thumbFrame) {
     return; // diplay:none?
   }
-  DoUpdateThumbPosition(thumbFrame, GetSize());
+  if (rangeProgressFrame) {
+    DoUpdateRangeProgressFrame(rangeProgressFrame, GetSize());
+  }
+  if (thumbFrame) {
+    DoUpdateThumbPosition(thumbFrame, GetSize());
+  }
   if (IsThemed()) {
     // We don't know the exact dimensions or location of the thumb when native
     // theming is applied, so we just repaint the entire range.
@@ -449,6 +494,51 @@ nsRangeFrame::DoUpdateThumbPosition(nsIFrame* aThumbFrame,
   aThumbFrame->SetPosition(newPosition);
 }
 
+void
+nsRangeFrame::DoUpdateRangeProgressFrame(nsIFrame* aRangeProgressFrame,
+                                         const nsSize& aRangeSize)
+{
+  MOZ_ASSERT(aRangeProgressFrame);
+
+  // The idea here is that we want to position the ::-moz-range-progress
+  // pseudo-element so that the center line running along its length is on the
+  // corresponding center line of the nsRangeFrame's content box. In the other
+  // dimension, we align the "start" edge of the ::-moz-range-progress
+  // pseudo-element's border-box with the corresponding edge of the
+  // nsRangeFrame's content box, and we size the progress element's border-box
+  // to have a length of GetValueAsFractionOfRange() times the nsRangeFrame's
+  // content-box size.
+
+  nsMargin borderAndPadding = GetUsedBorderAndPadding();
+  nsSize progSize = aRangeProgressFrame->GetSize();
+  nsRect progRect(borderAndPadding.left, borderAndPadding.top,
+                  progSize.width, progSize.height);
+
+  nsSize rangeContentBoxSize(aRangeSize);
+  rangeContentBoxSize.width -= borderAndPadding.LeftRight();
+  rangeContentBoxSize.height -= borderAndPadding.TopBottom();
+
+  double fraction = GetValueAsFractionOfRange();
+  MOZ_ASSERT(fraction >= 0.0 && fraction <= 1.0);
+
+  // We are called under Reflow, so we need to pass IsHorizontal a valid rect.
+  nsSize frameSizeOverride(aRangeSize.width, aRangeSize.height);
+  if (IsHorizontal(&frameSizeOverride)) {
+    nscoord progLength = NSToCoordRound(fraction * rangeContentBoxSize.width);
+    if (StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
+      progRect.x += rangeContentBoxSize.width - progLength;
+    }
+    progRect.y += (rangeContentBoxSize.height - progSize.height)/2;
+    progRect.width = progLength;
+  } else {
+    nscoord progLength = NSToCoordRound(fraction * rangeContentBoxSize.height);
+    progRect.x += (rangeContentBoxSize.width - progSize.width)/2;
+    progRect.y += rangeContentBoxSize.height - progLength;
+    progRect.height = progLength;
+  }
+  aRangeProgressFrame->SetRect(progRect);
+}
+
 NS_IMETHODIMP
 nsRangeFrame::AttributeChanged(int32_t  aNameSpaceID,
                                nsIAtom* aAttribute,
@@ -467,17 +557,17 @@ nsRangeFrame::AttributeChanged(int32_t  aNameSpaceID,
       // in the middle of a type change away from type=range, under the
       // SetAttr(..., nsGkAtoms::value, ...) call in nsHTMLInputElement::
       // HandleTypeChange. In that case the nsHTMLInputElement's type will
-      // already have changed, and if we call UpdateThumbPositionForValueChange()
+      // already have changed, and if we call UpdateForValueChange()
       // we'll fail the asserts under that call that check the type of our
       // nsHTMLInputElement. Given that we're changing away from being a range
       // and this frame will shortly be destroyed, there's no point in calling
-      // UpdateThumbPositionForValueChange() anyway.
+      // UpdateForValueChange() anyway.
       MOZ_ASSERT(mContent->IsHTML(nsGkAtoms::input), "bad cast");
       bool typeIsRange = static_cast<nsHTMLInputElement*>(mContent)->GetType() ==
                            NS_FORM_INPUT_RANGE;
       MOZ_ASSERT(typeIsRange || aAttribute == nsGkAtoms::value, "why?");
       if (typeIsRange) {
-        UpdateThumbPositionForValueChange();
+        UpdateForValueChange();
       }
     } else if (aAttribute == nsGkAtoms::orient) {
       PresContext()->PresShell()->FrameNeedsReflow(this, nsIPresShell::eResize,
@@ -599,6 +689,8 @@ nsRangeFrame::ShouldUseNativeStyle() const
          !PresContext()->HasAuthorSpecifiedRules(const_cast<nsRangeFrame*>(this),
                                                  STYLES_DISABLING_NATIVE_THEMING) &&
          !PresContext()->HasAuthorSpecifiedRules(mTrackDiv->GetPrimaryFrame(),
+                                                 STYLES_DISABLING_NATIVE_THEMING) &&
+         !PresContext()->HasAuthorSpecifiedRules(mProgressDiv->GetPrimaryFrame(),
                                                  STYLES_DISABLING_NATIVE_THEMING) &&
          !PresContext()->HasAuthorSpecifiedRules(mThumbDiv->GetPrimaryFrame(),
                                                  STYLES_DISABLING_NATIVE_THEMING);

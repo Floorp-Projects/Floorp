@@ -779,6 +779,28 @@ input[type=range][orient=vertical]::-moz-range-track {
 
 /**
  * Layout handles positioning of this pseudo-element specially (so that content
+ * authors can concentrate on styling this pseudo-element without worrying
+ * about the logic to position it). Specifically the 'margin', 'top' and 'left'
+ * properties are ignored. Additionally, if the range is horizontal, the width
+ * property is ignored, and if the range range is vertical, the height property
+ * is ignored.
+ */
+input[type=range]::-moz-range-progress {
+  /* Prevent styling that would change the type of frame we construct. */
+  display: inline-block !important;
+  float: none !important;
+  position: static !important;
+  /* Since one of width/height will be ignored, this just sets the "other"
+     dimension.
+   */
+  width: 0.2em;
+  height: 0.2em;
+  /* Prevent nsFrame::HandlePress setting mouse capture to this element. */
+  -moz-user-select: none ! important;
+}
+
+/**
+ * Layout handles positioning of this pseudo-element specially (so that content
  * authors can concentrate on styling the thumb without worrying about the
  * logic to position it). Specifically the 'margin', 'top' and 'left'
  * properties are ignored.
