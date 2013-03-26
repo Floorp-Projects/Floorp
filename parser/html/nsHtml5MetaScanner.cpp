@@ -55,13 +55,13 @@
 #include "nsHtml5MetaScanner.h"
 
 static PRUnichar const CHARSET_DATA[] = { 'h', 'a', 'r', 's', 'e', 't' };
-staticJArray<PRUnichar,int32_t> nsHtml5MetaScanner::CHARSET = { CHARSET_DATA, NS_ARRAY_LENGTH(CHARSET_DATA) };
+staticJArray<PRUnichar,int32_t> nsHtml5MetaScanner::CHARSET = { CHARSET_DATA, MOZ_ARRAY_LENGTH(CHARSET_DATA) };
 static PRUnichar const CONTENT_DATA[] = { 'o', 'n', 't', 'e', 'n', 't' };
-staticJArray<PRUnichar,int32_t> nsHtml5MetaScanner::CONTENT = { CONTENT_DATA, NS_ARRAY_LENGTH(CONTENT_DATA) };
+staticJArray<PRUnichar,int32_t> nsHtml5MetaScanner::CONTENT = { CONTENT_DATA, MOZ_ARRAY_LENGTH(CONTENT_DATA) };
 static PRUnichar const HTTP_EQUIV_DATA[] = { 't', 't', 'p', '-', 'e', 'q', 'u', 'i', 'v' };
-staticJArray<PRUnichar,int32_t> nsHtml5MetaScanner::HTTP_EQUIV = { HTTP_EQUIV_DATA, NS_ARRAY_LENGTH(HTTP_EQUIV_DATA) };
+staticJArray<PRUnichar,int32_t> nsHtml5MetaScanner::HTTP_EQUIV = { HTTP_EQUIV_DATA, MOZ_ARRAY_LENGTH(HTTP_EQUIV_DATA) };
 static PRUnichar const CONTENT_TYPE_DATA[] = { 'c', 'o', 'n', 't', 'e', 'n', 't', '-', 't', 'y', 'p', 'e' };
-staticJArray<PRUnichar,int32_t> nsHtml5MetaScanner::CONTENT_TYPE = { CONTENT_TYPE_DATA, NS_ARRAY_LENGTH(CONTENT_TYPE_DATA) };
+staticJArray<PRUnichar,int32_t> nsHtml5MetaScanner::CONTENT_TYPE = { CONTENT_TYPE_DATA, MOZ_ARRAY_LENGTH(CONTENT_TYPE_DATA) };
 
 nsHtml5MetaScanner::nsHtml5MetaScanner()
   : readable(nullptr),
