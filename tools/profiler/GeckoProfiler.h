@@ -104,13 +104,13 @@ static inline void profiler_stop() {}
 static inline bool profiler_is_active() { return false; }
 
 // Internal-only. Used by the event tracer.
-static inline void profiler_responsinveness(const TimeStamp& aTime) {}
+static inline void profiler_responsiveness(const mozilla::TimeStamp& aTime) {}
 
 // Internal-only. Used by the event tracer.
 static inline double* profiler_get_responsiveness() { return nullptr; }
 
 // Internal-only.
-static inline void profile_set_frame_number(int frameNumber) {}
+static inline void profiler_set_frame_number(int frameNumber) {}
 
 // Get the profile encoded as a JSON string.
 static inline char* profiler_get_profile() { return nullptr; }
