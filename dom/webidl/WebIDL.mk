@@ -236,6 +236,7 @@ webidl_files = \
   SVGPolylineElement.webidl \
   SVGPreserveAspectRatio.webidl \
   SVGRadialGradientElement.webidl \
+  SVGRect.webidl \
   SVGRectElement.webidl \
   SVGScriptElement.webidl \
   SVGSetElement.webidl \

@@ -10,20 +10,13 @@
  * liability, trademark and document use rules apply.
  */
 
-interface SVGGraphicsElement : SVGElement {
-  readonly attribute SVGAnimatedTransformList transform;
-
-  readonly attribute SVGElement? nearestViewportElement;
-  readonly attribute SVGElement? farthestViewportElement;
-
-  [Creator, Throws]
-  SVGRect getBBox();
-  // Not implemented
-  // SVGRect getStrokeBBox();
-  SVGMatrix? getCTM();
-  SVGMatrix? getScreenCTM();
-  [Throws]
-  SVGMatrix getTransformToElement(SVGGraphicsElement element);
+interface SVGRect {
+  [SetterThrows]
+  attribute float x;
+  [SetterThrows]
+  attribute float y;
+  [SetterThrows]
+  attribute float width;
+  [SetterThrows]
+  attribute float height;
 };
-
-SVGGraphicsElement implements SVGTests;

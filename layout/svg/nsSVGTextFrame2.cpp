@@ -19,7 +19,6 @@
 #include "nsGkAtoms.h"
 #include "nsIDOMSVGAnimatedNumber.h"
 #include "nsIDOMSVGLength.h"
-#include "nsIDOMSVGRect.h"
 #include "nsISVGGlyphFragmentNode.h"
 #include "nsISelection.h"
 #include "nsQuickSort.h"
@@ -3804,7 +3803,7 @@ nsSVGTextFrame2::GetEndPositionOfChar(nsIContent* aContent,
 nsresult
 nsSVGTextFrame2::GetExtentOfChar(nsIContent* aContent,
                                  uint32_t aCharNum,
-                                 nsIDOMSVGRect** aResult)
+                                 dom::SVGIRect** aResult)
 {
   UpdateGlyphPositioning(false);
 
