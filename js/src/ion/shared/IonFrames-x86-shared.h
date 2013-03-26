@@ -412,6 +412,8 @@ class IonOsrFrameLayout : public IonJSFrameLayout
     }
 };
 
+class ICStub;
+
 class IonBaselineStubFrameLayout : public IonCommonFrameLayout
 {
   public:
@@ -419,8 +421,16 @@ class IonBaselineStubFrameLayout : public IonCommonFrameLayout
         return sizeof(IonBaselineStubFrameLayout);
     }
 
+    static inline size_t reverseOffsetOfStubPtr() {
+        return -sizeof(void *);
+    }
     static inline size_t reverseOffsetOfSavedFramePtr() {
         return -(2 * sizeof(void *));
+    }
+
+    inline ICStub *stubPtr() {
+        uint8_t *fp = reinterpret_cast<uint8_t *>(this);
+        return *reinterpret_cast<ICStub **>(fp + reverseOffsetOfStubPtr());
     }
 };
 
