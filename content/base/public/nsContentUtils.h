@@ -210,6 +210,15 @@ public:
                                       const nsINode* aPossibleAncestor);
 
   /**
+   * Similar to ContentIsDescendantOf, except will treat an HTMLTemplateElement
+   * or ShadowRoot as an ancestor of things in the corresponding DocumentFragment.
+   * See the concept of "host-including inclusive ancestor" in the DOM
+   * specification.
+   */
+  static bool ContentIsHostIncludingDescendantOf(
+    const nsINode* aPossibleDescendant, const nsINode* aPossibleAncestor);
+
+  /**
    * Similar to ContentIsDescendantOf except it crosses document boundaries.
    */
   static bool ContentIsCrossDocDescendantOf(nsINode* aPossibleDescendant,
