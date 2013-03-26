@@ -387,8 +387,8 @@ WrappedNativeJSGCThingTracer(JSDHashTable *table, JSDHashEntryHdr *hdr,
 static PLDHashOperator
 TraceDOMExpandos(nsPtrHashKey<JSObject> *expando, void *aClosure)
 {
-    JS_CALL_OBJECT_TRACER(static_cast<JSTracer *>(aClosure), expando->GetKey(),
-                          "DOM expando object");
+    JS_CallObjectTracer(static_cast<JSTracer *>(aClosure), expando->GetKey(),
+                        "DOM expando object");
     return PL_DHASH_NEXT;
 }
 

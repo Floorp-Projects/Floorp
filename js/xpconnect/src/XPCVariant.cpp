@@ -65,9 +65,9 @@ void XPCTraceableVariant::TraceJS(JSTracer* trc)
 {
     jsval val = GetJSValPreserveColor();
 
-    NS_ASSERTION(JSVAL_IS_TRACEABLE(val), "Must be traceable");
+    MOZ_ASSERT(JSVAL_IS_TRACEABLE(val));
     JS_SET_TRACING_DETAILS(trc, GetTraceName, this, 0);
-    JS_CallTracer(trc, JSVAL_TO_TRACEABLE(val), JSVAL_TRACE_KIND(val));
+    JS_CallValueTracer(trc, val, "XPCTraceableVariant::mJSVal");
 }
 
 // static
