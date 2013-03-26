@@ -5345,7 +5345,11 @@ class ClassMethod(ClassItem):
                  virtual=False, const=False, bodyInHeader=False,
                  templateArgs=None, visibility='public', body=None,
                  breakAfterReturnDecl="\n",
-                 breakAfterSelf="\n"):
+                 breakAfterSelf="\n", override=False):
+        """
+        override indicates whether to flag the method as MOZ_OVERRIDE
+        """
+        assert not override or virtual
         self.returnType = returnType
         self.args = args
         self.inline = inline or bodyInHeader
@@ -5357,6 +5361,7 @@ class ClassMethod(ClassItem):
         self.body = body
         self.breakAfterReturnDecl = breakAfterReturnDecl
         self.breakAfterSelf = breakAfterSelf
+        self.override = override
         ClassItem.__init__(self, name, visibility)
 
     def getDecorators(self, declaring):
@@ -5388,7 +5393,7 @@ class ClassMethod(ClassItem):
            body = ';'
 
         return string.Template("${templateClause}${decorators}${returnType}%s"
-                               "${name}(${args})${const}${body}%s" %
+                               "${name}(${args})${const}${override}${body}%s" %
                                (self.breakAfterReturnDecl, self.breakAfterSelf)
                                ).substitute({
                 'templateClause': templateClause,
@@ -5396,6 +5401,7 @@ class ClassMethod(ClassItem):
                 'returnType': self.returnType,
                 'name': self.name,
                 'const': ' const' if self.const else '',
+                'override': ' MOZ_OVERRIDE' if self.override else '',
                 'args': args,
                 'body': body
                 })
@@ -7824,6 +7830,7 @@ class CGBindingImplClass(CGClass):
                                 ClassMethod("WrapObject", "JSObject*",
                                             wrapArgs, virtual=descriptor.wrapperCache,
                                             breakAfterReturnDecl=" ",
+                                            override=descriptor.wrapperCache,
                                             body=self.getWrapObjectBody()))
         self.methodDecls.insert(0,
                                 ClassMethod("GetParentObject",
