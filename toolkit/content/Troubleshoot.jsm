@@ -61,6 +61,7 @@ const PREFS_WHITELIST = [
   "privacy.",
   "security.",
   "social.enabled",
+  "storage.vacuum.last.",
   "svg.",
   "toolkit.startup.recent_crashes",
   "webgl.",
