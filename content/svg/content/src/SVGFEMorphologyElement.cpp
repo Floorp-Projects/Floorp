@@ -4,104 +4,110 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/SVGFEMorphologyElement.h"
+#include "mozilla/dom/SVGFEMorphologyElementBinding.h"
+#include "nsSVGFilterInstance.h"
+
+NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEMorphology)
 
 namespace mozilla {
 namespace dom {
 
-nsSVGElement::NumberPairInfo nsSVGFEMorphologyElement::sNumberPairInfo[1] =
+JSObject*
+SVGFEMorphologyElement::WrapNode(JSContext* aCx, JSObject* aScope)
+{
+  return SVGFEMorphologyElementBinding::Wrap(aCx, aScope, this);
+}
+
+// Morphology Operators
+static const unsigned short SVG_OPERATOR_UNKNOWN = 0;
+static const unsigned short SVG_OPERATOR_ERODE = 1;
+static const unsigned short SVG_OPERATOR_DILATE = 2;
+
+nsSVGElement::NumberPairInfo SVGFEMorphologyElement::sNumberPairInfo[1] =
 {
   { &nsGkAtoms::radius, 0, 0 }
 };
 
-nsSVGEnumMapping nsSVGFEMorphologyElement::sOperatorMap[] = {
-  {&nsGkAtoms::erode, nsSVGFEMorphologyElement::SVG_OPERATOR_ERODE},
-  {&nsGkAtoms::dilate, nsSVGFEMorphologyElement::SVG_OPERATOR_DILATE},
+nsSVGEnumMapping SVGFEMorphologyElement::sOperatorMap[] = {
+  {&nsGkAtoms::erode, SVG_OPERATOR_ERODE},
+  {&nsGkAtoms::dilate, SVG_OPERATOR_DILATE},
   {nullptr, 0}
 };
 
-nsSVGElement::EnumInfo nsSVGFEMorphologyElement::sEnumInfo[1] =
+nsSVGElement::EnumInfo SVGFEMorphologyElement::sEnumInfo[1] =
 {
   { &nsGkAtoms::_operator,
     sOperatorMap,
-    nsSVGFEMorphologyElement::SVG_OPERATOR_ERODE
+    SVG_OPERATOR_ERODE
   }
 };
 
-nsSVGElement::StringInfo nsSVGFEMorphologyElement::sStringInfo[2] =
+nsSVGElement::StringInfo SVGFEMorphologyElement::sStringInfo[2] =
 {
   { &nsGkAtoms::result, kNameSpaceID_None, true },
   { &nsGkAtoms::in, kNameSpaceID_None, true }
 };
 
-NS_IMPL_NS_NEW_SVG_ELEMENT(FEMorphology)
-
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ADDREF_INHERITED(nsSVGFEMorphologyElement,nsSVGFEMorphologyElementBase)
-NS_IMPL_RELEASE_INHERITED(nsSVGFEMorphologyElement,nsSVGFEMorphologyElementBase)
+NS_IMPL_ADDREF_INHERITED(SVGFEMorphologyElement,SVGFEMorphologyElementBase)
+NS_IMPL_RELEASE_INHERITED(SVGFEMorphologyElement,SVGFEMorphologyElementBase)
 
-DOMCI_NODE_DATA(SVGFEMorphologyElement, nsSVGFEMorphologyElement)
-
-NS_INTERFACE_TABLE_HEAD(nsSVGFEMorphologyElement)
-  NS_NODE_INTERFACE_TABLE5(nsSVGFEMorphologyElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement,
-                           nsIDOMSVGFilterPrimitiveStandardAttributes,
-                           nsIDOMSVGFEMorphologyElement)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEMorphologyElement)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGFEMorphologyElementBase)
+NS_INTERFACE_TABLE_HEAD(SVGFEMorphologyElement)
+  NS_NODE_INTERFACE_TABLE3(SVGFEMorphologyElement, nsIDOMNode, nsIDOMElement,
+                           nsIDOMSVGElement)
+NS_INTERFACE_MAP_END_INHERITING(SVGFEMorphologyElementBase)
 
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
 
-NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEMorphologyElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEMorphologyElement)
 
 
 //----------------------------------------------------------------------
-// nsSVGFEMorphologyElement methods
+// SVGFEMorphologyElement methods
 
-/* readonly attribute nsIDOMSVGAnimatedString in1; */
-NS_IMETHODIMP nsSVGFEMorphologyElement::GetIn1(nsIDOMSVGAnimatedString * *aIn)
+already_AddRefed<nsIDOMSVGAnimatedString>
+SVGFEMorphologyElement::In1()
 {
-  return mStringAttributes[IN1].ToDOMAnimatedString(aIn, this);
+  return mStringAttributes[IN1].ToDOMAnimatedString(this);
 }
 
-/* readonly attribute nsIDOMSVGAnimatedEnumeration operator; */
-NS_IMETHODIMP nsSVGFEMorphologyElement::GetOperator(nsIDOMSVGAnimatedEnumeration * *aOperator)
+already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+SVGFEMorphologyElement::Operator()
 {
-  return mEnumAttributes[OPERATOR].ToDOMAnimatedEnum(aOperator, this);
+  return mEnumAttributes[OPERATOR].ToDOMAnimatedEnum(this);
 }
 
-/* readonly attribute nsIDOMSVGAnimatedNumber radiusX; */
-NS_IMETHODIMP nsSVGFEMorphologyElement::GetRadiusX(nsIDOMSVGAnimatedNumber * *aX)
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGFEMorphologyElement::RadiusX()
 {
-  return mNumberPairAttributes[RADIUS].ToDOMAnimatedNumber(aX, nsSVGNumberPair::eFirst, this);
+  return mNumberPairAttributes[RADIUS].ToDOMAnimatedNumber(nsSVGNumberPair::eFirst, this);
 }
 
-/* readonly attribute nsIDOMSVGAnimatedNumber radiusY; */
-NS_IMETHODIMP nsSVGFEMorphologyElement::GetRadiusY(nsIDOMSVGAnimatedNumber * *aY)
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGFEMorphologyElement::RadiusY()
 {
-  return mNumberPairAttributes[RADIUS].ToDOMAnimatedNumber(aY, nsSVGNumberPair::eSecond, this);
-}
-
-NS_IMETHODIMP
-nsSVGFEMorphologyElement::SetRadius(float rx, float ry)
-{
-  NS_ENSURE_FINITE2(rx, ry, NS_ERROR_ILLEGAL_VALUE);
-  mNumberPairAttributes[RADIUS].SetBaseValues(rx, ry, this);
-  return NS_OK;
+  return mNumberPairAttributes[RADIUS].ToDOMAnimatedNumber(nsSVGNumberPair::eSecond, this);
 }
 
 void
-nsSVGFEMorphologyElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
+SVGFEMorphologyElement::SetRadius(float rx, float ry)
+{
+  mNumberPairAttributes[RADIUS].SetBaseValues(rx, ry, this);
+}
+
+void
+SVGFEMorphologyElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
 {
   aSources.AppendElement(nsSVGStringInfo(&mStringAttributes[IN1], this));
 }
 
 nsIntRect
-nsSVGFEMorphologyElement::InflateRect(const nsIntRect& aRect,
-                                      const nsSVGFilterInstance& aInstance)
+SVGFEMorphologyElement::InflateRect(const nsIntRect& aRect,
+                                    const nsSVGFilterInstance& aInstance)
 {
   int32_t rx, ry;
   GetRXY(&rx, &ry, aInstance);
@@ -111,22 +117,22 @@ nsSVGFEMorphologyElement::InflateRect(const nsIntRect& aRect,
 }
 
 nsIntRect
-nsSVGFEMorphologyElement::ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBoxes,
+SVGFEMorphologyElement::ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBoxes,
         const nsSVGFilterInstance& aInstance)
 {
   return InflateRect(aSourceBBoxes[0], aInstance);
 }
 
 void
-nsSVGFEMorphologyElement::ComputeNeededSourceBBoxes(const nsIntRect& aTargetBBox,
+SVGFEMorphologyElement::ComputeNeededSourceBBoxes(const nsIntRect& aTargetBBox,
           nsTArray<nsIntRect>& aSourceBBoxes, const nsSVGFilterInstance& aInstance)
 {
   aSourceBBoxes[0] = InflateRect(aTargetBBox, aInstance);
 }
 
 nsIntRect
-nsSVGFEMorphologyElement::ComputeChangeBBox(const nsTArray<nsIntRect>& aSourceChangeBoxes,
-                                            const nsSVGFilterInstance& aInstance)
+SVGFEMorphologyElement::ComputeChangeBBox(const nsTArray<nsIntRect>& aSourceChangeBoxes,
+                                          const nsSVGFilterInstance& aInstance)
 {
   return InflateRect(aSourceChangeBoxes[0], aInstance);
 }
@@ -134,8 +140,8 @@ nsSVGFEMorphologyElement::ComputeChangeBBox(const nsTArray<nsIntRect>& aSourceCh
 #define MORPHOLOGY_EPSILON 0.0001
 
 void
-nsSVGFEMorphologyElement::GetRXY(int32_t *aRX, int32_t *aRY,
-                                 const nsSVGFilterInstance& aInstance)
+SVGFEMorphologyElement::GetRXY(int32_t *aRX, int32_t *aRY,
+                               const nsSVGFilterInstance& aInstance)
 {
   // Subtract an epsilon here because we don't want a value that's just
   // slightly larger than an integer to round up to the next integer; it's
@@ -152,10 +158,10 @@ nsSVGFEMorphologyElement::GetRXY(int32_t *aRX, int32_t *aRY,
 }
 
 nsresult
-nsSVGFEMorphologyElement::Filter(nsSVGFilterInstance *instance,
-                                 const nsTArray<const Image*>& aSources,
-                                 const Image* aTarget,
-                                 const nsIntRect& rect)
+SVGFEMorphologyElement::Filter(nsSVGFilterInstance* instance,
+                               const nsTArray<const Image*>& aSources,
+                               const Image* aTarget,
+                               const nsIntRect& rect)
 {
   int32_t rx, ry;
   GetRXY(&rx, &ry, *instance);
@@ -198,9 +204,9 @@ nsSVGFEMorphologyElement::Filter(nsSVGFilterInstance *instance,
           for (int32_t i = 0; i < 4; i++) {
             uint8_t pixel = sourceData[y1 * stride + 4 * x1 + i];
             if ((extrema[i] > pixel &&
-                 op == nsSVGFEMorphologyElement::SVG_OPERATOR_ERODE) ||
+                 op == SVG_OPERATOR_ERODE) ||
                 (extrema[i] < pixel &&
-                 op == nsSVGFEMorphologyElement::SVG_OPERATOR_DILATE)) {
+                 op == SVG_OPERATOR_DILATE)) {
               extrema[i] = pixel;
             }
           }
@@ -216,10 +222,10 @@ nsSVGFEMorphologyElement::Filter(nsSVGFilterInstance *instance,
 }
 
 bool
-nsSVGFEMorphologyElement::AttributeAffectsRendering(int32_t aNameSpaceID,
-                                                    nsIAtom* aAttribute) const
+SVGFEMorphologyElement::AttributeAffectsRendering(int32_t aNameSpaceID,
+                                                  nsIAtom* aAttribute) const
 {
-  return nsSVGFEMorphologyElementBase::AttributeAffectsRendering(aNameSpaceID, aAttribute) ||
+  return SVGFEMorphologyElementBase::AttributeAffectsRendering(aNameSpaceID, aAttribute) ||
          (aNameSpaceID == kNameSpaceID_None &&
           (aAttribute == nsGkAtoms::in ||
            aAttribute == nsGkAtoms::radius ||
@@ -230,21 +236,21 @@ nsSVGFEMorphologyElement::AttributeAffectsRendering(int32_t aNameSpaceID,
 // nsSVGElement methods
 
 nsSVGElement::NumberPairAttributesInfo
-nsSVGFEMorphologyElement::GetNumberPairInfo()
+SVGFEMorphologyElement::GetNumberPairInfo()
 {
   return NumberPairAttributesInfo(mNumberPairAttributes, sNumberPairInfo,
                                   ArrayLength(sNumberPairInfo));
 }
 
 nsSVGElement::EnumAttributesInfo
-nsSVGFEMorphologyElement::GetEnumInfo()
+SVGFEMorphologyElement::GetEnumInfo()
 {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
                             ArrayLength(sEnumInfo));
 }
 
 nsSVGElement::StringAttributesInfo
-nsSVGFEMorphologyElement::GetStringInfo()
+SVGFEMorphologyElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               ArrayLength(sStringInfo));
