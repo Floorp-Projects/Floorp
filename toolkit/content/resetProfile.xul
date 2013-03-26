@@ -18,6 +18,7 @@
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             title="&resetProfile.dialog.title;"
             buttons="accept,cancel"
+            defaultButton="cancel"
             buttonlabelaccept="&resetProfile.dialog.button.label;"
             ondialogaccept="return onResetProfileAccepted();"
             ondialogcancel="window.close();"
