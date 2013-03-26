@@ -9,6 +9,7 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/FileUtils.jsm");
 
 this.EXPORTED_SYMBOLS = ["FreeSpaceWatcher"];
 
@@ -42,15 +43,7 @@ this.FreeSpaceWatcher = {
       currentStatus: null,
       notify: function(aTimer) {
         try {
-          let deviceStorage = Services.wm.getMostRecentWindow("navigator:browser")
-                                         .navigator.getDeviceStorage("apps");
-          let req = deviceStorage.freeSpace();
-          req.onsuccess = req.onerror = function statResult(e) {
-            if (!e.target.result) {
-              return;
-            }
-
-            let freeBytes = e.target.result;
+          let checkFreeSpace = function (freeBytes) {
             debug("Free bytes: " + freeBytes);
             let newStatus = freeBytes > aThreshold;
             if (newStatus != callback.currentStatus) {
@@ -58,8 +51,44 @@ this.FreeSpaceWatcher = {
               aOnStatusChange(newStatus ? "free" : "full");
               callback.currentStatus = newStatus;
             }
+          };
+
+          let deviceStorage = Services.wm.getMostRecentWindow("navigator:browser")
+                                         .navigator.getDeviceStorage("apps");
+          if (deviceStorage) {
+            let req = deviceStorage.freeSpace();
+            req.onsuccess = req.onerror = function statResult(e) {
+              if (!e.target.result) {
+                return;
+              }
+
+              let freeBytes = e.target.result;
+              checkFreeSpace(freeBytes);
+            }
+          } else {
+            // deviceStorage isn't available, so use the webappsDir instead.
+            // This needs to be moved from a hardcoded string to DIRECTORY_NAME
+            // in AppsUtils. See bug 852685.
+            let dir = FileUtils.getDir("webappsDir", ["webapps"], true, true);
+            let freeBytes;
+            try {
+              freeBytes = dir.diskSpaceAvailable;
+            } catch(e) {
+              // If disk space information isn't available, we should assume
+              // that there is enough free space, and that we'll fail when
+              // we actually run out of disk space.
+              callback.currentStatus = true;
+            }
+            if (freeBytes) {
+              // We have disk space information. Call this here so that
+              // any exceptions are caught in the outer catch block.
+              checkFreeSpace(freeBytes);
+            }
           }
-        } catch(e) { debug(e); }
+        } catch(e) {
+          // If the aOnStatusChange callback has errored we'll end up here.
+          debug(e);
+        }
       }
     }
 

@@ -42,6 +42,7 @@
 #include "nsISelectionPrivate.h"
 #include "nsITransferable.h" // for kUnicodeMime
 #include "nsContentUtils.h"
+#include "nsNodeUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsReadableUtils.h"
 #include "nsTArray.h"
@@ -495,7 +496,8 @@ nsDocumentEncoder::SerializeToStringRecursive(nsINode* aNode,
 
   nsINode* node = serializeClonedChildren ? maybeFixedNode : aNode;
 
-  for (nsINode* child = node->GetFirstChild(); child;
+  for (nsINode* child = nsNodeUtils::GetFirstChildOfTemplateOrNode(node);
+       child;
        child = child->GetNextSibling()) {
     rv = SerializeToStringRecursive(child, aStr, false);
     NS_ENSURE_SUCCESS(rv, rv);

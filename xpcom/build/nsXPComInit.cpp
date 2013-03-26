@@ -439,8 +439,14 @@ NS_InitXPCOM2(nsIServiceManager* *result,
     // Create the Component/Service Manager
     nsComponentManagerImpl::gComponentManager = new nsComponentManagerImpl();
     NS_ADDREF(nsComponentManagerImpl::gComponentManager);
-    
-    rv = nsCycleCollector_startup();
+
+    // Global cycle collector initialization.
+    if (!nsCycleCollector_init()) {
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    // And start it up for this thread too.
+    rv = nsCycleCollector_startup(CCSingleThread);
     if (NS_FAILED(rv)) return rv;
 
     rv = nsComponentManagerImpl::gComponentManager->Init();

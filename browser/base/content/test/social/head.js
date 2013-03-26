@@ -251,3 +251,11 @@ function addWindowListener(aURL, aCallback) {
     onWindowTitleChange: function(aXULWindow, aNewTitle) { }
   });
 }
+
+function addTab(url, callback) {
+  let tab = gBrowser.selectedTab = gBrowser.addTab(url, {skipAnimation: true});
+  tab.linkedBrowser.addEventListener("load", function tabLoad(event) {
+    tab.linkedBrowser.removeEventListener("load", tabLoad, true);
+    executeSoon(function() {callback(tab)});
+  }, true);
+}

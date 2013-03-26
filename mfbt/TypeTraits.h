@@ -17,6 +17,8 @@
 
 namespace mozilla {
 
+/* 20.9.3 Helper classes [meta.help] */
+
 /**
  * Helper class used as a base for various type traits, exposed publicly
  * because <type_traits> exposes it as well.
@@ -32,6 +34,78 @@ struct IntegralConstant
 /** Convenient aliases. */
 typedef IntegralConstant<bool, true> TrueType;
 typedef IntegralConstant<bool, false> FalseType;
+
+/* 20.9.4 Unary type traits [meta.unary] */
+
+/* 20.9.4.1 Primary type categories [meta.unary.cat] */
+
+/**
+ * IsPointer determines whether a type is a pointer type (but not a pointer-to-
+ * member type).
+ *
+ * mozilla::IsPointer<struct S*>::value is true;
+ * mozilla::IsPointer<int**>::value is true;
+ * mozilla::IsPointer<void (*)(void)>::value is true;
+ * mozilla::IsPointer<int>::value is false;
+ * mozilla::IsPointer<struct S>::value is false.
+ */
+template<typename T>
+struct IsPointer : FalseType {};
+
+template<typename T>
+struct IsPointer<T*> : TrueType {};
+
+/* 20.9.4.2 Composite type traits [meta.unary.comp] */
+
+/* 20.9.4.3 Type properties [meta.unary.prop] */
+
+/**
+ * Traits class for identifying POD types.  Until C++11 there's no automatic
+ * way to detect PODs, so for the moment this is done manually.  Users may
+ * define specializations of this class that inherit from mozilla::TrueType and
+ * mozilla::FalseType (or equivalently mozilla::IntegralConstant<bool, true or
+ * false>, or conveniently from mozilla::IsPod for composite types) as needed to
+ * ensure correct IsPod behavior.
+ */
+template<typename T>
+struct IsPod : public FalseType {};
+
+template<> struct IsPod<char>               : TrueType {};
+template<> struct IsPod<signed char>        : TrueType {};
+template<> struct IsPod<unsigned char>      : TrueType {};
+template<> struct IsPod<short>              : TrueType {};
+template<> struct IsPod<unsigned short>     : TrueType {};
+template<> struct IsPod<int>                : TrueType {};
+template<> struct IsPod<unsigned int>       : TrueType {};
+template<> struct IsPod<long>               : TrueType {};
+template<> struct IsPod<unsigned long>      : TrueType {};
+template<> struct IsPod<long long>          : TrueType {};
+template<> struct IsPod<unsigned long long> : TrueType {};
+template<> struct IsPod<bool>               : TrueType {};
+template<> struct IsPod<float>              : TrueType {};
+template<> struct IsPod<double>             : TrueType {};
+template<> struct IsPod<wchar_t>            : TrueType {};
+template<typename T> struct IsPod<T*>       : TrueType {};
+
+/* 20.9.5 Type property queries [meta.unary.prop.query] */
+
+/* 20.9.6 Relationships between types [meta.rel] */
+
+/**
+ * IsSame tests whether two types are the same type.
+ *
+ * mozilla::IsSame<int, int>::value is true;
+ * mozilla::IsSame<int*, int*>::value is true;
+ * mozilla::IsSame<int, unsigned int>::value is false;
+ * mozilla::IsSame<void, void>::value is true;
+ * mozilla::IsSame<const int, int>::value is false;
+ * mozilla::IsSame<struct S, struct S>::value is true.
+ */
+template<typename T, typename U>
+struct IsSame : FalseType {};
+
+template<typename T>
+struct IsSame<T, T> : TrueType {};
 
 namespace detail {
 
@@ -85,9 +159,6 @@ struct BaseOfTester<Type, const Type> : TrueType {};
 
 } /* namespace detail */
 
-template<bool Condition, typename A, typename B>
-struct Conditional;
-
 /*
  * IsBaseOf allows to know whether a given class is derived from another.
  *
@@ -102,7 +173,7 @@ struct Conditional;
  */
 template<class Base, class Derived>
 struct IsBaseOf
-  : Conditional<detail::BaseOfTester<Base, Derived>::value, TrueType, FalseType>::Type
+  : IntegralConstant<bool, detail::BaseOfTester<Base, Derived>::value>
 {};
 
 namespace detail {
@@ -149,26 +220,22 @@ struct ConvertibleTester
  */
 template<typename From, typename To>
 struct IsConvertible
-  : Conditional<detail::ConvertibleTester<From, To>::value, TrueType, FalseType>::Type
+  : IntegralConstant<bool, detail::ConvertibleTester<From, To>::value>
 {};
 
-/**
- * Conditional selects a class between two, depending on a given boolean value.
- *
- * mozilla::Conditional<true, A, B>::Type is A;
- * mozilla::Conditional<false, A, B>::Type is B;
- */
-template<bool Condition, typename A, typename B>
-struct Conditional
-{
-    typedef A Type;
-};
+/* 20.9.7 Transformations between types [meta.trans] */
 
-template<class A, class B>
-struct Conditional<false, A, B>
-{
-    typedef B Type;
-};
+/* 20.9.7.1 Const-volatile modifications [meta.trans.cv] */
+
+/* 20.9.7.2 Reference modifications [meta.trans.ref] */
+
+/* 20.9.7.3 Sign modifications [meta.trans.sign] */
+
+/* 20.9.7.4 Array modifications [meta.trans.arr] */
+
+/* 20.9.7.5 Pointer modifications [meta.trans.ptr] */
+
+/* 20.9.7.6 Other transformations [meta.trans.other] */
 
 /**
  * EnableIf is a struct containing a typedef of T if and only if B is true.
@@ -199,64 +266,22 @@ struct EnableIf<true, T>
 };
 
 /**
- * IsSame tests whether two types are the same type.
+ * Conditional selects a class between two, depending on a given boolean value.
  *
- * mozilla::IsSame<int, int>::value is true;
- * mozilla::IsSame<int*, int*>::value is true;
- * mozilla::IsSame<int, unsigned int>::value is false;
- * mozilla::IsSame<void, void>::value is true;
- * mozilla::IsSame<const int, int>::value is false;
- * mozilla::IsSame<struct S, struct S>::value is true.
+ * mozilla::Conditional<true, A, B>::Type is A;
+ * mozilla::Conditional<false, A, B>::Type is B;
  */
-template<typename T, typename U>
-struct IsSame : FalseType {};
+template<bool Condition, typename A, typename B>
+struct Conditional
+{
+    typedef A Type;
+};
 
-template<typename T>
-struct IsSame<T, T> : TrueType {};
-
-/**
- * Traits class for identifying POD types.  Until C++11 there's no automatic
- * way to detect PODs, so for the moment this is done manually.  Users may
- * define specializations of this class that inherit from mozilla::TrueType and
- * mozilla::FalseType (or equivalently mozilla::IntegralConstant<bool, true or
- * false>, or conveniently from mozilla::IsPod for composite types) as needed to
- * ensure correct IsPod behavior.
- */
-template<typename T>
-struct IsPod : public FalseType {};
-
-template<> struct IsPod<char>               : TrueType {};
-template<> struct IsPod<signed char>        : TrueType {};
-template<> struct IsPod<unsigned char>      : TrueType {};
-template<> struct IsPod<short>              : TrueType {};
-template<> struct IsPod<unsigned short>     : TrueType {};
-template<> struct IsPod<int>                : TrueType {};
-template<> struct IsPod<unsigned int>       : TrueType {};
-template<> struct IsPod<long>               : TrueType {};
-template<> struct IsPod<unsigned long>      : TrueType {};
-template<> struct IsPod<long long>          : TrueType {};
-template<> struct IsPod<unsigned long long> : TrueType {};
-template<> struct IsPod<bool>               : TrueType {};
-template<> struct IsPod<float>              : TrueType {};
-template<> struct IsPod<double>             : TrueType {};
-template<> struct IsPod<wchar_t>            : TrueType {};
-template<typename T> struct IsPod<T*>       : TrueType {};
-
-/**
- * IsPointer determines whether a type is a pointer type (but not a pointer-to-
- * member type).
- *
- * mozilla::IsPointer<struct S*>::value is true;
- * mozilla::IsPointer<int**>::value is true;
- * mozilla::IsPointer<void (*)(void)>::value is true;
- * mozilla::IsPointer<int>::value is false;
- * mozilla::IsPointer<struct S>::value is false.
- */
-template<typename T>
-struct IsPointer : FalseType {};
-
-template<typename T>
-struct IsPointer<T*> : TrueType {};
+template<class A, class B>
+struct Conditional<false, A, B>
+{
+    typedef B Type;
+};
 
 } /* namespace mozilla */
 

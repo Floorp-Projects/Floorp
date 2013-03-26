@@ -257,6 +257,8 @@ static const PRUnichar sHTMLTagUnicodeName_th[] =
   {'t', 'h', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_thead[] =
   {'t', 'h', 'e', 'a', 'd', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_template[] =
+  {'t', 'e', 'm', 'p', 'l', 'a', 't', 'e', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_time[] =
   {'t', 'i', 'm', 'e', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_title[] =

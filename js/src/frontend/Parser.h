@@ -155,10 +155,10 @@ struct ParseContext                 /* tree context for semantic checks */
     bool generateFunctionBindings(JSContext *cx, InternalHandle<Bindings*> bindings) const;
 
   public:
-    Node             yieldNode;     /* parse node for a yield expression that might
-                                       be an error if we turn out to be inside a
-                                       generator expression */
-
+    uint32_t         yieldOffset;   /* offset of a yield expression that might
+                                       be an error if we turn out to be inside
+                                       a generator expression.  Zero means
+                                       there isn't one. */
   private:
     ParseContext    **parserPC;     /* this points to the Parser's active pc
                                        and holds either |this| or one of
@@ -296,7 +296,13 @@ struct Parser : private AutoGCRooter, public StrictModeGetter
     /* State specific to the kind of parse being performed. */
     ParseHandler handler;
 
+  private:
+    bool reportHelper(ParseReportKind kind, bool strict, uint32_t offset,
+                      unsigned errorNumber, va_list args);
+  public:
     bool report(ParseReportKind kind, bool strict, Node pn, unsigned errorNumber, ...);
+    bool reportWithOffset(ParseReportKind kind, bool strict, uint32_t offset, unsigned errorNumber,
+                          ...);
 
     Parser(JSContext *cx, const CompileOptions &options,
            const jschar *chars, size_t length, bool foldConstants);
