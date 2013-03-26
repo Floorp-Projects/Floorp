@@ -69,15 +69,6 @@ FrozenImage::GetImageContainer(layers::LayerManager* aManager,
 }
 
 NS_IMETHODIMP
-FrozenImage::ExtractFrame(uint32_t aWhichFrame,
-                          const nsIntRect& aRegion,
-                          uint32_t aFlags,
-                          imgIContainer** _retval)
-{
-  return InnerImage()->ExtractFrame(FRAME_FIRST, aRegion, aFlags, _retval);
-}
-
-NS_IMETHODIMP
 FrozenImage::Draw(gfxContext* aContext,
                   gfxPattern::GraphicsFilter aFilter,
                   const gfxMatrix& aUserSpaceToImageSpace,
