@@ -69,6 +69,8 @@ public:
   using nsDocument::GetLocation;
 
 protected:
+  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope) MOZ_OVERRIDE;
+
   // mChannelIsPending indicates whether we're currently asynchronously loading
   // data from mChannel (via document.load() or normal load).  It's set to true
   // when we first find out about the channel (StartDocumentLoad) and set to

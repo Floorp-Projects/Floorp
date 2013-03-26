@@ -272,6 +272,7 @@ webidl_files = \
   UndoManager.webidl \
   URLUtils.webidl \
   USSDReceivedEvent.webidl \
+  XMLDocument.webidl \
   XMLHttpRequest.webidl \
   XMLHttpRequestEventTarget.webidl \
   XMLHttpRequestUpload.webidl \
