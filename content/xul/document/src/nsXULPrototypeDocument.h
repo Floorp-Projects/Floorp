@@ -18,18 +18,23 @@ class nsIAtom;
 class nsIPrincipal;
 class nsIURI;
 class nsNodeInfoManager;
-class nsXULDocument;
 class nsXULPrototypeElement;
 class nsXULPrototypePI;
 class nsXULPDGlobalObject;
 struct JSTracer;
+
+namespace mozilla {
+namespace dom {
+class XULDocument;
+} // namespace dom
+} // namespace mozilla
 
 /**
  * A "prototype" document that stores shared document information
  * for the XUL cache.
  * Among other things, stores the tree of nsXULPrototype*
  * objects, from which the real DOM tree is built later in
- * nsXULDocument::ResumeWalk.
+ * XULDocument::ResumeWalk.
  */
 class nsXULPrototypeDocument : public nsIScriptGlobalObjectOwner,
                                public nsISerializable
@@ -93,10 +98,10 @@ public:
     /**
      * If current prototype document has not yet finished loading,
      * appends aDocument to the list of documents to notify (via
-     * nsXULDocument::OnPrototypeLoadDone()) and sets aLoaded to false.
+     * XULDocument::OnPrototypeLoadDone()) and sets aLoaded to false.
      * Otherwise sets aLoaded to true.
      */
-    nsresult AwaitLoadDone(nsXULDocument* aDocument, bool* aResult);
+    nsresult AwaitLoadDone(mozilla::dom::XULDocument* aDocument, bool* aResult);
 
     /**
      * Notifies each document registered via AwaitLoadDone on this
@@ -130,7 +135,7 @@ protected:
     nsRefPtr<nsXULPDGlobalObject> mGlobalObject;
 
     bool mLoaded;
-    nsTArray< nsRefPtr<nsXULDocument> > mPrototypeWaiters;
+    nsTArray< nsRefPtr<mozilla::dom::XULDocument> > mPrototypeWaiters;
 
     nsRefPtr<nsNodeInfoManager> mNodeInfoManager;
 
