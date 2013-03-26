@@ -206,6 +206,7 @@ webidl_files = \
   SVGFEImageElement.webidl \
   SVGFEMergeElement.webidl \
   SVGFEMergeNodeElement.webidl \
+  SVGFEMorphologyElement.webidl \
   SVGFEOffsetElement.webidl \
   SVGFEPointLightElement.webidl \
   SVGFESpecularLightingElement.webidl \
