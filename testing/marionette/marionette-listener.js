@@ -965,14 +965,6 @@ function actions(finger, touchId, command_id, i){
       touch = createATouch(el, corx, cory, touchId);
       lastTouch = touch;
       emitTouchEvent('touchstart', touch);
-      // check if it's a long press
-      // standard waiting time to fire contextmenu
-      let standard = Services.prefs.getIntPref("ui.click_hold_context_menus.delay");
-      // long press only happens when wait follows press
-      if (finger[i][0] == 'wait' && finger[i][1] != null && finger[i][1]*1000 >= standard) {
-        finger[i][1] = finger[i][1] - standard/1000;
-        finger.splice(i, 0, ['wait', standard/1000], ['longPress']);
-      }
       actions(finger,touchId, command_id, i);
       break;
     case 'release':
@@ -1033,14 +1025,6 @@ function actions(finger, touchId, command_id, i){
       touch = lastTouch;
       emitTouchEvent('touchcancel', touch);
       lastTouch = null;
-      actions(finger, touchId, command_id, i);
-      break;
-    case 'longPress':
-      let event = curWindow.document.createEvent('HTMLEvents');
-      event.initEvent('contextmenu',
-                      true,
-                      true);
-      lastTouch.target.dispatchEvent(event);
       actions(finger, touchId, command_id, i);
       break;
   }
