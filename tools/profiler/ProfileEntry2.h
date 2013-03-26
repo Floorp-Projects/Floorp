@@ -6,6 +6,7 @@
 #ifndef MOZ_PROFILE_ENTRY_H
 #define MOZ_PROFILE_ENTRY_H
 
+#include "GeckoProfilerImpl.h"
 #include "mozilla/Mutex.h"
 
 class ThreadProfile2;

@@ -18,7 +18,7 @@
 #include "mozilla/storage.h"
 #include "mozilla/Util.h"
 
-#include "sampler.h"
+#include "GeckoProfiler.h"
 
 #define BOOKMARKS_TO_KEYWORDS_INITIAL_CACHE_SIZE 64
 #define RECENT_BOOKMARKS_INITIAL_CACHE_SIZE 10
@@ -50,10 +50,10 @@
 using namespace mozilla;
 
 // These columns sit to the right of the kGetInfoIndex_* columns.
-const int32_t nsNavBookmarks::kGetChildrenIndex_Position = 15;
-const int32_t nsNavBookmarks::kGetChildrenIndex_Type = 16;
-const int32_t nsNavBookmarks::kGetChildrenIndex_PlaceID = 17;
-const int32_t nsNavBookmarks::kGetChildrenIndex_Guid = 18;
+const int32_t nsNavBookmarks::kGetChildrenIndex_Position = 14;
+const int32_t nsNavBookmarks::kGetChildrenIndex_Type = 15;
+const int32_t nsNavBookmarks::kGetChildrenIndex_PlaceID = 16;
+const int32_t nsNavBookmarks::kGetChildrenIndex_Guid = 17;
 
 using namespace mozilla::places;
 
@@ -641,7 +641,7 @@ nsNavBookmarks::InsertBookmark(int64_t aFolder,
 NS_IMETHODIMP
 nsNavBookmarks::RemoveItem(int64_t aItemId)
 {
-  SAMPLE_LABEL("bookmarks", "RemoveItem");
+  PROFILER_LABEL("bookmarks", "RemoveItem");
   NS_ENSURE_ARG(!IsRoot(aItemId));
 
   BookmarkData bookmark;
@@ -1061,7 +1061,7 @@ nsNavBookmarks::GetDescendantChildren(int64_t aFolderId,
     // item_child, and folder_child from moz_bookmarks.
     nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
       "SELECT h.id, h.url, IFNULL(b.title, h.title), h.rev_host, h.visit_count, "
-             "h.last_visit_date, f.url, null, b.id, b.dateAdded, b.lastModified, "
+             "h.last_visit_date, f.url, b.id, b.dateAdded, b.lastModified, "
              "b.parent, null, h.frecency, h.hidden, b.position, b.type, b.fk, "
              "b.guid "
       "FROM moz_bookmarks b "
@@ -1128,7 +1128,7 @@ nsNavBookmarks::GetDescendantChildren(int64_t aFolderId,
 NS_IMETHODIMP
 nsNavBookmarks::RemoveFolderChildren(int64_t aFolderId)
 {
-  SAMPLE_LABEL("bookmarks", "RemoveFolderChilder");
+  PROFILER_LABEL("bookmarks", "RemoveFolderChilder");
   NS_ENSURE_ARG_MIN(aFolderId, 1);
   NS_ENSURE_ARG(aFolderId != mRoot);
 
@@ -1765,7 +1765,7 @@ nsNavBookmarks::QueryFolderChildren(
   // item_child, and folder_child from moz_bookmarks.
   nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
     "SELECT h.id, h.url, IFNULL(b.title, h.title), h.rev_host, h.visit_count, "
-           "h.last_visit_date, f.url, null, b.id, b.dateAdded, b.lastModified, "
+           "h.last_visit_date, f.url, b.id, b.dateAdded, b.lastModified, "
            "b.parent, null, h.frecency, h.hidden, b.position, b.type, b.fk, "
            "b.guid "
     "FROM moz_bookmarks b "
@@ -1899,7 +1899,7 @@ nsNavBookmarks::QueryFolderChildrenAsync(
   // item_child, and folder_child from moz_bookmarks.
   nsCOMPtr<mozIStorageAsyncStatement> stmt = mDB->GetAsyncStatement(
     "SELECT h.id, h.url, IFNULL(b.title, h.title), h.rev_host, h.visit_count, "
-           "h.last_visit_date, f.url, null, b.id, b.dateAdded, b.lastModified, "
+           "h.last_visit_date, f.url, b.id, b.dateAdded, b.lastModified, "
            "b.parent, null, h.frecency, h.hidden, b.position, b.type, b.fk, "
            "b.guid "
     "FROM moz_bookmarks b "
@@ -2633,7 +2633,7 @@ nsNavBookmarks::EnsureKeywordsHash() {
 NS_IMETHODIMP
 nsNavBookmarks::RunInBatchMode(nsINavHistoryBatchCallback* aCallback,
                                nsISupports* aUserData) {
-  SAMPLE_LABEL("bookmarks", "RunInBatchMode");
+  PROFILER_LABEL("bookmarks", "RunInBatchMode");
   NS_ENSURE_ARG(aCallback);
 
   mBatching = true;

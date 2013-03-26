@@ -95,6 +95,14 @@ public class ImmutableViewportMetrics {
         return viewportRectBottom - viewportRectTop;
     }
 
+    public float getWidthWithoutMargins() {
+        return viewportRectRight - viewportRectLeft - fixedLayerMarginLeft - fixedLayerMarginRight;
+    }
+
+    public float getHeightWithoutMargins() {
+        return viewportRectBottom - viewportRectTop - fixedLayerMarginTop - fixedLayerMarginBottom;
+    }
+
     public PointF getOrigin() {
         return new PointF(viewportRectLeft, viewportRectTop);
     }

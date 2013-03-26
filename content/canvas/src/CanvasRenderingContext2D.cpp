@@ -1148,7 +1148,7 @@ CanvasRenderingContext2D::SetTransform(double m11, double m12,
 JSObject*
 MatrixToJSObject(JSContext* cx, const Matrix& matrix, ErrorResult& error)
 {
-  jsval elts[] = {
+  JS::Value elts[] = {
     DOUBLE_TO_JSVAL(matrix._11), DOUBLE_TO_JSVAL(matrix._12),
     DOUBLE_TO_JSVAL(matrix._21), DOUBLE_TO_JSVAL(matrix._22),
     DOUBLE_TO_JSVAL(matrix._31), DOUBLE_TO_JSVAL(matrix._32)
@@ -1175,7 +1175,7 @@ ObjectToMatrix(JSContext* cx, JSObject& obj, Matrix& matrix, ErrorResult& error)
   Float* elts[] = { &matrix._11, &matrix._12, &matrix._21, &matrix._22,
                     &matrix._31, &matrix._32 };
   for (uint32_t i = 0; i < 6; ++i) {
-    jsval elt;
+    JS::Value elt;
     double d;
     if (!JS_GetElement(cx, &obj, i, &elt)) {
       error.Throw(NS_ERROR_FAILURE);

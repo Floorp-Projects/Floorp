@@ -8,4 +8,5 @@ function testLength() {
   assertEq(p.length, a.length);
 }
 
-testLength();
+if (getBuildConfiguration().parallelJS)
+  testLength();

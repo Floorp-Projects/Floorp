@@ -6,4 +6,4 @@ function testReduceOne() {
     assertEq(r, 1);
 }
 
-testReduceOne();
+if (getBuildConfiguration().parallelJS) testReduceOne();

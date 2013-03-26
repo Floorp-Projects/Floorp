@@ -23,4 +23,4 @@ function testReduce() {
   assertAlmostEq(actual, expected);
 }
 
-testReduce();
+if (getBuildConfiguration().parallelJS) testReduce();

@@ -20,7 +20,7 @@
 #include "nsRuleNode.h"
 #include "nsStyleContext.h"
 #include "nsStyleAnimation.h"
-#include "sampler.h"
+#include "GeckoProfiler.h"
 
 #ifdef DEBUG
 // #define NOISY_DEBUG
@@ -411,7 +411,7 @@ nsChangeHint
 nsStyleContext::CalcStyleDifference(nsStyleContext* aOther,
                                     nsChangeHint aParentHintsNotHandledForDescendants)
 {
-  SAMPLE_LABEL("nsStyleContext", "CalcStyleDifference");
+  PROFILER_LABEL("nsStyleContext", "CalcStyleDifference");
 
   NS_ABORT_IF_FALSE(NS_IsHintSubset(aParentHintsNotHandledForDescendants,
                                     nsChangeHint_Hints_NotHandledForDescendants),

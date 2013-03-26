@@ -39,7 +39,7 @@ function test() {
         setup: 'cookie remove',
         check: {
           input:  'cookie remove',
-          hints:               ' <key>',
+          hints:               ' <name>',
           markup: 'VVVVVVVVVVVVV',
           status: 'ERROR'
         },
@@ -48,7 +48,7 @@ function test() {
         setup: 'cookie set',
         check: {
           input:  'cookie set',
-          hints:            ' <key> <value> [options]',
+          hints:            ' <name> <value> [options]',
           markup: 'VVVVVVVVVV',
           status: 'ERROR'
         },
@@ -70,17 +70,23 @@ function test() {
           markup: 'VVVVVVVVVVVVVVVVVVVV',
           status: 'VALID',
           args: {
-            key: { value: 'fruit' },
+            name: { value: 'fruit' },
             value: { value: 'ban' },
             secure: { value: false },
           }
         },
       },
       {
+        setup: "cookie list",
+        exec: {
+          output: 'No cookies found for host'
+        }
+      },
+      {
         setup: "cookie set fruit banana",
         check: {
           args: {
-            key: { value: 'fruit' },
+            name: { value: 'fruit' },
             value: { value: 'banana' },
           }
         },
@@ -91,18 +97,24 @@ function test() {
       {
         setup: "cookie list",
         exec: {
-          output: /Key/
+          output: [ /fruit=banana/, /Expires:/, /Edit/ ]
         }
       },
       {
         setup: "cookie remove fruit",
         check: {
           args: {
-            key: { value: 'fruit' },
+            name: { value: 'fruit' },
           }
         },
         exec: {
           output: ""
+        }
+      },
+      {
+        setup: "cookie list",
+        exec: {
+          output: 'No cookies found for host'
         }
       },
     ]);

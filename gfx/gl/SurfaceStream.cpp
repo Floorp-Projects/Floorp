@@ -8,7 +8,7 @@
 #include "gfxPoint.h"
 #include "SharedSurface.h"
 #include "SurfaceFactory.h"
-#include "sampler.h"
+#include "GeckoProfiler.h"
 
 namespace mozilla {
 namespace gfx {
@@ -395,7 +395,7 @@ SharedSurface*
 SurfaceStream_TripleBuffer::SwapProducer(SurfaceFactory* factory,
                                          const gfxIntSize& size)
 {
-    SAMPLE_LABEL("SurfaceStream_TripleBuffer", "SwapProducer");
+    PROFILER_LABEL("SurfaceStream_TripleBuffer", "SwapProducer");
 
     MonitorAutoLock lock(mMonitor);
     if (mProducer) {
@@ -442,7 +442,7 @@ SurfaceStream_TripleBuffer_Async::~SurfaceStream_TripleBuffer_Async()
 bool
 SurfaceStream_TripleBuffer_Async::WaitForCompositor()
 {
-    SAMPLE_LABEL("SurfaceStream_TripleBuffer_Async", "WaitForCompositor");
+    PROFILER_LABEL("SurfaceStream_TripleBuffer_Async", "WaitForCompositor");
 
     // We are assumed to be locked
     while (mStaging)

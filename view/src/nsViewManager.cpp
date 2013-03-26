@@ -21,7 +21,7 @@
 #include "nsPresContext.h"
 #include "nsEventStateManager.h"
 #include "mozilla/StartupTimeline.h"
-#include "sampler.h"
+#include "GeckoProfiler.h"
 #include "nsRefreshDriver.h"
 #include "mozilla/Preferences.h"
 #include "nsContentUtils.h"
@@ -661,7 +661,7 @@ void nsViewManager::DidPaintWindow()
 void
 nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsView* aView, nsEventStatus* aStatus)
 {
-  SAMPLE_LABEL("event", "nsViewManager::DispatchEvent");
+  PROFILER_LABEL("event", "nsViewManager::DispatchEvent");
 
   if ((NS_IS_MOUSE_EVENT(aEvent) &&
        // Ignore mouse events that we synthesize.

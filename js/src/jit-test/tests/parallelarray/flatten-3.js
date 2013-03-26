@@ -21,4 +21,5 @@ function testFlatten() {
 }
 
 // FIXME(bug 844991) logical shape not implemented
-// testFlatten();
+// if (getBuildConfiguration().parallelJS)
+//   testFlatten();

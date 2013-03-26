@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <fstream>
 #include <sstream>
-#include "sps_sampler.h"
+#include "GeckoProfilerImpl.h"
 #include "platform.h"
 #include "nsXULAppAPI.h"
 #include "nsThreadUtils.h"
@@ -1223,7 +1223,7 @@ bool mozilla_sampler_is_active1()
 
 static double sResponsivenessTimes[100];
 static unsigned int sResponsivenessLoc = 0;
-void mozilla_sampler_responsiveness1(TimeStamp aTime)
+void mozilla_sampler_responsiveness1(const TimeStamp& aTime)
 {
   if (!sLastTracerEvent.IsNull()) {
     if (sResponsivenessLoc == 100) {

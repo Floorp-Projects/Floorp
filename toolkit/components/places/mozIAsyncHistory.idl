@@ -11,7 +11,7 @@ interface nsIVariant;
 #include "jsapi.h"
 %}
 
-[scriptable, uuid(1a3b1260-4bdb-45d0-a306-dc377dd9baa4)]
+[scriptable, uuid(41e4ccc9-f0c8-4cd7-9753-7a38514b8488)]
 interface mozIVisitInfo : nsISupports
 {
   /**
@@ -36,13 +36,6 @@ interface mozIVisitInfo : nsISupports
    * The referring URI of this visit.  This may be null.
    */
   readonly attribute nsIURI referrerURI;
-
-  /**
-   * The sessionId of this visit.
-   *
-   * @see nsINavHistory.idl
-   */
-  readonly attribute long long sessionId;
 };
 
 [scriptable, uuid(ad83e137-c92a-4b7b-b67e-0a318811f91e)]

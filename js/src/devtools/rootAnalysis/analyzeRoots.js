@@ -16,24 +16,27 @@ if (typeof arguments[0] != 'string' || typeof arguments[1] != 'string')
 
 var gcFunctionsFile = arguments[0];
 var gcTypesFile = arguments[1];
-var start = arguments[2]|0;
-var end = arguments[3]|0;
-var tmpfile = arguments[4];
-if (!start)
-    start = 1;
-if (!tmpfile)
-    tmpfile = "tmp.txt";
+var batch = arguments[2]|0;
+var numBatches = (arguments[3]|0) || 1;
+var tmpfile = arguments[4] || "tmp.txt";
 
 var gcFunctions = {};
 var suppressedFunctions = {};
-var gcFunctionsText = snarf(gcFunctionsFile).split('\n');
-for (var line of gcFunctionsText) {
-    if (match = /GC Function: (.*)/.exec(line))
-        gcFunctions[match[1]] = true;
-    if (match = /Suppressed Function: (.*)/.exec(line))
-        suppressedFunctions[match[1]] = true;
+assert(!system("grep 'GC Function' " + gcFunctionsFile + " > tmp.txt"));
+var text = snarf("tmp.txt").split('\n');
+assert(text.pop().length == 0);
+for (var line of text) {
+    match = /GC Function: (.*)/.exec(line);
+    gcFunctions[match[1]] = true;
 }
-gcFunctionsText = null;
+assert(!system("grep 'Suppressed Function' " + arguments[0] + " > tmp.txt"));
+text = snarf("tmp.txt").split('\n');
+assert(text.pop().length == 0);
+for (var line of text) {
+    match = /Suppressed Function: (.*)/.exec(line);
+    suppressedFunctions[match[1]] = true;
+}
+text = null;
 
 var match;
 var gcThings = {};
@@ -477,7 +480,7 @@ function processBodies()
     }
 }
 
-if (start == 1)
+if (batch == 1)
     print("Time: " + new Date);
 
 var xdb = xdbLibrary();
@@ -486,8 +489,10 @@ xdb.open("src_body.xdb");
 var minStream = xdb.min_data_stream()|0;
 var maxStream = xdb.max_data_stream()|0;
 
-start += minStream - 1;
-end += minStream - 1;
+var N = (maxStream - minStream) + 1;
+var each = Math.floor(N/numBatches);
+var start = minStream + each * (batch - 1);
+var end = Math.min(minStream + each * batch - 1, maxStream);
 
 // Find the source tree
 for (let nameIndex = minStream; nameIndex <= maxStream; nameIndex++) {

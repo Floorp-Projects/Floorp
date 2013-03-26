@@ -2056,12 +2056,12 @@ nsINode::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
       error.Throw(NS_ERROR_OUT_OF_MEMORY);                                   \
     }                                                                        \
   }                                                                          \
-  NS_IMETHODIMP nsINode::GetOn##name_(JSContext *cx, jsval *vp) {            \
+  NS_IMETHODIMP nsINode::GetOn##name_(JSContext *cx, JS::Value *vp) {        \
     EventHandlerNonNull* h = GetOn##name_();                                 \
     vp->setObjectOrNull(h ? h->Callable() : nullptr);                        \
     return NS_OK;                                                            \
   }                                                                          \
-  NS_IMETHODIMP nsINode::SetOn##name_(JSContext *cx, const jsval &v) {       \
+  NS_IMETHODIMP nsINode::SetOn##name_(JSContext *cx, const JS::Value &v) {   \
     JSObject *obj = GetWrapper();                                            \
     if (!obj) {                                                              \
       /* Just silently do nothing */                                         \

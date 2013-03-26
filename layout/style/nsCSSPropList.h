@@ -32,10 +32,12 @@
   -. 'method' is designed to be as input for CSS2Properties and similar
   callers.  It must always be the same as 'name' except it must use
   InterCaps and all hyphens ('-') must be removed.  Callers using this
-  parameter must also define the CSS_PROP_DOMPROP_PREFIXED(prop) macro,
-  either to be Moz ## prop or to just be prop, depending on whether they
-  want Moz prefixes or not (i.e., whether the use is for internal use
-  such as nsRuleData::ValueFor* or external use).
+  parameter must also define the CSS_PROP_PUBLIC_OR_PRIVATE(publicname_,
+  privatename_) macro to yield either publicname_ or privatename_.
+  The names differ in that publicname_ has Moz prefixes where they are
+  used, and also in CssFloat vs. Float.  The caller's choice depends on
+  whether the use is for internal use such as eCSSProperty_* or
+  nsRuleData::ValueFor* or external use such as exposing DOM properties.
 
   -. 'pref' is the name of a pref that controls whether the property
   is enabled.  The property is enabled if 'pref' is an empty string,
@@ -75,6 +77,9 @@
 #define CSS_PROP_SHORTHAND(name_, id_, method_, flags_, pref_) /* nothing */
 #define DEFINED_CSS_PROP_SHORTHAND
 #endif
+
+#define CSS_PROP_DOMPROP_PREFIXED(name_) \
+  CSS_PROP_PUBLIC_OR_PRIVATE(Moz ## name_, name_)
 
 #define CSS_PROP_NO_OFFSET (-1)
 
@@ -1654,7 +1659,7 @@ CSS_PROP_POSITION(
 CSS_PROP_DISPLAY(
     float,
     float,
-    CssFloat,
+    CSS_PROP_PUBLIC_OR_PRIVATE(CssFloat, Float),
     CSS_PROPERTY_PARSE_VALUE |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
     "",
@@ -3640,3 +3645,5 @@ CSS_PROP_TABLE(
 #undef CSS_PROP_SHORTHAND
 #undef DEFINED_CSS_PROP_SHORTHAND
 #endif
+
+#undef CSS_PROP_DOMPROP_PREFIXED
