@@ -18,7 +18,7 @@
 #include "nsCRT.h"
 
 #include "Image.h"
-#include "ImageFactory.h"
+#include "ImageOps.h"
 #include "nsError.h"
 #include "ImageLogging.h"
 
@@ -915,7 +915,7 @@ imgRequestProxy::GetStaticRequest(imgRequestProxy** aReturn)
   }
 
   // We are animated. We need to create a frozen version of this image.
-  nsRefPtr<Image> frozenImage = ImageFactory::Freeze(image);
+  nsRefPtr<Image> frozenImage = ImageOps::Freeze(image);
 
   // Create a static imgRequestProxy with our new extracted frame.
   nsCOMPtr<nsIPrincipal> currentPrincipal;
