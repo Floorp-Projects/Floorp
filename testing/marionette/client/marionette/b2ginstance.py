@@ -2,10 +2,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from ConfigParser import ConfigParser
 import os
 import platform
+import posixpath
+import shutil
 import subprocess
 import sys
+import tempfile
+import traceback
+
+from mozdevice import DeviceManagerADB
+import mozcrash
 
 class B2GInstance(object):
     @classmethod
@@ -68,7 +76,7 @@ class B2GInstance(object):
                 return option
         raise Exception('%s not found!' % binary)
 
-    def __init__(self, homedir=None):
+    def __init__(self, homedir=None, devicemanager=None):
         if not homedir:
             homedir = self.find_b2g_dir()
         else:
@@ -81,12 +89,56 @@ class B2GInstance(object):
         self.adb_path = self.check_adb(self.homedir)
         self.fastboot_path = self.check_fastboot(self.homedir)
         self.update_tools = os.path.join(self.homedir, 'tools', 'update-tools')
+        self._dm = devicemanager
+
+    @property
+    def dm(self):
+        if not self._dm:
+            self._dm = DeviceManagerADB(adbPath=self.adb_path)
+        return self._dm
 
     def check_file(self, filePath):
         if not os.access(filePath, os.F_OK):
             raise Exception(('File not found: %s; did you pass the B2G home '
                              'directory as the homedir parameter, or set '
                              'B2G_HOME correctly?') % filePath)
+
+    def check_remote_profiles(self, remote_profiles_ini='/data/b2g/mozilla/profiles.ini'):
+        if not self.dm.fileExists(remote_profiles_ini):
+            raise Exception("Remote file '%s' not found" % remote_profiles_ini)
+
+        local_profiles_ini = tempfile.NamedTemporaryFile()
+        self.dm.getFile(remote_profiles_ini, local_profiles_ini.name)
+        cfg = ConfigParser()
+        cfg.readfp(local_profiles_ini)
+
+        remote_profiles = []
+        for section in cfg.sections():
+            if cfg.has_option(section, 'Path'):
+                is_relative = 0
+                if cfg.has_option(section, 'IsRelative'):
+                    is_relative = cfg.getint(section, 'IsRelative')
+
+                remote_profiles.append(posixpath.join(remote_profiles_ini, cfg.get(section, 'Path'))
+                                        if is_relative else cfg.get(section, 'Path'))
+        return remote_profiles
+
+    def check_for_crashes(self, symbols_path):
+        remote_dump_dirs = [posixpath.join(p, 'minidumps') for p in self.check_remote_profiles()]
+        crashed = False
+        for remote_dump_dir in remote_dump_dirs:
+            print "checking for crashes in '%s'" % remote_dump_dir
+            local_dump_dir = tempfile.mkdtemp()
+            self.dm.getDirectory(remote_dump_dir, local_dump_dir)
+            try:
+                if mozcrash.check_for_crashes(local_dump_dir, symbols_path):
+                    crashed = True
+            except:
+                traceback.print_exc()
+            finally:
+                shutil.rmtree(local_dump_dir)
+                self.dm.removeDir(remote_dump_dir)
+        return crashed
 
     def import_update_tools(self):
         """Import the update_tools package from B2G"""
