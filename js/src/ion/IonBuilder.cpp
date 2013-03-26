@@ -185,7 +185,7 @@ IonBuilder::getPolyCallTargets(types::StackTypeSet *calleeTypes,
 }
 
 bool
-IonBuilder::canInlineTarget(JSFunction *target)
+IonBuilder::canInlineTarget(JSFunction *target, CallInfo &callInfo)
 {
     if (!target->isInterpreted()) {
         IonSpew(IonSpew_Inlining, "Cannot inline due to non-interpreted");
@@ -215,11 +215,40 @@ IonBuilder::canInlineTarget(JSFunction *target)
     }
 
     RootedScript callerScript(cx, script());
-    bool canInline = oracle->canEnterInlinedFunction(callerScript, pc, target);
 
-    if (!canInline) {
+    if (!oracle->canEnterInlinedFunction(target)) {
         IonSpew(IonSpew_Inlining, "Cannot inline due to oracle veto %d", script()->lineno);
         return false;
+    }
+
+    if (!oracle->callReturnTypeSetMatches(callerScript, pc, target)) {
+        IonSpew(IonSpew_Inlining, "Cannot inline due to return typeset mismatch");
+        return false;
+    }
+
+    JS_ASSERT(callInfo.hasCallType());
+    if (callInfo.constructing()) {
+        // For constructing calls the typeset of caller should intersect the callee's typeset.
+        // Except for the |this| type, because that is created during execution depending on target.
+        if (!oracle->callArgsTypeSetIntersects(NULL, callInfo.argvType(), target)) {
+            IonSpew(IonSpew_Inlining, "Cannot inline due to arguments typeset mismatch");
+            return false;
+        }
+    } else if (JSOp(*pc) == JSOP_FUNAPPLY) {
+        // For fun.apply() the typeset of the caller should be a subset of the callee.
+        // Currently we can't loosen this, since there are no type barriers at the call boundary
+        // of fun.apply. Seeing a new type will only be noticed in the inlined call and
+        // result in missed types in TI.
+        if (!oracle->callArgsTypeSetMatches(callInfo.thisType(), callInfo.argvType(), target)) {
+            IonSpew(IonSpew_Inlining, "Cannot inline due to arguments typeset mismatch");
+            return false;
+        }
+    } else {
+        // For normal calls the typeset of caller should intersect the callee's typeset.
+        if (!oracle->callArgsTypeSetIntersects(callInfo.thisType(), callInfo.argvType(), target)) {
+            IonSpew(IonSpew_Inlining, "Cannot inline due to arguments typeset mismatch");
+            return false;
+        }
     }
 
     IonSpew(IonSpew_Inlining, "Inlining good to go!");
@@ -434,7 +463,10 @@ IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoi
     // Save the actual arguments the caller used to call this inlined call,
     // to shortcut operations on "arguments" in the inlined call.
     JS_ASSERT(inlinedArguments_.length() == 0);
-    if (!inlinedArguments_.append(callInfo.argv()->begin(), callInfo.argv()->end()))
+    JS_ASSERT(inlinedArgumentTypes_.length() == 0);
+    if (!inlinedArguments_.append(callInfo.argv().begin(), callInfo.argv().end()))
+        return false;
+    if (!inlinedArgumentTypes_.append(callInfo.argvType().begin(), callInfo.argvType().end()))
         return false;
 
     // The Oracle ensures that the inlined script does not use the scope chain.
@@ -3019,6 +3051,9 @@ IonBuilder::addTypeBarrier(uint32_t i, CallInfo &callinfo, types::StackTypeSet *
     types::TypeBarrier *excluded = callinfo.argsBarrier();
 
     if (i == 0) {
+        // The |this| type get's created during execution, no need to add type barrier.
+        if (callinfo.constructing())
+            return;
         ins = callinfo.thisArg();
         callerObs = callinfo.thisType();
     } else {
@@ -3068,16 +3103,6 @@ IonBuilder::addTypeBarrier(uint32_t i, CallInfo &callinfo, types::StackTypeSet *
     if (needsBarrier) {
         MTypeBarrier *barrier = MTypeBarrier::New(ins, cloneTypeSet(calleeObs), Bailout_Normal);
         current->add(barrier);
-
-        // Non-matching types are boxed such as the MIRType does not conflict
-        // with the inferred type.
-        if (callerObs->getKnownTypeTag() != calleeObs->getKnownTypeTag() &&
-            ins->type() != MIRType_Value)
-        {
-            MBox *box = MBox::New(ins);
-            current->add(box);
-            ins = box;
-        }
     }
 
     if (i == 0)
@@ -3140,7 +3165,7 @@ IonBuilder::patchInlinedReturns(CallInfo &callInfo, MIRGraphExits &exits, MBasic
 }
 
 bool
-IonBuilder::makeInliningDecision(AutoObjectVector &targets)
+IonBuilder::makeInliningDecision(AutoObjectVector &targets, CallInfo &callInfo)
 {
     // For "small" functions, we should be more aggressive about inlining.
     // This is based on the following intuition:
@@ -3197,46 +3222,11 @@ IonBuilder::makeInliningDecision(AutoObjectVector &targets)
         return false;
     }
 
-    JSOp op = JSOp(*pc);
     for (size_t i = 0; i < targets.length(); i++) {
         JSFunction *target = targets[i]->toFunction();
-        JSScript *targetScript = target->nonLazyScript();
-
-        if (!canInlineTarget(target)) {
+        if (!canInlineTarget(target, callInfo)) {
             IonSpew(IonSpew_Inlining, "Decided not to inline");
             return false;
-        }
-
-        // For fun.apply we need to make sure the types of the argument is a subset
-        // of the types used in the callee. Because adding a typeset in the callee,
-        // doesn't update the types in the "apply" function, resulting in missed types.
-        if (op == JSOP_FUNAPPLY) {
-            types::TypeSet *calleeType, *callerType;
-            size_t nargs = Min<size_t>(target->nargs, inlinedArguments_.length());
-            for (size_t i = 0; i < nargs; i++) {
-                calleeType = types::TypeScript::ArgTypes(targetScript, i);
-                // The arguments to this function aren't always available in this script.
-                // We need to get them from the caller at the position where
-                // the function gets called.
-                callerType = oracle->getCallArg(callerBuilder_->script_.get(),
-                                                inlinedArguments_.length(),
-                                                i+1, callerBuilder_->pc);
-
-                if (!callerType->isSubset(calleeType)) {
-                    IonSpew(IonSpew_Inlining, "Funapply inlining failed due to wrong types");
-                    return false;
-                }
-            }
-            // Arguments that weren't provided will be Undefined
-            for (size_t i = nargs; i < target->nargs; i++) {
-                calleeType = types::TypeScript::ArgTypes(targetScript, i);
-                if (calleeType->unknown() ||
-                    !calleeType->hasType(types::Type::UndefinedType()))
-                {
-                    IonSpew(IonSpew_Inlining, "Funapply inlining failed due to wrong types");
-                    return false;
-                }
-            }
         }
     }
 
@@ -4054,7 +4044,11 @@ IonBuilder::jsop_funapplyarguments(uint32_t argc)
         return false;
     callInfo.setArgs(&args);
     RootedScript scriptRoot(cx, script());
-    if (!callInfo.initFunApplyArguments(oracle, scriptRoot, pc, info().nargs()))
+    RootedScript parentScriptRoot(cx, callerBuilder_->script());
+    Vector<types::StackTypeSet *> argTypes(cx);
+    if (!argTypes.append(inlinedArgumentTypes_.begin(), inlinedArgumentTypes_.end()))
+        return false;
+    if (!callInfo.initFunApplyArguments(oracle, scriptRoot, pc, &argTypes))
         return false;
 
     // This
@@ -4085,7 +4079,7 @@ IonBuilder::jsop_funapplyarguments(uint32_t argc)
         AutoObjectVector targets(cx);
         targets.append(target);
 
-        if (makeInliningDecision(targets))
+        if (makeInliningDecision(targets, callInfo))
             return inlineScriptedCall(target, callInfo);
     }
 
@@ -4149,7 +4143,7 @@ IonBuilder::jsop_call(uint32_t argc, bool constructing)
     // Inline scriped call(s).
     if (!callInfo.initCallType(oracle, scriptRoot, pc))
         return false;
-    if (inliningEnabled() && targets.length() > 0 && makeInliningDecision(targets))
+    if (inliningEnabled() && targets.length() > 0 && makeInliningDecision(targets, callInfo))
         return inlineScriptedCalls(targets, originals, callInfo);
 
     // No inline, just make the call.
