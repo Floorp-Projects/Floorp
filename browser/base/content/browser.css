@@ -9,6 +9,10 @@ searchbar {
   -moz-binding: url("chrome://browser/content/search/search.xml#searchbar");
 }
 
+#nav-bar {
+  -moz-binding: url("chrome://browser/content/toolbar.xml#toolbar");
+}
+
 tabbrowser {
   -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser");
 }

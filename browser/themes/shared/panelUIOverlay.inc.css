@@ -1,0 +1,249 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+#PanelUI-contents[type="list"] > toolbarbutton {
+  -moz-binding: url("chrome://browser/content/panelUI.xml#toolbarbutton");
+}
+
+#app-extension-point-end > #PanelUI-menu-button {
+  padding: 2px 5px;
+}
+#app-extension-point-end > #PanelUI-menu-button .toolbarbutton-text {
+  display: none;
+}
+#app-extension-point-end > #PanelUI-menu-button .toolbarbutton-icon {
+  margin: 0;
+}
+
+#PanelUI-popup > arrowscrollbox > autorepeatbutton {
+  display: none;
+}
+#PanelUI-popup > arrowscrollbox > scrollbox {
+  overflow: visible;
+}
+
+#PanelUI-popup > .panel-arrowcontainer > .panel-arrowcontent {
+  padding: 0;
+}
+
+#PanelUI-menu-button > .toolbarbutton-icon {
+  list-style-image: url("chrome://browser/skin/appmenu.png");
+}
+
+#PanelUI-menu-button {
+  list-style-image: none;
+}
+
+#PanelUI-mainView .toolbarbutton-text {
+  display: -moz-box;
+  font-size: 10px;
+}
+
+#PanelUI-contents {
+  max-width: @menuPanelWidth@;
+  padding: 0 1em;
+}
+
+#PanelUI-container {
+  overflow: hidden;
+}
+
+#PanelUI-popup[panelopen="true"] > #PanelUI-container {
+  transition: height 150ms;
+}
+
+#PanelUI-popup[panelopen="true"] > #PanelUI-container > #PanelUI-viewStack > #PanelUI-mainView {
+  transition: transform 150ms;
+}
+
+#PanelUI-viewStack[view="main"] > #PanelUI-clickCapturer {
+  pointer-events: none;
+}
+
+#PanelUI-viewStack {
+  position: relative;
+}
+
+#PanelUI-viewStack,
+#PanelUI-container {
+  min-width: @menuPanelWidth@;
+}
+
+#PanelUI-mainView-springy {
+  height: 0;
+  transition: height 150ms;
+}
+
+#PanelUI-subViews {
+  -moz-stack-sizing: ignore;
+  background-image: linear-gradient(to bottom, white 1px, rgba(255, 255, 255, 0) 15px);
+  background-color: -moz-dialog;
+  box-shadow: -1px 0px 0px rgba(0, 0, 0, 0.2), -1px 0px 2px rgba(0, 0, 0, 0.1), 1px 0px 0px rgba(255, 255, 255, 0.2) inset;
+  margin-left: 38px;
+  position: absolute;
+  transform: translateX(@menuPanelWidth@);
+  transition: transform 150ms;
+}
+
+#PanelUI-viewStack[view="subview"] > #PanelUI-subViews {
+  transform: translateX(0);
+}
+
+#PanelUI-contents[type="list"] > toolbarbutton {
+  -moz-box-orient: horizontal;
+}
+
+#PanelUI-contents[type="list"] toolbarbutton .toolbarbutton-text,
+#PanelUI-subViews toolbarbutton .toolbarbutton-text {
+  text-align: start;
+  -moz-padding-start: 8px;
+  font-size: 12px;
+}
+
+#PanelUI-contents[type="list"] toolbarbutton .toolbarbutton-acceltext {
+  font-size: 10px;
+  color: GrayText;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+#PanelUI-contents[type="list"] toolbarbutton .toolbarbutton-icon {
+  min-width: 24px;
+  max-width: 24px;
+  min-height: 24px;
+  max-height: 24px;
+}
+
+#PanelUI-contents[type="grid"] {
+  display: block;
+}
+
+#PanelUI-contents[type="grid"] toolbarbutton {
+  -moz-box-orient: vertical;
+  min-width: 72px;
+  max-width: 72px;
+  min-height: 72px;
+  max-height: 72px;
+}
+
+#PanelUI-contents[type="grid"] toolbarbutton .toolbarbutton-icon {
+  min-width: 32px;
+  max-width: 32px;
+  min-height: 32px;
+  max-height: 32px;
+  margin: 5px;
+}
+
+.PanelUI-pageControls {
+  padding: 12px 20px;
+}
+
+.PanelUI-editControls,
+.PanelUI-zoomControls {
+  padding: 6px 0;
+}
+
+
+.PanelUI-pageControls toolbarbutton {
+  list-style-image: url("chrome://browser/skin/Toolbar.png");
+}
+
+#PanelUI-cut-btn {
+  -moz-image-region: rect(0, 216px, 18px, 198px);
+}
+#PanelUI-copy-btn {
+  -moz-image-region: rect(0, 234px, 18px, 216px);
+}
+#PanelUI-paste-btn {
+  -moz-image-region: rect(0, 252px, 18px, 234px);
+}
+
+#PanelUI-zoomOut-btn {
+  -moz-image-region: rect(0, 288px, 18px, 270px);
+  padding-left: 12px;
+  padding-right: 12px;
+}
+#PanelUI-zoomIn-btn {
+  -moz-image-region: rect(0, 306px, 18px, 288px);
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+.PanelUI-editControls #PanelUI-copy-btn,
+.PanelUI-zoomControls #PanelUI-zoomReset-btn {
+  border-left: none;
+  border-right: none;
+  border-radius: 0;
+}
+
+#PanelUI-zoomIn-btn .toolbarbutton-text,
+#PanelUI-zoomOut-btn .toolbarbutton-text,
+#PanelUI-zoomReset-btn .toolbarbutton-icon {
+  display: none;
+}
+
+.PanelUI-footer {
+  padding: 9px 12px;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-top: 1px solid rgba(0,0,0,.1);
+}
+
+.PanelUI-footer toolbarbutton > .toolbarbutton-icon {
+  display: none;
+}
+
+#PanelUI-help-btn {
+  -moz-appearance: none;
+  border: none;
+  box-shadow: none;
+  background: transparent;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+#customization-palette .toolbarbutton-text {
+  display: none;
+}
+
+#PanelUI-subViews toolbarbutton, 
+#PanelUI-mainView toolbarbutton {
+  -moz-appearance: none;
+  padding: 2px 6px;
+  background: hsla(210,32%,93%,0) padding-box;
+  border-radius: 2px;
+  border: 1px solid;
+  border-color: hsla(210,54%,20%,0) hsla(210,54%,20%,0) hsla(210,54%,20%,0);
+  box-shadow: 0 1px hsla(0,0%,100%,0) inset,
+              0 1px hsla(210,54%,20%,0),
+              0 0 2px hsla(210,54%,20%,0);
+  transition-property: background-color, border-color, box-shadow;
+  transition-duration: 150ms;
+}
+
+#PanelUI-subViews toolbarbutton:not([disabled]):not([checked]):not([open]):not(:active):hover,
+#PanelUI-mainView toolbarbutton:not([disabled]):not([checked]):not([open]):not(:active):hover,
+#PanelUI-mainView .PanelUI-pageControls toolbarbutton,
+#PanelUI-mainView #PanelUI-customize-btn {
+  background-image: -moz-linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
+  border-color: hsla(210,54%,20%,.15) hsla(210,54%,20%,.2) hsla(210,54%,20%,.25);
+  box-shadow: 0 1px hsla(0,0%,100%,.3) inset,
+              0 1px hsla(210,54%,20%,.03),
+              0 0 2px hsla(210,54%,20%,.1);
+}
+
+#PanelUI-subViews toolbarbutton:not([disabled]):-moz-any([open],[checked],:hover:active),
+#PanelUI-mainView toolbarbutton:not([disabled]):-moz-any([open],[checked],:hover:active) {
+  background-image: -moz-linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
+  background-color: hsla(210,54%,20%,.15);
+  border-color: hsla(210,54%,20%,.3) hsla(210,54%,20%,.35) hsla(210,54%,20%,.4);
+  box-shadow: 0 1px 1px hsla(210,54%,20%,.1) inset,
+              0 0 1px hsla(210,54%,20%,.2) inset,
+              0 1px 0 hsla(210,54%,20%,0),
+              0 0 2px hsla(210,54%,20%,0);
+  text-shadow: none;
+  transition: none;
+}
+
+

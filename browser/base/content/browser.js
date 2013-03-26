@@ -90,6 +90,12 @@ XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch",
 XPCOMUtils.defineLazyModuleGetter(this, "AboutHomeUtils",
   "resource:///modules/AboutHomeUtils.jsm");
 
+XPCOMUtils.defineLazyGetter(this, "gCustomizeMode", function() {
+  let scope = {};
+  Cu.import("resource:///modules/CustomizeMode.jsm", scope);
+  return new scope.CustomizeMode(window);
+});
+
 #ifdef MOZ_SERVICES_SYNC
 XPCOMUtils.defineLazyModuleGetter(this, "Weave",
   "resource://services-sync/main.js");
@@ -146,6 +152,7 @@ let gInitialPages = [
 ];
 
 #include browser-addons.js
+#include browser-customization.js
 #include browser-feeds.js
 #include browser-fullScreen.js
 #include browser-fullZoom.js
@@ -1031,6 +1038,7 @@ var gBrowserInit = {
     OfflineApps.init();
     IndexedDBPromptHelper.init();
     gFormSubmitObserver.init();
+    PanelUI.init();
     SocialUI.init();
     AddonManager.addAddonListener(AddonsMgrListener);
     WebrtcIndicator.init();
@@ -1280,6 +1288,9 @@ var gBrowserInit = {
     Services.obs.notifyObservers(window, "browser-delayed-startup-finished", "");
     setTimeout(function () { BrowserChromeTest.markAsReady(); }, 0);
     TelemetryTimestamps.add("delayedStartupFinished");
+
+    window.addEventListener("CustomizationStart", CustomizationHandler, false);
+    window.addEventListener("CustomizationEnd", CustomizationHandler, false);
   },
 
   onUnload: function() {
@@ -1363,6 +1374,7 @@ var gBrowserInit = {
       IndexedDBPromptHelper.uninit();
       AddonManager.removeAddonListener(AddonsMgrListener);
       SocialUI.uninit();
+      PanelUI.uninit();
     }
 
     // Final window teardown, do this last.
@@ -3309,118 +3321,13 @@ function OpenBrowserWindow(options)
   return win;
 }
 
-var gCustomizeSheet = false;
+//XXXunf Are these still useful to keep around?
 function BrowserCustomizeToolbar() {
-  // Disable the toolbar context menu items
-  var menubar = document.getElementById("main-menubar");
-  for (let childNode of menubar.childNodes)
-    childNode.setAttribute("disabled", true);
-
-  var cmd = document.getElementById("cmd_CustomizeToolbars");
-  cmd.setAttribute("disabled", "true");
-
-  var splitter = document.getElementById("urlbar-search-splitter");
-  if (splitter)
-    splitter.parentNode.removeChild(splitter);
-
-  CombinedStopReload.uninit();
-
-  PlacesToolbarHelper.customizeStart();
-  BookmarksMenuButton.customizeStart();
-  DownloadsButton.customizeStart();
-
-  TabsInTitlebar.allowedBy("customizing-toolbars", false);
-
-  var customizeURL = "chrome://global/content/customizeToolbar.xul";
-  gCustomizeSheet = getBoolPref("toolbar.customization.usesheet", false);
-
-  if (gCustomizeSheet) {
-    let sheetFrame = document.createElement("iframe");
-    let panel = document.getElementById("customizeToolbarSheetPopup");
-    sheetFrame.id = "customizeToolbarSheetIFrame";
-    sheetFrame.toolbox = gNavToolbox;
-    sheetFrame.panel = panel;
-    sheetFrame.setAttribute("style", panel.getAttribute("sheetstyle"));
-    panel.appendChild(sheetFrame);
-
-    // Open the panel, but make it invisible until the iframe has loaded so
-    // that the user doesn't see a white flash.
-    panel.style.visibility = "hidden";
-    gNavToolbox.addEventListener("beforecustomization", function onBeforeCustomization() {
-      gNavToolbox.removeEventListener("beforecustomization", onBeforeCustomization, false);
-      panel.style.removeProperty("visibility");
-    }, false);
-
-    sheetFrame.setAttribute("src", customizeURL);
-
-    panel.openPopup(gNavToolbox, "after_start", 0, 0);
-  } else {
-    window.openDialog(customizeURL,
-                      "CustomizeToolbar",
-                      "chrome,titlebar,toolbar,location,resizable,dependent",
-                      gNavToolbox);
-  }
+  gCustomizeMode.enter();
 }
 
 function BrowserToolboxCustomizeDone(aToolboxChanged) {
-  if (gCustomizeSheet) {
-    document.getElementById("customizeToolbarSheetPopup").hidePopup();
-    let iframe = document.getElementById("customizeToolbarSheetIFrame");
-    iframe.parentNode.removeChild(iframe);
-  }
-
-  // Update global UI elements that may have been added or removed
-  if (aToolboxChanged) {
-    gURLBar = document.getElementById("urlbar");
-
-    gProxyFavIcon = document.getElementById("page-proxy-favicon");
-    gHomeButton.updateTooltip();
-    gIdentityHandler._cacheElements();
-    window.XULBrowserWindow.init();
-
-#ifndef XP_MACOSX
-    updateEditUIVisibility();
-#endif
-
-    // Hacky: update the PopupNotifications' object's reference to the iconBox,
-    // if it already exists, since it may have changed if the URL bar was
-    // added/removed.
-    if (!window.__lookupGetter__("PopupNotifications"))
-      PopupNotifications.iconBox = document.getElementById("notification-popup-box");
-  }
-
-  PlacesToolbarHelper.customizeDone();
-  BookmarksMenuButton.customizeDone();
-  DownloadsButton.customizeDone();
-
-  // The url bar splitter state is dependent on whether stop/reload
-  // and the location bar are combined, so we need this ordering
-  CombinedStopReload.init();
-  UpdateUrlbarSearchSplitterState();
-  setUrlAndSearchBarWidthForConditionalForwardButton();
-
-  // Update the urlbar
-  if (gURLBar) {
-    URLBarSetURI();
-    XULBrowserWindow.asyncUpdateUI();
-    PlacesStarButton.updateState();
-    SocialShareButton.updateShareState();
-  }
-
-  TabsInTitlebar.allowedBy("customizing-toolbars", true);
-
-  // Re-enable parts of the UI we disabled during the dialog
-  var menubar = document.getElementById("main-menubar");
-  for (let childNode of menubar.childNodes)
-    childNode.setAttribute("disabled", false);
-  var cmd = document.getElementById("cmd_CustomizeToolbars");
-  cmd.removeAttribute("disabled");
-
-  // make sure to re-enable click-and-hold
-  if (!getBoolPref("ui.click_hold_context_menus", false))
-    SetClickAndHoldHandlers();
-
-  gBrowser.selectedBrowser.focus();
+  gCustomizeMode.exit(aToolboxChanged);
 }
 
 function BrowserToolboxCustomizeChange(aType) {
@@ -3591,6 +3498,8 @@ var XULBrowserWindow = {
   startTime: 0,
   statusText: "",
   isBusy: false,
+  // The pages in this array should be kept in sync with what pages that
+  // panelUIOverlay.xul is set to overlay in /browser/base/jar.mn
   inContentWhitelist: ["about:addons", "about:downloads", "about:permissions",
                        "about:sync-progress", "about:preferences"],
 

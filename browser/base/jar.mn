@@ -13,8 +13,14 @@ browser.jar:
 #endif
 %  overlay chrome://global/content/viewSource.xul chrome://browser/content/viewSourceOverlay.xul
 %  overlay chrome://global/content/viewPartialSource.xul chrome://browser/content/viewSourceOverlay.xul
-%  style chrome://global/content/customizeToolbar.xul chrome://browser/content/browser.css
-%  style chrome://global/content/customizeToolbar.xul chrome://browser/skin/
+
+# These overlays should be kept in sync with what pages are in 
+# XULBrowserWindow.inContentWhitelist in browser.js
+% overlay about:addons                                chrome://browser/content/panelUIOverlay.xul
+% overlay about:preferences                           chrome://browser/content/panelUIOverlay.xul
+% overlay about:permissions                           chrome://browser/content/panelUIOverlay.xul
+% overlay about:sync-progress                         chrome://browser/content/panelUIOverlay.xul
+
 *       content/browser/aboutDialog.xul               (content/aboutDialog.xul)
 *       content/browser/aboutDialog.js                (content/aboutDialog.js)
         content/browser/aboutDialog.css               (content/aboutDialog.css)
@@ -60,6 +66,7 @@ browser.jar:
 *       content/browser/browser.xul                   (content/browser.xul)
 *       content/browser/browser-tabPreviews.xml       (content/browser-tabPreviews.xml)
         content/browser/content.js                    (content/content.js)
+        content/browser/customizing.xhtml             (content/customizing.xhtml)
         content/browser/newtab/newTab.xul             (content/newtab/newTab.xul)
 *       content/browser/newtab/newTab.js              (content/newtab/newTab.js)
         content/browser/newtab/newTab.css             (content/newtab/newTab.css)
@@ -72,6 +79,9 @@ browser.jar:
         content/browser/pageinfo/feeds.xml            (content/pageinfo/feeds.xml)
         content/browser/pageinfo/permissions.js       (content/pageinfo/permissions.js)
         content/browser/pageinfo/security.js          (content/pageinfo/security.js)
+        content/browser/panelUI.js                    (content/panelUI.js)
+        content/browser/panelUIOverlay.xul            (content/panelUIOverlay.xul)
+        content/browser/panelUIOverlay.js             (content/panelUIOverlay.js)
 #ifdef MOZ_SERVICES_SYNC
         content/browser/sync/aboutSyncTabs.xul        (content/sync/aboutSyncTabs.xul)
         content/browser/sync/aboutSyncTabs.js         (content/sync/aboutSyncTabs.js)
@@ -91,6 +101,8 @@ browser.jar:
         content/browser/sync/progress.js              (content/sync/progress.js)
         content/browser/sync/progress.xhtml           (content/sync/progress.xhtml)
 #endif
+        content/browser/panelUI.xml                   (content/panelUI.xml)
+        content/browser/toolbar.xml                   (content/toolbar.xml)
         content/browser/openLocation.js               (content/openLocation.js)
         content/browser/openLocation.xul              (content/openLocation.xul)
         content/browser/safeMode.css                  (content/safeMode.css)

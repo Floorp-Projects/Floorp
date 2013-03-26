@@ -13,6 +13,7 @@ include $(topsrcdir)/config/config.mk
 
 EXTRA_JS_MODULES = \
 	BrowserNewTabPreloader.jsm \
+	CustomizableUI.jsm \
 	openLocationLastURL.jsm \
 	NetworkPrioritizer.jsm \
 	offlineAppCache.jsm \
@@ -25,6 +26,7 @@ EXTRA_JS_MODULES = \
 
 EXTRA_PP_JS_MODULES = \
 	AboutHomeUtils.jsm \
+	CustomizeMode.jsm \
 	RecentWindow.jsm \
 	$(NULL)
 
