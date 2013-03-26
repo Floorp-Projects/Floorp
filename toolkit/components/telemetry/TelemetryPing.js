@@ -804,6 +804,9 @@ TelemetryPing.prototype = {
     Services.obs.addObserver(this, "sessionstore-windows-restored", false);
     Services.obs.addObserver(this, "quit-application-granted", false);
     Services.obs.addObserver(this, "profile-before-change2", false);
+#ifdef MOZ_WIDGET_ANDROID
+    Services.obs.addObserver(this, "application-background", false);
+#endif
     Services.obs.addObserver(this, "xul-window-visible", false);
     this._hasWindowRestoredObserver = true;
     this._hasXulWindowVisibleObserver = true;
@@ -1023,6 +1026,9 @@ TelemetryPing.prototype = {
     }
     Services.obs.removeObserver(this, "quit-application-granted");
     Services.obs.removeObserver(this, "profile-before-change2");
+#ifdef MOZ_WIDGET_ANDROID
+    Services.obs.removeObserver(this, "application-background", false);
+#endif
   },
 
   getPayload: function getPayload() {
@@ -1139,6 +1145,30 @@ TelemetryPing.prototype = {
         this.savePing(ping, true);
       }
       break;
+
+#ifdef MOZ_WIDGET_ANDROID
+    // On Android, we can get killed without warning once we are in the background,
+    // but we may also submit data and/or come back into the foreground without getting
+    // killed. To deal with this, we save the current session data to file when we are
+    // put into the background. This handles the following post-backgrounding scenarios:
+    // 1) We are killed immediately. In this case the current session data (which we
+    //    save to a file) will be loaded and submitted on a future run.
+    // 2) We submit the data while in the background, and then are killed. In this case
+    //    the file that we saved will be deleted by the usual process in
+    //    finishPingRequest after it is submitted.
+    // 3) We submit the data, and then come back into the foreground. Same as case (2).
+    // 4) We do not submit the data, but come back into the foreground. In this case
+    //    we have the option of either deleting the file that we saved (since we will either
+    //    send the live data while in the foreground, or create the file again on the next
+    //    backgrounding), or not (in which case we will delete it on submit, or overwrite
+    //    it on the next backgrounding). Not deleting it is faster, so that's what we do.
+    case "application-background":
+      if (Telemetry.canSend) {
+        let ping = this.getSessionPayloadAndSlug("saved-session");
+        this.savePing(ping, true);
+      }
+      break;
+#endif
     }
   },
 
