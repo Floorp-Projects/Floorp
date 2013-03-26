@@ -289,7 +289,8 @@ const kTreeDescriptions = {
 "This tree covers explicit memory allocations by the application, both at the \
 operating system level (via calls to functions such as VirtualAlloc, \
 vm_allocate, and mmap), and at the heap allocation level (via functions such \
-as malloc, calloc, realloc, memalign, operator new, and operator new[]).\
+as malloc, calloc, realloc, memalign, operator new, and operator new[]) that \
+have not been explicitly decommitted (i.e. evicted from memory and swap). \
 \n\n\
 It excludes memory that is mapped implicitly such as code and data segments, \
 and thread stacks.  It also excludes heap memory that has been freed by the \

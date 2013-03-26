@@ -17,14 +17,13 @@ namespace js {
 template <size_t nbits>
 class BitArray {
   private:
-    uintptr_t map[nbits / JS_BITS_PER_WORD + (nbits % JS_BITS_PER_WORD == 0 ? 0 : 1)];
+    static const size_t numSlots =
+        nbits / JS_BITS_PER_WORD + (nbits % JS_BITS_PER_WORD == 0 ? 0 : 1);
+    uintptr_t map[numSlots];
 
   public:
     void clear(bool value) {
-        if (value)
-            memset(map, 0xFF, sizeof(map));
-        else
-            memset(map, 0, sizeof(map));
+        memset(map, value ? 0xFF : 0, sizeof(map));
     }
 
     inline bool get(size_t offset) const {
@@ -43,6 +42,14 @@ class BitArray {
         uintptr_t index, mask;
         getMarkWordAndMask(offset, &index, &mask);
         map[index] &= ~mask;
+    }
+
+    bool isAllClear() const {
+        for (size_t i = 0; i < numSlots; i++) {
+            if (map[i])
+                return false;
+        }
+        return true;
     }
 
   private:
