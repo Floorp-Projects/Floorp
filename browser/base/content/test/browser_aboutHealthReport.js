@@ -48,6 +48,7 @@ let gTests = [
         }
         else if (e.data.type == "testsComplete") {
           is(results, e.data.count, "Checking number of results received matches the number of tests that should have run");
+          win.removeEventListener("message", testLoad, false, true);
           deferred.resolve();
         }
 
