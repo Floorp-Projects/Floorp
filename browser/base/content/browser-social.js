@@ -2,6 +2,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// the "exported" symbols
+let SocialUI,
+    SocialChatBar,
+    SocialFlyout,
+    SocialShareButton,
+    SocialMenu,
+    SocialToolbar,
+    SocialSidebar;
+
+(function() {
+
 // The minimum sizes for the auto-resize panel code.
 const PANEL_MIN_HEIGHT = 100;
 const PANEL_MIN_WIDTH = 330;
@@ -9,7 +20,7 @@ const PANEL_MIN_WIDTH = 330;
 XPCOMUtils.defineLazyModuleGetter(this, "SharedFrame",
   "resource:///modules/SharedFrame.jsm");
 
-let SocialUI = {
+SocialUI = {
   // Called on delayed startup to initialize the UI
   init: function SocialUI_init() {
     Services.obs.addObserver(this, "social:ambient-notification-changed", false);
@@ -340,7 +351,7 @@ let SocialUI = {
 
 }
 
-let SocialChatBar = {
+SocialChatBar = {
   init: function() {
   },
   get chatbar() {
@@ -437,7 +448,7 @@ DynamicResizeWatcher.prototype = {
   }
 }
 
-let SocialFlyout = {
+SocialFlyout = {
   get panel() {
     return document.getElementById("social-flyout-panel");
   },
@@ -569,7 +580,7 @@ let SocialFlyout = {
   }
 }
 
-let SocialShareButton = {
+SocialShareButton = {
   // Called once, after window load, when the Social.provider object is initialized
   init: function SSB_init() {
   },
@@ -712,7 +723,7 @@ let SocialShareButton = {
   }
 };
 
-var SocialMenu = {
+SocialMenu = {
   init: function SocialMenu_init() {
   },
 
@@ -746,7 +757,7 @@ var SocialMenu = {
 };
 
 // XXX Need to audit that this is being initialized correctly
-var SocialToolbar = {
+SocialToolbar = {
   // Called once, after window load, when the Social.provider object is
   // initialized.
   init: function SocialToolbar_init() {
@@ -1087,7 +1098,7 @@ var SocialToolbar = {
   }
 }
 
-var SocialSidebar = {
+SocialSidebar = {
   // Called once, after window load, when the Social.provider object is initialized
   init: function SocialSidebar_init() {
     let sbrowser = document.getElementById("social-sidebar-browser");
@@ -1194,3 +1205,5 @@ var SocialSidebar = {
     }
   }
 }
+
+})();
