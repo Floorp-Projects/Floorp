@@ -11,7 +11,7 @@
 
 #include "nsFileStreams.h"
 
-#include "QuotaManager.h"
+#include "QuotaObject.h"
 
 BEGIN_QUOTA_NAMESPACE
 

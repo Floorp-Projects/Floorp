@@ -1,0 +1,44 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIQuotaRequest;
+interface nsIURI;
+interface nsIUsageCallback;
+
+[scriptable, builtinclass, uuid(8d74e6f8-81c3-4045-9bb7-70bdb7b11b25)]
+interface nsIQuotaManager : nsISupports
+{
+  /**
+   * Schedules an asynchronous callback that will return the total amount of
+   * disk space being used by storages for the given origin.
+   *
+   * @param aURI
+   *        The URI whose usage is being queried.
+   * @param aCallback
+   *        The callback that will be called when the usage is available.
+   */
+  [optional_argc]
+  nsIQuotaRequest
+  getUsageForURI(in nsIURI aURI,
+                 in nsIUsageCallback aCallback,
+                 [optional] in unsigned long aAppId,
+                 [optional] in boolean aInMozBrowserOnly);
+
+  /**
+   * Removes all storages stored for the given URI. The files may not be
+   * deleted immediately depending on prohibitive concurrent operations.
+   *
+   * @param aURI
+   *        The URI whose storages are to be cleared.
+   */
+  [optional_argc]
+  void
+  clearStoragesForURI(in nsIURI aURI,
+                      [optional] in unsigned long aAppId,
+                      [optional] in boolean aInMozBrowserOnly);
+};

@@ -21,6 +21,7 @@ EXPORTS_NAMESPACES = mozilla/dom/indexedDB
 CPPSRCS = \
   AsyncConnectionHelper.cpp \
   CheckPermissionsHelper.cpp \
+  Client.cpp \
   DatabaseInfo.cpp \
   FileInfo.cpp \
   FileManager.cpp \
@@ -43,7 +44,10 @@ CPPSRCS = \
   $(NULL)
 
 EXPORTS_mozilla/dom/indexedDB = \
+  Client.h \
   DatabaseInfo.h \
+  FileManager.h \
+  FileInfo.h \
   IDBCursor.h \
   IDBDatabase.h \
   IDBEvents.h \
@@ -59,8 +63,6 @@ EXPORTS_mozilla/dom/indexedDB = \
   IndexedDatabaseManager.h \
   Key.h \
   KeyPath.h \
-  FileManager.h \
-  FileInfo.h \
   $(NULL)
 
 LOCAL_INCLUDES = \

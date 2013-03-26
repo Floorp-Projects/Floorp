@@ -107,7 +107,7 @@ FileHandle::Open(FileMode aMode, ErrorResult& aError)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (FileService::IsShuttingDown() || mFileStorage->IsStorageShuttingDown()) {
+  if (FileService::IsShuttingDown() || mFileStorage->IsShuttingDown()) {
     aError.Throw(NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
     return nullptr;
   }
