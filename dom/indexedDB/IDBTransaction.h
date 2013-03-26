@@ -20,6 +20,7 @@
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
 #include "nsInterfaceHashtable.h"
+#include "nsRefPtrHashtable.h"
 
 #include "mozilla/dom/indexedDB/IDBDatabase.h"
 #include "mozilla/dom/indexedDB/IDBWrapperCache.h"

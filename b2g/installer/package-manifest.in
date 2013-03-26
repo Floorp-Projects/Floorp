@@ -202,6 +202,7 @@
 @BINPATH@/components/dom_browserelement.xpt
 @BINPATH@/components/dom_messages.xpt
 @BINPATH@/components/dom_power.xpt
+@BINPATH@/components/dom_quota.xpt
 @BINPATH@/components/dom_range.xpt
 @BINPATH@/components/dom_settings.xpt
 @BINPATH@/components/dom_permissionsettings.xpt

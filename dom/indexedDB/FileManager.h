@@ -8,12 +8,14 @@
 #define mozilla_dom_indexeddb_filemanager_h__
 
 #include "IndexedDatabase.h"
-#include "nsIFile.h"
+
 #include "nsIDOMFile.h"
+#include "nsIFile.h"
+
+#include "mozilla/dom/quota/StoragePrivilege.h"
 #include "nsDataHashtable.h"
 
 class mozIStorageConnection;
-class mozIStorageServiceQuotaManagement;
 
 BEGIN_INDEXEDDB_NAMESPACE
 
@@ -23,8 +25,10 @@ class FileManager
 {
   friend class FileInfo;
 
+  typedef mozilla::dom::quota::StoragePrivilege StoragePrivilege;
+
 public:
-  FileManager(const nsACString& aOrigin, FactoryPrivilege aPrivilege,
+  FileManager(const nsACString& aOrigin, StoragePrivilege aPrivilege,
               const nsAString& aDatabaseName)
   : mOrigin(aOrigin), mPrivilege(aPrivilege), mDatabaseName(aDatabaseName),
     mLastFileId(0), mInvalidated(false)
@@ -40,7 +44,7 @@ public:
     return mOrigin;
   }
 
-  const FactoryPrivilege& Privilege() const
+  const StoragePrivilege& Privilege() const
   {
     return mPrivilege;
   }
@@ -81,7 +85,7 @@ public:
 
 private:
   nsCString mOrigin;
-  FactoryPrivilege mPrivilege;
+  StoragePrivilege mPrivilege;
   nsString mDatabaseName;
 
   nsString mDirectoryPath;

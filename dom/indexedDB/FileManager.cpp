@@ -11,17 +11,17 @@
 #include "nsIInputStream.h"
 #include "nsISimpleEnumerator.h"
 
+#include "mozilla/dom/quota/Utilities.h"
 #include "mozStorageCID.h"
 #include "mozStorageHelper.h"
 
+#include "Client.h"
 #include "FileInfo.h"
 #include "IndexedDatabaseManager.h"
 #include "OpenDatabaseHelper.h"
 
 #include "IndexedDatabaseInlines.h"
 #include <algorithm>
-
-#define JOURNAL_DIRECTORY_NAME "journals"
 
 USING_INDEXEDDB_NAMESPACE
 
@@ -412,7 +412,7 @@ FileManager::GetUsage(nsIFile* aDirectory, uint64_t* aUsage)
     rv = file->GetFileSize(&fileSize);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    IncrementUsage(&usage, uint64_t(fileSize));
+    quota::IncrementUsage(&usage, uint64_t(fileSize));
   }
 
   *aUsage = usage;

@@ -384,7 +384,7 @@ LockedFile::CreateParallelStream(nsISupports** aStream)
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   nsIFileStorage* fileStorage = mFileHandle->mFileStorage;
-  if (fileStorage->IsStorageInvalidated()) {
+  if (fileStorage->IsInvalidated()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -404,7 +404,7 @@ LockedFile::GetOrCreateStream(nsISupports** aStream)
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   nsIFileStorage* fileStorage = mFileHandle->mFileStorage;
-  if (fileStorage->IsStorageInvalidated()) {
+  if (fileStorage->IsInvalidated()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -957,7 +957,7 @@ FinishHelper::Run()
   }
 
   nsIFileStorage* fileStorage = mLockedFile->mFileHandle->mFileStorage;
-  if (fileStorage->IsStorageInvalidated()) {
+  if (fileStorage->IsInvalidated()) {
     mAborted = true;
   }
 

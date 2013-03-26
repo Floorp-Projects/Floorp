@@ -10,52 +10,50 @@
 #include "nsISupports.h"
 
 #define NS_FILESTORAGE_IID \
-  {0xa0801944, 0x2f1c, 0x4203, \
-  { 0x9c, 0xaa, 0xaa, 0x47, 0xe0, 0x0c, 0x67, 0x92 } }
+  {0x6278f453, 0xd557, 0x4a55, \
+  { 0x99, 0x3e, 0xf4, 0x69, 0xe2, 0xa5, 0xe1, 0xd0 } }
+
+class nsIAtom;
 
 class nsIFileStorage : public nsISupports
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_FILESTORAGE_IID)
 
-  virtual const nsACString&
-  StorageOrigin() = 0;
+  NS_IMETHOD_(nsIAtom*)
+  Id() = 0;
 
-  virtual nsISupports*
-  StorageId() = 0;
+  // Whether or not the storage has been invalidated. If it has then no further
+  // operations for this storage will be allowed to run.
+  NS_IMETHOD_(bool)
+  IsInvalidated() = 0;
 
-  virtual bool
-  IsStorageInvalidated() = 0;
+  NS_IMETHOD_(bool)
+  IsShuttingDown() = 0;
 
-  virtual bool
-  IsStorageShuttingDown() = 0;
-
-  virtual void
+  NS_IMETHOD_(void)
   SetThreadLocals() = 0;
 
-  virtual void
+  NS_IMETHOD_(void)
   UnsetThreadLocals() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIFileStorage, NS_FILESTORAGE_IID)
 
 #define NS_DECL_NSIFILESTORAGE                                                 \
-  virtual const nsACString&                                                    \
-  StorageOrigin() MOZ_OVERRIDE;                                                \
+  NS_IMETHOD_(nsIAtom*)                                                        \
+  Id() MOZ_OVERRIDE;                                                           \
                                                                                \
-  virtual nsISupports*                                                         \
-  StorageId() MOZ_OVERRIDE;                                                    \
+  NS_IMETHOD_(bool)                                                            \
+  IsInvalidated() MOZ_OVERRIDE;                                                \
                                                                                \
-  virtual bool                                                                 \
-  IsStorageInvalidated() MOZ_OVERRIDE;                                         \
+  NS_IMETHOD_(bool)                                                            \
+  IsShuttingDown() MOZ_OVERRIDE;                                               \
                                                                                \
-  virtual bool                                                                 \
-  IsStorageShuttingDown() MOZ_OVERRIDE;                                        \
-                                                                               \
-  virtual void                                                                 \
+  NS_IMETHOD_(void)                                                            \
   SetThreadLocals() MOZ_OVERRIDE;                                              \
                                                                                \
-  virtual void                                                                 \
+  NS_IMETHOD_(void)                                                            \
   UnsetThreadLocals() MOZ_OVERRIDE;
 
 #endif // nsIFileStorage_h__
