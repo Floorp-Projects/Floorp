@@ -67,7 +67,10 @@ IDBFileHandle::Create(IDBDatabase* aDatabase,
 already_AddRefed<nsISupports>
 IDBFileHandle::CreateStream(nsIFile* aFile, bool aReadOnly)
 {
-  const nsACString& origin = mFileStorage->StorageOrigin();
+  nsCOMPtr<nsIOfflineStorage> storage = do_QueryInterface(mFileStorage);
+  NS_ASSERTION(storage, "This should always succeed!");
+
+  const nsACString& origin = storage->Origin();
 
   nsCOMPtr<nsISupports> result;
 

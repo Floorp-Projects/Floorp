@@ -11,6 +11,7 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/storage.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/quota/Client.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "nsDOMClassInfo.h"
 #include "nsDOMLists.h"
@@ -27,7 +28,6 @@
 #include "IDBObjectStore.h"
 #include "IDBTransaction.h"
 #include "IDBFactory.h"
-#include "IndexedDatabaseManager.h"
 #include "TransactionThreadPool.h"
 #include "DictionaryHelpers.h"
 #include "nsContentUtils.h"
@@ -37,6 +37,7 @@
 
 USING_INDEXEDDB_NAMESPACE
 using mozilla::dom::ContentParent;
+using mozilla::dom::quota::Client;
 using mozilla::dom::quota::QuotaManager;
 
 namespace {
@@ -199,15 +200,28 @@ IDBDatabase::Create(IDBWrapperCache* aOwnerCache,
   db->mFileManager = aFileManager;
   db->mContentParent = aContentParent;
 
-  IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
-  NS_ASSERTION(mgr, "This should never be null!");
+  QuotaManager* quotaManager = QuotaManager::Get();
+  NS_ASSERTION(quotaManager, "This should never be null!");
 
-  if (!mgr->RegisterDatabase(db)) {
+  db->mQuotaClient = quotaManager->GetClient(Client::IDB);
+  NS_ASSERTION(db->mQuotaClient, "This shouldn't fail!");
+
+  if (!quotaManager->RegisterStorage(db)) {
     // Either out of memory or shutting down.
     return nullptr;
   }
 
+  db->mRegistered = true;
+
   return db.forget();
+}
+
+// static
+IDBDatabase*
+IDBDatabase::FromStorage(nsIOfflineStorage* aStorage)
+{
+  return aStorage->GetClient()->GetType() == Client::IDB ?
+         static_cast<IDBDatabase*>(aStorage) : nullptr;
 }
 
 IDBDatabase::IDBDatabase()
@@ -237,14 +251,14 @@ IDBDatabase::~IDBDatabase()
   if (mRegistered) {
     CloseInternal(true);
 
-    IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
-    if (mgr) {
-      mgr->UnregisterDatabase(this);
+    QuotaManager* quotaManager = QuotaManager::Get();
+    if (quotaManager) {
+      quotaManager->UnregisterStorage(this);
     }
   }
 }
 
-void
+NS_IMETHODIMP_(void)
 IDBDatabase::Invalidate()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -311,9 +325,9 @@ IDBDatabase::CloseInternal(bool aIsDead)
       }
     }
 
-    IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
-    if (mgr) {
-      mgr->OnDatabaseClosed(this);
+    QuotaManager* quotaManager = QuotaManager::Get();
+    if (quotaManager) {
+      quotaManager->OnStorageClosed(this);
     }
 
     // And let the parent process know as well.
@@ -324,8 +338,8 @@ IDBDatabase::CloseInternal(bool aIsDead)
   }
 }
 
-bool
-IDBDatabase::IsClosed() const
+NS_IMETHODIMP_(bool)
+IDBDatabase::IsClosed()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   return mClosed;
@@ -367,10 +381,10 @@ IDBDatabase::OnUnlink()
   // transactions from starting and unblock any other SetVersion callers.
   CloseInternal(true);
 
-  // No reason for the IndexedDatabaseManager to track us any longer.
-  IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
-  if (mgr) {
-    mgr->UnregisterDatabase(this);
+  // No reason for the QuotaManager to track us any longer.
+  QuotaManager* quotaManager = QuotaManager::Get();
+  if (quotaManager) {
+    quotaManager->UnregisterStorage(this);
 
     // Don't try to unregister again in the destructor.
     mRegistered = false;
@@ -433,6 +447,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(IDBDatabase)
   NS_INTERFACE_MAP_ENTRY(nsIIDBDatabase)
   NS_INTERFACE_MAP_ENTRY(nsIFileStorage)
+  NS_INTERFACE_MAP_ENTRY(nsIOfflineStorage)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IDBDatabase)
 NS_INTERFACE_MAP_END_INHERITING(IDBWrapperCache)
 
@@ -602,7 +617,7 @@ IDBDatabase::Transaction(const jsval& aStoreNames,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (IndexedDatabaseManager::IsShuttingDown()) {
+  if (QuotaManager::IsShuttingDown()) {
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
@@ -744,7 +759,7 @@ IDBDatabase::MozCreateFileHandle(const nsAString& aName,
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  if (IndexedDatabaseManager::IsShuttingDown()) {
+  if (QuotaManager::IsShuttingDown()) {
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
@@ -757,10 +772,10 @@ IDBDatabase::MozCreateFileHandle(const nsAString& aName,
   nsRefPtr<CreateFileHelper> helper =
     new CreateFileHelper(this, request, aName, aType);
 
-  IndexedDatabaseManager* manager = IndexedDatabaseManager::Get();
-  NS_ASSERTION(manager, "We should definitely have a manager here");
+  QuotaManager* quotaManager = QuotaManager::Get();
+  NS_ASSERTION(quotaManager, "We should definitely have a manager here");
 
-  nsresult rv = helper->Dispatch(manager->IOThread());
+  nsresult rv = helper->Dispatch(quotaManager->IOThread());
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   request.forget(_retval);
@@ -778,41 +793,53 @@ IDBDatabase::Close()
   return NS_OK;
 }
 
-const nsACString&
-IDBDatabase::StorageOrigin()
+NS_IMETHODIMP_(nsIAtom*)
+IDBDatabase::Id()
 {
-  return Origin();
+  return mDatabaseId;
 }
 
-nsISupports*
-IDBDatabase::StorageId()
+NS_IMETHODIMP_(bool)
+IDBDatabase::IsInvalidated()
 {
-  return Id();
+  return mInvalidated;
 }
 
-bool
-IDBDatabase::IsStorageInvalidated()
+NS_IMETHODIMP_(bool)
+IDBDatabase::IsShuttingDown()
 {
-  return IsInvalidated();
+  return QuotaManager::IsShuttingDown();
 }
 
-bool
-IDBDatabase::IsStorageShuttingDown()
-{
-  return IndexedDatabaseManager::IsShuttingDown();
-}
-
-void
+NS_IMETHODIMP_(void)
 IDBDatabase::SetThreadLocals()
 {
   NS_ASSERTION(GetOwner(), "Should have owner!");
   QuotaManager::SetCurrentWindow(GetOwner());
 }
 
-void
+NS_IMETHODIMP_(void)
 IDBDatabase::UnsetThreadLocals()
 {
   QuotaManager::SetCurrentWindow(nullptr);
+}
+
+NS_IMETHODIMP_(mozilla::dom::quota::Client*)
+IDBDatabase::GetClient()
+{
+  return mQuotaClient;
+}
+
+NS_IMETHODIMP_(bool)
+IDBDatabase::IsOwned(nsPIDOMWindow* aOwner)
+{
+  return GetOwner() == aOwner;
+}
+
+NS_IMETHODIMP_(const nsACString&)
+IDBDatabase::Origin()
+{
+  return mASCIIOrigin;
 }
 
 nsresult

@@ -14,7 +14,7 @@
 #include "nsIURI.h"
 #include "nsPIDOMWindow.h"
 
-#include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
+#include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/Services.h"
 #include "nsContentUtils.h"
 #include "nsNetUtil.h"
@@ -29,7 +29,6 @@
 
 USING_QUOTA_NAMESPACE
 using namespace mozilla::services;
-using mozilla::dom::indexedDB::IndexedDatabaseManager;
 using mozilla::MutexAutoLock;
 
 namespace {
@@ -167,7 +166,7 @@ CheckQuotaHelper::Run()
       }
     }
     else if (mPromptResult == nsIPermissionManager::UNKNOWN_ACTION) {
-      uint32_t quota = IndexedDatabaseManager::GetIndexedDBQuotaMB();
+      uint32_t quota = QuotaManager::GetStorageQuotaMB();
 
       nsString quotaString;
       quotaString.AppendInt(quota);

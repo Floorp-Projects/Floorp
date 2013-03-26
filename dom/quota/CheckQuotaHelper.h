@@ -49,4 +49,4 @@ private:
 
 END_QUOTA_NAMESPACE
 
-#endif // mozilla_dom_indexeddb_checkquotahelper_h__
+#endif // mozilla_dom_quota_checkquotahelper_h__
