@@ -11,7 +11,7 @@
 #include "nsIDOMMutationEvent.h"
 #include "nsIFrame.h"
 #include "nsISVGChildFrame.h"
-#include "nsSVGRect.h"
+#include "mozilla/dom/SVGRect.h"
 #include "nsSVGUtils.h"
 #include "SVGContentUtils.h"
 
