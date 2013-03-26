@@ -108,7 +108,7 @@ AudioContext::CreateGain()
 already_AddRefed<DelayNode>
 AudioContext::CreateDelay(double aMaxDelayTime, ErrorResult& aRv)
 {
-  if (aMaxDelayTime > 0. && aMaxDelayTime < 3.) {
+  if (aMaxDelayTime > 0. && aMaxDelayTime < 180.) {
     nsRefPtr<DelayNode> delayNode = new DelayNode(this, aMaxDelayTime);
     return delayNode.forget();
   }

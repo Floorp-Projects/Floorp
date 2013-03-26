@@ -549,16 +549,22 @@ public class GeckoAppShell
         gRestartScheduled = true;
     }
 
-    public static File installWebApp(String aTitle, String aURI, String aUniqueURI, String aIconURL) {
-        int index = WebAppAllocator.getInstance(GeckoApp.mAppContext).findAndAllocateIndex(aUniqueURI, aTitle, aIconURL);
+    public static File preInstallWebApp(String aTitle, String aURI, String aUniqueURI) {
+        int index = WebAppAllocator.getInstance(GeckoApp.mAppContext).findAndAllocateIndex(aUniqueURI, aTitle, (String) null);
         GeckoProfile profile = GeckoProfile.get(GeckoApp.mAppContext, "webapp" + index);
-        createShortcut(aTitle, aURI, aUniqueURI, aIconURL, "webapp");
         return profile.getDir();
+    }
+
+    public static void postInstallWebApp(String aTitle, String aURI, String aUniqueURI, String aIconURL) {
+    	WebAppAllocator allocator = WebAppAllocator.getInstance(GeckoApp.mAppContext);
+		int index = allocator.getIndexForApp(aUniqueURI);
+    	assert index != -1 && aIconURL != null;
+    	allocator.updateAppAllocation(aUniqueURI, index, BitmapUtils.getBitmapFromDataURI(aIconURL));
+    	createShortcut(aTitle, aURI, aUniqueURI, aIconURL, "webapp");
     }
 
     public static Intent getWebAppIntent(String aURI, String aUniqueURI, String aTitle, Bitmap aIcon) {
         int index;
-
         if (aIcon != null && !TextUtils.isEmpty(aTitle))
             index = WebAppAllocator.getInstance(GeckoApp.mAppContext).findAndAllocateIndex(aUniqueURI, aTitle, aIcon);
         else

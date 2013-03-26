@@ -99,3 +99,35 @@ function assertTypeFailInEval(str)
 assertTypeFailInEval('function f({}) { "use asm"; function g() {} return g }');
 assertTypeFailInEval('function f({global}) { "use asm"; function g() {} return g }');
 assertTypeFailInEval('function f(global, {imports}) { "use asm"; function g() {} return g }');
+
+function assertLinkFailInEval(str)
+{
+    if (!isAsmJSCompilationAvailable())
+        return;
+
+    var caught = false;
+    var oldOpts = options("werror");
+    assertEq(oldOpts.indexOf("werror"), -1);
+    try {
+        eval(str);
+    } catch (e) {
+        assertEq((''+e).indexOf(ASM_OK_STRING) == -1, false);
+        caught = true;
+    }
+    assertEq(caught, true);
+    options("werror");
+
+    var code = eval(str);
+
+    var caught = false;
+    var oldOpts = options("werror");
+    assertEq(oldOpts.indexOf("werror"), -1);
+    try {
+        code.apply(null, Array.slice(arguments, 1));
+    } catch (e) {
+        caught = true;
+    }
+    assertEq(caught, true);
+    options("werror");
+}
+assertLinkFailInEval('(function(global) { "use asm"; var im=global.Math.imul; function g() {} return g })');
