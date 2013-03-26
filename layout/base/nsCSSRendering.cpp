@@ -30,6 +30,7 @@
 #include "nsIScrollableFrame.h"
 #include "imgIRequest.h"
 #include "imgIContainer.h"
+#include "ImageOps.h"
 #include "nsCSSRendering.h"
 #include "nsCSSColorUtils.h"
 #include "nsITheme.h"
@@ -60,6 +61,7 @@
 
 using namespace mozilla;
 using namespace mozilla::css;
+using mozilla::image::ImageOps;
 
 static int gFrameTreeLockCount = 0;
 
@@ -4293,18 +4295,7 @@ nsImageRenderer::PrepareImage()
           // The cropped image is identical to the source image
           mImageContainer.swap(srcImage);
         } else {
-          nsCOMPtr<imgIContainer> subImage;
-          uint32_t aExtractFlags = (mFlags & FLAG_SYNC_DECODE_IMAGES)
-                                     ? (uint32_t) imgIContainer::FLAG_SYNC_DECODE
-                                     : (uint32_t) imgIContainer::FLAG_NONE;
-          nsresult rv = srcImage->ExtractFrame(imgIContainer::FRAME_CURRENT,
-                                               actualCropRect, aExtractFlags,
-                                               getter_AddRefs(subImage));
-          if (NS_FAILED(rv)) {
-            NS_WARNING("The cropped image contains no pixels to draw; "
-                       "maybe the crop rect is outside the image frame rect");
-            return false;
-          }
+          nsCOMPtr<imgIContainer> subImage = ImageOps::Clip(srcImage, actualCropRect);
           mImageContainer.swap(subImage);
         }
       }
