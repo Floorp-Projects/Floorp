@@ -333,6 +333,7 @@ public:
 
 private:
   friend struct IPC::ParamTraits<mozilla::TimeStamp>;
+  friend void StartupTimelineRecordExternal(int, uint64_t);
 
   TimeStamp(TimeStampValue aValue) : mValue(aValue) {}
 
