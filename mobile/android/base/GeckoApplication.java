@@ -45,7 +45,7 @@ public class GeckoApplication extends Application {
             // low memory killer subsequently kills us, the disk cache will
             // be left in a consistent state, avoiding costly cleanup and
             // re-creation. 
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createPauseEvent(true));
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createAppBackgroundingEvent());
             mPausedGecko = true;
         }
         GeckoConnectivityReceiver.getInstance().stop();
@@ -54,7 +54,7 @@ public class GeckoApplication extends Application {
 
     protected void onActivityResume(GeckoActivityStatus activity) {
         if (mPausedGecko) {
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createResumeEvent(true));
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createAppForegroundingEvent());
             mPausedGecko = false;
         }
         GeckoConnectivityReceiver.getInstance().start();
