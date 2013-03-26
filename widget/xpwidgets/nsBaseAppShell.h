@@ -78,6 +78,9 @@ private:
 
   bool DispatchDummyEvent(nsIThread* target);
 
+  void IncrementEventloopNestingLevel();
+  void DecrementEventloopNestingLevel();
+
   /**
    * Runs all synchronous sections which are queued up in mSyncSections.
    */
