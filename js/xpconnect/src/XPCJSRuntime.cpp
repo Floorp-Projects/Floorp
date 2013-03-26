@@ -1763,11 +1763,29 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
                    "stored on the JavaScript heap; those slots "
                    "are not counted here, but in 'gc-heap/objects' instead.");
 
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects-extra/elements"),
-                   cStats.objectsExtra.elements,
-                   "Memory allocated for object element "
-                   "arrays, which are used to represent indexed object "
-                   "properties.");
+    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects-extra/elements/non-asm.js"),
+                   cStats.objectsExtra.elementsNonAsmJS,
+                   "Memory allocated for non-asm.js object element arrays, "
+                   "which are used to represent indexed object properties.");
+
+    // asm.js arrays are heap-allocated on some platforms and
+    // non-heap-allocated on others.  We never put them under sundries,
+    // because (a) in practice they're almost always larger than the sundries
+    // threshold, and (b) we'd need a third category of non-heap, non-GC
+    // sundries, which would be a pain.
+    #define ASM_JS_DESC "Memory allocated for object element " \
+                        "arrays used as asm.js array buffers."
+    size_t asmJSHeap    = cStats.objectsExtra.elementsAsmJSHeap;
+    size_t asmJSNonHeap = cStats.objectsExtra.elementsAsmJSNonHeap;
+    JS_ASSERT(asmJSHeap == 0 || asmJSNonHeap == 0);
+    if (asmJSHeap > 0) {
+        REPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects-extra/elements/asm.js"),
+                     nsIMemoryReporter::KIND_HEAP, asmJSHeap, ASM_JS_DESC);
+    }
+    if (asmJSNonHeap > 0) {
+        REPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects-extra/elements/asm.js"),
+                     nsIMemoryReporter::KIND_NONHEAP, asmJSNonHeap, ASM_JS_DESC);
+    }
 
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects-extra/arguments-data"),
                    cStats.objectsExtra.argumentsData,
