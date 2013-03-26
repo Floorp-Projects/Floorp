@@ -185,7 +185,8 @@ let DebuggerController = {
     }
 
     // Chrome debugging needs to make the connection to the debuggee.
-    let transport = debuggerSocketConnect(Prefs.remoteHost, Prefs.remotePort);
+    let transport = debuggerSocketConnect(Prefs.chromeDebuggingHost,
+                                          Prefs.chromeDebuggingPort);
 
     let client = this.client = new DebuggerClient(transport);
     client.addListener("tabNavigated", this._onTabNavigated);
@@ -1731,6 +1732,8 @@ let Prefs = {
   }
 };
 
+Prefs.map("Char", "chromeDebuggingHost", "devtools.debugger.chrome-debugging-host");
+Prefs.map("Int", "chromeDebuggingPort", "devtools.debugger.chrome-debugging-port");
 Prefs.map("Int", "windowX", "devtools.debugger.ui.win-x");
 Prefs.map("Int", "windowY", "devtools.debugger.ui.win-y");
 Prefs.map("Int", "windowWidth", "devtools.debugger.ui.win-width");
