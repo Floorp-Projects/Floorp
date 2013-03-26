@@ -21,6 +21,7 @@ webidl_files = \
   AudioParam.webidl \
   AudioSourceNode.webidl \
   BatteryManager.webidl \
+  BeforeUnloadEvent.webidl \
   BiquadFilterNode.webidl \
   Blob.webidl \
   CanvasRenderingContext2D.webidl \
