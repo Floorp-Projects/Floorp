@@ -15,7 +15,6 @@
 #include "nsTArray.h"
 
 class nsFrameList;
-class nsIDOMSVGRect;
 class nsISVGGlyphFragmentNode;
 class nsStyleContext;
 class nsSVGGlyphFrame;
@@ -23,6 +22,10 @@ class nsSVGTextFrame;
 
 namespace mozilla {
 class nsISVGPoint;
+
+namespace dom {
+class SVGIRect;
+}
 }
 
 class nsSVGTextContainerFrame : public nsSVGDisplayContainerFrame
@@ -49,7 +52,7 @@ public:
 
   NS_IMETHOD GetStartPositionOfChar(uint32_t charnum, nsISupports **_retval);
   NS_IMETHOD GetEndPositionOfChar(uint32_t charnum, nsISupports **_retval);
-  NS_IMETHOD GetExtentOfChar(uint32_t charnum, nsIDOMSVGRect **_retval);
+  NS_IMETHOD GetExtentOfChar(uint32_t charnum, mozilla::dom::SVGIRect **_retval);
   NS_IMETHOD GetRotationOfChar(uint32_t charnum, float *_retval);
 
   /*

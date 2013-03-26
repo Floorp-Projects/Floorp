@@ -32,61 +32,6 @@ NS_INTERFACE_MAP_BEGIN(SVGRect)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-//----------------------------------------------------------------------
-// nsIDOMSVGRect methods:
-
-/* attribute float x; */
-NS_IMETHODIMP SVGRect::GetX(float *aX)
-{
-  *aX = mX;
-  return NS_OK;
-}
-NS_IMETHODIMP SVGRect::SetX(float aX)
-{
-  NS_ENSURE_FINITE(aX, NS_ERROR_ILLEGAL_VALUE);
-  mX = aX;
-  return NS_OK;
-}
-
-/* attribute float y; */
-NS_IMETHODIMP SVGRect::GetY(float *aY)
-{
-  *aY = mY;
-  return NS_OK;
-}
-NS_IMETHODIMP SVGRect::SetY(float aY)
-{
-  NS_ENSURE_FINITE(aY, NS_ERROR_ILLEGAL_VALUE);
-  mY = aY;
-  return NS_OK;
-}
-
-/* attribute float width; */
-NS_IMETHODIMP SVGRect::GetWidth(float *aWidth)
-{
-  *aWidth = mWidth;
-  return NS_OK;
-}
-NS_IMETHODIMP SVGRect::SetWidth(float aWidth)
-{
-  NS_ENSURE_FINITE(aWidth, NS_ERROR_ILLEGAL_VALUE);
-  mWidth = aWidth;
-  return NS_OK;
-}
-
-/* attribute float height; */
-NS_IMETHODIMP SVGRect::GetHeight(float *aHeight)
-{
-  *aHeight = mHeight;
-  return NS_OK;
-}
-NS_IMETHODIMP SVGRect::SetHeight(float aHeight)
-{
-  NS_ENSURE_FINITE(aHeight, NS_ERROR_ILLEGAL_VALUE);
-  mHeight = aHeight;
-  return NS_OK;
-}
-
 } // namespace dom
 } // namespace mozilla
 
@@ -94,7 +39,7 @@ NS_IMETHODIMP SVGRect::SetHeight(float aHeight)
 // Exported creation functions:
 
 nsresult
-NS_NewSVGRect(nsIDOMSVGRect** result, float x, float y,
+NS_NewSVGRect(mozilla::dom::SVGRect** result, float x, float y,
               float width, float height)
 {
   *result = new mozilla::dom::SVGRect(x, y, width, height);
@@ -104,7 +49,7 @@ NS_NewSVGRect(nsIDOMSVGRect** result, float x, float y,
 }
 
 nsresult
-NS_NewSVGRect(nsIDOMSVGRect** result, const gfxRect& rect)
+NS_NewSVGRect(mozilla::dom::SVGRect** result, const gfxRect& rect)
 {
   return NS_NewSVGRect(result,
                        rect.X(), rect.Y(),

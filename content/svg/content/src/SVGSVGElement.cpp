@@ -409,10 +409,10 @@ SVGSVGElement::CreateSVGMatrix()
   return matrix.forget();
 }
 
-already_AddRefed<nsIDOMSVGRect>
+already_AddRefed<SVGIRect>
 SVGSVGElement::CreateSVGRect()
 {
-  nsCOMPtr<nsIDOMSVGRect> rect;
+  nsRefPtr<SVGRect> rect;
   NS_NewSVGRect(getter_AddRefs(rect));
   return rect.forget();
 }

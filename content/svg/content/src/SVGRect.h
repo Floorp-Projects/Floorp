@@ -7,16 +7,7 @@
 #define mozilla_dom_SVGRect_h
 
 #include "gfxRect.h"
-#include "nsIDOMSVGRect.h"
-#include "mozilla/Attributes.h"
-
-nsresult
-NS_NewSVGRect(nsIDOMSVGRect** result,
-              float x=0.0f, float y=0.0f,
-              float width=0.0f, float height=0.0f);
-
-nsresult
-NS_NewSVGRect(nsIDOMSVGRect** result, const gfxRect& rect);
+#include "mozilla/dom/SVGIRect.h"
 
 ////////////////////////////////////////////////////////////////////////
 // SVGRect class
@@ -24,7 +15,7 @@ NS_NewSVGRect(nsIDOMSVGRect** result, const gfxRect& rect);
 namespace mozilla {
 namespace dom {
 
-class SVGRect MOZ_FINAL : public nsIDOMSVGRect
+class SVGRect MOZ_FINAL : public SVGIRect
 {
 public:
   SVGRect(float x=0.0f, float y=0.0f, float w=0.0f, float h=0.0f);
@@ -32,8 +23,51 @@ public:
   // nsISupports interface:
   NS_DECL_ISUPPORTS
 
-  // nsIDOMSVGRect interface:
-  NS_DECL_NSIDOMSVGRECT
+  // WebIDL
+  virtual float X() const MOZ_OVERRIDE MOZ_FINAL
+  {
+    return mX;
+  }
+
+  virtual void SetX(float aX, ErrorResult& aRv) MOZ_FINAL
+  {
+    mX = aX;
+  }
+
+  virtual float Y() const MOZ_OVERRIDE MOZ_FINAL
+  {
+    return mY;
+  }
+
+  virtual void SetY(float aY, ErrorResult& aRv) MOZ_FINAL
+  {
+    mY = aY;
+  }
+
+  virtual float Width() const MOZ_OVERRIDE MOZ_FINAL
+  {
+    return mWidth;
+  }
+
+  virtual void SetWidth(float aWidth, ErrorResult& aRv) MOZ_FINAL
+  {
+    mWidth = aWidth;
+  }
+
+  virtual float Height() const MOZ_OVERRIDE MOZ_FINAL
+  {
+    return mHeight;
+  }
+
+  virtual void SetHeight(float aHeight, ErrorResult& aRv) MOZ_FINAL
+  {
+    mHeight = aHeight;
+  }
+
+  using mozilla::dom::SVGIRect::SetX;
+  using mozilla::dom::SVGIRect::SetY;
+  using mozilla::dom::SVGIRect::SetWidth;
+  using mozilla::dom::SVGIRect::SetHeight;
 
 protected:
   float mX, mY, mWidth, mHeight;
@@ -41,5 +75,13 @@ protected:
 
 } // namespace dom
 } // namespace mozilla
+
+nsresult
+NS_NewSVGRect(mozilla::dom::SVGRect** result,
+              float x=0.0f, float y=0.0f,
+              float width=0.0f, float height=0.0f);
+
+nsresult
+NS_NewSVGRect(mozilla::dom::SVGRect** result, const gfxRect& rect);
 
 #endif //mozilla_dom_SVGRect_h
