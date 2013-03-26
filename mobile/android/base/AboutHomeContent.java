@@ -41,17 +41,20 @@ import android.text.style.TextAppearanceSpan;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AbsListView;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.ScrollView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
@@ -189,9 +192,8 @@ public class AboutHomeContent extends ScrollView
 
         mTopSitesGrid.setOnCreateContextMenuListener(new View.OnCreateContextMenuListener() {
             @Override
-            public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-                AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)menuInfo;
-                mTopSitesGrid.setSelectedPosition(info.position);
+            public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
+                AdapterContextMenuInfo info = (AdapterContextMenuInfo) menuInfo;
 
                 MenuInflater inflater = mActivity.getMenuInflater();
                 inflater.inflate(R.menu.abouthome_topsites_contextmenu, menu);
@@ -202,6 +204,8 @@ public class AboutHomeContent extends ScrollView
                 View view = mTopSitesGrid.getChildAt(info.position);
                 TopSitesViewHolder holder = (TopSitesViewHolder) view.getTag();
                 if (TextUtils.isEmpty(holder.getUrl())) {
+                    menu.findItem(R.id.abouthome_open_new_tab).setVisible(false);
+                    menu.findItem(R.id.abouthome_open_private_tab).setVisible(false);
                     menu.findItem(R.id.abouthome_topsites_pin).setVisible(false);
                     menu.findItem(R.id.abouthome_topsites_unpin).setVisible(false);
                     menu.findItem(R.id.abouthome_topsites_remove).setVisible(false);
@@ -784,8 +788,6 @@ public class AboutHomeContent extends ScrollView
     }
 
     public static class TopSitesGridView extends GridView {
-        int mSelected = -1;
-
         public TopSitesGridView(Context context, AttributeSet attrs) {
             super(context, attrs);
         }
@@ -825,14 +827,6 @@ public class AboutHomeContent extends ScrollView
             heightMeasureSpec = MeasureSpec.makeMeasureSpec((int)(w*ThumbnailHelper.THUMBNAIL_ASPECT_RATIO*numRows) + getPaddingTop() + getPaddingBottom(),
                                                                  MeasureSpec.EXACTLY);
             super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        }
-
-        public void setSelectedPosition(int position) {
-            mSelected = position;
-        }
-
-        public int getSelectedPosition() {
-            return mSelected;
         }
     }
 
@@ -988,10 +982,27 @@ public class AboutHomeContent extends ScrollView
         holder.setPinned(false);
     }
 
-    public void unpinSite(final UnpinFlags flags) {
-        final int position = mTopSitesGrid.getSelectedPosition();
-        final View v = mTopSitesGrid.getChildAt(position);
-        final TopSitesViewHolder holder = (TopSitesViewHolder) v.getTag();
+    private void openTab(ContextMenuInfo menuInfo, int flags) {
+        AdapterContextMenuInfo info = (AdapterContextMenuInfo) menuInfo;
+        final TopSitesViewHolder holder = (TopSitesViewHolder) info.targetView.getTag();
+        final String url = holder.getUrl();
+
+        Tabs.getInstance().loadUrl(url, flags);
+        Toast.makeText(mActivity, R.string.new_tab_opened, Toast.LENGTH_SHORT).show();
+    }
+
+    public void openNewTab(ContextMenuInfo menuInfo) {
+        openTab(menuInfo, Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_BACKGROUND);
+    }
+
+    public void openNewPrivateTab(ContextMenuInfo menuInfo) {
+        openTab(menuInfo, Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_PRIVATE | Tabs.LOADURL_BACKGROUND);
+    }
+
+    public void unpinSite(ContextMenuInfo menuInfo, final UnpinFlags flags) {
+        AdapterContextMenuInfo info = (AdapterContextMenuInfo) menuInfo;
+        final int position = info.position;
+        final TopSitesViewHolder holder = (TopSitesViewHolder) info.targetView.getTag();
         final String url = holder.getUrl();
         // Quickly update the view so that there isn't as much lag between the request and response
         clearThumbnail(holder);
@@ -1008,11 +1019,11 @@ public class AboutHomeContent extends ScrollView
         }).execute();
     }
 
-    public void pinSite() {
-        final int position = mTopSitesGrid.getSelectedPosition();
-        View v = mTopSitesGrid.getChildAt(position);
+    public void pinSite(ContextMenuInfo menuInfo) {
+        AdapterContextMenuInfo info = (AdapterContextMenuInfo) menuInfo;
+        final int position = info.position;
 
-        final TopSitesViewHolder holder = (TopSitesViewHolder) v.getTag();
+        final TopSitesViewHolder holder = (TopSitesViewHolder) info.targetView.getTag();
         holder.setPinned(true);
 
         // update the database on a background thread
@@ -1026,16 +1037,14 @@ public class AboutHomeContent extends ScrollView
         }).execute();
     }
 
-    public void editSite() {
-        int position = mTopSitesGrid.getSelectedPosition();
-        View v = mTopSitesGrid.getChildAt(position);
-
-        TopSitesViewHolder holder = (TopSitesViewHolder) v.getTag();
-        editSite(holder.getUrl(), position);
+    public void editSite(ContextMenuInfo menuInfo) {
+        AdapterContextMenuInfo info = (AdapterContextMenuInfo) menuInfo;
+        TopSitesViewHolder holder = (TopSitesViewHolder) info.targetView.getTag();
+        editSite(holder.getUrl(), info.position);
     }
 
     // Edit the site at position. Provide a url to start editing with
-    public void editSite(String url, final int position) {
+    private void editSite(String url, final int position) {
         Intent intent = new Intent(mContext, AwesomeBar.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
         intent.putExtra(AwesomeBar.TARGET_KEY, AwesomeBar.Target.PICK_SITE.toString());

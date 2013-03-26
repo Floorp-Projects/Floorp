@@ -39,6 +39,7 @@ import android.nfc.NfcEvent;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -1495,21 +1496,31 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     public boolean onContextItemSelected(MenuItem item) {
+        ContextMenuInfo info = item.getMenuInfo();
+
         switch (item.getItemId()) {
+            case R.id.abouthome_open_new_tab:
+                mAboutHomeContent.openNewTab(info);
+                return true;
+
+            case R.id.abouthome_open_private_tab:
+                mAboutHomeContent.openNewPrivateTab(info);
+                return true;
+
             case R.id.abouthome_topsites_edit:
-                mAboutHomeContent.editSite();
+                mAboutHomeContent.editSite(info);
                 return true;
 
             case R.id.abouthome_topsites_unpin:
-                mAboutHomeContent.unpinSite(AboutHomeContent.UnpinFlags.REMOVE_PIN);
+                mAboutHomeContent.unpinSite(info, AboutHomeContent.UnpinFlags.REMOVE_PIN);
                 return true;
 
             case R.id.abouthome_topsites_pin:
-                mAboutHomeContent.pinSite();
+                mAboutHomeContent.pinSite(info);
                 return true;
 
             case R.id.abouthome_topsites_remove:
-                mAboutHomeContent.unpinSite(AboutHomeContent.UnpinFlags.REMOVE_HISTORY);
+                mAboutHomeContent.unpinSite(info, AboutHomeContent.UnpinFlags.REMOVE_HISTORY);
                 return true;
 
         }
