@@ -614,10 +614,7 @@ abstract public class GeckoApp
         if (outState == null)
             outState = new Bundle();
 
-        boolean inBackground =
-            ((GeckoApplication)getApplication()).isApplicationInBackground();
-
-        outState.putBoolean(SAVED_STATE_IN_BACKGROUND, inBackground);
+        outState.putBoolean(SAVED_STATE_IN_BACKGROUND, isApplicationInBackground());
         outState.putString(SAVED_STATE_PRIVATE_SESSION, mPrivateBrowsingSession);
     }
 
