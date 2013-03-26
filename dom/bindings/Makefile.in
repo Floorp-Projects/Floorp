@@ -221,11 +221,6 @@ ParserResults.pkl: $(globalgen_dependencies)
     $(all_webidl_files)
 
 GARBAGE += \
-  $(binding_header_files) \
-  $(binding_cpp_files) \
-  $(all_webidl_files) \
-  $(globalgen_targets) \
-  ParserResults.pkl \
   webidlyacc.py \
   parser.out \
   $(wildcard *-example.h) \
@@ -237,5 +232,13 @@ GARBAGE += \
 # headers they depend on.  This is really only needed for the test files, since
 # the non-test headers are all exported above anyway.
 webidl-export:: $(binding_header_files)
+
+distclean::
+	-$(RM) \
+        $(binding_header_files) \
+        $(binding_cpp_files) \
+        $(all_webidl_files) \
+        $(globalgen_targets) \
+        ParserResults.pkl
 
 .PHONY: webidl-export
