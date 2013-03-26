@@ -598,7 +598,7 @@ TypeInferenceOracle::callArgsBarrier(HandleScript caller, jsbytecode *pc)
 }
 
 bool
-TypeInferenceOracle::canEnterInlinedFunction(RawScript caller, jsbytecode *pc, RawFunction target)
+TypeInferenceOracle::canEnterInlinedFunction(RawFunction target)
 {
     RootedScript targetScript(cx, target->nonLazyScript());
 
@@ -631,9 +631,20 @@ TypeInferenceOracle::canEnterInlinedFunction(RawScript caller, jsbytecode *pc, R
     if (!targetType || targetType->unknownProperties())
         return false;
 
-    JSOp op = JSOp(*pc);
+    // TI calls ObjectStateChange to trigger invalidation of the caller.
+    HeapTypeSet::WatchObjectStateChange(cx, targetType);
+    return true;
+}
+
+bool
+TypeInferenceOracle::callReturnTypeSetMatches(RawScript callerScript, jsbytecode *callerPc,
+                                              RawFunction callee)
+{
+    RootedScript targetScript(cx, callee->nonLazyScript());
+
+    JSOp op = JSOp(*callerPc);
     TypeSet *returnTypes = TypeScript::ReturnTypes(targetScript);
-    TypeSet *callReturn = getCallReturn(caller, pc);
+    TypeSet *callReturn = getCallReturn(callerScript, callerPc);
     if (op == JSOP_NEW) {
         if (!returnTypes->isSubsetIgnorePrimitives(callReturn))
             return false;
@@ -642,8 +653,74 @@ TypeInferenceOracle::canEnterInlinedFunction(RawScript caller, jsbytecode *pc, R
             return false;
     }
 
-    // TI calls ObjectStateChange to trigger invalidation of the caller.
-    HeapTypeSet::WatchObjectStateChange(cx, targetType);
+    return true;
+}
+
+bool
+TypeInferenceOracle::callArgsTypeSetMatches(types::StackTypeSet *thisType, Vector<types::StackTypeSet *> &argvType, RawFunction callee)
+{
+    RootedScript targetScript(cx, callee->nonLazyScript());
+    types::TypeSet *calleeType;
+
+    size_t nargs = Min<size_t>(callee->nargs, argvType.length());
+
+    // This
+    calleeType = types::TypeScript::ThisTypes(targetScript);
+    if (!thisType->isSubset(calleeType))
+        return false;
+
+    // Arguments
+    for (size_t i = 0; i < nargs; i++) {
+        calleeType = types::TypeScript::ArgTypes(targetScript, i);
+        if (!argvType[i]->isSubset(calleeType))
+            return false;
+    }
+
+    // Arguments that weren't provided will be Undefined
+    for (size_t i = nargs; i < callee->nargs; i++) {
+        calleeType = types::TypeScript::ArgTypes(targetScript, i);
+        if (calleeType->unknown() ||
+            !calleeType->hasType(types::Type::UndefinedType()))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool
+TypeInferenceOracle::callArgsTypeSetIntersects(types::StackTypeSet *thisType, Vector<types::StackTypeSet *> &argvType, RawFunction callee)
+{
+    RootedScript targetScript(cx, callee->nonLazyScript());
+    types::TypeSet *calleeType;
+
+    size_t nargs = Min<size_t>(callee->nargs, argvType.length());
+
+    // This
+    if (thisType) {
+        calleeType = types::TypeScript::ThisTypes(targetScript);
+        if (thisType->intersectionEmpty(calleeType))
+            return false;
+    }
+
+    // Arguments
+    for (size_t i = 0; i < nargs; i++) {
+        calleeType = types::TypeScript::ArgTypes(targetScript, i);
+        if (argvType[i]->intersectionEmpty(calleeType))
+            return false;
+    }
+
+    // Arguments that weren't provided will be Undefined
+    for (size_t i = nargs; i < callee->nargs; i++) {
+        calleeType = types::TypeScript::ArgTypes(targetScript, i);
+        if (calleeType->unknown() ||
+            !calleeType->hasType(types::Type::UndefinedType()))
+        {
+            return false;
+        }
+    }
+
     return true;
 }
 
