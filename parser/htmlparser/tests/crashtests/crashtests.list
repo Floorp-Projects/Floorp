@@ -34,7 +34,6 @@ asserts-if(Android,1) skip-if((OSX==10.7||OSX==10.8)&&browserIsRemote) load 3287
 load 408939-1.html
 load 423373-1.html
 load 445171-1.html
-skip-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) load 460706-1.xhtml # skip on WinXP - bug 851965
 load 468538-1.xhtml
 load 515278-1.html
 load 515533-1.html
