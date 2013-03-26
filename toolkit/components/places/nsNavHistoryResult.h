@@ -26,7 +26,6 @@ class nsNavHistoryQueryOptions;
 class nsNavHistoryContainerResultNode;
 class nsNavHistoryFolderResultNode;
 class nsNavHistoryQueryResultNode;
-class nsNavHistoryVisitResultNode;
 
 /**
  * hashkey wrapper using int64_t KeyType
@@ -290,9 +289,9 @@ public:
   // would take a vtable slot for every one of (potentially very many) nodes.
   // Note that GetType() already has a vtable slot because its on the iface.
   bool IsTypeContainer(uint32_t type) {
-    return (type == nsINavHistoryResultNode::RESULT_TYPE_QUERY ||
-            type == nsINavHistoryResultNode::RESULT_TYPE_FOLDER ||
-            type == nsINavHistoryResultNode::RESULT_TYPE_FOLDER_SHORTCUT);
+    return type == nsINavHistoryResultNode::RESULT_TYPE_QUERY ||
+           type == nsINavHistoryResultNode::RESULT_TYPE_FOLDER ||
+           type == nsINavHistoryResultNode::RESULT_TYPE_FOLDER_SHORTCUT;
   }
   bool IsContainer() {
     uint32_t type;
@@ -300,25 +299,16 @@ public:
     return IsTypeContainer(type);
   }
   static bool IsTypeURI(uint32_t type) {
-    return (type == nsINavHistoryResultNode::RESULT_TYPE_URI ||
-            type == nsINavHistoryResultNode::RESULT_TYPE_VISIT);
+    return type == nsINavHistoryResultNode::RESULT_TYPE_URI;
   }
   bool IsURI() {
     uint32_t type;
     GetType(&type);
     return IsTypeURI(type);
   }
-  static bool IsTypeVisit(uint32_t type) {
-    return type == nsINavHistoryResultNode::RESULT_TYPE_VISIT;
-  }
-  bool IsVisit() {
-    uint32_t type;
-    GetType(&type);
-    return IsTypeVisit(type);
-  }
   static bool IsTypeFolder(uint32_t type) {
-    return (type == nsINavHistoryResultNode::RESULT_TYPE_FOLDER ||
-            type == nsINavHistoryResultNode::RESULT_TYPE_FOLDER_SHORTCUT);
+    return type == nsINavHistoryResultNode::RESULT_TYPE_FOLDER ||
+           type == nsINavHistoryResultNode::RESULT_TYPE_FOLDER_SHORTCUT;
   }
   bool IsFolder() {
     uint32_t type;
@@ -326,7 +316,7 @@ public:
     return IsTypeFolder(type);
   }
   static bool IsTypeQuery(uint32_t type) {
-    return (type == nsINavHistoryResultNode::RESULT_TYPE_QUERY);
+    return type == nsINavHistoryResultNode::RESULT_TYPE_QUERY;
   }
   bool IsQuery() {
     uint32_t type;
@@ -336,15 +326,11 @@ public:
   bool IsSeparator() {
     uint32_t type;
     GetType(&type);
-    return (type == nsINavHistoryResultNode::RESULT_TYPE_SEPARATOR);
+    return type == nsINavHistoryResultNode::RESULT_TYPE_SEPARATOR;
   }
   nsNavHistoryContainerResultNode* GetAsContainer() {
     NS_ASSERTION(IsContainer(), "Not a container");
     return reinterpret_cast<nsNavHistoryContainerResultNode*>(this);
-  }
-  nsNavHistoryVisitResultNode* GetAsVisit() {
-    NS_ASSERTION(IsVisit(), "Not a visit");
-    return reinterpret_cast<nsNavHistoryVisitResultNode*>(this);
   }
   nsNavHistoryFolderResultNode* GetAsFolder() {
     NS_ASSERTION(IsFolder(), "Not a folder");
@@ -384,32 +370,6 @@ public:
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsNavHistoryResultNode, NS_NAVHISTORYRESULTNODE_IID)
-
-// nsNavHistoryVisitResultNode
-
-#define NS_IMPLEMENT_VISITRESULT \
-  NS_IMETHOD GetUri(nsACString& aURI) { aURI = mURI; return NS_OK; } \
-  NS_IMETHOD GetSessionId(int64_t* aSessionId) \
-    { *aSessionId = mSessionId; return NS_OK; }
-
-class nsNavHistoryVisitResultNode : public nsNavHistoryResultNode,
-                                    public nsINavHistoryVisitResultNode
-{
-public:
-  nsNavHistoryVisitResultNode(const nsACString& aURI, const nsACString& aTitle,
-                              uint32_t aAccessCount, PRTime aTime,
-                              const nsACString& aIconURI, int64_t aSession);
-
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_FORWARD_COMMON_RESULTNODE_TO_BASE
-  NS_IMETHOD GetType(uint32_t* type)
-    { *type = nsNavHistoryResultNode::RESULT_TYPE_VISIT; return NS_OK; }
-  NS_IMPLEMENT_VISITRESULT
-
-public:
-
-  int64_t mSessionId;
-};
 
 
 // nsNavHistoryContainerResultNode

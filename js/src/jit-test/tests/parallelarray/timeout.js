@@ -11,4 +11,7 @@ function iterate(x) {
 }
 
 timeout(1);
-new ParallelArray([2048], iterate);
+if (getBuildConfiguration().parallelJS)
+  new ParallelArray([2048], iterate);
+else
+  while (true);

@@ -7,4 +7,5 @@ function testLength() {
 }
 
 // FIXME(bug 844988) immutability not enforced
-// testLength();
+// if (getBuildConfiguration().parallelJS)
+//   testLength();

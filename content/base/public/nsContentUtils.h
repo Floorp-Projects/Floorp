@@ -1996,13 +1996,6 @@ public:
   static nsresult Atob(const nsAString& aAsciiString,
                        nsAString& aBinaryData);
 
-  /** If aJSArray is a Javascript array, this method iterates over its
-   *  elements and appends values to aRetVal as nsIAtoms.
-   *  @throw NS_ERROR_ILLEGAL_VALUE if aJSArray isn't a JS array.
-   */ 
-  static nsresult JSArrayToAtomArray(JSContext* aCx, const JS::Value& aJSArray,
-                                     nsCOMArray<nsIAtom>& aRetVal);
-
   /**
    * Returns whether the input element passed in parameter has the autocomplete
    * functionality enabled. It is taking into account the form owner.

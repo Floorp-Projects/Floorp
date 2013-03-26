@@ -10,7 +10,7 @@
 #include "nsRegion.h"
 #include "yuv_convert.h"
 #include "ycbcr_to_rgb565.h"
-#include "sampler.h"
+#include "GeckoProfiler.h"
 
 #ifdef XP_WIN
 #include "gfxWindowsPlatform.h"
@@ -221,7 +221,7 @@ CreateSamplingRestrictedDrawable(gfxDrawable* aDrawable,
                                  const gfxRect& aSubimage,
                                  const gfxImageSurface::gfxImageFormat aFormat)
 {
-    SAMPLE_LABEL("gfxUtils", "CreateSamplingRestricedDrawable");
+    PROFILER_LABEL("gfxUtils", "CreateSamplingRestricedDrawable");
     gfxRect userSpaceClipExtents = aContext->GetClipExtents();
     // This isn't optimal --- if aContext has a rotation then GetClipExtents
     // will have to do a bounding-box computation, and TransformBounds might
@@ -418,7 +418,7 @@ gfxUtils::DrawPixelSnapped(gfxContext*      aContext,
                            gfxPattern::GraphicsFilter aFilter,
                            uint32_t         aImageFlags)
 {
-    SAMPLE_LABEL("gfxUtils", "DrawPixelSnapped");
+    PROFILER_LABEL("gfxUtils", "DrawPixelSnapped");
     bool doTile = !aImageRect.Contains(aSourceRect) &&
                   !(aImageFlags & imgIContainer::FLAG_CLAMP);
 

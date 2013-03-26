@@ -48,7 +48,7 @@ void DoDrawImageSecurityCheck(dom::HTMLCanvasElement *aCanvasElement,
 // Make a double out of |v|, treating undefined values as 0.0 (for
 // the sake of sparse arrays).  Return true iff coercion
 // succeeded.
-bool CoerceDouble(jsval v, double* d);
+bool CoerceDouble(JS::Value v, double* d);
 
     /* Float validation stuff */
 #define VALIDATE(_f)  if (!NS_finite(_f)) return false
@@ -87,17 +87,17 @@ inline bool FloatValidate (double f1, double f2, double f3, double f4, double f5
 
 template<typename T>
 nsresult
-JSValToDashArray(JSContext* cx, const jsval& val,
+JSValToDashArray(JSContext* cx, const JS::Value& val,
                  FallibleTArray<T>& dashArray);
 
 template<typename T>
 nsresult
 DashArrayToJSVal(FallibleTArray<T>& dashArray,
-                 JSContext* cx, jsval* val);
+                 JSContext* cx, JS::Value* val);
 
 template<typename T>
 nsresult
-JSValToDashArray(JSContext* cx, const jsval& patternArray,
+JSValToDashArray(JSContext* cx, const JS::Value& patternArray,
                  FallibleTArray<T>& dashes)
 {
     // The cap is pretty arbitrary.  16k should be enough for
@@ -117,7 +117,7 @@ JSValToDashArray(JSContext* cx, const jsval& patternArray,
 
         bool haveNonzeroElement = false;
         for (uint32_t i = 0; i < length; ++i) {
-            jsval elt;
+            JS::Value elt;
             double d;
             if (!JS_GetElement(cx, obj, i, &elt)) {
                 return NS_ERROR_FAILURE;
@@ -151,7 +151,7 @@ JSValToDashArray(JSContext* cx, const jsval& patternArray,
 template<typename T>
 nsresult
 DashArrayToJSVal(FallibleTArray<T>& dashes,
-                 JSContext* cx, jsval* val)
+                 JSContext* cx, JS::Value* val)
 {
     if (dashes.IsEmpty()) {
         *val = JSVAL_NULL;
@@ -162,7 +162,7 @@ DashArrayToJSVal(FallibleTArray<T>& dashes,
         }
         for (uint32_t i = 0; i < dashes.Length(); ++i) {
             double d = dashes[i];
-            jsval elt = DOUBLE_TO_JSVAL(d);
+            JS::Value elt = DOUBLE_TO_JSVAL(d);
             if (!JS_SetElement(cx, obj, i, &elt)) {
                 return NS_ERROR_FAILURE;
             }

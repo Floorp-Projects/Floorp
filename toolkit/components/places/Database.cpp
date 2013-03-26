@@ -721,6 +721,13 @@ Database::InitSchema(bool* aDatabaseMigrated)
 
       // Firefox 14 uses schema version 21.
 
+      if (currentSchemaVersion < 22) {
+        rv = MigrateV22Up();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Firefox 22 uses schema version 22.
+
       // Schema Upgrades must add migration code here.
 
       rv = UpdateBookmarkRootTitles();
@@ -1868,6 +1875,21 @@ Database::MigrateV21Up()
 
   nsCOMPtr<mozIStoragePendingStatement> ps;
   rv = updatePrefixesStmt->ExecuteAsync(nullptr, getter_AddRefs(ps));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult
+Database::MigrateV22Up()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // Reset all session IDs to 0 since we don't support them anymore.
+  // We don't set them to NULL to avoid breaking downgrades.
+  nsresult rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "UPDATE moz_historyvisits SET session = 0"
+  ));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

@@ -31,4 +31,4 @@ function testDivideScatterVector() {
     }
 }
 
-testDivideScatterVector();
+if (getBuildConfiguration().parallelJS) testDivideScatterVector();

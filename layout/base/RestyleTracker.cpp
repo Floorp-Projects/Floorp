@@ -11,7 +11,7 @@
 #include "RestyleTracker.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsStyleChangeList.h"
-#include "sampler.h"
+#include "GeckoProfiler.h"
 
 namespace mozilla {
 namespace css {
@@ -135,7 +135,7 @@ RestyleTracker::ProcessOneRestyle(Element* aElement,
 void
 RestyleTracker::DoProcessRestyles()
 {
-  SAMPLE_LABEL("CSS", "ProcessRestyles");
+  PROFILER_LABEL("CSS", "ProcessRestyles");
   // Make sure to not rebuild quote or counter lists while we're
   // processing restyles
   mFrameConstructor->BeginUpdate();

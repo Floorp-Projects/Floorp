@@ -171,7 +171,7 @@ nsDOMMultipartFile::Initialize(nsISupports* aOwner,
                                JSContext* aCx,
                                JSObject* aObj,
                                uint32_t aArgc,
-                               jsval* aArgv)
+                               JS::Value* aArgv)
 {
   if (!mIsFile) {
     return InitBlob(aCx, aArgc, aArgv, GetXPConnectNative);
@@ -182,7 +182,7 @@ nsDOMMultipartFile::Initialize(nsISupports* aOwner,
 nsresult
 nsDOMMultipartFile::InitBlob(JSContext* aCx,
                              uint32_t aArgc,
-                             jsval* aArgv,
+                             JS::Value* aArgv,
                              UnwrapFuncPtr aUnwrapFunc)
 {
   bool nativeEOL = false;
@@ -219,7 +219,7 @@ nsDOMMultipartFile::InitBlob(JSContext* aCx,
     uint32_t length;
     JS_ALWAYS_TRUE(JS_GetArrayLength(aCx, &obj, &length));
     for (uint32_t i = 0; i < length; ++i) {
-      jsval element;
+      JS::Value element;
       if (!JS_GetElement(aCx, &obj, i, &element))
         return NS_ERROR_TYPE_ERR;
 
@@ -268,7 +268,7 @@ nsDOMMultipartFile::InitBlob(JSContext* aCx,
 nsresult
 nsDOMMultipartFile::InitFile(JSContext* aCx,
                              uint32_t aArgc,
-                             jsval* aArgv)
+                             JS::Value* aArgv)
 {
   nsresult rv;
 
