@@ -1,5 +1,6 @@
 
 #include "PlatformMacros.h"
+#include "nsAutoPtr.h"
 
 #if !defined(SPS_OS_windows)
 # include "common/module.h"
@@ -9,7 +10,6 @@
 #include "google_breakpad/processor/code_modules.h"
 #include "google_breakpad/processor/stack_frame.h"
 #include "processor/logging.h"
-#include "common/scoped_ptr.h"
 
 #if defined(SPS_PLAT_amd64_linux) || defined(SPS_PLAT_arm_android) \
     || defined(SPS_PLAT_x86_linux) || defined(SPS_PLAT_x86_android)
@@ -145,15 +145,18 @@ CFIFrameInfo* LocalDebugInfoSymbolizer::FindCFIFrameInfo(
     return NULL;
 
   //TODO: can we cache this data per-address? does that make sense?
-  scoped_ptr<CFIFrameInfo> rules(new CFIFrameInfo());
-  ConvertCFI(entry->initial_rules, rules.get());
+  // TODO: Maybe this should use google_breakpad::scoped_ptr, since we're in
+  // "namespace google_breakpad". Not using scoped_ptr currently, because its
+  // header triggers build warnings -- see bug 855010.
+  nsAutoPtr<CFIFrameInfo> rules(new CFIFrameInfo());
+  ConvertCFI(entry->initial_rules, rules);
   for (Module::RuleChangeMap::const_iterator delta_it =
            entry->rule_changes.begin();
        delta_it != entry->rule_changes.end() && delta_it->first < address;
        ++delta_it) {
-    ConvertCFI(delta_it->second, rules.get());
+    ConvertCFI(delta_it->second, rules);
   }
-  return rules.release();
+  return rules.forget();
 #endif /* defined(SPS_OS_windows) */
 }
 
