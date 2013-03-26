@@ -694,15 +694,9 @@
                                                                this.mFaviconService.FAVICON_LOAD_NON_PRIVATE);
             }
 
-            let sizedIconUrl = browser.mIconURL || "";
-            if (sizedIconUrl) {
-              let size = Math.round(16 * window.devicePixelRatio);
-              sizedIconUrl += (sizedIconUrl.contains("#") ? "&" : "#") +
-                              "-moz-resolution=" + size + "," + size;
-            }
-            if (sizedIconUrl != aTab.getAttribute("image")) {
-              if (sizedIconUrl)
-                aTab.setAttribute("image", sizedIconUrl);
+            if ((browser.mIconURL || "") != aTab.getAttribute("image")) {
+              if (browser.mIconURL)
+                aTab.setAttribute("image", browser.mIconURL);
               else
                 aTab.removeAttribute("image");
               this._tabAttrModified(aTab);
