@@ -45,7 +45,6 @@ var SelectionHandler = {
   _contentOffset: { x:0, y:0 },
   _domWinUtils: null,
   _selectionMoveActive: false,
-  _lastMarker: "",
   _debugOptions: { dumpRanges: false, displayRanges: false },
   _snap: true,
 
@@ -188,6 +187,14 @@ var SelectionHandler = {
 
     // We bail if things get out of sync here implying we missed a message.
     this._selectionMoveActive = true;
+
+    if (this._targetIsEditable) {
+      // If we're coming out of an out-of-bounds scroll, the node the user is
+      // trying to drag may be hidden (the monocle will be pegged to the edge
+      // of the edit). Make sure the node the user wants to move is visible
+      // and has focus.
+      this._updateInputFocus(aMsg.change);
+    }
 
     // Update the position of our selection monocles
     this._updateSelectionUI(true, true);
@@ -594,63 +601,16 @@ var SelectionHandler = {
     }
 
     // Adjust our y position up such that we are sending coordinates on
-    // the text line vs. below it where the monocle is positioned. This
-    // applies to free floating text areas. For text inputs we'll constrain
-    // coordinates further below.
+    // the text line vs. below it where the monocle is positioned.
     let halfLineHeight = this._queryHalfLineHeight(aMarker, selection);
     clientPoint.yPos -= halfLineHeight;
 
+    // Modify selection based on monocle movement
     if (this._targetIsEditable) {
-      // Check to see if we are beyond the bounds of selection in a input
-      // control. If we are we want to add selection and scroll the added
-      // selection into view.
-      let result = this.updateTextEditSelection(clientPoint);
-
-      // If we're targeting a text input of any kind, make sure clientPoint
-      // is contained within the bounds of the text control. For example, if
-      // a user drags up too close to an upper bounds, selectAtPoint might
-      // select the content above the control. This looks crappy and breaks
-      // our selection rect management.
-      clientPoint =
-       this._constrainPointWithinControl(clientPoint, halfLineHeight);
-
-      // If result.trigger is true, the monocle is outside the bounds of the
-      // control. If it's false, fall through to our additive text selection
-      // below.
-      if (result.trigger) {
-        // _handleSelectionPoint is triggered by input movement, so if we've
-        // tested positive for out-of-bounds scrolling here, we need to set a
-        // recurring timer to keep the expected selection behavior going as
-        // long as the user keeps the monocle out of bounds.
-        if (!this._scrollTimer)
-          this._scrollTimer = new Util.Timeout();
-        this._setTextEditUpdateInterval(result.speed);
-
-        // Smooth the selection
-        this._setContinuousSelection();
-
-        // Update the other monocle's position if we've dragged off to one side
-        this._updateSelectionUI(result.start, result.end);
-
-        return;
-      }
-    }
-
-    this._lastMarker = aMarker;
-
-    // If we aren't out-of-bounds, clear the scroll timer if it exists.
-    this._clearTimers();
-
-    // Adjusts the selection based on monocle movement
-    this._adjustSelection(aMarker, clientPoint, aEndOfSelection);
-
-    // Update the other monocle's position. We do this because the dragging
-    // monocle may reset the static monocle to a new position if the dragging
-    // monocle drags ahead or behind the other.
-    if (aMarker == "start") {
-      this._updateSelectionUI(false, true);
+      this._adjustEditableSelection(aMarker, clientPoint,
+                                    halfLineHeight, aEndOfSelection);
     } else {
-      this._updateSelectionUI(true, false);
+      this._adjustSelection(aMarker, clientPoint, aEndOfSelection);
     }
   },
 
@@ -659,6 +619,59 @@ var SelectionHandler = {
    */
 
   /*
+   * _adjustEditableSelection
+   *
+   * Based on a monocle marker and position, adds or subtracts from the
+   * existing selection in editable controls. Handles auto-scroll as well.
+   *
+   * @param the marker currently being manipulated
+   * @param aAdjustedClientPoint client point adjusted for line height.
+   * @param aHalfLineHeight half line height in pixels
+   * @param aEndOfSelection indicates if this is the end of a selection
+   * move, in which case we may want to snap to the end of a word or
+   * sentence.
+   */
+  _adjustEditableSelection: function _adjustEditableSelection(aMarker,
+                                                              aAdjustedClientPoint,
+                                                              aHalfLineHeight,
+                                                              aEndOfSelection) {
+    // Test to see if we need to handle auto-scroll in cases where the
+    // monocle is outside the bounds of the control. This also handles
+    // adjusting selection if out-of-bounds is true.
+    let result = this.updateTextEditSelection(aAdjustedClientPoint);
+
+    // If result.trigger is true, the monocle is outside the bounds of the
+    // control.
+    if (result.trigger) {
+      // _handleSelectionPoint is triggered by input movement, so if we've
+      // tested positive for out-of-bounds scrolling here, we need to set a
+      // recurring timer to keep the expected selection behavior going as
+      // long as the user keeps the monocle out of bounds.
+      this._setTextEditUpdateInterval(result.speed);
+
+      // Smooth the selection
+      this._setContinuousSelection();
+
+      // Update the other monocle's position if we've dragged off to one side
+      this._updateSelectionUI(result.start, result.end);
+    } else {
+      // If we aren't out-of-bounds, clear the scroll timer if it exists.
+      this._clearTimers();
+
+      // Restrict the client point to the interior of the control. Prevents
+      // _adjustSelection from accidentally selecting content outside the
+      // control.
+      let constrainedPoint =
+        this._constrainPointWithinControl(aAdjustedClientPoint, aHalfLineHeight);
+
+      // Add or subtract selection
+      this._adjustSelection(aMarker, constrainedPoint, aEndOfSelection);
+    }
+  },
+
+  /*
+   * _adjustSelection
+   *
    * Based on a monocle marker and position, adds or subtracts from the
    * existing selection.
    *
@@ -707,6 +720,15 @@ var SelectionHandler = {
 
     // Smooth over the selection between all existing ranges.
     this._setContinuousSelection();
+
+    // Update the other monocle's position. We do this because the dragging
+    // monocle may reset the static monocle to a new position if the dragging
+    // monocle drags ahead or behind the other.
+    if (aMarker == "start") {
+      this._updateSelectionUI(false, true);
+    } else {
+      this._updateSelectionUI(true, false);
+    }
   },
 
   /*
@@ -780,9 +802,9 @@ var SelectionHandler = {
   /*
    * updateTextEditSelection(aPoint, aClientPoint)
    *
-   * Checks to see if the monocle point is outside the bounds of the
-   * target edit. If so, use the selection controller to select and
-   * scroll the edit appropriately.
+   * Checks to see if the monocle point is outside the bounds of the target
+   * edit. If so, use the selection controller to select and scroll the edit
+   * appropriately.
    *
    * @param aClientPoint raw pointer position
    * @return { speed: 0.0 -> 1.0,
@@ -823,6 +845,8 @@ var SelectionHandler = {
 
   _setTextEditUpdateInterval: function _setTextEditUpdateInterval(aSpeedValue) {
     let timeout = (75 - (aSpeedValue * 75));
+    if (!this._scrollTimer)
+      this._scrollTimer = new Util.Timeout();
     this._scrollTimer.interval(timeout, this.scrollTimerCallback);
   },
 
@@ -836,7 +860,6 @@ var SelectionHandler = {
    * _addEditSelection - selection control call wrapper for text inputs.
    * Adds selection on the anchor or focus side of selection in a text
    * input. Scrolls the location into view as well.
-   * (TBD: anchor side scrolling is currently broken, see bug 848594)
    *
    * @param const selection node identifier
    */
@@ -844,16 +867,32 @@ var SelectionHandler = {
     let selCtrl = this._getSelectController();
     try {
       if (aLocation == kSelectionNodeAnchor) {
-        this._targetElement.selectionStart = this._targetElement.selectionStart - 1;
-        selCtrl.scrollSelectionIntoView(Ci.nsISelectionController.SELECTION_NORMAL,
-                                        Ci.nsISelectionController.SELECTION_ANCHOR_REGION,
-                                        Ci.nsISelectionController.SCROLL_SYNCHRONOUS);
+        let start = Math.max(this._targetElement.selectionStart - 1, 0);
+        this._targetElement.setSelectionRange(start, this._targetElement.selectionEnd,
+                                              "backward");
       } else {
-        this._targetElement.selectionEnd = this._targetElement.selectionEnd + 1;
-        selCtrl.scrollSelectionIntoView(Ci.nsISelectionController.SELECTION_NORMAL,
-                                        Ci.nsISelectionController.SELECTION_FOCUS_REGION,
-                                        Ci.nsISelectionController.SCROLL_SYNCHRONOUS);
+        let end = Math.min(this._targetElement.selectionEnd + 1,
+                           this._targetElement.textLength);
+        this._targetElement.setSelectionRange(this._targetElement.selectionStart,
+                                              end,
+                                              "forward");
       }
+      selCtrl.scrollSelectionIntoView(Ci.nsISelectionController.SELECTION_NORMAL,
+                                      Ci.nsISelectionController.SELECTION_FOCUS_REGION,
+                                      Ci.nsISelectionController.SCROLL_SYNCHRONOUS);
+    } catch (ex) { Util.dumpLn(ex);}
+  },
+
+  _updateInputFocus: function _updateInputFocus(aMarker) {
+    try {
+      let selCtrl = this._getSelectController();
+      this._targetElement.setSelectionRange(this._targetElement.selectionStart,
+                                            this._targetElement.selectionEnd,
+                                            aMarker == "start" ?
+                                              "backward" : "forward");
+      selCtrl.scrollSelectionIntoView(Ci.nsISelectionController.SELECTION_NORMAL,
+                                      Ci.nsISelectionController.SELECTION_FOCUS_REGION,
+                                      Ci.nsISelectionController.SCROLL_SYNCHRONOUS);
     } catch (ex) {}
   },
 

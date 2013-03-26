@@ -1614,6 +1614,7 @@ DataChannelConnection::HandleStreamResetEvent(const struct sctp_stream_reset_eve
           if (channel->mState == DataChannel::OPEN ||
               channel->mState == DataChannel::WAITING_TO_OPEN) {
             ResetOutgoingStream(channel->mStreamOut);
+            SendOutgoingStreamReset();
             NS_DispatchToMainThread(new DataChannelOnMessageAvailable(
                                       DataChannelOnMessageAvailable::ON_CHANNEL_CLOSED, this,
                                       channel));
@@ -2122,9 +2123,23 @@ DataChannelConnection::Close(DataChannel *aChannel)
   channel->mBufferedData.Clear();
   if (channel->mStreamOut != INVALID_STREAM) {
     ResetOutgoingStream(channel->mStreamOut);
-    SendOutgoingStreamReset();
+    if (mState == CLOSED) { // called from CloseAll()
+      // Let resets accumulate then send all at once in CloseAll()
+      // we're not going to hang around waiting
+      mStreamsOut[channel->mStreamOut] = nullptr;
+    } else {
+      SendOutgoingStreamReset();
+    }
   }
   channel->mState = CLOSING;
+  if (mState == CLOSED) {
+    // we're not going to hang around waiting
+    if (channel->mStreamOut != INVALID_STREAM) {
+      mStreamsIn[channel->mStreamIn] = nullptr;
+    }
+    channel->Destroy();
+  }
+  // At this point when we leave here, the object is a zombie held alive only by the DOM object
 }
 
 void DataChannelConnection::CloseAll()
@@ -2138,9 +2153,11 @@ void DataChannelConnection::CloseAll()
   // Close current channels
   // If there are runnables, they hold a strong ref and keep the channel
   // and/or connection alive (even if in a CLOSED state)
+  bool closed_some = false;
   for (uint32_t i = 0; i < mStreamsOut.Length(); ++i) {
     if (mStreamsOut[i]) {
       mStreamsOut[i]->Close();
+      closed_some = true;
     }
   }
 
@@ -2149,6 +2166,13 @@ void DataChannelConnection::CloseAll()
   while (nullptr != (channel = dont_AddRef(static_cast<DataChannel *>(mPending.PopFront())))) {
     LOG(("closing pending channel %p, stream %d", channel.get(), channel->mStreamOut));
     channel->Close(); // also releases the ref on each iteration
+    closed_some = true;
+  }
+  // It's more efficient to let the Resets queue in shutdown and then
+  // SendOutgoingStreamReset() here.
+  if (closed_some) {
+    MutexAutoLock lock(mLock);
+    SendOutgoingStreamReset();
   }
 }
 
