@@ -73,6 +73,42 @@ XPCOMUtils.defineLazyGetter(this, "Sanitizer", function() {
   });
 });
 
+// Lazily-loaded browser scripts that use observer notifcations:
+var LazyNotificationGetter = {
+  observers: [],
+  shutdown: function lng_shutdown() {
+    this.observers.forEach(function(o) {
+      Services.obs.removeObserver(o, o.notification, false);
+    });
+    this.observers = [];
+  }
+};
+
+[
+#ifdef MOZ_WEBRTC
+  ["WebRTC", ["getUserMedia:request"], "chrome://browser/content/WebRTC.js"],
+#endif
+  ["MemoryObserver", ["memory-pressure", "Memory:Dump"], "chrome://browser/content/MemoryObserver.js"],
+  ["ConsoleAPI", ["console-api-log-event"], "chrome://browser/content/ConsoleAPI.js"],
+].forEach(function (aScript) {
+  let [name, notifications, script] = aScript;
+  XPCOMUtils.defineLazyGetter(window, name, function() {
+    let sandbox = {};
+    Services.scriptloader.loadSubScript(script, sandbox);
+    return sandbox[name];
+  });
+  notifications.forEach(function (aNotification) {
+    let o = {
+      notification: aNotification,
+      observe: function(s, t, d) {
+        window[name].observe(s, t, d);
+      }
+    };
+    Services.obs.addObserver(o, aNotification, false);
+    LazyNotificationGetter.observers.push(o);
+  });
+});
+
 XPCOMUtils.defineLazyServiceGetter(this, "Haptic",
   "@mozilla.org/widget/hapticfeedback;1", "nsIHapticFeedback");
 
@@ -234,7 +270,6 @@ var BrowserApp = {
     OfflineApps.init();
     IndexedDB.init();
     XPInstallObserver.init();
-    ConsoleAPI.init();
     ClipboardHelper.init();
     PermissionsHelper.init();
     CharacterEncoding.init();
@@ -244,7 +279,6 @@ var BrowserApp = {
     Reader.init();
     UserAgent.init();
     ExternalApps.init();
-    MemoryObserver.init();
     Distribution.init();
     Tabs.init();
 #ifdef MOZ_TELEMETRY_REPORTING
@@ -252,9 +286,6 @@ var BrowserApp = {
 #endif
 #ifdef ACCESSIBILITY
     AccessFu.attach(window);
-#endif
-#ifdef MOZ_WEBRTC
-    WebrtcUI.init();
 #endif
 
     // Init LoginManager
@@ -527,7 +558,6 @@ var BrowserApp = {
     IndexedDB.uninit();
     ViewportHandler.uninit();
     XPInstallObserver.uninit();
-    ConsoleAPI.uninit();
     CharacterEncoding.uninit();
     SearchEngines.uninit();
     WebappsUI.uninit();
@@ -535,14 +565,10 @@ var BrowserApp = {
     Reader.uninit();
     UserAgent.uninit();
     ExternalApps.uninit();
-    MemoryObserver.uninit();
     Distribution.uninit();
     Tabs.uninit();
 #ifdef MOZ_TELEMETRY_REPORTING
     Telemetry.uninit();
-#endif
-#ifdef MOZ_WEBRTC
-    WebrtcUi.uninit();
 #endif
   },
 
@@ -5029,8 +5055,8 @@ var ViewportHandler = {
 
     let widthStr = windowUtils.getDocumentMetadata("viewport-width");
     let heightStr = windowUtils.getDocumentMetadata("viewport-height");
-    let width = this.clamp(parseInt(widthStr), kViewportMinWidth, kViewportMaxWidth);
-    let height = this.clamp(parseInt(heightStr), kViewportMinHeight, kViewportMaxHeight);
+    let width = this.clamp(parseInt(widthStr), kViewportMinWidth, kViewportMaxWidth) || 0;
+    let height = this.clamp(parseInt(heightStr), kViewportMinHeight, kViewportMaxHeight) || 0;
 
     // Allow zoom unless explicity disabled or minScale and maxScale are equal.
     // WebKit allows 0, "no", or "false" for viewport-user-scalable.
@@ -5417,113 +5443,6 @@ var IndexedDB = {
   }
 };
 
-var ConsoleAPI = {
-  init: function init() {
-    Services.obs.addObserver(this, "console-api-log-event", false);
-  },
-
-  uninit: function uninit() {
-    Services.obs.removeObserver(this, "console-api-log-event", false);
-  },
-
-  observe: function observe(aMessage, aTopic, aData) {
-    aMessage = aMessage.wrappedJSObject;
-
-    let mappedArguments = Array.map(aMessage.arguments, this.formatResult, this);
-    let joinedArguments = Array.join(mappedArguments, " ");
-
-    if (aMessage.level == "error" || aMessage.level == "warn") {
-      let flag = (aMessage.level == "error" ? Ci.nsIScriptError.errorFlag : Ci.nsIScriptError.warningFlag);
-      let consoleMsg = Cc["@mozilla.org/scripterror;1"].createInstance(Ci.nsIScriptError);
-      consoleMsg.init(joinedArguments, null, null, 0, 0, flag, "content javascript");
-      Services.console.logMessage(consoleMsg);
-    } else if (aMessage.level == "trace") {
-      let bundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
-      let args = aMessage.arguments;
-      let filename = this.abbreviateSourceURL(args[0].filename);
-      let functionName = args[0].functionName || bundle.GetStringFromName("stacktrace.anonymousFunction");
-      let lineNumber = args[0].lineNumber;
-
-      let body = bundle.formatStringFromName("stacktrace.outputMessage", [filename, functionName, lineNumber], 3);
-      body += "\n";
-      args.forEach(function(aFrame) {
-        let functionName = aFrame.functionName || bundle.GetStringFromName("stacktrace.anonymousFunction");
-        body += "  " + aFrame.filename + " :: " + functionName + " :: " + aFrame.lineNumber + "\n";
-      });
-
-      Services.console.logStringMessage(body);
-    } else if (aMessage.level == "time" && aMessage.arguments) {
-      let bundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
-      let body = bundle.formatStringFromName("timer.start", [aMessage.arguments.name], 1);
-      Services.console.logStringMessage(body);
-    } else if (aMessage.level == "timeEnd" && aMessage.arguments) {
-      let bundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
-      let body = bundle.formatStringFromName("timer.end", [aMessage.arguments.name, aMessage.arguments.duration], 2);
-      Services.console.logStringMessage(body);
-    } else if (["group", "groupCollapsed", "groupEnd"].indexOf(aMessage.level) != -1) {
-      // Do nothing yet
-    } else {
-      Services.console.logStringMessage(joinedArguments);
-    }
-  },
-
-  getResultType: function getResultType(aResult) {
-    let type = aResult === null ? "null" : typeof aResult;
-    if (type == "object" && aResult.constructor && aResult.constructor.name)
-      type = aResult.constructor.name;
-    return type.toLowerCase();
-  },
-
-  formatResult: function formatResult(aResult) {
-    let output = "";
-    let type = this.getResultType(aResult);
-    switch (type) {
-      case "string":
-      case "boolean":
-      case "date":
-      case "error":
-      case "number":
-      case "regexp":
-        output = aResult.toString();
-        break;
-      case "null":
-      case "undefined":
-        output = type;
-        break;
-      default:
-        if (aResult.toSource) {
-          try {
-            output = aResult.toSource();
-          } catch (ex) { }
-        }
-        if (!output || output == "({})") {
-          output = aResult.toString();
-        }
-        break;
-    }
-
-    return output;
-  },
-
-  abbreviateSourceURL: function abbreviateSourceURL(aSourceURL) {
-    // Remove any query parameters.
-    let hookIndex = aSourceURL.indexOf("?");
-    if (hookIndex > -1)
-      aSourceURL = aSourceURL.substring(0, hookIndex);
-
-    // Remove a trailing "/".
-    if (aSourceURL[aSourceURL.length - 1] == "/")
-      aSourceURL = aSourceURL.substring(0, aSourceURL.length - 1);
-
-    // Remove all but the last path component.
-    let slashIndex = aSourceURL.lastIndexOf("/");
-    if (slashIndex > -1)
-      aSourceURL = aSourceURL.substring(slashIndex + 1);
-
-    return aSourceURL;
-  }
-};
-
 var ClipboardHelper = {
   init: function() {
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.copy"), ClipboardHelper.getCopyContext(false), ClipboardHelper.copy.bind(ClipboardHelper));
@@ -5547,8 +5466,7 @@ var ClipboardHelper = {
 
   copy: function(aElement, aX, aY) {
     if (SelectionHandler.shouldShowContextMenu(aX, aY)) {
-      // Passing coordinates to endSelection takes care of copying for us
-      SelectionHandler.endSelection(aX, aY);
+      SelectionHandler.copySelection();
       return;
     }
 
@@ -5571,11 +5489,7 @@ var ClipboardHelper = {
   },
 
   share: function() {
-    let selectedText = SelectionHandler.endSelection();
-    sendMessageToJava({
-      type: "Share:Text",
-      text: selectedText
-    });
+    SelectionHandler.shareSelection();
   },
 
   paste: function(aElement) {
@@ -6754,55 +6668,76 @@ var WebappsUI = {
   },
 
   doInstall: function doInstall(aData) {
-    let manifest = new ManifestHelper(aData.app.manifest, aData.app.origin);
+    let jsonManifest = aData.isPackage ? aData.app.updateManifest : aData.app.manifest;
+    let manifest = new ManifestHelper(jsonManifest, aData.app.origin);
     let name = manifest.name ? manifest.name : manifest.fullLaunchPath();
     let showPrompt = true;
 
     if (!showPrompt || Services.prompt.confirm(null, Strings.browser.GetStringFromName("webapps.installTitle"), name)) {
-      // Add a homescreen shortcut -- we can't use createShortcut, since we need to pass
-      // a unique ID for Android webapp allocation
-      this.makeBase64Icon(this.getBiggestIcon(manifest.icons, Services.io.newURI(aData.app.origin, null, null)),
-        (function(scaledIcon, fullsizeIcon) {
-          let profilePath = sendMessageToJava({
-            type: "WebApps:Install",
-            name: manifest.name,
-            manifestURL: aData.app.manifestURL,
-            origin: aData.app.origin,
-            iconURL: scaledIcon,
-          });
+      // Get a profile for the app to be installed in. We'll download everything before creating the icons.
+      let profilePath = sendMessageToJava({
+        type: "WebApps:PreInstall",
+        name: manifest.name,
+        manifestURL: aData.app.manifestURL,
+        origin: aData.app.origin
+      });
+      let file = null;
+      if (profilePath) {
+        file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+        file.initWithPath(profilePath);
 
-          // if java returned a profile path to us, try to use it to pre-populate the app cache
-          let file = null;
-          if (profilePath) {
-            file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
-            file.initWithPath(profilePath);
+        // build any app specific default prefs
+        let prefs = [];
+        if (manifest.orientation) {
+          prefs.push({name:"app.orientation.default", value: manifest.orientation});
+        }
 
-            // build any app specific default prefs
-            let prefs = [];
-            if (manifest.orientation)
-              prefs.push({name:"app.orientation.default", value: manifest.orientation});
+        // write them into the app profile
+        let defaultPrefsFile = file.clone();
+        defaultPrefsFile.append(this.DEFAULT_PREFS_FILENAME);
+        this.writeDefaultPrefs(defaultPrefsFile, prefs);
 
-            // write them into the app profile
-            let defaultPrefsFile = file.clone();
-            defaultPrefsFile.append(this.DEFAULT_PREFS_FILENAME);
-            this.writeDefaultPrefs(defaultPrefsFile, prefs);
+        let self = this;
+        DOMApplicationRegistry.confirmInstall(aData, false, file, null,
+          function (manifest) {
+            // the manifest argument is the manifest from within the zip file,
+            // TODO so now would be a good time to ask about permissions.
+            self.makeBase64Icon(self.getBiggestIcon(manifest.icons, Services.io.newURI(aData.app.origin, null, null)),
+              function(scaledIcon, fullsizeIcon) {
+                // if java returned a profile path to us, try to use it to pre-populate the app cache
+                // also save the icon so that it can be used in the splash screen
+                try {
+                  let iconFile = file.clone();
+                  iconFile.append("logo.png");
+                  let persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"].createInstance(Ci.nsIWebBrowserPersist);
+                  persist.persistFlags = Ci.nsIWebBrowserPersist.PERSIST_FLAGS_REPLACE_EXISTING_FILES;
+                  persist.persistFlags |= Ci.nsIWebBrowserPersist.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
 
-            // also save the icon so that it can be used in the splash screen
-            try {
-              let iconFile = file.clone();
-              iconFile.append("logo.png");
-              let persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"].createInstance(Ci.nsIWebBrowserPersist);
-              persist.persistFlags = Ci.nsIWebBrowserPersist.PERSIST_FLAGS_REPLACE_EXISTING_FILES;
-              persist.persistFlags |= Ci.nsIWebBrowserPersist.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
-  
-              let source = Services.io.newURI(fullsizeIcon, "UTF8", null);
-              persist.saveURI(source, null, null, null, null, iconFile, null);
-            } catch(ex) {
-              console.log(ex);
-            }
+                  let source = Services.io.newURI(fullsizeIcon, "UTF8", null);
+                  persist.saveURI(source, null, null, null, null, iconFile, null);
+
+                  sendMessageToJava({
+                    type: "WebApps:PostInstall",
+                    name: manifest.name,
+                    manifestURL: aData.app.manifestURL,
+                    origin: aData.app.origin,
+                    iconURL: fullsizeIcon
+                  });
+                  let message = Strings.browser.GetStringFromName("webapps.alertSuccess");
+                  let alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
+                  alerts.showAlertNotification("drawable://alert_app", manifest.name, message, true, "", {
+                    observe: function () {
+                      self.openURL(aData.app.manifestURL, aData.app.origin);
+                    }
+                  }, "webapp");
+                } catch(ex) {
+                  console.log(ex);
+                }
+              }
+            );
           }
-          DOMApplicationRegistry.confirmInstall(aData, false, file);
-        }).bind(this));
+        );
+      }
     } else {
       DOMApplicationRegistry.denyInstall(aData);
     }
@@ -7614,76 +7549,6 @@ var ExternalApps = {
   }
 };
 
-var MemoryObserver = {
-  init: function() {
-    Services.obs.addObserver(this, "memory-pressure", false);
-    Services.obs.addObserver(this, "Memory:Dump", false);
-  },
-
-  uninit: function() {
-    Services.obs.removeObserver(this, "memory-pressure");
-    Services.obs.removeObserver(this, "Memory:Dump");
-  },
-
-  observe: function mo_observe(aSubject, aTopic, aData) {
-    if (aTopic == "memory-pressure") {
-      if (aData != "heap-minimize") {
-        this.handleLowMemory();
-      }
-      // The JS engine would normally GC on this notification, but since we
-      // disabled that in favor of this method (bug 669346), we should gc here.
-      // See bug 784040 for when this code was ported from XUL to native Fennec.
-      this.gc();
-    } else if (aTopic == "Memory:Dump") {
-      this.dumpMemoryStats(aData);
-    }
-  },
-
-  handleLowMemory: function() {
-    // do things to reduce memory usage here
-    let tabs = BrowserApp.tabs;
-    let selected = BrowserApp.selectedTab;
-    for (let i = 0; i < tabs.length; i++) {
-      if (tabs[i] != selected) {
-        this.zombify(tabs[i]);
-        Telemetry.addData("FENNEC_TAB_ZOMBIFIED", (Date.now() - tabs[i].lastTouchedAt) / 1000);
-      }
-    }
-    Telemetry.addData("FENNEC_LOWMEM_TAB_COUNT", tabs.length);
-  },
-
-  zombify: function(tab) {
-    let browser = tab.browser;
-    let data = browser.__SS_data;
-    let extra = browser.__SS_extdata;
-
-    // We need this data to correctly create and position the new browser
-    // If this browser is already a zombie, fallback to the session data
-    let currentURL = browser.__SS_restore ? data.entries[0].url : browser.currentURI.spec;
-    let sibling = browser.nextSibling;
-    let isPrivate = PrivateBrowsingUtils.isWindowPrivate(browser.contentWindow);
-
-    tab.destroy();
-    tab.create(currentURL, { sibling: sibling, zombifying: true, delayLoad: true, isPrivate: isPrivate });
-
-    // Reattach session store data and flag this browser so it is restored on select
-    browser = tab.browser;
-    browser.__SS_data = data;
-    browser.__SS_extdata = extra;
-    browser.__SS_restore = true;
-  },
-
-  gc: function() {
-    window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).garbageCollect();
-    Cu.forceGC();
-  },
-
-  dumpMemoryStats: function(aLabel) {
-    let memDumper = Cc["@mozilla.org/memory-info-dumper;1"].getService(Ci.nsIMemoryInfoDumper);
-    memDumper.dumpMemoryReportsToFile(aLabel, false, true);
-  },
-};
-
 var Distribution = {
   // File used to store campaign data
   _file: null,
@@ -7860,112 +7725,6 @@ var Distribution = {
     });
   }
 };
-
-#ifdef MOZ_WEBRTC
-var WebrtcUI = {
-  init: function () {
-    Services.obs.addObserver(this, "getUserMedia:request", false);
-  },
-
-  uninit: function () {
-    Services.obs.removeObserver(this, "getUserMedia:request");
-  },
-
-  observe: function(aSubject, aTopic, aData) {
-    if (aTopic == "getUserMedia:request") {
-      this.handleRequest(aSubject, aTopic, aData);
-    }
-  },
-
-  handleRequest: function handleRequest(aSubject, aTopic, aData) {
-    let { windowID: windowID, callID: callID } = JSON.parse(aData);
-
-    let someWindow = Services.wm.getMostRecentWindow("navigator:browser");
-    if (someWindow != window)
-      return;
-
-    let contentWindow = someWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(Ci.nsIDOMWindowUtils).getOuterWindowWithId(windowID);
-    let browser = BrowserApp.getBrowserForWindow(contentWindow);
-    let params = aSubject.QueryInterface(Ci.nsIMediaStreamOptions);
-
-    browser.ownerDocument.defaultView.navigator.mozGetUserMediaDevices(
-      function (devices) {
-        WebrtcUI.prompt(browser, callID, params.audio, params.video, devices);
-      },
-      function (error) {
-        Cu.reportError(error);
-      }
-    );
-  },
-
-  getDeviceButtons: function(aDevices, aCallID, stringBundle) {
-    let buttons = [{
-      label: stringBundle.GetStringFromName("getUserMedia.denyRequest.label"),
-      callback: function() {
-        Services.obs.notifyObservers(null, "getUserMedia:response:deny", aCallID);
-      }
-    }];
-    for (let device of aDevices) {
-      let button = {
-        label: stringBundle.GetStringFromName("getUserMedia.shareRequest.label"),
-        callback: function() {
-          let allowedDevices = Cc["@mozilla.org/supports-array;1"].createInstance(Ci.nsISupportsArray);
-          allowedDevices.AppendElement(device);
-          Services.obs.notifyObservers(allowedDevices, "getUserMedia:response:allow", aCallID);
-          // Show browser-specific indicator for the active camera/mic access.
-          // XXX: Mobile?
-        }
-      };
-      buttons.push(button);
-    }
-
-    return buttons;
-  },
-
-  prompt: function prompt(aBrowser, aCallID, aAudioRequested, aVideoRequested, aDevices) {
-    let audioDevices = [];
-    let videoDevices = [];
-    for (let device of aDevices) {
-      device = device.QueryInterface(Ci.nsIMediaDevice);
-      switch (device.type) {
-      case "audio":
-        if (aAudioRequested)
-          audioDevices.push(device);
-        break;
-      case "video":
-        if (aVideoRequested)
-          videoDevices.push(device);
-        break;
-      }
-    }
-
-    let requestType;
-    if (audioDevices.length && videoDevices.length)
-      requestType = "CameraAndMicrophone";
-    else if (audioDevices.length)
-      requestType = "Microphone";
-    else if (videoDevices.length)
-      requestType = "Camera";
-    else
-      return;
-
-    let host = aBrowser.contentDocument.documentURIObject.asciiHost;
-    let stringBundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
-    let message = stringBundle.formatStringFromName("getUserMedia.share" + requestType + ".message", [ host ], 1);
-
-    if (audioDevices.length) {
-      let buttons = this.getDeviceButtons(audioDevices, aCallID, stringBundle);
-      NativeWindow.doorhanger.show(message, "webrtc-request-audio", buttons, BrowserApp.selectedTab.id);
-    }
-
-    if (videoDevices.length) {
-      let buttons = this.getDeviceButtons(videoDevices, aCallID, stringBundle);
-      NativeWindow.doorhanger.show(message, "webrtc-request-video", buttons, BrowserApp.selectedTab.id);
-    }
-  }
-}
-#endif
 
 var Tabs = {
   // This object provides functions to manage a most-recently-used list

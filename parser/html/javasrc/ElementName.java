@@ -32,7 +32,7 @@ import nu.validator.htmlparser.common.Interner;
 
 public final class ElementName
 // uncomment when regenerating self
-//        implements Comparable<ElementName> 
+//        implements Comparable<ElementName>
 {
 
     /**
@@ -190,7 +190,7 @@ public final class ElementName
 //        }
 //        if ((flags & SCOPING) != 0) {
 //            buf.append(" | SCOPING");
-//        }        
+//        }
 //        if ((flags & SCOPING_AS_MATHML) != 0) {
 //            buf.append(" | SCOPING_AS_MATHML");
 //        }
@@ -202,7 +202,7 @@ public final class ElementName
 //        }
 //        return buf.toString();
 //    }
-//    
+//
 //    private String constName() {
 //        char[] buf = new char[name.length()];
 //        for (int i = 0; i < name.length(); i++) {
@@ -312,6 +312,8 @@ public final class ElementName
 //                return "TEXTAREA";
 //            case TreeBuilder.TITLE:
 //                return "TITLE";
+//            case TreeBuilder.TEMPLATE:
+//                return "TEMPLATE";
 //            case TreeBuilder.TR:
 //                return "TR";
 //            case TreeBuilder.XMP:
@@ -349,7 +351,7 @@ public final class ElementName
 //            case TreeBuilder.FIELDSET:
 //                return "FIELDSET";
 //            case TreeBuilder.ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY:
-//                return "ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_NAV_OR_SECTION_OR_SUMMARY";
+//                return "ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY";
 //            case TreeBuilder.RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR:
 //                return "RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR";
 //            case TreeBuilder.RT_OR_RP:
@@ -374,7 +376,7 @@ public final class ElementName
 //
 //    /**
 //     * Regenerate self
-//     * 
+//     *
 //     * @param args
 //     */
 //    public static void main(String[] args) {
@@ -724,6 +726,7 @@ public final class ElementName
     public static final ElementName QUOTIENT = new ElementName("quotient", "quotient", TreeBuilder.OTHER);
     public static final ElementName SELECTOR = new ElementName("selector", "selector", TreeBuilder.OTHER);
     public static final ElementName TEXTAREA = new ElementName("textarea", "textarea", TreeBuilder.TEXTAREA | SPECIAL);
+    public static final ElementName TEMPLATE = new ElementName("template", "template", TreeBuilder.TEMPLATE | SPECIAL);
     public static final ElementName TEXTPATH = new ElementName("textpath", "textPath", TreeBuilder.OTHER);
     public static final ElementName VARIANCE = new ElementName("variance", "variance", TreeBuilder.OTHER);
     public static final ElementName ANIMATION = new ElementName("animation", "animation", TreeBuilder.OTHER);
@@ -1118,6 +1121,7 @@ public final class ElementName
     QUOTIENT,
     SELECTOR,
     TEXTAREA,
+    TEMPLATE,
     TEXTPATH,
     VARIANCE,
     ANIMATION,
@@ -1513,6 +1517,7 @@ public final class ElementName
     286931113,
     288964227,
     289445441,
+    289591340,
     289689648,
     291671489,
     303512884,

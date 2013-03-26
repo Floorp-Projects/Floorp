@@ -52,8 +52,9 @@ struct cubeb_stream {
 };
 
 static void
-bufferqueue_callback(SLBufferQueueItf caller, struct cubeb_stream *stm)
+bufferqueue_callback(SLBufferQueueItf caller, void * user_ptr)
 {
+  cubeb_stream * stm = user_ptr;
   SLBufferQueueState state;
   (*stm->bufq)->GetState(stm->bufq, &state);
 
@@ -78,8 +79,13 @@ bufferqueue_callback(SLBufferQueueItf caller, struct cubeb_stream *stm)
       return;
     }
 
-    (*stm->bufq)->Enqueue(stm->bufq, buf, written * stm->framesize);
-    stm->queuebuf_idx = (stm->queuebuf_idx + 1) % NBUFS;
+    if (written) {
+      (*stm->bufq)->Enqueue(stm->bufq, buf, written * stm->framesize);
+      stm->queuebuf_idx = (stm->queuebuf_idx + 1) % NBUFS;
+    } else if (!i) {
+      stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_DRAINED);
+      return;
+    }
 
     if ((written * stm->framesize) < stm->queuebuf_len) {
       stm->draining = 1;

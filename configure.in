@@ -70,7 +70,7 @@ GCONF_VERSION=1.2.1
 GIO_VERSION=2.20
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
-SQLITE_VERSION=3.7.15.2
+SQLITE_VERSION=3.7.16
 
 MSMANIFEST_TOOL=
 
@@ -6121,8 +6121,7 @@ dnl If we're on an x86 or x64 system which supports libjpeg-turbo's asm routines
 dnl and --disable-libjpeg-turbo wasn't passed, check for Yasm, and error out if
 dnl it doesn't exist or we have too old of a version.
 if test -n "$LIBJPEG_TURBO_X86_ASM" -o -n "$LIBJPEG_TURBO_X64_ASM" ; then
-    AC_MSG_CHECKING([for Yasm assembler])
-    AC_CHECK_PROGS(LIBJPEG_TURBO_AS, yasm, "")
+    LIBJPEG_TURBO_AS=$YASM
 
     if test -z "$LIBJPEG_TURBO_AS" ; then
         AC_MSG_ERROR([Yasm is required to build with libjpeg-turbo's optimized JPEG decoding routines, but you do not appear to have Yasm installed.  Either install it or configure with --disable-libjpeg-turbo to use the pure C JPEG decoder.  See https://developer.mozilla.org/en/YASM for more details.])
