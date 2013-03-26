@@ -168,7 +168,7 @@ class Marionette(object):
                  emulator=None, sdcard=None, emulatorBinary=None,
                  emulatorImg=None, emulator_res=None, gecko_path=None,
                  connectToRunningEmulator=False, homedir=None, baseurl=None,
-                 noWindow=False, logcat_dir=None, busybox=None):
+                 noWindow=False, logcat_dir=None, busybox=None, symbols_path=None):
         self.host = host
         self.port = self.local_port = port
         self.bin = bin
@@ -183,6 +183,7 @@ class Marionette(object):
         self.noWindow = noWindow
         self.logcat_dir = logcat_dir
         self._test_name = None
+        self.symbols_path = symbols_path
 
         if bin:
             port = int(self.port)
@@ -366,10 +367,15 @@ class Marionette(object):
     def check_for_crash(self):
         returncode = None
         name = None
+        crashed = False
         if self.emulator:
             if self.emulator.check_for_crash():
                 returncode = self.emulator.proc.returncode
                 name = 'emulator'
+                crashed = True
+
+            if self.symbols_path and self.emulator.check_for_minidumps(self.symbols_path):
+                crashed = True
         elif self.instance:
             # In the future, a check for crashed Firefox processes
             # should be here.
@@ -377,7 +383,7 @@ class Marionette(object):
         if returncode is not None:
             print ('PROCESS-CRASH | %s | abnormal termination with exit code %d' %
                 (name, returncode))
-        return returncode is not None
+        return crashed
 
     def absolute_url(self, relative_url):
         return "%s%s" % (self.baseurl, relative_url)
@@ -386,8 +392,14 @@ class Marionette(object):
         return self._send_message('getStatus', 'value')
 
     def start_session(self, desired_capabilities=None):
-        # We are ignoring desired_capabilities, at least for now.
-        self.session = self._send_message('newSession', 'value')
+        try:
+            # We are ignoring desired_capabilities, at least for now.
+            self.session = self._send_message('newSession', 'value')
+        except:
+            traceback.print_exc()
+            self.check_for_crash()
+            sys.exit()
+
         self.b2g = 'b2g' in self.session
         return self.session
 
