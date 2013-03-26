@@ -33,6 +33,7 @@ webidl_files = \
   ClientRectList.webidl \
   CommandEvent.webidl \
   Comment.webidl \
+  CompositionEvent.webidl \
   CSS.webidl \
   CSSPrimitiveValue.webidl \
   CSSStyleDeclaration.webidl \
