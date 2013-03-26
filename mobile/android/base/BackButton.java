@@ -82,8 +82,10 @@ public class BackButton extends ShapedButton {
         Resources resources = getContext().getResources();
         StateListDrawable stateList = new StateListDrawable();
 
-        stateList.addState(new int[] { android.R.attr.state_pressed }, new ColorDrawable(resources.getColor(R.color.highlight)));
-        stateList.addState(new int[] { android.R.attr.state_focused }, new ColorDrawable(resources.getColor(R.color.highlight_focused)));
+        stateList.addState(new int[] { R.attr.state_private, android.R.attr.state_pressed }, new ColorDrawable(resources.getColor(R.color.highlight_nav_pb)));
+        stateList.addState(new int[] { android.R.attr.state_pressed }, new ColorDrawable(resources.getColor(R.color.highlight_nav)));
+        stateList.addState(new int[] { R.attr.state_private, android.R.attr.state_focused }, new ColorDrawable(resources.getColor(R.color.highlight_nav_focused_pb)));
+        stateList.addState(new int[] { android.R.attr.state_focused }, new ColorDrawable(resources.getColor(R.color.highlight_nav_focused)));
         stateList.addState(new int[] { R.attr.state_private }, new ColorDrawable(resources.getColor(R.color.background_private)));
         stateList.addState(new int[] {}, drawable);
 
