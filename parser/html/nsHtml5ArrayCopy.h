@@ -47,6 +47,12 @@ class nsHtml5ArrayCopy {
     }
 
     static inline void
+    arraycopy(int32_t* source, int32_t* target, int32_t length)
+    {
+      memcpy(target, source, length * sizeof(int32_t));
+    }
+
+    static inline void
     arraycopy(nsString** source, nsString** target, int32_t length)
     {
       memcpy(target, source, length * sizeof(nsString*));
