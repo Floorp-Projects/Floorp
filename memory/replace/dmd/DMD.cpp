@@ -2049,6 +2049,10 @@ SizeOf(Sizes* aSizes)
 MOZ_EXPORT void
 ClearReports()
 {
+  if (!gIsDMDRunning) {
+    return;
+  }
+
   // Unreport all blocks that were marked reported by a memory reporter.  This
   // excludes those that were reported on allocation, because they need to keep
   // their reported marking.
