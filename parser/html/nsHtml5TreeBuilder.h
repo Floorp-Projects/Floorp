@@ -1,25 +1,25 @@
 /*
  * Copyright (c) 2007 Henri Sivonen
  * Copyright (c) 2007-2011 Mozilla Foundation
- * Portions of comments Copyright 2004-2008 Apple Computer, Inc., Mozilla 
+ * Portions of comments Copyright 2004-2008 Apple Computer, Inc., Mozilla
  * Foundation, and Opera Software ASA.
  *
- * Permission is hereby granted, free of charge, to any person obtaining a 
- * copy of this software and associated documentation files (the "Software"), 
- * to deal in the Software without restriction, including without limitation 
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, 
- * and/or sell copies of the Software, and to permit persons to whom the 
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in 
+ * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
 
@@ -84,6 +84,8 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     nsIAtom* contextName;
     int32_t contextNamespace;
     nsIContent** contextNode;
+    autoJArray<int32_t,int32_t> templateModeStack;
+    int32_t templateModePtr;
     autoJArray<nsHtml5StackNode*,int32_t> stack;
     int32_t currentPtr;
     autoJArray<nsHtml5StackNode*,int32_t> listOfActiveFormattingElements;
@@ -106,6 +108,10 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     void endTokenization();
     void startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes, bool selfClosing);
   private:
+    void startTagGenericRawText(nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes);
+    void startTagScriptInHead(nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes);
+    void startTagTemplateInHead(nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes);
+    bool isTemplateContents();
     bool isSpecialParentInForeign(nsHtml5StackNode* stackNode);
   public:
     static nsString* extractCharsetFromContent(nsString* attributeValue);
@@ -114,7 +120,8 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
   public:
     void endTag(nsHtml5ElementName* elementName);
   private:
-    int32_t findLastInTableScopeOrRootTbodyTheadTfoot();
+    void endTagTemplateInHead(nsIAtom* name);
+    int32_t findLastInTableScopeOrRootTemplateTbodyTheadTfoot();
     int32_t findLast(nsIAtom* name);
     int32_t findLastInTableScope(nsIAtom* name);
     int32_t findLastInButtonScope(nsIAtom* name);
@@ -134,6 +141,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     void implicitlyCloseP();
     bool debugOnlyClearLastStackSlot();
     bool debugOnlyClearLastListSlot();
+    void pushTemplateMode(int32_t mode);
     void push(nsHtml5StackNode* node);
     void silentPush(nsHtml5StackNode* node);
     void append(nsHtml5StackNode* node);
@@ -165,6 +173,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     void reconstructTheActiveFormattingElements();
     void insertIntoFosterParent(nsIContent** child);
     bool isInStack(nsHtml5StackNode* node);
+    void popTemplateMode();
     void pop();
     void silentPop();
     void popOnEof();
@@ -320,6 +329,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
 #define NS_HTML5TREE_BUILDER_FONT 64
 #define NS_HTML5TREE_BUILDER_KEYGEN 65
 #define NS_HTML5TREE_BUILDER_MENUITEM 66
+#define NS_HTML5TREE_BUILDER_TEMPLATE 67
 #define NS_HTML5TREE_BUILDER_IN_ROW 0
 #define NS_HTML5TREE_BUILDER_IN_TABLE_BODY 1
 #define NS_HTML5TREE_BUILDER_IN_TABLE 2
@@ -342,6 +352,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
 #define NS_HTML5TREE_BUILDER_AFTER_AFTER_BODY 19
 #define NS_HTML5TREE_BUILDER_AFTER_AFTER_FRAMESET 20
 #define NS_HTML5TREE_BUILDER_TEXT 21
+#define NS_HTML5TREE_BUILDER_TEMPLATE_CONTENTS 22
 #define NS_HTML5TREE_BUILDER_CHARSET_INITIAL 0
 #define NS_HTML5TREE_BUILDER_CHARSET_C 1
 #define NS_HTML5TREE_BUILDER_CHARSET_H 2
