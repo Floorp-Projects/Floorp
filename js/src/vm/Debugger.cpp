@@ -879,7 +879,7 @@ Debugger::parseResumptionValue(Maybe<AutoCompartment> &ac, bool ok, const Value 
     Rooted<JSObject*> obj(cx);
     RootedShape shape(cx);
     RootedId returnId(cx, NameToId(cx->names().return_));
-    jsid throwId = NameToId(cx->names().throw_);
+    RootedId throwId(cx, NameToId(cx->names().throw_));
     bool okResumption = rv.isObject();
     if (okResumption) {
         obj = &rv.toObject();
