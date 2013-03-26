@@ -54,43 +54,52 @@ static char kDTLSExporterLabel[] = "EXTRACTOR-dtls_srtp";
 nsresult MediaPipeline::Init() {
   ASSERT_ON_THREAD(main_thread_);
 
-  // TODO(ekr@rtfm.com): is there a way to make this async?
-  nsresult ret;
   RUN_ON_THREAD(sts_thread_,
-		WrapRunnableRet(this, &MediaPipeline::Init_s, &ret),
-		NS_DISPATCH_SYNC);
-  return ret;
+                WrapRunnable(
+                    nsRefPtr<MediaPipeline>(this),
+                    &MediaPipeline::Init_s),
+                NS_DISPATCH_NORMAL);
+  
+  return NS_OK;
 }
 
 nsresult MediaPipeline::Init_s() {
   ASSERT_ON_THREAD(sts_thread_);
   conduit_->AttachTransport(transport_);
 
-  MOZ_ASSERT(rtp_transport_);
-
   nsresult res;
-
+  MOZ_ASSERT(rtp_transport_);
   // Look to see if the transport is ready
   rtp_transport_->SignalStateChange.connect(this,
                                             &MediaPipeline::StateChange);
 
   if (rtp_transport_->state() == TransportLayer::TS_OPEN) {
-    res = TransportReady(rtp_transport_);
+    res = TransportReady_s(rtp_transport_);
     if (NS_FAILED(res)) {
-      MOZ_MTLOG(PR_LOG_ERROR, "Error calling TransportReady()");
+      MOZ_MTLOG(PR_LOG_ERROR, "Error calling TransportReady(); res="
+                << static_cast<uint32_t>(res) << " in " << __FUNCTION__);
       return res;
     }
+  } else if (rtp_transport_->state() == TransportLayer::TS_ERROR) {
+    MOZ_MTLOG(PR_LOG_ERROR, "RTP transport is already in error state");
+    TransportFailed_s(rtp_transport_);
+    return NS_ERROR_FAILURE;
   } else {
     if (!muxed_) {
       rtcp_transport_->SignalStateChange.connect(this,
                                                  &MediaPipeline::StateChange);
 
       if (rtcp_transport_->state() == TransportLayer::TS_OPEN) {
-        res = TransportReady(rtcp_transport_);
+        res = TransportReady_s(rtcp_transport_);
         if (NS_FAILED(res)) {
-          MOZ_MTLOG(PR_LOG_ERROR, "Error calling TransportReady()");
+          MOZ_MTLOG(PR_LOG_ERROR, "Error calling TransportReady(); res="
+                    << static_cast<uint32_t>(res) << " in " << __FUNCTION__);
           return res;
         }
+      } else if (rtcp_transport_->state() == TransportLayer::TS_ERROR) {
+        MOZ_MTLOG(PR_LOG_ERROR, "RTCP transport is already in error state");
+        TransportFailed_s(rtcp_transport_);
+        return NS_ERROR_FAILURE;
       }
     }
   }
@@ -100,7 +109,7 @@ nsresult MediaPipeline::Init_s() {
 
 // Disconnect us from the transport so that we can cleanly destruct
 // the pipeline on the main thread.
-void MediaPipeline::DetachTransport_s() {
+void MediaPipeline::ShutdownTransport_s() {
   ASSERT_ON_THREAD(sts_thread_);
 
   disconnect_all();
@@ -109,42 +118,23 @@ void MediaPipeline::DetachTransport_s() {
   rtcp_transport_ = NULL;
 }
 
-void MediaPipeline::DetachTransport() {
-  RUN_ON_THREAD(sts_thread_,
-                WrapRunnable(this, &MediaPipeline::DetachTransport_s),
-                NS_DISPATCH_SYNC);
-}
-
 void MediaPipeline::StateChange(TransportFlow *flow, TransportLayer::State state) {
   if (state == TransportLayer::TS_OPEN) {
     MOZ_MTLOG(MP_LOG_INFO, "Flow is ready");
-    TransportReady(flow);
+    TransportReady_s(flow);
   } else if (state == TransportLayer::TS_CLOSED ||
              state == TransportLayer::TS_ERROR) {
-    TransportFailed(flow);
+    TransportFailed_s(flow);
   }
 }
 
-nsresult MediaPipeline::TransportReady(TransportFlow *flow) {
-  nsresult rv;
-  nsresult res;
-
-  rv = RUN_ON_THREAD(sts_thread_,
-    WrapRunnableRet(this, &MediaPipeline::TransportReadyInt, flow, &res),
-    NS_DISPATCH_SYNC);
-
-  // res is invalid unless the dispatch succeeded
-  if (NS_FAILED(rv))
-    return rv;
-
-  return res;
-}
-
-nsresult MediaPipeline::TransportReadyInt(TransportFlow *flow) {
+nsresult MediaPipeline::TransportReady_s(TransportFlow *flow) {
   MOZ_ASSERT(!description_.empty());
   bool rtcp = !(flow == rtp_transport_);
   State *state = rtcp ? &rtcp_state_ : &rtp_state_;
 
+  // TODO(ekr@rtfm.com): implement some kind of notification on
+  // failure. bug 852665.
   if (*state != MP_CONNECTING) {
     MOZ_MTLOG(PR_LOG_ERROR, "Transport ready for flow in wrong state:" <<
 	      description_ << ": " << (rtcp ? "rtcp" : "rtp"));
@@ -166,6 +156,7 @@ nsresult MediaPipeline::TransportReadyInt(TransportFlow *flow) {
   res = dtls->GetSrtpCipher(&cipher_suite);
   if (NS_FAILED(res)) {
     MOZ_MTLOG(PR_LOG_ERROR, "Failed to negotiate DTLS-SRTP. This is an error");
+    *state = MP_CLOSED;
     return res;
   }
 
@@ -268,7 +259,8 @@ nsresult MediaPipeline::TransportReadyInt(TransportFlow *flow) {
   return NS_OK;
 }
 
-nsresult MediaPipeline::TransportFailed(TransportFlow *flow) {
+nsresult MediaPipeline::TransportFailed_s(TransportFlow *flow) {
+  ASSERT_ON_THREAD(sts_thread_);
   bool rtcp = !(flow == rtp_transport_);
 
   State *state = rtcp ? &rtcp_state_ : &rtp_state_;
@@ -368,6 +360,16 @@ void MediaPipeline::RtpPacketReceived(TransportLayer *layer,
     return;
   }
 
+  if (rtp_state_ != MP_OPEN) {
+    MOZ_MTLOG(PR_LOG_DEBUG, "Discarding incoming packet; pipeline not open");
+    return;
+  }
+
+  if (rtp_transport_->state() != TransportLayer::TS_OPEN) {
+    MOZ_MTLOG(PR_LOG_ERROR, "Discarding incoming packet; transport not open");
+    return;
+  }
+
   MOZ_ASSERT(rtp_recv_srtp_);  // This should never happen
 
   if (direction_ == TRANSMIT) {
@@ -403,6 +405,16 @@ void MediaPipeline::RtcpPacketReceived(TransportLayer *layer,
 
   if (!conduit_) {
     MOZ_MTLOG(PR_LOG_DEBUG, "Discarding incoming packet; media disconnected");
+    return;
+  }
+
+  if (rtcp_state_ != MP_OPEN) {
+    MOZ_MTLOG(PR_LOG_DEBUG, "Discarding incoming packet; pipeline not open");
+    return;
+  }
+
+  if (rtcp_transport_->state() != TransportLayer::TS_OPEN) {
+    MOZ_MTLOG(PR_LOG_ERROR, "Discarding incoming packet; transport not open");
     return;
   }
 
@@ -503,9 +515,9 @@ nsresult MediaPipelineTransmit::Init() {
   return MediaPipeline::Init();
 }
 
-nsresult MediaPipelineTransmit::TransportReady(TransportFlow *flow) {
+nsresult MediaPipelineTransmit::TransportReady_s(TransportFlow *flow) {
   // Call base ready function.
-  MediaPipeline::TransportReady(flow);
+  MediaPipeline::TransportReady_s(flow);
 
   if (flow == rtp_transport_) {
     // TODO(ekr@rtfm.com): Move onto MSG thread.
@@ -910,7 +922,9 @@ MediaPipelineReceiveVideo::PipelineListener::PipelineListener(
   SourceMediaStream* source, TrackID track_id)
     : source_(source),
       track_id_(track_id),
+#ifdef MOZILLA_INTERNAL_API
       played_(0),
+#endif
       width_(640),
       height_(480),
 #ifdef MOZILLA_INTERNAL_API

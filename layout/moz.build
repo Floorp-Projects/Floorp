@@ -16,6 +16,7 @@ PARALLEL_DIRS += [
     'mathml',
     'inspector/public',
     'inspector/src',
+    'tools/recording',
 ]
 
 if CONFIG['NS_PRINTING']:

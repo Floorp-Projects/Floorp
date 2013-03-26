@@ -107,6 +107,10 @@
 #include "nsIDocShellTreeItem.h"
 #include "ExternalHelperAppChild.h"
 
+#ifdef XP_WIN
+#include "nsWindowsHelpers.h"
+#endif
+
 #ifdef MOZ_WIDGET_ANDROID
 #include "AndroidBridge.h"
 #endif
@@ -345,6 +349,16 @@ static nsresult GetDownloadDirectory(nsIFile **_directory)
   }
 #elif defined(MOZ_PLATFORM_MAEMO)
   nsresult rv = NS_GetSpecialDirectory(NS_UNIX_XDG_DOCUMENTS_DIR, getter_AddRefs(dir));
+  NS_ENSURE_SUCCESS(rv, rv);
+#elif defined(XP_WIN)
+  // On metro we want to be able to search opened files and the temp directory
+  // is exlcuded in searches.
+  nsresult rv;
+  if (IsRunningInWindowsMetro()) {
+    rv = NS_GetSpecialDirectory(NS_WIN_DEFAULT_DOWNLOAD_DIR, getter_AddRefs(dir));
+  } else {
+    rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(dir));
+  }
   NS_ENSURE_SUCCESS(rv, rv);
 #else
   // On all other platforms, we default to the systems temporary directory.

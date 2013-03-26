@@ -2282,96 +2282,81 @@ nsHTMLDocument::Plugins()
   return Embeds();
 }
 
-nsresult
-nsHTMLDocument::ResolveName(const nsAString& aName,
-                            nsIContent *aForm,
-                            nsISupports **aResult,
-                            nsWrapperCache **aCache)
+nsISupports*
+nsHTMLDocument::ResolveName(const nsAString& aName, nsWrapperCache **aCache)
 {
-  *aResult = nullptr;
-  *aCache = nullptr;
-
   nsIdentifierMapEntry *entry = mIdentifierMap.GetEntry(aName);
   if (!entry) {
-    return NS_OK;
+    *aCache = nullptr;
+    return nullptr;
   }
 
-  uint32_t length = 0;
   nsBaseContentList *list = entry->GetNameContentList();
-  if (list) {
-    list->GetLength(&length);
-  }
+  uint32_t length = list ? list->Length() : 0;
 
   if (length > 0) {
     if (length == 1) {
-      // Only one element in the list, return the element instead of
-      // returning the list
-
+      // Only one element in the list, return the element instead of returning
+      // the list.
       nsIContent *node = list->Item(0);
-      if (!aForm || nsContentUtils::BelongsInForm(aForm, node)) {
-        NS_ADDREF(*aResult = node);
-        *aCache = node;
-      }
-
-      return NS_OK;
+      *aCache = node;
+      return node;
     }
 
-    // The list contains more than one element, return the whole
-    // list, unless...
-
-    if (aForm) {
-      // ... we're called from a form, in that case we create a
-      // nsFormContentList which will filter out the elements in the
-      // list that don't belong to aForm
-
-      nsFormContentList *fc_list = new nsFormContentList(aForm, *list);
-      NS_ENSURE_TRUE(fc_list, NS_ERROR_OUT_OF_MEMORY);
-
-      uint32_t len;
-      fc_list->GetLength(&len);
-
-      if (len < 2) {
-        // After the nsFormContentList is done filtering there's either
-        // nothing or one element in the list.  Return that element, or null
-        // if there's no element in the list.
-
-        nsIContent *node = fc_list->Item(0);
-
-        NS_IF_ADDREF(*aResult = node);
-        *aCache = node;
-
-        delete fc_list;
-
-        return NS_OK;
-      }
-
-      list = fc_list;
-    }
-
-    return CallQueryInterface(list, aResult);
+    // The list contains more than one element, return the whole list.
+    *aCache = list;
+    return list;
   }
 
-  // No named items were found, see if there's one registerd by id for
-  // aName. If we get this far, FindNamedItems() will have been called
-  // for aName, so we're guaranteed that if there is an element with
-  // the id aName, it'll be entry's IdContent.
-
+  // No named items were found, see if there's one registerd by id for aName.
   Element *e = entry->GetIdElement();
 
   if (e && e->IsHTML()) {
     nsIAtom *tag = e->Tag();
-
-    if ((tag == nsGkAtoms::embed  ||
-         tag == nsGkAtoms::img    ||
-         tag == nsGkAtoms::object ||
-         tag == nsGkAtoms::applet) &&
-        (!aForm || nsContentUtils::BelongsInForm(aForm, e))) {
-      NS_ADDREF(*aResult = e);
+    if (tag == nsGkAtoms::embed  ||
+        tag == nsGkAtoms::img    ||
+        tag == nsGkAtoms::object ||
+        tag == nsGkAtoms::applet) {
       *aCache = e;
+      return e;
     }
   }
 
-  return NS_OK;
+  *aCache = nullptr;
+  return nullptr;
+}
+
+already_AddRefed<nsISupports>
+nsHTMLDocument::ResolveName(const nsAString& aName,
+                            nsIContent *aForm,
+                            nsWrapperCache **aCache)
+{
+  nsISupports* result = ResolveName(aName, aCache);
+  if (!result) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIContent> node = do_QueryInterface(result);
+  if (!node) {
+    // We create a nsFormContentList which will filter out the elements in the
+    // list that don't belong to aForm.
+    nsRefPtr<nsBaseContentList> list =
+      new nsFormContentList(aForm, *static_cast<nsBaseContentList*>(result));
+    if (list->Length() > 1) {
+      *aCache = list;
+      return list.forget();
+    }
+
+    // After the nsFormContentList is done filtering there's either nothing or
+    // one element in the list. Return that element, or null if there's no
+    // element in the list.
+    node = list->Item(0);
+  } else if (!nsContentUtils::BelongsInForm(aForm, node)) {
+    node = nullptr;
+  }
+
+  *aCache = node;
+  return node.forget();
 }
 
 //----------------------------
