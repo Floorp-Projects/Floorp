@@ -28,7 +28,7 @@
 #include "nsSVGGlyphFrame.h"
 #include "nsSVGOuterSVGFrame.h"
 #include "nsSVGPaintServerFrame.h"
-#include "nsSVGRect.h"
+#include "mozilla/dom/SVGRect.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGTextFrame.h"
 #include "nsSVGTextPathFrame.h"
@@ -3845,7 +3845,7 @@ nsSVGTextFrame2::GetExtentOfChar(nsIContent* aContent,
   // Transform the glyph's rect into user space.
   gfxRect r = m.TransformBounds(glyphRect);
 
-  NS_ADDREF(*aResult = new nsSVGRect(r.x, r.y, r.width, r.height));
+  NS_ADDREF(*aResult = new dom::SVGRect(r.x, r.y, r.width, r.height));
   return NS_OK;
 }
 
