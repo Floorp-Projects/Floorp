@@ -11,7 +11,7 @@ const Cu = Components.utils;
 
 const DBG_XUL = "chrome://browser/content/debugger.xul";
 const DBG_STRINGS_URI = "chrome://browser/locale/devtools/debugger.properties";
-const CHROME_DEBUGGER_PROFILE_NAME = "_chrome-debugger-profile";
+const CHROME_DEBUGGER_PROFILE_NAME = "-chrome-debugger";
 const TAB_SWITCH_NOTIFICATION = "debugger-tab-switch";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -475,7 +475,7 @@ ChromeDebuggerProcess.prototype = {
       DebuggerServer.init();
       DebuggerServer.addBrowserActors();
     }
-    DebuggerServer.openListener(Prefs.remotePort);
+    DebuggerServer.openListener(Prefs.chromeDebuggingPort);
   },
 
   /**
@@ -597,27 +597,11 @@ XPCOMUtils.defineLazyGetter(L10N, "stringBundle", function() {
 let Prefs = {};
 
 /**
- * Gets the preferred default remote debugging host.
- * @return string
- */
-XPCOMUtils.defineLazyGetter(Prefs, "remoteHost", function() {
-  return Services.prefs.getCharPref("devtools.debugger.remote-host");
-});
-
-/**
- * Gets the preferred default remote debugging port.
+ * Gets the preferred default remote browser debugging port.
  * @return number
  */
-XPCOMUtils.defineLazyGetter(Prefs, "remotePort", function() {
-  return Services.prefs.getIntPref("devtools.debugger.remote-port");
-});
-
-/**
- * Gets the preferred default remote debugging port.
- * @return number
- */
-XPCOMUtils.defineLazyGetter(Prefs, "wantLogging", function() {
-  return Services.prefs.getBoolPref("devtools.debugger.log");
+XPCOMUtils.defineLazyGetter(Prefs, "chromeDebuggingPort", function() {
+  return Services.prefs.getIntPref("devtools.debugger.chrome-debugging-port");
 });
 
 /**
@@ -625,7 +609,9 @@ XPCOMUtils.defineLazyGetter(Prefs, "wantLogging", function() {
  * @param string
  */
 function dumpn(str) {
-  if (Prefs.wantLogging) {
+  if (wantLogging) {
     dump("DBG-FRONTEND: " + str + "\n");
   }
 }
+
+let wantLogging = Services.prefs.getBoolPref("devtools.debugger.log");
