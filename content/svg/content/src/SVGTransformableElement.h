@@ -10,8 +10,6 @@
 #include "gfxMatrix.h"
 #include "SVGAnimatedTransformList.h"
 
-class nsIDOMSVGRect;
-
 namespace mozilla {
 class DOMSVGAnimatedTransformList;
 
@@ -19,6 +17,7 @@ namespace dom {
 
 class SVGGraphicsElement;
 class SVGMatrix;
+class SVGIRect;
 
 class SVGTransformableElement : public nsSVGElement
 {
@@ -33,7 +32,7 @@ public:
   already_AddRefed<DOMSVGAnimatedTransformList> Transform();
   nsSVGElement* GetNearestViewportElement();
   nsSVGElement* GetFarthestViewportElement();
-  already_AddRefed<nsIDOMSVGRect> GetBBox(ErrorResult& rv);
+  already_AddRefed<SVGIRect> GetBBox(ErrorResult& rv);
   already_AddRefed<SVGMatrix> GetCTM();
   already_AddRefed<SVGMatrix> GetScreenCTM();
   already_AddRefed<SVGMatrix> GetTransformToElement(SVGGraphicsElement& aElement,

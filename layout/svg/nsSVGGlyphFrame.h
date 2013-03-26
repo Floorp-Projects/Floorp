@@ -18,7 +18,6 @@
 class CharacterIterator;
 class gfxContext;
 class nsDisplaySVGGlyphs;
-class nsIDOMSVGRect;
 class nsRenderingContext;
 class nsSVGGlyphFrame;
 class nsSVGTextFrame;
@@ -28,6 +27,10 @@ class gfxTextObjectPaint;
 struct CharacterPosition;
 
 namespace mozilla {
+
+namespace dom {
+class SVGIRect;
+}
 
 // Slightly horrible callback for deferring application of opacity
 struct SVGTextObjectPaint : public gfxTextObjectPaint {
@@ -135,7 +138,7 @@ public:
   // These do not use the global transform if NS_STATE_NONDISPLAY_CHILD
   nsresult GetStartPositionOfChar(uint32_t charnum, nsISupports **_retval);
   nsresult GetEndPositionOfChar(uint32_t charnum, nsISupports **_retval);
-  nsresult GetExtentOfChar(uint32_t charnum, nsIDOMSVGRect **_retval);
+  nsresult GetExtentOfChar(uint32_t charnum, dom::SVGIRect **_retval);
   nsresult GetRotationOfChar(uint32_t charnum, float *_retval);
   /**
    * @param aForceGlobalTransform controls whether to use the
