@@ -27,6 +27,7 @@ CPPSRCS		= \
 			ImageFactory.cpp \
                         ImageMetadata.cpp \
 			ImageWrapper.cpp \
+			ClippedImage.cpp \
 			Decoder.cpp \
 			DiscardTracker.cpp \
 			FrozenImage.cpp \
