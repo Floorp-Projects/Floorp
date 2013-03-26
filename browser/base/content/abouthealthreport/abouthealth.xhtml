@@ -22,7 +22,8 @@
    <script type="text/javascript;version=1.8"
      src="chrome://browser/content/abouthealthreport/abouthealth.js" />
   </head>
-  <body onload="healthReportWrapper.init();">
+  <body onload="healthReportWrapper.init();"
+        onunload="healthReportWrapper.uninit();">
     <iframe id="remote-report"/>
   </body>
 </html>
