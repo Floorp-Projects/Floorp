@@ -62,7 +62,7 @@ protected:
   FrozenImage(Image* aImage) : ImageWrapper(aImage) { }
 
 private:
-  friend class ImageFactory;
+  friend class ImageOps;
 };
 
 } // namespace image
