@@ -87,6 +87,7 @@
 #include "nsCCUncollectableMarker.h"
 #include "nsURILoader.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/XULDocumentBinding.h"
 #include "mozilla/Preferences.h"
 
 using namespace mozilla;
@@ -202,7 +203,6 @@ XULDocument::XULDocument(void)
       mState(eState_Master),
       mResolutionPhase(nsForwardReference::eStart)
 {
-
     // NOTE! nsDocument::operator new() zeroes out all members, so don't
     // bother initializing members to 0.
 
@@ -215,6 +215,8 @@ XULDocument::XULDocument(void)
     mDelayFrameLoaderInitialization = true;
 
     mAllowXULXBL = eTriTrue;
+
+    SetIsDOMBinding();
 }
 
 XULDocument::~XULDocument()
@@ -4741,6 +4743,16 @@ XULDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
     nsCOMPtr<Element> el = do_QueryInterface(aElement);
     *aResult = GetBoxObjectFor(el, rv).get();
     return rv.ErrorCode();
+}
+
+JSObject*
+XULDocument::WrapNode(JSContext *aCx, JSObject *aScope)
+{
+  JSObject* obj = XULDocumentBinding::Wrap(aCx, aScope, this);
+  if (obj && !PostCreateWrapper(aCx, obj)) {
+    return nullptr;
+  }
+  return obj;
 }
 
 } // namespace dom
