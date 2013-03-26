@@ -1693,7 +1693,7 @@ nsContentUtils::TraceSafeJSContext(JSTracer* aTrc)
     return;
   }
   if (JSObject* global = JS_GetGlobalObject(cx)) {
-    JS_CALL_OBJECT_TRACER(aTrc, global, "safe context");
+    JS_CallObjectTracer(aTrc, global, "safe context");
   }
 }
 

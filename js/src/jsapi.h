@@ -949,11 +949,8 @@ typedef JSBool
 /*
  * Function type for trace operation of the class called to enumerate all
  * traceable things reachable from obj's private data structure. For each such
- * thing, a trace implementation must call
- *
- *    JS_CallTracer(trc, thing, kind);
- *
- * or one of its convenience macros as described in jsapi.h.
+ * thing, a trace implementation must call one of the |JS_Call<Type>Tracer|
+ * variants on the thing.
  *
  * JSTraceOp implementation can assume that no other threads mutates object
  * state. It must not change state of the object or corresponding native
@@ -967,8 +964,8 @@ typedef void
 (* JSTraceOp)(JSTracer *trc, JSRawObject obj);
 
 /*
- * DEBUG only callback that JSTraceOp implementation can provide to return
- * a string describing the reference traced with JS_CallTracer.
+ * Callback that JSTraceOp implementation can provide to return a string
+ * describing the reference traced with JS_CallTracer.
  */
 typedef void
 (* JSTraceNamePrinter)(JSTracer *trc, char *buf, size_t bufsize);
@@ -2490,15 +2487,6 @@ struct JSTracer {
 };
 
 /*
- * The method to call on each reference to a traceable thing stored in a
- * particular JSObject or other runtime structure. With DEBUG defined the
- * caller before calling JS_CallTracer must initialize JSTracer fields
- * describing the reference using the macros below.
- */
-extern JS_PUBLIC_API(void)
-JS_CallTracer(JSTracer *trc, void *thing, JSGCTraceKind kind);
-
-/*
  * Set debugging information about a reference to a traceable thing to prepare
  * for the following call to JS_CallTracer.
  *
@@ -2562,48 +2550,23 @@ JS_CallTracer(JSTracer *trc, void *thing, JSGCTraceKind kind);
 # define JS_SET_TRACING_NAME(trc, name)                                       \
     JS_SET_TRACING_DETAILS(trc, NULL, name, (size_t)-1)
 
-/*
- * Convenience macro to invoke JS_CallTracer using C string as the name for
- * the reference to a traceable thing.
- */
-# define JS_CALL_TRACER(trc, thing, kind, name)                               \
-    JS_BEGIN_MACRO                                                            \
-        JS_SET_TRACING_NAME(trc, name);                                       \
-        JS_CallTracer((trc), (thing), (kind));                                \
-    JS_END_MACRO
+extern JS_PUBLIC_API(void)
+JS_CallValueTracer(JSTracer *trc, JS::Value value, const char *name);
 
-/*
- * Convenience macros to invoke JS_CallTracer when jsval represents a
- * reference to a traceable thing.
- */
-#define JS_CALL_VALUE_TRACER(trc, val, name)                                  \
-    JS_BEGIN_MACRO                                                            \
-        if (JSVAL_IS_TRACEABLE(val)) {                                        \
-            JS_CALL_TRACER((trc), JSVAL_TO_GCTHING(val),                      \
-                           JSVAL_TRACE_KIND(val), name);                      \
-        }                                                                     \
-    JS_END_MACRO
+extern JS_PUBLIC_API(void)
+JS_CallIdTracer(JSTracer *trc, jsid id, const char *name);
 
-#define JS_CALL_OBJECT_TRACER(trc, object, name)                              \
-    JS_BEGIN_MACRO                                                            \
-        JSObject *obj_ = (object);                                            \
-        JS_ASSERT(obj_);                                                      \
-        JS_CALL_TRACER((trc), obj_, JSTRACE_OBJECT, name);                    \
-    JS_END_MACRO
+extern JS_PUBLIC_API(void)
+JS_CallObjectTracer(JSTracer *trc, JSObject *obj, const char *name);
 
-#define JS_CALL_STRING_TRACER(trc, string, name)                              \
-    JS_BEGIN_MACRO                                                            \
-        JSString *str_ = (string);                                            \
-        JS_ASSERT(str_);                                                      \
-        JS_CALL_TRACER((trc), str_, JSTRACE_STRING, name);                    \
-    JS_END_MACRO
+extern JS_PUBLIC_API(void)
+JS_CallStringTracer(JSTracer *trc, JSString *str, const char *name);
 
-#define JS_CALL_SCRIPT_TRACER(trc, script, name)                              \
-    JS_BEGIN_MACRO                                                            \
-        JSScript *script_ = (script);                                         \
-        JS_ASSERT(script_);                                                   \
-        JS_CALL_TRACER((trc), script_, JSTRACE_SCRIPT, name);                 \
-    JS_END_MACRO
+extern JS_PUBLIC_API(void)
+JS_CallScriptTracer(JSTracer *trc, JSScript *script, const char *name);
+
+extern JS_PUBLIC_API(void)
+JS_CallGenericTracer(JSTracer *trc, void *gcthing, const char *name);
 
 /*
  * API for JSTraceCallback implementations.
