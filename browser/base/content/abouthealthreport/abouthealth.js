@@ -34,6 +34,10 @@ let healthReportWrapper = {
     prefs.observe("uploadEnabled", this.updatePrefState, healthReportWrapper);
   },
 
+  uninit: function () {
+    prefs.ignore("uploadEnabled", this.updatePrefState, healthReportWrapper);
+  },
+
   _getReportURI: function () {
     let url = Services.urlFormatter.formatURLPref("datareporting.healthreport.about.reportUrl");
     return Services.io.newURI(url, null, null);
