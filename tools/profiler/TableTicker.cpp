@@ -196,7 +196,7 @@ void addDynamicTag(ThreadProfile &aProfile, char aTagName, const char *aStr)
   for (size_t j = 0; j < strLen;) {
     // Store as many characters in the void* as the platform allows
     char text[sizeof(void*)];
-    int len = sizeof(void*)/sizeof(char);
+    size_t len = sizeof(void*)/sizeof(char);
     if (j+len >= strLen) {
       len = strLen - j;
     }
@@ -300,7 +300,7 @@ void TableTicker::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample
   // Start with the current function.
   StackWalkCallback(aSample->pc, aSample->sp, &array);
 
-  uint32_t maxFrames = array.size - array.count;
+  uint32_t maxFrames = uint32_t(array.size - array.count);
 #ifdef XP_MACOSX
   pthread_t pt = GetProfiledThread(platform_data());
   void *stackEnd = reinterpret_cast<void*>(-1);

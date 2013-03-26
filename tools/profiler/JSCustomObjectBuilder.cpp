@@ -87,7 +87,7 @@ void EscapeToStream(std::ostream& stream, const char* str) {
     } else if (ucs4Char > 0xFF) {
       PRUnichar chr[2];
       ConvertUTF8toUTF16 encoder(chr);
-      encoder.write(utf8CharStart, str-utf8CharStart);
+      encoder.write(utf8CharStart, uint32_t(str-utf8CharStart));
       char escChar[13];
       snprintf(escChar, mozilla::ArrayLength(escChar), "\\u%04X\\u%04X", chr[0], chr[1]);
       stream << escChar;
@@ -210,7 +210,7 @@ operator<<(std::ostream& stream, JSCustomArray* entry)
 {
   bool needsComma = false;
   stream << "[";
-  for (size_t i = 0; i < entry->mValues.Length(); i++) {
+  for (uint32_t i = 0; i < entry->mValues.Length(); i++) {
     if (needsComma) {
       stream << ",";
     }
