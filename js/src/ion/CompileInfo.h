@@ -21,7 +21,7 @@ CountArgSlots(JSFunction *fun)
 
 enum ExecutionMode {
     // Normal JavaScript execution
-    SequentialExecution,
+    SequentialExecution = 0,
 
     // JavaScript code to be executed in parallel worker threads,
     // e.g. by ParallelArray
