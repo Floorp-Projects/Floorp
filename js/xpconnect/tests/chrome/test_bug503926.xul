@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=503926
   <script type="application/javascript">
   <![CDATA[
 
-  SimpleTest.expectAssertions(1);
+  SimpleTest.expectAssertions(0, 1);
 
   /** Test for Bug 503926 **/
   function iframe_loaded() {
