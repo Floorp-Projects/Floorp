@@ -38,6 +38,8 @@
              oncommand="DebuggerView.Filtering._doFileSearch()"/>
     <command id="globalSearchCommand"
              oncommand="DebuggerView.Filtering._doGlobalSearch()"/>
+    <command id="functionSearchCommand"
+             oncommand="DebuggerView.Filtering._doFunctionSearch()"/>
     <command id="tokenSearchCommand"
              oncommand="DebuggerView.Filtering._doTokenSearch()"/>
     <command id="lineSearchCommand"
@@ -94,6 +96,11 @@
                 accesskey="&debuggerUI.searchGlobal.key;"
                 key="globalSearchKey"
                 command="globalSearchCommand"/>
+      <menuitem id="se-dbg-cMenu-findFunction"
+                label="&debuggerUI.searchFunction;"
+                accesskey="&debuggerUI.searchFunction.key;"
+                key="functionSearchKey"
+                command="functionSearchCommand"/>
       <menuseparator/>
       <menuitem id="se-dbg-cMenu-findToken"
                 label="&debuggerUI.searchToken;"
@@ -174,10 +181,22 @@
          key="&debuggerUI.searchFile.key;"
          modifiers="accel"
          command="fileSearchCommand"/>
+    <key id="fileSearchKey"
+         key="&debuggerUI.searchFile.altkey;"
+         modifiers="accel"
+         command="fileSearchCommand"/>
     <key id="globalSearchKey"
          key="&debuggerUI.searchGlobal.key;"
          modifiers="accel alt"
          command="globalSearchCommand"/>
+    <key id="functionSearchKey"
+         key="&debuggerUI.searchFunction.key;"
+         modifiers="accel"
+         command="functionSearchCommand"/>
+    <key id="functionSearchKey"
+         key="&debuggerUI.searchFunction.altkey;"
+         modifiers="accel shift"
+         command="functionSearchCommand"/>
     <key id="tokenSearchKey"
          key="&debuggerUI.searchToken.key;"
          modifiers="accel"
@@ -279,6 +298,13 @@
                class="plain searchbox-panel-operator-label"/>
       </hbox>
       <hbox align="center">
+        <button id="function-operator-button"
+                class="searchbox-panel-operator-button"
+                command="functionSearchCommand"/>
+        <label id="function-operator-label"
+               class="plain searchbox-panel-operator-label"/>
+      </hbox>
+      <hbox align="center">
         <button id="token-operator-button"
                 class="searchbox-panel-operator-button"
                 command="tokenSearchCommand"/>
@@ -295,17 +321,11 @@
       <hbox align="center">
         <button id="variable-operator-button"
                 class="searchbox-panel-operator-button"
-                 command="variableSearchCommand"/>
+                command="variableSearchCommand"/>
         <label id="variable-operator-label"
                class="plain searchbox-panel-operator-label"/>
       </hbox>
     </vbox>
-  </panel>
-
-  <panel id="filtered-sources-panel"
-         level="top"
-         noautofocus="true"
-         position="before_start">
   </panel>
 
   <panel id="conditional-breakpoint-panel"
