@@ -5369,7 +5369,10 @@ CodeGenerator::visitStoreTypedArrayElementHole(LStoreTypedArrayElementHole *lir)
         StoreToTypedArray(masm, arrayType, value, dest);
     } else {
         Register idxReg = ToRegister(lir->index());
-        if (guardLength)
+        JS_ASSERT(guardLength);
+        if (lir->length()->isConstant())
+            masm.branch32(Assembler::AboveOrEqual, idxReg, Imm32(ToInt32(lir->length())), &skip);
+        else
             masm.branch32(Assembler::BelowOrEqual, ToOperand(lir->length()), idxReg, &skip);
         BaseIndex dest(elements, ToRegister(lir->index()), ScaleFromElemWidth(width));
         StoreToTypedArray(masm, arrayType, value, dest);
