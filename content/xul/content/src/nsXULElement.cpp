@@ -1367,10 +1367,8 @@ nsXULElement::GetBoxObject(nsIBoxObject** aResult)
 already_AddRefed<nsIBoxObject>
 nsXULElement::GetBoxObject(ErrorResult& rv)
 {
-    nsCOMPtr<nsIBoxObject> boxObject;
     // XXX sXBL/XBL2 issue! Owner or current document?
-    rv = OwnerDoc()->GetBoxObjectFor(this, getter_AddRefs(boxObject));
-    return boxObject.forget();
+    return OwnerDoc()->GetBoxObjectFor(this, rv);
 }
 
 // Methods for setting/getting attributes from nsIDOMXULElement

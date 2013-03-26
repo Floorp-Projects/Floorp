@@ -152,6 +152,7 @@ public:
     using nsDocument::GetLastStyleSheetSet;
     using nsDocument::MozSetImageElement;
     using nsDocument::GetMozFullScreenElement;
+    using nsIDocument::GetLocation;
 
     // nsDocument interface overrides
     virtual Element* GetElementById(const nsAString & elementId);
@@ -185,6 +186,42 @@ public:
     virtual nsXPCClassInfo* GetClassInfo();
 
     void TraceProtos(JSTracer* aTrc, uint32_t aGCNumber);
+
+    // WebIDL API
+    already_AddRefed<nsINode> GetPopupNode();
+    void SetPopupNode(nsINode* aNode);
+    already_AddRefed<nsINode> GetPopupRangeParent(ErrorResult& aRv);
+    int32_t GetPopupRangeOffset(ErrorResult& aRv);
+    already_AddRefed<nsINode> GetTooltipNode();
+    void SetTooltipNode(nsINode* aNode) { /* do nothing */ }
+    nsIDOMXULCommandDispatcher* GetCommandDispatcher() const
+    {
+        return mCommandDispatcher;
+    }
+    int32_t GetWidth(ErrorResult& aRv);
+    int32_t GetHeight(ErrorResult& aRv);
+    already_AddRefed<nsINodeList>
+      GetElementsByAttribute(const nsAString& aAttribute,
+                             const nsAString& aValue);
+    already_AddRefed<nsINodeList>
+      GetElementsByAttributeNS(const nsAString& aNamespaceURI,
+                               const nsAString& aAttribute,
+                               const nsAString& aValue,
+                               ErrorResult& aRv);
+    void AddBroadcastListenerFor(Element& aBroadcaster, Element& aListener,
+                                 const nsAString& aAttr, ErrorResult& aRv);
+    void RemoveBroadcastListenerFor(Element& aBroadcaster, Element& aListener,
+                                    const nsAString& aAttr);
+    void Persist(const nsAString& aId, const nsAString& aAttr, ErrorResult& aRv)
+    {
+        aRv = Persist(aId, aAttr);
+    }
+    using nsDocument::GetBoxObjectFor;
+    void LoadOverlay(const nsAString& aURL, nsIObserver* aObserver,
+                     ErrorResult& aRv)
+    {
+        aRv = LoadOverlay(aURL, aObserver);
+    }
 
 protected:
     // Implementation methods
@@ -229,8 +266,8 @@ protected:
     AddElementToDocumentPost(Element* aElement);
 
     nsresult
-    ExecuteOnBroadcastHandlerFor(nsIContent* aBroadcaster,
-                                 nsIDOMElement* aListener,
+    ExecuteOnBroadcastHandlerFor(Element* aBroadcaster,
+                                 Element* aListener,
                                  nsIAtom* aAttr);
 
     nsresult
@@ -522,10 +559,10 @@ protected:
     // *aBroadcaster do need to be released if non-null, of course).
     nsresult
     FindBroadcaster(Element* aElement,
-                    nsIDOMElement** aListener,
+                    Element** aListener,
                     nsString& aBroadcasterID,
                     nsString& aAttribute,
-                    nsIDOMElement** aBroadcaster);
+                    Element** aBroadcaster);
 
     nsresult
     CheckBroadcasterHookup(Element* aElement,
@@ -533,8 +570,8 @@ protected:
                            bool* aDidResolve);
 
     void
-    SynchronizeBroadcastListener(nsIDOMElement   *aBroadcaster,
-                                 nsIDOMElement   *aListener,
+    SynchronizeBroadcastListener(Element *aBroadcaster,
+                                 Element *aListener,
                                  const nsAString &aAttr);
 
     static
@@ -674,14 +711,14 @@ protected:
     class nsDelayedBroadcastUpdate
     {
     public:
-      nsDelayedBroadcastUpdate(nsIDOMElement* aBroadcaster,
-                               nsIDOMElement* aListener,
+      nsDelayedBroadcastUpdate(Element* aBroadcaster,
+                               Element* aListener,
                                const nsAString &aAttr)
       : mBroadcaster(aBroadcaster), mListener(aListener), mAttr(aAttr),
         mSetAttr(false), mNeedsAttrChange(false) {}
 
-      nsDelayedBroadcastUpdate(nsIDOMElement* aBroadcaster,
-                               nsIDOMElement* aListener,
+      nsDelayedBroadcastUpdate(Element* aBroadcaster,
+                               Element* aListener,
                                nsIAtom* aAttrName,
                                const nsAString &aAttr,
                                bool aSetAttr,
@@ -695,8 +732,8 @@ protected:
         mAttr(aOther.mAttr), mAttrName(aOther.mAttrName),
         mSetAttr(aOther.mSetAttr), mNeedsAttrChange(aOther.mNeedsAttrChange) {}
 
-      nsCOMPtr<nsIDOMElement> mBroadcaster;
-      nsCOMPtr<nsIDOMElement> mListener;
+      nsCOMPtr<Element>       mBroadcaster;
+      nsCOMPtr<Element>       mListener;
       // Note if mAttrName isn't used, this is the name of the attr, otherwise
       // this is the value of the attribute.
       nsString                mAttr;
