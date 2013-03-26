@@ -46,7 +46,7 @@ ParseContext<ParseHandler>::ParseContext(Parser<ParseHandler> *prs, SharedContex
     decls_(prs->context),
     args_(prs->context),
     vars_(prs->context),
-    yieldOffset(0),
+    yieldNode(ParseHandler::null()),
     parserPC(&prs->pc),
     lexdeps(prs->context),
     parent(prs->pc),
