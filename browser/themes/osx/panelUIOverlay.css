@@ -3,6 +3,44 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 %filter substitution
-%define menuPanelWidth 23em
+%define menuPanelWidth 26em
 
 %include ../shared/panelUIOverlay.inc.css
+
+.PanelUI-pageControls toolbarbutton {
+  list-style-image: url("chrome://browser/skin/Toolbar.png");
+}
+
+#PanelUI-cut-btn {
+  -moz-image-region: rect(0, 260px, 20px, 240px);
+}
+#PanelUI-copy-btn {
+  -moz-image-region: rect(0, 280px, 20px, 260px);
+}
+#PanelUI-paste-btn {
+  -moz-image-region: rect(0, 300px, 20px, 280px);
+}
+
+#PanelUI-zoomOut-btn {
+  -moz-image-region: rect(0, 400px, 20px, 380px);
+  padding-left: 12px;
+  padding-right: 12px;
+}
+#PanelUI-zoomIn-btn {
+  -moz-image-region: rect(0, 420px, 20px, 400px);
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+.PanelUI-editControls #PanelUI-copy-btn,
+.PanelUI-zoomControls #PanelUI-zoomReset-btn {
+  border-left: none;
+  border-right: none;
+  border-radius: 0;
+}
+
+#PanelUI-zoomIn-btn .toolbarbutton-text,
+#PanelUI-zoomOut-btn .toolbarbutton-text,
+#PanelUI-zoomReset-btn .toolbarbutton-icon {
+  display: none;
+}
