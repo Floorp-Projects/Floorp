@@ -279,9 +279,7 @@ AppInfoProvider.prototype = Object.freeze({
 
 
   collectConstantData: function () {
-    return this.enqueueStorageOperation(function collect() {
-      return Task.spawn(this._populateConstants.bind(this));
-    }.bind(this));
+    return this.storage.enqueueTransaction(this._populateConstants.bind(this));
   },
 
   _populateConstants: function () {
@@ -424,9 +422,7 @@ SysInfoProvider.prototype = Object.freeze({
   },
 
   collectConstantData: function () {
-    return this.enqueueStorageOperation(function collection() {
-      return Task.spawn(this._populateConstants.bind(this));
-    }.bind(this));
+    return this.storage.enqueueTransaction(this._populateConstants.bind(this));
   },
 
   _populateConstants: function () {
@@ -878,7 +874,7 @@ CrashesProvider.prototype = Object.freeze({
   pullOnly: true,
 
   collectConstantData: function () {
-    return Task.spawn(this._populateCrashCounts.bind(this));
+    return this.storage.enqueueTransaction(this._populateCrashCounts.bind(this));
   },
 
   _populateCrashCounts: function () {

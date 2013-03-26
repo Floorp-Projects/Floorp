@@ -182,12 +182,28 @@ Measurement.prototype = Object.freeze({
   },
 
   _configureStorage: function () {
-    return Task.spawn(function configureFields() {
-      for (let [name, info] in Iterator(this.fields)) {
-        this._log.debug("Registering field: " + name + " " + info.type);
+    let missing = [];
+    for (let [name, info] in Iterator(this.fields)) {
+      if (this.storage.hasFieldFromMeasurement(this.id, name)) {
+        this._fields[name] =
+          [this.storage.fieldIDFromMeasurement(this.id, name), info.type];
+        continue;
+      }
 
-        let id = yield this.storage.registerField(this.id, name, info.type);
-        this._fields[name] = [id, info.type];
+      missing.push([name, info.type]);
+    }
+
+    if (!missing.length) {
+      return CommonUtils.laterTickResolvingPromise();
+    }
+
+    // We only perform a transaction if we have work to do (to avoid
+    // extra SQLite overhead).
+    return this.storage.enqueueTransaction(function registerFields() {
+      for (let [name, type] of missing) {
+        this._log.debug("Registering field: " + name + " " + type);
+        let id = yield this.storage.registerField(this.id, name, type);
+        this._fields[name] = [id, type];
       }
     }.bind(this));
   },
