@@ -378,9 +378,22 @@ ICFallbackStub::unlinkStub(Zone *zone, ICStub *prev, ICStub *stub)
         stub->trace(zone->barrierTracer());
     }
 
+    if (ICStub::CanMakeCalls(stub->kind()) && stub->isMonitored()) {
+        // This stub can make calls so we can return to it if it's on the stack.
+        // We just have to reset its firstMonitorStub_ field to avoid a stale
+        // pointer when purgeOptimizedStubs destroys all optimized monitor
+        // stubs (unlinked stubs won't be updated).
+        ICTypeMonitor_Fallback *monitorFallback = toMonitoredFallbackStub()->fallbackMonitorStub();
+        stub->toMonitoredStub()->resetFirstMonitorStub(monitorFallback);
+    }
+
 #ifdef DEBUG
-    // Poison stub code to ensure we don't call this stub again.
-    stub->stubCode_ = (uint8_t *)0xbad;
+    // Poison stub code to ensure we don't call this stub again. However, if this
+    // stub can make calls, a pointer to it may be stored in a stub frame on the
+    // stack, so we can't touch the stubCode_ or GC will crash when marking this
+    // pointer.
+    if (!ICStub::CanMakeCalls(stub->kind()))
+        stub->stubCode_ = (uint8_t *)0xbad;
 #endif
 }
 

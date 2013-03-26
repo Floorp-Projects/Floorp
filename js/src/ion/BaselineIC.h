@@ -713,6 +713,7 @@ class ICStub
     }
 
     static bool CanMakeCalls(ICStub::Kind kind) {
+        JS_ASSERT(IsValidKind(kind));
         switch (kind) {
           case Call_Scripted:
           case Call_AnyScripted:
