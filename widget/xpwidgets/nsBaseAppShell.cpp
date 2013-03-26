@@ -11,10 +11,6 @@
 #include "nsServiceManagerUtils.h"
 #include "mozilla/Services.h"
 
-#if defined(MOZ_CRASHREPORTER)
-#include "nsExceptionHandler.h"
-#endif
-
 // When processing the next thread event, the appshell may process native
 // events (if not in performance mode), which can result in suppressing the
 // next thread event for at most this many ticks:
@@ -96,7 +92,7 @@ nsBaseAppShell::NativeEventCallback()
     mBlockNativeEvent = true;
   }
 
-  IncrementEventloopNestingLevel();
+  ++mEventloopNestingLevel;
   EventloopNestingState prevVal = mEventloopNestingState;
   NS_ProcessPendingEvents(thread, THREAD_EVENT_STARVATION_LIMIT);
   mProcessedGeckoEvents = true;
@@ -108,7 +104,7 @@ nsBaseAppShell::NativeEventCallback()
   if (NS_HasPendingEvents(thread))
     DoProcessMoreGeckoEvents();
 
-  DecrementEventloopNestingLevel();
+  --mEventloopNestingLevel;
 }
 
 // Note, this is currently overidden on windows, see comments in nsAppShell for
@@ -138,7 +134,7 @@ nsBaseAppShell::DoProcessNextNativeEvent(bool mayWait, uint32_t recursionDepth)
   EventloopNestingState prevVal = mEventloopNestingState;
   mEventloopNestingState = eEventloopXPCOM;
 
-  IncrementEventloopNestingLevel();
+  ++mEventloopNestingLevel;
 
   bool result = ProcessNextNativeEvent(mayWait);
 
@@ -147,7 +143,7 @@ nsBaseAppShell::DoProcessNextNativeEvent(bool mayWait, uint32_t recursionDepth)
   // to the event loop yet.
   RunSyncSections(false, recursionDepth);
 
-  DecrementEventloopNestingLevel();
+  --mEventloopNestingLevel;
 
   mEventloopNestingState = prevVal;
   return result;
@@ -327,30 +323,6 @@ nsBaseAppShell::DispatchDummyEvent(nsIThread* aTarget)
     mDummyEvent = new nsRunnable();
 
   return NS_SUCCEEDED(aTarget->Dispatch(mDummyEvent, NS_DISPATCH_NORMAL));
-}
-
-void
-nsBaseAppShell::IncrementEventloopNestingLevel()
-{
-  ++mEventloopNestingLevel;
-#if defined(MOZ_CRASHREPORTER)
-  nsAutoCString strValue;
-  strValue.AppendInt(mEventloopNestingLevel);
-  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("EventloopNestingLevel"),
-                                     strValue);
-#endif
-}
-
-void
-nsBaseAppShell::DecrementEventloopNestingLevel()
-{
-  --mEventloopNestingLevel;
-#if defined(MOZ_CRASHREPORTER)
-  nsAutoCString strValue;
-  strValue.AppendInt(mEventloopNestingLevel);
-  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("EventloopNestingLevel"),
-                                     strValue);
-#endif
 }
 
 void
