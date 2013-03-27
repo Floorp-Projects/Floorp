@@ -2311,15 +2311,9 @@ nsHTMLDocument::ResolveName(const nsAString& aName, nsWrapperCache **aCache)
   // No named items were found, see if there's one registerd by id for aName.
   Element *e = entry->GetIdElement();
 
-  if (e && e->IsHTML()) {
-    nsIAtom *tag = e->Tag();
-    if (tag == nsGkAtoms::embed  ||
-        tag == nsGkAtoms::img    ||
-        tag == nsGkAtoms::object ||
-        tag == nsGkAtoms::applet) {
-      *aCache = e;
-      return e;
-    }
+  if (e && nsGenericHTMLElement::ShouldExposeIdAsHTMLDocumentProperty(e)) {
+    *aCache = e;
+    return e;
   }
 
   *aCache = nullptr;
@@ -2385,10 +2379,23 @@ nsHTMLDocument::NamedGetter(JSContext* cx, const nsAString& aName, bool& aFound,
   return &val.toObject();
 }
 
+static PLDHashOperator
+IdentifierMapEntryAddNames(nsIdentifierMapEntry* aEntry, void* aArg)
+{
+  nsTArray<nsString>* aNames = static_cast<nsTArray<nsString>*>(aArg);
+  Element* idElement;
+  if (aEntry->HasNameElement() ||
+      ((idElement = aEntry->GetIdElement()) &&
+       nsGenericHTMLElement::ShouldExposeIdAsHTMLDocumentProperty(idElement))) {
+    aNames->AppendElement(aEntry->GetKey());
+  }
+  return PL_DHASH_NEXT;
+}
+
 void
 nsHTMLDocument::GetSupportedNames(nsTArray<nsString>& aNames)
 {
-  // Nothing, for now.  We should fix that.
+  mIdentifierMap.EnumerateEntries(IdentifierMapEntryAddNames, &aNames);
 }
 
 //----------------------------

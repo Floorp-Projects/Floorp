@@ -717,6 +717,19 @@ public:
 
   static bool TouchEventsEnabled(JSContext* /* unused */, JSObject* /* unused */);
 
+  static inline bool
+  ShouldExposeIdAsHTMLDocumentProperty(Element* aElement)
+  {
+    if (!aElement->IsHTML()) {
+      return false;
+    }
+    nsIAtom* tag = aElement->Tag();
+    return tag == nsGkAtoms::img ||
+           tag == nsGkAtoms::applet ||
+           tag == nsGkAtoms::embed ||
+           tag == nsGkAtoms::object;
+  }
+
 protected:
   /**
    * Add/remove this element to the documents name cache
