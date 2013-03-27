@@ -77,7 +77,7 @@ nsFileControlFrame::Init(nsIContent* aContent,
 {
   nsBlockFrame::Init(aContent, aParent, aPrevInFlow);
 
-  mMouseListener = new BrowseMouseListener(this);
+  mMouseListener = new DnDListener(this);
 }
 
 void
@@ -93,18 +93,7 @@ nsFileControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
                                         mMouseListener, false);
   }
 
-  // remove mMouseListener as a mouse event listener (bug 40533, bug 355931)
-
-  if (mBrowse) {
-    mBrowse->RemoveSystemEventListener(NS_LITERAL_STRING("click"),
-                                       mMouseListener, false);
-  }
   nsContentUtils::DestroyAnonymousContent(&mBrowse);
-
-  if (mTextContent) {
-    mTextContent->RemoveSystemEventListener(NS_LITERAL_STRING("click"),
-                                            mMouseListener, false);
-  }
   nsContentUtils::DestroyAnonymousContent(&mTextContent);
 
   mMouseListener->ForgetFrame();
@@ -164,16 +153,11 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  // We should be able to interact with the element by doing drag and drop or
-  // clicking.
+  // We should be able to interact with the element by doing drag and drop.
   mContent->AddSystemEventListener(NS_LITERAL_STRING("drop"),
                                    mMouseListener, false);
   mContent->AddSystemEventListener(NS_LITERAL_STRING("dragover"),
                                    mMouseListener, false);
-  mBrowse->AddSystemEventListener(NS_LITERAL_STRING("click"),
-                                  mMouseListener, false);
-  mTextContent->AddSystemEventListener(NS_LITERAL_STRING("click"),
-                                       mMouseListener, false);
 
   SyncDisabledState();
 
@@ -198,61 +182,27 @@ nsFileControlFrame::SetFocus(bool aOn, bool aRepaint)
 {
 }
 
-bool ShouldProcessMouseClick(nsIDOMEvent* aMouseEvent)
-{
-  // only allow the left button
-  nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
-  NS_ENSURE_TRUE(mouseEvent, false);
-  bool defaultPrevented = false;
-  aMouseEvent->GetPreventDefault(&defaultPrevented);
-  if (defaultPrevented) {
-    return false;
-  }
-
-  uint16_t whichButton;
-  if (NS_FAILED(mouseEvent->GetButton(&whichButton)) || whichButton != 0) {
-    return false;
-  }
-
-  int32_t clickCount;
-  if (NS_FAILED(mouseEvent->GetDetail(&clickCount)) || clickCount > 1) {
-    return false;
-  }
-
-  return true;
-}
-
 /**
- * This is called when we receive any registered events on the control.
- * We've only registered for drop, dragover and click events.
+ * This is called when we receive a drop or a dragover.
  */
 NS_IMETHODIMP
-nsFileControlFrame::BrowseMouseListener::HandleEvent(nsIDOMEvent* aEvent)
+nsFileControlFrame::DnDListener::HandleEvent(nsIDOMEvent* aEvent)
 {
   NS_ASSERTION(mFrame, "We should have been unregistered");
-
-  nsAutoString eventType;
-  aEvent->GetType(eventType);
-  if (eventType.EqualsLiteral("click")) {
-    if (!ShouldProcessMouseClick(aEvent))
-      return NS_OK;
-    
-    nsHTMLInputElement* input =
-      nsHTMLInputElement::FromContent(mFrame->GetContent());
-    return input ? input->FireAsyncClickHandler() : NS_OK;
-  }
 
   bool defaultPrevented = false;
   aEvent->GetPreventDefault(&defaultPrevented);
   if (defaultPrevented) {
     return NS_OK;
   }
-  
+
   nsCOMPtr<nsIDOMDragEvent> dragEvent = do_QueryInterface(aEvent);
   if (!dragEvent || !IsValidDropData(dragEvent)) {
     return NS_OK;
   }
 
+  nsAutoString eventType;
+  aEvent->GetType(eventType);
   if (eventType.EqualsLiteral("dragover")) {
     // Prevent default if we can accept this drag data
     aEvent->PreventDefault();
@@ -285,7 +235,7 @@ nsFileControlFrame::BrowseMouseListener::HandleEvent(nsIDOMEvent* aEvent)
 }
 
 /* static */ bool
-nsFileControlFrame::BrowseMouseListener::IsValidDropData(nsIDOMDragEvent* aEvent)
+nsFileControlFrame::DnDListener::IsValidDropData(nsIDOMDragEvent* aEvent)
 {
   nsCOMPtr<nsIDOMDataTransfer> dataTransfer;
   aEvent->GetDataTransfer(getter_AddRefs(dataTransfer));
