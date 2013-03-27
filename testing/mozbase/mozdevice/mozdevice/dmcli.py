@@ -25,6 +25,11 @@ class DMCli(object):
                                        'max_args': 1,
                                        'help_args': '<file>',
                                        'help': 'push this package file to the device and install it' },
+                          'uninstall': { 'function': lambda a: self.dm.uninstallApp(a),
+                                         'min_args': 1,
+                                         'max_args': 1,
+                                         'help_args': '<packagename>',
+                                         'help': 'uninstall the named app from the device' },
                           'killapp': { 'function': self.killapp,
                                        'min_args': 1,
                                        'max_args': 1,
@@ -105,7 +110,13 @@ class DMCli(object):
                                           'max_args': 1,
                                           'help_args': '<png file>',
                                           'help': 'capture screenshot of device in action'
-                                          }
+                                          },
+                          'sutver': { 'function': self.sutver,
+                                      'min_args': 0,
+                                      'max_args': 0,
+                                      'help_args': '',
+                                      'help': 'SUTAgent\'s product name and version (SUT only)'
+                                   },
 
                           }
 
@@ -280,6 +291,13 @@ class DMCli(object):
 
         print "FALSE"
         return errno.ENOTDIR
+
+    def sutver(self):
+        if self.options.dmtype == 'sut':
+            print '%s Version %s' % (self.dm.agentProductName,
+                                     self.dm.agentVersion)
+        else:
+            print 'Must use SUT transport to get SUT version.'
 
 def cli(args=sys.argv[1:]):
     # process the command line

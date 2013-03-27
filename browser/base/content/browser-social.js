@@ -170,12 +170,12 @@ let SocialUI = {
   },
 
   _updateMenuItems: function () {
-    if (!Social.provider)
+    let provider = Social.provider || Social.defaultProvider;
+    if (!provider)
       return;
-
     // The View->Sidebar and Menubar->Tools menu.
     for (let id of ["menu_socialSidebar", "menu_socialAmbientMenu"])
-      document.getElementById(id).setAttribute("label", Social.provider.name);
+      document.getElementById(id).setAttribute("label", provider.name);
   },
 
   // This handles "ActivateSocialFeature" events fired against content documents
@@ -226,7 +226,7 @@ let SocialUI = {
         return;
       }
     }
-    Social.installProvider(targetDoc.location.href, data, function(manifest) {
+    Social.installProvider(targetDoc, data, function(manifest) {
       this.doActivation(manifest.origin);
     }.bind(this));
   },

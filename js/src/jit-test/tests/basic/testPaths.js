@@ -1,12 +1,14 @@
-// load() should resolve paths relative to the current script. That's easily
-// tested. snarf() aka read() should resolve paths relative to the current
-// working directory, which is harder to test because the shell doesn't really
-// have any (portable) notion of the current directory (and it can't create
-// files to enforce an expected layout.)
+// load() and snarf() (aka read()) should resolve paths relative to the current
+// working directory. This is a little hard to test because the shell doesn't
+// really have any (portable) notion of the current directory (and it can't
+// create files to enforce an expected layout.) loadRelativeToScript() and
+// readRelativeToScript() do what their names say, which is much easier to
+// test.
 
 loaded = {}
 snarfed = {}
-relatived = {}
+loadRel = {}
+snarfRel = {}
 for (let f of ['local.js', '../basic/local.js', 'Y.js']) {
   try {
     load(f);
@@ -24,28 +26,42 @@ for (let f of ['local.js', '../basic/local.js', 'Y.js']) {
 
   try {
     readRelativeToScript(f);
-    relatived[f] = true;
+    snarfRel[f] = true;
   } catch(e) {
-    relatived[f] = !/can't open/.test(e);
+    snarfRel[f] = !/can't open/.test(e);
+  }
+
+  try {
+    loadRelativeToScript(f);
+    loadRel[f] = true;
+  } catch(e) {
+    loadRel[f] = !/can't open/.test(e);
   }
 }
 
-// local.js in the same dir as this script, so should be found by load() but
-// not snarf() -- unless you happen to be in that directory
-assertEq(loaded['local.js'], true);
-assertEq(loaded['../basic/local.js'], true);
-assertEq(relatived['local.js'], true);
-assertEq(relatived['../basic/local.js'], true);
+// local.js in the same dir as this script, so should be found by the
+// script-relative calls but not the cwd-relative ones -- unless you happen to
+// be in that directory
+assertEq(loadRel['local.js'], true);
+assertEq(loadRel['../basic/local.js'], true);
+assertEq(snarfRel['local.js'], true);
+assertEq(snarfRel['../basic/local.js'], true);
 if (('PWD' in environment) && !(/test.*[\/\\]basic[\/\\]/.test(environment['PWD']))) {
+  assertEq(loaded['local.js'], false);
+  assertEq(loaded['../basic/local.js'], false);
   assertEq(snarfed['local.js'], false);
   assertEq(snarfed['../basic/local.js'], false);
 }
 
 // Y.js is in the root of the objdir, where |make check| is normally
 // run from.
-assertEq(loaded['Y.js'], false);
-assertEq(relatived['Y.js'], false);
+assertEq(loadRel['Y.js'], false);
+assertEq(snarfRel['Y.js'], false);
 if (!snarfed['Y.js']) {
+  print("WARNING: expected to be able to find Y.js in current directory\n");
+  print("(not failing because it depends on where this test was run from)\n");
+}
+if (!loaded['Y.js']) {
   print("WARNING: expected to be able to find Y.js in current directory\n");
   print("(not failing because it depends on where this test was run from)\n");
 }

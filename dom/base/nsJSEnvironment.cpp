@@ -81,7 +81,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
 
-#include "sampler.h"
+#include "GeckoProfiler.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1248,7 +1248,7 @@ nsJSContext::EvaluateString(const nsAString& aScript,
                             bool aCoerceToString,
                             JS::Value* aRetValue)
 {
-  SAMPLE_LABEL("JS", "EvaluateString");
+  PROFILER_LABEL("JS", "EvaluateString");
   MOZ_ASSERT_IF(aOptions.versionSet, aOptions.version != JSVERSION_UNKNOWN);
   MOZ_ASSERT_IF(aCoerceToString, aRetValue);
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
@@ -1337,7 +1337,7 @@ nsJSContext::CompileScript(const PRUnichar* aText,
                            JS::MutableHandle<JSScript*> aScriptObject,
                            bool aSaveSource /* = false */)
 {
-  SAMPLE_LABEL_PRINTF("JS", "Compile Script", "%s", aURL ? aURL : "");
+  PROFILER_LABEL_PRINTF("JS", "Compile Script", "%s", aURL ? aURL : "");
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
 
   NS_ENSURE_ARG_POINTER(aPrincipal);
@@ -1499,7 +1499,7 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, JSObject* aScope,
     return NS_OK;
   }
 
-  SAMPLE_LABEL("JS", "CallEventHandler");
+  PROFILER_LABEL("JS", "CallEventHandler");
 
   nsAutoMicroTask mt;
   xpc_UnmarkGrayObject(aScope);
@@ -2556,7 +2556,7 @@ nsJSContext::GarbageCollectNow(JS::gcreason::Reason aReason,
                                IsShrinking aShrinking,
                                int64_t aSliceMillis)
 {
-  SAMPLE_LABEL("GC", "GarbageCollectNow");
+  PROFILER_LABEL("GC", "GarbageCollectNow");
 
   MOZ_ASSERT_IF(aSliceMillis, aIncremental == IncrementalGC);
 
@@ -2623,7 +2623,7 @@ nsJSContext::GarbageCollectNow(JS::gcreason::Reason aReason,
 void
 nsJSContext::ShrinkGCBuffersNow()
 {
-  SAMPLE_LABEL("GC", "ShrinkGCBuffersNow");
+  PROFILER_LABEL("GC", "ShrinkGCBuffersNow");
 
   KillShrinkGCBuffersTimer();
 
@@ -2737,7 +2737,7 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
     return;
   }
 
-  SAMPLE_LABEL("CC", "CycleCollectNow");
+  PROFILER_LABEL("CC", "CycleCollectNow");
 
   PRTime start = PR_Now();
 

@@ -1211,6 +1211,15 @@ const nsHTMLElement gHTMLElements[] = {
     /*special parents,kids*/            &gInTable,&gTableElemKids,
   },
   {
+    /*tag*/                             eHTMLTag_template,
+    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,
+    /*autoclose starttags and endtags*/ 0,0,0,0,
+    /*parent,incl,exclgroups*/          kNone, kNone, kNone,
+    /*special props, prop-range*/       0,kDefaultPropRange,
+    /*special parents,kids*/            0,0,
+  },
+  {
     /*tag*/                             eHTMLTag_time,
     /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
     /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,

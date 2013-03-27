@@ -61,6 +61,8 @@ public final class GeckoViewsFactory implements LayoutInflater.Factory {
             mFactoryMap.put("TabRow", TabRow.class.getConstructor(arg1Class, arg2Class));
             mFactoryMap.put("TabsButton", TabsButton.class.getConstructor(arg1Class, arg2Class));
             mFactoryMap.put("TabsPanel", TabsPanel.class.getConstructor(arg1Class, arg2Class));
+            mFactoryMap.put("TabsPanel$TabsListContainer", TabsPanel.TabsListContainer.class.getConstructor(arg1Class, arg2Class));
+            mFactoryMap.put("TabsPanel$TabsPanelToolbar", TabsPanel.TabsPanelToolbar.class.getConstructor(arg1Class, arg2Class));
             mFactoryMap.put("TabsTray", TabsTray.class.getConstructor(arg1Class, arg2Class));
             mFactoryMap.put("ThumbnailView", ThumbnailView.class.getConstructor(arg1Class, arg2Class));
             mFactoryMap.put("TextSelectionHandle", TextSelectionHandle.class.getConstructor(arg1Class, arg2Class));

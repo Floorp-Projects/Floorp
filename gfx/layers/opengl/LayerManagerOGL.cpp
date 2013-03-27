@@ -35,7 +35,7 @@
 
 #include "gfxCrashReporterUtils.h"
 
-#include "sampler.h"
+#include "GeckoProfiler.h"
 
 #ifdef MOZ_WIDGET_ANDROID
 #include <android/log.h>
@@ -931,7 +931,7 @@ static uint16_t sFrameCount = 0;
 void
 FPSState::DrawFrameCounter(GLContext* context)
 {
-  SAMPLER_FRAME_NUMBER(sFrameCount);
+  profiler_set_frame_number(sFrameCount);
 
   context->fEnable(LOCAL_GL_SCISSOR_TEST);
 
@@ -1038,7 +1038,7 @@ LayerManagerOGL::NotifyShadowTreeTransaction()
 void
 LayerManagerOGL::Render()
 {
-  SAMPLE_LABEL("LayerManagerOGL", "Render");
+  PROFILER_LABEL("LayerManagerOGL", "Render");
   if (mDestroyed) {
     NS_WARNING("Call on destroyed layer manager");
     return;

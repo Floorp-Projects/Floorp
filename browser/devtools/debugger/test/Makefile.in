@@ -11,10 +11,10 @@ relativesrcdir  = @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_BROWSER_TESTS = \
-	$(browser_dbg_cmd_break.js disabled until bug 722727 is fixed) \
-	browser_dbg_cmd.js \
 	browser_dbg_aaa_run_first_leaktest.js \
 	browser_dbg_clean-exit.js \
+	browser_dbg_cmd.js \
+	$(browser_dbg_cmd_break.js disabled until bug 722727 is fixed) \
 	browser_dbg_createChrome.js \
 	$(browser_dbg_createRemote.js disabled for intermittent failures, bug 753225) \
 	$(browser_dbg_debugger-tab-switch.js disabled until issues 106, 40 are fixed) \
@@ -63,6 +63,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_location-changes.js \
 	browser_dbg_location-changes-new.js \
 	browser_dbg_location-changes-blank.js \
+	browser_dbg_sources-cache.js \
 	browser_dbg_scripts-switching.js \
 	browser_dbg_scripts-sorting.js \
 	browser_dbg_scripts-searching-01.js \
@@ -75,6 +76,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_scripts-searching-08.js \
 	browser_dbg_scripts-searching-files_ui.js \
 	browser_dbg_scripts-searching-popup.js \
+	browser_dbg_function-search.js \
 	browser_dbg_pause-resume.js \
 	browser_dbg_pause-warning.js \
 	browser_dbg_update-editor-mode.js \
@@ -122,6 +124,11 @@ MOCHITEST_BROWSER_PAGES = \
 	browser_dbg_breakpoint-new-script.html \
 	browser_dbg_conditional-breakpoints.html \
 	browser_dbg_watch-expressions.html \
+	browser_dbg_function-search-01.html \
+	browser_dbg_function-search-02.html \
+	test-function-search-01.js \
+	test-function-search-02.js \
+	test-function-search-03.js \
 	$(NULL)
 
 MOCHITEST_BROWSER_FILES_PARTS = MOCHITEST_BROWSER_TESTS MOCHITEST_BROWSER_PAGES

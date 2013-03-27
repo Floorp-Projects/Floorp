@@ -8,6 +8,7 @@ package org.mozilla.gecko;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.util.Log;
 
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -58,7 +59,8 @@ public class WebAppAllocator {
     }
 
     public synchronized int findAndAllocateIndex(String app, String name, String aIconData) {
-        return findAndAllocateIndex(app, name, BitmapUtils.getBitmapFromDataURI(aIconData));
+        Bitmap icon = (aIconData != null) ? BitmapUtils.getBitmapFromDataURI(aIconData) : null;
+        return findAndAllocateIndex(app, name, icon);
     }
 
     public synchronized int findAndAllocateIndex(final String app, final String name, final Bitmap aIcon) {
@@ -69,29 +71,38 @@ public class WebAppAllocator {
         for (int i = 0; i < MAX_WEB_APPS; ++i) {
             if (!mPrefs.contains(appKey(i))) {
                 // found unused index i
-                final int foundIndex = i;
-                ThreadUtils.postToBackgroundThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        int color = 0;
-                        try {
-                            color = BitmapUtils.getDominantColor(aIcon);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-
-                        mPrefs.edit()
-                            .putString(appKey(foundIndex), app)
-                            .putInt(iconKey(foundIndex), color)
-                            .commit();
-                    }
-                });
+                updateAppAllocation(app, i, aIcon);
                 return i;
             }
         }
 
         // no more apps!
         return -1;
+    }
+
+    public synchronized void updateAppAllocation(final String app,
+                                                 final int index,
+                                                 final Bitmap aIcon) {
+        if (aIcon != null) {
+            ThreadUtils.getBackgroundHandler().post(new Runnable() {
+                @Override
+                public void run() {
+                    int color = 0;
+                    try {
+                        color = BitmapUtils.getDominantColor(aIcon);
+                    } catch (Exception e) {
+                        Log.e(LOGTAG, "Exception during getDominantColor", e);
+                    }
+                    mPrefs.edit()
+                          .putString(appKey(index), app)
+                          .putInt(iconKey(index), color).commit();
+                }
+            });
+        } else {
+            mPrefs.edit()
+                  .putString(appKey(index), app)
+                  .putInt(iconKey(index), 0).commit();
+        }
     }
 
     public synchronized int getIndexForApp(String app) {

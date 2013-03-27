@@ -347,7 +347,7 @@ Shape::setParent(RawShape p)
 }
 
 inline void
-Shape::removeFromDictionary(JSObject *obj)
+Shape::removeFromDictionary(ObjectImpl *obj)
 {
     JS_ASSERT(inDictionary());
     JS_ASSERT(obj->inDictionaryMode());

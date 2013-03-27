@@ -125,6 +125,7 @@ webidl_files = \
   HTMLTableElement.webidl \
   HTMLTableRowElement.webidl \
   HTMLTableSectionElement.webidl \
+  HTMLTemplateElement.webidl \
   HTMLTextAreaElement.webidl \
   HTMLTimeElement.webidl \
   HTMLTitleElement.webidl \

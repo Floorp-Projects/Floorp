@@ -324,7 +324,7 @@ JSONCreator(const jschar* aBuf, uint32_t aLen, void* aData)
 
 static bool
 GetParamsForMessage(JSContext* aCx,
-                    const jsval& aObject,
+                    const JS::Value& aObject,
                     JSAutoStructuredCloneBuffer& aBuffer,
                     StructuredCloneClosure& aClosure)
 {
@@ -339,11 +339,11 @@ GetParamsForMessage(JSContext* aCx,
   //    as a dictionary.
   nsAutoString json;
   JSAutoRequest ar(aCx);
-  jsval v = aObject;
+  JS::Value v = aObject;
   NS_ENSURE_TRUE(JS_Stringify(aCx, &v, nullptr, JSVAL_NULL, JSONCreator, &json), false);
   NS_ENSURE_TRUE(!json.IsEmpty(), false);
 
-  jsval val = JSVAL_NULL;
+  JS::Value val = JSVAL_NULL;
   NS_ENSURE_TRUE(JS_ParseJSON(aCx, static_cast<const jschar*>(json.get()),
                               json.Length(), &val), false);
 
@@ -355,10 +355,10 @@ GetParamsForMessage(JSContext* aCx,
 
 NS_IMETHODIMP
 nsFrameMessageManager::SendSyncMessage(const nsAString& aMessageName,
-                                       const jsval& aObject,
+                                       const JS::Value& aObject,
                                        JSContext* aCx,
                                        uint8_t aArgc,
-                                       jsval* aRetval)
+                                       JS::Value* aRetval)
 {
   NS_ASSERTION(!IsGlobal(), "Should not call SendSyncMessage in chrome");
   NS_ASSERTION(!IsWindowLevel(), "Should not call SendSyncMessage in chrome");
@@ -388,7 +388,7 @@ nsFrameMessageManager::SendSyncMessage(const nsAString& aMessageName,
         continue;
       }
 
-      jsval ret = JSVAL_VOID;
+      JS::Value ret = JSVAL_VOID;
       if (!JS_ParseJSON(aCx, static_cast<const jschar*>(retval[i].get()),
                         retval[i].Length(), &ret)) {
         return NS_ERROR_UNEXPECTED;
@@ -423,7 +423,7 @@ nsFrameMessageManager::DispatchAsyncMessageInternal(const nsAString& aMessage,
 
 nsresult
 nsFrameMessageManager::DispatchAsyncMessage(const nsAString& aMessageName,
-                                            const jsval& aObject,
+                                            const JS::Value& aObject,
                                             JSContext* aCx,
                                             uint8_t aArgc)
 {
@@ -446,7 +446,7 @@ nsFrameMessageManager::DispatchAsyncMessage(const nsAString& aMessageName,
 
 NS_IMETHODIMP
 nsFrameMessageManager::SendAsyncMessage(const nsAString& aMessageName,
-                                        const jsval& aObject,
+                                        const JS::Value& aObject,
                                         JSContext* aCx,
                                         uint8_t aArgc)
 {
@@ -458,7 +458,7 @@ nsFrameMessageManager::SendAsyncMessage(const nsAString& aMessageName,
 
 NS_IMETHODIMP
 nsFrameMessageManager::BroadcastAsyncMessage(const nsAString& aMessageName,
-                                             const jsval& aObject,
+                                             const JS::Value& aObject,
                                              JSContext* aCx,
                                              uint8_t aArgc)
 {
@@ -660,7 +660,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         JSObject* param = JS_NewObject(ctx, NULL, NULL, NULL);
         NS_ENSURE_TRUE(param, NS_ERROR_OUT_OF_MEMORY);
 
-        jsval targetv;
+        JS::Value targetv;
         nsContentUtils::WrapNative(ctx,
                                    JS_GetGlobalForObject(ctx, object),
                                    aTarget, &targetv, nullptr, true);
@@ -681,7 +681,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         if (!JS_WrapValue(ctx, objectsv.jsval_addr()))
             return NS_ERROR_UNEXPECTED;
 
-        jsval json = JSVAL_NULL;
+        JS::Value json = JSVAL_NULL;
         if (aCloneData && aCloneData->mDataLength &&
             !ReadStructuredClone(ctx, *aCloneData, &json)) {
           JS_ClearPendingException(ctx);
@@ -701,7 +701,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         JS_DefineProperty(ctx, param, "data", json, NULL, NULL, JSPROP_ENUMERATE);
         JS_DefineProperty(ctx, param, "objects", objectsv.jsval_value(), NULL, NULL, JSPROP_ENUMERATE);
 
-        jsval thisValue = JSVAL_VOID;
+        JS::Value thisValue = JSVAL_VOID;
 
         JS::Value funval;
         if (JS_ObjectIsCallable(ctx, object)) {
@@ -730,7 +730,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
           thisValue.setObject(*object);
         }
 
-        jsval rval = JSVAL_VOID;
+        JS::Value rval = JSVAL_VOID;
 
         JS::AutoValueRooter argv(ctx);
         argv.set(OBJECT_TO_JSVAL(param));

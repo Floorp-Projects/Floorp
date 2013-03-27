@@ -29,4 +29,5 @@ function buildSimple() {
     });
 }
 
-buildSimple();
+if (getBuildConfiguration().parallelJS)
+  buildSimple();

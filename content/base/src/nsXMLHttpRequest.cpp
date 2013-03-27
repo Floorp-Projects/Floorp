@@ -69,7 +69,7 @@
 #include "nsIFileChannel.h"
 #include "mozilla/Telemetry.h"
 #include "jsfriendapi.h"
-#include "sampler.h"
+#include "GeckoProfiler.h"
 #include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/dom/XMLHttpRequestBinding.h"
 #include "nsIDOMFormData.h"
@@ -927,7 +927,7 @@ nsXMLHttpRequest::SetResponseType(nsXMLHttpRequest::ResponseTypeEnum aResponseTy
 
 /* readonly attribute jsval response; */
 NS_IMETHODIMP
-nsXMLHttpRequest::GetResponse(JSContext *aCx, jsval *aResult)
+nsXMLHttpRequest::GetResponse(JSContext *aCx, JS::Value *aResult)
 {
   ErrorResult rv;
   *aResult = GetResponse(aCx, rv);
@@ -1855,7 +1855,7 @@ nsXMLHttpRequest::OnDataAvailable(nsIRequest *request,
 NS_IMETHODIMP
 nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
-  SAMPLE_LABEL("nsXMLHttpRequest", "OnStartRequest");
+  PROFILER_LABEL("nsXMLHttpRequest", "OnStartRequest");
   nsresult rv = NS_OK;
   if (!mFirstStartRequestSeen && mRequestObserver) {
     mFirstStartRequestSeen = true;
@@ -2041,7 +2041,7 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 NS_IMETHODIMP
 nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult status)
 {
-  SAMPLE_LABEL("content", "nsXMLHttpRequest::OnStopRequest");
+  PROFILER_LABEL("content", "nsXMLHttpRequest::OnStopRequest");
   if (request != mChannel) {
     // Can this still happen?
     return NS_OK;
@@ -2396,7 +2396,7 @@ GetRequestBody(nsIVariant* aBody, nsIInputStream** aResult, uint64_t* aContentLe
     }
 
     // ArrayBuffer?
-    jsval realVal;
+    JS::Value realVal;
 
     nsresult rv = aBody->GetAsJSVal(&realVal);
     if (NS_SUCCEEDED(rv) && !JSVAL_IS_PRIMITIVE(realVal)) {

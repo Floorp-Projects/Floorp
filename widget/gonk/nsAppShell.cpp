@@ -50,7 +50,7 @@
 #include "libui/InputReader.h"
 #include "libui/InputDispatcher.h"
 
-#include "sampler.h"
+#include "GeckoProfiler.h"
 
 #define LOG(args...)                                            \
     __android_log_print(ANDROID_LOG_INFO, "Gonk" , ## args)
@@ -711,12 +711,12 @@ nsAppShell::ScheduleNativeEventCallback()
 bool
 nsAppShell::ProcessNextNativeEvent(bool mayWait)
 {
-    SAMPLE_LABEL("nsAppShell", "ProcessNextNativeEvent");
+    PROFILER_LABEL("nsAppShell", "ProcessNextNativeEvent");
     epoll_event events[16] = {{ 0 }};
 
     int event_count;
     {
-        SAMPLE_LABEL("nsAppShell", "ProcessNextNativeEvent::Wait");
+        PROFILER_LABEL("nsAppShell", "ProcessNextNativeEvent::Wait");
         if ((event_count = epoll_wait(epollfd, events, 16,  mayWait ? -1 : 0)) <= 0)
             return true;
     }

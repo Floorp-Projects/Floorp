@@ -675,7 +675,7 @@ this.PlacesUIUtils = {
 
   getBestTitle: function PUIU_getBestTitle(aNode, aDoNotCutTitle) {
     var title;
-    if (!aNode.title && PlacesUtils.uriTypes.indexOf(aNode.type) != -1) {
+    if (!aNode.title && PlacesUtils.nodeIsURI(aNode)) {
       // if node title is empty, try to set the label using host and filename
       // PlacesUtils._uri() will throw if aNode.uri is not a valid URI
       try {

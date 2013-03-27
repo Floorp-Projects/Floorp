@@ -7,4 +7,4 @@ function testPartitionDivisible() {
   assertThrowsInstanceOf(function () { pp = p.partition(.34); }, Error);
 }
 
-testPartitionDivisible();
+if (getBuildConfiguration().parallelJS) testPartitionDivisible();

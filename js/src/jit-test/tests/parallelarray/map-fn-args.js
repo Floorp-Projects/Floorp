@@ -15,5 +15,5 @@ function testMap() {
   });
 }
 
-testMap();
+if (getBuildConfiguration().parallelJS) testMap();
 

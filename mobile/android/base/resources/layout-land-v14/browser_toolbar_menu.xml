@@ -18,6 +18,13 @@
         <ImageButton style="@style/AddressBar.ImageButton.Forward"
                      android:id="@+id/forward"/>
 
+        <view class="org.mozilla.gecko.TabsPanel$TabsPanelToolbar"
+              android:layout_width="95dip"
+              android:layout_height="fill_parent"
+              android:layout_alignParentTop="true"
+              android:layout_alignParentRight="true"
+              android:background="@color/background_tabs_dark"/>
+
         <org.mozilla.gecko.BrowserToolbarBackground android:id="@+id/address_bar_bg"
                                                     android:layout_width="fill_parent"
                                                     android:layout_height="fill_parent"
