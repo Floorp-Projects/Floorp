@@ -6,17 +6,25 @@
 #include "nsISupports.idl"
 interface nsIDOMMimeType;
 
-[scriptable, uuid(b8bf0a06-e395-4f44-af39-a51d3e7ef4b9)]
+[scriptable, uuid(87b4fcfc-417b-47f6-9c79-dfeb5e5a4840)]
 interface nsIPluginTag : nsISupports
 {
+  // enabledState is stored as one of the following as an integer in prefs,
+  // so if new states are added, they must not renumber the existing states.
+  const unsigned long STATE_DISABLED = 0;
+  const unsigned long STATE_CLICKTOPLAY = 1;
+  const unsigned long STATE_ENABLED = 2;
+
   readonly attribute AUTF8String description;
   readonly attribute AUTF8String filename;
   readonly attribute AUTF8String fullpath;
   readonly attribute AUTF8String version;
   readonly attribute AUTF8String name;
-           attribute boolean  disabled;
            attribute boolean  blocklisted;
-           attribute boolean  clicktoplay;
+  readonly attribute boolean  disabled;
+  readonly attribute boolean  clicktoplay;
+           attribute unsigned long enabledState;
+
   void getMimeTypes([optional] out unsigned long aCount,
                     [retval, array, size_is(aCount)] out nsIDOMMimeType aResults);
 };
