@@ -24,7 +24,6 @@
 <!ENTITY optionsHeader.privacy.passwords.label                   "Remember Passwords">
 <!ENTITY optionsHeader.privacy.doNotTrack.title                  "Tracking">
 <!ENTITY optionsHeader.privacy.doNotTrack.label                  "Tell websites not to track me">
-<!ENTITY optionsHeader.privacy.masterPassword.label              "Use Master Password">
 
 <!-- ## Sync Flyout Panel ## -->
 <!-- see sync.dtd -->

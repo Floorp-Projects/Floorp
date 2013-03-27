@@ -36,12 +36,9 @@ chrome.jar:
   content/prompt/promptPassword.xul            (content/prompt/promptPassword.xul)
   content/prompt/select.xul                    (content/prompt/select.xul)
   content/prompt/prompt.js                     (content/prompt/prompt.js)
-  content/prompt/masterPassword.xul            (content/prompt/masterPassword.xul)
-  content/prompt/removeMasterPassword.xul      (content/prompt/removeMasterPassword.xul)
 
   content/helperui/AlertsHelper.js             (content/helperui/AlertsHelper.js)
   content/helperui/IndexedDB.js                (content/helperui/IndexedDB.js)
-  content/helperui/MasterPasswordUI.js         (content/helperui/MasterPasswordUI.js)
   content/helperui/MenuUI.js                   (content/helperui/MenuUI.js)
   content/helperui/OfflineApps.js              (content/helperui/OfflineApps.js)
   content/helperui/SelectHelperUI.js           (content/helperui/SelectHelperUI.js)
