@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+<head>
+  <title>Test for Bug 854082</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <base href="chrome://browser/content/">
+</head>
+<body>
+<script type="application/javascript">
+  // Tests that destroying the plugin's frame inside NPP_New does not cause a
+  // crash
+
+  SimpleTest.waitForExplicitFinish();
+
+  // Create an object that will spawn asynchronously
+  var o = document.createElement("object");
+  o.type = "application/x-test";
+
+  // The test plugin sets pluginFoundElement on its element inside NPP_New,
+  // abuse this to run arbitrary script.
+  var setterCalled;
+  o.__defineSetter__("pluginFoundElement", function() {
+    o.style.display = "none";
+    // Access clientTop to force layout flush
+    o.clientTop;
+    setterCalled = true;
+  });
+  document.body.appendChild(o);
+
+  SimpleTest.executeSoon(function() {
+    ok(setterCalled, "Setter called and did not crash");
+    SimpleTest.finish();
+  });
+</script>
+</body>
+</html>
