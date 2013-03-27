@@ -5162,6 +5162,95 @@ LocationSetterUnwrapper(JSContext *cx, JSHandleObject obj_, JSHandleId id, JSBoo
   return LocationSetter<nsIDOMWindow>(cx, obj, id, strict, vp);
 }
 
+struct InterfaceShimEntry {
+  const char *geckoName;
+  const char *domName;
+};
+
+// We add shims from Components.interfaces.nsIDOMFoo to window.Foo for each
+// interface that has interface constants that sites might be getting off
+// of Ci.
+const InterfaceShimEntry kInterfaceShimMap[] =
+{ { "nsIDOMFileReader", "FileReader" },
+  { "nsIXMLHttpRequest", "XMLHttpRequest" },
+  { "nsIDOMDOMException", "DOMException" },
+  { "nsIDOMNode", "Node" },
+  { "nsIDOMUserDataHandler", "UserDataHandler" },
+  { "nsIDOMCSSPrimitiveValue", "CSSPrimitiveValue" },
+  { "nsIDOMCSSRule", "CSSRule" },
+  { "nsIDOMCSSValue", "CSSValue" },
+  { "nsIDOMEvent", "Event" },
+  { "nsIDOMNSEvent", "Event" },
+  { "nsIDOMKeyEvent", "KeyEvent" },
+  { "nsIDOMMouseEvent", "MouseEvent" },
+  { "nsIDOMMouseScrollEvent", "MouseScrollEvent" },
+  { "nsIDOMMutationEvent", "MutationEvent" },
+  { "nsIDOMSimpleGestureEvent", "SimpleGestureEvent" },
+  { "nsIDOMUIEvent", "UIEvent" },
+  { "nsIDOMGeoPositionError", "GeoPositionError" },
+  { "nsIDOMHTMLMediaElement", "HTMLMediaElement" },
+  { "nsIDOMMediaError", "MediaError" },
+  { "nsIDOMLoadStatus", "LoadStatus" },
+  { "nsIDOMOfflineResourceList", "OfflineResourceList" },
+  { "nsIDOMRange", "Range" },
+  { "nsIDOMSVGFETurbulenceElement", "SVGFETurbulenceElement" },
+  { "nsIDOMSVGFEMorphologyElement", "SVGFEMorphologyElement" },
+  { "nsIDOMSVGFEConvolveMatrixElement", "SVGFEConvolveMatrixElement" },
+  { "nsIDOMSVGFEDisplacementMapElement", "SVGFEDisplacementMapElement" },
+  { "nsIDOMSVGLength", "SVGLength" },
+  { "nsIDOMSVGUnitTypes", "SVGUnitTypes" },
+  { "nsIDOMNodeFilter", "NodeFilter" },
+  { "nsIDOMXPathNamespace", "XPathNamespace" },
+  { "nsIDOMXPathResult", "XPathResult" },
+  { "nsIDOMXULButtonElement", "XULButtonElement" },
+  { "nsIDOMXULCheckboxElement", "XULCheckboxElement" },
+  { "nsIDOMXULPopupElement", "XULPopupElement" } };
+
+static nsresult
+DefineComponentsShim(JSContext *cx, JS::HandleObject global)
+{
+  // Create a fake Components object.
+  JSObject *components = JS_NewObject(cx, nullptr, nullptr, global);
+  NS_ENSURE_TRUE(components, NS_ERROR_OUT_OF_MEMORY);
+  bool ok = JS_DefineProperty(cx, global, "Components", JS::ObjectValue(*components),
+                              JS_PropertyStub, JS_StrictPropertyStub, JSPROP_ENUMERATE);
+  NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
+
+  // Create a fake interfaces object.
+  JSObject *interfaces = JS_NewObject(cx, nullptr, nullptr, global);
+  NS_ENSURE_TRUE(interfaces, NS_ERROR_OUT_OF_MEMORY);
+  ok = JS_DefineProperty(cx, components, "interfaces", JS::ObjectValue(*interfaces),
+                         JS_PropertyStub, JS_StrictPropertyStub,
+                         JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY);
+  NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
+
+  // Define a bunch of shims from the Ci.nsIDOMFoo to window.Foo for DOM
+  // interfaces with constants.
+  for (uint32_t i = 0; i < ArrayLength(kInterfaceShimMap); ++i) {
+
+    // Grab the names from the table.
+    const char *geckoName = kInterfaceShimMap[i].geckoName;
+    const char *domName = kInterfaceShimMap[i].domName;
+
+    // Look up the appopriate interface object on the global.
+    JS::Value v = JS::UndefinedValue();
+    ok = JS_GetProperty(cx, global, domName, &v);
+    NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
+    if (!v.isObject()) {
+      NS_WARNING("Unable to find interface object on global");
+      continue;
+    }
+
+    // Define the shim on the interfaces object.
+    ok = JS_DefineProperty(cx, interfaces, geckoName, v,
+                           JS_PropertyStub, JS_StrictPropertyStub,
+                           JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY);
+    NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                        JSObject *obj_, jsid id_, uint32_t flags,
@@ -5172,6 +5261,12 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   if (!JSID_IS_STRING(id)) {
     return NS_OK;
+  }
+
+  MOZ_ASSERT(*_retval == true); // guaranteed by XPC_WN_Helper_NewResolve
+  if (id == XPCJSRuntime::Get()->GetStringID(XPCJSRuntime::IDX_COMPONENTS)) {
+    *objp = obj;
+    return DefineComponentsShim(cx, obj);
   }
 
   nsGlobalWindow *win = nsGlobalWindow::FromWrapper(wrapper);
