@@ -110,7 +110,7 @@ function test1() {
 
   var plugin = getTestPlugin();
   ok(plugin, "Should have a test plugin");
-  plugin.disabled = false;
+  plugin.enabledState = Ci.nsIPluginTag.STATE_ENABLED;
   plugin.blocklisted = false;
   prepareTest(test2, gTestRoot + "plugin_test.html");
 }
@@ -124,7 +124,7 @@ function test2() {
 
   var plugin = getTestPlugin();
   ok(plugin, "Should have a test plugin");
-  plugin.disabled = true;
+  plugin.enabledState = Ci.nsIPluginTag.STATE_DISABLED;
   prepareTest(test3, gTestRoot + "plugin_test.html");
 }
 
@@ -154,7 +154,7 @@ function test4(tab, win) {
 
 function prepareTest5() {
   var plugin = getTestPlugin();
-  plugin.disabled = false;
+  plugin.enabledState = Ci.nsIPluginTag.STATE_ENABLED;
   plugin.blocklisted = true;
   prepareTest(test5, gTestRoot + "plugin_test.html");
 }
@@ -197,7 +197,7 @@ function test7() {
   ok(gTestBrowser.missingPlugins.has("application/x-test"), "Test 7, Should know about application/x-test");
 
   var plugin = getTestPlugin();
-  plugin.disabled = false;
+  plugin.enabledState = Ci.nsIPluginTag.STATE_ENABLED;
   plugin.blocklisted = false;
   Services.prefs.setBoolPref("plugins.click_to_play", true);
 
@@ -523,7 +523,7 @@ function test14() {
   ok(objLoadingContent.activated, "Test 14, Plugin should be activated");
 
   var plugin = getTestPlugin();
-  plugin.disabled = false;
+  plugin.enabledState = Ci.nsIPluginTag.STATE_ENABLED;
   plugin.blocklisted = false;
   Services.prefs.setBoolPref("plugins.click_to_play", true);
   prepareTest(test15, gTestRoot + "plugin_alternate_content.html");
