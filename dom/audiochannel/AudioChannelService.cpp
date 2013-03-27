@@ -410,7 +410,7 @@ AudioChannelService::ChannelName(AudioChannelType aType)
     const char* value;
   } ChannelNameTable[] = {
     { AUDIO_CHANNEL_NORMAL,             "normal" },
-    { AUDIO_CHANNEL_CONTENT,            "normal" },
+    { AUDIO_CHANNEL_CONTENT,            "content" },
     { AUDIO_CHANNEL_NOTIFICATION,       "notification" },
     { AUDIO_CHANNEL_ALARM,              "alarm" },
     { AUDIO_CHANNEL_TELEPHONY,          "telephony" },
