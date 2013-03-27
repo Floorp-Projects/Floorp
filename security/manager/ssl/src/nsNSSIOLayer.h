@@ -51,6 +51,7 @@ public:
   void SetHandshakeInProgress(bool aIsIn);
   bool GetHandshakeInProgress() { return mHandshakeInProgress; }
   void SetFirstServerHelloReceived() { mFirstServerHelloReceived = true; }
+  bool GetFirstServerHelloReceived() { return mFirstServerHelloReceived; }
   bool HandshakeTimeout();
 
   void SetAllowTLSIntoleranceTimeout(bool aAllow);
@@ -59,7 +60,7 @@ public:
                 const nsNSSShutDownPreventionLock & proofOfLock);
   
   void SetNegotiatedNPN(const char *value, uint32_t length);
-  void SetHandshakeCompleted();
+  void SetHandshakeCompleted(bool aResumedSession);
 
   bool GetJoined() { return mJoined; }
   void SetSentClientCert() { mSentClientCert = true; }
