@@ -196,11 +196,13 @@
       <method name="appendItem">
         <parameter name="aLabel"/>
         <parameter name="aValue"/>
+        <parameter name="aSkipArrange"/>
         <body>
           <![CDATA[
             let addition = this._createItemElement(aLabel, aValue);
             this.appendChild(addition);
-            this.arrangeItems();
+            if (!aSkipArrange)
+              this.arrangeItems();
             return addition;
           ]]>
         </body>
@@ -222,6 +224,7 @@
         <parameter name="anIndex"/>
         <parameter name="aLabel"/>
         <parameter name="aValue"/>
+        <parameter name="aSkipArrange"/>
         <body>
           <![CDATA[
             let existing = this.getItemAtIndex(anIndex);
@@ -231,19 +234,21 @@
             } else {
               this.appendChild(addition);
             }
-            this.arrangeItems();
+            if (!aSkipArrange)
+              this.arrangeItems();
             return addition;
           ]]>
         </body>
       </method>
-
       <method name="removeItemAt">
         <parameter name="anIndex"/>
+        <parameter name="aSkipArrange"/>
         <body>
           <![CDATA[
             let removal = this.getItemAtIndex(anIndex);
             this.removeChild(removal);
-            this.arrangeItems();
+            if (!aSkipArrange)
+              this.arrangeItems();
             return removal;
           ]]>
         </body>
@@ -450,11 +455,6 @@
             item.setAttribute("label", aLabel);
             if (aValue)
               item.setAttribute("value", aValue);
-
-            // copy over the richgrid's data-contextactions as each child is created
-            if (this.hasAttribute("data-contextactions")) {
-              item.setAttribute("data-contextactions", this.getAttribute("data-contextactions"));
-            }
             return item;
           ]]>
         </body>
@@ -496,24 +496,56 @@
     <content>
       <xul:vbox anonid="anon-richgrid-item" class="richgrid-item-content" xbl:inherits="customImage">
         <xul:hbox class="richgrid-icon-container" xbl:inherits="customImage">
-          <xul:box class="richgrid-icon-box"><xul:image xbl:inherits="src=iconURI"/></xul:box>
+          <xul:box class="richgrid-icon-box"><xul:image anonid="anon-richgrid-item-icon" xbl:inherits="src=iconURI"/></xul:box>
           <xul:box flex="1" />
         </xul:hbox>
-        <xul:description class="richgrid-item-desc" xbl:inherits="value=label" crop="end"/>
+        <xul:description anonid="anon-richgrid-item-label" class="richgrid-item-desc" xbl:inherits="value=label" crop="end"/>
       </xul:vbox>
     </content>
 
     <implementation>
       <property name="_box" onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'anon-richgrid-item');"/>
+      <property name="_icon" onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'anon-richgrid-item-icon');"/>
+      <property name="_label" onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'anon-richgrid-item-label');"/>
+      <property name="iconSrc"
+                onset="this._icon.src = val; this.setAttribute('iconURI', val);"
+                onget="return this._icon.src;" />
 
       <property name="selected" onget="return this.hasAttribute('selected');" />
+      <property name="url"
+                onget="return this.getAttribute('value')"
+                onset="this.setAttribute('value', val);"/>
+      <property name="label"
+                onget="return this._label.getAttribute('value')"
+                onset="this.setAttribute('label', val); this._label.setAttribute('value', val);"/>
+      <property name="pinned"
+                onget="return this.hasAttribute('pinned')"
+                onset="if (val) { this.setAttribute('pinned', val) } else this.removeAttribute('pinned');"/>
 
       <constructor>
         <![CDATA[
-          this.color = this.getAttribute("customColor");
-          this.backgroundImage = this.getAttribute("customImage");
+            this.refresh();
         ]]>
       </constructor>
+      <method name="refresh">
+        <body>
+          <![CDATA[
+            // Seed the binding properties from bound-node attribute values
+            // Usage: node.refresh()
+            //        - reinitializes all binding properties from their associated attributes
+
+            this.iconSrc = this.getAttribute('iconURI');
+            this.color = this.getAttribute("customColor");
+            this.label = this.getAttribute('label');
+            // url getter just looks directly at attribute
+            // selected getter just looks directly at attribute
+            // pinned getter just looks directly at attribute
+            // value getter just looks directly at attribute
+            this.refreshBackgroundImage();
+            this._contextActions = null;
+          ]]>
+        </body>
+      </method>
 
       <property name="control">
         <getter><![CDATA[
@@ -577,8 +609,19 @@
             return this._contextActions;
           ]]>
         </getter>
+        <setter>
+          <![CDATA[
+            let actionSet = this._contextActions = new Set();
+            let actions = val;
+            if (actions) {
+              actions.split(/[,\s]+/).forEach(function(verb){
+                actionSet.add(verb);
+              });
+            }
+            return this._contextActions;
+          ]]>
+        </setter>
       </property>
-
     </implementation>
 
     <handlers>
