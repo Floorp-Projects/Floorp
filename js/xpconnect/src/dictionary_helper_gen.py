@@ -284,7 +284,7 @@ def write_getter(a, iface, fd):
         fd.write("    NS_ENSURE_STATE(JS_GetPropertyById(aCx, aObj, %s, &aDict.%s));\n"
                  % (get_jsid(a.name), a.name))
     else:
-        fd.write("    NS_ENSURE_STATE(JS_GetPropertyById(aCx, aObj, %s, &v));\n"
+        fd.write("    NS_ENSURE_STATE(JS_GetPropertyById(aCx, aObj, %s, v.address()));\n"
                  % get_jsid(a.name))
     if realtype.count("bool"):
         fd.write("    JSBool b;\n")
@@ -314,9 +314,9 @@ def write_getter(a, iface, fd):
         fd.write("    aDict.%s = (float) d;\n" % a.name)
     elif realtype.count("nsAString"):
         if a.nullable:
-            fd.write("    xpc_qsDOMString d(aCx, v, &v, xpc_qsDOMString::eNull, xpc_qsDOMString::eNull);\n")
+            fd.write("    xpc_qsDOMString d(aCx, v, v.address(), xpc_qsDOMString::eNull, xpc_qsDOMString::eNull);\n")
         else:
-            fd.write("    xpc_qsDOMString d(aCx, v, &v, xpc_qsDOMString::eStringify, xpc_qsDOMString::eStringify);\n")
+            fd.write("    xpc_qsDOMString d(aCx, v, v.address(), xpc_qsDOMString::eStringify, xpc_qsDOMString::eStringify);\n")
         fd.write("    NS_ENSURE_STATE(d.IsValid());\n")
         fd.write("    aDict.%s = d;\n" % a.name)
     elif realtype.count("nsIVariant"):
@@ -326,7 +326,7 @@ def write_getter(a, iface, fd):
     elif realtype.endswith('*'):
         fd.write("    %s d;\n" % realtype)
         fd.write("    xpc_qsSelfRef ref;\n")
-        fd.write("    nsresult rv = xpc_qsUnwrapArg<%s>(aCx, v, &d, &ref.ptr, &v);\n" % realtype.strip('* '))
+        fd.write("    nsresult rv = xpc_qsUnwrapArg<%s>(aCx, v, &d, &ref.ptr, v.address());\n" % realtype.strip('* '))
         fd.write("    NS_ENSURE_SUCCESS(rv, rv);\n")
         fd.write("    aDict.%s = d;\n" % a.name)
     elif not realtype.count("JS::Value"):
@@ -365,7 +365,7 @@ def write_cpp(iface, fd):
     fd.write("}\n\n")
     fd.write("%s::~%s() {}\n\n" % (iface.name, iface.name))
 
-    fd.write("static nsresult\n%s_InitInternal(%s& aDict, JSContext* aCx, JSObject* aObj)\n" %
+    fd.write("static nsresult\n%s_InitInternal(%s& aDict, JSContext* aCx, JS::HandleObject aObj)\n" %
              (iface.name, iface.name))
     fd.write("{\n")
     if iface.base is not None:
@@ -382,7 +382,7 @@ def write_cpp(iface, fd):
         if a.realtype.nativeType('in').count("nsIVariant"):
             needccx = True
     if needjsval:
-        fd.write("  jsval v = JSVAL_VOID;\n")
+        fd.write("  JS::RootedValue v(aCx, JSVAL_VOID);\n")
     if needccx:
         fd.write("  XPCCallContext ccx(NATIVE_CALLER, aCx);\n")
         fd.write("  NS_ENSURE_STATE(ccx.IsValid());\n")
@@ -404,7 +404,7 @@ def write_cpp(iface, fd):
              "  if (!aVal->isObject()) {\n"
              "    return aVal->isNullOrUndefined() ? NS_OK : NS_ERROR_TYPE_ERR;\n"
              "  }\n\n"
-             "  JSObject* obj = &aVal->toObject();\n"
+             "  JS::RootedObject obj(aCx, &aVal->toObject());\n"
              "  nsCxPusher pusher;\n"
              "  pusher.Push(aCx);\n"
              "  JSAutoRequest ar(aCx);\n"
