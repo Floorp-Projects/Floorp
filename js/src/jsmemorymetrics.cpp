@@ -379,6 +379,9 @@ JS::GetExplicitNonHeapForRuntime(JSRuntime *rt, JSMallocSizeOfFun mallocSizeOf)
     IterateChunks(rt, &decommittedArenas, DecommittedArenasChunkCallback);
     n -= decommittedArenas;
 
+    // explicit/*/objects-extra/elements/asm.js (64-bit platforms only)
+    n += rt->sizeOfNonHeapAsmJSArrays_;
+
     // explicit/runtime/mjit-code
     // explicit/runtime/regexp-code
     // explicit/runtime/stack-committed
