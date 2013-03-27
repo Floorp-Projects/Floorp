@@ -1074,6 +1074,9 @@ Engine.prototype = {
   // The engine's alias (can be null). Initialized to |undefined| to indicate
   // not-initialized-from-engineMetadataService.
   _alias: undefined,
+  // A distribution-unique identifier for the engine. Either null or set
+  // when loaded. See getter.
+  _identifier: undefined,
   // The data describing the engine. Is either an array of bytes, for Sherlock
   // files, or an XML document element, for XML plugins.
   _data: null,
@@ -2268,6 +2271,38 @@ Engine.prototype = {
     notifyAction(this, SEARCH_ENGINE_CHANGED);
   },
 
+  /**
+   * Return the built-in identifier of app-provided engines.
+   *
+   * Note that this identifier is substantially similar to _id, with the
+   * following exceptions:
+   *
+   * * There is no trailing file extension.
+   * * There is no [app] prefix.
+   *
+   * @return a string identifier, or null.
+   */
+  get identifier() {
+    if (this._identifier !== undefined) {
+      return this._identifier;
+    }
+
+    // No identifier if If the engine isn't app-provided
+    if (!this._isInAppDir && !this._isInJAR) {
+      return this._identifier = null;
+    }
+
+    let leaf = this._getLeafName();
+    ENSURE_WARN(leaf, "identifier: app-provided engine has no leafName");
+
+    // Strip file extension.
+    let ext = leaf.lastIndexOf(".");
+    if (ext == -1) {
+      return this._identifier = leaf;
+    }
+    return this._identifier = leaf.substring(0, ext);
+  },
+
   get description() {
     return this._description;
   },
@@ -2311,12 +2346,29 @@ Engine.prototype = {
     return "";
   },
 
+  /**
+   * @return the leaf name of the filename or URI of this plugin,
+   *         or null if no file or URI is known.
+   */
+  _getLeafName: function () {
+    if (this._file) {
+      return this._file.leafName;
+    }
+    if (this._uri && this._uri instanceof Ci.nsIURL) {
+      return this._uri.fileName;
+    }
+    return null;
+  },
+    
   // The file that the plugin is loaded from is a unique identifier for it.  We
   // use this as the identifier to store data in the sqlite database
   __id: null,
   get _id() {
-    if (this.__id)
+    if (this.__id) {
       return this.__id;
+    }
+
+    let leafName = this._getLeafName();
 
     // Treat engines loaded from JARs the same way we treat app shipped
     // engines.
@@ -2328,28 +2380,25 @@ Engine.prototype = {
     // different engine name. People using the JAR functionality should be
     // careful not to do that!
     if (this._isInAppDir || this._isInJAR) {
-      let leafName;
-      if (this._file)
-        leafName = this._file.leafName;
-      else {
-        // If we've reached this point, we must be loaded from a JAR, which
-        // also means we should have a URL.
-        ENSURE_WARN(this._isInJAR && (this._uri instanceof Ci.nsIURL),
-                    "_id: not inJAR, or no URI", Cr.NS_ERROR_UNEXPECTED);
-        leafName = this._uri.fileName;
-      }
-
+      // App dir and JAR engines should always have leafNames
+      ENSURE_WARN(leafName, "_id: no leafName for appDir or JAR engine",
+                  Cr.NS_ERROR_UNEXPECTED);
       return this.__id = "[app]/" + leafName;
     }
 
-    ENSURE_WARN(this._file, "_id: no _file!", Cr.NS_ERROR_UNEXPECTED);
+    if (this._isInProfile) {
+      ENSURE_WARN(leafName, "_id: no leafName for profile engine",
+                  Cr.NS_ERROR_UNEXPECTED);
+      return this.__id = "[profile]/" + leafName;
+    }
 
-    if (this._isInProfile)
-      return this.__id = "[profile]/" + this._file.leafName;
+    // If the engine isn't a JAR engine, it should have a file.
+    ENSURE_WARN(this._file, "_id: no _file for non-JAR engine",
+                Cr.NS_ERROR_UNEXPECTED);
 
     // We're not in the profile or appdir, so this must be an extension-shipped
     // plugin. Use the full filename.
-    return this.__id  = this._file.path;
+    return this.__id = this._file.path;
   },
 
   get _installLocation() {
