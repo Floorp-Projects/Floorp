@@ -3722,13 +3722,9 @@ public:
     NS_DECL_NSISECURITYCHECKEDCOMPONENT
 
 public:
-    // The target is the object upon which |Components| will be defined. If
-    // aTarget is left null, a default object will be computed. This is usually
-    // the right thing to do.
     static JSBool
     AttachComponentsObject(XPCCallContext& ccx,
-                           XPCWrappedNativeScope* aScope,
-                           JSObject* aTarget = NULL);
+                           XPCWrappedNativeScope* aScope);
 
     void SystemIsBeingShutDown() {ClearMembers();}
 
