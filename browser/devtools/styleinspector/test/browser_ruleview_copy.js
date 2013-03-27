@@ -47,107 +47,10 @@ function highlightNode()
 
   inspector.selection.once("new-node", function() {
     is(inspector.selection.node, div, "selection matches the div element");
-    testClip();
+    executeSoon(checkCopySelection);
   });
   executeSoon(function() {
     inspector.selection.setNode(div);
-  });
-}
-
-function testClip()
-{
-  executeSoon(function() {
-    info("Checking that _onCopyRule() returns " +
-         "the correct clipboard value");
-    let expectedPattern = "element {[\\r\\n]+" +
-      "    margin: 10em;[\\r\\n]+" +
-      "    font-size: 14pt;[\\r\\n]+" +
-      "    font-family: helvetica,sans-serif;[\\r\\n]+" +
-      "    color: rgb\\(170, 170, 170\\);[\\r\\n]+" +
-      "}[\\r\\n]*";
-
-    SimpleTest.waitForClipboard(function IUI_boundCopyPropCheck() {
-        return checkClipboardData(expectedPattern);
-      },
-      checkCopyRule, checkCopyProperty, function() {
-        failedClipboard(expectedPattern, checkCopyProperty);
-      });
-  });
-}
-
-function checkCopyRule() {
-  let contentDoc = win.document;
-  let props = contentDoc.querySelectorAll(".ruleview-property");
-
-  is(props.length, 5, "checking property length");
-
-  let prop = props[2];
-  let propName = prop.querySelector(".ruleview-propertyname").textContent;
-  let propValue = prop.querySelector(".ruleview-propertyvalue").textContent;
-
-  is(propName, "font-family", "checking property name");
-  is(propValue, "helvetica,sans-serif", "checking property value");
-
-  // We need the context menu to open in the correct place in order for
-  // popupNode to be propertly set.
-  contextMenuClick(prop);
-
-  ruleView()._boundCopyRule();
-  let menu = contentDoc.querySelector("#rule-view-context-menu");
-  ok(menu, "we have the context menu");
-  menu.hidePopup();
-}
-
-function checkCopyProperty()
-{
-  let contentDoc = win.document;
-  let props = contentDoc.querySelectorAll(".ruleview-property");
-  let prop = props[2];
-
-  info("Checking that _onCopyDeclaration() returns " +
-       "the correct clipboard value");
-  let expectedPattern = "font-family: helvetica,sans-serif;";
-
-  // We need the context menu to open in the correct place in order for
-  // popupNode to be propertly set.
-  contextMenuClick(prop);
-
-  SimpleTest.waitForClipboard(function IUI_boundCopyPropCheck() {
-    return checkClipboardData(expectedPattern);
-  },
-  ruleView()._boundCopyDeclaration,
-  checkCopyPropertyName, function() {
-    failedClipboard(expectedPattern, checkCopyPropertyName);
-  });
-}
-
-function checkCopyPropertyName()
-{
-  info("Checking that _onCopyProperty() returns " +
-       "the correct clipboard value");
-  let expectedPattern = "margin";
-
-  SimpleTest.waitForClipboard(function IUI_boundCopyPropNameCheck() {
-    return checkClipboardData(expectedPattern);
-  },
-  ruleView()._boundCopyProperty,
-  checkCopyPropertyValue, function() {
-    failedClipboard(expectedPattern, checkCopyPropertyValue);
-  });
-}
-
-function checkCopyPropertyValue()
-{
-  info("Checking that _onCopyPropertyValue() " +
-       " returns the correct clipboard value");
-  let expectedPattern = "10em";
-
-  SimpleTest.waitForClipboard(function IUI_boundCopyPropValueCheck() {
-    return checkClipboardData(expectedPattern);
-  },
-  ruleView()._boundCopyPropertyValue,
-  checkCopySelection, function() {
-    failedClipboard(expectedPattern, checkCopySelection);
   });
 }
 
@@ -176,49 +79,9 @@ function checkCopySelection()
 
   SimpleTest.waitForClipboard(function IUI_boundCopyCheck() {
     return checkClipboardData(expectedPattern);
-  },ruleView()._boundCopy, testSimpleCopy, function() {
-    failedClipboard(expectedPattern, testSimpleCopy);
+  },function() {fireCopyEvent(props[0])}, finishup, function() {
+    failedClipboard(expectedPattern, finishup);
   });
-}
-
-function testSimpleCopy()
-{
-  executeSoon(function() {
-    info("Checking that _onCopy() returns the correct clipboard value");
-    let expectedPattern = "element {[\\r\\n]+" +
-      "    margin: 10em;[\\r\\n]+" +
-      "    font-size: 14pt;[\\r\\n]+" +
-      "    font-family: helvetica,sans-serif;[\\r\\n]+" +
-      "    color: rgb\\(170, 170, 170\\);[\\r\\n]+" +
-      "}[\\r\\n]*";
-
-    SimpleTest.waitForClipboard(function IUI_testSimpleCopy() {
-        return checkClipboardData(expectedPattern);
-      },
-      checkSimpleCopy, finishup, function() {
-        failedClipboard(expectedPattern, finishup);
-      });
-  });
-}
-
-function checkSimpleCopy() {
-  let contentDoc = win.document;
-  let props = contentDoc.querySelectorAll(".ruleview-code");
-
-  is(props.length, 2, "checking property length");
-
-  let prop = props[0];
-
-  selectNode(prop);
-
-  // We need the context menu to open in the correct place in order for
-  // popupNode to be propertly set.
-  contextMenuClick(prop);
-
-  ruleView()._boundCopy();
-  let menu = contentDoc.querySelector("#rule-view-context-menu");
-  ok(menu, "we have the context menu");
-  menu.hidePopup();
 }
 
 function selectNode(aNode) {

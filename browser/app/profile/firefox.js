@@ -1099,6 +1099,9 @@ pref("devtools.styleeditor.transitions", true);
 // Enable tools for Chrome development.
 pref("devtools.chrome.enabled", false);
 
+// Default theme ("dark" or "light")
+pref("devtools.theme", "light");
+
 // Display the introductory text
 pref("devtools.gcli.hideIntro", false);
 
