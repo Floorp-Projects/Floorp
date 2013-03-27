@@ -1169,6 +1169,8 @@ struct JSRuntime : private JS::shadow::Runtime,
     js::AsmJSMachExceptionHandler asmJSMachExceptionHandler;
 #endif
 
+    size_t              sizeOfNonHeapAsmJSArrays_;
+
 #ifdef JS_THREADSAFE
 # ifdef JS_ION
     js::WorkerThreadState *workerThreadState;
