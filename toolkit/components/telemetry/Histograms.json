@@ -843,6 +843,13 @@
     "extended_statistics_ok": true,
     "description": "ms of SSL wait time including TCP and proxy tunneling"
   },
+  "SSL_BYTES_BEFORE_CERT_CALLBACK": {
+    "kind": "exponential",
+    "high": "32000",
+    "n_buckets": 64,
+    "extended_statistics_ok": true,
+    "description": "plaintext bytes read before a server certificate authenticated"
+  },
   "SSL_NPN_TYPE": {
     "kind": "enumerated",
     "n_values": 16,
