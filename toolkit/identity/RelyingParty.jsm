@@ -13,7 +13,6 @@ const Cr = Components.results;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/identity/LogUtils.jsm");
 Cu.import("resource://gre/modules/identity/IdentityUtils.jsm");
 Cu.import("resource://gre/modules/identity/IdentityStore.jsm");
 
@@ -23,12 +22,10 @@ XPCOMUtils.defineLazyModuleGetter(this,
                                   "jwcrypto",
                                   "resource://gre/modules/identity/jwcrypto.jsm");
 
-function log(...aMessageArgs) {
-  Logger.log.apply(Logger, ["RP"].concat(aMessageArgs));
-}
-function reportError(...aMessageArgs) {
-  Logger.reportError.apply(Logger, ["RP"].concat(aMessageArgs));
-}
+XPCOMUtils.defineLazyGetter(this, "logger", function() {
+  Cu.import('resource://gre/modules/identity/LogUtils.jsm');
+  return getLogger("Identity RP", "toolkit.identity.debug");
+});
 
 function IdentityRelyingParty() {
   // The store is a singleton shared among Identity, RelyingParty, and
@@ -87,7 +84,7 @@ IdentityRelyingParty.prototype = {
     let origin = aRpCaller.origin;
     let state = this._store.getLoginState(origin) || { isLoggedIn: false, email: null };
 
-    log("watch: rpId:", aRpCaller.id,
+    logger.log("watch: rpId:", aRpCaller.id,
         "origin:", origin,
         "loggedInUser:", aRpCaller.loggedInUser,
         "loggedIn:", state.isLoggedIn,
@@ -139,7 +136,7 @@ IdentityRelyingParty.prototype = {
    * Note that this calls _getAssertion
    */
   _doLogin: function _doLogin(aRpCaller, aOptions, aAssertion) {
-    log("_doLogin: rpId:", aRpCaller.id, "origin:", aOptions.origin);
+    logger.log("_doLogin: rpId:", aRpCaller.id, "origin:", aOptions.origin);
 
     let loginWithAssertion = function loginWithAssertion(assertion) {
       this._store.setLoginState(aOptions.origin, true, aOptions.loggedInUser);
@@ -153,7 +150,7 @@ IdentityRelyingParty.prototype = {
     } else {
       this._getAssertion(aOptions, function gotAssertion(err, assertion) {
         if (err) {
-          reportError("_doLogin:", "Failed to get assertion on login attempt:", err);
+          logger.warning("_doLogin:", "Failed to get assertion on login attempt:", err);
           this._doLogout(aRpCaller);
         } else {
           loginWithAssertion(assertion);
@@ -167,7 +164,7 @@ IdentityRelyingParty.prototype = {
    * on logout.
    */
   _doLogout: function _doLogout(aRpCaller, aOptions) {
-    log("_doLogout: rpId:", aRpCaller.id, "origin:", aOptions.origin);
+    logger.log("_doLogout: rpId:", aRpCaller.id, "origin:", aOptions.origin);
 
     let state = this._store.getLoginState(aOptions.origin) || {};
 
@@ -191,7 +188,7 @@ IdentityRelyingParty.prototype = {
    *        (string) The email of the user whose login state has changed
    */
   _notifyLoginStateChanged: function _notifyLoginStateChanged(aRpCallerId, aIdentity) {
-    log("_notifyLoginStateChanged: rpId:", aRpCallerId, "identity:", aIdentity);
+    logger.log("_notifyLoginStateChanged: rpId:", aRpCallerId, "identity:", aIdentity);
 
     let options = {rpId: aRpCallerId};
     Services.obs.notifyObservers({wrappedJSObject: options},
@@ -210,7 +207,7 @@ IdentityRelyingParty.prototype = {
    *        (Object)  options including privacyPolicy, termsOfService
    */
   request: function request(aRPId, aOptions) {
-    log("request: rpId:", aRPId);
+    logger.log("request: rpId:", aRPId);
     let rp = this._rpFlows[aRPId];
 
     // Notify UX to display identity picker.
@@ -238,14 +235,14 @@ IdentityRelyingParty.prototype = {
    *
    */
   logout: function logout(aRpCallerId) {
-    log("logout: RP caller id:", aRpCallerId);
+    logger.log("logout: RP caller id:", aRpCallerId);
     let rp = this._rpFlows[aRpCallerId];
     if (rp && rp.origin) {
       let origin = rp.origin;
-      log("logout: origin:", origin);
+      logger.log("logout: origin:", origin);
       this._doLogout(rp, {origin: origin});
     } else {
-      log("logout: no RP found with id:", aRpCallerId);
+      logger.log("logout: no RP found with id:", aRpCallerId);
     }
     // We don't delete this._rpFlows[aRpCallerId], because
     // the user might log back in again.
@@ -254,7 +251,7 @@ IdentityRelyingParty.prototype = {
   getDefaultEmailForOrigin: function getDefaultEmailForOrigin(aOrigin) {
     let identities = this.getIdentitiesForSite(aOrigin);
     let result = identities.lastUsed || null;
-    log("getDefaultEmailForOrigin:", aOrigin, "->", result);
+    logger.log("getDefaultEmailForOrigin:", aOrigin, "->", result);
     return result;
   },
 
@@ -293,7 +290,7 @@ IdentityRelyingParty.prototype = {
   _getAssertion: function _getAssertion(aOptions, aCallback) {
     let audience = aOptions.origin;
     let email = aOptions.loggedInUser || this.getDefaultEmailForOrigin(audience);
-    log("_getAssertion: audience:", audience, "email:", email);
+    logger.log("_getAssertion: audience:", audience, "email:", email);
     if (!audience) {
       throw "audience required for _getAssertion";
     }
@@ -307,9 +304,9 @@ IdentityRelyingParty.prototype = {
     if (cert) {
       this._generateAssertion(audience, email, function generatedAssertion(err, assertion) {
         if (err) {
-          log("ERROR: _getAssertion:", err);
+          logger.warning("ERROR: _getAssertion:", err);
         }
-        log("_getAssertion: generated assertion:", assertion);
+        logger.log("_getAssertion: generated assertion:", assertion);
         return aCallback(err, assertion);
       });
     }
@@ -331,12 +328,12 @@ IdentityRelyingParty.prototype = {
    *                   with first-positional parameter the error.
    */
   _generateAssertion: function _generateAssertion(aAudience, aIdentity, aCallback) {
-    log("_generateAssertion: audience:", aAudience, "identity:", aIdentity);
+    logger.log("_generateAssertion: audience:", aAudience, "identity:", aIdentity);
 
     let id = this._store.fetchIdentity(aIdentity);
     if (! (id && id.cert)) {
       let errStr = "Cannot generate an assertion without a certificate";
-      log("ERROR: _generateAssertion:", errStr);
+      logger.log("ERROR: _generateAssertion:", errStr);
       aCallback(errStr);
       return;
     }
@@ -345,7 +342,7 @@ IdentityRelyingParty.prototype = {
 
     if (!kp) {
       let errStr = "Cannot generate an assertion without a keypair";
-      log("ERROR: _generateAssertion:", errStr);
+      logger.log("ERROR: _generateAssertion:", errStr);
       aCallback(errStr);
       return;
     }
@@ -361,7 +358,7 @@ IdentityRelyingParty.prototype = {
     if (rp) {
       delete rp['provId'];
     } else {
-      log("Error: Couldn't delete provision flow ", aProvId, " for RP ", aRPId);
+      logger.log("Error: Couldn't delete provision flow ", aProvId, " for RP ", aRPId);
     }
   },
 

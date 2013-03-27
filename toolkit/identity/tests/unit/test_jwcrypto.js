@@ -3,14 +3,17 @@
 
 "use strict"
 
-Cu.import('resource://gre/modules/identity/LogUtils.jsm');
-
 XPCOMUtils.defineLazyModuleGetter(this, "IDService",
                                   "resource://gre/modules/identity/Identity.jsm",
                                   "IdentityService");
 
 XPCOMUtils.defineLazyModuleGetter(this, "jwcrypto",
                                   "resource://gre/modules/identity/jwcrypto.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "logger", function() {
+  Cu.import('resource://gre/modules/identity/LogUtils.jsm');
+  return getLogger("Identity test", "toolkit.identity.debug");
+});
 
 const RP_ORIGIN = "http://123done.org";
 const INTERNAL_ORIGIN = "browserid://";
@@ -47,7 +50,7 @@ function test_get_assertion() {
         do_check_null(err);
 
         // more checks on assertion
-        log("assertion", assertion);
+        logger.log("assertion", assertion);
 
         do_test_finished();
         run_next_test();
@@ -59,7 +62,7 @@ function test_rsa() {
   do_test_pending();
   function checkRSA(err, kpo) {
     do_check_neq(kpo, undefined);
-    log(kpo.serializedPublicKey);
+    logger.log(kpo.serializedPublicKey);
     let pk = JSON.parse(kpo.serializedPublicKey);
     do_check_eq(pk.algorithm, "RS");
 /* TODO
@@ -89,7 +92,7 @@ function test_dsa() {
   do_test_pending();
   function checkDSA(err, kpo) {
     do_check_neq(kpo, undefined);
-    log(kpo.serializedPublicKey);
+    logger.log(kpo.serializedPublicKey);
     let pk = JSON.parse(kpo.serializedPublicKey);
     do_check_eq(pk.algorithm, "DS");
 /* TODO

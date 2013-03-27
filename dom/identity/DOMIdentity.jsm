@@ -14,23 +14,16 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/identity/IdentityUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "IdentityService",
-#ifdef MOZ_B2G_VERSION
                                   "resource://gre/modules/identity/MinimalIdentity.jsm");
-#else
-                                  "resource://gre/modules/identity/Identity.jsm");
-#endif
-
-XPCOMUtils.defineLazyModuleGetter(this,
-                                  "Logger",
-                                  "resource://gre/modules/identity/LogUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
                                    "@mozilla.org/parentprocessmessagemanager;1",
                                    "nsIMessageListenerManager");
 
-function log(...aMessageArgs) {
-  Logger.log.apply(Logger, ["DOMIdentity"].concat(aMessageArgs));
-}
+XPCOMUtils.defineLazyGetter(this, "logger", function() {
+  Cu.import('resource://gre/modules/identity/LogUtils.jsm');
+  return getLogger("Identity", "toolkit.identity.debug");
+});
 
 function IDDOMMessage(aOptions) {
   objectCopy(aOptions, this);
@@ -55,14 +48,14 @@ IDPProvisioningContext.prototype = {
   },
 
   doGenKeyPairCallback: function IDPPC_doGenKeyPairCallback(aPublicKey) {
-    log("doGenKeyPairCallback");
+    logger.log("doGenKeyPairCallback");
     let message = new IDDOMMessage({id: this.id});
     message.publicKey = aPublicKey;
     this._mm.sendAsyncMessage("Identity:IDP:CallGenKeyPairCallback", message);
   },
 
   doError: function(msg) {
-    log("Provisioning ERROR: " + msg);
+    logger.warning(msg);
   }
 };
 
@@ -84,7 +77,7 @@ IDPAuthenticationContext.prototype = {
   },
 
   doError: function IDPAC_doError(msg) {
-    log("Authentication ERROR: " + msg);
+    logger.warning(msg);
   }
 };
 
@@ -93,7 +86,9 @@ function RPWatchContext(aOptions, aTargetMM) {
 
   // id and origin are required
   if (! (this.id && this.origin)) {
-    throw new Error("id and origin are required for RP watch context");
+    let err = "id and origin are required for RP watch context";
+    logger.error(err);
+    throw new Error(err);
   }
 
   // default for no loggedInUser is undefined, not null
@@ -107,7 +102,7 @@ function RPWatchContext(aOptions, aTargetMM) {
 
 RPWatchContext.prototype = {
   doLogin: function RPWatchContext_onlogin(aAssertion, aMaybeInternalParams) {
-    log("doLogin: " + this.id);
+    logger.log("login id: " + this.id);
     let message = new IDDOMMessage({id: this.id, assertion: aAssertion});
     if (aMaybeInternalParams) {
       message._internalParams = aMaybeInternalParams;
@@ -116,19 +111,19 @@ RPWatchContext.prototype = {
   },
 
   doLogout: function RPWatchContext_onlogout() {
-    log("doLogout: " + this.id);
+    logger.log("logout id: " + this.id);
     let message = new IDDOMMessage({id: this.id});
     this._mm.sendAsyncMessage("Identity:RP:Watch:OnLogout", message);
   },
 
   doReady: function RPWatchContext_onready() {
-    log("doReady: " + this.id);
+    logger.log("ready id: " + this.id);
     let message = new IDDOMMessage({id: this.id});
     this._mm.sendAsyncMessage("Identity:RP:Watch:OnReady", message);
   },
 
   doCancel: function RPWatchContext_oncancel() {
-    log("doCancel: " + this.id);
+    logger.log("cancel id: " + this.id);
     let message = new IDDOMMessage({id: this.id});
     this._mm.sendAsyncMessage("Identity:RP:Watch:OnCancel", message);
   },
@@ -146,6 +141,8 @@ this.DOMIdentity = {
     // Target is the frame message manager that called us and is
     // used to send replies back to the proper window.
     let targetMM = aMessage.target;
+
+    logger.log("received:", aMessage.name);
 
     switch (aMessage.name) {
       // RP
@@ -217,6 +214,7 @@ this.DOMIdentity = {
     Services.ww.registerNotification(this);
     Services.obs.addObserver(this, "xpcom-shutdown", false);
     this._subscribeListeners();
+    logger.log("DOM identity service initialized");
   },
 
   _subscribeListeners: function DOMIdentity__subscribeListeners() {
@@ -234,16 +232,18 @@ this.DOMIdentity = {
   },
 
   _resetFrameState: function(aContext) {
-    log("_resetFrameState: ", aContext.id);
+    logger.log("_resetFrameState: ", aContext.id);
     if (!aContext._mm) {
-      throw new Error("ERROR: Trying to reset an invalid context");
+      let err = "Trying to reset an invalid context";
+      logger.error(err);
+      throw new Error(err);
     }
     let message = new IDDOMMessage({id: aContext.id});
     aContext._mm.sendAsyncMessage("Identity:ResetState", message);
   },
 
   _watch: function DOMIdentity__watch(message, targetMM) {
-    log("DOMIdentity__watch: " + message.id);
+    logger.log("DOMIdentity__watch: " + message.id);
     // Pass an object with the watch members to Identity.jsm so it can call the
     // callbacks.
     let context = new RPWatchContext(message, targetMM);

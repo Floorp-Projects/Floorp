@@ -60,6 +60,7 @@ browser.jar:
 *       content/browser/browser.css                   (content/browser.css)
 *       content/browser/browser.js                    (content/browser.js)
 *       content/browser/browser.xul                   (content/browser.xul)
+        content/browser/browser-identity.js           (content/browser-identity.js)
 *       content/browser/browser-tabPreviews.xml       (content/browser-tabPreviews.xml)
         content/browser/content.js                    (content/content.js)
         content/browser/newtab/newTab.xul             (content/newtab/newTab.xul)

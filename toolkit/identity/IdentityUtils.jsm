@@ -23,12 +23,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "uuidgen",
                                    "@mozilla.org/uuid-generator;1",
                                    "nsIUUIDGenerator");
 
-XPCOMUtils.defineLazyModuleGetter(this, "Logger",
-                                  "resource://gre/modules/identity/LogUtils.jsm");
-
-function log(...aMessageArgs) {
-  Logger.log.apply(Logger, ["Identity"].concat(aMessageArgs));
-}
+XPCOMUtils.defineLazyGetter(this, "logger", function() {
+  Cu.import('resource://gre/modules/identity/LogUtils.jsm');
+  return getLogger("Identity", "toolkit.identity.debug");
+});
 
 function defined(item) {
   return typeof item !== 'undefined';
@@ -36,7 +34,7 @@ function defined(item) {
 
 var checkDeprecated = this.checkDeprecated = function checkDeprecated(aOptions, aField) {
   if (defined(aOptions[aField])) {
-    log("WARNING: field is deprecated:", aField);
+    logger.log("WARNING: field is deprecated:", aField);
     return true;
   }
   return false;
@@ -46,7 +44,7 @@ this.checkRenamed = function checkRenamed(aOptions, aOldName, aNewName) {
   if (defined(aOptions[aOldName]) &&
       defined(aOptions[aNewName])) {
     let err = "You cannot provide both " + aOldName + " and " + aNewName;
-    Logger.reportError(err);
+    logger.error(err);
     throw new Error(err);
   }
 
@@ -64,7 +62,7 @@ this.getRandomId = function getRandomId() {
  * copy source object into target, excluding private properties
  * (those whose names begin with an underscore)
  */
-this.objectCopy = function objectCopy(source, target){
+this.objectCopy = function objectCopy(source, target) {
   let desc;
   Object.getOwnPropertyNames(source).forEach(function(name) {
     if (name[0] !== '_') {
