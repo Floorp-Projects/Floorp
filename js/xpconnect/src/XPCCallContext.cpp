@@ -462,6 +462,10 @@ XPCCallContext::UnwrapThisIfAllowed(JSObject *object, JSObject *fun, unsigned ar
     MOZ_ASSERT(!js::UnwrapObjectChecked(obj));
     MOZ_ASSERT(js::IsObjectInContextCompartment(obj, mJSContext));
 
+    // We can't do anything here without a function.
+    if (!fun)
+        return nullptr;
+
     // Determine if we're allowed to unwrap the security wrapper to invoke the
     // method.
     //

@@ -21,8 +21,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id={678695}
 
 "use strict";
 
-SpecialPowers.Cu.import("resource://gre/modules/SettingsChangeNotifier.jsm");
-SpecialPowers.setBoolPref("dom.mozSettings.enabled", true);
+if (!SpecialPowers.getBoolPref("dom.mozSettings.enabled")) {
+  SpecialPowers.Cu.import("resource://gre/modules/SettingsChangeNotifier.jsm");
+  SpecialPowers.setBoolPref("dom.mozSettings.enabled", true);
+}
+
 SpecialPowers.addPermission("settings-write", true, document);
 SpecialPowers.addPermission("settings-read", true, document);
 
@@ -150,7 +153,7 @@ var steps = [
     }
     req.onerror = onFailure;
   },
-  
+
   function() {
     ok(true, "delete onsettingschange");
     var lock = mozSettings.createLock();

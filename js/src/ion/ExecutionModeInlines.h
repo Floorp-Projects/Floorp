@@ -40,6 +40,15 @@ static inline void SetIonScript(RawScript script, ExecutionMode cmode, IonScript
     JS_NOT_REACHED("No such execution mode");
 }
 
+static inline size_t OffsetOfIonInJSScript(ExecutionMode cmode)
+{
+    switch (cmode) {
+      case SequentialExecution: return offsetof(JSScript, ion);
+      case ParallelExecution: return offsetof(JSScript, parallelIon);
+    }
+    JS_NOT_REACHED("No such execution mode");
+}
+
 static inline bool CanIonCompile(RawScript script, ExecutionMode cmode)
 {
     switch (cmode) {

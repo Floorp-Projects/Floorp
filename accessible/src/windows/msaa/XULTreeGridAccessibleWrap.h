@@ -22,8 +22,9 @@ class XULTreeGridAccessibleWrap : public XULTreeGridAccessible,
                                   public ia2AccessibleTable
 {
 public:
-  XULTreeGridAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
-    XULTreeGridAccessible(aContent, aDoc), ia2AccessibleTable(this) {}
+  XULTreeGridAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc,
+                            nsTreeBodyFrame* aTree) :
+    XULTreeGridAccessible(aContent, aDoc, aTree), ia2AccessibleTable(this) {}
 
   // IUnknown
   DECL_IUNKNOWN_INHERITED

@@ -24,6 +24,8 @@ BEGIN_INDEXEDDB_NAMESPACE
 
 class OpenDatabaseHelper : public HelperBase
 {
+  typedef mozilla::dom::quota::StoragePrivilege StoragePrivilege;
+
 public:
   OpenDatabaseHelper(IDBOpenDBRequest* aRequest,
                      const nsAString& aName,
@@ -31,7 +33,7 @@ public:
                      uint64_t aRequestedVersion,
                      bool aForDeletion,
                      mozilla::dom::ContentParent* aContentParent,
-                     FactoryPrivilege aPrivilege)
+                     StoragePrivilege aPrivilege)
     : HelperBase(aRequest), mOpenDBRequest(aRequest), mName(aName),
       mASCIIOrigin(aASCIIOrigin), mRequestedVersion(aRequestedVersion),
       mForDeletion(aForDeletion), mPrivilege(aPrivilege), mDatabaseId(nullptr),
@@ -77,7 +79,7 @@ public:
     return mDatabase;
   }
 
-  const FactoryPrivilege& Privilege() const
+  const StoragePrivilege& Privilege() const
   {
     return mPrivilege;
   }
@@ -109,7 +111,7 @@ protected:
   nsCString mASCIIOrigin;
   uint64_t mRequestedVersion;
   bool mForDeletion;
-  FactoryPrivilege mPrivilege;
+  StoragePrivilege mPrivilege;
   nsCOMPtr<nsIAtom> mDatabaseId;
   mozilla::dom::ContentParent* mContentParent;
 

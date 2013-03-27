@@ -51,7 +51,26 @@ public:
   virtual void DocSizeOfExcludingThis(nsWindowSizes* aWindowSizes) const;
   // DocSizeOfIncludingThis is inherited from nsIDocument.
 
+
+  // WebIDL API
+  bool Load(const nsAString& aUrl, mozilla::ErrorResult& aRv);
+  bool Async() const
+  {
+    return mAsync;
+  }
+  // The XPCOM SetAsync is ok for us
+
+  // .location is [Unforgeable], so we have to make it clear that the
+  // nsIDocument version applies to us (it's shadowed by the XPCOM thing on
+  // nsDocument).
+  using nsIDocument::GetLocation;
+  // But then we need to also pull in the nsDocument XPCOM version
+  // because nsXULDocument tries to forward to it.
+  using nsDocument::GetLocation;
+
 protected:
+  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope) MOZ_OVERRIDE;
+
   // mChannelIsPending indicates whether we're currently asynchronously loading
   // data from mChannel (via document.load() or normal load).  It's set to true
   // when we first find out about the channel (StartDocumentLoad) and set to

@@ -280,40 +280,36 @@ nsSVGViewBox::DOMAnimVal::~DOMAnimVal()
   sAnimSVGViewBoxTearoffTable.RemoveTearoff(mVal);
 }
 
-NS_IMETHODIMP
-nsSVGViewBox::DOMBaseVal::SetX(float aX)
+void
+nsSVGViewBox::DOMBaseVal::SetX(float aX, ErrorResult& aRv)
 {
   nsSVGViewBoxRect rect = mVal->GetBaseValue();
   rect.x = aX;
   mVal->SetBaseValue(rect, mSVGElement);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSVGViewBox::DOMBaseVal::SetY(float aY)
+void
+nsSVGViewBox::DOMBaseVal::SetY(float aY, ErrorResult& aRv)
 {
   nsSVGViewBoxRect rect = mVal->GetBaseValue();
   rect.y = aY;
   mVal->SetBaseValue(rect, mSVGElement);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSVGViewBox::DOMBaseVal::SetWidth(float aWidth)
+void
+nsSVGViewBox::DOMBaseVal::SetWidth(float aWidth, ErrorResult& aRv)
 {
   nsSVGViewBoxRect rect = mVal->GetBaseValue();
   rect.width = aWidth;
   mVal->SetBaseValue(rect, mSVGElement);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSVGViewBox::DOMBaseVal::SetHeight(float aHeight)
+void
+nsSVGViewBox::DOMBaseVal::SetHeight(float aHeight, ErrorResult& aRv)
 {
   nsSVGViewBoxRect rect = mVal->GetBaseValue();
   rect.height = aHeight;
   mVal->SetBaseValue(rect, mSVGElement);
-  return NS_OK;
 }
 
 nsISMILAttr*

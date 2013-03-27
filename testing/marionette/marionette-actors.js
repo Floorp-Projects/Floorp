@@ -1407,7 +1407,8 @@ MarionetteDriverActor.prototype = {
       this.sendError("Not in Chrome", 500, null, this.command_id);
     }
     else {
-      this.sendAsync("actionChain", {value: aRequest.value,
+      this.sendAsync("actionChain", {chain: aRequest.chain,
+                                     nextId: aRequest.nextId,
                                      command_id: this.command_id});
     }
   },

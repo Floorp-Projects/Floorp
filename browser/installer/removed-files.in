@@ -26,6 +26,7 @@
 @DLL_PREFIX@nssutil3@DLL_SUFFIX@
 @DLL_PREFIX@mozsqlite3@DLL_SUFFIX@
 #endif
+@DLL_PREFIX@xpcom@DLL_SUFFIX@
 LICENSE
 browserconfig.properties
 chrome/US.jar

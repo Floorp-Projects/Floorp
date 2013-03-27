@@ -133,53 +133,6 @@ var Browser = {
     if (window.arguments && window.arguments[0])
       commandURL = window.arguments[0];
 
-    // Activation URIs come from protocol activations, secondary tiles, and file activations
-    let activationURI = this.getShortcutOrURI(MetroUtils.activationURI);
-
-    let self = this;
-    function loadStartupURI() {
-      let uri = activationURI || commandURL || Browser.getHomePage();
-      if (StartUI.isStartURI(uri)) {
-        self.addTab(uri, true);
-        StartUI.show(); // This makes about:start load a lot faster
-      } else if (activationURI) {
-        self.addTab(uri, true, null, { flags: Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP });
-      } else {
-        self.addTab(uri, true);
-      }
-    }
-
-    // Should we restore the previous session (crash or some other event)
-    let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
-    if (ss.shouldRestore() || Services.prefs.getBoolPref("browser.startup.sessionRestore")) {
-      let bringFront = false;
-      // First open any commandline URLs, except the homepage
-      if (activationURI && !StartUI.isStartURI(activationURI)) {
-        this.addTab(activationURI, true, null, { flags: Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP });
-      } else if (commandURL && !StartUI.isStartURI(commandURL)) {
-        this.addTab(commandURL, true);
-      } else {
-        bringFront = true;
-        // Initial window resizes call functions that assume a tab is in the tab list
-        // and restored tabs are added too late. We add a dummy to to satisfy the resize
-        // code and then remove the dummy after the session has been restored.
-        let dummy = this.addTab("about:blank", true);
-        let dummyCleanup = {
-          observe: function(aSubject, aTopic, aData) {
-            Services.obs.removeObserver(dummyCleanup, "sessionstore-windows-restored");
-            if (aData == "fail")
-              loadStartupURI();
-            dummy.chromeTab.ignoreUndo = true;
-            Browser.closeTab(dummy, { forceClose: true });
-          }
-        };
-        Services.obs.addObserver(dummyCleanup, "sessionstore-windows-restored", false);
-      }
-      ss.restoreLastSession(bringFront);
-    } else {
-      loadStartupURI();
-    }
-
     messageManager.addMessageListener("DOMLinkAdded", this);
     messageManager.addMessageListener("MozScrolledAreaChanged", this);
     messageManager.addMessageListener("Browser:ViewportMetadata", this);
@@ -197,10 +150,59 @@ var Browser = {
     // starting with:
     InputSourceHelper.fireUpdate();
 
-    // Broadcast a UIReady message so add-ons know we are finished with startup
-    let event = document.createEvent("Events");
-    event.initEvent("UIReady", true, false);
-    window.dispatchEvent(event);
+    Task.spawn(function() {
+      // Activation URIs come from protocol activations, secondary tiles, and file activations
+      let activationURI = yield this.getShortcutOrURI(MetroUtils.activationURI);
+
+      let self = this;
+      function loadStartupURI() {
+        let uri = activationURI || commandURL || Browser.getHomePage();
+        if (StartUI.isStartURI(uri)) {
+          self.addTab(uri, true);
+          StartUI.show(); // This makes about:start load a lot faster
+        } else if (activationURI) {
+          self.addTab(uri, true, null, { flags: Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP });
+        } else {
+          self.addTab(uri, true);
+        }
+      }
+
+      // Should we restore the previous session (crash or some other event)
+      let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+      if (ss.shouldRestore() || Services.prefs.getBoolPref("browser.startup.sessionRestore")) {
+        let bringFront = false;
+        // First open any commandline URLs, except the homepage
+        if (activationURI && !StartUI.isStartURI(activationURI)) {
+          this.addTab(activationURI, true, null, { flags: Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP });
+        } else if (commandURL && !StartUI.isStartURI(commandURL)) {
+          this.addTab(commandURL, true);
+        } else {
+          bringFront = true;
+          // Initial window resizes call functions that assume a tab is in the tab list
+          // and restored tabs are added too late. We add a dummy to to satisfy the resize
+          // code and then remove the dummy after the session has been restored.
+          let dummy = this.addTab("about:blank", true);
+          let dummyCleanup = {
+            observe: function(aSubject, aTopic, aData) {
+              Services.obs.removeObserver(dummyCleanup, "sessionstore-windows-restored");
+              if (aData == "fail")
+                loadStartupURI();
+              dummy.chromeTab.ignoreUndo = true;
+              Browser.closeTab(dummy, { forceClose: true });
+            }
+          };
+          Services.obs.addObserver(dummyCleanup, "sessionstore-windows-restored", false);
+        }
+        ss.restoreLastSession(bringFront);
+      } else {
+        loadStartupURI();
+      }
+
+      // Broadcast a UIReady message so add-ons know we are finished with startup
+      let event = document.createEvent("Events");
+      event.initEvent("UIReady", true, false);
+      window.dispatchEvent(event);
+    }.bind(this));
   },
 
   quit: function quit() {
@@ -348,77 +350,80 @@ var Browser = {
    * Determine if the given URL is a shortcut/keyword and, if so, expand it
    * @param aURL String
    * @param aPostDataRef Out param contains any required post data for a search
-   * @returns the expanded shortcut, or the original URL if not a shortcut
+   * @return {Promise}
+   * @result the expanded shortcut, or the original URL if not a shortcut
    */
   getShortcutOrURI: function getShortcutOrURI(aURL, aPostDataRef) {
-    if (!aURL)
-      return aURL;
+    return Task.spawn(function() {
+      if (!aURL)
+        throw new Task.Result(aURL);
 
-    let shortcutURL = null;
-    let keyword = aURL;
-    let param = "";
+      let shortcutURL = null;
+      let keyword = aURL;
+      let param = "";
 
-    let offset = aURL.indexOf(" ");
-    if (offset > 0) {
-      keyword = aURL.substr(0, offset);
-      param = aURL.substr(offset + 1);
-    }
-
-    if (!aPostDataRef)
-      aPostDataRef = {};
-
-    let engine = Services.search.getEngineByAlias(keyword);
-    if (engine) {
-      let submission = engine.getSubmission(param);
-      aPostDataRef.value = submission.postData;
-      return submission.uri.spec;
-    }
-
-    try {
-      [shortcutURL, aPostDataRef.value] = PlacesUtils.getURLAndPostDataForKeyword(keyword);
-    } catch (e) {}
-
-    if (!shortcutURL)
-      return aURL;
-
-    let postData = "";
-    if (aPostDataRef.value)
-      postData = unescape(aPostDataRef.value);
-
-    if (/%s/i.test(shortcutURL) || /%s/i.test(postData)) {
-      let charset = "";
-      const re = /^(.*)\&mozcharset=([a-zA-Z][_\-a-zA-Z0-9]+)\s*$/;
-      let matches = shortcutURL.match(re);
-      if (matches)
-        [, shortcutURL, charset] = matches;
-      else {
-        // Try to get the saved character-set.
-        try {
-          // makeURI throws if URI is invalid.
-          // Will return an empty string if character-set is not found.
-          charset = PlacesUtils.history.getCharsetForURI(Util.makeURI(shortcutURL));
-        } catch (e) { dump("--- error " + e + "\n"); }
+      let offset = aURL.indexOf(" ");
+      if (offset > 0) {
+        keyword = aURL.substr(0, offset);
+        param = aURL.substr(offset + 1);
       }
 
-      let encodedParam = "";
-      if (charset)
-        encodedParam = escape(convertFromUnicode(charset, param));
-      else // Default charset is UTF-8
-        encodedParam = encodeURIComponent(param);
+      if (!aPostDataRef)
+        aPostDataRef = {};
 
-      shortcutURL = shortcutURL.replace(/%s/g, encodedParam).replace(/%S/g, param);
+      let engine = Services.search.getEngineByAlias(keyword);
+      if (engine) {
+        let submission = engine.getSubmission(param);
+        aPostDataRef.value = submission.postData;
+        throw new Task.Result(submission.uri.spec);
+      }
 
-      if (/%s/i.test(postData)) // POST keyword
-        aPostDataRef.value = getPostDataStream(postData, param, encodedParam, "application/x-www-form-urlencoded");
-    } else if (param) {
-      // This keyword doesn't take a parameter, but one was provided. Just return
-      // the original URL.
-      aPostDataRef.value = null;
+      try {
+        [shortcutURL, aPostDataRef.value] = PlacesUtils.getURLAndPostDataForKeyword(keyword);
+      } catch (e) {}
 
-      return aURL;
-    }
+      if (!shortcutURL)
+        throw new Task.Result(aURL);
 
-    return shortcutURL;
+      let postData = "";
+      if (aPostDataRef.value)
+        postData = unescape(aPostDataRef.value);
+
+      if (/%s/i.test(shortcutURL) || /%s/i.test(postData)) {
+        let charset = "";
+        const re = /^(.*)\&mozcharset=([a-zA-Z][_\-a-zA-Z0-9]+)\s*$/;
+        let matches = shortcutURL.match(re);
+        if (matches)
+          [, shortcutURL, charset] = matches;
+        else {
+          // Try to get the saved character-set.
+          try {
+            // makeURI throws if URI is invalid.
+            // Will return an empty string if character-set is not found.
+            charset = yield PlacesUtils.getCharsetForURI(Util.makeURI(shortcutURL));
+          } catch (e) { dump("--- error " + e + "\n"); }
+        }
+
+        let encodedParam = "";
+        if (charset)
+          encodedParam = escape(convertFromUnicode(charset, param));
+        else // Default charset is UTF-8
+          encodedParam = encodeURIComponent(param);
+
+        shortcutURL = shortcutURL.replace(/%s/g, encodedParam).replace(/%S/g, param);
+
+        if (/%s/i.test(postData)) // POST keyword
+          aPostDataRef.value = getPostDataStream(postData, param, encodedParam, "application/x-www-form-urlencoded");
+      } else if (param) {
+        // This keyword doesn't take a parameter, but one was provided. Just return
+        // the original URL.
+        aPostDataRef.value = null;
+
+        throw new Task.Result(aURL);
+      }
+
+      throw new Task.Result(shortcutURL);
+    });
   },
 
   /**

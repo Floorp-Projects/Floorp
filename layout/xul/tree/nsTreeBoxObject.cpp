@@ -216,7 +216,7 @@ NS_IMETHODIMP nsTreeBoxObject::GetColumns(nsITreeColumns** aColumns)
   *aColumns = nullptr;
   nsTreeBodyFrame* body = GetTreeBody();
   if (body) 
-    return body->GetColumns(aColumns);
+    *aColumns = body->Columns().get();
   return NS_OK;
 }
 
@@ -243,7 +243,7 @@ NS_IMETHODIMP nsTreeBoxObject::GetFirstVisibleRow(int32_t *aFirstVisibleRow)
   *aFirstVisibleRow = 0;
   nsTreeBodyFrame* body = GetTreeBody();
   if (body)
-    return body->GetFirstVisibleRow(aFirstVisibleRow);
+    *aFirstVisibleRow = body->FirstVisibleRow();
   return NS_OK;
 }
 
@@ -252,7 +252,7 @@ NS_IMETHODIMP nsTreeBoxObject::GetLastVisibleRow(int32_t *aLastVisibleRow)
   *aLastVisibleRow = 0;
   nsTreeBodyFrame* body = GetTreeBody();
   if (body)
-    return body->GetLastVisibleRow(aLastVisibleRow);
+    *aLastVisibleRow = body->LastVisibleRow();
   return NS_OK;
 }
 
@@ -270,7 +270,7 @@ NS_IMETHODIMP nsTreeBoxObject::GetPageLength(int32_t *aPageLength)
   *aPageLength = 0;
   nsTreeBodyFrame* body = GetTreeBody();
   if (body)
-    return body->GetPageLength(aPageLength);
+    *aPageLength = body->PageLength();
   return NS_OK;
 }
 

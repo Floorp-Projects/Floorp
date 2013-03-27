@@ -136,6 +136,8 @@ ITfMessagePump*         nsTextStore::sMessagePump    = NULL;
 ITfKeystrokeMgr*        nsTextStore::sKeystrokeMgr   = NULL;
 ITfDisplayAttributeMgr* nsTextStore::sDisplayAttrMgr = NULL;
 ITfCategoryMgr*         nsTextStore::sCategoryMgr    = NULL;
+ITfDocumentMgr*         nsTextStore::sTsfDisabledDocumentMgr = NULL;
+ITfContext*             nsTextStore::sTsfDisabledContext = NULL;
 DWORD         nsTextStore::sTsfClientId  = 0;
 nsTextStore*  nsTextStore::sTsfTextStore = NULL;
 
@@ -212,6 +214,25 @@ GetIMEEnabledName(IMEState::Enabled aIMEEnabled)
       return "PLUGIN";
     default:
       return "Invalid";
+  }
+}
+
+static const char*
+GetFocusChangeName(InputContextAction::FocusChange aFocusChange)
+{
+  switch (aFocusChange) {
+    case InputContextAction::FOCUS_NOT_CHANGED:
+      return "FOCUS_NOT_CHANGED";
+    case InputContextAction::GOT_FOCUS:
+      return "GOT_FOCUS";
+    case InputContextAction::LOST_FOCUS:
+      return "LOST_FOCUS";
+    case InputContextAction::MENU_GOT_PSEUDO_FOCUS:
+      return "MENU_GOT_PSEUDO_FOCUS";
+    case InputContextAction::MENU_LOST_PSEUDO_FOCUS:
+      return "MENU_LOST_PSEUDO_FOCUS";
+    default:
+      return "Unknown";
   }
 }
 
@@ -508,12 +529,11 @@ nsTextStore::~nsTextStore()
 }
 
 bool
-nsTextStore::Create(nsWindowBase* aWidget,
-                    IMEState::Enabled aIMEEnabled)
+nsTextStore::Create(nsWindowBase* aWidget)
 {
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-    ("TSF: 0x%p nsTextStore::Create(aWidget=0x%p, aIMEEnabled=%s)",
-     this, aWidget, GetIMEEnabledName(aIMEEnabled)));
+    ("TSF: 0x%p nsTextStore::Create(aWidget=0x%p)",
+     this, aWidget));
 
   if (mDocumentMgr) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
@@ -544,8 +564,6 @@ nsTextStore::Create(nsWindowBase* aWidget,
     mDocumentMgr = NULL;
     return false;
   }
-
-  SetInputContextInternal(aIMEEnabled);
 
   hr = mDocumentMgr->Push(mContext);
   if (FAILED(hr)) {
@@ -2863,14 +2881,40 @@ nsTextStore::OnFocusChange(bool aGotFocus,
   // no change notifications if TSF is disabled
   NS_ENSURE_TRUE(sTsfThreadMgr && sTsfTextStore, NS_ERROR_NOT_AVAILABLE);
 
-  if (aGotFocus) {
-    bool bRet = sTsfTextStore->Create(aFocusedWidget, aIMEEnabled);
+  nsRefPtr<ITfDocumentMgr> prevFocusedDocumentMgr;
+  if (aGotFocus && (aIMEEnabled == IMEState::ENABLED ||
+                    aIMEEnabled == IMEState::PASSWORD)) {
+    bool bRet = sTsfTextStore->Create(aFocusedWidget);
     NS_ENSURE_TRUE(bRet, NS_ERROR_FAILURE);
     NS_ENSURE_TRUE(sTsfTextStore->mDocumentMgr, NS_ERROR_FAILURE);
+    if (aIMEEnabled == IMEState::PASSWORD) {
+      MarkContextAsKeyboardDisabled(sTsfTextStore->mContext);
+      nsRefPtr<ITfContext> topContext;
+      sTsfTextStore->mDocumentMgr->GetTop(getter_AddRefs(topContext));
+      if (topContext && topContext != sTsfTextStore->mContext) {
+        MarkContextAsKeyboardDisabled(topContext);
+      }
+    }
     HRESULT hr = sTsfThreadMgr->SetFocus(sTsfTextStore->mDocumentMgr);
     NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
+    // Use AssociateFocus() for ensuring that any native focus event
+    // never steal focus from our documentMgr.
+    hr = sTsfThreadMgr->AssociateFocus(aFocusedWidget->GetWindowHandle(),
+                                       sTsfTextStore->mDocumentMgr,
+                                       getter_AddRefs(prevFocusedDocumentMgr));
+    NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
   } else {
-    sTsfTextStore->Destroy();
+    if (ThinksHavingFocus()) {
+      DebugOnly<HRESULT> hr = sTsfThreadMgr->AssociateFocus(
+                                sTsfTextStore->mWidget->GetWindowHandle(),
+                                NULL, getter_AddRefs(prevFocusedDocumentMgr));
+      NS_ASSERTION(SUCCEEDED(hr), "Disassociating focus failed");
+      NS_ASSERTION(prevFocusedDocumentMgr == sTsfTextStore->mDocumentMgr,
+                   "different documentMgr has been associated with the window");
+      sTsfTextStore->Destroy();
+    }
+    HRESULT hr = sTsfThreadMgr->SetFocus(sTsfDisabledDocumentMgr);
+    NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
   }
   return NS_OK;
 }
@@ -3103,37 +3147,85 @@ nsTextStore::GetIMEOpenState(void)
   return false;
 }
 
+// static
 void
-nsTextStore::SetInputContextInternal(IMEState::Enabled aState)
+nsTextStore::SetInputContext(nsWindowBase* aWidget,
+                             const InputContext& aContext,
+                             const InputContextAction& aAction)
 {
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
-         ("TSF: 0x%p nsTextStore::SetInputContextInternal(aState=%s), "
-          "mContext=0x%p",
-          this, GetIMEEnabledName(aState), mContext.get()));
+         ("TSF: nsTextStore::SetInputContext(aWidget=%p, "
+          "aContext.mIMEState.mEnabled=%s, aAction.mFocusChange=%s), "
+          "ThinksHavingFocus()=%s",
+          aWidget, GetIMEEnabledName(aContext.mIMEState.mEnabled),
+          GetFocusChangeName(aAction.mFocusChange),
+          GetBoolName(ThinksHavingFocus())));
 
-  VARIANT variant;
-  variant.vt = VT_I4;
-  variant.lVal = (aState != IMEState::ENABLED);
+  NS_ENSURE_TRUE_VOID(sTsfTextStore);
+  sTsfTextStore->SetInputScope(aContext.mHTMLInputType);
 
-  // Set two contexts, the base context (mContext) and the top
-  // if the top context is not the same as the base context
-  nsRefPtr<ITfContext> context = mContext;
+  if (aAction.mFocusChange != InputContextAction::FOCUS_NOT_CHANGED) {
+    return;
+  }
+
+  // If focus isn't actually changed but the enabled state is changed,
+  // emulate the focus move.
+  if (!ThinksHavingFocus() &&
+      aContext.mIMEState.mEnabled == IMEState::ENABLED) {
+    OnFocusChange(true, aWidget, aContext.mIMEState.mEnabled);
+  } else if (ThinksHavingFocus() &&
+             aContext.mIMEState.mEnabled != IMEState::ENABLED) {
+    OnFocusChange(false, aWidget, aContext.mIMEState.mEnabled);
+  }
+}
+
+// static
+void
+nsTextStore::MarkContextAsKeyboardDisabled(ITfContext* aContext)
+{
+  VARIANT variant_int4_value1;
+  variant_int4_value1.vt = VT_I4;
+  variant_int4_value1.lVal = 1;
+
   nsRefPtr<ITfCompartment> comp;
-  do {
-    if (GetCompartment(context, GUID_COMPARTMENT_KEYBOARD_DISABLED,
-                       getter_AddRefs(comp))) {
-      PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
-             ("TSF: 0x%p   nsTextStore::SetInputContextInternal(), setting "
-              "0x%04X to GUID_COMPARTMENT_KEYBOARD_DISABLED of context 0x%p...",
-              this, variant.lVal, context.get()));
-      comp->SetValue(sTsfClientId, &variant);
-    }
+  if (!GetCompartment(aContext,
+                      GUID_COMPARTMENT_KEYBOARD_DISABLED,
+                      getter_AddRefs(comp))) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+           ("TSF: nsTextStore::MarkContextAsKeyboardDisabled() failed"
+            "aContext=0x%p...", aContext));
+    return;
+  }
 
-    if (context != mContext)
-      break;
-    if (mDocumentMgr)
-      mDocumentMgr->GetTop(getter_AddRefs(context));
-  } while (context != mContext);
+  PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
+         ("TSF: nsTextStore::MarkContextAsKeyboardDisabled(), setting "
+          "to disable context 0x%p...",
+          aContext));
+  comp->SetValue(sTsfClientId, &variant_int4_value1);
+}
+
+// static
+void
+nsTextStore::MarkContextAsEmpty(ITfContext* aContext)
+{
+  VARIANT variant_int4_value1;
+  variant_int4_value1.vt = VT_I4;
+  variant_int4_value1.lVal = 1;
+
+  nsRefPtr<ITfCompartment> comp;
+  if (!GetCompartment(aContext,
+                      GUID_COMPARTMENT_EMPTYCONTEXT,
+                      getter_AddRefs(comp))) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+           ("TSF: nsTextStore::MarkContextAsEmpty() failed"
+            "aContext=0x%p...", aContext));
+    return;
+  }
+
+  PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
+         ("TSF: nsTextStore::MarkContextAsEmpty(), setting "
+          "to mark empty context 0x%p...", aContext));
+  comp->SetValue(sTsfClientId, &variant_int4_value1);
 }
 
 // static
@@ -3223,6 +3315,32 @@ nsTextStore::Initialize(void)
       NS_RELEASE(sDisplayAttrMgr);
     }
   }
+
+  if (sTsfThreadMgr && sTsfTextStore) {
+    HRESULT hr =
+      sTsfThreadMgr->CreateDocumentMgr(&sTsfDisabledDocumentMgr);
+    if (FAILED(hr) || !sTsfDisabledDocumentMgr) {
+      PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+        ("TSF:   nsTextStore::Initialize() FAILED to create "
+         "a document manager for disabled mode"));
+    }
+    if (sTsfDisabledDocumentMgr) {
+      DWORD editCookie = 0;
+      hr = sTsfDisabledDocumentMgr->CreateContext(sTsfClientId, 0, NULL,
+                                                  &sTsfDisabledContext,
+                                                  &editCookie);
+      if (FAILED(hr) || !sTsfDisabledContext) {
+        PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+          ("TSF:   nsTextStore::Initialize() FAILED to create "
+           "a context for disabled mode"));
+      }
+      if (sTsfDisabledContext) {
+        MarkContextAsKeyboardDisabled(sTsfDisabledContext);
+        MarkContextAsEmpty(sTsfDisabledContext);
+      }
+    }
+  }
+
   if (sTsfThreadMgr && !sFlushTIPInputMessage) {
     sFlushTIPInputMessage = ::RegisterWindowMessageW(
         NS_LITERAL_STRING("Flush TIP Input Message").get());
@@ -3236,9 +3354,9 @@ nsTextStore::Initialize(void)
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
     ("TSF:   nsTextStore::Initialize(), sTsfThreadMgr=0x%p, "
      "sTsfClientId=0x%08X, sTsfTextStore=0x%p, sDisplayAttrMgr=0x%p, "
-     "sCategoryMgr=0x%p",
-     sTsfThreadMgr, sTsfClientId, sTsfTextStore,
-     sDisplayAttrMgr, sCategoryMgr));
+     "sCategoryMgr=0x%p, sTsfDisabledDocumentMgr=0x%p, sTsfDisabledContext=%p",
+     sTsfThreadMgr, sTsfClientId, sTsfTextStore, sDisplayAttrMgr, sCategoryMgr,
+     sTsfDisabledDocumentMgr, sTsfDisabledContext));
 }
 
 // static
@@ -3250,6 +3368,8 @@ nsTextStore::Terminate(void)
   NS_IF_RELEASE(sDisplayAttrMgr);
   NS_IF_RELEASE(sCategoryMgr);
   NS_IF_RELEASE(sTsfTextStore);
+  NS_IF_RELEASE(sTsfDisabledDocumentMgr);
+  NS_IF_RELEASE(sTsfDisabledContext);
   sTsfClientId = 0;
   if (sTsfThreadMgr) {
     sTsfThreadMgr->Deactivate();

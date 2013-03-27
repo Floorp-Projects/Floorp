@@ -717,9 +717,9 @@ meter {
   background: -moz-linear-gradient(top, #f77, #f77, #fcc 20%, #d44 45%, #d44 55%);
 }
 
-input[type="range"] {
+input[type=range] {
   -moz-appearance: none;
-  display: inline-block !important;
+  display: inline-block;
   width: 12em;
   height: 1.3em;
   margin: 0 0.7em;
@@ -732,6 +732,11 @@ input[type="range"] {
   -moz-user-select: none ! important;
 }
 
+input[type=range][orient=vertical] {
+  width: 1.3em;
+  height: 12em;
+}
+
 /**
  * Layout handles positioning of this pseudo-element specially (so that content
  * authors can concentrate on styling the thumb without worrying about the
@@ -741,7 +746,7 @@ input[type="range"] {
  * If content authors want to have a vertical range, they will also need to
  * set the width/height of this pseudo-element.
  */
-::-moz-range-track {
+input[type=range]::-moz-range-track {
   /* Prevent styling that would change the type of frame we construct. */
   display: inline-block !important;
   float: none !important;
@@ -756,13 +761,22 @@ input[type="range"] {
   -moz-user-select: none ! important;
 }
 
+input[type=range][orient=vertical]::-moz-range-track {
+  border-top: none;
+  border-bottom: none;
+  border-left: solid 0.1em lightgrey;
+  border-right: solid 0.1em lightgrey;
+  width: 0.2em;
+  height: 100%;
+}
+
 /**
  * Layout handles positioning of this pseudo-element specially (so that content
  * authors can concentrate on styling the thumb without worrying about the
  * logic to position it). Specifically the 'margin', 'top' and 'left'
  * properties are ignored.
  */
-::-moz-range-thumb {
+input[type=range]::-moz-range-thumb {
   /* Prevent styling that would change the type of frame we construct. */
   display: inline-block !important;
   float: none !important;

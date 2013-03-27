@@ -19,7 +19,7 @@ let localStore = {
     delete this.toolbar;
     let toolbar = this.RDF.GetResource(BROWSER_URL + "#PersonalToolbar");
     // Add the entry to the persisted set for this document if it's not there.
-    // See nsXULDocument::Persist.
+    // See XULDocument::Persist.
     let doc = this.RDF.GetResource(BROWSER_URL);
     let persist = this.RDF.GetResource("http://home.netscape.com/NC-rdf#persist");
     if (!this.store.HasAssertion(doc, persist, toolbar, true)) {
