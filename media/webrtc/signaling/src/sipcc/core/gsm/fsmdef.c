@@ -2324,7 +2324,7 @@ fsmdef_error_onhook_timeout (void *data)
                  dcb->call_id, dcb->line, fname, "timeout");
 
     cc_int_onhook(CC_SRC_GSM, CC_SRC_GSM, CC_NO_CALL_ID, CC_REASON_NONE,
-                  dcb->call_id, dcb->line, FALSE, FALSE);
+                  dcb->call_id, dcb->line, FALSE, FALSE, __FILE__, __LINE__);
 }
 
 /**
@@ -8574,7 +8574,8 @@ fsmdef_notify_hook_event (fsm_fcb_t *fcb, cc_msgs_t msg, char *global_call_id,
                        global_call_id, monitor_mode,cfwdall_mode);
     } else if (msg == CC_MSG_ONHOOK) {
         cc_int_onhook(CC_SRC_GSM, CC_SRC_SIP, prim_call_id,
-                      consult_reason, fcb->dcb->call_id, fcb->dcb->line, FALSE, FALSE);
+                      consult_reason, fcb->dcb->call_id, fcb->dcb->line, FALSE,
+                      FALSE, __FILE__, __LINE__);
     }
     return;
 }
