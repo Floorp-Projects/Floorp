@@ -123,10 +123,8 @@ function test() {
   testRight(editor.firstChild, 10);
   testRight(editor.firstChild.nextSibling.nextSibling, 5);
   testLeft(editor.firstChild.nextSibling.firstChild, 1);
-  testLeft(editor.firstChild, 10);
   testLeft(editor.firstChild, 8);
   testLeft(editor.firstChild, 5);
-  testLeft(editor.firstChild, 3);
   testLeft(editor.firstChild, 0);
 
   var ChineseChars = "&#x6F22;&#x5B57;";
@@ -239,10 +237,8 @@ function test() {
   testRight(editor.firstChild.nextSibling.firstChild, 0);
   testRight(editor.firstChild.nextSibling.nextSibling, 5);
   testLeft(editor.firstChild.nextSibling.firstChild, 1);
-  testLeft(editor.firstChild, 10);
   testLeft(editor.firstChild, 8);
   testLeft(editor.firstChild, 5);
-  testLeft(editor.firstChild, 3);
   testLeft(editor.firstChild, 0);
 
   editor.innerHTML = ChineseChars + HiraganaChars + ChineseChars;
