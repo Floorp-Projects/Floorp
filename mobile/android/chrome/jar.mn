@@ -46,6 +46,8 @@ chrome.jar:
   content/PluginHelper.js              (content/PluginHelper.js)
   content/OfflineApps.js               (content/OfflineApps.js)
   content/MasterPassword.js            (content/MasterPassword.js)
+  content/FindHelper.js                (content/FindHelper.js)
+  content/PermissionsHelper.js         (content/PermissionsHelper.js)
 
 % content branding %content/branding/
 
