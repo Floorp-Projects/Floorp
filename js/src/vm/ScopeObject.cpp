@@ -1476,8 +1476,7 @@ DebugScopeObject::create(JSContext *cx, ScopeObject &scope, HandleObject enclosi
 {
     JS_ASSERT(scope.compartment() == cx->compartment);
     JSObject *obj = NewProxyObject(cx, &DebugScopeProxy::singleton, ObjectValue(scope),
-                                   NULL /* proto */, &scope.global(),
-                                   NULL /* call */, NULL /* construct */);
+                                   NULL /* proto */, &scope.global(), ProxyNotCallable);
     if (!obj)
         return NULL;
 
