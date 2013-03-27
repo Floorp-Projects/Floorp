@@ -199,6 +199,8 @@ browser.jar:
   skin/classic/browser/tabview/tabview.png                  (tabview/tabview.png)
   skin/classic/browser/tabview/tabview.css                  (tabview/tabview.css)
 * skin/classic/browser/devtools/common.css                  (devtools/common.css)
+  skin/classic/browser/devtools/dark-theme.css              (devtools/dark-theme.css)
+  skin/classic/browser/devtools/light-theme.css             (devtools/light-theme.css)
   skin/classic/browser/devtools/widgets.css                 (devtools/widgets.css)
   skin/classic/browser/devtools/arrows.png                  (devtools/arrows.png)
   skin/classic/browser/devtools/commandline.png             (devtools/commandline.png)
@@ -208,8 +210,8 @@ browser.jar:
   skin/classic/browser/devtools/command-tilt.png            (devtools/command-tilt.png)
   skin/classic/browser/devtools/alerticon-warning.png       (devtools/alerticon-warning.png)
   skin/classic/browser/devtools/goto-mdn.png                (devtools/goto-mdn.png)
-  skin/classic/browser/devtools/csshtmltree.css             (devtools/csshtmltree.css)
-  skin/classic/browser/devtools/commandline.css                    (devtools/commandline.css)
+  skin/classic/browser/devtools/ruleview.css                (devtools/ruleview.css)
+  skin/classic/browser/devtools/commandline.css             (devtools/commandline.css)
   skin/classic/browser/devtools/markup-view.css             (devtools/markup-view.css)
   skin/classic/browser/devtools/orion.css                   (devtools/orion.css)
   skin/classic/browser/devtools/orion-container.css         (devtools/orion-container.css)
@@ -272,6 +274,7 @@ browser.jar:
   skin/classic/browser/devtools/dock-bottom.png             (devtools/dock-bottom.png)
   skin/classic/browser/devtools/dock-side.png               (devtools/dock-side.png)
   skin/classic/browser/devtools/floating-scrollbars.css     (devtools/floating-scrollbars.css)
+  skin/classic/browser/devtools/floating-scrollbars-light.css (devtools/floating-scrollbars-light.css)
 * skin/classic/browser/devtools/inspector.css               (devtools/inspector.css)
   skin/classic/browser/devtools/toolbox.css                 (devtools/toolbox.css)
   skin/classic/browser/devtools/tool-webconsole.png         (devtools/tool-webconsole.png)
@@ -282,6 +285,8 @@ browser.jar:
   skin/classic/browser/devtools/close.png                   (devtools/close.png)
   skin/classic/browser/devtools/undock.png                  (devtools/undock.png)
   skin/classic/browser/devtools/font-inspector.css          (devtools/font-inspector.css)
+  skin/classic/browser/devtools/computedview.css            (devtools/computedview.css)
+  skin/classic/browser/devtools/arrow-e.png                 (devtools/arrow-e.png)
 #ifdef MOZ_SERVICES_SYNC
   skin/classic/browser/sync-throbber.png
   skin/classic/browser/sync-16.png

@@ -863,21 +863,21 @@ TextProperty.prototype = {
  *        The CSS rule view can use this object to store metadata
  *        that might outlast the rule view, particularly the current
  *        set of disabled properties.
+ * @param {<iframe>} aOuterIFrame
+ *        The iframe containing the ruleview.
  * @constructor
  */
 this.CssRuleView = function CssRuleView(aDoc, aStore)
 {
   this.doc = aDoc;
   this.store = aStore;
-  this.element = this.doc.createElementNS(XUL_NS, "vbox");
-  this.element.setAttribute("tabindex", "0");
+  this.element = this.doc.createElementNS(HTML_NS, "div");
   this.element.className = "ruleview devtools-monospace";
   this.element.flex = 1;
 
   this._boundCopy = this._onCopy.bind(this);
   this.element.addEventListener("copy", this._boundCopy);
 
-  this._createContextMenu();
   this._showEmpty();
 }
 
@@ -897,24 +897,7 @@ CssRuleView.prototype = {
     this.clear();
 
     this.element.removeEventListener("copy", this._boundCopy);
-    this._copyItem.removeEventListener("command", this._boundCopy);
     delete this._boundCopy;
-
-    this._ruleItem.removeEventListener("command", this._boundCopyRule);
-    delete this._boundCopyRule;
-
-    this._declarationItem.removeEventListener("command", this._boundCopyDeclaration);
-    delete this._boundCopyDeclaration;
-
-    this._propertyItem.removeEventListener("command", this._boundCopyProperty);
-    delete this._boundCopyProperty;
-
-    this._propertyValueItem.removeEventListener("command", this._boundCopyPropertyValue);
-    delete this._boundCopyPropertyValue;
-
-    this._contextMenu.removeEventListener("popupshowing", this._boundMenuUpdate);
-    delete this._boundMenuUpdate;
-    delete this._contextMenu;
 
     if (this.element.parentNode) {
       this.element.parentNode.removeChild(this.element);
@@ -1036,7 +1019,7 @@ CssRuleView.prototype = {
       let inheritedSource = rule.inheritedSource;
       if (inheritedSource != lastInheritedSource) {
         let h2 = this.doc.createElementNS(HTML_NS, "div");
-        h2.className = "ruleview-rule-inheritance";
+        h2.className = "ruleview-rule-inheritance theme-gutter";
         h2.textContent = inheritedSource;
         lastInheritedSource = inheritedSource;
         this.element.appendChild(h2);
@@ -1051,104 +1034,6 @@ CssRuleView.prototype = {
   },
 
   /**
-   * Add a context menu to the rule view.
-   */
-  _createContextMenu: function CssRuleView_createContextMenu()
-  {
-    let popupSet = this.doc.createElement("popupset");
-    this.doc.documentElement.appendChild(popupSet);
-
-    let menu = this.doc.createElement("menupopup");
-    menu.id = "rule-view-context-menu";
-
-    this._boundMenuUpdate = this._onMenuUpdate.bind(this);
-    menu.addEventListener("popupshowing", this._boundMenuUpdate);
-
-    // Copy selection
-    this._copyItem = createMenuItem(menu, {
-      label: "rule.contextmenu.copyselection",
-      accesskey: "rule.contextmenu.copyselection.accesskey",
-      command: this._boundCopy
-    });
-
-    // Copy rule
-    this._boundCopyRule = this._onCopyRule.bind(this);
-    this._ruleItem = createMenuItem(menu, {
-      label: "rule.contextmenu.copyrule",
-      accesskey: "rule.contextmenu.copyrule.accesskey",
-      command: this._boundCopyRule
-    });
-
-    // Copy declaration
-    this._boundCopyDeclaration = this._onCopyDeclaration.bind(this);
-    this._declarationItem = createMenuItem(menu, {
-      label: "rule.contextmenu.copydeclaration",
-      accesskey: "rule.contextmenu.copydeclaration.accesskey",
-      command: this._boundCopyDeclaration
-    });
-
-    this._boundCopyProperty = this._onCopyProperty.bind(this);
-    this._propertyItem = createMenuItem(menu, {
-      label: "rule.contextmenu.copyproperty",
-      accesskey: "rule.contextmenu.copyproperty.accesskey",
-      command: this._boundCopyProperty
-    });
-
-    this._boundCopyPropertyValue = this._onCopyPropertyValue.bind(this);
-    this._propertyValueItem = createMenuItem(menu,{
-      label: "rule.contextmenu.copypropertyvalue",
-      accesskey: "rule.contextmenu.copypropertyvalue.accesskey",
-      command: this._boundCopyPropertyValue
-    });
-
-    popupSet.appendChild(menu);
-    this.element.setAttribute("context", menu.id);
-
-    this._contextMenu = menu;
-  },
-
-  /**
-   * Update the rule view's context menu by disabling irrelevant menuitems and
-   * enabling relevant ones.
-   *
-   * @param {Event} aEvent
-   *        The event object.
-   */
-  _onMenuUpdate: function CssRuleView_onMenuUpdate(aEvent)
-  {
-    let node = this.doc.popupNode;
-
-    // Copy selection.
-    let editorSelection = node.className == "styleinspector-propertyeditor" &&
-                          node.selectionEnd - node.selectionStart != 0;
-    let disable = this.doc.defaultView.getSelection().isCollapsed &&
-                  !editorSelection;
-    this._copyItem.disabled = disable;
-
-    // Copy property, copy property name & copy property value.
-    if (!node) {
-      return;
-    }
-
-    if (!node.classList.contains("ruleview-property") &&
-        !node.classList.contains("ruleview-computed")) {
-      while (node = node.parentElement) {
-        if (node.classList.contains("ruleview-property") ||
-          node.classList.contains("ruleview-computed")) {
-          break;
-        }
-      }
-    }
-    let disablePropertyItems = !node || (node &&
-      !node.classList.contains("ruleview-property") &&
-      !node.classList.contains("ruleview-computed"));
-
-    this._declarationItem.disabled = disablePropertyItems;
-    this._propertyItem.disabled = disablePropertyItems;
-    this._propertyValueItem.disabled = disablePropertyItems;
-  },
-
-  /**
    * Copy selected text from the rule view.
    *
    * @param {Event} aEvent
@@ -1156,7 +1041,8 @@ CssRuleView.prototype = {
    */
   _onCopy: function CssRuleView_onCopy(aEvent)
   {
-    let target = this.doc.popupNode || aEvent.target;
+    let target = aEvent.target;
+
     let text;
 
     if (target.nodeName == "input") {
@@ -1179,149 +1065,9 @@ CssRuleView.prototype = {
 
     clipboardHelper.copyString(text, this.doc);
 
-    if (aEvent) {
-      aEvent.preventDefault();
-    }
+    aEvent.preventDefault();
   },
 
-  /**
-   * Copy a rule from the rule view.
-   *
-   * @param {Event} aEvent
-   *        The event object.
-   */
-  _onCopyRule: function CssRuleView_onCopyRule(aEvent)
-  {
-    let terminator;
-    let node = this.doc.popupNode;
-    if (!node) {
-      return;
-    }
-
-    if (node.className != "ruleview-rule") {
-      while (node = node.parentElement) {
-        if (node.className == "ruleview-rule") {
-          break;
-        }
-      }
-    }
-    node = node.cloneNode();
-
-    let computedLists = node.querySelectorAll(".ruleview-computedlist");
-    for (let computedList of computedLists) {
-      computedList.parentNode.removeChild(computedList);
-    }
-
-    let autosizers = node.querySelectorAll(".autosizer");
-    for (let autosizer of autosizers) {
-      autosizer.parentNode.removeChild(autosizer);
-    }
-    let selector = node.querySelector(".ruleview-selector").textContent;
-    let propertyNames = node.querySelectorAll(".ruleview-propertyname");
-    let propertyValues = node.querySelectorAll(".ruleview-propertyvalue");
-
-    // Format the rule
-    if (osString == "WINNT") {
-      terminator = "\r\n";
-    } else {
-      terminator = "\n";
-    }
-
-    let out = selector + " {" + terminator;
-    for (let i = 0; i < propertyNames.length; i++) {
-      let name = propertyNames[i].textContent;
-      let value = propertyValues[i].textContent;
-      out += "    " + name + ": " + value + ";" + terminator;
-    }
-    out += "}" + terminator;
-
-    clipboardHelper.copyString(out, this.doc);
-  },
-
-  /**
-   * Copy a declaration from the rule view.
-   *
-   * @param {Event} aEvent
-   *        The event object.
-   */
-  _onCopyDeclaration: function CssRuleView_onCopyDeclaration(aEvent)
-  {
-    let node = this.doc.popupNode;
-    if (!node) {
-      return;
-    }
-
-    if (!node.classList.contains("ruleview-property") &&
-        !node.classList.contains("ruleview-computed")) {
-      while (node = node.parentElement) {
-        if (node.classList.contains("ruleview-property") ||
-            node.classList.contains("ruleview-computed")) {
-          break;
-        }
-      }
-    }
-
-    // We need to strip expanded properties from the node because we use
-    // node.textContent below, which also gets text from hidden nodes. The
-    // simplest way to do this is to clone the node and remove them from the
-    // clone.
-    node = node.cloneNode();
-    let computedLists = node.querySelectorAll(".ruleview-computedlist");
-    for (let computedList of computedLists) {
-      computedList.parentNode.removeChild(computedList);
-    }
-
-    let propertyName = node.querySelector(".ruleview-propertyname").textContent;
-    let propertyValue = node.querySelector(".ruleview-propertyvalue").textContent;
-    let out = propertyName + ": " + propertyValue + ";";
-
-    clipboardHelper.copyString(out, this.doc);
-  },
-
-  /**
-   * Copy a property name from the rule view.
-   *
-   * @param {Event} aEvent
-   *        The event object.
-   */
-  _onCopyProperty: function CssRuleView_onCopyProperty(aEvent)
-  {
-    let node = this.doc.popupNode;
-
-    if (!node) {
-      return;
-    }
-
-    if (!node.classList.contains("ruleview-propertyname")) {
-      node = node.parentNode.parentNode.querySelector(".ruleview-propertyname");
-    }
-
-    if (node) {
-      clipboardHelper.copyString(node.textContent, this.doc);
-    }
-  },
-
- /**
-   * Copy a property value from the rule view.
-   *
-   * @param {Event} aEvent
-   *        The event object.
-   */
-  _onCopyPropertyValue: function CssRuleView_onCopyPropertyValue(aEvent)
-  {
-    let node = this.doc.popupNode;
-    if (!node) {
-      return;
-    }
-
-    if (!node.classList.contains("ruleview-propertyvalue")) {
-      node = node.parentNode.parentNode.querySelector(".ruleview-propertyvalue");
-    }
-
-    if (node) {
-      clipboardHelper.copyString(node.textContent, this.doc);
-    }
-  }
 };
 
 /**
@@ -1350,7 +1096,7 @@ RuleEditor.prototype = {
   _create: function RuleEditor_create()
   {
     this.element = this.doc.createElementNS(HTML_NS, "div");
-    this.element.className = "ruleview-rule";
+    this.element.className = "ruleview-rule theme-separator";
     this.element._ruleEditor = this;
 
     // Give a relative position for the inplace editor's measurement
@@ -1359,7 +1105,7 @@ RuleEditor.prototype = {
 
     // Add the source link.
     let source = createChild(this.element, "div", {
-      class: "ruleview-rule-source",
+      class: "ruleview-rule-source theme-link",
       textContent: this.rule.title
     });
     source.addEventListener("click", function() {
@@ -1378,7 +1124,7 @@ RuleEditor.prototype = {
     let header = createChild(code, "div", {});
 
     this.selectorText = createChild(header, "span", {
-      class: "ruleview-selector"
+      class: "ruleview-selector theme-fg-color3"
     });
 
     this.openBrace = createChild(header, "span", {
@@ -1599,16 +1345,15 @@ TextPropertyEditor.prototype = {
     this.element.classList.add("ruleview-property");
 
     // The enable checkbox will disable or enable the rule.
-    this.enable = createChild(this.element, "input", {
-      class: "ruleview-enableproperty",
-      type: "checkbox",
+    this.enable = createChild(this.element, "div", {
+      class: "ruleview-enableproperty theme-checkbox",
       tabindex: "-1"
     });
     this.enable.addEventListener("click", this._onEnableClicked, true);
 
     // Click to expand the computed properties of the text property.
     this.expander = createChild(this.element, "span", {
-      class: "ruleview-expander"
+      class: "ruleview-expander theme-twisty"
     });
     this.expander.addEventListener("click", this._onExpandClicked, true);
 
@@ -1626,7 +1371,7 @@ TextPropertyEditor.prototype = {
     // Property name, editable when focused.  Property name
     // is committed when the editor is unfocused.
     this.nameSpan = createChild(this.nameContainer, "span", {
-      class: "ruleview-propertyname",
+      class: "ruleview-propertyname theme-fg-color5",
       tabindex: "0",
     });
 
@@ -1657,7 +1402,7 @@ TextPropertyEditor.prototype = {
     // property value are applied as they are typed, and reverted
     // if the user presses escape.
     this.valueSpan = createChild(propertyContainer, "span", {
-      class: "ruleview-propertyvalue",
+      class: "ruleview-propertyvalue theme-fg-color1",
       tabindex: "0",
     });
 
@@ -1768,13 +1513,13 @@ TextPropertyEditor.prototype = {
       }
 
       createChild(li, "span", {
-        class: "ruleview-propertyname",
+        class: "ruleview-propertyname theme-fg-color5",
         textContent: computed.name
       });
       appendText(li, ": ");
 
       createChild(li, "span", {
-        class: "ruleview-propertyvalue",
+        class: "ruleview-propertyvalue theme-fg-color1",
         textContent: computed.value
       });
       appendText(li, ";");
@@ -1793,7 +1538,13 @@ TextPropertyEditor.prototype = {
    */
   _onEnableClicked: function TextPropertyEditor_onEnableClicked(aEvent)
   {
-    this.prop.setEnabled(this.enable.checked);
+    let checked = this.enable.hasAttribute("checked");
+    if (checked) {
+      this.enable.removeAttribute("checked");
+    } else {
+      this.enable.setAttribute("checked", "");
+    }
+    this.prop.setEnabled(!checked);
     aEvent.stopPropagation();
   },
 
@@ -1802,8 +1553,12 @@ TextPropertyEditor.prototype = {
    */
   _onExpandClicked: function TextPropertyEditor_onExpandClicked(aEvent)
   {
-    this.expander.classList.toggle("styleinspector-open");
     this.computed.classList.toggle("styleinspector-open");
+    if (this.computed.classList.contains("styleinspector-open")) {
+      this.expander.setAttribute("open", "true");
+    } else {
+      this.expander.removeAttribute("open");
+    }
     aEvent.stopPropagation();
   },
 
@@ -2044,10 +1799,6 @@ XPCOMUtils.defineLazyGetter(this, "clipboardHelper", function() {
 XPCOMUtils.defineLazyGetter(this, "_strings", function() {
   return Services.strings.createBundle(
     "chrome://browser/locale/devtools/styleinspector.properties");
-});
-
-XPCOMUtils.defineLazyGetter(this, "osString", function() {
-  return Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
 });
 
 XPCOMUtils.defineLazyGetter(this, "domUtils", function() {
