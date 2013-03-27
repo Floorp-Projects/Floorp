@@ -203,6 +203,10 @@ pref("media.navigator.enabled", true);
 #endif
 #endif
 
+#ifdef MOZ_WEBSPEECH
+pref("media.webspeech.recognition.enable", false);
+#endif
+
 // Whether to enable Web Audio support
 pref("media.webaudio.enabled", false);
 

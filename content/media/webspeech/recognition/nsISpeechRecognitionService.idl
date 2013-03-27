@@ -1,0 +1,25 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{C++
+#include "mozilla/WeakPtr.h"
+%}
+
+native SpeechRecognitionWeakPtr(mozilla::WeakPtr<mozilla::dom::SpeechRecognition>);
+[ptr] native AudioSegmentPtr(mozilla::AudioSegment);
+
+[uuid(cb98d929-81cd-4a51-a214-80d3e6281d24)]
+interface nsISpeechRecognitionService : nsISupports {
+    void initialize(in SpeechRecognitionWeakPtr aSpeechRecognition);
+    void processAudioSegment(in AudioSegmentPtr aAudioSegment);
+    void soundEnd();
+    void abort();
+};
+
+%{C++
+#define NS_SPEECH_RECOGNITION_SERVICE_CONTRACTID_PREFIX "@mozilla.org/webspeech/service;1?name="
+%}
