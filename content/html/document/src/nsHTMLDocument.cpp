@@ -2359,6 +2359,38 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
   return node.forget();
 }
 
+JSObject*
+nsHTMLDocument::NamedGetter(JSContext* cx, const nsAString& aName, bool& aFound,
+                            ErrorResult& rv)
+{
+  nsWrapperCache* cache;
+  nsISupports* supp = ResolveName(aName, &cache);
+  if (!supp) {
+    aFound = false;
+    return nullptr;
+  }
+
+  JS::Value val;
+  { // Scope for auto-compartment
+    JSObject* wrapper = GetWrapper();
+    JSAutoCompartment ac(cx, wrapper);
+    // XXXbz Should we call the (slightly misnamed, really) WrapNativeParent
+    // here?
+    if (!dom::WrapObject(cx, wrapper, supp, cache, nullptr, &val)) {
+      rv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return nullptr;
+    }
+  }
+  aFound = true;
+  return &val.toObject();
+}
+
+void
+nsHTMLDocument::GetSupportedNames(nsTArray<nsString>& aNames)
+{
+  // Nothing, for now.  We should fix that.
+}
+
 //----------------------------
 
 // forms related stuff
