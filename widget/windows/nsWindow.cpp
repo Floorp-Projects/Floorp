@@ -7386,7 +7386,7 @@ nsWindow::SetInputContext(const InputContext& aContext,
                           const InputContextAction& aAction)
 {
   InputContext newInputContext = aContext;
-  IMEHandler::SetInputContext(this, newInputContext);
+  IMEHandler::SetInputContext(this, newInputContext, aAction);
   mInputContext = newInputContext;
 }
 
