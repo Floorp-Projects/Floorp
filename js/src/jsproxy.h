@@ -191,6 +191,9 @@ public:
 
     /* Spidermonkey extensions. */
     virtual bool isExtensible(JSObject *proxy) MOZ_OVERRIDE;
+    virtual bool call(JSContext *cx, HandleObject proxy, unsigned argc, Value *vp) MOZ_OVERRIDE;
+    virtual bool construct(JSContext *cx, HandleObject proxy, unsigned argc,
+                           Value *argv, MutableHandleValue rval) MOZ_OVERRIDE;
     virtual bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
                             CallArgs args) MOZ_OVERRIDE;
     virtual bool hasInstance(JSContext *cx, HandleObject proxy, MutableHandleValue v,
@@ -317,13 +320,6 @@ GetProxyTargetObject(RawObject obj)
 }
 
 inline const Value &
-GetProxyCall(RawObject obj)
-{
-    JS_ASSERT(IsFunctionProxy(obj));
-    return GetReservedSlot(obj, JSSLOT_PROXY_CALL);
-}
-
-inline const Value &
 GetProxyExtra(RawObject obj, size_t n)
 {
     JS_ASSERT(IsProxy(obj));
@@ -353,10 +349,6 @@ enum ProxyCallable {
 JS_FRIEND_API(JSObject *)
 NewProxyObject(JSContext *cx, BaseProxyHandler *handler, const Value &priv,
                JSObject *proto, JSObject *parent, ProxyCallable callable = ProxyNotCallable);
-
-JS_FRIEND_API(JSObject *)
-NewProxyObject(JSContext *cx, BaseProxyHandler *handler, const Value &priv,
-               JSObject *proto, JSObject *parent, JSObject *call, JSObject *construct);
 
 JSObject *
 RenewProxyObject(JSContext *cx, JSObject *obj, BaseProxyHandler *handler, Value priv);
