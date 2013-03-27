@@ -207,7 +207,7 @@
 #include "prenv.h"
 
 #include "mozilla/dom/indexedDB/IDBFactory.h"
-#include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
+#include "mozilla/dom/quota/QuotaManager.h"
 
 #include "mozilla/dom/StructuredCloneTags.h"
 
@@ -1390,11 +1390,10 @@ nsGlobalWindow::FreeInnerObjects()
   AutoPushJSContext cx(scx ? scx->GetNativeContext() : nullptr);
   mozilla::dom::workers::CancelWorkersForWindow(cx, this);
 
-  // Close all IndexedDB databases for this window.
-  indexedDB::IndexedDatabaseManager* idbManager =
-    indexedDB::IndexedDatabaseManager::Get();
-  if (idbManager) {
-    idbManager->AbortCloseDatabasesForWindow(this);
+  // Close all offline storages for this window.
+  quota::QuotaManager* quotaManager = quota::QuotaManager::Get();
+  if (quotaManager) {
+    quotaManager->AbortCloseStoragesForWindow(this);
   }
 
   ClearAllTimeouts();

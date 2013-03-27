@@ -12,9 +12,12 @@
 #include "nsIDocument.h"
 #include "nsIFileStorage.h"
 #include "nsIIDBDatabase.h"
+#include "nsIOfflineStorage.h"
+
 #include "nsDOMEventTargetHelper.h"
-#include "mozilla/dom/indexedDB/IDBWrapperCache.h"
+
 #include "mozilla/dom/indexedDB/FileManager.h"
+#include "mozilla/dom/indexedDB/IDBWrapperCache.h"
 
 class nsIScriptContext;
 class nsPIDOMWindow;
@@ -22,6 +25,9 @@ class nsPIDOMWindow;
 namespace mozilla {
 namespace dom {
 class ContentParent;
+namespace quota {
+class Client;
+}
 }
 }
 
@@ -40,7 +46,7 @@ struct ObjectStoreInfoGuts;
 
 class IDBDatabase : public IDBWrapperCache,
                     public nsIIDBDatabase,
-                    public nsIFileStorage
+                    public nsIOfflineStorage
 {
   friend class AsyncConnectionHelper;
   friend class IndexedDatabaseManager;
@@ -50,6 +56,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIIDBDATABASE
   NS_DECL_NSIFILESTORAGE
+  NS_DECL_NSIOFFLINESTORAGE_NOCLOSE
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBDatabase, IDBWrapperCache)
 
@@ -61,13 +68,18 @@ public:
          FileManager* aFileManager,
          mozilla::dom::ContentParent* aContentParent);
 
+  static IDBDatabase*
+  FromStorage(nsIOfflineStorage* aStorage);
+
+  static IDBDatabase*
+  FromStorage(nsIFileStorage* aStorage)
+  {
+    nsCOMPtr<nsIOfflineStorage> storage = do_QueryInterface(aStorage);
+    return storage ? FromStorage(storage) : nullptr;
+  }
+
   // nsIDOMEventTarget
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
-
-  nsIAtom* Id() const
-  {
-    return mDatabaseId;
-  }
 
   DatabaseInfo* Info() const
   {
@@ -95,27 +107,9 @@ public:
     return doc.forget();
   }
 
-  const nsCString& Origin() const
-  {
-    return mASCIIOrigin;
-  }
-
-  void Invalidate();
-
-  // Whether or not the database has been invalidated. If it has then no further
-  // transactions for this database will be allowed to run. This function may be
-  // called on any thread.
-  bool IsInvalidated() const
-  {
-    return mInvalidated;
-  }
-
   void DisconnectFromActorParent();
 
   void CloseInternal(bool aIsDead);
-
-  // Whether or not the database has had Close called on it.
-  bool IsClosed() const;
 
   void EnterSetVersionTransaction();
   void ExitSetVersionTransaction();
@@ -194,6 +188,8 @@ private:
   IndexedDBDatabaseParent* mActorParent;
 
   mozilla::dom::ContentParent* mContentParent;
+
+  nsRefPtr<mozilla::dom::quota::Client> mQuotaClient;
 
   bool mInvalidated;
   bool mRegistered;

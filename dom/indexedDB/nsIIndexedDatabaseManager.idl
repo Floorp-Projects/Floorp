@@ -6,63 +6,9 @@
 
 #include "nsISupports.idl"
 
-interface nsIURI;
-
-[scriptable, function, uuid(38f15cc7-2df0-4a90-8b7f-1606b2243522)]
-interface nsIIndexedDatabaseUsageCallback : nsISupports
-{
-  void onUsageResult(in nsIURI aURI,
-                     in unsigned long long aUsage,
-                     in unsigned long long aFileUsage,
-                     in unsigned long aAppId,
-                     in boolean aInMozBrowserOnly);
-};
-
-[scriptable, builtinclass, uuid(e5168115-baff-4559-887e-7c0405cc9e63)]
+[scriptable, builtinclass, uuid(538d1085-517e-405a-a0f0-eb575cb0b8e5)]
 interface nsIIndexedDatabaseManager : nsISupports
 {
-  /**
-   * Schedules an asynchronous callback that will return the total amount of
-   * disk space being used by databases for the given origin.
-   *
-   * @param aURI
-   *        The URI whose usage is being queried.
-   * @param aCallback
-   *        The callback that will be called when the usage is available.
-   */
-  [optional_argc]
-  void getUsageForURI(in nsIURI aURI,
-                      in nsIIndexedDatabaseUsageCallback aCallback,
-                      [optional] in unsigned long aAppId,
-                      [optional] in boolean aInMozBrowserOnly);
-
-  /**
-   * Cancels an asynchronous usage check initiated by a previous call to
-   * getUsageForURI().
-   *
-   * @param aURI
-   *        The URI whose usage is being queried.
-   * @param aCallback
-   *        The callback that will be called when the usage is available.
-   */
-  [optional_argc]
-  void cancelGetUsageForURI(in nsIURI aURI,
-                            in nsIIndexedDatabaseUsageCallback aCallback,
-                            [optional] in unsigned long aAppId,
-                            [optional] in boolean aInMozBrowserOnly);
-
-  /**
-   * Removes all databases stored for the given URI. The files may not be
-   * deleted immediately depending on prohibitive concurrent operations.
-   *
-   * @param aURI
-   *        The URI whose databases are to be cleared.
-   */
-  [optional_argc]
-  void clearDatabasesForURI(in nsIURI aURI,
-                            [optional] in unsigned long aAppId,
-                            [optional] in boolean aInMozBrowserOnly);
-
   /**
    * Defines indexedDB and IDBKeyrange with its static functions on 
    * aObject and initializes DOM exception providers if needed.

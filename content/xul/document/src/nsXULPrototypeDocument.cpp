@@ -5,7 +5,7 @@
 
 
 #include "nsXULPrototypeDocument.h"
-#include "nsXULDocument.h"
+#include "XULDocument.h"
 
 #include "nsAString.h"
 #include "nsIObjectInputStream.h"
@@ -34,6 +34,7 @@
 
 using mozilla::dom::DestroyProtoAndIfaceCache;
 using mozilla::AutoPushJSContext;
+using mozilla::dom::XULDocument;
 
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
                      NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
@@ -637,7 +638,7 @@ nsXULPrototypeDocument::GetNodeInfoManager()
 
 
 nsresult
-nsXULPrototypeDocument::AwaitLoadDone(nsXULDocument* aDocument, bool* aResult)
+nsXULPrototypeDocument::AwaitLoadDone(XULDocument* aDocument, bool* aResult)
 {
     nsresult rv = NS_OK;
 

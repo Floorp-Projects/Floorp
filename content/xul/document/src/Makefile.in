@@ -20,7 +20,7 @@ ifdef MOZ_XUL
 CPPSRCS		+= \
 		nsXULCommandDispatcher.cpp \
 		nsXULContentSink.cpp \
-		nsXULDocument.cpp \
+		XULDocument.cpp \
 		nsXULPrototypeCache.cpp \
 		nsXULPrototypeDocument.cpp \
 		$(NULL)

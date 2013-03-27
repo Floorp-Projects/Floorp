@@ -1398,7 +1398,7 @@ BrowserGlue.prototype = {
       }
 
       // Add the entry to the persisted set for this document if it's not there.
-      // This code is mostly borrowed from nsXULDocument::Persist.
+      // This code is mostly borrowed from XULDocument::Persist.
       let docURL = aSource.ValueUTF8.split("#")[0];
       let docResource = this._rdf.GetResource(docURL);
       let persistResource = this._rdf.GetResource("http://home.netscape.com/NC-rdf#persist");

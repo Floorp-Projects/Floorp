@@ -46,9 +46,9 @@ public:
   void
   NotifyLockedFileCompleted(LockedFile* aLockedFile);
 
-  bool
-  WaitForAllStoragesToComplete(nsTArray<nsCOMPtr<nsIFileStorage> >& aStorages,
-                               nsIRunnable* aCallback);
+  void
+  WaitForStoragesToComplete(nsTArray<nsCOMPtr<nsIFileStorage> >& aStorages,
+                            nsIRunnable* aCallback);
 
   void
   AbortLockedFilesForStorage(nsIFileStorage* aFileStorage);
@@ -129,8 +129,8 @@ private:
 
     inline void
     CollectRunningAndDelayedLockedFiles(
-                                nsIFileStorage* aFileStorage,
-                                nsTArray<nsRefPtr<LockedFile> >& aLockedFiles);
+                                 nsIFileStorage* aFileStorage,
+                                 nsTArray<nsRefPtr<LockedFile> >& aLockedFiles);
 
     void
     LockFileForReading(const nsAString& aFileName)

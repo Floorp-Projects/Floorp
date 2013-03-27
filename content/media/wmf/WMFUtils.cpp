@@ -9,6 +9,10 @@
 #include "mozilla/RefPtr.h"
 #include "prlog.h"
 #include "nsThreadUtils.h"
+#include "WinUtils.h"
+#include "nsWindowsHelpers.h"
+
+using namespace mozilla::widget;
 
 namespace mozilla {
 
@@ -269,15 +273,15 @@ DisableBlockedDecoders()
 {
   RefPtr<IMFPluginControl> pluginControl;
   HRESULT hr = wmf::MFGetPluginControl(byRef(pluginControl));
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  if (SUCCEEDED(hr) && pluginControl) {
+    hr = DisableBlockedDecoders(pluginControl,
+                                MFT_CATEGORY_VIDEO_DECODER);
+    NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-  hr = DisableBlockedDecoders(pluginControl,
-                              MFT_CATEGORY_VIDEO_DECODER);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-
-  hr = DisableBlockedDecoders(pluginControl,
-                              MFT_CATEGORY_AUDIO_DECODER);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+    hr = DisableBlockedDecoders(pluginControl,
+                                MFT_CATEGORY_AUDIO_DECODER);
+    NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  }
 
   return S_OK;
 }
@@ -286,15 +290,15 @@ static bool sDLLsLoaded = false;
 static bool sFailedToLoadDlls = false;
 
 struct WMFModule {
-  const char* name;
+  const wchar_t* name;
   HMODULE handle;
 };
 
 static WMFModule sDLLs[] = {
-  { "mfplat.dll", NULL },
-  { "mfreadwrite.dll", NULL },
-  { "propsys.dll", NULL },
-  { "mf.dll", NULL }
+  { L"mfplat.dll", NULL },
+  { L"mfreadwrite.dll", NULL },
+  { L"propsys.dll", NULL },
+  { L"mf.dll", NULL }
 };
 
 HRESULT
@@ -312,7 +316,7 @@ LoadDLLs()
   // Try to load all the required DLLs.
   uint32_t dllLength = NS_ARRAY_LENGTH(sDLLs);
   for (uint32_t i = 0; i < dllLength; i++) {
-    sDLLs[i].handle = LoadLibraryA(sDLLs[i].name);
+    sDLLs[i].handle = LoadLibrarySystem32(sDLLs[i].name);
     if (!sDLLs[i].handle) {
       sFailedToLoadDlls = true;
       NS_WARNING("Failed to load WMF DLLs");
@@ -367,9 +371,15 @@ UnloadDLLs()
 HRESULT
 MFStartup()
 {
+  const int MF_VISTA_VERSION = (0x0001 << 16 | MF_API_VERSION);
+  const int MF_WIN7_VERSION = (0x0002 << 16 | MF_API_VERSION);
+
   DECL_FUNCTION_PTR(MFStartup, ULONG, DWORD);
   ENSURE_FUNCTION_PTR(MFStartup, Mfplat.dll)
-  return MFStartupPtr(MF_VERSION, MFSTARTUP_FULL);
+  if (WinUtils::GetWindowsVersion() == WinUtils::VISTA_VERSION)
+    return MFStartupPtr(MF_VISTA_VERSION, MFSTARTUP_FULL);
+  else
+    return MFStartupPtr(MF_WIN7_VERSION, MFSTARTUP_FULL);
 }
 
 HRESULT

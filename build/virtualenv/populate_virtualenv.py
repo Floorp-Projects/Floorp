@@ -22,7 +22,8 @@ MINIMUM_PYTHON_MINOR = 7
 class VirtualenvManager(object):
     """Contains logic for managing virtualenvs for building the tree."""
 
-    def __init__(self, topsrcdir, virtualenv_path, log_handle, manifest_path):
+    def __init__(self, topsrcdir, topobjdir, virtualenv_path, log_handle,
+        manifest_path):
         """Create a new manager.
 
         Each manager is associated with a source directory, a path where you
@@ -30,6 +31,7 @@ class VirtualenvManager(object):
         """
         assert os.path.isabs(manifest_path), "manifest_path must be an absolute path: %s" % (manifest_path)
         self.topsrcdir = topsrcdir
+        self.topobjdir = topobjdir
         self.virtualenv_root = virtualenv_path
         self.log_handle = log_handle
         self.manifest_path = manifest_path
@@ -78,6 +80,7 @@ class VirtualenvManager(object):
         for submanifest in submanifests:
             submanifest = os.path.join(self.topsrcdir, submanifest)
             submanager = VirtualenvManager(self.topsrcdir,
+                                           self.topobjdir,
                                            self.virtualenv_root,
                                            self.log_handle,
                                            submanifest)
@@ -151,6 +154,14 @@ class VirtualenvManager(object):
         copy -- Copies the given file in the virtualenv site packages
             directory.
 
+        packages.txt -- Denotes that the specified path is a child manifest. It
+            will be read and processed as if its contents were concatenated
+            into the manifest being read.
+
+        objdir -- Denotes a relative path in the object directory to add to the
+            search path. e.g. "objdir:build" will add $topobjdir/build to the
+            search path.
+
         Note that the Python interpreter running this function should be the
         one from the virtualenv. If it is the system Python or if the
         environment is not configured properly, packages could be installed
@@ -185,6 +196,7 @@ class VirtualenvManager(object):
                 src = os.path.join(self.topsrcdir, package[1])
                 assert os.path.isfile(src), "'%s' does not exist" % src
                 submanager = VirtualenvManager(self.topsrcdir,
+                                               self.topobjdir,
                                                self.virtualenv_root,
                                                self.log_handle,
                                                src)
@@ -211,6 +223,15 @@ class VirtualenvManager(object):
                         'because optional. (%s)' % ':'.join(package),
                         file=self.log_handle)
                     return False
+
+            if package[0] == 'objdir':
+                assert len(package) == 2
+                path = os.path.join(self.topobjdir, package[1])
+
+                with open(os.path.join(python_lib, 'objdir.pth'), 'a') as f:
+                    f.write('%s\n' % path)
+
+                return True
 
             raise Exception('Unknown action: %s' % package[0])
 
@@ -293,7 +314,7 @@ class VirtualenvManager(object):
         # the virtualenv for paths to be proper.
 
         args = [self.python_path, __file__, 'populate', self.topsrcdir,
-            self.virtualenv_root]
+            self.topobjdir, self.virtualenv_root]
 
         result = subprocess.call(args, stdout=self.log_handle,
             stderr=subprocess.STDOUT, cwd=self.topsrcdir)
@@ -329,26 +350,29 @@ def verify_python_version(log_handle):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) < 3:
-        print('Usage: populate_virtualenv.py /path/to/topsrcdir /path/to/virtualenv')
+    if len(sys.argv) < 4:
+        print('Usage: populate_virtualenv.py /path/to/topsrcdir /path/to/topobjdir /path/to/virtualenv')
         sys.exit(1)
 
     verify_python_version(sys.stdout)
 
     topsrcdir = sys.argv[1]
-    virtualenv_path = sys.argv[2]
+    topobjdir = sys.argv[2]
+    virtualenv_path = sys.argv[3]
     populate = False
 
     # This should only be called internally.
     if sys.argv[1] == 'populate':
         populate = True
         topsrcdir = sys.argv[2]
-        virtualenv_path = sys.argv[3]
+        topobjdir = sys.argv[3]
+        virtualenv_path = sys.argv[4]
 
     # path to default packages.txt
     manifest_path = os.path.join(topsrcdir, 'build', 'virtualenv', 'packages.txt')
 
-    manager = VirtualenvManager(topsrcdir, virtualenv_path, sys.stdout, manifest_path)
+    manager = VirtualenvManager(topsrcdir, topobjdir, virtualenv_path,
+        sys.stdout, manifest_path)
 
     if populate:
         manager.populate()

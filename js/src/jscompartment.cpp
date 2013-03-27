@@ -199,8 +199,6 @@ JSCompartment::putWrapper(const CrossCompartmentKey &wrapped, const js::Value &w
     JS_ASSERT(!IsPoisonedPtr(wrapper.toGCThing()));
     JS_ASSERT_IF(wrapped.kind == CrossCompartmentKey::StringWrapper, wrapper.isString());
     JS_ASSERT_IF(wrapped.kind != CrossCompartmentKey::StringWrapper, wrapper.isObject());
-    // todo: uncomment when bug 815999 is fixed:
-    // JS_ASSERT(!wrapped.wrapped->isMarked(gc::GRAY));
     return crossCompartmentWrappers.put(wrapped, wrapper);
 }
 

@@ -15,6 +15,7 @@
 #include "ion/Bailouts.h"
 #include "ion/VMFunctions.h"
 #include "ion/x86/BaselineHelpers-x86.h"
+#include "ion/ExecutionModeInlines.h"
 
 #include "jsscriptinlines.h"
 
@@ -304,7 +305,7 @@ IonRuntime::generateInvalidator(JSContext *cx)
 }
 
 IonCode *
-IonRuntime::generateArgumentsRectifier(JSContext *cx, void **returnAddrOut)
+IonRuntime::generateArgumentsRectifier(JSContext *cx, ExecutionMode mode, void **returnAddrOut)
 {
     MacroAssembler masm(cx);
 
@@ -379,7 +380,12 @@ IonRuntime::generateArgumentsRectifier(JSContext *cx, void **returnAddrOut)
     // Call the target function.
     // Note that this assumes the function is JITted.
     masm.movl(Operand(eax, offsetof(JSFunction, u.i.script_)), eax);
-    masm.loadBaselineOrIonCode(eax, ebx, NULL);
+    if (mode == SequentialExecution) {
+        masm.loadBaselineOrIonCode(eax, ebx, NULL);
+    } else {
+        masm.movl(Operand(eax, OffsetOfIonInJSScript(mode)), eax);
+        masm.movl(Operand(eax, IonScript::offsetOfMethod()), eax);
+    }
     masm.movl(Operand(eax, IonCode::offsetOfCode()), eax);
     masm.call(eax);
     uint32_t returnOffset = masm.currentOffset();
@@ -402,7 +408,8 @@ IonRuntime::generateArgumentsRectifier(JSContext *cx, void **returnAddrOut)
 
     CodeOffsetLabel returnLabel(returnOffset);
     returnLabel.fixup(&masm);
-    *returnAddrOut = (void *) (code->raw() + returnLabel.offset());
+    if (returnAddrOut)
+        *returnAddrOut = (void *) (code->raw() + returnLabel.offset());
     return code;
 }
 

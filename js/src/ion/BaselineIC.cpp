@@ -5084,7 +5084,8 @@ ICGetProp_CallScripted::Compiler::generateStubCode(MacroAssembler &masm)
         // Call the arguments rectifier.
         JS_ASSERT(ArgumentsRectifierReg != code);
 
-        IonCode *argumentsRectifier = cx->compartment->ionCompartment()->getArgumentsRectifier();
+        IonCode *argumentsRectifier =
+            cx->compartment->ionCompartment()->getArgumentsRectifier(SequentialExecution);
 
         masm.movePtr(ImmGCPtr(argumentsRectifier), code);
         masm.loadPtr(Address(code, IonCode::offsetOfCode()), code);
@@ -5526,7 +5527,8 @@ ICSetProp_CallScripted::Compiler::generateStubCode(MacroAssembler &masm)
         // Call the arguments rectifier.
         JS_ASSERT(ArgumentsRectifierReg != code);
 
-        IonCode *argumentsRectifier = cx->compartment->ionCompartment()->getArgumentsRectifier();
+        IonCode *argumentsRectifier =
+            cx->compartment->ionCompartment()->getArgumentsRectifier(SequentialExecution);
 
         masm.movePtr(ImmGCPtr(argumentsRectifier), code);
         masm.loadPtr(Address(code, IonCode::offsetOfCode()), code);
@@ -6049,7 +6051,8 @@ ICCallScriptedCompiler::generateStubCode(MacroAssembler &masm)
         JS_ASSERT(ArgumentsRectifierReg != code);
         JS_ASSERT(ArgumentsRectifierReg != argcReg);
 
-        IonCode *argumentsRectifier = cx->compartment->ionCompartment()->getArgumentsRectifier();
+        IonCode *argumentsRectifier =
+            cx->compartment->ionCompartment()->getArgumentsRectifier(SequentialExecution);
 
         masm.movePtr(ImmGCPtr(argumentsRectifier), code);
         masm.loadPtr(Address(code, IonCode::offsetOfCode()), code);

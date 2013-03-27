@@ -215,13 +215,17 @@ members = [
     'nsIIDBTransaction.*',
     'nsIIDBOpenDBRequest.*',
     'nsIIDBVersionChangeEvent.*',
-    'nsIIndexedDatabaseUsageCallback.*',
     'nsIIndexedDatabaseManager.*',
 
     'nsIDOMDOMError.*',
 
     # dom/file
     'nsIDOMLockedFile.*',
+
+    # dom/quota
+    'nsIQuotaManager.*',
+    'nsIQuotaRequest.*',
+    'nsIUsageCallback.*',
     ]
 
 # Most interfaces can be found by searching the includePath; to find

@@ -16,6 +16,8 @@ class nsISVGPoint;
 
 namespace dom {
 
+class SVGIRect;
+
 typedef SVGGraphicsElement SVGTextContentElementBase;
 
 class SVGTextContentElement : public SVGTextContentElementBase
@@ -29,7 +31,7 @@ public:
   float GetSubStringLength(uint32_t charnum, uint32_t nchars, ErrorResult& rv);
   already_AddRefed<nsISVGPoint> GetStartPositionOfChar(uint32_t charnum, ErrorResult& rv);
   already_AddRefed<nsISVGPoint> GetEndPositionOfChar(uint32_t charnum, ErrorResult& rv);
-  already_AddRefed<nsIDOMSVGRect> GetExtentOfChar(uint32_t charnum, ErrorResult& rv);
+  already_AddRefed<SVGIRect> GetExtentOfChar(uint32_t charnum, ErrorResult& rv);
   float GetRotationOfChar(uint32_t charnum, ErrorResult& rv);
   int32_t GetCharNumAtPosition(nsISVGPoint& point);
 

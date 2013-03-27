@@ -20,39 +20,3 @@ interface nsIDOMSVGFilterPrimitiveStandardAttributes : nsIDOMSVGElement
     readonly attribute nsIDOMSVGAnimatedLength      height;
     readonly attribute nsIDOMSVGAnimatedString      result;
 };
-
-[scriptable, uuid(14eb581d-0e54-42b5-a595-5db6c9490277)]
-interface nsIDOMSVGFETurbulenceElement : nsIDOMSVGFilterPrimitiveStandardAttributes
-{ 
-    // Turbulence Types
-    const unsigned short SVG_TURBULENCE_TYPE_UNKNOWN      = 0;
-    const unsigned short SVG_TURBULENCE_TYPE_FRACTALNOISE = 1;
-    const unsigned short SVG_TURBULENCE_TYPE_TURBULENCE   = 2;
-    // Stitch Options
-    const unsigned short SVG_STITCHTYPE_UNKNOWN  = 0;
-    const unsigned short SVG_STITCHTYPE_STITCH   = 1;
-    const unsigned short SVG_STITCHTYPE_NOSTITCH = 2;
-
-    readonly attribute nsIDOMSVGAnimatedNumber      baseFrequencyX;
-    readonly attribute nsIDOMSVGAnimatedNumber      baseFrequencyY;
-    readonly attribute nsIDOMSVGAnimatedInteger     numOctaves;
-    readonly attribute nsIDOMSVGAnimatedNumber      seed;
-    readonly attribute nsIDOMSVGAnimatedEnumeration stitchTiles;
-    readonly attribute nsIDOMSVGAnimatedEnumeration type;
-};
-
-[scriptable, uuid(053c0aec-30df-48e9-9059-53f43b5261bb)]
-interface nsIDOMSVGFEMorphologyElement : nsIDOMSVGFilterPrimitiveStandardAttributes
-{ 
-    // Operator Types
-    const unsigned short SVG_OPERATOR_UNKNOWN  = 0;
-    const unsigned short SVG_OPERATOR_ERODE    = 1;
-    const unsigned short SVG_OPERATOR_DILATE   = 2;
-
-    readonly attribute nsIDOMSVGAnimatedString      in1;
-    readonly attribute nsIDOMSVGAnimatedNumber      radiusX;
-    readonly attribute nsIDOMSVGAnimatedNumber      radiusY;
-    readonly attribute nsIDOMSVGAnimatedEnumeration operator;
-    
-    void setRadius ( in float rx, in float ry );
-};

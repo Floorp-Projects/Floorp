@@ -21,12 +21,12 @@ S0OFF=FRAMESZ-(6*SZREG)
 GPOFF=FRAMESZ-(7*SZREG)
 
 #
-# _NS_InvokeByIndex_P(that, methodIndex, paramCount, params)
+# _NS_InvokeByIndex(that, methodIndex, paramCount, params)
 #                      a0       a1          a2         a3
 
-NESTED(_NS_InvokeByIndex_P, FRAMESZ, ra)
+NESTED(_NS_InvokeByIndex, FRAMESZ, ra)
     PTR_SUBU sp, FRAMESZ
-    SETUP_GP64(GPOFF, _NS_InvokeByIndex_P)
+    SETUP_GP64(GPOFF, _NS_InvokeByIndex)
 
     REG_S    ra, RAOFF(sp)
     REG_S    a0, A0OFF(sp)
@@ -119,4 +119,4 @@ NESTED(_NS_InvokeByIndex_P, FRAMESZ, ra)
     REG_L    s0, S0OFF(sp)
     PTR_ADDU sp, FRAMESZ
     j    ra
-.end _NS_InvokeByIndex_P
+.end _NS_InvokeByIndex

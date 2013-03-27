@@ -164,6 +164,7 @@ IonRuntime::IonRuntime()
     bailoutHandler_(NULL),
     argumentsRectifier_(NULL),
     argumentsRectifierReturnAddr_(NULL),
+    parallelArgumentsRectifier_(NULL),
     invalidator_(NULL),
     debugTrapHandler_(NULL),
     functionWrappers_(NULL),
@@ -214,9 +215,15 @@ IonRuntime::initialize(JSContext *cx)
     if (!bailoutHandler_)
         return false;
 
-    argumentsRectifier_ = generateArgumentsRectifier(cx, &argumentsRectifierReturnAddr_);
+    argumentsRectifier_ = generateArgumentsRectifier(cx, SequentialExecution, &argumentsRectifierReturnAddr_);
     if (!argumentsRectifier_)
         return false;
+
+#ifdef JS_THREADSAFE
+    parallelArgumentsRectifier_ = generateArgumentsRectifier(cx, ParallelExecution, NULL);
+    if (!parallelArgumentsRectifier_)
+        return false;
+#endif
 
     invalidator_ = generateInvalidator(cx);
     if (!invalidator_)

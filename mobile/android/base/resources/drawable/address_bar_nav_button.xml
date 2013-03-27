@@ -6,11 +6,29 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android"
           xmlns:gecko="http://schemas.android.com/apk/res-auto">
 
+    <!-- private pressed state -->
+    <item gecko:state_private="true"
+          android:state_pressed="true"
+          android:drawable="@color/highlight_nav_pb"/>
+
+    <!-- focused state -->
+    <item gecko:state_private="true"
+          android:state_focused="true"
+          android:state_pressed="false"
+          android:drawable="@color/highlight_nav_focused_pb"/>
+
     <!-- pressed state -->
-    <item android:state_pressed="true" android:drawable="@color/highlight"/>
+    <item android:state_pressed="true"
+          android:drawable="@color/highlight_nav"/>
+
+    <!-- focused state -->
+    <item android:state_focused="true"
+          android:state_pressed="false"
+          android:drawable="@color/highlight_nav_focused"/>
 
     <!-- private browsing mode -->
-    <item gecko:state_private="true" android:drawable="@color/background_private"/>
+    <item gecko:state_private="true"
+          android:drawable="@color/background_private"/>
 
     <!-- normal mode -->
     <item android:drawable="@color/background_normal"/>

@@ -124,6 +124,9 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         try {
             super.runTest();
         } catch (Throwable t) {
+            // save screenshot -- written to /mnt/sdcard/Robotium-Screenshots
+            // as <filename>.jpg
+            mSolo.takeScreenshot("robocop-screenshot");
             if (mAsserter != null) {
                 mAsserter.dumpLog("Exception caught during test!", t);
                 mAsserter.ok(false, "Exception caught", t.toString());

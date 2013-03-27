@@ -194,7 +194,7 @@ public:
   }
   uint32_t stackSize() const
   {
-    return std::min<uint32_t>(mStackPointer, mozilla::ArrayLength(mStack));
+    return std::min<uint32_t>(mStackPointer, mozilla::sig_safe_t(mozilla::ArrayLength(mStack)));
   }
 
   void sampleRuntime(JSRuntime *runtime) {
@@ -208,7 +208,7 @@ public:
     js::SetRuntimeProfilingStack(runtime,
                                  (js::ProfileEntry*) mStack,
                                  (uint32_t*) &mStackPointer,
-                                 mozilla::ArrayLength(mStack));
+                                 uint32_t(mozilla::ArrayLength(mStack)));
     if (mStartJSSampling)
       enableJSSampling();
   }

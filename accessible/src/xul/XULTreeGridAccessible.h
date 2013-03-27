@@ -24,7 +24,10 @@ class XULTreeGridAccessible : public XULTreeAccessible,
                               public TableAccessible
 {
 public:
-  XULTreeGridAccessible(nsIContent* aContent, DocAccessible* aDoc);
+  XULTreeGridAccessible(nsIContent* aContent, DocAccessible* aDoc,
+                        nsTreeBodyFrame* aTreeFrame) :
+    XULTreeAccessible(aContent, aDoc, aTreeFrame), xpcAccessibleTable(this)
+    { mGenericTypes |= eTable; }
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
