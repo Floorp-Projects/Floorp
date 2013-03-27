@@ -22,50 +22,9 @@
    <script type="text/javascript;version=1.8"
      src="chrome://browser/content/abouthealthreport/abouthealth.js" />
   </head>
-  <body dir="&abouthealth.locale-direction;" class="aboutPageWideContainer" onload="init();">
-    <div id="about-header">
-      <h1>&abouthealth.header;</h1>
-      <img src="chrome://branding/content/icon48.png"/>
-    </div>
-
-    <div id="content">
-      <div id="state-intro">
-        <h3>&abouthealth.intro.title;</h3>
-        <div id="content-line">
-          <p id="intro-enabled">&abouthealth.intro-enabled;</p>
-          <p id="intro-disabled">&abouthealth.intro-disabled;</p>
-          <div id="control-container">
-            <button id="btn-optin" onclick="onOptInClick();">&abouthealth.optin;</button>
-            <button id="btn-optout" onclick="onOptOutClick();">&abouthealth.optout;</button>
-
-            <button id="details-show" onclick="onShowRawDataClick()">&abouthealth.show-raw-data;</button>
-            <button id="details-hide" onclick="onHideRawDataClick()">&abouthealth.hide-raw-data;</button>
-          </div>
-        </div>
-      </div>
-      <div id="details-view">
-        <p id="details-description">
-          &abouthealth.details.description-start;
-          <a id="details-link">&abouthealth.details-link;</a>
-          &abouthealth.details.description-end;
-        </p>
-
-        <p id="data-no-data">&abouthealth.no-data-available;</p>
-        <pre id="raw-data" style="display: none"></pre>
-      </div>
-
-      <div id="data-view">
-        <button id="report-show" onclick="onShowReportClick()">&abouthealth.show-report;</button>
-        <div id="report-view">
-          <iframe id="remote-report"/>
-        </div>
-      </div>
-    </div>
-
-    <input type="hidden" id="optout-confirmationPrompt"
-      confirmationPrompt_title="&abouthealth.optout.confirmationPrompt.title;"
-      confirmationPrompt_message="&abouthealth.optout.confirmationPrompt.message;"
-    />
+  <body onload="healthReportWrapper.init();"
+        onunload="healthReportWrapper.uninit();">
+    <iframe id="remote-report"/>
   </body>
 </html>
 
