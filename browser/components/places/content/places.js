@@ -26,7 +26,7 @@ var PlacesOrganizer = {
     var itemId = PlacesUIUtils.leftPaneQueries[aQueryName];
     this._places.selectItems([itemId]);
     // Forcefully expand all-bookmarks
-    if (aQueryName == "AllBookmarks")
+    if (aQueryName == "AllBookmarks" || aQueryName == "History")
       PlacesUtils.asContainer(this._places.selectedNode).containerOpen = true;
   },
 
@@ -41,6 +41,11 @@ var PlacesOrganizer = {
       leftPaneSelection = window.arguments[0];
 
     this.selectLeftPaneQuery(leftPaneSelection);
+    if (leftPaneSelection == "History") {
+      let historyNode = this._places.selectedNode;
+      if (historyNode.childCount > 0)
+        this._places.selectNode(historyNode.getChild(0));
+    }
     // clear the back-stack
     this._backHistory.splice(0, this._backHistory.length);
     document.getElementById("OrganizerCommand:Back").setAttribute("disabled", true);
