@@ -9,7 +9,6 @@ var PreferencesPanelView = {
     Elements.prefsFlyout.addEventListener("PopupChanged", function onShow(aEvent) {
       if (aEvent.detail && aEvent.popup === Elements.prefsFlyout) {
         Elements.prefsFlyout.removeEventListener("PopupChanged", onShow, false);
-        MasterPasswordUI.updatePreference();
       }
     }, false);
   }

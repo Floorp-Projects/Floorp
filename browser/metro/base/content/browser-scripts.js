@@ -108,7 +108,6 @@ let ScriptContexts = {};
   ["MenuControlUI", "chrome://browser/content/helperui/MenuUI.js"],
   ["MenuPopup", "chrome://browser/content/helperui/MenuUI.js"],
   ["IndexedDB", "chrome://browser/content/helperui/IndexedDB.js"],
-  ["MasterPasswordUI", "chrome://browser/content/helperui/MasterPasswordUI.js"],
   ["OfflineApps", "chrome://browser/content/helperui/OfflineApps.js"],
   ["SelectHelperUI", "chrome://browser/content/helperui/SelectHelperUI.js"],
   ["SelectionHelperUI", "chrome://browser/content/helperui/SelectionHelperUI.js"],

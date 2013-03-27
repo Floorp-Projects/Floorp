@@ -437,8 +437,6 @@
       <settings id="prefs-donottrack" label="&optionsHeader.privacy.doNotTrack.title;">
         <setting pref="privacy.donottrackheader.enabled" title="&optionsHeader.privacy.doNotTrack.label;" type="bool"/>
       </settings>
-
-      <setting id="prefs-master-password" title="&optionsHeader.privacy.masterPassword.label;" type="bool" oncommand="MasterPasswordUI.show(this.value);"/>
     </flyoutpanel>
 
     <!-- Form Helper form validation helper popup -->
