@@ -108,9 +108,9 @@ protected:
     nsWeakFrame mFrame;
   };
 
-  class BrowseMouseListener: public MouseListener {
+  class DnDListener: public MouseListener {
   public:
-    BrowseMouseListener(nsFileControlFrame* aFrame)
+    DnDListener(nsFileControlFrame* aFrame)
       : MouseListener(aFrame)
     {}
 
@@ -137,9 +137,10 @@ protected:
   nsCOMPtr<nsIContent> mBrowse;
 
   /**
-   * Our mouse listener.  This makes sure we don't get used after destruction.
+   * Drag and drop mouse listener.
+   * This makes sure we don't get used after destruction.
    */
-  nsRefPtr<BrowseMouseListener> mMouseListener;
+  nsRefPtr<DnDListener> mMouseListener;
 
 protected:
   /**
