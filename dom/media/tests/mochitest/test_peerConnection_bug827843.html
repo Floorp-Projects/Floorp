@@ -9,10 +9,6 @@
 <body>
 <pre id="test">
 <script type="application/javascript">
-  if (navigator.platform.startsWith("Win")) {
-    SimpleTest.expectAssertions(0, 200);
-  }
-
   createHTML({
     bug: "827843",
     title: "Ensure that localDescription and remoteDescription are null after close"
