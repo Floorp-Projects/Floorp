@@ -481,7 +481,7 @@ TestRunner.testFinished = function(tests) {
 
     SpecialPowers.executeAfterFlushingMessageQueue(function() {
         cleanUpCrashDumpFiles();
-        SpecialPowers.flushPermissions(function () { SpecialPowers.flushPrefEnv(runNextTest); });
+        SpecialPowers.flushPrefEnv(runNextTest);
     });
 };
 
