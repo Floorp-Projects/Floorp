@@ -108,8 +108,10 @@ typedef struct _nsCocoaWindowList {
 
 // If we set the window's stylemask to be textured, the corners on the bottom of
 // the window are rounded by default. We use this private method to make
-// the corners square again, a la Safari.
+// the corners square again, a la Safari. Starting with 10.7, all windows have
+// rounded bottom corners, so this call doesn't have any effect there.
 - (void)setBottomCornerRounded:(BOOL)rounded;
+- (BOOL)bottomCornerRounded;
 
 @end
 

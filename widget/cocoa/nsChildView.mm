@@ -52,6 +52,7 @@
 #include "Layers.h"
 #include "LayerManagerOGL.h"
 #include "GLTextureImage.h"
+#include "GLContext.h"
 #include "mozilla/layers/CompositorCocoaWidgetHelper.h"
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
@@ -72,7 +73,6 @@ using namespace mozilla;
 using namespace mozilla::layers;
 using namespace mozilla::gl;
 using namespace mozilla::widget;
-using namespace mozilla;
 
 #undef DEBUG_UPDATE
 #undef INVALIDATE_DEBUGGING  // flash areas as they are invalidated
@@ -89,6 +89,9 @@ extern "C" {
   CG_EXTERN void CGContextResetCTM(CGContextRef);
   CG_EXTERN void CGContextSetCTM(CGContextRef, CGAffineTransform);
   CG_EXTERN void CGContextResetClip(CGContextRef);
+
+  typedef CFTypeRef CGSRegionObj;
+  CGError CGSNewRegionWithRect(const CGRect *rect, CGSRegionObj *outRegion);
 }
 
 // defined in nsMenuBarX.mm
@@ -138,6 +141,10 @@ uint32_t nsChildView::sLastInputEventCount = 0;
 - (void)drawUsingOpenGL;
 - (void)drawUsingOpenGLCallback;
 
+- (BOOL)hasRoundedBottomCorners;
+- (CGFloat)bottomCornerRadius;
+- (void)maybeClearBottomCorners;
+
 // Called using performSelector:withObject:afterDelay:0 to release
 // aWidgetArray (and its contents) the next time through the run loop.
 - (void)releaseWidgets:(NSArray*)aWidgetArray;
@@ -154,6 +161,28 @@ uint32_t nsChildView::sLastInputEventCount = 0;
 
 - (BOOL)inactiveWindowAcceptsMouseEvent:(NSEvent*)aEvent;
 
+@end
+
+@interface NSView(NSThemeFrameCornerRadius)
+- (float)roundedCornerRadius;
+@end
+
+// Starting with 10.7 the bottom corners of all windows are rounded.
+// Unfortunately, the standard rounding that OS X applies to OpenGL views
+// does not use anti-aliasing and looks very crude. Since we want a smooth,
+// anti-aliased curve, we'll draw it ourselves.
+// Additionally, we need to turn off the OS-supplied rounding because it
+// eats into our corner's curve. We do that by overriding an NSSurface method.
+@interface NSSurface @end
+
+@implementation NSSurface(DontCutOffCorners)
+- (CGSRegionObj)_createRoundedBottomRegionForRect:(CGRect)rect
+{
+  // Create a normal rect region without rounded bottom corners.
+  CGSRegionObj region;
+  CGSNewRegionWithRect(&rect, &region);
+  return region;
+}
 @end
 
 #pragma mark -
@@ -211,6 +240,8 @@ nsChildView::nsChildView() : nsBaseWidget()
 , mParentView(nullptr)
 , mParentWidget(nullptr)
 , mBackingScaleFactor(0.0)
+, mFailedResizerImage(false)
+, mFailedCornerMaskImage(false)
 , mVisible(false)
 , mDrawing(false)
 , mPluginDrawing(false)
@@ -235,10 +266,11 @@ nsChildView::~nsChildView()
     kid = kid->GetPrevSibling();
     childView->ResetParent();
   }
-
+  
   NS_WARN_IF_FALSE(mOnDestroyCalled, "nsChildView object destroyed without calling Destroy()");
 
   mResizerImage = nullptr;
+  mCornerMaskImage = nullptr;
 
   // An nsChildView object that was in use can be destroyed without Destroy()
   // ever being called on it.  So we also need to do a quick, safe cleanup
@@ -1817,6 +1849,18 @@ nsChildView::GetThebesSurface()
   return mTempThebesSurface;
 }
 
+void
+nsChildView::DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect)
+{
+  if (!aManager) {
+    return;
+  }
+
+  LayerManagerOGL *manager = static_cast<LayerManagerOGL *>(aManager);
+  MaybeDrawResizeIndicator(manager, aRect);
+  MaybeDrawRoundedBottomCorners(manager, aRect);
+}
+
 static void
 DrawResizer(CGContextRef aCtx)
 {
@@ -1851,39 +1895,42 @@ DrawResizer(CGContextRef aCtx)
 }
 
 void
-nsChildView::DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect)
+nsChildView::MaybeDrawResizeIndicator(LayerManagerOGL* aManager, nsIntRect aRect)
 {
-  if (!ShowsResizeIndicator(nullptr)) {
-    return;
-  }
-
-  nsRefPtr<LayerManagerOGL> manager(static_cast<LayerManagerOGL*>(aManager));
-  if (!manager) {
+  nsIntRect resizeRect;
+  if (!ShowsResizeIndicator(&resizeRect) || mFailedResizerImage) {
     return;
   }
 
   if (!mResizerImage) {
-    mResizerImage = TextureImage::Create(manager->gl(),
-                                         nsIntSize(15, 15),
-                                         gfxASurface::CONTENT_COLOR_ALPHA,
-                                         LOCAL_GL_CLAMP_TO_EDGE,
-                                         TextureImage::UseNearestFilter);
+    mResizerImage =
+      aManager->gl()->CreateTextureImage(nsIntSize(resizeRect.width, resizeRect.height),
+                                        gfxASurface::CONTENT_COLOR_ALPHA,
+                                        LOCAL_GL_CLAMP_TO_EDGE,
+                                        TextureImage::UseNearestFilter);
 
     // Creation of texture images can fail.
     if (!mResizerImage)
       return;
 
-    nsIntRegion update(nsIntRect(0, 0, 15, 15));
+    nsIntRegion update(nsIntRect(0, 0, resizeRect.width, resizeRect.height));
     gfxASurface *asurf = mResizerImage->BeginUpdate(update);
     if (!asurf) {
       mResizerImage = nullptr;
       return;
     }
 
-    NS_ABORT_IF_FALSE(asurf->GetType() == gfxASurface::SurfaceTypeQuartz,
-                  "BeginUpdate must return a Quartz surface!");
-
+    // is the CairoSurface of a non QuartzSurface usable in the gfxQuartzSurface constructor ?
+    // answer seems to be NO (see comments on bug 675410
+    // this should not work for instance: new gfxQuartzSurface(asurf->CairoSurface(), false))
+    if (asurf->GetType() != gfxASurface::SurfaceTypeQuartz) {
+      NS_WARN_IF_FALSE(FALSE, "mResizerImage's surface is not Quartz");
+      mResizerImage = nullptr;
+      mFailedResizerImage = true;
+      return;
+    }
     nsRefPtr<gfxQuartzSurface> image = static_cast<gfxQuartzSurface*>(asurf);
+
     DrawResizer(image->GetCGContext());
 
     mResizerImage->EndUpdate();
@@ -1897,18 +1944,100 @@ nsChildView::DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect)
   TextureImage::ScopedBindTexture texBind(mResizerImage, LOCAL_GL_TEXTURE0);
 
   ShaderProgramOGL *program =
-    manager->GetProgram(mResizerImage->GetShaderProgramType());
+    aManager->GetProgram(mResizerImage->GetShaderProgramType(), nullptr);
   program->Activate();
-  program->SetLayerQuadRect(nsIntRect(bottomX - 15,
-                                      bottomY - 15,
-                                      15,
-                                      15));
+  program->SetLayerQuadRect(nsIntRect(bottomX - resizeIndicatorWidth,
+                                      bottomY - resizeIndicatorHeight,
+                                      resizeIndicatorWidth,
+                                      resizeIndicatorHeight));
   program->SetLayerTransform(gfx3DMatrix());
   program->SetLayerOpacity(1.0);
   program->SetRenderOffset(nsIntPoint(0,0));
   program->SetTextureUnit(0);
 
-  manager->BindAndDrawQuad(program);
+  aManager->BindAndDrawQuad(program);
+}
+
+static void
+DrawTopLeftCornerMask(CGContextRef aCtx, int aRadius)
+{
+  CGContextSetRGBFillColor(aCtx, 1.0, 1.0, 1.0, 1.0);
+  CGContextFillEllipseInRect(aCtx, CGRectMake(0, 0, aRadius * 2, aRadius * 2));
+}
+
+void
+nsChildView::MaybeDrawRoundedBottomCorners(LayerManagerOGL* aManager, nsIntRect aRect)
+{
+  if (![mView isKindOfClass:[ChildView class]] ||
+      ![(ChildView*)mView hasRoundedBottomCorners] ||
+      mFailedCornerMaskImage)
+    return;
+  
+  CGFloat cornerRadius = [(ChildView*)mView bottomCornerRadius];
+  int devPixelCornerRadius = cornerRadius * BackingScaleFactor();
+  
+  if (!mCornerMaskImage) {
+    mCornerMaskImage =
+      aManager->gl()->CreateTextureImage(nsIntSize(devPixelCornerRadius, devPixelCornerRadius),
+                                         gfxASurface::CONTENT_COLOR_ALPHA,
+                                         LOCAL_GL_CLAMP_TO_EDGE,
+                                         TextureImage::UseNearestFilter);
+
+    // Creation of texture images can fail.
+    if (!mCornerMaskImage)
+      return;
+
+    nsIntRegion update(nsIntRect(0, 0, devPixelCornerRadius, devPixelCornerRadius));
+    gfxASurface *asurf = mCornerMaskImage->BeginUpdate(update);
+    if (!asurf) {
+      mCornerMaskImage = nullptr;
+      return;
+    }
+    
+    // is the CairoSurface of a non QuartzSurface usable in the gfxQuartzSurface constructor ?
+    // answer seems to be NO (see comments on bug 675410
+    // this should not work for instance: new gfxQuartzSurface(asurf->CairoSurface(), false))
+    if (asurf->GetType() != gfxASurface::SurfaceTypeQuartz) {
+      NS_WARN_IF_FALSE(FALSE, "mCornerMaskImage's surface is not Quartz");
+      mCornerMaskImage = nullptr;
+      mFailedCornerMaskImage = true;
+      return;
+    }
+    nsRefPtr<gfxQuartzSurface> image = static_cast<gfxQuartzSurface*>(asurf);
+    
+    DrawTopLeftCornerMask(image->GetCGContext(), devPixelCornerRadius);
+    
+    mCornerMaskImage->EndUpdate();
+  }
+  
+  NS_ABORT_IF_FALSE(mCornerMaskImage, "Must have a texture allocated by now!");
+  
+  TextureImage::ScopedBindTexture texBind(mCornerMaskImage, LOCAL_GL_TEXTURE0);
+  
+  ShaderProgramOGL *program = aManager->GetProgram(mCornerMaskImage->GetShaderProgramType(), nullptr);
+  program->Activate();
+  program->SetLayerQuadRect(nsIntRect(0, 0, // aRect.x, aRect.y,
+                                      devPixelCornerRadius,
+                                      devPixelCornerRadius));
+  program->SetLayerOpacity(1.0);
+  program->SetRenderOffset(nsIntPoint(0,0));
+  program->SetTextureUnit(0);
+  
+  // Use operator destination in: multiply all 4 channels with source alpha.
+  aManager->gl()->fBlendFuncSeparate(LOCAL_GL_ZERO, LOCAL_GL_SRC_ALPHA,
+                                     LOCAL_GL_ZERO, LOCAL_GL_SRC_ALPHA);
+  
+  // Draw; first bottom left, then bottom right.
+  program->SetLayerTransform(gfx3DMatrix::ScalingMatrix(1, -1, 1) *
+                             gfx3DMatrix::Translation(0, aRect.height, 0));
+  aManager->BindAndDrawQuad(program);
+  program->SetLayerTransform(gfx3DMatrix::ScalingMatrix(-1, -1, 1) *
+                             gfx3DMatrix::Translation(aRect.width, aRect.height, 0));
+  aManager->BindAndDrawQuad(program);
+  
+  // Reset blend mode.
+  aManager->gl()->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA,
+                                     LOCAL_GL_ONE, LOCAL_GL_ONE);
 }
 
 void
@@ -2577,6 +2706,13 @@ NSEvent* gLastDragMouseDownEvent = nil;
     // Paints that come through here are triggered by something that Cocoa
     // controls, for example by window resizing or window focus changes.
 
+    // Since our window is usually declared as opaque, the window's pixel
+    // buffer may now contain garbage which we need to prevent from reaching
+    // the screen. The only place where garbage can show is in the bottom
+    // corners - the rest of the window is covered by our OpenGL surface.
+    // So we need to clear the pixel buffer contents in the corners.
+    [self maybeClearBottomCorners];
+
     // Do GL composition and return.
     [self drawUsingOpenGL];
     return;
@@ -2726,6 +2862,47 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (mWaitingForPaint) {
     [self drawUsingOpenGL];
   }
+}
+
+- (BOOL)hasRoundedBottomCorners
+{
+  return [[self window] respondsToSelector:@selector(bottomCornerRounded)] &&
+  [[self window] bottomCornerRounded];
+}
+
+- (CGFloat)bottomCornerRadius
+{
+  if (![self hasRoundedBottomCorners])
+    return 0.0f;
+  NSView* borderView = [[[self window] contentView] superview];
+  if (!borderView || ![borderView respondsToSelector:@selector(roundedCornerRadius)])
+    return 4.0f;
+  return [borderView roundedCornerRadius];
+}
+
+// Accelerated windows have two NSSurfaces:
+//  (1) The window's pixel buffer in the back and
+//  (2) the OpenGL view in the front.
+// These two surfaces are composited by the window manager. Drawing with the
+// usual CGContext functions ends up in (1).
+// When our window has rounded bottom corners, the OpenGL view has transparent
+// pixels in the corners. In these places the contents of the window's pixel
+// buffer can show through. So we need to make sure that the pixel buffer is
+// transparent in the corners so that no garbage reaches the screen.
+// The contents of the pixel buffer in the rest of the window don't matter
+// because they're covered by the OpenGL view.
+// Making the bottom corners transparent works even though our window is
+// declared "opaque" (in the NSWindow's isOpaque method).
+- (void)maybeClearBottomCorners
+{
+  if (![self hasRoundedBottomCorners])
+    return;
+  
+  int radius = [self bottomCornerRadius];
+  int w = [self bounds].size.width, h = [self bounds].size.height;
+  [[NSColor clearColor] set];
+  NSRectFill(NSMakeRect(0, h - radius, radius, radius));
+  NSRectFill(NSMakeRect(w - radius, h - radius, radius, radius));
 }
 
 - (void)releaseWidgets:(NSArray*)aWidgetArray
