@@ -82,15 +82,19 @@ this.ProviderManager.prototype = Object.freeze({
    *
    * One can register entries in the application's .manifest file. e.g.
    *
-   *   category healthreport-js-provider FooProvider resource://gre/modules/foo.jsm
+   *   category healthreport-js-provider-default FooProvider resource://gre/modules/foo.jsm
+   *   category healthreport-js-provider-nightly EyeballProvider resource://gre/modules/eyeball.jsm
    *
    * Then to load them:
    *
    *   let reporter = getHealthReporter("healthreport.");
-   *   reporter.registerProvidersFromCategoryManager("healthreport-js-provider");
+   *   reporter.registerProvidersFromCategoryManager("healthreport-js-provider-default");
+   *
+   * If the category has no defined members, this call has no effect, and no error is raised.
    *
    * @param category
-   *        (string) Name of category to query and load from.
+   *        (string) Name of category from which to query and load.
+   * @return a newly spawned Task.
    */
   registerProvidersFromCategoryManager: function (category) {
     this._log.info("Registering providers from category: " + category);
