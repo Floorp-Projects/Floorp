@@ -406,10 +406,15 @@ let PinnedLinks = {
    */
   unpin: function PinnedLinks_unpin(aLink) {
     let index = this._indexOfLink(aLink);
-    if (index != -1) {
-      this.links[index] = null;
-      this.save();
-    }
+    if (index == -1)
+      return;
+    let links = this.links;
+    links[index] = null;
+    // trim trailing nulls
+    let i=links.length-1;
+    while (i >= 0 && links[i] == null)
+      i--;
+    links.splice(i +1);
   },
 
   /**
