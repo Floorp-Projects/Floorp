@@ -1200,7 +1200,8 @@ void cc_int_offhook(cc_srcs_t src_id, cc_srcs_t dst_id, callid_t prim_call_id,
 
 void cc_int_onhook(cc_srcs_t src_id, cc_srcs_t dst_id, callid_t prim_call_id,
                    cc_hold_resume_reason_e consult_reason, callid_t call_id,
-                   line_t line, boolean softkey, cc_onhook_reason_e active_list);
+                   line_t line, boolean softkey, cc_onhook_reason_e active_list,
+                   const char *filename, int fileline);
 
 void cc_int_line(cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id,
                  line_t line);
@@ -1260,8 +1261,8 @@ void cc_int_fail_fallback(cc_srcs_t src_id, cc_srcs_t dst_id, int rsp_type,
         cc_int_feature_ack(a, CC_SRC_GSM, b, c, d, e, f)
 #define cc_offhook(a, b, c)           cc_int_offhook(a, CC_SRC_GSM, CC_NO_CALL_ID, CC_REASON_NONE, b, c, NULL, CC_MONITOR_NONE,CFWDALL_NONE)
 #define cc_offhook_ext(a, b, c, d, e) cc_int_offhook(a, CC_SRC_GSM, CC_NO_CALL_ID, CC_REASON_NONE, b, c, d, e,CFWDALL_NONE)
-#define cc_onhook(a, b, c, d)         cc_int_onhook(a, CC_SRC_GSM, CC_NO_CALL_ID, CC_REASON_NONE, b, c, d, CC_REASON_NULL)
-#define cc_onhook_ext(a, b, c, d, e)  cc_int_onhook(a, CC_SRC_GSM, CC_NO_CALL_ID, CC_REASON_NONE, b, c, d, e)
+#define cc_onhook(a, b, c, d)         cc_int_onhook(a, CC_SRC_GSM, CC_NO_CALL_ID, CC_REASON_NONE, b, c, d, CC_REASON_NULL,__FILE__,__LINE__)
+#define cc_onhook_ext(a, b, c, d, e)  cc_int_onhook(a, CC_SRC_GSM, CC_NO_CALL_ID, CC_REASON_NONE, b, c, d, e,__FILE__,__LINE__)
 #define cc_line(a, b, c)              cc_int_line(a, CC_SRC_GSM, b, c)
 #define cc_digit_begin(a, b, c, d)    cc_int_digit_begin(a, CC_SRC_GSM, b, c, d)
 #define cc_dialstring(a, b, c, d)     cc_int_dialstring(a, CC_SRC_GSM, b, c, d, NULL, CC_MONITOR_NONE)

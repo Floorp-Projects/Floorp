@@ -107,9 +107,19 @@ extern int32_t nbuginf(const char *_format, ...);
 #define PHN_DEBUG_SNTP        if (DebugSNTP)
 #define PHN_DEBUG_SNTP_PACKET if (DebugSNTPPacket)
 
-/* TNP adapter debugs */
+/*
+ * TNP debugging has been raised from CSFLogDebug to CSFLogNotice
+ * to help diagnose some intermittent bugs in which the SIPCC
+ * code appears to have cleaned up a call, but the UI layer
+ * (PeerConnectionImpl) is not informed. This is less intrusive
+ * than running all the tests with logging turned all the way
+ * up to debug. This can be reverted back to CSFLogDebug once
+ * the WebRTC intermittent bugs are closed. For a current list
+ * of such bugs, see the results of the following query:
+ * http://tinyurl.com/webrtc-intermittent
+ */
 #define TNP_DEBUG(format,...) if (TNPDebug) \
-        CSFLogDebug("tnp", format, ## __VA_ARGS__)
+        CSFLogNotice("tnp", format, ## __VA_ARGS__)
 
 
 #define DEF_DISPLAY_BUF          128
