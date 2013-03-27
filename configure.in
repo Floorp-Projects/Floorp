@@ -4250,6 +4250,7 @@ MOZ_VP8=
 MOZ_VP8_ERROR_CONCEALMENT=
 MOZ_VP8_ENCODER=
 MOZ_WEBVTT=1
+MOZ_WEBSPEECH=1
 VPX_AS=
 VPX_ASFLAGS=
 VPX_AS_DASH_C_FLAG=
@@ -5366,6 +5367,21 @@ arm*)
     AC_SUBST(MOZ_SAMPLE_TYPE_FLOAT32)
 ;;
 esac
+
+dnl ========================================================
+dnl = Disable Speech API code
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(webspeech,
+[  --disable-webspeech        Disable support for HTML Speech API],
+    MOZ_WEBSPEECH=,
+    MOZ_WEBSPEECH=1)
+
+if test -n "$MOZ_WEBSPEECH"; then
+    AC_DEFINE(MOZ_WEBSPEECH)
+    MOZ_MEDIA=1
+fi
+
+AC_SUBST(MOZ_WEBSPEECH)
 
 dnl ========================================================
 dnl = Enable Raw Codecs

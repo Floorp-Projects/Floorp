@@ -208,6 +208,12 @@ SHARED_LIBRARY_LIBS += \
   $(NULL)
 endif
 
+ifdef MOZ_WEBSPEECH
+SHARED_LIBRARY_LIBS += \
+  $(DEPTH)/content/media/webspeech/$(LIB_PREFIX)gkconwebspeech_s.$(LIB_SUFFIX) \
+  $(NULL)
+endif
+
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
 INCLUDES	+= \
 		-I$(srcdir)/../../base/src \
