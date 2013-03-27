@@ -67,10 +67,9 @@
 
     ////////////////////////////////////////////////////////////////////////////
     // inherited from file control
-    var fileTextField = getAccessible("file").firstChild;
-    testStates(fileTextField, STATE_UNAVAILABLE | STATE_REQUIRED);
-    var fileBrowseButton = getAccessible("file").lastChild;
+    var fileBrowseButton = getAccessible("file").firstChild;
     testStates(fileBrowseButton, STATE_UNAVAILABLE | STATE_REQUIRED);
+    // No states on the label.
 
     ////////////////////////////////////////////////////////////////////////////
     // 'invalid' state
