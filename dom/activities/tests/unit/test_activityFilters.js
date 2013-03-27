@@ -137,15 +137,17 @@ function run_test() {
   do_check_false(ActivitiesServiceFilter.match({a: 42},
                                                {a: { max: '0' }}));
 
-  // String + RegExp
+  // String + Pattern
   do_check_true(ActivitiesServiceFilter.match({a: 'foobar'},
-                                              {a: { required: true, regexp: '/^foobar/'}}));
+                                              {a: { required: true, pattern: 'foobar'}}));
   do_check_false(ActivitiesServiceFilter.match({a: 'aafoobar'},
-                                               {a: { required: true, regexp: '/^foobar/'}}));
-  do_check_true(ActivitiesServiceFilter.match({a: 'aaFOOsdsad'},
-                                              {a: { required: true, regexp: '/foo/i'}}));
-  do_check_true(ActivitiesServiceFilter.match({a: 'aafoobarasdsad'},
-                                              {a: { required: true, regexp: '/foo/'}}));
+                                               {a: { required: true, pattern: 'foobar'}}));
   do_check_false(ActivitiesServiceFilter.match({a: 'aaFOOsdsad'},
-                                               {a: { required: true, regexp: '/foo/'}}));
+                                               {a: { required: true, pattern: 'foo', patternFlags: 'i'}}));
+  do_check_false(ActivitiesServiceFilter.match({a: 'aafoobarasdsad'},
+                                               {a: { required: true, pattern: 'foo'}}));
+  do_check_false(ActivitiesServiceFilter.match({a: 'aaFOOsdsad'},
+                                               {a: { required: true, pattern: 'foobar'}}));
+  do_check_true(ActivitiesServiceFilter.match({a: 'FoOBaR'},
+                                              {a: { required: true, pattern: 'foobar', patternFlags: 'i'}}));
 }
