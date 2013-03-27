@@ -5,7 +5,7 @@
 pref("datareporting.healthreport.currentDaySubmissionFailureCount", 0);
 pref("datareporting.healthreport.documentServerURI", "https://data.mozilla.com/");
 pref("datareporting.healthreport.documentServerNamespace", "metrics");
-pref("datareporting.healthreport.infoURL", "http://www.mozilla.org/legal/privacy/firefox.html#health-report");
+pref("datareporting.healthreport.infoURL", "https://www.mozilla.org/legal/privacy/firefox.html#health-report");
 pref("datareporting.healthreport.logging.consoleEnabled", true);
 pref("datareporting.healthreport.logging.consoleLevel", "Warn");
 pref("datareporting.healthreport.lastDataSubmissionFailureTime", "0");
