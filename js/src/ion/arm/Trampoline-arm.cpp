@@ -1,4 +1,3 @@
-
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=4 sw=4 et tw=99:
  *
@@ -15,6 +14,7 @@
 #include "ion/Bailouts.h"
 #include "ion/VMFunctions.h"
 #include "ion/arm/BaselineHelpers-arm.h"
+#include "ion/ExecutionModeInlines.h"
 
 using namespace js;
 using namespace js::ion;
@@ -355,7 +355,7 @@ IonRuntime::generateInvalidator(JSContext *cx)
 }
 
 IonCode *
-IonRuntime::generateArgumentsRectifier(JSContext *cx, void **returnAddrOut)
+IonRuntime::generateArgumentsRectifier(JSContext *cx, ExecutionMode mode, void **returnAddrOut)
 {
     MacroAssembler masm(cx);
     // ArgumentsRectifierReg contains the |nargs| pushed onto the current frame.
@@ -417,7 +417,12 @@ IonRuntime::generateArgumentsRectifier(JSContext *cx, void **returnAddrOut)
     // Call the target function.
     // Note that this code assumes the function is JITted.
     masm.ma_ldr(DTRAddr(r1, DtrOffImm(offsetof(JSFunction, u.i.script_))), r3);
-    masm.loadBaselineOrIonCode(r3, r6, NULL);
+    if (mode == SequentialExecution) {
+        masm.loadBaselineOrIonCode(r3, r6, NULL);
+    } else {
+        masm.ma_ldr(DTRAddr(r3, DtrOffImm(OffsetOfIonInJSScript(mode))), r3);
+        masm.ma_ldr(DTRAddr(r3, DtrOffImm(IonScript::offsetOfMethod())), r3);
+    }
     masm.ma_ldr(DTRAddr(r3, DtrOffImm(IonCode::offsetOfCode())), r3);
     masm.ma_callIonHalfPush(r3);
 
@@ -451,7 +456,8 @@ IonRuntime::generateArgumentsRectifier(JSContext *cx, void **returnAddrOut)
 
     CodeOffsetLabel returnLabel(returnOffset);
     returnLabel.fixup(&masm);
-    *returnAddrOut = (void *) (code->raw() + returnLabel.offset());
+    if (returnAddrOut)
+        *returnAddrOut = (void *) (code->raw() + returnLabel.offset());
     return code;
 }
 

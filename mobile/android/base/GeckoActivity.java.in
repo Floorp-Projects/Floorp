@@ -54,27 +54,24 @@ public class GeckoActivity extends Activity implements GeckoActivityStatus {
 
     @Override
     public void startActivity(Intent intent) {
-        checkIfGeckoActivity(intent);
+        mGeckoActivityOpened = checkIfGeckoActivity(intent);
         super.startActivity(intent);
     }
 
     @Override
     public void startActivityForResult(Intent intent, int request) {
-        checkIfGeckoActivity(intent);
+        mGeckoActivityOpened = checkIfGeckoActivity(intent);
         super.startActivityForResult(intent, request);
     }
 
-    private void checkIfGeckoActivity(Intent intent) {
-        // Whenever we call our own activity, the component and it's package name is set.
+    private static boolean checkIfGeckoActivity(Intent intent) {
+        // Whenever we call our own activity, the component and its package name is set.
         // If we call an activity from another package, or an open intent (leaving android to resolve)
         // component has a different package name or it is null.
         ComponentName component = intent.getComponent();
-        mGeckoActivityOpened = false;
-        if (component != null &&
-            component.getPackageName() != null &&
-            component.getPackageName().equals("@ANDROID_PACKAGE_NAME@")) {
-            mGeckoActivityOpened = true;
-        }
+        return (component != null
+                && component.getPackageName() != null
+                && component.getPackageName().equals("@ANDROID_PACKAGE_NAME@"));
     }
 
     @Override

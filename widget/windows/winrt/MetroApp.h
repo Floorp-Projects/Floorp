@@ -48,7 +48,6 @@ public:
   void ShutdownXPCOM();
 
   // Shared pointers between framework and widget
-  static FrameworkView* GetView();
   static void SetBaseWidget(MetroWidget* aPtr);
   static void PostSuspendResumeProcessNotification(bool aIsSuspend);
   static void PostSleepWakeNotification(bool aIsSuspend);

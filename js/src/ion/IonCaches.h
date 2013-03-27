@@ -112,6 +112,8 @@ class IonCacheVisitor
 class IonCache
 {
   public:
+    class StubAttacher;
+
     enum Kind {
 #   define DEFINE_CACHEKINDS(ickind) Cache_##ickind,
         IONCACHE_KIND_LIST(DEFINE_CACHEKINDS)
@@ -158,14 +160,6 @@ class IonCache
     JSScript *script;
     jsbytecode *pc;
 
-  private:
-    static const size_t MAX_STUBS;
-    void incrementStubCount() {
-        // The IC should stop generating stubs before wrapping stubCount.
-        stubCount_++;
-        JS_ASSERT(stubCount_);
-    }
-
     CodeLocationLabel fallbackLabel() const {
         return fallbackLabel_;
     }
@@ -177,6 +171,14 @@ class IonCache
             ptr = Assembler::nextInstruction(ptr, &i);
 #endif
         return CodeLocationLabel(ptr);
+    }
+
+  private:
+    static const size_t MAX_STUBS;
+    void incrementStubCount() {
+        // The IC should stop generating stubs before wrapping stubCount.
+        stubCount_++;
+        JS_ASSERT(stubCount_);
     }
 
   public:
@@ -238,17 +240,14 @@ class IonCache
     // this function returns CACHE_FLUSHED. In case of allocation issue this
     // function returns LINK_ERROR.
     LinkStatus linkCode(JSContext *cx, MacroAssembler &masm, IonScript *ion, IonCode **code);
-
     // Fixup variables and update jumps in the list of stubs.  Increment the
     // number of attached stubs accordingly.
-    void attachStub(MacroAssembler &masm, IonCode *code, CodeOffsetJump &rejoinOffset,
-                    CodeOffsetJump *exitOffset, CodeOffsetLabel *stubOffset = NULL);
+    void attachStub(MacroAssembler &masm, StubAttacher &patcher, IonCode *code);
 
-    // Combine both linkCode and attachStub into one function. In addition, it
+    // Combine both linkStub and attachStub into one function. In addition, it
     // produces a spew augmented with the attachKind string.
-    bool linkAndAttachStub(JSContext *cx, MacroAssembler &masm, IonScript *ion,
-                           const char *attachKind, CodeOffsetJump &rejoinOffset,
-                           CodeOffsetJump *exitOffset, CodeOffsetLabel *stubOffset = NULL);
+    bool linkAndAttachStub(JSContext *cx, MacroAssembler &masm, StubAttacher &patcher,
+                           IonScript *ion, const char *attachKind);
 
     bool pure() {
         return pure_;

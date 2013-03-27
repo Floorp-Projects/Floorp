@@ -692,7 +692,7 @@
   ERROR(NS_CONTENT_BLOCKED,                 SUCCESS(8)),
   ERROR(NS_CONTENT_BLOCKED_SHOW_ALT,        SUCCESS(9)),
   ERROR(NS_PROPTABLE_PROP_OVERWRITTEN,      SUCCESS(11)),
-  /* Error codes for FindBroadcaster in nsXULDocument.cpp */
+  /* Error codes for FindBroadcaster in XULDocument.cpp */
   ERROR(NS_FINDBROADCASTER_NOT_FOUND,       SUCCESS(12)),
   ERROR(NS_FINDBROADCASTER_FOUND,           SUCCESS(13)),
   ERROR(NS_FINDBROADCASTER_AWAIT_OVERLAYS,  SUCCESS(14)),

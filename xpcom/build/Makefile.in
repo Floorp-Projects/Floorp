@@ -37,6 +37,7 @@ CPPSRCS = \
   Services.cpp \
   Omnijar.cpp \
   FileLocation.cpp \
+  FrozenFunctions.cpp \
   $(NULL)
 
 ifeq (Darwin, $(OS_ARCH))

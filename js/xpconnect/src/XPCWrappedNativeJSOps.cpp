@@ -106,6 +106,8 @@ XPC_WN_Shared_ToString(JSContext *cx, unsigned argc, jsval *vp)
     }
 
     XPCCallContext ccx(JS_CALLER, cx, obj);
+    if (!ccx.IsValid())
+        return Throw(NS_ERROR_XPC_BAD_OP_ON_WN_PROTO, cx);
     ccx.SetName(ccx.GetRuntime()->GetStringID(XPCJSRuntime::IDX_TO_STRING));
     ccx.SetArgsAndResultPtr(argc, JS_ARGV(cx, vp), vp);
     return ToStringGuts(ccx);

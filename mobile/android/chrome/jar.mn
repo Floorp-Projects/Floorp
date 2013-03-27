@@ -43,6 +43,11 @@ chrome.jar:
   content/WebrtcUI.js                  (content/WebrtcUI.js)
   content/MemoryObserver.js            (content/MemoryObserver.js)
   content/ConsoleAPI.js                (content/ConsoleAPI.js)
+  content/PluginHelper.js              (content/PluginHelper.js)
+  content/OfflineApps.js               (content/OfflineApps.js)
+  content/MasterPassword.js            (content/MasterPassword.js)
+  content/FindHelper.js                (content/FindHelper.js)
+  content/PermissionsHelper.js         (content/PermissionsHelper.js)
 
 % content branding %content/branding/
 

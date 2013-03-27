@@ -614,10 +614,7 @@ abstract public class GeckoApp
         if (outState == null)
             outState = new Bundle();
 
-        boolean inBackground =
-            ((GeckoApplication)getApplication()).isApplicationInBackground();
-
-        outState.putBoolean(SAVED_STATE_IN_BACKGROUND, inBackground);
+        outState.putBoolean(SAVED_STATE_IN_BACKGROUND, isApplicationInBackground());
         outState.putString(SAVED_STATE_PRIVATE_SESSION, mPrivateBrowsingSession);
     }
 
@@ -1975,24 +1972,6 @@ abstract public class GeckoApp
     }
 
     @Override
-    public void onStop()
-    {
-        // We're about to be stopped, potentially in preparation for
-        // being destroyed.  We're killable after this point -- as I
-        // understand it, in extreme cases the process can be terminated
-        // without going through onDestroy.
-        //
-        // We might also get an onRestart after this; not sure what
-        // that would mean for Gecko if we were to kill it here.
-        // Instead, what we should do here is save prefs, session,
-        // etc., and generally mark the profile as 'clean', and then
-        // dirty it again if we get an onResume.
-
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createStoppingEvent(isApplicationInBackground()));
-        super.onStop();
-    }
-
-    @Override
     public void onPause()
     {
         // In some way it's sad that Android will trigger StrictMode warnings
@@ -2032,13 +2011,6 @@ abstract public class GeckoApp
         });
 
         super.onRestart();
-    }
-
-    @Override
-    public void onStart()
-    {
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createStartEvent(isApplicationInBackground()));
-        super.onStart();
     }
 
     @Override

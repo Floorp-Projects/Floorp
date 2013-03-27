@@ -339,7 +339,7 @@ nsTreeColumn::Invalidate()
 }
 
 
-nsTreeColumns::nsTreeColumns(nsITreeBoxObject* aTree)
+nsTreeColumns::nsTreeColumns(nsTreeBodyFrame* aTree)
   : mTree(aTree),
     mFirstColumn(nullptr)
 {
@@ -365,7 +365,7 @@ NS_IMPL_RELEASE(nsTreeColumns)
 NS_IMETHODIMP
 nsTreeColumns::GetTree(nsITreeBoxObject** _retval)
 {
-  NS_IF_ADDREF(*_retval = mTree);
+  NS_IF_ADDREF(*_retval = mTree ? mTree->GetTreeBoxObject() : nullptr);
   return NS_OK;
 }
 
@@ -552,10 +552,7 @@ nsTreeColumns::RestoreNaturalOrder()
   if (!mTree)
     return NS_OK;
 
-  nsCOMPtr<nsIBoxObject> boxObject = do_QueryInterface(mTree);
-  nsCOMPtr<nsIDOMElement> element;
-  boxObject->GetElement(getter_AddRefs(element));
-  nsCOMPtr<nsIContent> content = do_QueryInterface(element);
+  nsIContent* content = mTree->GetBaseElement();
 
   // Strong ref, since we'll be setting attributes
   nsCOMPtr<nsIContent> colsContent =
@@ -594,11 +591,7 @@ void
 nsTreeColumns::EnsureColumns()
 {
   if (mTree && !mFirstColumn) {
-    nsCOMPtr<nsIBoxObject> boxObject = do_QueryInterface(mTree);
-    nsCOMPtr<nsIDOMElement> treeElement;
-    boxObject->GetElement(getter_AddRefs(treeElement));
-    nsCOMPtr<nsIContent> treeContent = do_QueryInterface(treeElement);
-
+    nsIContent* treeContent = mTree->GetBaseElement();
     nsIContent* colsContent =
       nsTreeUtils::GetDescendantChild(treeContent, nsGkAtoms::treecols);
     if (!colsContent)

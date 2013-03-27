@@ -1139,7 +1139,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
       return True
 
     foundZombie = False
-    self.log.info('INFO | automation.py | Reading PID log: %s', processLog)
+    self.log.info('INFO | zombiecheck | Reading PID log: %s', processLog)
     processList = []
     pidRE = re.compile(r'launched child process (\d+)$')
     processLogFD = open(processLog)
@@ -1151,10 +1151,10 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
     processLogFD.close()
 
     for processPID in processList:
-      self.log.info("INFO | automation.py | Checking for orphan process with PID: %d", processPID)
+      self.log.info("INFO | zombiecheck | Checking for orphan process with PID: %d", processPID)
       if self.isPidAlive(processPID):
         foundZombie = True
-        self.log.info("TEST-UNEXPECTED-FAIL | automation.py | child process %d still alive after shutdown", processPID)
+        self.log.info("TEST-UNEXPECTED-FAIL | zombiecheck | child process %d still alive after shutdown", processPID)
         self.killPid(processPID)
     return foundZombie
 

@@ -20,9 +20,9 @@
 %ifdef WINDOWS_AERO
   -moz-margin-start: 8px;
 %endif
-  /* Prevent flickering when changing states. */
-  min-height: 32px;
-  min-width: 32px;
+  /* explicitly size the icon, so size doesn't vary on hidpi systems */
+  height: 32px;
+  width: 32px;
 }
 
 .blockedIcon {

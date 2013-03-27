@@ -19,34 +19,10 @@ LOCAL_INCLUDES	= \
 	-I$(srcdir)/../../../build \
 	$(NULL)
 
-ifeq (Darwin,$(OS_ARCH))
-ifeq (uikit,$(MOZ_WIDGET_TOOLKIT))
-LINKSRC = nsGlueLinkingDlopen.cpp
-else
-LINKSRC = nsGlueLinkingOSX.cpp
-endif
-endif
-
-ifeq ($(OS_ARCH),WINNT)
-LINKSRC = nsGlueLinkingWin.cpp
-endif
-ifneq (,$(filter AIX DragonFly FreeBSD GNU GNU_% Linux NetBSD OpenBSD SunOS,$(OS_ARCH)))
-LINKSRC = nsGlueLinkingDlopen.cpp
-endif
-ifeq (OS2,$(OS_ARCH))
-LINKSRC = nsGlueLinkingOS2.cpp
-endif
-
-ifndef LINKSRC
-LINKSRC = nsGlueLinkingNull.cpp
-$(warning TinderboxPrint:<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=298044">Error: XPCOM Glue</a>)
-endif
-
 CPPSRCS		= \
 	$(XPCOM_GLUE_SRC_LCPPSRCS)   \
 	nsXPCOMGlue.cpp              \
 	nsStringAPI.cpp              \
-	$(LINKSRC)                   \
 	$(NULL)
 
 SDK_LIBRARY     	= \
@@ -75,10 +51,10 @@ OS_COMPILE_CFLAGS += -Zl
 DEFINES += -D_USE_ANSI_CPP
 endif
 
-export:: $(XPCOM_GLUE_SRC_CPPSRCS) $(topsrcdir)/xpcom/glue/nsStringAPI.cpp ../nsXPCOMGlue.cpp ../nsGlueLinking.h ../$(LINKSRC)
+export:: $(XPCOM_GLUE_SRC_CPPSRCS) $(topsrcdir)/xpcom/glue/nsStringAPI.cpp ../nsXPCOMGlue.cpp
 	$(INSTALL) $^ .
 
-GARBAGE += nsStringAPI.cpp nsXPCOMGlue.cpp nsGlueLinking.h $(LINKSRC)
+GARBAGE += nsStringAPI.cpp nsXPCOMGlue.cpp
 
 DEFINES		+= -DXPCOM_GLUE
 
