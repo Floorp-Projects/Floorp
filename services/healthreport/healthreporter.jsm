@@ -53,6 +53,7 @@ const TELEMETRY_SHUTDOWN_DELAY = "HEALTHREPORT_SHUTDOWN_DELAY_MS";
 const TELEMETRY_COLLECT_CONSTANT = "HEALTHREPORT_COLLECT_CONSTANT_DATA_MS";
 const TELEMETRY_COLLECT_DAILY = "HEALTHREPORT_COLLECT_DAILY_MS";
 const TELEMETRY_SHUTDOWN = "HEALTHREPORT_SHUTDOWN_MS";
+const TELEMETRY_COLLECT_CHECKPOINT = "HEALTHREPORT_POST_COLLECT_CHECKPOINT_MS";
 
 /**
  * This is the abstract base class of `HealthReporter`. It exists so that
@@ -532,6 +533,18 @@ AbstractHealthReporter.prototype = Object.freeze({
           this._log.warn("Error collecting daily data from providers: " +
                          CommonUtils.exceptionStr(ex));
         }
+      }
+
+      // Flush gathered data to disk. This will incur an fsync. But, if
+      // there is ever a time we want to persist data to disk, it's
+      // after a massive collection.
+      try {
+        TelemetryStopwatch.start(TELEMETRY_COLLECT_CHECKPOINT, this);
+        yield this._storage.checkpoint();
+        TelemetryStopwatch.finish(TELEMETRY_COLLECT_CHECKPOINT, this);
+      } catch (ex) {
+        TelemetryStopwatch.cancel(TELEMETRY_COLLECT_CHECKPOINT, this);
+        throw ex;
       }
 
       throw new Task.Result();

@@ -731,6 +731,15 @@ function MetricsStorageSqliteBackend(connection) {
 }
 
 MetricsStorageSqliteBackend.prototype = Object.freeze({
+  // Max size (in kibibytes) the WAL log is allowed to grow to before it is
+  // checkpointed.
+  //
+  // This was first deployed in bug 848136. We want a value large enough
+  // that we aren't checkpointing all the time. However, we want it
+  // small enough so we don't have to read so much when we open the
+  // database.
+  MAX_WAL_SIZE_KB: 512,
+
   FIELD_DAILY_COUNTER: "daily-counter",
   FIELD_DAILY_DISCRETE_NUMERIC: "daily-discrete-numeric",
   FIELD_DAILY_DISCRETE_TEXT: "daily-discrete-text",
@@ -1105,6 +1114,43 @@ MetricsStorageSqliteBackend.prototype = Object.freeze({
   _init: function() {
     let self = this;
     return Task.spawn(function initTask() {
+      // 0. Database file and connection configuration.
+
+      // This should never fail. But, we assume the default of 1024 in case it
+      // does.
+      let rows = yield self._connection.execute("PRAGMA page_size");
+      let pageSize = 1024;
+      if (rows.length) {
+        pageSize = rows[0].getResultByIndex(0);
+      }
+
+      self._log.debug("Page size is " + pageSize);
+
+      // Ensure temp tables are stored in memory, not on disk.
+      yield self._connection.execute("PRAGMA temp_store=MEMORY");
+
+      let journalMode;
+      rows = yield self._connection.execute("PRAGMA journal_mode=WAL");
+      if (rows.length) {
+        journalMode = rows[0].getResultByIndex(0);
+      }
+
+      self._log.info("Journal mode is " + journalMode);
+
+      if (journalMode == "wal") {
+        yield self._connection.execute("PRAGMA wal_autocheckpoint=" +
+                                       Math.ceil(self.MAX_WAL_SIZE_KB * 1024 / pageSize));
+      } else {
+        if (journalMode != "truncate") {
+         // Fall back to truncate (which is faster than delete).
+          yield self._connection.execute("PRAGMA journal_mode=TRUNCATE");
+        }
+
+        // And always use full synchronous mode to reduce possibility for data
+        // loss.
+        yield self._connection.execute("PRAGMA synchronous=FULL");
+      }
+
       // 1. Create the schema.
       yield self._connection.executeTransaction(function ensureSchema(conn) {
         let schema = conn.schemaVersion;
@@ -1134,19 +1180,29 @@ MetricsStorageSqliteBackend.prototype = Object.freeze({
       });
 
       // 3. Populate built-in types with database.
+      let missingTypes = [];
       for (let type of self._BUILTIN_TYPES) {
         type = self[type];
         if (self._typesByName.has(type)) {
           continue;
         }
 
-        let params = {name: type};
-        yield self._connection.executeCached(SQL.addType, params);
-        let rows = yield self._connection.executeCached(SQL.getTypeID, params);
-        let id = rows[0].getResultByIndex(0);
+        missingTypes.push(type);
+      }
 
-        self._typesByID.set(id, type);
-        self._typesByName.set(type, id);
+      // Don't perform DB transaction unless there is work to do.
+      if (missingTypes.length) {
+        yield self._connection.executeTransaction(function populateBuiltinTypes() {
+          for (let type of missingTypes) {
+            let params = {name: type};
+            yield self._connection.executeCached(SQL.addType, params);
+            let rows = yield self._connection.executeCached(SQL.getTypeID, params);
+            let id = rows[0].getResultByIndex(0);
+
+            self._typesByID.set(id, type);
+            self._typesByName.set(type, id);
+          }
+        });
       }
 
       // 4. Obtain measurement info.
@@ -1221,6 +1277,19 @@ MetricsStorageSqliteBackend.prototype = Object.freeze({
       self._connection.discardCachedStatements();
       return self._connection.shrinkMemory();
     });
+  },
+
+  /**
+   * Checkpoint writes requiring flush to disk.
+   *
+   * This is called to persist queued and non-flushed writes to disk.
+   * It will force an fsync, so it is expensive and should be used
+   * sparingly.
+   */
+  checkpoint: function () {
+    return this.enqueueOperation(function checkpoint() {
+      return this._connection.execute("PRAGMA wal_checkpoint");
+    }.bind(this));
   },
 
   /**

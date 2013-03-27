@@ -3026,6 +3026,12 @@
     "n_buckets": 15,
     "description": "Time (ms) it takes FHR to shut down."
   },
+  "HEALTHREPORT_POST_COLLECT_CHECKPOINT_MS": {
+    "kind": "exponential",
+    "high": "20000",
+    "n_buckets": 15,
+    "description": "Time (ms) for a WAL checkpoint after collecting all measurements."
+  },
   "POPUP_NOTIFICATION_MAINACTION_TRIGGERED_MS": {
     "kind": "linear",
     "low": 25,
