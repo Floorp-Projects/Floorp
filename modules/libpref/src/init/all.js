@@ -384,7 +384,7 @@ pref("toolkit.telemetry.infoURL", "http://www.mozilla.com/legal/privacy/firefox.
 pref("toolkit.telemetry.debugSlowSql", false);
 
 // Identity module
-pref("toolkit.identity.enabled", false);
+pref("dom.identity.enabled", false);
 pref("toolkit.identity.debug", false);
 
 // Enable deprecation warnings.

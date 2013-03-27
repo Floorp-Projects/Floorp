@@ -5,7 +5,11 @@
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import('resource://gre/modules/identity/LogUtils.jsm');
+
+XPCOMUtils.defineLazyGetter(this, "logger", function() {
+  Cu.import('resource://gre/modules/identity/LogUtils.jsm');
+  return getLogger("Identity test", "toolkit.identity.debug");
+});
 
 const idService = Cc["@mozilla.org/identity/crypto-service;1"]
                     .getService(Ci.nsIIdentityCryptoService);
@@ -20,7 +24,7 @@ function do_check_eq_or_slightly_less(x, y) {
 
 function test_dsa() {
   idService.generateKeyPair(ALG_DSA, function (rv, keyPair) {
-    log("DSA generateKeyPair finished ", rv);
+    logger.log("DSA generateKeyPair finished ", rv);
     do_check_true(Components.isSuccessCode(rv));
     do_check_eq(typeof keyPair.sign, "function");
     do_check_eq(keyPair.keyType, ALG_DSA);
@@ -30,9 +34,9 @@ function test_dsa() {
     do_check_eq_or_slightly_less(keyPair.hexDSAPublicValue.length, 1024 / 8 * 2);
     // XXX: test that RSA parameters throw the correct error
 
-    log("about to sign with DSA key");
+    logger.log("about to sign with DSA key");
     keyPair.sign("foo", function (rv, signature) {
-      log("DSA sign finished ", rv, signature);
+      logger.log("DSA sign finished ", rv, signature);
       do_check_true(Components.isSuccessCode(rv));
       do_check_true(signature.length > 1);
       // TODO: verify the signature with the public key
@@ -43,7 +47,7 @@ function test_dsa() {
 
 function test_rsa() {
   idService.generateKeyPair(ALG_RSA, function (rv, keyPair) {
-    log("RSA generateKeyPair finished ", rv);
+    logger.log("RSA generateKeyPair finished ", rv);
     do_check_true(Components.isSuccessCode(rv));
     do_check_eq(typeof keyPair.sign, "function");
     do_check_eq(keyPair.keyType, ALG_RSA);
@@ -51,9 +55,9 @@ function test_rsa() {
                                  2048 / 8);
     do_check_true(keyPair.hexRSAPublicKeyExponent.length > 1);
 
-    log("about to sign with RSA key");
+    logger.log("about to sign with RSA key");
     keyPair.sign("foo", function (rv, signature) {
-      log("RSA sign finished ", rv, signature);
+      logger.log("RSA sign finished ", rv, signature);
       do_check_true(Components.isSuccessCode(rv));
       do_check_true(signature.length > 1);
       run_next_test();
