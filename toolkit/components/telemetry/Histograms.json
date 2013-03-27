@@ -848,6 +848,10 @@
     "n_values": 16,
     "description": "NPN Results (0=none, 1=negotiated, 2=no-overlap)"
   },
+  "SSL_RESUMED_SESSION": {
+    "kind": "boolean",
+    "description": "complete TLS connect that used TLS Sesison Resumption"
+  },
   "CERT_VALIDATION_HTTP_REQUEST_RESULT": {
     "kind": "enumerated",
     "n_values": 16,

@@ -189,12 +189,16 @@ getSecureBrowserUI(nsIInterfaceRequestor * callbacks,
 }
 
 void
-nsNSSSocketInfo::SetHandshakeCompleted()
+nsNSSSocketInfo::SetHandshakeCompleted(bool aResumedSession)
 {
   if (!mHandshakeCompleted) {
     // This will include TCP and proxy tunnel wait time
     Telemetry::AccumulateTimeDelta(Telemetry::SSL_TIME_UNTIL_READY,
                                    mSocketCreationTimestamp, TimeStamp::Now());
+
+    // If the handshake is completed for the first time from just 1 callback
+    // that means that TLS session resumption must have been used.
+    Telemetry::Accumulate(Telemetry::SSL_RESUMED_SESSION, aResumedSession);
     mHandshakeCompleted = true;
   }
 }
