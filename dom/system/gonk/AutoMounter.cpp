@@ -89,48 +89,6 @@ class AutoMounter;
 // try to automount. Any other volumes will be ignored.
 static const nsDependentCString sAutoVolumeName[] = { NS_LITERAL_CSTRING("sdcard") };
 
-/**************************************************************************
-*
-*   Some helper functions for reading/writing files in /sys
-*
-**************************************************************************/
-
-static bool
-ReadSysFile(const char* aFilename, char* aBuf, size_t aBufSize)
-{
-  int fd = open(aFilename, O_RDONLY);
-  if (fd < 0) {
-    ERR("Unable to open file '%s' for reading", aFilename);
-    return false;
-  }
-  ScopedClose autoClose(fd);
-  ssize_t bytesRead = read(fd, aBuf, aBufSize - 1);
-  if (bytesRead < 0) {
-    ERR("Unable to read from file '%s'", aFilename);
-    return false;
-  }
-  if (aBuf[bytesRead - 1] == '\n') {
-    bytesRead--;
-  }
-  aBuf[bytesRead] = '\0';
-  return true;
-}
-
-static bool
-ReadSysFile(const char* aFilename, bool* aVal)
-{
-  char valBuf[20];
-  if (!ReadSysFile(aFilename, valBuf, sizeof(valBuf))) {
-    return false;
-  }
-  int intVal;
-  if (sscanf(valBuf, "%d", &intVal) != 1) {
-    return false;
-  }
-  *aVal = (intVal != 0);
-  return true;
-}
-
 /***************************************************************************/
 
 inline const char* SwitchStateStr(const SwitchEvent& aEvent)
@@ -151,13 +109,18 @@ IsUsbCablePluggedIn()
   // Until then, just go read the file directly
   if (access(ICS_SYS_USB_STATE, F_OK) == 0) {
     char usbState[20];
-    return ReadSysFile(ICS_SYS_USB_STATE,
-                       usbState, sizeof(usbState)) &&
-           (strcmp(usbState, "CONFIGURED") == 0);
+    if (ReadSysFile(ICS_SYS_USB_STATE, usbState, sizeof(usbState))) {
+      return strcmp(usbState, "CONFIGURED") == 0;
+    }
+    ERR("Error reading file '%s': %s", ICS_SYS_USB_STATE, strerror(errno));
+    return false;
   }
   bool configured;
-  return ReadSysFile(GB_SYS_USB_CONFIGURED, &configured) &&
-         configured;
+  if (ReadSysFile(GB_SYS_USB_CONFIGURED, &configured)) {
+    return configured;
+  }
+  ERR("Error reading file '%s': %s", GB_SYS_USB_CONFIGURED, strerror(errno));
+  return false;
 #endif
 }
 
@@ -370,10 +333,17 @@ AutoMounter::UpdateState()
 
   if (access(ICS_SYS_USB_FUNCTIONS, F_OK) == 0) {
     umsAvail = (access(ICS_SYS_UMS_DIRECTORY, F_OK) == 0);
-    char functionsStr[60];
-    umsEnabled = umsAvail &&
-                 ReadSysFile(ICS_SYS_USB_FUNCTIONS, functionsStr, sizeof(functionsStr)) &&
-                 !!strstr(functionsStr, "mass_storage");
+    if (umsAvail) {
+      char functionsStr[60];
+      if (ReadSysFile(ICS_SYS_USB_FUNCTIONS, functionsStr, sizeof(functionsStr))) {
+        umsEnabled = strstr(functionsStr, "mass_storage") != NULL;
+      } else {
+        ERR("Error reading file '%s': %s", ICS_SYS_USB_FUNCTIONS, strerror(errno));
+        umsEnabled = false;
+      }
+    } else {
+      umsEnabled = false;
+    }
   } else {
     umsAvail = ReadSysFile(GB_SYS_UMS_ENABLE, &umsEnabled);
   }

@@ -1,0 +1,51 @@
+vbox {
+  margin: 8px;
+}
+
+.file {
+  display: inline;
+  -moz-appearance: none;
+  padding: 0;
+  border: 2px inset ThreeDFace;
+  border-style: none;
+
+  background-color: -moz-Field;
+
+  color: -moz-FieldText;
+  font: -moz-field;
+  text-rendering: optimizeLegibility;
+  line-height: normal !important;
+  text-align: start;
+  text-transform: none;
+  word-spacing: normal;
+  letter-spacing: normal;
+  cursor: text;
+  text-indent: 0;
+  -moz-user-select: text;
+  text-shadow: none;
+}
+
+.file > label {
+  display: inline-block;
+  width: 12em;
+  -moz-padding-start: 5px;
+
+  border-color: inherit;
+  background-color: inherit;
+  color: inherit;
+  font-size: inherit;
+  letter-spacing: inherit;
+}
+
+.file > label.rtl {
+  text-align: right;
+  -moz-padding-start: 0px;
+  padding-right: 1px;
+}
+
+.file > input[type='button'] {
+  height: inherit;
+  font-size: inherit;
+  letter-spacing: inherit;
+  cursor: inherit;
+}

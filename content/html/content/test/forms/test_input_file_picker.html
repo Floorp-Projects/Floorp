@@ -1,0 +1,181 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=377624
+https://bugzilla.mozilla.org/show_bug.cgi?id=565274
+-->
+<head>
+  <title>Test for Bug 377624</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=377624">Mozilla Bug 377624</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=565274">Mozilla Bug 565274</a>
+<p id="display"></p>
+<div id="content">
+  <input id='a' type='file' accept="image/*">
+  <input id='b' type='file' accept="audio/*">
+  <input id='c' type='file' accept="video/*">
+  <input id='d' type='file' accept="image/*, audio/* ">
+  <input id='e' type='file' accept=" image/*,video/*">
+  <input id='f' type='file' accept="audio/*,video/*">
+  <input id='g' type='file' accept="image/*, audio/* ,video/*">
+  <input id='h' type='file' accept="foo/baz,image/*,bogus/duh">
+  <input id='i' type='file' accept="mime/type;parameter,video/*">
+  <input id='j' type='file' accept="audio/*, audio/*, audio/*">
+  <input id='k' type="file" accept="image/gif,image/png" />
+  <input id='l' type="file" accept="image/*,image/gif,image/png" />
+  <input id='m' type="file" accept="image/gif,image/gif" />
+  <input id='n' type="file" accept="" />
+  <input id='z' type='file' accept="i/am,a,pathological,;,,,,test/case">
+  <input id='hidden' hidden type='file'>
+  <input id='untrusted-click' type='file'>
+  <input id='prevent-default' type='file'>
+  <input id='prevent-default-false' type='file'>
+  <input id='right-click' type='file'>
+  <input id='middle-click' type='file'>
+  <input id='left-click' type='file'>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 377624 and Bug 565274 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var MockFilePicker = SpecialPowers.MockFilePicker;
+MockFilePicker.init(window);
+
+// The following lists are from toolkit/content/filepicker.properties which is used by filePicker
+var imageExtensionList = "*.jpe; *.jpg; *.jpeg; *.gif; *.png; *.bmp; *.ico; *.svg; *.svgz; *.tif; *.tiff; *.ai; *.drw; *.pct; *.psp; *.xcf; *.psd; *.raw"
+var audioExtensionList = "*.aac; *.aif; *.flac; *.iff; *.m4a; *.m4b; *.mid; *.midi; *.mp3; *.mpa; *.mpc; *.oga; *.ogg; *.ra; *.ram; *.snd; *.wav; *.wma"
+var videoExtensionList = "*.avi; *.divx; *.flv; *.m4v; *.mkv; *.mov; *.mp4; *.mpeg; *.mpg; *.ogm; *.ogv; *.ogx; *.rm; *.rmvb; *.smil; *.webm; *.wmv; *.xvid"
+
+// [ element name | number of filters | extension list or filter mask | filter index ]
+var testData = [["a", 1, MockFilePicker.filterImages, 1],
+                ["b", 1, MockFilePicker.filterAudio, 1],
+                ["c", 1, MockFilePicker.filterVideo, 1],
+                ["d", 3, imageExtensionList + "; " + audioExtensionList, 1],
+                ["e", 3, imageExtensionList + "; " + videoExtensionList, 1],
+                ["f", 3, audioExtensionList + "; " + videoExtensionList, 1],
+                ["g", 4, imageExtensionList + "; " + audioExtensionList + "; " + videoExtensionList, 1],
+                ["h", 1, MockFilePicker.filterImages, 1],
+                ["i", 1, MockFilePicker.filterVideo, 1],
+                ["j", 1, MockFilePicker.filterAudio, 1],
+                ["k", 3, "*.gif; *.png", 0],
+                ["l", 4, imageExtensionList + "; " + "*.gif; *.png", 0],
+                ["m", 1, "*.gif", 0],
+                ["n", 0, undefined, 0],
+                ["z", 0, undefined, 0],
+                ["hidden", 0, undefined, 0],
+                ["untrusted-click", 0, undefined, 0],
+                ["prevent-default", 0, undefined, 0, true],
+                ["prevent-default-false", 0, undefined, 0, true],
+                ["right-click", 0, undefined, 0, true],
+                ["middle-click", 0, undefined, 0, true],
+                ["left-click", 0, undefined, 0],
+               ];
+
+var currentTest = 0;
+var filterAllAdded;
+var filters;
+var filterIndex;
+
+// disable popups to make sure that the popup blocker does not interfere
+// with manually opened file pickers.
+SpecialPowers.pushPrefEnv({'set': [["dom.disable_open_during_load", false]]}, runTests);
+
+function launchNextTest() {
+  MockFilePicker.shown = false;
+  filterAllAdded = false;
+  filters = [];
+  filterIndex = 0;
+
+  if (testData[currentTest][0] == "untrusted-click") {
+    var e = document.createEvent('MouseEvents');
+    e.initEvent('click', true, false);
+    document.getElementById(testData[currentTest][0]).dispatchEvent(e);
+  // All tests that should *NOT* show a file picker.
+  } else if (testData[currentTest][0] == "prevent-default" ||
+             testData[currentTest][0] == "prevent-default-false" ||
+             testData[currentTest][0] == "right-click" ||
+             testData[currentTest][0] == "middle-click") {
+    if (testData[currentTest][0] == "right-click" ||
+        testData[currentTest][0] == "middle-click") {
+      var b = testData[currentTest][0] == "middle-click" ? 1 : 2;
+      synthesizeMouseAtCenter(document.getElementById(testData[currentTest][0]),
+                              { button: b });
+    } else {
+      if (testData[currentTest][0] == "prevent-default-false") {
+        document.getElementById(testData[currentTest][0]).onclick = function() {
+          return false;
+        };
+      } else {
+        document.getElementById(testData[currentTest][0]).onclick = function(e) {
+          e.preventDefault();
+        };
+      }
+      document.getElementById(testData[currentTest][0]).click();
+    }
+
+    // Wait a bit and assume we can continue. If the file picker shows later,
+    // behaviour is uncertain but that would be a random green, no big deal...
+    setTimeout(function() {
+      ok(true, "we should be there without a file picker being opened");
+      ++currentTest;
+      launchNextTest();
+    }, 500);
+  } else {
+    document.getElementById(testData[currentTest][0]).click();
+  }
+}
+
+function runTests() {
+  MockFilePicker.appendFilterCallback = function(filepicker, title, val) {
+    filters.push(val);
+  };
+  MockFilePicker.appendFiltersCallback = function(filepicker, val) {
+    if (val === MockFilePicker.filterAll) {
+      filterAllAdded = true;
+    } else {
+      filters.push(val);
+    }
+  };
+  MockFilePicker.showCallback = function(filepicker) {
+    if (testData[currentTest][4]) {
+      ok(false, "we shouldn't have a file picker showing!");
+      return;
+    }
+
+    filterIndex = filepicker.filterIndex;
+    testName = testData[currentTest][0];
+    SimpleTest.executeSoon(function () {
+      ok(MockFilePicker.shown,
+         "File picker show method should have been called (" + testName + ")");
+      ok(filterAllAdded,
+         "filterAll is missing (" + testName + ")");
+      is(filters.length, testData[currentTest][1],
+         "appendFilters not called as often as expected (" + testName + ")");
+      is(filters[0], testData[currentTest][2],
+         "Correct filters should have been added (" + testName + ")");
+      is(filterIndex, testData[currentTest][3],
+         "File picker should show the correct filter index (" + testName + ")");
+
+      if (++currentTest == testData.length) {
+        MockFilePicker.cleanup();
+        SimpleTest.finish();
+      } else {
+        launchNextTest();
+      }
+    });
+  };
+
+  launchNextTest();
+}
+
+</script>
+</pre>
+</body>
+</html>

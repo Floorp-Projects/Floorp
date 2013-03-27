@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="Windows-1252"?>
-<VisualStudioPropertySheet
-	ProjectType="Visual C++"
-	Version="8.00"
-	Name="base_gfx"
-	InheritedPropertySheets="$(SolutionDir)..\build\common.vsprops;$(SolutionDir)..\third_party\icu38\build\using_icu.vsprops;$(SolutionDir)..\third_party\libjpeg\using_libjpeg.vsprops;$(SolutionDir)..\third_party\libpng\using_libpng.vsprops;$(SolutionDir)..\third_party\zlib\using_zlib.vsprops;..\..\skia\using_skia.vsprops"
-	>
-</VisualStudioPropertySheet>

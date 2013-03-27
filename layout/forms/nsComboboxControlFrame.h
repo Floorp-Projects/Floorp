@@ -115,7 +115,6 @@ public:
 
   // nsIFormControlFrame
   virtual nsresult SetFormProperty(nsIAtom* aName, const nsAString& aValue) MOZ_OVERRIDE;
-  virtual nsresult GetFormProperty(nsIAtom* aName, nsAString& aValue) const MOZ_OVERRIDE; 
   /**
    * Inform the control that it got (or lost) focus.
    * If it lost focus, the dropdown menu will be rolled up if needed,

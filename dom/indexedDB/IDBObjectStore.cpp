@@ -510,7 +510,7 @@ class ThreadLocalJSRuntime
   JSObject* mGlobal;
 
   static JSClass sGlobalClass;
-  static const unsigned sRuntimeHeapSize = 512 * 1024;
+  static const unsigned sRuntimeHeapSize = 768 * 1024;
 
   ThreadLocalJSRuntime()
   : mRuntime(NULL), mContext(NULL), mGlobal(NULL)

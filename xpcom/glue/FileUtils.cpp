@@ -3,9 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <errno.h>
+#include <stdio.h>
+
 #include "nscore.h"
 #include "nsStringGlue.h"
 #include "private/pprio.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/FileUtils.h"
 
 #if defined(XP_MACOSX)
@@ -112,6 +116,79 @@ mozilla::fallocate(PRFileDesc *aFD, int64_t aLength)
 #endif
   return false;
 }
+
+#ifdef MOZ_WIDGET_GONK
+
+#undef TEMP_FAILURE_RETRY
+#define TEMP_FAILURE_RETRY(exp) (__extension__({ \
+  typeof (exp) _rc; \
+  do { \
+    _rc = (exp); \
+  } while (_rc == -1 && errno == EINTR); \
+  _rc; \
+}))
+
+bool
+mozilla::ReadSysFile(
+  const char* aFilename,
+  char* aBuf,
+  size_t aBufSize)
+{
+  int fd = TEMP_FAILURE_RETRY(open(aFilename, O_RDONLY));
+  if (fd < 0) {
+    return false;
+  }
+  ScopedClose autoClose(fd);
+  if (aBufSize == 0) {
+    return true;
+  }
+  ssize_t bytesRead;
+  size_t offset = 0;
+  do {
+    bytesRead = TEMP_FAILURE_RETRY(read(fd, aBuf + offset, aBufSize - offset));
+    if (bytesRead == -1) {
+      return false;
+    }
+    offset += bytesRead;
+  } while (bytesRead > 0 && offset < aBufSize);
+  MOZ_ASSERT(offset <= aBufSize);
+  if (offset > 0 && aBuf[offset - 1] == '\n') {
+    offset--;
+  }
+  if (offset == aBufSize) {
+    MOZ_ASSERT(offset > 0);
+    offset--;
+  }
+  aBuf[offset] = '\0';
+  return true;
+}
+
+bool
+mozilla::ReadSysFile(
+  const char* aFilename,
+  int* aVal)
+{
+  char valBuf[32];
+  if (!ReadSysFile(aFilename, valBuf, sizeof(valBuf))) {
+    return false;
+  }
+  return sscanf(valBuf, "%d", aVal) == 1;
+}
+
+bool
+mozilla::ReadSysFile(
+  const char* aFilename,
+  bool* aVal)
+{
+  int v;
+  if (!ReadSysFile(aFilename, &v)) {
+    return false;
+  }
+  *aVal = (v != 0);
+  return true;
+}
+
+#endif /* MOZ_WIDGET_GONK */
 
 void
 mozilla::ReadAheadLib(nsIFile* aFile)

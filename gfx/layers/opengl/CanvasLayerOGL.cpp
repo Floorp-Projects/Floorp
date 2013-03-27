@@ -515,7 +515,7 @@ ShadowCanvasLayerOGL::GetLayer()
 LayerRenderState
 ShadowCanvasLayerOGL::GetRenderState()
 {
-  if (mDestroyed) {
+  if (mDestroyed || !IsValidSharedTexDescriptor(mFrontBufferDescriptor)) {
     return LayerRenderState();
   }
   return LayerRenderState(&mFrontBufferDescriptor,
