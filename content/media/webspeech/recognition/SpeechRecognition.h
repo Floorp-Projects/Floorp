@@ -18,10 +18,12 @@
 #include "MediaStreamGraph.h"
 #include "AudioSegment.h"
 #include "mozilla/WeakPtr.h"
+#include "mozilla/Preferences.h"
 
 #include "EnableWebSpeechRecognitionCheck.h"
 #include "SpeechGrammarList.h"
 #include "SpeechRecognitionResultList.h"
+#include "SpeechStreamListener.h"
 #include "nsISpeechRecognitionService.h"
 #include "endpointer.h"
 
@@ -33,6 +35,12 @@ class nsIDOMWindow;
 namespace mozilla {
 
 namespace dom {
+
+#define TEST_PREFERENCE_ENABLE "media.webspeech.test.enable"
+#define TEST_PREFERENCE_FAKE_FSM_EVENTS "media.webspeech.test.fake_fsm_events"
+#define TEST_PREFERENCE_FAKE_RECOGNITION_SERVICE "media.webspeech.test.fake_recognition_service"
+#define SPEECH_RECOGNITION_TEST_EVENT_REQUEST_TOPIC "SpeechRecognitionTest:RequestEvent"
+#define SPEECH_RECOGNITION_TEST_END_TOPIC "SpeechRecognitionTest:End"
 
 class GlobalObject;
 class SpeechEvent;
@@ -117,7 +125,37 @@ public:
   };
 
   void DispatchError(EventType aErrorType, int aErrorCode, const nsAString& aMessage);
+  uint32_t FillSamplesBuffer(const int16_t* aSamples, uint32_t aSampleCount);
+  uint32_t SplitSamplesBuffer(const int16_t* aSamplesBuffer, uint32_t aSampleCount, nsTArray<already_AddRefed<SharedBuffer> >& aResult);
+  AudioSegment* CreateAudioSegment(nsTArray<already_AddRefed<SharedBuffer> >& aChunks);
   void FeedAudioData(already_AddRefed<SharedBuffer> aSamples, uint32_t aDuration, MediaStreamListener* aProvider);
+
+  static struct TestConfig
+  {
+  public:
+    bool mEnableTests;
+    bool mFakeFSMEvents;
+    bool mFakeRecognitionService;
+
+    void Init()
+    {
+      if (mInitialized) {
+        return;
+      }
+
+      Preferences::AddBoolVarCache(&mEnableTests, TEST_PREFERENCE_ENABLE);
+
+      if (mEnableTests) {
+        Preferences::AddBoolVarCache(&mFakeFSMEvents, TEST_PREFERENCE_FAKE_FSM_EVENTS);
+        Preferences::AddBoolVarCache(&mFakeRecognitionService, TEST_PREFERENCE_FAKE_RECOGNITION_SERVICE);
+      }
+
+      mInitialized = true;
+    }
+  private:
+    bool mInitialized;
+  } mTestConfig;
+
 
   friend class SpeechEvent;
 private:
@@ -172,7 +210,7 @@ private:
     nsRefPtr<SpeechRecognition> mRecognition;
   };
 
-  NS_IMETHOD StartRecording(DOMLocalMediaStream* aDOMStream);
+  NS_IMETHOD StartRecording(DOMMediaStream* aDOMStream);
   NS_IMETHOD StopRecording();
 
   uint32_t ProcessAudioSegment(AudioSegment* aSegment);
@@ -193,7 +231,8 @@ private:
   FSMState AbortSilently(SpeechEvent* aEvent);
   FSMState AbortError(SpeechEvent* aEvent);
 
-  nsRefPtr<DOMLocalMediaStream> mDOMStream;
+  nsRefPtr<DOMMediaStream> mDOMStream;
+  nsRefPtr<SpeechStreamListener> mSpeechListener;
   nsCOMPtr<nsISpeechRecognitionService> mRecognitionService;
 
   void GetRecognitionServiceCID(nsACString& aResultCID);
@@ -204,8 +243,16 @@ private:
   Endpointer mEndpointer;
   uint32_t mEstimationSamples;
 
+  uint32_t mAudioSamplesPerChunk;
+
+  // buffer holds one chunk of mAudioSamplesPerChunk
+  // samples before feeding it to mEndpointer
+  nsRefPtr<SharedBuffer> mAudioSamplesBuffer;
+  uint32_t mBufferedSamples;
+
   nsCOMPtr<nsITimer> mSpeechDetectionTimer;
 
+  void ProcessTestEventRequest(nsISupports* aSubject, const nsAString& aEventName);
 };
 
 class SpeechEvent : public nsRunnable
