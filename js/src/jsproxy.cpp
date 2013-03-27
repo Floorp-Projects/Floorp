@@ -3213,19 +3213,16 @@ JS_FRIEND_DATA(Class) js::FunctionProxyClass = {
 
 static JSObject *
 NewProxyObject(JSContext *cx, BaseProxyHandler *handler, const Value &priv_, TaggedProto proto_,
-                   JSObject *parent_, JSObject *call_, JSObject *construct_)
+               JSObject *parent_, ProxyCallable callable)
 {
     RootedValue priv(cx, priv_);
     Rooted<TaggedProto> proto(cx, proto_);
-    RootedObject parent(cx, parent_), call(cx, call_), construct(cx, construct_);
+    RootedObject parent(cx, parent_);
 
     JS_ASSERT_IF(proto.isObject(), cx->compartment == proto.toObject()->compartment());
     JS_ASSERT_IF(parent, cx->compartment == parent->compartment());
-    JS_ASSERT_IF(construct, cx->compartment == construct->compartment());
-    JS_ASSERT_IF(call && cx->compartment != call->compartment(), priv.get() == ObjectValue(*call));
-    bool fun = call || construct;
     Class *clasp;
-    if (fun)
+    if (callable)
         clasp = &FunctionProxyClass;
     else
         clasp = handler->isOuterWindow() ? &OuterWindowProxyClass : &ObjectProxyClass;
@@ -3250,12 +3247,6 @@ NewProxyObject(JSContext *cx, BaseProxyHandler *handler, const Value &priv_, Tag
         return NULL;
     obj->initSlot(JSSLOT_PROXY_HANDLER, PrivateValue(handler));
     obj->initCrossCompartmentSlot(JSSLOT_PROXY_PRIVATE, priv);
-    if (fun) {
-        obj->initCrossCompartmentSlot(JSSLOT_PROXY_CALL, call ? ObjectValue(*call) : UndefinedValue());
-        if (construct) {
-            obj->initSlot(JSSLOT_PROXY_CONSTRUCT, ObjectValue(*construct));
-        }
-    }
 
     /* Don't track types of properties of proxies. */
     if (newKind != SingletonObject)
@@ -3266,9 +3257,29 @@ NewProxyObject(JSContext *cx, BaseProxyHandler *handler, const Value &priv_, Tag
 
 JS_FRIEND_API(JSObject *)
 js::NewProxyObject(JSContext *cx, BaseProxyHandler *handler, const Value &priv_, JSObject *proto_,
-                   JSObject *parent_, JSObject *call_, JSObject *construct_)
+                   JSObject *parent_, ProxyCallable callable)
 {
-    return NewProxyObject(cx, handler, priv_, TaggedProto(proto_), parent_, call_, construct_);
+    return NewProxyObject(cx, handler, priv_, TaggedProto(proto_), parent_, callable);
+}
+
+JS_FRIEND_API(JSObject *)
+js::NewProxyObject(JSContext *cx, BaseProxyHandler *handler, const Value &priv_, JSObject *proto_,
+                   JSObject *parent_, JSObject *call, JSObject *construct)
+{
+    JS_ASSERT_IF(construct, cx->compartment == construct->compartment());
+    JS_ASSERT_IF(call && cx->compartment != call->compartment(), priv_ == ObjectValue(*call));
+
+    JSObject *proxy = NewProxyObject(cx, handler, priv_, TaggedProto(proto_), parent_,
+                                     call || construct ? ProxyIsCallable : ProxyNotCallable);
+    if (!proxy)
+        return NULL;
+
+    if (call)
+        proxy->initCrossCompartmentSlot(JSSLOT_PROXY_CALL, ObjectValue(*call));
+    if (construct)
+        proxy->initCrossCompartmentSlot(JSSLOT_PROXY_CONSTRUCT, ObjectValue(*construct));
+
+    return proxy;
 }
 
 JSObject *
@@ -3397,7 +3408,8 @@ proxy_createFunction(JSContext *cx, unsigned argc, Value *vp)
     }
 
     JSObject *proxy = NewProxyObject(cx, &ScriptedIndirectProxyHandler::singleton,
-                                     ObjectValue(*handler), proto, parent, call, construct);
+                                     ObjectValue(*handler), proto, parent,
+                                     call, construct);
     if (!proxy)
         return false;
 
