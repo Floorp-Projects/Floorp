@@ -24,6 +24,14 @@ XPCOMUtils.defineLazyModuleGetter(this, "PdfJs",
 
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadUtils",
                                   "resource://gre/modules/DownloadUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Promise",
+                                  "resource://gre/modules/commonjs/sdk/core/promise.js");
+
+XPCOMUtils.defineLazyModuleGetter(this, "Task",
+                                  "resource://gre/modules/Task.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "NewTabUtils",
+                                  "resource://gre/modules/NewTabUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/commonjs/sdk/core/promise.js");
@@ -120,6 +128,8 @@ let ScriptContexts = {};
   ["HistoryView", "chrome://browser/content/history.js"],
   ["HistoryStartView", "chrome://browser/content/history.js"],
   ["HistoryPanelView", "chrome://browser/content/history.js"],
+  ["Site", "chrome://browser/content/Site.js"],
+  ["TopSites", "chrome://browser/content/TopSites.js"],
   ["TopSitesView", "chrome://browser/content/TopSites.js"],
   ["TopSitesSnappedView", "chrome://browser/content/TopSites.js"],
   ["TopSitesStartView", "chrome://browser/content/TopSites.js"],
