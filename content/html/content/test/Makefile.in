@@ -264,7 +264,6 @@ MOCHITEST_FILES = \
 		test_bug742030.html \
 		test_bug742549.html \
 		test_bug745685.html \
-		test_input_file_picker.html \
 		test_bug763626.html \
 		test_bug780993.html \
 		test_bug797113.html \
