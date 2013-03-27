@@ -6,4 +6,4 @@ function inc(n) {
   return n + 1;
 }
 
-compareAgainstArray(range(0, 512), "map", inc);
+if (getBuildConfiguration().parallelJS) compareAgainstArray(range(0, 512), "map", inc);

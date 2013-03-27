@@ -1235,7 +1235,7 @@ EventSource::DispatchAllMessageEvents()
       message(static_cast<Message*>(mMessagesToDispatch.PopFront()));
 
     // Now we can turn our string into a jsval
-    jsval jsData;
+    JS::Value jsData;
     {
       JSString* jsString;
       JSAutoRequest ar(cx);

@@ -147,6 +147,9 @@ endif
 
 ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
 TEST_HARNESS_BINS += screenshot$(BIN_SUFFIX)
+ifdef MOZ_METRO
+TEST_HARNESS_BINS += metrotestharness$(BIN_SUFFIX)
+endif
 endif
 
 # Components / typelibs that don't get packaged with

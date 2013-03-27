@@ -8,4 +8,5 @@ function testClosureCreation() {
   assertEq(m.get(1)(2), 3); // (\x.x+1) 2 == 3
 }
 
-testClosureCreation();
+if (getBuildConfiguration().parallelJS)
+  testClosureCreation();

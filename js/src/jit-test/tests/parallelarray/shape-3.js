@@ -13,4 +13,4 @@ function testInfer() {
 }
 
 // FIXME(bug 844991) logical shape not implemented
-// testInfer();
+// if (parallelEnabled) testInfer();

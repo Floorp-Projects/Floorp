@@ -198,8 +198,11 @@ class NrIceCtx {
 
   // Signals to indicate events. API users can (and should)
   // register for these.
+  // TODO(ekr@rtfm.com): refactor this to be state change instead
+  // so we don't need to keep adding signals?
   sigslot::signal1<NrIceCtx *> SignalGatheringCompleted;  // Done gathering
   sigslot::signal1<NrIceCtx *> SignalCompleted;  // Done handshaking
+  sigslot::signal1<NrIceCtx *> SignalFailed;  // Failure.
 
   // The thread to direct method calls to
   nsCOMPtr<nsIEventTarget> thread() { return sts_target_; }

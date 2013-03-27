@@ -13,4 +13,5 @@ function makeObject(e, i, c) {
   return v;
 }
 
-compareAgainstArray(range(0, 512), "map", makeObject);
+if (getBuildConfiguration().parallelJS)
+  compareAgainstArray(range(0, 512), "map", makeObject);

@@ -768,7 +768,7 @@ var PlacesSearchBox = {
           query.searchTerms = filterString;
           var options = currentOptions.clone();
           // Make sure we're getting uri results.
-          options.resultType = currentOptions.RESULT_TYPE_URI;
+          options.resultType = currentOptions.RESULTS_AS_URI;
           options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY;
           options.includeHidden = true;
           currentView.load([query], options);
@@ -784,7 +784,7 @@ var PlacesSearchBox = {
           query.setTransitions([Ci.nsINavHistoryService.TRANSITION_DOWNLOAD], 1);
           let options = currentOptions.clone();
           // Make sure we're getting uri results.
-          options.resultType = currentOptions.RESULT_TYPE_URI;
+          options.resultType = currentOptions.RESULTS_AS_URI;
           options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY;
           options.includeHidden = true;
           currentView.load([query], options);

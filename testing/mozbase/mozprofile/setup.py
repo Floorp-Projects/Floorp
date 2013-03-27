@@ -2,11 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import os
 import sys
 from setuptools import setup
 
-PACKAGE_VERSION = '0.4'
+PACKAGE_VERSION = '0.5'
 
 # we only support python 2 right now
 assert sys.version_info[0] == 2
@@ -23,17 +22,10 @@ except ImportError:
     deps.append('pysqlite')
 
 
-# take description from README
-here = os.path.dirname(os.path.abspath(__file__))
-try:
-    description = file(os.path.join(here, 'README.md')).read()
-except (OSError, IOError):
-    description = ''
-
 setup(name='mozprofile',
       version=PACKAGE_VERSION,
-      description="Handling of Mozilla Gecko based application profiles",
-      long_description=description,
+      description="Library to create and modify Mozilla application profiles",
+      long_description="see http://mozbase.readthedocs.org/",
       classifiers=['Environment :: Console',
                    'Intended Audience :: Developers',
                    'License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)',

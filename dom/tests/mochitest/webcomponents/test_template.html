@@ -1,0 +1,145 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=818976
+-->
+<head>
+  <title>Test for template element</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script>
+    function shouldNotCall() {
+      ok(false, "Template contents should be inert.");
+    }
+  </script>
+  <template>
+    <script>
+      shouldNotCall();
+    </script>
+  </template>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=818976">Bug 818976</a>
+<template id="grabme"><div id="insidetemplate"></div></template>
+<template id="justtemplate"></template>
+<template id="first">Hi<template>Bye</template></template>
+<div><template id="second"><span></span></template></div>
+<template id="cloneme"><span>I want a clone</span><span>me too</span></template>
+<template id="cycleone"></template>
+<template id="cycletwo"><template></template></template>
+<template id="cyclethree"></template>
+<template id="cyclefour"><template></template></template>
+<template id="appendtome"></template>
+<template id="insertinme"></template>
+<template>
+  <script>
+    shouldNotCall();
+  </script>
+</template>
+<div id="fillme"></div>
+<script>
+var templateEl = document.getElementById("grabme");
+ok(templateEl, "template element should be in document.");
+is(window.getComputedStyle(templateEl).display, "none", "Template element should not be visible.");
+ok(!document.getElementById("insidetemplate"), "Template content should not be in document.");
+is(templateEl.childNodes.length, 0, "Template element should have no children.");
+is(templateEl.content.childNodes.length, 1, "Template content should have 1 child <div>.");
+
+// Make sure that template is owned by different document.
+ok(templateEl.content.ownerDocument != templateEl.ownerDocument, "Template should be in a different document because the current document has a browsing context.");
+var otherTemplateEl = document.getElementById("first");
+is(templateEl.content.ownerDocument, otherTemplateEl.content.ownerDocument, "Template contents within the same document should be owned by the same template contents owner.");
+
+// Tests for XMLSerializer
+templateEl = document.getElementById("justtemplate");
+var serializer = new XMLSerializer();
+is(serializer.serializeToString(templateEl), '<template xmlns="http://www.w3.org/1999/xhtml" id="justtemplate"></template>', "XMLSerializer should serialize template element.");
+
+templateEl = document.getElementById("first");
+is(serializer.serializeToString(templateEl), '<template xmlns="http://www.w3.org/1999/xhtml" id="first">Hi<template>Bye</template></template>', "XMLSerializer should serialize template content.");
+
+// Tests for innerHTML.
+is(templateEl.innerHTML, 'Hi<template>Bye</template>', "innerHTML should serialize content.");
+// Tests for outerHTML, not specified but should do something reasonable.
+is(templateEl.outerHTML, '<template id="first">Hi<template>Bye</template></template>', "outerHTML should serialize content.");
+
+templateEl.innerHTML = "Hello";
+is(templateEl.innerHTML, "Hello", "innerHTML of template should be set to 'Hello'");
+is(templateEl.childNodes.length, 0, "Template element should have no children.");
+is(templateEl.content.childNodes.length, 1, "Template content should have 'Hello' as child.");
+
+// Test for innerHTML on parent of template element.
+var templateParent = document.getElementById("second").parentNode;
+is(templateParent.innerHTML, '<template id="second"><span></span></template>', "InnerHTML on parent of template element should serialize template and template content.");
+
+templateEl.innerHTML = '<template id="inner">Hello</template>';
+ok(templateEl.content.childNodes[0] instanceof HTMLTemplateElement, "Template content should have <template> as child.");
+is(templateEl.content.childNodes[0].childNodes.length, 0, "Parsed temlate element should have no children.");
+is(templateEl.content.childNodes[0].content.childNodes.length, 1, "Parsed temlate element should have 'Hello' in content.");
+
+// Test cloning.
+templateEl = document.getElementById("cloneme");
+var nonDeepClone = templateEl.cloneNode(false);
+is(nonDeepClone.childNodes.length, 0, "There should be no children on the clone.");
+is(nonDeepClone.content.childNodes.length, 0, "Content should not be cloned.");
+var deepClone = templateEl.cloneNode(true);
+is(deepClone.childNodes.length, 0, "There should be no children on the clone.");
+is(deepClone.content.childNodes.length, 2, "The content should be cloned.");
+
+// Append content into a node.
+var parentEl = document.getElementById("fillme");
+parentEl.appendChild(templateEl.content);
+is(parentEl.childNodes.length, 2, "Parent should be appended with cloned content.");
+
+// Test exceptions thrown for cycles.
+templateEl = document.getElementById("cycleone");
+try {
+  templateEl.content.appendChild(templateEl);
+  ok(false, "Exception should be thrown when creating cycles in template content.");
+} catch (ex) {
+  ok(true, "Exception should be thrown when creating cycles in template content.");
+}
+
+templateEl = document.getElementById("cycletwo");
+try {
+  // Append template to template content within the template content.
+  templateEl.content.childNodes[0].content.appendChild(templateEl);
+  ok(false, "Exception should be thrown when creating cycles in template content.");
+} catch (ex) {
+  ok(true, "Exception should be thrown when creating cycles in template content.");
+}
+
+templateEl = document.getElementById("cyclethree");
+try {
+  templateEl.appendChild(templateEl);
+  ok(false, "Exception should be thrown when creating cycles in hierarchy.");
+} catch (ex) {
+  ok(true, "Exception should be thrown when creating cycles in hierarchy.");
+}
+
+templateEl = document.getElementById("cyclefour");
+try {
+  templateEl.content.childNodes[0].appendChild(templateEl);
+  ok(false, "Exception should be thrown when creating cycles in hierarchy.");
+} catch (ex) {
+  ok(true, "Exception should be thrown when creating cycles in hierarchy.");
+}
+
+templateEl = document.getElementById("insertinme");
+var sentinel = document.createElement("div");
+try {
+  templateEl.content.appendChild(sentinel);
+  templateEl.content.insertBefore(templateEl, sentinel);
+  ok(false, "Exception should be thrown when creating cycles in hierarchy.");
+} catch (ex) {
+  ok(true, "Exception should be thrown when creating cycles in hierarchy.");
+}
+
+// Appending normal stuff into content should work.
+templateEl = document.getElementById("appendtome");
+templateEl.content.appendChild(document.createElement("div"));
+is(templateEl.content.childNodes.length, 1, "Template should have div element appended as child");
+
+</script>
+</body>
+</html>

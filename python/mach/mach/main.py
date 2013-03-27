@@ -257,10 +257,9 @@ To see more help for a specific command, run:
                 parser.print_help()
                 return 0
 
-            # ArgumentParser doesn't seem to have a public API to expose the
-            # subparsers. So, we just simulate the behavior that causes
-            # ArgumentParser to do the printing for us.
-            return self._run([args.subcommand, '--help'])
+            handler = Registrar.command_handlers[args.subcommand]
+            handler.parser.print_help()
+            return 0
 
         # Add JSON logging to a file if requested.
         if args.logfile:

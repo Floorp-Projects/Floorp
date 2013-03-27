@@ -15,7 +15,7 @@
 #include "nsThreadUtils.h"
 #include "nsCOMPtr.h"
 #include "prlog.h"
-#include "sampler.h"
+#include "GeckoProfiler.h"
 #include <algorithm>
 
 static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
@@ -353,7 +353,7 @@ nsInputStreamPump::OnInputStreamReady(nsIAsyncInputStream *stream)
 {
     LOG(("nsInputStreamPump::OnInputStreamReady [this=%x]\n", this));
 
-    SAMPLE_LABEL("Input", "nsInputStreamPump::OnInputStreamReady");
+    PROFILER_LABEL("Input", "nsInputStreamPump::OnInputStreamReady");
     // this function has been called from a PLEvent, so we can safely call
     // any listener or progress sink methods directly from here.
 
@@ -400,7 +400,7 @@ nsInputStreamPump::OnInputStreamReady(nsIAsyncInputStream *stream)
 uint32_t
 nsInputStreamPump::OnStateStart()
 {
-    SAMPLE_LABEL("nsInputStreamPump", "OnStateStart");
+    PROFILER_LABEL("nsInputStreamPump", "OnStateStart");
     LOG(("  OnStateStart [this=%x]\n", this));
 
     nsresult rv;
@@ -428,7 +428,7 @@ nsInputStreamPump::OnStateStart()
 uint32_t
 nsInputStreamPump::OnStateTransfer()
 {
-    SAMPLE_LABEL("Input", "nsInputStreamPump::OnStateTransfer");
+    PROFILER_LABEL("Input", "nsInputStreamPump::OnStateTransfer");
     LOG(("  OnStateTransfer [this=%x]\n", this));
 
     // if canceled, go directly to STATE_STOP...
@@ -536,7 +536,7 @@ nsInputStreamPump::OnStateTransfer()
 uint32_t
 nsInputStreamPump::OnStateStop()
 {
-    SAMPLE_LABEL("Input", "nsInputStreamPump::OnStateTransfer");
+    PROFILER_LABEL("Input", "nsInputStreamPump::OnStateTransfer");
     LOG(("  OnStateStop [this=%x status=%x]\n", this, mStatus));
 
     // if an error occurred, we must be sure to pass the error onto the async

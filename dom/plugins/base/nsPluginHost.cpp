@@ -2081,8 +2081,6 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile *pluginsDir,
       return NS_OK;
     }
 
-    pluginTag->SetHost(this);
-
     // Add plugin tags such that the list is ordered by modification date,
     // newest to oldest. This is ugly, it'd be easier with just about anything
     // other than a single-directional linked list.

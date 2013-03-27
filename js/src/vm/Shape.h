@@ -510,7 +510,7 @@ class Shape : public js::gc::Cell
     static inline RawShape search(JSContext *cx, Shape *start, jsid id,
                                   Shape ***pspp, bool adding = false);
 
-    inline void removeFromDictionary(JSObject *obj);
+    inline void removeFromDictionary(ObjectImpl *obj);
     inline void insertIntoDictionary(HeapPtrShape *dictp);
 
     inline void initDictionaryShape(const StackShape &child, uint32_t nfixed,
