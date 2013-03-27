@@ -345,10 +345,18 @@ SetProxyExtra(RawObject obj, size_t n, const Value &extra)
     SetReservedSlot(obj, JSSLOT_PROXY_EXTRA + n, extra);
 }
 
+enum ProxyCallable {
+    ProxyNotCallable = false,
+    ProxyIsCallable = true
+};
+
 JS_FRIEND_API(JSObject *)
 NewProxyObject(JSContext *cx, BaseProxyHandler *handler, const Value &priv,
-               JSObject *proto, JSObject *parent,
-               JSObject *call = NULL, JSObject *construct = NULL);
+               JSObject *proto, JSObject *parent, ProxyCallable callable = ProxyNotCallable);
+
+JS_FRIEND_API(JSObject *)
+NewProxyObject(JSContext *cx, BaseProxyHandler *handler, const Value &priv,
+               JSObject *proto, JSObject *parent, JSObject *call, JSObject *construct);
 
 JSObject *
 RenewProxyObject(JSContext *cx, JSObject *obj, BaseProxyHandler *handler, Value priv);
