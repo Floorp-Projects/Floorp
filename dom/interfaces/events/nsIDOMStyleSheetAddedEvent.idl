@@ -1,0 +1,27 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIDOMEvent.idl"
+
+interface nsIDOMCSSStyleSheet;
+
+[scriptable, builtinclass, uuid(05a78874-43d7-459d-be32-ba9271527153)]
+interface nsIDOMStyleSheetAddedEvent : nsIDOMEvent
+{
+  readonly attribute nsIDOMCSSStyleSheet stylesheet;
+  readonly attribute boolean documentSheet;
+  [noscript] void initStyleSheetAddedEvent(in DOMString aTypeArg,
+                                           in boolean aCanBubbleArg,
+                                           in boolean aCancelableArg,
+                                           in nsIDOMCSSStyleSheet aStyleSheet,
+                                           in boolean aDocumentSheet);
+};
+
+dictionary StyleSheetAddedEventInit : EventInit
+{
+  nsIDOMCSSStyleSheet stylesheet;
+  boolean documentSheet;
+};
+
