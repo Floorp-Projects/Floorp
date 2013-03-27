@@ -144,7 +144,7 @@ Site.prototype = {
     // Register drag-and-drop event handlers.
     this._node.addEventListener("dragstart", this, false);
     this._node.addEventListener("dragend", this, false);
-    this._node.addEventListener("mouseenter", this, false);
+    this._node.addEventListener("mouseover", this, false);
 
     let controls = this.node.querySelectorAll(".newtab-control");
     for (let i = 0; i < controls.length; i++)
@@ -174,7 +174,8 @@ Site.prototype = {
         else
           this.pin();
         break;
-      case "mouseenter":
+      case "mouseover":
+        this._node.removeEventListener("mouseover", this, false);
         this._speculativeConnect();
         break;
       case "dragstart":
