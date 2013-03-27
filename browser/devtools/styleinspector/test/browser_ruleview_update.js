@@ -29,7 +29,7 @@ function startTest()
   let elementStyle = 'margin-top: 1px; padding-top: 5px;'
   testElement.setAttribute("style", elementStyle);
 
-  ruleDialog = openDialog("chrome://browser/content/devtools/cssruleview.xul",
+  ruleDialog = openDialog("chrome://browser/content/devtools/cssruleview.xhtml",
                           "cssruleviewtest",
                           "width=200,height=350");
   ruleDialog.addEventListener("load", function onLoad(evt) {

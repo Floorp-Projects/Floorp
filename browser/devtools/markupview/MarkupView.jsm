@@ -843,13 +843,13 @@ MarkupContainer.prototype = {
 
   set expanded(aValue) {
     if (aValue) {
-      this.expander.setAttribute("expanded", "");
+      this.expander.setAttribute("open", "");
       this.children.setAttribute("expanded", "");
       if (this.editor.summaryElt) {
         this.editor.summaryElt.setAttribute("expanded", "");
       }
     } else {
-      this.expander.removeAttribute("expanded");
+      this.expander.removeAttribute("open");
       this.children.removeAttribute("expanded");
       if (this.editor.summaryElt) {
         this.editor.summaryElt.removeAttribute("expanded");
@@ -877,14 +877,14 @@ MarkupContainer.prototype = {
   set selected(aValue) {
     this._selected = aValue;
     if (this._selected) {
-      this.editor.elt.classList.add("selected");
+      this.editor.elt.classList.add("theme-selected");
       if (this.editor.closeElt) {
-        this.editor.closeElt.classList.add("selected");
+        this.editor.closeElt.classList.add("theme-selected");
       }
     } else {
-      this.editor.elt.classList.remove("selected");
+      this.editor.elt.classList.remove("theme-selected");
       if (this.editor.closeElt) {
-        this.editor.closeElt.classList.remove("selected");
+        this.editor.closeElt.classList.remove("theme-selected");
       }
     }
   },
