@@ -90,8 +90,8 @@ nsFileControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
                                         mMouseListener, false);
   }
 
-  nsContentUtils::DestroyAnonymousContent(&mBrowse);
   nsContentUtils::DestroyAnonymousContent(&mTextContent);
+  nsContentUtils::DestroyAnonymousContent(&mBrowse);
 
   mMouseListener->ForgetFrame();
   nsBlockFrame::DestroyFrom(aDestructRoot);
@@ -171,8 +171,8 @@ void
 nsFileControlFrame::AppendAnonymousContentTo(nsBaseContentList& aElements,
                                              uint32_t aFilter)
 {
-  aElements.MaybeAppendElement(mTextContent);
   aElements.MaybeAppendElement(mBrowse);
+  aElements.MaybeAppendElement(mTextContent);
 }
 
 NS_QUERYFRAME_HEAD(nsFileControlFrame)
