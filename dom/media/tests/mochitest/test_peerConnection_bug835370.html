@@ -8,10 +8,6 @@
 <body>
 <pre id="test">
 <script type="application/javascript">
-if (navigator.platform.startsWith("Win")) {
-  SimpleTest.expectAssertions(0, 9);
-}
-
   createHTML({
     bug: "825703",
     title: "PeerConnection.createOffer valid/invalid constraints permutations"
