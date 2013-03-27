@@ -61,7 +61,7 @@ if (typeof Components != "undefined") {
       * in a directory.
       *
       * Example: Obtaining $TMP/foo/bar in an OS-independent manner
-      *  var tmpDir = OS.Path.to("TmpD");
+      *  var tmpDir = OS.Constants.Path.tmpDir;
       *  var path = OS.Path.join(tmpDir, "foo", "bar");
       *
       * Under Unix, this will return "/tmp/foo/bar".
