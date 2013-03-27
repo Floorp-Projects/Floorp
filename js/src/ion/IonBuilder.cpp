@@ -2993,7 +2993,7 @@ IonBuilder::inlineScriptedCall(HandleFunction target, CallInfo &callInfo)
     LifoAlloc *alloc = GetIonContext()->temp->lifoAlloc();
     CompileInfo *info = alloc->new_<CompileInfo>(calleeScript.get(), target,
                                                  (jsbytecode *)NULL, thisCall.constructing(),
-                                                 SequentialExecution);
+                                                 this->info().executionMode());
     if (!info)
         return false;
 
