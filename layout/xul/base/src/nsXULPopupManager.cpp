@@ -381,26 +381,28 @@ nsXULPopupManager::PopupResized(nsIFrame* aFrame, nsIntSize aSize)
   if (!menuPopupFrame)
     return;
 
+  nsView* view = menuPopupFrame->GetView();
+  if (!view)
+    return;
+
+  nsIntRect curDevSize = view->CalcWidgetBounds(eWindowType_popup);
+  // If the size is what we think it is, we have nothing to do.
+  if (curDevSize.width == aSize.width && curDevSize.height == aSize.height)
+    return;
+
+  // The size is different. Convert the actual size to css pixels and store it
+  // as 'width' and 'height' attributes on the popup.
   nsPresContext* presContext = menuPopupFrame->PresContext();
 
-  nsSize currentSize = menuPopupFrame->GetSize();
-
-  // convert both current and new sizes to integer CSS pixels for comparison;
-  // we won't set attributes if there is only a sub-CSS-pixel discrepancy
-  nsIntSize currCSS(nsPresContext::AppUnitsToIntCSSPixels(currentSize.width),
-                    nsPresContext::AppUnitsToIntCSSPixels(currentSize.height));
   nsIntSize newCSS(presContext->DevPixelsToIntCSSPixels(aSize.width),
                    presContext->DevPixelsToIntCSSPixels(aSize.height));
 
-  if (newCSS.width != currCSS.width || newCSS.height != currCSS.height) {
-    // for resizes, we just set the width and height attributes
-    nsIContent* popup = menuPopupFrame->GetContent();
-    nsAutoString width, height;
-    width.AppendInt(newCSS.width);
-    height.AppendInt(newCSS.height);
-    popup->SetAttr(kNameSpaceID_None, nsGkAtoms::width, width, false);
-    popup->SetAttr(kNameSpaceID_None, nsGkAtoms::height, height, true);
-  }
+  nsIContent* popup = menuPopupFrame->GetContent();
+  nsAutoString width, height;
+  width.AppendInt(newCSS.width);
+  height.AppendInt(newCSS.height);
+  popup->SetAttr(kNameSpaceID_None, nsGkAtoms::width, width, false);
+  popup->SetAttr(kNameSpaceID_None, nsGkAtoms::height, height, true);
 }
 
 nsMenuPopupFrame*
