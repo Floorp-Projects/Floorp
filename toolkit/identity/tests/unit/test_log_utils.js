@@ -3,11 +3,7 @@
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import('resource://gre/modules/Services.jsm');
-
-XPCOMUtils.defineLazyGetter(this, "logger", function() {
-  Cu.import('resource://gre/modules/identity/LogUtils.jsm');
-  return getLogger("Identity test", "toolkit.identity.debug");
-});
+Cu.import('resource://gre/modules/identity/LogUtils.jsm');
 
 function toggle_debug() {
   do_test_pending();
@@ -21,7 +17,7 @@ function toggle_debug() {
     observe: function observe(aSubject, aTopic, aData) {
       if (aTopic === "nsPref:changed") {
         // race condition?
-        do_check_eq(logger._enabled, true);
+        do_check_eq(Logger._debug, true);
         do_test_finished();
         run_next_test();
       }
@@ -38,31 +34,37 @@ function toggle_debug() {
 
 // test that things don't break
 
+function logAlias(...args) {
+  Logger.log.apply(Logger, ["log alias"].concat(args));
+}
+function reportErrorAlias(...args) {
+  Logger.reportError.apply(Logger, ["report error alias"].concat(args));
+}
+
 function test_log() {
-  logger.log("log test", "I like pie");
+  Logger.log("log test", "I like pie");
   do_test_finished();
   run_next_test();
 }
 
-function test_warning() {
-  logger.warning("similar log test", "We are still out of pies!!!");
+function test_reportError() {
+  Logger.reportError("log test", "We are out of pies!!!");
   do_test_finished();
   run_next_test();
 }
 
-function test_error() {
-  logger.error("My head a splode");
+function test_wrappers() {
+  logAlias("I like potatoes");
   do_test_finished();
-  run_next_test();
+  reportErrorAlias("Too much red bull");
 }
-
 
 let TESTS = [
 // XXX fix me 
 //    toggle_debug,
     test_log,
-    test_warning,
-    test_error
+    test_reportError,
+    test_wrappers
 ];
 
 TESTS.forEach(add_test);
@@ -70,4 +72,3 @@ TESTS.forEach(add_test);
 function run_test() {
   run_next_test();
 }
-

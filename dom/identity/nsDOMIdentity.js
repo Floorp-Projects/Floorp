@@ -23,18 +23,12 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/identity/IdentityUtils.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "logger", function() {
-  Cu.import('resource://gre/modules/identity/LogUtils.jsm');
-  return getLogger("Identity", "toolkit.identity.debug");
-});
-
 // This is the child process corresponding to nsIDOMIdentity
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
                                    "nsIMessageSender");
 
 function nsDOMIdentity(aIdentityInternal) {
-  logger.log("nsDOMIdentity constructor");
   this._identityInternal = aIdentityInternal;
 }
 nsDOMIdentity.prototype = {
@@ -71,7 +65,6 @@ nsDOMIdentity.prototype = {
    */
 
   watch: function nsDOMIdentity_watch(aOptions) {
-    logger.log(aOptions);
     if (this._rpWatcher) {
       throw new Error("navigator.id.watch was already called");
     }
@@ -96,7 +89,6 @@ nsDOMIdentity.prototype = {
     }
 
     let message = this.DOMIdentityMessage(aOptions);
-    logger.log(message);
 
     // loggedInUser vs loggedInEmail
     // https://developer.mozilla.org/en-US/docs/DOM/navigator.id.watch
@@ -106,7 +98,6 @@ nsDOMIdentity.prototype = {
     checkRenamed(aOptions, "loggedInEmail", "loggedInUser");
     message["loggedInUser"] = aOptions["loggedInUser"];
 
-    logger.log(message);
     let emailType = typeof(aOptions["loggedInUser"]);
     if (aOptions["loggedInUser"] && aOptions["loggedInUser"] !== "undefined") {
       if (emailType !== "string") {
@@ -122,14 +113,13 @@ nsDOMIdentity.prototype = {
       // Set loggedInUser in this block that "undefined" doesn't get through.
       message.loggedInUser = aOptions.loggedInUser;
     }
-    logger.log("loggedInUser:", message.loggedInUser);
+    this._log("loggedInUser: " + message.loggedInUser);
 
     this._rpWatcher = aOptions;
     this._identityInternal._mm.sendAsyncMessage("Identity:RP:Watch", message);
   },
 
   request: function nsDOMIdentity_request(aOptions) {
-    logger.log(aOptions);
     let util = this._window.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIDOMWindowUtils);
 
@@ -138,7 +128,7 @@ nsDOMIdentity.prototype = {
     // getVerifiedEmail() calls, which make use of an RP context
     // marked as _internal.
     if (this.nativeEventsRequired && !util.isHandlingUserInput && !aOptions._internal) {
-      error("request: rejecting non-native event");
+      this._log("request: rejecting non-native event");
       return;
     }
 
@@ -181,7 +171,6 @@ nsDOMIdentity.prototype = {
   },
 
   logout: function nsDOMIdentity_logout() {
-    logger.log("logout");
     if (!this._rpWatcher) {
       throw new Error("navigator.id.logout called before navigator.id.watch");
     }
@@ -254,7 +243,7 @@ nsDOMIdentity.prototype = {
   },
 
   getVerifiedEmail: function nsDOMIdentity_getVerifiedEmail(aCallback) {
-    error("WARNING: getVerifiedEmail has been deprecated");
+    Cu.reportError("WARNING: getVerifiedEmail has been deprecated");
     this.get(aCallback, {});
   },
 
@@ -263,7 +252,7 @@ nsDOMIdentity.prototype = {
    */
 
   beginProvisioning: function nsDOMIdentity_beginProvisioning(aCallback) {
-    logger.log("beginProvisioning");
+    this._log("beginProvisioning");
     if (this._beginProvisioningCallback) {
       throw new Error("navigator.id.beginProvisioning already called.");
     }
@@ -277,7 +266,7 @@ nsDOMIdentity.prototype = {
   },
 
   genKeyPair: function nsDOMIdentity_genKeyPair(aCallback) {
-    logger.log("genKeyPair");
+    this._log("genKeyPair");
     if (!this._beginProvisioningCallback) {
       throw new Error("navigator.id.genKeyPair called outside of provisioning");
     }
@@ -294,7 +283,7 @@ nsDOMIdentity.prototype = {
   },
 
   registerCertificate: function nsDOMIdentity_registerCertificate(aCertificate) {
-    logger.log("registerCertificate");
+    this._log("registerCertificate");
     if (!this._genKeyPairCallback) {
       throw new Error("navigator.id.registerCertificate called outside of provisioning");
     }
@@ -309,7 +298,7 @@ nsDOMIdentity.prototype = {
   },
 
   raiseProvisioningFailure: function nsDOMIdentity_raiseProvisioningFailure(aReason) {
-    logger.log("raiseProvisioningFailure '" + aReason + "'");
+    this._log("raiseProvisioningFailure '" + aReason + "'");
     if (this._provisioningEnded) {
       throw new Error("Provisioning already ended");
     }
@@ -328,7 +317,7 @@ nsDOMIdentity.prototype = {
    */
 
   beginAuthentication: function nsDOMIdentity_beginAuthentication(aCallback) {
-    logger.log("beginAuthentication");
+    this._log("beginAuthentication");
     if (this._beginAuthenticationCallback) {
       throw new Error("navigator.id.beginAuthentication already called.");
     }
@@ -416,7 +405,7 @@ nsDOMIdentity.prototype = {
       case "Identity:RP:Watch:OnLogin":
         // Do we have a watcher?
         if (!this._rpWatcher) {
-          logger.warning("Received OnLogin message, but there is no RP watcher");
+          this._log("WARNING: Received OnLogin message, but there is no RP watcher");
           return;
         }
 
@@ -431,7 +420,7 @@ nsDOMIdentity.prototype = {
       case "Identity:RP:Watch:OnLogout":
         // Do we have a watcher?
         if (!this._rpWatcher) {
-          logger.warning("Received OnLogout message, but there is no RP watcher");
+          this._log("WARNING: Received OnLogout message, but there is no RP watcher");
           return;
         }
 
@@ -442,7 +431,7 @@ nsDOMIdentity.prototype = {
       case "Identity:RP:Watch:OnReady":
         // Do we have a watcher?
         if (!this._rpWatcher) {
-          logger.warning("Received OnReady message, but there is no RP watcher");
+          this._log("WARNING: Received OnReady message, but there is no RP watcher");
           return;
         }
 
@@ -453,7 +442,7 @@ nsDOMIdentity.prototype = {
       case "Identity:RP:Watch:OnCancel":
         // Do we have a watcher?
         if (!this._rpWatcher) {
-          logger.warning("Received OnCancel message, but there is no RP watcher");
+          this._log("WARNING: Received OnCancel message, but there is no RP watcher");
           return;
         }
 
@@ -471,6 +460,10 @@ nsDOMIdentity.prototype = {
         this._callBeginAuthenticationCallback(msg);
         break;
     }
+  },
+
+  _log: function nsDOMIdentity__log(msg) {
+    this._identityInternal._log(msg);
   },
 
   _callGenKeyPairCallback: function nsDOMIdentity__callGenKeyPairCallback(message) {
@@ -532,7 +525,7 @@ nsDOMIdentity.prototype = {
   },
 
   uninit: function DOMIdentity_uninit() {
-    logger.log("unwatch", this._id);
+    this._log("nsDOMIdentity uninit()");
     this._identityInternal._mm.sendAsyncMessage(
       "Identity:RP:Unwatch",
       { id: this._id }
@@ -605,7 +598,7 @@ nsDOMIdentityInternal.prototype = {
     this._id = util.outerWindowID;
     this._innerWindowID = util.currentInnerWindowID;
 
-    logger.log("init was called from", aWindow.document.location);
+    this._log("init was called from " + aWindow.document.location);
 
     this._mm = cpmm;
 
@@ -628,6 +621,14 @@ nsDOMIdentityInternal.prototype = {
     Services.obs.addObserver(this, "inner-window-destroyed", false);
 
     return this._identity;
+  },
+
+  // Private.
+  _log: function nsDOMIdentityInternal__log(msg) {
+    if (!this._debug) {
+      return;
+    }
+    dump("nsDOMIdentity (" + this._id + "): " + msg + "\n");
   },
 
   // Component setup.
