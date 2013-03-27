@@ -5848,13 +5848,6 @@ Parser<FullParseHandler>::generatorExpr(ParseNode *kid)
         genfn->pn_pos.begin = body->pn_pos.begin = kid->pn_pos.begin;
         genfn->pn_pos.end = body->pn_pos.end = tokenStream.currentToken().pos.end;
 
-        if (AtomDefnPtr p = genpc.lexdeps->lookup(context->names().arguments)) {
-            Definition *dn = p.value();
-            ParseNode *errorNode = dn->dn_uses ? dn->dn_uses : body;
-            report(ParseError, false, errorNode, JSMSG_BAD_GENEXP_BODY, js_arguments_str);
-            return null();
-        }
-
         RootedPropertyName funName(context);
         if (!leaveFunction(genfn, funName))
             return null();
