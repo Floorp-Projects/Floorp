@@ -365,13 +365,22 @@ SharedSurface_GLTexture::WaitSync()
         // We must have used glFinish instead of glFenceSync.
         return true;
     }
-    MOZ_ASSERT(mConsGL->IsExtensionSupported(GLContext::ARB_sync));
+    MOZ_ASSERT(mGL->IsExtensionSupported(GLContext::ARB_sync));
 
-    mConsGL->fWaitSync(mSync,
-                       0,
-                       LOCAL_GL_TIMEOUT_IGNORED);
+    GLuint64 waitMS = 500;
+    const GLuint64 nsPerMS = 1000 * 1000;
+    GLuint64 waitNS = waitMS * nsPerMS;
+    GLenum status = mGL->fClientWaitSync(mSync,
+                                         0,
+                                         waitNS);
 
-    mConsGL->fDeleteSync(mSync);
+    if (status != LOCAL_GL_CONDITION_SATISFIED &&
+        status != LOCAL_GL_ALREADY_SIGNALED)
+    {
+        return false;
+    }
+
+    mGL->fDeleteSync(mSync);
     mSync = 0;
 
     return true;
