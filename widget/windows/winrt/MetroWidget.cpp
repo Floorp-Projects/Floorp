@@ -1168,7 +1168,7 @@ MetroWidget::SetInputContext(const InputContext& aContext,
                              const InputContextAction& aAction)
 {
   mInputContext = aContext;
-  nsTextStore::SetInputContext(mInputContext);
+  nsTextStore::SetInputContext(this, mInputContext, aAction);
   bool enable = (mInputContext.mIMEState.mEnabled == IMEState::ENABLED ||
                  mInputContext.mIMEState.mEnabled == IMEState::PLUGIN);
   if (enable &&
