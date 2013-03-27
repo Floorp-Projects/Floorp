@@ -1156,6 +1156,10 @@ extern JSBool
 js_DefineOwnProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
                      const JS::Value &descriptor, JSBool *bp);
 
+extern JSBool
+js_DefineOwnProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
+                     const js::PropertyDescriptor &descriptor, JSBool *bp);
+
 namespace js {
 
 /*
