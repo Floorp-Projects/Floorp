@@ -13,6 +13,7 @@ const Cr = Components.results;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/identity/LogUtils.jsm");
 Cu.import("resource://gre/modules/identity/Sandbox.jsm");
 
 this.EXPORTED_SYMBOLS = ["IdentityProvider"];
@@ -22,10 +23,13 @@ XPCOMUtils.defineLazyModuleGetter(this,
                                   "jwcrypto",
                                   "resource://gre/modules/identity/jwcrypto.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "logger", function() {
-  Cu.import('resource://gre/modules/identity/LogUtils.jsm');
-  return getLogger("Identity IDP", "toolkit.identity.debug");
-});
+function log(...aMessageArgs) {
+  Logger.log.apply(Logger, ["IDP"].concat(aMessageArgs));
+}
+function reportError(...aMessageArgs) {
+  Logger.reportError.apply(Logger, ["IDP"].concat(aMessageArgs));
+}
+
 
 function IdentityProviderService() {
   XPCOMUtils.defineLazyModuleGetter(this,
@@ -72,7 +76,7 @@ IdentityProviderService.prototype = {
     }
 
     let err = "No provisioning flow found with id " + aProvId;
-    logger.warning("ERROR:", err);
+    log("ERROR:", err);
     if (typeof aErrBack === 'function') {
       aErrBack(err);
     }
@@ -118,7 +122,7 @@ IdentityProviderService.prototype = {
   _provisionIdentity: function _provisionIdentity(aIdentity, aIDPParams, aProvId, aCallback) {
     let provPath = aIDPParams.idpParams.provisioning;
     let url = Services.io.newURI("https://" + aIDPParams.domain, null, null).resolve(provPath);
-    logger.log("_provisionIdentity: identity:", aIdentity, "url:", url);
+    log("_provisionIdentity: identity:", aIdentity, "url:", url);
 
     // If aProvId is not null, then we already have a flow
     // with a sandbox.  Otherwise, get a sandbox and create a
@@ -126,7 +130,7 @@ IdentityProviderService.prototype = {
 
     if (aProvId) {
       // Re-use an existing sandbox
-      logger.log("_provisionIdentity: re-using sandbox in provisioning flow with id:", aProvId);
+      log("_provisionIdentity: re-using sandbox in provisioning flow with id:", aProvId);
       this._provisionFlows[aProvId].provisioningSandbox.reload();
 
     } else {
@@ -145,7 +149,7 @@ IdentityProviderService.prototype = {
           },
         };
 
-        logger.log("_provisionIdentity: Created sandbox and provisioning flow with id:", provId);
+        log("_provisionIdentity: Created sandbox and provisioning flow with id:", provId);
         // XXX bug 769862 - provisioning flow should timeout after N seconds
 
       }.bind(this));
@@ -163,7 +167,7 @@ IdentityProviderService.prototype = {
    *                  - doGenKeyPairCallback(pk)
    */
   beginProvisioning: function beginProvisioning(aCaller) {
-    logger.log("beginProvisioning:", aCaller.id);
+    log("beginProvisioning:", aCaller.id);
 
     // Expect a flow for this caller already to be underway.
     let provFlow = this.getProvisionFlow(aCaller.id, aCaller.doError);
@@ -195,7 +199,7 @@ IdentityProviderService.prototype = {
    * @param aReason
    */
   raiseProvisioningFailure: function raiseProvisioningFailure(aProvId, aReason) {
-    logger.warning("Provisioning failure", aReason);
+    reportError("Provisioning failure", aReason);
 
     // look up the provisioning caller and its callback
     let provFlow = this.getProvisionFlow(aProvId);
@@ -228,16 +232,16 @@ IdentityProviderService.prototype = {
 
     if (!provFlow.didBeginProvisioning) {
       let errStr = "ERROR: genKeyPair called before beginProvisioning";
-      logger.warning(errStr);
+      log(errStr);
       provFlow.callback(errStr);
       return;
     }
 
     // Ok generate a keypair
     jwcrypto.generateKeyPair(jwcrypto.ALGORITHMS.DS160, function gkpCb(err, kp) {
-      logger.log("in gkp callback");
+      log("in gkp callback");
       if (err) {
-        logger.error("ERROR: genKeyPair:", err);
+        log("ERROR: genKeyPair:", err);
         provFlow.callback(err);
         return;
       }
@@ -246,7 +250,7 @@ IdentityProviderService.prototype = {
 
       // Serialize the publicKey of the keypair and send it back to the
       // sandbox.
-      logger.log("genKeyPair: generated keypair for provisioning flow with id:", aProvId);
+      log("genKeyPair: generated keypair for provisioning flow with id:", aProvId);
       provFlow.caller.doGenKeyPairCallback(provFlow.kp.serializedPublicKey);
     }.bind(this));
   },
@@ -267,18 +271,18 @@ IdentityProviderService.prototype = {
    *                  being provisioned, provided by the IdP.
    */
   registerCertificate: function registerCertificate(aProvId, aCert) {
-    logger.log("registerCertificate:", aProvId, aCert);
+    log("registerCertificate:", aProvId, aCert);
 
     // look up provisioning caller, make sure it's valid.
     let provFlow = this.getProvisionFlow(aProvId);
 
     if (!provFlow.caller) {
-      logger.warning("registerCertificate", "No provision flow or caller");
+      reportError("registerCertificate", "No provision flow or caller");
       return;
     }
     if (!provFlow.kp)  {
       let errStr = "Cannot register a certificate without a keypair";
-      logger.warning("registerCertificate", errStr);
+      reportError("registerCertificate", errStr);
       provFlow.callback(errStr);
       return;
     }
@@ -304,7 +308,7 @@ IdentityProviderService.prototype = {
    *                   first-positional-param error.
    */
   _doAuthentication: function _doAuthentication(aProvId, aIDPParams) {
-    logger.log("_doAuthentication: provId:", aProvId, "idpParams:", aIDPParams);
+    log("_doAuthentication: provId:", aProvId, "idpParams:", aIDPParams);
     // create an authentication caller and its identifier AuthId
     // stash aIdentity, idpparams, and callback in it.
 
@@ -337,7 +341,7 @@ IdentityProviderService.prototype = {
    *
    */
   beginAuthentication: function beginAuthentication(aCaller) {
-    logger.log("beginAuthentication: caller id:", aCaller.id);
+    log("beginAuthentication: caller id:", aCaller.id);
 
     // Begin the authentication flow after having concluded a provisioning
     // flow.  The aCaller that the DOM gives us will have the same ID as
@@ -352,7 +356,7 @@ IdentityProviderService.prototype = {
     let identity = this._provisionFlows[authFlow.provId].identity;
 
     // tell the UI to start the authentication process
-    logger.log("beginAuthentication: authFlow:", aCaller.id, "identity:", identity);
+    log("beginAuthentication: authFlow:", aCaller.id, "identity:", identity);
     return authFlow.caller.doBeginAuthenticationCallback(identity);
   },
 
@@ -364,12 +368,12 @@ IdentityProviderService.prototype = {
    *
    */
   completeAuthentication: function completeAuthentication(aAuthId) {
-    logger.log("completeAuthentication:", aAuthId);
+    log("completeAuthentication:", aAuthId);
 
     // look up the AuthId caller, and get its callback.
     let authFlow = this._authenticationFlows[aAuthId];
     if (!authFlow) {
-      logger.warning("completeAuthentication", "No auth flow with id", aAuthId);
+      reportError("completeAuthentication", "No auth flow with id", aAuthId);
       return;
     }
     let provId = authFlow.provId;
@@ -395,12 +399,12 @@ IdentityProviderService.prototype = {
    *
    */
   cancelAuthentication: function cancelAuthentication(aAuthId) {
-    logger.log("cancelAuthentication:", aAuthId);
+    log("cancelAuthentication:", aAuthId);
 
     // look up the AuthId caller, and get its callback.
     let authFlow = this._authenticationFlows[aAuthId];
     if (!authFlow) {
-      logger.warning("cancelAuthentication", "No auth flow with id:", aAuthId);
+      reportError("cancelAuthentication", "No auth flow with id:", aAuthId);
       return;
     }
     let provId = authFlow.provId;
@@ -415,7 +419,7 @@ IdentityProviderService.prototype = {
 
     // invoke callback with ERROR.
     let errStr = "Authentication canceled by IDP";
-    logger.log("ERROR: cancelAuthentication:", errStr);
+    log("ERROR: cancelAuthentication:", errStr);
     provFlow.callback(errStr);
   },
 
@@ -426,7 +430,7 @@ IdentityProviderService.prototype = {
     // this is the transition point between the two flows,
     // provision and authenticate.  We tell the auth flow which
     // provisioning flow it is started from.
-    logger.log("setAuthenticationFlow: authId:", aAuthId, "provId:", aProvId);
+    log("setAuthenticationFlow: authId:", aAuthId, "provId:", aProvId);
     this._authenticationFlows[aAuthId] = { provId: aProvId };
     this._provisionFlows[aProvId].authId = aAuthId;
   },
@@ -436,7 +440,7 @@ IdentityProviderService.prototype = {
    * process.
    */
   _createProvisioningSandbox: function _createProvisioningSandbox(aURL, aCallback) {
-    logger.log("_createProvisioningSandbox:", aURL);
+    log("_createProvisioningSandbox:", aURL);
 
     if (!this._sandboxConfigured) {
       // Configure message manager listening on the hidden window
@@ -452,7 +456,7 @@ IdentityProviderService.prototype = {
    * Load the authentication UI to start the authentication process.
    */
   _beginAuthenticationFlow: function _beginAuthenticationFlow(aProvId, aURL) {
-    logger.log("_beginAuthenticationFlow:", aProvId, aURL);
+    log("_beginAuthenticationFlow:", aProvId, aURL);
     let propBag = {provId: aProvId};
 
     Services.obs.notifyObservers({wrappedJSObject:propBag}, "identity-auth", aURL);
@@ -463,14 +467,14 @@ IdentityProviderService.prototype = {
    * that may be attached to it.
    */
   _cleanUpProvisionFlow: function _cleanUpProvisionFlow(aProvId) {
-    logger.log('_cleanUpProvisionFlow:', aProvId);
+    log('_cleanUpProvisionFlow:', aProvId);
     let prov = this._provisionFlows[aProvId];
 
     // Clean up the sandbox, if there is one.
     if (prov.provisioningSandbox) {
       let sandbox = this._provisionFlows[aProvId]['provisioningSandbox'];
       if (sandbox.free) {
-        logger.log('_cleanUpProvisionFlow: freeing sandbox');
+        log('_cleanUpProvisionFlow: freeing sandbox');
         sandbox.free();
       }
       delete this._provisionFlows[aProvId]['provisioningSandbox'];

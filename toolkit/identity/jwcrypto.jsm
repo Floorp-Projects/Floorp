@@ -14,11 +14,7 @@ const Cr = Components.results;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-
-XPCOMUtils.defineLazyGetter(this, "logger", function() {
-  Cu.import('resource://gre/modules/identity/LogUtils.jsm');
-  return getLogger("Identity test", "toolkit.identity.debug");
-});
+Cu.import("resource://gre/modules/identity/LogUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this,
                                    "IdentityCryptoService",
@@ -29,8 +25,12 @@ this.EXPORTED_SYMBOLS = ["jwcrypto"];
 
 const ALGORITHMS = { RS256: "RS256", DS160: "DS160" };
 
+function log(...aMessageArgs) {
+  Logger.log.apply(Logger, ["jwcrypto"].concat(aMessageArgs));
+}
+
 function generateKeyPair(aAlgorithmName, aCallback) {
-  logger.log("Generate key pair; alg =", aAlgorithmName);
+  log("Generate key pair; alg =", aAlgorithmName);
 
   IdentityCryptoService.generateKeyPair(aAlgorithmName, function(rv, aKeyPair) {
     if (!Components.isSuccessCode(rv)) {
@@ -74,10 +74,10 @@ function generateKeyPair(aAlgorithmName, aCallback) {
 function sign(aPayload, aKeypair, aCallback) {
   aKeypair._kp.sign(aPayload, function(rv, signature) {
     if (!Components.isSuccessCode(rv)) {
-      logger.warning("ERROR: signer.sign failed");
+      log("ERROR: signer.sign failed");
       return aCallback("Sign failed");
     }
-    logger.log("signer.sign: success");
+    log("signer.sign: success");
     return aCallback(null, signature);
   });
 }
@@ -93,7 +93,7 @@ jwcryptoClass.prototype = {
   },
 
   generateKeyPair: function(aAlgorithmName, aCallback) {
-    logger.log("generating");
+    log("generating");
     generateKeyPair(aAlgorithmName, aCallback);
   },
 
@@ -113,7 +113,7 @@ jwcryptoClass.prototype = {
     var payloadBytes = IdentityCryptoService.base64UrlEncode(
                           JSON.stringify(payload));
 
-    logger.log("payload bytes", payload, payloadBytes);
+    log("payload bytes", payload, payloadBytes);
     sign(headerBytes + "." + payloadBytes, aKeyPair, function(err, signature) {
       if (err)
         return aCallback(err);
