@@ -311,6 +311,17 @@ webidl_files += \
   $(NULL)
 endif
 
+ifdef MOZ_WEBSPEECH
+webidl_files += \
+    SpeechGrammar.webidl \
+    SpeechGrammarList.webidl \
+    SpeechRecognitionAlternative.webidl \
+    SpeechRecognitionResultList.webidl \
+    SpeechRecognitionResult.webidl \
+    SpeechRecognition.webidl \
+    $(NULL)
+endif
+
 ifdef ENABLE_TESTS
 test_webidl_files := \
   TestCodeGen.webidl \
