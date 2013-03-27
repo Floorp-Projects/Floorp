@@ -271,7 +271,7 @@ def main():
                                      optimize=args.optimizejars,
                                      non_resources=args.non_resource)
     else:
-        errors.fatal('Unknown format: %s', format)
+        errors.fatal('Unknown format: %s' % args.format)
 
     # Adjust defines according to the requested format.
     if isinstance(formatter, OmniJarFormatter):
