@@ -35,14 +35,17 @@ import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.TransitionDrawable;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.os.SystemClock;
 import android.support.v4.util.LongSparseArray;
 import android.support.v4.util.SparseArrayCompat;
+import android.support.v4.view.AccessibilityDelegateCompat;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v4.view.VelocityTrackerCompat;
 import android.support.v4.view.ViewCompat;
+import android.support.v4.view.accessibility.AccessibilityNodeInfoCompat;
 import android.support.v4.widget.EdgeEffectCompat;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -56,6 +59,8 @@ import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.view.ViewTreeObserver;
+import android.view.accessibility.AccessibilityEvent;
+import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.AdapterView;
 import android.widget.Checkable;
 import android.widget.ListAdapter;
@@ -140,6 +145,8 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
     private final RecycleBin mRecycler;
     private AdapterDataSetObserver mDataSetObserver;
 
+    private boolean mItemsCanFocus;
+
     final boolean[] mIsScrap = new boolean[1];
 
     private boolean mDataChanged;
@@ -160,6 +167,8 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
     private float mTouchRemainderPos;
     private int mActivePointerId;
 
+    private final Rect mTempRect;
+
     private Rect mTouchFrame;
     private int mMotionPosition;
     private CheckForTap mPendingCheckForTap;
@@ -177,6 +186,9 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
 
     private int mOverScroll;
     private final int mOverscrollDistance;
+
+    private boolean mDesiredFocusableState;
+    private boolean mDesiredFocusableInTouchModeState;
 
     private SelectionNotifier mSelectionNotifier;
 
@@ -214,6 +226,11 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
     private int mLastScrollState;
 
     private View mEmptyView;
+
+    private ListItemAccessibilityDelegate mAccessibilityDelegate;
+
+    private int mLastAccessibilityScrollEventFromIndex;
+    private int mLastAccessibilityScrollEventToIndex;
 
     public interface OnScrollListener {
 
@@ -316,6 +333,10 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
 
         mIsVertical = true;
 
+        mItemsCanFocus = false;
+
+        mTempRect = new Rect();
+
         mSelectorPosition = INVALID_POSITION;
 
         mSelectorRect = new Rect();
@@ -409,6 +430,27 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
 
     public int getItemMargin() {
         return mItemMargin;
+    }
+
+    /**
+     * Indicates that the views created by the ListAdapter can contain focusable
+     * items.
+     *
+     * @param itemsCanFocus true if items can get focus, false otherwise
+     */
+    public void setItemsCanFocus(boolean itemsCanFocus) {
+        mItemsCanFocus = itemsCanFocus;
+        if (!itemsCanFocus) {
+            setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
+        }
+    }
+
+    /**
+     * @return Whether the views created by the ListAdapter can contain focusable
+     * items.
+     */
+    public boolean getItemsCanFocus() {
+        return mItemsCanFocus;
     }
 
     /**
@@ -778,10 +820,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
             checkSelectionChanged();
         }
 
-        if (mEmptyView != null) {
-            updateEmptyStatus();
-        }
-
+        checkFocus();
         requestLayout();
     }
 
@@ -793,6 +832,11 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
     @Override
     public int getLastVisiblePosition() {
         return mFirstPosition + getChildCount() - 1;
+    }
+
+    @Override
+    public int getCount() {
+        return mItemCount;
     }
 
     @Override
@@ -818,6 +862,83 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
 
         // Child not found!
         return INVALID_POSITION;
+    }
+
+    @Override
+    public void getFocusedRect(Rect r) {
+        View view = getSelectedView();
+
+        if (view != null && view.getParent() == this) {
+            // The focused rectangle of the selected view offset into the
+            // coordinate space of this view.
+            view.getFocusedRect(r);
+            offsetDescendantRectToMyCoords(view, r);
+        } else {
+            super.getFocusedRect(r);
+        }
+    }
+
+    @Override
+    protected void onFocusChanged(boolean gainFocus, int direction, Rect previouslyFocusedRect) {
+        super.onFocusChanged(gainFocus, direction, previouslyFocusedRect);
+
+        if (gainFocus && mSelectedPosition < 0 && !isInTouchMode()) {
+            if (!mIsAttached && mAdapter != null) {
+                // Data may have changed while we were detached and it's valid
+                // to change focus while detached. Refresh so we don't die.
+                mDataChanged = true;
+                mOldItemCount = mItemCount;
+                mItemCount = mAdapter.getCount();
+            }
+
+            resurrectSelection();
+        }
+
+        final ListAdapter adapter = mAdapter;
+        int closetChildIndex = INVALID_POSITION;
+        int closestChildStart = 0;
+
+        if (adapter != null && gainFocus && previouslyFocusedRect != null) {
+            previouslyFocusedRect.offset(getScrollX(), getScrollY());
+
+            // Don't cache the result of getChildCount or mFirstPosition here,
+            // it could change in layoutChildren.
+            if (adapter.getCount() < getChildCount() + mFirstPosition) {
+                mLayoutMode = LAYOUT_NORMAL;
+                layoutChildren();
+            }
+
+            // Figure out which item should be selected based on previously
+            // focused rect.
+            Rect otherRect = mTempRect;
+            int minDistance = Integer.MAX_VALUE;
+            final int childCount = getChildCount();
+            final int firstPosition = mFirstPosition;
+
+            for (int i = 0; i < childCount; i++) {
+                // Only consider selectable views
+                if (!adapter.isEnabled(firstPosition + i)) {
+                    continue;
+                }
+
+                View other = getChildAt(i);
+                other.getDrawingRect(otherRect);
+                offsetDescendantRectToMyCoords(other, otherRect);
+                int distance = getDistance(previouslyFocusedRect, otherRect, direction);
+
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closetChildIndex = i;
+                    closestChildStart = (mIsVertical ? other.getTop() : other.getLeft());
+                }
+            }
+        }
+
+        if (closetChildIndex >= 0) {
+            setSelectionFromOffset(closetChildIndex + mFirstPosition, closestChildStart);
+        } else {
+            requestLayout();
+        }
     }
 
     @Override
@@ -1465,6 +1586,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
             case TOUCH_MODE_OVERSCROLL:
                 mTouchMode = TOUCH_MODE_REST;
                 reportScrollStateChange(OnScrollListener.SCROLL_STATE_IDLE);
+                break;
             }
 
             cancelCheckForTap();
@@ -1512,6 +1634,95 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
                 }
             }
         }
+    }
+
+    @Override
+    public void sendAccessibilityEvent(int eventType) {
+        // Since this class calls onScrollChanged even if the mFirstPosition and the
+        // child count have not changed we will avoid sending duplicate accessibility
+        // events.
+        if (eventType == AccessibilityEvent.TYPE_VIEW_SCROLLED) {
+            final int firstVisiblePosition = getFirstVisiblePosition();
+            final int lastVisiblePosition = getLastVisiblePosition();
+
+            if (mLastAccessibilityScrollEventFromIndex == firstVisiblePosition
+                    && mLastAccessibilityScrollEventToIndex == lastVisiblePosition) {
+                return;
+            } else {
+                mLastAccessibilityScrollEventFromIndex = firstVisiblePosition;
+                mLastAccessibilityScrollEventToIndex = lastVisiblePosition;
+            }
+        }
+
+        super.sendAccessibilityEvent(eventType);
+    }
+
+    @Override
+    @TargetApi(14)
+    public void onInitializeAccessibilityEvent(AccessibilityEvent event) {
+        super.onInitializeAccessibilityEvent(event);
+        event.setClassName(TwoWayView.class.getName());
+    }
+
+    @Override
+    @TargetApi(14)
+    public void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo info) {
+        super.onInitializeAccessibilityNodeInfo(info);
+        info.setClassName(TwoWayView.class.getName());
+
+        AccessibilityNodeInfoCompat infoCompat = new AccessibilityNodeInfoCompat(info);
+
+        if (isEnabled()) {
+            if (getFirstVisiblePosition() > 0) {
+                infoCompat.addAction(AccessibilityNodeInfoCompat.ACTION_SCROLL_BACKWARD);
+            }
+
+            if (getLastVisiblePosition() < getCount() - 1) {
+                infoCompat.addAction(AccessibilityNodeInfoCompat.ACTION_SCROLL_FORWARD);
+            }
+        }
+    }
+
+    @Override
+    @TargetApi(16)
+    public boolean performAccessibilityAction(int action, Bundle arguments) {
+        if (super.performAccessibilityAction(action, arguments)) {
+            return true;
+        }
+
+        switch (action) {
+        case AccessibilityNodeInfo.ACTION_SCROLL_FORWARD:
+            if (isEnabled() && getLastVisiblePosition() < getCount() - 1) {
+                final int viewportSize;
+                if (mIsVertical) {
+                    viewportSize = getHeight() - getPaddingTop() - getPaddingBottom();
+                } else {
+                    viewportSize = getWidth() - getPaddingLeft() - getPaddingRight();
+                }
+
+                // TODO: Use some form of smooth scroll instead
+                trackMotionScroll(viewportSize);
+                return true;
+            }
+            return false;
+
+        case AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD:
+            if (isEnabled() && mFirstPosition > 0) {
+                final int viewportSize;
+                if (mIsVertical) {
+                    viewportSize = getHeight() - getPaddingTop() - getPaddingBottom();
+                } else {
+                    viewportSize = getWidth() - getPaddingLeft() - getPaddingRight();
+                }
+
+                // TODO: Use some form of smooth scroll instead
+                trackMotionScroll(-viewportSize);
+                return true;
+            }
+            return false;
+        }
+
+        return false;
     }
 
     private void initOrResetVelocityTracker() {
@@ -1711,7 +1922,70 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         }
     }
 
-    int findMotionRowOrColumn(int motionPos) {
+    /**
+     * What is the distance between the source and destination rectangles given the direction of
+     * focus navigation between them? The direction basically helps figure out more quickly what is
+     * self evident by the relationship between the rects...
+     *
+     * @param source the source rectangle
+     * @param dest the destination rectangle
+     * @param direction the direction
+     * @return the distance between the rectangles
+     */
+    private static int getDistance(Rect source, Rect dest, int direction) {
+        int sX, sY; // source x, y
+        int dX, dY; // dest x, y
+
+        switch (direction) {
+        case View.FOCUS_RIGHT:
+            sX = source.right;
+            sY = source.top + source.height() / 2;
+            dX = dest.left;
+            dY = dest.top + dest.height() / 2;
+            break;
+
+        case View.FOCUS_DOWN:
+            sX = source.left + source.width() / 2;
+            sY = source.bottom;
+            dX = dest.left + dest.width() / 2;
+            dY = dest.top;
+            break;
+
+        case View.FOCUS_LEFT:
+            sX = source.left;
+            sY = source.top + source.height() / 2;
+            dX = dest.right;
+            dY = dest.top + dest.height() / 2;
+            break;
+
+        case View.FOCUS_UP:
+            sX = source.left + source.width() / 2;
+            sY = source.top;
+            dX = dest.left + dest.width() / 2;
+            dY = dest.bottom;
+            break;
+
+        case View.FOCUS_FORWARD:
+        case View.FOCUS_BACKWARD:
+            sX = source.right + source.width() / 2;
+            sY = source.top + source.height() / 2;
+            dX = dest.left + dest.width() / 2;
+            dY = dest.top + dest.height() / 2;
+            break;
+
+        default:
+            throw new IllegalArgumentException("direction must be one of "
+                    + "{FOCUS_UP, FOCUS_DOWN, FOCUS_LEFT, FOCUS_RIGHT, "
+                    + "FOCUS_FORWARD, FOCUS_BACKWARD}.");
+        }
+
+        int deltaX = dX - sX;
+        int deltaY = dY - sY;
+
+        return deltaY * deltaY + deltaX * deltaX;
+    }
+
+    private int findMotionRowOrColumn(int motionPos) {
         int childCount = getChildCount();
         if (childCount == 0) {
             return INVALID_POSITION;
@@ -2193,6 +2467,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
             post(mSelectionNotifier);
         } else {
             fireOnSelected();
+            performAccessibilityActionsOnSelected();
         }
     }
 
@@ -2209,6 +2484,14 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
                     mAdapter.getItemId(selection));
         } else {
             listener.onNothingSelected(this);
+        }
+    }
+
+    private void performAccessibilityActionsOnSelected() {
+        final int position = getSelectedItemPosition();
+        if (position >= 0) {
+            // We fire selection events here not in View
+            sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_SELECTED);
         }
     }
 
@@ -2503,6 +2786,8 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
             int index = 0;
             int delta = 0;
 
+            View focusLayoutRestoreView = null;
+
             View selected = null;
             View oldSelected = null;
             View newSelected = null;
@@ -2562,6 +2847,9 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
 
             setSelectedPositionInt(mNextSelectedPosition);
 
+            // Reset the focus restoration
+            View focusLayoutRestoreDirectChild = null;
+
             // Pull all children into the RecycleBin.
             // These views will be reused if possible
             final int firstPosition = mFirstPosition;
@@ -2574,6 +2862,32 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
             } else {
                 recycleBin.fillActiveViews(childCount, firstPosition);
             }
+
+            // Take focus back to us temporarily to avoid the eventual
+            // call to clear focus when removing the focused child below
+            // from messing things up when ViewAncestor assigns focus back
+            // to someone else.
+            final View focusedChild = getFocusedChild();
+            if (focusedChild != null) {
+                // We can remember the focused view to restore after relayout if the
+                // data hasn't changed, or if the focused position is a header or footer.
+                if (!dataChanged) {
+                    focusLayoutRestoreDirectChild = focusedChild;
+
+                    // Remember the specific view that had focus
+                    focusLayoutRestoreView = findFocus();
+                    if (focusLayoutRestoreView != null) {
+                        // Tell it we are going to mess with it
+                        focusLayoutRestoreView.onStartTemporaryDetach();
+                    }
+                }
+
+                requestFocus();
+            }
+
+            // FIXME: We need a way to save current accessibility focus here
+            // so that it can be restored after we re-attach the children on each
+            // layout round.
 
             detachAllViewsFromParent();
 
@@ -2644,7 +2958,29 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
             recycleBin.scrapActiveViews();
 
             if (selected != null) {
-                positionSelector(INVALID_POSITION, selected);
+                if (mItemsCanFocus && hasFocus() && !selected.hasFocus()) {
+                    final boolean focusWasTaken = (selected == focusLayoutRestoreDirectChild &&
+                            focusLayoutRestoreView != null &&
+                            focusLayoutRestoreView.requestFocus()) || selected.requestFocus();
+
+                    if (!focusWasTaken) {
+                        // Selected item didn't take focus, fine, but still want
+                        // to make sure something else outside of the selected view
+                        // has focus
+                        final View focused = getFocusedChild();
+                        if (focused != null) {
+                            focused.clearFocus();
+                        }
+
+                        positionSelector(INVALID_POSITION, selected);
+                    } else {
+                        selected.setSelected(false);
+                        mSelectorRect.setEmpty();
+                    }
+                } else {
+                    positionSelector(INVALID_POSITION, selected);
+                }
+
                 mSelectedStart = (mIsVertical ? selected.getTop() : selected.getLeft());
             } else {
                 if (mTouchMode > TOUCH_MODE_DOWN && mTouchMode < TOUCH_MODE_DRAGGING) {
@@ -2657,6 +2993,19 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
                     mSelectedStart = 0;
                     mSelectorRect.setEmpty();
                 }
+
+                // Even if there is not selected position, we may need to restore
+                // focus (i.e. something focusable in touch mode)
+                if (hasFocus() && focusLayoutRestoreView != null) {
+                    focusLayoutRestoreView.requestFocus();
+                }
+            }
+
+            // Tell focus view we are done mucking with it, if it is still in
+            // our view hierarchy.
+            if (focusLayoutRestoreView != null
+                    && focusLayoutRestoreView.getWindowToken() != null) {
+                focusLayoutRestoreView.onFinishTemporaryDetach();
             }
 
             mLayoutMode = LAYOUT_NORMAL;
@@ -2998,7 +3347,6 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         mSelectorPosition = INVALID_POSITION;
 
         checkSelectionChanged();
-
     }
 
     private int reconcileSelectedPosition() {
@@ -3517,9 +3865,9 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         return selectedView;
     }
 
-    private View fillSpecific(int position, int top) {
+    private View fillSpecific(int position, int offset) {
         final boolean tempIsSelected = (position == mSelectedPosition);
-        View temp = makeAndAddView(position, top, true, tempIsSelected);
+        View temp = makeAndAddView(position, offset, true, tempIsSelected);
 
         // Possibly changed again in fillBefore if we add rows above this one.
         mFirstPosition = position;
@@ -3667,7 +4015,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
     private void correctTooHigh(int childCount) {
         // First see if the last item is visible. If it is not, it is OK for the
         // top of the list to be pushed up.
-        int lastPosition = mFirstPosition + childCount - 1;
+        final int lastPosition = mFirstPosition + childCount - 1;
         if (lastPosition != mItemCount - 1 || childCount == 0) {
             return;
         }
@@ -3901,11 +4249,11 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         return INVALID_POSITION;
     }
 
-    View obtainView(int position, boolean[] isScrap) {
+    @TargetApi(16)
+    private View obtainView(int position, boolean[] isScrap) {
         isScrap[0] = false;
-        View scrapView;
 
-        scrapView = mRecycler.getTransientStateView(position);
+        View scrapView = mRecycler.getTransientStateView(position);
         if (scrapView != null) {
             return scrapView;
         }
@@ -3925,6 +4273,10 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
             child = mAdapter.getView(position, null, this);
         }
 
+        if (ViewCompat.getImportantForAccessibility(child) == ViewCompat.IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
+            ViewCompat.setImportantForAccessibility(child, ViewCompat.IMPORTANT_FOR_ACCESSIBILITY_YES);
+        }
+
         if (mHasStableIds) {
             LayoutParams lp = (LayoutParams) child.getLayoutParams();
 
@@ -3938,6 +4290,12 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
 
             child.setLayoutParams(lp);
         }
+
+        if (mAccessibilityDelegate == null) {
+            mAccessibilityDelegate = new ListItemAccessibilityDelegate();
+        }
+
+        ViewCompat.setAccessibilityDelegate(child, mAccessibilityDelegate);
 
         return child;
     }
@@ -4475,6 +4833,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
             return null;
         }
 
+        @TargetApi(14)
         void addScrapView(View scrap, int position) {
             LayoutParams lp = (LayoutParams) scrap.getLayoutParams();
             if (lp == null) {
@@ -4505,11 +4864,18 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
                 mScrapViews[viewType].add(scrap);
             }
 
+            // FIXME: Unfortunately, ViewCompat.setAccessibilityDelegate() doesn't accept
+            // null delegates.
+            if (Build.VERSION.SDK_INT >= 14) {
+                scrap.setAccessibilityDelegate(null);
+            }
+
             if (mRecyclerListener != null) {
                 mRecyclerListener.onMovedToScrapHeap(scrap);
             }
         }
 
+        @TargetApi(14)
         void scrapActiveViews() {
             final View[] activeViews = mActiveViews;
             final boolean multipleScraps = (mViewTypeCount > 1);
@@ -4546,6 +4912,12 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
 
                     lp.scrappedFromPosition = mFirstActivePosition + i;
                     scrapViews.add(victim);
+
+                    // FIXME: Unfortunately, ViewCompat.setAccessibilityDelegate() doesn't accept
+                    // null delegates.
+                    if (Build.VERSION.SDK_INT >= 14) {
+                        victim.setAccessibilityDelegate(null);
+                    }
 
                     if (mRecyclerListener != null) {
                         mRecyclerListener.onMovedToScrapHeap(victim);
@@ -4625,8 +4997,50 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         updateEmptyStatus();
     }
 
+    @Override
+    public void setFocusable(boolean focusable) {
+        final ListAdapter adapter = getAdapter();
+        final boolean empty = (adapter == null || adapter.getCount() == 0);
+
+        mDesiredFocusableState = focusable;
+        if (!focusable) {
+            mDesiredFocusableInTouchModeState = false;
+        }
+
+        super.setFocusable(focusable && !empty);
+    }
+
+    @Override
+    public void setFocusableInTouchMode(boolean focusable) {
+        final ListAdapter adapter = getAdapter();
+        final boolean empty = (adapter == null || adapter.getCount() == 0);
+
+        mDesiredFocusableInTouchModeState = focusable;
+        if (focusable) {
+            mDesiredFocusableState = true;
+        }
+
+        super.setFocusableInTouchMode(focusable && !empty);
+    }
+
+    private void checkFocus() {
+        final ListAdapter adapter = getAdapter();
+        final boolean focusable = (adapter != null && adapter.getCount() > 0);
+
+        // The order in which we set focusable in touch mode/focusable may matter
+        // for the client, see View.setFocusableInTouchMode() comments for more
+        // details
+        super.setFocusableInTouchMode(focusable && mDesiredFocusableInTouchModeState);
+        super.setFocusable(focusable && mDesiredFocusableState);
+
+        if (mEmptyView != null) {
+            updateEmptyStatus();
+        }
+    }
+
     private void updateEmptyStatus() {
         final boolean isEmpty = (mAdapter == null || mAdapter.isEmpty());
+
         if (isEmpty) {
             if (mEmptyView != null) {
                 mEmptyView.setVisibility(View.VISIBLE);
@@ -4641,7 +5055,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
             // Force one here to make sure that the state of the list matches
             // the state of the adapter.
             if (mDataChanged) {
-                this.onLayout(false, getLeft(), getTop(), getRight(), getBottom());
+                onLayout(false, getLeft(), getTop(), getRight(), getBottom());
             }
         } else {
             if (mEmptyView != null) {
@@ -4671,10 +5085,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
                 rememberSyncState();
             }
 
-            if (mEmptyView != null) {
-                updateEmptyStatus();
-            }
-
+            checkFocus();
             requestLayout();
         }
 
@@ -4700,10 +5111,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
 
             mNeedSync = false;
 
-            if (mEmptyView != null) {
-                updateEmptyStatus();
-            }
-
+            checkFocus();
             requestLayout();
         }
     }
@@ -4811,6 +5219,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
                 }
             } else {
                 fireOnSelected();
+                performAccessibilityActionsOnSelected();
             }
         }
     }
@@ -4924,6 +5333,95 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
                     mTouchMode = TOUCH_MODE_DONE_WAITING;
                 }
             }
+        }
+    }
+
+    class ListItemAccessibilityDelegate extends AccessibilityDelegateCompat {
+        @Override
+        public void onInitializeAccessibilityNodeInfo(View host, AccessibilityNodeInfoCompat info) {
+            super.onInitializeAccessibilityNodeInfo(host, info);
+
+            final int position = getPositionForView(host);
+            final ListAdapter adapter = getAdapter();
+
+            // Cannot perform actions on invalid items
+            if (position == INVALID_POSITION || adapter == null) {
+                return;
+            }
+
+            // Cannot perform actions on disabled items
+            if (!isEnabled() || !adapter.isEnabled(position)) {
+                return;
+            }
+
+            if (position == getSelectedItemPosition()) {
+                info.setSelected(true);
+                info.addAction(AccessibilityNodeInfoCompat.ACTION_CLEAR_SELECTION);
+            } else {
+                info.addAction(AccessibilityNodeInfoCompat.ACTION_SELECT);
+            }
+
+            if (isClickable()) {
+                info.addAction(AccessibilityNodeInfoCompat.ACTION_CLICK);
+                info.setClickable(true);
+            }
+
+            if (isLongClickable()) {
+                info.addAction(AccessibilityNodeInfoCompat.ACTION_LONG_CLICK);
+                info.setLongClickable(true);
+            }
+        }
+
+        @Override
+        public boolean performAccessibilityAction(View host, int action, Bundle arguments) {
+            if (super.performAccessibilityAction(host, action, arguments)) {
+                return true;
+            }
+
+            final int position = getPositionForView(host);
+            final ListAdapter adapter = getAdapter();
+
+            // Cannot perform actions on invalid items
+            if (position == INVALID_POSITION || adapter == null) {
+                return false;
+            }
+
+            // Cannot perform actions on disabled items
+            if (!isEnabled() || !adapter.isEnabled(position)) {
+                return false;
+            }
+
+            final long id = getItemIdAtPosition(position);
+
+            switch (action) {
+            case AccessibilityNodeInfoCompat.ACTION_CLEAR_SELECTION:
+                if (getSelectedItemPosition() == position) {
+                    setSelection(INVALID_POSITION);
+                    return true;
+                }
+                return false;
+
+            case AccessibilityNodeInfoCompat.ACTION_SELECT:
+                if (getSelectedItemPosition() != position) {
+                    setSelection(position);
+                    return true;
+                }
+                return false;
+
+            case AccessibilityNodeInfoCompat.ACTION_CLICK:
+                if (isClickable()) {
+                    return performItemClick(host, position, id);
+                }
+                return false;
+
+            case AccessibilityNodeInfoCompat.ACTION_LONG_CLICK:
+                if (isLongClickable()) {
+                    return performLongPress(host, position, id);
+                }
+                return false;
+            }
+
+            return false;
         }
     }
 }
