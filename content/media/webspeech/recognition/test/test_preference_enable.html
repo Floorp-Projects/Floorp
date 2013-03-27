@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=650295
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 650295 -- No objects should be visible with preference disabled</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=650295">Mozilla Bug 650295</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="text/javascript">
+  SpecialPowers.setBoolPref("media.webspeech.recognition.enable", false);
+
+  var objects = [
+    "SpeechRecognition",
+    "SpeechGrammar",
+    "SpeechRecognitionResult",
+    "SpeechRecognitionResultList",
+    "SpeechRecognitionAlternative"
+  ];
+
+  for (var i = 0; i < objects.length; i++) {
+    is(window[objects[i]], undefined,
+       objects[i] + " should be undefined with pref off");
+  }
+</script>
+</pre>
+</body>
+</html>
