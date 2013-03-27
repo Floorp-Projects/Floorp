@@ -11,14 +11,31 @@ interface nsISocketTransport;
 native PRNetAddr(union PRNetAddr);
 [ptr] native PRNetAddrPtr(union PRNetAddr);
 
+typedef unsigned long nsServerSocketFlag;
+
 /**
  * nsIServerSocket
  *
  * An interface to a server socket that can accept incoming connections.
  */
-[scriptable, uuid(a5b64be0-d563-46bb-ae95-132e46fcd42f)]
+[scriptable, uuid(0df6a0e2-a6b1-4d4c-b30d-f2cb093444e3)]
 interface nsIServerSocket : nsISupports
 {
+    /**
+     * @name Server Socket Flags
+     * These flags define various socket options.
+     * @{
+     */
+    /// The server socket will only respond to connections on the
+    /// local loopback interface.  Otherwise, it will accept connections
+    /// from any interface.  To specify a particular network interface,
+    /// use initWithAddress.
+    const nsServerSocketFlag LoopbackOnly = 0x00000001;
+    /// The server socket will not be closed when Gecko is set
+    /// offline.
+    const nsServerSocketFlag KeepWhenOffline = 0x00000002;
+    /** @} */
+
     /**
      * init
      *
@@ -37,7 +54,30 @@ interface nsIServerSocket : nsISupports
      *        This parameter may be silently limited by the operating system.
      *        Pass -1 to use the default value.
      */
-    void init(in long aPort, in boolean aLoopbackOnly, in long aBackLog);
+    void init(in long aPort,
+              in boolean aLoopbackOnly,
+              in long aBackLog);
+
+    /**
+     * initSpecialConnection
+     *
+     * This method initializes a server socket and offers the ability to have
+     * that socket not get terminated if Gecko is set offline.
+     *
+     * @param aPort
+     *        The port of the server socket.  Pass -1 to indicate no preference,
+     *        and a port will be selected automatically.
+     * @param aFlags
+     *        Flags for the socket.
+     * @param aBackLog
+     *        The maximum length the queue of pending connections may grow to.
+     *        This parameter may be silently limited by the operating system.
+     *        Pass -1 to use the default value.
+     */
+    void initSpecialConnection(in long aPort,
+                               in nsServerSocketFlag aFlags,
+                               in long aBackLog);
+
 
     /**
      * initWithAddress
