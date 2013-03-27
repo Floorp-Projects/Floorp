@@ -30,6 +30,7 @@ UTIL_JAVA_FILES := \
   util/ActivityResultHandlerMap.java \
   util/EventDispatcher.java \
   util/FloatUtils.java \
+  util/GamepadUtils.java \
   util/GeckoBackgroundThread.java \
   util/GeckoEventListener.java \
   util/GeckoEventResponder.java \
