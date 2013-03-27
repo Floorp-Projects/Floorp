@@ -7,6 +7,7 @@
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://services-common/preferences.js");
+Cu.import("resource://gre/modules/Services.jsm");
 
 const reporter = Cc["@mozilla.org/datareporting/service;1"]
                    .getService(Ci.nsISupports)
@@ -18,99 +19,123 @@ const policy = Cc["@mozilla.org/datareporting/service;1"]
                  .wrappedJSObject
                  .policy;
 
-const prefs = new Preferences("datareporting.healthreport.about.");
+const prefs = new Preferences("datareporting.healthreport.");
 
-function getLocale() {
-   return Cc["@mozilla.org/chrome/chrome-registry;1"]
-            .getService(Ci.nsIXULChromeRegistry)
-            .getSelectedLocale("global");
+
+let healthReportWrapper = {
+  init: function () {
+    reporter.onInit().then(healthReportWrapper.refreshPayload,
+                           healthReportWrapper.handleInitFailure);
+
+    let iframe = document.getElementById("remote-report");
+    iframe.addEventListener("load", healthReportWrapper.initRemotePage, false);
+    let report = this._getReportURI();
+    iframe.src = report.spec;
+    prefs.observe("uploadEnabled", this.updatePrefState, healthReportWrapper);
+  },
+
+  uninit: function () {
+    prefs.ignore("uploadEnabled", this.updatePrefState, healthReportWrapper);
+  },
+
+  _getReportURI: function () {
+    let url = Services.urlFormatter.formatURLPref("datareporting.healthreport.about.reportUrl");
+    return Services.io.newURI(url, null, null);
+  },
+
+  onOptIn: function () {
+    policy.recordHealthReportUploadEnabled(true,
+                                           "Health report page sent opt-in command.");
+    this.updatePrefState();
+  },
+
+  onOptOut: function () {
+    policy.recordHealthReportUploadEnabled(false,
+                                           "Health report page sent opt-out command.");
+    this.updatePrefState();
+  },
+
+  updatePrefState: function () {
+    try {
+      let prefs = {
+        enabled: policy.healthReportUploadEnabled,
+      }
+      this.injectData("prefs", prefs);
+    } catch (e) {
+      this.reportFailure(this.ERROR_PREFS_FAILED);
+    }
+  },
+
+  refreshPayload: function () {
+    reporter.collectAndObtainJSONPayload().then(healthReportWrapper.updatePayload, 
+                                                healthReportWrapper.handlePayloadFailure);
+  },
+
+  updatePayload: function (data) {
+    healthReportWrapper.injectData("payload", data);
+  },
+
+  injectData: function (type, content) {
+    let report = this._getReportURI();
+    
+    // file URIs can't be used for targetOrigin, so we use "*" for this special case
+    // in all other cases, pass in the URL to the report so we properly restrict the message dispatch
+    let reportUrl = report.scheme == "file" ? "*" : report.spec;
+
+    let data = {
+      type: type,
+      content: content
+    }
+
+    let iframe = document.getElementById("remote-report");
+    iframe.contentWindow.postMessage(data, reportUrl);
+  },
+
+  handleRemoteCommand: function (evt) {
+    switch (evt.detail.command) {
+      case "DisableDataSubmission":
+        this.onOptOut();
+        break;
+      case "EnableDataSubmission":
+        this.onOptIn();
+        break;
+      case "RequestCurrentPrefs":
+        this.updatePrefState();
+        break;
+      case "RequestCurrentPayload":
+        this.refreshPayload();
+        break;
+      default:
+        Cu.reportError("Unexpected remote command received: " + evt.detail.command + ". Ignoring command.");
+        break;
+    }
+  },
+
+  initRemotePage: function () {
+    let iframe = document.getElementById("remote-report").contentDocument;
+    iframe.addEventListener("RemoteHealthReportCommand",
+                            function onCommand(e) {healthReportWrapper.handleRemoteCommand(e);},
+                            false);
+    healthReportWrapper.updatePrefState();
+  },
+
+  // error handling
+  ERROR_INIT_FAILED:    1,
+  ERROR_PAYLOAD_FAILED: 2,
+  ERROR_PREFS_FAILED:   3,
+
+  reportFailure: function (error) {
+    let details = {
+      errorType: error,
+    }
+    healthReportWrapper.injectData("error", details);
+  },
+
+  handleInitFailure: function () {
+    healthReportWrapper.reportFailure(healthReportWrapper.ERROR_INIT_FAILED);
+  },
+
+  handlePayloadFailure: function () {
+    healthReportWrapper.reportFailure(healthReportWrapper.ERROR_PAYLOAD_FAILED);
+  },
 }
-
-function init() {
-  refreshWithDataSubmissionFlag(policy.healthReportUploadEnabled);
-  refreshJSONPayload();
-  document.getElementById("details-link").href = prefs.get("glossaryUrl");
-}
-
-/**
- * Update the state of the page to reflect the current data submission state.
- *
- * @param enabled
- *        (bool) Whether data submission is enabled.
- */
-function refreshWithDataSubmissionFlag(enabled) {
-  if (!enabled) {
-    updateView("disabled");
-  } else {
-    updateView("default");
-  }
-}
-
-function updateView(state="default") {
-  let content = document.getElementById("content");
-  let controlContainer = document.getElementById("control-container");
-  content.setAttribute("state", state);
-  controlContainer.setAttribute("state", state);
-}
-
-function refreshDataView(data) {
-  let noData = document.getElementById("data-no-data");
-  let dataEl = document.getElementById("raw-data");
-
-  noData.style.display = data ? "none" : "inline";
-  dataEl.style.display = data ? "block" : "none";
-  if (data) {
-    dataEl.textContent = JSON.stringify(data, null, 2);
-  }
-}
-
-/**
- * Ensure the page has the latest version of the uploaded JSON payload.
- */
-function refreshJSONPayload() {
-  reporter.getLastPayload().then(refreshDataView);
-}
-
-function onOptInClick() {
-  policy.recordHealthReportUploadEnabled(true,
-                                         "Clicked opt in button on about page.");
-  refreshWithDataSubmissionFlag(true);
-}
-
-function onOptOutClick() {
-  let prompts = Cc["@mozilla.org/embedcomp/prompt-service;1"]
-                  .getService(Ci.nsIPromptService);
-
-  let messages = document.getElementById("optout-confirmationPrompt");
-  let title = messages.getAttribute("confirmationPrompt_title");
-  let message = messages.getAttribute("confirmationPrompt_message");
-
-  if (!prompts.confirm(window, title, message)) {
-    return;
-  }
-
-  policy.recordHealthReportUploadEnabled(false,
-                                         "Clicked opt out button on about page.");
-  refreshWithDataSubmissionFlag(false);
-  updateView("disabled");
-}
-
-function onShowRawDataClick() {
-  updateView("showDetails");
-  refreshJSONPayload();
-}
-
-function onHideRawDataClick() {
-  updateView("default");
-}
-
-function onShowReportClick() {
-  updateView("showReport");
-  document.getElementById("remote-report").src = prefs.get("reportUrl");
-}
-
-function onHideReportClick() {
-  updateView("default");
-  document.getElementById("remote-report").src = "";
-}
-
