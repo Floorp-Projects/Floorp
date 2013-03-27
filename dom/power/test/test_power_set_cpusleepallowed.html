@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test Enabling/Disabling CPU Sleep with Power Management API</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+  <script type="application/javascript">
+
+  "use strict";
+
+  function testEnableSleep() {
+    try {
+      navigator.mozPower.cpuSleepAllowed = true;
+      ok(navigator.mozPower.cpuSleepAllowed === true, "Allow entering suspend state.");
+    } catch (e) {
+      ok(false, "Unexpected exception trying to enable entering suspend state.");
+    }
+  }
+
+  function testDisableSleep() {
+    try {
+      navigator.mozPower.cpuSleepAllowed = false;
+      ok(navigator.mozPower.cpuSleepAllowed === false, "Deny entering suspend state.");
+    } catch (e) {
+      ok(false, "Unexpected exception trying to disable entering suspend state.");
+    }
+  }
+
+  function startTests() {
+    testDisableSleep();
+    testEnableSleep();
+
+    SimpleTest.finish();
+  }
+
+  SimpleTest.expectAssertions(0, 9);
+  SimpleTest.waitForExplicitFinish();
+  if (SpecialPowers.hasPermission("power", document)) {
+    // Currently only applicable on FxOS
+    if (navigator.userAgent.indexOf("Mobile") != -1 &&
+        navigator.appVersion.indexOf("Android") == -1) {
+      startTests();
+    } else {
+      ok(true, "mozPower on Firefox OS only.");
+      SimpleTest.finish();
+    }
+  } else {
+    // Add the permission and reload so it's propogated
+    SpecialPowers.addPermission("power", true, document);
+    window.location.reload();
+  }
+  </script>
+</pre>
+</body>
+</html>

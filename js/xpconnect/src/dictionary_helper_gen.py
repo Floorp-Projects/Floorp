@@ -373,7 +373,7 @@ def write_cpp(iface, fd):
                  iface.base)
         fd.write("  NS_ENSURE_SUCCESS(rv, rv);\n")
 
-    fd.write("  JSBool found = PR_FALSE;\n")
+    fd.write("  JSBool found = JS_FALSE;\n")
     needjsval = False
     needccx = False
     for a in attributes:

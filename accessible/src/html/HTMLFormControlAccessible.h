@@ -117,7 +117,6 @@ public:
   virtual void Value(nsString& aValue);
   virtual void ApplyARIAState(uint64_t* aState) const;
   virtual mozilla::a11y::role NativeRole();
-  virtual uint64_t State();
   virtual uint64_t NativeState();
 
   // ActionAccessible

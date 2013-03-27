@@ -82,6 +82,7 @@ chrome.jar:
   content/exceptions.js                        (content/exceptions.js)
   content/downloads.js                         (content/downloads.js)
   content/history.js                           (content/history.js)
+  content/Site.js                              (content/Site.js)
   content/TopSites.js                          (content/TopSites.js)
   content/console.js                           (content/console.js)
   content/AnimatedZoom.js                      (content/AnimatedZoom.js)

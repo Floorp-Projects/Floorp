@@ -1111,8 +1111,16 @@ static unsigned		ncpus;
 /*
  * VM page size. It must divide the runtime CPU page size or the code
  * will abort.
+ * Platform specific page size conditions copied from js/public/HeapAPI.h
  */
+#if (defined(SOLARIS) || defined(__FreeBSD__)) && \
+    (defined(__sparc) || defined(__sparcv9) || defined(__ia64))
+#define pagesize_2pow			((size_t) 13)
+#elif defined(__powerpc64__)
+#define pagesize_2pow			((size_t) 16)
+#else
 #define pagesize_2pow			((size_t) 12)
+#endif
 #define pagesize			((size_t) 1 << pagesize_2pow)
 #define pagesize_mask			(pagesize - 1)
 

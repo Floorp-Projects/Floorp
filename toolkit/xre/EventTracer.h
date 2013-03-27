@@ -10,7 +10,9 @@ namespace mozilla {
 // Create a thread that will fire events back at the
 // main thread to measure responsiveness. Return true
 // if the thread was created successfully.
-bool InitEventTracing();
+//   aLog If the tracing results should be printed to
+//        the console.
+bool InitEventTracing(bool aLog);
 
 // Signal the background thread to stop, and join it.
 // Must be called from the same thread that called InitEventTracing.

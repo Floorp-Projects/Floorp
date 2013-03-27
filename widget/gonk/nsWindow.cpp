@@ -110,8 +110,8 @@ static const char* kWakeFile = "/sys/power/wait_for_fb_wake";
 
 static void *frameBufferWatcher(void *) {
 
-    int len = 0;
     char buf;
+    bool ret;
 
     nsRefPtr<ScreenOnOffEvent> mScreenOnEvent = new ScreenOnOffEvent(true);
     nsRefPtr<ScreenOnOffEvent> mScreenOffEvent = new ScreenOnOffEvent(false);
@@ -119,23 +119,13 @@ static void *frameBufferWatcher(void *) {
     while (true) {
         // Cannot use epoll here because kSleepFile and kWakeFile are
         // always ready to read and blocking.
-        {
-            ScopedClose fd(open(kSleepFile, O_RDONLY, 0));
-            do {
-                len = read(fd.get(), &buf, 1);
-            } while (len < 0 && errno == EINTR);
-            NS_WARN_IF_FALSE(len >= 0, "WAIT_FOR_FB_SLEEP failed");
-            NS_DispatchToMainThread(mScreenOffEvent);
-        }
+        ret = ReadSysFile(kSleepFile, &buf, sizeof(buf));
+        NS_WARN_IF_FALSE(ret, "WAIT_FOR_FB_SLEEP failed");
+        NS_DispatchToMainThread(mScreenOffEvent);
 
-        {
-            ScopedClose fd(open(kWakeFile, O_RDONLY, 0));
-            do {
-                len = read(fd.get(), &buf, 1);
-            } while (len < 0 && errno == EINTR);
-            NS_WARN_IF_FALSE(len >= 0, "WAIT_FOR_FB_WAKE failed");
-            NS_DispatchToMainThread(mScreenOnEvent);
-        }
+        ret = ReadSysFile(kWakeFile, &buf, sizeof(buf));
+        NS_WARN_IF_FALSE(ret, "WAIT_FOR_FB_WAKE failed");
+        NS_DispatchToMainThread(mScreenOnEvent);
     }
 
     return NULL;

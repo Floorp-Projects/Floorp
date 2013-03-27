@@ -22,7 +22,7 @@ interface nsIPrintSession;
 /**
  * Simplified graphics interface for JS rendering.
  */
-[scriptable, uuid(4404c94b-0506-4255-9e3c-4582dba6cfbb)]
+[scriptable, uuid(a65cfa37-b381-4fe9-81b7-db08853f54ad)]
 
 interface nsIPrintSettings : nsISupports
 {

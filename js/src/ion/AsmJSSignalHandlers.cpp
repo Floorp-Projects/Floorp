@@ -18,6 +18,120 @@ using namespace js::ion;
 
 #ifdef JS_ASMJS
 
+#if defined(XP_WIN)
+# define XMM_sig(p,i) ((p)->Xmm##i)
+# define EIP_sig(p) ((p)->Eip)
+# define RIP_sig(p) ((p)->Rip)
+# define RAX_sig(p) ((p)->Rax)
+# define RCX_sig(p) ((p)->Rcx)
+# define RDX_sig(p) ((p)->Rdx)
+# define RBX_sig(p) ((p)->Rbx)
+# define RSP_sig(p) ((p)->Rsp)
+# define RBP_sig(p) ((p)->Rbp)
+# define RSI_sig(p) ((p)->Rsi)
+# define RDI_sig(p) ((p)->Rdi)
+# define R8_sig(p) ((p)->R8)
+# define R9_sig(p) ((p)->R9)
+# define R10_sig(p) ((p)->R10)
+# define R11_sig(p) ((p)->R11)
+# define R12_sig(p) ((p)->R12)
+# define R13_sig(p) ((p)->R13)
+# define R14_sig(p) ((p)->R14)
+# define R15_sig(p) ((p)->R15)
+#elif defined(__OpenBSD__)
+# define XMM_sig(p,i) ((p)->sc_fpstate->fx_xmm[i])
+# define EIP_sig(p) ((p)->sc_eip)
+# define RIP_sig(p) ((p)->sc_rip)
+# define RAX_sig(p) ((p)->sc_rax)
+# define RCX_sig(p) ((p)->sc_rcx)
+# define RDX_sig(p) ((p)->sc_rdx)
+# define RBX_sig(p) ((p)->sc_rbx)
+# define RSP_sig(p) ((p)->sc_rsp)
+# define RBP_sig(p) ((p)->sc_rbp)
+# define RSI_sig(p) ((p)->sc_rsi)
+# define RDI_sig(p) ((p)->sc_rdi)
+# define R8_sig(p) ((p)->sc_r8)
+# define R9_sig(p) ((p)->sc_r9)
+# define R10_sig(p) ((p)->sc_r10)
+# define R11_sig(p) ((p)->sc_r11)
+# define R12_sig(p) ((p)->sc_r12)
+# define R13_sig(p) ((p)->sc_r13)
+# define R14_sig(p) ((p)->sc_r14)
+# define R15_sig(p) ((p)->sc_r15)
+#elif defined(__linux__) || defined(SOLARIS)
+# if defined(__linux__)
+#  define XMM_sig(p,i) ((p)->uc_mcontext.fpregs->_xmm[i])
+# else
+#  define XMM_sig(p,i) ((p)->uc_mcontext.fpregs.fp_reg_set.fpchip_state.xmm[i])
+# endif
+# define EIP_sig(p) ((p)->uc_mcontext.gregs[REG_EIP])
+# define RIP_sig(p) ((p)->uc_mcontext.gregs[REG_RIP])
+# define RAX_sig(p) ((p)->uc_mcontext.gregs[REG_RAX])
+# define RCX_sig(p) ((p)->uc_mcontext.gregs[REG_RCX])
+# define RDX_sig(p) ((p)->uc_mcontext.gregs[REG_RDX])
+# define RBX_sig(p) ((p)->uc_mcontext.gregs[REG_RBX])
+# define RSP_sig(p) ((p)->uc_mcontext.gregs[REG_RSP])
+# define RBP_sig(p) ((p)->uc_mcontext.gregs[REG_RBP])
+# define RSI_sig(p) ((p)->uc_mcontext.gregs[REG_RSI])
+# define RDI_sig(p) ((p)->uc_mcontext.gregs[REG_RDI])
+# define R8_sig(p) ((p)->uc_mcontext.gregs[REG_R8])
+# define R9_sig(p) ((p)->uc_mcontext.gregs[REG_R9])
+# define R10_sig(p) ((p)->uc_mcontext.gregs[REG_R10])
+# define R11_sig(p) ((p)->uc_mcontext.gregs[REG_R11])
+# define R12_sig(p) ((p)->uc_mcontext.gregs[REG_R12])
+# define R13_sig(p) ((p)->uc_mcontext.gregs[REG_R13])
+# define R14_sig(p) ((p)->uc_mcontext.gregs[REG_R14])
+# define R15_sig(p) ((p)->uc_mcontext.gregs[REG_R15])
+#elif defined(__NetBSD__)
+# define XMM_sig(p,i) (((struct fxsave64 *)(p)->uc_mcontext.__fpregs)->fx_xmm[i])
+# define EIP_sig(p) ((p)->uc_mcontext.__gregs[_REG_EIP])
+# define RIP_sig(p) ((p)->uc_mcontext.__gregs[_REG_RIP])
+# define RAX_sig(p) ((p)->uc_mcontext.__gregs[_REG_RAX])
+# define RCX_sig(p) ((p)->uc_mcontext.__gregs[_REG_RCX])
+# define RDX_sig(p) ((p)->uc_mcontext.__gregs[_REG_RDX])
+# define RBX_sig(p) ((p)->uc_mcontext.__gregs[_REG_RBX])
+# define RSP_sig(p) ((p)->uc_mcontext.__gregs[_REG_RSP])
+# define RBP_sig(p) ((p)->uc_mcontext.__gregs[_REG_RBP])
+# define RSI_sig(p) ((p)->uc_mcontext.__gregs[_REG_RSI])
+# define RDI_sig(p) ((p)->uc_mcontext.__gregs[_REG_RDI])
+# define R8_sig(p) ((p)->uc_mcontext.__gregs[_REG_R8])
+# define R9_sig(p) ((p)->uc_mcontext.__gregs[_REG_R9])
+# define R10_sig(p) ((p)->uc_mcontext.__gregs[_REG_R10])
+# define R11_sig(p) ((p)->uc_mcontext.__gregs[_REG_R11])
+# define R12_sig(p) ((p)->uc_mcontext.__gregs[_REG_R12])
+# define R13_sig(p) ((p)->uc_mcontext.__gregs[_REG_R13])
+# define R14_sig(p) ((p)->uc_mcontext.__gregs[_REG_R14])
+# define R15_sig(p) ((p)->uc_mcontext.__gregs[_REG_R15])
+#elif defined(__DragonFly__) || defined(__FreeBSD__)
+# if defined(__DragonFly__)
+#  define XMM_sig(p,i) (((union savefpu *)(p)->uc_mcontext.mc_fpregs)->sv_xmm.sv_xmm[i])
+# else
+#  define XMM_sig(p,i) (((struct savefpu *)(p)->uc_mcontext.mc_fpstate)->sv_xmm[i])
+# endif
+# define EIP_sig(p) ((p)->uc_mcontext.mc_eip)
+# define RIP_sig(p) ((p)->uc_mcontext.mc_rip)
+# define RAX_sig(p) ((p)->uc_mcontext.mc_rax)
+# define RCX_sig(p) ((p)->uc_mcontext.mc_rcx)
+# define RDX_sig(p) ((p)->uc_mcontext.mc_rdx)
+# define RBX_sig(p) ((p)->uc_mcontext.mc_rbx)
+# define RSP_sig(p) ((p)->uc_mcontext.mc_rsp)
+# define RBP_sig(p) ((p)->uc_mcontext.mc_rbp)
+# define RSI_sig(p) ((p)->uc_mcontext.mc_rsi)
+# define RDI_sig(p) ((p)->uc_mcontext.mc_rdi)
+# define R8_sig(p) ((p)->uc_mcontext.mc_r8)
+# define R9_sig(p) ((p)->uc_mcontext.mc_r9)
+# define R10_sig(p) ((p)->uc_mcontext.mc_r10)
+# define R11_sig(p) ((p)->uc_mcontext.mc_r11)
+# define R12_sig(p) ((p)->uc_mcontext.mc_r12)
+# define R13_sig(p) ((p)->uc_mcontext.mc_r13)
+# define R14_sig(p) ((p)->uc_mcontext.mc_r14)
+# define R15_sig(p) ((p)->uc_mcontext.mc_r15)
+#elif defined(XP_MACOSX)
+// Mach requires special treatment.
+#else
+# error "Don't know how to read/write to the thread state via the mcontext_t."
+#endif
+
 // For platforms where the signal/exception handler runs on the same
 // thread/stack as the victim (Unix and Windows), we can use TLS to find any
 // currently executing asm.js code.
@@ -144,16 +258,37 @@ LookupHeapAccess(const AsmJSModule &module, uint8_t *pc)
 
 # if defined(XP_WIN)
 #  include "jswin.h"
+# else
+#  include <signal.h>
+#  include <sys/mman.h>
+# endif
 
+# if defined(__FreeBSD__)
+#  include <sys/ucontext.h> // for ucontext_t, mcontext_t
+# endif
+
+# if defined(JS_CPU_X64)
+#  if defined(__DragonFly__)
+#   include <machine/npx.h> // for union savefpu
+#  elif defined(__FreeBSD__) || defined(__OpenBSD__)
+#   include <machine/fpu.h> // for struct savefpu/fxsave64
+#  endif
+# endif
+
+# if !defined(XP_WIN)
+#  define CONTEXT ucontext_t
+# endif
+
+# if !defined(XP_MACOSX)
 static uint8_t **
-ContextToPC(PCONTEXT context)
+ContextToPC(CONTEXT *context)
 {
 #  if defined(JS_CPU_X64)
-    JS_STATIC_ASSERT(sizeof(context->Rip) == sizeof(void*));
-    return reinterpret_cast<uint8_t**>(&context->Rip);
+    JS_STATIC_ASSERT(sizeof(RIP_sig(context)) == sizeof(void*));
+    return reinterpret_cast<uint8_t**>(&RIP_sig(context));
 #  else
-    JS_STATIC_ASSERT(sizeof(context->Eip) == sizeof(void*));
-    return reinterpret_cast<uint8_t**>(&context->Eip);
+    JS_STATIC_ASSERT(sizeof(EIP_sig(context)) == sizeof(void*));
+    return reinterpret_cast<uint8_t**>(&EIP_sig(context));
 #  endif
 }
 
@@ -163,47 +298,50 @@ SetRegisterToCoercedUndefined(CONTEXT *context, bool isFloat32, AnyRegister reg)
 {
     if (reg.isFloat()) {
         switch (reg.fpu().code()) {
-          case JSC::X86Registers::xmm0:  SetXMMRegToNaN(isFloat32, &context->Xmm0); break;
-          case JSC::X86Registers::xmm1:  SetXMMRegToNaN(isFloat32, &context->Xmm1); break;
-          case JSC::X86Registers::xmm2:  SetXMMRegToNaN(isFloat32, &context->Xmm2); break;
-          case JSC::X86Registers::xmm3:  SetXMMRegToNaN(isFloat32, &context->Xmm3); break;
-          case JSC::X86Registers::xmm4:  SetXMMRegToNaN(isFloat32, &context->Xmm4); break;
-          case JSC::X86Registers::xmm5:  SetXMMRegToNaN(isFloat32, &context->Xmm5); break;
-          case JSC::X86Registers::xmm6:  SetXMMRegToNaN(isFloat32, &context->Xmm6); break;
-          case JSC::X86Registers::xmm7:  SetXMMRegToNaN(isFloat32, &context->Xmm7); break;
-          case JSC::X86Registers::xmm8:  SetXMMRegToNaN(isFloat32, &context->Xmm8); break;
-          case JSC::X86Registers::xmm9:  SetXMMRegToNaN(isFloat32, &context->Xmm9); break;
-          case JSC::X86Registers::xmm10: SetXMMRegToNaN(isFloat32, &context->Xmm10); break;
-          case JSC::X86Registers::xmm11: SetXMMRegToNaN(isFloat32, &context->Xmm11); break;
-          case JSC::X86Registers::xmm12: SetXMMRegToNaN(isFloat32, &context->Xmm12); break;
-          case JSC::X86Registers::xmm13: SetXMMRegToNaN(isFloat32, &context->Xmm13); break;
-          case JSC::X86Registers::xmm14: SetXMMRegToNaN(isFloat32, &context->Xmm14); break;
-          case JSC::X86Registers::xmm15: SetXMMRegToNaN(isFloat32, &context->Xmm15); break;
+          case JSC::X86Registers::xmm0:  SetXMMRegToNaN(isFloat32, &XMM_sig(context, 0)); break;
+          case JSC::X86Registers::xmm1:  SetXMMRegToNaN(isFloat32, &XMM_sig(context, 1)); break;
+          case JSC::X86Registers::xmm2:  SetXMMRegToNaN(isFloat32, &XMM_sig(context, 2)); break;
+          case JSC::X86Registers::xmm3:  SetXMMRegToNaN(isFloat32, &XMM_sig(context, 3)); break;
+          case JSC::X86Registers::xmm4:  SetXMMRegToNaN(isFloat32, &XMM_sig(context, 4)); break;
+          case JSC::X86Registers::xmm5:  SetXMMRegToNaN(isFloat32, &XMM_sig(context, 5)); break;
+          case JSC::X86Registers::xmm6:  SetXMMRegToNaN(isFloat32, &XMM_sig(context, 6)); break;
+          case JSC::X86Registers::xmm7:  SetXMMRegToNaN(isFloat32, &XMM_sig(context, 7)); break;
+          case JSC::X86Registers::xmm8:  SetXMMRegToNaN(isFloat32, &XMM_sig(context, 8)); break;
+          case JSC::X86Registers::xmm9:  SetXMMRegToNaN(isFloat32, &XMM_sig(context, 9)); break;
+          case JSC::X86Registers::xmm10: SetXMMRegToNaN(isFloat32, &XMM_sig(context, 10)); break;
+          case JSC::X86Registers::xmm11: SetXMMRegToNaN(isFloat32, &XMM_sig(context, 11)); break;
+          case JSC::X86Registers::xmm12: SetXMMRegToNaN(isFloat32, &XMM_sig(context, 12)); break;
+          case JSC::X86Registers::xmm13: SetXMMRegToNaN(isFloat32, &XMM_sig(context, 13)); break;
+          case JSC::X86Registers::xmm14: SetXMMRegToNaN(isFloat32, &XMM_sig(context, 14)); break;
+          case JSC::X86Registers::xmm15: SetXMMRegToNaN(isFloat32, &XMM_sig(context, 15)); break;
           default: MOZ_CRASH();
         }
     } else {
         switch (reg.gpr().code()) {
-          case JSC::X86Registers::eax: context->Rax = 0; break;
-          case JSC::X86Registers::ecx: context->Rcx = 0; break;
-          case JSC::X86Registers::edx: context->Rdx = 0; break;
-          case JSC::X86Registers::ebx: context->Rbx = 0; break;
-          case JSC::X86Registers::esp: context->Rsp = 0; break;
-          case JSC::X86Registers::ebp: context->Rbp = 0; break;
-          case JSC::X86Registers::esi: context->Rsi = 0; break;
-          case JSC::X86Registers::edi: context->Rdi = 0; break;
-          case JSC::X86Registers::r8:  context->R8  = 0; break;
-          case JSC::X86Registers::r9:  context->R9  = 0; break;
-          case JSC::X86Registers::r10: context->R10 = 0; break;
-          case JSC::X86Registers::r11: context->R11 = 0; break;
-          case JSC::X86Registers::r12: context->R12 = 0; break;
-          case JSC::X86Registers::r13: context->R13 = 0; break;
-          case JSC::X86Registers::r14: context->R14 = 0; break;
-          case JSC::X86Registers::r15: context->R15 = 0; break;
+          case JSC::X86Registers::eax: RAX_sig(context) = 0; break;
+          case JSC::X86Registers::ecx: RCX_sig(context) = 0; break;
+          case JSC::X86Registers::edx: RDX_sig(context) = 0; break;
+          case JSC::X86Registers::ebx: RBX_sig(context) = 0; break;
+          case JSC::X86Registers::esp: RSP_sig(context) = 0; break;
+          case JSC::X86Registers::ebp: RBP_sig(context) = 0; break;
+          case JSC::X86Registers::esi: RSI_sig(context) = 0; break;
+          case JSC::X86Registers::edi: RDI_sig(context) = 0; break;
+          case JSC::X86Registers::r8:  R8_sig(context)  = 0; break;
+          case JSC::X86Registers::r9:  R9_sig(context)  = 0; break;
+          case JSC::X86Registers::r10: R10_sig(context) = 0; break;
+          case JSC::X86Registers::r11: R11_sig(context) = 0; break;
+          case JSC::X86Registers::r12: R12_sig(context) = 0; break;
+          case JSC::X86Registers::r13: R13_sig(context) = 0; break;
+          case JSC::X86Registers::r14: R14_sig(context) = 0; break;
+          case JSC::X86Registers::r15: R15_sig(context) = 0; break;
           default: MOZ_CRASH();
         }
     }
 }
-#  endif
+#  endif  // JS_CPU_X64
+# endif   // !XP_MACOSX
+
+# if defined(XP_WIN)
 
 static bool
 HandleException(PEXCEPTION_POINTERS exception)
@@ -289,7 +427,6 @@ AsmJSExceptionHandler(LPEXCEPTION_POINTERS exception)
 }
 
 # elif defined(XP_MACOSX)
-#  include <sys/mman.h>
 #  include <mach/exc.h>
 
 static uint8_t **
@@ -615,70 +752,6 @@ AsmJSMachExceptionHandler::install(JSRuntime *rt)
 }
 
 # else  // If not Windows or Mac, assume Unix
-#  include <signal.h>
-#  include <sys/mman.h>
-
-// Unfortunately, we still need OS-specific code to read/write to the thread
-// state via the mcontext_t.
-static uint8_t **
-ContextToPC(mcontext_t &context)
-{
-#  if defined(JS_CPU_X86)
-    JS_STATIC_ASSERT(sizeof(context.gregs[REG_EIP]) == sizeof(void*));
-    return reinterpret_cast<uint8_t**>(&context.gregs[REG_EIP]);
-#  else
-    JS_STATIC_ASSERT(sizeof(context.gregs[REG_RIP]) == sizeof(void*));
-    return reinterpret_cast<uint8_t**>(&context.gregs[REG_RIP]);
-#  endif
-}
-
-#  if defined(JS_CPU_X64)
-static void
-SetRegisterToCoercedUndefined(mcontext_t &context, bool isFloat32, AnyRegister reg)
-{
-    if (reg.isFloat()) {
-        switch (reg.fpu().code()) {
-          case JSC::X86Registers::xmm0:  SetXMMRegToNaN(isFloat32, &context.fpregs->_xmm[0]); break;
-          case JSC::X86Registers::xmm1:  SetXMMRegToNaN(isFloat32, &context.fpregs->_xmm[1]); break;
-          case JSC::X86Registers::xmm2:  SetXMMRegToNaN(isFloat32, &context.fpregs->_xmm[2]); break;
-          case JSC::X86Registers::xmm3:  SetXMMRegToNaN(isFloat32, &context.fpregs->_xmm[3]); break;
-          case JSC::X86Registers::xmm4:  SetXMMRegToNaN(isFloat32, &context.fpregs->_xmm[4]); break;
-          case JSC::X86Registers::xmm5:  SetXMMRegToNaN(isFloat32, &context.fpregs->_xmm[5]); break;
-          case JSC::X86Registers::xmm6:  SetXMMRegToNaN(isFloat32, &context.fpregs->_xmm[6]); break;
-          case JSC::X86Registers::xmm7:  SetXMMRegToNaN(isFloat32, &context.fpregs->_xmm[7]); break;
-          case JSC::X86Registers::xmm8:  SetXMMRegToNaN(isFloat32, &context.fpregs->_xmm[8]); break;
-          case JSC::X86Registers::xmm9:  SetXMMRegToNaN(isFloat32, &context.fpregs->_xmm[9]); break;
-          case JSC::X86Registers::xmm10: SetXMMRegToNaN(isFloat32, &context.fpregs->_xmm[10]); break;
-          case JSC::X86Registers::xmm11: SetXMMRegToNaN(isFloat32, &context.fpregs->_xmm[11]); break;
-          case JSC::X86Registers::xmm12: SetXMMRegToNaN(isFloat32, &context.fpregs->_xmm[12]); break;
-          case JSC::X86Registers::xmm13: SetXMMRegToNaN(isFloat32, &context.fpregs->_xmm[13]); break;
-          case JSC::X86Registers::xmm14: SetXMMRegToNaN(isFloat32, &context.fpregs->_xmm[14]); break;
-          case JSC::X86Registers::xmm15: SetXMMRegToNaN(isFloat32, &context.fpregs->_xmm[15]); break;
-          default: MOZ_CRASH();
-        }
-    } else {
-        switch (reg.gpr().code()) {
-          case JSC::X86Registers::eax: context.gregs[REG_RAX] = 0; break;
-          case JSC::X86Registers::ecx: context.gregs[REG_RCX] = 0; break;
-          case JSC::X86Registers::edx: context.gregs[REG_RDX] = 0; break;
-          case JSC::X86Registers::ebx: context.gregs[REG_RBX] = 0; break;
-          case JSC::X86Registers::esp: context.gregs[REG_RSP] = 0; break;
-          case JSC::X86Registers::ebp: context.gregs[REG_RBP] = 0; break;
-          case JSC::X86Registers::esi: context.gregs[REG_RSI] = 0; break;
-          case JSC::X86Registers::edi: context.gregs[REG_RDI] = 0; break;
-          case JSC::X86Registers::r8:  context.gregs[REG_R8]  = 0; break;
-          case JSC::X86Registers::r9:  context.gregs[REG_R9]  = 0; break;
-          case JSC::X86Registers::r10: context.gregs[REG_R10] = 0; break;
-          case JSC::X86Registers::r11: context.gregs[REG_R11] = 0; break;
-          case JSC::X86Registers::r12: context.gregs[REG_R12] = 0; break;
-          case JSC::X86Registers::r13: context.gregs[REG_R13] = 0; break;
-          case JSC::X86Registers::r14: context.gregs[REG_R14] = 0; break;
-          case JSC::X86Registers::r15: context.gregs[REG_R15] = 0; break;
-          default: MOZ_CRASH();
-        }
-    }
-}
-#  endif
 
 // Be very cautious and default to not handling; we don't want to accidentally
 // silence real crashes from real bugs.
@@ -689,7 +762,7 @@ HandleSignal(int signum, siginfo_t *info, void *ctx)
     if (!activation)
         return false;
 
-    mcontext_t &context = reinterpret_cast<ucontext_t*>(ctx)->uc_mcontext;
+    CONTEXT *context = (CONTEXT *)ctx;
     uint8_t **ppc = ContextToPC(context);
     uint8_t *pc = *ppc;
 
