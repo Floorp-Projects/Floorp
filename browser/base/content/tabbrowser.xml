@@ -448,12 +448,28 @@
               return this.mTabBrowser._callProgressListeners.apply(this.mTabBrowser, arguments);
             },
 
+            _shouldShowProgress: function (aRequest) {
+              if (this.mBlank)
+                return false;
+
+              // Don't show progress indicators in tabs for about: URIs
+              // pointing to local resources.
+              try {
+                let channel = aRequest.QueryInterface(Ci.nsIChannel);
+                if (channel.originalURI.schemeIs("about") &&
+                    (channel.URI.schemeIs("jar") || channel.URI.schemeIs("file")))
+                  return false;
+              } catch (e) {}
+
+              return true;
+            },
+
             onProgressChange: function (aWebProgress, aRequest,
                                         aCurSelfProgress, aMaxSelfProgress,
                                         aCurTotalProgress, aMaxTotalProgress) {
               this.mTotalProgress = aMaxTotalProgress ? aCurTotalProgress / aMaxTotalProgress : 0;
 
-              if (this.mBlank)
+              if (!this._shouldShowProgress(aRequest))
                 return;
 
               if (this.mTotalProgress)
@@ -510,7 +526,7 @@
                 if (aWebProgress.DOMWindow == this.mBrowser.contentWindow)
                   this.mBrowser.userTypedClear += 2;
 
-                if (!this.mBlank) {
+                if (this._shouldShowProgress(aRequest)) {
                   if (!(aStateFlags & nsIWebProgressListener.STATE_RESTORING)) {
                     this.mTab.setAttribute("busy", "true");
                     if (!(this.mBrowser.docShell.loadType & Ci.nsIDocShell.LOAD_CMD_RELOAD))
