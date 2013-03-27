@@ -2715,9 +2715,20 @@ if test "$GNU_CXX"; then
         [AC_TRY_COMPILE([#include <memory>], [],
                         ac_cv_cxx0x_headers_bug="no",
                         ac_cv_cxx0x_headers_bug="yes")])
-    CXXFLAGS="$_SAVE_CXXFLAGS"
-    if test "$ac_cv_cxx0x_headers_bug" = "no"; then
-        CXXFLAGS="$CXXFLAGS -std=gnu++0x"
+
+    if test "$CLANG_CXX" -a "$ac_cv_cxx0x_headers_bug" = "yes"; then
+        CXXFLAGS="$CXXFLAGS -I$_topsrcdir/build/unix/headers"
+        AC_CACHE_CHECK(whether workaround for gcc c++0x headers conflict with clang works,
+            ac_cv_cxx0x_clang_workaround,
+            [AC_TRY_COMPILE([#include <memory>], [],
+                            ac_cv_cxx0x_clang_workaround="yes",
+                            ac_cv_cxx0x_clang_workaround="no")])
+
+        if test "ac_cv_cxx0x_clang_workaround" = "no"; then
+            CXXFLAGS="$_SAVE_CXXFLAGS"
+        fi
+    elif test "$ac_cv_cxx0x_headers_bug" = "yes"; then
+        CXXFLAGS="$_SAVE_CXXFLAGS"
     fi
 fi
 
