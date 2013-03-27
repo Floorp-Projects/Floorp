@@ -52,6 +52,13 @@ GetSCTPLog()
 }
 #endif
 
+// Let us turn on and off important assertions in non-debug builds
+#ifdef DEBUG
+#define ASSERT_WEBRTC(x) MOZ_ASSERT((x))
+#elif defined(MOZ_WEBRTC_ASSERT_ALWAYS)
+#define ASSERT_WEBRTC(x) do { if (!(x)) { MOZ_CRASH(); } } while 0
+#endif
+
 static bool sctp_initialized;
 
 namespace mozilla {
@@ -186,14 +193,14 @@ DataChannelConnection::~DataChannelConnection()
 {
   LOG(("Deleting DataChannelConnection %p", (void *) this));
   // This may die on the MainThread, or on the STS thread
-  MOZ_ASSERT(mState == CLOSED);
+  ASSERT_WEBRTC(mState == CLOSED);
   MOZ_ASSERT(!mMasterSocket);
   MOZ_ASSERT(mPending.GetSize() == 0);
 
   // Already disconnected from sigslot/mTransportFlow
   // TransportFlows must be released from the STS thread
   if (mTransportFlow && !IsSTSThread()) {
-    MOZ_ASSERT(mSTS);
+    ASSERT_WEBRTC(mSTS);
     RUN_ON_THREAD(mSTS, WrapRunnableNM(ReleaseTransportFlow, mTransportFlow.forget()),
                   NS_DISPATCH_NORMAL);
   }
@@ -207,7 +214,7 @@ DataChannelConnection::Destroy()
   // create a dependant Internal object that would remain around
   // until the network shut down the association or timed out.
   LOG(("Destroying DataChannelConnection %p", (void *) this));
-  MOZ_ASSERT(NS_IsMainThread());
+  ASSERT_WEBRTC(NS_IsMainThread());
   CloseAll();
 
   if (mSocket && mSocket != mMasterSocket)
@@ -225,7 +232,7 @@ DataChannelConnection::Destroy()
 
   if (mTransportFlow) {
     MOZ_ASSERT(mSTS);
-    MOZ_ASSERT(NS_IsMainThread());
+    ASSERT_WEBRTC(NS_IsMainThread());
     RUN_ON_THREAD(mSTS, WrapRunnable(nsRefPtr<DataChannelConnection>(this),
                                      &DataChannelConnection::disconnect_all),
                   NS_DISPATCH_NORMAL);
@@ -256,7 +263,7 @@ DataChannelConnection::Init(unsigned short aPort, uint16_t aNumStreams, bool aUs
                             SCTP_STREAM_RESET_EVENT,
                             SCTP_STREAM_CHANGE_EVENT};
   {
-    MOZ_ASSERT(NS_IsMainThread());
+    ASSERT_WEBRTC(NS_IsMainThread());
 
     // MutexAutoLock lock(mLock); Not needed since we're on mainthread always
     if (!sctp_initialized) {
@@ -421,7 +428,7 @@ DataChannelConnection::StartDefer()
     return;
   }
 
-  MOZ_ASSERT(NS_IsMainThread());
+  ASSERT_WEBRTC(NS_IsMainThread());
   if (!mDeferredTimer) {
     mDeferredTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
     MOZ_ASSERT(mDeferredTimer);
@@ -441,7 +448,7 @@ DataChannelConnection::StartDefer()
 NS_IMETHODIMP
 DataChannelConnection::Notify(nsITimer *timer)
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  ASSERT_WEBRTC(NS_IsMainThread());
   LOG(("%s: %p [%p] (%dms), sending deferred messages", __FUNCTION__, this, timer, mDeferTimeout));
 
   if (timer == mDeferredTimer) {
@@ -1628,9 +1635,9 @@ DataChannelConnection::HandleStreamResetEvent(const struct sctp_stream_reset_eve
 
           LOG(("Incoming: Channel %d outgoing/%d incoming closed, state %d",
                channel->mStreamOut, channel->mStreamIn, channel->mState));
-          MOZ_ASSERT(channel->mState == DataChannel::OPEN ||
-                     channel->mState == DataChannel::CLOSING ||
-                     channel->mState == DataChannel::WAITING_TO_OPEN);
+          ASSERT_WEBRTC(channel->mState == DataChannel::OPEN ||
+                        channel->mState == DataChannel::CLOSING ||
+                        channel->mState == DataChannel::WAITING_TO_OPEN);
           if (channel->mState == DataChannel::OPEN ||
               channel->mState == DataChannel::WAITING_TO_OPEN) {
             ResetOutgoingStream(channel->mStreamOut);
@@ -1657,7 +1664,7 @@ DataChannelConnection::HandleStreamResetEvent(const struct sctp_stream_reset_eve
           LOG(("Outgoing: Connection %p channel %p  streams: %d outgoing/%d incoming closed",
                (void *) this, (void *) channel.get(), channel->mStreamOut, channel->mStreamIn));
 
-          MOZ_ASSERT(channel->mState == CLOSING);
+          ASSERT_WEBRTC(channel->mState == CLOSING);
           if (channel->mState == CLOSING) {
             mStreamsOut[channel->mStreamOut] = nullptr;
             if (channel->mStreamIn != INVALID_STREAM)
@@ -1844,7 +1851,7 @@ int
 DataChannelConnection::ReceiveCallback(struct socket* sock, void *data, size_t datalen,
                                        struct sctp_rcvinfo rcv, int32_t flags)
 {
-  MOZ_ASSERT(!NS_IsMainThread());
+  ASSERT_WEBRTC(!NS_IsMainThread());
 
   if (!data) {
     usrsctp_close(sock); // SCTP has finished shutting down
@@ -2118,7 +2125,7 @@ int32_t
 DataChannelConnection::SendMsgCommon(uint16_t stream, const nsACString &aMsg,
                                      bool isBinary)
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  ASSERT_WEBRTC(NS_IsMainThread());
   // We really could allow this from other threads, so long as we deal with
   // asynchronosity issues with channels closing, in particular access to
   // mStreamsOut, and issues with the association closing (access to mSocket).
