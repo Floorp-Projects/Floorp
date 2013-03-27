@@ -4079,16 +4079,16 @@ nsSVGTextFrame2::ResolvePositions(nsTArray<gfxPoint>& aDeltas)
 
   // Fill in unspecified positions for all remaining characters, noting
   // them as unaddressable if they are.
-  uint32_t index = it.TextElementCharIndex();
-  for (uint32_t i = 0; i < index; i++) {
-    mPositions.AppendElement(CharPosition::Unspecified(false));
-  }
+  uint32_t index = 0;
   while (it.Next()) {
     while (++index < it.TextElementCharIndex()) {
       mPositions.AppendElement(CharPosition::Unspecified(false));
     }
     mPositions.AppendElement(CharPosition::Unspecified(
                                              it.IsOriginalCharUnaddressable()));
+  }
+  while (++index < it.TextElementCharIndex()) {
+    mPositions.AppendElement(CharPosition::Unspecified(false));
   }
 
   // Recurse over the content and fill in character positions as we go.
