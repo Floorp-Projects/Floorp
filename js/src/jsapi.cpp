@@ -4987,22 +4987,22 @@ JS_DefineFunctions(JSContext *cx, JSObject *objArg, JSFunctionSpec *fs)
         }
 
         /*
-         * During creation of the self-hosting global, we ignore all
-         * self-hosted functions, as that means we're currently setting up
-         * the global object that that the self-hosted code is then compiled
-         * in. Self-hosted functions can access each other via their names,
-         * but not via the builtin classes they get installed into.
-         */
-        if (fs->selfHostedName && cx->runtime->isSelfHostingGlobal(cx->global()))
-            return JS_TRUE;
-
-        /*
          * Delay cloning self-hosted functions until they are called. This is
          * achieved by passing DefineFunction a NULL JSNative which
          * produces an interpreted JSFunction where !hasScript. Interpreted
          * call paths then call InitializeLazyFunctionScript if !hasScript.
          */
         if (fs->selfHostedName) {
+            /*
+             * During creation of the self-hosting global, we ignore all
+             * self-hosted functions, as that means we're currently setting up
+             * the global object that the self-hosted code is then compiled
+             * in. Self-hosted functions can access each other via their names,
+             * but not via the builtin classes they get installed into.
+             */
+            if (cx->runtime->isSelfHostingGlobal(cx->global()))
+                continue;
+
             RootedFunction fun(cx, DefineFunction(cx, obj, id, /* native = */ NULL, fs->nargs, 0,
                                                   JSFunction::ExtendedFinalizeKind, SingletonObject));
             if (!fun)
