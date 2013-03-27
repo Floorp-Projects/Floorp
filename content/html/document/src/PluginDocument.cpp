@@ -17,7 +17,7 @@
 #include "nsIPropertyBag2.h"
 #include "mozilla/dom/Element.h"
 #include "nsObjectLoadingContent.h"
-#include "sampler.h"
+#include "GeckoProfiler.h"
 
 namespace mozilla {
 namespace dom {
@@ -73,7 +73,7 @@ private:
 NS_IMETHODIMP
 PluginStreamListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
 {
-  SAMPLE_LABEL("PluginStreamListener", "OnStartRequest");
+  PROFILER_LABEL("PluginStreamListener", "OnStartRequest");
 
   nsCOMPtr<nsIContent> embed = mPluginDoc->GetPluginContent();
   nsCOMPtr<nsIObjectLoadingContent> objlc = do_QueryInterface(embed);

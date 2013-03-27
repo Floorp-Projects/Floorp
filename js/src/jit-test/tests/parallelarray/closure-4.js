@@ -9,4 +9,5 @@ function testClosureCreationAndInvocation() {
   assertEq(m.get(2)(2), 5); // (\x.x+v){v=3} 2 == 5
 }
 
-testClosureCreationAndInvocation();
+if (getBuildConfiguration().parallelJS)
+  testClosureCreationAndInvocation();

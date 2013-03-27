@@ -8,4 +8,4 @@ function test() {
   compareAgainstArray(range(1, 3), "map", makeadd1);
 }
 
-test();
+if (getBuildConfiguration().parallelJS) test();

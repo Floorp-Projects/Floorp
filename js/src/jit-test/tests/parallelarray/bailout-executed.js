@@ -19,4 +19,5 @@ function test() {
   assertStructuralEq(pa1, array1);
 }
 
-test();
+if (getBuildConfiguration().parallelJS)
+  test();

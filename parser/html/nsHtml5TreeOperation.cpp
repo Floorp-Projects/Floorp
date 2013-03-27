@@ -31,6 +31,7 @@
 #include "nsIServiceManager.h"
 #include "nsEscape.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/HTMLTemplateElement.h"
 #include "nsHtml5SVGLoadDispatcher.h"
 #include "nsIURI.h"
 #include "nsIProtocolHandler.h"
@@ -558,6 +559,13 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       nsCOMPtr<nsIContent> asContent = do_QueryInterface(docType);
       return AppendToDocument(asContent, aBuilder);
     }
+    case eTreeOpGetDocumentFragmentForTemplate: {
+      dom::HTMLTemplateElement* tempElem =
+        static_cast<dom::HTMLTemplateElement*>(*mOne.node);
+      nsRefPtr<dom::DocumentFragment> frag = tempElem->Content();
+      *mTwo.node = frag.get();
+      return rv;
+    }
     case eTreeOpMarkAsBroken: {
       aBuilder->MarkAsBroken(NS_ERROR_OUT_OF_MEMORY);
       return rv;
@@ -811,3 +819,4 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
   }
   return rv; // keep compiler happy
 }
+

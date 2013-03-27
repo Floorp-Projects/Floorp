@@ -23,7 +23,7 @@ mozilla_StartupTimeline_Event(FIRST_LOAD_URI, "firstLoadURI")
 
 #include "prtime.h"
 #include "nscore.h"
-#include "sampler.h"
+#include "GeckoProfiler.h"
 
 #ifdef MOZ_LINKER
 extern "C" {
@@ -60,7 +60,7 @@ public:
   }
 
   static void Record(Event ev) {
-    SAMPLE_MARKER(Describe(ev));
+    PROFILER_MARKER(Describe(ev));
     Record(ev, PR_Now());
   }
 

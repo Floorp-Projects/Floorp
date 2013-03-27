@@ -25,7 +25,7 @@
 #include "nsAutoPtr.h"
 #include "nsStringGlue.h"
 #include "mozilla/Preferences.h"
-#include "sampler.h"
+#include "GeckoProfiler.h"
 
 #include "prprf.h"
 #include "nsCRT.h"
@@ -373,7 +373,7 @@ nsAppStartup::Quit(uint32_t aMode)
       }
     }
 
-    SAMPLE_MARKER("Shutdown start");
+    PROFILER_MARKER("Shutdown start");
     mozilla::RecordShutdownStartTimeStamp();
     mShuttingDown = true;
     if (!mRestart) {

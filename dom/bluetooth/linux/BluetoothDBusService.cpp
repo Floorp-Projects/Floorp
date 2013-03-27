@@ -266,10 +266,10 @@ public:
     NS_ENSURE_TRUE(bs, NS_ERROR_FAILURE);
     sAdapterPath = mPath;
 
-    // Due to the fact that we need to queue the dbus call to the command thread
-    // inside the bluetoothservice, we have to route the call down to the main
-    // thread and then back out to the command thread. There has to be a better
-    // way to do this.
+    // Due to the fact that we need to queue the dbus call to the command
+    // thread inside the bluetoothservice, we have to route the call down
+    // to the main thread and then back out to the command thread. There has
+    // to be a better way to do this.
     if (NS_FAILED(bs->PrepareAdapterInternal())) {
       NS_WARNING("Prepare adapter failed");
       return NS_ERROR_FAILURE;
@@ -406,7 +406,8 @@ static DBusHandlerResult
 AgentEventFilter(DBusConnection *conn, DBusMessage *msg, void *data)
 {
   if (dbus_message_get_type(msg) != DBUS_MESSAGE_TYPE_METHOD_CALL) {
-    BT_WARNING("%s: agent handler not interested (not a method call).\n", __FUNCTION__);
+    BT_WARNING("%s: agent handler not interested (not a method call).\n",
+               __FUNCTION__);
     return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
   }
 
@@ -484,9 +485,8 @@ AgentEventFilter(DBusConnection *conn, DBusMessage *msg, void *data)
                                DBUS_TYPE_OBJECT_PATH, &objectPath,
                                DBUS_TYPE_UINT32, &passkey,
                                DBUS_TYPE_INVALID)) {
-      BT_WARNING("%s: Invalid arguments for RequestConfirmation() method",
-                 __FUNCTION__);
-      errorStr.AssignLiteral("Invalid arguments for RequestConfirmation() method");
+      BT_WARNING("%s: Invalid arguments: RequestConfirmation()", __FUNCTION__);
+      errorStr.AssignLiteral("Invalid arguments: RequestConfirmation()");
     } else {
       parameters.AppendElement(BluetoothNamedValue(
                                  NS_LITERAL_STRING("path"),
@@ -899,7 +899,14 @@ RunDBusCallback(DBusMessage* aMsg, void* aBluetoothReplyRunnable,
   // being gtk based, sometimes we'll get signals/reply coming in on the main
   // thread. There's not a lot we can do about that for the time being and it
   // (technically) shouldn't hurt anything. However, on gonk, die.
-  MOZ_ASSERT(!NS_IsMainThread());
+
+  // Due to the fact introducing workaround in Bug 827888, the callback for a
+  // message gets executed immediately. The proper fix is in bug 830290, but
+  // it's a intrusive change, it is better to remove assertion here since it
+  // would not hurt anything.
+  // Tracking bug 830290 for intrusive solution.
+
+  // MOZ_ASSERT(!NS_IsMainThread());
 #endif
   nsRefPtr<BluetoothReplyRunnable> replyRunnable =
     dont_AddRef(static_cast< BluetoothReplyRunnable* >(aBluetoothReplyRunnable));
@@ -1132,13 +1139,13 @@ ParseProperties(DBusMessageIter* aIter,
   int prop_index = -1;
 
   NS_ASSERTION(dbus_message_iter_get_arg_type(aIter) == DBUS_TYPE_ARRAY,
-               "Trying to parse a property from something that's not an array!");
+               "Trying to parse a property from sth. that's not an array");
 
   dbus_message_iter_recurse(aIter, &dict);
   InfallibleTArray<BluetoothNamedValue> props;
   do {
     NS_ASSERTION(dbus_message_iter_get_arg_type(&dict) == DBUS_TYPE_DICT_ENTRY,
-                 "Trying to parse a property from something that's not an dict!");
+                 "Trying to parse a property from sth. that's not an dict!");
     dbus_message_iter_recurse(&dict, &dict_entry);
 
     if (!GetProperty(dict_entry, aPropertyTypes, aPropertyTypeLen, &prop_index,
@@ -1448,7 +1455,7 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
         }
       }
     } else {
-      errorStr.AssignLiteral("DBus device found message structure not as expected!");
+      errorStr.AssignLiteral("Unexpected message struct in msg DeviceFound");
     }
   } else if (dbus_message_is_signal(aMsg, DBUS_ADAPTER_IFACE,
                                     "DeviceDisappeared")) {
@@ -1877,7 +1884,8 @@ public:
 
     const InfallibleTArray<BluetoothNamedValue>& arr =
       v.get_ArrayOfBluetoothNamedValue();
-    NS_ASSERTION(arr[0].name().EqualsLiteral("path"), "failed to get object path");
+    NS_ASSERTION(arr[0].name().EqualsLiteral("path"),
+                 "failed to get object path");
     NS_ASSERTION(arr[0].value().type() == BluetoothValue::TnsString,
                  "failed to get_nsString");
     nsString devicePath = arr[0].value().get_nsString();
@@ -1891,7 +1899,8 @@ public:
       prop.get_ArrayOfBluetoothNamedValue();
 
     // Return original dbus message parameters and also device name
-    // for agent events "RequestConfirmation", "RequestPinCode", and "RequestPasskey"
+    // for agent events "RequestConfirmation", "RequestPinCode",
+    // and "RequestPasskey"
     InfallibleTArray<BluetoothNamedValue>& parameters =
       v.get_ArrayOfBluetoothNamedValue();
 
@@ -2056,10 +2065,10 @@ BluetoothDBusService::SetProperty(BluetoothObjectType aType,
 
   /* Compose the command */
   DBusMessage* msg = dbus_message_new_method_call(
-                                       "org.bluez",
-                                       NS_ConvertUTF16toUTF8(sAdapterPath).get(),
-                                       interface,
-                                       "SetProperty");
+                                      "org.bluez",
+                                      NS_ConvertUTF16toUTF8(sAdapterPath).get(),
+                                      interface,
+                                      "SetProperty");
 
   if (!msg) {
     NS_WARNING("Could not allocate D-Bus message object!");
@@ -2100,7 +2109,8 @@ BluetoothDBusService::SetProperty(BluetoothObjectType aType,
   DBusMessageIter value_iter, iter;
   dbus_message_iter_init_append(msg, &iter);
   char var_type[2] = {(char)type, '\0'};
-  if (!dbus_message_iter_open_container(&iter, DBUS_TYPE_VARIANT, var_type, &value_iter) ||
+  if (!dbus_message_iter_open_container(&iter, DBUS_TYPE_VARIANT, 
+                                        var_type, &value_iter) ||
       !dbus_message_iter_append_basic(&value_iter, type, val) ||
       !dbus_message_iter_close_container(&iter, &value_iter)) {
     NS_WARNING("Could not append argument to method call!");

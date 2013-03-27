@@ -50,11 +50,14 @@ interface nsINavHistoryResultNode : nsISupports
    * corresponding specialized result node interface.
    */
   const unsigned long RESULT_TYPE_URI = 0;               // nsINavHistoryResultNode
-  const unsigned long RESULT_TYPE_VISIT = 1;             // nsINavHistoryVisitResultNode
+
+  // Visit nodes are deprecated and unsupported.
+  // This line exists just to avoid reusing the value:
+  // const unsigned long RESULT_TYPE_VISIT = 1;
 
   // Full visit nodes are deprecated and unsupported.
   // This line exists just to avoid reusing the value:
-  // const unsigned long RESULT_TYPE_FULL_VISIT = 2;        // nsINavHistoryFullVisitResultNode
+  // const unsigned long RESULT_TYPE_FULL_VISIT = 2;
 
   // Dynamic containers are deprecated and unsupported.
   // This const exists just to avoid reusing the value:
@@ -151,22 +154,6 @@ interface nsINavHistoryResultNode : nsISupports
    * for the uri represented by this node. Otherwise this is an empty string.
    */
   readonly attribute AString tags;
-};
-
-
-/**
- * When you request RESULT_TYPE_VISIT from query options, you will get this
- * interface for each item, which includes the session ID so that we can
- * group items from the same session together.
- */
-[scriptable, uuid(8e2c5a86-b33d-4fa6-944b-559af7e95fcd)]
-interface nsINavHistoryVisitResultNode : nsINavHistoryResultNode
-{
-  /**
-   * This indicates the session ID of the * visit. This is used for session
-   * grouping when a tree view is sorted by date.
-   */
-  readonly attribute long long sessionId;
 };
 
 
@@ -636,7 +623,7 @@ interface nsINavHistoryObserver : nsISupports
    *
    * @param aVisitID        ID of the visit that was just created.
    * @param aTime           Time of the visit
-   * @param aSessionID      The ID of one connected sequence of visits.
+   * @param aSessionID      No longer supported (always set to 0).
    * @param aReferringID    The ID of the visit the user came from. 0 if empty.
    * @param aTransitionType One of nsINavHistory.TRANSITION_*
    * @param aGUID           The unique ID associated with the page.
@@ -1304,7 +1291,7 @@ interface nsINavHistoryService : nsISupports
 
   /**
    * Returns true if this URI would be added to the history. You don't have to
-   * worry about calling this, addPageToSession/addURI will always check before
+   * worry about calling this, adding a visit will always check before
    * actually adding the page. This function is public because some components
    * may want to check if this page would go in the history (i.e. for
    * annotations).

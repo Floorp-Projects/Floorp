@@ -111,6 +111,7 @@ function test() {
         HTML_TAG("tfoot", "TableSection")
         HTML_TAG("th", "TableCell")
         HTML_TAG("thead", "TableSection")
+        HTML_TAG("template", "Template")
         HTML_TAG("title", "Title")
         HTML_TAG("tr", "TableRow")
         HTML_TAG("tt", "Span")

@@ -53,4 +53,5 @@ Includes = (
     'nsTArray.h',
     'nsIFile.h',
     'mozilla/ipc/ProtocolUtils.h',
+    'GeckoProfiler.h'
 )

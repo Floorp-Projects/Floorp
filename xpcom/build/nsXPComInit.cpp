@@ -122,7 +122,7 @@ extern nsresult nsStringInputStreamConstructor(nsISupports *, REFNSIID, void **)
 
 #include "mozilla/VisualEventTracer.h"
 
-#include "sampler.h"
+#include "GeckoProfiler.h"
 
 using base::AtExitManager;
 using mozilla::ipc::BrowserProcessSubThread;
@@ -318,7 +318,7 @@ NS_InitXPCOM2(nsIServiceManager* *result,
               nsIFile* binDirectory,
               nsIDirectoryServiceProvider* appFileLocationProvider)
 {
-    SAMPLER_INIT();
+    profiler_init();
     nsresult rv = NS_OK;
 
      // We are not shutting down
@@ -439,8 +439,14 @@ NS_InitXPCOM2(nsIServiceManager* *result,
     // Create the Component/Service Manager
     nsComponentManagerImpl::gComponentManager = new nsComponentManagerImpl();
     NS_ADDREF(nsComponentManagerImpl::gComponentManager);
-    
-    rv = nsCycleCollector_startup();
+
+    // Global cycle collector initialization.
+    if (!nsCycleCollector_init()) {
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    // And start it up for this thread too.
+    rv = nsCycleCollector_startup(CCSingleThread);
     if (NS_FAILED(rv)) return rv;
 
     rv = nsComponentManagerImpl::gComponentManager->Init();
@@ -648,7 +654,7 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
         moduleLoaders = nullptr;
     }
 
-    SAMPLE_MARKER("Shutdown xpcom");
+    PROFILER_MARKER("Shutdown xpcom");
     // If we are doing any shutdown checks, poison writes.
     if (gShutdownChecks != SCM_NOTHING) {
         mozilla::PoisonWrite();

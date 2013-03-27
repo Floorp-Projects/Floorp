@@ -14,11 +14,13 @@ XPCSHELL_TESTS = tests
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORTS = sampler.h
+EXPORTS = GeckoProfiler.h
 
 ifdef MOZ_ENABLE_PROFILER_SPS
 EXPORTS += \
-  sps_sampler.h \
+  GeckoProfilerImpl.h \
+  GeckoProfilerFunc.h \
+  PseudoStack.h \
   shared-libraries.h \
   $(NULL)
 
@@ -42,12 +44,13 @@ FAIL_ON_WARNINGS = 1
 endif # !_MSC_VER
 
 CPPSRCS		= \
+  platform.cpp \
   nsProfilerFactory.cpp \
   nsProfiler.cpp \
   TableTicker.cpp \
-  TableTicker2.cpp \
+  BreakpadSampler.cpp \
   UnwinderThread2.cpp \
-  ProfileEntry2.cpp \
+  ProfileEntry.cpp \
   local_debug_info_symbolizer.cc \
   JSObjectBuilder.cpp \
   JSCustomObjectBuilder.cpp \

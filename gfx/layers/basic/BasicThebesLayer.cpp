@@ -7,7 +7,7 @@
 #include "gfxUtils.h"
 #include "nsIWidget.h"
 #include "RenderTrace.h"
-#include "sampler.h"
+#include "GeckoProfiler.h"
 
 #include "prprf.h"
 
@@ -86,7 +86,7 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
                               void* aCallbackData,
                               ReadbackProcessor* aReadback)
 {
-  SAMPLE_LABEL("BasicThebesLayer", "PaintThebes");
+  PROFILER_LABEL("BasicThebesLayer", "PaintThebes");
   NS_ASSERTION(BasicManager()->InDrawing(),
                "Can only draw in drawing phase");
   nsRefPtr<gfxASurface> targetSurface = aContext->CurrentSurface();

@@ -1420,8 +1420,10 @@ bool IsAllowedAsChild(nsIContent* aNewChild, nsINode* aParent,
   // actually equal to each other.  Fast-path that case, since aParent
   // could be pretty deep in the DOM tree.
   if (aNewChild == aParent ||
-      (aNewChild->GetFirstChild() &&
-       nsContentUtils::ContentIsDescendantOf(aParent, aNewChild))) {
+      ((aNewChild->GetFirstChild() ||
+        aNewChild->Tag() == nsGkAtoms::_template) &&
+       nsContentUtils::ContentIsHostIncludingDescendantOf(aParent,
+                                                          aNewChild))) {
     return false;
   }
 
@@ -2056,12 +2058,12 @@ nsINode::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
       error.Throw(NS_ERROR_OUT_OF_MEMORY);                                   \
     }                                                                        \
   }                                                                          \
-  NS_IMETHODIMP nsINode::GetOn##name_(JSContext *cx, jsval *vp) {            \
+  NS_IMETHODIMP nsINode::GetOn##name_(JSContext *cx, JS::Value *vp) {        \
     EventHandlerNonNull* h = GetOn##name_();                                 \
     vp->setObjectOrNull(h ? h->Callable() : nullptr);                        \
     return NS_OK;                                                            \
   }                                                                          \
-  NS_IMETHODIMP nsINode::SetOn##name_(JSContext *cx, const jsval &v) {       \
+  NS_IMETHODIMP nsINode::SetOn##name_(JSContext *cx, const JS::Value &v) {   \
     JSObject *obj = GetWrapper();                                            \
     if (!obj) {                                                              \
       /* Just silently do nothing */                                         \

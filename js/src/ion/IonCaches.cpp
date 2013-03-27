@@ -483,24 +483,20 @@ struct GetNativePropertyStub
             JS_ASSERT_IF(expando, expando->isNative() && expando->getProto() == NULL);
 
             masm.loadValue(expandoAddr, tempVal);
-            if (expando && expando->nativeLookup(cx, propName)) {
-                // Reference object has an expando that doesn't define the name.
-                // Check incoming object's expando and make sure it's an object.
 
-                // If checkExpando is true, we'll temporarily use register(s) for a ValueOperand.
-                // If we do that, we save the register(s) on stack before use and pop them
-                // on both exit paths.
+            // If the incoming object does not have an expando object then we're sure we're not
+            // shadowing.
+            masm.branchTestUndefined(Assembler::Equal, tempVal, &listBaseOk);
 
+            if (expando && !expando->nativeContains(cx, propName)) {
+                // Reference object has an expando object that doesn't define the name. Check that
+                // the incoming object has an expando object with the same shape.
                 masm.branchTestObject(Assembler::NotEqual, tempVal, &failListBaseCheck);
                 masm.extractObject(tempVal, tempVal.scratchReg());
                 masm.branchPtr(Assembler::Equal,
                                Address(tempVal.scratchReg(), JSObject::offsetOfShape()),
                                ImmGCPtr(expando->lastProperty()),
                                &listBaseOk);
-            } else {
-                // Reference object has no expando.  Check incoming object and ensure
-                // it has no expando.
-                masm.branchTestUndefined(Assembler::Equal, tempVal, &listBaseOk);
             }
 
             // Failure case: restore the tempVal registers and jump to failures.

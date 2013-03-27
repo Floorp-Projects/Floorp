@@ -62,7 +62,7 @@ add_task(function test_onVisit() {
     do_check_true(aURI.equals(testuri));
     do_check_true(aVisitID > 0);
     do_check_eq(aTime, testtime);
-    do_check_true(aSessionID > 0);
+    do_check_eq(aSessionID, 0);
     do_check_eq(aReferringID, 0);
     do_check_eq(aTransitionType, TRANSITION_TYPED);
     do_check_guid_for_uri(aURI, aGUID);
@@ -82,7 +82,7 @@ add_task(function test_onVisit() {
     do_check_true(aURI.equals(testuri));
     do_check_true(aVisitID > 0);
     do_check_eq(aTime, testtime);
-    do_check_true(aSessionID > 0);
+    do_check_eq(aSessionID, 0);
     do_check_eq(aReferringID, 0);
     do_check_eq(aTransitionType, TRANSITION_FRAMED_LINK);
     do_check_guid_for_uri(aURI, aGUID);

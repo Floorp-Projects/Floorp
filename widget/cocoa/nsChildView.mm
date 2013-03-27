@@ -64,7 +64,7 @@
 
 #include <ApplicationServices/ApplicationServices.h>
 
-#include "sampler.h"
+#include "GeckoProfiler.h"
 
 #include "nsIDOMWheelEvent.h"
 
@@ -2582,7 +2582,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
     return;
   }
 
-  SAMPLE_LABEL("widget", "ChildView::drawRect");
+  PROFILER_LABEL("widget", "ChildView::drawRect");
 
   nsIntRegion region;
   nsIntRect boundingRect = mGeckoChild->CocoaPointsToDevPixels(aRect);
@@ -2687,7 +2687,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
 - (void)drawUsingOpenGL
 {
-  SAMPLE_LABEL("widget", "ChildView::drawUsingOpenGL");
+  PROFILER_LABEL("widget", "ChildView::drawUsingOpenGL");
 
   if (![self isUsingOpenGL] || !mGeckoChild->IsVisible())
     return;

@@ -1247,7 +1247,8 @@ txMozillaXSLTProcessor::ContentRemoved(nsIDocument* aDocument,
 
 NS_IMETHODIMP
 txMozillaXSLTProcessor::Initialize(nsISupports* aOwner, JSContext* cx,
-                                   JSObject* obj, uint32_t argc, jsval* argv)
+                                   JSObject* obj, uint32_t argc,
+                                   JS::Value* argv)
 {
     nsCOMPtr<nsIPrincipal> prin;
     nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();

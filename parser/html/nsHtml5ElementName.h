@@ -395,6 +395,7 @@ class nsHtml5ElementName
     static nsHtml5ElementName* ELT_QUOTIENT;
     static nsHtml5ElementName* ELT_SELECTOR;
     static nsHtml5ElementName* ELT_TEXTAREA;
+    static nsHtml5ElementName* ELT_TEMPLATE;
     static nsHtml5ElementName* ELT_TEXTPATH;
     static nsHtml5ElementName* ELT_VARIANCE;
     static nsHtml5ElementName* ELT_ANIMATION;
