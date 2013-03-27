@@ -216,8 +216,7 @@
       * @return {File} A file object.
       * @throws {OS.File.Error} If the file could not be opened.
       */
-     File.open = function Unix_open(path, mode, options) {
-       options = options || noOptions;
+     File.open = function Unix_open(path, mode, options = noOptions) {
        let omode = options.unixMode || DEFAULT_UNIX_MODE;
        let flags;
        if (options.unixFlags) {
@@ -288,8 +287,7 @@
       *   - {bool} ignoreAbsent If |true|, do not fail if the
       *     directory does not exist yet.
       */
-     File.removeEmptyDir = function removeEmptyDir(path, options) {
-       options = options || noOptions;
+     File.removeEmptyDir = function removeEmptyDir(path, options = noOptions) {
        let result = UnixFile.rmdir(path);
        if (result == -1) {
          if (options.ignoreAbsent && ctypes.errno == Const.ENOENT) {
@@ -318,8 +316,7 @@
       * - {bool} ignoreExisting If |true|, do not fail if the
       * directory already exists.
       */
-     File.makeDir = function makeDir(path, options) {
-       options = options || noOptions;
+     File.makeDir = function makeDir(path, options = noOptions) {
        let omode = options.unixMode || DEFAULT_UNIX_MODE_DIR;
        let result = UnixFile.mkdir(path, omode);
        if (result != -1 ||
@@ -386,8 +383,7 @@
        // This implementation uses |copyfile(3)|, from the BSD library.
        // Adding copying of hierarchies and/or attributes is just a flag
        // away.
-       File.copy = function copyfile(sourcePath, destPath, options) {
-         options = options || noOptions;
+       File.copy = function copyfile(sourcePath, destPath, options = noOptions) {
          let flags = Const.COPYFILE_DATA;
          if (options.noOverwrite) {
            flags |= Const.COPYFILE_EXCL;
@@ -425,8 +421,7 @@
        let pump_buffer = null;
 
        // An implementation of |pump| using |read|/|write|
-       let pump_userland = function pump_userland(source, dest, options) {
-         options = options || noOptions;
+       let pump_userland = function pump_userland(source, dest, options = noOptions) {
          let bufSize = options.bufSize || 4096;
          let nbytes = options.nbytes || Infinity;
          if (!pump_buffer || pump_buffer.length < bufSize) {
@@ -462,8 +457,7 @@
          const BUFSIZE = 1 << 17;
 
          // An implementation of |pump| using |splice| (for Linux/Android)
-         pump = function pump_splice(source, dest, options) {
-           options = options || noOptions;
+         pump = function pump_splice(source, dest, options = noOptions) {
            let nbytes = options.nbytes || Infinity;
            let pipe = [];
            throw_on_negative("pump", UnixFile.pipe(pipe));
@@ -527,8 +521,7 @@
        // Implement |copy| using |pump|.
        // This implementation would require some work before being able to
        // copy directories
-       File.copy = function copy(sourcePath, destPath, options) {
-         options = options || noOptions;
+       File.copy = function copy(sourcePath, destPath, options = noOptions) {
          let source, dest;
          let result;
          try {
@@ -553,13 +546,11 @@
 
      // Implement |move| using |rename| (wherever possible) or |copy|
      // (if files are on distinct devices).
-     File.move = function move(sourcePath, destPath, options) {
+     File.move = function move(sourcePath, destPath, options = noOptions) {
        // An implementation using |rename| whenever possible or
        // |File.pump| when required, for other Unices.
        // It can move directories on one file system, not
        // across file systems
-
-       options = options || noOptions;
 
        // If necessary, fail if the destination file exists
        if (options.noOverwrite) {
@@ -796,8 +787,7 @@
       *
       * @return {File.Information}
       */
-     File.stat = function stat(path, options) {
-       options = options || noOptions;
+     File.stat = function stat(path, options = noOptions) {
        if (options.unixNoFollowingLinks) {
          throw_on_negative("stat", UnixFile.lstat(path, gStatDataPtr));
        } else {
