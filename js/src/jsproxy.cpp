@@ -327,24 +327,16 @@ bool
 BaseProxyHandler::call(JSContext *cx, HandleObject proxy, unsigned argc,
                        Value *vp)
 {
-    assertEnteredPolicy(cx, proxy, JSID_VOID);
-    AutoValueRooter rval(cx);
-    RootedValue call(cx, GetCall(proxy));
-    JSBool ok = Invoke(cx, vp[1], call, argc, JS_ARGV(cx, vp), rval.addr());
-    if (ok)
-        JS_SET_RVAL(cx, vp, rval.value());
-    return ok;
+    JS_NOT_REACHED("callable proxies should implement call trap");
+    return false;
 }
 
 bool
 BaseProxyHandler::construct(JSContext *cx, HandleObject proxy, unsigned argc,
                             Value *argv, MutableHandleValue rval)
 {
-    assertEnteredPolicy(cx, proxy, JSID_VOID);
-    RootedValue fval(cx, GetConstruct(proxy));
-    if (fval.isUndefined())
-        fval = GetCall(proxy);
-    return InvokeConstructor(cx, fval, argc, argv, rval.address());
+    JS_NOT_REACHED("callable proxies should implement construct trap");
+    return false;
 }
 
 JSString *
@@ -358,19 +350,8 @@ BaseProxyHandler::obj_toString(JSContext *cx, HandleObject proxy)
 JSString *
 BaseProxyHandler::fun_toString(JSContext *cx, HandleObject proxy, unsigned indent)
 {
-    assertEnteredPolicy(cx, proxy, JSID_VOID);
-    Value fval = GetCall(proxy);
-    if (IsFunctionProxy(proxy) &&
-        (fval.isPrimitive() || !fval.toObject().isFunction())) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_INCOMPATIBLE_PROTO,
-                             js_Function_str, js_toString_str,
-                             "object");
-        return NULL;
-    }
-    RootedObject obj(cx, &fval.toObject());
-    return fun_toStringHelper(cx, obj, indent);
-
+    JS_NOT_REACHED("callable proxies should implement fun_toString trap");
+    return false;
 }
 
 bool
@@ -509,6 +490,28 @@ DirectProxyHandler::enumerate(JSContext *cx, HandleObject proxy,
     JS_ASSERT(!hasPrototype()); // Should never be called if there's a prototype.
     RootedObject target(cx, GetProxyTargetObject(proxy));
     return GetPropertyNames(cx, target, 0, &props);
+}
+
+bool
+DirectProxyHandler::call(JSContext *cx, HandleObject proxy, unsigned argc,
+                         Value *vp)
+{
+    assertEnteredPolicy(cx, proxy, JSID_VOID);
+    AutoValueRooter rval(cx);
+    RootedValue target(cx, GetProxyPrivate(proxy));
+    JSBool ok = Invoke(cx, vp[1], target, argc, JS_ARGV(cx, vp), rval.addr());
+    if (ok)
+        JS_SET_RVAL(cx, vp, rval.value());
+    return ok;
+}
+
+bool
+DirectProxyHandler::construct(JSContext *cx, HandleObject proxy, unsigned argc,
+                              Value *argv, MutableHandleValue rval)
+{
+    assertEnteredPolicy(cx, proxy, JSID_VOID);
+    RootedValue target(cx, GetProxyPrivate(proxy));
+    return InvokeConstructor(cx, target, argc, argv, rval.address());
 }
 
 bool
@@ -812,8 +815,12 @@ class ScriptedIndirectProxyHandler : public BaseProxyHandler {
                          MutableHandleValue vp) MOZ_OVERRIDE;
 
     /* Spidermonkey extensions. */
+    virtual bool call(JSContext *cx, HandleObject proxy, unsigned argc, Value *vp) MOZ_OVERRIDE;
+    virtual bool construct(JSContext *cx, HandleObject proxy, unsigned argc,
+                           Value *argv, MutableHandleValue rval) MOZ_OVERRIDE;
     virtual bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
                             CallArgs args) MOZ_OVERRIDE;
+    virtual JSString *fun_toString(JSContext *cx, HandleObject proxy, unsigned indent) MOZ_OVERRIDE;
     virtual bool defaultValue(JSContext *cx, HandleObject obj, JSType hint,
                               MutableHandleValue vp) MOZ_OVERRIDE;
 
@@ -1012,10 +1019,51 @@ ScriptedIndirectProxyHandler::iterate(JSContext *cx, HandleObject proxy, unsigne
 }
 
 bool
+ScriptedIndirectProxyHandler::call(JSContext *cx, HandleObject proxy, unsigned argc,
+                                   Value *vp)
+{
+    assertEnteredPolicy(cx, proxy, JSID_VOID);
+    AutoValueRooter rval(cx);
+    RootedValue call(cx, GetCall(proxy));
+    JSBool ok = Invoke(cx, vp[1], call, argc, JS_ARGV(cx, vp), rval.addr());
+    if (ok)
+        JS_SET_RVAL(cx, vp, rval.value());
+    return ok;
+}
+
+bool
+ScriptedIndirectProxyHandler::construct(JSContext *cx, HandleObject proxy, unsigned argc,
+                                        Value *argv, MutableHandleValue rval)
+{
+    assertEnteredPolicy(cx, proxy, JSID_VOID);
+    RootedValue fval(cx, GetConstruct(proxy));
+    if (fval.isUndefined())
+        fval = GetCall(proxy);
+    return InvokeConstructor(cx, fval, argc, argv, rval.address());
+}
+
+bool
 ScriptedIndirectProxyHandler::nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
                                          CallArgs args)
 {
     return BaseProxyHandler::nativeCall(cx, test, impl, args);
+}
+
+JSString *
+ScriptedIndirectProxyHandler::fun_toString(JSContext *cx, HandleObject proxy, unsigned indent)
+{
+    assertEnteredPolicy(cx, proxy, JSID_VOID);
+    Value fval = GetCall(proxy);
+    if (IsFunctionProxy(proxy) &&
+        (fval.isPrimitive() || !fval.toObject().isFunction())) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_INCOMPATIBLE_PROTO,
+                             js_Function_str, js_toString_str,
+                             "object");
+        return NULL;
+    }
+    RootedObject obj(cx, &fval.toObject());
+    return fun_toStringHelper(cx, obj, indent);
 }
 
 bool
@@ -3262,9 +3310,9 @@ js::NewProxyObject(JSContext *cx, BaseProxyHandler *handler, const Value &priv_,
     return NewProxyObject(cx, handler, priv_, TaggedProto(proto_), parent_, callable);
 }
 
-JS_FRIEND_API(JSObject *)
-js::NewProxyObject(JSContext *cx, BaseProxyHandler *handler, const Value &priv_, JSObject *proto_,
-                   JSObject *parent_, JSObject *call, JSObject *construct)
+static JSObject *
+NewProxyObject(JSContext *cx, BaseProxyHandler *handler, const Value &priv_, JSObject *proto_,
+               JSObject *parent_, JSObject *call, JSObject *construct)
 {
     JS_ASSERT_IF(construct, cx->compartment == construct->compartment());
     JS_ASSERT_IF(call && cx->compartment != call->compartment(), priv_ == ObjectValue(*call));
