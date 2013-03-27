@@ -127,6 +127,7 @@ class GlyphMetricsUpdater : public nsRunnable {
 public:
   NS_DECL_NSIRUNNABLE
   GlyphMetricsUpdater(nsSVGTextFrame2* aFrame) : mFrame(aFrame) { }
+  static void Run(nsSVGTextFrame2* aFrame);
   void Revoke() { mFrame = nullptr; }
 private:
   nsSVGTextFrame2* mFrame;
@@ -274,9 +275,16 @@ public:
 
   /**
    * Schedules mPositions to be recomputed and the covered region to be
-   * updated.
+   * updated.  The aFlags argument can take the ePositioningDirtyDueToMutation
+   * value to indicate that glyph metrics need to be recomputed due to
+   * a DOM mutation in the <text> element on one of its descendants.
    */
-  void NotifyGlyphMetricsChange();
+  void NotifyGlyphMetricsChange(uint32_t aFlags = 0);
+
+  /**
+   * Enum for NotifyGlyphMetricsChange's aFlags argument.
+   */
+  enum { ePositioningDirtyDueToMutation = 1 };
 
   /**
    * Updates the mFontSizeScaleFactor value by looking at the range of

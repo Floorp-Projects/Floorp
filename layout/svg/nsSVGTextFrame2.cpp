@@ -2824,12 +2824,18 @@ NS_IMETHODIMP
 GlyphMetricsUpdater::Run()
 {
   if (mFrame) {
-    mFrame->mPositioningDirty = true;
-    nsSVGUtils::InvalidateBounds(mFrame, false);
-    nsSVGUtils::ScheduleReflowSVG(mFrame);
-    mFrame->mGlyphMetricsUpdater = nullptr;
+    Run(mFrame);
   }
   return NS_OK;
+}
+
+void
+GlyphMetricsUpdater::Run(nsSVGTextFrame2* aFrame)
+{
+  aFrame->mPositioningDirty = true;
+  nsSVGUtils::InvalidateBounds(aFrame, false);
+  nsSVGUtils::ScheduleReflowSVG(aFrame);
+  aFrame->mGlyphMetricsUpdater = nullptr;
 }
 
 }
@@ -4645,25 +4651,34 @@ nsSVGTextFrame2::ShouldRenderAsPath(nsRenderingContext* aContext,
 }
 
 void
-nsSVGTextFrame2::NotifyGlyphMetricsChange()
+nsSVGTextFrame2::NotifyGlyphMetricsChange(uint32_t aFlags)
 {
-  // We need to perform the operations in GlyphMetricsUpdater in a
-  // script runner since we can get called just after a DOM mutation,
-  // before frames have been reconstructed, and UpdateGlyphPositioning
-  // will be called with out-of-date frames.  This occurs when the
-  // <text> element is being filtered, as the InvalidateBounds()
-  // call needs to call in to GetBBoxContribution() to determine the
-  // filtered region, and that needs to iterate over the text frames.
-  // We would flush frame construction, but that needs to be done
-  // inside a script runner.
-  //
-  // Much of the time, this will perform the GlyphMetricsUpdater
-  // operations immediately.
-  if (mGlyphMetricsUpdater) {
+  NS_ASSERTION(!aFlags || aFlags == ePositioningDirtyDueToMutation,
+               "unexpected aFlags value");
+
+  if (aFlags == ePositioningDirtyDueToMutation) {
+    // We need to perform the operations in GlyphMetricsUpdater in a
+    // script runner since we can get called just after a DOM mutation,
+    // before frames have been reconstructed, and UpdateGlyphPositioning
+    // will be called with out-of-date frames.  This occurs when the
+    // <text> element is being filtered, as the InvalidateBounds()
+    // call needs to call in to GetBBoxContribution() to determine the
+    // filtered region, and that needs to iterate over the text frames.
+    // We would flush frame construction, but that needs to be done
+    // inside a script runner.
+    //
+    // Much of the time, this will perform the GlyphMetricsUpdater
+    // operations immediately.
+    if (mGlyphMetricsUpdater) {
+      return;
+    }
+    mGlyphMetricsUpdater = new GlyphMetricsUpdater(this);
+    nsContentUtils::AddScriptRunner(mGlyphMetricsUpdater.get());
     return;
   }
-  mGlyphMetricsUpdater = new GlyphMetricsUpdater(this);
-  nsContentUtils::AddScriptRunner(mGlyphMetricsUpdater.get());
+
+  // Otherwise, we perform the glyph metrics update immediately.
+  GlyphMetricsUpdater::Run(this);
 }
 
 void
