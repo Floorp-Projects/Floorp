@@ -122,6 +122,7 @@ js::ScriptDebugEpilogue(JSContext *cx, AbstractFramePtr frame, bool okArg)
     JS_ASSERT_IF(frame.isStackFrame(), frame.asStackFrame() == cx->fp());
     JSBool ok = okArg;
 
+    // We don't add hook data for self-hosted scripts, so we don't need to check for them, here.
     if (void *hookData = frame.maybeHookData()) {
         if (frame.isFramePushedByExecute()) {
             if (JSInterpreterHook hook = cx->runtime->debugHooks.executeHook)
