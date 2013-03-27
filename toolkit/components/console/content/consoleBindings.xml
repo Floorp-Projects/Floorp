@@ -18,7 +18,7 @@
         <xul:vbox class="console-rows" role="console-rows" xbl:inherits="dir=sortOrder"/>
       </xul:vbox>
     </content>
-  
+
     <implementation>
       <field name="limit" readonly="true">
         250
@@ -29,26 +29,14 @@
         200
       </field>
 
-      <field name="_showChromeErrors">-1</field>
-
-      <property name="showChromeErrors">
-        <getter><![CDATA[
-          if (this._showChromeErrors != -1)
-            return this._showChromeErrors;
-
-          try {
-            return this._showChromeErrors = Services.prefs.getBoolPref("javascript.options.showInConsole");
-          }
-          catch(ex) {
-            return this._showChromeErrors = false;
-          }
-        ]]></getter>
-      </property>
+      <field name="showChromeErrors" readonly="true">
+        Services.prefs.getBoolPref("javascript.options.showInConsole");
+      </field>
 
       <property name="count" readonly="true">
         <getter>return this.mCount</getter>
       </property>
-    
+
       <property name="mode">
         <getter>return this.mMode;</getter>
         <setter><![CDATA[
