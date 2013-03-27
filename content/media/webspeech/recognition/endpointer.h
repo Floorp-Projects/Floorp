@@ -88,6 +88,13 @@ class Endpointer {
   // Get the status of the endpointer.
   EpStatus Status(int64_t *time_us);
 
+  // Get the expected frame size for audio chunks. Audio chunks are expected
+  // to contain a number of samples that is a multiple of this number, and extra
+  // samples will be dropped.
+  int32_t FrameSize() const {
+    return frame_size_;
+  }
+
   // Returns true if the endpointer detected reasonable audio levels above
   // background noise which could be user speech, false if not.
   bool DidStartReceivingSpeech() const {

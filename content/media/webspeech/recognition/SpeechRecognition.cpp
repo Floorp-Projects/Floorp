@@ -9,16 +9,16 @@
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "nsCycleCollectionParticipant.h"
-#include "mozilla/Preferences.h"
 
 #include "mozilla/dom/SpeechRecognitionBinding.h"
 
 #include "AudioSegment.h"
-#include "SpeechStreamListener.h"
 #include "endpointer.h"
 
 #include "GeneratedEvents.h"
 #include "nsIDOMSpeechRecognitionEvent.h"
+
+#include <algorithm>
 
 namespace mozilla {
 namespace dom {
@@ -65,13 +65,24 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(SpeechRecognition, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(SpeechRecognition, nsDOMEventTargetHelper)
 
+struct SpeechRecognition::TestConfig SpeechRecognition::mTestConfig;
+
 SpeechRecognition::SpeechRecognition()
   : mProcessingEvent(false)
   , mEndpointer(kSAMPLE_RATE)
+  , mAudioSamplesPerChunk(mEndpointer.FrameSize())
   , mSpeechDetectionTimer(do_CreateInstance(NS_TIMER_CONTRACTID))
 {
   SR_LOG("created SpeechRecognition");
   SetIsDOMBinding();
+
+  mTestConfig.Init();
+  if (mTestConfig.mEnableTests) {
+    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+    obs->AddObserver(this, SPEECH_RECOGNITION_TEST_EVENT_REQUEST_TOPIC, false);
+    obs->AddObserver(this, SPEECH_RECOGNITION_TEST_END_TOPIC, false);
+  }
+
   mEndpointer.set_speech_input_complete_silence_length(
       Preferences::GetInt(PREFERENCE_ENDPOINTER_SILENCE_LENGTH, 500000));
   mEndpointer.set_long_speech_input_complete_silence_length(
@@ -259,6 +270,13 @@ SpeechRecognition::ProcessAudioSegment(AudioSegment* aSegment)
 void
 SpeechRecognition::GetRecognitionServiceCID(nsACString& aResultCID)
 {
+  if (mTestConfig.mFakeRecognitionService) {
+    aResultCID =
+      NS_SPEECH_RECOGNITION_SERVICE_CONTRACTID_PREFIX "fake";
+
+    return;
+  }
+
   nsAdoptingCString prefValue =
     Preferences::GetCString(PREFERENCE_DEFAULT_RECOGNITION_SERVICE);
 
@@ -285,6 +303,7 @@ SpeechRecognition::Reset()
 {
   mRecognitionService = nullptr;
   mEstimationSamples = 0;
+  mBufferedSamples = 0;
   mSpeechDetectionTimer->Cancel();
 
   return STATE_IDLE;
@@ -431,14 +450,15 @@ SpeechRecognition::NotifyError(SpeechEvent* aEvent)
  * Event triggers and other functions *
  **************************************/
 NS_IMETHODIMP
-SpeechRecognition::StartRecording(DOMLocalMediaStream* aDOMStream)
+SpeechRecognition::StartRecording(DOMMediaStream* aDOMStream)
 {
   // hold a reference so that the underlying stream
   // doesn't get Destroy()'ed
   mDOMStream = aDOMStream;
 
   NS_ENSURE_STATE(mDOMStream->GetStream());
-  mDOMStream->GetStream()->AddListener(new SpeechStreamListener(this));
+  mSpeechListener = new SpeechStreamListener(this);
+  mDOMStream->GetStream()->AddListener(mSpeechListener);
 
   mEndpointer.StartSession();
 
@@ -449,6 +469,11 @@ SpeechRecognition::StartRecording(DOMLocalMediaStream* aDOMStream)
 NS_IMETHODIMP
 SpeechRecognition::StopRecording()
 {
+  // we only really need to remove the listener explicitly when testing,
+  // as our JS code still holds a reference to mDOMStream and only assigning
+  // it to nullptr isn't guaranteed to free the stream and the listener.
+  mDOMStream->GetStream()->RemoveListener(mSpeechListener);
+  mSpeechListener = nullptr;
   mDOMStream = nullptr;
 
   mEndpointer.EndSession();
@@ -469,9 +494,43 @@ SpeechRecognition::Observe(nsISupports* aSubject, const char* aTopic,
     DispatchError(SpeechRecognition::EVENT_AUDIO_ERROR,
                   nsIDOMSpeechRecognitionError::NO_SPEECH,
                   NS_LITERAL_STRING("No speech detected (timeout)"));
+  } else if (!strcmp(aTopic, SPEECH_RECOGNITION_TEST_END_TOPIC)) {
+    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+    obs->RemoveObserver(this, SPEECH_RECOGNITION_TEST_EVENT_REQUEST_TOPIC);
+    obs->RemoveObserver(this, SPEECH_RECOGNITION_TEST_END_TOPIC);
+  } else if (mTestConfig.mFakeFSMEvents &&
+             !strcmp(aTopic, SPEECH_RECOGNITION_TEST_EVENT_REQUEST_TOPIC)) {
+    ProcessTestEventRequest(aSubject, nsDependentString(aData));
   }
 
   return NS_OK;
+}
+
+void
+SpeechRecognition::ProcessTestEventRequest(nsISupports* aSubject, const nsAString& aEventName)
+{
+  if (aEventName.EqualsLiteral("EVENT_START")) {
+    ErrorResult err;
+    Start(err);
+  } else if (aEventName.EqualsLiteral("EVENT_STOP")) {
+    Stop();
+  } else if (aEventName.EqualsLiteral("EVENT_ABORT")) {
+    Abort();
+  } else if (aEventName.EqualsLiteral("EVENT_AUDIO_ERROR")) {
+    DispatchError(SpeechRecognition::EVENT_AUDIO_ERROR,
+                  nsIDOMSpeechRecognitionError::AUDIO_CAPTURE, // TODO different codes?
+                  NS_LITERAL_STRING("AUDIO_ERROR test event"));
+  } else if (aEventName.EqualsLiteral("EVENT_AUDIO_DATA")) {
+    StartRecording(static_cast<DOMMediaStream*>(aSubject));
+  } else {
+    NS_ASSERTION(mTestConfig.mFakeRecognitionService,
+                 "Got request for fake recognition service event, but "
+                 TEST_PREFERENCE_FAKE_RECOGNITION_SERVICE " is unset");
+
+    // let the fake recognition service handle the request
+  }
+
+  return;
 }
 
 already_AddRefed<SpeechGrammarList>
@@ -572,18 +631,19 @@ SpeechRecognition::Start(ErrorResult& aRv)
 
   nsresult rv;
   mRecognitionService = do_GetService(speechRecognitionServiceCID.get(), &rv);
-  MOZ_ASSERT(mRecognitionService.get(),
-             "failed to instantiate recognition service");
+  NS_ENSURE_SUCCESS_VOID(rv);
 
   rv = mRecognitionService->Initialize(this->asWeakPtr());
   NS_ENSURE_SUCCESS_VOID(rv);
 
-  MediaManager* manager = MediaManager::Get();
-  manager->GetUserMedia(false,
-                        GetOwner(),
-                        new GetUserMediaStreamOptions(),
-                        new GetUserMediaSuccessCallback(this),
-                        new GetUserMediaErrorCallback(this));
+  if (!mTestConfig.mFakeFSMEvents) {
+    MediaManager* manager = MediaManager::Get();
+    manager->GetUserMedia(false,
+                          GetOwner(),
+                          new GetUserMediaStreamOptions(),
+                          new GetUserMediaSuccessCallback(this),
+                          new GetUserMediaErrorCallback(this));
+  }
 
   nsRefPtr<SpeechEvent> event = new SpeechEvent(this, EVENT_START);
   NS_DispatchToMainThread(event);
@@ -622,20 +682,120 @@ SpeechRecognition::DispatchError(EventType aErrorType, int aErrorCode,
   NS_DispatchToMainThread(event);
 }
 
+/*
+ * Buffer audio samples into mAudioSamplesBuffer until aBufferSize.
+ * Updates mBufferedSamples and returns the number of samples that were buffered.
+ */
+uint32_t
+SpeechRecognition::FillSamplesBuffer(const int16_t* aSamples,
+                                     uint32_t aSampleCount)
+{
+  MOZ_ASSERT(mBufferedSamples < mAudioSamplesPerChunk);
+  MOZ_ASSERT(mAudioSamplesBuffer.get());
+
+  int16_t* samplesBuffer = static_cast<int16_t*>(mAudioSamplesBuffer->Data());
+  size_t samplesToCopy = std::min(aSampleCount,
+                                  mAudioSamplesPerChunk - mBufferedSamples);
+
+  memcpy(samplesBuffer + mBufferedSamples, aSamples,
+         samplesToCopy * sizeof(int16_t));
+
+  mBufferedSamples += samplesToCopy;
+  return samplesToCopy;
+}
+
+/*
+ * Split a samples buffer starting of a given size into
+ * chunks of equal size. The chunks are stored in the array
+ * received as argument.
+ * Returns the offset of the end of the last chunk that was
+ * created.
+ */
+uint32_t
+SpeechRecognition::SplitSamplesBuffer(const int16_t* aSamplesBuffer,
+                                      uint32_t aSampleCount,
+                                      nsTArray<already_AddRefed<SharedBuffer> >& aResult)
+{
+  uint32_t chunkStart = 0;
+
+  while (chunkStart + mAudioSamplesPerChunk <= aSampleCount) {
+    nsRefPtr<SharedBuffer> chunk =
+      SharedBuffer::Create(mAudioSamplesPerChunk * sizeof(int16_t));
+
+    memcpy(chunk->Data(), aSamplesBuffer + chunkStart,
+           mAudioSamplesPerChunk * sizeof(int16_t));
+
+    aResult.AppendElement(chunk.forget());
+    chunkStart += mAudioSamplesPerChunk;
+  }
+
+  return chunkStart;
+}
+
+AudioSegment*
+SpeechRecognition::CreateAudioSegment(nsTArray<already_AddRefed<SharedBuffer> >& aChunks)
+{
+  AudioSegment* segment = new AudioSegment();
+  for (uint32_t i = 0; i < aChunks.Length(); ++i) {
+    const int16_t* chunkData =
+      static_cast<const int16_t*>(aChunks[i].get()->Data());
+
+    nsAutoTArray<const int16_t*, 1> channels;
+    channels.AppendElement(chunkData);
+    segment->AppendFrames(aChunks[i], channels, mAudioSamplesPerChunk);
+  }
+
+  return segment;
+}
+
 void
 SpeechRecognition::FeedAudioData(already_AddRefed<SharedBuffer> aSamples,
                                  uint32_t aDuration,
                                  MediaStreamListener* aProvider)
 {
-  MOZ_ASSERT(!NS_IsMainThread(),
-             "FeedAudioData should not be called in the main thread");
+  NS_ASSERTION(!NS_IsMainThread(),
+               "FeedAudioData should not be called in the main thread");
 
-  AudioSegment* segment = new AudioSegment();
+  // Endpointer expects to receive samples in chunks whose size is a
+  // multiple of its frame size.
+  // Since we can't assume we will receive the frames in appropriate-sized
+  // chunks, we must buffer and split them in chunks of mAudioSamplesPerChunk
+  // (a multiple of Endpointer's frame size) before feeding to Endpointer.
 
-  nsAutoTArray<const int16_t*, 1> channels;
-  channels.AppendElement(static_cast<const int16_t*>(aSamples.get()->Data()));
-  segment->AppendFrames(aSamples, channels, aDuration);
+  // ensure aSamples is deleted
+  nsRefPtr<SharedBuffer> refSamples = aSamples;
 
+  uint32_t samplesIndex = 0;
+  const int16_t* samples = static_cast<int16_t*>(refSamples->Data());
+  nsAutoTArray<already_AddRefed<SharedBuffer>, 5> chunksToSend;
+
+  // fill up our buffer and make a chunk out of it, if possible
+  if (mBufferedSamples > 0) {
+    samplesIndex += FillSamplesBuffer(samples, aDuration);
+
+    if (mBufferedSamples == mAudioSamplesPerChunk) {
+      chunksToSend.AppendElement(mAudioSamplesBuffer.forget());
+      mBufferedSamples = 0;
+    }
+  }
+
+  // create sample chunks of correct size
+  if (samplesIndex < aDuration) {
+    samplesIndex += SplitSamplesBuffer(samples + samplesIndex,
+                                       aDuration - samplesIndex,
+                                       chunksToSend);
+  }
+
+  // buffer remaining samples
+  if (samplesIndex < aDuration) {
+    mBufferedSamples = 0;
+    mAudioSamplesBuffer =
+      SharedBuffer::Create(mAudioSamplesPerChunk * sizeof(int16_t));
+
+    FillSamplesBuffer(samples + samplesIndex, aDuration - samplesIndex);
+  }
+
+  AudioSegment* segment = CreateAudioSegment(chunksToSend);
   nsRefPtr<SpeechEvent> event = new SpeechEvent(this, EVENT_AUDIO_DATA);
   event->mAudioSegment = segment;
   event->mProvider = aProvider;

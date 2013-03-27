@@ -12,6 +12,7 @@ include $(topsrcdir)/dom/dom-config.mk
 
 VPATH += \
   $(srcdir)/recognition \
+  $(srcdir)/recognition/test \
   $(NULL)
 
 LIBRARY_NAME   := gkconwebspeech_s
@@ -31,6 +32,7 @@ CPPSRCS := \
   endpointer.cc \
   energy_endpointer.cc \
   energy_endpointer_params.cc \
+  FakeSpeechRecognitionService.cpp \
   $(NULL)
 
 EXPORTS_NAMESPACES := mozilla/dom
