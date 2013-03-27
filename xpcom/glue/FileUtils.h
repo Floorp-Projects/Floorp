@@ -145,5 +145,46 @@ NS_COM_GLUE void ReadAhead(filedesc_t aFd, const size_t aOffset = 0,
                            const size_t aCount = SIZE_MAX);
 
 
+#ifdef MOZ_WIDGET_GONK
+
+/**
+ * Read the contents of a file.
+ * This function is intended for reading a single-lined text files from
+ * /sys/. If the file ends with a newline ('\n') then it will be discarded.
+ * The output buffer will always be '\0'-terminated on successful completion.
+ * If aBufSize == 0, then this function will return true if the file exists
+ * and is readable (it will not attempt to read anything from it).
+ * On failure the contents of aBuf after this call will be undefined and the
+ * value of the global variable errno will be set accordingly.
+ * @return true on success, notice that less than requested bytes could have
+ * been read if the file was smaller
+ */
+bool
+ReadSysFile(
+  const char* aFilename,
+  char* aBuf,
+  size_t aBufSize);
+
+/**
+ * Parse the contents of a file, assuming it contains a decimal integer.
+ * @return true on success
+ */
+bool
+ReadSysFile(
+  const char* aFilename,
+  int* aVal);
+
+/**
+ * Parse the contents of a file, assuming it contains a boolean value
+ * (either 0 or 1).
+ * @return true on success
+ */
+bool
+ReadSysFile(
+  const char* aFilename,
+  bool* aVal);
+
+#endif /* MOZ_WIDGET_GONK */
+
 } // namespace mozilla
 #endif

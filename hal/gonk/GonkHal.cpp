@@ -355,43 +355,6 @@ DisableBatteryNotifications()
       NewRunnableFunction(UnregisterBatteryObserverIOThread));
 }
 
-// See bug 819016 about moving the ReadSysFile functions to a
-// central location.
-static bool
-ReadSysFile(const char *aFilename, char *aBuf, size_t aBufSize,
-            size_t *aBytesRead = NULL)
-{
-  int fd = TEMP_FAILURE_RETRY(open(aFilename, O_RDONLY));
-  if (fd < 0) {
-    HAL_LOG(("Unable to open file '%s' for reading", aFilename));
-    return false;
-  }
-  ScopedClose autoClose(fd);
-  ssize_t bytesRead = TEMP_FAILURE_RETRY(read(fd, aBuf, aBufSize - 1));
-  if (bytesRead < 0) {
-    HAL_LOG(("Unable to read from file '%s'", aFilename));
-    return false;
-  }
-  if (bytesRead && (aBuf[bytesRead - 1] == '\n')) {
-    bytesRead--;
-  }
-  aBuf[bytesRead] = '\0';
-  if (aBytesRead) {
-    *aBytesRead = bytesRead;
-  }
-  return true;
-}
-
-static bool
-ReadSysFile(const char *aFilename, int *aVal)
-{
-  char valBuf[20];
-  if (!ReadSysFile(aFilename, valBuf, sizeof(valBuf))) {
-    return false;
-  }
-  return sscanf(valBuf, "%d", aVal) == 1;
-}
-
 static bool
 GetCurrentBatteryCharge(int* aCharge)
 {
@@ -403,7 +366,7 @@ GetCurrentBatteryCharge(int* aCharge)
 
   #ifdef DEBUG
   if ((*aCharge < 0) || (*aCharge > 100)) {
-    HAL_LOG(("charge level containes unknown value: %d", *aCharge));
+    HAL_LOG(("charge level contains unknown value: %d", *aCharge));
   }
   #endif
 
@@ -440,14 +403,12 @@ GetCurrentBatteryCharging(int* aCharging)
   // Otoro device support
 
   char chargingSrcString[16];
-  size_t chargingSrcLen;
 
   success = ReadSysFile("/sys/class/power_supply/battery/status",
-                        chargingSrcString, sizeof(chargingSrcString),
-                        &chargingSrcLen);
+                        chargingSrcString, sizeof(chargingSrcString));
   if (success) {
-    *aCharging = !memcmp(chargingSrcString, "Charging", chargingSrcLen) ||
-                 !memcmp(chargingSrcString, "Full", chargingSrcLen);
+    *aCharging = strcmp(chargingSrcString, "Charging") == 0 ||
+                 strcmp(chargingSrcString, "Full") == 0;
     return true;
   }
 
