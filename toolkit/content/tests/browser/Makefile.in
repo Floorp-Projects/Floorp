@@ -24,6 +24,7 @@ MOCHITEST_BROWSER_FILES = \
   browser_default_image_filename.js \
   browser_Troubleshoot.js \
   browser_Deprecated.js \
+  browser_input_file_tooltips.js \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

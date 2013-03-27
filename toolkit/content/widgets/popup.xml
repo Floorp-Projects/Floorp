@@ -563,6 +563,29 @@
             titleText = tipElement.validationMessage || null;
           }
 
+          // If the element is an <input type='file'> without a title, we should show
+          // the current file selection.
+          if (!titleText &&
+              tipElement instanceof HTMLInputElement &&
+              tipElement.type == 'file' &&
+              !tipElement.hasAttribute('title')) {
+            let files = tipElement.files;
+
+            if (files.length == 0) {
+              var bundle = Services.strings.createBundle("chrome://global/locale/layout/HtmlForm.properties");
+              if (tipElement.multiple) {
+                titleText = bundle.GetStringFromName("NoFilesSelected");
+              } else {
+                titleText = bundle.GetStringFromName("NoFileSelected");
+              }
+            } else {
+              titleText = files[0].name;
+              for (let i=1; i<files.length; ++i) {
+                titleText += "\n" + files[i].name;
+              }
+            }
+          }
+
           while ((titleText == null) && (XLinkTitleText == null) &&
                  (SVGTitleText == null) && tipElement) {
             if (tipElement.nodeType == Node.ELEMENT_NODE &&

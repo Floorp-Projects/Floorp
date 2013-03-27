@@ -2788,7 +2788,7 @@ public:
   }
 
   int XRE_main(int argc, char* argv[], const nsXREAppData* aAppData);
-  int XRE_mainInit(const nsXREAppData* aAppData, bool* aExitFlag);
+  int XRE_mainInit(bool* aExitFlag);
   int XRE_mainStartup(bool* aExitFlag);
   nsresult XRE_mainRun();
   
@@ -2824,7 +2824,7 @@ public:
  * true.
  */
 int
-XREMain::XRE_mainInit(const nsXREAppData* aAppData, bool* aExitFlag)
+XREMain::XRE_mainInit(bool* aExitFlag)
 {
   if (!aExitFlag)
     return 1;
@@ -2929,8 +2929,7 @@ XREMain::XRE_mainInit(const nsXREAppData* aAppData, bool* aExitFlag)
       return 1;
     }
 
-    nsXREAppData* overrideAppData = const_cast<nsXREAppData*>(aAppData);
-    rv = XRE_ParseAppData(overrideLF, overrideAppData);
+    rv = XRE_ParseAppData(overrideLF, mAppData);
     if (NS_FAILED(rv)) {
       Output(true, "Couldn't read override.ini");
       return 1;
@@ -3872,7 +3871,8 @@ XREMain::XRE_mainRun()
 
 #ifdef MOZ_INSTRUMENT_EVENT_LOOP
   if (PR_GetEnv("MOZ_INSTRUMENT_EVENT_LOOP") || profiler_is_active()) {
-    mozilla::InitEventTracing();
+    bool logToConsole = !!PR_GetEnv("MOZ_INSTRUMENT_EVENT_LOOP");
+    mozilla::InitEventTracing(logToConsole);
   }
 #endif /* MOZ_INSTRUMENT_EVENT_LOOP */
 
@@ -3924,7 +3924,7 @@ XREMain::XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
   // init
   bool exit = false;
-  int result = XRE_mainInit(aAppData, &exit);
+  int result = XRE_mainInit(&exit);
   if (result != 0 || exit)
     return result;
 
@@ -4119,7 +4119,7 @@ XRE_mainMetro(int argc, char* argv[], const nsXREAppData* aAppData)
 
   // init
   bool exit = false;
-  if (xreMainPtr->XRE_mainInit(aAppData, &exit) != 0 || exit)
+  if (xreMainPtr->XRE_mainInit(&exit) != 0 || exit)
     return 1;
 
   // Located in widget, will call back into XRE_metroStartup and

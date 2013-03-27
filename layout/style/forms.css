@@ -421,12 +421,21 @@ input[type="file"] {
   border-style: none !important;
 }
 
-input[type="file"] > input[type="text"] {
+input[type="file"] > xul|label {
+  width: 12em;
+  -moz-padding-start: 5px;
+
   border-color: inherit;
   background-color: inherit;
   color: inherit;
   font-size: inherit;
   letter-spacing: inherit;
+
+  /*
+   * Force the text to have LTR directionality. Otherwise filenames containing
+   * RTL characters will be reordered with chaotic results.
+   */
+  direction: ltr !important;
 }
 
 /* button part of file selector */
@@ -435,6 +444,14 @@ input[type="file"] > input[type="button"] {
   font-size: inherit;
   letter-spacing: inherit;
   cursor: inherit;
+}
+
+/* Try to make RTL <input type='file'> look nicer. */
+/* TODO: use text-align: match-parent when bug 645642 is fixed. */
+input[type="file"]:-moz-dir(rtl) > xul|label {
+  -moz-padding-start: 0px;
+  padding-right: 5px;
+  text-align: right;
 }
 
 /* radio buttons */
@@ -620,16 +637,6 @@ optgroup:before {
   text-overflow: inherit;
 }
 
- /*
-  * Force the text control child of file input controls to have left-to-right
-  * directionality. Otherwise filenames containing right-to-left characters
-  * will be reordered with chaotic results.
-  */
-input[type="file"] > input[type="text"] {
-  direction: ltr !important;
-  text-align: inherit;
-}
-
 /**
  * Set default style for invalid elements.
  */
@@ -768,6 +775,28 @@ input[type=range][orient=vertical]::-moz-range-track {
   border-right: solid 0.1em lightgrey;
   width: 0.2em;
   height: 100%;
+}
+
+/**
+ * Layout handles positioning of this pseudo-element specially (so that content
+ * authors can concentrate on styling this pseudo-element without worrying
+ * about the logic to position it). Specifically the 'margin', 'top' and 'left'
+ * properties are ignored. Additionally, if the range is horizontal, the width
+ * property is ignored, and if the range range is vertical, the height property
+ * is ignored.
+ */
+input[type=range]::-moz-range-progress {
+  /* Prevent styling that would change the type of frame we construct. */
+  display: inline-block !important;
+  float: none !important;
+  position: static !important;
+  /* Since one of width/height will be ignored, this just sets the "other"
+     dimension.
+   */
+  width: 0.2em;
+  height: 0.2em;
+  /* Prevent nsFrame::HandlePress setting mouse capture to this element. */
+  -moz-user-select: none ! important;
 }
 
 /**

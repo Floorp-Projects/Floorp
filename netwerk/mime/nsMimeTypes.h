@@ -78,6 +78,7 @@
 #define AUDIO_WEBM                          "audio/webm"
 #define AUDIO_MP3                           "audio/mpeg"
 #define AUDIO_MP4                           "audio/mp4"
+#define AUDIO_AMR                           "audio/amr"
 
 #define BINARY_OCTET_STREAM                 "binary/octet-stream"
 

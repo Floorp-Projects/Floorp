@@ -407,7 +407,7 @@ var shell = {
   needBufferSysMsgs: true,
   bufferedSysMsgs: [],
   timer: null,
-  visibleAudioActive: false,
+  visibleNormalAudioActive: false,
 
   handleEvent: function shell_handleEvent(evt) {
     let content = this.contentBrowser.contentWindow;
@@ -425,7 +425,7 @@ var shell = {
           Services.fm.focusedWindow = window;
         break;
       case 'sizemodechange':
-        if (window.windowState == window.STATE_MINIMIZED && !this.visibleAudioActive) {
+        if (window.windowState == window.STATE_MINIMIZED && !this.visibleNormalAudioActive) {
           this.contentBrowser.setVisible(false);
         } else {
           this.contentBrowser.setVisible(true);
@@ -1128,7 +1128,7 @@ window.addEventListener('ContentStart', function update_onContentStart() {
       type: 'visible-audio-channel-changed',
       channel: aData
     });
-    shell.visibleAudioActive = (aData !== 'none');
+    shell.visibleNormalAudioActive = (aData == 'normal');
 }, "visible-audio-channel-changed", false);
 })();
 

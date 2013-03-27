@@ -1878,20 +1878,31 @@ nsHTMLInputElement::GetDisplayFileName(nsAString& aValue) const
     return;
   }
 
-  aValue.Truncate();
-  for (int32_t i = 0; i < mFiles.Count(); ++i) {
-    nsString str;
-    mFiles[i]->GetMozFullPathInternal(str);
-    if (str.IsEmpty()) {
-      mFiles[i]->GetName(str);
-    }
-    if (i == 0) {
-      aValue.Append(str);
-    }
-    else {
-      aValue.Append(NS_LITERAL_STRING(", ") + str);
-    }
+  if (mFiles.Count() == 1) {
+    mFiles[0]->GetName(aValue);
+    return;
   }
+
+  nsXPIDLString value;
+
+  if (mFiles.Count() == 0) {
+    if (HasAttr(kNameSpaceID_None, nsGkAtoms::multiple)) {
+      nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
+                                         "NoFilesSelected", value);
+    } else {
+      nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
+                                         "NoFileSelected", value);
+    }
+  } else {
+    nsString count;
+    count.AppendInt(mFiles.Count());
+
+    const PRUnichar* params[] = { count.get() };
+    nsContentUtils::FormatLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
+                                          "XFilesSelected", params, value);
+  }
+
+  aValue = value;
 }
 
 void
@@ -2375,16 +2386,6 @@ nsHTMLInputElement::SelectAll(nsPresContext* aPresContext)
   }
 }
 
-void
-nsHTMLInputElement::Click()
-{
-  if (mType == NS_FORM_INPUT_FILE) {
-    FireAsyncClickHandler();
-  }
-
-  nsGenericHTMLElement::Click();
-}
-
 NS_IMETHODIMP
 nsHTMLInputElement::FireAsyncClickHandler()
 {
@@ -2602,7 +2603,7 @@ nsHTMLInputElement::CancelRangeThumbDrag(bool aIsForUserEvent)
     SetValueInternal(val, true, true);
     nsRangeFrame* frame = do_QueryFrame(GetPrimaryFrame());
     if (frame) {
-      frame->UpdateThumbPositionForValueChange();
+      frame->UpdateForValueChange();
     }
   }
   mIsDraggingRange = false;
@@ -2618,7 +2619,7 @@ nsHTMLInputElement::SetValueOfRangeForUserEvent(double aValue)
   SetValueInternal(val, true, true);
   nsRangeFrame* frame = do_QueryFrame(GetPrimaryFrame());
   if (frame) {
-    frame->UpdateThumbPositionForValueChange();
+    frame->UpdateForValueChange();
   }
   nsContentUtils::DispatchTrustedEvent(OwnerDoc(),
                                        static_cast<nsIDOMHTMLInputElement*>(this),
@@ -2655,6 +2656,32 @@ IsLTR(Element* aElement)
   return aElement->GetDirectionality() == eDir_LTR;
 }
 
+bool
+nsHTMLInputElement::ShouldPreventDOMActivateDispatch(nsIDOMEventTarget* aOriginalTarget)
+{
+  /*
+   * For the moment, there is only one situation where we actually want to
+   * prevent firing a DOMActivate event:
+   *  - we are a <input type='file'> that just got a click event,
+   *  - the event was targeted to our button which should have sent a
+   *    DOMActivate event.
+   */
+
+  if (mType != NS_FORM_INPUT_FILE) {
+    return false;
+  }
+
+  nsCOMPtr<nsIContent> target = do_QueryInterface(aOriginalTarget);
+  if (!target) {
+    return false;
+  }
+
+  return target->GetParent() == this &&
+         target->IsRootOfNativeAnonymousSubtree() &&
+         target->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                             nsGkAtoms::button, eCaseMatters);
+}
+
 nsresult
 nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
@@ -2679,27 +2706,13 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
     UpdateState(true);
   }
 
-  // ignore the activate event fired by the "Browse..." button
-  // (file input controls fire their own) (bug 500885)
-  if (mType == NS_FORM_INPUT_FILE) {
-    nsCOMPtr<nsIContent> maybeButton =
-      do_QueryInterface(aVisitor.mEvent->originalTarget);
-    if (maybeButton &&
-      maybeButton->IsRootOfNativeAnonymousSubtree() &&
-      maybeButton->AttrValueIs(kNameSpaceID_None,
-                               nsGkAtoms::type,
-                               nsGkAtoms::button,
-                               eCaseMatters)) {
-        return NS_OK;
-    }
-  }
-
   nsresult rv = NS_OK;
   bool outerActivateEvent = !!(aVisitor.mItemFlags & NS_OUTER_ACTIVATE_EVENT);
   bool originalCheckedValue =
     !!(aVisitor.mItemFlags & NS_ORIGINAL_CHECKED_VALUE);
   bool noContentDispatch = !!(aVisitor.mItemFlags & NS_NO_CONTENT_DISPATCH);
   uint8_t oldType = NS_CONTROL_TYPE(aVisitor.mItemFlags);
+
   // Ideally we would make the default action for click and space just dispatch
   // DOMActivate, and the default action for DOMActivate flip the checkbox/
   // radio state and fire onchange.  However, for backwards compatibility, we
@@ -2709,7 +2722,8 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
   // the click.
   if (aVisitor.mEventStatus != nsEventStatus_eConsumeNoDefault &&
       !IsSingleLineTextControl(true) &&
-      NS_IS_MOUSE_LEFT_CLICK(aVisitor.mEvent)) {
+      NS_IS_MOUSE_LEFT_CLICK(aVisitor.mEvent) &&
+      !ShouldPreventDOMActivateDispatch(aVisitor.mEvent->originalTarget)) {
     nsUIEvent actEvent(aVisitor.mEvent->mFlags.mIsTrusted, NS_UI_ACTIVATE, 1);
 
     nsCOMPtr<nsIPresShell> shell = aVisitor.mPresContext->GetPresShell();
@@ -3075,6 +3089,17 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 
   if (NS_SUCCEEDED(rv) && mType == NS_FORM_INPUT_RANGE) {
     PostHandleEventForRangeThumb(aVisitor);
+  }
+
+  // Open a file picker when we receive a click on a <input type='file'>.
+  // A click is handled in the following cases:
+  // - preventDefault() has not been called (or something similar);
+  // - it's the left mouse button.
+  // We do not prevent non-trusted click because authors can already use
+  // .click(). However, the file picker will follow the rules of popup-blocking.
+  if (mType == NS_FORM_INPUT_FILE && NS_IS_MOUSE_LEFT_CLICK(aVisitor.mEvent) &&
+      !aVisitor.mEvent->mFlags.mDefaultPrevented) {
+    return FireAsyncClickHandler();
   }
 
   return rv;

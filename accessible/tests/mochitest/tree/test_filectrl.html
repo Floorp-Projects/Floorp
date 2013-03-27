@@ -22,11 +22,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=483573
         role: ROLE_TEXT_CONTAINER,
         children: [
           {
-            role: ROLE_ENTRY
+            role: ROLE_PUSHBUTTON
           },
           {
-            role: ROLE_PUSHBUTTON
-          }
+            role: ROLE_LABEL,
+            children: [
+              {
+                role: ROLE_TEXT_LEAF,
+              }
+            ],
+          },
         ]
       };
       testAccessibleTree("filectrl", accTree);

@@ -77,8 +77,8 @@
     {
       this.fileControlNode = getNode(aID);
       this.fileControl = getAccessible(this.fileControlNode);
-      this.textEntry = this.fileControl.firstChild;
-      this.browseButton = this.fileControl.lastChild;
+      this.browseButton = this.fileControl.firstChild;
+      // No state change events on the label.
 
       this.invoke = function stateChangeOnFileInput_invoke()
       {
@@ -87,7 +87,6 @@
 
       this.eventSeq = [
         new stateChangeChecker(aState, aIsExtraState, aIsEnabled, this.fileControl),
-        new stateChangeChecker(aState, aIsExtraState, aIsEnabled, this.textEntry),
         new stateChangeChecker(aState, aIsExtraState, aIsEnabled, this.browseButton)
       ];
 
