@@ -723,7 +723,7 @@ add_test(function test_polling_implicit_acceptance() {
         listener.lastNotifyRequest.onUserNotifyComplete();
       }
 
-      if (delta <= 750) {
+      if (delta <= (750 + 250)) {
         do_check_false(policy.dataSubmissionPolicyAccepted);
         do_check_eq(listener.requestDataUploadCount, 0);
       } else if (count > 3) {
