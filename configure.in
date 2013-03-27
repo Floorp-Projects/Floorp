@@ -7777,20 +7777,22 @@ dnl =========================================================
 dnl = Chrome format
 dnl =========================================================
 MOZ_ARG_ENABLE_STRING([chrome-format],
-[  --enable-chrome-format=jar|flat|both|symlink|omni
-                          Select FORMAT of chrome files (default=jar)],
+[  --enable-chrome-format=jar|flat|omni
+                          Select FORMAT of chrome files during packaging],
     MOZ_CHROME_FILE_FORMAT=`echo $enableval | tr A-Z a-z`)
 
 if test -z "$MOZ_CHROME_FILE_FORMAT"; then
     MOZ_CHROME_FILE_FORMAT=jar
 fi
 
+if test "$MOZ_CHROME_FILE_FORMAT" = "symlink"; then
+    AC_MSG_ERROR([--enable-chrome-format=symlink has been deprecated. It is now used by default in $DIST/bin on platforms that support it])
+fi
+
 if test "$MOZ_CHROME_FILE_FORMAT" != "jar" &&
     test "$MOZ_CHROME_FILE_FORMAT" != "flat" &&
-    test "$MOZ_CHROME_FILE_FORMAT" != "symlink" &&
-    test "$MOZ_CHROME_FILE_FORMAT" != "both" &&
     test "$MOZ_CHROME_FILE_FORMAT" != "omni"; then
-    AC_MSG_ERROR([--enable-chrome-format must be set to either jar, flat, both, symlink, or omni])
+    AC_MSG_ERROR([--enable-chrome-format must be set to either jar, flat, or omni])
 fi
 
 dnl =========================================================
