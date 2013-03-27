@@ -226,14 +226,20 @@ class SourceDataCache
     void purge();
 };
 
+struct EvalCacheEntry
+{
+    JSScript *script;
+    JSScript *callerScript;
+    jsbytecode *pc;
+};
+
 struct EvalCacheLookup
 {
-    EvalCacheLookup(JSContext *cx) : str(cx), caller(cx) {}
+    EvalCacheLookup(JSContext *cx) : str(cx), callerScript(cx) {}
     RootedLinearString str;
-    RootedFunction caller;
-    unsigned staticLevel;
+    RootedScript callerScript;
     JSVersion version;
-    JSCompartment *compartment;
+    jsbytecode *pc;
 };
 
 struct EvalCacheHashPolicy
@@ -241,10 +247,10 @@ struct EvalCacheHashPolicy
     typedef EvalCacheLookup Lookup;
 
     static HashNumber hash(const Lookup &l);
-    static bool match(RawScript script, const EvalCacheLookup &l);
+    static bool match(const EvalCacheEntry &entry, const EvalCacheLookup &l);
 };
 
-typedef HashSet<RawScript, EvalCacheHashPolicy, SystemAllocPolicy> EvalCache;
+typedef HashSet<EvalCacheEntry, EvalCacheHashPolicy, SystemAllocPolicy> EvalCache;
 
 class NativeIterCache
 {
