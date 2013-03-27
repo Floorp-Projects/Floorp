@@ -29,7 +29,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
 <input type="reset" id="input_reset" onchange="++NonTextInputChange[3];"></input>
 <input type="radio" id="input_radio" onchange="++NonTextInputChange[4];"></input>
 <input type="checkbox" id="input_checkbox" onchange="++NonTextInputChange[5];"></input>
-<input type="range" id="input_range" onchange="++rangeChange;" oninput="++rangeInput;"></input>
+<input type="range" id="input_range" onchange="++rangeChange;"></input>
  
 </div>
 <pre id="test">
@@ -46,7 +46,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
   var NonTextInputChange = [0, 0, 0, 0, 0, 0];
 
   var rangeChange = 0;
-  var rangeInput = 0;
 
   var blurTestCalled = false; //Sentinel to prevent infinite loop.
 
@@ -171,27 +170,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
     synthesizeKey("a", {});
     range.blur();
     is(rangeChange, 0, "Change event shouldn't be dispatched on range input element for key changes that don't change its value");
-    is(rangeInput, 0, "Input event shouldn't be dispatched on range input element for key changes that don't change its value");
     range.focus();
     synthesizeKey("VK_HOME", {});
     is(rangeChange, 0, "Change event shouldn't be dispatched on range input element for key changes until it is looses focus");
-    is(rangeInput, 1, "Input event should be dispatched on range input element for key changes");
     range.blur();
     is(rangeChange, 1, "Change event should be dispatched on range input element on blur");
-    is(rangeInput, 1, "Input event shouldn't be dispatched on range input element on blur if the value hasn't changed");
     range.focus();
     var bcr = range.getBoundingClientRect();
     var centerOfRangeX = bcr.width / 2;
     var centerOfRangeY = bcr.height / 2;
     synthesizeMouse(range, centerOfRangeX - 10, centerOfRangeY, { type: "mousedown" });
     is(rangeChange, 1, "Change event shouldn't be dispatched on range input element for mousedown");
-    is(rangeInput, 2, "Input event should be dispatched on range input element on mousedown if the value changes");
     synthesizeMouse(range, centerOfRangeX - 5, centerOfRangeY, { type: "mousemove" });
     is(rangeChange, 1, "Change event shouldn't be dispatched on range input element during drag of thumb");
-    is(rangeInput, 3, "Input event should be dispatched on range input element during a drag");
     synthesizeMouse(range, centerOfRangeX, centerOfRangeY, { type: "mouseup" });
     is(rangeChange, 2, "Change event should be dispatched on range input element at end of drag");
-    is(rangeInput, 4, "Input event should be dispatched on range input element at the end of a drag");
 
     //Input type change test.
     input = document.getElementById("input_checkbox");

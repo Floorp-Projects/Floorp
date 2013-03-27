@@ -57,6 +57,7 @@ MOCHITEST_FILES = \
 		test_submit_invalid_file.html \
 		submit_invalid_file.sjs \
 		test_input_file_picker.html \
+		test_input_event.html \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
