@@ -91,6 +91,8 @@ public:
   void SetSSL3Enabled(bool enabled) { mSSL3Enabled = enabled; }
   bool IsTLSEnabled() const { return mTLSEnabled; }
   void SetTLSEnabled(bool enabled) { mTLSEnabled = enabled; }
+
+  void AddPlaintextBytesRead(uint64_t val) { mPlaintextBytesRead += val; }
 private:
   PRFileDesc* mFd;
 
@@ -118,6 +120,7 @@ private:
 
   uint32_t mProviderFlags;
   mozilla::TimeStamp mSocketCreationTimestamp;
+  uint64_t mPlaintextBytesRead;
 };
 
 class nsSSLIOLayerHelpers
@@ -131,7 +134,9 @@ public:
 
   static bool nsSSLIOLayerInitialized;
   static PRDescIdentity nsSSLIOLayerIdentity;
+  static PRDescIdentity nsSSLPlaintextLayerIdentity;
   static PRIOMethods nsSSLIOLayerMethods;
+  static PRIOMethods nsSSLPlaintextLayerMethods;
 
   mozilla::Mutex *mutex;
   nsTHashtable<nsCStringHashKey> *mTLSIntolerantSites;
