@@ -106,6 +106,7 @@
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "nsCharsetSource.h"
 #include "nsIStringBundle.h"
+#include "nsDOMClassInfo.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -2361,6 +2362,10 @@ nsHTMLDocument::NamedGetter(JSContext* cx, const nsAString& aName, bool& aFound,
   nsISupports* supp = ResolveName(aName, &cache);
   if (!supp) {
     aFound = false;
+    if (GetCompatibilityMode() == eCompatibility_NavQuirks &&
+        aName.EqualsLiteral("all")) {
+      rv = nsHTMLDocumentSH::TryResolveAll(cx, this, GetWrapper());
+    }
     return nullptr;
   }
 

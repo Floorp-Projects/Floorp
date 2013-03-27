@@ -7190,6 +7190,17 @@ ResolveAll(JSContext* cx, nsIDocument* doc, JSObject* obj)
   return NS_OK;
 }
 
+nsresult
+nsHTMLDocumentSH::TryResolveAll(JSContext* cx, nsHTMLDocument* doc,
+                                JSObject* obj)
+{
+  if (sDisableDocumentAllSupport) {
+    return NS_OK;
+  }
+  JSAutoCompartment ac(cx, obj);
+  return ResolveAll(cx, doc, obj);
+}
+
 NS_IMETHODIMP
 nsHTMLDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                              JSObject *obj, jsid id, uint32_t flags,
@@ -7226,12 +7237,10 @@ nsHTMLDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     if (id == sAll_id && !sDisableDocumentAllSupport &&
         !ObjectIsNativeWrapper(cx, obj)) {
       nsIDocument *doc = static_cast<nsIDocument*>(wrapper->Native());
-
-      if (doc->GetCompatibilityMode() == eCompatibility_NavQuirks) {
-        return ResolveAll(cx, doc, obj);
+      if (doc->GetCompatibilityMode() != eCompatibility_NavQuirks) {
+        return NS_OK;
       }
-
-      return NS_OK;
+      return ResolveAll(cx, doc, obj);
     }
   }
 
