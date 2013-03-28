@@ -3802,7 +3802,7 @@ var BrowserEventHandler = {
             // See if its a input element
             if ((element instanceof HTMLInputElement && element.mozIsTextField(false)) ||
                 (element instanceof HTMLTextAreaElement))
-               SelectionHandler.showThumb(element);
+               SelectionHandler.attachCaret(element);
 
             // scrollToFocusedInput does its own checks to find out if an element should be zoomed into
             BrowserApp.scrollToFocusedInput(BrowserApp.selectedBrowser);
