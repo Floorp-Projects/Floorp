@@ -23,6 +23,7 @@
 #include "runnable_utils.h"
 #include "cpr_stdlib.h"
 #include "cpr_string.h"
+#include "mozilla/SyncRunnable.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -515,7 +516,7 @@ short vcmRxAllocICE(cc_mcapid_t mcap_id,
                    )
 {
   int ret;
-  VcmSIPCCBinding::getMainThread()->Dispatch(
+  mozilla::SyncRunnable::DispatchToThread(VcmSIPCCBinding::getMainThread(),
       WrapRunnableNMRet(&vcmRxAllocICE_m,
                         mcap_id,
                         group_id,
@@ -527,8 +528,7 @@ short vcmRxAllocICE(cc_mcapid_t mcap_id,
                         default_portp,
                         candidatesp,
                         candidate_ctp,
-                        &ret),
-          NS_DISPATCH_SYNC);
+                        &ret));
   return ret;
 }
 
@@ -609,13 +609,12 @@ short vcmGetIceParams(const char *peerconnection,
                      char **pwdp)
 {
   int ret;
-  VcmSIPCCBinding::getMainThread()->Dispatch(
+  mozilla::SyncRunnable::DispatchToThread(VcmSIPCCBinding::getMainThread(),
       WrapRunnableNMRet(&vcmGetIceParams_m,
                         peerconnection,
                         ufragp,
                         pwdp,
-                        &ret),
-      NS_DISPATCH_SYNC);
+                        &ret));
   return ret;
 }
 
@@ -671,13 +670,12 @@ short vcmSetIceSessionParams(const char *peerconnection,
 {
   short ret;
 
-  VcmSIPCCBinding::getMainThread()->Dispatch(
+  mozilla::SyncRunnable::DispatchToThread(VcmSIPCCBinding::getMainThread(),
       WrapRunnableNMRet(&vcmSetIceSessionParams_m,
                         peerconnection,
                         ufrag,
                         pwd,
-                        &ret),
-      NS_DISPATCH_SYNC);
+                        &ret));
 
   return ret;
 }
@@ -738,13 +736,12 @@ short vcmSetIceCandidate(const char *peerconnection,
 {
   short ret;
 
-  VcmSIPCCBinding::getMainThread()->Dispatch(
+  mozilla::SyncRunnable::DispatchToThread(VcmSIPCCBinding::getMainThread(),
       WrapRunnableNMRet(&vcmSetIceCandidate_m,
                         peerconnection,
                         icecandidate,
                         level,
-                        &ret),
-      NS_DISPATCH_SYNC);
+                        &ret));
 
   return ret;
 }
@@ -794,12 +791,11 @@ short vcmStartIceChecks(const char *peerconnection, cc_boolean isControlling)
 {
   short ret;
 
-  VcmSIPCCBinding::getMainThread()->Dispatch(
+  mozilla::SyncRunnable::DispatchToThread(VcmSIPCCBinding::getMainThread(),
       WrapRunnableNMRet(&vcmStartIceChecks_m,
                         peerconnection,
                         isControlling,
-                        &ret),
-      NS_DISPATCH_SYNC);
+                        &ret));
 
   return ret;
 }
@@ -874,7 +870,7 @@ short vcmSetIceMediaParams(const char *peerconnection,
 {
   short ret;
 
-  VcmSIPCCBinding::getMainThread()->Dispatch(
+  mozilla::SyncRunnable::DispatchToThread(VcmSIPCCBinding::getMainThread(),
       WrapRunnableNMRet(&vcmSetIceMediaParams_m,
                      peerconnection,
                      level,
@@ -882,8 +878,7 @@ short vcmSetIceMediaParams(const char *peerconnection,
                      pwd,
                      candidates,
                      candidate_ct,
-                     &ret),
-      NS_DISPATCH_SYNC);
+                     &ret));
 
   return ret;
 }
@@ -950,13 +945,12 @@ short vcmCreateRemoteStream(cc_mcapid_t mcap_id,
 {
   short ret;
 
-  VcmSIPCCBinding::getMainThread()->Dispatch(
+  mozilla::SyncRunnable::DispatchToThread(VcmSIPCCBinding::getMainThread(),
       WrapRunnableNMRet(&vcmCreateRemoteStream_m,
                         mcap_id,
                         peerconnection,
                         pc_stream_id,
-                        &ret),
-      NS_DISPATCH_SYNC);
+                        &ret));
 
   return ret;
 }
@@ -1036,15 +1030,14 @@ short vcmGetDtlsIdentity(const char *peerconnection,
                          size_t max_digest_len) {
   short ret;
 
-  VcmSIPCCBinding::getMainThread()->Dispatch(
+  mozilla::SyncRunnable::DispatchToThread(VcmSIPCCBinding::getMainThread(),
       WrapRunnableNMRet(&vcmGetDtlsIdentity_m,
                         peerconnection,
                         digest_algp,
                         max_digest_alg_len,
                         digestp,
                         max_digest_len,
-                        &ret),
-      NS_DISPATCH_SYNC);
+                        &ret));
 
   return ret;
 }
@@ -1449,7 +1442,7 @@ int vcmRxStartICE(cc_mcapid_t mcap_id,
 {
   int ret;
 
-  VcmSIPCCBinding::getMainThread()->Dispatch(
+  mozilla::SyncRunnable::DispatchToThread(VcmSIPCCBinding::getMainThread(),
       WrapRunnableNMRet(&vcmRxStartICE_m,
                         mcap_id,
                         group_id,
@@ -1464,8 +1457,7 @@ int vcmRxStartICE(cc_mcapid_t mcap_id,
                         fingerprint_alg,
                         fingerprint,
                         attrs,
-                        &ret),
-      NS_DISPATCH_SYNC);
+                        &ret));
 
   return ret;
 }
@@ -2083,7 +2075,7 @@ int vcmTxStartICE(cc_mcapid_t mcap_id,
 {
   int ret;
 
-  VcmSIPCCBinding::getMainThread()->Dispatch(
+  mozilla::SyncRunnable::DispatchToThread(VcmSIPCCBinding::getMainThread(),
       WrapRunnableNMRet(&vcmTxStartICE_m,
                         mcap_id,
                         group_id,
@@ -2098,8 +2090,7 @@ int vcmTxStartICE(cc_mcapid_t mcap_id,
                         fingerprint_alg,
                         fingerprint,
                         attrs,
-                        &ret),
-      NS_DISPATCH_SYNC);
+                        &ret));
 
   return ret;
 }

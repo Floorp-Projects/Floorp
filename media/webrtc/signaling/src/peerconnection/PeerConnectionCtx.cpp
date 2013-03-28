@@ -24,6 +24,7 @@
 #include "nsIObserver.h"
 #include "mozilla/Services.h"
 #include "StaticPtr.h"
+#include "mozilla/SyncRunnable.h"
 
 static const char* logTag = "PeerConnectionCtx";
 
@@ -261,17 +262,14 @@ void PeerConnectionCtx::onCallEvent(ccapi_call_event_e aCallEvent,
                                       CSF::CC_CallPtr aCall,
                                       CSF::CC_CallInfoPtr aInfo) {
   // This is called on a SIPCC thread.
-  // WARNING: Do not make this NS_DISPATCH_NORMAL.
   // CC_*Ptr is not thread-safe so we must not manipulate
   // the ref count on multiple threads at once.
-  // NS_DISPATCH_SYNC enforces this and because this is
-  // not a real nsThread, we don't have to worry about
-  // reentrancy.
-  RUN_ON_THREAD(gMainThread,
+  // SyncRunnable enforces this and because it doesn't process
+  // incoming events, we don't have to worry about reentrancy.
+  mozilla::SyncRunnable::DispatchToThread(gMainThread,
                 WrapRunnable(this,
                              &PeerConnectionCtx::onCallEvent_m,
-                             aCallEvent, aCall, aInfo),
-                NS_DISPATCH_SYNC);
+                             aCallEvent, aCall, aInfo));
 }
 
 // Demux the call event to the right PeerConnection
