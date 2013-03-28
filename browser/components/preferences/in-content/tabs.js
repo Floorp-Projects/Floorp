@@ -12,9 +12,6 @@ var gTabsPane = {
    *     1 opens such links in the most recent window or tab,
    *     2 opens such links in a new window,
    *     3 opens such links in a new tab
-   * browser.tabs.autoHide
-   * - true if the tab bar is hidden when only one tab is open, false to always
-   *   show it
    * browser.tabs.loadInBackground
    * - true if display should switch to a new tab which has been opened from a
    *   link, false if display shouldn't switch

@@ -566,14 +566,9 @@ var FullScreen = {
 
     // In tabs-on-top mode, move window controls to the tab bar,
     // and in tabs-on-bottom mode, move them back to the navigation toolbar.
-    // When there is a chance the tab bar may be collapsed, put window
-    // controls on nav bar.
     var fullscreenctls = document.getElementById("window-controls");
     var navbar = document.getElementById("nav-bar");
-    var ctlsOnTabbar = window.toolbar.visible &&
-                       (navbar.collapsed ||
-                          (TabsOnTop.enabled &&
-                           !gPrefService.getBoolPref("browser.tabs.autoHide")));
+    var ctlsOnTabbar = window.toolbar.visible && (navbar.collapsed || TabsOnTop.enabled);
     if (fullscreenctls.parentNode == navbar && ctlsOnTabbar) {
       fullscreenctls.removeAttribute("flex");
       document.getElementById("TabsToolbar").appendChild(fullscreenctls);
