@@ -4302,7 +4302,7 @@ TryAttachScopeNameStub(JSContext *cx, HandleScript script, ICGetName_Fallback *s
     RootedId id(cx, NameToId(name));
     RootedObject scopeChain(cx, initialScopeChain);
 
-    Shape *shape;
+    Shape *shape = NULL;
     while (scopeChain) {
         if (!shapes.append(scopeChain->lastProperty()))
             return false;
