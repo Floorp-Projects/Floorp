@@ -34,9 +34,6 @@ protected:
 public:
   virtual bool SubregionIsUnionOfRegions() { return false; }
 
-  // interfaces:
-  NS_DECL_ISUPPORTS_INHERITED
-
   virtual nsresult Filter(nsSVGFilterInstance* aInstance,
                           const nsTArray<const Image*>& aSources,
                           const Image* aTarget,

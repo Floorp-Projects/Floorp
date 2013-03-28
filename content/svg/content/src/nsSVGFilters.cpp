@@ -534,11 +534,6 @@ SVGComponentTransferFunctionElement::GetNumberInfo()
                               ArrayLength(sNumberInfo));
 }
 
-NS_IMPL_ISUPPORTS_INHERITED3(SVGFEFuncRElement,
-                             SVGComponentTransferFunctionElement,
-                             nsIDOMNode, nsIDOMElement,
-                             nsIDOMSVGElement)
-
 /* virtual */ JSObject*
 SVGFEFuncRElement::WrapNode(JSContext* aCx, JSObject* aScope)
 {
@@ -554,11 +549,6 @@ namespace mozilla {
 namespace dom {
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEFuncRElement)
-
-NS_IMPL_ISUPPORTS_INHERITED3(SVGFEFuncGElement,
-                             SVGComponentTransferFunctionElement,
-                             nsIDOMNode, nsIDOMElement,
-                             nsIDOMSVGElement)
 
 /* virtual */ JSObject*
 SVGFEFuncGElement::WrapNode(JSContext* aCx, JSObject* aScope)
@@ -576,11 +566,6 @@ namespace dom {
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEFuncGElement)
 
-NS_IMPL_ISUPPORTS_INHERITED3(SVGFEFuncBElement,
-                             SVGComponentTransferFunctionElement,
-                             nsIDOMNode, nsIDOMElement,
-                             nsIDOMSVGElement)
-
 /* virtual */ JSObject*
 SVGFEFuncBElement::WrapNode(JSContext* aCx, JSObject* aScope)
 {
@@ -596,11 +581,6 @@ namespace mozilla {
 namespace dom {
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEFuncBElement)
-
-NS_IMPL_ISUPPORTS_INHERITED3(SVGFEFuncAElement,
-                             SVGComponentTransferFunctionElement,
-                             nsIDOMNode, nsIDOMElement,
-                             nsIDOMSVGElement)
 
 /* virtual */ JSObject*
 SVGFEFuncAElement::WrapNode(JSContext* aCx, JSObject* aScope)

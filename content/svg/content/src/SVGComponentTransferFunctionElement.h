@@ -92,8 +92,6 @@ protected:
     : SVGComponentTransferFunctionElement(aNodeInfo) {}
 
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-
   virtual int32_t GetChannel() { return 0; }
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
@@ -120,9 +118,6 @@ protected:
     : SVGComponentTransferFunctionElement(aNodeInfo) {}
 
 public:
-  // interfaces:
-  NS_DECL_ISUPPORTS_INHERITED
-
   virtual int32_t GetChannel() { return 1; }
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
@@ -149,9 +144,6 @@ protected:
     : SVGComponentTransferFunctionElement(aNodeInfo) {}
 
 public:
-  // interfaces:
-  NS_DECL_ISUPPORTS_INHERITED
-
   virtual int32_t GetChannel() { return 2; }
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
@@ -178,9 +170,6 @@ protected:
     : SVGComponentTransferFunctionElement(aNodeInfo) {}
 
 public:
-  // interfaces:
-  NS_DECL_ISUPPORTS_INHERITED
-
   virtual int32_t GetChannel() { return 3; }
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;

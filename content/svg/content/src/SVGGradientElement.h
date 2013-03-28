@@ -48,9 +48,6 @@ protected:
   WrapNode(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE = 0;
 
 public:
-  // interfaces:
-  NS_DECL_ISUPPORTS_INHERITED
-
   // nsIContent
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
@@ -100,8 +97,6 @@ protected:
   WrapNode(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   // WebIDL
@@ -136,9 +131,6 @@ protected:
   WrapNode(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 
 public:
-
-  NS_DECL_ISUPPORTS_INHERITED
-
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   // WebIDL

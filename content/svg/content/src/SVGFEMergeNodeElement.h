@@ -28,7 +28,6 @@ protected:
   virtual JSObject* WrapNode(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 
 public:
-  NS_DECL_ISUPPORTS_INHERITED
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual bool AttributeAffectsRendering(

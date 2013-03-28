@@ -226,18 +226,13 @@ nsSVGElement::Init()
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ADDREF_INHERITED(nsSVGElement, nsSVGElementBase)
-NS_IMPL_RELEASE_INHERITED(nsSVGElement, nsSVGElementBase)
-
-NS_INTERFACE_MAP_BEGIN(nsSVGElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGElementBase)
+NS_IMPL_ISUPPORTS_INHERITED3(nsSVGElement, nsSVGElementBase,
+                             nsIDOMNode, nsIDOMElement,
+                             nsIDOMSVGElement)
 
 //----------------------------------------------------------------------
 // Implementation
-  
+
 //----------------------------------------------------------------------
 // nsIContent methods
 
