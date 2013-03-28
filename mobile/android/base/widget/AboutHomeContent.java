@@ -99,7 +99,7 @@ public class AboutHomeContent extends ScrollView
         mAddons = (AddonsSection) findViewById(R.id.recommended_addons);
         mLastTabs = (LastTabsSection) findViewById(R.id.last_tabs);
         mRemoteTabs = (RemoteTabsSection) findViewById(R.id.remote_tabs);
-        
+
         // Inform the new views about the UriLoadCallback
         if (mUriLoadCallback != null)
             setUriLoadCallback(mUriLoadCallback);

@@ -51,7 +51,7 @@ public class AddonsSection extends AboutHomeSection {
         mActivity = (BrowserApp) context;
 
         int iconSize = mContext.getResources().getDimensionPixelSize(R.dimen.abouthome_addon_icon_size);
-        sIconBounds = new Rect(0, 0, iconSize, iconSize); 
+        sIconBounds = new Rect(0, 0, iconSize, iconSize);
         sSubTitleSpan = new TextAppearanceSpan(mContext, R.style.AboutHome_TextAppearance_SubTitle);
 
         setOnMoreTextClickListener(new View.OnClickListener() {
