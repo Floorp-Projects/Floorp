@@ -309,6 +309,8 @@ public:
 
   // Getters for border/padding
   // ==========================
+  const nsMargin& GetBorderPadding() const { return mBorderPadding; }
+
   // Returns the border+padding component for a given mozilla::css::Side
   nscoord GetBorderPaddingComponentForSide(Side aSide) const
   { return MarginComponentForSide(mBorderPadding, aSide); }
@@ -1990,15 +1992,27 @@ nsFlexContainerFrame::SizeItemInCrossAxis(
   // Save the sizing info that we learned from this reflow
   // -----------------------------------------------------
 
-  // Tentatively accept the child's desired size, minus border/padding, as its
-  // cross-size:
-  MOZ_ASSERT(childDesiredSize.height >=
-             aItem.GetBorderPaddingSizeInAxis(aAxisTracker.GetCrossAxis()),
-             "Child should ask for at least enough space for border/padding");
-  nscoord crossSize =
-    aAxisTracker.GetCrossComponent(childDesiredSize) -
-    aItem.GetBorderPaddingSizeInAxis(aAxisTracker.GetCrossAxis());
-  aItem.SetCrossSize(crossSize);
+  // Tentatively store the child's desired content-box cross-size.
+  // Note that childDesiredSize is the border-box size, so we have to
+  // subtract border & padding to get the content-box size.
+  // (Note that at this point in the code, we know our cross axis is vertical,
+  // so we don't bother with making aAxisTracker pick the cross-axis component
+  // for us.)
+  nscoord crossAxisBorderPadding = aItem.GetBorderPadding().TopBottom();
+  if (childDesiredSize.height < crossAxisBorderPadding) {
+    // Child's requested size isn't large enough for its border/padding!
+    // This is OK for the trivial nsFrame::Reflow() impl, but other frame
+    // classes should know better. So, if we get here, the child had better be
+    // an instance of nsFrame (i.e. it should return null from GetType()).
+    // XXXdholbert Once we've fixed bug 765861, we should upgrade this to an
+    // assertion that trivially passes if bug 765861's flag has been flipped.
+    NS_WARN_IF_FALSE(!aItem.Frame()->GetType(),
+                     "Child should at least request space for border/padding");
+    aItem.SetCrossSize(0);
+  } else {
+    // (normal case)
+    aItem.SetCrossSize(childDesiredSize.height - crossAxisBorderPadding);
+  }
 
   // If we need to do baseline-alignment, store the child's ascent.
   if (aItem.GetAlignSelf() == NS_STYLE_ALIGN_ITEMS_BASELINE) {
