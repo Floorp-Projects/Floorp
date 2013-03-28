@@ -12,6 +12,7 @@ import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.db.BrowserDB.TopSitesCursorWrapper;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.util.ActivityResultHandler;
+import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
 
@@ -616,6 +617,7 @@ public class AboutHomeContent extends ScrollView
                                     mUriLoadCallback.callback(homepageUrl);
                             }
                         });
+                        row.setOnKeyListener(GamepadUtils.getClickDispatcher());
 
                         Favicons favicons = Favicons.getInstance();
                         favicons.loadFavicon(pageUrl, iconUrl, true,
@@ -681,6 +683,7 @@ public class AboutHomeContent extends ScrollView
                                 Tabs.getInstance().loadUrl(url, flags);
                             }
                         });
+                        container.setOnKeyListener(GamepadUtils.getClickDispatcher());
 
                         mLastTabs.addItem(container);
                     }
@@ -752,6 +755,7 @@ public class AboutHomeContent extends ScrollView
             row.setTag(tab.url);
             mRemoteTabs.addItem(row);
             row.setOnClickListener(mRemoteTabClickListener);
+            row.setOnKeyListener(GamepadUtils.getClickDispatcher());
         }
         
         mRemoteTabs.setSubtitle(client);
