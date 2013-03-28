@@ -204,6 +204,10 @@ class ObjectPtr
         IncrementalObjectBarrier(value);
     }
 
+    bool isAboutToBeFinalized() {
+        return JS_IsAboutToBeFinalized(&value);
+    }
+
     ObjectPtr &operator=(JSObject *obj) {
         IncrementalObjectBarrier(value);
         value = obj;
