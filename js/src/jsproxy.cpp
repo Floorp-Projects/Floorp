@@ -351,7 +351,7 @@ JSString *
 BaseProxyHandler::fun_toString(JSContext *cx, HandleObject proxy, unsigned indent)
 {
     JS_NOT_REACHED("callable proxies should implement fun_toString trap");
-    return false;
+    return NULL;
 }
 
 bool
