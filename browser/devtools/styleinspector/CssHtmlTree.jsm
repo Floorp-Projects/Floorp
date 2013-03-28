@@ -134,11 +134,7 @@ this.CssHtmlTree = function CssHtmlTree(aStyleInspector)
 
   // Create bound methods.
   this.siFocusWindow = this.focusWindow.bind(this);
-  this.siBoundMenuUpdate = this.computedViewMenuUpdate.bind(this);
   this.siBoundCopy = this.computedViewCopy.bind(this);
-  this.siBoundCopyDeclaration = this.computedViewCopyDeclaration.bind(this);
-  this.siBoundCopyProperty = this.computedViewCopyProperty.bind(this);
-  this.siBoundCopyPropertyValue = this.computedViewCopyPropertyValue.bind(this);
 
   this.styleDocument.addEventListener("copy", this.siBoundCopy);
   this.styleDocument.addEventListener("mousedown", this.siFocusWindow);
@@ -154,7 +150,6 @@ this.CssHtmlTree = function CssHtmlTree(aStyleInspector)
   // The element that we're inspecting, and the document that it comes from.
   this.viewedElement = null;
   this.createStyleViews();
-  this.createContextMenu();
 }
 
 /**
@@ -205,10 +200,6 @@ CssHtmlTree.processTemplate = function CssHtmlTree_processTemplate(aTemplate,
 
 XPCOMUtils.defineLazyGetter(CssHtmlTree, "_strings", function() Services.strings
         .createBundle("chrome://browser/locale/devtools/styleinspector.properties"));
-
-XPCOMUtils.defineLazyGetter(CssHtmlTree, "HELP_LINK_TITLE", function() {
-  return CssHtmlTree.HELP_LINK_TITLE = CssHtmlTree.l10n("helpLinkTitle");
-});
 
 XPCOMUtils.defineLazyGetter(this, "clipboardHelper", function() {
   return Cc["@mozilla.org/widget/clipboardhelper;1"].
@@ -439,97 +430,6 @@ CssHtmlTree.prototype = {
   },
 
   /**
-   * Create a context menu.
-   */
-  createContextMenu: function SI_createContextMenu()
-  {
-    let iframe = this.styleInspector.outerIFrame;
-    let outerDoc = iframe.ownerDocument;
-
-    let popupSet = outerDoc.getElementById("inspectorPopupSet");
-
-    let menu = outerDoc.createElement("menupopup");
-    menu.addEventListener("popupshowing", this.siBoundMenuUpdate);
-    menu.id = "computed-view-context-menu";
-    popupSet.appendChild(menu);
-
-    // Copy selection
-    let label = CssHtmlTree.l10n("style.contextmenu.copyselection");
-    let accessKey = CssHtmlTree.l10n("style.contextmenu.copyselection.accesskey");
-    let item = outerDoc.createElement("menuitem");
-    item.id = "computed-view-copy";
-    item.setAttribute("label", label);
-    item.setAttribute("accesskey", accessKey);
-    item.addEventListener("command", this.siBoundCopy);
-    menu.appendChild(item);
-
-    // Copy declaration
-    label = CssHtmlTree.l10n("style.contextmenu.copydeclaration");
-    accessKey = CssHtmlTree.l10n("style.contextmenu.copydeclaration.accesskey");
-    item = outerDoc.createElement("menuitem");
-    item.id = "computed-view-copy-declaration";
-    item.setAttribute("label", label);
-    item.setAttribute("accesskey", accessKey);
-    item.addEventListener("command", this.siBoundCopyDeclaration);
-    menu.appendChild(item);
-
-    // Copy property name
-    label = CssHtmlTree.l10n("style.contextmenu.copyproperty");
-    accessKey = CssHtmlTree.l10n("style.contextmenu.copyproperty.accesskey");
-    item = outerDoc.createElement("menuitem");
-    item.id = "computed-view-copy-property";
-    item.setAttribute("label", label);
-    item.setAttribute("accesskey", accessKey);
-    item.addEventListener("command", this.siBoundCopyProperty);
-    menu.appendChild(item);
-
-    // Copy property value
-    label = CssHtmlTree.l10n("style.contextmenu.copypropertyvalue");
-    accessKey = CssHtmlTree.l10n("style.contextmenu.copypropertyvalue.accesskey");
-    item = outerDoc.createElement("menuitem");
-    item.id = "computed-view-copy-property-value";
-    item.setAttribute("label", label);
-    item.setAttribute("accesskey", accessKey);
-    item.addEventListener("command", this.siBoundCopyPropertyValue);
-    menu.appendChild(item);
-
-    iframe.setAttribute("context", menu.id);
-  },
-
-  /**
-   * Update the context menu by disabling irrelevant menuitems and enabling
-   * relevant ones.
-   */
-  computedViewMenuUpdate: function si_computedViewMenuUpdate()
-  {
-    let disable = this.styleWindow.getSelection().isCollapsed;
-
-    let outerDoc = this.styleInspector.outerIFrame.ownerDocument;
-    let menuitem = outerDoc.querySelector("#computed-view-copy");
-    menuitem.disabled = disable;
-
-    let node = outerDoc.popupNode;
-    if (!node) {
-      return;
-    }
-
-    if (!node.classList.contains("property-view")) {
-      while (node = node.parentElement) {
-        if (node.classList.contains("property-view")) {
-          break;
-        }
-      }
-    }
-    let disablePropertyItems = !node;
-    menuitem = outerDoc.querySelector("#computed-view-copy-declaration");
-    menuitem.disabled = disablePropertyItems;
-    menuitem = outerDoc.querySelector("#computed-view-copy-property");
-    menuitem.disabled = disablePropertyItems;
-    menuitem = outerDoc.querySelector("#computed-view-copy-property-value");
-    menuitem.disabled = disablePropertyItems;
-  },
-
-  /**
    * Focus the window on mousedown.
    *
    * @param aEvent The event object
@@ -552,95 +452,14 @@ CssHtmlTree.prototype = {
 
     // Tidy up block headings by moving CSS property names and their values onto
     // the same line and inserting a colon between them.
-    text = text.replace(/\t(.+)\t\t(.+)/g, "$1: $2");
+    text = text.replace(/(.+)\r\n(.+)/g, "$1: $2;");
+    text = text.replace(/(.+)\n(.+)/g, "$1: $2;");
 
-    // Remove any MDN link titles
-    text = text.replace(CssHtmlTree.HELP_LINK_TITLE, "");
     let outerDoc = this.styleInspector.outerIFrame.ownerDocument;
     clipboardHelper.copyString(text, outerDoc);
 
     if (aEvent) {
       aEvent.preventDefault();
-    }
-  },
-
-  /**
-   * Copy declaration.
-   *
-   * @param aEvent The event object
-   */
-  computedViewCopyDeclaration: function si_computedViewCopyDeclaration(aEvent)
-  {
-    let outerDoc = this.styleInspector.outerIFrame.ownerDocument;
-    let node = outerDoc.popupNode;
-    if (!node) {
-      return;
-    }
-
-    if (!node.classList.contains("property-view")) {
-      while (node = node.parentElement) {
-        if (node.classList.contains("property-view")) {
-          break;
-        }
-      }
-    }
-    if (node) {
-      let name = node.querySelector(".property-name").textContent;
-      let value = node.querySelector(".property-value").textContent;
-
-      clipboardHelper.copyString(name + ": " + value + ";", outerDoc);
-    }
-  },
-
-  /**
-   * Copy property name.
-   *
-   * @param aEvent The event object
-   */
-  computedViewCopyProperty: function si_computedViewCopyProperty(aEvent)
-  {
-    let outerDoc = this.styleInspector.outerIFrame.ownerDocument;
-    let node = outerDoc.popupNode;
-    if (!node) {
-      return;
-    }
-
-    if (!node.classList.contains("property-view")) {
-      while (node = node.parentElement) {
-        if (node.classList.contains("property-view")) {
-          break;
-        }
-      }
-    }
-    if (node) {
-      node = node.querySelector(".property-name");
-      clipboardHelper.copyString(node.textContent, outerDoc);
-    }
-  },
-
-  /**
-   * Copy property value.
-   *
-   * @param aEvent The event object
-   */
-  computedViewCopyPropertyValue: function si_computedViewCopyPropertyValue(aEvent)
-  {
-    let outerDoc = this.styleInspector.outerIFrame.ownerDocument;
-    let node = outerDoc.popupNode;
-    if (!node) {
-      return;
-    }
-
-    if (!node.classList.contains("property-view")) {
-      while (node = node.parentElement) {
-        if (node.classList.contains("property-view")) {
-          break;
-        }
-      }
-    }
-    if (node) {
-      node = node.querySelector(".property-value");
-      clipboardHelper.copyString(node.textContent, outerDoc);
     }
   },
 
@@ -808,7 +627,7 @@ PropertyView.prototype = {
     if (this.visible) {
       this.tree._darkStripe = !this.tree._darkStripe;
       let darkValue = this.tree._darkStripe ?
-                      "property-view darkrow" : "property-view";
+                      "property-view theme-bg-darker" : "property-view";
       return darkValue;
     }
     return "property-view-hidden";
@@ -823,7 +642,7 @@ PropertyView.prototype = {
   {
     if (this.visible) {
       let darkValue = this.tree._darkStripe ?
-                      "property-content darkrow" : "property-content";
+                      "property-content theme-bg-darker" : "property-content";
       return darkValue;
     }
     return "property-content-hidden";
@@ -832,15 +651,11 @@ PropertyView.prototype = {
   buildMain: function PropertyView_buildMain()
   {
     let doc = this.tree.styleDocument;
-    this.element = doc.createElementNS(HTML_NS, "tr");
+    this.element = doc.createElementNS(HTML_NS, "div");
     this.element.setAttribute("class", this.propertyHeaderClassName);
 
-    this.expanderContainer = doc.createElementNS(HTML_NS, "td");
-    this.element.appendChild(this.expanderContainer);
-    this.expanderContainer.setAttribute("class", "expander-container");
-
     this.matchedExpander = doc.createElementNS(HTML_NS, "div");
-    this.matchedExpander.setAttribute("class", "match expander");
+    this.matchedExpander.className = "expander theme-twisty";
     this.matchedExpander.setAttribute("tabindex", "0");
     this.matchedExpander.addEventListener("click",
       this.matchedExpanderClick.bind(this), false);
@@ -854,32 +669,21 @@ PropertyView.prototype = {
         this.matchedExpanderClick(aEvent);
       }
     }.bind(this), false);
-    this.expanderContainer.appendChild(this.matchedExpander);
+    this.element.appendChild(this.matchedExpander);
 
-    this.nameNode = doc.createElementNS(HTML_NS, "td");
+    this.nameNode = doc.createElementNS(HTML_NS, "div");
     this.element.appendChild(this.nameNode);
-    this.nameNode.setAttribute("class", "property-name");
-    this.nameNode.textContent = this.name;
+    this.nameNode.setAttribute("class", "property-name theme-fg-color5");
+    this.nameNode.textContent = this.nameNode.title = this.name;
     this.nameNode.addEventListener("click", function(aEvent) {
       this.matchedExpander.focus();
     }.bind(this), false);
 
-    let helpcontainer = doc.createElementNS(HTML_NS, "td");
-    this.element.appendChild(helpcontainer);
-    helpcontainer.setAttribute("class", "helplink-container");
-
-    let helplink = doc.createElementNS(HTML_NS, "a");
-    helpcontainer.appendChild(helplink);
-    helplink.setAttribute("class", "helplink");
-    helplink.setAttribute("title", CssHtmlTree.HELP_LINK_TITLE);
-    helplink.textContent = CssHtmlTree.HELP_LINK_TITLE;
-    helplink.addEventListener("click", this.mdnLinkClick.bind(this), false);
-
-    this.valueNode = doc.createElementNS(HTML_NS, "td");
+    this.valueNode = doc.createElementNS(HTML_NS, "div");
     this.element.appendChild(this.valueNode);
-    this.valueNode.setAttribute("class", "property-value");
+    this.valueNode.setAttribute("class", "property-value theme-fg-color1");
     this.valueNode.setAttribute("dir", "ltr");
-    this.valueNode.textContent = this.value;
+    this.valueNode.textContent = this.valueNode.title = this.value;
 
     return this.element;
   },
@@ -887,11 +691,10 @@ PropertyView.prototype = {
   buildSelectorContainer: function PropertyView_buildSelectorContainer()
   {
     let doc = this.tree.styleDocument;
-    let element = doc.createElementNS(HTML_NS, "tr");
+    let element = doc.createElementNS(HTML_NS, "div");
     element.setAttribute("class", this.propertyContentClassName);
-    this.matchedSelectorsContainer = doc.createElementNS(HTML_NS, "td");
-    this.matchedSelectorsContainer.setAttribute("colspan", "0");
-    this.matchedSelectorsContainer.setAttribute("class", "rulelink");
+    this.matchedSelectorsContainer = doc.createElementNS(HTML_NS, "div");
+    this.matchedSelectorsContainer.setAttribute("class", "matchedselectors");
     element.appendChild(this.matchedSelectorsContainer);
 
     return element;
@@ -911,7 +714,7 @@ PropertyView.prototype = {
     }
 
     if (!this.tree.viewedElement || !this.visible) {
-      this.valueNode.textContent = "";
+      this.valueNode.textContent = this.valueNode.title = "";
       this.matchedSelectorsContainer.parentNode.hidden = true;
       this.matchedSelectorsContainer.textContent = "";
       this.matchedExpander.removeAttribute("open");
@@ -919,7 +722,7 @@ PropertyView.prototype = {
     }
 
     this.tree.numVisibleProperties++;
-    this.valueNode.textContent = this.propertyInfo.value;
+    this.valueNode.textContent = this.valueNode.title = this.propertyInfo.value;
     this.refreshMatchedSelectors();
   },
 
@@ -1056,21 +859,12 @@ SelectorView.prototype = {
    */
   get statusClass()
   {
-    return SelectorView.CLASS_NAMES[this.selectorInfo.status];
+    return SelectorView.CLASS_NAMES[this.selectorInfo.status - 1];
   },
 
   /**
    * A localized Get localized human readable info
    */
-  humanReadableText: function SelectorView_humanReadableText(aElement)
-  {
-    if (this.tree.getRTLAttr == "rtl") {
-      return this.selectorInfo.value + " \u2190 " + this.text(aElement);
-    } else {
-      return this.text(aElement) + " \u2192 " + this.selectorInfo.value;
-    }
-  },
-
   text: function SelectorView_text(aElement) {
     let result = this.selectorInfo.selector.text;
     if (this.selectorInfo.elementStyle) {

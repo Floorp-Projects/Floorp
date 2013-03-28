@@ -221,11 +221,11 @@ InspectorPanel.prototype = {
     this.toggleHighlighter = this.toggleHighlighter.bind(this);
 
     this.sidebar.addTab("ruleview",
-                        "chrome://browser/content/devtools/cssruleview.xul",
+                        "chrome://browser/content/devtools/cssruleview.xhtml",
                         "ruleview" == defaultTab);
 
     this.sidebar.addTab("computedview",
-                        "chrome://browser/content/devtools/csshtmltree.xul",
+                        "chrome://browser/content/devtools/computedview.xhtml",
                         "computedview" == defaultTab);
 
     if (Services.prefs.getBoolPref("devtools.fontinspector.enabled")) {

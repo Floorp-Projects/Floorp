@@ -22,16 +22,16 @@ function runTests() {
   yield createThumbnail();
 
   // Make sure Storage.copy() updates an existing file.
-  PageThumbsStorage.copy(URL, URL_COPY);
-  let copy = PageThumbsStorage.getFileForURL(URL_COPY);
+  yield PageThumbsStorage.copy(URL, URL_COPY);
+  let copy = new FileUtils.File(PageThumbsStorage.getFilePathForURL(URL_COPY));
   let mtime = copy.lastModifiedTime -= 60;
 
-  PageThumbsStorage.copy(URL, URL_COPY);
-  isnot(PageThumbsStorage.getFileForURL(URL_COPY).lastModifiedTime, mtime,
+  yield PageThumbsStorage.copy(URL, URL_COPY);
+  isnot(new FileUtils.File(PageThumbsStorage.getFilePathForURL(URL_COPY)).lastModifiedTime, mtime,
         "thumbnail file was updated");
 
-  let file = PageThumbsStorage.getFileForURL(URL);
-  let fileCopy = PageThumbsStorage.getFileForURL(URL_COPY);
+  let file = new FileUtils.File(PageThumbsStorage.getFilePathForURL(URL));
+  let fileCopy = new FileUtils.File(PageThumbsStorage.getFilePathForURL(URL_COPY));
 
   // Clear the browser history. Retry until the files are gone because Windows
   // locks them sometimes.

@@ -1056,6 +1056,8 @@ pref("devtools.responsiveUI.enabled", true);
 // Enable the Debugger
 pref("devtools.debugger.enabled", true);
 pref("devtools.debugger.chrome-enabled", true);
+pref("devtools.debugger.chrome-debugging-host", "localhost");
+pref("devtools.debugger.chrome-debugging-port", 6080);
 pref("devtools.debugger.remote-host", "localhost");
 pref("devtools.debugger.remote-autoconnect", false);
 pref("devtools.debugger.remote-connection-retries", 3);
@@ -1096,6 +1098,9 @@ pref("devtools.styleeditor.transitions", true);
 
 // Enable tools for Chrome development.
 pref("devtools.chrome.enabled", false);
+
+// Default theme ("dark" or "light")
+pref("devtools.theme", "light");
 
 // Display the introductory text
 pref("devtools.gcli.hideIntro", false);

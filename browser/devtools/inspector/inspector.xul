@@ -87,7 +87,7 @@
       </vbox>
     </vbox>
     <splitter class="devtools-side-splitter"/>
-    <tabbox id="inspector-sidebar" class="devtools-sidebar-tabs" hidden="true">
+    <tabbox id="inspector-sidebar" handleCtrlTab="false" class="devtools-sidebar-tabs" hidden="true">
       <tabs/>
       <tabpanels flex="1"/>
     </tabbox>
