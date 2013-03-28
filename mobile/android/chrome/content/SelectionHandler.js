@@ -184,44 +184,31 @@ var SelectionHandler = {
              aElement.style.MozUserSelect != 'none';
   },
 
-  // aX/aY are in top-level window browser coordinates
+  /*
+   * Called from browser.js when the user long taps on text or chooses
+   * the "Select Word" context menu item. Initializes SelectionHandler,
+   * starts a selection, and positions the text selection handles.
+   *
+   * @param aX, aY tap location in client coordinates.
+   */
   startSelection: function sh_startSelection(aElement, aX, aY) {
-    // Clear out any existing selection
+    // Clear out any existing active selection
     this._closeSelection();
 
-    this._contentWindow = aElement.ownerDocument.defaultView;
-    this._targetElement = aElement;
+    this._initTargetInfo(aElement);
 
-    this._addObservers();
-    this._contentWindow.addEventListener("pagehide", this, false);
-    this._isRTL = (this._contentWindow.getComputedStyle(aElement, "").direction == "rtl");
+    // Clear any existing selection from the document
+    this._contentWindow.getSelection().removeAllRanges();
 
-    // Remove any previous selected or created ranges. Tapping anywhere on a
-    // page will create an empty range.
-    let selection = this._getSelection();
-    selection.removeAllRanges();
-
-    // Position the caret using a fake mouse click sent to the top-level window
-    this._sendMouseEvents(aX, aY, false);
-
-    try {
-      let selectionController = this._getSelectionController();
-
-      // Select the word nearest the caret
-      selectionController.wordMove(false, false);
-
-      // Move forward in LTR, backward in RTL
-      selectionController.wordMove(!this._isRTL, true);
-    } catch(e) {
-      // If we couldn't select the word at the given point, bail
-      this._closeSelection();
+    if (!this._domWinUtils.selectAtPoint(aX, aY, Ci.nsIDOMWindowUtils.SELECT_WORDNOSPACE)) {
+      this._onFail("failed to set selection at point");
       return;
     }
 
-    // If there isn't an appropriate selection, bail
-    if (!selection.rangeCount || !selection.getRangeAt(0) || !selection.toString().trim().length) {
-      selection.collapseToStart();
-      this._closeSelection();
+    let selection = this._getSelection();
+    // If the range didn't have any text, let's bail
+    if (!selection) {
+      this._onFail("no selection was present");
       return;
     }
 
@@ -239,9 +226,40 @@ var SelectionHandler = {
       type: "TextSelection:ShowHandles",
       handles: [this.HANDLE_TYPE_START, this.HANDLE_TYPE_END]
     });
+  },
 
-    if (aElement instanceof Ci.nsIDOMNSEditableElement)
+  /*
+   * Called by BrowserEventHandler when the user taps in a form input.
+   * Initializes SelectionHandler and positions the caret handle.
+   *
+   * @param aX, aY tap location in client coordinates.
+   */
+  attachCaret: function sh_attachCaret(aElement) {
+    this._initTargetInfo(aElement);
+
+    this._contentWindow.addEventListener("keydown", this, false);
+    this._contentWindow.addEventListener("blur", this, false);
+
+    this._activeType = this.TYPE_CURSOR;
+    this._positionHandles();
+
+    sendMessageToJava({
+      type: "TextSelection:ShowHandles",
+      handles: [this.HANDLE_TYPE_MIDDLE]
+    });
+  },
+
+  _initTargetInfo: function sh_initTargetInfo(aElement) {
+    this._targetElement = aElement;
+    if (aElement instanceof Ci.nsIDOMNSEditableElement) {
       aElement.focus();
+    }
+
+    this._contentWindow = aElement.ownerDocument.defaultView;
+    this._isRTL = (this._contentWindow.getComputedStyle(aElement, "").direction == "rtl");
+
+    this._addObservers();
+    this._contentWindow.addEventListener("pagehide", this, false);
   },
 
   _getSelection: function sh_getSelection() {
@@ -383,6 +401,16 @@ var SelectionHandler = {
   },
 
   /*
+   * Called if for any reason we fail during the selection
+   * process. Cancels the selection.
+   */
+  _onFail: function sh_onFail(aDbgMessage) {
+    if (aDbgMessage && aDbgMessage.length > 0)
+      Cu.reportError("SelectionHandler - " + aDbgMessage);
+    this._closeSelection();
+  },
+
+  /*
    * Shuts SelectionHandler down.
    */
   _closeSelection: function sh_closeSelection() {
@@ -459,28 +487,6 @@ var SelectionHandler = {
     this._cache.end = end;
 
     return selectionReversed;
-  },
-
-  showThumb: function sh_showThumb(aElement) {
-    if (!aElement)
-      return;
-
-    // Get the element's view
-    this._contentWindow = aElement.ownerDocument.defaultView;
-    this._targetElement = aElement;
-
-    this._addObservers();
-    this._contentWindow.addEventListener("pagehide", this, false);
-    this._contentWindow.addEventListener("keydown", this, false);
-    this._contentWindow.addEventListener("blur", this, true);
-
-    this._activeType = this.TYPE_CURSOR;
-    this._positionHandles();
-
-    sendMessageToJava({
-      type: "TextSelection:ShowHandles",
-      handles: [this.HANDLE_TYPE_MIDDLE]
-    });
   },
 
   _positionHandles: function sh_positionHandles() {
