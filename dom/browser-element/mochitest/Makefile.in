@@ -166,6 +166,9 @@ MOCHITEST_FILES = \
 # Disabled due to https://bugzilla.mozilla.org/show_bug.cgi?id=774100
 #		test_browserElement_inproc_Reload.html \
 
+# Disabled due to focus issues (no bug that I'm aware of)
+# 		test_browserElement_oop_KeyEvents.html \
+
 # OOP tests don't work on native-fennec (bug 774939).
 #
 # Both the "inproc" and "oop" versions of OpenMixedProcess open remote frames,
@@ -187,7 +190,6 @@ MOCHITEST_FILES += \
 		test_browserElement_oop_Iconchange.html \
 		test_browserElement_oop_GetScreenshot.html \
 		test_browserElement_oop_BadScreenshot.html \
-		test_browserElement_oop_KeyEvents.html \
 		test_browserElement_oop_XFrameOptions.html \
 		test_browserElement_oop_XFrameOptionsDeny.html \
 		test_browserElement_oop_XFrameOptionsSameOrigin.html \
