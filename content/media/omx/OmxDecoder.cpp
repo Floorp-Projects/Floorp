@@ -529,7 +529,14 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aTimeUs,
     }
 
     if (descriptor) {
-      aFrame->mGraphicBuffer = new mozilla::layers::VideoGraphicBuffer(this, mVideoBuffer, descriptor);
+      // Change the descriptor's size to video's size. There are cases that
+      // GraphicBuffer's size and actual video size is different.
+      // See Bug 850566.
+      const mozilla::layers::SurfaceDescriptorGralloc& grallocDesc = descriptor->get_SurfaceDescriptorGralloc();
+      mozilla::layers::SurfaceDescriptor newDescriptor = mozilla::layers::SurfaceDescriptorGralloc(grallocDesc.bufferParent(),
+                                                               grallocDesc.bufferChild(), nsIntSize(mVideoWidth, mVideoHeight), grallocDesc.external());
+
+      aFrame->mGraphicBuffer = new mozilla::layers::VideoGraphicBuffer(this, mVideoBuffer, &newDescriptor);
       aFrame->mRotation = mVideoRotation;
       aFrame->mTimeUs = timeUs;
       aFrame->mEndTimeUs = timeUs + durationUs;
