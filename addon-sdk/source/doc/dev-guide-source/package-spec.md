@@ -2,124 +2,221 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-# Package Specification #
+# package.json #
 
-A *package* is a directory that, at minimum, contains a JSON file
-called `package.json`. This file is also referred to as the
-*package manifest*.
+The "package.json" file contains metadata for your add-on.
 
-## The Package Manifest ##
+Some of its entries, such as [`icon`](dev-guide/package-spec.html#icon),
+[`name`](dev-guide/package-spec.html#name), and
+[`description`](dev-guide/package-spec.html#description), have
+direct analogues in the
+[install manifest](https://developer.mozilla.org/en-US/docs/Install_Manifests)
+format, and entries from package.json are written into the install
+manifest when the add-on is built using [`cfx xpi`](dev-guide/cfx-tool.html#cfx xpi).
+
+Others, such as
+[`lib`](dev-guide/package-spec.html#lib),
+[`permissions`](dev-guide/package-spec.html#permissions),
+and [`preferences`](dev-guide/package-spec.html#preferences),
+represent instructions to the cfx tool itself to generate and include
+particular code and data structures in your add-on.
+
+The `package.json` file is initially generated in your add-on's root
+directory the first time you run
+[`cfx init`](dev-guide/cfx-tool.html#cfx init). It looks like this
+(assuming the add-on's directory is "my-addon"):
+
+<pre>
+{
+  "name": "my-addon",
+  "fullName": "my-addon",
+  "description": "a basic add-on",
+  "author": "",
+  "license": "MPL 2.0",
+  "version": "0.1"
+}
+</pre>
 
 `package.json` may contain the following keys:
 
-* `name` - the name of the package. The package system will only load
-  one package with a given name. This name cannot contain spaces or periods.
-  The name defaults to the name of the parent directory. If the package is
-  ever built as an XPI and the `fullName` key is not present, this is
-  used as the add-on's `em:name` element in its `install.rdf`.
+<table>
 
-* `fullName` - the full name of the package. It can contain spaces. If
-  the package is ever built as an XPI, this is used as the add-on's
-  `em:name` element in its `install.rdf`.
+<colgroup>
+  <col width="20%"></col>
+  <col width="80%"></col>
+</colgroup>
 
-* `description` - a String describing the package. If the package is
-  ever built as an XPI, this is used as the add-on's
-  `em:description` element in its `install.rdf`.
+<tr>
+  <td id="author"><code>author</code></td>
+  <td><p>The original author of the package. Defaults to an empty string.
+  It may include a optional URL in parentheses and an email
+  address in angle brackets.</p>
+  <p>This value will be used as the add-on's
+  <a href="https://developer.mozilla.org/en-US/docs/Install_Manifests#creator"><code>em:creator</code></a>
+  element in its "install.rdf".</p></td>
+</tr>
 
-* `author` - the original author of the package. The author may be a
-  String including an optional URL in parentheses and optional email
-  address in angle brackets. If the package is ever built as an XPI,
-  this is used as the add-on's `em:creator` element in its
-  `install.rdf`.
+<tr>
+  <td id="contributors"><code>contributors</code></td>
+  <td><p>An array of additional <a href="dev-guide/package-spec.html#author"><code>author</code></a>
+  strings.</p>
+  <p>These values will be used as the add-on's
+  <a href="https://developer.mozilla.org/en-US/docs/Install_Manifests#contributor"><code>em:contributor</code></a>
+  elements in its "install.rdf".</p></td>
+</tr>
 
-* `translators` - an Array of Strings consisted of translators of the package.
+<tr>
+  <td id="dependencies"><code>dependencies</code></td>
+  <td><p>String or array of strings representing package
+  names that this add-on requires in order to function properly.</p></td>
+</tr>
 
-* `contributors` - may be an Array of additional author Strings.
+<tr>
+  <td id="description"><code>description</code></td>
+  <td><p>The add-on's description. This defaults to the text
+  <code>"a basic add-on"</code>.</p>
+  <p>This value will be used as the add-on's
+  <a href="https://developer.mozilla.org/en-US/docs/Install_Manifests#description"><code>em:description</code></a>
+  element in its "install.rdf".</p></td>
+</tr>
 
-* `homepage` - the URL of the package's website.
+<tr>
+  <td id="fullName"><code>fullName</code></td>
+  <td><p>The full name of the package. It can contain spaces.<p></p>
+  If this key is present its value will be used as the add-on's
+  <a href="https://developer.mozilla.org/en-US/docs/Install_Manifests#name"><code>em:name</code></a>
+  element in its "install.rdf".</p></td>
+</tr>
 
-* `icon` - the relative path from the root of the package to a
-  PNG file containing the icon for the package. By default, this
-  is `icon.png`. If the package is built as an XPI, this is used
-  as the add-on's icon to display in the Add-on Manager's add-ons list.
-  This key maps on to the
-  [`iconURL` entry in the Install Manifest](https://developer.mozilla.org/en/install_manifests#iconURL),
-  so the icon may be up to 48x48 pixels in size.
+<tr>
+  <td id="harnessClassID"><code>harnessClassID</code></td>
+  <td><p>String in the <a href="https://developer.mozilla.org/en-US/docs/Generating_GUIDs">GUID format</a>.</p>
+  <p>This is used as a
+  <a href="https://developer.mozilla.org/en-US/docs/Creating_XPCOM_Components/An_Overview_of_XPCOM#CID"><code>classID</code></a>
+  of the "harness service" XPCOM component. Defaults to a random GUID generated by <code>cfx</code>.</p></td>
+</tr>
 
-* `icon64` - the relative path from the root of the package to a
-  PNG file containing the icon64 for the package. By default, this
-  is `icon64.png`. If the package is built as an XPI, this is used
-  as the add-on's icon to display in the Addon Manager's add-on details view.
-  This key maps on to the
-  [`icon64URL` entry in the Install Manifest](https://developer.mozilla.org/en/install_manifests#icon64URL),
-  so the icon should be 64x64 pixels in size.
+<tr>
+  <td id="homepage"><code>homepage</code></td>
+  <td><p>The URL of the add-on's website.</p>
+  <p>This value will be used as the add-on's
+  <a href="https://developer.mozilla.org/en-US/docs/Install_Manifests#homepageURL"><code>em:homepageURL</code></a>
+  element in its "install.rdf".</p></td>
+</tr>
 
-* `preferences` - *experimental*
-  An array of JSON objects that use the following keys `name`, `type`, `value`,
-  `title`, and `description`.  These JSON objects will be used to automatically
-  create a preferences interface for the addon in the Add-ons Manager.
-  For more information see the documentation of [simple-prefs](modules/sdk/simple-prefs.html).
+<tr>
+  <td id="icon"><code>icon</code></td>
+  <td><p>The relative path from the root of the add-on to a
+  PNG file containing the icon for the add-on. Defaults to
+  <code>"icon.png"</code>.</p>
+  <p>This value will be used as the add-on's
+  <a href="https://developer.mozilla.org/en-US/docs/Install_Manifests#iconURL"><code>em:iconURL</code></a>
+  element in its "install.rdf".</p>
+  <p>The icon may be up to 48x48 pixels in size.</p></td>
+</tr>
 
-* `license` - the name of the license as a String, with an optional
-  URL in parentheses.
+<tr>
+  <td id="icon64"><code>icon64</code></td>
+  <td><p>The relative path from the root of the add-on to a
+  PNG file containing the large icon for the add-on. Defaults to
+  <code>"icon64.png"</code>.</p>
+  <p>This value will be used as the add-on's
+  <a href="https://developer.mozilla.org/en-US/docs/Install_Manifests#icon64URL"><code>em:icon64URL</code></a>
+  element in its "install.rdf".</p>
+  <p>The icon may be up to 64x64 pixels in size.</p></td>
+</tr>
 
-* `id` - a globally unique identifier for the package. When the package is
-   built as an XPI, this is used as the add-on's `em:id` element in its
-  `install.rdf`. See the
-  [Program ID page](dev-guide/guides/program-id.html).
+<tr>
+  <td id="id"><code>id</code></td>
+  <td><p>A globally unique identifier for the add-on.</p>
+  <p>This value will be used as the add-on's
+  <a href="https://developer.mozilla.org/en-US/docs/Install_Manifests#id"><code>em:id</code></a>
+  element in its "install.rdf".</p>
+  <p>See the <a href="dev-guide/guides/program-id.html">Program ID documentation</a>.</p></td>
+</tr>
 
-* `version` - a String representing the version of the package. If the
-  package is ever built as an XPI, this is used as the add-on's
-  `em:version` element in its `install.rdf`.
+<tr>
+  <td id="lib"><code>lib</code></td>
+  <td><p>String representing the top-level module directory provided in
+  this add-on. Defaults to <code>"lib"</code>.</p></td>
+</tr>
 
-* `dependencies` - a String or Array of Strings representing package
-  names that this package requires in order to function properly.
+<tr>
+  <td id="license"><code>license</code></td>
+  <td><p>The name of the license under which the add-on is distributed, with an optional
+  URL in parentheses. Defaults to <code>"MPL 2.0"</code>.</p></td>
+</tr>
 
-* `lib` - a String representing the top-level module directory provided in
-  this package. Defaults to `"lib"`.
-
-* `tests` - a String representing the top-level module directory containing
-  test suites for this package. Defaults to `"tests"`.
-
-* `packages` - a String or Array of Strings representing paths to
-  directories containing additional packages, defaults to
-  `"packages"`.
-
-* `main` - a String representing the name of a program module that is
+<tr>
+  <td id="main"><code>main</code></td>
+  <td><p>String representing the name of a program module that is
   located in one of the top-level module directories specified by
-  `lib`. Defaults to `"main"`.
+  <a href="dev-guide/package-spec.html#lib"><code>lib</code></a>.
+  Defaults to <code>"main"</code>.</p></td>
+</tr>
 
-* `harnessClassID` - a String in the GUID format:
-  `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`, where `x` represents a single
-  hexadecimal digit. It is used as a `classID` (CID) of the "harness service"
-  XPCOM component. Defaults to a random GUID generated by `cfx`.
+<tr>
+  <td id="name"><code>name</code></td>
+  <td><p>The add-on's name. This name cannot contain spaces or periods, and
+  defaults to the name of the parent directory.</p><p>When the add-on is
+  built as an XPI, if the <a href="dev-guide/package-spec.html#fullName"><code>fullName</code></a>
+  key is not present, <code>name</code> is used as the add-on's
+  <a href="https://developer.mozilla.org/en-US/docs/Install_Manifests#name"><code>em:name</code></a>
+  element in its "install.rdf".</p></td>
+</tr>
 
-* `permissions` - a set of permissions that the add-on needs.
-    * `private-browsing` - A Boolean indicating whether or not the
-      package supports private browsing.  If this value is not `true`
-      then the package will not see private windows.
+<tr>
+  <td id="packages"><code>packages</code></td>
+  <td><p>String or array of strings representing paths to
+  directories containing additional packages. Defaults to
+  <code>"packages"</code>.</p></td>
+</tr>
 
-## Documentation ##
+<tr>
+  <td id="permissions"><code>permissions</code></td>
+  <td><p>A set of permissions that the add-on needs.</p>
+    <p><strong><code>private-browsing</code></strong>: a boolean
+  indicating whether or not the
+  add-on supports private browsing. If this value is not <code>true</code>
+  or is omitted, then the add-on will not see any private windows or
+objects, such as tabs, that are associated with private windows. See the
+documentation for the
+<a href="modules/sdk/private-browsing.html"><code>private-browsing</code> module</a>.</p>
+  </td>
+</tr>
 
-A package may optionally contain a
-[Markdown](http://daringfireball.net/projects/markdown/)-formatted file
-called `README.md` in its root directory. Package-browsing tools may display
-this file to developers.
+<tr>
+  <td id="preferences"><code>preferences</code></td>
+  <td><p>An array of JSON objects that use the following keys:
+  <code>name</code>,<code>type</code>, <code>value</code>,
+  <code>title</code>, and <code>description</code>.  These JSON objects will be used to
+  create a preferences interface for the add-on in the Add-ons Manager.</p>
+  <p>See the documentation for the
+  <a href="modules/sdk/simple-prefs.html"><code>simple-prefs</code> module</a>.</p></td>
+</tr>
 
-Additionally, Markdown files can be placed in an optional `docs`
-directory. When package-browsing tools are asked to show the
-documentation for a module, they will look in this directory for a
-`.md` file with the module's name. Thus, for instance, if a user
-browses to a module at `lib/foo/bar.js`, the package-browsing tool
-will look for a file at `docs/foo/bar.js` to represent the module's
-API documentation.
+<tr>
+  <td id="tests"><code>tests</code></td>
+  <td><p>String representing the top-level module directory containing
+  test suites for this package. Defaults to <code>"tests"</code>.</p></td>
+</tr>
 
-## Data Resources ##
+<tr>
+  <td id="translators"><code>translators</code></td>
+  <td><p>An array of strings listing translators of this add-on.</p>
+  <p>These values will be used as the add-on's
+  <a href="https://developer.mozilla.org/en-US/docs/Install_Manifests#translator"><code>em:translator</code></a>
+  elements in its "install.rdf".</p></td>
+</tr>
 
-Packages may optionally contain a directory called `data` into which
-arbitrary files may be placed, such as images or text files. The
-URL for these resources may be reached using the
-[self](modules/sdk/self.html) module.
+<tr>
+  <td id="version"><code>version</code></td>
+  <td><p>String representing the version of the add-on. Defaults to
+  <code>"0.1"</code>.</p>
+  <p>This value will be used as the add-on's
+  <a href="https://developer.mozilla.org/en-US/docs/Install_Manifests#version"><code>em:version</code></a>
+  element in its "install.rdf".</p></td>
+</tr>
 
-  [Markdown]: http://daringfireball.net/projects/markdown/
-  [non-bootstrapped XUL extension]: #guide/xul-extensions
+</table>
+

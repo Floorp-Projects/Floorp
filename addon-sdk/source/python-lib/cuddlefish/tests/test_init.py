@@ -141,16 +141,15 @@ class TestInit(unittest.TestCase):
 
 class TestCfxQuits(unittest.TestCase):
 
-    def run_cfx(self, addon_name, command):
+    def run_cfx(self, addon_path, command):
         old_cwd = os.getcwd()
-        addon_path = os.path.join(tests_path,
-                                  "addons", addon_name)
         os.chdir(addon_path)
         import sys
         old_stdout = sys.stdout
         old_stderr = sys.stderr
         sys.stdout = out = StringIO()
         sys.stderr = err = StringIO()
+        rc = 0
         try:
             import cuddlefish
             args = list(command)
@@ -182,15 +181,43 @@ class TestCfxQuits(unittest.TestCase):
                                                   container)
             self.fail(standardMsg)
 
-    def test_run(self):
-        rc, out, err = self.run_cfx("simplest-test", ["run"])
+    def test_cfx_run(self):
+        addon_path = os.path.join(tests_path,
+                                  "addons", "simplest-test")
+        rc, out, err = self.run_cfx(addon_path, ["run"])
         self.assertEqual(rc, 0)
         self.assertIn("Program terminated successfully.", err)
 
-    def test_test(self):
-        rc, out, err = self.run_cfx("simplest-test", ["test"])
+    def test_cfx_test(self):
+        addon_path = os.path.join(tests_path,
+                                  "addons", "simplest-test")
+        rc, out, err = self.run_cfx(addon_path, ["test"])
         self.assertEqual(rc, 0)
         self.assertIn("1 of 1 tests passed.", err)
+        self.assertIn("Program terminated successfully.", err)
+
+    def test_cfx_init(self):
+        # Create an empty test directory
+        addon_path = os.path.abspath(os.path.join(".test_tmp", "test-cfx-init"))
+        if os.path.isdir(addon_path):
+            shutil.rmtree(addon_path)
+        os.makedirs(addon_path)
+
+        # Fake a call to cfx init
+        old_cwd = os.getcwd()
+        os.chdir(addon_path)
+        out, err = StringIO(), StringIO()
+        rc = initializer(None, ["init"], out, err)
+        os.chdir(old_cwd)
+        out, err = out.getvalue(), err.getvalue()
+        self.assertEqual(rc["result"], 0)
+        self.assertTrue("Have fun!" in out)
+        self.assertEqual(err,"")
+
+        # run cfx test
+        rc, out, err = self.run_cfx(addon_path, ["test"])
+        self.assertEqual(rc, 0)
+        self.assertIn("2 of 2 tests passed.", err)
         self.assertIn("Program terminated successfully.", err)
 
 
