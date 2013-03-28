@@ -366,32 +366,32 @@ class BaselineFrame
     // The reverseOffsetOf methods below compute the offset relative to the
     // frame's base pointer. Since the stack grows down, these offsets are
     // negative.
-    static size_t reverseOffsetOfFrameSize() {
-        return -BaselineFrame::Size() + offsetof(BaselineFrame, frameSize_);
+    static int reverseOffsetOfFrameSize() {
+        return -int(Size()) + offsetof(BaselineFrame, frameSize_);
     }
-    static size_t reverseOffsetOfScratchValue() {
-        return -BaselineFrame::Size() + offsetof(BaselineFrame, loScratchValue_);
+    static int reverseOffsetOfScratchValue() {
+        return -int(Size()) + offsetof(BaselineFrame, loScratchValue_);
     }
-    static size_t reverseOffsetOfScopeChain() {
-        return -BaselineFrame::Size() + offsetof(BaselineFrame, scopeChain_);
+    static int reverseOffsetOfScopeChain() {
+        return -int(Size()) + offsetof(BaselineFrame, scopeChain_);
     }
-    static size_t reverseOffsetOfBlockChain() {
-        return -BaselineFrame::Size() + offsetof(BaselineFrame, blockChain_);
+    static int reverseOffsetOfBlockChain() {
+        return -int(Size()) + offsetof(BaselineFrame, blockChain_);
     }
-    static size_t reverseOffsetOfArgsObj() {
-        return -BaselineFrame::Size() + offsetof(BaselineFrame, argsObj_);
+    static int reverseOffsetOfArgsObj() {
+        return -int(Size()) + offsetof(BaselineFrame, argsObj_);
     }
-    static size_t reverseOffsetOfFlags() {
-        return -BaselineFrame::Size() + offsetof(BaselineFrame, flags_);
+    static int reverseOffsetOfFlags() {
+        return -int(Size()) + offsetof(BaselineFrame, flags_);
     }
-    static size_t reverseOffsetOfEvalScript() {
-        return -BaselineFrame::Size() + offsetof(BaselineFrame, evalScript_);
+    static int reverseOffsetOfEvalScript() {
+        return -int(Size()) + offsetof(BaselineFrame, evalScript_);
     }
-    static size_t reverseOffsetOfReturnValue() {
-        return -BaselineFrame::Size() + offsetof(BaselineFrame, loReturnValue_);
+    static int reverseOffsetOfReturnValue() {
+        return -int(Size()) + offsetof(BaselineFrame, loReturnValue_);
     }
-    static size_t reverseOffsetOfLocal(size_t index) {
-        return -BaselineFrame::Size() - (index + 1) * sizeof(Value);
+    static int reverseOffsetOfLocal(size_t index) {
+        return -int(Size()) - (index + 1) * sizeof(Value);
     }
 };
 

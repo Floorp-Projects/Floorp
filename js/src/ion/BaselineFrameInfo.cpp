@@ -72,7 +72,7 @@ FrameInfo::numUnsyncedSlots()
     // Start at the bottom, find the first value that's not synced.
     uint32_t i = 0;
     for (; i < stackDepth(); i++) {
-        if (peek(-(i + 1))->kind() == StackValue::Stack)
+        if (peek(-int32_t(i + 1))->kind() == StackValue::Stack)
             break;
     }
     return i;
