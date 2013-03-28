@@ -12,8 +12,6 @@
 #include "mozilla/Util.h"
 #include "nsAutoJSValHolder.h"
 
-#include "prclist.h"
-
 #include "Events.h"
 #include "EventTarget.h"
 
@@ -21,11 +19,13 @@ using namespace mozilla::dom;
 using namespace mozilla;
 USING_WORKERS_NAMESPACE
 
+struct ListenerData;
+
 struct EventListenerManager::ListenerCollection :
   public LinkedListElement<EventListenerManager::ListenerCollection>
 {
   jsid mTypeId;
-  PRCList mListenerHead;
+  LinkedList<ListenerData> mListeners;
 
   static ListenerCollection*
   Add(JSContext* aCx, LinkedList<ListenerCollection>& aCollections, jsid aTypeId)
@@ -47,6 +47,7 @@ struct EventListenerManager::ListenerCollection :
   Remove(JSContext* aCx, ListenerCollection* aCollection)
   {
     aCollection->remove();
+    MOZ_ASSERT(aCollection->mListeners.isEmpty());
     JS_free(aCx, aCollection);
   }
 
@@ -54,20 +55,17 @@ private:
   ListenerCollection(jsid aTypeId)
     : mTypeId(aTypeId)
   {
-    PR_INIT_CLIST(&mListenerHead);
   }
 };
 
-namespace {
-
-struct ListenerData : PRCList
+struct ListenerData : LinkedListElement<ListenerData>
 {
   JSObject* mListener;
   EventListenerManager::Phase mPhase;
   bool mWantsUntrusted;
 
   static ListenerData*
-  Add(JSContext* aCx, ListenerData* aListenerDataHead, JSObject* aListener,
+  Add(JSContext* aCx, LinkedList<ListenerData>& aListeners, JSObject* aListener,
       EventListenerManager::Phase aPhase, bool aWantsUntrusted)
   {
     ListenerData* listenerData =
@@ -76,11 +74,8 @@ struct ListenerData : PRCList
       return NULL;
     }
 
-    PR_APPEND_LINK(listenerData, aListenerDataHead);
-
-    listenerData->mListener = aListener;
-    listenerData->mPhase = aPhase;
-    listenerData->mWantsUntrusted = aWantsUntrusted;
+    new (listenerData) ListenerData(aListener, aPhase, aWantsUntrusted);
+    aListeners.insertBack(listenerData);
     return listenerData;
   }
 
@@ -88,23 +83,23 @@ struct ListenerData : PRCList
   Remove(JSContext* aCx, ListenerData* aListenerData)
   {
     if (JS::IsIncrementalBarrierNeeded(aCx)) {
-      JS:: IncrementalObjectBarrier(aListenerData->mListener);
-  }
+      JS::IncrementalObjectBarrier(aListenerData->mListener);
+    }
 
-    PR_REMOVE_LINK(aListenerData);
+    aListenerData->remove();
     JS_free(aCx, aListenerData);
   }
+
+private:
+  ListenerData(JSObject* aListener, EventListenerManager::Phase aPhase,
+               bool aWantsUntrusted)
+    : mListener(aListener),
+      mPhase(aPhase),
+      mWantsUntrusted(aWantsUntrusted)
+  {}
 };
 
-inline void
-DestroyList(JSFreeOp* aFop, PRCList* aListHead)
-{
-  for (PRCList* elem = PR_NEXT_LINK(aListHead); elem != aListHead; ) {
-    PRCList* nextElem = PR_NEXT_LINK(elem);
-    JS_freeop(aFop, elem);
-    elem = nextElem;
-  }
-}
+namespace {
 
 template<typename T>
 inline void
@@ -186,11 +181,11 @@ EventListenerManager::TraceInternal(JSTracer* aTrc) const
        collection;
        collection = collection->getNext()) {
 
-    for (PRCList* listenerElem = PR_NEXT_LINK(&collection->mListenerHead);
-         listenerElem != &collection->mListenerHead;
-         listenerElem = PR_NEXT_LINK(listenerElem)) {
+    for (const ListenerData* listenerElem = collection->mListeners.getFirst();
+         listenerElem;
+         listenerElem = listenerElem->getNext()) {
       JS_CALL_OBJECT_TRACER(aTrc,
-                            static_cast<ListenerData*>(listenerElem)->mListener,
+                            listenerElem->mListener,
                             "EventListenerManager listener object");
     }
   }
@@ -204,7 +199,7 @@ EventListenerManager::FinalizeInternal(JSFreeOp* aFop)
   for (ListenerCollection* collection = mCollections.getFirst();
        collection;
        collection = collection->getNext()) {
-    DestroyList(aFop, &collection->mListenerHead);
+    DestroyList(aFop, collection->mListeners);
   }
 
   DestroyList(aFop, mCollections);
@@ -229,10 +224,9 @@ EventListenerManager::Add(JSContext* aCx, const jsid& aType,
     }
   }
 
-  for (PRCList* elem = PR_NEXT_LINK(&collection->mListenerHead);
-       elem != &collection->mListenerHead;
-       elem = PR_NEXT_LINK(elem)) {
-    ListenerData* listenerData = static_cast<ListenerData*>(elem);
+  for (ListenerData* listenerData = collection->mListeners.getFirst();
+       listenerData;
+       listenerData = listenerData->getNext()) {
     if (listenerData->mListener == aListener &&
         listenerData->mPhase == aPhase) {
       return;
@@ -240,8 +234,7 @@ EventListenerManager::Add(JSContext* aCx, const jsid& aType,
   }
 
   ListenerData* listenerData =
-    ListenerData::Add(aCx,
-                      static_cast<ListenerData*>(&collection->mListenerHead),
+    ListenerData::Add(aCx, collection->mListeners,
                       aListener, aPhase, aWantsUntrusted);
   if (!listenerData) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
@@ -259,14 +252,13 @@ EventListenerManager::Remove(JSContext* aCx, const jsid& aType,
   ListenerCollection* collection =
     GetCollectionForType(mCollections, aType);
   if (collection) {
-    for (PRCList* elem = PR_NEXT_LINK(&collection->mListenerHead);
-         elem != &collection->mListenerHead;
-         elem = PR_NEXT_LINK(elem)) {
-      ListenerData* listenerData = static_cast<ListenerData*>(elem);
+    for (ListenerData* listenerData = collection->mListeners.getFirst();
+         listenerData;
+         listenerData = listenerData->getNext()) {
       if (listenerData->mListener == aListener &&
           listenerData->mPhase == aPhase) {
         ListenerData::Remove(aCx, listenerData);
-        if (aClearEmpty && PR_CLIST_IS_EMPTY(&collection->mListenerHead)) {
+        if (aClearEmpty && collection->mListeners.isEmpty()) {
           ListenerCollection::Remove(aCx, collection);
         }
         break;
@@ -281,10 +273,9 @@ EventListenerManager::GetEventListener(const jsid& aType) const
   const ListenerCollection* collection =
     GetCollectionForType(mCollections, aType);
   if (collection) {
-    for (PRCList* elem = PR_PREV_LINK(&collection->mListenerHead);
-         elem != &collection->mListenerHead;
-         elem = PR_NEXT_LINK(elem)) {
-        ListenerData* listenerData = static_cast<ListenerData*>(elem);
+    for (const ListenerData* listenerData = collection->mListeners.getFirst();
+         listenerData;
+         listenerData = listenerData->getNext()) {
         if (listenerData->mPhase == Onfoo) {
           return listenerData->mListener;
       }
@@ -353,11 +344,9 @@ EventListenerManager::DispatchEvent(JSContext* aCx, const EventTarget& aTarget,
   //         the moment so we don't have much choice.
   js::Vector<nsAutoJSValHolder, 10, ContextAllocPolicy> listeners(ap);
 
-  for (PRCList* elem = PR_NEXT_LINK(&collection->mListenerHead);
-       elem != &collection->mListenerHead;
-       elem = PR_NEXT_LINK(elem)) {
-    ListenerData* listenerData = static_cast<ListenerData*>(elem);
-
+  for (ListenerData* listenerData = collection->mListeners.getFirst();
+       listenerData;
+       listenerData = listenerData->getNext()) {
     // Listeners that don't want untrusted events will be skipped if this is an
     // untrusted event.
     if (eventIsTrusted || listenerData->mWantsUntrusted) {
