@@ -61,6 +61,11 @@ CustomizeMode.prototype = {
 
     CustomizableUI.addListener(this);
 
+    // The menu panel is lazy, and registers itself when the popup shows. We
+    // need to force the menu panel to register itself, or else customization
+    // is really not going to work.
+    window.PanelUI.ensureRegistered();
+
     // Add a keypress listener to the tab-view-deck so that we can quickly
     // exit customization mode when pressing ESC
     let tabViewDeck = document.getElementById("tab-view-deck");
