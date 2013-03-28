@@ -99,6 +99,12 @@ function waitForEditorBlur(aEditor, aCallback)
   }, false);
 }
 
+function fireCopyEvent(element) {
+  let evt = element.ownerDocument.createEvent("Event");
+  evt.initEvent("copy", true, true);
+  element.dispatchEvent(evt);
+}
+
 function contextMenuClick(element) {
   var evt = element.ownerDocument.createEvent('MouseEvents');
 

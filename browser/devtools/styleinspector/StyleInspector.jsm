@@ -26,7 +26,7 @@ this.RuleViewTool = function RVT_RuleViewTool(aInspector, aWindow, aIFrame)
   this.doc = aWindow.document;
   this.outerIFrame = aIFrame;
 
-  this.view = new CssRuleView(this.doc);
+  this.view = new CssRuleView(this.doc, null);
   this.doc.documentElement.appendChild(this.view.element);
 
   this._changeHandler = function() {

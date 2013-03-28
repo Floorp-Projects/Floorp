@@ -7,14 +7,6 @@
   margin: 0;
 }
 
-body {
-  color: hsl(0,0%,50%);
-}
-
-.text {
-  color: black;
-}
-
 .newattr {
   cursor: pointer;
 }
@@ -41,12 +33,6 @@ li.container {
 
 .expander {
   position: absolute;
-  -moz-appearance: treetwisty;
-  padding: 11px 0;
-}
-
-.expander[expanded] {
-  -moz-appearance: treetwistyopen;
 }
 
 .more-nodes {

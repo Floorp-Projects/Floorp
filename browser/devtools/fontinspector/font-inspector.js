@@ -182,6 +182,7 @@ FontInspector.prototype = {
      *   <p contenteditable>Abc</p>
      */
     let extraCSS = "* {padding:0;margin:0}";
+    extraCSS += ".theme-dark {color: white}";
     extraCSS += "p {font-family: '" + name + "';}";
     extraCSS += "p {font-size: 40px;line-height:60px;padding:0 10px;margin:0;}";
     cssCode += extraCSS;
@@ -193,6 +194,8 @@ FontInspector.prototype = {
       // nightmare.
       doc.querySelector("base").href = base;
       doc.querySelector("style").textContent = cssCode;
+      // Forward theme
+      doc.documentElement.className = document.documentElement.className;
     }, true);
     iframe.src = src;
   },
