@@ -10,12 +10,11 @@ interface nsIDOMDOMRequest;
 interface nsIDOMBlob;
 interface nsIDOMBluetoothDevice;
 
-[scriptable, builtinclass, uuid(6a4a9415-cda3-4a19-b79e-05d9bc2c2700)]
+[scriptable, builtinclass, uuid(b0e7117a-25e3-4ea0-9cf4-3f8cd85f9e7a)]
 interface nsIDOMBluetoothAdapter : nsIDOMEventTarget
 {
   readonly attribute DOMString address;
   [binaryname(AdapterClass)] readonly attribute unsigned long class;
-  readonly attribute bool enabled;
   readonly attribute bool discovering;
 
   [implicit_jscontext]
@@ -60,16 +59,4 @@ interface nsIDOMBluetoothAdapter : nsIDOMEventTarget
 
   // Fired when discoverying and any device is discovered.
   [implicit_jscontext] attribute jsval ondevicefound;
-  // Fired when any device is out of discoverable range.
-  [implicit_jscontext] attribute jsval ondevicedisappeared;
-  // Fired when any device is created.
-  [implicit_jscontext] attribute jsval ondevicecreated;
-  // Fired when a property of the adapter is changed
-  [implicit_jscontext] attribute jsval onpropertychanged;
-  // Pairing related events
-  [implicit_jscontext] attribute jsval onrequestconfirmation;
-  [implicit_jscontext] attribute jsval onrequestpincode;
-  [implicit_jscontext] attribute jsval onrequestpasskey;
-  [implicit_jscontext] attribute jsval onauthorize;
-  [implicit_jscontext] attribute jsval oncancel;
 };
