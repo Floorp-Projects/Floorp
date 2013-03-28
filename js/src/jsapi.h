@@ -2628,8 +2628,24 @@ JS_SetFinalizeCallback(JSRuntime *rt, JSFinalizeCallback cb);
 extern JS_PUBLIC_API(JSBool)
 JS_IsGCMarkingTracer(JSTracer *trc);
 
+/*
+ * JS_IsAboutToBeFinalized checks if the given object is going to be finalized
+ * at the end of the current GC. When called outside of the context of a GC,
+ * this function will return false. Typically this function is used on weak
+ * references, where the reference should be nulled out or destroyed if the
+ * given object is about to be finalized.
+ *
+ * The argument to JS_IsAboutToBeFinalized is an in-out param: when the
+ * function returns false, the object being referenced is still alive, but the
+ * garbage collector might have moved it. In this case, the reference passed
+ * to JS_IsAboutToBeFinalized will be updated to the object's new location.
+ * Callers of this method are responsible for updating any state that is
+ * dependent on the object's address. For example, if the object's address is
+ * used as a key in a hashtable, then the object must be removed and
+ * re-inserted with the correct hash.
+ */
 extern JS_PUBLIC_API(JSBool)
-JS_IsAboutToBeFinalized(void *thing);
+JS_IsAboutToBeFinalized(JSObject **obj);
 
 typedef enum JSGCParamKey {
     /* Maximum nominal heap before last ditch GC. */
