@@ -438,7 +438,7 @@ abstract public class BrowserApp extends GeckoApp
         LinearLayout actionBar = (LinearLayout) getActionBarLayout();
         mMainLayout.addView(actionBar, 2);
 
-        ((GeckoApp.MainLayout) mMainLayout).setOnInterceptTouchListener(new HideTabsTouchListener());
+        ((GeckoApp.MainLayout) mMainLayout).setTouchEventInterceptor(new HideTabsTouchListener());
 
         mBrowserToolbar = new BrowserToolbar(this);
         mBrowserToolbar.from(actionBar);
@@ -1171,7 +1171,7 @@ abstract public class BrowserApp extends GeckoApp
         }
     }
 
-    private class HideTabsTouchListener implements OnInterceptTouchListener {
+    private class HideTabsTouchListener implements TouchEventInterceptor {
         private boolean mIsHidingTabs = false;
 
         @Override
