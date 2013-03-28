@@ -194,6 +194,10 @@ MOCHITEST_FILES += \
 		test_browserElement_oop_XFrameOptionsDeny.html \
 		test_browserElement_oop_XFrameOptionsSameOrigin.html \
 		test_browserElement_oop_XFrameOptionsAllowFrom.html \
+		test_browserElement_oop_SendEvent.html \
+		test_browserElement_oop_SetVisible.html \
+		test_browserElement_oop_SetVisibleFrames.html \
+		test_browserElement_oop_SetVisibleFrames2.html \
 		test_browserElement_oop_FirstPaint.html \
 		test_browserElement_oop_Alert.html \
 		test_browserElement_oop_AlertInFrame.html \
@@ -227,20 +231,6 @@ MOCHITEST_FILES += \
 		test_browserElement_oop_PurgeHistory.html \
 		test_browserElement_oop_DocumentFirstPaint.html \
 	$(NULL)
-
-# Disabled on Linux temporarily due to bug 779753
-# test_browserElement_oop_SendEvent.html
-# test_browserElement_oop_SetVisible.html
-# test_browserElement_oop_SetVisibleFrames.html
-# test_browserElement_oop_SetVisibleFrames2.html
-ifneq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-MOCHITEST_FILES += \
-		test_browserElement_oop_SendEvent.html \
-		test_browserElement_oop_SetVisible.html \
-		test_browserElement_oop_SetVisibleFrames.html \
-		test_browserElement_oop_SetVisibleFrames2.html \
-		$(NULL)
-endif
 
 endif #}
 
