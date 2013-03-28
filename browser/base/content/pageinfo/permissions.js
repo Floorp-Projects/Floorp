@@ -302,7 +302,7 @@ function initPluginsRow() {
     let mimeTypes = aTag.getMimeTypes();
     if (mimeTypes.length < 1)
       return false;
-    let mimeType = mimeTypes[0].type;
+    let mimeType = mimeTypes[0];
     return (!aTag.disabled && pluginHost.isPluginClickToPlayForType(mimeType));
   });
 
@@ -314,7 +314,7 @@ function initPluginsRow() {
 
   let permissionEntries = [];
   for (let plugin of tags) {
-    let mimeType = plugin.getMimeTypes()[0].type;
+    let mimeType = plugin.getMimeTypes()[0];
     let permString = pluginHost.getPermissionStringForType(mimeType);
     let pluginName = makeNicePluginName(plugin.name)
     let permEntry = fillInPluginPermissionTemplate(pluginName, permString);
