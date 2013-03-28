@@ -207,7 +207,12 @@ ion::ParallelAbort(JSScript *script)
 
     ForkJoinSlice *slice = ForkJoinSlice::Current();
 
-    Spew(SpewBailouts, "Parallel abort in %p:%s:%d", script, script->filename(), script->lineno);
+    Spew(SpewBailouts, "Parallel abort in %p:%s:%d (hasParallelIonScript:%d)",
+         script, script->filename(), script->lineno,
+         script->hasParallelIonScript());
+
+    // Otherwise what the heck are we executing?
+    JS_ASSERT(script->hasParallelIonScript());
 
     if (!slice->abortedScript)
         slice->abortedScript = script;
