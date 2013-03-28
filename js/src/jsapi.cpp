@@ -2907,12 +2907,9 @@ JS_SetFinalizeCallback(JSRuntime *rt, JSFinalizeCallback cb)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_IsAboutToBeFinalized(void *thing)
+JS_IsAboutToBeFinalized(JSObject **obj)
 {
-    gc::Cell *t = static_cast<gc::Cell *>(thing);
-    bool isDying = IsCellAboutToBeFinalized(&t);
-    JS_ASSERT(t == thing);
-    return isDying;
+    return IsObjectAboutToBeFinalized(obj);
 }
 
 JS_PUBLIC_API(void)
