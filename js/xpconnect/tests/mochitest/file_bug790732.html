@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+function testShim() {
+
+  // Basic stuff
+  ok(Components, "Components shim exists!");
+  var Ci = Components.interfaces;
+  ok(Ci, "interfaces shim exists!");
+  is(typeof Components.classes, 'undefined', "Shouldn't have a Cc");
+
+  // Check each interface that we shim. We start by checking specific
+  // constants for a couple of interfaces, and then once it's pretty clear that
+  // it's working as intended we just check that the objects themselves are the
+  // same.
+  is(Ci.nsIDOMFileReader.DONE, FileReader.DONE);
+  is(Ci.nsIXMLHttpRequest.HEADERS_RECEIVED, XMLHttpRequest.HEADERS_RECEIVED);
+  is(Ci.nsIDOMDOMException.DATA_CLONE_ERR, DOMException.DATA_CLONE_ERR);
+  is(Ci.nsIDOMNode.DOCUMENT_NODE, Node.DOCUMENT_NODE);
+  is(Ci.nsIDOMUserDataHandler.NODE_CLONED, UserDataHandler.NODE_CLONED);
+  is(Ci.nsIDOMCSSPrimitiveValue.CSS_PX, CSSPrimitiveValue.CSS_PX);
+  is(Ci.nsIDOMCSSRule.NAMESPACE_RULE, CSSRule.NAMESPACE_RULE);
+  is(Ci.nsIDOMCSSValue.CSS_PRIMITIVE_VALUE, CSSValue.CSS_PRIMITIVE_VALUE);
+  is(Ci.nsIDOMEvent.FOCUS, Event.FOCUS);
+  is(Ci.nsIDOMNSEvent.CLICK, Event.CLICK);
+  is(Ci.nsIDOMKeyEvent, KeyEvent);
+  is(Ci.nsIDOMMouseEvent, MouseEvent);
+  is(Ci.nsIDOMMouseScrollEvent, MouseScrollEvent);
+  is(Ci.nsIDOMMutationEvent, MutationEvent);
+  is(Ci.nsIDOMSimpleGestureEvent, SimpleGestureEvent);
+  is(Ci.nsIDOMUIEvent, UIEvent);
+  is(Ci.nsIDOMGeoPositionError, GeoPositionError);
+  is(Ci.nsIDOMHTMLMediaElement, HTMLMediaElement);
+  is(Ci.nsIDOMMediaError, MediaError);
+  is(Ci.nsIDOMLoadStatus, LoadStatus);
+  is(Ci.nsIDOMOfflineResourceList, OfflineResourceList);
+  is(Ci.nsIDOMRange, Range);
+  is(Ci.nsIDOMSVGFETurbulenceElement, SVGFETurbulenceElement);
+  is(Ci.nsIDOMSVGFEMorphologyElement, SVGFEMorphologyElement);
+  is(Ci.nsIDOMSVGFEConvolveMatrixElement, SVGFEConvolveMatrixElement);
+  is(Ci.nsIDOMSVGFEDisplacementMapElement, SVGFEDisplacementMapElement);
+  is(Ci.nsIDOMSVGLength, SVGLength);
+  is(Ci.nsIDOMSVGUnitTypes, SVGUnitTypes);
+  is(Ci.nsIDOMNodeFilter, NodeFilter);
+  is(Ci.nsIDOMXPathNamespace, XPathNamespace);
+  is(Ci.nsIDOMXPathResult, XPathResult);
+  is(Ci.nsIDOMXULButtonElement, XULButtonElement);
+  is(Ci.nsIDOMXULCheckboxElement, XULCheckboxElement);
+  is(Ci.nsIDOMXULPopupElement, XULPopupElement);
+}
+</script>
+</head>
+<body>
+</body>
+</html>

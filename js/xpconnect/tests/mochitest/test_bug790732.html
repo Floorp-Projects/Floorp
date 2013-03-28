@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=790732
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 790732</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for the Components shim. We split into two files because this stuff
+      is currently pref-controlled. **/
+  SimpleTest.waitForExplicitFinish();
+
+  function prepare() {
+    SpecialPowers.pushPrefEnv({set: [['dom.omit_components_in_content', true]]},
+                              function () { $('ifr').onload = go;
+                                            $('ifr').contentWindow.location =
+                                              '/tests/js/xpconnect/tests/mochitest/file_bug790732.html'; }
+                             );
+  }
+
+  function go() {
+    ok(true, "Started test");
+    var iwin = $('ifr').contentWindow;
+    iwin.ok = ok;
+    iwin.is = is;
+    iwin.testShim();
+    SimpleTest.finish();
+  }
+
+  </script>
+</head>
+<body onload="prepare()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=790732">Mozilla Bug 790732</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+<iframe id="ifr"></iframe>
+</body>
+</html>
