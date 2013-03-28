@@ -1,0 +1,26 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH = @DEPTH@
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/rules.mk
+
+MOCHITEST_PROFILE_FILES = \
+  prefs_general.js \
+  prefs_b2g_unittest.js \
+  webapps_mochitest.json \
+  $(NULL)
+
+_DEST_DIR = $(DEPTH)/_tests/testing/mochitest/profile_data
+libs:: $(MOCHITEST_PROFILE_FILES)
+	$(PYTHON) $(topsrcdir)/config/nsinstall.py $^ $(_DEST_DIR)
+
+stage-package: PKG_STAGE = $(DIST)/test-package-stage
+stage-package:
+	$(NSINSTALL) -D $(PKG_STAGE)/
+	@(cd $(srcdir) && tar $(TAR_CREATE_FLAGS) - $(MOCHITEST_PROFILE_FILES)) | (cd $(PKG_STAGE)/mochitest/profile_data && tar -xf -)
