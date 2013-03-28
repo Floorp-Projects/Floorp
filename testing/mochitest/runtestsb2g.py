@@ -10,7 +10,13 @@ import tempfile
 import threading
 import traceback
 
-sys.path.insert(0, os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0]))))
+try:
+    import json
+except ImportError:
+    import simplejson as json
+
+here = os.path.abspath(os.path.dirname(sys.argv[0]))
+sys.path.insert(0, here)
 
 from automation import Automation
 from b2gautomation import B2GRemoteAutomation, B2GDesktopAutomation
@@ -18,21 +24,34 @@ from runtests import Mochitest
 from runtests import MochitestOptions
 from runtests import MochitestServer
 
-from mozdevice import DeviceManagerADB, DMError
 from marionette import Marionette
 
+from mozdevice import DeviceManagerADB, DMError
+from mozprofile import Profile, Preferences
 
-class B2GMochitestMixin(object):
+class B2GMochitest(Mochitest):
+    def __init__(self, automation, OOP=True, profile_data_dir=None,
+                    locations=os.path.join(here, 'server-locations.txt')):
+        Mochitest.__init__(self, automation)
+        self.OOP = OOP
+        self.locations = locations
+        self.preferences = []
+        self.webapps = None
 
-    def setupCommonOptions(self, options, OOP=True):
+        if profile_data_dir:
+            self.preferences = [os.path.join(profile_data_dir, f)
+                                 for f in os.listdir(profile_data_dir) if f.startswith('pref')]
+            self.webapps = [os.path.join(profile_data_dir, f)
+                             for f in os.listdir(profile_data_dir) if f.startswith('webapp')]
+
+    def setupCommonOptions(self, options):
         # set the testURL
         testURL = self.buildTestPath(options)
         if len(self.urlOpts) > 0:
             testURL += "?" + "&".join(self.urlOpts)
         self.automation.testURL = testURL
 
-        if OOP:
-            OOP_pref = "true"
+        if self.OOP:
             OOP_script = """
 let specialpowers = {};
 let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader);
@@ -53,7 +72,6 @@ mm.loadFrameScript(CHILD_SCRIPT, true);
 specialPowersObserver._isFrameScriptLoaded = true;
 """
         else:
-            OOP_pref = "false"
             OOP_script = ""
 
         # Execute this script on start up: loads special powers and sets
@@ -72,18 +90,35 @@ container.setAttribute('mozapp', 'http://mochi.test:8888/manifest.webapp');
 container.src = '%s';
 """ % (OOP_script, testURL)
 
-        # Set extra prefs for B2G.
-        f = open(os.path.join(options.profilePath, "user.js"), "a")
-        f.write("""
-user_pref("browser.homescreenURL","app://test-container.gaiamobile.org/index.html");
-user_pref("browser.manifestURL","app://test-container.gaiamobile.org/manifest.webapp");
-user_pref("dom.mozBrowserFramesEnabled", %s);
-user_pref("dom.ipc.tabs.disabled", false);
-user_pref("dom.ipc.browser_frames.oop_by_default", false);
-user_pref("dom.mozBrowserFramesWhitelist","app://test-container.gaiamobile.org,http://mochi.test:8888");
-user_pref("marionette.force-local", true);
-""" % OOP_pref)
-        f.close()
+    def buildProfile(self, options):
+        # preferences
+        prefs = {}
+        for path in self.preferences:
+            prefs.update(Preferences.read_prefs(path))
+
+        for v in options.extraPrefs:
+            thispref = v.split("=", 1)
+            if len(thispref) < 2:
+                print "Error: syntax error in --setpref=" + v
+                sys.exit(1)
+            prefs[thispref[0]] = thispref[1]
+
+        # interpolate the preferences
+        interpolation = { "server": "%s:%s" % (options.webServer, options.httpPort),
+                          "OOP": "true" if self.OOP else "false" }
+        prefs = json.loads(json.dumps(prefs) % interpolation)
+
+        self.profile = Profile(addons=self.getExtensionsToInstall(options),
+                               apps=self.webapps,
+                               locations=self.locations,
+                               preferences=prefs,
+                               proxy={"remote": options.webServer})
+
+        options.profilePath = self.profile.profile
+        # TODO bug 839108 - mozprofile should probably handle this
+        manifest = self.addChromeToProfile(options)
+        self.copyExtraFilesToProfile(options)
+        return manifest
 
 
 class B2GOptions(MochitestOptions):
@@ -183,6 +218,11 @@ class B2GOptions(MochitestOptions):
                         type='string', dest='busybox',
                         help="Path to busybox binary to install on device")
         defaults['busybox'] = None
+        self.add_option('--profile-data-dir', action='store',
+                        type='string', dest='profile_data_dir',
+                        help="Path to a directory containing preference and other "
+                        "data to be installed into the profile")
+        defaults['profile_data_dir'] = os.path.join(here, 'profile_data')
 
         defaults["remoteTestRoot"] = "/data/local/tests"
         defaults["logFile"] = "mochitest.log"
@@ -287,15 +327,14 @@ class ProfileConfigParser(ConfigParser.RawConfigParser):
             fp.write("\n")
 
 
-class B2GMochitest(Mochitest, B2GMochitestMixin):
+class B2GDeviceMochitest(B2GMochitest):
 
     _automation = None
     _dm = None
-    localProfile = None
 
     def __init__(self, automation, devmgr, options):
         self._automation = automation
-        Mochitest.__init__(self, self._automation)
+        B2GMochitest.__init__(self, automation, OOP=True, profile_data_dir=options.profile_data_dir)
         self._dm = devmgr
         self.runSSLTunnel = False
         self.remoteProfile = options.remoteTestRoot + '/profile'
@@ -426,18 +465,6 @@ class B2GMochitest(Mochitest, B2GMochitestMixin):
         if hasattr(self, 'server'):
             self.server.stop()
 
-    def buildProfile(self, options):
-        if self.localProfile:
-            options.profilePath = self.localProfile
-        manifest = Mochitest.buildProfile(self, options)
-        self.localProfile = options.profilePath
-
-        # Profile isn't actually copied to device until
-        # buildURLOptions is called.
-
-        options.profilePath = self.remoteProfile
-        return manifest
-
     def updateProfilesIni(self, profilePath):
         # update profiles.ini on the device to point to the test profile
         self.originalProfilesIni = tempfile.mktemp()
@@ -466,7 +493,7 @@ class B2GMochitest(Mochitest, B2GMochitestMixin):
     def buildURLOptions(self, options, env):
         self.localLog = options.logFile
         options.logFile = self.remoteLog
-        options.profilePath = self.localProfile
+        options.profilePath = self.profile.profile
         retVal = Mochitest.buildURLOptions(self, options, env)
 
         self.setupCommonOptions(options)
@@ -503,11 +530,10 @@ class B2GMochitest(Mochitest, B2GMochitestMixin):
         return retVal
 
 
-class B2GDesktopMochitest(Mochitest, B2GMochitestMixin):
+class B2GDesktopMochitest(B2GMochitest):
 
-    def __init__(self, automation):
-        #self._automation = automation
-        Mochitest.__init__(self, automation)
+    def __init__(self, automation, options):
+        B2GMochitest.__init__(self, automation, OOP=False, profile_data_dir=options.profile_data_dir)
 
     def runMarionetteScript(self, marionette, test_script):
         assert(marionette.wait_for_port())
@@ -527,7 +553,7 @@ class B2GDesktopMochitest(Mochitest, B2GMochitestMixin):
     def buildURLOptions(self, options, env):
         retVal = Mochitest.buildURLOptions(self, options, env)
 
-        self.setupCommonOptions(options, OOP=False)
+        self.setupCommonOptions(options)
 
         # Copy the extensions to the B2G bundles dir.
         extensionDir = os.path.join(options.profilePath, 'extensions', 'staged')
@@ -540,16 +566,6 @@ class B2GDesktopMochitest(Mochitest, B2GMochitestMixin):
                             os.path.join(bundlesDir, filename))
 
         return retVal
-
-    def buildProfile(self, options):
-        self.automation.initializeProfile(options.profilePath,
-                                          options.extraPrefs,
-                                          useServerLocations=True,
-                                          initialProfile=options.profile)
-        manifest = self.addChromeToProfile(options)
-        self.copyExtraFilesToProfile(options)
-        self.installExtensionsToProfile(options)
-        return manifest
 
 
 def run_remote_mochitests(automation, parser, options):
@@ -597,7 +613,7 @@ def run_remote_mochitests(automation, parser, options):
 
     automation.setProduct("b2g")
 
-    mochitest = B2GMochitest(automation, dm, options)
+    mochitest = B2GDeviceMochitest(automation, dm, options)
 
     options = parser.verifyOptions(options, mochitest)
     if (options == None):
@@ -637,7 +653,7 @@ def run_desktop_mochitests(parser, options):
     marionette = Marionette.getMarionetteOrExit(**kwargs)
     automation.marionette = marionette
 
-    mochitest = B2GDesktopMochitest(automation)
+    mochitest = B2GDesktopMochitest(automation, options)
 
     # b2g desktop builds don't always have a b2g-bin file
     if options.app[-4:] == '-bin':
