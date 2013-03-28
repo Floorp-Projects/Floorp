@@ -6,7 +6,6 @@
 #ifndef mozilla_dom_SVGClipPathElement_h
 #define mozilla_dom_SVGClipPathElement_h
 
-#include "nsIDOMSVGUnitTypes.h"
 #include "nsSVGEnum.h"
 #include "mozilla/dom/SVGTransformableElement.h"
 
@@ -20,8 +19,7 @@ namespace dom {
 
 typedef SVGTransformableElement SVGClipPathElementBase;
 
-class SVGClipPathElement MOZ_FINAL : public SVGClipPathElementBase,
-                                     public nsIDOMSVGUnitTypes
+class SVGClipPathElement MOZ_FINAL : public SVGClipPathElementBase
 {
   friend class ::nsSVGClipPathFrame;
 

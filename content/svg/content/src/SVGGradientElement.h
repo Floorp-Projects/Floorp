@@ -6,7 +6,6 @@
 #ifndef __NS_SVGGRADIENTELEMENT_H__
 #define __NS_SVGGRADIENTELEMENT_H__
 
-#include "nsIDOMSVGUnitTypes.h"
 #include "nsSVGElement.h"
 #include "nsSVGLength2.h"
 #include "nsSVGEnum.h"
@@ -40,7 +39,6 @@ namespace dom {
 typedef nsSVGElement SVGGradientElementBase;
 
 class SVGGradientElement : public SVGGradientElementBase
-                         , public nsIDOMSVGUnitTypes
 {
   friend class ::nsSVGGradientFrame;
 
