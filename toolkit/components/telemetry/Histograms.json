@@ -2906,6 +2906,10 @@
     "kind": "flag",
     "description": "Whether content ever accesed Components.interfaces in this session"
   },
+  "COMPONENTS_SHIM_ACCESSED_BY_CONTENT": {
+    "kind": "flag",
+    "description": "Whether content ever accesed the Components shim in this session"
+  },
   "CHECK_ADDONS_MODIFIED_MS": {
     "kind": "exponential",
     "high": "5000",
