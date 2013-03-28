@@ -81,10 +81,10 @@ public class AboutHomeSection extends GeckoLinearLayout {
 
     public void addItem(View item) {
         mItemsContainer.addView(item);
-        
+
         Divider divider = new Divider(getContext(), null);
         divider.setBackgroundColor(0x3460666E);
-        
+
         mItemsContainer.addView(divider);
     }
 
