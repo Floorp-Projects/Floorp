@@ -840,7 +840,14 @@ public:
    * (not chrome) document, the topmost content document has a root scrollframe
    * with a displayport, but the layer does not move when that displayport scrolls.
    */
-  void SetIsFixedPosition(bool aFixedPosition) { mIsFixedPosition = aFixedPosition; }
+  void SetIsFixedPosition(bool aFixedPosition)
+  {
+    if (mIsFixedPosition != aFixedPosition) {
+      MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) IsFixedPosition", this));
+      mIsFixedPosition = aFixedPosition;
+      Mutated();
+    }
+  }
 
   // Call AddAnimation to add a new animation to this layer from layout code.
   // Caller must add segments to the returned animation.
@@ -861,7 +868,14 @@ public:
    * same position when compositing the layer tree with a transformation
    * (such as when asynchronously scrolling and zooming).
    */
-  void SetFixedPositionAnchor(const gfxPoint& aAnchor) { mAnchor = aAnchor; }
+  void SetFixedPositionAnchor(const gfxPoint& aAnchor)
+  {
+    if (mAnchor != aAnchor) {
+      MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) FixedPositionAnchor", this));
+      mAnchor = aAnchor;
+      Mutated();
+    }
+  }
 
   /**
    * CONSTRUCTION PHASE ONLY
@@ -871,7 +885,14 @@ public:
    * margins by reconciling the difference between this value and a value that
    * is updated more frequently.
    */
-  void SetFixedPositionMargins(const gfx::Margin& aMargins) { mMargins = aMargins; }
+  void SetFixedPositionMargins(const gfx::Margin& aMargins)
+  {
+    if (mMargins != aMargins) {
+      MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) FixedPositionMargins", this));
+      mMargins = aMargins;
+      Mutated();
+    }
+  }
 
   // These getters can be used anytime.
   float GetOpacity() { return mOpacity; }
@@ -1538,7 +1559,11 @@ public:
    */
   virtual void SetColor(const gfxRGBA& aColor)
   {
-    mColor = aColor;
+    if (mColor != aColor) {
+      MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) Color", this));
+      mColor = aColor;
+      Mutated();
+    }
   }
 
   // This getter can be used anytime.
@@ -1668,7 +1693,14 @@ public:
    * CONSTRUCTION PHASE ONLY
    * Set the filter used to resample this image (if necessary).
    */
-  void SetFilter(gfxPattern::GraphicsFilter aFilter) { mFilter = aFilter; }
+  void SetFilter(gfxPattern::GraphicsFilter aFilter)
+  {
+    if (mFilter != aFilter) {
+      MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) Filter", this));
+      mFilter = aFilter;
+      Mutated();
+    }
+  }
   gfxPattern::GraphicsFilter GetFilter() const { return mFilter; }
 
   MOZ_LAYER_DECL_NAME("CanvasLayer", TYPE_CANVAS)
