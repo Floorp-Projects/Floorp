@@ -27,14 +27,6 @@
   -  displayed. -->
 <!ENTITY noPropertiesFound     "No CSS properties found.">
 
-<!-- LOCALIZATION NOTE (bestMatch, matched, parentMatch): For each style
-  -  property the panel shows the rules containing that property. For every
-  -  rule, the rule status is also displayed: a rule can be the best match, a
-  -  match or a parent match. -->
-<!ENTITY bestMatch             "Best Match">
-<!ENTITY matched               "Matched">
-<!ENTITY parentMatch           "Parent Match">
-
 <!-- FIXME: notes -->
 <!ENTITY computedViewTitle     "Computed">
 <!ENTITY ruleViewTitle         "Rules">

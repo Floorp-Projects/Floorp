@@ -1,0 +1,157 @@
+/* vim:set ts=2 sw=2 sts=2 et: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+* {
+  -moz-box-sizing: border-box;
+}
+
+:root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  display : flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+#propertyContainer {
+  -moz-user-select: text;
+  overflow: auto;
+  min-height: 0;
+  flex: 1;
+}
+
+.property-view-hidden,
+.property-content-hidden {
+  display: none;
+}
+
+.property-view {
+  clear: both;
+  padding: 2px 0 2px 17px;
+}
+
+.property-view > * {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.property-name {
+  width: 50%;
+  overflow-x: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.property-value {
+  width: 50%;
+  max-width: 100%;
+  overflow-x: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background-image: url(arrow-e.png);
+  background-repeat: no-repeat;
+  background-size: 5px 8px;
+  background-position: 2px center;
+  padding-left: 10px;
+}
+
+.other-property-value {
+  background-image: url(arrow-e.png);
+  background-repeat: no-repeat;
+  background-size: 5px 8px;
+  background-position: left center;
+  padding-left: 8px;
+}
+
+@media (min-width: 400px) {
+  .property-name {
+    width: 200px;
+  }
+  .property-value {
+    width: auto;
+  }
+}
+
+.property-content {
+  padding-left: 17px;
+}
+
+/* From skin */
+.helplink {
+  /* FIXME: remove this image 
+  background-image: url("chrome://browser/skin/devtools/goto-mdn.png");
+  */
+}
+
+.expander {
+  visibility: hidden;
+  margin-left: -12px!important;
+}
+
+.expander[open] {
+  margin-left: -17px!important;
+}
+
+.expandable {
+  visibility: visible;
+}
+
+.match {
+  visibility: hidden;
+}
+
+.matchedselectors > p {
+  clear: both;
+  margin: 0 2px 0 0;
+  padding: 2px;
+  overflow-x: hidden;
+  border-style: dotted;
+  border-color: rgba(128,128,128,0.4);
+  border-width: 1px 1px 0 1px;
+}
+
+.matchedselectors > p:last-of-type {
+  border-bottom-width: 1px;
+}
+
+/* This rule is necessary because Templater.jsm breaks LTR TDs in RTL docs */
+.rule-text {
+  direction: ltr;
+}
+
+.matched {
+  text-decoration: line-through;
+}
+
+.parentmatch {
+  opacity: 0.5;
+}
+
+#noResults {
+  font-size: 110%;
+  margin: 5px;
+  text-align: center;
+}
+
+.onlyuserstyles {
+  cursor: pointer;
+}
+
+.legendKey {
+  margin: 0 5px;
+}
+
+.devtools-toolbar {
+  width: 100%;
+}
+
+.link {
+  padding: 0 3px;
+  cursor: pointer;
+  float: right;
+}

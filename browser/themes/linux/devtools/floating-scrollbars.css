@@ -10,21 +10,21 @@ scrollbar {
 }
 
 scrollbar[orient="vertical"] {
-  -moz-margin-start: -8px;
-  min-width: 8px;
-  max-width: 8px;
+  -moz-margin-start: -10px;
+  min-width: 10px;
+  max-width: 10px;
 }
 
 scrollbar[orient="horizontal"] {
-  margin-top: -8px;
-  min-height: 8px;
-  max-height: 8px;
+  margin-top: -10px;
+  min-height: 10px;
+  max-height: 10px;
 }
 
 scrollbar thumb {
   -moz-appearance: none !important;
   border-width: 0px !important;
-  background-color: rgba(0,0,0,0.2) !important;
+  background-color: rgba(170,170,170,0.2) !important;
   border-radius: 3px !important;
 }
 
