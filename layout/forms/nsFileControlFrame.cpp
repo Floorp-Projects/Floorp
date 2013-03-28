@@ -13,6 +13,7 @@
 #include "nsIComponentManager.h"
 #include "nsHTMLParts.h"
 #include "nsIDOMHTMLInputElement.h"
+#include "nsIDOMHTMLButtonElement.h"
 #include "nsIFormControl.h"
 #include "nsINameSpaceManager.h"
 #include "nsCOMPtr.h"
@@ -105,7 +106,7 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   nsCOMPtr<nsINodeInfo> nodeInfo;
 
   // Create and setup the file picking button.
-  nodeInfo = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::input, nullptr,
+  nodeInfo = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::button, nullptr,
                                                  kNameSpaceID_XHTML,
                                                  nsIDOMNode::ELEMENT_NODE);
   NS_NewHTMLElement(getter_AddRefs(mBrowse), nodeInfo.forget(),
@@ -116,15 +117,26 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
                    NS_LITERAL_STRING("button"), false);
 
   // Set the file picking button text depending on the current locale.
-  nsXPIDLString buttonValue;
+  nsXPIDLString buttonTxt;
   nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
-                                     "Browse", buttonValue);
-  mBrowse->SetAttr(kNameSpaceID_None, nsGkAtoms::value, buttonValue, false);
+                                     "Browse", buttonTxt);
+
+  // Set the browse button text. It's a bit of a pain to do because we want to
+  // make sure we are not notifying.
+  nsCOMPtr<nsIContent> textContent;
+  nsresult rv = NS_NewTextNode(getter_AddRefs(textContent),
+                               mBrowse->NodeInfo()->NodeInfoManager());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  textContent->SetText(buttonTxt, false);
+
+  rv = mBrowse->AppendChildTo(textContent, false);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Make sure access key and tab order for the element actually redirect to the
   // file picking button.
   nsCOMPtr<nsIDOMHTMLInputElement> fileContent = do_QueryInterface(mContent);
-  nsCOMPtr<nsIDOMHTMLInputElement> browseControl = do_QueryInterface(mBrowse);
+  nsCOMPtr<nsIDOMHTMLButtonElement> browseControl = do_QueryInterface(mBrowse);
 
   nsAutoString accessKey;
   fileContent->GetAccessKey(accessKey);
