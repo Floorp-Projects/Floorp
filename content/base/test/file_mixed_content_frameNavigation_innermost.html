@@ -51,6 +51,10 @@
       document.getElementById("content").innerHTML = "<p>Navigated from secure to insecure grandchild frame on a secure page</p>";
       break;
 
+    case "blankTarget":
+      window.close();
+      break;
+
     default:
       document.getElementById("content").innerHTML = "Hello";
       break;
