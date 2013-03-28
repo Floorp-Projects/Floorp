@@ -331,7 +331,7 @@ class B2GRemoteAutomation(Automation):
             self.stdout_proc.run()
             if hasattr(self.stdout_proc, 'processOutput'):
                 self.stdout_proc.processOutput()
-            self.stdout_proc.waitForFinish()
+            self.stdout_proc.wait()
             self.stdout_proc = None
 
         @property
