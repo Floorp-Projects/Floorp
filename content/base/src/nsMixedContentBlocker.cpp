@@ -377,7 +377,6 @@ nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
   if (aContentType == TYPE_SUBDOCUMENT && !rootHasSecureConnection) {
 
     bool httpsParentExists = false;
-    bool chromeParent = false;
 
     nsCOMPtr<nsIDocShellTreeItem> parentTreeItem;
     parentTreeItem = docShell;
