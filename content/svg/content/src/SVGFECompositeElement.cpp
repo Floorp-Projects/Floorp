@@ -66,9 +66,6 @@ NS_INTERFACE_MAP_END_INHERITING(SVGFECompositeElementBase)
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFECompositeElement)
 
-//----------------------------------------------------------------------
-// SVGFECompositeElement methods
-
 already_AddRefed<nsIDOMSVGAnimatedString>
 SVGFECompositeElement::In1()
 {

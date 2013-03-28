@@ -33,7 +33,6 @@ NS_IMPL_ISUPPORTS_INHERITED3(SVGStopElement, SVGStopElementBase,
 SVGStopElement::SVGStopElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : SVGStopElementBase(aNodeInfo)
 {
-  SetIsDOMBinding();
 }
 
 //----------------------------------------------------------------------

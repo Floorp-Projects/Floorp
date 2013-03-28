@@ -4,14 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsSVGElement.h"
-#include "nsIDOMSVGElement.h"
 
 using namespace mozilla;
 
 typedef nsSVGElement nsSVGUnknownElementBase;
 
-class nsSVGUnknownElement : public nsSVGUnknownElementBase,
-                            public nsIDOMSVGElement
+class nsSVGUnknownElement : public nsSVGUnknownElementBase
 {
 protected:
   friend nsresult NS_NewSVGUnknownElement(nsIContent **aResult,
@@ -21,17 +19,10 @@ protected:
 public:
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
-  
-  // xxx I wish we could use virtual inheritance
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGUnknownElementBase::)
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
-
-  virtual nsIDOMNode* AsDOMNode() { return this; }
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Unknown)

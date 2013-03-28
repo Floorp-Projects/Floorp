@@ -39,7 +39,6 @@ NS_IMPL_ISUPPORTS_INHERITED3(SVGEllipseElement, SVGEllipseElementBase,
 SVGEllipseElement::SVGEllipseElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : SVGEllipseElementBase(aNodeInfo)
 {
-  SetIsDOMBinding();
 }
 
 //----------------------------------------------------------------------

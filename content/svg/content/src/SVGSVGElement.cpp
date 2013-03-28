@@ -174,7 +174,6 @@ SVGSVGElement::SVGSVGElement(already_AddRefed<nsINodeInfo> aNodeInfo,
     mHasChildrenOnlyTransform(false),
     mUseCurrentView(false)
 {
-  SetIsDOMBinding();
 }
 
 //----------------------------------------------------------------------

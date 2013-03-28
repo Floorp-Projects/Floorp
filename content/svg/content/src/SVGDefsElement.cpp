@@ -30,7 +30,6 @@ NS_IMPL_ISUPPORTS_INHERITED3(SVGDefsElement, SVGGraphicsElement,
 SVGDefsElement::SVGDefsElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : SVGGraphicsElement(aNodeInfo)
 {
-  SetIsDOMBinding();
 }
 
 //----------------------------------------------------------------------

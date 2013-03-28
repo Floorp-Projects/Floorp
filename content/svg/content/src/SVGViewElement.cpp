@@ -50,7 +50,6 @@ NS_IMPL_ISUPPORTS_INHERITED3(SVGViewElement, SVGViewElementBase,
 SVGViewElement::SVGViewElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : SVGViewElementBase(aNodeInfo)
 {
-  SetIsDOMBinding();
 }
 
 //----------------------------------------------------------------------

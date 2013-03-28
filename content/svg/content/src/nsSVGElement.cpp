@@ -67,6 +67,7 @@ nsSVGEnumMapping nsSVGElement::sSVGUnitTypesMap[] = {
 nsSVGElement::nsSVGElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsSVGElementBase(aNodeInfo)
 {
+  SetIsDOMBinding();
 }
 
 JSObject*
@@ -214,8 +215,9 @@ NS_IMPL_ADDREF_INHERITED(nsSVGElement, nsSVGElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGElement, nsSVGElementBase)
 
 NS_INTERFACE_MAP_BEGIN(nsSVGElement)
-// provided by Element:
-//  NS_INTERFACE_MAP_ENTRY(nsIContent)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGElementBase)
 
 //----------------------------------------------------------------------
@@ -533,7 +535,7 @@ nsSVGElement::ParseAttribute(int32_t aNamespaceID,
 
     if (!foundMatch) {
       // Check for conditional processing attributes
-      nsCOMPtr<SVGTests> tests(do_QueryInterface(this));
+      nsCOMPtr<SVGTests> tests = do_QueryObject(this);
       if (tests && tests->ParseConditionalProcessingAttribute(
                             aAttribute, aValue, aResult)) {
         foundMatch = true;
@@ -817,7 +819,7 @@ nsSVGElement::UnsetAttrInternal(int32_t aNamespaceID, nsIAtom* aName,
     }
 
     // Check for conditional processing attributes
-    nsCOMPtr<SVGTests> tests(do_QueryInterface(this));
+    nsCOMPtr<SVGTests> tests = do_QueryObject(this);
     if (tests && tests->IsConditionalProcessingAttribute(aName)) {
       MaybeSerializeAttrBeforeRemoval(aName, aNotify);
       tests->UnsetAttr(aName);
@@ -868,7 +870,7 @@ nsSVGElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
   nsChangeHint retval =
     nsSVGElementBase::GetAttributeChangeHint(aAttribute, aModType);
 
-  nsCOMPtr<SVGTests> tests(do_QueryInterface(const_cast<nsSVGElement*>(this)));
+  nsCOMPtr<SVGTests> tests = do_QueryObject(const_cast<nsSVGElement*>(this));
   if (tests && tests->IsConditionalProcessingAttribute(aAttribute)) {
     // It would be nice to only reconstruct the frame if the value returned by
     // SVGTests::PassesConditionalProcessingTests has changed, but we don't
@@ -1120,8 +1122,7 @@ NS_IMETHODIMP
 nsSVGElement::GetViewportElement(nsIDOMSVGElement * *aViewportElement)
 {
   nsSVGElement* elem = GetViewportElement();
-  nsCOMPtr<nsIDOMSVGElement> svgElem = do_QueryInterface(elem);
-  svgElem.forget(aViewportElement);
+  NS_ADDREF(*aViewportElement = elem);
   return NS_OK;
 }
 
@@ -2425,7 +2426,7 @@ nsSVGElement::WillChangeStringList(bool aIsConditionalProcessingAttribute,
 {
   nsIAtom* name;
   if (aIsConditionalProcessingAttribute) {
-    nsCOMPtr<SVGTests> tests(do_QueryInterface(this));
+    nsCOMPtr<SVGTests> tests(do_QueryInterface(static_cast<nsIDOMSVGElement*>(this)));
     name = tests->GetAttrName(aAttrEnum);
   } else {
     name = *GetStringListInfo().mStringListInfo[aAttrEnum].mName;
@@ -2443,7 +2444,7 @@ nsSVGElement::DidChangeStringList(bool aIsConditionalProcessingAttribute,
   nsCOMPtr<SVGTests> tests;
 
   if (aIsConditionalProcessingAttribute) {
-    tests = do_QueryInterface(this);
+    tests = do_QueryObject(this);
     name = tests->GetAttrName(aAttrEnum);
     tests->GetAttrValue(aAttrEnum, newValue);
   } else {

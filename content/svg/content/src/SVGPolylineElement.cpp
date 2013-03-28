@@ -30,7 +30,6 @@ NS_IMPL_ISUPPORTS_INHERITED3(SVGPolylineElement, SVGPolylineElementBase,
 SVGPolylineElement::SVGPolylineElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : SVGPolylineElementBase(aNodeInfo)
 {
-
 }
 
 //----------------------------------------------------------------------

@@ -62,7 +62,6 @@ NS_INTERFACE_MAP_END_INHERITING(SVGGradientElementBase)
 SVGGradientElement::SVGGradientElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : SVGGradientElementBase(aNodeInfo)
 {
-  SetIsDOMBinding();
 }
 
 //----------------------------------------------------------------------
