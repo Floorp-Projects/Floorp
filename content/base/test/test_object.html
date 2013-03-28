@@ -12,7 +12,7 @@
       SimpleTest.waitForExplicitFinish();
 
       // This can go away once embed also is on WebIDL
-      let OBJLC = Components.interfaces.nsIObjectLoadingContent;
+      let OBJLC = SpecialPowers.Ci.nsIObjectLoadingContent;
 
       // Use string modes in this test to make the test easier to read/debug.
       // nsIObjectLoadingContent refers to this as "type", but I am using "mode"
