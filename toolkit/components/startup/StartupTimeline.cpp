@@ -7,7 +7,7 @@
 
 namespace mozilla {
 
-PRTime StartupTimeline::sStartupTimeline[StartupTimeline::MAX_EVENT_ID];
+TimeStamp StartupTimeline::sStartupTimeline[StartupTimeline::MAX_EVENT_ID];
 const char *StartupTimeline::sStartupTimelineDesc[StartupTimeline::MAX_EVENT_ID] = {
 #define mozilla_StartupTimeline_Event(ev, desc) desc,
 #include "StartupTimeline.h"
@@ -23,6 +23,8 @@ const char *StartupTimeline::sStartupTimelineDesc[StartupTimeline::MAX_EVENT_ID]
 void
 XRE_StartupTimelineRecord(int aEvent, PRTime aWhen)
 {
-  mozilla::StartupTimeline::Record((mozilla::StartupTimeline::Event) aEvent, aWhen);
+  /* FIXME: This effectively becomes a no-op until we fix all the users to
+   * provide proper timestamps */
+  mozilla::StartupTimeline::Record((mozilla::StartupTimeline::Event) aEvent,
+    mozilla::TimeStamp());
 }
-
