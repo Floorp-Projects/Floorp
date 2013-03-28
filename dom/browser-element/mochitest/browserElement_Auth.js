@@ -5,6 +5,8 @@
 "use strict";
 
 SimpleTest.waitForExplicitFinish();
+browserElementTestHelpers.setEnabledPref(true);
+browserElementTestHelpers.addPermission();
 
 function testFail(msg) {
   ok(false, JSON.stringify(msg));
@@ -13,9 +15,6 @@ function testFail(msg) {
 var iframe;
 
 function runTest() {
-  browserElementTestHelpers.setEnabledPref(true);
-  browserElementTestHelpers.addPermission();
-
   iframe = document.createElement('iframe');
   SpecialPowers.wrap(iframe).mozbrowser = true;
   document.body.appendChild(iframe);
@@ -168,4 +167,4 @@ function testFinish() {
   SimpleTest.finish();
 }
 
-runTest();
+addEventListener('testready', runTest);

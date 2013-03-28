@@ -1,7 +1,9 @@
 <html>
 <body>
 <script>
-window.open("http://example.com/" + location.hash, "foo");
+addEventListener('load', function() {
+  window.open("http://example.com/" + location.hash, "foo");
+});
 </script>
 </body>
 </html>

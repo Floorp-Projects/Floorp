@@ -5,6 +5,9 @@
 "use strict";
 
 SimpleTest.waitForExplicitFinish();
+browserElementTestHelpers.setEnabledPref(true);
+browserElementTestHelpers.addPermission();
+
 var iframe;
 
 function runTestQueue(queue) {
@@ -58,13 +61,10 @@ function testFirstLoad() {
 }
 
 function runTest() {
-  browserElementTestHelpers.setEnabledPref(true);
-  browserElementTestHelpers.addPermission();
-
   iframe = document.createElement('iframe');
   SpecialPowers.wrap(iframe).mozbrowser = true;
 
   runTestQueue([testFirstLoad, testReload, testChangeLocation]);
 }
 
-runTest();
+addEventListener('testready', runTest);

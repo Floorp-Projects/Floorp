@@ -9,11 +9,10 @@
 "use strict";
 
 SimpleTest.waitForExplicitFinish();
+browserElementTestHelpers.setEnabledPref(true);
+browserElementTestHelpers.addPermission();
 
 function runTest() {
-  browserElementTestHelpers.setEnabledPref(true);
-  browserElementTestHelpers.addPermission();
-
   var iframe = document.createElement('iframe');
   SpecialPowers.wrap(iframe).mozbrowser = true;
   document.body.appendChild(iframe);
@@ -85,4 +84,4 @@ function runTest() {
     </scr' + 'ipt></body></html>';
 }
 
-runTest();
+addEventListener('testready', runTest);
