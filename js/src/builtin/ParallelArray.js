@@ -953,7 +953,7 @@ function ParallelArrayScatter(targets, defaultValue, conflictFunc, length, mode)
       if ((t | 0) !== t)
         ThrowError(JSMSG_PAR_ARRAY_SCATTER_BAD_TARGET, i);
 
-      if (t >= length)
+      if (t < 0 || t >= length)
         ThrowError(JSMSG_PAR_ARRAY_SCATTER_BOUNDS);
   }
 }
