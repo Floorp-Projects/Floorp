@@ -1077,7 +1077,7 @@ nsStylePosition::nsStylePosition(void)
   mOffset.SetRight(autoCoord);
   mOffset.SetBottom(autoCoord);
   mWidth.SetAutoValue();
-  mMinWidth.SetAutoValue();
+  mMinWidth.SetCoordValue(0);
   mMaxWidth.SetNoneValue();
   mHeight.SetAutoValue();
   mMinHeight.SetCoordValue(0);
@@ -1189,7 +1189,8 @@ nsChangeHint nsStylePosition::CalcDifference(const nsStylePosition& aOther) cons
 /* static */ bool
 nsStylePosition::WidthCoordDependsOnContainer(const nsStyleCoord &aCoord)
 {
-  return aCoord.HasPercent() ||
+  return aCoord.GetUnit() == eStyleUnit_Auto ||
+         aCoord.HasPercent() ||
          (aCoord.GetUnit() == eStyleUnit_Enumerated &&
           (aCoord.GetIntValue() == NS_STYLE_WIDTH_FIT_CONTENT ||
            aCoord.GetIntValue() == NS_STYLE_WIDTH_AVAILABLE));
