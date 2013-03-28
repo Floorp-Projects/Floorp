@@ -29,19 +29,11 @@ nsSVGElement::EnumInfo SVGClipPathElement::sEnumInfo[1] =
 };
 
 //----------------------------------------------------------------------
-// nsISupports methods
-
-NS_IMPL_ISUPPORTS_INHERITED4(SVGClipPathElement, SVGClipPathElementBase,
-                             nsIDOMNode, nsIDOMElement,
-                             nsIDOMSVGElement, nsIDOMSVGUnitTypes)
-
-//----------------------------------------------------------------------
 // Implementation
 
 SVGClipPathElement::SVGClipPathElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : SVGClipPathElementBase(aNodeInfo)
 {
-  SetIsDOMBinding();
 }
 
 already_AddRefed<nsIDOMSVGAnimatedEnumeration>

@@ -94,6 +94,8 @@
 	"content/base/test/test_fileapi_slice.html":"",
 	"content/base/test/test_messagemanager_assertpermission.html":"",
 	"content/base/test/test_mixed_content_blocker.html":"",
+	"content/base/test/test_mixed_content_blocker_bug803225.html": "",
+	"content/base/test/test_mixed_content_blocker_frameNavigation.html": "",
 	"content/base/test/test_mozfiledataurl.html":"",
 	"content/base/test/test_mutationobservers.html":"",
 	"content/base/test/test_range_bounds.html":"",

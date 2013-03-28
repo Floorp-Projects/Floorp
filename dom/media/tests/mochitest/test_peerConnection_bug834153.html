@@ -8,10 +8,6 @@
 <body>
 <pre id="test">
 <script type="application/javascript">
-if (navigator.platform.startsWith("Win")) {
-  SimpleTest.expectAssertions(0, 369);
-}
-
   createHTML({
     bug: "834153",
     title: "Queue CreateAnswer in PeerConnection.js"

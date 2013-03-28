@@ -224,6 +224,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
         ok(false, "Should be able to create an EventSource in a sandbox " + e);
       }
 
+      try {
+        var nodeFilterIface = Components.utils.evalInSandbox(
+          'NodeFilter.myExpando = "FAIL"; NodeFilter', sandbox);
+        is(nodeFilterIface.myExpando, undefined,
+           "Should have Xrays for callback interface objects");
+      } catch (e) {
+        ok(false, "Should be able to return NodeFilter from a sandbox " + e);
+      }
+
       SimpleTest.finish();
     }
 

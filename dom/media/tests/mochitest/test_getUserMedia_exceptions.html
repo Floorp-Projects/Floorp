@@ -1,4 +1,4 @@
-﻿<!DOCTYPE HTML>
+<!DOCTYPE HTML>
 <html>
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=795367
@@ -18,11 +18,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=795367
 </div>
 <pre id="test">
 <script type="application/javascript">
-
-if (navigator.platform.startsWith("Win")) {
-  SimpleTest.expectAssertions(0, 1);
-}
-
 /**
   These tests verify that the appropriate exception is thrown when incorrect
   values are provided to the immediate mozGetUserMedia call.

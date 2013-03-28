@@ -70,7 +70,6 @@
   "CharacterData interface: document.createTextNode(\"abc\") must inherit property \"remove\" with the proper type (7)": true,
   "CharacterData interface: xmlDoc.createProcessingInstruction(\"abc\", \"def\") must inherit property \"remove\" with the proper type (7)": true,
   "CharacterData interface: document.createComment(\"abc\") must inherit property \"remove\" with the proper type (7)": true,
-  "NodeFilter interface: existence and properties of interface object": true,
   "NodeFilter interface: existence and properties of interface prototype object": true,
   "NodeFilter interface: existence and properties of interface prototype object's \"constructor\" property": true,
   "NodeFilter interface: constant FILTER_ACCEPT on interface prototype object": true,

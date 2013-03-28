@@ -1,0 +1,133 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests for Mixed Content Blocker
+https://bugzilla.mozilla.org/show_bug.cgi?id=840388
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Tests for Bug 840388</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script>
+  var counter = 0;
+  var origBlockActive = SpecialPowers.getBoolPref("security.mixed_content.block_active_content");
+
+  SpecialPowers.setBoolPref("security.mixed_content.block_active_content", true);
+  var blockActive = SpecialPowers.getBoolPref("security.mixed_content.block_active_content");
+
+
+  var testsToRunInsecure = {
+    insecurePage_navigate_child: false,
+    insecurePage_navigate_grandchild: false,
+  };
+
+  var testsToRunSecure = {
+    securePage_navigate_child: false,
+    securePage_navigate_grandchild: false,
+    blankTarget: false,
+  };
+
+  function log(msg) {
+    document.getElementById("log").textContent += "\n" + msg;
+  }
+
+  var secureTestsStarted = false;
+  function checkTestsCompleted() {
+    for (var prop in testsToRunInsecure) {
+      // some test hasn't run yet so we're not done
+      if (!testsToRunInsecure[prop])
+        return;
+    }
+    // If we are here, all the insecure tests have run.
+    // If we haven't changed the iframe to run the secure tests, change it now.
+    if (!secureTestsStarted) {
+      document.getElementById('testing_frame').src = "https://example.com/tests/content/base/test/file_mixed_content_frameNavigation_secure.html";
+      secureTestsStarted = true;
+    }
+    for (var prop in testsToRunSecure) {
+      // some test hasn't run yet so we're not done
+      if (!testsToRunSecure[prop])
+        return;
+    }
+    //if the secure and insecure testsToRun are all completed, change the block mixed active content pref and run the tests again.
+    if(counter < 1) {
+       for (var prop in testsToRunSecure) {
+         testsToRunSecure[prop] = false;
+       }
+       for (var prop in testsToRunInsecure) {
+         testsToRunInsecure[prop] = false;
+       }
+      //call to change the preferences
+      counter++;
+      SpecialPowers.setBoolPref("security.mixed_content.block_active_content", false);
+      blockActive = SpecialPowers.getBoolPref("security.mixed_content.block_active_content");
+      log("blockActive set to "+blockActive+".");
+      secureTestsStarted = false;
+      document.getElementById('framediv').innerHTML = '<iframe src="http://example.com/tests/content/base/test/file_mixed_content_frameNavigation.html" id="testing_frame"></iframe>';
+    }
+    else {
+      //set the prefs back to what they were set to originally
+      SpecialPowers.setBoolPref("security.mixed_content.block_active_content", origBlockActive);
+      SimpleTest.finish();
+    }
+  }
+
+  var firstTestDebugMessage = true;
+
+  // listen for a messages from the mixed content test harness
+  window.addEventListener("message", receiveMessage, false);
+  function receiveMessage(event) {
+    if(firstTestDebugMessage) {
+      log("blockActive set to "+blockActive);
+      firstTestDebugMessage = false;
+    }
+
+    log("test: "+event.data.test+", msg: "+event.data.msg + ".");
+    // test that the load type matches the pref for this type of content
+    // (i.e. active vs. display)
+
+    switch(event.data.test) {
+
+      case "insecurePage_navigate_child":
+        ok((event.data.msg == "navigated to insecure iframe on insecure page"), "navigating to insecure iframe blocked on insecure page");
+        testsToRunInsecure["insecurePage_navigate_child"] = true;
+        break;
+
+      case "insecurePage_navigate_grandchild":
+        ok((event.data.msg == "navigated to insecure grandchild iframe on insecure page"), "navigating to insecure grandchild iframe blocked on insecure page");
+        testsToRunInsecure["insecurePage_navigate_grandchild"] = true;
+        break;
+
+      case "securePage_navigate_child":
+        ok(blockActive == (event.data.msg == "navigating to insecure iframe blocked on secure page"), "navigated to insecure iframe on secure page");
+        testsToRunSecure["securePage_navigate_child"] = true;
+        break;
+
+      case "securePage_navigate_grandchild":
+        ok(blockActive == (event.data.msg == "navigating to insecure grandchild iframe blocked on secure page"), "navigated to insecure granchild iframe on secure page");
+        testsToRunSecure["securePage_navigate_grandchild"] = true;
+        break;
+
+      case "blankTarget":
+        ok((event.data.msg == "opened an http link with target=_blank from a secure page"), "couldn't open an http link in a new window from a secure page");
+        testsToRunSecure["blankTarget"] = true;
+        break;
+
+    }
+    checkTestsCompleted();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  </script>
+</head>
+
+<body>
+  <div id="framediv">
+    <iframe src="http://example.com/tests/content/base/test/file_mixed_content_frameNavigation.html" id="testing_frame"></iframe>
+  </div>
+
+  <pre id="log"></pre>
+</body>
+</html>

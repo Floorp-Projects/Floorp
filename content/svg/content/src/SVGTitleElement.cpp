@@ -31,7 +31,6 @@ NS_IMPL_ISUPPORTS_INHERITED4(SVGTitleElement, SVGTitleElementBase,
 SVGTitleElement::SVGTitleElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : SVGTitleElementBase(aNodeInfo)
 {
-  SetIsDOMBinding();
   AddMutationObserver(this);
 }
 

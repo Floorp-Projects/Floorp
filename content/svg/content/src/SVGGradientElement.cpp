@@ -47,22 +47,11 @@ nsSVGElement::StringInfo SVGGradientElement::sStringInfo[1] =
 };
 
 //----------------------------------------------------------------------
-// nsISupports methods
-
-NS_IMPL_ADDREF_INHERITED(SVGGradientElement, SVGGradientElementBase)
-NS_IMPL_RELEASE_INHERITED(SVGGradientElement, SVGGradientElementBase)
-
-NS_INTERFACE_MAP_BEGIN(SVGGradientElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGUnitTypes)
-NS_INTERFACE_MAP_END_INHERITING(SVGGradientElementBase)
-
-//----------------------------------------------------------------------
 // Implementation
 
 SVGGradientElement::SVGGradientElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : SVGGradientElementBase(aNodeInfo)
 {
-  SetIsDOMBinding();
 }
 
 //----------------------------------------------------------------------
@@ -142,13 +131,6 @@ nsSVGElement::LengthInfo SVGLinearGradientElement::sLengthInfo[4] =
 };
 
 //----------------------------------------------------------------------
-// nsISupports methods
-
-NS_IMPL_ISUPPORTS_INHERITED3(SVGLinearGradientElement, SVGLinearGradientElementBase,
-                             nsIDOMNode,
-                             nsIDOMElement, nsIDOMSVGElement)
-
-//----------------------------------------------------------------------
 // Implementation
 
 SVGLinearGradientElement::SVGLinearGradientElement(already_AddRefed<nsINodeInfo> aNodeInfo)
@@ -222,13 +204,6 @@ nsSVGElement::LengthInfo SVGRadialGradientElement::sLengthInfo[5] =
   { &nsGkAtoms::fx, 50, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::X },
   { &nsGkAtoms::fy, 50, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::Y },
 };
-
-//----------------------------------------------------------------------
-// nsISupports methods
-
-NS_IMPL_ISUPPORTS_INHERITED3(SVGRadialGradientElement, SVGRadialGradientElementBase,
-                             nsIDOMNode,
-                             nsIDOMElement, nsIDOMSVGElement)
 
 //----------------------------------------------------------------------
 // Implementation

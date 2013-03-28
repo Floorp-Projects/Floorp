@@ -6,7 +6,6 @@
 #ifndef __NS_SVGGRADIENTELEMENT_H__
 #define __NS_SVGGRADIENTELEMENT_H__
 
-#include "nsIDOMSVGUnitTypes.h"
 #include "nsSVGElement.h"
 #include "nsSVGLength2.h"
 #include "nsSVGEnum.h"
@@ -40,7 +39,6 @@ namespace dom {
 typedef nsSVGElement SVGGradientElementBase;
 
 class SVGGradientElement : public SVGGradientElementBase
-                         , public nsIDOMSVGUnitTypes
 {
   friend class ::nsSVGGradientFrame;
 
@@ -50,9 +48,6 @@ protected:
   WrapNode(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE = 0;
 
 public:
-  // interfaces:
-  NS_DECL_ISUPPORTS_INHERITED
-
   // nsIContent
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
@@ -90,7 +85,6 @@ protected:
 typedef SVGGradientElement SVGLinearGradientElementBase;
 
 class SVGLinearGradientElement : public SVGLinearGradientElementBase
-                               , public nsIDOMSVGElement
 {
   friend class ::nsSVGLinearGradientFrame;
   friend nsresult
@@ -103,18 +97,7 @@ protected:
   WrapNode(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 
 public:
-  // interfaces:
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // The Gradient Element base class implements these
-  NS_FORWARD_NSIDOMSVGELEMENT(SVGLinearGradientElementBase::)
-
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  virtual nsIDOMNode* AsDOMNode() { return this; }
 
   // WebIDL
   already_AddRefed<SVGAnimatedLength> X1();
@@ -136,7 +119,6 @@ protected:
 typedef SVGGradientElement SVGRadialGradientElementBase;
 
 class SVGRadialGradientElement : public SVGRadialGradientElementBase
-                               , public nsIDOMSVGElement
 {
   friend class ::nsSVGRadialGradientFrame;
   friend nsresult
@@ -149,18 +131,7 @@ protected:
   WrapNode(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 
 public:
-  // interfaces:
-
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // xxx I wish we could use virtual inheritance
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-  NS_FORWARD_NSIDOMSVGELEMENT(SVGRadialGradientElementBase::)
-
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  virtual nsIDOMNode* AsDOMNode() { return this; }
 
   // WebIDL
   already_AddRefed<SVGAnimatedLength> Cx();

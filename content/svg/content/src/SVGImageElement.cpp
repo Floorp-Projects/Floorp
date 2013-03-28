@@ -53,7 +53,6 @@ NS_IMPL_ISUPPORTS_INHERITED6(SVGImageElement, SVGImageElementBase,
 SVGImageElement::SVGImageElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : SVGImageElementBase(aNodeInfo)
 {
-  SetIsDOMBinding();
   // We start out broken
   AddStatesSilently(NS_EVENT_STATE_BROKEN);
 }
