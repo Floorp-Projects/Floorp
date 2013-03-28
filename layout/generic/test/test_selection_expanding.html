@@ -79,13 +79,10 @@ var textarea = SpecialPowers.wrap(document.getElementById("textarea"));
 
 function test()
 {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
   function getSelectionForEditor(aEditorElement)
   {
-    const nsIDOMNSEditableElement =
-      Components.interfaces.nsIDOMNSEditableElement;
-    return aEditorElement.QueryInterface(nsIDOMNSEditableElement).editor.selection;
+    const nsIDOMNSEditableElement = SpecialPowers.Ci.nsIDOMNSEditableElement;
+    return SpecialPowers.wrap(aEditorElement).editor.selection;
   }
 
   function clear()
