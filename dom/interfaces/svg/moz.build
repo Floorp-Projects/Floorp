@@ -17,7 +17,6 @@ XPIDL_SOURCES += [
     'nsIDOMSVGNumber.idl',
     'nsIDOMSVGRect.idl',
     'nsIDOMSVGStringList.idl',
-    'nsIDOMSVGUnitTypes.idl',
     'nsIDOMSVGZoomEvent.idl',
 ]
 
