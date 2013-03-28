@@ -12,22 +12,23 @@
 #include "mozilla/Util.h"
 #include "nsAutoJSValHolder.h"
 
+#include "prclist.h"
+
 #include "Events.h"
 #include "EventTarget.h"
 
 using namespace mozilla::dom;
+using namespace mozilla;
 USING_WORKERS_NAMESPACE
-using mozilla::ErrorResult;
 
-namespace {
-
-struct ListenerCollection : PRCList
+struct EventListenerManager::ListenerCollection :
+  public LinkedListElement<EventListenerManager::ListenerCollection>
 {
   jsid mTypeId;
   PRCList mListenerHead;
 
   static ListenerCollection*
-  Add(JSContext* aCx, ListenerCollection* aCollectionHead, jsid aTypeId)
+  Add(JSContext* aCx, LinkedList<ListenerCollection>& aCollections, jsid aTypeId)
   {
     ListenerCollection* collection =
       static_cast<ListenerCollection*>(JS_malloc(aCx,
@@ -36,20 +37,28 @@ struct ListenerCollection : PRCList
       return NULL;
     }
 
-    PR_APPEND_LINK(collection, aCollectionHead);
+    new (collection) ListenerCollection(aTypeId);
+    aCollections.insertBack(collection);
 
-    collection->mTypeId = aTypeId;
-    PR_INIT_CLIST(&collection->mListenerHead);
     return collection;
   }
 
   static void
   Remove(JSContext* aCx, ListenerCollection* aCollection)
   {
-    PR_REMOVE_LINK(aCollection);
+    aCollection->remove();
     JS_free(aCx, aCollection);
   }
+
+private:
+  ListenerCollection(jsid aTypeId)
+    : mTypeId(aTypeId)
+  {
+    PR_INIT_CLIST(&mListenerHead);
+  }
 };
+
+namespace {
 
 struct ListenerData : PRCList
 {
@@ -97,18 +106,30 @@ DestroyList(JSFreeOp* aFop, PRCList* aListHead)
   }
 }
 
-inline ListenerCollection*
-GetCollectionForType(const PRCList* aHead, const jsid& aTypeId)
+template<typename T>
+inline void
+DestroyList(JSFreeOp* aFop, LinkedList<T>& aList)
 {
-  for (PRCList* elem = PR_NEXT_LINK(aHead);
-       elem != aHead;
-       elem = PR_NEXT_LINK(elem)) {
-    ListenerCollection* collection = static_cast<ListenerCollection*>(elem);
+  while (!aList.isEmpty()) {
+    T* elem = aList.popFirst();
+    JS_freeop(aFop, elem);
+  }
+}
+
+inline EventListenerManager::ListenerCollection*
+GetCollectionForType(const LinkedList<EventListenerManager::ListenerCollection>& aList,
+                     const jsid& aTypeId)
+{
+  for (const EventListenerManager::ListenerCollection* collection = aList.getFirst();
+       collection;
+       collection = collection->getNext()) {
     if (collection->mTypeId == aTypeId) {
-      return collection;
+      // We need to either cast away const here or write a second copy of this
+      // method that takes a non-const LinkedList
+      return const_cast<EventListenerManager::ListenerCollection*>(collection);
     }
   }
-  return NULL;
+  return nullptr;
 }
 
 class ContextAllocPolicy
@@ -152,20 +173,18 @@ public:
 #ifdef DEBUG
 EventListenerManager::~EventListenerManager()
 {
-  MOZ_ASSERT(PR_CLIST_IS_EMPTY(&mCollectionHead));
+  MOZ_ASSERT(mCollections.isEmpty());
 }
 #endif
 
 void
 EventListenerManager::TraceInternal(JSTracer* aTrc) const
 {
-  MOZ_ASSERT(!PR_CLIST_IS_EMPTY(&mCollectionHead));
+  MOZ_ASSERT(!mCollections.isEmpty());
 
-  for (PRCList* collectionElem = PR_NEXT_LINK(&mCollectionHead);
-       collectionElem != &mCollectionHead;
-       collectionElem = PR_NEXT_LINK(collectionElem)) {
-    ListenerCollection* collection =
-      static_cast<ListenerCollection*>(collectionElem);
+  for (const ListenerCollection* collection = mCollections.getFirst();
+       collection;
+       collection = collection->getNext()) {
 
     for (PRCList* listenerElem = PR_NEXT_LINK(&collection->mListenerHead);
          listenerElem != &collection->mListenerHead;
@@ -180,19 +199,17 @@ EventListenerManager::TraceInternal(JSTracer* aTrc) const
 void
 EventListenerManager::FinalizeInternal(JSFreeOp* aFop)
 {
-  MOZ_ASSERT(!PR_CLIST_IS_EMPTY(&mCollectionHead));
+  MOZ_ASSERT(!mCollections.isEmpty());
 
-  for (PRCList* elem = PR_NEXT_LINK(&mCollectionHead);
-       elem != &mCollectionHead;
-       elem = PR_NEXT_LINK(elem)) {
-    DestroyList(aFop, &static_cast<ListenerCollection*>(elem)->mListenerHead);
+  for (ListenerCollection* collection = mCollections.getFirst();
+       collection;
+       collection = collection->getNext()) {
+    DestroyList(aFop, &collection->mListenerHead);
   }
 
-  DestroyList(aFop, &mCollectionHead);
+  DestroyList(aFop, mCollections);
 
-#ifdef DEBUG
-  PR_INIT_CLIST(&mCollectionHead);
-#endif
+  MOZ_ASSERT(mCollections.isEmpty());
 }
 
 void
@@ -203,11 +220,9 @@ EventListenerManager::Add(JSContext* aCx, const jsid& aType,
   MOZ_ASSERT(aListener);
 
   ListenerCollection* collection =
-    GetCollectionForType(&mCollectionHead, aType);
+    GetCollectionForType(mCollections, aType);
   if (!collection) {
-    ListenerCollection* head =
-      static_cast<ListenerCollection*>(&mCollectionHead);
-    collection = ListenerCollection::Add(aCx, head, aType);
+    collection = ListenerCollection::Add(aCx, mCollections, aType);
     if (!collection) {
       aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
       return;
@@ -242,30 +257,29 @@ EventListenerManager::Remove(JSContext* aCx, const jsid& aType,
   MOZ_ASSERT(aListener);
 
   ListenerCollection* collection =
-    GetCollectionForType(&mCollectionHead, aType);
+    GetCollectionForType(mCollections, aType);
   if (collection) {
-  for (PRCList* elem = PR_NEXT_LINK(&collection->mListenerHead);
-       elem != &collection->mListenerHead;
-       elem = PR_NEXT_LINK(elem)) {
+    for (PRCList* elem = PR_NEXT_LINK(&collection->mListenerHead);
+         elem != &collection->mListenerHead;
+         elem = PR_NEXT_LINK(elem)) {
       ListenerData* listenerData = static_cast<ListenerData*>(elem);
       if (listenerData->mListener == aListener &&
           listenerData->mPhase == aPhase) {
         ListenerData::Remove(aCx, listenerData);
-      if (aClearEmpty && PR_CLIST_IS_EMPTY(&collection->mListenerHead)) {
-        ListenerCollection::Remove(aCx, collection);
+        if (aClearEmpty && PR_CLIST_IS_EMPTY(&collection->mListenerHead)) {
+          ListenerCollection::Remove(aCx, collection);
+        }
+        break;
       }
-      break;
     }
-  }
   }
 }
 
 JSObject*
 EventListenerManager::GetEventListener(const jsid& aType) const
 {
-  if (!PR_CLIST_IS_EMPTY(&mCollectionHead)) {
-    const ListenerCollection* collection =
-      GetCollectionForType(&mCollectionHead, aType);
+  const ListenerCollection* collection =
+    GetCollectionForType(mCollections, aType);
   if (collection) {
     for (PRCList* elem = PR_PREV_LINK(&collection->mListenerHead);
          elem != &collection->mListenerHead;
@@ -276,7 +290,6 @@ EventListenerManager::GetEventListener(const jsid& aType) const
       }
     }
   }
-    }
 
   return NULL;
 }
@@ -304,7 +317,7 @@ EventListenerManager::DispatchEvent(JSContext* aCx, const EventTarget& aTarget,
     return false;
   }
 
-  if (PR_CLIST_IS_EMPTY(&mCollectionHead)) {
+  if (mCollections.isEmpty()) {
     return false;
   }
 
@@ -327,8 +340,7 @@ EventListenerManager::DispatchEvent(JSContext* aCx, const EventTarget& aTarget,
   }
 
   ListenerCollection* collection =
-    GetCollectionForType(&mCollectionHead,
-                         INTERNED_STRING_TO_JSID(aCx, eventType));
+    GetCollectionForType(mCollections, INTERNED_STRING_TO_JSID(aCx, eventType));
   if (!collection) {
     return false;
   }
@@ -436,6 +448,6 @@ bool
 EventListenerManager::HasListenersForTypeInternal(JSContext* aCx,
                                                   const jsid& aType) const
 {
-  MOZ_ASSERT(!PR_CLIST_IS_EMPTY(&mCollectionHead));
-  return !!GetCollectionForType(&mCollectionHead, aType);
+  MOZ_ASSERT(!mCollections.isEmpty());
+  return !!GetCollectionForType(mCollections, aType);
 }
