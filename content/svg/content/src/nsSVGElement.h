@@ -67,10 +67,15 @@ class nsSVGElement : public nsSVGElementBase    // nsIContent
 {
 protected:
   nsSVGElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  friend nsresult NS_NewSVGElement(nsIContent **aResult,
+                                   already_AddRefed<nsINodeInfo> aNodeInfo);
   nsresult Init();
   virtual ~nsSVGElement(){}
 
 public:
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_MUST_OVERRIDE;
+
   typedef mozilla::SVGNumberList SVGNumberList;
   typedef mozilla::SVGAnimatedNumberList SVGAnimatedNumberList;
   typedef mozilla::SVGUserUnitList SVGUserUnitList;

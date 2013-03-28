@@ -57,6 +57,21 @@ using namespace mozilla::dom;
 // See bug 547964 for details:
 PR_STATIC_ASSERT(sizeof(void*) == sizeof(nullptr));
 
+nsresult
+NS_NewSVGElement(nsIContent **aResult, already_AddRefed<nsINodeInfo> aNodeInfo) 
+{
+  nsRefPtr<nsSVGElement> it = new nsSVGElement(aNodeInfo);
+  nsresult rv = it->Init();
+
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  it.forget(aResult);
+  return rv;
+}
+
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGElement)
 
 nsSVGEnumMapping nsSVGElement::sSVGUnitTypesMap[] = {
   {&nsGkAtoms::userSpaceOnUse, SVG_UNIT_TYPE_USERSPACEONUSE},
