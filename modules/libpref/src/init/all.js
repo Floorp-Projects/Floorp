@@ -720,7 +720,7 @@ pref("dom.min_background_timeout_value", 1000);
 pref("dom.xbl_scopes", true);
 
 // Stop defining the Components object in content.
-pref("dom.omit_components_in_content", false);
+pref("dom.omit_components_in_content", true);
 
 // Don't use new input types
 pref("dom.experimental_forms", false);
