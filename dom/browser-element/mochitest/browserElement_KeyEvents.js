@@ -20,7 +20,6 @@ SimpleTest.waitForExplicitFinish();
 
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
-browserElementTestHelpers.setOOPDisabledPref(true); // this is breaking the autofocus.
 
 var iframe = document.createElement('iframe');
 SpecialPowers.wrap(iframe).mozbrowser = true;
@@ -39,7 +38,6 @@ function eventHandler(e) {
   nbEvents--;
 
   if (nbEvents == 0) {
-    browserElementTestHelpers.restoreOriginalPrefs();
     SimpleTest.finish();
     return;
   }
