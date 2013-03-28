@@ -519,7 +519,7 @@ public class TopSitesView extends GridView {
     public void unpinSite(ContextMenuInfo menuInfo, final UnpinFlags flags) {
         AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
         final int position = info.position;
-        
+
         final View v = getChildAt(position);
         final TopSitesViewHolder holder = (TopSitesViewHolder) v.getTag();
         final String url = holder.getUrl();

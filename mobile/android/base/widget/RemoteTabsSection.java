@@ -53,7 +53,7 @@ public class RemoteTabsSection extends AboutHomeSection
             }
         };
     }
-    
+
     public void loadRemoteTabs() {
         if (!SyncAccounts.syncAccountsExist(mActivity)) {
             post(new Runnable() {
@@ -75,11 +75,11 @@ public class RemoteTabsSection extends AboutHomeSection
             hide();
             return;
         }
-        
+
         clear();
-        
+
         String client = null;
-        
+
         for (TabsAccessor.RemoteTab tab : tabs) {
             if (client == null)
                 client = tab.name;
@@ -93,7 +93,7 @@ public class RemoteTabsSection extends AboutHomeSection
             row.setOnClickListener(mRemoteTabClickListener);
             row.setOnKeyListener(GamepadUtils.getClickDispatcher());
         }
-        
+
         setSubtitle(client);
         show();
     }
