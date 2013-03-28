@@ -411,6 +411,18 @@ let test_read_write_all = maketest("read_write_all", function read_write_all(tes
       test.ok(true, "Without a tmpPath, writeAtomic has failed as expected");
     }
 
+    // Write strings, default encoding
+    let ARBITRARY_STRING = "aeiouyâêîôûçß•";
+    yield OS.File.writeAtomic(pathDest, ARBITRARY_STRING, {tmpPath: tmpPath});
+    let array = yield OS.File.read(pathDest);
+    let IN_STRING = (new TextDecoder()).decode(array);
+    test.is(ARBITRARY_STRING, IN_STRING, "String write + read with default encoding works");
+
+    yield OS.File.writeAtomic(pathDest, ARBITRARY_STRING, {tmpPath: tmpPath, encoding: "utf-16"});
+    array = yield OS.File.read(pathDest);
+    IN_STRING = (new TextDecoder("utf-16")).decode(array);
+    test.is(ARBITRARY_STRING, IN_STRING, "String write + read with utf-16 encoding works");
+
     // Cleanup.
     OS.File.remove(pathDest);
 
