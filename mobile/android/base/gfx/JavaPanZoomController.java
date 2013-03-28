@@ -82,7 +82,7 @@ class JavaPanZoomController
         WAITING_LISTENERS, /* a state halfway between NOTHING and TOUCHING - the user has
                         put a finger down, but we don't yet know if a touch listener has
                         prevented the default actions yet. we still need to abort animations. */
-        AUTOSCROLL,     /* We are scrolling using an AutoscrollRunnable animation. This is similar
+        AUTONAV,        /* We are scrolling using an AutonavRunnable animation. This is similar
                         to the FLING state except that it must be stopped manually by the code that
                         started it, and it's velocity can be updated while it's running. */
     }
@@ -366,7 +366,7 @@ class JavaPanZoomController
             mTarget.forceRedraw();
             // fall through
         case FLING:
-        case AUTOSCROLL:
+        case AUTONAV:
         case BOUNCE:
         case NOTHING:
         case WAITING_LISTENERS:
@@ -389,7 +389,7 @@ class JavaPanZoomController
 
         switch (mState) {
         case FLING:
-        case AUTOSCROLL:
+        case AUTONAV:
         case BOUNCE:
         case WAITING_LISTENERS:
             // should never happen
@@ -437,7 +437,7 @@ class JavaPanZoomController
 
         switch (mState) {
         case FLING:
-        case AUTOSCROLL:
+        case AUTONAV:
         case BOUNCE:
         case WAITING_LISTENERS:
             // should never happen
@@ -514,13 +514,13 @@ class JavaPanZoomController
     }
 
     // Since this event is a position-based event rather than a motion-based event, we need to
-    // set up an AUTOSCROLL animation to keep scrolling even while we don't get events.
+    // set up an AUTONAV animation to keep scrolling even while we don't get events.
     private boolean handleJoystickScroll(MotionEvent event) {
         float velocityX = normalizeJoystick(event.getX(0), event.getDevice().getMotionRange(MotionEvent.AXIS_X));
         float velocityY = normalizeJoystick(event.getY(0), event.getDevice().getMotionRange(MotionEvent.AXIS_Y));
 
         if (velocityX == 0 && velocityY == 0) {
-            if (mState == PanZoomState.AUTOSCROLL) {
+            if (mState == PanZoomState.AUTONAV) {
                 bounce(); // if not needed, this will automatically go to state NOTHING
                 return true;
             }
@@ -528,10 +528,10 @@ class JavaPanZoomController
         }
 
         if (mState == PanZoomState.NOTHING) {
-            setState(PanZoomState.AUTOSCROLL);
-            startAnimationTimer(new AutoscrollRunnable());
+            setState(PanZoomState.AUTONAV);
+            startAnimationTimer(new AutonavRunnable());
         }
-        if (mState == PanZoomState.AUTOSCROLL) {
+        if (mState == PanZoomState.AUTONAV) {
             mX.setAutoscrollVelocity(velocityX);
             mY.setAutoscrollVelocity(velocityY);
             return true;
@@ -746,10 +746,10 @@ class JavaPanZoomController
         }
     }
 
-    private class AutoscrollRunnable extends AnimationRunnable {
+    private class AutonavRunnable extends AnimationRunnable {
         @Override
         protected void animateFrame() {
-            if (mState != PanZoomState.AUTOSCROLL) {
+            if (mState != PanZoomState.AUTONAV) {
                 finishAnimation();
                 return;
             }
