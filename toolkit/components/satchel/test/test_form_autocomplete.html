@@ -122,7 +122,7 @@ const shiftModifier = Event.SHIFT_MASK;
 
 // Get the form history service
 var fh = SpecialPowers.Cc["@mozilla.org/satchel/form-history;1"].
-         getService(Components.interfaces.nsIFormHistory2);
+         getService(SpecialPowers.Ci.nsIFormHistory2);
 ok(fh != null, "got form history service");
 
 fh.removeAllEntries();

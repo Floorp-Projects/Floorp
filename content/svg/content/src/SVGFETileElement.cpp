@@ -26,17 +26,6 @@ nsSVGElement::StringInfo SVGFETileElement::sStringInfo[2] =
 };
 
 //----------------------------------------------------------------------
-// nsISupports methods
-
-NS_IMPL_ADDREF_INHERITED(SVGFETileElement,SVGFETileElementBase)
-NS_IMPL_RELEASE_INHERITED(SVGFETileElement,SVGFETileElementBase)
-
-NS_INTERFACE_TABLE_HEAD(SVGFETileElement)
-  NS_NODE_INTERFACE_TABLE3(SVGFETileElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement)
-NS_INTERFACE_MAP_END_INHERITING(SVGFETileElementBase)
-
-//----------------------------------------------------------------------
 // nsIDOMNode methods
 
 

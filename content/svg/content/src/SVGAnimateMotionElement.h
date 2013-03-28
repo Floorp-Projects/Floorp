@@ -15,8 +15,7 @@ nsresult NS_NewSVGAnimateMotionElement(nsIContent **aResult,
 namespace mozilla {
 namespace dom {
 
-class SVGAnimateMotionElement MOZ_FINAL : public SVGAnimationElement,
-                                          public nsIDOMSVGElement
+class SVGAnimateMotionElement MOZ_FINAL : public SVGAnimationElement
 {
 protected:
   SVGAnimateMotionElement(already_AddRefed<nsINodeInfo> aNodeInfo);
@@ -29,13 +28,6 @@ protected:
   virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope) MOZ_OVERRIDE;
 
 public:
-  // interfaces:
-  NS_DECL_ISUPPORTS_INHERITED
-
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-  NS_FORWARD_NSIDOMSVGELEMENT(SVGAnimationElement::)
-
   // nsIDOMNode specializations
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
@@ -53,8 +45,6 @@ public:
   // Utility method to let our <mpath> children tell us when they've changed,
   // so we can make sure our mAnimationFunction is marked as having changed.
   void MpathChanged() { mAnimationFunction.MpathChanged(); }
-
-  virtual nsIDOMNode* AsDOMNode() { return this; }
 };
 
 } // namespace dom

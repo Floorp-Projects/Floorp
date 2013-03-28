@@ -313,9 +313,10 @@ nsStyleSet::GatherRuleProcessors(sheetType aType)
   }
   if (mAuthorStyleDisabled && (aType == eDocSheet || 
                                aType == eScopedDocSheet ||
-                               aType == ePresHintSheet ||
                                aType == eStyleAttrSheet)) {
-    //don't regather if this level is disabled
+    // Don't regather if this level is disabled.  Note that we gather
+    // preshint sheets no matter what, but then skip them for some
+    // elements later if mAuthorStyleDisabled.
     return NS_OK;
   }
   if (aType == eAnimationSheet) {
@@ -512,7 +513,7 @@ nsStyleSet::SetAuthorStyleDisabled(bool aStyleDisabled)
     mAuthorStyleDisabled = aStyleDisabled;
     BeginUpdate();
     mDirty |= 1 << eDocSheet |
-              1 << ePresHintSheet |
+              1 << eScopedDocSheet |
               1 << eStyleAttrSheet;
     return EndUpdate();
   }
@@ -1148,7 +1149,7 @@ nsStyleSet::ResolveStyleFor(Element* aElement,
   NS_ENSURE_FALSE(mInShutdown, nullptr);
   NS_ASSERTION(aElement, "aElement must not be null");
 
-  nsRuleWalker ruleWalker(mRuleTree);
+  nsRuleWalker ruleWalker(mRuleTree, mAuthorStyleDisabled);
   aTreeMatchContext.ResetForUnvisitedMatching();
   ElementRuleProcessorData data(PresContext(), aElement, &ruleWalker,
                                 aTreeMatchContext);
@@ -1189,7 +1190,7 @@ nsStyleSet::ResolveStyleForRules(nsStyleContext* aParentContext,
 {
   NS_ENSURE_FALSE(mInShutdown, nullptr);
 
-  nsRuleWalker ruleWalker(mRuleTree);
+  nsRuleWalker ruleWalker(mRuleTree, mAuthorStyleDisabled);
   // FIXME: Perhaps this should be passed in, but it probably doesn't
   // matter.
   ruleWalker.SetLevel(eDocSheet, false, false);
@@ -1207,7 +1208,7 @@ nsStyleSet::ResolveStyleForRules(nsStyleContext* aParentContext,
                                  nsStyleContext* aOldStyle,
                                  const nsTArray<RuleAndLevel>& aRules)
 {
-  nsRuleWalker ruleWalker(mRuleTree);
+  nsRuleWalker ruleWalker(mRuleTree, mAuthorStyleDisabled);
   for (int32_t i = aRules.Length() - 1; i >= 0; --i) {
     ruleWalker.SetLevel(aRules[i].mLevel, false, false);
     ruleWalker.ForwardOnPossiblyCSSRule(aRules[i].mRule);
@@ -1232,7 +1233,7 @@ nsStyleSet::ResolveStyleByAddingRules(nsStyleContext* aBaseContext,
 {
   NS_ENSURE_FALSE(mInShutdown, nullptr);
 
-  nsRuleWalker ruleWalker(mRuleTree);
+  nsRuleWalker ruleWalker(mRuleTree, mAuthorStyleDisabled);
   ruleWalker.SetCurrentNode(aBaseContext->RuleNode());
   // FIXME: Perhaps this should be passed in, but it probably doesn't
   // matter.
@@ -1299,7 +1300,7 @@ nsStyleSet::ResolvePseudoElementStyle(Element* aParentElement,
                "must have pseudo element type");
   NS_ASSERTION(aParentElement, "Must have parent element");
 
-  nsRuleWalker ruleWalker(mRuleTree);
+  nsRuleWalker ruleWalker(mRuleTree, mAuthorStyleDisabled);
   TreeMatchContext treeContext(true, nsRuleWalker::eRelevantLinkUnvisited,
                                aParentElement->OwnerDoc());
   PseudoElementRuleProcessorData data(PresContext(), aParentElement,
@@ -1360,7 +1361,7 @@ nsStyleSet::ProbePseudoElementStyle(Element* aParentElement,
   NS_ASSERTION(aParentElement, "aParentElement must not be null");
 
   nsIAtom* pseudoTag = nsCSSPseudoElements::GetPseudoAtom(aType);
-  nsRuleWalker ruleWalker(mRuleTree);
+  nsRuleWalker ruleWalker(mRuleTree, mAuthorStyleDisabled);
   aTreeMatchContext.ResetForUnvisitedMatching();
   PseudoElementRuleProcessorData data(PresContext(), aParentElement,
                                       &ruleWalker, aType, aTreeMatchContext);
@@ -1435,7 +1436,7 @@ nsStyleSet::ResolveAnonymousBoxStyle(nsIAtom* aPseudoTag,
     NS_PRECONDITION(isAnonBox, "Unexpected pseudo");
 #endif
 
-  nsRuleWalker ruleWalker(mRuleTree);
+  nsRuleWalker ruleWalker(mRuleTree, mAuthorStyleDisabled);
   AnonBoxRuleProcessorData data(PresContext(), aPseudoTag, &ruleWalker);
   FileRules(EnumRulesMatching<AnonBoxRuleProcessorData>, &data, nullptr,
             &ruleWalker);
@@ -1476,7 +1477,7 @@ nsStyleSet::ResolveXULTreePseudoStyle(Element* aParentElement,
   NS_ASSERTION(nsCSSAnonBoxes::IsTreePseudoElement(aPseudoTag),
                "Unexpected pseudo");
 
-  nsRuleWalker ruleWalker(mRuleTree);
+  nsRuleWalker ruleWalker(mRuleTree, mAuthorStyleDisabled);
   TreeMatchContext treeContext(true, nsRuleWalker::eRelevantLinkUnvisited,
                                aParentElement->OwnerDoc());
   XULTreeRuleProcessorData data(PresContext(), aParentElement, &ruleWalker,

@@ -336,8 +336,16 @@ nsWinGesture::ProcessGestureMessage(HWND hWnd, WPARAM wParam, LPARAM lParam, nsS
         evt.message = NS_SIMPLE_GESTURE_MAGNIFY_START;
         evt.delta = 0.0;
       }
+      else if (gi.dwFlags & GF_END) {
+        // Send a zoom end event, the delta is the change
+        // in touch points.
+        evt.message = NS_SIMPLE_GESTURE_MAGNIFY;
+        // (positive for a "zoom in")
+        evt.delta = -1.0 * (mZoomIntermediate - (float)gi.ullArguments);
+        mZoomIntermediate = (float)gi.ullArguments;
+      }
       else {
-        // Send a zoom intermediate/end event, the delta is the change
+        // Send a zoom intermediate event, the delta is the change
         // in touch points.
         evt.message = NS_SIMPLE_GESTURE_MAGNIFY_UPDATE;
         // (positive for a "zoom in")

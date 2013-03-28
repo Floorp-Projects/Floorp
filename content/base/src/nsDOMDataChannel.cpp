@@ -63,6 +63,7 @@ public:
     // one) once we block GC until all the (appropriate) onXxxx handlers
     // are dropped. (See WebRTC spec)
     mDataChannel->SetListener(nullptr, nullptr);
+    mDataChannel->Close();
   }
 
   nsresult Init(nsPIDOMWindow* aDOMWindow);

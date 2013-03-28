@@ -2508,6 +2508,7 @@ NS_IMETHODIMP
 nsDocShell::SetSecurityUI(nsISecureBrowserUI *aSecurityUI)
 {
     mSecurityUI = aSecurityUI;
+    mSecurityUI->SetDocShell(this);
     return NS_OK;
 }
 
@@ -8630,7 +8631,20 @@ nsDocShell::InternalLoad(nsIURI * aURI,
 
     int16_t shouldLoad = nsIContentPolicy::ACCEPT;
     uint32_t contentType;
-    if (IsFrame()) {
+    bool isNewDocShell = false;
+    nsCOMPtr<nsIDocShell> targetDocShell;
+    if (aWindowTarget && *aWindowTarget) {
+        // Locate the target DocShell.
+        nsCOMPtr<nsIDocShellTreeItem> targetItem;
+        FindItemWithName(aWindowTarget, nullptr, this,
+                         getter_AddRefs(targetItem));
+
+        targetDocShell = do_QueryInterface(targetItem);
+        // If the targetDocShell doesn't exist, then this is a new docShell
+        // and we should consider this a TYPE_DOCUMENT load
+        isNewDocShell = !targetDocShell;
+    }
+    if (IsFrame() && !isNewDocShell) {
         NS_ASSERTION(requestingElement, "A frame but no DOM element!?");
         contentType = nsIContentPolicy::TYPE_SUBDOCUMENT;
     } else {
@@ -8732,15 +8746,6 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         // don't try inheriting an owner from the target window if we came up
         // with a null owner above.
         aFlags = aFlags & ~INTERNAL_LOAD_FLAGS_INHERIT_OWNER;
-        
-        // Locate the target DocShell.
-        // This may involve creating a new toplevel window - if necessary.
-        //
-        nsCOMPtr<nsIDocShellTreeItem> targetItem;
-        FindItemWithName(aWindowTarget, nullptr, this,
-                         getter_AddRefs(targetItem));
-
-        nsCOMPtr<nsIDocShell> targetDocShell = do_QueryInterface(targetItem);
         
         bool isNewWindow = false;
         if (!targetDocShell) {

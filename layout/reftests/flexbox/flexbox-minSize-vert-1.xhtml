@@ -4,10 +4,10 @@
      http://creativecommons.org/publicdomain/zero/1.0/
 -->
 <!--
-     This test checks that we honor the flexbox-specific behavior of the
-     new "min-height: auto" value that was introduced in the flexbox spec.
+     This test checks that we correctly handle flex items with an explicit
+     "min-height: -moz-min-content".
 
-     We check that flex items can't shrink below their min-content height,
+     We check that such flex items can't shrink below their min-content height,
      unless we explicitly reduce their min-height with e.g. "min-height: 0".
 -->
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -27,6 +27,7 @@
         border: 1px dashed green;
         background: lightblue;
         width: 40px;
+        min-height: -moz-min-content; /* not yet supported -- see bug 852367 */
       }
       div.smallSize      { height: 5px; }
       div.smallFlexBasis { flex-basis: 2px; }
@@ -36,8 +37,8 @@
   </head>
   <body>
 
-    <!-- Check that we use the min-content height as a lower-bound when sizing
-         flex items. -->
+    <!-- Check that we honor "min-height: min-content" as a lower-bound when
+         sizing flex items. -->
     <div class="flexbox">
       <div>a b</div>
       <div class="smallSize">a b</div>
@@ -51,9 +52,8 @@
       <div class="smallFlexBasis">a b</div>
     </div>
 
-    <!-- Test that "min-height: 0" on flex items will keep us from clamping to
-         the min-content height. (So we can now actually honor small 'height'
-         and 'flex-basis' values.) -->
+    <!-- Test that we don't clamp when we've got "min-height: 0" on our
+         flex items, though. -->
     <div class="flexbox">
       <div class="zeroMinHeight">a b</div>
       <div class="zeroMinHeight smallSize">a b</div>

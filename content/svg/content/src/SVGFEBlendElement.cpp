@@ -43,12 +43,6 @@ nsSVGElement::StringInfo SVGFEBlendElement::sStringInfo[3] =
 };
 
 //----------------------------------------------------------------------
-// nsISupports methods
-
-NS_IMPL_ISUPPORTS_INHERITED3(SVGFEBlendElement, SVGFEBlendElementBase,
-                             nsIDOMNode, nsIDOMElement,
-                             nsIDOMSVGElement)
-//----------------------------------------------------------------------
 // nsIDOMNode methods
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEBlendElement)

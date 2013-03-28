@@ -17,8 +17,7 @@ class nsSVGForeignObjectFrame;
 namespace mozilla {
 namespace dom {
 
-class SVGForeignObjectElement MOZ_FINAL : public SVGGraphicsElement,
-                                          public nsIDOMSVGElement
+class SVGForeignObjectElement MOZ_FINAL : public SVGGraphicsElement
 {
   friend class ::nsSVGForeignObjectFrame;
 
@@ -29,15 +28,6 @@ protected:
   virtual JSObject* WrapNode(JSContext *cx, JSObject *scope) MOZ_OVERRIDE;
 
 public:
-  // interfaces:
-
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // xxx I wish we could use virtual inheritance
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-  NS_FORWARD_NSIDOMSVGELEMENT(SVGGraphicsElement::)
-
   // nsSVGElement specializations:
   virtual gfxMatrix PrependLocalTransformsTo(const gfxMatrix &aMatrix,
                       TransformTypes aWhich = eAllTransforms) const;
@@ -47,8 +37,6 @@ public:
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* name) const;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  virtual nsIDOMNode* AsDOMNode() { return this; }
 
   // WebIDL
   already_AddRefed<SVGAnimatedLength> X();

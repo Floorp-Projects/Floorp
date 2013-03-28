@@ -10,10 +10,6 @@
 <body>
 <pre id="test">
 <script type="application/javascript">
-if (navigator.platform.startsWith("Win")) {
-  SimpleTest.expectAssertions(0, 1);
-}
-
   createHTML({
     bug: "796892",
     title: "Basic audio-only peer connection"

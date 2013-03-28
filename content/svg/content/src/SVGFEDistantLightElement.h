@@ -17,8 +17,7 @@ nsresult NS_NewSVGFEDistantLightElement(nsIContent **aResult,
 namespace mozilla {
 namespace dom {
 
-class SVGFEDistantLightElement : public SVGFEDistantLightElementBase,
-                                 public nsIDOMSVGElement
+class SVGFEDistantLightElement : public SVGFEDistantLightElementBase
 {
   friend nsresult (::NS_NewSVGFEDistantLightElement(nsIContent **aResult,
                                                     already_AddRefed<nsINodeInfo> aNodeInfo));
@@ -26,24 +25,14 @@ protected:
   SVGFEDistantLightElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : SVGFEDistantLightElementBase(aNodeInfo)
   {
-    SetIsDOMBinding();
   }
   virtual JSObject* WrapNode(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 
 public:
-  // interfaces:
-  NS_DECL_ISUPPORTS_INHERITED
-
-  NS_FORWARD_NSIDOMSVGELEMENT(SVGFEDistantLightElementBase::)
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-
   virtual bool AttributeAffectsRendering(
           int32_t aNameSpaceID, nsIAtom* aAttribute) const;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  virtual nsIDOMNode* AsDOMNode() { return this; }
 
   // WebIDL
   already_AddRefed<nsIDOMSVGAnimatedNumber> Azimuth();
