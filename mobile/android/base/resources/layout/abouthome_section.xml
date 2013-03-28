@@ -36,7 +36,7 @@
 
     <org.mozilla.gecko.LinkTextView android:id="@+id/more_text"
                                     android:layout_width="fill_parent"
-                                    android:layout_height="47dip"
+                                    android:layout_height="@dimen/abouthome_rowitem_height"
                                     android:textColor="@color/abouthome_section_more_text"
                                     android:textSize="12sp"
                                     android:gravity="center"
