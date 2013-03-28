@@ -258,7 +258,6 @@ customIncludes = [
     'mozilla/dom/ElementBinding.h',
     'mozilla/dom/HTMLElementBinding.h',
     'mozilla/dom/DocumentBinding.h',
-    'mozilla/dom/SVGElementBinding.h',
     'nsPerformance.h',
     'mozilla/dom/HTMLDocumentBinding.h',
     'mozilla/dom/EventTargetBinding.h',
@@ -307,7 +306,6 @@ newBindingProperties = {
     'nsIDOMElement': 'mozilla::dom::ElementBinding::sNativePropertyHooks.mNativeProperties.regular',
     'nsIDOMHTMLElement': 'mozilla::dom::HTMLElementBinding::sNativePropertyHooks.mNativeProperties.regular',
     'nsIDOMDocument': 'mozilla::dom::DocumentBinding::sNativePropertyHooks.mNativeProperties.regular',
-    'nsIDOMSVGElement': 'mozilla::dom::SVGElementBinding::sNativePropertyHooks.mNativeProperties.regular',
     'nsIDOMHTMLDocument': 'mozilla::dom::HTMLDocumentBinding::sNativePropertyHooks.mNativeProperties.regular',
     'nsIDOMEventTarget': 'mozilla::dom::EventTargetBinding::sNativePropertyHooks.mNativeProperties.regular',
     }
