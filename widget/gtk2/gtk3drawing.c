@@ -1306,8 +1306,6 @@ moz_gtk_scale_paint(cairo_t *cr, GdkRectangle* rect,
     y = border.top;
   }
 
-  gtk_render_background(style, cr, rect->x + x, rect->y + y,
-                        rect->width - 2*x, rect->height - 2*y);
   gtk_render_frame(style, cr, rect->x + x, rect->y + y,
                    rect->width - 2*x, rect->height - 2*y);
 
