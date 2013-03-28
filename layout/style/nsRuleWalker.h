@@ -64,6 +64,8 @@ public:
   bool GetImportance() const { return mImportance; }
   bool GetCheckForImportantRules() const { return mCheckForImportantRules; }
 
+  bool AuthorStyleDisabled() const { return mAuthorStyleDisabled; }
+
   // We define the visited-relevant link to be the link that is the
   // nearest self-or-ancestor to the node being matched.
   enum VisitedHandlingType {
@@ -84,13 +86,15 @@ private:
   uint8_t mLevel; // an nsStyleSet::sheetType
   bool mImportance;
   bool mCheckForImportantRules; // If true, check for important rules as
-                                        // we walk and set to false if we find
-                                        // one.
+                                // we walk and set to false if we find
+                                // one.
+  bool mAuthorStyleDisabled;
 
 public:
-  nsRuleWalker(nsRuleNode* aRoot)
+  nsRuleWalker(nsRuleNode* aRoot, bool aAuthorStyleDisabled)
     : mCurrent(aRoot)
     , mRoot(aRoot)
+    , mAuthorStyleDisabled(aAuthorStyleDisabled)
   {
     NS_ASSERTION(mCurrent, "Caller screwed up and gave us null node");
     MOZ_COUNT_CTOR(nsRuleWalker);

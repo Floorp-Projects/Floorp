@@ -43,7 +43,6 @@ SVGScriptElement::SVGScriptElement(already_AddRefed<nsINodeInfo> aNodeInfo,
   : SVGScriptElementBase(aNodeInfo)
   , nsScriptElement(aFromParser)
 {
-  SetIsDOMBinding();
   AddMutationObserver(this);
 }
 

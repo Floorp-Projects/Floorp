@@ -84,6 +84,13 @@ interface IPeerConnection : nsISupports
   const long kIceConnected = 3;
   const long kIceFailed = 4;
 
+  /* for readyState on Peer Connection */
+  const long kNew = 0;
+  const long kNegotiating = 1;
+  const long kActive = 2;
+  const long kClosing = 3;
+  const long kClosed = 4;
+
   /* for 'type' in DataChannelInit dictionary */
   const unsigned short kDataChannelReliable = 0;
   const unsigned short kDataChannelPartialReliableRexmit = 1;

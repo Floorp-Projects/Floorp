@@ -49,17 +49,6 @@ nsSVGElement::StringInfo SVGFEMorphologyElement::sStringInfo[2] =
 };
 
 //----------------------------------------------------------------------
-// nsISupports methods
-
-NS_IMPL_ADDREF_INHERITED(SVGFEMorphologyElement,SVGFEMorphologyElementBase)
-NS_IMPL_RELEASE_INHERITED(SVGFEMorphologyElement,SVGFEMorphologyElementBase)
-
-NS_INTERFACE_TABLE_HEAD(SVGFEMorphologyElement)
-  NS_NODE_INTERFACE_TABLE3(SVGFEMorphologyElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement)
-NS_INTERFACE_MAP_END_INHERITING(SVGFEMorphologyElementBase)
-
-//----------------------------------------------------------------------
 // nsIDOMNode methods
 
 

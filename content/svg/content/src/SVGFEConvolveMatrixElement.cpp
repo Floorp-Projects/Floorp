@@ -79,18 +79,6 @@ nsSVGElement::NumberListInfo SVGFEConvolveMatrixElement::sNumberListInfo[1] =
 };
 
 //----------------------------------------------------------------------
-// nsISupports methods
-
-NS_IMPL_ADDREF_INHERITED(SVGFEConvolveMatrixElement,SVGFEConvolveMatrixElementBase)
-NS_IMPL_RELEASE_INHERITED(SVGFEConvolveMatrixElement,SVGFEConvolveMatrixElementBase)
-
-NS_INTERFACE_TABLE_HEAD(SVGFEConvolveMatrixElement)
-  NS_NODE_INTERFACE_TABLE3(SVGFEConvolveMatrixElement, nsIDOMNode,
-                           nsIDOMElement, nsIDOMSVGElement)
-NS_INTERFACE_MAP_END_INHERITING(SVGFEConvolveMatrixElementBase)
-
-
-//----------------------------------------------------------------------
 // nsIDOMNode methods
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEConvolveMatrixElement)

@@ -16,8 +16,7 @@ typedef nsSVGElement SVGMetadataElementBase;
 namespace mozilla {
 namespace dom {
 
-class SVGMetadataElement MOZ_FINAL : public SVGMetadataElementBase,
-                                     public nsIDOMSVGElement
+class SVGMetadataElement MOZ_FINAL : public SVGMetadataElementBase
 {
 protected:
   friend nsresult (::NS_NewSVGMetadataElement(nsIContent **aResult,
@@ -28,18 +27,7 @@ protected:
   nsresult Init();
 
 public:
-  // interfaces:
-
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // xxx I wish we could use virtual inheritance
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGElement::)
-
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  virtual nsIDOMNode* AsDOMNode() { return this; }
 };
 
 } // namespace dom

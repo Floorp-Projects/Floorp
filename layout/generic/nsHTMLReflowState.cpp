@@ -2505,27 +2505,9 @@ nsHTMLReflowState::ComputeMinMaxValues(nscoord aContainingBlockWidth,
                                        nscoord aContainingBlockHeight,
                                        const nsHTMLReflowState* aContainingBlockRS)
 {
-#ifdef MOZ_FLEXBOX
-  nsFlexContainerFrame* flexContainerFrame = GetFlexContainer(frame);
-#endif // MOZ_FLEXBOX
-
-  // Handle "min-width: auto"
-  if (eStyleUnit_Auto == mStylePosition->mMinWidth.GetUnit()) {
-    mComputedMinWidth = 0;
-#ifdef MOZ_FLEXBOX
-    if (flexContainerFrame && flexContainerFrame->IsHorizontal()) {
-      mComputedMinWidth =
-        ComputeWidthValue(aContainingBlockWidth,
-                          mStylePosition->mBoxSizing,
-                          nsStyleCoord(NS_STYLE_WIDTH_MIN_CONTENT,
-                                       eStyleUnit_Enumerated));
-    }
-#endif // MOZ_FLEXBOX
-  } else {
-    mComputedMinWidth = ComputeWidthValue(aContainingBlockWidth,
-                                          mStylePosition->mBoxSizing,
-                                          mStylePosition->mMinWidth);
-  }
+  mComputedMinWidth = ComputeWidthValue(aContainingBlockWidth,
+                                        mStylePosition->mBoxSizing,
+                                        mStylePosition->mMinWidth);
 
   if (eStyleUnit_None == mStylePosition->mMaxWidth.GetUnit()) {
     // Specified value of 'none'
@@ -2549,13 +2531,8 @@ nsHTMLReflowState::ComputeMinMaxValues(nscoord aContainingBlockWidth,
   // Likewise, if we're a child of a flex container who's measuring our
   // intrinsic height, then we want to disregard our min-height.
 
-  // NOTE: We treat "min-height:auto" as "0" for the purpose of this code,
-  // since that's what it means in all cases except for on flex items -- and
-  // even there, we're supposed to ignore it (i.e. treat it as 0) until the
-  // flex container explicitly considers it.
   const nsStyleCoord &minHeight = mStylePosition->mMinHeight;
-  if (eStyleUnit_Auto == minHeight.GetUnit() ||
-      (NS_AUTOHEIGHT == aContainingBlockHeight &&
+  if ((NS_AUTOHEIGHT == aContainingBlockHeight &&
        minHeight.HasPercent()) ||
       (mFrameType == NS_CSS_FRAME_TYPE_INTERNAL_TABLE &&
        minHeight.IsCalcUnit() && minHeight.CalcHasPercent()) ||
