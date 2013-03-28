@@ -165,6 +165,7 @@ webidl_files = \
   RTCConfiguration.webidl \
   Screen.webidl \
   ScrollAreaEvent.webidl \
+  SimpleGestureEvent.webidl \
   StyleSheet.webidl \
   SVGAElement.webidl \
   SVGAltGlyphElement.webidl \
