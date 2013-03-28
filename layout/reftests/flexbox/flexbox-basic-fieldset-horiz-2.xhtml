@@ -4,8 +4,9 @@
      http://creativecommons.org/publicdomain/zero/1.0/
 -->
 <!--
-     This test checks that fieldset elements' default "min-width: auto" property
-     is handled correctly (i.e. isn't influenced by the "width" property).
+     This test checks that a fieldset element with "min-width: min-content"
+     and a huge specified "width" ends up being shrinkable. (In particular,
+     the large "width" value shouldn't influence the min-content width).
 -->
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
@@ -21,6 +22,7 @@
         height: 50px;
         background: purple;
         border: 1px dotted green;
+        min-width: -moz-min-content;
       }
     </style>
   </head>
