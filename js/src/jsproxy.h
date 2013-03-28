@@ -104,7 +104,7 @@ class JS_FRIEND_API(BaseProxyHandler) {
                        bool *bp);
 
     /* ES5 Harmony fundamental proxy traps. */
-    virtual bool preventExtensions(JSContext *cx, HandleObject proxy);
+    virtual bool preventExtensions(JSContext *cx, HandleObject proxy) = 0;
     virtual bool getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
                                        PropertyDescriptor *desc, unsigned flags) = 0;
     virtual bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy,
@@ -129,7 +129,7 @@ class JS_FRIEND_API(BaseProxyHandler) {
                          MutableHandleValue vp);
 
     /* Spidermonkey extensions. */
-    virtual bool isExtensible(JSObject *proxy);
+    virtual bool isExtensible(JSObject *proxy) = 0;
     virtual bool call(JSContext *cx, HandleObject proxy, unsigned argc, Value *vp);
     virtual bool construct(JSContext *cx, HandleObject proxy, unsigned argc,
                            Value *argv, MutableHandleValue rval);
