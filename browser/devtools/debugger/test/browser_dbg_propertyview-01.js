@@ -81,7 +81,7 @@ function testlabelshortening() {
     urls.forEach(function(url) {
       executeSoon(function() {
         let loc = url.href + url.leaf;
-        vs.push([sv.getSourceLabel(loc), loc], { forced: true });
+        vs.push([sv.trimUrlLength(sv.getSourceLabel(loc)), loc], { forced: true });
       });
     });
 

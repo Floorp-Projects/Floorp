@@ -1400,7 +1400,8 @@ cc_int_line (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id, line_t line)
 void
 cc_int_onhook (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t prim_call_id,
                cc_hold_resume_reason_e consult_reason, callid_t call_id,
-               line_t line, boolean softkey, cc_onhook_reason_e active_list)
+               line_t line, boolean softkey, cc_onhook_reason_e active_list,
+               const char *filename, int fileline)
 {
     cc_onhook_t *pmsg;
 
@@ -1421,6 +1422,8 @@ cc_int_onhook (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t prim_call_id,
     pmsg->active_list  = active_list;
 
     CC_DEBUG_ENTRY(__FUNCTION__, src_id, dst_id, call_id, line, cc_msg_name(pmsg->msg_id));
+    DEF_DEBUG("(%u/%u) On-hook called from %s:%d",
+              line, call_id, filename, fileline);
 
     if (cc_send_msg((cprBuffer_t) pmsg, sizeof(*pmsg), dst_id) != CC_RC_SUCCESS) {
         // nobody checks the return code, so generate error message

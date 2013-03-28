@@ -2315,7 +2315,7 @@ IonBuilder::jsop_condswitch()
     while (JSOp(*curCase) == JSOP_CASE) {
         // Fetch the next case.
         jssrcnote *caseSn = info().getNote(cx, curCase);
-        JS_ASSERT(caseSn && SN_TYPE(caseSn) == SRC_PCDELTA);
+        JS_ASSERT(caseSn && SN_TYPE(caseSn) == SRC_NEXTCASE);
         ptrdiff_t off = js_GetSrcNoteOffset(caseSn, 0);
         curCase = off ? curCase + off : GetNextPc(curCase);
         JS_ASSERT(pc < curCase && curCase <= exitpc);
@@ -3007,7 +3007,7 @@ IonBuilder::inlineScriptedCall(HandleFunction target, CallInfo &callInfo)
     LifoAlloc *alloc = GetIonContext()->temp->lifoAlloc();
     CompileInfo *info = alloc->new_<CompileInfo>(calleeScript.get(), target,
                                                  (jsbytecode *)NULL, thisCall.constructing(),
-                                                 SequentialExecution);
+                                                 this->info().executionMode());
     if (!info)
         return false;
 
@@ -3316,7 +3316,7 @@ IonBuilder::getInlineableGetPropertyCache(CallInfo &callInfo)
 }
 
 MPolyInlineDispatch *
-IonBuilder::makePolyInlineDispatch(JSContext *cx, CallInfo &callInfo, 
+IonBuilder::makePolyInlineDispatch(JSContext *cx, CallInfo &callInfo,
                                    MGetPropertyCache *getPropCache, MBasicBlock *bottom,
                                    Vector<MDefinition *, 8, IonAllocPolicy> &retvalDefns)
 {
@@ -3942,7 +3942,7 @@ IonBuilder::jsop_funcall(uint32_t argc)
         current->push(pass);
     } else {
         // |this| becomes implicit in the call.
-        argc -= 1; 
+        argc -= 1;
     }
 
     // Call without inlining.
@@ -4375,7 +4375,7 @@ AdjustTypeBarrierForDOMCall(const JSJitInfo* jitinfo, types::StackTypeSet *types
 
     if (jitinfo->returnType != types->getKnownTypeTag())
         return barrier;
-    
+
     // No need for a barrier if we're already expecting the type we'll produce.
     return NULL;
 }
@@ -4493,7 +4493,7 @@ IonBuilder::jsop_eval(uint32_t argc)
         MInstruction *filterArguments = MFilterArguments::New(string);
         current->add(filterArguments);
 
-        MInstruction *ins = MCallDirectEval::New(scopeChain, string, thisValue);
+        MInstruction *ins = MCallDirectEval::New(scopeChain, string, thisValue, pc);
         current->add(ins);
         current->push(ins);
 

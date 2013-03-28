@@ -2161,3 +2161,15 @@ GK_ATOM(treegrid, "treegrid")
 GK_ATOM(_undefined, "undefined")
 GK_ATOM(xmlroles, "xml-roles")
 #endif
+
+#ifdef MOZ_WEBSPEECH
+GK_ATOM(onaudiostart, "onaudiostart")
+GK_ATOM(onaudioend, "onaudioend")
+GK_ATOM(onsoundstart, "onsoundstart")
+GK_ATOM(onsoundend, "onsoundend")
+GK_ATOM(onspeechstart, "onspeechstart")
+GK_ATOM(onspeechend, "onspeechend")
+GK_ATOM(onresult, "onresult")
+GK_ATOM(onnomatch, "onnomatch")
+GK_ATOM(onstart, "onstart")
+#endif

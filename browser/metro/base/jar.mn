@@ -36,12 +36,9 @@ chrome.jar:
   content/prompt/promptPassword.xul            (content/prompt/promptPassword.xul)
   content/prompt/select.xul                    (content/prompt/select.xul)
   content/prompt/prompt.js                     (content/prompt/prompt.js)
-  content/prompt/masterPassword.xul            (content/prompt/masterPassword.xul)
-  content/prompt/removeMasterPassword.xul      (content/prompt/removeMasterPassword.xul)
 
   content/helperui/AlertsHelper.js             (content/helperui/AlertsHelper.js)
   content/helperui/IndexedDB.js                (content/helperui/IndexedDB.js)
-  content/helperui/MasterPasswordUI.js         (content/helperui/MasterPasswordUI.js)
   content/helperui/MenuUI.js                   (content/helperui/MenuUI.js)
   content/helperui/OfflineApps.js              (content/helperui/OfflineApps.js)
   content/helperui/SelectHelperUI.js           (content/helperui/SelectHelperUI.js)
@@ -75,6 +72,7 @@ chrome.jar:
   content/cursor.css                           (content/cursor.css)
 % content branding %content/branding/
   content/sanitize.js                          (content/sanitize.js)
+  content/sanitizeUI.js                        (content/sanitizeUI.js)
   content/input.js                             (content/input.js)
   content/Util.js                              (content/Util.js)
   content/bookmarks.js                         (content/bookmarks.js)
@@ -82,6 +80,7 @@ chrome.jar:
   content/exceptions.js                        (content/exceptions.js)
   content/downloads.js                         (content/downloads.js)
   content/history.js                           (content/history.js)
+  content/Site.js                              (content/Site.js)
   content/TopSites.js                          (content/TopSites.js)
   content/console.js                           (content/console.js)
   content/AnimatedZoom.js                      (content/AnimatedZoom.js)

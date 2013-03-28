@@ -787,213 +787,15 @@ class XPCShellTests(object):
 
             self.testCount += 1
 
-            xunitResult = {"name": test["name"], "classname": "xpcshell"}
-            # The xUnit package is defined as the path component between the root
-            # dir and the test with path characters replaced with '.' (using Java
-            # class notation).
-            if testsRootDir is not None:
-                testsRootDir = os.path.normpath(testsRootDir)
-                if test["here"].find(testsRootDir) != 0:
-                    raise Exception("testsRootDir is not a parent path of %s" %
-                        test["here"])
-                relpath = test["here"][len(testsRootDir):].lstrip("/\\")
-                xunitResult["classname"] = relpath.replace("/", ".").replace("\\", ".")
-
-            # Check for skipped tests
-            if 'disabled' in test:
-                self.log.info("TEST-INFO | skipping %s | %s" %
-                              (name, test['disabled']))
-
-                xunitResult["skipped"] = True
-                xunitResults.append(xunitResult)
-                continue
-
-            # Check for known-fail tests
-            expected = test['expected'] == 'pass'
-
-            # By default self.appPath will equal the gre dir. If specified in the
-            # xpcshell.ini file, set a different app dir for this test.
-            if appDirKey != None and appDirKey in test:
-                relAppDir = test[appDirKey]
-                relAppDir = os.path.join(self.xrePath, relAppDir)
-                self.appPath = os.path.abspath(relAppDir)
-            else:
-                self.appPath = None
-
-            testdir = os.path.dirname(name)
-            self.buildXpcsCmd(testdir)
-            testHeadFiles, testTailFiles = self.getHeadAndTailFiles(test)
-            cmdH = self.buildCmdHead(testHeadFiles, testTailFiles, self.xpcsCmd)
-
-            # create a temp dir that the JS harness can stick a profile in
-            self.profileDir = self.setupProfileDir()
-            self.leakLogFile = self.setupLeakLogging()
-
-            # The test file will have to be loaded after the head files.
-            cmdT = self.buildCmdTestFile(name)
-
-            args = self.xpcsRunArgs[:]
-            if 'debug' in test:
-                args.insert(0, '-d')
-
-            completeCmd = cmdH + cmdT + args
-
-            proc = None
-            try:
-                self.log.info("TEST-INFO | %s | running test ..." % name)
-                if verbose:
-                    self.logCommand(name, completeCmd, testdir)
-                startTime = time.time()
-
-                proc = self.launchProcess(completeCmd,
-                            stdout=pStdout, stderr=pStderr, env=self.env, cwd=testdir)
-
-                if interactive:
-                    self.log.info("TEST-INFO | %s | Process ID: %d" % (name, proc.pid))
-
-                # Allow user to kill hung subprocess with SIGINT w/o killing this script
-                # - don't move this line above launchProcess, or child will inherit the SIG_IGN
-                signal.signal(signal.SIGINT, markGotSIGINT)
-                # |stderr == None| as |pStderr| was either |None| or redirected to |stdout|.
-                stdout, stderr = self.communicate(proc)
-                signal.signal(signal.SIGINT, signal.SIG_DFL)
-
-                if interactive:
-                    # Not sure what else to do here...
-                    return True
-
-                def print_stdout(stdout):
-                    """Print stdout line-by-line to avoid overflowing buffers."""
-                    self.log.info(">>>>>>>")
-                    if (stdout):
-                        for line in stdout.splitlines():
-                            self.log.info(line)
-                    self.log.info("<<<<<<<")
-
-                result = not ((self.getReturnCode(proc) != 0) or
-                              # if do_throw or do_check failed
-                              (stdout and re.search("^((parent|child): )?TEST-UNEXPECTED-",
-                                                    stdout, re.MULTILINE)) or
-                              # if syntax error in xpcshell file
-                              (stdout and re.search(": SyntaxError:", stdout,
-                                                    re.MULTILINE)) or
-                              # if e10s test started but never finished (child process crash)
-                              (stdout and re.search("^child: CHILD-TEST-STARTED",
-                                                    stdout, re.MULTILINE)
-                                      and not re.search("^child: CHILD-TEST-COMPLETED",
-                                                        stdout, re.MULTILINE)))
-
-                if result != expected:
-                    failureType = "TEST-UNEXPECTED-%s" % ("FAIL" if expected else "PASS")
-                    message = "%s | %s | test failed (with xpcshell return code: %d), see following log:" % (
-                                  failureType, name, self.getReturnCode(proc))
-                    self.log.error(message)
-                    print_stdout(stdout)
-                    self.failCount += 1
-                    xunitResult["passed"] = False
-
-                    xunitResult["failure"] = {
-                      "type": failureType,
-                      "message": message,
-                      "text": stdout
-                    }
-                else:
-                    now = time.time()
-                    timeTaken = (now - startTime) * 1000
-                    xunitResult["time"] = now - startTime
-                    self.log.info("TEST-%s | %s | test passed (time: %.3fms)" % ("PASS" if expected else "KNOWN-FAIL", name, timeTaken))
-                    if verbose:
-                        print_stdout(stdout)
-
-                    xunitResult["passed"] = True
-
-                    if expected:
-                        self.passCount += 1
-                    else:
-                        self.todoCount += 1
-                        xunitResult["todo"] = True
-
-                if mozcrash.check_for_crashes(testdir, self.symbolsPath, test_name=name):
-                    message = "PROCESS-CRASH | %s | application crashed" % name
-                    self.failCount += 1
-                    xunitResult["passed"] = False
-                    xunitResult["failure"] = {
-                      "type": "PROCESS-CRASH",
-                      "message": message,
-                      "text": stdout
-                    }
-
-                # Find child process(es) leak log(s), if any: See InitLog() in
-                # xpcom/base/nsTraceRefcntImpl.cpp for logfile naming logic
-                leakLogs = [self.leakLogFile]
-                for childLog in glob(os.path.join(self.profileDir, "runxpcshelltests_leaks_*_pid*.log")):
-                    if os.path.isfile(childLog):
-                        leakLogs += [childLog]
-                for log in leakLogs:
-                    dumpLeakLog(log, True)
-
-                if self.logfiles and stdout:
-                    self.createLogFile(name, stdout, leakLogs)
-            finally:
-                # We can sometimes get here before the process has terminated, which would
-                # cause removeDir() to fail - so check for the process & kill it it needed.
-                if proc and self.poll(proc) is None:
-                    message = "TEST-UNEXPECTED-FAIL | %s | Process still running after test!" % name
-                    self.log.error(message)
-                    print_stdout(stdout)
-                    self.failCount += 1
-                    xunitResult["passed"] = False
-                    xunitResult["failure"] = {
-                      "type": "TEST-UNEXPECTED-FAIL",
-                      "message": message,
-                      "text": stdout
-                    }
-                    self.kill(proc)
-                # We don't want to delete the profile when running check-interactive
-                # or check-one.
-                if self.profileDir and not self.interactive and not self.singleFile:
-                    try:
-                        self.removeDir(self.profileDir)
-                    except Exception:
-                        self.log.info("TEST-INFO | Failed to remove profile directory. Waiting.")
-
-                        # We suspect the filesystem may still be making changes. Wait a
-                        # little bit and try again.
-                        time.sleep(5)
-
-                        try:
-                            self.removeDir(self.profileDir)
-                        except Exception:
-                            message = "TEST-UNEXPECTED-FAIL | %s | Failed to clean up the test profile directory: %s" % (name, sys.exc_info()[1])
-                            self.log.error(message)
-                            print_stdout(stdout)
-                            print_stdout(traceback.format_exc())
-
-                            self.failCount += 1
-                            xunitResult["passed"] = False
-                            xunitResult["failure"] = {
-                                "type": "TEST-UNEXPECTED-FAIL",
-                                "message": message,
-                                "text": "%s\n%s" % (stdout, traceback.format_exc())
-                            }
-
-            if gotSIGINT:
-                xunitResult["passed"] = False
-                xunitResult["time"] = "0.0"
-                xunitResult["failure"] = {
-                  "type": "SIGINT",
-                  "message": "Received SIGINT",
-                  "text": "Received SIGINT (control-C) during test execution."
-                }
-
-                self.log.error("TEST-UNEXPECTED-FAIL | Received SIGINT (control-C) during test execution")
-                if (keepGoing):
-                    gotSIGINT = False
-                else:
-                    xunitResults.append(xunitResult)
-                    break
+            keep_going, xunitResult = self.run_test(test,
+                tests_root_dir=testsRootDir, app_dir_key=appDirKey,
+                interactive=interactive, verbose=verbose, pStdout=pStdout,
+                pStderr=pStderr, keep_going=keepGoing)
 
             xunitResults.append(xunitResult)
+
+            if not keep_going:
+                break
 
         self.shutdownNode()
 
@@ -1019,6 +821,228 @@ class XPCShellTests(object):
             return False
 
         return self.failCount == 0
+
+
+    def run_test(self, test, tests_root_dir=None, app_dir_key=None,
+            interactive=False, verbose=False, pStdout=None, pStderr=None,
+            keep_going=False):
+        """Run an individual xpcshell test."""
+        global gotSIGINT
+
+        name = test['path']
+
+        xunit_result = {'name': test['name'], 'classname': 'xpcshell'}
+
+        # The xUnit package is defined as the path component between the root
+        # dir and the test with path characters replaced with '.' (using Java
+        # class notation).
+        if tests_root_dir is not None:
+            tests_root_dir = os.path.normpath(tests_root_dir)
+            if test['here'].find(tests_root_dir) != 0:
+                raise Exception('tests_root_dir is not a parent path of %s' %
+                    test['here'])
+            relpath = test['here'][len(tests_root_dir):].lstrip('/\\')
+            xunit_result['classname'] = relpath.replace('/', '.').replace('\\', '.')
+
+        # Check for skipped tests
+        if 'disabled' in test:
+            self.log.info('TEST-INFO | skipping %s | %s' %
+                (name, test['disabled']))
+
+            xunit_result['skipped'] = True
+
+            return True, xunit_result
+
+        # Check for known-fail tests
+        expected = test['expected'] == 'pass'
+
+        # By default self.appPath will equal the gre dir. If specified in the
+        # xpcshell.ini file, set a different app dir for this test.
+        if app_dir_key and app_dir_key in test:
+            rel_app_dir = test[app_dir_key]
+            rel_app_dir = os.path.join(self.xrePath, rel_app_dir)
+            self.appPath = os.path.abspath(rel_app_dir)
+        else:
+            self.appPath = None
+
+        test_dir = os.path.dirname(name)
+        self.buildXpcsCmd(test_dir)
+        head_files, tail_files = self.getHeadAndTailFiles(test)
+        cmdH = self.buildCmdHead(head_files, tail_files, self.xpcsCmd)
+
+        # Create a temp dir that the JS harness can stick a profile in
+        self.profileDir = self.setupProfileDir()
+        self.leakLogFile = self.setupLeakLogging()
+
+        # The test file will have to be loaded after the head files.
+        cmdT = self.buildCmdTestFile(name)
+
+        args = self.xpcsRunArgs[:]
+        if 'debug' in test:
+            args.insert(0, '-d')
+
+        completeCmd = cmdH + cmdT + args
+
+        proc = None
+
+        try:
+            self.log.info("TEST-INFO | %s | running test ..." % name)
+            if verbose:
+                self.logCommand(name, completeCmd, test_dir)
+
+            startTime = time.time()
+            proc = self.launchProcess(completeCmd,
+                stdout=pStdout, stderr=pStderr, env=self.env, cwd=test_dir)
+
+            if interactive:
+                self.log.info("TEST-INFO | %s | Process ID: %d" % (name, proc.pid))
+
+            # Allow user to kill hung subprocess with SIGINT w/o killing this script
+            # - don't move this line above launchProcess, or child will inherit the SIG_IGN
+            signal.signal(signal.SIGINT, markGotSIGINT)
+            # |stderr == None| as |pStderr| was either |None| or redirected to |stdout|.
+            stdout, stderr = self.communicate(proc)
+            signal.signal(signal.SIGINT, signal.SIG_DFL)
+
+            if interactive:
+                # Not sure what else to do here...
+                return True
+
+            def print_stdout(stdout):
+                """Print stdout line-by-line to avoid overflowing buffers."""
+                self.log.info(">>>>>>>")
+                if (stdout):
+                    for line in stdout.splitlines():
+                        self.log.info(line)
+                self.log.info("<<<<<<<")
+
+            result = not ((self.getReturnCode(proc) != 0) or
+                          # if do_throw or do_check failed
+                          (stdout and re.search("^((parent|child): )?TEST-UNEXPECTED-",
+                                                stdout, re.MULTILINE)) or
+                          # if syntax error in xpcshell file
+                          (stdout and re.search(": SyntaxError:", stdout,
+                                                re.MULTILINE)) or
+                          # if e10s test started but never finished (child process crash)
+                          (stdout and re.search("^child: CHILD-TEST-STARTED",
+                                                stdout, re.MULTILINE)
+                                  and not re.search("^child: CHILD-TEST-COMPLETED",
+                                                    stdout, re.MULTILINE)))
+
+            if result != expected:
+                failureType = "TEST-UNEXPECTED-%s" % ("FAIL" if expected else "PASS")
+                message = "%s | %s | test failed (with xpcshell return code: %d), see following log:" % (
+                              failureType, name, self.getReturnCode(proc))
+                self.log.error(message)
+                print_stdout(stdout)
+                self.failCount += 1
+                xunit_result["passed"] = False
+
+                xunit_result["failure"] = {
+                  "type": failureType,
+                  "message": message,
+                  "text": stdout
+                }
+            else:
+                now = time.time()
+                timeTaken = (now - startTime) * 1000
+                xunit_result["time"] = now - startTime
+                self.log.info("TEST-%s | %s | test passed (time: %.3fms)" % ("PASS" if expected else "KNOWN-FAIL", name, timeTaken))
+                if verbose:
+                    print_stdout(stdout)
+
+                xunit_result["passed"] = True
+
+                if expected:
+                    self.passCount += 1
+                else:
+                    self.todoCount += 1
+                    xunit_result["todo"] = True
+
+            if mozcrash.check_for_crashes(test_dir, self.symbolsPath, test_name=name):
+                message = "PROCESS-CRASH | %s | application crashed" % name
+                self.failCount += 1
+                xunit_result["passed"] = False
+                xunit_result["failure"] = {
+                    "type": "PROCESS-CRASH",
+                    "message": message,
+                    "text": stdout
+                }
+
+            # Find child process(es) leak log(s), if any: See InitLog() in
+            # xpcom/base/nsTraceRefcntImpl.cpp for logfile naming logic
+            leakLogs = [self.leakLogFile]
+            for childLog in glob(os.path.join(self.profileDir, "runxpcshelltests_leaks_*_pid*.log")):
+                if os.path.isfile(childLog):
+                    leakLogs += [childLog]
+            for log in leakLogs:
+                dumpLeakLog(log, True)
+
+            if self.logfiles and stdout:
+                self.createLogFile(name, stdout, leakLogs)
+
+        finally:
+            # We can sometimes get here before the process has terminated, which would
+            # cause removeDir() to fail - so check for the process & kill it it needed.
+            if proc and self.poll(proc) is None:
+                message = "TEST-UNEXPECTED-FAIL | %s | Process still running after test!" % name
+                self.log.error(message)
+                print_stdout(stdout)
+                self.failCount += 1
+                xunit_result["passed"] = False
+                xunit_result["failure"] = {
+                  "type": "TEST-UNEXPECTED-FAIL",
+                  "message": message,
+                  "text": stdout
+                }
+                self.kill(proc)
+
+
+            # We don't want to delete the profile when running check-interactive
+            # or check-one.
+            if self.profileDir and not self.interactive and not self.singleFile:
+                try:
+                    self.removeDir(self.profileDir)
+                except Exception:
+                    self.log.info("TEST-INFO | Failed to remove profile directory. Waiting.")
+
+                    # We suspect the filesystem may still be making changes. Wait a
+                    # little bit and try again.
+                    time.sleep(5)
+
+                    try:
+                        self.removeDir(self.profileDir)
+                    except Exception:
+                        message = "TEST-UNEXPECTED-FAIL | %s | Failed to clean up the test profile directory: %s" % (name, sys.exc_info()[1])
+                        self.log.error(message)
+                        print_stdout(stdout)
+                        print_stdout(traceback.format_exc())
+
+                        self.failCount += 1
+                        xunit_result["passed"] = False
+                        xunit_result["failure"] = {
+                            "type": "TEST-UNEXPECTED-FAIL",
+                            "message": message,
+                            "text": "%s\n%s" % (stdout, traceback.format_exc())
+                        }
+
+        if gotSIGINT:
+            xunit_result["passed"] = False
+            xunit_result["time"] = "0.0"
+            xunit_result["failure"] = {
+                "type": "SIGINT",
+                "message": "Received SIGINT",
+                "text": "Received SIGINT (control-C) during test execution."
+            }
+
+            self.log.error("TEST-UNEXPECTED-FAIL | Received SIGINT (control-C) during test execution")
+            if (keep_going):
+                gotSIGINT = False
+            else:
+                return False, xunit_result
+
+        return True, xunit_result
+
 
 class XPCShellOptions(OptionParser):
     def __init__(self):

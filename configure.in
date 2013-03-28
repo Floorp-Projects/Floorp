@@ -4250,6 +4250,7 @@ MOZ_VP8=
 MOZ_VP8_ERROR_CONCEALMENT=
 MOZ_VP8_ENCODER=
 MOZ_WEBVTT=1
+MOZ_WEBSPEECH=1
 VPX_AS=
 VPX_ASFLAGS=
 VPX_AS_DASH_C_FLAG=
@@ -5368,6 +5369,21 @@ arm*)
 esac
 
 dnl ========================================================
+dnl = Disable Speech API code
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(webspeech,
+[  --disable-webspeech        Disable support for HTML Speech API],
+    MOZ_WEBSPEECH=,
+    MOZ_WEBSPEECH=1)
+
+if test -n "$MOZ_WEBSPEECH"; then
+    AC_DEFINE(MOZ_WEBSPEECH)
+    MOZ_MEDIA=1
+fi
+
+AC_SUBST(MOZ_WEBSPEECH)
+
+dnl ========================================================
 dnl = Enable Raw Codecs
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(raw,
@@ -6051,13 +6067,13 @@ if test -n "$MOZ_CRASHREPORTER"; then
   fi
 
   if test "$OS_ARCH" = "WINNT"; then
-    AC_DEFINE_UNQUOTED(BREAKPAD_CUSTOM_STDINT_H, "mozilla/StandardInteger.h")
     if test -z "$HAVE_64BIT_OS"; then
       MOZ_CRASHREPORTER_INJECTOR=1
       AC_DEFINE(MOZ_CRASHREPORTER_INJECTOR)
     fi
   fi
 fi
+AC_DEFINE_UNQUOTED(BREAKPAD_CUSTOM_STDINT_H, "mozilla/StandardInteger.h")
 
 MOZ_ARG_WITH_STRING(crashreporter-enable-percent,
 [  --with-crashreporter-enable-percent=NN
@@ -7790,20 +7806,22 @@ dnl =========================================================
 dnl = Chrome format
 dnl =========================================================
 MOZ_ARG_ENABLE_STRING([chrome-format],
-[  --enable-chrome-format=jar|flat|both|symlink|omni
-                          Select FORMAT of chrome files (default=jar)],
+[  --enable-chrome-format=jar|flat|omni
+                          Select FORMAT of chrome files during packaging],
     MOZ_CHROME_FILE_FORMAT=`echo $enableval | tr A-Z a-z`)
 
 if test -z "$MOZ_CHROME_FILE_FORMAT"; then
     MOZ_CHROME_FILE_FORMAT=jar
 fi
 
+if test "$MOZ_CHROME_FILE_FORMAT" = "symlink"; then
+    AC_MSG_ERROR([--enable-chrome-format=symlink has been deprecated. It is now used by default in $DIST/bin on platforms that support it])
+fi
+
 if test "$MOZ_CHROME_FILE_FORMAT" != "jar" &&
     test "$MOZ_CHROME_FILE_FORMAT" != "flat" &&
-    test "$MOZ_CHROME_FILE_FORMAT" != "symlink" &&
-    test "$MOZ_CHROME_FILE_FORMAT" != "both" &&
     test "$MOZ_CHROME_FILE_FORMAT" != "omni"; then
-    AC_MSG_ERROR([--enable-chrome-format must be set to either jar, flat, both, symlink, or omni])
+    AC_MSG_ERROR([--enable-chrome-format must be set to either jar, flat, or omni])
 fi
 
 dnl =========================================================
@@ -8523,6 +8541,12 @@ dnl Build Captive Portal Detector if required
 AC_SUBST(MOZ_CAPTIVEDETECT)
 if test -n "$MOZ_CAPTIVEDETECT"; then
   AC_DEFINE(MOZ_CAPTIVEDETECT)
+fi
+
+dnl Build WBMP decoder if required
+AC_SUBST(MOZ_WBMP)
+if test -n "$MOZ_WBMP"; then
+  AC_DEFINE(MOZ_WBMP)
 fi
 
 dnl ========================================================

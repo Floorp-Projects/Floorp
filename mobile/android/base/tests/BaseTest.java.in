@@ -566,6 +566,69 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         hitEnterAndWait();
     }
 
+    /**
+    * This method will edit the bookmark with index = bookmarkIndex from the list of bookmarks
+    * For the field index:
+    *     fieldIndex = 1 - the Bookmark name
+    *     fieldIndex = 2 - the Bookmark url
+    *     fieldIndex = 3 - the Bookmark keyword
+    */
+    public void editBookmark(int bookmarkIndex, int fieldIndex, String addedText, ListView list) {
+
+        // Open the Edit Bookmark context menu
+        View child;
+        mSolo.clickOnText("Bookmarks");
+        child = list.getChildAt(bookmarkIndex);
+        mAsserter.ok(child != null, "edit item can be retrieved", child != null ? child.toString() : "null!");
+        waitForText("about:home|Firefox");
+        mSolo.clickLongOnView(child);
+        waitForText("Open in New Tab");
+        mSolo.clickOnText("Edit");
+        waitForText("Edit Bookmark");
+
+        // Clear the Field
+        mSolo.clearEditText(fieldIndex);
+
+        // Enter the new text
+        mSolo.clickOnEditText(fieldIndex);
+        mActions.sendKeys(addedText);
+        mSolo.clickOnText("OK");
+        waitForText("Bookmark updated");
+        mActions.sendSpecialKey(Actions.SpecialKey.BACK); // close the VKB
+    }
+
+    public boolean checkBookmarkEdit(int bookmarkIndex, String addedText, ListView list) {
+        Device mDevice = new Device();
+        // Open the Edit Bookmark context menu
+        View child;
+        mSolo.clickOnText("Bookmarks");
+        child = list.getChildAt(bookmarkIndex);
+        mAsserter.ok(child != null, "check item can be retrieved", child != null ? child.toString() : "null!");
+        waitForText("about:home|Firefox");
+        mSolo.clickLongOnView(child);
+        waitForText("Open in New Tab");
+        mSolo.clickOnText("Edit");
+        waitForText("Edit Bookmark");
+
+        // If the OS is not Gingerbread the vkb will be opened so we need to close it in order to press the "Cancel" button
+        if (!(mDevice.version.equals("2.x"))) {
+            mActions.sendSpecialKey(Actions.SpecialKey.BACK); // close the VKB
+        }
+
+        // Check if the new text was added
+        if (mSolo.searchText(addedText)) {
+            mSolo.clickOnText("Cancel");
+            waitForText("about:home");
+            mActions.sendSpecialKey(Actions.SpecialKey.BACK); // close the VKB
+            return true;
+        } else {
+            mSolo.clickOnText("Cancel");
+            waitForText("about:home");
+            mActions.sendSpecialKey(Actions.SpecialKey.BACK); // close the VKB
+            return false;
+        }
+    }
+
     class Device {
         Build.VERSION mBuildVersion;
         public String version; // 2.x or 3.x or 4.x

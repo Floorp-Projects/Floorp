@@ -61,6 +61,7 @@
 %define metro_border_thick 2px
 %define metro_border_xthick 4px
 
+%define metro_font_snormal 14px
 %define metro_font_normal 15px
 %define metro_font_large 25px
 %define metro_font_xlarge 45px

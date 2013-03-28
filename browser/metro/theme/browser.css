@@ -624,9 +624,38 @@ appbar toolbarbutton[disabled] {
 #star-button[checked] {
   -moz-image-region: rect(80px, 360px, 120px, 320px) !important;
 }
+/* Tile-selection-Specific */
+#pin-selected-button {
+  -moz-image-region: rect(0px, 240px, 40px, 200px) !important;
+}
+#pin-selected-button:hover {
+  -moz-image-region: rect(40px, 240px, 80px, 200px) !important;
+}
+#pin-selected-button:active {
+  -moz-image-region: rect(80px, 240px, 120px, 200px) !important;
+}
+
+#unpin-selected-button {
+  -moz-image-region: rect(80px, 240px, 120px, 200px) !important;
+}
+#unpin-selected-button:hover {
+  -moz-image-region: rect(40px, 240px, 80px, 200px) !important;
+}
+#unpin-selected-button:active {
+  -moz-image-region: rect(0px, 240px, 40px, 200px) !important;
+}
+
+#delete-selected-button {
+  -moz-image-region: rect(0px, 480px, 40px, 440px) !important;
+}
+#delete-selected-button:hover {
+  -moz-image-region: rect(40px, 480px, 80px, 440px) !important;
+}
+#delete-selected-button:active {
+  -moz-image-region: rect(80px, 480px, 120px, 440px) !important;
+}
 
 /* Flyouts ---------------------------------------------------------------- */
-
 /* don't add a margin to the very top settings entry in flyouts */
 flyoutpanel > settings:first-child {
   margin-top: 0px;
@@ -730,6 +759,31 @@ setting[type="directory"] > .preferences-alignment {
 
 .preferences-description:empty {
   display: none;
+}
+
+/* Clear private data prefs */
+
+/* hide subitems when other data checkbox is not checked */
+#prefs-privdata-other:not([checked]) + #prefs-privdata-subitems {
+  display: none;
+}
+
+#prefs-privdata-subitems {
+  display: block;
+  padding-left: @metro_spacing_xnormal@;
+  font-size: @metro_font_snormal@;
+}
+
+/* arrange sub-items in two columns */
+.privdata-subitem-item {
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0;
+  width: 50%;
+}
+
+#clear-notification-done {
+  font-weight: bold;
 }
 
 /* Start UI (Autocomplete + New Tab Page) ----------------------------------- */

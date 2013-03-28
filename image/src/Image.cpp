@@ -86,9 +86,11 @@ Image::GetDecoderType(const char *aMimeType)
   else if (!strcmp(aMimeType, IMAGE_ICON_MS))
     rv = eDecoderType_icon;
 
+#ifdef MOZ_WBMP
   // WBMP
   else if (!strcmp(aMimeType, IMAGE_WBMP))
     rv = eDecoderType_wbmp;
+#endif
 
   return rv;
 }

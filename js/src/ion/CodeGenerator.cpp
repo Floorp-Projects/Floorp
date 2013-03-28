@@ -1700,7 +1700,7 @@ CodeGenerator::visitFilterArguments(LFilterArguments *lir)
 }
 
 typedef bool (*DirectEvalFn)(JSContext *, HandleObject, HandleScript, HandleValue, HandleString,
-                             MutableHandleValue);
+                             jsbytecode *, MutableHandleValue);
 static const VMFunction DirectEvalInfo = FunctionInfo<DirectEvalFn>(DirectEvalFromIon);
 
 bool
@@ -1709,6 +1709,7 @@ CodeGenerator::visitCallDirectEval(LCallDirectEval *lir)
     Register scopeChain = ToRegister(lir->getScopeChain());
     Register string = ToRegister(lir->getString());
 
+    pushArg(ImmWord(lir->mir()->pc()));
     pushArg(string);
     pushArg(ToValue(lir, LCallDirectEval::ThisValueInput));
     pushArg(ImmGCPtr(gen->info().script()));

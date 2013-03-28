@@ -2074,7 +2074,7 @@ RadioInterfaceLayer.prototype = {
 
     this.handleCallError({
       callIndex: -1,
-      error: RIL.RIL_CALL_FAILCAUSE_TO_GECKO_CALL_ERROR[RIL.CALL_FAIL_UNOBTAINABLE_NUMBER]
+      errorMsg: RIL.RIL_CALL_FAILCAUSE_TO_GECKO_CALL_ERROR[RIL.CALL_FAIL_UNOBTAINABLE_NUMBER]
     });
     debug("Number '" + number + "' doesn't seem to be a viable number. Drop.");
 

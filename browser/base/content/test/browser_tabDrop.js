@@ -64,7 +64,7 @@ function test() {
   drop("mochi.test/first", true);
   drop("javascript:'bad'");
   drop("jAvascript:'bad'");
-  drop("space bad");
+  drop("search this", true);
   drop("mochi.test/second", true);
   drop("data:text/html,bad");
   drop("mochi.test/third", true);

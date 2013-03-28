@@ -65,8 +65,6 @@ public:
   // nsIFormControlFrame
   virtual nsresult SetFormProperty(nsIAtom* aName, const nsAString& aValue) MOZ_OVERRIDE;
 
-  virtual nsresult GetFormProperty(nsIAtom* aName, nsAString& aValue) const MOZ_OVERRIDE; 
-  
   // AccessKey Helper function
   static nsresult RegUnRegAccessKey(nsIFrame * aFrame, bool aDoReg);
 

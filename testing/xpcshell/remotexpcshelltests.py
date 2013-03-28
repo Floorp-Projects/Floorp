@@ -152,7 +152,11 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
 
     def setupTestDir(self):
         print 'pushing %s' % self.xpcDir
-        self.device.pushDir(self.xpcDir, self.remoteScriptsDir, retryLimit=10)
+        try:
+            self.device.pushDir(self.xpcDir, self.remoteScriptsDir, retryLimit=10)
+        except TypeError:
+            # Foopies have an older mozdevice ver without retryLimit
+            self.device.pushDir(self.xpcDir, self.remoteScriptsDir)
 
     def buildTestList(self):
         xpcshell.XPCShellTests.buildTestList(self)
@@ -419,6 +423,10 @@ class PathMapping:
 
 def main():
 
+    if sys.version_info < (2,7):
+        print >>sys.stderr, "Error: You must use python version 2.7 or newer but less than 3.0"
+        sys.exit(1)
+
     parser = RemoteXPCShellOptions()
     options, args = parser.parse_args()
     if not options.localAPK:
@@ -452,10 +460,6 @@ def main():
 
     if options.interactive and not options.testPath:
         print >>sys.stderr, "Error: You must specify a test filename in interactive mode!"
-        sys.exit(1)
-
-    if not options.objdir:
-        print >>sys.stderr, "Error: You must specify an objdir"
         sys.exit(1)
 
     xpcsh = XPCShellRemote(dm, options, args)

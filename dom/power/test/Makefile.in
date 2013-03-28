@@ -13,10 +13,13 @@ include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES = \
   test_power_basics.html \
+  test_power_set_cpusleepallowed.html \
+  test_power_set_screen_brightness.html \
+  test_power_set_screen_enabled.html \
   $(NULL)
 
 MOCHITEST_BROWSER_FILES = \
-  browser_bug697132.js \
+  browser_wakelocks.js \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

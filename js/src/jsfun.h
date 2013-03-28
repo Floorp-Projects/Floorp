@@ -100,6 +100,18 @@ class JSFunction : public JSObject
     bool isSelfHostedConstructor()  const { return flags & SELF_HOSTED_CTOR; }
     bool hasRest()                  const { return flags & HAS_REST; }
     bool hasDefaults()              const { return flags & HAS_DEFAULTS; }
+
+    // Arrow functions are a little weird.
+    //
+    // Like all functions, (1) when the compiler parses an arrow function, it
+    // creates a function object that gets stored with the enclosing script;
+    // and (2) at run time the script's function object is cloned.
+    //
+    // But then, unlike other functions, (3) a bound function is created with
+    // the clone as its target.
+    //
+    // isArrow() is true for all three of these Function objects.
+    // isBoundFunction() is true only for the last one.
     bool isArrow()                  const { return flags & ARROW; }
 
     /* Compound attributes: */

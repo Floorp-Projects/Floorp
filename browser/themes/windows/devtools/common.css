@@ -142,6 +142,7 @@
 .devtools-searchinput {
   -moz-appearance: none;
   margin: 0 3px;
+  min-height: 22px;
   border: 1px solid hsla(211,68%,6%,.6);
   box-shadow: inset 0 1px 0 hsla(211,68%,6%,.05), 0 0 0 1px hsla(210,40%,83%,.1);
   border-radius: 2px;
@@ -361,36 +362,6 @@
 .devtools-sidebar-tabs > tabs > tab[selected=true]:hover:active {
   background-image: linear-gradient(#1f3e4f, #1b3243), @solidSeparator@;
   box-shadow: 0 1px 0 hsla(0,0%,100%,.05) inset, 0 -2px 0 hsla(206,37%,4%,.05) inset, 0 -1px 1px hsla(206,37%,4%,.1) inset;
-}
-
-/* Theme */
-
-.devtools-theme-background {
-  background-color: white;
-}
-
-.devtools-theme-comment {
-  color: hsl(90,2%,46%); /* grey */
-}
-
-.devtools-theme-keyword {
-  color: hsl(276,44%,45%); /* purple */
-}
-
-.devtools-theme-string {
-  color: hsl(72,100%,27%); /* green */
-}
-
-.devtools-theme-tagname {
-  color: hsl(208,81%,21%); /* dark blue */
-}
-
-.devtools-theme-attrname {
-  color: hsl(208,56%,40%); /* blue */
-}
-
-.devtools-theme-attrvalue {
-  color: hsl(24,85%,39%); /* orange */
 }
 
 %include ../../shared/devtools/common.inc.css

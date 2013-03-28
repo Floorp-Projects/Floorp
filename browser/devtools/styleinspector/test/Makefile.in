@@ -23,7 +23,7 @@ MOCHITEST_BROWSER_FILES = \
   browser_ruleview_734259_style_editor_link.js \
   browser_ruleview_editor.js \
   browser_ruleview_editor_changedvalues.js \
-  browser_ruleview_bug_703643_context_menu_copy.js \
+  browser_ruleview_copy.js \
   browser_ruleview_focus.js \
   browser_ruleview_inherit.js \
   browser_ruleview_manipulation.js \
@@ -36,7 +36,7 @@ MOCHITEST_BROWSER_FILES = \
   browser_bug_592743_specificity.js \
   browser_bug722691_rule_view_increment.js \
   browser_computedview_734259_style_editor_link.js \
-  browser_computedview_bug_703643_context_menu_copy.js\
+  browser_computedview_copy.js\
   head.js \
   $(NULL)
 
