@@ -54,7 +54,7 @@ AbstractFile.prototype = {
       bytes = this.stat().size;
     }
     let buffer = new Uint8Array(bytes);
-    let size = this.readTo(buffer, bytes);
+    let size = this.readTo(buffer, {bytes: bytes});
     if (size == bytes) {
       return buffer;
     } else {
