@@ -31,7 +31,6 @@ NS_IMPL_ISUPPORTS_INHERITED3(SVGMetadataElement, SVGMetadataElementBase,
 SVGMetadataElement::SVGMetadataElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : SVGMetadataElementBase(aNodeInfo)
 {
-  SetIsDOMBinding();
 }
 
 

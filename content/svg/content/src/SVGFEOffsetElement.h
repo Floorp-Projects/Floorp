@@ -18,8 +18,7 @@ namespace dom {
 
 typedef nsSVGFE SVGFEOffsetElementBase;
 
-class SVGFEOffsetElement : public SVGFEOffsetElementBase,
-                           public nsIDOMSVGElement
+class SVGFEOffsetElement : public SVGFEOffsetElementBase
 {
   friend nsresult (::NS_NewSVGFEOffsetElement(nsIContent **aResult,
                                               already_AddRefed<nsINodeInfo> aNodeInfo));
@@ -27,7 +26,6 @@ protected:
   SVGFEOffsetElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : SVGFEOffsetElementBase(aNodeInfo)
   {
-    SetIsDOMBinding();
   }
   virtual JSObject* WrapNode(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 
@@ -50,14 +48,7 @@ public:
   virtual nsIntRect ComputeChangeBBox(const nsTArray<nsIntRect>& aSourceChangeBoxes,
           const nsSVGFilterInstance& aInstance);
 
-  NS_FORWARD_NSIDOMSVGELEMENT(SVGFEOffsetElementBase::)
-
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  virtual nsIDOMNode* AsDOMNode() { return this; }
 
   // WebIDL
   already_AddRefed<nsIDOMSVGAnimatedString> In1();

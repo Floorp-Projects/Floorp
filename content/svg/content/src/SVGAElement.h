@@ -20,7 +20,6 @@ namespace dom {
 typedef SVGGraphicsElement SVGAElementBase;
 
 class SVGAElement MOZ_FINAL : public SVGAElementBase,
-                              public nsIDOMSVGElement,
                               public nsILink,
                               public Link
 {
@@ -31,14 +30,7 @@ protected:
   virtual JSObject* WrapNode(JSContext *cx, JSObject *scope) MOZ_OVERRIDE;
 
 public:
-  // interfaces:
-
   NS_DECL_ISUPPORTS_INHERITED
-
-  // XXX: I wish we could use virtual inheritance
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-  NS_FORWARD_NSIDOMSVGELEMENT(SVGAElementBase::)
 
   // nsINode interface methods
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
@@ -72,8 +64,6 @@ public:
                            bool aNotify);
   virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
                              bool aNotify);
-
-  virtual nsIDOMNode* AsDOMNode() { return this; }
 
   // WebIDL
   already_AddRefed<nsIDOMSVGAnimatedString> Href();

@@ -45,7 +45,6 @@ NS_IMPL_ISUPPORTS_INHERITED3(SVGRectElement, SVGRectElementBase,
 SVGRectElement::SVGRectElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : SVGRectElementBase(aNodeInfo)
 {
-  SetIsDOMBinding();
 }
 
 //----------------------------------------------------------------------

@@ -56,7 +56,6 @@ NS_IMPL_ISUPPORTS_INHERITED4(SVGMaskElement, SVGMaskElementBase,
 SVGMaskElement::SVGMaskElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : SVGMaskElementBase(aNodeInfo)
 {
-  SetIsDOMBinding();
 }
 
 //----------------------------------------------------------------------

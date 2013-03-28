@@ -32,7 +32,6 @@ NS_IMPL_ISUPPORTS_INHERITED3(SVGTSpanElement, SVGTSpanElementBase,
 SVGTSpanElement::SVGTSpanElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : SVGTSpanElementBase(aNodeInfo)
 {
-  SetIsDOMBinding();
 }
 
 

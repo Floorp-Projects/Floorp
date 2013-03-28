@@ -39,7 +39,6 @@ NS_INTERFACE_MAP_END_INHERITING(SVGFEDistantLightElementBase)
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEDistantLightElement)
 
-//----------------------------------------------------------------------
 // nsFEUnstyledElement methods
 
 bool

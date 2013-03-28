@@ -71,7 +71,6 @@ NS_IMPL_ISUPPORTS_INHERITED3(SVGTextPathElement, SVGTextPathElementBase,
 SVGTextPathElement::SVGTextPathElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : SVGTextPathElementBase(aNodeInfo)
 {
-  SetIsDOMBinding();
 }
 
 //----------------------------------------------------------------------
