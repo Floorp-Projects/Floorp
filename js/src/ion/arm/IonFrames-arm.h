@@ -176,11 +176,11 @@ class IonBaselineStubFrameLayout : public IonCommonFrameLayout
         return sizeof(IonBaselineStubFrameLayout);
     }
 
-    static inline size_t reverseOffsetOfStubPtr() {
-        return -sizeof(void *);
+    static inline int reverseOffsetOfStubPtr() {
+        return -int(sizeof(void *));
     }
-    static inline size_t reverseOffsetOfSavedFramePtr() {
-        return -(2 * sizeof(void *));
+    static inline int reverseOffsetOfSavedFramePtr() {
+        return -int(2 * sizeof(void *));
     }
 
     inline ICStub *stubPtr() {

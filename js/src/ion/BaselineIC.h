@@ -1304,12 +1304,16 @@ class ICTypeMonitor_Fallback : public ICStub
                            uint32_t argumentIndex)
       : ICStub(ICStub::TypeMonitor_Fallback, stubCode),
         mainFallbackStub_(mainFallbackStub),
-        firstMonitorStub_(this),
+        firstMonitorStub_(thisFromCtor()),
         lastMonitorStubPtrAddr_(NULL),
         numOptimizedMonitorStubs_(0),
         hasFallbackStub_(mainFallbackStub != NULL),
         argumentIndex_(argumentIndex)
     { }
+
+    ICTypeMonitor_Fallback *thisFromCtor() {
+        return this;
+    }
 
     void addOptimizedMonitorStub(ICStub *stub) {
         stub->setNext(this);
