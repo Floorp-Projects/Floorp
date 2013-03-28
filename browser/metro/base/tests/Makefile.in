@@ -25,12 +25,13 @@ BROWSER_TESTS = \
   browser_plugin_input_mouse.js \
   browser_plugin_input_keyboard.js \
   browser_context_menu_tests.js \
+  browser_sanitize_ui.js \
   browser_context_menu_tests_01.html \
   browser_context_menu_tests_02.html \
   browser_context_menu_tests_03.html \
   text-block.html \
+  browser_topsites.js \
   $(NULL)
-
 BROWSER_TEST_RESOURCES = \
   res/image01.png \
   $(NULL)

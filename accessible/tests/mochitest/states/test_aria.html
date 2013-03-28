@@ -132,12 +132,10 @@
       testStates("as_item2", 0, 0, 0, EXT_STATE_ACTIVE);
 
       // universal ARIA properties inherited from file input control
-      var fileTextField = getAccessible("fileinput").firstChild;
-      testStates(fileTextField,
-                 STATE_BUSY | STATE_UNAVAILABLE | STATE_REQUIRED | STATE_HASPOPUP | STATE_INVALID);
-      var fileBrowseButton = getAccessible("fileinput").lastChild;
+      var fileBrowseButton = getAccessible("fileinput").firstChild;
       testStates(fileBrowseButton,
                  STATE_BUSY | STATE_UNAVAILABLE | STATE_REQUIRED | STATE_HASPOPUP | STATE_INVALID);
+      // No states on the label.
 
       // offscreen test
       testStates("aria_offscreen_textbox", STATE_OFFSCREEN);

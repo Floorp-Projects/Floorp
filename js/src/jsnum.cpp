@@ -894,19 +894,15 @@ static JSFunctionSpec number_methods[] = {
     JS_FN(js_toSource_str,       num_toSource,          0, 0),
 #endif
     JS_FN(js_toString_str,       num_toString,          1, 0),
-    JS_FN(js_valueOf_str,        js_num_valueOf,        0, 0),
-    JS_FN("toFixed",             num_toFixed,           1, 0),
-    JS_FN("toExponential",       num_toExponential,     1, 0),
-    JS_FN("toPrecision",         num_toPrecision,       1, 0),
-
-    // This must be at the end because of bug 853075: functions listed after
-    // self-hosted methods aren't available in self-hosted code.
 #if ENABLE_INTL_API
          {js_toLocaleString_str, {NULL, NULL},           0,0, "Number_toLocaleString"},
 #else
     JS_FN(js_toLocaleString_str, num_toLocaleString,     0,0),
 #endif
-
+    JS_FN(js_valueOf_str,        js_num_valueOf,        0, 0),
+    JS_FN("toFixed",             num_toFixed,           1, 0),
+    JS_FN("toExponential",       num_toExponential,     1, 0),
+    JS_FN("toPrecision",         num_toPrecision,       1, 0),
     JS_FS_END
 };
 

@@ -370,25 +370,6 @@ HTMLTextFieldAccessible::ApplyARIAState(uint64_t* aState) const
 }
 
 uint64_t
-HTMLTextFieldAccessible::State()
-{
-  uint64_t state = HyperTextAccessibleWrap::State();
-  if (state & states::DEFUNCT)
-    return state;
-
-  // Inherit states from input@type="file" suitable for the button. Note,
-  // no special processing for unavailable state since inheritance is supplied
-  // by other code paths.
-  if (mParent && mParent->IsHTMLFileInput()) {
-    uint64_t parentState = mParent->State();
-    state |= parentState & (states::BUSY | states::REQUIRED |
-      states::HASPOPUP | states::INVALID);
-  }
-
-  return state;
-}
-
-uint64_t
 HTMLTextFieldAccessible::NativeState()
 {
   uint64_t state = HyperTextAccessibleWrap::NativeState();
@@ -555,24 +536,17 @@ HTMLFileInputAccessible::HandleAccEvent(AccEvent* aEvent)
        event->GetState() == states::REQUIRED ||
        event->GetState() == states::HASPOPUP ||
        event->GetState() == states::INVALID)) {
-    Accessible* input = GetChildAt(0);
-    if (input && input->Role() == roles::ENTRY) {
-      nsRefPtr<AccStateChangeEvent> childEvent =
-        new AccStateChangeEvent(input, event->GetState(),
-                                event->IsStateEnabled(),
-                                (event->IsFromUserInput() ? eFromUserInput : eNoUserInput));
-      nsEventShell::FireEvent(childEvent);
-    }
-
-    Accessible* button = GetChildAt(1);
+    Accessible* button = GetChildAt(0);
     if (button && button->Role() == roles::PUSHBUTTON) {
       nsRefPtr<AccStateChangeEvent> childEvent =
         new AccStateChangeEvent(button, event->GetState(),
                                 event->IsStateEnabled(),
-                                (event->IsFromUserInput() ? eFromUserInput : eNoUserInput));
+                                (event->IsFromUserInput() ? eFromUserInput
+                                                          : eNoUserInput));
       nsEventShell::FireEvent(childEvent);
     }
   }
+
   return NS_OK;
 }
 

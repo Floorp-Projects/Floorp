@@ -258,23 +258,21 @@
             <scrollbox id="start-scrollbox" orient="horizontal" flex="1">
             <vbox id="start-topsites" class="meta-section">
               <label class="meta-section-title" value="&startTopSitesHeader.label;"/>
-              <richgrid id="start-topsites-grid" seltype="single" flex="1"/>
+              <richgrid id="start-topsites-grid" seltype="multiple" flex="1"/>
             </vbox>
-
             <vbox id="start-bookmarks" class="meta-section">
               <label class="meta-section-title" value="&startBookmarksHeader.label;"
                 onclick="PanelUI.show('bookmarks-container');"/>
-              <richgrid id="start-bookmarks-grid" seltype="single" flex="1"/>
+              <richgrid id="start-bookmarks-grid" seltype="multiple" flex="1"/>
             </vbox>
-
             <vbox id="start-history" class="meta-section">
               <label class="meta-section-title" value="&startHistoryHeader.label;"/>
-              <richgrid id="start-history-grid" seltype="single" flex="1"/>
+              <richgrid id="start-history-grid" seltype="multiple" flex="1"/>
             </vbox>
             <vbox id="start-remotetabs" class="meta-section">
               <label class="meta-section-title" value="&startRemoteTabsHeader.label;"
                 onclick="PanelUI.show('remotetabs-container');"/>
-              <richgrid id="start-remotetabs-grid" seltype="single" flex="1"/>
+              <richgrid id="start-remotetabs-grid" seltype="multiple" flex="1"/>
             </vbox>
             </scrollbox>
           </hbox>
@@ -313,7 +311,7 @@
 
     <!-- Windows 8 Appbar -->
     <appbar id="appbar" mousethrough="never" observes="bcast_windowState">
-      <!-- contextual actions temporarily hidden, pending #800996, #831918 -->
+      <!-- contextual actions temporarily hidden, pending #800996 -->
       <hbox id="contextualactions-tray" flex="1" hidden="true">
         <toolbarbutton id="delete-selected-button" hidden="true" oncommand="Appbar.dispatchContextualAction('delete')"/>
         <toolbarbutton id="restore-selected-button" hidden="true" oncommand="Appbar.dispatchContextualAction('restore')"/>
@@ -430,17 +428,39 @@
       <settings id="prefs-charencoding" label="&optionsHeader.char.title;">
         <setting pref="browser.menu.showCharacterEncoding" title="&optionsHeader.char.options.label;" type="bool"/>
       </settings>
-      <settings id="prefs-privdata" label="&optionsHeader.privacy.clearPrivateData.title;">
-        <setting title="&optionsHeader.privacy.clearPrivateData.label;" type="control">
-          <button id="prefs-clear-data" label="&optionsHeader.privacy.clearPrivateData.button;" command="cmd_sanitize"/>
-        </setting>
+      <settings id="prefs-privdata" label="&clearPrivateData.title;">
+        <description>&clearPrivateData.label;</description>
+
+        <checkbox id="prefs-privdata-history" itemName="history" label="&clearPrivateData.history;" checked="true" />
+
+        <checkbox id="prefs-privdata-other" label="&clearPrivateData.otherdata;"/>
+        <hbox id="prefs-privdata-subitems" >
+          <checkbox class="privdata-subitem-item" checked="true" itemName="downloads" label="&clearPrivateData.downloadHist;"/>
+          <checkbox class="privdata-subitem-item" checked="true" itemName="formdata" label="&clearPrivateData.formSearchHist;"/>
+          <checkbox class="privdata-subitem-item" checked="true" itemName="cookies" label="&clearPrivateData.cookies;"/>
+          <checkbox class="privdata-subitem-item" checked="true" itemName="passwords" label="&clearPrivateData.passwords;"/>
+          <checkbox class="privdata-subitem-item" checked="true" itemName="cache" label="&clearPrivateData.cache;"/>
+          <checkbox class="privdata-subitem-item" checked="true" itemName="offlineApps" label="&clearPrivateData.offline;"/>
+          <checkbox class="privdata-subitem-item" checked="true" itemName="siteSettings" label="&clearPrivateData.sitePref;"/>
+          <checkbox class="privdata-subitem-item" checked="true" itemName="sessions" label="&clearPrivateData.logins;"/>
+        </hbox>
+
+        <hbox align="center">
+          <button id="prefs-clear-data" label="&clearPrivateData.button;" command="cmd_sanitize" flex="1" />
+          <deck id="clear-notification" flex="2" selectedIndex="0" align="center">
+            <spacer id="clear-notification-empty"/>
+            <hbox id="clear-notification-clearing" align="center">
+              <!-- TODO: we need a more metro-y throbber. See bug 852622 -->
+              <image src="chrome://browser/skin/images/throbber.png" />
+            </hbox>
+            <description id="clear-notification-done">&clearPrivateData.done;</description>
+          </deck>
+        </hbox>
       </settings>
       <setting pref="signon.rememberSignons" title="&optionsHeader.privacy.passwords.label;" type="bool"/>
       <settings id="prefs-donottrack" label="&optionsHeader.privacy.doNotTrack.title;">
         <setting pref="privacy.donottrackheader.enabled" title="&optionsHeader.privacy.doNotTrack.label;" type="bool"/>
       </settings>
-
-      <setting id="prefs-master-password" title="&optionsHeader.privacy.masterPassword.label;" type="bool" oncommand="MasterPasswordUI.show(this.value);"/>
     </flyoutpanel>
 
     <!-- Form Helper form validation helper popup -->
@@ -535,12 +555,12 @@
 #endif
 
     <box onclick="event.stopPropagation();" id="context-container" class="menu-container" hidden="true">
-      <!-- onclick is dom bug 835175 --> 
+      <!-- onclick is dom bug 835175 -->
       <vbox id="context-popup" class="menu-popup">
         <richlistbox id="context-commands" bindingType="contextmenu" flex="1">
           <!-- priority="low" items are hidden by default when a context is being displayed
                for two or more media types. (e.g. a linked image) -->
-          <!-- content types preceeded by '!' act as exclusion rules, the menu item will not 
+          <!-- content types preceeded by '!' act as exclusion rules, the menu item will not
                be displayed if the content type is present. -->
           <!-- Note the order of richlistitem here is important as it is reflected in the
                menu itself. -->

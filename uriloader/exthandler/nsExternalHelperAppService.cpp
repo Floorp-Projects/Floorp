@@ -478,7 +478,9 @@ static nsExtraMimeTypeEntry extraMimeEntries [] =
   { IMAGE_PNG, "png", "PNG Image" },
   { IMAGE_TIFF, "tiff,tif", "TIFF Image" },
   { IMAGE_XBM, "xbm", "XBM Image" },
+#ifdef MOZ_WBMP
   { IMAGE_WBMP, "wbmp", "WBMP Image" },
+#endif
   { "image/svg+xml", "svg", "Scalable Vector Graphics" },
   { MESSAGE_RFC822, "eml", "RFC-822 data" },
   { TEXT_PLAIN, "txt,text", "Text File" },
@@ -494,6 +496,9 @@ static nsExtraMimeTypeEntry extraMimeEntries [] =
   { APPLICATION_OGG, "ogg", "Ogg Video"},
   { AUDIO_OGG, "oga", "Ogg Audio" },
   { AUDIO_OGG, "opus", "Opus Audio" },
+#ifdef MOZ_WIDGET_GONK
+  { AUDIO_AMR, "amr", "Adaptive Multi-Rate Audio" },
+#endif
   { VIDEO_WEBM, "webm", "Web Media Video" },
   { AUDIO_WEBM, "webm", "Web Media Audio" },
 #ifdef MOZ_DASH

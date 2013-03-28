@@ -9,7 +9,10 @@
 #include "gfxASurface.h"
 #include "gfxImageSurface.h"
 
+/* include windows.h for the HWND and HDC definitions that we need. */
 #include <windows.h>
+/* undefine LoadImage because our code uses that name */
+#undef LoadImage
 
 class gfxContext;
 

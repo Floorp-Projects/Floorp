@@ -1,0 +1,34 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#root {
+  display: -moz-box;
+}
+
+.ruleview {
+  overflow: auto;
+  -moz-user-select: text;
+}
+
+.ruleview-code {
+  direction: ltr;
+}
+
+.ruleview-property:not(:hover) > .ruleview-enableproperty {
+  pointer-events: none;
+}
+
+.ruleview-namecontainer {
+  cursor: text;
+}
+
+.ruleview-propertycontainer {
+  cursor: text;
+  padding-right: 15px;
+}
+
+.ruleview-computedlist:not(.styleinspector-open),
+.ruleview-warning[hidden] {
+  display: none;
+}

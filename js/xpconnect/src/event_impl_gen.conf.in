@@ -50,6 +50,10 @@ simple_events = [
     'GamepadButtonEvent',
     'GamepadAxisMoveEvent',
 #endif
+#ifdef MOZ_WEBSPEECH
+    'SpeechRecognitionEvent',
+    'SpeechRecognitionError',
+#endif
   ]
 
 """ include file names """

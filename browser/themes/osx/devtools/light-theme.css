@@ -1,0 +1,107 @@
+/* vim:set ts=2 sw=2 sts=2 et: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* According to:
+ * https://bugzilla.mozilla.org/show_bug.cgi?id=715472#c17
+ */
+.theme-body {
+  background: white;
+  color: black;
+}
+
+.theme-twisty {
+  cursor: pointer;
+  margin-right: 5px;
+}
+
+.theme-twisty:-moz-focusring {
+  outline-style: none;
+}
+
+.theme-twisty:not([open]) {
+  width: 0;
+  height: 0;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 5px solid rgba(0,0,0,0.5);
+  margin-left: 5px;
+}
+
+.theme-twisty[open] {
+  width: 10px;
+  height: 10px;
+  background-image: linear-gradient(to bottom right, transparent 68%,  rgba(0,0,0,0.5) 68%);
+}
+
+.theme-checkbox {
+  display: inline-block;
+  border: 1px solid rgba(160,160,160,0.4);
+  width: 6px;
+  height: 6px;
+  padding: 2px;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  outline: none;
+}
+
+.theme-checkbox[checked] {
+  background-clip: content-box;
+  background-image: linear-gradient(to bottom right, transparent 48%, rgba(160,160,160,1) 48%, rgba(160,160,160,1) 52%, transparent 52%),
+                    linear-gradient(to bottom left, transparent 48%, rgba(160,160,160,1) 48%, rgba(160,160,160,1) 52%, transparent 52%);
+}
+
+.theme-selected {
+  background-color: hsl(0,0%,90%);
+}
+
+.theme-bg-darker {
+  background: #F9F9F9;
+}
+
+.theme-link { /* blue */
+  color: hsl(208,56%,40%);
+}
+
+.theme-comment { /* grey */
+  color: hsl(90,2%,46%);
+}
+
+.theme-gutter {
+  background-color: hsl(0,0%,90%);
+  color: #667380;
+  border-color: hsl(0,0%,65%);
+}
+
+.theme-separator { /* grey */
+  border-color: #cddae5;
+}
+
+.theme-fg-color1 { /* green */
+  color: hsl(72,100%,27%);
+}
+
+.theme-fg-color2 { /* blue */
+  color: hsl(208,56%,40%);
+}
+
+.theme-fg-color3 { /* dark blue */
+  color: hsl(208,81%,21%)
+}
+
+.theme-fg-color4 { /* Orange */
+  color: hsl(24,85%,39%);
+}
+
+.theme-fg-color5 { /* Yellow */
+  color: #a18650;
+}
+
+.theme-fg-color6 { /* Orange */
+  color: hsl(24,85%,39%);
+}
+
+.theme-fg-color7 { /* Red */
+  color: #bf5656;
+}

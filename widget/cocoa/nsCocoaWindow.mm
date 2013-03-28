@@ -2813,7 +2813,7 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
     // setBottomCornerRounded: is a private API call, so we check to make sure
     // we respond to it just in case.
     if ([self respondsToSelector:@selector(setBottomCornerRounded:)])
-      [self setBottomCornerRounded:NO];
+      [self setBottomCornerRounded:nsCocoaFeatures::OnLionOrLater()];
 
     [self setAutorecalculatesContentBorderThickness:NO forEdge:NSMaxYEdge];
     [self setContentBorderThickness:0.0f forEdge:NSMaxYEdge];
