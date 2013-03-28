@@ -43,7 +43,7 @@ vbox {
   padding-right: 1px;
 }
 
-.file > button {
+.file > input[type='button'] {
   height: inherit;
   font-size: inherit;
   letter-spacing: inherit;
