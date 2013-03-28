@@ -33,7 +33,7 @@
 //
 // Author: Mark Mentovai
 
-#include "processor/pathname_stripper.h"
+#include "common/pathname_stripper.h"
 
 namespace google_breakpad {
 
