@@ -56,7 +56,7 @@ GetSCTPLog()
 #ifdef DEBUG
 #define ASSERT_WEBRTC(x) MOZ_ASSERT((x))
 #elif defined(MOZ_WEBRTC_ASSERT_ALWAYS)
-#define ASSERT_WEBRTC(x) do { if (!(x)) { MOZ_CRASH(); } } while 0
+#define ASSERT_WEBRTC(x) do { if (!(x)) { MOZ_CRASH(); } } while (0)
 #endif
 
 static bool sctp_initialized;
