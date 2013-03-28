@@ -53,8 +53,9 @@ downgrade
 
 <api name="isPrivateBrowsingSupported">
 @property {boolean}
-This property indicates add-on's support for private browsing. It comes from the
-`private-browsing` property set in the `package.json` file in the main package.
+This property indicates whether or not the add-on supports private browsing.
+It comes from the [`private-browsing` key](dev-guide/package-spec.html#permissions)
+in the add-on's `package.json` file.
 </api>
 
 <api name="data">

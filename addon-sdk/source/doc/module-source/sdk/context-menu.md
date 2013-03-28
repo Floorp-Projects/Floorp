@@ -5,12 +5,6 @@
 <!-- contributed by Drew Willcoxon [adw@mozilla.com]  -->
 <!-- edited by Noelle Murata [fiveinchpixie@gmail.com]  -->
 
-The `context-menu` module lets you add items to Firefox's page context menu.
-
-
-Introduction
-------------
-
 The `context-menu` API provides a simple, declarative way to add items to the
 page's context menu. You can add items that perform an action when clicked,
 submenus, and menu separators.
@@ -396,6 +390,15 @@ it's too long, and includes it in the returned string. When the item is shown,
 its label will be "Search Google for `text`", where `text` is the truncated
 selection.
 
+## Private Windows ##
+
+If your add-on has not opted into private browsing, then any menus or
+menu items that you add will not appear in context menus belonging to
+private browser windows.
+
+To learn more about private windows, how to opt into private browsing, and how
+to support private browsing, refer to the
+[documentation for the `private-browsing` module](modules/sdk/private-browsing.html).
 
 More Examples
 -------------

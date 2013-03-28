@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
+const app = require("sdk/system/xul-app");
 
 // This test makes sure that require statements used by all AMO hosted
 // add-ons will be able to use old require statements.
@@ -16,14 +17,18 @@ exports["test compatibility"] = function(assert) {
   assert.equal(require("tabs"),
                require("sdk/tabs"), "sdk/tabs -> tabs");
 
-  assert.equal(require("widget"),
-               require("sdk/widget"), "sdk/widget -> widget");
+  if (app.is("Firefox")) {
+    assert.equal(require("widget"),
+                 require("sdk/widget"), "sdk/widget -> widget");
+  }
 
   assert.equal(require("page-mod"),
                require("sdk/page-mod"), "sdk/page-mod -> page-mod");
 
-  assert.equal(require("panel"),
-               require("sdk/panel"), "sdk/panel -> panel");
+  if (app.is("Firefox")) {
+    assert.equal(require("panel"),
+                 require("sdk/panel"), "sdk/panel -> panel");
+  }
 
   assert.equal(require("request"),
                require("sdk/request"), "sdk/request -> request");
@@ -34,8 +39,10 @@ exports["test compatibility"] = function(assert) {
   assert.equal(require("simple-storage"),
                require("sdk/simple-storage"), "sdk/simple-storage -> simple-storage");
 
-  assert.equal(require("context-menu"),
-               require("sdk/context-menu"), "sdk/context-menu -> context-menu");
+  if (app.is("Firefox")) {
+    assert.equal(require("context-menu"),
+                 require("sdk/context-menu"), "sdk/context-menu -> context-menu");
+  }
 
   assert.equal(require("notifications"),
                require("sdk/notifications"), "sdk/notifications -> notifications");
@@ -49,8 +56,10 @@ exports["test compatibility"] = function(assert) {
   assert.equal(require("url"),
                require("sdk/url"), "sdk/url -> url");
 
-  assert.equal(require("selection"),
-               require("sdk/selection"), "sdk/selection -> selection");
+  if (app.is("Firefox")) {
+    assert.equal(require("selection"),
+                 require("sdk/selection"), "sdk/selection -> selection");
+  }
 
   assert.equal(require("timers"),
                require("sdk/timers"), "sdk/timers -> timers");
@@ -97,8 +106,10 @@ exports["test compatibility"] = function(assert) {
   assert.equal(require("match-pattern"),
                require("sdk/page-mod/match-pattern"), "sdk/page-mod/match-pattern -> match-pattern");
 
-  assert.equal(require("tab-browser"),
-               require("sdk/deprecated/tab-browser"), "sdk/deprecated/tab-browser -> tab-browser");
+  if (app.is("Firefox")) {
+    assert.equal(require("tab-browser"),
+                 require("sdk/deprecated/tab-browser"), "sdk/deprecated/tab-browser -> tab-browser");
+  }
 
   assert.equal(require("file"),
                require("sdk/io/file"), "sdk/io/file -> file");
@@ -154,8 +165,12 @@ exports["test compatibility"] = function(assert) {
   assert.equal(require("environment"),
                require("sdk/system/environment"), "sdk/system/environment -> environment");
 
-  assert.equal(require("utils/data"),
-               require("sdk/io/data"), "sdk/io/data -> utils/data");
+  if (app.is("Firefox")) {
+    // This module fails on fennec because of favicon xpcom component
+    // being not implemented on it.
+    assert.equal(require("utils/data"),
+                 require("sdk/io/data"), "sdk/io/data -> utils/data");
+  }
 
   assert.equal(require("test/assert"),
                require("sdk/test/assert"), "sdk/test/assert -> test/assert");
@@ -173,15 +188,5 @@ exports["test compatibility"] = function(assert) {
                require("sdk/deprecated/cortex"),
                "api-utils/cortex -> sdk/deprecated/cortex");
 };
-
-if (require("sdk/system/xul-app").is("Fennec")) {
-  module.exports = {
-    "test Unsupported Test": function UnsupportedTest (assert) {
-        assert.pass(
-          "Skipping this test until Fennec support is implemented." +
-          "See bug 809352");
-    }
-  }
-}
 
 require("sdk/test/runner").runTestsFromModule(module);

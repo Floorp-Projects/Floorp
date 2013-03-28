@@ -13,10 +13,12 @@ You can find a list of events dispatched by firefox codebase
     var events = require("sdk/system/events");
     var { Ci } = require("chrome");
 
-    events.on("http-on-modify-request", function (event) {
+    function listener(event) {
       var channel = event.subject.QueryInterface(Ci.nsIHttpChannel);
       channel.setRequestHeader("User-Agent", "MyBrowser/1.0", false);
-    });
+    }
+
+    events.on("http-on-modify-request", listener);
 
 <api name="emit">
 @function
