@@ -6976,4 +6976,8 @@ s3-website-ap-northeast-1.amazonaws.com
 s3-website-sa-east-1.amazonaws.com
 s3-website-us-gov-west-1.amazonaws.com
 
+// Amazon CloudFront : https://aws.amazon.com/cloudfront/
+// Requested by Donavan Miller <donavanm@amazon.com> 2013-03-22
+cloudfront.net
+
 // ===END PRIVATE DOMAINS===
