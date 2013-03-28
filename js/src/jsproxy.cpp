@@ -307,23 +307,6 @@ BaseProxyHandler::iterate(JSContext *cx, HandleObject proxy, unsigned flags, Mut
 }
 
 bool
-BaseProxyHandler::isExtensible(JSObject *proxy)
-{
-    // Unaltered proxies always claim to be extensible.  (Whether defining a
-    // property will actually *work* is an entirely different question.)  As a
-    // necessary consequence, they can't be made non-extensible.
-    return true;
-}
-
-bool
-BaseProxyHandler::preventExtensions(JSContext *cx, HandleObject proxy)
-{
-    // See above.
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_CHANGE_EXTENSIBILITY);
-    return false;
-}
-
-bool
 BaseProxyHandler::call(JSContext *cx, HandleObject proxy, unsigned argc,
                        Value *vp)
 {
@@ -793,6 +776,7 @@ class ScriptedIndirectProxyHandler : public BaseProxyHandler {
     virtual ~ScriptedIndirectProxyHandler();
 
     /* ES5 Harmony fundamental proxy traps. */
+    virtual bool preventExtensions(JSContext *cx, HandleObject proxy) MOZ_OVERRIDE;
     virtual bool getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
                                        PropertyDescriptor *desc, unsigned flags) MOZ_OVERRIDE;
     virtual bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
@@ -815,6 +799,7 @@ class ScriptedIndirectProxyHandler : public BaseProxyHandler {
                          MutableHandleValue vp) MOZ_OVERRIDE;
 
     /* Spidermonkey extensions. */
+    virtual bool isExtensible(JSObject *proxy) MOZ_OVERRIDE;
     virtual bool call(JSContext *cx, HandleObject proxy, unsigned argc, Value *vp) MOZ_OVERRIDE;
     virtual bool construct(JSContext *cx, HandleObject proxy, unsigned argc,
                            Value *argv, MutableHandleValue rval) MOZ_OVERRIDE;
@@ -836,6 +821,14 @@ ScriptedIndirectProxyHandler::ScriptedIndirectProxyHandler()
 
 ScriptedIndirectProxyHandler::~ScriptedIndirectProxyHandler()
 {
+}
+
+bool
+ScriptedIndirectProxyHandler::preventExtensions(JSContext *cx, HandleObject proxy)
+{
+    // Scripted indirect proxies don't support extensibility changes.
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_CHANGE_EXTENSIBILITY);
+    return false;
 }
 
 static bool
@@ -1016,6 +1009,13 @@ ScriptedIndirectProxyHandler::iterate(JSContext *cx, HandleObject proxy, unsigne
         return BaseProxyHandler::iterate(cx, proxy, flags, vp);
     return Trap(cx, handler, value, 0, NULL, vp) &&
            ReturnedValueMustNotBePrimitive(cx, proxy, cx->names().iterate, vp);
+}
+
+bool
+ScriptedIndirectProxyHandler::isExtensible(JSObject *proxy)
+{
+    // Scripted indirect proxies don't support extensibility changes.
+    return true;
 }
 
 bool
