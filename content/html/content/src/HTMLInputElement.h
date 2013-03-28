@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsHTMLInputElement_h__
-#define nsHTMLInputElement_h__
+#ifndef mozilla_dom_HTMLInputElement_h
+#define mozilla_dom_HTMLInputElement_h
 
 #include "nsGenericHTMLElement.h"
 #include "nsImageLoadingContent.h"
@@ -25,6 +25,9 @@ class nsIFilePicker;
 class nsIRadioGroupContainer;
 class nsIRadioGroupVisitor;
 class nsIRadioVisitor;
+
+namespace mozilla {
+namespace dom {
 
 class UploadLastDir MOZ_FINAL : public nsIObserver, public nsSupportsWeakReference {
 public:
@@ -50,22 +53,22 @@ public:
   nsresult StoreLastUsedDirectory(nsIDocument* aDoc, nsIDOMFile* aDomFile);
 };
 
-class nsHTMLInputElement : public nsGenericHTMLFormElement,
-                           public nsImageLoadingContent,
-                           public nsIDOMHTMLInputElement,
-                           public nsITextControlElement,
-                           public nsIPhonetic,
-                           public nsIDOMNSEditableElement,
-                           public nsIConstraintValidation
+class HTMLInputElement : public nsGenericHTMLFormElement,
+                         public nsImageLoadingContent,
+                         public nsIDOMHTMLInputElement,
+                         public nsITextControlElement,
+                         public nsIPhonetic,
+                         public nsIDOMNSEditableElement,
+                         public nsIConstraintValidation
 {
 public:
   using nsIConstraintValidation::GetValidationMessage;
 
-  nsHTMLInputElement(already_AddRefed<nsINodeInfo> aNodeInfo,
-                     mozilla::dom::FromParser aFromParser);
-  virtual ~nsHTMLInputElement();
+  HTMLInputElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+                   mozilla::dom::FromParser aFromParser);
+  virtual ~HTMLInputElement();
 
-  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(nsHTMLInputElement, input)
+  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLInputElement, input)
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -79,7 +82,7 @@ public:
   // nsIDOMHTMLElement
   NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
   virtual int32_t TabIndexDefault() MOZ_OVERRIDE;
-  virtual void Focus(mozilla::ErrorResult& aError) MOZ_OVERRIDE;
+  virtual void Focus(ErrorResult& aError) MOZ_OVERRIDE;
 
   // nsIDOMHTMLInputElement
   NS_DECL_NSIDOMHTMLINPUTELEMENT
@@ -188,7 +191,7 @@ public:
 
   NS_IMETHOD FireAsyncClickHandler();
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLInputElement,
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLInputElement,
                                            nsGenericHTMLFormElement)
 
   static UploadLastDir* gUploadLastDir;
@@ -887,11 +890,11 @@ private:
     : public nsRunnable
   {
   public:
-    AsyncClickHandler(nsHTMLInputElement* aInput);
+    AsyncClickHandler(HTMLInputElement* aInput);
     NS_IMETHOD Run();
 
   protected:
-    nsRefPtr<nsHTMLInputElement> mInput;
+    nsRefPtr<HTMLInputElement> mInput;
     PopupControlState mPopupControlState;
   };
 
@@ -899,7 +902,7 @@ private:
     : public nsIFilePickerShownCallback
   {
   public:
-    nsFilePickerShownCallback(nsHTMLInputElement* aInput,
+    nsFilePickerShownCallback(HTMLInputElement* aInput,
                               nsIFilePicker* aFilePicker,
                               bool aMulti);
     virtual ~nsFilePickerShownCallback()
@@ -911,9 +914,12 @@ private:
 
   private:
     nsCOMPtr<nsIFilePicker> mFilePicker;
-    nsRefPtr<nsHTMLInputElement> mInput;
+    nsRefPtr<HTMLInputElement> mInput;
     bool mMulti;
   };
 };
+
+} // namespace dom
+} // namespace mozilla
 
 #endif
