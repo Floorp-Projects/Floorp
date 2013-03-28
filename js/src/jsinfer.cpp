@@ -2390,9 +2390,13 @@ TypeInferenceSupported()
 #endif
 
 #if WTF_ARM_ARCH_VERSION == 6
+#ifdef  JS_ION
+    return js::ion::hasVFP();
+#else
     // If building for ARMv6 targets, we can't be guaranteed an FPU,
     // so we hardcode TI off for consistency (see bug 793740).
     return false;
+#endif
 #endif
 
     return true;
