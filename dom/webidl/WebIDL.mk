@@ -31,6 +31,7 @@ webidl_files = \
   CharacterData.webidl \
   ClientRect.webidl \
   ClientRectList.webidl \
+  ClipboardEvent.webidl \
   CommandEvent.webidl \
   Comment.webidl \
   CompositionEvent.webidl \
