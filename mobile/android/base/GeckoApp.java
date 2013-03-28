@@ -2469,6 +2469,7 @@ abstract public class GeckoApp
 
     public static class MainLayout extends RelativeLayout {
         private TouchEventInterceptor mTouchEventInterceptor;
+        private MotionEventInterceptor mMotionEventInterceptor;
 
         public MainLayout(Context context, AttributeSet attrs) {
             super(context, attrs);
@@ -2476,6 +2477,10 @@ abstract public class GeckoApp
 
         public void setTouchEventInterceptor(TouchEventInterceptor interceptor) {
             mTouchEventInterceptor = interceptor;
+        }
+
+        public void setMotionEventInterceptor(MotionEventInterceptor interceptor) {
+            mMotionEventInterceptor = interceptor;
         }
 
         @Override
@@ -2492,6 +2497,14 @@ abstract public class GeckoApp
                 return true;
             }
             return super.onTouchEvent(event);
+        }
+
+        @Override
+        public boolean onGenericMotionEvent(MotionEvent event) {
+            if (mMotionEventInterceptor != null && mMotionEventInterceptor.onInterceptMotionEvent(this, event)) {
+                return true;
+            }
+            return super.onGenericMotionEvent(event);
         }
 
         @Override

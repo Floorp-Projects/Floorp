@@ -8,6 +8,7 @@ package org.mozilla.gecko.util;
 import android.os.Build;
 import android.view.InputDevice;
 import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
@@ -36,6 +37,13 @@ public final class GamepadUtils {
 
     public static boolean isBackKey(KeyEvent event) {
         return (isGamepadKey(event) && (event.getKeyCode() == KeyEvent.KEYCODE_BUTTON_B));
+    }
+
+    public static boolean isPanningControl(MotionEvent event) {
+        if (Build.VERSION.SDK_INT >= 12) {
+            return (event.getSource() & InputDevice.SOURCE_CLASS_MASK) == InputDevice.SOURCE_CLASS_JOYSTICK;
+        }
+        return false;
     }
 
     public static View.OnKeyListener getClickDispatcher() {
