@@ -166,7 +166,7 @@ NS_IMPL_ISUPPORTS2(nsHTMLStyleSheet, nsIStyleSheet, nsIStyleRuleProcessor)
 nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
 {
   nsRuleWalker *ruleWalker = aData->mRuleWalker;
-  if (aData->mElement->IsHTML()) {
+  if (aData->mElement->IsHTML() && !ruleWalker->AuthorStyleDisabled()) {
     nsIAtom* tag = aData->mElement->Tag();
 
     // if we have anchor colors, check if this is an anchor with an href
@@ -206,8 +206,12 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
     }
   } // end html element
 
-    // just get the style rules from the content
-  aData->mElement->WalkContentStyleRules(ruleWalker);
+  // just get the style rules from the content.  For SVG we do this even if
+  // author style is disabled, because SVG presentational hints aren't
+  // considered style.
+  if (!ruleWalker->AuthorStyleDisabled() || aData->mElement->IsSVG()) {
+    aData->mElement->WalkContentStyleRules(ruleWalker);
+  }
 }
 
 // Test if style is dependent on content state
