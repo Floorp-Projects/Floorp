@@ -843,13 +843,13 @@ MarkupContainer.prototype = {
 
   set expanded(aValue) {
     if (aValue) {
-      this.expander.setAttribute("expanded", "");
+      this.expander.setAttribute("open", "");
       this.children.setAttribute("expanded", "");
       if (this.editor.summaryElt) {
         this.editor.summaryElt.setAttribute("expanded", "");
       }
     } else {
-      this.expander.removeAttribute("expanded");
+      this.expander.removeAttribute("open");
       this.children.removeAttribute("expanded");
       if (this.editor.summaryElt) {
         this.editor.summaryElt.removeAttribute("expanded");
@@ -877,14 +877,14 @@ MarkupContainer.prototype = {
   set selected(aValue) {
     this._selected = aValue;
     if (this._selected) {
-      this.editor.elt.classList.add("selected");
+      this.editor.elt.classList.add("theme-selected");
       if (this.editor.closeElt) {
-        this.editor.closeElt.classList.add("selected");
+        this.editor.closeElt.classList.add("theme-selected");
       }
     } else {
-      this.editor.elt.classList.remove("selected");
+      this.editor.elt.classList.remove("theme-selected");
       if (this.editor.closeElt) {
-        this.editor.closeElt.classList.remove("selected");
+        this.editor.closeElt.classList.remove("theme-selected");
       }
     }
   },
@@ -1178,28 +1178,21 @@ ElementEditor.prototype = {
    * @param Element aAttrNode the attribute editor that created this
    *        set of attributes, used to place new attributes where the
    *        user put them.
-   * @throws SYNTAX_ERR if aValue is not well-formed.
    */
   _applyAttributes: function EE__applyAttributes(aValue, aAttrNode)
   {
-    // Create a dummy node for parsing the attribute list.
-    let dummyNode = this.doc.createElement("div");
-
-    let parseTag = (this.node.namespaceURI.match(/svg/i) ? "svg" :
-                   (this.node.namespaceURI.match(/mathml/i) ? "math" : "div"));
-    let parseText = "<" + parseTag + " " + aValue + "/>";
-    // Throws exception if parseText is not well-formed.
-    dummyNode.innerHTML = parseText;
-    let parsedNode = dummyNode.firstChild;
-
-    let attrs = parsedNode.attributes;
+    let attrs = escapeAttributeValues(aValue);
 
     this.undo.startBatch();
 
-    for (let i = 0; i < attrs.length; i++) {
+    for (let attr of attrs) {
+      let attribute = {
+        name: attr.name,
+        value: attr.value
+      };
       // Create an attribute editor next to the current attribute if needed.
-      this._createAttribute(attrs[i], aAttrNode ? aAttrNode.nextSibling : null);
-      this._setAttribute(this.node, attrs[i].name, attrs[i].value);
+      this._createAttribute(attribute, aAttrNode ? aAttrNode.nextSibling : null);
+      this._setAttribute(this.node, attr.name, attr.value);
     }
 
     this.undo.endBatch();
@@ -1424,6 +1417,100 @@ DocumentWalker.prototype = {
   nextSibling: function DW_nextSibling() this.walker.nextSibling(),
 
   // XXX bug 785143: not doing previousNode or nextNode, which would sure be useful.
+};
+
+/**
+ * Properly escape attribute values.
+ *
+ * @param  {String} attr
+ *         The attributes for which the values are to be escaped.
+ * @return {Array}
+ *         An array of attribute names and their escaped values.
+ */
+function escapeAttributeValues(attr) {
+  let name = null;
+  let value = null;
+  let result = "";
+  let attributes = [];
+
+  while(attr.length > 0) {
+    let match;
+    let dirty = false;
+
+    // Trim quotes and spaces from attr start
+    match = attr.match(/^["\s]+/);
+    if (match && match.length == 1) {
+      attr = attr.substr(match[0].length);
+    }
+
+    // Name
+    if (!dirty) {
+      match = attr.match(/^([\w-]+)="/);
+      if (match && match.length == 2) {
+        if (name) {
+          // We had a name without a value e.g. disabled. Let's set the value to "";
+          value = "";
+        } else {
+          name = match[1];
+          attr = attr.substr(match[0].length);
+        }
+        dirty = true;
+      }
+    }
+
+    // Value (in the case of multiple attributes)
+    if (!dirty) {
+      match = attr.match(/^(.+?)"\s+[\w-]+="/);
+      if (match && match.length > 1) {
+        value = typeof match[1] == "undefined" ? match[2] : match[1];
+        attr = attr.substr(value.length);
+        value = simpleEscape(value);
+        dirty = true;
+      }
+    }
+
+    // Final value
+    if (!dirty && attr.indexOf("=\"") == -1) {
+      // No more attributes, get the remaining value minus it's ending quote.
+      if (attr.charAt(attr.length - 1) == '"') {
+        attr = attr.substr(0, attr.length - 1);
+      }
+
+      if (!name) {
+        name = attr;
+        value = "";
+      } else {
+        value = simpleEscape(attr);
+      }
+      attr = "";
+      dirty = true;
+    }
+
+    if (name !== null && value !== null) {
+      attributes.push({name: name, value: value});
+      name = value = null;
+    }
+
+    if (!dirty) {
+      // This should never happen but we exit here if it does.
+      return attributes;
+    }
+  }
+  return attributes;
+}
+
+/**
+ * Escape basic html entities <, >, " and '.
+ * @param  {String} value
+ *         Value to escape.
+ * @return {String}
+ *         Escaped value.
+ */
+function simpleEscape(value) {
+  return value.replace(/</g, "&lt;")
+              .replace(/>/g, "&gt;")
+              .replace(/"/g, "&quot;")
+              .replace(/'/g, "&apos;");
 }
 
 /**

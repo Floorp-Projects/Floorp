@@ -63,56 +63,7 @@ function runStyleInspectorTests()
   let prop = contentDocument.querySelector(".property-view");
   ok(prop, "captain, we have the property-view node");
 
-  // We need the context menu to open in the correct place in order for
-  // popupNode to be propertly set.
-  contextMenuClick(prop);
-
-  checkCopyProperty();
-}
-
-function checkCopyProperty()
-{
-  info("Checking that cssHtmlTree.siBoundCopyDeclaration() returns the " +
-       "correct clipboard value");
-  let expectedPattern = "color: rgb\\(255, 255, 0\\);";
-
-  SimpleTest.waitForClipboard(function CS_boundCopyPropCheck() {
-      return checkClipboardData(expectedPattern);
-    },
-    computedView.siBoundCopyDeclaration,
-    checkCopyPropertyName, function() {
-      failedClipboard(expectedPattern, checkCopyPropertyName);
-    });
-}
-
-function checkCopyPropertyName()
-{
-  info("Checking that cssHtmlTree.siBoundCopyProperty() returns the " +
-       "correct clipboard value");
-  let expectedPattern = "color";
-
-  SimpleTest.waitForClipboard(function CS_boundCopyPropNameCheck() {
-      return checkClipboardData(expectedPattern);
-    },
-    computedView.siBoundCopyProperty,
-    checkCopyPropertyValue, function() {
-      failedClipboard(expectedPattern, checkCopyPropertyValue);
-    });
-}
-
-function checkCopyPropertyValue()
-{
-  info("Checking that cssHtmlTree.siBoundCopyPropertyValue() returns the " +
-       "correct clipboard value");
-  let expectedPattern = "rgb\\(255, 255, 0\\)";
-
-  SimpleTest.waitForClipboard(function CS_boundCopyPropValueCheck() {
-      return checkClipboardData(expectedPattern);
-    },
-    computedView.siBoundCopyPropertyValue,
-    checkCopySelection, function() {
-      failedClipboard(expectedPattern, checkCopySelection);
-    });
+  checkCopySelection();
 }
 
 function checkCopySelection()
@@ -123,21 +74,21 @@ function checkCopySelection()
 
   let range = document.createRange();
   range.setStart(props[0], 0);
-  range.setEnd(props[3], 4);
+  range.setEnd(props[3], 3);
   win.getSelection().addRange(range);
 
   info("Checking that cssHtmlTree.siBoundCopy() " +
        " returns the correct clipboard value");
 
-  let expectedPattern = "color: rgb\\(255, 255, 0\\)[\\r\\n]+" +
-                 "font-family: helvetica,sans-serif[\\r\\n]+" +
-                 "font-size: 16px[\\r\\n]+" +
-                 "font-variant: small-caps[\\r\\n]*";
+  let expectedPattern = "color: rgb\\(255, 255, 0\\);[\\r\\n]+" +
+                 "font-family: helvetica,sans-serif;[\\r\\n]+" +
+                 "font-size: 16px;[\\r\\n]+" +
+                 "font-variant: small-caps;[\\r\\n]*";
 
   SimpleTest.waitForClipboard(function CS_boundCopyCheck() {
       return checkClipboardData(expectedPattern);
     },
-    computedView.siBoundCopy, closeStyleInspector, function() {
+    function() {fireCopyEvent(props[0])}, closeStyleInspector, function() {
       failedClipboard(expectedPattern, closeStyleInspector);
     });
 }

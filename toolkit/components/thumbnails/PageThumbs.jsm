@@ -27,7 +27,10 @@ const THUMBNAIL_DIRECTORY = "thumbnails";
  */
 const THUMBNAIL_BG_COLOR = "#fff";
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
+Cu.import("resource://gre/modules/osfile/_PromiseWorker.jsm", this);
+Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", this);
+Cu.import("resource://gre/modules/osfile.jsm", this);
 
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
   "resource://gre/modules/NetUtil.jsm");
@@ -54,6 +57,70 @@ XPCOMUtils.defineLazyGetter(this, "gUnicodeConverter", function () {
   converter.charset = 'utf8';
   return converter;
 });
+
+XPCOMUtils.defineLazyModuleGetter(this, "Task",
+  "resource://gre/modules/Task.jsm");
+
+/**
+ * Utilities for dealing with promises and Task.jsm
+ */
+const TaskUtils = {
+  /**
+   * Add logging to a promise.
+   *
+   * @param {Promise} promise
+   * @return {Promise} A promise behaving as |promise|, but with additional
+   * logging in case of uncaught error.
+   */
+  captureErrors: function captureErrors(promise) {
+    return promise.then(
+      null,
+      function onError(reason) {
+        Cu.reportError("Uncaught asynchronous error: " + reason + " at\n"
+          + reason.stack + "\n");
+        throw reason;
+      }
+    );
+  },
+
+  /**
+   * Spawn a new Task from a generator.
+   *
+   * This function behaves as |Task.spawn|, with the exception that it
+   * adds logging in case of uncaught error. For more information, see
+   * the documentation of |Task.jsm|.
+   *
+   * @param {generator} gen Some generator.
+   * @return {Promise} A promise built from |gen|, with the same semantics
+   * as |Task.spawn(gen)|.
+   */
+  spawn: function spawn(gen) {
+    return this.captureErrors(Task.spawn(gen));
+  },
+  /**
+   * Read the bytes from a blob, asynchronously.
+   *
+   * @return {Promise}
+   * @resolve {ArrayBuffer} In case of success, the bytes contained in the blob.
+   * @reject {DOMError} In case of error, the underlying DOMError.
+   */
+  readBlob: function readBlob(blob) {
+    let deferred = Promise.defer();
+    let reader = Cc["@mozilla.org/files/filereader;1"].createInstance(Ci.nsIDOMFileReader);
+    reader.onloadend = function onloadend() {
+      if (reader.readyState != Ci.nsIDOMFileReader.DONE) {
+        deferred.reject(reader.error);
+      } else {
+        deferred.resolve(reader.result);
+      }
+    };
+    reader.readAsArrayBuffer(blob);
+    return deferred.promise;
+  }
+};
+
+
+
 
 /**
  * Singleton providing functionality for capturing web page thumbnails and for
@@ -134,6 +201,33 @@ this.PageThumbs = {
     }.bind(this), Ci.nsIThread.DISPATCH_NORMAL);
   },
 
+
+  /**
+   * Captures a thumbnail for the given window.
+   *
+   * @param aWindow The DOM window to capture a thumbnail from.
+   * @return {Promise}
+   * @resolve {Blob} The thumbnail, as a Blob.
+   */
+  captureToBlob: function PageThumbs_captureToBlob(aWindow) {
+    if (!this._prefEnabled()) {
+      return null;
+    }
+
+    let canvas = this._createCanvas();
+    this.captureToCanvas(aWindow, canvas);
+
+    let deferred = Promise.defer();
+    let type = this.contentType;
+    // Fetch the canvas data on the next event loop tick so that we allow
+    // some event processing in between drawing to the canvas and encoding
+    // its data. We want to block the UI as short as possible. See bug 744100.
+    canvas.toBlob(function asBlob(blob) {
+      deferred.resolve(blob, type);
+    });
+    return deferred.promise;
+  },
+
   /**
    * Captures a thumbnail from a given window and draws it to the given canvas.
    * @param aWindow The DOM window to capture a thumbnail from.
@@ -177,35 +271,39 @@ this.PageThumbs = {
     let channel = aBrowser.docShell.currentDocumentChannel;
     let originalURL = channel.originalURI.spec;
 
-    this.capture(aBrowser.contentWindow, function (aInputStream) {
-      let telemetryStoreTime = new Date();
+    TaskUtils.spawn((function task() {
+      let isSuccess = true;
+      try {
+        let blob = yield this.captureToBlob(aBrowser.contentWindow);
+        let buffer = yield TaskUtils.readBlob(blob);
 
-      function finish(aSuccessful) {
-        if (aSuccessful) {
-          Services.telemetry.getHistogramById("FX_THUMBNAILS_STORE_TIME_MS")
-            .add(new Date() - telemetryStoreTime);
+        let telemetryStoreTime = new Date();
+        yield PageThumbsStorage.writeData(url, new Uint8Array(buffer));
 
-          // We've been redirected. Create a copy of the current thumbnail for
-          // the redirect source. We need to do this because:
-          //
-          // 1) Users can drag any kind of links onto the newtab page. If those
-          //    links redirect to a different URL then we want to be able to
-          //    provide thumbnails for both of them.
-          //
-          // 2) The newtab page should actually display redirect targets, only.
-          //    Because of bug 559175 this information can get lost when using
-          //    Sync and therefore also redirect sources appear on the newtab
-          //    page. We also want thumbnails for those.
-          if (url != originalURL)
-            PageThumbsStorage.copy(url, originalURL);
+        Services.telemetry.getHistogramById("FX_THUMBNAILS_STORE_TIME_MS")
+          .add(new Date() - telemetryStoreTime);
+
+        // We've been redirected. Create a copy of the current thumbnail for
+        // the redirect source. We need to do this because:
+        //
+        // 1) Users can drag any kind of links onto the newtab page. If those
+        //    links redirect to a different URL then we want to be able to
+        //    provide thumbnails for both of them.
+        //
+        // 2) The newtab page should actually display redirect targets, only.
+        //    Because of bug 559175 this information can get lost when using
+        //    Sync and therefore also redirect sources appear on the newtab
+        //    page. We also want thumbnails for those.
+        if (url != originalURL) {
+          yield PageThumbsStorage.copy(url, originalURL);
         }
-
-        if (aCallback)
-          aCallback(aSuccessful);
+      } catch (_) {
+        isSuccess = false;
       }
-
-      PageThumbsStorage.write(url, aInputStream, finish);
-    });
+      if (aCallback) {
+        aCallback(isSuccess);
+      }
+    }).bind(this));
   },
 
   /**
@@ -314,55 +412,99 @@ this.PageThumbs = {
 };
 
 this.PageThumbsStorage = {
-  getDirectory: function Storage_getDirectory(aCreate = true) {
-    return FileUtils.getDir("ProfLD", [THUMBNAIL_DIRECTORY], aCreate);
+  // The path for the storage
+  _path: null,
+  get path() {
+    if (!this._path) {
+      this._path = OS.Path.join(OS.Constants.Path.localProfileDir, THUMBNAIL_DIRECTORY);
+    }
+    return this._path;
+  },
+
+  ensurePath: function Storage_ensurePath() {
+    // Create the directory (ignore any error if the directory
+    // already exists). As all writes are done from the PageThumbsWorker
+    // thread, which serializes its operations, this ensures that
+    // future operations can proceed without having to check whether
+    // the directory exists.
+    return PageThumbsWorker.post("makeDir",
+      [this.path, {ignoreExisting: true}]).then(
+        null,
+        function onError(aReason) {
+          Components.utils.reportError("Could not create thumbnails directory" + aReason);
+        });
   },
 
   getLeafNameForURL: function Storage_getLeafNameForURL(aURL) {
+    if (typeof aURL != "string") {
+      throw new TypeError("Expecting a string");
+    }
     let hash = this._calculateMD5Hash(aURL);
     return hash + ".png";
   },
 
-  getFileForURL: function Storage_getFileForURL(aURL) {
-    let file = this.getDirectory();
-    file.append(this.getLeafNameForURL(aURL));
-    return file;
+  getFilePathForURL: function Storage_getFilePathForURL(aURL) {
+    return OS.Path.join(this.path, this.getLeafNameForURL(aURL));
   },
 
-  write: function Storage_write(aURL, aDataStream, aCallback) {
-    let file = this.getFileForURL(aURL);
-    let fos = FileUtils.openSafeFileOutputStream(file);
-
-    NetUtil.asyncCopy(aDataStream, fos, function (aResult) {
-      FileUtils.closeSafeFileOutputStream(fos);
-      aCallback(Components.isSuccessCode(aResult));
-    });
+  /**
+   * Write the contents of a thumbnail, off the main thread.
+   *
+   * @param {string} aURL The url for which to store a thumbnail.
+   * @param {string} aData The data to store in the thumbnail, as
+   * an ArrayBuffer. This array buffer is neutered and cannot be
+   * reused after the copy.
+   *
+   * @return {Promise}
+   */
+  writeData: function Storage_write(aURL, aData) {
+    let path = this.getFilePathForURL(aURL);
+    this.ensurePath();
+    let msg = [
+      path,
+      aData,
+      {
+        tmpPath: path + ".tmp",
+        bytes: aData.byteLength,
+        flush: false /*thumbnails do not require the level of guarantee provided by flush*/
+      }];
+    return PageThumbsWorker.post("writeAtomic", msg,
+      msg /*we don't want that message garbage-collected,
+           as OS.Shared.Type.void_t.in_ptr.toMsg uses C-level
+           memory tricks to enforce zero-copy*/);
   },
 
+  /**
+   * Copy a thumbnail, off the main thread.
+   *
+   * @param {string} aSourceURL The url of the thumbnail to copy.
+   * @param {string} aTargetURL The url of the target thumbnail.
+   *
+   * @return {Promise}
+   */
   copy: function Storage_copy(aSourceURL, aTargetURL) {
-    let sourceFile = this.getFileForURL(aSourceURL);
-    let targetFile = this.getFileForURL(aTargetURL);
-
-    try {
-      sourceFile.copyTo(targetFile.parent, targetFile.leafName);
-    } catch (e) {
-      /* We might not be permitted to write to the file. */
-    }
+    this.ensurePath();
+    let sourceFile = this.getFilePathForURL(aSourceURL);
+    let targetFile = this.getFilePathForURL(aTargetURL);
+    return PageThumbsWorker.post("copy", [sourceFile, targetFile]);
   },
 
+  /**
+   * Remove a single thumbnail, off the main thread.
+   *
+   * @return {Promise}
+   */
   remove: function Storage_remove(aURL) {
-    let file = this.getFileForURL(aURL);
-    PageThumbsWorker.postMessage({type: "removeFile", path: file.path});
+    return PageThumbsWorker.post("remove", [this.getFilePathForURL(aURL)]);
   },
 
+  /**
+   * Remove all thumbnails, off the main thread.
+   *
+   * @return {Promise}
+   */
   wipe: function Storage_wipe() {
-    let dir = this.getDirectory(false);
-    dir.followLinks = false;
-    try {
-      dir.remove(true);
-    } catch (e) {
-      /* The directory might not exist or we're not permitted to remove it. */
-    }
+    return PageThumbsWorker.post("wipe", [this.path]);
   },
 
   _calculateMD5Hash: function Storage_calculateMD5Hash(aValue) {
@@ -423,18 +565,20 @@ let PageThumbsStorageMigrator = {
    * try to move the old thumbnails to their new location. If that's not
    * possible (because ProfD might be on a different file system than
    * ProfLD) we'll just discard them.
+   *
+   * @param {string*} local The path to the local profile directory.
+   * Used for testing. Default argument is good for all non-testing uses.
+   * @param {string*} roaming The path to the roaming profile directory.
+   * Used for testing. Default argument is good for all non-testing uses.
    */
-  migrateToVersion3: function Migrator_migrateToVersion3() {
-    let local = FileUtils.getDir("ProfLD", [THUMBNAIL_DIRECTORY], true);
-    let roaming = FileUtils.getDir("ProfD", [THUMBNAIL_DIRECTORY]);
-
-    if (!roaming.equals(local)) {
-      PageThumbsWorker.postMessage({
-        type: "moveOrDeleteAllThumbnails",
-        from: roaming.path,
-        to: local.path
-      });
-    }
+  migrateToVersion3: function Migrator_migrateToVersion3(
+    local = OS.Constants.Path.localProfileDir,
+    roaming = OS.Constants.Path.profileDir) {
+    PageThumbsWorker.post(
+      "moveOrDeleteAllThumbnails",
+      [OS.Path.join(roaming, THUMBNAIL_DIRECTORY),
+       OS.Path.join(local, THUMBNAIL_DIRECTORY)]
+    );
   }
 };
 
@@ -484,60 +628,46 @@ let PageThumbsExpiration = {
     }
   },
 
-  expireThumbnails: function Expiration_expireThumbnails(aURLsToKeep, aCallback) {
-    PageThumbsWorker.postMessage({
-      type: "expireFilesInDirectory",
-      minChunkSize: EXPIRATION_MIN_CHUNK_SIZE,
-      path: PageThumbsStorage.getDirectory().path,
-      filesToKeep: [PageThumbsStorage.getLeafNameForURL(url) for (url of aURLsToKeep)]
-    }, aCallback);
+  expireThumbnails: function Expiration_expireThumbnails(aURLsToKeep) {
+    let path = this.path;
+    let keep = [PageThumbsStorage.getLeafNameForURL(url) for (url of aURLsToKeep)];
+    let msg = [
+      PageThumbsStorage.path,
+      keep,
+      EXPIRATION_MIN_CHUNK_SIZE
+    ];
+
+    return PageThumbsWorker.post(
+      "expireFilesInDirectory",
+      msg
+    );
   }
 };
 
 /**
  * Interface to a dedicated thread handling I/O
  */
-let PageThumbsWorker = {
-  /**
-   * A (fifo) queue of callbacks registered for execution
-   * upon completion of calls to the worker.
-   */
-  _callbacks: [],
 
-  /**
-   * Get the worker, spawning it if necessary.
-   * Code of the worker is in companion file PageThumbsWorker.js
-   */
-  get _worker() {
-    delete this._worker;
-    this._worker = new ChromeWorker("resource://gre/modules/PageThumbsWorker.js");
-    this._worker.addEventListener("message", this);
-    return this._worker;
-  },
-
-  /**
-   * Post a message to the dedicated thread, registering a callback
-   * to be executed once the reply has been received.
-   *
-   * See PageThumbsWorker.js for the format of messages and replies.
-   *
-   * @param {*} message A JSON message.
-   * @param {Function=} callback An optional callback.
-   */
-  postMessage: function Worker_postMessage(message, callback) {
-    this._callbacks.push(callback);
-    this._worker.postMessage(message);
-  },
-
-  /**
-   * Handle a message from the dedicated thread.
-   */
-  handleEvent: function Worker_handleEvent(aEvent) {
-    let callback = this._callbacks.shift();
-    if (callback)
-      callback(aEvent.data);
-  }
-};
+let PageThumbsWorker = (function() {
+  let worker = new PromiseWorker("resource://gre/modules/PageThumbsWorker.js",
+    OS.Shared.LOG.bind("PageThumbs"));
+  return {
+    post: function post(...args) {
+      let promise = worker.post.apply(worker, args);
+      return promise.then(
+        null,
+        function onError(error) {
+          // Decode any serialized error
+          if (error instanceof PromiseWorker.WorkerError) {
+            throw OS.File.Error.fromMsg(error.data);
+          } else {
+            throw error;
+          }
+        }
+      );
+    }
+  };
+})();
 
 let PageThumbsHistoryObserver = {
   onDeleteURI: function Thumbnails_onDeleteURI(aURI, aGUID) {

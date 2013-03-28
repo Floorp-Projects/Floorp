@@ -3,7 +3,6 @@
 }
 
 body {
-  background: #F9F9F9;
   margin: 0;
   padding-bottom: 20px;
 }
@@ -24,16 +23,23 @@ body {
 }
 
 .font {
-  border-bottom: 1px solid #DDD;
   padding: 10px 5px;
   font-size: 0;
+}
+
+.theme-dark .font {
+  border-bottom: 1px solid #444;
+}
+
+.theme-light .font {
+  border-bottom: 1px solid #DDD;
 }
 
 .font:last-of-type {
   border-bottom: 0;
 }
 
-.font:nth-child(even) {
+.theme-light .font:nth-child(even) {
   background: #F4F4F4;
 }
 
@@ -57,23 +63,18 @@ body {
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
-  background: white;
   padding: 5px;
-  border: 1px dotted #CCC;
 }
 
-.font-is-local,
-.font-is-remote,
-.font-format-url,
-.font-css {
-  color: #999
-}
-
-.font-url {
+.theme-light .font-css-code,
+.theme-light .font-url {
   border: 1px solid #CCC;
-  color: #888;
+  background: white;
 }
 
-.font-url:focus {
-  color: black;
+.theme-dark .font-css-code,
+.theme-dark .font-url {
+  border: 1px solid #333;
+  background: black;
+  color: white;
 }
