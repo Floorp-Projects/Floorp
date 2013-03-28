@@ -6950,4 +6950,8 @@ betainabox.com
 // Requested by Tim Kramer <tkramer@rhcloud.com> 2012-10-24
 rhcloud.com
 
+// Amazon Elastic Load Balancing : https://aws.amazon.com/elasticloadbalancing/
+// Requested by Scott Vidmar <svidmar@amazon.com> 2013-03-27
+elb.amazonaws.com
+
 // ===END PRIVATE DOMAINS===
