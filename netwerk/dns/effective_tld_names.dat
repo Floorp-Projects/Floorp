@@ -6980,4 +6980,8 @@ s3-website-us-gov-west-1.amazonaws.com
 // Requested by Donavan Miller <donavanm@amazon.com> 2013-03-22
 cloudfront.net
 
+// NYC.mn : http://www.information.nyc.mn
+// Requested by Matthew Brown <mattbrown@nyc.mn> 2013-03-11
+nyc.mn
+
 // ===END PRIVATE DOMAINS===
