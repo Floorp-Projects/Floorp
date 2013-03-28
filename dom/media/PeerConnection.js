@@ -665,6 +665,34 @@ PeerConnection.prototype = {
     };
   },
 
+  get readyState() {
+    // checking for our local pc closed indication
+    // before invoking the pc methods.
+    if(this._closed) {
+      return "closed";
+    }
+
+    var state="undefined";
+    switch (this._pc.readyState) {
+      case Ci.IPeerConnection.kNew:
+        state = "new";
+        break;
+      case Ci.IPeerConnection.kNegotiating:
+        state = "negotiating";
+        break;
+      case Ci.IPeerConnection.kActive:
+        state = "active";
+        break;
+      case Ci.IPeerConnection.kClosing:
+        state = "closing";
+        break;
+      case Ci.IPeerConnection.kClosed:
+        state = "closed";
+        break;
+    }
+    return state;
+  },
+
   createDataChannel: function(label, dict) {
     this._checkClosed();
     if (dict &&
