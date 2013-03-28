@@ -35,10 +35,6 @@ protected:
   SVGPathElement(already_AddRefed<nsINodeInfo> aNodeInfo);
 
 public:
-  // interfaces:
-
-  NS_DECL_ISUPPORTS_INHERITED
-
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* name) const;
 

@@ -26,8 +26,6 @@ public:
     : nsSVGElement(aNodeInfo) {}
   virtual ~SVGTransformableElement() {}
 
-  NS_DECL_ISUPPORTS_INHERITED
-
   // WebIDL
   already_AddRefed<DOMSVGAnimatedTransformList> Transform();
   nsSVGElement* GetNearestViewportElement();

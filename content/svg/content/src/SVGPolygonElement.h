@@ -25,10 +25,6 @@ protected:
                                              already_AddRefed<nsINodeInfo> aNodeInfo));
 
 public:
-  // interfaces:
-
-  NS_DECL_ISUPPORTS_INHERITED
-
   // nsSVGPathGeometryElement methods:
   virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks);
   virtual void ConstructPath(gfxContext *aCtx);

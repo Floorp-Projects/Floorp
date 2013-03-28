@@ -23,17 +23,6 @@ nsSVGElement::StringInfo SVGFEMergeNodeElement::sStringInfo[1] =
 };
 
 //----------------------------------------------------------------------
-// nsISupports methods
-
-NS_IMPL_ADDREF_INHERITED(SVGFEMergeNodeElement,SVGFEMergeNodeElementBase)
-NS_IMPL_RELEASE_INHERITED(SVGFEMergeNodeElement,SVGFEMergeNodeElementBase)
-
-NS_INTERFACE_TABLE_HEAD(SVGFEMergeNodeElement)
-  NS_NODE_INTERFACE_TABLE3(SVGFEMergeNodeElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement)
-NS_INTERFACE_MAP_END_INHERITING(SVGFEMergeNodeElementBase)
-
-//----------------------------------------------------------------------
 // nsIDOMNode methods
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEMergeNodeElement)

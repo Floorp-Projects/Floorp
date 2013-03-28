@@ -26,9 +26,6 @@ class nsSVGPathGeometryElement : public nsSVGPathGeometryElementBase
 public:
   nsSVGPathGeometryElement(already_AddRefed<nsINodeInfo> aNodeInfo);
 
-  // interfaces:
-  NS_DECL_ISUPPORTS_INHERITED
-
   virtual bool AttributeDefinesGeometry(const nsIAtom *aName);
   virtual bool IsMarkable();
   virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks);

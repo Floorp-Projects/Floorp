@@ -25,10 +25,6 @@ protected:
                                               already_AddRefed<nsINodeInfo> aNodeInfo));
 
 public:
-  // interfaces:
-
-  NS_DECL_ISUPPORTS_INHERITED
-
   // nsIContent interface
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 };

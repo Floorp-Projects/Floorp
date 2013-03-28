@@ -26,8 +26,6 @@ protected:
                                              already_AddRefed<nsINodeInfo> aNodeInfo));
 
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-
   // nsSVGSVGElement methods:
   virtual bool HasValidDimensions() const;
 
