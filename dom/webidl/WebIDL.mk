@@ -284,6 +284,7 @@ webidl_files = \
   XMLSerializer.webidl \
   XMLStylesheetProcessingInstruction.webidl \
   XPathEvaluator.webidl \
+  XULCommandEvent.webidl \
   XULDocument.webidl \
   XULElement.webidl \
   $(NULL)
