@@ -323,14 +323,6 @@ nsresult nsHTMLButtonControlFrame::SetFormProperty(nsIAtom* aName, const nsAStri
   return NS_OK;
 }
 
-nsresult nsHTMLButtonControlFrame::GetFormProperty(nsIAtom* aName, nsAString& aValue) const
-{
-  if (nsGkAtoms::value == aName)
-    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::value, aValue);
-
-  return NS_OK;
-}
-
 nsStyleContext*
 nsHTMLButtonControlFrame::GetAdditionalStyleContext(int32_t aIndex) const
 {

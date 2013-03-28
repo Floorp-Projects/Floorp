@@ -67,7 +67,7 @@ function SI_AddFilterText()
   Services.obs.removeObserver(SI_AddFilterText, "StyleInspector-populated", false);
 
   let doc = computedView.styleDocument;
-  let searchbar = doc.querySelector(".searchfield");
+  let searchbar = doc.querySelector(".devtools-searchinput");
   Services.obs.addObserver(SI_checkFilter, "StyleInspector-populated", false);
   info("setting filter text to \"color\"");
   searchbar.focus();

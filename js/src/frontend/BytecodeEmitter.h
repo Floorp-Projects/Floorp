@@ -274,9 +274,8 @@ enum SrcNoteType {
     SRC_CONDSWITCH  = 12,       /* JSOP_CONDSWITCH, 1st offset points to end of
                                    switch, 2nd points to first JSOP_CASE */
 
-    SRC_PCDELTA     = 13,       /* distance forward from comma-operator to
-                                   next POP, or from CONDSWITCH to first CASE
-                                   opcode, etc. -- always a forward delta */
+    SRC_NEXTCASE    = 13,       /* distance forward from one CASE in a
+                                   CONDSWITCH to the next */
 
     SRC_ASSIGNOP    = 14,       /* += or another assign-op follows */
 

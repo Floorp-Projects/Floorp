@@ -432,10 +432,11 @@ create({ constructor: StackFramesView, proto: MenuContainer.prototype }, {
    */
   _createFrameView:
   function DVSF__createFrameView(aFrameTitle, aSourceLocation, aLineNumber, aDepth) {
-    let frameDetails = SourceUtils.getSourceLabel(aSourceLocation,
-      STACK_FRAMES_SOURCE_URL_MAX_LENGTH,
-      STACK_FRAMES_SOURCE_URL_TRIM_SECTION) +
-      SEARCH_LINE_FLAG + aLineNumber;
+    let frameDetails =
+      SourceUtils.trimUrlLength(
+        SourceUtils.getSourceLabel(aSourceLocation),
+        STACK_FRAMES_SOURCE_URL_MAX_LENGTH,
+        STACK_FRAMES_SOURCE_URL_TRIM_SECTION) + SEARCH_LINE_FLAG + aLineNumber;
 
     let frameTitleNode = document.createElement("label");
     frameTitleNode.className = "plain dbg-stackframe-title breadcrumbs-widget-item-tag";
@@ -471,10 +472,11 @@ create({ constructor: StackFramesView, proto: MenuContainer.prototype }, {
    */
   _createMenuEntry:
   function DVSF__createMenuEntry(aFrameTitle, aSourceLocation, aLineNumber, aDepth) {
-    let frameDescription = SourceUtils.getSourceLabel(aSourceLocation,
-      STACK_FRAMES_POPUP_SOURCE_URL_MAX_LENGTH,
-      STACK_FRAMES_POPUP_SOURCE_URL_TRIM_SECTION) +
-      SEARCH_LINE_FLAG + aLineNumber;
+    let frameDescription =
+      SourceUtils.trimUrlLength(
+        SourceUtils.getSourceLabel(aSourceLocation),
+        STACK_FRAMES_POPUP_SOURCE_URL_MAX_LENGTH,
+        STACK_FRAMES_POPUP_SOURCE_URL_TRIM_SECTION) + SEARCH_LINE_FLAG + aLineNumber;
 
     let prefix = "sf-cMenu-"; // "stackframes context menu"
     let commandId = prefix + aDepth + "-" + "-command";

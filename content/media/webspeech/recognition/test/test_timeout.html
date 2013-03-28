@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=650295
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 650295 -- Timeout for user speech</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="head.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=650295">Mozilla Bug 650295</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="text/javascript">
+  SimpleTest.waitForExplicitFinish();
+
+  SpecialPowers.setBoolPref("media.webspeech.test.fake_fsm_events", true);
+  SpecialPowers.setBoolPref("media.webspeech.test.fake_recognition_service", true);
+
+  performTest([
+    "EVENT_START",
+    "EVENT_AUDIO_DATA"
+  ], {
+    "start": null,
+    "audiostart": null,
+    "audioend": null,
+    "error": buildErrorCallback(errorCodes.NO_SPEECH),
+    "end": null
+  }, SimpleTest.finish, "silence.ogg");
+
+</script>
+</pre>
+</body>
+</html>

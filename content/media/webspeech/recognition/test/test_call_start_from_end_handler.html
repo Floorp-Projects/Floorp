@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=650295
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 650295 -- Restart recognition from end handler</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="head.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=650295">Mozilla Bug 650295</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="text/javascript">
+  SimpleTest.waitForExplicitFinish();
+
+  SpecialPowers.setBoolPref("media.webspeech.test.fake_fsm_events", true);
+  SpecialPowers.setBoolPref("media.webspeech.test.fake_recognition_service", true);
+
+  function endHandler(evt, sr) {
+    try {
+      sr.start(); // shouldn't fail
+    } catch (err) {
+      ok(false, "Failed to start() from end() callback");
+    }
+
+    info("Successfully start() from end() callback");
+  }
+
+  performTest([
+    'EVENT_START',
+    'EVENT_AUDIO_DATA',
+    'EVENT_RECOGNITIONSERVICE_FINAL_RESULT'
+  ], {
+    'start': null,
+    'audiostart': null,
+    'speechstart': null,
+    'speechend': null,
+    'audioend': null,
+    'result': buildResultCallback("Mock final result"),
+    'end': endHandler,
+  }, SimpleTest.finish);
+
+</script>
+</pre>
+</body>
+</html>

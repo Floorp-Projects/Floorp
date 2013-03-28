@@ -391,18 +391,21 @@ stun_get_win32_addrs(nr_transport_addr addrs[], int maxaddrs, int *count)
       r_log(NR_LOG_STUN, LOG_DEBUG, "Adapter Name (GUID) = %s", pAdapter->AdapterName);
       r_log(NR_LOG_STUN, LOG_DEBUG, "Adapter Description = %s", pAdapter->Description);
 
-      if ((r = nr_win32_get_adapter_friendly_name(pAdapter->AdapterName, &friendly_name))) {
-        r_log(NR_LOG_STUN, LOG_ERR, "Error %d getting friendly name for adapter with GUID = %s", r,
-              pAdapter->AdapterName);
-        ABORT(r);
+      if (nr_win32_get_adapter_friendly_name(pAdapter->AdapterName, &friendly_name)) {
+        friendly_name = 0;
       }
-
-      r_log(NR_LOG_STUN, LOG_INFO, "Found adapter with friendly name: %s", friendly_name);
-
-      snprintf(munged_ifname, IFNAMSIZ, "%s%c", friendly_name, 0);
-      RFREE(friendly_name);
-      friendly_name = 0;
-
+      if (friendly_name && *friendly_name) {
+        r_log(NR_LOG_STUN, LOG_INFO, "Found adapter with friendly name: %s", friendly_name);
+        snprintf(munged_ifname, IFNAMSIZ, "%s%c", friendly_name, 0);
+        RFREE(friendly_name);
+        friendly_name = 0;
+      } else {
+        // Not all adapters follow the friendly name convention. Windows' PPTP
+        // VPN adapter puts "VPN Connection 2" in the Description field instead.
+        // Windows's renaming-logic appears to enforce uniqueness in spite of this.
+        r_log(NR_LOG_STUN, LOG_INFO, "Found adapter with description: %s", pAdapter->Description);
+        snprintf(munged_ifname, IFNAMSIZ, "%s%c", pAdapter->Description, 0);
+      }
       /* replace spaces with underscores */
       c = strchr(munged_ifname, ' ');
       while (c != NULL) {

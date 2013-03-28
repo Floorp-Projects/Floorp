@@ -843,10 +843,21 @@
     "extended_statistics_ok": true,
     "description": "ms of SSL wait time including TCP and proxy tunneling"
   },
+  "SSL_BYTES_BEFORE_CERT_CALLBACK": {
+    "kind": "exponential",
+    "high": "32000",
+    "n_buckets": 64,
+    "extended_statistics_ok": true,
+    "description": "plaintext bytes read before a server certificate authenticated"
+  },
   "SSL_NPN_TYPE": {
     "kind": "enumerated",
     "n_values": 16,
     "description": "NPN Results (0=none, 1=negotiated, 2=no-overlap)"
+  },
+  "SSL_RESUMED_SESSION": {
+    "kind": "boolean",
+    "description": "complete TLS connect that used TLS Sesison Resumption"
   },
   "CERT_VALIDATION_HTTP_REQUEST_RESULT": {
     "kind": "enumerated",

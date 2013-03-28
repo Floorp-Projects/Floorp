@@ -1,0 +1,126 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.ruleview {
+  height: 100%;
+}
+
+.ruleview-rule-source {
+  -moz-padding-start: 5px;
+  cursor: pointer;
+  text-align: right;
+  float: right;
+  -moz-user-select: none;
+}
+
+.ruleview-rule-inheritance {
+  border-top-width: 1px;
+  border-bottom-width: 1px;
+  border-top-style: solid;
+  border-bottom-style: solid;
+  padding: 1px 4px;
+  margin-top: 4px;
+  -moz-user-select: none;
+}
+
+.ruleview-rule-source:hover {
+  text-decoration: underline;
+}
+
+.ruleview-rule {
+  padding: 2px 4px;
+}
+
+.ruleview-rule + .ruleview-rule {
+  border-top-width: 1px;
+  border-top-style: dotted;
+}
+
+.ruleview-warning {
+  background: url("chrome://browser/skin/devtools/alerticon-warning.png");
+  -moz-margin-start: 5px;
+  vertical-align: middle;
+  width: 13px;
+  height: 12px;
+}
+
+.ruleview-ruleopen {
+  -moz-padding-end: 5px;
+}
+
+.ruleview-ruleclose {
+  cursor: text;
+  padding-right: 20px;
+}
+
+.ruleview-propertylist {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.ruleview-rule:not(:hover) .ruleview-enableproperty {
+  visibility: hidden;
+}
+
+.ruleview-expander {
+  display: inline-block;
+}
+
+.ruleview-newproperty {
+  /* (enable checkbox width: 12px) + (expander width: 15px) */
+  -moz-margin-start: 27px;
+}
+
+.ruleview-namecontainer,
+.ruleview-propertycontainer,
+.ruleview-propertyname,
+.ruleview-propertyvalue {
+  text-decoration: inherit;
+}
+
+.ruleview-computedlist {
+  list-style: none;
+  padding: 0;
+}
+
+.ruleview-computed {
+  -moz-margin-start: 35px;
+}
+
+.ruleview-overridden {
+  text-decoration: line-through;
+}
+
+.styleinspector-propertyeditor {
+  border: 1px solid #CCC;
+  padding: 0;
+}
+
+.ruleview-property {
+  border-left: 2px solid transparent;
+}
+
+.ruleview-property  > * {
+  vertical-align: middle;
+}
+
+.ruleview-property[dirty] {
+  border-left-color: #68E268;
+}
+
+.ruleview-namecontainer > .ruleview-propertyname,
+.ruleview-propertycontainer > .ruleview-propertyvalue {
+  border-bottom: 1px dashed transparent;
+}
+
+.ruleview-namecontainer:hover > .ruleview-propertyname,
+.ruleview-propertycontainer:hover > .ruleview-propertyvalue {
+  border-bottom-color: hsl(0,0%,50%);
+}
+
+.ruleview-selector-separator, .ruleview-selector-unmatched {
+  color: #888;
+}
+

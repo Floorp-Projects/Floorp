@@ -52,19 +52,11 @@ function SI_checkText()
   propertyView.matchedExpanded = true;
   propertyView.refreshMatchedSelectors();
 
-  let td = propertyView.matchedSelectorsContainer.querySelector("td.rule-text");
-  ok(td, "found the first table row");
+  let span = propertyView.matchedSelectorsContainer.querySelector("span.rule-text");
+  ok(span, "found the first table row");
 
   let selector = propertyView.matchedSelectorViews[0];
   ok(selector, "found the first matched selector view");
-
-  try {
-    is(td.textContent.trim(), selector.humanReadableText(td).trim(),
-      "selector text is correct");
-  } catch (ex) {
-    info("EXCEPTION: " + ex);
-    ok(false, "getting the selector text should not raise an exception");
-  }
 
   finishUp();
 }

@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test Setting Screen Brightness with Power Management API</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+  <script type="application/javascript">
+
+  "use strict";
+
+  // Test setting brightness to a value < 0
+  function testInvalidBrightness1() {
+    try {
+      navigator.mozPower.screenBrightness = -1;
+    } catch (e) {
+      return ok(true, "Invalid brightness level results in exception.");
+    }
+    ok(false, "Exeception not thrown for invalid brightness level.");
+  }
+
+  // Test setting brightness to a value > 1
+  function testInvalidBrightness2() {
+    try {
+      navigator.mozPower.screenBrightness = 2;
+    } catch (e) {
+      return ok(true, "Invalid brightness level results in exception.");
+    }
+    ok(false, "Exeception not thrown for invalid brightness level.");
+  }
+
+  function testSettingBrightness() {
+    var newBright = 0.312;
+    navigator.mozPower.screenBrightness = newBright;
+    ok(fuzzyEq(newBright, navigator.mozPower.screenBrightness),
+       "Set new brightness value.");
+  }
+
+  function startTests() {
+    testInvalidBrightness1();
+    testInvalidBrightness2();
+    testSettingBrightness();
+
+    SimpleTest.finish();
+  }
+
+  function fuzzyEq(a, b) {
+    var epsilon = 0.002;
+    return Math.abs(a - b) < epsilon;
+  }
+
+  SimpleTest.expectAssertions(0, 9);
+  SimpleTest.waitForExplicitFinish();
+  if (SpecialPowers.hasPermission("power", document)) {
+    // Currently only applicable on FxOS
+    if (navigator.userAgent.indexOf("Mobile") != -1 &&
+        navigator.appVersion.indexOf("Android") == -1) {
+      startTests();
+    } else {
+      ok(true, "mozPower on Firefox OS only.");
+      SimpleTest.finish();
+    }
+  } else {
+    // Add the permission and reload so it's propogated
+    SpecialPowers.addPermission("power", true, document);
+    window.location.reload();
+  }
+  </script>
+</pre>
+</body>
+</html>
