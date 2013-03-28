@@ -120,6 +120,7 @@ FENNEC_JAVA_FILES = \
   MenuItemDefault.java \
   MenuPanel.java \
   MenuPopup.java \
+  MotionEventInterceptor.java \
   MultiChoicePreference.java \
   NotificationClient.java \
   NotificationHandler.java \

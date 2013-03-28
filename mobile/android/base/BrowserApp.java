@@ -9,9 +9,11 @@ import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
+import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.util.FloatUtils;
-import org.mozilla.gecko.util.UiAsyncTask;
+import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.util.UiAsyncTask;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -439,6 +441,19 @@ abstract public class BrowserApp extends GeckoApp
         mMainLayout.addView(actionBar, 2);
 
         ((GeckoApp.MainLayout) mMainLayout).setTouchEventInterceptor(new HideTabsTouchListener());
+        ((GeckoApp.MainLayout) mMainLayout).setMotionEventInterceptor(new MotionEventInterceptor() {
+            @Override
+            public boolean onInterceptMotionEvent(View view, MotionEvent event) {
+                // If we get a gamepad panning MotionEvent while the focus is not on the layerview,
+                // put the focus on the layerview and carry on
+                LayerView layerView = mLayerView;
+                if (layerView != null && !layerView.hasFocus() && GamepadUtils.isPanningControl(event)) {
+                    layerView.requestFocus();
+                }
+                return false;
+            }
+        });
+
 
         mBrowserToolbar = new BrowserToolbar(this);
         mBrowserToolbar.from(actionBar);
