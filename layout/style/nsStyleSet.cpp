@@ -513,6 +513,7 @@ nsStyleSet::SetAuthorStyleDisabled(bool aStyleDisabled)
     mAuthorStyleDisabled = aStyleDisabled;
     BeginUpdate();
     mDirty |= 1 << eDocSheet |
+              1 << eScopedDocSheet |
               1 << eStyleAttrSheet;
     return EndUpdate();
   }
