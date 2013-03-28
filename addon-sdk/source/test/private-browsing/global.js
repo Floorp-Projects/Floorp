@@ -6,6 +6,7 @@
 const timer = require("sdk/timers");
 const { LoaderWithHookedConsole, deactivate, pb, pbUtils } = require("./helper");
 const tabs = require("sdk/tabs");
+const { getMostRecentBrowserWindow, isWindowPrivate } = require('sdk/window/utils');
 
 exports["test activate private mode via handler"] = function(test) {
   test.waitUntilDone();
@@ -230,5 +231,20 @@ exports.testUnloadWhileActive = function(test) {
     test.done();
   });
 
+  pb.activate();
+};
+
+exports.testIgnoreWindow = function(test) {
+  test.waitUntilDone();
+  let window = getMostRecentBrowserWindow();
+
+  pb.once('start', function() {
+    test.assert(isWindowPrivate(window), 'window is private');
+    test.assert(!pbUtils.ignoreWindow(window), 'window is not ignored');
+    pb.once('stop', function() {
+      test.done();
+    });
+    pb.deactivate();
+  });
   pb.activate();
 };

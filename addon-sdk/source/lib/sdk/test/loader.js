@@ -51,7 +51,11 @@ exports.LoaderWithHookedConsole = function (module, callback) {
         warn: hook.bind("warn"),
         error: hook.bind("error"),
         debug: hook.bind("debug"),
-        exception: hook.bind("exception")
+        exception: hook.bind("exception"),
+        __exposedProps__: {
+          log: "rw", info: "rw", warn: "rw", error: "rw", debug: "rw",
+          exception: "rw"
+        }
       }
     }),
     messages: messages
