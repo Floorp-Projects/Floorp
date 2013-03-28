@@ -21,13 +21,22 @@ SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
 
-var iframe = document.createElement('iframe');
-SpecialPowers.wrap(iframe).mozbrowser = true;
-iframe.src = browserElementTestHelpers.focusPage;
-document.body.appendChild(iframe);
-
 // Number of expected events at which point we will consider the test as done.
 var nbEvents = whitelistedEvents.length * 3;
+
+var iframe;
+var finished = false;
+function runTest() {
+  iframe = document.createElement('iframe');
+  SpecialPowers.wrap(iframe).mozbrowser = true;
+  iframe.src = browserElementTestHelpers.focusPage;
+  document.body.appendChild(iframe);
+
+  SimpleTest.waitForFocus(function() {
+    iframe.focus();
+    SimpleTest.executeSoon(test2);
+  });
+}
 
 function eventHandler(e) {
   ok(((e.type == 'keydown' || e.type == 'keypress' || e.type == 'keyup') &&
@@ -42,14 +51,14 @@ function eventHandler(e) {
     return;
   }
 
-  if (nbEvents < 0) {
+  if (nbEvents < 0 && !finished) {
     ok(false, "got an unexpected event! " + e.type + " " + e.keyCode);
     SimpleTest.finish();
     return;
   }
 }
 
-function runTest() {
+function test2() {
   is(document.activeElement, iframe, "iframe should be focused");
 
   addEventListener('keydown', eventHandler);
@@ -70,10 +79,7 @@ function runTest() {
   synthesizeKey("VK_PAGE_DOWN", {}); // keypress is ignored because .preventDefault() will be called.
   synthesizeKey("VK_CONTEXT_MENU", {});
   synthesizeKey("VK_SLEEP", {});
+  finished = true;
 }
 
-SimpleTest.waitForFocus(function() {
-  iframe.focus();
-  SimpleTest.executeSoon(runTest);
-});
-
+addEventListener('testready', runTest);
