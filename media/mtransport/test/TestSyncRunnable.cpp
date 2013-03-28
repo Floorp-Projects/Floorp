@@ -70,8 +70,8 @@ int main(int argc, char **argv)
   // Start the tests
   ::testing::InitGoogleTest(&argc, argv);
 
-  RUN_ALL_TESTS();
+  int rv = RUN_ALL_TESTS();
 
   delete test_utils;
-  return 0;
+  return rv;
 }
