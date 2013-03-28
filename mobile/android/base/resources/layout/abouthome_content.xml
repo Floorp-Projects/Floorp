@@ -63,7 +63,8 @@
                                                  android:clickable="true"
                                                  android:textSize="15sp"
                                                  android:textColor="#FFFFFF"
-                                                 android:visibility="gone"/>
+                                                 android:visibility="gone"
+                                                 android:focusable="true"/>
 
             <org.mozilla.gecko.AboutHomeSection android:id="@+id/last_tabs"
                                                 android:layout_width="fill_parent"
