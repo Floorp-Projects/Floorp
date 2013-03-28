@@ -402,9 +402,19 @@ function PluginWrapper(aId, aName, aDescription, aTags) {
 
   this.__defineGetter__("pluginMimeTypes", function() {
     let types = [];
-    for (let tag of aTags)
-      for (let type of tag.getMimeTypes({}))
+    for (let tag of aTags) {
+      let mimeTypes = tag.getMimeTypes({});
+      let mimeDescriptions = tag.getMimeDescriptions({});
+      let extensions = tag.getExtensions({});
+      for (let i = 0; i < mimeTypes.length; i++) {
+        let type = {};
+        type.type = mimeTypes[i];
+        type.description = mimeDescriptions[i];
+        type.suffixes = extensions[i];
+
         types.push(type);
+      }
+    }
     return types;
   });
 
