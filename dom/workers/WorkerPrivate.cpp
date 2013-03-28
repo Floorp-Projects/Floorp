@@ -3258,10 +3258,10 @@ WorkerPrivate::TraceInternal(JSTracer* aTrc)
 
   for (uint32_t index = 0; index < mTimeouts.Length(); index++) {
     TimeoutInfo* info = mTimeouts[index];
-    JS_CallValueTracer(aTrc, info->mTimeoutVal,
+    JS_CallValueTracer(aTrc, &info->mTimeoutVal,
                        "WorkerPrivate timeout value");
     for (uint32_t index2 = 0; index2 < info->mExtraArgVals.Length(); index2++) {
-      JS_CallValueTracer(aTrc, info->mExtraArgVals[index2],
+      JS_CallValueTracer(aTrc, &info->mExtraArgVals[index2],
                          "WorkerPrivate timeout extra argument value");
     }
   }

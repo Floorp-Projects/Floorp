@@ -1421,9 +1421,9 @@ void
 XMLHttpRequest::_trace(JSTracer* aTrc)
 {
   if (mUpload) {
-    JS_CallObjectTracer(aTrc, mUpload->GetJSObject(), "mUpload");
+    mUpload->TraceJSObject(aTrc, "mUpload");
   }
-  JS_CallValueTracer(aTrc, mStateData.mResponse, "mResponse");
+  JS_CallValueTracer(aTrc, &mStateData.mResponse, "mResponse");
   XMLHttpRequestEventTarget::_trace(aTrc);
 }
 
