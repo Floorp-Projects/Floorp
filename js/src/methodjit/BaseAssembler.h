@@ -1147,6 +1147,9 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::MIPSRegiste
     }
 
     template <typename T>
+#if defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ == 7 && defined(JS_CPU_ARM)
+    __attribute__((optimize("-O1")))
+#endif
     void storeToTypedArray(int atype, ValueRemat vr, T address)
     {
         if (atype == js::TypedArray::TYPE_FLOAT32 || atype == js::TypedArray::TYPE_FLOAT64) {
