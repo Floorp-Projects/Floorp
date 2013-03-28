@@ -43,8 +43,8 @@ NS_NewSVG##_classname##Element(nsIContent** aResult, \
 #undef SVG_FROM_PARSER_TAG
 
 nsresult
-NS_NewSVGUnknownElement(nsIContent** aResult,
-                        already_AddRefed<nsINodeInfo> aNodeInfo);
+NS_NewSVGElement(nsIContent** aResult,
+                 already_AddRefed<nsINodeInfo> aNodeInfo);
 
 typedef nsresult
   (*contentCreatorCallback)(nsIContent** aResult,
@@ -127,5 +127,5 @@ NS_NewSVGElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo,
   }
 
   // if we don't know what to create, just create a standard svg element:
-  return NS_NewSVGUnknownElement(aResult, aNodeInfo);
+  return NS_NewSVGElement(aResult, aNodeInfo);
 }

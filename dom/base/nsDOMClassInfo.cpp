@@ -254,7 +254,6 @@
 #include "nsIDOMSVGAnimatedString.h"
 #include "nsIDOMTimeEvent.h"
 #include "nsIDOMSVGDocument.h"
-#include "nsIDOMSVGElement.h"
 #include "nsIDOMSVGLength.h"
 #include "nsIDOMSVGNumber.h"
 #include "nsIDOMSVGRect.h"
@@ -808,11 +807,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(SVGDocument, nsDocumentSH,
                            DOCUMENT_SCRIPTABLE_FLAGS)
 
-  // SVG element classes
   NS_DEFINE_CLASSINFO_DATA(TimeEvent, nsEventSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA_WITH_NAME(SVGUnknownElement, SVGElement, nsElementSH,
-                                     ELEMENT_SCRIPTABLE_FLAGS)
 
   // other SVG classes
   NS_DEFINE_CLASSINFO_DATA(SVGAnimatedEnumeration, nsDOMGenericSH,
@@ -2188,22 +2184,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
-#define DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES                           \
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)                          \
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGElement)                           \
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeSelector)                         \
-    DOM_CLASSINFO_MAP_ENTRY(nsIInlineEventHandlers)                     \
-    DOM_CLASSINFO_MAP_CONDITIONAL_ENTRY(nsITouchEventReceiver,          \
-                                        nsDOMTouchEvent::PrefEnabled())
-
-#define DOM_CLASSINFO_SVG_GRAPHIC_ELEMENT_MAP_ENTRIES \
-    DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
-
-  // XXX - the proto chain stuff is sort of hackish, because of the MI in
-  // the SVG interfaces. I doubt that extending the proto on one interface
-  // works properly on an element which inherits off multiple interfaces.
-  // Tough luck. - bbaetz
-
   // The SVG document
 
   DOM_CLASSINFO_MAP_BEGIN(SVGDocument, nsIDOMSVGDocument)
@@ -2214,14 +2194,9 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_DOCUMENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
-  // SVG element classes
   DOM_CLASSINFO_MAP_BEGIN(TimeEvent, nsIDOMTimeEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMTimeEvent)
     DOM_CLASSINFO_EVENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(SVGUnknownElement, nsIDOMSVGElement)
-    DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
   // other SVG classes
