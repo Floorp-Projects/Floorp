@@ -4880,8 +4880,7 @@ ContentComponentsGetterOp(JSContext *cx, JSHandleObject obj, JSHandleId id,
 // static
 JSBool
 nsXPCComponents::AttachComponentsObject(XPCCallContext& ccx,
-                                        XPCWrappedNativeScope* aScope,
-                                        JSObject* aTarget)
+                                        XPCWrappedNativeScope* aScope)
 {
     JSObject *components = aScope->GetComponentsJSObject(ccx);
     if (!components)
@@ -4889,13 +4888,11 @@ nsXPCComponents::AttachComponentsObject(XPCCallContext& ccx,
 
     JSObject *global = aScope->GetGlobalJSObject();
     MOZ_ASSERT(js::IsObjectInContextCompartment(global, ccx));
-    if (!aTarget)
-        aTarget = global;
 
     jsid id = ccx.GetRuntime()->GetStringID(XPCJSRuntime::IDX_COMPONENTS);
     JSPropertyOp getter = AccessCheck::isChrome(global) ? nullptr
                                                         : &ContentComponentsGetterOp;
-    return JS_DefinePropertyById(ccx, aTarget, id, js::ObjectValue(*components),
+    return JS_DefinePropertyById(ccx, global, id, js::ObjectValue(*components),
                                  getter, nullptr, JSPROP_PERMANENT | JSPROP_READONLY);
 }
 
