@@ -23,6 +23,7 @@
 #include "nsISocketTransport.h"
 #include "nsMultiplexInputStream.h"
 #include "nsStringStream.h"
+#include "mozilla/VisualEventTracer.h"
 
 #include "nsComponentManagerUtils.h" // do_CreateInstance
 #include "nsServiceManagerUtils.h"   // do_GetService
@@ -180,6 +181,12 @@ nsHttpTransaction::Init(uint32_t caps,
                         nsITransportEventSink *eventsink,
                         nsIAsyncInputStream **responseBody)
 {
+    MOZ_EVENT_TRACER_COMPOUND_NAME(static_cast<nsAHttpTransaction*>(this),
+                                   requestHead->PeekHeader(nsHttp::Host),
+                                   requestHead->RequestURI().BeginReading());
+
+    MOZ_EVENT_TRACER_WAIT(static_cast<nsAHttpTransaction*>(this),
+                          "net::http::transaction");
     nsresult rv;
 
     LOG(("nsHttpTransaction::Init [this=%x caps=%x]\n", this, caps));
@@ -393,6 +400,11 @@ nsHttpTransaction::SetConnection(nsAHttpConnection *conn)
 {
     NS_IF_RELEASE(mConnection);
     NS_IF_ADDREF(mConnection = conn);
+
+    if (conn) {
+        MOZ_EVENT_TRACER_EXEC(static_cast<nsAHttpTransaction*>(this),
+                              "net::http::transaction");
+    }
 }
 
 void
@@ -536,6 +548,12 @@ nsHttpTransaction::ReadRequestSegment(nsIInputStream *stream,
         // First data we're sending -> this is requestStart
         trans->mTimings.requestStart = TimeStamp::Now();
     }
+
+    if (!trans->mSentData) {
+        MOZ_EVENT_TRACER_MARK(static_cast<nsAHttpTransaction*>(trans),
+                              "net::http::first-write");
+    }
+
     trans->mSentData = true;
     return NS_OK;
 }
@@ -605,6 +623,11 @@ nsHttpTransaction::WritePipeSegment(nsIOutputStream *stream,
     //
     rv = trans->mWriter->OnWriteSegment(buf, count, countWritten);
     if (NS_FAILED(rv)) return rv; // caller didn't want to write anything
+
+    if (!trans->mReceivedData) {
+        MOZ_EVENT_TRACER_MARK(static_cast<nsAHttpTransaction*>(trans),
+                              "net::http::first-read");
+    }
 
     NS_ASSERTION(*countWritten > 0, "bad writer");
     trans->mReceivedData = true;
@@ -805,6 +828,9 @@ nsHttpTransaction::Close(nsresult reason)
 
     // closing this pipe triggers the channel's OnStopRequest method.
     mPipeOut->CloseWithStatus(reason);
+
+    MOZ_EVENT_TRACER_DONE(static_cast<nsAHttpTransaction*>(this),
+                          "net::http::transaction");
 }
 
 nsresult
