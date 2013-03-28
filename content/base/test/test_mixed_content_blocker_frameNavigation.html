@@ -26,6 +26,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840388
   var testsToRunSecure = {
     securePage_navigate_child: false,
     securePage_navigate_grandchild: false,
+    blankTarget: false,
   };
 
   function log(msg) {
@@ -108,6 +109,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840388
         ok(blockActive == (event.data.msg == "navigating to insecure grandchild iframe blocked on secure page"), "navigated to insecure granchild iframe on secure page");
         testsToRunSecure["securePage_navigate_grandchild"] = true;
         break;
+
+      case "blankTarget":
+        ok((event.data.msg == "opened an http link with target=_blank from a secure page"), "couldn't open an http link in a new window from a secure page");
+        testsToRunSecure["blankTarget"] = true;
+        break;
+
     }
     checkTestsCompleted();
   }

@@ -604,6 +604,7 @@ MOCHITEST_FILES_C= \
 		file_mixed_content_frameNavigation_grandchild.html \
 		file_mixed_content_frameNavigation_secure.html \
 		file_mixed_content_frameNavigation_secure_grandchild.html \
+		file_mixed_content_frameNavigation_blankTarget.html \
 		test_bug789856.html \
 		file_bug804395.jar \
 		test_bug804395.html \
