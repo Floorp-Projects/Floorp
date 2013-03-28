@@ -660,7 +660,7 @@ static PLDHashOperator
 MarkScriptsInGC(nsIURI* aKey, CacheScriptEntry& aScriptEntry, void* aClosure)
 {
     JSTracer* trc = static_cast<JSTracer*>(aClosure);
-    JS_CallScriptTracer(trc, aScriptEntry.mScriptObject,
+    JS_CallScriptTracer(trc, &aScriptEntry.mScriptObject,
                         "nsXULPrototypeCache script");
     return PL_DHASH_NEXT;
 }
