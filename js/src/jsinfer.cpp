@@ -1399,6 +1399,17 @@ TypeConstraintCall::newType(JSContext *cx, TypeSet *source, Type type)
                 }
             }
 
+            if (native == intrinsic_UnsafeSetElement) {
+                // UnsafeSetElement(arr0, idx0, elem0, ..., arrN, idxN, elemN)
+                // is (basically) equivalent to arri[idxi] = elemi for i = 0...N
+                JS_ASSERT((callsite->argumentCount % 3) == 0);
+                for (size_t i = 0; i < callsite->argumentCount; i += 3) {
+                    StackTypeSet *arr = callsite->argumentTypes[i];
+                    StackTypeSet *elem = callsite->argumentTypes[i+2];
+                    arr->addSetProperty(cx, script, pc, elem, JSID_VOID);
+                }
+            }
+
             if (native == js::array_pop || native == js::array_shift)
                 callsite->thisTypes->addGetProperty(cx, script, pc, callsite->returnTypes, JSID_VOID);
 
