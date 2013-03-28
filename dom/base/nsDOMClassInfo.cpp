@@ -255,7 +255,6 @@
 #include "nsIDOMTimeEvent.h"
 #include "nsIDOMSVGDocument.h"
 #include "nsIDOMSVGElement.h"
-#include "nsIDOMSVGFilters.h"
 #include "nsIDOMSVGLength.h"
 #include "nsIDOMSVGNumber.h"
 #include "nsIDOMSVGRect.h"
