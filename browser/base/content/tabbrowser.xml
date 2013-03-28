@@ -3041,9 +3041,6 @@
               this.tabContainer.mCloseButtons = Services.prefs.getIntPref(data);
               this.tabContainer.adjustTabstrip();
               break;
-            case "browser.tabs.autoHide":
-              this.tabContainer.updateVisibility();
-              break;
             case "browser.tabs.closeWindowWithLastTab":
               this.tabContainer._closeWindowWithLastTab = Services.prefs.getBoolPref(data);
               this.tabContainer.adjustTabstrip();
@@ -3121,8 +3118,7 @@
       <method name="updateVisibility">
         <body><![CDATA[
           if (this.childNodes.length - this.tabbrowser._removingTabs.length == 1)
-            this.visible = window.toolbar.visible &&
-                           !Services.prefs.getBoolPref("browser.tabs.autoHide");
+            this.visible = window.toolbar.visible;
           else
             this.visible = true;
         ]]></body>
