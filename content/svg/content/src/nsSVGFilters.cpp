@@ -12,7 +12,6 @@
 #include "nsSVGInteger.h"
 #include "nsSVGIntegerPair.h"
 #include "nsSVGBoolean.h"
-#include "nsIDOMSVGFilters.h"
 #include "nsCOMPtr.h"
 #include "nsSVGFilterInstance.h"
 #include "nsSVGEnum.h"
@@ -250,27 +249,10 @@ nsSVGFE::AttributeAffectsRendering(int32_t aNameSpaceID,
           aAttribute == nsGkAtoms::result);
 }
 
-//----------------------------------------------------------------------
-// nsIDOMSVGFilterPrimitiveStandardAttributes methods
-
-/* readonly attribute nsIDOMSVGAnimatedLength x; */
-NS_IMETHODIMP nsSVGFE::GetX(nsIDOMSVGAnimatedLength * *aX)
-{
-  *aX = X().get();
-  return NS_OK;
-}
-
 already_AddRefed<SVGAnimatedLength>
 nsSVGFE::X()
 {
   return mLengthAttributes[ATTR_X].ToDOMAnimatedLength(this);
-}
-
-/* readonly attribute nsIDOMSVGAnimatedLength y; */
-NS_IMETHODIMP nsSVGFE::GetY(nsIDOMSVGAnimatedLength * *aY)
-{
-  *aY = Y().get();
-  return NS_OK;
 }
 
 already_AddRefed<SVGAnimatedLength>
@@ -279,37 +261,16 @@ nsSVGFE::Y()
   return mLengthAttributes[ATTR_Y].ToDOMAnimatedLength(this);
 }
 
-/* readonly attribute nsIDOMSVGAnimatedLength width; */
-NS_IMETHODIMP nsSVGFE::GetWidth(nsIDOMSVGAnimatedLength * *aWidth)
-{
-  *aWidth = Width().get();
-  return NS_OK;
-}
-
 already_AddRefed<SVGAnimatedLength>
 nsSVGFE::Width()
 {
   return mLengthAttributes[ATTR_WIDTH].ToDOMAnimatedLength(this);
 }
 
-/* readonly attribute nsIDOMSVGAnimatedLength height; */
-NS_IMETHODIMP nsSVGFE::GetHeight(nsIDOMSVGAnimatedLength * *aHeight)
-{
-  *aHeight = Height().get();
-  return NS_OK;
-}
-
 already_AddRefed<SVGAnimatedLength>
 nsSVGFE::Height()
 {
   return mLengthAttributes[ATTR_HEIGHT].ToDOMAnimatedLength(this);
-}
-
-/* readonly attribute nsIDOMSVGAnimatedString result; */
-NS_IMETHODIMP nsSVGFE::GetResult(nsIDOMSVGAnimatedString * *aResult)
-{
-  *aResult = Result().get();
-  return NS_OK;
 }
 
 already_AddRefed<nsIDOMSVGAnimatedString>
