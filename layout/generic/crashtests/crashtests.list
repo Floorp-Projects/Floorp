@@ -24,7 +24,7 @@ load 321224.xul
 load 322780-1.xul
 load 323381-1.html
 load 323381-2.html
-asserts-if(gtk2Widget,13-15) load 323386-1.html # Bug 575011
+asserts-if(gtk2Widget,14-15) load 323386-1.html # Bug 575011
 load 323389-1.html
 load 323389-2.html
 load 323493-1.html
@@ -330,7 +330,7 @@ load 495875-1.html
 load 495875-2.html
 load 499862-1.html
 load 499857-1.html
-asserts(4-90) asserts-if(winWidget,3-108) load 499885-1.xhtml # nscoord_MAX assertions (bug 575011), plus bug 570436 on some versions of windows
+asserts(10-90) asserts-if(winWidget,3-108) load 499885-1.xhtml # nscoord_MAX assertions (bug 575011), plus bug 570436 on some versions of windows
 load 501535-1.html
 load 503961-1.xhtml
 load 503961-2.html

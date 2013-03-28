@@ -1080,7 +1080,7 @@ nsStylePosition::nsStylePosition(void)
   mMinWidth.SetAutoValue();
   mMaxWidth.SetNoneValue();
   mHeight.SetAutoValue();
-  mMinHeight.SetAutoValue();
+  mMinHeight.SetCoordValue(0);
   mMaxHeight.SetNoneValue();
 #ifdef MOZ_FLEXBOX
   mFlexBasis.SetAutoValue();
