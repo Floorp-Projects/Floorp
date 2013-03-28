@@ -18,13 +18,6 @@ SVGGElement::WrapNode(JSContext *aCx, JSObject *aScope)
 }
 
 //----------------------------------------------------------------------
-// nsISupports methods
-
-NS_IMPL_ISUPPORTS_INHERITED3(SVGGElement, SVGGraphicsElement,
-                             nsIDOMNode, nsIDOMElement,
-                             nsIDOMSVGElement)
-
-//----------------------------------------------------------------------
 // Implementation
 
 SVGGElement::SVGGElement(already_AddRefed<nsINodeInfo> aNodeInfo)

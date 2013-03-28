@@ -53,13 +53,6 @@ nsSVGElement::StringInfo SVGFilterElement::sStringInfo[1] =
 };
 
 //----------------------------------------------------------------------
-// nsISupports methods
-
-NS_IMPL_ISUPPORTS_INHERITED3(SVGFilterElement, SVGFilterElementBase,
-                             nsIDOMNode, nsIDOMElement,
-                             nsIDOMSVGElement)
-
-//----------------------------------------------------------------------
 // Implementation
 
 SVGFilterElement::SVGFilterElement(already_AddRefed<nsINodeInfo> aNodeInfo)

@@ -27,10 +27,6 @@ protected:
   nsresult Init();
 
 public:
-  // interfaces:
-
-  NS_DECL_ISUPPORTS_INHERITED
-
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 };
 
