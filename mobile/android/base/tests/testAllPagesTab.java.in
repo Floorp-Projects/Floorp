@@ -116,8 +116,7 @@ public class testAllPagesTab extends BaseTest {
         mSolo.clickLongOnView(child);
 
         // TODO: Test clicking these does the right thing
-        mAsserter.ok(mSolo.waitForText("Open in New Tab"), "Context menu has New Tab option", "Open in New Tab");
-        mAsserter.ok(mSolo.searchText("Share", true), "Context menu has Share option", "Share");
+        mAsserter.ok(mSolo.waitForText("Share"), "Context menu has Share option", "Share");
         mAsserter.ok(mSolo.searchText("Remove", true), "Context menu has Remove option", "Remove");
         mAsserter.ok(mSolo.searchText("Add to Home Screen", true), "Context menu has Add to Home Screen option", "Add to Home Screen");
 

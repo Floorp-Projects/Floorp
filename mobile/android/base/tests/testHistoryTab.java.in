@@ -24,7 +24,6 @@ import java.util.GregorianCalendar;
 
 public class testHistoryTab extends PixelTest {
     private static final String ABOUT_HOME_URL = "about:home";
-    private static final String OPEN_NEW_TAB = "Open in New Tab";
     private static ListView listview = null;
     private String[] bookmarks = new String[] {
         "http://mochi.test:8888/tests/robocop/robocop_blank_01.html"
@@ -183,8 +182,7 @@ public class testHistoryTab extends PixelTest {
             mSolo.clickLongOnView(mFirstChild);
 
             // TODO: Test clicking these does the right thing
-            mAsserter.ok(mSolo.waitForText("Open in New Tab"), "Context menu has New Tab option", "Open in New Tab");
-            mAsserter.ok(mSolo.searchText("Share", true), "Context menu has Share option", "Share");
+            mAsserter.ok(mSolo.waitForText("Share"), "Context menu has Share option", "Share");
             mAsserter.ok(mSolo.searchText("Remove", true), "Context menu has Remove option", "Remove");
             mAsserter.ok(mSolo.searchText("Add to Home Screen", true), "Context menu has Add to Home Screen option", "Add to Home Screen");
 
@@ -193,7 +191,7 @@ public class testHistoryTab extends PixelTest {
             View child = listview.getChildAt(0);
             mAsserter.ok(child != null, "first list item can be retrieved", child != null ? child.toString() : "null!");
             mSolo.clickLongOnView(child);
-            mAsserter.is(false, mSolo.waitForText("Open in New Tab"), "Header rows should not show a context menu");
+            mAsserter.is(false, mSolo.waitForText("Share"), "Header rows should not show a context menu");
 
         } else {
             mAsserter.ok(false, "waiting for history item", "history item available");
