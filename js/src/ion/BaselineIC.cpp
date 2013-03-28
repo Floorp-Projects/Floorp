@@ -210,17 +210,16 @@ ICStub::trace(JSTracer *trc)
       }
       case ICStub::SetElem_DenseAdd: {
         ICSetElem_DenseAdd *setElemStub = toSetElem_DenseAdd();
-        MarkShape(trc, &setElemStub->shape(), "baseline-getelem-denseadd-shape");
         MarkTypeObject(trc, &setElemStub->type(), "baseline-setelem-denseadd-type");
 
         JS_STATIC_ASSERT(ICSetElem_DenseAdd::MAX_PROTO_CHAIN_DEPTH == 4);
 
         switch (setElemStub->protoChainDepth()) {
-          case 0: setElemStub->toImpl<0>()->traceProtoShapes(trc); break;
-          case 1: setElemStub->toImpl<1>()->traceProtoShapes(trc); break;
-          case 2: setElemStub->toImpl<2>()->traceProtoShapes(trc); break;
-          case 3: setElemStub->toImpl<3>()->traceProtoShapes(trc); break;
-          case 4: setElemStub->toImpl<4>()->traceProtoShapes(trc); break;
+          case 0: setElemStub->toImpl<0>()->traceShapes(trc); break;
+          case 1: setElemStub->toImpl<1>()->traceShapes(trc); break;
+          case 2: setElemStub->toImpl<2>()->traceShapes(trc); break;
+          case 3: setElemStub->toImpl<3>()->traceShapes(trc); break;
+          case 4: setElemStub->toImpl<4>()->traceShapes(trc); break;
           default: JS_NOT_REACHED("Invalid proto stub.");
         }
         break;
@@ -320,15 +319,14 @@ ICStub::trace(JSTracer *trc)
       case ICStub::SetProp_NativeAdd: {
         ICSetProp_NativeAdd *propStub = toSetProp_NativeAdd();
         MarkTypeObject(trc, &propStub->type(), "baseline-setpropnativeadd-stub-type");
-        MarkShape(trc, &propStub->oldShape(), "baseline-setpropnativeadd-stub-oldshape");
         MarkShape(trc, &propStub->newShape(), "baseline-setpropnativeadd-stub-newshape");
         JS_STATIC_ASSERT(ICSetProp_NativeAdd::MAX_PROTO_CHAIN_DEPTH == 4);
         switch (propStub->protoChainDepth()) {
-          case 0: propStub->toImpl<0>()->traceProtoShapes(trc); break;
-          case 1: propStub->toImpl<1>()->traceProtoShapes(trc); break;
-          case 2: propStub->toImpl<2>()->traceProtoShapes(trc); break;
-          case 3: propStub->toImpl<3>()->traceProtoShapes(trc); break;
-          case 4: propStub->toImpl<4>()->traceProtoShapes(trc); break;
+          case 0: propStub->toImpl<0>()->traceShapes(trc); break;
+          case 1: propStub->toImpl<1>()->traceShapes(trc); break;
+          case 2: propStub->toImpl<2>()->traceShapes(trc); break;
+          case 3: propStub->toImpl<3>()->traceShapes(trc); break;
+          case 4: propStub->toImpl<4>()->traceShapes(trc); break;
           default: JS_NOT_REACHED("Invalid proto stub.");
         }
         break;
@@ -3573,8 +3571,11 @@ DenseSetElemStubExists(JSContext *cx, ICStub::Kind kind, ICSetElem_Fallback *stu
 
         if (kind == ICStub::SetElem_DenseAdd && iter->isSetElem_DenseAdd()) {
             ICSetElem_DenseAdd *dense = iter->toSetElem_DenseAdd();
-            if (obj->lastProperty() == dense->shape() && obj->getType(cx) == dense->type())
+            if (obj->lastProperty() == dense->toImplUnchecked<0>()->shape(0) &&
+                obj->getType(cx) == dense->type())
+            {
                 return true;
+            }
         }
     }
     return false;
@@ -3676,7 +3677,7 @@ CanOptimizeDenseSetElem(JSContext *cx, HandleObject obj, uint32_t index,
             ++*protoDepthOut;
     }
 
-    if (*protoDepthOut > ICSetProp_NativeAdd::MAX_PROTO_CHAIN_DEPTH)
+    if (*protoDepthOut > ICSetElem_DenseAdd::MAX_PROTO_CHAIN_DEPTH)
         return false;
 
     *isAddingCaseOut = true;
@@ -3953,12 +3954,12 @@ ICSetElem_Dense::Compiler::generateStubCode(MacroAssembler &masm)
 }
 
 static bool
-GetProtoShapes(JSObject *obj, size_t protoChainDepth, AutoShapeVector *protoShapes)
+GetProtoShapes(JSObject *obj, size_t protoChainDepth, AutoShapeVector *shapes)
 {
-    JS_ASSERT(protoShapes->empty());
+    JS_ASSERT(shapes->length() == 1);
     JSObject *curProto = obj->getProto();
     for (size_t i = 0; i < protoChainDepth; i++) {
-        if (!protoShapes->append(curProto->lastProperty()))
+        if (!shapes->append(curProto->lastProperty()))
             return false;
         curProto = curProto->getProto();
     }
@@ -3973,19 +3974,22 @@ GetProtoShapes(JSObject *obj, size_t protoChainDepth, AutoShapeVector *protoShap
 ICUpdatedStub *
 ICSetElemDenseAddCompiler::getStub(ICStubSpace *space)
 {
-    AutoShapeVector protoShapes(cx);
-    if (!GetProtoShapes(obj_, protoChainDepth_, &protoShapes))
+    AutoShapeVector shapes(cx);
+    if (!shapes.append(obj_->lastProperty()))
+        return NULL;
+
+    if (!GetProtoShapes(obj_, protoChainDepth_, &shapes))
         return NULL;
 
     JS_STATIC_ASSERT(ICSetElem_DenseAdd::MAX_PROTO_CHAIN_DEPTH == 4);
 
     ICUpdatedStub *stub = NULL;
     switch (protoChainDepth_) {
-      case 0: stub = getStubSpecific<0>(space, &protoShapes); break;
-      case 1: stub = getStubSpecific<1>(space, &protoShapes); break;
-      case 2: stub = getStubSpecific<2>(space, &protoShapes); break;
-      case 3: stub = getStubSpecific<3>(space, &protoShapes); break;
-      case 4: stub = getStubSpecific<4>(space, &protoShapes); break;
+      case 0: stub = getStubSpecific<0>(space, &shapes); break;
+      case 1: stub = getStubSpecific<1>(space, &shapes); break;
+      case 2: stub = getStubSpecific<2>(space, &shapes); break;
+      case 3: stub = getStubSpecific<3>(space, &shapes); break;
+      case 4: stub = getStubSpecific<4>(space, &shapes); break;
       default: JS_NOT_REACHED("ProtoChainDepth too high.");
     }
     if (!stub || !stub->initUpdatingChain(cx, space))
@@ -4009,7 +4013,8 @@ ICSetElemDenseAddCompiler::generateStubCode(MacroAssembler &masm)
 
     // Unbox R0 and guard on its shape.
     Register obj = masm.extractObject(R0, ExtractTemp0);
-    masm.loadPtr(Address(BaselineStubReg, ICSetElem_DenseAdd::offsetOfShape()), scratchReg);
+    masm.loadPtr(Address(BaselineStubReg, ICSetElem_DenseAddImpl<0>::offsetOfShape(0)),
+                 scratchReg);
     masm.branchTestObjShape(Assembler::NotEqual, obj, scratchReg, &failure);
 
     // Stow both R0 and R1 (object and key)
@@ -4032,7 +4037,7 @@ ICSetElemDenseAddCompiler::generateStubCode(MacroAssembler &masm)
     Register protoReg = regs.takeAny();
     for (size_t i = 0; i < protoChainDepth_; i++) {
         masm.loadObjProto(i == 0 ? obj : protoReg, protoReg);
-        masm.loadPtr(Address(BaselineStubReg, ICSetElem_DenseAddImpl<0>::offsetOfProtoShape(i)),
+        masm.loadPtr(Address(BaselineStubReg, ICSetElem_DenseAddImpl<0>::offsetOfShape(i + 1)),
                      scratchReg);
         masm.branchTestObjShape(Assembler::NotEqual, protoReg, scratchReg, &failureUnstow);
     }
@@ -5353,19 +5358,22 @@ ICSetProp_Native::Compiler::generateStubCode(MacroAssembler &masm)
 ICUpdatedStub *
 ICSetPropNativeAddCompiler::getStub(ICStubSpace *space)
 {
-    AutoShapeVector protoShapes(cx);
-    if (!GetProtoShapes(obj_, protoChainDepth_, &protoShapes))
+    AutoShapeVector shapes(cx);
+    if (!shapes.append(oldShape_))
+        return NULL;
+
+    if (!GetProtoShapes(obj_, protoChainDepth_, &shapes))
         return NULL;
 
     JS_STATIC_ASSERT(ICSetProp_NativeAdd::MAX_PROTO_CHAIN_DEPTH == 4);
 
     ICUpdatedStub *stub = NULL;
     switch(protoChainDepth_) {
-      case 0: stub = getStubSpecific<0>(space, &protoShapes); break;
-      case 1: stub = getStubSpecific<1>(space, &protoShapes); break;
-      case 2: stub = getStubSpecific<2>(space, &protoShapes); break;
-      case 3: stub = getStubSpecific<3>(space, &protoShapes); break;
-      case 4: stub = getStubSpecific<4>(space, &protoShapes); break;
+      case 0: stub = getStubSpecific<0>(space, &shapes); break;
+      case 1: stub = getStubSpecific<1>(space, &shapes); break;
+      case 2: stub = getStubSpecific<2>(space, &shapes); break;
+      case 3: stub = getStubSpecific<3>(space, &shapes); break;
+      case 4: stub = getStubSpecific<4>(space, &shapes); break;
       default: JS_NOT_REACHED("ProtoChainDepth too high.");
     }
     if (!stub || !stub->initUpdatingChain(cx, space))
@@ -5387,7 +5395,7 @@ ICSetPropNativeAddCompiler::generateStubCode(MacroAssembler &masm)
 
     // Unbox and guard against old shape.
     Register objReg = masm.extractObject(R0, ExtractTemp0);
-    masm.loadPtr(Address(BaselineStubReg, ICSetProp_NativeAdd::offsetOfOldShape()), scratch);
+    masm.loadPtr(Address(BaselineStubReg, ICSetProp_NativeAddImpl<0>::offsetOfShape(0)), scratch);
     masm.branchTestObjShape(Assembler::NotEqual, objReg, scratch, &failure);
 
     // Guard that the type object matches.
@@ -5404,9 +5412,7 @@ ICSetPropNativeAddCompiler::generateStubCode(MacroAssembler &masm)
     // Check the proto chain.
     for (size_t i = 0; i < protoChainDepth_; i++) {
         masm.loadObjProto(i == 0 ? objReg : protoReg, protoReg);
-        masm.branchTestPtr(Assembler::Zero, protoReg, protoReg, &failureUnstow);
-
-        masm.loadPtr(Address(BaselineStubReg, ICSetProp_NativeAddImpl<0>::offsetOfProtoShape(i)),
+        masm.loadPtr(Address(BaselineStubReg, ICSetProp_NativeAddImpl<0>::offsetOfShape(i + 1)),
                      scratch);
         masm.branchTestObjShape(Assembler::NotEqual, protoReg, scratch, &failureUnstow);
     }
