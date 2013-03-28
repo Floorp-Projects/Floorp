@@ -39,7 +39,6 @@ NS_IMPL_ISUPPORTS_INHERITED3(SVGCircleElement, SVGCircleElementBase,
 SVGCircleElement::SVGCircleElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : SVGCircleElementBase(aNodeInfo)
 {
-  SetIsDOMBinding();
 }
 
 //----------------------------------------------------------------------

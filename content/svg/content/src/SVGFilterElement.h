@@ -26,7 +26,6 @@ namespace dom {
 class SVGAnimatedLength;
 
 class SVGFilterElement : public SVGFilterElementBase,
-                         public nsIDOMSVGElement,
                          public nsIDOMSVGUnitTypes
 {
   friend class ::nsSVGFilterFrame;
@@ -39,14 +38,8 @@ protected:
   virtual JSObject* WrapNode(JSContext *cx, JSObject *scope) MOZ_OVERRIDE;
 
 public:
-  // interfaces:
 
   NS_DECL_ISUPPORTS_INHERITED
-
-  // xxx I wish we could use virtual inheritance
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-  NS_FORWARD_NSIDOMSVGELEMENT(SVGFilterElementBase::)
 
   // nsIContent
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
@@ -54,8 +47,6 @@ public:
 
   // Invalidate users of this filter
   void Invalidate();
-
-  virtual nsIDOMNode* AsDOMNode() { return this; }
 
   // nsSVGSVGElement methods:
   virtual bool HasValidDimensions() const;

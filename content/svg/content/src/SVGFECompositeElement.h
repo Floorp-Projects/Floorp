@@ -27,8 +27,7 @@ static const unsigned short SVG_FECOMPOSITE_OPERATOR_ARITHMETIC = 6;
 
 typedef nsSVGFE SVGFECompositeElementBase;
 
-class SVGFECompositeElement : public SVGFECompositeElementBase,
-                              public nsIDOMSVGElement
+class SVGFECompositeElement : public SVGFECompositeElementBase
 {
   friend nsresult (::NS_NewSVGFECompositeElement(nsIContent **aResult,
                                                  already_AddRefed<nsINodeInfo> aNodeInfo));
@@ -36,7 +35,6 @@ protected:
   SVGFECompositeElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : SVGFECompositeElementBase(aNodeInfo)
   {
-    SetIsDOMBinding();
   }
   virtual JSObject* WrapNode(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 
@@ -55,14 +53,8 @@ public:
   virtual nsIntRect ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBoxes,
           const nsSVGFilterInstance& aInstance);
 
-  NS_FORWARD_NSIDOMSVGELEMENT(SVGFECompositeElementBase::)
-
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  virtual nsIDOMNode* AsDOMNode() { return this; }
 
   // WebIDL
   already_AddRefed<nsIDOMSVGAnimatedString> In1();

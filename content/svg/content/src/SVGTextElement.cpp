@@ -30,7 +30,6 @@ NS_IMPL_ISUPPORTS_INHERITED3(SVGTextElement, SVGTextElementBase,
 SVGTextElement::SVGTextElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : SVGTextElementBase(aNodeInfo)
 {
-  SetIsDOMBinding();
 }
 
 //----------------------------------------------------------------------

@@ -16,8 +16,7 @@ namespace dom {
 
 typedef nsSVGFE SVGFEMergeElementBase;
 
-class SVGFEMergeElement : public SVGFEMergeElementBase,
-                          public nsIDOMSVGElement
+class SVGFEMergeElement : public SVGFEMergeElementBase
 {
   friend nsresult (::NS_NewSVGFEMergeElement(nsIContent **aResult,
                                              already_AddRefed<nsINodeInfo> aNodeInfo));
@@ -25,7 +24,6 @@ protected:
   SVGFEMergeElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : SVGFEMergeElementBase(aNodeInfo)
   {
-    SetIsDOMBinding();
   }
   virtual JSObject* WrapNode(JSContext *cx, JSObject *scope) MOZ_OVERRIDE;
 
@@ -40,15 +38,8 @@ public:
   virtual nsSVGString& GetResultImageName() { return mStringAttributes[RESULT]; }
   virtual void GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources);
 
-  NS_FORWARD_NSIDOMSVGELEMENT(SVGFEMergeElementBase::)
-
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-
   // nsIContent
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  virtual nsIDOMNode* AsDOMNode() { return this; }
 protected:
   virtual StringAttributesInfo GetStringInfo();
 

@@ -63,6 +63,7 @@ struct nsSVGEnumMapping;
 typedef nsStyledElementNotElementCSSInlineStyle nsSVGElementBase;
 
 class nsSVGElement : public nsSVGElementBase    // nsIContent
+                   , public nsIDOMSVGElement
 {
 protected:
   nsSVGElement(already_AddRefed<nsINodeInfo> aNodeInfo);
@@ -117,13 +118,9 @@ public:
   static const MappedAttributeEntry sLightingEffectsMap[];
   static const MappedAttributeEntry sMaskMap[];
 
-  // nsIDOMSVGElement
-  NS_IMETHOD GetId(nsAString & aId);
-  NS_IMETHOD SetId(const nsAString & aId);
-  NS_IMETHOD GetOwnerSVGElement(nsIDOMSVGElement** aOwnerSVGElement);
-  NS_IMETHOD GetViewportElement(nsIDOMSVGElement** aViewportElement);
-  NS_IMETHOD GetClassName(nsIDOMSVGAnimatedString** aClassName);
-  NS_IMETHOD GetStyle(nsIDOMCSSStyleDeclaration** aStyle);
+  NS_FORWARD_NSIDOMNODE_TO_NSINODE
+  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
+  NS_DECL_NSIDOMSVGELEMENT
 
   // Gets the element that establishes the rectangular viewport against which
   // we should resolve percentage lengths (our "coordinate context"). Returns
@@ -296,6 +293,9 @@ public:
   virtual nsIAtom* GetTransformListAttrName() const {
     return nullptr;
   }
+
+  virtual nsIDOMNode* AsDOMNode() MOZ_FINAL { return this; }
+  virtual bool IsTransformable() { return false; }
 
   // WebIDL
   mozilla::dom::SVGSVGElement* GetOwnerSVGElement(mozilla::ErrorResult& rv);

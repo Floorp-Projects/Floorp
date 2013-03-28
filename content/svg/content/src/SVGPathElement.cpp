@@ -42,7 +42,6 @@ NS_IMPL_ISUPPORTS_INHERITED3(SVGPathElement, SVGPathElementBase,
 SVGPathElement::SVGPathElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : SVGPathElementBase(aNodeInfo)
 {
-  SetIsDOMBinding();
 }
 
 //----------------------------------------------------------------------

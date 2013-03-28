@@ -17,8 +17,7 @@ namespace dom {
 
 typedef nsSVGFE SVGFEDisplacementMapElementBase;
 
-class SVGFEDisplacementMapElement : public SVGFEDisplacementMapElementBase,
-                                    public nsIDOMSVGElement
+class SVGFEDisplacementMapElement : public SVGFEDisplacementMapElementBase
 {
 protected:
   friend nsresult (::NS_NewSVGFEDisplacementMapElement(nsIContent **aResult,
@@ -26,7 +25,6 @@ protected:
   SVGFEDisplacementMapElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : SVGFEDisplacementMapElementBase(aNodeInfo)
   {
-    SetIsDOMBinding();
   }
   virtual JSObject* WrapNode(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 
@@ -49,14 +47,8 @@ public:
   virtual nsIntRect ComputeChangeBBox(const nsTArray<nsIntRect>& aSourceChangeBoxes,
           const nsSVGFilterInstance& aInstance);
 
-  NS_FORWARD_NSIDOMSVGELEMENT(SVGFEDisplacementMapElementBase::)
-
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  virtual nsIDOMNode* AsDOMNode() { return this; }
 
   // WebIDL
   already_AddRefed<nsIDOMSVGAnimatedString> In1();

@@ -41,7 +41,6 @@ NS_IMPL_ISUPPORTS_INHERITED4(SVGClipPathElement, SVGClipPathElementBase,
 SVGClipPathElement::SVGClipPathElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : SVGClipPathElementBase(aNodeInfo)
 {
-  SetIsDOMBinding();
 }
 
 already_AddRefed<nsIDOMSVGAnimatedEnumeration>

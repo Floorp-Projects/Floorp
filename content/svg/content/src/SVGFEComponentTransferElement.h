@@ -16,8 +16,7 @@ nsresult NS_NewSVGFEComponentTransferElement(nsIContent **aResult,
 namespace mozilla {
 namespace dom {
 
-class SVGFEComponentTransferElement : public SVGFEComponentTransferElementBase,
-                                      public nsIDOMSVGElement
+class SVGFEComponentTransferElement : public SVGFEComponentTransferElementBase
 {
   friend nsresult (::NS_NewSVGFEComponentTransferElement(nsIContent **aResult,
                                                          already_AddRefed<nsINodeInfo> aNodeInfo));
@@ -25,7 +24,6 @@ protected:
   SVGFEComponentTransferElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : SVGFEComponentTransferElementBase(aNodeInfo)
   {
-    SetIsDOMBinding();
   }
   virtual JSObject* WrapNode(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 
@@ -42,15 +40,8 @@ public:
   virtual nsSVGString& GetResultImageName() { return mStringAttributes[RESULT]; }
   virtual void GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources);
 
-  NS_FORWARD_NSIDOMSVGELEMENT(SVGFEComponentTransferElementBase::)
-
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-
   // nsIContent
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  virtual nsIDOMNode* AsDOMNode() { return this; }
 
   // WebIDL
   already_AddRefed<nsIDOMSVGAnimatedString> In1();

@@ -24,7 +24,6 @@ namespace dom {
 typedef nsSVGElement SVGMaskElementBase;
 
 class SVGMaskElement MOZ_FINAL : public SVGMaskElementBase,
-                                 public nsIDOMSVGElement,
                                  public nsIDOMSVGUnitTypes
 {
   friend class ::nsSVGMaskFrame;
@@ -39,15 +38,9 @@ public:
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGElement::)
-
   // nsIContent interface
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
-
-  virtual nsIDOMNode* AsDOMNode() { return this; }
 
   // nsSVGSVGElement methods:
   virtual bool HasValidDimensions() const;

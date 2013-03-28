@@ -19,7 +19,6 @@ namespace dom {
 typedef nsSVGFE SVGFEImageElementBase;
 
 class SVGFEImageElement : public SVGFEImageElementBase,
-                          public nsIDOMSVGElement,
                           public nsImageLoadingContent
 {
   friend class ::SVGFEImageFrame;
@@ -47,11 +46,6 @@ public:
   virtual nsIntRect ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBoxes,
           const nsSVGFilterInstance& aInstance);
 
-  NS_FORWARD_NSIDOMSVGELEMENT(SVGFEImageElementBase::)
-
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-
   // nsIContent
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
@@ -68,8 +62,6 @@ public:
   NS_IMETHODIMP Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* aData);
 
   void MaybeLoadSVGImage();
-
-  virtual nsIDOMNode* AsDOMNode() { return this; }
 
   // WebIDL
   already_AddRefed<nsIDOMSVGAnimatedString> Href();

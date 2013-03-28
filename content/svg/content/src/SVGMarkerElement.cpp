@@ -101,7 +101,6 @@ nsSVGOrientType::ToDOMAnimatedEnum(nsSVGElement *aSVGElement)
 SVGMarkerElement::SVGMarkerElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : SVGMarkerElementBase(aNodeInfo), mCoordCtx(nullptr)
 {
-  SetIsDOMBinding();
 }
 
 //----------------------------------------------------------------------

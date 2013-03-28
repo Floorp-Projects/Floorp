@@ -16,8 +16,7 @@ namespace dom {
 
 typedef nsSVGFE SVGFEFloodElementBase;
 
-class SVGFEFloodElement : public SVGFEFloodElementBase,
-                          public nsIDOMSVGElement
+class SVGFEFloodElement : public SVGFEFloodElementBase
 {
   friend nsresult (::NS_NewSVGFEFloodElement(nsIContent **aResult,
                                              already_AddRefed<nsINodeInfo> aNodeInfo));
@@ -25,7 +24,6 @@ protected:
   SVGFEFloodElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : SVGFEFloodElementBase(aNodeInfo)
   {
-    SetIsDOMBinding();
   }
   virtual JSObject* WrapNode(JSContext *cx, JSObject *scope) MOZ_OVERRIDE;
 
@@ -43,17 +41,11 @@ public:
   virtual nsIntRect ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBoxes,
           const nsSVGFilterInstance& aInstance);
 
-  NS_FORWARD_NSIDOMSVGELEMENT(SVGFEFloodElementBase::)
-
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
-  virtual nsIDOMNode* AsDOMNode() { return this; }
 protected:
   virtual bool OperatesOnSRGB(nsSVGFilterInstance*,
                               int32_t, Image*) { return true; }

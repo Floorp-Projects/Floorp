@@ -83,7 +83,6 @@ SVGUseElement::SVGUseElement(already_AddRefed<nsINodeInfo> aNodeInfo)
 #pragma warning(pop)
 #endif
 {
-  SetIsDOMBinding();
 }
 
 SVGUseElement::~SVGUseElement()

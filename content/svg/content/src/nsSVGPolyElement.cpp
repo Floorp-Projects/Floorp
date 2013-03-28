@@ -25,7 +25,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGPolyElementBase)
 nsSVGPolyElement::nsSVGPolyElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsSVGPolyElementBase(aNodeInfo)
 {
-  SetIsDOMBinding();
 }
 
 already_AddRefed<DOMSVGPointList>

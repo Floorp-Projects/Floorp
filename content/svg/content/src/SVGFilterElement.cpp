@@ -65,7 +65,6 @@ NS_IMPL_ISUPPORTS_INHERITED4(SVGFilterElement, SVGFilterElementBase,
 SVGFilterElement::SVGFilterElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : SVGFilterElementBase(aNodeInfo)
 {
-  SetIsDOMBinding();
 }
 
 //----------------------------------------------------------------------
