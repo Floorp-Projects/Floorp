@@ -15,8 +15,9 @@
 
 // lame check for kernel version
 // see bug 586550
-
+#ifndef WTF_OS_ANDROID
 #include <asm/hwcap.h>
+#endif
 #include "ion/arm/Architecture-arm.h"
 #include "ion/arm/Assembler-arm.h"
 namespace js {
