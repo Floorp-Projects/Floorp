@@ -92,20 +92,20 @@ var SelectionHandler = {
       case "after-viewport-change": {
         if (this._activeType == this.TYPE_SELECTION) {
           // Update the cache after the viewport changes (e.g. panning, zooming).
-          this.updateCacheForSelection();
+          this._updateCacheForSelection();
         }
         break;
       }
       case "TextSelection:Move": {
         let data = JSON.parse(aData);
         if (this._activeType == this.TYPE_SELECTION)
-          this.moveSelection(data.handleType == this.HANDLE_TYPE_START, data.x, data.y);
+          this._moveSelection(data.handleType == this.HANDLE_TYPE_START, data.x, data.y);
         else if (this._activeType == this.TYPE_CURSOR) {
           // Send a click event to the text box, which positions the caret
           this._sendMouseEvents(data.x, data.y);
 
           // Move the handle directly under the caret
-          this.positionHandles();
+          this._positionHandles();
         }
         break;
       }
@@ -114,7 +114,7 @@ var SelectionHandler = {
           let data = JSON.parse(aData);
 
           // Reverse the handles if necessary.
-          let selectionReversed = this.updateCacheForSelection(data.handleType == this.HANDLE_TYPE_START);
+          let selectionReversed = this._updateCacheForSelection(data.handleType == this.HANDLE_TYPE_START);
           if (selectionReversed) {
             // Re-send mouse events to update the selection corresponding to the new handles.
             if (this._isRTL) {
@@ -127,9 +127,9 @@ var SelectionHandler = {
           }
 
           // Position the handles to align with the edges of the selection.
-          this.positionHandles();
+          this._positionHandles();
         } else if (this._activeType == this.TYPE_CURSOR) {
-          this.positionHandles();
+          this._positionHandles();
         }
         break;
       }
@@ -198,14 +198,14 @@ var SelectionHandler = {
 
     // Remove any previous selected or created ranges. Tapping anywhere on a
     // page will create an empty range.
-    let selection = this.getSelection();
+    let selection = this._getSelection();
     selection.removeAllRanges();
 
     // Position the caret using a fake mouse click sent to the top-level window
     this._sendMouseEvents(aX, aY, false);
 
     try {
-      let selectionController = this.getSelectionController();
+      let selectionController = this._getSelectionController();
 
       // Select the word nearest the caret
       selectionController.wordMove(false, false);
@@ -230,10 +230,10 @@ var SelectionHandler = {
 
     // Initialize the cache
     this._cache = { start: {}, end: {}};
-    this.updateCacheForSelection();
+    this._updateCacheForSelection();
 
     this._activeType = this.TYPE_SELECTION;
-    this.positionHandles();
+    this._positionHandles();
 
     sendMessageToJava({
       type: "TextSelection:ShowHandles",
@@ -244,7 +244,7 @@ var SelectionHandler = {
       aElement.focus();
   },
 
-  getSelection: function sh_getSelection() {
+  _getSelection: function sh_getSelection() {
     if (this._targetElement instanceof Ci.nsIDOMNSEditableElement)
       return this._targetElement.QueryInterface(Ci.nsIDOMNSEditableElement).editor.selection;
     else
@@ -252,13 +252,13 @@ var SelectionHandler = {
   },
 
   _getSelectedText: function sh_getSelectedText() {
-    let selection = this.getSelection();
+    let selection = this._getSelection();
     if (selection)
       return selection.toString().trim();
     return "";
   },
 
-  getSelectionController: function sh_getSelectionController() {
+  _getSelectionController: function sh_getSelectionController() {
     if (this._targetElement instanceof Ci.nsIDOMNSEditableElement)
       return this._targetElement.QueryInterface(Ci.nsIDOMNSEditableElement).editor.selectionController;
     else
@@ -278,15 +278,15 @@ var SelectionHandler = {
     if (this._activeType != this.TYPE_SELECTION)
       this.startSelection(aElement, aX, aY);
 
-    let selectionController = this.getSelectionController();
+    let selectionController = this._getSelectionController();
     selectionController.selectAll();
-    this.updateCacheForSelection();
-    this.positionHandles();
+    this._updateCacheForSelection();
+    this._positionHandles();
   },
 
   // Moves the ends of the selection in the page. aX/aY are in top-level window
   // browser coordinates.
-  moveSelection: function sh_moveSelection(aIsStartHandle, aX, aY) {
+  _moveSelection: function sh_moveSelection(aIsStartHandle, aX, aY) {
     // Update the handle position as it's dragged.
     if (aIsStartHandle) {
       this._cache.start.x = aX;
@@ -338,19 +338,19 @@ var SelectionHandler = {
       // field's text (and clicking the bottom moves the cursor to the end).
       if (aY < rect.y + 1) {
         aY = rect.y + 1;
-        this.getSelectionController().scrollLine(false);
+        this._getSelectionController().scrollLine(false);
       } else if (aY > rect.y + rect.height - 1) {
         aY = rect.y + rect.height - 1;
-        this.getSelectionController().scrollLine(true);
+        this._getSelectionController().scrollLine(true);
       }
 
       // Clamp horizontally and scroll if handle is at bounds
       if (aX < rect.x) {
         aX = rect.x;
-        this.getSelectionController().scrollCharacter(false);
+        this._getSelectionController().scrollCharacter(false);
       } else if (aX > rect.x + rect.width) {
         aX = rect.x + rect.width;
-        this.getSelectionController().scrollCharacter(true);
+        this._getSelectionController().scrollCharacter(true);
       }
     } else if (this._activeType == this.TYPE_SELECTION) {
       // Send mouse event 1px too high to prevent selection from entering the line below where it should be
@@ -391,7 +391,7 @@ var SelectionHandler = {
       return;
 
     if (this._activeType == this.TYPE_SELECTION) {
-      let selection = this.getSelection();
+      let selection = this._getSelection();
       if (selection) {
         // Remove the listener before calling removeAllRanges() to avoid
         // recursively notifying the listener.
@@ -432,7 +432,7 @@ var SelectionHandler = {
 
   _pointInSelection: function sh_pointInSelection(aX, aY) {
     let offset = this._getViewOffset();
-    let rangeRect = this.getSelection().getRangeAt(0).getBoundingClientRect();
+    let rangeRect = this._getSelection().getRangeAt(0).getBoundingClientRect();
     let radius = ElementTouchHelper.getTouchRadius();
     return (aX - offset.x > rangeRect.left - radius.left &&
             aX - offset.x < rangeRect.right + radius.right &&
@@ -442,8 +442,8 @@ var SelectionHandler = {
 
   // Returns true if the selection has been reversed. Takes optional aIsStartHandle
   // param to decide whether the selection has been reversed.
-  updateCacheForSelection: function sh_updateCacheForSelection(aIsStartHandle) {
-    let selection = this.getSelection();
+  _updateCacheForSelection: function sh_updateCacheForSelection(aIsStartHandle) {
+    let selection = this._getSelection();
     let rects = selection.getRangeAt(0).getClientRects();
     let start = { x: this._isRTL ? rects[0].right : rects[0].left, y: rects[0].bottom };
     let end = { x: this._isRTL ? rects[rects.length - 1].left : rects[rects.length - 1].right, y: rects[rects.length - 1].bottom };
@@ -475,7 +475,7 @@ var SelectionHandler = {
     this._contentWindow.addEventListener("blur", this, true);
 
     this._activeType = this.TYPE_CURSOR;
-    this.positionHandles();
+    this._positionHandles();
 
     sendMessageToJava({
       type: "TextSelection:ShowHandles",
@@ -483,7 +483,7 @@ var SelectionHandler = {
     });
   },
 
-  positionHandles: function sh_positionHandles() {
+  _positionHandles: function sh_positionHandles() {
     let scrollX = {}, scrollY = {};
     this._contentWindow.top.QueryInterface(Ci.nsIInterfaceRequestor).
                             getInterface(Ci.nsIDOMWindowUtils).getScrollXY(false, scrollX, scrollY);
@@ -551,9 +551,9 @@ var SelectionHandler = {
         // The selection is in a view (or sub-view) of the view that scrolled.
         // So we need to reposition the handles.
         if (this._activeType == this.TYPE_SELECTION) {
-          this.updateCacheForSelection();
+          this._updateCacheForSelection();
         }
-        this.positionHandles();
+        this._positionHandles();
         break;
       }
       if (view == view.parent) {
