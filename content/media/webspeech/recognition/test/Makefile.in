@@ -14,11 +14,6 @@ CPPSRCS := \
   FakeSpeechRecognitionService.cpp \
   $(NULL)
 
-EXPORTS_NAMESPACES := mozilla/dom
-EXPORTS_mozilla/dom := \
-  FakeSpeechRecognitionService.h \
-  $(NULL)
-
 MOCHITEST_FILES := \
   head.js \
   test_success_without_recognition_service.html \
