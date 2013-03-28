@@ -91,6 +91,22 @@ class MochitestRunner(MozbuildObject):
         opts = mochitest.MochitestOptions(automation, tests_dir)
         options, args = opts.parse_args([])
 
+        # Need to set the suite options before verifyOptions below.
+        if suite == 'plain':
+            # Don't need additional options for plain.
+            pass
+        elif suite == 'chrome':
+            options.chrome = True
+        elif suite == 'browser':
+            options.browserChrome = True
+        elif suite == 'metro':
+            options.immersiveMode = True
+            options.browserChrome = True
+        elif suite == 'a11y':
+            options.a11y = True
+        else:
+            raise Exception('None or unrecognized mochitest suite type.')
+
         options = opts.verifyOptions(options, runner)
 
         if options is None:
@@ -110,21 +126,6 @@ class MochitestRunner(MozbuildObject):
 
         automation.setServerInfo(options.webServer, options.httpPort,
             options.sslPort, options.webSocketPort)
-
-        if suite == 'plain':
-            # Don't need additional options for plain.
-            pass
-        elif suite == 'chrome':
-            options.chrome = True
-        elif suite == 'browser':
-            options.browserChrome = True
-        elif suite == 'metro':
-            options.immersiveMode = True
-            options.browser = True
-        elif suite == 'a11y':
-            options.a11y = True
-        else:
-            raise Exception('None or unrecognized mochitest suite type.')
 
         if test_path:
             test_root = runner.getTestRoot(options)
