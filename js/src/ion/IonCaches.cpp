@@ -1737,7 +1737,6 @@ GetElementIC::attachTypedArrayElement(JSContext *cx, IonScript *ion, JSObject *o
                                       const Value &idval)
 {
     JS_ASSERT(obj->isTypedArray());
-    JS_ASSERT(idval.isInt32());
 
     Label failures;
     MacroAssembler masm(cx);
@@ -1759,19 +1758,55 @@ GetElementIC::attachTypedArrayElement(JSContext *cx, IonScript *ion, JSObject *o
     // because load size differ in function of the typed array data width.
     masm.branchTestObjClass(Assembler::NotEqual, object(), tmpReg, obj->getClass(), &failures);
 
-    // Ensure the index is an int32 value.
+    // Decide to what type index the stub should be optimized
     Register indexReg = tmpReg;
-
     JS_ASSERT(!index().constant());
-    if (index().reg().hasValue()) {
-        ValueOperand val = index().reg().valueReg();
-        masm.branchTestInt32(Assembler::NotEqual, val, &failures);
+    if (idval.isString()) {
+        JS_ASSERT(GetIndexFromString(idval.toString()) != UINT32_MAX);
 
-        // Unbox the index.
-        masm.unboxInt32(val, indexReg);
+        // Part 1: Get the string into a register
+        Register str;
+        if (index().reg().hasValue()) {
+            ValueOperand val = index().reg().valueReg();
+            masm.branchTestString(Assembler::NotEqual, val, &failures);
+
+            str = masm.extractString(val, indexReg);
+        } else {
+            JS_ASSERT(!index().reg().typedReg().isFloat());
+            str = index().reg().typedReg().gpr();
+        }
+
+        // Part 2: Call to translate the str into index
+        RegisterSet regs = RegisterSet::Volatile();
+        masm.PushRegsInMask(regs);
+        regs.maybeTake(str);
+
+        Register temp = regs.takeGeneral();
+
+        masm.setupUnalignedABICall(1, temp);
+        masm.passABIArg(str);
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, GetIndexFromString));
+        masm.mov(ReturnReg, indexReg);
+
+        RegisterSet ignore = RegisterSet();
+        ignore.add(indexReg);
+        masm.PopRegsInMaskIgnore(RegisterSet::Volatile(), ignore);
+
+        masm.branch32(Assembler::Equal, indexReg, Imm32(UINT32_MAX), &failures);
+
     } else {
-        JS_ASSERT(!index().reg().typedReg().isFloat());
-        indexReg = index().reg().typedReg().gpr();
+        JS_ASSERT(idval.isInt32());
+
+        if (index().reg().hasValue()) {
+            ValueOperand val = index().reg().valueReg();
+            masm.branchTestInt32(Assembler::NotEqual, val, &failures);
+
+            // Unbox the index.
+            masm.unboxInt32(val, indexReg);
+        } else {
+            JS_ASSERT(!index().reg().typedReg().isFloat());
+            indexReg = index().reg().typedReg().gpr();
+        }
     }
 
     // Guard on the initialized length.
@@ -1850,14 +1885,18 @@ GetElementIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
             if (!cache.attachDenseElement(cx, ion, obj, idval))
                 return false;
             attachedStub = true;
-        } else if (obj->isTypedArray() && idval.isInt32()) {
-            int arrayType = TypedArray::type(obj);
-            bool floatOutput = arrayType == TypedArray::TYPE_FLOAT32 ||
-                               arrayType == TypedArray::TYPE_FLOAT64;
-            if (!floatOutput || cache.output().hasValue()) {
-                if (!cache.attachTypedArrayElement(cx, ion, obj, idval))
-                    return false;
-                attachedStub = true;
+        } else if (obj->isTypedArray()) {
+            if ((idval.isInt32()) ||
+                (idval.isString() && GetIndexFromString(idval.toString()) != UINT32_MAX))
+            {
+                int arrayType = TypedArray::type(obj);
+                bool floatOutput = arrayType == TypedArray::TYPE_FLOAT32 ||
+                                   arrayType == TypedArray::TYPE_FLOAT64;
+                if (!floatOutput || cache.output().hasValue()) {
+                    if (!cache.attachTypedArrayElement(cx, ion, obj, idval))
+                        return false;
+                    attachedStub = true;
+                }
             }
         }
     }
