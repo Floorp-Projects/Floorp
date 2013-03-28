@@ -110,7 +110,7 @@ abstract public class GeckoApp
                 implements GeckoEventListener, SensorEventListener, LocationListener,
                            Tabs.OnTabsChangedListener, GeckoEventResponder,
                            GeckoMenu.Callback, GeckoMenu.MenuPresenter,
-                           OnInterceptTouchListener
+                           TouchEventInterceptor
 {
     private static final String LOGTAG = "GeckoApp";
 
@@ -2468,28 +2468,29 @@ abstract public class GeckoApp
     }
 
     public static class MainLayout extends RelativeLayout {
-        private OnInterceptTouchListener mOnInterceptTouchListener;
+        private TouchEventInterceptor mTouchEventInterceptor;
 
         public MainLayout(Context context, AttributeSet attrs) {
             super(context, attrs);
-            mOnInterceptTouchListener = null;
         }
 
-        public void setOnInterceptTouchListener(OnInterceptTouchListener listener) {
-            mOnInterceptTouchListener = listener;
+        public void setTouchEventInterceptor(TouchEventInterceptor interceptor) {
+            mTouchEventInterceptor = interceptor;
         }
 
         @Override
         public boolean onInterceptTouchEvent(MotionEvent event) {
-            if (mOnInterceptTouchListener != null && mOnInterceptTouchListener.onInterceptTouchEvent(this, event))
+            if (mTouchEventInterceptor != null && mTouchEventInterceptor.onInterceptTouchEvent(this, event)) {
                 return true;
+            }
             return super.onInterceptTouchEvent(event);
         }
 
         @Override
         public boolean onTouchEvent(MotionEvent event) {
-            if (mOnInterceptTouchListener != null && mOnInterceptTouchListener.onTouch(this, event))
+            if (mTouchEventInterceptor != null && mTouchEventInterceptor.onTouch(this, event)) {
                 return true;
+            }
             return super.onTouchEvent(event);
         }
 

@@ -126,7 +126,6 @@ FENNEC_JAVA_FILES = \
   NotificationService.java \
   NSSBridge.java \
   CustomEditText.java \
-  OnInterceptTouchListener.java \
   PrefsHelper.java \
   PrivateDataPreference.java \
   PrivateTab.java \
@@ -158,6 +157,7 @@ FENNEC_JAVA_FILES = \
   TextSelection.java \
   TextSelectionHandle.java \
   ThumbnailHelper.java \
+  TouchEventInterceptor.java \
   VideoPlayer.java \
   WebAppAllocator.java \
   ZoomConstraints.java \
