@@ -47,6 +47,16 @@ body {
   font: 10px/12px monospace;
 }
 
+@media (min-width: 320px) {
+  body {
+    position: absolute;
+    width: 320px;
+    left: -160px;
+    margin-left: 50%;
+  }
+}
+
+
 #margins {
   padding: 28px;
 }

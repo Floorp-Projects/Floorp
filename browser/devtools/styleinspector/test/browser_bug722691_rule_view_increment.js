@@ -23,7 +23,7 @@ function setUpTests()
                            'background-color: #000000; >"'+
                        '</div>';
   let testElement = doc.getElementById("test");
-  ruleDialog = openDialog("chrome://browser/content/devtools/cssruleview.xul",
+  ruleDialog = openDialog("chrome://browser/content/devtools/cssruleview.xhtml",
                           "cssruleviewtest",
                           "width=350,height=350");
   ruleDialog.addEventListener("load", function onLoad(evt) {

@@ -3,6 +3,7 @@
 
 function test() {
   let instance, deletedPresetA, deletedPresetB, oldPrompt;
+  let mgr = ResponsiveUI.ResponsiveUIManager;
 
   waitForExplicitFinish();
 
@@ -27,8 +28,8 @@ function test() {
     };
 
     document.getElementById("Tools:ResponsiveUI").removeAttribute("disabled");
+    mgr.once("on", onUIOpen);
     synthesizeKeyFromKeyTag("key_responsiveUI");
-    executeSoon(onUIOpen);
   }
 
   function onUIOpen() {
@@ -66,19 +67,31 @@ function test() {
 
     instance.menulist.selectedIndex = 1;
 
-    EventUtils.synthesizeKey("VK_ESCAPE", {});
-    executeSoon(restart);
+    mgr.once("off", restart);
+
+    // We're still in the loop of initializing the responsive mode.
+    // Let's wait next loop to stop it.
+    executeSoon(function() {
+      EventUtils.synthesizeKey("VK_ESCAPE", {});
+    });
   }
 
   function restart() {
-    synthesizeKeyFromKeyTag("key_responsiveUI");
+    info("Restarting Responsive Mode");
+    mgr.once("on", function() {
+      let container = gBrowser.getBrowserContainer();
+      is(container.getAttribute("responsivemode"), "true", "In responsive mode.");
 
-    let container = gBrowser.getBrowserContainer();
-    is(container.getAttribute("responsivemode"), "true", "In responsive mode.");
+      instance = gBrowser.selectedTab.__responsiveUI;
 
-    instance = gBrowser.selectedTab.__responsiveUI;
+      testCustomPresetInList();
+    });
 
-    testCustomPresetInList();
+    // We're still in the loop of destroying the responsive mode.
+    // Let's wait next loop to start it.
+    executeSoon(function() {
+      synthesizeKeyFromKeyTag("key_responsiveUI");
+    });
   }
 
   function testCustomPresetInList() {

@@ -4,7 +4,9 @@
 let tmp = {};
 Cu.import("resource://gre/modules/PageThumbs.jsm", tmp);
 Cu.import("resource:///modules/sessionstore/SessionStore.jsm", tmp);
-let {PageThumbs, PageThumbsStorage, SessionStore} = tmp;
+Cu.import("resource://gre/modules/FileUtils.jsm", tmp);
+Cu.import("resource://gre/modules/osfile.jsm", tmp);
+let {PageThumbs, PageThumbsStorage, SessionStore, FileUtils, OS} = tmp;
 
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
 
@@ -45,7 +47,9 @@ let TestRunner = {
    */
   next: function () {
     try {
-      TestRunner._iter.next();
+      let value = TestRunner._iter.next();
+      if (value && typeof value.then == "function")
+        value.then(next);
     } catch (e if e instanceof StopIteration) {
       finish();
     }
@@ -85,10 +89,10 @@ function navigateTo(aURI) {
  * @param aElement The DOM element to listen on.
  * @param aCallback The function to call when the load event was dispatched.
  */
-function whenLoaded(aElement, aCallback) {
+function whenLoaded(aElement, aCallback = next) {
   aElement.addEventListener("load", function onLoad() {
     aElement.removeEventListener("load", onLoad, true);
-    executeSoon(aCallback || next);
+    executeSoon(aCallback);
   }, true);
 }
 
@@ -143,7 +147,7 @@ function retrieveImageDataForURL(aURL, aCallback) {
  * @param aURL The url associated to the thumbnail.
  */
 function thumbnailExists(aURL) {
-  let file = PageThumbsStorage.getFileForURL(aURL);
+  let file = new FileUtils.File(PageThumbsStorage.getFilePathForURL(aURL));
   return file.exists() && file.fileSize;
 }
 
@@ -211,13 +215,13 @@ function addVisits(aPlaceInfo, aCallback) {
  * @param [optional] aCallback
  *        Function to be invoked on completion.
  */
-function whenFileExists(aURL, aCallback) {
+function whenFileExists(aURL, aCallback = next) {
   let callback = aCallback;
   if (!thumbnailExists(aURL)) {
     callback = function () whenFileExists(aURL, aCallback);
   }
 
-  executeSoon(callback || next);
+  executeSoon(callback);
 }
 
 /**
