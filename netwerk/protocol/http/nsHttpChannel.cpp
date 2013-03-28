@@ -163,6 +163,9 @@ AutoRedirectVetoNotifier::ReportRedirectResult(bool succeeded)
                                   NS_GET_IID(nsIRedirectResultListener), 
                                   getter_AddRefs(vetoHook));
 
+#ifdef MOZ_VISUAL_EVENT_TRACER
+    nsHttpChannel* channel = mChannel;
+#endif
     mChannel = nullptr;
     if (vetoHook)
         vetoHook->OnRedirectResult(succeeded);
