@@ -21,7 +21,6 @@ if CONFIG['MOZ_B2G_BT']:
         'nsIDOMBluetoothManager.idl',
         'nsIDOMBluetoothAdapter.idl',
         'nsIDOMBluetoothDevice.idl',
-        'nsIDOMBluetoothDeviceEvent.idl',
-        'nsIDOMBluetoothDeviceAddressEvent.idl',
+        'nsIDOMBluetoothDeviceEvent.idl'
     ]
 
