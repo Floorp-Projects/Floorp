@@ -2,22 +2,20 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Check basic getSources functionality.
+ * Check getSources functionality when there are lots of sources.
  */
 
 var gDebuggee;
 var gClient;
 var gThreadClient;
 
-var gNumTimesSourcesSent = 0;
-
 function run_test()
 {
   initTestDebuggerServer();
-  gDebuggee = addTestGlobal("test-stack");
+  gDebuggee = addTestGlobal("test-sources");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect(function () {
-    attachTestGlobalClientAndResume(gClient, "test-stack", function (aResponse, aThreadClient) {
+    attachTestGlobalClientAndResume(gClient, "test-sources", function (aResponse, aThreadClient) {
       gThreadClient = aThreadClient;
       test_simple_listsources();
     });
@@ -29,13 +27,13 @@ function test_simple_listsources()
 {
   gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
     gThreadClient.getSources(function (aResponse) {
-      do_check_true(aResponse.sources.some(function (s) {
-        return s.url.match(/test_listsources-01.js$/);
-      }));
+      do_check_true(
+        !aResponse.error,
+        "There shouldn't be an error fetching large amounts of sources.");
 
-      do_check_true(gNumTimesSourcesSent <= 1,
-                    "Should only send one sources request at most, even though we"
-                    + " might have had to send one to determine feature support.");
+      do_check_true(aResponse.sources.some(function (s) {
+        return s.url.match(/foo-999.js$/);
+      }));
 
       gThreadClient.resume(function () {
         finishClient(gClient);
@@ -43,8 +41,12 @@ function test_simple_listsources()
     });
   });
 
-  gDebuggee.eval("var line0 = Error().lineNumber;\n" +
-       "debugger;\n" +   // line0 + 1
-       "var a = 1;\n" +  // line0 + 2
-       "var b = 2;\n");  // line0 + 3
+  for (let i = 0; i < 1000; i++) {
+    Cu.evalInSandbox("function foo###() {return ###;}".replace(/###/g, i),
+                     gDebuggee,
+                     "1.8",
+                     "http://example.com/foo-" + i + ".js",
+                     1);
+  }
+  gDebuggee.eval("debugger;");
 }
