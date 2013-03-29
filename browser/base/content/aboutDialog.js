@@ -95,9 +95,6 @@ function appUpdater()
   XPCOMUtils.defineLazyServiceGetter(this, "um",
                                      "@mozilla.org/updates/update-manager;1",
                                      "nsIUpdateManager");
-  XPCOMUtils.defineLazyServiceGetter(this, "bs",
-                                     "@mozilla.org/extensions/blocklist;1",
-                                     "nsIBlocklistService");
 
   this.bundle = Services.strings.
                 createBundle("chrome://browser/locale/browser.properties");
@@ -433,9 +430,9 @@ appUpdater.prototype =
    * See XPIProvider.jsm
    */
   onUpdateAvailable: function(aAddon, aInstall) {
-    if (!this.bs.isAddonBlocklisted(aAddon.id, aInstall.version,
-                                    this.update.appVersion,
-                                    this.update.platformVersion)) {
+    if (!Services.blocklist.isAddonBlocklisted(aAddon.id, aInstall.version,
+                                               this.update.appVersion,
+                                               this.update.platformVersion)) {
       // Compatibility or new version updates mean the same thing here.
       this.onCompatibilityUpdateAvailable(aAddon);
     }
