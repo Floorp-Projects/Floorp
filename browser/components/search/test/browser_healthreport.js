@@ -26,7 +26,7 @@ function test() {
     ok(reporter, "Health Reporter available.");
     reporter.onInit().then(function onInit() {
       let provider = reporter.getProvider("org.mozilla.searches");
-      let m = provider.getMeasurement("counts", 1);
+      let m = provider.getMeasurement("counts", 2);
 
       m.getValues().then(function onData(data) {
         let now = new Date();
