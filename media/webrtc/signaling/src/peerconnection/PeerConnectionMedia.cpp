@@ -119,7 +119,8 @@ PeerConnectionImpl* PeerConnectionImpl::CreatePeerConnection()
 }
 
 
-nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_servers)
+nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_servers,
+                                   const std::vector<NrIceTurnServer>& turn_servers)
 {
   mMainThread = mParent->GetMainThread();
   mSTSThread = mParent->GetSTSThread();
@@ -134,6 +135,10 @@ nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_serv
   nsresult rv;
   if (NS_FAILED(rv = mIceCtx->SetStunServers(stun_servers))) {
     CSFLogError(logTag, "%s: Failed to set stun servers", __FUNCTION__);
+    return rv;
+  }
+  if (NS_FAILED(rv = mIceCtx->SetTurnServers(turn_servers))) {
+    CSFLogError(logTag, "%s: Failed to set turn servers", __FUNCTION__);
     return rv;
   }
   if (NS_FAILED(rv = mDNSResolver->Init())) {

@@ -13,40 +13,56 @@
     title: "RTCConfiguration valid/invalid permutations"
   });
 
+  makePC = function (config, expect_success) {
+      var exception = null;
+
+      try {
+          var pc = new mozRTCPeerConnection(config);
+      } catch (e) {
+          exception = e;
+      }
+
+      if (expect_success) {
+          ok(!exception, "mozRTCPeerConnection(" +
+             JSON.stringify(config) + ") succeeds");
+      } else {
+          ok(exception, "mozRTCPeerConnection(" +
+             JSON.stringify(config) + ") throws");
+      }
+  }
+
   runTest(function () {
     var pc;
-    var pcs;
     var exception = null;
+    var config;
+
     try { pcs = new mozRTCPeerConnection(); } catch (e) { exception = e; }
     ok(!exception, "mozRTCPeerConnection() succeeds");
     exception = null;
-    try { pc = new mozRTCPeerConnection(1); } catch (e) { exception = e; }
-    ok(exception, "mozRTCPeerConnection(1) throws");
-    exception = null;
-    try { pc = new mozRTCPeerConnection({}); } catch (e) { exception = e; }
-    ok(exception, "mozRTCPeerConnection({}) throws");
-    exception = null;
-    try { pcs = new mozRTCPeerConnection([]); } catch (e) { exception = e; }
-    ok(exception, "mozRTCPeerConnection([]) throws");
-    exception = null;
-    try { pc = new mozRTCPeerConnection({ iceServers: {}}); } catch (e) { exception = e; }
-    ok(exception, "mozRTCPeerConnection({ iceServers: {}}) throws");
-    exception = null;
-    try { pcs = new mozRTCPeerConnection({ iceServers: [] }); } catch (e) { exception = e; }
-    ok(!exception, "mozRTCPeerConnection({ iceServers: [] }) succeeds");
-    exception = null;
-    try { pc = new mozRTCPeerConnection({ iceServers: [{ url:"" }] }); } catch (e) { exception = e; }
-    ok(exception, "mozRTCPeerConnection({ iceServers: [{ url:\"\" }] }) throws");
-    exception = null;
-    try { pc = new mozRTCPeerConnection({ iceServers: [{ url:"http:0.0.0.0" }] }); } catch (e) { exception = e; }
-    ok(exception, "mozRTCPeerConnection({ iceServers: [{ url:\"http:0.0.0.0\" }] }) throws");
-    exception = null;
-    try { pcs = new mozRTCPeerConnection({ iceServers: [{ url:"stun:0.0.0.0" }, { url:"stuns:x.net", foo:"" }, { url: "turn:[::192.9.5.5]:42" }, { url:"turns:user@x.org:42", credential:"p" }] }); } catch (e) { exception = e; }
-    ok(!exception, "mozRTCPeerConnection({ iceServers: [{ url:\"stun:0.0.0.0\" }, { url:\"stuns:x.net\", foo:\"\" }, { url: \"turn:[::192.9.5.5]:42\" }, { url:\"turns:user@x.org:42\", credential:\"p\" }] }) succeeds");
-    exception = null;
-    try { pc = new mozRTCPeerConnection({ iceServers: [{ url:"stun:0.0.0.0", credential:{}}] }); } catch (e) { exception = e; }
-    ok(exception, "mozRTCPeerConnection({ iceServers: [{ url:\"stun:0.0.0.0\", credential:{}}] }) throws");
-    pc = null;
+
+    makePC(1, false);
+
+    makePC({}, false);
+
+    makePC([], false);
+
+    makePC({ iceServers: {}}, false);
+
+    makePC({ iceServers: [] }, true);
+
+    makePC({ iceServers: [{ url:"" }] }, false);
+
+    makePC({ iceServers: [{ url:"http:0.0.0.0" }] }, false);
+
+    makePC({ iceServers: [
+                { url:"stun:0.0.0.0" },
+                { url:"stuns:x.net", foo:"" },
+                { url:"turn:[::192.9.5.5]:42", username:"p", credential:"p" },
+                { url:"turns:x.org:42", username:"p", credential:"p" }
+                ]}, true);
+
+    makePC({ iceServers: [{ url:"stun:0.0.0.0", credential:{}}] }, false);
+
     pcs = null;
     SimpleTest.finish();
   }, true);

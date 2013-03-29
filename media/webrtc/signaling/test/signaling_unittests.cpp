@@ -544,7 +544,7 @@ class SignalingAgent {
     ASSERT_TRUE(pObserver);
 
     sipcc::IceConfiguration cfg;
-    cfg.addServer("23.21.150.121", 3478);
+    cfg.addStunServer("23.21.150.121", 3478);
     ASSERT_EQ(pc->Initialize(pObserver, nullptr, cfg, thread), NS_OK);
 
   }
