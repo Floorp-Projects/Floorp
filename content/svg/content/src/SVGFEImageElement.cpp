@@ -46,7 +46,6 @@ NS_INTERFACE_MAP_END_INHERITING(SVGFEImageElementBase)
 SVGFEImageElement::SVGFEImageElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : SVGFEImageElementBase(aNodeInfo)
 {
-  SetIsDOMBinding();
   // We start out broken
   AddStatesSilently(NS_EVENT_STATE_BROKEN);
 }

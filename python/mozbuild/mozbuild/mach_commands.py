@@ -274,6 +274,68 @@ class Warnings(MachCommandBase):
                     warning['flag'], warning['message']))
 
 @CommandProvider
+class GTestCommands(MachCommandBase):
+    @Command('gtest', help='Run GTest unit tests.')
+    @CommandArgument('gtest_filter', default='*', nargs='?', metavar='gtest_filter',
+        help="test_filter is a ':'-separated list of wildcard patterns (called the positive patterns),"
+             "optionally followed by a '-' and another ':'-separated pattern list (called the negative patterns).")
+    @CommandArgument('--jobs', '-j', default='1', nargs='?', metavar='jobs', type=int,
+        help='Run the tests in parallel using multiple processes.')
+    @CommandArgument('--tbpl-parser', '-t', action='store_true',
+        help='Output test results in a format that can be parsed by TBPL.')
+    @CommandArgument('--shuffle', '-s', action='store_true',
+        help='Randomize the execution order of tests.')
+    def gtest(self, shuffle, jobs, gtest_filter, tbpl_parser):
+        app_path = self.get_binary_path('app')
+
+        # Use GTest environment variable to control test execution
+        # For details see:
+        # https://code.google.com/p/googletest/wiki/AdvancedGuide#Running_Test_Programs:_Advanced_Options
+        gtest_env = {b'GTEST_FILTER': gtest_filter}
+
+        if shuffle:
+            gtest_env[b"GTEST_SHUFFLE"] = b"True"
+
+        if tbpl_parser:
+            gtest_env[b"MOZ_TBPL_PARSER"] = b"True"
+
+        if jobs == 1:
+            return self.run_process([app_path, "-unittest"],
+                                    append_env=gtest_env,
+                                    ensure_exit_code=False,
+                                    pass_thru=True)
+
+        from mozprocess import ProcessHandlerMixin
+        import functools
+        def handle_line(job_id, line):
+            # Prepend the jobId
+            line = '[%d] %s' % (job_id + 1, line.strip())
+            self.log(logging.INFO, "GTest", {'line': line}, '{line}')
+
+        gtest_env["GTEST_TOTAL_SHARDS"] = str(jobs)
+        processes = {}
+        for i in range(0, jobs):
+            gtest_env["GTEST_SHARD_INDEX"] = str(i)
+            processes[i] = ProcessHandlerMixin([app_path, "-unittest"],
+                             env=gtest_env,
+                             processOutputLine=[functools.partial(handle_line, i)],
+                             universal_newlines=True)
+            processes[i].run()
+
+        exit_code = 0
+        for process in processes.values():
+            status = process.wait()
+            if status:
+                exit_code = status
+
+        # Clamp error code to 255 to prevent overflowing multiple of
+        # 256 into 0
+        if exit_code > 255:
+            exit_code = 255
+
+        return exit_code
+
+@CommandProvider
 class ClangCommands(MachCommandBase):
     @Command('clang-complete', help='Generate a .clang_complete file.')
     def clang_complete(self):

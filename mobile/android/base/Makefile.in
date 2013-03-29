@@ -43,9 +43,6 @@ UTIL_JAVA_FILES := \
   $(NULL)
 
 FENNEC_JAVA_FILES = \
-  AboutHomeContent.java \
-  AboutHomePromoBox.java \
-  AboutHomeSection.java \
   ActivityHandlerHelper.java \
   AlertNotification.java \
   AllCapsTextView.java \
@@ -113,20 +110,19 @@ FENNEC_JAVA_FILES = \
   LightweightTheme.java \
   LightweightThemeDrawable.java \
   LinkPreference.java \
-  LinkTextView.java \
   MemoryMonitor.java \
   MenuButton.java \
   MenuItemActionBar.java \
   MenuItemDefault.java \
   MenuPanel.java \
   MenuPopup.java \
+  MotionEventInterceptor.java \
   MultiChoicePreference.java \
   NotificationClient.java \
   NotificationHandler.java \
   NotificationService.java \
   NSSBridge.java \
   CustomEditText.java \
-  OnInterceptTouchListener.java \
   PrefsHelper.java \
   PrivateDataPreference.java \
   PrivateTab.java \
@@ -158,6 +154,7 @@ FENNEC_JAVA_FILES = \
   TextSelection.java \
   TextSelectionHandle.java \
   ThumbnailHelper.java \
+  TouchEventInterceptor.java \
   VideoPlayer.java \
   WebAppAllocator.java \
   ZoomConstraints.java \
@@ -200,8 +197,16 @@ FENNEC_JAVA_FILES = \
   gfx/TouchEventHandler.java \
   gfx/ViewTransform.java \
   gfx/VirtualLayer.java \
+  widget/AboutHomeContent.java \
+  widget/AboutHomeSection.java \
+  widget/AddonsSection.java \
   widget/DateTimePicker.java \
   widget/IconTabWidget.java \
+  widget/LastTabsSection.java \
+  widget/LinkTextView.java \
+  widget/PromoBox.java \
+  widget/RemoteTabsSection.java \
+  widget/TopSitesView.java \
   widget/TabRow.java \
   widget/ThumbnailView.java \
   widget/TwoWayView.java \
@@ -998,6 +1003,7 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/address_bar_bg_shadow_repeat.xml       \
   mobile/android/base/resources/drawable/address_bar_nav_button.xml             \
   mobile/android/base/resources/drawable/address_bar_url.xml                    \
+  mobile/android/base/resources/drawable/awesomebar_header_row.xml              \
   mobile/android/base/resources/drawable/awesomebar_row_favicon_bg.xml          \
   mobile/android/base/resources/drawable/awesomebar_tab_indicator.xml           \
   mobile/android/base/resources/drawable/awesomebar_tab_selected.xml            \

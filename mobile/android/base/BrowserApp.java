@@ -9,9 +9,13 @@ import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
+import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.util.FloatUtils;
-import org.mozilla.gecko.util.UiAsyncTask;
+import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.util.UiAsyncTask;
+import org.mozilla.gecko.widget.AboutHomeContent;
+import org.mozilla.gecko.widget.TopSitesView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -37,6 +41,7 @@ import android.nfc.NfcEvent;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -438,7 +443,20 @@ abstract public class BrowserApp extends GeckoApp
         LinearLayout actionBar = (LinearLayout) getActionBarLayout();
         mMainLayout.addView(actionBar, 2);
 
-        ((GeckoApp.MainLayout) mMainLayout).setOnInterceptTouchListener(new HideTabsTouchListener());
+        ((GeckoApp.MainLayout) mMainLayout).setTouchEventInterceptor(new HideTabsTouchListener());
+        ((GeckoApp.MainLayout) mMainLayout).setMotionEventInterceptor(new MotionEventInterceptor() {
+            @Override
+            public boolean onInterceptMotionEvent(View view, MotionEvent event) {
+                // If we get a gamepad panning MotionEvent while the focus is not on the layerview,
+                // put the focus on the layerview and carry on
+                LayerView layerView = mLayerView;
+                if (layerView != null && !layerView.hasFocus() && GamepadUtils.isPanningControl(event)) {
+                    layerView.requestFocus();
+                }
+                return false;
+            }
+        });
+
 
         mBrowserToolbar = new BrowserToolbar(this);
         mBrowserToolbar.from(actionBar);
@@ -1171,7 +1189,7 @@ abstract public class BrowserApp extends GeckoApp
         }
     }
 
-    private class HideTabsTouchListener implements OnInterceptTouchListener {
+    private class HideTabsTouchListener implements TouchEventInterceptor {
         private boolean mIsHidingTabs = false;
 
         @Override
@@ -1480,21 +1498,31 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     public boolean onContextItemSelected(MenuItem item) {
+        ContextMenuInfo info = item.getMenuInfo();
+
         switch (item.getItemId()) {
+            case R.id.abouthome_open_new_tab:
+                mAboutHomeContent.openNewTab(info);
+                return true;
+
+            case R.id.abouthome_open_private_tab:
+                mAboutHomeContent.openNewPrivateTab(info);
+                return true;
+
             case R.id.abouthome_topsites_edit:
-                mAboutHomeContent.editSite();
+                mAboutHomeContent.editSite(info);
                 return true;
 
             case R.id.abouthome_topsites_unpin:
-                mAboutHomeContent.unpinSite(AboutHomeContent.UnpinFlags.REMOVE_PIN);
+                mAboutHomeContent.unpinSite(info, TopSitesView.UnpinFlags.REMOVE_PIN);
                 return true;
 
             case R.id.abouthome_topsites_pin:
-                mAboutHomeContent.pinSite();
+                mAboutHomeContent.pinSite(info);
                 return true;
 
             case R.id.abouthome_topsites_remove:
-                mAboutHomeContent.unpinSite(AboutHomeContent.UnpinFlags.REMOVE_HISTORY);
+                mAboutHomeContent.unpinSite(info, TopSitesView.UnpinFlags.REMOVE_HISTORY);
                 return true;
 
         }

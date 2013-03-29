@@ -259,6 +259,16 @@ The following add-on creates a widget which, when clicked, highlights all the
       }
     });
 
+## Private Windows ##
+
+If your add-on has not opted into private browsing, then your page-mods will
+not attach content scripts to documents loaded into private windows, even if
+their URLs match the pattern you have specified.
+
+To learn more about private windows, how to opt into private browsing, and how
+to support private browsing, refer to the
+[documentation for the `private-browsing` module](modules/sdk/private-browsing.html).
+
 <api name="PageMod">
 @class
 A page-mod object. Once created a page-mod will execute the supplied content

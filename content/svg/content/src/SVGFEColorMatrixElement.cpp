@@ -49,18 +49,6 @@ nsSVGElement::NumberListInfo SVGFEColorMatrixElement::sNumberListInfo[1] =
 };
 
 //----------------------------------------------------------------------
-// nsISupports methods
-
-NS_IMPL_ADDREF_INHERITED(SVGFEColorMatrixElement,SVGFEColorMatrixElementBase)
-NS_IMPL_RELEASE_INHERITED(SVGFEColorMatrixElement,SVGFEColorMatrixElementBase)
-
-NS_INTERFACE_TABLE_HEAD(SVGFEColorMatrixElement)
-  NS_NODE_INTERFACE_TABLE3(SVGFEColorMatrixElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement)
-NS_INTERFACE_MAP_END_INHERITING(SVGFEColorMatrixElementBase)
-
-
-//----------------------------------------------------------------------
 // nsIDOMNode methods
 
 

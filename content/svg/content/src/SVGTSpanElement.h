@@ -16,8 +16,7 @@ namespace dom {
 
 typedef SVGTextPositioningElement SVGTSpanElementBase;
 
-class SVGTSpanElement MOZ_FINAL : public SVGTSpanElementBase,
-                                  public nsIDOMSVGElement
+class SVGTSpanElement MOZ_FINAL : public SVGTSpanElementBase
 {
 protected:
   friend nsresult (::NS_NewSVGTSpanElement(nsIContent **aResult,
@@ -26,22 +25,10 @@ protected:
   virtual JSObject* WrapNode(JSContext *cx, JSObject *scope) MOZ_OVERRIDE;
 
 public:
-  // interfaces:
-
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // xxx If xpcom allowed virtual inheritance we wouldn't need to
-  // forward here :-(
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-  NS_FORWARD_NSIDOMSVGELEMENT(SVGTSpanElementBase::)
-
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  virtual nsIDOMNode* AsDOMNode() { return this; }
 protected:
 
   // nsSVGElement overrides

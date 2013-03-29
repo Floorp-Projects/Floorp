@@ -21,7 +21,6 @@ namespace dom {
 class SVGPathElement;
 
 class SVGMPathElement MOZ_FINAL : public SVGMPathElementBase,
-                                  public nsIDOMSVGElement,
                                   public nsStubMutationObserver
 {
 protected:
@@ -40,11 +39,6 @@ public:
                                            SVGMPathElementBase)
 
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
-
-  // Forward interface implementations to base class
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-  NS_FORWARD_NSIDOMSVGELEMENT(SVGMPathElementBase::)
 
   // nsIContent interface
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
@@ -65,8 +59,6 @@ public:
   // element, this method returns a pointer to that element. Otherwise,
   // this returns nullptr.
   SVGPathElement* GetReferencedPath();
-
-  virtual nsIDOMNode* AsDOMNode() { return this; }
 
   // WebIDL
   already_AddRefed<nsIDOMSVGAnimatedString> Href();

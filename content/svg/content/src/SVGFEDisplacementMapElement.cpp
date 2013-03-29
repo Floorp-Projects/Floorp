@@ -59,17 +59,6 @@ nsSVGElement::StringInfo SVGFEDisplacementMapElement::sStringInfo[3] =
 };
 
 //----------------------------------------------------------------------
-// nsISupports methods
-
-NS_IMPL_ADDREF_INHERITED(SVGFEDisplacementMapElement,SVGFEDisplacementMapElementBase)
-NS_IMPL_RELEASE_INHERITED(SVGFEDisplacementMapElement,SVGFEDisplacementMapElementBase)
-
-NS_INTERFACE_TABLE_HEAD(SVGFEDisplacementMapElement)
-  NS_NODE_INTERFACE_TABLE3(SVGFEDisplacementMapElement, nsIDOMNode,
-                           nsIDOMElement, nsIDOMSVGElement)
-NS_INTERFACE_MAP_END_INHERITING(SVGFEDisplacementMapElementBase)
-
-//----------------------------------------------------------------------
 // nsIDOMNode methods
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEDisplacementMapElement)

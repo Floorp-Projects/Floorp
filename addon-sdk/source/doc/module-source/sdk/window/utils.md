@@ -5,6 +5,21 @@
 The `window/utils` module provides helper functions for working with
 application windows.
 
+## Private Windows ##
+
+With this module your add-on will see private browser windows
+even if it has not explicitly opted into private browsing, so you need
+to take care not to store any user data derived from private browser windows.
+
+The exception is the [`windows()`](modules/sdk/window/utils.html#windows())
+function which returns an array of currently opened windows. Private windows
+will not be included in this list if your add-on has not opted into private
+browsing.
+
+To learn more about private windows, how to opt into private browsing, and how
+to support private browsing, refer to the
+[documentation for the `private-browsing` module](modules/sdk/private-browsing.html).
+
 <api name="getMostRecentBrowserWindow">
   @function
   Get the topmost browser window, as an
@@ -169,6 +184,11 @@ element.
   @function
   Returns an array of all currently opened windows.
   Note that these windows may still be loading.
+
+  If your add-on has not
+  [opted into private browsing](modules/sdk/private-browsing.html),
+  any private browser windows will not be included in the array.
+
   @returns {Array}
   Array of `nsIDOMWindow` instances.
 </api>

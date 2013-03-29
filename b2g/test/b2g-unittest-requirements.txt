@@ -1,4 +1,6 @@
+ManifestDestiny==0.5.6
 mozprocess==0.9
+mozprofile==0.6
 mozrunner==5.15
 mozdevice==0.21
 mozcrash==0.5

@@ -27,7 +27,7 @@
 #include "nsINodeInfo.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIFile.h"
-#include "nsHTMLInputElement.h"
+#include "mozilla/dom/HTMLInputElement.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
@@ -51,6 +51,7 @@
 #include "nsIDOMMutationEvent.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 nsIFrame*
 NS_NewFileControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -149,7 +150,7 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 
   // Update the displayed text to reflect the current element's value.
   nsAutoString value;
-  nsHTMLInputElement::FromContent(mContent)->GetDisplayFileName(value);
+  HTMLInputElement::FromContent(mContent)->GetDisplayFileName(value);
   UpdateDisplayedValue(value, false);
 
   if (!aElements.AppendElement(mTextContent)) {
@@ -219,7 +220,7 @@ nsFileControlFrame::DnDListener::HandleEvent(nsIDOMEvent* aEvent)
     nsIContent* content = mFrame->GetContent();
     NS_ASSERTION(content, "The frame has no content???");
 
-    nsHTMLInputElement* inputElement = nsHTMLInputElement::FromContent(content);
+    HTMLInputElement* inputElement = HTMLInputElement::FromContent(content);
     NS_ASSERTION(inputElement, "No input element for this file upload control frame!");
 
     nsCOMPtr<nsIDOMDataTransfer> dataTransfer;

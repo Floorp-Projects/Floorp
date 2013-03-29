@@ -6,11 +6,10 @@
 
 "use strict";
 SimpleTest.waitForExplicitFinish();
+browserElementTestHelpers.setEnabledPref(true);
+browserElementTestHelpers.addPermission();
 
 function runTest() {
-  browserElementTestHelpers.setEnabledPref(true);
-  browserElementTestHelpers.addPermission();
-
   // Load emptypage1 into the iframe, wait for that to finish loading, then
   // call runTest2.
   //
@@ -115,4 +114,4 @@ function runTest2() {
   waitForAllCallbacks();
 }
 
-addEventListener('load', function() { SimpleTest.executeSoon(runTest); });
+addEventListener('testready', runTest);

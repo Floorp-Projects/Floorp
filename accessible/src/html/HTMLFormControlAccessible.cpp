@@ -15,7 +15,7 @@
 #include "States.h"
 
 #include "nsContentList.h"
-#include "nsHTMLInputElement.h"
+#include "mozilla/dom/HTMLInputElement.h"
 #include "nsIAccessibleRelation.h"
 #include "nsIDOMNSEditableElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
@@ -32,6 +32,7 @@
 #include "mozilla/Preferences.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 using namespace mozilla::a11y;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -91,7 +92,7 @@ HTMLCheckboxAccessible::NativeState()
   uint64_t state = LeafAccessible::NativeState();
 
   state |= states::CHECKABLE;
-  nsHTMLInputElement* input = nsHTMLInputElement::FromContent(mContent);
+  HTMLInputElement* input = HTMLInputElement::FromContent(mContent);
   if (!input)
     return state;
 
@@ -131,7 +132,7 @@ HTMLRadioButtonAccessible::NativeState()
 
   state |= states::CHECKABLE;
 
-  nsHTMLInputElement* input = nsHTMLInputElement::FromContent(mContent);
+  HTMLInputElement* input = HTMLInputElement::FromContent(mContent);
   if (input && input->Checked())
     state |= states::CHECKED;
 
@@ -356,7 +357,7 @@ HTMLTextFieldAccessible::Value(nsString& aValue)
     return;
   }
 
-  nsHTMLInputElement* input = nsHTMLInputElement::FromContent(mContent);
+  HTMLInputElement* input = HTMLInputElement::FromContent(mContent);
   if (input)
     input->GetValue(aValue);
 }
@@ -385,7 +386,7 @@ HTMLTextFieldAccessible::NativeState()
   }
 
   // Is it an <input> or a <textarea> ?
-  nsHTMLInputElement* input = nsHTMLInputElement::FromContent(mContent);
+  HTMLInputElement* input = HTMLInputElement::FromContent(mContent);
   state |= input && input->IsSingleLineTextControl() ?
     states::SINGLE_LINE : states::MULTI_LINE;
 
@@ -451,7 +452,7 @@ NS_IMETHODIMP
 HTMLTextFieldAccessible::DoAction(uint8_t aIndex)
 {
   if (aIndex == 0) {
-    nsHTMLInputElement* element = nsHTMLInputElement::FromContent(mContent);
+    HTMLInputElement* element = HTMLInputElement::FromContent(mContent);
     if (element)
       return element->Focus();
 

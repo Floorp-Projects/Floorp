@@ -43,7 +43,7 @@ DOMBindingBase::_trace(JSTracer* aTrc)
 {
   JSObject* obj = GetJSObject();
   if (obj) {
-    JS_CALL_OBJECT_TRACER(aTrc, obj, "cached wrapper");
+    JS_CallObjectTracer(aTrc, obj, "cached wrapper");
   }
 }
 

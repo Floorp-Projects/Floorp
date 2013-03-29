@@ -6950,4 +6950,38 @@ betainabox.com
 // Requested by Tim Kramer <tkramer@rhcloud.com> 2012-10-24
 rhcloud.com
 
+// Amazon Elastic Load Balancing : https://aws.amazon.com/elasticloadbalancing/
+// Requested by Scott Vidmar <svidmar@amazon.com> 2013-03-27
+elb.amazonaws.com
+
+// Amazon S3 : https://aws.amazon.com/s3/
+// Requested by Courtney Eckhardt <coec@amazon.com> 2013-03-22
+s3.amazonaws.com
+s3-us-west-2.amazonaws.com
+s3-us-west-1.amazonaws.com
+s3-eu-west-1.amazonaws.com
+s3-ap-southeast-1.amazonaws.com
+s3-ap-southeast-2.amazonaws.com
+s3-ap-northeast-1.amazonaws.com
+s3-sa-east-1.amazonaws.com
+s3-us-gov-west-1.amazonaws.com
+s3-fips-us-gov-west-1.amazonaws.com
+s3-website-us-east-1.amazonaws.com
+s3-website-us-west-2.amazonaws.com
+s3-website-us-west-1.amazonaws.com
+s3-website-eu-west-1.amazonaws.com
+s3-website-ap-southeast-1.amazonaws.com
+s3-website-ap-southeast-2.amazonaws.com
+s3-website-ap-northeast-1.amazonaws.com
+s3-website-sa-east-1.amazonaws.com
+s3-website-us-gov-west-1.amazonaws.com
+
+// Amazon CloudFront : https://aws.amazon.com/cloudfront/
+// Requested by Donavan Miller <donavanm@amazon.com> 2013-03-22
+cloudfront.net
+
+// NYC.mn : http://www.information.nyc.mn
+// Requested by Matthew Brown <mattbrown@nyc.mn> 2013-03-11
+nyc.mn
+
 // ===END PRIVATE DOMAINS===

@@ -21,13 +21,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=602130
 
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   var i = document.createElement("input");
   document.body.appendChild(i);
-  i.QueryInterface(Components.interfaces.nsIDOMNSEditableElement);
+  SpecialPowers.wrap(i).QueryInterface(SpecialPowers.Ci.nsIDOMNSEditableElement);
   i.select();
   i.focus();
-  is(i.editor.transactionManager.numberOfUndoItems, 0,
+  is(SpecialPowers.wrap(i).editor.transactionManager.numberOfUndoItems, 0,
      "The number of undo items should be 0 after initing the editor");
   i.style.display = "none";
   document.offsetWidth;
@@ -35,7 +34,7 @@ addLoadEvent(function() {
   document.offsetWidth;
   i.select();
   i.focus();
-  is(i.editor.transactionManager.numberOfUndoItems, 0,
+  is(SpecialPowers.wrap(i).editor.transactionManager.numberOfUndoItems, 0,
      "The number of undo items should be 0 after re-initing the editor");
   SimpleTest.finish();
 });

@@ -507,6 +507,8 @@
 @BINPATH@/components/nsDOMIdentity.js
 @BINPATH@/components/nsIDService.js
 @BINPATH@/components/Identity.manifest
+@BINPATH@/components/recording-cmdline.js
+@BINPATH@/components/recording-cmdline.manifest
 
 @BINPATH@/components/PermissionSettings.js
 @BINPATH@/components/PermissionSettings.manifest
@@ -563,6 +565,8 @@
 #endif
 @BINPATH@/chrome/toolkit@JAREXT@
 @BINPATH@/chrome/toolkit.manifest
+@BINPATH@/chrome/recording.manifest
+@BINPATH@/chrome/recording/*
 #ifdef MOZ_GTK2
 @BINPATH@/browser/chrome/icons/default/default16.png
 @BINPATH@/browser/chrome/icons/default/default32.png

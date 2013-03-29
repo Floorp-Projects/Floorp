@@ -42,7 +42,7 @@
 #include "google_breakpad/processor/memory_region.h"
 #include "google_breakpad/processor/source_line_resolver_interface.h"
 #include "google_breakpad/processor/stack_frame_cpu.h"
-#include "processor/logging.h"
+#include "common/logging.h"
 #include "processor/postfix_evaluator-inl.h"
 #include "processor/stackwalker_x86.h"
 #include "processor/windows_frame_info.h"

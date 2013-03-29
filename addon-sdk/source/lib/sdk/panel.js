@@ -17,16 +17,20 @@ const { validateOptions: valid } = require('./deprecated/api-utils');
 const { Symbiont } = require('./content/content');
 const { EventEmitter } = require('./deprecated/events');
 const { setTimeout } = require('./timers');
+const { on, off, emit } = require('./system/events');
 const runtime = require('./system/runtime');
 const { getDocShell } = require("./frame/utils");
 const { getWindow } = require('./panel/window');
 const { isPrivateBrowsingSupported } = require('./self');
 const { isWindowPBSupported } = require('./private-browsing/utils');
+const { getNodeView } = require('./view/core');
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
       ON_SHOW = 'popupshown',
       ON_HIDE = 'popuphidden',
-      validNumber = { is: ['number', 'undefined', 'null'] };
+      validNumber = { is: ['number', 'undefined', 'null'] },
+      validBoolean = { is: ['boolean', 'undefined', 'null'] },
+      ADDON_ID = require('./self').id;
 
 if (isPrivateBrowsingSupported && isWindowPBSupported) {
   throw Error('The panel module cannot be used with per-window private browsing at the moment, see Bug 816257');
@@ -68,6 +72,9 @@ const Panel = Symbiont.resolve({
   constructor: function Panel(options) {
     this._onShow = this._onShow.bind(this);
     this._onHide = this._onHide.bind(this);
+    this._onAnyPanelShow = this._onAnyPanelShow.bind(this);
+    on('sdk-panel-show', this._onAnyPanelShow);
+
     this.on('inited', this._onSymbiontInit.bind(this));
     this.on('propertyChange', this._onChange.bind(this));
 
@@ -82,6 +89,12 @@ const Panel = Symbiont.resolve({
       this.height = options.height;
     if ('contentURL' in options)
       this.contentURL = options.contentURL;
+    if ('focus' in options) {
+      var value = options.focus;
+      var validatedValue = valid({ $: value }, { $: validBoolean }).$;
+      this._focus =
+        (typeof validatedValue == 'boolean') ? validatedValue : this._focus;
+    }
 
     this._init(options);
   },
@@ -91,6 +104,7 @@ const Panel = Symbiont.resolve({
     this._removeAllListeners('hide');
     this._removeAllListeners('propertyChange');
     this._removeAllListeners('inited');
+    off('sdk-panel-show', this._onAnyPanelShow);
     // defer cleanup to be performed after panel gets hidden
     this._xulPanel = null;
     this._symbiontDestructor(this);
@@ -109,13 +123,16 @@ const Panel = Symbiont.resolve({
   set height(value)
     this._height =  valid({ $: value }, { $: validNumber }).$ || this._height,
   _height: 240,
+  /* Public API: Panel.focus */
+  get focus() this._focus,
+  _focus: true,
 
   /* Public API: Panel.isShowing */
   get isShowing() !!this._xulPanel && this._xulPanel.state == "open",
 
   /* Public API: Panel.show */
   show: function show(anchor) {
-    anchor = anchor || null;
+    anchor = anchor ? getNodeView(anchor) : null;
     let anchorWindow = getWindow(anchor);
 
     // If there is no open window, or the anchor is in a private window
@@ -126,6 +143,7 @@ const Panel = Symbiont.resolve({
 
     let document = anchorWindow.document;
     let xulPanel = this._xulPanel;
+    let panel = this;
     if (!xulPanel) {
       xulPanel = this._xulPanel = document.createElementNS(XUL_NS, 'panel');
       xulPanel.setAttribute("type", "arrow");
@@ -165,7 +183,7 @@ const Panel = Symbiont.resolve({
       xulPanel.appendChild(frame);
       document.getElementById("mainPopupSet").appendChild(xulPanel);
     }
-    let { width, height } = this, x, y, position;
+    let { width, height, focus } = this, x, y, position;
 
     if (!anchor) {
       // Open the popup in the middle of the window.
@@ -210,13 +228,25 @@ const Panel = Symbiont.resolve({
     xulPanel.firstChild.style.width = width + "px";
     xulPanel.firstChild.style.height = height + "px";
 
+    // Only display xulPanel if Panel.hide() was not called
+    // after Panel.show(), but before xulPanel.openPopup
+    // was loaded
+    emit('sdk-panel-show', { data: ADDON_ID, subject: xulPanel });
+
+    // Prevent the panel from getting focus when showing up
+    // if focus is set to false
+    xulPanel.setAttribute("noautofocus",!focus);
+
     // Wait for the XBL binding to be constructed
     function waitForBinding() {
       if (!xulPanel.openPopup) {
         setTimeout(waitForBinding, 50);
         return;
       }
-      xulPanel.openPopup(anchor, position, x, y);
+
+      if (xulPanel.state !== 'hiding') {
+        xulPanel.openPopup(anchor, position, x, y);
+      }
     }
     waitForBinding();
 
@@ -289,6 +319,8 @@ const Panel = Symbiont.resolve({
    * text color.
    */
   _applyStyleToDocument: function _applyStyleToDocument() {
+    if (this._defaultStyleApplied)
+      return;
     try {
       let win = this._xulPanel.ownerDocument.defaultView;
       let node = win.document.getAnonymousElementByAttribute(
@@ -309,6 +341,7 @@ const Panel = Symbiont.resolve({
         container.insertBefore(style, container.firstChild);
       else
         container.appendChild(style);
+      this._defaultStyleApplied = true;
     }
     catch(e) {
       console.error("Unable to apply panel style");
@@ -333,6 +366,16 @@ const Panel = Symbiont.resolve({
       this._emit('error', e);
     }
   },
+
+  /**
+   * When any panel is displayed, system-wide, close `this`
+   * panel unless it's the most recently displayed panel
+   */
+  _onAnyPanelShow: function _onAnyPanelShow(e) {
+    if (e.subject !== this._xulPanel)
+      this.hide();
+  },
+
   /**
    * Notification that panel was fully initialized.
    */

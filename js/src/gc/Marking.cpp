@@ -1487,15 +1487,6 @@ js::TraceChildren(JSTracer *trc, void *thing, JSGCTraceKind kind)
     }
 }
 
-void
-js::CallTracer(JSTracer *trc, void *thing, JSGCTraceKind kind)
-{
-    JS_ASSERT(thing);
-    void *tmp = thing;
-    MarkKind(trc, &tmp, kind);
-    JS_ASSERT(tmp == thing);
-}
-
 static void
 UnmarkGrayGCThing(void *thing)
 {

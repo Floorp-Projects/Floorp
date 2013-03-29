@@ -1,0 +1,53 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIVisualEventTracerLog;
+
+/**
+ * Interface to control the visual event tracer feature.  The result
+ * is a log of various events that are monitored by a custom code
+ * instrumentation around the mozilla code base.
+ */
+
+[scriptable, uuid(D51F7867-42F3-4029-8C4E-C00676253A8E)]
+interface nsIVisualEventTracer : nsISupports
+{
+  /**
+   * Start the logging now.  No affect if already started.
+   * Current backlog is deleted by this call otherwise.
+   *
+   * @param minBacklogSeconds
+   *    Manimum time to keep the backlog.  Entries of the log are discarded
+   *    when their age is more then value of this argument.
+   */
+  void start(in unsigned long minBacklogSeconds);
+
+  /**
+   * Stop the logging now.  Backlog is kept in memory.
+   */
+  void stop();
+
+  /**
+   * Obtain the log.  This can be called whenever you want.
+   *
+   * @return
+   *    Result is an object that keeps snaphot of the log from
+   *    time this method has been called.  You can then access
+   *    the log using the object.  Calling stop() on the tracer
+   *    doesn't delete this log.
+   */
+  nsIVisualEventTracerLog snapshot();
+};
+
+[scriptable, uuid(52EC8962-F67C-4f49-A9D6-89B8EBDA2649)]
+interface nsIVisualEventTracerLog : nsISupports
+{
+  /**
+   * JSON string of the log.  Use JSON.parse to get it as an object.
+   */
+  readonly attribute ACString JSONString;
+};

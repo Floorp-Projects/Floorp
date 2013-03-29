@@ -23,6 +23,7 @@
 #include "nsIScriptObjectPrincipal.h"
 #include "nsISecureBrowserUI.h"
 #include "nsIDocumentLoader.h"
+#include "nsIWebNavigation.h"
 #include "nsLoadGroup.h"
 
 #include "prlog.h"
@@ -353,8 +354,6 @@ nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
     return NS_OK;
   }
 
-  // If we are here we have mixed content.
-
   // Determine if the rootDoc is https and if the user decided to allow Mixed Content
   nsCOMPtr<nsIDocShell> docShell = NS_CP_GetDocShellFromContext(aRequestingContext);
   NS_ENSURE_TRUE(docShell, NS_OK);
@@ -366,10 +365,53 @@ nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
      return rv;
   }
 
-  // Get the root document from the docshell
+
+  // Get the sameTypeRoot tree item from the docshell
   nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
   docShell->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
-  NS_ASSERTION(sameTypeRoot, "No document shell root tree item from document shell tree item!");
+  NS_ASSERTION(sameTypeRoot, "No root tree item from docshell!");
+
+  // When navigating an iframe, the iframe may be https
+  // but its parents may not be.  Check the parents to see if any of them are https.
+  // If none of the parents are https, allow the load.
+  if (aContentType == TYPE_SUBDOCUMENT && !rootHasSecureConnection) {
+
+    bool httpsParentExists = false;
+
+    nsCOMPtr<nsIDocShellTreeItem> parentTreeItem;
+    parentTreeItem = docShell;
+
+    while(!httpsParentExists && parentTreeItem) {
+      nsCOMPtr<nsIWebNavigation> parentAsNav(do_QueryInterface(parentTreeItem));
+      NS_ASSERTION(parentAsNav, "No web navigation object from parent's docshell tree item");
+      nsCOMPtr<nsIURI> parentURI;
+
+      parentAsNav->GetCurrentURI(getter_AddRefs(parentURI));
+      if (!parentURI || NS_FAILED(parentURI->SchemeIs("https", &httpsParentExists))) {
+        // if getting the URI or the scheme fails, assume there is a https parent and break.
+        httpsParentExists = true;
+        break;
+      }
+
+      // When the parent and the root are the same, we have traversed all the way up
+      // the same type docshell tree.  Break out of the while loop.
+      if(sameTypeRoot == parentTreeItem) {
+        break;
+      }
+
+      // update the parent to the grandparent.
+      nsCOMPtr<nsIDocShellTreeItem> newParentTreeItem;
+      parentTreeItem->GetSameTypeParent(getter_AddRefs(newParentTreeItem));
+      parentTreeItem = newParentTreeItem;
+    } // end while loop.
+
+    if (!httpsParentExists) {
+      *aDecision = nsIContentPolicy::ACCEPT;
+      return NS_OK;
+    }
+  }
+
+  // Get the root document from the sameTypeRoot
   nsCOMPtr<nsIDocument> rootDoc = do_GetInterface(sameTypeRoot);
   NS_ASSERTION(rootDoc, "No root document from document shell root tree item.");
 

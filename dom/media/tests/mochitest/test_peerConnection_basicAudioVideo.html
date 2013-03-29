@@ -11,14 +11,6 @@
 <pre id="test">
 <script type="application/javascript">
 
-if (navigator.platform.startsWith("Win")) {
-  SimpleTest.expectAssertions(0, 41);
-} else if (navigator.platform.startsWith("Mac")) {
-  SimpleTest.expectAssertions(0, 2);
-} else if (navigator.platform.startsWith("Linux")) {
-  SimpleTest.expectAssertions(0, 6);
-}
-
   createHTML({
     bug: "796890",
     title: "Basic audio/video (separate) peer connection"

@@ -17,6 +17,7 @@
 #include "nsIStringBundle.h"
 #include "nsISecureBrowserUI.h"
 #include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
 #include "nsIWebProgressListener.h"
 #include "nsIFormSubmitObserver.h"
 #include "nsIURI.h"
@@ -66,6 +67,7 @@ protected:
   mozilla::ReentrantMonitor mReentrantMonitor;
   
   nsWeakPtr mWindow;
+  nsWeakPtr mDocShell;
   nsCOMPtr<nsINetUtil> mIOService;
   nsCOMPtr<nsIStringBundle> mStringBundle;
   nsCOMPtr<nsIURI> mCurrentURI;

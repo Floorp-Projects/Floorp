@@ -277,93 +277,20 @@ under quota.)
 
 ## Respecting Private Browsing ##
 
-Since annotations record the user's browsing history we should prevent the user
-from creating annotations while the browser is in
-[Private Browsing](http://support.mozilla.com/en-US/kb/Private%20Browsing) mode.
+Since annotations record the user's browsing history we should avoid recording
+annotations in private windows.
 
-First let's import the `private-browsing` module into `main.js`:
+There's a very simple way to do this: do nothing. By omitting the
+[`"private-browsing"` key](dev-guide/package-spec.html#permissions) from the
+annotator's "package.json" file, the annotator opts out of private browsing
+altogether.
 
-    var privateBrowsing = require('sdk/private-browsing');
+This means that its widget will not appear on any private windows and its
+selector and matcher content scripts won't run, so the user won't be able to
+enter any annotations in private windows.
 
-We already have a variable `annotatorIsOn` that we use to indicate whether the
-user can enter annotations. But we don't want to use that here, because we want
-to remember the underlying state so that when they exit Private Browsing the
-annotator is back in whichever state it was in before.
-
-So we'll implement a function defining that to enter annotations, the annotator
-must be active *and* Private Browsing must be off:
-
-    function canEnterAnnotations() {
-      return (annotatorIsOn && !privateBrowsing.isActive);
-    }
-
-Next, everywhere we previously used `annotatorIsOn` directly, we'll call this
-function instead:
-
-    function activateSelectors() {
-      selectors.forEach(
-        function (selector) {
-          selector.postMessage(canEnterAnnotations());
-      });
-    }
-<br>
-
-    function toggleActivation() {
-      annotatorIsOn = !annotatorIsOn;
-      activateSelectors();
-      return canEnterAnnotations();
-    }
-<br>
-
-    var selector = pageMod.PageMod({
-      include: ['*'],
-      contentScriptWhen: 'ready',
-      contentScriptFile: [data.url('jquery-1.4.2.min.js'),
-                          data.url('selector.js')],
-      onAttach: function(worker) {
-        worker.postMessage(canEnterAnnotations());
-        selectors.push(worker);
-        worker.port.on('show', function(data) {
-          annotationEditor.annotationAnchor = data;
-          annotationEditor.show();
-        });
-        worker.on('detach', function () {
-          detachWorker(this, selectors);
-        });
-      }
-    });
-
-We want to stop the user changing the underlying activation state when in
-Private Browsing mode, so we'll edit `toggleActivation` again:
-
-    function toggleActivation() {
-      if (privateBrowsing.isActive) {
-        return false;
-      }
-      annotatorIsOn = !annotatorIsOn;
-      activateSelectors();
-      return canEnterAnnotations();
-    }
-
-Finally, inside the `main` function, we'll add the following code to handle
-changes in Private Browsing state by changing the icon and notifying the
-selectors:
-
-    privateBrowsing.on('start', function() {
-      widget.contentURL = data.url('widget/pencil-off.png');
-      activateSelectors();
-    });
-
-    privateBrowsing.on('stop', function() {
-      if (canEnterAnnotations()) {
-        widget.contentURL = data.url('widget/pencil-on.png');
-        activateSelectors();
-      }
-    });
-
-Try it: execute `cfx run`, and experiment with switching the annotator on and
-off while in and out of Private Browsing mode.
+Try it: execute cfx run and open a new private window: you should no longer
+see the annotator's widget.
 
 Now we can create and store annotations, the last piece is to
-[display them when the user loads the
-page](dev-guide/tutorials/annotator/displaying.html).
+[display them when the user loads the page](dev-guide/tutorials/annotator/displaying.html).

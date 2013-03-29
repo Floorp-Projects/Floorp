@@ -68,6 +68,7 @@
 #include "common/stabs_to_module.h"
 #endif
 #include "common/using_std_string.h"
+#include "common/logging.h"
 
 // This namespace contains helper functions.
 namespace {
@@ -528,6 +529,9 @@ bool LoadSymbols(const string& obj_file,
   typedef typename ElfClass::Phdr Phdr;
   typedef typename ElfClass::Shdr Shdr;
 
+  BPLOG(INFO) << "";
+  BPLOG(INFO) << "LoadSymbols: BEGIN   " << obj_file;
+
   Addr loading_addr = GetLoadingAddress<ElfClass>(
       GetOffset<ElfClass, Phdr>(elf_header, elf_header->e_phoff),
       elf_header->e_phnum);
@@ -597,6 +601,8 @@ bool LoadSymbols(const string& obj_file,
                                  dwarf_cfi_section, false, 0, 0, big_endian,
                                  module);
       found_usable_info = found_usable_info || result;
+      if (result)
+        BPLOG(INFO) << "LoadSymbols:   read CFI from .debug_frame";
     }
 
     // Linux C++ exception handling information can also provide
@@ -623,6 +629,8 @@ bool LoadSymbols(const string& obj_file,
                                  eh_frame_section, true,
                                  got_section, text_section, big_endian, module);
       found_usable_info = found_usable_info || result;
+      if (result)
+        BPLOG(INFO) << "LoadSymbols:   read CFI from .eh_frame";
     }
   }
 
@@ -690,14 +698,19 @@ bool LoadSymbols(const string& obj_file,
 
       // Return true if some usable information was found, since
       // the caller doesn't want to use .gnu_debuglink.
+      BPLOG(INFO) << "LoadSymbols: " 
+                  << (found_usable_info ? "SUCCESS " : "FAILURE ")
+                  << obj_file;
       return found_usable_info;
     }
 
     // No debug info was found, let the user try again with .gnu_debuglink
     // if present.
+    BPLOG(INFO) << "LoadSymbols: FAILURE " << obj_file;
     return false;
   }
 
+  BPLOG(INFO) << "LoadSymbols: SUCCESS " << obj_file;
   return true;
 }
 

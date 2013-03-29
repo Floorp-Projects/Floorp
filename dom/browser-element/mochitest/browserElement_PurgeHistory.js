@@ -6,6 +6,8 @@
 
 "use strict";
 SimpleTest.waitForExplicitFinish();
+browserElementTestHelpers.setEnabledPref(true);
+browserElementTestHelpers.addPermission();
 
 var iframe;
 function addOneShotIframeEventListener(event, fn) {
@@ -18,9 +20,6 @@ function addOneShotIframeEventListener(event, fn) {
 }
 
 function runTest() {
-  browserElementTestHelpers.setEnabledPref(true);
-  browserElementTestHelpers.addPermission();
-
   iframe = document.createElement('iframe');
   SpecialPowers.wrap(iframe).mozbrowser = true;
 
@@ -84,4 +83,4 @@ function test4() {
   });
 }
 
-runTest();
+addEventListener('testready', runTest);

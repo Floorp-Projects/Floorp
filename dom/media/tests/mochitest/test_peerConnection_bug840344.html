@@ -9,13 +9,6 @@
 <body>
 <pre id="test">
 <script type="application/javascript">
-
-  if (navigator.platform.startsWith("Linux")) {
-    SimpleTest.expectAssertions(0, 1);
-  } else if (navigator.platform.startsWith("Win")) {
-    SimpleTest.expectAssertions(0, 125);
-  }
-
   createHTML({
     bug: "840344",
     title: "Prevent multiple creations of local SDP"

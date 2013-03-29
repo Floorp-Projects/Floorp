@@ -185,7 +185,7 @@ SVGStringList &
 DOMSVGStringList::InternalList()
 {
   if (mIsConditionalProcessingAttribute) {
-    nsCOMPtr<dom::SVGTests> tests = do_QueryInterface(mElement);
+    nsCOMPtr<dom::SVGTests> tests = do_QueryObject(mElement);
     return tests->mStringListAttributes[mAttrEnum];
   }
   return mElement->GetStringListInfo().mStringLists[mAttrEnum];

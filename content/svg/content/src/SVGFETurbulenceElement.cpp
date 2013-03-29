@@ -78,17 +78,6 @@ nsSVGElement::StringInfo SVGFETurbulenceElement::sStringInfo[1] =
 };
 
 //----------------------------------------------------------------------
-// nsISupports methods
-
-NS_IMPL_ADDREF_INHERITED(SVGFETurbulenceElement,SVGFETurbulenceElementBase)
-NS_IMPL_RELEASE_INHERITED(SVGFETurbulenceElement,SVGFETurbulenceElementBase)
-
-NS_INTERFACE_TABLE_HEAD(SVGFETurbulenceElement)
-  NS_NODE_INTERFACE_TABLE3(SVGFETurbulenceElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement)
-NS_INTERFACE_MAP_END_INHERITING(SVGFETurbulenceElementBase)
-
-//----------------------------------------------------------------------
 // nsIDOMNode methods
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFETurbulenceElement)

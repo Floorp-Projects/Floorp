@@ -31,6 +31,15 @@ in preparation for the next time it is shown.
 Your add-on can receive notifications when a panel is shown or hidden by
 listening to its `show` and `hide` events.
 
+Opening a panel will close an already opened panel.
+
+<div class="warning">
+If your add-on has
+<a href="modules/sdk/private-browsing.html#Opting into private browsing">opted into private browsing</a>,
+then you can't use panels in your add-on. This is due to a platform bug which we expect to
+be fixed in Firefox 21.
+</div>
+
 ## Panel Content ##
 
 The panel's content is specified as HTML, which is loaded from the URL
@@ -376,6 +385,18 @@ when applying your own styles. For example, if you set the panel's
 `background-color` property to `white` and do not set the `color` property,
 then the panel's text will be invisible on OS X although it looks fine on Ubuntu.
 
+## Private Browsing ##
+
+If your add-on has
+[opted into private browsing](modules/sdk/private-browsing.html#Opting into private browsing),
+then **you can't use panels in your add-on**. This is due to a platform bug which we expect to
+be fixed in Firefox 21.
+
+If your add-on has not opted into private browsing, and it calls `panel.show()`
+when the currently active window is a
+[private window](modules/sdk/private-browsing.html#Per-window private browsing),
+then the panel will not be shown.
+
 <api name="Panel">
 @class
 The Panel object represents a floating modal dialog that can by an add-on to
@@ -400,6 +421,10 @@ Creates a panel.
     The width of the panel in pixels. Optional.
   @prop [height] {number}
     The height of the panel in pixels. Optional.
+  @prop [focus] {boolean}
+    Set to `false` to prevent taking the focus away when the panel is shown.
+    Only turn this off if necessary, to prevent accessibility issue.
+    Optional, default to `true`.
   @prop [contentURL] {string}
     The URL of the content to load in the panel.
   @prop [allow] {object}
@@ -470,6 +495,12 @@ The height of the panel in pixels.
 <api name="width">
 @property {number}
 The width of the panel in pixels.
+</api>
+
+<api name="focus">
+@property {boolean}
+Whether of not focus will be taken away when the panel is shown.
+This property is read-only.
 </api>
 
 <api name="contentURL">

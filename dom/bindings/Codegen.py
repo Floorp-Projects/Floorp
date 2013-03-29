@@ -1640,12 +1640,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             protoClass = "nullptr"
             protoCache = "nullptr"
         if needInterfaceObject:
-            if self.descriptor.interface.isCallback():
-                # We don't have slots to store the named constructors.
-                assert len(self.descriptor.interface.namedConstructors) == 0
-                interfaceClass = "js::Jsvalify(&js::ObjectClass)"
-            else:
-                interfaceClass = "&InterfaceObjectClass.mBase"
+            interfaceClass = "&InterfaceObjectClass.mBase"
             interfaceCache = "&protoAndIfaceArray[constructors::id::%s]" % self.descriptor.name
         else:
             # We don't have slots to store the named constructors.
@@ -6643,8 +6638,7 @@ class CGDescriptor(CGThing):
             cgThings.append(CGClassConstructor(descriptor,
                                                descriptor.interface.ctor()))
             cgThings.append(CGClassHasInstanceHook(descriptor))
-            if not descriptor.interface.isCallback():
-                cgThings.append(CGInterfaceObjectJSClass(descriptor, properties))
+            cgThings.append(CGInterfaceObjectJSClass(descriptor, properties))
             if descriptor.needsConstructHookHolder():
                 cgThings.append(CGClassConstructHookHolder(descriptor))
             cgThings.append(CGNamedConstructors(descriptor))

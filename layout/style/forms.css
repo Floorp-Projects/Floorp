@@ -806,6 +806,10 @@ input[type=range]::-moz-range-progress {
  * properties are ignored.
  */
 input[type=range]::-moz-range-thumb {
+  /* Native theming is atomic for range. Set -moz-appearance on the range
+   * to get rid of it. The thumb's -moz-appearance is fixed.
+   */
+  -moz-appearance: range-thumb !important;
   /* Prevent styling that would change the type of frame we construct. */
   display: inline-block !important;
   float: none !important;

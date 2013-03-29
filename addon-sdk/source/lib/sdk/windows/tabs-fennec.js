@@ -8,7 +8,8 @@ const { Tab } = require('../tabs/tab');
 const { browserWindows } = require('./fennec');
 const { windowNS } = require('../window/namespace');
 const { tabsNS, tabNS } = require('../tabs/namespace');
-const { openTab, getTabs, getSelectedTab, getTabForBrowser: getRawTabForBrowser } = require('../tabs/utils');
+const { openTab, getTabs, getSelectedTab, getTabForBrowser: getRawTabForBrowser,
+        getTabContentWindow } = require('../tabs/utils');
 const { Options } = require('../tabs/common');
 const { getTabForBrowser, getTabForRawTab } = require('../tabs/helpers');
 const { on, once, off, emit } = require('../event/core');
@@ -18,8 +19,8 @@ const { EventTarget } = require('../event/target');
 const { when: unload } = require('../system/unload');
 const { windowIterator } = require('../deprecated/window-utils');
 const { List, addListItem, removeListItem } = require('../util/list');
-const { isPrivateBrowsingSupported } = require('sdk/self');
-const { isTabPBSupported } = require('sdk/private-browsing/utils');
+const { isPrivateBrowsingSupported } = require('../self');
+const { isTabPBSupported, ignoreWindow } = require('../private-browsing/utils');
 
 const mainWindow = windowNS(browserWindows.activeWindow).window;
 
@@ -113,6 +114,10 @@ function removeTab(tab) {
 function onTabOpen(event) {
   let browser = event.target;
 
+  // Eventually ignore private tabs
+  if (ignoreWindow(browser.contentWindow))
+    return;
+
   let tab = getTabForBrowser(browser);
   if (tab === null) {
     let rawTab = getRawTabForBrowser(browser);
@@ -132,8 +137,14 @@ function onTabOpen(event) {
 
 // TabSelect
 function onTabSelect(event) {
+  let browser = event.target;
+
+  // Eventually ignore private tabs
+  if (ignoreWindow(browser.contentWindow))
+    return;
+
   // Set value whenever new tab becomes active.
-  let tab = getTabForBrowser(event.target);
+  let tab = getTabForBrowser(browser);
   emit(tab, 'activate', tab);
   emit(gTabs, 'activate', tab);
 

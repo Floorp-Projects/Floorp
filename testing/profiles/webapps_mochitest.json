@@ -1,0 +1,98 @@
+[
+  {
+    "name": "http_example_org",
+    "csp": "",
+    "origin": "http://example.org",
+    "manifestURL": "http://example.org/manifest.webapp",
+    "description": "http://example.org App",
+    "appStatus": 1
+  },
+  {
+    "name": "https_example_com",
+    "csp": "",
+    "origin": "https://example.com",
+    "manifestURL": "https://example.com/manifest.webapp",
+    "description": "https://example.com App",
+    "appStatus": 1
+  },
+  {
+    "name": "http_test1_example_org",
+    "csp": "",
+    "origin": "http://test1.example.org",
+    "manifestURL": "http://test1.example.org/manifest.webapp",
+    "description": "http://test1.example.org App",
+    "appStatus": 1
+  },
+  {
+    "name": "http_test1_example_org_8000",
+    "csp": "",
+    "origin": "http://test1.example.org:8000",
+    "manifestURL": "http://test1.example.org:8000/manifest.webapp",
+    "description": "http://test1.example.org:8000 App",
+    "appStatus": 1
+  },
+  {
+    "name": "http_sub1_test1_example_org",
+    "csp": "",
+    "origin": "http://sub1.test1.example.org",
+    "manifestURL": "http://sub1.test1.example.org/manifest.webapp",
+    "description": "http://sub1.test1.example.org App",
+    "appStatus": 1
+  },
+  {
+    "name": "https_example_com_privileged",
+    "csp": "",
+    "origin": "https://example.com",
+    "manifestURL": "https://example.com/manifest_priv.webapp",
+    "description": "https://example.com Privileged App",
+    "appStatus": 2
+  },
+  {
+    "name": "https_example_com_certified",
+    "csp": "",
+    "origin": "https://example.com",
+    "manifestURL": "https://example.com/manifest_cert.webapp",
+    "description": "https://example.com Certified App",
+    "appStatus": 3
+  },
+  {
+    "name": "https_example_csp_certified",
+    "csp": "default-src *; script-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline'",
+    "origin": "https://example.com",
+    "manifestURL": "https://example.com/manifest_csp_cert.webapp",
+    "description": "https://example.com Certified App with manifest policy",
+    "appStatus": 3
+  },
+  {
+    "name": "https_example_csp_installed",
+    "csp": "default-src *; script-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline'",
+    "origin": "https://example.com",
+    "manifestURL": "https://example.com/manifest_csp_inst.webapp",
+    "description": "https://example.com Installed App with manifest policy",
+    "appStatus": 1
+  },
+  {
+    "name": "https_example_csp_privileged",
+    "csp": "default-src *; script-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline'",
+    "origin": "https://example.com",
+    "manifestURL": "https://example.com/manifest_csp_priv.webapp",
+    "description": "https://example.com Privileged App with manifest policy",
+    "appStatus": 2
+  },
+  {
+    "name": "https_a_domain_certified",
+    "csp": "",
+    "origin": "https://acertified.com",
+    "manifestURL": "https://acertified.com/manifest.webapp",
+    "description": "https://acertified.com Certified App",
+    "appStatus": 3
+  },
+  {
+    "name": "https_a_domain_privileged",
+    "csp": "",
+    "origin": "https://aprivileged.com",
+    "manifestURL": "https://aprivileged.com/manifest.webapp",
+    "description": "https://aprivileged.com Privileged App ",
+    "appStatus": 2
+  }
+]
