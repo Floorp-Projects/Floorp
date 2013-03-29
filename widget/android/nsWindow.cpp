@@ -1800,6 +1800,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                   notified of the new selection
             */
             AutoIMEMask selMask(mIMEMaskSelectionUpdate);
+            RemoveIMEComposition();
             nsSelectionEvent selEvent(true, NS_SELECTION_SET, this);
             InitEvent(selEvent, nullptr);
 
