@@ -454,7 +454,7 @@ imgStatusTracker::NotifyCurrentState(imgRequestProxy* proxy)
 
   proxy->SetNotificationsDeferred(true);
 
-  // We don't keep track of 
+  // We don't keep track of
   nsCOMPtr<nsIRunnable> ev = new imgStatusNotifyRunnable(*this, proxy);
   NS_DispatchToCurrentThread(ev);
 }

@@ -147,7 +147,7 @@ private:
   inline nsIProperties *Properties() {
     return mProperties;
   }
-    
+
   // Reset the cache entry after we've dropped our reference to it. Used by the
   // imgLoader when our cache entry is re-requested after we've dropped our
   // reference to it.

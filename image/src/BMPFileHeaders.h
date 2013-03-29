@@ -18,7 +18,7 @@ namespace mozilla {
     };
 
 // The length of the bitmap file header as defined in the BMP spec.
-#define BFH_LENGTH 14 
+#define BFH_LENGTH 14
 // Internally we store the bitmap file header with an additional 4 bytes which
 // is used to store the bitmap information header size.
 #define BFH_INTERNAL_LENGTH 18
