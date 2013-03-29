@@ -39,6 +39,7 @@ interface GeckoEditableClient {
     void sendEvent(GeckoEvent event);
     Editable getEditable();
     void setUpdateGecko(boolean update);
+    void setSuppressKeyUp(boolean suppress);
     Handler getInputConnectionHandler();
     boolean setInputConnectionHandler(Handler handler);
 }
@@ -98,6 +99,7 @@ final class GeckoEditable
     private int mLastIcUpdateSeqno;
     private boolean mUpdateGecko;
     private boolean mFocused;
+    private volatile boolean mSuppressKeyUp;
 
     /* An action that alters the Editable
 
@@ -274,6 +276,9 @@ final class GeckoEditable
                     GeckoEvent.createIMESelectEvent(action.mStart, action.mEnd));
             for (KeyEvent event : keyEvents) {
                 if (KeyEvent.isModifierKey(event.getKeyCode())) {
+                    continue;
+                }
+                if (event.getAction() == KeyEvent.ACTION_UP && mSuppressKeyUp) {
                     continue;
                 }
                 if (DEBUG) {
@@ -584,10 +589,20 @@ final class GeckoEditable
     }
 
     @Override
-    public Handler getInputConnectionHandler() {
+    public void setSuppressKeyUp(boolean suppress) {
         if (DEBUG) {
-            assertOnIcThread();
+            // only used by key event handler
+            ThreadUtils.assertOnUiThread();
         }
+        // Suppress key up event generated as a result of
+        // translating characters to key events
+        mSuppressKeyUp = suppress;
+    }
+
+    @Override
+    public Handler getInputConnectionHandler() {
+        // Can be called from either UI thread or IC thread;
+        // care must be taken to avoid race conditions
         return mIcRunHandler;
     }
 
