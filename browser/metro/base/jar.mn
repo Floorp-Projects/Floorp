@@ -11,7 +11,6 @@ chrome.jar:
   content/aboutRights.xhtml                    (content/pages/aboutRights.xhtml)
   content/aboutCrash.xhtml                     (content/pages/aboutCrash.xhtml)
   content/blockedSite.xhtml                    (content/pages/blockedSite.xhtml)
-  content/fullscreen-video.xhtml               (content/pages/fullscreen-video.xhtml)
   content/netError.xhtml                       (content/pages/netError.xhtml)
 
   content/bindings/bindings.xml                (content/bindings/bindings.xml)
@@ -83,7 +82,6 @@ chrome.jar:
   content/TopSites.js                          (content/TopSites.js)
   content/console.js                           (content/console.js)
   content/AnimatedZoom.js                      (content/AnimatedZoom.js)
-  content/video.js                             (content/video.js)
 #ifdef MOZ_SERVICES_SYNC
 * content/sync.js                              (content/sync.js)
   content/RemoteTabs.js                        (content/RemoteTabs.js)
