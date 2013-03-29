@@ -517,6 +517,7 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             break;
 
         case KEY_EVENT:
+        case IME_KEY_EVENT:
             mTime = jenv->GetLongField(jobj, jTimeField);
             mMetaState = jenv->GetIntField(jobj, jMetaStateField);
             mDomKeyLocation = jenv->GetIntField(jobj, jDomKeyLocationField);
