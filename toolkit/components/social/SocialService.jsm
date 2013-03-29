@@ -20,10 +20,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "WorkerAPI", "resource://gre/modules/Wor
 XPCOMUtils.defineLazyModuleGetter(this, "MozSocialAPI", "resource://gre/modules/MozSocialAPI.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask", "resource://gre/modules/DeferredTask.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(this, 'bs',
-                                   "@mozilla.org/extensions/blocklist;1",
-                                   "nsIBlocklistService");
-
 /**
  * The SocialService is the public API to social providers - it tracks which
  * providers are installed and enabled, and is the entry-point for access to
@@ -418,7 +414,7 @@ this.SocialService = {
 
     let id = getAddonIDFromOrigin(installOrigin);
     let version = data && data.version ? data.version : "0";
-    if (bs.getAddonBlocklistState(id, version) == Ci.nsIBlocklistService.STATE_BLOCKED)
+    if (Services.blocklist.getAddonBlocklistState(id, version) == Ci.nsIBlocklistService.STATE_BLOCKED)
       throw new Error("installProvider: provider with origin [" +
                       installOrigin + "] is blocklisted");
 
@@ -487,7 +483,7 @@ function SocialProvider(input) {
     throw new Error("SocialProvider must be passed an origin");
 
   let id = getAddonIDFromOrigin(input.origin);
-  if (bs.getAddonBlocklistState(id, input.version || "0") == Ci.nsIBlocklistService.STATE_BLOCKED)
+  if (Services.blocklist.getAddonBlocklistState(id, input.version || "0") == Ci.nsIBlocklistService.STATE_BLOCKED)
     throw new Error("SocialProvider: provider with origin [" +
                     input.origin + "] is blocklisted");
 
@@ -785,7 +781,7 @@ var SocialAddonProvider = {
       try {
         if (ActiveProviders.has(manifest.origin)) {
           let id = getAddonIDFromOrigin(manifest.origin);
-          if (bs.getAddonBlocklistState(id, manifest.version || "0") != Ci.nsIBlocklistService.STATE_NOT_BLOCKED) {
+          if (Services.blocklist.getAddonBlocklistState(id, manifest.version || "0") != Ci.nsIBlocklistService.STATE_NOT_BLOCKED) {
             SocialService.removeProvider(manifest.origin);
           }
         }
@@ -870,11 +866,11 @@ AddonWrapper.prototype = {
   },
 
   get blocklistState() {
-    return bs.getAddonBlocklistState(this.id, this.version || "0");
+    return Services.blocklist.getAddonBlocklistState(this.id, this.version || "0");
   },
 
   get blocklistURL() {
-    return bs.getAddonBlocklistURL(this.id, this.version || "0");
+    return Services.blocklist.getAddonBlocklistURL(this.id, this.version || "0");
   },
 
   get screenshots() {
