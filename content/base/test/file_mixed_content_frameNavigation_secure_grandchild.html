@@ -42,7 +42,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840388
       }
       else {
         // After we have called setTimeout the maximum number of times, assume navigating the iframe is blocked
+        dump("\nWe have past the maximum timeout.  Navigating a grandchild iframe from an https location to an http location on a secure page failed.  We are about to post message to the top level page\n");
         parent.parent.postMessage({"test": "securePage_navigate_grandchild", "msg": "navigating to insecure grandchild iframe blocked on secure page"}, "http://mochi.test:8888");
+        dump("\nAttempted postMessage\n");
       }
     }
   }
