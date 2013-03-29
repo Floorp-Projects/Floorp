@@ -28,9 +28,10 @@
 
 #include <windows.h>
 #include <mmsystem.h>
-#include "platform.h"
 #include <process.h>
+#include "platform.h"
 
+#include "ProfileEntry.h"
 
 class Sampler::PlatformData : public Malloced {
  public:
@@ -67,9 +68,9 @@ Sampler::GetThreadHandle(Sampler::PlatformData* aData)
 class SamplerThread : public Thread {
  public:
   SamplerThread(int interval, Sampler* sampler)
-      : Thread("SamplerThread"),
-        interval_(interval),
-        sampler_(sampler) {}
+      : Thread("SamplerThread")
+      , interval_(interval)
+      , sampler_(sampler) {}
 
   static void StartSampler(Sampler* sampler) {
     if (instance_ == NULL) {
@@ -120,6 +121,7 @@ class SamplerThread : public Thread {
 
     // Grab the timestamp before pausing the thread, to avoid deadlocks.
     sample->timestamp = mozilla::TimeStamp::Now();
+    sample->threadProfile = NULL;
 
     static const DWORD kSuspendFailed = static_cast<DWORD>(-1);
     if (SuspendThread(profiled_thread) == kSuspendFailed)
@@ -155,11 +157,12 @@ class SamplerThread : public Thread {
 SamplerThread* SamplerThread::instance_ = NULL;
 
 
-Sampler::Sampler(int interval, bool profiling)
+Sampler::Sampler(int interval, bool profiling, int entrySize)
     : interval_(interval),
       profiling_(profiling),
       paused_(false),
       active_(false),
+      entrySize_(entrySize),
       data_(new PlatformData) {
 }
 
@@ -237,4 +240,31 @@ void Thread::Join() {
 
 void OS::Sleep(int milliseconds) {
   ::Sleep(milliseconds);
+}
+
+bool Sampler::RegisterCurrentThread(const char* aName, PseudoStack* aPseudoStack, bool aIsMainThread)
+{
+  mozilla::MutexAutoLock lock(*sRegisteredThreadsMutex);
+
+  if (!aIsMainThread)
+    return false;
+
+  ThreadInfo* info = new ThreadInfo(aName, 0, true, aPseudoStack);
+
+  if (sActiveSampler) {
+    // We need to create the ThreadProfile now
+    info->SetProfile(new ThreadProfile(info->Name(),
+                                       sActiveSampler->EntrySize(),
+                                       info->Stack(),
+                                       info->ThreadId(),
+                                       true));
+  }
+
+  sRegisteredThreads->push_back(info);
+  return true;
+}
+
+void Sampler::UnregisterCurrentThread()
+{
+  // We only have the main thread currently and that will never be unregistered
 }
