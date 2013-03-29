@@ -310,6 +310,7 @@ CellBroadcastEtwsInfo.prototype = {
 function RILContentHelper() {
   this.rilContext = {
     cardState:            RIL.GECKO_CARDSTATE_UNKNOWN,
+    networkSelectionMode: RIL.GECKO_NETWORK_SELECTION_UNKNOWN,
     iccInfo:              new MobileICCInfo(),
     voiceConnectionInfo:  new MobileConnectionInfo(),
     dataConnectionInfo:   new MobileConnectionInfo()
@@ -382,8 +383,6 @@ RILContentHelper.prototype = {
 
   // nsIRILContentHelper
 
-  networkSelectionMode: RIL.GECKO_NETWORK_SELECTION_UNKNOWN,
-
   rilContext: null,
 
   getRilContext: function getRilContext() {
@@ -400,6 +399,7 @@ RILContentHelper.prototype = {
       return;
     }
     this.rilContext.cardState = rilContext.cardState;
+    this.rilContext.networkSelectionMode = rilContext.networkSelectionMode;
     this.updateInfo(rilContext.iccInfo, this.rilContext.iccInfo);
     this.updateConnectionInfo(rilContext.voice, this.rilContext.voiceConnectionInfo);
     this.updateConnectionInfo(rilContext.data, this.rilContext.dataConnectionInfo);
@@ -421,6 +421,10 @@ RILContentHelper.prototype = {
 
   get cardState() {
     return this.getRilContext().cardState;
+  },
+
+  get networkSelectionMode() {
+    return this.getRilContext().networkSelectionMode;
   },
 
   /**
