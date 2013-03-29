@@ -35,13 +35,19 @@ DIST_GARBAGE = config.cache config.log config.status* config-defs.h \
    netwerk/necko-config.h xpcom/xpcom-config.h xpcom/xpcom-private.h \
    $(topsrcdir)/.mozconfig.mk $(topsrcdir)/.mozconfig.out
 
-default alldep all:: $(topsrcdir)/configure config.status
+default alldep all:: CLOBBER $(topsrcdir)/configure config.status
 	$(RM) -r $(DIST)/sdk
 	$(RM) -r $(DIST)/include
 	$(RM) -r $(DIST)/private
 	$(RM) -r $(DIST)/public
 	$(RM) $(DIST)/bin/chrome.manifest $(DIST)/bin/components/components.manifest
 	$(RM) -r _tests
+
+CLOBBER: $(topsrcdir)/CLOBBER
+	@echo "STOP!  The CLOBBER file has changed."
+	@echo "Please run the build through a sanctioned build wrapper, such as"
+	@echo "'mach build' or client.mk."
+	@exit 1
 
 $(topsrcdir)/configure: $(topsrcdir)/configure.in
 	@echo "STOP!  configure.in has changed, and your configure is out of date."
