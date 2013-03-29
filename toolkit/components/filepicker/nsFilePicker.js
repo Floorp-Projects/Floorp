@@ -106,7 +106,7 @@ nsFilePicker.prototype = {
     }
 
     if (!this.mDOMFilesEnumerator) {
-      this.mDOMFilesEnumerator {
+      this.mDOMFilesEnumerator = {
         QueryInterface: XPCOMUtils.generateQI([Components.interfaces.nsISimpleEnumerator]),
 
         mFiles: [],
@@ -124,7 +124,7 @@ nsFilePicker.prototype = {
         }
       };
 
-      for (var i = 0, i < this.mFilesEnumerator.mFiles.length; ++i) {
+      for (var i = 0; i < this.mFilesEnumerator.mFiles.length; ++i) {
         var file = this.mParentWindow.wrapDOMFile(
                      this.mFilesEnumerator.mFiles[i]);
         this.mDOMFilesEnumerator.mFiles.push(file);
