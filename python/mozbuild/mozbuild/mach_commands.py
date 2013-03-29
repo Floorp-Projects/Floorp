@@ -65,6 +65,9 @@ class Build(MachCommandBase):
         warnings_collector = WarningsCollector(database=warnings_database,
             objdir=self.topobjdir)
 
+        have_silliness = time.localtime()[1:3] == (4, 1)
+        performed_silliness = []
+
         def on_line(line):
             try:
                 warning = warnings_collector.process_line(line)
@@ -76,6 +79,20 @@ class Build(MachCommandBase):
                 pass
 
             self.log(logging.INFO, 'build_output', {'line': line}, '{line}')
+
+            if have_silliness and not performed_silliness:
+                import random
+                if random.randint(0, 1000) != 42:
+                    return
+
+                performed_silliness.append(True)
+
+                try:
+                    import webbrowser
+                    webbrowser.open_new_tab(
+                        'https://www.youtube.com/watch?v=oHg5SJYRHA0')
+                except Exception:
+                    pass
 
         finder_start_cpu = self._get_finder_cpu_usage()
         time_start = time.time()
