@@ -16,6 +16,7 @@ function run_test()
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
+
   gClient.request = (function (request) {
     return function (aRequest, aOnResponse) {
       if (aRequest.type === "sources") {
@@ -33,6 +34,7 @@ function run_test()
       test_listing_zero_sources();
     });
   });
+
   do_test_pending();
 }
 
@@ -47,6 +49,6 @@ function test_listing_zero_sources()
                   "Should only send one sources request at most, even though we"
                   + " might have had to send one to determine feature support.");
 
-   finishClient(gClient);
+    finishClient(gClient);
   });
 }

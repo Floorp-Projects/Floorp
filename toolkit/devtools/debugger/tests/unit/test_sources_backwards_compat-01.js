@@ -18,6 +18,7 @@ function run_test()
   initSourcesBackwardsCompatDebuggerServer();
   gDebuggee = addTestGlobal("test-sources-compat");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
+
   gClient.request = (function (request) {
     return function (aRequest, aOnResponse) {
       if (aRequest.type === "sources") {
@@ -26,6 +27,7 @@ function run_test()
       return request.call(this, aRequest, aOnResponse);
     };
   }(gClient.request));
+
   gClient.connect(function() {
     attachTestTabAndResume(gClient, "test-sources-compat", function (aResponse,
                                                                      aTabClient,

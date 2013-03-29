@@ -30,7 +30,6 @@ function ThreadActor(aHooks, aGlobal)
   this._frameActors = [];
   this._environmentActors = [];
   this._hooks = aHooks;
-  this._sources = {};
   this.global = aGlobal;
 
   // A cache of prototype chains for objects that have received a
@@ -46,6 +45,11 @@ function ThreadActor(aHooks, aGlobal)
 
   this.findGlobals = this.globalManager.findGlobals.bind(this);
   this.onNewGlobal = this.globalManager.onNewGlobal.bind(this);
+  this.onNewSource = this.onNewSource.bind(this);
+
+  this._options = {
+    useSourceMaps: false
+  };
 }
 
 /**
@@ -73,13 +77,21 @@ ThreadActor.prototype = {
     return this._threadLifetimePool;
   },
 
+  get sources() {
+    if (!this._sources) {
+      this._sources = new ThreadSources(this, this._options.useSourceMaps,
+                                        this._allowSource, this.onNewSource);
+    }
+    return this._sources;
+  },
+
   clearDebuggees: function TA_clearDebuggees() {
     if (this.dbg) {
       this.dbg.removeAllDebuggees();
     }
     this.conn.removeActorPool(this._threadLifetimePool || undefined);
     this._threadLifetimePool = null;
-    this._sources = {};
+    this._sources = null;
   },
 
   /**
@@ -202,11 +214,14 @@ ThreadActor.prototype = {
 
     this._state = "attached";
 
+    update(this._options, aRequest.options || {});
+
     if (!this.dbg) {
       this._initDebugger();
     }
     this.findGlobals();
     this.dbg.enabled = true;
+
     try {
       // Put ourselves in the paused state.
       let packet = this._paused();
@@ -222,19 +237,20 @@ ThreadActor.prototype = {
 
       // Start a nested event loop.
       this._nest();
-
       // We already sent a response to this request, don't send one
       // now.
       return null;
-    } catch(e) {
-      Cu.reportError(e);
+    } catch (e) {
+      reportError(e);
       return { error: "notAttached", message: e.toString() };
     }
   },
 
   onDetach: function TA_onDetach(aRequest) {
     this.disconnect();
-    return { type: "detached" };
+    return {
+      type: "detached"
+    };
   },
 
   /**
@@ -245,15 +261,19 @@ ThreadActor.prototype = {
    *        The newest debuggee frame in the stack.
    * @param object aReason
    *        An object with a 'type' property containing the reason for the pause.
+   * @param function onPacket
+   *        Hook to modify the packet before it is sent. Feel free to return a
+   *        promise.
    */
-  _pauseAndRespond: function TA__pauseAndRespond(aFrame, aReason) {
+  _pauseAndRespond: function TA__pauseAndRespond(aFrame, aReason,
+                                                 onPacket=function (k) k) {
     try {
       let packet = this._paused(aFrame);
       if (!packet) {
         return undefined;
       }
       packet.why = aReason;
-      this.conn.send(packet);
+      resolve(onPacket(packet)).then(this.conn.send.bind(this.conn));
       return this._nest();
     } catch(e) {
       let msg = "Got an exception during TA__pauseAndRespond: " + e +
@@ -427,14 +447,23 @@ ThreadActor.prototype = {
     // Return request.count frames, or all remaining
     // frames if count is not defined.
     let frames = [];
-    for (; frame && (!count || i < (start + count)); i++) {
+    let promises = [];
+    for (; frame && (!count || i < (start + count)); i++, frame=frame.older) {
       let form = this._createFrameActor(frame).form();
       form.depth = i;
       frames.push(form);
-      frame = frame.older;
+
+      let promise = this.sources.getOriginalLocation(form.where.url,
+                                                     form.where.line)
+        .then(function (aOrigLocation) {
+          form.where = aOrigLocation;
+        });
+      promises.push(promise);
     }
 
-    return { frames: frames };
+    return Promise.all(promises).then(function () {
+      return { frames: frames };
+    });
   },
 
   onReleaseMany: function TA_onReleaseMany(aRequest) {
@@ -467,25 +496,58 @@ ThreadActor.prototype = {
                message: "Breakpoints can only be set while the debuggee is paused."};
     }
 
-    let location = aRequest.location;
-    let line = location.line;
-    if (this.dbg.findScripts({ url: location.url }).length == 0 || line < 0) {
-      return { error: "noScript" };
-    }
+    // XXX: `originalColumn` is never used. See bug 827639.
+    let { url: originalSource,
+          line: originalLine,
+          column: originalColumn } = aRequest.location;
 
-    // Add the breakpoint to the store for later reuse, in case it belongs to a
-    // script that hasn't appeared yet.
-    if (!this._breakpointStore[location.url]) {
-      this._breakpointStore[location.url] = [];
-    }
-    let scriptBreakpoints = this._breakpointStore[location.url];
-    scriptBreakpoints[line] = {
-      url: location.url,
-      line: line,
-      column: location.column
-    };
+    let locationPromise = this.sources.getGeneratedLocation(originalSource,
+                                                            originalLine)
+    return locationPromise.then(function (aLocation) {
+      let line = aLocation.line;
+      if (this.dbg.findScripts({ url: aLocation.url }).length == 0 || line < 0) {
+        return { error: "noScript" };
+      }
 
-    return this._setBreakpoint(location);
+      // Add the breakpoint to the store for later reuse, in case it belongs to a
+      // script that hasn't appeared yet.
+      if (!this._breakpointStore[aLocation.url]) {
+        this._breakpointStore[aLocation.url] = [];
+      }
+      let scriptBreakpoints = this._breakpointStore[aLocation.url];
+      scriptBreakpoints[line] = {
+        url: aLocation.url,
+        line: line,
+        column: aLocation.column
+      };
+
+      let response = this._setBreakpoint(aLocation);
+      // If the original location of our generated location is different from
+      // the original location we attempted to set the breakpoint on, we will
+      // need to know so that we can set actualLocation on the response.
+      let originalLocation = this.sources.getOriginalLocation(aLocation.url,
+                                                              aLocation.line);
+
+      return Promise.all(response, originalLocation)
+        .then(function ([aResponse, {url, line}]) {
+          if (aResponse.actualLocation) {
+            let actualOrigLocation = this.sources.getOriginalLocation(
+              aResponse.actualLocation.url, aResponse.actualLocation.line);
+            return actualOrigLocation.then(function ({ url, line }) {
+              if (url !== originalSource || line !== originalLine) {
+                aResponse.actualLocation = { url: url, line: line };
+              }
+              return aResponse;
+            });
+          }
+
+          if (url !== originalSource || line !== originalLine) {
+            aResponse.actualLocation = { url: url, line: line };
+          }
+
+          return aResponse;
+        }.bind(this));
+    }.bind(this));
   },
 
   /**
@@ -596,17 +658,16 @@ ThreadActor.prototype = {
    * Get the script and source lists from the debugger.
    */
   _discoverScriptsAndSources: function TA__discoverScriptsAndSources() {
-    for (let s of this.dbg.findScripts()) {
-      this._addScript(s);
-    }
+    return Promise.all([this._addScript(s)
+                       for (s of this.dbg.findScripts())]);
   },
 
   onSources: function TA_onSources(aRequest) {
-    this._discoverScriptsAndSources();
-    let urls = Object.getOwnPropertyNames(this._sources);
-    return {
-      sources: [this._getSource(url).form() for (url of urls)]
-    };
+    return this._discoverScriptsAndSources().then(function () {
+      return {
+        sources: [s.form() for (s of this.sources.iter())]
+      };
+    }.bind(this));
   },
 
   /**
@@ -643,8 +704,8 @@ ThreadActor.prototype = {
       // We already sent a response to this request, don't send one
       // now.
       return null;
-    } catch(e) {
-      Cu.reportError(e);
+    } catch (e) {
+      reportError(e);
       return { error: "notInterrupted", message: e.toString() };
     }
   },
@@ -715,7 +776,6 @@ ThreadActor.prototype = {
     if (aFrame) {
       packet.frame = this._createFrameActor(aFrame).form();
     }
-
     if (poppedFrames) {
       packet.poppedFrames = poppedFrames;
     }
@@ -1018,8 +1078,9 @@ ThreadActor.prototype = {
    * Create a source grip for the given script.
    */
   sourceGrip: function TA_sourceGrip(aScript) {
-    // TODO: Once we have Debugger.Source, this should be replaced with a
-    // weakmap mapping Debugger.Source instances to SourceActor instances.
+    // TODO bug 637572: Once we have Debugger.Source, this should be replaced
+    // with a weakmap mapping Debugger.Source instances to SourceActor
+    // instances.
     if (!this.threadLifetimePool.sourceActors) {
       this.threadLifetimePool.sourceActors = {};
     }
@@ -1079,7 +1140,7 @@ ThreadActor.prototype = {
                      exception: this.createValueGrip(aValue) };
       this.conn.send(packet);
       return this._nest();
-    } catch(e) {
+    } catch (e) {
       Cu.reportError("Got an exception during TA_onExceptionUnwind: " + e +
                      ": " + e.stack);
       return undefined;
@@ -1099,6 +1160,14 @@ ThreadActor.prototype = {
     this._addScript(aScript);
   },
 
+  onNewSource: function TA_onNewSource(aSource) {
+    this.conn.send({
+      from: this.actorID,
+      type: "newSource",
+      source: aSource.form()
+    });
+  },
+
   /**
    * Check if scripts from the provided source URL are allowed to be stored in
    * the cache.
@@ -1107,7 +1176,7 @@ ThreadActor.prototype = {
    *        The url of the script's source that will be stored.
    * @returns true, if the script can be added, false otherwise.
    */
-  _allowSource: function TA__allowScript(aSourceUrl) {
+  _allowSource: function TA__allowSource(aSourceUrl) {
     // Ignore anything we don't have a URL for (eval scripts, for example).
     if (!aSourceUrl)
       return false;
@@ -1131,28 +1200,30 @@ ThreadActor.prototype = {
    */
   _addScript: function TA__addScript(aScript) {
     if (!this._allowSource(aScript.url)) {
-      return false;
+      return resolve(false);
     }
 
     // TODO bug 637572: we should be dealing with sources directly, not
     // inferring them through scripts.
-    this._addSource(aScript.url);
+    return this.sources.sourcesForScript(aScript).then(function () {
 
-    // Set any stored breakpoints.
-    let existing = this._breakpointStore[aScript.url];
-    if (existing) {
-      let endLine = aScript.startLine + aScript.lineCount - 1;
-      // Iterate over the lines backwards, so that sliding breakpoints don't
-      // affect the loop.
-      for (let line = existing.length - 1; line >= 0; line--) {
-        let bp = existing[line];
-        // Limit search to the line numbers contained in the new script.
-        if (bp && line >= aScript.startLine && line <= endLine) {
-          this._setBreakpoint(bp);
+      // Set any stored breakpoints.
+      let existing = this._breakpointStore[aScript.url];
+      if (existing) {
+        let endLine = aScript.startLine + aScript.lineCount - 1;
+        // Iterate over the lines backwards, so that sliding breakpoints don't
+        // affect the loop.
+        for (let line = existing.length - 1; line >= 0; line--) {
+          let bp = existing[line];
+          // Limit search to the line numbers contained in the new script.
+          if (bp && line >= aScript.startLine && line <= endLine) {
+            this._setBreakpoint(bp);
+          }
         }
       }
-    }
-    return true;
+
+      return true;
+    }.bind(this));
   },
 
   /**
@@ -1198,48 +1269,6 @@ ThreadActor.prototype = {
       }
     }
     return retval;
-  },
-
-  /**
-   * Add a source to the current set of sources.
-   *
-   * Right now this takes an url, but in the future it should
-   * take a Debugger.Source.
-   *
-   * @param string the source URL.
-   * @returns a SourceActor representing the source.
-   */
-  _addSource: function TA__addSource(aURL) {
-    if (!this._allowSource(aURL)) {
-      return false;
-    }
-
-    if (aURL in this._sources) {
-      return true;
-    }
-
-    let actor = new SourceActor(aURL, this);
-    this.threadLifetimePool.addActor(actor);
-    this._sources[aURL] = actor;
-
-    this.conn.send({
-      from: this.actorID,
-      type: "newSource",
-      source: actor.form()
-    });
-
-    return true;
-  },
-
-  /**
-   * Get the source actor for the given URL.
-   */
-  _getSource: function TA__getSource(aUrl) {
-    let source = this._sources[aUrl];
-    if (!source) {
-      throw new Error("No source for '" + aUrl + "'");
-    }
-    return source;
   },
 
 };
@@ -1348,6 +1377,7 @@ SourceActor.prototype = {
   actorPrefix: "source",
 
   get threadActor() { return this._threadActor; },
+  get url() { return this._url; },
 
   form: function SA_form() {
     return {
@@ -1367,10 +1397,9 @@ SourceActor.prototype = {
    * Handler for the "source" packet.
    */
   onSource: function SA_onSource(aRequest) {
-    return this
-      ._loadSource()
+    return fetch(this._url)
       .then(function(aSource) {
-        return this._threadActor.createValueGrip(
+        return this.threadActor.createValueGrip(
           aSource, this.threadActor.threadLifetimePool);
       }.bind(this))
       .then(function (aSourceGrip) {
@@ -1379,121 +1408,17 @@ SourceActor.prototype = {
           source: aSourceGrip
         };
       }.bind(this), function (aError) {
+        let msg = "Got an exception during SA_onSource: " + aError +
+          "\n" + aError.stack;
+        Cu.reportError(msg);
+        dumpn(msg);
         return {
           "from": this.actorID,
           "error": "loadSourceError",
           "message": "Could not load the source for " + this._url + "."
         };
       }.bind(this));
-  },
-
-  /**
-   * Convert a given string, encoded in a given character set, to unicode.
-   * @param string aString
-   *        A string.
-   * @param string aCharset
-   *        A character set.
-   * @return string
-   *         A unicode string.
-   */
-  _convertToUnicode: function SS__convertToUnicode(aString, aCharset) {
-    // Decoding primitives.
-    let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-        .createInstance(Ci.nsIScriptableUnicodeConverter);
-
-    try {
-      converter.charset = aCharset || "UTF-8";
-      return converter.ConvertToUnicode(aString);
-    } catch(e) {
-      return aString;
-    }
-  },
-
-  /**
-   * Performs a request to load the desired URL and returns a promise.
-   *
-   * @param aURL String
-   *        The URL we will request.
-   * @returns Promise
-   *
-   * XXX: It may be better to use nsITraceableChannel to get to the sources
-   * without relying on caching when we can (not for eval, etc.):
-   * http://www.softwareishard.com/blog/firebug/nsitraceablechannel-intercept-http-traffic/
-   */
-  _loadSource: function SA__loadSource() {
-    let deferred = defer();
-    let scheme;
-    let url = this._url.split(" -> ").pop();
-
-    try {
-      scheme = Services.io.extractScheme(url);
-    } catch (e) {
-      // In the xpcshell tests, the script url is the absolute path of the test
-      // file, which will make a malformed URI error be thrown. Add the file
-      // scheme prefix ourselves.
-      url = "file://" + url;
-      scheme = Services.io.extractScheme(url);
-    }
-
-    switch (scheme) {
-      case "file":
-      case "chrome":
-      case "resource":
-        try {
-          NetUtil.asyncFetch(url, function onFetch(aStream, aStatus) {
-            if (!Components.isSuccessCode(aStatus)) {
-              deferred.reject(new Error("Request failed"));
-              return;
-            }
-
-            let source = NetUtil.readInputStreamToString(aStream, aStream.available());
-            deferred.resolve(this._convertToUnicode(source));
-            aStream.close();
-          }.bind(this));
-        } catch (ex) {
-          deferred.reject(new Error("Request failed"));
-        }
-        break;
-
-      default:
-        let channel;
-        try {
-          channel = Services.io.newChannel(url, null, null);
-        } catch (e if e.name == "NS_ERROR_UNKNOWN_PROTOCOL") {
-          // On Windows xpcshell tests, c:/foo/bar can pass as a valid URL, but
-          // newChannel won't be able to handle it.
-          url = "file:///" + url;
-          channel = Services.io.newChannel(url, null, null);
-        }
-        let chunks = [];
-        let streamListener = {
-          onStartRequest: function(aRequest, aContext, aStatusCode) {
-            if (!Components.isSuccessCode(aStatusCode)) {
-              deferred.reject("Request failed");
-            }
-          },
-          onDataAvailable: function(aRequest, aContext, aStream, aOffset, aCount) {
-            chunks.push(NetUtil.readInputStreamToString(aStream, aCount));
-          },
-          onStopRequest: function(aRequest, aContext, aStatusCode) {
-            if (!Components.isSuccessCode(aStatusCode)) {
-              deferred.reject("Request failed");
-              return;
-            }
-
-            deferred.resolve(this._convertToUnicode(chunks.join(""),
-                                                    channel.contentCharset));
-          }.bind(this)
-        };
-
-        channel.loadFlags = channel.LOAD_FROM_CACHE;
-        channel.asyncOpen(streamListener, null);
-        break;
-    }
-
-    return deferred.promise;
   }
-
 };
 
 SourceActor.prototype.requestTypes = {
@@ -2038,7 +1963,14 @@ BreakpointActor.prototype = {
   hit: function BA_hit(aFrame) {
     // TODO: add the rest of the breakpoints on that line (bug 676602).
     let reason = { type: "breakpoint", actors: [ this.actorID ] };
-    return this.threadActor._pauseAndRespond(aFrame, reason);
+    return this.threadActor._pauseAndRespond(aFrame, reason, function (aPacket) {
+      let { url, line } = aPacket.frame.where;
+      return this.threadActor.sources.getOriginalLocation(url, line)
+        .then(function (aOrigPosition) {
+          aPacket.frame.where = aOrigPosition;
+          return aPacket;
+        });
+    }.bind(this));
   },
 
   /**
@@ -2360,6 +2292,183 @@ update(ChromeDebuggerActor.prototype, {
 });
 
 
+/**
+ * Manages the sources for a thread. Handles source maps, locations in the
+ * sources, etc for ThreadActors.
+ */
+function ThreadSources(aThreadActor, aUseSourceMaps,
+                       aAllowPredicate, aOnNewSource) {
+  this._thread = aThreadActor;
+  this._useSourceMaps = aUseSourceMaps;
+  this._allow = aAllowPredicate;
+  this._onNewSource = aOnNewSource;
+
+  // source map URL --> promise of SourceMapConsumer
+  this._sourceMaps = Object.create(null);
+  // generated source url --> promise of SourceMapConsumer
+  this._sourceMapsByGeneratedSource = Object.create(null);
+  // original source url --> promise of SourceMapConsumer
+  this._sourceMapsByOriginalSource = Object.create(null);
+  // source url --> SourceActor
+  this._sourceActors = Object.create(null);
+  // original url --> generated url
+  this._generatedUrlsByOriginalUrl = Object.create(null);
+}
+
+ThreadSources.prototype = {
+  /**
+   * Add a source to the current set of sources.
+   *
+   * Right now this takes a URL, but in the future it should
+   * take a Debugger.Source. See bug 637572.
+   *
+   * @param string the source URL.
+   * @returns a SourceActor representing the source or null.
+   */
+  source: function TS_source(aURL) {
+    if (!this._allow(aURL)) {
+      return null;
+    }
+
+    if (aURL in this._sourceActors) {
+      return this._sourceActors[aURL];
+    }
+
+    let actor = new SourceActor(aURL, this._thread);
+    this._thread.threadLifetimePool.addActor(actor);
+    this._sourceActors[aURL] = actor;
+    try {
+      this._onNewSource(actor);
+    } catch (e) {
+      reportError(e);
+    }
+    return actor;
+  },
+
+  /**
+   * Add all of the sources associated with the given script.
+   */
+  sourcesForScript: function TS_sourcesForScript(aScript) {
+    if (!this._useSourceMaps || !aScript.sourceMapURL) {
+      return resolve([this.source(aScript.url)].filter(isNotNull));
+    }
+
+    return this.sourceMap(aScript)
+      .then(function (aSourceMap) {
+        return [
+          this.source(s) for (s of aSourceMap.sources)
+        ];
+      }.bind(this), function (e) {
+        reportError(e);
+        delete this._sourceMaps[aScript.sourceMapURL];
+        delete this._sourceMapsByGeneratedSource[aScript.url];
+        return [this.source(aScript.url)];
+      }.bind(this))
+      .then(function (aSources) {
+        return aSources.filter(isNotNull);
+      });
+  },
+
+  /**
+   * Add the source map for the given script.
+   */
+  sourceMap: function TS_sourceMap(aScript) {
+    if (aScript.url in this._sourceMapsByGeneratedSource) {
+      return this._sourceMapsByGeneratedSource[aScript.url];
+    }
+    dbg_assert(aScript.sourceMapURL);
+    let map = this._fetchSourceMap(aScript.sourceMapURL)
+      .then(function (aSourceMap) {
+        for (let s of aSourceMap.sources) {
+          this._generatedUrlsByOriginalUrl[s] = aScript.url;
+          this._sourceMapsByOriginalSource[s] = resolve(aSourceMap);
+        }
+        return aSourceMap;
+      }.bind(this));
+    this._sourceMapsByGeneratedSource[aScript.url] = map;
+    return map;
+  },
+
+  /**
+   * Fetch the source map located at the given url.
+   */
+  _fetchSourceMap: function TS__featchSourceMap(aSourceMapURL) {
+    if (aSourceMapURL in this._sourceMaps) {
+      return this._sourceMaps[aSourceMapURL];
+    } else {
+      let promise = fetch(aSourceMapURL).then(function (rawSourceMap) {
+        return new SourceMapConsumer(rawSourceMap);
+      });
+      this._sourceMaps[aSourceMapURL] = promise;
+      return promise;
+    }
+  },
+
+  /**
+   * Returns a promise for the location in the original source if the source is
+   * source mapped, otherwise a promise of the same location.
+   *
+   * TODO bug 637572: take/return a column
+   */
+  getOriginalLocation: function TS_getOriginalLocation(aSourceUrl, aLine) {
+    if (aSourceUrl in this._sourceMapsByGeneratedSource) {
+      return this._sourceMapsByGeneratedSource[aSourceUrl]
+        .then(function (aSourceMap) {
+          let { source, line } = aSourceMap.originalPositionFor({
+            source: aSourceUrl,
+            line: aLine,
+            column: Infinity
+          });
+          return {
+            url: source,
+            line: line
+          };
+        });
+    }
+
+    // No source map
+    return resolve({
+      url: aSourceUrl,
+      line: aLine
+    });
+  },
+
+  /**
+   * Returns a promise of the location in the generated source corresponding to
+   * the original source and line given.
+   *
+   * TODO bug 637572: take/return a column
+   */
+  getGeneratedLocation: function TS_getGeneratedLocation(aSourceUrl, aLine) {
+    if (aSourceUrl in this._sourceMapsByOriginalSource) {
+      return this._sourceMapsByOriginalSource[aSourceUrl]
+        .then(function (aSourceMap) {
+          let { line } = aSourceMap.generatedPositionFor({
+            source: aSourceUrl,
+            line: aLine,
+            column: Infinity
+          });
+          return {
+            url: this._generatedUrlsByOriginalUrl[aSourceUrl],
+            line: line
+          };
+        }.bind(this));
+    }
+
+    // No source map
+    return resolve({
+      url: aSourceUrl,
+      line: aLine
+    });
+  },
+
+  iter: function TS_iter() {
+    for (let url in this._sourceActors) {
+      yield this._sourceActors[url];
+    }
+  }
+};
+
 // Utility functions.
 
 /**
@@ -2379,4 +2488,127 @@ function update(aTarget, aNewAttrs) {
       Object.defineProperty(aTarget, key, desc);
     }
   }
+}
+
+/**
+ * Returns true if its argument is not null.
+ */
+function isNotNull(aThing) {
+  return aThing !== null;
+}
+
+/**
+ * Performs a request to load the desired URL and returns a promise.
+ *
+ * @param aURL String
+ *        The URL we will request.
+ * @returns Promise
+ *
+ * XXX: It may be better to use nsITraceableChannel to get to the sources
+ * without relying on caching when we can (not for eval, etc.):
+ * http://www.softwareishard.com/blog/firebug/nsitraceablechannel-intercept-http-traffic/
+ */
+function fetch(aURL) {
+  let deferred = defer();
+  let scheme;
+  let url = aURL.split(" -> ").pop();
+  let charset;
+
+  try {
+    scheme = Services.io.extractScheme(url);
+  } catch (e) {
+    // In the xpcshell tests, the script url is the absolute path of the test
+    // file, which will make a malformed URI error be thrown. Add the file
+    // scheme prefix ourselves.
+    url = "file://" + url;
+    scheme = Services.io.extractScheme(url);
+  }
+
+  switch (scheme) {
+    case "file":
+    case "chrome":
+    case "resource":
+      try {
+        NetUtil.asyncFetch(url, function onFetch(aStream, aStatus) {
+          if (!Components.isSuccessCode(aStatus)) {
+            deferred.reject(new Error("Request failed"));
+            return;
+          }
+
+          let source = NetUtil.readInputStreamToString(aStream, aStream.available());
+          deferred.resolve(source);
+          aStream.close();
+        });
+      } catch (ex) {
+        deferred.reject(new Error("Request failed: " + url));
+      }
+      break;
+
+    default:
+      let channel;
+      try {
+        channel = Services.io.newChannel(url, null, null);
+      } catch (e if e.name == "NS_ERROR_UNKNOWN_PROTOCOL") {
+        // On Windows xpcshell tests, c:/foo/bar can pass as a valid URL, but
+        // newChannel won't be able to handle it.
+        url = "file:///" + url;
+        channel = Services.io.newChannel(url, null, null);
+      }
+      let chunks = [];
+      let streamListener = {
+        onStartRequest: function(aRequest, aContext, aStatusCode) {
+          if (!Components.isSuccessCode(aStatusCode)) {
+            deferred.reject("Request failed");
+          }
+        },
+        onDataAvailable: function(aRequest, aContext, aStream, aOffset, aCount) {
+          chunks.push(NetUtil.readInputStreamToString(aStream, aCount));
+        },
+        onStopRequest: function(aRequest, aContext, aStatusCode) {
+          if (!Components.isSuccessCode(aStatusCode)) {
+            deferred.reject("Request failed: " + url);
+            return;
+          }
+
+          charset = channel.contentCharset;
+          deferred.resolve(chunks.join(""));
+        }
+      };
+
+      channel.loadFlags = channel.LOAD_FROM_CACHE;
+      channel.asyncOpen(streamListener, null);
+      break;
+  }
+
+  return deferred.promise.then(function (source) {
+    return convertToUnicode(source, charset);
+  });
+}
+
+/**
+ * Convert a given string, encoded in a given character set, to unicode.
+ *
+ * @param string aString
+ *        A string.
+ * @param string aCharset
+ *        A character set.
+ */
+function convertToUnicode(aString, aCharset=null) {
+  // Decoding primitives.
+  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+    .createInstance(Ci.nsIScriptableUnicodeConverter);
+  try {
+    converter.charset = aCharset || "UTF-8";
+    return converter.ConvertToUnicode(aString);
+  } catch(e) {
+    return aString;
+  }
+}
+
+/**
+ * Report the given error in the error console and to stdout.
+ */
+function reportError(aError) {
+  Cu.reportError(aError);
+  dumpn(aError.message + ":\n" + aError.stack);
 }
