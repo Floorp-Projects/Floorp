@@ -238,7 +238,8 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
 
   ~PeerConnectionMedia() {}
 
-  nsresult Init(const std::vector<mozilla::NrIceStunServer>& stun_servers);
+  nsresult Init(const std::vector<mozilla::NrIceStunServer>& stun_servers,
+                const std::vector<mozilla::NrIceTurnServer>& turn_servers);
   // WARNING: This destroys the object!
   void SelfDestruct();
 
