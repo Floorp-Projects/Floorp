@@ -35,8 +35,10 @@
 // See dwarf_cfi_to_module.h for details.
 
 #include <sstream>
+#include <iomanip>
 
 #include "common/dwarf_cfi_to_module.h"
+#include "common/logging.h"
 
 namespace google_breakpad {
 
@@ -231,31 +233,37 @@ bool DwarfCFIToModule::End() {
 }
 
 void DwarfCFIToModule::Reporter::UnnamedRegister(size_t offset, int reg) {
-  fprintf(stderr, "%s, section '%s': "
-          "the call frame entry at offset 0x%zx refers to register %d,"
-          " whose name we don't know\n",
-          file_.c_str(), section_.c_str(), offset, reg);
+  BPLOG(INFO) << file_ << ", section '" << section_ 
+    << "': the call frame entry at offset 0x" 
+    << std::setbase(16) << offset << std::setbase(10)
+    << " refers to register " << reg << ", whose name we don't know";
 }
 
 void DwarfCFIToModule::Reporter::UndefinedNotSupported(
     size_t offset,
     const UniqueString* reg) {
-  fprintf(stderr, "%s, section '%s': "
-          "the call frame entry at offset 0x%zx sets the rule for "
-          "register '%s' to 'undefined', but the Breakpad symbol file format"
-          " cannot express this\n",
-          file_.c_str(), section_.c_str(), offset, FromUniqueString(reg));
+  BPLOG(INFO) << file_ << ", section '" << section_ 
+    << "': the call frame entry at offset 0x" 
+    << std::setbase(16) << offset << std::setbase(10)
+    << " sets the rule for register '" << FromUniqueString(reg)
+    << "' to 'undefined', but the Breakpad symbol file format cannot "
+    << " express this";
 }
 
 void DwarfCFIToModule::Reporter::ExpressionsNotSupported(
     size_t offset,
     const UniqueString* reg) {
-  fprintf(stderr, "%s, section '%s': "
-          "the call frame entry at offset 0x%zx uses a DWARF expression to"
-          " describe how to recover register '%s', "
-          " but this translator cannot yet translate DWARF expressions to"
-          " Breakpad postfix expressions\n",
-          file_.c_str(), section_.c_str(), offset, FromUniqueString(reg));
+  static uint64_t n_complaints = 0; // This isn't threadsafe
+  n_complaints++;
+  if (!is_power_of_2(n_complaints))
+    return;
+  BPLOG(INFO) << file_ << ", section '" << section_ 
+    << "': the call frame entry at offset 0x" 
+    << std::setbase(16) << offset << std::setbase(10)
+    << " uses a DWARF expression to describe how to recover register '"
+    << FromUniqueString(reg) << "', but this translator cannot yet "
+    << "translate DWARF expressions to Breakpad postfix expressions (shown "
+    << n_complaints << " times)";
 }
 
 } // namespace google_breakpad

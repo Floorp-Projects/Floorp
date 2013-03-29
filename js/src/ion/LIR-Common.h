@@ -1228,6 +1228,47 @@ class LTestVAndBranch : public LInstructionHelper<0, BOX_PIECES, 3>
     }
 };
 
+// Dispatches control flow to a successor based on incoming JSFunction*.
+// Used to implemenent polymorphic inlining.
+class LFunctionDispatch : public LInstructionHelper<0, 1, 0>
+{
+    // Dispatch is performed based on a function -> block map
+    // stored in the MIR.
+
+  public:
+    LIR_HEADER(FunctionDispatch);
+
+    LFunctionDispatch(const LAllocation &in) {
+        setOperand(0, in);
+    }
+
+    MFunctionDispatch *mir() {
+        return mir_->toFunctionDispatch();
+    }
+};
+
+class LTypeObjectDispatch : public LInstructionHelper<0, 1, 1>
+{
+    // Dispatch is performed based on a TypeObject -> block
+    // map inferred by the MIR.
+
+  public:
+    LIR_HEADER(TypeObjectDispatch);
+
+    LTypeObjectDispatch(const LAllocation &in, const LDefinition &temp) {
+        setOperand(0, in);
+        setTemp(0, temp);
+    }
+
+    const LDefinition *temp() {
+        return getTemp(0);
+    }
+
+    MTypeObjectDispatch *mir() {
+        return mir_->toTypeObjectDispatch();
+    }
+};
+
 class LPolyInlineDispatch : public LInstructionHelper<0, 1, 1>
 {
   // Accesses function/block table from MIR instruction.

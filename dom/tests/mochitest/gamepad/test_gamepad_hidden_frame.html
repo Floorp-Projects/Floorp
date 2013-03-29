@@ -21,7 +21,7 @@ function pressButton() {
 }
 
 function setFrameVisible(f, visible) {
-  var Ci = SpecialPowers.wrap(Components.interfaces);
+  var Ci = SpecialPowers.Ci;
   var docshell = SpecialPowers.wrap(f.contentWindow).QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation).QueryInterface(Ci.nsIDocShell);
   docshell.isActive = visible;
 }

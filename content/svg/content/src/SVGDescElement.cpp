@@ -18,19 +18,11 @@ SVGDescElement::WrapNode(JSContext* aCx, JSObject* aScope)
 }
 
 //----------------------------------------------------------------------
-// nsISupports methods
-
-NS_IMPL_ISUPPORTS_INHERITED3(SVGDescElement, SVGDescElementBase,
-                             nsIDOMNode, nsIDOMElement,
-                             nsIDOMSVGElement)
-
-//----------------------------------------------------------------------
 // Implementation
 
 SVGDescElement::SVGDescElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : SVGDescElementBase(aNodeInfo)
 {
-  SetIsDOMBinding();
 }
 
 //----------------------------------------------------------------------

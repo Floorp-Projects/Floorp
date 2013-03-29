@@ -18,20 +18,11 @@ SVGMetadataElement::WrapNode(JSContext *aCx, JSObject *aScope)
 }
 
 //----------------------------------------------------------------------
-// nsISupports methods
-
-NS_IMPL_ISUPPORTS_INHERITED3(SVGMetadataElement, SVGMetadataElementBase,
-                             nsIDOMNode, nsIDOMElement,
-                             nsIDOMSVGElement)
-
-
-//----------------------------------------------------------------------
 // Implementation
 
 SVGMetadataElement::SVGMetadataElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : SVGMetadataElementBase(aNodeInfo)
 {
-  SetIsDOMBinding();
 }
 
 

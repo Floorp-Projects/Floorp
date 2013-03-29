@@ -5,11 +5,10 @@
 
 "use strict";
 SimpleTest.waitForExplicitFinish();
+browserElementTestHelpers.setEnabledPref(true);
+browserElementTestHelpers.addPermission();
 
 function runTest() {
-  browserElementTestHelpers.setEnabledPref(true);
-  browserElementTestHelpers.addPermission();
-
   var iframeJS = document.createElement('iframe');
   SpecialPowers.wrap(iframeJS).mozbrowser = true;
 
@@ -50,4 +49,4 @@ function runTest() {
   document.body.appendChild(iframe);
 }
 
-runTest();
+addEventListener('testready', runTest);

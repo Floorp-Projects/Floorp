@@ -7,6 +7,7 @@
 
 #include "nsIDOMSimpleGestureEvent.h"
 #include "nsDOMMouseEvent.h"
+#include "mozilla/dom/SimpleGestureEventBinding.h"
 
 class nsPresContext;
 
@@ -24,6 +25,54 @@ public:
 
   // Forward to base class
   NS_FORWARD_TO_NSDOMMOUSEEVENT
+
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope)
+  {
+    return mozilla::dom::SimpleGestureEventBinding::Wrap(aCx, aScope, this);
+  }
+
+  uint32_t Direction()
+  {
+    return static_cast<nsSimpleGestureEvent*>(mEvent)->direction;
+  }
+
+  double Delta()
+  {
+    return static_cast<nsSimpleGestureEvent*>(mEvent)->delta;
+  }
+
+  uint32_t ClickCount()
+  {
+    return static_cast<nsSimpleGestureEvent*>(mEvent)->clickCount;
+  }
+
+  void InitSimpleGestureEvent(const nsAString& aType,
+                              bool aCanBubble,
+                              bool aCancelable,
+                              nsIDOMWindow* aView,
+                              int32_t aDetail,
+                              int32_t aScreenX,
+                              int32_t aScreenY,
+                              int32_t aClientX,
+                              int32_t aClientY,
+                              bool aCtrlKey,
+                              bool aAltKey,
+                              bool aShiftKey,
+                              bool aMetaKey,
+                              uint16_t aButton,
+                              mozilla::dom::EventTarget* aRelatedTarget,
+                              uint32_t aDirection,
+                              double aDelta,
+                              uint32_t aClickCount,
+                              mozilla::ErrorResult& aRv)
+  {
+    aRv = InitSimpleGestureEvent(aType, aCanBubble, aCancelable,
+                                 aView, aDetail, aScreenX, aScreenY,
+                                 aClientX, aClientY, aCtrlKey, aAltKey,
+                                 aShiftKey, aMetaKey, aButton,
+                                 aRelatedTarget, aDirection,
+                                 aDelta, aClickCount);
+  }
 };
 
 #endif

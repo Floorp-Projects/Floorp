@@ -21,19 +21,11 @@ nsSVGElement::NumberInfo SVGStopElement::sNumberInfo =
 { &nsGkAtoms::offset, 0, true };
 
 //----------------------------------------------------------------------
-// nsISupports methods
-
-NS_IMPL_ISUPPORTS_INHERITED3(SVGStopElement, SVGStopElementBase,
-                             nsIDOMNode, nsIDOMElement,
-                             nsIDOMSVGElement)
-
-//----------------------------------------------------------------------
 // Implementation
 
 SVGStopElement::SVGStopElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : SVGStopElementBase(aNodeInfo)
 {
-  SetIsDOMBinding();
 }
 
 //----------------------------------------------------------------------

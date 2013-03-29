@@ -16,8 +16,7 @@ namespace dom {
 
 typedef SVGTextPositioningElement SVGTextElementBase;
 
-class SVGTextElement MOZ_FINAL : public SVGTextElementBase,
-                                 public nsIDOMSVGElement
+class SVGTextElement MOZ_FINAL : public SVGTextElementBase
 {
 protected:
   SVGTextElement(already_AddRefed<nsINodeInfo> aNodeInfo);
@@ -27,22 +26,10 @@ protected:
                                           already_AddRefed<nsINodeInfo> aNodeInfo));
 
 public:
-  // interfaces:
-
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // xxx If xpcom allowed virtual inheritance we wouldn't need to
-  // forward here :-(
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-  NS_FORWARD_NSIDOMSVGELEMENT(SVGTextElementBase::)
-
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  virtual nsIDOMNode* AsDOMNode() { return this; }
 };
 
 } // namespace dom

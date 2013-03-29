@@ -52,6 +52,13 @@ GetSCTPLog()
 }
 #endif
 
+// Let us turn on and off important assertions in non-debug builds
+#ifdef DEBUG
+#define ASSERT_WEBRTC(x) MOZ_ASSERT((x))
+#elif defined(MOZ_WEBRTC_ASSERT_ALWAYS)
+#define ASSERT_WEBRTC(x) do { if (!(x)) { MOZ_CRASH(); } } while (0)
+#endif
+
 static bool sctp_initialized;
 
 namespace mozilla {
@@ -186,14 +193,14 @@ DataChannelConnection::~DataChannelConnection()
 {
   LOG(("Deleting DataChannelConnection %p", (void *) this));
   // This may die on the MainThread, or on the STS thread
-  MOZ_ASSERT(mState == CLOSED);
+  ASSERT_WEBRTC(mState == CLOSED);
   MOZ_ASSERT(!mMasterSocket);
   MOZ_ASSERT(mPending.GetSize() == 0);
 
   // Already disconnected from sigslot/mTransportFlow
   // TransportFlows must be released from the STS thread
   if (mTransportFlow && !IsSTSThread()) {
-    MOZ_ASSERT(mSTS);
+    ASSERT_WEBRTC(mSTS);
     RUN_ON_THREAD(mSTS, WrapRunnableNM(ReleaseTransportFlow, mTransportFlow.forget()),
                   NS_DISPATCH_NORMAL);
   }
@@ -207,7 +214,7 @@ DataChannelConnection::Destroy()
   // create a dependant Internal object that would remain around
   // until the network shut down the association or timed out.
   LOG(("Destroying DataChannelConnection %p", (void *) this));
-  MOZ_ASSERT(NS_IsMainThread());
+  ASSERT_WEBRTC(NS_IsMainThread());
   CloseAll();
 
   if (mSocket && mSocket != mMasterSocket)
@@ -225,7 +232,7 @@ DataChannelConnection::Destroy()
 
   if (mTransportFlow) {
     MOZ_ASSERT(mSTS);
-    MOZ_ASSERT(NS_IsMainThread());
+    ASSERT_WEBRTC(NS_IsMainThread());
     RUN_ON_THREAD(mSTS, WrapRunnable(nsRefPtr<DataChannelConnection>(this),
                                      &DataChannelConnection::disconnect_all),
                   NS_DISPATCH_NORMAL);
@@ -256,7 +263,7 @@ DataChannelConnection::Init(unsigned short aPort, uint16_t aNumStreams, bool aUs
                             SCTP_STREAM_RESET_EVENT,
                             SCTP_STREAM_CHANGE_EVENT};
   {
-    MOZ_ASSERT(NS_IsMainThread());
+    ASSERT_WEBRTC(NS_IsMainThread());
 
     // MutexAutoLock lock(mLock); Not needed since we're on mainthread always
     if (!sctp_initialized) {
@@ -421,7 +428,7 @@ DataChannelConnection::StartDefer()
     return;
   }
 
-  MOZ_ASSERT(NS_IsMainThread());
+  ASSERT_WEBRTC(NS_IsMainThread());
   if (!mDeferredTimer) {
     mDeferredTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
     MOZ_ASSERT(mDeferredTimer);
@@ -441,7 +448,7 @@ DataChannelConnection::StartDefer()
 NS_IMETHODIMP
 DataChannelConnection::Notify(nsITimer *timer)
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  ASSERT_WEBRTC(NS_IsMainThread());
   LOG(("%s: %p [%p] (%dms), sending deferred messages", __FUNCTION__, this, timer, mDeferTimeout));
 
   if (timer == mDeferredTimer) {
@@ -961,6 +968,7 @@ DataChannelConnection::SendDeferredMessages()
           // delete the channel.
           mStreamsIn[channel->mStreamIn]   = nullptr;
           mStreamsOut[channel->mStreamOut] = nullptr;
+          channel->mState = CLOSED;
         }
       }
     }
@@ -976,7 +984,8 @@ DataChannelConnection::SendDeferredMessages()
           still_blocked = true;
         } else {
           // Close the channel, inform the user
-          Close(channel);
+          CloseInt(channel);
+          // XXX send error via DataChannelOnMessageAvailable (bug 843625)
         }
       }
     }
@@ -1099,10 +1108,20 @@ DataChannelConnection::OpenResponseFinish(already_AddRefed<DataChannel> aChannel
 
   if (streamOut == INVALID_STREAM) {
     if (!RequestMoreStreamsOut()) {
-      /* XXX: Signal error to the other end. */
+      channel->mState = CLOSED;
+      if (channel->mFlags & DATA_CHANNEL_FLAGS_FINISH_RSP) {
+        // We already returned the channel to the app.
+        NS_ERROR("Failed to request more streams");
+        NS_DispatchToMainThread(new DataChannelOnMessageAvailable(
+                                  DataChannelOnMessageAvailable::ON_CHANNEL_CLOSED, this,
+                                  channel));
+      }
+      // If we weren't deferred, we'll be destroying the channel, but it
+      // never really got set up
+      // Alternative would be to RUN_ON_THREAD(channel.forget(),::Destroy,...) and
+      // Dispatch it to ourselves
       mStreamsIn[channel->mStreamIn] = nullptr;
-      // we can do this with the lock held because mStreamOut is INVALID_STREAM,
-      // so there's no outbound channel to reset
+      /* XXX: Signal error to the other end (and maybe fire onError: bug 843625) */
       return;
     }
     LOG(("Queuing channel %d to finish response", channel->mStreamIn));
@@ -1127,13 +1146,21 @@ DataChannelConnection::OpenResponseFinish(already_AddRefed<DataChannel> aChannel
         channel->mFlags |= DATA_CHANNEL_FLAGS_SEND_RSP;
         StartDefer();
       } else {
+        if (channel->mFlags & DATA_CHANNEL_FLAGS_FINISH_RSP) {
+          // We already returned the channel to the app.
+          NS_ERROR("Failed to send open response");
+          NS_DispatchToMainThread(new DataChannelOnMessageAvailable(
+                                    DataChannelOnMessageAvailable::ON_CHANNEL_CLOSED, this,
+                                    channel));
+        }
+
         /* XXX: Signal error to the other end. */
         mStreamsIn[channel->mStreamIn] = nullptr;
         mStreamsOut[streamOut] = nullptr;
         channel->mStreamOut = INVALID_STREAM;
-        // we can do this with the lock held because mStreamOut is INVALID_STREAM,
-        // so there's no outbound channel to reset (we failed to send on it)
-        return; // paranoia against future changes since we unlocked
+        // we'll be destroying the channel if it wasn't already returned
+        channel->mState = CLOSED;
+        return;
       }
     }
   }
@@ -1608,9 +1635,9 @@ DataChannelConnection::HandleStreamResetEvent(const struct sctp_stream_reset_eve
 
           LOG(("Incoming: Channel %d outgoing/%d incoming closed, state %d",
                channel->mStreamOut, channel->mStreamIn, channel->mState));
-          MOZ_ASSERT(channel->mState == DataChannel::OPEN ||
-                     channel->mState == DataChannel::CLOSING ||
-                     channel->mState == DataChannel::WAITING_TO_OPEN);
+          ASSERT_WEBRTC(channel->mState == DataChannel::OPEN ||
+                        channel->mState == DataChannel::CLOSING ||
+                        channel->mState == DataChannel::WAITING_TO_OPEN);
           if (channel->mState == DataChannel::OPEN ||
               channel->mState == DataChannel::WAITING_TO_OPEN) {
             ResetOutgoingStream(channel->mStreamOut);
@@ -1637,7 +1664,7 @@ DataChannelConnection::HandleStreamResetEvent(const struct sctp_stream_reset_eve
           LOG(("Outgoing: Connection %p channel %p  streams: %d outgoing/%d incoming closed",
                (void *) this, (void *) channel.get(), channel->mStreamOut, channel->mStreamIn));
 
-          MOZ_ASSERT(channel->mState == CLOSING);
+          ASSERT_WEBRTC(channel->mState == CLOSING);
           if (channel->mState == CLOSING) {
             mStreamsOut[channel->mStreamOut] = nullptr;
             if (channel->mStreamIn != INVALID_STREAM)
@@ -1741,8 +1768,10 @@ DataChannelConnection::HandleStreamChangeEvent(const struct sctp_stream_change_e
           mStreamsIn[channel->mStreamIn] = nullptr;
         }
         channel->mState = CLOSED;
-        // inform user!
-        // XXX delete channel;
+        NS_DispatchToMainThread(new DataChannelOnMessageAvailable(
+                                  DataChannelOnMessageAvailable::ON_CHANNEL_CLOSED, this,
+                                  channel));
+        // maybe fire onError (bug 843625)
       } else {
         streamOut = FindFreeStreamOut();
         if (streamOut != INVALID_STREAM) {
@@ -1822,7 +1851,7 @@ int
 DataChannelConnection::ReceiveCallback(struct socket* sock, void *data, size_t datalen,
                                        struct sctp_rcvinfo rcv, int32_t flags)
 {
-  MOZ_ASSERT(!NS_IsMainThread());
+  ASSERT_WEBRTC(!NS_IsMainThread());
 
   if (!data) {
     usrsctp_close(sock); // SCTP has finished shutting down
@@ -1888,14 +1917,18 @@ DataChannelConnection::OpenFinish(already_AddRefed<DataChannel> aChannel)
 
   if (streamOut == INVALID_STREAM) {
     if (!RequestMoreStreamsOut()) {
+      channel->mState = CLOSED;
       if (channel->mFlags & DATA_CHANNEL_FLAGS_FINISH_OPEN) {
-        // We already returned the channel to the app.  Mark it closed
-        channel->mState = CLOSED;
+        // We already returned the channel to the app.
         NS_ERROR("Failed to request more streams");
+        NS_DispatchToMainThread(new DataChannelOnMessageAvailable(
+                                  DataChannelOnMessageAvailable::ON_CHANNEL_CLOSED, this,
+                                  channel));
         return channel.forget();
       }
-      // we can do this with the lock held because mStreamOut is INVALID_STREAM,
-      // so there's no outbound channel to reset
+      // we'll be destroying the channel, but it never really got set up
+      // Alternative would be to RUN_ON_THREAD(channel.forget(),::Destroy,...) and
+      // Dispatch it to ourselves
       return nullptr;
     }
     LOG(("Queuing channel %p to finish open", channel.get()));
@@ -1916,12 +1949,19 @@ DataChannelConnection::OpenFinish(already_AddRefed<DataChannel> aChannel)
       channel->mFlags |= DATA_CHANNEL_FLAGS_SEND_REQ;
       StartDefer();
     } else {
-      // XXX FIX! can't do this if we previously returned it!  Need to internally mark it dead
-      // and file onerror
+      if (channel->mFlags & DATA_CHANNEL_FLAGS_FINISH_OPEN) {
+        // We already returned the channel to the app.
+        NS_ERROR("Failed to send open request");
+        NS_DispatchToMainThread(new DataChannelOnMessageAvailable(
+                                  DataChannelOnMessageAvailable::ON_CHANNEL_CLOSED, this,
+                                  channel));
+      }
+      // If we haven't returned the channel yet, it will get destroyed when we exit
+      // this function.
       mStreamsOut[streamOut] = nullptr;
       channel->mStreamOut = INVALID_STREAM;
-      // we can do this with the lock held because mStreamOut is INVALID_STREAM,
-      // so there's no outbound channel to reset (we didn't sent anything)
+      // we'll be destroying the channel
+      channel->mState = CLOSED;
       return nullptr;
     }
   }
@@ -2085,7 +2125,7 @@ int32_t
 DataChannelConnection::SendMsgCommon(uint16_t stream, const nsACString &aMsg,
                                      bool isBinary)
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  ASSERT_WEBRTC(NS_IsMainThread());
   // We really could allow this from other threads, so long as we deal with
   // asynchronosity issues with channels closing, in particular access to
   // mStreamsOut, and issues with the association closing (access to mSocket).
@@ -2094,10 +2134,7 @@ DataChannelConnection::SendMsgCommon(uint16_t stream, const nsACString &aMsg,
   uint32_t len     = aMsg.Length();
   DataChannel *channel;
 
-  if (isBinary)
-    LOG(("Sending to stream %u: %u bytes", stream, len));
-  else
-    LOG(("Sending to stream %u: %s", stream, data));
+  LOG(("Sending %sto stream %u: %u bytes", isBinary ? "binary " : "", stream, len));
   // XXX if we want more efficiency, translate flags once at open time
   channel = mStreamsOut[stream];
   NS_ENSURE_TRUE(channel, 0);
@@ -2110,28 +2147,38 @@ DataChannelConnection::SendMsgCommon(uint16_t stream, const nsACString &aMsg,
 void
 DataChannelConnection::Close(DataChannel *aChannel)
 {
+  MutexAutoLock lock(mLock);
+  CloseInt(aChannel);
+}
+
+// So we can call Close() with the lock already held
+// Called from someone who holds a ref via ::Close(), or from ~DataChannel
+void
+DataChannelConnection::CloseInt(DataChannel *aChannel)
+{
   MOZ_ASSERT(aChannel);
   nsRefPtr<DataChannel> channel(aChannel); // make sure it doesn't go away on us
 
-  MutexAutoLock lock(mLock);
+  mLock.AssertCurrentThreadOwns();
   LOG(("Connection %p/Channel %p: Closing stream %d",
-       channel->mConnection.get(), channel.get(), channel->mStreamOut));
-  if (channel->mState == CLOSED || channel->mState == CLOSING) {
-    LOG(("Channel already closing/closed (%d)", channel->mState));
+       aChannel->mConnection.get(), aChannel, aChannel->mStreamOut));
+  // re-test since it may have closed before the lock was grabbed
+  if (aChannel->mState == CLOSED || aChannel->mState == CLOSING) {
+    LOG(("Channel already closing/closed (%d)", aChannel->mState));
     return;
   }
-  channel->mBufferedData.Clear();
-  if (channel->mStreamOut != INVALID_STREAM) {
-    ResetOutgoingStream(channel->mStreamOut);
+  aChannel->mBufferedData.Clear();
+  if (aChannel->mStreamOut != INVALID_STREAM) {
+    ResetOutgoingStream(aChannel->mStreamOut);
     if (mState == CLOSED) { // called from CloseAll()
       // Let resets accumulate then send all at once in CloseAll()
       // we're not going to hang around waiting
-      mStreamsOut[channel->mStreamOut] = nullptr;
+      mStreamsOut[aChannel->mStreamOut] = nullptr;
     } else {
       SendOutgoingStreamReset();
     }
   }
-  channel->mState = CLOSING;
+  aChannel->mState = CLOSING;
   if (mState == CLOSED) {
     // we're not going to hang around waiting
     if (channel->mStreamOut != INVALID_STREAM) {
@@ -2178,7 +2225,10 @@ void DataChannelConnection::CloseAll()
 
 DataChannel::~DataChannel()
 {
-  Close();
+  // NS_ASSERTION since this is more "I think I caught all the cases that
+  // can cause this" than a true kill-the-program assertion.  If this is
+  // wrong, nothing bad happens.  A worst it's a leak.
+  NS_ASSERTION(mState == CLOSED || mState == CLOSING, "unexpected state in ~DataChannel");
 }
 
 void

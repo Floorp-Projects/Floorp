@@ -6,7 +6,6 @@
 #ifndef mozilla_dom_SVGPatternElement_h
 #define mozilla_dom_SVGPatternElement_h
 
-#include "nsIDOMSVGUnitTypes.h"
 #include "nsSVGEnum.h"
 #include "nsSVGLength2.h"
 #include "nsSVGString.h"
@@ -27,9 +26,7 @@ namespace dom {
 
 typedef nsSVGElement SVGPatternElementBase;
 
-class SVGPatternElement MOZ_FINAL : public SVGPatternElementBase,
-                                    public nsIDOMSVGElement,
-                                    public nsIDOMSVGUnitTypes
+class SVGPatternElement MOZ_FINAL : public SVGPatternElementBase
 {
   friend class ::nsSVGPatternFrame;
 
@@ -42,19 +39,10 @@ protected:
 public:
   typedef mozilla::SVGAnimatedPreserveAspectRatio SVGAnimatedPreserveAspectRatio;
 
-  // interfaces:
-  NS_DECL_ISUPPORTS_INHERITED
-
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGElement::)
-
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* name) const;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  virtual nsIDOMNode* AsDOMNode() { return this; }
 
   // nsSVGSVGElement methods:
   virtual bool HasValidDimensions() const;

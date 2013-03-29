@@ -504,6 +504,7 @@ class PerThreadData : public js::PerThreadDataFriendFields
     };
 #else
     class IonStackLimitLock {
+      public:
         IonStackLimitLock(PerThreadData &data) {}
     };
 # endif

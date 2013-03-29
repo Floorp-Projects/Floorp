@@ -134,10 +134,10 @@ MacroAssembler::PushRegsInMask(RegisterSet set)
     int32_t diffF = set.fpus().size() * sizeof(double);
     int32_t diffG = set.gprs().size() * STACK_SLOT_SIZE;
 
-    reserveStack(diffG);
 #ifdef JS_CPU_ARM
     if (set.gprs().size() > 1) {
-        startDataTransferM(IsStore, StackPointer, IA, NoWriteBack);
+        adjustFrame(diffG);
+        startDataTransferM(IsStore, StackPointer, DB, WriteBack);
         for (GeneralRegisterIterator iter(set.gprs()); iter.more(); iter++) {
             diffG -= STACK_SLOT_SIZE;
             transferReg(*iter);
@@ -146,6 +146,7 @@ MacroAssembler::PushRegsInMask(RegisterSet set)
     } else
 #endif
     {
+        reserveStack(diffG);
         for (GeneralRegisterIterator iter(set.gprs()); iter.more(); iter++) {
             diffG -= STACK_SLOT_SIZE;
             storePtr(*iter, Address(StackPointer, diffG));
@@ -194,12 +195,13 @@ MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore)
 
 #ifdef JS_CPU_ARM
     if (set.gprs().size() > 1 && ignore.empty(false)) {
-        startDataTransferM(IsLoad, StackPointer, IA, NoWriteBack);
+        startDataTransferM(IsLoad, StackPointer, IA, WriteBack);
         for (GeneralRegisterIterator iter(set.gprs()); iter.more(); iter++) {
             diffG -= STACK_SLOT_SIZE;
             transferReg(*iter);
         }
         finishDataTransfer();
+        adjustFrame(-reservedG);
     } else
 #endif
     {
@@ -208,8 +210,8 @@ MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore)
             if (!ignore.has(*iter))
                 loadPtr(Address(StackPointer, diffG), *iter);
         }
+        freeStack(reservedG);
     }
-    freeStack(reservedG);
     JS_ASSERT(diffG == 0);
 }
 
@@ -326,29 +328,53 @@ MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
 {
     JS_ASSERT(input != ScratchFloatReg);
 #ifdef JS_CPU_ARM
-    Label notSplit;
     ma_vimm(0.5, ScratchFloatReg);
-    ma_vadd(input, ScratchFloatReg, ScratchFloatReg);
-    // Convert the double into an unsigned fixed point value with 24 bits of
-    // precision. The resulting number will look like 0xII.DDDDDD
-    as_vcvtFixed(ScratchFloatReg, false, 24, true);
-    // Move the fixed point value into an integer register
-    as_vxfer(output, InvalidReg, ScratchFloatReg, FloatToCore);
-    // See if this value *might* have been an exact integer after adding 0.5
-    // This tests the 1/2 through 1/16,777,216th places, but 0.5 needs to be tested out to
-    // the 1/140,737,488,355,328th place.
-    ma_tst(output, Imm32(0x00ffffff));
-    // convert to a uint8 by shifting out all of the fraction bits
-    ma_lsr(Imm32(24), output, output);
-    // If any of the bottom 24 bits were non-zero, then we're good, since this number
-    // can't be exactly XX.0
-    ma_b(&notSplit, NonZero);
-    as_vxfer(ScratchRegister, InvalidReg, input, FloatToCore);
-    ma_cmp(ScratchRegister, Imm32(0));
-    // If the lower 32 bits of the double were 0, then this was an exact number,
-    // and it should be even.
-    ma_bic(Imm32(1), output, NoSetCond, Zero);
-    bind(&notSplit);
+    if (hasVFPv3()) {
+        Label notSplit;
+        ma_vadd(input, ScratchFloatReg, ScratchFloatReg);
+        // Convert the double into an unsigned fixed point value with 24 bits of
+        // precision. The resulting number will look like 0xII.DDDDDD
+        as_vcvtFixed(ScratchFloatReg, false, 24, true);
+        // Move the fixed point value into an integer register
+        as_vxfer(output, InvalidReg, ScratchFloatReg, FloatToCore);
+        // see if this value *might* have been an exact integer after adding 0.5
+        // This tests the 1/2 through 1/16,777,216th places, but 0.5 needs to be tested out to
+        // the 1/140,737,488,355,328th place.
+        ma_tst(output, Imm32(0x00ffffff));
+        // convert to a uint8 by shifting out all of the fraction bits
+        ma_lsr(Imm32(24), output, output);
+        // If any of the bottom 24 bits were non-zero, then we're good, since this number
+        // can't be exactly XX.0
+        ma_b(&notSplit, NonZero);
+        as_vxfer(ScratchRegister, InvalidReg, input, FloatToCore);
+        ma_cmp(ScratchRegister, Imm32(0));
+        // If the lower 32 bits of the double were 0, then this was an exact number,
+        // and it should be even.
+        ma_bic(Imm32(1), output, NoSetCond, Zero);
+        bind(&notSplit);
+
+    } else {
+        Label outOfRange;
+        ma_vcmpz(input);
+        // do the add, in place so we can reference it later
+        ma_vadd(input, ScratchFloatReg, input);
+        // do the conversion to an integer.
+        as_vcvt(VFPRegister(ScratchFloatReg).uintOverlay(), VFPRegister(input));
+        // copy the converted value out
+        as_vxfer(output, InvalidReg, ScratchFloatReg, FloatToCore);
+        as_vmrs(pc);
+        ma_b(&outOfRange, Overflow);
+        ma_cmp(output, Imm32(0xff));
+        ma_mov(Imm32(0xff), output, NoSetCond, Above);
+        ma_b(&outOfRange, Above);
+        // convert it back to see if we got the same value back
+        as_vcvt(ScratchFloatReg, VFPRegister(ScratchFloatReg).uintOverlay());
+        // do the check
+        as_vcmp(ScratchFloatReg, input);
+        as_vmrs(pc);
+        ma_bic(Imm32(1), output, NoSetCond, Zero);
+        bind(&outOfRange);
+    }
 #else
 
     Label positive, done;

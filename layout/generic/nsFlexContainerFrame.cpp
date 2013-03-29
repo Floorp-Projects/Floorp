@@ -309,6 +309,8 @@ public:
 
   // Getters for border/padding
   // ==========================
+  const nsMargin& GetBorderPadding() const { return mBorderPadding; }
+
   // Returns the border+padding component for a given mozilla::css::Side
   nscoord GetBorderPaddingComponentForSide(Side aSide) const
   { return MarginComponentForSide(mBorderPadding, aSide); }
@@ -604,17 +606,14 @@ nsFlexContainerFrame::AppendFlexItemForChild(
   // If we're vertical and our main size ended up being unconstrained
   // (e.g. because we had height:auto), we need to instead use our
   // "max-content" height, which is what we get from reflowing into our
-  // available width.  This is the same as our "min-content" height --
-  // so if we have "min-height:auto", we need to use this value as our
-  // min-height.
+  // available width.
   bool needToMeasureMaxContentHeight = false;
   if (!IsAxisHorizontal(aAxisTracker.GetMainAxis())) {
-    bool isMainSizeAuto = (NS_UNCONSTRAINEDSIZE == flexBaseSize);
-    bool isMainMinSizeAuto =
-      (eStyleUnit_Auto ==
-       aChildFrame->StylePosition()->mMinHeight.GetUnit());
-
-    needToMeasureMaxContentHeight = isMainSizeAuto || isMainMinSizeAuto;
+    // NOTE: If & when we handle "min-height: min-content" for flex items,
+    // this is probably the spot where we'll want to resolve it to the
+    // actual intrinsic height given our computed width. It'll be the same
+    // auto-height that we determine here.
+    needToMeasureMaxContentHeight = (NS_AUTOHEIGHT == flexBaseSize);
 
     if (needToMeasureMaxContentHeight) {
       // Give the item a special reflow with "mIsFlexContainerMeasuringHeight"
@@ -629,9 +628,8 @@ nsFlexContainerFrame::AppendFlexItemForChild(
       childRSForMeasuringHeight.mFlags.mIsFlexContainerMeasuringHeight = true;
       childRSForMeasuringHeight.Init(aPresContext);
 
-      // If this item is flexible (vertically), or if we're measuring the
-      // 'auto' min-height and our main-size is something else, then we assume
-      // that the computed-height we're reflowing with now could be different
+      // If this item is flexible (vertically), then we assume that the
+      // computed-height we're reflowing with now could be different
       // from the one we'll use for this flex item's "actual" reflow later on.
       // In that case, we need to be sure the flex item treats this as a
       // vertical resize, even though none of its ancestors are necessarily
@@ -639,8 +637,7 @@ nsFlexContainerFrame::AppendFlexItemForChild(
       // (Note: We don't have to do this for width, because InitResizeFlags
       // will always turn on mHResize on when it sees that the computed width
       // is different from current width, and that's all we need.)
-      if (flexGrow != 0.0f || flexShrink != 0.0f ||  // Are we flexible?
-          !isMainSizeAuto) {  // Are we *only* measuring this for min-height?
+      if (flexGrow != 0.0f || flexShrink != 0.0f) {  // Are we flexible?
         childRSForMeasuringHeight.mFlags.mVResize = true;
       }
 
@@ -667,13 +664,7 @@ nsFlexContainerFrame::AppendFlexItemForChild(
         childRS.mComputedBorderPadding.TopBottom();
       childDesiredHeight = std::max(0, childDesiredHeight);
 
-      if (isMainSizeAuto) {
-        flexBaseSize = childDesiredHeight;
-      }
-      if (isMainMinSizeAuto) {
-        mainMinSize = childDesiredHeight;
-        mainMaxSize = std::max(mainMaxSize, mainMinSize);
-      }
+      flexBaseSize = childDesiredHeight;
     }
   }
 
@@ -2001,15 +1992,27 @@ nsFlexContainerFrame::SizeItemInCrossAxis(
   // Save the sizing info that we learned from this reflow
   // -----------------------------------------------------
 
-  // Tentatively accept the child's desired size, minus border/padding, as its
-  // cross-size:
-  MOZ_ASSERT(childDesiredSize.height >=
-             aItem.GetBorderPaddingSizeInAxis(aAxisTracker.GetCrossAxis()),
-             "Child should ask for at least enough space for border/padding");
-  nscoord crossSize =
-    aAxisTracker.GetCrossComponent(childDesiredSize) -
-    aItem.GetBorderPaddingSizeInAxis(aAxisTracker.GetCrossAxis());
-  aItem.SetCrossSize(crossSize);
+  // Tentatively store the child's desired content-box cross-size.
+  // Note that childDesiredSize is the border-box size, so we have to
+  // subtract border & padding to get the content-box size.
+  // (Note that at this point in the code, we know our cross axis is vertical,
+  // so we don't bother with making aAxisTracker pick the cross-axis component
+  // for us.)
+  nscoord crossAxisBorderPadding = aItem.GetBorderPadding().TopBottom();
+  if (childDesiredSize.height < crossAxisBorderPadding) {
+    // Child's requested size isn't large enough for its border/padding!
+    // This is OK for the trivial nsFrame::Reflow() impl, but other frame
+    // classes should know better. So, if we get here, the child had better be
+    // an instance of nsFrame (i.e. it should return null from GetType()).
+    // XXXdholbert Once we've fixed bug 765861, we should upgrade this to an
+    // assertion that trivially passes if bug 765861's flag has been flipped.
+    NS_WARN_IF_FALSE(!aItem.Frame()->GetType(),
+                     "Child should at least request space for border/padding");
+    aItem.SetCrossSize(0);
+  } else {
+    // (normal case)
+    aItem.SetCrossSize(childDesiredSize.height - crossAxisBorderPadding);
+  }
 
   // If we need to do baseline-alignment, store the child's ascent.
   if (aItem.GetAlignSelf() == NS_STYLE_ALIGN_ITEMS_BASELINE) {

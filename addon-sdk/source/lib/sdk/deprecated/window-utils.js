@@ -15,7 +15,7 @@ const { getInnerId, getOuterId, windows, isDocumentLoaded, isBrowser,
         getMostRecentBrowserWindow, getMostRecentWindow } = require('../window/utils');
 const errors = require('../deprecated/errors');
 const { deprecateFunction } = require('../util/deprecate');
-const { ignoreWindow } = require('sdk/private-browsing/utils');
+const { ignoreWindow, isGlobalPBSupported } = require('sdk/private-browsing/utils');
 const { isPrivateBrowsingSupported } = require('../self');
 
 const windowWatcher = Cc['@mozilla.org/embedcomp/window-watcher;1'].
@@ -24,7 +24,7 @@ const appShellService = Cc['@mozilla.org/appshell/appShellService;1'].
                         getService(Ci.nsIAppShellService);
 
 // Bug 834961: ignore private windows when they are not supported
-function getWindows() windows(null, { includePrivate: isPrivateBrowsingSupported });
+function getWindows() windows(null, { includePrivate: isPrivateBrowsingSupported || isGlobalPBSupported });
 
 /**
  * An iterator for XUL windows currently in the application.

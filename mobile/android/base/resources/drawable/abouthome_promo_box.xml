@@ -6,6 +6,8 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item android:state_pressed="true" android:drawable="@drawable/abouthome_promo_box_pressed_bg"/>
+    <!-- TODO: create a new 9-patch for focused state (bug 855013). For now re-use the pressed state image -->
+    <item android:state_focused="true" android:drawable="@drawable/abouthome_promo_box_pressed_bg"/>
     <item android:drawable="@drawable/abouthome_promo_box_bg"/>
 
 </selector>

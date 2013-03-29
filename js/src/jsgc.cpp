@@ -3261,11 +3261,6 @@ JSCompartment::findOutgoingEdges(ComponentFinder<JS::Zone> &finder)
             if (w->isGCMarking())
                 finder.addEdgeTo(w);
         }
-
-#ifdef DEBUG
-        JSObject *wrapper = &e.front().value.toObject();
-        JS_ASSERT_IF(IsFunctionProxy(wrapper), &GetProxyCall(wrapper).toObject() == other);
-#endif
     }
 
     Debugger::findCompartmentEdges(zone(), finder);

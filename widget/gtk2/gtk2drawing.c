@@ -1442,9 +1442,6 @@ moz_gtk_scale_paint(GdkDrawable* drawable, GdkRectangle* rect,
   }
 
   TSOffsetStyleGCs(style, rect->x, rect->y);
-  gtk_style_apply_default_background(style, drawable, TRUE, GTK_STATE_NORMAL,
-                                     cliprect, rect->x, rect->y,
-                                     rect->width, rect->height);
 
   gtk_paint_box(style, drawable, GTK_STATE_ACTIVE, GTK_SHADOW_IN, cliprect,
                 widget, "trough", rect->x + x, rect->y + y,

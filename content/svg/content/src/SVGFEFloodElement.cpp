@@ -23,17 +23,6 @@ nsSVGElement::StringInfo SVGFEFloodElement::sStringInfo[1] =
 };
 
 //----------------------------------------------------------------------
-// nsISupports methods
-
-NS_IMPL_ADDREF_INHERITED(SVGFEFloodElement,SVGFEFloodElementBase)
-NS_IMPL_RELEASE_INHERITED(SVGFEFloodElement,SVGFEFloodElementBase)
-
-NS_INTERFACE_TABLE_HEAD(SVGFEFloodElement)
-  NS_NODE_INTERFACE_TABLE3(SVGFEFloodElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement)
-NS_INTERFACE_MAP_END_INHERITING(SVGFEFloodElementBase)
-
-//----------------------------------------------------------------------
 // nsIDOMNode methods
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEFloodElement)

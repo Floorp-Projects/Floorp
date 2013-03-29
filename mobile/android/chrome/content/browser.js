@@ -1184,7 +1184,7 @@ var BrowserApp = {
 
         let delayLoad = ("delayLoad" in data) ? data.delayLoad : false;
         let params = {
-          selected: !delayLoad,
+          selected: ("selected" in data) ? data.selected : !delayLoad,
           parentId: ("parentId" in data) ? data.parentId : -1,
           flags: flags,
           tabID: data.tabID,
@@ -3802,7 +3802,7 @@ var BrowserEventHandler = {
             // See if its a input element
             if ((element instanceof HTMLInputElement && element.mozIsTextField(false)) ||
                 (element instanceof HTMLTextAreaElement))
-               SelectionHandler.showThumb(element);
+               SelectionHandler.attachCaret(element);
 
             // scrollToFocusedInput does its own checks to find out if an element should be zoomed into
             BrowserApp.scrollToFocusedInput(BrowserApp.selectedBrowser);
