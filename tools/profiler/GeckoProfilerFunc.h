@@ -57,6 +57,10 @@ void mozilla_sampler_lock();
 // Unlock the profiler, leaving it stopped and fires profiler-unlocked.
 void mozilla_sampler_unlock();
 
+// Register/unregister threads with the profiler
+bool mozilla_sampler_register_thread(const char* name);
+void mozilla_sampler_unregister_thread();
+
 /* Returns true if env var SPS_NEW is set to anything, else false. */
 extern bool sps_version2();
 
