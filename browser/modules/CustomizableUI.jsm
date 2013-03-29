@@ -170,7 +170,6 @@ let gFuturePlacements = new Map();
 let gDefaultPlacements = new Map([
   ["nav-bar", [
     "search-container",
-    "webrtc-status-button",
     "bookmarks-menu-button-container",
     "downloads-button",
     "social-toolbar-button",
