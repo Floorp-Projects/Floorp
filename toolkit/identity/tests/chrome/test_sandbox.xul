@@ -33,7 +33,6 @@ SimpleTest.waitForExplicitFinish();
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
-const OSX_10_5 = navigator.oscpu == "Intel Mac OS X 10.5";
 
 const secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(Ci.nsIScriptSecurityManager);
 
@@ -131,20 +130,18 @@ function check_loaded_content(aSandbox, aNothingShouldLoad, aCallback) {
 
     if (aNothingShouldLoad) {
       is(res, "NOTHING", "Check that nothing was loaded on the server");
-    } else if (!OSX_10_5) {
-      let allowedTypes = [ "application/javascript", "text/html", "video/webm",
-                           "audio/ogg", "application/x-test" ];
+    } else {
+      let allowedTypes = [ "application/javascript", "text/html", "application/x-test" ];
       let loadedTypes = res == "NOTHING" ? [] : res.split(",");
 
       for (let loadedType of loadedTypes) {
-        isnot(allowedTypes.indexOf(loadedType), -1, "Check that " + loadedType + " was expected to load");
+        isnot(allowedTypes.indexOf(loadedType), -1, "Check that " + loadedType + " was expected to load"); // TODO
       }
 
-      // TODO: Media should be disabled after bug 759964.
       isnot(loadedTypes.indexOf("application/javascript"), -1, "Check JS was loaded");
       isnot(loadedTypes.indexOf("text/html"), -1, "Check iframe was loaded");
-      //todo_is(loadedTypes.indexOf("video/webm"), -1, "Check webm was not loaded");
-      //todo_is(loadedTypes.indexOf("audio/ogg"), -1, "Check ogg was not loaded");
+      is(loadedTypes.indexOf("video/webm"), -1, "Check webm was not loaded");
+      is(loadedTypes.indexOf("audio/ogg"), -1, "Check ogg was not loaded");
 
       // Check that no plugin tags have a type other than TYPE_NULL (failed load)
       // --
