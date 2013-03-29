@@ -1,0 +1,4 @@
+component {c7ad4f42-faae-4e8b-9879-780a72349945} Push.js
+contract @mozilla.org/Push;1 {c7ad4f42-faae-4e8b-9879-780a72349945}
+category JavaScript-navigator-property push @mozilla.org/Push;1
+
