@@ -145,6 +145,7 @@ var BrowserUI = {
         DialogUI.init();
         FormHelperUI.init();
         FindHelperUI.init();
+        FullScreenVideo.init();
         PdfJs.init();
 #ifdef MOZ_SERVICES_SYNC
         WeaveGlue.init();
