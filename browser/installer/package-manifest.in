@@ -197,6 +197,7 @@
 @BINPATH@/components/dom_indexeddb.xpt
 @BINPATH@/components/dom_offline.xpt
 @BINPATH@/components/dom_json.xpt
+@BINPATH@/components/dom_push.xpt
 #ifdef MOZ_B2G_RIL
 @BINPATH@/components/dom_mms.xpt
 #endif
@@ -504,6 +505,10 @@
 @BINPATH@/components/Webapps.manifest
 @BINPATH@/components/AppsService.js
 @BINPATH@/components/AppsService.manifest
+@BINPATH@/components/Push.js
+@BINPATH@/components/Push.manifest
+@BINPATH@/components/PushService.js
+@BINPATH@/components/PushService.manifest
 @BINPATH@/components/nsDOMIdentity.js
 @BINPATH@/components/nsIDService.js
 @BINPATH@/components/Identity.manifest

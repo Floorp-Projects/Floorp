@@ -1,0 +1,4 @@
+component {0ACE8D15-9B15-41F4-992F-C88820421DBF} PushService.js
+contract @mozilla.org/PushService;1 {0ACE8D15-9B15-41F4-992F-C88820421DBF}
+category app-startup PushService service,@mozilla.org/PushService;1
+
