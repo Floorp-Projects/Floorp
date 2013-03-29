@@ -61,6 +61,7 @@ public class GeckoEvent {
     private static final int COMPOSITOR_PAUSE = 29;
     private static final int COMPOSITOR_RESUME = 30;
     private static final int NATIVE_GESTURE_EVENT = 31;
+    private static final int IME_KEY_EVENT = 32;
 
     /**
      * These DOM_KEY_LOCATION constants mirror the DOM KeyboardEvent's constants.
@@ -478,6 +479,12 @@ public class GeckoEvent {
     public static GeckoEvent createIMEEvent(int action) {
         GeckoEvent event = new GeckoEvent(IME_EVENT);
         event.mAction = action;
+        return event;
+    }
+
+    public static GeckoEvent createIMEKeyEvent(KeyEvent k) {
+        GeckoEvent event = new GeckoEvent(IME_KEY_EVENT);
+        event.initKeyEvent(k, 0);
         return event;
     }
 

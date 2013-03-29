@@ -225,9 +225,7 @@ final class GeckoEditable
                 break;
             case Action.TYPE_REPLACE_TEXT:
                 // try key events first
-                if (sendCharKeyEvents(action)) {
-                    break;
-                }
+                sendCharKeyEvents(action);
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createIMEReplaceEvent(
                         action.mStart, action.mEnd, action.mSequence.toString()));
                 break;
@@ -259,21 +257,19 @@ final class GeckoEditable
             return keyEvents;
         }
 
-        private boolean sendCharKeyEvents(Action action) {
+        private void sendCharKeyEvents(Action action) {
             if (action.mSequence.length() == 0 ||
                 (action.mSequence instanceof Spannable &&
                 ((Spannable)action.mSequence).nextSpanTransition(
                     -1, Integer.MAX_VALUE, null) < Integer.MAX_VALUE)) {
                 // Spans are not preserved when we use key events,
                 // so we need the sequence to not have any spans
-                return false;
+                return;
             }
             KeyEvent [] keyEvents = synthesizeKeyEvents(action.mSequence);
             if (keyEvents == null) {
-                return false;
+                return;
             }
-            GeckoAppShell.sendEventToGecko(
-                    GeckoEvent.createIMESelectEvent(action.mStart, action.mEnd));
             for (KeyEvent event : keyEvents) {
                 if (KeyEvent.isModifierKey(event.getKeyCode())) {
                     continue;
@@ -284,12 +280,8 @@ final class GeckoEditable
                 if (DEBUG) {
                     Log.d(LOGTAG, "sending: " + event);
                 }
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createKeyEvent(event, 0));
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createIMEKeyEvent(event));
             }
-            // use a IME_SYNCHRONIZE event to mimic a IME_REPLACE_TEXT event
-            GeckoAppShell.sendEventToGecko(
-                    GeckoEvent.createIMEEvent(GeckoEvent.IME_SYNCHRONIZE));
-            return true;
         }
 
         void poll() {
