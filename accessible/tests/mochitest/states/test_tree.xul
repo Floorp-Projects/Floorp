@@ -96,10 +96,8 @@
     }
 
     if (MAC && (navigator.userAgent.indexOf("Mac OS X 10.6") != -1)) {
-
       todo(false,
            "Re-enable on Mac OS 10.6 after fixing bug 845095 - intermittent orange");
-      SimpleTest.finish();
     } else {
     SimpleTest.waitForExplicitFinish();
     addA11yLoadEvent(doTest);
