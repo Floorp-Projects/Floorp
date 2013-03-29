@@ -1,6 +1,9 @@
 /*
  * Submitted by David Pacheco (dp.spambait@gmail.com)
  *
+ * Copyright 2006-2007 Niels Provos
+ * Copyright 2007-2012 Niels Provos and Nick Mathewson
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -21,7 +24,7 @@
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 /*
@@ -41,7 +44,7 @@
  *
  * evport_add and evport_del update this data structure. evport_dispatch uses it
  * to determine where to callback when an event occurs (which it gets from
- * port_getn). 
+ * port_getn).
  *
  * Helper functions are used: grow() grows the file descriptor array as
  * necessary when large fd's come in. reassociate() takes care of maintaining
@@ -50,12 +53,9 @@
  * As in the select(2) implementation, signals are handled by evsignal.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+#include "event2/event-config.h"
 
 #include <sys/time.h>
-#include <assert.h>
 #include <sys/queue.h>
 #include <errno.h>
 #include <poll.h>
@@ -66,15 +66,14 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
-#ifdef CHECK_INVARIANTS
-#include <assert.h>
-#endif
 
-#include "event.h"
+#include "event2/thread.h"
+
+#include "evthread-internal.h"
 #include "event-internal.h"
-#include "log.h"
-#include "evsignal.h"
-
+#include "log-internal.h"
+#include "evsignal-internal.h"
+#include "evmap-internal.h"
 
 /*
  * Default value for ed_nevents, which is the maximum file descriptor number we
@@ -97,38 +96,39 @@
  */
 
 struct fd_info {
-	struct event* fdi_revt; /* the event responsible for the "read"  */
-	struct event* fdi_wevt; /* the event responsible for the "write" */
+	short fdi_what;		/* combinations of EV_READ and EV_WRITE */
 };
 
-#define FDI_HAS_READ(fdi)  ((fdi)->fdi_revt != NULL)
-#define FDI_HAS_WRITE(fdi) ((fdi)->fdi_wevt != NULL)
+#define FDI_HAS_READ(fdi)  ((fdi)->fdi_what & EV_READ)
+#define FDI_HAS_WRITE(fdi) ((fdi)->fdi_what & EV_WRITE)
 #define FDI_HAS_EVENTS(fdi) (FDI_HAS_READ(fdi) || FDI_HAS_WRITE(fdi))
 #define FDI_TO_SYSEVENTS(fdi) (FDI_HAS_READ(fdi) ? POLLIN : 0) | \
     (FDI_HAS_WRITE(fdi) ? POLLOUT : 0)
 
 struct evport_data {
-	int 		ed_port;	/* event port for system events  */
-	int		ed_nevents;	/* number of allocated fdi's 	 */
-	struct fd_info *ed_fds;		/* allocated fdi table 		 */
+	int		ed_port;	/* event port for system events  */
+	int		ed_nevents;	/* number of allocated fdi's	 */
+	struct fd_info *ed_fds;		/* allocated fdi table		 */
 	/* fdi's that we need to reassoc */
 	int ed_pending[EVENTS_PER_GETN]; /* fd's with pending events */
 };
 
-static void*	evport_init	(struct event_base *);
-static int 	evport_add	(void *, struct event *);
-static int 	evport_del	(void *, struct event *);
-static int 	evport_dispatch	(struct event_base *, void *, struct timeval *);
-static void	evport_dealloc	(struct event_base *, void *);
+static void*	evport_init(struct event_base *);
+static int evport_add(struct event_base *, int fd, short old, short events, void *);
+static int evport_del(struct event_base *, int fd, short old, short events, void *);
+static int	evport_dispatch(struct event_base *, struct timeval *);
+static void	evport_dealloc(struct event_base *);
 
 const struct eventop evportops = {
-	"event ports",
+	"evport",
 	evport_init,
 	evport_add,
 	evport_del,
 	evport_dispatch,
 	evport_dealloc,
-	1 /* need reinit */
+	1, /* need reinit */
+	0, /* features */
+	0, /* fdinfo length */
 };
 
 /*
@@ -140,34 +140,29 @@ evport_init(struct event_base *base)
 {
 	struct evport_data *evpd;
 	int i;
-	/*
-	 * Disable event ports when this environment variable is set 
-	 */
-	if (getenv("EVENT_NOEVPORT"))
-		return (NULL);
 
-	if (!(evpd = calloc(1, sizeof(struct evport_data))))
+	if (!(evpd = mm_calloc(1, sizeof(struct evport_data))))
 		return (NULL);
 
 	if ((evpd->ed_port = port_create()) == -1) {
-		free(evpd);
+		mm_free(evpd);
 		return (NULL);
 	}
 
 	/*
 	 * Initialize file descriptor structure
 	 */
-	evpd->ed_fds = calloc(DEFAULT_NFDS, sizeof(struct fd_info));
+	evpd->ed_fds = mm_calloc(DEFAULT_NFDS, sizeof(struct fd_info));
 	if (evpd->ed_fds == NULL) {
 		close(evpd->ed_port);
-		free(evpd);
+		mm_free(evpd);
 		return (NULL);
 	}
 	evpd->ed_nevents = DEFAULT_NFDS;
 	for (i = 0; i < EVENTS_PER_GETN; i++)
 		evpd->ed_pending[i] = -1;
 
-	evsignal_init(base);
+	evsig_init(base);
 
 	return (evpd);
 }
@@ -182,29 +177,10 @@ evport_init(struct event_base *base)
 static void
 check_evportop(struct evport_data *evpd)
 {
-	assert(evpd);
-	assert(evpd->ed_nevents > 0);
-	assert(evpd->ed_port > 0);
-	assert(evpd->ed_fds > 0);
-
-	/*
-	 * Verify the integrity of the fd_info struct as well as the events to
-	 * which it points (at least, that they're valid references and correct
-	 * for their position in the structure).
-	 */
-	int i;
-	for (i = 0; i < evpd->ed_nevents; ++i) {
-		struct event 	*ev;
-		struct fd_info 	*fdi;
-
-		fdi = &evpd->ed_fds[i];
-		if ((ev = fdi->fdi_revt) != NULL) {
-			assert(ev->ev_fd == i);
-		}
-		if ((ev = fdi->fdi_wevt) != NULL) {
-			assert(ev->ev_fd == i);
-		}
-	}
+	EVUTIL_ASSERT(evpd);
+	EVUTIL_ASSERT(evpd->ed_nevents > 0);
+	EVUTIL_ASSERT(evpd->ed_port > 0);
+	EVUTIL_ASSERT(evpd->ed_fds > 0);
 }
 
 /*
@@ -219,8 +195,8 @@ check_event(port_event_t* pevt)
 	 * but since we're not using port_alert either, we can assume
 	 * PORT_SOURCE_FD.
 	 */
-	assert(pevt->portev_source == PORT_SOURCE_FD);
-	assert(pevt->portev_user == NULL);
+	EVUTIL_ASSERT(pevt->portev_source == PORT_SOURCE_FD);
+	EVUTIL_ASSERT(pevt->portev_user == NULL);
 }
 
 #else
@@ -237,15 +213,15 @@ grow(struct evport_data *epdp, int factor)
 	struct fd_info *tmp;
 	int oldsize = epdp->ed_nevents;
 	int newsize = factor * oldsize;
-	assert(factor > 1);
+	EVUTIL_ASSERT(factor > 1);
 
 	check_evportop(epdp);
 
-	tmp = realloc(epdp->ed_fds, sizeof(struct fd_info) * newsize);
+	tmp = mm_realloc(epdp->ed_fds, sizeof(struct fd_info) * newsize);
 	if (NULL == tmp)
 		return -1;
 	epdp->ed_fds = tmp;
-	memset((char*) (epdp->ed_fds + oldsize), 0, 
+	memset((char*) (epdp->ed_fds + oldsize), 0,
 	    (newsize - oldsize)*sizeof(struct fd_info));
 	epdp->ed_nevents = newsize;
 
@@ -283,10 +259,10 @@ reassociate(struct evport_data *epdp, struct fd_info *fdip, int fd)
  */
 
 static int
-evport_dispatch(struct event_base *base, void *arg, struct timeval *tv)
+evport_dispatch(struct event_base *base, struct timeval *tv)
 {
 	int i, res;
-	struct evport_data *epdp = arg;
+	struct evport_data *epdp = base->evbase;
 	port_event_t pevtlist[EVENTS_PER_GETN];
 
 	/*
@@ -322,17 +298,21 @@ evport_dispatch(struct event_base *base, void *arg, struct timeval *tv)
 		}
 
 		if (fdi != NULL && FDI_HAS_EVENTS(fdi)) {
-			int fd = FDI_HAS_READ(fdi) ? fdi->fdi_revt->ev_fd : 
-			    fdi->fdi_wevt->ev_fd;
+			int fd = epdp->ed_pending[i];
 			reassociate(epdp, fdi, fd);
 			epdp->ed_pending[i] = -1;
 		}
 	}
 
-	if ((res = port_getn(epdp->ed_port, pevtlist, EVENTS_PER_GETN, 
-		    (unsigned int *) &nevents, ts_p)) == -1) {
+	EVBASE_RELEASE_LOCK(base, th_base_lock);
+
+	res = port_getn(epdp->ed_port, pevtlist, EVENTS_PER_GETN,
+	    (unsigned int *) &nevents, ts_p);
+
+	EVBASE_ACQUIRE_LOCK(base, th_base_lock);
+
+	if (res == -1) {
 		if (errno == EINTR || errno == EAGAIN) {
-			evsignal_process(base);
 			return (0);
 		} else if (errno == ETIME) {
 			if (nevents == 0)
@@ -341,14 +321,11 @@ evport_dispatch(struct event_base *base, void *arg, struct timeval *tv)
 			event_warn("port_getn");
 			return (-1);
 		}
-	} else if (base->sig.evsignal_caught) {
-		evsignal_process(base);
 	}
-	
+
 	event_debug(("%s: port_getn reports %d events", __func__, nevents));
 
 	for (i = 0; i < nevents; ++i) {
-		struct event *ev;
 		struct fd_info *fdi;
 		port_event_t *pevt = &pevtlist[i];
 		int fd = (int) pevt->portev_object;
@@ -358,31 +335,29 @@ evport_dispatch(struct event_base *base, void *arg, struct timeval *tv)
 		epdp->ed_pending[i] = fd;
 
 		/*
-		 * Figure out what kind of event it was 
+		 * Figure out what kind of event it was
 		 * (because we have to pass this to the callback)
 		 */
 		res = 0;
-		if (pevt->portev_events & POLLIN)
-			res |= EV_READ;
-		if (pevt->portev_events & POLLOUT)
-			res |= EV_WRITE;
-
-		assert(epdp->ed_nevents > fd);
-		fdi = &(epdp->ed_fds[fd]);
+		if (pevt->portev_events & (POLLERR|POLLHUP)) {
+			res = EV_READ | EV_WRITE;
+		} else {
+			if (pevt->portev_events & POLLIN)
+				res |= EV_READ;
+			if (pevt->portev_events & POLLOUT)
+				res |= EV_WRITE;
+		}
 
 		/*
-		 * We now check for each of the possible events (READ
-		 * or WRITE).  Then, we activate the event (which will
-		 * cause its callback to be executed).
+		 * Check for the error situations or a hangup situation
 		 */
+		if (pevt->portev_events & (POLLERR|POLLHUP|POLLNVAL))
+			res |= EV_READ|EV_WRITE;
 
-		if ((res & EV_READ) && ((ev = fdi->fdi_revt) != NULL)) {
-			event_active(ev, res, 1);
-		}
+		EVUTIL_ASSERT(epdp->ed_nevents > fd);
+		fdi = &(epdp->ed_fds[fd]);
 
-		if ((res & EV_WRITE) && ((ev = fdi->fdi_wevt) != NULL)) {
-			event_active(ev, res, 1);
-		}
+		evmap_io_active(base, fd, res);
 	} /* end of all events gotten */
 
 	check_evportop(epdp);
@@ -397,26 +372,21 @@ evport_dispatch(struct event_base *base, void *arg, struct timeval *tv)
  */
 
 static int
-evport_add(void *arg, struct event *ev)
+evport_add(struct event_base *base, int fd, short old, short events, void *p)
 {
-	struct evport_data *evpd = arg;
+	struct evport_data *evpd = base->evbase;
 	struct fd_info *fdi;
 	int factor;
+	(void)p;
 
 	check_evportop(evpd);
-
-	/*
-	 * Delegate, if it's not ours to handle.
-	 */
-	if (ev->ev_events & EV_SIGNAL)
-		return (evsignal_add(ev));
 
 	/*
 	 * If necessary, grow the file descriptor info table
 	 */
 
 	factor = 1;
-	while (ev->ev_fd >= factor * evpd->ed_nevents)
+	while (fd >= factor * evpd->ed_nevents)
 		factor *= 2;
 
 	if (factor > 1) {
@@ -425,13 +395,10 @@ evport_add(void *arg, struct event *ev)
 		}
 	}
 
-	fdi = &evpd->ed_fds[ev->ev_fd];
-	if (ev->ev_events & EV_READ)
-		fdi->fdi_revt = ev;
-	if (ev->ev_events & EV_WRITE)
-		fdi->fdi_wevt = ev;
+	fdi = &evpd->ed_fds[fd];
+	fdi->fdi_what |= events;
 
-	return reassociate(evpd, fdi, ev->ev_fd);
+	return reassociate(evpd, fdi, fd);
 }
 
 /*
@@ -439,45 +406,38 @@ evport_add(void *arg, struct event *ev)
  */
 
 static int
-evport_del(void *arg, struct event *ev)
+evport_del(struct event_base *base, int fd, short old, short events, void *p)
 {
-	struct evport_data *evpd = arg;
+	struct evport_data *evpd = base->evbase;
 	struct fd_info *fdi;
 	int i;
 	int associated = 1;
+	(void)p;
 
 	check_evportop(evpd);
 
-	/*
-	 * Delegate, if it's not ours to handle
-	 */
-	if (ev->ev_events & EV_SIGNAL) {
-		return (evsignal_del(ev));
-	}
-
-	if (evpd->ed_nevents < ev->ev_fd) {
+	if (evpd->ed_nevents < fd) {
 		return (-1);
 	}
 
 	for (i = 0; i < EVENTS_PER_GETN; ++i) {
-		if (evpd->ed_pending[i] == ev->ev_fd) {
+		if (evpd->ed_pending[i] == fd) {
 			associated = 0;
 			break;
 		}
 	}
 
-	fdi = &evpd->ed_fds[ev->ev_fd];
-	if (ev->ev_events & EV_READ)
-		fdi->fdi_revt = NULL;
-	if (ev->ev_events & EV_WRITE)
-		fdi->fdi_wevt = NULL;
+	fdi = &evpd->ed_fds[fd];
+	if (events & EV_READ)
+		fdi->fdi_what &= ~EV_READ;
+	if (events & EV_WRITE)
+		fdi->fdi_what &= ~EV_WRITE;
 
 	if (associated) {
 		if (!FDI_HAS_EVENTS(fdi) &&
-		    port_dissociate(evpd->ed_port, PORT_SOURCE_FD,
-		    ev->ev_fd) == -1) {	 
+		    port_dissociate(evpd->ed_port, PORT_SOURCE_FD, fd) == -1) {
 			/*
-			 * Ignre EBADFD error the fd could have been closed
+			 * Ignore EBADFD error the fd could have been closed
 			 * before event_del() was called.
 			 */
 			if (errno != EBADFD) {
@@ -486,11 +446,11 @@ evport_del(void *arg, struct event *ev)
 			}
 		} else {
 			if (FDI_HAS_EVENTS(fdi)) {
-				return (reassociate(evpd, fdi, ev->ev_fd));
+				return (reassociate(evpd, fdi, fd));
 			}
 		}
 	} else {
-		if (fdi->fdi_revt == NULL && fdi->fdi_wevt == NULL) {
+		if ((fdi->fdi_what & (EV_READ|EV_WRITE)) == 0) {
 			evpd->ed_pending[i] = -1;
 		}
 	}
@@ -499,15 +459,15 @@ evport_del(void *arg, struct event *ev)
 
 
 static void
-evport_dealloc(struct event_base *base, void *arg)
+evport_dealloc(struct event_base *base)
 {
-	struct evport_data *evpd = arg;
+	struct evport_data *evpd = base->evbase;
 
-	evsignal_dealloc(base);
+	evsig_dealloc(base);
 
 	close(evpd->ed_port);
 
 	if (evpd->ed_fds)
-		free(evpd->ed_fds);
-	free(evpd);
+		mm_free(evpd->ed_fds);
+	mm_free(evpd);
 }

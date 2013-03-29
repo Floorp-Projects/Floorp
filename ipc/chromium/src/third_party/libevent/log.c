@@ -5,7 +5,7 @@
  *
  * Based on err.c, which was adapted from OpenBSD libc *err* *warn* code.
  *
- * Copyright (c) 2005 Nick Mathewson <nickm@freehaven.net>
+ * Copyright (c) 2005-2012 Niels Provos and Nick Mathewson
  *
  * Copyright (c) 2000 Dug Song <dugsong@monkey.org>
  *
@@ -37,53 +37,91 @@
  * SUCH DAMAGE.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+#include "event2/event-config.h"
 
 #ifdef WIN32
+#include <winsock2.h>
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #undef WIN32_LEAN_AND_MEAN
 #endif
 #include <sys/types.h>
-#ifdef HAVE_SYS_TIME_H
-#include <sys/time.h>
-#else
-#include <sys/_time.h>
-#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
 #include <errno.h>
-#include "event.h"
+#include "event2/event.h"
+#include "event2/util.h"
 
-#include "log.h"
-#include "evutil.h"
+#include "log-internal.h"
 
-static void _warn_helper(int severity, int log_errno, const char *fmt,
-                         va_list ap);
+static void _warn_helper(int severity, const char *errstr, const char *fmt,
+    va_list ap);
 static void event_log(int severity, const char *msg);
+static void event_exit(int errcode) EV_NORETURN;
+
+static event_fatal_cb fatal_fn = NULL;
+
+void
+event_set_fatal_callback(event_fatal_cb cb)
+{
+	fatal_fn = cb;
+}
+
+static void
+event_exit(int errcode)
+{
+	if (fatal_fn) {
+		fatal_fn(errcode);
+		exit(errcode); /* should never be reached */
+	} else if (errcode == _EVENT_ERR_ABORT)
+		abort();
+	else
+		exit(errcode);
+}
 
 void
 event_err(int eval, const char *fmt, ...)
 {
 	va_list ap;
-	
+
 	va_start(ap, fmt);
-	_warn_helper(_EVENT_LOG_ERR, errno, fmt, ap);
+	_warn_helper(_EVENT_LOG_ERR, strerror(errno), fmt, ap);
 	va_end(ap);
-	exit(eval);
+	event_exit(eval);
 }
 
 void
 event_warn(const char *fmt, ...)
 {
 	va_list ap;
-	
+
 	va_start(ap, fmt);
-	_warn_helper(_EVENT_LOG_WARN, errno, fmt, ap);
+	_warn_helper(_EVENT_LOG_WARN, strerror(errno), fmt, ap);
+	va_end(ap);
+}
+
+void
+event_sock_err(int eval, evutil_socket_t sock, const char *fmt, ...)
+{
+	va_list ap;
+	int err = evutil_socket_geterror(sock);
+
+	va_start(ap, fmt);
+	_warn_helper(_EVENT_LOG_ERR, evutil_socket_error_to_string(err), fmt, ap);
+	va_end(ap);
+	event_exit(eval);
+}
+
+void
+event_sock_warn(evutil_socket_t sock, const char *fmt, ...)
+{
+	va_list ap;
+	int err = evutil_socket_geterror(sock);
+
+	va_start(ap, fmt);
+	_warn_helper(_EVENT_LOG_WARN, evutil_socket_error_to_string(err), fmt, ap);
 	va_end(ap);
 }
 
@@ -91,20 +129,20 @@ void
 event_errx(int eval, const char *fmt, ...)
 {
 	va_list ap;
-	
+
 	va_start(ap, fmt);
-	_warn_helper(_EVENT_LOG_ERR, -1, fmt, ap);
+	_warn_helper(_EVENT_LOG_ERR, NULL, fmt, ap);
 	va_end(ap);
-	exit(eval);
+	event_exit(eval);
 }
 
 void
 event_warnx(const char *fmt, ...)
 {
 	va_list ap;
-	
+
 	va_start(ap, fmt);
-	_warn_helper(_EVENT_LOG_WARN, -1, fmt, ap);
+	_warn_helper(_EVENT_LOG_WARN, NULL, fmt, ap);
 	va_end(ap);
 }
 
@@ -112,9 +150,9 @@ void
 event_msgx(const char *fmt, ...)
 {
 	va_list ap;
-	
+
 	va_start(ap, fmt);
-	_warn_helper(_EVENT_LOG_MSG, -1, fmt, ap);
+	_warn_helper(_EVENT_LOG_MSG, NULL, fmt, ap);
 	va_end(ap);
 }
 
@@ -122,14 +160,14 @@ void
 _event_debugx(const char *fmt, ...)
 {
 	va_list ap;
-	
+
 	va_start(ap, fmt);
-	_warn_helper(_EVENT_LOG_DEBUG, -1, fmt, ap);
+	_warn_helper(_EVENT_LOG_DEBUG, NULL, fmt, ap);
 	va_end(ap);
 }
 
 static void
-_warn_helper(int severity, int log_errno, const char *fmt, va_list ap)
+_warn_helper(int severity, const char *errstr, const char *fmt, va_list ap)
 {
 	char buf[1024];
 	size_t len;
@@ -139,11 +177,10 @@ _warn_helper(int severity, int log_errno, const char *fmt, va_list ap)
 	else
 		buf[0] = '\0';
 
-	if (log_errno >= 0) {
+	if (errstr) {
 		len = strlen(buf);
 		if (len < sizeof(buf) - 3) {
-			evutil_snprintf(buf + len, sizeof(buf) - len, ": %s",
-			    strerror(log_errno));
+			evutil_snprintf(buf + len, sizeof(buf) - len, ": %s", errstr);
 		}
 	}
 
