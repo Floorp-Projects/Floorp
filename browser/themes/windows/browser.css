@@ -1895,34 +1895,34 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 %ifndef WINDOWS_AERO
 /* Use lighter colors of buttons and text in the titlebar on luna-blue */
 @media (-moz-windows-theme: luna-blue) {
-  #main-window[tabsintitlebar] .tabbrowser-tab:not([selected]):not(:-moz-lwtheme) {
-    color: CaptionText;
-  }
-
-  #main-window[tabsintitlebar] .tabbrowser-arrowscrollbox > .scrollbutton-up,
-  #main-window[tabsintitlebar] .tabbrowser-arrowscrollbox > .scrollbutton-down {
+  #main-window[tabsintitlebar]:not([inFullscreen]) .tabbrowser-arrowscrollbox > .scrollbutton-up,
+  #main-window[tabsintitlebar]:not([inFullscreen]) .tabbrowser-arrowscrollbox > .scrollbutton-down {
     list-style-image: url(chrome://browser/skin/tabbrowser/tab-arrow-left-inverted.png);
   }
 
-  #main-window[tabsintitlebar] .tabs-newtab-button,
-  #main-window[tabsintitlebar] #TabsToolbar > #new-tab-button,
-  #main-window[tabsintitlebar] #TabsToolbar > toolbarpaletteitem > #new-tab-button {
+  #main-window[tabsintitlebar]:not([inFullscreen]) .tabs-newtab-button,
+  #main-window[tabsintitlebar]:not([inFullscreen]) #TabsToolbar > #new-tab-button,
+  #main-window[tabsintitlebar]:not([inFullscreen]) #TabsToolbar > toolbarpaletteitem > #new-tab-button {
     list-style-image: url(chrome://browser/skin/tabbrowser/newtab-inverted.png);
   }
 
-  #main-window[tabsintitlebar] #TabsToolbar > #alltabs-button {
+  #main-window[tabsintitlebar]:not([inFullscreen]) #TabsToolbar > #alltabs-button {
     list-style-image: url("chrome://browser/skin/toolbarbutton-dropdown-arrow-inverted.png");
   }
 
-  #main-window[tabsintitlebar] #TabsToolbar > #tabview-button {
+  #main-window[tabsintitlebar]:not([inFullscreen]) #TabsToolbar > #tabview-button {
     list-style-image: url(chrome://browser/skin/tabview/tabview-inverted.png);
   }
 
-  #main-window[tabsintitlebar] .tab-close-button:not(:hover):not([selected="true"]) {
+  #main-window[tabsintitlebar]:not([inFullscreen]) .tab-close-button:not(:hover):not([selected="true"]) {
     -moz-image-region: rect(0, 64px, 16px, 48px);
   }
 }
 %endif
+
+#main-window[tabsintitlebar]:not([inFullscreen]) .tabbrowser-tab:not([selected]):not(:-moz-lwtheme) {
+  color: CaptionText;
+}
 
 .tabbrowser-tab:-moz-lwtheme {
   color: inherit;
