@@ -876,6 +876,15 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             }
             break;
 
+        case AndroidGeckoEvent::IME_KEY_EVENT:
+            // Keys synthesized by Java IME code are saved in the mIMEKeyEvents
+            // array until the next IME_REPLACE_TEXT event, at which point
+            // these keys are dispatched in sequence.
+            if (win->mFocus) {
+                win->mFocus->mIMEKeyEvents.AppendElement(*ae);
+            }
+            break;
+
         case AndroidGeckoEvent::COMPOSITOR_CREATE:
             win->CreateLayerManager(ae->Width(), ae->Height());
             break;
@@ -1781,6 +1790,17 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                 event.mExpandToClusterBoundary = false;
                 DispatchEvent(&event);
             }
+
+            if (!mIMEKeyEvents.IsEmpty()) {
+                for (uint32_t i = 0; i < mIMEKeyEvents.Length(); i++) {
+                    OnKeyEvent(&mIMEKeyEvents[i]);
+                }
+                mIMEKeyEvents.Clear();
+                FlushIMEChanges();
+                AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_REPLY_EVENT);
+                break;
+            }
+
             {
                 nsCompositionEvent event(true, NS_COMPOSITION_START, this);
                 InitEvent(event, nullptr);
