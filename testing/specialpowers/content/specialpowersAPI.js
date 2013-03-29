@@ -24,6 +24,9 @@ function SpecialPowersAPI() {
   this._prefEnvUndoStack = [];
   this._pendingPrefs = [];
   this._applyingPrefs = false;
+  this._permissionsUndoStack = [];
+  this._pendingPermissions = [];
+  this._applyingPermissions = false;
   this._fm = null;
   this._cb = null;
 }
@@ -492,6 +495,150 @@ SpecialPowersAPI.prototype = {
       self._unexpectedCrashDumpFiles[aFilename] = true;
     });
     return crashDumpFiles;
+  },
+
+  /* apply permissions to the system and when the test case is finished (SimpleTest.finish())
+     we will revert the permission back to the original.
+
+     inPermissions is an array of objects where each object has a type, action, context, ex:
+     [{'type': 'SystemXHR', 'allow': 1, 'context': document}, 
+      {'type': 'SystemXHR', 'allow': 0, 'context': document}]
+
+    allow is a boolean and can be true/false or 1/0
+  */
+  pushPermissions: function(inPermissions, callback) {
+    var pendingPermissions = [];
+    var cleanupPermissions = [];
+
+    for (var p in inPermissions) {
+        var permission = inPermissions[p];
+        var originalValue = Ci.nsIPermissionManager.UNKNOWN_ACTION;
+        if (this.testPermission(permission.type, Ci.nsIPermissionManager.ALLOW_ACTION, permission.context)) {
+          originalValue = Ci.nsIPermissionManager.ALLOW_ACTION;
+        } else if (this.testPermission(permission.type, Ci.nsIPermissionManager.DENY_ACTION, permission.context)) {
+          originalValue = Ci.nsIPermissionManager.DENY_ACTION;
+        }
+
+        let [url, appId, isInBrowserElement] = this._getInfoFromPermissionArg(permission.context);
+
+        let perm = permission.allow ? Ci.nsIPermissionManager.ALLOW_ACTION
+                           : Ci.nsIPermissionManager.DENY_ACTION;
+
+        if (originalValue == perm) {
+          continue;
+        }
+        pendingPermissions.push({'op': 'add', 'type': permission.type, 'permission': perm, 'value': perm, 'url': url, 'appId': appId, 'isInBrowserElement': isInBrowserElement});
+
+        /* Push original permissions value or clear into cleanup array */
+        var cleanupTodo = {'op': 'add', 'type': permission.type, 'permission': perm, 'value': perm, 'url': url, 'appId': appId, 'isInBrowserElement': isInBrowserElement};
+        if (originalValue == Ci.nsIPermissionManager.UNKNOWN_ACTION) {
+          cleanupTodo.op = 'remove';
+        } else {
+          cleeanupTodo.value = originalValue;
+        }
+        cleanupPermissions.push(cleanupTodo);
+    }
+
+    if (pendingPermissions.length > 0) {
+      // The callback needs to be delayed twice. One delay is because the pref
+      // service doesn't guarantee the order it calls its observers in, so it
+      // may notify the observer holding the callback before the other
+      // observers have been notified and given a chance to make the changes
+      // that the callback checks for. The second delay is because pref
+      // observers often defer making their changes by posting an event to the
+      // event loop.
+      function delayedCallback() {
+        function delayAgain() {
+          content.window.setTimeout(callback, 0);
+        }
+        content.window.setTimeout(delayAgain, 0);
+      }
+      this._permissionsUndoStack.push(cleanupPermissions);
+      this._pendingPermissions.push([pendingPermissions, delayedCallback]);
+      this._applyPermissions();
+    } else {
+      content.window.setTimeout(callback, 0);
+    }
+  },
+
+  popPermissions: function(callback) {
+    if (this._permissionsUndoStack.length > 0) {
+      // See pushPermissions comment regarding delay.
+      function delayedCallback() {
+        function delayAgain() {
+          content.window.setTimeout(callback, 0);
+        }
+        content.window.setTimeout(delayAgain, 0);
+      }
+      let cb = callback ? delayedCallback : null;
+      /* Each pop from the stack will yield an object {op/type/permission/value/url/appid/isInBrowserElement} or null */
+      this._pendingPermissions.push([this._permissionsUndoStack.pop(), cb]);
+      this._applyPermissions();
+    } else {
+      content.window.setTimeout(callback, 0);
+    }
+  },
+
+  flushPermissions: function(callback) {
+    while (this._permissionsUndoStack.length > 1)
+      this.popPermissions(null);
+
+    this.popPermissions(callback);
+  },
+
+
+  _permissionObserver: {
+    _lastPermission: {},
+    _callBack: null,
+    _nextCallback: null,
+
+    observe: function (aSubject, aTopic, aData)
+    {
+      if (aTopic == "perm-changed") {
+        var permission = aSubject.QueryInterface(Ci.nsIPermission);
+        if (permission.type == this._lastPermission.type) {
+          var os = Components.classes["@mozilla.org/observer-service;1"]
+                             .getService(Components.interfaces.nsIObserverService);
+          os.removeObserver(this, "perm-changed");
+          content.window.setTimeout(this._callback, 0);
+          content.window.setTimeout(this._nextCallback, 0);
+        }
+      }
+    }
+  },
+
+  /*
+    Iterate through one atomic set of permissions actions and perform allow/deny as appropriate.
+    All actions performed must modify the relevant permission.
+  */
+  _applyPermissions: function() {
+    if (this._applyingPermissions || this._pendingPermissions.length <= 0) {
+      return;
+    }
+
+    /* Set lock and get prefs from the _pendingPrefs queue */
+    this._applyingPermissions = true;
+    var transaction = this._pendingPermissions.shift();
+    var pendingActions = transaction[0];
+    var callback = transaction[1];
+    lastPermission = pendingActions[pendingActions.length-1];
+
+    var self = this;
+    var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+    this._permissionObserver._lastPermission = lastPermission;
+    this._permissionObserver._callback = callback;
+    this._permissionObserver._nextCallback = function () {
+        self._applyingPermissions = false;
+        // Now apply any permissions that may have been queued while we were applying
+        self._applyPermissions();
+    }
+
+    os.addObserver(this._permissionObserver, "perm-changed", false);
+
+    for (var idx in pendingActions) {
+      var perm = pendingActions[idx];
+      this._sendSyncMessage('SPPermissionManager', perm)[0];
+    }
   },
 
   /*
