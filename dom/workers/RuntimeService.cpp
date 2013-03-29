@@ -42,6 +42,8 @@
 #include "OSFileConstants.h"
 #include <algorithm>
 
+#include "GeckoProfiler.h"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -516,6 +518,8 @@ public:
       return NS_ERROR_FAILURE;
     }
 
+    profiler_register_thread("WebWorker");
+
     {
       JSAutoRequest ar(cx);
       workerPrivate->DoRunLoop(cx);
@@ -544,6 +548,7 @@ public:
     JS_DestroyRuntime(rt);
 
     workerPrivate->ScheduleDeletion(false);
+    profiler_unregister_thread();
     return NS_OK;
   }
 };
