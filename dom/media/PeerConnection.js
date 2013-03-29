@@ -615,11 +615,8 @@ PeerConnection.prototype = {
   },
 
   removeStream: function(stream) {
-    this._queueOrRun({
-      func: this._pc.removeStream,
-      args: [stream],
-      wait: false
-    });
+     //Bug844295: Not implemeting this functionality.
+     return Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
 
   close: function() {
