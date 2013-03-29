@@ -2397,7 +2397,7 @@ HTMLInputElement::Focus(ErrorResult& aError)
       // See if the child is a button control.
       nsCOMPtr<nsIFormControl> formCtrl =
         do_QueryInterface(childFrame->GetContent());
-      if (formCtrl && formCtrl->GetType() == NS_FORM_INPUT_BUTTON) {
+      if (formCtrl && formCtrl->GetType() == NS_FORM_BUTTON_BUTTON) {
         nsCOMPtr<nsIDOMElement> element = do_QueryInterface(formCtrl);
         nsIFocusManager* fm = nsFocusManager::GetFocusManager();
         if (fm && element) {
