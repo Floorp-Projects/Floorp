@@ -254,6 +254,3 @@ BluetoothDevice::GetServices(JSContext* aCx, jsval* aServices)
   return NS_OK;
 }
 
-NS_IMPL_EVENT_HANDLER(BluetoothDevice, propertychanged)
-NS_IMPL_EVENT_HANDLER(BluetoothDevice, connected)
-NS_IMPL_EVENT_HANDLER(BluetoothDevice, disconnected)

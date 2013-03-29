@@ -690,6 +690,9 @@ public:
   NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsid id, jsval *vp, bool *_retval);
 
+  static nsresult TryResolveAll(JSContext* cx, nsHTMLDocument* doc,
+                                JSObject* obj);
+
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
     return new nsHTMLDocumentSH(aData);

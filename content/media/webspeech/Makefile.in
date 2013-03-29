@@ -37,6 +37,7 @@ CPPSRCS := \
 
 EXPORTS_NAMESPACES := mozilla/dom
 EXPORTS_mozilla/dom := \
+  FakeSpeechRecognitionService.h \
   SpeechGrammar.h \
   SpeechGrammarList.h \
   SpeechRecognitionAlternative.h \

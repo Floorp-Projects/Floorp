@@ -1440,4 +1440,8 @@ inline void assertEnteredPolicy(JSContext *cx, JSObject *obj, jsid id) {};
 
 } /* namespace js */
 
+extern JS_FRIEND_API(JSBool)
+js_DefineOwnProperty(JSContext *cx, JSObject *objArg, jsid idArg,
+                     const js::PropertyDescriptor& descriptor, JSBool *bp);
+
 #endif /* jsfriendapi_h___ */

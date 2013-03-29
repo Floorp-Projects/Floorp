@@ -95,6 +95,7 @@ webidl_files = \
   HTMLHtmlElement.webidl \
   HTMLIFrameElement.webidl \
   HTMLImageElement.webidl \
+  HTMLInputElement.webidl \
   HTMLLabelElement.webidl \
   HTMLLegendElement.webidl \
   HTMLLIElement.webidl \

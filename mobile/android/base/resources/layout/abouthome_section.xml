@@ -40,6 +40,6 @@
                                     android:textColor="@color/abouthome_section_more_text"
                                     android:textSize="12sp"
                                     android:gravity="center"
-                                    android:duplicateParentState="true"/>
+                                    android:focusable="true"/>
 
 </merge>

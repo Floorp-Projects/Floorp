@@ -478,6 +478,8 @@ void GetDynamicName(JSContext *cx, JSObject *scopeChain, JSString *str, Value *v
 
 JSBool FilterArguments(JSContext *cx, JSString *str);
 
+uint32_t GetIndexFromString(JSString *str);
+
 } // namespace ion
 } // namespace js
 

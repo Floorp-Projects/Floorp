@@ -27,7 +27,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=764481
 
     SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms",true]]}, function() {
       // Change the type of input to text and then back to number, 
-      // so that nsHTMLInputElement::ParseAttribute gets called with the pref enabled.
+      // so that HTMLInputElement::ParseAttribute gets called with the pref enabled.
       input.type = "text";
       input.type = "number";
       is(input.type, "number", "input type should be number when the experimental forms are enabled");

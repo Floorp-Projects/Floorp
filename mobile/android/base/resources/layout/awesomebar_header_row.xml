@@ -7,7 +7,7 @@
           android:id="@+id/title"
           android:layout_width="fill_parent"
           android:layout_height="@dimen/awesomebar_header_row_height"
-          android:background="#D2DAE2"
+          android:background="@drawable/awesomebar_header_row"
           android:textColor="#222222"
           android:textSize="13sp"
           android:textStyle="bold"

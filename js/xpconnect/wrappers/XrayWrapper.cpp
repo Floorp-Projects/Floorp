@@ -1337,7 +1337,7 @@ IsXrayResolving(JSContext *cx, JSObject *wrapper, jsid id)
     return XPCWrappedNativeXrayTraits::isResolving(cx, holder, id);
 }
 
-}
+} // namespace XrayUtils
 
 static JSBool
 XrayToString(JSContext *cx, unsigned argc, jsval *vp)
@@ -1415,6 +1415,27 @@ DEBUG_CheckXBLLookup(JSContext *cx, JSPropertyDescriptor *desc)
 #else
 #define DEBUG_CheckXBLLookup(a, b) {}
 #endif
+
+template <typename Base, typename Traits>
+bool
+XrayWrapper<Base, Traits>::isExtensible(JSObject *wrapper)
+{
+    // Xray wrappers are supposed to provide a clean view of the target
+    // reflector, hiding any modifications by script in the target scope.  So
+    // even if that script freezes the reflector, we don't want to make that
+    // visible to the caller. DOM reflectors are always extensible by default,
+    // so we can just return true here.
+    return true;
+}
+
+template <typename Base, typename Traits>
+bool
+XrayWrapper<Base, Traits>::preventExtensions(JSContext *cx, JS::Handle<JSObject*> wrapper)
+{
+    // See above.
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_CHANGE_EXTENSIBILITY);
+    return false;
+}
 
 template <typename Base, typename Traits>
 bool

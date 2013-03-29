@@ -3057,8 +3057,7 @@ bool
 xpc::SandboxCallableProxyHandler::call(JSContext *cx, JS::Handle<JSObject*> proxy,
                                        unsigned argc, Value *vp)
 {
-    // We forward the call to our underlying callable. The callable to forward
-    // to can be gotten via GetProxyCall.
+    // We forward the call to our underlying callable.
 
     // The parent of our proxy is the SandboxProxyHandler proxy
     JSObject *sandboxProxy = JS_GetParent(proxy);
@@ -3106,7 +3105,7 @@ xpc::SandboxCallableProxyHandler::call(JSContext *cx, JS::Handle<JSObject*> prox
         thisVal = ObjectValue(*js::GetProxyTargetObject(sandboxProxy));
     }
 
-    return JS::Call(cx, thisVal, js::GetProxyCall(proxy), argc,
+    return JS::Call(cx, thisVal, js::GetProxyPrivate(proxy), argc,
                     JS_ARGV(cx, vp), vp);
 }
 
@@ -3125,11 +3124,9 @@ WrapCallable(JSContext *cx, JSObject *callable, JSObject *sandboxProtoProxy)
                js::GetProxyHandler(sandboxProtoProxy) ==
                  &xpc::sandboxProxyHandler);
 
-    // We need to pass the given callable in as the "call" and
-    // "construct" so we get a function proxy.
     return js::NewProxyObject(cx, &xpc::sandboxCallableProxyHandler,
                               ObjectValue(*callable), nullptr,
-                              sandboxProtoProxy, callable, callable);
+                              sandboxProtoProxy, js::ProxyIsCallable);
 }
 
 template<typename Op>

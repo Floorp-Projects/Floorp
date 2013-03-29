@@ -284,6 +284,31 @@
         <item name="android:textColor">@color/abouthome_section_subtitle</item>
     </style>
 
+    <style name="AboutHome.RowItem">
+        <item name="android:background">@drawable/action_bar_button</item>
+        <item name="android:focusable">true</item>
+    </style>
+
+    <style name="AboutHome.RowItem.TextRow">
+        <item name="android:textAppearance">@style/AboutHome.TextAppearance.Title</item>
+        <item name="android:ellipsize">middle</item>
+        <item name="android:singleLine">true</item>
+    </style>
+
+    <style name="AboutHome.LastTabRow" />
+
+    <style name="AboutHome.LastTabRow.Title">
+        <item name="android:textSize">15sp</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:textColor">@color/abouthome_section_title</item>
+    </style>
+
+    <style name="AboutHome.LastTabRow.Url">
+        <item name="android:textSize">12sp</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:textColor">@color/abouthome_section_subtitle</item>
+    </style>
+
     <style name="GeckoDialogTitle">
         <item name="android:textAppearance">@android:style/TextAppearance.DialogWindowTitle</item>
     </style>

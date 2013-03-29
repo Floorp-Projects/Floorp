@@ -42,11 +42,15 @@
 #include <string>
 
 #include "common/using_std_string.h"
-#include "processor/logging.h"
-#include "processor/pathname_stripper.h"
+#include "common/logging.h"
+#include "common/pathname_stripper.h"
 
 #ifdef _WIN32
 #define snprintf _snprintf
+#endif
+
+#ifdef __ANDROID__
+# include <android/log.h>
 #endif
 
 namespace google_breakpad {
@@ -75,12 +79,18 @@ LogStream::LogStream(std::ostream &stream, Severity severity,
       break;
   }
 
-  stream_ << time_string << ": " << PathnameStripper::File(file) << ":" <<
-             line << ": " << severity_string << ": ";
+  str_ << time_string << ": " << PathnameStripper::File(file) << ":" <<
+          line << ": " << severity_string << ": ";
 }
 
 LogStream::~LogStream() {
+#ifdef __ANDROID__
+  __android_log_print(ANDROID_LOG_ERROR,
+                      "Profiler", "%s", str_.str().c_str());
+#else
+  stream_ << str_.str();
   stream_ << std::endl;
+#endif
 }
 
 string HexString(uint32_t number) {
@@ -113,3 +123,17 @@ int ErrnoString(string *error_string) {
 }
 
 }  // namespace google_breakpad
+
+bool is_power_of_2(uint64_t x_in)
+{
+  uint64_t x = x_in;
+  x = x | (x >> 1);
+  x = x | (x >> 2);
+  x = x | (x >> 4);
+  x = x | (x >> 8);
+  x = x | (x >> 16);
+  x = x | (x >> 32);
+  x = x - (x >> 1);
+  // x has now been rounded down to the nearest power of 2 <= x_in.
+  return x == x_in;
+}
