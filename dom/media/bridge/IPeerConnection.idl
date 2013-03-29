@@ -24,7 +24,7 @@ interface IPeerConnectionManager : nsISupports
  *
  * See media/webrtc/signaling/include/PeerConnectionImpl.h
  */
-[scriptable, uuid(e61821ba-7772-4973-b583-1715e4bbaeed)]
+[scriptable, uuid(85ba28da-53d0-401d-afed-9cad69f727ff)]
 interface IPeerConnectionObserver : nsISupports
 {
   /* Constants */
@@ -35,15 +35,15 @@ interface IPeerConnectionObserver : nsISupports
 
   /* JSEP callbacks */
   void onCreateOfferSuccess(in string offer);
-  void onCreateOfferError(in unsigned long code);
+  void onCreateOfferError(in unsigned long name, in string message);
   void onCreateAnswerSuccess(in string answer);
-  void onCreateAnswerError(in unsigned long code);
-  void onSetLocalDescriptionSuccess(in unsigned long code);
-  void onSetRemoteDescriptionSuccess(in unsigned long code);
-  void onSetLocalDescriptionError(in unsigned long code);
-  void onSetRemoteDescriptionError(in unsigned long code);
-  void onAddIceCandidateSuccess(in unsigned long code);
-  void onAddIceCandidateError(in unsigned long code);
+  void onCreateAnswerError(in unsigned long name, in string message);
+  void onSetLocalDescriptionSuccess();
+  void onSetRemoteDescriptionSuccess();
+  void onSetLocalDescriptionError(in unsigned long name, in string message);
+  void onSetRemoteDescriptionError(in unsigned long name, in string message);
+  void onAddIceCandidateSuccess();
+  void onAddIceCandidateError(in unsigned long name, in string message);
 
   /* Data channel callbacks */
   void notifyDataChannel(in nsIDOMDataChannel channel);
@@ -67,7 +67,7 @@ interface IPeerConnectionObserver : nsISupports
   void foundIceCandidate(in string candidate);
 };
 
-[scriptable, uuid(cc8327f5-66f4-42f4-820d-9a9db0474b6e)]
+[scriptable, uuid(2bba7b2b-e152-4ae7-b7d4-f84e41a2211b)]
 interface IPeerConnection : nsISupports
 {
   const unsigned long kHintAudio = 0x00000001;
@@ -95,6 +95,19 @@ interface IPeerConnection : nsISupports
   const unsigned short kDataChannelReliable = 0;
   const unsigned short kDataChannelPartialReliableRexmit = 1;
   const unsigned short kDataChannelPartialReliableTimed = 2;
+
+  /* Constants for 'name' in error callbacks */
+  const unsigned long kNoError                          = 0; // Test driver only
+  const unsigned long kInvalidConstraintsType           = 1;
+  const unsigned long kInvalidCandidateType             = 2;
+  const unsigned long kInvalidMediastreamTrack          = 3;
+  const unsigned long kInvalidState                     = 4;
+  const unsigned long kInvalidSessionDescription        = 5;
+  const unsigned long kIncompatibleSessionDescription   = 6;
+  const unsigned long kIncompatibleConstraints          = 7;
+  const unsigned long kIncompatibleMediaStreamTrack     = 8;
+  const unsigned long kInternalError                    = 9;
+  const unsigned long kMaxErrorType                     = 9; // Same as final error
 
   /* Must be called first. Observer events will be dispatched on the thread provided */
   [implicit_jscontext] void initialize(in IPeerConnectionObserver observer, in nsIDOMWindow window,
