@@ -11,8 +11,6 @@ const Cu = Components.utils;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-this.EXPORTED_SYMBOLS = ["DOMContactManager"];
-
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/ContactDB.jsm");
@@ -36,7 +34,7 @@ XPCOMUtils.defineLazyGetter(this, "mRIL", function () {
 
 let myGlobal = this;
 
-this.DOMContactManager = {
+let ContactService = {
   init: function() {
     if (DEBUG) debug("Init");
     this._messages = ["Contacts:Find", "Contacts:GetAll", "Contacts:Clear", "Contact:Save",
@@ -202,4 +200,4 @@ this.DOMContactManager = {
   }
 }
 
-DOMContactManager.init();
+ContactService.init();
