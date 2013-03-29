@@ -1482,8 +1482,12 @@ nsWindow::InitKeyEvent(nsKeyEvent& event, AndroidGeckoEvent& key,
 
     if (event.message == NS_KEY_PRESS) {
         // Android gives us \n, so filter out some control characters.
-        event.isChar = (key.UnicodeChar() >= ' ');
-        event.charCode = event.isChar ? key.UnicodeChar() : 0;
+        int charCode = key.UnicodeChar();
+        if (!charCode) {
+            charCode = key.BaseUnicodeChar();
+        }
+        event.isChar = (charCode >= ' ');
+        event.charCode = event.isChar ? charCode : 0;
         event.keyCode = (event.charCode > 0) ? 0 : domKeyCode;
         event.pluginEvent = NULL;
     } else {
@@ -1505,10 +1509,17 @@ nsWindow::InitKeyEvent(nsKeyEvent& event, AndroidGeckoEvent& key,
         event.pluginEvent = pluginEvent;
     }
 
-    event.InitBasicModifiers(gMenu || key.IsCtrlPressed(),
-                             key.IsAltPressed(),
-                             key.IsShiftPressed(),
-                             key.IsMetaPressed());
+    if (event.message != NS_KEY_PRESS ||
+        !key.UnicodeChar() || !key.BaseUnicodeChar() ||
+        key.UnicodeChar() == key.BaseUnicodeChar()) {
+        // For keypress, if the unicode char already has modifiers applied, we
+        // don't specify extra modifiers. If UnicodeChar() != BaseUnicodeChar()
+        // it means UnicodeChar() already has modifiers applied.
+        event.InitBasicModifiers(gMenu || key.IsCtrlPressed(),
+                                 key.IsAltPressed(),
+                                 key.IsShiftPressed(),
+                                 key.IsMetaPressed());
+    }
     event.location = key.DomKeyLocation();
     event.time = key.Time();
 
