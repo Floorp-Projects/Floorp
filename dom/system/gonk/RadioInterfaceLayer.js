@@ -226,6 +226,7 @@ function RadioInterfaceLayer() {
   this.rilContext = {
     radioState:     RIL.GECKO_RADIOSTATE_UNAVAILABLE,
     cardState:      RIL.GECKO_CARDSTATE_UNKNOWN,
+    networkSelectionMode: RIL.GECKO_NETWORK_SELECTION_UNKNOWN,
     iccInfo:        null,
     imsi:           null,
 
@@ -1441,6 +1442,7 @@ RadioInterfaceLayer.prototype = {
    */
   updateNetworkSelectionMode: function updateNetworkSelectionMode(message) {
     debug("updateNetworkSelectionMode: " + JSON.stringify(message));
+    this.rilContext.networkSelectionMode = message.mode;
     this._sendMobileConnectionMessage("RIL:NetworkSelectionModeChanged", message);
   },
 
