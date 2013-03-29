@@ -4,11 +4,11 @@
         xmlns:html="http://www.w3.org/1999/xhtml">
   <vbox>
     <html:div class='file'>
-      <html:input type='button' value='Browse&#8230;'/><label value="No file selected."/>
+      <html:button>Browse&#8230;</html:button><label value="No file selected."/>
     </html:div>
     <html:br/>
     <html:div class='file'>
-      <html:input type='button' value='Browse&#8230;'/><label value="No files selected."/>
+      <html:button>Browse&#8230;</html:button><label value="No files selected."/>
     </html:div>
   </vbox>
 </window>
