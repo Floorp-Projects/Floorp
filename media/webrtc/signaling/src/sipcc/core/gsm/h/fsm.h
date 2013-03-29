@@ -230,15 +230,13 @@ typedef struct fsmdef_media_t_ {
     /*
      * port number used in m= data channel line
      */
-    uint16_t       local_datachannel_port;
-    uint16_t       remote_datachannel_port;
+    uint16_t       sctp_port;
 
     /*
      * Data Channel properties
      */
-#define WEBRTC_DATACHANNEL_STREAMS_DEFAULT 16
-    uint32         datachannel_streams;
-    char           datachannel_protocol[SDP_MAX_STRING_LEN + 1];
+    uint32         streams;
+    char          *protocol;
 
     /*
      * This field contains the number of elements in the payloads field.
