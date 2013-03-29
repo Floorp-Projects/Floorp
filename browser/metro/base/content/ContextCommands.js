@@ -216,11 +216,6 @@ var ContextCommands = {
     BrowserUI.newTab(ContextMenuUI.popupState.mediaURL, Browser.selectedTab);
   },
 
-  openVideoInFullscreen: function cc_openVideoInFullscreen() {
-    // XXX currently isn't working.
-    this.sendCommand('videotab');
-  },
-
   // Bookmarks
 
   editBookmark: function cc_editBookmark() {

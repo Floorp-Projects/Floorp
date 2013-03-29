@@ -69,21 +69,6 @@ var ContextMenuHandler = {
         this._onPaste();
         break;
 
-      case "play":
-      case "pause":
-        if (node instanceof Ci.nsIDOMHTMLMediaElement)
-          node[command]();
-        break;
-
-      case "videotab":
-        if (node instanceof Ci.nsIDOMHTMLVideoElement) {
-          node.pause();
-          Cu.import("resource:///modules/video.jsm");
-          Video.fullScreenSourceElement = node;
-          sendAsyncMessage("Browser:FullScreenVideo:Start");
-        }
-        break;
-
       case "select-all":
         this._onSelectAll();
         break;
