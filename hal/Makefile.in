@@ -156,8 +156,8 @@ include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
 
-CFLAGS          += $(MOZ_DBUS_GLIB_CFLAGS)
-CXXFLAGS        += $(MOZ_DBUS_GLIB_CFLAGS)
+CFLAGS          += $(GLIB_CFLAGS) $(MOZ_DBUS_GLIB_CFLAGS)
+CXXFLAGS        += $(GLIB_CFLAGS) $(MOZ_DBUS_GLIB_CFLAGS)
 
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
 # So that we can call nsScreenManagerGonk::GetConfiguration().

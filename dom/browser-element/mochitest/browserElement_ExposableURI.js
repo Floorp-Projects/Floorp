@@ -6,9 +6,10 @@
 
 "use strict";
 SimpleTest.waitForExplicitFinish();
+browserElementTestHelpers.setEnabledPref(true);
+browserElementTestHelpers.addPermission();
 
 var iframe;
-
 
 function testPassword() {
   function locationchange(e) {
@@ -45,13 +46,10 @@ function testWyciwyg() {
 }
 
 function runTest() {
-  browserElementTestHelpers.setEnabledPref(true);
-  browserElementTestHelpers.addPermission();
-
   iframe = document.createElement('iframe');
   SpecialPowers.wrap(iframe).mozbrowser = true;
   document.body.appendChild(iframe);
   testWyciwyg();
 }
 
-addEventListener('load', function() { SimpleTest.executeSoon(runTest); });
+addEventListener('testready', runTest);

@@ -16,8 +16,7 @@ typedef nsSVGPolyElement SVGPolygonElementBase;
 namespace mozilla {
 namespace dom {
 
-class SVGPolygonElement MOZ_FINAL : public SVGPolygonElementBase,
-                                    public nsIDOMSVGElement
+class SVGPolygonElement MOZ_FINAL : public SVGPolygonElementBase
 {
 protected:
   SVGPolygonElement(already_AddRefed<nsINodeInfo> aNodeInfo);
@@ -26,22 +25,11 @@ protected:
                                              already_AddRefed<nsINodeInfo> aNodeInfo));
 
 public:
-  // interfaces:
-
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // xxx I wish we could use virtual inheritance
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-  NS_FORWARD_NSIDOMSVGELEMENT(SVGPolygonElementBase::)
-
   // nsSVGPathGeometryElement methods:
   virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks);
   virtual void ConstructPath(gfxContext *aCtx);
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  virtual nsIDOMNode* AsDOMNode() { return this; }
 };
 
 } // namespace dom

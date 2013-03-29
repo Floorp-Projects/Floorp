@@ -563,6 +563,7 @@ const int32_t nsCSSProps::kAppearanceKTable[] = {
   eCSSKeyword_menulist_text,          NS_THEME_DROPDOWN_TEXT,
   eCSSKeyword_menulist_textfield,     NS_THEME_DROPDOWN_TEXTFIELD,
   eCSSKeyword_range,                  NS_THEME_RANGE,
+  eCSSKeyword_range_thumb,            NS_THEME_RANGE_THUMB,
   eCSSKeyword_scale_horizontal,       NS_THEME_SCALE_HORIZONTAL,
   eCSSKeyword_scale_vertical,         NS_THEME_SCALE_VERTICAL,
   eCSSKeyword_scalethumb_horizontal,  NS_THEME_SCALE_THUMB_HORIZONTAL,

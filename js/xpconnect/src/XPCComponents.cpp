@@ -3057,8 +3057,7 @@ bool
 xpc::SandboxCallableProxyHandler::call(JSContext *cx, JS::Handle<JSObject*> proxy,
                                        unsigned argc, Value *vp)
 {
-    // We forward the call to our underlying callable. The callable to forward
-    // to can be gotten via GetProxyCall.
+    // We forward the call to our underlying callable.
 
     // The parent of our proxy is the SandboxProxyHandler proxy
     JSObject *sandboxProxy = JS_GetParent(proxy);
@@ -3106,7 +3105,7 @@ xpc::SandboxCallableProxyHandler::call(JSContext *cx, JS::Handle<JSObject*> prox
         thisVal = ObjectValue(*js::GetProxyTargetObject(sandboxProxy));
     }
 
-    return JS::Call(cx, thisVal, js::GetProxyCall(proxy), argc,
+    return JS::Call(cx, thisVal, js::GetProxyPrivate(proxy), argc,
                     JS_ARGV(cx, vp), vp);
 }
 
@@ -3125,11 +3124,9 @@ WrapCallable(JSContext *cx, JSObject *callable, JSObject *sandboxProtoProxy)
                js::GetProxyHandler(sandboxProtoProxy) ==
                  &xpc::sandboxProxyHandler);
 
-    // We need to pass the given callable in as the "call" and
-    // "construct" so we get a function proxy.
     return js::NewProxyObject(cx, &xpc::sandboxCallableProxyHandler,
                               ObjectValue(*callable), nullptr,
-                              sandboxProtoProxy, callable, callable);
+                              sandboxProtoProxy, js::ProxyIsCallable);
 }
 
 template<typename Op>
@@ -4880,8 +4877,7 @@ ContentComponentsGetterOp(JSContext *cx, JSHandleObject obj, JSHandleId id,
 // static
 JSBool
 nsXPCComponents::AttachComponentsObject(XPCCallContext& ccx,
-                                        XPCWrappedNativeScope* aScope,
-                                        JSObject* aTarget)
+                                        XPCWrappedNativeScope* aScope)
 {
     JSObject *components = aScope->GetComponentsJSObject(ccx);
     if (!components)
@@ -4889,13 +4885,11 @@ nsXPCComponents::AttachComponentsObject(XPCCallContext& ccx,
 
     JSObject *global = aScope->GetGlobalJSObject();
     MOZ_ASSERT(js::IsObjectInContextCompartment(global, ccx));
-    if (!aTarget)
-        aTarget = global;
 
     jsid id = ccx.GetRuntime()->GetStringID(XPCJSRuntime::IDX_COMPONENTS);
     JSPropertyOp getter = AccessCheck::isChrome(global) ? nullptr
                                                         : &ContentComponentsGetterOp;
-    return JS_DefinePropertyById(ccx, aTarget, id, js::ObjectValue(*components),
+    return JS_DefinePropertyById(ccx, global, id, js::ObjectValue(*components),
                                  getter, nullptr, JSPROP_PERMANENT | JSPROP_READONLY);
 }
 

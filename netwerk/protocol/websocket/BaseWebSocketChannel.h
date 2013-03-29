@@ -42,6 +42,10 @@ class BaseWebSocketChannel : public nsIWebSocketChannel,
   NS_IMETHOD GetExtensions(nsACString &aExtensions);
   NS_IMETHOD GetProtocol(nsACString &aProtocol);
   NS_IMETHOD SetProtocol(const nsACString &aProtocol);
+  NS_IMETHOD GetPingInterval(uint32_t *aMilliSeconds);
+  NS_IMETHOD SetPingInterval(uint32_t aMilliSeconds);
+  NS_IMETHOD GetPingTimeout(uint32_t *aMilliSeconds);
+  NS_IMETHOD SetPingTimeout(uint32_t aMilliSeconds);
 
  protected:
   nsCOMPtr<nsIURI>                mOriginalURI;
@@ -54,8 +58,15 @@ class BaseWebSocketChannel : public nsIWebSocketChannel,
   nsCString                       mProtocol;
   nsCString                       mOrigin;
 
-  bool                            mEncrypted;
   nsCString                       mNegotiatedExtensions;
+
+  uint32_t                        mEncrypted                 : 1;
+  uint32_t                        mWasOpened                 : 1;
+  uint32_t                        mClientSetPingInterval     : 1;
+  uint32_t                        mClientSetPingTimeout      : 1;
+
+  uint32_t                        mPingInterval;         /* milliseconds */
+  uint32_t                        mPingResponseTimeout;  /* milliseconds */
 };
 
 } // namespace net

@@ -383,7 +383,6 @@ protected:
   inline void SetKeyPointsErrorFlag(bool aNewValue) {
     SetErrorFlag(BF_KEY_POINTS, aNewValue);
   }
-  // Helper method -- based on SET_BOOLBIT in nsHTMLInputElement.cpp
   inline void SetErrorFlag(AnimationAttributeIdx aField, bool aValue) {
     if (aValue) {
       mErrorFlags |=  (0x01 << aField);

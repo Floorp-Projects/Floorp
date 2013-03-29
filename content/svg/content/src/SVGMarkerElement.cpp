@@ -67,10 +67,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGOrientType::DOMAnimatedEnum)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGAnimatedEnumeration)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ISUPPORTS_INHERITED3(SVGMarkerElement, SVGMarkerElementBase,
-                             nsIDOMNode, nsIDOMElement,
-                             nsIDOMSVGElement)
-
 //----------------------------------------------------------------------
 // Implementation
 
@@ -101,7 +97,6 @@ nsSVGOrientType::ToDOMAnimatedEnum(nsSVGElement *aSVGElement)
 SVGMarkerElement::SVGMarkerElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : SVGMarkerElementBase(aNodeInfo), mCoordCtx(nullptr)
 {
-  SetIsDOMBinding();
 }
 
 //----------------------------------------------------------------------

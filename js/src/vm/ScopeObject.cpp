@@ -1307,6 +1307,12 @@ class DebugScopeProxy : public BaseProxyHandler
 
     DebugScopeProxy() : BaseProxyHandler(&family) {}
 
+    bool preventExtensions(JSContext *cx, HandleObject proxy) MOZ_OVERRIDE
+    {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_CHANGE_EXTENSIBILITY);
+        return false;
+    }
+
     bool getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id, PropertyDescriptor *desc,
                                unsigned flags) MOZ_OVERRIDE
     {
@@ -1466,6 +1472,13 @@ class DebugScopeProxy : public BaseProxyHandler
         return js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_CANT_DELETE,
                                         JSDVG_IGNORE_STACK, idval, NullPtr(), NULL, NULL);
     }
+
+    bool isExtensible(JSObject *proxy) MOZ_OVERRIDE
+    {
+        // always [[Extensible]], can't be made non-[[Extensible]], like most
+        // proxies
+        return true;
+    }
 };
 
 int DebugScopeProxy::family = 0;
@@ -1476,8 +1489,7 @@ DebugScopeObject::create(JSContext *cx, ScopeObject &scope, HandleObject enclosi
 {
     JS_ASSERT(scope.compartment() == cx->compartment);
     JSObject *obj = NewProxyObject(cx, &DebugScopeProxy::singleton, ObjectValue(scope),
-                                   NULL /* proto */, &scope.global(),
-                                   NULL /* call */, NULL /* construct */);
+                                   NULL /* proto */, &scope.global(), ProxyNotCallable);
     if (!obj)
         return NULL;
 

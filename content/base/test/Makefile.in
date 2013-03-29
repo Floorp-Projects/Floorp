@@ -594,10 +594,17 @@ MOCHITEST_FILES_C= \
 		test_mixed_content_blocker.html \
 		file_mixed_content_main.html \
 		file_mixed_content_server.sjs \
-    test_mixed_content_blocker_bug803225.html \
-    file_mixed_content_main_bug803225.html \
-    file_mixed_content_main_bug803225_websocket_wsh.py \
-    bug803225_test_mailto.html \
+		test_mixed_content_blocker_bug803225.html \
+		file_mixed_content_main_bug803225.html \
+		file_mixed_content_main_bug803225_websocket_wsh.py \
+		bug803225_test_mailto.html \
+		test_mixed_content_blocker_frameNavigation.html \
+		file_mixed_content_frameNavigation.html \
+		file_mixed_content_frameNavigation_innermost.html \
+		file_mixed_content_frameNavigation_grandchild.html \
+		file_mixed_content_frameNavigation_secure.html \
+		file_mixed_content_frameNavigation_secure_grandchild.html \
+		file_mixed_content_frameNavigation_blankTarget.html \
 		test_bug789856.html \
 		file_bug804395.jar \
 		test_bug804395.html \

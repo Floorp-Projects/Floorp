@@ -19,8 +19,7 @@ namespace dom {
 
 typedef SVGFEUnstyledElement SVGFESpotLightElementBase;
 
-class SVGFESpotLightElement : public SVGFESpotLightElementBase,
-                              public nsIDOMSVGElement
+class SVGFESpotLightElement : public SVGFESpotLightElementBase
 {
   friend nsresult (::NS_NewSVGFESpotLightElement(nsIContent **aResult,
                                                  already_AddRefed<nsINodeInfo> aNodeInfo));
@@ -29,24 +28,14 @@ protected:
   SVGFESpotLightElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : SVGFESpotLightElementBase(aNodeInfo)
   {
-    SetIsDOMBinding();
   }
   virtual JSObject* WrapNode(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 
 public:
-  // interfaces:
-  NS_DECL_ISUPPORTS_INHERITED
-
-  NS_FORWARD_NSIDOMSVGELEMENT(SVGFESpotLightElementBase::)
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-
   virtual bool AttributeAffectsRendering(
           int32_t aNameSpaceID, nsIAtom* aAttribute) const;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  virtual nsIDOMNode* AsDOMNode() { return this; }
 
   // WebIDL
   already_AddRefed<nsIDOMSVGAnimatedNumber> X();

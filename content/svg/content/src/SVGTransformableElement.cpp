@@ -18,11 +18,6 @@
 namespace mozilla {
 namespace dom {
 
-//----------------------------------------------------------------------
-// nsISupports methods
-
-NS_IMPL_ISUPPORTS_INHERITED0(SVGTransformableElement, nsSVGElement)
-
 already_AddRefed<DOMSVGAnimatedTransformList>
 SVGTransformableElement::Transform()
 {

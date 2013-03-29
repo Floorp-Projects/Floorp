@@ -8,10 +8,12 @@ function logResult(str, passed) {
   document.body.appendChild(elt);
 }
 
+window._testResults = {};
 
 // callback for when stuff is allowed by CSP
 var onevalexecuted = (function(window) {
     return function(shouldrun, what, data) {
+      window._testResults[what] = "ran";
       window.parent.scriptRan(shouldrun, what, data);
       logResult((shouldrun ? "PASS: " : "FAIL: ") + what + " : " + data, shouldrun);
     };})(window);
@@ -19,6 +21,7 @@ var onevalexecuted = (function(window) {
 // callback for when stuff is blocked
 var onevalblocked = (function(window) {
     return function(shouldrun, what, data) {
+      window._testResults[what] = "blocked";
       window.parent.scriptBlocked(shouldrun, what, data);
       logResult((shouldrun ? "FAIL: " : "PASS: ") + what + " : " + data, !shouldrun);
     };})(window);
@@ -28,26 +31,38 @@ var onevalblocked = (function(window) {
 // out.
 addEventListener('load', function() {
 
-  // setTimeout(String) test  -- should pass
-  try {
-    setTimeout('onevalexecuted(false, "setTimeout(String)", "setTimeout with a string was enabled.");', 10);
-  } catch (e) {
-    onevalblocked(false, "setTimeout(String)",
-                  "setTimeout with a string was blocked");
+  // setTimeout(String) test -- mutate something in the window._testResults
+  // obj, then check it.
+  {
+    var str_setTimeoutWithStringRan = 'onevalexecuted(false, "setTimeout(String)", "setTimeout with a string was enabled.");';
+    function fcn_setTimeoutWithStringCheck() {
+      if (this._testResults["setTimeout(String)"] !== "ran") {
+        onevalblocked(false, "setTimeout(String)",
+                      "setTimeout with a string was blocked");
+      }
+    }
+    setTimeout(fcn_setTimeoutWithStringCheck.bind(window), 10);
+    setTimeout(str_setTimeoutWithStringRan, 10);
   }
 
-  // setTimeout(function) test  -- should pass
-  try {
-    setTimeout(function() {
-          onevalexecuted(true, "setTimeout(function)",
-                        "setTimeout with a function was enabled.")
-        }, 10);
-  } catch (e) {
-    onevalblocked(true, "setTimeout(function)",
-                  "setTimeout with a function was blocked");
+  // setTimeout(function) test -- mutate something in the window._testResults
+  // obj, then check it.
+  {
+    function fcn_setTimeoutWithFunctionRan() {
+      onevalexecuted(true, "setTimeout(function)",
+                    "setTimeout with a function was enabled.")
+    }
+    function fcn_setTimeoutWithFunctionCheck() {
+      if (this._testResults["setTimeout(function)"] !== "ran") {
+        onevalblocked(true, "setTimeout(function)",
+                      "setTimeout with a function was blocked");
+      }
+    }
+    setTimeout(fcn_setTimeoutWithFunctionRan.bind(window), 10);
+    setTimeout(fcn_setTimeoutWithFunctionCheck.bind(window), 10);
   }
 
-  // eval() test
+  // eval() test -- should throw exception as per spec
   try {
     eval('onevalexecuted(false, "eval(String)", "eval() was enabled.");');
   } catch (e) {
@@ -55,7 +70,7 @@ addEventListener('load', function() {
                   "eval() was blocked");
   }
 
-  // eval(foo,bar) test
+  // eval(foo,bar) test -- should throw exception as per spec
   try {
     eval('onevalexecuted(false, "eval(String,scope)", "eval() was enabled.");',1);
   } catch (e) {
@@ -63,7 +78,7 @@ addEventListener('load', function() {
                   "eval() with scope was blocked");
   }
 
-  // [foo,bar].sort(eval) test
+  // [foo,bar].sort(eval) test -- should throw exception as per spec
   try {
     ['onevalexecuted(false, "[String, obj].sort(eval)", "eval() was enabled.");',1].sort(eval);
   } catch (e) {
@@ -71,7 +86,7 @@ addEventListener('load', function() {
                   "eval() with scope via sort was blocked");
   }
 
-  // [].sort.call([foo,bar], eval) test
+  // [].sort.call([foo,bar], eval) test -- should throw exception as per spec
   try {
     [].sort.call(['onevalexecuted(false, "[String, obj].sort(eval)", "eval() was enabled.");',1], eval);
   } catch (e) {
@@ -79,7 +94,7 @@ addEventListener('load', function() {
                   "eval() with scope via sort/call was blocked");
   }
 
-  // new Function() test
+  // new Function() test -- should throw exception as per spec
   try {
     var fcn = new Function('onevalexecuted(false, "new Function(String)", "new Function(String) was enabled.");');
     fcn();

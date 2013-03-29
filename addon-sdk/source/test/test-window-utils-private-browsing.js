@@ -30,14 +30,10 @@ exports.testWindowTrackerIgnoresPrivateWindows = function(assert, done) {
 
   let wt = windowUtils.WindowTracker({
     onTrack: function(window) {
-      if (isWindowPrivate(window)) {
-        assert.fail('private window was tracked!');
-      }
+      assert.ok(!isWindowPrivate(window), 'private window was not tracked!');
     },
     onUntrack: function(window) {
-      if (isWindowPrivate(window)) {
-        assert.fail('private window was tracked!');
-      }
+      assert.ok(!isWindowPrivate(window), 'private window was not tracked!');
       // PWPB case
       if (window === myPrivateWindow && isWindowPBSupported) {
         privateWindowClosed = true;

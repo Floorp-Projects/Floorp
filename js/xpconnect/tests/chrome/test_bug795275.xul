@@ -20,6 +20,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=795275
   /** Test for Warning in content scopes about Components. **/
 
   SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({set: [['dom.omit_components_in_content', false]]}, startLoad);
+  function startLoad() {
+    for (var i = 1; i <= document.getElementsByTagName('iframe').length; ++i) {
+      var frame = document.getElementById('frame' + i);
+      frame.contentWindow.location = 'http://mochi.test:8888/tests/js/xpconnect/tests/mochitest/file_bug795275.html';
+      frame.onload = frameLoaded;
+    }
+  }
 
   // Set up our console listener.
   var gWarnings = 0;
@@ -73,10 +81,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=795275
   ]]>
 
   </script>
-  <iframe id="frame1" onload="frameLoaded();" type="content" src="http://mochi.test:8888/tests/js/xpconnect/tests/mochitest/file_bug795275.html" />
-  <iframe id="frame2" onload="frameLoaded();" type="content" src="http://mochi.test:8888/tests/js/xpconnect/tests/mochitest/file_bug795275.html" />
-  <iframe id="frame3" onload="frameLoaded();" type="content" src="http://mochi.test:8888/tests/js/xpconnect/tests/mochitest/file_bug795275.html" />
-  <iframe id="frame4" onload="frameLoaded();" type="content" src="http://mochi.test:8888/tests/js/xpconnect/tests/mochitest/file_bug795275.html" />
-  <iframe id="frame5" onload="frameLoaded();" type="content" src="http://mochi.test:8888/tests/js/xpconnect/tests/mochitest/file_bug795275.html" />
+  <iframe id="frame1"/>
+  <iframe id="frame2"/>
+  <iframe id="frame3"/>
+  <iframe id="frame4"/>
+  <iframe id="frame5"/>
 
 </window>

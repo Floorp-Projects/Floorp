@@ -13,12 +13,10 @@ XPIDL_SOURCES += [
     'nsIDOMSVGAnimatedString.idl',
     'nsIDOMSVGDocument.idl',
     'nsIDOMSVGElement.idl',
-    'nsIDOMSVGFilters.idl',
     'nsIDOMSVGLength.idl',
     'nsIDOMSVGNumber.idl',
     'nsIDOMSVGRect.idl',
     'nsIDOMSVGStringList.idl',
-    'nsIDOMSVGUnitTypes.idl',
     'nsIDOMSVGZoomEvent.idl',
 ]
 

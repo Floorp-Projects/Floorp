@@ -33,6 +33,7 @@ using namespace std;
 #include "nsIDNSService.h"
 #include "nsWeakReference.h"
 #include "nricectx.h"
+#include "mozilla/SyncRunnable.h"
 
 #include "mtransport_test_utils.h"
 MtransportTestUtils *test_utils;
@@ -525,9 +526,8 @@ class SignalingAgent {
   SignalingAgent() : pc(nullptr) {}
 
   ~SignalingAgent() {
-    pc->GetMainThread()->Dispatch(
-      WrapRunnable(this, &SignalingAgent::Close),
-      NS_DISPATCH_SYNC);
+    mozilla::SyncRunnable::DispatchToThread(pc->GetMainThread(),
+      WrapRunnable(this, &SignalingAgent::Close));
   }
 
   void Init_m(nsCOMPtr<nsIThread> thread)
@@ -546,9 +546,8 @@ class SignalingAgent {
 
   void Init(nsCOMPtr<nsIThread> thread)
   {
-    thread->Dispatch(
-      WrapRunnable(this, &SignalingAgent::Init_m, thread),
-      NS_DISPATCH_SYNC);
+    mozilla::SyncRunnable::DispatchToThread(thread,
+      WrapRunnable(this, &SignalingAgent::Init_m, thread));
 
     ASSERT_TRUE_WAIT(sipcc_state() == sipcc::PeerConnectionImpl::kStarted,
                      kDefaultTimeout);
@@ -558,9 +557,8 @@ class SignalingAgent {
 
   bool InitAllowFail(nsCOMPtr<nsIThread> thread)
   {
-    thread->Dispatch(
-        WrapRunnable(this, &SignalingAgent::Init_m, thread),
-        NS_DISPATCH_SYNC);
+    mozilla::SyncRunnable::DispatchToThread(thread,
+        WrapRunnable(this, &SignalingAgent::Init_m, thread));
 
     EXPECT_TRUE_WAIT(sipcc_state() == sipcc::PeerConnectionImpl::kStarted,
                      kDefaultTimeout);
@@ -633,9 +631,9 @@ class SignalingAgent {
       new Fake_AudioStreamSource();
 
     nsresult ret;
-    test_utils->sts_target()->Dispatch(
-      WrapRunnableRet(audio_stream, &Fake_MediaStream::Start, &ret),
-        NS_DISPATCH_SYNC);
+    mozilla::SyncRunnable::DispatchToThread(
+      test_utils->sts_target(),
+      WrapRunnableRet(audio_stream, &Fake_MediaStream::Start, &ret));
 
     ASSERT_TRUE(NS_SUCCEEDED(ret));
 

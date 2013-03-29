@@ -20,7 +20,12 @@ namespace mozilla {
 namespace net {
 
 BaseWebSocketChannel::BaseWebSocketChannel()
-  : mEncrypted(false)
+  : mEncrypted(0)
+  , mWasOpened(0)
+  , mClientSetPingInterval(0)
+  , mClientSetPingTimeout(0)
+  , mPingInterval(0)
+  , mPingResponseTimeout(10000)
 {
 #if defined(PR_LOGGING)
   if (!webSocketLog)
@@ -112,6 +117,46 @@ BaseWebSocketChannel::SetProtocol(const nsACString &aProtocol)
 {
   LOG(("BaseWebSocketChannel::SetProtocol() %p\n", this));
   mProtocol = aProtocol;                        /* the sub protocol */
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BaseWebSocketChannel::GetPingInterval(uint32_t *aMilliSeconds)
+{
+  *aMilliSeconds = mPingInterval;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BaseWebSocketChannel::SetPingInterval(uint32_t aMilliSeconds)
+{
+  if (mWasOpened) {
+    return NS_ERROR_IN_PROGRESS;
+  }
+
+  mPingInterval = aMilliSeconds;
+  mClientSetPingInterval = 1;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BaseWebSocketChannel::GetPingTimeout(uint32_t *aMilliSeconds)
+{
+  *aMilliSeconds = mPingResponseTimeout;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BaseWebSocketChannel::SetPingTimeout(uint32_t aMilliSeconds)
+{
+  if (mWasOpened) {
+    return NS_ERROR_IN_PROGRESS;
+  }
+
+  mPingResponseTimeout = aMilliSeconds;
+  mClientSetPingTimeout = 1;
+
   return NS_OK;
 }
 

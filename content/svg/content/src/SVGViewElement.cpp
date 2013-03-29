@@ -38,19 +38,11 @@ nsSVGElement::EnumInfo SVGViewElement::sEnumInfo[1] =
 };
 
 //----------------------------------------------------------------------
-// nsISupports methods
-
-NS_IMPL_ISUPPORTS_INHERITED3(SVGViewElement, SVGViewElementBase,
-                             nsIDOMNode, nsIDOMElement,
-                             nsIDOMSVGElement)
-
-//----------------------------------------------------------------------
 // Implementation
 
 SVGViewElement::SVGViewElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : SVGViewElementBase(aNodeInfo)
 {
-  SetIsDOMBinding();
 }
 
 //----------------------------------------------------------------------

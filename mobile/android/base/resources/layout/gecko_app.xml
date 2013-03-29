@@ -27,10 +27,10 @@
 
             <include layout="@layout/shared_ui_components"/>
 
-            <org.mozilla.gecko.AboutHomeContent android:id="@+id/abouthome_content"
-                                                android:layout_width="fill_parent"
-                                                android:layout_height="fill_parent"
-                                                android:background="@color/background_normal"/>
+            <Gecko.AboutHomeContent android:id="@+id/abouthome_content"
+                                    android:layout_width="fill_parent"
+                                    android:layout_height="fill_parent"
+                                    android:background="@color/background_normal"/>
 
         </RelativeLayout>
 

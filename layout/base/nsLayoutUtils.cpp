@@ -2586,8 +2586,7 @@ GetPercentHeight(const nsStyleCoord& aStyle,
     if (minh > h)
       h = minh;
   } else {
-    NS_ASSERTION(pos->mMinHeight.HasPercent() ||
-                 pos->mMinHeight.GetUnit() == eStyleUnit_Auto,
+    NS_ASSERTION(pos->mMinHeight.HasPercent(),
                  "unknown min-height unit");
   }
 
@@ -2699,19 +2698,7 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
   nscoord maxw;
   bool haveFixedMaxWidth = GetAbsoluteCoord(styleMaxWidth, maxw);
   nscoord minw;
-
-  // Treat "min-width: auto" as 0.
-  bool haveFixedMinWidth;
-  if (eStyleUnit_Auto == styleMinWidth.GetUnit()) {
-    // NOTE: Technically, "auto" is supposed to behave like "min-content" on
-    // flex items. However, we don't need to worry about that here, because
-    // flex items' min-sizes are intentionally ignored until the flex
-    // container explicitly considers them during space distribution.
-    minw = 0;
-    haveFixedMinWidth = true;
-  } else {
-    haveFixedMinWidth = GetAbsoluteCoord(styleMinWidth, minw);
-  }
+  bool haveFixedMinWidth = GetAbsoluteCoord(styleMinWidth, minw);
 
   // If we have a specified width (or a specified 'min-width' greater
   // than the specified 'max-width', which works out to the same thing),
@@ -2745,18 +2732,12 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
 
     // Handle elements with an intrinsic ratio (or size) and a specified
     // height, min-height, or max-height.
-    // NOTE: We treat "min-height:auto" as "0" for the purpose of this code,
-    // since that's what it means in all cases except for on flex items -- and
-    // even there, we're supposed to ignore it (i.e. treat it as 0) until the
-    // flex container explicitly considers it.
     const nsStyleCoord &styleHeight = stylePos->mHeight;
     const nsStyleCoord &styleMinHeight = stylePos->mMinHeight;
     const nsStyleCoord &styleMaxHeight = stylePos->mMaxHeight;
-
     if (styleHeight.GetUnit() != eStyleUnit_Auto ||
-        !(styleMinHeight.GetUnit() == eStyleUnit_Auto || 
-          (styleMinHeight.GetUnit() == eStyleUnit_Coord &&
-           styleMinHeight.GetCoordValue() == 0)) ||
+        !(styleMinHeight.GetUnit() == eStyleUnit_Coord &&
+          styleMinHeight.GetCoordValue() == 0) ||
         styleMaxHeight.GetUnit() != eStyleUnit_None) {
 
       nsSize ratio = aFrame->GetIntrinsicRatio();
@@ -3130,23 +3111,20 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
                  aFrame, aCBSize.width, boxSizingAdjust.width,
                  boxSizingToMarginEdgeWidth, stylePos->mMaxWidth);
   } else {
+    // NOTE: Flex items ignore their min & max sizing properties in their
+    // flex container's main-axis.  (Those properties get applied later in
+    // the flexbox algorithm.)
     maxWidth = nscoord_MAX;
   }
 
-  // NOTE: Flex items ignore their min & max sizing properties in their
-  // flex container's main-axis.  (Those properties get applied later in
-  // the flexbox algorithm.)
-  if (stylePos->mMinWidth.GetUnit() != eStyleUnit_Auto &&
-      !(isFlexItem && isHorizontalFlexItem)) {
+  if (!(isFlexItem && isHorizontalFlexItem)) {
     minWidth = nsLayoutUtils::ComputeWidthValue(aRenderingContext,
                  aFrame, aCBSize.width, boxSizingAdjust.width,
                  boxSizingToMarginEdgeWidth, stylePos->mMinWidth);
   } else {
-    // Treat "min-width: auto" as 0.
-    // NOTE: Technically, "auto" is supposed to behave like "min-content" on
-    // flex items. However, we don't need to worry about that here, because
-    // flex items' min-sizes are intentionally ignored until the flex
-    // container explicitly considers them during space distribution.
+    // NOTE: Flex items ignore their min & max sizing properties in their
+    // flex container's main-axis.  (Those properties get applied later in
+    // the flexbox algorithm.)
     minWidth = 0;
   }
 
