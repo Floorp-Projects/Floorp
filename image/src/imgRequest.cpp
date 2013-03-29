@@ -200,7 +200,7 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus)
       NS_ABORT_IF_FALSE(mURI, "Removing last observer without key uri.");
 
       mLoader->SetHasNoProxies(mURI, mCacheEntry);
-    } 
+    }
 #if defined(PR_LOGGING)
     else {
       nsAutoCString spec;
@@ -842,7 +842,7 @@ imgRequest::GetInterface(const nsIID & aIID, void **aResult)
   if (!mPrevChannelSink || aIID.Equals(NS_GET_IID(nsIChannelEventSink)))
     return QueryInterface(aIID, aResult);
 
-  NS_ASSERTION(mPrevChannelSink != this, 
+  NS_ASSERTION(mPrevChannelSink != this,
                "Infinite recursion - don't keep track of channel sinks that are us!");
   return mPrevChannelSink->GetInterface(aIID, aResult);
 }

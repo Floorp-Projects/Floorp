@@ -45,7 +45,7 @@ public:
     NS_LOG_ADDREF(this, mRefCnt, "imgCacheEntry", sizeof(*this));
     return mRefCnt;
   }
- 
+
   nsrefcnt Release()
   {
     NS_PRECONDITION(0 != mRefCnt, "dup release");
@@ -57,7 +57,7 @@ public:
       delete this;
       return 0;
     }
-    return mRefCnt;                              
+    return mRefCnt;
   }
 
   uint32_t GetDataSize() const
@@ -175,7 +175,7 @@ private: // data
 
 class imgCacheQueue
 {
-public: 
+public:
   imgCacheQueue();
   void Remove(imgCacheEntry *);
   void Push(imgCacheEntry *);
@@ -186,7 +186,7 @@ public:
   uint32_t GetSize() const;
   void UpdateSize(int32_t diff);
   uint32_t GetNumElements() const;
-  typedef std::vector<nsRefPtr<imgCacheEntry> > queueContainer;  
+  typedef std::vector<nsRefPtr<imgCacheEntry> > queueContainer;
   typedef queueContainer::iterator iterator;
   typedef queueContainer::const_iterator const_iterator;
 
@@ -300,11 +300,11 @@ public:
 
   // The image loader maintains a hash table of all imgCacheEntries. However,
   // only some of them will be evicted from the cache: those who have no
-  // imgRequestProxies watching their imgRequests. 
+  // imgRequestProxies watching their imgRequests.
   //
   // Once an imgRequest has no imgRequestProxies, it should notify us by
   // calling HasNoObservers(), and null out its cache entry pointer.
-  // 
+  //
   // Upon having a proxy start observing again, it should notify us by calling
   // HasObservers(). The request's cache entry will be re-set before this
   // happens, by calling imgRequest::SetCacheEntry() when an entry with no
@@ -315,7 +315,7 @@ public:
 private: // methods
 
   bool ValidateEntry(imgCacheEntry *aEntry, nsIURI *aKey,
-                       nsIURI *aInitialDocumentURI, nsIURI *aReferrerURI, 
+                       nsIURI *aInitialDocumentURI, nsIURI *aReferrerURI,
                        nsILoadGroup *aLoadGroup,
                        imgINotificationObserver *aObserver, nsISupports *aCX,
                        nsLoadFlags aLoadFlags, bool aCanMakeNewChannel,

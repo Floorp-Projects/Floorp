@@ -48,7 +48,7 @@
 // we want to explore making the document own the load group
 // so we can associate the document URI with the load group.
 // until this point, we have an evil hack:
-#include "nsIHttpChannelInternal.h"  
+#include "nsIHttpChannelInternal.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIChannelPolicy.h"
 #include "nsILoadContext.h"
@@ -391,8 +391,8 @@ static bool ShouldRevalidateEntry(imgCacheEntry *aEntry,
     // entries to be used unless they have been explicitly marked to
     // indicate that revalidation is necessary.
     //
-    if (aFlags & (nsIRequest::VALIDATE_NEVER | 
-                  nsIRequest::VALIDATE_ONCE_PER_SESSION)) 
+    if (aFlags & (nsIRequest::VALIDATE_NEVER |
+                  nsIRequest::VALIDATE_ONCE_PER_SESSION))
     {
       bValidateEntry = false;
     }
@@ -461,7 +461,7 @@ static nsresult NewImageChannel(nsIChannel **aResult,
   nsresult rv;
   nsCOMPtr<nsIChannel> newChannel;
   nsCOMPtr<nsIHttpChannel> newHttpChannel;
- 
+
   nsCOMPtr<nsIInterfaceRequestor> callbacks;
 
   if (aLoadGroup) {
@@ -482,7 +482,7 @@ static nsresult NewImageChannel(nsIChannel **aResult,
   // canceled too.
   //
   rv = NS_NewChannel(aResult,
-                     aURI,        // URI 
+                     aURI,        // URI
                      nullptr,      // Cached IOService
                      nullptr,      // LoadGroup
                      callbacks,   // Notification Callbacks
@@ -1139,7 +1139,7 @@ void imgLoader::CacheEntriesChanged(nsIURI *uri, int32_t sizediff /* = 0 */)
 void imgLoader::CheckCacheLimits(imgCacheTable &cache, imgCacheQueue &queue)
 {
   if (queue.GetNumElements() == 0)
-    NS_ASSERTION(queue.GetSize() == 0, 
+    NS_ASSERTION(queue.GetSize() == 0,
                  "imgLoader::CheckCacheLimits -- incorrect cache size");
 
   // Remove entries from the cache until we're back under our desired size.
@@ -1363,7 +1363,7 @@ bool imgLoader::ValidateEntry(imgCacheEntry *aEntry,
     validateRequest = ShouldRevalidateEntry(aEntry, aLoadFlags, hasExpired);
 
     PR_LOG(GetImgLog(), PR_LOG_DEBUG,
-           ("imgLoader::ValidateEntry validating cache entry. " 
+           ("imgLoader::ValidateEntry validating cache entry. "
             "validateRequest = %d", validateRequest));
   }
 #if defined(PR_LOGGING)
@@ -1372,7 +1372,7 @@ bool imgLoader::ValidateEntry(imgCacheEntry *aEntry,
     aURI->GetSpec(spec);
 
     PR_LOG(GetImgLog(), PR_LOG_DEBUG,
-           ("imgLoader::ValidateEntry BYPASSING cache validation for %s " 
+           ("imgLoader::ValidateEntry BYPASSING cache validation for %s "
             "because of NULL LoadID", spec.get()));
   }
 #endif
@@ -1478,11 +1478,11 @@ bool imgLoader::RemoveFromCache(imgCacheEntry *entry)
   return false;
 }
 
-static PLDHashOperator EnumEvictEntries(const nsACString&, 
+static PLDHashOperator EnumEvictEntries(const nsACString&,
                                         nsRefPtr<imgCacheEntry> &aData,
                                         void *data)
 {
-  nsTArray<nsRefPtr<imgCacheEntry> > *entries = 
+  nsTArray<nsRefPtr<imgCacheEntry> > *entries =
     reinterpret_cast<nsTArray<nsRefPtr<imgCacheEntry> > *>(data);
 
   entries->AppendElement(aData);
@@ -1661,7 +1661,7 @@ nsresult imgLoader::LoadImage(nsIURI *aURI,
 
         if (mCacheTracker)
           mCacheTracker->MarkUsed(entry);
-      } 
+      }
 
       entry->Touch();
 
@@ -1765,7 +1765,7 @@ nsresult imgLoader::LoadImage(nsIURI *aURI,
     // Try to add the new request into the cache.
     PutIntoCache(aURI, entry);
   } else {
-    LOG_MSG_WITH_PARAM(GetImgLog(), 
+    LOG_MSG_WITH_PARAM(GetImgLog(),
                        "imgLoader::LoadImage |cache hit|", "request", request);
   }
 
@@ -1902,7 +1902,7 @@ nsresult imgLoader::LoadImageWithChannel(nsIChannel *channel, imgINotificationOb
 
           if (mCacheTracker)
             mCacheTracker->MarkUsed(entry);
-        } 
+        }
       }
     }
   }
@@ -1997,7 +1997,7 @@ nsresult imgLoader::GetMimeTypeFromContent(const char* aContents, uint32_t aLeng
                    (unsigned char)aContents[5]==0x0A &&
                    (unsigned char)aContents[6]==0x1A &&
                    (unsigned char)aContents[7]==0x0A))
-  { 
+  {
     aContentType.AssignLiteral(IMAGE_PNG);
   }
 
