@@ -850,11 +850,6 @@ nsresult MediaPipelineReceiveAudio::Init() {
 }
 
 
-void GenericReceiveListener::AddSelf(MediaSegment* segment) {
-  RefPtr<TrackAddedCallback> callback = new GenericReceiveCallback(this);
-  AddTrackAndListener(source_, track_id_, track_rate_, this, segment, callback);
-}
-
 // Add a track and listener on the MSG thread using the MSG command queue
 static void AddTrackAndListener(MediaStream* source,
                                 TrackID track_id, TrackRate track_rate,
@@ -916,8 +911,14 @@ static void AddTrackAndListener(MediaStream* source,
 
   source->GraphImpl()->AppendMessage(new Message(source, track_id, track_rate, segment, listener, completed));
 #else
+  source->AddListener(listener);
   source->AsSourceStream()->AddTrack(track_id, track_rate, 0, segment);
 #endif
+}
+
+void GenericReceiveListener::AddSelf(MediaSegment* segment) {
+  RefPtr<TrackAddedCallback> callback = new GenericReceiveCallback(this);
+  AddTrackAndListener(source_, track_id_, track_rate_, this, segment, callback);
 }
 
 MediaPipelineReceiveAudio::PipelineListener::PipelineListener(

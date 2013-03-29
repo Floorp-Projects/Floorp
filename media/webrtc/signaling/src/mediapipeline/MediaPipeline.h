@@ -282,12 +282,6 @@ class GenericReceiveCallback : public TrackAddedCallback
   RefPtr<GenericReceiveListener> listener_;
 };
 
-// Add a track and listener on the MSG thread using the MSG command queue
-static void AddTrackAndListener(MediaStream* source,
-                                TrackID track_id, TrackRate track_rate,
-                                MediaStreamListener* listener, MediaSegment* segment,
-                                const RefPtr<TrackAddedCallback>& completed);
-
 class ConduitDeleteEvent: public nsRunnable
 {
 public:
