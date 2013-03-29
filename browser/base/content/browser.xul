@@ -661,6 +661,18 @@
 
       <hbox id="nav-bar-customizationtarget" class="customization-target" flex="100"/>
 
+      <toolbarbutton id="webrtc-status-button"
+                     class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     type="menu"
+                     hidden="true"
+                     orient="horizontal"
+                     label="&webrtcIndicatorButton.label;"
+                     tooltiptext="&webrtcIndicatorButton.tooltip;">
+        <menupopup onpopupshowing="WebrtcIndicator.fillPopup(this);"
+                   onpopuphiding="WebrtcIndicator.clearPopup(this);"
+                   oncommand="WebrtcIndicator.menuCommand(event.target);"/>
+      </toolbarbutton>
+
       <toolbaritem id="PanelUI-button"
                    class="chromeclass-toolbar-additional"
                    removable="false"
@@ -831,18 +843,6 @@
                    flex="100" persist="width" removable="true">
         <searchbar id="searchbar" flex="1"/>
       </toolbaritem>
-
-      <toolbarbutton id="webrtc-status-button"
-                     class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     type="menu"
-                     hidden="true"
-                     orient="horizontal"
-                     label="&webrtcIndicatorButton.label;"
-                     tooltiptext="&webrtcIndicatorButton.tooltip;">
-        <menupopup onpopupshowing="WebrtcIndicator.fillPopup(this);"
-                   onpopuphiding="WebrtcIndicator.clearPopup(this);"
-                   oncommand="WebrtcIndicator.menuCommand(event.target);"/>
-      </toolbarbutton>
 
       <toolbarbutton id="home-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      persist="class" removable="true"
