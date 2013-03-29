@@ -35,7 +35,7 @@ interface nsIDOMRTCIceCandidate : nsISupports
 };
 
 /* See http://dev.w3.org/2011/webrtc/editor/webrtc.html */
-[scriptable, uuid(f888648c-5e6b-4af9-91ad-a911e53d7a39)]
+[scriptable, uuid(474074ab-11f9-4933-a200-8ea1a5f84e4c)]
 interface nsIDOMRTCPeerConnection : nsISupports
 {
   void createOffer(in RTCPeerConnectionCallback successCallback,
@@ -48,11 +48,11 @@ interface nsIDOMRTCPeerConnection : nsISupports
     [optional] in bool createProvisionalAnswer);
 
   void setLocalDescription(in nsIDOMRTCSessionDescription desc,
-    [optional] in RTCPeerConnectionCallback successCallback,
+    [optional] in RTCPeerConnectionCallbackVoid successCallback,
     [optional] in RTCPeerConnectionCallback failureCallback);
 
   void setRemoteDescription(in nsIDOMRTCSessionDescription desc,
-    [optional] in RTCPeerConnectionCallback successCallback,
+    [optional] in RTCPeerConnectionCallbackVoid successCallback,
     [optional] in RTCPeerConnectionCallback failureCallback);
 
   void updateIce([optional] in jsval configuration,
@@ -60,7 +60,7 @@ interface nsIDOMRTCPeerConnection : nsISupports
     [optional] in bool restart);
 
   void addIceCandidate(in nsIDOMRTCIceCandidate candidate,
-    [optional] in RTCPeerConnectionCallback successCallback,
+    [optional] in RTCPeerConnectionCallbackVoid successCallback,
     [optional] in RTCPeerConnectionCallback failureCallback);
 
   void addStream(in nsIDOMMediaStream stream,

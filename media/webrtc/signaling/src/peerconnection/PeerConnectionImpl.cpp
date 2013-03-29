@@ -142,6 +142,10 @@ public:
   ~PeerConnectionObserverDispatch(){}
 
   NS_IMETHOD Run() {
+
+    CSFLogInfo(logTag, "PeerConnectionObserverDispatch processing "
+                       "mCallState = %d (%s)", mCallState, mStateStr.c_str());
+
     switch (mCallState) {
       case CREATEOFFER:
         mObserver->OnCreateOfferSuccess(mSdpStr.c_str());
@@ -152,47 +156,57 @@ public:
         break;
 
       case CREATEOFFERERROR:
-        mObserver->OnCreateOfferError(mCode);
+        mObserver->OnCreateOfferError(
+          PeerConnectionImpl::kInternalError,
+          "Unspecified Error processing createOffer");
         break;
 
       case CREATEANSWERERROR:
-        mObserver->OnCreateAnswerError(mCode);
+        mObserver->OnCreateAnswerError(
+          PeerConnectionImpl::kInternalError,
+          "Unspecified Error processing createAnswer");
         break;
 
       case SETLOCALDESC:
         // TODO: The SDP Parse error list should be copied out and sent up
         // to the Javascript layer before being cleared here.
         mPC->ClearSdpParseErrorMessages();
-        mObserver->OnSetLocalDescriptionSuccess(mCode);
+        mObserver->OnSetLocalDescriptionSuccess();
         break;
 
       case SETREMOTEDESC:
         // TODO: The SDP Parse error list should be copied out and sent up
         // to the Javascript layer before being cleared here.
         mPC->ClearSdpParseErrorMessages();
-        mObserver->OnSetRemoteDescriptionSuccess(mCode);
+        mObserver->OnSetRemoteDescriptionSuccess();
         break;
 
       case SETLOCALDESCERROR:
         // TODO: The SDP Parse error list should be copied out and sent up
         // to the Javascript layer before being cleared here.
         mPC->ClearSdpParseErrorMessages();
-        mObserver->OnSetLocalDescriptionError(mCode);
+        mObserver->OnSetLocalDescriptionError(
+          PeerConnectionImpl::kInternalError,
+          "Unspecified Error processing setLocalDescription");
         break;
 
       case SETREMOTEDESCERROR:
         // TODO: The SDP Parse error list should be copied out and sent up
         // to the Javascript layer before being cleared here.
         mPC->ClearSdpParseErrorMessages();
-        mObserver->OnSetRemoteDescriptionError(mCode);
+        mObserver->OnSetRemoteDescriptionError(
+          PeerConnectionImpl::kInternalError,
+          "Unspecified Error processing setRemoteDescription");
         break;
 
       case ADDICECANDIDATE:
-        mObserver->OnAddIceCandidateSuccess(mCode);
+        mObserver->OnAddIceCandidateSuccess();
         break;
 
       case ADDICECANDIDATEERROR:
-        mObserver->OnAddIceCandidateError(mCode);
+        mObserver->OnAddIceCandidateError(
+          PeerConnectionImpl::kInternalError,
+          "Unspecified Error processing addIceCandidate");
         break;
 
       case REMOTESTREAMADD:
@@ -225,7 +239,8 @@ public:
         break;
 
       default:
-        CSFLogDebug(logTag, ": **** UNHANDLED CALL STATE : %s", mStateStr.c_str());
+        CSFLogError(logTag, ": **** UNHANDLED CALL STATE : %d (%s)",
+                    mCallState, mStateStr.c_str());
         break;
     }
 

@@ -136,6 +136,19 @@ public:
     kRoleAnswerer
   };
 
+  enum Error {
+    kNoError                          = 0,
+    kInvalidConstraintsType           = 1,
+    kInvalidCandidateType             = 2,
+    kInvalidMediastreamTrack          = 3,
+    kInvalidState                     = 4,
+    kInvalidSessionDescription        = 5,
+    kIncompatibleSessionDescription   = 6,
+    kIncompatibleConstraints          = 7,
+    kIncompatibleMediaStreamTrack     = 8,
+    kInternalError                    = 9
+  };
+
   NS_DECL_ISUPPORTS
   NS_DECL_IPEERCONNECTION
 
