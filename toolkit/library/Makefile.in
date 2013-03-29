@@ -617,11 +617,15 @@ EXTRA_DSO_LDOPTS += -DELAYLOAD:msdmo.dll
 endif
 endif
 ifdef MOZ_GAMEPAD
+ifndef GNU_CC
 DXSDK := $(subst \,/,$(MOZ_DIRECTX_SDK_PATH))/Lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)
 OS_LIBS += \
   "$(DXSDK)/dxguid.lib" \
   "$(DXSDK)/dinput8.lib" \
   $(NULL)
+else
+OS_LIBS += $(call EXPAND_LIBNAME,dxguid dinput8)
+endif
 endif
 endif # WINNT
 

@@ -43,13 +43,14 @@
 #include <cxxabi.h>
 #endif
 #include <inttypes.h>
-#include <stdio.h>
 
 #include <algorithm>
 #include <set>
 #include <utility>
+#include <iomanip>
 
 #include "common/dwarf_line_to_module.h"
+#include "common/logging.h"
 
 namespace google_breakpad {
 
@@ -558,48 +559,54 @@ dwarf2reader::DIEHandler *DwarfCUToModule::NamedScopeHandler::FindChildHandler(
 void DwarfCUToModule::WarningReporter::CUHeading() {
   if (printed_cu_header_)
     return;
-  fprintf(stderr, "%s: in compilation unit '%s' (offset 0x%llx):\n",
-          filename_.c_str(), cu_name_.c_str(), cu_offset_);
+  BPLOG(INFO)
+    << filename_ << ": in compilation unit '" << cu_name_
+    << "' (offset 0x" << std::setbase(16) << cu_offset_ << std::setbase(10)
+    << "):";
   printed_cu_header_ = true;
 }
 
 void DwarfCUToModule::WarningReporter::UnknownSpecification(uint64 offset,
                                                             uint64 target) {
   CUHeading();
-  fprintf(stderr, "%s: the DIE at offset 0x%llx has a DW_AT_specification"
-          " attribute referring to the die at offset 0x%llx, which either"
-          " was not marked as a declaration, or comes later in the file\n",
-          filename_.c_str(), offset, target);
+  BPLOG(INFO)
+    << filename_ << ": the DIE at offset 0x" 
+    << std::setbase(16) << offset << std::setbase(10)
+    << " has a DW_AT_specification attribute referring to the die at offset 0x"
+    << std::setbase(16) << target << std::setbase(10)
+    << ", which either was not marked as a declaration, or comes "
+    << "later in the file";
 }
 
 void DwarfCUToModule::WarningReporter::UnknownAbstractOrigin(uint64 offset,
                                                              uint64 target) {
   CUHeading();
-  fprintf(stderr, "%s: the DIE at offset 0x%llx has a DW_AT_abstract_origin"
-          " attribute referring to the die at offset 0x%llx, which either"
-          " was not marked as an inline, or comes later in the file\n",
-          filename_.c_str(), offset, target);
+  BPLOG(INFO)
+    << filename_ << ": the DIE at offset 0x" 
+    << std::setbase(16) << offset << std::setbase(10)
+    << " has a DW_AT_abstract_origin attribute referring to the die at"
+    << " offset 0x" << std::setbase(16) << target << std::setbase(10)
+    << ", which either was not marked as an inline, or comes "
+    << "later in the file";
 }
 
 void DwarfCUToModule::WarningReporter::MissingSection(const string &name) {
   CUHeading();
-  fprintf(stderr, "%s: warning: couldn't find DWARF '%s' section\n",
-          filename_.c_str(), name.c_str());
+  BPLOG(INFO) << filename_ << ": warning: couldn't find DWARF '"
+    << name << "' section";
 }
 
 void DwarfCUToModule::WarningReporter::BadLineInfoOffset(uint64 offset) {
   CUHeading();
-  fprintf(stderr, "%s: warning: line number data offset beyond end"
-          " of '.debug_line' section\n",
-          filename_.c_str());
+  BPLOG(INFO) << filename_ << ": warning: line number data offset beyond "
+    << "end of '.debug_line' section";
 }
 
 void DwarfCUToModule::WarningReporter::UncoveredHeading() {
   if (printed_unpaired_header_)
     return;
   CUHeading();
-  fprintf(stderr, "%s: warning: skipping unpaired lines/functions:\n",
-          filename_.c_str());
+  BPLOG(INFO) << filename_ << ": warning: skipping unpaired lines/functions:";
   printed_unpaired_header_ = true;
 }
 
@@ -608,24 +615,23 @@ void DwarfCUToModule::WarningReporter::UncoveredFunction(
   if (!uncovered_warnings_enabled_)
     return;
   UncoveredHeading();
-  fprintf(stderr, "    function%s: %s\n",
-          function.size == 0 ? " (zero-length)" : "",
-          function.name.c_str());
+  BPLOG(INFO) << "    function" << (function.size == 0 ? " (zero-length)" : "")
+    << ": " << function.name;
 }
 
 void DwarfCUToModule::WarningReporter::UncoveredLine(const Module::Line &line) {
   if (!uncovered_warnings_enabled_)
     return;
   UncoveredHeading();
-  fprintf(stderr, "    line%s: %s:%d at 0x%" PRIx64 "\n",
-          (line.size == 0 ? " (zero-length)" : ""),
-          line.file->name.c_str(), line.number, line.address);
+  BPLOG(INFO) << "    line" << (line.size == 0 ? " (zero-length)" : "")
+    << ": " << line.file->name << ":" << line.number
+    << " at 0x" << std::setbase(16) << line.address << std::setbase(10);
 }
 
 void DwarfCUToModule::WarningReporter::UnnamedFunction(uint64 offset) {
   CUHeading();
-  fprintf(stderr, "%s: warning: function at offset 0x%llx has no name\n",
-          filename_.c_str(), offset);
+  BPLOG(INFO) << filename_ << ": warning: function at offset 0x"
+    << std::setbase(16) << offset << std::setbase(10) << " has no name";
 }
 
 DwarfCUToModule::DwarfCUToModule(FileContext *file_context,

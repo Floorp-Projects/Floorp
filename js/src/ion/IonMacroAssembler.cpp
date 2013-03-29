@@ -131,10 +131,10 @@ MacroAssembler::PushRegsInMask(RegisterSet set)
     int32_t diffF = set.fpus().size() * sizeof(double);
     int32_t diffG = set.gprs().size() * STACK_SLOT_SIZE;
 
-    reserveStack(diffG);
 #ifdef JS_CPU_ARM
     if (set.gprs().size() > 1) {
-        startDataTransferM(IsStore, StackPointer, IA, NoWriteBack);
+        adjustFrame(diffG);
+        startDataTransferM(IsStore, StackPointer, DB, WriteBack);
         for (GeneralRegisterIterator iter(set.gprs()); iter.more(); iter++) {
             diffG -= STACK_SLOT_SIZE;
             transferReg(*iter);
@@ -143,6 +143,7 @@ MacroAssembler::PushRegsInMask(RegisterSet set)
     } else
 #endif
     {
+        reserveStack(diffG);
         for (GeneralRegisterIterator iter(set.gprs()); iter.more(); iter++) {
             diffG -= STACK_SLOT_SIZE;
             storePtr(*iter, Address(StackPointer, diffG));
@@ -191,12 +192,13 @@ MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore)
 
 #ifdef JS_CPU_ARM
     if (set.gprs().size() > 1 && ignore.empty(false)) {
-        startDataTransferM(IsLoad, StackPointer, IA, NoWriteBack);
+        startDataTransferM(IsLoad, StackPointer, IA, WriteBack);
         for (GeneralRegisterIterator iter(set.gprs()); iter.more(); iter++) {
             diffG -= STACK_SLOT_SIZE;
             transferReg(*iter);
         }
         finishDataTransfer();
+        adjustFrame(-reservedG);
     } else
 #endif
     {
@@ -205,8 +207,8 @@ MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore)
             if (!ignore.has(*iter))
                 loadPtr(Address(StackPointer, diffG), *iter);
         }
+        freeStack(reservedG);
     }
-    freeStack(reservedG);
     JS_ASSERT(diffG == 0);
 }
 

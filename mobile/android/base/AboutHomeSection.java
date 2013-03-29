@@ -4,6 +4,8 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.util.GamepadUtils;
+
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.text.TextUtils;
@@ -73,6 +75,7 @@ public class AboutHomeSection extends GeckoLinearLayout {
 
     public void setOnMoreTextClickListener(View.OnClickListener listener) {
         mMoreText.setOnClickListener(listener);
+        mMoreText.setOnKeyListener(GamepadUtils.getClickDispatcher());
     }
 
     public void addItem(View item) {

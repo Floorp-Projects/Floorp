@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 
+import mozpack.path
 import os
 import platform
 import sys
@@ -55,14 +56,13 @@ class MochitestRunner(MozbuildObject):
             print('Cannot specify both --rerun-failures and a test path.')
             return 1
 
-        # Need to perform path test before os.chdir() below.
+        # Need to call relpath before os.chdir() below.
+        test_path = ''
         if test_file:
-            path_arg = self._wrap_path_argument(test_file)
-            if not os.path.exists(path_arg.srcdir_path()):
-                print('Specified test path does not exist: %s' % test_file)
-                return 1
+            test_path = self._wrap_path_argument(test_file).relpath()
 
-            test_file = path_arg.relpath()
+        tests_dir = os.path.join(self.topobjdir, '_tests')
+        mochitest_dir = os.path.join(tests_dir, 'testing', 'mochitest')
 
         failure_file_path = os.path.join(self.statedir, 'mochitest_failures.json')
 
@@ -75,8 +75,7 @@ class MochitestRunner(MozbuildObject):
         # runtests.py is ambiguous, so we load the file/module manually.
         if 'mochitest' not in sys.modules:
             import imp
-            path = os.path.join(self.topobjdir, '_tests', 'testing',
-                'mochitest', 'runtests.py')
+            path = os.path.join(mochitest_dir, 'runtests.py')
             with open(path, 'r') as fh:
                 imp.load_module('mochitest', fh, path,
                     ('.py', 'r', imp.PY_SOURCE))
@@ -89,19 +88,29 @@ class MochitestRunner(MozbuildObject):
         automation = Automation()
         runner = mochitest.Mochitest(automation)
 
-        opts = mochitest.MochitestOptions(automation,
-            os.path.join(self.topobjdir, '_tests'))
+        opts = mochitest.MochitestOptions(automation, tests_dir)
         options, args = opts.parse_args([])
+
+        # Need to set the suite options before verifyOptions below.
+        if suite == 'plain':
+            # Don't need additional options for plain.
+            pass
+        elif suite == 'chrome':
+            options.chrome = True
+        elif suite == 'browser':
+            options.browserChrome = True
+        elif suite == 'metro':
+            options.immersiveMode = True
+            options.browserChrome = True
+        elif suite == 'a11y':
+            options.a11y = True
+        else:
+            raise Exception('None or unrecognized mochitest suite type.')
 
         options = opts.verifyOptions(options, runner)
 
         if options is None:
             raise Exception('mochitest option validator failed.')
-
-        tests_dir = os.path.join(self.topobjdir, '_tests')
-
-        if test_file:
-            env = {'TEST_PATH': test_file}
 
         options.autorun = not no_autorun
         options.closeWhenDone = not keep_open
@@ -118,23 +127,16 @@ class MochitestRunner(MozbuildObject):
         automation.setServerInfo(options.webServer, options.httpPort,
             options.sslPort, options.webSocketPort)
 
-        if suite == 'plain':
-            # Don't need additional options for plain.
-            pass
-        elif suite == 'chrome':
-            options.chrome = True
-        elif suite == 'browser':
-            options.browserChrome = True
-        elif suite == 'metro':
-            options.immersiveMode = True
-            options.browser = True
-        elif suite == 'a11y':
-            options.a11y = True
-        else:
-            raise Exception('None or unrecognized mochitest suite type.')
+        if test_path:
+            test_root = runner.getTestRoot(options)
+            test_root_file = mozpack.path.join(mochitest_dir, test_root, test_path)
+            if not os.path.exists(test_root_file):
+                print('Specified test path does not exist: %s' % test_root_file)
+                print('You may need to run |mach build| to build the test files.')
+                return 1
 
-        if test_file:
-            options.testPath = test_file
+            options.testPath = test_path
+            env = {'TEST_PATH': test_path}
 
         if rerun_failures:
             options.testManifest = failure_file_path

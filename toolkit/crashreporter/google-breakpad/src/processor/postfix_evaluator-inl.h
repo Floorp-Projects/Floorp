@@ -46,7 +46,7 @@
 #include <sstream>
 
 #include "google_breakpad/processor/memory_region.h"
-#include "processor/logging.h"
+#include "common/logging.h"
 
 namespace google_breakpad {
 
@@ -152,7 +152,7 @@ bool PostfixEvaluator<ValueType>::EvaluateToken(
 
     ValueType address;
     if (!PopValue(&address)) {
-      BPLOG(ERROR) << "Could not PopValue to get value to derefence: " <<
+      BPLOG(ERROR) << "Could not PopValue to get value to dereference: " <<
                       expression;
       return false;
     }
@@ -310,8 +310,13 @@ bool PostfixEvaluator<ValueType>::EvaluateForValue(const Module::Expr& expr,
       if (!found) {
         // The identifier wasn't found in the dictionary.  Don't imply any
         // default value, just fail.
-        BPLOG(INFO) << "Identifier " << FromUniqueString(expr.ident_)
-                    << " not in dictionary (kExprSimple{Mem})";
+        static uint64_t n_complaints = 0; // This isn't threadsafe.
+        n_complaints++;
+        if (is_power_of_2(n_complaints)) {
+          BPLOG(INFO) << "Identifier " << FromUniqueString(expr.ident_)
+                      << " not in dictionary (kExprSimple{Mem})"
+                      << " (shown " << n_complaints << " times)";
+        }
         return false;
       }
 

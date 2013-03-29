@@ -3,14 +3,10 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
-          android:layout_width="fill_parent"
-          android:layout_height="46dip"
-          android:paddingLeft="12dip"
-          android:paddingRight="12dip"
-          android:textAppearance="@style/AboutHome.TextAppearance.Title"
-          android:background="@drawable/action_bar_button"
-          android:gravity="center_vertical"
-          android:singleLine="true"
-          android:ellipsize="middle"
-          android:duplicateParentState="true"/>
+<Gecko.TextView xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="fill_parent"
+                android:layout_height="@dimen/abouthome_rowitem_height"
+                android:paddingLeft="@dimen/abouthome_rowitem_left_padding"
+                android:gravity="center_vertical"
+                android:paddingRight="12dip"
+                style="@style/AboutHome.RowItem.TextRow"/>

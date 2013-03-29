@@ -33,11 +33,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=502673
       listener.prototype =
       {
         NotifyDocumentWillBeDestroyed: function () {
-          netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-         
-          if (this.input instanceof
-                Components.interfaces.nsIDOMNSEditableElement) {
-            var editor = this.input.editor;
+          if (this.input instanceof SpecialPowers.Ci.nsIDOMNSEditableElement) {
+            var editor = SpecialPowers.wrap(this.input).editor;
             editor.removeDocumentStateListener(this);
           }
         },
@@ -46,30 +43,25 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=502673
         },
 
         NotifyDocumentStateChanged: function (aNowDirty) {
-          netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
-          if (this.input instanceof
-                Components.interfaces.nsIDOMNSEditableElement) {
-            var editor = this.input.editor;
+          if (this.input instanceof SpecialPowers.Ci.nsIDOMNSEditableElement) {
+            var editor = SpecialPowers.wrap(this.input).editor;
             editor.removeDocumentStateListener(this);
           }
         },
 
         QueryInterface: function(iid) {
-          netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-          if (iid.equals(Components.interfaces.nsIDocumentStateListener) ||
-              iid.equals(Components.interfaces.nsISupports))
+          if (iid.equals(SpecialPowers.Ci.nsIDocumentStateListener) ||
+              iid.equals(SpecialPowers.Ci.nsISupports))
             return this;
-          throw Components.results.NS_ERROR_NO_INTERFACE;
+          throw SpecialPowers.Cr.NS_ERROR_NO_INTERFACE;
         },
       };
 
       function doTest() {
-        netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
         var input = document.getElementById("ip");
-        if (input instanceof Components.interfaces.nsIDOMNSEditableElement) {
+        if (input instanceof SpecialPowers.Ci.nsIDOMNSEditableElement) {
           // Add multiple listeners to the same editor
-          var editor = input.editor;
+          var editor = SpecialPowers.wrap(input).editor;
           var listener1 = new listener();
           listener1.input = input;
           var listener2 = new listener();

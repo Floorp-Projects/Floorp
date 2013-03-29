@@ -40,7 +40,7 @@
 
 #include "google_breakpad/processor/code_module.h"
 #include "processor/linked_ptr.h"
-#include "processor/logging.h"
+#include "common/logging.h"
 #include "processor/range_map-inl.h"
 
 namespace google_breakpad {

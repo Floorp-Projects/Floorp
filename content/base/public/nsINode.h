@@ -282,7 +282,7 @@ public:
   // - HTMLFieldSetElement:   mElements, mDependentElements, mFirstLegend
   // - nsHTMLFormElement:     many!
   // - HTMLFrameSetElement:   mRowSpecs, mColSpecs
-  // - nsHTMLInputElement:    mInputData, mFiles, mFileList, mStaticDocfileList
+  // - HTMLInputElement:      mInputData, mFiles, mFileList, mStaticDocfileList
   // - nsHTMLMapElement:      mAreas
   // - HTMLMediaElement:      many!
   // - nsHTMLOutputElement:   mDefaultValue, mTokenList

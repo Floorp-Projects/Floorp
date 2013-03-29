@@ -6,7 +6,7 @@
 
 #include "nsIDOMEventTarget.idl"
 
-[scriptable, builtinclass, uuid(4a679fc6-572a-4ddc-8e93-cfbddb9f2d6a)]
+[scriptable, builtinclass, uuid(4ca7697a-9d0c-492e-a6be-ccc5c3ec503c)]
 interface nsIDOMBluetoothDevice : nsIDOMEventTarget
 {
   readonly attribute DOMString address;
@@ -17,7 +17,4 @@ interface nsIDOMBluetoothDevice : nsIDOMEventTarget
   [implicit_jscontext] readonly attribute jsval services;
   readonly attribute bool connected;
   readonly attribute bool paired;
-  [implicit_jscontext] attribute jsval onpropertychanged;
-  [implicit_jscontext] attribute jsval onconnected;
-  [implicit_jscontext] attribute jsval ondisconnected;
 };

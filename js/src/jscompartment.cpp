@@ -485,12 +485,6 @@ JSCompartment::markCrossCompartmentWrappers(JSTracer *trc)
             Value referent = GetProxyPrivate(wrapper);
             MarkValueRoot(trc, &referent, "cross-compartment wrapper");
             JS_ASSERT(referent == GetProxyPrivate(wrapper));
-
-            if (IsFunctionProxy(wrapper)) {
-                Value call = GetProxyCall(wrapper);
-                MarkValueRoot(trc, &call, "cross-compartment wrapper");
-                JS_ASSERT(call == GetProxyCall(wrapper));
-            }
         }
     }
 }

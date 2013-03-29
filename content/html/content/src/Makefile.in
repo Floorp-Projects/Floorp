@@ -43,6 +43,7 @@ EXPORTS_mozilla/dom = \
 		HTMLHRElement.h \
 		HTMLIFrameElement.h \
 		HTMLImageElement.h \
+		HTMLInputElement.h \
 		HTMLLabelElement.h \
 		HTMLLegendElement.h \
 		HTMLLIElement.h \
@@ -110,7 +111,7 @@ CPPSRCS		= \
 		HTMLHeadingElement.cpp \
 		HTMLIFrameElement.cpp \
 		HTMLImageElement.cpp \
-		nsHTMLInputElement.cpp \
+		HTMLInputElement.cpp \
 		HTMLLIElement.cpp \
 		HTMLLabelElement.cpp \
 		HTMLLegendElement.cpp \

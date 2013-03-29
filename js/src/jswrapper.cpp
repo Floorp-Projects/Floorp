@@ -46,7 +46,7 @@ Wrapper::New(JSContext *cx, JSObject *obj, JSObject *proto, JSObject *parent,
     AutoMarkInDeadZone amd(cx->zone());
 
     return NewProxyObject(cx, handler, ObjectValue(*obj), proto, parent,
-                          obj->isCallable() ? obj : NULL, NULL);
+                          obj->isCallable() ? ProxyIsCallable : ProxyNotCallable);
 }
 
 JSObject *
@@ -628,6 +628,25 @@ SecurityWrapper<Base>::SecurityWrapper(unsigned flags)
 
 template <class Base>
 bool
+SecurityWrapper<Base>::isExtensible(JSObject *wrapper)
+{
+    // Just like BaseProxyHandler, SecurityWrappers claim by default to always
+    // be extensible, so as not to leak information about the state of the
+    // underlying wrapped thing.
+    return true;
+}
+
+template <class Base>
+bool
+SecurityWrapper<Base>::preventExtensions(JSContext *cx, HandleObject wrapper)
+{
+    // See above.
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNWRAP_DENIED);
+    return false;
+}
+
+template <class Base>
+bool
 SecurityWrapper<Base>::enter(JSContext *cx, HandleObject wrapper, HandleId id,
                              Wrapper::Action act, bool *bp)
 {
@@ -636,8 +655,8 @@ SecurityWrapper<Base>::enter(JSContext *cx, HandleObject wrapper, HandleId id,
     return false;
 }
 
- template <class Base>
- bool
+template <class Base>
+bool
 SecurityWrapper<Base>::nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
                                   CallArgs args)
 {
@@ -666,6 +685,13 @@ template class js::SecurityWrapper<CrossCompartmentWrapper>;
 DeadObjectProxy::DeadObjectProxy()
   : BaseProxyHandler(&sDeadObjectFamily)
 {
+}
+
+bool
+DeadObjectProxy::preventExtensions(JSContext *cx, HandleObject proxy)
+{
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEAD_OBJECT);
+    return false;
 }
 
 bool
@@ -712,6 +738,14 @@ DeadObjectProxy::enumerate(JSContext *cx, HandleObject wrapper, AutoIdVector &pr
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEAD_OBJECT);
     return false;
+}
+
+bool
+DeadObjectProxy::isExtensible(JSObject *proxy)
+{
+    // This is kind of meaningless, but dead-object semantics aside,
+    // [[Extensible]] always being true is consistent with other proxy types.
+    return true;
 }
 
 bool
@@ -798,7 +832,7 @@ JSObject *
 js::NewDeadProxyObject(JSContext *cx, JSObject *parent)
 {
     return NewProxyObject(cx, &DeadObjectProxy::singleton, NullValue(),
-                          NULL, parent, NULL, NULL);
+                          NULL, parent, ProxyNotCallable);
 }
 
 bool
