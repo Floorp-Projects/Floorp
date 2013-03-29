@@ -1028,19 +1028,12 @@ Shape::setObjectParent(JSContext *cx, JSObject *parent, TaggedProto proto, Shape
     return replaceLastProperty(cx, base, proto, lastRoot);
 }
 
-/* static */ bool
-js::ObjectImpl::preventExtensions(JSContext *cx, Handle<ObjectImpl*> obj)
+bool
+JSObject::preventExtensions(JSContext *cx)
 {
-    MOZ_ASSERT(obj->isExtensible(),
-               "Callers must ensure |obj| is extensible before calling "
-               "preventExtensions");
+    JS_ASSERT(isExtensible());
 
-    if (obj->isProxy()) {
-        RootedObject object(cx, obj->asObjectPtr());
-        return js::Proxy::preventExtensions(cx, object);
-    }
-
-    RootedObject self(cx, obj->asObjectPtr());
+    RootedObject self(cx, this);
 
     /*
      * Force lazy properties to be resolved by iterating over the objects' own

@@ -24,12 +24,5 @@ var desc = {
     enumerable: false,
     configurable: true
 };
-
-var p = new Proxy(target, handler);
-Object.defineProperty(p, 'foo', desc);
+Object.defineProperty(new Proxy(target, handler), 'foo', desc);
 assertEq(called, true);
-assertEq(Object.isExtensible(target), true);
-assertEq(Object.isExtensible(p), true);
-Object.preventExtensions(target);
-assertEq(Object.isExtensible(target), false);
-assertEq(Object.isExtensible(p), false);
