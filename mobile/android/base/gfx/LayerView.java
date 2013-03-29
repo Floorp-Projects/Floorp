@@ -5,12 +5,12 @@
 
 package org.mozilla.gecko.gfx;
 
+import org.mozilla.gecko.GeckoAccessibility;
 import org.mozilla.gecko.GeckoApp;
-import org.mozilla.gecko.OnInterceptTouchListener;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.TouchEventInterceptor;
 import org.mozilla.gecko.ZoomConstraints;
 import org.mozilla.gecko.util.EventDispatcher;
-import org.mozilla.gecko.GeckoAccessibility;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -59,7 +59,7 @@ public class LayerView extends FrameLayout {
     private TextureView mTextureView;
 
     private Listener mListener;
-    private OnInterceptTouchListener mTouchIntercepter;
+    private TouchEventInterceptor mTouchInterceptor;
 
     /* Flags used to determine when to show the painted surface. */
     public static final int PAINT_START = 0;
@@ -129,13 +129,13 @@ public class LayerView extends FrameLayout {
         }
     }
 
-    public void setTouchIntercepter(final OnInterceptTouchListener touchIntercepter) {
+    public void setTouchIntercepter(final TouchEventInterceptor touchInterceptor) {
         // this gets run on the gecko thread, but for thread safety we want the assignment
         // on the UI thread.
         post(new Runnable() {
             @Override
             public void run() {
-                mTouchIntercepter = touchIntercepter;
+                mTouchInterceptor = touchInterceptor;
             }
         });
     }
@@ -146,13 +146,13 @@ public class LayerView extends FrameLayout {
             requestFocus();
         }
 
-        if (mTouchIntercepter != null && mTouchIntercepter.onInterceptTouchEvent(this, event)) {
+        if (mTouchInterceptor != null && mTouchInterceptor.onInterceptTouchEvent(this, event)) {
             return true;
         }
         if (mPanZoomController != null && mPanZoomController.onTouchEvent(event)) {
             return true;
         }
-        if (mTouchIntercepter != null && mTouchIntercepter.onTouch(this, event)) {
+        if (mTouchInterceptor != null && mTouchInterceptor.onTouch(this, event)) {
             return true;
         }
         return false;
@@ -160,7 +160,7 @@ public class LayerView extends FrameLayout {
 
     @Override
     public boolean onHoverEvent(MotionEvent event) {
-        if (mTouchIntercepter != null && mTouchIntercepter.onTouch(this, event)) {
+        if (mTouchInterceptor != null && mTouchInterceptor.onTouch(this, event)) {
             return true;
         }
         return false;

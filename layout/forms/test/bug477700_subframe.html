@@ -19,13 +19,11 @@
           var t = $("target");
           doIs(t.value, "Test", "Typing should work");
           (function() {
-            netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-            t.QueryInterface(Components.interfaces.nsIDOMNSEditableElement).editor.undo(1);
+            SpecialPowers.wrap(t).QueryInterface(SpecialPowers.Ci.nsIDOMNSEditableElement).editor.undo(1);
           })()
           doIs(t.value, "", "Undo should work");
           (function() {
-            netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-            t.QueryInterface(Components.interfaces.nsIDOMNSEditableElement).editor.redo(1);
+            SpecialPowers.wrap(t).QueryInterface(SpecialPowers.Ci.nsIDOMNSEditableElement).editor.redo(1);
           })()
           doIs(t.value, "Test", "Redo should work");
           window.parent.postMessage("f", "*");

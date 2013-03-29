@@ -6004,7 +6004,7 @@ if test "$MOZ_GAMEPAD"; then
             if ! test -f "$MOZ_DIRECTX_SDK_PATH"/lib/$MOZ_DIRECTX_SDK_CPU_SUFFIX/dxguid.lib ; then
                MOZ_GAMEPAD=
             fi
-        else
+        elif test "$GCC" != "yes"; then
             MOZ_GAMEPAD=
         fi
         if test -z "$MOZ_GAMEPAD"; then

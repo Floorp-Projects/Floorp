@@ -61,7 +61,6 @@ function reflectString(aParameters)
   // TODO: remove this ugly hack when null stringification will work as expected.
   var todoAttrs = {
     form: [ "acceptCharset", "name", "target" ],
-    input: [ "accept", "alt", "formTarget", "max", "min", "name", "pattern", "placeholder", "step", "defaultValue" ]
   };
   if (!(element.localName in todoAttrs) || todoAttrs[element.localName].indexOf(idlAttr) == -1) {
     if (treatNullAs == "EmptyString") {

@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsHTMLInputElement_h__
-#define nsHTMLInputElement_h__
+#ifndef mozilla_dom_HTMLInputElement_h
+#define mozilla_dom_HTMLInputElement_h
 
 #include "nsGenericHTMLElement.h"
 #include "nsImageLoadingContent.h"
@@ -25,6 +25,9 @@ class nsIFilePicker;
 class nsIRadioGroupContainer;
 class nsIRadioGroupVisitor;
 class nsIRadioVisitor;
+
+namespace mozilla {
+namespace dom {
 
 class UploadLastDir MOZ_FINAL : public nsIObserver, public nsSupportsWeakReference {
 public:
@@ -50,22 +53,26 @@ public:
   nsresult StoreLastUsedDirectory(nsIDocument* aDoc, nsIDOMFile* aDomFile);
 };
 
-class nsHTMLInputElement : public nsGenericHTMLFormElement,
-                           public nsImageLoadingContent,
-                           public nsIDOMHTMLInputElement,
-                           public nsITextControlElement,
-                           public nsIPhonetic,
-                           public nsIDOMNSEditableElement,
-                           public nsIConstraintValidation
+class HTMLInputElement : public nsGenericHTMLFormElement,
+                         public nsImageLoadingContent,
+                         public nsIDOMHTMLInputElement,
+                         public nsITextControlElement,
+                         public nsIPhonetic,
+                         public nsIDOMNSEditableElement,
+                         public nsIConstraintValidation
 {
 public:
   using nsIConstraintValidation::GetValidationMessage;
+  using nsIConstraintValidation::CheckValidity;
+  using nsIConstraintValidation::WillValidate;
+  using nsIConstraintValidation::Validity;
+  using nsGenericHTMLFormElement::GetForm;
 
-  nsHTMLInputElement(already_AddRefed<nsINodeInfo> aNodeInfo,
-                     mozilla::dom::FromParser aFromParser);
-  virtual ~nsHTMLInputElement();
+  HTMLInputElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+                   mozilla::dom::FromParser aFromParser);
+  virtual ~HTMLInputElement();
 
-  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(nsHTMLInputElement, input)
+  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLInputElement, input)
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -79,7 +86,7 @@ public:
   // nsIDOMHTMLElement
   NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
   virtual int32_t TabIndexDefault() MOZ_OVERRIDE;
-  virtual void Focus(mozilla::ErrorResult& aError) MOZ_OVERRIDE;
+  virtual void Focus(ErrorResult& aError) MOZ_OVERRIDE;
 
   // nsIDOMHTMLInputElement
   NS_DECL_NSIDOMHTMLINPUTELEMENT
@@ -164,7 +171,12 @@ public:
   NS_IMETHOD_(bool) HasCachedSelection();
 
   void GetDisplayFileName(nsAString& aFileName) const;
-  const nsCOMArray<nsIDOMFile>& GetFiles() const;
+
+  const nsCOMArray<nsIDOMFile>& GetFilesInternal() const
+  {
+    return mFiles;
+  }
+
   void SetFiles(const nsCOMArray<nsIDOMFile>& aFiles, bool aSetValueChanged);
   void SetFiles(nsIDOMFileList* aFiles, bool aSetValueChanged);
 
@@ -188,7 +200,7 @@ public:
 
   NS_IMETHOD FireAsyncClickHandler();
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLInputElement,
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLInputElement,
                                            nsGenericHTMLFormElement)
 
   static UploadLastDir* gUploadLastDir;
@@ -275,13 +287,6 @@ public:
    */
   void UpdateValidityUIBits(bool aIsFocused);
 
-  bool DefaultChecked() const {
-    return HasAttr(kNameSpaceID_None, nsGkAtoms::checked);
-  }
-
-  bool Indeterminate() const { return mIndeterminate; }
-  bool Checked() const { return mChecked; }
-
   /**
    * Fires change event if mFocusedValue and current value held are unequal.
    */
@@ -315,7 +320,319 @@ public:
    */
   double GetMaximum() const;
 
+  // WebIDL
+
+  // XPCOM GetAccept() is OK
+  void SetAccept(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::accept, aValue, aRv);
+  }
+
+  // XPCOM GetAlt() is OK
+  void SetAlt(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::alt, aValue, aRv);
+  }
+
+  // XPCOM GetAutocomplete() is OK
+  void SetAutocomplete(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::autocomplete, aValue, aRv);
+  }
+
+  bool Autofocus() const
+  {
+    return GetBoolAttr(nsGkAtoms::autofocus);
+  }
+
+  void SetAutofocus(bool aValue, ErrorResult& aRv)
+  {
+    SetHTMLBoolAttr(nsGkAtoms::autofocus, aValue, aRv);
+  }
+
+  bool DefaultChecked() const
+  {
+    return HasAttr(kNameSpaceID_None, nsGkAtoms::checked);
+  }
+
+  void SetDefaultChecked(bool aValue, ErrorResult& aRv)
+  {
+    SetHTMLBoolAttr(nsGkAtoms::checked, aValue, aRv);
+  }
+
+  bool Checked() const
+  {
+    return mChecked;
+  }
+  // XPCOM SetChecked() is OK
+
+  bool Disabled() const
+  {
+    return GetBoolAttr(nsGkAtoms::disabled);
+  }
+
+  void SetDisabled(bool aValue,ErrorResult& aRv)
+  {
+    SetHTMLBoolAttr(nsGkAtoms::disabled, aValue, aRv);
+  }
+
+  // XPCOM GetForm() is OK
+
+  nsDOMFileList* GetFiles();
+
+  // XPCOM GetFormAction() is OK
+  void SetFormAction(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::formaction, aValue, aRv);
+  }
+
+  // XPCOM GetFormEnctype() is OK
+  void SetFormEnctype(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::formenctype, aValue, aRv);
+  }
+
+  // XPCOM GetFormMethod() is OK
+  void SetFormMethod(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::formmethod, aValue, aRv);
+  }
+
+  bool FormNoValidate() const
+  {
+    return GetBoolAttr(nsGkAtoms::formnovalidate);
+  }
+
+  void SetFormNoValidate(bool aValue, ErrorResult& aRv)
+  {
+    SetHTMLBoolAttr(nsGkAtoms::formnovalidate, aValue, aRv);
+  }
+
+  // XPCOM GetFormTarget() is OK
+  void SetFormTarget(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::formtarget, aValue, aRv);
+  }
+
+  uint32_t Height();
+
+  void SetHeight(uint32_t aValue, ErrorResult& aRv)
+  {
+    aRv = nsGenericHTMLElement::SetUnsignedIntAttr(nsGkAtoms::height, aValue);
+  }
+
+  bool Indeterminate() const
+  {
+    return mIndeterminate;
+  }
+  // XPCOM SetIndeterminate() is OK
+
+  // XPCOM GetInputMode() is OK
+  void SetInputMode(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::inputmode, aValue, aRv);
+  }
+
+  nsGenericHTMLElement* GetList() const;
+
+  // XPCOM GetMax() is OK
+  void SetMax(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::max, aValue, aRv);
+  }
+
+  int32_t MaxLength() const
+  {
+    return GetIntAttr(nsGkAtoms::maxlength, -1);
+  }
+
+  void SetMaxLength(int32_t aValue, ErrorResult& aRv)
+  {
+    if (aValue < 0) {
+      aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+      return;
+    }
+
+    SetHTMLIntAttr(nsGkAtoms::maxlength, aValue, aRv);
+  }
+
+  // XPCOM GetMin() is OK
+  void SetMin(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::min, aValue, aRv);
+  }
+
+  bool Multiple() const
+  {
+    return GetBoolAttr(nsGkAtoms::multiple);
+  }
+
+  void SetMultiple(bool aValue, ErrorResult& aRv)
+  {
+    SetHTMLBoolAttr(nsGkAtoms::multiple, aValue, aRv);
+  }
+
+  // XPCOM GetName() is OK
+  void SetName(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::name, aValue, aRv);
+  }
+
+  // XPCOM GetPattern() is OK
+  void SetPattern(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::pattern, aValue, aRv);
+  }
+
+  // XPCOM GetPlaceholder() is OK
+  void SetPlaceholder(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::placeholder, aValue, aRv);
+  }
+
+  bool ReadOnly() const
+  {
+    return GetBoolAttr(nsGkAtoms::readonly);
+  }
+
+  void SetReadOnly(bool aValue, ErrorResult& aRv)
+  {
+    SetHTMLBoolAttr(nsGkAtoms::readonly, aValue, aRv);
+  }
+
+  bool Required() const
+  {
+    return GetBoolAttr(nsGkAtoms::required);
+  }
+
+  void SetRequired(bool aValue, ErrorResult& aRv)
+  {
+    SetHTMLBoolAttr(nsGkAtoms::required, aValue, aRv);
+  }
+
+  uint32_t Size()
+  {
+    uint32_t value;
+    GetUnsignedIntAttr(nsGkAtoms::size, DEFAULT_COLS, &value);
+    return value;
+  }
+
+  void SetSize(uint32_t aValue, ErrorResult& aRv)
+  {
+    if (aValue == 0) {
+      aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+      return;
+    }
+
+    SetHTMLUnsignedIntAttr(nsGkAtoms::size, aValue, aRv);
+  }
+
+  // XPCOM GetSrc() is OK
+  void SetSrc(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::src, aValue, aRv);
+  }
+
+  // XPCOM GetStep() is OK
+  void SetStep(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::step, aValue, aRv);
+  }
+
+  // XPCOM GetType() is OK
+  void SetType(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::type, aValue, aRv);
+  }
+
+  // XPCOM GetDefaultValue() is OK
+  void SetDefaultValue(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::value, aValue, aRv);
+  }
+
+  // XPCOM GetValue() is OK
+  void SetValue(const nsAString& aValue, ErrorResult& aRv);
+
+  JS::Value GetValueAsDate(JSContext* aCx, ErrorResult& aRv);
+
+  void SetValueAsDate(JSContext* aCx, JS::Value aValue, ErrorResult& aRv);
+
+  double ValueAsNumber() const
+  {
+    return DoesValueAsNumberApply() ? GetValueAsDouble()
+                                    : MOZ_DOUBLE_NaN();
+  }
+
+  void SetValueAsNumber(double aValue, ErrorResult& aRv);
+
+  uint32_t Width();
+
+  void SetWidth(uint32_t aValue, ErrorResult& aRv)
+  {
+    aRv = nsGenericHTMLElement::SetUnsignedIntAttr(nsGkAtoms::width, aValue);
+  }
+
+  void StepUp(const Optional< int32_t >& n, ErrorResult& aRv)
+  {
+    aRv = ApplyStep(n.WasPassed() ? n.Value() : 1);
+  }
+
+  void StepDown(const Optional< int32_t >& n, ErrorResult& aRv)
+  {
+    aRv = ApplyStep(n.WasPassed() ? -n.Value() : -1);
+  }
+
+  void GetValidationMessage(nsAString& aValidationMessage, ErrorResult& aRv);
+
+  // XPCOM GetCustomVisibility() is OK
+
+  // XPCOM Select() is OK
+
+  int32_t GetSelectionStart(ErrorResult& aRv);
+  void SetSelectionStart(int32_t aValue, ErrorResult& aRv);
+
+  int32_t GetSelectionEnd(ErrorResult& aRv);
+  void SetSelectionEnd(int32_t aValue, ErrorResult& aRv);
+
+  void GetSelectionDirection(nsAString& aValue, ErrorResult& aRv);
+  void SetSelectionDirection(const nsAString& aValue, ErrorResult& aRv);
+
+  void SetSelectionRange(int32_t aStart, int32_t aEnd,
+                         const Optional< nsAString >& direction,
+                         ErrorResult& aRv);
+
+  // XPCOM GetAlign() is OK
+  void SetAlign(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::align, aValue, aRv);
+  }
+
+  // XPCOM GetUseMap() is OK
+  void SetUseMap(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::usemap, aValue, aRv);
+  }
+
+  nsIControllers* GetControllers(ErrorResult& aRv);
+
+  int32_t GetTextLength(ErrorResult& aRv);
+
+  void MozGetFileNameArray(nsTArray< nsString >& aFileNames);
+
+  void MozSetFileNameArray(const Sequence< nsString >& aFileNames);
+
+  bool MozIsTextField(bool aExcludePassword);
+
+  nsIEditor* GetEditor();
+
+  // XPCOM SetUserInput() is OK
+
+  // XPCOM GetPhonetic() is OK
+
 protected:
+  virtual JSObject* WrapNode(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
+
   // Pull IsSingleLineTextControl into our scope, otherwise it'd be hidden
   // by the nsITextControlElement version.
   using nsGenericHTMLFormElement::IsSingleLineTextControl;
@@ -401,8 +718,8 @@ protected:
     SetFiles(files, aSetValueChanged);
   }
 
-  nsresult SetIndeterminateInternal(bool aValue,
-                                    bool aShouldInvalidate);
+  void SetIndeterminateInternal(bool aValue,
+                                bool aShouldInvalidate);
 
   nsresult GetSelectionRange(int32_t* aSelectionStart, int32_t* aSelectionEnd);
 
@@ -887,11 +1204,11 @@ private:
     : public nsRunnable
   {
   public:
-    AsyncClickHandler(nsHTMLInputElement* aInput);
+    AsyncClickHandler(HTMLInputElement* aInput);
     NS_IMETHOD Run();
 
   protected:
-    nsRefPtr<nsHTMLInputElement> mInput;
+    nsRefPtr<HTMLInputElement> mInput;
     PopupControlState mPopupControlState;
   };
 
@@ -899,7 +1216,7 @@ private:
     : public nsIFilePickerShownCallback
   {
   public:
-    nsFilePickerShownCallback(nsHTMLInputElement* aInput,
+    nsFilePickerShownCallback(HTMLInputElement* aInput,
                               nsIFilePicker* aFilePicker,
                               bool aMulti);
     virtual ~nsFilePickerShownCallback()
@@ -911,9 +1228,12 @@ private:
 
   private:
     nsCOMPtr<nsIFilePicker> mFilePicker;
-    nsRefPtr<nsHTMLInputElement> mInput;
+    nsRefPtr<HTMLInputElement> mInput;
     bool mMulti;
   };
 };
+
+} // namespace dom
+} // namespace mozilla
 
 #endif
