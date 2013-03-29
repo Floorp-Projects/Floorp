@@ -18,7 +18,6 @@
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "mozilla/Services.h"
-#include "nsThreadUtils.h"
 
 mozilla::ThreadLocal<PseudoStack *> tlsPseudoStack;
 mozilla::ThreadLocal<TableTicker *> tlsTicker;
@@ -36,25 +35,13 @@ int       sLastFrameNumber = 0;
 unsigned int sLastSampledEventGeneration = 0;
 
 /* a counter that's incremented everytime we get responsiveness event
- * note: it might also be worth trackplaing everytime we go around
+ * note: it might also be worth tracking everytime we go around
  * the event loop */
 unsigned int sCurrentEventGeneration = 0;
 /* we don't need to worry about overflow because we only treat the
  * case of them being the same as special. i.e. we only run into
  * a problem if 2^32 events happen between samples that we need
  * to know are associated with different events */
-
-std::vector<ThreadInfo*>* Sampler::sRegisteredThreads = new std::vector<ThreadInfo*>();
-mozilla::Mutex* Sampler::sRegisteredThreadsMutex = new mozilla::Mutex("sRegisteredThreads mutex");
-
-Sampler* Sampler::sActiveSampler;
-
-ThreadInfo::~ThreadInfo() {
-  free(mName);
-
-  if (mProfile)
-    delete mProfile;
-}
 
 bool sps_version2()
 {
@@ -198,8 +185,6 @@ void mozilla_sampler_init()
   PseudoStack *stack = new PseudoStack();
   tlsPseudoStack.set(stack);
 
-  Sampler::RegisterCurrentThread("Gecko", stack, true);
-
   if (sps_version2()) {
     // Read mode settings from MOZ_PROFILER_MODE and interval
     // settings from MOZ_PROFILER_INTERVAL.
@@ -266,8 +251,6 @@ void mozilla_sampler_shutdown()
   if (sps_version2()) {
     uwt__deinit();
   }
-
-  Sampler::FreeRegisteredThreads();
 
   profiler_stop();
   // We can't delete the Stack because we can be between a
@@ -463,20 +446,6 @@ void mozilla_sampler_unlock()
     os->NotifyObservers(nullptr, "profiler-unlocked", nullptr);
 }
 
-bool mozilla_sampler_register_thread(const char* aName)
-{
-  PseudoStack* stack = new PseudoStack();
-  tlsPseudoStack.set(stack);
-
-  return Sampler::RegisterCurrentThread(aName, stack, false);
-}
-
-void mozilla_sampler_unregister_thread()
-{
-  Sampler::UnregisterCurrentThread();
-}
-
 // END externally visible functions
 ////////////////////////////////////////////////////////////////////////
-
 

@@ -5,7 +5,6 @@
 
 #include "platform.h"
 #include "ProfileEntry.h"
-#include "mozilla/Mutex.h"
 
 static bool
 hasFeature(const char** aFeatures, uint32_t aFeatureCount, const char* aFeature) {
@@ -33,8 +32,8 @@ class TableTicker: public Sampler {
  public:
   TableTicker(int aInterval, int aEntrySize, PseudoStack *aStack,
               const char** aFeatures, uint32_t aFeatureCount)
-    : Sampler(aInterval, true, aEntrySize)
-    , mPrimaryThreadProfile(nullptr)
+    : Sampler(aInterval, true)
+    , mPrimaryThreadProfile(aEntrySize, aStack)
     , mStartTime(TimeStamp::Now())
     , mSaveRequested(false)
   {
@@ -44,47 +43,10 @@ class TableTicker: public Sampler {
     mJankOnly = hasFeature(aFeatures, aFeatureCount, "jank");
     mProfileJS = hasFeature(aFeatures, aFeatureCount, "js");
     mAddLeafAddresses = hasFeature(aFeatures, aFeatureCount, "leaf");
-
-    {
-      mozilla::MutexAutoLock lock(*sRegisteredThreadsMutex);
-
-      // Create ThreadProfile for each registered thread
-      for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
-        ThreadInfo* info = sRegisteredThreads->at(i);
-        ThreadProfile* profile = new ThreadProfile(info->Name(),
-                                                   aEntrySize,
-                                                   info->Stack(),
-                                                   info->ThreadId(),
-                                                   info->IsMainThread());
-        profile->addTag(ProfileEntry('m', "Start"));
-
-        info->SetProfile(profile);
-      }
-
-      SetActiveSampler(this);
-    }
+    mPrimaryThreadProfile.addTag(ProfileEntry('m', "Start"));
   }
 
-  ~TableTicker() {
-    if (IsActive())
-      Stop();
-
-    SetActiveSampler(nullptr);
-
-    // Destroy ThreadProfile for all threads
-    {
-      mozilla::MutexAutoLock lock(*sRegisteredThreadsMutex);
-
-      for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
-        ThreadInfo* info = sRegisteredThreads->at(i);
-        ThreadProfile* profile = info->Profile();
-        if (profile) {
-          delete profile;
-          info->SetProfile(nullptr);
-        }
-      }
-    }
-  }
+  ~TableTicker() { if (IsActive()) Stop(); }
 
   virtual void SampleStack(TickSample* sample) {}
 
@@ -101,19 +63,7 @@ class TableTicker: public Sampler {
 
   ThreadProfile* GetPrimaryThreadProfile()
   {
-    if (!mPrimaryThreadProfile) {
-      mozilla::MutexAutoLock lock(*sRegisteredThreadsMutex);
-
-      for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
-        ThreadInfo* info = sRegisteredThreads->at(i);
-        if (info->IsMainThread()) {
-          mPrimaryThreadProfile = info->Profile();
-          break;
-        }
-      }
-    }
-
-    return mPrimaryThreadProfile;
+    return &mPrimaryThreadProfile;
   }
 
   void ToStreamAsJSON(std::ostream& stream);
@@ -131,7 +81,7 @@ protected:
   void BuildJSObject(JSAObjectBuilder& b, JSCustomObject* profile);
 
   // This represent the application's main thread (SAMPLER_INIT)
-  ThreadProfile* mPrimaryThreadProfile;
+  ThreadProfile mPrimaryThreadProfile;
   TimeStamp mStartTime;
   bool mSaveRequested;
   bool mAddLeafAddresses;

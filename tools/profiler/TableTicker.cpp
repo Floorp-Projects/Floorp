@@ -173,22 +173,16 @@ void TableTicker::BuildJSObject(JSAObjectBuilder& b, JSCustomObject* profile)
   JSCustomArray *threads = b.CreateArray();
   b.DefineProperty(profile, "threads", threads);
 
+  // For now we only have one thread
   SetPaused(true);
-
-  {
-    mozilla::MutexAutoLock lock(*sRegisteredThreadsMutex);
-
-    for (size_t i = 0; i < sRegisteredThreads->size(); i++) {
-      MutexAutoLock lock(*sRegisteredThreads->at(i)->Profile()->GetMutex());
-
-      JSCustomObject* threadSamples = b.CreateObject();
-      sRegisteredThreads->at(i)->Profile()->BuildJSObject(b, threadSamples);
-      b.ArrayPush(threads, threadSamples);
-    }
-  }
-
+  ThreadProfile* prof = GetPrimaryThreadProfile();
+  prof->GetMutex()->Lock();
+  JSCustomObject* threadSamples = b.CreateObject();
+  prof->BuildJSObject(b, threadSamples);
+  b.ArrayPush(threads, threadSamples);
+  prof->GetMutex()->Unlock();
   SetPaused(false);
-} 
+}
 
 // END SaveProfileTask et al
 ////////////////////////////////////////////////////////////////////////
@@ -389,17 +383,10 @@ void doSampleStackTrace(PseudoStack *aStack, ThreadProfile &aProfile, TickSample
 
 void TableTicker::Tick(TickSample* sample)
 {
-  if (!sample->threadProfile) {
-    // Platform doesn't support multithread, so use the main thread profile we created
-    sample->threadProfile = GetPrimaryThreadProfile();
-  }
-
-  ThreadProfile& currThreadProfile = *sample->threadProfile;
-
   // Marker(s) come before the sample
-  PseudoStack* stack = currThreadProfile.GetPseudoStack();
+  PseudoStack* stack = mPrimaryThreadProfile.GetPseudoStack();
   for (int i = 0; stack->getMarker(i) != NULL; i++) {
-    addDynamicTag(currThreadProfile, 'm', stack->getMarker(i));
+    addDynamicTag(mPrimaryThreadProfile, 'm', stack->getMarker(i));
   }
   stack->mQueueClearMarker = true;
 
@@ -411,7 +398,7 @@ void TableTicker::Tick(TickSample* sample)
       // XXX: we also probably want to add an entry to the profile to help
       // distinguish which samples are part of the same event. That, or record
       // the event generation in each sample
-      currThreadProfile.erase();
+      mPrimaryThreadProfile.erase();
     }
     sLastSampledEventGeneration = sCurrentEventGeneration;
 
@@ -427,29 +414,29 @@ void TableTicker::Tick(TickSample* sample)
 
 #if defined(USE_BACKTRACE) || defined(USE_NS_STACKWALK)
   if (mUseStackWalk) {
-    doNativeBacktrace(currThreadProfile, sample);
+    doNativeBacktrace(mPrimaryThreadProfile, sample);
   } else {
-    doSampleStackTrace(stack, currThreadProfile, mAddLeafAddresses ? sample : nullptr);
+    doSampleStackTrace(stack, mPrimaryThreadProfile, mAddLeafAddresses ? sample : nullptr);
   }
 #else
-  doSampleStackTrace(stack, currThreadProfile, mAddLeafAddresses ? sample : nullptr);
+  doSampleStackTrace(stack, mPrimaryThreadProfile, mAddLeafAddresses ? sample : nullptr);
 #endif
 
   if (recordSample)
-    currThreadProfile.flush();
+    mPrimaryThreadProfile.flush();
 
-  if (!sLastTracerEvent.IsNull() && sample && currThreadProfile.IsMainThread()) {
+  if (!sLastTracerEvent.IsNull() && sample) {
     TimeDuration delta = sample->timestamp - sLastTracerEvent;
-    currThreadProfile.addTag(ProfileEntry('r', delta.ToMilliseconds()));
+    mPrimaryThreadProfile.addTag(ProfileEntry('r', delta.ToMilliseconds()));
   }
 
   if (sample) {
     TimeDuration delta = sample->timestamp - mStartTime;
-    currThreadProfile.addTag(ProfileEntry('t', delta.ToMilliseconds()));
+    mPrimaryThreadProfile.addTag(ProfileEntry('t', delta.ToMilliseconds()));
   }
 
   if (sLastFrameNumber != sFrameNumber) {
-    currThreadProfile.addTag(ProfileEntry('f', sFrameNumber));
+    mPrimaryThreadProfile.addTag(ProfileEntry('f', sFrameNumber));
     sLastFrameNumber = sFrameNumber;
   }
 }
@@ -473,8 +460,7 @@ void mozilla_sampler_print_location1()
     return;
   }
 
-  ThreadProfile threadProfile("Temp", PROFILE_DEFAULT_ENTRY, stack,
-                              0, false);
+  ThreadProfile threadProfile(1000, stack);
   doSampleStackTrace(stack, threadProfile, NULL);
 
   threadProfile.flush();
