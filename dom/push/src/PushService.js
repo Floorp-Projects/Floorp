@@ -11,6 +11,7 @@ function debug(s) {
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
+const Cr = Components.results;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -28,6 +29,10 @@ const kCONFLICT_RETRY_ATTEMPTS = 3; // If channelID registration says 409, how
 
 const kERROR_CHID_CONFLICT = 409;   // Error code sent by push server if this
                                     // channel already exists on the server.
+
+const kUDP_WAKEUP_WS_STATUS_CODE = 4774;  // WebSocket Close status code sent
+                                          // by server to signal that it can
+                                          // wake client up using UDP.
 
 const kCHILD_PROCESS_MESSAGES = ["Push:Register", "Push:Unregister",
                                  "Push:Registrations"];
@@ -270,13 +275,17 @@ const STATE_READY = 3;
 PushService.prototype = {
   classID : Components.ID("{0ACE8D15-9B15-41F4-992F-C88820421DBF}"),
 
-  QueryInterface : XPCOMUtils.generateQI([Ci.nsIObserver]),
+  QueryInterface : XPCOMUtils.generateQI([Ci.nsIObserver,
+                                          Ci.nsIUDPServerSocketListener]),
 
   observe: function observe(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "app-startup":
         Services.obs.addObserver(this, "final-ui-startup", false);
         Services.obs.addObserver(this, "profile-change-teardown", false);
+        Services.obs.addObserver(this,
+                                 "network-interface-state-changed",
+                                 false);
         break;
       case "final-ui-startup":
         Services.obs.removeObserver(this, "final-ui-startup");
@@ -286,7 +295,22 @@ PushService.prototype = {
         Services.obs.removeObserver(this, "profile-change-teardown");
         this._shutdown();
         break;
+      case "network-interface-state-changed":
+        debug("network-interface-state-changed");
 
+        if (this._udpServer) {
+          this._udpServer.close();
+        }
+
+        this._shutdownWS();
+
+        // Check to see if we need to do anything.
+        this._db.getAllChannelIDs(function(channelIDs) {
+          if (channelIDs.length > 0) {
+            this._beginWSSetup();
+          }
+        }.bind(this));
+        break;
       case "nsPref:changed":
         if (aData == "services.push.serverURL") {
           debug("services.push.serverURL changed! websocket. new value " +
@@ -363,6 +387,18 @@ PushService.prototype = {
   _retryTimeoutTimer: null,
   _retryFailCount: 0,
 
+  /**
+   * According to the WS spec, servers should immediately close the underlying
+   * TCP connection after they close a WebSocket. This causes wsOnStop to be
+   * called with error NS_BASE_STREAM_CLOSED. Since the client has to keep the
+   * WebSocket up, it should try to reconnect. But if the server closes the
+   * WebSocket because it will wake up the client via UDP, then the client
+   * shouldn't re-establish the connection. If the server says that it will
+   * wake up the client over UDP, this is set to true in wsOnServerClose. It is
+   * checked in wsOnStop.
+   */
+  _willBeWokenUpByUDP: false,
+
   init: function() {
     debug("init()");
     this._db = new PushDB(this);
@@ -375,6 +411,8 @@ PushService.prototype = {
     }.bind(this));
 
     this._requestTimeout = this._prefs.get("requestTimeout");
+
+    this._udpPort = this._prefs.get("udp.port");
 
     this._db.getAllChannelIDs(
       function(channelIDs) {
@@ -397,6 +435,7 @@ PushService.prototype = {
   _shutdownWS: function() {
     debug("shutdownWS()");
     this._currentState = STATE_SHUT_DOWN;
+    this._willBeWokenUpByUDP = false;
     if (this._wsListener)
       this._wsListener._pushService = null;
     try {
@@ -409,6 +448,10 @@ PushService.prototype = {
     debug("_shutdown()");
     this._db.close();
     this._db = null;
+
+    if (this._udpServer) {
+      this._udpServer.close();
+    }
 
     // All pending requests (ideally none) are dropped at this point. We
     // shouldn't have any applications performing registration/unregistration
@@ -1032,6 +1075,20 @@ PushService.prototype = {
     if (this._UAID)
       data["uaid"] = this._UAID;
 
+    var networkState = this._getNetworkState();
+    if (networkState.ip) {
+      // Hostport is apparently a thing.
+      data["wakeup_hostport"] = {
+        ip: networkState.ip,
+        port: this._udpPort
+      };
+
+      data["mobilenetwork"] = {
+        mcc: networkState.mcc,
+        mnc: networkState.mnc
+      };
+    }
+
     function sendHelloMessage(ids) {
       // On success, ids is an array, on error its not.
       data["channelIDs"] = ids.map ?
@@ -1047,10 +1104,14 @@ PushService.prototype = {
   /**
    * This statusCode is not the websocket protocol status code, but the TCP
    * connection close status code.
+   *
+   * If we do not explicitly call ws.close() then statusCode is always
+   * NS_BASE_STREAM_CLOSED, even on a successful close.
    */
   _wsOnStop: function(context, statusCode) {
     debug("wsOnStop()");
-    if (statusCode != Components.results.NS_OK) {
+    if (statusCode != Cr.NS_OK &&
+        !(statusCode == Cr.NS_BASE_STREAM_CLOSED && this._willBeWokenUpByUDP)) {
       debug("Socket error " + statusCode);
       this._socketError(statusCode);
     }
@@ -1098,16 +1159,105 @@ PushService.prototype = {
     this[handler](reply);
   },
 
+  /**
+   * The websocket should never be closed. Since we don't call ws.close(),
+   * _wsOnStop() receives error code NS_BASE_STREAM_CLOSED (see comment in that
+   * function), which calls socketError and re-establishes the WebSocket
+   * connection.
+   *
+   * If the server said it'll use UDP for wakeup, we set _willBeWokenUpByUDP
+   * and stop reconnecting in _wsOnStop().
+   */
   _wsOnServerClose: function(context, aStatusCode, aReason) {
     debug("wsOnServerClose() " + aStatusCode + " " + aReason);
-    // 1000 is the normal close
-    if (aStatusCode == 1000 && Object.keys(this._pendingRequests).length > 0) {
-      // This should never happen. A successful close cannot have pending
-      // requests since the server should've responded to them before the
-      // connection was closed.
-      this._shutdownWS();
-      this._beginWSSetup();
+
+    // Switch over to UDP.
+    if (aStatusCode == kUDP_WAKEUP_WS_STATUS_CODE) {
+      debug("Server closed with promise to wake up");
+      this._willBeWokenUpByUDP = true;
+      // TODO: there should be no pending requests
+      this._listenForUDPWakeup();
     }
+  },
+
+  _listenForUDPWakeup: function() {
+    debug("listenForUDPWakeup()");
+
+    if (this._udpServer) {
+      debug("UDP Server already running");
+      return;
+    }
+
+    if (!this._getNetworkState().ip) {
+      debug("No IP");
+      return;
+    }
+
+    if (!this._prefs.get("udp.wakeupEnabled")) {
+      debug("UDP support disabled");
+      return;
+    }
+
+    this._udpServer = Cc["@mozilla.org/network/server-socket-udp;1"]
+                        .createInstance(Ci.nsIUDPServerSocket);
+    this._udpServer.init(this._udpPort, false);
+    this._udpServer.asyncListen(this);
+    debug("listenForUDPWakeup listening on " + this._udpPort);
+  },
+
+  /**
+   * Called by UDP Server Socket. As soon as a ping is recieved via UDP,
+   * reconnect the WebSocket and get the actual data.
+   */
+  onPacketReceived: function(aServ, aMessage) {
+    debug("Recv UDP datagram on port: " + this._udpPort);
+    this._beginWSSetup();
+  },
+
+  /**
+   * Called by UDP Server Socket if the socket was closed for some reason.
+   *
+   * If this happens, we reconnect the WebSocket to not miss out on
+   * notifications.
+   */
+  onStopListening: function(aServ, aStatus) {
+    debug("UDP Server socket was shutdown. Status: " + aStatus);
+    this._beginWSSetup();
+  },
+
+  /**
+   * Get mobile network information to decide if the client is capable of being woken
+   * up by UDP (which currently just means having an mcc and mnc along with an
+   * IP).
+   */
+  _getNetworkState: function() {
+    debug("getNetworkState()");
+
+    var networkManager = Cc["@mozilla.org/network/manager;1"]
+                           .getService(Ci.nsINetworkManager);
+    if (networkManager.active &&
+        networkManager.active.type ==
+                      Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE) {
+      debug("Running on mobile data");
+      var mcp = Cc["@mozilla.org/ril/content-helper;1"]
+                  .getService(Ci.nsIMobileConnectionProvider);
+      if (mcp.iccInfo) {
+        return {
+          mcc: mcp.iccInfo.mcc,
+          mnc: mcp.iccInfo.mnc,
+          ip: networkManager.active.ip
+        }
+      }
+    }
+    else {
+      debug("Running on wifi");
+    }
+
+    return {
+      mcc: 0,
+      mnc: 0,
+      ip: undefined
+    };
   }
 }
 

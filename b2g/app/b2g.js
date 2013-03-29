@@ -398,6 +398,10 @@ pref("services.push.retryBaseInterval", 5000);
 pref("services.push.maxRetryInterval", 1200000);
 // How long before a DOMRequest errors as timeout
 pref("services.push.requestTimeout", 10000);
+// enable udp wakeup support
+pref("services.push.udp.wakeupEnabled", true);
+// port on which UDP server socket is bound
+pref("services.push.udp.port", 2442);
 
 // NetworkStats
 #ifdef MOZ_B2G_RIL
