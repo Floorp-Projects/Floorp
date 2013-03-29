@@ -464,6 +464,7 @@ SuggestAutoComplete.prototype = {
     this._suggestURI = submission.uri;
     var method = (submission.postData ? "POST" : "GET");
     this._request.open(method, this._suggestURI.spec, true);
+    this._request.channel.notificationCallbacks = new AuthPromptOverride();
     if (this._request.channel instanceof Ci.nsIPrivateBrowsingChannel) {
       this._request.channel.setPrivate(privacyMode);
     }
@@ -523,6 +524,31 @@ SuggestAutoComplete.prototype = {
                                          Ci.nsIAutoCompleteObserver])
 };
 
+function AuthPromptOverride() {
+}
+AuthPromptOverride.prototype = {
+  // nsIAuthPromptProvider
+  getAuthPrompt: function (reason, iid) {
+    // Return a no-op nsIAuthPrompt2 implementation.
+    return {
+      promptAuth: function () {
+        throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+      },
+      asyncPromptAuth: function () {
+        throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+      }
+    };
+  },
+
+  // nsIInterfaceRequestor
+  getInterface: function SSLL_getInterface(iid) {
+    return this.QueryInterface(iid);
+  },
+
+  // nsISupports
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAuthPromptProvider,
+                                         Ci.nsIInterfaceRequestor])
+};
 /**
  * SearchSuggestAutoComplete is a service implementation that handles suggest
  * results specific to web searches.
