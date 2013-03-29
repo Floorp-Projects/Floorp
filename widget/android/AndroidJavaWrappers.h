@@ -640,6 +640,7 @@ public:
     bool IsMetaPressed() const { return (mMetaState & AndroidKeyEvent::META_META_MASK) != 0; }
     int Flags() { return mFlags; }
     int UnicodeChar() { return mUnicodeChar; }
+    int BaseUnicodeChar() { return mBaseUnicodeChar; }
     int RepeatCount() const { return mRepeatCount; }
     int Count() { return mCount; }
     int Start() { return mStart; }
@@ -673,7 +674,7 @@ protected:
     nsIntRect mRect;
     int mFlags, mMetaState;
     int mDomKeyLocation;
-    int mKeyCode, mUnicodeChar;
+    int mKeyCode, mUnicodeChar, mBaseUnicodeChar;
     int mRepeatCount;
     int mCount;
     int mStart, mEnd;
@@ -734,6 +735,7 @@ protected:
     static jfieldID jEndField;
     static jfieldID jPointerIndexField;
     static jfieldID jUnicodeCharField;
+    static jfieldID jBaseUnicodeCharField;
     static jfieldID jRepeatCountField;
     static jfieldID jRangeTypeField;
     static jfieldID jRangeStylesField;
