@@ -8,6 +8,7 @@
 #include "base/string_util.h"
 #include "base/thread_local.h"
 #include "base/waitable_event.h"
+#include "GeckoProfiler.h"
 
 namespace base {
 
@@ -136,6 +137,8 @@ void Thread::StopSoon() {
 }
 
 void Thread::ThreadMain() {
+  profiler_register_thread(name_.c_str());
+
   // The message loop for this thread.
   MessageLoop message_loop(startup_data_->options.message_loop_type);
 
@@ -160,6 +163,8 @@ void Thread::ThreadMain() {
 
   // Assert that MessageLoop::Quit was called by ThreadQuitTask.
   DCHECK(GetThreadWasQuitProperly());
+
+  profiler_unregister_thread();
 
   // We can't receive messages anymore.
   message_loop_ = NULL;
