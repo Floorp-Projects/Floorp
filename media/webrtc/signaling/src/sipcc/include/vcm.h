@@ -672,10 +672,9 @@ int vcmTxStart(cc_mcapid_t mcap_id,
         size_t max_digest_len);
 
 
-  short vcmInitializeDataChannel(const char *peerconnection,
+  short vcmSetDataChannelParameters(const char *peerconnection,
         cc_uint16_t streams,
-        int local_datachannel_port,
-        int remote_datachannel_port,
+        int sctp_port,
         const char* protocol);
 
 /*!
