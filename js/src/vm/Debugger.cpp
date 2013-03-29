@@ -4499,7 +4499,7 @@ DebuggerObject_sealHelper(JSContext *cx, unsigned argc, Value *vp, SealHelperOp 
             args.rval().setUndefined();
             return true;
         }
-        ok = JSObject::preventExtensions(cx, obj);
+        ok = obj->preventExtensions(cx);
     }
     if (!ok)
         return false;

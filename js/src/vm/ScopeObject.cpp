@@ -1307,12 +1307,6 @@ class DebugScopeProxy : public BaseProxyHandler
 
     DebugScopeProxy() : BaseProxyHandler(&family) {}
 
-    bool preventExtensions(JSContext *cx, HandleObject proxy) MOZ_OVERRIDE
-    {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_CHANGE_EXTENSIBILITY);
-        return false;
-    }
-
     bool getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id, PropertyDescriptor *desc,
                                unsigned flags) MOZ_OVERRIDE
     {
@@ -1471,13 +1465,6 @@ class DebugScopeProxy : public BaseProxyHandler
         RootedValue idval(cx, IdToValue(id));
         return js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_CANT_DELETE,
                                         JSDVG_IGNORE_STACK, idval, NullPtr(), NULL, NULL);
-    }
-
-    bool isExtensible(JSObject *proxy) MOZ_OVERRIDE
-    {
-        // always [[Extensible]], can't be made non-[[Extensible]], like most
-        // proxies
-        return true;
     }
 };
 

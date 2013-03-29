@@ -914,7 +914,7 @@ obj_preventExtensions(JSContext *cx, unsigned argc, Value *vp)
     if (!obj->isExtensible())
         return true;
 
-    return JSObject::preventExtensions(cx, obj);
+    return obj->preventExtensions(cx);
 }
 
 static JSBool
