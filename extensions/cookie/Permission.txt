@@ -68,6 +68,8 @@ Turn on/off screen, cpu, device power, etc. Listen and inspect resource lock eve
 
 push
 {}
+Push Notifications, 822712
+Notify application about updates to things it registers interest in.
 
 settings
 {read, write}
