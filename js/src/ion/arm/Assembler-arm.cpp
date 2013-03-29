@@ -2134,9 +2134,32 @@ Assembler::retarget(Label *label, Label *target)
     if (label->used()) {
         if (target->bound()) {
             bind(label, BufferOffset(target));
+        } else if (target->used()) {
+            // The target is not bound but used. Prepend label's branch list
+            // onto target's.
+            bool more;
+            BufferOffset labelBranchOffset(label);
+            BufferOffset next;
+
+            // Find the head of the use chain for label.
+            while (nextLink(labelBranchOffset, &next))
+                labelBranchOffset = next;
+
+            // Then patch the head of label's use chain to the tail of
+            // target's use chain, prepending the entire use chain of target.
+            Instruction branch = *editSrc(labelBranchOffset);
+            Condition c;
+            branch.extractCond(&c);
+            int32_t prev = target->use(label->offset());
+            if (branch.is<InstBImm>())
+                as_b(BOffImm(prev), c, labelBranchOffset);
+            else if (branch.is<InstBLImm>())
+                as_bl(BOffImm(prev), c, labelBranchOffset);
+            else
+                JS_NOT_REACHED("crazy fixup!");
         } else {
-            // The target is unbound.  We can just take the head of the list
-            // hanging off of label, and dump that into target.
+            // The target is unbound and unused.  We can just take the head of
+            // the list hanging off of label, and dump that into target.
             DebugOnly<uint32_t> prev = target->use(label->offset());
             JS_ASSERT((int32_t)prev == Label::INVALID_OFFSET);
         }
