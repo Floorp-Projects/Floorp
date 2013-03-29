@@ -21,7 +21,12 @@
     {
       // Some AT may look for this
       testAttrs("nav", {"xml-roles" : "navigation"}, true);
+      testAttrs("header", {"xml-roles" : "banner"}, true);
+      testAbsentAttrs("article_header", {"xml-roles" : "banner"});
+      testAbsentAttrs("section_header", {"xml-roles" : "banner"});
       testAttrs("footer", {"xml-roles" : "contentinfo"}, true);
+      testAbsentAttrs("article_footer", {"xml-roles" : "contentinfo"});
+      testAbsentAttrs("section_footer", {"xml-roles" : "contentinfo"});
       testAttrs("aside", {"xml-roles" : "complementary"}, true);
       testAttrs("section", {"xml-roles" : "region"}, true);
       testAttrs("main", {"xml-roles" : "main"}, true); // // ARIA override
@@ -68,13 +73,27 @@
      title="HTML5 article element should expose xml-roles:article object attribute">
     Bug 761891
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=849624"
+     title="modify HTML5 header and footer accessibility API mapping">
+    Bug 849624
+  </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
   </pre>
 
   <nav id="nav">a nav</nav>
+  <header id="header">a header</header>
   <footer id="footer">a footer</footer>
+  <article id="article_with_header_and_footer">
+    <header id="article_header">a header within an article</header>
+    <footer id="article_footer">a footer within an article</footer>
+  </article>
+  <section id="section_with_header_and_footer">
+    <header id="section_header">a header within an section</header>
+    <footer id="section_footer">a footer within an section</footer>
+  </section>
   <aside id="aside">by the way I am an aside</aside>
   <section id="section">a section</section>
   <article id="main" role="main">a main area</article>
