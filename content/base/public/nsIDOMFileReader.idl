@@ -9,7 +9,7 @@ interface nsIDOMEventListener;
 interface nsIDOMBlob;
 interface nsIDOMDOMError;
 
-[scriptable, builtinclass, uuid(62a1628e-c856-4aee-8273-d0c62488e2ca)]
+[scriptable, builtinclass, uuid(81a8d00b-2982-44f6-aecf-faac0d0819d6)]
 interface nsIDOMFileReader : nsIDOMEventTarget
 {
   [implicit_jscontext]

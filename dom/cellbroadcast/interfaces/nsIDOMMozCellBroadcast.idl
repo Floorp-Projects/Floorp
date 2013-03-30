@@ -9,7 +9,7 @@
  * unacknowledged general CBS messages to be broadcast to all receivers within
  * a particular region.
  */
-[scriptable, builtinclass, uuid(06bf2607-cd01-4307-9063-b6eac13b4613)]
+[scriptable, builtinclass, uuid(113bd5ff-8981-4e55-8c20-ea68fd722a48)]
 interface nsIDOMMozCellBroadcast : nsIDOMEventTarget
 {
   [implicit_jscontext] attribute jsval onreceived;
