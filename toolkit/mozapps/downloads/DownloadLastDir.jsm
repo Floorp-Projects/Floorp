@@ -52,11 +52,8 @@ let observer = {
           Services.prefs.clearUserPref(LAST_DIR_PREF);
         // Ensure that purging session history causes both the session-only PB cache
         // and persistent prefs to be cleared.
-        let cps2 = Components.classes["@mozilla.org/content-pref/service;1"].
-                     getService(Components.interfaces.nsIContentPrefService2);
-
-        cps2.removeByName(LAST_DIR_PREF, {usePrivateBrowsing: false});
-        cps2.removeByName(LAST_DIR_PREF, {usePrivateBrowsing: true});
+        Services.contentPrefs.removePrefsByName(LAST_DIR_PREF, {usePrivateBrowsing: false});
+        Services.contentPrefs.removePrefsByName(LAST_DIR_PREF, {usePrivateBrowsing: true});
         break;
     }
   }
