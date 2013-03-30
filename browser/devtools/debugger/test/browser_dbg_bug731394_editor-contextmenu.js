@@ -27,22 +27,19 @@ function test()
     gDebugger = gPane.panelWin;
     resumed = true;
 
-    gDebugger.addEventListener("Debugger:SourceShown", onSourceShown);
+    gDebugger.addEventListener("Debugger:SourceShown", onScriptShown);
 
-    gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded",
-                                                                 onFramesAdded);
+    gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
+      framesAdded = true;
+      executeSoon(startTest);
+    });
 
     executeSoon(function() {
       gDebuggee.firstCall();
     });
   });
 
-  function onFramesAdded(aEvent) {
-    framesAdded = true;
-    executeSoon(startTest);
-  }
-
-  function onSourceShown(aEvent) {
+  function onScriptShown(aEvent) {
     scriptShown = aEvent.detail.url.indexOf("-02.js") != -1;
     executeSoon(startTest);
   }
@@ -51,8 +48,8 @@ function test()
   {
     if (scriptShown && framesAdded && resumed && !testStarted) {
       testStarted = true;
-      gDebugger.removeEventListener("Debugger:SourceShown", onSourceShown);
-      executeSoon(performTest);
+      gDebugger.removeEventListener("Debugger:SourceShown", onScriptShown);
+      Services.tm.currentThread.dispatch({ run: performTest }, 0);
     }
   }
 
@@ -112,7 +109,6 @@ function test()
     }
 
     executeSoon(function() {
-      dump("\n\n\n\n\n\n\n\n\n\n\n" + gDebugger.editor.getText() + "\n\n\n\n\n\n\n\n");
       contextMenu.hidePopup();
       closeDebuggerAndFinish();
     });
