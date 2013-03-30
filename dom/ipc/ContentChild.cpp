@@ -308,21 +308,6 @@ ContentChild::Init(MessageLoop* aIOLoop,
 #ifdef MOZ_CRASHREPORTER
     SendPCrashReporterConstructor(CrashReporter::CurrentThreadId(),
                                   XRE_GetProcessType());
-#if defined(MOZ_WIDGET_ANDROID)
-    PCrashReporterChild* crashreporter = ManagedPCrashReporterChild()[0];
-
-    InfallibleTArray<Mapping> mappings;
-    const struct mapping_info *info = getLibraryMapping();
-    while (info && info->name) {
-        mappings.AppendElement(Mapping(nsDependentCString(info->name),
-                                       nsDependentCString(info->file_id),
-                                       info->base,
-                                       info->len,
-                                       info->offset));
-        info++;
-    }
-    crashreporter->SendAddLibraryMappings(mappings);
-#endif
 #endif
 
     SendGetProcessAttributes(&mID, &mIsForApp, &mIsForBrowser);
