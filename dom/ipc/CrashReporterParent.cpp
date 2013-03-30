@@ -15,31 +15,6 @@ namespace mozilla {
 namespace dom {
 
 void
-CrashReporterParent::ActorDestroy(ActorDestroyReason why)
-{
-#if defined(MOZ_WIDGET_ANDROID) && defined(MOZ_CRASHREPORTER)
-  CrashReporter::RemoveLibraryMappingsForChild(ProcessId(OtherProcess()));
-#endif
-}
-
-bool
-CrashReporterParent::RecvAddLibraryMappings(const InfallibleTArray<Mapping>& mappings)
-{
-#if defined(MOZ_WIDGET_ANDROID) && defined(MOZ_CRASHREPORTER)
-  for (uint32_t i = 0; i < mappings.Length(); i++) {
-    const Mapping& m = mappings[i];
-    CrashReporter::AddLibraryMappingForChild(ProcessId(OtherProcess()),
-                                             m.library_name().get(),
-                                             m.file_id().get(),
-                                             m.start_address(),
-                                             m.mapping_length(),
-                                             m.file_offset());
-  }
-#endif
-  return true;
-}
-
-void
 CrashReporterParent::AnnotateCrashReport(const nsCString& key,
                                          const nsCString& data)
 {
