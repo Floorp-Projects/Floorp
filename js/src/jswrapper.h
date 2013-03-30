@@ -150,6 +150,8 @@ class JS_FRIEND_API(SecurityWrapper) : public Base
     virtual bool objectClassIs(HandleObject obj, ESClassValue classValue,
                                JSContext *cx) MOZ_OVERRIDE;
     virtual bool regexp_toShared(JSContext *cx, HandleObject proxy, RegExpGuard *g) MOZ_OVERRIDE;
+    virtual bool defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
+                                PropertyDescriptor *desc) MOZ_OVERRIDE;
 
     /*
      * Allow our subclasses to select the superclass behavior they want without
