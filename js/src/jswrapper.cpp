@@ -659,6 +659,21 @@ SecurityWrapper<Base>::regexp_toShared(JSContext *cx, HandleObject obj, RegExpGu
     return Base::regexp_toShared(cx, obj, g);
 }
 
+template <class Base>
+bool
+SecurityWrapper<Base>::defineProperty(JSContext *cx, HandleObject wrapper,
+                                      HandleId id, PropertyDescriptor *desc)
+{
+    if (desc->getter || desc->setter) {
+        JSString *str = IdToString(cx, id);
+        const jschar *prop = str ? str->getCharsZ(cx) : NULL;
+        JS_ReportErrorNumberUC(cx, js_GetErrorMessage, NULL,
+                               JSMSG_ACCESSOR_DEF_DENIED, prop);
+        return false;
+    }
+
+    return Base::defineProperty(cx, wrapper, id, desc);
+}
 
 template class js::SecurityWrapper<Wrapper>;
 template class js::SecurityWrapper<CrossCompartmentWrapper>;
