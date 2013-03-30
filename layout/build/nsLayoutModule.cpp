@@ -676,6 +676,12 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsStructuredCloneContainer)
 NS_GENERIC_FACTORY_CONSTRUCTOR(OSFileConstantsService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(TCPSocketChild)
 
+#ifdef ACCESSIBILITY
+#include "nsAccessibilityService.h"
+
+  MAKE_CTOR(CreateA11yService, nsIAccessibilityService, NS_GetAccessibilityService)
+#endif
+
 static nsresult
 Construct_nsIScriptSecurityManager(nsISupports *aOuter, REFNSIID aIID,
                                    void **aResult)
@@ -846,6 +852,10 @@ NS_DEFINE_NAMED_CID(NS_GAMEPAD_TEST_CID);
 #ifdef MOZ_WEBSPEECH
 NS_DEFINE_NAMED_CID(NS_FAKE_SPEECH_RECOGNITION_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_SYNTHVOICEREGISTRY_CID);
+#endif
+
+#ifdef ACCESSIBILITY
+NS_DEFINE_NAMED_CID(NS_ACCESSIBILITY_SERVICE_CID);
 #endif
 
 static nsresult
@@ -1129,6 +1139,9 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
 #ifdef MOZ_GAMEPAD
   { &kNS_GAMEPAD_TEST_CID, false, NULL, GamepadServiceTestConstructor },
 #endif
+#ifdef ACCESSIBILITY
+  { &kNS_ACCESSIBILITY_SERVICE_CID, false, NULL, CreateA11yService },
+#endif
   { NULL }
 };
 
@@ -1278,6 +1291,10 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { NS_GAMEPAD_TEST_CONTRACTID, &kNS_GAMEPAD_TEST_CID },
 #endif
   { MEDIAMANAGERSERVICE_CONTRACTID, &kNS_MEDIAMANAGERSERVICE_CID },
+#ifdef ACCESSIBILITY
+  { "@mozilla.org/accessibilityService;1", &kNS_ACCESSIBILITY_SERVICE_CID },
+  { "@mozilla.org/accessibleRetrieval;1", &kNS_ACCESSIBILITY_SERVICE_CID },
+#endif
   { NULL }
 };
 
