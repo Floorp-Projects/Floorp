@@ -776,6 +776,8 @@ struct JSRuntime : private JS::shadow::Runtime,
                                        js::Handle<JSFunction*> targetFun);
     bool cloneSelfHostedValue(JSContext *cx, js::Handle<js::PropertyName*> name,
                               js::MutableHandleValue vp);
+    bool maybeWrappedSelfHostedFunction(JSContext *cx, js::Handle<js::PropertyName*> name,
+                                        js::MutableHandleValue funVal);
 
     //-------------------------------------------------------------------------
     // Locale information
