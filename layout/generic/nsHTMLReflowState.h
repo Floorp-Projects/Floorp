@@ -12,7 +12,6 @@
 #include "nsStyleCoord.h"
 #include "nsStyleStructInlines.h"
 #include "nsIFrame.h"
-#include "mozilla/AutoRestore.h"
 #include <algorithm>
 
 class nsPresContext;
