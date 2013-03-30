@@ -15,7 +15,6 @@ include $(srcdir)/../glue/objs.mk
 EXTRA_DEPS += $(srcdir)/../glue/objs.mk
 
 LIBRARY_NAME	= xpcom_core
-SHORT_LIBNAME	= xpcomcor
 LIBXUL_LIBRARY = 1
 EXPORT_LIBRARY = 1
 
