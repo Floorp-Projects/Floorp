@@ -127,6 +127,16 @@ function runTest() {
        "uri3 should return dir3"); // set in CPS
     is(gDownloadLastDir.getFile(uri4).path, dir2.path,
        "uri4 should return dir2"); // fallback
+
+    // check clearHistory removes all data
+    clearHistory();
+    is(gDownloadLastDir.file, null, "clearHistory removes all data");
+    is(Services.contentPrefs.hasPref(uri1, "browser.download.lastDir", null),
+       false, "LastDir preference should be absent");
+    is(gDownloadLastDir.getFile(uri1), null, "uri1 should point to null");
+    is(gDownloadLastDir.getFile(uri2), null, "uri2 should point to null");
+    is(gDownloadLastDir.getFile(uri3), null, "uri3 should point to null");
+    is(gDownloadLastDir.getFile(uri4), null, "uri4 should point to null");
   }
 
   function checkDownloadLastDir(aWin, gDownloadLastDir, aLastDir) {
@@ -170,19 +180,6 @@ function runTest() {
 
   yield testOnWindow(false, function(win, downloadDir) {
     checkInit(win, downloadDir);
-    clearHistory();
-  });
-
-  yield testOnWindow(false, function(win, downloadDir) {
-    // check clearHistory removes all data
-    is(downloadDir.file, null, "clearHistory removes all data");
-    is(Services.contentPrefs.hasPref(uri1, "browser.download.lastDir", null),
-       false, "LastDir preference should be absent");
-    is(downloadDir.getFile(uri1), null, "uri1 should point to null");
-    is(downloadDir.getFile(uri2), null, "uri2 should point to null");
-    is(downloadDir.getFile(uri3), null, "uri3 should point to null");
-    is(downloadDir.getFile(uri4), null, "uri4 should point to null");
-
     downloadDir.setFile(null, tmpDir);
   });
 
@@ -247,8 +244,6 @@ function runTest() {
   yield testOnWindow(true, function(win, downloadDir) {
     downloadDir.setFile(uri1, dir2);
     clearHistory();
-  });
-  yield testOnWindow(true, function(win, downloadDir) {
     checkDownloadLastDirNull(win, downloadDir);
   });
   yield testOnWindow(false, function(win, downloadDir) {
