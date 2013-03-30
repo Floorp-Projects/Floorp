@@ -35,14 +35,29 @@ namespace {
 
 inline
 uint32_t
-GetQuotaPermissionFromWindow(nsIDOMWindow* aWindow)
+GetQuotaPermissions(nsIDOMWindow* aWindow)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   nsCOMPtr<nsIScriptObjectPrincipal> sop(do_QueryInterface(aWindow));
   NS_ENSURE_TRUE(sop, nsIPermissionManager::DENY_ACTION);
 
-  return CheckQuotaHelper::GetQuotaPermission(sop->GetPrincipal());
+  if (nsContentUtils::IsSystemPrincipal(sop->GetPrincipal())) {
+    return nsIPermissionManager::ALLOW_ACTION;
+  }
+
+  nsCOMPtr<nsIPermissionManager> permissionManager =
+    do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+  NS_ENSURE_TRUE(permissionManager, nsIPermissionManager::DENY_ACTION);
+
+  uint32_t permission;
+  nsresult rv =
+    permissionManager->TestPermissionFromPrincipal(sop->GetPrincipal(),
+                                                   PERMISSION_INDEXEDDB_UNLIMITED,
+                                                   &permission);
+  NS_ENSURE_SUCCESS(rv, nsIPermissionManager::DENY_ACTION);
+
+  return permission;
 }
 
 } // anonymous namespace
@@ -113,30 +128,6 @@ CheckQuotaHelper::Cancel()
   }
 }
 
-// static
-uint32_t
-CheckQuotaHelper::GetQuotaPermission(nsIPrincipal* aPrincipal)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(aPrincipal, "Null principal!");
-
-  if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
-    return nsIPermissionManager::ALLOW_ACTION;
-  }
-
-  nsCOMPtr<nsIPermissionManager> pm =
-    do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
-  NS_ENSURE_TRUE(pm, nsIPermissionManager::DENY_ACTION);
-
-  uint32_t permission;
-  nsresult rv = pm->TestPermissionFromPrincipal(aPrincipal,
-                                                PERMISSION_INDEXEDDB_UNLIMITED,
-                                                &permission);
-  NS_ENSURE_SUCCESS(rv, nsIPermissionManager::DENY_ACTION);
-
-  return permission;
-}
-
 NS_IMPL_THREADSAFE_ISUPPORTS3(CheckQuotaHelper, nsIRunnable,
                                                 nsIInterfaceRequestor,
                                                 nsIObserver)
@@ -150,7 +141,7 @@ CheckQuotaHelper::Run()
 
   if (NS_SUCCEEDED(rv)) {
     if (!mHasPrompted) {
-      mPromptResult = GetQuotaPermissionFromWindow(mWindow);
+      mPromptResult = GetQuotaPermissions(mWindow);
     }
 
     if (mHasPrompted) {

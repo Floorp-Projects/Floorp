@@ -481,14 +481,10 @@ QuotaManager::Init()
 
 void
 QuotaManager::InitQuotaForOrigin(const nsACString& aOrigin,
-                                 int64_t aLimitBytes,
-                                 int64_t aUsageBytes)
+                                 int64_t aLimit,
+                                 int64_t aUsage)
 {
-  MOZ_ASSERT(aUsageBytes >= 0);
-  MOZ_ASSERT(aLimitBytes > 0);
-  MOZ_ASSERT(aUsageBytes <= aLimitBytes);
-
-  OriginInfo* info = new OriginInfo(aOrigin, aLimitBytes, aUsageBytes);
+  OriginInfo* info = new OriginInfo(aOrigin, aLimit * 1024 * 1024, aUsage);
 
   MutexAutoLock lock(mQuotaMutex);
 
@@ -822,7 +818,7 @@ QuotaManager::GetDirectoryForOrigin(const nsACString& aASCIIOrigin,
 
 nsresult
 QuotaManager::EnsureOriginIsInitialized(const nsACString& aOrigin,
-                                        bool aTrackQuota,
+                                        StoragePrivilege aPrivilege,
                                         nsIFile** aDirectory)
 {
 #ifdef DEBUG
@@ -874,7 +870,7 @@ QuotaManager::EnsureOriginIsInitialized(const nsACString& aOrigin,
   // We need to initialize directories of all clients if they exists and also
   // get the total usage to initialize the quota.
   nsAutoPtr<UsageRunnable> runnable;
-  if (aTrackQuota) {
+  if (aPrivilege != Chrome) {
     runnable = new UsageRunnable();
   }
 
@@ -919,25 +915,12 @@ QuotaManager::EnsureOriginIsInitialized(const nsACString& aOrigin,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (aTrackQuota) {
-    uint64_t quotaMaxBytes = GetStorageQuotaMB() * 1024 * 1024;
-    uint64_t totalUsageBytes = runnable->TotalUsage();
+  if (aPrivilege != Chrome) {
+    QuotaManager* quotaManager = QuotaManager::Get();
+    NS_ASSERTION(quotaManager, "Shouldn't be null!");
 
-    if (totalUsageBytes > quotaMaxBytes) {
-      NS_WARNING("Origin is already using more storage than allowed by quota!");
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    // XXX This signed/unsigned mismatch must be fixed.
-    int64_t limit = quotaMaxBytes >= uint64_t(INT64_MAX) ?
-                    INT64_MAX :
-                    int64_t(quotaMaxBytes);
-
-    int64_t usage = totalUsageBytes >= uint64_t(INT64_MAX) ?
-                    INT64_MAX :
-                    int64_t(totalUsageBytes);
-
-    InitQuotaForOrigin(aOrigin, limit, usage);
+    quotaManager->InitQuotaForOrigin(aOrigin, GetStorageQuotaMB(),
+                                     runnable->TotalUsage());
   }
 
   mInitializedOrigins.AppendElement(aOrigin);
