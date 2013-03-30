@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1363988948000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1364316540000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -372,6 +372,10 @@
                         <versionRange  minVersion="2.0" maxVersion="2.0">
                     </versionRange>
                   </emItem>
+      <emItem  blockID="i326" id="/^((support2_en@adobe14\.com)|(XN4Xgjw7n4@yUWgc\.com)|(C7yFVpIP@WeolS3acxgS\.com)|(Kbeu4h0z@yNb7QAz7jrYKiiTQ3\.com)|(aWQzX@a6z4gWdPu8FF\.com)|(CBSoqAJLYpCbjTP90@JoV0VMywCjsm75Y0toAd\.com)|(zZ2jWZ1H22Jb5NdELHS@o0jQVWZkY1gx1\.com))$/">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                  </emItem>
       <emItem  blockID="i162" id="{EB7508CA-C7B2-46E0-8C04-3E94A035BD49}">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
@@ -393,10 +397,6 @@
                   </emItem>
       <emItem  blockID="i86" id="{45147e67-4020-47e2-8f7a-55464fb535aa}">
                         <versionRange  minVersion="0" maxVersion="*">
-                    </versionRange>
-                  </emItem>
-      <emItem  blockID="i326" id="/^((support2_en@adobe14\.com)|(XN4Xgjw7n4@yUWgc\.com)|(C7yFVpIP@WeolS3acxgS\.com)|(Kbeu4h0z@yNb7QAz7jrYKiiTQ3\.com)|(aWQzX@a6z4gWdPu8FF\.com)|(CBSoqAJLYpCbjTP90@JoV0VMywCjsm75Y0toAd\.com))$/">
-                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i312" id="extension21804@extension21804.com">
@@ -803,7 +803,28 @@
       <pluginItem  blockID="p316">
                   <match name="filename" exp="(NPSWF[0-9_]*\.dll)|(Flash\ Player\.plugin)" />                                    <versionRange  minVersion="11.2.202.275" maxVersion="11.4.402.286.9999" severity="0" vulnerabilitystatus="1">
                                 <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="20.0a1" maxVersion="*" />
+                              <versionRange  minVersion="21.0a1" maxVersion="*" />
+                          </targetApplication>
+                  </versionRange>
+                  </pluginItem>
+      <pluginItem  blockID="p328">
+                  <match name="filename" exp="Silverlight\.plugin" />                                    <versionRange  minVersion="5.1" maxVersion="5.1.20124.9999" severity="0" vulnerabilitystatus="1">
+                                <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="19.0a1" maxVersion="*" />
+                          </targetApplication>
+                  </versionRange>
+                  </pluginItem>
+      <pluginItem  blockID="p330">
+            <match name="description" exp="^Shockwave Flash (([1-9]\.[0-9]+)|(10\.([0-2]|(3 r(([0-9][0-9]?)|1(([0-7][0-9])|8[0-2]))))))( |$)" />      <match name="filename" exp="libflashplayer\.so" />                                    <versionRange  severity="0" vulnerabilitystatus="1">
+                                <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="19.0a1" maxVersion="*" />
+                          </targetApplication>
+                  </versionRange>
+                  </pluginItem>
+      <pluginItem  blockID="p332">
+            <match name="description" exp="^Shockwave Flash 11.(0|1) r[0-9]{1,3}$" />      <match name="filename" exp="libflashplayer\.so" />                                    <versionRange  severity="0" vulnerabilitystatus="1">
+                                <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="19.0a1" maxVersion="*" />
                           </targetApplication>
                   </versionRange>
                   </pluginItem>
