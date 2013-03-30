@@ -17,7 +17,6 @@ function run_test()
   initSourcesBackwardsCompatDebuggerServer();
   gDebuggee = addTestGlobal("test-sources-compat");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-
   gClient.request = (function (request) {
     return function (aRequest, aOnResponse) {
       if (aRequest.type === "sources") {
