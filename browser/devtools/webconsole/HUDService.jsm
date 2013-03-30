@@ -405,6 +405,40 @@ WebConsole.prototype = {
   },
 
   /**
+   * Retrieve information about the JavaScript debugger's stackframes list. This
+   * is used to allow the Web Console to evaluate code in the selected
+   * stackframe.
+   *
+   * @return object|null
+   *         An object which holds:
+   *         - frames: the active ThreadClient.cachedFrames array.
+   *         - selected: depth/index of the selected stackframe in the debugger
+   *         UI.
+   *         If the debugger is not open or if it's not paused, then |null| is
+   *         returned.
+   */
+  getDebuggerFrames: function WC_getDebuggerFrames()
+  {
+    let toolbox = gDevTools.getToolbox(this.target);
+    if (!toolbox) {
+      return null;
+    }
+    let panel = toolbox.getPanel("jsdebugger");
+    if (!panel) {
+      return null;
+    }
+    let framesController = panel.panelWin.gStackFrames;
+    let thread = framesController.activeThread;
+    if (thread && thread.paused) {
+      return {
+        frames: thread.cachedFrames,
+        selected: framesController.currentFrame,
+      };
+    }
+    return null;
+  },
+
+  /**
    * Destroy the object. Call this method to avoid memory leaks when the Web
    * Console is closed.
    *
