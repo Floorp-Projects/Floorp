@@ -3966,17 +3966,6 @@ if test -n "$MOZ_NATIVE_NSS"; then
    NSS_LIBS="$NSS_LIBS -lcrmf"
 else
    NSS_CFLAGS='-I$(LIBXUL_DIST)/include/nss'
-   if test -z "$IMPORT_LIB_SUFFIX"; then
-       DLL_LINK_SUFFIX='$(DLL_SUFFIX)'
-   else
-       DLL_LINK_SUFFIX='.$(IMPORT_LIB_SUFFIX)'
-   fi
-   NSS_DEP_LIBS="\
-        \$(LIBXUL_DIST)/lib/\$(LIB_PREFIX)crmf.\$(LIB_SUFFIX) \
-        \$(LIBXUL_DIST)/lib/\$(DLL_PREFIX)smime$NSS_VERSION${DLL_LINK_SUFFIX} \
-        \$(LIBXUL_DIST)/lib/\$(DLL_PREFIX)ssl$NSS_VERSION${DLL_LINK_SUFFIX} \
-        \$(LIBXUL_DIST)/lib/\$(DLL_PREFIX)nss$NSS_VERSION${DLL_LINK_SUFFIX} \
-        \$(LIBXUL_DIST)/lib/\$(DLL_PREFIX)nssutil$NSS_VERSION${DLL_LINK_SUFFIX}"
 
    if test -z "$GNU_CC" -a "$OS_ARCH" = "WINNT" -o "$OS_ARCH" = "OS2"; then
        NSS_LIBS="\
@@ -4515,6 +4504,9 @@ cairo-windows)
     MOZ_WEBGL=1
     MOZ_PDF_PRINTING=1
     MOZ_INSTRUMENT_EVENT_LOOP=1
+    if test -n "$GNU_CC"; then
+        MOZ_FOLD_LIBS=
+    fi
     ;;
 
 cairo-gtk2|cairo-gtk2-x11)
@@ -8836,7 +8828,6 @@ AC_SUBST(MOZ_NATIVE_NSPR)
 
 AC_SUBST(NSS_CFLAGS)
 AC_SUBST(NSS_LIBS)
-AC_SUBST(NSS_DEP_LIBS)
 AC_SUBST(MOZ_NATIVE_NSS)
 AC_SUBST(NSS_DISABLE_DBM)
 
