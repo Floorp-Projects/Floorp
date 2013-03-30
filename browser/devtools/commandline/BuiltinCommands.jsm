@@ -161,10 +161,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
 
       // Create the promise that will be resolved when the add-on listing has
       // been finished.
-      let promise = context.createPromise();
+      let deferred = context.defer();
       let types = aArgs.type == "all" ? null : [aArgs.type];
-      AddonManager.getAddonsByTypes(types, list.bind(promise, aArgs.type));
-      return promise;
+      AddonManager.getAddonsByTypes(types, list.bind(deferred, aArgs.type));
+      return deferred.promise;
     }
   });
 
@@ -259,10 +259,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
           this.resolve(message);
         }
 
-        let promise = context.createPromise();
+        let deferred = context.defer();
         // List the installed add-ons, enable one when done listing.
-        AddonManager.getAllAddons(enable.bind(promise, aArgs.name));
-        return promise;
+        AddonManager.getAllAddons(enable.bind(deferred, aArgs.name));
+        return deferred.promise;
       }
     });
 
@@ -301,10 +301,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
           this.resolve(message);
         }
 
-        let promise = context.createPromise();
+        let deferred = context.defer();
         // List the installed add-ons, disable one when done listing.
-        AddonManager.getAllAddons(disable.bind(promise, aArgs.name));
-        return promise;
+        AddonManager.getAllAddons(disable.bind(deferred, aArgs.name));
+        return deferred.promise;
       }
     });
     module.CmdAddonFlags.addonsLoaded = true;
@@ -1235,7 +1235,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
         return gcli.lookup('jsbInvalidURL');
       }
 
-      let promise = context.createPromise();
+      let deferred = context.defer();
 
       xhr.onreadystatechange = function(aEvt) {
         if (xhr.readyState == 4) {
@@ -1247,15 +1247,15 @@ XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
 
             browserWindow.Scratchpad.ScratchpadManager.openScratchpad({text: result});
 
-            promise.resolve();
+            deferred.resolve();
           } else {
-            promise.resolve("Unable to load page to beautify: " + args.url + " " +
-                            xhr.status + " " + xhr.statusText);
+            deferred.resolve("Unable to load page to beautify: " + args.url + " " +
+                             xhr.status + " " + xhr.statusText);
           }
         };
       }
       xhr.send(null);
-      return promise;
+      return deferred.promise;
     }
   });
 }(this));
@@ -1642,13 +1642,13 @@ XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
       var document = args.chrome? context.environment.chromeDocument
                                 : context.environment.contentDocument;
       if (args.delay > 0) {
-        var promise = context.createPromise();
+        var deferred = context.defer();
         document.defaultView.setTimeout(function Command_screenshotDelay() {
           let reply = this.grabScreen(document, args.filename, args.clipboard,
                                       args.fullpage);
-          promise.resolve(reply);
+          deferred.resolve(reply);
         }.bind(this), args.delay * 1000);
-        return promise;
+        return deferred.promise;
       }
       else {
         return this.grabScreen(document, args.filename, args.clipboard,
