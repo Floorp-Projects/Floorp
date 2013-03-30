@@ -20,13 +20,13 @@ function doConsoleCalls(aState)
 {
   let longString = (new Array(DebuggerServer.LONG_STRING_LENGTH + 2)).join("a");
 
-  console.log("foobarBaz-log", undefined);
-  console.info("foobarBaz-info", null);
-  console.warn("foobarBaz-warn", document.body);
-  console.debug(null);
-  console.trace();
-  console.dir(document, window);
-  console.log("foo", longString);
+  top.console.log("foobarBaz-log", undefined);
+  top.console.info("foobarBaz-info", null);
+  top.console.warn("foobarBaz-warn", top.document.documentElement);
+  top.console.debug(null);
+  top.console.trace();
+  top.console.dir(top.document, top.location);
+  top.console.log("foo", longString);
 
   expectedConsoleCalls = [
     {
@@ -82,23 +82,13 @@ function doConsoleCalls(aState)
         {
           type: "object",
           actor: /[a-z]/,
-          className: "HTMLDocument",
+          class: "XULDocument",
         },
         {
           type: "object",
           actor: /[a-z]/,
-          className: "Window",
+          class: "Location",
         }
-      ],
-      objectProperties: [
-        {
-          name: "ATTRIBUTE_NODE",
-          value: 2,
-        },
-        {
-          name: "CDATA_SECTION_NODE",
-          value: 4,
-        }, // ...
       ],
     },
     {
@@ -124,7 +114,7 @@ function startTest()
 {
   removeEventListener("load", startTest);
 
-  attachConsole(["ConsoleAPI"], onAttach);
+  attachConsole(["ConsoleAPI"], onAttach, true);
 }
 
 function onAttach(aState, aResponse)
