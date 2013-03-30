@@ -19,7 +19,7 @@ dictionary MmsParameters
   jsval      attachments; // MmsAttachment[]
 };
 
-[scriptable, builtinclass, uuid(e4db3360-8e9d-11e2-8ca6-0ba19c435073)]
+[scriptable, builtinclass, uuid(645161ca-b009-461b-bd13-45c3075cdfba)]
 interface nsIDOMMozMobileMessageManager : nsIDOMEventTarget
 {
   nsIDOMMozSmsSegmentInfo getSegmentInfoForText(in DOMString text);
