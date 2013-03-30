@@ -8,7 +8,7 @@
 
 interface nsIDOMMozVoicemailStatus;
 
-[scriptable, builtinclass, uuid(c343eb25-9dc8-49a8-a70f-58a0337b3f6e)]
+[scriptable, builtinclass, uuid(12e6604b-4981-4aa4-a31f-f77181f8a466)]
 interface nsIDOMMozVoicemail : nsIDOMEventTarget
 {
   /**

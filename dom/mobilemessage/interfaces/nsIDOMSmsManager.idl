@@ -9,7 +9,7 @@ interface nsIDOMMozSmsRequest;
 interface nsIDOMMozSmsFilter;
 interface nsIDOMMozSmsSegmentInfo;
 
-[scriptable, builtinclass, uuid(2bdb02e7-ec3a-47a9-885c-0ab514566801)]
+[scriptable, builtinclass, uuid(9bc1d6fc-6b53-48f6-99e8-793e746e5dbb)]
 interface nsIDOMMozSmsManager : nsIDOMEventTarget
 {
   nsIDOMMozSmsSegmentInfo getSegmentInfoForText(in DOMString text);

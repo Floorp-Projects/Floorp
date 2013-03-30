@@ -11,7 +11,7 @@ interface nsIDOMWindow;
 interface nsIDOMDOMCursor;
 interface nsICursorContinueCallback;
 
-[scriptable, builtinclass, uuid(d88998b7-ee30-4ae5-bbed-58f5711929de)]
+[scriptable, builtinclass, uuid(e18fdde5-35b0-46df-8522-f88adf7698f3)]
 interface nsIDOMDOMRequest : nsIDOMEventTarget
 {
   readonly attribute DOMString readyState; // "pending" or "done"

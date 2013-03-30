@@ -16,7 +16,7 @@ dictionary DeviceStorageEnumerationParameters
   jsval since;
 };
 
-[scriptable, uuid(d0df738b-1c42-4b1a-84d0-9a089d830974), builtinclass]
+[scriptable, uuid(cf424c41-26e0-4c26-bb81-82981f7e3641), builtinclass]
 interface nsIDOMDeviceStorage : nsIDOMEventTarget
 {
     [implicit_jscontext] attribute jsval onchange;
