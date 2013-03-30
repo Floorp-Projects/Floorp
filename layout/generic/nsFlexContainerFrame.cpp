@@ -2175,11 +2175,11 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
   // not NS_AUTOHEIGHT and there's any cross-size left over to distribute)
 
   // Figure out our flex container's cross size
-  mCachedContentBoxCrossSize =
+  nscoord contentBoxCrossSize =
     axisTracker.GetCrossComponent(nsSize(aReflowState.ComputedWidth(),
                                          aReflowState.ComputedHeight()));
 
-  if (mCachedContentBoxCrossSize == NS_AUTOHEIGHT) {
+  if (contentBoxCrossSize == NS_AUTOHEIGHT) {
     // Unconstrained 'auto' cross-size: shrink-wrap our line(s), subject
     // to our min-size / max-size constraints in that axis.
     nscoord minCrossSize =
@@ -2188,21 +2188,21 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
     nscoord maxCrossSize =
       axisTracker.GetCrossComponent(nsSize(aReflowState.mComputedMaxWidth,
                                            aReflowState.mComputedMaxHeight));
-    mCachedContentBoxCrossSize =
+    contentBoxCrossSize =
       NS_CSS_MINMAX(lineCrossAxisPosnTracker.GetLineCrossSize(),
                     minCrossSize, maxCrossSize);
   }
   if (lineCrossAxisPosnTracker.GetLineCrossSize() !=
-      mCachedContentBoxCrossSize) {
+      contentBoxCrossSize) {
     // XXXdholbert When we support multi-line flex containers, we should
     // distribute any extra space among or between our lines here according
     // to 'align-content'. For now, we do the single-line special behavior:
     // "If the flex container has only a single line (even if it's a
     // multi-line flex container), the cross size of the flex line is the
     // flex container's inner cross size."
-    lineCrossAxisPosnTracker.SetLineCrossSize(mCachedContentBoxCrossSize);
+    lineCrossAxisPosnTracker.SetLineCrossSize(contentBoxCrossSize);
   }
-  frameCrossSize = mCachedContentBoxCrossSize +
+  frameCrossSize = contentBoxCrossSize +
     axisTracker.GetMarginSizeInCrossAxis(aReflowState.mComputedBorderPadding);
 
   // XXXdholbert FOLLOW ACTUAL RULES FOR FLEX CONTAINER BASELINE
@@ -2212,7 +2212,7 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
   // ...ELSE use "after" edge of content box.
   // Default baseline: the "after" edge of content box. (Note: if we have any
   // flex items, they'll override this.)
-  mCachedAscent = mCachedContentBoxCrossSize +
+  nscoord flexContainerAscent = contentBoxCrossSize +
     aReflowState.mComputedBorderPadding.top;
 
   // Position the items in cross axis, within their line
@@ -2331,7 +2331,7 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
     IsAxisHorizontal(axisTracker.GetCrossAxis()) ?
     frameMainSize : frameCrossSize;
 
-  aDesiredSize.ascent = mCachedAscent;
+  aDesiredSize.ascent = flexContainerAscent;
 
   // Overflow area = union(my overflow area, kids' overflow areas)
   aDesiredSize.SetOverflowAreasToDesiredBounds();
