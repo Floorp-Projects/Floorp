@@ -284,6 +284,17 @@ case $platform in
         RELEASE_CFLAGS='-O3'
         RELEASE_CXXFLAGS='-O3'
         ;;
+    MSYS/MSVC)
+        THE_OS="MSYS"
+        THE_COMP="Microsoft Visual C++"
+        CC=cl; export CC
+        CXX=cl; export CXX
+        RELEASE_CFLAGS='-Gy -MD'
+        RELEASE_CXXFLAGS='-Gy -MD'
+        DEBUG_CFLAGS='-Zi -MDd'
+        DEBUG_CXXFLAGS='-Zi -MDd'
+        DEBUG_LDFLAGS='-DEBUG'
+        ;;
     *BSD)
         THE_OS="BSD"
         THE_COMP="the GNU C++"
