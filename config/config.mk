@@ -246,7 +246,9 @@ $(error Component makefile does not specify MODULE_NAME.)
 endif
 endif
 FORCE_STATIC_LIB=1
-SHORT_LIBNAME=
+ifneq ($(SHORT_LIBNAME),)
+$(error make file is in libxul but  gives SHORT_LIBNAME as $(SHORT_LIBNAME))
+endif
 endif
 
 # If we are building this component into an extension/xulapp, it cannot be
