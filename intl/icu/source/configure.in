@@ -318,8 +318,8 @@ AC_SUBST(UCLN_NO_AUTO_CLEANUP)
 # MSVC floating-point option
 MSVC_RELEASE_FLAG=""
 if test $enabled = yes
-then  
-    if test $icu_cv_host_frag = mh-cygwin-msvc
+then
+    if test $icu_cv_host_frag = mh-cygwin-msvc -o $icu_cv_host_frag = mh-msys-msvc
     then
         AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
     #if defined _MSC_VER && _MSC_VER >= 1400
