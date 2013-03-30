@@ -1651,7 +1651,7 @@ OpenDatabaseHelper::DoDatabaseWork()
 
   nsresult rv =
     quotaManager->EnsureOriginIsInitialized(mASCIIOrigin,
-                                            mPrivilege,
+                                            mTrackingQuota,
                                             getter_AddRefs(dbDirectory));
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 

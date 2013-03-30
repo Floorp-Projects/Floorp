@@ -76,7 +76,10 @@ FileQuotaStreamWithWrite<FileStreamBase>::Write(const char* aBuf,
 
     if (!FileQuotaStreamWithWrite::
          mQuotaObject->MaybeAllocateMoreSpace(offset, aCount)) {
-      return NS_ERROR_FAILURE;
+      // A quota failure shouldn't be confused with a write failure. We don't
+      // attempt the write and inform the caller.
+      *_retval = 0;
+      return NS_OK;
     }
   }
 

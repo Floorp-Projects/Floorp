@@ -72,6 +72,7 @@ LOCAL_INCLUDES = \
   -I$(topsrcdir)/db/sqlite3/src \
   -I$(topsrcdir)/dom/base \
   -I$(topsrcdir)/dom/src/storage \
+  -I$(topsrcdir)/dom/quota \
   -I$(topsrcdir)/xpcom/build \
   $(NULL)
 
