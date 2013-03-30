@@ -1709,11 +1709,7 @@ pref("layout.css.supports-rule.enabled", true);
 #endif
 
 // Is support for CSS Flexbox enabled?
-#ifdef RELEASE_BUILD
-pref("layout.css.flexbox.enabled", false);
-#else
 pref("layout.css.flexbox.enabled", true);
-#endif
 
 // Are sets of prefixed properties supported?
 pref("layout.css.prefixes.border-image", true);
