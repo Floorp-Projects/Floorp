@@ -8844,7 +8844,7 @@ nsGlobalWindow::GetLocalStorage(nsIDOMStorage ** aLocalStorage)
 //*****************************************************************************
 
 NS_IMETHODIMP
-nsGlobalWindow::GetIndexedDB(nsIIDBFactory** _retval)
+nsGlobalWindow::GetIndexedDB(nsISupports** _retval)
 {
   if (!mIndexedDB) {
     nsresult rv;
@@ -8877,13 +8877,13 @@ nsGlobalWindow::GetIndexedDB(nsIIDBFactory** _retval)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsCOMPtr<nsIIDBFactory> request(mIndexedDB);
+  nsCOMPtr<nsISupports> request(mIndexedDB);
   request.forget(_retval);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsGlobalWindow::GetMozIndexedDB(nsIIDBFactory** _retval)
+nsGlobalWindow::GetMozIndexedDB(nsISupports** _retval)
 {
   return GetIndexedDB(_retval);
 }
