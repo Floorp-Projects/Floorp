@@ -686,20 +686,6 @@ nsIPresShell::FrameSelection()
 
 //----------------------------------------------------------------------
 
-nsresult
-NS_NewPresShell(nsIPresShell** aInstancePtrResult)
-{
-  NS_PRECONDITION(nullptr != aInstancePtrResult, "null ptr");
-
-  if (!aInstancePtrResult)
-    return NS_ERROR_NULL_POINTER;
-
-  *aInstancePtrResult = new PresShell();
-
-  NS_ADDREF(*aInstancePtrResult);
-  return NS_OK;
-}
-
 static bool sSynthMouseMove = true;
 
 PresShell::PresShell()
