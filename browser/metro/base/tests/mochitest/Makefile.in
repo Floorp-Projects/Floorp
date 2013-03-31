@@ -1,0 +1,46 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH     = @DEPTH@
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
+relativesrcdir  = @relativesrcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+BROWSER_TESTS = \
+  head.js \
+  browser_test.js \
+  browser_canonizeURL.js \
+  browser_context_ui.js \
+  browser_tiles.js \
+  browser_tilegrid.xul \
+  browser_onscreen_keyboard.js \
+  browser_onscreen_keyboard.html \
+  browser_remotetabs.js \
+  browser_downloads.js \
+  browser_plugin_input.html \
+  browser_plugin_input_mouse.js \
+  browser_plugin_input_keyboard.js \
+  browser_context_menu_tests.js \
+  browser_context_menu_tests_01.html \
+  browser_context_menu_tests_02.html \
+  browser_context_menu_tests_03.html \
+  text-block.html \
+  browser_sanitize_ui.js \
+  browser_topsites.js \
+  $(NULL)
+
+BROWSER_TEST_RESOURCES = \
+  res/image01.png \
+  $(NULL)
+
+libs:: $(BROWSER_TESTS)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/metro/$(relativesrcdir)
+
+libs:: $(BROWSER_TEST_RESOURCES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/metro/$(relativesrcdir)/res
+
+include $(topsrcdir)/config/rules.mk
