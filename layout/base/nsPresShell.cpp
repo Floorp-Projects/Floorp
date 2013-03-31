@@ -812,8 +812,7 @@ PresShell::Init(nsIDocument* aDocument,
   aPresContext->SetShell(this);
 
   // Now we can initialize the style set.
-  result = aStyleSet->Init(aPresContext);
-  NS_ENSURE_SUCCESS(result, result);
+  aStyleSet->Init(aPresContext);
 
   // From this point on, any time we return an error we need to make
   // sure to null out mStyleSet first, since an error return from this
