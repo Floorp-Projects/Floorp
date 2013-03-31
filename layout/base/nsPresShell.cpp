@@ -781,7 +781,6 @@ PresShell::Init(nsIDocument* aDocument,
   NS_PRECONDITION(nullptr != aDocument, "null ptr");
   NS_PRECONDITION(nullptr != aPresContext, "null ptr");
   NS_PRECONDITION(nullptr != aViewManager, "null ptr");
-  nsresult result;
 
   if ((nullptr == aDocument) || (nullptr == aPresContext) ||
       (nullptr == aViewManager)) {
@@ -799,7 +798,7 @@ PresShell::Init(nsIDocument* aDocument,
   mViewManager = aViewManager;
 
   // Create our frame constructor.
-  mFrameConstructor = new nsCSSFrameConstructor(mDocument, this);
+  mFrameConstructor = new nsCSSFrameConstructor(mDocument, this, aStyleSet);
 
   mFrameManager = mFrameConstructor;
 
@@ -830,17 +829,6 @@ PresShell::Init(nsIDocument* aDocument,
   SetPreferenceStyleRules(false);
 
   NS_ADDREF(mSelection = new nsFrameSelection());
-
-  // Create and initialize the frame manager
-  // XXXjwatt it would be better if we did this right after creating
-  // mFrameConstructor, since the frame constructor and frame manager
-  // are now the same object.
-  result =  mFrameConstructor->Init(mStyleSet);
-  if (NS_FAILED(result)) {
-    NS_WARNING("Frame manager initialization failed");
-    mStyleSet = nullptr;
-    return result;
-  }
 
   mSelection->Init(this, nullptr);
 
