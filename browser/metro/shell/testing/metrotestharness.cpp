@@ -156,6 +156,14 @@ public:
   }
 };
 
+static void AddConsoleIdToParams()
+{
+  DWORD dwId = GetCurrentProcessId();
+  CString tmp;
+  tmp.Format(L" testconsoleid=%d", dwId);
+  sAppParams += tmp;
+}
+
 static bool Launch()
 {
   Log(L"Launching browser...");
@@ -299,6 +307,7 @@ int wmain(int argc, WCHAR* argv[])
   if (sFirefoxPath.GetLength()) {
     Log(L"firefoxpath: '%s'", sFirefoxPath);
   }
+  AddConsoleIdToParams();
   Log(L"args: '%s'", sAppParams);
   Launch();
 
