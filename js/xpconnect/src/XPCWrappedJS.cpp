@@ -214,7 +214,7 @@ nsXPCWrappedJS::TraceJS(JSTracer* trc)
 {
     NS_ASSERTION(mRefCnt >= 2 && IsValid(), "must be strongly referenced");
     JS_SET_TRACING_DETAILS(trc, GetTraceName, this, 0);
-    JS_CallTracer(trc, GetJSObjectPreserveColor(), JSTRACE_OBJECT);
+    JS_CallObjectTracer(trc, GetJSObjectPreserveColor(), "nsXPCWrappedJS::mJSObj");
 }
 
 // static

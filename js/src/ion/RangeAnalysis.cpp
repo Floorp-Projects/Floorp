@@ -1038,10 +1038,15 @@ RangeAnalysis::analyzeLoopPhi(MBasicBlock *header, LoopIterationBound *loopBound
     if (!SafeSub(0, modified.constant, &negativeConstant) || !limitSum.add(negativeConstant))
         return;
 
+    Range *initRange = initial->range();
     if (modified.constant > 0) {
+        if (initRange && !initRange->isLowerInfinite())
+            phi->range()->setLower(initRange->lower());
         phi->range()->setSymbolicLower(new SymbolicBound(NULL, initialSum));
         phi->range()->setSymbolicUpper(new SymbolicBound(loopBound, limitSum));
     } else {
+        if (initRange && !initRange->isUpperInfinite())
+            phi->range()->setUpper(initRange->upper());
         phi->range()->setSymbolicUpper(new SymbolicBound(NULL, initialSum));
         phi->range()->setSymbolicLower(new SymbolicBound(loopBound, limitSum));
     }

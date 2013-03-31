@@ -30,6 +30,14 @@ Discontiguous selections can be accessed by iterating over the `selection`
 module itself. Each iteration yields a `Selection` object from which `text`,
 `html`, and `isContiguous` properties can be accessed.
 
+## Private Windows ##
+
+If your add-on has not opted into private browsing, then you won't see any
+selections made in tabs that are hosted by private browser windows.
+
+To learn more about private windows, how to opt into private browsing, and how
+to support private browsing, refer to the
+[documentation for the `private-browsing` module](modules/sdk/private-browsing.html).
 
 Examples
 --------

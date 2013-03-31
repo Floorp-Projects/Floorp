@@ -39,6 +39,16 @@ random == flexbox-align-self-horiz-1-table.xhtml  flexbox-align-self-horiz-1-ref
 == flexbox-align-self-vert-rtl-3.xhtml  flexbox-align-self-vert-rtl-3-ref.xhtml
 == flexbox-align-self-vert-rtl-4.xhtml  flexbox-align-self-vert-rtl-4-ref.xhtml
 
+# Tests for computing the baseline of a flex container
+== flexbox-baseline-align-self-baseline-horiz-1.html flexbox-baseline-align-self-baseline-horiz-1-ref.html
+== flexbox-baseline-align-self-baseline-vert-1.html flexbox-baseline-align-self-baseline-vert-1-ref.html
+== flexbox-baseline-empty-1a.html flexbox-baseline-empty-1-ref.html
+== flexbox-baseline-empty-1b.html flexbox-baseline-empty-1-ref.html
+== flexbox-baseline-multi-item-horiz-1.html flexbox-baseline-multi-item-horiz-1-ref.html
+== flexbox-baseline-multi-item-vert-1.html flexbox-baseline-multi-item-vert-1-ref.html
+== flexbox-baseline-single-item-1a.html flexbox-baseline-single-item-1-ref.html
+== flexbox-baseline-single-item-1b.html flexbox-baseline-single-item-1-ref.html
+
 # Basic tests with with blocks as flex items
 == flexbox-basic-block-horiz-1.xhtml flexbox-basic-block-horiz-1-ref.xhtml
 == flexbox-basic-block-vert-1.xhtml flexbox-basic-block-vert-1-ref.xhtml

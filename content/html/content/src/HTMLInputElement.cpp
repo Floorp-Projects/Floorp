@@ -260,6 +260,48 @@ HTMLInputElement::nsFilePickerShownCallback::nsFilePickerShownCallback(
 {
 }
 
+NS_IMPL_ISUPPORTS1(UploadLastDir::ContentPrefCallback, nsIContentPrefCallback2)
+
+NS_IMETHODIMP
+UploadLastDir::ContentPrefCallback::HandleCompletion(uint16_t aReason)
+{
+  nsCOMPtr<nsIFile> localFile = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
+  NS_ENSURE_STATE(localFile);
+
+  if (aReason == nsIContentPrefCallback2::COMPLETE_ERROR ||
+      !mResult) {
+    // Default to "desktop" directory for each platform
+    nsCOMPtr<nsIFile> homeDir;
+    NS_GetSpecialDirectory(NS_OS_DESKTOP_DIR, getter_AddRefs(homeDir));
+    localFile = do_QueryInterface(homeDir);
+  } else {
+    nsAutoString prefStr;
+    nsCOMPtr<nsIVariant> pref;
+    mResult->GetValue(getter_AddRefs(pref));
+    pref->GetAsAString(prefStr);
+    localFile->InitWithPath(prefStr);
+  }
+
+  mFilePicker->SetDisplayDirectory(localFile);
+  mFilePicker->Open(mFpCallback);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+UploadLastDir::ContentPrefCallback::HandleResult(nsIContentPref* pref)
+{
+  mResult = pref;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+UploadLastDir::ContentPrefCallback::HandleError(nsresult error)
+{
+  // HandleCompletion is always called (even with HandleError was called),
+  // so we don't need to do anything special here.
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 HTMLInputElement::nsFilePickerShownCallback::Done(int16_t aResult)
 {
@@ -389,6 +431,9 @@ HTMLInputElement::AsyncClickHandler::Run()
 
   const nsCOMArray<nsIDOMFile>& oldFiles = mInput->GetFilesInternal();
 
+  nsCOMPtr<nsIFilePickerShownCallback> callback =
+    new HTMLInputElement::nsFilePickerShownCallback(mInput, filePicker, multi);
+
   if (oldFiles.Count()) {
     nsString path;
 
@@ -415,23 +460,13 @@ HTMLInputElement::AsyncClickHandler::Run()
         filePicker->SetDefaultString(leafName);
       }
     }
-  } else {
-    // Attempt to retrieve the last used directory from the content pref service
-    nsCOMPtr<nsIFile> localFile;
-    HTMLInputElement::gUploadLastDir->FetchLastUsedDirectory(doc,
-                                                             getter_AddRefs(localFile));
-    if (!localFile) {
-      // Default to "desktop" directory for each platform
-      nsCOMPtr<nsIFile> homeDir;
-      NS_GetSpecialDirectory(NS_OS_DESKTOP_DIR, getter_AddRefs(homeDir));
-      localFile = do_QueryInterface(homeDir);
-    }
-    filePicker->SetDisplayDirectory(localFile);
+
+    return filePicker->Open(callback);
   }
 
-  nsCOMPtr<nsIFilePickerShownCallback> callback =
-    new HTMLInputElement::nsFilePickerShownCallback(mInput, filePicker, multi);
-  return filePicker->Open(callback);
+  HTMLInputElement::gUploadLastDir->FetchDirectoryAndDisplayPicker(doc, filePicker, callback);
+  return NS_OK;
+
 }
 
 #define CPS_PREF_NAME NS_LITERAL_STRING("browser.upload.lastDir")
@@ -456,10 +491,13 @@ HTMLInputElement::DestroyUploadLastDir() {
 }
 
 nsresult
-UploadLastDir::FetchLastUsedDirectory(nsIDocument* aDoc, nsIFile** aFile)
+UploadLastDir::FetchDirectoryAndDisplayPicker(nsIDocument* aDoc,
+                                              nsIFilePicker* aFilePicker,
+                                              nsIFilePickerShownCallback* aFpCallback)
 {
   NS_PRECONDITION(aDoc, "aDoc is null");
-  NS_PRECONDITION(aFile, "aFile is null");
+  NS_PRECONDITION(aFilePicker, "aFilePicker is null");
+  NS_PRECONDITION(aFpCallback, "aFpCallback is null");
 
   nsIURI* docURI = aDoc->GetDocumentURI();
   NS_PRECONDITION(docURI, "docURI is null");
@@ -467,30 +505,22 @@ UploadLastDir::FetchLastUsedDirectory(nsIDocument* aDoc, nsIFile** aFile)
   nsCOMPtr<nsISupports> container = aDoc->GetContainer();
   nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(container);
 
-  // Attempt to get the CPS, if it's not present we'll just return
-  nsCOMPtr<nsIContentPrefService> contentPrefService =
+  nsCOMPtr<nsIContentPrefCallback2> prefCallback = 
+    new UploadLastDir::ContentPrefCallback(aFilePicker, aFpCallback);
+
+  // Attempt to get the CPS, if it's not present we'll fallback to use the Desktop folder
+  nsCOMPtr<nsIContentPrefService2> contentPrefService =
     do_GetService(NS_CONTENT_PREF_SERVICE_CONTRACTID);
-  if (!contentPrefService)
-    return NS_ERROR_NOT_AVAILABLE;
-  nsCOMPtr<nsIWritableVariant> uri = do_CreateInstance(NS_VARIANT_CONTRACTID);
-  if (!uri)
-    return NS_ERROR_OUT_OF_MEMORY;
-  uri->SetAsISupports(docURI);
-
-  // Get the last used directory, if it is stored
-  bool hasPref;
-  if (NS_SUCCEEDED(contentPrefService->HasPref(uri, CPS_PREF_NAME, loadContext, &hasPref)) && hasPref) {
-    nsCOMPtr<nsIVariant> pref;
-    contentPrefService->GetPref(uri, CPS_PREF_NAME, loadContext, nullptr, getter_AddRefs(pref));
-    nsString prefStr;
-    pref->GetAsAString(prefStr);
-
-    nsCOMPtr<nsIFile> localFile = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
-    if (!localFile)
-      return NS_ERROR_OUT_OF_MEMORY;
-    localFile->InitWithPath(prefStr);
-    localFile.forget(aFile);
+  if (!contentPrefService) {
+    prefCallback->HandleCompletion(nsIContentPrefCallback2::COMPLETE_ERROR);
+    return NS_OK;
   }
+
+  nsAutoCString cstrSpec;
+  docURI->GetSpec(cstrSpec);
+  NS_ConvertUTF8toUTF16 spec(cstrSpec);
+
+  contentPrefService->GetByDomainAndName(spec, CPS_PREF_NAME, loadContext, prefCallback);
   return NS_OK;
 }
 
@@ -521,14 +551,14 @@ UploadLastDir::StoreLastUsedDirectory(nsIDocument* aDoc, nsIDOMFile* aDomFile)
   }
 
   // Attempt to get the CPS, if it's not present we'll just return
-  nsCOMPtr<nsIContentPrefService> contentPrefService =
+  nsCOMPtr<nsIContentPrefService2> contentPrefService =
     do_GetService(NS_CONTENT_PREF_SERVICE_CONTRACTID);
   if (!contentPrefService)
     return NS_ERROR_NOT_AVAILABLE;
-  nsCOMPtr<nsIWritableVariant> uri = do_CreateInstance(NS_VARIANT_CONTRACTID);
-  if (!uri)
-    return NS_ERROR_OUT_OF_MEMORY;
-  uri->SetAsISupports(docURI);
+
+  nsAutoCString cstrSpec;
+  docURI->GetSpec(cstrSpec);
+  NS_ConvertUTF8toUTF16 spec(cstrSpec);
 
   // Find the parent of aFile, and store it
   nsString unicodePath;
@@ -542,17 +572,17 @@ UploadLastDir::StoreLastUsedDirectory(nsIDocument* aDoc, nsIDOMFile* aDomFile)
 
   nsCOMPtr<nsISupports> container = aDoc->GetContainer();
   nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(container);
-  return contentPrefService->SetPref(uri, CPS_PREF_NAME, prefValue, loadContext);
+  return contentPrefService->Set(spec, CPS_PREF_NAME, prefValue, loadContext, nullptr);
 }
 
 NS_IMETHODIMP
 UploadLastDir::Observe(nsISupports* aSubject, char const* aTopic, PRUnichar const* aData)
 {
   if (strcmp(aTopic, "browser:purge-session-history") == 0) {
-    nsCOMPtr<nsIContentPrefService> contentPrefService =
+    nsCOMPtr<nsIContentPrefService2> contentPrefService =
       do_GetService(NS_CONTENT_PREF_SERVICE_CONTRACTID);
     if (contentPrefService)
-      contentPrefService->RemovePrefsByName(CPS_PREF_NAME, nullptr);
+      contentPrefService->RemoveByName(CPS_PREF_NAME, nullptr, nullptr);
   }
   return NS_OK;
 }
@@ -2397,7 +2427,7 @@ HTMLInputElement::Focus(ErrorResult& aError)
       // See if the child is a button control.
       nsCOMPtr<nsIFormControl> formCtrl =
         do_QueryInterface(childFrame->GetContent());
-      if (formCtrl && formCtrl->GetType() == NS_FORM_INPUT_BUTTON) {
+      if (formCtrl && formCtrl->GetType() == NS_FORM_BUTTON_BUTTON) {
         nsCOMPtr<nsIDOMElement> element = do_QueryInterface(formCtrl);
         nsIFocusManager* fm = nsFocusManager::GetFocusManager();
         if (fm && element) {

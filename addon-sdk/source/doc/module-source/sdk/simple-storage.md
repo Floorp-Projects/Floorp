@@ -172,33 +172,13 @@ data you remove is up to you.  For example:
 Private Browsing
 ----------------
 If your storage is related to your users' Web history, personal information, or
-other sensitive data, your add-on should respect [private browsing mode][SUMO].
-While private browsing mode is active, you should not store any sensitive data.
+other sensitive data, your add-on should respect
+[private browsing](http://support.mozilla.com/en-US/kb/Private+Browsing).
 
-Because any kind of data can be placed into simple storage, support for private
-browsing is not built into the module.  Instead, use the
-[`private-browsing`](modules/sdk/private-browsing.html) module to
-check private browsing status and respond accordingly.
-
-For example, the URLs your users visit should not be stored during private
-browsing.  If your add-on records the URL of the selected tab, here's how you
-might handle that:
-
-    ss.storage.history = [];
-    var privateBrowsing = require("sdk/private-browsing");
-    if (!privateBrowsing.isActive) {
-      var url = getSelectedTabURL();
-      ss.storage.history.push(url);
-    }
-
-For more information on supporting private browsing, see its [Mozilla Developer
-Network documentation][MDN].  While that page does not apply specifically to
-SDK-based add-ons (and its code samples don't apply at all), you should follow
-its guidance on best practices and policies.
-
-[SUMO]: http://support.mozilla.com/en-US/kb/Private+Browsing
-[MDN]: https://developer.mozilla.org/En/Supporting_private_browsing_mode
-
+To read about how to opt into private browsing mode and how to use the
+SDK to avoid storing user data associated with private windows, refer to the
+documentation for the
+[`private-browsing` module](modules/sdk/private-browsing.html).
 
 <api name="storage">
 @property {object}

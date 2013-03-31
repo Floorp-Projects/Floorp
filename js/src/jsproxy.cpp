@@ -770,7 +770,8 @@ ArrayToIdVector(JSContext *cx, const Value &array, AutoIdVector &props)
 }
 
 /* Derived class for all scripted indirect proxy handlers. */
-class ScriptedIndirectProxyHandler : public BaseProxyHandler {
+class ScriptedIndirectProxyHandler : public BaseProxyHandler
+{
   public:
     ScriptedIndirectProxyHandler();
     virtual ~ScriptedIndirectProxyHandler();
@@ -824,9 +825,16 @@ ScriptedIndirectProxyHandler::~ScriptedIndirectProxyHandler()
 }
 
 bool
-ScriptedIndirectProxyHandler::preventExtensions(JSContext *cx, HandleObject proxy)
+ScriptedIndirectProxyHandler::isExtensible(JSObject *proxy)
 {
     // Scripted indirect proxies don't support extensibility changes.
+    return true;
+}
+
+bool
+ScriptedIndirectProxyHandler::preventExtensions(JSContext *cx, HandleObject proxy)
+{
+    // See above.
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_CHANGE_EXTENSIBILITY);
     return false;
 }
@@ -1009,13 +1017,6 @@ ScriptedIndirectProxyHandler::iterate(JSContext *cx, HandleObject proxy, unsigne
         return BaseProxyHandler::iterate(cx, proxy, flags, vp);
     return Trap(cx, handler, value, 0, NULL, vp) &&
            ReturnedValueMustNotBePrimitive(cx, proxy, cx->names().iterate, vp);
-}
-
-bool
-ScriptedIndirectProxyHandler::isExtensible(JSObject *proxy)
-{
-    // Scripted indirect proxies don't support extensibility changes.
-    return true;
 }
 
 bool
@@ -2596,17 +2597,17 @@ Proxy::iterate(JSContext *cx, HandleObject proxy, unsigned flags, MutableHandleV
 }
 
 bool
+Proxy::isExtensible(JSObject *proxy)
+{
+    return GetProxyHandler(proxy)->isExtensible(proxy);
+}
+
+bool
 Proxy::preventExtensions(JSContext *cx, HandleObject proxy)
 {
     JS_CHECK_RECURSION(cx, return false);
     BaseProxyHandler *handler = GetProxyHandler(proxy);
     return handler->preventExtensions(cx, proxy);
-}
-
-bool
-Proxy::isExtensible(JSObject *proxy)
-{
-    return GetProxyHandler(proxy)->isExtensible(proxy);
 }
 
 bool

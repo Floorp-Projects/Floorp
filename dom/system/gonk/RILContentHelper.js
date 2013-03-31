@@ -82,7 +82,7 @@ const RIL_IPC_MSG_NAMES = [
   "RIL:IccOpenChannel",
   "RIL:IccCloseChannel",
   "RIL:IccExchangeAPDU",
-  "RIL:IccUpdateContact"
+  "RIL:UpdateIccContact"
 ];
 
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
@@ -310,6 +310,7 @@ CellBroadcastEtwsInfo.prototype = {
 function RILContentHelper() {
   this.rilContext = {
     cardState:            RIL.GECKO_CARDSTATE_UNKNOWN,
+    networkSelectionMode: RIL.GECKO_NETWORK_SELECTION_UNKNOWN,
     iccInfo:              new MobileICCInfo(),
     voiceConnectionInfo:  new MobileConnectionInfo(),
     dataConnectionInfo:   new MobileConnectionInfo()
@@ -382,8 +383,6 @@ RILContentHelper.prototype = {
 
   // nsIRILContentHelper
 
-  networkSelectionMode: RIL.GECKO_NETWORK_SELECTION_UNKNOWN,
-
   rilContext: null,
 
   getRilContext: function getRilContext() {
@@ -400,6 +399,7 @@ RILContentHelper.prototype = {
       return;
     }
     this.rilContext.cardState = rilContext.cardState;
+    this.rilContext.networkSelectionMode = rilContext.networkSelectionMode;
     this.updateInfo(rilContext.iccInfo, this.rilContext.iccInfo);
     this.updateConnectionInfo(rilContext.voice, this.rilContext.voiceConnectionInfo);
     this.updateConnectionInfo(rilContext.data, this.rilContext.dataConnectionInfo);
@@ -421,6 +421,10 @@ RILContentHelper.prototype = {
 
   get cardState() {
     return this.getRilContext().cardState;
+  },
+
+  get networkSelectionMode() {
+    return this.getRilContext().networkSelectionMode;
   },
 
   /**
@@ -676,7 +680,7 @@ RILContentHelper.prototype = {
       iccContact.number = contact.tel[0].value;
     }
 
-    cpmm.sendAsyncMessage("RIL:IccUpdateContact", {requestId: requestId,
+    cpmm.sendAsyncMessage("RIL:UpdateIccContact", {requestId: requestId,
                                                    contactType: contactType,
                                                    contact: iccContact,
                                                    pin2: pin2});
@@ -1086,8 +1090,8 @@ RILContentHelper.prototype = {
       case "RIL:IccExchangeAPDU":
         this.handleIccExchangeAPDU(msg.json);
         break;
-      case "RIL:IccUpdateContact":
-        this.handleIccUpdateContact(msg.json);
+      case "RIL:UpdateIccContact":
+        this.handleUpdateIccContact(msg.json);
         break;
       case "RIL:DataError":
         this.updateConnectionInfo(msg.json, this.rilContext.dataConnectionInfo);
@@ -1200,7 +1204,7 @@ RILContentHelper.prototype = {
     }
   },
 
-  handleIccUpdateContact: function handleIccUpdateContact(message) {
+  handleUpdateIccContact: function handleUpdateIccContact(message) {
     if (message.errorMsg) {
       this.fireRequestError(message.requestId, message.errorMsg);
     } else {

@@ -19,6 +19,7 @@
 #include "nsHTMLFormElement.h" // for ShouldShowInvalidUI()
 #include "nsIFile.h"
 #include "nsIFilePicker.h"
+#include "nsIContentPrefService2.h"
 
 class nsDOMFileList;
 class nsIFilePicker;
@@ -36,12 +37,15 @@ public:
 
   /**
    * Fetch the last used directory for this location from the content
-   * pref service, if it is available.
+   * pref service, and display the file picker opened in that directory.
    *
-   * @param aDoc  current document
-   * @param aFile path to the last used directory
+   * @param aDoc          current document
+   * @param aFilePicker   the file picker to open
+   * @param aFpCallback   the callback object to be run when the file is shown.
    */
-  nsresult FetchLastUsedDirectory(nsIDocument* aDoc, nsIFile** aFile);
+  nsresult FetchDirectoryAndDisplayPicker(nsIDocument* aDoc,
+                                          nsIFilePicker* aFilePicker,
+                                          nsIFilePickerShownCallback* aFpCallback);
 
   /**
    * Store the last used directory for this location using the
@@ -51,6 +55,25 @@ public:
    *        file will be stored
    */
   nsresult StoreLastUsedDirectory(nsIDocument* aDoc, nsIDOMFile* aDomFile);
+
+  class ContentPrefCallback MOZ_FINAL : public nsIContentPrefCallback2
+  {
+    public:
+    ContentPrefCallback(nsIFilePicker* aFilePicker, nsIFilePickerShownCallback* aFpCallback)
+    : mFilePicker(aFilePicker)
+    , mFpCallback(aFpCallback)
+    { }
+
+    virtual ~ContentPrefCallback()
+    { }
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSICONTENTPREFCALLBACK2
+
+    nsCOMPtr<nsIFilePicker> mFilePicker;
+    nsCOMPtr<nsIFilePickerShownCallback> mFpCallback;
+    nsCOMPtr<nsIContentPref> mResult;
+  };
 };
 
 class HTMLInputElement : public nsGenericHTMLFormElement,

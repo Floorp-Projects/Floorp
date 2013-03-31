@@ -9,11 +9,11 @@ interface nsIHttpChannel;
 interface nsIDocShell;
 
 /**
- * nsIContentSecurityPolicy  
+ * nsIContentSecurityPolicy
  * Describes an XPCOM component used to model an enforce CSPs.
  */
 
-[scriptable, uuid(d1680bb4-1ac0-4772-9437-1188375e44f2)]
+[scriptable, uuid(91E1F257-914C-4D4F-902C-F67F772839AB)]
 interface nsIContentSecurityPolicy : nsISupports
 {
 
@@ -37,14 +37,30 @@ interface nsIContentSecurityPolicy : nsISupports
 
   /**
    * Whether this policy allows in-page script.
+   * @param shouldReportViolation
+   *     Whether or not the use of inline script should be reported.
+   *     This function always returns "true" for report-only policies, but when
+   *     the report-only policy is violated, shouldReportViolation is true as
+   *     well.
+   * @return
+   *     Whether or not the effects of the inline script should be allowed
+   *     (block the compilation if false).
    */
-  readonly attribute boolean allowsInlineScript;
+  boolean getAllowsInlineScript(out boolean shouldReportViolation);
 
   /**
    * whether this policy allows eval and eval-like functions
    * such as setTimeout("code string", time).
+   * @param shouldReportViolation
+   *     Whether or not the use of eval should be reported.
+   *     This function always returns "true" for report-only policies, but when
+   *     the report-only policy is violated, shouldReportViolation is true as
+   *     well.
+   * @return
+   *     Whether or not the effects of the eval call should be allowed
+   *     (block the call if false).
    */
-  readonly attribute boolean allowsEval;
+  boolean getAllowsEval(out boolean shouldReportViolation);
 
   /**
    * Log policy violation on the Error Console and send a report if a report-uri
@@ -78,7 +94,7 @@ interface nsIContentSecurityPolicy : nsISupports
    *     a sample of the violating inline script
    * @param lineNum
    *     source line number of the violation (if available)
-   * @return 
+   * @return
    *     nothing.
    */
   void sendReports(in AString blockedURI,

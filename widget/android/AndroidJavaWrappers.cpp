@@ -33,6 +33,7 @@ jfieldID AndroidGeckoEvent::jMetaStateField = 0;
 jfieldID AndroidGeckoEvent::jDomKeyLocationField = 0;
 jfieldID AndroidGeckoEvent::jFlagsField = 0;
 jfieldID AndroidGeckoEvent::jUnicodeCharField = 0;
+jfieldID AndroidGeckoEvent::jBaseUnicodeCharField = 0;
 jfieldID AndroidGeckoEvent::jRepeatCountField = 0;
 jfieldID AndroidGeckoEvent::jCountField = 0;
 jfieldID AndroidGeckoEvent::jStartField = 0;
@@ -227,6 +228,7 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
     jDomKeyLocationField = getField("mDomKeyLocation", "I");
     jFlagsField = getField("mFlags", "I");
     jUnicodeCharField = getField("mUnicodeChar", "I");
+    jBaseUnicodeCharField = getField("mBaseUnicodeChar", "I");
     jRepeatCountField = getField("mRepeatCount", "I");
     jCountField = getField("mCount", "I");
     jStartField = getField("mStart", "I");
@@ -515,12 +517,14 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             break;
 
         case KEY_EVENT:
+        case IME_KEY_EVENT:
             mTime = jenv->GetLongField(jobj, jTimeField);
             mMetaState = jenv->GetIntField(jobj, jMetaStateField);
             mDomKeyLocation = jenv->GetIntField(jobj, jDomKeyLocationField);
             mFlags = jenv->GetIntField(jobj, jFlagsField);
             mKeyCode = jenv->GetIntField(jobj, jKeyCodeField);
             mUnicodeChar = jenv->GetIntField(jobj, jUnicodeCharField);
+            mBaseUnicodeChar = jenv->GetIntField(jobj, jBaseUnicodeCharField);
             mRepeatCount = jenv->GetIntField(jobj, jRepeatCountField);
             ReadCharactersField(jenv);
             break;

@@ -133,4 +133,26 @@ interface nsIWebSocketChannel : nsISupports
      */
     void sendBinaryStream(in nsIInputStream aStream, 
                           in unsigned long length);
+
+    /**
+     * This value determines how often (in milliseconds) websocket keepalive
+     * pings are sent.  If set to 0 (the default), no pings are ever sent.
+     *
+     * This value can currently only be set before asyncOpen is called, else 
+     * NS_ERROR_IN_PROGRESS is thrown.
+     *
+     * Be careful using this setting: ping traffic can consume lots of power and
+     * bandwidth over time.
+     */
+    attribute unsigned long pingInterval;
+
+    /**
+     * This value determines how long (in milliseconds) the websocket waits for
+     * the server to reply to a ping that has been sent.
+     *
+     * This value can currently only be set before asyncOpen is called, else 
+     * NS_ERROR_IN_PROGRESS is thrown.
+     */
+    attribute unsigned long pingTimeout;
+
 };

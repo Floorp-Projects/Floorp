@@ -12,8 +12,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840388
 
 <iframe src="https://example.com/tests/content/base/test/file_mixed_content_frameNavigation_innermost.html?securePage_navigate_grandchild" id="child"></iframe>
 <script>
-  // For tests that require setTimeout, set the maximum polling time to 50 x 100ms = 5 seconds.
-  var MAX_COUNT = 50;
+  // For tests that require setTimeout, set the maximum polling time to 100 x 100ms = 10 seconds.
+  var MAX_COUNT = 100;
   var TIMEOUT_INTERVAL = 100;
   var counter = 0;
 
@@ -42,7 +42,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840388
       }
       else {
         // After we have called setTimeout the maximum number of times, assume navigating the iframe is blocked
+        dump("\nWe have past the maximum timeout.  Navigating a grandchild iframe from an https location to an http location on a secure page failed.  We are about to post message to the top level page\n");
         parent.parent.postMessage({"test": "securePage_navigate_grandchild", "msg": "navigating to insecure grandchild iframe blocked on secure page"}, "http://mochi.test:8888");
+        dump("\nAttempted postMessage\n");
       }
     }
   }

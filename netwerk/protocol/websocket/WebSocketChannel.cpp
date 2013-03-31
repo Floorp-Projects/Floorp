@@ -921,8 +921,6 @@ WebSocketChannel::WebSocketChannel() :
   mCloseTimeout(20000),
   mOpenTimeout(20000),
   mConnecting(NOT_CONNECTING),
-  mPingTimeout(0),
-  mPingResponseTimeout(10000),
   mMaxConcurrentConnections(200),
   mGotUpgradeOK(0),
   mRecvdHttpUpgradeTransport(0),
@@ -936,7 +934,6 @@ WebSocketChannel::WebSocketChannel() :
   mAutoFollowRedirects(0),
   mReleaseOnTransmit(0),
   mTCPClosed(0),
-  mWasOpened(0),
   mOpenedHttpChannel(0),
   mDataStarted(0),
   mIncrementedSessionCount(0),
@@ -1153,15 +1150,11 @@ WebSocketChannel::ProcessInput(uint8_t *buffer, uint32_t count)
   LOG(("WebSocketChannel::ProcessInput %p [%d %d]\n", this, count, mBuffered));
   NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "not socket thread");
 
-  // reset the ping timer
-  if (mPingTimer) {
-    // The purpose of ping/pong is to actively probe the peer so that an
-    // unreachable peer is not mistaken for a period of idleness. This
-    // implementation accepts any application level read activity as a sign of
-    // life, it does not necessarily have to be a pong.
-    mPingOutstanding = 0;
-    mPingTimer->SetDelay(mPingTimeout);
-  }
+  // The purpose of ping/pong is to actively probe the peer so that an
+  // unreachable peer is not mistaken for a period of idleness. This
+  // implementation accepts any application level read activity as a sign of
+  // life, it does not necessarily have to be a pong.
+  ResetPingTimer();
 
   uint32_t avail;
 
@@ -2233,6 +2226,20 @@ WebSocketChannel::StartWebsocketData()
   if (mListener)
     mListener->OnStart(mContext);
 
+  // Start keepalive ping timer, if we're using keepalive.
+  if (mPingInterval) {
+    nsresult rv;
+    mPingTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("unable to create ping timer. Carrying on.");
+    } else {
+      LOG(("WebSocketChannel will generate ping after %d ms of receive silence\n",
+           mPingInterval));
+      mPingTimer->SetTarget(mSocketThread);
+      mPingTimer->InitWithCallback(this, mPingInterval, nsITimer::TYPE_ONE_SHOT);
+    }
+  }
+
   return mSocketIn->AsyncWait(this, 0, 0, mSocketThread);
 }
 
@@ -2507,6 +2514,7 @@ WebSocketChannel::Notify(nsITimer *timer)
   return NS_OK;
 }
 
+// nsIWebSocketChannel
 
 NS_IMETHODIMP
 WebSocketChannel::GetSecurityInfo(nsISupports **aSecurityInfo)
@@ -2576,12 +2584,12 @@ WebSocketChannel::AsyncOpen(nsIURI *aURI,
     }
     rv = prefService->GetIntPref("network.websocket.timeout.ping.request",
                                  &intpref);
-    if (NS_SUCCEEDED(rv)) {
-      mPingTimeout = clamped(intpref, 0, 86400) * 1000;
+    if (NS_SUCCEEDED(rv) && !mClientSetPingInterval) {
+      mPingInterval = clamped(intpref, 0, 86400) * 1000;
     }
     rv = prefService->GetIntPref("network.websocket.timeout.ping.response",
                                  &intpref);
-    if (NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(rv) && !mClientSetPingTimeout) {
       mPingResponseTimeout = clamped(intpref, 1, 3600) * 1000;
     }
     rv = prefService->GetBoolPref("network.websocket.extensions.stream-deflate",
@@ -2615,18 +2623,6 @@ WebSocketChannel::AsyncOpen(nsIURI *aURI,
     // WebSocket connections are expected to be long lived, so return
     // an error here instead of queueing
     return NS_ERROR_SOCKET_CREATE_FAILED;
-  }
-
-  if (mPingTimeout) {
-    mPingTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("unable to create ping timer. Carrying on.");
-    } else {
-      LOG(("WebSocketChannel will generate ping after %d ms of receive silence\n",
-           mPingTimeout));
-      mPingTimer->SetTarget(mSocketThread);
-      mPingTimer->InitWithCallback(this, mPingTimeout, nsITimer::TYPE_ONE_SHOT);
-    }
   }
 
   mOriginalURI = aURI;
@@ -2800,6 +2796,8 @@ WebSocketChannel::SendMsgCommon(const nsACString *aMsg, bool aIsBinary,
                                          new nsCString(*aMsg))),
     nsIEventTarget::DISPATCH_NORMAL);
 }
+
+// nsIHttpUpgradeListener
 
 NS_IMETHODIMP
 WebSocketChannel::OnTransportAvailable(nsISocketTransport *aTransport,

@@ -572,12 +572,16 @@
             let files = tipElement.files;
 
             if (files.length == 0) {
-              var bundle = Services.strings.createBundle("chrome://global/locale/layout/HtmlForm.properties");
-              if (tipElement.multiple) {
-                titleText = bundle.GetStringFromName("NoFilesSelected");
-              } else {
-                titleText = bundle.GetStringFromName("NoFileSelected");
-              }
+              try {
+                var bundle = Components.classes['@mozilla.org/intl/stringbundle;1']
+                                       .getService(Components.interfaces.nsIStringBundleService)
+                                       .createBundle("chrome://global/locale/layout/HtmlForm.properties");
+                if (tipElement.multiple) {
+                  titleText = bundle.GetStringFromName("NoFilesSelected");
+                } else {
+                  titleText = bundle.GetStringFromName("NoFileSelected");
+                }
+              } catch(e) {}
             } else {
               titleText = files[0].name;
               for (let i=1; i<files.length; ++i) {

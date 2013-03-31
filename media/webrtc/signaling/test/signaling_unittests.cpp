@@ -175,7 +175,7 @@ public:
 
   ResponseState state;
   char *lastString;
-  uint32_t lastStatusCode;
+  sipcc::PeerConnectionImpl::Error lastStatusCode;
   uint32_t lastStateType;
   int addIceSuccessCount;
   bool onAddStreamCalled;
@@ -199,11 +199,12 @@ TestObserver::OnCreateOfferSuccess(const char* offer)
 }
 
 NS_IMETHODIMP
-TestObserver::OnCreateOfferError(uint32_t code)
+TestObserver::OnCreateOfferError(uint32_t code, const char *message)
 {
-  lastStatusCode = code;
+  lastStatusCode = static_cast<sipcc::PeerConnectionImpl::Error>(code);
   state = stateError;
-  cout << "onCreateOfferError" << endl;
+  cout << "onCreateOfferError = " << code
+    << " (" << message << ")" << endl;
   return NS_OK;
 }
 
@@ -217,47 +218,50 @@ TestObserver::OnCreateAnswerSuccess(const char* answer)
 }
 
 NS_IMETHODIMP
-TestObserver::OnCreateAnswerError(uint32_t code)
+TestObserver::OnCreateAnswerError(uint32_t code, const char *message)
 {
-  lastStatusCode = code;
-  cout << "onCreateAnswerError = " << code << endl;
+  lastStatusCode = static_cast<sipcc::PeerConnectionImpl::Error>(code);
+  cout << "onCreateAnswerError = " << code
+    << " (" << message << ")" << endl;
   state = stateError;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TestObserver::OnSetLocalDescriptionSuccess(uint32_t code)
+TestObserver::OnSetLocalDescriptionSuccess()
 {
-  lastStatusCode = code;
+  lastStatusCode = sipcc::PeerConnectionImpl::kNoError;
   state = stateSuccess;
-  cout << "onSetLocalDescriptionSuccess = " << code << endl;
+  cout << "onSetLocalDescriptionSuccess" << endl;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TestObserver::OnSetRemoteDescriptionSuccess(uint32_t code)
+TestObserver::OnSetRemoteDescriptionSuccess()
 {
-  lastStatusCode = code;
+  lastStatusCode = sipcc::PeerConnectionImpl::kNoError;
   state = stateSuccess;
-  cout << "onSetRemoteDescriptionSuccess = " << code << endl;
+  cout << "onSetRemoteDescriptionSuccess = " << endl;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TestObserver::OnSetLocalDescriptionError(uint32_t code)
+TestObserver::OnSetLocalDescriptionError(uint32_t code, const char *message)
 {
-  lastStatusCode = code;
+  lastStatusCode = static_cast<sipcc::PeerConnectionImpl::Error>(code);
   state = stateError;
-  cout << "onSetLocalDescriptionError = " << code << endl;
+  cout << "onSetLocalDescriptionError = " << code
+    << " (" << message << ")" << endl;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TestObserver::OnSetRemoteDescriptionError(uint32_t code)
+TestObserver::OnSetRemoteDescriptionError(uint32_t code, const char *message)
 {
-  lastStatusCode = code;
+  lastStatusCode = static_cast<sipcc::PeerConnectionImpl::Error>(code);
   state = stateError;
-  cout << "onSetRemoteDescriptionError = " << code << endl;
+  cout << "onSetRemoteDescriptionError = " << code
+    << " (" << message << ")" << endl;
   return NS_OK;
 }
 
@@ -373,20 +377,21 @@ TestObserver::FoundIceCandidate(const char* strCandidate)
 }
 
 NS_IMETHODIMP
-TestObserver::OnAddIceCandidateSuccess(uint32_t code)
+TestObserver::OnAddIceCandidateSuccess()
 {
-  lastStatusCode = code;
+  lastStatusCode = sipcc::PeerConnectionImpl::kNoError;
   state = stateSuccess;
   addIceSuccessCount++;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TestObserver::OnAddIceCandidateError(uint32_t code)
+TestObserver::OnAddIceCandidateError(uint32_t code, const char *message)
 {
-  lastStatusCode = code;
+  lastStatusCode = static_cast<sipcc::PeerConnectionImpl::Error>(code);
   state = stateError;
-  cout << "onAddIceCandidateError = " << code << endl;
+  cout << "onAddIceCandidateError = " << code
+    << " (" << message << ")" << endl;
   return NS_OK;
 }
 

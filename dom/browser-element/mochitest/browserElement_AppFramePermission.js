@@ -5,6 +5,8 @@
 "use strict";
 
 SimpleTest.waitForExplicitFinish();
+browserElementTestHelpers.setEnabledPref(true);
+browserElementTestHelpers.addPermission();
 
 function makeAllAppsLaunchable() {
   var Webapps = {};
@@ -37,9 +39,6 @@ function testAppElement(expectAnApp, callback) {
 }
 
 function runTest() {
-  browserElementTestHelpers.setEnabledPref(true);
-  browserElementTestHelpers.addPermission();
-
   SpecialPowers.addPermission("embed-apps", true, document);
   testAppElement(true, function() {
     SpecialPowers.removePermission("embed-apps", document);
@@ -49,4 +48,4 @@ function runTest() {
   });
 }
 
-runTest();
+addEventListener('testready', runTest);

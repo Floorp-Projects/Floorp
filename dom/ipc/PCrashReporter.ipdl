@@ -21,7 +21,6 @@ struct Mapping {
 protocol PCrashReporter {
   manager PContent or PPluginModule;
 parent:
-  AddLibraryMappings(Mapping[] m);
   AnnotateCrashReport(nsCString key, nsCString data);
   AppendAppNotes(nsCString data);
   __delete__();

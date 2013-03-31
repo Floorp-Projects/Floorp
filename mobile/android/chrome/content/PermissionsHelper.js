@@ -163,7 +163,9 @@ var PermissionsHelper = {
     } else {
       Services.perms.remove(aURI.host, aType);
       // Clear content prefs set in ContentPermissionPrompt.js
-      Services.contentPrefs.removePref(aURI, aType + ".request.remember", aContext);
+      Cc["@mozilla.org/content-pref/service;1"]
+        .getService(Ci.nsIContentPrefService2)
+        .removeByDomainAndName(aURI.spec, aType + ".request.remember", aContext);
     }
   }
 };

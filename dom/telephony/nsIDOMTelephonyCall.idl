@@ -9,7 +9,7 @@
 
 interface nsIDOMEventListener;
 
-[scriptable, builtinclass, uuid(0662d161-6df7-41fc-a044-0ab0c668680c)]
+[scriptable, builtinclass, uuid(a6ac6941-866c-4e25-b616-045c817e04c8)]
 interface nsIDOMTelephonyCall : nsIDOMEventTarget
 {
   readonly attribute DOMString number;

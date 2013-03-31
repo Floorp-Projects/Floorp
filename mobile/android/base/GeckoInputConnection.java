@@ -727,7 +727,9 @@ class GeckoInputConnection
         Handler icHandler = mEditableClient.getInputConnectionHandler();
         Editable uiEditable = mThreadUtils.getEditableForUiThread(uiHandler, icHandler);
         boolean skip = shouldSkipKeyListener(keyCode, event);
-
+        if (down) {
+            mEditableClient.setSuppressKeyUp(true);
+        }
         if (skip ||
             (down && !keyListener.onKeyDown(view, uiEditable, keyCode, event)) ||
             (!down && !keyListener.onKeyUp(view, uiEditable, keyCode, event))) {
@@ -739,6 +741,9 @@ class GeckoInputConnection
                 // states so the meta states remain consistent
                 TextKeyListener.adjustMetaAfterKeypress(uiEditable);
             }
+        }
+        if (down) {
+            mEditableClient.setSuppressKeyUp(false);
         }
         return true;
     }
