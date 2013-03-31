@@ -943,16 +943,9 @@ overlay chrome://webapprt/content/webapp.xul chrome://mochikit/content/browser-t
         self.automation.log.warning("WARNING | runtests.py | Failed to copy %s to profile", abspath)
         continue
 
-  def installExtensionFromPath(self, options, path, extensionID = None):
-    extensionPath = self.getFullPath(path)
-
-    self.automation.log.info("INFO | runtests.py | Installing extension at %s to %s." %
-                            (extensionPath, options.profilePath))
-    self.automation.installExtension(extensionPath, options.profilePath,
-                                     extensionID)
-
-  def installExtensionsToProfile(self, options):
-    "Install special testing extensions, application distributed extensions, and specified on the command line ones to testing profile."
+  def getExtensionsToInstall(self, options):
+    "Return a list of extensions to install in the profile"
+    extensions = options.extensionsToInstall or []
     extensionDirs = [
       # Extensions distributed with the test harness.
       os.path.normpath(os.path.join(self.SCRIPT_DIRECTORY, "extensions")),
@@ -966,10 +959,20 @@ overlay chrome://webapprt/content/webapp.xul chrome://mochikit/content/browser-t
           if dirEntry not in options.extensionsToExclude:
             path = os.path.join(extensionDir, dirEntry)
             if os.path.isdir(path) or (os.path.isfile(path) and path.endswith(".xpi")):
-              self.installExtensionFromPath(options, path)
+              extensions.append(path)
+    return extensions
 
-    # Install custom extensions passed on the command line.
-    for path in options.extensionsToInstall:
+  def installExtensionFromPath(self, options, path, extensionID = None):
+    extensionPath = self.getFullPath(path)
+
+    self.automation.log.info("INFO | runtests.py | Installing extension at %s to %s." %
+                            (extensionPath, options.profilePath))
+    self.automation.installExtension(extensionPath, options.profilePath,
+                                     extensionID)
+
+  def installExtensionsToProfile(self, options):
+    "Install special testing extensions, application distributed extensions, and specified on the command line ones to testing profile."
+    for path in self.getExtensionsToInstall(options):
       self.installExtensionFromPath(options, path)
 
 def main():

@@ -8,6 +8,8 @@ pref("datareporting.healthreport.documentServerNamespace", "metrics");
 pref("datareporting.healthreport.infoURL", "https://www.mozilla.org/legal/privacy/firefox.html#health-report");
 pref("datareporting.healthreport.logging.consoleEnabled", true);
 pref("datareporting.healthreport.logging.consoleLevel", "Warn");
+pref("datareporting.healthreport.logging.dumpEnabled", false);
+pref("datareporting.healthreport.logging.dumpLevel", "Debug");
 pref("datareporting.healthreport.lastDataSubmissionFailureTime", "0");
 pref("datareporting.healthreport.lastDataSubmissionRequestedTime", "0");
 pref("datareporting.healthreport.lastDataSubmissionSuccessfulTime", "0");

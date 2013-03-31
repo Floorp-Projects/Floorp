@@ -1002,8 +1002,11 @@ static bool CanDecode(const char *aMimeChars, size_t aMimeLen, const char* const
 static bool CreateDecoder(PluginHost *aPluginHost, Decoder *aDecoder, const char *aMimeChars, size_t aMimeLen)
 {
   OmxDecoder *omx = new OmxDecoder(aPluginHost, aDecoder);
-  if (!omx || !omx->Init())
+  if (!omx || !omx->Init()) {
+    if (omx)
+      delete omx;
     return false;
+  }
 
   aDecoder->mPrivate = omx;
   aDecoder->GetDuration = GetDuration;

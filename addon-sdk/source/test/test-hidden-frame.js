@@ -4,6 +4,7 @@
 
 "use strict";
 
+const { Loader } = require("sdk/test/loader");
 const hiddenFrames = require("sdk/frame/hidden-frame");
 const { HiddenFrame } = hiddenFrames;
 
@@ -28,5 +29,47 @@ exports["test Frame"] = function(assert, done) {
     }
   }));
 };
+
+exports["test frame removed properly"] = function(assert, done) {
+  let url = "data:text/html;charset=utf-8,<!DOCTYPE%20html>";
+
+  let hiddenFrame = hiddenFrames.add(HiddenFrame({
+    onReady: function () {
+      let frame = this.element;
+      assert.ok(frame.parentNode, "frame has a parent node");
+      hiddenFrames.remove(hiddenFrame);
+      assert.ok(!frame.parentNode, "frame no longer has a parent node");
+      done();
+    }
+  }));
+};
+
+
+exports["test unload detaches panels"] = function(assert, done) {
+  let loader = Loader(module);
+  let { add, remove, HiddenFrame } = loader.require("sdk/frame/hidden-frame");
+  let frames = []
+
+  function ready() {
+    frames.push(this.element);
+    if (frames.length === 2) complete();
+  }
+
+  add(HiddenFrame({ onReady: ready }));
+  add(HiddenFrame({ onReady: ready }));
+
+  function complete() {
+    frames.forEach(function(frame) {
+      assert.ok(frame.parentNode, "frame is in the document");
+    })
+    loader.unload();
+    frames.forEach(function(frame) {
+      assert.ok(!frame.parentNode, "frame isn't in the document'");
+    });
+    done();
+  }
+};
+
+
 
 require("test").run(exports);

@@ -274,29 +274,30 @@ var tests = [
   function test_forget_site() {
     // click "Forget About This Site" button
     gBrowser.contentDocument.getElementById("forget-site-button").doCommand();
+    waitForClearHistory(function() {
+      is(gSiteLabel.value, "", "site label cleared");
 
-    is(gSiteLabel.value, "", "site label cleared");
+      let allSitesItem = gBrowser.contentDocument.getElementById("all-sites-item");
+      is(gSitesList.selectedItem, allSitesItem,
+         "all sites item selected after forgetting selected site");
 
-    let allSitesItem = gBrowser.contentDocument.getElementById("all-sites-item");
-    is(gSitesList.selectedItem, allSitesItem,
-       "all sites item selected after forgetting selected site");
+      // check to make sure site is gone from sites list
+      let testSiteItem = getSiteItem(TEST_URI_2.host);
+      ok(!testSiteItem, "site removed from sites list");
 
-    // check to make sure site is gone from sites list
-    let testSiteItem = getSiteItem(TEST_URI_2.host);
-    ok(!testSiteItem, "site removed from sites list");
-
-    // check to make sure we forgot all permissions corresponding to site
-    for (let type in TEST_PERMS) {
-      if (type == "password") {
-        ok(Services.logins.getLoginSavingEnabled(TEST_URI_2.prePath),
-           "password saving should be enabled by default");
-      } else {
-        is(Services.perms.testPermissionFromPrincipal(TEST_PRINCIPAL_2, type), PERM_UNKNOWN,
-           type + " permission should not be set for test site 2");
+      // check to make sure we forgot all permissions corresponding to site
+      for (let type in TEST_PERMS) {
+        if (type == "password") {
+          ok(Services.logins.getLoginSavingEnabled(TEST_URI_2.prePath),
+             "password saving should be enabled by default");
+        } else {
+          is(Services.perms.testPermissionFromPrincipal(TEST_PRINCIPAL_2, type), PERM_UNKNOWN,
+             type + " permission should not be set for test site 2");
+        }
       }
-    }
 
-    runNextTest();
+      runNextTest();
+    });
   }
 ];
 

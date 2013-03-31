@@ -16,7 +16,7 @@
 namespace js {
 namespace ion {
 
-static const ptrdiff_t STACK_SLOT_SIZE       = 4;
+static const uint32_t STACK_SLOT_SIZE       = 4;
 static const uint32_t DOUBLE_STACK_ALIGNMENT = 2;
 
 // In bytes: slots needed for potential memory->memory move spills.
@@ -209,6 +209,7 @@ class FloatRegisters
 
 bool hasMOVWT();
 bool hasVFPv3();
+bool hasVFP();
 bool has16DP();
 
 } // namespace ion

@@ -160,7 +160,7 @@ InstDTR::isTHIS(const Instruction &i)
 }
 
 InstDTR *
-InstDTR::asTHIS(Instruction &i)
+InstDTR::asTHIS(const Instruction &i)
 {
     if (isTHIS(i))
         return (InstDTR*)&i;
@@ -174,7 +174,7 @@ InstLDR::isTHIS(const Instruction &i)
 }
 
 InstLDR *
-InstLDR::asTHIS(Instruction &i)
+InstLDR::asTHIS(const Instruction &i)
 {
     if (isTHIS(i))
         return (InstLDR*)&i;
@@ -605,9 +605,20 @@ Assembler::getCF32Target(Iter *iter)
         uint32_t *dest = (uint32_t*) (targ_bot.decode() | (targ_top.decode() << 16));
         return dest;
     }
-    
+
     if (inst1->is<InstLDR>()) {
-        JS_NOT_REACHED("ldr-based relocs NYI");
+        InstLDR *load = inst1->as<InstLDR>();
+        uint32_t inst = load->encode();
+        // get the address of the instruction as a raw pointer
+        char *dataInst = reinterpret_cast<char*>(load);
+        IsUp_ iu = IsUp_(inst & IsUp);
+        int32_t offset = inst & 0xfff;
+        if (iu != IsUp) {
+            offset = - offset;
+        }
+        uint32_t **ptr = (uint32_t **)&dataInst[offset + 8];
+        return *ptr;
+
     }
 
     JS_NOT_REACHED("unsupported branch relocation");
@@ -658,7 +669,22 @@ Assembler::getPtr32Target(Iter *start, Register *dest, RelocStyle *style)
         uint32_t *value = (uint32_t*) (targ_bot.decode() | (targ_top.decode() << 16));
         return value;
     }
-
+    if (load1->is<InstLDR>()) {
+        InstLDR *load = load1->as<InstLDR>();
+        uint32_t inst = load->encode();
+        // get the address of the instruction as a raw pointer
+        char *dataInst = reinterpret_cast<char*>(load);
+        IsUp_ iu = IsUp_(inst & IsUp);
+        int32_t offset = inst & 0xfff;
+        if (iu == IsDown)
+            offset = - offset;
+        if (dest)
+            *dest = toRD(*load);
+        if (style)
+            *style = L_LDR;
+        uint32_t **ptr = (uint32_t **)&dataInst[offset + 8];
+        return *ptr;
+    }
     JS_NOT_REACHED("unsupported relocation");
     return NULL;
 }
@@ -1539,6 +1565,20 @@ Assembler::as_Imm32Pool(Register dest, uint32_t value, ARMBuffer::PoolEntry *pe,
     php.phd.init(0, c, PoolHintData::poolDTR, dest);
     return m_buffer.insertEntry(4, (uint8_t*)&php.raw, int32Pool, (uint8_t*)&value, pe);
 }
+void
+Assembler::as_WritePoolEntry(Instruction *addr, Condition c, uint32_t data)
+{
+    JS_ASSERT(addr->is<InstLDR>());
+    int32_t offset = addr->encode() & 0xfff;
+    if ((addr->encode() & IsUp) != IsUp)
+        offset = -offset;
+    char * rawAddr = reinterpret_cast<char*>(addr);
+    uint32_t * dest = reinterpret_cast<uint32_t*>(&rawAddr[offset + 8]);
+    *dest = data;
+    Condition orig_cond;
+    addr->extractCond(&orig_cond);
+    JS_ASSERT(orig_cond == c);
+}
 
 BufferOffset
 Assembler::as_BranchPool(uint32_t value, RepatchLabel *label, ARMBuffer::PoolEntry *pe, Condition c)
@@ -2094,9 +2134,32 @@ Assembler::retarget(Label *label, Label *target)
     if (label->used()) {
         if (target->bound()) {
             bind(label, BufferOffset(target));
+        } else if (target->used()) {
+            // The target is not bound but used. Prepend label's branch list
+            // onto target's.
+            bool more;
+            BufferOffset labelBranchOffset(label);
+            BufferOffset next;
+
+            // Find the head of the use chain for label.
+            while (nextLink(labelBranchOffset, &next))
+                labelBranchOffset = next;
+
+            // Then patch the head of label's use chain to the tail of
+            // target's use chain, prepending the entire use chain of target.
+            Instruction branch = *editSrc(labelBranchOffset);
+            Condition c;
+            branch.extractCond(&c);
+            int32_t prev = target->use(label->offset());
+            if (branch.is<InstBImm>())
+                as_b(BOffImm(prev), c, labelBranchOffset);
+            else if (branch.is<InstBLImm>())
+                as_bl(BOffImm(prev), c, labelBranchOffset);
+            else
+                JS_NOT_REACHED("crazy fixup!");
         } else {
-            // The target is unbound.  We can just take the head of the list
-            // hanging off of label, and dump that into target.
+            // The target is unbound and unused.  We can just take the head of
+            // the list hanging off of label, and dump that into target.
             DebugOnly<uint32_t> prev = target->use(label->offset());
             JS_ASSERT((int32_t)prev == Label::INVALID_OFFSET);
         }
@@ -2310,9 +2373,11 @@ Assembler::patchDataWithValueCheck(CodeLocationLabel label, ImmWord newValue, Im
     const uint32_t *val = getPtr32Target(&iter, &dest, &rs);
     JS_ASSERT((uint32_t)val == expectedValue.value);
     reinterpret_cast<MacroAssemblerARM*>(dummy)->ma_movPatchable(Imm32(newValue.value), dest, Always, rs, ptr);
-
-    AutoFlushCache::updateTop(uintptr_t(ptr), 4);
-    AutoFlushCache::updateTop(uintptr_t(ptr->next()), 4);
+    // L_LDR won't cause any instructions to be updated.
+    if (rs != L_LDR) {
+        AutoFlushCache::updateTop(uintptr_t(ptr), 4);
+        AutoFlushCache::updateTop(uintptr_t(ptr->next()), 4);
+    }
 }
 
 // This just stomps over memory with 32 bits of raw data. Its purpose is to

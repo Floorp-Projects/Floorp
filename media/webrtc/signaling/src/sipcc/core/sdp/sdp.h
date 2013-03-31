@@ -1163,6 +1163,7 @@ extern sdp_result_e sdp_set_media_port_format(void *sdp_ptr, u16 level,
                                        sdp_port_format_e port_format);
 extern sdp_result_e sdp_set_media_portnum(void *sdp_ptr, u16 level,
                                           int32 portnum, int32 sctpport);
+extern int32 sdp_get_media_sctp_port(void *sdp_ptr, u16 level);
 extern sdp_result_e sdp_set_media_portcount(void *sdp_ptr, u16 level,
                                             int32 num_ports);
 extern sdp_result_e sdp_set_media_vpi(void *sdp_ptr, u16 level, int32 vpi);

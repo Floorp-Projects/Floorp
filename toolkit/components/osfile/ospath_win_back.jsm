@@ -17,6 +17,7 @@
  *
  * - drivename:backslash-separated components
  * - backslash-separated components
+ * - \\drivename\ followed by backslash-separated components
  *
  * Additionally, |normalize| can convert a path containing slash-
  * separated components to a path containing backslash-separated
@@ -24,7 +25,24 @@
  */
 if (typeof Components != "undefined") {
   this.EXPORTED_SYMBOLS = ["OS"];
-  Components.utils.import("resource://gre/modules/osfile/osfile_win_allthreads.jsm", this);
+  let Scope = {};
+  Components.utils.import("resource://gre/modules/Services.jsm", Scope);
+
+  // Some tests need to import this module from any platform.
+  // We detect this by setting a bogus preference "toolkit.osfile.test.syslib_necessary"
+  // from the test suite
+  let syslib_necessary = true;
+  try {
+    syslib_necessary = Scope.Services.prefs.getBoolPref("toolkit.osfile.test.syslib_necessary");
+  } catch (x) {
+    // Ignore errors
+  }
+
+  try {
+    Components.utils.import("resource://gre/modules/osfile/osfile_win_allthreads.jsm", this);
+  } catch (ex if !syslib_necessary && ex.message.startsWith("Could not open system library:")) {
+    // Executing this module without a libc is acceptable for this test
+  }
 }
 (function(exports) {
    "use strict";
@@ -43,19 +61,28 @@ if (typeof Components != "undefined") {
       * The final part of the path is everything after the last "\\".
       */
      basename: function basename(path) {
-       ensureNotUNC(path);
+       if (path.startsWith("\\\\")) {
+         // UNC-style path
+         let index = path.lastIndexOf("\\");
+         if (index != 1) {
+           return path.slice(index + 1);
+         }
+         return ""; // Degenerate case
+       }
        return path.slice(Math.max(path.lastIndexOf("\\"),
-         path.lastIndexOf(":")) + 1);
+                                  path.lastIndexOf(":")) + 1);
      },
 
      /**
-      * Return the directory part of the path.  The directory part
-      * of the path is everything before the last "\\", including
-      * the drive/server name.
+      * Return the directory part of the path.
       *
       * If the path contains no directory, return the drive letter,
       * or "." if the path contains no drive letter or if option
       * |winNoDrive| is set.
+      *
+      * Otherwise, return everything before the last backslash,
+      * including the drive/server name.
+      *
       *
       * @param {string} path The path.
       * @param {*=} options Platform-specific options controlling the behavior
@@ -63,7 +90,6 @@ if (typeof Components != "undefined") {
       *  - |winNoDrive| If |true|, also remove the letter from the path name.
       */
      dirname: function dirname(path, options) {
-       ensureNotUNC(path);
        let noDrive = (options && options.winNoDrive);
 
        // Find the last occurrence of "\\"
@@ -76,6 +102,15 @@ if (typeof Components != "undefined") {
          } else {
            // Or just "."
            return ".";
+         }
+       }
+
+       if (index == 1 && path.charAt(0) == "\\") {
+         // The path is reduced to a UNC drive
+         if (noDrive) {
+           return ".";
+         } else {
+           return path;
          }
        }
 
@@ -114,7 +149,12 @@ if (typeof Components != "undefined") {
          let abs   = this.winIsAbsolute(subpath);
          if (drive) {
            root = drive;
-           paths = [trimBackslashes(subpath.slice(drive.length))];
+           let component = trimBackslashes(subpath.slice(drive.length));
+           if (component) {
+             paths = [component];
+           } else {
+             paths = [];
+           }
            absolute = abs;
          } else if (abs) {
            paths = [trimBackslashes(subpath)];
@@ -135,11 +175,26 @@ if (typeof Components != "undefined") {
      },
 
      /**
-      * Return the drive letter of a path, or |null| if the
-      * path does not contain a drive letter.
+      * Return the drive name of a path, or |null| if the path does
+      * not contain a drive name.
+      *
+      * Drive name appear either as "DriveName:..." (the return drive
+      * name includes the ":") or "\\\\DriveName..." (the returned drive name
+      * includes "\\\\").
       */
      winGetDrive: function winGetDrive(path) {
-       ensureNotUNC(path);
+       if (path.startsWith("\\\\")) {
+         // UNC path
+         if (path.length == 2) {
+           return null;
+         }
+         let index = path.indexOf("\\", 2);
+         if (index == -1) {
+           return path;
+         }
+         return path.slice(0, index);
+       }
+       // Non-UNC path
        let index = path.indexOf(":");
        if (index <= 0) return null;
        return path.slice(0, index + 1);
@@ -152,14 +207,6 @@ if (typeof Components != "undefined") {
       * or "driveletter:\\".
       */
      winIsAbsolute: function winIsAbsolute(path) {
-       ensureNotUNC(path);
-       return this._winIsAbsolute(path);
-     },
-     /**
-      * As |winIsAbsolute|, but does not check for UNC.
-      * Useful mostly as an internal utility, for normalization.
-      */
-     _winIsAbsolute: function _winIsAbsolute(path) {
        let index = path.indexOf(":");
        return path.length > index + 1 && path[index + 1] == "\\";
      },
@@ -177,8 +224,8 @@ if (typeof Components != "undefined") {
          path = path.slice(root.length);
        }
 
-       // Remember whether we need to restore a leading "\\".
-       let absolute = this._winIsAbsolute(path);
+       // Remember whether we need to restore a leading "\\" or drive name.
+       let absolute = this.winIsAbsolute(path);
 
        // Normalize "/" to "\\"
        path = path.replace("/", "\\");
@@ -240,22 +287,6 @@ if (typeof Components != "undefined") {
        };
      }
    };
-
-    /**
-     * Utility function: check that a path is not a UNC path,
-     * as the current implementation of |Path| does not support
-     * UNC grammars.
-     *
-     * We consider that any path starting with "\\\\" is a UNC path.
-     */
-    let ensureNotUNC = function ensureNotUNC(path) {
-       if (!path) {
-          throw new TypeError("Expecting a non-null path");
-       }
-       if (path.length >= 2 && path[0] == "\\" && path[1] == "\\") {
-          throw new Error("Module Path cannot handle UNC-formatted paths yet: " + path);
-       }
-    };
 
     /**
      * Utility function: Remove any leading/trailing backslashes

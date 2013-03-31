@@ -6,7 +6,7 @@
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body onload="runTests();">
+<body onload="setup();">
 <p id="display">
 <iframe id="loader"></iframe>
 </p>
@@ -43,7 +43,6 @@ var tests = [ test1, test2, test2a, test3, test3, test3, test4, test4, test4, te
 function runTests() {
   if (!tests.length) {
     am.tearDown();
-    SpecialPowers.removePermission("systemXHR", document);
     SimpleTest.finish();
     return;
   }
@@ -167,9 +166,11 @@ function test5() {
   xhr.send();
 }
 
-am.init();
-SpecialPowers.addPermission("systemXHR", true, document);
-SimpleTest.waitForExplicitFinish();
+function setup() {
+  am.init();
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPermissions([{'type': 'systemXHR', 'allow': true, 'context': document}], runTests);
+}
 </script>
 </pre>
 </body>

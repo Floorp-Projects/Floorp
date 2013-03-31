@@ -89,10 +89,8 @@ JSObject2WrappedJSMap::FindDyingJSObjects(nsTArray<nsXPCWrappedJS*>* dying)
 
         // walk the wrapper chain and find any whose JSObject is to be finalized
         while (wrapper) {
-            if (wrapper->IsSubjectToFinalization()) {
-                if (JS_IsAboutToBeFinalized(wrapper->GetJSObjectPreserveColor()))
-                    dying->AppendElement(wrapper);
-            }
+            if (wrapper->IsSubjectToFinalization() && wrapper->IsObjectAboutToBeFinalized())
+                dying->AppendElement(wrapper);
             wrapper = wrapper->GetNextWrapper();
         }
     }

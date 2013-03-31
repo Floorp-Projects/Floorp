@@ -22,6 +22,7 @@ nsDOMSimpleGestureEvent::nsDOMSimpleGestureEvent(mozilla::dom::EventTarget* aOwn
     mEvent->refPoint.x = mEvent->refPoint.y = 0;
     static_cast<nsMouseEvent*>(mEvent)->inputSource = nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN;
   }
+  SetIsDOMBinding();
 }
 
 nsDOMSimpleGestureEvent::~nsDOMSimpleGestureEvent()
@@ -47,7 +48,7 @@ NS_IMETHODIMP
 nsDOMSimpleGestureEvent::GetDirection(uint32_t *aDirection)
 {
   NS_ENSURE_ARG_POINTER(aDirection);
-  *aDirection = static_cast<nsSimpleGestureEvent*>(mEvent)->direction;
+  *aDirection = Direction();
   return NS_OK;
 }
 
@@ -56,7 +57,7 @@ NS_IMETHODIMP
 nsDOMSimpleGestureEvent::GetDelta(double *aDelta)
 {
   NS_ENSURE_ARG_POINTER(aDelta);
-  *aDelta = static_cast<nsSimpleGestureEvent*>(mEvent)->delta;
+  *aDelta = Delta();
   return NS_OK;
 }
 
@@ -65,7 +66,7 @@ NS_IMETHODIMP
 nsDOMSimpleGestureEvent::GetClickCount(uint32_t *aClickCount)
 {
   NS_ENSURE_ARG_POINTER(aClickCount);
-  *aClickCount = static_cast<nsSimpleGestureEvent*>(mEvent)->clickCount;
+  *aClickCount = ClickCount();
   return NS_OK;
 }
 

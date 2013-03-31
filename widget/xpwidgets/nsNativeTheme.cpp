@@ -306,10 +306,15 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
   }
 
   /**
+   * An nsRangeFrame and its children are treated atomically when it
+   * comes to native theming (either all parts, or no parts, are themed).
    * nsRangeFrame owns the logic and will tell us what we should do.
    */
-  if (aWidgetType == NS_THEME_RANGE) {
-    nsRangeFrame* rangeFrame = do_QueryFrame(aFrame);
+  if (aWidgetType == NS_THEME_RANGE ||
+      aWidgetType == NS_THEME_RANGE_THUMB) {
+    nsRangeFrame* rangeFrame =
+      do_QueryFrame(aWidgetType == NS_THEME_RANGE_THUMB
+                      ? aFrame->GetParent() : aFrame);
     if (rangeFrame) {
       return !rangeFrame->ShouldUseNativeStyle();
     }
@@ -664,7 +669,11 @@ nsNativeTheme::GetAdjacentSiblingFrameWithSameAppearance(nsIFrame* aFrame,
 bool
 nsNativeTheme::IsRangeHorizontal(nsIFrame* aFrame)
 {
-  MOZ_ASSERT(aFrame->GetType() == nsGkAtoms::rangeFrame);
+  nsIFrame* rangeFrame = aFrame;
+  if (rangeFrame->GetType() != nsGkAtoms::rangeFrame) {
+    rangeFrame = aFrame->GetParent();
+  }
+  MOZ_ASSERT(rangeFrame->GetType() == nsGkAtoms::rangeFrame);
 
-  return static_cast<nsRangeFrame*>(aFrame)->IsHorizontal();
+  return static_cast<nsRangeFrame*>(rangeFrame)->IsHorizontal();
 }

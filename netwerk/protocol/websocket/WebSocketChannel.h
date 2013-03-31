@@ -151,6 +151,13 @@ private:
                         uint32_t accumulatedFragments,
                         uint32_t *available);
 
+  inline void ResetPingTimer()
+  {
+    if (mPingTimer) {
+      mPingOutstanding = 0;
+      mPingTimer->SetDelay(mPingInterval);
+    }
+  }
 
   nsCOMPtr<nsIEventTarget>                 mSocketThread;
   nsCOMPtr<nsIHttpChannelInternal>         mChannel;
@@ -179,8 +186,6 @@ private:
   nsCOMPtr<nsITimer>              mReconnectDelayTimer;
 
   nsCOMPtr<nsITimer>              mPingTimer;
-  uint32_t                        mPingTimeout;  /* milliseconds */
-  uint32_t                        mPingResponseTimeout;  /* milliseconds */
 
   nsCOMPtr<nsITimer>              mLingeringCloseTimer;
   const static int32_t            kLingeringCloseTimeout =   1000;
@@ -200,7 +205,6 @@ private:
   uint32_t                        mAutoFollowRedirects       : 1;
   uint32_t                        mReleaseOnTransmit         : 1;
   uint32_t                        mTCPClosed                 : 1;
-  uint32_t                        mWasOpened                 : 1;
   uint32_t                        mOpenedHttpChannel         : 1;
   uint32_t                        mDataStarted               : 1;
   uint32_t                        mIncrementedSessionCount   : 1;

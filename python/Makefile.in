@@ -12,6 +12,7 @@ include $(DEPTH)/config/autoconf.mk
 test_dirs := \
   mozbuild/mozbuild/test \
   mozbuild/mozbuild/test/backend \
+  mozbuild/mozbuild/test/controller \
   mozbuild/mozbuild/test/compilation \
   mozbuild/mozbuild/test/frontend \
   mozbuild/mozpack/test \

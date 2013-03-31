@@ -13,7 +13,6 @@ self.onmessage = function(msg) {
   test_OpenClose();
   test_CreateFile();
   test_ReadWrite();
-  test_path();
   finish();
 };
 
@@ -189,63 +188,3 @@ function test_ReadWrite()
   info("test_ReadWrite cleanup complete");
 }
 
-function test_path()
-{
-  info("test_path: starting");
-  is(OS.Win.Path.basename("a\\b"), "b", "basename of a\\b");
-  is(OS.Win.Path.basename("a\\b\\"), "", "basename of a\\b\\");
-  is(OS.Win.Path.basename("abc"), "abc", "basename of abc");
-  is(OS.Win.Path.dirname("a\\b"), "a", "dirname of a\\b");
-  is(OS.Win.Path.dirname("a\\b\\"), "a\\b", "dirname of a\\b\\");
-  is(OS.Win.Path.dirname("a\\\\\\\\b"), "a", "dirname of a\\\\\\b");
-  is(OS.Win.Path.dirname("abc"), ".", "dirname of abc");
-  is(OS.Win.Path.normalize("\\a\\b\\c"), "\\a\\b\\c", "normalize \\a\\b\\c");
-  is(OS.Win.Path.normalize("\\a\\b\\\\\\\\c"), "\\a\\b\\c", "normalize \\a\\b\\\\\\\\c");
-  is(OS.Win.Path.normalize("\\a\\b\\c\\\\\\"), "\\a\\b\\c", "normalize \\a\\b\\c\\\\\\");
-  is(OS.Win.Path.normalize("\\a\\b\\c\\..\\..\\..\\d\\e\\f"), "\\d\\e\\f", "normalize \\a\\b\\c\\..\\..\\..\\d\\e\\f");
-  is(OS.Win.Path.normalize("a\\b\\c\\..\\..\\..\\d\\e\\f"), "d\\e\\f", "normalize a\\b\\c\\..\\..\\..\\d\\e\\f");
-  let error = false;
-  try {
-    OS.Win.Path.normalize("\\a\\b\\c\\..\\..\\..\\..\\d\\e\\f");
-  } catch (x) {
-    error = true;
-  }
-  ok(error, "cannot normalize \\a\\b\\c\\..\\..\\..\\..\\d\\e\\f");
-  is(OS.Win.Path.join("\\tmp", "foo", "bar"), "\\tmp\\foo\\bar", "join \\tmp,foo,bar");
-  is(OS.Win.Path.join("\\tmp", "\\foo", "bar"), "\\foo\\bar", "join \\tmp,\\foo,bar");
-
-  is(OS.Win.Path.basename("c:a\\b"), "b", "basename of c:a\\b");
-  is(OS.Win.Path.basename("c:a\\b\\"), "", "basename of c:a\\b\\");
-  is(OS.Win.Path.basename("c:abc"), "abc", "basename of c:abc");
-  is(OS.Win.Path.dirname("c:a\\b"), "c:a", "dirname of c:a\\b");
-  is(OS.Win.Path.dirname("c:a\\b\\"), "c:a\\b", "dirname of c:a\\b\\");
-  is(OS.Win.Path.dirname("c:a\\\\\\\\b"), "c:a", "dirname of c:a\\\\\\b");
-  is(OS.Win.Path.dirname("c:abc"), "c:", "dirname of c:abc");
-  let options = {
-    winNoDrive: true
-  };
-  is(OS.Win.Path.dirname("c:a\\b", options), "a", "dirname of c:a\\b");
-  is(OS.Win.Path.dirname("c:a\\b\\", options), "a\\b", "dirname of c:a\\b\\");
-  is(OS.Win.Path.dirname("c:a\\\\\\\\b", options), "a", "dirname of c:a\\\\\\b");
-  is(OS.Win.Path.dirname("c:abc", options), ".", "dirname of c:abc");
-
-  is(OS.Win.Path.normalize("c:\\a\\b\\c"), "c:\\a\\b\\c", "normalize c:\\a\\b\\c");
-  is(OS.Win.Path.normalize("c:\\a\\b\\\\\\\\c"), "c:\\a\\b\\c", "normalize c:\\a\\b\\\\\\\\c");
-  is(OS.Win.Path.normalize("c:\\\\\\\\a\\b\\c"), "c:\\a\\b\\c", "normalize c:\\\\\\a\\b\\c");
-  is(OS.Win.Path.normalize("c:\\a\\b\\c\\\\\\"), "c:\\a\\b\\c", "normalize c:\\a\\b\\c\\\\\\");
-  is(OS.Win.Path.normalize("c:\\a\\b\\c\\..\\..\\..\\d\\e\\f"), "c:\\d\\e\\f", "normalize c:\\a\\b\\c\\..\\..\\..\\d\\e\\f");
-  is(OS.Win.Path.normalize("c:a\\b\\c\\..\\..\\..\\d\\e\\f"), "c:d\\e\\f", "normalize c:a\\b\\c\\..\\..\\..\\d\\e\\f");
-  error = false;
-  try {
-    OS.Win.Path.normalize("c:\\a\\b\\c\\..\\..\\..\\..\\d\\e\\f");
-  } catch (x) {
-    error = true;
-  }
-  ok(error, "cannot normalize c:\\a\\b\\c\\..\\..\\..\\..\\d\\e\\f");
-  is(OS.Win.Path.join("c:\\tmp", "foo", "bar"), "c:\\tmp\\foo\\bar", "join c:\\tmp,foo,bar");
-  is(OS.Win.Path.join("c:\\tmp", "\\foo", "bar"), "c:\\foo\\bar", "join c:\\tmp,\\foo,bar");
-  is(OS.Win.Path.join("c:\\tmp", "c:\\foo", "bar"), "c:\\foo\\bar", "join c:\\tmp,c:\\foo,bar");
-  is(OS.Win.Path.join("c:\\tmp", "c:foo", "bar"), "c:foo\\bar", "join c:\\tmp,c:foo,bar");
-
-  info("test_path: complete");
-}

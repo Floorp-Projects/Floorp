@@ -720,7 +720,7 @@ pref("dom.min_background_timeout_value", 1000);
 pref("dom.xbl_scopes", true);
 
 // Stop defining the Components object in content.
-pref("dom.omit_components_in_content", false);
+pref("dom.omit_components_in_content", true);
 
 // Don't use new input types
 pref("dom.experimental_forms", false);
@@ -1709,11 +1709,7 @@ pref("layout.css.supports-rule.enabled", true);
 #endif
 
 // Is support for CSS Flexbox enabled?
-#ifdef RELEASE_BUILD
-pref("layout.css.flexbox.enabled", false);
-#else
 pref("layout.css.flexbox.enabled", true);
-#endif
 
 // Are sets of prefixed properties supported?
 pref("layout.css.prefixes.border-image", true);

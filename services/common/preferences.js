@@ -25,8 +25,6 @@ this.Preferences =
         this._prefBranch = args.branch;
       if (args.defaultBranch)
         this._defaultBranch = args.defaultBranch;
-      if (args.site)
-        this._site = args.site;
       if (args.privacyContext)
         this._privacyContext = args.privacyContext;
     }
@@ -50,10 +48,7 @@ Preferences.prototype = {
     if (Array.isArray(prefName))
       return prefName.map(function(v) this.get(v, defaultValue), this);
 
-    if (this._site)
-      return this._siteGet(prefName, defaultValue);
-    else
-      return this._get(prefName, defaultValue);
+    return this._get(prefName, defaultValue);
   },
 
   _get: function(prefName, defaultValue) {
@@ -76,11 +71,6 @@ Preferences.prototype = {
               this._prefSvc.getPrefType(prefName) + ", which I don't know " +
               "how to handle.";
     }
-  },
-
-  _siteGet: function(prefName, defaultValue) {
-    let value = this._contentPrefSvc.getPref(this._site, this._prefBranch + prefName, this._privacyContext);
-    return typeof value != "undefined" ? value : defaultValue;
   },
 
   /**
@@ -112,10 +102,7 @@ Preferences.prototype = {
       return;
     }
 
-    if (this._site)
-      this._siteSet(prefName, prefValue);
-    else
-      this._set(prefName, prefValue);
+    this._set(prefName, prefValue);
   },
 
   _set: function(prefName, prefValue) {
@@ -162,10 +149,6 @@ Preferences.prototype = {
     }
   },
 
-  _siteSet: function(prefName, prefValue) {
-    this._contentPrefSvc.setPref(this._site, this._prefBranch + prefName, prefValue, this._privacyContext);
-  },
-
   /**
    * Whether or not the given pref has a value.  This is different from isSet
    * because it returns true whether the value of the pref is a default value
@@ -184,18 +167,11 @@ Preferences.prototype = {
     if (Array.isArray(prefName))
       return prefName.map(this.has, this);
 
-    if (this._site)
-      return this._siteHas(prefName);
-    else
-      return this._has(prefName);
+    return this._has(prefName);
   },
 
   _has: function(prefName) {
     return (this._prefSvc.getPrefType(prefName) != Ci.nsIPrefBranch.PREF_INVALID);
-  },
-
-  _siteHas: function(prefName) {
-    return this._contentPrefSvc.hasPref(this._site, this._prefBranch + prefName, this._privacyContext);
   },
 
   /**
@@ -232,10 +208,7 @@ Preferences.prototype = {
       return;
     }
 
-    if (this._site)
-      this._siteReset(prefName);
-    else
-      this._reset(prefName);
+    this._reset(prefName);
   },
 
   _reset: function(prefName) {
@@ -253,10 +226,6 @@ Preferences.prototype = {
       if (ex.result != Cr.NS_ERROR_UNEXPECTED)
         throw ex;
     }
-  },
-
-  _siteReset: function(prefName) {
-    return this._contentPrefSvc.removePref(this._site, this._prefBranch + prefName, this._privacyContext);
   },
 
   /**
@@ -390,12 +359,6 @@ Preferences.prototype = {
    */
   _prefBranch: "",
 
-  site: function(site, privacyContext) {
-    if (!(site instanceof Ci.nsIURI))
-      site = this._ioSvc.newURI("http://" + site, null, null);
-    return new Preferences({ branch: this._prefBranch, site: site, privacyContext: privacyContext });
-  },
-
   /**
    * Preferences Service
    * @private
@@ -422,17 +385,6 @@ Preferences.prototype = {
                 getService(Ci.nsIIOService);
     this.__defineGetter__("_ioSvc", function() ioSvc);
     return this._ioSvc;
-  },
-
-  /**
-   * Site Preferences Service
-   * @private
-   */
-  get _contentPrefSvc() {
-    let contentPrefSvc = Cc["@mozilla.org/content-pref/service;1"].
-                         getService(Ci.nsIContentPrefService);
-    this.__defineGetter__("_contentPrefSvc", function() contentPrefSvc);
-    return this._contentPrefSvc;
   }
 
 };

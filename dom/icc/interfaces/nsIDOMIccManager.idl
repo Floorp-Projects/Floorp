@@ -9,7 +9,7 @@ interface nsIDOMEventListener;
 interface nsIDOMDOMRequest;
 interface nsIDOMContact;
 
-[scriptable, builtinclass, uuid(487b1da5-f497-4eb0-8f84-bca7e0ac95cf)]
+[scriptable, builtinclass, uuid(9af5378e-03ce-4c5f-8ec1-50ae774b5612)]
 interface nsIDOMMozIccManager : nsIDOMEventTarget
 {
   /**

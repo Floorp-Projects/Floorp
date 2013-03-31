@@ -18,7 +18,8 @@ this.LightweightThemeConsumer =
   this._win = aDocument.defaultView;
   this._footerId = aDocument.documentElement.getAttribute("lightweightthemesfooter");
 
-  if (PrivateBrowsingUtils.isWindowPrivate(this._win)) {
+  if (PrivateBrowsingUtils.isWindowPrivate(this._win) &&
+      !PrivateBrowsingUtils.permanentPrivateBrowsing) {
     return;
   }
 
@@ -59,7 +60,8 @@ LightweightThemeConsumer.prototype = {
   },
 
   destroy: function () {
-    if (!PrivateBrowsingUtils.isWindowPrivate(this._win)) {
+    if (!PrivateBrowsingUtils.isWindowPrivate(this._win) ||
+        PrivateBrowsingUtils.permanentPrivateBrowsing) {
       Components.classes["@mozilla.org/observer-service;1"]
                 .getService(Components.interfaces.nsIObserverService)
                 .removeObserver(this, "lightweight-theme-styling-update");

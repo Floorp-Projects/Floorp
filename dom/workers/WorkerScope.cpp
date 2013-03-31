@@ -128,7 +128,7 @@ protected:
   _trace(JSTracer* aTrc) MOZ_OVERRIDE
   {
     for (int32_t i = 0; i < SLOT_COUNT; i++) {
-      JS_CALL_VALUE_TRACER(aTrc, mSlots[i], "WorkerGlobalScope instance slot");
+      JS_CallValueTracer(aTrc, mSlots[i], "WorkerGlobalScope instance slot");
     }
     mWorker->TraceInternal(aTrc);
     EventTarget::_trace(aTrc);
@@ -650,6 +650,7 @@ const char* const WorkerGlobalScope::sEventStrings[STRING_COUNT] = {
 class DedicatedWorkerGlobalScope : public WorkerGlobalScope
 {
   static DOMJSClass sClass;
+  static DOMIfaceAndProtoJSClass sProtoClass;
   static JSPropertySpec sProperties[];
   static JSFunctionSpec sFunctions[];
 
@@ -669,11 +670,29 @@ public:
     return sClass.ToJSClass();
   }
 
+  static JSClass*
+  ProtoClass()
+  {
+    return sProtoClass.ToJSClass();
+  }
+
+  static DOMClass*
+  DOMClassStruct()
+  {
+    return &sClass.mClass;
+  }
+
   static JSObject*
   InitClass(JSContext* aCx, JSObject* aObj, JSObject* aParentProto)
   {
-    return JS_InitClass(aCx, aObj, aParentProto, Class(), Construct, 0,
-                        sProperties, sFunctions, NULL, NULL);
+    JSObject* proto =
+      JS_InitClass(aCx, aObj, aParentProto, ProtoClass(), Construct, 0,
+                   sProperties, sFunctions, NULL, NULL);
+    if (proto) {
+      js::SetReservedSlot(proto, DOM_PROTO_INSTANCE_CLASS_SLOT,
+                          JS::PrivateValue(DOMClassStruct()));
+    }
+    return proto;
   }
 
   static JSBool
@@ -868,6 +887,36 @@ DOMJSClass DedicatedWorkerGlobalScope::sClass = {
     false,
     &sWorkerNativePropertyHooks
   }
+};
+
+DOMIfaceAndProtoJSClass DedicatedWorkerGlobalScope::sProtoClass = {
+  {
+    // XXXbz we use "DedicatedWorkerGlobalScope" here to match sClass
+    // so that we can JS_InitClass this JSClass and then
+    // call JS_NewObject with our sClass and have it find the right
+    // prototype.
+    "DedicatedWorkerGlobalScope",
+    JSCLASS_IS_DOMIFACEANDPROTOJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(2),
+    JS_PropertyStub,       /* addProperty */
+    JS_PropertyStub,       /* delProperty */
+    JS_PropertyStub,       /* getProperty */
+    JS_StrictPropertyStub, /* setProperty */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
+    nullptr,               /* finalize */
+    nullptr,               /* checkAccess */
+    nullptr,               /* call */
+    nullptr,               /* hasInstance */
+    nullptr,               /* construct */
+    nullptr,               /* trace */
+    JSCLASS_NO_INTERNAL_MEMBERS
+  },
+  eInterfacePrototype,
+  &sWorkerNativePropertyHooks,
+  "[object DedicatedWorkerGlobalScope]",
+  prototypes::id::_ID_Count,
+  0
 };
 
 JSPropertySpec DedicatedWorkerGlobalScope::sProperties[] = {
