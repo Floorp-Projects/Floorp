@@ -768,7 +768,10 @@ let gGestureSupport = {
    *        The gesture event to handle
    */
   handleEvent: function GS_handleEvent(aEvent) {
-    aEvent.stopPropagation();
+    if (!Services.prefs.getBoolPref(
+           "dom.debug.propagate_gesture_events_through_content")) {
+      aEvent.stopPropagation();
+    }
 
     // Create a preference object with some defaults
     let def = function(aThreshold, aLatched)
