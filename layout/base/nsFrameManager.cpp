@@ -188,23 +188,6 @@ nsFrameManager::~nsFrameManager()
   NS_ASSERTION(!mPresShell, "nsFrameManager::Destroy never called");
 }
 
-nsresult
-nsFrameManager::Init(nsStyleSet* aStyleSet)
-{
-  if (!mPresShell) {
-    NS_ERROR("null pres shell");
-    return NS_ERROR_FAILURE;
-  }
-
-  if (!aStyleSet) {
-    NS_ERROR("null style set");
-    return NS_ERROR_FAILURE;
-  }
-
-  mStyleSet = aStyleSet;
-  return NS_OK;
-}
-
 void
 nsFrameManager::Destroy()
 {
