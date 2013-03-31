@@ -13,7 +13,7 @@ interface nsIDOMMozMobileCellInfo;
 interface nsIDOMMozIccManager;
 interface nsIDOMMozMobileCFInfo;
 
-[scriptable, builtinclass, uuid(4175a903-61e6-4fa7-af0d-1e41632ee2dd)]
+[scriptable, builtinclass, uuid(2065b3c3-e876-4be1-b373-428ee254a63e)]
 interface nsIDOMMozMobileConnection : nsIDOMEventTarget
 {
   const long ICC_SERVICE_CLASS_VOICE = (1 << 0);

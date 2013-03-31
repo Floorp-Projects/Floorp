@@ -99,7 +99,7 @@ const RIL_IPC_MOBILECONNECTION_MSG_NAMES = [
   "RIL:IccOpenChannel",
   "RIL:IccExchangeAPDU",
   "RIL:IccCloseChannel",
-  "RIL:IccUpdateContact",
+  "RIL:UpdateIccContact",
   "RIL:RegisterMobileConnectionMsg",
   "RIL:RegisterIccMsg",
   "RIL:SetCallForwardingOption",
@@ -226,6 +226,7 @@ function RadioInterfaceLayer() {
   this.rilContext = {
     radioState:     RIL.GECKO_RADIOSTATE_UNAVAILABLE,
     cardState:      RIL.GECKO_CARDSTATE_UNKNOWN,
+    networkSelectionMode: RIL.GECKO_NETWORK_SELECTION_UNKNOWN,
     iccInfo:        null,
     imsi:           null,
 
@@ -511,9 +512,9 @@ RadioInterfaceLayer.prototype = {
         this.saveRequestTarget(msg);
         this.iccExchangeAPDU(msg.json);
         break;
-      case "RIL:IccUpdateContact":
+      case "RIL:UpdateIccContact":
         this.saveRequestTarget(msg);
-        this.updateICCContact(msg.json);
+        this.updateIccContact(msg.json);
         break;
       case "RIL:RegisterMobileConnectionMsg":
         this.registerMessageTarget("mobileconnection", msg.target);
@@ -657,7 +658,7 @@ RadioInterfaceLayer.prototype = {
         this.handleNitzTime(message);
         break;
       case "iccinfochange":
-        this.handleICCInfoChange(message);
+        this.handleIccInfoChange(message);
         break;
       case "iccimsi":
         this.rilContext.imsi = message.imsi;
@@ -665,7 +666,7 @@ RadioInterfaceLayer.prototype = {
       case "iccGetCardLock":
       case "iccSetCardLock":
       case "iccUnlockCardLock":
-        this.handleICCCardLockResult(message);
+        this.handleIccCardLockResult(message);
         break;
       case "icccontacts":
         if (!this._contactsCallbacks) {
@@ -680,10 +681,10 @@ RadioInterfaceLayer.prototype = {
         }
         break;
       case "icccontactupdate":
-        this.handleIccUpdateContact(message);
+        this.handleUpdateIccContact(message);
         break;
       case "iccmbdn":
-        this.handleICCMbdn(message);
+        this.handleIccMbdn(message);
         break;
       case "USSDReceived":
         debug("USSDReceived " + JSON.stringify(message));
@@ -714,6 +715,10 @@ RadioInterfaceLayer.prototype = {
         break;
       case "setCellBroadcastSearchList":
         this.handleSetCellBroadcastSearchList(message);
+        break;
+      case "setRadioEnabled":
+        let lock = gSettingsService.createLock();
+        lock.set("ril.radio.disabled", !message.on, null, null);
         break;
       default:
         throw new Error("Don't know about this message type: " +
@@ -1394,9 +1399,9 @@ RadioInterfaceLayer.prototype = {
     this._sendRequestResults("RIL:EnumerateCalls", options);
   },
 
-  handleIccUpdateContact: function handleIccUpdateContact(message) {
-    debug("handleIccUpdateContact: " + JSON.stringify(message));
-    this._sendRequestResults("RIL:IccUpdateContact", message);
+  handleUpdateIccContact: function handleUpdateIccContact(message) {
+    debug("handleUpdateIccContact: " + JSON.stringify(message));
+    this._sendRequestResults("RIL:UpdateIccContact", message);
   },
 
   /**
@@ -1437,6 +1442,7 @@ RadioInterfaceLayer.prototype = {
    */
   updateNetworkSelectionMode: function updateNetworkSelectionMode(message) {
     debug("updateNetworkSelectionMode: " + JSON.stringify(message));
+    this.rilContext.networkSelectionMode = message.mode;
     this._sendMobileConnectionMessage("RIL:NetworkSelectionModeChanged", message);
   },
 
@@ -1773,7 +1779,7 @@ RadioInterfaceLayer.prototype = {
     }
   },
 
-  handleICCMbdn: function handleICCMbdn(message) {
+  handleIccMbdn: function handleIccMbdn(message) {
     let voicemailInfo = this.voicemailInfo;
 
     voicemailInfo.number = message.number;
@@ -1782,7 +1788,7 @@ RadioInterfaceLayer.prototype = {
     this._sendVoicemailMessage("RIL:VoicemailInfoChanged", voicemailInfo);
   },
 
-  handleICCInfoChange: function handleICCInfoChange(message) {
+  handleIccInfoChange: function handleIccInfoChange(message) {
     let oldIccInfo = this.rilContext.iccInfo;
     this.rilContext.iccInfo = message;
 
@@ -1819,7 +1825,7 @@ RadioInterfaceLayer.prototype = {
     }
   },
 
-  handleICCCardLockResult: function handleICCCardLockResult(message) {
+  handleIccCardLockResult: function handleIccCardLockResult(message) {
     this._sendRequestResults("RIL:CardLockResult", message);
   },
 
@@ -2894,7 +2900,7 @@ RadioInterfaceLayer.prototype = {
                              requestId: requestId});
   },
 
-  updateICCContact: function updateICCContact(message) {
+  updateIccContact: function updateIccContact(message) {
     message.rilMessageType = "updateICCContact";
     this.worker.postMessage(message);
   },

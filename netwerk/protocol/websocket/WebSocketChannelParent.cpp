@@ -51,7 +51,11 @@ bool
 WebSocketChannelParent::RecvAsyncOpen(const URIParams& aURI,
                                       const nsCString& aOrigin,
                                       const nsCString& aProtocol,
-                                      const bool& aSecure)
+                                      const bool& aSecure,
+                                      const uint32_t& aPingInterval,
+                                      const bool& aClientSetPingInterval,
+                                      const uint32_t& aPingTimeout,
+                                      const bool& aClientSetPingTimeout)
 {
   LOG(("WebSocketChannelParent::RecvAsyncOpen() %p\n", this));
 
@@ -80,6 +84,14 @@ WebSocketChannelParent::RecvAsyncOpen(const URIParams& aURI,
   if (!uri) {
     rv = NS_ERROR_FAILURE;
     goto fail;
+  }
+
+  // only use ping values from child if they were overridden by client code.
+  if (aClientSetPingInterval) {
+    mChannel->SetPingInterval(aPingInterval);
+  }
+  if (aClientSetPingTimeout) {
+    mChannel->SetPingTimeout(aPingTimeout);
   }
 
   rv = mChannel->AsyncOpen(uri, aOrigin, this, nullptr);

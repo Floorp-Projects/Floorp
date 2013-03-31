@@ -260,7 +260,15 @@ MacroAssemblerARM::ma_alu(Register src1, Imm32 imm, Register dest,
         if ((imm.value >> 16) != 0)
             as_movt(ScratchRegister, (imm.value >> 16) & 0xffff, c);
     } else {
-        JS_NOT_REACHED("non-ARMv7 loading of immediates NYI.");
+        // Going to have to use a load.  If the operation is a move, then just move it into the
+        // destination register
+        if (op == op_mov) {
+            as_Imm32Pool(dest, imm.value, NULL, c);
+            return;
+        } else {
+            // If this isn't just going into a register, then stick it in a temp, and then proceed.
+            as_Imm32Pool(ScratchRegister, imm.value, NULL, c);
+        }
     }
     as_alu(dest, src1, O2Reg(ScratchRegister), op, sc, c);
 }
@@ -301,11 +309,17 @@ MacroAssemblerARM::ma_movPatchable(Imm32 imm_, Register dest,
     switch(rs) {
       case L_MOVWT:
         as_movw(dest, Imm16(imm & 0xffff), c, i);
+        // i can be NULL here.  that just means "insert in the next in sequence."
+        // NextInst is special cased to not do anything when it is passed NULL, so two
+        // consecutive instructions will be inserted.
         i = NextInst(i);
         as_movt(dest, Imm16(imm >> 16 & 0xffff), c, i);
         break;
       case L_LDR:
-        //as_Imm32Pool(dest, imm, c, i);
+        if(i == NULL)
+            as_Imm32Pool(dest, imm, NULL, c);
+        else
+            as_WritePoolEntry(i, c, imm);
         break;
     }
 }
@@ -331,7 +345,13 @@ MacroAssemblerARM::ma_mov(const ImmGCPtr &ptr, Register dest)
     // As opposed to x86/x64 version, the data relocation has to be executed
     // before to recover the pointer, and not after.
     writeDataRelocation(ptr);
-    ma_movPatchable(Imm32(ptr.value), dest, Always, L_MOVWT);
+    RelocStyle rs;
+    if (hasMOVWT()) {
+        rs = L_MOVWT;
+    } else {
+        rs = L_LDR;
+    }
+    ma_movPatchable(Imm32(ptr.value), dest, Always, rs);
 }
 
     // Shifts (just a move with a shifting op2)
@@ -1232,22 +1252,23 @@ MacroAssemblerARM::ma_vimm(double value, FloatRegister dest, Condition cc)
         double d;
     } dpun;
     dpun.d = value;
+    if (hasVFPv3()) {
+        if (dpun.s.lo == 0) {
+            if (dpun.s.hi == 0) {
+                // To zero a register, load 1.0, then execute dN <- dN - dN
+                VFPImm dblEnc(0x3FF00000);
+                as_vimm(dest, dblEnc, cc);
+                as_vsub(dest, dest, dest, cc);
+                return;
+            }
 
-    if ((dpun.s.lo) == 0) {
-        if (dpun.s.hi == 0) {
-            // To zero a register, load 1.0, then execute dN <- dN - dN
-            VFPImm dblEnc(0x3FF00000);
-            as_vimm(dest, dblEnc, cc);
-            as_vsub(dest, dest, dest, cc);
-            return;
+            VFPImm dblEnc(dpun.s.hi);
+            if (dblEnc.isValid()) {
+                as_vimm(dest, dblEnc, cc);
+                return;
+            }
+
         }
-
-        VFPImm dblEnc(dpun.s.hi);
-        if (dblEnc.isValid()) {
-            as_vimm(dest, dblEnc, cc);
-            return;
-        }
-
     }
     // Fall back to putting the value in a pool.
     as_FImm64Pool(dest, value, NULL, cc);

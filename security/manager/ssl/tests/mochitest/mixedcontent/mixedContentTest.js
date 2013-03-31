@@ -23,6 +23,8 @@ var openTwoWindows = false;
 var testPage = "";
 // Assign a function to this variable to have a clean up at the end
 var testCleanUp = null;
+// Contains mixed active content that needs to load to run the test
+var hasMixedActiveContent = false;
 
 
 // Internal variables
@@ -64,6 +66,12 @@ window.onload = function onLoad()
     }
     secureTestLocation += "?runtest";
 
+    if (hasMixedActiveContent)
+    {
+      SpecialPowers.pushPrefEnv(
+        {"set": [["security.mixed_content.block_active_content", false]]},
+        null);
+    }
     if (openTwoWindows)
     {
       _windowCount = 2;
@@ -88,7 +96,10 @@ function onMessageReceived(event)
       {
         if (testCleanUp)
           testCleanUp();
-          
+        if (hasMixedActiveContent) {
+          SpecialPowers.popPrefEnv(null);
+        }
+
         SimpleTest.finish();
       }
       break;

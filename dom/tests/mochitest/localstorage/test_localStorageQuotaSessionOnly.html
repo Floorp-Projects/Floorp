@@ -22,6 +22,8 @@ var cp = Components.classes["@mozilla.org/cookie/permission;1"]
 cp.setAccess(uri, Components.interfaces.nsICookiePermission.ACCESS_SESSION);
 
 var quota;
+var origBlockDisplay;
+var origBlockActive;
 
 function doNextTest()
 {
@@ -41,6 +43,11 @@ function doNextTest()
       }
       prefs.setIntPref("dom.storage.default_quota", 1);
 
+      origBlockDisplay = prefs.getBoolPref("security.mixed_content.block_display_content");
+      origBlockActive = prefs.getBoolPref("security.mixed_content.block_active_content");
+
+      prefs.setBoolPref("security.mixed_content.block_display_content", false);
+      prefs.setBoolPref("security.mixed_content.block_active_content", false);
 
       slaveOrigin = "http://example.com";
       slave.location = slaveOrigin + slavePath + "frameQuotaSessionOnly.html?add&A&success";
@@ -109,6 +116,8 @@ function doNextTest()
 
     default:
       prefs.setIntPref("dom.storage.default_quota", quota);
+      prefs.setBoolPref("security.mixed_content.block_display_content", origBlockDisplay);
+      prefs.setBoolPref("security.mixed_content.block_active_content", origBlockActive);
       cp.setAccess(uri, Components.interfaces.nsICookiePermission.ACCESS_DEFAULT);
       SimpleTest.finish();
   }

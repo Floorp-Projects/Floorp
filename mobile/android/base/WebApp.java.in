@@ -186,8 +186,9 @@ public class WebApp extends GeckoApp {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 #ifdef MOZ_PROFILING
-        if (item.getItemId() == R.id.toggle_profiling) {
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("ToggleProfiling", null));
+        if (item.getItemId() == org.mozilla.gecko.R.id.toggle_profiling) {
+            org.mozilla.gecko.GeckoAppShell.sendEventToGecko(
+                org.mozilla.gecko.GeckoEvent.createBroadcastEvent("ToggleProfiling", null));
             return true;
         }
 #endif

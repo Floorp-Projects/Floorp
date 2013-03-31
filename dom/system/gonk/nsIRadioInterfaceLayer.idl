@@ -77,7 +77,7 @@ interface nsIVoicemailInfo : nsISupports
   readonly attribute DOMString displayName;
 };
 
-[scriptable, uuid(a09c42c3-1063-42f6-8022-268c6a0fe5e8)]
+[scriptable, uuid(f7ff9856-5c55-4ba2-9b64-bfc0ace169e7)]
 interface nsIRilContext : nsISupports
 {
   readonly attribute DOMString radioState;
@@ -85,6 +85,8 @@ interface nsIRilContext : nsISupports
   readonly attribute DOMString cardState;
 
   readonly attribute DOMString imsi;
+
+  readonly attribute DOMString networkSelectionMode;
 
   readonly attribute nsIDOMMozMobileICCInfo iccInfo;
 

@@ -274,17 +274,25 @@ ifndef MOZ_NATIVE_LIBEVENT # {
 ifdef OS_POSIX # {
 
 LOCAL_INCLUDES += -I$(srcdir)/src/third_party/libevent
+LOCAL_INCLUDES += -I$(srcdir)/src/third_party/libevent/include
 DEFINES += -DHAVE_CONFIG_H
 
 CSRCS += \
   buffer.c \
-  evbuffer.c \
+  bufferevent.c \
+  bufferevent_sock.c \
+  bufferevent_ratelim.c \
   evdns.c \
   event.c \
   event_tagging.c \
+  evmap.c \
+  evthread.c \
+  evthread_pthread.c \
   evrpc.c \
   evutil.c \
+  evutil_rand.c \
   http.c \
+  listener.c \
   log.c \
   poll.c \
   select.c \
@@ -298,7 +306,11 @@ CSRCS += kqueue.c
 endif # }
 
 ifdef OS_LINUX # {
+ifeq ($(OS_TARGET),Android) # {
+LOCAL_INCLUDES += -I$(srcdir)/src/third_party/libevent/android
+else # } else {
 LOCAL_INCLUDES += -I$(srcdir)/src/third_party/libevent/linux
+endif # }
 CSRCS += \
   epoll.c \
   epoll_sub.c \

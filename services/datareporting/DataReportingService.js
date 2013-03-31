@@ -247,6 +247,17 @@ DataReportingService.prototype = Object.freeze({
       }
     }
 
+    if (loggingPrefs.get("dumpEnabled", false)) {
+      let level = loggingPrefs.get("dumpLevel", "Debug");
+      let appender = new ns.Log4Moz.DumpAppender();
+      appender.level = ns.Log4Moz.Level[level] || ns.Log4Moz.Level.Debug;
+
+      for (let name of LOGGERS) {
+        let logger = ns.Log4Moz.repository.getLogger(name);
+        logger.addAppender(appender);
+      }
+    }
+
     // The reporter initializes in the background.
     this._healthReporter = new ns.HealthReporter(HEALTHREPORT_BRANCH,
                                                  this.policy,

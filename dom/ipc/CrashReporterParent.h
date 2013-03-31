@@ -73,10 +73,6 @@ public:
   AnnotateCrashReport(const nsCString& key, const nsCString& data);
 
  protected:
-  virtual void ActorDestroy(ActorDestroyReason why);
-
-  virtual bool
-    RecvAddLibraryMappings(const InfallibleTArray<Mapping>& m);
   virtual bool
     RecvAnnotateCrashReport(const nsCString& key, const nsCString& data) {
     AnnotateCrashReport(key, data);

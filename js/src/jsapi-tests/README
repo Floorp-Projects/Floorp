@@ -120,8 +120,6 @@ tests.h:
         SameValue(-0, 0) is false.
         Otherwise SameValue(a, b) iff a === b.
 
-And see class jsvalRoot, also defined in tests.h.
-
 
 --- Custom test setup
 
@@ -135,8 +133,8 @@ functions, like this:
 
     BEGIN_TEST(testGlobalResolveHook)
         {
-            jsvalRoot v;
-            EVAL("v", v.addr());
+            RootedValue v;
+            EVAL("v", v.address());
             CHECK_SAME(v, JSVAL_VOID);
             return true;
         }

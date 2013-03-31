@@ -452,6 +452,10 @@ class Automation(object):
     self.setupPermissionsDatabase(profileDir,
       {'allowXULXBL':[(l.host, 'noxul' not in l.options) for l in locations]});
 
+    # NOTE: For refactoring purposes we are temporarily storing these prefs
+    #       in two locations. If you update a pref below, please also update
+    #       it in source/testing/profiles/prefs_general.js.
+    #       See bug 830430 for more details.
     part = """\
 user_pref("browser.console.showInPanel", true);
 user_pref("browser.dom.window.dump.enabled", true);

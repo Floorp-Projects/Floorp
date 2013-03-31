@@ -325,6 +325,20 @@ exports.testContentScriptOptionsOption = function(assert, done) {
   });
 };
 
+exports.testMessageQueue = function (assert, done) {
+  let page = new Page({
+    contentScript: 'self.on("message", function (m) {' +
+      'self.postMessage(m);' +
+      '});',
+    contentURL: 'data:text/html;charset=utf-8,',
+  });
+  page.postMessage('ping');
+  page.on('message', function (m) {
+    assert.equal(m, 'ping', 'postMessage should queue messages');
+    done();
+  });
+};
+
 function isDestroyed(page) {
   try {
     page.postMessage("foo");

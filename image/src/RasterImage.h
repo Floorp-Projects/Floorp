@@ -81,7 +81,7 @@ class nsIThreadPool;
  *
  * @par
  * Each frame can have a different method of removing itself. These are
- * listed as imgIContainer::cDispose... constants.  Notify() calls 
+ * listed as imgIContainer::cDispose... constants.  Notify() calls
  * DoComposite() to handle any special frame destruction.
  *
  * @par
@@ -612,7 +612,7 @@ private:
    *
    * Does not change the size of mFrames.
    *
-   * @param framenum The index of the frame to be deleted. 
+   * @param framenum The index of the frame to be deleted.
    *                 Must lie in [0, mFrames.Length() )
    */
   void DeleteImgFrame(uint32_t framenum);
@@ -637,7 +637,7 @@ private:
 
       // We don't support discarding animated images (See bug 414259).
       // Lock the image and throw away the key.
-      // 
+      //
       // Note that this is inefficient, since we could get rid of the source
       // data too. However, doing this is actually hard, because we're probably
       // calling ensureAnimExists mid-decode, and thus we're decoding out of
@@ -673,11 +673,11 @@ private:
 
   //! @overload
   static void ClearFrame(imgFrame* aFrame, nsIntRect &aRect);
-  
+
   //! Copy one frames's image and mask into another
   static bool CopyFrameImage(imgFrame *aSrcFrame,
                                imgFrame *aDstFrame);
-  
+
   /** Draws one frames's image to into another,
    * at the position specified by aRect
    *
@@ -728,21 +728,21 @@ private: // data
   uint32_t                   mFrameDecodeFlags;
 
   //! All the frames of the image
-  // IMPORTANT: if you use mFrames in a method, call EnsureImageIsDecoded() first 
+  // IMPORTANT: if you use mFrames in a method, call EnsureImageIsDecoded() first
   // to ensure that the frames actually exist (they may have been discarded to save
   // memory, or we may be decoding on draw).
   nsTArray<imgFrame *>       mFrames;
-  
+
   nsCOMPtr<nsIProperties>    mProperties;
 
   // IMPORTANT: if you use mAnim in a method, call EnsureImageIsDecoded() first to ensure
   // that the frames actually exist (they may have been discarded to save memory, or
   // we maybe decoding on draw).
   RasterImage::Anim*        mAnim;
-  
+
   //! # loops remaining before animation stops (-1 no stop)
   int32_t                    mLoopCount;
-  
+
   // Discard members
   uint32_t                   mLockCount;
   DiscardTracker::Node       mDiscardTrackerNode;

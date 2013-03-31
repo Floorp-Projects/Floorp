@@ -188,6 +188,23 @@ bool
 CodeGeneratorARM::bailoutFrom(Label *label, LSnapshot *snapshot)
 {
     JS_ASSERT(label->used() && !label->bound());
+
+    CompileInfo &info = snapshot->mir()->block()->info();
+    switch (info.executionMode()) {
+      case ParallelExecution: {
+        // In parallel mode, make no attempt to recover, just signal an error.
+        Label *ool;
+        if (!ensureOutOfLineParallelAbort(&ool))
+            return false;
+        masm.retarget(label, ool);
+        return true;
+      }
+      case SequentialExecution:
+        break;
+      default:
+        JS_NOT_REACHED("No such execution mode");
+    }
+
     if (!encode(snapshot))
         return false;
 

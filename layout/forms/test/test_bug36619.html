@@ -19,9 +19,36 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=36619
 <button id='c' onmousedown="document.getElementById('a').click();">Show Filepicker</button>
 <button id='d' onmouseup="document.getElementById('a').click();">Show Filepicker</button>
 <pre id="test">
-<script type="application/javascript">
+<script type="application/javascript;version=1.8">
 
 /** Test for Bug 36619 **/
+
+let gGen = doTest();
+function continueTest() {
+  gGen.next();
+}
+
+function waitForCondition(condition, errorMsg) {
+  var tries = 0;
+  var interval = setInterval(function() {
+    if (tries >= 10) {
+      ok(false, errorMsg);
+      moveOn();
+    }
+    if (condition()) {
+      moveOn();
+    }
+    tries++;
+  }, 100);
+  var moveOn = function() {
+    clearInterval(interval);
+    try {
+      continueTest();
+    } catch (e if e instanceof StopIteration) {
+      SimpleTest.finish();
+    }
+  };
+}
 
 SimpleTest.waitForExplicitFinish();
 
@@ -34,42 +61,44 @@ SpecialPowers.pushPrefEnv({'set': [
   ["privacy.popups.showBrowserMessage", false]
 ]}, function() {
   SimpleTest.waitForFocus(function() {
-
-    // Tests that a click on 'b' calls the show method.
-    var b = document.getElementById('b');
-    b.focus(); // Be sure the element is visible.
-    synthesizeMouseAtCenter(b, {});
-    SimpleTest.executeSoon(function() {
-      ok(MockFilePicker.showing,
-         "File picker showAsync method should have been called");
-      MockFilePicker.reset();
-
-      // Tests that a click on 'a' doesn't call the show method, because it is hidden.
-      document.getElementById("a").click();
-      SimpleTest.executeSoon(function() {
-        ok(!MockFilePicker.showing,
-           "File picker showAsync method should not have been called");
-        MockFilePicker.reset();
-
-        synthesizeMouseAtCenter(document.getElementById('c'), {});
-        SimpleTest.executeSoon(function() {
-          ok(!MockFilePicker.showing,
-             "File picker showAsync method should have been called");
-          MockFilePicker.reset();
-
-          synthesizeMouseAtCenter(document.getElementById('d'), {});
-          SimpleTest.executeSoon(function() {
-            ok(MockFilePicker.showing,
-               "File picker showAsync method should have been called");
-
-            MockFilePicker.cleanup();
-            SimpleTest.finish();
-          });
-        });
-      });
-    });
+    continueTest();
   });
 });
+
+let showing = function() MockFilePicker.showing;
+let notShowing = function() !MockFilePicker.showing;
+
+function doTest() {
+  ok(true, "Test start");
+  var b = document.getElementById('b');
+  b.focus(); // Be sure the element is visible.
+
+  synthesizeMouseAtCenter(b, {});
+  yield waitForCondition(showing,
+                         "File picker showAsync method should have been called");
+
+  MockFilePicker.reset();
+
+  // Tests that a click on 'a' doesn't call the show method, because it is hidden.
+  document.getElementById("a").click();
+  yield waitForCondition(notShowing,
+                         "File picker showAsync method should not have been called");
+
+  MockFilePicker.reset();
+
+  synthesizeMouseAtCenter(document.getElementById('c'), {});
+  yield waitForCondition(notShowing,
+                         "File picker showAsync method should not have been called");
+
+  MockFilePicker.reset();
+  synthesizeMouseAtCenter(document.getElementById('d'), {});
+
+  yield waitForCondition(showing,
+                         "File picker showAsync method should have been called");
+
+  ok(true, "Test completed");
+  MockFilePicker.cleanup();
+}
 
 </script>
 </pre>

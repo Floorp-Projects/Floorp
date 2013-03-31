@@ -2226,19 +2226,18 @@ NPObjectMember_Trace(JSTracer *trc, JSObject *obj)
 
   // Our NPIdentifier is not always interned, so we must root it explicitly.
   jsid id = NPIdentifierToJSId(memberPrivate->methodName);
-  if (JSID_IS_STRING(id))
-    JS_CALL_STRING_TRACER(trc, JSID_TO_STRING(id), "NPObjectMemberPrivate.methodName");
+  JS_CallIdTracer(trc, id, "NPObjectMemberPrivate.methodName");
 
   if (!JSVAL_IS_PRIMITIVE(memberPrivate->fieldValue)) {
-    JS_CALL_VALUE_TRACER(trc, memberPrivate->fieldValue,
-                         "NPObject Member => fieldValue");
+    JS_CallValueTracer(trc, memberPrivate->fieldValue,
+                       "NPObject Member => fieldValue");
   }
 
   // There's no strong reference from our private data to the
   // NPObject, so make sure to mark the NPObject wrapper to keep the
   // NPObject alive as long as this NPObjectMember is alive.
   if (memberPrivate->npobjWrapper) {
-    JS_CALL_OBJECT_TRACER(trc, memberPrivate->npobjWrapper,
-                          "NPObject Member => npobjWrapper");
+    JS_CallObjectTracer(trc, memberPrivate->npobjWrapper,
+                        "NPObject Member => npobjWrapper");
   }
 }

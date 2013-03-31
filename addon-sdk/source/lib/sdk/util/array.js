@@ -90,8 +90,14 @@ exports.flatten = function flatten(array){
 
 function fromIterator(iterator) {
   let array = [];
-  for each (let item in iterator)
-    array.push(item);
+  if (iterator.__iterator__) {
+    for each (let item in iterator)
+      array.push(item);
+  }
+  else {
+    for (let item of iterator)
+      array.push(item);
+  }
   return array;
 }
 exports.fromIterator = fromIterator;

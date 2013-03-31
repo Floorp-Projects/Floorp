@@ -1,0 +1,14 @@
+This is a clean copy of libevent-2.0.21-stable with the following modifications:
+
+1. Add the following files:
+
+linux/event2/event-config.h
+mac/event2/event-config.h
+android/event2/event-config.h
+
+These files are taken from libevent-2.0.21-stable built on the development environment indicated by the first path component. You have to run "./configure" and "make" to get all of the pre-processing done. The file can then be found in "include/event2/".
+
+2. This is ugly, prepare yourself. OS X has a weird problem with how the "TAILQ_END(head)" is used, causing a linking error. Just replace all use of the "TAILQ_END(head)" macro with "NULL".
+
+3. Apply "add mac-arc4random-buf.patch", which removes some bad OS X compatibility code. This will allow libevent to compile on all supported versions of OS X.
+
