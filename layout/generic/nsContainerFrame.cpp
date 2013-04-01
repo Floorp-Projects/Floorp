@@ -239,30 +239,27 @@ nsContainerFrame::SafelyDestroyFrameListProp(nsIFrame* aDestructRoot,
 void
 nsContainerFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
-  // Prevent event dispatch during destruction
+  // Prevent event dispatch during destruction.
   if (HasView()) {
     GetView()->SetFrame(nullptr);
   }
 
   DestroyAbsoluteFrames(aDestructRoot);
 
-  // Delete the primary child list
+  // Destroy frames on the principal child list.
   mFrames.DestroyFramesFrom(aDestructRoot);
 
-  // Destroy auxiliary frame lists
-  nsPresContext* prescontext = PresContext();
-
-  DestroyOverflowList(prescontext, aDestructRoot);
+  // Destroy frames on the auxiliary frame lists and delete the lists.
+  FramePropertyTable* props = PresContext()->PropertyTable();
+  SafelyDestroyFrameListProp(aDestructRoot, props, OverflowProperty());
 
   if (IsFrameOfType(nsIFrame::eCanContainOverflowContainers)) {
-    FramePropertyTable* props = prescontext->PropertyTable();
     SafelyDestroyFrameListProp(aDestructRoot, props,
                                OverflowContainersProperty());
     SafelyDestroyFrameListProp(aDestructRoot, props,
                                ExcessOverflowContainersProperty());
   }
 
-  // Destroy the frame and remove the flow pointers
   nsSplittableFrame::DestroyFrom(aDestructRoot);
 }
 
