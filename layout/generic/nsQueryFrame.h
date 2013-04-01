@@ -8,7 +8,8 @@
 #include "nscore.h"
 
 #define NS_DECL_QUERYFRAME_TARGET(classname)                    \
-  static const nsQueryFrame::FrameIID kFrameIID = nsQueryFrame::classname##_id;
+  static const nsQueryFrame::FrameIID kFrameIID = nsQueryFrame::classname##_id; \
+  typedef classname* Has_NS_DECL_QUERYFRAME_TARGET;
 
 #define NS_DECL_QUERYFRAME                                      \
   virtual void* QueryFrame(FrameIID id);
@@ -33,7 +34,7 @@
 #define NS_QUERYFRAME_TAIL_INHERITANCE_ROOT                     \
   default: break;                                               \
   }                                                             \
-  return nullptr;                                                \
+  return nullptr;                                               \
 }
 
 class nsQueryFrame
@@ -63,9 +64,10 @@ public:
 
   template<class Dest>
   operator Dest*() {
-    if (!mRawPtr)
-      return nullptr;
-
+    if (!mRawPtr) {
+      // Ensure that Dest declared itself as a queryframe target.
+      return static_cast<typename Dest::Has_NS_DECL_QUERYFRAME_TARGET>(nullptr);
+    }
     return reinterpret_cast<Dest*>(mRawPtr->QueryFrame(Dest::kFrameIID));
   }
 
