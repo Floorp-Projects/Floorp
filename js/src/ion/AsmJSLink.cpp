@@ -395,20 +395,15 @@ HandleDynamicLinkFailure(JSContext *cx, CallArgs args, AsmJSModule &module, Hand
     // Call the function we just recompiled.
 
     unsigned argc = args.length();
-    JS_ASSERT(argc <= 3);
 
     InvokeArgsGuard args2;
-    if (!cx->stack.pushInvokeArgs(cx, args.length(), &args2))
+    if (!cx->stack.pushInvokeArgs(cx, argc, &args2))
         return false;
 
     args2.setCallee(ObjectValue(*fun));
     args2.setThis(args.thisv());
-    if (argc > 0)
-        args2[0] = args[0];
-    if (argc > 1)
-        args2[1] = args[1];
-    if (argc > 2)
-        args2[2] = args[2];
+    for (unsigned i = 0; i < argc; i++)
+        args2[i] = args[i];
 
     if (!Invoke(cx, args2))
         return false;
