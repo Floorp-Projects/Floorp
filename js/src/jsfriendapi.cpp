@@ -1037,3 +1037,20 @@ js::AutoCTypesActivityCallback::AutoCTypesActivityCallback(JSContext *cx,
     if (callback)
         callback(cx, beginType);
 }
+
+JS_FRIEND_API(JSBool)
+js_DefineOwnProperty(JSContext *cx, JSObject *objArg, jsid idArg,
+                     const js::PropertyDescriptor& descriptor, JSBool *bp)
+{
+    RootedObject obj(cx, objArg);
+    RootedId id(cx, idArg);
+    JS_ASSERT(cx->runtime->heapState == js::Idle);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, obj, id, descriptor.value);
+    if (descriptor.attrs & JSPROP_GETTER)
+        assertSameCompartment(cx, CastAsObjectJsval(descriptor.getter));
+    if (descriptor.attrs & JSPROP_SETTER)
+        assertSameCompartment(cx, CastAsObjectJsval(descriptor.setter));
+
+    return js_DefineOwnProperty(cx, HandleObject(obj), id, descriptor, bp);
+}

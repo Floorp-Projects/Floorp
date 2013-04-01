@@ -118,6 +118,9 @@ static int       unwind_thr_exit_now = 0; // RACED ON
 // registered thread.
 static void thread_register_for_profiling ( void* stackTop );
 
+// Frees some memory when the unwinder thread is shut down.
+static void do_breakpad_unwind_Buffer_free_singletons();
+
 // RUNS IN SIGHANDLER CONTEXT
 // Acquire an empty buffer and mark it as FILLING
 static UnwinderThreadBuffer* acquire_empty_buffer();
@@ -157,6 +160,7 @@ void uwt__deinit()
   unwind_thr_exit_now = 1;
   do_MBAR();
   int r = pthread_join(unwind_thr, NULL); MOZ_ALWAYS_TRUE(r==0);
+  do_breakpad_unwind_Buffer_free_singletons();
 }
 
 void uwt__register_thread_for_profiling(void* stackTop)
@@ -813,6 +817,14 @@ static void* unwind_thr_fn(void* exit_nowV)
     MOZ_ASSERT(buffers);
     int i;
     for (i = 0; i < N_UNW_THR_BUFFERS; i++) {
+      /* These calloc-ations are never freed, even when the unwinder
+         thread is shut down.  The reason is that sampler threads
+         might still be filling them up even after this thread is shut
+         down.  The buffers themselves are not protected by the
+         spinlock, so we have no way to stop them being accessed
+         whilst we free them.  It doesn't matter much since they will
+         not be reallocated if a new unwinder thread is restarted
+         later. */
       buffers[i] = (UnwinderThreadBuffer*)
                    calloc(sizeof(UnwinderThreadBuffer), 1);
       MOZ_ASSERT(buffers[i]);
@@ -1478,6 +1490,22 @@ class MyCodeModules : public google_breakpad::CodeModules
 MyCodeModules* sModules = NULL;
 google_breakpad::LocalDebugInfoSymbolizer* sSymbolizer = NULL;
 
+// Free up the above two singletons when the unwinder thread is shut
+// down.
+static
+void do_breakpad_unwind_Buffer_free_singletons()
+{
+  if (sSymbolizer) {
+    delete sSymbolizer;
+    sSymbolizer = NULL;
+  }
+  if (sModules) {
+    delete sModules;
+    sModules = NULL;
+  }
+}
+
+static
 void do_breakpad_unwind_Buffer(/*OUT*/PCandSP** pairs,
                                /*OUT*/unsigned int* nPairs,
                                UnwinderThreadBuffer* buff,

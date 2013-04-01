@@ -2,5 +2,13 @@
 == table-repaint-b.html table-repaint-b-ref.html
 == table-repaint-c.html table-repaint-c-ref.html
 == table-repaint-d.html table-repaint-d-ref.html
-== 540247-1.xul 540247-1-ref.xul
+# The below test involves XUL that expects to be able to use
+# Components.interfaces. This is kind of a tricky situation because reftests
+# actually run XUL with file:// URIs, and flip a pref that allows remote XUL
+# from the filesystem. And in fact, we have special behavior to allow access to
+# the Components object on remote XUL origins. However, we actually have an
+# override pref during automation that disables this behavior during automation.
+# Since reftests don't have SpecialPowers, our simplest path to victory here is
+# to override the override. Ugh.
+pref(dom.use_xbl_scopes_for_remote_xul,false) == 540247-1.xul 540247-1-ref.xul
 == 543681-1.html 543681-1-ref.html

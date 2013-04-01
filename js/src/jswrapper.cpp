@@ -46,7 +46,7 @@ Wrapper::New(JSContext *cx, JSObject *obj, JSObject *proto, JSObject *parent,
     AutoMarkInDeadZone amd(cx->zone());
 
     return NewProxyObject(cx, handler, ObjectValue(*obj), proto, parent,
-                          obj->isCallable() ? obj : NULL, NULL);
+                          obj->isCallable() ? ProxyIsCallable : ProxyNotCallable);
 }
 
 JSObject *
@@ -225,6 +225,30 @@ bool CrossCompartmentWrapper::finalizeInBackground(Value priv)
     JS_END_MACRO
 
 #define NOTHING (true)
+
+bool
+CrossCompartmentWrapper::isExtensible(JSObject *wrapper)
+{
+    // The lack of a context to enter a compartment here is troublesome.  We
+    // don't know anything about the wrapped object (it might even be a
+    // proxy!), and embeddings' proxy handlers could theoretically trigger
+    // compartment mismatches here (because isExtensible wouldn't be called in
+    // the wrapped object's compartment.  But that's probably not very likely.
+    // (Famous last words.)
+    //
+    // Given that we're likely going to make this method take a context and
+    // maybe be fallible at some point, punt on the issue for now.
+    return wrappedObject(wrapper)->isExtensible();
+}
+
+bool
+CrossCompartmentWrapper::preventExtensions(JSContext *cx, HandleObject wrapper)
+{
+    PIERCE(cx, wrapper,
+           NOTHING,
+           Wrapper::preventExtensions(cx, wrapper),
+           NOTHING);
+}
 
 bool
 CrossCompartmentWrapper::getPropertyDescriptor(JSContext *cx, HandleObject wrapper, HandleId id,
@@ -628,6 +652,25 @@ SecurityWrapper<Base>::SecurityWrapper(unsigned flags)
 
 template <class Base>
 bool
+SecurityWrapper<Base>::isExtensible(JSObject *wrapper)
+{
+    // Just like BaseProxyHandler, SecurityWrappers claim by default to always
+    // be extensible, so as not to leak information about the state of the
+    // underlying wrapped thing.
+    return true;
+}
+
+template <class Base>
+bool
+SecurityWrapper<Base>::preventExtensions(JSContext *cx, HandleObject wrapper)
+{
+    // See above.
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNWRAP_DENIED);
+    return false;
+}
+
+template <class Base>
+bool
 SecurityWrapper<Base>::enter(JSContext *cx, HandleObject wrapper, HandleId id,
                              Wrapper::Action act, bool *bp)
 {
@@ -636,8 +679,8 @@ SecurityWrapper<Base>::enter(JSContext *cx, HandleObject wrapper, HandleId id,
     return false;
 }
 
- template <class Base>
- bool
+template <class Base>
+bool
 SecurityWrapper<Base>::nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
                                   CallArgs args)
 {
@@ -659,6 +702,21 @@ SecurityWrapper<Base>::regexp_toShared(JSContext *cx, HandleObject obj, RegExpGu
     return Base::regexp_toShared(cx, obj, g);
 }
 
+template <class Base>
+bool
+SecurityWrapper<Base>::defineProperty(JSContext *cx, HandleObject wrapper,
+                                      HandleId id, PropertyDescriptor *desc)
+{
+    if (desc->getter || desc->setter) {
+        JSString *str = IdToString(cx, id);
+        const jschar *prop = str ? str->getCharsZ(cx) : NULL;
+        JS_ReportErrorNumberUC(cx, js_GetErrorMessage, NULL,
+                               JSMSG_ACCESSOR_DEF_DENIED, prop);
+        return false;
+    }
+
+    return Base::defineProperty(cx, wrapper, id, desc);
+}
 
 template class js::SecurityWrapper<Wrapper>;
 template class js::SecurityWrapper<CrossCompartmentWrapper>;
@@ -666,6 +724,21 @@ template class js::SecurityWrapper<CrossCompartmentWrapper>;
 DeadObjectProxy::DeadObjectProxy()
   : BaseProxyHandler(&sDeadObjectFamily)
 {
+}
+
+bool
+DeadObjectProxy::isExtensible(JSObject *proxy)
+{
+    // This is kind of meaningless, but dead-object semantics aside,
+    // [[Extensible]] always being true is consistent with other proxy types.
+    return true;
+}
+
+bool
+DeadObjectProxy::preventExtensions(JSContext *cx, HandleObject proxy)
+{
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEAD_OBJECT);
+    return false;
 }
 
 bool
@@ -798,7 +871,7 @@ JSObject *
 js::NewDeadProxyObject(JSContext *cx, JSObject *parent)
 {
     return NewProxyObject(cx, &DeadObjectProxy::singleton, NullValue(),
-                          NULL, parent, NULL, NULL);
+                          NULL, parent, ProxyNotCallable);
 }
 
 bool

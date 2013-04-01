@@ -40,9 +40,8 @@ public class FennecNativeElement implements Element {
     private boolean mClickSuccess;
 
     public boolean click() {
-        final SynchronousQueue syncQueue = new SynchronousQueue();
         mClickSuccess = false;
-        mActivity.runOnUiThread(
+        RobocopUtils.runOnUiThreadSync(mActivity,
             new Runnable() {
                 public void run() {
                     View view = (View)mActivity.findViewById(mId);
@@ -57,32 +56,16 @@ public class FennecNativeElement implements Element {
                         FennecNativeDriver.log(FennecNativeDriver.LogLevel.ERROR,
                             "click: unable to find view "+mId);
                     }
-                    try {
-                        syncQueue.put(new Object());
-                    } catch (InterruptedException e) {
-                        FennecNativeDriver.log(FennecNativeDriver.LogLevel.ERROR, e);
-                    }
                 }
             });
-        try {
-            // Wait for the UiThread code to finish running
-            if (syncQueue.poll(MAX_WAIT_MS, TimeUnit.MILLISECONDS) == null) {
-                FennecNativeDriver.log(FennecNativeDriver.LogLevel.ERROR, 
-                    "click: time-out waiting for UI thread");
-                FennecNativeDriver.logAllStackTraces(FennecNativeDriver.LogLevel.ERROR);
-            }
-        } catch (InterruptedException e) {
-            FennecNativeDriver.log(FennecNativeDriver.LogLevel.ERROR, e);
-        }
         return mClickSuccess;
     }
 
     private Object mText;
 
     public String getText() {
-        final SynchronousQueue syncQueue = new SynchronousQueue();
         mText = null;
-        mActivity.runOnUiThread(
+        RobocopUtils.runOnUiThreadSync(mActivity,
             new Runnable() {
                 public void run() {
                     View v = mActivity.findViewById(mId);
@@ -109,24 +92,9 @@ public class FennecNativeElement implements Element {
                         FennecNativeDriver.log(FennecNativeDriver.LogLevel.ERROR,
                             "getText: unhandled type for view "+mId);
                     }
-                    try {
-                        syncQueue.put(new Object());
-                    } catch (InterruptedException e) {
-                        FennecNativeDriver.log(FennecNativeDriver.LogLevel.ERROR, e);
-                    }
                 } // end of run() method definition
             } // end of anonymous Runnable object instantiation
         );
-        try {     
-            // Wait for the UiThread code to finish running
-            if (syncQueue.poll(MAX_WAIT_MS, TimeUnit.MILLISECONDS) == null) {
-                FennecNativeDriver.log(FennecNativeDriver.LogLevel.ERROR, 
-                    "getText: time-out waiting for UI thread");
-                FennecNativeDriver.logAllStackTraces(FennecNativeDriver.LogLevel.ERROR);
-            }
-        } catch (InterruptedException e) {
-            FennecNativeDriver.log(FennecNativeDriver.LogLevel.ERROR, e);
-        }
         if (mText == null) {
             FennecNativeDriver.log(FennecNativeDriver.LogLevel.WARN,
                 "getText: Text is null for view "+mId);
@@ -138,33 +106,16 @@ public class FennecNativeElement implements Element {
     private boolean mDisplayed;
 
     public boolean isDisplayed() {
-        final SynchronousQueue syncQueue = new SynchronousQueue();
         mDisplayed = false;
-        mActivity.runOnUiThread(
+        RobocopUtils.runOnUiThreadSync(mActivity,
             new Runnable() {
                 public void run() {
                     View view = (View)mActivity.findViewById(mId);
                     if (view != null) {
                         mDisplayed = true;
                     }
-                    try {
-                        syncQueue.put(new Object());
-                    } catch (InterruptedException e) {
-                        FennecNativeDriver.log(FennecNativeDriver.LogLevel.ERROR, e);
-                    }
                 }
             });
-        try {
-            // Wait for the UiThread code to finish running
-            if (syncQueue.poll(MAX_WAIT_MS, TimeUnit.MILLISECONDS) == null) {
-                FennecNativeDriver.log(FennecNativeDriver.LogLevel.ERROR, 
-                    "isDisplayed: time-out waiting for UI thread");
-                FennecNativeDriver.logAllStackTraces(FennecNativeDriver.LogLevel.ERROR);
-            }
-        } catch (InterruptedException e) {
-            FennecNativeDriver.log(FennecNativeDriver.LogLevel.ERROR, e);
-        }
         return mDisplayed;
     }
-
 }

@@ -50,8 +50,12 @@ the matcher tells the main add-on code, which displays the annotation panel.
 We'll use the `simple-storage` module to store annotations.
 
 Because we are recording potentially sensitive information, we want to prevent
-the user creating annotations when in private browsing mode, so we'll use the
-`private-browsing` module for that.
+the user creating annotations when in private browsing mode. The simplest way
+to do this is to omit the
+[`"private-browsing"` key](dev-guide/package-spec.html#permissions) from the
+add-on's "package.json" file. If we do this, then the add-on won't see any
+private windows, and the annotator's widget will not appear in any private
+windows.
 
 ## Getting Started ##
 

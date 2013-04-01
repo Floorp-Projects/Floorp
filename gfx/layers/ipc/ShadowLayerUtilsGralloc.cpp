@@ -315,7 +315,7 @@ ShadowLayerForwarder::PlatformAllocBuffer(const gfxIntSize& aSize,
   GrallocBufferActor* gba = static_cast<GrallocBufferActor*>(gc);
   gba->InitFromHandle(handle.get_MagicGrallocBufferHandle());
 
-  *aBuffer = SurfaceDescriptorGralloc(nullptr, gc, /* external */ false);
+  *aBuffer = SurfaceDescriptorGralloc(nullptr, gc, aSize, /* external */ false);
   return true;
 }
 
@@ -355,7 +355,7 @@ ShadowLayerForwarder::PlatformOpenDescriptor(OpenMode aMode,
   // If we fail to lock, we'll just end up aborting anyway.
   MOZ_ASSERT(status == OK);
 
-  gfxIntSize size = gfxIntSize(buffer->getWidth(), buffer->getHeight());
+  gfxIntSize size = aSurface.get_SurfaceDescriptorGralloc().size();
   gfxImageFormat format = ImageFormatForPixelFormat(buffer->getPixelFormat());
   long pixelStride = buffer->getStride();
   long byteStride = pixelStride * gfxASurface::BytePerPixelFromFormat(format);
@@ -393,7 +393,7 @@ ShadowLayerForwarder::PlatformGetDescriptorSurfaceSize(
 
   sp<GraphicBuffer> buffer =
     GrallocBufferActor::GetFrom(aDescriptor.get_SurfaceDescriptorGralloc());
-  *aSize = gfxIntSize(buffer->getWidth(), buffer->getHeight());
+  *aSize = aDescriptor.get_SurfaceDescriptorGralloc().size();
   return true;
 }
 

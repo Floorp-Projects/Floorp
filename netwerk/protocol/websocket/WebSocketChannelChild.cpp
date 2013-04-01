@@ -344,7 +344,9 @@ WebSocketChannelChild::AsyncOpen(nsIURI *aURI,
 
   gNeckoChild->SendPWebSocketConstructor(this, tabChild,
                                          IPC::SerializedLoadContext(this));
-  if (!SendAsyncOpen(uri, nsCString(aOrigin), mProtocol, mEncrypted))
+  if (!SendAsyncOpen(uri, nsCString(aOrigin), mProtocol, mEncrypted,
+                     mPingInterval, mClientSetPingInterval,
+                     mPingResponseTimeout, mClientSetPingTimeout))
     return NS_ERROR_UNEXPECTED;
 
   mOriginalURI = aURI;
@@ -352,6 +354,7 @@ WebSocketChannelChild::AsyncOpen(nsIURI *aURI,
   mListener = aListener;
   mContext = aContext;
   mOrigin = aOrigin;
+  mWasOpened = 1;
 
   return NS_OK;
 }

@@ -566,6 +566,10 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         hitEnterAndWait();
     }
 
+    public final void runOnUiThreadSync(Runnable runnable) {
+        RobocopUtils.runOnUiThreadSync(mActivity, runnable);
+    }
+
     /**
     * This method will edit the bookmark with index = bookmarkIndex from the list of bookmarks
     * For the field index:

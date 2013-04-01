@@ -22,6 +22,7 @@ nsDOMClipboardEvent::nsDOMClipboardEvent(mozilla::dom::EventTarget* aOwner,
     mEventIsInternal = true;
     mEvent->time = PR_Now();
   }
+  SetIsDOMBinding();
 }
 
 nsDOMClipboardEvent::~nsDOMClipboardEvent()
@@ -70,6 +71,7 @@ nsDOMClipboardEvent::InitFromCtor(const nsAString& aType,
       // Always create a clipboardData for the copy event. If this is changed to
       // support other types of events, make sure that read/write privileges are
       // checked properly within nsDOMDataTransfer.
+      // If you change this, change then also Constructor!
       clipboardData = new nsDOMDataTransfer(NS_COPY, false);
       clipboardData->SetData(d.dataType, d.data);
     }
@@ -81,8 +83,45 @@ nsDOMClipboardEvent::InitFromCtor(const nsAString& aType,
   return NS_OK;
 }
 
+already_AddRefed<nsDOMClipboardEvent>
+nsDOMClipboardEvent::Constructor(const mozilla::dom::GlobalObject& aGlobal,
+                                 const nsAString& aType,
+                                 const mozilla::dom::ClipboardEventInit& aParam,
+                                 mozilla::ErrorResult& aRv)
+{
+  nsCOMPtr<mozilla::dom::EventTarget> t = do_QueryInterface(aGlobal.Get());
+  nsRefPtr<nsDOMClipboardEvent> e =
+    new nsDOMClipboardEvent(t, nullptr, nullptr);
+  bool trusted = e->Init(t);
+
+  nsRefPtr<nsDOMDataTransfer> clipboardData;
+  if (e->mEventIsInternal) {
+    nsClipboardEvent* event = static_cast<nsClipboardEvent*>(e->mEvent);
+    if (event) {
+      // Always create a clipboardData for the copy event. If this is changed to
+      // support other types of events, make sure that read/write privileges are
+      // checked properly within nsDOMDataTransfer.
+      // If you change this, change then also InitFromCtor!
+      clipboardData = new nsDOMDataTransfer(NS_COPY, false);
+      clipboardData->SetData(aParam.mDataType, aParam.mData);
+    }
+  }
+
+  aRv = e->InitClipboardEvent(aType, aParam.mBubbles, aParam.mCancelable,
+                              clipboardData);
+  e->SetTrusted(trusted);
+  return e.forget();
+}
+
 NS_IMETHODIMP
 nsDOMClipboardEvent::GetClipboardData(nsIDOMDataTransfer** aClipboardData)
+{
+  NS_IF_ADDREF(*aClipboardData = GetClipboardData());
+  return NS_OK;
+}
+
+nsIDOMDataTransfer*
+nsDOMClipboardEvent::GetClipboardData()
 {
   nsClipboardEvent* event = static_cast<nsClipboardEvent*>(mEvent);
 
@@ -95,8 +134,7 @@ nsDOMClipboardEvent::GetClipboardData(nsIDOMDataTransfer** aClipboardData)
     }
   }
 
-  NS_IF_ADDREF(*aClipboardData = event->clipboardData);
-  return NS_OK;
+  return event->clipboardData;
 }
 
 nsresult NS_NewDOMClipboardEvent(nsIDOMEvent** aInstancePtrResult,

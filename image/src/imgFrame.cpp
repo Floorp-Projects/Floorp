@@ -146,7 +146,7 @@ imgFrame::~imgFrame()
   }
 }
 
-nsresult imgFrame::Init(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight, 
+nsresult imgFrame::Init(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight,
                         gfxASurface::gfxImageFormat aFormat, uint8_t aPaletteDepth /* = 0 */)
 {
   // assert for properties that should be verified by decoders, warn for properties related to bad content
@@ -492,7 +492,7 @@ nsresult imgFrame::Extract(const nsIntRect& aRegion, imgFrame** aResult)
   // (albeit slower) Cairo fallback scaler will be used.
   subImage->mNeverUseDeviceSurface = true;
 
-  nsresult rv = subImage->Init(0, 0, aRegion.width, aRegion.height, 
+  nsresult rv = subImage->Init(0, 0, aRegion.width, aRegion.height,
                                mFormat, mPaletteDepth);
   NS_ENSURE_SUCCESS(rv, rv);
 

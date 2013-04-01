@@ -996,6 +996,7 @@ ShadowImageLayerOGL::RenderLayer(int aPreviousFrameBuffer,
       const SurfaceDescriptorGralloc& desc = img->get_SurfaceDescriptor().get_SurfaceDescriptorGralloc();
       sp<GraphicBuffer> graphicBuffer = GrallocBufferActor::GetFrom(desc);
       mSize = gfxIntSize(graphicBuffer->getWidth(), graphicBuffer->getHeight());
+      mPictureRect = nsIntRect(0, 0, desc.size().width, desc.size().height);
       if (!mExternalBufferTexture.IsAllocated()) {
         mExternalBufferTexture.Allocate(gl());
       }
@@ -1061,14 +1062,17 @@ ShadowImageLayerOGL::RenderLayer(int aPreviousFrameBuffer,
 
     program->Activate();
     program->SetLayerQuadRect(nsIntRect(0, 0,
-                                        mSize.width, mSize.height));
+                                           mPictureRect.width,
+                                           mPictureRect.height));
     program->SetLayerTransform(GetEffectiveTransform());
     program->SetLayerOpacity(GetEffectiveOpacity());
     program->SetRenderOffset(aOffset);
     program->SetTextureUnit(0);
     program->LoadMask(GetMaskLayer());
 
-    mOGLManager->BindAndDrawQuad(program);
+    mOGLManager->BindAndDrawQuadWithTextureRect(program,
+                                                mPictureRect,
+                                                nsIntSize(mSize.width, mSize.height));
 
     // Make sure that we release the underlying external image
     gl()->fActiveTexture(LOCAL_GL_TEXTURE0);

@@ -175,6 +175,7 @@ exports["test:emit hack message"] = WorkerTest(
 exports["test:n-arguments emit"] = WorkerTest(
   DEFAULT_CONTENT_URL,
   function(assert, browser, done) {
+    let repeat = 0;
     let worker =  Worker({
         window: browser.contentWindow,
         contentScript: "new " + function WorkerScope() {
@@ -187,10 +188,14 @@ exports["test:n-arguments emit"] = WorkerTest(
 
     // Validate worker.port
     worker.port.on("content-to-addon", function (arg1, arg2, arg3) {
-      assert.equal(arg1, "first argument");
-      assert.equal(arg2, "second");
-      assert.equal(arg3, "third");
-      done();
+      if (!repeat++) {
+        this.emit("addon-to-content", "first argument", "second", "third");
+      } else {
+        assert.equal(arg1, "first argument");
+        assert.equal(arg2, "second");
+        assert.equal(arg3, "third");
+        done();
+      }
     });
     worker.port.emit("addon-to-content", "first argument", "second", "third");
   }

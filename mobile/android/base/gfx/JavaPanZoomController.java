@@ -66,6 +66,9 @@ class JavaPanZoomController
     // The maximum amount we would like to scroll with the mouse
     private static final float MAX_SCROLL = 0.075f * GeckoAppShell.getDpi();
 
+    // The maximum zoom factor adjustment per frame of the AUTONAV animation
+    private static final float MAX_ZOOM_DELTA = 0.125f;
+
     private enum PanZoomState {
         NOTHING,        /* no touch-start events received */
         FLING,          /* all touches removed, but we're still scrolling page */
@@ -82,7 +85,7 @@ class JavaPanZoomController
         WAITING_LISTENERS, /* a state halfway between NOTHING and TOUCHING - the user has
                         put a finger down, but we don't yet know if a touch listener has
                         prevented the default actions yet. we still need to abort animations. */
-        AUTOSCROLL,     /* We are scrolling using an AutoscrollRunnable animation. This is similar
+        AUTONAV,        /* We are scrolling using an AutonavRunnable animation. This is similar
                         to the FLING state except that it must be stopped manually by the code that
                         started it, and it's velocity can be updated while it's running. */
     }
@@ -104,6 +107,8 @@ class JavaPanZoomController
     private long mLastEventTime;
     /* Current state the pan/zoom UI is in. */
     private PanZoomState mState;
+    /* The per-frame zoom delta for the currently-running AUTONAV animation. */
+    private float mAutonavZoomDelta;
 
     public JavaPanZoomController(PanZoomTarget target, View view, EventDispatcher eventDispatcher) {
         mTarget = target;
@@ -252,7 +257,7 @@ class JavaPanZoomController
             break;
         case InputDevice.SOURCE_CLASS_JOYSTICK:
             switch (event.getAction() & MotionEvent.ACTION_MASK) {
-            case MotionEvent.ACTION_MOVE: return handleJoystickScroll(event);
+            case MotionEvent.ACTION_MOVE: return handleJoystickNav(event);
             }
             break;
         }
@@ -366,7 +371,7 @@ class JavaPanZoomController
             mTarget.forceRedraw();
             // fall through
         case FLING:
-        case AUTOSCROLL:
+        case AUTONAV:
         case BOUNCE:
         case NOTHING:
         case WAITING_LISTENERS:
@@ -389,7 +394,7 @@ class JavaPanZoomController
 
         switch (mState) {
         case FLING:
-        case AUTOSCROLL:
+        case AUTONAV:
         case BOUNCE:
         case WAITING_LISTENERS:
             // should never happen
@@ -437,7 +442,7 @@ class JavaPanZoomController
 
         switch (mState) {
         case FLING:
-        case AUTOSCROLL:
+        case AUTONAV:
         case BOUNCE:
         case WAITING_LISTENERS:
             // should never happen
@@ -502,25 +507,37 @@ class JavaPanZoomController
         return false;
     }
 
-    private float normalizeJoystick(float value, InputDevice.MotionRange range) {
+    private float filterDeadZone(float value, InputDevice.MotionRange range) {
         // The 1e-2 here should really be range.getFlat() + range.getFuzz() but the
         // values those functions return on the Ouya are zero so we're just hard-coding
         // it for now.
         if (Math.abs(value) < 1e-2) {
             return 0;
         }
-        // joystick axis positions are already normalized to [-1, 1] so just scale it up by how much we want
-        return value * MAX_SCROLL;
+        return value;
+    }
+
+    private float normalizeJoystickScroll(float value, InputDevice.MotionRange range) {
+        return filterDeadZone(value, range) * MAX_SCROLL;
+    }
+
+    private float normalizeJoystickZoom(float value, InputDevice.MotionRange range) {
+        // negate MAX_ZOOM_DELTA so that pushing up on the stick zooms in
+        return filterDeadZone(value, range) * -MAX_ZOOM_DELTA;
     }
 
     // Since this event is a position-based event rather than a motion-based event, we need to
-    // set up an AUTOSCROLL animation to keep scrolling even while we don't get events.
-    private boolean handleJoystickScroll(MotionEvent event) {
-        float velocityX = normalizeJoystick(event.getX(0), event.getDevice().getMotionRange(MotionEvent.AXIS_X));
-        float velocityY = normalizeJoystick(event.getY(0), event.getDevice().getMotionRange(MotionEvent.AXIS_Y));
+    // set up an AUTONAV animation to keep scrolling even while we don't get events.
+    private boolean handleJoystickNav(MotionEvent event) {
+        float velocityX = normalizeJoystickScroll(event.getAxisValue(MotionEvent.AXIS_X),
+                                                  event.getDevice().getMotionRange(MotionEvent.AXIS_X));
+        float velocityY = normalizeJoystickScroll(event.getAxisValue(MotionEvent.AXIS_Y),
+                                                  event.getDevice().getMotionRange(MotionEvent.AXIS_Y));
+        float zoomDelta = normalizeJoystickZoom(event.getAxisValue(MotionEvent.AXIS_RZ),
+                                                event.getDevice().getMotionRange(MotionEvent.AXIS_RZ));
 
-        if (velocityX == 0 && velocityY == 0) {
-            if (mState == PanZoomState.AUTOSCROLL) {
+        if (velocityX == 0 && velocityY == 0 && zoomDelta == 0) {
+            if (mState == PanZoomState.AUTONAV) {
                 bounce(); // if not needed, this will automatically go to state NOTHING
                 return true;
             }
@@ -528,12 +545,13 @@ class JavaPanZoomController
         }
 
         if (mState == PanZoomState.NOTHING) {
-            setState(PanZoomState.AUTOSCROLL);
-            startAnimationTimer(new AutoscrollRunnable());
+            setState(PanZoomState.AUTONAV);
+            startAnimationTimer(new AutonavRunnable());
         }
-        if (mState == PanZoomState.AUTOSCROLL) {
+        if (mState == PanZoomState.AUTONAV) {
             mX.setAutoscrollVelocity(velocityX);
             mY.setAutoscrollVelocity(velocityY);
+            mAutonavZoomDelta = zoomDelta;
             return true;
         }
         return false;
@@ -746,15 +764,18 @@ class JavaPanZoomController
         }
     }
 
-    private class AutoscrollRunnable extends AnimationRunnable {
+    private class AutonavRunnable extends AnimationRunnable {
         @Override
         protected void animateFrame() {
-            if (mState != PanZoomState.AUTOSCROLL) {
+            if (mState != PanZoomState.AUTONAV) {
                 finishAnimation();
                 return;
             }
 
             updatePosition();
+            synchronized (mTarget.getLock()) {
+                mTarget.setViewportMetrics(applyZoomDelta(getMetrics(), mAutonavZoomDelta));
+            }
         }
     }
 
@@ -1031,17 +1052,22 @@ class JavaPanZoomController
         return true;
     }
 
+    private ImmutableViewportMetrics applyZoomDelta(ImmutableViewportMetrics metrics, float zoomDelta) {
+        float oldZoom = metrics.zoomFactor;
+        float newZoom = oldZoom + zoomDelta;
+        float adjustedZoom = getAdjustedZoomFactor(newZoom / oldZoom);
+        // since we don't have a particular focus to zoom to, just use the center
+        PointF center = new PointF(metrics.getWidth() / 2.0f, metrics.getHeight() / 2.0f);
+        metrics = metrics.scaleTo(adjustedZoom, center);
+        return metrics;
+    }
+
     private boolean animatedScale(float zoomDelta) {
         if (mState != PanZoomState.NOTHING && mState != PanZoomState.BOUNCE) {
             return false;
         }
         synchronized (mTarget.getLock()) {
-            ImmutableViewportMetrics metrics = getMetrics();
-            float oldZoom = metrics.zoomFactor;
-            float newZoom = oldZoom + zoomDelta;
-            float adjustedZoom = getAdjustedZoomFactor(newZoom / oldZoom);
-            PointF center = new PointF(metrics.getWidth() / 2.0f, metrics.getHeight() / 2.0f);
-            metrics = metrics.scaleTo(adjustedZoom, center);
+            ImmutableViewportMetrics metrics = applyZoomDelta(getMetrics(), zoomDelta);
             bounce(getValidViewportMetrics(metrics), PanZoomState.BOUNCE);
         }
         return true;

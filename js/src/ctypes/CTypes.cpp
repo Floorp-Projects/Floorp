@@ -3320,8 +3320,8 @@ CType::Trace(JSTracer* trc, JSObject* obj)
     FieldInfoHash* fields =
       static_cast<FieldInfoHash*>(JSVAL_TO_PRIVATE(slot));
     for (FieldInfoHash::Range r = fields->all(); !r.empty(); r.popFront()) {
-      JS_CALL_TRACER(trc, r.front().key, JSTRACE_STRING, "fieldName");
-      JS_CALL_TRACER(trc, r.front().value.mType, JSTRACE_OBJECT, "fieldType");
+      JS_CallStringTracer(trc, r.front().key, "fieldName");
+      JS_CallObjectTracer(trc, r.front().value.mType, "fieldType");
     }
 
     break;
@@ -3336,10 +3336,10 @@ CType::Trace(JSTracer* trc, JSObject* obj)
     JS_ASSERT(fninfo);
 
     // Identify our objects to the tracer.
-    JS_CALL_TRACER(trc, fninfo->mABI, JSTRACE_OBJECT, "abi");
-    JS_CALL_TRACER(trc, fninfo->mReturnType, JSTRACE_OBJECT, "returnType");
+    JS_CallObjectTracer(trc, fninfo->mABI, "abi");
+    JS_CallObjectTracer(trc, fninfo->mReturnType, "returnType");
     for (size_t i = 0; i < fninfo->mArgTypes.length(); ++i)
-      JS_CALL_TRACER(trc, fninfo->mArgTypes[i], JSTRACE_OBJECT, "argType");
+      JS_CallObjectTracer(trc, fninfo->mArgTypes[i], "argType");
 
     break;
   }
@@ -6078,10 +6078,10 @@ CClosure::Trace(JSTracer* trc, JSObject* obj)
 
   // Identify our objects to the tracer. (There's no need to identify
   // 'closureObj', since that's us.)
-  JS_CALL_OBJECT_TRACER(trc, cinfo->typeObj, "typeObj");
-  JS_CALL_OBJECT_TRACER(trc, cinfo->jsfnObj, "jsfnObj");
+  JS_CallObjectTracer(trc, cinfo->typeObj, "typeObj");
+  JS_CallObjectTracer(trc, cinfo->jsfnObj, "jsfnObj");
   if (cinfo->thisObj)
-    JS_CALL_OBJECT_TRACER(trc, cinfo->thisObj, "thisObj");
+    JS_CallObjectTracer(trc, cinfo->thisObj, "thisObj");
 }
 
 void

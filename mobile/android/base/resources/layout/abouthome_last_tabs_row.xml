@@ -5,40 +5,33 @@
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 android:layout_width="fill_parent"
-                android:layout_height="47dip"
+                android:layout_height="@dimen/abouthome_rowitem_height"
                 android:gravity="left|center_vertical"
-                android:background="@drawable/action_bar_button"
-                android:duplicateParentState="true">
+                style="@style/AboutHome.RowItem">
 
     <ImageView android:id="@+id/last_tab_favicon"
                android:layout_width="32dip"
                android:layout_height="32dip"
                android:layout_centerVertical="true"
-               android:layout_marginLeft="12dip"
+               android:layout_marginLeft="@dimen/abouthome_rowitem_left_padding"
                android:src="@drawable/favicon"/>
 
-    <TextView android:id="@+id/last_tab_title"
-              android:layout_width="wrap_content"
-              android:layout_height="wrap_content"
-              android:layout_toRightOf="@id/last_tab_favicon"
-              android:layout_marginTop="2dip"
-              android:layout_marginLeft="12dip"
-              android:layout_marginRight="12dip"
-              android:textSize="15sp"
-              android:singleLine="true"
-              android:textColor="@color/abouthome_section_title"
-              android:duplicateParentState="true"/>
+    <Gecko.TextView android:id="@+id/last_tab_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_toRightOf="@id/last_tab_favicon"
+                    android:layout_marginTop="2dip"
+                    android:layout_marginLeft="12dip"
+                    android:layout_marginRight="12dip"
+                    style="@style/AboutHome.LastTabRow.Title"/>
 
-    <TextView android:id="@+id/last_tab_url"
-              android:layout_width="wrap_content"
-              android:layout_height="wrap_content"
-              android:layout_marginLeft="12dip"
-              android:layout_marginRight="12dip"
-              android:layout_toRightOf="@id/last_tab_favicon"
-              android:layout_below="@id/last_tab_title"
-              android:textSize="12sp"
-              android:singleLine="true"
-              android:textColor="@color/abouthome_section_subtitle"
-              android:duplicateParentState="true"/>
+    <Gecko.TextView android:id="@+id/last_tab_url"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="12dip"
+                    android:layout_marginRight="12dip"
+                    android:layout_toRightOf="@id/last_tab_favicon"
+                    android:layout_below="@id/last_tab_title"
+                    style="@style/AboutHome.LastTabRow.Url"/>
 
 </RelativeLayout>

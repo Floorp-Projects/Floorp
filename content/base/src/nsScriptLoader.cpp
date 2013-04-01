@@ -613,12 +613,12 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
 
   if (csp) {
     PR_LOG(gCspPRLog, PR_LOG_DEBUG, ("New ScriptLoader i ****with CSP****"));
-    bool inlineOK;
-    rv = csp->GetAllowsInlineScript(&inlineOK);
+    bool inlineOK = true;
+    bool reportViolations = false;
+    rv = csp->GetAllowsInlineScript(&reportViolations, &inlineOK);
     NS_ENSURE_SUCCESS(rv, false);
 
-    if (!inlineOK) {
-      PR_LOG(gCspPRLog, PR_LOG_DEBUG, ("CSP blocked inline scripts (2)"));
+    if (reportViolations) {
       // gather information to log with violation report
       nsIURI* uri = mDocument->GetDocumentURI();
       nsAutoCString asciiSpec;
@@ -636,6 +636,10 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
                                NS_ConvertUTF8toUTF16(asciiSpec),
                                scriptText,
                                aElement->GetScriptLineNumber());
+    }
+
+    if (!inlineOK) {
+      PR_LOG(gCspPRLog, PR_LOG_DEBUG, ("CSP blocked inline scripts (2)"));
       return false;
     }
   }

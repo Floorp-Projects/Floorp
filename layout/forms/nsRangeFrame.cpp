@@ -17,7 +17,7 @@
 #include "nsINodeInfo.h"
 #include "nsIPresShell.h"
 #include "nsGkAtoms.h"
-#include "nsHTMLInputElement.h"
+#include "mozilla/dom/HTMLInputElement.h"
 #include "nsPresContext.h"
 #include "nsNodeInfoManager.h"
 #include "nsRenderingContext.h"
@@ -27,6 +27,8 @@
 #include <algorithm>
 
 #define LONG_SIDE_TO_SHORT_SIDE_RATIO 10
+
+using namespace mozilla;
 
 nsIFrame*
 NS_NewRangeFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -77,7 +79,7 @@ nsRangeFrame::MakeAnonymousDiv(nsIContent** aResult,
                                                  nsIDOMNode::ELEMENT_NODE);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
   nsresult rv = NS_NewHTMLElement(aResult, nodeInfo.forget(),
-                                  mozilla::dom::NOT_FROM_PARSER);
+                                  dom::NOT_FROM_PARSER);
   NS_ENSURE_SUCCESS(rv, rv);
   // Associate the pseudo-element with the anonymous child.
   nsRefPtr<nsStyleContext> newStyleContext =
@@ -196,10 +198,6 @@ nsRangeFrame::ReflowAnonymousContent(nsPresContext*           aPresContext,
                                      nsHTMLReflowMetrics&     aDesiredSize,
                                      const nsHTMLReflowState& aReflowState)
 {
-  if (ShouldUseNativeStyle()) {
-    return NS_OK; // No need to reflow since we're not using these frames
-  }
-
   // The width/height of our content box, which is the available width/height
   // for our anonymous content:
   nscoord rangeFrameContentBoxWidth = aReflowState.ComputedWidth();
@@ -239,7 +237,7 @@ nsRangeFrame::ReflowAnonymousContent(nsPresContext*           aPresContext,
     trackX += aReflowState.mComputedBorderPadding.left;
     trackY += aReflowState.mComputedBorderPadding.top;
 
-    nsReflowStatus frameStatus = NS_FRAME_COMPLETE;
+    nsReflowStatus frameStatus;
     nsHTMLReflowMetrics trackDesiredSize;
     nsresult rv = ReflowChild(trackFrame, aPresContext, trackDesiredSize,
                               trackReflowState, trackX, trackY, 0, frameStatus);
@@ -261,7 +259,7 @@ nsRangeFrame::ReflowAnonymousContent(nsPresContext*           aPresContext,
     // Where we position the thumb depends on its size, so we first reflow
     // the thumb at {0,0} to obtain its size, then position it afterwards.
 
-    nsReflowStatus frameStatus = NS_FRAME_COMPLETE;
+    nsReflowStatus frameStatus;
     nsHTMLReflowMetrics thumbDesiredSize;
     nsresult rv = ReflowChild(thumbFrame, aPresContext, thumbDesiredSize,
                               thumbReflowState, 0, 0, 0, frameStatus);
@@ -288,7 +286,7 @@ nsRangeFrame::ReflowAnonymousContent(nsPresContext*           aPresContext,
     // unadjusted dimensions, then we adjust it to so that the appropriate edge
     // ends at the thumb.
 
-    nsReflowStatus frameStatus = NS_FRAME_COMPLETE;
+    nsReflowStatus frameStatus;
     nsHTMLReflowMetrics progressDesiredSize;
     nsresult rv = ReflowChild(rangeProgressFrame, aPresContext,
                               progressDesiredSize, progressReflowState, 0, 0,
@@ -311,7 +309,7 @@ double
 nsRangeFrame::GetValueAsFractionOfRange()
 {
   MOZ_ASSERT(mContent->IsHTML(nsGkAtoms::input), "bad cast");
-  nsHTMLInputElement* input = static_cast<nsHTMLInputElement*>(mContent);
+  dom::HTMLInputElement* input = static_cast<dom::HTMLInputElement*>(mContent);
 
   MOZ_ASSERT(input->GetType() == NS_FORM_INPUT_RANGE);
 
@@ -342,7 +340,7 @@ nsRangeFrame::GetValueAtEventPoint(nsGUIEvent* aEvent)
              "Unexpected event type - aEvent->refPoint may be meaningless");
 
   MOZ_ASSERT(mContent->IsHTML(nsGkAtoms::input), "bad cast");
-  nsHTMLInputElement* input = static_cast<nsHTMLInputElement*>(mContent);
+  dom::HTMLInputElement* input = static_cast<dom::HTMLInputElement*>(mContent);
 
   MOZ_ASSERT(input->GetType() == NS_FORM_INPUT_RANGE);
 
@@ -555,15 +553,15 @@ nsRangeFrame::AttributeChanged(int32_t  aNameSpaceID,
       // We want to update the position of the thumb, except in one special
       // case: If the value attribute is being set, it is possible that we are
       // in the middle of a type change away from type=range, under the
-      // SetAttr(..., nsGkAtoms::value, ...) call in nsHTMLInputElement::
-      // HandleTypeChange. In that case the nsHTMLInputElement's type will
+      // SetAttr(..., nsGkAtoms::value, ...) call in HTMLInputElement::
+      // HandleTypeChange. In that case the HTMLInputElement's type will
       // already have changed, and if we call UpdateForValueChange()
       // we'll fail the asserts under that call that check the type of our
-      // nsHTMLInputElement. Given that we're changing away from being a range
+      // HTMLInputElement. Given that we're changing away from being a range
       // and this frame will shortly be destroyed, there's no point in calling
       // UpdateForValueChange() anyway.
       MOZ_ASSERT(mContent->IsHTML(nsGkAtoms::input), "bad cast");
-      bool typeIsRange = static_cast<nsHTMLInputElement*>(mContent)->GetType() ==
+      bool typeIsRange = static_cast<dom::HTMLInputElement*>(mContent)->GetType() ==
                            NS_FORM_INPUT_RANGE;
       MOZ_ASSERT(typeIsRange || aAttribute == nsGkAtoms::value, "why?");
       if (typeIsRange) {
@@ -648,7 +646,7 @@ nsRangeFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
 bool
 nsRangeFrame::IsHorizontal(const nsSize *aFrameSizeOverride) const
 {
-  nsHTMLInputElement* element = static_cast<nsHTMLInputElement*>(mContent);
+  dom::HTMLInputElement* element = static_cast<dom::HTMLInputElement*>(mContent);
   return !element->AttrValueIs(kNameSpaceID_None, nsGkAtoms::orient,
                                nsGkAtoms::vertical, eCaseMatters);
 }
@@ -656,19 +654,19 @@ nsRangeFrame::IsHorizontal(const nsSize *aFrameSizeOverride) const
 double
 nsRangeFrame::GetMin() const
 {
-  return static_cast<nsHTMLInputElement*>(mContent)->GetMinimum();
+  return static_cast<dom::HTMLInputElement*>(mContent)->GetMinimum();
 }
 
 double
 nsRangeFrame::GetMax() const
 {
-  return static_cast<nsHTMLInputElement*>(mContent)->GetMaximum();
+  return static_cast<dom::HTMLInputElement*>(mContent)->GetMaximum();
 }
 
 double
 nsRangeFrame::GetValue() const
 {
-  return static_cast<nsHTMLInputElement*>(mContent)->GetValueAsDouble();
+  return static_cast<dom::HTMLInputElement*>(mContent)->GetValueAsDouble();
 }
 
 nsIAtom*
