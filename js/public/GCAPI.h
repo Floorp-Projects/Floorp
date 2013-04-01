@@ -237,10 +237,20 @@ ExposeGCThingToActiveJS(void *thing, JSGCTraceKind kind)
 {
     JS_ASSERT(kind != JSTRACE_SHAPE);
 
-    if (GCThingIsMarkedGray(thing))
-        UnmarkGrayGCThingRecursively(thing, kind);
-    else if (IsIncrementalBarrierNeededOnGCThing(thing, kind))
+    shadow::Runtime *rt = js::gc::GetGCThingRuntime(thing);
+#ifdef JSGC_GENERATIONAL
+    /*
+     * GC things residing in the nursery cannot be gray: they have no mark bits.
+     * All live objects in the nursery are moved to tenured at the beginning of
+     * each GC slice, so the gray marker never sees nursery things.
+     */
+    if (uintptr_t(thing) >= rt->gcNurseryStart_ && uintptr_t(thing) < rt->gcNurseryEnd_)
+        return;
+#endif
+    if (IsIncrementalBarrierNeededOnGCThing(rt, thing, kind))
         IncrementalReferenceBarrier(thing, kind);
+    else if (GCThingIsMarkedGray(thing))
+        UnmarkGrayGCThingRecursively(thing, kind);
 }
 
 static JS_ALWAYS_INLINE void
