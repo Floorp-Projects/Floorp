@@ -59,3 +59,15 @@ class testSingleFinger(MarionetteTestCase):
         action = Actions(self.marionette)
         action.release()
         self.assertRaises(NoSuchElementException, action.perform)
+
+    def test_long_press(self):
+        testTouch = self.marionette.absolute_url("testAction.html")
+        self.marionette.navigate(testTouch)
+        button = self.marionette.find_element("id", "mozLinkCopy")
+        action = Actions(self.marionette)
+        action.press(button).wait(5).perform()
+        time.sleep(10)
+        self.assertEqual("Context", self.marionette.execute_script("return document.getElementById('mozLinkCopy').innerHTML;"))
+        action.release().perform()
+        time.sleep(10)
+        self.assertEqual("End", self.marionette.execute_script("return document.getElementById('mozLinkCopy').innerHTML;"))
