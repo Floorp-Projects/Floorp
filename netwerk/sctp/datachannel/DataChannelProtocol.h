@@ -44,21 +44,9 @@ struct rtcweb_datachannel_open_request {
   char     label[1]; // keep VC++ happy...  UTF8 null-terminated string
 } SCTP_PACKED;
 
-struct rtcweb_datachannel_open_response {
-  uint8_t  msg_type; // DATA_CHANNEL_OPEN_RESPONSE
-  uint8_t  error;    // 0 == no error
-  uint16_t flags;
-  uint16_t reverse_stream;
-} SCTP_PACKED;
-
-struct rtcweb_datachannel_ack {
-  uint8_t  msg_type; // DATA_CHANNEL_ACK
-} SCTP_PACKED;
-
 /* msg_type values: */
-#define DATA_CHANNEL_OPEN_REQUEST             0
-#define DATA_CHANNEL_OPEN_RESPONSE            1
-#define DATA_CHANNEL_ACK                      2
+/* 0-2 were used in an early version of the protocol with 3-way handshakes */
+#define DATA_CHANNEL_OPEN_REQUEST             3
 
 /* channel_type values: */
 #define DATA_CHANNEL_RELIABLE                 0
