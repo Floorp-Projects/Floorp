@@ -1039,6 +1039,33 @@ DataChannelConnection::HandleOpenRequestMessage(const struct rtcweb_datachannel_
                             this, channel));
 
   LOG(("%s: deferring sending ON_CHANNEL_OPEN for %p", __FUNCTION__, channel.get()));
+
+  // Now process any queued data messages for the channel (which will
+  // themselves likely get queued until we leave WAITING_TO_OPEN, plus any
+  // more that come in before that happens)
+  DeliverQueuedData(stream);
+}
+
+void
+DataChannelConnection::DeliverQueuedData(uint16_t stream)
+{
+  mLock.AssertCurrentThreadOwns();
+
+  uint32_t i = 0;
+  while (i < mQueuedData.Length()) {
+    // Careful! we may modify the array length from within the loop!
+    if (mQueuedData[i]->mStream == stream) {
+      LOG(("Delivering queued data for stream %u, length %u",
+           stream, mQueuedData[i]->mLength));
+      // Deliver the queued data
+      HandleDataMessage(mQueuedData[i]->mPpid,
+                        mQueuedData[i]->mData, mQueuedData[i]->mLength,
+                        mQueuedData[i]->mStream);
+      mQueuedData.RemoveElementAt(i);
+      continue; // don't bump index since we removed the element
+    }
+    i++;
+  }
 }
 
 void
@@ -1062,8 +1089,21 @@ DataChannelConnection::HandleDataMessage(uint32_t ppid,
   channel = FindChannelByStream(stream);
 
   // XXX A closed channel may trip this... check
-  NS_ENSURE_TRUE_VOID(channel);
-  NS_ENSURE_TRUE_VOID(channel->mState != CONNECTING);
+  if (!channel) {
+    // In the updated 0-RTT open case, the sender can send data immediately
+    // after Open, and doesn't set the in-order bit (since we don't have a
+    // response or ack).  Also, with external negotiation, data can come in
+    // before we're told about the external negotiation.  We need to buffer
+    // data until either a) Open comes in, if the ordering get messed up,
+    // or b) the app tells us this channel was externally negotiated.  When
+    // these occur, we deliver the data.
+
+    // Since this is rare and non-performance, keep a single list of queued
+    // data messages to deliver once the channel opens.
+    LOG(("Queuing data for stream %u, length %u", stream, length));
+    mQueuedData.AppendElement(new QueuedDataMessage(stream, ppid, data, length));
+    return;
+  }
 
   // XXX should this be a simple if, no warnings/debugbreaks?
   NS_ENSURE_TRUE_VOID(channel->mState != CLOSED);
@@ -1723,6 +1763,13 @@ DataChannelConnection::OpenFinish(already_AddRefed<DataChannel> aChannel)
   }
   mStreams[stream] = channel;
   channel->mStream = stream;
+
+#ifdef TEST_QUEUED_DATA
+  // It's painful to write a test for this...
+  channel->mState = OPEN;
+  channel->mReady = true;
+  SendMsgInternal(channel, "Help me!", 8, DATA_CHANNEL_PPID_DOMSTRING);
+#endif
 
   if (!SendOpenRequestMessage(channel->mLabel, stream,
                               !!(channel->mFlags & DATA_CHANNEL_FLAG_OUT_OF_ORDER_ALLOWED),
