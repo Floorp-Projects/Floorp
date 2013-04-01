@@ -13,9 +13,15 @@
   <body>
     <p>Peanut butter jelly time!</p>
 
-    <script type="text/javascript">
-      function inline() {
-      }
+    <script type="text/javascript;version=1.8">
+      function inline() {}
+      let arrow = () => {}
+
+      let foo = bar => {}
+      let foo2 = bar2 = baz2 => 42;
+
+      setTimeout((foo, bar, baz) => {});
+      setTimeout((foo, bar, baz) => 42);
     </script>
 
   </body>

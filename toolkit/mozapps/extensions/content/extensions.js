@@ -891,6 +891,8 @@ var gViewController = {
             aAddon.optionsType == AddonManager.OPTIONS_TYPE_INLINE) {
           return false;
         }
+        if (aAddon.optionsType == AddonManager.OPTIONS_TYPE_INLINE_INFO)
+          return false;
         return true;
       },
       doCommand: function cmd_showItemPreferences_doCommand(aAddon) {
@@ -1161,6 +1163,11 @@ var gViewController = {
 
   onEvent: function gVC_onEvent() {}
 };
+
+function hasInlineOptions(aAddon) {
+  return (aAddon.optionsType == AddonManager.OPTIONS_TYPE_INLINE ||
+          aAddon.optionsType == AddonManager.OPTIONS_TYPE_INLINE_INFO);
+}
 
 function openOptionsInTab(optionsURL) {
   var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -2727,7 +2734,7 @@ var gDetailView = {
     AddonManager.removeManagerListener(this);
     this.clearLoading();
     if (this._addon) {
-      if (this._addon.optionsType == AddonManager.OPTIONS_TYPE_INLINE) {
+      if (hasInlineOptions(this._addon)) {
         Services.obs.notifyObservers(document,
                                      AddonManager.OPTIONS_NOTIFICATION_HIDDEN,
                                      this._addon.id);
@@ -2849,7 +2856,7 @@ var gDetailView = {
 
   fillSettingsRows: function gDetailView_fillSettingsRows(aScrollToPreferences, aCallback) {
     this.emptySettingsRows();
-    if (this._addon.optionsType != AddonManager.OPTIONS_TYPE_INLINE) {
+    if (!hasInlineOptions(this._addon)) {
       if (aCallback)
         aCallback();
       return;
@@ -2970,8 +2977,7 @@ var gDetailView = {
 
   onDisabling: function gDetailView_onDisabling(aNeedsRestart) {
     this.updateState();
-    if (!aNeedsRestart &&
-        this._addon.optionsType == AddonManager.OPTIONS_TYPE_INLINE) {
+    if (!aNeedsRestart && hasInlineOptions(this._addon)) {
       Services.obs.notifyObservers(document,
                                    AddonManager.OPTIONS_NOTIFICATION_HIDDEN,
                                    this._addon.id);
