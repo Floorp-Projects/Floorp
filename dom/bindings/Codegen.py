@@ -3536,7 +3536,7 @@ if (!%(resultStr)s) {
 """ % { "result" : result,
         "resultStr" : result + "_str",
         "strings" : type.inner.identifier.name + "Values::strings",
-        "exceptionCode" : exceptionCode } +
+        "exceptionCode" : exceptionCodeIndented.define() } +
         setValue("JS::StringValue(%s_str)" % result), False)
 
     if type.isCallback() or type.isCallbackInterface():
@@ -8382,7 +8382,7 @@ class CallbackMember(CGNativeMember):
             jsvalIndex = "%d + idx" % i
         else:
             jsvalIndex = "%d" % i
-            if arg.optional:
+            if arg.optional and not arg.defaultValue:
                 argval += ".Value()"
         if arg.type.isString():
             # XPConnect string-to-JS conversion wants to mutate the string.  So
@@ -8413,7 +8413,7 @@ class CallbackMember(CGNativeMember):
                 CGIndenter(CGGeneric(conversion)).define() + "\n"
                 "}\n"
                 "break;").substitute({ "arg": arg.identifier.name })
-        elif arg.optional:
+        elif arg.optional and not arg.defaultValue:
             conversion = (
                 CGIfWrapper(CGGeneric(conversion),
                             "%s.WasPassed()" % arg.identifier.name).define() +
