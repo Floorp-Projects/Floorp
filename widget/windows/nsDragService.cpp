@@ -305,10 +305,9 @@ nsDragService::StartInvokingDragSession(IDataObject * aDataObj,
   // Note that we must convert this from device pixels back to Windows logical
   // pixels (bug 818927).
   DWORD pos = ::GetMessagePos();
-  FLOAT scaleFactor = 96.0f /
-    GetDeviceCaps(gfxWindowsPlatform::GetPlatform()->GetScreenDC(), LOGPIXELSY);
-  nsIntPoint logPos(NSToIntRound(scaleFactor * GET_X_LPARAM(pos)),
-                    NSToIntRound(scaleFactor * GET_Y_LPARAM(pos)));
+  FLOAT dpiScale = gfxWindowsPlatform::GetPlatform()->GetDPIScale();
+  nsIntPoint logPos(NSToIntRound(GET_X_LPARAM(pos) / dpiScale),
+                    NSToIntRound(GET_Y_LPARAM(pos) / dpiScale));
   SetDragEndPoint(logPos);
   EndDragSession(true);
 
