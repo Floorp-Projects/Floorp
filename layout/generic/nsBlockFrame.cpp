@@ -248,12 +248,9 @@ DestroyOverflowLines(void* aPropertyValue)
 }
 
 NS_DECLARE_FRAME_PROPERTY(OverflowLinesProperty, DestroyOverflowLines)
-NS_DECLARE_FRAME_PROPERTY(OverflowOutOfFlowsProperty,
-                          nsContainerFrame::DestroyFrameList)
-NS_DECLARE_FRAME_PROPERTY(PushedFloatProperty,
-                          nsContainerFrame::DestroyFrameList)
-NS_DECLARE_FRAME_PROPERTY(OutsideBulletProperty,
-                          nsContainerFrame::DestroyFrameList)
+NS_DECLARE_FRAME_PROPERTY_FRAMELIST(OverflowOutOfFlowsProperty)
+NS_DECLARE_FRAME_PROPERTY_FRAMELIST(PushedFloatProperty)
+NS_DECLARE_FRAME_PROPERTY_FRAMELIST(OutsideBulletProperty)
 NS_DECLARE_FRAME_PROPERTY(InsideBulletProperty, nullptr)
 
 //----------------------------------------------------------------------
@@ -282,9 +279,12 @@ nsBlockFrame::DestroyFrom(nsIFrame* aDestructRoot)
   nsLineBox::DeleteLineList(presContext, mLines, aDestructRoot,
                             &mFrames);
 
-  nsFrameList* pushedFloats = RemovePushedFloats();
-  if (pushedFloats) {
-    pushedFloats->DestroyFrom(aDestructRoot);
+  FramePropertyTable* props = presContext->PropertyTable();
+
+  if (HasPushedFloats()) {
+    SafelyDestroyFrameListProp(aDestructRoot, props,
+                               PushedFloatProperty());
+    RemoveStateBits(NS_BLOCK_HAS_PUSHED_FLOATS);
   }
 
   // destroy overflow lines now
@@ -295,10 +295,16 @@ nsBlockFrame::DestroyFrom(nsIFrame* aDestructRoot)
     delete overflowLines;
   }
 
-  {
-    nsAutoOOFFrameList oofs(this);
-    oofs.mList.DestroyFramesFrom(aDestructRoot);
-    // oofs is now empty and will remove the frame list property
+  if (GetStateBits() & NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS) {
+    SafelyDestroyFrameListProp(aDestructRoot, props,
+                               OverflowOutOfFlowsProperty());
+    RemoveStateBits(NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS);
+  }
+
+  if (HasOutsideBullet()) {
+    SafelyDestroyFrameListProp(aDestructRoot, props,
+                               OutsideBulletProperty());
+    RemoveStateBits(NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET);
   }
 
   nsBlockFrameSuper::DestroyFrom(aDestructRoot);

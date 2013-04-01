@@ -250,15 +250,19 @@ nsContainerFrame::DestroyFrom(nsIFrame* aDestructRoot)
   mFrames.DestroyFramesFrom(aDestructRoot);
 
   // Destroy frames on the auxiliary frame lists and delete the lists.
-  FramePropertyTable* props = PresContext()->PropertyTable();
+  nsPresContext* pc = PresContext();
+  FramePropertyTable* props = pc->PropertyTable();
   SafelyDestroyFrameListProp(aDestructRoot, props, OverflowProperty());
 
-  if (IsFrameOfType(nsIFrame::eCanContainOverflowContainers)) {
-    SafelyDestroyFrameListProp(aDestructRoot, props,
-                               OverflowContainersProperty());
-    SafelyDestroyFrameListProp(aDestructRoot, props,
-                               ExcessOverflowContainersProperty());
-  }
+  MOZ_ASSERT(IsFrameOfType(nsIFrame::eCanContainOverflowContainers) ||
+             !(props->Get(this, nsContainerFrame::OverflowContainersProperty()) ||
+               props->Get(this, nsContainerFrame::ExcessOverflowContainersProperty())),
+             "this type of frame should't have overflow containers");
+
+  SafelyDestroyFrameListProp(aDestructRoot, props,
+                             OverflowContainersProperty());
+  SafelyDestroyFrameListProp(aDestructRoot, props,
+                             ExcessOverflowContainersProperty());
 
   nsSplittableFrame::DestroyFrom(aDestructRoot);
 }
@@ -1449,6 +1453,7 @@ nsContainerFrame::SetPropTableFrames(nsPresContext*                 aPresContext
      aProperty != nsContainerFrame::ExcessOverflowContainersProperty()) ||
     IsFrameOfType(nsIFrame::eCanContainOverflowContainers),
     "this type of frame can't have overflow containers");
+  MOZ_ASSERT(!GetPropTableFrames(aPresContext, aProperty));
   aPresContext->PropertyTable()->Set(this, aProperty, aFrameList);
 }
 
