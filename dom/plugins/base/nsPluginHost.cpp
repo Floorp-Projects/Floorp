@@ -1566,7 +1566,13 @@ bool nsPluginHost::IsJavaMIMEType(const char* aType)
      (0 == PL_strncasecmp(aType, "application/x-java-applet",
                           sizeof("application/x-java-applet") - 1)) ||
      (0 == PL_strncasecmp(aType, "application/x-java-bean",
-                          sizeof("application/x-java-bean") - 1)));
+                          sizeof("application/x-java-bean") - 1))
+#ifdef DEBUG
+     // Emulate java handling for the npjavatest plugin
+     || (0 == PL_strncasecmp(aType, "application/x-java-test",
+                             sizeof("application/x-java-test") - 1))
+#endif
+     );
 }
 
 // Check whether or not a tag is a live, valid tag, and that it's loaded.
