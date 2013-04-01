@@ -958,15 +958,7 @@ float nsWindow::GetDPI()
 
 double nsWindow::GetDefaultScaleInternal()
 {
-  HDC dc = ::GetDC(mWnd);
-  if (!dc)
-    return 1.0;
-
-  // LOGPIXELSY returns the number of logical pixels per inch. This is based
-  // on font DPI settings rather than the actual screen DPI.
-  double pixelsPerInch = ::GetDeviceCaps(dc, LOGPIXELSY);
-  ::ReleaseDC(mWnd, dc);
-  return pixelsPerInch/96.0;
+  return gfxWindowsPlatform::GetPlatform()->GetDPIScale();
 }
 
 nsWindow* nsWindow::GetParentWindow(bool aIncludeOwner)
