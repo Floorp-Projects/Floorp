@@ -1625,6 +1625,12 @@
     "n_buckets": 20,
     "description": "Value of dom.ipc.plugins.hangUITimeoutSecs plus time spent in Plugin Hang UI (ms)"
   },
+  "PLUGIN_LOAD_METADATA": {
+    "kind": "exponential",
+    "high": "5000",
+    "n_buckets": 20,
+    "description": "Time spent loading plugin DLL and obtaining metadata (ms)"
+  },
   "PLUGIN_SHUTDOWN_MS": {
     "kind": "exponential",
     "high": "5000",
