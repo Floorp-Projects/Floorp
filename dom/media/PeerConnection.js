@@ -936,7 +936,10 @@ PeerConnectionObserver.prototype = {
   notifyDataChannel: function(channel) {
     if (this._dompc.ondatachannel) {
       try {
-        this._dompc.ondatachannel.onCallback(channel);
+        this._dompc.ondatachannel.onCallback({
+          channel: channel,
+          __exposedProps__: { channel: "r" }
+        });
       } catch(e) {}
     }
   },
