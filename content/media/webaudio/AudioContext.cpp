@@ -10,7 +10,6 @@
 #include "nsPIDOMWindow.h"
 #include "mozilla/ErrorResult.h"
 #include "MediaStreamGraph.h"
-#include "mozilla/dom/AnalyserNode.h"
 #include "AudioDestinationNode.h"
 #include "AudioBufferSourceNode.h"
 #include "AudioBuffer.h"
@@ -97,13 +96,6 @@ AudioContext::CreateBuffer(JSContext* aJSContext, uint32_t aNumberOfChannels,
   }
 
   return buffer.forget();
-}
-
-already_AddRefed<AnalyserNode>
-AudioContext::CreateAnalyser()
-{
-  nsRefPtr<AnalyserNode> analyserNode = new AnalyserNode(this);
-  return analyserNode.forget();
 }
 
 already_AddRefed<GainNode>
