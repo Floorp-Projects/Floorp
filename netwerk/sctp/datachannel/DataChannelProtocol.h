@@ -30,6 +30,7 @@
 #define DATA_CHANNEL_FLAGS_SEND_DATA            0x00000010
 #define DATA_CHANNEL_FLAGS_FINISH_OPEN          0x00000020
 #define DATA_CHANNEL_FLAGS_FINISH_RSP           0x00000040
+#define DATA_CHANNEL_FLAGS_EXTERNAL_NEGOTIATED  0x00000080
 
 #define INVALID_STREAM (0xFFFF)
 // max is 0xFFFF: Streams 0 to 0xFFFE = 0xFFFF streams
@@ -41,7 +42,9 @@ struct rtcweb_datachannel_open_request {
   uint16_t flags;
   uint16_t reliability_params;
   int16_t  priority;
-  char     label[1]; // keep VC++ happy...  UTF8 null-terminated string
+  uint16_t label_length;
+  uint16_t protocol_length;
+  char     label[1]; // (and protocol) keep VC++ happy...  UTF8 null-terminated strings
 } SCTP_PACKED;
 
 /* msg_type values: */
