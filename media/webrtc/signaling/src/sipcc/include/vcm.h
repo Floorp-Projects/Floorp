@@ -29,6 +29,8 @@
 #define CC_IS_AUDIO(id) ((id == CC_AUDIO_1) ? TRUE:FALSE)
 /** Evaluates to TRUE for video media streams where id is the mcap_id of the given stream */
 #define CC_IS_VIDEO(id) ((id == CC_VIDEO_1) ? TRUE:FALSE)
+/** Evaluates to TRUE for datachannel streams where id is the mcap_id of the given stream */
+#define CC_IS_DATACHANNEL(id) ((id == CC_DATACHANNEL_1) ? TRUE:FALSE)
 
 
 /** Definitions for direction requesting Play tone to user */
@@ -673,6 +675,7 @@ int vcmTxStart(cc_mcapid_t mcap_id,
 
 
   short vcmInitializeDataChannel(const char *peerconnection,
+        int track_id,
         cc_uint16_t streams,
         int local_datachannel_port,
         int remote_datachannel_port,
