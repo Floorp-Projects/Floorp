@@ -383,7 +383,7 @@ struct udphdr {
 #else /* !defined(Userspace_os_Windows) */
 #include <sys/cdefs.h> /* needed? added from old __FreeBSD__ */
 #include <sys/socket.h>
-#if defined(__Userspace_os_FreeBSD) || defined(__Userspace_os_OpenBSD)
+#if defined(__Userspace_os_FreeBSD) || defined(__Userspace_os_OpenBSD) || defined(ANDROID)
 #include <pthread.h>
 #endif
 typedef pthread_mutex_t userland_mutex_t;
@@ -463,7 +463,9 @@ struct sx {int dummy;};
 /* for getifaddrs */
 #include <sys/types.h>
 #if !defined(__Userspace_os_Windows)
+#if !defined(ANDROID)
 #include <ifaddrs.h>
+#endif
 
 /* for ioctl */
 #include <sys/ioctl.h>
