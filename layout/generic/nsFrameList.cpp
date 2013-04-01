@@ -14,21 +14,18 @@
 #include "nsBidiPresUtils.h"
 #endif // IBMBIDI
 
-const nsFrameList* nsFrameList::sEmptyList;
-
-/* static */
-void
-nsFrameList::Init()
-{
-  NS_PRECONDITION(!sEmptyList, "Shouldn't be allocated");
-
-  sEmptyList = new nsFrameList();
+namespace mozilla {
+namespace layout {
+namespace detail {
+const AlignedFrameListBytes gEmptyFrameListBytes = { 0 };
+}
+}
 }
 
 void
 nsFrameList::Destroy()
 {
-  NS_PRECONDITION(this != sEmptyList, "Shouldn't Destroy() sEmptyList");
+  NS_PRECONDITION(this != &EmptyList(), "Shouldn't Destroy() sEmptyList");
 
   DestroyFrames();
   delete this;
@@ -37,7 +34,7 @@ nsFrameList::Destroy()
 void
 nsFrameList::DestroyFrom(nsIFrame* aDestructRoot)
 {
-  NS_PRECONDITION(this != sEmptyList, "Shouldn't Destroy() sEmptyList");
+  NS_PRECONDITION(this != &EmptyList(), "Shouldn't Destroy() this list");
 
   DestroyFramesFrom(aDestructRoot);
   delete this;
