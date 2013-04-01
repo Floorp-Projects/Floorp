@@ -66,19 +66,20 @@ function test() {
 
     MockFilePicker.returnFiles = [aFile];
     MockFilePicker.displayDirectory = null;
-    aWin.getTargetFile(params, function() {
-      // File picker should start with expected display dir.
-      is(MockFilePicker.displayDirectory.path, aDisplayDir.path,
-         "File picker should start with browser.download.lastDir");
-      // browser.download.lastDir should be modified on not private windows
-      is(prefs.getComplexValue("lastDir", Ci.nsIFile).path, aLastDir.path,
-         "LastDir should be the expected last dir");
-      // gDownloadLastDir should be usable outside of private windows
-      is(gDownloadLastDir.file.path, aGlobalLastDir.path,
-         "gDownloadLastDir should be the expected global last dir");
+    ok(aWin.getTargetFile(params),
+       "Show the file picker dialog with given params");
 
-      aCallback();
-    });
+    // File picker should start with expected display dir.
+    is(MockFilePicker.displayDirectory.path, aDisplayDir.path,
+       "File picker should start with browser.download.lastDir");
+    // browser.download.lastDir should be modified on not private windows
+    is(prefs.getComplexValue("lastDir", Ci.nsIFile).path, aLastDir.path,
+       "LastDir should be the expected last dir");
+    // gDownloadLastDir should be usable outside of private windows
+    is(gDownloadLastDir.file.path, aGlobalLastDir.path,
+       "gDownloadLastDir should be the expected global last dir");
+
+    aCallback();
   }
 
   testOnWindow(false, function(win, downloadDir) {
