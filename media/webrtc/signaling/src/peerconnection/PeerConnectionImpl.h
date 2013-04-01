@@ -339,6 +339,8 @@ private:
   int mNumAudioStreams;
   int mNumVideoStreams;
 
+  bool mHaveDataStream;
+
   // Holder for error messages from parsing SDP
   std::vector<std::string> mSDPParseErrorMessages;
 
