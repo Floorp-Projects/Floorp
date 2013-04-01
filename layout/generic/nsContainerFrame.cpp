@@ -1278,7 +1278,7 @@ nsContainerFrame::StealFrame(nsPresContext* aPresContext,
       if (frameList) {
         removed = frameList->ContinueRemoveFrame(aChild);
         if (frameList->IsEmpty()) {
-          DestroyOverflowList(aPresContext, nullptr);
+          DestroyOverflowList(aPresContext);
         }
       }
     }
@@ -1323,20 +1323,6 @@ nsContainerFrame::StealFramesAfter(nsIFrame* aChild)
 
   NS_ERROR("StealFramesAfter: can't find aChild");
   return nsFrameList::EmptyList();
-}
-
-void
-nsContainerFrame::DestroyOverflowList(nsPresContext* aPresContext,
-                                      nsIFrame*      aDestructRoot)
-{
-  nsFrameList* list =
-    RemovePropTableFrames(aPresContext, OverflowProperty());
-  if (list) {
-    if (aDestructRoot)
-      list->DestroyFrom(aDestructRoot);
-    else
-      list->Destroy();
-  }
 }
 
 /*

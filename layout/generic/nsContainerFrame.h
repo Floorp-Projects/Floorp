@@ -441,12 +441,9 @@ protected:
                          const nsFrameList& aOverflowFrames);
 
   /**
-   * Destroy the overflow list and any frames that are on it.
-   * Calls DestructFrom() insead of Destruct() on the frames if
-   * aDestructRoot is non-null.
+   * Destroy the overflow list, which must be empty.
    */
-  void DestroyOverflowList(nsPresContext* aPresContext,
-                           nsIFrame*      aDestructRoot);
+  inline void DestroyOverflowList(nsPresContext* aPresContext);
 
   /**
    * Moves any frames on both the prev-in-flow's overflow list and the
@@ -676,6 +673,14 @@ nsContainerFrame::StealOverflowFrames()
     static_cast<nsFrameList*>(Properties().Remove(OverflowProperty()));
   NS_ASSERTION(!list || !list->IsEmpty(), "Unexpected empty overflow list");
   return list;
+}
+
+inline void
+nsContainerFrame::DestroyOverflowList(nsPresContext* aPresContext)
+{
+  nsFrameList* list = RemovePropTableFrames(aPresContext, OverflowProperty());
+  MOZ_ASSERT(list && list->IsEmpty());
+  delete list;
 }
 
 #endif /* nsContainerFrame_h___ */
