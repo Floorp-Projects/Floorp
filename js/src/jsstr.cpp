@@ -2465,16 +2465,18 @@ str_replace_regexp_remove(JSContext *cx, CallArgs args, HandleString str, RegExp
         lazyIndex = lastIndex;
         lastIndex = startIndex;
 
+        if (match.isEmpty())
+            startIndex++;
+
         /* Non-global removal executes at most once. */
         if (!re.global())
             break;
-
-        if (match.isEmpty())
-            startIndex++;
     }
 
     /* If unmatched, return the input string. */
     if (!lastIndex) {
+        if (startIndex > 0)
+            cx->regExpStatics()->updateLazily(cx, stableStr, &re, lazyIndex);
         args.rval().setString(str);
         return true;
     }
