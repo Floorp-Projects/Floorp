@@ -663,7 +663,8 @@ PeerConnectionImpl::EnsureDataConnection(uint16_t aNumstreams)
 }
 
 nsresult
-PeerConnectionImpl::InitializeDataChannel(uint16_t aLocalport,
+PeerConnectionImpl::InitializeDataChannel(int track_id,
+                                          uint16_t aLocalport,
                                           uint16_t aRemoteport,
                                           uint16_t aNumstreams)
 {
@@ -671,22 +672,19 @@ PeerConnectionImpl::InitializeDataChannel(uint16_t aLocalport,
 
 #ifdef MOZILLA_INTERNAL_API
   nsresult rv = EnsureDataConnection(aNumstreams);
-
-  // XXX Fix! Get the correct flow for DataChannel. Also error handling.
-  for (int i = 2; i >= 0; i--) {
-    nsRefPtr<TransportFlow> flow = mMedia->GetTransportFlow(i,false).get();
-    CSFLogDebug(logTag, "Transportflow[%d] = %p", i, flow.get());
+  if (NS_SUCCEEDED(rv)) {
+    // use the specified TransportFlow
+    nsRefPtr<TransportFlow> flow = mMedia->GetTransportFlow(track_id, false).get();
+    CSFLogDebug(logTag, "Transportflow[%d] = %p", track_id, flow.get());
     if (flow) {
-      if (!mDataConnection->ConnectViaTransportFlow(flow, aLocalport, aRemoteport)) {
-        return NS_ERROR_FAILURE;
+      if (mDataConnection->ConnectViaTransportFlow(flow, aLocalport, aRemoteport)) {
+        return NS_OK;
       }
-      break;
     }
   }
-  return NS_OK;
-#else
-  return NS_ERROR_FAILURE;
+  mDataConnection = nullptr;
 #endif
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
