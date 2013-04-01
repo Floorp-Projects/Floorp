@@ -8,17 +8,32 @@
  * object that is a containing block for them
  */
 
-#include "nsCOMPtr.h"
 #include "nsAbsoluteContainingBlock.h"
+
 #include "nsContainerFrame.h"
+#include "nsGkAtoms.h"
 #include "nsIPresShell.h"
 #include "nsHTMLParts.h"
+#include "nsHTMLReflowState.h"
 #include "nsPresContext.h"
 #include "nsFrameManager.h"
 #include "nsCSSFrameConstructor.h"
 
 #ifdef DEBUG
 #include "nsBlockFrame.h"
+
+static void PrettyUC(nscoord aSize, char* aBuf)
+{
+  if (NS_UNCONSTRAINEDSIZE == aSize) {
+    strcpy(aBuf, "UC");
+  } else {
+    if((int32_t)0xdeadbeef == aSize) {
+      strcpy(aBuf, "deadbeef");
+    } else {
+      sprintf(aBuf, "%d", aSize);
+    }
+  }
+}
 #endif
 
 nsresult
@@ -26,7 +41,7 @@ nsAbsoluteContainingBlock::SetInitialChildList(nsIFrame*       aDelegatingFrame,
                                                ChildListID     aListID,
                                                nsFrameList&    aChildList)
 {
-  NS_PRECONDITION(GetChildListID() == aListID, "unexpected child list name");
+  NS_PRECONDITION(mChildListID == aListID, "unexpected child list name");
 #ifdef DEBUG
   nsFrame::VerifyDirtyBitSet(aChildList);
 #endif
@@ -39,7 +54,7 @@ nsAbsoluteContainingBlock::AppendFrames(nsIFrame*      aDelegatingFrame,
                                         ChildListID    aListID,
                                         nsFrameList&   aFrameList)
 {
-  NS_ASSERTION(GetChildListID() == aListID, "unexpected child list");
+  NS_ASSERTION(mChildListID == aListID, "unexpected child list");
 
   // Append the frames to our list of absolutely positioned frames
 #ifdef DEBUG
@@ -62,7 +77,7 @@ nsAbsoluteContainingBlock::InsertFrames(nsIFrame*      aDelegatingFrame,
                                         nsIFrame*      aPrevFrame,
                                         nsFrameList&   aFrameList)
 {
-  NS_ASSERTION(GetChildListID() == aListID, "unexpected child list");
+  NS_ASSERTION(mChildListID == aListID, "unexpected child list");
   NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == aDelegatingFrame,
                "inserting after sibling frame with different parent");
 
@@ -85,7 +100,7 @@ nsAbsoluteContainingBlock::RemoveFrame(nsIFrame*       aDelegatingFrame,
                                        ChildListID     aListID,
                                        nsIFrame*       aOldFrame)
 {
-  NS_ASSERTION(GetChildListID() == aListID, "unexpected child list");
+  NS_ASSERTION(mChildListID == aListID, "unexpected child list");
   nsIFrame* nif = aOldFrame->GetNextInFlow();
   if (nif) {
     static_cast<nsContainerFrame*>(nif->GetParent())
@@ -328,7 +343,7 @@ nsAbsoluteContainingBlock::DoMarkFramesDirty(bool aMarkAllDirty)
 // reflow...
 
 // When bug 154892 is checked in, make sure that when 
-// GetChildListID() == kFixedList, the height is unconstrained.
+// mChildListID == kFixedList, the height is unconstrained.
 // since we don't allow replicated frames to split.
 
 nsresult
@@ -482,22 +497,3 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
 
   return rv;
 }
-
-#ifdef DEBUG
- void nsAbsoluteContainingBlock::PrettyUC(nscoord aSize,
-                        char*   aBuf)
-{
-  if (NS_UNCONSTRAINEDSIZE == aSize) {
-    strcpy(aBuf, "UC");
-  }
-  else {
-    if((int32_t)0xdeadbeef == aSize)
-    {
-      strcpy(aBuf, "deadbeef");
-    }
-    else {
-      sprintf(aBuf, "%d", aSize);
-    }
-  }
-}
-#endif

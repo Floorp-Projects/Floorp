@@ -270,7 +270,8 @@ PeerConnectionImpl::PeerConnectionImpl()
   , mSTSThread(NULL)
   , mMedia(new PeerConnectionMedia(this))
   , mNumAudioStreams(0)
-  , mNumVideoStreams(0) {
+  , mNumVideoStreams(0)
+  , mHaveDataStream(false) {
 #ifdef MOZILLA_INTERNAL_API
   MOZ_ASSERT(NS_IsMainThread());
 #endif
@@ -627,7 +628,7 @@ PeerConnectionImpl::CreateFakeMediaStream(uint32_t aHint, nsIDOMMediaStream** aR
 
 // Stubbing this call out for now.
 // We can remove it when we are confident of datachannels being started
-// correctly on SDP negotiation
+// correctly on SDP negotiation (bug 852908)
 NS_IMETHODIMP
 PeerConnectionImpl::ConnectDataConnection(uint16_t aLocalport,
                                           uint16_t aRemoteport,
@@ -639,49 +640,62 @@ PeerConnectionImpl::ConnectDataConnection(uint16_t aLocalport,
 // Data channels won't work without a window, so in order for the C++ unit
 // tests to work (it doesn't have a window available) we ifdef the following
 // two implementations.
-nsresult
-PeerConnectionImpl::InitializeDataChannel(uint16_t aLocalport,
-                                          uint16_t aRemoteport,
-                                          uint16_t aNumstreams)
+NS_IMETHODIMP
+PeerConnectionImpl::EnsureDataConnection(uint16_t aNumstreams)
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
 #ifdef MOZILLA_INTERNAL_API
   if (mDataConnection) {
-    CSFLogError(logTag,"%s DataConnection already connected",__FUNCTION__);
+    CSFLogDebug(logTag,"%s DataConnection already connected",__FUNCTION__);
     // Ignore the request to connect when already connected.  This entire
     // implementation is temporary.  Ignore aNumstreams as it's merely advisory
     // and we increase the number of streams dynamically as needed.
     return NS_OK;
   }
   mDataConnection = new mozilla::DataChannelConnection(this);
-  if (!mDataConnection->Init(aLocalport, aNumstreams, true)) {
+  if (!mDataConnection->Init(5000, aNumstreams, true)) {
     CSFLogError(logTag,"%s DataConnection Init Failed",__FUNCTION__);
     return NS_ERROR_FAILURE;
   }
-  // XXX Fix! Get the correct flow for DataChannel. Also error handling.
-  for (int i = 2; i >= 0; i--) {
-    nsRefPtr<TransportFlow> flow = mMedia->GetTransportFlow(i,false).get();
-    CSFLogDebug(logTag, "Transportflow[%d] = %p", i, flow.get());
+#endif
+  return NS_OK;
+}
+
+nsresult
+PeerConnectionImpl::InitializeDataChannel(int track_id,
+                                          uint16_t aLocalport,
+                                          uint16_t aRemoteport,
+                                          uint16_t aNumstreams)
+{
+  PC_AUTO_ENTER_API_CALL_NO_CHECK();
+
+#ifdef MOZILLA_INTERNAL_API
+  nsresult rv = EnsureDataConnection(aNumstreams);
+  if (NS_SUCCEEDED(rv)) {
+    // use the specified TransportFlow
+    nsRefPtr<TransportFlow> flow = mMedia->GetTransportFlow(track_id, false).get();
+    CSFLogDebug(logTag, "Transportflow[%d] = %p", track_id, flow.get());
     if (flow) {
-      if (!mDataConnection->ConnectDTLS(flow, aLocalport, aRemoteport)) {
-        return NS_ERROR_FAILURE;
+      if (mDataConnection->ConnectViaTransportFlow(flow, aLocalport, aRemoteport)) {
+        return NS_OK;
       }
-      break;
     }
   }
-  return NS_OK;
-#else
-    return NS_ERROR_FAILURE;
+  mDataConnection = nullptr;
 #endif
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 PeerConnectionImpl::CreateDataChannel(const nsACString& aLabel,
+                                      const nsACString& aProtocol,
                                       uint16_t aType,
                                       bool outOfOrderAllowed,
                                       uint16_t aMaxTime,
                                       uint16_t aMaxNum,
+                                      bool aExternalNegotiated,
+                                      uint16_t aStream,
                                       nsIDOMDataChannel** aRetval)
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
@@ -692,21 +706,25 @@ PeerConnectionImpl::CreateDataChannel(const nsACString& aLabel,
   mozilla::DataChannelConnection::Type theType =
     static_cast<mozilla::DataChannelConnection::Type>(aType);
 
-  if (!mDataConnection) {
-    return NS_ERROR_FAILURE;
+  nsresult rv = EnsureDataConnection(WEBRTC_DATACHANNEL_STREAMS_DEFAULT);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
   dataChannel = mDataConnection->Open(
-    aLabel, theType, !outOfOrderAllowed,
+    aLabel, aProtocol, theType, !outOfOrderAllowed,
     aType == mozilla::DataChannelConnection::PARTIAL_RELIABLE_REXMIT ? aMaxNum :
     (aType == mozilla::DataChannelConnection::PARTIAL_RELIABLE_TIMED ? aMaxTime : 0),
-    nullptr, nullptr
+    nullptr, nullptr, aExternalNegotiated, aStream
   );
   NS_ENSURE_TRUE(dataChannel,NS_ERROR_FAILURE);
 
   CSFLogDebug(logTag, "%s: making DOMDataChannel", __FUNCTION__);
 
-  // TODO -- need something like "mCall->addStream(stream_id, 0, DATA);" so
-  // the SDP can be generated correctly
+  if (!mHaveDataStream) {
+    // XXX stream_id of 0 might confuse things...
+    mCall->addStream(0, 2, DATA);
+    mHaveDataStream = true;
+  }
 
   return NS_NewDOMDataChannel(dataChannel.forget(), mWindow, aRetval);
 #else

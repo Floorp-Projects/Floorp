@@ -332,6 +332,14 @@ InitializeXPConditionVariable(userland_cond_t *cv)
 	cv->events_[C_BROADCAST] = CreateEvent (NULL, TRUE, FALSE, NULL);
 }
 
+void
+DeleteXPConditionVariable(userland_cond_t *cv)
+{
+	CloseHandle(cv->events_[C_BROADCAST]);
+	CloseHandle(cv->events_[C_SIGNAL]);
+	DeleteCriticalSection(&(cv->waiters_count_lock));
+}
+
 int
 SleepXPConditionVariable(userland_cond_t *cv, userland_mutex_t *mtx)
 {
