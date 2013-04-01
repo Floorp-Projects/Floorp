@@ -64,9 +64,11 @@ typedef struct
 	HANDLE events_[C_MAX_EVENTS];
 } userland_cond_t;
 #define InitializeConditionVariable(cond) InitializeXPConditionVariable(cond)
+#define DeleteConditionVariable(cond) DeleteXPConditionVariable(cond)
 #define SleepConditionVariableCS(cond, mtx, time) SleepXPConditionVariable(cond, mtx)
 #define WakeAllConditionVariable(cond) WakeAllXPConditionVariable(cond)
 #else
+#define DeleteConditionVariable(cond)
 typedef CONDITION_VARIABLE userland_cond_t;
 #endif
 typedef HANDLE userland_thread_t;
@@ -381,7 +383,7 @@ struct udphdr {
 #else /* !defined(Userspace_os_Windows) */
 #include <sys/cdefs.h> /* needed? added from old __FreeBSD__ */
 #include <sys/socket.h>
-#if defined(__Userspace_os_FreeBSD) || defined(__Userspace_os_Linux) || defined(__Userspace_os_Android)
+#if defined(__Userspace_os_FreeBSD) || defined(__Userspace_os_OpenBSD)
 #include <pthread.h>
 #endif
 typedef pthread_mutex_t userland_mutex_t;
@@ -461,9 +463,7 @@ struct sx {int dummy;};
 /* for getifaddrs */
 #include <sys/types.h>
 #if !defined(__Userspace_os_Windows)
-#if !defined(ANDROID)
 #include <ifaddrs.h>
-#endif
 
 /* for ioctl */
 #include <sys/ioctl.h>
@@ -498,7 +498,7 @@ struct sx {int dummy;};
 #include <netinet/ip6.h>
 #include <netinet/icmp6.h>
 #endif
-#if defined(__Userspace_os_Linux) || defined(__Userspace_os_Darwin) || defined(__Userspace_os_FreeBSD) || defined(__Userspace_os_Windows)
+#if defined(__Userspace_os_Linux) || defined(__Userspace_os_Darwin) || defined(__Userspace_os_FreeBSD) || defined(__Userspace_os_OpenBSD) ||defined(__Userspace_os_Windows)
 #include "user_ip6_var.h"
 #else
 #include <netinet6/ip6_var.h>
@@ -1115,7 +1115,7 @@ sctp_get_mbuf_for_msg(unsigned int space_needed, int want_header, int how, int a
 /* with the current included files, this is defined in Linux but
  *  in FreeBSD, it is behind a _KERNEL in sys/socket.h ...
  */
-#if defined(__Userspace_os_FreeBSD)
+#if defined(__Userspace_os_FreeBSD) || defined(__Userspace_os_OpenBSD)
 /* stolen from /usr/include/sys/socket.h */
 #define CMSG_ALIGN(n)   _ALIGN(n)
 #elif defined(__Userspace_os_Darwin)

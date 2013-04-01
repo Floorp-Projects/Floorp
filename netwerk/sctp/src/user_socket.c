@@ -717,8 +717,6 @@ uiomove(void *cp, int n, struct uio *uio)
 			else
 				bcopy(iov->iov_base, cp, cnt);
 			break;
-		case UIO_NOCOPY:
-			break;
 		}
 		iov->iov_base = (char *)iov->iov_base + cnt;
 		iov->iov_len -= cnt;
@@ -1066,7 +1064,7 @@ userspace_sctp_recvmsg(struct socket *so,
     void *dbuf,
     size_t len,
     struct sockaddr *from,
-    socklen_t * fromlen,
+    socklen_t *fromlenp,
     struct sctp_sndrcvinfo *sinfo,
     int *msg_flags)
 {
@@ -1076,6 +1074,7 @@ userspace_sctp_recvmsg(struct socket *so,
 	int iovlen = 1;
 	int error = 0;
 	int ulen, i, retval;
+	socklen_t fromlen;
 
 	iov[0].iov_base = dbuf;
 	iov[0].iov_len = len;
@@ -1095,8 +1094,13 @@ userspace_sctp_recvmsg(struct socket *so,
 		}
 	}
 	ulen = auio.uio_resid;
+	if (fromlenp != NULL) {
+		fromlen = *fromlenp;
+	} else {
+		fromlen = 0;
+	}
 	error = sctp_sorecvmsg(so, &auio, (struct mbuf **)NULL,
-		    from, *fromlen, msg_flags,
+		    from, fromlen, msg_flags,
 		    (struct sctp_sndrcvinfo *)sinfo, 1);
 
 	if (error) {
@@ -1104,7 +1108,29 @@ userspace_sctp_recvmsg(struct socket *so,
 		    error == EINTR || error == EWOULDBLOCK))
 			error = 0;
 		}
-
+	if ((fromlenp != NULL) && (fromlen > 0) && (from != NULL)) {
+		switch (from->sa_family) {
+#if defined(INET)
+		case AF_INET:
+			*fromlenp = sizeof(struct sockaddr_in);
+			break;
+#endif
+#if defined(INET6)
+		case AF_INET6:
+			*fromlenp = sizeof(struct sockaddr_in6);
+			break;
+#endif
+		case AF_CONN:
+			*fromlenp = sizeof(struct sockaddr_conn);
+			break;
+		default:
+			*fromlenp = 0;
+			break;
+		}
+		if (*fromlenp > fromlen) {
+			*fromlenp = fromlen;
+		}
+	}
 	if (error == 0){
 		/* ready return value */
 		retval = (int)ulen - auio.uio_resid;
@@ -1120,7 +1146,7 @@ usrsctp_recvv(struct socket *so,
     void *dbuf,
     size_t len,
     struct sockaddr *from,
-    socklen_t * fromlen,
+    socklen_t *fromlenp,
     void *info,
     socklen_t *infolen,
     unsigned int *infotype,
@@ -1131,6 +1157,7 @@ usrsctp_recvv(struct socket *so,
 	struct iovec *tiov;
 	int iovlen = 1;
 	int ulen, i;
+	socklen_t fromlen;
 	struct sctp_rcvinfo *rcv;
 	struct sctp_recvv_rn *rn;
 	struct sctp_extrcvinfo seinfo;
@@ -1156,8 +1183,13 @@ usrsctp_recvv(struct socket *so,
 		}
 	}
 	ulen = auio.uio_resid;
+	if (fromlenp != NULL) {
+		fromlen = *fromlenp;
+	} else {
+		fromlen = 0;
+	}
 	errno = sctp_sorecvmsg(so, &auio, (struct mbuf **)NULL,
-		    from, *fromlen, msg_flags,
+		    from, fromlen, msg_flags,
 		    (struct sctp_sndrcvinfo *)&seinfo, 1);
 	if (errno) {
 		if (auio.uio_resid != (int)ulen &&
@@ -1214,6 +1246,29 @@ usrsctp_recvv(struct socket *so,
 		} else {
 			*infotype = SCTP_RECVV_NOINFO;
 			*infolen = 0;
+		}
+	}
+	if ((fromlenp != NULL) && (fromlen > 0) && (from != NULL)) {
+		switch (from->sa_family) {
+#if defined(INET)
+		case AF_INET:
+			*fromlenp = sizeof(struct sockaddr_in);
+			break;
+#endif
+#if defined(INET6)
+		case AF_INET6:
+			*fromlenp = sizeof(struct sockaddr_in6);
+			break;
+#endif
+		case AF_CONN:
+			*fromlenp = sizeof(struct sockaddr_conn);
+			break;
+		default:
+			*fromlenp = 0;
+			break;
+		}
+		if (*fromlenp > fromlen) {
+			*fromlenp = fromlen;
 		}
 	}
 	if (errno == 0) {
@@ -1828,7 +1883,6 @@ user_accept(struct socket *head,  struct sockaddr **name, socklen_t *namelen, st
 	 * we will return the socket for accepted connection.
 	 */
 
-	sa = 0;
 	error = soaccept(so, &sa);
 	if (error) {
 		/*
@@ -3084,7 +3138,7 @@ usrsctp_deregister_address(void *addr)
 	                       "conn");
 }
 
-#define PREAMBLE_FORMAT "\n%c %02d:%02d:%02d.%06d "
+#define PREAMBLE_FORMAT "\n%c %02d:%02d:%02d.%06ld "
 #define PREAMBLE_LENGTH 19
 #define HEADER "0000 "
 #define TRAILER "# SCTP_PACKET\n"
@@ -3100,6 +3154,7 @@ usrsctp_dumppacket(void *buf, size_t len, int outbound)
 #else
 	struct timeval tv;
 	struct tm *t;
+	time_t sec;
 #endif
 
 	if ((len == 0) || (buf == NULL)) {
@@ -3114,13 +3169,14 @@ usrsctp_dumppacket(void *buf, size_t len, int outbound)
 	localtime_s(&t, &tb.time);
 	_snprintf_s(dump_buf, PREAMBLE_LENGTH + 1, PREAMBLE_LENGTH, PREAMBLE_FORMAT,
 	            outbound ? 'O' : 'I',
-	            t.tm_hour, t.tm_min, t.tm_sec, 1000 * tb.millitm);	
+	            t.tm_hour, t.tm_min, t.tm_sec, (long)(1000 * tb.millitm));
 #else
 	gettimeofday(&tv, NULL);
-	t = localtime(&tv.tv_sec);
+	sec = (time_t)tv.tv_sec;
+	t = localtime((const time_t *)&sec);
 	snprintf(dump_buf, PREAMBLE_LENGTH + 1, PREAMBLE_FORMAT,
 	         outbound ? 'O' : 'I',
-	         t->tm_hour, t->tm_min, t->tm_sec, tv.tv_usec);
+	         t->tm_hour, t->tm_min, t->tm_sec, (long)tv.tv_usec);
 #endif
 	pos += PREAMBLE_LENGTH;
 #ifdef _WIN32
