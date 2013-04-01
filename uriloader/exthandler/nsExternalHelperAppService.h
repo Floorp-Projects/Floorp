@@ -342,9 +342,34 @@ protected:
    * what's going on...
    */
   nsresult CreateProgressListener();
-  nsresult PromptForSaveToFile(nsIFile ** aNewFile,
-                               const nsAFlatString &aDefaultFile,
-                               const nsAFlatString &aDefaultFileExt);
+
+
+  /* 
+   * The following two functions are part of the split of SaveToDisk
+   * to make it async, and works as following:
+   *
+   *    SaveToDisk    ------->   RequestSaveDestination
+   *                                     .
+   *                                     .
+   *                                     v
+   *    ContinueSave  <-------   SaveDestinationAvailable
+   */
+
+  /**
+   * This is called by SaveToDisk to decide what's the final
+   * file destination chosen by the user or by auto-download settings.
+   */
+  void RequestSaveDestination(const nsAFlatString &aDefaultFile,
+                              const nsAFlatString &aDefaultFileExt);
+
+  /**
+   * When SaveToDisk is called, it possibly delegates to RequestSaveDestination
+   * to decide the file destination. ContinueSave must then be called when
+   * the final destination is finally known.
+   * @param  aFile  The file that was chosen as the final destination.
+   *                Must not be null.
+   */
+  nsresult ContinueSave(nsIFile* aFile);
 
   /**
    * After we're done prompting the user for any information, if the original
