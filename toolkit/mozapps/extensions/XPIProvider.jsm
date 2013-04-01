@@ -760,7 +760,8 @@ function loadManifestFromRDF(aUri, aStream) {
     if (addon.optionsType &&
         addon.optionsType != AddonManager.OPTIONS_TYPE_DIALOG &&
         addon.optionsType != AddonManager.OPTIONS_TYPE_INLINE &&
-        addon.optionsType != AddonManager.OPTIONS_TYPE_TAB) {
+        addon.optionsType != AddonManager.OPTIONS_TYPE_TAB &&
+        addon.optionsType != AddonManager.OPTIONS_TYPE_INLINE_INFO) {
       throw new Error("Install manifest specifies unknown type: " + addon.optionsType);
     }
   }
@@ -5961,6 +5962,7 @@ function AddonWrapper(aAddon) {
       case AddonManager.OPTIONS_TYPE_TAB:
         return hasOptionsURL ? aAddon.optionsType : null;
       case AddonManager.OPTIONS_TYPE_INLINE:
+      case AddonManager.OPTIONS_TYPE_INLINE_INFO:
         return (hasOptionsXUL || hasOptionsURL) ? aAddon.optionsType : null;
       }
       return null;
