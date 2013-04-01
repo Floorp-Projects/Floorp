@@ -28,6 +28,7 @@
 #include "mtransport/sigslot.h"
 #include "mtransport/transportflow.h"
 #include "mtransport/transportlayer.h"
+#include "mtransport/transportlayerdtls.h"
 #include "mtransport/transportlayerprsock.h"
 #endif
 
@@ -144,16 +145,20 @@ public:
   bool Init(unsigned short aPort, uint16_t aNumStreams, bool aUsingDtls);
   void Destroy(); // So we can spawn refs tied to runnables in shutdown
 
+#ifdef ALLOW_DIRECT_SCTP_LISTEN_CONNECT
   // These block; they require something to decide on listener/connector
   // (though you can do simultaneous Connect()).  Do not call these from
   // the main thread!
   bool Listen(unsigned short port);
   bool Connect(const char *addr, unsigned short port);
+#endif
 
 #ifdef SCTP_DTLS_SUPPORTED
   // Connect using a TransportFlow (DTLS) channel
-  bool ConnectDTLS(TransportFlow *aFlow, uint16_t localport, uint16_t remoteport,
-                   bool even);
+  void SetEvenOdd();
+  bool ConnectViaTransportFlow(TransportFlow *aFlow, uint16_t localport, uint16_t remoteport);
+  void CompleteConnect(TransportFlow *flow, TransportLayer::State state);
+  void SetSignals();
 #endif
 
   typedef enum {
@@ -198,7 +203,7 @@ public:
     CLOSING = 2U,
     CLOSED = 3U
   };
-  uint16_t GetReadyState() { return mState; }
+  uint16_t GetReadyState() { MutexAutoLock lock(mLock); return mState; }
 
   friend class DataChannel;
   Mutex  mLock;
@@ -281,9 +286,9 @@ private:
   // Streams pending reset
   nsAutoTArray<uint16_t,4> mStreamsResetting;
 
-  struct socket *mMasterSocket; // accessed from connect thread
-  struct socket *mSocket; // cloned from mMasterSocket on successful Connect on connect thread
-  uint16_t mState; // modified on connect thread (to OPEN)
+  struct socket *mMasterSocket; // accessed from STS thread
+  struct socket *mSocket; // cloned from mMasterSocket on successful Connect on STS thread
+  uint16_t mState; // Protected with mLock
 
 #ifdef SCTP_DTLS_SUPPORTED
   nsRefPtr<TransportFlow> mTransportFlow;
