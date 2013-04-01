@@ -51,9 +51,11 @@ extern void lsm_stop_continuous_tone_timer(void);
 
 static const char* logTag = "VcmSipccBinding";
 
+// Cloned from ccapi.h
 typedef enum {
     CC_AUDIO_1,
-    CC_VIDEO_1
+    CC_VIDEO_1,
+    CC_DATACHANNEL_1
 } cc_media_cap_name;
 
 #define SIPSDP_ILBC_MODE20 20
@@ -80,6 +82,14 @@ static mozilla::RefPtr<TransportFlow> vcmCreateTransportFlow(sipcc::PeerConnecti
     if (!pc.impl()) {                                                 \
       CSFLogDebug(logTag, "%s: couldn't acquire peerconnection %s", __FUNCTION__, peerconnection); \
       return errval; \
+    }         \
+  } while(0)
+
+#define ENSURE_PC_NO_RET(pc, peerconnection) \
+  do { \
+    if (!pc.impl()) {                                                 \
+      CSFLogDebug(logTag, "%s: couldn't acquire peerconnection %s", __FUNCTION__, peerconnection); \
+      return; \
     }         \
   } while(0)
 
@@ -1046,18 +1056,60 @@ short vcmGetDtlsIdentity(const char *peerconnection,
  *
  *  @param[in]  peerconnection - the peerconnection in use
  *  @param[in]  streams - the number of streams for this data channel
- *  @param[in]  sctp_port - the negotiated sctp port
+ *  @param[in]  local_datachannel_port - the negotiated sctp port
+ *  @param[in]  remote_datachannel_port - the negotiated sctp port
  *  @param[in]  protocol - the protocol as a string
  *
  *  @return 0 success, error failure
  */
-short vcmSetDataChannelParameters(const char *peerconnection, cc_uint16_t streams, int sctp_port, const char* protocol)
+static short vcmInitializeDataChannel_m(const char *peerconnection,
+  int track_id, cc_uint16_t streams,
+  int local_datachannel_port, int remote_datachannel_port, const char* protocol)
 {
+  nsresult res;
+
   CSFLogDebug( logTag, "%s: PC = %s", __FUNCTION__, peerconnection);
+
+  sipcc::PeerConnectionWrapper pc(peerconnection);
+  ENSURE_PC(pc, VCM_ERROR);
+
+  res = pc.impl()->InitializeDataChannel(track_id, local_datachannel_port,
+                                         remote_datachannel_port, streams);
+  if (NS_FAILED(res)) {
+    return VCM_ERROR;
+  }
 
   return 0;
 }
 
+/* Set negotiated DataChannel parameters.
+ *
+ *  @param[in]  peerconnection - the peerconnection in use
+ *  @param[in]  streams - the number of streams for this data channel
+ *  @param[in]  local_datachannel_port - the negotiated sctp port
+ *  @param[in]  remote_datachannel_port - the negotiated sctp port
+ *  @param[in]  protocol - the protocol as a string
+ *
+ *  @return 0 success, error failure
+ */
+short vcmInitializeDataChannel(const char *peerconnection, int track_id,
+  cc_uint16_t streams,
+  int local_datachannel_port, int remote_datachannel_port, const char* protocol)
+{
+  short ret;
+
+  mozilla::SyncRunnable::DispatchToThread(VcmSIPCCBinding::getMainThread(),
+      WrapRunnableNMRet(&vcmInitializeDataChannel_m,
+                        peerconnection,
+                        track_id,
+                        streams,
+                        local_datachannel_port,
+                        remote_datachannel_port,
+                        protocol,
+                        &ret));
+
+  return ret;
+}
 
 
 /**
@@ -1268,9 +1320,24 @@ static int vcmRxStartICE_m(cc_mcapid_t mcap_id,
   sipcc::PeerConnectionWrapper pc(peerconnection);
   ENSURE_PC(pc, VCM_ERROR);
 
-  if(!payloads) {
-      CSFLogError( logTag, "Unitialized payload list");
-      return VCM_ERROR;
+  // Datachannel will use this though not for RTP
+  mozilla::RefPtr<TransportFlow> rtp_flow =
+    vcmCreateTransportFlow(pc.impl(), level, false,
+                           fingerprint_alg, fingerprint);
+  if (!rtp_flow) {
+    CSFLogError( logTag, "Could not create RTP flow");
+    return VCM_ERROR;
+  }
+
+  if (CC_IS_DATACHANNEL(mcap_id)) {
+    // That's all we need for DataChannels - a flow registered
+    CSFLogDebug( logTag, "%s success", __FUNCTION__);
+    return 0;
+  }
+
+  if (!payloads) {
+    CSFLogError( logTag, "Unitialized payload list");
+    return VCM_ERROR;
   }
 
   // Find the stream we need
@@ -1281,20 +1348,13 @@ static int vcmRxStartICE_m(cc_mcapid_t mcap_id,
     PR_ASSERT(PR_FALSE);
     return VCM_ERROR;
   }
-  // Create the transport flows
-  mozilla::RefPtr<TransportFlow> rtp_flow =
-      vcmCreateTransportFlow(pc.impl(), level, false,
-                             fingerprint_alg, fingerprint);
-  if (!rtp_flow) {
-      CSFLogError( logTag, "Could not create RTP flow");
-      return VCM_ERROR;
-  }
+
   mozilla::RefPtr<TransportFlow> rtcp_flow =
-      vcmCreateTransportFlow(pc.impl(), level, true,
-                             fingerprint_alg, fingerprint);
+    vcmCreateTransportFlow(pc.impl(), level, true,
+                           fingerprint_alg, fingerprint);
   if (!rtcp_flow) {
-      CSFLogError( logTag, "Could not create RTCP flow");
-      return VCM_ERROR;
+    CSFLogError( logTag, "Could not create RTCP flow");
+    return VCM_ERROR;
   }
 
   if (CC_IS_AUDIO(mcap_id)) {
@@ -2697,19 +2757,50 @@ vcmCreateTransportFlow(sipcc::PeerConnectionImpl *pc, int level, bool rtcp,
 
 
 /**
- * vcmOnSdpParseError
+ * vcmOnSdpParseError_m
  *
  * This method is called for each parsing error of SDP.  It does not necessarily
  * mean the SDP read was fatal and can be called many times for the same SDP.
  *
+ * This function should only be called on the main thread.
+ *
+ */
+static void vcmOnSdpParseError_m(nsAutoPtr<std::string> peerconnection, 
+                                 nsAutoPtr<std::string> message) {
+
+  sipcc::PeerConnectionWrapper pc(peerconnection->c_str());
+  ENSURE_PC_NO_RET(pc, peerconnection->c_str());
+
+  pc.impl()->OnSdpParseError(message->c_str());
+}
+
+
+/**
+ * vcmOnSdpParseError
+ *
+ * Dispatch the static version of this function on the main thread.
+ * The string parameters are autoptr in order to survive the DISPATCH_NORMAL
+ *
  */
 int vcmOnSdpParseError(const char *peerconnection, const char *message) {
+  MOZ_ASSERT(peerconnection);
+  MOZ_ASSERT(message);
+  nsAutoPtr<std::string> peerconnectionDuped(new std::string(peerconnection));
+  nsAutoPtr<std::string> messageDuped(new std::string(message));
 
-  sipcc::PeerConnectionWrapper pc(peerconnection);
-  ENSURE_PC(pc, VCM_ERROR);
+  // Now DISPATCH_NORMAL with the duped strings
+  nsresult rv = VcmSIPCCBinding::getMainThread()->Dispatch(
+      WrapRunnableNM(&vcmOnSdpParseError_m,
+                   peerconnectionDuped,
+                   messageDuped),
+      NS_DISPATCH_NORMAL);
 
-  pc.impl()->OnSdpParseError(message);
+  if (!NS_SUCCEEDED(rv)) {
+    CSFLogError( logTag, "%s(): Could not dispatch to main thread", __FUNCTION__);
+    return VCM_ERROR;
+  }
 
   return 0;
 }
+
 

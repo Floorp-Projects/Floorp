@@ -478,26 +478,16 @@ PeerConnection.prototype = {
     this._onCreateAnswerFailure = onError;
 
     if (!this.remoteDescription) {
-      this._observer.onCreateAnswerError(3); // PC_INVALID_REMOTE_SDP
-      /*
-        This needs to be matched to spec -- see bug 834270. The final
-        code will be of the form:
 
-      this._observer.onCreateAnswerError(ci.IPeerConnection.kInvalidState,
+      this._observer.onCreateAnswerError(Ci.IPeerConnection.kInvalidState,
                                          "setRemoteDescription not called");
-      */
       return;
     }
 
     if (this.remoteDescription.type != "offer") {
-      this._observer.onCreateAnswerError(3); // PC_INVALID_REMOTE_SDP
-      /*
-        This needs to be matched to spec -- see bug 834270. The final
-        code will be of the form:
 
-      this._observer.onCreateAnswerError(ci.IPeerConnection.kInvalidState,
+      this._observer.onCreateAnswerError(Ci.IPeerConnection.kInvalidState,
                                          "No outstanding offer");
-      */
       return;
     }
 
@@ -615,11 +605,8 @@ PeerConnection.prototype = {
   },
 
   removeStream: function(stream) {
-    this._queueOrRun({
-      func: this._pc.removeStream,
-      args: [stream],
-      wait: false
-    });
+     //Bug844295: Not implemeting this functionality.
+     return Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
 
   close: function() {
@@ -695,10 +682,18 @@ PeerConnection.prototype = {
 
   createDataChannel: function(label, dict) {
     this._checkClosed();
-    if (dict &&
-        dict.maxRetransmitTime != undefined &&
+    if (dict == undefined) {
+	dict = {};
+    }
+    if (dict.maxRetransmitTime != undefined &&
         dict.maxRetransmitNum != undefined) {
       throw new Components.Exception("Both maxRetransmitTime and maxRetransmitNum cannot be provided");
+    }
+    let protocol;
+    if (dict.protocol == undefined) {
+      protocol = "";
+    } else {
+      protocol = dict.protocol;
     }
 
     // Must determine the type where we still know if entries are undefined.
@@ -712,11 +707,10 @@ PeerConnection.prototype = {
     }
 
     // Synchronous since it doesn't block.
-    // TODO -- this may need to be revisited, based on how the
-    // spec ends up defining data channel handling
     let channel = this._pc.createDataChannel(
-      label, type, dict.outOfOrderAllowed, dict.maxRetransmitTime,
-      dict.maxRetransmitNum
+      label, protocol, type, dict.outOfOrderAllowed, dict.maxRetransmitTime,
+      dict.maxRetransmitNum, dict.preset ? true : false,
+      dict.stream != undefined ? dict.stream : 0xFFFF
     );
     return channel;
   },
@@ -741,6 +735,39 @@ PeerConnectionObserver.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.IPeerConnectionObserver,
                                          Ci.nsISupportsWeakReference]),
 
+  // These strings must match those defined in the WebRTC spec.
+  reasonName: [
+    "NO_ERROR", // Should never happen -- only used for testing
+    "INVALID_CONSTRAINTS_TYPE",
+    "INVALID_CANDIDATE_TYPE",
+    "INVALID_MEDIASTREAM_TRACK",
+    "INVALID_STATE",
+    "INVALID_SESSION_DESCRIPTION",
+    "INCOMPATIBLE_SESSION_DESCRIPTION",
+    "INCOMPATIBLE_CONSTRAINTS",
+    "INCOMPATIBLE_MEDIASTREAMTRACK",
+    "INTERNAL_ERROR"
+  ],
+
+  callErrorCallback: function(callback, code, message) {
+    if (code > Ci.IPeerConnection.kMaxErrorType) {
+      code = Ci.IPeerConnection.kInternalError;
+    }
+
+    if (typeof message !== "string") {
+      message = this.reasonName[code];
+    }
+
+    if (callback) {
+      try {
+        callback.onCallback({
+          name: this.reasonName[code], message: message,
+          __exposedProps__: { name: "rw", message: "rw" }
+        });
+      } catch(e) {}
+    }
+  },
+
   onCreateOfferSuccess: function(offer) {
     if (this._dompc._onCreateOfferSuccess) {
       try {
@@ -753,12 +780,8 @@ PeerConnectionObserver.prototype = {
     this._dompc._executeNext();
   },
 
-  onCreateOfferError: function(code) {
-    if (this._dompc._onCreateOfferFailure) {
-      try {
-        this._dompc._onCreateOfferFailure.onCallback(code);
-      } catch(e) {}
-    }
+  onCreateOfferError: function(code, message) {
+    this.callErrorCallback (this._dompc._onCreateOfferFailure, code, message);
     this._dompc._executeNext();
   },
 
@@ -774,68 +797,58 @@ PeerConnectionObserver.prototype = {
     this._dompc._executeNext();
   },
 
-  onCreateAnswerError: function(code) {
-    if (this._dompc._onCreateAnswerFailure) {
-      try {
-        this._dompc._onCreateAnswerFailure.onCallback(code);
-      } catch(e) {}
-    }
+  onCreateAnswerError: function(code, message) {
+    this.callErrorCallback (this._dompc._onCreateAnswerFailure, code, message);
     this._dompc._executeNext();
   },
 
-  onSetLocalDescriptionSuccess: function(code) {
+  onSetLocalDescriptionSuccess: function() {
     this._dompc._localType = this._dompc._pendingType;
     this._dompc._pendingType = null;
     if (this._dompc._onSetLocalDescriptionSuccess) {
       try {
-        this._dompc._onSetLocalDescriptionSuccess.onCallback(code);
+        this._dompc._onSetLocalDescriptionSuccess.onCallback();
       } catch(e) {}
     }
     this._dompc._executeNext();
   },
 
-  onSetRemoteDescriptionSuccess: function(code) {
+  onSetRemoteDescriptionSuccess: function() {
     this._dompc._remoteType = this._dompc._pendingType;
     this._dompc._pendingType = null;
     if (this._dompc._onSetRemoteDescriptionSuccess) {
       try {
-        this._dompc._onSetRemoteDescriptionSuccess.onCallback(code);
+        this._dompc._onSetRemoteDescriptionSuccess.onCallback();
       } catch(e) {}
     }
     this._dompc._executeNext();
   },
 
-  onSetLocalDescriptionError: function(code) {
+  onSetLocalDescriptionError: function(code, message) {
     this._dompc._pendingType = null;
-    if (this._dompc._onSetLocalDescriptionFailure) {
-      try {
-        this._dompc._onSetLocalDescriptionFailure.onCallback(code);
-      } catch(e) {}
-    }
+    this.callErrorCallback (this._dompc._onSetLocalDescriptionFailure, code,
+                            message);
     this._dompc._executeNext();
   },
 
-  onSetRemoteDescriptionError: function(code) {
+  onSetRemoteDescriptionError: function(code, message) {
     this._dompc._pendingType = null;
-    if (this._dompc._onSetRemoteDescriptionFailure) {
-      this._dompc._onSetRemoteDescriptionFailure.onCallback(code);
-    }
+    this.callErrorCallback (this._dompc._onSetRemoteDescriptionFailure, code,
+                            message);
     this._dompc._executeNext();
   },
 
-  onAddIceCandidateSuccess: function(code) {
+  onAddIceCandidateSuccess: function() {
     this._dompc._pendingType = null;
     if (this._dompc._onAddIceCandidateSuccess) {
-      this._dompc._onAddIceCandidateSuccess.onCallback(code);
+      this._dompc._onAddIceCandidateSuccess.onCallback();
     }
     this._dompc._executeNext();
   },
 
-  onAddIceCandidateError: function(code) {
+  onAddIceCandidateError: function(code, message) {
     this._dompc._pendingType = null;
-    if (this._dompc._onAddIceCandidateError) {
-      this._dompc._onAddIceCandidateError.onCallback(code);
-    }
+    this.callErrorCallback (this._dompc._onAddIceCandidateError, code, message);
     this._dompc._executeNext();
   },
 
@@ -923,7 +936,10 @@ PeerConnectionObserver.prototype = {
   notifyDataChannel: function(channel) {
     if (this._dompc.ondatachannel) {
       try {
-        this._dompc.ondatachannel.onCallback(channel);
+        this._dompc.ondatachannel.onCallback({
+          channel: channel,
+          __exposedProps__: { channel: "r" }
+        });
       } catch(e) {}
     }
   },

@@ -147,6 +147,11 @@ function runTest(aCallback, desktopSupportedOnly) {
  *        The object fired back from the callback
  */
 function unexpectedCallbackAndFinish(aObj) {
-  ok(false, "Unexpected error callback with " + aObj);
+  if (aObj && aObj.name && aObj.message) {
+    ok(false, "Unexpected error callback with name = '" + aObj.name +
+              "', message = '" + aObj.message + "'");
+  } else {
+     ok(false, "Unexpected error callback with " + aObj);
+  }
   SimpleTest.finish();
 }

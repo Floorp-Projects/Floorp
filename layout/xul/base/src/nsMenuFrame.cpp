@@ -306,7 +306,7 @@ nsMenuFrame::DestroyPopupList()
   NS_ASSERTION(prop && prop->IsEmpty(),
                "popup list must exist and be empty when destroying");
   RemoveStateBits(NS_STATE_MENU_HAS_POPUP_LIST);
-  delete prop;
+  prop->Delete(PresContext()->PresShell());
 }
 
 void
@@ -317,7 +317,7 @@ nsMenuFrame::SetPopupFrame(nsFrameList& aFrameList)
     if (popupFrame) {
       // Remove the frame from the list and store it in a nsFrameList* property.
       aFrameList.RemoveFrame(popupFrame);
-      nsFrameList* popupList = new nsFrameList(popupFrame, popupFrame);
+      nsFrameList* popupList = new (PresContext()->PresShell()) nsFrameList(popupFrame, popupFrame);
       Properties().Set(PopupListProperty(), popupList);
       AddStateBits(NS_STATE_MENU_HAS_POPUP_LIST);
       break;

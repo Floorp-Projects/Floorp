@@ -82,8 +82,8 @@ public:
 
   void
   InitQuotaForOrigin(const nsACString& aOrigin,
-                     int64_t aLimit,
-                     int64_t aUsage);
+                     int64_t aLimitBytes,
+                     int64_t aUsageBytes);
 
   void
   DecreaseUsageForOrigin(const nsACString& aOrigin,
@@ -192,7 +192,7 @@ public:
 
   nsresult
   EnsureOriginIsInitialized(const nsACString& aOrigin,
-                            StoragePrivilege aPrivilege,
+                            bool aTrackQuota,
                             nsIFile** aDirectory);
 
   void

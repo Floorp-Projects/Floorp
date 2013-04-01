@@ -64,7 +64,7 @@ FULL_NSPR_LIBS=$(subst $(prefix),\$${sdkdir},$(shell $(DEPTH)/nsprpub/config/nsp
 NSPR_VERSION=$(shell $(DEPTH)/nsprpub/config/nspr-config --version)
 endif
 
-MOZ_XUL_LINK = -lxpcomglue_s -lxul -lxpcom -lmozalloc
+MOZ_XUL_LINK = -lxpcomglue_s -lxul -lmozalloc
 ifdef JS_SHARED_LIBRARY
 MOZ_JS_LINK = -lmozjs
 else

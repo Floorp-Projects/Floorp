@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=78: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -780,6 +781,37 @@ HyperTextAccessible::GetRelativeOffset(nsIPresShell* aPresShell,
   return hyperTextOffset;
 }
 
+int32_t
+HyperTextAccessible::FindWordBoundary(int32_t aOffset, nsDirection aDirection,
+                                      EWordMovementType aWordMovementType)
+{
+  // Convert hypertext offset to frame-relative offset.
+  int32_t offsetInFrame = aOffset, notUsedOffset = aOffset;
+  nsRefPtr<Accessible> accAtOffset;
+  nsIFrame* frameAtOffset =
+    GetPosAndText(offsetInFrame, notUsedOffset, nullptr, nullptr,
+                  nullptr, getter_AddRefs(accAtOffset));
+  if (!frameAtOffset) {
+    if (aOffset == CharacterCount()) {
+      // Asking for start of line, while on last character.
+      if (accAtOffset)
+        frameAtOffset = accAtOffset->GetFrame();
+    }
+    NS_ASSERTION(frameAtOffset, "No start frame for text getting!");
+    if (!frameAtOffset)
+      return -1;
+
+    // We're on the last continuation since we're on the last character.
+    frameAtOffset = frameAtOffset->GetLastContinuation();
+  }
+
+  // Return hypertext offset of the boundary of the found word.
+  return GetRelativeOffset(mDoc->PresShell(), frameAtOffset, offsetInFrame,
+                           accAtOffset, eSelectWord, aDirection,
+                           (aWordMovementType == eStartWord),
+                           aWordMovementType);
+}
+
 /*
 Gets the specified text relative to aBoundaryType, which means:
 BOUNDARY_CHAR             The character before/at/after the offset is returned.
@@ -972,13 +1004,57 @@ HyperTextAccessible::GetTextBeforeOffset(int32_t aOffset,
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  if (aBoundaryType == BOUNDARY_CHAR) {
-    GetCharAt(aOffset, eGetBefore, aText, aStartOffset, aEndOffset);
-    return NS_OK;
-  }
+  int32_t offset = ConvertMagicOffset(aOffset);
+  if (offset < 0)
+    return NS_ERROR_INVALID_ARG;
 
-  return GetTextHelper(eGetBefore, aBoundaryType, aOffset,
-                       aStartOffset, aEndOffset, aText);
+  switch (aBoundaryType) {
+    case BOUNDARY_CHAR:
+      GetCharAt(offset, eGetBefore, aText, aStartOffset, aEndOffset);
+      return NS_OK;
+
+    case BOUNDARY_WORD_START: {
+      if (offset == 0) { // no word before 0 offset
+        *aStartOffset = *aEndOffset = 0;
+        return NS_OK;
+      }
+
+      // If the offset is a word start then move backward to find start offset
+      // (end offset is the given offset). Otherwise move backward twice to find
+      // both start and end offsets.
+      int32_t midOffset = FindWordBoundary(offset, eDirPrevious, eStartWord);
+      *aEndOffset = FindWordBoundary(midOffset, eDirNext, eStartWord);
+      if (*aEndOffset == offset) {
+        *aStartOffset = midOffset;
+        return GetText(*aStartOffset, *aEndOffset, aText);
+      }
+
+      *aStartOffset = FindWordBoundary(midOffset, eDirPrevious, eStartWord);
+      *aEndOffset = midOffset;
+      return GetText(*aStartOffset, *aEndOffset, aText);
+    }
+
+    case BOUNDARY_WORD_END: {
+      if (offset == 0) { // no word before 0 offset
+        *aStartOffset = *aEndOffset = 0;
+        return NS_OK;
+      }
+
+      // Move word backward twice to find start and end offsets.
+      *aEndOffset = FindWordBoundary(offset, eDirPrevious, eEndWord);
+      *aStartOffset = FindWordBoundary(*aEndOffset, eDirPrevious, eEndWord);
+      return GetText(*aStartOffset, *aEndOffset, aText);
+    }
+
+    case BOUNDARY_LINE_START:
+    case BOUNDARY_LINE_END:
+    case BOUNDARY_ATTRIBUTE_RANGE:
+      return GetTextHelper(eGetBefore, aBoundaryType, aOffset,
+                           aStartOffset, aEndOffset, aText);
+
+    default:
+      return NS_ERROR_INVALID_ARG;
+  }
 }
 
 NS_IMETHODIMP
@@ -990,117 +1066,50 @@ HyperTextAccessible::GetTextAtOffset(int32_t aOffset,
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  nsSelectionAmount selectionAmount = eSelectWord;
+  int32_t offset = ConvertMagicOffset(aOffset);
+  if (offset < 0)
+    return NS_ERROR_INVALID_ARG;
+
   EWordMovementType wordMovementType = eDefaultBehavior;
-  bool forwardBack = true;
+  bool moveForwardThenBack = true;
 
   switch (aBoundaryType) {
     case BOUNDARY_CHAR:
       return GetCharAt(aOffset, eGetAt, aText, aStartOffset, aEndOffset) ?
         NS_OK : NS_ERROR_INVALID_ARG;
 
-    case BOUNDARY_WORD_START:
-      wordMovementType = eStartWord;
-      break;
+    case BOUNDARY_WORD_START: {
+      uint32_t textLen =  CharacterCount();
+      if (offset == textLen) {
+        *aStartOffset = *aEndOffset = textLen;
+        return NS_OK;
+      }
 
-    case BOUNDARY_WORD_END:
-      wordMovementType = eEndWord;
-      forwardBack = false;
-      break;
+      *aEndOffset = FindWordBoundary(offset, eDirNext, eStartWord);
+      *aStartOffset = FindWordBoundary(*aEndOffset, eDirPrevious, eStartWord);
+      return GetText(*aStartOffset, *aEndOffset, aText);
+    }
+
+    case BOUNDARY_WORD_END: {
+      if (offset == 0) {
+        *aStartOffset = *aEndOffset = 0;
+        return NS_OK;
+      }
+
+      *aStartOffset = FindWordBoundary(offset, eDirPrevious, eEndWord);
+      *aEndOffset = FindWordBoundary(*aStartOffset, eDirNext, eEndWord);
+      return GetText(*aStartOffset, *aEndOffset, aText);
+    }
 
     case BOUNDARY_LINE_START:
     case BOUNDARY_LINE_END:
+    case BOUNDARY_ATTRIBUTE_RANGE:
       return GetTextHelper(eGetAt, aBoundaryType, aOffset,
                            aStartOffset, aEndOffset, aText);
-      break;
-
-    case BOUNDARY_ATTRIBUTE_RANGE:
-    {
-      nsresult rv = GetTextAttributes(false, aOffset,
-                                      aStartOffset, aEndOffset, nullptr);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      return GetText(*aStartOffset, *aEndOffset, aText);
-    }
 
     default:
       return NS_ERROR_INVALID_ARG;
   }
-
-  int32_t offset = ConvertMagicOffset(aOffset);
-  if (offset < 0)
-    return NS_ERROR_INVALID_ARG;
-
-  uint32_t textLen =  CharacterCount();
-  if (forwardBack) {
-    if (offset == textLen) {
-      *aStartOffset = *aEndOffset = textLen;
-      return NS_OK;
-    }
-  } else {
-    if (offset == 0) {
-      *aStartOffset = *aEndOffset = 0;
-      return NS_OK;
-    }
-  }
-
-  // Convert offsets to frame-relative
-  int32_t startOffset = offset, endOffset = offset;
-  nsRefPtr<Accessible> startAcc;
-  nsIFrame* startFrame = GetPosAndText(startOffset, endOffset, nullptr, nullptr,
-                                       nullptr, getter_AddRefs(startAcc));
-  if (!startFrame) {
-    if (offset == textLen) {
-      // Asking for start of line, while on last character
-      if (startAcc)
-        startFrame = startAcc->GetFrame();
-    }
-    NS_ASSERTION(startFrame, "No start frame for text getting!");
-    if (!startFrame)
-      return NS_ERROR_FAILURE;
-
-    // We're on the last continuation since we're on the last character.
-    startFrame = startFrame->GetLastContinuation();
-  }
-
-  offset = GetRelativeOffset(mDoc->PresShell(), startFrame, startOffset,
-                             startAcc, selectionAmount,
-                             (forwardBack ? eDirNext : eDirPrevious),
-                             forwardBack, wordMovementType);
-
-  if (forwardBack)
-    *aEndOffset = offset;
-  else
-    *aStartOffset = offset;
-
-  startOffset = endOffset = offset;
-  startFrame = GetPosAndText(startOffset, endOffset, nullptr, nullptr,
-                             nullptr, getter_AddRefs(startAcc));
-  if (!startFrame) {
-    if (offset == textLen) {
-      // Asking for start of line, while on last character
-      if (startAcc)
-        startFrame = startAcc->GetFrame();
-    }
-    NS_ASSERTION(startFrame, "No start frame for text getting!");
-    if (!startFrame)
-      return NS_ERROR_FAILURE;
-
-    // We're on the last continuation since we're on the last character.
-    startFrame = startFrame->GetLastContinuation();
-  }
-
-  offset = GetRelativeOffset(mDoc->PresShell(), startFrame, startOffset,
-                             startAcc, selectionAmount,
-                             (forwardBack ? eDirPrevious : eDirNext),
-                             forwardBack, wordMovementType);
-
-  if (forwardBack)
-    *aStartOffset = offset;
-  else
-    *aEndOffset = offset;
-
-  return GetText(*aStartOffset, *aEndOffset, aText);
 }
 
 NS_IMETHODIMP
@@ -1272,27 +1281,48 @@ HyperTextAccessible::NativeAttributes()
     return attributes.forget();
 
   // For the html landmark elements we expose them like we do aria landmarks to
-  // make AT navigation schemes "just work". Note html:header is redundant as
-  // a landmark since it usually contains headings. We're not yet sure how the
-  // web will use html:footer but our best bet right now is as contentinfo.
-  if (mContent->Tag() == nsGkAtoms::nav)
+  // make AT navigation schemes "just work".
+  nsIAtom* tag = mContent->Tag();
+  if (tag == nsGkAtoms::nav) {
     nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles,
                            NS_LITERAL_STRING("navigation"));
-  else if (mContent->Tag() == nsGkAtoms::section) 
+  } else if (tag == nsGkAtoms::section)  {
     nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles,
                            NS_LITERAL_STRING("region"));
-  else if (mContent->Tag() == nsGkAtoms::footer) 
+  } else if (tag == nsGkAtoms::header || tag == nsGkAtoms::footer) {
+    // Only map header and footer if they are not descendants
+    // of an article or section tag.
+    nsIContent* parent = mContent->GetParent();
+    while (parent) {
+      if (parent->Tag() == nsGkAtoms::article ||
+          parent->Tag() == nsGkAtoms::section)
+        break;
+      parent = parent->GetParent();
+    }
+
+    // No article or section elements found.
+    if (!parent) {
+      if (tag == nsGkAtoms::header) {
+        nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles,
+                               NS_LITERAL_STRING("banner"));
+      } else if (tag == nsGkAtoms::footer) {
+        nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles,
+                               NS_LITERAL_STRING("contentinfo"));
+      }
+    }
+  } else if (tag == nsGkAtoms::footer) {
     nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles,
                            NS_LITERAL_STRING("contentinfo"));
-  else if (mContent->Tag() == nsGkAtoms::aside) 
+  } else if (tag == nsGkAtoms::aside) {
     nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles,
                            NS_LITERAL_STRING("complementary"));
-  else if (mContent->Tag() == nsGkAtoms::article)
+  } else if (tag == nsGkAtoms::article) {
     nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles,
                            NS_LITERAL_STRING("article"));
-  else if (mContent->Tag() == nsGkAtoms::main)
+  } else if (tag == nsGkAtoms::main) {
     nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles,
                            NS_LITERAL_STRING("main"));
+  }
 
   return attributes.forget();
 }

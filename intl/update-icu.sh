@@ -3,6 +3,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# Warning
+# =======
+# As of ICU 51.1, ICU as obtained from the ICU repository does not
+# build with the Mozilla build tools for Windows. Check
+# http://bugs.icu-project.org/trac/ticket/9985
+# whether this has been addressed in the version you're updating to.
+# If not, obtain the patch "Make ICU build with Mozilla build for Windows" from
+# https://bugzilla.mozilla.org/show_bug.cgi?id=724533
+# and reapply it after running update-icu.sh (additional updates may be needed).
+# If the bug has been addressed, please delete this warning.
+
 # Usage: update-icu.sh <URL of ICU SVN with release>
 # E.g., for ICU 50.1.1: update-icu.sh http://source.icu-project.org/repos/icu/icu/tags/release-50-1-1/
 

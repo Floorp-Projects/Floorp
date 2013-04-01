@@ -117,7 +117,7 @@ public:
   }
 
   ~SVGParseCompleteListener()
-  { 
+  {
     if (mDocument) {
       // The document must have been destroyed before we got our event.
       // Otherwise this can't happen, since documents hold strong references to
@@ -750,7 +750,7 @@ VectorImage::Draw(gfxContext* aContext,
                              subimage, sourceRect, imageRect, aFill,
                              gfxASurface::ImageFormatARGB32, aFilter);
 
-  MOZ_ASSERT(mRenderingObserver || mHaveRestrictedRegion, 
+  MOZ_ASSERT(mRenderingObserver || mHaveRestrictedRegion,
       "Should have a rendering observer by now unless ExtractFrame created us");
   if (mRenderingObserver) {
     // Allow ourselves to fire FrameChanged and OnStopFrame again.

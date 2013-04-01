@@ -548,6 +548,7 @@ typedef enum {
   NO_STREAM = -1,
   AUDIO,
   VIDEO,
+  DATA,
   TYPE_MAX
 } cc_media_type_t;
 

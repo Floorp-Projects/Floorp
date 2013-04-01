@@ -2040,10 +2040,10 @@ public:
   bool Next(uint32_t aCount);
 
   /**
-   * Advances ahead up to aCount matching characters, stopping early if we move
-   * past the subtree (if one was specified in the constructor).
+   * Advances ahead up to aCount matching characters, returns true if there
+   * were enough characters to advance to.
    */
-  void NextWithinSubtree(uint32_t aCount);
+  bool NextWithinSubtree(uint32_t aCount);
 
   /**
    * Advances to the character with the specified index.  The index is in the
@@ -2305,15 +2305,16 @@ CharIterator::Next(uint32_t aCount)
   return true;
 }
 
-void
+bool
 CharIterator::NextWithinSubtree(uint32_t aCount)
 {
   while (IsWithinSubtree() && aCount) {
+    --aCount;
     if (!Next()) {
       break;
     }
-    aCount--;
   }
+  return !aCount;
 }
 
 bool
@@ -3650,6 +3651,38 @@ nsSVGTextFrame2::GetComputedTextLength(nsIContent* aContent)
 }
 
 /**
+ * Implements the SVG DOM SelectSubString method for the specified
+ * text content element.
+ */
+nsresult
+nsSVGTextFrame2::SelectSubString(nsIContent* aContent,
+                                 uint32_t charnum, uint32_t nchars)
+{
+  UpdateGlyphPositioning(false);
+
+  // Convert charnum/nchars from addressable characters relative to
+  // aContent to global character indices.
+  CharIterator chit(this, CharIterator::eAddressable, aContent);
+  if (!chit.AdvanceToSubtree() ||
+      !chit.Next(charnum) ||
+      chit.IsAfterSubtree()) {
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
+  charnum = chit.TextElementCharIndex();
+  nsIContent* content = chit.TextFrame()->GetContent();
+  if (!chit.NextWithinSubtree(nchars)) {
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
+  nchars = chit.TextElementCharIndex() - charnum;
+
+  nsRefPtr<nsFrameSelection> frameSelection = GetFrameSelection();
+
+  frameSelection->HandleClick(content, charnum, charnum + nchars,
+                              false, false, false);
+  return NS_OK;
+}
+
+/**
  * Implements the SVG DOM GetSubStringLength method for the specified
  * text content element.
  */
@@ -3675,7 +3708,9 @@ nsSVGTextFrame2::GetSubStringLength(nsIContent* aContent,
   }
 
   charnum = chit.TextElementCharIndex();
-  chit.NextWithinSubtree(nchars);
+  if (!chit.NextWithinSubtree(nchars)) {
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
   nchars = chit.TextElementCharIndex() - charnum;
 
   // Find each rendered run that intersects with the range defined

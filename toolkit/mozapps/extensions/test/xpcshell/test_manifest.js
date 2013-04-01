@@ -330,6 +330,18 @@ function run_test() {
     name: "Test Addon 25"
   }, profileDir);
 
+  writeInstallRDFForExtension({
+    id: "addon26@tests.mozilla.org",
+    version: "1.0",
+    optionsType: "4",
+    targetApplications: [{
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "1",
+      maxVersion: "1"
+    }],
+    name: "Test Addon 26"
+  }, profileDir, null, "options.xul");
+
   do_test_pending();
   startupManager();
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
@@ -356,10 +368,11 @@ function run_test() {
                                "addon22@tests.mozilla.org",
                                "addon23@tests.mozilla.org",
                                "addon24@tests.mozilla.org",
-                               "addon25@tests.mozilla.org"],
+                               "addon25@tests.mozilla.org",
+                               "addon26@tests.mozilla.org"],
                                function([a1, a2, a3, a4, a5, a6, a7, a8, a9, a10,
                                          a11, a12, a13, a14, a15, a16, a17, a18, a19, a20,
-                                         a21, a22, a23, a24, a25]) {
+                                         a21, a22, a23, a24, a25, a26]) {
 
     do_check_neq(a1, null);
     do_check_eq(a1.id, "addon1@tests.mozilla.org");
@@ -539,6 +552,10 @@ function run_test() {
     do_check_neq(a25, null);
     do_check_eq(a25.optionsType, null);
     do_check_eq(a25.optionsURL, null);
+
+    do_check_neq(a26, null);
+    do_check_eq(a26.optionsType, AddonManager.OPTIONS_TYPE_INLINE_INFO);
+    do_check_neq(a26.optionsURL, null);
 
     do_test_finished();
   });

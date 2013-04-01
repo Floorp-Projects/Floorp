@@ -128,6 +128,7 @@
 @BINPATH@/components/dom_indexeddb.xpt
 @BINPATH@/components/dom_offline.xpt
 @BINPATH@/components/dom_json.xpt
+@BINPATH@/components/dom_push.xpt
 @BINPATH@/components/dom_browserelement.xpt
 @BINPATH@/components/dom_power.xpt
 @BINPATH@/components/dom_quota.xpt
@@ -365,6 +366,10 @@
 @BINPATH@/components/Webapps.manifest
 @BINPATH@/components/AppsService.js
 @BINPATH@/components/AppsService.manifest
+@BINPATH@/components/Push.js
+@BINPATH@/components/Push.manifest
+@BINPATH@/components/PushService.js
+@BINPATH@/components/PushService.manifest
 @BINPATH@/components/AppProtocolHandler.js
 @BINPATH@/components/AppProtocolHandler.manifest
 
