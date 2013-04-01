@@ -3337,29 +3337,25 @@ nsDocument::TryChannelCharset(nsIChannel *aChannel,
   }
 }
 
-nsresult
+already_AddRefed<nsIPresShell>
 nsDocument::CreateShell(nsPresContext* aContext, nsViewManager* aViewManager,
-                        nsStyleSet* aStyleSet,
-                        nsIPresShell** aInstancePtrResult)
+                        nsStyleSet* aStyleSet)
 {
   // Don't add anything here.  Add it to |doCreateShell| instead.
   // This exists so that subclasses can pass other values for the 4th
   // parameter some of the time.
   return doCreateShell(aContext, aViewManager, aStyleSet,
-                       eCompatibility_FullStandards, aInstancePtrResult);
+                       eCompatibility_FullStandards);
 }
 
-nsresult
+already_AddRefed<nsIPresShell>
 nsDocument::doCreateShell(nsPresContext* aContext,
                           nsViewManager* aViewManager, nsStyleSet* aStyleSet,
-                          nsCompatibility aCompatMode,
-                          nsIPresShell** aInstancePtrResult)
+                          nsCompatibility aCompatMode)
 {
-  *aInstancePtrResult = nullptr;
-
   NS_ASSERTION(!mPresShell, "We have a presshell already!");
 
-  NS_ENSURE_FALSE(GetBFCacheEntry(), NS_ERROR_FAILURE);
+  NS_ENSURE_FALSE(GetBFCacheEntry(), nullptr);
 
   FillStyleSet(aStyleSet);
 
@@ -3373,9 +3369,7 @@ nsDocument::doCreateShell(nsPresContext* aContext,
 
   MaybeRescheduleAnimationFrameNotifications();
 
-  shell.forget(aInstancePtrResult);
-
-  return NS_OK;
+  return shell.forget();
 }
 
 void

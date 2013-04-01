@@ -304,14 +304,12 @@ nsHTMLDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
   SetContentTypeInternal(nsDependentCString("text/html"));
 }
 
-nsresult
+already_AddRefed<nsIPresShell>
 nsHTMLDocument::CreateShell(nsPresContext* aContext,
                             nsViewManager* aViewManager,
-                            nsStyleSet* aStyleSet,
-                            nsIPresShell** aInstancePtrResult)
+                            nsStyleSet* aStyleSet)
 {
-  return doCreateShell(aContext, aViewManager, aStyleSet, mCompatMode,
-                       aInstancePtrResult);
+  return doCreateShell(aContext, aViewManager, aStyleSet, mCompatMode);
 }
 
 void
