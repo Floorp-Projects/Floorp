@@ -239,6 +239,9 @@ void
 ShadowLayerForwarder::RemoveChild(ShadowableLayer* aContainer,
                                   ShadowableLayer* aChild)
 {
+  MOZ_LAYERS_LOG(("[LayersForwarder] OpRemoveChild container=%p child=%p\n",
+                  aContainer->AsLayer(), aChild->AsLayer()));
+
   mTxn->AddEdit(OpRemoveChild(NULL, Shadow(aContainer),
                               NULL, Shadow(aChild)));
 }
@@ -247,13 +250,18 @@ ShadowLayerForwarder::RepositionChild(ShadowableLayer* aContainer,
                                       ShadowableLayer* aChild,
                                       ShadowableLayer* aAfter)
 {
-  if (aAfter)
+  if (aAfter) {
+    MOZ_LAYERS_LOG(("[LayersForwarder] OpRepositionChild container=%p child=%p after=%p",
+                   aContainer->AsLayer(), aChild->AsLayer(), aAfter->AsLayer()));
     mTxn->AddEdit(OpRepositionChild(NULL, Shadow(aContainer),
                                     NULL, Shadow(aChild),
                                     NULL, Shadow(aAfter)));
-  else
+  } else {
+    MOZ_LAYERS_LOG(("[LayersForwarder] OpRaiseToTopChild container=%p child=%p",
+                   aContainer->AsLayer(), aChild->AsLayer()));
     mTxn->AddEdit(OpRaiseToTopChild(NULL, Shadow(aContainer),
                                     NULL, Shadow(aChild)));
+  }
 }
 
 void
@@ -263,6 +271,8 @@ ShadowLayerForwarder::PaintedThebesBuffer(ShadowableLayer* aThebes,
                                           const nsIntPoint& aBufferRotation,
                                           const SurfaceDescriptor& aNewFrontBuffer)
 {
+  MOZ_LAYERS_LOG(("[LayersForwarder] OpPaintThebesBuffer(%p)\n", aThebes->AsLayer()));
+
   mTxn->AddPaint(OpPaintThebesBuffer(NULL, Shadow(aThebes),
                                      ThebesBuffer(aNewFrontBuffer,
                                                   aBufferRect,
@@ -364,6 +374,8 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies)
     common.animations() = mutant->GetAnimations();
     attrs.specific() = null_t();
     mutant->FillSpecificAttributes(attrs.specific());
+
+    MOZ_LAYERS_LOG(("[LayersForwarder] OpSetLayerAttributes(%p)\n", mutant));
 
     mTxn->AddEdit(OpSetLayerAttributes(NULL, Shadow(shadow), attrs));
   }

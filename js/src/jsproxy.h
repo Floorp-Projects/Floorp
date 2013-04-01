@@ -48,7 +48,8 @@ class JS_FRIEND_API(Wrapper);
  * the derived traps in terms of the fundamental ones. This allows consumers of
  * this class to define any custom behavior they want.
  */
-class JS_FRIEND_API(BaseProxyHandler) {
+class JS_FRIEND_API(BaseProxyHandler)
+{
     void *mFamily;
     bool mHasPrototype;
     bool mHasPolicy;
@@ -155,8 +156,9 @@ class JS_FRIEND_API(BaseProxyHandler) {
  * allows consumers of this class to forward to another object as transparently
  * and efficiently as possible.
  */
-class JS_PUBLIC_API(DirectProxyHandler) : public BaseProxyHandler {
-public:
+class JS_PUBLIC_API(DirectProxyHandler) : public BaseProxyHandler
+{
+  public:
     explicit DirectProxyHandler(void *family);
 
     /* ES5 Harmony fundamental proxy traps. */
@@ -211,7 +213,8 @@ public:
 };
 
 /* Dispatch point for handlers that executes the appropriate C++ or scripted traps. */
-class Proxy {
+class Proxy
+{
   public:
     /* ES5 Harmony fundamental proxy traps. */
     static bool preventExtensions(JSContext *cx, HandleObject proxy);

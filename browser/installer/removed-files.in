@@ -1222,6 +1222,7 @@ xpicleanup@BIN_SUFFIX@
   components/dom_json.xpt
   components/dom_loadsave.xpt
   components/dom_offline.xpt
+  components/dom_push.xpt
   components/dom_range.xpt
   components/dom_sidebar.xpt
   components/dom_smil.xpt

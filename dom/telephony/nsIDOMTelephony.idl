@@ -9,7 +9,7 @@
 interface nsIDOMEventListener;
 interface nsIDOMTelephonyCall;
 
-[scriptable, builtinclass, uuid(ec253100-630d-4366-ac77-b67525167960)]
+[scriptable, builtinclass, uuid(0e7bc85e-7e88-43fa-b349-6ea348bda2df)]
 interface nsIDOMTelephony : nsIDOMEventTarget
 {
   nsIDOMTelephonyCall dial(in DOMString number);

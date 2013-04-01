@@ -136,6 +136,19 @@ public:
     kRoleAnswerer
   };
 
+  enum Error {
+    kNoError                          = 0,
+    kInvalidConstraintsType           = 1,
+    kInvalidCandidateType             = 2,
+    kInvalidMediastreamTrack          = 3,
+    kInvalidState                     = 4,
+    kInvalidSessionDescription        = 5,
+    kIncompatibleSessionDescription   = 6,
+    kIncompatibleConstraints          = 7,
+    kIncompatibleMediaStreamTrack     = 8,
+    kInternalError                    = 9
+  };
+
   NS_DECL_ISUPPORTS
   NS_DECL_IPEERCONNECTION
 
@@ -223,6 +236,9 @@ public:
   NS_IMETHODIMP CreateOffer(MediaConstraints& aConstraints);
   NS_IMETHODIMP CreateAnswer(MediaConstraints& aConstraints);
 
+  nsresult InitializeDataChannel(int track_id, uint16_t aLocalport,
+                                 uint16_t aRemoteport, uint16_t aNumstreams);
+
   // Called whenever something is unrecognized by the parser
   // May be called more than once and does not necessarily mean
   // that parsing was stopped, only that something was unrecognized.
@@ -243,6 +259,7 @@ private:
                       JSContext* aCx);
   NS_IMETHODIMP CreateOfferInt(MediaConstraints& constraints);
   NS_IMETHODIMP CreateAnswerInt(MediaConstraints& constraints);
+  NS_IMETHODIMP EnsureDataConnection(uint16_t aNumstreams);
 
   nsresult CloseInt(bool aIsSynchronous);
   void ChangeReadyState(ReadyState aReadyState);
@@ -321,6 +338,8 @@ private:
   // Bug 840728.
   int mNumAudioStreams;
   int mNumVideoStreams;
+
+  bool mHaveDataStream;
 
   // Holder for error messages from parsing SDP
   std::vector<std::string> mSDPParseErrorMessages;

@@ -20,44 +20,31 @@ function test()
 {
   let scriptShown = false;
   let framesAdded = false;
+  let resumed = false;
   let testStarted = false;
 
-  gTab = addTab(TAB_URL, function onAddTab() {
-    info("tab added");
-    gDebuggee = gTab.linkedBrowser.contentWindow.wrappedJSObject;
+  debug_tab_pane(TAB_URL, function(aTab, aDebuggee, aPane) {
+    gTab = aTab;
+    gDebuggee = aDebuggee;
+    gPane = aPane;
+    gDebugger = gPane.panelWin;
+    resumed = true;
 
-    let target = TargetFactory.forTab(gTab);
-
-    gDevTools.showToolbox(target, "jsdebugger").then(function(toolbox) {
-      info("jsdebugger panel opened");
-      gPane = toolbox.getCurrentPanel();
-      gDebugger = gPane.panelWin;
-      gDebugger.addEventListener("Debugger:AfterSourcesAdded", onAfterSourcesAdded);
-    });
-  });
-
-  function onAfterSourcesAdded()
-  {
-    info("scripts added");
-    gDebugger.removeEventListener("Debugger:AfterSourcesAdded",onAfterSourcesAdded);
     gDebugger.addEventListener("Debugger:SourceShown", onSourceShown);
 
-    gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded",
-      function onFramesAdded() {
-        info("frames added");
-        framesAdded = true;
-        executeSoon(startTest);
-      });
+    gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
+      framesAdded = true;
+      executeSoon(startTest);
+    });
 
     executeSoon(function() {
       gDebuggee.firstCall();
     });
-  }
+  });
 
   function onSourceShown(aEvent)
   {
     scriptShown = aEvent.detail.url.indexOf("-02.js") != -1;
-    info("script shown " + aEvent.detail.url);
     executeSoon(startTest);
   }
 
@@ -66,7 +53,6 @@ function test()
     if (scriptShown && framesAdded && !testStarted) {
       gDebugger.removeEventListener("Debugger:SourceShown", onSourceShown);
       testStarted = true;
-      info("test started");
       Services.tm.currentThread.dispatch({ run: performTest }, 0);
     }
   }
@@ -171,7 +157,8 @@ function test()
   {
     info("add a breakpoint to the second script which is not selected");
 
-    is(Object.keys(gBreakpoints).length, 0, "no breakpoints in the debugger");
+    is(Object.keys(gBreakpoints).length, 0,
+      "no breakpoints in the debugger");
     ok(!gPane.getBreakpoint(gSources.selectedValue, 6),
       "getBreakpoint(selectedScript, 6) returns no breakpoint");
     isnot(gSources.values[0], gSources.selectedValue,
@@ -204,7 +191,9 @@ function test()
     executeSoon(function() {
       ok(aBreakpointClient.actor in gBreakpoints,
         "breakpoint2 client found in the list of debugger breakpoints");
-      is(Object.keys(gBreakpoints).length, 1, "one breakpoint in the debugger");
+
+      is(Object.keys(gBreakpoints).length, 1,
+        "one breakpoint in the debugger");
       is(gPane.getBreakpoint(gSources.values[0], 5), aBreakpointClient,
         "getBreakpoint(locations[0], 5) returns the correct breakpoint");
 
@@ -229,7 +218,7 @@ function test()
     is(aEvent.added[0].line, 4, "editor breakpoint line is correct");
 
     is(gEditor.getBreakpoints().length, 1,
-       "editor.getBreakpoints().length is correct");
+      "editor.getBreakpoints().length is correct");
   }
 
   function onEditorTextChanged()

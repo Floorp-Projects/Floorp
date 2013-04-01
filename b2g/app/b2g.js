@@ -388,6 +388,21 @@ pref("dom.mozContacts.enabled", true);
 // WebAlarms
 pref("dom.mozAlarms.enabled", true);
 
+// SimplePush
+// serverURL to be assigned by services team
+pref("services.push.serverURL", "");
+pref("services.push.userAgentID", "");
+// exponential back-off start is 5 seconds like in HTTP/1.1
+pref("services.push.retryBaseInterval", 5000);
+// exponential back-off end is 20 minutes
+pref("services.push.maxRetryInterval", 1200000);
+// How long before a DOMRequest errors as timeout
+pref("services.push.requestTimeout", 10000);
+// enable udp wakeup support
+pref("services.push.udp.wakeupEnabled", true);
+// port on which UDP server socket is bound
+pref("services.push.udp.port", 2442);
+
 // NetworkStats
 #ifdef MOZ_B2G_RIL
 pref("dom.mozNetworkStats.enabled", true);
