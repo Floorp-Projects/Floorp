@@ -26,7 +26,7 @@ let manifest2 = { // used for testing install
 function test() {
   waitForExplicitFinish();
 
-  Services.prefs.setCharPref("social.manifest.good", JSON.stringify(manifest));
+  setManifestPref("social.manifest.good", manifest);
   Services.prefs.setBoolPref("social.remote-install.enabled", true);
   runSocialTests(tests, undefined, undefined, function () {
     Services.prefs.clearUserPref("social.remote-install.enabled");
