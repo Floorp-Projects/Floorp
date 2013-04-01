@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for bug 856771</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  SpecialPowers.setBoolPref("media.webaudio.enabled", true);
+
+  var context = new AudioContext();
+
+  var source = context.createBufferSource();
+  source.connect(context.destination);
+  ok(true, "Nothing should leak");
+
+  SpecialPowers.clearUserPref("media.webaudio.enabled");
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>
