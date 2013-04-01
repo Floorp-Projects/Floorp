@@ -279,44 +279,39 @@ nsUnknownContentTypeDialog.prototype = {
                             .getService(Components.interfaces.nsIDownloadManager);
     picker.displayDirectory = dnldMgr.userDownloadsDirectory;
 
-    // The last directory preference may not exist, which will throw.
-    try {
-      var lastDir = gDownloadLastDir.getFile(aLauncher.source);
-      if (isUsableDirectory(lastDir))
+    gDownloadLastDir.getFileAsync(aLauncher.source, function LastDirCallback(lastDir) {
+      if (lastDir && isUsableDirectory(lastDir))
         picker.displayDirectory = lastDir;
-    }
-    catch (ex) {
-    }
 
-    if (picker.show() == nsIFilePicker.returnCancel) {
-      // null result means user cancelled.
-      aLauncher.saveDestinationAvailable(null);
-      return;
-    }
-
-    // Be sure to save the directory the user chose through the Save As...
-    // dialog  as the new browser.download.dir since the old one
-    // didn't exist.
-    result = picker.file;
-
-    if (result) {
-      try {
-        // Remove the file so that it's not there when we ensure non-existence later;
-        // this is safe because for the file to exist, the user would have had to
-        // confirm that he wanted the file overwritten.
-        if (result.exists())
-          result.remove(false);
+      if (picker.show() == nsIFilePicker.returnCancel) {
+        // null result means user cancelled.
+        aLauncher.saveDestinationAvailable(null);
+        return;
       }
-      catch (e) { }
-      var newDir = result.parent.QueryInterface(Components.interfaces.nsILocalFile);
 
-      // Do not store the last save directory as a pref inside the private browsing mode
-      gDownloadLastDir.setFile(aLauncher.source, newDir);
+      // Be sure to save the directory the user chose through the Save As...
+      // dialog  as the new browser.download.dir since the old one
+      // didn't exist.
+      result = picker.file;
 
-      result = this.validateLeafName(newDir, result.leafName, null);
-    }
-    aLauncher.saveDestinationAvailable(result);
-    return;
+      if (result) {
+        try {
+          // Remove the file so that it's not there when we ensure non-existence later;
+          // this is safe because for the file to exist, the user would have had to
+          // confirm that he wanted the file overwritten.
+          if (result.exists())
+            result.remove(false);
+        }
+        catch (e) { }
+        var newDir = result.parent.QueryInterface(Components.interfaces.nsILocalFile);
+
+        // Do not store the last save directory as a pref inside the private browsing mode
+        gDownloadLastDir.setFile(aLauncher.source, newDir);
+
+        result = this.validateLeafName(newDir, result.leafName, null);
+      }
+      aLauncher.saveDestinationAvailable(result);
+    }.bind(this));
   },
 
   /**
