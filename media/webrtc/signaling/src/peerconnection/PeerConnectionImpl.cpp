@@ -639,6 +639,28 @@ PeerConnectionImpl::ConnectDataConnection(uint16_t aLocalport,
 // Data channels won't work without a window, so in order for the C++ unit
 // tests to work (it doesn't have a window available) we ifdef the following
 // two implementations.
+NS_IMETHODIMP
+PeerConnectionImpl::EnsureDataConnection(uint16_t aNumstreams)
+{
+  PC_AUTO_ENTER_API_CALL_NO_CHECK();
+
+#ifdef MOZILLA_INTERNAL_API
+  if (mDataConnection) {
+    CSFLogDebug(logTag,"%s DataConnection already connected",__FUNCTION__);
+    // Ignore the request to connect when already connected.  This entire
+    // implementation is temporary.  Ignore aNumstreams as it's merely advisory
+    // and we increase the number of streams dynamically as needed.
+    return NS_OK;
+  }
+  mDataConnection = new mozilla::DataChannelConnection(this);
+  if (!mDataConnection->Init(5000, aNumstreams, true)) {
+    CSFLogError(logTag,"%s DataConnection Init Failed",__FUNCTION__);
+    return NS_ERROR_FAILURE;
+  }
+#endif
+  return NS_OK;
+}
+
 nsresult
 PeerConnectionImpl::InitializeDataChannel(uint16_t aLocalport,
                                           uint16_t aRemoteport,
@@ -647,25 +669,14 @@ PeerConnectionImpl::InitializeDataChannel(uint16_t aLocalport,
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
 #ifdef MOZILLA_INTERNAL_API
-  if (mDataConnection) {
-    CSFLogError(logTag,"%s DataConnection already connected",__FUNCTION__);
-    // Ignore the request to connect when already connected.  This entire
-    // implementation is temporary.  Ignore aNumstreams as it's merely advisory
-    // and we increase the number of streams dynamically as needed.
-    return NS_OK;
-  }
-  // FIX! Temporary cheat to decide on even/odd
-  mDataConnection = new mozilla::DataChannelConnection(this, aLocalport > aRemoteport);
-  if (!mDataConnection->Init(aLocalport, aNumstreams, true)) {
-    CSFLogError(logTag,"%s DataConnection Init Failed",__FUNCTION__);
-    return NS_ERROR_FAILURE;
-  }
+  nsresult rv = EnsureDataConnection(aNumstreams);
+
   // XXX Fix! Get the correct flow for DataChannel. Also error handling.
   for (int i = 2; i >= 0; i--) {
     nsRefPtr<TransportFlow> flow = mMedia->GetTransportFlow(i,false).get();
     CSFLogDebug(logTag, "Transportflow[%d] = %p", i, flow.get());
     if (flow) {
-      if (!mDataConnection->ConnectDTLS(flow, aLocalport, aRemoteport)) {
+      if (!mDataConnection->ConnectDTLS(flow, aLocalport, aRemoteport, aLocalport > aRemoteport)) {
         return NS_ERROR_FAILURE;
       }
       break;
@@ -673,7 +684,7 @@ PeerConnectionImpl::InitializeDataChannel(uint16_t aLocalport,
   }
   return NS_OK;
 #else
-    return NS_ERROR_FAILURE;
+  return NS_ERROR_FAILURE;
 #endif
 }
 
@@ -696,8 +707,9 @@ PeerConnectionImpl::CreateDataChannel(const nsACString& aLabel,
   mozilla::DataChannelConnection::Type theType =
     static_cast<mozilla::DataChannelConnection::Type>(aType);
 
-  if (!mDataConnection) {
-    return NS_ERROR_FAILURE;
+  nsresult rv = EnsureDataConnection(WEBRTC_DATACHANNEL_STREAMS_DEFAULT);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
   dataChannel = mDataConnection->Open(
     aLabel, aProtocol, theType, !outOfOrderAllowed,

@@ -138,8 +138,7 @@ public:
     virtual void NotifyDataChannel(already_AddRefed<DataChannel> channel) = 0;
   };
 
-  DataChannelConnection(DataConnectionListener *listener,
-                        bool aIsEven);
+  DataChannelConnection(DataConnectionListener *listener);
   virtual ~DataChannelConnection();
 
   bool Init(unsigned short aPort, uint16_t aNumStreams, bool aUsingDtls);
@@ -153,7 +152,8 @@ public:
 
 #ifdef SCTP_DTLS_SUPPORTED
   // Connect using a TransportFlow (DTLS) channel
-  bool ConnectDTLS(TransportFlow *aFlow, uint16_t localport, uint16_t remoteport);
+  bool ConnectDTLS(TransportFlow *aFlow, uint16_t localport, uint16_t remoteport,
+                   bool even);
 #endif
 
   typedef enum {
@@ -237,6 +237,7 @@ private:
 
   void StartDefer();
   bool SendDeferredMessages();
+  void ProcessQueuedOpens();
   void SendOutgoingStreamReset();
   void ResetOutgoingStream(uint16_t streamOut);
   void HandleOpenRequestMessage(const struct rtcweb_datachannel_open_request *req,

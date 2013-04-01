@@ -259,6 +259,7 @@ private:
                       JSContext* aCx);
   NS_IMETHODIMP CreateOfferInt(MediaConstraints& constraints);
   NS_IMETHODIMP CreateAnswerInt(MediaConstraints& constraints);
+  NS_IMETHODIMP EnsureDataConnection(uint16_t aNumstreams);
 
   nsresult CloseInt(bool aIsSynchronous);
   void ChangeReadyState(ReadyState aReadyState);
