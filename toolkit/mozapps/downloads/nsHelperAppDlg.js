@@ -189,6 +189,10 @@ nsUnknownContentTypeDialog.prototype = {
   // Note - this function is called without a dialog, so it cannot access any part
   // of the dialog XUL as other functions on this object do.
   promptForSaveToFile: function(aLauncher, aContext, aDefaultFile, aSuggestedFileExtension, aForcePrompt) {
+    throw new Components.Exception("Async version must be used", Components.results.NS_ERROR_NOT_AVAILABLE);
+  },
+
+  promptForSaveToFileAsync: function(aLauncher, aContext, aDefaultFile, aSuggestedFileExtension, aForcePrompt) {
     var result = null;
 
     this.mLauncher = aLauncher;
@@ -226,13 +230,16 @@ nsUnknownContentTypeDialog.prototype = {
                            bundle.GetStringFromName("badPermissions.title"),
                            bundle.GetStringFromName("badPermissions"));
 
+            aLauncher.saveDestinationAvailable(null);
             return;
           }
         }
 
         // Check to make sure we have a valid directory, otherwise, prompt
-        if (result)
-          return result;
+        if (result) {
+          aLauncher.saveDestinationAvailable(result);
+          return;
+        }
       }
     }
 
@@ -283,7 +290,8 @@ nsUnknownContentTypeDialog.prototype = {
 
     if (picker.show() == nsIFilePicker.returnCancel) {
       // null result means user cancelled.
-      return null;
+      aLauncher.saveDestinationAvailable(null);
+      return;
     }
 
     // Be sure to save the directory the user chose through the Save As...
@@ -307,7 +315,8 @@ nsUnknownContentTypeDialog.prototype = {
 
       result = this.validateLeafName(newDir, result.leafName, null);
     }
-    return result;
+    aLauncher.saveDestinationAvailable(result);
+    return;
   },
 
   /**
