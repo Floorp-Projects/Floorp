@@ -10,7 +10,6 @@ XPIDL_SOURCES += [
     'nsIIDBCursor.idl',
     'nsIIDBCursorWithValue.idl',
     'nsIIDBDatabase.idl',
-    'nsIIDBFactory.idl',
     'nsIIDBFileHandle.idl',
     'nsIIDBIndex.idl',
     'nsIIDBKeyRange.idl',

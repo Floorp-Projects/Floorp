@@ -17,6 +17,7 @@
 #include "jsdbgapi.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/IDBFactoryBinding.h"
 #include "mozilla/dom/PBrowserChild.h"
 #include "mozilla/dom/quota/OriginOrPatternString.h"
 #include "mozilla/dom/quota/QuotaManager.h"
@@ -51,7 +52,10 @@ USING_QUOTA_NAMESPACE
 
 using mozilla::dom::ContentChild;
 using mozilla::dom::ContentParent;
+using mozilla::dom::NonNull;
+using mozilla::dom::Optional;
 using mozilla::dom::TabChild;
+using mozilla::ErrorResult;
 
 namespace {
 
@@ -70,6 +74,7 @@ IDBFactory::IDBFactory()
 : mOwningObject(nullptr), mActorChild(nullptr), mActorParent(nullptr),
   mContentParent(nullptr), mRootedOwningObject(false)
 {
+  SetIsDOMBinding();
 }
 
 IDBFactory::~IDBFactory()
@@ -483,9 +488,8 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(IDBFactory)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(IDBFactory)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(IDBFactory)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRY(nsIIDBFactory)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IDBFactory)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(IDBFactory)
@@ -494,6 +498,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(IDBFactory)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(IDBFactory)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
   if (tmp->mOwningObject) {
     tmp->mOwningObject = nullptr;
   }
@@ -505,18 +510,19 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(IDBFactory)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(IDBFactory)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mOwningObject)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 DOMCI_DATA(IDBFactory, IDBFactory)
 
 nsresult
-IDBFactory::OpenCommon(const nsAString& aName,
-                       int64_t aVersion,
-                       const nsACString& aASCIIOrigin,
-                       bool aDeleting,
-                       JSContext* aCallingCx,
-                       IDBOpenDBRequest** _retval)
+IDBFactory::OpenInternal(const nsAString& aName,
+                         int64_t aVersion,
+                         const nsACString& aASCIIOrigin,
+                         bool aDeleting,
+                         JSContext* aCallingCx,
+                         IDBOpenDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(mWindow || mOwningObject, "Must have one of these!");
@@ -586,60 +592,102 @@ IDBFactory::OpenCommon(const nsAString& aName,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-IDBFactory::Open(const nsAString& aName,
-                 int64_t aVersion,
-                 JSContext* aCx,
-                 uint8_t aArgc,
-                 nsIIDBOpenDBRequest** _retval)
+JSObject*
+IDBFactory::WrapObject(JSContext* aCx, JSObject* aScope)
 {
-  if (aVersion < 1 && aArgc) {
-    return NS_ERROR_TYPE_ERR;
-  }
-
-  nsRefPtr<IDBOpenDBRequest> request;
-  nsresult rv = OpenCommon(aName, aVersion, false, aCx,
-                           getter_AddRefs(request));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  request.forget(_retval);
-  return NS_OK;
+  return IDBFactoryBinding::Wrap(aCx, aScope, this);
 }
 
-NS_IMETHODIMP
-IDBFactory::DeleteDatabase(const nsAString& aName,
-                           JSContext* aCx,
-                           nsIIDBOpenDBRequest** _retval)
-{
-  nsRefPtr<IDBOpenDBRequest> request;
-  nsresult rv = OpenCommon(aName, 0, true, aCx, getter_AddRefs(request));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  request.forget(_retval);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-IDBFactory::Cmp(const jsval& aFirst,
-                const jsval& aSecond,
-                JSContext* aCx,
-                int16_t* _retval)
+int16_t
+IDBFactory::Cmp(JSContext* aCx, JS::Value aFirst, JS::Value aSecond,
+                ErrorResult& aRv)
 {
   Key first, second;
   nsresult rv = first.SetFromJSVal(aCx, aFirst);
   if (NS_FAILED(rv)) {
-    return rv;
+    aRv.Throw(rv);
+    return 0;
   }
 
   rv = second.SetFromJSVal(aCx, aSecond);
   if (NS_FAILED(rv)) {
-    return rv;
+    aRv.Throw(rv);
+    return 0;
   }
 
   if (first.IsUnset() || second.IsUnset()) {
-    return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
+    aRv.Throw(NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
+    return 0;
   }
 
-  *_retval = Key::CompareKeys(first, second);
-  return NS_OK;
+  return Key::CompareKeys(first, second);
+}
+
+already_AddRefed<nsIIDBOpenDBRequest>
+IDBFactory::OpenForPrincipal(JSContext* aCx, nsIPrincipal* aPrincipal,
+                             const NonNull<nsAString>& aName,
+                             const Optional<uint64_t>& aVersion,
+                             ErrorResult& aRv)
+{
+  // Just to be on the extra-safe side
+  if (!nsContentUtils::IsCallerChrome()) {
+    MOZ_CRASH();
+  }
+
+  return Open(aCx, aPrincipal, aName, aVersion, false, aRv);
+}
+
+already_AddRefed<nsIIDBOpenDBRequest>
+IDBFactory::DeleteForPrincipal(JSContext* aCx, nsIPrincipal* aPrincipal,
+                               const NonNull<nsAString>& aName,
+                               ErrorResult& aRv)
+{
+  // Just to be on the extra-safe side
+  if (!nsContentUtils::IsCallerChrome()) {
+    MOZ_CRASH();
+  }
+
+  return Open(aCx, aPrincipal, aName, Optional<uint64_t>(), true, aRv);
+}
+
+already_AddRefed<nsIIDBOpenDBRequest>
+IDBFactory::Open(JSContext* aCx, nsIPrincipal* aPrincipal,
+                 const nsAString& aName, const Optional<uint64_t>& aVersion,
+                 bool aDelete, ErrorResult& aRv)
+{
+  nsresult rv;
+
+  nsCString origin;
+  if (aPrincipal) {
+    rv = QuotaManager::GetASCIIOriginFromPrincipal(aPrincipal, origin);
+    if (NS_FAILED(rv)) {
+      aRv.Throw(rv);
+      return nullptr;
+    }
+  }
+  else {
+    origin = mASCIIOrigin;
+  }
+
+  uint64_t version;
+  if (!aDelete && aVersion.WasPassed()) {
+    version = aVersion.Value();
+    if (version < 1) {
+      aRv.ThrowTypeError(MSG_INVALID_VERSION);
+      return nullptr;
+    }
+  }
+  else {
+    version = 0;
+  }
+
+  nsRefPtr<IDBOpenDBRequest> request;
+  rv = OpenInternal(aName, version, origin, aDelete, aCx,
+                    getter_AddRefs(request));
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return nullptr;
+  }
+
+  return request.forget();
 }
