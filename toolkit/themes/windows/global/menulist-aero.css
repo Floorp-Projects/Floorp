@@ -14,4 +14,21 @@ menulist:-moz-focusring:not([open="true"]):not(.menulist-compact) > .menulist-la
     background-color: transparent !important;
     color: inherit !important;
   }
+
+  .menulist-label {
+    margin-top: -1px !important;
+    margin-bottom: -1px !important;
+    -moz-margin-start: 0 !important;
+  }
+
+  .menulist-dropmarker {
+    margin-top: -2px;
+    -moz-margin-start: 3px;
+    -moz-margin-end: -3px;
+  }
+
+  .menulist-icon {
+    margin-top: -1px;
+    margin-bottom: -1px;
+  }
 }
