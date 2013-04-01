@@ -89,7 +89,7 @@ var LazyNotificationGetter = {
 
 [
 #ifdef MOZ_WEBRTC
-  ["WebRTC", ["getUserMedia:request"], "chrome://browser/content/WebRTC.js"],
+  ["WebrtcUI", ["getUserMedia:request"], "chrome://browser/content/WebrtcUI.js"],
 #endif
   ["MemoryObserver", ["memory-pressure", "Memory:Dump"], "chrome://browser/content/MemoryObserver.js"],
   ["ConsoleAPI", ["console-api-log-event"], "chrome://browser/content/ConsoleAPI.js"],
