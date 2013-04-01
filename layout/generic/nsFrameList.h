@@ -13,6 +13,9 @@
 #include "nsTArray.h"
 
 class nsIFrame;
+class nsIPresShell;
+class nsPresContext;
+
 namespace mozilla {
 namespace layout {
   class FrameChildList;
@@ -50,26 +53,29 @@ public:
   nsFrameList() :
     mFirstChild(nullptr), mLastChild(nullptr)
   {
-    MOZ_COUNT_CTOR(nsFrameList);
   }
 
   nsFrameList(nsIFrame* aFirstFrame, nsIFrame* aLastFrame) :
     mFirstChild(aFirstFrame), mLastChild(aLastFrame)
   {
-    MOZ_COUNT_CTOR(nsFrameList);
     VerifyList();
   }
 
   nsFrameList(const nsFrameList& aOther) :
     mFirstChild(aOther.mFirstChild), mLastChild(aOther.mLastChild)
   {
-    MOZ_COUNT_CTOR(nsFrameList);
   }
 
-  ~nsFrameList() {
-    MOZ_COUNT_DTOR(nsFrameList);
-    // Don't destroy our frames here, so that we can have temporary nsFrameLists
-  }
+  /**
+   * Allocate a nsFrameList from the shell arena.
+   */
+  void* operator new(size_t sz, nsIPresShell* aPresShell) CPP_THROW_NEW;
+
+  /**
+   * Deallocate this list that was allocated from the shell arena.
+   * The list is required to be empty.
+   */
+  void Delete(nsIPresShell* aPresShell);
 
   /**
    * For each frame in this list: remove it from the list then call
@@ -79,23 +85,9 @@ public:
 
   /**
    * For each frame in this list: remove it from the list then call
-   * DestroyFrom() on it.
+   * DestroyFrom(aDestructRoot) on it.
    */
   void DestroyFramesFrom(nsIFrame* aDestructRoot);
-
-  /**
-   * For each frame in this list: remove it from the list then call
-   * Destroy() on it. Finally <code>delete this</code>.
-   * 
-   */
-  void Destroy();
-
-  /**
-   * For each frame in this list: remove it from the list then call
-   * DestroyFrom() on it. Finally <code>delete this</code>.
-   *
-   */
-  void DestroyFrom(nsIFrame* aDestructRoot);
 
   void Clear() { mFirstChild = mLastChild = nullptr; }
 
@@ -456,6 +448,8 @@ public:
   };
 
 private:
+  void operator delete(void*) MOZ_DELETE;
+
 #ifdef DEBUG_FRAME_LIST
   void VerifyList() const;
 #else
@@ -477,6 +471,24 @@ protected:
 
 namespace mozilla {
 namespace layout {
+
+/**
+ * Simple "auto_ptr" for nsFrameLists allocated from the shell arena.
+ * The frame list given to the constructor will be deallocated (if non-null)
+ * in the destructor.  The frame list must then be empty.
+ */
+class AutoFrameListPtr {
+public:
+  AutoFrameListPtr(nsPresContext* aPresContext, nsFrameList* aFrameList)
+    : mPresContext(aPresContext), mFrameList(aFrameList) {}
+  ~AutoFrameListPtr();
+  operator nsFrameList*() const { return mFrameList; }
+  nsFrameList* operator->() const { return mFrameList; }
+private:
+  nsPresContext* mPresContext;
+  nsFrameList* mFrameList;
+};
+
 namespace detail {
 union AlignedFrameListBytes {
   void* ptr;

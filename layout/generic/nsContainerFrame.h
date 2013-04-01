@@ -12,7 +12,6 @@
 #include "nsSplittableFrame.h"
 #include "nsFrameList.h"
 #include "nsLayoutUtils.h"
-#include "nsAutoPtr.h"
 
 // Option flags for ReflowChild() and FinishReflowChild()
 // member functions
@@ -431,10 +430,10 @@ protected:
   /**
    * As GetOverflowFrames, but removes the overflow frames property.  The
    * caller is responsible for deleting nsFrameList and either passing
-   * ownership of the frames to someone else or destroying the frames.  A
-   * non-null return value indicates that the list is nonempty.  The
+   * ownership of the frames to someone else or destroying the frames.
+   * A non-null return value indicates that the list is nonempty.  The
    * recommended way to use this function it to assign its return value
-   * into an nsAutoPtr.
+   * into an AutoFrameListPtr.
    */
   inline nsFrameList* StealOverflowFrames();
   
@@ -512,6 +511,7 @@ protected:
    * Nothing happens if the property doesn't exist.
    */
   void SafelyDestroyFrameListProp(nsIFrame* aDestructRoot,
+                                  nsIPresShell* aPresShell,
                                   mozilla::FramePropertyTable* aPropTable,
                                   const FramePropertyDescriptor* aProp);
 
@@ -684,7 +684,7 @@ nsContainerFrame::DestroyOverflowList(nsPresContext* aPresContext)
 {
   nsFrameList* list = RemovePropTableFrames(aPresContext, OverflowProperty());
   MOZ_ASSERT(list && list->IsEmpty());
-  delete list;
+  list->Delete(aPresContext->PresShell());
 }
 
 #endif /* nsContainerFrame_h___ */

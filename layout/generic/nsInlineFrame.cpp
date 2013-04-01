@@ -27,6 +27,7 @@
 #endif
 
 using namespace mozilla;
+using namespace mozilla::layout;
 
 
 //////////////////////////////////////////////////////////////////////
@@ -312,9 +313,9 @@ nsInlineFrame::Reflow(nsPresContext*          aPresContext,
 
    // Check for an overflow list with our prev-in-flow
   nsInlineFrame* prevInFlow = (nsInlineFrame*)GetPrevInFlow();
-  if (nullptr != prevInFlow) {
-    nsAutoPtr<nsFrameList> prevOverflowFrames(prevInFlow->StealOverflowFrames());
-
+  if (prevInFlow) {
+    AutoFrameListPtr prevOverflowFrames(aPresContext,
+                                        prevInFlow->StealOverflowFrames());
     if (prevOverflowFrames) {
       // When pushing and pulling frames we need to check for whether any
       // views need to be reparented.
@@ -370,7 +371,7 @@ nsInlineFrame::Reflow(nsPresContext*          aPresContext,
   }
 #endif
   if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
-    nsAutoPtr<nsFrameList> overflowFrames(StealOverflowFrames());
+    AutoFrameListPtr overflowFrames(aPresContext, StealOverflowFrames());
     if (overflowFrames) {
       NS_ASSERTION(mFrames.NotEmpty(), "overflow list w/o frames");
       if (!lazilySetParentPointer) {
@@ -435,10 +436,12 @@ nsInlineFrame::PullOverflowsFromPrevInFlow()
 {
   nsInlineFrame* prevInFlow = static_cast<nsInlineFrame*>(GetPrevInFlow());
   if (prevInFlow) {
-    nsAutoPtr<nsFrameList> prevOverflowFrames(prevInFlow->StealOverflowFrames());
+    nsPresContext* presContext = PresContext();
+    AutoFrameListPtr prevOverflowFrames(presContext,
+                                        prevInFlow->StealOverflowFrames());
     if (prevOverflowFrames) {
       // Assume that our prev-in-flow has the same line container that we do.
-      nsContainerFrame::ReparentFrameViewList(PresContext(),
+      nsContainerFrame::ReparentFrameViewList(presContext,
                                               *prevOverflowFrames,
                                               prevInFlow, this);
       mFrames.InsertFrames(this, nullptr, *prevOverflowFrames);
@@ -977,8 +980,9 @@ nsFirstLineFrame::Reflow(nsPresContext* aPresContext,
 
   // Check for an overflow list with our prev-in-flow
   nsFirstLineFrame* prevInFlow = (nsFirstLineFrame*)GetPrevInFlow();
-  if (nullptr != prevInFlow) {
-    nsAutoPtr<nsFrameList> prevOverflowFrames(prevInFlow->StealOverflowFrames());
+  if (prevInFlow) {
+    AutoFrameListPtr prevOverflowFrames(aPresContext,
+                                        prevInFlow->StealOverflowFrames());
     if (prevOverflowFrames) {
       // Assign all floats to our block if necessary
       if (lineContainer && lineContainer->GetPrevContinuation()) {
@@ -993,7 +997,7 @@ nsFirstLineFrame::Reflow(nsPresContext* aPresContext,
   }
 
   // It's also possible that we have an overflow list for ourselves
-  nsAutoPtr<nsFrameList> overflowFrames(StealOverflowFrames());
+  AutoFrameListPtr overflowFrames(aPresContext, StealOverflowFrames());
   if (overflowFrames) {
     NS_ASSERTION(mFrames.NotEmpty(), "overflow list w/o frames");
 
@@ -1083,12 +1087,14 @@ nsFirstLineFrame::PullOverflowsFromPrevInFlow()
 {
   nsFirstLineFrame* prevInFlow = static_cast<nsFirstLineFrame*>(GetPrevInFlow());
   if (prevInFlow) {
-    nsAutoPtr<nsFrameList> prevOverflowFrames(prevInFlow->StealOverflowFrames());
+    nsPresContext* presContext = PresContext();
+    AutoFrameListPtr prevOverflowFrames(presContext,
+                                        prevInFlow->StealOverflowFrames());
     if (prevOverflowFrames) {
       // Assume that our prev-in-flow has the same line container that we do.
       const nsFrameList::Slice& newFrames =
         mFrames.InsertFrames(this, nullptr, *prevOverflowFrames);
-      ReparentChildListStyle(PresContext(), newFrames, this);
+      ReparentChildListStyle(presContext, newFrames, this);
     }
   }
 }
