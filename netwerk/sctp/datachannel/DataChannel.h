@@ -262,6 +262,7 @@ private:
 #endif
   uint16_t mLocalPort; // Accessed from connect thread
   uint16_t mRemotePort;
+  bool mUsingDtls;
 
   // Timer to control when we try to resend blocked messages
   nsCOMPtr<nsITimer> mDeferredTimer;

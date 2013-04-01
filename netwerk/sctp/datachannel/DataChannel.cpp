@@ -225,6 +225,10 @@ DataChannelConnection::Destroy()
   mSocket = nullptr;
   mMasterSocket = nullptr;
 
+  if (mUsingDtls) {
+    usrsctp_deregister_address(static_cast<void *>(this));
+    LOG(("Deregistered %p from the SCTP stack.", static_cast<void *>(this)));
+  }
   // We can't get any more new callbacks from the SCTP library
   // All existing callbacks have refs to DataChannelConnection
 
@@ -300,6 +304,8 @@ DataChannelConnection::Init(unsigned short aPort, uint16_t aNumStreams, bool aUs
       }
 #endif
       usrsctp_sysctl_set_sctp_blackhole(2);
+      // ECN is currently not supported by the Firefox code
+      usrsctp_sysctl_set_sctp_ecn_enable(0);
       sctp_initialized = true;
 
       gDataChannelShutdown = new DataChannelShutdown();
@@ -409,11 +415,19 @@ DataChannelConnection::Init(unsigned short aPort, uint16_t aNumStreams, bool aUs
   }
 
   mSocket = nullptr;
+  if (aUsingDtls) {
+    mUsingDtls = true;
+    usrsctp_register_address(static_cast<void *>(this));
+    LOG(("Registered %p within the SCTP stack.", static_cast<void *>(this)));
+  } else {
+    mUsingDtls = false;
+  }
   return true;
 
 error_cleanup:
   usrsctp_close(mMasterSocket);
   mMasterSocket = nullptr;
+  mUsingDtls = false;
   return false;
 }
 
@@ -493,6 +507,7 @@ DataChannelConnection::ConnectDTLS(TransportFlow *aFlow, uint16_t localport, uin
   addr.sconn_len = sizeof(addr);
 #endif
   addr.sconn_port = htons(mLocalPort);
+  addr.sconn_addr = static_cast<void *>(this);
 
   LOG(("Calling usrsctp_bind"));
   int r = usrsctp_bind(mMasterSocket, reinterpret_cast<struct sockaddr *>(&addr),
@@ -502,7 +517,6 @@ DataChannelConnection::ConnectDTLS(TransportFlow *aFlow, uint16_t localport, uin
   } else {
     // This is the remote addr
     addr.sconn_port = htons(mRemotePort);
-    addr.sconn_addr = static_cast<void *>(this);
     LOG(("Calling usrsctp_connect"));
     r = usrsctp_connect(mMasterSocket, reinterpret_cast<struct sockaddr *>(&addr),
                         sizeof(addr));
