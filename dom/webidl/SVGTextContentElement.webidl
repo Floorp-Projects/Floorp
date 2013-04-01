@@ -35,6 +35,7 @@ interface SVGTextContentElement : SVGGraphicsElement {
   [Throws]
   float getRotationOfChar(unsigned long charnum);
   long getCharNumAtPosition(SVGPoint point);
-  // void selectSubString(unsigned long charnum, unsigned long nchars);
+  [Throws]
+  void selectSubString(unsigned long charnum, unsigned long nchars);
 };
 

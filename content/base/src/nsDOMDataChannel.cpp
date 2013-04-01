@@ -189,6 +189,20 @@ nsDOMDataChannel::GetLabel(nsAString& aLabel)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDOMDataChannel::GetProtocol(nsAString& aProtocol)
+{
+  mDataChannel->GetProtocol(aProtocol);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMDataChannel::GetStream(uint16_t *aStream)
+{
+  mDataChannel->GetStream(aStream);
+  return NS_OK;
+}
+
 // XXX should be GetType()?  Open question for the spec
 NS_IMETHODIMP
 nsDOMDataChannel::GetReliable(bool* aReliable)

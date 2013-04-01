@@ -263,6 +263,12 @@ protected:
     return aOffset;
   }
 
+  /**
+   * Return an offset of the found word boundary.
+   */
+  int32_t FindWordBoundary(int32_t aOffset, nsDirection aDirection,
+                           EWordMovementType aWordMovementType);
+
   /*
    * This does the work for nsIAccessibleText::GetText[At|Before|After]Offset
    * @param aType, eGetBefore, eGetAt, eGetAfter

@@ -39,6 +39,7 @@
 #include "gfxContext.h"
 #include "nsRect.h"
 #include "nsMathUtils.h"
+#include "gfxWindowsPlatform.h"
 
 //-------------------------------------------------------------------------
 //
@@ -301,11 +302,13 @@ nsDragService::StartInvokingDragSession(IDataObject * aDataObj,
   // We're done dragging, get the cursor position and end the drag
   // Use GetMessagePos to get the position of the mouse at the last message
   // seen by the event loop. (Bug 489729)
+  // Note that we must convert this from device pixels back to Windows logical
+  // pixels (bug 818927).
   DWORD pos = ::GetMessagePos();
-  POINT cpos;
-  cpos.x = GET_X_LPARAM(pos);
-  cpos.y = GET_Y_LPARAM(pos);
-  SetDragEndPoint(nsIntPoint(cpos.x, cpos.y));
+  FLOAT dpiScale = gfxWindowsPlatform::GetPlatform()->GetDPIScale();
+  nsIntPoint logPos(NSToIntRound(GET_X_LPARAM(pos) / dpiScale),
+                    NSToIntRound(GET_Y_LPARAM(pos) / dpiScale));
+  SetDragEndPoint(logPos);
   EndDragSession(true);
 
   mDoingDrag = false;

@@ -48,6 +48,8 @@ protected:
   WrapNode(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE = 0;
 
 public:
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE = 0;
+
   // nsIContent
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
