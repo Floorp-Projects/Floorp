@@ -169,14 +169,13 @@ nsCOMArray_base::InsertElementsAt(uint32_t aIndex, nsISupports* const* aElements
 bool
 nsCOMArray_base::ReplaceObjectAt(nsISupports* aObject, int32_t aIndex)
 {
-    bool result = mArray.EnsureLengthAtLeast(aIndex + 1);
-    if (result) {
-        nsISupports *oldObject = mArray[aIndex];
-        // Make sure to addref first, in case aObject == oldObject
-        NS_IF_ADDREF(mArray[aIndex] = aObject);
-        NS_IF_RELEASE(oldObject);
-    }
-    return result;
+  mArray.EnsureLengthAtLeast(aIndex + 1);
+  nsISupports *oldObject = mArray[aIndex];
+  // Make sure to addref first, in case aObject == oldObject
+  NS_IF_ADDREF(mArray[aIndex] = aObject);
+  NS_IF_RELEASE(oldObject);
+  // XXX make this return void
+  return true;
 }
 
 bool
