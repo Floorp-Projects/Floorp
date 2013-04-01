@@ -71,6 +71,10 @@ void uwt__init()
 {
 }
 
+void uwt__stop()
+{
+}
+
 void uwt__deinit()
 {
 }
@@ -153,13 +157,17 @@ void uwt__init()
   MOZ_ALWAYS_TRUE(r==0);
 }
 
-void uwt__deinit()
+void uwt__stop()
 {
   // Shut down the unwinder thread.
   MOZ_ASSERT(unwind_thr_exit_now == 0);
   unwind_thr_exit_now = 1;
   do_MBAR();
   int r = pthread_join(unwind_thr, NULL); MOZ_ALWAYS_TRUE(r==0);
+}
+
+void uwt__deinit()
+{
   do_breakpad_unwind_Buffer_free_singletons();
 }
 
@@ -817,14 +825,9 @@ static void* unwind_thr_fn(void* exit_nowV)
     MOZ_ASSERT(buffers);
     int i;
     for (i = 0; i < N_UNW_THR_BUFFERS; i++) {
-      /* These calloc-ations are never freed, even when the unwinder
-         thread is shut down.  The reason is that sampler threads
-         might still be filling them up even after this thread is shut
-         down.  The buffers themselves are not protected by the
-         spinlock, so we have no way to stop them being accessed
-         whilst we free them.  It doesn't matter much since they will
-         not be reallocated if a new unwinder thread is restarted
-         later. */
+      /* These calloc-ations are shared between the sampler and the unwinder.
+       * They must be free after both threads have terminated.
+       */
       buffers[i] = (UnwinderThreadBuffer*)
                    calloc(sizeof(UnwinderThreadBuffer), 1);
       MOZ_ASSERT(buffers[i]);
@@ -872,7 +875,10 @@ static void* unwind_thr_fn(void* exit_nowV)
 
   while (1) {
 
-    if (*exit_now != 0) break;
+    if (*exit_now != 0) {
+      *exit_now = 0;
+      break;
+    }
 
     spinLock_acquire(&g_spinLock);
 
@@ -1528,6 +1534,11 @@ void do_breakpad_unwind_Buffer_free_singletons()
     delete sModules;
     sModules = NULL;
   }
+
+  g_stackLimitsUsed = 0;
+  g_seqNo = 0;
+  free(g_buffers);
+  g_buffers = NULL;
 }
 
 static
