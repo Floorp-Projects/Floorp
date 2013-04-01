@@ -558,6 +558,18 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         return mVisibility == ToolbarVisibility.VISIBLE;
     }
 
+    public void setNextFocusDownId(int nextId) {
+        mAwesomeBar.setNextFocusDownId(nextId);
+        mTabs.setNextFocusDownId(nextId);
+        mBack.setNextFocusDownId(nextId);
+        mForward.setNextFocusDownId(nextId);
+        mFavicon.setNextFocusDownId(nextId);
+        mStop.setNextFocusDownId(nextId);
+        mSiteSecurity.setNextFocusDownId(nextId);
+        mReader.setNextFocusDownId(nextId);
+        mMenu.setNextFocusDownId(nextId);
+    }
+
     @Override
     public void onAnimationStart(Animation animation) {
         if (animation.equals(mLockFadeIn)) {
