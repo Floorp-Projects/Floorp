@@ -258,6 +258,13 @@ let Util = {
             aURL == "about:start");
   },
 
+  // Title to use for emptyURL tabs.
+  getEmptyURLTabTitle: function getEmptyURLTabTitle() {
+    let browserStrings = Services.strings.createBundle("chrome://browser/locale/browser.properties");
+
+    return browserStrings.GetStringFromName("tabs.emptyTabTitle");
+  },
+
   // Don't remember these pages in the session store.
   isURLMemorable: function isURLMemorable(aURL) {
     return !(aURL == "about:blank" ||

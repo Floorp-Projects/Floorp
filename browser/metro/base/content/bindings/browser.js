@@ -353,8 +353,11 @@ let WebNavigation =  {
   _serializeHistoryEntry: function _serializeHistoryEntry(aEntry) {
     let entry = { url: aEntry.URI.spec };
 
-    if (aEntry.title && aEntry.title != entry.url)
+    if (Util.isURLEmpty(entry.url)) {
+      entry.title = Util.getEmptyURLTabTitle();
+    } else {
       entry.title = aEntry.title;
+    }
 
     if (!(aEntry instanceof Ci.nsISHEntry))
       return entry;
