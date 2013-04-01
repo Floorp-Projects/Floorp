@@ -120,12 +120,17 @@ PeerConnectionImpl* PeerConnectionImpl::CreatePeerConnection()
 }
 
 
+PeerConnectionMedia::PeerConnectionMedia(PeerConnectionImpl *parent)
+    : mParent(parent),
+      mLocalSourceStreamsLock("PeerConnectionMedia.mLocalSourceStreamsLock"),
+      mIceCtx(NULL),
+      mDNSResolver(new mozilla::NrIceResolver()),
+      mMainThread(mParent->GetMainThread()),
+      mSTSThread(mParent->GetSTSThread()) {}
+
 nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_servers,
                                    const std::vector<NrIceTurnServer>& turn_servers)
 {
-  mMainThread = mParent->GetMainThread();
-  mSTSThread = mParent->GetSTSThread();
-
   // TODO(ekr@rtfm.com): need some way to set not offerer later
   // Looks like a bug in the NrIceCtx API.
   mIceCtx = NrIceCtx::Create("PC:" + mParent->GetHandle(), true);
