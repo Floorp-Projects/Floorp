@@ -10,7 +10,12 @@ var archiveReaderEnabled = false;
 // and content mochitests (where the |Components| object is accessible only as
 // SpecialPowers.Components). Expose Components if necessary here to make things
 // work everywhere.
-if (typeof Components === 'undefined' && typeof SpecialPowers === 'object')
+//
+// Even if the real |Components| doesn't exist, we might shim in a simple JS
+// placebo for compat. An easy way to differentiate this from the real thing
+// is whether the property is read-only or not.
+var c = Object.getOwnPropertyDescriptor(this, 'Components');
+if ((!c.value || c.writable) && typeof SpecialPowers === 'object')
   Components = SpecialPowers.Components;
 
 function executeSoon(aFun)

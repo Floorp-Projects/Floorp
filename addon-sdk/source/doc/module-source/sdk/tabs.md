@@ -68,6 +68,18 @@ content:
       });
     });
 
+## Private Windows ##
+
+If your add-on has not opted into private browsing, then you won't see any
+tabs that are hosted by private browser windows.
+
+Tabs hosted by private browser windows won't be seen if you enumerate the
+`tabs` module itself, and you won't receive any events for them.
+
+To learn more about private windows, how to opt into private browsing, and how
+to support private browsing, refer to the
+[documentation for the `private-browsing` module](modules/sdk/private-browsing.html).
+
 <api name="activeTab">
 @property {Tab}
 
@@ -140,8 +152,8 @@ If present and true, the new tab will be opened to the right of the active tab
 and will not be active. This is an optional property.
 
 @prop isPrivate {boolean}
-Boolean which will determine if a private tab should be opened.
-Private browsing mode must be supported in order to do this.
+Boolean which will determine whether the new tab should be private or not.
+If your add-on does not support private browsing this will have no effect.
 See the [private-browsing](modules/sdk/private-browsing.html) documentation for more information.
 
 @prop [isPinned] {boolean}

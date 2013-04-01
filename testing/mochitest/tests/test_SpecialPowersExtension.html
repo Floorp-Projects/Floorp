@@ -160,6 +160,9 @@ function starttest(){
   is(SpecialPowers.wrap(document).URI, document.URI, "Got property correctly on Xray-wrapped DOM object");
 
   info("\nProfile::SpecialPowersRunTime: " + (new Date() - startTime) + "\n");
+
+  // bug 855192
+  ok(SpecialPowers.MockPermissionPrompt, "check mock permission prompt");
   SimpleTest.finish();
 }
 </script>

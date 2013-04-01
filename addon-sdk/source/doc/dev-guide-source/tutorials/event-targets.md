@@ -10,7 +10,7 @@ incompatible changes to them in future releases.</span>
 
 The [guide to event-driven programming with the SDK](dev-guide/guides/events.html)
 describes how to consume events: that is, how to listen to events generated
-by event targets. For example, you can listen to [`private-browsing`'s `start` event](modules/sdk/private-browsing.html#start) or the
+by event targets. For example, you can listen to the [`tabs` module's `ready` event](modules/sdk/tabs.html#ready) or the
 [`Panel` object's `show` event](modules/sdk/panel.html#show).
 
 With the SDK, it's also simple to implement your own event targets.

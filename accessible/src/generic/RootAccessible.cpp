@@ -165,9 +165,9 @@ const char* const kEventTypes[] = {
   "TreeInvalidated",
   // add ourself as a OpenStateChange listener (custom event fired in tree.xml)
   "OpenStateChange",
-  // add ourself as a CheckboxStateChange listener (custom event fired in nsHTMLInputElement.cpp)
+  // add ourself as a CheckboxStateChange listener (custom event fired in HTMLInputElement.cpp)
   "CheckboxStateChange",
-  // add ourself as a RadioStateChange Listener ( custom event fired in in nsHTMLInputElement.cpp  & radio.xml)
+  // add ourself as a RadioStateChange Listener ( custom event fired in in HTMLInputElement.cpp  & radio.xml)
   "RadioStateChange",
   "popupshown",
   "popuphiding",

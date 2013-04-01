@@ -20,7 +20,8 @@ const systemPrincipal = CC('@mozilla.org/systemprincipal;1', 'nsIPrincipal')();
 const scriptLoader = Cc['@mozilla.org/moz/jssubscript-loader;1'].
                      getService(Ci.mozIJSSubScriptLoader);
 const prefService = Cc['@mozilla.org/preferences-service;1'].
-                    getService(Ci.nsIPrefService);
+                    getService(Ci.nsIPrefService).
+                    QueryInterface(Ci.nsIPrefBranch);
 const appInfo = Cc["@mozilla.org/xre/app-info;1"].
                 getService(Ci.nsIXULAppInfo);
 const vc = Cc["@mozilla.org/xpcom/version-comparator;1"].
@@ -127,12 +128,21 @@ function startup(data, reasonCode) {
     if (name == 'addon-sdk')
       paths['tests/'] = prefixURI + name + '/tests/';
 
+    let useBundledSDK = options['force-use-bundled-sdk'];
+    if (!useBundledSDK) {
+      try {
+        useBundledSDK = prefService.getBoolPref("extensions.addon-sdk.useBundledSDK");
+      }
+      catch (e) {
+        // Pref doesn't exist, allow using Firefox shipped SDK
+      }
+    }
+
     // Starting with Firefox 21.0a1, we start using modules shipped into firefox
     // Still allow using modules from the xpi if the manifest tell us to do so.
     // And only try to look for sdk modules in xpi if the xpi actually ship them
     if (options['is-sdk-bundled'] &&
-        (vc.compare(appInfo.version, '21.0a1') < 0 ||
-         options['force-use-bundled-sdk'])) {
+        (vc.compare(appInfo.version, '21.0a1') < 0 || useBundledSDK)) {
       // Maps sdk module folders to their resource folder
       paths[''] = prefixURI + 'addon-sdk/lib/';
       // test.js is usually found in root commonjs or SDK_ROOT/lib/ folder,

@@ -24,6 +24,7 @@
 #include "prnetdb.h"
 #include "prerr.h"
 #include "NetworkActivityMonitor.h"
+#include "mozilla/VisualEventTracer.h"
 
 #include "nsIServiceManager.h"
 #include "nsISocketProviderService.h"
@@ -729,6 +730,8 @@ nsSocketTransport::Init(const char **types, uint32_t typeCount,
                         const nsACString &host, uint16_t port,
                         nsIProxyInfo *givenProxyInfo)
 {
+    MOZ_EVENT_TRACER_NAME_OBJECT(this, host.BeginReading());
+
     nsCOMPtr<nsProxyInfo> proxyInfo;
     if (givenProxyInfo) {
         proxyInfo = do_QueryInterface(givenProxyInfo);
@@ -1179,6 +1182,8 @@ nsSocketTransport::InitiateSocket()
     //
     PRNetAddr prAddr;
     NetAddrToPRNetAddr(&mNetAddr, &prAddr);
+
+    MOZ_EVENT_TRACER_EXEC(this, "net::tcp::connect");
     status = PR_Connect(fd, &prAddr, NS_SOCKET_CONNECT_TIMEOUT);
     if (status == PR_SUCCESS) {
         // 
@@ -1403,6 +1408,8 @@ nsSocketTransport::OnSocketConnected()
         NS_ASSERTION(mFDref == 1, "wrong socket ref count");
         mFDconnected = true;
     }
+
+    MOZ_EVENT_TRACER_DONE(this, "net::tcp::connect");
 
     SendStatus(NS_NET_STATUS_CONNECTED_TO);
 }
@@ -2144,6 +2151,7 @@ nsSocketTransport::OnLookupComplete(nsICancelable *request,
     // flag host lookup complete for the benefit of the ResolveHost method.
     mResolving = false;
 
+    MOZ_EVENT_TRACER_WAIT(this, "net::tcp::connect");
     nsresult rv = PostEvent(MSG_DNS_LOOKUP_COMPLETE, status, rec);
 
     // if posting a message fails, then we should assume that the socket

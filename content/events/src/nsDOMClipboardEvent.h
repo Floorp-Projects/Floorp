@@ -8,6 +8,7 @@
 
 #include "nsIDOMClipboardEvent.h"
 #include "nsDOMEvent.h"
+#include "mozilla/dom/ClipboardEventBinding.h"
 
 class nsDOMClipboardEvent : public nsDOMEvent,
                             public nsIDOMClipboardEvent
@@ -28,6 +29,18 @@ public:
   nsresult InitFromCtor(const nsAString& aType,
                         JSContext* aCx, jsval* aVal);
 
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope)
+  {
+    return mozilla::dom::ClipboardEventBinding::Wrap(aCx, aScope, this);
+  }
+
+  static already_AddRefed<nsDOMClipboardEvent>
+  Constructor(const mozilla::dom::GlobalObject& aGlobal,
+              const nsAString& aType,
+              const mozilla::dom::ClipboardEventInit& aParam,
+              mozilla::ErrorResult& aRv);
+
+  nsIDOMDataTransfer* GetClipboardData();
 };
 
 #endif // nsDOMClipboardEvent_h_

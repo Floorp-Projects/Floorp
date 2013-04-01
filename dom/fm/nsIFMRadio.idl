@@ -26,7 +26,7 @@ interface nsIFMRadioSettings : nsISupports
  *
  * If the WebFM API is re-written in c++ some day, this interface will be useless.
  */
-[scriptable, builtinclass, uuid(9586bc9c-738e-4bcd-907c-ad340a6adc8b)]
+[scriptable, builtinclass, uuid(2ee7c122-b7aa-4948-9bc5-e4593ed4ac32)]
 interface nsIFMRadio : nsIDOMEventTarget {
     const long SEEK_DIRECTION_UP   = 0;
     const long SEEK_DIRECTION_DOWN = 1;

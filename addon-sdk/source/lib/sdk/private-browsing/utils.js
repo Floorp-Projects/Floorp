@@ -54,7 +54,7 @@ let isTabPBSupported = exports.isTabPBSupported =
                        !pbService && !!PrivateBrowsingUtils && is('Fennec') && satisfiesVersion(version, '>=20.0*');
                        
 function ignoreWindow(window) {
-  return !isPrivateBrowsingSupported && isWindowPrivate(window);
+  return !isPrivateBrowsingSupported && isWindowPrivate(window) && !isGlobalPBSupported;
 }
 exports.ignoreWindow = ignoreWindow;
 

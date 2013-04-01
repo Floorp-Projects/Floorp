@@ -39,8 +39,17 @@ A browser window.
 
 <api name="getTabs">
 @function
-Returns the tabs for the specified `window`, or the tabs
-across all the browser's windows if `window` is omitted.
+Returns the tabs for the specified `window`.
+
+If you omit `window`, this function will return tabs
+across all the browser's windows. However, if your add-on
+has not opted into private browsing, then the function will
+exclude all tabs that are hosted by private browser windows.
+
+To learn more about private windows, how to opt into private browsing, and how
+to support private browsing, refer to the
+[documentation for the `private-browsing` module](modules/sdk/private-browsing.html).
+
 @param window {nsIWindow}
 Optional.
 @returns {Array}

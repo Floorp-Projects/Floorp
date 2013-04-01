@@ -5,6 +5,12 @@
 
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <item android:id="@+id/abouthome_open_new_tab"
+          android:title="@string/contextmenu_open_new_tab"/>
+
+    <item android:id="@+id/abouthome_open_private_tab"
+          android:title="@string/contextmenu_open_private_tab"/>
+
     <item android:id="@+id/abouthome_topsites_edit"
           android:title="@string/abouthome_topsites_edit"/>
 

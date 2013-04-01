@@ -38,7 +38,11 @@ class WebSocketChannelParent : public PWebSocketParent,
   bool RecvAsyncOpen(const URIParams& aURI,
                      const nsCString& aOrigin,
                      const nsCString& aProtocol,
-                     const bool& aSecure);
+                     const bool& aSecure,
+                     const uint32_t& aPingInterval,
+                     const bool& aClientSetPingInterval,
+                     const uint32_t& aPingTimeout,
+                     const bool& aClientSetPingTimeout);
   bool RecvClose(const uint16_t & code, const nsCString & reason);
   bool RecvSendMsg(const nsCString& aMsg);
   bool RecvSendBinaryMsg(const nsCString& aMsg);

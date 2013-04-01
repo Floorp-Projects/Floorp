@@ -403,8 +403,7 @@ void XPCJSRuntime::TraceGrayJS(JSTracer* trc, void* data)
 static void
 TraceJSObject(void *aScriptThing, const char *name, void *aClosure)
 {
-    JS_CALL_TRACER(static_cast<JSTracer*>(aClosure), aScriptThing,
-                   js::GCThingTraceKind(aScriptThing), name);
+    JS_CallGenericTracer(static_cast<JSTracer*>(aClosure), aScriptThing, name);
 }
 
 static PLDHashOperator
@@ -421,7 +420,7 @@ void XPCJSRuntime::TraceXPConnectRoots(JSTracer *trc)
     while (JSContext *acx = JS_ContextIterator(GetJSRuntime(), &iter)) {
         MOZ_ASSERT(js::HasUnrootedGlobal(acx));
         if (JSObject *global = JS_GetGlobalObject(acx))
-            JS_CALL_OBJECT_TRACER(trc, global, "XPC global object");
+            JS_CallObjectTracer(trc, global, "XPC global object");
     }
 
     XPCAutoLock lock(mMapLock);

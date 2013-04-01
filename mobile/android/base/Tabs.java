@@ -54,6 +54,7 @@ public class Tabs implements GeckoEventListener {
     public static final int LOADURL_PINNED = 8;
     public static final int LOADURL_DELAY_LOAD = 16;
     public static final int LOADURL_DESKTOP = 32;
+    public static final int LOADURL_BACKGROUND = 64;
 
     private static final int SCORE_INCREMENT_TAB_LOCATION_CHANGE = 5;
     private static final int SCORE_INCREMENT_TAB_SELECTED = 10;
@@ -605,6 +606,7 @@ public class Tabs implements GeckoEventListener {
         JSONObject args = new JSONObject();
         Tab added = null;
         boolean delayLoad = (flags & LOADURL_DELAY_LOAD) != 0;
+        boolean background = (flags & LOADURL_BACKGROUND) != 0;
 
         try {
             boolean isPrivate = (flags & LOADURL_PRIVATE) != 0;
@@ -620,6 +622,7 @@ public class Tabs implements GeckoEventListener {
             args.put("pinned", (flags & LOADURL_PINNED) != 0);
             args.put("delayLoad", delayLoad);
             args.put("desktopMode", desktopMode);
+            args.put("selected", !background);
 
             if ((flags & LOADURL_NEW_TAB) != 0) {
                 int tabId = getNextTabId();
@@ -639,7 +642,7 @@ public class Tabs implements GeckoEventListener {
 
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Load", args.toString()));
 
-        if ((added != null) && !delayLoad) {
+        if ((added != null) && !delayLoad && !background) {
             selectTab(added.getId());
         }
 

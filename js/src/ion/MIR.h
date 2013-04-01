@@ -3278,10 +3278,17 @@ class MPhi : public MDefinition, public InlineForwardListNode<MPhi>
     bool triedToSpecialize_;
     bool isIterator_;
 
+#if DEBUG
+    uint32_t capacity_;
+#endif
+
     MPhi(uint32_t slot)
       : slot_(slot),
         triedToSpecialize_(false),
         isIterator_(false)
+#if DEBUG
+        , capacity_(0)
+#endif
     {
         setResultType(MIRType_Value);
     }
@@ -3295,7 +3302,6 @@ class MPhi : public MDefinition, public InlineForwardListNode<MPhi>
     INSTRUCTION_HEADER(Phi)
     static MPhi *New(uint32_t slot);
 
-    // Unsafe to use unless space has already been reserved via initLength().
     void setOperand(size_t index, MDefinition *operand) {
         JS_ASSERT(index < numOperands());
         inputs_[index].set(operand, this, index);
@@ -3321,12 +3327,15 @@ class MPhi : public MDefinition, public InlineForwardListNode<MPhi>
         setResultType(type);
     }
 
-    // Initializes the operands vector to the given length,
-    // permitting use of setOperand() instead of addInputSlow().
-    bool initLength(size_t length);
+    // Initializes the operands vector to the given capacity,
+    // permitting use of addInput() instead of addInputSlow().
+    bool reserveLength(size_t length);
+
+    // Use only if capacity has been reserved by reserveLength
+    void addInput(MDefinition *ins);
 
     // Appends a new input to the input vector. May call realloc().
-    // Prefer initLength() and setOperand() instead, where possible.
+    // Prefer reserveLength() and addInput() instead, where possible.
     bool addInputSlow(MDefinition *ins);
 
     MDefinition *foldsTo(bool useValueNumbers);
@@ -4885,6 +4894,12 @@ class InlinePropertyTable : public TempObject
         return entries_[i]->func;
     }
 
+    bool hasFunction(JSFunction *func) const;
+
+    // Remove targets that vetoed inlining from the InlinePropertyTable.
+    void trimTo(AutoObjectVector &targets, Vector<bool> &choiceSet);
+
+    // Ensure that the InlinePropertyTable's domain is a subset of |targets|.
     void trimToAndMaybePatchTargets(AutoObjectVector &targets, AutoObjectVector &originals);
 };
 
@@ -4930,7 +4945,7 @@ class MGetPropertyCache
         inlinePropertyTable_ = NULL;
     }
 
-    InlinePropertyTable *inlinePropertyTable() const {
+    InlinePropertyTable *propTable() const {
         return inlinePropertyTable_;
     }
 
@@ -4974,6 +4989,144 @@ class MGetPropertyCache
         return AliasSet::Store(AliasSet::Any);
     }
 
+};
+
+class MDispatchInstruction
+  : public MControlInstruction,
+    public SingleObjectPolicy
+{
+    // Map from JSFunction* -> MBasicBlock.
+    struct Entry {
+        JSFunction *func;
+        MBasicBlock *block;
+
+        Entry(JSFunction *func, MBasicBlock *block)
+          : func(func), block(block)
+        { }
+    };
+    Vector<Entry, 4, IonAllocPolicy> map_;
+
+    // An optional fallback path that uses MCall.
+    MBasicBlock *fallback_;
+    MUse operand_;
+
+  public:
+    MDispatchInstruction(MDefinition *input)
+      : map_(), fallback_(NULL)
+    {
+        setOperand(0, input);
+    }
+
+  protected:
+    void setOperand(size_t index, MDefinition *operand) {
+        JS_ASSERT(index == 0);
+        operand_.set(operand, this, 0);
+        operand->addUse(&operand_);
+    }
+    MUse *getUseFor(size_t index) {
+        JS_ASSERT(index == 0);
+        return &operand_;
+    }
+    MDefinition *getOperand(size_t index) const {
+        JS_ASSERT(index == 0);
+        return operand_.producer();
+    }
+    size_t numOperands() const {
+        return 1;
+    }
+
+  public:
+    void setSuccessor(size_t i, MBasicBlock *successor) {
+        JS_ASSERT(i < numSuccessors());
+        if (i == map_.length())
+            fallback_ = successor;
+        else
+            map_[i].block = successor;
+    }
+    size_t numSuccessors() const {
+        return map_.length() + (fallback_ ? 1 : 0);
+    }
+    void replaceSuccessor(size_t i, MBasicBlock *successor) {
+        setSuccessor(i, successor);
+    }
+    MBasicBlock *getSuccessor(size_t i) const {
+        JS_ASSERT(i < numSuccessors());
+        if (i == map_.length())
+            return fallback_;
+        return map_[i].block;
+    }
+
+  public:
+    void addCase(JSFunction *func, MBasicBlock *block) {
+        map_.append(Entry(func, block));
+    }
+    uint32_t numCases() const {
+        return map_.length();
+    }
+    JSFunction *getCase(uint32_t i) const {
+        return map_[i].func;
+    }
+    MBasicBlock *getCaseBlock(uint32_t i) const {
+        return map_[i].block;
+    }
+
+    bool hasFallback() const {
+        return bool(fallback_);
+    }
+    void addFallback(MBasicBlock *block) {
+        JS_ASSERT(!hasFallback());
+        fallback_ = block;
+    }
+    MBasicBlock *getFallback() const {
+        JS_ASSERT(hasFallback());
+        return fallback_;
+    }
+
+  public:
+    MDefinition *input() const {
+        return getOperand(0);
+    }
+    TypePolicy *typePolicy() {
+        return this;
+    }
+};
+
+// Polymorphic dispatch for inlining, keyed off incoming TypeObject.
+class MTypeObjectDispatch : public MDispatchInstruction
+{
+    // Map TypeObject (of CallProp's Target Object) -> JSFunction (yielded by the CallProp).
+    InlinePropertyTable *inlinePropertyTable_;
+
+    MTypeObjectDispatch(MDefinition *input, InlinePropertyTable *table)
+      : MDispatchInstruction(input),
+        inlinePropertyTable_(table)
+    { }
+
+  public:
+    INSTRUCTION_HEADER(TypeObjectDispatch)
+
+    static MTypeObjectDispatch *New(MDefinition *ins, InlinePropertyTable *table) {
+        return new MTypeObjectDispatch(ins, table);
+    }
+
+    InlinePropertyTable *propTable() const {
+        return inlinePropertyTable_;
+    }
+};
+
+// Polymorphic dispatch for inlining, keyed off incoming JSFunction*.
+class MFunctionDispatch : public MDispatchInstruction
+{
+    MFunctionDispatch(MDefinition *input)
+      : MDispatchInstruction(input)
+    { }
+
+  public:
+    INSTRUCTION_HEADER(FunctionDispatch)
+
+    static MFunctionDispatch *New(MDefinition *ins) {
+        return new MFunctionDispatch(ins);
+    }
 };
 
 // Represents a polymorphic dispatch to one or more functions.
@@ -5109,7 +5262,7 @@ class MPolyInlineDispatch : public MControlInstruction, public SingleObjectPolic
         JS_NOT_REACHED("Bad function lookup!");
     }
 
-    InlinePropertyTable *inlinePropertyTable() const {
+    InlinePropertyTable *propTable() const {
         return inlinePropertyTable_;
     }
 

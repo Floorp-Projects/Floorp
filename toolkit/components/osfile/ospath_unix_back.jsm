@@ -16,7 +16,24 @@
  */
 if (typeof Components != "undefined") {
   this.EXPORTED_SYMBOLS = ["OS"];
-  Components.utils.import("resource://gre/modules/osfile/osfile_unix_allthreads.jsm", this);
+  let Scope = {};
+  Components.utils.import("resource://gre/modules/Services.jsm", Scope);
+
+  // Some tests need to import this module from any platform.
+  // We detect this by setting a bogus preference "toolkit.osfile.test.syslib_necessary"
+  // from the test suite
+  let syslib_necessary = true;
+  try {
+    syslib_necessary = Scope.Services.prefs.getBoolPref("toolkit.osfile.test.syslib_necessary");
+  } catch (x) {
+    // Ignore errors
+  }
+
+  try {
+    Components.utils.import("resource://gre/modules/osfile/osfile_unix_allthreads.jsm", this);
+  } catch (ex if !syslib_necessary && ex.message.startsWith("Could not open system library:")) {
+    // Executing this module without a libc is acceptable for this test
+  }
 }
 (function(exports) {
    "use strict";

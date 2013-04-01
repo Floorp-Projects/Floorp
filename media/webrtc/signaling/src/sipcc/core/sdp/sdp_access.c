@@ -2016,6 +2016,31 @@ sdp_result_e sdp_set_media_portnum (void *sdp_ptr, u16 level, int32 portnum, int
     return (SDP_SUCCESS);
 }
 
+/* Function:    sdp_get_media_sctp_port
+ * Description: Gets the value of the sctp port number parameter for the m=
+ *              media token line.
+ * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
+ *              level       The media level to set the param.  Will be 1-n.
+ * Returns:     sctp_port or -1 on failure
+ */
+int32 sdp_get_media_sctp_port(void *sdp_ptr, u16 level)
+{
+    sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
+    sdp_mca_t  *mca_p;
+
+    if (!sdp_verify_sdp_ptr(sdp_p)) {
+        return -1;
+    }
+
+    mca_p = sdp_find_media_level(sdp_p, level);
+    if (!mca_p) {
+        sdp_p->conf_p->num_invalid_param++;
+        return -1;
+    }
+
+    return mca_p->sctpport;
+}
+
 /* Function:    sdp_set_media_portcount
  * Description: Sets the value of the port count parameter for the m=
  *              media token line.  If the port count is not valid with the

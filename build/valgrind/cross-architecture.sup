@@ -90,8 +90,7 @@
    Bug 793548
    Memcheck:Leak
    fun:malloc
-   fun:moz_xmalloc
-   fun:NS_Alloc_P
+   ...
    fun:_Z12ToNewCStringRK19nsACString_internal
    fun:_ZN13CrashReporter14SetupExtraDataEP7nsIFileRK19nsACString_internal
    ...
@@ -291,6 +290,13 @@
    fun:malloc
    ...
    fun:_ZN2js6ctypes10StructTypeL6CreateEP9JSContextjPN2JS5ValueE
+   ...
+}
+{
+   Bug 823782
+   Memcheck:Leak
+   fun:malloc
+   fun:_ZN2js6ctypes9Int64Base9ConstructEP9JSContextN2JS6HandleIP8JSObjectEEmb
    ...
 }
 {
