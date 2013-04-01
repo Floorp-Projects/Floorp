@@ -286,6 +286,8 @@ function internalSave(aURL, aDocument, aDefaultFileName, aContentDisposition,
     file = aChosenData.file;
     sourceURI = aChosenData.uri;
     saveAsType = kSaveAsType_Complete;
+
+    continueSave();
   } else {
     var charset = null;
     if (aDocument)
@@ -309,38 +311,42 @@ function internalSave(aURL, aDocument, aDefaultFileName, aContentDisposition,
     // Find a URI to use for determining last-downloaded-to directory
     let relatedURI = aReferrer || sourceURI;
 
-    if (!getTargetFile(fpParams, aSkipPrompt, relatedURI))
-      // If the method returned false this is because the user cancelled from
-      // the save file picker dialog.
-      return;
+    getTargetFile(fpParams, function(aDialogCancelled) {
+      if (aDialogCancelled)
+        return;
 
-    saveAsType = fpParams.saveAsType;
-    file = fpParams.file;
+      saveAsType = fpParams.saveAsType;
+      file = fpParams.file;
+
+      continueSave();
+    }, aSkipPrompt, relatedURI);
   }
 
-  // XXX We depend on the following holding true in appendFiltersForContentType():
-  // If we should save as a complete page, the saveAsType is kSaveAsType_Complete.
-  // If we should save as text, the saveAsType is kSaveAsType_Text.
-  var useSaveDocument = aDocument &&
-                        (((saveMode & SAVEMODE_COMPLETE_DOM) && (saveAsType == kSaveAsType_Complete)) ||
-                         ((saveMode & SAVEMODE_COMPLETE_TEXT) && (saveAsType == kSaveAsType_Text)));
-  // If we're saving a document, and are saving either in complete mode or
-  // as converted text, pass the document to the web browser persist component.
-  // If we're just saving the HTML (second option in the list), send only the URI.
-  var persistArgs = {
-    sourceURI         : sourceURI,
-    sourceReferrer    : aReferrer,
-    sourceDocument    : useSaveDocument ? aDocument : null,
-    targetContentType : (saveAsType == kSaveAsType_Text) ? "text/plain" : null,
-    targetFile        : file,
-    sourceCacheKey    : aCacheKey,
-    sourcePostData    : aDocument ? getPostData(aDocument) : null,
-    bypassCache       : aShouldBypassCache,
-    initiatingWindow  : aInitiatingDocument.defaultView
-  };
+  function continueSave() {
+    // XXX We depend on the following holding true in appendFiltersForContentType():
+    // If we should save as a complete page, the saveAsType is kSaveAsType_Complete.
+    // If we should save as text, the saveAsType is kSaveAsType_Text.
+    var useSaveDocument = aDocument &&
+                          (((saveMode & SAVEMODE_COMPLETE_DOM) && (saveAsType == kSaveAsType_Complete)) ||
+                           ((saveMode & SAVEMODE_COMPLETE_TEXT) && (saveAsType == kSaveAsType_Text)));
+    // If we're saving a document, and are saving either in complete mode or
+    // as converted text, pass the document to the web browser persist component.
+    // If we're just saving the HTML (second option in the list), send only the URI.
+    var persistArgs = {
+      sourceURI         : sourceURI,
+      sourceReferrer    : aReferrer,
+      sourceDocument    : useSaveDocument ? aDocument : null,
+      targetContentType : (saveAsType == kSaveAsType_Text) ? "text/plain" : null,
+      targetFile        : file,
+      sourceCacheKey    : aCacheKey,
+      sourcePostData    : aDocument ? getPostData(aDocument) : null,
+      bypassCache       : aShouldBypassCache,
+      initiatingWindow  : aInitiatingDocument.defaultView
+    };
 
-  // Start the actual save process
-  internalPersist(persistArgs);
+    // Start the actual save process
+    internalPersist(persistArgs);
+  }
 }
 
 /**
@@ -521,6 +527,10 @@ function initFileInfo(aFI, aURL, aURLCharset, aDocument,
  * @param aFpP
  *        A structure (see definition in internalSave(...) method)
  *        containing all the data used within this method.
+ * @param aCallback
+ *        A callback function that will be called once the function finishes.
+ *        The first argument passed to the function will be a boolean that,
+ *        when true, indicated that the user dismissed the file picker.
  * @param aSkipPrompt
  *        If true, attempt to save the file automatically to the user's default
  *        download directory, thus skipping the explicit prompt for a file name,
@@ -532,10 +542,8 @@ function initFileInfo(aFI, aURL, aURLCharset, aDocument,
  *        An nsIURI associated with the download. The last used
  *        directory of the picker is retrieved from/stored in the 
  *        Content Pref Service using this URI.
- * @return true if the user confirmed a filename in the picker or the picker
- *         was not displayed; false if they dismissed the picker.
  */
-function getTargetFile(aFpP, /* optional */ aSkipPrompt, /* optional */ aRelatedURI)
+function getTargetFile(aFpP, aCallback, /* optional */ aSkipPrompt, /* optional */ aRelatedURI)
 {
   if (!getTargetFile.DownloadLastDir)
     Components.utils.import("resource://gre/modules/DownloadLastDir.jsm", getTargetFile);
@@ -557,66 +565,74 @@ function getTargetFile(aFpP, /* optional */ aSkipPrompt, /* optional */ aRelated
     dir.append(getNormalizedLeafName(aFpP.fileInfo.fileName,
                                      aFpP.fileInfo.fileExt));
     aFpP.file = uniqueFile(dir);
-    return true;
+    aCallback(false);
+    return;
   }
 
   // We must prompt for the file name explicitly.
   // If we must prompt because we were asked to...
-  if (!useDownloadDir) try {
-    // ...find the directory that was last used for saving, and use it in the
-    // file picker if it is still valid. Otherwise, keep the default of the
-    // user's default downloads directory. If it doesn't exist, it will be
-    // changed to the user's desktop later.
-    var lastDir = gDownloadLastDir.getFile(aRelatedURI);
-    if (lastDir.exists()) {
-      dir = lastDir;
-      dirExists = true;
-    }
-  } catch(e) {}
-
-  if (!dirExists) {
-    // Default to desktop.
-    dir = Services.dirsvc.get("Desk", nsIFile);
+  if (useDownloadDir) {
+    // Keep async behavior in both branches
+    Services.tm.mainThread.dispatch(function() {
+      displayPicker();
+    }, Components.interfaces.nsIThread.DISPATCH_NORMAL);
+  } else {
+    gDownloadLastDir.getFileAsync(aRelatedURI, function getFileAsyncCB(aFile) {
+      if (aFile && aFile.exists()) {
+        dir = aFile;
+        dirExists = true;
+      }
+      displayPicker();
+    });
   }
 
-  var fp = makeFilePicker();
-  var titleKey = aFpP.fpTitleKey || "SaveLinkTitle";
-  fp.init(window, ContentAreaUtils.stringBundle.GetStringFromName(titleKey),
-          Components.interfaces.nsIFilePicker.modeSave);
-
-  fp.displayDirectory = dir;
-  fp.defaultExtension = aFpP.fileInfo.fileExt;
-  fp.defaultString = getNormalizedLeafName(aFpP.fileInfo.fileName,
-                                           aFpP.fileInfo.fileExt);
-  appendFiltersForContentType(fp, aFpP.contentType, aFpP.fileInfo.fileExt,
-                              aFpP.saveMode);
-
-  // The index of the selected filter is only preserved and restored if there's
-  // more than one filter in addition to "All Files".
-  if (aFpP.saveMode != SAVEMODE_FILEONLY) {
-    try {
-      fp.filterIndex = prefs.getIntPref("save_converter_index");
+  function displayPicker() {
+    if (!dirExists) {
+      // Default to desktop.
+      dir = Services.dirsvc.get("Desk", nsIFile);
     }
-    catch (e) {
+
+    var fp = makeFilePicker();
+    var titleKey = aFpP.fpTitleKey || "SaveLinkTitle";
+    fp.init(window, ContentAreaUtils.stringBundle.GetStringFromName(titleKey),
+            Components.interfaces.nsIFilePicker.modeSave);
+
+    fp.displayDirectory = dir;
+    fp.defaultExtension = aFpP.fileInfo.fileExt;
+    fp.defaultString = getNormalizedLeafName(aFpP.fileInfo.fileName,
+                                             aFpP.fileInfo.fileExt);
+    appendFiltersForContentType(fp, aFpP.contentType, aFpP.fileInfo.fileExt,
+                                aFpP.saveMode);
+
+    // The index of the selected filter is only preserved and restored if there's
+    // more than one filter in addition to "All Files".
+    if (aFpP.saveMode != SAVEMODE_FILEONLY) {
+      try {
+        fp.filterIndex = prefs.getIntPref("save_converter_index");
+      }
+      catch (e) {
+      }
     }
+
+    if (fp.show() == Components.interfaces.nsIFilePicker.returnCancel || !fp.file) {
+      aCallback(true);
+      return;
+    }
+
+    if (aFpP.saveMode != SAVEMODE_FILEONLY)
+      prefs.setIntPref("save_converter_index", fp.filterIndex);
+
+    // Do not store the last save directory as a pref inside the private browsing mode
+    var directory = fp.file.parent.QueryInterface(nsIFile);
+    gDownloadLastDir.setFile(aRelatedURI, directory);
+
+    fp.file.leafName = validateFileName(fp.file.leafName);
+
+    aFpP.saveAsType = fp.filterIndex;
+    aFpP.file = fp.file;
+    aFpP.fileURL = fp.fileURL;
+    aCallback(false);
   }
-
-  if (fp.show() == Components.interfaces.nsIFilePicker.returnCancel || !fp.file)
-    return false;
-
-  if (aFpP.saveMode != SAVEMODE_FILEONLY)
-    prefs.setIntPref("save_converter_index", fp.filterIndex);
-
-  // Do not store the last save directory as a pref inside the private browsing mode
-  var directory = fp.file.parent.QueryInterface(nsIFile);
-  gDownloadLastDir.setFile(aRelatedURI, directory);
-
-  fp.file.leafName = validateFileName(fp.file.leafName);
-
-  aFpP.saveAsType = fp.filterIndex;
-  aFpP.file = fp.file;
-  aFpP.fileURL = fp.fileURL;
-  return true;
 }
 
 // Since we're automatically downloading, we don't get the file picker's
