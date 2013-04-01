@@ -29,6 +29,8 @@ public:
     return true;
   }
 
+  virtual void DestroyMediaStream() MOZ_OVERRIDE;
+
   void GetFloatFrequencyData(Float32Array& aArray);
   void GetByteFrequencyData(Uint8Array& aArray);
   void GetByteTimeDomainData(Uint8Array& aArray);
@@ -58,10 +60,17 @@ public:
   void SetSmoothingTimeConstant(double aValue, ErrorResult& aRv);
 
 private:
+  friend class AnalyserNodeEngine;
+  void AppendChunk(const AudioChunk& aChunk);
+  bool AllocateBuffer();
+
+private:
   uint32_t mFFTSize;
   double mMinDecibels;
   double mMaxDecibels;
   double mSmoothingTimeConstant;
+  uint32_t mWriteIndex;
+  FallibleTArray<float> mBuffer;
 };
 
 }
