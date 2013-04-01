@@ -528,25 +528,24 @@ class ParsedSDP {
 
 class SignalingAgent {
  public:
-  SignalingAgent() : pc(nullptr) {}
+  SignalingAgent() : pc(nullptr) {
+    cfg_.addStunServer("23.21.150.121", 3478);
+
+    pc = sipcc::PeerConnectionImpl::CreatePeerConnection();
+    EXPECT_TRUE(pc);
+  }
 
   ~SignalingAgent() {
-    mozilla::SyncRunnable::DispatchToThread(pc->GetMainThread(),
+    mozilla::SyncRunnable::DispatchToThread(gThread,
       WrapRunnable(this, &SignalingAgent::Close));
   }
 
   void Init_m(nsCOMPtr<nsIThread> thread)
   {
-    pc = sipcc::PeerConnectionImpl::CreatePeerConnection();
-    ASSERT_TRUE(pc);
-
     pObserver = new TestObserver(pc);
     ASSERT_TRUE(pObserver);
 
-    sipcc::IceConfiguration cfg;
-    cfg.addStunServer("23.21.150.121", 3478);
-    ASSERT_EQ(pc->Initialize(pObserver, nullptr, cfg, thread), NS_OK);
-
+    ASSERT_EQ(pc->Initialize(pObserver, nullptr, cfg_, thread), NS_OK);
   }
 
   void Init(nsCOMPtr<nsIThread> thread)
@@ -597,10 +596,12 @@ class SignalingAgent {
 
   void Close()
   {
-    cout << "Close" << endl;
+    if (pc) {
+      cout << "Close" << endl;
 
-    pc->Close(false);
-    pc = nullptr;
+      pc->Close(false);
+      pc = nullptr;
+    }
 
     // Shutdown is synchronous evidently.
     // ASSERT_TRUE(pObserver->WaitForObserverCall());
@@ -849,6 +850,7 @@ public:
   char* offer_;
   char* answer_;
   nsRefPtr<DOMMediaStream> domMediaStream_;
+  sipcc::IceConfiguration cfg_;
 
 private:
   void SDPSanityCheck(std::string sdp, uint32_t flags, bool offer)
@@ -992,6 +994,19 @@ class SignalingAgentTest : public ::testing::Test {
     agents_.push_back(agent.forget());
 
     return true;
+  }
+
+  void CreateAgentNoInit() {
+    ScopedDeletePtr<SignalingAgent> agent(new SignalingAgent());
+    agents_.push_back(agent.forget());
+  }
+
+  bool InitAgent(size_t i) {
+    return agents_[i]->InitAllowFail(gThread);
+  }
+
+  SignalingAgent *agent(size_t i) {
+    return agents_[i];
   }
 
  private:
@@ -1970,6 +1985,11 @@ TEST_F(SignalingAgentTest, CreateUntilFailThenWait) {
   }
   std::cerr << "Failed after creating " << i << " PCs " << std::endl;
   PR_Sleep(10000);  // Wait to see if we crash
+}
+
+// Test for bug 856433.
+TEST_F(SignalingAgentTest, CreateNoInit) {
+  CreateAgentNoInit();
 }
 
 /*
