@@ -11,7 +11,6 @@
 #include "xpcprivate.h"
 #include "XPCInlines.h"
 #include "XPCQuickStubs.h"
-#include "XPCWrapper.h"
 #include "mozilla/dom/BindingUtils.h"
 
 using namespace mozilla;
@@ -548,12 +547,13 @@ getWrapper(JSContext *cx,
     // * A (possible) outer window
     //
     // If we pass stopAtOuter == false, we can handle all three with one call
-    // to XPCWrapper::Unwrap.
+    // to js::UnwrapObjectChecked.
     if (js::IsWrapper(obj)) {
-        obj = XPCWrapper::Unwrap(cx, obj, false);
+        obj = js::UnwrapObjectChecked(obj, /* stopAtOuter = */ false);
 
-        // The safe unwrap might have failed for SCRIPT_ACCESS_ONLY objects. If it
-        // didn't fail though, we should be done with wrappers.
+        // The safe unwrap might have failed if we encountered an object that
+        // we're not allowed to unwrap. If it didn't fail though, we should be
+        // done with wrappers.
         if (!obj)
             return NS_ERROR_XPC_SECURITY_MANAGER_VETO;
         MOZ_ASSERT(!js::IsWrapper(obj));
