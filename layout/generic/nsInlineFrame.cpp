@@ -767,21 +767,20 @@ nsInlineFrame::PullOneFrame(nsPresContext* aPresContext,
 
   nsIFrame* frame = nullptr;
   nsInlineFrame* nextInFlow = irs.mNextInFlow;
-  while (nullptr != nextInFlow) {
+  while (nextInFlow) {
     frame = nextInFlow->mFrames.FirstChild();
     if (!frame) {
       // The nextInFlow's principal list has no frames, try its overflow list.
       nsFrameList* overflowFrames = nextInFlow->GetOverflowFrames();
       if (overflowFrames) {
-        frame = overflowFrames->FirstChild();
-        if (!frame->GetNextSibling()) {
+        frame = overflowFrames->RemoveFirstChild();
+        if (overflowFrames->IsEmpty()) {
           // We're stealing the only frame - delete the overflow list.
-          delete nextInFlow->StealOverflowFrames();
+          nextInFlow->DestroyOverflowList(aPresContext);
         } else {
           // We leave the remaining frames on the overflow list (rather than
           // putting them on nextInFlow's principal list) so we don't have to
           // set up the parent for them.
-          overflowFrames->RemoveFirstChild();
         }
         // ReparentFloatsForInlineChild needs it to be on a child list -
         // we remove it again below.
@@ -789,7 +788,7 @@ nsInlineFrame::PullOneFrame(nsPresContext* aPresContext,
       }
     }
 
-    if (nullptr != frame) {
+    if (frame) {
       // If our block has no next continuation, then any floats belonging to
       // the pulled frame must belong to our block already. This check ensures
       // we do no extra work in the common non-vertical-breaking case.
@@ -810,7 +809,7 @@ nsInlineFrame::PullOneFrame(nsPresContext* aPresContext,
       nsContainerFrame::ReparentFrameView(aPresContext, frame, nextInFlow, this);
       break;
     }
-    nextInFlow = (nsInlineFrame*) nextInFlow->GetNextInFlow();
+    nextInFlow = static_cast<nsInlineFrame*>(nextInFlow->GetNextInFlow());
     irs.mNextInFlow = nextInFlow;
   }
 
