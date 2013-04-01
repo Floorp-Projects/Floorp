@@ -371,8 +371,8 @@ HandleDynamicLinkFailure(JSContext *cx, CallArgs args, AsmJSModule &module, Hand
     const AsmJSModule::PostLinkFailureInfo &info = module.postLinkFailureInfo();
 
     uint32_t length = info.bufEnd_ - info.bufStart_;
-    Rooted<JSFlatString*> src(cx, info.scriptSource_->substring(cx, info.bufStart_, info.bufEnd_));
-    const jschar *chars = src->chars();
+    Rooted<JSStableString*> src(cx, info.scriptSource_->substring(cx, info.bufStart_, info.bufEnd_));
+    const jschar *chars = src->chars().get();
 
     RootedFunction fun(cx, NewFunction(cx, NullPtr(), NULL, 0, JSFunction::INTERPRETED,
                                        cx->global(), name));

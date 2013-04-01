@@ -1103,7 +1103,7 @@ struct ScriptSource
         JS_ASSERT(hasSourceData());
         return argumentsNotIncluded_;
     }
-    JSFlatString *substring(JSContext *cx, uint32_t start, uint32_t stop);
+    JSStableString *substring(JSContext *cx, uint32_t start, uint32_t stop);
     size_t sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf);
 
     // XDR handling
