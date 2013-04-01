@@ -5488,10 +5488,7 @@ SetBackgroundList(nsStyleContext* aStyleContext,
   case eCSSUnit_Inherit:
     aRebuild = true;
     aCanStoreInRuleTree = false;
-    if (!aLayers.EnsureLengthAtLeast(aParentItemCount)) {
-      NS_WARNING("out of memory");
-      aParentItemCount = aLayers.Length();
-    }
+    aLayers.EnsureLengthAtLeast(aParentItemCount);
     aItemCount = aParentItemCount;
     for (uint32_t i = 0; i < aParentItemCount; ++i) {
       aLayers[i].*aResultLocation = aParentLayers[i].*aResultLocation;
@@ -5515,11 +5512,7 @@ SetBackgroundList(nsStyleContext* aStyleContext,
                    item->mValue.GetUnit() != eCSSUnit_Initial,
                    "unexpected unit");
       ++aItemCount;
-      if (!aLayers.EnsureLengthAtLeast(aItemCount)) {
-        NS_WARNING("out of memory");
-        --aItemCount;
-        break;
-      }
+      aLayers.EnsureLengthAtLeast(aItemCount);
       BackgroundItemComputer<nsCSSValueList, ComputedValueItem>
         ::ComputeValue(aStyleContext, item,
                        aLayers[aItemCount-1].*aResultLocation,
@@ -5562,10 +5555,7 @@ SetBackgroundPairList(nsStyleContext* aStyleContext,
   case eCSSUnit_Inherit:
     aRebuild = true;
     aCanStoreInRuleTree = false;
-    if (!aLayers.EnsureLengthAtLeast(aParentItemCount)) {
-      NS_WARNING("out of memory");
-      aParentItemCount = aLayers.Length();
-    }
+    aLayers.EnsureLengthAtLeast(aParentItemCount);
     aItemCount = aParentItemCount;
     for (uint32_t i = 0; i < aParentItemCount; ++i) {
       aLayers[i].*aResultLocation = aParentLayers[i].*aResultLocation;
@@ -5590,11 +5580,7 @@ SetBackgroundPairList(nsStyleContext* aStyleContext,
                    item->mYValue.GetUnit() != eCSSUnit_Initial,
                    "unexpected unit");
       ++aItemCount;
-      if (!aLayers.EnsureLengthAtLeast(aItemCount)) {
-        NS_WARNING("out of memory");
-        --aItemCount;
-        break;
-      }
+      aLayers.EnsureLengthAtLeast(aItemCount);
       BackgroundItemComputer<nsCSSValuePairList, ComputedValueItem>
         ::ComputeValue(aStyleContext, item,
                        aLayers[aItemCount-1].*aResultLocation,
