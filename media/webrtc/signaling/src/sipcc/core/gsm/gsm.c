@@ -346,14 +346,6 @@ GSMTask (void *arg)
                 sub_process_feature_msg(syshdr->Cmd, msg);
                 break;
 
-            case SUB_MSG_KPML_SUBSCRIBE:
-            case SUB_MSG_KPML_TERMINATE:
-            case SUB_MSG_KPML_NOTIFY_ACK:
-            case SUB_MSG_KPML_SUBSCRIBE_TIMER:
-            case SUB_MSG_KPML_DIGIT_TIMER:
-                kpml_process_msg(syshdr->Cmd, msg);
-                break;
-
             case REG_MGR_STATE_CHANGE:
                 gsm_reset();
                 break;
@@ -599,6 +591,5 @@ void destroy_gsm_thread()
         DEB_F_PREFIX_ARGS(SIP_CC_INIT, fname));
     gsm_shutdown();
     dp_shutdown();
-    kpml_shutdown();
     (void) cprDestroyThread(gsm_thread);
 }
