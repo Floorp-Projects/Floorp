@@ -42,7 +42,7 @@ let SocialServiceInternal = {
     let prefs = MANIFEST_PREFS.getChildList("", []);
     for (let pref of prefs) {
       try {
-        var manifest = JSON.parse(MANIFEST_PREFS.getCharPref(pref));
+        var manifest = JSON.parse(MANIFEST_PREFS.getComplexValue(pref, Ci.nsISupportsString).data);
         if (manifest && typeof(manifest) == "object" && manifest.origin)
           yield manifest;
       } catch (err) {
@@ -759,7 +759,12 @@ function AddonInstaller(sourceURI, aManifest, installCallback) {
     let addon = this.addon;
     AddonManagerPrivate.callInstallListeners("onExternalInstall", null, addon, null, false);
     AddonManagerPrivate.callAddonListeners("onInstalling", addon, false);
-    Services.prefs.setCharPref(getPrefnameFromOrigin(aManifest.origin), JSON.stringify(aManifest));
+
+    let string = Cc["@mozilla.org/supports-string;1"].
+                 createInstance(Ci.nsISupportsString);
+    string.data = JSON.stringify(aManifest);
+    Services.prefs.setComplexValue(getPrefnameFromOrigin(aManifest.origin), Ci.nsISupportsString, string);
+
     AddonManagerPrivate.callAddonListeners("onInstalled", addon);
     installCallback(aManifest);
   };
@@ -1000,7 +1005,10 @@ AddonWrapper.prototype = {
     if (Services.prefs.prefHasUserValue(prefName))
       throw new Error(this.manifest.name + " is not marked to be uninstalled");
     // ensure we're set into prefs
-    Services.prefs.setCharPref(prefName, JSON.stringify(this.manifest));
+    let string = Cc["@mozilla.org/supports-string;1"].
+                 createInstance(Ci.nsISupportsString);
+    string.data = JSON.stringify(this.manifest);
+    Services.prefs.setComplexValue(prefName, Ci.nsISupportsString, string);
     this._pending -= AddonManager.PENDING_UNINSTALL;
     AddonManagerPrivate.callAddonListeners("onOperationCancelled", this);
   }
