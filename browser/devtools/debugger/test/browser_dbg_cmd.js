@@ -27,54 +27,52 @@ function test() {
           }]);
         }
 
-        let testCommands = function(dbg, cmd) {
-          // Wait for the initial resume...
-          dbg._controller.activeThread.addOneTimeListener("resumed", function() {
-            info("Starting tests");
+        // Wait for the initial resume...
+        dbg.panelWin.gClient.addOneTimeListener("resumed", function() {
+          info("Starting tests");
 
-            let contentDoc = content.window.document;
-            let output = contentDoc.querySelector("input[type=text]");
-            let btnDoit = contentDoc.querySelector("input[type=button]");
+          let contentDoc = content.window.document;
+          let output = contentDoc.querySelector("input[type=text]");
+          let btnDoit = contentDoc.querySelector("input[type=button]");
 
-            helpers.audit(options, [{
-              setup: "dbg list",
-              exec: { output: /browser_dbg_cmd.html/ }
-            }]);
+          helpers.audit(options, [{
+            setup: "dbg list",
+            exec: { output: /browser_dbg_cmd.html/ }
+          }]);
 
-            cmd("dbg interrupt", function() {
-              ok(true, "debugger is paused");
-              dbg._controller.activeThread.addOneTimeListener("resumed", function() {
-                ok(true, "debugger continued");
-                dbg._controller.activeThread.addOneTimeListener("paused", function() {
+          cmd("dbg interrupt", function() {
+            ok(true, "debugger is paused");
+            dbg._controller.activeThread.addOneTimeListener("resumed", function() {
+              ok(true, "debugger continued");
+              dbg._controller.activeThread.addOneTimeListener("paused", function() {
+                cmd("dbg step in", function() {
                   cmd("dbg step in", function() {
                     cmd("dbg step in", function() {
-                      cmd("dbg step in", function() {
-                        is(output.value, "step in", "debugger stepped in");
-                        cmd("dbg step over", function() {
-                          is(output.value, "step over", "debugger stepped over");
-                          cmd("dbg step out", function() {
-                            is(output.value, "step out", "debugger stepped out");
+                      is(output.value, "step in", "debugger stepped in");
+                      cmd("dbg step over", function() {
+                        is(output.value, "step over", "debugger stepped over");
+                        cmd("dbg step out", function() {
+                          is(output.value, "step out", "debugger stepped out");
+                          cmd("dbg continue", function() {
                             cmd("dbg continue", function() {
-                              cmd("dbg continue", function() {
-                                is(output.value, "dbg continue", "debugger continued");
+                              is(output.value, "dbg continue", "debugger continued");
 
-                                helpers.audit(options, [{
-                                  setup: "dbg close",
-                                  completed: false,
-                                  exec: { output: "" }
-                                }]);
+                              helpers.audit(options, [{
+                                setup: "dbg close",
+                                completed: false,
+                                exec: { output: "" }
+                              }]);
 
-                                let toolbox = gDevTools.getToolbox(options.target);
-                                if (!toolbox) {
+                              let toolbox = gDevTools.getToolbox(options.target);
+                              if (!toolbox) {
+                                ok(true, "Debugger was closed.");
+                                deferred.resolve();
+                              } else {
+                                toolbox.on("destroyed", function () {
                                   ok(true, "Debugger was closed.");
                                   deferred.resolve();
-                                } else {
-                                  toolbox.on("destroyed", function () {
-                                    ok(true, "Debugger was closed.");
-                                    deferred.resolve();
-                                  });
-                                }
-                              });
+                                });
+                              }
                             });
                           });
                         });
@@ -82,22 +80,16 @@ function test() {
                     });
                   });
                 });
-                EventUtils.sendMouseEvent({type:"click"}, btnDoit);
               });
-
-              helpers.audit(options, [{
-                setup: "dbg continue",
-                exec: { output: "" }
-              }]);
+              EventUtils.sendMouseEvent({type:"click"}, btnDoit);
             });
-          });
-        };
 
-        if (dbg._controller.activeThread) {
-          testCommands(dbg, cmd);
-        } else {
-          dbg.once("connected", testCommands.bind(null, dbg, cmd));
-        }
+            helpers.audit(options, [{
+              setup: "dbg continue",
+              exec: { output: "" }
+            }]);
+          });
+        });
       });
     });
 

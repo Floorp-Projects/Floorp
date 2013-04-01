@@ -316,6 +316,12 @@
   background-clip: padding-box;
 }
 
+@media (max-width: 600px) {
+  #header-search {
+    width: 12em;
+  }
+}
+
 #header-search[focused] {
   box-shadow: @focusRingShadow@, inset 0 1px 1px rgba(0,0,0,0.15);
   border-color: -moz-mac-focusring;
