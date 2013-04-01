@@ -406,7 +406,7 @@ inline void
 Shape::writeBarrierPre(RawShape shape)
 {
 #ifdef JSGC_INCREMENTAL
-    if (!shape || !shape->runtime()->needsBarrier())
+    if (!shape)
         return;
 
     JS::Zone *zone = shape->zone();
@@ -449,7 +449,7 @@ inline void
 BaseShape::writeBarrierPre(RawBaseShape base)
 {
 #ifdef JSGC_INCREMENTAL
-    if (!base || !base->runtime()->needsBarrier())
+    if (!base)
         return;
 
     JS::Zone *zone = base->zone();
