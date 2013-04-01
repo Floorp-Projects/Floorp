@@ -291,9 +291,7 @@ public:
   void List(FILE* out) const;
 #endif
 
-  static void Init();
-  static void Shutdown() { delete sEmptyList; }
-  static const nsFrameList& EmptyList() { return *sEmptyList; }
+  static inline const nsFrameList& EmptyList();
 
   class Enumerator;
 
@@ -464,8 +462,6 @@ private:
   void VerifyList() const {}
 #endif
 
-  static const nsFrameList* sEmptyList;
-
 protected:
   /**
    * Disconnect aFrame from its siblings.  This must only be called if aFrame
@@ -478,5 +474,23 @@ protected:
   nsIFrame* mFirstChild;
   nsIFrame* mLastChild;
 };
+
+namespace mozilla {
+namespace layout {
+namespace detail {
+union AlignedFrameListBytes {
+  void* ptr;
+  char bytes[sizeof(nsFrameList)];
+};
+extern const AlignedFrameListBytes gEmptyFrameListBytes;
+}
+}
+}
+
+/* static */ inline const nsFrameList&
+nsFrameList::EmptyList()
+{
+  return *reinterpret_cast<const nsFrameList*>(&mozilla::layout::detail::gEmptyFrameListBytes);
+}
 
 #endif /* nsFrameList_h___ */
