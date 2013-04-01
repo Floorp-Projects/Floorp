@@ -63,6 +63,8 @@ private:
   friend class AnalyserNodeEngine;
   void AppendChunk(const AudioChunk& aChunk);
   bool AllocateBuffer();
+  bool FFTAnalysis();
+  void ApplyBlackmanWindow(float* aBuffer, uint32_t aSize);
 
 private:
   uint32_t mFFTSize;
@@ -71,6 +73,7 @@ private:
   double mSmoothingTimeConstant;
   uint32_t mWriteIndex;
   FallibleTArray<float> mBuffer;
+  FallibleTArray<float> mOutputBuffer;
 };
 
 }
