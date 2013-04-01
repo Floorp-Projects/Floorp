@@ -870,8 +870,8 @@ DataChannelConnection::SendOpenRequestMessage(const nsACString& label,
   int label_len = label.Length(); // not including nul
   int proto_len = protocol.Length(); // not including nul
   struct rtcweb_datachannel_open_request *req =
-    (struct rtcweb_datachannel_open_request*) moz_xmalloc(sizeof(*req)+label_len+proto_len+1);
-   // careful - ok because request includes 1 char label
+    (struct rtcweb_datachannel_open_request*) moz_xmalloc((sizeof(*req)-1) + label_len + proto_len);
+   // careful - request includes 1 char label
 
   memset(req, 0, sizeof(struct rtcweb_datachannel_open_request));
   req->msg_type = DATA_CHANNEL_OPEN_REQUEST;
@@ -890,19 +890,20 @@ DataChannelConnection::SendOpenRequestMessage(const nsACString& label,
     moz_free(req);
     return (0);
   }
-  req->flags = htons(0);
   if (unordered) {
-    req->flags |= htons(DATA_CHANNEL_FLAG_OUT_OF_ORDER_ALLOWED);
+    // Per the current types, all differ by 0x80 between ordered and unordered
+    req->channel_type |= 0x80; // NOTE: be careful if new types are added in the future
   }
+
   req->reliability_params = htons((uint16_t)prValue); /* XXX Why 16-bit */
   req->priority = htons(0); /* XXX: add support */
   req->label_length = label_len;
   req->protocol_length = proto_len;
-  strcpy(&req->label[0], PromiseFlatCString(label).get());
-  strcpy(&req->label[req->label_length+1], PromiseFlatCString(protocol).get());
+  memcpy(&req->label[0], PromiseFlatCString(label).get(), label_len);
+  memcpy(&req->label[req->label_length], PromiseFlatCString(protocol).get(), proto_len);
 
   // sizeof(*req) already includes +1 byte for label, need nul for both strings
-  int32_t result = SendControlMessage(req, sizeof(*req)+label_len+proto_len+1, stream);
+  int32_t result = SendControlMessage(req, (sizeof(*req)-1) + label_len + proto_len, stream);
 
   moz_free(req);
   return result;
@@ -940,7 +941,7 @@ DataChannelConnection::SendDeferredMessages()
     if (channel->mFlags & DATA_CHANNEL_FLAGS_SEND_REQ) {
       if (SendOpenRequestMessage(channel->mLabel, channel->mProtocol,
                                  channel->mStream,
-                                 channel->mFlags & DATA_CHANNEL_FLAG_OUT_OF_ORDER_ALLOWED,
+                                 channel->mFlags & DATA_CHANNEL_FLAGS_OUT_OF_ORDER_ALLOWED,
                                  channel->mPrPolicy, channel->mPrValue)) {
         channel->mFlags &= ~DATA_CHANNEL_FLAGS_SEND_REQ;
         sent = true;
@@ -1027,19 +1028,27 @@ DataChannelConnection::HandleOpenRequestMessage(const struct rtcweb_datachannel_
   uint32_t prValue;
   uint16_t prPolicy;
   uint32_t flags;
-  nsCString label(nsDependentCString(req->label));
-  nsCString protocol(nsDependentCString(&req->label[req->label_length+1]));
 
   mLock.AssertCurrentThreadOwns();
 
+  if (length != (sizeof(*req) - 1) + req->label_length + req->protocol_length) {
+    LOG(("Inconsistent length: %u, should be %u", length,
+         (sizeof(*req) - 1) + req->label_length + req->protocol_length));
+    if (length < (sizeof(*req) - 1) + req->label_length + req->protocol_length)
+      return;
+  }
+
   switch (req->channel_type) {
     case DATA_CHANNEL_RELIABLE:
+    case DATA_CHANNEL_RELIABLE_UNORDERED:
       prPolicy = SCTP_PR_SCTP_NONE;
       break;
     case DATA_CHANNEL_PARTIAL_RELIABLE_REXMIT:
+    case DATA_CHANNEL_PARTIAL_RELIABLE_REXMIT_UNORDERED:
       prPolicy = SCTP_PR_SCTP_RTX;
       break;
     case DATA_CHANNEL_PARTIAL_RELIABLE_TIMED:
+    case DATA_CHANNEL_PARTIAL_RELIABLE_TIMED_UNORDERED:
       prPolicy = SCTP_PR_SCTP_TTL;
       break;
     default:
@@ -1047,7 +1056,7 @@ DataChannelConnection::HandleOpenRequestMessage(const struct rtcweb_datachannel_
       return;
   }
   prValue = ntohs(req->reliability_params);
-  flags = ntohs(req->flags) & DATA_CHANNEL_FLAG_OUT_OF_ORDER_ALLOWED;
+  flags = (req->channel_type & 0x80) ? DATA_CHANNEL_FLAGS_OUT_OF_ORDER_ALLOWED : 0;
 
   if ((channel = FindChannelByStream(stream))) {
     if (!(channel->mFlags & DATA_CHANNEL_FLAGS_EXTERNAL_NEGOTIATED)) {
@@ -1059,7 +1068,7 @@ DataChannelConnection::HandleOpenRequestMessage(const struct rtcweb_datachannel_
       // XXX should also check protocol, maybe label
       if (prPolicy != channel->mPrPolicy ||
           prValue != channel->mPrValue ||
-          flags != (channel->mFlags & DATA_CHANNEL_FLAG_OUT_OF_ORDER_ALLOWED))
+          flags != (channel->mFlags & DATA_CHANNEL_FLAGS_OUT_OF_ORDER_ALLOWED))
       {
         LOG(("WARNING: external negotiation mismatch with OpenRequest:"
              "channel %u, policy %u/%u, value %u/%u, flags %x/%x",
@@ -1069,6 +1078,11 @@ DataChannelConnection::HandleOpenRequestMessage(const struct rtcweb_datachannel_
     }
     return;
   }
+
+  nsCString label(nsDependentCSubstring(&req->label[0], req->label_length));
+  nsCString protocol(nsDependentCSubstring(&req->label[req->label_length],
+                                           req->protocol_length));
+
   channel = new DataChannel(this,
                             stream,
                             DataChannel::CONNECTING,
@@ -1766,7 +1780,7 @@ DataChannelConnection::Open(const nsACString& label, const nsACString& protocol,
     return nullptr;
   }
 
-  flags = !inOrder ? DATA_CHANNEL_FLAG_OUT_OF_ORDER_ALLOWED : 0;
+  flags = !inOrder ? DATA_CHANNEL_FLAGS_OUT_OF_ORDER_ALLOWED : 0;
   nsRefPtr<DataChannel> channel(new DataChannel(this,
                                                 aStream,
                                                 DataChannel::CONNECTING,
@@ -1817,6 +1831,7 @@ DataChannelConnection::OpenFinish(already_AddRefed<DataChannel> aChannel)
         }
       } else if (mState != OPEN) {
         mStreams[stream] = channel;
+        channel->mStream = stream;
       }
 
       LOG(("Queuing channel %p (%u) to finish open", channel.get(), stream));
@@ -1845,7 +1860,7 @@ DataChannelConnection::OpenFinish(already_AddRefed<DataChannel> aChannel)
   if (!(channel->mFlags & DATA_CHANNEL_FLAGS_EXTERNAL_NEGOTIATED)) {
     if (!SendOpenRequestMessage(channel->mLabel, channel->mProtocol,
                                 stream,
-                                !!(channel->mFlags & DATA_CHANNEL_FLAG_OUT_OF_ORDER_ALLOWED),
+                                !!(channel->mFlags & DATA_CHANNEL_FLAGS_OUT_OF_ORDER_ALLOWED),
                                 channel->mPrPolicy, channel->mPrValue)) {
       LOG(("SendOpenRequest failed, errno = %d", errno));
       if (errno == EAGAIN || errno == EWOULDBLOCK) {
@@ -1895,7 +1910,7 @@ DataChannelConnection::SendMsgInternal(DataChannel *channel, const char *data,
   NS_ENSURE_TRUE(channel->mState == OPEN || channel->mState == CONNECTING, 0);
   NS_WARN_IF_FALSE(length > 0, "Length is 0?!");
 
-  flags = (channel->mFlags & DATA_CHANNEL_FLAG_OUT_OF_ORDER_ALLOWED) ? SCTP_UNORDERED : 0;
+  flags = (channel->mFlags & DATA_CHANNEL_FLAGS_OUT_OF_ORDER_ALLOWED) ? SCTP_UNORDERED : 0;
 
   // To avoid problems where an in-order OPEN_RESPONSE is lost and an
   // out-of-order data message "beats" it, require data to be in-order
@@ -1970,7 +1985,7 @@ DataChannelConnection::SendBinary(DataChannel *channel, const char *data,
   // This MUST be reliable and in-order for the reassembly to work
   if (len > DATA_CHANNEL_MAX_BINARY_FRAGMENT &&
       channel->mPrPolicy == DATA_CHANNEL_RELIABLE &&
-      !(channel->mFlags & DATA_CHANNEL_FLAG_OUT_OF_ORDER_ALLOWED)) {
+      !(channel->mFlags & DATA_CHANNEL_FLAGS_OUT_OF_ORDER_ALLOWED)) {
     int32_t sent=0;
     uint32_t origlen = len;
     LOG(("Sending binary message length %u in chunks", len));
