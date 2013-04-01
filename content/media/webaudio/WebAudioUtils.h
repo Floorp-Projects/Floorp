@@ -40,6 +40,23 @@ struct WebAudioUtils {
   static void ConvertAudioParamToTicks(AudioParamTimeline& aParam,
                                        AudioNodeStream* aSource,
                                        AudioNodeStream* aDest);
+
+  /**
+   * Converts a linear value to decibels.  Returns aMinDecibels if the linear
+   * value is 0.
+   */
+  static float ConvertLinearToDecibels(float aLinearValue, float aMinDecibels)
+  {
+    return aLinearValue ? 20.0f * std::log10(aLinearValue) : aMinDecibels;
+  }
+
+  /**
+   * Converts a decibel to a linear value.
+   */
+  static float ConvertDecibelToLinear(float aDecibel)
+  {
+    return std::pow(10.0f, 0.05f * aDecibel);
+  }
 };
 
 }
