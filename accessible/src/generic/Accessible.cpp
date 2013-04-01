@@ -14,6 +14,7 @@
 #include "nsAccessibleRelation.h"
 #include "nsAccessibilityService.h"
 #include "nsIAccessibleRelation.h"
+#include "nsIAccessibleRole.h"
 #include "nsEventShell.h"
 #include "nsTextEquivUtils.h"
 #include "Relation.h"
