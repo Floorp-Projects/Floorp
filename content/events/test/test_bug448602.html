@@ -45,6 +45,8 @@ function runTests() {
   is(infos[0].type, "click", "Wrong type (1)");
   is(infos[0].capturing, false, "Wrong phase (1)");
   is(infos[0].allowsUntrusted, true, "Should allow untrusted events (1)");
+  is(SpecialPowers.unwrap(infos[0].listenerObject), root.onclick,
+     "Should have the right listener object (1)");
 
 /*
   var jsdOn = jsd.isOn;
@@ -72,6 +74,8 @@ function runTests() {
   is(infos[0].type, "foo", "Wrong type (2)");
   is(infos[0].capturing, true, "Wrong phase (2)");
   is(infos[0].allowsUntrusted, true, "Should allow untrusted events (2)");
+  is(SpecialPowers.unwrap(infos[0].listenerObject), l,
+     "Should have the right listener object (2)");
 /*
   jsdvalue = infos[0].getDebugObject().QueryInterface(SpecialPowers.Ci.jsdIValue);
   is(jsdvalue.jsType, 3, "Event listener should be a function!(2)");
@@ -83,6 +87,8 @@ function runTests() {
   is(infos[1].type, "foo", "Wrong type (3)");
   is(infos[1].capturing, false, "Wrong phase (3)");
   is(infos[1].allowsUntrusted, false, "Shouldn't allow untrusted events (1)");
+  is(SpecialPowers.unwrap(infos[1].listenerObject), l,
+     "Should have the right listener object (3)");
 
 /*
   jsdvalue2 = infos[1].getDebugObject().QueryInterface(SpecialPowers.Ci.jsdIValue);
@@ -102,6 +108,8 @@ function runTests() {
   is(infos[0].type, "click", "Wrong type (4)");
   is(infos[0].capturing, false, "Wrong phase (4)");
   is(infos[0].allowsUntrusted, true, "Should allow untrusted events (3)");
+  is(SpecialPowers.unwrap(infos[0].listenerObject), l,
+     "Should have the right listener object (4)");
 
   // Event target chain tests
   l2 = document.getElementById("testlevel2");
