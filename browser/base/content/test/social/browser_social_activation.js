@@ -42,7 +42,7 @@ function postTestCleanup(callback) {
 }
 
 function addBuiltinManifest(manifest) {
-  Services.prefs.setCharPref("social.manifest." + manifest.origin, JSON.stringify(manifest));
+  setManifestPref("social.manifest."+manifest.origin, manifest);
 }
 
 function addTab(url, callback) {
