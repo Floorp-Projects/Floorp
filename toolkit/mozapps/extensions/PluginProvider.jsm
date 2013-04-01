@@ -420,7 +420,7 @@ function PluginWrapper(aId, aName, aDescription, aTags) {
 }
 
 PluginWrapper.prototype = {
-  optionsType: AddonManager.OPTIONS_TYPE_INLINE,
+  optionsType: AddonManager.OPTIONS_TYPE_INLINE_INFO,
   optionsURL: "chrome://mozapps/content/extensions/pluginPrefs.xul",
 
   get updateDate() {
