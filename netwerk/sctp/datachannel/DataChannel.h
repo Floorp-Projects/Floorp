@@ -111,7 +111,8 @@ public:
     virtual void NotifyDataChannel(already_AddRefed<DataChannel> channel) = 0;
   };
 
-  DataChannelConnection(DataConnectionListener *listener);
+  DataChannelConnection(DataConnectionListener *listener,
+                        bool aIsEven);
   virtual ~DataChannelConnection();
 
   bool Init(unsigned short aPort, uint16_t aNumStreams, bool aUsingDtls);
@@ -187,15 +188,12 @@ private:
   void SctpDtlsInput(TransportFlow *flow, const unsigned char *data, size_t len);
   static int SctpDtlsOutput(void *addr, void *buffer, size_t length, uint8_t tos, uint8_t set_df);
 #endif
-  DataChannel* FindChannelByStreamIn(uint16_t streamIn);
-  DataChannel* FindChannelByStreamOut(uint16_t streamOut);
-  uint16_t FindFreeStreamOut();
-  bool RequestMoreStreamsOut(int32_t aNeeded = 16);
+  DataChannel* FindChannelByStream(uint16_t stream);
+  uint16_t FindFreeStream();
+  bool RequestMoreStreams(int32_t aNeeded = 16);
   int32_t SendControlMessage(void *msg, uint32_t len, uint16_t streamOut);
   int32_t SendOpenRequestMessage(const nsACString& label,uint16_t streamOut,
                                  bool unordered, uint16_t prPolicy, uint32_t prValue);
-  int32_t SendOpenResponseMessage(uint16_t streamOut, uint16_t streamIn);
-  int32_t SendOpenAckMessage(uint16_t streamOut);
   int32_t SendMsgInternal(DataChannel *channel, const char *data,
                           uint32_t length, uint32_t ppid);
   int32_t SendBinary(DataChannel *channel, const char *data,
@@ -211,11 +209,6 @@ private:
   void HandleOpenRequestMessage(const struct rtcweb_datachannel_open_request *req,
                                 size_t length,
                                 uint16_t streamIn);
-  void OpenResponseFinish(already_AddRefed<DataChannel> channel);
-  void HandleOpenResponseMessage(const struct rtcweb_datachannel_open_response *rsp,
-                                 size_t length, uint16_t streamIn);
-  void HandleOpenAckMessage(const struct rtcweb_datachannel_ack *ack,
-                            size_t length, uint16_t streamIn);
   void HandleUnknownMessage(uint32_t ppid, size_t length, uint16_t streamIn);
   void HandleDataMessage(uint32_t ppid, const void *buffer, size_t length, uint16_t streamIn);
   void HandleMessage(const void *buffer, size_t length, uint32_t ppid, uint16_t streamIn);
@@ -243,10 +236,10 @@ private:
   static void ReleaseTransportFlow(nsRefPtr<TransportFlow> aFlow) {}
 
   // Data:
-  // NOTE: while these arrays will auto-expand, increases in the number of
+  // NOTE: while this array will auto-expand, increases in the number of
   // channels available from the stack must be negotiated!
-  nsAutoTArray<nsRefPtr<DataChannel>,16> mStreamsOut;
-  nsAutoTArray<nsRefPtr<DataChannel>,16> mStreamsIn;
+  bool mAllocateEven;
+  nsAutoTArray<nsRefPtr<DataChannel>,16> mStreams;
   nsDeque mPending; // Holds already_AddRefed<DataChannel>s -- careful!
 
   // Streams pending reset
@@ -287,7 +280,7 @@ public:
   };
 
   DataChannel(DataChannelConnection *connection,
-              uint16_t streamOut, uint16_t streamIn,
+              uint16_t stream,
               uint16_t state,
               const nsACString& label,
               uint16_t policy, uint32_t value,
@@ -301,8 +294,7 @@ public:
     , mLabel(label)
     , mState(state)
     , mReady(false)
-    , mStreamOut(streamOut)
-    , mStreamIn(streamIn)
+    , mStream(stream)
     , mPrPolicy(policy)
     , mPrValue(value)
     , mFlags(0)
@@ -327,8 +319,8 @@ public:
     {
       ENSURE_DATACONNECTION_RET(false);
 
-      if (mStreamOut != INVALID_STREAM)
-        return (mConnection->SendMsg(mStreamOut, aMsg) > 0);
+      if (mStream != INVALID_STREAM)
+        return (mConnection->SendMsg(mStream, aMsg) > 0);
       else
         return false;
     }
@@ -338,8 +330,8 @@ public:
     {
       ENSURE_DATACONNECTION_RET(false);
 
-      if (mStreamOut != INVALID_STREAM)
-        return (mConnection->SendBinaryMsg(mStreamOut, aMsg) > 0);
+      if (mStream != INVALID_STREAM)
+        return (mConnection->SendBinaryMsg(mStream, aMsg) > 0);
       else
         return false;
     }
@@ -349,8 +341,8 @@ public:
     {
       ENSURE_DATACONNECTION_RET(false);
 
-      if (mStreamOut != INVALID_STREAM)
-        return (mConnection->SendBlob(mStreamOut, aBlob) > 0);
+      if (mStream != INVALID_STREAM)
+        return (mConnection->SendBlob(mStream, aBlob) > 0);
       else
         return false;
     }
@@ -393,8 +385,7 @@ private:
   nsCString mLabel;
   uint16_t mState;
   bool     mReady;
-  uint16_t mStreamOut;
-  uint16_t mStreamIn;
+  uint16_t mStream;
   uint16_t mPrPolicy;
   uint32_t mPrValue;
   uint32_t mFlags;
