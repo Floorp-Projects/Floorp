@@ -180,7 +180,7 @@ inline void
 JSScript::writeBarrierPre(js::RawScript script)
 {
 #ifdef JSGC_INCREMENTAL
-    if (!script || !script->runtime()->needsBarrier())
+    if (!script)
         return;
 
     JS::Zone *zone = script->zone();

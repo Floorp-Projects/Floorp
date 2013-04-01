@@ -632,7 +632,7 @@ typedef Vector<JS::Zone *, 1, SystemAllocPolicy> ZoneVector;
 
 } // namespace js
 
-struct JSRuntime : private JS::shadow::Runtime,
+struct JSRuntime : js::RuntimeFriendFields,
                    public js::MallocProvider<JSRuntime>
 {
     /*
@@ -642,16 +642,10 @@ struct JSRuntime : private JS::shadow::Runtime,
      * above for more details.
      *
      * NB: This field is statically asserted to be at offset
-     * sizeof(js::shadow::Runtime). See
+     * sizeof(RuntimeFriendFields). See
      * PerThreadDataFriendFields::getMainThread.
      */
     js::PerThreadData   mainThread;
-
-    /*
-     * If non-zero, we were been asked to call the operation callback as soon
-     * as possible.
-     */
-    volatile int32_t    interrupt;
 
     /* Default compartment. */
     JSCompartment       *atomsCompartment;
@@ -1089,14 +1083,6 @@ struct JSRuntime : private JS::shadow::Runtime,
     volatile ptrdiff_t  gcMallocBytes;
 
   public:
-    void setNeedsBarrier(bool needs) {
-        needsBarrier_ = needs;
-    }
-
-    bool needsBarrier() const {
-        return needsBarrier_;
-    }
-
     /*
      * The trace operations to trace embedding-specific GC roots. One is for
      * tracing through black roots and the other is for tracing through gray
