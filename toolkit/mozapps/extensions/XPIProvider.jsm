@@ -1681,8 +1681,6 @@ var XPIProvider = {
     // of XPCOM
     Services.obs.addObserver({
       observe: function shutdownObserver(aSubject, aTopic, aData) {
-        Services.prefs.setCharPref(PREF_BOOTSTRAP_ADDONS,
-                                   JSON.stringify(XPIProvider.bootstrappedAddons));
         for (let id in XPIProvider.bootstrappedAddons) {
           let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
           file.persistentDescriptor = XPIProvider.bootstrappedAddons[id].descriptor;
@@ -1787,6 +1785,14 @@ var XPIProvider = {
     // Ensure any changes to the add-ons list are flushed to disk
     XPIDatabase.writeAddonsList();
     Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, false);
+  },
+
+  /**
+   * Persists changes to XPIProvider.bootstrappedAddons to it's store (a pref).
+   */
+  persistBootstrappedAddons: function XPI_persistBootstrappedAddons() {
+    Services.prefs.setCharPref(PREF_BOOTSTRAP_ADDONS,
+                               JSON.stringify(this.bootstrappedAddons));
   },
 
   /**
@@ -2939,6 +2945,7 @@ var XPIProvider = {
     // Cache the new install location states
     let cache = JSON.stringify(this.getInstallLocationStates());
     Services.prefs.setCharPref(PREF_INSTALL_CACHE, cache);
+    this.persistBootstrappedAddons();
 
     // Clear out any cached migration data.
     XPIDatabase.migrateData = null;
@@ -3680,6 +3687,7 @@ var XPIProvider = {
       type: aType,
       descriptor: aFile.persistentDescriptor
     };
+    this.persistBootstrappedAddons();
     this.addAddonsToCrashReporter();
 
     // Locales only contain chrome and can't have bootstrap scripts
@@ -3747,6 +3755,7 @@ var XPIProvider = {
   unloadBootstrapScope: function XPI_unloadBootstrapScope(aId) {
     delete this.bootstrapScopes[aId];
     delete this.bootstrappedAddons[aId];
+    this.persistBootstrappedAddons();
     this.addAddonsToCrashReporter();
   },
 
