@@ -614,6 +614,8 @@ class ParallelDo : public ForkJoinOp
         JS_ASSERT(ok == !slice.abortedScript);
         if (!ok) {
             JSScript *script = slice.abortedScript;
+            Spew(SpewBailouts, "Aborted script: %p (hasParallelIonScript? %d)",
+                 script, script->hasParallelIonScript());
             JS_ASSERT(script->hasParallelIonScript());
             pendingInvalidations[slice.sliceId] = script;
         }

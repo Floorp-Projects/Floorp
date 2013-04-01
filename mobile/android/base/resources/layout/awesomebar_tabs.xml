@@ -16,7 +16,9 @@
               android:id="@+id/tab_widget_container"
               android:layout_width="fill_parent"
               android:layout_height="wrap_content"
-              android:background="@drawable/address_bar_bg">
+              android:background="@drawable/address_bar_bg"
+              android:focusable="false"
+              android:descendantFocusability="blocksDescendants">
 
             <View android:id="@+id/tab_widget_left"
                   style="@style/AwesomeBarTabIndicatorCurve.Left"/>

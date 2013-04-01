@@ -69,7 +69,6 @@ private:
   
   nsString mAddress;
   nsString mName;
-  bool mEnabled;
   bool mDiscoverable;
   bool mDiscovering;
   bool mPairable;

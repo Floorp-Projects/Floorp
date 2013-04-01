@@ -108,6 +108,9 @@ endef
 # before evaluation.
 $(eval $(subst ||,$(CR),$(shell _PYMAKE=$(.PYMAKE) $(TOPSRCDIR)/$(MOZCONFIG_LOADER) $(TOPSRCDIR) 2> $(TOPSRCDIR)/.mozconfig.out | sed 's/$$/||/')))
 
+ifdef NO_AUTOCLOBBER
+export NO_AUTOCLOBBER=1
+endif
 
 # Automatically add -jN to make flags if not defined. N defaults to number of cores.
 ifeq (,$(findstring -j,$(MOZ_MAKE_FLAGS)))
@@ -302,9 +305,13 @@ else
   CONFIGURE = $(TOPSRCDIR)/configure
 endif
 
+check-clobber:
+	$(PYTHON) $(TOPSRCDIR)/python/mozbuild/mozbuild/controller/clobber.py $(TOPSRCDIR) $(OBJDIR)
+
 configure-files: $(CONFIGURES)
 
 configure-preqs = \
+  check-clobber \
   configure-files \
   $(call mkdir_deps,$(OBJDIR)) \
   $(if $(MOZ_BUILD_PROJECTS),$(call mkdir_deps,$(MOZ_OBJDIR))) \
@@ -442,4 +449,23 @@ echo-variable-%:
 # in parallel.
 .NOTPARALLEL:
 
-.PHONY: checkout real_checkout depend realbuild build profiledbuild cleansrcdir pull_all build_all clobber clobber_all pull_and_build_all everything configure preflight_all preflight postflight postflight_all $(OBJDIR_TARGETS)
+.PHONY: checkout \
+    real_checkout \
+    depend \
+    realbuild \
+    build \
+    profiledbuild \
+    cleansrcdir \
+    pull_all \
+    build_all \
+    check-clobber \
+    clobber \
+    clobber_all \
+    pull_and_build_all \
+    everything \
+    configure \
+    preflight_all \
+    preflight \
+    postflight \
+    postflight_all \
+    $(OBJDIR_TARGETS)

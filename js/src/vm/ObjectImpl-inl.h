@@ -13,6 +13,7 @@
 #include "jscompartment.h"
 #include "jsgc.h"
 #include "jsinterp.h"
+#include "jsproxy.h"
 
 #include "gc/Heap.h"
 #include "gc/Marking.h"
@@ -85,6 +86,10 @@ js::ObjectImpl::nativeContains(JSContext *cx, Shape *shape)
 inline bool
 js::ObjectImpl::isExtensible() const
 {
+    if (this->isProxy())
+        return Proxy::isExtensible(const_cast<JSObject*>(this->asObjectPtr()));
+
+    // [[Extensible]] for ordinary non-proxy objects is an object flag.
     return !lastProperty()->hasObjectFlag(BaseShape::NOT_EXTENSIBLE);
 }
 

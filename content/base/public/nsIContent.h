@@ -673,7 +673,7 @@ public:
    * If you also need to determine whether the parser is the one creating your
    * element (through createElement() or cloneNode() generally) then add a
    * uint32_t aFromParser to the NS_NewXXX() constructor for your element and
-   * have the parser pass the appropriate flags. See nsHTMLInputElement.cpp and
+   * have the parser pass the appropriate flags. See HTMLInputElement.cpp and
    * nsHTMLContentSink::MakeContentObject().
    *
    * DO NOT USE THIS METHOD to get around the fact that it's hard to deal with
@@ -709,7 +709,7 @@ public:
    * If you also need to determine whether the parser is the one creating your
    * element (through createElement() or cloneNode() generally) then add a
    * boolean aFromParser to the NS_NewXXX() constructor for your element and
-   * have the parser pass true.  See nsHTMLInputElement.cpp and
+   * have the parser pass true.  See HTMLInputElement.cpp and
    * nsHTMLContentSink::MakeContentObject().
    *
    * @param aHaveNotified Whether there has been a

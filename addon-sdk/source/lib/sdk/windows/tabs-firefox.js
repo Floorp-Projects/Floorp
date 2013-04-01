@@ -16,7 +16,7 @@ const { getOwnerWindow, getActiveTab, getTabs,
         openTab } = require("../tabs/utils");
 const { Options } = require("../tabs/common");
 const { observer: tabsObserver } = require("../tabs/observer");
-const { ignoreWindow, isWindowPrivate } = require("../private-browsing/utils");
+const { ignoreWindow } = require("../private-browsing/utils");
 
 const TAB_BROWSER = "tabbrowser";
 

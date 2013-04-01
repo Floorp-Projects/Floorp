@@ -94,20 +94,23 @@ function emit(target, type, message /*, ...*/) {
  * arguments.
  */
 emit.lazy = function lazy(target, type, message /*, ...*/) {
-  let args = Array.slice(arguments, 2)
-  let listeners = observers(target, type).slice()
-  while (listeners.length) {
-    try {
-      yield listeners.shift().apply(target, args);
-    }
+  let args = Array.slice(arguments, 2);
+  let listeners = observers(target, type).slice();
+  let index = 0;
+  let count = listeners.length;
+
+  // If error event and there are no handlers then print error message
+  // into a console.
+  if (count === 0 && type === 'error') console.exception(message);
+  while (index < count) {
+    try { yield listeners[index].apply(target, args); }
     catch (error) {
       // If exception is not thrown by a error listener and error listener is
       // registered emit `error` event. Otherwise dump exception to the console.
-      if (type !== 'error' && observers(target, 'error').length)
-        emit(target, 'error', error);
-      else
-        console.exception(error);
+      if (type !== 'error') emit(target, 'error', error);
+      else console.exception(error);
     }
+    index = index + 1;
   }
 }
 exports.emit = emit;

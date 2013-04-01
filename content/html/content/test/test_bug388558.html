@@ -23,12 +23,11 @@ var inputChange = 0;
 var textareaChange = 0;
 
 function testUserInput() {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   var input = document.getElementById("input");
   var textarea = SpecialPowers.wrap(document.getElementById("textarea"));
 
   input.focus();
-  input.QueryInterface(Components.interfaces.nsIDOMNSEditableElement).setUserInput("foo");
+  SpecialPowers.wrap(input).setUserInput("foo");
   input.blur();
   is(inputChange, 1, "Input element should have got one change event.");
 
@@ -42,7 +41,7 @@ function testUserInput() {
   is(inputChange, 1, 
      "Change event dispatched when setting the value of the input element (2).");
 
-  input.QueryInterface(Components.interfaces.nsIDOMNSEditableElement).setUserInput("foo");
+  SpecialPowers.wrap(input).setUserInput("foo");
   is(inputChange, 1,
      "Change event dispatched when input element doesn't have focus.");
 

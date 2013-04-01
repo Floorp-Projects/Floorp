@@ -106,6 +106,7 @@
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "nsCharsetSource.h"
 #include "nsIStringBundle.h"
+#include "nsDOMClassInfo.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -2311,15 +2312,9 @@ nsHTMLDocument::ResolveName(const nsAString& aName, nsWrapperCache **aCache)
   // No named items were found, see if there's one registerd by id for aName.
   Element *e = entry->GetIdElement();
 
-  if (e && e->IsHTML()) {
-    nsIAtom *tag = e->Tag();
-    if (tag == nsGkAtoms::embed  ||
-        tag == nsGkAtoms::img    ||
-        tag == nsGkAtoms::object ||
-        tag == nsGkAtoms::applet) {
-      *aCache = e;
-      return e;
-    }
+  if (e && nsGenericHTMLElement::ShouldExposeIdAsHTMLDocumentProperty(e)) {
+    *aCache = e;
+    return e;
   }
 
   *aCache = nullptr;
@@ -2357,6 +2352,55 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
 
   *aCache = node;
   return node.forget();
+}
+
+JSObject*
+nsHTMLDocument::NamedGetter(JSContext* cx, const nsAString& aName, bool& aFound,
+                            ErrorResult& rv)
+{
+  nsWrapperCache* cache;
+  nsISupports* supp = ResolveName(aName, &cache);
+  if (!supp) {
+    aFound = false;
+    if (GetCompatibilityMode() == eCompatibility_NavQuirks &&
+        aName.EqualsLiteral("all")) {
+      rv = nsHTMLDocumentSH::TryResolveAll(cx, this, GetWrapper());
+    }
+    return nullptr;
+  }
+
+  JS::Value val;
+  { // Scope for auto-compartment
+    JSObject* wrapper = GetWrapper();
+    JSAutoCompartment ac(cx, wrapper);
+    // XXXbz Should we call the (slightly misnamed, really) WrapNativeParent
+    // here?
+    if (!dom::WrapObject(cx, wrapper, supp, cache, nullptr, &val)) {
+      rv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return nullptr;
+    }
+  }
+  aFound = true;
+  return &val.toObject();
+}
+
+static PLDHashOperator
+IdentifierMapEntryAddNames(nsIdentifierMapEntry* aEntry, void* aArg)
+{
+  nsTArray<nsString>* aNames = static_cast<nsTArray<nsString>*>(aArg);
+  Element* idElement;
+  if (aEntry->HasNameElement() ||
+      ((idElement = aEntry->GetIdElement()) &&
+       nsGenericHTMLElement::ShouldExposeIdAsHTMLDocumentProperty(idElement))) {
+    aNames->AppendElement(aEntry->GetKey());
+  }
+  return PL_DHASH_NEXT;
+}
+
+void
+nsHTMLDocument::GetSupportedNames(nsTArray<nsString>& aNames)
+{
+  mIdentifierMap.EnumerateEntries(IdentifierMapEntryAddNames, &aNames);
 }
 
 //----------------------------

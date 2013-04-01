@@ -4,7 +4,7 @@
 
 #include "nsIDOMDOMRequest.idl"
 
-[scriptable, builtinclass, uuid(ae6acad4-3174-44d6-a491-9ff94ab847c2)]
+[scriptable, builtinclass, uuid(d77cafb5-7a91-4631-9597-5e4dcc9d90a5)]
 interface nsIDOMMozSmsRequest : nsIDOMDOMRequest
 {
 };

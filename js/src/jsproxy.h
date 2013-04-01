@@ -48,7 +48,8 @@ class JS_FRIEND_API(Wrapper);
  * the derived traps in terms of the fundamental ones. This allows consumers of
  * this class to define any custom behavior they want.
  */
-class JS_FRIEND_API(BaseProxyHandler) {
+class JS_FRIEND_API(BaseProxyHandler)
+{
     void *mFamily;
     bool mHasPrototype;
     bool mHasPolicy;
@@ -104,6 +105,7 @@ class JS_FRIEND_API(BaseProxyHandler) {
                        bool *bp);
 
     /* ES5 Harmony fundamental proxy traps. */
+    virtual bool preventExtensions(JSContext *cx, HandleObject proxy) = 0;
     virtual bool getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
                                        PropertyDescriptor *desc, unsigned flags) = 0;
     virtual bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy,
@@ -128,6 +130,7 @@ class JS_FRIEND_API(BaseProxyHandler) {
                          MutableHandleValue vp);
 
     /* Spidermonkey extensions. */
+    virtual bool isExtensible(JSObject *proxy) = 0;
     virtual bool call(JSContext *cx, HandleObject proxy, unsigned argc, Value *vp);
     virtual bool construct(JSContext *cx, HandleObject proxy, unsigned argc,
                            Value *argv, MutableHandleValue rval);
@@ -153,11 +156,13 @@ class JS_FRIEND_API(BaseProxyHandler) {
  * allows consumers of this class to forward to another object as transparently
  * and efficiently as possible.
  */
-class JS_PUBLIC_API(DirectProxyHandler) : public BaseProxyHandler {
-public:
+class JS_PUBLIC_API(DirectProxyHandler) : public BaseProxyHandler
+{
+  public:
     explicit DirectProxyHandler(void *family);
 
     /* ES5 Harmony fundamental proxy traps. */
+    virtual bool preventExtensions(JSContext *cx, HandleObject proxy) MOZ_OVERRIDE;
     virtual bool getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
                                        PropertyDescriptor *desc, unsigned flags) MOZ_OVERRIDE;
     virtual bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy,
@@ -187,6 +192,10 @@ public:
                          MutableHandleValue vp) MOZ_OVERRIDE;
 
     /* Spidermonkey extensions. */
+    virtual bool isExtensible(JSObject *proxy) MOZ_OVERRIDE;
+    virtual bool call(JSContext *cx, HandleObject proxy, unsigned argc, Value *vp) MOZ_OVERRIDE;
+    virtual bool construct(JSContext *cx, HandleObject proxy, unsigned argc,
+                           Value *argv, MutableHandleValue rval) MOZ_OVERRIDE;
     virtual bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
                             CallArgs args) MOZ_OVERRIDE;
     virtual bool hasInstance(JSContext *cx, HandleObject proxy, MutableHandleValue v,
@@ -204,9 +213,11 @@ public:
 };
 
 /* Dispatch point for handlers that executes the appropriate C++ or scripted traps. */
-class Proxy {
+class Proxy
+{
   public:
     /* ES5 Harmony fundamental proxy traps. */
+    static bool preventExtensions(JSContext *cx, HandleObject proxy);
     static bool getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
                                       PropertyDescriptor *desc, unsigned flags);
     static bool getPropertyDescriptor(JSContext *cx, HandleObject proxy, unsigned flags, HandleId id,
@@ -234,6 +245,7 @@ class Proxy {
     static bool iterate(JSContext *cx, HandleObject proxy, unsigned flags, MutableHandleValue vp);
 
     /* Spidermonkey extensions. */
+    static bool isExtensible(JSObject *proxy);
     static bool call(JSContext *cx, HandleObject proxy, unsigned argc, Value *vp);
     static bool construct(JSContext *cx, HandleObject proxy, unsigned argc, Value *argv,
                           MutableHandleValue rval);
@@ -311,13 +323,6 @@ GetProxyTargetObject(RawObject obj)
 }
 
 inline const Value &
-GetProxyCall(RawObject obj)
-{
-    JS_ASSERT(IsFunctionProxy(obj));
-    return GetReservedSlot(obj, JSSLOT_PROXY_CALL);
-}
-
-inline const Value &
 GetProxyExtra(RawObject obj, size_t n)
 {
     JS_ASSERT(IsProxy(obj));
@@ -339,10 +344,14 @@ SetProxyExtra(RawObject obj, size_t n, const Value &extra)
     SetReservedSlot(obj, JSSLOT_PROXY_EXTRA + n, extra);
 }
 
+enum ProxyCallable {
+    ProxyNotCallable = false,
+    ProxyIsCallable = true
+};
+
 JS_FRIEND_API(JSObject *)
 NewProxyObject(JSContext *cx, BaseProxyHandler *handler, const Value &priv,
-               JSObject *proto, JSObject *parent,
-               JSObject *call = NULL, JSObject *construct = NULL);
+               JSObject *proto, JSObject *parent, ProxyCallable callable = ProxyNotCallable);
 
 JSObject *
 RenewProxyObject(JSContext *cx, JSObject *obj, BaseProxyHandler *handler, Value priv);

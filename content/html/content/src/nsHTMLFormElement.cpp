@@ -38,7 +38,7 @@
 
 // radio buttons
 #include "nsIDOMHTMLInputElement.h"
-#include "nsHTMLInputElement.h"
+#include "mozilla/dom/HTMLInputElement.h"
 #include "nsIRadioVisitor.h"
 
 #include "nsLayoutUtils.h"
@@ -1240,8 +1240,8 @@ nsHTMLFormElement::AddElement(nsGenericHTMLFormElement* aChild,
   // This has to be done _after_ UpdateValidity() call to prevent the element
   // being count twice.
   if (type == NS_FORM_INPUT_RADIO) {
-    nsRefPtr<nsHTMLInputElement> radio =
-      static_cast<nsHTMLInputElement*>(aChild);
+    nsRefPtr<HTMLInputElement> radio =
+      static_cast<HTMLInputElement*>(aChild);
     radio->AddedToRadioGroup();
   }
 
@@ -1265,8 +1265,8 @@ nsHTMLFormElement::RemoveElement(nsGenericHTMLFormElement* aChild,
   //
   nsresult rv = NS_OK;
   if (aChild->GetType() == NS_FORM_INPUT_RADIO) {
-    nsRefPtr<nsHTMLInputElement> radio =
-      static_cast<nsHTMLInputElement*>(aChild);
+    nsRefPtr<HTMLInputElement> radio =
+      static_cast<HTMLInputElement*>(aChild);
     radio->WillRemoveFromRadioGroup();
   }
 
@@ -1746,7 +1746,7 @@ nsHTMLFormElement::CheckValidFormSubmission()
           // update the style in that case.
           if (mControls->mElements[i]->IsHTML(nsGkAtoms::input) &&
               nsContentUtils::IsFocusedContent(mControls->mElements[i])) {
-            static_cast<nsHTMLInputElement*>(mControls->mElements[i])
+            static_cast<HTMLInputElement*>(mControls->mElements[i])
               ->UpdateValidityUIBits(true);
           }
 

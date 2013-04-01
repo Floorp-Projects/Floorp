@@ -481,7 +481,7 @@ PlanarYCbCrImage::SetData(const Data &aData)
 gfxASurface::gfxImageFormat
 PlanarYCbCrImage::GetOffscreenFormat()
 {
-  return mOffscreenFormat != gfxASurface::ImageFormatUnknown ?
+  return mOffscreenFormat == gfxASurface::ImageFormatUnknown ?
     gfxPlatform::GetPlatform()->GetOffscreenFormat() :
     mOffscreenFormat;
 }

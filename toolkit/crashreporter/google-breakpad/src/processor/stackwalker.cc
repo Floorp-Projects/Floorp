@@ -46,7 +46,7 @@
 #include "google_breakpad/processor/stack_frame_symbolizer.h"
 #include "google_breakpad/processor/system_info.h"
 #include "processor/linked_ptr.h"
-#include "processor/logging.h"
+#include "common/logging.h"
 #include "processor/stackwalker_ppc.h"
 #include "processor/stackwalker_sparc.h"
 #include "processor/stackwalker_x86.h"

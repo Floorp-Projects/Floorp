@@ -3833,13 +3833,9 @@ PluginInstanceChild::RecvUpdateBackground(const SurfaceDescriptor& aBackground,
     // XXX refactor me
     mAccumulatedInvalidRect.UnionRect(aRect, mAccumulatedInvalidRect);
 
-    // The browser is limping along with a stale copy of our pixels.
-    // Try to repaint ASAP.  This will ClearCurrentBackground() if we
-    // needed it.
-    if (!ShowPluginFrame()) {
-        NS_WARNING("Couldn't immediately repaint plugin instance");
-        AsyncShowPluginFrame();
-    }
+    // This must be asynchronous, because we may be nested within RPC messages
+    // which do not expect to receiving paint events.
+    AsyncShowPluginFrame();
 
     return true;
 }

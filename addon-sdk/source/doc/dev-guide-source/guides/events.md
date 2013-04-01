@@ -51,19 +51,15 @@ is specific to an event emitter and is included with its documentation.
 whenever the event occurs. The arguments that will be passed to the listener
 are specific to an event type and are documented with the event emitter.
 
-For example, the following add-on registers two listeners with the
-[`private-browsing`](modules/sdk/private-browsing.html) module to
-listen for the `start` and `stop` events, and logs a string to the console
-reporting the change:
+For example, the following add-on registers a listener with the
+[`tabs`](modules/sdk/tabs.html) module to
+listen for the `ready` event, and logs a string to the console
+reporting the event:
 
-    var pb = require("sdk/private-browsing");
+    var tabs = require("sdk/tabs");
 
-    pb.on("start", function() {
-      console.log("Private browsing is on");
-    });
-
-    pb.on("stop", function() {
-      console.log("Private browsing is off");
+    tabs.on("ready", function () {
+      console.log("tab loaded");
     });
 
 It is not possible to enumerate the set of listeners for a given event.
@@ -73,9 +69,8 @@ the event.
 
 ### Adding Listeners in Constructors ###
 
-Event emitters may be modules, as is the case for the
-`private-browsing` events, or they may be objects returned by
-constructors.
+Event emitters may be modules, as is the case for the `ready` event
+above, or they may be objects returned by constructors.
 
 In the latter case the `options` object passed to the constructor typically
 defines properties whose names are the names of supported event types prefixed
@@ -126,28 +121,36 @@ supplying the type of event and the listener to remove.
 The listener must have been previously been added using one of the methods
 described above.
 
-In the following add-on, we add two listeners to private-browsing's `start`
-event, enter and exit private browsing, then remove the first listener and
-enter private browsing again.
+In the following add-on, we add two listeners to the
+[`tabs` module's `ready` event](modules/sdk/tabs.html#ready).
+One of the handler functions removes the listener again.
 
-    var pb = require("sdk/private-browsing");
+Then we open two tabs.
+
+    var tabs = require("sdk/tabs");
 
     function listener1() {
       console.log("Listener 1");
-      pb.removeListener("start", listener1);
+      tabs.removeListener("ready", listener1);
     }
 
     function listener2() {
       console.log("Listener 2");
     }
 
-    pb.on("start", listener1);
-    pb.on("start", listener2);
+    tabs.on("ready", listener1);
+    tabs.on("ready", listener2);
 
-    pb.activate();
-    pb.deactivate();
-    pb.activate();
+    tabs.open("https://www.mozilla.org");
+    tabs.open("https://www.mozilla.org");
 
-Removing listeners is optional since they will be removed in any case
-when the application or add-on is unloaded.
+We should see output like this:
+
+<pre>
+info: tabevents: Listener 1
+info: tabevents: Listener 2
+info: tabevents: Listener 2
+</pre>
+
+Listeners will be removed automatically when the add-on is unloaded.
 

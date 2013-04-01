@@ -16,9 +16,10 @@ const { Ci } = require('chrome');
 const { defer } = require("../lang/functional");
 const { windows, isBrowser } = require('../window/utils');
 const { isPrivateBrowsingSupported } = require('../self');
+const { isGlobalPBSupported } = require('../private-browsing/utils');
 
 // Bug 834961: ignore private windows when they are not supported
-function getWindows() windows(null, { includePrivate: isPrivateBrowsingSupported });
+function getWindows() windows(null, { includePrivate: isPrivateBrowsingSupported || isGlobalPBSupported });
 
 function activateTab(tab, window) {
   let gBrowser = getTabBrowserForTab(tab);
@@ -165,12 +166,6 @@ function getBrowserForTab(tab) {
   return tab.linkedBrowser;
 }
 exports.getBrowserForTab = getBrowserForTab;
-
-
-function getContentWindowForTab(tab) {
-  return getBrowserForTab(tab).contentWindow;
-}
-exports.getContentWindowForTab = getContentWindowForTab;
 
 function getTabId(tab) {
   if (tab.browser) // fennec

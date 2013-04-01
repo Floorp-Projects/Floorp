@@ -108,7 +108,7 @@ def main(argv):
         try:
             f = open(options.read_tests)
             for line in f:
-                test_list.append(os.path.join(TEST_DIR, line.strip('\n')))
+                test_list.append(os.path.join(jittests.TEST_DIR, line.strip('\n')))
             f.close()
         except IOError:
             if options.retest:

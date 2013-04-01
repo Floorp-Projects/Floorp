@@ -273,16 +273,13 @@ function dbOK(expectedRows) {
   stmt.finalize();
 }
 
-function on(event, names) {
+function on(event, names, dontRemove) {
   let args = {
     reset: function () {
       for (let prop in this) {
         if (Array.isArray(this[prop]))
           this[prop].splice(0, this[prop].length);
       }
-    },
-    destroy: function () {
-      names.forEach(function (n) cps.removeObserverForName(n, observers[n]));
     },
   };
 
@@ -302,7 +299,15 @@ function on(event, names) {
     cps.addObserverForName(name, obs);
   });
 
-  return args;
+  do_execute_soon(function () {
+    if (!dontRemove)
+      names.forEach(function (n) cps.removeObserverForName(n, observers[n]));
+    next(args);
+  });
+}
+
+function wait() {
+  do_execute_soon(next);
 }
 
 function observerArgsOK(actualArgs, expectedArgs) {

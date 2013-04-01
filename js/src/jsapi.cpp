@@ -2450,6 +2450,56 @@ JS_SetExtraGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
 }
 
 JS_PUBLIC_API(void)
+JS_CallValueTracer(JSTracer *trc, Value valueArg, const char *name)
+{
+    Value value = valueArg;
+    MarkValueUnbarriered(trc, &value, name);
+    JS_ASSERT(value == valueArg);
+}
+
+JS_PUBLIC_API(void)
+JS_CallIdTracer(JSTracer *trc, jsid idArg, const char *name)
+{
+    jsid id = idArg;
+    MarkIdUnbarriered(trc, &id, name);
+    JS_ASSERT(id == idArg);
+}
+
+JS_PUBLIC_API(void)
+JS_CallObjectTracer(JSTracer *trc, JSObject *objArg, const char *name)
+{
+    JSObject *obj = objArg;
+    MarkObjectUnbarriered(trc, &obj, name);
+    JS_ASSERT(obj == objArg);
+}
+
+JS_PUBLIC_API(void)
+JS_CallStringTracer(JSTracer *trc, JSString *strArg, const char *name)
+{
+    JSString *str = strArg;
+    MarkStringUnbarriered(trc, &str, name);
+    JS_ASSERT(str == strArg);
+}
+
+JS_PUBLIC_API(void)
+JS_CallScriptTracer(JSTracer *trc, JSScript *scriptArg, const char *name)
+{
+    JSScript *script = scriptArg;
+    MarkScriptUnbarriered(trc, &script, name);
+    JS_ASSERT(script == scriptArg);
+}
+
+JS_PUBLIC_API(void)
+JS_CallGenericTracer(JSTracer *trc, void *gcthingArg, const char *name)
+{
+    void *gcthing = gcthingArg;
+    JSGCTraceKind kind = gc::GetGCThingTraceKind(gcthing);
+    JS_SET_TRACING_NAME(trc, name);
+    MarkKind(trc, &gcthing, kind);
+    JS_ASSERT(gcthing == gcthingArg);
+}
+
+JS_PUBLIC_API(void)
 JS_TracerInit(JSTracer *trc, JSRuntime *rt, JSTraceCallback callback)
 {
     InitTracer(trc, rt, callback);
@@ -2466,12 +2516,6 @@ JS_PUBLIC_API(void)
 JS_TraceChildren(JSTracer *trc, void *thing, JSGCTraceKind kind)
 {
     js::TraceChildren(trc, thing, kind);
-}
-
-JS_PUBLIC_API(void)
-JS_CallTracer(JSTracer *trc, void *thing, JSGCTraceKind kind)
-{
-    js::CallTracer(trc, thing, kind);
 }
 
 JS_PUBLIC_API(void)
@@ -2863,12 +2907,9 @@ JS_SetFinalizeCallback(JSRuntime *rt, JSFinalizeCallback cb)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_IsAboutToBeFinalized(void *thing)
+JS_IsAboutToBeFinalized(JSObject **obj)
 {
-    gc::Cell *t = static_cast<gc::Cell *>(thing);
-    bool isDying = IsCellAboutToBeFinalized(&t);
-    JS_ASSERT(t == thing);
-    return isDying;
+    return IsObjectAboutToBeFinalized(obj);
 }
 
 JS_PUBLIC_API(void)

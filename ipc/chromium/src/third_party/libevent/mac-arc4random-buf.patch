@@ -1,0 +1,30 @@
+--- a/evutil_rand.c	2012-08-02 10:36:53.000000000 -0500
++++ b/evutil_rand.c	2013-02-20 13:01:45.000000000 -0600
+@@ -58,27 +58,16 @@ evutil_secure_rng_global_setup_locks_(co
+ static void
+ ev_arc4random_buf(void *buf, size_t n)
+ {
+ #if defined(_EVENT_HAVE_ARC4RANDOM_BUF) && !defined(__APPLE__)
+ 	return arc4random_buf(buf, n);
+ #else
+ 	unsigned char *b = buf;
+ 
+-#if defined(_EVENT_HAVE_ARC4RANDOM_BUF)
+-	/* OSX 10.7 introducd arc4random_buf, so if you build your program
+-	 * there, you'll get surprised when older versions of OSX fail to run.
+-	 * To solve this, we can check whether the function pointer is set,
+-	 * and fall back otherwise.  (OSX does this using some linker
+-	 * trickery.)
+-	 */
+-	if (arc4random_buf != NULL) {
+-		return arc4random_buf(buf, n);
+-	}
+-#endif
+ 	/* Make sure that we start out with b at a 4-byte alignment; plenty
+ 	 * of CPUs care about this for 32-bit access. */
+ 	if (n >= 4 && ((ev_uintptr_t)b) & 3) {
+ 		ev_uint32_t u = arc4random();
+ 		int n_bytes = 4 - (((ev_uintptr_t)b) & 3);
+ 		memcpy(b, &u, n_bytes);
+ 		b += n_bytes;
+ 		n -= n_bytes;

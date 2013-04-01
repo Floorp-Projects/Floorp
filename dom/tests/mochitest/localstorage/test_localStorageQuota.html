@@ -14,6 +14,8 @@ var currentTest = 1;
 var prefs = Components.classes["@mozilla.org/preferences-service;1"]
             .getService(Components.interfaces.nsIPrefBranch);
 var quota;
+var origBlockDisplay;
+var origBlockActive;
 
 function doNextTest()
 {
@@ -32,6 +34,12 @@ function doNextTest()
         quota = 5*1024;
       }
       prefs.setIntPref("dom.storage.default_quota", 1);
+
+      origBlockDisplay = prefs.getBoolPref("security.mixed_content.block_display_content");
+      origBlockActive = prefs.getBoolPref("security.mixed_content.block_active_content");
+
+      prefs.setBoolPref("security.mixed_content.block_display_content", false);
+      prefs.setBoolPref("security.mixed_content.block_active_content", false);
 
       slaveOrigin = "http://example.com";
       slave.location = slaveOrigin + slavePath + "frameQuota.html?add&A&success";
@@ -100,6 +108,8 @@ function doNextTest()
 
     default: // end
       prefs.setIntPref("dom.storage.default_quota", quota);
+      prefs.setBoolPref("security.mixed_content.block_display_content", origBlockDisplay);
+      prefs.setBoolPref("security.mixed_content.block_active_content", origBlockActive);
       SimpleTest.finish();
   }
 

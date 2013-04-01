@@ -103,14 +103,6 @@ UnwrapDOMObject(JSObject* obj)
              "Don't pass non-DOM objects to this function");
 
   JS::Value val = js::GetReservedSlot(obj, DOM_OBJECT_SLOT);
-  // XXXbz/khuey worker code tries to unwrap interface objects (which have
-  // nothing here).  That needs to stop.
-  // XXX We don't null-check UnwrapObject's result; aren't we going to crash
-  // anyway?
-  if (val.isUndefined()) {
-    return NULL;
-  }
-  
   return static_cast<T*>(val.toPrivate());
 }
 
@@ -281,7 +273,7 @@ TraceProtoAndIfaceCache(JSTracer* trc, JSObject* obj)
   for (size_t i = 0; i < kProtoAndIfaceCacheCount; ++i) {
     JSObject* proto = protoAndIfaceArray[i];
     if (proto) {
-      JS_CALL_OBJECT_TRACER(trc, proto, "protoAndIfaceArray[i]");
+      JS_CallObjectTracer(trc, proto, "protoAndIfaceArray[i]");
     }
   }
 }

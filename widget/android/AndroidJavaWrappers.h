@@ -640,6 +640,7 @@ public:
     bool IsMetaPressed() const { return (mMetaState & AndroidKeyEvent::META_META_MASK) != 0; }
     int Flags() { return mFlags; }
     int UnicodeChar() { return mUnicodeChar; }
+    int BaseUnicodeChar() { return mBaseUnicodeChar; }
     int RepeatCount() const { return mRepeatCount; }
     int Count() { return mCount; }
     int Start() { return mStart; }
@@ -673,7 +674,7 @@ protected:
     nsIntRect mRect;
     int mFlags, mMetaState;
     int mDomKeyLocation;
-    int mKeyCode, mUnicodeChar;
+    int mKeyCode, mUnicodeChar, mBaseUnicodeChar;
     int mRepeatCount;
     int mCount;
     int mStart, mEnd;
@@ -734,6 +735,7 @@ protected:
     static jfieldID jEndField;
     static jfieldID jPointerIndexField;
     static jfieldID jUnicodeCharField;
+    static jfieldID jBaseUnicodeCharField;
     static jfieldID jRepeatCountField;
     static jfieldID jRangeTypeField;
     static jfieldID jRangeStylesField;
@@ -778,10 +780,15 @@ public:
         COMPOSITOR_PAUSE = 29,
         COMPOSITOR_RESUME = 30,
         NATIVE_GESTURE_EVENT = 31,
+        IME_KEY_EVENT = 32,
         dummy_java_enum_list_end
     };
 
     enum {
+        // Internal Gecko events
+        IME_FLUSH_CHANGES = -2,
+        IME_UPDATE_CONTEXT = -1,
+        // Events from Java to Gecko
         IME_SYNCHRONIZE = 0,
         IME_REPLACE_TEXT = 1,
         IME_SET_SELECTION = 2,
@@ -789,8 +796,7 @@ public:
         IME_UPDATE_COMPOSITION = 4,
         IME_REMOVE_COMPOSITION = 5,
         IME_ACKNOWLEDGE_FOCUS = 6,
-        IME_FLUSH_CHANGES = 7,
-        IME_UPDATE_CONTEXT = 8
+        dummy_ime_enum_list_end
     };
 };
 

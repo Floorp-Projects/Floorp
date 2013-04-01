@@ -1018,15 +1018,15 @@ nsDocumentViewer::LoadComplete(nsresult aStatus)
 
     docShell->GetRestoringDocument(&restoring);
     if (!restoring) {
-      MOZ_ASSERT(mDocument->IsXUL() || // readyState for XUL is bogus
-                 mDocument->GetReadyStateEnum() ==
-                   nsIDocument::READYSTATE_INTERACTIVE ||
-                 // test_stricttransportsecurity.html has old-style
-                 // docshell-generated about:blank docs reach this code!
-                 (mDocument->GetReadyStateEnum() ==
-                    nsIDocument::READYSTATE_UNINITIALIZED &&
-                  NS_IsAboutBlank(mDocument->GetDocumentURI())),
-                 "Bad readystate");
+      NS_ASSERTION(mDocument->IsXUL() || // readyState for XUL is bogus
+                   mDocument->GetReadyStateEnum() ==
+                     nsIDocument::READYSTATE_INTERACTIVE ||
+                   // test_stricttransportsecurity.html has old-style
+                   // docshell-generated about:blank docs reach this code!
+                   (mDocument->GetReadyStateEnum() ==
+                      nsIDocument::READYSTATE_UNINITIALIZED &&
+                    NS_IsAboutBlank(mDocument->GetDocumentURI())),
+                   "Bad readystate");
       nsCOMPtr<nsIDocument> d = mDocument;
       mDocument->SetReadyStateInternal(nsIDocument::READYSTATE_COMPLETE);
 
