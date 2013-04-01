@@ -163,10 +163,13 @@ public:
   } Type;
 
   already_AddRefed<DataChannel> Open(const nsACString& label,
+                                     const nsACString& protocol,
                                      Type type, bool inOrder,
                                      uint32_t prValue,
                                      DataChannelListener *aListener,
-                                     nsISupports *aContext);
+                                     nsISupports *aContext,
+                                     bool aExternalNegotiated,
+                                     uint16_t aStream);
 
   void Close(DataChannel *aChannel);
   // CloseInt() must be called with mLock held
@@ -219,7 +222,8 @@ private:
   uint16_t FindFreeStream();
   bool RequestMoreStreams(int32_t aNeeded = 16);
   int32_t SendControlMessage(void *msg, uint32_t len, uint16_t streamOut);
-  int32_t SendOpenRequestMessage(const nsACString& label,uint16_t streamOut,
+  int32_t SendOpenRequestMessage(const nsACString& label, const nsACString& protocol,
+                                 uint16_t streamOut,
                                  bool unordered, uint16_t prPolicy, uint32_t prValue);
   int32_t SendMsgInternal(DataChannel *channel, const char *data,
                           uint32_t length, uint32_t ppid);
@@ -314,6 +318,7 @@ public:
               uint16_t stream,
               uint16_t state,
               const nsACString& label,
+              const nsACString& protocol,
               uint16_t policy, uint32_t value,
               uint32_t flags,
               DataChannelListener *aListener,
@@ -323,6 +328,7 @@ public:
     , mContext(aContext)
     , mConnection(connection)
     , mLabel(label)
+    , mProtocol(protocol)
     , mState(state)
     , mReady(false)
     , mStream(stream)
@@ -396,6 +402,8 @@ public:
   void SetReadyState(uint16_t aState) { mState = aState; }
 
   void GetLabel(nsAString& aLabel) { CopyUTF8toUTF16(mLabel, aLabel); }
+  void GetProtocol(nsAString& aProtocol) { CopyUTF8toUTF16(mProtocol, aProtocol); }
+  void GetStream(uint16_t *aStream) { *aStream = mStream; }
 
   void AppReady();
 
@@ -414,6 +422,7 @@ private:
 
   nsRefPtr<DataChannelConnection> mConnection;
   nsCString mLabel;
+  nsCString mProtocol;
   uint16_t mState;
   bool     mReady;
   uint16_t mStream;
