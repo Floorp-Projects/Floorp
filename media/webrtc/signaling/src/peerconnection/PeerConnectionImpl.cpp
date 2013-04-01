@@ -270,7 +270,8 @@ PeerConnectionImpl::PeerConnectionImpl()
   , mSTSThread(NULL)
   , mMedia(new PeerConnectionMedia(this))
   , mNumAudioStreams(0)
-  , mNumVideoStreams(0) {
+  , mNumVideoStreams(0)
+  , mHaveDataStream(false) {
 #ifdef MOZILLA_INTERNAL_API
   MOZ_ASSERT(NS_IsMainThread());
 #endif
@@ -627,7 +628,7 @@ PeerConnectionImpl::CreateFakeMediaStream(uint32_t aHint, nsIDOMMediaStream** aR
 
 // Stubbing this call out for now.
 // We can remove it when we are confident of datachannels being started
-// correctly on SDP negotiation
+// correctly on SDP negotiation (bug 852908)
 NS_IMETHODIMP
 PeerConnectionImpl::ConnectDataConnection(uint16_t aLocalport,
                                           uint16_t aRemoteport,
@@ -721,8 +722,11 @@ PeerConnectionImpl::CreateDataChannel(const nsACString& aLabel,
 
   CSFLogDebug(logTag, "%s: making DOMDataChannel", __FUNCTION__);
 
-  // TODO -- need something like "mCall->addStream(stream_id, 0, DATA);" so
-  // the SDP can be generated correctly
+  if (!mHaveDataStream) {
+    // XXX stream_id of 0 might confuse things...
+    mCall->addStream(0, 2, DATA);
+    mHaveDataStream = true;
+  }
 
   return NS_NewDOMDataChannel(dataChannel.forget(), mWindow, aRetval);
 #else
