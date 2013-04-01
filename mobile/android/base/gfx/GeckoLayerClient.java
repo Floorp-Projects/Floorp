@@ -809,6 +809,12 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     }
 
     private void setViewportMetrics(ImmutableViewportMetrics metrics, boolean notifyGecko, boolean keepFixedMargins) {
+        // This class owns the viewport size; don't let other pieces of code clobber our notion
+        // of the viewport size. The only place the viewport size should ever be updated is in
+        // the GeckoLayerClient.setViewportSize function, and there mViewportMetrics is updated
+        // directly.
+        metrics = metrics.setViewportSize(mViewportMetrics.getWidth(), mViewportMetrics.getHeight());
+
         if (keepFixedMargins) {
             mViewportMetrics = metrics.setFixedLayerMarginsFrom(mViewportMetrics);
         } else {
