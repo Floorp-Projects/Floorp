@@ -67,7 +67,7 @@ interface IPeerConnectionObserver : nsISupports
   void foundIceCandidate(in string candidate);
 };
 
-[scriptable, uuid(2bba7b2b-e152-4ae7-b7d4-f84e41a2211b)]
+[scriptable, uuid(121ff773-949b-48b9-83b2-9a4ef908833c)]
 interface IPeerConnection : nsISupports
 {
   const unsigned long kHintAudio = 0x00000001;
@@ -147,9 +147,10 @@ interface IPeerConnection : nsISupports
   readonly attribute unsigned long sipccState;
 
   /* Data channels */
-  nsIDOMDataChannel createDataChannel(in ACString label,
+  nsIDOMDataChannel createDataChannel(in ACString label, in ACString protocol,
     in unsigned short type, in boolean outOfOrderAllowed,
-    in unsigned short maxTime, in unsigned short maxNum);
+    in unsigned short maxTime, in unsigned short maxNum,
+    in boolean externalNegotiated, in unsigned short stream);
   void connectDataConnection(in unsigned short localport,
     in unsigned short remoteport, in unsigned short numstreams);
 };
