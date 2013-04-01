@@ -1664,7 +1664,7 @@ inline void
 TypeObject::writeBarrierPre(TypeObject *type)
 {
 #ifdef JSGC_INCREMENTAL
-    if (!type || !type->runtime()->needsBarrier())
+    if (!type)
         return;
 
     JS::Zone *zone = type->zone();
@@ -1698,7 +1698,7 @@ inline void
 TypeNewScript::writeBarrierPre(TypeNewScript *newScript)
 {
 #ifdef JSGC_INCREMENTAL
-    if (!newScript || !newScript->fun->runtime()->needsBarrier())
+    if (!newScript)
         return;
 
     JS::Zone *zone = newScript->fun->zone();
