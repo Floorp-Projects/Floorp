@@ -8560,9 +8560,8 @@ PresShell::VerifyIncrementalReflow()
   // Create a new presentation shell to view the document. Use the
   // exact same style information that this document has.
   nsAutoPtr<nsStyleSet> newSet(CloneStyleSet(mStyleSet));
-  nsCOMPtr<nsIPresShell> sh;
-  rv = mDocument->CreateShell(cx, vm, newSet, getter_AddRefs(sh));
-  NS_ENSURE_SUCCESS(rv, false);
+  nsCOMPtr<nsIPresShell> sh = mDocument->CreateShell(cx, vm, newSet);
+  NS_ENSURE_TRUE(sh, false);
   newSet.forget();
   // Note that after we create the shell, we must make sure to destroy it
   sh->SetVerifyReflowEnable(false); // turn off verify reflow while we're reflowing the test frame tree
