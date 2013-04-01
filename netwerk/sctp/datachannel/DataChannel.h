@@ -387,7 +387,7 @@ public:
 
   uint16_t GetType() { return mPrPolicy; }
 
-  bool GetOrdered() { return !(mFlags & DATA_CHANNEL_FLAG_OUT_OF_ORDER_ALLOWED); }
+  bool GetOrdered() { return !(mFlags & DATA_CHANNEL_FLAGS_OUT_OF_ORDER_ALLOWED); }
 
   // Amount of data buffered to send
   uint32_t GetBufferedAmount();
