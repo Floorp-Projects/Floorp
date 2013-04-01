@@ -1180,8 +1180,10 @@ abstract public class BrowserApp extends GeckoApp
                                                         AboutHomeContent.UpdateFlags.REMOTE_TABS));
                 }
                 mAboutHomeContent.setVisibility(View.VISIBLE);
+                mBrowserToolbar.setNextFocusDownId(R.id.abouthome_content);
             } else {
                 findViewById(R.id.abouthome_content).setVisibility(View.GONE);
+                mBrowserToolbar.setNextFocusDownId(R.id.layer_view);
             }
 
             // Refresh margins to possibly restore the toolbar padding
