@@ -1373,10 +1373,7 @@ GetAllKeysHelper::GetSuccessResult(JSContext* aCx,
   NS_ASSERTION(mKeys.Length() <= mLimit, "Too many results!");
 
   nsTArray<Key> keys;
-  if (!mKeys.SwapElements(keys)) {
-    NS_ERROR("Failed to swap elements!");
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
+  mKeys.SwapElements(keys);
 
   JSAutoRequest ar(aCx);
 
