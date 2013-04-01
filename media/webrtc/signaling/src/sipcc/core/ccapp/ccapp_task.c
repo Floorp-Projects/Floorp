@@ -156,6 +156,11 @@ void CCApp_task(void * arg)
     appListener *listener = NULL;
     void * msg;
 
+    //initialize the listener list
+    sll_lite_init(&sll_list);
+
+    CCAppInit();
+
     // If the "ready to start" condition variable has been created
     // (is non-null), we're going to wait for it to be signaled
     // before we start processing messages.
@@ -167,10 +172,6 @@ void CCApp_task(void * arg)
       PR_Unlock(ccAppReadyToStartLock);
     }
 
-    //initialize the listener list
-    sll_lite_init(&sll_list);
-
-    CCAppInit();
 
     while (1) {
         msg = cprGetMessage(ccapp_msgq, TRUE, (void **) &syshdr);

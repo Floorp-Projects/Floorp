@@ -289,6 +289,12 @@
   margin: 0;
 }
 
+@media (max-width: 600px) {
+  #header-search {
+    width: 12em;
+  }
+}
+
 @media (-moz-windows-default-theme) {
   #header-search {
     -moz-appearance: none;

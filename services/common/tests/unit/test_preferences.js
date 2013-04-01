@@ -356,30 +356,3 @@ add_test(function test_lock_prefs() {
   run_next_test();
 });
 */
-
-add_test(function test_site_prefs() {
-  let prefs = Preferences.site("www.example.com", null);
-
-  prefs.set("test_site_prefs.integer", 1);
-  do_check_eq(prefs.get("test_site_prefs.integer"), 1);
-  do_check_true(prefs.has("test_site_prefs.integer"));
-  do_check_false(Preferences.has("test_site_prefs.integer"));
-  prefs.reset("test_site_prefs.integer");
-  do_check_false(prefs.has("test_site_prefs.integer"));
-
-  prefs.set("test_site_prefs.string", "foo");
-  do_check_eq(prefs.get("test_site_prefs.string"), "foo");
-  do_check_true(prefs.has("test_site_prefs.string"));
-  do_check_false(Preferences.has("test_site_prefs.string"));
-  prefs.reset("test_site_prefs.string");
-  do_check_false(prefs.has("test_site_prefs.string"));
-
-  prefs.set("test_site_prefs.boolean", true);
-  do_check_eq(prefs.get("test_site_prefs.boolean"), true);
-  do_check_true(prefs.has("test_site_prefs.boolean"));
-  do_check_false(Preferences.has("test_site_prefs.boolean"));
-  prefs.reset("test_site_prefs.boolean");
-  do_check_false(prefs.has("test_site_prefs.boolean"));
-
-  run_next_test();
-});

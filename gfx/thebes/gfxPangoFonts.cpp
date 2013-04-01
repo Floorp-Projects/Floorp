@@ -195,7 +195,7 @@ protected:
 
     // One pattern is the common case and some subclasses rely on successful
     // addition of the first element to the array.
-    nsAutoTArray<nsCountedRef<FcPattern>,1> mPatterns;
+    AutoFallibleTArray<nsCountedRef<FcPattern>,1> mPatterns;
     bool mSkipHarfBuzz;
     bool mSkipGraphiteCheck;
 

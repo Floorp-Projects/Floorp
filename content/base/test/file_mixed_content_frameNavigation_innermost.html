@@ -47,7 +47,9 @@
       break;
 
     case "securePage_navigate_grandchild_response":
+      dump("\nNavigated to grandchild iframe from secure location to insecure location.  About to post message to the top page.\n");
       parent.parent.parent.postMessage({"test": "securePage_navigate_grandchild", "msg": "navigated to insecure grandchild iframe on secure page"}, "http://mochi.test:8888");
+      dump("\npostMessage to parent attempted.\n");
       document.getElementById("content").innerHTML = "<p>Navigated from secure to insecure grandchild frame on a secure page</p>";
       break;
 

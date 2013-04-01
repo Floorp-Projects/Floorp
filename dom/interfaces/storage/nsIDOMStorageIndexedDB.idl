@@ -13,14 +13,12 @@
  * Allows access to contextual storage areas.
  */
 
-interface nsIIDBFactory;
-
-[scriptable, uuid(94ca74e8-9cff-456e-a7a4-a4071a32ff58)]
+[scriptable, uuid(f4deeef5-32d3-4048-bb56-883330fd8f35)]
 interface nsIDOMStorageIndexedDB : nsISupports
 {
   /**
    * Indexed Databases for the current browsing context.
    */
-  readonly attribute nsIIDBFactory indexedDB;
-  readonly attribute nsIIDBFactory mozIndexedDB;
+  readonly attribute nsISupports indexedDB;
+  readonly attribute nsISupports mozIndexedDB;
 };

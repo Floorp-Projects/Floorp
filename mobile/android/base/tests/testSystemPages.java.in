@@ -30,20 +30,24 @@ public class testSystemPages extends PixelTest {
            and checks that the pages are loaded in the same tab */
         checkUrl(urls);
 
-        /* Verify that the search field is not in the focus by pressing back. That will load the previous
-           about: page if there is no the keyboard to dismiss, meaning that the search field was not in focus */
-        loadUrl("about:config");
+        // Following part of the test disabled due to intermittent failures in bug 797615
+        // made permanent in bug 852489
+        if (false) {
+            /* Verify that the search field is not in the focus by pressing back. That will load the previous
+               about: page if there is no the keyboard to dismiss, meaning that the search field was not in focus */
+            loadUrl("about:config");
 
-        paintExpecter = mActions.expectPaint();// Set up listener to catch the page load
+            paintExpecter = mActions.expectPaint();// Set up listener to catch the page load
 
-        // Press back to verify if the keyboard is dismissed or the previous about: page loads
-        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
-        PaintedSurface painted = waitForPaint(paintExpecter);
+            // Press back to verify if the keyboard is dismissed or the previous about: page loads
+            mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+            PaintedSurface painted = waitForPaint(paintExpecter);
 
-        verifyUrl("about:"); // Verify that the previous about: page is loaded, meaning no keyboard was present
+            verifyUrl("about:"); // Verify that the previous about: page is loaded, meaning no keyboard was present
 
-        // The second section loads system pages from Firefox menu in different tabs
-        loadFromMenu(menuItems, expectedUrls);
+            // The second section loads system pages from Firefox menu in different tabs
+            loadFromMenu(menuItems, expectedUrls);
+        }
     }
 
     // Load from Url the about: pages,verify the Url and the tabs number

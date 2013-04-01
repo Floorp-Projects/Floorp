@@ -10,6 +10,8 @@
 #if defined(XP_WIN)
 #include <windows.h>
 #include <stdlib.h>
+#include <io.h>
+#include <fcntl.h>
 #elif defined(XP_UNIX)
 #include <sys/time.h>
 #include <sys/resource.h>
@@ -49,7 +51,10 @@ using namespace mozilla;
 #define kDesktopFolder "browser"
 #define kMetroFolder "metro"
 #define kMetroAppIniFilename "metroapp.ini"
+#ifdef XP_WIN
 #define kMetroTestFile "tests.ini"
+const char* kMetroConsoleIdParam = "testconsoleid=";
+#endif
 
 static void Output(const char *fmt, ... )
 {
@@ -100,6 +105,42 @@ static bool IsArg(const char* arg, const char* s)
 
   return false;
 }
+
+#ifdef XP_WIN
+/*
+ * AttachToTestsConsole - Windows helper for when we are running
+ * in the immersive environment. Firefox is launched by Windows in
+ * response to a request by metrotestharness, which is launched by
+ * runtests.py. As such stdout in fx doesn't point to the right
+ * stream. This helper touches up stdout such that test output gets
+ * routed to the console the tests are run in.
+ */
+static void AttachToTestsConsole(DWORD aProcessId)
+{
+  if (!AttachConsole(aProcessId)) {
+    OutputDebugStringW(L"Could not attach to console.\n");
+    return;
+  }
+
+  HANDLE winOut = CreateFileA("CONOUT$",
+                              GENERIC_READ | GENERIC_WRITE,
+                              FILE_SHARE_WRITE, 0,
+                              OPEN_EXISTING, 0, 0);
+  if (winOut == INVALID_HANDLE_VALUE) {
+    OutputDebugStringW(L"Could not attach to console.\n");
+    return;
+  }
+
+  // Set the c runtime handle
+  int stdOut = _open_osfhandle((intptr_t)winOut, _O_APPEND);
+  if (stdOut == -1) {
+    OutputDebugStringW(L"Could not open c-runtime handle.\n");
+    return;
+  }
+  FILE *fp = _fdopen(stdOut, "a");
+  *stdout = *fp;
+}
+#endif
 
 XRE_GetFileFromPathType XRE_GetFileFromPath;
 XRE_CreateAppDataType XRE_CreateAppData;
@@ -314,6 +355,15 @@ static int do_main(int argc, char* argv[], nsIFile *xreDirectory)
         if (isspace(*ptr)) {
           *ptr = '\0';
           ptr++;
+          // Check for the console id the metrotestharness passes in, we need
+          // to connect up to this so test output goes to the right place.
+          if (ptr && !strncmp(ptr, kMetroConsoleIdParam, strlen(kMetroConsoleIdParam))) {
+            DWORD processId = strtol(ptr + strlen(kMetroConsoleIdParam), nullptr, 10);
+            if (processId > 0) {
+              AttachToTestsConsole(processId);
+            }
+            continue;
+          }
           newArgv[newArgc] = ptr;
           newArgc++;
           continue;

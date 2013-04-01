@@ -12,9 +12,9 @@
           src="../text.js"></script>
   <script type="application/javascript">
     if (navigator.platform.startsWith("Mac")) {
-      SimpleTest.expectAssertions(0, 28);
+      SimpleTest.expectAssertions(0, 20);
     } else {
-      SimpleTest.expectAssertions(28);
+      SimpleTest.expectAssertions(20);
     }
 
     function doTest()
@@ -218,108 +218,28 @@
       testCharBeforeOffset(IDs, 15, "d", 14, 15);
 
       // BOUNDARY_WORD_START
-      testTextBeforeOffset(0, BOUNDARY_WORD_START, "", 0, 0,
-                           "input", kOk, kOk, kOk,
-                           "div", kOk, kOk, kOk,
-                           "editable", kOk, kOk, kOk,
-                           "textarea", kOk, kOk, kOk);
-      testTextBeforeOffset(1, BOUNDARY_WORD_START, "", 0, 0,
-                           "input", kTodo, kOk, kTodo,
-                           "div", kTodo, kOk, kTodo,
-                           "editable", kTodo, kOk, kTodo,
-                           "textarea", kTodo, kOk, kTodo);
-      testTextBeforeOffset(5, BOUNDARY_WORD_START, "", 0, 0,
-                           "input", kTodo, kOk, kTodo,
-                           "div", kTodo, kOk, kTodo,
-                           "editable", kTodo, kOk, kTodo,
-                           "textarea", kTodo, kOk, kTodo);
-      testTextBeforeOffset(6, BOUNDARY_WORD_START, "hello ", 0, 6,
-                           "input", kOk, kOk, kOk,
-                           "div", kOk, kOk, kOk,
-                           "editable", kOk, kOk, kOk,
-                           "textarea", kOk, kOk, kOk);
-      testTextBeforeOffset(7, BOUNDARY_WORD_START, "hello ", 0, 6,
-                           "input", kTodo, kTodo, kTodo,
-                           "div", kTodo, kTodo, kTodo,
-                           "editable", kTodo, kTodo, kTodo,
-                           "textarea", kTodo, kTodo, kTodo);
-      testTextBeforeOffset(8, BOUNDARY_WORD_START, "hello ", 0, 6,
-                           "input", kTodo, kTodo, kTodo,
-                           "div", kTodo, kTodo, kTodo,
-                           "editable", kTodo, kTodo, kTodo,
-                           "textarea", kTodo, kTodo, kTodo);
-      testTextBeforeOffset(9, BOUNDARY_WORD_START, "my ", 6, 9,
-                           "input", kOk, kOk, kOk,
-                           "div", kOk, kOk, kOk,
-                           "editable", kOk, kOk, kOk,
-                           "textarea", kOk, kOk, kOk);
-      testTextBeforeOffset(10, BOUNDARY_WORD_START, "my ", 6, 9,
-                           "input", kTodo, kTodo, kTodo,
-                           "div", kTodo, kTodo, kTodo,
-                           "editable", kTodo, kTodo, kTodo,
-                           "textarea", kTodo, kTodo, kTodo);
-      testTextBeforeOffset(14, BOUNDARY_WORD_START, "my ", 6, 9,
-                           "input", kTodo, kTodo, kTodo,
-                           "div", kTodo, kTodo, kTodo,
-                           "editable", kTodo, kTodo, kTodo,
-                           "textarea", kTodo, kTodo, kTodo);
-      testTextBeforeOffset(15, BOUNDARY_WORD_START, "my ", 6, 9,
-                           "input", kTodo, kTodo, kTodo,
-                           "div", kTodo, kTodo, kTodo,
-                           "editable", kTodo, kTodo, kTodo,
-                           "textarea", kTodo, kTodo, kTodo);
+      testTextBeforeOffset(0, BOUNDARY_WORD_START, "", 0, 0, IDs);
+      testTextBeforeOffset(1, BOUNDARY_WORD_START, "", 0, 0, IDs);
+      testTextBeforeOffset(5, BOUNDARY_WORD_START, "", 0, 0, IDs);
+      testTextBeforeOffset(6, BOUNDARY_WORD_START, "hello ", 0, 6, IDs);
+      testTextBeforeOffset(7, BOUNDARY_WORD_START, "hello ", 0, 6, IDs);
+      testTextBeforeOffset(8, BOUNDARY_WORD_START, "hello ", 0, 6, IDs);
+      testTextBeforeOffset(9, BOUNDARY_WORD_START, "my ", 6, 9, IDs);
+      testTextBeforeOffset(10, BOUNDARY_WORD_START, "my ", 6, 9, IDs);
+      testTextBeforeOffset(14, BOUNDARY_WORD_START, "my ", 6, 9, IDs);
+      testTextBeforeOffset(15, BOUNDARY_WORD_START, "friend", 9, 15, IDs);
 
       // BOUNDARY_WORD_END
-      testTextBeforeOffset(0, BOUNDARY_WORD_END, "", 0, 0,
-                           "input", kOk, kOk, kOk,
-                           "div", kOk, kOk, kOk,
-                           "editable", kOk, kOk, kOk,
-                           "textarea", kOk, kOk, kOk);
-      testTextBeforeOffset(1, BOUNDARY_WORD_END, "", 0, 0,
-                           "input", kTodo, kOk, kTodo,
-                           "div", kTodo, kOk, kTodo,
-                           "editable", kTodo, kOk, kTodo,
-                           "textarea", kTodo, kOk, kTodo);
-      testTextBeforeOffset(5, BOUNDARY_WORD_END, "", 0, 0,
-                           "input", kTodo, kOk, kTodo,
-                           "div", kTodo, kOk, kTodo,
-                           "editable", kTodo, kOk, kTodo,
-                           "textarea", kTodo, kOk, kTodo);
-      testTextBeforeOffset(6, BOUNDARY_WORD_END, "hello ", 0, 6,
-                           "input", kTodo, kTodo, kOk,
-                           "div", kTodo, kTodo, kOk,
-                           "editable", kTodo, kTodo, kOk,
-                           "textarea", kTodo, kTodo, kOk);
-      testTextBeforeOffset(7, BOUNDARY_WORD_END, "hello ", 0, 6,
-                           "input", kTodo, kTodo, kTodo,
-                           "div", kTodo, kTodo, kTodo,
-                           "editable", kTodo, kTodo, kTodo,
-                           "textarea", kTodo, kTodo, kTodo);
-      testTextBeforeOffset(8, BOUNDARY_WORD_END, "hello ", 0, 6,
-                           "input", kTodo, kTodo, kTodo,
-                           "div", kTodo, kTodo, kTodo,
-                           "editable", kTodo, kTodo, kTodo,
-                           "textarea", kTodo, kTodo, kTodo);
-      testTextBeforeOffset(9, BOUNDARY_WORD_END, " my", 5, 8,
-                           "input", kTodo, kTodo, kTodo,
-                           "div", kTodo, kTodo, kTodo,
-                           "editable", kTodo, kTodo, kTodo,
-                           "textarea", kTodo, kTodo, kTodo);
-      testTextBeforeOffset(10, BOUNDARY_WORD_END, " my", 5, 8,
-                           "input", kTodo, kTodo, kTodo,
-                           "div", kTodo, kTodo, kTodo,
-                           "editable", kTodo, kTodo, kTodo,
-                           "textarea", kTodo, kTodo, kTodo);
-      testTextBeforeOffset(14, BOUNDARY_WORD_END, " my", 5, 8,
-                           "input", kTodo, kTodo, kTodo,
-                           "div", kTodo, kTodo, kTodo,
-                           "editable", kTodo, kTodo, kTodo,
-                           "textarea", kTodo, kTodo, kTodo);
-      testTextBeforeOffset(15, BOUNDARY_WORD_END, " my", 5, 8,
-                           "input", kTodo, kTodo, kTodo,
-                           "div", kTodo, kTodo, kTodo,
-                           "editable", kTodo, kTodo, kTodo,
-                           "textarea", kTodo, kTodo, kTodo);
+      testTextBeforeOffset(0, BOUNDARY_WORD_END, "", 0, 0, IDs);
+      testTextBeforeOffset(1, BOUNDARY_WORD_END, "", 0, 0, IDs);
+      testTextBeforeOffset(5, BOUNDARY_WORD_END, "", 0, 0, IDs);
+      testTextBeforeOffset(6, BOUNDARY_WORD_END, "hello", 0, 5, IDs);
+      testTextBeforeOffset(7, BOUNDARY_WORD_END, "hello", 0, 5, IDs);
+      testTextBeforeOffset(8, BOUNDARY_WORD_END, "hello", 0, 5, IDs);
+      testTextBeforeOffset(9, BOUNDARY_WORD_END, " my", 5, 8, IDs);
+      testTextBeforeOffset(10, BOUNDARY_WORD_END, " my", 5, 8, IDs);
+      testTextBeforeOffset(14, BOUNDARY_WORD_END, " my", 5, 8, IDs);
+      testTextBeforeOffset(15, BOUNDARY_WORD_END, " my", 5, 8, IDs);
 
       // BOUNDARY_LINE_START
       testTextBeforeOffset(0, BOUNDARY_LINE_START, "", 0, 0,
@@ -463,7 +383,19 @@
 
   <a target="_blank"
      title="nsIAccessibleText getText related function tests for html:input,html:div and html:textarea"
-     href="https://bugzilla.mozilla.org/show_bug.cgi?id=452769">Mozilla Bug 452769</a>
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=452769">
+    Bug 452769
+  </a>
+  <a target="_blank"
+     title="getTextAtOffset for word boundaries: beginning of a new life"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=853340">
+    Bug 853340
+  </a>
+  <a target="_blank"
+     title="getTextBeforeOffset for word boundaries: evolving"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=855732">
+    Bug 855732
+  </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">

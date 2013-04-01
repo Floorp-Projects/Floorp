@@ -691,6 +691,14 @@ inf.cu
 // cv : http://en.wikipedia.org/wiki/.cv
 cv
 
+// cw : http://www.una.cw/cw_registry/
+// Confirmed by registry <registry@una.net> 2013-03-26
+cw
+com.cw
+edu.cw
+net.cw
+org.cw
+
 // cx : http://en.wikipedia.org/wiki/.cx
 // list of other 2nd level tlds ?
 cx
@@ -5307,6 +5315,9 @@ co.pn
 org.pn
 edu.pn
 net.pn
+
+// post : http://en.wikipedia.org/wiki/.post
+post
 
 // pr : http://www.nic.pr/index.asp?f=1
 pr

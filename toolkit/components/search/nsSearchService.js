@@ -4079,7 +4079,7 @@ var engineMetadataService = {
             Services.obs.notifyObservers(null,
               SEARCH_SERVICE_TOPIC,
               SEARCH_SERVICE_METADATA_WRITTEN);
-            LOG("epsWriteCommit: done " + result);
+            LOG("epsWriteCommit: done");
           }
         );
         TaskUtils.captureErrors(promise);

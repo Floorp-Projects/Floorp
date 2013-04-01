@@ -354,7 +354,6 @@ typedef struct {
 } mapping_info;
 static std::vector<mapping_info> library_mappings;
 typedef std::map<uint32_t,google_breakpad::MappingList> MappingMap;
-static MappingMap child_library_mappings;
 
 void FileIDToGUID(const char* file_id, u_int8_t guid[sizeof(MDGUID)])
 {
@@ -2848,36 +2847,6 @@ void AddLibraryMapping(const char* library_name,
                                       mapping_length,
                                       file_offset);
   }
-}
-
-void AddLibraryMappingForChild(uint32_t    childPid,
-                               const char* library_name,
-                               const char* file_id,
-                               uintptr_t   start_address,
-                               size_t      mapping_length,
-                               size_t      file_offset)
-{
-  if (child_library_mappings.find(childPid) == child_library_mappings.end())
-    child_library_mappings[childPid] = google_breakpad::MappingList();
-  google_breakpad::MappingInfo info;
-  info.start_addr = start_address;
-  info.size = mapping_length;
-  info.offset = file_offset;
-  strcpy(info.name, library_name);
-
-  struct google_breakpad::MappingEntry mapping;
-  mapping.first = info;
-  u_int8_t guid[sizeof(MDGUID)];
-  FileIDToGUID(file_id, guid);
-  memcpy(mapping.second, guid, sizeof(MDGUID));
-  child_library_mappings[childPid].push_back(mapping);
-}
-
-void RemoveLibraryMappingsForChild(uint32_t childPid)
-{
-  MappingMap::iterator iter = child_library_mappings.find(childPid);
-  if (iter != child_library_mappings.end())
-    child_library_mappings.erase(iter);
 }
 #endif
 
