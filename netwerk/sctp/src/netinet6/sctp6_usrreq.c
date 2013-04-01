@@ -1004,7 +1004,7 @@ static
 int
 sctp6_disconnect(struct socket *so)
 {
-	return(sctp_disconnect(so));
+	return (sctp_disconnect(so));
 }
 
 

@@ -768,7 +768,10 @@ let gGestureSupport = {
    *        The gesture event to handle
    */
   handleEvent: function GS_handleEvent(aEvent) {
-    aEvent.stopPropagation();
+    if (!Services.prefs.getBoolPref(
+           "dom.debug.propagate_gesture_events_through_content")) {
+      aEvent.stopPropagation();
+    }
 
     // Create a preference object with some defaults
     let def = function(aThreshold, aLatched)
@@ -4213,32 +4216,6 @@ var XULBrowserWindow = {
       }
     }
 
-    // This code here does not compare uris exactly when determining
-    // whether or not the message should be hidden since the message
-    // may be prematurely hidden when an install is invoked by a click
-    // on a link that looks like this:
-    //
-    // <a href="#" onclick="return install();">Install Foo</a>
-    //
-    // - which fires a onLocationChange message to uri + '#'...
-    var selectedBrowser = gBrowser.selectedBrowser;
-    if (selectedBrowser.lastURI) {
-      let oldSpec = selectedBrowser.lastURI.spec;
-      let oldIndexOfHash = oldSpec.indexOf("#");
-      if (oldIndexOfHash != -1)
-        oldSpec = oldSpec.substr(0, oldIndexOfHash);
-      let newSpec = location;
-      let newIndexOfHash = newSpec.indexOf("#");
-      if (newIndexOfHash != -1)
-        newSpec = newSpec.substr(0, newIndexOfHash);
-      if (newSpec != oldSpec) {
-        // Remove all the notifications, except for those which want to
-        // persist across the first location change.
-        let nBox = gBrowser.getNotificationBox(selectedBrowser);
-        nBox.removeTransientNotifications();
-      }
-    }
-
     // Disable menu entries for images, enable otherwise
     if (content.document && mimeTypeIsTextBased(content.document.contentType))
       this.isImage.removeAttribute('disabled');
@@ -4691,25 +4668,25 @@ var TabsProgressListener = {
 
   onLocationChange: function (aBrowser, aWebProgress, aRequest, aLocationURI,
                               aFlags) {
-    // Filter out sub-frame loads and location changes caused by anchor
-    // navigation or history.push/pop/replaceState.
-    if (aBrowser.contentWindow == aWebProgress.DOMWindow &&
-        !(aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT)) {
+    // Filter out location changes caused by anchor navigation
+    // or history.push/pop/replaceState.
+    if (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT)
+      return;
+
+    // Only need to call locationChange if the PopupNotifications object
+    // for this window has already been initialized (i.e. its getter no
+    // longer exists)
+    if (!Object.getOwnPropertyDescriptor(window, "PopupNotifications").get)
+      PopupNotifications.locationChange(aBrowser);
+
+    gBrowser.getNotificationBox(aBrowser).removeTransientNotifications();
+
+    // Filter out location changes in sub documents.
+    if (aBrowser.contentWindow == aWebProgress.DOMWindow) {
       // Initialize the click-to-play state.
       aBrowser._clickToPlayPluginsActivated = new Map();
       aBrowser._clickToPlayAllPluginsActivated = false;
       aBrowser._pluginScriptedState = gPluginHandler.PLUGIN_SCRIPTED_STATE_NONE;
-
-      // Only need to call locationChange if the PopupNotifications object
-      // for this window has already been initialized (i.e. its getter no
-      // longer exists)
-      if (!Object.getOwnPropertyDescriptor(window, "PopupNotifications").get)
-        PopupNotifications.locationChange(aBrowser);
-
-      // Only handle background browsers as long as the selected browser is
-      // handled in XULBrowserWindow.onLocationChange (bug 839516).
-      if (aBrowser != gBrowser.selectedBrowser)
-        gBrowser.getNotificationBox(aBrowser).removeTransientNotifications();
 
       FullZoom.onLocationChange(aLocationURI, false, aBrowser);
     }

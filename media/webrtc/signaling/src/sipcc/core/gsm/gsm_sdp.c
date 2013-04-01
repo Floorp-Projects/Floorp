@@ -147,16 +147,7 @@ static const cc_media_cap_table_t *gsmsdp_get_media_capability (fsmdef_dcb_t *dc
 
         dcb_p->media_cap_tbl->cap[CC_AUDIO_1].enabled = FALSE;
         dcb_p->media_cap_tbl->cap[CC_VIDEO_1].enabled = FALSE;
-        /*
-         * This really should be set to FALSE unless we have added
-         * a data channel using createDataChannel(). Right now,
-         * though, those operations are not queued (and, in fact,
-         * the W3C hasn't specified the proper behavior here anyway, so
-         * we would only be implementing speculatively) -- so we'll
-         * always offer data channels until the standard is
-         * a bit more set.
-         */
-        dcb_p->media_cap_tbl->cap[CC_DATACHANNEL_1].enabled = TRUE;
+        dcb_p->media_cap_tbl->cap[CC_DATACHANNEL_1].enabled = FALSE;
 
         dcb_p->media_cap_tbl->cap[CC_AUDIO_1].support_security = TRUE;
         dcb_p->media_cap_tbl->cap[CC_VIDEO_1].support_security = TRUE;

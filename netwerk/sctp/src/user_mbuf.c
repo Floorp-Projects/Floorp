@@ -59,20 +59,6 @@ sctp_zone_t	zone_mbuf;
 sctp_zone_t	zone_clust;
 sctp_zone_t	zone_ext_refcnt;
 
-/*__Userspace__
- * constructor callback_data
- * mbuf_mb_args will be passed as callback data to umem_cache_create.
- * umem_cache_alloc will then be able to use this callback data when the constructor
- * function mb_ctor_mbuf is called. See user_mbuf.c
- * This is important because mbuf_mb_args would specify flags like M_PKTHDR
- * and type like MT_DATA or MT_HEADER. This information is needed in mb_ctor_mbuf
- * to properly initialize the mbuf being allocated.
- *
- * Argument structure passed to UMA routines during mbuf and packet
- * allocations.
- */
-struct mb_args mbuf_mb_args;
-
 /* __Userspace__ clust_mb_args will be passed as callback data to mb_ctor_clust
  * and mb_dtor_clust.
  * Note: I had to use struct clust_args as an encapsulation for an mbuf pointer.
@@ -91,18 +77,6 @@ static void	mb_dtor_clust(void *, void *);
 
 
 /***************** Functions taken from user_mbuf.h *************/
-
-/* __Userspace__  Setter function for mbuf_mb_args */
-static void set_mbuf_mb_args(int flags, short type) {
-	mbuf_mb_args.flags = flags;
-	mbuf_mb_args.type = type;
-}
-#if USING_MBUF_CONSTRUCTOR
-/* __Userspace__  Setter function for clust_mb_args */
-static void set_clust_mb_args(struct mbuf * mb) {
-	clust_mb_args.parent_mbuf = mb;
-}
-#endif
 
 static int mbuf_constructor_dup(struct mbuf *m, int pkthdr, short type)
 {
@@ -136,12 +110,16 @@ struct mbuf *
 m_get(int how, short type)
 {
 	struct mbuf *mret;
+#if defined(SCTP_SIMPLE_ALLOCATOR)
+	struct mb_args mbuf_mb_args;
+
 	/* The following setter function is not yet being enclosed within
 	 * #if USING_MBUF_CONSTRUCTOR - #endif, until I have thoroughly tested
 	 * mb_dtor_mbuf. See comment there
 	 */
-	set_mbuf_mb_args(0, type);
-
+	mbuf_mb_args.flags = 0;
+	mbuf_mb_args.type = type;
+#endif
 	/* Mbuf master zone, zone_mbuf, has already been
 	 * created in mbuf_init() */
 	mret = SCTP_ZONE_GET(zone_mbuf, struct mbuf);
@@ -174,12 +152,16 @@ struct mbuf *
 m_gethdr(int how, short type)
 {
 	struct mbuf *mret;
+#if defined(SCTP_SIMPLE_ALLOCATOR)
+	struct mb_args mbuf_mb_args;
+
 	/* The following setter function is not yet being enclosed within
 	 * #if USING_MBUF_CONSTRUCTOR - #endif, until I have thoroughly tested
 	 * mb_dtor_mbuf. See comment there
 	 */
-	set_mbuf_mb_args(M_PKTHDR, type);
-
+	mbuf_mb_args.flags = M_PKTHDR;
+	mbuf_mb_args.type = type;
+#endif
 	mret = SCTP_ZONE_GET(zone_mbuf, struct mbuf);
 #if defined(SCTP_SIMPLE_ALLOCATOR)
 	mb_ctor_mbuf(mret, &mbuf_mb_args, 0);
@@ -213,7 +195,7 @@ m_free(struct mbuf *m)
 		mb_free_ext(m);
 	else if ((m->m_flags & M_NOFREE) == 0) {
 #if defined(SCTP_SIMPLE_ALLOCATOR)
-		mb_dtor_mbuf(m, &mbuf_mb_args);
+		mb_dtor_mbuf(m, NULL);
 #endif
 		SCTP_ZONE_FREE(zone_mbuf, m);
 	}
@@ -262,13 +244,15 @@ void
 m_clget(struct mbuf *m, int how)
 {
 	caddr_t mclust_ret;
-
+#if defined(SCTP_SIMPLE_ALLOCATOR)
+	struct clust_args clust_mb_args;
+#endif
 	if (m->m_flags & M_EXT) {
 		SCTPDBG(SCTP_DEBUG_USR, "%s: %p mbuf already has cluster\n", __func__, (void *)m);
 	}
 	m->m_ext.ext_buf = (char *)NULL;
-#if USING_MBUF_CONSTRUCTOR
-	set_clust_mb_args(m);
+#if defined(SCTP_SIMPLE_ALLOCATOR)
+	clust_mb_args.parent_mbuf = m;
 #endif
 	mclust_ret = SCTP_ZONE_GET(zone_clust, char);
 #if defined(SCTP_SIMPLE_ALLOCATOR)
@@ -366,9 +350,9 @@ mbuf_init(void *dummy)
 	SCTP_ZONE_INIT(zone_mbuf, MBUF_MEM_NAME, MSIZE, 0);
 #else
 	zone_mbuf = umem_cache_create(MBUF_MEM_NAME, MSIZE, 0,
-								  mb_ctor_mbuf, mb_dtor_mbuf, NULL,
-								  &mbuf_mb_args,
-								  NULL, 0);
+	                              mb_ctor_mbuf, mb_dtor_mbuf, NULL,
+	                              NUULL,
+	                              NULL, 0);
 #endif
 	/*zone_ext_refcnt = umem_cache_create(MBUF_EXTREFCNT_MEM_NAME, sizeof(u_int), 0,
 				NULL, NULL, NULL,
@@ -498,16 +482,10 @@ mb_ctor_mbuf(void *mem, void *arg, int flgs)
 static void
 mb_dtor_mbuf(void *mem, void *arg)
 {
-
 	struct mbuf *m;
-	struct mb_args *args;
-	int flags;
 
 	m = (struct mbuf *)mem;
-	args = (struct mb_args *)arg;
-	flags = args->flags;
-
-	if ((flags & MB_NOTAGS) == 0 && (m->m_flags & M_PKTHDR) != 0) {
+	if ((m->m_flags & M_PKTHDR) != 0) {
 		m_tag_delete_chain(m, NULL);
 	}
 }
@@ -693,7 +671,7 @@ mb_free_ext(struct mbuf *m)
 	m->m_ext.ext_type = 0;
 	m->m_flags &= ~M_EXT;
 #if defined(SCTP_SIMPLE_ALLOCATOR)
-	mb_dtor_mbuf(m, &mbuf_mb_args);
+	mb_dtor_mbuf(m, NULL);
 #endif
 	SCTP_ZONE_FREE(zone_mbuf, m);
 

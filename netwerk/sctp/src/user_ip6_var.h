@@ -95,7 +95,7 @@ struct ip6_hdr {
 #endif
 #endif
 
-#if !defined(__Userspace_os_FreeBSD)
+#if !defined(__Userspace_os_FreeBSD) && !defined(__Userspace_os_OpenBSD)
 struct route_in6 {
 	struct	rtentry *ro_rt;
 	struct	llentry *ro_lle;
