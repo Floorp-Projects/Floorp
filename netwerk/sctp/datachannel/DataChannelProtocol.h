@@ -16,6 +16,9 @@
 #error "Unsupported compiler"
 #endif
 
+// Duplicated in fsm.def
+#define WEBRTC_DATACHANNEL_STREAMS_DEFAULT 16
+
 #define DATA_CHANNEL_PPID_CONTROL   50
 #define DATA_CHANNEL_PPID_DOMSTRING 51
 #define DATA_CHANNEL_PPID_BINARY    52

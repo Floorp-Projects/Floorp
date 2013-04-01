@@ -175,11 +175,9 @@ debug_printf(const char *format, ...)
 }
 #endif
 
-DataChannelConnection::DataChannelConnection(DataConnectionListener *listener,
-                                             bool aIsEven) :
+  DataChannelConnection::DataChannelConnection(DataConnectionListener *listener) :
    mLock("netwerk::sctp::DataChannelConnection")
 {
-  mAllocateEven = aIsEven;
   mState = CLOSED;
   mSocket = nullptr;
   mMasterSocket = nullptr;
@@ -188,8 +186,7 @@ DataChannelConnection::DataChannelConnection(DataConnectionListener *listener,
   mRemotePort = 0;
   mDeferTimeout = 10;
   mTimerRunning = false;
-  LOG(("Constructor DataChannelConnection=%p, listener=%p, %s", this, mListener.get(),
-       aIsEven ? "Even" : "Odd"));
+  LOG(("Constructor DataChannelConnection=%p, listener=%p", this, mListener.get()));
 }
 
 DataChannelConnection::~DataChannelConnection()
@@ -488,9 +485,10 @@ DataChannelConnection::Notify(nsITimer *timer)
 
 #ifdef MOZ_PEERCONNECTION
 bool
-DataChannelConnection::ConnectDTLS(TransportFlow *aFlow, uint16_t localport, uint16_t remoteport)
+DataChannelConnection::ConnectDTLS(TransportFlow *aFlow, uint16_t localport, uint16_t remoteport,
+                                   bool even)
 {
-  LOG(("Connect DTLS local %u, remote %u", localport, remoteport));
+  LOG(("Connect DTLS local %d, remote %d, %s", localport, remoteport, even ? "Even" : "Odd"));
 
   NS_PRECONDITION(mMasterSocket, "SCTP wasn't initialized before ConnectDTLS!");
   NS_ENSURE_TRUE(aFlow, false);
@@ -499,6 +497,7 @@ DataChannelConnection::ConnectDTLS(TransportFlow *aFlow, uint16_t localport, uin
   mTransportFlow->SignalPacketReceived.connect(this, &DataChannelConnection::SctpDtlsInput);
   mLocalPort = localport;
   mRemotePort = remoteport;
+  mAllocateEven = even;
   mState = CONNECTING;
 
   struct sockaddr_conn addr;
@@ -539,6 +538,10 @@ DataChannelConnection::ConnectDTLS(TransportFlow *aFlow, uint16_t localport, uin
       NS_DispatchToMainThread(new DataChannelOnMessageAvailable(
                                 DataChannelOnMessageAvailable::ON_CONNECTION,
                                 this, true));
+
+      // Open any streams pending...
+      MutexAutoLock lock(mLock); // OpenFinish assumes this
+      ProcessQueuedOpens();
       return true;
     }
   }
@@ -547,6 +550,28 @@ DataChannelConnection::ConnectDTLS(TransportFlow *aFlow, uint16_t localport, uin
                             DataChannelOnMessageAvailable::ON_CONNECTION,
                             this, false));
   return false;
+}
+
+// Process any pending Opens
+void
+DataChannelConnection::ProcessQueuedOpens()
+{
+  // Can't copy nsDeque's.  Move into temp array since any that fail will
+  // go back to mPending
+  nsDeque temp;
+  DataChannel *temp_channel; // really already_AddRefed<>
+  while (nullptr != (temp_channel = static_cast<DataChannel *>(mPending.PopFront()))) {
+    temp.Push(static_cast<void *>(temp_channel));
+  }
+
+  nsRefPtr<DataChannel> channel;
+  while (nullptr != (channel = dont_AddRef(static_cast<DataChannel *>(temp.PopFront())))) {
+    if (channel->mFlags & DATA_CHANNEL_FLAGS_FINISH_OPEN) {
+      LOG(("Processing queued open for %p (%u)", channel.get(), channel->mStream));
+      channel->mFlags &= ~DATA_CHANNEL_FLAGS_FINISH_OPEN;
+      OpenFinish(channel.forget()); // may reset the flag and re-push
+    }
+  }
 }
 
 void
@@ -1235,6 +1260,10 @@ DataChannelConnection::HandleAssociationChangeEvent(const struct sctp_assoc_chan
                                 DataChannelOnMessageAvailable::ON_CONNECTION,
                                 this, true));
       LOG(("DTLS connect() succeeded!  Entering connected mode"));
+
+      // Open any streams pending...
+      ProcessQueuedOpens();
+
     } else if (mState == OPEN) {
       LOG(("DataConnection Already OPEN"));
     } else {
@@ -1588,21 +1617,7 @@ DataChannelConnection::HandleStreamChangeEvent(const struct sctp_stream_change_e
         RequestMoreStreams(num_needed);
       }
 
-      // Can't copy nsDeque's.  Move into temp array since any that fail will
-      // go back to mPending
-      nsDeque temp;
-      DataChannel *temp_channel; // really already_AddRefed<>
-      while (nullptr != (temp_channel = static_cast<DataChannel *>(mPending.PopFront()))) {
-        temp.Push(static_cast<void *>(temp_channel));
-      }
-
-      // Now assign our new streams
-      while (nullptr != (channel = dont_AddRef(static_cast<DataChannel *>(temp.PopFront())))) {
-        if (channel->mFlags & DATA_CHANNEL_FLAGS_FINISH_OPEN) {
-          channel->mFlags &= ~DATA_CHANNEL_FLAGS_FINISH_OPEN;
-          OpenFinish(channel.forget()); // may reset the flag and re-push
-        }
-      }
+      ProcessQueuedOpens();
     }
     // else probably not a change in # of streams
   }
@@ -1774,30 +1789,37 @@ DataChannelConnection::OpenFinish(already_AddRefed<DataChannel> aChannel)
   nsRefPtr<DataChannel> channel(aChannel);
   uint16_t stream = channel->mStream;
 
-  if (stream == INVALID_STREAM) {
-    stream = FindFreeStream(); // may be INVALID_STREAM!
+  mLock.AssertCurrentThreadOwns();
 
-    mLock.AssertCurrentThreadOwns();
+  if (stream == INVALID_STREAM || mState != OPEN) {
+    if (stream == INVALID_STREAM) {
+      stream = FindFreeStream(); // may be INVALID_STREAM!
+    }
 
     LOG(("Finishing open: channel %p, stream = %u", channel.get(), stream));
 
-    if (stream == INVALID_STREAM) {
-      if (!RequestMoreStreams()) {
-        channel->mState = CLOSED;
-        if (channel->mFlags & DATA_CHANNEL_FLAGS_FINISH_OPEN) {
-          // We already returned the channel to the app.
-          NS_ERROR("Failed to request more streams");
-          NS_DispatchToMainThread(new DataChannelOnMessageAvailable(
-                                    DataChannelOnMessageAvailable::ON_CHANNEL_CLOSED, this,
-                                    channel));
-          return channel.forget();
+    if (stream == INVALID_STREAM || mState != OPEN) {
+      if (stream == INVALID_STREAM) {
+        if (!RequestMoreStreams()) {
+          channel->mState = CLOSED;
+          if (channel->mFlags & DATA_CHANNEL_FLAGS_FINISH_OPEN) {
+            // We already returned the channel to the app.
+            NS_ERROR("Failed to request more streams");
+            NS_DispatchToMainThread(new DataChannelOnMessageAvailable(
+                                      DataChannelOnMessageAvailable::ON_CHANNEL_CLOSED, this,
+                                      channel));
+            return channel.forget();
+          }
+          // we'll be destroying the channel, but it never really got set up
+          // Alternative would be to RUN_ON_THREAD(channel.forget(),::Destroy,...) and
+          // Dispatch it to ourselves
+          return nullptr;
         }
-        // we'll be destroying the channel, but it never really got set up
-        // Alternative would be to RUN_ON_THREAD(channel.forget(),::Destroy,...) and
-        // Dispatch it to ourselves
-        return nullptr;
+      } else if (mState != OPEN) {
+        mStreams[stream] = channel;
       }
-      LOG(("Queuing channel %p to finish open", channel.get()));
+
+      LOG(("Queuing channel %p (%u) to finish open", channel.get(), stream));
       // Also serves to mark we told the app
       channel->mFlags |= DATA_CHANNEL_FLAGS_FINISH_OPEN;
       channel->AddRef(); // we need a ref for the nsDeQue and one to return
@@ -1806,7 +1828,12 @@ DataChannelConnection::OpenFinish(already_AddRefed<DataChannel> aChannel)
     }
     channel->mStream = stream;
   }
-  mStreams[stream] = channel;
+  if (!mStreams[stream]) {
+    mStreams[stream] = channel;
+  } else {
+    // externally negotiated before connection
+    MOZ_ASSERT(mStreams[stream] == channel);
+  }
 
 #ifdef TEST_QUEUED_DATA
   // It's painful to write a test for this...
