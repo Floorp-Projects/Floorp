@@ -676,7 +676,7 @@ PeerConnectionImpl::InitializeDataChannel(uint16_t aLocalport,
     nsRefPtr<TransportFlow> flow = mMedia->GetTransportFlow(i,false).get();
     CSFLogDebug(logTag, "Transportflow[%d] = %p", i, flow.get());
     if (flow) {
-      if (!mDataConnection->ConnectDTLS(flow, aLocalport, aRemoteport, aLocalport > aRemoteport)) {
+      if (!mDataConnection->ConnectViaTransportFlow(flow, aLocalport, aRemoteport)) {
         return NS_ERROR_FAILURE;
       }
       break;
