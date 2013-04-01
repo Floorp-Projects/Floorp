@@ -679,10 +679,13 @@ PeerConnectionImpl::InitializeDataChannel(uint16_t aLocalport,
 
 NS_IMETHODIMP
 PeerConnectionImpl::CreateDataChannel(const nsACString& aLabel,
+                                      const nsACString& aProtocol,
                                       uint16_t aType,
                                       bool outOfOrderAllowed,
                                       uint16_t aMaxTime,
                                       uint16_t aMaxNum,
+                                      bool aExternalNegotiated,
+                                      uint16_t aStream,
                                       nsIDOMDataChannel** aRetval)
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
@@ -697,10 +700,10 @@ PeerConnectionImpl::CreateDataChannel(const nsACString& aLabel,
     return NS_ERROR_FAILURE;
   }
   dataChannel = mDataConnection->Open(
-    aLabel, theType, !outOfOrderAllowed,
+    aLabel, aProtocol, theType, !outOfOrderAllowed,
     aType == mozilla::DataChannelConnection::PARTIAL_RELIABLE_REXMIT ? aMaxNum :
     (aType == mozilla::DataChannelConnection::PARTIAL_RELIABLE_TIMED ? aMaxTime : 0),
-    nullptr, nullptr
+    nullptr, nullptr, aExternalNegotiated, aStream
   );
   NS_ENSURE_TRUE(dataChannel,NS_ERROR_FAILURE);
 
