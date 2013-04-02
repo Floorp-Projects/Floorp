@@ -11,6 +11,7 @@
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/PodOperations.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -82,6 +83,7 @@ using namespace js::gc;
 using namespace js::types;
 
 using mozilla::DebugOnly;
+using mozilla::PodCopy;
 
 /* Some objects (e.g., With) delegate 'this' to another object. */
 static inline JSObject *

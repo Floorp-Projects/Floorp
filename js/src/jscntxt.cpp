@@ -72,6 +72,8 @@ using namespace js;
 using namespace js::gc;
 
 using mozilla::DebugOnly;
+using mozilla::PodArrayZero;
+using mozilla::PodZero;
 using mozilla::PointerRangeSize;
 
 bool

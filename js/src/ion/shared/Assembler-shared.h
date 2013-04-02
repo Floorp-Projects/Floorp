@@ -11,6 +11,7 @@
 #include <limits.h>
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/PodOperations.h"
 
 #include "ion/IonAllocPolicy.h"
 #include "ion/Registers.h"
@@ -147,7 +148,7 @@ struct Address
     Address(Register base, int32_t offset) : base(base), offset(offset)
     { }
 
-    Address() { PodZero(this); }
+    Address() { mozilla::PodZero(this); }
 };
 
 // Specifies an address computed in the form of a register base and a constant,
@@ -163,7 +164,7 @@ struct BaseIndex
       : base(base), index(index), scale(scale), offset(offset)
     { }
 
-    BaseIndex() { PodZero(this); }
+    BaseIndex() { mozilla::PodZero(this); }
 };
 
 class Relocation {
@@ -381,7 +382,7 @@ class CodeOffsetJump
 #endif
 
     CodeOffsetJump() {
-        PodZero(this);
+        mozilla::PodZero(this);
     }
 
     size_t offset() const {

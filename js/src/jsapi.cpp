@@ -11,6 +11,7 @@
 
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/GuardObjects.h"
+#include "mozilla/PodOperations.h"
 #include "mozilla/ThreadLocal.h"
 
 #include <ctype.h>
@@ -99,6 +100,8 @@ using namespace js::gc;
 using namespace js::types;
 
 using mozilla::Maybe;
+using mozilla::PodCopy;
+using mozilla::PodZero;
 
 using js::frontend::Parser;
 

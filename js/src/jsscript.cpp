@@ -10,6 +10,9 @@
  */
 
 #include <string.h>
+
+#include "mozilla/PodOperations.h"
+
 #include "jstypes.h"
 #include "jsutil.h"
 #include "jscrashreport.h"
@@ -49,6 +52,9 @@
 using namespace js;
 using namespace js::gc;
 using namespace js::frontend;
+
+using mozilla::PodCopy;
+using mozilla::PodZero;
 
 typedef Rooted<GlobalObject *> RootedGlobalObject;
 

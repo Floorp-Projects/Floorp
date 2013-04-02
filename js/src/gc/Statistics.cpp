@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+#include "mozilla/PodOperations.h"
+
 #include "jscntxt.h"
 #include "jscompartment.h"
 #include "jscrashformat.h"
@@ -24,6 +26,8 @@
 
 using namespace js;
 using namespace js::gcstats;
+
+using mozilla::PodArrayZero;
 
 /* Except for the first and last, slices of less than 42ms are not reported. */
 static const int64_t SLICE_MIN_REPORT_TIME = 42 * PRMJ_USEC_PER_MSEC;
