@@ -1572,6 +1572,8 @@ public:
   {
     aLocalName = mNodeInfo->LocalName();
   }
+  // HasAttributes is defined inline in Element.h.
+  bool HasAttributes() const;
   nsDOMAttributeMap* GetAttributes();
   JS::Value SetUserData(JSContext* aCx, const nsAString& aKey, JS::Value aData,
                         nsIDOMUserDataHandler* aHandler,
@@ -2013,6 +2015,12 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsINode, NS_INODE_IID)
   NS_IMETHOD GetLocalName(nsAString& aLocalName) __VA_ARGS__ \
   { \
     nsINode::GetLocalName(aLocalName); \
+    return NS_OK; \
+  } \
+  using nsINode::HasAttributes; \
+  NS_IMETHOD HasAttributes(bool* aResult) __VA_ARGS__ \
+  { \
+    *aResult = nsINode::HasAttributes(); \
     return NS_OK; \
   } \
   NS_IMETHOD GetDOMBaseURI(nsAString& aBaseURI) __VA_ARGS__ \
