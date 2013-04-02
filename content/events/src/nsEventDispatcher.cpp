@@ -432,7 +432,7 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
   PROFILER_LABEL("nsEventDispatcher", "Dispatch");
   NS_ASSERTION(aEvent, "Trying to dispatch without nsEvent!");
   NS_ENSURE_TRUE(!aEvent->mFlags.mIsBeingDispatched,
-                 NS_ERROR_ILLEGAL_VALUE);
+                 NS_ERROR_DOM_INVALID_STATE_ERR);
   NS_ASSERTION(!aTargets || !aEvent->message, "Wrong parameters!");
 
   // If we're dispatching an already created DOMEvent object, make

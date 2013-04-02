@@ -15,7 +15,7 @@
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(62af8276-947f-4ad1-a303-f076a3b05ca8)]
+[scriptable, uuid(9ee8b1c3-2b0d-49e2-b2d6-f6bb8bf21b9e)]
 interface nsIDOMProcessingInstruction : nsIDOMCharacterData
 {
   readonly attribute DOMString        target;

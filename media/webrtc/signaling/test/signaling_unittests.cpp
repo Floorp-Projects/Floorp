@@ -95,7 +95,7 @@ enum sdpTestFlags
   SHOULD_OMIT_VIDEO     = (1<<12),
   DONT_CHECK_VIDEO      = (1<<13),
 
-  SHOULD_OMIT_DATA      = (1 << 16),
+  SHOULD_INCLUDE_DATA   = (1 << 16),
   DONT_CHECK_DATA       = (1 << 17),
 
   SHOULD_SENDRECV_AUDIO = SHOULD_SEND_AUDIO | SHOULD_RECV_AUDIO,
@@ -877,7 +877,7 @@ private:
          << ((flags & SHOULD_OMIT_VIDEO)?" SHOULD_OMIT_VIDEO":"")
          << ((flags & DONT_CHECK_VIDEO)?" DONT_CHECK_VIDEO":"")
 
-         << ((flags & SHOULD_OMIT_DATA)?" SHOULD_OMIT_DATA":"")
+         << ((flags & SHOULD_INCLUDE_DATA)?" SHOULD_INCLUDE_DATA":"")
          << ((flags & DONT_CHECK_DATA)?" DONT_CHECK_DATA":"")
          << endl;
 
@@ -955,10 +955,10 @@ private:
             ASSERT_FALSE("Missing case in switch statement");
     }
 
-    if (flags & SHOULD_OMIT_DATA) {
-      ASSERT_EQ(sdp.find("m=application"), std::string::npos);
-    } else if (!(flags & DONT_CHECK_DATA)) {
+    if (flags & SHOULD_INCLUDE_DATA) {
       ASSERT_NE(sdp.find("m=application"), std::string::npos);
+    } else if (!(flags & DONT_CHECK_DATA)) {
+      ASSERT_EQ(sdp.find("m=application"), std::string::npos);
     }
   }
 };
@@ -1181,15 +1181,6 @@ TEST_F(SignalingTest, CreateOfferNoAudioStream)
   constraints.setBooleanConstraint("OfferToReceiveVideo", true, false);
   CreateOffer(constraints, OFFER_VIDEO,
               SHOULD_OMIT_AUDIO | SHOULD_SENDRECV_VIDEO);
-}
-
-TEST_F(SignalingTest, CreateOfferNoDataChannel)
-{
-  sipcc::MediaConstraints constraints;
-  constraints.setBooleanConstraint("OfferToReceiveAudio", true, false);
-  constraints.setBooleanConstraint("OfferToReceiveVideo", true, false);
-  constraints.setBooleanConstraint("MozDontOfferDataChannel", true, false);
-  CreateOffer(constraints, OFFER_AV, SHOULD_SENDRECV_AV | SHOULD_OMIT_DATA);
 }
 
 TEST_F(SignalingTest, CreateOfferDontReceiveAudio)

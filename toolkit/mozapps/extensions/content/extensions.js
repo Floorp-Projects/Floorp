@@ -68,7 +68,7 @@ document.addEventListener("load", initialize, true);
 window.addEventListener("unload", shutdown, false);
 
 var gPendingInitializations = 1;
-__defineGetter__("gIsInitializing", function gIsInitializingGetter() gPendingInitializations > 0);
+this.__defineGetter__("gIsInitializing", function gIsInitializingGetter() gPendingInitializations > 0);
 
 function initialize(event) {
   // XXXbz this listener gets _all_ load events for all nodes in the

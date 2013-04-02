@@ -22,7 +22,6 @@ try
 }
 catch(ex)
 {
-  print(ex + '');
 }
 
 expect = 'object';

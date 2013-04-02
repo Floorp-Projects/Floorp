@@ -1891,15 +1891,9 @@ DebugScopes::onCompartmentLeaveDebugMode(JSCompartment *c)
 {
     DebugScopes *scopes = c->debugScopes;
     if (scopes) {
-        if (c->rt->isHeapBusy()) {
-            scopes->proxiedScopes.clearWithoutCallingDestructors();
-            scopes->missingScopes.clearWithoutCallingDestructors();
-            scopes->liveScopes.clearWithoutCallingDestructors();
-        } else {
-            scopes->proxiedScopes.clear();
-            scopes->missingScopes.clear();
-            scopes->liveScopes.clear();
-        }
+        scopes->proxiedScopes.clear();
+        scopes->missingScopes.clear();
+        scopes->liveScopes.clear();
     }
 }
 

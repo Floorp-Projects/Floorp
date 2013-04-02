@@ -10,7 +10,7 @@ Cu.import("resource:///modules/tabview/utils.jsm");
 
 // Bug 671101 - directly using webProgress in this context
 // causes docShells to leak
-__defineGetter__("webProgress", function () {
+this.__defineGetter__("webProgress", function () {
   let ifaceReq = docShell.QueryInterface(Ci.nsIInterfaceRequestor);
   return ifaceReq.getInterface(Ci.nsIWebProgress);
 });

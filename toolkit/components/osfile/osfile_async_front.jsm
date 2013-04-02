@@ -274,14 +274,14 @@ File.prototype = {
    * @resolves {number} The number of bytes effectively read.
    * @rejects {OS.File.Error}
    */
-  readTo: function readTo(buffer, options) {
+  readTo: function readTo(buffer, options = noOptions) {
     // If |buffer| is a typed array and there is no |bytes| options, we
     // need to extract the |byteLength| now, as it will be lost by
     // communication
-    if (isTypedArray(buffer) && (!options || !"bytes" in options)) {
+    if (isTypedArray(buffer) && (!options || !("bytes" in options))) {
       // Preserve the reference to |outExecutionDuration| option if it is
       // passed.
-      options = clone(options || noOptions, ["outExecutionDuration"]);
+      options = clone(options, ["outExecutionDuration"]);
       options.bytes = buffer.byteLength;
     }
     // Note: Type.void_t.out_ptr.toMsg ensures that
@@ -312,14 +312,14 @@ File.prototype = {
    *
    * @return {number} The number of bytes actually written.
    */
-  write: function write(buffer, options) {
+  write: function write(buffer, options = noOptions) {
     // If |buffer| is a typed array and there is no |bytes| options,
     // we need to extract the |byteLength| now, as it will be lost
     // by communication
-    if (isTypedArray(buffer) && (!options || !"bytes" in options)) {
+    if (isTypedArray(buffer) && (!options || !("bytes" in options))) {
       // Preserve the reference to |outExecutionDuration| option if it is
       // passed.
-      options = clone(options || noOptions, ["outExecutionDuration"]);
+      options = clone(options, ["outExecutionDuration"]);
       options.bytes = buffer.byteLength;
     }
     // Note: Type.void_t.out_ptr.toMsg ensures that
@@ -612,10 +612,10 @@ File.exists = function exists(path) {
  * @return {promise}
  * @resolves {number} The number of bytes actually written.
  */
-File.writeAtomic = function writeAtomic(path, buffer, options) {
+File.writeAtomic = function writeAtomic(path, buffer, options = noOptions) {
   // Copy |options| to avoid modifying the original object but preserve the
   // reference to |outExecutionDuration| option if it is passed.
-  options = clone(options || noOptions, ["outExecutionDuration"]);
+  options = clone(options, ["outExecutionDuration"]);
   // As options.tmpPath is a path, we need to encode it as |Type.path| message
   if ("tmpPath" in options) {
     options.tmpPath = Type.path.toMsg(options.tmpPath);

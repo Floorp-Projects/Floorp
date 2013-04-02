@@ -22,6 +22,7 @@ static const int AUDIO_NODE_STREAM_TRACK_ID = 1;
 
 AudioNodeStream::~AudioNodeStream()
 {
+  MOZ_COUNT_DTOR(AudioNodeStream);
 }
 
 void

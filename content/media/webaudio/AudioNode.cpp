@@ -200,6 +200,15 @@ AudioNode::SendThreeDPointParameterToStream(uint32_t aIndex, const ThreeDPoint& 
 }
 
 void
+AudioNode::SendTimelineParameterToStream(AudioNode* aNode, uint32_t aIndex,
+                                         const AudioParamTimeline& aValue)
+{
+  AudioNodeStream* ns = static_cast<AudioNodeStream*>(aNode->mStream.get());
+  MOZ_ASSERT(ns, "How come we don't have a stream here?");
+  ns->SetTimelineParameter(aIndex, aValue);
+}
+
+void
 AudioNode::Disconnect(uint32_t aOutput, ErrorResult& aRv)
 {
   if (aOutput >= NumberOfOutputs()) {

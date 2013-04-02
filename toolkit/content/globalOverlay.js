@@ -180,7 +180,7 @@ function setTooltipText(aID, aTooltipText)
     element.setAttribute("tooltiptext", aTooltipText);
 }
 
-__defineGetter__("NS_ASSERT", function() {
+this.__defineGetter__("NS_ASSERT", function() {
   delete this.NS_ASSERT;
   var tmpScope = {};
   Components.utils.import("resource://gre/modules/debug.js", tmpScope);
