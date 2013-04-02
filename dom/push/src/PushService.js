@@ -18,7 +18,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/IndexedDBHelper.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/services-common/preferences.js");
-Cu.import("resource://gre/modules/services-common/utils.js");
 Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
 
 const kPUSHDB_DB_NAME = "push";

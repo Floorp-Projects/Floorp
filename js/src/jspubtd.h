@@ -214,6 +214,20 @@ typedef JSBool                 (*JSInitCallback)(void);
 
 #ifdef __cplusplus
 
+namespace JS {
+namespace shadow {
+
+struct Runtime
+{
+    /* Restrict zone access during Minor GC. */
+    bool needsBarrier_;
+
+    Runtime() : needsBarrier_(false) {}
+};
+
+} /* namespace shadow */
+} /* namespace JS */
+
 namespace js {
 
 class Allocator;
@@ -300,21 +314,6 @@ struct ContextFriendFields {
 #endif
 };
 
-struct RuntimeFriendFields {
-    /*
-     * If non-zero, we were been asked to call the operation callback as soon
-     * as possible.
-     */
-    volatile int32_t    interrupt;
-
-    RuntimeFriendFields()
-      : interrupt(0) { }
-
-    static const RuntimeFriendFields *get(const JSRuntime *rt) {
-        return reinterpret_cast<const RuntimeFriendFields *>(rt);
-    }
-};
-
 class PerThreadData;
 
 struct PerThreadDataFriendFields
@@ -323,7 +322,7 @@ struct PerThreadDataFriendFields
     // Note: this type only exists to permit us to derive the offset of
     // the perThread data within the real JSRuntime* type in a portable
     // way.
-    struct RuntimeDummy : RuntimeFriendFields
+    struct RuntimeDummy : JS::shadow::Runtime
     {
         struct PerThreadDummy {
             void *field1;
@@ -368,14 +367,14 @@ struct PerThreadDataFriendFields
     }
 
     static inline PerThreadDataFriendFields *getMainThread(JSRuntime *rt) {
-        // mainThread must always appear directly after |RuntimeFriendFields|.
+        // mainThread must always appear directly after |JS::shadow::Runtime|.
         // Tested by a JS_STATIC_ASSERT in |jsfriendapi.cpp|
         return reinterpret_cast<PerThreadDataFriendFields *>(
             reinterpret_cast<char*>(rt) + RuntimeMainThreadOffset);
     }
 
     static inline const PerThreadDataFriendFields *getMainThread(const JSRuntime *rt) {
-        // mainThread must always appear directly after |RuntimeFriendFields|.
+        // mainThread must always appear directly after |JS::shadow::Runtime|.
         // Tested by a JS_STATIC_ASSERT in |jsfriendapi.cpp|
         return reinterpret_cast<const PerThreadDataFriendFields *>(
             reinterpret_cast<const char*>(rt) + RuntimeMainThreadOffset);

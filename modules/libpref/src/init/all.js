@@ -331,6 +331,16 @@ pref("accessibility.tabfocus_applies_to_xul", true);
 // further checks.
 pref("accessibility.force_disabled", 0);
 
+#ifdef XP_WIN
+// Some accessibility tools poke at windows in the plugin process during setup
+// which can cause hangs.  To hack around this set accessibility.delay_plugins
+// to true, you can also try increasing accessibility.delay_plugin_time if your
+// machine is slow and you still experience hangs.
+// See bug 781791.
+pref("accessibility.delay_plugins", false);
+pref("accessibility.delay_plugin_time", 10000);
+#endif
+
 pref("focusmanager.testmode", false);
 
 pref("accessibility.usetexttospeech", "");
@@ -1702,11 +1712,7 @@ pref("layout.css.masking.enabled", true);
 #endif
 
 // Is support for the the @supports rule enabled?
-#ifdef RELEASE_BUILD
-pref("layout.css.supports-rule.enabled", false);
-#else
 pref("layout.css.supports-rule.enabled", true);
-#endif
 
 // Is support for CSS Flexbox enabled?
 pref("layout.css.flexbox.enabled", true);

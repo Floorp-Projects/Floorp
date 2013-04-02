@@ -80,13 +80,13 @@
           title="&visibilityToggle.tooltip;"
           accesskey="&saveButton.accesskey;"></a>
         <hgroup class="stylesheet-info">
-          <h1><a class="stylesheet-name" href="#"><xul:label crop="start"/></a></h1>
+          <h1><a class="stylesheet-name" tabindex="0"><xul:label crop="start"/></a></h1>
           <div class="stylesheet-more">
             <h3 class="stylesheet-title"></h3>
             <h3 class="stylesheet-rule-count"></h3>
             <h3 class="stylesheet-error-message"></h3>
             <xul:spacer/>
-            <h3><a class="stylesheet-saveButton" href="#"
+            <h3><a class="stylesheet-saveButton"
                   title="&saveButton.tooltip;"
                   accesskey="&saveButton.accesskey;">&saveButton.label;</a></h3>
           </div>

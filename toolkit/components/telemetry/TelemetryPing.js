@@ -180,12 +180,6 @@ TelemetryPing.prototype = {
   // The number of those requests that have actually completed.
   _pingLoadsCompleted: 0,
   _savedProfileDirectory: null,
-  // Saving pings for later consumption is done in two parts: one part
-  // saves a minimal amount of information in these variables.  Said
-  // information will not be available later on.  The second part
-  // handles retrieving histograms and writing the data to disk.
-  _savedSimpleMeasurements: null,
-  _savedInfo: null,
   // The previous build ID, if this is the first run with a new build.
   // Undefined if this is not the first run, or the previous build ID is unknown.
   _previousBuildID: undefined,
@@ -801,9 +795,9 @@ TelemetryPing.prototype = {
       Telemetry.canRecord = false;
       return;
     }
+    Services.obs.addObserver(this, "profile-before-change", false);
     Services.obs.addObserver(this, "sessionstore-windows-restored", false);
     Services.obs.addObserver(this, "quit-application-granted", false);
-    Services.obs.addObserver(this, "profile-before-change2", false);
 #ifdef MOZ_WIDGET_ANDROID
     Services.obs.addObserver(this, "application-background", false);
 #endif
@@ -1000,6 +994,8 @@ TelemetryPing.prototype = {
   },
 
   savePendingPings: function savePendingPings() {
+    let sessionPing = this.getSessionPayloadAndSlug("saved-session");
+    this.savePing(sessionPing, true);
     this._pendingPings.forEach(function sppcb(e, i, a) {
                                  this.savePing(e, false);
                                }, this);
@@ -1024,8 +1020,8 @@ TelemetryPing.prototype = {
       Services.obs.removeObserver(this, "xul-window-visible");
       this._hasXulWindowVisibleObserver = false;
     }
+    Services.obs.removeObserver(this, "profile-before-change");
     Services.obs.removeObserver(this, "quit-application-granted");
-    Services.obs.removeObserver(this, "profile-before-change2");
 #ifdef MOZ_WIDGET_ANDROID
     Services.obs.removeObserver(this, "application-background", false);
 #endif
@@ -1089,6 +1085,9 @@ TelemetryPing.prototype = {
       this.setup();
       this.cacheProfileDirectory();
       break;
+    case "profile-before-change":
+      this.uninstall();
+      break;
     case "cycle-collector-begin":
       let now = new Date();
       if (!gLastMemoryPoll
@@ -1130,19 +1129,7 @@ TelemetryPing.prototype = {
       break;
     case "quit-application-granted":
       if (Telemetry.canSend) {
-        this._savedSimpleMeasurements = this.getSimpleMeasurements(/*forSavedSession=*/true);
-        this._savedInfo = this.getMetadata("saved-session");
         this.savePendingPings();
-      }
-      break;
-    case "profile-before-change2":
-      this.uninstall();
-      if (Telemetry.canSend) {
-        let payloadObj =
-          this.assemblePayloadWithMeasurements(this._savedSimpleMeasurements,
-                                               this._savedInfo);
-        let ping = this.assemblePing(payloadObj, "saved-session");
-        this.savePing(ping, true);
       }
       break;
 

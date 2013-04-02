@@ -9,6 +9,7 @@ generated_webidl_files = \
   $(NULL)
 
 webidl_files = \
+  AnalyserNode.webidl \
   AnimationEvent.webidl \
   ArchiveReader.webidl \
   ArchiveRequest.webidl \
@@ -135,6 +136,7 @@ webidl_files = \
   HTMLTitleElement.webidl \
   HTMLUListElement.webidl \
   HTMLVideoElement.webidl \
+  IDBFactory.webidl \
   IDBVersionChangeEvent.webidl \
   ImageData.webidl \
   InspectorUtils.webidl \

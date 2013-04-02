@@ -20,8 +20,8 @@ class XPCCallContext;
 
 struct xpc_qsPropertySpec {
     uint16_t name_index;
-    JSPropertyOp getter;
-    JSStrictPropertyOp setter;
+    JSNative getter;
+    JSNative setter;
 };
 
 struct xpc_qsFunctionSpec {
@@ -72,6 +72,13 @@ xpc_qsThrow(JSContext *cx, nsresult rv);
 JSBool
 xpc_qsThrowGetterSetterFailed(JSContext *cx, nsresult rv,
                               JSObject *obj, jsid memberId);
+// And variants using strings and string tables
+JSBool
+xpc_qsThrowGetterSetterFailed(JSContext *cx, nsresult rv,
+                              JSObject *obj, const char* memberName);
+JSBool
+xpc_qsThrowGetterSetterFailed(JSContext *cx, nsresult rv,
+                              JSObject *obj, uint16_t memberIndex);
 
 /**
  * Fail after an XPCOM method returned rv.
@@ -112,10 +119,20 @@ xpc_qsThrowBadArgWithDetails(JSContext *cx, nsresult rv, unsigned paramnum,
 void
 xpc_qsThrowBadSetterValue(JSContext *cx, nsresult rv, JSObject *obj,
                           jsid propId);
+// And variants using strings and string tables
+void
+xpc_qsThrowBadSetterValue(JSContext *cx, nsresult rv, JSObject *obj,
+                          const char* propName);
+void
+xpc_qsThrowBadSetterValue(JSContext *cx, nsresult rv, JSObject *obj,
+                          uint16_t name_index);
 
 
 JSBool
 xpc_qsGetterOnlyPropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, JSMutableHandleValue vp);
+
+JSBool
+xpc_qsGetterOnlyNativeStub(JSContext *cx, unsigned argc, jsval *vp);
 
 /* Functions for converting values between COM and JS. */
 

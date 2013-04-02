@@ -1,0 +1,28 @@
+<style>
+  body { overflow-x: scroll }
+  div {
+    width: 10px;
+    height: 10px;
+    background-color: #d64203;
+  }
+</style>
+
+<body>
+  <div style="width: 50px"></div> <!-- Unaffected by scrollbars. -->
+  <div id="b"></div>
+  <div style="width: 35px"></div> <!-- Unaffected by scrollbars. -->
+  <div id="d"></div>
+
+  <!-- Deliberately make scrollbars appear. -->
+  <div style="width: 500px; height: 500px; background-color: black">
+</body>
+
+<script>
+  // client{Width, Height} consist of the area _inside_ the scrollbars, so these
+  // manually calculated units reflect the fact that with 'overflow: scroll' set,
+  // viewport units are sized taking the scrollbars into account. Since we're
+  // only dealing with 'overflow-x' here, only the height units are affected.
+  var vh = 0.01 * document.body.clientHeight;
+  document.getElementById('b').style.height = (25 * vh) + "px";
+  document.getElementById('d').style.height = (25 * vh) + "px";
+</script>

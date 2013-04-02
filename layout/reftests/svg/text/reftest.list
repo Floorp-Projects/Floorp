@@ -165,6 +165,9 @@ HTTP(../..) == clipPath-applied.svg clipPath-applied-ref.svg
 HTTP(../..) == filter-applied.svg filter-applied-ref.svg
 
 # selection
+needs-focus == selectSubString.svg selectSubString-ref.svg
+needs-focus == selectSubString-2.svg selectSubString-2-ref.svg
+needs-focus == selectSubString-3.svg selectSubString-3-ref.svg
 needs-focus == simple-selection.svg simple-selection-ref.html
 needs-focus == simple-bidi-selection.svg simple-bidi-selection-ref.html
 needs-focus == simple-fill-color-selection.svg simple-fill-color-selection-ref.html

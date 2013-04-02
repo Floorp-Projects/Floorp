@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_structs.h 242714 2012-11-07 22:11:38Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_structs.h 246595 2013-02-09 17:26:14Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_STRUCTS_H_
@@ -653,6 +653,9 @@ struct sctp_asconf_addr {
 struct sctp_scoping {
 	uint8_t ipv4_addr_legal;
 	uint8_t ipv6_addr_legal;
+#if defined(__Userspace__)
+	uint8_t conn_addr_legal;
+#endif
 	uint8_t loopback_scope;
 	uint8_t ipv4_local_scope;
 	uint8_t local_scope;
@@ -1221,17 +1224,7 @@ struct sctp_association {
 	 */
 	uint8_t peer_supports_pktdrop;
 
-	/* Do we allow V6/V4? */
-	uint8_t ipv4_addr_legal;
-	uint8_t ipv6_addr_legal;
-	/* Address scoping flags */
-	/* scope value for IPv4 */
-	uint8_t ipv4_local_scope;
-	/* scope values for IPv6 */
-	uint8_t local_scope;
-	uint8_t site_scope;
-	/* loopback scope */
-	uint8_t loopback_scope;
+	struct sctp_scoping scope;
 	/* flags to handle send alternate net tracking */
 	uint8_t used_alt_onsack;
 	uint8_t used_alt_asconfack;

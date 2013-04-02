@@ -1281,7 +1281,6 @@ bool MediaDecoder::IsMediaSeekable()
 
 nsresult MediaDecoder::GetSeekable(TimeRanges* aSeekable)
 {
-  //TODO : change 0.0 to GetInitialTime() when available
   double initialTime = 0.0;
 
   // We can seek in buffered range if the media is seekable. Also, we can seek

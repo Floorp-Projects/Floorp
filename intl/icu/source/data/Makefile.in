@@ -350,7 +350,8 @@ ifeq ($(ENABLE_SO_VERSION_DATA),1)
 ifeq ($(PKGDATA_MODE),dll)
 SO_VERSION_DATA = $(OUTTMPDIR)/icudata.res
 $(SO_VERSION_DATA) : $(MISCSRCDIR)/icudata.rc
-	rc.exe /i$(srcdir)/../common /i$(top_builddir)/common /fo$@ $(CPPFLAGS) $(SOURCE_FILE)
+        # fixme: need to tell whether to use - or /, $(SOURCEFILE) or $<
+	rc.exe -i$(srcdir)/../common -i$(top_builddir)/common -fo$@ $(CPPFLAGS) $<
 endif
 endif
 

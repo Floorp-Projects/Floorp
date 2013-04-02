@@ -95,6 +95,7 @@ interface Node : EventTarget {
   [Constant]
   readonly attribute DOMString? localName;
 
+  boolean hasAttributes();
   [Throws, Func="nsINode::ShouldExposeUserData"]
   any setUserData(DOMString key, any data, UserDataHandler? handler);
   [Throws, Func="nsINode::ShouldExposeUserData"]

@@ -14,7 +14,12 @@ let gDevTools = temp.gDevTools;
 Cu.import("resource://gre/modules/devtools/dbg-server.jsm", temp);
 let DebuggerServer = temp.DebuggerServer;
 
+// Import the GCLI test helper
+let testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
+Services.scriptloader.loadSubScript(testDir + "../../../commandline/test/helpers.js", this);
+
 registerCleanupFunction(function () {
+  helpers = null;
   Services.prefs.clearUserPref(PROFILER_ENABLED);
   Services.prefs.clearUserPref(REMOTE_ENABLED);
   DebuggerServer.destroy();

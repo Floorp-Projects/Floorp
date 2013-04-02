@@ -259,6 +259,7 @@ public:
   // SVG DOM text methods:
   uint32_t GetNumberOfChars(nsIContent* aContent);
   float GetComputedTextLength(nsIContent* aContent);
+  nsresult SelectSubString(nsIContent* aContent, uint32_t charnum, uint32_t nchars);
   nsresult GetSubStringLength(nsIContent* aContent, uint32_t charnum,
                               uint32_t nchars, float* aResult);
   int32_t GetCharNumAtPosition(nsIContent* aContent, mozilla::nsISVGPoint* point);

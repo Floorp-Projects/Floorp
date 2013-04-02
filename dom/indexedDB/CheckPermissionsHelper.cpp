@@ -15,6 +15,7 @@
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIURI.h"
 
+#include "CheckQuotaHelper.h"
 #include "nsContentUtils.h"
 #include "nsDOMStorage.h"
 #include "nsNetUtil.h"
@@ -38,9 +39,10 @@
 #define PERMISSION_DENIED nsIPermissionManager::DENY_ACTION
 #define PERMISSION_PROMPT nsIPermissionManager::ALLOW_ACTION
 
-using namespace mozilla;
 USING_INDEXEDDB_NAMESPACE
 using namespace mozilla::services;
+using mozilla::dom::quota::CheckQuotaHelper;
+using mozilla::Preferences;
 
 namespace {
 
@@ -111,14 +113,19 @@ CheckPermissionsHelper::Run()
     // we cannot set the permission from the child).
     if (permission != PERMISSION_PROMPT &&
         IndexedDatabaseManager::IsMainProcess()) {
+      NS_ASSERTION(mWindow, "Null window!");
+
+      nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(mWindow);
+      NS_ASSERTION(sop, "Window didn't QI to nsIScriptObjectPrincipal!");
+
+      nsIPrincipal* windowPrincipal = sop->GetPrincipal();
+      NS_ASSERTION(windowPrincipal, "Null principal!");
+
       nsCOMPtr<nsIPermissionManager> permissionManager =
         do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
       NS_ENSURE_STATE(permissionManager);
 
-      nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(mWindow);
-      NS_ENSURE_TRUE(sop, NS_ERROR_FAILURE);
-
-      rv = permissionManager->AddFromPrincipal(sop->GetPrincipal(),
+      rv = permissionManager->AddFromPrincipal(windowPrincipal,
                                                PERMISSION_INDEXEDDB, permission,
                                                nsIPermissionManager::EXPIRE_NEVER,
                                                0);
@@ -141,6 +148,24 @@ CheckPermissionsHelper::Run()
   window.swap(mWindow);
 
   if (permission == PERMISSION_ALLOWED) {
+    // If we're running from a window then we should check the quota permission
+    // as well. If we don't have a window then we're opening a chrome database
+    // and the quota will be unlimited already.
+    if (window) {
+      nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(window);
+      NS_ASSERTION(sop, "Window didn't QI to nsIScriptObjectPrincipal!");
+
+      nsIPrincipal* windowPrincipal = sop->GetPrincipal();
+      NS_ASSERTION(windowPrincipal, "Null principal!");
+
+      uint32_t quotaPermission =
+        CheckQuotaHelper::GetQuotaPermission(windowPrincipal);
+
+      if (quotaPermission == nsIPermissionManager::ALLOW_ACTION) {
+        helper->SetUnlimitedQuotaAllowed();
+      }
+    }
+
     quota::QuotaManager* quotaManager = quota::QuotaManager::Get();
     NS_ASSERTION(quotaManager, "This should never be null!");
 

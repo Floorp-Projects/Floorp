@@ -3526,6 +3526,11 @@ fsmdef_ev_addstream(sm_event_t *event) {
         dcb->media_cap_tbl->cap[CC_AUDIO_1].support_direction = SDP_DIRECTION_SENDRECV;
         dcb->media_cap_tbl->cap[CC_AUDIO_1].pc_stream = msg->data.track.stream_id;
         dcb->media_cap_tbl->cap[CC_AUDIO_1].pc_track = msg->data.track.track_id;
+    } else if (msg->data.track.media_type == DATA) {
+        dcb->media_cap_tbl->cap[CC_DATACHANNEL_1].enabled = TRUE;
+        dcb->media_cap_tbl->cap[CC_DATACHANNEL_1].support_direction = SDP_DIRECTION_SENDRECV;
+        dcb->media_cap_tbl->cap[CC_DATACHANNEL_1].pc_stream = msg->data.track.stream_id;
+        dcb->media_cap_tbl->cap[CC_DATACHANNEL_1].pc_track = msg->data.track.track_id;
     } else {
         return (SM_RC_END);
     }
@@ -3564,11 +3569,11 @@ fsmdef_ev_removestream(sm_event_t *event) {
      * will be re-implemented.
      */
     if (msg->data.track.media_type == AUDIO) {
-        dcb->media_cap_tbl->cap[CC_AUDIO_1].enabled = TRUE;
+        PR_ASSERT(dcb->media_cap_tbl->cap[CC_AUDIO_1].enabled);
         dcb->media_cap_tbl->cap[CC_AUDIO_1].support_direction = SDP_DIRECTION_RECVONLY;
         dcb->video_pref = SDP_DIRECTION_SENDRECV;
     } else if (msg->data.track.media_type == VIDEO) {
-        dcb->media_cap_tbl->cap[CC_VIDEO_1].enabled = TRUE;
+        PR_ASSERT(dcb->media_cap_tbl->cap[CC_VIDEO_1].enabled);
         dcb->media_cap_tbl->cap[CC_VIDEO_1].support_direction = SDP_DIRECTION_RECVONLY;
     } else {
         return (SM_RC_END);

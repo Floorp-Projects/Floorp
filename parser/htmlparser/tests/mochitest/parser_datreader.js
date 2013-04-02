@@ -134,8 +134,7 @@ function addLevels(walker, buf, indent) {
             buf += "otherns ";
           }
           buf += walker.currentNode.localName + ">";
-          if (walker.currentNode.attributes &&
-              walker.currentNode.attributes.length) {
+          if (walker.currentNode.hasAttributes()) {
             var valuesByName = {};
             var attrs = walker.currentNode.attributes;
             for (var i = 0; i < attrs.length; ++i) {

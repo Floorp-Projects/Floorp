@@ -130,12 +130,11 @@ sctp_timeout(void *arg SCTP_UNUSED)
 	void (*c_func)(void *);
 	void *c_arg;
 
+	SCTP_TIMERQ_LOCK();
 #if defined(__APPLE__)
 	/* update our tick count */
 	ticks += SCTP_BASE_VAR(sctp_main_timer_ticks);
 #endif
-
-	SCTP_TIMERQ_LOCK();
 	c = TAILQ_FIRST(&SCTP_BASE_INFO(callqueue));
 	while (c) {
 		if (c->c_time <= ticks) {

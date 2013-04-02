@@ -16,7 +16,6 @@
 // asm.js compilation is only available on desktop x86/x64 at the moment.
 // Don't panic, mobile support is coming soon.
 #if defined(JS_ION) && \
-    !defined(ANDROID) && \
     (defined(JS_CPU_X86) || defined(JS_CPU_X64))
 # define JS_ASMJS
 #endif
@@ -75,14 +74,13 @@ class AsmJSActivation
 {
     JSContext *cx_;
     const AsmJSModule &module_;
-    unsigned entryIndex_;
     AsmJSActivation *prev_;
     void *errorRejoinSP_;
     SPSProfiler *profiler_;
     void *resumePC_;
 
   public:
-    AsmJSActivation(JSContext *cx, const AsmJSModule &module, unsigned entryIndex);
+    AsmJSActivation(JSContext *cx, const AsmJSModule &module);
     ~AsmJSActivation();
 
     const AsmJSModule &module() const { return module_; }

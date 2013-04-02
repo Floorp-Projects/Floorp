@@ -22,6 +22,7 @@
 #include <algorithm>
 
 using namespace mozilla;
+using namespace mozilla::layout;
 
 nsTableRowGroupFrame::nsTableRowGroupFrame(nsStyleContext* aContext):
   nsContainerFrame(aContext)
@@ -971,7 +972,7 @@ nsTableRowGroupFrame::UndoContinuedRow(nsPresContext*   aPresContext,
   NS_PRECONDITION(mFrames.ContainsFrame(rowBefore),
                   "rowBefore not in our frame list?");
 
-  nsAutoPtr<nsFrameList> overflows(StealOverflowFrames());
+  AutoFrameListPtr overflows(aPresContext, StealOverflowFrames());
   if (!rowBefore || !overflows || overflows->IsEmpty() ||
       overflows->FirstChild() != aRow) {
     NS_ERROR("invalid continued row");
@@ -982,10 +983,10 @@ nsTableRowGroupFrame::UndoContinuedRow(nsPresContext*   aPresContext,
   // will not have reflowed yet to pick up content from any overflow lines.
   overflows->DestroyFrame(aRow);
 
-  if (overflows->IsEmpty())
-    return;
   // Put the overflow rows into our child list
-  mFrames.InsertFrames(nullptr, rowBefore, *overflows);
+  if (!overflows->IsEmpty()) {
+    mFrames.InsertFrames(nullptr, rowBefore, *overflows);
+  }
 }
 
 static nsTableRowFrame* 

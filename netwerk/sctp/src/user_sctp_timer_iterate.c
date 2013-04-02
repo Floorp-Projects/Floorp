@@ -73,9 +73,9 @@ user_sctp_timer_iterate(void *arg)
 		if (SCTP_BASE_VAR(timer_thread_should_exit)) {
 			break;
 		}
+		SCTP_TIMERQ_LOCK();
 		/* update our tick count */
 		ticks += MSEC_TO_TICKS(TIMEOUT_INTERVAL);
-		SCTP_TIMERQ_LOCK();
 		c = TAILQ_FIRST(&SCTP_BASE_INFO(callqueue));
 		while (c) {
 			if (c->c_time <= ticks) {

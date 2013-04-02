@@ -10,32 +10,6 @@ relativesrcdir  = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-BROWSER_TESTS = \
-  head.js \
-  browser_test.js \
-  browser_canonizeURL.js \
-  browser_context_ui.js \
-  browser_tiles.js \
-  browser_tilegrid.xul \
-  browser_onscreen_keyboard.js \
-  browser_onscreen_keyboard.html \
-  browser_remotetabs.js \
-  browser_downloads.js \
-  browser_plugin_input.html \
-  browser_plugin_input_mouse.js \
-  browser_plugin_input_keyboard.js \
-  browser_context_menu_tests.js \
-  browser_sanitize_ui.js \
-  browser_context_menu_tests_01.html \
-  browser_context_menu_tests_02.html \
-  browser_context_menu_tests_03.html \
-  text-block.html \
-  browser_topsites.js \
-  $(NULL)
-BROWSER_TEST_RESOURCES = \
-  res/image01.png \
-  $(NULL)
-
 XPCSHELL_TESTS = unit
 
 # For now we're copying the actual Util code.
@@ -43,12 +17,6 @@ XPCSHELL_TESTS = unit
 XPCSHELL_RESOURCES = \
   $(DEPTH)/browser/metro/base/content/Util.js \
   $(NULL)
-
-libs:: $(BROWSER_TESTS)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/metro/$(relativesrcdir)
-
-libs:: $(BROWSER_TEST_RESOURCES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/metro/$(relativesrcdir)/res
 
 libs:: $(XPCSHELL_RESOURCES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/unit/

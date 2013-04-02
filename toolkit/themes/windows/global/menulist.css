@@ -28,13 +28,9 @@ menulist {
   -moz-box-align: center;
   -moz-box-pack: center;
   margin: 1px;
-}
-
-.menulist-label-box {
   border: 1px solid transparent;
   background-color: transparent;
   color: inherit;
-  -moz-box-align: center;
 }
 
 .menulist-icon[src] {

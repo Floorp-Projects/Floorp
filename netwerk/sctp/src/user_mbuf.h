@@ -93,33 +93,14 @@ extern sctp_zone_t zone_ext_refcnt;
 #define	mtod(m, t)	((t)((m)->m_data))
 #define	dtom(x)		((struct mbuf *)((intptr_t)(x) & ~(MSIZE-1)))
 
-
-
 struct mb_args {
 	int	flags;	/* Flags for mbuf being allocated */
 	short	type;	/* Type of mbuf being allocated */
 };
 
 struct clust_args {
-  struct mbuf * parent_mbuf;
+	struct mbuf * parent_mbuf;
 };
-
-/*__Userspace__
- * mbuf_mb_args will be passed as callback data to umem_cache_create.
- * umem_cache_alloc will then be able to use this callback data when the constructor
- * function mb_ctor_mbuf is called. See user_mbuf.c
- * This is important because mbuf_mb_args would specify flags like M_PKTHDR
- * and type like MT_DATA or MT_HEADER. This information is needed in mb_ctor_mbuf
- * to properly initialize the mbuf being allocated.
- *
- * Argument structure passed to UMA routines during mbuf and packet
- * allocations.
- */
-extern struct mb_args mbuf_mb_args;
-/* __Userspace__ clust_mb_args will be passed as callback data to mb_ctor_clust
- * and mb_dtor_clust.
- */
-extern struct clust_args clust_mb_args;
 
 struct mbuf *    m_split(struct mbuf *, int, int);
 void             m_cat(struct mbuf *m, struct mbuf *n);
@@ -143,7 +124,6 @@ void		 m_copydata(const struct mbuf *, int, int, caddr_t);
 
 #define	MT_NOINIT	255	/* Not a type but a flag to allocate
 				   a non-initialized mbuf */
-#define MB_NOTAGS	0x1UL	/* no tags attached to mbuf */
 
 /*
  * General mbuf allocator statistics structure.
@@ -343,10 +323,6 @@ struct mbuf {
 
 #define	MT_NOINIT	255	/* Not a type but a flag to allocate
 				   a non-initialized mbuf */
-
-#define MB_NOTAGS	0x1UL	/* no tags attached to mbuf */
-
-
 
 /*
  * __Userspace__ flags like M_NOWAIT are defined in malloc.h

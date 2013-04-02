@@ -1342,11 +1342,8 @@ nsXPConnect::GetNativeOfWrapper(JSContext * aJSContext,
         return nullptr;
     }
 
-    JSObject* unsafeObj =
-        XPCWrapper::Unwrap(aJSContext, aJSObj, /* stopAtOuter = */ false);
-    JSObject* cur = unsafeObj ? unsafeObj : aJSObj;
     nsISupports* supports = nullptr;
-    mozilla::dom::UnwrapDOMObjectToISupports(cur, supports);
+    mozilla::dom::UnwrapDOMObjectToISupports(aJSObj, supports);
     nsCOMPtr<nsISupports> canonical = do_QueryInterface(supports);
     return canonical;
 }
