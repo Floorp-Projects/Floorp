@@ -20,15 +20,6 @@ class nsSVGElement;
 
 struct gfxMatrix;
 
-// We make DOMSVGTransform a pseudo-interface to allow us to QI to it in order
-// to check that the objects that scripts pass in are our our *native* transform
-// objects.
-//
-// {0A799862-9469-41FE-B4CD-2019E65D8DA6}
-#define MOZILLA_DOMSVGTRANSFORM_IID \
-  { 0x0A799862, 0x9469, 0x41FE, \
-    { 0xB4, 0xCD, 0x20, 0x19, 0xE6, 0x5D, 0x8D, 0xA6 } }
-
 #define MOZ_SVG_LIST_INDEX_BIT_COUNT 31 // supports > 2 billion list items
 
 namespace mozilla {
@@ -40,13 +31,11 @@ class SVGMatrix;
 /**
  * DOM wrapper for an SVG transform. See DOMSVGLength.h.
  */
-class DOMSVGTransform MOZ_FINAL : public nsISupports,
-                                  public nsWrapperCache
+class DOMSVGTransform MOZ_FINAL : public nsWrapperCache
 {
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_DOMSVGTRANSFORM_IID)
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMSVGTransform)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(DOMSVGTransform)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(DOMSVGTransform)
 
   /**
    * Generic ctor for DOMSVGTransform objects that are created for an attribute.
@@ -193,8 +182,6 @@ private:
   // that case we allocate an SVGTransform object on the heap to store the data.
   nsAutoPtr<SVGTransform> mTransform;
 };
-
-NS_DEFINE_STATIC_IID_ACCESSOR(DOMSVGTransform, MOZILLA_DOMSVGTRANSFORM_IID)
 
 nsAttrValue
 DOMSVGTransform::NotifyElementWillChange()
