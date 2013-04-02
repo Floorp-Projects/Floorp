@@ -50,13 +50,13 @@ function run_test()
   }
 
   let timesCalled = 0;
-  geolocation = Cc["@mozilla.org/geolocation;1"].createInstance(Ci.nsIDOMGeoGeolocation);
+  geolocation = Cc["@mozilla.org/geolocation;1"].createInstance(Ci.nsISupports);
   geolocation.watchPosition(function(pos) {
     do_check_eq(++timesCalled, 1);
     do_check_eq(pos.coords.accuracy, gAccuracy);
 
     gAccuracy = 420;
-    geolocation2 = Cc["@mozilla.org/geolocation;1"].createInstance(Ci.nsIDOMGeoGeolocation);
+    geolocation2 = Cc["@mozilla.org/geolocation;1"].createInstance(Ci.nsISupports);
     geolocation2.getCurrentPosition(function(pos) {
       do_check_eq(pos.coords.accuracy, gAccuracy);
 
