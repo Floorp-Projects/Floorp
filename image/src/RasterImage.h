@@ -222,8 +222,6 @@ public:
                        uint32_t* imageLength,
                        imgFrame** aFrame);
 
-  void FrameUpdated(uint32_t aFrameNum, nsIntRect& aUpdatedRect);
-
   /* notification that the entire image has been decoded */
   nsresult DecodingComplete();
 

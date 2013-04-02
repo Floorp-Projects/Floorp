@@ -1518,22 +1518,6 @@ RasterImage::EnsureFrame(uint32_t aFramenum, int32_t aX, int32_t aY,
                      aFrame);
 }
 
-void
-RasterImage::FrameUpdated(uint32_t aFrameNum, nsIntRect &aUpdatedRect)
-{
-  NS_ABORT_IF_FALSE(aFrameNum < mFrames.Length(), "Invalid frame index!");
-
-  imgFrame *frame = GetImgFrameNoDecode(aFrameNum);
-  NS_ABORT_IF_FALSE(frame, "Calling FrameUpdated on frame that doesn't exist!");
-
-  frame->ImageUpdated(aUpdatedRect);
-
-  if (aFrameNum == GetCurrentImgFrameIndex() &&
-      !IsInUpdateImageContainer()) {
-    mImageContainer = nullptr;
-  }
-}
-
 nsresult
 RasterImage::SetFrameAsNonPremult(uint32_t aFrameNum, bool aIsNonPremult)
 {
