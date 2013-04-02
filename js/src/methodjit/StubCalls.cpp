@@ -16,6 +16,7 @@
 #include "jsbool.h"
 #include "assembler/assembler/MacroAssemblerCodeRef.h"
 #include "jstypes.h"
+#include "jsworkers.h"
 
 #include "gc/Marking.h"
 #include "ion/AsmJS.h"
@@ -776,7 +777,7 @@ stubs::TriggerIonCompile(VMFrame &f)
 {
     RootedScript script(f.cx, f.script());
 
-    if (ion::js_IonOptions.parallelCompilation && !f.cx->runtime->profilingScripts) {
+    if (OffThreadCompilationEnabled(f.cx) && !f.cx->runtime->profilingScripts) {
         if (script->hasIonScript()) {
             /*
              * Normally TriggerIonCompile is not called if !script->ion, but the
