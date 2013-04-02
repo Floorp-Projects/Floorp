@@ -418,6 +418,14 @@ class CGIfWrapper(CGWrapper):
         CGWrapper.__init__(self, CGIndenter(child), pre=pre.define(),
                            post="\n}")
 
+class CGTemplatedType(CGWrapper):
+    def __init__(self, templateName, child, isConst=False, isReference=False):
+        const = "const " if isConst else ""
+        pre = "%s%s<" % (const, templateName)
+        ref = "&" if isReference else ""
+        post = " >%s" % ref
+        CGWrapper.__init__(self, child, pre=pre, post=post)
+
 class CGNamespace(CGWrapper):
     def __init__(self, namespace, child, declareOnly=False):
         pre = "namespace %s {\n" % namespace
@@ -2371,11 +2379,10 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
         if elementHolderType is not None:
             raise TypeError("Shouldn't need holders for sequences")
 
-        typeName = CGWrapper(elementDeclType,
-                             pre=("%s< " % sequenceClass), post=" >")
+        typeName = CGTemplatedType(sequenceClass, elementDeclType)
         sequenceType = typeName.define()
         if nullable:
-            typeName = CGWrapper(typeName, pre="Nullable< ", post=" >")
+            typeName = CGTemplatedType("Nullable", typeName)
             arrayRef = "${declName}.Value()"
         else:
             arrayRef = "${declName}"
@@ -2603,8 +2610,8 @@ for (uint32_t i = 0; i < length; ++i) {
         holderType = CGGeneric(argumentTypeName)
         if isOptional:
             mutableDecl = nonConstDecl + ".Value()"
-            declType = CGWrapper(declType, pre="const Optional<", post=" >")
-            holderType = CGWrapper(holderType, pre="Maybe<", post=" >")
+            declType = CGTemplatedType("Optional", declType, isConst=True)
+            holderType = CGTemplatedType("Maybe", holderType)
             constructDecl = CGGeneric(nonConstDecl + ".Construct();")
             if nullable:
                 constructHolder = CGGeneric("${holderName}.construct(%s.SetValue());" % mutableDecl)
@@ -2614,7 +2621,7 @@ for (uint32_t i = 0; i < length; ++i) {
             mutableDecl = nonConstDecl
             constructDecl = None
             if nullable:
-                holderType = CGWrapper(holderType, pre="Maybe<", post=" >")
+                holderType = CGTemplatedType("Maybe", holderType)
                 constructHolder = CGGeneric("${holderName}.construct(%s.SetValue());" % mutableDecl)
             else:
                 constructHolder = CGWrapper(holderType, post=" ${holderName}(${declName});")
@@ -3195,7 +3202,7 @@ def instantiateJSToNativeConversionTemplate(templateTuple, replacements,
             replacements["holderName"] = (
                 "const_cast< %s & >(%s.Value())" %
                 (holderType.define(), originalHolderName))
-            mutableHolderType = CGWrapper(holderType, pre="Optional< ", post=" >")
+            mutableHolderType = CGTemplatedType("Optional", holderType)
             holderType = CGWrapper(mutableHolderType, pre="const ")
         result.append(
             CGList([holderType, CGGeneric(" "),
@@ -3208,7 +3215,7 @@ def instantiateJSToNativeConversionTemplate(templateTuple, replacements,
             replacements["declName"] = (
                 "const_cast< %s & >(%s.Value())" %
                 (declType.define(), originalDeclName))
-            mutableDeclType = CGWrapper(declType, pre="Optional< ", post=" >")
+            mutableDeclType = CGTemplatedType("Optional", declType)
             declType = CGWrapper(mutableDeclType, pre="const ")
         result.append(
             CGList([declType, CGGeneric(" "),
@@ -3339,7 +3346,7 @@ class CGArgumentConverter(CGThing):
             raise TypeError("Shouldn't need holders for variadics")
 
         replacer = dict(self.argcAndIndex, **self.replacementVariables)
-        replacer["seqType"] = CGWrapper(elementDeclType, pre="AutoSequence< ", post=" >").define()
+        replacer["seqType"] = CGTemplatedType("AutoSequence", elementDeclType).define()
         replacer["elemType"] = elementDeclType.define()
 
         # NOTE: Keep this in sync with sequence conversions as needed
@@ -3719,7 +3726,7 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
     if returnType.isPrimitive() and returnType.tag() in builtinNames:
         result = CGGeneric(builtinNames[returnType.tag()])
         if returnType.nullable():
-            result = CGWrapper(result, pre="Nullable<", post=">")
+            result = CGTemplatedType("Nullable", result)
         return result, False
     if returnType.isString():
         if isMember:
@@ -3733,7 +3740,7 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
         result = CGGeneric(descriptorProvider.getDescriptor(
             returnType.unroll().inner.identifier.name).nativeType)
         if resultAlreadyAddRefed:
-            result = CGWrapper(result, pre="nsRefPtr<", post=">")
+            result = CGTemplatedType("nsRefPtr", result)
         else:
             result = CGWrapper(result, post="*")
         return result, False
@@ -3756,9 +3763,9 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
                                                   descriptorProvider,
                                                   resultAlreadyAddRefed,
                                                   isMember=True)
-        result = CGWrapper(result, pre="nsTArray< ", post=" >")
+        result = CGTemplatedType("nsTArray", result)
         if nullable:
-            result = CGWrapper(result, pre="Nullable< ", post=" >")
+            result = CGTemplatedType("Nullable", result)
         return result, True
     if returnType.isDictionary():
         nullable = returnType.nullable()
@@ -3767,7 +3774,7 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
                                             descriptorProvider.workers) +
             "Initializer")
         if nullable:
-            result = CGWrapper(result, pre="Nullable< ", post=" >")
+            result = CGTemplatedType("Nullable", result)
         return result, True
     if returnType.isUnion():
         raise TypeError("Need to sort out ownership model for union retvals");
@@ -4976,16 +4983,16 @@ def getUnionAccessorSignatureType(type, descriptorProvider):
         (elementTemplate, elementDeclType,
          elementHolderType, dealWithOptional) = getJSToNativeConversionTemplate(
             type, descriptorProvider, isSequenceMember=True)
-        typeName = CGWrapper(elementDeclType, pre="Sequence< ", post=" >&")
+        typeName = CGTemplatedType("Sequence", elementDeclType, isReference=True)
         if nullable:
-            typeName = CGWrapper(typeName, pre="Nullable< ", post=" >&")
+            typeName = CGTemplatedType("Nullable", typeName, isReference=True)
 
         return typeName
 
     if type.isUnion():
         typeName = CGGeneric(type.name)
         if type.nullable():
-            typeName = CGWrapper(typeName, pre="Nullable< ", post=" >&")
+            typeName = CGTemplatedType("Nullable", typeName, isReference=True)
 
         return typeName
 
@@ -5044,7 +5051,7 @@ def getUnionAccessorSignatureType(type, descriptorProvider):
 
     typeName = CGGeneric(builtinNames[type.tag()])
     if type.nullable():
-        typeName = CGWrapper(typeName, pre="Nullable< ", post=" >&")
+        typeName = CGTemplatedType("Nullable", typeName, isReference=True)
     return typeName
 
 def getUnionTypeTemplateVars(type, descriptorProvider):
@@ -6942,7 +6949,7 @@ class CGDictionary(CGThing):
         # We can't handle having a holderType here
         assert holderType is None
         if dealWithOptional:
-            declType = CGWrapper(declType, pre="Optional< ", post=" >")
+            declType = CGTemplatedType("Optional", declType)
         return declType.define()
 
     def getMemberConversion(self, memberInfo):
@@ -7439,7 +7446,7 @@ class CGNativeMember(ClassMethod):
             result = CGGeneric(builtinNames[type.tag()])
             defaultReturnArg = "0"
             if type.nullable():
-                result = CGWrapper(result, pre="Nullable<", post=">")
+                result = CGTemplatedType("Nullable", result)
                 defaultReturnArg = ""
             return (result.define(),
                     "%s(%s)" % (result.define(), defaultReturnArg),
@@ -7550,9 +7557,9 @@ class CGNativeMember(ClassMethod):
                 returnType = returnType.inner
             # And now the actual underlying type
             elementDecl = self.getReturnType(returnType.inner, True)
-            type = CGWrapper(CGGeneric(elementDecl), pre="nsTArray< ", post=" >")
+            type = CGTemplatedType("nsTArray", CGGeneric(elementDecl))
             if nullable:
-                type = CGWrapper(type, pre="Nullable< ", post=" >")
+                type = CGTemplatedType("Nullable", type)
             args.append(Argument("%s&" % type.define(), "retval"))
         # And the ErrorResult
         if not 'infallible' in self.extendedAttrs:
@@ -7590,8 +7597,8 @@ class CGNativeMember(ClassMethod):
             if nullable:
                 type = type.inner
             elementType = type.inner
-            decl = CGWrapper(self.getArgType(elementType, False, False, True)[0],
-                             pre="Sequence< ", post=" >")
+            argType = self.getArgType(elementType, False, False, True)[0]
+            decl = CGTemplatedType("Sequence", argType)
             return decl.define(), True, True
 
         if type.isUnion():
@@ -7694,16 +7701,16 @@ class CGNativeMember(ClassMethod):
                                                         isMember or variadic)
         decl = CGGeneric(decl)
         if handleNullable and type.nullable():
-            decl = CGWrapper(decl, pre="Nullable< ", post=" >")
+            decl = CGTemplatedType("Nullable", decl)
             ref = True
         if variadic:
             arrayType = "Sequence" if self.variadicIsSequence else "nsTArray"
-            decl = CGWrapper(decl, pre="%s< " % arrayType, post=" >")
+            decl = CGTemplatedType(arrayType, decl)
             ref = True
         elif optional:
             # Note: All variadic args claim to be optional, but we can just use
             # empty arrays to represent them not being present.
-            decl = CGWrapper(decl, pre="Optional< ", post=" >")
+            decl = CGTemplatedType("Optional", decl)
             ref = True
         return (decl, ref)
 
