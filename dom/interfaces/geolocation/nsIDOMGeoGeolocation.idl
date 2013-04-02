@@ -20,7 +20,7 @@ dictionary GeoPositionOptions
 
 [ptr] native NamespacedGeoPositionOptions(mozilla::idl::GeoPositionOptions);
 
-[scriptable, builtinclass, uuid(1bc7d103-c7ae-4467-881c-21a8dfa17938)]
+[builtinclass, uuid(1bc7d103-c7ae-4467-881c-21a8dfa17938)]
 interface nsIDOMGeoGeolocation : nsISupports
 {
   int32_t watchPosition(in nsIDOMGeoPositionCallback callback,

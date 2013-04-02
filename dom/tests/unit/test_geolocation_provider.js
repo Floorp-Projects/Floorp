@@ -81,6 +81,6 @@ function run_test()
     obs = obs.QueryInterface(Ci.nsIObserverService);
     obs.addObserver(observer, "geolocation-device-events", false);
 
-    geolocation = Cc["@mozilla.org/geolocation;1"].getService(Ci.nsIDOMGeoGeolocation);
+    geolocation = Cc["@mozilla.org/geolocation;1"].getService(Ci.nsISupports);
     watchID = geolocation.watchPosition(successCallback, errorCallback);
 }
