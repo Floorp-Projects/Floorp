@@ -883,6 +883,14 @@ EnableSPSProfilingAssertions(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static JSBool
+DisableSPSProfiling(JSContext *cx, unsigned argc, jsval *vp)
+{
+    if (cx->runtime->spsProfiler.installed())
+        cx->runtime->spsProfiler.enable(false);
+    return true;
+}
+
+static JSBool
 DisplayName(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1046,6 +1054,10 @@ static JSFunctionSpecWithHelp TestingFunctions[] = {
 "  true, then even slower assertions are enabled for all generated JIT code.\n"
 "  When 'slow' is false, then instrumentation is enabled, but the slow\n"
 "  assertions are disabled."),
+
+    JS_FN_HELP("disableSPSProfiling", DisableSPSProfiling, 1, 0,
+"disableSPSProfiling()",
+"  Disables SPS instrumentation"),
 
     JS_FN_HELP("displayName", DisplayName, 1, 0,
 "displayName(fn)",
