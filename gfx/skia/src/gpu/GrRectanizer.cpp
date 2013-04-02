@@ -48,7 +48,7 @@ public:
 
     static int HeightToRowIndex(int height) {
         GrAssert(height >= MIN_HEIGHT_POW2);
-        return 32 - Gr_clz(height - 1);
+        return 32 - SkCLZ(height - 1);
     }
 
     int fNextStripY;
@@ -119,5 +119,3 @@ bool GrRectanizerPow2::addRect(int width, int height, GrIPoint16* loc) {
 GrRectanizer* GrRectanizer::Factory(int width, int height) {
     return SkNEW_ARGS(GrRectanizerPow2, (width, height));
 }
-
-

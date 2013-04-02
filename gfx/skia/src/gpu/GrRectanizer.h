@@ -12,7 +12,6 @@
 #define GrRectanizer_DEFINED
 
 #include "GrRect.h"
-#include "GrTDArray.h"
 
 class GrRectanizerPurgeListener {
 public:
@@ -53,5 +52,3 @@ private:
 };
 
 #endif
-
-

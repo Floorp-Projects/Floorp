@@ -16,7 +16,7 @@
 
 //////////////////////////////////////////////////////////////////////
 
-#if !defined(SK_BUILD_FOR_ANDROID) && !defined(SK_BUILD_FOR_ANDROID_NDK) && !defined(SK_BUILD_FOR_IOS) && !defined(SK_BUILD_FOR_PALM) && !defined(SK_BUILD_FOR_WINCE) && !defined(SK_BUILD_FOR_WIN32) && !defined(SK_BUILD_FOR_UNIX) && !defined(SK_BUILD_FOR_MAC) && !defined(SK_BUILD_FOR_SDL) && !defined(SK_BUILD_FOR_BREW)
+#if !defined(SK_BUILD_FOR_ANDROID) && !defined(SK_BUILD_FOR_IOS) && !defined(SK_BUILD_FOR_PALM) && !defined(SK_BUILD_FOR_WINCE) && !defined(SK_BUILD_FOR_WIN32) && !defined(SK_BUILD_FOR_UNIX) && !defined(SK_BUILD_FOR_MAC) && !defined(SK_BUILD_FOR_SDL) && !defined(SK_BUILD_FOR_BREW) && !defined(SK_BUILD_FOR_NACL)
 
     #ifdef __APPLE__
         #include "TargetConditionals.h"
@@ -30,8 +30,6 @@
         #define SK_BUILD_FOR_WIN32
     #elif defined(__SYMBIAN32__)
         #define SK_BUILD_FOR_WIN32
-    #elif defined(ANDROID_NDK)
-        #define SK_BUILD_FOR_ANDROID_NDK
     #elif defined(ANDROID)
         #define SK_BUILD_FOR_ANDROID
     #elif defined(linux) || defined(__FreeBSD__) || defined(__OpenBSD__) || \
@@ -46,13 +44,20 @@
 
 #endif
 
-/* Even if the user only defined the NDK variant we still need to build
- * the default Android code. Therefore, when attempting to include/exclude
- * something from the NDK variant check first that we are building for
- * Android then check the status of the NDK define.
+/* Even if the user only defined the framework variant we still need to build
+ * the default (NDK-compliant) Android code. Therefore, when attempting to
+ * include/exclude something from the framework variant check first that we are
+ * building for Android then check the status of the framework define.
  */
-#if defined(SK_BUILD_FOR_ANDROID_NDK) && !defined(SK_BUILD_FOR_ANDROID)
+#if defined(SK_BUILD_FOR_ANDROID_FRAMEWORK) && !defined(SK_BUILD_FOR_ANDROID)
     #define SK_BUILD_FOR_ANDROID
+#endif
+
+
+// USE_CHROMIUM_SKIA is defined when building Skia for the Chromium
+// browser.
+#if defined(USE_CHROMIUM_SKIA)
+    #define SK_BUILD_FOR_CHROMIUM
 #endif
 
 //////////////////////////////////////////////////////////////////////
@@ -94,10 +99,21 @@
 //////////////////////////////////////////////////////////////////////
 
 #if !defined(SK_CPU_BENDIAN) && !defined(SK_CPU_LENDIAN)
-#if defined (__ppc__) || defined(__PPC__) || defined(__ppc64__) || defined(__PPC64__)
+    #if defined (__ppc__) || defined(__ppc64__)
         #define SK_CPU_BENDIAN
     #else
         #define SK_CPU_LENDIAN
+    #endif
+#endif
+
+//////////////////////////////////////////////////////////////////////
+
+#ifndef SK_MMAP_SUPPORT
+    #ifdef SK_BUILD_FOR_WIN32
+        // by default, if we're windows, we assume we don't have mmap
+        #define SK_MMAP_SUPPORT 0
+    #else
+        #define SK_MMAP_SUPPORT 1
     #endif
 #endif
 
@@ -140,6 +156,40 @@
     #if !defined(SK_CPU_SSE_LEVEL) || (SK_CPU_SSE_LEVEL < SK_CPU_SSE_LEVEL_SSE2)
         #undef SK_CPU_SSE_LEVEL
         #define SK_CPU_SSE_LEVEL    SK_CPU_SSE_LEVEL_SSE2
+    #endif
+#endif
+
+//////////////////////////////////////////////////////////////////////
+// ARM defines
+
+#if defined(__arm__) && (!defined(__APPLE__) || !TARGET_IPHONE_SIMULATOR)
+    #define SK_CPU_ARM
+
+    #if defined(__GNUC__)
+        #if defined(__ARM_ARCH_7__) || defined(__ARM_ARCH_7A__) \
+                || defined(__ARM_ARCH_7R__) || defined(__ARM_ARCH_7M__) \
+                || defined(__ARM_ARCH_7EM__) || defined(_ARM_ARCH_7)
+            #define SK_ARM_ARCH 7
+        #elif defined(__ARM_ARCH_6__) || defined(__ARM_ARCH_6J__) \
+                || defined(__ARM_ARCH_6K__) || defined(__ARM_ARCH_6Z__) \
+                || defined(__ARM_ARCH_6ZK__) || defined(__ARM_ARCH_6T2__) \
+                || defined(__ARM_ARCH_6M__) || defined(_ARM_ARCH_6)
+            #define SK_ARM_ARCH 6
+        #elif defined(__ARM_ARCH_5__) || defined(__ARM_ARCH_5T__) \
+                || defined(__ARM_ARCH_5E__) || defined(__ARM_ARCH_5TE__) \
+                || defined(__ARM_ARCH_5TEJ__) || defined(_ARM_ARCH_5)
+            #define SK_ARM_ARCH 5
+        #elif defined(__ARM_ARCH_4__) || defined(__ARM_ARCH_4T__) || defined(_ARM_ARCH_4)
+            #define SK_ARM_ARCH 4
+        #else
+            #define SK_ARM_ARCH 3
+        #endif
+
+        #if defined(__thumb2__) && (SK_ARM_ARCH >= 6) \
+                || !defined(__thumb__) && ((SK_ARM_ARCH > 5) || defined(__ARM_ARCH_5E__) \
+                || defined(__ARM_ARCH_5TE__) || defined(__ARM_ARCH_5TEJ__))
+            #define SK_ARM_HAS_EDSP
+        #endif
     #endif
 #endif
 

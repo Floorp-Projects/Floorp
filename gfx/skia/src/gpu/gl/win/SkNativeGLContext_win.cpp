@@ -7,6 +7,7 @@
  */
 
 #include "gl/SkNativeGLContext.h"
+#include "SkWGL.h"
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
@@ -85,31 +86,7 @@ const GrGLInterface* SkNativeGLContext::createGLContext() {
         return NULL;
     }
 
-    PIXELFORMATDESCRIPTOR pfd;
-    ZeroMemory(&pfd, sizeof(pfd));
-    pfd.nSize = sizeof(pfd);
-    pfd.nVersion = 1;
-    pfd.dwFlags = PFD_SUPPORT_OPENGL;
-    pfd.iPixelType = PFD_TYPE_RGBA;
-    pfd.cColorBits = 32;
-    pfd.cDepthBits = 0;
-    pfd.cStencilBits = 0;
-    pfd.iLayerType = PFD_MAIN_PLANE;
-
-    int pixelFormat = 0;
-    if (!(pixelFormat = ChoosePixelFormat(fDeviceContext, &pfd))) {
-        SkDebugf("No matching pixel format descriptor.\n");
-        this->destroyGLContext();
-        return NULL;
-    }
-
-    if (!SetPixelFormat(fDeviceContext, pixelFormat, &pfd)) {
-        SkDebugf("Could not set the pixel format %d.\n", pixelFormat);
-        this->destroyGLContext();
-        return NULL;
-    }
-
-    if (!(fGlRenderContext = wglCreateContext(fDeviceContext))) {
+    if (!(fGlRenderContext = SkCreateWGLContext(fDeviceContext, 0, true))) {
         SkDebugf("Could not create rendering context.\n");
         this->destroyGLContext();
         return NULL;

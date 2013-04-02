@@ -15,7 +15,22 @@
 #include "SkString.h"
 #include "SkFlattenable.h"
 
+#ifdef SK_DEBUG
+    /**
+     *  Defining SK_IGNORE_PIXELREF_SETPRELOCKED will force all pixelref
+     *  subclasses to correctly handle lock/unlock pixels. For performance
+     *  reasons, simple malloc-based subclasses call setPreLocked() to skip
+     *  the overhead of implementing these calls.
+     *
+     *  This build-flag disables that optimization, to add in debugging our
+     *  call-sites, to ensure that they correctly balance their calls of
+     *  lock and unlock.
+     */
+//    #define SK_IGNORE_PIXELREF_SETPRELOCKED
+#endif
+
 class SkColorTable;
+class SkData;
 struct SkIRect;
 class SkMutex;
 
@@ -49,6 +64,8 @@ public:
      *  Returns true if the lockcount > 0
      */
     bool isLocked() const { return fLockCount > 0; }
+
+    SkDEBUGCODE(int getLockCount() const { return fLockCount; })
 
     /** Call to access the pixel memory, which is returned. Balance with a call
         to unlockPixels().
@@ -113,17 +130,36 @@ public:
     */
     void setURI(const SkString& uri) { fURI = uri; }
 
+    /**
+     *  If the pixelRef has an encoded (i.e. compressed) representation,
+     *  return a ref to its data. If the pixelRef
+     *  is uncompressed or otherwise does not have this form, return NULL.
+     *
+     *  If non-null is returned, the caller is responsible for calling unref()
+     *  on the data when it is finished.
+     */
+    SkData* refEncodedData() {
+        return this->onRefEncodedData();
+    }
+
     /** Are we really wrapping a texture instead of a bitmap?
      */
     virtual SkGpuTexture* getTexture() { return NULL; }
 
     bool readPixels(SkBitmap* dst, const SkIRect* subset = NULL);
 
-    /** Makes a deep copy of this PixelRef, respecting the requested config.
-        Returns NULL if either there is an error (e.g. the destination could
-        not be created with the given config), or this PixelRef does not
-        support deep copies.  */
-    virtual SkPixelRef* deepCopy(SkBitmap::Config config) { return NULL; }
+    /**
+     *  Makes a deep copy of this PixelRef, respecting the requested config.
+     *  @param config Desired config.
+     *  @param subset Subset of this PixelRef to copy. Must be fully contained within the bounds of
+     *         of this PixelRef.
+     *  @return A new SkPixelRef, or NULL if either there is an error (e.g. the destination could
+     *          not be created with the given config), or this PixelRef does not support deep
+     *          copies.
+     */
+    virtual SkPixelRef* deepCopy(SkBitmap::Config config, const SkIRect* subset = NULL) {
+        return NULL;
+    }
 
 #ifdef SK_BUILD_FOR_ANDROID
     /**
@@ -163,6 +199,9 @@ protected:
      */
     virtual bool onReadPixels(SkBitmap* dst, const SkIRect* subsetOrNull);
 
+    // default impl returns NULL.
+    virtual SkData* onRefEncodedData();
+
     /** Return the mutex associated with this pixelref. This value is assigned
         in the constructor, and cannot change during the lifetime of the object.
     */
@@ -176,13 +215,6 @@ protected:
     // the need to grab the mutex and call onLockPixels/onUnlockPixels.
     // Performance tweak to avoid those calls (esp. in multi-thread use case).
     void setPreLocked(void* pixels, SkColorTable* ctable);
-
-    /**
-     *  If a subclass passed a particular mutex to the base constructor, it can
-     *  override that to go back to the default mutex by calling this. However,
-     *  this should only be called from within the subclass' constructor.
-     */
-    void useDefaultMutex() { this->setMutex(NULL); }
 
 private:
 

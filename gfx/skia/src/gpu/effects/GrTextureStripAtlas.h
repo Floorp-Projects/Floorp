@@ -13,6 +13,7 @@
 #include "GrTHashCache.h"
 #include "SkGr.h"
 #include "SkTDArray.h"
+#include "GrBinHashKey.h"
 
 /**
  * Maintains a single large texture whose rows store many textures of a small fixed height,
@@ -20,8 +21,6 @@
  */
 class GrTextureStripAtlas {
 public:
-    GR_DECLARE_RESOURCE_CACHE_DOMAIN(GetTextureStripAtlasDomain)
-
     /**
      * Descriptor struct which we'll use as a hash table key
      **/
@@ -65,8 +64,8 @@ public:
      * atlas and scaleFactor, returned by getVerticalScaleFactor(), is the y-scale of the row,
      * relative to the height of the overall atlas texture.
      */
-    GrScalar getYOffset(int row) const { return SkIntToScalar(row) / fNumRows; }
-    GrScalar getVerticalScaleFactor() const { return SkIntToScalar(fDesc.fRowHeight) / fDesc.fHeight; }
+    SkScalar getYOffset(int row) const { return SkIntToScalar(row) / fNumRows; }
+    SkScalar getVerticalScaleFactor() const { return SkIntToScalar(fDesc.fRowHeight) / fDesc.fHeight; }
 
     GrContext* getContext() const { return fDesc.fContext; }
     GrTexture* getTexture() const { return fTexture; }
@@ -129,12 +128,34 @@ private:
     void validate();
 #endif
 
+    /**
+     * Clean up callback registered with GrContext. Allows this class to
+     * free up any allocated AtlasEntry and GrTextureStripAtlas objects
+     */
+    static void CleanUp(const GrContext* context, void* info);
+
+    // Hash table entry for atlases
+    class AtlasEntry;
+    typedef GrTBinHashKey<AtlasEntry, sizeof(GrTextureStripAtlas::Desc)> AtlasHashKey;
+    class AtlasEntry : public ::GrNoncopyable {
+    public:
+        AtlasEntry() : fAtlas(NULL) {}
+        ~AtlasEntry() { SkDELETE(fAtlas); }
+        int compare(const AtlasHashKey& key) const { return fKey.compare(key); }
+        AtlasHashKey fKey;
+        GrTextureStripAtlas* fAtlas;
+    };
+
+    static GrTHashTable<AtlasEntry, AtlasHashKey, 8>* gAtlasCache;
+
+    static GrTHashTable<AtlasEntry, AtlasHashKey, 8>* GetCache();
+
     // We increment gCacheCount for each atlas
     static int32_t gCacheCount;
 
     // A unique ID for this texture (formed with: gCacheCount++), so we can be sure that if we
     // get a texture back from the texture cache, that it's the same one we last used.
-    const uint64_t fCacheID;
+    const int32_t fCacheKey;
 
     // Total locks on all rows (when this reaches zero, we can unlock our texture)
     int32_t fLockedRows;
@@ -158,4 +179,3 @@ private:
 };
 
 #endif
-

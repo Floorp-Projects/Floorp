@@ -96,10 +96,10 @@ extern const SkBitmapProcState::MatrixProc RepeatX_RepeatY_Procs_neon[];
 #endif
 
 #define MAKENAME(suffix)        GeneralXY ## suffix
-#define PREAMBLE(state)         SkBitmapProcState::FixedTileProc tileProcX = (state).fTileProcX; \
-                                SkBitmapProcState::FixedTileProc tileProcY = (state).fTileProcY; \
-                                SkBitmapProcState::FixedTileLowBitsProc tileLowBitsProcX = (state).fTileLowBitsProcX; \
-                                SkBitmapProcState::FixedTileLowBitsProc tileLowBitsProcY = (state).fTileLowBitsProcY
+#define PREAMBLE(state)         SkBitmapProcState::FixedTileProc tileProcX = (state).fTileProcX; (void) tileProcX; \
+                                SkBitmapProcState::FixedTileProc tileProcY = (state).fTileProcY; (void) tileProcY; \
+                                SkBitmapProcState::FixedTileLowBitsProc tileLowBitsProcX = (state).fTileLowBitsProcX; (void) tileLowBitsProcX; \
+                                SkBitmapProcState::FixedTileLowBitsProc tileLowBitsProcY = (state).fTileLowBitsProcY; (void) tileLowBitsProcY
 #define PREAMBLE_PARAM_X        , SkBitmapProcState::FixedTileProc tileProcX, SkBitmapProcState::FixedTileLowBitsProc tileLowBitsProcX
 #define PREAMBLE_PARAM_Y        , SkBitmapProcState::FixedTileProc tileProcY, SkBitmapProcState::FixedTileLowBitsProc tileLowBitsProcY
 #define PREAMBLE_ARG_X          , tileProcX, tileLowBitsProcX
@@ -113,17 +113,21 @@ extern const SkBitmapProcState::MatrixProc RepeatX_RepeatY_Procs_neon[];
 static inline U16CPU fixed_clamp(SkFixed x)
 {
 #ifdef SK_CPU_HAS_CONDITIONAL_INSTR
-    if (x >> 16)
-        x = 0xFFFF;
     if (x < 0)
         x = 0;
+    if (x >> 16)
+        x = 0xFFFF;
 #else
     if (x >> 16)
     {
+#if 0   // is this faster?
+        x = (~x >> 31) & 0xFFFF;
+#else
         if (x < 0)
             x = 0;
         else
             x = 0xFFFF;
+#endif
     }
 #endif
     return x;
@@ -515,4 +519,3 @@ SkBitmapProcState::chooseMatrixProc(bool trivial_matrix) {
     fTileLowBitsProcY = choose_tile_lowbits_proc(fTileModeY);
     return GeneralXY_Procs[index];
 }
-

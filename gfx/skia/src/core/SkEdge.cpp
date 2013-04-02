@@ -72,8 +72,9 @@ int SkEdge::setLine(const SkPoint& p0, const SkPoint& p1, const SkIRect* clip,
     }
 
     SkFixed slope = SkFDot6Div(x1 - x0, y1 - y0);
+    const int dy  = SkEdge_Compute_DY(top, y0);
 
-    fX          = SkFDot6ToFixed(x0 + SkFixedMul(slope, (32 - y0) & 63));   // + SK_Fixed1/2
+    fX          = SkFDot6ToFixed(x0 + SkFixedMul(slope, dy));   // + SK_Fixed1/2
     fDX         = slope;
     fFirstY     = top;
     fLastY      = bot - 1;
@@ -112,8 +113,9 @@ int SkEdge::updateLine(SkFixed x0, SkFixed y0, SkFixed x1, SkFixed y1)
     x1 >>= 10;
 
     SkFixed slope = SkFDot6Div(x1 - x0, y1 - y0);
+    const int dy  = SkEdge_Compute_DY(top, y0);
 
-    fX          = SkFDot6ToFixed(x0 + SkFixedMul(slope, (32 - y0) & 63));   // + SK_Fixed1/2
+    fX          = SkFDot6ToFixed(x0 + SkFixedMul(slope, dy));   // + SK_Fixed1/2
     fDX         = slope;
     fFirstY     = top;
     fLastY      = bot - 1;
@@ -476,6 +478,13 @@ int SkCubicEdge::updateCubic()
             newx    = fCLastX;
             newy    = fCLastY;
         }
+
+        // we want to say SkASSERT(oldy <= newy), but our finite fixedpoint
+        // doesn't always achieve that, so we have to explicitly pin it here.
+        if (newy < oldy) {
+            newy = oldy;
+        }
+
         success = this->updateLine(oldx, oldy, newx, newy);
         oldx = newx;
         oldy = newy;
@@ -486,6 +495,3 @@ int SkCubicEdge::updateCubic()
     fCurveCount = SkToS8(count);
     return success;
 }
-
-
-

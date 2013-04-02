@@ -15,25 +15,26 @@
 
 static bool skip_compression(SkPDFCatalog* catalog) {
     return SkToBool(catalog->getDocumentFlags() &
-                    SkPDFDocument::kNoCompression_Flags);
+                    SkPDFDocument::kFavorSpeedOverSize_Flags);
 }
 
 SkPDFStream::SkPDFStream(SkStream* stream)
     : fState(kUnused_State),
       fData(stream) {
+    SkSafeRef(stream);
 }
 
 SkPDFStream::SkPDFStream(SkData* data) : fState(kUnused_State) {
     SkMemoryStream* stream = new SkMemoryStream;
     stream->setData(data);
-    fData = stream;
-    fData->unref();  // SkRefPtr and new both took a reference.
+    fData.reset(stream);  // Transfer ownership.
 }
 
 SkPDFStream::SkPDFStream(const SkPDFStream& pdfStream)
         : SkPDFDict(),
           fState(kUnused_State),
-          fData(pdfStream.fData) {
+          fData(pdfStream.fData.get()) {
+    fData.get()->ref();
     bool removeLength = true;
     // Don't uncompress an already compressed stream, but we could.
     if (pdfStream.fState == kCompressed_State) {
@@ -84,7 +85,8 @@ size_t SkPDFStream::getOutputSize(SkPDFCatalog* catalog, bool indirect) {
 SkPDFStream::SkPDFStream() : fState(kUnused_State) {}
 
 void SkPDFStream::setData(SkStream* stream) {
-    fData = stream;
+    fData.reset(stream);
+    SkSafeRef(stream);
 }
 
 bool SkPDFStream::populate(SkPDFCatalog* catalog) {
@@ -96,8 +98,7 @@ bool SkPDFStream::populate(SkPDFCatalog* catalog) {
             if (compressedData.getOffset() < fData->getLength()) {
                 SkMemoryStream* stream = new SkMemoryStream;
                 stream->setData(compressedData.copyToData())->unref();
-                fData = stream;
-                fData->unref();  // SkRefPtr and new both took a reference.
+                fData.reset(stream);  // Transfer ownership.
                 insertName("Filter", "FlateDecode");
             }
             fState = kCompressed_State;
@@ -108,8 +109,7 @@ bool SkPDFStream::populate(SkPDFCatalog* catalog) {
     } else if (fState == kNoCompression_State && !skip_compression(catalog) &&
                SkFlate::HaveFlate()) {
         if (!fSubstitute.get()) {
-            fSubstitute = new SkPDFStream(*this);
-            fSubstitute->unref();  // SkRefPtr and new both took a reference.
+            fSubstitute.reset(new SkPDFStream(*this));
             catalog->setSubstitute(this, fSubstitute.get());
         }
         return false;

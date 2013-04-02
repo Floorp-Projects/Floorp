@@ -6,7 +6,7 @@
  * found in the LICENSE file.
  */
 
-#import "SkNSView.h"s
+#import "SkNSView.h"
 #include "SkCanvas.h"
 #include "SkCGUtils.h"
 #include "SkEvent.h"
@@ -57,7 +57,9 @@ SK_COMPILE_ASSERT(SK_SUPPORT_GPU, not_implemented_for_non_gpu_build);
 - (void)resizeSkView:(NSSize)newSize {
     if (NULL != fWind && (fWind->width() != newSize.width || fWind->height() != newSize.height)) {
         fWind->resize((int) newSize.width, (int) newSize.height);
-        glClear(GL_STENCIL_BUFFER_BIT);
+        if (NULL != fGLContext) {
+            glClear(GL_STENCIL_BUFFER_BIT);
+        }
         [fGLContext update];
     }
 }
@@ -79,8 +81,8 @@ SK_COMPILE_ASSERT(SK_SUPPORT_GPU, not_implemented_for_non_gpu_build);
 - (void)drawSkia {
     fRedrawRequestPending = false;
     if (NULL != fWind) {
-        SkCanvas canvas(fWind->getBitmap());
-        fWind->draw(&canvas);
+        SkAutoTUnref<SkCanvas> canvas(fWind->createCanvas());
+        fWind->draw(canvas);
 #ifdef FORCE_REDRAW
         fWind->inval(NULL);
 #endif
@@ -190,35 +192,68 @@ static SkKey raw2key(UInt32 raw)
  //     unichar c = [[event characters] characterAtIndex:0];
 }
 
+static const struct {
+    unsigned    fNSModifierMask;
+    unsigned    fSkModifierMask;
+} gModifierMasks[] = {
+    { NSAlphaShiftKeyMask,  kShift_SkModifierKey },
+    { NSShiftKeyMask,       kShift_SkModifierKey },
+    { NSControlKeyMask,     kControl_SkModifierKey },
+    { NSAlternateKeyMask,   kOption_SkModifierKey },
+    { NSCommandKeyMask,     kCommand_SkModifierKey },
+};
+
+static unsigned convertNSModifiersToSk(NSUInteger nsModi) {
+    unsigned skModi = 0;
+    for (size_t i = 0; i < SK_ARRAY_COUNT(gModifierMasks); ++i) {
+        if (nsModi & gModifierMasks[i].fNSModifierMask) {
+            skModi |= gModifierMasks[i].fSkModifierMask;
+        }
+    }
+    return skModi;
+}
+
 - (void)mouseDown:(NSEvent *)event {
     NSPoint p = [event locationInWindow];
+    unsigned modi = convertNSModifiersToSk([event modifierFlags]);
+
     if ([self mouse:p inRect:[self bounds]] && NULL != fWind) {
         NSPoint loc = [self convertPoint:p fromView:nil];
-        fWind->handleClick((int) loc.x, (int) loc.y, SkView::Click::kDown_State, self);
+        fWind->handleClick((int) loc.x, (int) loc.y,
+                           SkView::Click::kDown_State, self, modi);
     }
 }
 
 - (void)mouseDragged:(NSEvent *)event {
     NSPoint p = [event locationInWindow];
+    unsigned modi = convertNSModifiersToSk([event modifierFlags]);
+
     if ([self mouse:p inRect:[self bounds]] && NULL != fWind) {
         NSPoint loc = [self convertPoint:p fromView:nil];
-        fWind->handleClick((int) loc.x, (int) loc.y, SkView::Click::kMoved_State, self);
+        fWind->handleClick((int) loc.x, (int) loc.y,
+                           SkView::Click::kMoved_State, self, modi);
     }
 }
 
 - (void)mouseMoved:(NSEvent *)event {
     NSPoint p = [event locationInWindow];
+    unsigned modi = convertNSModifiersToSk([event modifierFlags]);
+    
     if ([self mouse:p inRect:[self bounds]] && NULL != fWind) {
         NSPoint loc = [self convertPoint:p fromView:nil];
-        fWind->handleClick((int) loc.x, (int) loc.y, SkView::Click::kMoved_State, self);
+        fWind->handleClick((int) loc.x, (int) loc.y,
+                           SkView::Click::kMoved_State, self, modi);
     }
 }
 
 - (void)mouseUp:(NSEvent *)event {
     NSPoint p = [event locationInWindow];
+    unsigned modi = convertNSModifiersToSk([event modifierFlags]);
+    
     if ([self mouse:p inRect:[self bounds]] && NULL != fWind) {
         NSPoint loc = [self convertPoint:p fromView:nil];
-        fWind->handleClick((int) loc.x, (int) loc.y, SkView::Click::kUp_State, self);
+        fWind->handleClick((int) loc.x, (int) loc.y,
+                           SkView::Click::kUp_State, self, modi);
     }
 }
 
@@ -256,7 +291,6 @@ CGLContextObj createGLContext(int msaaSampleCount) {
     if (!npix) {
         CGLChoosePixelFormat(attributes, &format, &npix);
     }
-    
     CGLContextObj ctx;
     CGLCreateContext(format, NULL, &ctx);
     CGLDestroyPixelFormat(format);
@@ -279,7 +313,8 @@ CGLContextObj createGLContext(int msaaSampleCount) {
     }
 }
 - (bool)attach:(SkOSWindow::SkBackEndTypes)attachType
-        withMSAASampleCount:(int) sampleCount {
+        withMSAASampleCount:(int) sampleCount
+        andGetInfo:(SkOSWindow::AttachmentInfo*) info {
     if (nil == fGLContext) {
         CGLContextObj ctx = createGLContext(sampleCount);
         fGLContext = [[NSOpenGLContext alloc] initWithCGLContextObj:ctx];
@@ -289,9 +324,11 @@ CGLContextObj createGLContext(int msaaSampleCount) {
         }
         [fGLContext setView:self];
     }
-    
+
     [fGLContext makeCurrentContext];
-    
+    CGLPixelFormatObj format = CGLGetPixelFormat((CGLContextObj)[fGLContext CGLContextObj]);
+    CGLDescribePixelFormat(format, 0, kCGLPFASamples, &info->fSampleCount);
+    CGLDescribePixelFormat(format, 0, kCGLPFAStencilSize, &info->fStencilBits);
     glViewport(0, 0, (int) self.bounds.size.width, (int) self.bounds.size.width);
     glClearColor(0, 0, 0, 0);
     glClearStencil(0);

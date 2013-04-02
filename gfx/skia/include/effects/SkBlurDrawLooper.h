@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2008 The Android Open Source Project
  *
@@ -33,7 +32,7 @@ public:
         kOverrideColor_BlurFlag     = 0x02,
         kHighQuality_BlurFlag       = 0x04,
         /** mask for all blur flags */
-        kAll_BlurFlag = 0x07
+        kAll_BlurFlag               = 0x07
     };
 
     SkBlurDrawLooper(SkScalar radius, SkScalar dx, SkScalar dy, SkColor color,
@@ -44,6 +43,7 @@ public:
     virtual void init(SkCanvas*);
     virtual bool next(SkCanvas*, SkPaint* paint);
 
+    SK_DEVELOPER_TO_STRING()
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkBlurDrawLooper)
 
 protected:

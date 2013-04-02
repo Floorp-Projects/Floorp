@@ -86,13 +86,9 @@ static inline bool hasSSSE3() {
 #else
 
 static inline bool hasSSSE3() {
-#if defined(SK_BUILD_SSSE3)
     int cpu_info[4] = { 0 };
     getcpuid(1, cpu_info);
     return (cpu_info[2] & 0x200) != 0;
-#else
-    return false;
-#endif
 }
 #endif
 
@@ -108,7 +104,7 @@ static bool cachedHasSSSE3() {
 
 void SkBitmapProcState::platformProcs() {
     if (cachedHasSSSE3()) {
-#if !defined(SK_BUILD_FOR_ANDROID) && defined(SK_BUILD_SSSE3)
+#if !defined(SK_BUILD_FOR_ANDROID)
         // Disable SSSE3 optimization for Android x86
         if (fSampleProc32 == S32_opaque_D32_filter_DX) {
             fSampleProc32 = S32_opaque_D32_filter_DX_SSSE3;
@@ -248,5 +244,3 @@ SkBlitRow::ColorRectProc PlatformColorRectProcFactory() {
         return NULL;
     }
 }
-
-

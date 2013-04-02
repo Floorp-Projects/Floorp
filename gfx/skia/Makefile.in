@@ -23,6 +23,7 @@ LOCAL_INCLUDES += \
 	-I$(srcdir)/include/pipe \
 	-I$(srcdir)/include/ports \
 	-I$(srcdir)/include/images \
+	-I$(srcdir)/include/lazy \
 	-I$(srcdir)/include/utils \
 	-I$(srcdir)/include/utils/mac \
 	-I$(srcdir)/include/utils/win \
@@ -33,7 +34,9 @@ LOCAL_INCLUDES += \
 	-I$(srcdir)/src/gpu \
 	-I$(srcdir)/src/gpu/effects \
 	-I$(srcdir)/src/gpu/gl \
+	-I$(srcdir)/src/lazy \
 	-I$(srcdir)/src/utils \
+	-I$(srcdir)/src/utils/android \
 	-I$(srcdir)/src/sfnt \
 	$(NULL)
 
@@ -44,12 +47,14 @@ VPATH += \
 	$(srcdir)/src/gpu/gl \
 	$(srcdir)/src/image \
 	$(srcdir)/src/images \
+	$(srcdir)/src/lazy \
 	$(srcdir)/src/pipe \
 	$(srcdir)/src/ports \
 	$(srcdir)/src/opts \
 	$(srcdir)/src/effects \
 	$(srcdir)/src/effects/gradients \
 	$(srcdir)/src/utils \
+	$(srcdir)/src/utils/android \
 	$(srcdir)/src/utils/mac \
 	$(srcdir)/src/sfnt \
 	$(NULL)

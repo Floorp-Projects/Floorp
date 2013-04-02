@@ -17,6 +17,16 @@
 #include "SkMovie.h"
 #include "SkStream.h"
 #include "SkTScopedComPtr.h"
+#include "SkUnPreMultiply.h"
+
+//All Windows SDKs back to XPSP2 export the CLSID_WICImagingFactory symbol.
+//In the Windows8 SDK the CLSID_WICImagingFactory symbol is still exported
+//but CLSID_WICImagingFactory is then #defined to CLSID_WICImagingFactory2.
+//Undo this #define if it has been done so that we link against the symbols
+//we intended to link against on all SDKs.
+#if defined(CLSID_WICImagingFactory)
+#undef CLSID_WICImagingFactory
+#endif
 
 class SkImageDecoder_WIC : public SkImageDecoder {
 protected:
@@ -126,7 +136,7 @@ bool SkImageDecoder_WIC::onDecode(SkStream* stream, SkBitmap* bm, Mode mode) {
     //Copy the pixels into the bitmap.
     if (SUCCEEDED(hr)) {
         SkAutoLockPixels alp(*bm);
-        bm->eraseColor(0);
+        bm->eraseColor(SK_ColorTRANSPARENT);
         const int stride = bm->rowBytes();
         hr = piBitmapSourceConverted->CopyPixels(
             NULL,                             //Get all the pixels
@@ -134,6 +144,9 @@ bool SkImageDecoder_WIC::onDecode(SkStream* stream, SkBitmap* bm, Mode mode) {
             stride * height,
             reinterpret_cast<BYTE *>(bm->getPixels())
         );
+
+        // Note: we don't need to premultiply here since we specified PBGRA
+        bm->computeAndSetOpaquePredicate();
     }
 
     return SUCCEEDED(hr);
@@ -183,13 +196,30 @@ bool SkImageEncoder_WIC::onEncode(SkWStream* stream
     //Convert to 8888 if needed.
     const SkBitmap* bitmap;
     SkBitmap bitmapCopy;
-    if (SkBitmap::kARGB_8888_Config == bitmapOrig.config()) {
+    if (SkBitmap::kARGB_8888_Config == bitmapOrig.config() && bitmapOrig.isOpaque()) {
         bitmap = &bitmapOrig;
     } else {
         if (!bitmapOrig.copyTo(&bitmapCopy, SkBitmap::kARGB_8888_Config)) {
             return false;
         }
         bitmap = &bitmapCopy;
+    }
+
+    // We cannot use PBGRA so we need to unpremultiply ourselves
+    if (!bitmap->isOpaque()) {
+        SkAutoLockPixels alp(*bitmap);
+
+        uint8_t* pixels = reinterpret_cast<uint8_t*>(bitmap->getPixels());
+        for (int y = 0; y < bitmap->height(); ++y) {
+            for (int x = 0; x < bitmap->width(); ++x) {
+                uint8_t* bytes = pixels + y * bitmap->rowBytes() + x * bitmap->bytesPerPixel();
+
+                SkPMColor* src = reinterpret_cast<SkPMColor*>(bytes);
+                SkColor* dst = reinterpret_cast<SkColor*>(bytes);
+
+                *dst = SkUnPreMultiply::PMColorToColor(*src);
+            }
+        }
     }
 
     //Initialize COM.
@@ -304,4 +334,3 @@ SkImageEncoder* SkImageEncoder::Create(Type t) {
     }
     return SkNEW_ARGS(SkImageEncoder_WIC, (t));
 }
-

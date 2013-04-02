@@ -9,9 +9,10 @@
 #ifndef GrGLCaps_DEFINED
 #define GrGLCaps_DEFINED
 
+#include "GrDrawTargetCaps.h"
+#include "GrGLStencilBuffer.h"
 #include "SkTArray.h"
 #include "SkTDArray.h"
-#include "GrGLStencilBuffer.h"
 
 class GrGLContextInfo;
 
@@ -20,8 +21,10 @@ class GrGLContextInfo;
  * version and the extensions string. It also tracks formats that have passed
  * the FBO completeness test.
  */
-class GrGLCaps {
+class GrGLCaps : public GrDrawTargetCaps {
 public:
+    SK_DECLARE_INST_COUNT(GrGLCaps)
+
     typedef GrGLStencilBuffer::Format StencilFormat;
 
     /**
@@ -62,6 +65,10 @@ public:
          * GL_APPLE_framebuffer_multisample ES extension
          */
         kAppleES_MSFBOType,
+        /**
+         * GL_IMG_multisampled_render_to_texture
+         */
+        kImaginationES_MSFBOType,
     };
 
     enum CoverageAAType {
@@ -89,13 +96,13 @@ public:
     /**
      * Resets the caps such that nothing is supported.
      */
-    void reset();
+    virtual void reset() SK_OVERRIDE;
 
     /**
      * Initializes the GrGLCaps to the set of features supported in the current
      * OpenGL context accessible via ctxInfo.
      */
-    void init(const GrGLContextInfo& ctxInfo);
+    void init(const GrGLContextInfo& ctxInfo, const GrGLInterface* interface);
 
     /**
      * Call to note that a color config has been verified as a valid color
@@ -138,11 +145,6 @@ public:
     MSFBOType msFBOType() const { return fMSFBOType; }
 
     /**
-     * Reports the maximum number of samples supported.
-     */
-    int maxSampleCount() const { return fMaxSampleCount; }
-
-    /**
      * Reports the type of coverage sample AA support.
      */
     CoverageAAType coverageAAType() const { return fCoverageAAType; }
@@ -159,7 +161,7 @@ public:
     /**
      * Prints the caps info using GrPrintf.
      */
-    void print() const;
+    virtual void print() const SK_OVERRIDE;
 
     /**
      * Gets an array of legal stencil formats. These formats are not guaranteed
@@ -216,10 +218,23 @@ public:
     /// Is GL_ARB_IMAGING supported
     bool imagingSupport() const { return fImagingSupport; }
 
-    // Does ReadPixels support the provided format/type combo?
+    /// Is GL_ARB_fragment_coord_conventions supported?
+    bool fragCoordConventionsSupport() const { return fFragCoordsConventionSupport; }
+
+    /// Is there support for Vertex Array Objects?
+    bool vertexArrayObjectSupport() const { return fVertexArrayObjectSupport; }
+
+    /// Use indices or vertices in CPU arrays rather than VBOs for dynamic content.
+    bool useNonVBOVertexAndIndexDynamicData() const {
+        return fUseNonVBOVertexAndIndexDynamicData;
+    }
+
+    /// Does ReadPixels support the provided format/type combo?
     bool readPixelsSupported(const GrGLInterface* intf,
                              GrGLenum format,
                              GrGLenum type) const;
+
+    bool isCoreProfile() const { return fIsCoreProfile; }
 
 private:
     /**
@@ -237,7 +252,7 @@ private:
             }
         }
 
-        static const int kNumUints = (kGrPixelConfigCount  + 31) / 32;
+        static const int kNumUints = (kGrPixelConfigCnt  + 31) / 32;
         uint32_t fVerifiedColorConfigs[kNumUints];
 
         void markVerified(GrPixelConfig config) {
@@ -259,7 +274,7 @@ private:
         }
     };
 
-    void initFSAASupport(const GrGLContextInfo& ctxInfo);
+    void initFSAASupport(const GrGLContextInfo& ctxInfo, const GrGLInterface* gli);
     void initStencilFormats(const GrGLContextInfo& ctxInfo);
 
     // tracks configs that have been verified to pass the FBO completeness when
@@ -276,7 +291,6 @@ private:
     int fMaxVertexAttributes;
 
     MSFBOType fMSFBOType;
-    int fMaxSampleCount;
     CoverageAAType fCoverageAAType;
     SkTDArray<MSAACoverageMode> fMSAACoverageModes;
 
@@ -293,6 +307,12 @@ private:
     bool fTextureRedSupport : 1;
     bool fImagingSupport  : 1;
     bool fTwoFormatLimit : 1;
+    bool fFragCoordsConventionSupport : 1;
+    bool fVertexArrayObjectSupport : 1;
+    bool fUseNonVBOVertexAndIndexDynamicData : 1;
+    bool fIsCoreProfile : 1;
+
+    typedef GrDrawTargetCaps INHERITED;
 };
 
 #endif

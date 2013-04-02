@@ -89,6 +89,12 @@ public:
     static SkData* NewFromMalloc(const void* data, size_t length);
 
     /**
+     *  Create a new dataref from a pointer allocated by mmap. The Data object
+     *  will handle calling munmap().
+     */
+    static SkData* NewFromMMap(const void* data, size_t length);
+
+    /**
      *  Create a new dataref using a subset of the data in the specified
      *  src dataref.
      */
@@ -128,7 +134,7 @@ private:
 
 /**
  *  Specialized version of SkAutoTUnref<SkData> for automatically unref-ing a
- *  SkData. If the SkData is null, data(), bytes() and size() will return 0.
+ *  SkData.
  */
 class SkAutoDataUnref : SkNoncopyable {
 public:

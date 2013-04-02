@@ -245,8 +245,9 @@ static bool chopMonoCubicAt(SkScalar c0, SkScalar c1, SkScalar c2, SkScalar c3,
     SkScalar minT = 0;
     SkScalar maxT = SK_Scalar1;
     SkScalar mid;
-    int i;
-    for (i = 0; i < 16; i++) {
+
+    // This is a lot of iterations. Is there a faster way?
+    for (int i = 0; i < 24; i++) {
         mid = SkScalarAve(minT, maxT);
         SkScalar delta = eval_cubic_coeff(A, B, C, D, mid);
         if (delta < 0) {
@@ -282,12 +283,11 @@ static void chop_cubic_in_Y(SkPoint pts[4], const SkRect& clip) {
             SkPoint tmp[7];
             SkChopCubicAt(pts, tmp, t);
 
-            // tmp[3, 4, 5].fY should all be to the below clip.fTop, and
+            // tmp[3, 4].fY should all be to the below clip.fTop, and
             // still be monotonic in Y. Since we can't trust the numerics of
             // the chopper, we force those conditions now
             tmp[3].fY = clip.fTop;
             clamp_ge(tmp[4].fY, clip.fTop);
-            clamp_ge(tmp[5].fY, tmp[4].fY);
 
             pts[0] = tmp[3];
             pts[1] = tmp[4];
@@ -309,7 +309,6 @@ static void chop_cubic_in_Y(SkPoint pts[4], const SkRect& clip) {
             SkChopCubicAt(pts, tmp, t);
             tmp[3].fY = clip.fBottom;
             clamp_le(tmp[2].fY, clip.fBottom);
-            clamp_le(tmp[1].fY, tmp[2].fY);
 
             pts[1] = tmp[1];
             pts[2] = tmp[2];

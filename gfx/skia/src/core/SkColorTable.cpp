@@ -146,14 +146,14 @@ SkColorTable::SkColorTable(SkFlattenableReadBuffer& buffer) {
     fFlags = buffer.readUInt();
     fCount = buffer.getArrayCount();
     fColors = (SkPMColor*)sk_malloc_throw(fCount * sizeof(SkPMColor));
-    const uint32_t countRead = buffer.readColorArray(fColors);
+    SkDEBUGCODE(const uint32_t countRead =) buffer.readColorArray(fColors);
+#ifdef SK_DEBUG
     SkASSERT((unsigned)fCount <= 256);
     SkASSERT(countRead == fCount);
+#endif
 }
 
 void SkColorTable::flatten(SkFlattenableWriteBuffer& buffer) const {
     buffer.writeUInt(fFlags);
     buffer.writeColorArray(fColors, fCount);
 }
-
-SK_DEFINE_FLATTENABLE_REGISTRAR(SkColorTable)

@@ -33,6 +33,11 @@ public:
      */
     int height() const { return fDesc.fHeight; }
 
+    GrSurfaceOrigin origin() const {
+        GrAssert(kTopLeft_GrSurfaceOrigin == fDesc.fOrigin || kBottomLeft_GrSurfaceOrigin == fDesc.fOrigin);
+        return fDesc.fOrigin;
+    }
+
     /**
      * Retrieves the pixel config specified when the surface was created.
      * For render targets this can be kUnknown_GrPixelConfig
@@ -66,7 +71,7 @@ public:
      * @param height        height of rectangle to read in pixels.
      * @param config        the pixel config of the destination buffer
      * @param buffer        memory to read the rectangle into.
-     * @param rowBytes      number of bytes bewtween consecutive rows. Zero means rows are tightly
+     * @param rowBytes      number of bytes between consecutive rows. Zero means rows are tightly
      *                      packed.
      * @param pixelOpsFlags See the GrContext::PixelOpsFlags enum.
      *
@@ -88,7 +93,7 @@ public:
      * @param height        height of rectangle to write in pixels.
      * @param config        the pixel config of the source buffer
      * @param buffer        memory to read the rectangle from.
-     * @param rowBytes      number of bytes bewtween consecutive rows. Zero means rows are tightly
+     * @param rowBytes      number of bytes between consecutive rows. Zero means rows are tightly
      *                      packed.
      * @param pixelOpsFlags See the GrContext::PixelOpsFlags enum.
      */
@@ -99,12 +104,12 @@ public:
                              uint32_t pixelOpsFlags = 0) = 0;
 
 protected:
-    GrTextureDesc fDesc;
-
-    GrSurface(GrGpu* gpu, const GrTextureDesc& desc)
-    : INHERITED(gpu)
+    GrSurface(GrGpu* gpu, bool isWrapped, const GrTextureDesc& desc)
+    : INHERITED(gpu, isWrapped)
     , fDesc(desc) {
     }
+
+    GrTextureDesc fDesc;
 
 private:
     typedef GrResource INHERITED;

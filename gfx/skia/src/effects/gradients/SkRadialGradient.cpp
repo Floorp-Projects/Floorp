@@ -88,7 +88,7 @@ void shadeSpan16_radial_clamp(SkScalar sfx, SkScalar sdx,
             fx += dx;
             *dstC++ = cache[toggle +
                             (sqrt_table[fi] >> SkGradientShaderBase::kSqrt16Shift)];
-            toggle ^= SkGradientShaderBase::kDitherStride16;
+            toggle = next_dither_toggle16(toggle);
         } while (--count != 0);
     } else {
         do {
@@ -100,7 +100,7 @@ void shadeSpan16_radial_clamp(SkScalar sfx, SkScalar sdx,
             fy += dy;
             *dstC++ = cache[toggle +
                             (sqrt_table[fi] >> SkGradientShaderBase::kSqrt16Shift)];
-            toggle ^= SkGradientShaderBase::kDitherStride16;
+            toggle = next_dither_toggle16(toggle);
         } while (--count != 0);
     }
 }
@@ -123,7 +123,7 @@ void shadeSpan16_radial_mirror(SkScalar sfx, SkScalar sdx,
         unsigned fi = mirror_tileproc(dist);
         SkASSERT(fi <= 0xFFFF);
         *dstC++ = cache[toggle + (fi >> SkGradientShaderBase::kCache16Shift)];
-        toggle ^= SkGradientShaderBase::kDitherStride16;
+        toggle = next_dither_toggle16(toggle);
         sfx += sdx;
         sfy += sdy;
     } while (--count != 0);
@@ -144,7 +144,7 @@ void shadeSpan16_radial_repeat(SkScalar sfx, SkScalar sdx,
         fx += dx;
         fy += dy;
         *dstC++ = cache[toggle + (fi >> SkGradientShaderBase::kCache16Shift)];
-        toggle ^= SkGradientShaderBase::kDitherStride16;
+        toggle = next_dither_toggle16(toggle);
     } while (--count != 0);
 }
 
@@ -175,7 +175,7 @@ void SkRadialGradient::shadeSpan16(int x, int y, uint16_t* dstCParam,
     SkMatrix::MapXYProc dstProc = fDstToIndexProc;
     TileProc            proc = fTileProc;
     const uint16_t* SK_RESTRICT cache = this->getCache16();
-    int                 toggle = ((x ^ y) & 1) * kDitherStride16;
+    int                 toggle = init_dither_toggle16(x, y);
 
     if (fDstToIndexClass != kPerspective_MatrixClass) {
         dstProc(fDstToIndex, SkIntToScalar(x) + SK_ScalarHalf,
@@ -214,7 +214,7 @@ void SkRadialGradient::shadeSpan16(int x, int y, uint16_t* dstCParam,
 
             int index = fi >> (16 - kCache16Bits);
             *dstC++ = cache[toggle + index];
-            toggle ^= kDitherStride16;
+            toggle = next_dither_toggle16(toggle);
 
             dstX += SK_Scalar1;
         } while (--count != 0);
@@ -227,8 +227,8 @@ SkShader::BitmapType SkRadialGradient::asABitmap(SkBitmap* bitmap,
         this->getGradientTableBitmap(bitmap);
     }
     if (matrix) {
-        matrix->setScale(SkIntToScalar(kGradient32Length),
-                         SkIntToScalar(kGradient32Length));
+        matrix->setScale(SkIntToScalar(kCache32Count),
+                         SkIntToScalar(kCache32Count));
         matrix->preConcat(fPtsToUnit);
     }
     if (xy) {
@@ -296,7 +296,7 @@ inline bool no_need_for_radial_pin(int fx, int dx,
     fi = (fx * fx + fy * fy) >> (14 + 16 - kSQRT_TABLE_BITS); \
     *dstC++ = cache[toggle + \
                     (sqrt_table[fi] >> SkGradientShaderBase::kSqrt32Shift)]; \
-    toggle ^= SkGradientShaderBase::kDitherStride32; \
+    toggle = next_dither_toggle(toggle); \
     fx += dx; \
     fy += dy;
 
@@ -318,10 +318,10 @@ void shadeSpan_radial_clamp(SkScalar sfx, SkScalar sdx,
     SkFixed fy = SkScalarToFixed(sfy) >> 1;
     SkFixed dy = SkScalarToFixed(sdy) >> 1;
     if ((count > 4) && radial_completely_pinned(fx, dx, fy, dy)) {
-        unsigned fi = SkGradientShaderBase::kGradient32Length;
+        unsigned fi = SkGradientShaderBase::kCache32Count - 1;
         sk_memset32_dither(dstC,
             cache[toggle + fi],
-            cache[(toggle ^ SkGradientShaderBase::kDitherStride32) + fi],
+            cache[next_dither_toggle(toggle) + fi],
             count);
     } else if ((count > 4) &&
                no_need_for_radial_pin(fx, dx, fy, dy, count)) {
@@ -335,8 +335,7 @@ void shadeSpan_radial_clamp(SkScalar sfx, SkScalar sdx,
         if (count) {
             UNPINNED_RADIAL_STEP;
         }
-    }
-    else  {
+    } else  {
         // Specializing for dy == 0 gains us 25% on Skia benchmarks
         if (dy == 0) {
             unsigned yy = SkPin32(fy, -0xFFFF >> 1, 0xFFFF >> 1);
@@ -347,7 +346,7 @@ void shadeSpan_radial_clamp(SkScalar sfx, SkScalar sdx,
                 fi = SkFastMin32(fi, 0xFFFF >> (16 - kSQRT_TABLE_BITS));
                 *dstC++ = cache[toggle + (sqrt_table[fi] >>
                     SkGradientShaderBase::kSqrt32Shift)];
-                toggle ^= SkGradientShaderBase::kDitherStride32;
+                toggle = next_dither_toggle(toggle);
                 fx += dx;
             } while (--count != 0);
         } else {
@@ -358,7 +357,7 @@ void shadeSpan_radial_clamp(SkScalar sfx, SkScalar sdx,
                 fi = SkFastMin32(fi, 0xFFFF >> (16 - kSQRT_TABLE_BITS));
                 *dstC++ = cache[toggle + (sqrt_table[fi] >>
                     SkGradientShaderBase::kSqrt32Shift)];
-                toggle ^= SkGradientShaderBase::kDitherStride32;
+                toggle = next_dither_toggle(toggle);
                 fx += dx;
                 fy += dy;
             } while (--count != 0);
@@ -387,7 +386,7 @@ void shadeSpan_radial_mirror(SkScalar sfx, SkScalar sdx,
         unsigned fi = mirror_tileproc(dist);
         SkASSERT(fi <= 0xFFFF);
         *dstC++ = cache[toggle + (fi >> SkGradientShaderBase::kCache32Shift)];
-        toggle ^= SkGradientShaderBase::kDitherStride32;
+        toggle = next_dither_toggle(toggle);
         sfx += sdx;
         sfy += sdy;
     } while (--count != 0);
@@ -410,7 +409,7 @@ void shadeSpan_radial_repeat(SkScalar sfx, SkScalar sdx,
         unsigned fi = repeat_tileproc(dist);
         SkASSERT(fi <= 0xFFFF);
         *dstC++ = cache[toggle + (fi >> SkGradientShaderBase::kCache32Shift)];
-        toggle ^= SkGradientShaderBase::kDitherStride32;
+        toggle = next_dither_toggle(toggle);
         fx += dx;
         fy += dy;
     } while (--count != 0);
@@ -425,11 +424,7 @@ void SkRadialGradient::shadeSpan(int x, int y,
     SkMatrix::MapXYProc dstProc = fDstToIndexProc;
     TileProc            proc = fTileProc;
     const SkPMColor* SK_RESTRICT cache = this->getCache32();
-#ifdef USE_DITHER_32BIT_GRADIENT
-    int toggle = ((x ^ y) & 1) * SkGradientShaderBase::kDitherStride32;
-#else
-    int toggle = 0;
-#endif
+    int toggle = init_dither_toggle(x, y);
 
     if (fDstToIndexClass != kPerspective_MatrixClass) {
         dstProc(fDstToIndex, SkIntToScalar(x) + SK_ScalarHalf,
@@ -473,25 +468,29 @@ void SkRadialGradient::shadeSpan(int x, int y,
 
 #if SK_SUPPORT_GPU
 
-class GrGLRadialGradient : public GrGLGradientStage {
+#include "GrTBackendEffectFactory.h"
+
+class GrGLRadialGradient : public GrGLGradientEffect {
 public:
 
-    GrGLRadialGradient(const GrProgramStageFactory& factory,
-                       const GrCustomStage&) : INHERITED (factory) { }
+    GrGLRadialGradient(const GrBackendEffectFactory& factory,
+                       const GrDrawEffect&) : INHERITED (factory) { }
     virtual ~GrGLRadialGradient() { }
 
-    virtual void emitVS(GrGLShaderBuilder* builder,
-                        const char* vertexCoords) SK_OVERRIDE { }
-    virtual void emitFS(GrGLShaderBuilder* builder,
-                        const char* outputColor,
-                        const char* inputColor,
-                        const TextureSamplerArray&) SK_OVERRIDE;
+    virtual void emitCode(GrGLShaderBuilder*,
+                          const GrDrawEffect&,
+                          EffectKey,
+                          const char* outputColor,
+                          const char* inputColor,
+                          const TextureSamplerArray&) SK_OVERRIDE;
 
-    static StageKey GenKey(const GrCustomStage& s, const GrGLCaps& caps) { return 0; }
+    static EffectKey GenKey(const GrDrawEffect& drawEffect, const GrGLCaps&) {
+        return GenMatrixKey(drawEffect);
+    }
 
 private:
 
-    typedef GrGLGradientStage INHERITED;
+    typedef GrGLGradientEffect INHERITED;
 
 };
 
@@ -499,35 +498,44 @@ private:
 
 class GrRadialGradient : public GrGradientEffect {
 public:
-
-    GrRadialGradient(GrContext* ctx,
-                     const SkRadialGradient& shader,
-                     GrSamplerState* sampler)
-        : INHERITED(ctx, shader, sampler) {
+    static GrEffectRef* Create(GrContext* ctx,
+                               const SkRadialGradient& shader,
+                               const SkMatrix& matrix,
+                               SkShader::TileMode tm) {
+        AutoEffectUnref effect(SkNEW_ARGS(GrRadialGradient, (ctx, shader, matrix, tm)));
+        return CreateEffectRef(effect);
     }
 
     virtual ~GrRadialGradient() { }
 
     static const char* Name() { return "Radial Gradient"; }
-    virtual const GrProgramStageFactory& getFactory() const SK_OVERRIDE {
-        return GrTProgramStageFactory<GrRadialGradient>::getInstance();
+    virtual const GrBackendEffectFactory& getFactory() const SK_OVERRIDE {
+        return GrTBackendEffectFactory<GrRadialGradient>::getInstance();
     }
 
-    typedef GrGLRadialGradient GLProgramStage;
+    typedef GrGLRadialGradient GLEffect;
 
 private:
-    GR_DECLARE_CUSTOM_STAGE_TEST;
+    GrRadialGradient(GrContext* ctx,
+                     const SkRadialGradient& shader,
+                     const SkMatrix& matrix,
+                     SkShader::TileMode tm)
+        : INHERITED(ctx, shader, matrix, tm) {
+    }
+
+    GR_DECLARE_EFFECT_TEST;
 
     typedef GrGradientEffect INHERITED;
 };
 
 /////////////////////////////////////////////////////////////////////
 
-GR_DEFINE_CUSTOM_STAGE_TEST(GrRadialGradient);
+GR_DEFINE_EFFECT_TEST(GrRadialGradient);
 
-GrCustomStage* GrRadialGradient::TestCreate(SkRandom* random,
-                                            GrContext* context,
-                                            GrTexture**) {
+GrEffectRef* GrRadialGradient::TestCreate(SkMWCRandom* random,
+                                          GrContext* context,
+                                          const GrDrawTargetCaps&,
+                                          GrTexture**) {
     SkPoint center = {random->nextUScalar1(), random->nextUScalar1()};
     SkScalar radius = random->nextUScalar1();
 
@@ -539,41 +547,63 @@ GrCustomStage* GrRadialGradient::TestCreate(SkRandom* random,
     SkAutoTUnref<SkShader> shader(SkGradientShader::CreateRadial(center, radius,
                                                                  colors, stops, colorCount,
                                                                  tm));
-    GrSamplerState sampler;
-    GrCustomStage* stage = shader->asNewCustomStage(context, &sampler);
-    GrAssert(NULL != stage);
-    return stage;
+    SkPaint paint;
+    return shader->asNewEffect(context, paint);
 }
 
 /////////////////////////////////////////////////////////////////////
 
-void GrGLRadialGradient::emitFS(GrGLShaderBuilder* builder,
-                                const char* outputColor,
-                                const char* inputColor,
-                                const TextureSamplerArray& samplers) {
-    SkString t;
-    t.printf("length(%s.xy)", builder->defaultTexCoordsName());
+void GrGLRadialGradient::emitCode(GrGLShaderBuilder* builder,
+                                  const GrDrawEffect&,
+                                  EffectKey key,
+                                  const char* outputColor,
+                                  const char* inputColor,
+                                  const TextureSamplerArray& samplers) {
+    this->emitYCoordUniform(builder);
+    const char* coords;
+    this->setupMatrix(builder, key, &coords);
+    SkString t("length(");
+    t.append(coords);
+    t.append(")");
     this->emitColorLookup(builder, t.c_str(), outputColor, inputColor, samplers[0]);
 }
 
 /////////////////////////////////////////////////////////////////////
 
-GrCustomStage* SkRadialGradient::asNewCustomStage(GrContext* context,
-    GrSamplerState* sampler) const {
-    SkASSERT(NULL != context && NULL != sampler);
-    sampler->matrix()->preConcat(fPtsToUnit);
-    sampler->textureParams()->setTileModeX(fTileMode);
-    sampler->textureParams()->setTileModeY(kClamp_TileMode);
-    sampler->textureParams()->setBilerp(true);
-    return SkNEW_ARGS(GrRadialGradient, (context, *this, sampler));
+GrEffectRef* SkRadialGradient::asNewEffect(GrContext* context, const SkPaint&) const {
+    SkASSERT(NULL != context);
+
+    SkMatrix matrix;
+    if (!this->getLocalMatrix().invert(&matrix)) {
+        return NULL;
+    }
+    matrix.postConcat(fPtsToUnit);
+    return GrRadialGradient::Create(context, *this, matrix, fTileMode);
 }
 
 #else
 
-GrCustomStage* SkRadialGradient::asNewCustomStage(GrContext* context,
-    GrSamplerState* sampler) const {
+GrEffectRef* SkRadialGradient::asNewEffect(GrContext*, const SkPaint&) const {
     SkDEBUGFAIL("Should not call in GPU-less build");
     return NULL;
 }
 
+#endif
+
+#ifdef SK_DEVELOPER
+void SkRadialGradient::toString(SkString* str) const {
+    str->append("SkRadialGradient: (");
+
+    str->append("center: (");
+    str->appendScalar(fCenter.fX);
+    str->append(", ");
+    str->appendScalar(fCenter.fY);
+    str->append(") radius: ");
+    str->appendScalar(fRadius);
+    str->append(" ");
+
+    this->INHERITED::toString(str);
+
+    str->append(")");
+}
 #endif

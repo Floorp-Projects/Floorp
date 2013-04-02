@@ -74,8 +74,9 @@ static void interpolateColorCode(SkScalar range, SkScalar* curColor,
     }
 
     for (int i = 0; i < components; i++) {
-        // If the next components needs t, make a copy.
-        if (dupInput[i]) {
+        // If the next components needs t and this component will consume a
+        // copy, make another copy.
+        if (dupInput[i] && multiplier[i] != 0) {
             result->append("dup ");
         }
 
@@ -424,8 +425,11 @@ public:
 
     virtual bool isValid() { return fResources.count() > 0; }
 
-    void getResources(SkTDArray<SkPDFObject*>* resourceList) {
-        GetResourcesHelper(&fResources, resourceList);
+    void getResources(const SkTSet<SkPDFObject*>& knownResourceObjects,
+                      SkTSet<SkPDFObject*>* newResourceObjects) {
+        GetResourcesHelper(&fResources,
+                           knownResourceObjects,
+                           newResourceObjects);
     }
 
 private:
@@ -447,12 +451,15 @@ public:
 
     virtual bool isValid() { return size() > 0; }
 
-    void getResources(SkTDArray<SkPDFObject*>* resourceList) {
-        GetResourcesHelper(&fResources, resourceList);
+    void getResources(const SkTSet<SkPDFObject*>& knownResourceObjects,
+                      SkTSet<SkPDFObject*>* newResourceObjects) {
+        GetResourcesHelper(&fResources.toArray(),
+                           knownResourceObjects,
+                           newResourceObjects);
     }
 
 private:
-    SkTDArray<SkPDFObject*> fResources;
+    SkTSet<SkPDFObject*> fResources;
     SkAutoTDelete<const SkPDFShader::State> fState;
 };
 
@@ -611,8 +618,7 @@ SkPDFFunctionShader::SkPDFFunctionShader(SkPDFShader::State* state)
         return;
     }
 
-    SkRefPtr<SkPDFArray> domain = new SkPDFArray;
-    domain->unref();  // SkRefPtr and new both took a reference.
+    SkAutoTUnref<SkPDFArray> domain(new SkPDFArray);
     domain->reserve(4);
     domain->appendScalar(bbox.fLeft);
     domain->appendScalar(bbox.fRight);
@@ -639,16 +645,14 @@ SkPDFFunctionShader::SkPDFFunctionShader(SkPDFShader::State* state)
         functionCode = codeFunction(*info);
     }
 
-    SkRefPtr<SkPDFStream> function = makePSFunction(functionCode, domain.get());
-    // Pass one reference to fResources, SkRefPtr and new both took a reference.
-    fResources.push(function.get());
-
-    SkRefPtr<SkPDFDict> pdfShader = new SkPDFDict;
-    pdfShader->unref();  // SkRefPtr and new both took a reference.
+    SkAutoTUnref<SkPDFDict> pdfShader(new SkPDFDict);
     pdfShader->insertInt("ShadingType", 1);
     pdfShader->insertName("ColorSpace", "DeviceRGB");
     pdfShader->insert("Domain", domain.get());
-    pdfShader->insert("Function", new SkPDFObjRef(function.get()))->unref();
+
+    SkPDFStream* function = makePSFunction(functionCode, domain.get());
+    pdfShader->insert("Function", new SkPDFObjRef(function))->unref();
+    fResources.push(function);  // Pass ownership to resource list.
 
     insertInt("PatternType", 2);
     insert("Matrix", SkPDFUtils::MatrixToArray(finalMatrix))->unref();
@@ -824,8 +828,7 @@ SkPDFImageShader::SkPDFImageShader(SkPDFShader::State* state) : fState(state) {
         }
     }
 
-    SkRefPtr<SkPDFArray> patternBBoxArray = new SkPDFArray;
-    patternBBoxArray->unref();  // SkRefPtr and new both took a reference.
+    SkAutoTUnref<SkPDFArray> patternBBoxArray(new SkPDFArray);
     patternBBoxArray->reserve(4);
     patternBBoxArray->appendScalar(patternBBox.fLeft);
     patternBBoxArray->appendScalar(patternBBox.fTop);
@@ -833,11 +836,10 @@ SkPDFImageShader::SkPDFImageShader(SkPDFShader::State* state) : fState(state) {
     patternBBoxArray->appendScalar(patternBBox.fBottom);
 
     // Put the canvas into the pattern stream (fContent).
-    SkRefPtr<SkStream> content = pattern.content();
-    content->unref();  // SkRefPtr and content() both took a reference.
-    pattern.getResources(&fResources, false);
-
+    SkAutoTUnref<SkStream> content(pattern.content());
     setData(content.get());
+    pattern.getResources(fResources, &fResources, false);
+
     insertName("Type", "Pattern");
     insertInt("PatternType", 1);
     insertInt("PaintType", 1);
@@ -936,7 +938,7 @@ SkPDFShader::State::State(const SkShader& shader,
     fInfo.fColorCount = 0;
     fInfo.fColors = NULL;
     fInfo.fColorOffsets = NULL;
-    shader.getLocalMatrix(&fShaderTransform);
+    fShaderTransform = shader.getLocalMatrix();
     fImageTileModes[0] = fImageTileModes[1] = SkShader::kClamp_TileMode;
 
     fType = shader.asAGradient(&fInfo);
