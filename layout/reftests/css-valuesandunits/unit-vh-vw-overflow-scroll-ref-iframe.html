@@ -1,0 +1,36 @@
+<style>
+  body { overflow: scroll }
+  div {
+    width: 10px;
+    height: 10px;
+    background-color: #d64203;
+  }
+</style>
+
+<body>
+  <div id="a"></div>
+  <div id="b"></div>
+  <div id="c"></div>
+  <div id="d"></div>
+
+  <!--
+  Ensure that the scroller positioned the same way as it would be in the
+  'overflow: auto' case. We'll have scrollbars either way, but we don't
+  want the '!=' reftest to spuriously succeed because of the scrollers.
+  -->
+  <div style="width: 500px; height: 500px; background-color: black">
+</body>
+
+<script>
+  // client{Width, Height} consist of the area _inside_ the scrollbars, so these
+  // manually calculated units reflect the fact that with 'overflow: scroll' set,
+  // viewport units are sized taking the scrollbars into account.
+  var vw = 0.01 * document.body.clientWidth;
+  var vh = 0.01 * document.body.clientHeight;
+  var vmin = Math.min(vw, vh);
+  var vmax = Math.max(vw, vh);
+  document.getElementById('a').style.width = (50 * vw) + "px";
+  document.getElementById('b').style.height = (25 * vh) + "px";
+  document.getElementById('c').style.width = (35 * vmin) + "px";
+  document.getElementById('d').style.height = (25 * vmax) + "px";
+</script>

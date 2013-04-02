@@ -30,7 +30,6 @@ function test()
   }
   catch(ex)
   {
-    print(ex + '');
   }
   reportCompare(expect, actual, summary);
 

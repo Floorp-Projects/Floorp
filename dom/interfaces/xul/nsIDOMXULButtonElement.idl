@@ -5,7 +5,7 @@
 
 #include "nsIDOMXULLabeledControlEl.idl"
 
-[scriptable, uuid(db51259e-4d2f-4b86-a686-6831e77b58b3)]
+[scriptable, uuid(8eec22e8-91f4-44fc-9142-b4cd0f623076)]
 interface nsIDOMXULButtonElement : nsIDOMXULLabeledControlElement {
   const short CHECKSTATE_UNCHECKED = 0;
   const short CHECKSTATE_CHECKED = 1;

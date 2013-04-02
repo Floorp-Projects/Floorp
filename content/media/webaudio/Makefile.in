@@ -16,6 +16,7 @@ FAIL_ON_WARNINGS := 1
 endif # !_MSC_VER
 
 CPPSRCS := \
+  AnalyserNode.cpp \
   AudioBuffer.cpp \
   AudioBufferSourceNode.cpp \
   AudioContext.cpp \
@@ -37,6 +38,7 @@ CPPSRCS := \
 
 EXPORTS_NAMESPACES := mozilla/dom
 EXPORTS_mozilla/dom := \
+  AnalyserNode.h \
   AudioBuffer.h \
   AudioBufferSourceNode.h \
   AudioContext.h \

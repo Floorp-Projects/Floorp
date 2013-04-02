@@ -152,6 +152,24 @@ SPSProfiler::exit(JSContext *cx, RawScript script, RawFunction maybeFun)
 }
 
 void
+SPSProfiler::enterNative(const char *string, void *sp)
+{
+    /* these operations cannot be re-ordered, so volatile-ize operations */
+    volatile ProfileEntry *stack = stack_;
+    volatile uint32_t *size = size_;
+    uint32_t current = *size;
+
+    JS_ASSERT(enabled());
+    if (current < max_) {
+        stack[current].setLabel(string);
+        stack[current].setStackAddress(sp);
+        stack[current].setScript(NULL);
+        stack[current].setLine(0);
+    }
+    *size = current + 1;
+}
+
+void
 SPSProfiler::push(const char *string, void *sp, RawScript script, jsbytecode *pc)
 {
     /* these operations cannot be re-ordered, so volatile-ize operations */

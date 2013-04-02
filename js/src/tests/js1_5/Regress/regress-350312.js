@@ -43,7 +43,6 @@ function test()
       catch(e2)
       {
         actual += e2;
-        print(e2);
         if (++counter > 10)
         {
           throw 'Infinite loop...';

@@ -1184,7 +1184,7 @@ SourceDataCache::purge()
     map_ = NULL;
 }
 
-JSFlatString *
+JSStableString *
 ScriptSource::substring(JSContext *cx, uint32_t start, uint32_t stop)
 {
     const jschar *chars;
@@ -1226,7 +1226,10 @@ ScriptSource::substring(JSContext *cx, uint32_t start, uint32_t stop)
 #else
     chars = data.source;
 #endif
-    return js_NewStringCopyN<CanGC>(cx, chars + start, stop - start);
+    JSFlatString *flatStr = js_NewStringCopyN<CanGC>(cx, chars + start, stop - start);
+    if (!flatStr)
+        return NULL;
+    return flatStr->ensureStable(cx);
 }
 
 bool

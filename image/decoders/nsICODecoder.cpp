@@ -244,10 +244,15 @@ nsICODecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
   uint16_t colorDepth = 0;
   nsIntSize prefSize = mImage.GetRequestedResolution();
   if (prefSize.width == 0 && prefSize.height == 0) {
-    prefSize.SizeTo(PREFICONSIZE,PREFICONSIZE);
+    prefSize.SizeTo(PREFICONSIZE, PREFICONSIZE);
   }
 
-  int32_t diff = INT_MAX;
+  // A measure of the difference in size between the entry we've found
+  // and the requested size. We will choose the smallest image that is
+  // >= requested size (i.e. we assume it's better to downscale a larger
+  // icon than to upscale a smaller one).
+  int32_t diff = INT_MIN;
+
   // Loop through each entry's dir entry
   while (mCurrIcon < mNumIcons) { 
     if (mPos >= DIRENTRYOFFSET + (mCurrIcon * sizeof(mDirEntryArray)) && 
@@ -271,11 +276,14 @@ nsICODecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
       mCurrIcon++;
       ProcessDirEntry(e);
       // We can't use GetRealWidth and GetRealHeight here because those operate
-      // on mDirEntry, here we are going through each item in the directory
-      int32_t delta = abs( (e.mWidth == 0 ? 256 : e.mWidth) - prefSize.width +
-                           (e.mHeight == 0 ? 256 : e.mHeight) - prefSize.height );
-      if ((e.mBitCount >= colorDepth && delta <= diff) ||
-          (mCurrIcon == mNumIcons && mImageOffset == 0)) {
+      // on mDirEntry, here we are going through each item in the directory.
+      // Calculate the delta between this image's size and the desired size,
+      // so we can see if it is better than our current-best option.
+      // In the case of several equally-good images, we use the last one.
+      int32_t delta = (e.mWidth == 0 ? 256 : e.mWidth) - prefSize.width +
+                      (e.mHeight == 0 ? 256 : e.mHeight) - prefSize.height;
+      if (e.mBitCount >= colorDepth &&
+          ((diff < 0 && delta >= diff) || (delta >= 0 && delta <= diff))) {
         diff = delta;
         mImageOffset = e.mImageOffset;
 

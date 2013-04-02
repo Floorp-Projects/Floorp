@@ -157,6 +157,15 @@ public:
 
     HDC GetScreenDC() { return mScreenDC; }
 
+    /**
+     * Return the resolution scaling factor to convert between "logical" or
+     * "screen" pixels as used by Windows (dependent on the DPI scaling option
+     * in the Display control panel) and actual device pixels.
+     */
+    double GetDPIScale() {
+        return GetDeviceCaps(mScreenDC, LOGPIXELSY) / 96.0;
+    }
+
     nsresult GetFontList(nsIAtom *aLangGroup,
                          const nsACString& aGenericFamily,
                          nsTArray<nsString>& aListOfFonts);

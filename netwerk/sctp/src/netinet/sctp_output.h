@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_output.h 244021 2012-12-08 08:22:33Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_output.h 246595 2013-02-09 17:26:14Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_OUTPUT_H_
@@ -57,13 +57,9 @@ int sctp_is_addr_restricted(struct sctp_tcb *, struct sctp_ifa *);
 
 int
 sctp_is_address_in_scope(struct sctp_ifa *ifa,
-			 int ipv4_addr_legal,
-			 int ipv6_addr_legal,
-			 int loopback_scope,
-			 int ipv4_local_scope,
-			 int local_scope,
-			 int site_scope,
+                         struct sctp_scoping *scope,
 			 int do_update);
+
 int
 sctp_is_addr_in_ep(struct sctp_inpcb *inp, struct sctp_ifa *ifa);
 

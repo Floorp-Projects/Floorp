@@ -54,6 +54,9 @@ MOCHITEST_FILES = \
 		test_pointer-events-4.xhtml \
 		test_scientific.html \
 		scientific-helper.svg \
+		test_selectSubString.xhtml \
+		test_selectSubString2.xhtml \
+		selectSubString-helper.svg \
 		animated-svg-image-helper.html \
 		animated-svg-image-helper.svg \
 		test_stroke-linecap-hit-testing.xhtml \

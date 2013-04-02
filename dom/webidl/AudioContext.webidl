@@ -36,6 +36,8 @@ interface AudioContext {
     AudioBufferSourceNode createBufferSource();
 
     [Creator]
+    AnalyserNode createAnalyser();
+    [Creator]
     GainNode createGain();
     [Creator, Throws]
     DelayNode createDelay(optional double maxDelayTime = 1);

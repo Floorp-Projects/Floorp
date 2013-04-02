@@ -50,11 +50,14 @@
       </property>
 
       <property name="filter">
+        <getter>return this.mFilter;</getter>
         <setter><![CDATA[
           val = val.toLowerCase();
           if (this.mFilter != val) {
             this.mFilter = val;
-            setTimeout(this.applyFilter.bind(this), 0);
+            for (let aRow of this.mConsoleRowBox.children) {
+              this.filterElement(aRow);
+            }
           }
           return val;
         ]]></setter>
@@ -70,7 +73,7 @@
         <setter><![CDATA[
           if (this.mSelectedItem)
             this.mSelectedItem.removeAttribute("selected");
-          
+
           this.mSelectedItem = val;
           if (val)
             val.setAttribute("selected", "true");
@@ -80,11 +83,11 @@
           return val;
         ]]></setter>
       </property>
-    
+
       <method name="init">
         <body><![CDATA[
           this.mCount = 0;
-          
+
           this.mConsoleListener = {
             console: this, 
             observe : function(aObject) {
@@ -94,7 +97,7 @@
                 this.console.appendItem(aObject);
             }
           };
-          
+
           this.mConsoleRowBox = document.getAnonymousElementByAttribute(this, "role", "console-rows");
           this.mStrBundle = document.getAnonymousElementByAttribute(this, "role", "string-bundle");
 
@@ -125,19 +128,19 @@
       <method name="appendInitialItems">
         <body><![CDATA[
           var messages = Services.console.getMessageArray();
-      
+
           // In case getMessageArray returns 0-length array as null
           if (!messages)
             messages = [];
-      
+
           var limit = messages.length - this.limit;
           if (limit < 0) limit = 0;
-        
+
           // Checks if console ever been cleared
           for (var i = messages.length - 1; i >= limit; --i)
             if (!messages[i].message)
               break;
-        
+
           // Populate with messages after latest "clear"
           while (++i < messages.length)
             this.appendItem(messages[i]);
@@ -150,7 +153,7 @@
           try {
             // Try to QI it to a script error to get more info
             var scriptError = aObject.QueryInterface(Components.interfaces.nsIScriptError);
-            
+
             // filter chrome urls
             if (!this.showChromeErrors && scriptError.sourceName.substr(0, 9) == "chrome://")
               return;
@@ -217,7 +220,7 @@
         <body><![CDATA[
           var row = this.createConsoleRow();
           var nsIScriptError = Components.interfaces.nsIScriptError;
-          
+
           // Is this error actually just a non-fatal warning?
           var warning = aObject.flags & nsIScriptError.warningFlag != 0;
 
@@ -253,7 +256,7 @@
           this.appendConsoleRow(row);
         ]]></body>
       </method>
-            
+
       <method name="appendMessage">
         <parameter name="aMessage"/>
         <parameter name="aType"/>
@@ -264,7 +267,7 @@
           this.appendConsoleRow(row);
         ]]></body>
       </method>
-      
+
       <method name="clear">
         <body><![CDATA[
           // add a "clear" message (mainly for other listeners)
@@ -298,7 +301,7 @@
           }
         ]]></body>
       </method>
-                  
+
       <method name="createConsoleRow">
         <body><![CDATA[
           var row = document.createElement("box");
@@ -308,7 +311,7 @@
           return row;
         ]]></body>
       </method>
-            
+
       <method name="appendConsoleRow">
         <parameter name="aRow"/>
         <body><![CDATA[
@@ -317,7 +320,7 @@
           if (++this.mCount > this.limit) this.deleteFirst();
         ]]></body>
       </method>
-            
+
       <method name="deleteFirst">
         <body><![CDATA[
           var node = this.mConsoleRowBox.firstChild;
@@ -325,13 +328,13 @@
           --this.mCount;
         ]]></body>
       </method>
-            
+
       <method name="clearConsole">
         <body><![CDATA[
           if (this.mCount == 0) // already clear
             return;
           this.mCount = 0;
-          
+
           var newRows = this.mConsoleRowBox.cloneNode(false);
           this.mConsoleRowBox.parentNode.replaceChild(newRows, this.mConsoleRowBox);
           this.mConsoleRowBox = newRows;
@@ -352,15 +355,6 @@
             aRow.classList.remove("filtered-by-string")
           } else {
             aRow.classList.add("filtered-by-string")
-          }
-        ]]></body>
-      </method>
-
-      <method name="applyFilter">
-        <parameter name="aFilter" />
-        <body><![CDATA[
-          for (let aRow of this.mConsoleRowBox.children) {
-            this.filterElement(aRow);
           }
         ]]></body>
       </method>
@@ -427,12 +421,12 @@
         onEvent: function() { }
       });]]></field>
     </implementation>
-    
+
     <handlers>
       <handler event="mousedown"><![CDATA[
         if (event.button == 0 || event.button == 2) {
           var target = event.originalTarget;
-  
+
           while (target && !("_IsConsoleRow" in target))
             target = target.parentNode;
 
@@ -509,7 +503,7 @@
     </implementation>
 
   </binding>
-  
+
   <binding id="message" extends="xul:box">
     <content>
       <xul:box class="console-internal-box" flex="1">

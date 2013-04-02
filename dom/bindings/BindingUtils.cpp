@@ -17,7 +17,6 @@
 #include "WrapperFactory.h"
 #include "xpcprivate.h"
 #include "XPCQuickStubs.h"
-#include "XPCWrapper.h"
 #include "XrayWrapper.h"
 
 #include "mozilla/dom/HTMLObjectElement.h"
@@ -1570,7 +1569,7 @@ GetGlobalObject(JSContext* aCx, JSObject* aObject,
                 Maybe<JSAutoCompartment>& aAutoCompartment)
 {
   if (js::IsWrapper(aObject)) {
-    aObject = XPCWrapper::Unwrap(aCx, aObject, false);
+    aObject = js::UnwrapObjectChecked(aObject, /* stopAtOuter = */ false);
     if (!aObject) {
       Throw<mainThread>(aCx, NS_ERROR_XPC_SECURITY_MANAGER_VETO);
       return nullptr;

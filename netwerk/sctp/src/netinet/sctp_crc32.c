@@ -579,7 +579,7 @@ sctp_crc32c_sb8_64_bit(uint32_t crc,
 	for (li = 0; li < end_bytes; li++)
 		crc = sctp_crc_tableil8_o32[(crc ^ *p_buf++) & 0x000000FF] ^
 		    (crc >> 8);
-	return crc;
+	return (crc);
 }
 
 

@@ -14,3 +14,4 @@ Cu.import("resource:///modules/devtools/CmdInspect.jsm");
 Cu.import("resource:///modules/devtools/CmdResize.jsm");
 Cu.import("resource:///modules/devtools/CmdTilt.jsm");
 Cu.import("resource:///modules/devtools/CmdScratchpad.jsm");
+Cu.import("resource:///modules/devtools/cmd-profiler.jsm");

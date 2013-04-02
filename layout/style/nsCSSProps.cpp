@@ -2445,7 +2445,7 @@ enum ColumnCheckCounter {
 
 /* static */ const size_t
 nsCSSProps::gPropertyCountInStruct[nsStyleStructID_Length] = {
-  #define STYLE_STRUCT(name, checkdata_cb, ctor_args) \
+  #define STYLE_STRUCT(name, checkdata_cb) \
     ePropertyCount_for_##name,
   #include "nsStyleStructList.h"
   #undef STYLE_STRUCT

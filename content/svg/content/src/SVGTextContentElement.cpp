@@ -67,6 +67,20 @@ SVGTextContentElement::GetComputedTextLength()
   }
 }
 
+void
+SVGTextContentElement::SelectSubString(uint32_t charnum, uint32_t nchars, ErrorResult& rv)
+{
+  if (FrameIsSVGText()) {
+    nsSVGTextFrame2* textFrame = GetSVGTextFrame();
+    if (!textFrame)
+      return;
+
+    rv = textFrame->SelectSubString(this, charnum, nchars);
+  } else {
+    rv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  }
+}
+
 float
 SVGTextContentElement::GetSubStringLength(uint32_t charnum, uint32_t nchars, ErrorResult& rv)
 {

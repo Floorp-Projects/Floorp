@@ -16,6 +16,8 @@ MOCHITEST_FILES := \
   test_bug827541.html \
   test_bug839753.html \
   test_bug845960.html \
+  test_bug856771.html \
+  test_analyserNode.html \
   test_AudioBuffer.html \
   test_AudioContext.html \
   test_AudioListener.html \

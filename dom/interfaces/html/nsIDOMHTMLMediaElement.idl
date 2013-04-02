@@ -27,7 +27,7 @@ interface nsIDOMMediaStream;
 #endif
 %}
 
-[scriptable, uuid(488eb1d7-fa08-425e-bac4-f7dd59805352)]
+[scriptable, uuid(55484dc4-7eb3-40ca-ad51-d4870bf1c9a9)]
 interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
 {
   // error state
@@ -59,7 +59,6 @@ interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
 
   // playback state
            attribute double currentTime;
-  readonly attribute double initialTime;
   readonly attribute double duration;
   readonly attribute boolean paused;
            attribute double defaultPlaybackRate;

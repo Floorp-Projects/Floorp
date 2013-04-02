@@ -50,6 +50,7 @@ public:
     , mConnector(aConnector)
     , mShuttingDownOnIOThread(false)
     , mAddress(aAddress)
+    , mDelayedConnectTask(nullptr)
   {
   }
 
@@ -111,6 +112,28 @@ public:
                                  this);
   }
 
+  void SetDelayedConnectTask(CancelableTask* aTask)
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    mDelayedConnectTask = aTask;
+  }
+
+  void ClearDelayedConnectTask()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    mDelayedConnectTask = nullptr;
+  }
+
+  void CancelDelayedConnectTask()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    if (!mDelayedConnectTask) {
+      return;
+    }
+    mDelayedConnectTask->Cancel();
+    ClearDelayedConnectTask();
+  }
+
   /** 
    * Connect to a socket
    */
@@ -135,8 +158,7 @@ public:
 
   void GetSocketAddr(nsAString& aAddrStr)
   {
-    if (!mConnector)
-    {
+    if (!mConnector) {
       NS_WARNING("No connector to get socket address from!");
       aAddrStr.Truncate();
       return;
@@ -219,6 +241,11 @@ private:
    * Address struct of the socket currently in use
    */
   sockaddr_any mAddr;
+
+  /**
+   * Task member for delayed connect task. Should only be access on main thread.
+   */
+  CancelableTask* mDelayedConnectTask;
 };
 
 template<class T>
@@ -294,7 +321,7 @@ public:
   NS_IMETHOD Run()
   {
     MOZ_ASSERT(NS_IsMainThread());
-    if(mImpl->IsShutdownOnMainThread()) {
+    if (mImpl->IsShutdownOnMainThread()) {
       NS_WARNING("mConsumer is null, aborting receive!");
       // Since we've already explicitly closed and the close happened before
       // this, this isn't really an error. Since we've warned, return OK.
@@ -404,6 +431,30 @@ void SocketConnectTask::Run()
   mImpl->Connect();
 }
 
+class SocketDelayedConnectTask : public CancelableTask {
+  virtual void Run();
+
+  UnixSocketImpl* mImpl;
+public:
+  SocketDelayedConnectTask(UnixSocketImpl* aImpl) : mImpl(aImpl) { }
+
+  virtual void Cancel()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    mImpl = nullptr;
+  }
+};
+
+void SocketDelayedConnectTask::Run()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!mImpl || mImpl->IsShutdownOnMainThread()) {
+    return;
+  }
+  mImpl->ClearDelayedConnectTask();
+  XRE_GetIOMessageLoop()->PostTask(FROM_HERE, new SocketConnectTask(mImpl));
+}
+
 class ShutdownSocketTask : public Task {
   virtual void Run();
 
@@ -446,8 +497,7 @@ UnixSocketImpl::Accept()
     return;
   }
 
-  if (mFd.get() < 0)
-  {
+  if (mFd.get() < 0) {
     mFd = mConnector->Create();
     if (mFd.get() < 0) {
       return;
@@ -486,8 +536,7 @@ UnixSocketImpl::Connect()
     return;
   }
 
-  if(mFd.get() < 0)
-  {
+  if (mFd.get() < 0) {
     mFd = mConnector->Create();
     if (mFd.get() < 0) {
       return;
@@ -600,6 +649,8 @@ UnixSocketConsumer::CloseSocket()
   if (!mImpl) {
     return;
   }
+
+  mImpl->CancelDelayedConnectTask();
 
   // From this point on, we consider mImpl as being deleted.
   // We sever the relationship here so any future calls to listen or connect
@@ -799,7 +850,9 @@ UnixSocketConsumer::ConnectSocket(UnixSocketConnector* aConnector,
   MessageLoop* ioLoop = XRE_GetIOMessageLoop();
   mConnectionStatus = SOCKET_CONNECTING;
   if (aDelayMs > 0) {
-    ioLoop->PostDelayedTask(FROM_HERE, new SocketConnectTask(mImpl), aDelayMs);
+    SocketDelayedConnectTask* connectTask = new SocketDelayedConnectTask(mImpl);
+    mImpl->SetDelayedConnectTask(connectTask);
+    MessageLoop::current()->PostDelayedTask(FROM_HERE, connectTask, aDelayMs);
   } else {
     ioLoop->PostTask(FROM_HERE, new SocketConnectTask(mImpl));
   }

@@ -179,13 +179,11 @@ FilteringWrapper<Base, Policy>::enter(JSContext *cx, JS::Handle<JSObject*> wrapp
 #define NNXOW FilteringWrapper<CrossCompartmentSecurityWrapper, Opaque>
 #define CW FilteringWrapper<SameCompartmentSecurityWrapper, ComponentsObjectPolicy>
 #define XCW FilteringWrapper<CrossCompartmentSecurityWrapper, ComponentsObjectPolicy>
-template<> SOW SOW::singleton(WrapperFactory::SCRIPT_ACCESS_ONLY_FLAG |
-                              WrapperFactory::SOW_FLAG);
-template<> SCSOW SCSOW::singleton(WrapperFactory::SCRIPT_ACCESS_ONLY_FLAG |
-                                  WrapperFactory::SOW_FLAG);
-template<> XOW XOW::singleton(WrapperFactory::SCRIPT_ACCESS_ONLY_FLAG);
-template<> DXOW DXOW::singleton(WrapperFactory::SCRIPT_ACCESS_ONLY_FLAG);
-template<> NNXOW NNXOW::singleton(WrapperFactory::SCRIPT_ACCESS_ONLY_FLAG);
+template<> SOW SOW::singleton(WrapperFactory::SOW_FLAG);
+template<> SCSOW SCSOW::singleton(WrapperFactory::SOW_FLAG);
+template<> XOW XOW::singleton(0);
+template<> DXOW DXOW::singleton(0);
+template<> NNXOW NNXOW::singleton(0);
 
 template<> CW CW::singleton(0);
 template<> XCW XCW::singleton(0);

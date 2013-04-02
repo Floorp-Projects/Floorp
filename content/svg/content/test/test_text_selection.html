@@ -134,7 +134,7 @@ function testSelection()
 
 function runTest()
 {
-  SpecialPowers.pushPrefEnv({ set: [['svg.text.css-frames.enabled', true]] },
+  SpecialPowers.pushPrefEnv({ 'set': [['svg.text.css-frames.enabled', true]] },
                             testSelection);
 }
 

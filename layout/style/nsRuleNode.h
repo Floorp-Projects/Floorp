@@ -56,11 +56,11 @@ struct nsInheritedStyleData
   }
 
   void DestroyStructs(uint32_t aBits, nsPresContext* aContext) {
-#define STYLE_STRUCT_INHERITED(name, checkdata_cb, ctor_args) \
+#define STYLE_STRUCT_INHERITED(name, checkdata_cb) \
     void *name##Data = mStyleStructs[eStyleStruct_##name]; \
     if (name##Data && !(aBits & NS_STYLE_INHERIT_BIT(name))) \
       static_cast<nsStyle##name*>(name##Data)->Destroy(aContext);
-#define STYLE_STRUCT_RESET(name, checkdata_cb, ctor_args)
+#define STYLE_STRUCT_RESET(name, checkdata_cb)
 
 #include "nsStyleStructList.h"
 
@@ -101,11 +101,11 @@ struct nsResetStyleData
   }
 
   void Destroy(uint32_t aBits, nsPresContext* aContext) {
-#define STYLE_STRUCT_RESET(name, checkdata_cb, ctor_args) \
+#define STYLE_STRUCT_RESET(name, checkdata_cb) \
     void *name##Data = mStyleStructs[eStyleStruct_##name]; \
     if (name##Data && !(aBits & NS_STYLE_INHERIT_BIT(name))) \
       static_cast<nsStyle##name*>(name##Data)->Destroy(aContext);
-#define STYLE_STRUCT_INHERITED(name, checkdata_cb, ctor_args)
+#define STYLE_STRUCT_INHERITED(name, checkdata_cb)
 
 #include "nsStyleStructList.h"
 
@@ -160,15 +160,15 @@ struct nsCachedStyleData
   }
 
   // Typesafe and faster versions of the above
-  #define STYLE_STRUCT_INHERITED(name_, checkdata_cb_, ctor_args_)       \
+  #define STYLE_STRUCT_INHERITED(name_, checkdata_cb_)                   \
     nsStyle##name_ * NS_FASTCALL GetStyle##name_ () {                    \
       return mInheritedData ? static_cast<nsStyle##name_*>(              \
-        mInheritedData->mStyleStructs[eStyleStruct_##name_]) : nullptr;   \
+        mInheritedData->mStyleStructs[eStyleStruct_##name_]) : nullptr;  \
     }
-  #define STYLE_STRUCT_RESET(name_, checkdata_cb_, ctor_args_)           \
+  #define STYLE_STRUCT_RESET(name_, checkdata_cb_)                       \
     nsStyle##name_ * NS_FASTCALL GetStyle##name_ () {                    \
       return mResetData ? static_cast<nsStyle##name_*>(                  \
-        mResetData->mStyleStructs[eStyleStruct_##name_]) : nullptr;       \
+        mResetData->mStyleStructs[eStyleStruct_##name_]) : nullptr;      \
     }
   #include "nsStyleStructList.h"
   #undef STYLE_STRUCT_RESET
@@ -674,7 +674,7 @@ public:
                            nsStyleContext* aContext,
                            bool aComputeData);
 
-  #define STYLE_STRUCT(name_, checkdata_cb_, ctor_args_)                      \
+  #define STYLE_STRUCT(name_, checkdata_cb_)                                  \
     const nsStyle##name_* GetStyle##name_(nsStyleContext* aContext,           \
                                           bool aComputeData);
   #include "nsStyleStructList.h"

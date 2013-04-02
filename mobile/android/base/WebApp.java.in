@@ -33,6 +33,7 @@ import org.mozilla.gecko.WebAppAllocator;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.util.HardwareUtils;
 
 public class WebApp extends GeckoApp {
     private static final String LOGTAG = "WebApp";
@@ -157,7 +158,7 @@ public class WebApp extends GeckoApp {
     @Override
     public String getDefaultUAString() {
         String deviceType = "Mobile";
-        if (GeckoAppShell.isTablet())
+        if (HardwareUtils.isTablet())
             deviceType = "Tablet";
         return "Mozilla/5.0 (Android; " + deviceType + "; rv:@MOZ_APP_VERSION@) Gecko/@MOZ_APP_VERSION@ Firefox/@MOZ_APP_VERSION@";
     }

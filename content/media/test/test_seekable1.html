@@ -28,7 +28,6 @@ setup : function(element) {
           element.addEventListener("loadedmetadata", function() {
               is(element.seekable.length, 1, "seekable.length should be 1 for a server supporting range requests.");
 
-              //TODO : change this by using element.initialTime
               is(element.seekable.start(0), 0.0, "The start of the first range should be the initialTime.");
               is(element.seekable.end(0), element.duration, "The end of the first range should be the duration.")
               finish_test(element);

@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test GainNode</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  SpecialPowers.setBoolPref("media.webaudio.enabled", true);
+
+  var context = new AudioContext();
+  var buffer = context.createBuffer(1, 2048, context.sampleRate);
+  for (var i = 0; i < 2048; ++i) {
+    buffer.getChannelData(0)[i] = Math.sin(440 * 2 * Math.PI * i / context.sampleRate);
+  }
+
+  var destination = context.destination;
+
+  var source = context.createBufferSource();
+
+  var analyser = context.createAnalyser();
+
+  source.buffer = buffer;
+
+  source.connect(analyser);
+  analyser.connect(destination);
+
+  is(analyser.fftSize, 2048, "Correct default value for fftSize");
+  is(analyser.frequencyBinCount, 1024, "Correct default value for frequencyBinCount");
+  expectException(function() {
+    analyser.fftSize = 0;
+  }, DOMException.INDEX_SIZE_ERR);
+  expectException(function() {
+    analyser.fftSize = 1;
+  }, DOMException.INDEX_SIZE_ERR);
+  expectException(function() {
+    analyser.fftSize = 100; // non-power of two
+  }, DOMException.INDEX_SIZE_ERR);
+  analyser.fftSize = 1024;
+  is(analyser.frequencyBinCount, 512, "Correct new value for frequencyBinCount");
+
+  is(analyser.minDecibels, -100, "Correct default value for minDecibels");
+  is(analyser.maxDecibels, -30, "Correct default value for maxDecibels");
+  expectException(function() {
+    analyser.minDecibels = -30;
+  }, DOMException.INDEX_SIZE_ERR);
+  expectException(function() {
+    analyser.minDecibels = -29;
+  }, DOMException.INDEX_SIZE_ERR);
+  expectException(function() {
+    analyser.maxDecibels = -100;
+  }, DOMException.INDEX_SIZE_ERR);
+  expectException(function() {
+    analyser.maxDecibels = -101;
+  }, DOMException.INDEX_SIZE_ERR);
+
+  is(analyser.smoothingTimeConstant, 0.8, "Correct default value for smoothingTimeConstant");
+  expectException(function() {
+    analyser.smoothingTimeConstant = -0.1;
+  }, DOMException.INDEX_SIZE_ERR);
+  expectException(function() {
+    analyser.smoothingTimeConstant = 1.1;
+  }, DOMException.INDEX_SIZE_ERR);
+  analyser.smoothingTimeConstant = 0;
+  analyser.smoothingTimeConstant = 1;
+
+  SpecialPowers.clearUserPref("media.webaudio.enabled");
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

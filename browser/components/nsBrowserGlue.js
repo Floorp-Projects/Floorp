@@ -1637,9 +1637,10 @@ ContentPermissionPrompt.prototype = {
    *                               Permission is granted if action is null or ALLOW_ACTION.
    * @param aNotificationId        The id of the PopupNotification.
    * @param aAnchorId              The id for the PopupNotification anchor.
+   * @param aOptions               Options for the PopupNotification
    */
   _showPrompt: function CPP_showPrompt(aRequest, aMessage, aPermission, aActions,
-                                       aNotificationId, aAnchorId) {
+                                       aNotificationId, aAnchorId, aOptions) {
     function onFullScreen() {
       popup.remove();
     }
@@ -1692,24 +1693,25 @@ ContentPermissionPrompt.prototype = {
     var mainAction = popupNotificationActions.length ?
                        popupNotificationActions[0] : null;
     var secondaryActions = popupNotificationActions.splice(1);
-    var options = null;
 
     if (aRequest.type == "pointerLock") {
       // If there's no mainAction, this is the autoAllow warning prompt.
       let autoAllow = !mainAction;
-      options = { removeOnDismissal: autoAllow,
-                  eventCallback: function (type) {
-                                   if (type == "removed") {
-                                     browser.removeEventListener("mozfullscreenchange", onFullScreen, true);
-                                     if (autoAllow)
-                                       aRequest.allow();
-                                   }
-                                 },
-                };
+      aOptions = {
+        removeOnDismissal: autoAllow,
+        eventCallback: type => {
+          if (type == "removed") {
+            browser.removeEventListener("mozfullscreenchange", onFullScreen, true);
+            if (autoAllow) {
+              aRequest.allow();
+            }
+          }
+        },
+      };
     }
 
     var popup = chromeWin.PopupNotifications.show(browser, aNotificationId, aMessage, aAnchorId,
-                                                  mainAction, secondaryActions, options);
+                                                  mainAction, secondaryActions, aOptions);
     if (aRequest.type == "pointerLock") {
       // pointerLock is automatically allowed in fullscreen mode (and revoked
       // upon exit), so if the page enters fullscreen mode after requesting
@@ -1771,7 +1773,8 @@ ContentPermissionPrompt.prototype = {
 
     secHistogram.add(Ci.nsISecurityUITelemetry.WARNING_GEOLOCATION_REQUEST);
 
-    this._showPrompt(aRequest, message, "geo", actions, "geolocation", "geo-notification-icon");
+    this._showPrompt(aRequest, message, "geo", actions, "geolocation",
+                     "geo-notification-icon", null);
   },
 
   _promptWebNotifications : function(aRequest) {
@@ -1804,7 +1807,7 @@ ContentPermissionPrompt.prototype = {
 
     this._showPrompt(aRequest, message, "desktop-notification", actions,
                      "web-notifications",
-                     "web-notifications-notification-icon");
+                     "web-notifications-notification-icon", null);
   },
 
   _promptPointerLock: function CPP_promtPointerLock(aRequest, autoAllow) {
@@ -1842,7 +1845,8 @@ ContentPermissionPrompt.prototype = {
       ];
     }
 
-    this._showPrompt(aRequest, message, "pointerLock", actions, "pointerLock", "pointerLock-notification-icon");
+    this._showPrompt(aRequest, message, "pointerLock", actions, "pointerLock",
+                     "pointerLock-notification-icon", null);
   },
 
   prompt: function CPP_prompt(request) {
