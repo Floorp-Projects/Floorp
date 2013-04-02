@@ -54,6 +54,46 @@ nsVolume::nsVolume(const Volume* aVolume)
 {
 }
 
+bool nsVolume::Equals(nsIVolume* aVolume)
+{
+  nsString volName;
+  aVolume->GetName(volName);
+  if (!mName.Equals(volName)) {
+    return false;
+  }
+
+  nsString volMountPoint;
+  aVolume->GetMountPoint(volMountPoint);
+  if (!mMountPoint.Equals(volMountPoint)) {
+    return false;
+  }
+
+  int32_t volState;
+  aVolume->GetState(&volState);
+  if (mState != volState){
+    return false;
+  }
+
+  int32_t volMountGeneration;
+  aVolume->GetMountGeneration(&volMountGeneration);
+  if (mMountGeneration != volMountGeneration) {
+    return false;
+  }
+
+  bool volIsMountLocked;
+  aVolume->GetIsMountLocked(&volIsMountLocked);
+  if (mMountLocked != volIsMountLocked) {
+    return false;
+  }
+  return true;
+}
+
+NS_IMETHODIMP nsVolume::GetIsMountLocked(bool *aIsMountLocked)
+{
+  *aIsMountLocked = mMountLocked;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsVolume::GetName(nsAString& aName)
 {
   aName = mName;
@@ -109,13 +149,16 @@ nsVolume::LogState() const
   LOG("nsVolume: %s state %s", NameStr().get(), StateStr());
 }
 
-void nsVolume::Set(const nsVolume* aVolume)
+void nsVolume::Set(nsIVolume* aVolume)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  mName = aVolume->mName;
-  mMountPoint = aVolume->mMountPoint;
-  mState = aVolume->mState;
+  aVolume->GetName(mName);
+  aVolume->GetMountPoint(mMountPoint);
+  aVolume->GetState(&mState);
+
+  int32_t volMountGeneration;
+  aVolume->GetMountGeneration(&volMountGeneration);
 
   if (mState != nsIVolume::STATE_MOUNTED) {
     // Since we're not in the mounted state, we need to
@@ -123,12 +166,18 @@ void nsVolume::Set(const nsVolume* aVolume)
     mMountGeneration = -1;
     return;
   }
-  if (mMountGeneration == aVolume->mMountGeneration) {
+  if (mMountGeneration == volMountGeneration) {
     // No change in mount generation, nothing else to do
     return;
   }
 
-  mMountGeneration = aVolume->mMountGeneration;
+  mMountGeneration = volMountGeneration;
+
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    // Child processes just track the state, not maintain it.
+    aVolume->GetIsMountLocked(&mMountLocked);
+    return;
+  }
 
   // Notify the Volume on IOThread whether the volume is locked or not.
   nsCOMPtr<nsIPowerManagerService> pmService =
@@ -146,6 +195,7 @@ void nsVolume::Set(const nsVolume* aVolume)
 void
 nsVolume::UpdateMountLock(const nsAString& aMountLockState)
 {
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
   MOZ_ASSERT(NS_IsMainThread());
 
   // There are 3 states, unlocked, locked-background, and locked-foreground
@@ -156,6 +206,7 @@ nsVolume::UpdateMountLock(const nsAString& aMountLockState)
 void
 nsVolume::UpdateMountLock(bool aMountLocked)
 {
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
   MOZ_ASSERT(NS_IsMainThread());
 
   if (aMountLocked == mMountLocked) {

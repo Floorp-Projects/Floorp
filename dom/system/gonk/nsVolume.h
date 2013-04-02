@@ -46,16 +46,8 @@ public:
   {
   }
 
-  bool Equals(const nsVolume* aVolume)
-  {
-    return mName.Equals(aVolume->mName)
-        && mMountPoint.Equals(aVolume->mMountPoint)
-        && (mState == aVolume->mState)
-        && (mMountGeneration == aVolume->mMountGeneration)
-        && (mMountLocked == aVolume->mMountLocked);
-  }
-
-  void Set(const nsVolume* aVolume);
+  bool Equals(nsIVolume* aVolume);
+  void Set(nsIVolume* aVolume);
 
   void LogState() const;
 
