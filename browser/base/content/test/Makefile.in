@@ -160,7 +160,6 @@ _BROWSER_FILES = \
                  browser_bug817947.js \
                  browser_bug822367.js \
                  browser_bug832435.js \
-                 browser_bug839103.js \
                  browser_canonizeURL.js \
                  browser_customize.js \
                  browser_findbarClose.js \
@@ -210,8 +209,6 @@ _BROWSER_FILES = \
                  bug792517.html \
                  bug792517-2.html \
                  bug792517.sjs \
-                 test_bug839103.html \
-                 bug839103.css \
                  browser_scope.js \
                  browser_selectTabAtIndex.js \
                  browser_tab_dragdrop.js \

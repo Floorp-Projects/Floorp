@@ -24,26 +24,10 @@ nsAsyncDOMEvent::nsAsyncDOMEvent(nsINode *aEventNode, nsEvent &aEvent)
 NS_IMETHODIMP nsAsyncDOMEvent::Run()
 {
   if (mEvent) {
-    if (mDispatchChromeOnly) {
-      MOZ_ASSERT(mEvent->InternalDOMEvent()->IsTrusted());
-
-      nsCOMPtr<nsIDocument> ownerDoc = mEventNode->OwnerDoc();
-      nsPIDOMWindow* window = ownerDoc->GetWindow();
-      if (!window) {
-        return NS_ERROR_INVALID_ARG;
-      }
-
-      nsCOMPtr<nsIDOMEventTarget> target = window->GetParentTarget();
-      if (!target) {
-        return NS_ERROR_INVALID_ARG;
-      }
-      nsEventDispatcher::DispatchDOMEvent(target, nullptr, mEvent,
-                                          nullptr, nullptr);
-    } else {
-      nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mEventNode);
-      bool defaultActionEnabled; // This is not used because the caller is async
-      target->DispatchEvent(mEvent, &defaultActionEnabled);
-    }
+    NS_ASSERTION(!mDispatchChromeOnly, "Can't do that");
+    nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mEventNode);
+    bool defaultActionEnabled; // This is not used because the caller is async
+    target->DispatchEvent(mEvent, &defaultActionEnabled);
   } else {
     nsIDocument* doc = mEventNode->OwnerDoc();
     if (mDispatchChromeOnly) {
