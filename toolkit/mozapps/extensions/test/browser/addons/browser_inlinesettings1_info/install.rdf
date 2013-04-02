@@ -1,13 +1,12 @@
-<?xml version="1.0"?>
-
-<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+<?xml version="1.0" ?>
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:em="http://www.mozilla.org/2004/em-rdf#">
 
   <Description about="urn:mozilla:install-manifest">
-    <em:id>locale1@tests.mozilla.org</em:id>
-    <em:version>1.0</em:version>
-    <em:type>8</em:type>
+    <em:id>inlinesettings1@tests.mozilla.org</em:id>
+    <em:name>Inline Settings (Bootstrap)</em:name>
+    <em:version>1</em:version>
     <em:bootstrap>true</em:bootstrap>
+    <em:optionsType>4</em:optionsType>
 
     <em:targetApplication>
       <Description>
@@ -16,9 +15,6 @@
         <em:maxVersion>*</em:maxVersion>
       </Description>
     </em:targetApplication>
-
-    <!-- Front End MetaData -->
-    <em:name>Test Locale</em:name>
-
   </Description>
+
 </RDF>

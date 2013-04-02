@@ -8,3 +8,8 @@ skip-if(B2G) == unit-rem-iframe.html unit-rem-ref-iframe.html # bug 773482
 == unit-rem.svg unit-rem-ref.svg
 == unit-vh-vw.html unit-vh-vw-ref.html
 == unit-vh-vw-zoom.html unit-vh-vw-zoom-ref.html
+== unit-vh-vw-overflow-auto.html unit-vh-vw-overflow-auto-ref.html
+== unit-vh-vw-overflow-scroll.html unit-vh-vw-overflow-scroll-ref.html
+== unit-vh-vw-overflow-scroll-x.html unit-vh-vw-overflow-scroll-x-ref.html
+== unit-vh-vw-overflow-scroll-y.html unit-vh-vw-overflow-scroll-y-ref.html
+skip-if(B2G) skip-if(Android) != unit-vh-vw-overflow-auto.html unit-vh-vw-overflow-scroll.html

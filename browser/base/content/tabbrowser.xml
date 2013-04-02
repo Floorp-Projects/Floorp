@@ -2926,8 +2926,8 @@
         <xul:toolbarbutton class="tabs-newtab-button"
                            command="cmd_newNavigatorTab"
                            onclick="checkForMiddleClick(this, event);"
-                           onmouseenter="document.getBindingParent(this)._enterNewTab();"
-                           onmouseleave="document.getBindingParent(this)._leaveNewTab();"
+                           onmouseover="document.getBindingParent(this)._enterNewTab();"
+                           onmouseout="document.getBindingParent(this)._leaveNewTab();"
                            tooltiptext="&newTabButton.tooltip;"/>
         <xul:spacer class="closing-tabs-spacer" anonid="closing-tabs-spacer"
                     style="width: 0;"/>
@@ -4268,17 +4268,11 @@
     </implementation>
 
     <handlers>
-      <handler event="mouseover">
-        var anonid = event.originalTarget.getAttribute("anonid");
+      <handler event="mouseover"><![CDATA[
+        let anonid = event.originalTarget.getAttribute("anonid");
         if (anonid == "close-button")
           this.mOverCloseButton = true;
-      </handler>
-      <handler event="mouseout">
-        var anonid = event.originalTarget.getAttribute("anonid");
-        if (anonid == "close-button")
-          this.mOverCloseButton = false;
-      </handler>
-      <handler event="mouseenter" phase="target"><![CDATA[
+
         let tab = event.target;
         if (tab.selected)
           return;
@@ -4306,7 +4300,11 @@
           }
         }
       ]]></handler>
-      <handler event="mouseleave" phase="target"><![CDATA[
+      <handler event="mouseout"><![CDATA[
+        let anonid = event.originalTarget.getAttribute("anonid");
+        if (anonid == "close-button")
+          this.mOverCloseButton = false;
+
         let tabContainer = this.parentNode;
         if (tabContainer._beforeHoveredTab) {
           tabContainer._beforeHoveredTab.removeAttribute("beforehovered");

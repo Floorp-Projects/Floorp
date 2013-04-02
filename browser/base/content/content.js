@@ -9,7 +9,7 @@ let Cu = Components.utils;
 
 // Bug 671101 - directly using webNavigation in this context
 // causes docshells to leak
-__defineGetter__("webNavigation", function () {
+this.__defineGetter__("webNavigation", function () {
   return docShell.QueryInterface(Ci.nsIWebNavigation);
 });
 

@@ -825,6 +825,7 @@ struct Chunk
 
 JS_STATIC_ASSERT(sizeof(Chunk) == ChunkSize);
 JS_STATIC_ASSERT(js::gc::ChunkMarkBitmapOffset == offsetof(Chunk, bitmap));
+JS_STATIC_ASSERT(js::gc::ChunkRuntimeOffset == offsetof(Chunk, info) + offsetof(ChunkInfo, runtime));
 
 inline uintptr_t
 ArenaHeader::address() const

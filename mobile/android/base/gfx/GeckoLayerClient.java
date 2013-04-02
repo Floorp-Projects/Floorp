@@ -383,7 +383,9 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
                 break;
             }
 
-            final ImmutableViewportMetrics geckoMetrics = newMetrics;
+            // Update the Gecko-side viewport metrics. Make sure to do this
+            // before modifying the metrics below.
+            final ImmutableViewportMetrics geckoMetrics = newMetrics.clamp();
             post(new Runnable() {
                 @Override
                 public void run() {
@@ -406,7 +408,7 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
                                  newMetrics.pageRectTop - oldMetrics.fixedLayerMarginTop);
             }
 
-            setViewportMetrics(newMetrics, type == ViewportMessageType.UPDATE, true);
+            setViewportMetrics(newMetrics, type == ViewportMessageType.UPDATE);
             mDisplayPort = DisplayPortCalculator.calculate(getViewportMetrics(), null);
         }
         return mDisplayPort;
@@ -432,7 +434,7 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
      * Sets margins on fixed-position layers, to be used when compositing.
      * Must be called on the UI thread!
      */
-    public void setFixedLayerMargins(float left, float top, float right, float bottom) {
+    public synchronized void setFixedLayerMargins(float left, float top, float right, float bottom) {
         ImmutableViewportMetrics oldMetrics = getViewportMetrics();
         ImmutableViewportMetrics newMetrics = oldMetrics.setFixedLayerMargins(left, top, right, bottom);
 
@@ -471,7 +473,9 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
             }
         }
 
-        setViewportMetrics(newMetrics, false, false);
+        mViewportMetrics = newMetrics;
+        mView.requestRender();
+        setShadowVisibility();
     }
 
     public void setClampOnFixedLayerMarginsChange(boolean aClamp) {
@@ -591,12 +595,6 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         synchronized (this) {
             ImmutableViewportMetrics currentMetrics = getViewportMetrics();
 
-            // If we're meant to be scrolled to the top, take into account any
-            // margin set on the pan zoom controller.
-            if (FloatUtils.fuzzyEquals(offsetY, pageTop)) {
-                offsetY = -currentMetrics.fixedLayerMarginTop;
-            }
-
             final ImmutableViewportMetrics newMetrics = currentMetrics
                 .setViewportOrigin(offsetX, offsetY)
                 .setZoomFactor(zoom)
@@ -612,7 +610,16 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
                     mGeckoViewport = newMetrics;
                 }
             });
-            setViewportMetrics(newMetrics);
+
+            // If we're meant to be scrolled to the top, take into account any
+            // margin set on the pan zoom controller.
+            if (FloatUtils.fuzzyEquals(offsetY, pageTop)
+                  && newMetrics.fixedLayerMarginTop > 0) {
+                setViewportMetrics(newMetrics.setViewportOrigin(offsetX,
+                    -newMetrics.fixedLayerMarginTop));
+            } else {
+                setViewportMetrics(newMetrics);
+            }
 
             Tab tab = Tabs.getInstance().getSelectedTab();
             mView.setBackgroundColor(tab.getBackgroundColor());
@@ -800,15 +807,22 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
      */
     @Override
     public void setViewportMetrics(ImmutableViewportMetrics metrics) {
-        setViewportMetrics(metrics, true, true);
+        setViewportMetrics(metrics, true);
     }
 
-    private void setViewportMetrics(ImmutableViewportMetrics metrics, boolean notifyGecko, boolean keepFixedMargins) {
-        if (keepFixedMargins) {
-            mViewportMetrics = metrics.setFixedLayerMarginsFrom(mViewportMetrics);
-        } else {
-            mViewportMetrics = metrics;
-        }
+    /*
+     * You must hold the monitor while calling this.
+     */
+    private void setViewportMetrics(ImmutableViewportMetrics metrics, boolean notifyGecko) {
+        // This class owns the viewport size and the fixed layer margins; don't let other pieces
+        // of code clobber either of them. The only place the viewport size should ever be
+        // updated is in GeckoLayerClient.setViewportSize, and the only place the margins should
+        // ever be updated is in GeckoLayerClient.setFixedLayerMargins; both of these assign to
+        // mViewportMetrics directly.
+        metrics = metrics.setViewportSize(mViewportMetrics.getWidth(), mViewportMetrics.getHeight());
+        metrics = metrics.setFixedLayerMarginsFrom(mViewportMetrics);
+        mViewportMetrics = metrics;
+
         mView.requestRender();
         if (notifyGecko && mGeckoIsReady) {
             geometryChanged();

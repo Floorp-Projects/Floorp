@@ -99,7 +99,7 @@ private:
                  "property getter should have been marked layout-dependent");
   }
 
-#define STYLE_STRUCT(name_, checkdata_cb_, ctor_args_)                  \
+#define STYLE_STRUCT(name_, checkdata_cb_)                              \
   const nsStyle##name_ * Style##name_() {                               \
     return mStyleContextHolder->Style##name_();                         \
   }

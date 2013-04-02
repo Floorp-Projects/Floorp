@@ -456,7 +456,7 @@ void
 IonCode::writeBarrierPre(IonCode *code)
 {
 #ifdef JSGC_INCREMENTAL
-    if (!code)
+    if (!code || !code->runtime()->needsBarrier())
         return;
 
     Zone *zone = code->zone();

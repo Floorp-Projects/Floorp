@@ -48,20 +48,19 @@ function test() {
           openDone.then(function(toolbox) {
             let dbg = toolbox.getCurrentPanel();
             ok(dbg, "DebuggerPanel exists");
-            dbg.once("connected", function() {
-              // Wait for the initial resume...
-              dbg.panelWin.gClient.addOneTimeListener("resumed", function() {
-                dbg._view.Variables.lazyEmpty = false;
 
-                client = dbg.panelWin.gClient;
-                client.activeThread.addOneTimeListener("framesadded", function() {
-                  line0 = '' + options.window.wrappedJSObject.line0;
-                  deferred.resolve();
-                });
+            // Wait for the initial resume...
+            dbg.panelWin.gClient.addOneTimeListener("resumed", function() {
+              info("Starting tests");
 
-                // Trigger newScript notifications using eval.
-                content.wrappedJSObject.firstCall();
+              client = dbg.panelWin.gClient;
+              client.activeThread.addOneTimeListener("framesadded", function() {
+                line0 = '' + options.window.wrappedJSObject.line0;
+                deferred.resolve();
               });
+
+              // Trigger newScript notifications using eval.
+              content.wrappedJSObject.firstCall();
             });
           });
 

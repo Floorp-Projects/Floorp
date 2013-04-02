@@ -555,6 +555,16 @@ StyleEditorChrome.prototype = {
           editor.enableStyleSheet(editor.styleSheet.disabled);
         });
 
+        wire(aSummary, ".stylesheet-name", {
+          events: {
+            "keypress": function onStylesheetNameActivate(aEvent) {
+              if (aEvent.keyCode == aEvent.DOM_VK_RETURN) {
+                this._view.activeSummary = aSummary;
+              }
+            }.bind(this)
+          }
+        });
+
         wire(aSummary, ".stylesheet-saveButton", function onSaveButton(aEvent) {
           aEvent.stopPropagation();
           aEvent.target.blur();

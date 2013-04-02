@@ -914,6 +914,14 @@ lsm_rx_start (lsm_lcb_t *lcb, const char *fname, fsmdef_media_t *media)
             continue;
         }
 
+        /* TODO(ekr@rtfm.com): Needs changing for when we
+           have > 2 streams. (adam@nostrum.com): For now,
+           we use all the same stream so pc_stream_id == 0
+           and the tracks are assigned in order and are
+           equal to the level in the media objects */
+        pc_stream_id = 0;
+        pc_track_id = media->level;
+
         /*
          * Open the RTP receive channel if it is not already open.
          */
@@ -978,23 +986,14 @@ lsm_rx_start (lsm_lcb_t *lcb, const char *fname, fsmdef_media_t *media)
                     media->src_port = open_rcv.port;
                 }
 
-                /* TODO(ekr@rtfm.com): Needs changing for when we
-                   have > 2 streams. (adam@nostrum.com): For now,
-                   we use all the same stream so pc_stream_id == 0
-                   and the tracks are assigned in order and are
-                   equal to the level in the media objects */
                 if ( media->cap_index == CC_VIDEO_1 ) {
                     attrs.video.opaque = media->video;
-                    pc_stream_id = 0;
-                    pc_track_id = media->level;
                 } else {
                     attrs.audio.packetization_period = media->packetization_period;
                     attrs.audio.max_packetization_period = media->max_packetization_period;
                     attrs.audio.avt_payload_type = media->avt_payload_type;
                     attrs.audio.mixing_mode = mix_mode;
                     attrs.audio.mixing_party = mix_party;
-                    pc_stream_id = 0;
-                    pc_track_id = media->level;
                 }
                 dcb->cur_video_avail &= ~CC_ATTRIB_CAST;
 
@@ -1056,10 +1055,10 @@ lsm_rx_start (lsm_lcb_t *lcb, const char *fname, fsmdef_media_t *media)
         }
 
         if (media->type == SDP_MEDIA_APPLICATION) {
-            /* Enable datachannels
-               Datachannels are always two-way so initializing only here in rx_start.
-            */
-            lsm_initialize_datachannel(dcb, media);
+          /* Enable datachannels
+             Datachannels are always two-way so initializing only here in rx_start.
+          */
+          lsm_initialize_datachannel(dcb, media, pc_track_id);
         }
     }
 }
@@ -5320,9 +5319,11 @@ void lsm_add_remote_stream (line_t line, callid_t call_id, fsmdef_media_t *media
  * Parameters:
  *   [in]  dcb - pointer to get the peerconnection id
  *   [in]  media - pointer to get the datachannel info
+ *   [in]  track_id - track ID (aka m-line number)
  * Returns: None
  */
-void lsm_initialize_datachannel (fsmdef_dcb_t *dcb, fsmdef_media_t *media)
+void lsm_initialize_datachannel (fsmdef_dcb_t *dcb, fsmdef_media_t *media,
+                                 int track_id)
 {
     if (!dcb) {
         CSFLogError(logTag, "%s DCB is NULL", __FUNCTION__);
@@ -5335,9 +5336,11 @@ void lsm_initialize_datachannel (fsmdef_dcb_t *dcb, fsmdef_media_t *media)
     }
 
     /*
-     * have access to media->streams, media->protocol, media->local/remote_datachannel_port
+     * have access to media->cap_index, media->streams, media->protocol,
+     * media->local/remote_datachannel_port
      */
-    vcmInitializeDataChannel(dcb->peerconnection, media->datachannel_streams,
+    vcmInitializeDataChannel(dcb->peerconnection,
+        track_id, media->datachannel_streams,
         media->local_datachannel_port, media->remote_datachannel_port,
         media->datachannel_protocol);
 }

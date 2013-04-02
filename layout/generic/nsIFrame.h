@@ -792,13 +792,13 @@ public:
    */
 
 #ifdef _IMPL_NS_LAYOUT
-  #define STYLE_STRUCT(name_, checkdata_cb_, ctor_args_)                      \
+  #define STYLE_STRUCT(name_, checkdata_cb_)                                  \
     const nsStyle##name_ * Style##name_ () const {                            \
       NS_ASSERTION(mStyleContext, "No style context found!");                 \
       return mStyleContext->Style##name_ ();                                  \
     }
 #else
-  #define STYLE_STRUCT(name_, checkdata_cb_, ctor_args_)                      \
+  #define STYLE_STRUCT(name_, checkdata_cb_)                                  \
     const nsStyle##name_ * Style##name_ () const {                            \
       return static_cast<const nsStyle##name_*>(                              \
                             StyleDataExternal(eStyleStruct_##name_));         \

@@ -12,7 +12,6 @@
 #include "nsSplittableFrame.h"
 #include "nsFrameList.h"
 #include "nsLayoutUtils.h"
-#include "nsAutoPtr.h"
 
 // Option flags for ReflowChild() and FinishReflowChild()
 // member functions
@@ -358,17 +357,21 @@ public:
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
-  // Destructor function for the proptable-stored framelists
+  /**
+   * Destructor function for the proptable-stored framelists --
+   * it should never be called.
+   */
   static void DestroyFrameList(void* aPropertyValue)
   {
-    if (aPropertyValue) {
-      static_cast<nsFrameList*>(aPropertyValue)->Destroy();
-    }
+    MOZ_ASSERT(false, "The owning frame should destroy its nsFrameList props");
   }
 
-  NS_DECLARE_FRAME_PROPERTY(OverflowProperty, DestroyFrameList)
-  NS_DECLARE_FRAME_PROPERTY(OverflowContainersProperty, DestroyFrameList)
-  NS_DECLARE_FRAME_PROPERTY(ExcessOverflowContainersProperty, DestroyFrameList)
+#define NS_DECLARE_FRAME_PROPERTY_FRAMELIST(prop)                     \
+  NS_DECLARE_FRAME_PROPERTY(prop, nsContainerFrame::DestroyFrameList)
+
+  NS_DECLARE_FRAME_PROPERTY_FRAMELIST(OverflowProperty)
+  NS_DECLARE_FRAME_PROPERTY_FRAMELIST(OverflowContainersProperty)
+  NS_DECLARE_FRAME_PROPERTY_FRAMELIST(ExcessOverflowContainersProperty)
 
 protected:
   nsContainerFrame(nsStyleContext* aContext) : nsSplittableFrame(aContext) {}
@@ -427,10 +430,10 @@ protected:
   /**
    * As GetOverflowFrames, but removes the overflow frames property.  The
    * caller is responsible for deleting nsFrameList and either passing
-   * ownership of the frames to someone else or destroying the frames.  A
-   * non-null return value indicates that the list is nonempty.  The
+   * ownership of the frames to someone else or destroying the frames.
+   * A non-null return value indicates that the list is nonempty.  The
    * recommended way to use this function it to assign its return value
-   * into an nsAutoPtr.
+   * into an AutoFrameListPtr.
    */
   inline nsFrameList* StealOverflowFrames();
   
@@ -441,12 +444,9 @@ protected:
                          const nsFrameList& aOverflowFrames);
 
   /**
-   * Destroy the overflow list and any frames that are on it.
-   * Calls DestructFrom() insead of Destruct() on the frames if
-   * aDestructRoot is non-null.
+   * Destroy the overflow list, which must be empty.
    */
-  void DestroyOverflowList(nsPresContext* aPresContext,
-                           nsIFrame*      aDestructRoot);
+  inline void DestroyOverflowList(nsPresContext* aPresContext);
 
   /**
    * Moves any frames on both the prev-in-flow's overflow list and the
@@ -511,6 +511,7 @@ protected:
    * Nothing happens if the property doesn't exist.
    */
   void SafelyDestroyFrameListProp(nsIFrame* aDestructRoot,
+                                  nsIPresShell* aPresShell,
                                   mozilla::FramePropertyTable* aPropTable,
                                   const FramePropertyDescriptor* aProp);
 
@@ -676,6 +677,14 @@ nsContainerFrame::StealOverflowFrames()
     static_cast<nsFrameList*>(Properties().Remove(OverflowProperty()));
   NS_ASSERTION(!list || !list->IsEmpty(), "Unexpected empty overflow list");
   return list;
+}
+
+inline void
+nsContainerFrame::DestroyOverflowList(nsPresContext* aPresContext)
+{
+  nsFrameList* list = RemovePropTableFrames(aPresContext, OverflowProperty());
+  MOZ_ASSERT(list && list->IsEmpty());
+  list->Delete(aPresContext->PresShell());
 }
 
 #endif /* nsContainerFrame_h___ */

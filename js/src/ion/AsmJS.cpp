@@ -390,7 +390,7 @@ class Type
     }
 
     bool isExtern() const {
-        return isDouble() || isSigned() || isUnsigned();
+        return isDouble() || isSigned();
     }
 
     MIRType toMIRType() const {

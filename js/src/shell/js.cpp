@@ -214,15 +214,17 @@ ReportException(JSContext *cx)
 class ToStringHelper
 {
   public:
-    ToStringHelper(JSContext *aCx, jsval v, bool aThrow = false)
+    ToStringHelper(JSContext *aCx, HandleValue v, bool aThrow = false)
       : cx(aCx), mStr(cx, JS_ValueToString(cx, v))
     {
         if (!aThrow && !mStr)
             ReportException(cx);
-        JS_AddNamedStringRoot(cx, mStr.address(), "Value ToString helper");
     }
-    ~ToStringHelper() {
-        JS_RemoveStringRoot(cx, mStr.address());
+    ToStringHelper(JSContext *aCx, HandleId id, bool aThrow = false)
+      : cx(aCx), mStr(cx, JS_ValueToString(cx, IdToValue(id)))
+    {
+        if (!aThrow && !mStr)
+            ReportException(cx);
     }
     bool threw() { return !mStr; }
     jsval getJSVal() { return STRING_TO_JSVAL(mStr); }
@@ -235,13 +237,6 @@ class ToStringHelper
     JSContext *cx;
     RootedString mStr;  // Objects of this class are always stack-allocated.
     JSAutoByteString mBytes;
-};
-
-class IdStringifier : public ToStringHelper {
-public:
-    IdStringifier(JSContext *cx, jsid id, bool aThrow = false)
-    : ToStringHelper(cx, IdToJsval(id), aThrow)
-    { }
 };
 
 static char *
@@ -4026,7 +4021,7 @@ its_addProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue
     if (!its_noisy)
         return true;
 
-    IdStringifier idString(cx, id);
+    ToStringHelper idString(cx, id);
     fprintf(gOutFile, "adding its property %s,", idString.getBytes());
     ToStringHelper valueString(cx, vp);
     fprintf(gOutFile, " initial value %s\n", valueString.getBytes());
@@ -4039,7 +4034,7 @@ its_delProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue
     if (!its_noisy)
         return true;
 
-    IdStringifier idString(cx, id);
+    ToStringHelper idString(cx, id);
     fprintf(gOutFile, "deleting its property %s,", idString.getBytes());
     ToStringHelper valueString(cx, vp);
     fprintf(gOutFile, " initial value %s\n", valueString.getBytes());
@@ -4052,7 +4047,7 @@ its_getProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue
     if (!its_noisy)
         return true;
 
-    IdStringifier idString(cx, id);
+    ToStringHelper idString(cx, id);
     fprintf(gOutFile, "getting its property %s,", idString.getBytes());
     ToStringHelper valueString(cx, vp);
     fprintf(gOutFile, " initial value %s\n", valueString.getBytes());
@@ -4062,7 +4057,7 @@ its_getProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue
 static JSBool
 its_setProperty(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, MutableHandleValue vp)
 {
-    IdStringifier idString(cx, id);
+    ToStringHelper idString(cx, id);
     if (its_noisy) {
         fprintf(gOutFile, "setting its property %s,", idString.getBytes());
         ToStringHelper valueString(cx, vp);
@@ -4133,7 +4128,7 @@ its_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
             MutableHandleObject objp)
 {
     if (its_noisy) {
-        IdStringifier idString(cx, id);
+        ToStringHelper idString(cx, id);
         fprintf(gOutFile, "resolving its property %s, flags {%s}\n",
                idString.getBytes(),
                (flags & JSRESOLVE_ASSIGNING) ? "assigning" : "");
@@ -4404,7 +4399,7 @@ env_setProperty(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, Mut
 #if !defined XP_OS2 && !defined SOLARIS
     int rv;
 
-    IdStringifier idstr(cx, id, true);
+    ToStringHelper idstr(cx, id, true);
     if (idstr.threw())
         return false;
     ToStringHelper valstr(cx, vp, true);
@@ -4476,7 +4471,7 @@ env_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
     JSString *valstr;
     const char *name, *value;
 
-    IdStringifier idstr(cx, id, true);
+    ToStringHelper idstr(cx, id, true);
     if (idstr.threw())
         return false;
 

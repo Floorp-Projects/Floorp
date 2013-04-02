@@ -46,7 +46,6 @@ function test()
   }
   catch(ex)
   {
-    print(ex+'');
     actual = ex.name;
   }
   reportCompare(expect, actual, summary);

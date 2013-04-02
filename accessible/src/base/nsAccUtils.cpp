@@ -239,7 +239,7 @@ nsAccUtils::GetSelectableContainer(Accessible* aAccessible, uint64_t aState)
 
   Accessible* parent = aAccessible;
   while ((parent = parent->Parent()) && !parent->IsSelect()) {
-    if (Role(parent) == nsIAccessibleRole::ROLE_PANE)
+    if (parent->Role() == roles::PANE)
       return nullptr;
   }
   return parent;

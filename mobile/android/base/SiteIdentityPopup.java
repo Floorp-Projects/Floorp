@@ -4,6 +4,8 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.util.HardwareUtils;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -67,7 +69,7 @@ public class SiteIdentityPopup extends PopupWindow {
     private void init() {
         setBackgroundDrawable(new BitmapDrawable());
         setOutsideTouchable(true);
-        setWindowLayoutMode(GeckoApp.mAppContext.isTablet() ? LayoutParams.WRAP_CONTENT : LayoutParams.FILL_PARENT,
+        setWindowLayoutMode(HardwareUtils.isTablet() ? LayoutParams.WRAP_CONTENT : LayoutParams.FILL_PARENT,
                 LayoutParams.WRAP_CONTENT);
 
         LayoutInflater inflater = LayoutInflater.from(GeckoApp.mAppContext);
@@ -153,7 +155,7 @@ public class SiteIdentityPopup extends PopupWindow {
         int leftMargin = anchorLocation[0] + (v.getWidth() - arrowWidth) / 2;
 
         int offset = 0;
-        if (GeckoApp.mAppContext.isTablet()) {
+        if (HardwareUtils.isTablet()) {
             int popupWidth = mResources.getDimensionPixelSize(R.dimen.popup_width);
             offset = 0 - popupWidth + arrowWidth*3/2 + v.getWidth()/2;
         }
