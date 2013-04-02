@@ -18,6 +18,27 @@ NS_IMPL_ISUPPORTS_INHERITED0(AnalyserNode, AudioNode)
 
 class AnalyserNodeEngine : public AudioNodeEngine
 {
+  class TransferBuffer : public nsRunnable
+  {
+  public:
+    TransferBuffer(AnalyserNode* aNode,
+                   const AudioChunk& aChunk)
+      : mNode(aNode)
+      , mChunk(aChunk)
+    {
+    }
+
+    NS_IMETHOD Run()
+    {
+      mNode->AppendChunk(mChunk);
+      return NS_OK;
+    }
+
+  private:
+    AnalyserNode* mNode;
+    AudioChunk mChunk;
+  };
+
 public:
   explicit AnalyserNodeEngine(AnalyserNode& aNode)
     : mMutex("AnalyserNodeEngine")
@@ -38,27 +59,6 @@ public:
                                  bool* aFinished)
   {
     *aOutput = aInput;
-
-    class TransferBuffer : public nsRunnable
-    {
-    public:
-      TransferBuffer(AnalyserNode* aNode,
-                     const AudioChunk& aChunk)
-        : mNode(aNode)
-        , mChunk(aChunk)
-      {
-      }
-
-      NS_IMETHOD Run()
-      {
-        mNode->AppendChunk(mChunk);
-        return NS_OK;
-      }
-
-    private:
-      AnalyserNode* mNode;
-      AudioChunk mChunk;
-    };
 
     MutexAutoLock lock(mMutex);
     if (mNode &&
