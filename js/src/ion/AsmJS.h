@@ -74,14 +74,13 @@ class AsmJSActivation
 {
     JSContext *cx_;
     const AsmJSModule &module_;
-    unsigned entryIndex_;
     AsmJSActivation *prev_;
     void *errorRejoinSP_;
     SPSProfiler *profiler_;
     void *resumePC_;
 
   public:
-    AsmJSActivation(JSContext *cx, const AsmJSModule &module, unsigned entryIndex);
+    AsmJSActivation(JSContext *cx, const AsmJSModule &module);
     ~AsmJSActivation();
 
     const AsmJSModule &module() const { return module_; }
