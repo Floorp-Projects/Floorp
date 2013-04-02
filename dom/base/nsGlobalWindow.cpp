@@ -620,6 +620,12 @@ nsOuterWindowProxy::finalize(JSFreeOp *fop, JSObject *proxy)
   nsGlobalWindow* global = GetWindow(proxy);
   if (global) {
     global->ClearWrapper();
+
+    // Ideally we would use OnFinalize here, but it's possible that
+    // EnsureScriptEnvironment will later be called on the window, and we don't
+    // want to create a new script object in that case. Therefore, we need to
+    // write a non-null value that will reliably crash when dereferenced.
+    global->PoisonOuterWindowProxy(proxy);
   }
 }
 
@@ -3020,6 +3026,15 @@ nsGlobalWindow::OnFinalize(JSObject* aObject)
 {
   if (aObject == mJSObject) {
     mJSObject = NULL;
+  }
+}
+
+void
+nsGlobalWindow::PoisonOuterWindowProxy(JSObject *aObject)
+{
+  MOZ_ASSERT(IsOuterWindow());
+  if (aObject == mJSObject) {
+    mJSObject = reinterpret_cast<JSObject*>(0x1);
   }
 }
 
