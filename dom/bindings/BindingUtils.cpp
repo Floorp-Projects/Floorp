@@ -230,7 +230,8 @@ InterfaceObjectToString(JSContext* cx, unsigned argc, JS::Value *vp)
     return false;
   }
 
-  jsval v = js::GetFunctionNativeReserved(callee, TOSTRING_CLASS_RESERVED_SLOT);
+  JS::Value v = js::GetFunctionNativeReserved(callee,
+                                              TOSTRING_CLASS_RESERVED_SLOT);
   JSClass* clasp = static_cast<JSClass*>(JSVAL_TO_PRIVATE(v));
 
   v = js::GetFunctionNativeReserved(callee, TOSTRING_NAME_RESERVED_SLOT);
