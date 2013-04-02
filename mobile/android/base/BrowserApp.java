@@ -735,7 +735,7 @@ abstract public class BrowserApp extends GeckoApp
     public View getActionBarLayout() {
         int actionBarRes;
 
-        if (!hasPermanentMenuKey() || HardwareUtils.isTablet())
+        if (!HardwareUtils.hasMenuButton() || HardwareUtils.isTablet())
            actionBarRes = R.layout.browser_toolbar_menu;
         else
            actionBarRes = R.layout.browser_toolbar;

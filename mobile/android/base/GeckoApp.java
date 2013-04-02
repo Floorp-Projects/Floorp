@@ -17,6 +17,7 @@ import org.mozilla.gecko.updater.UpdateService;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.GeckoEventResponder;
+import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
 
@@ -473,7 +474,7 @@ abstract public class GeckoApp
     @Override
     public void showMenu(View menu) {
         // Hide the menu only if we are showing the MenuPopup.
-        if (!hasPermanentMenuKey())
+        if (!HardwareUtils.hasMenuButton())
             closeMenu();
 
         mMenuPanel.removeAllViews();
@@ -717,18 +718,6 @@ abstract public class GeckoApp
     public boolean autoHideTabs() { return false; }
 
     public boolean areTabsShown() { return false; }
-
-    public boolean hasPermanentMenuKey() {
-        boolean hasMenu = true;
-
-        if (Build.VERSION.SDK_INT >= 11)
-            hasMenu = false;
-
-        if (Build.VERSION.SDK_INT >= 14)
-            hasMenu = ViewConfiguration.get(GeckoApp.mAppContext).hasPermanentMenuKey();
-
-        return hasMenu;
-    }
 
     @Override
     public void handleMessage(String event, JSONObject message) {
