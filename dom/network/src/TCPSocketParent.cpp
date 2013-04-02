@@ -16,7 +16,7 @@ namespace IPC {
 extern bool
 DeserializeUint8Array(JSRawObject aObj,
                       const InfallibleTArray<uint8_t>& aBuffer,
-                      jsval* aVal);
+                      JS::Value* aVal);
 
 }
 
@@ -96,7 +96,7 @@ TCPSocketParent::RecvData(const SendableData& aData)
   nsresult rv;
   switch (aData.type()) {
     case SendableData::TArrayOfuint8_t: {
-      jsval val;
+      JS::Value val;
       IPC::DeserializeUint8Array(mIntermediaryObj, aData.get_ArrayOfuint8_t(), &val);
       rv = mIntermediary->SendArrayBuffer(val);
       NS_ENSURE_SUCCESS(rv, true);
@@ -171,7 +171,7 @@ TCPSocketParent::SendCallback(const nsAString& aType, const JS::Value& aDataVal,
       uint32_t lineNumber = 0;
       uint32_t columnNumber = 0;
 
-      jsval val;
+      JS::Value val;
       if (!JS_GetProperty(aCx, obj, "message", &val)) {
         NS_ERROR("No message property on supposed error object");
       } else if (JSVAL_IS_STRING(val)) {
