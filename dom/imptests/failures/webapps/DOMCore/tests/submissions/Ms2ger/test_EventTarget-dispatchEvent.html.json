@@ -1,3 +1,0 @@
-{
-  "If the event's dispatch flag is set, an InvalidStateError must be thrown.": true
-}
