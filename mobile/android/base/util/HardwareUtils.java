@@ -10,6 +10,7 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.util.Log;
+import android.view.ViewConfiguration;
 
 public final class HardwareUtils {
     private static final String LOGTAG = "GeckoHardwareUtils";
@@ -19,6 +20,7 @@ public final class HardwareUtils {
     private static Boolean sIsLargeTablet;
     private static Boolean sIsSmallTablet;
     private static Boolean sIsTelevision;
+    private static Boolean sHasMenuButton;
 
     private HardwareUtils() {
     }
@@ -57,5 +59,18 @@ public final class HardwareUtils {
             sIsTelevision = sContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_TELEVISION);
         }
         return sIsTelevision;
+    }
+
+    public static boolean hasMenuButton() {
+        if (sHasMenuButton == null) {
+            sHasMenuButton = Boolean.TRUE;
+            if (Build.VERSION.SDK_INT >= 11) {
+                sHasMenuButton = Boolean.FALSE;
+            }
+            if (Build.VERSION.SDK_INT >= 14) {
+                sHasMenuButton = ViewConfiguration.get(sContext).hasPermanentMenuKey();
+            }
+        }
+        return sHasMenuButton;
     }
 }
