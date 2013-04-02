@@ -2173,6 +2173,10 @@ WifiWorker.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWorkerHolder,
                                          Ci.nsIWifi]),
 
+  disconnectedByWifi: false,
+
+  disconnectedByWifiTethering: false,
+
   // Internal methods.
   waitForScan: function(callback) {
     this.wantScanResults.push(callback);
@@ -2828,6 +2832,16 @@ WifiWorker.prototype = {
     }
   },
 
+  notifyTetheringOn: function notifyTetheringOn() {
+    // It's really sad that we don't have an API to notify the wifi
+    // hotspot status. Toggle settings to let gaia know that wifi hotspot
+    // is enabled.
+    gSettingsService.createLock().set(
+      "tethering.wifi.enabled", true, null, "fromInternalSetting");
+    // Check for the next request.
+    this.nextRequest();
+  },
+
   notifyTetheringOff: function notifyTetheringOff() {
     // It's really sad that we don't have an API to notify the wifi
     // hotspot status. Toggle settings to let gaia know that wifi hotspot
@@ -2846,10 +2860,18 @@ WifiWorker.prototype = {
     if (enabled && (gNetworkManager.wifiTetheringEnabled ||
          WifiManager.tetheringState != "UNINITIALIZED")) {
       this.queueRequest(false, function(data) {
+        this.disconnectedByWifi = true;
         this.setWifiApEnabled(false, this.notifyTetheringOff.bind(this));
       }.bind(this));
     }
     this.setWifiEnabled({enabled: enabled});
+    
+    if (!enabled && this.disconnectedByWifi) {
+      this.queueRequest(true, function(data) {
+        this.disconnectedByWifi = false;
+        this.setWifiApEnabled(true, this.notifyTetheringOn.bind(this));
+      }.bind(this));
+    }
   },
 
   handleWifiTetheringEnabled: function(enabled) {
@@ -2860,12 +2882,18 @@ WifiWorker.prototype = {
     // Make sure Wifi is idle before switching to Wifi hotspot mode.
     if (enabled && (WifiManager.enabled ||
          WifiManager.state != "UNINITIALIZED")) {
+      this.disconnectedByWifiTethering = true;
       this.setWifiEnabled({enabled: false});
     }
 
     this.queueRequest(enabled, function(data) {
       this.setWifiApEnabled(data, this.nextRequest.bind(this));
     }.bind(this));
+
+    if (!enabled && this.disconnectedByWifiTethering) {
+      this.disconnectedByWifiTethering = false;
+      this.setWifiEnabled({enabled: true});
+    }
   },
 
   // nsIObserver implementation
