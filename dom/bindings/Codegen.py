@@ -2473,9 +2473,7 @@ for (uint32_t i = 0; i < length; ++i) {
             memberType = arrayObjectMemberTypes[0]
             name = memberType.name
             arrayObject = CGGeneric("done = (failed = !%s.TrySetTo%s(cx, ${obj}, ${val}, ${valPtr}, tryNext)) || !tryNext;" % (unionArgumentObj, name))
-            arrayObject = CGWrapper(CGIndenter(arrayObject),
-                                    pre="if (IsArrayLike(cx, &argObj)) {\n",
-                                    post="}")
+            arrayObject = CGIfWrapper(arrayObject, "IsArrayLike(cx, &argObj)")
             names.append(name)
         else:
             arrayObject = None
@@ -2487,9 +2485,7 @@ for (uint32_t i = 0; i < length; ++i) {
             name = memberType.name
             dateObject = CGGeneric("%s.SetTo%s(cx, ${val}, ${valPtr});\n"
                                    "done = true;" % (unionArgumentObj, name))
-            dateObject = CGWrapper(CGIndenter(dateObject),
-                                   pre="if (JS_ObjectIsDate(cx, &argObj)) {\n",
-                                   post="\n}")
+            dateObject = CGIfWrapper(dateObject, "JS_ObjectIsDate(cx, &argObj)");
             names.append(name)
         else:
             dateObject = None
@@ -2536,8 +2532,7 @@ for (uint32_t i = 0; i < length; ++i) {
             if interfaceObject:
                 assert not object
                 if templateBody:
-                    templateBody = CGWrapper(CGIndenter(templateBody),
-                                             pre="if (!done) {\n", post=("\n}"))
+                    templateBody = CGIfWrapper(templateBody, "!done")
                 templateBody = CGList([interfaceObject, templateBody], "\n")
             else:
                 templateBody = CGList([templateBody, object], "\n")
@@ -2545,9 +2540,7 @@ for (uint32_t i = 0; i < length; ++i) {
             if any([arrayObject, dateObject, callbackObject, dictionaryObject,
                     object]):
                 templateBody.prepend(CGGeneric("JSObject& argObj = ${val}.toObject();"))
-            templateBody = CGWrapper(CGIndenter(templateBody),
-                                     pre="if (${val}.isObject()) {\n",
-                                     post="\n}")
+            templateBody = CGIfWrapper(templateBody, "${val}.isObject()")
         else:
             templateBody = CGGeneric()
 
