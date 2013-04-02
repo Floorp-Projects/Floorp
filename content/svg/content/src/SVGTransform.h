@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_DOMSVGTRANSFORM_H__
-#define MOZILLA_DOMSVGTRANSFORM_H__
+#ifndef mozilla_dom_SVGTransform_h
+#define mozilla_dom_SVGTransform_h
 
 #include "DOMSVGTransformList.h"
 #include "nsAutoPtr.h"
@@ -23,26 +23,25 @@ struct gfxMatrix;
 #define MOZ_SVG_LIST_INDEX_BIT_COUNT 31 // supports > 2 billion list items
 
 namespace mozilla {
-
 namespace dom {
+
 class SVGMatrix;
-}
 
 /**
  * DOM wrapper for an SVG transform. See DOMSVGLength.h.
  */
-class DOMSVGTransform MOZ_FINAL : public nsWrapperCache
+class SVGTransform MOZ_FINAL : public nsWrapperCache
 {
 public:
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(DOMSVGTransform)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(DOMSVGTransform)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(SVGTransform)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(SVGTransform)
 
   /**
-   * Generic ctor for DOMSVGTransform objects that are created for an attribute.
+   * Generic ctor for SVGTransform objects that are created for an attribute.
    */
-  DOMSVGTransform(DOMSVGTransformList *aList,
-                  uint32_t aListIndex,
-                  bool aIsAnimValItem);
+  SVGTransform(DOMSVGTransformList *aList,
+               uint32_t aListIndex,
+               bool aIsAnimValItem);
 
   /**
    * Ctors for creating the objects returned by:
@@ -51,23 +50,23 @@ public:
    *   SVGTransformList.createSVGTransformFromMatrix(in SVGMatrix matrix)
    * which do not initially belong to an attribute.
    */
-  explicit DOMSVGTransform();
-  explicit DOMSVGTransform(const gfxMatrix &aMatrix);
+  explicit SVGTransform();
+  explicit SVGTransform(const gfxMatrix &aMatrix);
 
   /**
    * Ctor for creating an unowned copy. Used with Clone().
    */
-  explicit DOMSVGTransform(const nsSVGTransform &aMatrix);
+  explicit SVGTransform(const nsSVGTransform &aMatrix);
 
-  ~DOMSVGTransform();
+  ~SVGTransform();
 
   /**
    * Create an unowned copy of an owned transform. The caller is responsible for
    * the first AddRef().
    */
-  DOMSVGTransform* Clone() {
+  SVGTransform* Clone() {
     NS_ASSERTION(mList, "unexpected caller");
-    return new DOMSVGTransform(InternalItem());
+    return new SVGTransform(InternalItem());
   }
 
   bool IsInList() const {
@@ -184,7 +183,7 @@ private:
 };
 
 nsAttrValue
-DOMSVGTransform::NotifyElementWillChange()
+SVGTransform::NotifyElementWillChange()
 {
   nsAttrValue result;
   if (HasOwner()) {
@@ -193,8 +192,9 @@ DOMSVGTransform::NotifyElementWillChange()
   return result;
 }
 
+} // namespace dom
 } // namespace mozilla
 
 #undef MOZ_SVG_LIST_INDEX_BIT_COUNT
 
-#endif // MOZILLA_DOMSVGTRANSFORM_H__
+#endif // mozilla_dom_SVGTransform_h
