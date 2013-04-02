@@ -22,7 +22,6 @@ try
 }
 catch(ex)
 {
-  print(ex + '');
 }
 
 __proto__ = save__proto__;
