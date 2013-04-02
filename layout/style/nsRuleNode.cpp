@@ -1768,7 +1768,7 @@ static const uint32_t gColumnFlags[] = {
 
 static const uint32_t* gFlagsByStruct[] = {
 
-#define STYLE_STRUCT(name, checkdata_cb, ctor_args) \
+#define STYLE_STRUCT(name, checkdata_cb) \
   g##name##Flags,
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
@@ -1777,7 +1777,7 @@ static const uint32_t* gFlagsByStruct[] = {
 
 static const CheckCallbackFn gCheckCallbacks[] = {
 
-#define STYLE_STRUCT(name, checkdata_cb, ctor_args) \
+#define STYLE_STRUCT(name, checkdata_cb) \
   checkdata_cb,
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
@@ -2113,7 +2113,7 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
   // We need to compute the data from the information that the rules specified.
   const void* res;
 #define STYLE_STRUCT_TEST aSID
-#define STYLE_STRUCT(name, checkdata_cb, ctor_args)                           \
+#define STYLE_STRUCT(name, checkdata_cb)                                      \
   res = Compute##name##Data(startStruct, &ruleData, aContext,                 \
                             highestNode, detail, ruleData.mCanStoreInRuleTree);
 #include "nsStyleStructList.h"
@@ -7723,9 +7723,9 @@ nsRuleNode::GetStyleData(nsStyleStructID aSID,
 
 // See comments above in GetStyleData for an explanation of what the
 // code below does.
-#define STYLE_STRUCT(name_, checkdata_cb_, ctor_args_)                        \
+#define STYLE_STRUCT(name_, checkdata_cb_)                                    \
 const nsStyle##name_*                                                         \
-nsRuleNode::GetStyle##name_(nsStyleContext* aContext, bool aComputeData)    \
+nsRuleNode::GetStyle##name_(nsStyleContext* aContext, bool aComputeData)      \
 {                                                                             \
   NS_ASSERTION(IsUsedDirectly(),                                              \
                "if we ever call this on rule nodes that aren't used "         \
