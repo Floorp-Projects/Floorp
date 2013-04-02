@@ -115,12 +115,10 @@ class B2GInstance(object):
         remote_profiles = []
         for section in cfg.sections():
             if cfg.has_option(section, 'Path'):
-                is_relative = 0
-                if cfg.has_option(section, 'IsRelative'):
-                    is_relative = cfg.getint(section, 'IsRelative')
-
-                remote_profiles.append(posixpath.join(remote_profiles_ini, cfg.get(section, 'Path'))
-                                        if is_relative else cfg.get(section, 'Path'))
+                if cfg.has_option(section, 'IsRelative') and cfg.getint(section, 'IsRelative'):
+                    remote_profiles.append(posixpath.join(posixpath.dirname(remote_profiles_ini), cfg.get(section, 'Path')))
+                else:
+                    remote_profiles.append(cfg.get(section, 'Path'))
         return remote_profiles
 
     def check_for_crashes(self, symbols_path):
