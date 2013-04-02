@@ -8,7 +8,7 @@
 
 interface nsIControllers;
 
-[scriptable, uuid(caeccd1a-7559-4888-ade2-5879d24315c0)]
+[scriptable, uuid(3b1bce24-c3ad-4568-8e10-85922b521e8b)]
 interface nsIDOMXULControlElement : nsIDOMXULElement {
   attribute boolean disabled;
   attribute long tabIndex;
