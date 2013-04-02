@@ -887,6 +887,12 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
     }
 
     public void updateTabCountAndAnimate(int count) {
+        // Don't animate if the toolbar is hidden.
+        if (!isVisible()) {
+            updateTabCount(count);
+            return;
+        }
+
         if (mCount > count) {
             mTabsCount.setInAnimation(mSlideDownIn);
             mTabsCount.setOutAnimation(mSlideDownOut);
