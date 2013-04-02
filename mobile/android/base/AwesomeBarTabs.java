@@ -56,7 +56,6 @@ public class AwesomeBarTabs extends TabHost
         @Override
         public Object instantiateItem(ViewGroup group, int index) {
             AwesomeBarTab tab = mTabs[index];
-            tab.setListTouchListener(mListTouchListener);
             group.addView(tab.getView());
             return tab;
         }
@@ -65,7 +64,6 @@ public class AwesomeBarTabs extends TabHost
         public void destroyItem(ViewGroup group, int index, Object obj) {
             AwesomeBarTab tab = (AwesomeBarTab)obj;
             group.removeView(tab.getView());
-            tab.onDestroyView();
         }
 
         @Override
@@ -172,6 +170,7 @@ public class AwesomeBarTabs extends TabHost
          });
 
         for (int i = 0; i < mTabs.length; i++) {
+            mTabs[i].setListTouchListener(mListTouchListener);
             addAwesomeTab(mTabs[i].getTag(),
                           mTabs[i].getTitleStringId(),
                           i);
@@ -297,7 +296,6 @@ public class AwesomeBarTabs extends TabHost
 
     public void destroy() {
         for (AwesomeBarTab tab : mTabs) {
-            tab.onDestroyView();
             tab.destroy();
         }
     }

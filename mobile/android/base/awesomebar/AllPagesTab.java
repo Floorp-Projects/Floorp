@@ -140,9 +140,6 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
             AwesomeBarCursorAdapter adapter = getCursorAdapter();
             list.setAdapter(adapter);
             list.setOnTouchListener(mListListener);
-
-            // Call filter to kick off  a db query and create a cursor
-            adapter.filter("");
         }
 
         return mView;
@@ -150,27 +147,19 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
 
     @Override
     public void destroy() {
-        mHandler.removeMessages(MESSAGE_UPDATE_FAVICONS);
-        mHandler.removeMessages(MESSAGE_LOAD_FAVICONS);
-        mHandler = null;
-
+        AwesomeBarCursorAdapter adapter = getCursorAdapter();
         unregisterEventListener("SearchEngines:Data");
-    }
-
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-
-        mListView = null;
-        if (mCursorAdapter == null) {
+        if (adapter == null) {
             return;
         }
 
-        Cursor cursor = mCursorAdapter.getCursor();
-        if (cursor != null) {
+        Cursor cursor = adapter.getCursor();
+        if (cursor != null)
             cursor.close();
-        }
-        mCursorAdapter = null;
+
+        mHandler.removeMessages(MESSAGE_UPDATE_FAVICONS);
+        mHandler.removeMessages(MESSAGE_LOAD_FAVICONS);
+        mHandler = null;
     }
 
     public void filter(String searchTerm) {
