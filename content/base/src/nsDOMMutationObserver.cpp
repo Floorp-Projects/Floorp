@@ -52,31 +52,11 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMMutationRecord)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMMutationRecord)
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsDOMMutationRecord)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMMutationRecord)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTarget)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPreviousSibling)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mNextSibling)
-  tmp->mAddedNodes = nullptr;
-  tmp->mRemovedNodes = nullptr;
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOwner)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMMutationRecord)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTarget)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPreviousSibling)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNextSibling)
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mAddedNodes");
-  cb.NoteXPCOMChild(static_cast<nsIDOMNodeList*>(tmp->mAddedNodes));
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mRemovedNodes");
-  cb.NoteXPCOMChild(static_cast<nsIDOMNodeList*>(tmp->mRemovedNodes));
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwner)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_6(nsDOMMutationRecord,
+                                        mTarget,
+                                        mPreviousSibling, mNextSibling,
+                                        mAddedNodes, mRemovedNodes,
+                                        mOwner)
 
 // Observer
 
