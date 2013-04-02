@@ -28,7 +28,7 @@ LoginManagerPrompter.prototype = {
     QueryInterface : XPCOMUtils.generateQI([Ci.nsILoginManagerPrompter]),
 
     _factory       : null,
-    _browser       : null,
+    _window        : null,
     _debug         : false, // mirrors signon.debug
 
     __pwmgr : null, // Password Manager service
@@ -113,8 +113,8 @@ LoginManagerPrompter.prototype = {
      * init
      *
      */
-    init : function (aBrowser, aFactory) {
-        this._browser = aBrowser;
+    init : function (aWindow, aFactory) {
+        this._window = aWindow;
         this._factory = aFactory || null;
 
         var prefBranch = Services.prefs.getBranch("signon.");
@@ -468,6 +468,57 @@ LoginManagerPrompter.prototype = {
     },
 
     /*
+     * _getNotifyWindow
+     */
+    _getNotifyWindow: function () {
+        try {
+            // Get topmost window, in case we're in a frame.
+            var notifyWin = this._window.top;
+
+            // Some sites pop up a temporary login window, when disappears
+            // upon submission of credentials. We want to put the notification
+            // bar in the opener window if this seems to be happening.
+            if (notifyWin.opener) {
+                var chromeDoc = this._getChromeWindow(notifyWin).
+                                     document.documentElement;
+                var webnav = notifyWin.
+                             QueryInterface(Ci.nsIInterfaceRequestor).
+                             getInterface(Ci.nsIWebNavigation);
+
+                // Check to see if the current window was opened with chrome
+                // disabled, and if so use the opener window. But if the window
+                // has been used to visit other pages (ie, has a history),
+                // assume it'll stick around and *don't* use the opener.
+                if (chromeDoc.getAttribute("chromehidden") &&
+                    webnav.sessionHistory.count == 1) {
+                    this.log("Using opener window for notification bar.");
+                    notifyWin = notifyWin.opener;
+                }
+            }
+
+            return notifyWin;
+
+        } catch (e) {
+            // If any errors happen, just assume no notification box.
+            this.log("Unable to get notify window");
+            return null;
+        }
+    },
+
+    /*
+     * _getChromeWindow
+     *
+     * Given a content DOM window, returns the chrome window it's in.
+     */
+    _getChromeWindow: function (aWindow) {
+        var chromeWin = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                               .getInterface(Ci.nsIWebNavigation)
+                               .QueryInterface(Ci.nsIDocShell)
+                               .chromeEventHandler.ownerDocument.defaultView;
+        return chromeWin;
+    },
+
+    /*
      * _getNotifyBox
      *
      * Returns the notification box to this prompter, or null if there isn't
@@ -475,22 +526,25 @@ LoginManagerPrompter.prototype = {
      */
     _getNotifyBox : function () {
         let notifyBox = null;
-        try {
-            let chromeWin = this._browser.ownerDocument.defaultView;
-            if (chromeWin.getNotificationBox) {
-                notifyBox = chromeWin.getNotificationBox(this._browser);
-            } else {
-                this.log("getNotificationBox() not available on window");
-            }
 
+        try {
+            let notifyWin = this._getNotifyWindow();
+            let windowID = notifyWin.QueryInterface(Ci.nsIInterfaceRequestor)
+                                    .getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
+
+            // Get the chrome window for the content window we're using.
+            // .wrappedJSObject needed here -- see bug 422974 comment 5.
+            let chromeWin = this._getChromeWindow(notifyWin).wrappedJSObject;
+            let browser = chromeWin.Browser.getBrowserForWindowId(windowID);
+
+            notifyBox = chromeWin.getNotificationBox(browser);
         } catch (e) {
-            // If any errors happen, just assume no notification box.
-            this.log("No notification box available: " + e)
+            this.log("Notification bars not available on window");
         }
+
         return notifyBox;
     },
 
-    
     /*
      * _getLocalizedString
      *
