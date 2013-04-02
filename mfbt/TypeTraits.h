@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -226,6 +227,60 @@ struct IsConvertible
 /* 20.9.7 Transformations between types [meta.trans] */
 
 /* 20.9.7.1 Const-volatile modifications [meta.trans.cv] */
+
+/**
+ * RemoveConst removes top-level const qualifications on a type.
+ *
+ * mozilla::RemoveConst<int>::type is int;
+ * mozilla::RemoveConst<const int>::type is int;
+ * mozilla::RemoveConst<const int*>::type is const int*;
+ * mozilla::RemoveConst<int* const>::type is int*.
+ */
+template<typename T>
+struct RemoveConst
+{
+    typedef T Type;
+};
+
+template<typename T>
+struct RemoveConst<const T>
+{
+    typedef T Type;
+};
+
+/**
+ * RemoveVolatile removes top-level volatile qualifications on a type.
+ *
+ * mozilla::RemoveVolatile<int>::type is int;
+ * mozilla::RemoveVolatile<volatile int>::type is int;
+ * mozilla::RemoveVolatile<volatile int*>::type is volatile int*;
+ * mozilla::RemoveVolatile<int* volatile>::type is int*.
+ */
+template<typename T>
+struct RemoveVolatile
+{
+    typedef T Type;
+};
+
+template<typename T>
+struct RemoveVolatile<volatile T>
+{
+    typedef T Type;
+};
+
+/**
+ * RemoveCV removes top-level const and volatile qualifications on a type.
+ *
+ * mozilla::RemoveCV<int>::type is int;
+ * mozilla::RemoveCV<const int>::type is int;
+ * mozilla::RemoveCV<volatile int>::type is int;
+ * mozilla::RemoveCV<int* const volatile>::type is int*.
+ */
+template<typename T>
+struct RemoveCV
+{
+    typedef typename RemoveConst<typename RemoveVolatile<T>::Type>::Type Type;
+};
 
 /* 20.9.7.2 Reference modifications [meta.trans.ref] */
 
