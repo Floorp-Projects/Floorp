@@ -8,6 +8,8 @@
 #ifndef Stack_inl_h__
 #define Stack_inl_h__
 
+#include "mozilla/PodOperations.h"
+
 #include "jscntxt.h"
 #include "jscompartment.h"
 
@@ -433,7 +435,7 @@ ContextStack::getCallFrame(JSContext *cx, MaybeReportError report, const CallArg
         return NULL;
     Value *dst = firstUnused;
     Value *src = args.base();
-    PodCopy(dst, src, ncopy);
+    mozilla::PodCopy(dst, src, ncopy);
     return reinterpret_cast<StackFrame *>(firstUnused + ncopy);
 }
 

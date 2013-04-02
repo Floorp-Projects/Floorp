@@ -12,6 +12,7 @@
  */
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/PodOperations.h"
 
 #include <stddef.h>
 #include <stdio.h>
@@ -371,7 +372,7 @@ struct CompileError {
     CompileError(JSContext *cx)
       : cx(cx), message(NULL), argumentsType(ArgumentsAreUnicode)
     {
-        PodZero(&report);
+        mozilla::PodZero(&report);
     }
     ~CompileError();
     void throwError();

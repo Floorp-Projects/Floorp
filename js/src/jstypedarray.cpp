@@ -8,6 +8,7 @@
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/PodOperations.h"
 
 #include "jstypes.h"
 #include "jsutil.h"
@@ -50,6 +51,7 @@ using namespace js::gc;
 using namespace js::types;
 
 using mozilla::DebugOnly;
+using mozilla::PodCopy;
 
 /*
  * Allocate array buffers with the maximum number of fixed slots marked as

@@ -11,6 +11,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/PodOperations.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Util.h"
 
@@ -832,13 +833,13 @@ class HashTable : private AllocPolicy
     HashTable(MoveRef<HashTable> rhs)
       : AllocPolicy(*rhs)
     {
-        PodAssign(this, &*rhs);
+        mozilla::PodAssign(this, &*rhs);
         rhs->table = NULL;
     }
     void operator=(MoveRef<HashTable> rhs) {
         if (table)
             destroyTable(*this, table, capacity());
-        PodAssign(this, &*rhs);
+        mozilla::PodAssign(this, &*rhs);
         rhs->table = NULL;
     }
 
