@@ -258,7 +258,6 @@ public class TopSitesView extends GridView {
             } catch (OutOfMemoryError oom) {
                 Log.e(LOGTAG, "Unable to load thumbnail bitmap", oom);
                 thumbnailView.setImageResource(R.drawable.abouthome_thumbnail_bg);
-                thumbnailView.setBackgroundColor(mThumbnailBackground);
                 thumbnailView.setScaleType(ImageView.ScaleType.FIT_CENTER);
             }
         }
@@ -278,7 +277,6 @@ public class TopSitesView extends GridView {
             if (TextUtils.isEmpty(url)) {
                 holder.thumbnailView.setImageResource(R.drawable.abouthome_thumbnail_add);
                 holder.thumbnailView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-                holder.thumbnailView.setBackgroundColor(mThumbnailBackground);
             } else {
                 displayThumbnail(view, thumbnails.get(url));
             }
