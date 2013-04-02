@@ -7,6 +7,7 @@
 #define Shape_inl_h__
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/PodOperations.h"
 
 #include "jsarray.h"
 #include "jsbool.h"
@@ -50,7 +51,7 @@ inline
 BaseShape::BaseShape(JSCompartment *comp, Class *clasp, JSObject *parent, uint32_t objectFlags)
 {
     JS_ASSERT(!(objectFlags & ~OBJECT_FLAG_MASK));
-    PodZero(this);
+    mozilla::PodZero(this);
     this->clasp = clasp;
     this->parent = parent;
     this->flags = objectFlags;
@@ -62,7 +63,7 @@ BaseShape::BaseShape(JSCompartment *comp, Class *clasp, JSObject *parent, uint32
                      uint8_t attrs, js::PropertyOp rawGetter, js::StrictPropertyOp rawSetter)
 {
     JS_ASSERT(!(objectFlags & ~OBJECT_FLAG_MASK));
-    PodZero(this);
+    mozilla::PodZero(this);
     this->clasp = clasp;
     this->parent = parent;
     this->flags = objectFlags;
@@ -82,7 +83,7 @@ BaseShape::BaseShape(JSCompartment *comp, Class *clasp, JSObject *parent, uint32
 inline
 BaseShape::BaseShape(const StackBaseShape &base)
 {
-    PodZero(this);
+    mozilla::PodZero(this);
     this->clasp = base.clasp;
     this->parent = base.parent;
     this->flags = base.flags;

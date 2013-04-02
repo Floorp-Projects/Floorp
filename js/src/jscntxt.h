@@ -13,6 +13,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/LinkedList.h"
+#include "mozilla/PodOperations.h"
 
 #include <string.h>
 
@@ -70,7 +71,7 @@ struct CallsiteCloneKey {
     /* The offset of the call. */
     uint32_t offset;
 
-    CallsiteCloneKey() { PodZero(this); }
+    CallsiteCloneKey() { mozilla::PodZero(this); }
 
     typedef CallsiteCloneKey Lookup;
 
@@ -185,7 +186,7 @@ struct ConservativeGCData
     } registerSnapshot;
 
     ConservativeGCData() {
-        PodZero(this);
+        mozilla::PodZero(this);
     }
 
     ~ConservativeGCData() {
@@ -268,13 +269,14 @@ class NativeIterCache
     PropertyIteratorObject *last;
 
     NativeIterCache()
-      : last(NULL) {
-        PodArrayZero(data);
+      : last(NULL)
+    {
+        mozilla::PodArrayZero(data);
     }
 
     void purge() {
         last = NULL;
-        PodArrayZero(data);
+        mozilla::PodArrayZero(data);
     }
 
     PropertyIteratorObject *get(uint32_t key) const {
@@ -336,8 +338,8 @@ class NewObjectCache
 
     typedef int EntryIndex;
 
-    NewObjectCache() { PodZero(this); }
-    void purge() { PodZero(this); }
+    NewObjectCache() { mozilla::PodZero(this); }
+    void purge() { mozilla::PodZero(this); }
 
     /*
      * Get the entry index for the given lookup, return whether there was a hit
@@ -2121,13 +2123,13 @@ namespace js {
 static JS_ALWAYS_INLINE void
 MakeRangeGCSafe(Value *vec, size_t len)
 {
-    PodZero(vec, len);
+    mozilla::PodZero(vec, len);
 }
 
 static JS_ALWAYS_INLINE void
 MakeRangeGCSafe(Value *beg, Value *end)
 {
-    PodZero(beg, end - beg);
+    mozilla::PodZero(beg, end - beg);
 }
 
 static JS_ALWAYS_INLINE void
@@ -2146,13 +2148,13 @@ MakeRangeGCSafe(jsid *vec, size_t len)
 static JS_ALWAYS_INLINE void
 MakeRangeGCSafe(Shape **beg, Shape **end)
 {
-    PodZero(beg, end - beg);
+    mozilla::PodZero(beg, end - beg);
 }
 
 static JS_ALWAYS_INLINE void
 MakeRangeGCSafe(Shape **vec, size_t len)
 {
-    PodZero(vec, len);
+    mozilla::PodZero(vec, len);
 }
 
 static JS_ALWAYS_INLINE void

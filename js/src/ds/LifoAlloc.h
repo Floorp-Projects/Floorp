@@ -13,6 +13,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/MemoryChecking.h"
+#include "mozilla/PodOperations.h"
 #include "mozilla/TypeTraits.h"
 
 // This data structure supports stacky LIFO allocation (mark/release and
@@ -221,7 +222,7 @@ class LifoAlloc
         // Copy everything from |other| to |this| except for |peakSize_|, which
         // requires some care.
         size_t oldPeakSize = peakSize_;
-        PodCopy((char *) this, (char *) other, sizeof(*this));
+        mozilla::PodAssign(this, other);
         peakSize_ = Max(oldPeakSize, curSize_);
 
         other->reset(defaultChunkSize_);

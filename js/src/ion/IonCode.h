@@ -8,6 +8,8 @@
 #ifndef jsion_coderef_h__
 #define jsion_coderef_h__
 
+#include "mozilla/PodOperations.h"
+
 #include "IonTypes.h"
 #include "gc/Heap.h"
 
@@ -578,7 +580,7 @@ struct IonScriptCounts
   public:
 
     IonScriptCounts() {
-        PodZero(this);
+        mozilla::PodZero(this);
     }
 
     ~IonScriptCounts() {

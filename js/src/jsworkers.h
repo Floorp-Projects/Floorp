@@ -14,6 +14,7 @@
 #define jsworkers_h___
 
 #include "mozilla/GuardObjects.h"
+#include "mozilla/PodOperations.h"
 
 #include "jscntxt.h"
 #include "jslock.h"
@@ -58,7 +59,7 @@ class WorkerThreadState
      */
     js::Vector<AsmJSParallelTask*, 0, SystemAllocPolicy> asmJSFinishedList;
 
-    WorkerThreadState() { PodZero(this); }
+    WorkerThreadState() { mozilla::PodZero(this); }
     ~WorkerThreadState();
 
     bool init(JSRuntime *rt);

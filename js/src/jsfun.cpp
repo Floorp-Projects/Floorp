@@ -10,6 +10,7 @@
  */
 #include <string.h>
 
+#include "mozilla/PodOperations.h"
 #include "mozilla/RangedPtr.h"
 #include "mozilla/Util.h"
 
@@ -71,6 +72,7 @@ using namespace js::types;
 using namespace js::frontend;
 
 using mozilla::ArrayLength;
+using mozilla::PodCopy;
 
 static JSBool
 fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, MutableHandleValue vp)
