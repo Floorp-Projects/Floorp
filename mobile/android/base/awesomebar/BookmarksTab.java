@@ -92,7 +92,8 @@ public class BookmarksTab extends AwesomeBarTab {
     }
 
     @Override
-    public void destroy() {
+    public void onDestroyView() {
+        super.onDestroyView();
         BookmarksListAdapter adapter = getCursorAdapter();
         if (adapter == null) {
             return;
