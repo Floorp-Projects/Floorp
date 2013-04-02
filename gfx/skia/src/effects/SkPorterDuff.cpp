@@ -36,7 +36,7 @@ static const struct Pair {
     MAKE_PAIR(Xor),
     MAKE_PAIR(Darken),
     MAKE_PAIR(Lighten),
-    MAKE_PAIR(Multiply),
+    MAKE_PAIR(Modulate),
     MAKE_PAIR(Screen),
     { SkPorterDuff::kAdd_Mode, SkXfermode::kPlus_Mode },
 #ifdef SK_BUILD_FOR_ANDROID
@@ -85,4 +85,3 @@ SkXfermodeProc SkPorterDuff::GetXfermodeProc(Mode mode) {
 SkXfermodeProc16 SkPorterDuff::GetXfermodeProc16(Mode mode, SkColor srcColor) {
     return SkXfermode::GetProc16(gPairs[mode].fXF, srcColor);
 }
-

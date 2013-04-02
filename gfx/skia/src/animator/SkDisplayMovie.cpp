@@ -101,7 +101,7 @@ void SkDisplayMovie::dumpEvents() {
 }
 #endif
 
-bool SkDisplayMovie::enable(SkAnimateMaker& maker) {
+bool SkDisplayMovie::enable(SkAnimateMaker&) {
     if (fDecodedSuccessfully == false)
         return false;
     SkAnimateMaker* movieMaker = fMovie.fMaker;
@@ -126,5 +126,3 @@ void SkDisplayMovie::onEndElement(SkAnimateMaker& maker) {
     buildMovie();
     *maker.fMovies.append() = this;
 }
-
-

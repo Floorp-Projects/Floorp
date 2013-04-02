@@ -19,6 +19,7 @@ class SkAnnotation;
 class SkAutoGlyphCache;
 class SkColorFilter;
 class SkDescriptor;
+struct SkDeviceProperties;
 class SkFlattenableReadBuffer;
 class SkFlattenableWriteBuffer;
 struct SkGlyph;
@@ -290,8 +291,9 @@ public:
         kFill_Style,            //!< fill the geometry
         kStroke_Style,          //!< stroke the geometry
         kStrokeAndFill_Style,   //!< fill and stroke the geometry
-
-        kStyleCount
+    };
+    enum {
+        kStyleCount = kStrokeAndFill_Style + 1
     };
 
     /** Return the paint's style, used for controlling how primitives'
@@ -425,16 +427,20 @@ public:
     */
     void setStrokeJoin(Join join);
 
-    /** Applies any/all effects (patheffect, stroking) to src, returning the
-        result in dst. The result is that drawing src with this paint will be
-        the same as drawing dst with a default paint (at least from the
-        geometric perspective).
-        @param src  input path
-        @param dst  output path (may be the same as src)
-        @return     true if the path should be filled, or false if it should be
-                    drawn with a hairline (width == 0)
-    */
-    bool getFillPath(const SkPath& src, SkPath* dst) const;
+    /**
+     *  Applies any/all effects (patheffect, stroking) to src, returning the
+     *  result in dst. The result is that drawing src with this paint will be
+     *  the same as drawing dst with a default paint (at least from the
+     *  geometric perspective).
+     *
+     *  @param src  input path
+     *  @param dst  output path (may be the same as src)
+     *  @param cullRect If not null, the dst path may be culled to this rect.
+     *  @return     true if the path should be filled, or false if it should be
+     *              drawn with a hairline (width == 0)
+     */
+    bool getFillPath(const SkPath& src, SkPath* dst,
+                     const SkRect* cullRect = NULL) const;
 
     /** Get the paint's shader object.
         <p />
@@ -844,11 +850,12 @@ public:
                         const SkPoint pos[], SkPath* path) const;
 
 #ifdef SK_BUILD_FOR_ANDROID
-    const SkGlyph& getUnicharMetrics(SkUnichar);
-    const SkGlyph& getGlyphMetrics(uint16_t);
-    const void* findImage(const SkGlyph&);
+    const SkGlyph& getUnicharMetrics(SkUnichar, const SkMatrix*);
+    const SkGlyph& getGlyphMetrics(uint16_t, const SkMatrix*);
+    const void* findImage(const SkGlyph&, const SkMatrix*);
 
     uint32_t getGenerationID() const;
+    void setGenerationID(uint32_t generationID);
 
     /** Returns the base glyph count for the strike associated with this paint
     */
@@ -919,6 +926,8 @@ public:
     const SkRect& doComputeFastBounds(const SkRect& orig, SkRect* storage,
                                       Style) const;
 
+    SkDEVCODE(void toString(SkString*) const;)
+
 private:
     SkTypeface*     fTypeface;
     SkScalar        fTextSize;
@@ -962,10 +971,10 @@ private:
     SkScalar measure_text(SkGlyphCache*, const char* text, size_t length,
                           int* count, SkRect* bounds) const;
 
-    SkGlyphCache*   detachCache(const SkMatrix*) const;
+    SkGlyphCache* detachCache(const SkDeviceProperties* deviceProperties, const SkMatrix*) const;
 
-    void descriptorProc(const SkMatrix* deviceMatrix,
-                        void (*proc)(const SkDescriptor*, void*),
+    void descriptorProc(const SkDeviceProperties* deviceProperties, const SkMatrix* deviceMatrix,
+                        void (*proc)(SkTypeface*, const SkDescriptor*, void*),
                         void* context, bool ignoreGamma = false) const;
 
     static void Term();
@@ -988,4 +997,3 @@ private:
 };
 
 #endif
-

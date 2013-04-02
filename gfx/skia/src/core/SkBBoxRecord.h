@@ -19,7 +19,8 @@
 class SkBBoxRecord : public SkPictureRecord {
 public:
 
-    SkBBoxRecord(uint32_t recordFlags) :INHERITED(recordFlags) { }
+    SkBBoxRecord(uint32_t recordFlags, SkDevice* device)
+            : INHERITED(recordFlags, device) { }
     virtual ~SkBBoxRecord() { }
 
     /**
@@ -28,6 +29,8 @@ public:
      */
     virtual void handleBBox(const SkRect& bbox) = 0;
 
+    virtual void drawOval(const SkRect& rect, const SkPaint& paint) SK_OVERRIDE;
+    virtual void drawRRect(const SkRRect& rrect, const SkPaint& paint) SK_OVERRIDE;
     virtual void drawRect(const SkRect& rect, const SkPaint& paint) SK_OVERRIDE;
     virtual void drawPath(const SkPath& path, const SkPaint& paint) SK_OVERRIDE;
     virtual void drawPoints(PointMode mode, size_t count, const SkPoint pts[],
@@ -38,7 +41,7 @@ public:
                           const SkPaint& paint) SK_OVERRIDE;
     virtual void drawBitmap(const SkBitmap& bitmap, SkScalar left, SkScalar top,
                             const SkPaint* paint = NULL) SK_OVERRIDE;
-    virtual void drawBitmapRect(const SkBitmap& bitmap, const SkIRect* src,
+    virtual void drawBitmapRectToRect(const SkBitmap& bitmap, const SkRect* src,
                                 const SkRect& dst, const SkPaint* paint) SK_OVERRIDE;
     virtual void drawBitmapMatrix(const SkBitmap& bitmap, const SkMatrix& mat,
                                   const SkPaint* paint) SK_OVERRIDE;
@@ -73,4 +76,3 @@ private:
 };
 
 #endif
-

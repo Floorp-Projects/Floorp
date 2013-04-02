@@ -8,9 +8,9 @@
 
 
 #include "SkFontHost.h"
+#include "SkFontHost_FreeType_common.h"
 #include "SkFontDescriptor.h"
 #include "SkDescriptor.h"
-#include "SkMMapStream.h"
 #include "SkOSFile.h"
 #include "SkPaint.h"
 #include "SkString.h"
@@ -19,17 +19,14 @@
 #include "SkTSearch.h"
 
 #ifndef SK_FONT_FILE_PREFIX
-    #define SK_FONT_FILE_PREFIX      "/usr/share/fonts/truetype/msttcorefonts/"
+    #define SK_FONT_FILE_PREFIX "/usr/share/fonts/truetype/"
+#endif
+#ifndef SK_FONT_FILE_DIR_SEPERATOR
+    #define SK_FONT_FILE_DIR_SEPERATOR "/"
 #endif
 
 bool find_name_and_attributes(SkStream* stream, SkString* name,
-                              SkTypeface::Style* style, bool* isFixedWidth);
-
-static void GetFullPathForSysFonts(SkString* full, const char name[])
-{
-    full->append(SK_FONT_FILE_PREFIX);
-    full->append(name);
-}
+                              SkTypeface::Style* style, bool* isFixedPitch);
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -232,10 +229,10 @@ static void remove_from_names(FamilyRec* emptyFamily) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-class FamilyTypeface : public SkTypeface {
+class FamilyTypeface : public SkTypeface_FreeType {
 public:
-    FamilyTypeface(Style style, bool sysFont, FamilyRec* family, bool isFixedWidth)
-    : SkTypeface(style, sk_atomic_inc(&gUniqueFontID) + 1, isFixedWidth) {
+    FamilyTypeface(Style style, bool sysFont, FamilyRec* family, bool isFixedPitch)
+    : INHERITED(style, sk_atomic_inc(&gUniqueFontID) + 1, isFixedPitch) {
         fIsSysFont = sysFont;
 
         SkAutoMutexAcquire  ac(gFamilyMutex);
@@ -261,15 +258,17 @@ public:
 
     bool isSysFont() const { return fIsSysFont; }
     FamilyRec* getFamily() const { return fFamilyRec; }
-    // openStream returns a SkStream that has been ref-ed
-    virtual SkStream* openStream() = 0;
+
     virtual const char* getUniqueString() const = 0;
+
+protected:
+    virtual void onGetFontDescriptor(SkFontDescriptor*, bool*) const SK_OVERRIDE;
 
 private:
     FamilyRec*  fFamilyRec; // we don't own this, just point to it
     bool        fIsSysFont;
 
-    typedef SkTypeface INHERITED;
+    typedef SkTypeface_FreeType INHERITED;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -282,9 +281,10 @@ class EmptyTypeface : public FamilyTypeface {
 public:
     EmptyTypeface() : INHERITED(SkTypeface::kNormal, true, NULL, false) {}
 
-    // overrides
-    virtual SkStream* openStream() { return NULL; }
-    virtual const char* getUniqueString() const { return NULL; }
+    virtual const char* getUniqueString() SK_OVERRIDE const { return NULL; }
+
+protected:
+    virtual SkStream* onOpenStream(int*) const SK_OVERRIDE { return NULL; }
 
 private:
     typedef FamilyTypeface INHERITED;
@@ -293,8 +293,8 @@ private:
 class StreamTypeface : public FamilyTypeface {
 public:
     StreamTypeface(Style style, bool sysFont, FamilyRec* family,
-                   SkStream* stream, bool isFixedWidth)
-    : INHERITED(style, sysFont, family, isFixedWidth) {
+                   SkStream* stream, bool isFixedPitch)
+    : INHERITED(style, sysFont, family, isFixedPitch) {
         stream->ref();
         fStream = stream;
     }
@@ -302,14 +302,14 @@ public:
         fStream->unref();
     }
 
-    // overrides
-    virtual SkStream* openStream()
-    {
-      // openStream returns a refed stream.
-      fStream->ref();
-      return fStream;
+    virtual const char* getUniqueString() const SK_OVERRIDE { return NULL; }
+
+protected:
+    virtual SkStream* onOpenStream(int* ttcIndex) const SK_OVERRIDE {
+        *ttcIndex = 0;
+        fStream->ref();
+        return fStream;
     }
-    virtual const char* getUniqueString() const { return NULL; }
 
 private:
     SkStream* fStream;
@@ -320,35 +320,23 @@ private:
 class FileTypeface : public FamilyTypeface {
 public:
     FileTypeface(Style style, bool sysFont, FamilyRec* family,
-                 const char path[], bool isFixedWidth)
-        : INHERITED(style, sysFont, family, isFixedWidth) {
+                 const char path[], bool isFixedPitch)
+        : INHERITED(style, sysFont, family, isFixedPitch) {
         fPath.set(path);
     }
 
-    // overrides
-    virtual SkStream* openStream()
-    {
-        SkStream* stream = SkNEW_ARGS(SkMMAPStream, (fPath.c_str()));
-
-        // check for failure
-        if (stream->getLength() <= 0) {
-            SkDELETE(stream);
-            // maybe MMAP isn't supported. try FILE
-            stream = SkNEW_ARGS(SkFILEStream, (fPath.c_str()));
-            if (stream->getLength() <= 0) {
-                SkDELETE(stream);
-                stream = NULL;
-            }
-        }
-        return stream;
-    }
-
-    virtual const char* getUniqueString() const {
+    virtual const char* getUniqueString() const SK_OVERRIDE {
         const char* str = strrchr(fPath.c_str(), '/');
         if (str) {
             str += 1;   // skip the '/'
         }
         return str;
+    }
+
+protected:
+    virtual SkStream* onOpenStream(int* ttcIndex) const SK_OVERRIDE {
+        *ttcIndex = 0;
+        return SkStream::NewFromFile(fPath.c_str());
     }
 
 private:
@@ -361,20 +349,14 @@ private:
 ///////////////////////////////////////////////////////////////////////////////
 
 static bool get_name_and_style(const char path[], SkString* name,
-                               SkTypeface::Style* style, bool* isFixedWidth) {
-    SkMMAPStream stream(path);
-    if (stream.getLength() > 0) {
-        return find_name_and_attributes(&stream, name, style, isFixedWidth);
+                               SkTypeface::Style* style, bool* isFixedPitch) {
+    SkAutoTUnref<SkStream> stream(SkStream::NewFromFile(path));
+    if (stream.get()) {
+        return find_name_and_attributes(stream, name, style, isFixedPitch);
+    } else {
+        SkDebugf("---- failed to open <%s> as a font\n", path);
+        return false;
     }
-    else {
-        SkFILEStream stream(path);
-        if (stream.getLength() > 0) {
-            return find_name_and_attributes(&stream, name, style, isFixedWidth);
-        }
-    }
-
-    SkDebugf("---- failed to open <%s> as a font\n", path);
-    return false;
 }
 
 // these globals are assigned (once) by load_system_fonts()
@@ -382,36 +364,25 @@ static SkTypeface* gFallBackTypeface;
 static FamilyRec* gDefaultFamily;
 static SkTypeface* gDefaultNormal;
 
-static void load_system_fonts() {
-    // check if we've already be called
-    if (NULL != gDefaultNormal) {
-//        printf("---- default font %p\n", gDefaultNormal);
-        return;
-    }
-
-    SkOSFile::Iter  iter(SK_FONT_FILE_PREFIX, ".ttf");
+static void load_directory_fonts(const SkString& directory, unsigned int* count) {
+    SkOSFile::Iter  iter(directory.c_str(), ".ttf");
     SkString        name;
-    int             count = 0;
 
     while (iter.next(&name, false)) {
-        SkString filename;
-        GetFullPathForSysFonts(&filename, name.c_str());
+        SkString filename(directory);
+        filename.append(name);
 
-        bool isFixedWidth;
+        bool isFixedPitch;
         SkString realname;
         SkTypeface::Style style = SkTypeface::kNormal; // avoid uninitialized warning
 
-        if (!get_name_and_style(filename.c_str(), &realname, &style, &isFixedWidth)) {
+        if (!get_name_and_style(filename.c_str(), &realname, &style, &isFixedPitch)) {
             SkDebugf("------ can't load <%s> as a font\n", filename.c_str());
             continue;
         }
 
-//        SkDebugf("font: <%s> %d <%s>\n", realname.c_str(), style, filename.c_str());
-
         FamilyRec* family = find_familyrec(realname.c_str());
         if (family && family->fFaces[style]) {
-//            SkDebugf("---- skipping duplicate typeface %s style %d\n",
-//                     realname.c_str(), style);
             continue;
         }
 
@@ -421,14 +392,36 @@ static void load_system_fonts() {
                                          true,  // system-font (cannot delete)
                                          family, // what family to join
                                          filename.c_str(),
-                                         isFixedWidth) // filename
+                                         isFixedPitch) // filename
                                         );
 
         if (NULL == family) {
             add_name(realname.c_str(), tf->getFamily());
         }
-        count += 1;
+        *count += 1;
     }
+
+    SkOSFile::Iter  dirIter(directory.c_str());
+    while (dirIter.next(&name, true)) {
+        if (name.startsWith(".")) {
+            continue;
+        }
+        SkString dirname(directory);
+        dirname.append(name);
+        dirname.append(SK_FONT_FILE_DIR_SEPERATOR);
+        load_directory_fonts(dirname, count);
+    }
+}
+
+static void load_system_fonts() {
+    // check if we've already be called
+    if (NULL != gDefaultNormal) {
+        return;
+    }
+
+    SkString baseDirectory(SK_FONT_FILE_PREFIX);
+    unsigned int count = 0;
+    load_directory_fonts(baseDirectory, &count);
 
     if (0 == count) {
         SkNEW(EmptyTypeface);
@@ -463,58 +456,15 @@ static void load_system_fonts() {
     }
     gFallBackTypeface = gDefaultNormal;
     gDefaultFamily = find_family(gDefaultNormal);
-
-//    SkDebugf("---- default %p head %p family %p\n", gDefaultNormal, gFamilyHead, gDefaultFamily);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void SkFontHost::Serialize(const SkTypeface* face, SkWStream* stream) {
-
-    SkFontDescriptor descriptor;
-    descriptor.setFamilyName(find_family_name(face));
-    descriptor.setStyle(face->style());
-    descriptor.setFontFileName(((FamilyTypeface*)face)->getUniqueString());
-
-    descriptor.serialize(stream);
-
-    const bool isCustomFont = !((FamilyTypeface*)face)->isSysFont();
-    if (isCustomFont) {
-        // store the entire font in the fontData
-        SkStream* fontStream = ((FamilyTypeface*)face)->openStream();
-        const uint32_t length = fontStream->getLength();
-
-        stream->writePackedUInt(length);
-        stream->writeStream(fontStream, length);
-
-        fontStream->unref();
-    } else {
-        stream->writePackedUInt(0);
-    }
-}
-
-SkTypeface* SkFontHost::Deserialize(SkStream* stream) {
-    load_system_fonts();
-
-    SkFontDescriptor descriptor(stream);
-    const char* familyName = descriptor.getFamilyName();
-    const char* typefaceName = descriptor.getFontFileName();
-    const SkTypeface::Style style = descriptor.getStyle();
-
-    const uint32_t customFontDataLength = stream->readPackedUInt();
-    if (customFontDataLength > 0) {
-
-        // generate a new stream to store the custom typeface
-        SkMemoryStream* fontStream = new SkMemoryStream(customFontDataLength - 1);
-        stream->read((void*)fontStream->getMemoryBase(), customFontDataLength - 1);
-
-        SkTypeface* face = CreateTypefaceFromStream(fontStream);
-
-        fontStream->unref();
-        return face;
-    }
-
-    return SkFontHost::CreateTypeface(NULL, familyName, style);
+void FamilyTypeface::onGetFontDescriptor(SkFontDescriptor* desc,
+                                         bool* isLocalStream) const {
+    desc->setFamilyName(find_family_name(this));
+    desc->setFontFileName(this->getUniqueString());
+    *isLocalStream = !this->isSysFont();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -546,27 +496,6 @@ SkTypeface* SkFontHost::CreateTypeface(const SkTypeface* familyFace,
     return tf;
 }
 
-SkStream* SkFontHost::OpenStream(uint32_t fontID) {
-    FamilyTypeface* tf = (FamilyTypeface*)find_from_uniqueID(fontID);
-    SkStream* stream = tf ? tf->openStream() : NULL;
-
-    if (stream && stream->getLength() == 0) {
-        stream->unref();
-        stream = NULL;
-    }
-    return stream;
-}
-
-size_t SkFontHost::GetFileName(SkFontID fontID, char path[], size_t length,
-                               int32_t* index) {
-    SkDebugf("SkFontHost::GetFileName unimplemented\n");
-    return 0;
-}
-
-SkFontID SkFontHost::NextLogicalFont(SkFontID currFontID, SkFontID origFontID) {
-    return 0;
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 
 SkTypeface* SkFontHost::CreateTypefaceFromStream(SkStream* stream) {
@@ -575,23 +504,25 @@ SkTypeface* SkFontHost::CreateTypefaceFromStream(SkStream* stream) {
         return NULL;
     }
 
-    bool isFixedWidth;
+    bool isFixedPitch;
     SkTypeface::Style style;
-    if (find_name_and_attributes(stream, NULL, &style, &isFixedWidth)) {
-        return SkNEW_ARGS(StreamTypeface, (style, false, NULL, stream, isFixedWidth));
+    if (find_name_and_attributes(stream, NULL, &style, &isFixedPitch)) {
+        return SkNEW_ARGS(StreamTypeface, (style, false, NULL, stream, isFixedPitch));
     } else {
         return NULL;
     }
 }
 
 SkTypeface* SkFontHost::CreateTypefaceFromFile(const char path[]) {
-    SkTypeface* face = NULL;
-    SkFILEStream* stream = SkNEW_ARGS(SkFILEStream, (path));
-
-    if (stream->isValid()) {
-        face = CreateTypefaceFromStream(stream);
-    }
-    stream->unref();
-    return face;
+    SkAutoTUnref<SkStream> stream(SkStream::NewFromFile(path));
+    return stream.get() ? CreateTypefaceFromStream(stream) : NULL;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
+#include "SkFontMgr.h"
+
+SkFontMgr* SkFontMgr::Factory() {
+    // todo
+    return NULL;
+}

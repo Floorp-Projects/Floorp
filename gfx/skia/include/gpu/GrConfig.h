@@ -126,8 +126,12 @@ typedef unsigned __int64 uint64_t;
  *  macros here before anyone else has a chance to include stdint.h without
  *  these.
  */
+#ifndef __STDC_LIMIT_MACROS
 #define __STDC_LIMIT_MACROS
+#endif
+#ifndef __STDC_CONSTANT_MACROS
 #define __STDC_CONSTANT_MACROS
+#endif
 #include <stdint.h>
 #endif
 
@@ -139,7 +143,7 @@ typedef unsigned __int64 uint64_t;
  *  GR_USER_CONFIG_FILE. It should be defined relative to GrConfig.h
  *
  *  e.g. it can specify GR_DEBUG/GR_RELEASE as it please, change the BUILD
- *  target, or supply its own defines for anything else (e.g. GR_SCALAR)
+ *  target, or supply its own defines for anything else (e.g. GR_DEFAULT_TEXTURE_CACHE_MB_LIMIT)
  */
 #if !defined(GR_USER_CONFIG_FILE)
     #include "GrUserConfig.h"
@@ -311,27 +315,6 @@ inline void GrCrash(const char* msg) { GrPrintf(msg); GrAlwaysAssert(false); }
     #endif
 #endif
 
-#if !defined(GR_SCALAR_IS_FLOAT)
-    #define GR_SCALAR_IS_FLOAT   0
-#endif
-#if !defined(GR_SCALAR_IS_FIXED)
-    #define GR_SCALAR_IS_FIXED   0
-#endif
-
-#if !defined(GR_TEXT_SCALAR_TYPE_IS_USHORT)
-    #define GR_TEXT_SCALAR_TYPE_IS_USHORT  0
-#endif
-#if !defined(GR_TEXT_SCALAR_TYPE_IS_FLOAT)
-    #define GR_TEXT_SCALAR_TYPE_IS_FLOAT   0
-#endif
-#if !defined(GR_TEXT_SCALAR_TYPE_IS_FIXED)
-    #define GR_TEXT_SCALAR_TYPE_IS_FIXED   0
-#endif
-
-#ifndef GR_DUMP_TEXTURE_UPLOAD
-    #define GR_DUMP_TEXTURE_UPLOAD  0
-#endif
-
 /**
  *  GR_STATIC_RECT_VB controls whether rects are drawn by issuing a vertex
  *  for each corner or using a static vb that is positioned by modifying the
@@ -342,24 +325,6 @@ inline void GrCrash(const char* msg) { GrPrintf(msg); GrAlwaysAssert(false); }
 #endif
 
 /**
- *  GR_DISABLE_DRAW_BUFFERING prevents GrContext from queueing draws in a
- *  GrInOrderDrawBuffer.
- */
-#if !defined(GR_DISABLE_DRAW_BUFFERING)
-    #define GR_DISABLE_DRAW_BUFFERING 0
-#endif
-
-/**
- *  GR_AGGRESSIVE_SHADER_OPTS controls how aggressively shaders are optimized
- *  for special cases. On systems where program changes are expensive this
- *  may not be advantageous. Consecutive draws may no longer use the same
- *  program.
- */
-#if !defined(GR_AGGRESSIVE_SHADER_OPTS)
-    #define GR_AGGRESSIVE_SHADER_OPTS 1
-#endif
-
-/**
  * GR_GEOM_BUFFER_LOCK_THRESHOLD gives a threshold (in bytes) for when Gr should
  * lock a GrGeometryBuffer to update its contents. It will use lock() if the
  * size of the updated region is greater than the threshold. Otherwise it will
@@ -367,6 +332,23 @@ inline void GrCrash(const char* msg) { GrPrintf(msg); GrAlwaysAssert(false); }
  */
 #if !defined(GR_GEOM_BUFFER_LOCK_THRESHOLD)
     #define GR_GEOM_BUFFER_LOCK_THRESHOLD (1 << 15)
+#endif
+
+/**
+ * GR_DEFAULT_TEXTURE_CACHE_MB_LIMIT gives a threshold (in megabytes) for the
+ * maximum size of the texture cache in vram. The value is only a default and
+ * can be overridden at runtime.
+ */
+#if !defined(GR_DEFAULT_TEXTURE_CACHE_MB_LIMIT)
+    #define GR_DEFAULT_TEXTURE_CACHE_MB_LIMIT 96
+#endif
+
+/**
+ * GR_STROKE_PATH_RENDERING controls whether or not the GrStrokePathRenderer can be selected
+ * as a path renderer. GrStrokePathRenderer is currently an experimental path renderer.
+ */
+#if !defined(GR_STROKE_PATH_RENDERING)
+    #define GR_STROKE_PATH_RENDERING                 0
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -385,21 +367,6 @@ inline void GrCrash(const char* msg) { GrPrintf(msg); GrAlwaysAssert(false); }
     #error "Missing a GR_BUILD define"
 #elif 1 != GR_BUILD_SUM
     #error "More than one GR_BUILD defined"
-#endif
-
-
-#if !GR_SCALAR_IS_FLOAT && !GR_SCALAR_IS_FIXED
-    #undef  GR_SCALAR_IS_FLOAT
-    #define GR_SCALAR_IS_FLOAT              1
-    #pragma message GR_WARN("Scalar type not defined, defaulting to float")
-#endif
-
-#if !GR_TEXT_SCALAR_IS_FLOAT && \
-    !GR_TEXT_SCALAR_IS_FIXED && \
-    !GR_TEXT_SCALAR_IS_USHORT
-    #undef  GR_TEXT_SCALAR_IS_FLOAT
-    #define GR_TEXT_SCALAR_IS_FLOAT         1
-    #pragma message GR_WARN("Text scalar type not defined, defaulting to float")
 #endif
 
 #if 0
@@ -424,4 +391,3 @@ inline void GrCrash(const char* msg) { GrPrintf(msg); GrAlwaysAssert(false); }
 #endif
 
 #endif
-

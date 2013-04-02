@@ -40,7 +40,11 @@ static int Decode(GifFileType* fileType, GifByteType* out, int size) {
 
 SkGIFMovie::SkGIFMovie(SkStream* stream)
 {
+#if GIFLIB_MAJOR < 5
     fGIF = DGifOpen( stream, Decode );
+#else
+    fGIF = DGifOpen( stream, Decode, NULL );
+#endif
     if (NULL == fGIF)
         return;
 
@@ -65,8 +69,7 @@ static SkMSec savedimage_duration(const SavedImage* image)
     {
         if (image->ExtensionBlocks[j].Function == GRAPHICS_EXT_FUNC_CODE)
         {
-            int size = image->ExtensionBlocks[j].ByteCount;
-            SkASSERT(size >= 4);
+            SkASSERT(image->ExtensionBlocks[j].ByteCount >= 4);
             const uint8_t* b = (const uint8_t*)image->ExtensionBlocks[j].Bytes;
             return ((b[2] << 8) | b[1]) * 10;
         }
@@ -184,9 +187,6 @@ static void blitNormal(SkBitmap* bm, const SavedImage* frame, const ColorMapObje
         copyHeight = height - frame->ImageDesc.Top;
     }
 
-    int srcPad, dstPad;
-    dstPad = width - copyWidth;
-    srcPad = frame->ImageDesc.Width - copyWidth;
     for (; copyHeight > 0; copyHeight--) {
         copyLine(dst, src, cmap, transparent, copyWidth);
         src += frame->ImageDesc.Width;

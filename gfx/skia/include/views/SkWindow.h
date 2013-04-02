@@ -1,11 +1,9 @@
-
 /*
  * Copyright 2006 The Android Open Source Project
  *
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-
 
 #ifndef SkWindow_DEFINED
 #define SkWindow_DEFINED
@@ -40,14 +38,14 @@ public:
     void    eraseRGB(U8CPU r, U8CPU g, U8CPU b);
 
     bool    isDirty() const { return !fDirtyRgn.isEmpty(); }
-    bool    update(SkIRect* updateArea, SkCanvas* = NULL);
+    bool    update(SkIRect* updateArea);
     // does not call through to onHandleInval(), but does force the fDirtyRgn
     // to be wide open. Call before update() to ensure we redraw everything.
     void    forceInvalAll();
     // return the bounds of the dirty/inval rgn, or [0,0,0,0] if none
     const SkIRect& getDirtyBounds() const { return fDirtyRgn.getBounds(); }
 
-    bool    handleClick(int x, int y, Click::State, void* owner = NULL);
+    bool    handleClick(int x, int y, Click::State, void* owner, unsigned modi = 0);
     bool    handleChar(SkUnichar);
     bool    handleKey(SkKey);
     bool    handleKeyUp(SkKey);
@@ -63,11 +61,13 @@ public:
     void    preConcat(const SkMatrix&);
     void    postConcat(const SkMatrix&);
 
+    virtual SkCanvas* createCanvas();
+
     virtual void onPDFSaved(const char title[], const char desc[],
         const char path[]) {}
 protected:
     virtual bool onEvent(const SkEvent&);
-    virtual bool onDispatchClick(int x, int y, Click::State, void* owner);
+    virtual bool onDispatchClick(int x, int y, Click::State, void* owner, unsigned modi);
     // called if part of our bitmap is invalidated
     virtual void onHandleInval(const SkIRect&);
     virtual bool onHandleChar(SkUnichar);
@@ -100,10 +100,10 @@ private:
     typedef SkView INHERITED;
 };
 
-///////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
-#ifdef SK_USE_WXWIDGETS
-    #include "SkOSWindow_wxwidgets.h"
+#if defined(SK_BUILD_FOR_NACL)
+    #include "SkOSWindow_NaCl.h"
 #elif defined(SK_BUILD_FOR_MAC)
     #include "SkOSWindow_Mac.h"
 #elif defined(SK_BUILD_FOR_WIN)
@@ -119,4 +119,3 @@ private:
 #endif
 
 #endif
-

@@ -13,19 +13,21 @@ SK_DEFINE_INST_COUNT(GrAARectRenderer)
 
 namespace {
 
-static GrVertexLayout aa_rect_layout(const GrDrawTarget* target,
-                                     bool useCoverage) {
-    GrVertexLayout layout = 0;
-    if (useCoverage) {
-        layout |= GrDrawTarget::kCoverage_VertexLayoutBit;
-    } else {
-        layout |= GrDrawTarget::kColor_VertexLayoutBit;
-    }
-    return layout;
+static void aa_rect_attributes(bool useCoverage, const GrVertexAttrib** attribs, int* count) {
+    static const GrVertexAttrib kCoverageAttribs[] = {
+        {kVec2f_GrVertexAttribType,  0, kPosition_GrVertexAttribBinding},
+        {kVec4ub_GrVertexAttribType, sizeof(GrPoint), kCoverage_GrVertexAttribBinding},
+    };
+    static const GrVertexAttrib kColorAttribs[] = {
+        {kVec2f_GrVertexAttribType,  0, kPosition_GrVertexAttribBinding},
+        {kVec4ub_GrVertexAttribType, sizeof(GrPoint), kColor_GrVertexAttribBinding},
+    };
+    *attribs = useCoverage ? kCoverageAttribs : kColorAttribs;
+    *count = 2;
 }
 
-static void setInsetFan(GrPoint* pts, size_t stride,
-                        const GrRect& r, GrScalar dx, GrScalar dy) {
+static void set_inset_fan(GrPoint* pts, size_t stride,
+                          const GrRect& r, SkScalar dx, SkScalar dy) {
     pts->setRectFan(r.fLeft + dx, r.fTop + dy,
                     r.fRight - dx, r.fBottom - dy, stride);
 }
@@ -37,7 +39,7 @@ void GrAARectRenderer::reset() {
     GrSafeSetNull(fAAStrokeRectIndexBuffer);
 }
 
-const uint16_t GrAARectRenderer::gFillAARectIdx[] = {
+static const uint16_t gFillAARectIdx[] = {
     0, 1, 5, 5, 4, 0,
     1, 2, 6, 6, 5, 1,
     2, 3, 7, 7, 6, 2,
@@ -45,27 +47,47 @@ const uint16_t GrAARectRenderer::gFillAARectIdx[] = {
     4, 5, 6, 6, 7, 4,
 };
 
-int GrAARectRenderer::aaFillRectIndexCount() {
-    return GR_ARRAY_COUNT(gFillAARectIdx);
-}
+static const int kIndicesPerAAFillRect = GR_ARRAY_COUNT(gFillAARectIdx);
+static const int kVertsPerAAFillRect = 8;
+static const int kNumAAFillRectsInIndexBuffer = 256;
 
 GrIndexBuffer* GrAARectRenderer::aaFillRectIndexBuffer(GrGpu* gpu) {
+    static const size_t kAAFillRectIndexBufferSize = kIndicesPerAAFillRect *
+                                                     sizeof(uint16_t) *
+                                                     kNumAAFillRectsInIndexBuffer;
+
     if (NULL == fAAFillRectIndexBuffer) {
-        fAAFillRectIndexBuffer = gpu->createIndexBuffer(sizeof(gFillAARectIdx),
-                                                         false);
+        fAAFillRectIndexBuffer = gpu->createIndexBuffer(kAAFillRectIndexBufferSize, false);
         if (NULL != fAAFillRectIndexBuffer) {
-#if GR_DEBUG
-            bool updated =
-#endif
-            fAAFillRectIndexBuffer->updateData(gFillAARectIdx,
-                                               sizeof(gFillAARectIdx));
-            GR_DEBUGASSERT(updated);
+            uint16_t* data = (uint16_t*) fAAFillRectIndexBuffer->lock();
+            bool useTempData = (NULL == data);
+            if (useTempData) {
+                data = SkNEW_ARRAY(uint16_t, kNumAAFillRectsInIndexBuffer * kIndicesPerAAFillRect);
+            }
+            for (int i = 0; i < kNumAAFillRectsInIndexBuffer; ++i) {
+                // Each AA filled rect is drawn with 8 vertices and 10 triangles (8 around
+                // the inner rect (for AA) and 2 for the inner rect.
+                int baseIdx = i * kIndicesPerAAFillRect;
+                uint16_t baseVert = (uint16_t)(i * kVertsPerAAFillRect);
+                for (int j = 0; j < kIndicesPerAAFillRect; ++j) {
+                    data[baseIdx+j] = baseVert + gFillAARectIdx[j];
+                }
+            }
+            if (useTempData) {
+                if (!fAAFillRectIndexBuffer->updateData(data, kAAFillRectIndexBufferSize)) {
+                    GrCrash("Can't get AA Fill Rect indices into buffer!");
+                }
+                SkDELETE_ARRAY(data);
+            } else {
+                fAAFillRectIndexBuffer->unlock();
+            }
         }
     }
+
     return fAAFillRectIndexBuffer;
 }
 
-const uint16_t GrAARectRenderer::gStrokeAARectIdx[] = {
+static const uint16_t gStrokeAARectIdx[] = {
     0 + 0, 1 + 0, 5 + 0, 5 + 0, 4 + 0, 0 + 0,
     1 + 0, 2 + 0, 6 + 0, 6 + 0, 5 + 0, 1 + 0,
     2 + 0, 3 + 0, 7 + 0, 7 + 0, 6 + 0, 2 + 0,
@@ -106,15 +128,19 @@ void GrAARectRenderer::fillAARect(GrGpu* gpu,
                                   GrDrawTarget* target,
                                   const GrRect& devRect,
                                   bool useVertexCoverage) {
-    GrVertexLayout layout = aa_rect_layout(target, useVertexCoverage);
+    GrDrawState* drawState = target->drawState();
 
-    size_t vsize = GrDrawTarget::VertexSize(layout);
+    const GrVertexAttrib* attribs;
+    int attribCount;
+    aa_rect_attributes(useVertexCoverage, &attribs, &attribCount);
+    drawState->setVertexAttribs(attribs, attribCount);
 
-    GrDrawTarget::AutoReleaseGeometry geo(target, layout, 8, 0);
+    GrDrawTarget::AutoReleaseGeometry geo(target, 8, 0);
     if (!geo.succeeded()) {
         GrPrintf("Failed to get space for vertices!\n");
         return;
     }
+
     GrIndexBuffer* indexBuffer = this->aaFillRectIndexBuffer(gpu);
     if (NULL == indexBuffer) {
         GrPrintf("Failed to create index buffer!\n");
@@ -122,12 +148,14 @@ void GrAARectRenderer::fillAARect(GrGpu* gpu,
     }
 
     intptr_t verts = reinterpret_cast<intptr_t>(geo.vertices());
+    size_t vsize = drawState->getVertexSize();
+    GrAssert(sizeof(GrPoint) + sizeof(GrColor) == vsize);
 
     GrPoint* fan0Pos = reinterpret_cast<GrPoint*>(verts);
     GrPoint* fan1Pos = reinterpret_cast<GrPoint*>(verts + 4 * vsize);
 
-    setInsetFan(fan0Pos, vsize, devRect, -GR_ScalarHalf, -GR_ScalarHalf);
-    setInsetFan(fan1Pos, vsize, devRect,  GR_ScalarHalf,  GR_ScalarHalf);
+    set_inset_fan(fan0Pos, vsize, devRect, -SK_ScalarHalf, -SK_ScalarHalf);
+    set_inset_fan(fan1Pos, vsize, devRect,  SK_ScalarHalf,  SK_ScalarHalf);
 
     verts += sizeof(GrPoint);
     for (int i = 0; i < 4; ++i) {
@@ -147,9 +175,9 @@ void GrAARectRenderer::fillAARect(GrGpu* gpu,
     }
 
     target->setIndexSourceToBuffer(indexBuffer);
-
-    target->drawIndexed(kTriangles_GrPrimitiveType, 0,
-                        0, 8, this->aaFillRectIndexCount());
+    target->drawIndexedInstances(kTriangles_GrPrimitiveType, 1,
+                                 kVertsPerAAFillRect,
+                                 kIndicesPerAAFillRect);
 }
 
 void GrAARectRenderer::strokeAARect(GrGpu* gpu,
@@ -157,15 +185,17 @@ void GrAARectRenderer::strokeAARect(GrGpu* gpu,
                                     const GrRect& devRect,
                                     const GrVec& devStrokeSize,
                                     bool useVertexCoverage) {
-    const GrScalar& dx = devStrokeSize.fX;
-    const GrScalar& dy = devStrokeSize.fY;
-    const GrScalar rx = GrMul(dx, GR_ScalarHalf);
-    const GrScalar ry = GrMul(dy, GR_ScalarHalf);
+    GrDrawState* drawState = target->drawState();
 
-    GrScalar spare;
+    const SkScalar& dx = devStrokeSize.fX;
+    const SkScalar& dy = devStrokeSize.fY;
+    const SkScalar rx = SkScalarMul(dx, SK_ScalarHalf);
+    const SkScalar ry = SkScalarMul(dy, SK_ScalarHalf);
+
+    SkScalar spare;
     {
-        GrScalar w = devRect.width() - dx;
-        GrScalar h = devRect.height() - dy;
+        SkScalar w = devRect.width() - dx;
+        SkScalar h = devRect.height() - dy;
         spare = GrMin(w, h);
     }
 
@@ -175,10 +205,13 @@ void GrAARectRenderer::strokeAARect(GrGpu* gpu,
         this->fillAARect(gpu, target, r, useVertexCoverage);
         return;
     }
-    GrVertexLayout layout = aa_rect_layout(target, useVertexCoverage);
-    size_t vsize = GrDrawTarget::VertexSize(layout);
 
-    GrDrawTarget::AutoReleaseGeometry geo(target, layout, 16, 0);
+    const GrVertexAttrib* attribs;
+    int attribCount;
+    aa_rect_attributes(useVertexCoverage, &attribs, &attribCount);
+    drawState->setVertexAttribs(attribs, attribCount);
+
+    GrDrawTarget::AutoReleaseGeometry geo(target, 16, 0);
     if (!geo.succeeded()) {
         GrPrintf("Failed to get space for vertices!\n");
         return;
@@ -190,6 +223,8 @@ void GrAARectRenderer::strokeAARect(GrGpu* gpu,
     }
 
     intptr_t verts = reinterpret_cast<intptr_t>(geo.vertices());
+    size_t vsize = drawState->getVertexSize();
+    GrAssert(sizeof(GrPoint) + sizeof(GrColor) == vsize);
 
     // We create vertices for four nested rectangles. There are two ramps from 0 to full
     // coverage, one on the exterior of the stroke and the other on the interior.
@@ -199,14 +234,14 @@ void GrAARectRenderer::strokeAARect(GrGpu* gpu,
     GrPoint* fan2Pos = reinterpret_cast<GrPoint*>(verts + 8 * vsize);
     GrPoint* fan3Pos = reinterpret_cast<GrPoint*>(verts + 12 * vsize);
 
-    setInsetFan(fan0Pos, vsize, devRect,
-                -rx - GR_ScalarHalf, -ry - GR_ScalarHalf);
-    setInsetFan(fan1Pos, vsize, devRect,
-                -rx + GR_ScalarHalf, -ry + GR_ScalarHalf);
-    setInsetFan(fan2Pos, vsize, devRect,
-                rx - GR_ScalarHalf,  ry - GR_ScalarHalf);
-    setInsetFan(fan3Pos, vsize, devRect,
-                rx + GR_ScalarHalf,  ry + GR_ScalarHalf);
+    set_inset_fan(fan0Pos, vsize, devRect,
+                  -rx - SK_ScalarHalf, -ry - SK_ScalarHalf);
+    set_inset_fan(fan1Pos, vsize, devRect,
+                  -rx + SK_ScalarHalf, -ry + SK_ScalarHalf);
+    set_inset_fan(fan2Pos, vsize, devRect,
+                  rx - SK_ScalarHalf,  ry - SK_ScalarHalf);
+    set_inset_fan(fan3Pos, vsize, devRect,
+                  rx + SK_ScalarHalf,  ry + SK_ScalarHalf);
 
     // The outermost rect has 0 coverage
     verts += sizeof(GrPoint);

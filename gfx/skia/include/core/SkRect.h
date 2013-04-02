@@ -72,6 +72,24 @@ struct SK_API SkIRect {
     int height() const { return fBottom - fTop; }
 
     /**
+     *  Since the center of an integer rect may fall on a factional value, this
+     *  method is defined to return (right + left) >> 1.
+     *
+     *  This is a specific "truncation" of the average, which is different than
+     *  (right + left) / 2 when the sum is negative.
+     */
+    int centerX() const { return (fRight + fLeft) >> 1; }
+
+    /**
+     *  Since the center of an integer rect may fall on a factional value, this
+     *  method is defined to return (bottom + top) >> 1
+     *
+     *  This is a specific "truncation" of the average, which is different than
+     *  (bottom + top) / 2 when the sum is negative.
+     */
+    int centerY() const { return (fBottom + fTop) >> 1; }
+
+    /**
      *  Return true if the rectangle's width or height are <= 0
      */
     bool isEmpty() const { return fLeft >= fRight || fTop >= fBottom; }
@@ -140,6 +158,16 @@ struct SK_API SkIRect {
 
     void offset(const SkIPoint& delta) {
         this->offset(delta.fX, delta.fY);
+    }
+
+    /**
+     *  Offset this rect such its new x() and y() will equal newX and newY.
+     */
+    void offsetTo(int32_t newX, int32_t newY) {
+        fRight += newX - fLeft;
+        fBottom += newY - fTop;
+        fLeft = newX;
+        fTop = newY;
     }
 
     /** Inset the rectangle by (dx,dy). If dx is positive, then the sides are moved inwards,
@@ -356,6 +384,25 @@ struct SK_API SkRect {
         return r;
     }
 
+    // DEPRECATED: call Make(r)
+    static SkRect SK_WARN_UNUSED_RESULT MakeFromIRect(const SkIRect& irect) {
+        SkRect r;
+        r.set(SkIntToScalar(irect.fLeft),
+              SkIntToScalar(irect.fTop),
+              SkIntToScalar(irect.fRight),
+              SkIntToScalar(irect.fBottom));
+        return r;
+    }
+
+    static SkRect SK_WARN_UNUSED_RESULT Make(const SkIRect& irect) {
+        SkRect r;
+        r.set(SkIntToScalar(irect.fLeft),
+              SkIntToScalar(irect.fTop),
+              SkIntToScalar(irect.fRight),
+              SkIntToScalar(irect.fBottom));
+        return r;
+    }
+
     /**
      *  Return true if the rectangle's width or height are <= 0
      */
@@ -401,11 +448,11 @@ struct SK_API SkRect {
     SkScalar    centerY() const { return SkScalarHalf(fTop + fBottom); }
 
     friend bool operator==(const SkRect& a, const SkRect& b) {
-        return 0 == memcmp(&a, &b, sizeof(a));
+        return SkScalarsEqual((SkScalar*)&a, (SkScalar*)&b, 4);
     }
 
     friend bool operator!=(const SkRect& a, const SkRect& b) {
-        return 0 != memcmp(&a, &b, sizeof(a));
+        return !SkScalarsEqual((SkScalar*)&a, (SkScalar*)&b, 4);
     }
 
     /** return the 4 points that enclose the rectangle
@@ -442,6 +489,16 @@ struct SK_API SkRect {
         fTop    = SkIntToScalar(top);
         fRight  = SkIntToScalar(right);
         fBottom = SkIntToScalar(bottom);
+    }
+
+    /**
+     *  Set this rectangle to be left/top at 0,0, and have the specified width
+     *  and height (automatically converted to SkScalar).
+     */
+    void isetWH(int width, int height) {
+        fLeft = fTop = 0;
+        fRight = SkIntToScalar(width);
+        fBottom = SkIntToScalar(height);
     }
 
     /** Set this rectangle to be the bounds of the array of points.
@@ -481,6 +538,13 @@ struct SK_API SkRect {
         fBottom = y + height;
     }
 
+    void setWH(SkScalar width, SkScalar height) {
+        fLeft = 0;
+        fTop = 0;
+        fRight = width;
+        fBottom = height;
+    }
+
     /**
      *  Make the largest representable rectangle
      */
@@ -510,6 +574,16 @@ struct SK_API SkRect {
 
     void offset(const SkPoint& delta) {
         this->offset(delta.fX, delta.fY);
+    }
+
+    /**
+     *  Offset this rect such its new x() and y() will equal newX and newY.
+     */
+    void offsetTo(SkScalar newX, SkScalar newY) {
+        fRight += newX - fLeft;
+        fBottom += newY - fTop;
+        fLeft = newX;
+        fTop = newY;
     }
 
     /** Inset the rectangle by (dx,dy). If dx is positive, then the sides are
@@ -649,8 +723,8 @@ struct SK_API SkRect {
      */
     void round(SkIRect* dst) const {
         SkASSERT(dst);
-        dst->set(SkScalarRound(fLeft), SkScalarRound(fTop),
-                 SkScalarRound(fRight), SkScalarRound(fBottom));
+        dst->set(SkScalarRoundToInt(fLeft), SkScalarRoundToInt(fTop),
+                 SkScalarRoundToInt(fRight), SkScalarRoundToInt(fBottom));
     }
 
     /**
@@ -659,8 +733,8 @@ struct SK_API SkRect {
      */
     void roundOut(SkIRect* dst) const {
         SkASSERT(dst);
-        dst->set(SkScalarFloor(fLeft), SkScalarFloor(fTop),
-                 SkScalarCeil(fRight), SkScalarCeil(fBottom));
+        dst->set(SkScalarFloorToInt(fLeft), SkScalarFloorToInt(fTop),
+                 SkScalarCeilToInt(fRight), SkScalarCeilToInt(fBottom));
     }
 
     /**
@@ -676,13 +750,30 @@ struct SK_API SkRect {
     }
 
     /**
+     *  Set the dst rectangle by rounding "in" this rectangle, choosing the
+     *  ceil of top and left, and the floor of right and bottom. This does *not*
+     *  call sort(), so it is possible that the resulting rect is inverted...
+     *  e.g. left >= right or top >= bottom. Call isEmpty() to detect that.
+     */
+    void roundIn(SkIRect* dst) const {
+        SkASSERT(dst);
+        dst->set(SkScalarCeilToInt(fLeft), SkScalarCeilToInt(fTop),
+                 SkScalarFloorToInt(fRight), SkScalarFloorToInt(fBottom));
+    }
+
+
+    /**
      *  Swap top/bottom or left/right if there are flipped (i.e. if width()
      *  or height() would have returned a negative value.) This should be called
      *  if the edges are computed separately, and may have crossed over each
      *  other. When this returns, left <= right && top <= bottom
      */
     void sort();
+
+    /**
+     *  cast-safe way to treat the rect as an array of (4) SkScalars.
+     */
+    const SkScalar* asScalars() const { return &fLeft; }
 };
 
 #endif
-

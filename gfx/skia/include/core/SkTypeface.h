@@ -13,6 +13,10 @@
 #include "SkAdvancedTypefaceMetrics.h"
 #include "SkWeakRefCnt.h"
 
+class SkDescriptor;
+class SkFontDescriptor;
+class SkScalerContext;
+struct SkScalerContextRec;
 class SkStream;
 class SkAdvancedTypefaceMetrics;
 class SkWStream;
@@ -56,9 +60,10 @@ public:
     */
     bool isItalic() const { return (fStyle & kItalic) != 0; }
 
-    /** Returns true if the typeface is fixed-width
+    /** Returns true if the typeface claims to be fixed-pitch.
+     *  This is a style bit, advance widths may vary even if this returns true.
      */
-    bool isFixedWidth() const { return fIsFixedWidth; }
+    bool isFixedPitch() const { return fIsFixedPitch; }
 
     /** Return a 32bit value for this typeface, unique for the underlying font
         data. Will never return 0.
@@ -75,6 +80,12 @@ public:
         handling either being null (treating null as the default font)
      */
     static bool Equal(const SkTypeface* facea, const SkTypeface* faceb);
+
+    /**
+     *  Returns a ref() to the default typeface. The caller must call unref()
+     *  when they are done referencing the object. Never returns NULL.
+     */
+    static SkTypeface* RefDefault();
 
     /** Return a new reference to the typeface that most closely matches the
         requested familyName and style. Pass null as the familyName to return
@@ -183,16 +194,51 @@ public:
      */
     int getUnitsPerEm() const;
 
+    /**
+     *  Return a stream for the contents of the font data, or NULL on failure.
+     *  If ttcIndex is not null, it is set to the TrueTypeCollection index
+     *  of this typeface within the stream, or 0 if the stream is not a
+     *  collection.
+     */
+    SkStream* openStream(int* ttcIndex) const;
+    SkScalerContext* createScalerContext(const SkDescriptor*) const;
+
 protected:
-    /** uniqueID must be unique (please!) and non-zero
+    /** uniqueID must be unique and non-zero
     */
-    SkTypeface(Style style, SkFontID uniqueID, bool isFixedWidth = false);
+    SkTypeface(Style style, SkFontID uniqueID, bool isFixedPitch = false);
     virtual ~SkTypeface();
+
+    /** Sets the fixedPitch bit. If used, must be called in the constructor. */
+    void setIsFixedPitch(bool isFixedPitch) { fIsFixedPitch = isFixedPitch; }
+
+    friend class SkScalerContext;
+    static SkTypeface* GetDefaultTypeface();
+
+    virtual SkScalerContext* onCreateScalerContext(const SkDescriptor*) const = 0;
+    virtual void onFilterRec(SkScalerContextRec*) const = 0;
+    virtual SkAdvancedTypefaceMetrics* onGetAdvancedTypefaceMetrics(
+                        SkAdvancedTypefaceMetrics::PerGlyphInfo perGlyphInfo,
+                        const uint32_t* glyphIDs,
+                        uint32_t glyphIDsCount) const = 0;
+    virtual SkStream* onOpenStream(int* ttcIndex) const = 0;
+    virtual void onGetFontDescriptor(SkFontDescriptor*, bool* isLocal) const = 0;
+
+    virtual int onGetUPEM() const;
+
+    virtual int onGetTableTags(SkFontTableTag tags[]) const;
+    virtual size_t onGetTableData(SkFontTableTag, size_t offset,
+                                  size_t length, void* data) const;
 
 private:
     SkFontID    fUniqueID;
     Style       fStyle;
-    bool        fIsFixedWidth;
+    bool        fIsFixedPitch;
+
+    friend class SkPaint;
+    friend class SkGlyphCache;  // GetDefaultTypeface
+    // just so deprecated fonthost can call protected methods
+    friend class SkFontHost;
 
     typedef SkWeakRefCnt INHERITED;
 };

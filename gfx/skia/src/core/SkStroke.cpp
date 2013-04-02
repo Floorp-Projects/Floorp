@@ -1,11 +1,9 @@
-
 /*
  * Copyright 2008 The Android Open Source Project
  *
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-
 
 #include "SkStrokerPriv.h"
 #include "SkGeometry.h"
@@ -257,9 +255,13 @@ void SkPathStroker::quad_to(const SkPoint pts[3],
         this->quad_to(&tmp[0], normalAB, unitNormalAB, &norm, &unit, subDivide);
         this->quad_to(&tmp[2], norm, unit, normalBC, unitNormalBC, subDivide);
     } else {
-        SkVector    normalB, unitB;
-        SkAssertResult(set_normal_unitnormal(pts[0], pts[2], fRadius,
-                                             &normalB, &unitB));
+        SkVector    normalB;
+
+        normalB = pts[2] - pts[0];
+        normalB.rotateCCW();
+        SkScalar dot = SkPoint::DotProduct(unitNormalAB, *unitNormalBC);
+        SkAssertResult(normalB.setLength(SkScalarDiv(fRadius,
+                                     SkScalarSqrt((SK_Scalar1 + dot)/2))));
 
         fOuter.quadTo(  pts[1].fX + normalB.fX, pts[1].fY + normalB.fY,
                         pts[2].fX + normalBC->fX, pts[2].fY + normalBC->fY);
@@ -301,13 +303,23 @@ DRAW_LINE:
     SkAssertResult(set_normal_unitnormal(cd, fRadius, normalCD, unitNormalCD));
     bool degenerateBC = !set_normal_unitnormal(pts[1], pts[2], fRadius,
                                                &normalBC, &unitNormalBC);
-
+#ifndef SK_IGNORE_CUBIC_STROKE_FIX
+    if (subDivide <= 0) {
+        if (degenerateBC) {
+            goto DRAW_LINE;
+        } else {
+            goto DRAW_CUBIC;
+        }
+    }
+#endif
     if (degenerateBC || normals_too_curvy(unitNormalAB, unitNormalBC) ||
              normals_too_curvy(unitNormalBC, *unitNormalCD)) {
+#ifdef SK_IGNORE_CUBIC_STROKE_FIX
         // subdivide if we can
         if (--subDivide < 0) {
             goto DRAW_LINE;
         }
+#endif
         SkPoint     tmp[7];
         SkVector    norm, unit, dummy, unitDummy;
 
@@ -318,33 +330,26 @@ DRAW_LINE:
         // normals for CD
         this->cubic_to(&tmp[3], norm, unit, &dummy, &unitDummy, subDivide);
     } else {
+#ifndef SK_IGNORE_CUBIC_STROKE_FIX
+    DRAW_CUBIC:
+#endif
         SkVector    normalB, normalC;
 
         // need normals to inset/outset the off-curve pts B and C
 
-        if (0) {    // this is normal to the line between our adjacent pts
-            normalB = pts[2] - pts[0];
-            normalB.rotateCCW();
-            SkAssertResult(normalB.setLength(fRadius));
+        SkVector    unitBC = pts[2] - pts[1];
+        unitBC.normalize();
+        unitBC.rotateCCW();
 
-            normalC = pts[3] - pts[1];
-            normalC.rotateCCW();
-            SkAssertResult(normalC.setLength(fRadius));
-        } else {    // miter-join
-            SkVector    unitBC = pts[2] - pts[1];
-            unitBC.normalize();
-            unitBC.rotateCCW();
+        normalB = unitNormalAB + unitBC;
+        normalC = *unitNormalCD + unitBC;
 
-            normalB = unitNormalAB + unitBC;
-            normalC = *unitNormalCD + unitBC;
-
-            SkScalar dot = SkPoint::DotProduct(unitNormalAB, unitBC);
-            SkAssertResult(normalB.setLength(SkScalarDiv(fRadius,
-                                        SkScalarSqrt((SK_Scalar1 + dot)/2))));
-            dot = SkPoint::DotProduct(*unitNormalCD, unitBC);
-            SkAssertResult(normalC.setLength(SkScalarDiv(fRadius,
-                                        SkScalarSqrt((SK_Scalar1 + dot)/2))));
-        }
+        SkScalar dot = SkPoint::DotProduct(unitNormalAB, unitBC);
+        SkAssertResult(normalB.setLength(SkScalarDiv(fRadius,
+                                    SkScalarSqrt((SK_Scalar1 + dot)/2))));
+        dot = SkPoint::DotProduct(*unitNormalCD, unitBC);
+        SkAssertResult(normalC.setLength(SkScalarDiv(fRadius,
+                                    SkScalarSqrt((SK_Scalar1 + dot)/2))));
 
         fOuter.cubicTo( pts[1].fX + normalB.fX, pts[1].fY + normalB.fY,
                         pts[2].fX + normalC.fX, pts[2].fY + normalC.fY,
@@ -443,12 +448,7 @@ void SkPathStroker::cubicTo(const SkPoint& pt1, const SkPoint& pt2,
         pts[2] = pt2;
         pts[3] = pt3;
 
-#if 1
         count = SkChopCubicAtMaxCurvature(pts, tmp, tValues);
-#else
-        count = 1;
-        memcpy(tmp, pts, 4 * sizeof(SkPoint));
-#endif
         n = normalAB;
         u = unitAB;
         for (i = 0; i < count; i++) {
@@ -461,31 +461,6 @@ void SkPathStroker::cubicTo(const SkPoint& pt1, const SkPoint& pt2,
             u = unitCD;
 
         }
-
-#if 0
-        /*
-         *  Why was this code here? It caused us to draw circles where we didn't
-         *  want them. See http://code.google.com/p/chromium/issues/detail?id=112145
-         *  and gm/dashcubics.cpp
-         *
-         *  Simply removing this code seemed to fix the problem (no more circles).
-         *  Wish I had a repro case earlier when I added this check/hack...
-         */
-        // check for too pinchy
-        for (i = 1; i < count; i++) {
-            SkPoint p;
-            SkVector    v, c;
-
-            SkEvalCubicAt(pts, tValues[i - 1], &p, &v, &c);
-
-            SkScalar    dot = SkPoint::DotProduct(c, c);
-            v.scale(SkScalarInvert(dot));
-
-            if (SkScalarNearlyZero(v.fX) && SkScalarNearlyZero(v.fY)) {
-                fExtra.addCircle(p.fX, p.fY, fRadius, SkPath::kCW_Direction);
-            }
-        }
-#endif
     }
 
     this->postJoinTo(pt3, normalCD, unitCD);
@@ -609,6 +584,21 @@ void SkStroke::strokePath(const SkPath& src, SkPath* dst) const {
         return;
     }
 
+    // If src is really a rect, call our specialty strokeRect() method
+    {
+        bool isClosed;
+        SkPath::Direction dir;
+        if (src.isRect(&isClosed, &dir) && isClosed) {
+            this->strokeRect(src.getBounds(), dst, dir);
+            // our answer should preserve the inverseness of the src
+            if (src.isInverseFillType()) {
+                SkASSERT(!dst->isInverseFillType());
+                dst->toggleInverseFillType();
+            }
+            return;
+        }
+    }
+
 #ifdef SK_SCALAR_IS_FIXED
     void (*proc)(SkPoint pts[], int count) = identity_proc;
     if (needs_to_shrink(src)) {
@@ -702,3 +692,82 @@ void SkStroke::strokePath(const SkPath& src, SkPath* dst) const {
     }
 }
 
+static SkPath::Direction reverse_direction(SkPath::Direction dir) {
+    SkASSERT(SkPath::kUnknown_Direction != dir);
+    return SkPath::kCW_Direction == dir ? SkPath::kCCW_Direction : SkPath::kCW_Direction;
+}
+
+static void addBevel(SkPath* path, const SkRect& r, const SkRect& outer, SkPath::Direction dir) {
+    SkPoint pts[8];
+
+    if (SkPath::kCW_Direction == dir) {
+        pts[0].set(r.fLeft, outer.fTop);
+        pts[1].set(r.fRight, outer.fTop);
+        pts[2].set(outer.fRight, r.fTop);
+        pts[3].set(outer.fRight, r.fBottom);
+        pts[4].set(r.fRight, outer.fBottom);
+        pts[5].set(r.fLeft, outer.fBottom);
+        pts[6].set(outer.fLeft, r.fBottom);
+        pts[7].set(outer.fLeft, r.fTop);
+    } else {
+        pts[7].set(r.fLeft, outer.fTop);
+        pts[6].set(r.fRight, outer.fTop);
+        pts[5].set(outer.fRight, r.fTop);
+        pts[4].set(outer.fRight, r.fBottom);
+        pts[3].set(r.fRight, outer.fBottom);
+        pts[2].set(r.fLeft, outer.fBottom);
+        pts[1].set(outer.fLeft, r.fBottom);
+        pts[0].set(outer.fLeft, r.fTop);
+    }
+    path->addPoly(pts, 8, true);
+}
+
+void SkStroke::strokeRect(const SkRect& origRect, SkPath* dst,
+                          SkPath::Direction dir) const {
+    SkASSERT(dst != NULL);
+    dst->reset();
+
+    SkScalar radius = SkScalarHalf(fWidth);
+    if (radius <= 0) {
+        return;
+    }
+
+    SkScalar rw = origRect.width();
+    SkScalar rh = origRect.height();
+    if ((rw < 0) ^ (rh < 0)) {
+        dir = reverse_direction(dir);
+    }
+    SkRect rect(origRect);
+    rect.sort();
+    // reassign these, now that we know they'll be >= 0
+    rw = rect.width();
+    rh = rect.height();
+
+    SkRect r(rect);
+    r.outset(radius, radius);
+
+    SkPaint::Join join = (SkPaint::Join)fJoin;
+    if (SkPaint::kMiter_Join == join && fMiterLimit < SK_ScalarSqrt2) {
+        join = SkPaint::kBevel_Join;
+    }
+
+    switch (join) {
+        case SkPaint::kMiter_Join:
+            dst->addRect(r, dir);
+            break;
+        case SkPaint::kBevel_Join:
+            addBevel(dst, rect, r, dir);
+            break;
+        case SkPaint::kRound_Join:
+            dst->addRoundRect(r, radius, radius, dir);
+            break;
+        default:
+            break;
+    }
+
+    if (fWidth < SkMinScalar(rw, rh) && !fDoFill) {
+        r = rect;
+        r.inset(radius, radius);
+        dst->addRect(r, reverse_direction(dir));
+    }
+}

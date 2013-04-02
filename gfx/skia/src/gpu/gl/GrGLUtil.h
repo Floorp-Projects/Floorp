@@ -16,6 +16,17 @@
 typedef uint32_t GrGLVersion;
 typedef uint32_t GrGLSLVersion;
 
+/**
+ * This list is lazily updated as required.
+ */
+enum GrGLVendor {
+    kARM_GrGLVendor,
+    kImagination_GrGLVendor,
+    kIntel_GrGLVendor,
+
+    kOther_GrGLVendor
+};
+
 #define GR_GL_VER(major, minor) ((static_cast<int>(major) << 16) | \
                                  static_cast<int>(minor))
 #define GR_GLSL_VER(major, minor) ((static_cast<int>(major) << 16) | \
@@ -60,13 +71,13 @@ typedef uint32_t GrGLSLVersion;
 GrGLVersion GrGLGetVersionFromString(const char* versionString);
 GrGLBinding GrGLGetBindingInUseFromString(const char* versionString);
 GrGLSLVersion GrGLGetGLSLVersionFromString(const char* versionString);
-bool GrGLHasExtensionFromString(const char* ext, const char* extensionString);
+GrGLVendor GrGLGetVendorFromString(const char* vendorString);
 
 // these variants call glGetString()
-bool GrGLHasExtension(const GrGLInterface*, const char* ext);
 GrGLBinding GrGLGetBindingInUse(const GrGLInterface*);
 GrGLVersion GrGLGetVersion(const GrGLInterface*);
 GrGLSLVersion GrGLGetGLSLVersion(const GrGLInterface*);
+GrGLVendor GrGLGetVendor(const GrGLInterface*);
 
 /**
  * Helpers for glGetError()

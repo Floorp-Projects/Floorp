@@ -87,6 +87,12 @@ public:
     bool isFreshFrame() const;
 
     /**
+     *  Returns true if the canvas has recorded draw commands that have
+     *  not yet been played back.
+     */
+    bool hasPendingCommands() const;
+
+    /**
      *  Specify the maximum number of bytes to be allocated for the purpose
      *  of recording draw commands to this canvas.  The default limit, is
      *  64MB.
@@ -109,6 +115,17 @@ public:
      */
     size_t freeMemoryIfPossible(size_t bytesToFree);
 
+    /**
+     * Specifies the maximum size (in bytes) allowed for a given image to be
+     * rendered using the deferred canvas.
+     */
+    void setBitmapSizeThreshold(size_t sizeThreshold);
+
+    /**
+     * Executes all pending commands without drawing
+     */
+    void silentFlush();
+
     // Overrides of the SkCanvas interface
     virtual int save(SaveFlags flags) SK_OVERRIDE;
     virtual int saveLayer(const SkRect* bounds, const SkPaint* paint,
@@ -123,6 +140,8 @@ public:
     virtual void setMatrix(const SkMatrix& matrix) SK_OVERRIDE;
     virtual bool clipRect(const SkRect& rect, SkRegion::Op op,
                           bool doAntiAlias) SK_OVERRIDE;
+    virtual bool clipRRect(const SkRRect& rect, SkRegion::Op op,
+                           bool doAntiAlias) SK_OVERRIDE;
     virtual bool clipPath(const SkPath& path, SkRegion::Op op,
                           bool doAntiAlias) SK_OVERRIDE;
     virtual bool clipRegion(const SkRegion& deviceRgn,
@@ -131,14 +150,15 @@ public:
     virtual void drawPaint(const SkPaint& paint) SK_OVERRIDE;
     virtual void drawPoints(PointMode mode, size_t count, const SkPoint pts[],
                             const SkPaint& paint) SK_OVERRIDE;
-    virtual void drawRect(const SkRect& rect, const SkPaint& paint)
-                          SK_OVERRIDE;
+    virtual void drawOval(const SkRect&, const SkPaint& paint) SK_OVERRIDE;
+    virtual void drawRect(const SkRect& rect, const SkPaint& paint) SK_OVERRIDE;
+    virtual void drawRRect(const SkRRect&, const SkPaint& paint) SK_OVERRIDE;
     virtual void drawPath(const SkPath& path, const SkPaint& paint)
                           SK_OVERRIDE;
     virtual void drawBitmap(const SkBitmap& bitmap, SkScalar left,
                             SkScalar top, const SkPaint* paint)
                             SK_OVERRIDE;
-    virtual void drawBitmapRect(const SkBitmap& bitmap, const SkIRect* src,
+    virtual void drawBitmapRectToRect(const SkBitmap& bitmap, const SkRect* src,
                                 const SkRect& dst, const SkPaint* paint)
                                 SK_OVERRIDE;
 
@@ -172,6 +192,8 @@ public:
 public:
     class NotificationClient {
     public:
+        virtual ~NotificationClient() {}
+
         /**
          *  Called before executing one or several draw commands, which means
          *  once per flush when deferred rendering is enabled.
@@ -192,8 +214,12 @@ public:
          */
         virtual void flushedDrawCommands() {}
 
-    private:
-        typedef SkRefCnt INHERITED;
+        /**
+         *  Called after pending draw commands have been skipped, meaning
+         *  that they were optimized-out because the canvas is cleared
+         *  or completely overwritten by the command currently being recorded.
+         */
+        virtual void skippedPendingDrawCommands() {}
     };
 
 protected:

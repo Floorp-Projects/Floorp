@@ -29,8 +29,6 @@
         as a 16.16 fixed point integer.
     */
     typedef float   SkScalar;
-    extern const uint32_t gIEEENotANumber;
-    extern const uint32_t gIEEEInfinity;
 
     /** SK_Scalar1 is defined to be 1.0 represented as an SkScalar
     */
@@ -40,7 +38,10 @@
     #define SK_ScalarHalf           (0.5f)
     /** SK_ScalarInfinity is defined to be infinity as an SkScalar
     */
-    #define SK_ScalarInfinity           (*(const float*)&gIEEEInfinity)
+    #define SK_ScalarInfinity       SK_FloatInfinity
+    /** SK_ScalarNegativeInfinity is defined to be negative infinity as an SkScalar
+    */
+    #define SK_ScalarNegativeInfinity       SK_FloatNegativeInfinity
     /** SK_ScalarMax is defined to be the largest value representable as an SkScalar
     */
     #define SK_ScalarMax            (3.402823466e+38f)
@@ -49,7 +50,7 @@
     #define SK_ScalarMin            (-SK_ScalarMax)
     /** SK_ScalarNaN is defined to be 'Not a Number' as an SkScalar
     */
-    #define SK_ScalarNaN      (*(const float*)(const void*)&gIEEENotANumber)
+    #define SK_ScalarNaN            SK_FloatNaN
     /** SkScalarIsNaN(n) returns true if argument is not a number
     */
     static inline bool SkScalarIsNaN(float x) { return x != x; }
@@ -131,6 +132,7 @@
     #define SkScalarFloorToInt(x)       sk_float_floor2int(x)
     #define SkScalarCeilToInt(x)        sk_float_ceil2int(x)
     #define SkScalarRoundToInt(x)       sk_float_round2int(x)
+    #define SkScalarTruncToInt(x)       static_cast<int>(x)
 
     /** Returns the absolute value of the specified SkScalar
     */
@@ -222,7 +224,8 @@
 
     #define SK_Scalar1              SK_Fixed1
     #define SK_ScalarHalf           SK_FixedHalf
-    #define SK_ScalarInfinity   SK_FixedMax
+    #define SK_ScalarInfinity           SK_FixedMax
+    #define SK_ScalarNegativeInfinity   SK_FixedMin
     #define SK_ScalarMax            SK_FixedMax
     #define SK_ScalarMin            SK_FixedMin
     #define SK_ScalarNaN            SK_FixedNaN
@@ -246,6 +249,7 @@
     #define SkScalarFloorToInt(x)       SkFixedFloorToInt(x)
     #define SkScalarCeilToInt(x)        SkFixedCeilToInt(x)
     #define SkScalarRoundToInt(x)       SkFixedRoundToInt(x)
+    #define SkScalarTruncToInt(x)       (((x) < 0) ? SkScalarCeilToInt(x) : SkScalarFloorToInt(x))
 
     #define SkScalarAbs(x)          SkFixedAbs(x)
     #define SkScalarCopySign(x, y)  SkCopySign32(x, y)
@@ -354,5 +358,22 @@ static inline SkScalar SkScalarLog2(SkScalar x) {
 */
 SkScalar SkScalarInterpFunc(SkScalar searchKey, const SkScalar keys[],
                             const SkScalar values[], int length);
+
+/*
+ *  Helper to compare an array of scalars.
+ */
+static inline bool SkScalarsEqual(const SkScalar a[], const SkScalar b[], int n) {
+#ifdef SK_SCALAR_IS_FLOAT
+    SkASSERT(n >= 0);
+    for (int i = 0; i < n; ++i) {
+        if (a[i] != b[i]) {
+            return false;
+        }
+    }
+    return true;
+#else
+    return 0 == memcmp(a, b, n * sizeof(SkScalar));
+#endif
+}
 
 #endif

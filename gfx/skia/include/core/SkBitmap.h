@@ -21,6 +21,7 @@ struct SkRect;
 class SkPaint;
 class SkPixelRef;
 class SkRegion;
+class SkString;
 
 // This is an opaque class, not interpreted by skia
 class SkGpuTexture;
@@ -111,7 +112,7 @@ public:
     int height() const { return fHeight; }
     /** Return the number of bytes between subsequent rows of the bitmap.
     */
-    int rowBytes() const { return fRowBytes; }
+    size_t rowBytes() const { return fRowBytes; }
 
     /** Return the shift amount per pixel (i.e. 0 for 1-byte per pixel, 1 for
         2-bytes per pixel configs, 2 for 4-bytes per pixel configs). Return 0
@@ -144,7 +145,7 @@ public:
 
     /** Return the number of bytes from the pointer returned by getPixels()
         to the end of the allocated space in the buffer. Required in
-        cases where extractBitmap has been called.
+        cases where extractSubset has been called.
     */
     size_t getSafeSize() const ;
 
@@ -205,7 +206,7 @@ public:
     /** Given a config and a width, this computes the optimal rowBytes value. This is called automatically
         if you pass 0 for rowBytes to setConfig().
     */
-    static int ComputeRowBytes(Config c, int width);
+    static size_t ComputeRowBytes(Config c, int width);
 
     /** Return the bytes-per-pixel for the specified config. If the config is
         not at least 1-byte per pixel, return 0, including for kNo_Config.
@@ -223,6 +224,24 @@ public:
     static size_t ComputeSize(Config, int width, int height);
 
     /**
+     *  This will brute-force return true if all of the pixels in the bitmap
+     *  are opaque. If it fails to read the pixels, or encounters an error,
+     *  it will return false.
+     *
+     *  Since this can be an expensive operation, the bitmap stores a flag for
+     *  this (isOpaque, setIsOpaque). Only call this if you need to compute this
+     *  value from "unknown" pixels.
+     */
+    static bool ComputeIsOpaque(const SkBitmap&);
+
+    /**
+     *  Calls ComputeIsOpaque, and passes its result to setIsOpaque().
+     */
+    void computeAndSetOpaquePredicate() {
+        this->setIsOpaque(ComputeIsOpaque(*this));
+    }
+
+    /**
      *  Return the bitmap's bounds [0, 0, width, height] as an SkRect
      */
     void getBounds(SkRect* bounds) const;
@@ -232,7 +251,7 @@ public:
         ComputeRowBytes() is called to compute the optimal value. This resets
         any pixel/colortable ownership, just like reset().
     */
-    void setConfig(Config, int width, int height, int rowBytes = 0);
+    void setConfig(Config, int width, int height, size_t rowBytes = 0);
     /** Use this to assign a new pixel address for an existing bitmap. This
         will automatically release any pixelref previously installed. Only call
         this if you are handling ownership/lifetime of the pixel memory.
@@ -259,13 +278,12 @@ public:
         @param dst      Location of destination buffer.
         @param dstSize  Size of destination buffer. Must be large enough to hold
                         pixels using indicated stride.
-        @param dstRowBytes  Width of each line in the buffer. If -1, uses
+        @param dstRowBytes  Width of each line in the buffer. If 0, uses
                             bitmap's internal stride.
         @param preserveDstPad Must we preserve padding in the dst
     */
-    bool copyPixelsTo(void* const dst, size_t dstSize, int dstRowBytes = -1,
-                      bool preserveDstPad = false)
-         const;
+    bool copyPixelsTo(void* const dst, size_t dstSize, size_t dstRowBytes = 0,
+                      bool preserveDstPad = false) const;
 
     /** Use the standard HeapAllocator to create the pixelref that manages the
         pixel memory. It will be sized based on the current width/height/config.
@@ -524,6 +542,20 @@ public:
     */
     int extractMipLevel(SkBitmap* dst, SkFixed sx, SkFixed sy);
 
+#ifdef SK_BUILD_FOR_ANDROID
+    bool hasHardwareMipMap() const {
+        return (fFlags & kHasHardwareMipMap_Flag) != 0;
+    }
+
+    void setHasHardwareMipMap(bool hasHardwareMipMap) {
+        if (hasHardwareMipMap) {
+            fFlags |= kHasHardwareMipMap_Flag;
+        } else {
+            fFlags &= ~kHasHardwareMipMap_Flag;
+        }
+    }
+#endif
+
     bool extractAlpha(SkBitmap* dst) const {
         return this->extractAlpha(dst, NULL, NULL, NULL);
     }
@@ -607,6 +639,8 @@ public:
         int       fHeight;
     };
 
+    SkDEVCODE(void toString(SkString* str) const;)
+
 private:
     struct MipMap;
     mutable MipMap* fMipMap;
@@ -622,7 +656,14 @@ private:
     enum Flags {
         kImageIsOpaque_Flag     = 0x01,
         kImageIsVolatile_Flag   = 0x02,
-        kImageIsImmutable_Flag  = 0x04
+        kImageIsImmutable_Flag  = 0x04,
+#ifdef SK_BUILD_FOR_ANDROID
+        /* A hint for the renderer responsible for drawing this bitmap
+         * indicating that it should attempt to use mipmaps when this bitmap
+         * is drawn scaled down.
+         */
+        kHasHardwareMipMap_Flag = 0x08,
+#endif
     };
 
     uint32_t    fRowBytes;
@@ -634,14 +675,14 @@ private:
 
     /* Internal computations for safe size.
     */
-    static Sk64 ComputeSafeSize64(Config config,
+    static Sk64 ComputeSafeSize64(Config   config,
                                   uint32_t width,
                                   uint32_t height,
-                                  uint32_t rowBytes);
+                                  size_t   rowBytes);
     static size_t ComputeSafeSize(Config   config,
                                   uint32_t width,
                                   uint32_t height,
-                                  uint32_t rowBytes);
+                                  size_t   rowBytes);
 
     /*  Unreference any pixelrefs or colortables
     */
