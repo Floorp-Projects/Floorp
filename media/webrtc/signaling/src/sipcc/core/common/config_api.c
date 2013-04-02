@@ -302,11 +302,9 @@ show_config_cmd (cc_int32_t argc, const char *argv[])
         table++;
     }
 
-    debugif_printf("%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s\n",
+    debugif_printf("%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s",
         prot_cfg_table[CFGID_LINE_INDEX].name,
         prot_cfg_table[CFGID_LINE_FEATURE].name,
-        prot_cfg_table[CFGID_LINE_MAXNUMCALLS].name,
-        prot_cfg_table[CFGID_LINE_BUSY_TRIGGER].name,
         prot_cfg_table[CFGID_PROXY_ADDRESS].name,
         prot_cfg_table[CFGID_PROXY_PORT].name,
         prot_cfg_table[CFGID_LINE_CALL_WAITING].name,
@@ -327,8 +325,6 @@ show_config_cmd (cc_int32_t argc, const char *argv[])
       if ( feat != CC_FEATURE_NONE ){
         debugif_printf("%3s ", get_printable_cfg(CFGID_LINE_INDEX+i, buf, MAX_CONFIG_VAL_PRINT_LEN));
         debugif_printf("%4s ", get_printable_cfg(CFGID_LINE_FEATURE+i, buf, MAX_CONFIG_VAL_PRINT_LEN));
-        debugif_printf("%3s ", get_printable_cfg(CFGID_LINE_MAXNUMCALLS+i, buf, MAX_CONFIG_VAL_PRINT_LEN));
-        debugif_printf("%3s ", get_printable_cfg(CFGID_LINE_BUSY_TRIGGER+i, buf, MAX_CONFIG_VAL_PRINT_LEN));
         debugif_printf("%12s ", get_printable_cfg(CFGID_PROXY_ADDRESS+i, buf, MAX_CONFIG_VAL_PRINT_LEN));
         debugif_printf("%s ", get_printable_cfg(CFGID_PROXY_PORT+i, buf, MAX_CONFIG_VAL_PRINT_LEN));
         debugif_printf("%3s ", get_printable_cfg(CFGID_LINE_CALL_WAITING+i, buf, MAX_CONFIG_VAL_PRINT_LEN));
