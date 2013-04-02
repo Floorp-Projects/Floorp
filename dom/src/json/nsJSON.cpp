@@ -57,7 +57,8 @@ WarnDeprecatedMethod(DeprecationWarning warning)
 }
 
 NS_IMETHODIMP
-nsJSON::Encode(const JS::Value& aValue, JSContext* cx, uint8_t aArgc, nsAString &aJSON)
+nsJSON::Encode(const JS::Value& aValue, JSContext* cx, uint8_t aArgc,
+               nsAString &aJSON)
 {
   // This function should only be called from JS.
   nsresult rv = WarnDeprecatedMethod(EncodeWarning);
@@ -194,7 +195,8 @@ nsJSON::EncodeFromJSVal(JS::Value *value, JSContext *cx, nsAString &result)
 }
 
 nsresult
-nsJSON::EncodeInternal(JSContext* cx, const JS::Value& aValue, nsJSONWriter* writer)
+nsJSON::EncodeInternal(JSContext* cx, const JS::Value& aValue,
+                       nsJSONWriter* writer)
 {
   JSAutoRequest ar(cx);
 
@@ -214,7 +216,7 @@ nsJSON::EncodeInternal(JSContext* cx, const JS::Value& aValue, nsJSONWriter* wri
    * Note: It is perfectly fine to not implement toJSON, so it is
    * perfectly fine for GetMethod to fail
    */
-  jsval toJSON;
+  JS::Value toJSON;
   if (JS_GetMethod(cx, obj, "toJSON", NULL, &toJSON) &&
       !JSVAL_IS_PRIMITIVE(toJSON) &&
       JS_ObjectIsCallable(cx, JSVAL_TO_OBJECT(toJSON))) {
@@ -388,7 +390,7 @@ nsJSON::DecodeFromStream(nsIInputStream *aStream, int32_t aContentLength,
 }
 
 NS_IMETHODIMP
-nsJSON::DecodeToJSVal(const nsAString &str, JSContext *cx, jsval *result)
+nsJSON::DecodeToJSVal(const nsAString &str, JSContext *cx, JS::Value *result)
 {
   JSAutoRequest ar(cx);
 
@@ -497,7 +499,7 @@ nsJSON::LegacyDecodeFromStream(nsIInputStream *aStream, int32_t aContentLength,
 }
 
 NS_IMETHODIMP
-nsJSON::LegacyDecodeToJSVal(const nsAString &str, JSContext *cx, jsval *result)
+nsJSON::LegacyDecodeToJSVal(const nsAString &str, JSContext *cx, JS::Value *result)
 {
   JSAutoRequest ar(cx);
 
@@ -527,7 +529,7 @@ NS_NewJSON(nsISupports* aOuter, REFNSIID aIID, void** aResult)
   return NS_OK;
 }
 
-nsJSONListener::nsJSONListener(JSContext *cx, jsval *rootVal,
+nsJSONListener::nsJSONListener(JSContext *cx, JS::Value *rootVal,
                                bool needsConverter,
                                DecodingMode mode /* = STRICT */)
   : mNeedsConverter(needsConverter), 
