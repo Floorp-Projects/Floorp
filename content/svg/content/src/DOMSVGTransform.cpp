@@ -20,7 +20,6 @@ using namespace dom;
 static nsSVGAttrTearoffTable<DOMSVGTransform, SVGMatrix> sSVGMatrixTearoffTable;
 
 //----------------------------------------------------------------------
-// nsISupports methods:
 
 // We could use NS_IMPL_CYCLE_COLLECTION_1, except that in Unlink() we need to
 // clear our list's weak ref to us to be safe. (The other option would be to
@@ -43,19 +42,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mList)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(DOMSVGTransform)
-NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMSVGTransform)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMSVGTransform)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGTransform)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(mozilla::DOMSVGTransform)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(DOMSVGTransform, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DOMSVGTransform, Release)
 
 JSObject*
 DOMSVGTransform::WrapObject(JSContext* aCx, JSObject* aScope)
