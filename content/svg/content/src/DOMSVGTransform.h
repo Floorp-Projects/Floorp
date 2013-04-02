@@ -12,7 +12,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsDebug.h"
 #include "nsID.h"
-#include "SVGTransform.h"
+#include "nsSVGTransform.h"
 #include "nsWrapperCache.h"
 #include "mozilla/Attributes.h"
 
@@ -57,7 +57,7 @@ public:
   /**
    * Ctor for creating an unowned copy. Used with Clone().
    */
-  explicit DOMSVGTransform(const SVGTransform &aMatrix);
+  explicit DOMSVGTransform(const nsSVGTransform &aMatrix);
 
   ~DOMSVGTransform();
 
@@ -113,7 +113,7 @@ public:
    */
   void RemovingFromList();
 
-  SVGTransform ToSVGTransform() const {
+  nsSVGTransform ToSVGTransform() const {
     return Transform();
   }
 
@@ -147,20 +147,20 @@ private:
   }
 
   /**
-   * Get a reference to the internal SVGTransform list item that this DOM
+   * Get a reference to the internal nsSVGTransform list item that this DOM
    * wrapper object currently wraps.
    */
-  SVGTransform& InternalItem();
-  const SVGTransform& InternalItem() const;
+  nsSVGTransform& InternalItem();
+  const nsSVGTransform& InternalItem() const;
 
 #ifdef DEBUG
   bool IndexIsValid();
 #endif
 
-  const SVGTransform& Transform() const {
+  const nsSVGTransform& Transform() const {
     return HasOwner() ? InternalItem() : *mTransform;
   }
-  SVGTransform& Transform() {
+  nsSVGTransform& Transform() {
     return HasOwner() ? InternalItem() : *mTransform;
   }
   inline nsAttrValue NotifyElementWillChange();
@@ -174,13 +174,13 @@ private:
   uint32_t mListIndex:MOZ_SVG_LIST_INDEX_BIT_COUNT;
   uint32_t mIsAnimValItem:1;
 
-  // Usually this class acts as a wrapper for an SVGTransform object which is
+  // Usually this class acts as a wrapper for an nsSVGTransform object which is
   // part of a list and is accessed by going via the owning Element.
   //
   // However, in some circumstances, objects of this class may not be associated
-  // with any particular list and thus, no internal SVGTransform object. In
-  // that case we allocate an SVGTransform object on the heap to store the data.
-  nsAutoPtr<SVGTransform> mTransform;
+  // with any particular list and thus, no internal nsSVGTransform object. In
+  // that case we allocate an nsSVGTransform object on the heap to store the data.
+  nsAutoPtr<nsSVGTransform> mTransform;
 };
 
 nsAttrValue

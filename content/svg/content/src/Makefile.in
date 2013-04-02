@@ -50,6 +50,7 @@ CPPSRCS		= \
 		nsSVGPathGeometryElement.cpp \
 		nsSVGPolyElement.cpp \
 		nsSVGString.cpp \
+		nsSVGTransform.cpp \
 		nsSVGViewBox.cpp \
 		SVGAElement.cpp \
 		SVGAltGlyphElement.cpp \
@@ -146,7 +147,6 @@ CPPSRCS		= \
 		SVGTextPathElement.cpp \
 		SVGTextPositioningElement.cpp \
 		SVGTitleElement.cpp \
-		SVGTransform.cpp \
 		SVGTransformableElement.cpp \
 		SVGTransformList.cpp \
 		SVGTransformListParser.cpp \
