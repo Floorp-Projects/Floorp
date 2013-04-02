@@ -301,12 +301,6 @@ DIST_FILES += \
   distribution \
   $(NULL)
 
-ifdef MOZ_ENABLE_SZIP
-SZIP_LIBRARIES = \
-  libxul.so \
-  $(NULL)
-endif
-
 NON_DIST_FILES = \
   classes.dex \
   $(NULL)
@@ -348,6 +342,10 @@ endif
 
 ifdef MOZ_OMX_PLUGIN
 DIST_FILES += libomxplugin.so libomxplugingb.so libomxplugingb235.so libomxpluginhc.so libomxpluginsony.so libomxpluginfroyo.so libomxpluginjb-htc.so
+endif
+
+ifdef MOZ_ENABLE_SZIP
+SZIP_LIBRARIES := $(filter-out $(MOZ_CHILD_PROCESS_NAME),$(filter %.so,$(DIST_FILES)))
 endif
 
 PKG_SUFFIX      = .apk
