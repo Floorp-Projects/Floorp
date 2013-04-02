@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsError.h"
-#include "SVGTransform.h"
+#include "nsSVGTransform.h"
 #include "nsContentUtils.h"
 #include "nsTextFormatter.h"
 
@@ -16,7 +16,7 @@ namespace {
 namespace mozilla {
 
 void
-SVGTransform::GetValueAsString(nsAString& aValue) const
+nsSVGTransform::GetValueAsString(nsAString& aValue) const
 {
   PRUnichar buf[256];
 
@@ -74,7 +74,7 @@ SVGTransform::GetValueAsString(nsAString& aValue) const
 }
 
 void
-SVGTransform::SetMatrix(const gfxMatrix& aMatrix)
+nsSVGTransform::SetMatrix(const gfxMatrix& aMatrix)
 {
   mType    = SVG_TRANSFORM_MATRIX;
   mMatrix  = aMatrix;
@@ -86,7 +86,7 @@ SVGTransform::SetMatrix(const gfxMatrix& aMatrix)
 }
 
 void
-SVGTransform::SetTranslate(float aTx, float aTy)
+nsSVGTransform::SetTranslate(float aTx, float aTy)
 {
   mType    = SVG_TRANSFORM_TRANSLATE;
   mMatrix.Reset();
@@ -98,7 +98,7 @@ SVGTransform::SetTranslate(float aTx, float aTy)
 }
 
 void
-SVGTransform::SetScale(float aSx, float aSy)
+nsSVGTransform::SetScale(float aSx, float aSy)
 {
   mType    = SVG_TRANSFORM_SCALE;
   mMatrix.Reset();
@@ -110,7 +110,7 @@ SVGTransform::SetScale(float aSx, float aSy)
 }
 
 void
-SVGTransform::SetRotate(float aAngle, float aCx, float aCy)
+nsSVGTransform::SetRotate(float aAngle, float aCx, float aCy)
 {
   mType    = SVG_TRANSFORM_ROTATE;
   mMatrix.Reset();
@@ -123,7 +123,7 @@ SVGTransform::SetRotate(float aAngle, float aCx, float aCy)
 }
 
 nsresult
-SVGTransform::SetSkewX(float aAngle)
+nsSVGTransform::SetSkewX(float aAngle)
 {
   double ta = tan(aAngle*radPerDegree);
   NS_ENSURE_FINITE(ta, NS_ERROR_RANGE_ERR);
@@ -138,7 +138,7 @@ SVGTransform::SetSkewX(float aAngle)
 }
 
 nsresult
-SVGTransform::SetSkewY(float aAngle)
+nsSVGTransform::SetSkewY(float aAngle)
 {
   double ta = tan(aAngle*radPerDegree);
   NS_ENSURE_FINITE(ta, NS_ERROR_RANGE_ERR);
@@ -152,7 +152,7 @@ SVGTransform::SetSkewY(float aAngle)
   return NS_OK;
 }
 
-SVGTransformSMILData::SVGTransformSMILData(const SVGTransform& aTransform)
+SVGTransformSMILData::SVGTransformSMILData(const nsSVGTransform& aTransform)
   : mTransformType(aTransform.Type())
 {
   NS_ABORT_IF_FALSE(
@@ -203,10 +203,10 @@ SVGTransformSMILData::SVGTransformSMILData(const SVGTransform& aTransform)
   }
 }
 
-SVGTransform
+nsSVGTransform
 SVGTransformSMILData::ToSVGTransform() const
 {
-  SVGTransform result;
+  nsSVGTransform result;
 
   switch (mTransformType) {
     case SVG_TRANSFORM_MATRIX:
