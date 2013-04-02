@@ -129,11 +129,8 @@ LoginManagerPrompter.prototype = {
      */
     promptToSavePassword : function (aLogin) {
         var notifyBox = this._getNotifyBox();
-
         if (notifyBox)
             this._showSaveLoginNotification(notifyBox, aLogin);
-        else
-            this._showSaveLoginDialog(aLogin);
     },
 
 
@@ -241,65 +238,6 @@ LoginManagerPrompter.prototype = {
 
 
     /*
-     * _showSaveLoginDialog
-     *
-     * Called when we detect a new login in a form submission,
-     * asks the user what to do.
-     *
-     */
-    _showSaveLoginDialog : function (aLogin) {
-        const buttonFlags = Ci.nsIPrompt.BUTTON_POS_1_DEFAULT +
-            (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_0) +
-            (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_1) +
-            (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_2);
-
-        var brandShortName =
-                this._brandBundle.GetStringFromName("brandShortName");
-        var displayHost = this._getShortDisplayHost(aLogin.hostname);
-
-        var dialogText;
-        if (aLogin.username) {
-            var displayUser = this._sanitizeUsername(aLogin.username);
-            dialogText = this._getLocalizedString(
-                                 "saveLoginText",
-                                 [brandShortName, displayUser, displayHost]);
-        } else {
-            dialogText = this._getLocalizedString(
-                                 "saveLoginTextNoUsername",
-                                 [brandShortName, displayHost]);
-        }
-        var dialogTitle        = this._getLocalizedString(
-                                        "savePasswordTitle");
-        var neverButtonText    = this._getLocalizedString(
-                                        "neverForSiteButtonText");
-        var rememberButtonText = this._getLocalizedString(
-                                        "rememberButtonText");
-        var notNowButtonText   = this._getLocalizedString(
-                                        "notNowButtonText");
-
-        this.log("Prompting user to save/ignore login");
-        var userChoice = this._promptService.confirmEx(null,
-                                            dialogTitle, dialogText,
-                                            buttonFlags, rememberButtonText,
-                                            notNowButtonText, neverButtonText,
-                                            null, {});
-        //  Returns:
-        //   0 - Save the login
-        //   1 - Ignore the login this time
-        //   2 - Never save logins for this site
-        if (userChoice == 2) {
-            this.log("Disabling " + aLogin.hostname + " logins by request.");
-            this._pwmgr.setLoginSavingEnabled(aLogin.hostname, false);
-        } else if (userChoice == 0) {
-            this.log("Saving login for " + aLogin.hostname);
-            this._pwmgr.addLogin(aLogin);
-        } else {
-            // userChoice == 1 --> just ignore the login.
-            this.log("Ignoring login.");
-        }
-    },
-
-    /*
      * promptToChangePassword
      *
      * Called when we think we detect a password change for an existing
@@ -309,11 +247,8 @@ LoginManagerPrompter.prototype = {
      */
     promptToChangePassword : function (aOldLogin, aNewLogin) {
         var notifyBox = this._getNotifyBox();
-
         if (notifyBox)
             this._showChangeLoginNotification(notifyBox, aOldLogin, aNewLogin.password);
-        else
-            this._showChangeLoginDialog(aOldLogin, aNewLogin.password);
     },
 
     /*
@@ -373,39 +308,6 @@ LoginManagerPrompter.prototype = {
     },
 
     /*
-     * _showChangeLoginDialog
-     *
-     * Shows the Change Password dialog.
-     *
-     */
-    _showChangeLoginDialog : function (aOldLogin, aNewPassword) {
-        const buttonFlags = Ci.nsIPrompt.STD_YES_NO_BUTTONS;
-
-        var dialogText;
-        if (aOldLogin.username)
-            dialogText  = this._getLocalizedString(
-                                    "passwordChangeText",
-                                    [aOldLogin.username]);
-        else
-            dialogText  = this._getLocalizedString(
-                                    "passwordChangeTextNoUser");
-
-        var dialogTitle = this._getLocalizedString(
-                                    "passwordChangeTitle");
-
-        // returns 0 for yes, 1 for no.
-        var ok = !this._promptService.confirmEx(null,
-                                dialogTitle, dialogText, buttonFlags,
-                                null, null, null,
-                                null, {});
-        if (ok) {
-            this.log("Updating password for user " + aOldLogin.username);
-            this._updateLogin(aOldLogin, aNewPassword);
-        }
-    },
-
-
-    /*
      * promptToChangePasswordWithUsernames
      *
      * Called when we detect a password change in a form submission, but we
@@ -441,12 +343,7 @@ LoginManagerPrompter.prototype = {
     },
 
 
-
-
     /* ---------- Internal Methods ---------- */
-
-
-
 
     /*
      * _updateLogin
@@ -539,7 +436,7 @@ LoginManagerPrompter.prototype = {
 
             notifyBox = chromeWin.getNotificationBox(browser);
         } catch (e) {
-            this.log("Notification bars not available on window");
+            Cu.reportError(e);
         }
 
         return notifyBox;
@@ -580,38 +477,6 @@ LoginManagerPrompter.prototype = {
             username += this._ellipsis;
         }
         return username.replace(/['"]/g, "");
-    },
-
-
-    /*
-     * _getFormattedHostname
-     *
-     * The aURI parameter may either be a string uri, or an nsIURI instance.
-     *
-     * Returns the hostname to use in a nsILoginInfo object (for example,
-     * "http://example.com").
-     */
-    _getFormattedHostname : function (aURI) {
-        var uri;
-        if (aURI instanceof Ci.nsIURI) {
-            uri = aURI;
-        } else {
-            uri = Services.io.newURI(aURI, null, null);
-        }
-        var scheme = uri.scheme;
-
-        var hostname = scheme + "://" + uri.host;
-
-        // If the URI explicitly specified a port, only include it when
-        // it's not the default. (We never want "http://foo.com:80")
-        port = uri.port;
-        if (port != -1) {
-            var handler = Services.io.getProtocolHandler(scheme);
-            if (port != handler.defaultPort)
-                hostname += ":" + port;
-        }
-
-        return hostname;
     },
 
 
