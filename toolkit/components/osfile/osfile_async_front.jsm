@@ -278,7 +278,7 @@ File.prototype = {
     // If |buffer| is a typed array and there is no |bytes| options, we
     // need to extract the |byteLength| now, as it will be lost by
     // communication
-    if (isTypedArray(buffer) && (!options || !"bytes" in options)) {
+    if (isTypedArray(buffer) && (!options || !("bytes" in options))) {
       // Preserve the reference to |outExecutionDuration| option if it is
       // passed.
       options = clone(options, ["outExecutionDuration"]);
@@ -316,7 +316,7 @@ File.prototype = {
     // If |buffer| is a typed array and there is no |bytes| options,
     // we need to extract the |byteLength| now, as it will be lost
     // by communication
-    if (isTypedArray(buffer) && (!options || !"bytes" in options)) {
+    if (isTypedArray(buffer) && (!options || !("bytes" in options))) {
       // Preserve the reference to |outExecutionDuration| option if it is
       // passed.
       options = clone(options, ["outExecutionDuration"]);
