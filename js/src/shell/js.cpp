@@ -121,7 +121,7 @@ static uintptr_t gStackBase;
 static double MAX_TIMEOUT_INTERVAL = 1800.0;
 static double gTimeoutInterval = -1.0;
 static volatile bool gTimedOut = false;
-static js::Value gTimeoutFunc;
+static JS::Value gTimeoutFunc;
 
 static bool enableMethodJit = true;
 static bool enableTypeInference = true;
@@ -5349,6 +5349,9 @@ main(int argc, char **argv, char **envp)
     if (OOM_printAllocationCount)
         printf("OOM max count: %u\n", OOM_counter);
 #endif
+
+    gTimeoutFunc = NullValue();
+    JS_RemoveValueRootRT(rt, &gTimeoutFunc);
 
     DestroyContext(cx, true);
 
