@@ -204,7 +204,9 @@ class Thread {
 #undef HAVE_NATIVE_UNWIND
 #if defined(MOZ_PROFILING) \
     && (defined(SPS_PLAT_amd64_linux) || defined(SPS_PLAT_arm_android) \
-        || defined(SPS_PLAT_x86_linux))
+        || defined(SPS_PLAT_x86_linux) \
+        || defined(SPS_OS_windows) \
+        || defined(SPS_OS_darwin))
 # define HAVE_NATIVE_UNWIND
 #endif
 
