@@ -290,7 +290,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(7dc3a740-7ba9-11e2-b92a-0800200c9a66)]
+[uuid(7e7a9a90-4607-4e3a-8ef1-b0f4b8de1c27)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -553,6 +553,7 @@ interface nsIXPConnect : nsISupports
      * other running scripts.
      *
      * @param source The source of the script to evaluate.
+     * @param filename The filename of the script. May be null.
      * @param cx The context to use when setting up the evaluation of
      *           the script. The actual evaluation will happen on a new
      *           temporary context.
@@ -566,8 +567,9 @@ interface nsIXPConnect : nsISupports
      *         is responsible for rooting the jsval before making a call
      *         to this method.
      */
-    [noscript] jsval evalInSandboxObject(in AString source, in JSContextPtr cx,
-                                         in nsIXPConnectJSObjectHolder sandbox,
+    [noscript] jsval evalInSandboxObject(in AString source, in string filename,
+                                         in JSContextPtr cx,
+                                         in JSObjectPtr sandbox,
                                          in boolean returnStringOnly);
 
     /**
