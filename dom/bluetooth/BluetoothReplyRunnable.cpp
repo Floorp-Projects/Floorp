@@ -31,7 +31,7 @@ BluetoothReplyRunnable::~BluetoothReplyRunnable()
 {}
 
 nsresult
-BluetoothReplyRunnable::FireReply(const jsval& aVal)
+BluetoothReplyRunnable::FireReply(const JS::Value& aVal)
 {
   nsCOMPtr<nsIDOMRequestService> rs =
     do_GetService(DOMREQUEST_SERVICE_CONTRACTID);
@@ -64,7 +64,7 @@ BluetoothReplyRunnable::Run()
   if (mReply->type() != BluetoothReply::TBluetoothReplySuccess) {
     rv = FireReply(JSVAL_VOID);
   } else {
-    jsval v; 
+    JS::Value v; 
     if (!ParseSuccessfulReply(&v)) {
       rv = FireErrorString();
     } else {
