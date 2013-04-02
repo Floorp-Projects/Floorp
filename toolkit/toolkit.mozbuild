@@ -124,6 +124,8 @@ if CONFIG['MOZ_OMX_PLUGIN']:
 if not CONFIG['MOZ_NATIVE_PNG']:
     add_tier_dir('platform', 'media/libpng')
 
+add_tier_dir('platform', 'media/kiss_fft')
+
 if CONFIG['ENABLE_TESTS']:
     add_tier_dir('platform', 'testing/specialpowers')
 
