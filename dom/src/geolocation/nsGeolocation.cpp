@@ -90,7 +90,7 @@ public:
     MOZ_COUNT_DTOR(GeolocationSettingsCallback);
   }
 
-  NS_IMETHOD Handle(const nsAString& aName, const jsval& aResult)
+  NS_IMETHOD Handle(const nsAString& aName, const JS::Value& aResult)
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -307,7 +307,7 @@ nsGeolocationRequest::~nsGeolocationRequest()
 
 
 static mozilla::idl::GeoPositionOptions*
-OptionsFromJSOptions(JSContext* aCx, const jsval& aOptions, nsresult* aRv)
+OptionsFromJSOptions(JSContext* aCx, const JS::Value& aOptions, nsresult* aRv)
 {
   *aRv = NS_OK;
   nsAutoPtr<mozilla::idl::GeoPositionOptions> options(nullptr);
@@ -1281,7 +1281,7 @@ nsGeolocation::Update(nsIDOMGeoPosition *aSomewhere, bool aIsBetter)
 NS_IMETHODIMP
 nsGeolocation::GetCurrentPosition(nsIDOMGeoPositionCallback *callback,
                                   nsIDOMGeoPositionErrorCallback *errorCallback,
-                                  const jsval& jsoptions,
+                                  const JS::Value& jsoptions,
                                   JSContext* cx)
 {
   nsresult rv;
@@ -1353,7 +1353,7 @@ nsGeolocation::GetCurrentPositionReady(nsGeolocationRequest* aRequest)
 NS_IMETHODIMP
 nsGeolocation::WatchPosition(nsIDOMGeoPositionCallback *callback,
                              nsIDOMGeoPositionErrorCallback *errorCallback,
-                             const jsval& jsoptions,
+                             const JS::Value& jsoptions,
                              JSContext* cx,
                              int32_t *_retval)
 {
