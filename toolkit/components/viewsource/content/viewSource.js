@@ -31,7 +31,7 @@ function getBrowser() {
   return gBrowser;
 }
 
-__defineGetter__("gPageLoader", function () {
+this.__defineGetter__("gPageLoader", function () {
   var webnav = getWebNavigation();
   if (!webnav)
     return null;

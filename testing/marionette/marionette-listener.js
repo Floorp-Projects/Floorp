@@ -1378,7 +1378,18 @@ function clickElement(msg) {
   let el;
   try {
     el = elementManager.getKnownElement(msg.json.element, curWindow);
-    utils.click(el);
+    if (utils.isElementDisplayed(el)) {
+      if (utils.isElementEnabled(el)) {
+        utils.synthesizeMouseAtCenter(el, {}, el.ownerDocument.defaultView)
+      }
+      else {
+        sendError("Element is not Enabled", 12, null, command_id)
+      }
+    }
+    else {
+      sendError("Element is not visible", 11, null, command_id)
+    }
+    //utils.click(el);
     sendOk(command_id);
   }
   catch (e) {

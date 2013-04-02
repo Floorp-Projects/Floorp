@@ -33,13 +33,13 @@ extern JSClass HolderClass;
 bool CloneExpandoChain(JSContext *cx, JSObject *src, JSObject *dst);
 
 bool
-IsTransparent(JSContext *cx, JSObject *wrapper, jsid id);
+IsTransparent(JSContext *cx, JSHandleObject wrapper, JSHandleId id);
 
 JSObject *
 GetNativePropertiesObject(JSContext *cx, JSObject *wrapper);
 
 bool
-IsXrayResolving(JSContext *cx, JSObject *wrapper, jsid id);
+IsXrayResolving(JSContext *cx, JSHandleObject wrapper, JSHandleId id);
 
 }
 
