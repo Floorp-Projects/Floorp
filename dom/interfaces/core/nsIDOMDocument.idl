@@ -27,7 +27,7 @@ interface nsIDOMLocation;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(49592e41-a3a6-406c-a3d4-b5cf491f4e73)]
+[scriptable, uuid(75996de6-6b0f-43e5-ae79-c98fa669da9a)]
 interface nsIDOMDocument : nsIDOMNode
 {
   readonly attribute nsIDOMDocumentType         doctype;

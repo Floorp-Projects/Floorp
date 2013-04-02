@@ -28,7 +28,6 @@ function test()
   }
   catch(ex)
   {
-    print(ex + "");
     assertEq(ex instanceof SyntaxError, true, "wrong error: " + ex);
   }
 

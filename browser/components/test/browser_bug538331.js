@@ -107,7 +107,7 @@ const BCH_TESTS = [
 var gOriginalMStone;
 var gOriginalOverrideURL;
 
-__defineGetter__("gBG", function() {
+this.__defineGetter__("gBG", function() {
   delete this.gBG;
   return this.gBG = Cc["@mozilla.org/browser/browserglue;1"].
                     getService(Ci.nsIBrowserGlue).

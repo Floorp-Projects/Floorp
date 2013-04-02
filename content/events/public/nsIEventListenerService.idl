@@ -11,7 +11,7 @@ interface nsIDOMEventTarget;
  * An instance of this interface describes how an event listener
  * was added to an event target.
  */
-[scriptable, uuid(cbc2ea6e-4043-4435-ba8f-64cbf6638622)]
+[scriptable, uuid(c4776eb7-05bc-49ce-a0ca-6213a346d53a)]
 interface nsIEventListenerInfo : nsISupports
 {
   /**
@@ -21,6 +21,14 @@ interface nsIEventListenerInfo : nsISupports
   readonly attribute boolean capturing;
   readonly attribute boolean allowsUntrusted;
   readonly attribute boolean inSystemEventGroup;
+
+  /**
+   * The underlying JS object of the event listener, if this listener
+   * has one.  Null otherwise.
+   */
+  [implicit_jscontext]
+  readonly attribute jsval listenerObject;
+
   /**
    * Tries to serialize event listener to a string.
    * Returns null if serialization isn't possible

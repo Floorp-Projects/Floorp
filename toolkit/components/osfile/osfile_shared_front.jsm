@@ -80,8 +80,7 @@ AbstractFile.prototype = {
    * @return {number} The number of bytes actually read, which may be
    * less than |bytes| if the file did not contain that many bytes left.
    */
-  readTo: function readTo(buffer, options) {
-    options = options || noOptions;
+  readTo: function readTo(buffer, options = noOptions) {
     let {ptr, bytes} = AbstractFile.normalizeToPointer(buffer, options.bytes);
     let pos = 0;
     while (pos < bytes) {
@@ -113,8 +112,7 @@ AbstractFile.prototype = {
    *
    * @return {number} The number of bytes actually written.
    */
-  write: function write(buffer, options) {
-    options = options || noOptions;
+  write: function write(buffer, options = noOptions) {
 
     let {ptr, bytes} = AbstractFile.normalizeToPointer(buffer, options.bytes);
 
@@ -342,8 +340,7 @@ AbstractFile.read = function read(path, bytes) {
  * @return {number} The number of bytes actually written.
  */
 AbstractFile.writeAtomic =
-     function writeAtomic(path, buffer, options) {
-  options = options || noOptions;
+     function writeAtomic(path, buffer, options = noOptions) {
 
   let noOverwrite = options.noOverwrite;
   if (noOverwrite && OS.File.exists(path)) {

@@ -133,7 +133,7 @@ class TestBuildReader(unittest.TestCase):
             list(reader.read_topsrcdir())
 
         e = bre.exception
-        self.assertIn('Python syntax error on line 4', str(e))
+        self.assertIn('Python syntax error on line 5', str(e))
         self.assertIn('    foo =', str(e))
         self.assertIn('         ^', str(e))
 
@@ -144,7 +144,7 @@ class TestBuildReader(unittest.TestCase):
             list(reader.read_topsrcdir())
 
         e = bre.exception
-        self.assertIn('The error was triggered on line 4', str(e))
+        self.assertIn('The error was triggered on line 5', str(e))
         self.assertIn('The underlying problem is an attempt to read', str(e))
         self.assertIn('    FOO', str(e))
 
@@ -155,7 +155,7 @@ class TestBuildReader(unittest.TestCase):
             list(reader.read_topsrcdir())
 
         e = bre.exception
-        self.assertIn('The error was triggered on line 6', str(e))
+        self.assertIn('The error was triggered on line 7', str(e))
         self.assertIn('The underlying problem is an attempt to write', str(e))
         self.assertIn('    FOO', str(e))
 
@@ -166,7 +166,7 @@ class TestBuildReader(unittest.TestCase):
             list(reader.read_topsrcdir())
 
         e = bre.exception
-        self.assertIn('The error was triggered on line 4', str(e))
+        self.assertIn('The error was triggered on line 5', str(e))
         self.assertIn('is an attempt to write an illegal value to a special',
             str(e))
 
