@@ -171,27 +171,13 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDocumentEncoder)
    NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocumentEncoder)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocument)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSelection)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mRange)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mNode)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCommonParent)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDocumentEncoder)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocument)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSelection)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRange)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNode)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCommonParent)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_5(nsDocumentEncoder,
+                           mDocument, mSelection, mRange, mNode, mCommonParent)
 
 nsDocumentEncoder::nsDocumentEncoder() : mCachedBuffer(nullptr)
 {
   Initialize();
   mMimeType.AssignLiteral("text/plain");
-
 }
 
 void nsDocumentEncoder::Initialize(bool aClearCachedSerializer)
