@@ -141,9 +141,16 @@ public class TopSitesView extends GridView {
 
     public void onDestroy() {
         if (mTopSitesAdapter != null) {
-            Cursor cursor = mTopSitesAdapter.getCursor();
-            if (cursor != null && !cursor.isClosed())
-                cursor.close();
+            setAdapter(null);
+            final Cursor cursor = mTopSitesAdapter.getCursor();
+
+            ThreadUtils.postToBackgroundThread(new Runnable() {
+                @Override
+                public void run() {
+                if (cursor != null && !cursor.isClosed())
+                    cursor.close();
+                }
+            });
         }
     }
 
@@ -186,12 +193,9 @@ public class TopSitesView extends GridView {
 
     public void loadTopSites() {
         final ContentResolver resolver = mContext.getContentResolver();
-        Cursor old = null;
-        if (mTopSitesAdapter != null) {
-            old = mTopSitesAdapter.getCursor();
-        }
+
         // Swap in the new cursor.
-        final Cursor oldCursor = old;
+        final Cursor oldCursor = (mTopSitesAdapter != null) ? mTopSitesAdapter.getCursor() : null;
         final Cursor newCursor = BrowserDB.getTopSites(resolver, mNumberOfTopSites);
 
         post(new Runnable() {
@@ -338,13 +342,6 @@ public class TopSitesView extends GridView {
 
     public void setLoadCompleteCallback(AboutHomeContent.VoidCallback callback) {
         mLoadCompleteCallback = callback;
-    }
-
-    public void refresh() {
-        if (mTopSitesAdapter != null)
-            mTopSitesAdapter.notifyDataSetChanged();
-
-        setAdapter(mTopSitesAdapter);
     }
 
     private class TopSitesViewHolder {
