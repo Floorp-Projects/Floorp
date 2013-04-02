@@ -5,6 +5,9 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
+import org.mozilla.gecko.util.HardwareUtils;
+
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -43,8 +46,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.TimerTask;
-
-import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 
 public class BrowserToolbar implements ViewSwitcher.ViewFactory,
                                        Tabs.OnTabsChangedListener,
@@ -364,7 +365,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
             });
         }
 
-        if (!mActivity.isTablet()) {
+        if (!HardwareUtils.isTablet()) {
             // Set a touch delegate to Tabs button, so the touch events on its tail
             // are passed to the menu button.
             mLayout.post(new Runnable() {
@@ -659,7 +660,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
             setTitle(url);
         }
 
-        if (mActivity.isTablet() || Build.VERSION.SDK_INT < 11) {
+        if (HardwareUtils.isTablet() || Build.VERSION.SDK_INT < 11) {
             return;
         }
 
@@ -784,7 +785,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
 
     private void onAwesomeBarSearch() {
         // This animation doesn't make much sense in a sidebar UI
-        if (mActivity.isTablet() || Build.VERSION.SDK_INT < 11) {
+        if (HardwareUtils.isTablet() || Build.VERSION.SDK_INT < 11) {
             mActivity.onSearchRequested();
             return;
         }

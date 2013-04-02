@@ -183,10 +183,6 @@ abstract public class GeckoApp
 
     private PointF mInitialTouchPoint = null;
 
-    private static Boolean sIsLargeTablet = null;
-    private static Boolean sIsSmallTablet = null;
-    private static Boolean sIsTouchDevice = null;
-
     abstract public int getLayout();
     abstract public boolean hasTabsSideBar();
     abstract protected String getDefaultProfileName();
@@ -1316,47 +1312,6 @@ abstract public class GeckoApp
                     window.getDecorView().setSystemUiVisibility(fullscreen ? 1 : 0);
             }
         });
-    }
-
-    public boolean isTablet() {
-        return isLargeTablet() || isSmallTablet();
-    }
-
-    public boolean isLargeTablet() {
-        if (sIsLargeTablet == null) {
-            int screenLayout = getResources().getConfiguration().screenLayout;
-            sIsLargeTablet = (Build.VERSION.SDK_INT >= 11 &&
-                              ((screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) == Configuration.SCREENLAYOUT_SIZE_XLARGE));
-        }
-
-        return sIsLargeTablet;
-    }
-
-    public boolean isSmallTablet() {
-        if (sIsSmallTablet == null) {
-            int screenLayout = getResources().getConfiguration().screenLayout;
-            sIsSmallTablet = (Build.VERSION.SDK_INT >= 11 &&
-                              ((screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) == Configuration.SCREENLAYOUT_SIZE_LARGE));
-        }
-
-        return sIsSmallTablet;
-    }
-
-    public boolean isTouchDevice() {
-        if (sIsTouchDevice == null) {
-            if (Build.VERSION.SDK_INT >= 9) {
-                sIsTouchDevice = false;
-                for (int inputDeviceId : InputDevice.getDeviceIds()) {
-                    if ((InputDevice.getDevice(inputDeviceId).getSources() & InputDevice.SOURCE_TOUCHSCREEN) == InputDevice.SOURCE_TOUCHSCREEN) {
-                        sIsTouchDevice = true;
-                    }
-                }
-            } else {
-                // pre-gingerbread just assume everything is touch-enabled
-                sIsTouchDevice = true;
-            }
-        }
-        return sIsTouchDevice;
     }
 
     /** Called when the activity is first created. */
