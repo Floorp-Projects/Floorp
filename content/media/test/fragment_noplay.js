@@ -6,7 +6,6 @@ function onLoadedMetadata() {
   var a = s - 0.15;
   var b = s + 0.15;
   ok(v.currentTime >= a && v.currentTime <= b, "loadedmetadata currentTime is " + a + " < " + v.currentTime + " < " + b);
-  ok(v.initialTime == s, "initialTime (" + v.initialTime + ") == start Time (" + s + ")");
   ok(v.mozFragmentEnd == e, "mozFragmentEnd (" + v.mozFragmentEnd + ") == end Time (" + e + ")");
   finish();
 }
