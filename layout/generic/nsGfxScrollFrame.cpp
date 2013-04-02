@@ -3888,12 +3888,7 @@ nsGfxScrollFrameInner::SaveState()
   }
 
   nsPresState* state = new nsPresState();
-  // Save mRestorePos instead of our actual current scroll position, if it's
-  // valid. This ensures if a reframe occurs while we're in the process
-  // of loading content to scroll to a restored position, we'll keep trying
-  // after the reframe.
-  nsPoint pt = mRestorePos.y == -1 ? GetLogicalScrollPosition() : mRestorePos;
-  state->SetScrollState(pt);
+  state->SetScrollState(GetLogicalScrollPosition());
   return state;
 }
 
@@ -3901,6 +3896,8 @@ void
 nsGfxScrollFrameInner::RestoreState(nsPresState* aState)
 {
   mRestorePos = aState->GetScrollState();
+  mLastPos.x = -1;
+  mLastPos.y = -1;
   mDidHistoryRestore = true;
   mLastPos = mScrolledFrame ? GetLogicalScrollPosition() : nsPoint(0,0);
 }
