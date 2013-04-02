@@ -192,11 +192,12 @@ public class AboutHomeContent extends ScrollView
      * Reinflates and updates all components of this view.
      */
     public void refresh() {
+        mTopSites.onDestroy();
+
         // We must remove the currently inflated view to allow for reinflation.
         removeAllViews();
 
         inflate();
-        mTopSites.refresh();
 
         // Refresh all elements.
         update(AboutHomeContent.UpdateFlags.ALL);
