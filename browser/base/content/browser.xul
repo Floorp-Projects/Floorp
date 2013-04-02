@@ -182,37 +182,27 @@
            hidden="true"
            consumeoutsideclicks="true"
            align="start"
+           orient="horizontal"
            role="alert">
-      <hbox flex="1">
-        <image id="social-activation-icon" class="popup-notification-icon"/>
-        <vbox flex="1">
-          <description id="social-activation-message" class="popup-notification-description"/>
+      <image id="social-activation-icon" class="popup-notification-icon"/>
+      <vbox flex="1">
+        <description id="social-activation-message" class="popup-notification-description">&social.activated.description;</description>
+        <spacer flex="1"/>
+        <hbox pack="start" align="center" class="popup-notification-button-container">
+          <label  id="social-undoactivation-button"
+                  class="text-link"
+                  value="&social.activated.undobutton.label;"
+                  accesskey="&social.activated.undobutton.accesskey;"
+                  onclick="SocialUI.undoActivation(this);"/>
           <spacer flex="1"/>
-          <hbox pack="end" align="center" class="popup-notification-button-container">
-#ifdef XP_UNIX
-        <button id="social-undoactivation-button"
-                label="&social.activated.undobutton.label;"
-                accesskey="&social.activated.undobutton.accesskey;"
-                onclick="SocialUI.undoActivation(this);"/>
-        <button default="true"
-                autofocus="autofocus"
-                label="&social.ok.label;"
-                accesskey="&social.ok.accesskey;"
-                oncommand="SocialUI.notificationPanel.hidePopup();"/>
-#else
-        <button default="true"
-                autofocus="autofocus"
-                label="&social.ok.label;"
-                accesskey="&social.ok.accesskey;"
-                oncommand="SocialUI.notificationPanel.hidePopup();"/>
-        <button id="social-undoactivation-button"
-                label="&social.activated.undobutton.label;"
-                accesskey="&social.activated.undobutton.accesskey;"
-                onclick="SocialUI.undoActivation(this);"/>
-#endif
-          </hbox>
-        </vbox>
-      </hbox>
+          <button id="social-activation-button"
+                  default="true"
+                  autofocus="autofocus"
+                  label="&social.ok.label;"
+                  accesskey="&social.ok.accesskey;"
+                  oncommand="SocialUI.activationPanel.hidePopup();"/>
+        </hbox>
+      </vbox>
     </panel>
 
     <panel id="unsharePopup"
@@ -450,6 +440,13 @@
       </popupnotificationcontent>
     </popupnotification>
 
+    <popupnotification id="servicesInstall-notification" hidden="true">
+      <popupnotificationcontent orient="vertical" align="start">
+        <separator class="thin"/>
+        <label id="servicesInstall-learnmore-link" class="text-link"/>
+      </popupnotificationcontent>
+    </popupnotification>
+
     <popupnotification id="pointerLock-notification" hidden="true">
       <popupnotificationcontent orient="vertical" align="start">
         <separator class="thin"/>
@@ -588,6 +585,7 @@
             <image id="webRTC-shareDevices-notification-icon" class="notification-anchor-icon" role="button"/>
             <image id="webRTC-sharingDevices-notification-icon" class="notification-anchor-icon" role="button"/>
             <image id="pointerLock-notification-icon" class="notification-anchor-icon" role="button"/>
+            <image id="servicesInstall-notification-icon" class="notification-anchor-icon" role="button"/>
           </box>
           <!-- Use onclick instead of normal popup= syntax since the popup
                code fires onmousedown, and hence eats our favicon drag events.
@@ -726,6 +724,9 @@
             <menuseparator class="social-provider-menu" hidden="true"/>
             <menuitem class="social-addons-menuitem" command="Social:Addons"
                       label="&social.addons.label;"/>
+            <menuitem label="&social.learnMore.label;"
+                      accesskey="&social.learnMore.accesskey;"
+                      oncommand="SocialUI.showLearnMore();"/>
           </menupopup>
         </toolbarbutton>
       </toolbaritem>
