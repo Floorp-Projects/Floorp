@@ -1,10 +1,10 @@
-
 /*
  * Copyright 2011 Google Inc.
  *
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
+
 #ifndef SkLayerDrawLooper_DEFINED
 #define SkLayerDrawLooper_DEFINED
 
@@ -90,7 +90,7 @@ public:
     SkPaint* addLayer(const LayerInfo&);
 
     /**
-     *  This layer will draw with the original paint, ad the specified offset
+     *  This layer will draw with the original paint, at the specified offset
      */
     void addLayer(SkScalar dx, SkScalar dy);
 
@@ -103,6 +103,7 @@ public:
     virtual void init(SkCanvas*);
     virtual bool next(SkCanvas*, SkPaint* paint);
 
+    SK_DEVELOPER_TO_STRING()
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkLayerDrawLooper)
 
 protected:
@@ -132,6 +133,5 @@ private:
 
     typedef SkDrawLooper INHERITED;
 };
-
 
 #endif

@@ -16,16 +16,18 @@ public:
     ~SkOSWindow();
     void*   getHWND() const { return fHWND; }
 
-    virtual bool onDispatchClick(int x, int y, Click::State state,
-                                 void* owner);
-
     enum SkBackEndTypes {
         kNone_BackEndType,
         kNativeGL_BackEndType,
     };
 
+    struct AttachmentInfo {
+        int fSampleCount;
+        int fStencilBits;
+    };
+
     void    detach();
-    bool    attach(SkBackEndTypes attachType, int msaaSampleCount);
+    bool    attach(SkBackEndTypes attachType, int msaaSampleCount, AttachmentInfo*);
     void    present();
 
 protected:
@@ -35,7 +37,7 @@ protected:
     virtual void onHandleInval(const SkIRect&);
     // overrides from SkView
     virtual void onAddMenu(const SkOSMenu*);
-    virtual void onUpdateMenu(const SkOSMenu*);
+    virtual void onUpdateMenu(SkOSMenu*);
     virtual void onSetTitle(const char[]);
 
 private:
@@ -46,4 +48,3 @@ private:
 };
 
 #endif
-

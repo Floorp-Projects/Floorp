@@ -11,7 +11,7 @@
 
 #include "GrGLIRect.h"
 #include "GrRenderTarget.h"
-#include "GrScalar.h"
+#include "SkScalar.h"
 
 class GrGpuGL;
 class GrGLTexture;
@@ -25,12 +25,13 @@ public:
     enum { kUnresolvableFBOID = 0 };
 
     struct Desc {
-        GrGLuint      fRTFBOID;
-        GrGLuint      fTexFBOID;
-        GrGLuint      fMSColorRenderbufferID;
-        bool          fOwnIDs;
-        GrPixelConfig fConfig;
-        int           fSampleCnt;
+        GrGLuint         fRTFBOID;
+        GrGLuint         fTexFBOID;
+        GrGLuint         fMSColorRenderbufferID;
+        bool             fIsWrapped;
+        GrPixelConfig    fConfig;
+        int              fSampleCnt;
+        GrSurfaceOrigin  fOrigin;
     };
 
     // creates a GrGLRenderTarget associated with a texture
@@ -51,7 +52,7 @@ public:
     const GrGLIRect& getViewport() const { return fViewport; }
 
     // The following two functions return the same ID when a
-    // texture-rendertarget is multisampled, and different IDs when
+    // texture/render target is multisampled, and different IDs when
     // it is.
     // FBO ID used to render into
     GrGLuint renderFBOID() const { return fRTFBOID; }
@@ -59,10 +60,10 @@ public:
     GrGLuint textureFBOID() const { return fTexFBOID; }
 
     // override of GrRenderTarget
-    virtual intptr_t getRenderTargetHandle() const {
+    virtual GrBackendObject getRenderTargetHandle() const {
         return this->renderFBOID();
     }
-    virtual intptr_t getRenderTargetResolvedHandle() const {
+    virtual GrBackendObject getRenderTargetResolvedHandle() const {
         return this->textureFBOID();
     }
     virtual ResolveType getResolveType() const {
@@ -89,11 +90,7 @@ private:
 
     GrGLuint      fMSColorRenderbufferID;
 
-    // Should this object delete IDs when it is destroyed or does someone
-    // else own them.
-    bool        fOwnIDs;
-
-    // when we switch to this rendertarget we want to set the viewport to
+    // when we switch to this render target we want to set the viewport to
     // only render to to content area (as opposed to the whole allocation) and
     // we want the rendering to be at top left (GL has origin in bottom left)
     GrGLIRect fViewport;

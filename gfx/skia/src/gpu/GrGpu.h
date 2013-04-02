@@ -15,6 +15,8 @@
 #include "GrRefCnt.h"
 #include "GrClipMaskManager.h"
 
+#include "SkPath.h"
+
 class GrContext;
 class GrIndexBufferAllocPool;
 class GrPath;
@@ -29,7 +31,7 @@ class GrGpu : public GrDrawTarget {
 public:
 
     /**
-     * Additional blend coeffecients for dual source blending, not exposed
+     * Additional blend coefficients for dual source blending, not exposed
      * through GrPaint/GrContext.
      */
     enum ExtendedBlendCoeffs {
@@ -44,25 +46,19 @@ public:
     };
 
     /**
-     *  Create an instance of GrGpu that matches the specified Engine backend.
-     *  If the requested engine is not supported (at compile-time or run-time)
-     *  this returns NULL.
+     * Create an instance of GrGpu that matches the specified backend. If the requested backend is
+     * not supported (at compile-time or run-time) this returns NULL. The context will not be
+     * fully constructed and should not be used by GrGpu until after this function returns.
      */
-    static GrGpu* Create(GrEngine, GrPlatform3DContext context3D);
+    static GrGpu* Create(GrBackend, GrBackendContext, GrContext* context);
 
     ////////////////////////////////////////////////////////////////////////////
 
-    GrGpu();
+    GrGpu(GrContext* context);
     virtual ~GrGpu();
 
-    // The GrContext sets itself as the owner of this Gpu object
-    void setContext(GrContext* context) {
-        GrAssert(NULL == fContext);
-        fContext = context;
-        fClipMaskManager.setContext(context);
-    }
-    GrContext* getContext() { return fContext; }
-    const GrContext* getContext() const { return fContext; }
+    GrContext* getContext() { return this->INHERITED::getContext(); }
+    const GrContext* getContext() const { return this->INHERITED::getContext(); }
 
     /**
      * The GrGpu object normally assumes that no outsider is setting state
@@ -96,14 +92,14 @@ public:
                              const void* srcData, size_t rowBytes);
 
     /**
-     * Implements GrContext::createPlatformTexture
+     * Implements GrContext::wrapBackendTexture
      */
-    GrTexture* createPlatformTexture(const GrPlatformTextureDesc& desc);
+    GrTexture* wrapBackendTexture(const GrBackendTextureDesc&);
 
     /**
-     * Implements GrContext::createPlatformTexture
+     * Implements GrContext::wrapBackendTexture
      */
-    GrRenderTarget* createPlatformRenderTarget(const GrPlatformRenderTargetDesc& desc);
+    GrRenderTarget* wrapBackendRenderTarget(const GrBackendRenderTargetDesc&);
 
     /**
      * Creates a vertex buffer.
@@ -164,23 +160,17 @@ public:
     void forceRenderTargetFlush();
 
     /**
-     * readPixels with some configs may be slow. Given a desired config this
-     * function returns a fast-path config. The returned config must have the
-     * same components and component sizes. The caller is free to ignore the
-     * result and call readPixels with the original config.
+     * Gets a preferred 8888 config to use for writing / reading pixel data. The returned config
+     * must have at least as many bits per channel as the config param.
      */
-    virtual GrPixelConfig preferredReadPixelsConfig(GrPixelConfig config)
-                                                                        const {
-        return config;
-    }
+    virtual GrPixelConfig preferredReadPixelsConfig(GrPixelConfig config) const { return config; }
+    virtual GrPixelConfig preferredWritePixelsConfig(GrPixelConfig config) const { return config; }
 
     /**
-     * Same as above but applies to writeTexturePixels
+     * Called before uploading writing pixels to a GrTexture when the src pixel config doesn't
+     * match the texture's config.
      */
-    virtual GrPixelConfig preferredWritePixelsConfig(GrPixelConfig config)
-                                                                        const {
-        return config;
-    }
+    virtual bool canWriteTexturePixels(const GrTexture*, GrPixelConfig srcConfig) const = 0;
 
     /**
      * OpenGL's readPixels returns the result bottom-to-top while the skia
@@ -233,8 +223,7 @@ public:
      */
     bool readPixels(GrRenderTarget* renderTarget,
                     int left, int top, int width, int height,
-                    GrPixelConfig config, void* buffer, size_t rowBytes,
-                    bool invertY);
+                    GrPixelConfig config, void* buffer, size_t rowBytes);
 
     /**
      * Updates the pixels in a rectangle of a texture.
@@ -245,10 +234,10 @@ public:
      * @param height        height of rectangle to write in pixels.
      * @param config        the pixel config of the source buffer
      * @param buffer        memory to read pixels from
-     * @param rowBytes      number of bytes bewtween consecutive rows. Zero
+     * @param rowBytes      number of bytes between consecutive rows. Zero
      *                      means rows are tightly packed.
      */
-    void writeTexturePixels(GrTexture* texture,
+    bool writeTexturePixels(GrTexture* texture,
                             int left, int top, int width, int height,
                             GrPixelConfig config, const void* buffer,
                             size_t rowBytes);
@@ -310,13 +299,13 @@ public:
      * Can the provided configuration act as a color render target?
      */
     bool isConfigRenderable(GrPixelConfig config) const {
-        GrAssert(kGrPixelConfigCount > config);
+        GrAssert(kGrPixelConfigCnt > config);
         return fConfigRenderSupport[config];
     }
 
     /**
      * These methods are called by the clip manager's setupClipping function
-     * which (called as part of GrGpu's implementation of onDraw* and
+     * which (called as part of GrGpu's implementation of onDraw and
      * onStencilPath member functions.) The GrGpu subclass should flush the
      * stencil state to the 3D API in its implementation of flushGraphicsState.
      */
@@ -377,7 +366,7 @@ protected:
     }
 
     // prepares clip flushes gpu state before a draw
-    bool setupClipAndFlushState(DrawType);
+    bool setupClipAndFlushState(DrawType, const GrDeviceCoordTexture* dstCopy);
 
     // Functions used to map clip-respecting stencil tests into normal
     // stencil funcs supported by GPUs.
@@ -414,162 +403,99 @@ protected:
 
     // Derived classes need access to this so they can fill it out in their
     // constructors
-    bool    fConfigRenderSupport[kGrPixelConfigCount];
-
-    // GrDrawTarget overrides
-    virtual bool onReserveVertexSpace(GrVertexLayout vertexLayout,
-                                      int vertexCount,
-                                      void** vertices) SK_OVERRIDE;
-    virtual bool onReserveIndexSpace(int indexCount,
-                                     void** indices) SK_OVERRIDE;
-    virtual void releaseReservedVertexSpace() SK_OVERRIDE;
-    virtual void releaseReservedIndexSpace() SK_OVERRIDE;
-    virtual void onSetVertexSourceToArray(const void* vertexArray,
-                                          int vertexCount) SK_OVERRIDE;
-    virtual void onSetIndexSourceToArray(const void* indexArray,
-                                         int indexCount) SK_OVERRIDE;
-    virtual void releaseVertexArray() SK_OVERRIDE;
-    virtual void releaseIndexArray() SK_OVERRIDE;
-    virtual void geometrySourceWillPush() SK_OVERRIDE;
-    virtual void geometrySourceWillPop(
-        const GeometrySrcState& restoredState) SK_OVERRIDE;
+    bool    fConfigRenderSupport[kGrPixelConfigCnt];
 
     // Helpers for setting up geometry state
     void finalizeReservedVertices();
     void finalizeReservedIndices();
 
+private:
+    // GrDrawTarget overrides
+    virtual bool onReserveVertexSpace(size_t vertexSize, int vertexCount, void** vertices) SK_OVERRIDE;
+    virtual bool onReserveIndexSpace(int indexCount, void** indices) SK_OVERRIDE;
+    virtual void releaseReservedVertexSpace() SK_OVERRIDE;
+    virtual void releaseReservedIndexSpace() SK_OVERRIDE;
+    virtual void onSetVertexSourceToArray(const void* vertexArray, int vertexCount) SK_OVERRIDE;
+    virtual void onSetIndexSourceToArray(const void* indexArray, int indexCount) SK_OVERRIDE;
+    virtual void releaseVertexArray() SK_OVERRIDE;
+    virtual void releaseIndexArray() SK_OVERRIDE;
+    virtual void geometrySourceWillPush() SK_OVERRIDE;
+    virtual void geometrySourceWillPop(const GeometrySrcState& restoredState) SK_OVERRIDE;
+
+
     // called when the 3D context state is unknown. Subclass should emit any
     // assumed 3D context state and dirty any state cache.
     virtual void onResetContext() = 0;
 
-
-    // overridden by API-specific derived class to create objects.
+    // overridden by backend-specific derived class to create objects.
     virtual GrTexture* onCreateTexture(const GrTextureDesc& desc,
                                        const void* srcData,
                                        size_t rowBytes) = 0;
-    virtual GrTexture* onCreatePlatformTexture(const GrPlatformTextureDesc& desc) = 0;
-    virtual GrRenderTarget* onCreatePlatformRenderTarget(const GrPlatformRenderTargetDesc& desc) = 0;
-    virtual GrVertexBuffer* onCreateVertexBuffer(uint32_t size,
-                                                 bool dynamic) = 0;
-    virtual GrIndexBuffer* onCreateIndexBuffer(uint32_t size,
-                                               bool dynamic) = 0;
+    virtual GrTexture* onWrapBackendTexture(const GrBackendTextureDesc&) = 0;
+    virtual GrRenderTarget* onWrapBackendRenderTarget(const GrBackendRenderTargetDesc&) = 0;
+    virtual GrVertexBuffer* onCreateVertexBuffer(uint32_t size, bool dynamic) = 0;
+    virtual GrIndexBuffer* onCreateIndexBuffer(uint32_t size, bool dynamic) = 0;
     virtual GrPath* onCreatePath(const SkPath& path) = 0;
 
-    // overridden by API-specific derivated class to perform the clear and
+    // overridden by backend-specific derived class to perform the clear and
     // clearRect. NULL rect means clear whole target.
     virtual void onClear(const GrIRect* rect, GrColor color) = 0;
 
-    // overridden by API-specific derived class to perform the draw call.
-    virtual void onGpuDrawIndexed(GrPrimitiveType type,
-                                  uint32_t startVertex,
-                                  uint32_t startIndex,
-                                  uint32_t vertexCount,
-                                  uint32_t indexCount) = 0;
-
-    virtual void onGpuDrawNonIndexed(GrPrimitiveType type,
-                                     uint32_t vertexCount,
-                                     uint32_t numVertices) = 0;
+    // overridden by backend-specific derived class to perform the draw call.
+    virtual void onGpuDraw(const DrawInfo&) = 0;
     // when GrDrawTarget::stencilPath is called the draw state's current stencil
     // settings are ignored. Instead the GrGpu decides the stencil rules
     // necessary to stencil the path. These are still subject to filtering by
     // the clip mask manager.
     virtual void setStencilPathSettings(const GrPath&,
-                                        GrPathFill,
+                                        SkPath::FillType,
                                         GrStencilSettings* settings) = 0;
-    // overridden by API-specific derived class to perform the path stenciling.
-    virtual void onGpuStencilPath(const GrPath*, GrPathFill) = 0;
+    // overridden by backend-specific derived class to perform the path stenciling.
+    virtual void onGpuStencilPath(const GrPath*, SkPath::FillType) = 0;
 
-    // overridden by API-specific derived class to perform flush
+    // overridden by backend-specific derived class to perform flush
     virtual void onForceRenderTargetFlush() = 0;
 
-    // overridden by API-specific derived class to perform the read pixels.
+    // overridden by backend-specific derived class to perform the read pixels.
     virtual bool onReadPixels(GrRenderTarget* target,
                               int left, int top, int width, int height,
                               GrPixelConfig,
                               void* buffer,
-                              size_t rowBytes,
-                              bool invertY) = 0;
+                              size_t rowBytes) = 0;
 
-    // overridden by API-specific derived class to perform the texture update
-    virtual void onWriteTexturePixels(GrTexture* texture,
+    // overridden by backend-specific derived class to perform the texture update
+    virtual bool onWriteTexturePixels(GrTexture* texture,
                                       int left, int top, int width, int height,
                                       GrPixelConfig config, const void* buffer,
                                       size_t rowBytes) = 0;
 
-    // overridden by API-specific derived class to perform the resolve
+    // overridden by backend-specific derived class to perform the resolve
     virtual void onResolveRenderTarget(GrRenderTarget* target) = 0;
-
-    // called to program the vertex data, indexCount will be 0 if drawing non-
-    // indexed geometry. The subclass may adjust the startVertex and/or
-    // startIndex since it may have already accounted for these in the setup.
-    virtual void setupGeometry(int* startVertex,
-                               int* startIndex,
-                               int vertexCount,
-                               int indexCount) = 0;
 
     // width and height may be larger than rt (if underlying API allows it).
     // Should attach the SB to the RT. Returns false if compatible sb could
     // not be created.
-    virtual bool createStencilBufferForRenderTarget(GrRenderTarget* rt,
-                                                    int width,
-                                                    int height) = 0;
+    virtual bool createStencilBufferForRenderTarget(GrRenderTarget*, int width, int height) = 0;
 
     // attaches an existing SB to an existing RT.
-    virtual bool attachStencilBufferToRenderTarget(GrStencilBuffer* sb,
-                                                   GrRenderTarget* rt) = 0;
+    virtual bool attachStencilBufferToRenderTarget(GrStencilBuffer*, GrRenderTarget*) = 0;
 
     // The GrGpu typically records the clients requested state and then flushes
     // deltas from previous state at draw time. This function does the
-    // API-specific flush of the state
+    // backend-specific flush of the state.
     // returns false if current state is unsupported.
-    virtual bool flushGraphicsState(DrawType) = 0;
+    virtual bool flushGraphicsState(DrawType, const GrDeviceCoordTexture* dstCopy) = 0;
 
     // clears the entire stencil buffer to 0
     virtual void clearStencil() = 0;
-
-private:
-    GrContext*                  fContext; // not reffed (context refs gpu)
-
-    ResetTimestamp              fResetTimestamp;
-
-    GrVertexBufferAllocPool*    fVertexPool;
-
-    GrIndexBufferAllocPool*     fIndexPool;
-
-    // counts number of uses of vertex/index pool in the geometry stack
-    int                         fVertexPoolUseCnt;
-    int                         fIndexPoolUseCnt;
-
-    enum {
-        kPreallocGeomPoolStateStackCnt = 4,
-    };
-    SkSTArray<kPreallocGeomPoolStateStackCnt,
-              GeometryPoolState, true>              fGeomPoolStateStack;
-
-    mutable GrIndexBuffer*      fQuadIndexBuffer; // mutable so it can be
-                                                  // created on-demand
-
-    mutable GrVertexBuffer*     fUnitSquareVertexBuffer; // mutable so it can be
-                                                         // created on-demand
-
-    bool                        fContextIsDirty;
-
-    typedef SkTDLinkedList<GrResource> ResourceList;
-    ResourceList                fResourceList;
 
     // Given a rt, find or create a stencil buffer and attach it
     bool attachStencilBufferToRenderTarget(GrRenderTarget* target);
 
     // GrDrawTarget overrides
-    virtual void onDrawIndexed(GrPrimitiveType type,
-                               int startVertex,
-                               int startIndex,
-                               int vertexCount,
-                               int indexCount) SK_OVERRIDE;
-    virtual void onDrawNonIndexed(GrPrimitiveType type,
-                                  int startVertex,
-                                  int vertexCount) SK_OVERRIDE;
-    virtual void onStencilPath(const GrPath* path, GrPathFill fill) SK_OVERRIDE;
+    virtual void onDraw(const DrawInfo&) SK_OVERRIDE;
+    virtual void onStencilPath(const GrPath* path, const SkStrokeRec& stroke,
+                               SkPath::FillType) SK_OVERRIDE;
 
     // readies the pools to provide vertex/index data.
     void prepareVertexPool();
@@ -590,6 +516,23 @@ private:
             fContextIsDirty = false;
         }
     }
+
+    enum {
+        kPreallocGeomPoolStateStackCnt = 4,
+    };
+    typedef SkTInternalLList<GrResource> ResourceList;
+    SkSTArray<kPreallocGeomPoolStateStackCnt, GeometryPoolState, true>  fGeomPoolStateStack;
+    ResetTimestamp                                                      fResetTimestamp;
+    GrVertexBufferAllocPool*                                            fVertexPool;
+    GrIndexBufferAllocPool*                                             fIndexPool;
+    // counts number of uses of vertex/index pool in the geometry stack
+    int                                                                 fVertexPoolUseCnt;
+    int                                                                 fIndexPoolUseCnt;
+    // these are mutable so they can be created on-demand
+    mutable GrVertexBuffer*                                             fUnitSquareVertexBuffer;
+    mutable GrIndexBuffer*                                              fQuadIndexBuffer;
+    bool                                                                fContextIsDirty;
+    ResourceList                                                        fResourceList;
 
     typedef GrDrawTarget INHERITED;
 };

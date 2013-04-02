@@ -21,7 +21,7 @@ class SkPaint;
  *  used for the actual drawing. Note: this modification only lasts for the
  *  current draw, as a temporary copy of the paint is used.
  */
-class SkDrawFilter : public SkRefCnt {
+class SK_API SkDrawFilter : public SkRefCnt {
 public:
     SK_DECLARE_INST_COUNT(SkDrawFilter)
 
@@ -31,15 +31,21 @@ public:
         kLine_Type,
         kBitmap_Type,
         kRect_Type,
+        kOval_Type,
         kPath_Type,
-        kText_Type
+        kText_Type,
+    };
+
+    enum {
+        kTypeCount = kText_Type + 1
     };
 
     /**
      *  Called with the paint that will be used to draw the specified type.
-     *  The implementation may modify the paint as they wish.
+     *  The implementation may modify the paint as they wish. If filter()
+     *  returns false, the draw will be skipped.
      */
-    virtual void filter(SkPaint*, Type) = 0;
+    virtual bool filter(SkPaint*, Type) = 0;
 
 private:
     typedef SkRefCnt INHERITED;

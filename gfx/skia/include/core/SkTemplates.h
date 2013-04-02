@@ -11,12 +11,19 @@
 #define SkTemplates_DEFINED
 
 #include "SkTypes.h"
+#include <new>
 
 /** \file SkTemplates.h
 
     This file contains light-weight template classes for type-safe and exception-safe
     resource management.
 */
+
+/**
+ *  Marks a local variable as known to be unused (to avoid warnings).
+ *  Note that this does *not* prevent the local variable from being optimized away.
+ */
+template<typename T> inline void sk_ignore_unused_variable(const T&) { }
 
 /**
  *  SkTIsConst<T>::value is true if the type T is const.
@@ -76,18 +83,34 @@ private:
 // See also SkTScopedPtr.
 template <typename T> class SkAutoTDelete : SkNoncopyable {
 public:
-    SkAutoTDelete(T* obj, bool deleteWhenDone = true) : fObj(obj) {
-        fDeleteWhenDone = deleteWhenDone;
-    }
-    ~SkAutoTDelete() { if (fDeleteWhenDone) delete fObj; }
+    SkAutoTDelete(T* obj) : fObj(obj) {}
+    ~SkAutoTDelete() { delete fObj; }
 
-    T*      get() const { return fObj; }
-    void    free() { delete fObj; fObj = NULL; }
-    T*      detach() { T* obj = fObj; fObj = NULL; return obj; }
+    T* get() const { return fObj; }
+    T& operator*() const { SkASSERT(fObj); return *fObj; }
+    T* operator->() const { SkASSERT(fObj); return fObj; }
+
+    /**
+     *  Delete the owned object, setting the internal pointer to NULL.
+     */
+    void free() {
+        delete fObj;
+        fObj = NULL;
+    }
+
+    /**
+     *  Transfer ownership of the object to the caller, setting the internal
+     *  pointer to NULL. Note that this differs from get(), which also returns
+     *  the pointer, but it does not transfer ownership.
+     */
+    T* detach() {
+        T* obj = fObj;
+        fObj = NULL;
+        return obj;
+    }
 
 private:
     T*  fObj;
-    bool fDeleteWhenDone;
 };
 
 template <typename T> class SkAutoTDeleteArray : SkNoncopyable {
@@ -333,4 +356,3 @@ private:
 };
 
 #endif
-

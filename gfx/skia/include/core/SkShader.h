@@ -18,8 +18,7 @@
 
 class SkPath;
 class GrContext;
-class GrCustomStage;
-class GrSamplerState;
+class GrEffectRef;
 
 /** \class SkShader
  *
@@ -39,22 +38,25 @@ public:
     virtual ~SkShader();
 
     /**
-     *  Return true if the shader has a non-identity local matrix.
-     *  @param localM   Optional: If not null, return the shader's local matrix
-     *  @return true if the shader has a non-identity local matrix.
+     * Returns true if the local matrix is not an identity matrix.
      */
-    bool getLocalMatrix(SkMatrix* localM) const;
+    bool hasLocalMatrix() const { return !fLocalMatrix.isIdentity(); }
+
+    /**
+     *  Returns the local matrix.
+     */
+    const SkMatrix& getLocalMatrix() const { return fLocalMatrix; }
 
     /**
      *  Set the shader's local matrix.
      *  @param localM   The shader's new local matrix.
      */
-    void setLocalMatrix(const SkMatrix& localM);
+    void setLocalMatrix(const SkMatrix& localM) { fLocalMatrix = localM; }
 
     /**
      *  Reset the shader's local matrix to identity.
      */
-    void resetLocalMatrix();
+    void resetLocalMatrix() { fLocalMatrix.reset(); }
 
     enum TileMode {
         /** replicate the edge color if the shader draws outside of its
@@ -136,10 +138,27 @@ public:
     /**
      *  Called once before drawing, with the current paint and device matrix.
      *  Return true if your shader supports these parameters, or false if not.
-     *  If false is returned, nothing will be drawn.
+     *  If false is returned, nothing will be drawn. If true is returned, then
+     *  a balancing call to endContext() will be made before the next call to
+     *  setContext.
+     *
+     *  Subclasses should be sure to call their INHERITED::setContext() if they
+     *  override this method.
      */
     virtual bool setContext(const SkBitmap& device, const SkPaint& paint,
                             const SkMatrix& matrix);
+
+    /**
+     *  Assuming setContext returned true, endContext() will be called when
+     *  the draw using the shader has completed. It is an error for setContext
+     *  to be called twice w/o an intervening call to endContext().
+     *
+     *  Subclasses should be sure to call their INHERITED::endContext() if they
+     *  override this method.
+     */
+    virtual void endContext();
+
+    SkDEBUGCODE(bool setContextHasBeenCalled() const { return SkToBool(fInSetContext); })
 
     /**
      *  Called for each span of the object being drawn. Your subclass should
@@ -147,6 +166,9 @@ public:
      *  to the specified device coordinates.
      */
     virtual void shadeSpan(int x, int y, SkPMColor[], int count) = 0;
+
+    typedef void (*ShadeProc)(void* ctx, int x, int y, SkPMColor[], int count);
+    virtual ShadeProc asAShadeProc(void** ctx);
 
     /**
      *  Called only for 16bit devices when getFlags() returns
@@ -175,14 +197,6 @@ public:
     static bool CanCallShadeSpan16(uint32_t flags) {
         return (flags & kHasSpan16_Flag) != 0;
     }
-
-    /**
-     *  Called before a session using the shader begins. Some shaders override
-     *  this to defer some of their work (like calling bitmap.lockPixels()).
-     *  Must be balanced by a call to endSession.
-     */
-    virtual void beginSession();
-    virtual void endSession();
 
     /**
      Gives method bitmap should be read to implement a shader.
@@ -303,14 +317,11 @@ public:
     virtual GradientType asAGradient(GradientInfo* info) const;
 
     /**
-     *  If the shader subclass has a GrCustomStage implementation, this returns
-     *  a new custom stage (the caller assumes ownership, and will need to
-     *  unref it). A GrContext pointer is required since custom stages may
-     *  need to create textures. The sampler parameter is necessary to set
-     *  up matrix/tile modes/etc, and will eventually be removed.
+     *  If the shader subclass has a GrEffect implementation, this installs an effect on the stage.
+     *  The GrContext may be used by the effect to create textures. The GPU device does not call
+     *  setContext. Instead we pass the paint here in case the shader needs paint info.
      */
-    virtual GrCustomStage* asNewCustomStage(GrContext* context,
-                                            GrSamplerState* sampler) const;
+    virtual GrEffectRef* asNewEffect(GrContext* context, const SkPaint& paint) const;
 
     //////////////////////////////////////////////////////////////////////////
     //  Factory methods for stock shaders
@@ -329,6 +340,8 @@ public:
     static SkShader* CreateBitmapShader(const SkBitmap& src,
                                         TileMode tmx, TileMode tmy);
 
+    SkDEVCODE(virtual void toString(SkString* str) const;)
+
 protected:
     enum MatrixClass {
         kLinear_MatrixClass,            // no perspective
@@ -346,12 +359,12 @@ protected:
     SkShader(SkFlattenableReadBuffer& );
     virtual void flatten(SkFlattenableWriteBuffer&) const SK_OVERRIDE;
 private:
-    SkMatrix*           fLocalMatrix;
+    SkMatrix            fLocalMatrix;
     SkMatrix            fTotalInverse;
     uint8_t             fPaintAlpha;
     uint8_t             fDeviceConfig;
     uint8_t             fTotalInverseClass;
-    SkDEBUGCODE(SkBool8 fInSession;)
+    SkDEBUGCODE(SkBool8 fInSetContext;)
 
     static SkShader* CreateBitmapShader(const SkBitmap& src,
                                         TileMode, TileMode,
@@ -361,4 +374,3 @@ private:
 };
 
 #endif
-

@@ -112,6 +112,21 @@ public:
     void reset() { this->pop_back_n(fCount); }
 
     /**
+     * Resets to a copy of a C array.
+     */
+    void reset(const T* array, int count) {
+        for (int i = 0; i < fCount; ++i) {
+            fItemArray[i].~T();
+        }
+        int delta = count - fCount;
+        this->checkRealloc(delta);
+        fCount = count;
+        for (int i = 0; i < count; ++i) {
+            SkTArrayExt::copy(this, array);
+        }
+    }
+
+    /**
      * Number of elements in the array.
      */
     int count() const { return fCount; }
@@ -223,7 +238,20 @@ public:
         }
     }
 
-    /**
+    T* begin() {
+        return fItemArray;
+    }
+    const T* begin() const {
+        return fItemArray;
+    }
+    T* end() {
+        return fItemArray ? fItemArray + fCount : NULL;
+    }
+    const T* end() const {
+        return fItemArray ? fItemArray + fCount : NULL;;
+    }
+
+   /**
      * Get the i^th element.
      */
     T& operator[] (int i) {
@@ -265,6 +293,23 @@ public:
         SkASSERT(i >= 0);
         SkASSERT(i < fCount);
         return fItemArray[fCount - i - 1];
+    }
+
+    bool operator==(const SkTArray<T, MEM_COPY>& right) const {
+        int leftCount = this->count();
+        if (leftCount != right.count()) {
+            return false;
+        }
+        for (int index = 0; index < leftCount; ++index) {
+            if (fItemArray[index] != right.fItemArray[index]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool operator!=(const SkTArray<T, MEM_COPY>& right) const {
+        return !(*this == right);
     }
 
 protected:
@@ -375,10 +420,10 @@ private:
 /**
  * Subclass of SkTArray that contains a preallocated memory block for the array.
  */
-template <int N, typename T, bool DATA_TYPE = false>
-class SkSTArray : public SkTArray<T, DATA_TYPE> {
+template <int N, typename T, bool MEM_COPY = false>
+class SkSTArray : public SkTArray<T, MEM_COPY> {
 private:
-    typedef SkTArray<T, DATA_TYPE> INHERITED;
+    typedef SkTArray<T, MEM_COPY> INHERITED;
 
 public:
     SkSTArray() : INHERITED(&fStorage) {
@@ -410,4 +455,3 @@ private:
 };
 
 #endif
-

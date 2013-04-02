@@ -17,6 +17,7 @@
 #include "GrPath.h"
 
 #include "SkClipStack.h"
+#include "SkStrokeRec.h"
 #include "SkTemplates.h"
 
 class GrGpu;
@@ -24,118 +25,65 @@ class GrIndexBufferAllocPool;
 class GrVertexBufferAllocPool;
 
 /**
- * GrInOrderDrawBuffer is an implementation of GrDrawTarget that queues up
- * draws for eventual playback into a GrGpu. In theory one draw buffer could
- * playback into another. When index or vertex buffers are used as geometry
- * sources it is the callers the draw buffer only holds references to the
- * buffers. It is the callers responsibility to ensure that the data is still
- * valid when the draw buffer is played back into a GrGpu. Similarly, it is the
- * caller's responsibility to ensure that all referenced textures, buffers,
- * and rendertargets are associated in the GrGpu object that the buffer is
- * played back into. The buffer requires VB and IB pools to store geometry.
+ * GrInOrderDrawBuffer is an implementation of GrDrawTarget that queues up draws for eventual
+ * playback into a GrGpu. In theory one draw buffer could playback into another. When index or
+ * vertex buffers are used as geometry sources it is the callers the draw buffer only holds
+ * references to the buffers. It is the callers responsibility to ensure that the data is still
+ * valid when the draw buffer is played back into a GrGpu. Similarly, it is the caller's
+ * responsibility to ensure that all referenced textures, buffers, and render-targets are associated
+ * in the GrGpu object that the buffer is played back into. The buffer requires VB and IB pools to
+ * store geometry.
  */
-
 class GrInOrderDrawBuffer : public GrDrawTarget {
 public:
 
     /**
      * Creates a GrInOrderDrawBuffer
      *
-     * @param gpu        the gpu object where this will be played back
-     *                   (possible indirectly). GrResources used with the draw
-     *                   buffer are created by this gpu object.
+     * @param gpu        the gpu object that this draw buffer flushes to.
      * @param vertexPool pool where vertices for queued draws will be saved when
      *                   the vertex source is either reserved or array.
      * @param indexPool  pool where indices for queued draws will be saved when
      *                   the index source is either reserved or array.
      */
-    GrInOrderDrawBuffer(const GrGpu* gpu,
+    GrInOrderDrawBuffer(GrGpu* gpu,
                         GrVertexBufferAllocPool* vertexPool,
                         GrIndexBufferAllocPool* indexPool);
 
     virtual ~GrInOrderDrawBuffer();
 
     /**
-     * Provides the buffer with an index buffer that can be used for quad rendering.
-     * The buffer may be able to batch consecutive drawRects if this is provided.
-     * @param indexBuffer   index buffer with quad indices.
-     */
-    void setQuadIndexBuffer(const GrIndexBuffer* indexBuffer);
-
-    /**
-     * Empties the draw buffer of any queued up draws. This must not be called
-     * while inside an unbalanced pushGeometrySource().
+     * Empties the draw buffer of any queued up draws. This must not be called while inside an
+     * unbalanced pushGeometrySource(). The current draw state and clip are preserved.
      */
     void reset();
 
     /**
-     * plays the queued up draws to another target. Does not empty this buffer
-     * so that it can be played back multiple times. This buffer must not have
-     * an active reserved vertex or index source. Any reserved geometry on
-     * the target will be finalized because it's geometry source will be pushed
-     * before playback and popped afterwards.
+     * This plays the queued up draws to its GrGpu target. It also resets this object (i.e. flushing
+     * is destructive). This buffer must not have an active reserved vertex or index source. Any
+     * reserved geometry on the target will be finalized because it's geometry source will be pushed
+     * before flushing and popped afterwards.
      *
-     * @return false if the playback trivially drew nothing because nothing was
-     *         recorded.
-     *
-     * @param target    the target to receive the playback
+     * @return false if the playback trivially drew nothing because nothing was recorded.
      */
-    bool playback(GrDrawTarget* target);
+    bool flush();
 
-    /**
-     * A convenience method to do a playback followed by a reset. All the
-     * constraints and side-effects or playback() and reset apply().
-     */
-    void flushTo(GrDrawTarget* target) {
-        if (fFlushing) {
-            // When creating SW-only clip masks, the GrClipMaskManager can
-            // cause a GrContext::flush (when copying the mask results back
-            // to the GPU). Without a guard this results in a recursive call
-            // to this method.
-            return;
-        }
-
-        fFlushing = true;
-        if (this->playback(target)) {
-            this->reset();
-        }
-        fFlushing = false;
-    }
-
-    /**
-     * This function allows the draw buffer to automatically flush itself to
-     * another target. This means the buffer may internally call
-     * this->flushTo(target) when it is safe to do so.
-     *
-     * When the auto flush target is set to NULL (as it initially is) the draw
-     * buffer will never automatically flush itself.
-     */
-    void setAutoFlushTarget(GrDrawTarget* target);
+    bool isFlushing() const { return fFlushing; }
 
     // overrides from GrDrawTarget
-    virtual void drawRect(const GrRect& rect,
-                          const GrMatrix* matrix = NULL,
-                          const GrRect* srcRects[] = NULL,
-                          const GrMatrix* srcMatrices[] = NULL) SK_OVERRIDE;
-
-    virtual void drawIndexedInstances(GrPrimitiveType type,
-                                      int instanceCount,
-                                      int verticesPerInstance,
-                                      int indicesPerInstance)
-                                      SK_OVERRIDE;
-
-    virtual bool geometryHints(GrVertexLayout vertexLayout,
-                               int* vertexCount,
+    virtual bool geometryHints(int* vertexCount,
                                int* indexCount) const SK_OVERRIDE;
-
     virtual void clear(const GrIRect* rect,
                        GrColor color,
                        GrRenderTarget* renderTarget = NULL) SK_OVERRIDE;
+    virtual void drawRect(const GrRect& rect,
+                          const SkMatrix* matrix,
+                          const GrRect* localRect,
+                          const SkMatrix* localMatrix) SK_OVERRIDE;
 
 protected:
-    virtual void willReserveVertexAndIndexSpace(GrVertexLayout vertexLayout,
-                                                int vertexCount,
-                                                int indexCount) SK_OVERRIDE;
+    virtual void clipWillBeSet(const GrClipData* newClip) SK_OVERRIDE;
+
 private:
     enum Cmd {
         kDraw_Cmd           = 1,
@@ -145,20 +93,19 @@ private:
         kClear_Cmd          = 5,
     };
 
-    struct Draw {
-        GrPrimitiveType         fPrimitiveType;
-        int                     fStartVertex;
-        int                     fStartIndex;
-        int                     fVertexCount;
-        int                     fIndexCount;
-        GrVertexLayout          fVertexLayout;
+    class DrawRecord : public DrawInfo {
+    public:
+        DrawRecord(const DrawInfo& info) : DrawInfo(info) {}
         const GrVertexBuffer*   fVertexBuffer;
         const GrIndexBuffer*    fIndexBuffer;
     };
 
     struct StencilPath {
+        StencilPath();
+
         SkAutoTUnref<const GrPath>  fPath;
-        GrPathFill                  fFill;
+        SkStrokeRec                 fStroke;
+        SkPath::FillType            fFill;
     };
 
     struct Clear {
@@ -171,16 +118,9 @@ private:
     };
 
     // overrides from GrDrawTarget
-    virtual void onDrawIndexed(GrPrimitiveType primitiveType,
-                               int startVertex,
-                               int startIndex,
-                               int vertexCount,
-                               int indexCount) SK_OVERRIDE;
-    virtual void onDrawNonIndexed(GrPrimitiveType primitiveType,
-                                  int startVertex,
-                                  int vertexCount) SK_OVERRIDE;
-    virtual void onStencilPath(const GrPath*, GrPathFill) SK_OVERRIDE;
-    virtual bool onReserveVertexSpace(GrVertexLayout layout,
+    virtual void onDraw(const DrawInfo&) SK_OVERRIDE;
+    virtual void onStencilPath(const GrPath*, const SkStrokeRec& stroke, SkPath::FillType) SK_OVERRIDE;
+    virtual bool onReserveVertexSpace(size_t vertexSize,
                                       int vertexCount,
                                       void** vertices) SK_OVERRIDE;
     virtual bool onReserveIndexSpace(int indexCount,
@@ -194,27 +134,26 @@ private:
     virtual void releaseVertexArray() SK_OVERRIDE;
     virtual void releaseIndexArray() SK_OVERRIDE;
     virtual void geometrySourceWillPush() SK_OVERRIDE;
-    virtual void geometrySourceWillPop(
-        const GeometrySrcState& restoredState) SK_OVERRIDE;
-    virtual void clipWillBeSet(const GrClipData* newClip) SK_OVERRIDE;
+    virtual void geometrySourceWillPop(const GeometrySrcState& restoredState) SK_OVERRIDE;
+    virtual void willReserveVertexAndIndexSpace(int vertexCount,
+                                                int indexCount) SK_OVERRIDE;
+    bool quickInsideClip(const SkRect& devBounds);
 
-    // we lazily record state and clip changes in order to skip clips and states
-    // that have no effect.
+    // Attempts to concat instances from info onto the previous draw. info must represent an
+    // instanced draw. The caller must have already recorded a new draw state and clip if necessary.
+    int concatInstancedDraw(const DrawInfo& info);
+
+    // we lazily record state and clip changes in order to skip clips and states that have no
+    // effect.
     bool needsNewState() const;
     bool needsNewClip() const;
 
     // these functions record a command
     void            recordState();
-    void            recordDefaultState();
     void            recordClip();
-    void            recordDefaultClip();
-    Draw*           recordDraw();
+    DrawRecord*     recordDraw(const DrawInfo&);
     StencilPath*    recordStencilPath();
     Clear*          recordClear();
-
-    // call this to invalidate the tracking data that is used to concatenate
-    // multiple draws into a single draw.
-    void resetDrawTracking();
 
     enum {
         kCmdPreallocCnt          = 32,
@@ -226,38 +165,30 @@ private:
         kGeoPoolStatePreAllocCnt = 4,
     };
 
-    SkSTArray<kCmdPreallocCnt, uint8_t, true>           fCmds;
-    GrSTAllocator<kDrawPreallocCnt, Draw>               fDraws;
-    GrSTAllocator<kStatePreallocCnt, StencilPath>       fStencilPaths;
-    GrSTAllocator<kStatePreallocCnt, GrDrawState>       fStates;
-    GrSTAllocator<kClearPreallocCnt, Clear>             fClears;
+    SkSTArray<kCmdPreallocCnt, uint8_t, true>                          fCmds;
+    GrSTAllocator<kDrawPreallocCnt, DrawRecord>                        fDraws;
+    GrSTAllocator<kStatePreallocCnt, StencilPath>                      fStencilPaths;
+    GrSTAllocator<kStatePreallocCnt, GrDrawState::DeferredState>       fStates;
+    GrSTAllocator<kClearPreallocCnt, Clear>                            fClears;
 
     GrSTAllocator<kClipPreallocCnt, SkClipStack>        fClips;
     GrSTAllocator<kClipPreallocCnt, SkIPoint>           fClipOrigins;
 
-    GrDrawTarget*                   fAutoFlushTarget;
+    GrDrawTarget*                   fDstGpu;
 
     bool                            fClipSet;
+
+    enum ClipProxyState {
+        kUnknown_ClipProxyState,
+        kValid_ClipProxyState,
+        kInvalid_ClipProxyState
+    };
+    ClipProxyState                  fClipProxyState;
+    SkRect                          fClipProxy;
 
     GrVertexBufferAllocPool&        fVertexPool;
 
     GrIndexBufferAllocPool&         fIndexPool;
-
-    // these are used to attempt to concatenate drawRect calls
-    GrVertexLayout                  fLastRectVertexLayout;
-    const GrIndexBuffer*            fQuadIndexBuffer;
-    int                             fMaxQuads;
-    int                             fCurrQuad;
-
-    // bookkeeping to attempt to concantenate drawIndexedInstances calls
-    struct {
-        int            fVerticesPerInstance;
-        int            fIndicesPerInstance;
-        void reset() {
-            fVerticesPerInstance = 0;
-            fIndicesPerInstance = 0;
-        }
-    } fInstancedDrawTracker;
 
     struct GeometryPoolState {
         const GrVertexBuffer*           fPoolVertexBuffer;

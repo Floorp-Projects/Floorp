@@ -15,92 +15,64 @@
 
 SK_DEFINE_INST_COUNT(SkShader)
 
-SkShader::SkShader() : fLocalMatrix(NULL) {
-    SkDEBUGCODE(fInSession = false;)
+SkShader::SkShader() {
+    fLocalMatrix.reset();
+    SkDEBUGCODE(fInSetContext = false;)
 }
 
 SkShader::SkShader(SkFlattenableReadBuffer& buffer)
-        : INHERITED(buffer), fLocalMatrix(NULL) {
+        : INHERITED(buffer) {
     if (buffer.readBool()) {
-        SkMatrix matrix;
-        buffer.readMatrix(&matrix);
-        setLocalMatrix(matrix);
+        buffer.readMatrix(&fLocalMatrix);
+    } else {
+        fLocalMatrix.reset();
     }
-    SkDEBUGCODE(fInSession = false;)
+
+    SkDEBUGCODE(fInSetContext = false;)
 }
 
 SkShader::~SkShader() {
-    SkASSERT(!fInSession);
-    sk_free(fLocalMatrix);
-}
-
-void SkShader::beginSession() {
-    SkASSERT(!fInSession);
-    SkDEBUGCODE(fInSession = true;)
-}
-
-void SkShader::endSession() {
-    SkASSERT(fInSession);
-    SkDEBUGCODE(fInSession = false;)
+    SkASSERT(!fInSetContext);
 }
 
 void SkShader::flatten(SkFlattenableWriteBuffer& buffer) const {
     this->INHERITED::flatten(buffer);
-    buffer.writeBool(fLocalMatrix != NULL);
-    if (fLocalMatrix) {
-        buffer.writeMatrix(*fLocalMatrix);
-    }
-}
-
-bool SkShader::getLocalMatrix(SkMatrix* localM) const {
-    if (fLocalMatrix) {
-        if (localM) {
-            *localM = *fLocalMatrix;
-        }
-        return true;
-    } else {
-        if (localM) {
-            localM->reset();
-        }
-        return false;
-    }
-}
-
-void SkShader::setLocalMatrix(const SkMatrix& localM) {
-    if (localM.isIdentity()) {
-        this->resetLocalMatrix();
-    } else {
-        if (fLocalMatrix == NULL) {
-            fLocalMatrix = (SkMatrix*)sk_malloc_throw(sizeof(SkMatrix));
-        }
-        *fLocalMatrix = localM;
-    }
-}
-
-void SkShader::resetLocalMatrix() {
-    if (fLocalMatrix) {
-        sk_free(fLocalMatrix);
-        fLocalMatrix = NULL;
+    bool hasLocalM = this->hasLocalMatrix();
+    buffer.writeBool(hasLocalM);
+    if (hasLocalM) {
+        buffer.writeMatrix(fLocalMatrix);
     }
 }
 
 bool SkShader::setContext(const SkBitmap& device,
                           const SkPaint& paint,
                           const SkMatrix& matrix) {
+    SkASSERT(!this->setContextHasBeenCalled());
+
     const SkMatrix* m = &matrix;
     SkMatrix        total;
 
     fDeviceConfig = SkToU8(device.getConfig());
     fPaintAlpha = paint.getAlpha();
-    if (fLocalMatrix) {
-        total.setConcat(matrix, *fLocalMatrix);
+    if (this->hasLocalMatrix()) {
+        total.setConcat(matrix, this->getLocalMatrix());
         m = &total;
     }
     if (m->invert(&fTotalInverse)) {
         fTotalInverseClass = (uint8_t)ComputeMatrixClass(fTotalInverse);
+        SkDEBUGCODE(fInSetContext = true;)
         return true;
     }
     return false;
+}
+
+void SkShader::endContext() {
+    SkASSERT(fInSetContext);
+    SkDEBUGCODE(fInSetContext = false;)
+}
+
+SkShader::ShadeProc SkShader::asAShadeProc(void** ctx) {
+    return NULL;
 }
 
 #include "SkColorPriv.h"
@@ -201,8 +173,7 @@ SkShader::GradientType SkShader::asAGradient(GradientInfo* info) const {
     return kNone_GradientType;
 }
 
-GrCustomStage* SkShader::asNewCustomStage(GrContext* context,
-                                          GrSamplerState* sampler) const {
+GrEffectRef* SkShader::asNewEffect(GrContext*, const SkPaint&) const {
     return NULL;
 }
 
@@ -210,6 +181,15 @@ SkShader* SkShader::CreateBitmapShader(const SkBitmap& src,
                                        TileMode tmx, TileMode tmy) {
     return SkShader::CreateBitmapShader(src, tmx, tmy, NULL, 0);
 }
+
+#ifdef SK_DEVELOPER
+void SkShader::toString(SkString* str) const {
+    if (this->hasLocalMatrix()) {
+        str->append(" ");
+        this->getLocalMatrix().toString(str);
+    }
+}
+#endif
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -332,7 +312,22 @@ SkShader::GradientType SkColorShader::asAGradient(GradientInfo* info) const {
     return kColor_GradientType;
 }
 
-SK_DEFINE_FLATTENABLE_REGISTRAR(SkColorShader)
+#ifdef SK_DEVELOPER
+void SkColorShader::toString(SkString* str) const {
+    str->append("SkColorShader: (");
+
+    if (fInheritColor) {
+        str->append("Color: inherited from paint");
+    } else {
+        str->append("Color: ");
+        str->appendHex(fColor);
+    }
+
+    this->INHERITED::toString(str);
+
+    str->append(")");
+}
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -356,4 +351,12 @@ void SkEmptyShader::shadeSpanAlpha(int x, int y, uint8_t alpha[], int count) {
     SkDEBUGFAIL("should never get called, since setContext() returned false");
 }
 
-SK_DEFINE_FLATTENABLE_REGISTRAR(SkEmptyShader)
+#ifdef SK_DEVELOPER
+void SkEmptyShader::toString(SkString* str) const {
+    str->append("SkEmptyShader: (");
+
+    this->INHERITED::toString(str);
+
+    str->append(")");
+}
+#endif

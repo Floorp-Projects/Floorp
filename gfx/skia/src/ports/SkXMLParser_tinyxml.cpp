@@ -58,7 +58,7 @@ static bool load_buf(SkXMLParser* parser, const char buf[])
 
 bool SkXMLParser::parse(SkStream& stream)
 {
-    size_t size = stream.read(NULL, 0);
+    size_t size = stream.getLength();
 
     SkAutoMalloc    buffer(size + 1);
     char*           buf = (char*)buffer.get();
@@ -85,4 +85,3 @@ void SkXMLParser::GetNativeErrorString(int error, SkString* str)
     if (str)
         str->set("GetNativeErrorString not implemented for TinyXml");
 }
-

@@ -20,7 +20,7 @@ void S32_opaque_D32_filter_DX_SSE2(const SkBitmapProcState& s,
     SkASSERT(s.fAlphaScale == 256);
 
     const char* srcAddr = static_cast<const char*>(s.fBitmap->getPixels());
-    unsigned rb = s.fBitmap->rowBytes();
+    size_t rb = s.fBitmap->rowBytes();
     uint32_t XY = *xy++;
     unsigned y0 = XY >> 14;
     const uint32_t* row0 = reinterpret_cast<const uint32_t*>(srcAddr + (y0 >> 4) * rb);
@@ -126,7 +126,7 @@ void S32_alpha_D32_filter_DX_SSE2(const SkBitmapProcState& s,
     SkASSERT(s.fAlphaScale < 256);
 
     const char* srcAddr = static_cast<const char*>(s.fBitmap->getPixels());
-    unsigned rb = s.fBitmap->rowBytes();
+    size_t rb = s.fBitmap->rowBytes();
     uint32_t XY = *xy++;
     unsigned y0 = XY >> 14;
     const uint32_t* row0 = reinterpret_cast<const uint32_t*>(srcAddr + (y0 >> 4) * rb);
@@ -647,7 +647,7 @@ void S32_D16_filter_DX_SSE2(const SkBitmapProcState& s,
 
     SkPMColor dstColor;
     const char* srcAddr = static_cast<const char*>(s.fBitmap->getPixels());
-    unsigned rb = s.fBitmap->rowBytes();
+    size_t rb = s.fBitmap->rowBytes();
     uint32_t XY = *xy++;
     unsigned y0 = XY >> 14;
     const uint32_t* row0 = reinterpret_cast<const uint32_t*>(srcAddr + (y0 >> 4) * rb);
@@ -678,8 +678,6 @@ void S32_D16_filter_DX_SSE2(const SkBitmapProcState& s,
     // ( 0,  0,  0,  0,  0,  0,  0,  0)
     __m128i zero = _mm_setzero_si128();
 
-    __m128i _m_shift_5 = _mm_set1_epi32((1<<5)-1);
-    __m128i _m_shift_6 = _mm_set1_epi32((1<<6)-1);
     do {
         uint32_t XX = *xy++;    // x0:14 | 4 | x1:14
         unsigned x0 = XX >> 18;
