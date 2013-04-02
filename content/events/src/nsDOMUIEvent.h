@@ -100,7 +100,7 @@ public:
   already_AddRefed<nsIDOMWindow> GetView()
   {
     nsCOMPtr<nsIDOMWindow> view = mView;
-    return mView.forget();
+    return view.forget();
   }
 
   int32_t Detail()
