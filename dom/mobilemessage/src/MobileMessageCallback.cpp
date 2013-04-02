@@ -37,7 +37,7 @@ MobileMessageCallback::~MobileMessageCallback()
 
 
 nsresult
-MobileMessageCallback::NotifySuccess(const jsval& aResult)
+MobileMessageCallback::NotifySuccess(const JS::Value& aResult)
 {
   nsCOMPtr<nsIDOMRequestService> rs = do_GetService(DOMREQUEST_SERVICE_CONTRACTID);
   return rs ? rs->FireSuccess(mDOMRequest, aResult) : NS_ERROR_FAILURE;
@@ -54,7 +54,7 @@ MobileMessageCallback::NotifySuccess(nsISupports *aMessage)
   AutoPushJSContext cx(scriptContext->GetNativeContext());
   NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
 
-  jsval wrappedMessage;
+  JS::Value wrappedMessage;
   rv = nsContentUtils::WrapNative(cx,
                                   JS_GetGlobalObject(cx),
                                   aMessage,
@@ -160,7 +160,7 @@ MobileMessageCallback::NotifyMarkMessageReadFailed(int32_t aError)
 }
 
 NS_IMETHODIMP
-MobileMessageCallback::NotifyThreadList(const jsval& aThreadList, JSContext* aCx)
+MobileMessageCallback::NotifyThreadList(const JS::Value& aThreadList, JSContext* aCx)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

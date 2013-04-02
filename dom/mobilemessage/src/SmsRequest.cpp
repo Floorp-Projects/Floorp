@@ -185,7 +185,7 @@ SmsRequest::SetSuccess(nsIDOMMozSmsCursor* aCursor)
 }
 
 void
-SmsRequest::SetSuccess(const jsval& aResult)
+SmsRequest::SetSuccess(const JS::Value& aResult)
 {
   NS_PRECONDITION(!mDone, "mDone shouldn't have been set to true already!");
   NS_PRECONDITION(!mError, "mError shouldn't have been set!");
@@ -285,7 +285,7 @@ SmsRequest::GetError(nsIDOMDOMError** aError)
 }
 
 NS_IMETHODIMP
-SmsRequest::GetResult(jsval* aResult)
+SmsRequest::GetResult(JS::Value* aResult)
 {
   if (!mDone) {
     NS_ASSERTION(mResult == JSVAL_VOID,
@@ -503,7 +503,7 @@ SmsRequest::NotifyMarkMessageReadFailed(int32_t aError)
 }
 
 NS_IMETHODIMP
-SmsRequest::NotifyThreadList(const jsval& aThreadList, JSContext* aCx)
+SmsRequest::NotifyThreadList(const JS::Value& aThreadList, JSContext* aCx)
 {
   MOZ_ASSERT(aThreadList.isObject());
 
@@ -521,7 +521,7 @@ SmsRequest::NotifyThreadList(const jsval& aThreadList, JSContext* aCx)
       ipcItems.SetCapacity(length);
 
       for (uint32_t i = 0; i < length; i++) {
-        jsval arrayEntry;
+        JS::Value arrayEntry;
         ok = JS_GetElement(aCx, array, i, &arrayEntry);
         NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
@@ -589,22 +589,22 @@ SmsRequest::NotifyThreadList(const InfallibleTArray<ThreadListItem>& aItems)
 
     nsString temp = source.senderOrReceiver();
 
-    jsval senderOrReceiver;
+    JS::Value senderOrReceiver;
     ok = xpc::StringToJsval(cx, temp, &senderOrReceiver);
     NS_ENSURE_TRUE_VOID(ok);
 
     JSObject* timestampObj = JS_NewDateObjectMsec(cx, source.timestamp());
     NS_ENSURE_TRUE_VOID(timestampObj);
 
-    jsval timestamp = OBJECT_TO_JSVAL(timestampObj);
+    JS::Value timestamp = OBJECT_TO_JSVAL(timestampObj);
 
     temp = source.body();
 
-    jsval body;
+    JS::Value body;
     ok = xpc::StringToJsval(cx, temp, &body);
     NS_ENSURE_TRUE_VOID(ok);
 
-    jsval unreadCount = JS_NumberValue(double(source.unreadCount()));
+    JS::Value unreadCount = JS_NumberValue(double(source.unreadCount()));
 
     JSObject* elementObj = JS_NewObject(cx, nullptr, nullptr, nullptr);
     NS_ENSURE_TRUE_VOID(elementObj);
@@ -621,7 +621,7 @@ SmsRequest::NotifyThreadList(const InfallibleTArray<ThreadListItem>& aItems)
     ok = JS_SetProperty(cx, elementObj, "unreadCount", &unreadCount);
     NS_ENSURE_TRUE_VOID(ok);
 
-    jsval element = OBJECT_TO_JSVAL(elementObj);
+    JS::Value element = OBJECT_TO_JSVAL(elementObj);
 
     ok = JS_SetElement(cx, array, i, &element);
     NS_ENSURE_TRUE_VOID(ok);
