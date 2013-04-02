@@ -862,45 +862,24 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsEventStateManager)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsEventStateManager)
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsEventStateManager)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCurrentTargetContent);
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLastMouseOverElement);
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGestureDownContent);
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGestureDownFrameOwner);
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLastLeftMouseDownContent);
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLastLeftMouseDownContentParent);
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLastMiddleMouseDownContent);
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLastMiddleMouseDownContentParent);
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLastRightMouseDownContent);
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLastRightMouseDownContentParent);
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mActiveContent);
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mHoverContent);
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mURLTargetContent);
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFirstMouseOverEventElement);
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFirstMouseOutEventElement);
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocument);
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAccessKeys);
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsEventStateManager)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCurrentTargetContent);
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLastMouseOverElement);
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mGestureDownContent);
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mGestureDownFrameOwner);
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLastLeftMouseDownContent);
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLastLeftMouseDownContentParent);
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLastMiddleMouseDownContent);
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLastMiddleMouseDownContentParent);
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLastRightMouseDownContent);
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLastRightMouseDownContentParent);
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mActiveContent);
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mHoverContent);
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mURLTargetContent);
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFirstMouseOverEventElement);
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFirstMouseOutEventElement);
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocument);
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mAccessKeys);
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_17(nsEventStateManager,
+                            mCurrentTargetContent,
+                            mLastMouseOverElement,
+                            mGestureDownContent,
+                            mGestureDownFrameOwner,
+                            mLastLeftMouseDownContent,
+                            mLastLeftMouseDownContentParent,
+                            mLastMiddleMouseDownContent,
+                            mLastMiddleMouseDownContentParent,
+                            mLastRightMouseDownContent,
+                            mLastRightMouseDownContentParent,
+                            mActiveContent,
+                            mHoverContent,
+                            mURLTargetContent,
+                            mFirstMouseOverEventElement,
+                            mFirstMouseOutEventElement,
+                            mDocument,
+                            mAccessKeys)
 
 nsresult
 nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
