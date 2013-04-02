@@ -18,6 +18,10 @@
 
 namespace mozilla {
 
+/* Forward declarations. */
+
+template<typename> struct RemoveCV;
+
 /* 20.9.3 Helper classes [meta.help] */
 
 /**
@@ -39,6 +43,43 @@ typedef IntegralConstant<bool, false> FalseType;
 /* 20.9.4 Unary type traits [meta.unary] */
 
 /* 20.9.4.1 Primary type categories [meta.unary.cat] */
+
+namespace detail {
+
+template <typename T>
+struct IsIntegralHelper : FalseType {};
+
+template<> struct IsIntegralHelper<char>               : TrueType {};
+template<> struct IsIntegralHelper<signed char>        : TrueType {};
+template<> struct IsIntegralHelper<unsigned char>      : TrueType {};
+template<> struct IsIntegralHelper<short>              : TrueType {};
+template<> struct IsIntegralHelper<unsigned short>     : TrueType {};
+template<> struct IsIntegralHelper<int>                : TrueType {};
+template<> struct IsIntegralHelper<unsigned int>       : TrueType {};
+template<> struct IsIntegralHelper<long>               : TrueType {};
+template<> struct IsIntegralHelper<unsigned long>      : TrueType {};
+template<> struct IsIntegralHelper<long long>          : TrueType {};
+template<> struct IsIntegralHelper<unsigned long long> : TrueType {};
+template<> struct IsIntegralHelper<bool>               : TrueType {};
+template<> struct IsIntegralHelper<wchar_t>            : TrueType {};
+
+} /* namespace detail */
+
+/**
+ * IsIntegral determines whether a type is an integral type.
+ *
+ * mozilla::IsIntegral<int>::value is true;
+ * mozilla::IsIntegral<unsigned short>::value is true;
+ * mozilla::IsIntegral<const long>::value is true;
+ * mozilla::IsIntegral<int*>::value is false;
+ * mozilla::IsIntegral<double>::value is false;
+ *
+ * Note that the behavior of IsIntegral on char16_t and char32_t is
+ * unspecified.
+ */
+template<typename T>
+struct IsIntegral : detail::IsIntegralHelper<typename RemoveCV<T>::Type>
+{};
 
 /**
  * IsPointer determines whether a type is a pointer type (but not a pointer-to-
@@ -231,10 +272,10 @@ struct IsConvertible
 /**
  * RemoveConst removes top-level const qualifications on a type.
  *
- * mozilla::RemoveConst<int>::type is int;
- * mozilla::RemoveConst<const int>::type is int;
- * mozilla::RemoveConst<const int*>::type is const int*;
- * mozilla::RemoveConst<int* const>::type is int*.
+ * mozilla::RemoveConst<int>::Type is int;
+ * mozilla::RemoveConst<const int>::Type is int;
+ * mozilla::RemoveConst<const int*>::Type is const int*;
+ * mozilla::RemoveConst<int* const>::Type is int*.
  */
 template<typename T>
 struct RemoveConst
@@ -251,10 +292,10 @@ struct RemoveConst<const T>
 /**
  * RemoveVolatile removes top-level volatile qualifications on a type.
  *
- * mozilla::RemoveVolatile<int>::type is int;
- * mozilla::RemoveVolatile<volatile int>::type is int;
- * mozilla::RemoveVolatile<volatile int*>::type is volatile int*;
- * mozilla::RemoveVolatile<int* volatile>::type is int*.
+ * mozilla::RemoveVolatile<int>::Type is int;
+ * mozilla::RemoveVolatile<volatile int>::Type is int;
+ * mozilla::RemoveVolatile<volatile int*>::Type is volatile int*;
+ * mozilla::RemoveVolatile<int* volatile>::Type is int*.
  */
 template<typename T>
 struct RemoveVolatile
@@ -271,10 +312,10 @@ struct RemoveVolatile<volatile T>
 /**
  * RemoveCV removes top-level const and volatile qualifications on a type.
  *
- * mozilla::RemoveCV<int>::type is int;
- * mozilla::RemoveCV<const int>::type is int;
- * mozilla::RemoveCV<volatile int>::type is int;
- * mozilla::RemoveCV<int* const volatile>::type is int*.
+ * mozilla::RemoveCV<int>::Type is int;
+ * mozilla::RemoveCV<const int>::Type is int;
+ * mozilla::RemoveCV<volatile int>::Type is int;
+ * mozilla::RemoveCV<int* const volatile>::Type is int*.
  */
 template<typename T>
 struct RemoveCV
