@@ -49,15 +49,25 @@ function testCSSRepeats(hud) {
 }
 
 function testAfterReload(hud) {
+  let repeats;
   waitForSuccess({
     name: "message repeats increased",
-    validatorFn: function()
-    {
-      return hud.outputNode.querySelector(".webconsole-msg-repeat")
-             .getAttribute("value") == 2;
+    validatorFn: () => {
+      repeats = hud.outputNode.querySelectorAll(".webconsole-msg-cssparser " +
+                                                ".webconsole-msg-repeat");
+      return repeats.length == 2 &&
+             repeats[0].getAttribute("value") == 2 &&
+             repeats[1].getAttribute("value") == 2;
     },
     successFn: testCSSRepeatsAfterReload.bind(null, hud),
-    failureFn: finishTest,
+    failureFn: () => {
+      let repeats0 = repeats[0] ? repeats[0].getAttribute("value") : "undefined";
+      let repeats1 = repeats[1] ? repeats[1].getAttribute("value") : "undefined";
+      info("repeats.length " + repeats.length);
+      info("repeats[0] value " + repeats0);
+      info("repeats[1] value " + repeats1);
+      finishTest();
+    },
   });
 }
 
