@@ -240,18 +240,16 @@ DynamicallyLinkModule(JSContext *cx, CallArgs args, AsmJSModule &module)
     return true;
 }
 
-AsmJSActivation::AsmJSActivation(JSContext *cx, const AsmJSModule &module, unsigned entryIndex)
+AsmJSActivation::AsmJSActivation(JSContext *cx, const AsmJSModule &module)
   : cx_(cx),
     module_(module),
-    entryIndex_(entryIndex),
     errorRejoinSP_(NULL),
     profiler_(NULL),
     resumePC_(NULL)
 {
     if (cx->runtime->spsProfiler.enabled()) {
         profiler_ = &cx->runtime->spsProfiler;
-        JSFunction *fun = module_.exportedFunction(entryIndex_).unclonedFunObj();
-        profiler_->enter(cx_, fun->nonLazyScript(), fun);
+        profiler_->enterNative("asm.js code", this);
     }
 
     prev_ = cx_->runtime->mainThread.asmJSActivationStack_;
@@ -264,10 +262,8 @@ AsmJSActivation::AsmJSActivation(JSContext *cx, const AsmJSModule &module, unsig
 
 AsmJSActivation::~AsmJSActivation()
 {
-    if (profiler_) {
-        JSFunction *fun = module_.exportedFunction(entryIndex_).unclonedFunObj();
-        profiler_->exit(cx_, fun->nonLazyScript(), fun);
-    }
+    if (profiler_)
+        profiler_->exitNative();
 
     JS_ASSERT(cx_->runtime->mainThread.asmJSActivationStack_ == this);
 
@@ -324,7 +320,7 @@ CallAsmJS(JSContext *cx, unsigned argc, Value *vp)
     }
 
     {
-        AsmJSActivation activation(cx, module, exportIndex);
+        AsmJSActivation activation(cx, module);
 
         // Call into generated code.
         if (!func.code()(coercedArgs.begin()))
