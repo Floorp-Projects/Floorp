@@ -4,8 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SVGTransformListSMILType.h"
-#include "SVGTransform.h"
 #include "SVGTransformList.h"
+#include "nsSVGTransform.h"
 #include "nsSMILValue.h"
 #include "nsCRT.h"
 #include <math.h>
@@ -351,7 +351,7 @@ SVGTransformListSMILType::AppendTransforms(const SVGTransformList& aList,
 // static
 bool
 SVGTransformListSMILType::GetTransforms(const nsSMILValue& aValue,
-                                        FallibleTArray<SVGTransform>& aTransforms)
+                                        FallibleTArray<nsSVGTransform>& aTransforms)
 {
   NS_PRECONDITION(aValue.mType == &sSingleton, "Unexpected SMIL value type");
 

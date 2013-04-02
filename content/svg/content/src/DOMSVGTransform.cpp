@@ -74,9 +74,9 @@ DOMSVGTransform::DOMSVGTransform()
   : mList(nullptr)
   , mListIndex(0)
   , mIsAnimValItem(false)
-  , mTransform(new SVGTransform()) // Default ctor for objects not in a list
-                                   // initialises to matrix type with identity
-                                   // matrix
+  , mTransform(new nsSVGTransform()) // Default ctor for objects not in a list
+                                     // initialises to matrix type with identity
+                                     // matrix
 {
   SetIsDOMBinding();
 }
@@ -85,16 +85,16 @@ DOMSVGTransform::DOMSVGTransform(const gfxMatrix &aMatrix)
   : mList(nullptr)
   , mListIndex(0)
   , mIsAnimValItem(false)
-  , mTransform(new SVGTransform(aMatrix))
+  , mTransform(new nsSVGTransform(aMatrix))
 {
   SetIsDOMBinding();
 }
 
-DOMSVGTransform::DOMSVGTransform(const SVGTransform &aTransform)
+DOMSVGTransform::DOMSVGTransform(const nsSVGTransform &aTransform)
   : mList(nullptr)
   , mListIndex(0)
   , mIsAnimValItem(false)
-  , mTransform(new SVGTransform(aTransform))
+  , mTransform(new nsSVGTransform(aTransform))
 {
   SetIsDOMBinding();
 }
@@ -272,12 +272,12 @@ DOMSVGTransform::RemovingFromList()
   NS_ABORT_IF_FALSE(!mTransform,
       "Item in list also has another non-list value associated with it");
 
-  mTransform = new SVGTransform(InternalItem());
+  mTransform = new nsSVGTransform(InternalItem());
   mList = nullptr;
   mIsAnimValItem = false;
 }
 
-SVGTransform&
+nsSVGTransform&
 DOMSVGTransform::InternalItem()
 {
   SVGAnimatedTransformList *alist = Element()->GetAnimatedTransformList();
@@ -286,7 +286,7 @@ DOMSVGTransform::InternalItem()
     alist->mBaseVal[mListIndex];
 }
 
-const SVGTransform&
+const nsSVGTransform&
 DOMSVGTransform::InternalItem() const
 {
   return const_cast<DOMSVGTransform *>(this)->InternalItem();
@@ -315,7 +315,7 @@ DOMSVGTransform::SetMatrix(const gfxMatrix& aMatrix)
       "Attempting to modify read-only transform");
 
   if (Transform().Type() == SVG_TRANSFORM_MATRIX &&
-      SVGTransform::MatricesEqual(Matrixgfx(), aMatrix)) {
+      nsSVGTransform::MatricesEqual(Matrixgfx(), aMatrix)) {
     return;
   }
 
