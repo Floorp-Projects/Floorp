@@ -83,13 +83,16 @@ public:
 
   nsDOMDeviceStorage();
 
-  nsresult Init(nsPIDOMWindow* aWindow, const nsAString &aType);
+  nsresult Init(nsPIDOMWindow* aWindow, const nsAString &aType, const nsAString &aVolName);
 
-  void SetRootDirectoryForType(const nsAString& aType);
+  void SetRootDirectoryForType(const nsAString& aType, const nsAString &aVolName);
+
+  static void GetOrderedVolumeNames(const nsAString &aType,
+                                    nsTArray<nsString> &aVolumeNames);
 
   static void CreateDeviceStoragesFor(nsPIDOMWindow* aWin,
                                       const nsAString &aType,
-                                      nsDOMDeviceStorage** aStore);
+                                      nsTArray<nsRefPtr<nsDOMDeviceStorage> > &aStores);
   void Shutdown();
 
 private:
@@ -109,6 +112,7 @@ private:
 
   nsString mStorageType;
   nsCOMPtr<nsIFile> mRootDirectory;
+  nsString mVolumeName;
 
   nsCOMPtr<nsIPrincipal> mPrincipal;
 

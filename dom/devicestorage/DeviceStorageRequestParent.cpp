@@ -120,7 +120,8 @@ DeviceStorageRequestParent::Dispatch()
 
     case DeviceStorageParams::TDeviceStorageAvailableParams:
     {
-      nsRefPtr<PostAvailableResultEvent> r = new PostAvailableResultEvent(this);
+      DeviceStorageAvailableParams p = mParams;
+      nsRefPtr<PostAvailableResultEvent> r = new PostAvailableResultEvent(this, p.fullpath());
       NS_DispatchToMainThread(r);
       break;
     }
@@ -653,8 +654,10 @@ DeviceStorageRequestParent::PostPathResultEvent::CancelableRun()
   return NS_OK;
 }
 
-DeviceStorageRequestParent::PostAvailableResultEvent::PostAvailableResultEvent(DeviceStorageRequestParent* aParent)
+DeviceStorageRequestParent::PostAvailableResultEvent::PostAvailableResultEvent(DeviceStorageRequestParent* aParent,
+                                                                               const nsAString &aPath)
   : CancelableRunnable(aParent)
+  , mPath(aPath)
 {
 }
 
@@ -670,7 +673,7 @@ DeviceStorageRequestParent::PostAvailableResultEvent::CancelableRun()
   nsString state;
   state.Assign(NS_LITERAL_STRING("available"));
 #ifdef MOZ_WIDGET_GONK
-  nsresult rv = GetSDCardStatus(state);
+  nsresult rv = GetSDCardStatus(mPath, state);
   if (NS_FAILED(rv)) {
     state.Assign(NS_LITERAL_STRING("unavailable"));
   }
