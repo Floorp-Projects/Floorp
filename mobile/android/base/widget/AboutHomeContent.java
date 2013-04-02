@@ -14,7 +14,6 @@ import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.Context;
 import android.database.ContentObserver;
-import android.graphics.Canvas;
 import android.util.AttributeSet;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -46,7 +45,6 @@ public class AboutHomeContent extends ScrollView
     private Context mContext;
     private BrowserApp mActivity;
     private UriLoadCallback mUriLoadCallback = null;
-    private EnumSet<UpdateFlags> mPendingUpdates = EnumSet.noneOf(UpdateFlags.class);
 
     private ContentObserver mTabsContentObserver = null;
 
@@ -157,44 +155,19 @@ public class AboutHomeContent extends ScrollView
     }
 
     public void update(final EnumSet<UpdateFlags> flags) {
-        synchronized (mPendingUpdates) {
-            for (UpdateFlags flag : flags) {
-                if (!mPendingUpdates.contains(flag))
-                    mPendingUpdates.add(flag);
-            }
-        }
-    }
-
-    @Override
-    protected void dispatchDraw(Canvas canvas) {
-        super.dispatchDraw(canvas);
-        // if any updates are pending, process them on a background thread
-        processPendingUpdates();
-    }
-
-    void processPendingUpdates() {
-        // during startup, this may be called before init()
-        final EnumSet<UpdateFlags> copiedUpdates;
-        synchronized (mPendingUpdates) {
-            if (mPendingUpdates.isEmpty())
-                return;
-            copiedUpdates = mPendingUpdates.clone();
-            mPendingUpdates = EnumSet.noneOf(UpdateFlags.class);
-        }
-
-        ThreadUtils.getBackgroundHandler().post(new Runnable() {
+        ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                if (copiedUpdates.contains(UpdateFlags.TOP_SITES))
+                if (flags.contains(UpdateFlags.TOP_SITES))
                     loadTopSites();
 
-                if (copiedUpdates.contains(UpdateFlags.PREVIOUS_TABS))
+                if (flags.contains(UpdateFlags.PREVIOUS_TABS))
                     readLastTabs();
 
-                if (copiedUpdates.contains(UpdateFlags.RECOMMENDED_ADDONS))
+                if (flags.contains(UpdateFlags.RECOMMENDED_ADDONS))
                     readRecommendedAddons();
 
-                if (copiedUpdates.contains(UpdateFlags.REMOTE_TABS))
+                if (flags.contains(UpdateFlags.REMOTE_TABS))
                     loadRemoteTabs();
             }
         });

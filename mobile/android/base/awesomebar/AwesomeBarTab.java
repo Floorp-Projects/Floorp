@@ -26,6 +26,7 @@ import android.widget.TextView;
 abstract public class AwesomeBarTab {
     abstract public String getTag();
     abstract public int getTitleStringId();
+    abstract public void destroy();
     abstract public boolean   onBackPressed();
     abstract public ContextMenuSubject getSubject(ContextMenu menu, View view, ContextMenuInfo menuInfo);
     abstract public View getView();
@@ -138,10 +139,4 @@ abstract public class AwesomeBarTab {
 
         return imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
-
-    public void onDestroyView() {
-        mView = null;
-    }
-
-    public void destroy() { }
 }
