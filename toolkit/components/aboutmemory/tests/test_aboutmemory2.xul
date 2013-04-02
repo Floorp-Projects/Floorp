@@ -24,6 +24,7 @@
 
   // Remove all the real reporters and multi-reporters;  save them to
   // restore at the end.
+  mgr.blockRegistration();
   let e = mgr.enumerateReporters();
   let realReporters = [];
   while (e.hasMoreElements()) {
@@ -78,7 +79,7 @@
   ];
 
   for (let i = 0; i < fakeReporters.length; i++) {
-    mgr.registerReporter(fakeReporters[i]);
+    mgr.registerReporterEvenIfBlocked(fakeReporters[i]);
   }
 
   ]]>
@@ -97,11 +98,13 @@
       mgr.unregisterReporter(fakeReporters[i]);
     }
     for (let i = 0; i < realReporters.length; i++) {
-      mgr.registerReporter(realReporters[i]);
+      mgr.registerReporterEvenIfBlocked(realReporters[i]);
     }
     for (let i = 0; i < realMultiReporters.length; i++) {
-      mgr.registerMultiReporter(realMultiReporters[i]);
+      mgr.registerMultiReporterEvenIfBlocked(realMultiReporters[i]);
     }
+    mgr.unblockRegistration();
+
     SimpleTest.finish();
   }
 

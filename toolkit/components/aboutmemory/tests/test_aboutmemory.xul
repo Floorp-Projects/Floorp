@@ -29,6 +29,7 @@
 
   // Remove all the real reporters and multi-reporters;  save them to
   // restore at the end.
+  mgr.blockRegistration();
   let e = mgr.enumerateReporters();
   let realReporters = [];
   while (e.hasMoreElements()) {
@@ -162,10 +163,10 @@
     }
   ];
   for (let i = 0; i < fakeReporters.length; i++) {
-    mgr.registerReporter(fakeReporters[i]);
+    mgr.registerReporterEvenIfBlocked(fakeReporters[i]);
   }
   for (let i = 0; i < fakeMultiReporters.length; i++) {
-    mgr.registerMultiReporter(fakeMultiReporters[i]);
+    mgr.registerMultiReporterEvenIfBlocked(fakeMultiReporters[i]);
   }
 
   // mgr.explicit sums "heap-allocated" and all the appropriate NONHEAP ones:
@@ -243,7 +244,7 @@
     f("5th", "explicit/b/c/i/j", NONHEAP,   5 * KB)
   ];
   for (let i = 0; i < fakeReporters2.length; i++) {
-    mgr.registerReporter(fakeReporters2[i]);
+    mgr.registerReporterEvenIfBlocked(fakeReporters2[i]);
   }
   fakeReporters = fakeReporters.concat(fakeReporters2);
   ]]>
@@ -595,11 +596,13 @@ Other Measurements\n\
       mgr.unregisterMultiReporter(fakeMultiReporters[i]);
     }
     for (let i = 0; i < realReporters.length; i++) {
-      mgr.registerReporter(realReporters[i]);
+      mgr.registerReporterEvenIfBlocked(realReporters[i]);
     }
     for (let i = 0; i < realMultiReporters.length; i++) {
-      mgr.registerMultiReporter(realMultiReporters[i]);
+      mgr.registerMultiReporterEvenIfBlocked(realMultiReporters[i]);
     }
+    mgr.unblockRegistration();
+
     SimpleTest.finish();
   }
 
