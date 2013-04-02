@@ -3517,28 +3517,6 @@ void HTMLMediaElement::GetCurrentSpec(nsCString& aString)
   }
 }
 
-/* attribute double initialTime; */
-double
-HTMLMediaElement::InitialTime()
-{
-  // If there is no start fragment then the initalTime is zero.
-  // Clamp to duration if it is greater than duration.
-  double duration = Duration();
-
-  double time = mFragmentStart < 0.0 ? 0.0 : mFragmentStart;
-  if (time > duration) {
-    time = duration;
-  }
-
-  return time;
-}
-
-NS_IMETHODIMP HTMLMediaElement::GetInitialTime(double* aTime)
-{
-  *aTime = InitialTime();
-  return NS_OK;
-}
-
 /* attribute double mozFragmentEnd; */
 double
 HTMLMediaElement::MozFragmentEnd()
