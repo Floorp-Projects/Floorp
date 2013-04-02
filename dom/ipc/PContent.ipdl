@@ -91,6 +91,7 @@ struct DeviceStorageUsedSpaceParams
 struct DeviceStorageAvailableParams
 {
   nsString type;
+  nsString fullpath;
 };
 
 struct DeviceStorageAddParams

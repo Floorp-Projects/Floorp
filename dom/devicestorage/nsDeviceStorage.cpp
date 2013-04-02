@@ -222,6 +222,15 @@ DeviceStorageTypeChecker::GetAccessForRequest(const DeviceStorageRequestType aRe
   return NS_OK;
 }
 
+bool
+DeviceStorageTypeChecker::IsVolumeBased(const nsAString& aType)
+{
+  // The apps aren't stored in the same place as the media, so
+  // we only ever return a single apps object, and not an array
+  // with one per volume (as is the case for the remaining
+  // storage types).
+  return !aType.EqualsLiteral(DEVICESTORAGE_APPS);
+}
 
 NS_IMPL_ISUPPORTS1(FileUpdateDispatcher, nsIObserver)
 
@@ -651,13 +660,13 @@ NS_IMPL_THREADSAFE_ISUPPORTS0(DeviceStorageFile)
 
 #ifdef MOZ_WIDGET_GONK
 nsresult
-GetSDCardStatus(nsAString& aState) {
+GetSDCardStatus(nsAString& aPath, nsAString& aState) {
   nsCOMPtr<nsIVolumeService> vs = do_GetService(NS_VOLUMESERVICE_CONTRACTID);
   if (!vs) {
     return NS_ERROR_FAILURE;
   }
   nsCOMPtr<nsIVolume> vol;
-  vs->GetVolumeByName(NS_LITERAL_STRING("sdcard"), getter_AddRefs(vol));
+  vs->GetVolumeByPath(aPath, getter_AddRefs(vol));
   if (!vol) {
     return NS_ERROR_FAILURE;
   }
@@ -694,16 +703,33 @@ UnregisterForSDCardChanges(nsIObserver* aObserver)
 #endif
 
 void
-nsDOMDeviceStorage::SetRootDirectoryForType(const nsAString& aType)
+nsDOMDeviceStorage::SetRootDirectoryForType(const nsAString& aType, const nsAString& aVolName)
 {
   nsCOMPtr<nsIFile> f;
   nsCOMPtr<nsIProperties> dirService = do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID);
   NS_ASSERTION(dirService, "Must have directory service");
 
+  mVolumeName = NS_LITERAL_STRING("");
+#ifdef MOZ_WIDGET_GONK
+  nsString volMountPoint(NS_LITERAL_STRING("/sdcard"));
+  if (!aVolName.EqualsLiteral("")) {
+    nsCOMPtr<nsIVolumeService> vs = do_GetService(NS_VOLUMESERVICE_CONTRACTID);
+    if (vs) {
+      nsresult rv;
+      nsCOMPtr<nsIVolume> vol;
+      rv = vs->GetVolumeByName(aVolName, getter_AddRefs(vol));
+      if (NS_SUCCEEDED(rv)) {
+        vol->GetMountPoint(volMountPoint);
+        mVolumeName = aVolName;
+      }
+    }
+  }
+#endif
+
   // Picture directory
   if (aType.EqualsLiteral(DEVICESTORAGE_PICTURES)) {
 #ifdef MOZ_WIDGET_GONK
-    NS_NewLocalFile(NS_LITERAL_STRING("/sdcard"), false, getter_AddRefs(f));
+    NS_NewLocalFile(volMountPoint, false, getter_AddRefs(f));
 #elif defined (MOZ_WIDGET_COCOA)
     dirService->Get(NS_OSX_PICTURE_DOCUMENTS_DIR, NS_GET_IID(nsIFile), getter_AddRefs(f));
 #elif defined (XP_UNIX)
@@ -716,7 +742,7 @@ nsDOMDeviceStorage::SetRootDirectoryForType(const nsAString& aType)
   // Video directory
   else if (aType.EqualsLiteral(DEVICESTORAGE_VIDEOS)) {
 #ifdef MOZ_WIDGET_GONK
-    NS_NewLocalFile(NS_LITERAL_STRING("/sdcard"), false, getter_AddRefs(f));
+    NS_NewLocalFile(volMountPoint, false, getter_AddRefs(f));
 #elif defined (MOZ_WIDGET_COCOA)
     dirService->Get(NS_OSX_MOVIE_DOCUMENTS_DIR, NS_GET_IID(nsIFile), getter_AddRefs(f));
 #elif defined (XP_UNIX)
@@ -729,7 +755,7 @@ nsDOMDeviceStorage::SetRootDirectoryForType(const nsAString& aType)
   // Music directory
   else if (aType.EqualsLiteral(DEVICESTORAGE_MUSIC)) {
 #ifdef MOZ_WIDGET_GONK
-    NS_NewLocalFile(NS_LITERAL_STRING("/sdcard"), false, getter_AddRefs(f));
+    NS_NewLocalFile(volMountPoint, false, getter_AddRefs(f));
 #elif defined (MOZ_WIDGET_COCOA)
     dirService->Get(NS_OSX_MUSIC_DOCUMENTS_DIR, NS_GET_IID(nsIFile), getter_AddRefs(f));
 #elif defined (XP_UNIX)
@@ -753,9 +779,9 @@ nsDOMDeviceStorage::SetRootDirectoryForType(const nsAString& aType)
 
    // default SDCard
    else if (aType.EqualsLiteral(DEVICESTORAGE_SDCARD)) {
- #ifdef MOZ_WIDGET_GONK
-     NS_NewLocalFile(NS_LITERAL_STRING("/sdcard"), false, getter_AddRefs(f));
- #else
+#ifdef MOZ_WIDGET_GONK
+     NS_NewLocalFile(volMountPoint, false, getter_AddRefs(f));
+#else
     // Eventually, on desktop, we want to do something smarter -- for example,
     // detect when an sdcard is inserted, and use that instead of this.
     dirService->Get(NS_APP_USER_PROFILE_50_DIR, NS_GET_IID(nsIFile), getter_AddRefs(f));
@@ -1223,8 +1249,9 @@ nsDOMDeviceStorageCursor::RequestComplete()
 class PostAvailableResultEvent : public nsRunnable
 {
 public:
-  PostAvailableResultEvent(DOMRequest* aRequest)
-    : mRequest(aRequest)
+  PostAvailableResultEvent(const nsAString& aPath, DOMRequest* aRequest)
+    : mPath(aPath)
+    , mRequest(aRequest)
   {
   }
 
@@ -1237,7 +1264,7 @@ public:
     nsString state;
     state.Assign(NS_LITERAL_STRING("available"));
 #ifdef MOZ_WIDGET_GONK
-    nsresult rv = GetSDCardStatus(state);
+    nsresult rv = GetSDCardStatus(mPath, state);
     if (NS_FAILED(rv)) {
       state.Assign(NS_LITERAL_STRING("unavailable"));
     }
@@ -1250,6 +1277,7 @@ public:
   }
 
 private:
+  nsString mPath;
   nsRefPtr<DOMRequest> mRequest;
 };
 
@@ -1742,11 +1770,11 @@ public:
       {
         if (XRE_GetProcessType() != GeckoProcessType_Default) {
           PDeviceStorageRequestChild* child = new DeviceStorageRequestChild(mRequest, mFile);
-          DeviceStorageAvailableParams params(mFile->mStorageType);
+          DeviceStorageAvailableParams params(mFile->mStorageType, fullpath);
           ContentChild::GetSingleton()->SendPDeviceStorageRequestConstructor(child, params);
           return NS_OK;
         }
-        r = new PostAvailableResultEvent(mRequest);
+        r = new PostAvailableResultEvent(mFile->mPath, mRequest);
         NS_DispatchToMainThread(r);
         return NS_OK;
       }
@@ -1828,14 +1856,14 @@ nsDOMDeviceStorage::nsDOMDeviceStorage()
 { }
 
 nsresult
-nsDOMDeviceStorage::Init(nsPIDOMWindow* aWindow, const nsAString &aType)
+nsDOMDeviceStorage::Init(nsPIDOMWindow* aWindow, const nsAString &aType, const nsAString &aVolName)
 {
   DebugOnly<FileUpdateDispatcher*> observer = FileUpdateDispatcher::GetSingleton();
   NS_ASSERTION(observer, "FileUpdateDispatcher is null");
 
   NS_ASSERTION(aWindow, "Must have a content dom");
 
-  SetRootDirectoryForType(aType);
+  SetRootDirectoryForType(aType, aVolName);
   if (!mRootDirectory) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -1888,13 +1916,49 @@ nsDOMDeviceStorage::Shutdown()
 }
 
 void
+nsDOMDeviceStorage::GetOrderedVolumeNames(const nsAString &aType,
+                                          nsTArray<nsString> &aVolumeNames)
+{
+#ifdef MOZ_WIDGET_GONK
+  if (DeviceStorageTypeChecker::IsVolumeBased(aType)) {
+    nsCOMPtr<nsIVolumeService> vs = do_GetService(NS_VOLUMESERVICE_CONTRACTID);
+    if (vs) {
+      vs->GetVolumeNames(aVolumeNames);
+
+      // If the volume sdcard exists, then we want it to be first.
+
+      nsTArray<nsString>::index_type sdcardIndex;
+      sdcardIndex = aVolumeNames.IndexOf(NS_LITERAL_STRING("sdcard"));
+      if ((sdcardIndex != nsTArray<nsString>::NoIndex)
+      &&  (sdcardIndex > 0)) {
+        aVolumeNames.RemoveElementAt(sdcardIndex);
+        aVolumeNames.InsertElementAt(0, NS_LITERAL_STRING("sdcard"));
+      }
+    }
+  }
+#endif
+  if (aVolumeNames.Length() == 0) {
+    aVolumeNames.AppendElement(NS_LITERAL_STRING(""));
+  }
+}
+
+void
 nsDOMDeviceStorage::CreateDeviceStoragesFor(nsPIDOMWindow* aWin,
                                             const nsAString &aType,
-                                            nsDOMDeviceStorage** aStore)
+                                            nsTArray<nsRefPtr<nsDOMDeviceStorage> > &aStores)
 {
-  nsRefPtr<nsDOMDeviceStorage> storage = new nsDOMDeviceStorage();
-  if (NS_SUCCEEDED(storage->Init(aWin, aType))) {
-    NS_ADDREF(*aStore = storage);
+  nsTArray<nsString>  volNames;
+  GetOrderedVolumeNames(aType, volNames);
+
+  nsTArray<nsString>::size_type numVolumeNames = volNames.Length();
+  for (nsTArray<nsString>::index_type i = 0; i < numVolumeNames; i++) {
+    nsresult rv;
+    nsRefPtr<nsDOMDeviceStorage> storage = new nsDOMDeviceStorage();
+    rv = storage->Init(aWin, aType, volNames[i]);
+    if (NS_FAILED(rv)) {
+      break;
+    }
+    aStores.AppendElement(storage);
   }
 }
 
@@ -2130,6 +2194,13 @@ nsDOMDeviceStorage::GetRootDirectory(nsIFile** aRootDirectory)
     return NS_ERROR_FAILURE;
   }
   return mRootDirectory->Clone(aRootDirectory);
+}
+
+NS_IMETHODIMP
+nsDOMDeviceStorage::GetVolumeName(nsAString & aVolumeName)
+{
+  aVolumeName = mVolumeName;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
