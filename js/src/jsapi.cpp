@@ -718,6 +718,7 @@ PerThreadData::~PerThreadData()
 
 JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
   : mainThread(this),
+    interrupt(0),
     atomsCompartment(NULL),
     systemZone(NULL),
     numCompartments(0),
