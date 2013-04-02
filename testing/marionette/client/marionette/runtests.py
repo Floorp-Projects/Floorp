@@ -12,6 +12,7 @@ import unittest
 import socket
 import sys
 import time
+import traceback
 import platform
 import moznetwork
 import xml.dom.minidom as dom
@@ -186,7 +187,8 @@ class MarionetteTestRunner(object):
                  es_server=None, rest_server=None, logger=None,
                  testgroup="marionette", noWindow=False, logcat_dir=None,
                  xml_output=None, repeat=0, perf=False, perfserv=None,
-                 gecko_path=None, testvars=None, tree=None, device=None):
+                 gecko_path=None, testvars=None, tree=None, device=None,
+                 symbols_path=None):
         self.address = address
         self.emulator = emulator
         self.emulatorBinary = emulatorBinary
@@ -215,6 +217,7 @@ class MarionetteTestRunner(object):
         self.testvars = {}
         self.tree = tree
         self.device = device
+        self.symbols_path = symbols_path
 
         if testvars:
             if not os.path.exists(testvars):
@@ -283,7 +286,8 @@ class MarionetteTestRunner(object):
                                              homedir=self.homedir,
                                              baseurl=self.baseurl,
                                              logcat_dir=self.logcat_dir,
-                                             gecko_path=self.gecko_path)
+                                             gecko_path=self.gecko_path,
+                                             symbols_path=self.symbols_path)
             else:
                 self.marionette = Marionette(host=host,
                                              port=int(port),
@@ -298,7 +302,8 @@ class MarionetteTestRunner(object):
                                          baseurl=self.baseurl,
                                          noWindow=self.noWindow,
                                          logcat_dir=self.logcat_dir,
-                                         gecko_path=self.gecko_path)
+                                         gecko_path=self.gecko_path,
+                                         symbols_path=self.symbols_path)
         else:
             raise Exception("must specify binary, address or emulator")
 
@@ -355,6 +360,11 @@ class MarionetteTestRunner(object):
         self.logger.info('passed: %d' % self.passed)
         self.logger.info('failed: %d' % self.failed)
         self.logger.info('todo: %d' % self.todo)
+        try:
+            self.marionette.check_for_crash()
+        except:
+            traceback.print_exc()
+
         self.elapsedtime = datetime.utcnow() - starttime
         if self.autolog:
             self.post_to_autolog(self.elapsedtime)
@@ -636,6 +646,10 @@ def parse_options():
     parser.add_option('--tree', dest='tree', action='store',
                       default='b2g',
                       help='the tree that the revsion parameter refers to')
+    parser.add_option('--symbols-path', dest='symbols_path', action='store',
+                      default=None,
+                      help='absolute path to directory containing breakpad '
+                      'symbols, or the URL of a zip file containing symbols')
 
     options, tests = parser.parse_args()
 
@@ -690,7 +704,8 @@ def startTestRunner(runner_class, options, tests):
                           perfserv=options.perfserv,
                           gecko_path=options.gecko_path,
                           testvars=options.testvars,
-                          device=options.device)
+                          device=options.device,
+                          symbols_path=options.symbols_path)
     runner.run_tests(tests, testtype=options.type)
     return runner
 
