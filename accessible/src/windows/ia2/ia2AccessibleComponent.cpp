@@ -21,7 +21,7 @@ using namespace mozilla::a11y;
 STDMETHODIMP
 ia2AccessibleComponent::QueryInterface(REFIID iid, void** ppv)
 {
-  *ppv = NULL;
+  *ppv = nullptr;
 
   if (IID_IAccessibleComponent == iid) {
     *ppv = static_cast<IAccessibleComponent*>(this);

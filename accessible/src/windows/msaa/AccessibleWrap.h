@@ -46,7 +46,7 @@ Class::QueryInterface(REFIID aIID, void** aInstancePtr)                        \
   A11Y_TRYBLOCK_BEGIN                                                          \
   if (!aInstancePtr)                                                           \
     return E_INVALIDARG;                                                       \
-  *aInstancePtr = NULL;                                                        \
+  *aInstancePtr = nullptr;                                                        \
                                                                                \
   HRESULT hr = E_NOINTERFACE;
 

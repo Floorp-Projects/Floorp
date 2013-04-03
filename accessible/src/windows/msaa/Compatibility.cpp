@@ -30,7 +30,7 @@ IsModuleVersionLessThan(HMODULE aModuleHandle, DWORD aMajor, DWORD aMinor)
   ::GetFileVersionInfoW(fileName, 0, length, versionInfo);
 
   UINT uLen;
-  VS_FIXEDFILEINFO* fixedFileInfo = NULL;
+  VS_FIXEDFILEINFO* fixedFileInfo = nullptr;
   ::VerQueryValueW(versionInfo, L"\\", (LPVOID*)&fixedFileInfo, &uLen);
   DWORD dwFileVersionMS = fixedFileInfo->dwFileVersionMS;
   DWORD dwFileVersionLS = fixedFileInfo->dwFileVersionLS;

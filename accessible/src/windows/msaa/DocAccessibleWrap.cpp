@@ -38,7 +38,7 @@ using namespace mozilla::a11y;
 DocAccessibleWrap::
   DocAccessibleWrap(nsIDocument* aDocument, nsIContent* aRootContent,
                     nsIPresShell* aPresShell) :
-  DocAccessible(aDocument, aRootContent, aPresShell), mHWND(NULL)
+  DocAccessible(aDocument, aRootContent, aPresShell), mHWND(nullptr)
 {
 }
 
@@ -64,7 +64,7 @@ STDMETHODIMP_(ULONG) DocAccessibleWrap::Release()
 STDMETHODIMP
 DocAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
 {
-  *ppv = NULL;
+  *ppv = nullptr;
 
   if (IID_ISimpleDOMDocument != iid)
     return HyperTextAccessibleWrap::QueryInterface(iid, ppv);
@@ -80,7 +80,7 @@ DocAccessibleWrap::get_URL(/* [out] */ BSTR __RPC_FAR *aURL)
 {
   A11Y_TRYBLOCK_BEGIN
 
-  *aURL = NULL;
+  *aURL = nullptr;
 
   nsAutoString URL;
   nsresult rv = GetURL(URL);
@@ -101,7 +101,7 @@ DocAccessibleWrap::get_title( /* [out] */ BSTR __RPC_FAR *aTitle)
 {
   A11Y_TRYBLOCK_BEGIN
 
-  *aTitle = NULL;
+  *aTitle = nullptr;
 
   nsAutoString title;
   nsresult rv = GetTitle(title);
@@ -119,7 +119,7 @@ DocAccessibleWrap::get_mimeType(/* [out] */ BSTR __RPC_FAR *aMimeType)
 {
   A11Y_TRYBLOCK_BEGIN
 
-  *aMimeType = NULL;
+  *aMimeType = nullptr;
 
   nsAutoString mimeType;
   nsresult rv = GetMimeType(mimeType);
@@ -140,7 +140,7 @@ DocAccessibleWrap::get_docType(/* [out] */ BSTR __RPC_FAR *aDocType)
 {
   A11Y_TRYBLOCK_BEGIN
 
-  *aDocType = NULL;
+  *aDocType = nullptr;
 
   nsAutoString docType;
   nsresult rv = GetDocType(docType);
@@ -162,7 +162,7 @@ DocAccessibleWrap::get_nameSpaceURIForID(/* [in] */  short aNameSpaceID,
 {
   A11Y_TRYBLOCK_BEGIN
 
-  *aNameSpaceURI = NULL;
+  *aNameSpaceURI = nullptr;
 
   if (aNameSpaceID < 0)
     return E_INVALIDARG;  // -1 is kNameSpaceID_Unknown
@@ -188,7 +188,7 @@ DocAccessibleWrap::put_alternateViewMediaTypes( /* [in] */ BSTR __RPC_FAR *aComm
 {
   A11Y_TRYBLOCK_BEGIN
 
-  *aCommaSeparatedMediaTypes = NULL;
+  *aCommaSeparatedMediaTypes = nullptr;
   return E_NOTIMPL;
 
   A11Y_TRYBLOCK_END
@@ -200,7 +200,7 @@ DocAccessibleWrap::get_accValue(
       /* [retval][out] */ BSTR __RPC_FAR *pszValue)
 {
   // For backwards-compat, we still support old MSAA hack to provide URL in accValue
-  *pszValue = NULL;
+  *pszValue = nullptr;
   // Check for real value first
   HRESULT hr = AccessibleWrap::get_accValue(varChild, pszValue);
   if (FAILED(hr) || *pszValue || varChild.lVal != CHILDID_SELF)

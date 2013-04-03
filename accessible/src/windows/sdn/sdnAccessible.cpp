@@ -31,7 +31,7 @@ sdnAccessible::QueryInterface(REFIID aREFIID, void** aInstancePtr)
 
   if (!aInstancePtr)
     return E_FAIL;
-  *aInstancePtr = NULL;
+  *aInstancePtr = nullptr;
 
   if (aREFIID == IID_ISimpleDOMNode) {
     *aInstancePtr = this;
@@ -70,9 +70,9 @@ sdnAccessible::get_nodeInfo(BSTR __RPC_FAR* aNodeName,
       !aUniqueID || !aNodeType)
     return E_INVALIDARG;
 
-  *aNodeName = NULL;
+  *aNodeName = nullptr;
   *aNameSpaceID = 0;
-  *aNodeValue = NULL;
+  *aNodeValue = nullptr;
   *aNumChildren = 0;
   *aUniqueID = 0;
   *aNodeType = 0;
@@ -143,7 +143,7 @@ sdnAccessible::get_attributes(unsigned  short aMaxAttribs,
 
   for (uint32_t index = 0; index < numAttribs; index++) {
     aNameSpaceIDs[index] = 0;
-    aAttribValues[index] = aAttribNames[index] = NULL;
+    aAttribValues[index] = aAttribNames[index] = nullptr;
     nsAutoString attributeValue;
 
     const nsAttrName* name = elm->GetAttrNameAt(index);
@@ -181,7 +181,7 @@ sdnAccessible::get_attributesForNames(unsigned short aMaxAttribs,
 
   int32_t index = 0;
   for (index = 0; index < aMaxAttribs; index++) {
-    aAttribValues[index] = NULL;
+    aAttribValues[index] = nullptr;
     if (aAttribNames[index]) {
       nsAutoString attributeValue, nameSpaceURI;
       nsAutoString attributeName(nsDependentString(
@@ -321,7 +321,7 @@ sdnAccessible::get_parentNode(ISimpleDOMNode __RPC_FAR *__RPC_FAR* aNode)
 
   if (!aNode)
     return E_INVALIDARG;
-  *aNode = NULL;
+  *aNode = nullptr;
 
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
@@ -344,7 +344,7 @@ sdnAccessible::get_firstChild(ISimpleDOMNode __RPC_FAR *__RPC_FAR* aNode)
 
   if (!aNode)
     return E_INVALIDARG;
-  *aNode = NULL;
+  *aNode = nullptr;
 
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
@@ -367,7 +367,7 @@ sdnAccessible::get_lastChild(ISimpleDOMNode __RPC_FAR *__RPC_FAR* aNode)
 
   if (!aNode)
     return E_INVALIDARG;
-  *aNode = NULL;
+  *aNode = nullptr;
 
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
@@ -390,7 +390,7 @@ sdnAccessible::get_previousSibling(ISimpleDOMNode __RPC_FAR *__RPC_FAR* aNode)
 
   if (!aNode)
     return E_INVALIDARG;
-  *aNode = NULL;
+  *aNode = nullptr;
 
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
@@ -413,7 +413,7 @@ sdnAccessible::get_nextSibling(ISimpleDOMNode __RPC_FAR *__RPC_FAR* aNode)
 
   if (!aNode)
     return E_INVALIDARG;
-  *aNode = NULL;
+  *aNode = nullptr;
 
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
@@ -437,7 +437,7 @@ sdnAccessible::get_childAt(unsigned aChildIndex,
 
   if (!aNode)
     return E_INVALIDARG;
-  *aNode = NULL;
+  *aNode = nullptr;
 
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
@@ -461,7 +461,7 @@ sdnAccessible::get_innerHTML(BSTR __RPC_FAR* aInnerHTML)
 
   if (!aInnerHTML)
     return E_INVALIDARG;
-  *aInnerHTML = NULL;
+  *aInnerHTML = nullptr;
 
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
@@ -491,7 +491,7 @@ sdnAccessible::get_localInterface(void __RPC_FAR *__RPC_FAR* aLocalInterface)
 
   if (!aLocalInterface)
     return E_INVALIDARG;
-  *aLocalInterface = NULL;
+  *aLocalInterface = nullptr;
 
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
@@ -511,7 +511,7 @@ sdnAccessible::get_language(BSTR __RPC_FAR* aLanguage)
 
   if (!aLanguage)
     return E_INVALIDARG;
-  *aLanguage = NULL;
+  *aLanguage = nullptr;
 
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;

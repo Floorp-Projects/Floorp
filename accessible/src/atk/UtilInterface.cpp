@@ -42,7 +42,7 @@ struct MaiUtilListenerInfo
   guint gail_listenerid;
 };
 
-static GHashTable* sListener_list = NULL;
+static GHashTable* sListener_list = nullptr;
 static gint sListener_idx = 1;
 
 extern "C" {
@@ -129,7 +129,7 @@ mai_util_remove_global_event_listener(guint remove_listener)
         listener_info = (MaiUtilListenerInfo *)
             g_hash_table_lookup(sListener_list, &tmp_idx);
 
-        if (listener_info != NULL) {
+        if (listener_info != nullptr) {
             if (gail_remove_global_event_listener &&
                 listener_info->gail_listenerid) {
               gail_remove_global_event_listener(listener_info->gail_listenerid);
@@ -178,7 +178,7 @@ atk_key_event_from_gdk_event_key (GdkEventKey *key)
         break;
     default:
         g_assert_not_reached ();
-        return NULL;
+        return nullptr;
     }
     event->state = key->state;
     event->keyval = key->keyval;
@@ -226,7 +226,7 @@ insert_hf(gpointer key, gpointer value, gpointer data)
     g_hash_table_insert (new_table, key, value);
 }
 
-static GHashTable* sKey_listener_list = NULL;
+static GHashTable* sKey_listener_list = nullptr;
 
 static gint
 mai_key_snooper(GtkWidget *the_widget, GdkEventKey *event, gpointer func_data)
@@ -236,7 +236,7 @@ mai_key_snooper(GtkWidget *the_widget, GdkEventKey *event, gpointer func_data)
     MaiKeyEventInfo *info = g_new0(MaiKeyEventInfo, 1);
     gint consumed = 0;
     if (sKey_listener_list) {
-        GHashTable *new_hash = g_hash_table_new(NULL, NULL);
+        GHashTable *new_hash = g_hash_table_new(nullptr, nullptr);
         g_hash_table_foreach (sKey_listener_list, insert_hf, new_hash);
         info->key_event = atk_key_event_from_gdk_event_key (event);
         info->func_data = func_data;
@@ -260,7 +260,7 @@ mai_util_add_key_event_listener (AtkKeySnoopFunc listener,
     static guint key=0;
 
     if (!sKey_listener_list) {
-        sKey_listener_list = g_hash_table_new(NULL, NULL);
+        sKey_listener_list = g_hash_table_new(nullptr, nullptr);
         sKey_snooper_id = gtk_key_snooper_install(mai_key_snooper, data);
     }
     AtkKeySnoopFuncPointer atkKeySnoop;
@@ -368,12 +368,12 @@ UtilInterfaceInit(MaiUtilClass* klass)
     atk_class->get_toolkit_name = mai_util_get_toolkit_name;
     atk_class->get_toolkit_version = mai_util_get_toolkit_version;
 
-    sListener_list = g_hash_table_new_full(g_int_hash, g_int_equal, NULL,
+    sListener_list = g_hash_table_new_full(g_int_hash, g_int_equal, nullptr,
                                            _listener_info_destroy);
     // Keep track of added/removed windows.
     AtkObject *root = atk_get_root ();
-    g_signal_connect (root, "children-changed::add", (GCallback) window_added, NULL);
-    g_signal_connect (root, "children-changed::remove", (GCallback) window_removed, NULL);
+    g_signal_connect (root, "children-changed::add", (GCallback) window_added, nullptr);
+    g_signal_connect (root, "children-changed::remove", (GCallback) window_removed, nullptr);
 }
 }
 
@@ -385,15 +385,15 @@ mai_util_get_type()
     if (!type) {
         static const GTypeInfo tinfo = {
             sizeof(MaiUtilClass),
-            (GBaseInitFunc) NULL, /* base init */
-            (GBaseFinalizeFunc) NULL, /* base finalize */
+            (GBaseInitFunc) nullptr, /* base init */
+            (GBaseFinalizeFunc) nullptr, /* base finalize */
             (GClassInitFunc) UtilInterfaceInit, /* class init */
-            (GClassFinalizeFunc) NULL, /* class finalize */
-            NULL, /* class data */
+            (GClassFinalizeFunc) nullptr, /* class finalize */
+            nullptr, /* class data */
             sizeof(MaiUtil), /* instance size */
             0, /* nb preallocs */
-            (GInstanceInitFunc) NULL, /* instance init */
-            NULL /* value table */
+            (GInstanceInitFunc) nullptr, /* instance init */
+            nullptr /* value table */
         };
 
         type = g_type_register_static(ATK_TYPE_UTIL,
