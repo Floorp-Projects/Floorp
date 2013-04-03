@@ -91,6 +91,7 @@ components/dom_wifi.xpt
 components/dom_system_b2g.xpt
 #endif
 components/dom_sms.xpt
+components/dom_webspeech.xpt
 components/uconvd.dll
 components/WeaveCrypto.js
 components/WeaveCrypto.manifest
