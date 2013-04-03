@@ -509,8 +509,8 @@ richgriditem[customColor] .richgrid-icon-box {
 }
 
 .richgrid-item-content[customImage] {
-  height: 120px;
-  width: 200px;
+  height: 160px;
+  width: 250px;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
