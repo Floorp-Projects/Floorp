@@ -115,8 +115,8 @@ JSClass nsXULPDGlobalObject::gSharedGlobalClass = {
     JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(0),
     JS_PropertyStub,  JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     JS_EnumerateStub, nsXULPDGlobalObject_resolve,  JS_ConvertStub,
-    nsXULPDGlobalObject_finalize, NULL, NULL, NULL, NULL,
-    NULL
+    nsXULPDGlobalObject_finalize, nullptr, nullptr, nullptr, nullptr,
+    nullptr
 };
 
 
@@ -712,7 +712,7 @@ nsXULPrototypeDocument::GetScriptGlobalObject()
 
 nsXULPDGlobalObject::nsXULPDGlobalObject(nsXULPrototypeDocument* owner)
   : mGlobalObjectOwner(owner)
-  , mJSObject(NULL)
+  , mJSObject(nullptr)
 {
 }
 
@@ -784,7 +784,7 @@ nsXULPDGlobalObject::EnsureScriptEnvironment()
   ctxNew->DidInitializeContext();
 
   JSObject* global = ctxNew->GetNativeGlobal();
-  NS_ASSERTION(global, "GetNativeGlobal returned NULL!");
+  NS_ASSERTION(global, "GetNativeGlobal returned nullptr!");
 
   mContext = ctxNew;
   mJSObject = global;
@@ -804,7 +804,7 @@ nsXULPDGlobalObject::GetScriptContext()
   nsresult rv = EnsureScriptEnvironment();
   if (NS_FAILED(rv)) {
     NS_ERROR("Failed to setup script language");
-    return NULL;
+    return nullptr;
   }
 
   return mContext;
@@ -826,15 +826,15 @@ nsXULPDGlobalObject::ClearGlobalObjectOwner()
   if (this != nsXULPrototypeDocument::gSystemGlobal)
     mCachedPrincipal = mGlobalObjectOwner->DocumentPrincipal();
 
-  mContext = NULL;
-  mGlobalObjectOwner = NULL;
+  mContext = nullptr;
+  mGlobalObjectOwner = nullptr;
 }
 
 
 void
 nsXULPDGlobalObject::OnFinalize(JSObject* aObject)
 {
-  mJSObject = NULL;
+  mJSObject = nullptr;
 }
 
 void

@@ -1131,7 +1131,7 @@ nsXBLBinding::DoInitJSClass(JSContext *cx, JSObject *global, JSObject *obj,
   }
 
   JS::Value val;
-  JSObject* proto = NULL;
+  JSObject* proto = nullptr;
   if ((!::JS_LookupPropertyWithFlags(cx, global, className.get(), 0, &val)) ||
       JSVAL_IS_PRIMITIVE(val)) {
     // We need to initialize the class.

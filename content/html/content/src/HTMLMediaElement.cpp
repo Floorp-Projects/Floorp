@@ -441,7 +441,7 @@ NS_IMPL_BOOL_ATTR(HTMLMediaElement, Controls, controls)
 NS_IMPL_BOOL_ATTR(HTMLMediaElement, Autoplay, autoplay)
 NS_IMPL_BOOL_ATTR(HTMLMediaElement, Loop, loop)
 NS_IMPL_BOOL_ATTR(HTMLMediaElement, DefaultMuted, muted)
-NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(HTMLMediaElement, Preload, preload, NULL)
+NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(HTMLMediaElement, Preload, preload, nullptr)
 NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(HTMLMediaElement, MozAudioChannelType, mozaudiochannel, "normal")
 
 already_AddRefed<DOMMediaStream>
@@ -888,9 +888,9 @@ void HTMLMediaElement::LoadFromSourceChildren()
     if (child->GetAttr(kNameSpaceID_None, nsGkAtoms::media, media) && !media.IsEmpty()) {
       nsCSSParser cssParser;
       nsRefPtr<nsMediaList> mediaList(new nsMediaList());
-      cssParser.ParseMediaList(media, NULL, 0, mediaList, false);
+      cssParser.ParseMediaList(media, nullptr, 0, mediaList, false);
       nsIPresShell* presShell = OwnerDoc()->GetShell();
-      if (presShell && !mediaList->Matches(presShell->GetPresContext(), NULL)) {
+      if (presShell && !mediaList->Matches(presShell->GetPresContext(), nullptr)) {
         DispatchAsyncSourceError(child);
         const PRUnichar* params[] = { media.get(), src.get() };
         ReportLoadError("MediaLoadSourceMediaNotMatched", params, ArrayLength(params));
@@ -1573,7 +1573,7 @@ HTMLMediaElement::BuildObjectFromTags(nsCStringHashKey::KeyType aKey,
   }
   JS::Value value = STRING_TO_JSVAL(string);
   if (!JS_DefineProperty(args->cx, args->tags, aKey.Data(), value,
-                         NULL, NULL, JSPROP_ENUMERATE)) {
+                         nullptr, nullptr, JSPROP_ENUMERATE)) {
     NS_WARNING("Failed to set metadata property");
     args->error = true;
     return PL_DHASH_STOP;
@@ -1590,7 +1590,7 @@ HTMLMediaElement::MozGetMetadata(JSContext* cx, ErrorResult& aRv)
     return nullptr;
   }
 
-  JSObject* tags = JS_NewObject(cx, NULL, NULL, NULL);
+  JSObject* tags = JS_NewObject(cx, nullptr, nullptr, nullptr);
   if (!tags) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -2089,7 +2089,7 @@ HTMLMediaElement::WakeLockBoolWrapper& HTMLMediaElement::WakeLockBoolWrapper::op
     pmService->NewWakeLock(NS_LITERAL_STRING("Playing_media"), mOuter->OwnerDoc()->GetWindow(), getter_AddRefs(mWakeLock));
   } else if (mWakeLock && val) {
     mWakeLock->Unlock();
-    mWakeLock = NULL;
+    mWakeLock = nullptr;
   }
   mValue = val;
   return *this;
@@ -3424,7 +3424,7 @@ HTMLMediaElement::CopyInnerTo(Element* aDest)
       if (frame && frame->GetType() == nsGkAtoms::HTMLVideoFrame &&
           static_cast<nsVideoFrame*>(frame)->ShouldDisplayPoster()) {
         nsIContent* content = static_cast<nsVideoFrame*>(frame)->GetPosterImage();
-        element = content ? content->AsElement() : NULL;
+        element = content ? content->AsElement() : nullptr;
       } else {
         element = const_cast<HTMLMediaElement*>(this);
       }

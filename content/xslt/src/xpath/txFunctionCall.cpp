@@ -36,7 +36,7 @@ FunctionCall::evaluateToNumber(Expr* aExpr, txIEvalContext* aContext,
 
 /*
  * Evaluates the given Expression and converts its result to a NodeSet.
- * If the result is not a NodeSet NULL is returned.
+ * If the result is not a NodeSet nullptr is returned.
  */
 nsresult
 FunctionCall::evaluateToNodeSet(Expr* aExpr, txIEvalContext* aContext,

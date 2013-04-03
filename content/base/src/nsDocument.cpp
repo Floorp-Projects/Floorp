@@ -5055,7 +5055,7 @@ nsDocument::Register(JSContext* aCx, const nsAString& aName,
 
   JSObject* protoObject;
   if (!aOptions.mPrototype) {
-    protoObject = JS_NewObject(aCx, NULL, htmlProto, NULL);
+    protoObject = JS_NewObject(aCx, nullptr, htmlProto, nullptr);
     if (!protoObject) {
       rv.Throw(NS_ERROR_UNEXPECTED);
       return nullptr;
@@ -11184,7 +11184,7 @@ nsDocument::DocSizeOfExcludingThis(nsWindowSizes* aWindowSizes) const
     0;
 
   aWindowSizes->mDOMOther +=
-    mStyledLinks.SizeOfExcludingThis(NULL, aWindowSizes->mMallocSizeOf);
+    mStyledLinks.SizeOfExcludingThis(nullptr, aWindowSizes->mMallocSizeOf);
 
   aWindowSizes->mDOMOther +=
     mIdentifierMap.SizeOfExcludingThis(nsIdentifierMapEntry::SizeOfExcludingThis,
