@@ -26,7 +26,7 @@ using namespace mozilla::a11y;
 STDMETHODIMP
 ia2AccessibleImage::QueryInterface(REFIID iid, void** ppv)
 {
-  *ppv = NULL;
+  *ppv = nullptr;
 
   if (IID_IAccessibleImage == iid) {
     *ppv = static_cast<IAccessibleImage*>(this);
@@ -44,7 +44,7 @@ ia2AccessibleImage::get_description(BSTR* aDescription)
 {
   A11Y_TRYBLOCK_BEGIN
 
-  *aDescription = NULL;
+  *aDescription = nullptr;
 
   ImageAccessibleWrap* acc = static_cast<ImageAccessibleWrap*>(this);
   if (acc->IsDefunct())

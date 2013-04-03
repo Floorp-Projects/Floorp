@@ -2,13 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/PodOperations.h"
+#include "mozilla/Util.h"
+
 #include "tests.h"
+
 #include "jsutil.h"
+
+using mozilla::ArrayLength;
+using mozilla::PodEqual;
 
 static const jschar arr[] = {
     'h', 'i', ',', 'd', 'o', 'n', '\'', 't', ' ', 'd', 'e', 'l', 'e', 't', 'e', ' ', 'm', 'e', '\0'
 };
-static const size_t arrlen = sizeof(arr) / sizeof(arr[0]) - 1;
+static const size_t arrlen = ArrayLength(arr) - 1;
 
 static int finalized1 = 0;
 static int finalized2 = 0;
@@ -22,7 +29,7 @@ static const JSStringFinalizer finalizer2 = { finalize_str };
 static void
 finalize_str(const JSStringFinalizer *fin, jschar *chars)
 {
-    if (chars && js::PodEqual(const_cast<const jschar *>(chars), arr, arrlen)) {
+    if (chars && PodEqual(const_cast<const jschar *>(chars), arr, arrlen)) {
         if (fin == &finalizer1) {
             ++finalized1;
         } else if (fin == &finalizer2) {

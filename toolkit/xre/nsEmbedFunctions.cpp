@@ -695,7 +695,8 @@ ContentParent* gContentParent; //long-lived, manually refcounted
 TestShellParent* GetOrCreateTestShellParent()
 {
     if (!gContentParent) {
-        NS_ADDREF(gContentParent = ContentParent::GetNewOrUsed());
+        nsRefPtr<ContentParent> parent = ContentParent::GetNewOrUsed().get();
+        parent.forget(&gContentParent);
     } else if (!gContentParent->IsAlive()) {
         return nullptr;
     }

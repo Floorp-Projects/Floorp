@@ -1261,9 +1261,11 @@ class PropertyDefiner:
         specs.append(specTerminator)
         prefableSpecs.append("  { false, NULL }");
 
+        specType = "const " + specType
         arrays = (("static %s %s_specs[] = {\n" +
                    ',\n'.join(specs) + "\n" +
                    "};\n\n" +
+                   "// Can't be const because the pref-enabled boolean needs to be writable\n"
                    "static Prefable<%s> %s[] = {\n" +
                    ',\n'.join(prefableSpecs) + "\n" +
                    "};\n\n") % (specType, name, specType, name))
@@ -3369,6 +3371,8 @@ if (${argc} > ${index}) {
                                "}")
         return variadicConversion
 
+sequenceWrapLevel = 0
+
 def getWrapTemplateForType(type, descriptorProvider, result, successCode,
                            isCreator, exceptionCode, isMember=False):
     """
@@ -3432,13 +3436,17 @@ if (%s.IsNull()) {
 }
 %s""" % (result, CGIndenter(CGGeneric(setValue("JSVAL_NULL"))).define(), recTemplate), recInfall)
 
-        # Now do non-nullable sequences.  We use setting the element
-        # in the array as our succcess code because when we succeed in
-        # wrapping that's what we should do.
+        # Now do non-nullable sequences.  Our success code is just to break to
+        # where we set the element in the array.  Note that we bump the
+        # sequenceWrapLevel around this call so that nested sequence conversions
+        # will use different iteration variables.
+        global sequenceWrapLevel
+        index = "sequenceIdx%d" % sequenceWrapLevel
+        sequenceWrapLevel += 1
         innerTemplate = wrapForType(
             type.inner, descriptorProvider,
             {
-                'result' :  "%s[i]" % result,
+                'result' :  "%s[%s]" % (result, index),
                 'successCode': "break;",
                 'jsvalRef': "tmp",
                 'jsvalPtr': "&tmp",
@@ -3447,6 +3455,7 @@ if (%s.IsNull()) {
                 'obj': "returnArray"
                 }
             )
+        sequenceWrapLevel -= 1
         innerTemplate = CGIndenter(CGGeneric(innerTemplate), 6).define()
         return (("""
 uint32_t length = %s.Length();
@@ -3457,19 +3466,20 @@ if (!returnArray) {
 // Scope for 'tmp'
 {
   jsval tmp;
-  for (uint32_t i = 0; i < length; ++i) {
+  for (uint32_t %s = 0; %s < length; ++%s) {
     // Control block to let us common up the JS_DefineElement calls when there
     // are different ways to succeed at wrapping the object.
     do {
 %s
     } while (0);
-    if (!JS_DefineElement(cx, returnArray, i, tmp,
+    if (!JS_DefineElement(cx, returnArray, %s, tmp,
                           nullptr, nullptr, JSPROP_ENUMERATE)) {
 %s
     }
   }
 }\n""" % (result, exceptionCodeIndented.define(),
-          innerTemplate,
+          index, index, index,
+          innerTemplate, index,
           CGIndenter(exceptionCodeIndented, 4).define())) +
                 setValue("JS::ObjectValue(*returnArray)"), False)
 
@@ -4761,7 +4771,7 @@ class CGMemberJITInfo(CGThing):
         returnType = reduce(CGMemberJITInfo.getSingleReturnType, returnTypes,
                             "")
         return ("\n"
-                "const JSJitInfo %s = {\n"
+                "static const JSJitInfo %s = {\n"
                 "  %s,\n"
                 "  %s,\n"
                 "  %s,\n"

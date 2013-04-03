@@ -64,7 +64,7 @@ static const int32_t kIEnumVariantDisconnected = -1;
 // AccessibleWrap
 ////////////////////////////////////////////////////////////////////////////////
 
-ITypeInfo* AccessibleWrap::gTypeInfo = NULL;
+ITypeInfo* AccessibleWrap::gTypeInfo = nullptr;
 
 NS_IMPL_ISUPPORTS_INHERITED0(AccessibleWrap, Accessible)
 
@@ -78,7 +78,7 @@ AccessibleWrap::QueryInterface(REFIID iid, void** ppv)
 {
   A11Y_TRYBLOCK_BEGIN
 
-  *ppv = NULL;
+  *ppv = nullptr;
 
   if (IID_IUnknown == iid || IID_IDispatch == iid || IID_IAccessible == iid)
     *ppv = static_cast<IAccessible*>(this);
@@ -99,25 +99,25 @@ AccessibleWrap::QueryInterface(REFIID iid, void** ppv)
     *ppv = new sdnAccessible(GetNode());
   }
 
-  if (NULL == *ppv) {
+  if (nullptr == *ppv) {
     HRESULT hr = ia2AccessibleComponent::QueryInterface(iid, ppv);
     if (SUCCEEDED(hr))
       return hr;
   }
 
-  if (NULL == *ppv) {
+  if (nullptr == *ppv) {
     HRESULT hr = ia2AccessibleHyperlink::QueryInterface(iid, ppv);
     if (SUCCEEDED(hr))
       return hr;
   }
 
-  if (NULL == *ppv) {
+  if (nullptr == *ppv) {
     HRESULT hr = ia2AccessibleValue::QueryInterface(iid, ppv);
     if (SUCCEEDED(hr))
       return hr;
   }
 
-  if (NULL == *ppv)
+  if (nullptr == *ppv)
     return E_NOINTERFACE;
 
   (reinterpret_cast<IUnknown*>(*ppv))->AddRef();
@@ -135,7 +135,7 @@ AccessibleWrap::get_accParent( IDispatch __RPC_FAR *__RPC_FAR *ppdispParent)
 {
   A11Y_TRYBLOCK_BEGIN
 
-  *ppdispParent = NULL;
+  *ppdispParent = nullptr;
 
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
@@ -195,7 +195,7 @@ AccessibleWrap::get_accChild(
 {
   A11Y_TRYBLOCK_BEGIN
 
-  *ppdispChild = NULL;
+  *ppdispChild = nullptr;
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -224,7 +224,7 @@ AccessibleWrap::get_accName(
 {
   A11Y_TRYBLOCK_BEGIN
 
-  *pszName = NULL;
+  *pszName = nullptr;
 
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
@@ -261,7 +261,7 @@ AccessibleWrap::get_accValue(
 {
   A11Y_TRYBLOCK_BEGIN
 
-  *pszValue = NULL;
+  *pszValue = nullptr;
 
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
@@ -299,7 +299,7 @@ AccessibleWrap::get_accDescription(VARIANT varChild,
 {
   A11Y_TRYBLOCK_BEGIN
 
-  *pszDescription = NULL;
+  *pszDescription = nullptr;
 
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
@@ -461,7 +461,7 @@ AccessibleWrap::get_accHelp(
 {
   A11Y_TRYBLOCK_BEGIN
 
-  *pszHelp = NULL;
+  *pszHelp = nullptr;
   return S_FALSE;
 
   A11Y_TRYBLOCK_END
@@ -475,7 +475,7 @@ AccessibleWrap::get_accHelpTopic(
 {
   A11Y_TRYBLOCK_BEGIN
 
-  *pszHelpFile = NULL;
+  *pszHelpFile = nullptr;
   *pidTopic = 0;
   return S_FALSE;
 
@@ -491,7 +491,7 @@ AccessibleWrap::get_accKeyboardShortcut(
 
   if (!pszKeyboardShortcut)
     return E_INVALIDARG;
-  *pszKeyboardShortcut = NULL;
+  *pszKeyboardShortcut = nullptr;
 
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
@@ -600,7 +600,7 @@ AccessibleEnumerator::QueryInterface(REFIID iid, void ** ppvObject)
     return S_OK;
   }
 
-  *ppvObject = NULL;
+  *ppvObject = nullptr;
   return E_NOINTERFACE;
 
   A11Y_TRYBLOCK_END
@@ -742,7 +742,7 @@ AccessibleWrap::get_accDefaultAction(
 {
   A11Y_TRYBLOCK_BEGIN
 
-  *pszDefaultAction = NULL;
+  *pszDefaultAction = nullptr;
 
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
@@ -1066,7 +1066,7 @@ AccessibleWrap::get_relation(long aRelationIndex,
   if (!aRelation)
     return E_INVALIDARG;
 
-  *aRelation = NULL;
+  *aRelation = nullptr;
 
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
@@ -1280,7 +1280,7 @@ AccessibleWrap::get_extendedRole(BSTR *aExtendedRole)
 {
   A11Y_TRYBLOCK_BEGIN
 
-  *aExtendedRole = NULL;
+  *aExtendedRole = nullptr;
   return E_NOTIMPL;
 
   A11Y_TRYBLOCK_END
@@ -1291,7 +1291,7 @@ AccessibleWrap::get_localizedExtendedRole(BSTR *aLocalizedExtendedRole)
 {
   A11Y_TRYBLOCK_BEGIN
 
-  *aLocalizedExtendedRole = NULL;
+  *aLocalizedExtendedRole = nullptr;
   return E_NOTIMPL;
 
   A11Y_TRYBLOCK_END
@@ -1315,7 +1315,7 @@ AccessibleWrap::get_extendedStates(long aMaxExtendedStates,
 {
   A11Y_TRYBLOCK_BEGIN
 
-  *aExtendedStates = NULL;
+  *aExtendedStates = nullptr;
   *aNExtendedStates = 0;
   return E_NOTIMPL;
 
@@ -1329,7 +1329,7 @@ AccessibleWrap::get_localizedExtendedStates(long aMaxLocalizedExtendedStates,
 {
   A11Y_TRYBLOCK_BEGIN
 
-  *aLocalizedExtendedStates = NULL;
+  *aLocalizedExtendedStates = nullptr;
   *aNLocalizedExtendedStates = 0;
   return E_NOTIMPL;
 
@@ -1438,7 +1438,7 @@ AccessibleWrap::get_attributes(BSTR *aAttributes)
 
   // The format is name:value;name:value; with \ for escaping these
   // characters ":;=,\".
-  *aAttributes = NULL;
+  *aAttributes = nullptr;
 
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
@@ -1462,7 +1462,7 @@ AccessibleWrap::GetTypeInfoCount(UINT *pctinfo)
 STDMETHODIMP
 AccessibleWrap::GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo)
 {
-  *ppTInfo = NULL;
+  *ppTInfo = nullptr;
 
   if (iTInfo != 0)
     return DISP_E_BADINDEX;
@@ -1647,7 +1647,7 @@ HRESULT
 AccessibleWrap::ConvertToIA2Attributes(nsIPersistentProperties *aAttributes,
                                        BSTR *aIA2Attributes)
 {
-  *aIA2Attributes = NULL;
+  *aIA2Attributes = nullptr;
 
   // The format is name:value;name:value; with \ for escaping these
   // characters ":;=,\".
@@ -1711,7 +1711,7 @@ AccessibleWrap::NativeAccessible(nsIAccessible* aAccessible)
 {
   if (!aAccessible) {
    NS_WARNING("Not passing in an aAccessible");
-   return NULL;
+   return nullptr;
   }
 
   IAccessible* msaaAccessible = nullptr;
@@ -1789,7 +1789,7 @@ AccessibleWrap::UpdateSystemCaret()
 
   // Create invisible bitmap for caret, otherwise its appearance interferes
   // with Gecko caret
-  HBITMAP caretBitMap = CreateBitmap(1, caretRect.height, 1, 1, NULL);
+  HBITMAP caretBitMap = CreateBitmap(1, caretRect.height, 1, 1, nullptr);
   if (::CreateCaret(caretWnd, caretBitMap, 1, caretRect.height)) {  // Also destroys the last caret
     ::ShowCaret(caretWnd);
     RECT windowRect;
@@ -1805,16 +1805,16 @@ AccessibleWrap::GetTI(LCID lcid)
   if (gTypeInfo)
     return gTypeInfo;
 
-  ITypeLib *typeLib = NULL;
+  ITypeLib *typeLib = nullptr;
   HRESULT hr = LoadRegTypeLib(LIBID_Accessibility, 1, 0, lcid, &typeLib);
   if (FAILED(hr))
-    return NULL;
+    return nullptr;
 
   hr = typeLib->GetTypeInfoOfGuid(IID_IAccessible, &gTypeInfo);
   typeLib->Release();
 
   if (FAILED(hr))
-    return NULL;
+    return nullptr;
 
   return gTypeInfo;
 }

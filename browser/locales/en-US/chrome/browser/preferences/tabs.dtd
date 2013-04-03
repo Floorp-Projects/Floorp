@@ -11,9 +11,6 @@
 <!ENTITY warnOpenManyTabs.label       "Warn me when opening multiple tabs might slow down &brandShortName;">
 <!ENTITY warnOpenManyTabs.accesskey   "o">
 
-<!ENTITY showTabBar.label             "Always show the tab bar">
-<!ENTITY showTabBar.accesskey         "b">
-
 <!ENTITY restoreTabsOnDemand.label        "Don’t load tabs until selected">
 <!ENTITY restoreTabsOnDemand.accesskey    "l">
 

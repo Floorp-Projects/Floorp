@@ -7,7 +7,7 @@
 #include "mozilla/Util.h"
 
 #include "SVGTransformListParser.h"
-#include "SVGTransform.h"
+#include "nsSVGTransform.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
 #include "nsIAtom.h"
@@ -209,7 +209,7 @@ SVGTransformListParser::MatchTranslate()
       // fall-through
     case 2:
     {
-      SVGTransform* transform = mTransforms.AppendElement();
+      nsSVGTransform* transform = mTransforms.AppendElement();
       NS_ENSURE_TRUE(transform, NS_ERROR_OUT_OF_MEMORY);
       transform->SetTranslate(t[0], t[1]);
       break;
@@ -238,7 +238,7 @@ SVGTransformListParser::MatchScale()
       // fall-through
     case 2:
     {
-      SVGTransform* transform = mTransforms.AppendElement();
+      nsSVGTransform* transform = mTransforms.AppendElement();
       NS_ENSURE_TRUE(transform, NS_ERROR_OUT_OF_MEMORY);
       transform->SetScale(s[0], s[1]);
       break;
@@ -267,7 +267,7 @@ SVGTransformListParser::MatchRotate()
       // fall-through
     case 3:
     {
-      SVGTransform* transform = mTransforms.AppendElement();
+      nsSVGTransform* transform = mTransforms.AppendElement();
       NS_ENSURE_TRUE(transform, NS_ERROR_OUT_OF_MEMORY);
       transform->SetRotate(r[0], r[1], r[2]);
       break;
@@ -294,7 +294,7 @@ SVGTransformListParser::MatchSkewX()
     return NS_ERROR_FAILURE;
   }
 
-  SVGTransform* transform = mTransforms.AppendElement();
+  nsSVGTransform* transform = mTransforms.AppendElement();
   NS_ENSURE_TRUE(transform, NS_ERROR_OUT_OF_MEMORY);
   transform->SetSkewX(skew);
 
@@ -316,7 +316,7 @@ SVGTransformListParser::MatchSkewY()
     return NS_ERROR_FAILURE;
   }
 
-  SVGTransform* transform = mTransforms.AppendElement();
+  nsSVGTransform* transform = mTransforms.AppendElement();
   NS_ENSURE_TRUE(transform, NS_ERROR_OUT_OF_MEMORY);
   transform->SetSkewY(skew);
 
@@ -338,7 +338,7 @@ SVGTransformListParser::MatchMatrix()
     return NS_ERROR_FAILURE;
   }
 
-  SVGTransform* transform = mTransforms.AppendElement();
+  nsSVGTransform* transform = mTransforms.AppendElement();
   NS_ENSURE_TRUE(transform, NS_ERROR_OUT_OF_MEMORY);
   transform->SetMatrix(gfxMatrix(m[0], m[1], m[2], m[3], m[4], m[5]));
 

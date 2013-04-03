@@ -3919,7 +3919,7 @@ nsresult
 nsHTMLEditor::GetPriorHTMLSibling(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode)
 {
   NS_ENSURE_TRUE(outNode, NS_ERROR_NULL_POINTER);
-  *outNode = NULL;
+  *outNode = nullptr;
 
   nsCOMPtr<nsINode> node = do_QueryInterface(inNode);
   NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
@@ -3952,7 +3952,7 @@ nsresult
 nsHTMLEditor::GetPriorHTMLSibling(nsIDOMNode *inParent, int32_t inOffset, nsCOMPtr<nsIDOMNode> *outNode)
 {
   NS_ENSURE_TRUE(outNode, NS_ERROR_NULL_POINTER);
-  *outNode = NULL;
+  *outNode = nullptr;
 
   nsCOMPtr<nsINode> parent = do_QueryInterface(inParent);
   NS_ENSURE_TRUE(parent, NS_ERROR_NULL_POINTER);
@@ -4016,7 +4016,7 @@ nsresult
 nsHTMLEditor::GetNextHTMLSibling(nsIDOMNode *inParent, int32_t inOffset, nsCOMPtr<nsIDOMNode> *outNode)
 {
   NS_ENSURE_TRUE(outNode, NS_ERROR_NULL_POINTER);
-  *outNode = NULL;
+  *outNode = nullptr;
 
   nsCOMPtr<nsINode> parent = do_QueryInterface(inParent);
   NS_ENSURE_TRUE(parent, NS_ERROR_NULL_POINTER);

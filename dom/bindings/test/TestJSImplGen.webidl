@@ -251,6 +251,9 @@ interface TestJSImplInterface {
   //sequence<any> receiveAnySequence();
   //sequence<any>? receiveNullableAnySequence();
 
+  void passSequenceOfSequences(sequence<sequence<long>> arg);
+  //sequence<sequence<long>> receiveSequenceOfSequences();
+
   // ArrayBuffer is handled differently in callback interfaces and the example generator.
   // Need to figure out what should be done there.  Seems like other typed array stuff is
   // similarly not working in the JS implemented generator.  Probably some other issues

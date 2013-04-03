@@ -1924,7 +1924,7 @@ nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
     *aHandled = true;
     return res;
   }
-  cell = NULL;
+  cell = nullptr;
 
   NS_ENSURE_STATE(mHTMLEditor);
   res = mHTMLEditor->GetStartNodeAndOffset(aSelection, getter_AddRefs(startNode), &startOffset);

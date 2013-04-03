@@ -38,13 +38,13 @@ NS_DEFINE_NAMED_CID(MOZ_SPELLI18NMANAGER_CID);
 NS_DEFINE_NAMED_CID(MOZ_INLINESPELLCHECKER_CID);
 
 static const mozilla::Module::CIDEntry kSpellcheckCIDs[] = {
-    { &kMOZ_HUNSPELL_CID, false, NULL, mozHunspellConstructor },
-    { &kHUNSPELLDIRPROVIDER_CID, false, NULL, mozHunspellDirProviderConstructor },
-    { &kNS_SPELLCHECKER_CID, false, NULL, mozSpellCheckerConstructor },
-    { &kMOZ_PERSONALDICTIONARY_CID, false, NULL, mozPersonalDictionaryConstructor },
-    { &kMOZ_SPELLI18NMANAGER_CID, false, NULL, mozSpellI18NManagerConstructor },
-    { &kMOZ_INLINESPELLCHECKER_CID, false, NULL, mozInlineSpellCheckerConstructor },
-    { NULL }
+    { &kMOZ_HUNSPELL_CID, false, nullptr, mozHunspellConstructor },
+    { &kHUNSPELLDIRPROVIDER_CID, false, nullptr, mozHunspellDirProviderConstructor },
+    { &kNS_SPELLCHECKER_CID, false, nullptr, mozSpellCheckerConstructor },
+    { &kMOZ_PERSONALDICTIONARY_CID, false, nullptr, mozPersonalDictionaryConstructor },
+    { &kMOZ_SPELLI18NMANAGER_CID, false, nullptr, mozSpellI18NManagerConstructor },
+    { &kMOZ_INLINESPELLCHECKER_CID, false, nullptr, mozInlineSpellCheckerConstructor },
+    { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kSpellcheckContracts[] = {
@@ -54,12 +54,12 @@ static const mozilla::Module::ContractIDEntry kSpellcheckContracts[] = {
     { MOZ_PERSONALDICTIONARY_CONTRACTID, &kMOZ_PERSONALDICTIONARY_CID },
     { MOZ_SPELLI18NMANAGER_CONTRACTID, &kMOZ_SPELLI18NMANAGER_CID },
     { MOZ_INLINESPELLCHECKER_CONTRACTID, &kMOZ_INLINESPELLCHECKER_CID },
-    { NULL }
+    { nullptr }
 };
 
 static const mozilla::Module::CategoryEntry kSpellcheckCategories[] = {
     { XPCOM_DIRECTORY_PROVIDER_CATEGORY, "spellcheck-directory-provider", mozHunspellDirProvider::kContractID },
-    { NULL }
+    { nullptr }
 };
 
 const mozilla::Module kSpellcheckModule = {

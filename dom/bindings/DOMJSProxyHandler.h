@@ -113,7 +113,7 @@ FillPropertyDescriptor(JSPropertyDescriptor* desc, JSObject* obj, bool readonly)
 }
 
 inline void
-FillPropertyDescriptor(JSPropertyDescriptor* desc, JSObject* obj, jsval v, bool readonly)
+FillPropertyDescriptor(JSPropertyDescriptor* desc, JSObject* obj, JS::Value v, bool readonly)
 {
   desc->value = v;
   FillPropertyDescriptor(desc, obj, readonly);

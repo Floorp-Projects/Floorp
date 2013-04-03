@@ -189,6 +189,10 @@ nsUnknownContentTypeDialog.prototype = {
   // Note - this function is called without a dialog, so it cannot access any part
   // of the dialog XUL as other functions on this object do.
   promptForSaveToFile: function(aLauncher, aContext, aDefaultFile, aSuggestedFileExtension, aForcePrompt) {
+    throw new Components.Exception("Async version must be used", Components.results.NS_ERROR_NOT_AVAILABLE);
+  },
+
+  promptForSaveToFileAsync: function(aLauncher, aContext, aDefaultFile, aSuggestedFileExtension, aForcePrompt) {
     var result = null;
 
     this.mLauncher = aLauncher;
@@ -226,13 +230,16 @@ nsUnknownContentTypeDialog.prototype = {
                            bundle.GetStringFromName("badPermissions.title"),
                            bundle.GetStringFromName("badPermissions"));
 
+            aLauncher.saveDestinationAvailable(null);
             return;
           }
         }
 
         // Check to make sure we have a valid directory, otherwise, prompt
-        if (result)
-          return result;
+        if (result) {
+          aLauncher.saveDestinationAvailable(result);
+          return;
+        }
       }
     }
 
@@ -272,42 +279,39 @@ nsUnknownContentTypeDialog.prototype = {
                             .getService(Components.interfaces.nsIDownloadManager);
     picker.displayDirectory = dnldMgr.userDownloadsDirectory;
 
-    // The last directory preference may not exist, which will throw.
-    try {
-      var lastDir = gDownloadLastDir.getFile(aLauncher.source);
-      if (isUsableDirectory(lastDir))
+    gDownloadLastDir.getFileAsync(aLauncher.source, function LastDirCallback(lastDir) {
+      if (lastDir && isUsableDirectory(lastDir))
         picker.displayDirectory = lastDir;
-    }
-    catch (ex) {
-    }
 
-    if (picker.show() == nsIFilePicker.returnCancel) {
-      // null result means user cancelled.
-      return null;
-    }
-
-    // Be sure to save the directory the user chose through the Save As...
-    // dialog  as the new browser.download.dir since the old one
-    // didn't exist.
-    result = picker.file;
-
-    if (result) {
-      try {
-        // Remove the file so that it's not there when we ensure non-existence later;
-        // this is safe because for the file to exist, the user would have had to
-        // confirm that he wanted the file overwritten.
-        if (result.exists())
-          result.remove(false);
+      if (picker.show() == nsIFilePicker.returnCancel) {
+        // null result means user cancelled.
+        aLauncher.saveDestinationAvailable(null);
+        return;
       }
-      catch (e) { }
-      var newDir = result.parent.QueryInterface(Components.interfaces.nsILocalFile);
 
-      // Do not store the last save directory as a pref inside the private browsing mode
-      gDownloadLastDir.setFile(aLauncher.source, newDir);
+      // Be sure to save the directory the user chose through the Save As...
+      // dialog  as the new browser.download.dir since the old one
+      // didn't exist.
+      result = picker.file;
 
-      result = this.validateLeafName(newDir, result.leafName, null);
-    }
-    return result;
+      if (result) {
+        try {
+          // Remove the file so that it's not there when we ensure non-existence later;
+          // this is safe because for the file to exist, the user would have had to
+          // confirm that he wanted the file overwritten.
+          if (result.exists())
+            result.remove(false);
+        }
+        catch (e) { }
+        var newDir = result.parent.QueryInterface(Components.interfaces.nsILocalFile);
+
+        // Do not store the last save directory as a pref inside the private browsing mode
+        gDownloadLastDir.setFile(aLauncher.source, newDir);
+
+        result = this.validateLeafName(newDir, result.leafName, null);
+      }
+      aLauncher.saveDestinationAvailable(result);
+    }.bind(this));
   },
 
   /**

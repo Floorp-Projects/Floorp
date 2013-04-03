@@ -35,7 +35,7 @@ SetJsObject(JSContext* aContext,
     aValue.get_ArrayOfBluetoothNamedValue();
 
   for (uint32_t i = 0; i < arr.Length(); i++) {
-    jsval val;
+    JS::Value val;
     const BluetoothValue& v = arr[i].value();
     JSString* jsData;
 

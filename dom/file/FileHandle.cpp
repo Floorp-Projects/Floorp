@@ -35,7 +35,7 @@ public:
   { }
 
   nsresult
-  GetSuccessResult(JSContext* aCx, jsval* aVal);
+  GetSuccessResult(JSContext* aCx, JS::Value* aVal);
 
   void
   ReleaseObjects()
@@ -186,7 +186,7 @@ FileHandle::GetFileInfo()
 }
 
 nsresult
-GetFileHelper::GetSuccessResult(JSContext* aCx, jsval* aVal)
+GetFileHelper::GetSuccessResult(JSContext* aCx, JS::Value* aVal)
 {
   nsCOMPtr<nsIDOMFile> domFile =
     mFileHandle->CreateFileObject(mLockedFile, mParams->Size());

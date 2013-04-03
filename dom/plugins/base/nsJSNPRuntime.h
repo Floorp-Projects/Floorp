@@ -75,7 +75,7 @@ public:
 };
 
 bool
-JSValToNPVariant(NPP npp, JSContext *cx, jsval val, NPVariant *variant);
+JSValToNPVariant(NPP npp, JSContext *cx, JS::Value val, NPVariant *variant);
 
 
 #endif // nsJSNPRuntime_h_

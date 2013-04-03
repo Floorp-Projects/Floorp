@@ -10,9 +10,13 @@
 #include "gfxMatrix.h"
 #include "nsDebug.h"
 #include "nsTArray.h"
-#include "SVGTransform.h"
+#include "nsSVGTransform.h"
 
 namespace mozilla {
+
+namespace dom {
+class SVGTransform;
+}
 
 /**
  * ATTENTION! WARNING! WATCH OUT!!
@@ -27,7 +31,7 @@ class SVGTransformList
 {
   friend class SVGAnimatedTransformList;
   friend class DOMSVGTransformList;
-  friend class DOMSVGTransform;
+  friend class dom::SVGTransform;
 
 public:
   SVGTransformList() {}
@@ -47,7 +51,7 @@ public:
     return mItems.Length();
   }
 
-  const SVGTransform& operator[](uint32_t aIndex) const {
+  const nsSVGTransform& operator[](uint32_t aIndex) const {
     return mItems[aIndex];
   }
 
@@ -79,9 +83,9 @@ protected:
    * which case the list will be left unmodified.
    */
   nsresult CopyFrom(const SVGTransformList& rhs);
-  nsresult CopyFrom(const nsTArray<SVGTransform>& aTransformArray);
+  nsresult CopyFrom(const nsTArray<nsSVGTransform>& aTransformArray);
 
-  SVGTransform& operator[](uint32_t aIndex) {
+  nsSVGTransform& operator[](uint32_t aIndex) {
     return mItems[aIndex];
   }
 
@@ -105,14 +109,14 @@ private:
     mItems.Clear();
   }
 
-  bool InsertItem(uint32_t aIndex, const SVGTransform& aTransform) {
+  bool InsertItem(uint32_t aIndex, const nsSVGTransform& aTransform) {
     if (aIndex >= mItems.Length()) {
       aIndex = mItems.Length();
     }
     return !!mItems.InsertElementAt(aIndex, aTransform);
   }
 
-  void ReplaceItem(uint32_t aIndex, const SVGTransform& aTransform) {
+  void ReplaceItem(uint32_t aIndex, const nsSVGTransform& aTransform) {
     NS_ABORT_IF_FALSE(aIndex < mItems.Length(),
                       "DOM wrapper caller should have raised INDEX_SIZE_ERR");
     mItems[aIndex] = aTransform;
@@ -124,16 +128,16 @@ private:
     mItems.RemoveElementAt(aIndex);
   }
 
-  bool AppendItem(const SVGTransform& aTransform) {
+  bool AppendItem(const nsSVGTransform& aTransform) {
     return !!mItems.AppendElement(aTransform);
   }
 
 protected:
   /*
-   * See SVGLengthList for the rationale for using FallibleTArray<SVGTransform>
-   * instead of FallibleTArray<SVGTransform, 1>.
+   * See SVGLengthList for the rationale for using FallibleTArray<nsSVGTransform>
+   * instead of FallibleTArray<nsSVGTransform, 1>.
    */
-  FallibleTArray<SVGTransform> mItems;
+  FallibleTArray<nsSVGTransform> mItems;
 };
 
 } // namespace mozilla
