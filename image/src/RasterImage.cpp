@@ -3327,35 +3327,38 @@ bool
 RasterImage::IsDecodeFinished()
 {
   // Precondition
+  mDecodingMutex.AssertCurrentThreadOwns();
   NS_ABORT_IF_FALSE(mDecoder, "Can't call IsDecodeFinished() without decoder!");
+  MOZ_ASSERT(mDecodeRequest);
 
-  // Assume it's not finished
-  bool decodeFinished = false;
-
-  // The decode is complete if we got what we wanted...
+  // The decode is complete if we got what we wanted.
   if (mDecoder->IsSizeDecode()) {
-    if (mHasSize)
-      decodeFinished = true;
+    if (mDecoder->HasSize()) {
+      return true;
+    }
+  } else if (mDecoder->GetDecodeDone()) {
+    return true;
   }
-  else {
-    if (mDecoded)
-      decodeFinished = true;
+  
+  // If the decoder returned because it needed a new frame and we haven't
+  // written to it since then, the decoder may be storing data that it hasn't
+  // decoded yet.
+  if (mDecoder->NeedsNewFrame() || mDecodeRequest->mAllocatedNewFrame) {
+    return false;
   }
-
-  // ... but if we're waiting for a new frame, we're not done.
-  if (mDecoder && mDecoder->NeedsNewFrame())
-    decodeFinished = false;
 
   // Otherwise, if we have all the source data and wrote all the source data,
   // we're done.
   //
-  // (NB - This can be distinct from the above case even for non-erroneous
-  // images because the decoder might not call DecodingComplete() until we
-  // call Close() in ShutdownDecoder())
-  else if (mHasSourceData && (mBytesDecoded == mSourceData.Length()))
-    decodeFinished = true;
+  // (NB - This can be the case even for non-erroneous images because
+  // Decoder::GetDecodeDone() might not return true until after we call
+  // Decoder::Finish() in ShutdownDecoder())
+  if (mHasSourceData && (mBytesDecoded == mSourceData.Length())) {
+    return true;
+  }
 
-  return decodeFinished;
+  // If we get here, assume it's not finished.
+  return false;
 }
 
 // Indempotent error flagging routine. If a decoder is open, shuts it down.
@@ -3471,8 +3474,7 @@ RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_D
 
     // If the decode finished, or we're specifically being told to shut down,
     // tell the image and shut down the decoder.
-    if (image->mDecoder->GetDecodeDone() || image->IsDecodeFinished() ||
-        aIntent != eShutdownIntent_Done) {
+    if (image->IsDecodeFinished() || aIntent != eShutdownIntent_Done) {
       done = true;
 
       // Hold on to a reference to the decoder until we're done with it
@@ -3683,7 +3685,7 @@ RasterImage::DecodePool::DecodeJob::Run()
   }
 
   // If someone came along and synchronously decoded us, there's nothing for us to do.
-  if (!mRequest->mAllocatedNewFrame && (!mImage->mDecoder || mImage->IsDecodeFinished())) {
+  if (!mImage->mDecoder || mImage->IsDecodeFinished()) {
     DecodeDoneWorker::NotifyFinishedSomeDecoding(mImage, mRequest);
     return NS_OK;
   }
