@@ -152,6 +152,17 @@ void profiler_unregister_thread()
   mozilla_sampler_unregister_thread();
 }
 
+static inline
+void profiler_js_operation_callback()
+{
+  PseudoStack *stack = tlsPseudoStack.get();
+  if (!stack) {
+    return;
+  }
+
+  stack->jsOperationCallback();
+}
+
 // we want the class and function name but can't easily get that using preprocessor macros
 // __func__ doesn't have the class name and __PRETTY_FUNCTION__ has the parameters
 
