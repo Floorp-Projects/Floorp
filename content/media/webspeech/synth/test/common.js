@@ -106,41 +106,70 @@ var TestSpeechServiceNoAudio = {
 };
 
 function synthAddVoice(aServiceName, aName, aLang, aIsLocal) {
-  var voicesBefore = speechSynthesis.getVoices().length;
-  var uri = "urn:moz-tts:mylittleservice:" + encodeURI(aName + '?' + aLang);
-  gSpeechRegistry.addVoice(window[aServiceName], uri, aName, aLang, aIsLocal);
+  if (SpecialPowers.isMainProcess()) {
+    var voicesBefore = speechSynthesis.getVoices().length;
+    var uri = "urn:moz-tts:mylittleservice:" + encodeURI(aName + '?' + aLang);
+    gSpeechRegistry.addVoice(window[aServiceName], uri, aName, aLang, aIsLocal);
 
-  gAddedVoices.push([window[aServiceName], uri]);
-  var voicesAfter = speechSynthesis.getVoices().length;
+    gAddedVoices.push([window[aServiceName], uri]);
+    var voicesAfter = speechSynthesis.getVoices().length;
 
-  is(voicesBefore + 1, voicesAfter, "Voice added");
-  var voice = speechSynthesis.getVoices()[voicesAfter - 1];
-  is(voice.voiceURI, uri, "voice URI matches");
-  is(voice.name, aName, "voice name matches");
-  is(voice.lang, aLang, "voice lang matches");
-  is(voice.localService, aIsLocal, "voice localService matches");
+    is(voicesBefore + 1, voicesAfter, "Voice added");
+    var voice = speechSynthesis.getVoices()[voicesAfter - 1];
+    is(voice.voiceURI, uri, "voice URI matches");
+    is(voice.name, aName, "voice name matches");
+    is(voice.lang, aLang, "voice lang matches");
+    is(voice.localService, aIsLocal, "voice localService matches");
 
-  return uri;
+    return uri;
+  } else {
+    // XXX: It would be nice to check here that the child gets the voice
+    // added update, but alas, it is aynchronous.
+    var mm = SpecialPowers.Cc["@mozilla.org/childprocessmessagemanager;1"]
+      .getService(SpecialPowers.Ci.nsISyncMessageSender);
+
+    return mm.sendSyncMessage(
+      'test:SpeechSynthesis:ipcSynthAddVoice',
+      [aServiceName, aName, aLang, aIsLocal])[0];
+  }
 }
 
 function synthSetDefault(aUri, aIsDefault) {
-  gSpeechRegistry.setDefaultVoice(aUri, aIsDefault);
-  var voices = speechSynthesis.getVoices();
-  for (var i in voices) {
-    if (voices[i].voiceURI == aUri)
-      ok(voices[i]['default'], "Voice set to default");
+  if (SpecialPowers.isMainProcess()) {
+    gSpeechRegistry.setDefaultVoice(aUri, aIsDefault);
+    var voices = speechSynthesis.getVoices();
+    for (var i in voices) {
+      if (voices[i].voiceURI == aUri)
+        ok(voices[i]['default'], "Voice set to default");
+    }
+  } else {
+    // XXX: It would be nice to check here that the child gets the voice
+    // added update, but alas, it is aynchronous.
+    var mm = SpecialPowers.Cc["@mozilla.org/childprocessmessagemanager;1"]
+      .getService(SpecialPowers.Ci.nsISyncMessageSender);
+
+    return mm.sendSyncMessage(
+      'test:SpeechSynthesis:ipcSynthSetDefault', [aUri, aIsDefault])[0];
   }
 }
 
 function synthCleanup() {
-  var voicesBefore = speechSynthesis.getVoices().length;
-  var toRemove = gAddedVoices.length;
-  var removeArgs;
-  while ((removeArgs = gAddedVoices.shift()))
-    gSpeechRegistry.removeVoice.apply(gSpeechRegistry.removeVoice, removeArgs);
+  if (SpecialPowers.isMainProcess()) {
+    var voicesBefore = speechSynthesis.getVoices().length;
+    var toRemove = gAddedVoices.length;
+    var removeArgs;
+    while ((removeArgs = gAddedVoices.shift()))
+      gSpeechRegistry.removeVoice.apply(gSpeechRegistry.removeVoice, removeArgs);
 
-  var voicesAfter = speechSynthesis.getVoices().length;
-  is(voicesAfter, voicesBefore - toRemove, "Successfully removed test voices");
+    var voicesAfter = speechSynthesis.getVoices().length;
+    is(voicesAfter, voicesBefore - toRemove, "Successfully removed test voices");
+  } else {
+    // XXX: It would be nice to check here that the child gets the voice
+    // removed update, but alas, it is aynchronous.
+    var mm = SpecialPowers.Cc["@mozilla.org/childprocessmessagemanager;1"]
+      .getService(SpecialPowers.Ci.nsISyncMessageSender);
+    mm.sendSyncMessage('test:SpeechSynthesis:ipcSynthCleanup');
+  }
 }
 
 function synthTestQueue(aTestArgs, aEndFunc) {

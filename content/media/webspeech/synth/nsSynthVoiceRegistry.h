@@ -18,6 +18,7 @@ namespace dom {
 
 class RemoteVoice;
 class SpeechSynthesisUtterance;
+class SpeechSynthesisChild;
 class nsSpeechTask;
 class VoiceData;
 
@@ -37,9 +38,18 @@ public:
              const nsAString& aUri, const float& aRate, const float& aPitch,
              nsSpeechTask* aTask);
 
+  void SendVoices(InfallibleTArray<RemoteVoice>* aVoices,
+                  InfallibleTArray<nsString>* aDefaults);
+
   static nsSynthVoiceRegistry* GetInstance();
 
   static already_AddRefed<nsSynthVoiceRegistry> GetInstanceForService();
+
+  static void RecvRemoveVoice(const nsAString& aUri);
+
+  static void RecvAddVoice(const RemoteVoice& aVoice);
+
+  static void RecvSetDefaultVoice(const nsAString& aUri, bool aIsDefault);
 
   static void Shutdown();
 
@@ -59,6 +69,8 @@ private:
   nsTArray<nsRefPtr<VoiceData> > mDefaultVoices;
 
   nsRefPtrHashtable<nsStringHashKey, VoiceData> mUriVoiceMap;
+
+  SpeechSynthesisChild* mSpeechSynthChild;
 };
 
 } // namespace dom

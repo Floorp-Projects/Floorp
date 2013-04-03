@@ -116,6 +116,10 @@ using namespace mozilla::system;
 
 #include "Crypto.h"
 
+#ifdef MOZ_WEBSPEECH
+#include "mozilla/dom/SpeechSynthesisParent.h"
+#endif
+
 static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
 static const char* sClipboardTextFlavors[] = { kUnicodeMime };
 
@@ -2014,6 +2018,37 @@ ContentParent::RecvPBluetoothConstructor(PBluetoothParent* aActor)
     return static_cast<BluetoothParent*>(aActor)->InitWithService(btService);
 #else
     MOZ_NOT_REACHED("No support for bluetooth on this platform!");
+    return false;
+#endif
+}
+
+PSpeechSynthesisParent*
+ContentParent::AllocPSpeechSynthesis()
+{
+#ifdef MOZ_WEBSPEECH
+    return new mozilla::dom::SpeechSynthesisParent();
+#else
+    return nullptr;
+#endif
+}
+
+bool
+ContentParent::DeallocPSpeechSynthesis(PSpeechSynthesisParent* aActor)
+{
+#ifdef MOZ_WEBSPEECH
+    delete aActor;
+    return true;
+#else
+    return false;
+#endif
+}
+
+bool
+ContentParent::RecvPSpeechSynthesisConstructor(PSpeechSynthesisParent* aActor)
+{
+#ifdef MOZ_WEBSPEECH
+    return true;
+#else
     return false;
 #endif
 }

@@ -15,6 +15,12 @@
 
 #include "nsString.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/ContentParent.h"
+#include "mozilla/unused.h"
+
+#include "SpeechSynthesisChild.h"
+#include "SpeechSynthesisParent.h"
 
 #undef LOG
 #ifdef PR_LOGGING
@@ -23,6 +29,38 @@ extern PRLogModuleInfo* GetSpeechSynthLog();
 #else
 #define LOG(type, msg)
 #endif
+
+namespace {
+
+void
+GetAllSpeechSynthActors(InfallibleTArray<mozilla::dom::SpeechSynthesisParent*>& aActors)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aActors.IsEmpty());
+
+  nsAutoTArray<mozilla::dom::ContentParent*, 20> contentActors;
+  mozilla::dom::ContentParent::GetAll(contentActors);
+
+  for (uint32_t contentIndex = 0;
+       contentIndex < contentActors.Length();
+       ++contentIndex) {
+    MOZ_ASSERT(contentActors[contentIndex]);
+
+    AutoInfallibleTArray<mozilla::dom::PSpeechSynthesisParent*, 5> speechsynthActors;
+    contentActors[contentIndex]->ManagedPSpeechSynthesisParent(speechsynthActors);
+
+    for (uint32_t speechsynthIndex = 0;
+         speechsynthIndex < speechsynthActors.Length();
+         ++speechsynthIndex) {
+      MOZ_ASSERT(speechsynthActors[speechsynthIndex]);
+
+      mozilla::dom::SpeechSynthesisParent* actor =
+        static_cast<mozilla::dom::SpeechSynthesisParent*>(speechsynthActors[speechsynthIndex]);
+      aActors.AppendElement(actor);
+    }
+  }
+}
+}
 
 namespace mozilla {
 namespace dom {
@@ -62,13 +100,39 @@ static StaticRefPtr<nsSynthVoiceRegistry> gSynthVoiceRegistry;
 NS_IMPL_ISUPPORTS1(nsSynthVoiceRegistry, nsISynthVoiceRegistry)
 
 nsSynthVoiceRegistry::nsSynthVoiceRegistry()
+  : mSpeechSynthChild(nullptr)
 {
   mUriVoiceMap.Init();
+
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+
+    mSpeechSynthChild = new SpeechSynthesisChild();
+    ContentChild::GetSingleton()->SendPSpeechSynthesisConstructor(mSpeechSynthChild);
+
+    InfallibleTArray<RemoteVoice> voices;
+    InfallibleTArray<nsString> defaults;
+
+    mSpeechSynthChild->SendReadVoiceList(&voices, &defaults);
+
+    for (uint32_t i = 0; i < voices.Length(); ++i) {
+      RemoteVoice voice = voices[i];
+      AddVoiceImpl(nullptr, voice.voiceURI(),
+                   voice.name(), voice.lang(),
+                   voice.localService());
+    }
+
+    for (uint32_t i = 0; i < defaults.Length(); ++i) {
+      SetDefaultVoice(defaults[i], true);
+    }
+  }
 }
 
 nsSynthVoiceRegistry::~nsSynthVoiceRegistry()
 {
   LOG(PR_LOG_DEBUG, ("~nsSynthVoiceRegistry"));
+
+  // mSpeechSynthChild's lifecycle is managed by the Content protocol.
+  mSpeechSynthChild = nullptr;
 
   mUriVoiceMap.Clear();
 }
@@ -96,8 +160,63 @@ nsSynthVoiceRegistry::GetInstanceForService()
 void
 nsSynthVoiceRegistry::Shutdown()
 {
-  LOG(PR_LOG_DEBUG, ("nsSynthVoiceRegistry::Shutdown()"));
+  LOG(PR_LOG_DEBUG, ("[%s] nsSynthVoiceRegistry::Shutdown()",
+                     (XRE_GetProcessType() == GeckoProcessType_Content) ? "Content" : "Default"));
   gSynthVoiceRegistry = nullptr;
+}
+
+void
+nsSynthVoiceRegistry::SendVoices(InfallibleTArray<RemoteVoice>* aVoices,
+                                 InfallibleTArray<nsString>* aDefaults)
+{
+  for (uint32_t i=0; i < mVoices.Length(); ++i) {
+    nsRefPtr<VoiceData> voice = mVoices[i];
+
+    aVoices->AppendElement(RemoteVoice(voice->mUri, voice->mName, voice->mLang,
+                                       voice->mIsLocal));
+  }
+
+  for (uint32_t i=0; i < mDefaultVoices.Length(); ++i) {
+    aDefaults->AppendElement(mDefaultVoices[i]->mUri);
+  }
+}
+
+void
+nsSynthVoiceRegistry::RecvRemoveVoice(const nsAString& aUri)
+{
+  // If we dont have a local instance of the registry yet, we will recieve current
+  // voices at contruction time.
+  if(!gSynthVoiceRegistry) {
+    return;
+  }
+
+  gSynthVoiceRegistry->RemoveVoice(nullptr, aUri);
+}
+
+void
+nsSynthVoiceRegistry::RecvAddVoice(const RemoteVoice& aVoice)
+{
+  // If we dont have a local instance of the registry yet, we will recieve current
+  // voices at contruction time.
+  if(!gSynthVoiceRegistry) {
+    return;
+  }
+
+  gSynthVoiceRegistry->AddVoiceImpl(nullptr, aVoice.voiceURI(),
+                                    aVoice.name(), aVoice.lang(),
+                                    aVoice.localService());
+}
+
+void
+nsSynthVoiceRegistry::RecvSetDefaultVoice(const nsAString& aUri, bool aIsDefault)
+{
+  // If we dont have a local instance of the registry yet, we will recieve current
+  // voices at contruction time.
+  if(!gSynthVoiceRegistry) {
+    return;
+  }
+
+  gSynthVoiceRegistry->SetDefaultVoice(aUri, aIsDefault);
 }
 
 NS_IMETHODIMP
@@ -113,6 +232,9 @@ nsSynthVoiceRegistry::AddVoice(nsISpeechService* aService,
        NS_ConvertUTF16toUTF8(aLang).get(),
        aLocalService ? "true" : "false"));
 
+  NS_ENSURE_FALSE(XRE_GetProcessType() == GeckoProcessType_Content,
+                  NS_ERROR_NOT_AVAILABLE);
+
   return AddVoiceImpl(aService, aUri, aName, aLang,
                       aLocalService);
 }
@@ -122,8 +244,9 @@ nsSynthVoiceRegistry::RemoveVoice(nsISpeechService* aService,
                                   const nsAString& aUri)
 {
   LOG(PR_LOG_DEBUG,
-      ("nsSynthVoiceRegistry::RemoveVoice uri='%s'",
-       NS_ConvertUTF16toUTF8(aUri).get()));
+      ("nsSynthVoiceRegistry::RemoveVoice uri='%s' (%s)",
+       NS_ConvertUTF16toUTF8(aUri).get(),
+       (XRE_GetProcessType() == GeckoProcessType_Content) ? "child" : "parent"));
 
   bool found = false;
   VoiceData* retval = mUriVoiceMap.GetWeak(aUri, &found);
@@ -134,6 +257,12 @@ nsSynthVoiceRegistry::RemoveVoice(nsISpeechService* aService,
   mVoices.RemoveElement(retval);
   mDefaultVoices.RemoveElement(retval);
   mUriVoiceMap.Remove(aUri);
+
+  nsTArray<SpeechSynthesisParent*> ssplist;
+  GetAllSpeechSynthActors(ssplist);
+
+  for (uint32_t i = 0; i < ssplist.Length(); ++i)
+    unused << ssplist[i]->SendVoiceRemoved(nsString(aUri));
 
   return NS_OK;
 }
@@ -154,6 +283,15 @@ nsSynthVoiceRegistry::SetDefaultVoice(const nsAString& aUri,
 
   if (aIsDefault) {
     mDefaultVoices.AppendElement(retval);
+  }
+
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    nsTArray<SpeechSynthesisParent*> ssplist;
+    GetAllSpeechSynthActors(ssplist);
+
+    for (uint32_t i = 0; i < ssplist.Length(); ++i) {
+      unused << ssplist[i]->SendSetDefaultVoice(nsString(aUri), aIsDefault);
+    }
   }
 
   return NS_OK;
@@ -246,6 +384,20 @@ nsSynthVoiceRegistry::AddVoiceImpl(nsISpeechService* aService,
 
   mVoices.AppendElement(voice);
   mUriVoiceMap.Put(aUri, voice);
+
+  nsTArray<SpeechSynthesisParent*> ssplist;
+  GetAllSpeechSynthActors(ssplist);
+
+  if (!ssplist.IsEmpty()) {
+    mozilla::dom::RemoteVoice ssvoice(nsString(aUri),
+                                      nsString(aName),
+                                      nsString(aLang),
+                                      aLocalService);
+
+    for (uint32_t i = 0; i < ssplist.Length(); ++i) {
+      unused << ssplist[i]->SendVoiceAdded(ssvoice);
+    }
+  }
 
   return NS_OK;
 }
@@ -364,9 +516,23 @@ nsSynthVoiceRegistry::SpeakUtterance(SpeechSynthesisUtterance& aUtterance,
     aUtterance.mVoice->GetVoiceURI(uri);
   }
 
-  nsSpeechTask* task  = new nsSpeechTask(&aUtterance);
-  Speak(aUtterance.mText, lang, uri,
-        aUtterance.Rate(), aUtterance.Pitch(), task);
+  nsSpeechTask* task;
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    task = new SpeechTaskChild(&aUtterance);
+    SpeechSynthesisRequestChild* actor =
+      new SpeechSynthesisRequestChild(static_cast<SpeechTaskChild*>(task));
+    mSpeechSynthChild->SendPSpeechSynthesisRequestConstructor(actor,
+                                                              aUtterance.mText,
+                                                              lang,
+                                                              uri,
+                                                              aUtterance.Volume(),
+                                                              aUtterance.Rate(),
+                                                              aUtterance.Pitch());
+  } else {
+    task = new nsSpeechTask(&aUtterance);
+    Speak(aUtterance.mText, lang, uri,
+          aUtterance.Rate(), aUtterance.Pitch(), task);
+  }
 
   NS_IF_ADDREF(task);
   return task;
