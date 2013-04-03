@@ -226,12 +226,12 @@ public:
     }
 
     T* operator->() const {
-        NS_ABORT_IF_FALSE(mRawPtr != 0, "You can't dereference a NULL WebGLRefPtr with operator->()!");
+        NS_ABORT_IF_FALSE(mRawPtr != 0, "You can't dereference a nullptr WebGLRefPtr with operator->()!");
         return get();
     }
 
     T& operator*() const {
-        NS_ABORT_IF_FALSE(mRawPtr != 0, "You can't dereference a NULL WebGLRefPtr with operator*()!");
+        NS_ABORT_IF_FALSE(mRawPtr != 0, "You can't dereference a nullptr WebGLRefPtr with operator*()!");
         return *get();
     }
 

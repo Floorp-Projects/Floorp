@@ -3253,7 +3253,7 @@ nsDOMSettableTokenListPropertyDestructor(void *aObject, nsIAtom *aProperty,
 nsDOMSettableTokenList*
 nsGenericHTMLElement::GetTokenList(nsIAtom* aAtom)
 {
-  nsDOMSettableTokenList* list = NULL;
+  nsDOMSettableTokenList* list = nullptr;
   if (HasProperties()) {
     list = static_cast<nsDOMSettableTokenList*>(GetProperty(aAtom));
   }

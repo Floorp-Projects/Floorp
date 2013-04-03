@@ -218,7 +218,7 @@ nsRange::CreateRange(nsIDOMNode* aStartParent, int32_t aStartOffset,
                      nsRange** aRange)
 {
   MOZ_ASSERT(aRange);
-  *aRange = NULL;
+  *aRange = nullptr;
 
   nsCOMPtr<nsINode> startParent = do_QueryInterface(aStartParent);
   NS_ENSURE_ARG_POINTER(startParent);

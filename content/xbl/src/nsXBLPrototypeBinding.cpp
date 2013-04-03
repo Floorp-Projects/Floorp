@@ -1028,7 +1028,7 @@ nsXBLPrototypeBinding::ConstructAttributeTable(nsIContent* aElement)
       // so that we don't have to convert from Unicode to ASCII and then back
 
       char* token = nsCRT::strtok( str, ", ", &newStr );
-      while( token != NULL ) {
+      while( token != nullptr ) {
         // Build an atom out of this attribute.
         nsCOMPtr<nsIAtom> atom;
         int32_t atomNsID = kNameSpaceID_None;
@@ -1137,7 +1137,7 @@ nsXBLPrototypeBinding::ConstructInsertionTable(nsIContent* aContent)
       // so that we don't have to convert from Unicode to ASCII and then back
 
       char* token = nsCRT::strtok( str, "| ", &newStr );
-      while( token != NULL ) {
+      while( token != nullptr ) {
         nsAutoString tok;
         tok.AssignWithConversion(token);
 
@@ -1218,7 +1218,7 @@ nsXBLPrototypeBinding::ConstructInterfaceTable(const nsAString& aImpls)
     // so that we don't have to convert from Unicode to ASCII and then back
 
     char* token = nsCRT::strtok( str, ", ", &newStr );
-    while( token != NULL ) {
+    while( token != nullptr ) {
       // get the InterfaceInfo for the name
       nsCOMPtr<nsIInterfaceInfo> iinfo;
       infoManager->GetInfoForName(token, getter_AddRefs(iinfo));
