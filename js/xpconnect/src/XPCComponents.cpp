@@ -3335,7 +3335,7 @@ xpc_CreateSandboxObject(JSContext *cx, jsval *vp, nsISupports *prinOrSop, Sandbo
         JSAutoCompartment ac(cx, sandbox);
 
         if (options.proto) {
-            bool ok = JS_WrapObject(cx, &options.proto);
+            bool ok = JS_WrapObject(cx, options.proto.address());
             if (!ok)
                 return NS_ERROR_XPC_UNEXPECTED;
 
@@ -3650,7 +3650,7 @@ ParseOptionsObject(JSContext *cx, jsval from, SandboxOptions &options)
     NS_ENSURE_TRUE(from.isObject(), NS_ERROR_INVALID_ARG);
     JSObject &optionsObject = from.toObject();
     nsresult rv = GetObjPropFromOptions(cx, optionsObject,
-                                        "sandboxPrototype", &options.proto);
+                                        "sandboxPrototype", options.proto.address());
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = GetBoolPropFromOptions(cx, optionsObject,
@@ -3670,7 +3670,7 @@ ParseOptionsObject(JSContext *cx, jsval from, SandboxOptions &options)
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = GetObjPropFromOptions(cx, optionsObject,
-                               "sameZoneAs", &options.sameZoneAs);
+                               "sameZoneAs", options.sameZoneAs.address());
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
@@ -3746,7 +3746,7 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
     if (NS_FAILED(rv))
         return ThrowAndFail(rv, cx, _retval);
 
-    SandboxOptions options;
+    SandboxOptions options(cx);
 
     if (argc > 1 && NS_FAILED(ParseOptionsObject(cx, argv[1], options)))
         return ThrowAndFail(NS_ERROR_INVALID_ARG, cx, _retval);

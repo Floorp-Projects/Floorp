@@ -14,12 +14,6 @@
 using namespace mozilla;
 using namespace xpc;
 
-static inline JSContext *
-GetSafeJSContext()
-{
-    return XPCJSRuntime::Get()->GetJSContextStack()->GetSafeJSContext();
-}
-
 XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
                                JSContext* cx    /* = nullptr    */,
                                JSObject* obj    /* = nullptr    */,
@@ -35,11 +29,11 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
         mContextPopRequired(false),
         mDestroyJSContextInDestructor(false),
         mCallerLanguage(callerLanguage),
-        mScopeForNewJSObjects(GetSafeJSContext()),
-        mFlattenedJSObject(GetSafeJSContext()),
+        mScopeForNewJSObjects(xpc_GetSafeJSContext()),
+        mFlattenedJSObject(xpc_GetSafeJSContext()),
         mWrapper(nullptr),
         mTearOff(nullptr),
-        mName(GetSafeJSContext())
+        mName(xpc_GetSafeJSContext())
 {
     Init(callerLanguage, callerLanguage == NATIVE_CALLER, obj, funobj,
          INIT_SHOULD_LOOKUP_WRAPPER, name, argc, argv, rval);
@@ -59,11 +53,11 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
         mContextPopRequired(false),
         mDestroyJSContextInDestructor(false),
         mCallerLanguage(callerLanguage),
-        mScopeForNewJSObjects(GetSafeJSContext()),
-        mFlattenedJSObject(GetSafeJSContext(), flattenedJSObject),
+        mScopeForNewJSObjects(xpc_GetSafeJSContext()),
+        mFlattenedJSObject(xpc_GetSafeJSContext(), flattenedJSObject),
         mWrapper(wrapper),
         mTearOff(tearOff),
-        mName(GetSafeJSContext())
+        mName(xpc_GetSafeJSContext())
 {
     Init(callerLanguage, callBeginRequest, obj, nullptr,
          WRAPPER_PASSED_TO_CONSTRUCTOR, JSID_VOID, NO_ARGS,
