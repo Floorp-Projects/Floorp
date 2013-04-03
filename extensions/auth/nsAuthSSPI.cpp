@@ -101,7 +101,7 @@ MakeSN(const char *principal, nsCString &result)
     // The service name looks like "protocol@hostname", we need to map
     // this to a value that SSPI expects.  To be consistent with IE, we
     // need to map '@' to '/' and canonicalize the hostname.
-    PRInt32 index = buf.FindChar('@');
+    int32_t index = buf.FindChar('@');
     if (index == kNotFound)
         return NS_ERROR_UNEXPECTED;
     

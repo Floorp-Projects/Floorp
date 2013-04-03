@@ -11224,21 +11224,21 @@ nsGlobalWindow::SizeOfIncludingThis(nsWindowSizes* aWindowSizes) const
 
 #ifdef MOZ_GAMEPAD
 void
-nsGlobalWindow::AddGamepad(PRUint32 aIndex, nsDOMGamepad* aGamepad)
+nsGlobalWindow::AddGamepad(uint32_t aIndex, nsDOMGamepad* aGamepad)
 {
   FORWARD_TO_INNER_VOID(AddGamepad, (aIndex, aGamepad));
   mGamepads.Put(aIndex, aGamepad);
 }
 
 void
-nsGlobalWindow::RemoveGamepad(PRUint32 aIndex)
+nsGlobalWindow::RemoveGamepad(uint32_t aIndex)
 {
   FORWARD_TO_INNER_VOID(RemoveGamepad, (aIndex));
   mGamepads.Remove(aIndex);
 }
 
 already_AddRefed<nsDOMGamepad>
-nsGlobalWindow::GetGamepad(PRUint32 aIndex)
+nsGlobalWindow::GetGamepad(uint32_t aIndex)
 {
   FORWARD_TO_INNER(GetGamepad, (aIndex), nullptr);
   nsRefPtr<nsDOMGamepad> gamepad;
@@ -11265,7 +11265,7 @@ nsGlobalWindow::HasSeenGamepadInput()
 
 // static
 PLDHashOperator
-nsGlobalWindow::EnumGamepadsForSync(const PRUint32& aKey, nsDOMGamepad* aData, void* userArg)
+nsGlobalWindow::EnumGamepadsForSync(const uint32_t& aKey, nsDOMGamepad* aData, void* userArg)
 {
   nsRefPtr<GamepadService> gamepadsvc(GamepadService::GetService());
   gamepadsvc->SyncGamepadState(aKey, aData);
