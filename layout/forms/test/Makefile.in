@@ -38,7 +38,6 @@ MOCHITEST_FILES =	test_bug231389.html \
 		test_bug571352.html \
 		test_bug572406.html \
 		test_bug572649.html \
-		test_bug36619.html \
 		test_bug620936.html \
 		test_bug595310.html \
 		test_bug644542.html \
