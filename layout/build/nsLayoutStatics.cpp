@@ -75,6 +75,10 @@
 #include "nsHTMLEditor.h"
 #include "nsTextServicesDocument.h"
 
+#ifdef MOZ_WEBSPEECH
+#include "nsSynthVoiceRegistry.h"
+#endif
+
 #ifdef MOZ_MEDIA_PLUGINS
 #include "MediaPluginHost.h"
 #endif
@@ -356,6 +360,10 @@ nsLayoutStatics::Shutdown()
 
 #ifdef MOZ_WIDGET_GONK
   nsVolumeService::Shutdown();
+#endif
+
+#ifdef MOZ_WEBSPEECH
+  nsSynthVoiceRegistry::Shutdown();
 #endif
 
   nsCORSListenerProxy::Shutdown();

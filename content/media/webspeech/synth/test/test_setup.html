@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=525444
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 525444: Web Speech API check all classes are present</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onunload="synthCleanup();">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=650295">Mozilla Bug 650295</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 525444 **/
+
+synthAddVoice('TestSpeechServiceNoAudio', 'Bob Marley', 'en-JM', true);
+synthAddVoice('TestSpeechServiceNoAudio', 'Amy Winehouse', 'en-GB', true);
+synthAddVoice('TestSpeechServiceNoAudio', 'Leonard Cohen', 'en-CA', true);
+synthAddVoice('TestSpeechServiceNoAudio', 'Celine Dion', 'fr-CA', true);
+synthAddVoice('TestSpeechServiceNoAudio', 'Julieta Venegas', 'es-MX', true);
+
+ok(SpeechSynthesis, "SpeechSynthesis exists in global scope");
+ok(SpeechSynthesisVoice, "SpeechSynthesisVoice exists in global scope");
+ok(SpeechSynthesisEvent, "SpeechSynthesisEvent exists in global scope");
+
+// SpeechSynthesisUtterance is the only type that has a constructor
+//  and writable properties
+ok(SpeechSynthesisUtterance, "SpeechSynthesisUtterance exists in global scope");
+var ssu = new SpeechSynthesisUtterance("hello world");
+is(typeof ssu, "object", "SpeechSynthesisUtterance instance is an object");
+is(ssu.text, "hello world", "SpeechSynthesisUtterance.text is correct");
+is(ssu.volume, 1, "SpeechSynthesisUtterance.volume default is correct");
+is(ssu.rate, 1, "SpeechSynthesisUtterance.rate default is correct");
+is(ssu.pitch, 1, "SpeechSynthesisUtterance.pitch default is correct");
+ssu.lang = "he-IL";
+ssu.volume = 0.5;
+ssu.rate = 2.0;
+ssu.pitch = 1.5;
+is(ssu.lang, "he-IL", "SpeechSynthesisUtterance.lang is correct");
+is(ssu.volume, 0.5,  "SpeechSynthesisUtterance.volume is correct");
+is(ssu.rate, 2.0,  "SpeechSynthesisUtterance.rate is correct");
+is(ssu.pitch, 1.5,  "SpeechSynthesisUtterance.pitch is correct");
+
+// Test for singleton instance hanging off of window.
+ok(speechSynthesis, "speechSynthesis exists in global scope");
+is(typeof speechSynthesis, "object", "speechSynthesis instance is an object");
+is(typeof speechSynthesis.speak, "function", "speechSynthesis.speak is a function");
+is(typeof speechSynthesis.cancel, "function", "speechSynthesis.cancel is a function");
+is(typeof speechSynthesis.pause, "function", "speechSynthesis.pause is a function");
+is(typeof speechSynthesis.resume, "function", "speechSynthesis.resume is a function");
+is(typeof speechSynthesis.getVoices, "function", "speechSynthesis.getVoices is a function");
+
+is(typeof speechSynthesis.pending, "boolean", "speechSynthesis.pending is a boolean");
+is(typeof speechSynthesis.speaking, "boolean", "speechSynthesis.speaking is a boolean");
+is(typeof speechSynthesis.paused, "boolean", "speechSynthesis.paused is a boolean");
+
+var voices1 = speechSynthesis.getVoices();
+var voices2 = speechSynthesis.getVoices();
+
+ok(voices1.length == voices2.length, "Voice count matches");
+
+for (var i in voices1) {
+  ok(voices1[i] == voices2[i], "Voice instance matches");
+}
+
+synthCleanup();
+</script>
+</pre>
+</body>
+</html>

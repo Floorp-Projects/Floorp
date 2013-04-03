@@ -540,6 +540,10 @@
 @BINPATH@/components/marionettecomponent.js
 #endif
 
+#ifdef MOZ_WEBSPEECH
+@BINPATH@/components/dom_webspeechsynth.xpt
+#endif
+
 ; Modules
 @BINPATH@/browser/modules/*
 @BINPATH@/modules/*
