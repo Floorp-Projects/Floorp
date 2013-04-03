@@ -28,12 +28,12 @@ UnwrapNW(JSContext *cx, unsigned argc, jsval *vp)
     return ThrowException(NS_ERROR_XPC_NOT_ENOUGH_ARGS, cx);
   }
 
-  jsval v = JS_ARGV(cx, vp)[0];
+  JS::RootedValue v(cx, JS_ARGV(cx, vp)[0]);
   if (JSVAL_IS_PRIMITIVE(v)) {
     return ThrowException(NS_ERROR_INVALID_ARG, cx);
   }
 
-  JSObject *obj = JSVAL_TO_OBJECT(v);
+  JS::RootedObject obj(cx, JSVAL_TO_OBJECT(v));
   if (!js::IsWrapper(obj)) {
     JS_SET_RVAL(cx, vp, v);
     return true;

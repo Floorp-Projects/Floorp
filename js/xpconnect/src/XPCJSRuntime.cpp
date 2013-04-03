@@ -3021,7 +3021,7 @@ XPCJSRuntime::GetJunkScope()
     if (!mJunkScope) {
         JS::Value v;
         SafeAutoJSContext cx;
-        SandboxOptions options;
+        SandboxOptions options(cx);
         options.sandboxName.AssignASCII("XPConnect Junk Compartment");
         JSAutoRequest ac(cx);
         nsresult rv = xpc_CreateSandboxObject(cx, &v,
