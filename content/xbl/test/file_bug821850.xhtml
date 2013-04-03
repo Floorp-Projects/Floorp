@@ -44,8 +44,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
           is(bound.objectField.bar.a, 1, "Field Xrays work on objects");
           is(bound.contentField.foo, 10, "Field Xrays work on content objects");
           var hole = bound.contentField.rabbit.hole;
-          ok(hole.win === window, "We gain back Xray vision when hitting a native object");
-          ok(Cu.isXrayWrapper(hole.win), "Really is Xray");
+          ok(hole.win === XPCNativeWrapper.unwrap(window), "Xray vision remains waived when hitting a native object");
+          ok(!Cu.isXrayWrapper(hole.win), "Xray is waived");
 
           // This gets invoked by an event handler.
           window.finish = function() {
