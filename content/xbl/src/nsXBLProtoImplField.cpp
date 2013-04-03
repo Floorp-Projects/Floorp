@@ -17,6 +17,7 @@
 #include "nsXBLPrototypeBinding.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "xpcpublic.h"
+#include "WrapperFactory.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -251,8 +252,36 @@ FieldGetterImpl(JSContext *cx, JS::CallArgs args)
 static JSBool
 FieldGetter(JSContext *cx, unsigned argc, JS::Value *vp)
 {
+  // FieldGetter generally lives in the XBL scope, and is defined as a cross-
+  // compartment wrapper on the in-content XBL prototype object. When content
+  // accesses the field for the first time, it ends up invoking the wrapped
+  // FieldGetter on the prototype, which enters the XBL scope, landing us here.
+  // We then use the nativeCall machinery to re-enter the content compartment
+  // (unwrapping |this|), define the field on the in-content |this|, and return
+  // the value of the field to the caller.
+  //
+  // There's one hitch, though. When code in the XBL scope accesses a field on
+  // the content object, we waive the usual Xray vision granted to XBL scopes
+  // in order to do the access, because there isn't really anything else sane to
+  // do. In this sequence of events, the chrome caller invokes a get() for the
+  // field on the Xrayed element. XrayWrapper::get bounces to BaseProxyHandler::get,
+  // Which invokes XrayWrapper::getPropertyDescriptor. This detects the field
+  // access, creates a waived version of the wrapper, and does a lookup for the
+  // property on the waived wrapper. This would normally result in the resulting
+  // getter being transitively waived, which would cause said getter to properly
+  // waive Xray on its return value when it is eventually invoked (by the XBL
+  // scope) further down in BaseProxyHandler::get. However, this getter is
+  // FieldGetter, which actually lives in the XBL scope, meaning that we end up
+  // stripping all the wrappers off, effectively losing track of the fact that
+  // we meant to be waiving Xray here.
+  //
+  // Since fields are already doing this special Xray waiving stuff, the simplest
+  // solution seems to be to waive Xray on the |this| object before invoking
+  // CallNonGenericMethod. This means that the nativeCall trap of WaiveXrayWrapper
+  // will properly waive the result on the way back. Whew.
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-  return JS::CallNonGenericMethod<ValueHasISupportsPrivate, FieldGetterImpl>
+  return xpc::WrapperFactory::WaiveXrayAndWrap(cx, args.mutableThisv().address()) &&
+         JS::CallNonGenericMethod<ValueHasISupportsPrivate, FieldGetterImpl>
                                  (cx, args);
 }
 
@@ -291,7 +320,12 @@ static JSBool
 FieldSetter(JSContext *cx, unsigned argc, JS::Value *vp)
 {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-  return JS::CallNonGenericMethod<ValueHasISupportsPrivate, FieldSetterImpl>
+  // It's probably not actually necessary to waive Xray here given that
+  // FieldSetter doesn't return everything, but it's good to maintain
+  // consistency with FieldGetter. See the comment there for more details on
+  // why we do this.
+  return xpc::WrapperFactory::WaiveXrayAndWrap(cx, args.mutableThisv().address()) &&
+         JS::CallNonGenericMethod<ValueHasISupportsPrivate, FieldSetterImpl>
                                  (cx, args);
 }
 
