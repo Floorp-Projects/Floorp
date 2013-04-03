@@ -731,7 +731,7 @@ BrowserGlue.prototype = {
     var button0Title = quitBundle.GetStringFromName("saveTitle");
     var button1Title = quitBundle.GetStringFromName("cancelTitle");
     var button2Title = quitBundle.GetStringFromName("quitTitle");
-    var neverAskText = quitBundle.GetStringFromName("neverAsk");
+    var neverAskText = quitBundle.GetStringFromName("neverAsk2");
 
     // This wouldn't have been set above since we shouldn't be here for
     // aQuitType == "lastwindow"
