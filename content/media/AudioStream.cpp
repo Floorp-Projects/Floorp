@@ -41,6 +41,14 @@ static Mutex* gAudioPrefsLock = nullptr;
 static double gVolumeScale;
 static uint32_t gCubebLatency;
 
+/**
+ * When MOZ_DUMP_AUDIO is set in the environment (to anything),
+ * we'll drop a series of files in the current working directory named
+ * dumped-audio-<nnn>.wav, one per nsBufferedAudioStream created, containing
+ * the audio for the stream including any skips due to underruns.
+ */
+static int gDumpedAudioCount = 0;
+
 static int PrefChanged(const char* aPref, void* aClosure)
 {
   if (strcmp(aPref, PREF_VOLUME_SCALE) == 0) {
@@ -355,6 +363,9 @@ private:
   // than are available in mBuffer.
   uint64_t mLostFrames;
 
+  // Output file for dumping audio
+  FILE* mDumpFile;
+
   // Temporary audio buffer.  Filled by Write() and consumed by
   // DataCallback().  Once mBuffer is full, Write() blocks until sufficient
   // space becomes available in mBuffer.  mBuffer is sized in bytes, not
@@ -405,16 +416,88 @@ AudioStream* AudioStream::AllocateStream()
   return nullptr;
 }
 
+static void SetUint16LE(PRUint8* aDest, PRUint16 aValue)
+{
+  aDest[0] = aValue & 0xFF;
+  aDest[1] = aValue >> 8;
+}
+
+static void SetUint32LE(PRUint8* aDest, PRUint32 aValue)
+{
+  SetUint16LE(aDest, aValue & 0xFFFF);
+  SetUint16LE(aDest + 2, aValue >> 16);
+}
+
+static FILE*
+OpenDumpFile(AudioStream* aStream)
+{
+  if (!getenv("MOZ_DUMP_AUDIO"))
+    return nullptr;
+  char buf[100];
+  sprintf(buf, "dumped-audio-%d.wav", gDumpedAudioCount);
+  FILE* f = fopen(buf, "wb");
+  if (!f)
+    return nullptr;
+  ++gDumpedAudioCount;
+
+  PRUint8 header[] = {
+    // RIFF header
+    0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00, 0x57, 0x41, 0x56, 0x45,
+    // fmt chunk. We always write 16-bit samples.
+    0x66, 0x6d, 0x74, 0x20, 0x10, 0x00, 0x00, 0x00, 0x01, 0x00, 0xFF, 0xFF,
+    0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x10, 0x00,
+    // data chunk
+    0x64, 0x61, 0x74, 0x61, 0xFE, 0xFF, 0xFF, 0x7F
+  };
+  static const int CHANNEL_OFFSET = 22;
+  static const int SAMPLE_RATE_OFFSET = 24;
+  static const int BLOCK_ALIGN_OFFSET = 32;
+  SetUint16LE(header + CHANNEL_OFFSET, aStream->GetChannels());
+  SetUint32LE(header + SAMPLE_RATE_OFFSET, aStream->GetRate());
+  SetUint16LE(header + BLOCK_ALIGN_OFFSET, aStream->GetChannels()*2);
+  fwrite(header, sizeof(header), 1, f);
+
+  return f;
+}
+
+static void
+WriteDumpFile(FILE* aDumpFile, AudioStream* aStream, PRUint32 aFrames,
+              void* aBuffer)
+{
+  if (!aDumpFile)
+    return;
+
+  PRUint32 samples = aStream->GetChannels()*aFrames;
+  if (AUDIO_OUTPUT_FORMAT == AUDIO_FORMAT_S16) {
+    fwrite(aBuffer, 2, samples, aDumpFile);
+    return;
+  }
+
+  NS_ASSERTION(AUDIO_OUTPUT_FORMAT == AUDIO_FORMAT_FLOAT32, "bad format");
+  nsAutoTArray<PRUint8, 1024*2> buf;
+  buf.SetLength(samples*2);
+  float* input = static_cast<float*>(aBuffer);
+  PRUint8* output = buf.Elements();
+  for (PRUint32 i = 0; i < samples; ++i) {
+    SetUint16LE(output + i*2, PRInt16(input[i]*32767.0f));
+  }
+  fwrite(output, 2, samples, aDumpFile);
+  fflush(aDumpFile);
+}
+
 #if defined(MOZ_CUBEB)
 BufferedAudioStream::BufferedAudioStream()
-  : mMonitor("BufferedAudioStream"), mLostFrames(0), mVolume(1.0),
-    mBytesPerFrame(0), mState(INITIALIZED)
+  : mMonitor("BufferedAudioStream"), mLostFrames(0), mDumpFile(nullptr),
+    mVolume(1.0), mBytesPerFrame(0), mState(INITIALIZED)
 {
 }
 
 BufferedAudioStream::~BufferedAudioStream()
 {
   Shutdown();
+  if (mDumpFile) {
+    fclose(mDumpFile);
+  }
 }
 
 nsresult
@@ -436,6 +519,8 @@ BufferedAudioStream::Init(int32_t aNumChannels, int32_t aRate,
 
   mInRate = mOutRate = aRate;
   mChannels = aNumChannels;
+
+  mDumpFile = OpenDumpFile(this);
 
   cubeb_stream_params params;
   params.rate = aRate;
@@ -777,9 +862,17 @@ BufferedAudioStream::DataCallback(void* aBuffer, long aFrames)
   if (mState != DRAINING) {
     uint8_t* rpos = static_cast<uint8_t*>(aBuffer) + FramesToBytes(aFrames - underrunFrames);
     memset(rpos, 0, FramesToBytes(underrunFrames));
+#ifdef PR_LOGGING
+    if (underrunFrames) {
+      PR_LOG(gAudioStreamLog, PR_LOG_WARNING,
+             ("AudioStream %p lost %d frames", this, underrunFrames));
+    }
+#endif
     mLostFrames += underrunFrames;
     servicedFrames += underrunFrames;
   }
+
+  WriteDumpFile(mDumpFile, this, aFrames, aBuffer);
 
   mAudioClock.UpdateWritePosition(servicedFrames);
   return servicedFrames;
