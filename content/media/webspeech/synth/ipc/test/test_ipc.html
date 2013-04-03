@@ -1,0 +1,191 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for OOP TTS</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="../../test/common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+  <body>
+
+  <script type="application/javascript;version=1.7">
+    "use strict";
+
+    SimpleTest.waitForExplicitFinish();
+
+    function iframeScriptFirst() {
+      content.wrappedJSObject.RunSet.reloadAndRunAll({
+          preventDefault: function() { },
+          __exposedProps__: { preventDefault: 'r' }
+      });
+    }
+
+    function iframeScriptSecond() {
+      let TestRunner = content.wrappedJSObject.TestRunner;
+
+      let oldComplete = TestRunner.onComplete;
+
+      TestRunner.onComplete = function() {
+        TestRunner.onComplete = oldComplete;
+
+        sendAsyncMessage("test:SpeechSynthesis:ipcTestComplete", {
+          result: JSON.stringify(TestRunner._failedTests)
+        });
+
+        if (oldComplete) {
+          oldComplete();
+        }
+      };
+
+      let oldLog = TestRunner.log;
+      TestRunner.log = function(msg) {
+        sendAsyncMessage("test:SpeechSynthesis:ipcTestMessage", { msg: msg });
+      }
+    }
+
+    let regex = /^(TEST-PASS|TEST-UNEXPECTED-PASS|TEST-KNOWN-FAIL|TEST-UNEXPECTED-FAIL|TEST-DEBUG-INFO) \| ([^\|]+) \|(.*)/;
+
+    function onTestMessage(data) {
+      let message = SpecialPowers.wrap(data).json.msg;
+      let match = regex.exec(message);
+      if (match) {
+        let state = match[1];
+        let details = match[2] + " | " + match[3];
+
+        switch (state) {
+          case "TEST-PASS":
+          case "TEST-KNOWN-FAIL":
+            ok(true, details);
+            break;
+
+          case "TEST-UNEXPECTED-FAIL":
+          case "TEST-UNEXPECTED-PASS":
+            ok(false, details);
+            break;
+
+          case "TEST-DEBUG-INFO":
+          default:
+            info(details);
+        }
+      }
+    }
+
+    function onTestComplete() {
+      let comp = SpecialPowers.wrap(SpecialPowers.Components);
+      let mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
+      let spObserver = comp.classes["@mozilla.org/special-powers-observer;1"]
+                            .getService(comp.interfaces.nsIMessageListener);
+
+      mm.removeMessageListener("SPPrefService", spObserver);
+      mm.removeMessageListener("SPProcessCrashService", spObserver);
+      mm.removeMessageListener("SPPingService", spObserver);
+      mm.removeMessageListener("SpecialPowers.Quit", spObserver);
+      mm.removeMessageListener("SPPermissionManager", spObserver);
+
+      mm.removeMessageListener("test:SpeechSynthesis:ipcTestMessage", onTestMessage);
+      mm.removeMessageListener("test:SpeechSynthesis:ipcTestComplete", onTestComplete);
+
+      let ppmm = SpecialPowers.Cc["@mozilla.org/parentprocessmessagemanager;1"]
+        .getService(SpecialPowers.Ci.nsIMessageBroadcaster);
+      ppmm.removeMessageListener("test:SpeechSynthesis:ipcSynthAddVoice", onSynthAddVoice);
+      ppmm.removeMessageListener("test:SpeechSynthesis:ipcSynthSetDefault", onSynthSetDefault);
+      ppmm.removeMessageListener("test:SpeechSynthesis:ipcSynthCleanup", onSynthCleanup);
+
+      SimpleTest.executeSoon(function () { SimpleTest.finish(); });
+    }
+
+    function onSynthAddVoice(data) {
+      let message = SpecialPowers.wrap(data).json;
+      return synthAddVoice.apply(synthAddVoice, message);
+    }
+
+    function onSynthSetDefault(data) {
+      let message = SpecialPowers.wrap(data).json;
+      synthSetDefault.apply(synthSetDefault, message);
+    }
+
+    function onSynthCleanup(data) {
+      synthCleanup();
+    }
+
+    function runTests() {
+      let iframe = document.createElement("iframe");
+      SpecialPowers.wrap(iframe).mozbrowser = true;
+      iframe.id = "iframe";
+      iframe.style.width = "100%";
+      iframe.style.height = "1000px";
+
+      function iframeLoadSecond() {
+        ok(true, "Got second iframe load event.");
+        iframe.removeEventListener("mozbrowserloadend", iframeLoadSecond);
+        let mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
+        mm.loadFrameScript("data:,(" + iframeScriptSecond.toString() + ")();",
+                           false);
+      }
+
+      function iframeLoadFirst() {
+        ok(true, "Got first iframe load event.");
+        iframe.removeEventListener("mozbrowserloadend", iframeLoadFirst);
+        iframe.addEventListener("mozbrowserloadend", iframeLoadSecond);
+
+        let mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
+
+        let comp = SpecialPowers.wrap(SpecialPowers.Components);
+
+        let spObserver =
+          comp.classes["@mozilla.org/special-powers-observer;1"]
+              .getService(comp.interfaces.nsIMessageListener);
+
+        mm.addMessageListener("SPPrefService", spObserver);
+        mm.addMessageListener("SPProcessCrashService", spObserver);
+        mm.addMessageListener("SPPingService", spObserver);
+        mm.addMessageListener("SpecialPowers.Quit", spObserver);
+        mm.addMessageListener("SPPermissionManager", spObserver);
+
+        mm.addMessageListener("test:SpeechSynthesis:ipcTestMessage", onTestMessage);
+        mm.addMessageListener("test:SpeechSynthesis:ipcTestComplete", onTestComplete);
+
+        let specialPowersBase = "chrome://specialpowers/content/";
+        mm.loadFrameScript(specialPowersBase + "MozillaLogger.js", false);
+        mm.loadFrameScript(specialPowersBase + "specialpowersAPI.js", false);
+        mm.loadFrameScript(specialPowersBase + "specialpowers.js", false);
+
+        mm.loadFrameScript("data:,(" + iframeScriptFirst.toString() + ")();", false);
+
+        let ppmm = SpecialPowers.Cc["@mozilla.org/parentprocessmessagemanager;1"]
+          .getService(SpecialPowers.Ci.nsIMessageBroadcaster);
+        ppmm.addMessageListener("test:SpeechSynthesis:ipcSynthAddVoice", onSynthAddVoice);
+        ppmm.addMessageListener("test:SpeechSynthesis:ipcSynthSetDefault", onSynthSetDefault);
+        ppmm.addMessageListener("test:SpeechSynthesis:ipcSynthCleanup", onSynthCleanup);
+      }
+
+      iframe.addEventListener("mozbrowserloadend", iframeLoadFirst);
+
+      // Strip this filename and one directory level and then add "/test".
+      let href =  window.location.href;
+      href = href.substring(0, href.lastIndexOf('/'));
+      href = href.substring(0, href.lastIndexOf('/'));
+      href = href.substring(0, href.lastIndexOf('/'));
+      iframe.src = href + "/test?consoleLevel=INFO";
+
+      document.body.appendChild(iframe);
+    }
+
+    addEventListener("load", function() {
+
+      SpecialPowers.addPermission("browser", true, document);
+      SpecialPowers.pushPrefEnv({
+        "set": [
+          // TODO: remove this as part of bug 820712
+          ["network.disable.ipc.security", true],
+
+          ["dom.ipc.browser_frames.oop_by_default", true],
+          ["dom.mozBrowserFramesEnabled", true],
+          ["browser.pageThumbs.enabled", false]
+        ]
+      }, runTests);
+    });
+
+  </script>
+</body>
+</html>
