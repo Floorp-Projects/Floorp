@@ -37,7 +37,7 @@ CString sFirefoxPath;
 
 static void Log(const wchar_t *fmt, ...)
 {
-  va_list a = NULL;
+  va_list a = nullptr;
   wchar_t szDebugString[1024];
   if(!lstrlenW(fmt))
     return;
@@ -53,7 +53,7 @@ static void Log(const wchar_t *fmt, ...)
 
 static void Fail(const wchar_t *fmt, ...)
 {
-  va_list a = NULL;
+  va_list a = nullptr;
   wchar_t szDebugString[1024];
   if(!lstrlenW(fmt))
     return;
@@ -77,7 +77,7 @@ static bool GetModulePath(CStringW& aPathBuffer)
   WCHAR buffer[MAX_PATH];
   memset(buffer, 0, sizeof(buffer));
 
-  if (!GetModuleFileName(NULL, buffer, MAX_PATH)) {
+  if (!GetModuleFileName(nullptr, buffer, MAX_PATH)) {
     Fail(L"GetModuleFileName failed.");
     return false;
   }
@@ -132,7 +132,7 @@ static bool GetDefaultBrowserAppModelID(WCHAR* aIDBuffer,
   }
   DWORD len = aCharLength * sizeof(WCHAR);
   memset(aIDBuffer, 0, len);
-  if (RegQueryValueExW(key, L"AppUserModelID", NULL, NULL,
+  if (RegQueryValueExW(key, L"AppUserModelID", nullptr, nullptr,
                        (LPBYTE)aIDBuffer, &len) != ERROR_SUCCESS || !len) {
     RegCloseKey(key);
     return false;
@@ -172,7 +172,7 @@ static bool Launch()
 
   // The interface that allows us to activate the browser
   CComPtr<IApplicationActivationManager> activateMgr;
-  if (FAILED(CoCreateInstance(CLSID_ApplicationActivationManager, NULL,
+  if (FAILED(CoCreateInstance(CLSID_ApplicationActivationManager, nullptr,
                               CLSCTX_LOCAL_SERVER,
                               IID_IApplicationActivationManager,
                               (void**)&activateMgr))) {
@@ -191,7 +191,7 @@ static bool Launch()
 
   // Hand off focus rights to the out-of-process activation server. Without
   // this the metro interface won't launch.
-  hr = CoAllowSetForegroundWindow(activateMgr, NULL);
+  hr = CoAllowSetForegroundWindow(activateMgr, nullptr);
   if (FAILED(hr)) {
     Fail(L"CoAllowSetForegroundWindow result %X", hr);
     return false;
@@ -215,7 +215,7 @@ static bool Launch()
   } else {
     // Use the module path
     char path[MAX_PATH];
-    if (!GetModuleFileNameA(NULL, path, MAX_PATH)) {
+    if (!GetModuleFileNameA(nullptr, path, MAX_PATH)) {
       Fail(L"GetModuleFileNameA errorno=%d", GetLastError());
       return false;
     }
@@ -230,9 +230,9 @@ static bool Launch()
 
   Log(L"Writing out tests.ini to: '%s'", CStringW(testFilePath));
   HANDLE hTestFile = CreateFileA(testFilePath, GENERIC_WRITE,
-                                 0, NULL, CREATE_ALWAYS,
+                                 0, nullptr, CREATE_ALWAYS,
                                  FILE_ATTRIBUTE_NORMAL,
-                                 NULL);
+                                 nullptr);
   if (hTestFile == INVALID_HANDLE_VALUE) {
     Fail(L"CreateFileA errorno=%d", GetLastError());
     return false;
@@ -241,7 +241,7 @@ static bool Launch()
   DeleteTestFileHelper dtf(testFilePath);
 
   CStringA asciiParams = sAppParams;
-  if (!WriteFile(hTestFile, asciiParams, asciiParams.GetLength(), NULL, 0)) {
+  if (!WriteFile(hTestFile, asciiParams, asciiParams.GetLength(), nullptr, 0)) {
     CloseHandle(hTestFile);
     Fail(L"WriteFile errorno=%d", GetLastError());
     return false;
@@ -269,7 +269,7 @@ static bool Launch()
   MSG msg;
   DWORD waitResult = WAIT_TIMEOUT;
   while ((waitResult = WaitForSingleObject(child, 10)) != WAIT_OBJECT_0) {
-    if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+    if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
       TranslateMessage(&msg);
       DispatchMessage(&msg);
     }
@@ -281,7 +281,7 @@ static bool Launch()
 
 int wmain(int argc, WCHAR* argv[])
 {
-  CoInitialize(NULL);
+  CoInitialize(nullptr);
 
   int idx;
   bool firefoxParam = false;
