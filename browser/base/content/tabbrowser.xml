@@ -1454,17 +1454,18 @@
             }
 
             if (animate) {
-              this.tabContainer._handleTabTelemetryStart(t, aURI);
+              mozRequestAnimationFrame(function () {
+                this.tabContainer._handleTabTelemetryStart(t, aURI);
 
-              // kick the animation off
-              t.clientTop;
-              t.setAttribute("fadein", "true");
+                // kick the animation off
+                t.setAttribute("fadein", "true");
 
-              // This call to adjustTabstrip is redundant but needed so that
-              // when opening a second tab, the first tab's close buttons
-              // appears immediately rather than when the transition ends.
-              if (this.tabContainer.childNodes.length == 2)
-                this.tabContainer.adjustTabstrip();
+                // This call to adjustTabstrip is redundant but needed so that
+                // when opening a second tab, the first tab's close buttons
+                // appears immediately rather than when the transition ends.
+                if (this.tabContainer.childNodes.length == 2)
+                  this.tabContainer.adjustTabstrip();
+              }.bind(this));
             }
 
             return t;
