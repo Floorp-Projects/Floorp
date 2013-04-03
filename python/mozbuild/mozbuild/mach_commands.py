@@ -424,6 +424,34 @@ class RunProgram(MachCommandBase):
             pass_thru=True)
 
 @CommandProvider
+class DebugProgram(MachCommandBase):
+    """Debug the compiled binary"""
+
+    @Command('debug', help='Debug the compiled program.', prefix_chars='+')
+    @CommandArgument('params', default=None, nargs='*',
+        help='Command-line arguments to pass to the program.')
+    def debug(self, params):
+        import which
+        try:
+            debugger = which.which('gdb')
+        except Exception as e:
+            print("You don't have gdb in your PATH")
+            print(e)
+            return 1
+        try:
+            args = [debugger, self.get_binary_path('app')]
+        except Exception as e:
+            print("It looks like your program isn't built.",
+                "You can run |mach build| to build it.")
+            print(e)
+            return 1
+        if params:
+            args.insert(1, '--args')
+            args.extend(params)
+        return self.run_process(args=args, ensure_exit_code=False,
+            pass_thru=True)
+
+@CommandProvider
 class Buildsymbols(MachCommandBase):
     """Produce a package of debug symbols suitable for use with Breakpad."""
 
