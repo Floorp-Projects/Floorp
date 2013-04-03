@@ -36,9 +36,6 @@ class WaiveXrayWrapper : public js::CrossCompartmentWrapper {
                            unsigned argc, js::Value *argv,
                            JS::MutableHandle<JS::Value> rval) MOZ_OVERRIDE;
 
-    virtual bool nativeCall(JSContext *cx, JS::IsAcceptableThis test,
-                            JS::NativeImpl impl, JS::CallArgs args) MOZ_OVERRIDE;
-
     static WaiveXrayWrapper singleton;
 };
 
