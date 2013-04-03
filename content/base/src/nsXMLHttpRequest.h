@@ -152,7 +152,7 @@ public:
       do_QueryInterface(aGlobal.Get());
     if (!window || ! principal) {
       aRv.Throw(NS_ERROR_FAILURE);
-      return NULL;
+      return nullptr;
     }
 
     nsRefPtr<nsXMLHttpRequest> req = new nsXMLHttpRequest();
@@ -179,7 +179,7 @@ public:
 
   void Construct(nsIPrincipal* aPrincipal,
                  nsPIDOMWindow* aOwnerWindow,
-                 nsIURI* aBaseURI = NULL)
+                 nsIURI* aBaseURI = nullptr)
   {
     MOZ_ASSERT(aPrincipal);
     MOZ_ASSERT_IF(aOwnerWindow, aOwnerWindow->IsInnerWindow());

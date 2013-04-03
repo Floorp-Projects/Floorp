@@ -974,7 +974,7 @@ HTMLCanvasElement::GetContextAtIndex(int32_t index)
   if (mCurrentContext && index == 0)
     return mCurrentContext;
 
-  return NULL;
+  return nullptr;
 }
 
 bool

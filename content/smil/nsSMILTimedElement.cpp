@@ -485,8 +485,8 @@ void
 nsSMILTimedElement::SetTimeClient(nsSMILAnimationFunction* aClient)
 {
   //
-  // No need to check for NULL. A NULL parameter simply means to remove the
-  // previous client which we do by setting to NULL anyway.
+  // No need to check for nullptr. A nullptr parameter simply means to remove the
+  // previous client which we do by setting to nullptr anyway.
   //
 
   mClient = aClient;

@@ -217,7 +217,7 @@ HTMLAudioElement::MozWriteAudio(JSContext* aCx, JS::Value aData, ErrorResult& aR
 
   JSObject* darray = &aData.toObject();
   JS::AutoObjectRooter tvr(aCx);
-  JSObject* tsrc = NULL;
+  JSObject* tsrc = nullptr;
 
   // Allow either Float32Array or plain JS Array
   if (JS_IsFloat32Array(darray)) {

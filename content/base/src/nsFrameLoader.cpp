@@ -942,7 +942,7 @@ nsFrameLoader::ShowRemoteFrame(const nsIntSize& size,
     nsCOMPtr<nsIObserverService> os = services::GetObserverService();
     if (OwnerIsBrowserOrAppFrame() && os && !mRemoteBrowserInitialized) {
       os->NotifyObservers(NS_ISUPPORTS_CAST(nsIFrameLoader*, this),
-                          "remote-browser-frame-shown", NULL);
+                          "remote-browser-frame-shown", nullptr);
       mRemoteBrowserInitialized = true;
     }
   } else {
@@ -1679,7 +1679,7 @@ nsFrameLoader::MaybeCreateDocShell()
     nsCOMPtr<nsIObserverService> os = services::GetObserverService();
     if (os) {
       os->NotifyObservers(NS_ISUPPORTS_CAST(nsIFrameLoader*, this),
-                          "in-process-browser-or-app-frame-shown", NULL);
+                          "in-process-browser-or-app-frame-shown", nullptr);
     }
 
     if (mMessageManager) {

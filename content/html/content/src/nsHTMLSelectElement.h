@@ -503,7 +503,7 @@ protected:
                                    int32_t aEndIndex);
 
   /**
-   * Get the frame as an nsISelectControlFrame (MAY RETURN NULL)
+   * Get the frame as an nsISelectControlFrame (MAY RETURN nullptr)
    * @return the select frame, or null
    */
   nsISelectControlFrame* GetSelectFrame();

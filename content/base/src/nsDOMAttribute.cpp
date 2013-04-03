@@ -309,7 +309,7 @@ nsIContent * const *
 nsDOMAttribute::GetChildArray(uint32_t* aChildCount) const
 {
   *aChildCount = 0;
-  return NULL;
+  return nullptr;
 }
 
 int32_t

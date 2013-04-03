@@ -80,7 +80,7 @@ public:
    * media attribute is not allowed).
    *
    * @param aSpec    The string containing a clock value, e.g. "10s"
-   * @param aResult  The parsed result. May be NULL (e.g. if this method is
+   * @param aResult  The parsed result. May be nullptr (e.g. if this method is
    *                 being called just to test if aSpec is a valid clock value).
    *                 [OUT]
    * @param aFlags   A combination of the kClockValue* bit flags OR'ed together

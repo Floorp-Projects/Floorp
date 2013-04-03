@@ -124,7 +124,7 @@ NS_IMETHODIMP
 HTMLPropertiesCollection::NamedItem(const nsAString& aName,
                                     nsIDOMNode** aResult)
 {
-  *aResult = NULL;
+  *aResult = nullptr;
   return NS_OK;
 }
 
@@ -232,7 +232,7 @@ HTMLPropertiesCollection::EnsureFresh()
   mProperties.Clear();
   mNames->Clear();
   // We don't clear NamedItemEntries because the PropertyNodeLists must be live.
-  mNamedItemEntries.EnumerateRead(MarkDirty, NULL);
+  mNamedItemEntries.EnumerateRead(MarkDirty, nullptr);
   if (!mRoot->HasAttr(kNameSpaceID_None, nsGkAtoms::itemscope)) {
     return;
   }
@@ -267,7 +267,7 @@ GetElementByIdForConnectedSubtree(nsIContent* aContent, const nsIAtom* aId)
     aContent = aContent->GetNextNode();
   } while(aContent);
 
-  return NULL;
+  return nullptr;
 }
 
 void
@@ -376,7 +376,7 @@ PropertyNodeList::Item(uint32_t aIndex, nsIDOMNode** aReturn)
   EnsureFresh();
   nsINode* element = mElements.SafeElementAt(aIndex);
   if (!element) {
-    *aReturn = NULL;
+    *aReturn = nullptr;
     return NS_OK;
   }
   return CallQueryInterface(element, aReturn);
