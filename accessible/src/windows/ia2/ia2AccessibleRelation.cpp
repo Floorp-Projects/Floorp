@@ -32,7 +32,7 @@ ia2AccessibleRelation::QueryInterface(REFIID iid, void** ppv)
   if (!ppv)
     return E_INVALIDARG;
 
-  *ppv = NULL;
+  *ppv = nullptr;
 
   if (IID_IAccessibleRelation == iid || IID_IUnknown == iid) {
     *ppv = static_cast<IAccessibleRelation*>(this);
@@ -70,7 +70,7 @@ ia2AccessibleRelation::get_relationType(BSTR *aRelationType)
   if (!aRelationType)
     return E_INVALIDARG;
 
-  *aRelationType = NULL;
+  *aRelationType = nullptr;
 
   switch (mType) {
     case nsIAccessibleRelation::RELATION_CONTROLLED_BY:
@@ -135,7 +135,7 @@ ia2AccessibleRelation::get_localizedRelationType(BSTR *aLocalizedRelationType)
   if (!aLocalizedRelationType)
     return E_INVALIDARG;
 
-  *aLocalizedRelationType = NULL;
+  *aLocalizedRelationType = nullptr;
   return E_NOTIMPL;
 
   A11Y_TRYBLOCK_END
