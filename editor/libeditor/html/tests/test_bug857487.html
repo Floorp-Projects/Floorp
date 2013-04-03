@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=857487
+-->
+<head>
+  <title>Test for Bug 857487</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=857487">Mozilla Bug 857487</a>
+<div id="edit" contenteditable="true">
+  <table id="table" border="1" width="100%">
+    <tbody>
+      <tr>
+        <td>a</td>
+        <td>b</td>
+        <td>c</td>
+      </tr>
+      <tr>
+        <td>d</td>
+        <td id="cell">e</td>
+        <td>f</td>
+      </tr>
+      <tr>
+        <td>g</td>
+        <td>h</td>
+        <td>i</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<script type="application/javascript">
+
+/**
+ * Test for Bug 857487
+ *
+ * Tests that removing a table row through nsIHTMLEditor works
+ */
+
+function getEditor() {
+  const Ci = SpecialPowers.Ci;
+  var editingSession = SpecialPowers.wrap(window)
+                                    .QueryInterface(Ci.nsIInterfaceRequestor)
+                                    .getInterface(Ci.nsIWebNavigation)
+                                    .QueryInterface(Ci.nsIInterfaceRequestor)
+                                    .getInterface(Ci.nsIEditingSession);
+  return editingSession.getEditorForWindow(window).QueryInterface(Ci.nsITableEditor);
+}
+
+var cell = document.getElementById("cell");
+cell.focus();
+
+// place caret at end of center cell
+var sel = getSelection();
+sel.collapse(cell, cell.childNodes.length);
+
+var editor = getEditor();
+editor.deleteTableRow(1);
+
+var table = document.getElementById("table");
+
+is(table.innerHTML == "\n    <tbody>\n      <tr>\n        <td>a</td>\n        <td>b</td>\n        <td>c</td>\n      </tr>\n      \n      <tr>\n        <td>g</td>\n        <td>h</td>\n        <td>i</td>\n      </tr>\n    </tbody>\n  ",
+   true, "editor.deleteTableRow(1) should delete the row containing the selection");
+
+</script>
+
+
+</body>
+</html>
