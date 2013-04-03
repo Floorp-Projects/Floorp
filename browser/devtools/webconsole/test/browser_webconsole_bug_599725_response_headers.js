@@ -30,8 +30,21 @@ function performTest(lastFinishedRequest, aConsole)
     function (aResponse) {
       headers = aResponse.headers;
       ok(headers, "we have the response headers");
-      ok(!readHeader("Content-Type"), "we do not have the Content-Type header");
-      isnot(readHeader("Content-Length"), 60, "Content-Length != 60");
+
+      let contentType = readHeader("Content-Type");
+      let contentLength = readHeader("Content-Length");
+
+      ok(!contentType, "we do not have the Content-Type header");
+      isnot(contentLength, 60, "Content-Length != 60");
+
+      if (contentType || contentLength == 60) {
+        console.debug("lastFinishedRequest", lastFinishedRequest,
+                      "request", lastFinishedRequest.request,
+                      "response", lastFinishedRequest.response,
+                      "updates", lastFinishedRequest.updates,
+                      "response headers", headers);
+      }
+
       executeSoon(finishTest);
     });
 
@@ -44,9 +57,9 @@ function test()
 
   browser.addEventListener("load", function onLoad() {
     browser.removeEventListener("load", onLoad, true);
-    openConsole(null, function() {
+    executeSoon(() => openConsole(null, () => {
       HUDService.lastFinishedRequestCallback = performTest;
       content.location.reload();
-    });
+    }));
   }, true);
 }
