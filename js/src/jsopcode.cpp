@@ -1484,10 +1484,13 @@ FindStartPC(JSContext *cx, ScriptFrameIter &iter, int spindex, int skipStackHits
      * stack pointer and skewing it from what static analysis in pcstack.init
      * would compute.
      *
-     * FIXME: also fall back if iter.isIon(), since the stack snapshot may be
-     * for the previous pc (see bug 831120).
+     * FIXME: also fall back if iter.isIonOptimizedJS(), since the stack snapshot
+     * may be for the previous pc (see bug 831120).
      */
-    if (iter.isIon() || iter.interpFrame()->jitRevisedStack())
+    if (iter.isIonOptimizedJS())
+        return true;
+
+    if (!iter.isIonBaselineJS() && iter.interpFrame()->jitRevisedStack())
         return true;
 
     *valuepc = NULL;

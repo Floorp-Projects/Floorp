@@ -23,6 +23,7 @@
 #include "frontend/BytecodeEmitter.h"
 #include "gc/Marking.h"
 #include "methodjit/Retcon.h"
+#include "ion/BaselineJIT.h"
 #include "js/Vector.h"
 
 #include "gc/FindSCCs-inl.h"
@@ -242,6 +243,11 @@ BreakpointSite::recompile(FreeOp *fop)
         mjit::Recompiler::clearStackReferences(fop, script);
         mjit::ReleaseScriptCode(fop, script);
     }
+#endif
+
+#ifdef JS_ION
+    if (script->hasBaselineScript())
+        script->baseline->toggleDebugTraps(script, pc);
 #endif
 }
 
@@ -1987,11 +1993,11 @@ Debugger::getNewestFrame(JSContext *cx, unsigned argc, Value *vp)
          * Debug-mode currently disables Ion compilation in the compartment of
          * the debuggee.
          */
-        if (i.isIon())
+        if (i.isIonOptimizedJS())
             continue;
         if (dbg->observesFrame(i.abstractFramePtr())) {
             ScriptFrameIter iter(i.seg()->cx(), StackIter::GO_THROUGH_SAVED);
-            while (iter.isIon() || iter.abstractFramePtr() != i.abstractFramePtr())
+            while (iter.isIonOptimizedJS() || iter.abstractFramePtr() != i.abstractFramePtr())
                 ++iter;
             return dbg->getScriptFrame(cx, iter, args.rval());
         }
@@ -3278,6 +3284,37 @@ Debugger::observesScript(JSScript *script) const
     return observesGlobal(&script->global()) && !script->selfHosted;
 }
 
+/* static */ bool
+Debugger::handleBaselineOsr(JSContext *cx, StackFrame *from, ion::BaselineFrame *to)
+{
+    ScriptFrameIter iter(cx);
+    JS_ASSERT(iter.abstractFramePtr() == to);
+
+    for (FrameRange r(from); !r.empty(); r.popFront()) {
+        RootedObject frameobj(cx, r.frontFrame());
+        Debugger *dbg = r.frontDebugger();
+        JS_ASSERT(dbg == Debugger::fromChildJSObject(frameobj));
+
+        // Update frame object's StackIter::data pointer.
+        DebuggerFrame_freeStackIterData(cx->runtime->defaultFreeOp(), frameobj);
+        StackIter::Data *data = iter.copyData();
+        if (!data)
+            return false;
+        frameobj->setPrivate(data);
+
+        // Add the frame object with |to| as key.
+        if (!dbg->frames.putNew(to, frameobj)) {
+            js_ReportOutOfMemory(cx);
+            return false;
+        }
+
+        // Remove the old entry.
+        r.removeFrontFrame();
+    }
+
+    return true;
+}
+
 static JSBool
 DebuggerScript_setBreakpoint(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -3555,7 +3592,7 @@ DebuggerFrame_getOlder(JSContext *cx, unsigned argc, Value *vp)
     Debugger *dbg = Debugger::fromChildJSObject(thisobj);
 
     for (++iter; !iter.done(); ++iter) {
-        if (iter.isIon())
+        if (iter.isIonOptimizedJS())
             continue;
         if (dbg->observesFrame(iter.abstractFramePtr()))
             return dbg->getScriptFrame(cx, iter, args.rval());
