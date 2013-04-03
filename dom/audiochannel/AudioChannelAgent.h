@@ -1,5 +1,5 @@
 /* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
-/* vim: set ts=2 et sw=2 tw=40: */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -9,6 +9,7 @@
 
 #include "nsIAudioChannelAgent.h"
 #include "nsCOMPtr.h"
+#include "nsWeakPtr.h"
 
 #define NS_AUDIOCHANNELAGENT_CONTRACTID "@mozilla.org/audiochannelagent;1"
 // f27688e2-3dd7-11e2-904e-10bf48d64bd4
@@ -30,7 +31,17 @@ public:
 
 private:
   virtual ~AudioChannelAgent();
+
+  // Returns mCallback if that's non-null, or otherwise tries to get an
+  // nsIAudioChannelAgentCallback out of mWeakCallback.
+  already_AddRefed<nsIAudioChannelAgentCallback> GetCallback();
+
+  nsresult InitInternal(int32_t aAudioAgentType,
+                        nsIAudioChannelAgentCallback* aCallback,
+                        bool aUseWeakRef);
+
   nsCOMPtr<nsIAudioChannelAgentCallback> mCallback;
+  nsWeakPtr mWeakCallback;
   int32_t mAudioChannelType;
   bool mIsRegToService;
   bool mVisible;
