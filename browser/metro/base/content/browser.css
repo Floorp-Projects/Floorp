@@ -186,10 +186,6 @@ dialog.content-dialog {
   -moz-binding: none;
 }
 
-pageaction {
-  -moz-binding: url("chrome://browser/content/bindings/pageaction.xml#pageaction");
-}
-
 arrowbox {
   -moz-binding: url("chrome://browser/content/bindings/arrowbox.xml#arrowbox");
 }
