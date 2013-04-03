@@ -617,13 +617,13 @@ public:
   }
 
 #ifdef MOZ_GAMEPAD
-  void AddGamepad(PRUint32 aIndex, nsDOMGamepad* aGamepad);
-  void RemoveGamepad(PRUint32 aIndex);
-  already_AddRefed<nsDOMGamepad> GetGamepad(PRUint32 aIndex);
+  void AddGamepad(uint32_t aIndex, nsDOMGamepad* aGamepad);
+  void RemoveGamepad(uint32_t aIndex);
+  already_AddRefed<nsDOMGamepad> GetGamepad(uint32_t aIndex);
   void SetHasSeenGamepadInput(bool aHasSeen);
   bool HasSeenGamepadInput();
   void SyncGamepadState();
-  static PLDHashOperator EnumGamepadsForSync(const PRUint32& aKey,
+  static PLDHashOperator EnumGamepadsForSync(const uint32_t& aKey,
                                              nsDOMGamepad* aData,
                                              void* userArg);
 #endif
