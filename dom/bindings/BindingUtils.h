@@ -189,30 +189,6 @@ inline bool
 IsNotDateOrRegExp(JSContext* cx, JSObject* obj)
 {
   MOZ_ASSERT(obj);
-  // For simplicity, check for security wrappers up front.  In case we
-  // have a security wrapper, don't forget to enter the compartment of
-  // the underlying object after unwrapping.
-  Maybe<JSAutoCompartment> ac;
-  if (js::IsWrapper(obj)) {
-    obj = js::UnwrapObjectChecked(obj, /* stopAtOuter = */ false);
-    if (!obj) {
-      // If this is a security wrapper, it'd be better to say not here. But
-      // this function is used to determine whether an object is convertible to
-      // a callback interface, and we've historically allowed COWs to be passed
-      // as callback interfaces (in part to allow things like:
-      //
-      // |contentWindow.wrappedJSObject.addEventListener(function() {...})|
-      //
-      // to work. We could check for COWs here, but bz says we can probably
-      // just get away with returning true until the JS engine switches to
-      // ObjectClassIs for this stuff and we can just kill this code.
-      return true;
-    }
-
-    ac.construct(cx, obj);
-  }
-
-  // Everything except dates and regexps is arraylike
   return !JS_ObjectIsDate(cx, obj) && !JS_ObjectIsRegExp(cx, obj);
 }
 
