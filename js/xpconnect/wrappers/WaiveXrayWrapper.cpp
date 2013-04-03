@@ -15,6 +15,25 @@
 
 namespace xpc {
 
+static bool
+WaiveAccessors(JSContext *cx, js::PropertyDescriptor *desc)
+{
+    if ((desc->attrs & JSPROP_GETTER) && desc->getter) {
+        JS::Value v = JS::ObjectValue(*JS_FUNC_TO_DATA_PTR(JSObject *, desc->getter));
+        if (!WrapperFactory::WaiveXrayAndWrap(cx, &v))
+            return false;
+        desc->getter = js::CastAsJSPropertyOp(&v.toObject());
+    }
+
+    if ((desc->attrs & JSPROP_SETTER) && desc->setter) {
+        JS::Value v = JS::ObjectValue(*JS_FUNC_TO_DATA_PTR(JSObject *, desc->setter));
+        if (!WrapperFactory::WaiveXrayAndWrap(cx, &v))
+            return false;
+        desc->setter = js::CastAsJSStrictPropertyOp(&v.toObject());
+    }
+    return true;
+}
+
 WaiveXrayWrapper::WaiveXrayWrapper(unsigned flags) : js::CrossCompartmentWrapper(flags)
 {
 }
@@ -29,7 +48,7 @@ WaiveXrayWrapper::getPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*>wrap
                                         unsigned flags)
 {
     return CrossCompartmentWrapper::getPropertyDescriptor(cx, wrapper, id, desc, flags) &&
-           WrapperFactory::WaiveXrayAndWrap(cx, &desc->value);
+           WrapperFactory::WaiveXrayAndWrap(cx, &desc->value) && WaiveAccessors(cx, desc);
 }
 
 bool
@@ -38,7 +57,7 @@ WaiveXrayWrapper::getOwnPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*> 
                                            unsigned flags)
 {
     return CrossCompartmentWrapper::getOwnPropertyDescriptor(cx, wrapper, id, desc, flags) &&
-           WrapperFactory::WaiveXrayAndWrap(cx, &desc->value);
+           WrapperFactory::WaiveXrayAndWrap(cx, &desc->value) && WaiveAccessors(cx, desc);
 }
 
 bool
