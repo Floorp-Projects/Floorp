@@ -13,6 +13,8 @@ include $(DEPTH)/config/autoconf.mk
 MOCHITEST_FILES := \
   common.js \
   test_setup.html \
+  test_speech_simple.html \
+  test_speech_queue.html \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

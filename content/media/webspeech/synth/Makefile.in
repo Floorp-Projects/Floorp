@@ -29,6 +29,7 @@ CPPSRCS := \
   SpeechSynthesisChild.cpp \
   SpeechSynthesisParent.cpp \
   nsSynthVoiceRegistry.cpp \
+  nsSpeechTask.cpp \
   $(NULL)
 
 EXPORTS_NAMESPACES := mozilla/dom
@@ -40,6 +41,7 @@ EXPORTS_mozilla/dom := \
   SpeechSynthesisChild.h \
   SpeechSynthesisParent.h \
   nsSynthVoiceRegistry.h \
+  nsSpeechTask.h \
   $(NULL)
 
 FORCE_STATIC_LIB := 1
