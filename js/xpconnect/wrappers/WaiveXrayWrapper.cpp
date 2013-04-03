@@ -85,4 +85,14 @@ WaiveXrayWrapper::construct(JSContext *cx, JS::Handle<JSObject*> wrapper,
            WrapperFactory::WaiveXrayAndWrap(cx, rval.address());
 }
 
+// NB: This is important as the other side of a handshake with FieldGetter. See
+// nsXBLProtoImplField.cpp.
+bool
+WaiveXrayWrapper::nativeCall(JSContext *cx, JS::IsAcceptableThis test,
+                             JS::NativeImpl impl, JS::CallArgs args)
+{
+    return CrossCompartmentWrapper::nativeCall(cx, test, impl, args) &&
+           WrapperFactory::WaiveXrayAndWrap(cx, args.rval().address());
+}
+
 }
