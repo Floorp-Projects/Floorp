@@ -349,7 +349,7 @@ static int do_main(int argc, char* argv[], nsIFile *xreDirectory)
 
       char* ptr = buffer;
       newArgv[0] = ptr;
-      while (*ptr != nullptr &&
+      while (*ptr != 0 &&
              (ptr - buffer) < sizeof(buffer) &&
              newArgc < ARRAYSIZE(newArgv)) {
         if (isspace(*ptr)) {
