@@ -1848,6 +1848,32 @@ nsFtpState::KillControlConnection()
     mControlConnection = nullptr;
 }
 
+class nsFtpAsyncAlert : public nsRunnable
+{
+public:
+    nsFtpAsyncAlert(nsIPrompt *aPrompter, nsACString& aResponseMsg)
+        : mPrompter(aPrompter)
+        , mResponseMsg(aResponseMsg)
+    {
+        MOZ_COUNT_CTOR(nsFtpAsyncAlert);
+    }
+    virtual ~nsFtpAsyncAlert()
+    {
+        MOZ_COUNT_DTOR(nsFtpAsyncAlert);
+    }
+    NS_IMETHOD Run()
+    {
+        if (mPrompter) {
+            mPrompter->Alert(nullptr, NS_ConvertASCIItoUTF16(mResponseMsg).get());
+        }
+        return NS_OK;
+    }
+private:
+    nsCOMPtr<nsIPrompt> mPrompter;
+    nsCString mResponseMsg;
+};
+    
+
 nsresult
 nsFtpState::StopProcessing()
 {
@@ -1869,8 +1895,11 @@ nsFtpState::StopProcessing()
         // XXX(darin): this code should not be dictating UI like this!
         nsCOMPtr<nsIPrompt> prompter;
         mChannel->GetCallback(prompter);
-        if (prompter)
-            prompter->Alert(nullptr, NS_ConvertASCIItoUTF16(mResponseMsg).get());
+        if (prompter) {
+            nsCOMPtr<nsIRunnable> alertEvent =
+                new nsFtpAsyncAlert(prompter, mResponseMsg);
+            NS_DispatchToMainThread(alertEvent, NS_DISPATCH_NORMAL);
+        }
     }
     
     nsresult broadcastErrorCode = mControlStatus;
