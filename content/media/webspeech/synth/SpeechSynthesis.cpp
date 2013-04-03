@@ -7,6 +7,7 @@
 #include "nsSpeechTask.h"
 #include "prlog.h"
 
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/Element.h"
 
 #include "mozilla/dom/SpeechSynthesisBinding.h"
