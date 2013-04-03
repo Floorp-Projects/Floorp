@@ -4617,7 +4617,7 @@ DoGetIntrinsicFallback(JSContext *cx, BaselineFrame *frame, ICGetIntrinsic_Fallb
 
     JS_ASSERT(op == JSOP_GETINTRINSIC || op == JSOP_CALLINTRINSIC);
 
-    if (!GetIntrinsicOperation(cx, script, pc, res))
+    if (!GetIntrinsicOperation(cx, pc, res))
         return false;
 
     // An intrinsic operation will always produce the same result, so only
