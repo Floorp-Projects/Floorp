@@ -443,16 +443,6 @@ GfxInfo::Init()
     }
   }
 
-  const char *spoofedDriverVersionString = PR_GetEnv("MOZ_GFX_SPOOF_DRIVER_VERSION");
-  if (spoofedDriverVersionString) {
-    mDriverVersion.AssignASCII(spoofedDriverVersionString);
-  }
-
-  const char *spoofedVendor = PR_GetEnv("MOZ_GFX_SPOOF_VENDOR_ID");
-  if (spoofedVendor) {
-    mAdapterVendorID.AssignASCII(spoofedVendor);
-  }
-
   mHasDriverVersionMismatch = false;
   if (mAdapterVendorID == GfxDriverInfo::GetDeviceVendor(VendorIntel)) {
     // we've had big crashers (bugs 590373 and 595364) apparently correlated
@@ -474,6 +464,16 @@ GfxInfo::Init()
     // so this test implicitly handles the case where GetDLLVersion failed
     if (dllNumericVersion != driverNumericVersion)
       mHasDriverVersionMismatch = true;
+  }
+
+  const char *spoofedDriverVersionString = PR_GetEnv("MOZ_GFX_SPOOF_DRIVER_VERSION");
+  if (spoofedDriverVersionString) {
+    mDriverVersion.AssignASCII(spoofedDriverVersionString);
+  }
+
+  const char *spoofedVendor = PR_GetEnv("MOZ_GFX_SPOOF_VENDOR_ID");
+  if (spoofedVendor) {
+    mAdapterVendorID.AssignASCII(spoofedVendor);
   }
 
   const char *spoofedDevice = PR_GetEnv("MOZ_GFX_SPOOF_DEVICE_ID");
