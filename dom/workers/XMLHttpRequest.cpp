@@ -1670,6 +1670,7 @@ XMLHttpRequest::SendInternal(const nsAString& aStringBody,
     new SendRunnable(mWorkerPrivate, mProxy, aStringBody, aBody,
                      aClonedObjects, syncQueueKey, hasUploadListeners);
   if (!runnable->Dispatch(cx)) {
+    aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
 
