@@ -44,7 +44,7 @@ ia2AccessibleText::get_attributes(long aOffset, long *aStartOffset,
 
   *aStartOffset = 0;
   *aEndOffset = 0;
-  *aTextAttributes = NULL;
+  *aTextAttributes = nullptr;
 
   HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
@@ -210,7 +210,7 @@ ia2AccessibleText::get_text(long aStartOffset, long aEndOffset, BSTR *aText)
 {
   A11Y_TRYBLOCK_BEGIN
 
-  *aText = NULL;
+  *aText = nullptr;
 
   HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
@@ -240,7 +240,7 @@ ia2AccessibleText::get_textBeforeOffset(long aOffset,
 
   *aStartOffset = 0;
   *aEndOffset = 0;
-  *aText = NULL;
+  *aText = nullptr;
 
   HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
@@ -287,7 +287,7 @@ ia2AccessibleText::get_textAfterOffset(long aOffset,
 
   *aStartOffset = 0;
   *aEndOffset = 0;
-  *aText = NULL;
+  *aText = nullptr;
 
   HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
@@ -334,7 +334,7 @@ ia2AccessibleText::get_textAtOffset(long aOffset,
 
   *aStartOffset = 0;
   *aEndOffset = 0;
-  *aText = NULL;
+  *aText = nullptr;
 
   HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
