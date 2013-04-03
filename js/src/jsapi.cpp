@@ -3992,7 +3992,7 @@ JS_DefineConstDoubles(JSContext *cx, JSObject *objArg, JSConstDoubleSpec *cds)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_DefineProperties(JSContext *cx, JSObject *objArg, JSPropertySpec *ps)
+JS_DefineProperties(JSContext *cx, JSObject *objArg, const JSPropertySpec *ps)
 {
     RootedObject obj(cx, objArg);
     JSBool ok;
@@ -4985,7 +4985,7 @@ js_generic_native_method_dispatcher(JSContext *cx, unsigned argc, Value *vp)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_DefineFunctions(JSContext *cx, JSObject *objArg, JSFunctionSpec *fs)
+JS_DefineFunctions(JSContext *cx, JSObject *objArg, const JSFunctionSpec *fs)
 {
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     AssertHeapIsIdle(cx);
@@ -5026,7 +5026,7 @@ JS_DefineFunctions(JSContext *cx, JSObject *objArg, JSFunctionSpec *fs)
              * As jsapi.h notes, fs must point to storage that lives as long
              * as fun->object lives.
              */
-            fun->setExtendedSlot(0, PrivateValue(fs));
+            fun->setExtendedSlot(0, PrivateValue(const_cast<JSFunctionSpec*>(fs)));
         }
 
         /*
@@ -5051,7 +5051,7 @@ JS_DefineFunctions(JSContext *cx, JSObject *objArg, JSFunctionSpec *fs)
             if (!fun)
                 return JS_FALSE;
             fun->setIsSelfHostedBuiltin();
-            fun->setExtendedSlot(0, PrivateValue(fs));
+            fun->setExtendedSlot(0, PrivateValue(const_cast<JSFunctionSpec*>(fs)));
             RootedAtom shAtom(cx, Atomize(cx, fs->selfHostedName, strlen(fs->selfHostedName)));
             if (!shAtom)
                 return JS_FALSE;

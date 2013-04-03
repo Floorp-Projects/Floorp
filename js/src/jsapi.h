@@ -3188,7 +3188,7 @@ extern JS_PUBLIC_API(JSBool)
 JS_DefineConstDoubles(JSContext *cx, JSObject *obj, JSConstDoubleSpec *cds);
 
 extern JS_PUBLIC_API(JSBool)
-JS_DefineProperties(JSContext *cx, JSObject *obj, JSPropertySpec *ps);
+JS_DefineProperties(JSContext *cx, JSObject *obj, const JSPropertySpec *ps);
 
 extern JS_PUBLIC_API(JSBool)
 JS_DefineProperty(JSContext *cx, JSObject *obj, const char *name, jsval value,
@@ -3695,7 +3695,7 @@ extern JS_PUBLIC_API(JSObject*)
 JS_BindCallable(JSContext *cx, JSObject *callable, JSRawObject newThis);
 
 extern JS_PUBLIC_API(JSBool)
-JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs);
+JS_DefineFunctions(JSContext *cx, JSObject *obj, const JSFunctionSpec *fs);
 
 extern JS_PUBLIC_API(JSFunction *)
 JS_DefineFunction(JSContext *cx, JSObject *obj, const char *name, JSNative call,
