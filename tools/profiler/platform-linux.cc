@@ -64,6 +64,7 @@
 #include "mozilla/Mutex.h"
 #include "ProfileEntry.h"
 #include "nsThreadUtils.h"
+#include "TableTicker.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -83,6 +84,19 @@ pid_t gettid()
 #ifdef ANDROID
 #include "android-signal-defs.h"
 #endif
+
+struct SamplerRegistry {
+  static void AddActiveSampler(Sampler *sampler) {
+    ASSERT(!SamplerRegistry::sampler);
+    SamplerRegistry::sampler = sampler;
+  }
+  static void RemoveActiveSampler(Sampler *sampler) {
+    SamplerRegistry::sampler = NULL;
+  }
+  static Sampler *sampler;
+};
+
+Sampler *SamplerRegistry::sampler = NULL;
 
 static ThreadProfile* sCurrentThreadProfile = NULL;
 
@@ -150,93 +164,75 @@ static void ProfilerSignalHandler(int signal, siginfo_t* info, void* context) {
   sCurrentThreadProfile = NULL;
 }
 
-#ifndef XP_MACOSX
 int tgkill(pid_t tgid, pid_t tid, int signalno) {
   return syscall(SYS_tgkill, tgid, tid, signalno);
 }
-#endif
 
-class Sampler::PlatformData : public Malloced {
+class PlatformData : public Malloced {
  public:
-  explicit PlatformData(Sampler* sampler)
-      : sampler_(sampler),
-        signal_handler_installed_(false),
-        vm_tgid_(getpid()),
-#ifndef XP_MACOSX
-        vm_tid_(gettid()),
-#endif
-        signal_sender_launched_(false)
-#ifdef XP_MACOSX
-        , signal_receiver_(pthread_self())
-#endif
+  PlatformData()
   {
   }
-
-  void SignalSender() {
-    while (sampler_->IsActive()) {
-      sampler_->HandleSaveRequest();
-
-      if (!sampler_->IsPaused()) {
-#ifdef XP_MACOSX
-        pthread_kill(signal_receiver_, SIGPROF);
-#else
-
-        std::vector<ThreadInfo*> threads = GetRegisteredThreads();
-
-        for (uint32_t i = 0; i < threads.size(); i++) {
-          ThreadInfo* info = threads[i];
-
-          // We use sCurrentThreadProfile the ThreadProfile for the
-          // thread we're profiling to the signal handler
-          sCurrentThreadProfile = info->Profile();
-
-          int threadId = info->ThreadId();
-          if (threadId == 0) {
-            threadId = vm_tid_;
-          }
-
-          if (tgkill(vm_tgid_, threadId, SIGPROF) != 0) {
-            printf_stderr("profiler failed to signal tid=%d\n", threadId);
-#ifdef DEBUG
-            abort();
-#endif
-            continue;
-          }
-
-          // Wait for the signal handler to run before moving on to the next one
-          while (sCurrentThreadProfile)
-            sched_yield();
-        }
-#endif
-      }
-
-      // Convert ms to us and subtract 100 us to compensate delays
-      // occuring during signal delivery.
-      // TODO measure and confirm this.
-      const useconds_t interval = sampler_->interval_ * 1000 - 100;
-      //int result = usleep(interval);
-      usleep(interval);
-    }
-  }
-
-  Sampler* sampler_;
-  bool signal_handler_installed_;
-  struct sigaction old_sigprof_signal_handler_;
-  struct sigaction old_sigsave_signal_handler_;
-  pid_t vm_tgid_;
-  pid_t vm_tid_;
-  bool signal_sender_launched_;
-  pthread_t signal_sender_thread_;
-#ifdef XP_MACOSX
-  pthread_t signal_receiver_;
-#endif
 };
 
+/* static */ PlatformData*
+Sampler::AllocPlatformData(int aThreadId)
+{
+  return new PlatformData;
+}
 
-static void* SenderEntry(void* arg) {
-  Sampler::PlatformData* data =
-      reinterpret_cast<Sampler::PlatformData*>(arg);
-  data->SignalSender();
+/* static */ void
+Sampler::FreePlatformData(PlatformData* aData)
+{
+  delete aData;
+}
+
+static void* SignalSender(void* arg) {
+  int vm_tgid_ = getpid();
+
+  while (SamplerRegistry::sampler->IsActive()) {
+    SamplerRegistry::sampler->HandleSaveRequest();
+
+    if (!SamplerRegistry::sampler->IsPaused()) {
+      mozilla::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
+      std::vector<ThreadInfo*> threads =
+        SamplerRegistry::sampler->GetRegisteredThreads();
+
+      for (uint32_t i = 0; i < threads.size(); i++) {
+        ThreadInfo* info = threads[i];
+
+        // This will be null if we're not interested in profiling this thread.
+        if (!info->Profile())
+          continue;
+
+        // We use sCurrentThreadProfile the ThreadProfile for the
+        // thread we're profiling to the signal handler
+        sCurrentThreadProfile = info->Profile();
+
+        int threadId = info->ThreadId();
+
+        if (tgkill(vm_tgid_, threadId, SIGPROF) != 0) {
+          printf_stderr("profiler failed to signal tid=%d\n", threadId);
+#ifdef DEBUG
+          abort();
+#endif
+          continue;
+        }
+
+        // Wait for the signal handler to run before moving on to the next one
+        while (sCurrentThreadProfile)
+          sched_yield();
+      }
+    }
+
+    // Convert ms to us and subtract 100 us to compensate delays
+    // occuring during signal delivery.
+    // TODO measure and confirm this.
+    const useconds_t interval =
+      SamplerRegistry::sampler->interval() * 1000 - 100;
+    //int result = usleep(interval);
+    usleep(interval);
+  }
   return 0;
 }
 
@@ -247,17 +243,17 @@ Sampler::Sampler(int interval, bool profiling, int entrySize)
       paused_(false),
       active_(false),
       entrySize_(entrySize) {
-  data_ = new PlatformData(this);
 }
 
 Sampler::~Sampler() {
-  ASSERT(!data_->signal_sender_launched_);
-  delete data_;
+  ASSERT(!signal_sender_launched_);
 }
 
 
 void Sampler::Start() {
   LOG("Sampler started");
+
+  SamplerRegistry::AddActiveSampler(this);
 
   // Request profiling signals.
   LOG("Request signal");
@@ -265,7 +261,7 @@ void Sampler::Start() {
   sa.sa_sigaction = ProfilerSignalHandler;
   sigemptyset(&sa.sa_mask);
   sa.sa_flags = SA_RESTART | SA_SIGINFO;
-  if (sigaction(SIGPROF, &sa, &data_->old_sigprof_signal_handler_) != 0) {
+  if (sigaction(SIGPROF, &sa, &old_sigprof_signal_handler_) != 0) {
     LOG("Error installing signal");
     return;
   }
@@ -275,20 +271,20 @@ void Sampler::Start() {
   sa2.sa_sigaction = ProfilerSaveSignalHandler;
   sigemptyset(&sa2.sa_mask);
   sa2.sa_flags = SA_RESTART | SA_SIGINFO;
-  if (sigaction(SIGNAL_SAVE_PROFILE, &sa2, &data_->old_sigsave_signal_handler_) != 0) {
+  if (sigaction(SIGNAL_SAVE_PROFILE, &sa2, &old_sigsave_signal_handler_) != 0) {
     LOG("Error installing start signal");
     return;
   }
   LOG("Signal installed");
-  data_->signal_handler_installed_ = true;
+  signal_handler_installed_ = true;
 
   // Start a thread that sends SIGPROF signal to VM thread.
   // Sending the signal ourselves instead of relying on itimer provides
   // much better accuracy.
   SetActive(true);
   if (pthread_create(
-          &data_->signal_sender_thread_, NULL, SenderEntry, data_) == 0) {
-    data_->signal_sender_launched_ = true;
+          &signal_sender_thread_, NULL, SignalSender, NULL) == 0) {
+    signal_sender_launched_ = true;
   }
   LOG("Profiler thread started");
 }
@@ -299,32 +295,42 @@ void Sampler::Stop() {
 
   // Wait for signal sender termination (it will exit after setting
   // active_ to false).
-  if (data_->signal_sender_launched_) {
-    pthread_join(data_->signal_sender_thread_, NULL);
-    data_->signal_sender_launched_ = false;
+  if (signal_sender_launched_) {
+    pthread_join(signal_sender_thread_, NULL);
+    signal_sender_launched_ = false;
   }
 
+  SamplerRegistry::RemoveActiveSampler(this);
+
   // Restore old signal handler
-  if (data_->signal_handler_installed_) {
-    sigaction(SIGNAL_SAVE_PROFILE, &data_->old_sigsave_signal_handler_, 0);
-    sigaction(SIGPROF, &data_->old_sigprof_signal_handler_, 0);
-    data_->signal_handler_installed_ = false;
+  if (signal_handler_installed_) {
+    sigaction(SIGNAL_SAVE_PROFILE, &old_sigsave_signal_handler_, 0);
+    sigaction(SIGPROF, &old_sigprof_signal_handler_, 0);
+    signal_handler_installed_ = false;
   }
 }
 
 bool Sampler::RegisterCurrentThread(const char* aName, PseudoStack* aPseudoStack, bool aIsMainThread)
 {
-  mozilla::MutexAutoLock lock(*sRegisteredThreadsMutex);
+  mozilla::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
 
-  ThreadInfo* info = new ThreadInfo(aName, gettid(), aIsMainThread, aPseudoStack);
+  ThreadInfo* info = new ThreadInfo(aName, gettid(),
+    aIsMainThread, aPseudoStack);
 
-  if (sActiveSampler) {
+  bool profileThread = sActiveSampler &&
+    (aIsMainThread || sActiveSampler->ProfileThreads());
+
+  if (profileThread) {
     // We need to create the ThreadProfile now
     info->SetProfile(new ThreadProfile(info->Name(),
                                        sActiveSampler->EntrySize(),
                                        info->Stack(),
                                        info->ThreadId(),
+                                       info->GetPlatformData(),
                                        aIsMainThread));
+    if (sActiveSampler->ProfileJS()) {
+      info->Profile()->GetPseudoStack()->enableJSSampling();
+    }
   }
 
   sRegisteredThreads->push_back(info);
@@ -333,7 +339,7 @@ bool Sampler::RegisterCurrentThread(const char* aName, PseudoStack* aPseudoStack
 
 void Sampler::UnregisterCurrentThread()
 {
-  mozilla::MutexAutoLock lock(*sRegisteredThreadsMutex);
+  mozilla::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
 
   int id = gettid();
 
