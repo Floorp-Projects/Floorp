@@ -692,11 +692,14 @@ PerThreadData::PerThreadData(JSRuntime *runtime)
     ionTop(NULL),
     ionJSContext(NULL),
     ionStackLimit(0),
+#ifdef JS_THREADSAFE
+    ionStackLimitLock_(NULL),
+#endif
     ionActivation(NULL),
     asmJSActivationStack_(NULL),
-# ifdef JS_THREADSAFE
+#ifdef JS_THREADSAFE
     asmJSActivationStackLock_(NULL),
-# endif
+#endif
     suppressGC(0)
 {}
 
@@ -704,6 +707,10 @@ bool
 PerThreadData::init()
 {
 #ifdef JS_THREADSAFE
+    ionStackLimitLock_ = PR_NewLock();
+    if (!ionStackLimitLock_)
+        return false;
+
     asmJSActivationStackLock_ = PR_NewLock();
     if (!asmJSActivationStackLock_)
         return false;
@@ -714,6 +721,9 @@ PerThreadData::init()
 PerThreadData::~PerThreadData()
 {
 #ifdef JS_THREADSAFE
+    if (ionStackLimitLock_)
+        PR_DestroyLock(ionStackLimitLock_);
+
     if (asmJSActivationStackLock_)
         PR_DestroyLock(asmJSActivationStackLock_);
 #endif
@@ -3076,6 +3086,16 @@ JS_SetNativeStackQuota(JSRuntime *rt, size_t stackSize)
     } else {
         JS_ASSERT(rt->nativeStackBase >= stackSize);
         rt->mainThread.nativeStackLimit = rt->nativeStackBase - (stackSize - 1);
+    }
+#endif
+
+    // If there's no pending interrupt request set on the runtime's main thread's
+    // ionStackLimit, then update it so that it reflects the new nativeStacklimit.
+#ifdef JS_ION
+    {
+        PerThreadData::IonStackLimitLock lock(rt->mainThread);
+        if (rt->mainThread.ionStackLimit != uintptr_t(-1))
+            rt->mainThread.ionStackLimit = rt->mainThread.nativeStackLimit;
     }
 #endif
 }

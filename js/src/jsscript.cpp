@@ -36,6 +36,7 @@
 #include "js/MemoryMetrics.h"
 #include "methodjit/MethodJIT.h"
 #include "ion/IonCode.h"
+#include "ion/BaselineJIT.h"
 #include "methodjit/Retcon.h"
 #include "vm/Debugger.h"
 #include "vm/Shape.h"
@@ -2527,6 +2528,11 @@ JSScript::recompileForStepMode(FreeOp *fop)
         mjit::ReleaseScriptCode(fop, this);
     }
 #endif
+
+#ifdef JS_ION
+    if (hasBaselineScript())
+        baseline->toggleDebugTraps(this, NULL);
+#endif
 }
 
 bool
@@ -2795,6 +2801,16 @@ JSScript::argumentsOptimizationFailed(JSContext *cx, HandleScript script)
 
     script->needsArgsObj_ = true;
 
+#ifdef JS_ION
+    /*
+     * Since we can't invalidate baseline scripts, set a flag that's checked from
+     * JIT code to indicate the arguments optimization failed and JSOP_ARGUMENTS
+     * should create an arguments object next time.
+     */
+    if (script->hasBaselineScript())
+        script->baselineScript()->setNeedsArgsObj();
+#endif
+
     /*
      * By design, the arguments optimization is only made when there are no
      * outstanding cases of MagicValue(JS_OPTIMIZED_ARGUMENTS) at any points
@@ -2818,7 +2834,7 @@ JSScript::argumentsOptimizationFailed(JSContext *cx, HandleScript script)
          * safe since the engine avoids any observation of a StackFrame when it
          * beginsIonActivation (see StackIter::interpFrame comment).
          */
-        if (i.isIon())
+        if (i.isIonOptimizedJS())
             continue;
         AbstractFramePtr frame = i.abstractFramePtr();
         if (frame.isFunctionFrame() && frame.script() == script) {

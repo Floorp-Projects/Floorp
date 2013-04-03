@@ -17,6 +17,7 @@
 #include "jsanalyze.h"
 #include "jsinferinlines.h"
 #include "IonFrames-inl.h"
+#include "BaselineJIT.h"
 
 using namespace js;
 using namespace js::ion;
@@ -324,8 +325,9 @@ ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
 }
 
 uint32_t
-ion::Bailout(BailoutStack *sp)
+ion::Bailout(BailoutStack *sp, BaselineBailoutInfo **bailoutInfo)
 {
+    JS_ASSERT(bailoutInfo);
     JSContext *cx = GetIonContext()->cx;
     // We don't have an exit frame.
     cx->mainThread().ionTop = NULL;
@@ -339,14 +341,27 @@ ion::Bailout(BailoutStack *sp)
 
     IonSpew(IonSpew_Bailouts, "Took bailout! Snapshot offset: %d", iter.snapshotOffset());
 
-    uint32_t retval = ConvertFrames(cx, activation, iter);
+    uint32_t retval;
+    if (IsBaselineEnabled(cx)) {
+        *bailoutInfo = NULL;
+        retval = BailoutIonToBaseline(cx, activation, iter, false, bailoutInfo);
+        JS_ASSERT(retval == BAILOUT_RETURN_BASELINE ||
+                  retval == BAILOUT_RETURN_FATAL_ERROR ||
+                  retval == BAILOUT_RETURN_OVERRECURSED);
+        JS_ASSERT_IF(retval == BAILOUT_RETURN_BASELINE, *bailoutInfo != NULL);
+    } else {
+        retval = ConvertFrames(cx, activation, iter);
+    }
 
-    EnsureExitFrame(iter.jsFrame());
+    if (retval != BAILOUT_RETURN_BASELINE)
+        EnsureExitFrame(iter.jsFrame());
+
     return retval;
 }
 
 uint32_t
-ion::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut)
+ion::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut,
+                         BaselineBailoutInfo **bailoutInfo)
 {
     sp->checkInvariants();
 
@@ -363,9 +378,36 @@ ion::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut)
     // Note: the frame size must be computed before we return from this function.
     *frameSizeOut = iter.topFrameSize();
 
-    uint32_t retval = ConvertFrames(cx, activation, iter);
+    uint32_t retval;
+    if (IsBaselineEnabled(cx)) {
+        *bailoutInfo = NULL;
+        retval = BailoutIonToBaseline(cx, activation, iter, true, bailoutInfo);
+        JS_ASSERT(retval == BAILOUT_RETURN_BASELINE ||
+                  retval == BAILOUT_RETURN_FATAL_ERROR ||
+                  retval == BAILOUT_RETURN_OVERRECURSED);
+        JS_ASSERT_IF(retval == BAILOUT_RETURN_BASELINE, *bailoutInfo != NULL);
 
-    {
+        if (retval != BAILOUT_RETURN_BASELINE) {
+            IonJSFrameLayout *frame = iter.jsFrame();
+            IonSpew(IonSpew_Invalidate, "converting to exit frame");
+            IonSpew(IonSpew_Invalidate, "   orig calleeToken %p", (void *) frame->calleeToken());
+            IonSpew(IonSpew_Invalidate, "   orig frameSize %u", unsigned(frame->prevFrameLocalSize()));
+            IonSpew(IonSpew_Invalidate, "   orig ra %p", (void *) frame->returnAddress());
+
+            frame->replaceCalleeToken(NULL);
+            EnsureExitFrame(frame);
+
+            IonSpew(IonSpew_Invalidate, "   new  calleeToken %p", (void *) frame->calleeToken());
+            IonSpew(IonSpew_Invalidate, "   new  frameSize %u", unsigned(frame->prevFrameLocalSize()));
+            IonSpew(IonSpew_Invalidate, "   new  ra %p", (void *) frame->returnAddress());
+        }
+
+        iter.ionScript()->decref(cx->runtime->defaultFreeOp());
+
+        return retval;
+    } else {
+        retval = ConvertFrames(cx, activation, iter);
+
         IonJSFrameLayout *frame = iter.jsFrame();
         IonSpew(IonSpew_Invalidate, "converting to exit frame");
         IonSpew(IonSpew_Invalidate, "   orig calleeToken %p", (void *) frame->calleeToken());
@@ -378,32 +420,33 @@ ion::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut)
         IonSpew(IonSpew_Invalidate, "   new  calleeToken %p", (void *) frame->calleeToken());
         IonSpew(IonSpew_Invalidate, "   new  frameSize %u", unsigned(frame->prevFrameLocalSize()));
         IonSpew(IonSpew_Invalidate, "   new  ra %p", (void *) frame->returnAddress());
-    }
 
-    iter.ionScript()->decref(cx->runtime->defaultFreeOp());
+        iter.ionScript()->decref(cx->runtime->defaultFreeOp());
 
-    if (cx->runtime->hasIonReturnOverride())
-        cx->regs().sp[-1] = cx->runtime->takeIonReturnOverride();
+        // Only need to take ion return override if resuming to interpreter.
+        if (cx->runtime->hasIonReturnOverride())
+            cx->regs().sp[-1] = cx->runtime->takeIonReturnOverride();
 
-    if (retval != BAILOUT_RETURN_FATAL_ERROR) {
-        // If invalidation was triggered inside a stub call, we may still have to
-        // monitor the result, since the bailout happens before the MMonitorTypes
-        // instruction is executed.
-        jsbytecode *pc = activation->bailout()->bailoutPc();
+        if (retval != BAILOUT_RETURN_FATAL_ERROR) {
+            // If invalidation was triggered inside a stub call, we may still have to
+            // monitor the result, since the bailout happens before the MMonitorTypes
+            // instruction is executed.
+            jsbytecode *pc = activation->bailout()->bailoutPc();
 
-        // If this is not a ResumeAfter bailout, there's nothing to monitor,
-        // we will redo the op in the interpreter.
-        bool isResumeAfter = GetNextPc(pc) == cx->regs().pc;
+            // If this is not a ResumeAfter bailout, there's nothing to monitor,
+            // we will redo the op in the interpreter.
+            bool isResumeAfter = GetNextPc(pc) == cx->regs().pc;
 
-        if ((js_CodeSpec[*pc].format & JOF_TYPESET) && isResumeAfter) {
-            JS_ASSERT(retval == BAILOUT_RETURN_OK);
-            return BAILOUT_RETURN_MONITOR;
+            if ((js_CodeSpec[*pc].format & JOF_TYPESET) && isResumeAfter) {
+                JS_ASSERT(retval == BAILOUT_RETURN_OK);
+                return BAILOUT_RETURN_MONITOR;
+            }
+
+            return retval;
         }
 
-        return retval;
+        return BAILOUT_RETURN_FATAL_ERROR;
     }
-
-    return BAILOUT_RETURN_FATAL_ERROR;
 }
 
 static void
@@ -458,13 +501,13 @@ ion::ReflowTypeInfo(uint32_t bailoutResult)
 
 // Initialize the decl env Object and the call object of the current frame.
 bool
-ion::EnsureHasScopeObjects(JSContext *cx, StackFrame *fp)
+ion::EnsureHasScopeObjects(JSContext *cx, AbstractFramePtr fp)
 {
-    if (fp->isFunctionFrame() &&
-        fp->fun()->isHeavyweight() &&
-        !fp->hasCallObj())
+    if (fp.isFunctionFrame() &&
+        fp.fun()->isHeavyweight() &&
+        !fp.hasCallObj())
     {
-        return fp->initFunctionScopeObjects(cx);
+        return fp.initFunctionScopeObjects(cx);
     }
     return true;
 }

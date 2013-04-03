@@ -42,6 +42,7 @@ class LIRGeneratorX64 : public LIRGeneratorX86Shared
     bool visitUnbox(MUnbox *unbox);
     bool visitReturn(MReturn *ret);
     bool visitStoreTypedArrayElement(MStoreTypedArrayElement *ins);
+    bool visitStoreTypedArrayElementHole(MStoreTypedArrayElementHole *ins);
     bool visitAsmJSUnsignedToDouble(MAsmJSUnsignedToDouble *ins);
     bool visitAsmJSStoreHeap(MAsmJSStoreHeap *ins);
     bool visitAsmJSLoadFuncPtr(MAsmJSLoadFuncPtr *ins);

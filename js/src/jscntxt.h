@@ -485,6 +485,36 @@ class PerThreadData : public js::PerThreadDataFriendFields
     JSContext           *ionJSContext;
     uintptr_t            ionStackLimit;
 
+# ifdef JS_THREADSAFE
+    /*
+     * Synchronizes setting of ionStackLimit so signals by triggerOperationCallback don't
+     * get lost.
+     */
+    PRLock *ionStackLimitLock_;
+
+    class IonStackLimitLock {
+        PerThreadData &data_;
+      public:
+        IonStackLimitLock(PerThreadData &data) : data_(data) {
+            JS_ASSERT(data_.ionStackLimitLock_);
+            PR_Lock(data_.ionStackLimitLock_);
+        }
+        ~IonStackLimitLock() {
+            JS_ASSERT(data_.ionStackLimitLock_);
+            PR_Unlock(data_.ionStackLimitLock_);
+        }
+    };
+#else
+    class IonStackLimitLock {
+      public:
+        IonStackLimitLock(PerThreadData &data) {}
+    };
+# endif
+    void setIonStackLimit(uintptr_t limit) {
+        IonStackLimitLock lock(*this);
+        ionStackLimit = limit;
+    }
+
     /*
      * This points to the most recent Ion activation running on the thread.
      */
@@ -1272,8 +1302,10 @@ struct JSRuntime : private JS::shadow::Runtime,
 
     bool                jitHardening;
 
+    // Used to reset stack limit after a signaled interrupt (i.e. ionStackLimit_ = -1)
+    // has been noticed by Ion/Baseline.
     void resetIonStackLimit() {
-        mainThread.ionStackLimit = mainThread.nativeStackLimit;
+        mainThread.setIonStackLimit(mainThread.nativeStackLimit);
     }
 
     // Cache for ion::GetPcScript().
@@ -2090,9 +2122,6 @@ js_InvokeOperationCallback(JSContext *cx);
 
 extern JSBool
 js_HandleExecutionInterrupt(JSContext *cx);
-
-extern jsbytecode*
-js_GetCurrentBytecodePC(JSContext* cx);
 
 /*
  * If the operation callback flag was set, call the operation callback.

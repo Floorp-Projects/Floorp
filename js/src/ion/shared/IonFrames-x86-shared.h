@@ -44,6 +44,9 @@ class IonCommonFrameLayout
     uint8_t *returnAddress() const {
         return returnAddress_;
     }
+    void setReturnAddress(uint8_t *addr) {
+        returnAddress_ = addr;
+    }
 };
 
 class IonJSFrameLayout : public IonCommonFrameLayout
@@ -65,12 +68,22 @@ class IonJSFrameLayout : public IonCommonFrameLayout
     static size_t offsetOfNumActualArgs() {
         return offsetof(IonJSFrameLayout, numActualArgs_);
     }
+    static size_t offsetOfThis() {
+        IonJSFrameLayout *base = NULL;
+        return reinterpret_cast<size_t>(&base->argv()[0]);
+    }
     static size_t offsetOfActualArgs() {
         IonJSFrameLayout *base = NULL;
         // +1 to skip |this|.
         return reinterpret_cast<size_t>(&base->argv()[1]);
     }
+    static size_t offsetOfActualArg(size_t arg) {
+        return offsetOfActualArgs() + arg * sizeof(Value);
+    }
 
+    Value thisv() {
+        return argv()[0];
+    }
     Value *argv() {
         return (Value *)(this + 1);
     }
@@ -397,7 +410,29 @@ class IonOsrFrameLayout : public IonJSFrameLayout
     static inline size_t Size() {
         return sizeof(IonOsrFrameLayout);
     }
- };
+};
+
+class ICStub;
+
+class IonBaselineStubFrameLayout : public IonCommonFrameLayout
+{
+  public:
+    static inline size_t Size() {
+        return sizeof(IonBaselineStubFrameLayout);
+    }
+
+    static inline int reverseOffsetOfStubPtr() {
+        return -int(sizeof(void *));
+    }
+    static inline int reverseOffsetOfSavedFramePtr() {
+        return -int(2 * sizeof(void *));
+    }
+
+    inline ICStub *stubPtr() {
+        uint8_t *fp = reinterpret_cast<uint8_t *>(this);
+        return *reinterpret_cast<ICStub **>(fp + reverseOffsetOfStubPtr());
+    }
+};
 
 // An invalidation bailout stack is at the stack pointer for the callee frame.
 class InvalidationBailoutStack

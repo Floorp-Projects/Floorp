@@ -341,19 +341,8 @@ CodeGenerator::testObjectTruthy(Register objreg, Label *ifTruthy, Label *ifFalsy
     // Perform a fast-path check of the object's class flags if the object's
     // not a proxy.  Let out-of-line code handle the slow cases that require
     // saving registers, making a function call, and restoring registers.
-    //
-    // The branches to out-of-line code here implement a conservative version
-    // of the JSObject::isWrapper test performed in EmulatesUndefined.  If none
-    // of the branches are taken, we can check class flags directly.
-    masm.loadObjClass(objreg, scratch);
-
-    Label *outOfLineTest = ool->entry();
-    masm.branchPtr(Assembler::Equal, scratch, ImmWord(&ObjectProxyClass), outOfLineTest);
-    masm.branchPtr(Assembler::Equal, scratch, ImmWord(&OuterWindowProxyClass), outOfLineTest);
-    masm.branchPtr(Assembler::Equal, scratch, ImmWord(&FunctionProxyClass), outOfLineTest);
-
-    masm.branchTest32(Assembler::Zero, Address(scratch, Class::offsetOfFlags()),
-                      Imm32(JSCLASS_EMULATES_UNDEFINED), ifTruthy);
+    Assembler::Condition cond = masm.branchTestObjectTruthy(true, objreg, scratch, ool->entry());
+    masm.j(cond, ifTruthy);
     masm.jump(ifFalsy);
 }
 
@@ -5405,6 +5394,46 @@ CodeGenerator::visitStoreTypedArrayElement(LStoreTypedArrayElement *lir)
         BaseIndex dest(elements, ToRegister(lir->index()), ScaleFromElemWidth(width));
         StoreToTypedArray(masm, arrayType, value, dest);
     }
+
+    return true;
+}
+
+bool
+CodeGenerator::visitStoreTypedArrayElementHole(LStoreTypedArrayElementHole *lir)
+{
+    Register elements = ToRegister(lir->elements());
+    const LAllocation *value = lir->value();
+
+    int arrayType = lir->mir()->arrayType();
+    int width = TypedArray::slotWidth(arrayType);
+
+    bool guardLength = true;
+    if (lir->index()->isConstant() && lir->length()->isConstant()) {
+        uint32_t idx = ToInt32(lir->index());
+        uint32_t len = ToInt32(lir->length());
+        if (idx >= len)
+            return true;
+        guardLength = false;
+    }
+    Label skip;
+    if (lir->index()->isConstant()) {
+        uint32_t idx = ToInt32(lir->index());
+        if (guardLength)
+            masm.branch32(Assembler::BelowOrEqual, ToOperand(lir->length()), Imm32(idx), &skip);
+        Address dest(elements, idx * width);
+        StoreToTypedArray(masm, arrayType, value, dest);
+    } else {
+        Register idxReg = ToRegister(lir->index());
+        JS_ASSERT(guardLength);
+        if (lir->length()->isConstant())
+            masm.branch32(Assembler::AboveOrEqual, idxReg, Imm32(ToInt32(lir->length())), &skip);
+        else
+            masm.branch32(Assembler::BelowOrEqual, ToOperand(lir->length()), idxReg, &skip);
+        BaseIndex dest(elements, ToRegister(lir->index()), ScaleFromElemWidth(width));
+        StoreToTypedArray(masm, arrayType, value, dest);
+    }
+    if (guardLength)
+        masm.bind(&skip);
 
     return true;
 }

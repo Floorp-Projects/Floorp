@@ -96,6 +96,9 @@ class MacroAssemblerX86Shared : public Assembler
     void test32(const Register &lhs, const Register &rhs) {
         testl(lhs, rhs);
     }
+    void test32(const Address &addr, Imm32 imm) {
+        testl(Operand(addr), imm);
+    }
     void cmp32(Register a, Register b) {
         cmpl(a, b);
     }
@@ -104,6 +107,9 @@ class MacroAssemblerX86Shared : public Assembler
     }
     void cmp32(const Operand &lhs, const Register &rhs) {
         cmpl(lhs, rhs);
+    }
+    void add32(Register src, Register dest) {
+        addl(src, dest);
     }
     void add32(Imm32 imm, Register dest) {
         addl(imm, dest);
@@ -114,10 +120,21 @@ class MacroAssemblerX86Shared : public Assembler
     void sub32(Imm32 imm, Register dest) {
         subl(imm, dest);
     }
+    void sub32(Register src, Register dest) {
+        subl(src, dest);
+    }
     void xor32(Imm32 imm, Register dest) {
         xorl(imm, dest);
     }
 
+    void branch32(Condition cond, const Operand &lhs, const Register &rhs, Label *label) {
+        cmpl(lhs, rhs);
+        j(cond, label);
+    }
+    void branch32(Condition cond, const Operand &lhs, Imm32 rhs, Label *label) {
+        cmpl(lhs, rhs);
+        j(cond, label);
+    }
     void branch32(Condition cond, const Address &lhs, const Register &rhs, Label *label) {
         cmpl(Operand(lhs), rhs);
         j(cond, label);
@@ -188,6 +205,9 @@ class MacroAssemblerX86Shared : public Assembler
     }
 
     void convertInt32ToDouble(const Register &src, const FloatRegister &dest) {
+        cvtsi2sd(Operand(src), dest);
+    }
+    void convertInt32ToDouble(const Address &src, FloatRegister dest) {
         cvtsi2sd(Operand(src), dest);
     }
     Condition testDoubleTruthy(bool truthy, const FloatRegister &reg) {
@@ -277,6 +297,15 @@ class MacroAssemblerX86Shared : public Assembler
     }
     void addDouble(FloatRegister src, FloatRegister dest) {
         addsd(src, dest);
+    }
+    void subDouble(FloatRegister src, FloatRegister dest) {
+        subsd(src, dest);
+    }
+    void mulDouble(FloatRegister src, FloatRegister dest) {
+        mulsd(src, dest);
+    }
+    void divDouble(FloatRegister src, FloatRegister dest) {
+        divsd(src, dest);
     }
     void convertDoubleToFloat(const FloatRegister &src, const FloatRegister &dest) {
         cvtsd2ss(src, dest);
