@@ -1356,8 +1356,12 @@ nsHttpHandler::StartCacheExperiment(nsITimer * aTimer, void * aClosure)
 
     if (randomGenerator &&
         NS_SUCCEEDED(randomGenerator->GenerateRandomBytes(1, &buffer))) {
+        // temporarily select all sessions
+        selected = true;
+#if 0
         if (!((*buffer) & 0x0f))
             selected = true;
+#endif
         if (!((*buffer) & 0x10))
             disableCache = true;
         NS_Free(buffer);
