@@ -11,6 +11,8 @@
 #include "nsRefPtrHashtable.h"
 #include "nsTArray.h"
 
+class nsISpeechService;
+
 namespace mozilla {
 namespace dom {
 
@@ -28,6 +30,13 @@ public:
   nsSynthVoiceRegistry();
   virtual ~nsSynthVoiceRegistry();
 
+  already_AddRefed<nsSpeechTask> SpeakUtterance(SpeechSynthesisUtterance& aUtterance,
+                                                const nsAString& aDocLang);
+
+  void Speak(const nsAString& aText, const nsAString& aLang,
+             const nsAString& aUri, const float& aRate, const float& aPitch,
+             nsSpeechTask* aTask);
+
   static nsSynthVoiceRegistry* GetInstance();
 
   static already_AddRefed<nsSynthVoiceRegistry> GetInstanceForService();
@@ -35,7 +44,11 @@ public:
   static void Shutdown();
 
 private:
-  nsresult AddVoiceImpl(nsISupports* aService,
+  VoiceData* FindBestMatch(const nsAString& aUri, const nsAString& lang);
+
+  bool FindVoiceByLang(const nsAString& aLang, VoiceData** aRetval);
+
+  nsresult AddVoiceImpl(nsISpeechService* aService,
                         const nsAString& aUri,
                         const nsAString& aName,
                         const nsAString& aLang,

@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsSpeechTask.h"
 #include "prlog.h"
 
 #include "mozilla/dom/Element.h"
@@ -43,12 +44,14 @@ TraverseCachedVoices(const nsAString& aKey, SpeechSynthesisVoice* aEntry, void* 
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(SpeechSynthesis)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mParent)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCurrentTask)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
   tmp->mVoiceCache.Clear();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(SpeechSynthesis)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParent)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCurrentTask)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
   tmp->mVoiceCache.EnumerateRead(TraverseCachedVoices, &cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -164,31 +167,52 @@ SpeechSynthesis::AdvanceQueue()
     }
   }
 
+  mCurrentTask =
+    nsSynthVoiceRegistry::GetInstance()->SpeakUtterance(*utterance, docLang);
+
+  if (mCurrentTask) {
+    mCurrentTask->SetSpeechSynthesis(this);
+  }
+
   return;
 }
 
 void
 SpeechSynthesis::Cancel()
 {
+  mSpeechQueue.Clear();
+
+  if (mCurrentTask) {
+    mCurrentTask->Cancel();
+  }
 }
 
 void
 SpeechSynthesis::Pause()
 {
+  if (mCurrentTask) {
+    mCurrentTask->Pause();
+  }
 }
 
 void
 SpeechSynthesis::Resume()
 {
+  if (mCurrentTask) {
+    mCurrentTask->Resume();
+  }
 }
 
 void
-SpeechSynthesis::OnEnd()
+SpeechSynthesis::OnEnd(const nsSpeechTask* aTask)
 {
+  MOZ_ASSERT(mCurrentTask == aTask);
+
   if (!mSpeechQueue.IsEmpty()) {
     mSpeechQueue.RemoveElementAt(0);
   }
 
+  mCurrentTask = nullptr;
   AdvanceQueue();
 }
 

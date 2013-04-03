@@ -11,5 +11,6 @@ XPIDL_MODULE = 'dom_webspeechsynth'
 
 XPIDL_SOURCES += [
     'nsIDOMSpeechSynthesisEvent.idl',
+    'nsISpeechService.idl',
     'nsISynthVoiceRegistry.idl'
     ]

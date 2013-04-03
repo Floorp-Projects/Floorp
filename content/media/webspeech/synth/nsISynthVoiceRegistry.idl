@@ -5,6 +5,8 @@
 
 #include "nsISupports.idl"
 
+interface nsISpeechService;
+
 [scriptable, builtinclass, uuid(53dcc868-4193-4c3c-a1d9-fe5a0a6af2fb)]
 interface nsISynthVoiceRegistry : nsISupports
 {
@@ -17,7 +19,7 @@ interface nsISynthVoiceRegistry : nsISupports
    * @param aLang         a BCP 47 language tag.
    * @param aLocalService true if service does not require network.
    */
-  void addVoice(in nsISupports aService, in DOMString aUri,
+  void addVoice(in nsISpeechService aService, in DOMString aUri,
                 in DOMString aName, in DOMString aLang,
                 in boolean aLocalService);
 
@@ -27,7 +29,7 @@ interface nsISynthVoiceRegistry : nsISupports
    * @param aService the service that was used to add the voice.
    * @param aUri     a unique identifier of an existing voice.
    */
-  void removeVoice(in nsISupports aService, in DOMString aUri);
+  void removeVoice(in nsISpeechService aService, in DOMString aUri);
 
   /**
    * Set a voice as default.
