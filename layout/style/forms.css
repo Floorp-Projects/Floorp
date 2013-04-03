@@ -725,7 +725,7 @@ meter {
 }
 
 input[type=range] {
-  -moz-appearance: none;
+  -moz-appearance: range;
   display: inline-block;
   width: 12em;
   height: 1.3em;

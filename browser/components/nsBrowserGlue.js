@@ -731,7 +731,7 @@ BrowserGlue.prototype = {
     var button0Title = quitBundle.GetStringFromName("saveTitle");
     var button1Title = quitBundle.GetStringFromName("cancelTitle");
     var button2Title = quitBundle.GetStringFromName("quitTitle");
-    var neverAskText = quitBundle.GetStringFromName("neverAsk");
+    var neverAskText = quitBundle.GetStringFromName("neverAsk2");
 
     // This wouldn't have been set above since we shouldn't be here for
     // aQuitType == "lastwindow"
@@ -1817,7 +1817,7 @@ ContentPermissionPrompt.prototype = {
 
     let originString = requestingURI.schemeIs("file") ? requestingURI.path : requestingURI.host;
     let message = browserBundle.formatStringFromName(autoAllow ?
-                                  "pointerLock.autoLock.title" : "pointerLock.title",
+                                  "pointerLock.autoLock.title2" : "pointerLock.title2",
                                   [originString], 1);
     // If this is an autoAllow info prompt, offer no actions.
     // _showPrompt() will allow the request when it's dismissed.
@@ -1825,7 +1825,7 @@ ContentPermissionPrompt.prototype = {
     if (!autoAllow) {
       actions = [
         {
-          stringId: "pointerLock.allow",
+          stringId: "pointerLock.allow2",
           action: null,
           expireType: null,
           callback: function() {},

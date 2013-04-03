@@ -769,9 +769,7 @@ public:
   {
     aData.steal(&mData, &mDataByteCount);
 
-    if (!mClonedObjects.SwapElements(aClonedObjects)) {
-      NS_ERROR("This should never fail!");
-    }
+    mClonedObjects.SwapElements(aClonedObjects);
   }
 
   bool

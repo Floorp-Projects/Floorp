@@ -70,16 +70,15 @@ var std_WeakMap_set = WeakMap.prototype.set;
 
 
 /* Spec: ECMAScript Language Specification, 5.1 edition, 8.8 */
-function List() {
-    if (List.prototype === undefined) {
-        var proto = std_Object_create(null);
-        proto.indexOf = std_Array_indexOf;
-        proto.join = std_Array_join;
-        proto.push = std_Array_push;
-        proto.slice = std_Array_slice;
-        proto.sort = std_Array_sort;
-        List.prototype = proto;
-    }
+function List() {}
+{
+  let ListProto = std_Object_create(null);
+  ListProto.indexOf = std_Array_indexOf;
+  ListProto.join = std_Array_join;
+  ListProto.push = std_Array_push;
+  ListProto.slice = std_Array_slice;
+  ListProto.sort = std_Array_sort;
+  List.prototype = ListProto;
 }
 MakeConstructible(List);
 

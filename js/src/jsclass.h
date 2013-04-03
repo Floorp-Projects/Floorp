@@ -16,8 +16,6 @@
 #include "jsapi.h"
 #include "jsprvtd.h"
 
-#ifdef __cplusplus
-
 namespace js {
 
 class PropertyName;
@@ -395,7 +393,5 @@ template <> struct RootMethods<SpecialId>
 };
 
 }  /* namespace js */
-
-#endif  /* __cplusplus */
 
 #endif  /* jsclass_h__ */
