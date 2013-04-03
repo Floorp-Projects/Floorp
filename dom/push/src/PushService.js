@@ -160,13 +160,22 @@ this.PushDB.prototype = {
       }
       return;
     }
+
+    var self = this;
     this.newTxn(
       "readonly",
       kPUSHDB_STORE_NAME,
       function txnCb(aTxn, aStore) {
         var index = aStore.index("manifestURL");
-        index.mozGetAll().onsuccess = function(event) {
-          aTxn.result = event.target.result;
+        var range = self.dbGlobal.IDBKeyRange.only(aManifestURL);
+        aTxn.result = [];
+        index.openCursor(range).onsuccess = function(event) {
+          var cursor = event.target.result;
+          if (cursor) {
+            debug(cursor.value.manifestURL + " " + cursor.value.channelID);
+            aTxn.result.push(cursor.value);
+            cursor.continue();
+          }
         }
       },
       aSuccessCb,
