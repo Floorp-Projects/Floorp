@@ -278,7 +278,7 @@ nsFilteredContentIterator::AdvanceNode(nsIDOMNode* aNode, nsIDOMNode*& aNewNode,
     // The next node was null so we need to walk up the parent(s)
     nsCOMPtr<nsIDOMNode> parent;
     aNode->GetParentNode(getter_AddRefs(parent));
-    NS_ASSERTION(parent, "parent can't be NULL");
+    NS_ASSERTION(parent, "parent can't be nullptr");
 
     // Make sure the parent is in the DOMRange before going further
     bool intersects = ContentIsInTraversalRange(mRange, nextNode, aDir == eForward);
