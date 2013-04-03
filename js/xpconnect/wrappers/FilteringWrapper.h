@@ -39,6 +39,8 @@ class FilteringWrapper : public Base {
     virtual bool nativeCall(JSContext *cx, JS::IsAcceptableThis test, JS::NativeImpl impl,
                             JS::CallArgs args) MOZ_OVERRIDE;
 
+    virtual bool defaultValue(JSContext *cx, JS::Handle<JSObject*> obj, JSType hint, JS::MutableHandleValue vp) MOZ_OVERRIDE;
+
     virtual bool enter(JSContext *cx, JS::Handle<JSObject*> wrapper, JS::Handle<jsid> id,
                        js::Wrapper::Action act, bool *bp) MOZ_OVERRIDE;
 
