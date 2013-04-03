@@ -26,11 +26,14 @@ namespace js {
 
 namespace ion {
     struct IonScript;
+    struct BaselineScript;
     struct IonScriptCounts;
 }
 
 # define ION_DISABLED_SCRIPT ((js::ion::IonScript *)0x1)
 # define ION_COMPILING_SCRIPT ((js::ion::IonScript *)0x2)
+
+# define BASELINE_DISABLED_SCRIPT ((js::ion::BaselineScript *)0x1)
 
 class Shape;
 
@@ -591,7 +594,6 @@ class JSScript : public js::gc::Cell
     bool hasIonScript() const {
         return ion && ion != ION_DISABLED_SCRIPT && ion != ION_COMPILING_SCRIPT;
     }
-
     bool canIonCompile() const {
         return ion != ION_DISABLED_SCRIPT;
     }
@@ -604,6 +606,19 @@ class JSScript : public js::gc::Cell
         JS_ASSERT(hasIonScript());
         return ion;
     }
+
+    /* Information attached by the baseline compiler. */
+    js::ion::BaselineScript *baseline;
+
+    bool hasBaselineScript() const {
+        return baseline && baseline != BASELINE_DISABLED_SCRIPT;
+    }
+    js::ion::BaselineScript *baselineScript() const {
+        JS_ASSERT(hasBaselineScript());
+        return baseline;
+    }
+
+    uint32_t padding0;
 
     /* Information attached by Ion: script for parallel mode execution */
     js::ion::IonScript *parallelIon;
@@ -743,6 +758,7 @@ class JSScript : public js::gc::Cell
     uint32_t getUseCount() const  { return useCount; }
     uint32_t incUseCount(uint32_t amount = 1) { return useCount += amount; }
     uint32_t *addressOfUseCount() { return &useCount; }
+    static size_t offsetOfUseCount() { return offsetof(JSScript, useCount); }
     void resetUseCount() { useCount = 0; }
 
     void resetLoopCount() {

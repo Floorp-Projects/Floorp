@@ -8,10 +8,13 @@
 #include "Ion.h"
 #include "IonCompartment.h"
 #include "jsinterp.h"
+#include "ion/BaselineFrame-inl.h"
+#include "ion/BaselineIC.h"
 #include "ion/IonFrames.h"
 #include "ion/IonFrames-inl.h" // for GetTopIonJSScript
 
 #include "vm/StringObject-inl.h"
+#include "vm/Debugger.h"
 
 #include "builtin/ParallelArray.h"
 
@@ -153,6 +156,17 @@ DefVarOrConst(JSContext *cx, HandlePropertyName dn, unsigned attrs, HandleObject
         obj = obj->enclosingScope();
 
     return DefVarOrConstOperation(cx, obj, dn, attrs);
+}
+
+bool
+SetConst(JSContext *cx, HandlePropertyName name, HandleObject scopeChain, HandleValue rval)
+{
+    // Given the ScopeChain, extract the VarObj.
+    RootedObject obj(cx, scopeChain);
+    while (!obj->isVarObj())
+        obj = obj->enclosingScope();
+
+    return SetConstOperation(cx, obj, name, rval);
 }
 
 bool
@@ -585,6 +599,183 @@ GetIndexFromString(JSString *str)
     return index;
 }
 
+bool
+DebugPrologue(JSContext *cx, BaselineFrame *frame, JSBool *mustReturn)
+{
+    *mustReturn = false;
+
+    JSTrapStatus status = ScriptDebugPrologue(cx, frame);
+    switch (status) {
+      case JSTRAP_CONTINUE:
+        return true;
+
+      case JSTRAP_RETURN:
+        // The script is going to return immediately, so we have to call the
+        // debug epilogue handler as well.
+        JS_ASSERT(frame->hasReturnValue());
+        *mustReturn = true;
+        return ion::DebugEpilogue(cx, frame, true);
+
+      case JSTRAP_THROW:
+      case JSTRAP_ERROR:
+        return false;
+
+      default:
+        JS_NOT_REACHED("Invalid trap status");
+    }
+}
+
+bool
+DebugEpilogue(JSContext *cx, BaselineFrame *frame, JSBool ok)
+{
+    // Unwind scope chain to stack depth 0.
+    UnwindScope(cx, frame, 0);
+
+    // If ScriptDebugEpilogue returns |true| we have to return the frame's
+    // return value. If it returns |false|, the debugger threw an exception.
+    // In both cases we have to pop debug scopes.
+    ok = ScriptDebugEpilogue(cx, frame, ok);
+
+    if (frame->isNonEvalFunctionFrame()) {
+        JS_ASSERT_IF(ok, frame->hasReturnValue());
+        DebugScopes::onPopCall(frame, cx);
+    }
+
+    if (!ok) {
+        // Pop this frame by updating ionTop, so that the exception handling
+        // code will start at the previous frame.
+        IonJSFrameLayout *prefix = frame->framePrefix();
+        EnsureExitFrame(prefix);
+        cx->mainThread().ionTop = (uint8_t *)prefix;
+    }
+
+    return ok;
+}
+
+bool
+StrictEvalPrologue(JSContext *cx, BaselineFrame *frame)
+{
+    return frame->strictEvalPrologue(cx);
+}
+
+bool
+HeavyweightFunPrologue(JSContext *cx, BaselineFrame *frame)
+{
+    return frame->heavyweightFunPrologue(cx);
+}
+
+bool
+NewArgumentsObject(JSContext *cx, BaselineFrame *frame, MutableHandleValue res)
+{
+    ArgumentsObject *obj = ArgumentsObject::createExpected(cx, frame);
+    if (!obj)
+        return false;
+    res.setObject(*obj);
+    return true;
+}
+
+bool
+HandleDebugTrap(JSContext *cx, BaselineFrame *frame, uint8_t *retAddr, JSBool *mustReturn)
+{
+    *mustReturn = false;
+
+    RootedScript script(cx, GetTopIonJSScript(cx));
+    jsbytecode *pc = script->baseline->icEntryFromReturnAddress(retAddr).pc(script);
+
+    JS_ASSERT(cx->compartment->debugMode());
+    JS_ASSERT(script->stepModeEnabled() || script->hasBreakpointsAt(pc));
+
+    RootedValue rval(cx);
+    JSTrapStatus status = JSTRAP_CONTINUE;
+    JSInterruptHook hook = cx->runtime->debugHooks.interruptHook;
+
+    if (hook || script->stepModeEnabled()) {
+        if (hook)
+            status = hook(cx, script, pc, rval.address(), cx->runtime->debugHooks.interruptHookData);
+        if (status == JSTRAP_CONTINUE && script->stepModeEnabled())
+            status = Debugger::onSingleStep(cx, &rval);
+    }
+
+    if (status == JSTRAP_CONTINUE && script->hasBreakpointsAt(pc))
+        status = Debugger::onTrap(cx, &rval);
+
+    switch (status) {
+      case JSTRAP_CONTINUE:
+        break;
+
+      case JSTRAP_ERROR:
+        return false;
+
+      case JSTRAP_RETURN:
+        *mustReturn = true;
+        frame->setReturnValue(rval);
+        return ion::DebugEpilogue(cx, frame, true);
+
+      case JSTRAP_THROW:
+        cx->setPendingException(rval);
+        return false;
+
+      default:
+        JS_NOT_REACHED("Invalid trap status");
+    }
+
+    return true;
+}
+
+bool
+OnDebuggerStatement(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, JSBool *mustReturn)
+{
+    *mustReturn = false;
+
+    RootedScript script(cx, frame->script());
+    JSTrapStatus status = JSTRAP_CONTINUE;
+    RootedValue rval(cx);
+
+    if (JSDebuggerHandler handler = cx->runtime->debugHooks.debuggerHandler)
+        status = handler(cx, script, pc, rval.address(), cx->runtime->debugHooks.debuggerHandlerData);
+
+    if (status == JSTRAP_CONTINUE)
+        status = Debugger::onDebuggerStatement(cx, &rval);
+
+    switch (status) {
+      case JSTRAP_ERROR:
+        return false;
+
+      case JSTRAP_CONTINUE:
+        return true;
+
+      case JSTRAP_RETURN:
+        frame->setReturnValue(rval);
+        *mustReturn = true;
+        return ion::DebugEpilogue(cx, frame, true);
+
+      case JSTRAP_THROW:
+        cx->setPendingException(rval);
+        return false;
+
+      default:
+        JS_NOT_REACHED("Invalid trap status");
+    }
+}
+
+bool
+EnterBlock(JSContext *cx, BaselineFrame *frame, Handle<StaticBlockObject *> block)
+{
+    return frame->pushBlock(cx, block);
+}
+
+bool
+LeaveBlock(JSContext *cx, BaselineFrame *frame)
+{
+    frame->popBlock(cx);
+    return true;
+}
+
+bool
+InitBaselineFrameForOsr(BaselineFrame *frame, StackFrame *interpFrame, uint32_t numStackValues)
+{
+    return frame->initForOsr(interpFrame, numStackValues);
+}
 
 } // namespace ion
 } // namespace js

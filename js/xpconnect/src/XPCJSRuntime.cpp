@@ -1849,6 +1849,19 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
                    "Memory used by the JaegerMonkey JIT for compilation data: "
                    "JITScripts, native maps, and inline cache structs.");
 
+    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("baseline-data"),
+                   cStats.baselineData,
+                   "Memory used by the Baseline JIT for compilation data: "
+                   "BaselineScripts.");
+
+    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("baseline-fallback-stubs"),
+                   cStats.baselineFallbackStubs,
+                   "Memory used by Baseline fallback IC stubs (excluding code).");
+
+    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("baseline-optimized-stubs"),
+                   cStats.baselineOptimizedStubs,
+                   "Memory used by Baseline optimized IC stubs (excluding code).");
+
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("ion-data"),
                    cStats.ionData,
                    "Memory used by the IonMonkey JIT for compilation data: "

@@ -14,6 +14,7 @@
 #include "Ion.h"
 #include "IonAnalysis.h"
 #include "IonSpewer.h"
+#include "BaselineInspector.h"
 #include "builtin/Eval.h"
 #include "frontend/BytecodeEmitter.h"
 
@@ -32,7 +33,8 @@ using namespace js::ion;
 using mozilla::DebugOnly;
 
 IonBuilder::IonBuilder(JSContext *cx, TempAllocator *temp, MIRGraph *graph,
-                       TypeOracle *oracle, CompileInfo *info, size_t inliningDepth, uint32_t loopDepth)
+                       TypeOracle *oracle, BaselineInspector *inspector, CompileInfo *info,
+                       size_t inliningDepth, uint32_t loopDepth)
   : MIRGenerator(cx->compartment, temp, graph, info),
     backgroundCodegen_(NULL),
     recompileInfo(cx->compartment->types.compiledInfo),
@@ -42,6 +44,7 @@ IonBuilder::IonBuilder(JSContext *cx, TempAllocator *temp, MIRGraph *graph,
     callerResumePoint_(NULL),
     callerBuilder_(NULL),
     oracle(oracle),
+    inspector(inspector),
     inliningDepth_(inliningDepth),
     failedBoundsCheck_(info->script()->failedBoundsCheck),
     failedShapeGuard_(info->script()->failedShapeGuard),
@@ -201,6 +204,15 @@ IonBuilder::canInlineTarget(JSFunction *target, CallInfo &callInfo)
     ExecutionMode executionMode = info().executionMode();
     if (!CanIonCompile(inlineScript, executionMode)) {
         IonSpew(IonSpew_Inlining, "Cannot inline due to disable Ion compilation");
+        return false;
+    }
+
+    // Don't inline functions which don't have baseline scripts compiled for them.
+    if (executionMode == SequentialExecution &&
+        ion::IsBaselineEnabled(cx) &&
+        !inlineScript->hasBaselineScript())
+    {
+        IonSpew(IonSpew_Inlining, "Cannot inline target with no baseline jitcode");
         return false;
     }
 
@@ -2971,8 +2983,10 @@ IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
 
     RootedScript calleeScript(cx, target->nonLazyScript());
     TypeInferenceOracle oracle;
-    if (!oracle.init(cx, calleeScript))
+    if (!oracle.init(cx, calleeScript, /* inlinedCall = */ true))
         return false;
+
+    BaselineInspector inspector(cx, target->nonLazyScript());
 
     // Copy the CallInfo as the addTypeBarrier is mutating it.
     bool argsBarrier = callInfo.argsBarrier();
@@ -3002,7 +3016,8 @@ IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
     AutoAccumulateExits aae(graph(), saveExits);
 
     // Build the graph.
-    IonBuilder inlineBuilder(cx, &temp(), &graph(), &oracle, info, inliningDepth_ + 1, loopDepth_);
+    IonBuilder inlineBuilder(cx, &temp(), &graph(), &oracle, &inspector, info, inliningDepth_ + 1,
+                             loopDepth_);
     if (!inlineBuilder.buildInline(this, outerResumePoint, thisCall)) {
         JS_ASSERT(calleeScript->hasAnalysis());
 
@@ -6060,6 +6075,11 @@ IonBuilder::jsop_setelem_typed(int arrayType)
     MDefinition *id = current->pop();
     MDefinition *obj = current->pop();
 
+    SetElemICInspector icInspect(inspector->setElemICInspector(pc));
+    bool expectOOB = icInspect.sawOOBTypedArrayWrite();
+    if (expectOOB)
+        spew("Emitting OOB TypedArray SetElem");
+
     // Ensure id is an integer.
     MInstruction *idInt32 = MToInt32::New(id);
     current->add(idInt32);
@@ -6069,26 +6089,31 @@ IonBuilder::jsop_setelem_typed(int arrayType)
     MInstruction *length = getTypedArrayLength(obj);
     current->add(length);
 
-    // Bounds check.
-    id = addBoundsCheck(id, length);
+    if (!expectOOB) {
+        // Bounds check.
+        id = addBoundsCheck(id, length);
+    }
 
     // Get the elements vector.
     MInstruction *elements = getTypedArrayElements(obj);
     current->add(elements);
 
     // Clamp value to [0, 255] for Uint8ClampedArray.
-    MDefinition *unclampedValue = value;
+    MDefinition *toWrite = value;
     if (arrayType == TypedArray::TYPE_UINT8_CLAMPED) {
-        value = MClampToUint8::New(value);
-        current->add(value->toInstruction());
+        toWrite = MClampToUint8::New(value);
+        current->add(toWrite->toInstruction());
     }
 
     // Store the value.
-    MStoreTypedArrayElement *store = MStoreTypedArrayElement::New(elements, id, value, arrayType);
-    current->add(store);
-
-    current->push(unclampedValue);
-    return resumeAfter(store);
+    MInstruction *ins;
+    if (expectOOB)
+        ins = MStoreTypedArrayElementHole::New(elements, length, id, toWrite, arrayType);
+    else
+        ins = MStoreTypedArrayElement::New(elements, id, toWrite, arrayType);
+    current->add(ins);
+    current->push(value);
+    return resumeAfter(ins);
 }
 
 bool
@@ -6830,6 +6855,9 @@ IonBuilder::getPropTryMonomorphic(bool *emitted, HandleId id, types::StackTypeSe
         return true;
 
     RootedShape objShape(cx, mjit::GetPICSingleShape(cx, script(), pc, info().constructing()));
+    if (!objShape)
+        objShape = inspector->maybeMonomorphicShapeForPropertyOp(pc);
+
     if (!objShape || objShape->inDictionary()) {
         spew("GETPROP not monomorphic");
         return true;
@@ -6995,6 +7023,9 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
         ins = MCallSetProperty::New(obj, value, name, script()->strict);
     } else {
         RawShape objShape = mjit::GetPICSingleShape(cx, script(), pc, info().constructing());
+        if (!objShape)
+            objShape = inspector->maybeMonomorphicShapeForPropertyOp(pc);
+
         if (objShape && !objShape->inDictionary()) {
             // The JM IC was monomorphic, so we inline the property access as
             // long as the shape is not in dictionary mode. We cannot be sure

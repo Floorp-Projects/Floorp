@@ -134,7 +134,7 @@ class SPSProfiler
     uint32_t             *size_;
     uint32_t             max_;
     bool                 slowAssertions;
-    bool                 enabled_;
+    uint32_t             enabled_;
 
     const char *allocProfileString(JSContext *cx, RawScript script,
                                    RawFunction function);
@@ -258,6 +258,10 @@ class SPSProfiler
     /* meant to be used for testing, not recommended to call in normal code */
     size_t stringsCount() { return strings.count(); }
     void stringsReset() { strings.clear(); }
+
+    uint32_t *addressOfEnabled() {
+        return &enabled_;
+    }
 };
 
 /*
