@@ -812,7 +812,9 @@ void MediaDecoderStateMachine::DecodeLoop()
          !mStopDecodeThread &&
          (videoPlaying || audioPlaying))
   {
+#ifdef MOZ_DASH
     mReader->PrepareToDecode();
+#endif
 
     // We don't want to consider skipping to the next keyframe if we've
     // only just started up the decode loop, so wait until we've decoded
