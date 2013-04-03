@@ -67,7 +67,6 @@ pref("browser.chromeURL", "chrome://browser/content/");
 // When true, always show the tab strip and use desktop-style tabs (no thumbnails)
 pref("browser.tabs.tabsOnly", false);
 
-pref("browser.tabs.warnOnClose", true);
 pref("browser.tabs.remote", false);
 
 // Telemetry
