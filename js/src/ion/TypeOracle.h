@@ -238,10 +238,15 @@ class TypeInferenceOracle : public TypeOracle
     MIRType getMIRType(types::StackTypeSet *types);
     MIRType getMIRType(types::HeapTypeSet *types);
 
+    bool analyzeTypesForInlinableCallees(JSContext *cx, JSScript *script,
+                                         Vector<JSScript*> &seen);
+    bool analyzeTypesForInlinableCallees(JSContext *cx, types::StackTypeSet *calleeTypes,
+                                         Vector<JSScript*> &seen);
+
   public:
     TypeInferenceOracle() : cx(NULL), script_(NULL) {}
 
-    bool init(JSContext *cx, JSScript *script);
+    bool init(JSContext *cx, JSScript *script, bool inlinedCall);
 
     RawScript script() { return script_.get(); }
 

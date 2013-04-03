@@ -3097,6 +3097,37 @@ class LStoreTypedArrayElement : public LInstructionHelper<0, 3, 0>
     }
 };
 
+class LStoreTypedArrayElementHole : public LInstructionHelper<0, 4, 0>
+{
+  public:
+    LIR_HEADER(StoreTypedArrayElementHole)
+
+    LStoreTypedArrayElementHole(const LAllocation &elements, const LAllocation &length,
+                                const LAllocation &index, const LAllocation &value)
+    {
+        setOperand(0, elements);
+        setOperand(1, length);
+        setOperand(2, index);
+        setOperand(3, value);
+    }
+
+    const MStoreTypedArrayElementHole *mir() const {
+        return mir_->toStoreTypedArrayElementHole();
+    }
+    const LAllocation *elements() {
+        return getOperand(0);
+    }
+    const LAllocation *length() {
+        return getOperand(1);
+    }
+    const LAllocation *index() {
+        return getOperand(2);
+    }
+    const LAllocation *value() {
+        return getOperand(3);
+    }
+};
+
 class LEffectiveAddress : public LInstructionHelper<1, 2, 0>
 {
   public:

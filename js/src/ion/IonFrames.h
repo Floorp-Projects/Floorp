@@ -176,8 +176,8 @@ class OsiIndex
 // The descriptor is organized into three sections:
 // [ frame size | constructing bit | frame type ]
 // < highest - - - - - - - - - - - - - - lowest >
-static const uintptr_t FRAMESIZE_SHIFT = 3;
-static const uintptr_t FRAMETYPE_BITS = 3;
+static const uintptr_t FRAMESIZE_SHIFT = 4;
+static const uintptr_t FRAMETYPE_BITS = 4;
 static const uintptr_t FRAMETYPE_MASK = (1 << FRAMETYPE_BITS) - 1;
 
 // Ion frames have a few important numbers associated with them:
@@ -242,7 +242,14 @@ class FrameSizeClass
 // Data needed to recover from an exception.
 struct ResumeFromException
 {
-    void *stackPointer;
+    static const uint32_t RESUME_ENTRY_FRAME = 0;
+    static const uint32_t RESUME_CATCH = 1;
+    static const uint32_t RESUME_FORCED_RETURN = 2;
+
+    uint8_t *framePointer;
+    uint8_t *stackPointer;
+    uint8_t *target;
+    uint32_t kind;
 };
 
 void HandleException(ResumeFromException *rfe);
@@ -302,6 +309,9 @@ ReadFrameDoubleSlot(IonJSFrameLayout *fp, int32_t slot)
 {
     return *(double *)((char *)fp + OffsetOfFrameSlot(slot));
 }
+
+void
+MarkCalleeToken(JSTracer *trc, CalleeToken token);
 
 } /* namespace ion */
 } /* namespace js */
