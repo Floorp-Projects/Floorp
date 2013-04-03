@@ -12,6 +12,7 @@ include $(topsrcdir)/config/config.mk
 
 EXTRA_JS_MODULES = \
   video.jsm \
+  colorUtils.jsm \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

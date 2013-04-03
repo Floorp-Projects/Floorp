@@ -505,6 +505,7 @@
 
     <implementation>
       <property name="_box" onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'anon-richgrid-item');"/>
+      <property name="_textbox" onget="return document.getAnonymousElementByAttribute(this, 'class', 'richgrid-item-desc');"/>
       <property name="_icon" onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'anon-richgrid-item-icon');"/>
       <property name="_label" onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'anon-richgrid-item-label');"/>
       <property name="iconSrc"
@@ -564,9 +565,11 @@
           if (val) {
             this.setAttribute("customColor", val);
             this._box.style.backgroundColor = val;
+            this._textbox.style.backgroundColor = val;
           } else {
             this.removeAttribute("customColor");
             this._box.style.removeProperty("background-color");
+            this._textbox.style.removeProperty("background-color");
           }
         ]]></setter>
       </property>
