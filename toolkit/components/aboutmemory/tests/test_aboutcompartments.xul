@@ -148,27 +148,30 @@
   var acExpectedText =
 "\
 Main Process\n\
-\n\
 User Compartments\n\
+\n\
 http://foo.com/\n\
 https://bar.com/bar?baz\n\
 https://very-long-url.com/very-long/oh-so-long/really-quite-long.html?a=2&b=3&c=4&d=5&e=abcdefghijklmnopqrstuvwxyz&f=123456789123456789123456789\n\
 \n\
 System Compartments\n\
+\n\
 [System Principal] [3]\n\
 atoms\n\
 moz-nullprincipal:{7ddefdaf-34f1-473f-9b03-50a4568ccb06}\n\
 \n\
 Ghost Windows\n\
+\n\
 http://foobar.com/foo?bar#baz\n\
 https://very-long-url.com/very-long/oh-so-long/really-quite-long.html?a=2&b=3&c=4&d=5&e=abcdefghijklmnopqrstuvwxyz&f=123456789123456789123456789\n\
 \n\
 2nd\n\
-\n\
 User Compartments\n\
+\n\
 child-user-compartment\n\
 \n\
 System Compartments\n\
+\n\
 child-system-compartment\n\
 \n\
 Ghost Windows\n\

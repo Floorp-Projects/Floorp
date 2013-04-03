@@ -258,8 +258,8 @@
   let amExpectedText =
 "\
 Main Process\n\
-\n\
 Explicit Allocations\n\
+\n\
 623.58 MB (100.0%) -- explicit\n\
 ├──232.00 MB (37.20%) -- b\n\
 │  ├───85.00 MB (13.63%) ── a\n\
@@ -280,6 +280,7 @@ Explicit Allocations\n\
 └────0.58 MB (00.09%) ++ (2 tiny)\n\
 \n\
 Other Measurements\n\
+\n\
 166.00 MB (100.0%) -- other1\n\
 ├──111.00 MB (66.87%) ── a/b\n\
 └───55.00 MB (33.13%) -- c\n\
@@ -310,18 +311,20 @@ Other Measurements\n\
 4th\n\
 \n\
 WARNING: the following values are negative or unreasonably large.\n\
- explicit/js/compartment(http://too-big.com/)/stuff\n\
- explicit/(2 tiny)\n\
- explicit/(2 tiny)/neg1\n\
- explicit/(2 tiny)/heap-unclassified\n\
- other1\n\
- other2\n\
- other3\n\
- other4\n\
- other5\n\
-This indicates a defect in one or more memory reporters.  The invalid values are highlighted.\n\
 \n\
+    explicit/js/compartment(http://too-big.com/)/stuff\n\
+    explicit/(2 tiny)\n\
+    explicit/(2 tiny)/neg1\n\
+    explicit/(2 tiny)/heap-unclassified\n\
+    other1\n\
+    other2\n\
+    other3\n\
+    other4\n\
+    other5 \n\
+\n\
+This indicates a defect in one or more memory reporters. The invalid values are highlighted.\n\
 Explicit Allocations\n\
+\n\
 98.00 MB (100.0%) -- explicit\n\
 ├──150.00 MB (153.06%) ── js/compartment(http://too-big.com/)/stuff [?!]\n\
 ├───5.00 MB (05.10%) ── ok\n\
@@ -330,6 +333,7 @@ Explicit Allocations\n\
    └──-55.00 MB (-56.12%) ── heap-unclassified [?!]\n\
 \n\
 Other Measurements\n\
+\n\
  100.00 MB ── heap-allocated\n\
   -0.00 MB ── other1 [?!]\n\
 -222.00 MB ── other2 [?!]\n\
@@ -342,20 +346,21 @@ Other Measurements\n\
 3rd\n\
 \n\
 WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
-\n\
 Explicit Allocations\n\
+\n\
 777.00 MB (100.0%) -- explicit\n\
 └──777.00 MB (100.0%) -- a\n\
    ├──444.00 MB (57.14%) ── c\n\
    └──333.00 MB (42.86%) ── b\n\
 \n\
 Other Measurements\n\
+\n\
   1.00 MB ── other1\n\
 100.00 MB ── resident\n\
 \n\
 2nd\n\
-\n\
 Explicit Allocations\n\
+\n\
 1,000.00 MB (100.0%) -- explicit\n\
 ├────499.00 MB (49.90%) ── a/b/c [3]\n\
 ├────200.00 MB (20.00%) ── compartment(compartment-url)\n\
@@ -363,6 +368,7 @@ Explicit Allocations\n\
 └────101.00 MB (10.10%) ── heap-unclassified\n\
 \n\
 Other Measurements\n\
+\n\
 1,000.00 MB ── heap-allocated\n\
   100.00 MB ── heap-unallocated\n\
   666.00 MB ── other0\n\
@@ -371,14 +377,16 @@ Other Measurements\n\
 5th\n\
 \n\
 WARNING: the following values are negative or unreasonably large.\n\
- explicit/(3 tiny)/a/neg2\n\
- explicit/(3 tiny)/a/neg1\n\
- explicit/(3 tiny)/b/c\n\
- explicit/(3 tiny)/b/c/d\n\
- explicit/(3 tiny)/b/c/d/f\n\
-This indicates a defect in one or more memory reporters.  The invalid values are highlighted.\n\
 \n\
+    explicit/(3 tiny)/a/neg2\n\
+    explicit/(3 tiny)/a/neg1\n\
+    explicit/(3 tiny)/b/c\n\
+    explicit/(3 tiny)/b/c/d\n\
+    explicit/(3 tiny)/b/c/d/f \n\
+\n\
+This indicates a defect in one or more memory reporters. The invalid values are highlighted.\n\
 Explicit Allocations\n\
+\n\
 99.95 MB (100.0%) -- explicit\n\
 ├──99.00 MB (99.05%) ── big\n\
 └───0.95 MB (00.95%) -- (3 tiny)\n\
@@ -395,6 +403,7 @@ Explicit Allocations\n\
           └──-0.06 MB (-0.06%) ── f [?!]\n\
 \n\
 Other Measurements\n\
+\n\
 100.00 MB ── heap-allocated\n\
 \n\
 ";
@@ -402,8 +411,8 @@ Other Measurements\n\
   let amvExpectedText =
 "\
 Main Process\n\
-\n\
 Explicit Allocations\n\
+\n\
 653,876,224 B (100.0%) -- explicit\n\
 ├──243,269,632 B (37.20%) -- b\n\
 │  ├───89,128,960 B (13.63%) ── a\n\
@@ -428,18 +437,23 @@ Explicit Allocations\n\
 └──────102,400 B (00.02%) ── e\n\
 \n\
 Resident Set Size (RSS) Breakdown\n\
+\n\
 172,032 B (100.0%) ++ rss\n\
 \n\
 Proportional Set Size (PSS) Breakdown\n\
+\n\
 176,128 B (100.0%) ++ pss\n\
 \n\
 Virtual Size Breakdown\n\
+\n\
 176,128 B (100.0%) ++ size\n\
 \n\
 Swap Breakdown\n\
+\n\
 53,248 B (100.0%) ++ swap\n\
 \n\
 Other Measurements\n\
+\n\
 174,063,616 B (100.0%) -- other1\n\
 ├──116,391,936 B (66.87%) ── a/b\n\
 └───57,671,680 B (33.13%) -- c\n\
@@ -471,17 +485,19 @@ Other Measurements\n\
 4th\n\
 \n\
 WARNING: the following values are negative or unreasonably large.\n\
- explicit/js/compartment(http://too-big.com/)/stuff\n\
- explicit/neg1\n\
- explicit/heap-unclassified\n\
- other1\n\
- other2\n\
- other3\n\
- other4\n\
- other5\n\
-This indicates a defect in one or more memory reporters.  The invalid values are highlighted.\n\
 \n\
+    explicit/js/compartment(http://too-big.com/)/stuff\n\
+    explicit/neg1\n\
+    explicit/heap-unclassified\n\
+    other1\n\
+    other2\n\
+    other3\n\
+    other4\n\
+    other5 \n\
+\n\
+This indicates a defect in one or more memory reporters. The invalid values are highlighted.\n\
 Explicit Allocations\n\
+\n\
 102,760,448 B (100.0%) -- explicit\n\
 ├──157,286,400 B (153.06%) ── js/compartment(http://too-big.com/)/stuff [?!]\n\
 ├────5,242,880 B (05.10%) ── ok\n\
@@ -489,6 +505,7 @@ Explicit Allocations\n\
 └──-57,671,680 B (-56.12%) ── heap-unclassified [?!]\n\
 \n\
 Other Measurements\n\
+\n\
  104,857,600 B ── heap-allocated\n\
         -111 B ── other1 [?!]\n\
 -232,783,872 B ── other2 [?!]\n\
@@ -501,20 +518,21 @@ Other Measurements\n\
 3rd\n\
 \n\
 WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
-\n\
 Explicit Allocations\n\
+\n\
 814,743,552 B (100.0%) -- explicit\n\
 └──814,743,552 B (100.0%) -- a\n\
    ├──465,567,744 B (57.14%) ── c\n\
    └──349,175,808 B (42.86%) ── b\n\
 \n\
 Other Measurements\n\
+\n\
   1,048,576 B ── other1\n\
 104,857,600 B ── resident\n\
 \n\
 2nd\n\
-\n\
 Explicit Allocations\n\
+\n\
 1,048,576,000 B (100.0%) -- explicit\n\
 ├────523,239,424 B (49.90%) ── a/b/c [3]\n\
 ├────209,715,200 B (20.00%) ── compartment(compartment-url)\n\
@@ -522,9 +540,11 @@ Explicit Allocations\n\
 └────105,906,176 B (10.10%) ── heap-unclassified\n\
 \n\
 Virtual Size Breakdown\n\
+\n\
 196,608 B (100.0%) ++ size\n\
 \n\
 Other Measurements\n\
+\n\
 1,048,576,000 B ── heap-allocated\n\
   104,857,600 B ── heap-unallocated\n\
   698,351,616 B ── other0\n\
@@ -533,14 +553,16 @@ Other Measurements\n\
 5th\n\
 \n\
 WARNING: the following values are negative or unreasonably large.\n\
- explicit/a/neg2\n\
- explicit/a/neg1\n\
- explicit/b/c\n\
- explicit/b/c/d\n\
- explicit/b/c/d/f\n\
-This indicates a defect in one or more memory reporters.  The invalid values are highlighted.\n\
 \n\
+    explicit/a/neg2\n\
+    explicit/a/neg1\n\
+    explicit/b/c\n\
+    explicit/b/c/d\n\
+    explicit/b/c/d/f \n\
+\n\
+This indicates a defect in one or more memory reporters. The invalid values are highlighted.\n\
 Explicit Allocations\n\
+\n\
 104,801,280 B (100.0%) -- explicit\n\
 ├──103,809,024 B (99.05%) ── big\n\
 ├────1,007,616 B (00.96%) ── heap-unclassified\n\
@@ -556,6 +578,7 @@ Explicit Allocations\n\
           └──-61,440 B (-0.06%) ── f [?!]\n\
 \n\
 Other Measurements\n\
+\n\
 104,857,600 B ── heap-allocated\n\
 \n\
 "
