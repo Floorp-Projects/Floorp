@@ -214,7 +214,7 @@
 @BINPATH@/components/dom_traversal.xpt
 @BINPATH@/components/dom_views.xpt
 #ifdef MOZ_WEBSPEECH
-@BINPATH@/components/dom_webspeech.xpt
+@BINPATH@/components/dom_webspeechrecognition.xpt
 #endif
 @BINPATH@/components/dom_xbl.xpt
 @BINPATH@/components/dom_xpath.xpt

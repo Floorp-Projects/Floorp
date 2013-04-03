@@ -210,7 +210,7 @@ endif
 
 ifdef MOZ_WEBSPEECH
 SHARED_LIBRARY_LIBS += \
-  $(DEPTH)/content/media/webspeech/$(LIB_PREFIX)gkconwebspeech_s.$(LIB_SUFFIX) \
+  $(DEPTH)/content/media/webspeech/recognition/$(LIB_PREFIX)gkconwebspeechrecognition_s.$(LIB_SUFFIX) \
   $(NULL)
 endif
 
