@@ -31,7 +31,7 @@ interface nsIAudioChannelAgentCallback : nsISupports
  *   1. Changes to the playable status of this channel.
  */
 
-[scriptable, uuid(4d01d4f0-3d16-11e2-a0db-10bf48d64bd4)]
+[scriptable, uuid(f012a9b7-6431-4915-a4ac-4ba7d833e28e)]
 interface nsIAudioChannelAgent : nsISupports
 {
   const long AUDIO_AGENT_CHANNEL_NORMAL             = 0;
@@ -60,8 +60,18 @@ interface nsIAudioChannelAgent : nsISupports
    *       Gecko component.
    *    2. The callback is allowed to be null. Ex: telephony doesn't need to listen change
    *       of the playable status.
+   *    3. The AudioChannelAgent keeps a strong reference to the callback object.
    */
   void init(in long channelType, in nsIAudioChannelAgentCallback callback);
+
+  /**
+   * This method is just like init(), except the audio channel agent keeps a
+   * weak reference to the callback object.
+   *
+   * In order for this to work, |callback| must implement
+   * nsISupportsWeakReference.
+   */
+  void initWithWeakCallback(in long channelType, in nsIAudioChannelAgentCallback callback);
 
   /**
    * Notify the agent that we want to start playing.
