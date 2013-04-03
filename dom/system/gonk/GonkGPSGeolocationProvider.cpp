@@ -673,9 +673,10 @@ GonkGPSGeolocationProvider::Handle(const nsAString& aName,
     JSContext *cx = nsContentUtils::GetCurrentJSContext();
     NS_ENSURE_TRUE(cx, NS_OK);
     JSAutoRequest ar(cx);
-    JSAutoCompartment ac(cx, JSVAL_TO_OBJECT(aResult));
+
     // When we get the APN, we attempt to call data_call_open of AGPS.
     if (aResult.isString()) {
+      // NB: No need to enter a compartment to read the contents of a string.
       nsDependentJSString apn;
       apn.init(cx, aResult.toString());
       if (!apn.IsEmpty()) {
