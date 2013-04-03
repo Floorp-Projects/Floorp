@@ -1583,7 +1583,7 @@ class XPCWrappedNativeScope : public PRCList
 public:
 
     static XPCWrappedNativeScope*
-    GetNewOrUsed(JSContext *cx, JSObject* aGlobal);
+    GetNewOrUsed(JSContext *cx, JS::HandleObject aGlobal);
 
     XPCJSRuntime*
     GetRuntime() const {return XPCJSRuntime::Get();}
@@ -1703,7 +1703,7 @@ public:
     // object is wrapped into the compartment of the global.
     JSObject *EnsureXBLScope(JSContext *cx);
 
-    XPCWrappedNativeScope(JSContext *cx, JSObject* aGlobal);
+    XPCWrappedNativeScope(JSContext *cx, JS::HandleObject aGlobal);
 
     nsAutoPtr<JSObject2JSObjectMap> mWaiverWrapperMap;
 
@@ -4150,22 +4150,28 @@ xpc_GetJSPrivate(JSObject *obj)
     return js::GetObjectPrivate(obj);
 }
 
+inline JSContext *
+xpc_GetSafeJSContext()
+{
+    return XPCJSRuntime::Get()->GetJSContextStack()->GetSafeJSContext();
+}
+
 namespace xpc {
 struct SandboxOptions {
-    SandboxOptions()
+    SandboxOptions(JSContext *cx)
         : wantXrays(true)
         , wantComponents(true)
         , wantXHRConstructor(false)
-        , proto(NULL)
-        , sameZoneAs(NULL)
+        , proto(xpc_GetSafeJSContext())
+        , sameZoneAs(xpc_GetSafeJSContext())
     { }
 
     bool wantXrays;
     bool wantComponents;
     bool wantXHRConstructor;
-    JSObject* proto;
+    JS::RootedObject proto;
     nsCString sandboxName;
-    JSObject* sameZoneAs;
+    JS::RootedObject sameZoneAs;
 };
 
 JSObject *
