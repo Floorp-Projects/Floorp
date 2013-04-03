@@ -70,6 +70,39 @@ class WeakCache : public HashMap<Key, Value, HashPolicy, AllocPolicy> {
     }
 };
 
+// A WeakValueCache is similar to a WeakCache, except keys are never marked.
+// This is useful for weak maps where the keys are primitive values such as uint32_t.
+template <class Key, class Value,
+          class HashPolicy = DefaultHasher<Key>,
+          class AllocPolicy = RuntimeAllocPolicy>
+class WeakValueCache : public HashMap<Key, Value, HashPolicy, AllocPolicy>
+{
+  public:
+    typedef HashMap<Key, Value, HashPolicy, AllocPolicy> Base;
+    typedef typename Base::Range Range;
+    typedef typename Base::Enum Enum;
+
+    explicit WeakValueCache(JSRuntime *rt) : Base(rt) { }
+    explicit WeakValueCache(JSContext *cx) : Base(cx) { }
+
+  public:
+    // Sweep all entries which have unmarked key or value.
+    void sweep(FreeOp *fop) {
+        // Remove all entries whose values remain unmarked.
+        for (Enum e(*this); !e.empty(); e.popFront()) {
+            if (gc::IsAboutToBeFinalized(e.front().value))
+                e.removeFront();
+        }
+
+#if DEBUG
+        // Once we've swept, all remaining edges should stay within the
+        // known-live part of the graph.
+        for (Range r = Base::all(); !r.empty(); r.popFront())
+            JS_ASSERT(!gc::IsAboutToBeFinalized(r.front().value));
+#endif
+    }
+};
+
 } // namespace js
 
 #endif // jsweakcache_h___

@@ -83,6 +83,7 @@
 #include "vm/ForkJoin.h"
 #include "ion/IonCode.h"
 #ifdef JS_ION
+# include "ion/BaselineJIT.h"
 # include "ion/IonMacroAssembler.h"
 #include "ion/IonFrameIterator.h"
 #endif
@@ -4815,6 +4816,18 @@ js::ReleaseAllJITCode(FreeOp *fop)
     for (ZonesIter zone(fop->runtime()); !zone.done(); zone.next()) {
         mjit::ClearAllFrames(zone);
 # ifdef JS_ION
+
+#  ifdef DEBUG
+        /* Assert no baseline scripts are marked as active. */
+        for (CellIter i(zone, FINALIZE_SCRIPT); !i.done(); i.next()) {
+            JSScript *script = i.get<JSScript>();
+            JS_ASSERT_IF(script->hasBaselineScript(), !script->baseline->active());
+        }
+#  endif
+
+        /* Mark baseline scripts on the stack as active. */
+        ion::MarkActiveBaselineScripts(zone);
+
         ion::InvalidateAll(fop, zone);
 # endif
 
@@ -4823,6 +4836,12 @@ js::ReleaseAllJITCode(FreeOp *fop)
             mjit::ReleaseScriptCode(fop, script);
 # ifdef JS_ION
             ion::FinishInvalidation(fop, script);
+
+            /*
+             * Discard baseline script if it's not marked as active. Note that
+             * this also resets the active flag.
+             */
+            ion::FinishDiscardBaselineScript(fop, script);
 # endif
         }
     }

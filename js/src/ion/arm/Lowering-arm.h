@@ -61,6 +61,7 @@ class LIRGeneratorARM : public LIRGeneratorShared
     bool lowerPhi(MPhi *phi);
     bool visitGuardShape(MGuardShape *ins);
     bool visitStoreTypedArrayElement(MStoreTypedArrayElement *ins);
+    bool visitStoreTypedArrayElementHole(MStoreTypedArrayElementHole *ins);
     bool visitInterruptCheck(MInterruptCheck *ins);
 };
 
