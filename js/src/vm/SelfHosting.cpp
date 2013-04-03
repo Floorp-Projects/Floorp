@@ -142,6 +142,19 @@ intrinsic_MakeConstructible(JSContext *cx, unsigned argc, Value *vp)
     JS_ASSERT(args[0].isObject());
     JS_ASSERT(args[0].toObject().isFunction());
     args[0].toObject().toFunction()->setIsSelfHostedConstructor();
+    args.rval().setUndefined();
+    return true;
+}
+
+static JSBool
+intrinsic_MakeWrappable(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JS_ASSERT(args.length() >= 1);
+    JS_ASSERT(args[0].isObject());
+    JS_ASSERT(args[0].toObject().isFunction());
+    args[0].toObject().toFunction()->makeWrappable();
+    args.rval().setUndefined();
     return true;
 }
 
@@ -204,6 +217,7 @@ intrinsic_SetScriptHints(JSContext *cx, unsigned argc, Value *vp)
     if (ToBoolean(propv))
         funScript->shouldCloneAtCallsite = true;
 
+    args.rval().setUndefined();
     return true;
 }
 
@@ -217,7 +231,6 @@ js::intrinsic_Dump(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     RootedValue val(cx, args[0]);
     js_DumpValue(val);
-    fprintf(stderr, "\n");
     args.rval().setUndefined();
     return true;
 }
@@ -458,6 +471,7 @@ JSFunctionSpec intrinsic_functions[] = {
     JS_FN("AssertionFailed",      intrinsic_AssertionFailed,      1,0),
     JS_FN("SetScriptHints",       intrinsic_SetScriptHints,       2,0),
     JS_FN("MakeConstructible",    intrinsic_MakeConstructible,    1,0),
+    JS_FN("MakeWrappable",        intrinsic_MakeWrappable,        1,0),
     JS_FN("DecompileArg",         intrinsic_DecompileArg,         2,0),
     JS_FN("RuntimeDefaultLocale", intrinsic_RuntimeDefaultLocale, 0,0),
 
@@ -515,6 +529,8 @@ JSRuntime::initSelfHosting(JSContext *cx)
     CompileOptions options(cx);
     options.setFileAndLine("self-hosted", 1);
     options.setSelfHostingMode(true);
+    options.setSourcePolicy(CompileOptions::NO_SOURCE);
+    options.setVersion(JSVERSION_LATEST);
 
     /*
      * Set a temporary error reporter printing to stderr because it is too
@@ -606,8 +622,14 @@ CloneObject(JSContext *cx, HandleObject srcObj, CloneMemory &clonedObjects)
         return p->value;
     RootedObject clone(cx);
     if (srcObj->isFunction()) {
-        RootedFunction fun(cx, srcObj->toFunction());
-        clone = CloneFunctionObject(cx, fun, cx->global(), fun->getAllocKind());
+        if (srcObj->toFunction()->isWrappable()) {
+            clone = srcObj;
+            if (!cx->compartment->wrap(cx, clone.address()))
+                return NULL;
+        } else {
+            RootedFunction fun(cx, srcObj->toFunction());
+            clone = CloneFunctionObject(cx, fun, cx->global(), fun->getAllocKind());
+        }
     } else if (srcObj->isRegExp()) {
         RegExpObject &reobj = srcObj->asRegExp();
         RootedAtom source(cx, reobj.getSource());
@@ -679,7 +701,7 @@ JSRuntime::cloneSelfHostedFunctionScript(JSContext *cx, Handle<PropertyName*> na
         return false;
 
     RootedFunction sourceFun(cx, funVal.toObject().toFunction());
-    Rooted<JSScript*> sourceScript(cx, sourceFun->nonLazyScript());
+    RootedScript sourceScript(cx, sourceFun->nonLazyScript());
     JS_ASSERT(!sourceScript->enclosingStaticScope());
     RawScript cscript = CloneScript(cx, NullPtr(), targetFun, sourceScript);
     if (!cscript)
@@ -712,4 +734,24 @@ JSRuntime::cloneSelfHostedValue(JSContext *cx, Handle<PropertyName*> name, Mutab
     }
     vp.set(val);
     return true;
+}
+
+bool
+JSRuntime::maybeWrappedSelfHostedFunction(JSContext *cx, Handle<PropertyName*> name,
+                                          MutableHandleValue funVal)
+{
+    RootedObject shg(cx, selfHostingGlobal_);
+    RootedId id(cx, NameToId(name));
+    if (!GetUnclonedValue(cx, shg, id, funVal))
+        return false;
+
+    JS_ASSERT(funVal.isObject());
+    JS_ASSERT(funVal.toObject().isCallable());
+
+    if (!funVal.toObject().toFunction()->isWrappable()) {
+        funVal.setUndefined();
+        return true;
+    }
+
+    return cx->compartment->wrap(cx, funVal);
 }

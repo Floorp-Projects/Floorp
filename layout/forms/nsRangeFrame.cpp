@@ -131,7 +131,23 @@ nsRangeFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                const nsRect&           aDirtyRect,
                                const nsDisplayListSet& aLists)
 {
-  BuildDisplayListForInline(aBuilder, aDirtyRect, aLists);
+  if (IsThemed()) {
+    DisplayBorderBackgroundOutline(aBuilder, aLists);
+    // Only create items for the thumb. Specifically, we do not want
+    // the track to paint, since *our* background is used to paint
+    // the track, and we don't want the unthemed track painting over
+    // the top of the themed track.
+    // This logic is copied from
+    // nsContainerFrame::BuildDisplayListForNonBlockChildren as
+    // called by BuildDisplayListForInline.
+    nsIFrame* thumb = mThumbDiv->GetPrimaryFrame();
+    if (thumb) {
+      nsDisplayListSet set(aLists, aLists.Content());
+      BuildDisplayListForChild(aBuilder, thumb, aDirtyRect, set, DISPLAY_CHILD_INLINE);
+    }
+  } else {
+    BuildDisplayListForInline(aBuilder, aDirtyRect, aLists);
+  }
 }
 
 NS_IMETHODIMP

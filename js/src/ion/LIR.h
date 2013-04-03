@@ -1308,7 +1308,7 @@ class LIRGraph
         localSlotCount_ = localSlotCount;
     }
     uint32_t localSlotCount() const {
-        return localSlotCount_;
+        return AlignBytes(localSlotCount_, StackAlignment / STACK_SLOT_SIZE);
     }
     void setArgumentSlotCount(uint32_t argumentSlotCount) {
         argumentSlotCount_ = argumentSlotCount;
