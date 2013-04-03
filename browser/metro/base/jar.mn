@@ -22,7 +22,6 @@ chrome.jar:
   content/bindings/downloads.xml               (content/bindings/downloads.xml)
   content/bindings/console.xml                 (content/bindings/console.xml)
   content/bindings/dialog.xml                  (content/bindings/dialog.xml)
-  content/bindings/pageaction.xml              (content/bindings/pageaction.xml)
   content/bindings/arrowbox.xml                (content/bindings/arrowbox.xml)
   content/bindings/grid.xml                    (content/bindings/grid.xml)
   content/bindings/autocomplete.xml            (content/bindings/autocomplete.xml)
