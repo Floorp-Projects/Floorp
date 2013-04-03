@@ -99,7 +99,7 @@ mozInlineSpellStatus::mozInlineSpellStatus(mozInlineSpellChecker* aSpellChecker)
 //    This is the most complicated case. For changes, we need to compute the
 //    range of stuff that changed based on the old and new caret positions,
 //    as well as use a range possibly provided by the editor (start and end,
-//    which are usually NULL) to get a range with the union of these.
+//    which are usually nullptr) to get a range with the union of these.
 
 nsresult
 mozInlineSpellStatus::InitForEditorChange(
@@ -155,7 +155,7 @@ mozInlineSpellStatus::InitForEditorChange(
   NS_ENSURE_SUCCESS(rv, rv);
 
   // On insert save this range: DoSpellCheck optimizes things in this range.
-  // Otherwise, just leave this NULL.
+  // Otherwise, just leave this nullptr.
   if (aAction == EditAction::insertText)
     mCreatedRange = mRange;
 
@@ -261,9 +261,9 @@ mozInlineSpellStatus::InitForRange(nsRange* aRange)
 //    Called when the event is triggered to complete initialization that
 //    might require the WordUtil. This calls to the operation-specific
 //    initializer, and also sets the range to be the entire element if it
-//    is NULL.
+//    is nullptr.
 //
-//    Watch out: the range might still be NULL if there is nothing to do,
+//    Watch out: the range might still be nullptr if there is nothing to do,
 //    the caller will have to check for this.
 
 nsresult
@@ -287,7 +287,7 @@ mozInlineSpellStatus::FinishInitOnEvent(mozInlineSpellWordUtil& aWordUtil)
         NS_ENSURE_SUCCESS(rv, rv);
       }
       // Delete events will have no range for the changed text (because it was
-      // deleted), and InitForEditorChange will set it to NULL. Here, we select
+      // deleted), and InitForEditorChange will set it to nullptr. Here, we select
       // the entire word to cause any underlining to be removed.
       mRange = mNoCheckRange;
       break;
@@ -311,7 +311,7 @@ mozInlineSpellStatus::FinishInitOnEvent(mozInlineSpellWordUtil& aWordUtil)
 //    This verifies that we need to check the word at the previous caret
 //    position. Now that we have the word util, we can find the word belonging
 //    to the previous caret position. If the new position is inside that word,
-//    we don't want to do anything. In this case, we'll NULL out mRange so
+//    we don't want to do anything. In this case, we'll nullptr out mRange so
 //    that the caller will know not to continue.
 //
 //    Notice that we don't set mNoCheckRange. We check here whether the cursor
@@ -704,7 +704,7 @@ mozInlineSpellChecker::SetEnableRealTimeSpell(bool aEnabled)
 //    Called by the editor when nearly anything happens to change the content.
 //
 //    The start and end positions specify a range for the thing that happened,
-//    but these are usually NULL, even when you'd think they would be useful
+//    but these are usually nullptr, even when you'd think they would be useful
 //    because you want the range (for example, pasting). We ignore them in
 //    this case.
 
@@ -750,7 +750,7 @@ mozInlineSpellChecker::SpellCheckAfterEditorChange(
 // mozInlineSpellChecker::SpellCheckRange
 //
 //    Spellchecks all the words in the given range.
-//    Supply a NULL range and this will check the entire editor.
+//    Supply a nullptr range and this will check the entire editor.
 
 nsresult
 mozInlineSpellChecker::SpellCheckRange(nsIDOMRange* aRange)
@@ -971,11 +971,11 @@ NS_IMETHODIMP mozInlineSpellChecker::DidDeleteSelection(nsISelection *aSelection
 // mozInlineSpellChecker::MakeSpellCheckRange
 //
 //    Given begin and end positions, this function constructs a range as
-//    required for ScheduleSpellCheck. If the start and end nodes are NULL,
+//    required for ScheduleSpellCheck. If the start and end nodes are nullptr,
 //    then the entire range will be selected, and you can supply -1 as the
 //    offset to the end range to select all of that node.
 //
-//    If the resulting range would be empty, NULL is put into *aRange and the
+//    If the resulting range would be empty, nullptr is put into *aRange and the
 //    function succeeds.
 
 nsresult
@@ -1228,12 +1228,12 @@ mozInlineSpellChecker::DoSpellCheckSelection(mozInlineSpellWordUtil& aWordUtil,
 // mozInlineSpellChecker::DoSpellCheck
 //
 //    This function checks words intersecting the given range, excluding those
-//    inside mStatus->mNoCheckRange (can be NULL). Words inside aNoCheckRange
+//    inside mStatus->mNoCheckRange (can be nullptr). Words inside aNoCheckRange
 //    will have any spell selection removed (this is used to hide the
 //    underlining for the word that the caret is in). aNoCheckRange should be
 //    on word boundaries.
 //
-//    mResume->mCreatedRange is a possibly NULL range of new text that was
+//    mResume->mCreatedRange is a possibly nullptr range of new text that was
 //    inserted.  Inside this range, we don't bother to check whether things are
 //    inside the spellcheck selection, which speeds up large paste operations
 //    considerably.
@@ -1503,7 +1503,7 @@ mozInlineSpellChecker::ResumeCheck(mozInlineSpellStatus* aStatus)
 //    intersects is places in *aRange. (There may be multiple disjoint
 //    ranges in a selection.)
 //
-//    If there is no intersection, *aRange will be NULL.
+//    If there is no intersection, *aRange will be nullptr.
 
 nsresult
 mozInlineSpellChecker::IsPointInSelection(nsISelection *aSelection,

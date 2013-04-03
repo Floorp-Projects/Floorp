@@ -62,16 +62,16 @@ static struct GSSFunction {
     const char *str;
     PRFuncPtr func;
 } gssFuncs[] = {
-    { "gss_display_status", NULL },
-    { "gss_init_sec_context", NULL },
-    { "gss_indicate_mechs", NULL },
-    { "gss_release_oid_set", NULL },
-    { "gss_delete_sec_context", NULL },
-    { "gss_import_name", NULL },
-    { "gss_release_buffer", NULL },
-    { "gss_release_name", NULL },
-    { "gss_wrap", NULL },
-    { "gss_unwrap", NULL }
+    { "gss_display_status", nullptr },
+    { "gss_init_sec_context", nullptr },
+    { "gss_indicate_mechs", nullptr },
+    { "gss_release_oid_set", nullptr },
+    { "gss_delete_sec_context", nullptr },
+    { "gss_import_name", nullptr },
+    { "gss_release_buffer", nullptr },
+    { "gss_release_name", nullptr },
+    { "gss_wrap", nullptr },
+    { "gss_unwrap", nullptr }
 };
 
 static bool      gssNativeImp = true;
@@ -104,7 +104,7 @@ gssInit()
         prefs->GetBoolPref(kNegotiateAuthNativeImp, &gssNativeImp); 
     }
 
-    PRLibrary *lib = NULL;
+    PRLibrary *lib = nullptr;
 
     if (!libPath.IsEmpty()) {
         LOG(("Attempting to load user specified library [%s]\n", libPath.get()));
@@ -113,7 +113,7 @@ gssInit()
     }
     else {
 #ifdef XP_WIN
-        char *libName = PR_GetLibraryName(NULL, "gssapi32");
+        char *libName = PR_GetLibraryName(nullptr, "gssapi32");
         if (libName) {
             lib = PR_LoadLibrary("gssapi32");
             PR_FreeLibraryName(libName);
@@ -148,12 +148,12 @@ gssInit()
                 PR_FindFunctionSymbol(lib, "gssd_pname_to_uid")) {
                 LOG(("CITI libgssapi found, which calls exit(). Skipping\n"));
                 PR_UnloadLibrary(lib);
-                lib = NULL;
+                lib = nullptr;
             }
         }
 
         for (size_t i = 0; i < ArrayLength(libNames) && !lib; ++i) {
-            char *libName = PR_GetLibraryName(NULL, libNames[i]);
+            char *libName = PR_GetLibraryName(nullptr, libNames[i]);
             if (libName) {
                 lib = PR_LoadLibrary(libName);
                 PR_FreeLibraryName(libName);
@@ -164,7 +164,7 @@ gssInit()
                     PR_FindFunctionSymbol(lib, "gssd_pname_to_uid")) {
                     LOG(("CITI libgssapi found, which calls exit(). Skipping\n"));
                     PR_UnloadLibrary(lib);
-                    lib = NULL;
+                    lib = nullptr;
                 } 
             }
         }
@@ -396,7 +396,7 @@ nsAuthGSSAPI::GetNextToken(const void *inToken,
                                    &input_token,
                                    &gss_c_nt_hostbased_service,
                                    &server);
-    input_token.value = NULL;
+    input_token.value = nullptr;
     input_token.length = 0;
     if (GSS_ERROR(major_status)) {
         LogGssError(major_status, minor_status, "gss_import_name() failed");
@@ -429,7 +429,7 @@ nsAuthGSSAPI::GetNextToken(const void *inToken,
                            mServiceName.Find("ldap@");
     
     if (!doingMailTask && (gssNativeImp &&
-         (KLCacheHasValidTickets_ptr(NULL, kerberosVersion_V5, &found, NULL, NULL) != klNoErr || !found)))
+         (KLCacheHasValidTickets_ptr(nullptr, kerberosVersion_V5, &found, nullptr, nullptr) != klNoErr || !found)))
     {
         major_status = GSS_S_FAILURE;
         minor_status = 0;
@@ -473,7 +473,7 @@ nsAuthGSSAPI::GetNextToken(const void *inToken,
     if (output_token.length != 0)
         *outToken = nsMemory::Clone(output_token.value, output_token.length);
     else
-        *outToken = NULL;
+        *outToken = nullptr;
     
     gss_release_buffer_ptr(&minor_status, &output_token);
 
@@ -507,8 +507,8 @@ nsAuthGSSAPI::Unwrap(const void *inToken,
                                   mCtx,
                                   &input_token,
                                   &output_token,
-                                  NULL,
-                                  NULL);
+                                  nullptr,
+                                  nullptr);
     if (GSS_ERROR(major_status)) {
         LogGssError(major_status, minor_status, "gss_unwrap() failed");
         Reset();
@@ -521,7 +521,7 @@ nsAuthGSSAPI::Unwrap(const void *inToken,
     if (output_token.length)
         *outToken = nsMemory::Clone(output_token.value, output_token.length);
     else
-        *outToken = NULL;
+        *outToken = nullptr;
 
     gss_release_buffer_ptr(&minor_status, &output_token);
 
@@ -548,7 +548,7 @@ nsAuthGSSAPI::Wrap(const void *inToken,
                                 confidential,
                                 GSS_C_QOP_DEFAULT,
                                 &input_token,
-                                NULL,
+                                nullptr,
                                 &output_token);
     
     if (GSS_ERROR(major_status)) {

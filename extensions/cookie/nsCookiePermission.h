@@ -33,7 +33,7 @@ public:
   void PrefChanged(nsIPrefBranch *, const char *);
 
 private:
-   bool EnsureInitialized() { return (mPermMgr != NULL && mThirdPartyUtil != NULL) || Init(); };
+   bool EnsureInitialized() { return (mPermMgr != nullptr && mThirdPartyUtil != nullptr) || Init(); };
 
   nsCOMPtr<nsIPermissionManager> mPermMgr;
   nsCOMPtr<mozIThirdPartyUtil> mThirdPartyUtil;
