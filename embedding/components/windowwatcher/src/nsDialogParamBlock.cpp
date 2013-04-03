@@ -9,7 +9,7 @@
 
 NS_IMPL_ISUPPORTS1(nsDialogParamBlock, nsIDialogParamBlock)
 
-nsDialogParamBlock::nsDialogParamBlock() : mNumStrings(0), mString(NULL)
+nsDialogParamBlock::nsDialogParamBlock() : mNumStrings(0), mString(nullptr)
 {
   for(int32_t i = 0; i < kNumInts; i++)
     mInt[i] = 0;
@@ -22,7 +22,7 @@ nsDialogParamBlock::~nsDialogParamBlock()
 
 NS_IMETHODIMP nsDialogParamBlock::SetNumberStrings(int32_t inNumStrings)
 {
-  if (mString != NULL)
+  if (mString != nullptr)
     return NS_ERROR_ALREADY_INITIALIZED;
 
   mString = new nsString[inNumStrings];
