@@ -147,7 +147,7 @@ let styleEditorDefinition = {
 let profilerDefinition = {
   id: "jsprofiler",
   accesskey: l10n("profiler.accesskey", profilerStrings),
-  key: l10n("profiler.commandkey", profilerStrings),
+  key: l10n("profiler2.commandkey", profilerStrings),
   ordinal: 4,
   modifiers: "shift",
   killswitch: "devtools.profiler.enabled",
