@@ -5,7 +5,7 @@
 
 #include "mozilla/DebugOnly.h"          // for DebugOnly
 
-#include <stdio.h>                      // for NULL, stdout
+#include <stdio.h>                      // for nullptr, stdout
 #include <string.h>                     // for strcmp
 
 #include "ChangeAttributeTxn.h"         // for ChangeAttributeTxn
@@ -428,7 +428,7 @@ nsEditor::PreDestroy(bool aDestroyingFrames)
   // Let spellchecker clean up its observers etc. It is important not to
   // actually free the spellchecker here, since the spellchecker could have
   // caused flush notifications, which could have gotten here if a textbox
-  // is being removed. Setting the spellchecker to NULL could free the
+  // is being removed. Setting the spellchecker to nullptr could free the
   // object that is still in use! It will be freed when the editor is
   // destroyed.
   if (mInlineSpellChecker)
@@ -562,7 +562,7 @@ nsEditor::GetPresShell()
 {
   NS_PRECONDITION(mDocWeak, "bad state, null mDocWeak");
   nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocWeak);
-  NS_ENSURE_TRUE(doc, NULL);
+  NS_ENSURE_TRUE(doc, nullptr);
   nsCOMPtr<nsIPresShell> ps = doc->GetShell();
   return ps.forget();
 }
@@ -746,7 +746,7 @@ nsEditor::GetTransactionManager(nsITransactionManager* *aTxnManager)
 {
   NS_ENSURE_ARG_POINTER(aTxnManager);
   
-  *aTxnManager = NULL;
+  *aTxnManager = nullptr;
   NS_ENSURE_TRUE(mTxnMgr, NS_ERROR_FAILURE);
 
   NS_ADDREF(*aTxnManager = mTxnMgr);
@@ -4976,7 +4976,7 @@ nsEditor::InitializeSelection(nsIDOMEventTarget* aFocusEventTarget)
   selCon->RepaintSelection(nsISelectionController::SELECTION_NORMAL);
   // If the computed selection root isn't root content, we should set it
   // as selection ancestor limit.  However, if that is root element, it means
-  // there is not limitation of the selection, then, we must set NULL.
+  // there is not limitation of the selection, then, we must set nullptr.
   // NOTE: If we set a root element to the ancestor limit, some selection
   // methods don't work fine.
   if (selectionRootContent->GetParent()) {

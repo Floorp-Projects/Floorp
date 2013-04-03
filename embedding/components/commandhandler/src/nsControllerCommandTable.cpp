@@ -70,7 +70,7 @@ nsControllerCommandTable::FindCommandHandler(const char * aCommandName, nsIContr
 {
   NS_ENSURE_ARG_POINTER(outCommand);
   
-  *outCommand = NULL;
+  *outCommand = nullptr;
   
   nsCStringKey commandKey(aCommandName);
   nsISupports* foundCommand = mCommandsTable.Get(&commandKey);

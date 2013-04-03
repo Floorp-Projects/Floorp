@@ -232,6 +232,13 @@ function resetBlocklist() {
   Services.prefs.setCharPref("extensions.blocklist.url", _originalTestBlocklistURL);
 }
 
+function setManifestPref(name, manifest) {
+  let string = Cc["@mozilla.org/supports-string;1"].
+               createInstance(Ci.nsISupportsString);
+  string.data = JSON.stringify(manifest);
+  Services.prefs.setComplexValue(name, Ci.nsISupportsString, string);
+}
+
 function addWindowListener(aURL, aCallback) {
   Services.wm.addListener({
     onOpenWindow: function(aXULWindow) {

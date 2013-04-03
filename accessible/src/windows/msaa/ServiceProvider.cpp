@@ -37,7 +37,7 @@ ServiceProvider::QueryService(REFGUID aGuidService, REFIID aIID,
   if (!aInstancePtr)
     return E_INVALIDARG;
 
-  *aInstancePtr = NULL;
+  *aInstancePtr = nullptr;
 
   // UIA IAccessibleEx
   if (aGuidService == IID_IAccessibleEx &&

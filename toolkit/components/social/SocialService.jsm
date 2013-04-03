@@ -42,7 +42,7 @@ let SocialServiceInternal = {
     let prefs = MANIFEST_PREFS.getChildList("", []);
     for (let pref of prefs) {
       try {
-        var manifest = JSON.parse(MANIFEST_PREFS.getCharPref(pref));
+        var manifest = JSON.parse(MANIFEST_PREFS.getComplexValue(pref, Ci.nsISupportsString).data);
         if (manifest && typeof(manifest) == "object" && manifest.origin)
           yield manifest;
       } catch (err) {
@@ -369,6 +369,49 @@ this.SocialService = {
     return data;
   },
 
+  _getChromeWindow: function(aWindow) {
+    var chromeWin = aWindow
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIWebNavigation)
+      .QueryInterface(Ci.nsIDocShellTreeItem)
+      .rootTreeItem
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDOMWindow)
+      .QueryInterface(Ci.nsIDOMChromeWindow);
+    return chromeWin;
+  },
+
+  _showInstallNotification: function(aDOMDocument, aAddonInstaller) {
+    let brandBundle = Services.strings.createBundle("chrome://branding/locale/brand.properties");
+    let browserBundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
+    let requestingWindow = aDOMDocument.defaultView.top;
+    let chromeWin = this._getChromeWindow(requestingWindow).wrappedJSObject;
+    let browser = chromeWin.gBrowser.getBrowserForDocument(aDOMDocument);
+    let requestingURI =  Services.io.newURI(aDOMDocument.location.href, null, null);
+
+    let productName = brandBundle.GetStringFromName("brandShortName");
+
+    let message = browserBundle.formatStringFromName("service.install.description",
+                                                     [requestingURI.host, productName], 2);
+
+    let action = {
+      label: browserBundle.GetStringFromName("service.install.ok.label"),
+      accessKey: browserBundle.GetStringFromName("service.install.ok.accesskey"),
+      callback: function() {
+        aAddonInstaller.install();
+      },
+    };
+
+    let link = chromeWin.document.getElementById("servicesInstall-learnmore-link");
+    link.value = browserBundle.GetStringFromName("service.install.learnmore");
+    link.href = Services.urlFormatter.formatURLPref("app.support.baseURL") + "social-api";
+
+    let anchor = "servicesInstall-notification-icon";
+    let notificationid = "servicesInstall";
+    chromeWin.PopupNotifications.show(browser, notificationid, message, anchor,
+                                      action, [], {});
+  },
+
   installProvider: function(aDOMDocument, data, installCallback) {
     let sourceURI = aDOMDocument.location.href;
     let installOrigin = aDOMDocument.nodePrincipal.origin;
@@ -387,21 +430,16 @@ this.SocialService = {
       if (!manifest)
         throw new Error("SocialService.installProvider: service configuration is invalid from " + sourceURI);
     }
+    let installer;
     switch(installType) {
       case "foreign":
         if (!Services.prefs.getBoolPref("social.remote-install.enabled"))
           throw new Error("Remote install of services is disabled");
         if (!manifest)
           throw new Error("Cannot install provider without manifest data");
-        let args = {};
-        args.url = this.url;
-        args.installs = [new AddonInstaller(sourceURI, manifest, installCallback)];
-        args.wrappedJSObject = args;
 
-        // Bug 836452, get something better than the scary addon dialog
-        Services.ww.openWindow(aDOMDocument.defaultView,
-                               "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul",
-                               null, "chrome,modal,centerscreen", args);
+        installer = new AddonInstaller(sourceURI, manifest, installCallback);
+        this._showInstallNotification(aDOMDocument, installer);
         break;
       case "builtin":
         // for builtin, we already have a manifest, but it can be overridden
@@ -419,7 +457,7 @@ this.SocialService = {
         // a manifest is required, we'll catch a missing manifest below.
         if (!manifest)
           throw new Error("Cannot install provider without manifest data");
-        let installer = new AddonInstaller(sourceURI, manifest, installCallback);
+        installer = new AddonInstaller(sourceURI, manifest, installCallback);
         installer.install();
         break;
       default:
@@ -721,7 +759,12 @@ function AddonInstaller(sourceURI, aManifest, installCallback) {
     let addon = this.addon;
     AddonManagerPrivate.callInstallListeners("onExternalInstall", null, addon, null, false);
     AddonManagerPrivate.callAddonListeners("onInstalling", addon, false);
-    Services.prefs.setCharPref(getPrefnameFromOrigin(aManifest.origin), JSON.stringify(aManifest));
+
+    let string = Cc["@mozilla.org/supports-string;1"].
+                 createInstance(Ci.nsISupportsString);
+    string.data = JSON.stringify(aManifest);
+    Services.prefs.setComplexValue(getPrefnameFromOrigin(aManifest.origin), Ci.nsISupportsString, string);
+
     AddonManagerPrivate.callAddonListeners("onInstalled", addon);
     installCallback(aManifest);
   };
@@ -962,7 +1005,10 @@ AddonWrapper.prototype = {
     if (Services.prefs.prefHasUserValue(prefName))
       throw new Error(this.manifest.name + " is not marked to be uninstalled");
     // ensure we're set into prefs
-    Services.prefs.setCharPref(prefName, JSON.stringify(this.manifest));
+    let string = Cc["@mozilla.org/supports-string;1"].
+                 createInstance(Ci.nsISupportsString);
+    string.data = JSON.stringify(this.manifest);
+    Services.prefs.setComplexValue(prefName, Ci.nsISupportsString, string);
     this._pending -= AddonManager.PENDING_UNINSTALL;
     AddonManagerPrivate.callAddonListeners("onOperationCancelled", this);
   }

@@ -846,10 +846,10 @@ nsBaseWidget::ComputeShouldAccelerate(bool aDefault)
     return true;
 
   if (!whitelisted) {
-    NS_WARNING("OpenGL-accelerated layers are not supported on this system.");
+    NS_WARNING("OpenGL-accelerated layers are not supported on this system");
 #ifdef MOZ_ANDROID_OMTC
     NS_RUNTIMEABORT("OpenGL-accelerated layers are a hard requirement on this platform. "
-                    "Cannot continue without support for them.");
+                    "Cannot continue without support for them");
 #endif
     return false;
   }

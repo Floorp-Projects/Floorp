@@ -50,7 +50,7 @@ nsDOMCameraManager::GetListOfCameras(JSContext* cx, JS::Value* _retval)
     }
 
     JSString* v;
-    jsval jv;
+    JS::Value jv;
 
     switch (info.facing) {
       case CAMERA_FACING_BACK:

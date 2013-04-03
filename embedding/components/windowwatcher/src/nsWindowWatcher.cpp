@@ -195,7 +195,7 @@ nsWatcherWindowEnumerator::GetNext(nsISupports **retval)
   if (!retval)
     return NS_ERROR_INVALID_ARG;
 
-  *retval = NULL;
+  *retval = nullptr;
 
 #ifdef USEWEAKREFS
   while (mCurrentPosition) {
@@ -322,12 +322,12 @@ nsWindowWatcher::Init()
 }
 
 /**
- * Convert aArguments into either an nsIArray or NULL.
+ * Convert aArguments into either an nsIArray or nullptr.
  *
- *  - If aArguments is NULL, return NULL.
- *  - If aArguments is an nsArray, return NULL if it's empty, or otherwise
+ *  - If aArguments is nullptr, return nullptr.
+ *  - If aArguments is an nsArray, return nullptr if it's empty, or otherwise
  *    return the array.
- *  - If aArguments is an nsISupportsArray, return NULL if it's empty, or
+ *  - If aArguments is an nsISupportsArray, return nullptr if it's empty, or
  *    otherwise add its elements to an nsArray and return the new array.
  *  - Otherwise, return an nsIArray with one element: aArguments.
  */
@@ -335,7 +335,7 @@ static already_AddRefed<nsIArray>
 ConvertArgsToArray(nsISupports* aArguments)
 {
   if (!aArguments) {
-    return NULL;
+    return nullptr;
   }
 
   nsCOMPtr<nsIArray> array = do_QueryInterface(aArguments);
@@ -343,7 +343,7 @@ ConvertArgsToArray(nsISupports* aArguments)
     uint32_t argc = 0;
     array->GetLength(&argc);
     if (argc == 0)
-      return NULL;
+      return nullptr;
 
     return array.forget();
   }
@@ -353,18 +353,18 @@ ConvertArgsToArray(nsISupports* aArguments)
     uint32_t argc = 0;
     supArray->Count(&argc);
     if (argc == 0) {
-      return NULL;
+      return nullptr;
     }
 
     nsCOMPtr<nsIMutableArray> mutableArray =
       do_CreateInstance(NS_ARRAY_CONTRACTID);
-    NS_ENSURE_TRUE(mutableArray, NULL);
+    NS_ENSURE_TRUE(mutableArray, nullptr);
 
     for (uint32_t i = 0; i < argc; i++) {
       nsCOMPtr<nsISupports> elt;
       supArray->GetElementAt(i, getter_AddRefs(elt));
       nsresult rv = mutableArray->AppendElement(elt, /* aWeak = */ false);
-      NS_ENSURE_SUCCESS(rv, NULL);
+      NS_ENSURE_SUCCESS(rv, nullptr);
     }
 
     return mutableArray.forget();
@@ -372,10 +372,10 @@ ConvertArgsToArray(nsISupports* aArguments)
 
   nsCOMPtr<nsIMutableArray> singletonArray =
     do_CreateInstance(NS_ARRAY_CONTRACTID);
-  NS_ENSURE_TRUE(singletonArray, NULL);
+  NS_ENSURE_TRUE(singletonArray, nullptr);
 
   nsresult rv = singletonArray->AppendElement(aArguments, /* aWeak = */ false);
-  NS_ENSURE_SUCCESS(rv, NULL);
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
   return singletonArray.forget();
 }

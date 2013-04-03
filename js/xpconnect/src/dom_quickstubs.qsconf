@@ -301,6 +301,8 @@ customMethodCalls = {
     }
 
 newBindingProperties = {
+    # Once the last entry here goes away, we can make the sNativePropertyHooks
+    # of bindings static.
     'nsIDOMNode': 'mozilla::dom::NodeBinding::sNativePropertyHooks.mNativeProperties.regular',
     'nsIDOMElement': 'mozilla::dom::ElementBinding::sNativePropertyHooks.mNativeProperties.regular',
     'nsIDOMHTMLElement': 'mozilla::dom::HTMLElementBinding::sNativePropertyHooks.mNativeProperties.regular',

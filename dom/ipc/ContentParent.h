@@ -81,7 +81,8 @@ public:
      */
     static void JoinAllSubprocesses();
 
-    static ContentParent* GetNewOrUsed(bool aForBrowserElement = false);
+    static already_AddRefed<ContentParent>
+    GetNewOrUsed(bool aForBrowserElement = false);
 
     /**
      * Get or create a content process for the given TabContext.  aFrameElement

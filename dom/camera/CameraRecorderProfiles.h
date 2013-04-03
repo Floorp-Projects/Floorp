@@ -179,7 +179,7 @@ public:
     }
 
     JSString* s = JS_NewStringCopyZ(aCx, format);
-    jsval v = STRING_TO_JSVAL(s);
+    JS::Value v = STRING_TO_JSVAL(s);
     if (!JS_SetProperty(aCx, o, "format", &v)) {
       return NS_ERROR_FAILURE;
     }

@@ -9,10 +9,6 @@
   <preference id="browser.link.open_newwindow"
               name="browser.link.open_newwindow"
               type="int"/>
-  <preference id="browser.tabs.autoHide"
-              name="browser.tabs.autoHide"
-              type="bool"
-              inverted="true"/>
   <preference id="browser.tabs.loadInBackground"
               name="browser.tabs.loadInBackground"
               type="bool"
@@ -58,11 +54,6 @@
           preference="browser.tabs.warnOnOpen"
           class="indent"/>
 
-<checkbox id="showTabBar" label="&showTabBar.label;"
-          data-category="paneTabs" hidden="true"
-          accesskey="&showTabBar.accesskey;"
-          preference="browser.tabs.autoHide"
-          class="indent"/>
 
 <checkbox id="restoreOnDemand" label="&restoreTabsOnDemand.label;"
           data-category="paneTabs" hidden="true"

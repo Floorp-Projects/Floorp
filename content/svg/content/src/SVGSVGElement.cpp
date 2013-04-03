@@ -416,17 +416,17 @@ SVGSVGElement::CreateSVGRect()
   return rect.forget();
 }
 
-already_AddRefed<DOMSVGTransform>
+already_AddRefed<SVGTransform>
 SVGSVGElement::CreateSVGTransform()
 {
-  nsRefPtr<DOMSVGTransform> transform = new DOMSVGTransform();
+  nsRefPtr<SVGTransform> transform = new SVGTransform();
   return transform.forget();
 }
 
-already_AddRefed<DOMSVGTransform>
+already_AddRefed<SVGTransform>
 SVGSVGElement::CreateSVGTransformFromMatrix(SVGMatrix& matrix)
 {
-  nsRefPtr<DOMSVGTransform> transform = new DOMSVGTransform(matrix.Matrix());
+  nsRefPtr<SVGTransform> transform = new SVGTransform(matrix.Matrix());
   return transform.forget();
 }
 

@@ -1,0 +1,23 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH = @DEPTH@
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+LIBRARY_NAME = kiss_fft
+ifeq (WINNT,$(OS_TARGET))
+VISIBILITY_FLAGS =
+endif
+EXPORTS_NAMESPACES = kiss_fft
+
+EXPORTS_kiss_fft = kiss_fft.h kiss_fftr.h
+
+CSRCS = kiss_fft.c kiss_fftr.c
+
+include $(topsrcdir)/config/rules.mk
+

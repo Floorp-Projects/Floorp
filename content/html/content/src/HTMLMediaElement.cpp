@@ -66,6 +66,7 @@
 #include "nsIScriptError.h"
 #include "nsHostObjectProtocolHandler.h"
 #include "MediaMetadataManager.h"
+#include "mozilla/dom/EnableWebAudioCheck.h"
 
 #include "AudioChannelService.h"
 
@@ -3536,6 +3537,9 @@ NS_IMETHODIMP HTMLMediaElement::GetMozFragmentEnd(double* aTime)
 
 void HTMLMediaElement::NotifyAudioAvailableListener()
 {
+  if (dom::EnableWebAudioCheck::PrefEnabled()) {
+    OwnerDoc()->WarnOnceAbout(nsIDocument::eMozAudioData);
+  }
   if (mDecoder) {
     mDecoder->NotifyAudioAvailableListener();
   }

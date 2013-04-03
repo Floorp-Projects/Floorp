@@ -682,3 +682,8 @@ pref("browser.chrome.dynamictoolbar", true);
 // too long for some reason (bug 843738)
 pref("webgl.disabled", true);
 #endif
+
+#ifndef RELEASE_BUILD
+// Enable Web Audio for Firefox for Android in Nightly and Aurora
+pref("media.webaudio.enabled", true);
+#endif

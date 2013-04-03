@@ -44,7 +44,7 @@ public:
   }
 
   bool
-  ParseSuccessfulReply(jsval* aValue)
+  ParseSuccessfulReply(JS::Value* aValue)
   {
     *aValue = JSVAL_VOID;
 

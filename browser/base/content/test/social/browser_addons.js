@@ -26,7 +26,7 @@ let manifest2 = { // used for testing install
 function test() {
   waitForExplicitFinish();
 
-  Services.prefs.setCharPref("social.manifest.good", JSON.stringify(manifest));
+  setManifestPref("social.manifest.good", manifest);
   Services.prefs.setBoolPref("social.remote-install.enabled", true);
   runSocialTests(tests, undefined, undefined, function () {
     Services.prefs.clearUserPref("social.remote-install.enabled");
@@ -175,23 +175,12 @@ var tests = {
     // we expect the addon install dialog to appear, we need to accept the
     // install from the dialog.
     info("Waiting for install dialog");
-    Services.wm.addListener({
-      onWindowTitleChange: function() {},
-      onCloseWindow: function() {},
-      onOpenWindow: function(xulwindow) {
-        Services.wm.removeListener(this);
-        var domwindow = xulwindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                              .getInterface(Components.interfaces.nsIDOMWindow);
-        waitForFocus(function() {
-          info("Saw install dialog");
-          is(domwindow.document.location.href, XPINSTALL_URL, "Should have seen the right window open");
-          // Initially the accept button is disabled on a countdown timer
-          var button = domwindow.document.documentElement.getButton("accept");
-          button.disabled = false;
-          domwindow.document.documentElement.acceptDialog();
-        }, domwindow);
-      }
-    });
+    let panel = document.getElementById("servicesInstall-notification");
+    PopupNotifications.panel.addEventListener("popupshown", function onpopupshown() {
+      PopupNotifications.panel.removeEventListener("popupshown", onpopupshown);
+      info("servicesInstall-notification panel opened");
+      panel.button.click();
+    })
 
     let activationURL = manifest2.origin + "/browser/browser/base/content/test/social/social_activate.html"
     addTab(activationURL, function(tab) {

@@ -52,7 +52,7 @@ SmsMessage::Create(int32_t aId,
                    const nsAString& aReceiver,
                    const nsAString& aBody,
                    const nsAString& aMessageClass,
-                   const jsval& aTimestamp,
+                   const JS::Value& aTimestamp,
                    const bool aRead,
                    JSContext* aCx,
                    nsIDOMMozSmsMessage** aMessage)
@@ -249,7 +249,7 @@ SmsMessage::GetMessageClass(nsAString& aMessageClass)
 }
 
 NS_IMETHODIMP
-SmsMessage::GetTimestamp(JSContext* cx, jsval* aDate)
+SmsMessage::GetTimestamp(JSContext* cx, JS::Value* aDate)
 {
   *aDate = OBJECT_TO_JSVAL(JS_NewDateObjectMsec(cx, mData.timestamp()));
   return NS_OK;

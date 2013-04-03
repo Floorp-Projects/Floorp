@@ -39,6 +39,9 @@ Push.prototype = {
   init: function(aWindow) {
     debug("init()");
 
+    if (!Services.prefs.getBoolPref("services.push.enabled"))
+      return null;
+
     let principal = aWindow.document.nodePrincipal;
 
     this._pageURL = principal.URI;

@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <string.h>                     // for NULL, strcmp
+#include <string.h>                     // for nullptr, strcmp
 
 #include "imgIContainer.h"              // for imgIContainer, etc
 #include "mozFlushType.h"               // for mozFlushType::Flush_Frames
@@ -260,7 +260,7 @@ const char* const gSupportedTextTypes[] = {
   "application/x-javascript",  // obsolete type
   "text/xul",                  // obsolete type
   "application/vnd.mozilla.xul+xml",
-  NULL      // IMPORTANT! Null must be at end
+  nullptr   // IMPORTANT! Null must be at end
 };
 
 bool
@@ -995,7 +995,7 @@ nsEditingSession::EndDocumentLoad(nsIWebProgress *aWebProgress,
           {
             // Must cancel previous timer?
             mLoadBlankDocTimer->Cancel();
-            mLoadBlankDocTimer = NULL;
+            mLoadBlankDocTimer = nullptr;
           }
   
           mLoadBlankDocTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);

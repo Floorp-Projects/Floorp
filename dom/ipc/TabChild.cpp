@@ -1401,7 +1401,7 @@ TabChild::DispatchMessageManagerMessage(const nsAString& aMessageName,
                                         const nsACString& aJSONData)
 {
     JSAutoRequest ar(mCx);
-    jsval json = JSVAL_NULL;
+    JS::Value json = JSVAL_NULL;
     StructuredCloneData cloneData;
     JSAutoStructuredCloneBuffer buffer;
     if (JS_ParseJSON(mCx,

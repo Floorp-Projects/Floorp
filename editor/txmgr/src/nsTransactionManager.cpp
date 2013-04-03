@@ -258,7 +258,7 @@ nsTransactionManager::EndBatch(bool aAllowEmpty)
   //
   //      For now, we can detect this case by checking the value of the
   //      dummy transaction's mTransaction field. If it is our dummy
-  //      transaction, it should be NULL. This may not be true in the
+  //      transaction, it should be nullptr. This may not be true in the
   //      future when we allow users to execute a transaction when beginning
   //      a batch!!!!
 

@@ -314,15 +314,15 @@ public class TopSitesView extends GridView {
         if (urls.size() == 0)
             return;
 
-        (new UiAsyncTask<Void, Void, Cursor>(ThreadUtils.getBackgroundHandler()) {
+        (new UiAsyncTask<Void, Void, Map<String, Bitmap> >(ThreadUtils.getBackgroundHandler()) {
             @Override
-            public Cursor doInBackground(Void... params) {
-                return BrowserDB.getThumbnailsForUrls(cr, urls);
+            public Map<String, Bitmap> doInBackground(Void... params) {
+                return getThumbnailsFromCursor(BrowserDB.getThumbnailsForUrls(cr, urls));
             }
 
             @Override
-            public void onPostExecute(Cursor c) {
-                updateTopSitesThumbnails(getThumbnailsFromCursor(c));
+            public void onPostExecute(Map<String, Bitmap> thumbnails) {
+                updateTopSitesThumbnails(thumbnails);
             }
         }).execute();
     }

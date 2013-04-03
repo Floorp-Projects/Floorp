@@ -18,7 +18,7 @@ using namespace mozilla::a11y;
 STDMETHODIMP
 ia2AccessibleHyperlink::QueryInterface(REFIID iid, void** ppv)
 {
-  *ppv = NULL;
+  *ppv = nullptr;
 
   if (IID_IAccessibleHyperlink == iid) {
     if (!static_cast<AccessibleWrap*>(this)->IsLink())
@@ -56,7 +56,7 @@ ia2AccessibleHyperlink::get_anchor(long aIndex, VARIANT* aAnchor)
   if (!anchor)
     return S_FALSE;
 
-  void* instancePtr = NULL;
+  void* instancePtr = nullptr;
   HRESULT result = anchor->QueryInterface(IID_IUnknown, &instancePtr);
   if (FAILED(result))
     return result;

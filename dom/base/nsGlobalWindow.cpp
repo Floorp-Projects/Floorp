@@ -620,6 +620,12 @@ nsOuterWindowProxy::finalize(JSFreeOp *fop, JSObject *proxy)
   nsGlobalWindow* global = GetWindow(proxy);
   if (global) {
     global->ClearWrapper();
+
+    // Ideally we would use OnFinalize here, but it's possible that
+    // EnsureScriptEnvironment will later be called on the window, and we don't
+    // want to create a new script object in that case. Therefore, we need to
+    // write a non-null value that will reliably crash when dereferenced.
+    global->PoisonOuterWindowProxy(proxy);
   }
 }
 
@@ -3020,6 +3026,15 @@ nsGlobalWindow::OnFinalize(JSObject* aObject)
 {
   if (aObject == mJSObject) {
     mJSObject = NULL;
+  }
+}
+
+void
+nsGlobalWindow::PoisonOuterWindowProxy(JSObject *aObject)
+{
+  MOZ_ASSERT(IsOuterWindow());
+  if (aObject == mJSObject) {
+    mJSObject = reinterpret_cast<JSObject*>(0x1);
   }
 }
 
@@ -11209,21 +11224,21 @@ nsGlobalWindow::SizeOfIncludingThis(nsWindowSizes* aWindowSizes) const
 
 #ifdef MOZ_GAMEPAD
 void
-nsGlobalWindow::AddGamepad(PRUint32 aIndex, nsDOMGamepad* aGamepad)
+nsGlobalWindow::AddGamepad(uint32_t aIndex, nsDOMGamepad* aGamepad)
 {
   FORWARD_TO_INNER_VOID(AddGamepad, (aIndex, aGamepad));
   mGamepads.Put(aIndex, aGamepad);
 }
 
 void
-nsGlobalWindow::RemoveGamepad(PRUint32 aIndex)
+nsGlobalWindow::RemoveGamepad(uint32_t aIndex)
 {
   FORWARD_TO_INNER_VOID(RemoveGamepad, (aIndex));
   mGamepads.Remove(aIndex);
 }
 
 already_AddRefed<nsDOMGamepad>
-nsGlobalWindow::GetGamepad(PRUint32 aIndex)
+nsGlobalWindow::GetGamepad(uint32_t aIndex)
 {
   FORWARD_TO_INNER(GetGamepad, (aIndex), nullptr);
   nsRefPtr<nsDOMGamepad> gamepad;
@@ -11250,7 +11265,7 @@ nsGlobalWindow::HasSeenGamepadInput()
 
 // static
 PLDHashOperator
-nsGlobalWindow::EnumGamepadsForSync(const PRUint32& aKey, nsDOMGamepad* aData, void* userArg)
+nsGlobalWindow::EnumGamepadsForSync(const uint32_t& aKey, nsDOMGamepad* aData, void* userArg)
 {
   nsRefPtr<GamepadService> gamepadsvc(GamepadService::GetService());
   gamepadsvc->SyncGamepadState(aKey, aData);
