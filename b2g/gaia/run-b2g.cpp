@@ -19,7 +19,7 @@
 #endif
 
 void error(wchar_t* msg){
-    MessageBoxW(NULL, msg, L"Error starting program", MB_OK | MB_ICONERROR);
+    MessageBoxW(nullptr, msg, L"Error starting program", MB_OK | MB_ICONERROR);
 }
 
 /* This function takes a string which represents a windows path, orig.
@@ -31,18 +31,18 @@ void error(wchar_t* msg){
 wchar_t* make_path_with_leaf_file_name(wchar_t* orig, wchar_t* file){
     wchar_t* buffer = (wchar_t*) malloc(NUM_MAX_PATH_BYTES);
     if (!buffer) {
-        return NULL;
+        return nullptr;
     }
     if (FAILED(StringCchCopyW(buffer, NUM_MAX_PATH_BYTES, orig))) {
         error(L"Error copying string");
         free(buffer);
-        buffer = NULL;
+        buffer = nullptr;
     }
     PathRemoveFileSpecW(buffer);
     if (!PathAppendW(buffer, file)) {
         error(L"Unable to append file to directory");
         free(buffer);
-        buffer = NULL;
+        buffer = nullptr;
     }
     return buffer;
 }
@@ -58,12 +58,12 @@ BOOL execute(wchar_t* binary_path, wchar_t* args, int cp_flags) {
     if (!CreateProcessW(
         binary_path,
         args,
-        NULL,
-        NULL,
+        nullptr,
+        nullptr,
         FALSE,
         cp_flags,
-        NULL,
-        NULL,
+        nullptr,
+        nullptr,
         &si,
         &pi)){
             error(L"Could not execute program");
@@ -97,6 +97,6 @@ int wmain(int argc, wchar_t *argv[], wchar_t *envp[]){
     free(profile_path);
     free(b2g_path);
     free(args);
-    profile_path = b2g_path = args = NULL;
+    profile_path = b2g_path = args = nullptr;
     
 }
