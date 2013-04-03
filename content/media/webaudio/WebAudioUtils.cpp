@@ -21,11 +21,11 @@ struct ConvertTimeToTickHelper
     TrackRate sampleRate = IdealAudioRate();
 
     ConvertTimeToTickHelper* This = static_cast<ConvertTimeToTickHelper*> (aClosure);
-    TrackTicks tick = This->mSourceStream->GetCurrentPosition();
-    StreamTime streamTime = TicksToTimeRoundDown(sampleRate, tick);
-    GraphTime graphTime = This->mSourceStream->StreamTimeToGraphTime(streamTime);
-    StreamTime destinationStreamTime = This->mDestinationStream->GraphTimeToStreamTime(graphTime);
-    return TimeToTicksRoundDown(sampleRate, destinationStreamTime + SecondsToMediaTime(aTime));
+    TrackTicks tick = This->mDestinationStream->GetCurrentPosition();
+    StreamTime destinationStreamTime = TicksToTimeRoundDown(sampleRate, tick);
+    GraphTime graphTime = This->mDestinationStream->StreamTimeToGraphTime(destinationStreamTime);
+    StreamTime streamTime = This->mSourceStream->GraphTimeToStreamTime(graphTime);
+    return TimeToTicksRoundDown(sampleRate, streamTime + SecondsToMediaTime(aTime));
   }
 };
 
