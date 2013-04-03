@@ -277,7 +277,7 @@ DestroyProtoAndIfaceCache(JSObject* obj)
  * Add constants to an object.
  */
 bool
-DefineConstants(JSContext* cx, JSObject* obj, ConstantSpec* cs);
+DefineConstants(JSContext* cx, JSObject* obj, const ConstantSpec* cs);
 
 struct JSNativeHolder
 {
@@ -345,7 +345,7 @@ CreateInterfaceObjects(JSContext* cx, JSObject* global, JSObject* protoProto,
  */
 bool
 DefineUnforgeableAttributes(JSContext* cx, JSObject* obj,
-                            Prefable<JSPropertySpec>* props);
+                            const Prefable<const JSPropertySpec>* props);
 
 bool
 DefineWebIDLBindingPropertiesOnXPCProto(JSContext* cx, JSObject* proto, const NativeProperties* properties);
@@ -1185,7 +1185,7 @@ InternJSString(JSContext* cx, jsid& id, const char* chars)
 // Spec needs a name property
 template <typename Spec>
 static bool
-InitIds(JSContext* cx, Prefable<Spec>* prefableSpecs, jsid* ids)
+InitIds(JSContext* cx, const Prefable<Spec>* prefableSpecs, jsid* ids)
 {
   MOZ_ASSERT(prefableSpecs);
   MOZ_ASSERT(prefableSpecs->specs);

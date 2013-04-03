@@ -1261,9 +1261,11 @@ class PropertyDefiner:
         specs.append(specTerminator)
         prefableSpecs.append("  { false, NULL }");
 
+        specType = "const " + specType
         arrays = (("static %s %s_specs[] = {\n" +
                    ',\n'.join(specs) + "\n" +
                    "};\n\n" +
+                   "// Can't be const because the pref-enabled boolean needs to be writable\n"
                    "static Prefable<%s> %s[] = {\n" +
                    ',\n'.join(prefableSpecs) + "\n" +
                    "};\n\n") % (specType, name, specType, name))
@@ -4769,7 +4771,7 @@ class CGMemberJITInfo(CGThing):
         returnType = reduce(CGMemberJITInfo.getSingleReturnType, returnTypes,
                             "")
         return ("\n"
-                "const JSJitInfo %s = {\n"
+                "static const JSJitInfo %s = {\n"
                 "  %s,\n"
                 "  %s,\n"
                 "  %s,\n"
