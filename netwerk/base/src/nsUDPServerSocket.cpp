@@ -82,7 +82,7 @@ NS_IMETHODIMP nsUDPOutputStream::Write(const char * aBuf, uint32_t aCount, uint3
     return NS_BASE_STREAM_CLOSED;
 
   *_retval = 0;
-  PRInt32 count = PR_SendTo(mFD, aBuf, aCount, 0, &mPrClientAddr, PR_INTERVAL_NO_WAIT);
+  int32_t count = PR_SendTo(mFD, aBuf, aCount, 0, &mPrClientAddr, PR_INTERVAL_NO_WAIT);
   if (count < 0) {
     PRErrorCode code = PR_GetError();
     return ErrorAccordingToNSPR(code);

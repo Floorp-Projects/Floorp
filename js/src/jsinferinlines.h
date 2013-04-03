@@ -6,6 +6,8 @@
 
 /* Inline members for javascript type inference. */
 
+#include "mozilla/PodOperations.h"
+
 #include "jsarray.h"
 #include "jsanalyze.h"
 #include "jscompartment.h"
@@ -873,7 +875,7 @@ struct AllocationSiteKey {
 
     static const uint32_t OFFSET_LIMIT = (1 << 23);
 
-    AllocationSiteKey() { PodZero(this); }
+    AllocationSiteKey() { mozilla::PodZero(this); }
 
     typedef AllocationSiteKey Lookup;
 
@@ -1251,7 +1253,7 @@ HashSetInsertTry(LifoAlloc &alloc, U **&values, unsigned &count, T key)
     U **newValues = alloc.newArray<U*>(newCapacity);
     if (!newValues)
         return NULL;
-    PodZero(newValues, newCapacity);
+    mozilla::PodZero(newValues, newCapacity);
 
     for (unsigned i = 0; i < capacity; i++) {
         if (values[i]) {
@@ -1294,7 +1296,7 @@ HashSetInsert(LifoAlloc &alloc, U **&values, unsigned &count, T key)
             values = (U **) oldData;
             return NULL;
         }
-        PodZero(values, SET_ARRAY_SIZE);
+        mozilla::PodZero(values, SET_ARRAY_SIZE);
         count++;
 
         values[0] = oldData;
@@ -1566,7 +1568,7 @@ TypeCallsite::TypeCallsite(JSContext *cx, RawScript script, jsbytecode *pc,
 
 inline TypeObject::TypeObject(Class *clasp, TaggedProto proto, bool function, bool unknown)
 {
-    PodZero(this);
+    mozilla::PodZero(this);
 
     /* Inner objects may not appear on prototype chains. */
     JS_ASSERT_IF(proto.isObject(), !proto.toObject()->getClass()->ext.outerObject);

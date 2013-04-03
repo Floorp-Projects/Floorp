@@ -992,6 +992,44 @@ Navigator::MozIsLocallyAvailable(const nsAString &aURI,
 
 NS_IMETHODIMP Navigator::GetDeviceStorage(const nsAString &aType, nsIDOMDeviceStorage** _retval)
 {
+  // We're going to obsolete getDeviceStorage, but want to leave it in for
+  // compatability right now. So we do essentially the same thing as GetDeviceStorages
+  // but only take the first element of the array.
+
+  NS_WARNING("navigator.getDeviceStorage is deprecated. Returning navigator.getDeviceStorages[0]");
+
+  nsCOMPtr<nsIVariant> variantArray;
+
+  nsresult rv = GetDeviceStorages(aType, getter_AddRefs(variantArray));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  uint16_t dataType;
+  variantArray->GetDataType(&dataType);
+
+  if (dataType != nsIDataType::VTYPE_ARRAY) {
+    NS_ASSERTION(dataType == nsIDataType::VTYPE_EMPTY_ARRAY,
+                 "Expecting an empty array");
+    *_retval = nullptr;
+    return NS_OK;
+  }
+
+  uint16_t valueType;
+  nsIID iid;
+  uint32_t valueCount;
+  void* rawArray;
+  variantArray->GetAsArray(&valueType, &iid, &valueCount, &rawArray);
+  NS_ASSERTION(valueCount > 0, "Expecting non-zero array size");
+  nsIDOMDeviceStorage** values = static_cast<nsIDOMDeviceStorage**>(rawArray);
+  *_retval = values[0];
+  for (uint32_t i = 1; i < valueCount; i++) {
+    values[i]->Release();
+  }
+  nsMemory::Free(rawArray);
+  return NS_OK;
+}
+
+NS_IMETHODIMP Navigator::GetDeviceStorages(const nsAString &aType, nsIVariant** _retval)
+{
   if (!Preferences::GetBool("device.storage.enabled", false)) {
     return NS_OK;
   }
@@ -1002,15 +1040,23 @@ NS_IMETHODIMP Navigator::GetDeviceStorage(const nsAString &aType, nsIDOMDeviceSt
     return NS_ERROR_FAILURE;
   }
 
-  nsRefPtr<nsDOMDeviceStorage> storage;
-  nsDOMDeviceStorage::CreateDeviceStoragesFor(win, aType, getter_AddRefs(storage));
+  nsTArray<nsRefPtr<nsDOMDeviceStorage> > stores;
+  nsDOMDeviceStorage::CreateDeviceStoragesFor(win, aType, stores);
 
-  if (!storage) {
-    return NS_OK;
+  nsCOMPtr<nsIWritableVariant> result = do_CreateInstance("@mozilla.org/variant;1");
+  NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
+
+  if (stores.Length() == 0) {
+    result->SetAsEmptyArray();
+  } else {
+    result->SetAsArray(nsIDataType::VTYPE_INTERFACE,
+                       &NS_GET_IID(nsIDOMDeviceStorage),
+                       stores.Length(),
+                       const_cast<void*>(static_cast<const void*>(stores.Elements())));
   }
+  result.forget(_retval);
 
-  NS_ADDREF(*_retval = storage.get());
-  mDeviceStorageStores.AppendElement(storage);
+  mDeviceStorageStores.AppendElements(stores);
   return NS_OK;
 }
 

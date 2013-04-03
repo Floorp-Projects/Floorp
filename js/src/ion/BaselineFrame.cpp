@@ -63,7 +63,7 @@ BaselineFrame::copyRawFrameSlots(AutoValueVector *vec) const
     if (!vec->resize(nformals + nfixed))
         return false;
 
-    PodCopy(vec->begin(), formals(), nformals);
+    mozilla::PodCopy(vec->begin(), formals(), nformals);
     for (unsigned i = 0; i < nfixed; i++)
         (*vec)[nformals + i] = *valueSlot(i);
     return true;
@@ -107,7 +107,7 @@ BaselineFrame::initFunctionScopeObjects(JSContext *cx)
 bool
 BaselineFrame::initForOsr(StackFrame *fp, uint32_t numStackValues)
 {
-    PodZero(this);
+    mozilla::PodZero(this);
 
     scopeChain_ = fp->scopeChain();
 

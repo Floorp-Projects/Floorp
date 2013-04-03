@@ -60,22 +60,22 @@ NS_DEFINE_NAMED_CID(NS_BASECOMMANDCONTROLLER_CID);
 
 static const mozilla::Module::CIDEntry kEmbeddingCIDs[] = {
 #ifdef MOZ_XUL
-    { &kNS_DIALOGPARAMBLOCK_CID, false, NULL, nsDialogParamBlockConstructor },
+    { &kNS_DIALOGPARAMBLOCK_CID, false, nullptr, nsDialogParamBlockConstructor },
 #ifdef NS_PRINTING
-    { &kNS_PRINTINGPROMPTSERVICE_CID, false, NULL, nsPrintingPromptServiceConstructor },
+    { &kNS_PRINTINGPROMPTSERVICE_CID, false, nullptr, nsPrintingPromptServiceConstructor },
 #endif
 #endif
-    { &kNS_WINDOWWATCHER_CID, false, NULL, nsWindowWatcherConstructor },
-    { &kNS_FIND_CID, false, NULL, nsFindConstructor },
-    { &kNS_WEB_BROWSER_FIND_CID, false, NULL, nsWebBrowserFindConstructor },
-    { &kNS_APPSTARTUPNOTIFIER_CID, false, NULL, nsAppStartupNotifierConstructor },
-    { &kNS_WEBBROWSERPERSIST_CID, false, NULL, nsWebBrowserPersistConstructor },
-    { &kNS_CONTROLLERCOMMANDTABLE_CID, false, NULL, nsControllerCommandTableConstructor },
-    { &kNS_COMMAND_MANAGER_CID, false, NULL, nsCommandManagerConstructor },
-    { &kNS_COMMAND_PARAMS_CID, false, NULL, nsCommandParamsConstructor },
-    { &kNS_CONTROLLER_COMMAND_GROUP_CID, false, NULL, nsControllerCommandGroupConstructor },
-    { &kNS_BASECOMMANDCONTROLLER_CID, false, NULL, nsBaseCommandControllerConstructor },
-    { NULL }
+    { &kNS_WINDOWWATCHER_CID, false, nullptr, nsWindowWatcherConstructor },
+    { &kNS_FIND_CID, false, nullptr, nsFindConstructor },
+    { &kNS_WEB_BROWSER_FIND_CID, false, nullptr, nsWebBrowserFindConstructor },
+    { &kNS_APPSTARTUPNOTIFIER_CID, false, nullptr, nsAppStartupNotifierConstructor },
+    { &kNS_WEBBROWSERPERSIST_CID, false, nullptr, nsWebBrowserPersistConstructor },
+    { &kNS_CONTROLLERCOMMANDTABLE_CID, false, nullptr, nsControllerCommandTableConstructor },
+    { &kNS_COMMAND_MANAGER_CID, false, nullptr, nsCommandManagerConstructor },
+    { &kNS_COMMAND_PARAMS_CID, false, nullptr, nsCommandParamsConstructor },
+    { &kNS_CONTROLLER_COMMAND_GROUP_CID, false, nullptr, nsControllerCommandGroupConstructor },
+    { &kNS_BASECOMMANDCONTROLLER_CID, false, nullptr, nsBaseCommandControllerConstructor },
+    { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kEmbeddingContracts[] = {
@@ -95,7 +95,7 @@ static const mozilla::Module::ContractIDEntry kEmbeddingContracts[] = {
     { NS_COMMAND_PARAMS_CONTRACTID, &kNS_COMMAND_PARAMS_CID },
     { NS_CONTROLLER_COMMAND_GROUP_CONTRACTID, &kNS_CONTROLLER_COMMAND_GROUP_CID },
     { NS_BASECOMMANDCONTROLLER_CONTRACTID, &kNS_BASECOMMANDCONTROLLER_CID },
-    { NULL }
+    { nullptr }
 };
 
 static const mozilla::Module kEmbeddingModule = {

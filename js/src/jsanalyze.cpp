@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/PodOperations.h"
 
 #include "jsanalyze.h"
 #include "jsautooplen.h"
@@ -18,6 +19,8 @@ using namespace js;
 using namespace js::analyze;
 
 using mozilla::DebugOnly;
+using mozilla::PodCopy;
+using mozilla::PodZero;
 
 /////////////////////////////////////////////////////////////////////
 // Bytecode

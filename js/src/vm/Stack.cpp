@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/PodOperations.h"
 
 #include "jscntxt.h"
 #include "gc/Marking.h"
@@ -48,6 +49,7 @@
 using namespace js;
 
 using mozilla::DebugOnly;
+using mozilla::PodCopy;
 
 /*****************************************************************************/
 
@@ -130,6 +132,7 @@ StackFrame::copyFrameAndValues(JSContext *cx, Value *vp, StackFrame *otherfp,
     }
 
     *this = *otherfp;
+    unsetPushedSPSFrame();
     if (doPostBarrier)
         writeBarrierPost();
 

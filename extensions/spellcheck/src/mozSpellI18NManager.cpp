@@ -23,10 +23,10 @@ mozSpellI18NManager::~mozSpellI18NManager()
 /* mozISpellI18NUtil GetUtil (in wstring language); */
 NS_IMETHODIMP mozSpellI18NManager::GetUtil(const PRUnichar *aLanguage, mozISpellI18NUtil **_retval)
 {
- if( NULL == _retval) {
+ if( nullptr == _retval) {
    return NS_ERROR_NULL_POINTER;
  }
- *_retval = NULL;
+ *_retval = nullptr;
  nsAutoString lang;
  lang.Assign(aLanguage);
  if(lang.EqualsLiteral("en")){

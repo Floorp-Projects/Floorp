@@ -9,6 +9,7 @@
  */
 
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/PodOperations.h"
 #include "mozilla/RangedPtr.h"
 
 #include "double-conversion.h"
@@ -58,6 +59,7 @@
 using namespace js;
 using namespace js::types;
 
+using mozilla::PodCopy;
 using mozilla::RangedPtr;
 
 /*

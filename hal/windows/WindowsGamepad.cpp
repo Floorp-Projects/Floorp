@@ -32,7 +32,7 @@ const DWORD BUTTON_DOWN_MASK = 0x80;
 // is connected, because USB devices consist of multiple logical devices.
 // Therefore, we wait a bit after receiving one before looking for
 // device changes.
-const PRUint32 kDevicesChangedStableDelay = 200;
+const uint32_t kDevicesChangedStableDelay = 200;
 
 typedef struct {
   float x,y;

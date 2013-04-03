@@ -144,7 +144,7 @@ void nsPrincipal::dumpImpl()
 }
 #endif 
 
-NS_IMPL_CLASSINFO(nsPrincipal, NULL, nsIClassInfo::MAIN_THREAD_ONLY,
+NS_IMPL_CLASSINFO(nsPrincipal, nullptr, nsIClassInfo::MAIN_THREAD_ONLY,
                   NS_PRINCIPAL_CID)
 NS_IMPL_QUERY_INTERFACE2_CI(nsPrincipal,
                             nsIPrincipal,
@@ -691,7 +691,7 @@ nsPrincipal::GetAppStatus()
 
 static const char EXPANDED_PRINCIPAL_SPEC[] = "[Expanded Principal]";
 
-NS_IMPL_CLASSINFO(nsExpandedPrincipal, NULL, nsIClassInfo::MAIN_THREAD_ONLY,
+NS_IMPL_CLASSINFO(nsExpandedPrincipal, nullptr, nsIClassInfo::MAIN_THREAD_ONLY,
                   NS_EXPANDEDPRINCIPAL_CID)
 NS_IMPL_QUERY_INTERFACE2_CI(nsExpandedPrincipal,
                             nsIPrincipal,

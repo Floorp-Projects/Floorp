@@ -77,7 +77,7 @@ UDPListener::OnPacketReceived(nsIUDPServerSocket* socket, nsIUDPMessage* message
   message->GetData(data);
 
   const char* buffer = data.get();
-  PRUint32 len = data.Length();
+  uint32_t len = data.Length();
 
   uint32_t input = 0;
   for (uint32_t i = 0; i < len; i++) {

@@ -29,7 +29,6 @@ CPPSRCS		= \
 		DOMSVGPoint.cpp \
 		DOMSVGPointList.cpp \
 		DOMSVGStringList.cpp \
-		DOMSVGTransform.cpp \
 		DOMSVGTransformList.cpp \
 		nsDOMSVGZoomEvent.cpp \
 		nsISVGPoint.cpp \
@@ -50,6 +49,7 @@ CPPSRCS		= \
 		nsSVGPathGeometryElement.cpp \
 		nsSVGPolyElement.cpp \
 		nsSVGString.cpp \
+		nsSVGTransform.cpp \
 		nsSVGViewBox.cpp \
 		SVGAElement.cpp \
 		SVGAltGlyphElement.cpp \
@@ -241,6 +241,7 @@ EXPORTS_mozilla/dom = \
 	SVGTextPathElement.h \
 	SVGTextPositioningElement.h \
 	SVGTitleElement.h \
+	SVGTransform.h \
 	SVGTransformableElement.h \
 	SVGTSpanElement.h \
 	SVGUseElement.h \

@@ -280,6 +280,9 @@ PushService.prototype = {
   observe: function observe(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "app-startup":
+        if (!this._prefs.get("enabled"))
+          return;
+
         Services.obs.addObserver(this, "final-ui-startup", false);
         Services.obs.addObserver(this, "profile-change-teardown", false);
         Services.obs.addObserver(this,

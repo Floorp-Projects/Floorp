@@ -36,7 +36,7 @@ MobileMessageService::CreateSmsMessage(int32_t aId,
                                        const nsAString& aReceiver,
                                        const nsAString& aBody,
                                        const nsAString& aMessageClass,
-                                       const jsval& aTimestamp,
+                                       const JS::Value& aTimestamp,
                                        const bool aRead,
                                        JSContext* aCx,
                                        nsIDOMMozSmsMessage** aMessage)

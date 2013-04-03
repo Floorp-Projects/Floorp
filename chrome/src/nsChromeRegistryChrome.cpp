@@ -772,12 +772,12 @@ nsChromeRegistry::ManifestProcessingContext::ResolveURI(const char* uri)
 {
   nsIURI* baseuri = GetManifestURI();
   if (!baseuri)
-    return NULL;
+    return nullptr;
 
   nsCOMPtr<nsIURI> resolved;
   nsresult rv = NS_NewURI(getter_AddRefs(resolved), uri, baseuri);
   if (NS_FAILED(rv))
-    return NULL;
+    return nullptr;
 
   return resolved.forget();
 }

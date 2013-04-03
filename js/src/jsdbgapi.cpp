@@ -52,6 +52,7 @@ using namespace js;
 using namespace js::gc;
 
 using mozilla::DebugOnly;
+using mozilla::PodZero;
 
 JS_PUBLIC_API(JSBool)
 JS_GetDebugMode(JSContext *cx)

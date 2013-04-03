@@ -4050,6 +4050,9 @@ pref("dom.mozContacts.enabled", false);
 // WebAlarms
 pref("dom.mozAlarms.enabled", false);
 
+// SimplePush
+pref("services.push.enabled", false);
+
 // WebNetworkStats
 pref("dom.mozNetworkStats.enabled", false);
 

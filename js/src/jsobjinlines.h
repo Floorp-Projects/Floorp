@@ -24,7 +24,6 @@
 #include "jstypedarray.h"
 #include "jswrapper.h"
 
-#include "builtin/MapObject.h"
 #include "builtin/Iterator-inl.h"
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
@@ -1732,6 +1731,7 @@ ObjectClassIs(HandleObject obj, ESClassValue classValue, JSContext *cx)
       case ESClass_Boolean: return obj->isBoolean();
       case ESClass_RegExp: return obj->isRegExp();
       case ESClass_ArrayBuffer: return obj->isArrayBuffer();
+      case ESClass_Date: return obj->isDate();
     }
     JS_NOT_REACHED("bad classValue");
     return false;

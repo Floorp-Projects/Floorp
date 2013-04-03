@@ -18,6 +18,7 @@
 #include "AudioChannelCommon.h"
 #include <algorithm>
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/EnableWebAudioCheck.h"
 
 DOMCI_NODE_DATA(HTMLAudioElement, mozilla::dom::HTMLAudioElement)
 
@@ -154,6 +155,10 @@ HTMLAudioElement::MozSetup(uint32_t aChannels, uint32_t aRate, ErrorResult& aRv)
   if (!IsAudioAPIEnabled()) {
     aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return;
+  }
+
+  if (dom::EnableWebAudioCheck::PrefEnabled()) {
+    OwnerDoc()->WarnOnceAbout(nsIDocument::eMozAudioData);
   }
 
   // If there is already a src provided, don't setup another stream

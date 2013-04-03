@@ -6,7 +6,13 @@
 #include "nsIVolume.idl"
 #include "nsIVolumeMountLock.idl"
 
-[scriptable, uuid(597403c6-5ba4-4e7b-b3f4-ed3f05f775d8)]
+%{C++
+#include "nsTArray.h"
+#include "nsString.h"
+%}
+[ref] native nsStringTArrayRef(nsTArray<nsString>);
+
+[scriptable, uuid(fc4e6449-922e-463d-880b-bfbab4909114)]
 interface nsIVolumeService : nsISupports
 {
     nsIVolume getVolumeByName(in DOMString volName);
@@ -15,6 +21,8 @@ interface nsIVolumeService : nsISupports
     void BroadcastVolume(in DOMString volName);
 
     nsIVolumeMountLock createMountLock(in DOMString volName);
+
+    [noscript] void getVolumeNames(in nsStringTArrayRef aVolNames);
 };
 
 %{C++

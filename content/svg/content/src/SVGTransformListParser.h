@@ -21,17 +21,17 @@ class nsIAtom;
 
 namespace mozilla {
 
-class SVGTransform;
+class nsSVGTransform;
 
 class SVGTransformListParser : public nsSVGDataParser
 {
 public:
-  const nsTArray<SVGTransform>& GetTransformList() const {
+  const nsTArray<nsSVGTransform>& GetTransformList() const {
     return mTransforms;
   }
 
 private:
-  nsTArray<SVGTransform> mTransforms;
+  nsTArray<nsSVGTransform> mTransforms;
 
   // helpers
   virtual nsresult Match();

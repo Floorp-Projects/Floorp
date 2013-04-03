@@ -54,7 +54,7 @@ var tests = {
       Services.prefs.clearUserPref("social.manifest.good");
       setAndUpdateBlocklist(blocklistEmpty, next);
     }
-    Services.prefs.setCharPref("social.manifest.good", JSON.stringify(manifest));
+    setManifestPref("social.manifest.good", manifest);
     setAndUpdateBlocklist(blocklistURL, function() {
       try {
         SocialService.addProvider(manifest, function(provider) {
@@ -79,7 +79,7 @@ var tests = {
       Services.prefs.clearUserPref("social.manifest.blocked");
       setAndUpdateBlocklist(blocklistEmpty, next);
     }
-    Services.prefs.setCharPref("social.manifest.blocked", JSON.stringify(manifest_bad));
+    setManifestPref("social.manifest.blocked", manifest_bad);
     setAndUpdateBlocklist(blocklistURL, function() {
       try {
         SocialService.addProvider(manifest_bad, function(provider) {
@@ -136,7 +136,7 @@ var tests = {
       Services.prefs.clearUserPref("social.manifest.blocked");
       setAndUpdateBlocklist(blocklistEmpty, next);
     }
-    Services.prefs.setCharPref("social.manifest.blocked", JSON.stringify(manifest_bad));
+    setManifestPref("social.manifest.blocked", manifest_bad);
     SocialService.addProvider(manifest_bad, function(provider) {
       if (provider) {
         setAndUpdateBlocklist(blocklistURL, function() {
