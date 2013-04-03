@@ -34,7 +34,6 @@ js_memcpy(void *dst_, const void *src_, size_t len)
     return memcpy(dst, src, len);
 }
 
-#ifdef __cplusplus
 namespace js {
 
 template <class T>
@@ -309,7 +308,6 @@ bool DecompressString(const unsigned char *inp, size_t inplen,
 #endif
 
 }  /* namespace js */
-#endif  /* __cplusplus */
 
 /* Crash diagnostics */
 #ifdef DEBUG

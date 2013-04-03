@@ -5051,21 +5051,31 @@ JS_DefineFunctions(JSContext *cx, JSObject *objArg, const JSFunctionSpec *fs)
             if (cx->runtime->isSelfHostingGlobal(cx->global()))
                 continue;
 
-            RootedFunction fun(cx, DefineFunction(cx, obj, id, /* native = */ NULL, fs->nargs, 0,
-                                                  JSFunction::ExtendedFinalizeKind, SingletonObject));
-            if (!fun)
-                return JS_FALSE;
-            fun->setIsSelfHostedBuiltin();
-            fun->setExtendedSlot(0, PrivateValue(const_cast<JSFunctionSpec*>(fs)));
             RootedAtom shAtom(cx, Atomize(cx, fs->selfHostedName, strlen(fs->selfHostedName)));
             if (!shAtom)
                 return JS_FALSE;
-            RootedObject holder(cx, cx->global()->intrinsicsHolder());
-            if (!JS_DefinePropertyById(cx,holder, AtomToId(shAtom),
-                                       ObjectValue(*fun), NULL, NULL, 0))
-            {
+            RootedPropertyName shName(cx, shAtom->asPropertyName());
+            RootedValue funVal(cx);
+            if (!cx->runtime->maybeWrappedSelfHostedFunction(cx, shName, &funVal))
                 return JS_FALSE;
+            if (!funVal.isUndefined()) {
+                if (!JSObject::defineProperty(cx, obj, atom->asPropertyName(), funVal,
+                                             NULL, NULL, flags & ~JSFUN_FLAGS_MASK))
+                {
+                    return JS_FALSE;
+                }
+            } else {
+                RawFunction fun = DefineFunction(cx, obj, id, /* native = */ NULL, fs->nargs, 0,
+                                                 JSFunction::ExtendedFinalizeKind, SingletonObject);
+                if (!fun)
+                    return JS_FALSE;
+                fun->setIsSelfHostedBuiltin();
+                fun->setExtendedSlot(0, PrivateValue(const_cast<JSFunctionSpec*>(fs)));
+                funVal.setObject(*fun);
             }
+            RootedObject holder(cx, cx->global()->intrinsicsHolder());
+            if (!JSObject::defineProperty(cx, holder, shName, funVal))
+                return JS_FALSE;
         } else {
             JSFunction *fun = DefineFunction(cx, obj, id, fs->call.op, fs->nargs, flags);
             if (!fun)

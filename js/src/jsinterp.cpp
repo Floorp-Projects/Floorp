@@ -2489,7 +2489,7 @@ BEGIN_CASE(JSOP_CALLINTRINSIC)
 {
     RootedValue &rval = rootValue0;
 
-    if (!GetIntrinsicOperation(cx, script, regs.pc, &rval))
+    if (!GetIntrinsicOperation(cx, regs.pc, &rval))
         goto error;
 
     PUSH_COPY(rval);
