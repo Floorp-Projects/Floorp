@@ -327,6 +327,41 @@ protected:
                              void *arg);
 };
 
+class nsCycleCollectionTraversalCallback;
+
+struct NS_STACK_CLASS nsBaseHashtableCCTraversalData
+{
+  nsBaseHashtableCCTraversalData(nsCycleCollectionTraversalCallback& aCallback,
+                                 const char* aName,
+                                 uint32_t aFlags)
+  : mCallback(aCallback),
+    mName(aName),
+    mFlags(aFlags)
+  {
+  }
+
+  nsCycleCollectionTraversalCallback& mCallback;
+  const char* mName;
+  uint32_t mFlags;
+
+};
+
+template <typename K, typename T>
+PLDHashOperator
+ImplCycleCollectionTraverse_EnumFunc(K aKey,
+                                     T aData,
+                                     void* aUserData)
+{
+  nsBaseHashtableCCTraversalData* userData =
+    static_cast<nsBaseHashtableCCTraversalData*>(aUserData);
+
+  CycleCollectionNoteChild(userData->mCallback,
+                           aData,
+                           userData->mName,
+                           userData->mFlags);
+  return PL_DHASH_NEXT;
+}
+
 /**
  * This class is a thread-safe version of nsBaseHashtable. It only exposes
  * an infallible API.
