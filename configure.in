@@ -4200,7 +4200,7 @@ MOZ_SAMPLE_TYPE_S16=
 MOZ_MEDIA=
 MOZ_OPUS=1
 MOZ_WEBM=1
-MOZ_DASH=1
+MOZ_DASH=
 MOZ_WMF=
 MOZ_WEBRTC=1
 MOZ_PEERCONNECTION=
@@ -5426,25 +5426,6 @@ if test -n "$MOZ_WEBM"; then
     AC_DEFINE(MOZ_WEBM)
     MOZ_VP8=1
 fi;
-
-dnl ========================================================
-dnl = Disable DASH-WebM support
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(dash,
-[  --disable-dash          Disable support for DASH-WebM],
-    MOZ_DASH=,
-    MOZ_DASH=1)
-
-if test -n "$MOZ_DASH"; then
-    if test -n "$MOZ_WEBM"; then
-        AC_DEFINE(MOZ_DASH)
-    else
-        dnl Fail if WebM is not enabled as well as DASH.
-        AC_MSG_ERROR([WebM is currently disabled and must be enabled for DASH
-                     to work.])
-    fi
-fi;
-
 
 dnl ========================================================
 dnl = Windows Media Foundation support
