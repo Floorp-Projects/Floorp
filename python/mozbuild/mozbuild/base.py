@@ -58,6 +58,8 @@ class MozbuildObject(ProcessExecutionMixin):
     def topobjdir(self):
         if self._topobjdir is None:
             topobj = self.mozconfig['topobjdir'] or 'obj-@CONFIG_GUESS@'
+            if not os.path.isabs(topobj):
+                topobj = os.path.abspath(os.path.join(self.topsrcdir, topobj))
             self._topobjdir = topobj.replace("@CONFIG_GUESS@",
                                              self._config_guess)
         return self._topobjdir
