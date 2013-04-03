@@ -145,7 +145,7 @@ static void
 ClearPropertyPolicyEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
 {
     PropertyPolicy* pp = (PropertyPolicy*)entry;
-    pp->key = NULL;
+    pp->key = nullptr;
 }
 
 // Class Policy
