@@ -75,6 +75,7 @@ public interface Actions {
      * @param key The special key to send
      */
     void sendSpecialKey(SpecialKey key);
+    void sendKeyCode(int keyCode);
 
     void drag(int startingX, int endingX, int startingY, int endingY);
 
