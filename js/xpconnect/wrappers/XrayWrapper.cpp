@@ -1303,7 +1303,7 @@ XrayWrapper<Base, Traits>::~XrayWrapper()
 namespace XrayUtils {
 
 bool
-NeedsWaive(JSContext *cx, HandleObject wrapper, HandleId id)
+IsTransparent(JSContext *cx, HandleObject wrapper, HandleId id)
 {
     // We dynamically waive Xray vision for XBL bindings accessing fields
     // on bound elements, since there's no way to access such things sanely
@@ -1456,11 +1456,18 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, HandleObject wra
 
     typename Traits::ResolvingIdImpl resolving(wrapper, id);
 
-    if (XrayUtils::NeedsWaive(cx, wrapper, id)) {
-        RootedObject waived(cx, WrapperFactory::WaiveXray(cx, wrapper));
-        if (!waived || !JS_WrapObject(cx, waived.address()))
-            return false;
-        return JS_GetPropertyDescriptorById(cx, waived, id, flags, desc);
+    // Redirect access straight to the wrapper if we should be transparent.
+    if (XrayUtils::IsTransparent(cx, wrapper, id)) {
+        RootedObject obj(cx, Traits::getTargetObject(wrapper));
+        {
+            JSAutoCompartment ac(cx, obj);
+            if (!JS_GetPropertyDescriptorById(cx, obj, id, flags, desc))
+                return false;
+        }
+
+        if (desc->obj)
+            desc->obj = wrapper;
+        return JS_WrapPropertyDescriptor(cx, desc);
     }
 
     if (!holder)
@@ -1592,16 +1599,17 @@ XrayWrapper<Base, Traits>::getOwnPropertyDescriptor(JSContext *cx, HandleObject 
 
     // NB: Nothing we do here acts on the wrapped native itself, so we don't
     // enter our policy.
+    // Redirect access straight to the wrapper if we should be transparent.
+    if (XrayUtils::IsTransparent(cx, wrapper, id)) {
+        RootedObject obj(cx, Traits::getTargetObject(wrapper));
+        {
+            JSAutoCompartment ac(cx, obj);
+            if (!JS_GetPropertyDescriptorById(cx, obj, id, flags, desc))
+                return false;
+        }
 
-    if (XrayUtils::NeedsWaive(cx, wrapper, id)) {
-        RootedObject waived(cx, WrapperFactory::WaiveXray(cx, wrapper));
-        if (!waived || !JS_WrapObject(cx, waived.address()))
-            return false;
-        if (!JS_GetPropertyDescriptorById(cx, waived, id, flags, desc))
-            return false;
-        if (desc->obj != waived)
-            desc->obj = nullptr;
-        return true;
+        desc->obj = (desc->obj == obj) ? wrapper.get() : nullptr; // XXX
+        return JS_WrapPropertyDescriptor(cx, desc);
     }
 
     if (!Traits::singleton.resolveOwnProperty(cx, *this, wrapper, holder, id, desc, flags))
@@ -1628,11 +1636,14 @@ XrayWrapper<Base, Traits>::defineProperty(JSContext *cx, HandleObject wrapper,
                                           HandleId id, PropertyDescriptor *desc)
 {
     assertEnteredPolicy(cx, wrapper, id);
-    if (XrayUtils::NeedsWaive(cx, wrapper, id)) {
-        RootedObject waived(cx, WrapperFactory::WaiveXray(cx, wrapper));
-        if (!waived || !JS_WrapObject(cx, waived.address()))
+    // Redirect access straight to the wrapper if we should be transparent.
+    if (XrayUtils::IsTransparent(cx, wrapper, id)) {
+        RootedObject obj(cx, Traits::getTargetObject(wrapper));
+        JSAutoCompartment ac(cx, obj);
+        if (!JS_WrapPropertyDescriptor(cx, desc))
             return false;
-        return JS_DefinePropertyById(cx, waived, id, desc->value, desc->getter, desc->setter,
+
+        return JS_DefinePropertyById(cx, obj, id, desc->value, desc->getter, desc->setter,
                                      desc->attrs);
     }
 
@@ -1687,6 +1698,19 @@ XrayWrapper<Base, Traits>::delete_(JSContext *cx, HandleObject wrapper,
                                    HandleId id, bool *bp)
 {
     assertEnteredPolicy(cx, wrapper, id);
+    // Redirect access straight to the wrapper if we should be transparent.
+    if (XrayUtils::IsTransparent(cx, wrapper, id)) {
+        RootedObject obj(cx, Traits::getTargetObject(wrapper));
+
+        JSAutoCompartment ac(cx, obj);
+
+        JSBool b;
+        RootedValue v(cx);
+        if (!JS_DeletePropertyById2(cx, obj, id, v.address()) || !JS_ValueToBoolean(cx, v, &b))
+            return false;
+        *bp = !!b;
+        return true;
+    }
 
     // Check the expando object.
     RootedObject target(cx, Traits::getTargetObject(wrapper));
@@ -1711,6 +1735,13 @@ XrayWrapper<Base, Traits>::enumerate(JSContext *cx, HandleObject wrapper, unsign
                                      AutoIdVector &props)
 {
     assertEnteredPolicy(cx, wrapper, JSID_VOID);
+    // Redirect access straight to the wrapper if we should be transparent.
+    if (XrayUtils::IsTransparent(cx, wrapper, JSID_VOIDHANDLE)) {
+        RootedObject obj(cx, Traits::getTargetObject(wrapper));
+        JSAutoCompartment ac(cx, obj);
+        return js::GetPropertyNames(cx, obj, flags, &props);
+    }
+
     if (!AccessCheck::wrapperSubsumes(wrapper)) {
         JS_ReportError(cx, "Not allowed to enumerate cross origin objects");
         return false;
