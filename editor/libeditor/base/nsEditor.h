@@ -763,7 +763,7 @@ public:
 
   // FindSelectionRoot() returns a selection root of this editor when aNode
   // gets focus.  aNode must be a content node or a document node.  When the
-  // target isn't a part of this editor, returns NULL.  If this is for
+  // target isn't a part of this editor, returns nullptr.  If this is for
   // designMode, you should set the document node to aNode except that an
   // element in the document has focus.
   virtual already_AddRefed<nsIContent> FindSelectionRoot(nsINode* aNode);
