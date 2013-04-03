@@ -235,7 +235,7 @@ BluetoothOppManager::BluetoothOppManager() : mConnected(false)
                                 BluetoothSocketType::RFCOMM,
                                 true,
                                 true);
-  mSocketStatus = mSocket->GetConnectionStatus();
+  mPrevSocketStatus = mSocket->GetConnectionStatus();
 }
 
 BluetoothOppManager::~BluetoothOppManager()
@@ -327,7 +327,7 @@ BluetoothOppManager::Listen()
     return false;
   }
 
-  mSocketStatus = mSocket->GetConnectionStatus();
+  mPrevSocketStatus = mSocket->GetConnectionStatus();
   return true;
 }
 
@@ -1319,7 +1319,7 @@ BluetoothOppManager::OnConnectSuccess(BluetoothSocket* aSocket)
   // Cache device address since we can't get socket address when a remote
   // device disconnect with us.
   mSocket->GetAddress(mConnectedDeviceAddress);
-  mSocketStatus = mSocket->GetConnectionStatus();
+  mPrevSocketStatus = mSocket->GetConnectionStatus();
 }
 
 void
@@ -1339,7 +1339,7 @@ BluetoothOppManager::OnConnectError(BluetoothSocket* aSocket)
   }
 
   mSocket->Disconnect();
-  mSocketStatus = mSocket->GetConnectionStatus();
+  mPrevSocketStatus = mSocket->GetConnectionStatus();
   Listen();
 }
 
@@ -1355,7 +1355,7 @@ BluetoothOppManager::OnDisconnect(BluetoothSocket* aSocket)
    * and notify the transfer has been completed (but failed). We also call
    * AfterOppDisconnected here to ensure all variables will be cleaned.
    */
-  if (mSocketStatus == SocketConnectionStatus::SOCKET_CONNECTED) {
+  if (mPrevSocketStatus == SocketConnectionStatus::SOCKET_CONNECTED) {
     if (mTransferMode) {
       if (!mSuccessFlag) {
         DeleteReceivedFile();
@@ -1376,7 +1376,7 @@ BluetoothOppManager::OnDisconnect(BluetoothSocket* aSocket)
     }
 
     Listen();
-  } else if (mSocketStatus == SocketConnectionStatus::SOCKET_CONNECTING) {
+  } else if (mPrevSocketStatus == SocketConnectionStatus::SOCKET_CONNECTING) {
     NS_WARNING("BluetoothOppManager got unexpected socket status!");
   }
 
