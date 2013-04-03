@@ -2549,6 +2549,19 @@ abstract public class GeckoApp
                 shareCurrentUrl();
                 return true;
             }
+            case R.id.subscribe: {
+                Tab tab = Tabs.getInstance().getSelectedTab();
+                if (tab != null && tab.getFeedsEnabled()) {
+                    JSONObject args = new JSONObject();
+                    try {
+                        args.put("tabId", tab.getId());
+                    } catch (JSONException e) {
+                        Log.e(LOGTAG, "error building json arguments");
+                    }
+                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Feeds:Subscribe", args.toString()));
+                }
+                return true;
+            }
             case R.id.copyurl: {
                 Tab tab = Tabs.getInstance().getSelectedTab();
                 if (tab != null) {
