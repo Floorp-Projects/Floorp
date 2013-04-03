@@ -44,7 +44,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
           is(bound.objectField.bar.a, 1, "Field Xrays work on objects");
           is(bound.contentField.foo, 10, "Field Xrays work on content objects");
           var hole = bound.contentField.rabbit.hole;
-          is(hole.win, window, "We gain back Xray vision when hitting a native object");
+          ok(hole.win === window, "We gain back Xray vision when hitting a native object");
           ok(Cu.isXrayWrapper(hole.win), "Really is Xray");
 
           // This gets invoked by an event handler.
