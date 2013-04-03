@@ -6693,11 +6693,11 @@ JS_NewDateObjectMsec(JSContext *cx, double msec)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_ObjectIsDate(JSContext *cx, JSRawObject obj)
+JS_ObjectIsDate(JSContext *cx, JSRawObject objArg)
 {
-    AssertHeapIsIdle(cx);
-    JS_ASSERT(obj);
-    return obj->isDate();
+    RootedObject obj(cx, objArg);
+    assertSameCompartment(cx, obj);
+    return ObjectClassIs(obj, ESClass_Date, cx);
 }
 
 JS_PUBLIC_API(void)
