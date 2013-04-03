@@ -103,6 +103,7 @@
 #include "nsStyleStruct.h"              // for nsStyleDisplay, nsStyleText, etc
 #include "nsStyleStructFwd.h"           // for nsIFrame::StyleUIReset, etc
 #include "nsTextEditUtils.h"            // for nsTextEditUtils
+#include "nsTextNode.h"                 // for nsTextNode
 #include "nsThreadUtils.h"              // for nsRunnable
 #include "nsTransactionManager.h"       // for nsTransactionManager
 #include "prtime.h"                     // for PR_Now
@@ -2294,141 +2295,100 @@ NS_IMETHODIMP nsEditor::ScrollSelectionIntoView(bool aScrollToAnchor)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsEditor::InsertTextImpl(const nsAString& aStringToInsert, 
-                                          nsCOMPtr<nsIDOMNode> *aInOutNode, 
-                                          int32_t *aInOutOffset,
-                                          nsIDOMDocument *aDoc)
+NS_IMETHODIMP
+nsEditor::InsertTextImpl(const nsAString& aStringToInsert,
+                         nsCOMPtr<nsIDOMNode>* aInOutNode,
+                         int32_t* aInOutOffset,
+                         nsIDOMDocument* aDoc)
 {
-  // NOTE: caller *must* have already used nsAutoTxnsConserveSelection stack-based
-  // class to turn off txn selection updating.  Caller also turned on rules sniffing
-  // if desired.
-  
-  nsresult res;
-  NS_ENSURE_TRUE(aInOutNode && *aInOutNode && aInOutOffset && aDoc, NS_ERROR_NULL_POINTER);
-  if (!mInIMEMode && aStringToInsert.IsEmpty()) return NS_OK;
-  nsCOMPtr<nsIDOMText> nodeAsText = do_QueryInterface(*aInOutNode);
-  if (!nodeAsText && IsPlaintextEditor()) {
-    nsCOMPtr<nsIDOMNode> rootNode = do_QueryInterface(GetRoot());
-    // In some cases, aInOutNode is the anonymous DIV, and aInOutOffset is 0.
-    // To avoid injecting unneeded text nodes, we first look to see if we have
-    // one available.  In that case, we'll just adjust aInOutNode and aInOutOffset
-    // accordingly.
-    if (*aInOutNode == rootNode && *aInOutOffset == 0) {
-      nsCOMPtr<nsIDOMNode> possibleTextNode;
-      res = (*aInOutNode)->GetFirstChild(getter_AddRefs(possibleTextNode));
-      if (NS_SUCCEEDED(res)) {
-        nodeAsText = do_QueryInterface(possibleTextNode);
-        if (nodeAsText) {
-          *aInOutNode = possibleTextNode;
-        }
-      }
+  // NOTE: caller *must* have already used nsAutoTxnsConserveSelection
+  // stack-based class to turn off txn selection updating.  Caller also turned
+  // on rules sniffing if desired.
+
+  NS_ENSURE_TRUE(aInOutNode && *aInOutNode && aInOutOffset && aDoc,
+                 NS_ERROR_NULL_POINTER);
+  if (!mInIMEMode && aStringToInsert.IsEmpty()) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsINode> node = do_QueryInterface(*aInOutNode);
+  NS_ENSURE_STATE(node);
+  uint32_t offset = static_cast<uint32_t>(*aInOutOffset);
+
+  if (!node->IsNodeOfType(nsINode::eTEXT) && IsPlaintextEditor()) {
+    nsCOMPtr<nsINode> root = GetRoot();
+    // In some cases, node is the anonymous DIV, and offset is 0.  To avoid
+    // injecting unneeded text nodes, we first look to see if we have one
+    // available.  In that case, we'll just adjust node and offset accordingly.
+    if (node == root && offset == 0 && node->HasChildren() &&
+        node->GetFirstChild()->IsNodeOfType(nsINode::eTEXT)) {
+      node = node->GetFirstChild();
     }
-    // In some other cases, aInOutNode is the anonymous DIV, and aInOutOffset points
-    // to the terminating mozBR.  In that case, we'll adjust aInOutNode and aInOutOffset
-    // to the preceding text node, if any.
-    if (!nodeAsText && *aInOutNode == rootNode && *aInOutOffset > 0) {
-      nsCOMPtr<nsIDOMNodeList> children;
-      res = (*aInOutNode)->GetChildNodes(getter_AddRefs(children));
-      if (NS_SUCCEEDED(res)) {
-        nsCOMPtr<nsIDOMNode> possibleMozBRNode;
-        children->Item(*aInOutOffset, getter_AddRefs(possibleMozBRNode));
-        if (possibleMozBRNode && nsTextEditUtils::IsMozBR(possibleMozBRNode)) {
-          nsCOMPtr<nsIDOMNode> possibleTextNode;
-          res = children->Item(*aInOutOffset - 1, getter_AddRefs(possibleTextNode));
-          if (NS_SUCCEEDED(res)) {
-            nodeAsText = do_QueryInterface(possibleTextNode);
-            if (nodeAsText) {
-              uint32_t length;
-              res = nodeAsText->GetLength(&length);
-              if (NS_SUCCEEDED(res)) {
-                *aInOutOffset = int32_t(length);
-                *aInOutNode = possibleTextNode;
-              }
-            }
-          }
-        } else {
-          // The selection might be at the end of the last textnode child,
-          // in which case we can just append to the textnode in question.
-          nsCOMPtr<nsIDOMNode> possibleTextNode;
-          res = children->Item(*aInOutOffset - 1, getter_AddRefs(possibleTextNode));
-          nodeAsText = do_QueryInterface(possibleTextNode);
-          if (nodeAsText) {
-            uint32_t length;
-            res = nodeAsText->GetLength(&length);
-            if (NS_SUCCEEDED(res)) {
-              *aInOutOffset = int32_t(length);
-              *aInOutNode = possibleTextNode;
-            }
-          }
-        }
-      }
+    // In some other cases, node is the anonymous DIV, and offset points to the
+    // terminating mozBR.  In that case, we'll adjust aInOutNode and
+    // aInOutOffset to the preceding text node, if any.
+    if (node == root && offset > 0 && node->GetChildAt(offset - 1) &&
+        node->GetChildAt(offset - 1)->IsNodeOfType(nsINode::eTEXT)) {
+      node = node->GetChildAt(offset - 1);
+      offset = node->Length();
     }
-    // Sometimes, aInOutNode is the mozBR element itself.  In that case, we'll
-    // adjust the insertion point to the previous text node, if one exists, or
-    // to the parent anonymous DIV.
-    if (nsTextEditUtils::IsMozBR(*aInOutNode) && *aInOutOffset == 0) {
-      nsCOMPtr<nsIDOMNode> previous;
-      (*aInOutNode)->GetPreviousSibling(getter_AddRefs(previous));
-      nodeAsText = do_QueryInterface(previous);
-      if (nodeAsText) {
-        uint32_t length;
-        res = nodeAsText->GetLength(&length);
-        if (NS_SUCCEEDED(res)) {
-          *aInOutOffset = int32_t(length);
-          *aInOutNode = previous;
-        }
-      } else {
-        nsCOMPtr<nsIDOMNode> parent;
-        (*aInOutNode)->GetParentNode(getter_AddRefs(parent));
-        if (parent == rootNode) {
-          *aInOutNode = parent;
-        }
+    // Sometimes, node is the mozBR element itself.  In that case, we'll adjust
+    // the insertion point to the previous text node, if one exists, or to the
+    // parent anonymous DIV.
+    if (nsTextEditUtils::IsMozBR(node) && offset == 0) {
+      if (node->GetPreviousSibling() &&
+          node->GetPreviousSibling()->IsNodeOfType(nsINode::eTEXT)) {
+        node = node->GetPreviousSibling();
+        offset = node->Length();
+      } else if (node->GetParentNode() && node->GetParentNode() == root) {
+        node = node->GetParentNode();
       }
     }
   }
-  int32_t offset = *aInOutOffset;
-  if (mInIMEMode)
-  {
-    if (!nodeAsText)
-    {
+
+  nsresult res;
+  if (mInIMEMode) {
+    if (!node->IsNodeOfType(nsINode::eTEXT)) {
       // create a text node
-      res = aDoc->CreateTextNode(EmptyString(), getter_AddRefs(nodeAsText));
-      NS_ENSURE_SUCCESS(res, res);
-      NS_ENSURE_TRUE(nodeAsText, NS_ERROR_NULL_POINTER);
-      nsCOMPtr<nsIDOMNode> newNode = do_QueryInterface(nodeAsText);
+      nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDoc);
+      NS_ENSURE_STATE(doc);
+      nsRefPtr<nsTextNode> newNode = doc->CreateTextNode(EmptyString());
       // then we insert it into the dom tree
-      res = InsertNode(newNode, *aInOutNode, offset);
+      res = InsertNode(newNode->AsDOMNode(), node->AsDOMNode(), offset);
       NS_ENSURE_SUCCESS(res, res);
+      node = newNode;
       offset = 0;
     }
-    res = InsertTextIntoTextNodeImpl(aStringToInsert, nodeAsText, offset);
+    nsCOMPtr<nsIDOMCharacterData> charDataNode = do_QueryInterface(node);
+    NS_ENSURE_STATE(charDataNode);
+    res = InsertTextIntoTextNodeImpl(aStringToInsert, charDataNode, offset);
     NS_ENSURE_SUCCESS(res, res);
-  }
-  else
-  {
-    if (nodeAsText)
-    {
+    offset += aStringToInsert.Length();
+  } else {
+    if (node->IsNodeOfType(nsINode::eTEXT)) {
       // we are inserting text into an existing text node.
-      res = InsertTextIntoTextNodeImpl(aStringToInsert, nodeAsText, offset);
+      nsCOMPtr<nsIDOMCharacterData> charDataNode = do_QueryInterface(node);
+      NS_ENSURE_STATE(charDataNode);
+      res = InsertTextIntoTextNodeImpl(aStringToInsert, charDataNode, offset);
       NS_ENSURE_SUCCESS(res, res);
-      *aInOutOffset += aStringToInsert.Length();
-    }
-    else
-    {
-      // we are inserting text into a non-text node
-      // first we have to create a textnode (this also populates it with the text)
-      res = aDoc->CreateTextNode(aStringToInsert, getter_AddRefs(nodeAsText));
-      NS_ENSURE_SUCCESS(res, res);
-      NS_ENSURE_TRUE(nodeAsText, NS_ERROR_NULL_POINTER);
-      nsCOMPtr<nsIDOMNode> newNode = do_QueryInterface(nodeAsText);
+      offset += aStringToInsert.Length();
+    } else {
+      // we are inserting text into a non-text node.  first we have to create a
+      // textnode (this also populates it with the text)
+      nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDoc);
+      NS_ENSURE_STATE(doc);
+      nsRefPtr<nsTextNode> newNode = doc->CreateTextNode(aStringToInsert);
       // then we insert it into the dom tree
-      res = InsertNode(newNode, *aInOutNode, offset);
+      res = InsertNode(newNode->AsDOMNode(), node->AsDOMNode(), offset);
       NS_ENSURE_SUCCESS(res, res);
-      *aInOutNode = newNode;
-      *aInOutOffset = aStringToInsert.Length();
+      node = newNode;
+      offset = aStringToInsert.Length();
     }
   }
-  return res;
+
+  *aInOutNode = node->AsDOMNode();
+  *aInOutOffset = static_cast<int32_t>(offset);
+  return NS_OK;
 }
 
 
