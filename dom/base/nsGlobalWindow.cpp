@@ -229,6 +229,10 @@
 #include "nsPISocketTransportService.h"
 #include "mozilla/dom/AudioContext.h"
 
+#ifdef MOZ_WEBSPEECH
+#include "mozilla/dom/SpeechSynthesis.h"
+#endif
+
 // Apple system headers seem to have a check() macro.  <sigh>
 #ifdef check
 #undef check
@@ -1319,6 +1323,10 @@ nsGlobalWindow::CleanUp(bool aIgnoreModalDialog)
 
   mPerformance = nullptr;
 
+#ifdef MOZ_WEBSPEECH
+  mSpeechSynthesis = nullptr;
+#endif
+
   ClearControllers();
 
   mOpener = nullptr;             // Forces Release
@@ -1484,6 +1492,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindow)
 #ifdef MOZ_B2G
   NS_INTERFACE_MAP_ENTRY(nsIDOMWindowB2G)
 #endif // MOZ_B2G
+#ifdef MOZ_WEBSPEECH
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSpeechSynthesisGetter)
+#endif // MOZ_B2G
   NS_INTERFACE_MAP_ENTRY(nsIDOMJSWindow)
   if (aIID.Equals(NS_GET_IID(nsIDOMWindowInternal))) {
     foundInterface = static_cast<nsIDOMWindowInternal*>(this);
@@ -1575,6 +1586,10 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindow)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPerformance)
 
+#ifdef MOZ_WEBSPEECH
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSpeechSynthesis)
+#endif
+
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mInnerWindowHolder)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOuterWindow)
 
@@ -1614,6 +1629,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mArgumentsLast)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPerformance)
+
+#ifdef MOZ_WEBSPEECH
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSpeechSynthesis)
+#endif
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mInnerWindowHolder)
   if (tmp->mOuterWindow) {
@@ -3286,6 +3305,35 @@ nsPIDOMWindow::CreatePerformanceObjectIfNeeded()
     mPerformance = new nsPerformance(this, timing, timedChannel);
   }
 }
+
+// nsIDOMSpeechSynthesisGetter
+
+#ifdef MOZ_WEBSPEECH
+NS_IMETHODIMP
+nsGlobalWindow::GetSpeechSynthesis(nsISupports** aSpeechSynthesis)
+{
+  FORWARD_TO_INNER(GetSpeechSynthesis, (aSpeechSynthesis), NS_ERROR_NOT_INITIALIZED);
+
+  NS_IF_ADDREF(*aSpeechSynthesis = nsPIDOMWindow::GetSpeechSynthesisInternal());
+  return NS_OK;
+}
+
+SpeechSynthesis*
+nsPIDOMWindow::GetSpeechSynthesisInternal()
+{
+  MOZ_ASSERT(IsInnerWindow());
+
+  if (!SpeechSynthesis::PrefEnabled()) {
+    return nullptr;
+  }
+
+  if (!mSpeechSynthesis) {
+    mSpeechSynthesis = new SpeechSynthesis(this);
+  }
+
+  return mSpeechSynthesis;
+}
+#endif
 
 /**
  * GetScriptableParent is called when script reads window.parent.

@@ -43,6 +43,9 @@ simple_events = [
     'ElementReplaceEvent',
     'MozSmsEvent',
     'MozMmsEvent',
+#ifdef MOZ_WEBSPEECH
+    'SpeechSynthesisEvent',
+#endif
     'DeviceStorageChangeEvent',
     'PopupBlockedEvent',
     'BlobEvent',
