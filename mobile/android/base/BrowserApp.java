@@ -199,7 +199,7 @@ abstract public class BrowserApp extends GeckoApp
             case PAGE_SHOW:
                 loadFavicon(tab);
                 break;
-            case LINK_ADDED:
+            case LINK_FAVICON:
                 // If tab is not loading and the favicon is updated, we
                 // want to load the image straight away. If tab is still
                 // loading, we only load the favicon once the page's content
