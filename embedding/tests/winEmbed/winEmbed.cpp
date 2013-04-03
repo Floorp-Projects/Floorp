@@ -90,14 +90,14 @@ static nsresult StartupProfile();
 
 // Global variables
 static UINT gDialogCount = 0;
-static HINSTANCE ghInstanceApp = NULL;
+static HINSTANCE ghInstanceApp = nullptr;
 static char gFirstURL[1024];
 
 // like strpbrk but finds the *last* char, not the first
 static char*
 ns_strrpbrk(char *string, const char *strCharSet)
 {
-    char *found = NULL;
+    char *found = nullptr;
     for (; *string; ++string) {
         for (const char *search = strCharSet; *search; ++search) {
             if (*search == *string) {
@@ -159,7 +159,7 @@ int main(int argc, char *argv[])
     }
     strncpy(gFirstURL, szFirstURL, sizeof(gFirstURL) - 1);
 
-    ghInstanceApp = GetModuleHandle(NULL);
+    ghInstanceApp = GetModuleHandle(nullptr);
 
     // Initialize global strings
     TCHAR szTitle[MAX_LOADSTRING];
@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
 
     strcpy(lastslash, "\\xulrunner\\xul.dll");
 
-    HINSTANCE xulModule = LoadLibraryEx(path, NULL, 0);
+    HINSTANCE xulModule = LoadLibraryEx(path, nullptr, 0);
     if (!xulModule)
         return 4;
 
@@ -308,10 +308,10 @@ HWND GetBrowserFromChrome(nsIWebBrowserChrome *aChrome)
 {
     if (!aChrome)
     {
-        return NULL;
+        return nullptr;
     }
     nsCOMPtr<nsIEmbeddingSiteWindow> baseWindow = do_QueryInterface(aChrome);
-    HWND hwnd = NULL;
+    HWND hwnd = nullptr;
     baseWindow->GetSiteWindow((void **) & hwnd);
     return hwnd;
 }
@@ -393,7 +393,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.cbWndExtra        = 0;
     wcex.hInstance        = hInstance;
     wcex.hIcon            = LoadIcon(ghInstanceApp, (LPCTSTR)IDI_WINEMBED);
-    wcex.hCursor        = LoadCursor(NULL, IDC_ARROW);
+    wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
     wcex.hbrBackground    = (HBRUSH)(COLOR_WINDOW+1);
     wcex.lpszClassName    = szWindowClass;
     wcex.hIconSm        = LoadIcon(ghInstanceApp, (LPCTSTR)IDI_SMALL);
@@ -616,7 +616,7 @@ INT_PTR CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM l
                 TCHAR szAbout[MAX_LOADSTRING];
                 LoadString(ghInstanceApp, IDS_ABOUT_TITLE, szAboutTitle, MAX_LOADSTRING);
                 LoadString(ghInstanceApp, IDS_ABOUT, szAbout, MAX_LOADSTRING);
-                MessageBox(NULL, szAbout, szAboutTitle, MB_OK);
+                MessageBox(nullptr, szAbout, szAboutTitle, MB_OK);
             }
             break;
         }
@@ -786,15 +786,15 @@ HWND WebBrowserChromeUI::CreateNativeWindow(nsIWebBrowserChrome* chrome)
   if ((chromeFlags & nsIWebBrowserChrome::CHROME_ALL) == nsIWebBrowserChrome::CHROME_ALL)
     hwndDialog = CreateDialog(ghInstanceApp,
                               MAKEINTRESOURCE(IDD_BROWSER),
-                              NULL,
+                              nullptr,
                               BrowserDlgProc);
   else
     hwndDialog = CreateDialog(ghInstanceApp,
                               MAKEINTRESOURCE(IDD_BROWSER_NC),
-                              NULL,
+                              nullptr,
                               BrowserDlgProc);
   if (!hwndDialog)
-    return NULL;
+    return nullptr;
 
   // Stick a menu onto it
   if (chromeFlags & nsIWebBrowserChrome::CHROME_MENUBAR) {
@@ -844,7 +844,7 @@ void WebBrowserChromeUI::Destroy(nsIWebBrowserChrome* chrome)
   chrome->ExitModalEventLoop(NS_OK);
 
   HWND hwndDlg = GetBrowserDlgFromChrome(chrome);
-  if (hwndDlg == NULL)
+  if (hwndDlg == nullptr)
     return;
 
   // Explicitly destroy the embedded browser and then the chrome
@@ -868,7 +868,7 @@ void WebBrowserChromeUI::Destroy(nsIWebBrowserChrome* chrome)
 void WebBrowserChromeUI::Destroyed(nsIWebBrowserChrome* chrome)
 {
     HWND hwndDlg = GetBrowserDlgFromChrome(chrome);
-    if (hwndDlg == NULL)
+    if (hwndDlg == nullptr)
     {
         return;
     }
@@ -894,7 +894,7 @@ void WebBrowserChromeUI::Destroyed(nsIWebBrowserChrome* chrome)
 void WebBrowserChromeUI::SetFocus(nsIWebBrowserChrome *chrome)
 {
     HWND hwndDlg = GetBrowserDlgFromChrome(chrome);
-    if (hwndDlg == NULL)
+    if (hwndDlg == nullptr)
     {
         return;
     }
@@ -1112,12 +1112,12 @@ void AppCallbacks::EnableChromeWindow(nsIWebBrowserChrome *aWindow,
 uint32_t AppCallbacks::RunEventLoop(bool &aRunCondition)
 {
   MSG msg;
-  HANDLE hFakeEvent = ::CreateEvent(NULL, TRUE, FALSE, NULL);
+  HANDLE hFakeEvent = ::CreateEvent(nullptr, TRUE, FALSE, nullptr);
 
   while (aRunCondition ) {
     // Process pending messages
-    while (::PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) {
-      if (!::GetMessage(&msg, NULL, 0, 0)) {
+    while (::PeekMessage(&msg, nullptr, 0, 0, PM_NOREMOVE)) {
+      if (!::GetMessage(&msg, nullptr, 0, 0)) {
         // WM_QUIT
         aRunCondition = false;
         break;
