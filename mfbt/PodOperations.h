@@ -14,10 +14,8 @@
 #ifndef mozilla_PodOperations_h
 #define mozilla_PodOperations_h
 
-#define MOZ_DELETE delete
-#define MOZ_ASSERT
-#define MOZ_ASSERT_IF
-#define MOZ_ALWAYS_INLINE __attribute__((always_inline)) __inline__
+#include "mozilla/Attributes.h"
+#include "mozilla/Util.h"
 
 #include <string.h>
 
