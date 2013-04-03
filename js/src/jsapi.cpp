@@ -6829,9 +6829,8 @@ JS_PUBLIC_API(JSBool)
 JS_ObjectIsRegExp(JSContext *cx, JSObject *objArg)
 {
     RootedObject obj(cx, objArg);
-    AssertHeapIsIdle(cx);
-    JS_ASSERT(obj);
-    return obj->isRegExp();
+    assertSameCompartment(cx, obj);
+    return ObjectClassIs(obj, ESClass_RegExp, cx);
 }
 
 JS_PUBLIC_API(unsigned)
