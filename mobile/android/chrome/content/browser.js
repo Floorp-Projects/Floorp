@@ -95,6 +95,7 @@ var LazyNotificationGetter = {
   ["ConsoleAPI", ["console-api-log-event"], "chrome://browser/content/ConsoleAPI.js"],
   ["FindHelper", ["FindInPage:Find", "FindInPage:Prev", "FindInPage:Next", "FindInPage:Closed", "Tab:Selected"], "chrome://browser/content/FindHelper.js"],
   ["PermissionsHelper", ["Permissions:Get", "Permissions:Clear"], "chrome://browser/content/PermissionsHelper.js"],
+  ["FeedHandler", ["Feeds:Subscribe"], "chrome://browser/content/FeedHandler.js"],
 ].forEach(function (aScript) {
   let [name, notifications, script] = aScript;
   XPCOMUtils.defineLazyGetter(window, name, function() {
@@ -3017,11 +3018,11 @@ Tab.prototype = {
         if (!target.href || target.disabled)
           return;
 
-        // ignore on frames and other documents
+        // Ignore on frames and other documents
         if (target.ownerDocument != this.browser.contentDocument)
           return;
 
-        // sanitize the rel string
+        // Sanitize the rel string
         let list = [];
         if (target.rel) {
           list = target.rel.toLowerCase().split(/\s+/);
@@ -3032,42 +3033,60 @@ Tab.prototype = {
             list.push("[" + rel + "]");
         }
 
-        // We only care about icon links
-        if (list.indexOf("[icon]") == -1)
-          return;
+        if (list.indexOf("[icon]") != -1) {
+          // We want to get the largest icon size possible for our UI.
+          let maxSize = 0;
 
-        // We want to get the largest icon size possible for our UI.
-        let maxSize = 0;
+          // We use the sizes attribute if available
+          // see http://www.whatwg.org/specs/web-apps/current-work/multipage/links.html#rel-icon
+          if (target.hasAttribute("sizes")) {
+            let sizes = target.getAttribute("sizes").toLowerCase();
 
-        // We use the sizes attribute if available
-        // see http://www.whatwg.org/specs/web-apps/current-work/multipage/links.html#rel-icon
-        if (target.hasAttribute("sizes")) {
-          let sizes = target.getAttribute("sizes").toLowerCase();
-
-          if (sizes == "any") {
-            // Since Java expects an integer, use -1 to represent icons with sizes="any"
-            maxSize = -1; 
-          } else {
-            let tokens = sizes.split(" ");
-            tokens.forEach(function(token) {
-              // TODO: check for invalid tokens
-              let [w, h] = token.split("x");
-              maxSize = Math.max(maxSize, Math.max(w, h));
-            });
+            if (sizes == "any") {
+              // Since Java expects an integer, use -1 to represent icons with sizes="any"
+              maxSize = -1; 
+            } else {
+              let tokens = sizes.split(" ");
+              tokens.forEach(function(token) {
+                // TODO: check for invalid tokens
+                let [w, h] = token.split("x");
+                maxSize = Math.max(maxSize, Math.max(w, h));
+              });
+            }
           }
+
+          let json = {
+            type: "Link:Favicon",
+            tabID: this.id,
+            href: resolveGeckoURI(target.href),
+            charset: target.ownerDocument.characterSet,
+            title: target.title,
+            rel: list.join(" "),
+            size: maxSize
+          };
+          sendMessageToJava(json);
+        } else if (list.indexOf("[alternate]") != -1) {
+          let type = target.type.toLowerCase().replace(/^\s+|\s*(?:;.*)?$/g, "");
+          let isFeed = (type == "application/rss+xml" || type == "application/atom+xml");
+
+          if (!isFeed)
+            return;
+
+          try {
+            // urlSecurityCeck will throw if things are not OK
+            ContentAreaUtils.urlSecurityCheck(target.href, target.ownerDocument.nodePrincipal, Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
+
+            if (!this.browser.feeds)
+              this.browser.feeds = [];
+            this.browser.feeds.push({ href: target.href, title: target.title, type: type });
+
+            let json = {
+              type: "Link:Feed",
+              tabID: this.id
+            };
+            sendMessageToJava(json);
+          } catch (e) {}
         }
-
-        let json = {
-          type: "DOMLinkAdded",
-          tabID: this.id,
-          href: resolveGeckoURI(target.href),
-          charset: target.ownerDocument.characterSet,
-          title: target.title,
-          rel: list.join(" "),
-          size: maxSize
-        };
-
-        sendMessageToJava(json);
         break;
       }
 

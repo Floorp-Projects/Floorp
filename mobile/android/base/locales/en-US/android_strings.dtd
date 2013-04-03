@@ -164,6 +164,7 @@ size. -->
 <!ENTITY contextmenu_paste "Paste">
 <!ENTITY contextmenu_copyurl "Copy Address">
 <!ENTITY contextmenu_edit_bookmark "Edit">
+<!ENTITY contextmenu_subscribe "Subscribe to Page">
 
 <!ENTITY history_removed "Page removed">
 

@@ -171,6 +171,7 @@
   <string name="contextmenu_paste">&contextmenu_paste;</string>
   <string name="contextmenu_copyurl">&contextmenu_copyurl;</string>
   <string name="contextmenu_edit_bookmark">&contextmenu_edit_bookmark;</string>
+  <string name="contextmenu_subscribe">&contextmenu_subscribe;</string>
 
   <string name="history_removed">&history_removed;</string>
 
