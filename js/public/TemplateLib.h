@@ -104,10 +104,6 @@ template <class T> struct UnsafeRangeSizeMask {
     static const size_t result = MulOverflowMask<2 * sizeof(T)>::result;
 };
 
-/* Return T stripped of any const-ness. */
-template <class T> struct StripConst          { typedef T result; };
-template <class T> struct StripConst<const T> { typedef T result; };
-
 template <bool cond, typename T, T v1, T v2> struct If        { static const T result = v1; };
 template <typename T, T v1, T v2> struct If<false, T, v1, v2> { static const T result = v2; };
 
