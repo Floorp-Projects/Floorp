@@ -11,18 +11,21 @@
 #include "nsWrapperCache.h"
 
 #include "EnableSpeechSynthesisCheck.h"
+#include "nsISpeechService.h"
 
 struct JSContext;
 
 namespace mozilla {
 namespace dom {
 
+class nsSynthVoiceRegistry;
 class SpeechSynthesis;
 
 class SpeechSynthesisVoice MOZ_FINAL : public nsISupports,
                                        public nsWrapperCache,
                                        public EnableSpeechSynthesisCheck
 {
+  friend class nsSynthVoiceRegistry;
   friend class SpeechSynthesis;
 
 public:

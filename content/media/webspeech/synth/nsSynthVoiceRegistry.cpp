@@ -5,12 +5,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsILocaleService.h"
-#include "nsISupports.h"
+#include "nsISpeechService.h"
 #include "nsServiceManagerUtils.h"
 
 #include "SpeechSynthesisUtterance.h"
 #include "SpeechSynthesisVoice.h"
 #include "nsSynthVoiceRegistry.h"
+#include "nsSpeechTask.h"
 
 #include "nsString.h"
 #include "mozilla/StaticPtr.h"
@@ -31,7 +32,7 @@ namespace dom {
 class VoiceData
 {
 public:
-  VoiceData(nsISupports* aService, const nsAString& aUri,
+  VoiceData(nsISpeechService* aService, const nsAString& aUri,
             const nsAString& aName, const nsAString& aLang, bool aIsLocal)
     : mService(aService)
     , mUri(aUri)
@@ -43,7 +44,7 @@ public:
 
   NS_INLINE_DECL_REFCOUNTING(VoiceData)
 
-  nsCOMPtr<nsISupports> mService;
+  nsCOMPtr<nsISpeechService> mService;
 
   nsString mUri;
 
@@ -99,10 +100,8 @@ nsSynthVoiceRegistry::Shutdown()
   gSynthVoiceRegistry = nullptr;
 }
 
-// nsISynthVoiceRegistry
-
 NS_IMETHODIMP
-nsSynthVoiceRegistry::AddVoice(nsISupports* aService,
+nsSynthVoiceRegistry::AddVoice(nsISpeechService* aService,
                                const nsAString& aUri,
                                const nsAString& aName,
                                const nsAString& aLang,
@@ -119,7 +118,7 @@ nsSynthVoiceRegistry::AddVoice(nsISupports* aService,
 }
 
 NS_IMETHODIMP
-nsSynthVoiceRegistry::RemoveVoice(nsISupports* aService,
+nsSynthVoiceRegistry::RemoveVoice(nsISpeechService* aService,
                                   const nsAString& aUri)
 {
   LOG(PR_LOG_DEBUG,
@@ -232,7 +231,7 @@ nsSynthVoiceRegistry::GetVoiceName(const nsAString& aUri, nsAString& aRetval)
 }
 
 nsresult
-nsSynthVoiceRegistry::AddVoiceImpl(nsISupports* aService,
+nsSynthVoiceRegistry::AddVoiceImpl(nsISpeechService* aService,
                                    const nsAString& aUri,
                                    const nsAString& aName,
                                    const nsAString& aLang,
@@ -249,6 +248,164 @@ nsSynthVoiceRegistry::AddVoiceImpl(nsISupports* aService,
   mUriVoiceMap.Put(aUri, voice);
 
   return NS_OK;
+}
+
+bool
+nsSynthVoiceRegistry::FindVoiceByLang(const nsAString& aLang,
+                                      VoiceData** aRetval)
+{
+  nsAString::const_iterator dashPos, start, end;
+  aLang.BeginReading(start);
+  aLang.EndReading(end);
+
+  while (true) {
+    nsAutoString langPrefix(Substring(start, end));
+
+    for (int32_t i = mDefaultVoices.Length(); i > 0; ) {
+      VoiceData* voice = mDefaultVoices[--i];
+
+      if (StringBeginsWith(voice->mLang, langPrefix)) {
+        *aRetval = voice;
+        return true;
+      }
+    }
+
+    for (int32_t i = mVoices.Length(); i > 0; ) {
+      VoiceData* voice = mVoices[--i];
+
+      if (StringBeginsWith(voice->mLang, langPrefix)) {
+        *aRetval = voice;
+        return true;
+      }
+    }
+
+    dashPos = end;
+    end = start;
+
+    if (!RFindInReadable(NS_LITERAL_STRING("-"), end, dashPos)) {
+      break;
+    }
+  }
+
+  return false;
+}
+
+VoiceData*
+nsSynthVoiceRegistry::FindBestMatch(const nsAString& aUri,
+                                    const nsAString& aLang)
+{
+  if (mVoices.IsEmpty()) {
+    return nullptr;
+  }
+
+  bool found = false;
+  VoiceData* retval = mUriVoiceMap.GetWeak(aUri, &found);
+
+  if (found) {
+    LOG(PR_LOG_DEBUG, ("nsSynthVoiceRegistry::FindBestMatch - Matched URI"));
+    return retval;
+  }
+
+  // Try finding a match for given voice.
+  if (!aLang.IsVoid() && !aLang.IsEmpty()) {
+    if (FindVoiceByLang(aLang, &retval)) {
+      LOG(PR_LOG_DEBUG,
+          ("nsSynthVoiceRegistry::FindBestMatch - Matched language (%s ~= %s)",
+           NS_ConvertUTF16toUTF8(aLang).get(),
+           NS_ConvertUTF16toUTF8(retval->mLang).get()));
+
+      return retval;
+    }
+  }
+
+  // Try UI language.
+  nsresult rv;
+  nsCOMPtr<nsILocaleService> localeService = do_GetService(NS_LOCALESERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, nullptr);
+
+  nsAutoString uiLang;
+  rv = localeService->GetLocaleComponentForUserAgent(uiLang);
+  NS_ENSURE_SUCCESS(rv, nullptr);
+
+  if (FindVoiceByLang(uiLang, &retval)) {
+    LOG(PR_LOG_DEBUG,
+        ("nsSynthVoiceRegistry::FindBestMatch - Matched UI language (%s ~= %s)",
+         NS_ConvertUTF16toUTF8(uiLang).get(),
+         NS_ConvertUTF16toUTF8(retval->mLang).get()));
+
+    return retval;
+  }
+
+  // Try en-US, the language of locale "C"
+  if (FindVoiceByLang(NS_LITERAL_STRING("en-US"), &retval)) {
+    LOG(PR_LOG_DEBUG,
+        ("nsSynthVoiceRegistry::FindBestMatch - Matched C locale language (en-US ~= %s)",
+         NS_ConvertUTF16toUTF8(retval->mLang).get()));
+
+    return retval;
+  }
+
+  // The top default voice is better than nothing...
+  if (!mDefaultVoices.IsEmpty()) {
+    return mDefaultVoices.LastElement();
+  }
+
+  return nullptr;
+}
+
+already_AddRefed<nsSpeechTask>
+nsSynthVoiceRegistry::SpeakUtterance(SpeechSynthesisUtterance& aUtterance,
+                                     const nsAString& aDocLang)
+{
+  nsString lang = nsString(aUtterance.mLang.IsEmpty() ? aDocLang : aUtterance.mLang);
+  nsAutoString uri;
+
+  if (aUtterance.mVoice) {
+    aUtterance.mVoice->GetVoiceURI(uri);
+  }
+
+  nsSpeechTask* task  = new nsSpeechTask(&aUtterance);
+  Speak(aUtterance.mText, lang, uri,
+        aUtterance.Rate(), aUtterance.Pitch(), task);
+
+  NS_IF_ADDREF(task);
+  return task;
+}
+
+void
+nsSynthVoiceRegistry::Speak(const nsAString& aText,
+                            const nsAString& aLang,
+                            const nsAString& aUri,
+                            const float& aRate,
+                            const float& aPitch,
+                            nsSpeechTask* aTask)
+{
+  LOG(PR_LOG_DEBUG,
+      ("nsSynthVoiceRegistry::Speak text='%s' lang='%s' uri='%s' rate=%f pitch=%f",
+       NS_ConvertUTF16toUTF8(aText).get(), NS_ConvertUTF16toUTF8(aLang).get(),
+       NS_ConvertUTF16toUTF8(aUri).get(), aRate, aPitch));
+
+  VoiceData* voice = FindBestMatch(aUri, aLang);
+
+  if (!voice) {
+    NS_WARNING("No voices found.");
+    aTask->DispatchError(0, 0);
+    return;
+  }
+
+  LOG(PR_LOG_DEBUG, ("nsSynthVoiceRegistry::Speak - Using voice URI: %s",
+                     NS_ConvertUTF16toUTF8(voice->mUri).get()));
+
+  SpeechServiceType serviceType;
+
+  DebugOnly<nsresult> rv = voice->mService->GetServiceType(&serviceType);
+  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to get speech service type");
+
+  if (serviceType == nsISpeechService::SERVICETYPE_INDIRECT_AUDIO) {
+    aTask->SetIndirectAudio(true);
+  }
+
+  voice->mService->Speak(aText, voice->mUri, aRate, aPitch, aTask);
 }
 
 } // namespace dom

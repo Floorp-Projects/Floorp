@@ -1,0 +1,157 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+typedef unsigned short SpeechServiceType;
+
+/**
+ * A callback is implemented by the service. For direct audio services, it is
+ * required to implement these, although it could be helpful to use the
+ * cancel method for shutting down the speech resources.
+ */
+[scriptable, uuid(408251b0-1d7b-4876-888f-718859ce8c9d)]
+interface nsISpeechTaskCallback : nsISupports
+{
+  /**
+   * The user or application has paused the speech.
+   */
+  void onPause();
+
+  /**
+   * The user or application has resumed the speech.
+   */
+  void onResume();
+
+  /**
+   * The user or application has canceled the speech.
+   */
+  void onCancel();
+};
+
+
+/**
+ * A task is associated with a single utterance. It is provided by the browser
+ * to the service in the speak() method.
+ */
+[scriptable, builtinclass, uuid(3a60c397-7a04-4cf7-99ea-7432e7a0a1c1)]
+interface nsISpeechTask : nsISupports
+{
+  /**
+   * Prepare browser for speech.
+   *
+   * @param aCallback callback object for mid-speech operations.
+   * @param aChannels number of audio channels. Only required
+   *                    in direct audio services
+   * @param aRate     audio rate. Only required in direct audio services
+   */
+  [optional_argc] void setup(in nsISpeechTaskCallback aCallback,
+                               [optional] in uint32_t aChannels,
+                               [optional] in uint32_t aRate);
+
+  /**
+   * Send audio data to browser.
+   *
+   * @param aData     an Int16Array with PCM-16 audio data.
+   * @param aLandmarks an array of sample offset and landmark pairs.
+   *                     Used for emiting boundary and mark events.
+   */
+  [implicit_jscontext]
+  void sendAudio(in jsval aData, in jsval aLandmarks);
+
+  /**
+   * Dispatch start event.
+   */
+  void dispatchStart();
+
+  /**
+   * Dispatch end event.
+   *
+   * @param aElapsedTime time in seconds since speech has started.
+   * @param aCharIndex   offset of spoken characters.
+   */
+  void dispatchEnd(in float aElapsedTime, in unsigned long aCharIndex);
+
+  /**
+   * Dispatch pause event. Should not be called directly by service.
+   *
+   * @param aElapsedTime time in seconds since speech has started.
+   * @param aCharIndex   offset of spoken characters.
+   */
+  void dispatchPause(in float aElapsedTime, in unsigned long aCharIndex);
+
+  /**
+   * Dispatch resume event. Should not be called directly by service.
+   *
+   * @param aElapsedTime time in seconds since speech has started.
+   * @param aCharIndex   offset of spoken characters.
+   */
+  void dispatchResume(in float aElapsedTime, in unsigned long aCharIndex);
+
+  /**
+   * Dispatch error event.
+   *
+   * @param aElapsedTime time in seconds since speech has started.
+   * @param aCharIndex   offset of spoken characters.
+   */
+  void dispatchError(in float aElapsedTime, in unsigned long aCharIndex);
+
+  /**
+   * Dispatch boundary event.
+   *
+   * @param aName        name of boundary, 'word' or 'sentence'
+   * @param aElapsedTime time in seconds since speech has started.
+   * @param aCharIndex   offset of spoken characters.
+   */
+  void dispatchBoundary(in DOMString aName, in float aElapsedTime,
+                        in unsigned long aCharIndex);
+
+  /**
+   * Dispatch mark event.
+   *
+   * @param aName        mark identifier.
+   * @param aElapsedTime time in seconds since speech has started.
+   * @param aCharIndex   offset of spoken characters.
+   */
+  void dispatchMark(in DOMString aName, in float aElapsedTime, in unsigned long aCharIndex);
+};
+
+/**
+ * The main interface of a speech synthesis service.
+ *
+ * A service's speak method could be implemented in two ways:
+ *  1. Indirect audio - the service is responsible for outputting audio.
+ *    The service calls the nsISpeechTask.dispatch* methods directly. Starting
+ *    with dispatchStart() and ending with dispatchEnd or dispatchError().
+ *
+ *  2. Direct audio - the service provides us with PCM-16 data, and we output it.
+ *    The service does not call the dispatch task methods directly. Instead,
+ *    audio information is provided at setup(), and audio data is sent with
+ *    sendAudio(). The utterance is terminated with an empty sendAudio().
+ */
+[scriptable, uuid(3952d388-050c-47ba-a70f-5fc1cadf1db0)]
+interface nsISpeechService : nsISupports
+{
+  /**
+   * Speak the given text using the voice identified byu the given uri. See
+   * W3C Speech API spec for information about pitch and rate.
+   * https://dvcs.w3.org/hg/speech-api/raw-file/tip/speechapi.html#utterance-attributes
+   *
+   * @param aText  text to utter.
+   * @param aUri   unique voice identifier.
+   * @param aRate  rate to speak voice in.
+   * @param aPitch pitch to speak voice in.
+   * @param aTask  task instance for utterance, used for sending events or audio
+   *                 data back to browser.
+   */
+  void speak(in DOMString aText, in DOMString aUri,
+             in float aRate, in float aPitch,
+             in nsISpeechTask aTask);
+
+  const SpeechServiceType SERVICETYPE_DIRECT_AUDIO = 1;
+  const SpeechServiceType SERVICETYPE_INDIRECT_AUDIO = 2;
+
+  readonly attribute SpeechServiceType serviceType;
+};

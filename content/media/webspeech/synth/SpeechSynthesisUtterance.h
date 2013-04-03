@@ -11,6 +11,7 @@
 #include "nsString.h"
 
 #include "EnableSpeechSynthesisCheck.h"
+#include "nsSpeechTask.h"
 
 struct JSContext;
 
@@ -18,11 +19,15 @@ namespace mozilla {
 namespace dom {
 
 class SpeechSynthesisVoice;
+class SpeechSynthesis;
+class nsSynthVoiceRegistry;
 
 class SpeechSynthesisUtterance MOZ_FINAL : public nsDOMEventTargetHelper,
                                            public EnableSpeechSynthesisCheck
 {
   friend class SpeechSynthesis;
+  friend class nsSpeechTask;
+  friend class nsSynthVoiceRegistry;
 
 public:
   SpeechSynthesisUtterance(const nsAString& aText);
