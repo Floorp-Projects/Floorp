@@ -214,46 +214,7 @@ var Browser = {
     }
   },
 
-  _waitingToClose: false,
   closing: function closing() {
-    // If we are already waiting for the close prompt, don't show another
-    if (this._waitingToClose)
-      return false;
-
-    // Prompt if we have multiple tabs before closing window
-    let numTabs = this._tabs.length;
-    if (numTabs > 1) {
-      let shouldPrompt = Services.prefs.getBoolPref("browser.tabs.warnOnClose");
-      if (shouldPrompt) {
-        let prompt = Services.prompt;
-
-        // Default to true: if it were false, we wouldn't get this far
-        let warnOnClose = { value: true };
-
-        let messageBase = Strings.browser.GetStringFromName("tabs.closeWarning");
-        let message = PluralForm.get(numTabs, messageBase).replace("#1", numTabs);
-
-        let title = Strings.browser.GetStringFromName("tabs.closeWarningTitle");
-        let closeText = Strings.browser.GetStringFromName("tabs.closeButton");
-        let checkText = Strings.browser.GetStringFromName("tabs.closeWarningPromptMe");
-        let buttons = (prompt.BUTTON_TITLE_IS_STRING * prompt.BUTTON_POS_0) +
-                      (prompt.BUTTON_TITLE_CANCEL * prompt.BUTTON_POS_1);
-
-        this._waitingToClose = true;
-        let pressed = prompt.confirmEx(window, title, message, buttons, closeText, null, null, checkText, warnOnClose);
-        this._waitingToClose = false;
-
-        // Don't set the pref unless they press OK and it's false
-        let reallyClose = (pressed == 0);
-        if (reallyClose && !warnOnClose.value)
-          Services.prefs.setBoolPref("browser.tabs.warnOnClose", false);
-
-        // If we don't want to close, return now. If we are closing, continue with other housekeeping.
-        if (!reallyClose)
-          return false;
-      }
-    }
-
     // Figure out if there's at least one other browser window around.
     let lastBrowser = true;
     let e = Services.wm.getEnumerator("navigator:browser");
