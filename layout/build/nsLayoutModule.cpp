@@ -96,6 +96,7 @@
 
 #ifdef MOZ_WEBSPEECH
 #include "mozilla/dom/FakeSpeechRecognitionService.h"
+#include "mozilla/dom/nsSynthVoiceRegistry.h"
 #endif
 
 #ifdef MOZ_B2G_RIL
@@ -295,6 +296,11 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(SystemWorkerManager,
 #ifdef MOZ_B2G_BT
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(BluetoothService,
                                          BluetoothService::FactoryCreate)
+#endif
+
+#ifdef MOZ_WEBSPEECH
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsSynthVoiceRegistry,
+                                         nsSynthVoiceRegistry::GetInstanceForService)
 #endif
 
 #ifdef MOZ_WIDGET_GONK
@@ -865,6 +871,7 @@ NS_DEFINE_NAMED_CID(NS_GAMEPAD_TEST_CID);
 #endif
 #ifdef MOZ_WEBSPEECH
 NS_DEFINE_NAMED_CID(NS_FAKE_SPEECH_RECOGNITION_SERVICE_CID);
+NS_DEFINE_NAMED_CID(NS_SYNTHVOICEREGISTRY_CID);
 #endif
 
 static nsresult
@@ -1116,6 +1123,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_FOCUSMANAGER_CID, false, NULL, CreateFocusManager },
 #ifdef MOZ_WEBSPEECH
   { &kNS_FAKE_SPEECH_RECOGNITION_SERVICE_CID, false, NULL, FakeSpeechRecognitionServiceConstructor },
+  { &kNS_SYNTHVOICEREGISTRY_CID, true, NULL, nsSynthVoiceRegistryConstructor },
 #endif
   { &kCSPSERVICE_CID, false, NULL, CSPServiceConstructor },
   { &kNS_MIXEDCONTENTBLOCKER_CID, false, NULL, nsMixedContentBlockerConstructor },
@@ -1265,6 +1273,7 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { "@mozilla.org/focus-manager;1", &kNS_FOCUSMANAGER_CID },
 #ifdef MOZ_WEBSPEECH
   { NS_SPEECH_RECOGNITION_SERVICE_CONTRACTID_PREFIX "fake", &kNS_FAKE_SPEECH_RECOGNITION_SERVICE_CID },
+  { NS_SYNTHVOICEREGISTRY_CONTRACTID, &kNS_SYNTHVOICEREGISTRY_CID },
 #endif
   { CSPSERVICE_CONTRACTID, &kCSPSERVICE_CID },
   { NS_MIXEDCONTENTBLOCKER_CONTRACTID, &kNS_MIXEDCONTENTBLOCKER_CID },

@@ -321,13 +321,16 @@ endif
 
 ifdef MOZ_WEBSPEECH
 webidl_files += \
-    SpeechGrammar.webidl \
-    SpeechGrammarList.webidl \
-    SpeechRecognitionAlternative.webidl \
-    SpeechRecognitionResultList.webidl \
-    SpeechRecognitionResult.webidl \
-    SpeechRecognition.webidl \
-    $(NULL)
+  SpeechGrammar.webidl \
+  SpeechGrammarList.webidl \
+  SpeechRecognitionAlternative.webidl \
+  SpeechRecognitionResultList.webidl \
+  SpeechRecognitionResult.webidl \
+  SpeechRecognition.webidl \
+  SpeechSynthesisUtterance.webidl \
+  SpeechSynthesisVoice.webidl \
+  SpeechSynthesis.webidl \
+  $(NULL)
 endif
 
 ifdef ENABLE_TESTS

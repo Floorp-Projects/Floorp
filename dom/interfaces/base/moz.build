@@ -58,6 +58,11 @@ if CONFIG['MOZ_B2G']:
         'nsIDOMWindowB2G.idl',
     ]
 
+if CONFIG['MOZ_WEBSPEECH']:
+    XPIDL_SOURCES += [
+        'nsIDOMSpeechSynthesisGetter.idl'
+    ]
+
 XPIDL_MODULE = 'dom_base'
 
 XPIDL_FLAGS += [

@@ -72,6 +72,10 @@
 #include "nsIDOMWindowB2G.h"
 #endif // MOZ_B2G
 
+#ifdef MOZ_WEBSPEECH
+#include "nsIDOMSpeechSynthesisGetter.h"
+#endif // MOZ_WEBSPEECH
+
 #define DEFAULT_HOME_PAGE "www.mozilla.org"
 #define PREF_BROWSER_STARTUP_HOMEPAGE "browser.startup.homepage"
 
@@ -267,6 +271,9 @@ class nsGlobalWindow : public mozilla::dom::EventTarget,
 #ifdef MOZ_B2G
                      , public nsIDOMWindowB2G
 #endif // MOZ_B2G
+#ifdef MOZ_WEBSPEECH
+                     , public nsIDOMSpeechSynthesisGetter
+#endif // MOZ_WEBSPEECH
 {
 public:
   typedef mozilla::TimeStamp TimeStamp;
@@ -318,6 +325,11 @@ public:
   // nsIDOMWindowB2G
   NS_DECL_NSIDOMWINDOWB2G
 #endif // MOZ_B2G
+
+#ifdef MOZ_WEBSPEECH
+  // nsIDOMSpeechSynthesisGetter
+  NS_DECL_NSIDOMSPEECHSYNTHESISGETTER
+#endif // MOZ_WEBSPEECH
 
   // nsIDOMWindowPerformance
   NS_DECL_NSIDOMWINDOWPERFORMANCE
