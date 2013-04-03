@@ -377,7 +377,7 @@ private:
 
     // For broadcasting tracking preference
     bool           mDoNotTrackEnabled;
-    PRUint8        mDoNotTrackValue;
+    uint8_t        mDoNotTrackValue;
 
     // Whether telemetry is reported or not
     bool           mTelemetryEnabled;
