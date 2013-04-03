@@ -28,7 +28,7 @@ CopyStackFrameArguments(const AbstractFramePtr frame, HeapValue *dst)
     JS_ASSERT_IF(frame.isStackFrame(), !frame.asStackFrame()->runningInIon());
 
     unsigned numActuals = frame.numActualArgs();
-    unsigned numFormals = frame.callee().nargs;
+    unsigned numFormals = frame.callee()->nargs;
 
     /* Copy formal arguments. */
     Value *src = frame.formals();
@@ -181,7 +181,7 @@ ArgumentsObject::createExpected(JSContext *cx, AbstractFramePtr frame)
 {
     JS_ASSERT(frame.script()->needsArgsObj());
     RootedScript script(cx, frame.script());
-    RootedFunction callee(cx, &frame.callee());
+    RootedFunction callee(cx, frame.callee());
     CopyFrameArgs copy(frame);
     ArgumentsObject *argsobj = create(cx, script, callee, frame.numActualArgs(), copy);
     if (!argsobj)
@@ -204,7 +204,7 @@ ArgumentsObject *
 ArgumentsObject::createUnexpected(JSContext *cx, AbstractFramePtr frame)
 {
     RootedScript script(cx, frame.script());
-    RootedFunction callee(cx, &frame.callee());
+    RootedFunction callee(cx, frame.callee());
     CopyFrameArgs copy(frame);
     return create(cx, script, callee, frame.numActualArgs(), copy);
 }

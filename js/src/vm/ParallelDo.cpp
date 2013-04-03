@@ -408,7 +408,7 @@ class ParallelIonInvoke
 
     bool invoke(JSContext *cx) {
         RootedValue result(cx);
-        enter_(jitcode_, argc_ + 1, argv_ + 1, NULL, calleeToken_, result.address());
+        enter_(jitcode_, argc_ + 1, argv_ + 1, NULL, calleeToken_, NULL, 0, result.address());
         return !result.isMagic();
     }
 };

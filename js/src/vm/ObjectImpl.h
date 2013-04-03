@@ -1121,6 +1121,7 @@ class ObjectImpl : public gc::Cell
     inline const Value & getDenseElement(uint32_t idx);
     inline bool containsDenseElement(uint32_t idx);
     inline uint32_t getDenseInitializedLength();
+    inline uint32_t getDenseCapacity();
 
     bool makeElementsSparse(JSContext *cx) {
         NEW_OBJECT_REPRESENTATION_ONLY();

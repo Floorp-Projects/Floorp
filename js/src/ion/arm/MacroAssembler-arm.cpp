@@ -9,6 +9,7 @@
 #include "mozilla/MathAlgorithms.h"
 
 #include "ion/arm/MacroAssembler-arm.h"
+#include "ion/BaselineFrame.h"
 #include "ion/MoveEmitter.h"
 
 using namespace js;
@@ -37,6 +38,13 @@ MacroAssemblerARM::convertInt32ToDouble(const Register &src, const FloatRegister
     as_vxfer(src, InvalidReg, dest.sintOverlay(),
              CoreToFloat);
     as_vcvt(dest, dest.sintOverlay());
+}
+
+void
+MacroAssemblerARM::convertInt32ToDouble(const Address &src, FloatRegister dest)
+{
+    ma_ldr(Operand(src), ScratchRegister);
+    convertInt32ToDouble(ScratchRegister, dest);
 }
 
 void
@@ -93,6 +101,30 @@ MacroAssemblerARM::convertDoubleToInt32(const FloatRegister &src, const Register
         ma_b(fail, Assembler::Equal);
         // guard for != 0.
     }
+}
+
+void
+MacroAssemblerARM::addDouble(FloatRegister src, FloatRegister dest)
+{
+    ma_vadd(dest, src, dest);
+}
+
+void
+MacroAssemblerARM::subDouble(FloatRegister src, FloatRegister dest)
+{
+    ma_vsub(dest, src, dest);
+}
+
+void
+MacroAssemblerARM::mulDouble(FloatRegister src, FloatRegister dest)
+{
+    ma_vmul(dest, src, dest);
+}
+
+void
+MacroAssemblerARM::divDouble(FloatRegister src, FloatRegister dest)
+{
+    ma_vdiv(dest, src, dest);
 }
 
 void
@@ -1505,6 +1537,12 @@ MacroAssemblerARMCompat::freeStack(Register amount)
 }
 
 void
+MacroAssemblerARMCompat::add32(Register src, Register dest)
+{
+    ma_add(src, dest, SetCond);
+}
+
+void
 MacroAssemblerARMCompat::add32(Imm32 imm, Register dest)
 {
     ma_add(imm, dest, SetCond);
@@ -1528,6 +1566,12 @@ void
 MacroAssemblerARMCompat::sub32(Imm32 imm, Register dest)
 {
     ma_sub(imm, dest, SetCond);
+}
+
+void
+MacroAssemblerARMCompat::sub32(Register src, Register dest)
+{
+    ma_sub(src, dest, SetCond);
 }
 
 void
@@ -1572,6 +1616,12 @@ MacroAssemblerARMCompat::xorPtr(Imm32 imm, Register dest)
 }
 
 void
+MacroAssemblerARMCompat::xorPtr(Register src, Register dest)
+{
+    ma_eor(src, dest);
+}
+
+void
 MacroAssemblerARMCompat::orPtr(Imm32 imm, Register dest)
 {
     ma_orr(imm, dest);
@@ -1587,6 +1637,12 @@ void
 MacroAssemblerARMCompat::andPtr(Imm32 imm, Register dest)
 {
     ma_and(imm, dest);
+}
+
+void
+MacroAssemblerARMCompat::andPtr(Register src, Register dest)
+{
+    ma_and(src, dest);
 }
 
 void
@@ -2143,6 +2199,12 @@ MacroAssemblerARMCompat::testObject(Assembler::Condition cond, const ValueOperan
 }
 
 Assembler::Condition
+MacroAssemblerARMCompat::testNumber(Assembler::Condition cond, const ValueOperand &value)
+{
+    return testNumber(cond, value.typeReg());
+}
+
+Assembler::Condition
 MacroAssemblerARMCompat::testMagic(Assembler::Condition cond, const ValueOperand &value)
 {
     return testMagic(cond, value.typeReg());
@@ -2253,6 +2315,23 @@ MacroAssemblerARMCompat::testMagic(Assembler::Condition cond, const BaseIndex &a
 }
 
 Assembler::Condition
+MacroAssemblerARMCompat::testInt32(Assembler::Condition cond, const Address &address)
+{
+    JS_ASSERT(cond == Equal || cond == NotEqual);
+    extractTag(address, ScratchRegister);
+    ma_cmp(ScratchRegister, ImmTag(JSVAL_TAG_INT32));
+    return cond;
+}
+
+Assembler::Condition
+MacroAssemblerARMCompat::testDouble(Assembler::Condition cond, const Address &address)
+{
+    JS_ASSERT(cond == Equal || cond == NotEqual);
+    extractTag(address, ScratchRegister);
+    return testDouble(cond, ScratchRegister);
+}
+
+Assembler::Condition
 MacroAssemblerARMCompat::testDouble(Condition cond, const Register &tag)
 {
     JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
@@ -2333,6 +2412,12 @@ MacroAssemblerARMCompat::unboxDouble(const ValueOperand &operand, const FloatReg
     JS_ASSERT(dest != ScratchFloatReg);
     as_vxfer(operand.payloadReg(), operand.typeReg(),
              VFPRegister(dest), CoreToFloat);
+}
+
+void
+MacroAssemblerARMCompat::unboxDouble(const Address &src, const FloatRegister &dest)
+{
+    ma_vldr(Operand(src), dest);
 }
 
 void
@@ -2633,6 +2718,20 @@ MacroAssemblerARMCompat::pushValue(ValueOperand val) {
     ma_push(val.payloadReg());
 }
 void
+MacroAssemblerARMCompat::pushValue(const Address &addr)
+{
+    JS_ASSERT(addr.base != StackPointer);
+    Operand srcOp = Operand(addr);
+    Operand payload = ToPayload(srcOp);
+    Operand type = ToType(srcOp);
+
+    ma_ldr(type, ScratchRegister);
+    ma_push(ScratchRegister);
+    ma_ldr(payload, ScratchRegister);
+    ma_push(ScratchRegister);
+}
+
+void
 MacroAssemblerARMCompat::popValue(ValueOperand val) {
     ma_pop(val.payloadReg());
     ma_pop(val.typeReg());
@@ -2769,6 +2868,22 @@ void
 MacroAssemblerARMCompat::breakpoint()
 {
     as_bkpt();
+}
+
+void
+MacroAssemblerARMCompat::ensureDouble(const ValueOperand &source, FloatRegister dest, Label *failure)
+{
+    Label isDouble, done;
+    branchTestDouble(Assembler::Equal, source.typeReg(), &isDouble);
+    branchTestInt32(Assembler::NotEqual, source.typeReg(), failure);
+
+    convertInt32ToDouble(source.payloadReg(), dest);
+    jump(&done);
+
+    bind(&isDouble);
+    unboxDouble(source, dest);
+
+    bind(&done);
 }
 
 void
@@ -2951,11 +3066,18 @@ MacroAssemblerARMCompat::callWithABIPre(uint32_t *stackAdjust)
             ma_vxfer(floatArgsInGPR[i], Register::FromCode(i*2), Register::FromCode(i*2+1));
     }
     checkStackAlignment();
+
+    // Save the lr register if we need to preserve it.
+    if (secondScratchReg_ != lr)
+        ma_mov(lr, secondScratchReg_);
 }
 
 void
 MacroAssemblerARMCompat::callWithABIPost(uint32_t stackAdjust, Result result)
 {
+    if (secondScratchReg_ != lr)
+        ma_mov(secondScratchReg_, lr);
+
     if (result == DOUBLE) {
 #ifdef JS_CPU_ARM_HARDFP
         as_vmov(ReturnFloatReg, d0);
@@ -3011,7 +3133,21 @@ MacroAssemblerARMCompat::handleException()
     setupUnalignedABICall(1, r1);
     passABIArg(r0);
     callWithABI(JS_FUNC_TO_DATA_PTR(void *, ion::HandleException));
-    // Load the error value, load the new stack pointer, and return.
+
+    Label catch_;
+    Label entryFrame;
+    Label return_;
+
+    ma_ldr(Operand(sp, offsetof(ResumeFromException, kind)), r0);
+    branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_ENTRY_FRAME), &entryFrame);
+    branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_CATCH), &catch_);
+    branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_FORCED_RETURN), &return_);
+
+    breakpoint(); // Invalid kind.
+
+    // No exception handler. Load the error value, load the new stack pointer
+    // and return from the entry frame.
+    bind(&entryFrame);
     moveValue(MagicValue(JS_ION_ERROR), JSReturnOperand);
     ma_ldr(Operand(sp, offsetof(ResumeFromException, stackPointer)), sp);
 
@@ -3019,6 +3155,22 @@ MacroAssemblerARMCompat::handleException()
     // by ??? (for now, I think ldr pc, [sp]!)
     as_dtr(IsLoad, 32, PostIndex, pc, DTRAddr(sp, DtrOffImm(4)));
 
+    // If we found a catch handler, this must be a baseline frame. Restore state
+    // and jump to the catch block.
+    bind(&catch_);
+    ma_ldr(Operand(sp, offsetof(ResumeFromException, target)), r0);
+    ma_ldr(Operand(sp, offsetof(ResumeFromException, framePointer)), r11);
+    ma_ldr(Operand(sp, offsetof(ResumeFromException, stackPointer)), sp);
+    jump(r0);
+
+    // Only used in debug mode. Return BaselineFrame->returnValue() to the caller.
+    bind(&return_);
+    ma_ldr(Operand(sp, offsetof(ResumeFromException, framePointer)), r11);
+    ma_ldr(Operand(sp, offsetof(ResumeFromException, stackPointer)), sp);
+    loadValue(Address(r11, BaselineFrame::reverseOffsetOfReturnValue()), JSReturnOperand);
+    ma_mov(r11, sp);
+    pop(r11);
+    ret();
 }
 
 Assembler::Condition
@@ -3119,6 +3271,7 @@ MacroAssemblerARMCompat::toggledCall(IonCode *target, bool enabled)
         ma_blx(ScratchRegister);
     else
         ma_nop();
+    JS_ASSERT(size() - offset.offset() == ToggledCallSize());
     return offset;
 }
 
