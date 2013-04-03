@@ -138,6 +138,10 @@ static inline void profiler_unlock() {}
 static inline void profiler_register_thread(const char* name) {}
 static inline void profiler_unregister_thread() {}
 
+// Call by the JSRuntime's operation callback. This is used to enable
+// profiling on auxilerary threads.
+static inline void profiler_js_operation_callback() {}
+
 #else
 
 #include "GeckoProfilerImpl.h"
