@@ -142,6 +142,8 @@ protected:
 class nsHTMLFramesetBlankFrame : public nsLeafFrame
 {
 public:
+  NS_DECL_QUERYFRAME_TARGET(nsHTMLFramesetBlankFrame)
+  NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
 
 #ifdef DEBUG
@@ -1641,6 +1643,10 @@ NS_IMETHODIMP nsHTMLFramesetBorderFrame::GetFrameName(nsAString& aResult) const
 /*******************************************************************************
  * nsHTMLFramesetBlankFrame
  ******************************************************************************/
+
+NS_QUERYFRAME_HEAD(nsHTMLFramesetBlankFrame)
+  NS_QUERYFRAME_ENTRY(nsHTMLFramesetBlankFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsLeafFrame)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsHTMLFramesetBlankFrame)
 

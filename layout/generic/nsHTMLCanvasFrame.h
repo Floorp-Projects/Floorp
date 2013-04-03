@@ -34,6 +34,8 @@ public:
   typedef mozilla::layers::LayerManager LayerManager;
   typedef mozilla::FrameLayerBuilder::ContainerParameters ContainerParameters;
 
+  NS_DECL_QUERYFRAME_TARGET(nsHTMLCanvasFrame)
+  NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
 
   nsHTMLCanvasFrame(nsStyleContext* aContext) : nsContainerFrame(aContext) {}
