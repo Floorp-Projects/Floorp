@@ -145,6 +145,30 @@ FilteringWrapper<Base, Policy>::nativeCall(JSContext *cx, JS::IsAcceptableThis t
 
 template <typename Base, typename Policy>
 bool
+FilteringWrapper<Base, Policy>::defaultValue(JSContext *cx, JS::Handle<JSObject*> obj,
+                                             JSType hint, MutableHandleValue vp)
+{
+    return Base::defaultValue(cx, obj, hint, vp);
+}
+
+// With our entirely-opaque wrapper, the DefaultValue algorithm throws,
+// causing spurious exceptions. Manually implement something benign.
+template<>
+bool
+FilteringWrapper<CrossCompartmentSecurityWrapper, GentlyOpaque>
+                ::defaultValue(JSContext *cx, JS::Handle<JSObject*> obj,
+                               JSType hint, MutableHandleValue vp)
+{
+    JSString *str = JS_NewStringCopyZ(cx, "[Opaque]");
+    if (!str)
+        return false;
+    vp.set(JS::StringValue(str));
+    return true;
+}
+
+
+template <typename Base, typename Policy>
+bool
 FilteringWrapper<Base, Policy>::enter(JSContext *cx, JS::Handle<JSObject*> wrapper,
                                       JS::Handle<jsid> id, Wrapper::Action act, bool *bp)
 {
@@ -179,6 +203,7 @@ FilteringWrapper<Base, Policy>::enter(JSContext *cx, JS::Handle<JSObject*> wrapp
 #define NNXOW FilteringWrapper<CrossCompartmentSecurityWrapper, Opaque>
 #define CW FilteringWrapper<SameCompartmentSecurityWrapper, ComponentsObjectPolicy>
 #define XCW FilteringWrapper<CrossCompartmentSecurityWrapper, ComponentsObjectPolicy>
+#define GO FilteringWrapper<CrossCompartmentSecurityWrapper, GentlyOpaque>
 template<> SOW SOW::singleton(WrapperFactory::SOW_FLAG);
 template<> SCSOW SCSOW::singleton(WrapperFactory::SOW_FLAG);
 template<> XOW XOW::singleton(0);
@@ -188,9 +213,12 @@ template<> NNXOW NNXOW::singleton(0);
 template<> CW CW::singleton(0);
 template<> XCW XCW::singleton(0);
 
+template<> GO GO::singleton(0);
+
 template class SOW;
 template class XOW;
 template class DXOW;
 template class NNXOW;
 template class ChromeObjectWrapperBase;
+template class GO;
 }

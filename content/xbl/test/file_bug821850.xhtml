@@ -71,6 +71,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
             return "method:" + arg;
           </body>
         </method>
+        <method name="passMeAJSObject">
+          <parameter name="arg" />
+          <body>
+            is(typeof arg.prop, 'undefined', "No properties");
+            is(Object.getOwnPropertyNames(arg).length, 0, "Should have no own properties");
+            try {
+              arg.foo = 2;
+              ok(true, "Stuff fails silently");
+            } catch (e) {
+              ok(false, "Stuff should fail silently");
+            }
+            is(typeof arg.foo, 'undefined', "Shouldn't place props");
+          </body>
+        </method>
         <property name="prop">
           <getter>return this._prop;</getter>
           <setter>this._prop = "set:" + val;</setter>
@@ -120,11 +134,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
     bound.prop = "someOtherVal";
     is(bound.prop, "set:someOtherVal", "Can set properties from content");
 
+    // Make sure we can't pass JS objects to the XBL scope.
+    var proto = bound.__proto__;
+    proto.passMeAJSObject({prop: 2});
+
     //
     // Try sticking a bunch of stuff on the prototype object.
     //
 
-    var proto = bound.__proto__;
     proto.someExpando = 201;
     is(bound.someExpando, 201, "Can stick non-XBL properties on the proto");
 
