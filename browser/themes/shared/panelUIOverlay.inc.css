@@ -82,7 +82,6 @@
   background-color: -moz-dialog;
   box-shadow: -1px 0px 0px rgba(0, 0, 0, 0.2), -1px 0px 2px rgba(0, 0, 0, 0.1), 1px 0px 0px rgba(255, 255, 255, 0.2) inset;
   margin-left: 38px;
-  position: absolute;
   transform: translateX(@menuPanelWidth@);
   transition: transform 150ms;
 }
