@@ -20,20 +20,12 @@ DOMCI_DATA(PropertyNodeList, mozilla::dom::PropertyNodeList)
 namespace mozilla {
 namespace dom {
 
-static PLDHashOperator
-TraverseNamedProperties(const nsAString& aKey, PropertyNodeList* aEntry, void* aData)
-{
-  nsCycleCollectionTraversalCallback* cb = static_cast<nsCycleCollectionTraversalCallback*>(aData);
-  cb->NoteXPCOMChild(static_cast<nsINodeList*>(aEntry));
-  return PL_DHASH_NEXT;
-}
-
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(HTMLPropertiesCollection)
   // SetDocument(nullptr) ensures that we remove ourselves as a mutation observer
   tmp->SetDocument(nullptr);
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mRoot)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mNames)
-  tmp->mNamedItemEntries.Clear();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mNamedItemEntries)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mProperties)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -41,7 +33,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(HTMLPropertiesCollection)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDoc)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRoot)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNames)
-  tmp->mNamedItemEntries.EnumerateRead(TraverseNamedProperties, &cb);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNamedItemEntries);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mProperties)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END

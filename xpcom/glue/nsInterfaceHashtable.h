@@ -49,6 +49,26 @@ public:
   Interface* GetWeak(KeyType aKey, bool* aFound = nullptr) const;
 };
 
+template <typename K, typename T>
+inline void
+ImplCycleCollectionUnlink(nsInterfaceHashtable<K, T>& aField)
+{
+  aField.Clear();
+}
+
+template <typename K, typename T>
+inline void
+ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                            nsInterfaceHashtable<K, T>& aField,
+                            const char* aName,
+                            uint32_t aFlags = 0)
+{
+  nsBaseHashtableCCTraversalData userData(aCallback, aName, aFlags);
+
+  aField.EnumerateRead(ImplCycleCollectionTraverse_EnumFunc<typename K::KeyType,T*>,
+                       &userData);
+}
+
 /**
  * Thread-safe version of nsInterfaceHashtable
  * @param KeyClass a wrapper-class for the hashtable key, see nsHashKeys.h
