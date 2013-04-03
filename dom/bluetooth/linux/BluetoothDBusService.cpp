@@ -833,17 +833,17 @@ public:
   {
     BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
     if (hfp) {
-      hfp->Disconnect();
+      hfp->CloseSocket();
     }
 
     BluetoothOppManager* opp = BluetoothOppManager::Get();
     if (opp) {
-      opp->Disconnect();
+      opp->CloseSocket();
     }
 
     BluetoothScoManager* sco = BluetoothScoManager::Get();
     if (sco) {
-      sco->Disconnect();
+      sco->CloseSocket();
     }
 
     return NS_OK;
@@ -2547,7 +2547,8 @@ BluetoothDBusService::IsConnected(const uint16_t aProfileId)
   if (aProfileId == BluetoothServiceClass::HANDSFREE ||
       aProfileId == BluetoothServiceClass::HEADSET) {
     BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
-    return hfp->IsConnected();
+    return (hfp->GetConnectionStatus() ==
+            SocketConnectionStatus::SOCKET_CONNECTED);
   } else if (aProfileId == BluetoothServiceClass::OBJECT_PUSH) {
     BluetoothOppManager* opp = BluetoothOppManager::Get();
     return opp->IsTransferring();
@@ -2793,3 +2794,22 @@ BluetoothDBusService::ConfirmReceivingFile(const nsAString& aDeviceAddress,
   DispatchBluetoothReply(aRunnable, v, errorStr);
 }
 
+nsresult
+BluetoothDBusService::ListenSocketViaService(
+                                    int aChannel,
+                                    BluetoothSocketType aType,
+                                    bool aAuth,
+                                    bool aEncrypt,
+                                    mozilla::ipc::UnixSocketConsumer* aConsumer)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Must be called from main thread!");
+
+  BluetoothUnixSocketConnector* c =
+    new BluetoothUnixSocketConnector(aType, aChannel, aAuth, aEncrypt);
+  if (!aConsumer->ListenSocket(c)) {
+    NS_WARNING("Can't listen on socket!");
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
