@@ -610,7 +610,7 @@ template <class T>
 class HashTableEntry
 {
     template <class, class, class> friend class HashTable;
-    typedef typename tl::StripConst<T>::result NonConstT;
+    typedef typename mozilla::RemoveConst<T>::Type NonConstT;
 
     HashNumber keyHash;
     mozilla::AlignedStorage2<NonConstT> mem;
@@ -677,7 +677,7 @@ class HashTableEntry
 template <class T, class HashPolicy, class AllocPolicy>
 class HashTable : private AllocPolicy
 {
-    typedef typename tl::StripConst<T>::result NonConstT;
+    typedef typename mozilla::RemoveConst<T>::Type NonConstT;
     typedef typename HashPolicy::KeyType Key;
     typedef typename HashPolicy::Lookup Lookup;
 
