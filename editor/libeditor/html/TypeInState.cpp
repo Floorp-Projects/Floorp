@@ -141,7 +141,7 @@ TypeInState::SetProp(nsIAtom* aProp, const nsAString& aAttr,
   }
 
   int32_t index;
-  if (IsPropSet(aProp, aAttr, NULL, index)) {
+  if (IsPropSet(aProp, aAttr, nullptr, index)) {
     // if it's already set, update the value
     mSetArray[index]->value = aValue;
     return;
@@ -190,7 +190,7 @@ TypeInState::TakeClearProperty()
 {
   uint32_t count = mClearedArray.Length();
   if (!count) {
-    return NULL;
+    return nullptr;
   }
 
   --count; // indices are zero based
@@ -208,7 +208,7 @@ TypeInState::TakeSetProperty()
 {
   uint32_t count = mSetArray.Length();
   if (!count) {
-    return NULL;
+    return nullptr;
   }
   count--; // indices are zero based
   PropItem* propItem = mSetArray[count];
