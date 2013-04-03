@@ -1731,6 +1731,7 @@ ObjectClassIs(HandleObject obj, ESClassValue classValue, JSContext *cx)
       case ESClass_Boolean: return obj->isBoolean();
       case ESClass_RegExp: return obj->isRegExp();
       case ESClass_ArrayBuffer: return obj->isArrayBuffer();
+      case ESClass_Date: return obj->isDate();
     }
     JS_NOT_REACHED("bad classValue");
     return false;
