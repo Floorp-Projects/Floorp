@@ -1520,31 +1520,11 @@ function getElementPosition(msg) {
   let command_id = msg.json.command_id;
   try{
     let el = elementManager.getKnownElement(msg.json.element, curWindow);
-    var x = el.offsetLeft;
-    var y = el.offsetTop;
-    var elementParent = el.offsetParent;
-    while (elementParent != null) {
-      if (elementParent.tagName == "TABLE") {
-        var parentBorder = parseInt(elementParent.border);
-        if (isNaN(parentBorder)) {
-          var parentFrame = elementParent.getAttribute('frame');
-          if (parentFrame != null) {
-            x += 1;
-            y += 1;
-          }
-        } else if (parentBorder > 0) {
-          x += parentBorder;
-          y += parentBorder;
-        }
-      }
-      x += elementParent.offsetLeft;
-      y += elementParent.offsetTop;
-      elementParent = elementParent.offsetParent;
-    }
+    let rect = el.getBoundingClientRect();
 
     let location = {};
-    location.x = x;
-    location.y = y;
+    location.x = rect.left;
+    location.y = rect.top;
 
     sendResponse({value: location}, command_id);
   }
