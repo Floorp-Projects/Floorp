@@ -142,7 +142,7 @@ public:
 
   virtual ~UnixSocketConsumer();
 
-  SocketConnectionStatus GetConnectionStatus() const
+  SocketConnectionStatus GetConnectionStatus()
   {
     return mConnectionStatus;
   }
