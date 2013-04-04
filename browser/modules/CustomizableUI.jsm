@@ -452,6 +452,15 @@ let CustomizableUIInternal = {
       return;
     }
 
+    let placements = gPlacements.get(aArea);
+    if (!placements) {
+      Cu.reportError("Could not find any placements for " + aArea +
+                     " when adding a widget.");
+      return;
+    }
+
+    let nextNodeId = placements[aPosition + 1];
+
     // Go through each of the nodes associated with this area and move the
     // widget to the requested location.
     for (let areaNode of areaNodes) {
@@ -465,7 +474,7 @@ let CustomizableUIInternal = {
         this.ensureButtonClosesPanel(widgetNode);
       }
 
-      let nextNode = container.children.item(aPosition);
+      let nextNode = container.querySelector("#" + nextNodeId);
       container.insertBefore(widgetNode, nextNode);
     }
   },
@@ -498,6 +507,15 @@ let CustomizableUIInternal = {
       return;
     }
 
+    let placements = gPlacements.get(aArea);
+    if (!placements) {
+      Cu.reportError("Could not find any placements for " + aArea +
+                     " when moving a widget.");
+      return;
+    }
+
+    let nextNodeId = placements[aNewPosition + 1];
+
     for (let areaNode of areaNodes) {
       let container = areaNode.customizationTarget;
       let widgetNode = container.ownerDocument.getElementById(aWidgetId);
@@ -506,9 +524,7 @@ let CustomizableUIInternal = {
         continue;
       }
 
-      let nextNode = container.children.item(aNewPosition > aOldPosition ?
-                                             aNewPosition + 1 :
-                                             aNewPosition);
+      let nextNode = container.querySelector("#" + nextNodeId);
       container.insertBefore(widgetNode, nextNode);
     }
   },
@@ -1435,6 +1451,9 @@ this.CustomizableUI = {
   },
   reset: function() {
     CustomizableUIInternal.reset();
+  },
+  getPlacementOfWidget: function(aWidgetId) {
+    return CustomizableUIInternal.getPlacementOfWidget(aWidgetId);
   }
 };
 Object.freeze(this.CustomizableUI);
