@@ -36,15 +36,15 @@
 #include "nsGUIEvent.h"
 #include "nsIServiceManager.h"
 #include "nsINodeInfo.h"
-#include "nsHTMLSelectElement.h"
 #include "nsCSSRendering.h"
 #include "nsITheme.h"
 #include "nsIDOMEventListener.h"
 #include "nsLayoutUtils.h"
 #include "nsDisplayList.h"
 #include "nsContentUtils.h"
-#include "mozilla/LookAndFeel.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/HTMLSelectElement.h"
+#include "mozilla/LookAndFeel.h"
 #include <algorithm>
 
 using namespace mozilla;
@@ -1234,8 +1234,8 @@ nsListControlFrame::GetCurrentOption()
     return GetOptionContent(focusedIndex);
   }
 
-  nsRefPtr<nsHTMLSelectElement> selectElement =
-    nsHTMLSelectElement::FromContent(mContent);
+  nsRefPtr<dom::HTMLSelectElement> selectElement =
+    dom::HTMLSelectElement::FromContent(mContent);
   NS_ASSERTION(selectElement, "Can't be null");
 
   // There is no a selected item return the first non-disabled item and skip all
@@ -1410,8 +1410,8 @@ nsListControlFrame::SetOptionsSelectedFromFrame(int32_t aStartIndex,
                                                 bool aValue,
                                                 bool aClearAll)
 {
-  nsRefPtr<nsHTMLSelectElement> selectElement =
-    nsHTMLSelectElement::FromContent(mContent);
+  nsRefPtr<dom::HTMLSelectElement> selectElement =
+    dom::HTMLSelectElement::FromContent(mContent);
   bool wasChanged = false;
 #ifdef DEBUG
   nsresult rv = 
@@ -1448,8 +1448,8 @@ nsListControlFrame::ToggleOptionSelectedFromFrame(int32_t aIndex)
     option->GetSelected(&value);
 
   NS_ASSERTION(NS_SUCCEEDED(rv), "GetSelected failed");
-  nsRefPtr<nsHTMLSelectElement> selectElement =
-    nsHTMLSelectElement::FromContent(mContent);
+  nsRefPtr<dom::HTMLSelectElement> selectElement =
+    dom::HTMLSelectElement::FromContent(mContent);
   bool wasChanged = false;
 #ifdef DEBUG
   rv =
@@ -1679,8 +1679,8 @@ nsListControlFrame::GetHeightOfARow()
 nsresult
 nsListControlFrame::IsOptionDisabled(int32_t anIndex, bool &aIsDisabled)
 {
-  nsRefPtr<nsHTMLSelectElement> sel =
-    nsHTMLSelectElement::FromContent(mContent);
+  nsRefPtr<dom::HTMLSelectElement> sel =
+    dom::HTMLSelectElement::FromContent(mContent);
   if (sel) {
     sel->IsOptionDisabled(anIndex, &aIsDisabled);
     return NS_OK;

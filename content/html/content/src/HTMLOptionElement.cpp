@@ -6,7 +6,7 @@
 
 #include "mozilla/dom/HTMLOptionElement.h"
 #include "mozilla/dom/HTMLOptionElementBinding.h"
-#include "nsHTMLSelectElement.h"
+#include "mozilla/dom/HTMLSelectElement.h"
 #include "nsIDOMHTMLOptGroupElement.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMEventTarget.h"
@@ -104,7 +104,7 @@ HTMLOptionElement::GetForm(nsIDOMHTMLFormElement** aForm)
 nsHTMLFormElement*
 HTMLOptionElement::GetForm()
 {
-  nsHTMLSelectElement* selectControl = GetSelect();
+  HTMLSelectElement* selectControl = GetSelect();
   return selectControl ? selectControl->GetForm() : nullptr;
 }
 
@@ -134,7 +134,7 @@ HTMLOptionElement::SetSelected(bool aValue)
 {
   // Note: The select content obj maintains all the PresState
   // so defer to it to get the answer
-  nsHTMLSelectElement* selectInt = GetSelect();
+  HTMLSelectElement* selectInt = GetSelect();
   if (selectInt) {
     int32_t index;
     GetIndex(&index);
@@ -163,7 +163,7 @@ HTMLOptionElement::GetIndex(int32_t* aIndex)
   *aIndex = 0;
 
   // Only select elements can contain a list of options.
-  nsHTMLSelectElement* selectElement = GetSelect();
+  HTMLSelectElement* selectElement = GetSelect();
   if (!selectElement) {
     return NS_OK;
   }
@@ -225,7 +225,7 @@ HTMLOptionElement::BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
   // We just changed out selected state (since we look at the "selected"
   // attribute when mSelectedChanged is false).  Let's tell our select about
   // it.
-  nsHTMLSelectElement* selectInt = GetSelect();
+  HTMLSelectElement* selectInt = GetSelect();
   if (!selectInt) {
     return NS_OK;
   }
@@ -344,13 +344,13 @@ HTMLOptionElement::IntrinsicState() const
 }
 
 // Get the select content element that contains this option
-nsHTMLSelectElement*
+HTMLSelectElement*
 HTMLOptionElement::GetSelect()
 {
   nsIContent* parent = this;
   while ((parent = parent->GetParent()) &&
          parent->IsHTML()) {
-    nsHTMLSelectElement* select = nsHTMLSelectElement::FromContent(parent);
+    HTMLSelectElement* select = HTMLSelectElement::FromContent(parent);
     if (select) {
       return select;
     }
