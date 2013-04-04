@@ -6,6 +6,7 @@
 #include "nsISupports.idl"
 
 interface nsIXULWindow;
+interface nsIWebNavigation;
 interface nsIURI;
 interface nsIDOMWindow;
 interface nsIAppShell;
@@ -42,6 +43,8 @@ interface nsIAppShellService : nsISupports
                                     in uint32_t aChromeMask,
                                     in long aInitialWidth,
                                     in long aInitialHeight);
+
+  nsIWebNavigation createWindowlessBrowser();
 
   [noscript]
   void createHiddenWindow();
