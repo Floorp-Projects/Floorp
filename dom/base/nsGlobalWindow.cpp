@@ -1493,7 +1493,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindow)
   NS_INTERFACE_MAP_ENTRY(nsIDOMWindowB2G)
 #endif // MOZ_B2G
 #ifdef MOZ_WEBSPEECH
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSpeechSynthesisGetter)
+  NS_INTERFACE_MAP_ENTRY(nsISpeechSynthesisGetter)
 #endif // MOZ_B2G
   NS_INTERFACE_MAP_ENTRY(nsIDOMJSWindow)
   if (aIID.Equals(NS_GET_IID(nsIDOMWindowInternal))) {
@@ -3307,7 +3307,7 @@ nsPIDOMWindow::CreatePerformanceObjectIfNeeded()
   }
 }
 
-// nsIDOMSpeechSynthesisGetter
+// nsISpeechSynthesisGetter
 
 #ifdef MOZ_WEBSPEECH
 NS_IMETHODIMP

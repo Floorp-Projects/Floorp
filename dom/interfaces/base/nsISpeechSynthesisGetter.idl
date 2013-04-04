@@ -10,8 +10,8 @@
  * http://dvcs.w3.org/hg/speech-api/raw-file/tip/speechapi.html#tts-section
  */
 
-[scriptable, uuid(9fe60496-8356-430e-bf38-2debec45711e)]
-interface nsIDOMSpeechSynthesisGetter : nsISupports
+[scriptable, uuid(31e6c818-0279-4948-843c-930043f6bafd)]
+interface nsISpeechSynthesisGetter : nsISupports
 {
   readonly attribute nsISupports speechSynthesis;
 };
