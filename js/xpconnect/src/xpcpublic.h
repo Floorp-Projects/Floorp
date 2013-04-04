@@ -25,11 +25,13 @@
 #include "mozilla/dom/DOMJSClass.h"
 #include "nsMathUtils.h"
 #include "nsStringBuffer.h"
+#include "nsIGlobalObject.h"
 #include "mozilla/dom/BindingDeclarations.h"
 
 class nsIPrincipal;
 class nsIXPConnectWrappedJS;
 class nsScriptNameSpaceManager;
+class nsIGlobalObject;
 
 #ifndef BAD_TLS_INDEX
 #define BAD_TLS_INDEX ((uint32_t) -1)
@@ -400,6 +402,11 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
 bool
 Throw(JSContext *cx, nsresult rv);
 
+/**
+ * Every global should hold a native that implements the nsIGlobalObject interface.
+ */
+nsIGlobalObject *
+GetNativeForGlobal(JSObject *global);
 } // namespace xpc
 
 nsCycleCollectionParticipant *
