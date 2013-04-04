@@ -1105,13 +1105,16 @@ class CGClassHasInstanceHook(CGAbstractStaticMethod):
   const DOMClass* domClass = GetDOMClass(js::UnwrapObject(instance));
   *bp = false;
   """
-        for iface in self.descriptor.interface.interfacesImplementingSelf:
+        # Sort interaces implementing self by name so we get stable output.
+        for iface in sorted(self.descriptor.interface.interfacesImplementingSelf,
+                            key=lambda iface: iface.identifier.name):
             hasInstanceCode += """
   if (domClass->mInterfaceChain[PrototypeTraits<prototypes::id::%s>::Depth] == prototypes::id::%s) {
     *bp = true;
     return true;
-  }""" % (iface.identifier.name, iface.identifier.name)
-        hasInstanceCode += "return true;"
+  }
+""" % (iface.identifier.name, iface.identifier.name)
+        hasInstanceCode += "  return true;"
         return header + hasInstanceCode;
 
 def isChromeOnly(m):
