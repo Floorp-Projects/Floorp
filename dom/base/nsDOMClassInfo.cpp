@@ -1764,7 +1764,7 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(Window, nsIDOMWindow)
     DOM_CLASSINFO_WINDOW_MAP_ENTRIES(nsGlobalWindow::HasIndexedDBSupport())
 #ifdef MOZ_WEBSPEECH
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSpeechSynthesisGetter)
+    DOM_CLASSINFO_MAP_ENTRY(nsISpeechSynthesisGetter)
 #endif
   DOM_CLASSINFO_MAP_END
 
@@ -2108,7 +2108,7 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_WINDOW_MAP_ENTRIES(true)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMChromeWindow)
 #ifdef MOZ_WEBSPEECH
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSpeechSynthesisGetter)
+    DOM_CLASSINFO_MAP_ENTRY(nsISpeechSynthesisGetter)
 #endif
   DOM_CLASSINFO_MAP_END
 
@@ -2299,7 +2299,7 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_WINDOW_MAP_ENTRIES(nsGlobalWindow::HasIndexedDBSupport())
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMModalContentWindow)
 #ifdef MOZ_WEBSPEECH
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSpeechSynthesisGetter)
+    DOM_CLASSINFO_MAP_ENTRY(nsISpeechSynthesisGetter)
 #endif
   DOM_CLASSINFO_MAP_END
 
