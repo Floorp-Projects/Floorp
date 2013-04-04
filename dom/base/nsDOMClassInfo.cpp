@@ -198,7 +198,6 @@
 #include "nsIDOMHTMLIFrameElement.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLObjectElement.h"
-#include "nsIDOMTimeRanges.h"
 #include "nsIDOMCSSCharsetRule.h"
 #include "nsIDOMCSSImportRule.h"
 #include "nsIDOMCSSMediaRule.h"
@@ -938,11 +937,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(CSSFontFaceRule, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
-#if defined(MOZ_MEDIA)
-  NS_DEFINE_CLASSINFO_DATA(TimeRanges, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-#endif
 
   // DOM Traversal NodeIterator class
   NS_DEFINE_CLASSINFO_DATA(NodeIterator, nsDOMGenericSH,
@@ -2406,12 +2400,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(CSSFontFaceRule, nsIDOMCSSFontFaceRule)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSFontFaceRule)
   DOM_CLASSINFO_MAP_END
-
-#if defined (MOZ_MEDIA)
-  DOM_CLASSINFO_MAP_BEGIN(TimeRanges, nsIDOMTimeRanges)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMTimeRanges)
-  DOM_CLASSINFO_MAP_END
-#endif
 
   DOM_CLASSINFO_MAP_BEGIN(DataTransfer, nsIDOMDataTransfer)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDataTransfer)
