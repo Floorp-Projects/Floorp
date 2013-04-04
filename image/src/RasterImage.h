@@ -729,7 +729,10 @@ private: // data
   // IMPORTANT: if you use mFrames in a method, call EnsureImageIsDecoded() first
   // to ensure that the frames actually exist (they may have been discarded to save
   // memory, or we may be decoding on draw).
-  nsTArray<imgFrame *>       mFrames;
+  nsTArray<imgFrame*>        mFrames;
+
+  // The last frame we decoded for multipart images.
+  imgFrame*                  mMultipartDecodedFrame;
 
   nsCOMPtr<nsIProperties>    mProperties;
 

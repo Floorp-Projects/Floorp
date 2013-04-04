@@ -385,6 +385,7 @@ RasterImage::RasterImage(imgStatusTracker* aStatusTracker,
   ImageResource(aStatusTracker, aURI), // invoke superclass's constructor
   mSize(0,0),
   mFrameDecodeFlags(DECODE_FLAGS_DEFAULT),
+  mMultipartDecodedFrame(nullptr),
   mAnim(nullptr),
   mLoopCount(-1),
   mLockCount(0),
@@ -457,6 +458,8 @@ RasterImage::~RasterImage()
 
   for (unsigned int i = 0; i < mFrames.Length(); ++i)
     delete mFrames[i];
+
+  delete mMultipartDecodedFrame;
 
   // Total statistics
   num_containers--;
@@ -1571,6 +1574,25 @@ RasterImage::DecodingComplete()
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  // Double-buffer our frame in the multipart case, since we'll start decoding
+  // into mFrames again immediately and this produces severe tearing.
+  if (mMultipart) {
+    if (mFrames.Length() == 1) {
+      imgFrame* swapFrame = mMultipartDecodedFrame;
+      mMultipartDecodedFrame = GetImgFrameNoDecode(GetCurrentFrameIndex());
+      mFrames.Clear();
+      if (swapFrame) {
+        mFrames.AppendElement(swapFrame);
+      }
+    } else {
+      // Don't double buffer for animated multipart images. It entails more
+      // complexity and it's not really needed since we already are smart about
+      // not displaying the still-decoding frame of an animated image. We may
+      // have already stored an extra frame, though, so we'll release it here.
+      delete mMultipartDecodedFrame;
+    }
+  }
+
   return NS_OK;
 }
 
@@ -2473,6 +2495,10 @@ RasterImage::Discard(bool force)
   mScaleResult.status = SCALE_INVALID;
   mScaleResult.frame = nullptr;
 
+  // Clear the last decoded multipart frame.
+  delete mMultipartDecodedFrame;
+  mMultipartDecodedFrame = nullptr;
+
   // Flag that we no longer have decoded frames for this image
   mDecoded = false;
 
@@ -3193,9 +3219,19 @@ RasterImage::Draw(gfxContext *aContext,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  uint32_t frameIndex = aWhichFrame == FRAME_FIRST ? 0
-                                                   : GetCurrentImgFrameIndex();
-  imgFrame *frame = GetDrawableImgFrame(frameIndex);
+  imgFrame* frame = nullptr;
+
+  if (mMultipart) {
+    // In the multipart case we prefer to use mMultipartDecodedFrame, which is
+    // the most recent one we completely decoded, rather than display the real
+    // current frame and risk severe tearing.
+    frame = mMultipartDecodedFrame;
+  }
+  if (!frame) {
+    uint32_t frameIndex = aWhichFrame == FRAME_FIRST ? 0
+                                                     : GetCurrentImgFrameIndex();
+    frame = GetDrawableImgFrame(frameIndex);
+  }
   if (!frame) {
     return NS_OK; // Getting the frame (above) touches the image and kicks off decoding
   }
