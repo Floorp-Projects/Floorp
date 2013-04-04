@@ -118,32 +118,26 @@ class JS_PUBLIC_API(AutoGCRooter) {
         SHAPEVECTOR =  -4, /* js::AutoShapeVector */
         IDARRAY =      -6, /* js::AutoIdArray */
         DESCRIPTORS =  -7, /* js::AutoPropDescArrayRooter */
-        // UNUSED      -8
-        // UNUSED      -9
-        OBJECT =      -10, /* js::AutoObjectRooter */
-        ID =          -11, /* js::AutoIdRooter */
-        VALVECTOR =   -12, /* js::AutoValueVector */
-        DESCRIPTOR =  -13, /* js::AutoPropertyDescriptorRooter */
-        STRING =      -14, /* js::AutoStringRooter */
-        IDVECTOR =    -15, /* js::AutoIdVector */
-        OBJVECTOR =   -16, /* js::AutoObjectVector */
-        STRINGVECTOR =-17, /* js::AutoStringVector */
-        SCRIPTVECTOR =-18, /* js::AutoScriptVector */
-        PROPDESC =    -19, /* js::PropDesc::AutoRooter */
-        STACKSHAPE =  -21, /* js::StackShape::AutoRooter */
-        STACKBASESHAPE=-22,/* js::StackBaseShape::AutoRooter */
-        GETTERSETTER =-24, /* js::AutoRooterGetterSetter */
-        REGEXPSTATICS=-25, /* js::RegExpStatics::AutoRooter */
-        NAMEVECTOR =  -26, /* js::AutoNameVector */
-        HASHABLEVALUE=-27,
-        IONMASM =     -28, /* js::ion::MacroAssembler */
-        IONALLOC =    -29, /* js::ion::AutoTempAllocatorRooter */
-        WRAPVECTOR =  -30, /* js::AutoWrapperVector */
-        WRAPPER =     -31, /* js::AutoWrapperRooter */
-        OBJOBJHASHMAP=-32, /* js::AutoObjectObjectHashMap */
-        OBJU32HASHMAP=-33, /* js::AutoObjectUnsigned32HashMap */
-        OBJHASHSET =  -34, /* js::AutoObjectHashSet */
-        JSONPARSER =  -35  /* js::JSONParser */
+        OBJECT =       -8, /* js::AutoObjectRooter */
+        ID =           -9, /* js::AutoIdRooter */
+        VALVECTOR =   -10, /* js::AutoValueVector */
+        DESCRIPTOR =  -11, /* js::AutoPropertyDescriptorRooter */
+        STRING =      -12, /* js::AutoStringRooter */
+        IDVECTOR =    -13, /* js::AutoIdVector */
+        OBJVECTOR =   -14, /* js::AutoObjectVector */
+        STRINGVECTOR =-15, /* js::AutoStringVector */
+        SCRIPTVECTOR =-16, /* js::AutoScriptVector */
+        NAMEVECTOR =  -17, /* js::AutoNameVector */
+        HASHABLEVALUE=-18, /* js::HashableValue */
+        IONMASM =     -19, /* js::ion::MacroAssembler */
+        IONALLOC =    -20, /* js::ion::AutoTempAllocatorRooter */
+        WRAPVECTOR =  -21, /* js::AutoWrapperVector */
+        WRAPPER =     -22, /* js::AutoWrapperRooter */
+        OBJOBJHASHMAP=-23, /* js::AutoObjectObjectHashMap */
+        OBJU32HASHMAP=-24, /* js::AutoObjectUnsigned32HashMap */
+        OBJHASHSET =  -25, /* js::AutoObjectHashSet */
+        JSONPARSER =  -26, /* js::JSONParser */
+        CUSTOM =      -27  /* js::CustomAutoRooter */
     };
 
   private:
@@ -664,6 +658,35 @@ class AutoScriptVector : public AutoVectorRooter<JSScript *>
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+/*
+ * Cutsom rooting behavior for internal and external clients.
+ */
+class JS_PUBLIC_API(CustomAutoRooter) : private AutoGCRooter
+{
+  public:
+    explicit CustomAutoRooter(JSContext *cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoGCRooter(cx, CUSTOM)
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    friend void AutoGCRooter::trace(JSTracer *trc);
+
+  protected:
+    /* Supplied by derived class to trace roots. */
+    virtual void trace(JSTracer *trc) = 0;
+
+    /* Methods for trace() to call to mark roots, for external clients. */
+    static void traceObject(JSTracer *trc, JSObject **thingp, const char *name);
+    static void traceScript(JSTracer *trc, JSScript **thingp, const char *name);
+    static void traceString(JSTracer *trc, JSString **thingp, const char *name);
+    static void traceId(JSTracer *trc, jsid *thingp, const char *name);
+    static void traceValue(JSTracer *trc, JS::Value *thingp, const char *name);
+
+  private:
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
