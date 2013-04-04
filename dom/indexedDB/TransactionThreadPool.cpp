@@ -16,11 +16,6 @@
 
 using mozilla::MonitorAutoLock;
 
-#define MOZ_OPT_ASSERT(cond) \
-  if (!(cond)) {             \
-    MOZ_CRASH();             \
-  }
-
 USING_INDEXEDDB_NAMESPACE
 
 namespace {
@@ -53,7 +48,6 @@ private:
 END_INDEXEDDB_NAMESPACE
 
 TransactionThreadPool::TransactionThreadPool()
-  : mTouchingCallbacks(false)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(!gInstance, "More than one instance!");
@@ -146,14 +140,11 @@ TransactionThreadPool::Cleanup()
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!mCompleteCallbacks.IsEmpty()) {
-    MOZ_OPT_ASSERT(!mTouchingCallbacks);
-    mTouchingCallbacks = true;
     // Run all callbacks manually now.
     for (uint32_t index = 0; index < mCompleteCallbacks.Length(); index++) {
       mCompleteCallbacks[index].mCallback->Run();
     }
     mCompleteCallbacks.Clear();
-    mTouchingCallbacks = false;
 
     // And make sure they get processed.
     rv = NS_ProcessPendingEvents(nullptr);
@@ -225,8 +216,6 @@ TransactionThreadPool::FinishTransaction(IDBTransaction* aTransaction)
 
     // See if we need to fire any complete callbacks.
     uint32_t index = 0;
-    MOZ_OPT_ASSERT(!mTouchingCallbacks);
-    mTouchingCallbacks = true;
     while (index < mCompleteCallbacks.Length()) {
       if (MaybeFireCallback(mCompleteCallbacks[index])) {
         mCompleteCallbacks.RemoveElementAt(index);
@@ -235,7 +224,6 @@ TransactionThreadPool::FinishTransaction(IDBTransaction* aTransaction)
         index++;
       }
     }
-    mTouchingCallbacks = false;
 
     return;
   }
@@ -372,8 +360,6 @@ TransactionThreadPool::WaitForDatabasesToComplete(
   NS_ASSERTION(!aDatabases.IsEmpty(), "No databases to wait on!");
   NS_ASSERTION(aCallback, "Null pointer!");
 
-  MOZ_OPT_ASSERT(!mTouchingCallbacks);
-  mTouchingCallbacks = true;
   DatabasesCompleteCallback* callback = mCompleteCallbacks.AppendElement();
 
   callback->mCallback = aCallback;
@@ -382,8 +368,6 @@ TransactionThreadPool::WaitForDatabasesToComplete(
   if (MaybeFireCallback(*callback)) {
     mCompleteCallbacks.RemoveElementAt(mCompleteCallbacks.Length() - 1);
   }
-
-  mTouchingCallbacks = false;
 }
 
 // static
