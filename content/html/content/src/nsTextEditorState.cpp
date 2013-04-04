@@ -39,6 +39,7 @@
 #include "nsEventListenerManager.h"
 #include "nsContentUtils.h"
 #include "mozilla/Preferences.h"
+#include "nsTextNode.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1645,7 +1646,6 @@ be called if @placeholder is the empty string when trimmed from line breaks");
   NS_ENSURE_TRUE(pNodeInfoManager, NS_ERROR_OUT_OF_MEMORY);
 
   nsresult rv;
-  nsCOMPtr<nsIContent> placeholderText;
 
   // Create a DIV for the placeholder
   // and add it to the anonymous content child list
@@ -1659,8 +1659,7 @@ be called if @placeholder is the empty string when trimmed from line breaks");
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Create the text node for the placeholder text before doing anything else
-  rv = NS_NewTextNode(getter_AddRefs(placeholderText), pNodeInfoManager);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsRefPtr<nsTextNode> placeholderText = new nsTextNode(pNodeInfoManager);
 
   rv = mPlaceholderDiv->AppendChildTo(placeholderText, false);
   NS_ENSURE_SUCCESS(rv, rv);

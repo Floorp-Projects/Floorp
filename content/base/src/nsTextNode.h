@@ -14,19 +14,33 @@
 #include "nsIDOMText.h"
 #include "nsDebug.h"
 
+class nsNodeInfoManager;
+
 /**
  * Class used to implement DOM text nodes
  */
 class nsTextNode : public mozilla::dom::Text,
                    public nsIDOMText
 {
-public:
-  nsTextNode(already_AddRefed<nsINodeInfo> aNodeInfo)
-    : mozilla::dom::Text(aNodeInfo)
+private:
+  void Init()
   {
     NS_ABORT_IF_FALSE(mNodeInfo->NodeType() == nsIDOMNode::TEXT_NODE,
                       "Bad NodeType in aNodeInfo");
     SetIsDOMBinding();
+  }
+
+public:
+  nsTextNode(already_AddRefed<nsINodeInfo> aNodeInfo)
+    : mozilla::dom::Text(aNodeInfo)
+  {
+    Init();
+  }
+
+  nsTextNode(nsNodeInfoManager* aNodeInfoManager)
+    : mozilla::dom::Text(aNodeInfoManager->GetTextNodeInfo())
+  {
+    Init();
   }
 
   virtual ~nsTextNode();

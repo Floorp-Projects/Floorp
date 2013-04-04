@@ -32,6 +32,7 @@
 #include "nsRuleData.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStyleConsts.h"
+#include "nsTextNode.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Select)
 DOMCI_NODE_DATA(HTMLSelectElement, mozilla::dom::HTMLSelectElement)
@@ -745,9 +746,7 @@ HTMLSelectElement::SetLength(uint32_t aLength)
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    nsCOMPtr<nsIContent> text;
-    rv = NS_NewTextNode(getter_AddRefs(text), mNodeInfo->NodeInfoManager());
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsRefPtr<nsTextNode> text = new nsTextNode(mNodeInfo->NodeInfoManager());
 
     rv = element->AppendChildTo(text, false);
     NS_ENSURE_SUCCESS(rv, rv);

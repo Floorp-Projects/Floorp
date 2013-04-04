@@ -90,29 +90,6 @@ private:
   nsCOMPtr<nsIAtom> mAttrName;
 };
 
-nsresult
-NS_NewTextNode(nsIContent** aInstancePtrResult,
-               nsNodeInfoManager *aNodeInfoManager)
-{
-  NS_PRECONDITION(aNodeInfoManager, "Missing nodeInfoManager");
-
-  *aInstancePtrResult = nullptr;
-
-  nsCOMPtr<nsINodeInfo> ni = aNodeInfoManager->GetTextNodeInfo();
-  if (!ni) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsTextNode *instance = new nsTextNode(ni.forget());
-  if (!instance) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  NS_ADDREF(*aInstancePtrResult = instance);
-
-  return NS_OK;
-}
-
 nsTextNode::~nsTextNode()
 {
 }

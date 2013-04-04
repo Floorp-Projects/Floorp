@@ -22,6 +22,7 @@
 #include "nsIContent.h"
 #include "nsIDOMDocumentFragment.h"
 #include "txMozillaXMLOutput.h"
+#include "nsTextNode.h"
 
 using namespace mozilla;
 
@@ -84,11 +85,9 @@ createTextNode(txIEvalContext *aContext, nsString& aValue,
     const txXPathNode& document = es->getSourceDocument();
 
     nsIDocument *doc = txXPathNativeNode::getDocument(document);
-    nsCOMPtr<nsIContent> text;
-    nsresult rv = NS_NewTextNode(getter_AddRefs(text), doc->NodeInfoManager());
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIContent> text = new nsTextNode(doc->NodeInfoManager());
 
-    rv = text->SetText(aValue, false);
+    nsresult rv = text->SetText(aValue, false);
     NS_ENSURE_SUCCESS(rv, rv);
 
     *aResult = txXPathNativeNode::createXPathNode(text, true);
@@ -133,9 +132,7 @@ createAndAddToResult(nsIAtom* aName, const nsSubstring& aValue,
                                   getter_AddRefs(elem));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIContent> text;
-    rv = NS_NewTextNode(getter_AddRefs(text), doc->NodeInfoManager());
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsRefPtr<nsTextNode> text = new nsTextNode(doc->NodeInfoManager());
 
     rv = text->SetText(aValue, false);
     NS_ENSURE_SUCCESS(rv, rv);
