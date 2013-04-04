@@ -594,14 +594,14 @@ public:
     SetUnsignedIntAttr(nsGkAtoms::width, aValue, aRv);
   }
 
-  void StepUp(const Optional< int32_t >& n, ErrorResult& aRv)
+  void StepUp(int32_t aN, ErrorResult& aRv)
   {
-    aRv = ApplyStep(n.WasPassed() ? n.Value() : 1);
+    aRv = ApplyStep(aN);
   }
 
-  void StepDown(const Optional< int32_t >& n, ErrorResult& aRv)
+  void StepDown(int32_t aN, ErrorResult& aRv)
   {
-    aRv = ApplyStep(n.WasPassed() ? -n.Value() : -1);
+    aRv = ApplyStep(-aN);
   }
 
   void GetValidationMessage(nsAString& aValidationMessage, ErrorResult& aRv);
