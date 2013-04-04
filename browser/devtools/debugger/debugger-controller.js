@@ -201,7 +201,7 @@ let DebuggerController = {
    *        Packet received from the server.
    */
   _onTabNavigated: function DC__onTabNavigated(aType, aPacket) {
-    if (aPacket.state == "start") {
+    if (aType == "will-navigate") {
       DebuggerView._handleTabNavigation();
 
       // Discard all the old sources.
