@@ -5468,11 +5468,11 @@ class ClassConstructor(ClassItem):
     baseConstructors is a list of strings containing calls to base constructors,
     defaults to None.
 
-    body contains a string with the code for the constructor, defaults to None.
+    body contains a string with the code for the constructor, defaults to empty.
     """
     def __init__(self, args, inline=False, bodyInHeader=False,
                  visibility="private", explicit=False, baseConstructors=None,
-                 body=None):
+                 body=""):
         self.args = args
         self.inline = inline or bodyInHeader
         self.bodyInHeader = bodyInHeader
@@ -5504,7 +5504,6 @@ class ClassConstructor(ClassItem):
         return ''
 
     def getBody(self):
-        assert self.body is not None
         return self.body
 
     def declare(self, cgClass):
@@ -6085,8 +6084,7 @@ const DOMClass Class = """ + DOMClass(self.descriptor) + """;
 class CGDOMJSProxyHandler_CGDOMJSProxyHandler(ClassConstructor):
     def __init__(self):
         ClassConstructor.__init__(self, [], inline=True, visibility="private",
-                                  baseConstructors=["mozilla::dom::DOMProxyHandler(Class)"],
-                                  body="")
+                                  baseConstructors=["mozilla::dom::DOMProxyHandler(Class)"])
 
 class CGDOMJSProxyHandler_getOwnPropertyDescriptor(ClassMethod):
     def __init__(self, descriptor):
@@ -8035,17 +8033,9 @@ class CGJSImplMethod(CGNativeMember):
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
-  // Construct the callback interface object.
-  bool initOk;
-  nsRefPtr<${callbackClass}> cbImpl = new ${callbackClass}(cx, nullptr, jsImplObj, &initOk);
-  if (!initOk) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-  // Build the actual implementation.
-  nsRefPtr<${implClass}> impl = new ${implClass}(cbImpl, window);
+  // Build the C++ implementation.
+  nsRefPtr<${implClass}> impl = new ${implClass}(jsImplObj, window);
   return impl.forget();""").substitute({"implClass" : self.descriptor.name,
-                 "callbackClass" : jsImplName(self.descriptor.name),
                  "contractId" : self.descriptor.interface.getJSImplementation()
                  })
 
@@ -8117,15 +8107,19 @@ class CGJSImplClass(CGBindingImplClass):
             decorators = "MOZ_FINAL"
             destructor = None
 
+        constructor = ClassConstructor(
+            [Argument("JSObject*", "aJSImplObject"),
+             Argument("nsISupports*", "aParent")],
+            visibility="public",
+            baseConstructors=["mImpl(new %s(aJSImplObject))" %
+                              jsImplName(descriptor.name),
+                              "mParent(aParent)"],
+            body="SetIsDOMBinding();")
+
         CGClass.__init__(self, descriptor.name,
                          bases=[ClassBase("nsISupports"),
                                 ClassBase("nsWrapperCache")],
-                         constructors=[ClassConstructor([Argument(jsImplName(descriptor.name) + "*", "aImpl"),
-                                                         Argument("nsISupports*", "aParent")],
-                                                        visibility="public",
-                                                        baseConstructors=["mImpl(aImpl)",
-                                                                          "mParent(aParent)"],
-                                                        body="SetIsDOMBinding();")],
+                         constructors=[constructor],
                          destructor=destructor,
                          methods=self.methodDecls,
                          decorators=decorators,
@@ -8178,8 +8172,7 @@ class CGCallback(CGClass):
             visibility="public",
             baseConstructors=[
                 "%s(cx, aOwner, aCallback, aInited)" % self.baseName
-                ],
-            body="")]
+                ])]
 
     def getMethodImpls(self, method):
         assert method.needThisHandling
@@ -8255,8 +8248,7 @@ class CGCallbackFunction(CGCallback):
             explicit=True,
             baseConstructors=[
                 "CallbackFunction(aOther)"
-                ],
-            body="")]
+                ])]
 
 class CGCallbackInterface(CGCallback):
     def __init__(self, descriptor):
@@ -8271,6 +8263,16 @@ class CGCallbackInterface(CGCallback):
                    for sig in m.signatures()]
         CGCallback.__init__(self, iface, descriptor, "CallbackInterface",
                             methods, getters=getters, setters=setters)
+
+    def getConstructors(self):
+        return CGCallback.getConstructors(self) + [
+            ClassConstructor(
+                [Argument("JSObject*", "aCallback")],
+                bodyInHeader=True,
+                visibility="public",
+                explicit=True,
+                baseConstructors=["CallbackInterface(aCallback)"])
+            ]
 
 class FakeMember():
     def __init__(self):
