@@ -29,6 +29,7 @@ import android.view.SurfaceHolder.Callback;
 
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.util.ThreadUtils;
 
 public class VideoCaptureAndroid implements PreviewCallback, Callback {
 
@@ -72,7 +73,7 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
 
         GeckoApp.mAppContext.cameraView.getHolder().
             removeCallback(captureAndroid);
-        GeckoAppShell.getMainHandler().post(new Runnable() {
+        ThreadUtils.getUiHandler().post(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -95,7 +96,7 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
 
         try {
             GeckoApp.mAppContext.cameraView.getHolder().addCallback(this);
-            GeckoAppShell.getMainHandler().post(new Runnable() {
+            ThreadUtils.getUiHandler().post(new Runnable() {
                 @Override
                 public void run() {
                     try {
