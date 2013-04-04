@@ -1364,10 +1364,24 @@ nsHTMLFormElement::RemoveElementFromTable(nsGenericHTMLFormElement* aElement,
   return mControls->RemoveElementFromTable(aElement, aName);
 }
 
-NS_IMETHODIMP_(already_AddRefed<nsISupports>)
-nsHTMLFormElement::ResolveName(const nsAString& aName)
+already_AddRefed<nsISupports>
+nsHTMLFormElement::FindNamedItem(const nsAString& aName,
+                                 nsWrapperCache** aCache)
 {
-  return DoResolveName(aName, true);
+  nsCOMPtr<nsISupports> result = DoResolveName(aName, true);
+  if (result) {
+    // FIXME Get the wrapper cache from DoResolveName.
+    *aCache = nullptr;
+    return result.forget();
+  }
+
+  nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(GetCurrentDoc());
+  if (!htmlDoc) {
+    *aCache = nullptr;
+    return nullptr;
+  }
+
+  return htmlDoc->ResolveName(aName, this, aCache);
 }
 
 already_AddRefed<nsISupports>
@@ -1933,7 +1947,7 @@ nsHTMLFormElement::GetNextRadioButton(const nsAString& aName,
     mSelectedRadioButtons.Get(aName, getter_AddRefs(currentRadio));
   }
 
-  nsCOMPtr<nsISupports> itemWithName = ResolveName(aName);
+  nsCOMPtr<nsISupports> itemWithName = DoResolveName(aName, true);
   nsCOMPtr<nsINodeList> radioGroup(do_QueryInterface(itemWithName));
 
   if (!radioGroup) {
