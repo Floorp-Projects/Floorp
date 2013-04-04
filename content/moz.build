@@ -10,6 +10,7 @@ PARALLEL_DIRS += [
     'events',
     'html',
     'mathml/content/src',
+    'media',
     'smil',
     'svg',
     'xml',
@@ -17,9 +18,6 @@ PARALLEL_DIRS += [
     'xbl',
     'xslt',
 ]
-
-if CONFIG['MOZ_MEDIA']:
-    PARALLEL_DIRS += ['media']
 
 TEST_TOOL_DIRS += ['test']
 

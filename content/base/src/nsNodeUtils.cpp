@@ -24,9 +24,7 @@
 #endif
 #include "nsBindingManager.h"
 #include "nsGenericHTMLElement.h"
-#ifdef MOZ_MEDIA
 #include "mozilla/dom/HTMLMediaElement.h"
-#endif // MOZ_MEDIA
 #include "nsWrapperCacheInlines.h"
 #include "nsObjectLoadingContent.h"
 #include "nsDOMMutationObserver.h"
@@ -491,11 +489,9 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
           if (elm->MayHavePaintEventListener()) {
             window->SetHasPaintEventListeners();
           }
-#ifdef MOZ_MEDIA
           if (elm->MayHaveAudioAvailableEventListener()) {
             window->SetHasAudioAvailableEventListeners();
           }
-#endif
           if (elm->MayHaveTouchEventListener()) {
             window->SetHasTouchEventListeners();
           }
@@ -507,13 +503,11 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
     }
 
     if (wasRegistered && oldDoc != newDoc) {
-#ifdef MOZ_MEDIA
       nsCOMPtr<nsIDOMHTMLMediaElement> domMediaElem(do_QueryInterface(aNode));
       if (domMediaElem) {
         HTMLMediaElement* mediaElem = static_cast<HTMLMediaElement*>(aNode);
         mediaElem->NotifyOwnerDocumentActivityChanged();
       }
-#endif
       nsCOMPtr<nsIObjectLoadingContent> objectLoadingContent(do_QueryInterface(aNode));
       if (objectLoadingContent) {
         nsObjectLoadingContent* olc = static_cast<nsObjectLoadingContent*>(objectLoadingContent.get());
