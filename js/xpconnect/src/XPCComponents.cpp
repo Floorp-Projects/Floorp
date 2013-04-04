@@ -2837,7 +2837,10 @@ nsXPCComponents_Utils::ReportError(const JS::Value &error, JSContext *cx)
 #include "nsNetUtil.h"
 const char kScriptSecurityManagerContractID[] = NS_SCRIPTSECURITYMANAGER_CONTRACTID;
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(SandboxPrivate, nsIScriptObjectPrincipal, nsIGlobalObject)
+NS_IMPL_THREADSAFE_ISUPPORTS3(SandboxPrivate,
+                              nsIScriptObjectPrincipal,
+                              nsIGlobalObject,
+                              nsISupportsWeakReference)
 
 static JSBool
 SandboxDump(JSContext *cx, unsigned argc, jsval *vp)
