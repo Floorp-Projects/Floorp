@@ -1087,6 +1087,17 @@ RES_DIRS= \
   res/menu-xlarge-v11           \
   $(NULL)
 
+ALL_JARS = \
+  jars/gecko-browser.jar \
+  jars/gecko-util.jar \
+  jars/sync-thirdparty.jar \
+  jars/gecko-mozglue.jar \
+  $(NULL)
+
+ifdef MOZ_WEBRTC
+ALL_JARS += jars/webrtc.jar
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 # Override the Java settings with some specific android settings
@@ -1097,7 +1108,7 @@ include $(topsrcdir)/config/android-common.mk
 # Sync dependencies are provided in a single jar. Sync classes themselves are delivered as source,
 # because Android resource classes must be compiled together in order to avoid overlapping resource
 # indices.
-classes.dex: jars/gecko-browser.jar jars/webrtc.jar
+classes.dex: $(ALL_JARS)
 	@echo "DX classes.dex"
 	$(DX) --dex --output=classes.dex jars $(ANDROID_COMPAT_LIB)
 
