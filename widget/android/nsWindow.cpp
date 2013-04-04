@@ -1188,6 +1188,10 @@ bool nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)
 {
     nsRefPtr<nsWindow> kungFuDeathGrip(this);
 
+    // End any composition in progress in case the touch event listener
+    // modifies the input field value (see bug 856155)
+    RemoveIMEComposition();
+
     // This is set to true once we have called SetPreventPanning() exactly
     // once for a given sequence of touch events. It is reset on the start
     // of the next sequence.
