@@ -6344,8 +6344,9 @@ function warnAboutClosingWindow() {
       return false;
   }
 
-  if (!isPBWindow && nonPopupPresent)
-    return gBrowser.warnAboutClosingTabs(true);
+  if (nonPopupPresent) {
+    return isPBWindow || gBrowser.warnAboutClosingTabs(true);
+  }
 
   let os = Services.obs;
 
