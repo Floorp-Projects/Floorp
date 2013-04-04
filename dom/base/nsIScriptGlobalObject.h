@@ -9,44 +9,11 @@
 
 #include "nsISupports.h"
 #include "nsEvent.h"
-#include "nsIProgrammingLanguage.h"
 
 class nsIScriptContext;
-class nsIDOMEvent;
-class nsIScriptGlobalObjectOwner;
-class nsIArray;
 class nsScriptErrorEvent;
 class nsIScriptGlobalObject;
-class JSObject; // until we finally remove GetGlobalJSObject...
-
-// XXXbz can we just remove all this script type id stuff?
-// Some helpers for working with integer "script type IDs", and specifically
-// for working with arrays of such objects. For example, it is common for
-// implementations supporting multiple script languages to keep each
-// language's nsIScriptContext in an array indexed by the language ID.
-
-#define NS_STID_FIRST nsIProgrammingLanguage::JAVASCRIPT
-// only 4 bits worth is valid...
-#define NS_STID_LAST (nsIProgrammingLanguage::MAX > 0x000FU ? \
-                      0x000FU : nsIProgrammingLanguage::MAX)
-
-// Use to declare the array size
-#define NS_STID_ARRAY_UBOUND (NS_STID_LAST-NS_STID_FIRST+1)
-
-// Is a language ID valid?
-#define NS_STID_VALID(langID) (langID >= NS_STID_FIRST && langID <= NS_STID_LAST)
-
-// Return an index for a given ID.
-#define NS_STID_INDEX(langID) (langID-NS_STID_FIRST)
-
-// Create a 'for' loop iterating over all possible language IDs (*not* indexes)
-#define NS_STID_FOR_ID(varName) \
-          for (varName=NS_STID_FIRST;varName<=NS_STID_LAST;varName++)
-
-// Create a 'for' loop iterating over all indexes (when you don't need to know
-// what language it is)
-#define NS_STID_FOR_INDEX(varName) \
-          for (varName=0;varName<=NS_STID_INDEX(NS_STID_LAST);varName++)
+class JSObject;
 
 // A helper function for nsIScriptGlobalObject implementations to use
 // when handling a script error.  Generally called by the global when a context
