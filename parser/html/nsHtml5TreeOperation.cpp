@@ -30,6 +30,7 @@
 #include "nsIFormProcessor.h"
 #include "nsIServiceManager.h"
 #include "nsEscape.h"
+#include "mozilla/dom/Comment.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
 #include "nsHtml5SVGLoadDispatcher.h"
@@ -516,8 +517,8 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       PRUnichar* buffer = mTwo.unicharPtr;
       int32_t length = mFour.integer;
       
-      nsCOMPtr<nsIContent> comment;
-      NS_NewCommentNode(getter_AddRefs(comment), aBuilder->GetNodeInfoManager());
+      nsRefPtr<dom::Comment> comment =
+        new dom::Comment(aBuilder->GetNodeInfoManager());
       NS_ASSERTION(comment, "Infallible malloc failed?");
       rv = comment->SetText(buffer, length, false);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -528,8 +529,8 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       PRUnichar* buffer = mTwo.unicharPtr;
       int32_t length = mFour.integer;
       
-      nsCOMPtr<nsIContent> comment;
-      NS_NewCommentNode(getter_AddRefs(comment), aBuilder->GetNodeInfoManager());
+      nsRefPtr<dom::Comment> comment =
+        new dom::Comment(aBuilder->GetNodeInfoManager());
       NS_ASSERTION(comment, "Infallible malloc failed?");
       rv = comment->SetText(buffer, length, false);
       NS_ENSURE_SUCCESS(rv, rv);

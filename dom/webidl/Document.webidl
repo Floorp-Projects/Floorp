@@ -50,7 +50,7 @@ interface Document : Node {
   DocumentFragment createDocumentFragment();
   [Creator]
   Text createTextNode(DOMString data);
-  [Creator, Throws]
+  [Creator]
   Comment createComment(DOMString data);
   [Creator, Throws]
   ProcessingInstruction createProcessingInstruction(DOMString target, DOMString data);
