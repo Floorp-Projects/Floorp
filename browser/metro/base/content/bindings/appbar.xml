@@ -34,10 +34,22 @@
           ]]>
         </getter>
       </property>
+
+      <method name="_fire">
+        <parameter name="aName"/>
+        <body>
+          <![CDATA[
+            let event = document.createEvent("Events");
+            event.initEvent(aName, true, false);
+            this.dispatchEvent(event);
+          ]]>
+        </body>
+      </method>
       
       <method name="dismiss">
         <body>
           <![CDATA[
+            this._fire("MozAppbarDismissing");
             this.removeAttribute("visible");
           ]]>
         </body>
@@ -46,6 +58,7 @@
       <method name="show">
         <body>
           <![CDATA[
+            this._fire("MozAppbarShowing");
             this.setAttribute("visible", "true");
           ]]>
         </body>
