@@ -1863,7 +1863,7 @@ Debugger::unwrapDebuggeeArgument(JSContext *cx, const Value &v)
     }
 
     /* If we have a cross-compartment wrapper, dereference as far as is secure. */
-    obj = UnwrapObjectChecked(obj);
+    obj = CheckedUnwrap(obj);
     if (!obj) {
         JS_ReportError(cx, "Permission denied to access object");
         return NULL;
@@ -4721,7 +4721,7 @@ RequireGlobalObject(JSContext *cx, HandleValue dbgobj, HandleObject obj)
     if (!obj->isGlobal()) {
         /* Help the poor programmer by pointing out wrappers around globals. */
         if (obj->isWrapper()) {
-            JSObject *unwrapped = js::UnwrapObject(obj);
+            JSObject *unwrapped = js::UncheckedUnwrap(obj);
             if (unwrapped->isGlobal()) {
                 js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_DEBUG_WRAPPER_IN_WAY,
                                          JSDVG_SEARCH_STACK, dbgobj, NullPtr(),
