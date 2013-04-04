@@ -9,8 +9,9 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 
 Cu.import('resource://gre/modules/Services.jsm');
+Cu.import('resource://gre/modules/Geometry.jsm');
 
-this.EXPORTED_SYMBOLS = ['Utils', 'Logger'];
+this.EXPORTED_SYMBOLS = ['Utils', 'Logger', 'PivotContext'];
 
 this.Utils = {
   _buildAppMap: {
@@ -266,4 +267,133 @@ this.Logger = {
     for (var i=0; i < aAccessible.childCount; i++)
       this._dumpTreeInternal(aLogLevel, aAccessible.getChildAt(i), aIndent + 1);
     }
+};
+
+/**
+ * PivotContext: An object that generates and caches context information
+ * for a given accessible and its relationship with another accessible.
+ */
+this.PivotContext = function PivotContext(aAccessible, aOldAccessible) {
+  this._accessible = aAccessible;
+  this._oldAccessible =
+    this._isDefunct(aOldAccessible) ? null : aOldAccessible;
+}
+
+PivotContext.prototype = {
+  get accessible() {
+    return this._accessible;
+  },
+
+  get oldAccessible() {
+    return this._oldAccessible;
+  },
+
+  /*
+   * This is a list of the accessible's ancestry up to the common ancestor
+   * of the accessible and the old accessible. It is useful for giving the
+   * user context as to where they are in the heirarchy.
+   */
+  get newAncestry() {
+    if (!this._newAncestry) {
+      let newLineage = [];
+      let oldLineage = [];
+
+      let parent = this._accessible;
+      while (parent && (parent = parent.parent))
+        newLineage.push(parent);
+
+      parent = this._oldAccessible;
+      while (parent && (parent = parent.parent))
+        oldLineage.push(parent);
+
+      this._newAncestry = [];
+
+      while (true) {
+        let newAncestor = newLineage.pop();
+        let oldAncestor = oldLineage.pop();
+
+        if (newAncestor == undefined)
+          break;
+
+        if (newAncestor != oldAncestor)
+          this._newAncestry.push(newAncestor);
+      }
+
+    }
+
+    return this._newAncestry;
+  },
+
+  /*
+   * Traverse the accessible's subtree in pre or post order.
+   * It only includes the accessible's visible chidren.
+   */
+  _traverse: function _traverse(aAccessible, preorder) {
+    let list = [];
+    let child = aAccessible.firstChild;
+    while (child) {
+      let state = {};
+      child.getState(state, {});
+      if (!(state.value & Ci.nsIAccessibleStates.STATE_INVISIBLE)) {
+        let traversed = _traverse(child, preorder);
+        // Prepend or append a child, based on traverse order.
+        traversed[preorder ? "unshift" : "push"](child);
+        list.push.apply(list, traversed);
+      }
+      child = child.nextSibling;
+    }
+    return list;
+  },
+
+  /*
+   * This is a flattened list of the accessible's subtree in preorder.
+   * It only includes the accessible's visible chidren.
+   */
+  get subtreePreorder() {
+    if (!this._subtreePreOrder)
+      this._subtreePreOrder = this._traverse(this._accessible, true);
+
+    return this._subtreePreOrder;
+  },
+
+  /*
+   * This is a flattened list of the accessible's subtree in postorder.
+   * It only includes the accessible's visible chidren.
+   */
+  get subtreePostorder() {
+    if (!this._subtreePostOrder)
+      this._subtreePostOrder = this._traverse(this._accessible, false);
+
+    return this._subtreePostOrder;
+  },
+
+  get bounds() {
+    if (!this._bounds) {
+      let objX = {}, objY = {}, objW = {}, objH = {};
+
+      this._accessible.getBounds(objX, objY, objW, objH);
+
+      // XXX: OOP content provides a screen offset of 0, while in-process provides a real
+      // offset. Removing the offset and using content-relative coords normalizes this.
+      let docX = {}, docY = {};
+      let docRoot = this._accessible.rootDocument.
+        QueryInterface(Ci.nsIAccessible);
+      docRoot.getBounds(docX, docY, {}, {});
+
+      this._bounds = new Rect(objX.value, objY.value, objW.value, objH.value).
+        translate(-docX.value, -docY.value);
+    }
+
+    return this._bounds.clone();
+  },
+
+  _isDefunct: function _isDefunct(aAccessible) {
+    try {
+      let extstate = {};
+      aAccessible.getState({}, extstate);
+      return !!(aAccessible.value & Ci.nsIAccessibleStates.EXT_STATE_DEFUNCT);
+    } catch (x) {
+      return true;
+    }
+  }
 };
