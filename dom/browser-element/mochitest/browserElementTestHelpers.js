@@ -110,6 +110,11 @@ const browserElementTestHelpers = {
 //    but it's still scary looking.  So we just set the pref to true and never
 //    pop that value.  We'll rely on the tests which test IPC security to set
 //    it to false.
+//
+//  * security.mixed_content.block_active_content: false
+//
+//    Disable mixed active content blocking, so that tests can confirm that mixed
+//    content results in a broken security state.
 
 (function() {
   var oop = location.pathname.indexOf('_inproc_') == -1;
@@ -118,7 +123,8 @@ const browserElementTestHelpers = {
   SpecialPowers.setBoolPref("network.disable.ipc.security", true);
   SpecialPowers.pushPrefEnv({set: [["browser.pageThumbs.enabled", false],
                                    ["dom.ipc.browser_frames.oop_by_default", oop],
-                                   ["dom.ipc.tabs.disabled", false]]},
+                                   ["dom.ipc.tabs.disabled", false],
+                                   ["security.mixed_content.block_active_content", false]]},
                             browserElementTestHelpers.unlockTestReady.bind(browserElementTestHelpers));
 })();
 
