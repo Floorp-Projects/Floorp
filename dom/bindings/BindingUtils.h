@@ -834,6 +834,11 @@ bool
 XPCOMObjectToJsval(JSContext* cx, JSObject* scope, xpcObjectHelper &helper,
                    const nsIID* iid, bool allowNativeWrapper, JS::Value* rval);
 
+// Special-cased wrapping for variants
+bool
+VariantToJsval(JSContext* aCx, JSObject* aScope, nsIVariant* aVariant,
+               JS::Value* aRetval);
+
 // Wrap an object "p" which is not using WebIDL bindings yet.  This _will_
 // actually work on WebIDL binding objects that are wrappercached, but will be
 // much slower than WrapNewBindingObject.  "cache" must either be null or be the
@@ -847,6 +852,18 @@ WrapObject(JSContext* cx, JSObject* scope, T* p, nsWrapperCache* cache,
     return true;
   qsObjectHelper helper(p, cache);
   return XPCOMObjectToJsval(cx, scope, helper, iid, true, vp);
+}
+
+// A specialization of the above for nsIVariant, because that needs to
+// do something different.
+template<>
+inline bool
+WrapObject<nsIVariant>(JSContext* cx, JSObject* scope, nsIVariant* p,
+                       nsWrapperCache* cache, const nsIID* iid, JS::Value* vp)
+{
+  MOZ_ASSERT(iid);
+  MOZ_ASSERT(iid->Equals(NS_GET_IID(nsIVariant)));
+  return VariantToJsval(cx, scope, p, vp);
 }
 
 // Wrap an object "p" which is not using WebIDL bindings yet.  Just like the
