@@ -831,9 +831,7 @@ nsPipeInputStream::AsyncWait(nsIInputStreamCallback *callback,
 
         nsCOMPtr<nsIInputStreamCallback> proxy;
         if (target) {
-            nsresult rv = NS_NewInputStreamReadyEvent(getter_AddRefs(proxy),
-                                                      callback, target);
-            if (NS_FAILED(rv)) return rv;
+            proxy = NS_NewInputStreamReadyEvent(callback, target);
             callback = proxy;
         }
 
@@ -1212,9 +1210,7 @@ nsPipeOutputStream::AsyncWait(nsIOutputStreamCallback *callback,
 
         nsCOMPtr<nsIOutputStreamCallback> proxy;
         if (target) {
-            nsresult rv = NS_NewOutputStreamReadyEvent(getter_AddRefs(proxy),
-                                                       callback, target);
-            if (NS_FAILED(rv)) return rv;
+            proxy = NS_NewOutputStreamReadyEvent(callback, target);
             callback = proxy;
         }
 
