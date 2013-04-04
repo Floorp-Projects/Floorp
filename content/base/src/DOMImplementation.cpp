@@ -114,7 +114,7 @@ DOMImplementation::CreateDocument(const nsAString& aNamespaceURI,
     }
   }
 
-  nsCOMPtr<nsIScriptGlobalObject> scriptHandlingObject =
+  nsCOMPtr<nsIGlobalObject> scriptHandlingObject =
     do_QueryReferent(mScriptObject);
 
   NS_ENSURE_STATE(!mScriptObject || scriptHandlingObject);
@@ -182,7 +182,7 @@ DOMImplementation::CreateHTMLDocument(const nsAString& aTitle,
   NS_ENSURE_SUCCESS(rv, rv);
 
 
-  nsCOMPtr<nsIScriptGlobalObject> scriptHandlingObject =
+  nsCOMPtr<nsIGlobalObject> scriptHandlingObject =
     do_QueryReferent(mScriptObject);
 
   NS_ENSURE_STATE(!mScriptObject || scriptHandlingObject);

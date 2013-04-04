@@ -2515,7 +2515,7 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
                   nsIURI* aBaseURI,
                   nsIPrincipal* aPrincipal,
                   bool aLoadedAsData,
-                  nsIScriptGlobalObject* aEventObject,
+                  nsIGlobalObject* aEventObject,
                   DocumentFlavor aFlavor);
 
 // This is used only for xbl documents created from the startup cache.

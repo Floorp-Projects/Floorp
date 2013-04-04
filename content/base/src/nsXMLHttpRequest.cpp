@@ -2000,8 +2000,8 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     // principal, so use mPrincipal when creating the document, then reset the
     // principal.
     const nsAString& emptyStr = EmptyString();
-    nsCOMPtr<nsIScriptGlobalObject> global = do_QueryInterface(GetOwner());
     nsCOMPtr<nsIDOMDocument> responseDoc;
+    nsIGlobalObject* global = nsDOMEventTargetHelper::GetParentObject();
     rv = NS_NewDOMDocument(getter_AddRefs(responseDoc),
                            emptyStr, emptyStr, nullptr, docURI,
                            baseURI, mPrincipal, true, global,

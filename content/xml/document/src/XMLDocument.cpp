@@ -71,7 +71,7 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
                   nsIURI* aBaseURI,
                   nsIPrincipal* aPrincipal,
                   bool aLoadedAsData,
-                  nsIScriptGlobalObject* aEventObject,
+                  nsIGlobalObject* aEventObject,
                   DocumentFlavor aFlavor)
 {
   // Note: can't require that aDocumentURI/aBaseURI/aPrincipal be non-null,
@@ -127,8 +127,12 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
     return rv;
   }
 
-  d->SetScriptHandlingObject(aEventObject);
-  
+  if (nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(aEventObject)) {
+    d->SetScriptHandlingObject(sgo);
+  } else if (aEventObject){
+    d->SetScopeObject(aEventObject);
+  }
+
   if (isHTML) {
     nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(d);
     NS_ASSERTION(htmlDoc, "HTML Document doesn't implement nsIHTMLDocument?");
