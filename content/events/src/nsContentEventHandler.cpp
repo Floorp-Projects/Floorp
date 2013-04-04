@@ -106,6 +106,9 @@ nsContentEventHandler::Init(nsQueryContentEvent* aEvent)
 
   nsRect r;
   nsIFrame* frame = caret->GetGeometry(mSelection, &r);
+  if (!frame) {
+    frame = mRootContent->GetPrimaryFrame();
+  }
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
   aEvent->mReply.mFocusedWidget = frame->GetNearestWidget();
