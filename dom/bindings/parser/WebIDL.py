@@ -506,6 +506,7 @@ class IDLInterface(IDLObjectWithScope):
         # self.interfacesImplementingSelf is the set of interfaces that directly
         # have self as a consequential interface
         self.interfacesImplementingSelf = set()
+        self._hasChildInterfaces = False
 
         IDLObjectWithScope.__init__(self, location, parentScope, name)
 
@@ -566,6 +567,8 @@ class IDLInterface(IDLObjectWithScope):
 
         if self.parent:
             self.parent.finish(scope)
+
+            self.parent._hasChildInterfaces = True
 
             # Callbacks must not inherit from non-callbacks or inherit from
             # anything that has consequential interfaces.
@@ -976,6 +979,9 @@ class IDLInterface(IDLObjectWithScope):
 
     def isJSImplemented(self):
         return bool(self.getJSImplementation())
+
+    def hasChildInterfaces(self):
+        return self._hasChildInterfaces
 
     def _getDependentObjects(self):
         deps = set(self.members)
