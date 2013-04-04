@@ -162,11 +162,11 @@ public:
   }
   uint32_t Size()
   {
-    return GetHTMLUnsignedIntAttr(nsGkAtoms::size, 0);
+    return GetUnsignedIntAttr(nsGkAtoms::size, 0);
   }
   void SetSize(uint32_t aSize, ErrorResult& aRv)
   {
-    SetHTMLUnsignedIntAttr(nsGkAtoms::size, aSize, aRv);
+    SetUnsignedIntAttr(nsGkAtoms::size, aSize, aRv);
   }
   void GetName(nsString& aName, ErrorResult& aRv) const
   {
