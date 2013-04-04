@@ -18,7 +18,9 @@ EXPORTS = \
 		xpcObjectHelper.h \
 		xpcpublic.h \
 		XPCJSMemoryReporter.h \
-		GeneratedEvents.h
+		GeneratedEvents.h \
+		BackstagePass.h \
+		$(NULL)
 
 CPPSRCS		= \
 		nsScriptError.cpp \

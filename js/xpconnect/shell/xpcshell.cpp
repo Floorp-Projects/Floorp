@@ -45,6 +45,7 @@
 #include "nsJSPrincipals.h"
 #include "xpcpublic.h"
 #include "nsXULAppAPI.h"
+#include "BackstagePass.h"
 #ifdef XP_MACOSX
 #include "xpcshellMacUtils.h"
 #endif
@@ -1882,16 +1883,17 @@ main(int argc, char **argv, char **envp)
             return 1;
         }
 
-        nsCOMPtr<nsIXPCScriptable> backstagePass;
-        nsresult rv = rtsvc->GetBackstagePass(getter_AddRefs(backstagePass));
+        nsRefPtr<BackstagePass> backstagePass;
+        rv = NS_NewBackstagePass(getter_AddRefs(backstagePass));
         if (NS_FAILED(rv)) {
-            fprintf(gErrFile, "+++ Failed to get backstage pass from rtsvc: %8x\n",
+            fprintf(gErrFile, "+++ Failed to create BackstagePass: %8x\n",
                     static_cast<uint32_t>(rv));
             return 1;
         }
 
         nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-        rv = xpc->InitClassesWithNewWrappedGlobal(cx, backstagePass,
+        rv = xpc->InitClassesWithNewWrappedGlobal(cx,
+                                                  static_cast<nsIGlobalObject *>(backstagePass),
                                                   systemprincipal,
                                                   0,
                                                   JS::SystemZone,
@@ -1904,6 +1906,8 @@ main(int argc, char **argv, char **envp)
             NS_ASSERTION(glob == nullptr, "bad GetJSObject?");
             return 1;
         }
+
+        backstagePass->SetGlobalObject(glob);
 
         JS_BeginRequest(cx);
         {

@@ -179,6 +179,7 @@
 #include "nsIThreadInternal.h"
 
 #include "SandboxPrivate.h"
+#include "BackstagePass.h"
 
 #ifdef XP_WIN
 // Nasty MS defines
@@ -578,8 +579,6 @@ private:
     // an 'after' notification without getting an 'on' notification. If we don't
     // watch out for this, we'll do an unmatched |pop| on the context stack.
     uint16_t                   mEventDepth;
-
-    nsCOMPtr<nsIXPCScriptable> mBackstagePass;
 
     static uint32_t gReportAllJSExceptions;
     static JSBool gDebugMode;
@@ -3685,31 +3684,6 @@ private:
 };
 
 /***************************************************************************/
-#include "nsIScriptSecurityManager.h"
-
-class BackstagePass : public nsIScriptObjectPrincipal,
-                      public nsIXPCScriptable,
-                      public nsIClassInfo
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIXPCSCRIPTABLE
-  NS_DECL_NSICLASSINFO
-
-  virtual nsIPrincipal* GetPrincipal() {
-    return mPrincipal;
-  }
-
-  BackstagePass(nsIPrincipal *prin) :
-    mPrincipal(prin)
-  {
-  }
-
-  virtual ~BackstagePass() { }
-
-private:
-  nsCOMPtr<nsIPrincipal> mPrincipal;
-};
 // 'Components' object
 
 class nsXPCComponents : public nsIXPCComponents,
