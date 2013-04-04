@@ -110,8 +110,8 @@ typedef CallbackObjectHolder<NodeFilter, nsIDOMNodeFilter> NodeFilterHolder;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID \
-{ 0x699e0649, 0x55f2, 0x47f1, \
- { 0x93, 0x38, 0xcd, 0x67, 0xf3, 0x2b, 0x04, 0xe9 } }
+{ 0x2adedf2, 0x8d85, 0x4a38, \
+  { 0xb6, 0x38, 0x91, 0xf4, 0xd2, 0xa4, 0x9b, 0x36 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -2311,6 +2311,8 @@ protected:
   // If true, we have an input encoding.  If this is false, then the
   // document was created entirely in memory
   bool mHaveInputEncoding;
+
+  bool mHasHadDefaultView;
 
   // The document's script global object, the object from which the
   // document can get its script context and scope. This is the

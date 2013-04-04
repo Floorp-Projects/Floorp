@@ -1180,11 +1180,6 @@ protected:
   // Array of observers
   nsTObserverArray<nsIDocumentObserver*> mObservers;
 
-  // If document is created for example using
-  // document.implementation.createDocument(...), mScriptObject points to
-  // the script global object of the original document.
-  nsWeakPtr mScriptObject;
-
   // Weak reference to the scope object (aka the script global object)
   // that, unlike mScriptGlobalObject, is never unset once set. This
   // is a weak reference to avoid leaks due to circular references.

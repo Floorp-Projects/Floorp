@@ -4089,8 +4089,8 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
   mScriptGlobalObject = aScriptGlobalObject;
 
   if (aScriptGlobalObject) {
-    mScriptObject = nullptr;
     mHasHadScriptHandlingObject = true;
+    mHasHadDefaultView = true;
     // Go back to using the docshell for the layout history state
     mLayoutHistoryState = nullptr;
     mScopeObject = do_GetWeakReference(aScriptGlobalObject);
@@ -4144,9 +4144,12 @@ nsDocument::GetScriptHandlingObjectInternal() const
 {
   NS_ASSERTION(!mScriptGlobalObject,
                "Do not call this when mScriptGlobalObject is set!");
+  if (mHasHadDefaultView) {
+    return nullptr;
+  }
 
   nsCOMPtr<nsIScriptGlobalObject> scriptHandlingObject =
-    do_QueryReferent(mScriptObject);
+    do_QueryReferent(mScopeObject);
   nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(scriptHandlingObject);
   if (win) {
     NS_ASSERTION(win->IsInnerWindow(), "Should have inner window here!");
@@ -4166,9 +4169,10 @@ nsDocument::SetScriptHandlingObject(nsIScriptGlobalObject* aScriptObject)
                "Wrong script object!");
   nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aScriptObject);
   NS_ASSERTION(!win || win->IsInnerWindow(), "Should have inner window here!");
-  mScopeObject = mScriptObject = do_GetWeakReference(aScriptObject);
+  mScopeObject = do_GetWeakReference(aScriptObject);
   if (aScriptObject) {
     mHasHadScriptHandlingObject = true;
+    mHasHadDefaultView = false;
   }
 }
 
