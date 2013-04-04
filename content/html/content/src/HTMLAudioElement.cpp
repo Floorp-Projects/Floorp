@@ -20,37 +20,13 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/EnableWebAudioCheck.h"
 
-DOMCI_NODE_DATA(HTMLAudioElement, mozilla::dom::HTMLAudioElement)
-
 static bool
 IsAudioAPIEnabled()
 {
   return mozilla::Preferences::GetBool("media.audio_data.enabled", true);
 }
 
-nsGenericHTMLElement*
-NS_NewHTMLAudioElement(already_AddRefed<nsINodeInfo> aNodeInfo,
-                       mozilla::dom::FromParser aFromParser)
-{
-  /*
-   * HTMLAudioElement's will be created without a nsINodeInfo passed in
-   * if someone says "var audio = new Audio();" in JavaScript, in a case like
-   * that we request the nsINodeInfo from the document's nodeinfo list.
-   */
-  nsCOMPtr<nsINodeInfo> nodeInfo(aNodeInfo);
-  if (!nodeInfo) {
-    nsCOMPtr<nsIDocument> doc =
-      do_QueryInterface(nsContentUtils::GetDocumentFromCaller());
-    NS_ENSURE_TRUE(doc, nullptr);
-
-    nodeInfo = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::audio, nullptr,
-                                                   kNameSpaceID_XHTML,
-                                                   nsIDOMNode::ELEMENT_NODE);
-    NS_ENSURE_TRUE(nodeInfo, nullptr);
-  }
-
-  return new mozilla::dom::HTMLAudioElement(nodeInfo.forget());
-}
+NS_IMPL_NS_NEW_HTML_ELEMENT(Audio)
 
 namespace mozilla {
 namespace dom {
@@ -59,11 +35,11 @@ NS_IMPL_ADDREF_INHERITED(HTMLAudioElement, HTMLMediaElement)
 NS_IMPL_RELEASE_INHERITED(HTMLAudioElement, HTMLMediaElement)
 
 NS_INTERFACE_TABLE_HEAD(HTMLAudioElement)
-NS_HTML_CONTENT_INTERFACE_TABLE3(HTMLAudioElement, nsIDOMHTMLMediaElement,
-                                 nsIDOMHTMLAudioElement, nsIJSNativeInitializer)
+NS_HTML_CONTENT_INTERFACE_TABLE2(HTMLAudioElement, nsIDOMHTMLMediaElement,
+                                 nsIDOMHTMLAudioElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLAudioElement,
                                              HTMLMediaElement)
-NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLAudioElement)
+NS_HTML_CONTENT_INTERFACE_MAP_END
 
 NS_IMPL_ELEMENT_CLONE(HTMLAudioElement)
 
@@ -78,37 +54,6 @@ HTMLAudioElement::~HTMLAudioElement()
 {
 }
 
-
-NS_IMETHODIMP
-HTMLAudioElement::Initialize(nsISupports* aOwner, JSContext* aContext,
-                             JSObject *aObj, uint32_t argc, jsval *argv)
-{
-  // Audio elements created using "new Audio(...)" should have
-  // 'preload' set to 'auto' (since the script must intend to
-  // play the audio)
-  nsresult rv = SetAttr(kNameSpaceID_None, nsGkAtoms::preload,
-                        NS_LITERAL_STRING("auto"), true);
-  if (NS_FAILED(rv))
-    return rv;
-
-  if (argc <= 0) {
-    // Nothing more to do here if we don't get any arguments.
-    return NS_OK;
-  }
-
-  // The only (optional) argument is the url of the audio
-  JSString* jsstr = JS_ValueToString(aContext, argv[0]);
-  if (!jsstr)
-    return NS_ERROR_FAILURE;
-
-  nsDependentJSString str;
-  if (!str.init(aContext, jsstr))
-    return NS_ERROR_FAILURE;
-
-  // The only (optional) argument is the src of the audio (which must
-  // be a URL string), used to initialize the 'src' attribute.
-  return SetSrc(str);
-}
 
 already_AddRefed<HTMLAudioElement>
 HTMLAudioElement::Audio(const GlobalObject& aGlobal, ErrorResult& aRv)

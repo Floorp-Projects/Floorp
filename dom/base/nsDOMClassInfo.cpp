@@ -199,8 +199,6 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLObjectElement.h"
 #include "nsIDOMTimeRanges.h"
-#include "nsIDOMHTMLVideoElement.h"
-#include "nsIDOMHTMLAudioElement.h"
 #include "nsIDOMCSSCharsetRule.h"
 #include "nsIDOMCSSImportRule.h"
 #include "nsIDOMCSSMediaRule.h"
@@ -942,10 +940,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
 #if defined(MOZ_MEDIA)
-  NS_DEFINE_CLASSINFO_DATA(HTMLVideoElement, nsElementSH,
-                           ELEMENT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(HTMLAudioElement, nsElementSH,
-                           ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(TimeRanges, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 #endif
@@ -2414,16 +2408,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_END
 
 #if defined (MOZ_MEDIA)
-  DOM_CLASSINFO_MAP_BEGIN(HTMLVideoElement, nsIDOMHTMLVideoElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLVideoElement)
-    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(HTMLAudioElement, nsIDOMHTMLAudioElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLAudioElement)
-    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(TimeRanges, nsIDOMTimeRanges)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMTimeRanges)
   DOM_CLASSINFO_MAP_END
