@@ -15,6 +15,7 @@ _BROWSER_FILES = \
 		 blocklist.xml \
 		 blocklistEmpty.xml \
 		 browser_blocklist.js \
+		 browser_defaults.js \
 		 browser_addons.js \
                  browser_social_activation.js \
                  browser_social_perwindowPB.js \
