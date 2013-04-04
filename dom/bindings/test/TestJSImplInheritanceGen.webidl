@@ -11,3 +11,7 @@ interface TestJSImplInterface2 :  TestCImplementedInterface {
 [Constructor, JSImplementation="@mozilla.org/test-js-impl-interface3;1"]
 interface TestJSImplInterface3 : TestCImplementedInterface2 {
 };
+
+[Constructor, JSImplementation="@mozilla.org/test-js-impl-interface4;1"]
+interface TestJSImplInterface4 : EventTarget {
+};
