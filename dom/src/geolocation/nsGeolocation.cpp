@@ -867,7 +867,7 @@ nsGeolocationService::Update(nsIDOMGeoPosition *aSomewhere)
   return NS_OK;
 }
 
-PRBool
+bool
 nsGeolocationService::IsBetterPosition(nsIDOMGeoPosition *aSomewhere)
 {
   if (!aSomewhere) {
