@@ -381,31 +381,18 @@ nsComputedDOMStyle::GetAdjustedValuesForBoxSizing()
   // We want the width/height of whatever parts 'width' or 'height' controls,
   // which can be different depending on the value of the 'box-sizing' property.
   const nsStylePosition* stylePos = StylePosition();
-  nscoord borderPaddingLeft = 0;
-  nscoord borderPaddingRight = 0;
-  nscoord borderPaddingTop = 0;
-  nscoord borderPaddingBottom = 0;
 
-  nsMargin border = mInnerFrame->GetUsedBorder();
-  nsMargin padding = mInnerFrame->GetUsedPadding();
-
+  nsMargin adjustment;
   switch(stylePos->mBoxSizing) {
     case NS_STYLE_BOX_SIZING_BORDER:
-      borderPaddingLeft += border.left;
-      borderPaddingRight += border.right;
-      borderPaddingTop += border.top;
-      borderPaddingBottom += border.bottom;
+      adjustment += mInnerFrame->GetUsedBorder();
       // fall through
 
     case NS_STYLE_BOX_SIZING_PADDING:
-      borderPaddingLeft += padding.left;
-      borderPaddingRight += padding.right;
-      borderPaddingTop += padding.top;
-      borderPaddingBottom += padding.bottom;
+      adjustment += mInnerFrame->GetUsedPadding();
   }
 
-  return nsMargin(borderPaddingTop, borderPaddingRight, borderPaddingBottom,
-                  borderPaddingLeft);
+  return adjustment;
 }
 
 /* static */
