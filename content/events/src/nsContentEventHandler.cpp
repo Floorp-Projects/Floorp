@@ -388,6 +388,11 @@ nsContentEventHandler::SetRangeFromFlatTextOffset(
 
   uint32_t nativeOffset = 0;
   uint32_t nativeEndOffset = aNativeOffset + aNativeLength;
+  // When we clip the end offset to the end of the root element, set it to after
+  // the last valid node. This way we don't include any extraneous nodes, such
+  // as the bogus editor BR node, in our range.
+  nsINode *lastValidNode = mRootContent;
+  uint32_t lastValidOffset = 0;
   bool startSet = false;
   for (; !iter->IsDone(); iter->Next()) {
     nsINode* node = iter->GetCurrentNode();
@@ -402,6 +407,8 @@ nsContentEventHandler::SetRangeFromFlatTextOffset(
     if (nativeTextLength == 0)
       continue;
 
+    lastValidNode = node->GetParent();
+    lastValidOffset = lastValidNode->IndexOf(node) + 1;
     if (nativeOffset <= aNativeOffset &&
         aNativeOffset < nativeOffset + nativeTextLength) {
       nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(content));
@@ -455,17 +462,16 @@ nsContentEventHandler::SetRangeFromFlatTextOffset(
     nativeOffset += nativeTextLength;
   }
 
-  if (nativeOffset < aNativeOffset)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(aNativeOffset <= nativeOffset, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(mRootContent));
+  nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(lastValidNode));
   NS_ASSERTION(domNode, "lastContent doesn't have nsIDOMNode!");
   if (!startSet) {
-    MOZ_ASSERT(!mRootContent->IsNodeOfType(nsINode::eTEXT));
-    rv = aRange->SetStart(domNode, int32_t(mRootContent->GetChildCount()));
+    MOZ_ASSERT(!domNode->IsNodeOfType(nsINode::eTEXT));
+    rv = aRange->SetStart(domNode, int32_t(lastValidOffset));
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  rv = aRange->SetEnd(domNode, int32_t(mRootContent->GetChildCount()));
+  rv = aRange->SetEnd(domNode, int32_t(lastValidOffset));
   NS_ASSERTION(NS_SUCCEEDED(rv), "nsIDOMRange::SetEnd failed");
   return rv;
 }
