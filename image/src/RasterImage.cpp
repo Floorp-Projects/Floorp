@@ -872,14 +872,16 @@ RasterImage::GetImgFrame(uint32_t framenum)
 imgFrame*
 RasterImage::GetDrawableImgFrame(uint32_t framenum)
 {
-  imgFrame* frame;
+  imgFrame* frame = nullptr;
 
   if (mMultipart && framenum == GetCurrentImgFrameIndex()) {
     // In the multipart case we prefer to use mMultipartDecodedFrame, which is
     // the most recent one we completely decoded, rather than display the real
     // current frame and risk severe tearing.
     frame = mMultipartDecodedFrame;
-  } else {
+  }
+
+  if (!frame) {
     frame = GetImgFrame(framenum);
   }
 
