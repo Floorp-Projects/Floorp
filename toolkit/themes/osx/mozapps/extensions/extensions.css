@@ -248,7 +248,7 @@
   list-style-image: url("chrome://mozapps/skin/extensions/category-extensions.png");
 }
 #category-service > .category-icon {
-  list-style-image: url("chrome://mozapps/skin/extensions/category-extensions.png");
+  list-style-image: url("chrome://mozapps/skin/extensions/category-service.png");
 }
 #category-theme > .category-icon {
   list-style-image: url("chrome://mozapps/skin/extensions/category-themes.png");
