@@ -147,16 +147,16 @@ public:
               const mozilla::dom::MozXMLHttpRequestParameters& aParams,
               ErrorResult& aRv)
   {
-    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.Get());
+    nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.Get());
     nsCOMPtr<nsIScriptObjectPrincipal> principal =
       do_QueryInterface(aGlobal.Get());
-    if (!window || ! principal) {
+    if (!global || ! principal) {
       aRv.Throw(NS_ERROR_FAILURE);
       return nullptr;
     }
 
     nsRefPtr<nsXMLHttpRequest> req = new nsXMLHttpRequest();
-    req->Construct(principal->GetPrincipal(), window);
+    req->Construct(principal->GetPrincipal(), global);
     req->InitParameters(aParams.mMozAnon, aParams.mMozSystem);
     return req.forget();
   }
@@ -178,13 +178,14 @@ public:
   }
 
   void Construct(nsIPrincipal* aPrincipal,
-                 nsPIDOMWindow* aOwnerWindow,
+                 nsIGlobalObject* aGlobalObject,
                  nsIURI* aBaseURI = nullptr)
   {
     MOZ_ASSERT(aPrincipal);
-    MOZ_ASSERT_IF(aOwnerWindow, aOwnerWindow->IsInnerWindow());
+    MOZ_ASSERT_IF(nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(
+      aGlobalObject), win->IsInnerWindow());
     mPrincipal = aPrincipal;
-    BindToOwner(aOwnerWindow);
+    BindToOwner(aGlobalObject);
     mBaseURI = aBaseURI;
   }
 
@@ -457,6 +458,11 @@ public:
 
   // This is called by the factory constructor.
   nsresult Init();
+
+  nsresult init(nsIPrincipal* principal,
+                nsIScriptContext* scriptContext,
+                nsPIDOMWindow* globalObject,
+                nsIURI* baseURI);
 
   void SetRequestObserver(nsIRequestObserver* aObserver);
 

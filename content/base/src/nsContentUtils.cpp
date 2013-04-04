@@ -1666,7 +1666,7 @@ nsContentUtils::InProlog(nsINode *aNode)
 JSContext *
 nsContentUtils::GetContextFromDocument(nsIDocument *aDocument)
 {
-  nsIScriptGlobalObject *sgo = aDocument->GetScopeObject();
+  nsCOMPtr<nsIScriptGlobalObject> sgo =  do_QueryInterface(aDocument->GetScopeObject());
   if (!sgo) {
     // No script global, no context.
     return nullptr;
@@ -4696,6 +4696,15 @@ nsContentUtils::IsSystemPrincipal(nsIPrincipal* aPrincipal)
   bool isSystem;
   nsresult rv = sSecurityManager->IsSystemPrincipal(aPrincipal, &isSystem);
   return NS_SUCCEEDED(rv) && isSystem;
+}
+
+nsIPrincipal*
+nsContentUtils::GetSystemPrincipal()
+{
+  nsCOMPtr<nsIPrincipal> sysPrin;
+  nsresult rv = sSecurityManager->GetSystemPrincipal(getter_AddRefs(sysPrin));
+  MOZ_ASSERT(NS_SUCCEEDED(rv) && sysPrin);
+  return sysPrin;
 }
 
 bool

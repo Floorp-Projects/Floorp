@@ -18,7 +18,9 @@ EXPORTS = \
 		xpcObjectHelper.h \
 		xpcpublic.h \
 		XPCJSMemoryReporter.h \
-		GeneratedEvents.h
+		GeneratedEvents.h \
+		BackstagePass.h \
+		$(NULL)
 
 CPPSRCS		= \
 		nsScriptError.cpp \
@@ -63,6 +65,7 @@ LOCAL_INCLUDES = \
 		-I$(srcdir)/../loader \
 		-I$(topsrcdir)/caps/include \
 		-I$(topsrcdir)/content/base/src \
+		-I$(topsrcdir)/content/base/public \
 		-I$(topsrcdir)/content/events/src \
 		-I$(topsrcdir)/content/html/content/src \
 		-I$(topsrcdir)/content/html/document/src \

@@ -14,6 +14,7 @@ STL_FLAGS =
 CPP_UNIT_TESTS = \
   TestBloomFilter.cpp \
   TestCheckedInt.cpp \
+  TestEndian.cpp \
   TestEnumSet.cpp \
   TestSHA1.cpp \
   TestTypeTraits.cpp \

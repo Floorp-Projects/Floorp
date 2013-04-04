@@ -342,7 +342,11 @@ nsXMLHttpRequest::Init()
     secMan->GetSystemPrincipal(getter_AddRefs(subjectPrincipal));
   }
   NS_ENSURE_STATE(subjectPrincipal);
-  Construct(subjectPrincipal, nullptr);
+
+  // Instead of grabbing some random global from the context stack,
+  // let's use the default one (junk drawer) for now.
+  // We should move away from this Init...
+  Construct(subjectPrincipal, xpc::GetNativeForGlobal(xpc::GetJunkScope()));
   return NS_OK;
 }
 
@@ -352,15 +356,21 @@ nsXMLHttpRequest::Init()
 NS_IMETHODIMP
 nsXMLHttpRequest::Init(nsIPrincipal* aPrincipal,
                        nsIScriptContext* aScriptContext,
-                       nsPIDOMWindow* aOwnerWindow,
+                       nsIGlobalObject* aGlobalObject,
                        nsIURI* aBaseURI)
 {
-  NS_ASSERTION(!aOwnerWindow || aOwnerWindow->IsOuterWindow(),
-               "Expecting an outer window here!");
   NS_ENSURE_ARG_POINTER(aPrincipal);
-  Construct(aPrincipal,
-            aOwnerWindow ? aOwnerWindow->GetCurrentInnerWindow() : nullptr,
-            aBaseURI);
+  
+  if (nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aGlobalObject)) {
+    if (win->IsOuterWindow()) {
+      // Must be bound to inner window, innerize if necessary.
+      nsCOMPtr<nsIGlobalObject> inner = do_QueryInterface(
+        win->GetCurrentInnerWindow());
+      aGlobalObject = inner.get();
+    }
+  }
+
+  Construct(aPrincipal, aGlobalObject, aBaseURI);
   return NS_OK;
 }
 
@@ -1990,8 +2000,8 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     // principal, so use mPrincipal when creating the document, then reset the
     // principal.
     const nsAString& emptyStr = EmptyString();
-    nsCOMPtr<nsIScriptGlobalObject> global = do_QueryInterface(GetOwner());
     nsCOMPtr<nsIDOMDocument> responseDoc;
+    nsIGlobalObject* global = nsDOMEventTargetHelper::GetParentObject();
     rv = NS_NewDOMDocument(getter_AddRefs(responseDoc),
                            emptyStr, emptyStr, nullptr, docURI,
                            baseURI, mPrincipal, true, global,

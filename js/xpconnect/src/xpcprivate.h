@@ -178,6 +178,9 @@
 #include "xpcObjectHelper.h"
 #include "nsIThreadInternal.h"
 
+#include "SandboxPrivate.h"
+#include "BackstagePass.h"
+
 #ifdef XP_WIN
 // Nasty MS defines
 #ifdef GetClassInfo
@@ -577,8 +580,6 @@ private:
     // watch out for this, we'll do an unmatched |pop| on the context stack.
     uint16_t                   mEventDepth;
 
-    nsCOMPtr<nsIXPCScriptable> mBackstagePass;
-
     static uint32_t gReportAllJSExceptions;
     static JSBool gDebugMode;
     static JSBool gDesiredDebugMode;
@@ -908,6 +909,8 @@ public:
 
     AutoMarkingPtr**  GetAutoRootsAdr() {return &mAutoRoots;}
 
+    JSObject* GetJunkScope();
+    void DeleteJunkScope();
 private:
     XPCJSRuntime(); // no implementation
     XPCJSRuntime(nsXPConnect* aXPConnect);
@@ -958,6 +961,7 @@ private:
     PRTime mLastActiveTime; // -1 if active NOW
     nsRefPtr<XPCIncrementalReleaseRunnable> mReleaseRunnable;
     JS::GCSliceCallback mPrevGCSliceCallback;
+    JSObject* mJunkScope;
 
     nsCOMPtr<nsIException>   mPendingException;
     nsCOMPtr<nsIExceptionManager> mExceptionManager;
@@ -3683,31 +3687,6 @@ private:
 };
 
 /***************************************************************************/
-#include "nsIScriptSecurityManager.h"
-
-class BackstagePass : public nsIScriptObjectPrincipal,
-                      public nsIXPCScriptable,
-                      public nsIClassInfo
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIXPCSCRIPTABLE
-  NS_DECL_NSICLASSINFO
-
-  virtual nsIPrincipal* GetPrincipal() {
-    return mPrincipal;
-  }
-
-  BackstagePass(nsIPrincipal *prin) :
-    mPrincipal(prin)
-  {
-  }
-
-  virtual ~BackstagePass() { }
-
-private:
-  nsCOMPtr<nsIPrincipal> mPrincipal;
-};
 // 'Components' object
 
 class nsXPCComponents : public nsIXPCComponents,
@@ -4163,32 +4142,6 @@ public:
     void TraceJS(JSTracer* trc);
     static void GetTraceName(JSTracer* trc, char *buf, size_t bufsize);
 };
-
-/***************************************************************************/
-
-#define PRINCIPALHOLDER_IID \
-{0xbf109f49, 0xf94a, 0x43d8, {0x93, 0xdb, 0xe4, 0x66, 0x49, 0xc5, 0xd9, 0x7d}}
-
-class PrincipalHolder : public nsIScriptObjectPrincipal
-{
-public:
-    NS_DECLARE_STATIC_IID_ACCESSOR(PRINCIPALHOLDER_IID)
-
-    PrincipalHolder(nsIPrincipal *holdee)
-        : mHoldee(holdee)
-    {
-    }
-    virtual ~PrincipalHolder() { }
-
-    NS_DECL_ISUPPORTS
-
-    nsIPrincipal *GetPrincipal();
-
-private:
-    nsCOMPtr<nsIPrincipal> mHoldee;
-};
-
-NS_DEFINE_STATIC_IID_ACCESSOR(PrincipalHolder, PRINCIPALHOLDER_IID)
 
 /***************************************************************************/
 // Utilities

@@ -71,6 +71,9 @@ policies and contribution forms [3].
  *    author - Name and contact information for the author of the test in the
  *             format: "Name <email_addr>" or "Name http://contact/url"
  *
+ *    flags - space separated list of test flags in addition to any present in
+ *            the head metadata
+ *
  * == Asynchronous Tests ==
  *
  * Testing asynchronous features is somewhat more complex since the result of
@@ -93,6 +96,19 @@ policies and contribution forms [3].
  * When all the steps are complete, the done() method must be called:
  *
  * t.done();
+ *
+ * As a convenience, async_test can also takes a function as first argument.
+ * This function is called with the test object as both its `this` object and
+ * first argument. The above example can be rewritten as:
+ *
+ * async_test(function(t) {
+ *     object.some_event = function() {
+ *         t.step(function (){assert_true(true); t.done();});
+ *     };
+ * }, "Simple async test");
+ *
+ * which avoids cluttering the global scope with references to async
+ * tests instances.
  *
  * The properties argument is identical to that for test().
  *
@@ -222,7 +238,7 @@ policies and contribution forms [3].
  *
  * In order to collect the results of multiple pages containing tests, the test
  * harness will, when loaded in a nested browsing context, attempt to call
- * certain functions in each ancestor browsing context:
+ * certain functions in each ancestor and opener browsing context:
  *
  * start - start_callback
  * result - result_callback
@@ -230,6 +246,22 @@ policies and contribution forms [3].
  *
  * These are given the same arguments as the corresponding internal callbacks
  * described above.
+ *
+ * == External API through cross-document messaging ==
+ *
+ * Where supported, the test harness will also send messages using
+ * cross-document messaging to each ancestor and opener browsing context. Since
+ * it uses the wildcard keyword (*), cross-origin communication is enabled and
+ * script on different origins can collect the results.
+ *
+ * This API follows similar conventions as those described above only slightly
+ * modified to accommodate message event API. Each message is sent by the harness
+ * is passed a single vanilla object, available as the `data` property of the
+ * event object. These objects are structures as follows:
+ *
+ * start - { type: "start" }
+ * result - { type: "result", test: Test }
+ * complete - { type: "complete", tests: [Test, ...], status: TestsStatus }
  *
  * == List of assertions ==
  *
@@ -376,11 +408,19 @@ policies and contribution forms [3].
         }
     }
 
-    function async_test(name, properties)
+    function async_test(func, name, properties)
     {
+        if (typeof func !== "function") {
+            properties = name;
+            name = func;
+            func = null;
+        }
         var test_name = name ? name : next_default_name();
         properties = properties ? properties : {};
         var test_obj = new Test(test_name, properties);
+        if (func) {
+            test_obj.step(func, test_obj, test_obj);
+        }
         return test_obj;
     }
 
@@ -652,7 +692,7 @@ policies and contribution forms [3].
                  }
                  else
                  {
-                     assert(actual[p] === expected[p], "assert_object_equals", description,
+                     assert(same_value(actual[p], expected[p]), "assert_object_equals", description,
                                                        "property ${p} expected ${expected} got ${actual}",
                                                        {p:p, expected:expected, actual:actual});
                  }
@@ -683,7 +723,7 @@ policies and contribution forms [3].
                    "property ${i}, property expected to be $expected but was $actual",
                    {i:i, expected:expected.hasOwnProperty(i) ? "present" : "missing",
                    actual:actual.hasOwnProperty(i) ? "present" : "missing"});
-            assert(expected[i] === actual[i],
+            assert(same_value(expected[i], actual[i]),
                    "assert_array_equals", description,
                    "property ${i}, expected ${expected} but got ${actual}",
                    {i:i, expected:expected[i], actual:actual[i]});
@@ -777,7 +817,7 @@ policies and contribution forms [3].
              //Note that this can have side effects in the case where
              //the property has PutForwards
              object[property_name] = initial_value + "a"; //XXX use some other value here?
-             assert(object[property_name] === initial_value,
+             assert(same_value(object[property_name], initial_value),
                     "assert_readonly", description,
                     "changing property ${p} succeeded",
                     {p:property_name});
@@ -838,7 +878,7 @@ policies and contribution forms [3].
                 QUOTA_EXCEEDED_ERR: 'QuotaExceededError',
                 TIMEOUT_ERR: 'TimeoutError',
                 INVALID_NODE_TYPE_ERR: 'InvalidNodeTypeError',
-                DATA_CLONE_ERR: 'DataCloneError',
+                DATA_CLONE_ERR: 'DataCloneError'
             };
 
             var name = code in code_name_map ? code_name_map[code] : code;
@@ -871,7 +911,7 @@ policies and contribution forms [3].
                 DataError: 0,
                 TransactionInactiveError: 0,
                 ReadOnlyError: 0,
-                VersionError: 0,
+                VersionError: 0
             };
 
             if (!(name in name_code_map))
@@ -954,13 +994,29 @@ policies and contribution forms [3].
         tests.push(this);
     }
 
-    Test.prototype = {
+    Test.statuses = {
         PASS:0,
         FAIL:1,
         TIMEOUT:2,
         NOTRUN:3
     };
 
+    Test.prototype = merge({}, Test.statuses);
+
+    Test.prototype.structured_clone = function()
+    {
+        if(!this._structured_clone)
+        {
+            var msg = this.message;
+            msg = msg ? String(msg) : msg;
+            this._structured_clone = merge({
+                name:String(this.name),
+                status:this.status,
+                message:msg
+            }, Test.statuses);
+        }
+        return this._structured_clone;
+    };
 
     Test.prototype.step = function(func, this_obj)
     {
@@ -1085,10 +1141,27 @@ policies and contribution forms [3].
         this.status = null;
         this.message = null;
     }
-    TestsStatus.prototype = {
+
+    TestsStatus.statuses = {
         OK:0,
         ERROR:1,
         TIMEOUT:2
+    };
+
+    TestsStatus.prototype = merge({}, TestsStatus.statuses);
+
+    TestsStatus.prototype.structured_clone = function()
+    {
+        if(!this._structured_clone)
+        {
+            var msg = this.message;
+            msg = msg ? String(msg) : msg;
+            this._structured_clone = merge({
+                status:this.status,
+                message:msg
+            }, TestsStatus.statuses);
+        }
+        return this._structured_clone;
     };
 
     function Tests()
@@ -1232,10 +1305,10 @@ policies and contribution forms [3].
                  {
                      callback(this_obj.properties);
                  });
-        forEach(ancestor_windows(),
-                function(w)
+        forEach_windows(
+                function(w, is_same_origin)
                 {
-                    if(w.start_callback)
+                    if(is_same_origin && w.start_callback)
                     {
                         try
                         {
@@ -1248,6 +1321,13 @@ policies and contribution forms [3].
                                 throw(e);
                             }
                         }
+                    }
+                    if (supports_post_message(w) && w !== self)
+                    {
+                        w.postMessage({
+                            type: "start",
+                            properties: this_obj.properties
+                        }, "*");
                     }
                 });
     };
@@ -1272,10 +1352,10 @@ policies and contribution forms [3].
                     callback(test, this_obj);
                 });
 
-        forEach(ancestor_windows(),
-                function(w)
+        forEach_windows(
+                function(w, is_same_origin)
                 {
-                    if(w.result_callback)
+                    if(is_same_origin && w.result_callback)
                     {
                         try
                         {
@@ -1287,6 +1367,13 @@ policies and contribution forms [3].
                                 throw e;
                             }
                         }
+                    }
+                    if (supports_post_message(w) && w !== self)
+                    {
+                        w.postMessage({
+                            type: "result",
+                            test: test.structured_clone()
+                        }, "*");
                     }
                 });
         this.processing_callbacks = false;
@@ -1318,6 +1405,11 @@ policies and contribution forms [3].
     {
         clearTimeout(this.timeout_id);
         var this_obj = this;
+        var tests = map(this_obj.tests,
+                        function(test)
+                        {
+                            return test.structured_clone();
+                        });
         if (this.status.status === null)
         {
             this.status.status = this.status.OK;
@@ -1329,10 +1421,10 @@ policies and contribution forms [3].
                      callback(this_obj.tests, this_obj.status);
                  });
 
-        forEach(ancestor_windows(),
-                function(w)
+        forEach_windows(
+                function(w, is_same_origin)
                 {
-                    if(w.completion_callback)
+                    if(is_same_origin && w.completion_callback)
                     {
                         try
                         {
@@ -1345,6 +1437,14 @@ policies and contribution forms [3].
                                 throw e;
                             }
                         }
+                    }
+                    if (supports_post_message(w) && w !== self)
+                    {
+                        w.postMessage({
+                            type: "complete",
+                            tests: tests,
+                            status: this_obj.status.structured_clone()
+                        }, "*");
                     }
                 });
     };
@@ -1382,7 +1482,7 @@ policies and contribution forms [3].
     */
 
     function Output() {
-      this.output_document = null;
+      this.output_document = document;
       this.output_node = null;
       this.done_count = 0;
       this.enabled = settings.output;
@@ -1939,22 +2039,107 @@ policies and contribution forms [3].
         target[components[components.length - 1]] = object;
     }
 
- function ancestor_windows() {
-     //Get the windows [self ... top] as an array
-     if ("result_cache" in ancestor_windows)
-     {
-         return ancestor_windows.result_cache;
-     }
-     var rv = [self];
-     var w = self;
-     while (w != w.parent)
-     {
-         w = w.parent;
-         rv.push(w);
-     }
-     ancestor_windows.result_cache = rv;
-     return rv;
- }
+    function forEach_windows(callback) {
+        // Iterate of the the windows [self ... top, opener]. The callback is passed
+        // two objects, the first one is the windows object itself, the second one
+        // is a boolean indicating whether or not its on the same origin as the
+        // current window.
+        var cache = forEach_windows.result_cache;
+        if (!cache) {
+            cache = [[self, true]];
+            var w = self;
+            var i = 0;
+            var so;
+            var origins = location.ancestorOrigins;
+            while (w != w.parent)
+            {
+                w = w.parent;
+                // In WebKit, calls to parent windows' properties that aren't on the same
+                // origin cause an error message to be displayed in the error console but
+                // don't throw an exception. This is a deviation from the current HTML5
+                // spec. See: https://bugs.webkit.org/show_bug.cgi?id=43504
+                // The problem with WebKit's behavior is that it pollutes the error console
+                // with error messages that can't be caught.
+                //
+                // This issue can be mitigated by relying on the (for now) proprietary
+                // `location.ancestorOrigins` property which returns an ordered list of
+                // the origins of enclosing windows. See:
+                // http://trac.webkit.org/changeset/113945.
+                if(origins) {
+                    so = (location.origin == origins[i]);
+                }
+                else
+                {
+                    so = is_same_origin(w);
+                }
+                cache.push([w, so]);
+                i++;
+            }
+            w = window.opener;
+            if(w)
+            {
+                // window.opener isn't included in the `location.ancestorOrigins` prop.
+                // We'll just have to deal with a simple check and an error msg on WebKit
+                // browsers in this case.
+                cache.push([w, is_same_origin(w)]);
+            }
+            forEach_windows.result_cache = cache;
+        }
 
+        forEach(cache,
+                function(a)
+                {
+                    callback.apply(null, a);
+                });
+    }
+
+    function is_same_origin(w) {
+        try {
+            'random_prop' in w;
+            return true;
+        } catch(e) {
+            return false;
+        }
+    }
+
+    function supports_post_message(w)
+    {
+        var supports;
+        var type;
+        // Given IE  implements postMessage across nested iframes but not across
+        // windows or tabs, you can't infer cross-origin communication from the presence
+        // of postMessage on the current window object only.
+        //
+        // Touching the postMessage prop on a window can throw if the window is
+        // not from the same origin AND post message is not supported in that
+        // browser. So just doing an existence test here won't do, you also need
+        // to wrap it in a try..cacth block.
+        try
+        {
+            type = typeof w.postMessage;
+            if (type === "function")
+            {
+                supports = true;
+            }
+            // IE8 supports postMessage, but implements it as a host object which
+            // returns "object" as its `typeof`.
+            else if (type === "object")
+            {
+                supports = true;
+            }
+            // This is the case where postMessage isn't supported AND accessing a
+            // window property across origins does NOT throw (e.g. old Safari browser).
+            else
+            {
+                supports = false;
+            }
+        }
+        catch(e) {
+            // This is the case where postMessage isn't supported AND accessing a
+            // window property across origins throws (e.g. old Firefox browser).
+            supports = false;
+        }
+        return supports;
+    }
 })();
 // vim: set expandtab shiftwidth=4 tabstop=4:

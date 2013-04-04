@@ -9,6 +9,7 @@
 
 #include "nsISupports.h"
 #include "nsEvent.h"
+#include "nsIGlobalObject.h"
 
 class nsIScriptContext;
 class nsScriptErrorEvent;
@@ -27,15 +28,17 @@ NS_HandleScriptError(nsIScriptGlobalObject *aScriptGlobal,
 
 
 #define NS_ISCRIPTGLOBALOBJECT_IID \
-{ 0x92569431, 0x6e6e, 0x408a, \
-  { 0xa8, 0x8c, 0x45, 0x28, 0x5c, 0x1c, 0x85, 0x73 } }
+{ 0xde24b30a, 0x12c6, 0x4e5f, \
+  { 0xa8, 0x5e, 0x90, 0xcd, 0xfb, 0x6c, 0x54, 0x51 } }
 
 /**
  * The global object which keeps a script context for each supported script
  * language. This often used to store per-window global state.
+ * This is a heavyweight interface implemented only by DOM globals, and
+ * it might go away some time in the future.
  */
 
-class nsIScriptGlobalObject : public nsISupports
+class nsIScriptGlobalObject : public nsIGlobalObject
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCRIPTGLOBALOBJECT_IID)
@@ -54,8 +57,6 @@ public:
    * Get a script context (WITHOUT added reference) for the specified language.
    */
   virtual nsIScriptContext *GetScriptContext() = 0;
-  
-  virtual JSObject* GetGlobalJSObject() = 0;
 
   nsIScriptContext* GetContext() {
     return GetScriptContext();

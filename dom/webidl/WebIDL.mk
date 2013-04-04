@@ -339,6 +339,7 @@ test_webidl_files := \
   TestDictionary.webidl \
   TestExampleGen.webidl \
   TestJSImplGen.webidl \
+  TestJSImplInheritanceGen.webidl \
   TestTypedef.webidl \
   $(NULL)
 else
