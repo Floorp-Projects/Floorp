@@ -181,7 +181,6 @@ protected:
     mTransactionsInProgress;
 
   nsTArray<DatabasesCompleteCallback> mCompleteCallbacks;
-  bool mTouchingCallbacks;
 };
 
 END_INDEXEDDB_NAMESPACE
