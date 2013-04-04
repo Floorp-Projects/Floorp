@@ -55,7 +55,12 @@ function EventManager(sr) {
   for (var i = 0; i < allEvents.length; i++) {
     (function (eventName) {
       sr["on" + eventName] = function (evt) {
-        ok(false, "unexpected event: " + eventName);
+        var message = "unexpected event: " + eventName;
+        if (eventName == "error") {
+          message += " -- " + evt.message;
+        }
+
+        ok(false, message);
         if (self.done) self.done();
       };
     })(allEvents[i]);
