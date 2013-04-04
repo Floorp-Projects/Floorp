@@ -149,7 +149,7 @@ struct RuntimeSizes
 struct ZoneStats
 {
     ZoneStats()
-      : extra1(0),
+      : extra(NULL),
         gcHeapArenaAdmin(0),
         gcHeapUnusedGcThings(0),
         gcHeapStringsNormal(0),
@@ -163,7 +163,7 @@ struct ZoneStats
     {}
 
     ZoneStats(const ZoneStats &other)
-      : extra1(other.extra1),
+      : extra(other.extra),
         gcHeapArenaAdmin(other.gcHeapArenaAdmin),
         gcHeapUnusedGcThings(other.gcHeapUnusedGcThings),
         gcHeapStringsNormal(other.gcHeapStringsNormal),
@@ -200,7 +200,7 @@ struct ZoneStats
     }
 
     // This field can be used by embedders.
-    void   *extra1;
+    void   *extra;
 
     size_t gcHeapArenaAdmin;
     size_t gcHeapUnusedGcThings;
@@ -225,8 +225,7 @@ struct ZoneStats
 struct CompartmentStats
 {
     CompartmentStats()
-      : extra1(0),
-        extra2(0),
+      : extra(NULL),
         gcHeapObjectsOrdinary(0),
         gcHeapObjectsFunction(0),
         gcHeapObjectsDenseArray(0),
@@ -256,8 +255,7 @@ struct CompartmentStats
     {}
 
     CompartmentStats(const CompartmentStats &other)
-      : extra1(other.extra1),
-        extra2(other.extra2),
+      : extra(other.extra),
         gcHeapObjectsOrdinary(other.gcHeapObjectsOrdinary),
         gcHeapObjectsFunction(other.gcHeapObjectsFunction),
         gcHeapObjectsDenseArray(other.gcHeapObjectsDenseArray),
@@ -287,9 +285,8 @@ struct CompartmentStats
     {
     }
 
-    // These fields can be used by embedders.
-    void   *extra1;
-    void   *extra2;
+    // This field can be used by embedders.
+    void   *extra;
 
     // If you add a new number, remember to update the constructors, add(), and
     // maybe gcHeapThingsSize()!
