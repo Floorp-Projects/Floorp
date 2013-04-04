@@ -606,7 +606,7 @@ class CGHeaders(CGWrapper):
             jsParent = jsImplemented.interface.parent
             if jsParent:
                 parentDesc = jsImplemented.getDescriptor(jsParent.identifier.name)
-                declareIncludes.add(parentDesc.headerFile)
+                declareIncludes.add(parentDesc.jsImplParentHeader)
 
         # Let the machinery do its thing.
         def _includeString(includes):
@@ -8097,7 +8097,7 @@ class CGJSImplClass(CGBindingImplClass):
 
         if descriptor.interface.parent:
             parentClass = descriptor.getDescriptor(
-                descriptor.interface.parent.identifier.name).nativeType
+                descriptor.interface.parent.identifier.name).jsImplParent
             baseClasses = [ClassBase(parentClass)]
             isupportsDecl = "NS_DECL_ISUPPORTS_INHERITED"
             ccDecl = ("NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(%s, %s)" %
