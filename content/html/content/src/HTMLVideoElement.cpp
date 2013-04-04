@@ -34,7 +34,6 @@
 #include "MediaDecoder.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Video)
-DOMCI_NODE_DATA(HTMLVideoElement, mozilla::dom::HTMLVideoElement)
 
 namespace mozilla {
 namespace dom {
@@ -46,7 +45,7 @@ NS_INTERFACE_TABLE_HEAD(HTMLVideoElement)
   NS_HTML_CONTENT_INTERFACE_TABLE2(HTMLVideoElement, nsIDOMHTMLMediaElement, nsIDOMHTMLVideoElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLVideoElement,
                                                HTMLMediaElement)
-NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLVideoElement)
+NS_HTML_CONTENT_INTERFACE_MAP_END
 
 NS_IMPL_ELEMENT_CLONE(HTMLVideoElement)
 
