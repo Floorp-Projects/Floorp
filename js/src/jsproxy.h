@@ -131,9 +131,8 @@ class JS_FRIEND_API(BaseProxyHandler)
 
     /* Spidermonkey extensions. */
     virtual bool isExtensible(JSObject *proxy) = 0;
-    virtual bool call(JSContext *cx, HandleObject proxy, unsigned argc, Value *vp);
-    virtual bool construct(JSContext *cx, HandleObject proxy, unsigned argc,
-                           Value *argv, MutableHandleValue rval);
+    virtual bool call(JSContext *cx, HandleObject proxy, const CallArgs &args);
+    virtual bool construct(JSContext *cx, HandleObject proxy, const CallArgs &args);
     virtual bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl, CallArgs args);
     virtual bool hasInstance(JSContext *cx, HandleObject proxy, MutableHandleValue v, bool *bp);
     virtual bool objectClassIs(HandleObject obj, ESClassValue classValue, JSContext *cx);
@@ -193,9 +192,8 @@ class JS_PUBLIC_API(DirectProxyHandler) : public BaseProxyHandler
 
     /* Spidermonkey extensions. */
     virtual bool isExtensible(JSObject *proxy) MOZ_OVERRIDE;
-    virtual bool call(JSContext *cx, HandleObject proxy, unsigned argc, Value *vp) MOZ_OVERRIDE;
-    virtual bool construct(JSContext *cx, HandleObject proxy, unsigned argc,
-                           Value *argv, MutableHandleValue rval) MOZ_OVERRIDE;
+    virtual bool call(JSContext *cx, HandleObject proxy, const CallArgs &args) MOZ_OVERRIDE;
+    virtual bool construct(JSContext *cx, HandleObject proxy, const CallArgs &args) MOZ_OVERRIDE;
     virtual bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
                             CallArgs args) MOZ_OVERRIDE;
     virtual bool hasInstance(JSContext *cx, HandleObject proxy, MutableHandleValue v,
@@ -246,9 +244,8 @@ class Proxy
 
     /* Spidermonkey extensions. */
     static bool isExtensible(JSObject *proxy);
-    static bool call(JSContext *cx, HandleObject proxy, unsigned argc, Value *vp);
-    static bool construct(JSContext *cx, HandleObject proxy, unsigned argc, Value *argv,
-                          MutableHandleValue rval);
+    static bool call(JSContext *cx, HandleObject proxy, const CallArgs &args);
+    static bool construct(JSContext *cx, HandleObject proxy, const CallArgs &args);
     static bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl, CallArgs args);
     static bool hasInstance(JSContext *cx, HandleObject proxy, MutableHandleValue v, bool *bp);
     static bool objectClassIs(HandleObject obj, ESClassValue classValue, JSContext *cx);

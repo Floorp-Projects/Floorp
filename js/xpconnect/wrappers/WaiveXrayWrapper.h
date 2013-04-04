@@ -30,11 +30,10 @@ class WaiveXrayWrapper : public js::CrossCompartmentWrapper {
     virtual bool get(JSContext *cx, JS::Handle<JSObject*> wrapper, JS::Handle<JSObject*> receiver,
                      JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp) MOZ_OVERRIDE;
 
-    virtual bool call(JSContext *cx, JS::Handle<JSObject*> wrapper, unsigned argc,
-                      js::Value *vp) MOZ_OVERRIDE;
+    virtual bool call(JSContext *cx, JS::Handle<JSObject*> wrapper,
+                      const JS::CallArgs &args) MOZ_OVERRIDE;
     virtual bool construct(JSContext *cx, JS::Handle<JSObject*> wrapper,
-                           unsigned argc, js::Value *argv,
-                           JS::MutableHandle<JS::Value> rval) MOZ_OVERRIDE;
+                           const JS::CallArgs &args) MOZ_OVERRIDE;
 
     virtual bool nativeCall(JSContext *cx, JS::IsAcceptableThis test,
                             JS::NativeImpl impl, JS::CallArgs args) MOZ_OVERRIDE;

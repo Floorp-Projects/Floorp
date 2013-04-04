@@ -25,6 +25,7 @@
 
 using namespace js;
 using namespace js::gc;
+using mozilla::ArrayLength;
 
 static inline HeapSlot &
 GetCall(RawObject proxy)
@@ -307,16 +308,14 @@ BaseProxyHandler::iterate(JSContext *cx, HandleObject proxy, unsigned flags, Mut
 }
 
 bool
-BaseProxyHandler::call(JSContext *cx, HandleObject proxy, unsigned argc,
-                       Value *vp)
+BaseProxyHandler::call(JSContext *cx, HandleObject proxy, const CallArgs &args)
 {
     JS_NOT_REACHED("callable proxies should implement call trap");
     return false;
 }
 
 bool
-BaseProxyHandler::construct(JSContext *cx, HandleObject proxy, unsigned argc,
-                            Value *argv, MutableHandleValue rval)
+BaseProxyHandler::construct(JSContext *cx, HandleObject proxy, const CallArgs &args)
 {
     JS_NOT_REACHED("callable proxies should implement construct trap");
     return false;
@@ -476,25 +475,19 @@ DirectProxyHandler::enumerate(JSContext *cx, HandleObject proxy,
 }
 
 bool
-DirectProxyHandler::call(JSContext *cx, HandleObject proxy, unsigned argc,
-                         Value *vp)
+DirectProxyHandler::call(JSContext *cx, HandleObject proxy, const CallArgs &args)
 {
     assertEnteredPolicy(cx, proxy, JSID_VOID);
-    AutoValueRooter rval(cx);
     RootedValue target(cx, GetProxyPrivate(proxy));
-    JSBool ok = Invoke(cx, vp[1], target, argc, JS_ARGV(cx, vp), rval.addr());
-    if (ok)
-        JS_SET_RVAL(cx, vp, rval.value());
-    return ok;
+    return Invoke(cx, args.thisv(), target, args.length(), args.array(), args.rval().address());
 }
 
 bool
-DirectProxyHandler::construct(JSContext *cx, HandleObject proxy, unsigned argc,
-                              Value *argv, MutableHandleValue rval)
+DirectProxyHandler::construct(JSContext *cx, HandleObject proxy, const CallArgs &args)
 {
     assertEnteredPolicy(cx, proxy, JSID_VOID);
     RootedValue target(cx, GetProxyPrivate(proxy));
-    return InvokeConstructor(cx, target, argc, argv, rval.address());
+    return InvokeConstructor(cx, target, args.length(), args.array(), args.rval().address());
 }
 
 bool
@@ -801,9 +794,8 @@ class ScriptedIndirectProxyHandler : public BaseProxyHandler
 
     /* Spidermonkey extensions. */
     virtual bool isExtensible(JSObject *proxy) MOZ_OVERRIDE;
-    virtual bool call(JSContext *cx, HandleObject proxy, unsigned argc, Value *vp) MOZ_OVERRIDE;
-    virtual bool construct(JSContext *cx, HandleObject proxy, unsigned argc,
-                           Value *argv, MutableHandleValue rval) MOZ_OVERRIDE;
+    virtual bool call(JSContext *cx, HandleObject proxy, const CallArgs &args) MOZ_OVERRIDE;
+    virtual bool construct(JSContext *cx, HandleObject proxy, const CallArgs &args) MOZ_OVERRIDE;
     virtual bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
                             CallArgs args) MOZ_OVERRIDE;
     virtual JSString *fun_toString(JSContext *cx, HandleObject proxy, unsigned indent) MOZ_OVERRIDE;
@@ -1020,27 +1012,21 @@ ScriptedIndirectProxyHandler::iterate(JSContext *cx, HandleObject proxy, unsigne
 }
 
 bool
-ScriptedIndirectProxyHandler::call(JSContext *cx, HandleObject proxy, unsigned argc,
-                                   Value *vp)
+ScriptedIndirectProxyHandler::call(JSContext *cx, HandleObject proxy, const CallArgs &args)
 {
     assertEnteredPolicy(cx, proxy, JSID_VOID);
-    AutoValueRooter rval(cx);
     RootedValue call(cx, GetCall(proxy));
-    JSBool ok = Invoke(cx, vp[1], call, argc, JS_ARGV(cx, vp), rval.addr());
-    if (ok)
-        JS_SET_RVAL(cx, vp, rval.value());
-    return ok;
+    return Invoke(cx, args.thisv(), call, args.length(), args.array(), args.rval().address());
 }
 
 bool
-ScriptedIndirectProxyHandler::construct(JSContext *cx, HandleObject proxy, unsigned argc,
-                                        Value *argv, MutableHandleValue rval)
+ScriptedIndirectProxyHandler::construct(JSContext *cx, HandleObject proxy, const CallArgs &args)
 {
     assertEnteredPolicy(cx, proxy, JSID_VOID);
     RootedValue fval(cx, GetConstruct(proxy));
     if (fval.isUndefined())
         fval = GetCall(proxy);
-    return InvokeConstructor(cx, fval, argc, argv, rval.address());
+    return InvokeConstructor(cx, fval, args.length(), args.array(), args.rval().address());
 }
 
 bool
@@ -1115,9 +1101,8 @@ class ScriptedDirectProxyHandler : public DirectProxyHandler {
     virtual bool iterate(JSContext *cx, HandleObject proxy, unsigned flags,
                          MutableHandleValue vp) MOZ_OVERRIDE;
 
-    virtual bool call(JSContext *cx, HandleObject proxy, unsigned argc, Value *vp) MOZ_OVERRIDE;
-    virtual bool construct(JSContext *cx, HandleObject proxy, unsigned argc, Value *argv,
-                           MutableHandleValue rval) MOZ_OVERRIDE;
+    virtual bool call(JSContext *cx, HandleObject proxy, const CallArgs &args) MOZ_OVERRIDE;
+    virtual bool construct(JSContext *cx, HandleObject proxy, const CallArgs &args) MOZ_OVERRIDE;
 
     static ScriptedDirectProxyHandler singleton;
 };
@@ -2210,7 +2195,7 @@ ScriptedDirectProxyHandler::iterate(JSContext *cx, HandleObject proxy, unsigned 
 }
 
 bool
-ScriptedDirectProxyHandler::call(JSContext *cx, HandleObject proxy, unsigned argc, Value *vp)
+ScriptedDirectProxyHandler::call(JSContext *cx, HandleObject proxy, const CallArgs &args)
 {
     // step 1
     RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
@@ -2224,8 +2209,8 @@ ScriptedDirectProxyHandler::call(JSContext *cx, HandleObject proxy, unsigned arg
      */
 
     // step 3
-    RootedObject args(cx, NewDenseCopiedArray(cx, argc, vp + 2));
-    if (!args)
+    RootedObject argsArray(cx, NewDenseCopiedArray(cx, args.length(), args.array()));
+    if (!argsArray)
         return false;
 
     // step 4
@@ -2235,21 +2220,20 @@ ScriptedDirectProxyHandler::call(JSContext *cx, HandleObject proxy, unsigned arg
 
     // step 5
     if (trap.isUndefined())
-        return DirectProxyHandler::call(cx, proxy, argc, vp);
+        return DirectProxyHandler::call(cx, proxy, args);
 
     // step 6
     Value argv[] = {
         ObjectValue(*target),
-        vp[1],
-        ObjectValue(*args)
+        args.thisv(),
+        ObjectValue(*argsArray)
     };
     RootedValue thisValue(cx, ObjectValue(*handler));
-    return Invoke(cx, thisValue, trap, 3, argv, vp);
+    return Invoke(cx, thisValue, trap, ArrayLength(argv), argv, args.rval().address());
 }
 
 bool
-ScriptedDirectProxyHandler::construct(JSContext *cx, HandleObject proxy, unsigned argc, Value *argv,
-                                      MutableHandleValue rval)
+ScriptedDirectProxyHandler::construct(JSContext *cx, HandleObject proxy, const CallArgs &args)
 {
     // step 1
     RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
@@ -2263,8 +2247,8 @@ ScriptedDirectProxyHandler::construct(JSContext *cx, HandleObject proxy, unsigne
      */
 
     // step 3
-    RootedObject args(cx, NewDenseCopiedArray(cx, argc, argv));
-    if (!args)
+    RootedObject argsArray(cx, NewDenseCopiedArray(cx, args.length(), args.array()));
+    if (!argsArray)
         return false;
 
     // step 4
@@ -2274,15 +2258,16 @@ ScriptedDirectProxyHandler::construct(JSContext *cx, HandleObject proxy, unsigne
 
     // step 5
     if (trap.isUndefined())
-        return DirectProxyHandler::construct(cx, proxy, argc, argv, rval);
+        return DirectProxyHandler::construct(cx, proxy, args);
 
     // step 6
     Value constructArgv[] = {
         ObjectValue(*target),
-        ObjectValue(*args)
+        ObjectValue(*argsArray)
     };
     RootedValue thisValue(cx, ObjectValue(*handler));
-    return Invoke(cx, thisValue, trap, 2, constructArgv, rval.address());
+    return Invoke(cx, thisValue, trap, ArrayLength(constructArgv), constructArgv,
+                  args.rval().address());
 }
 
 ScriptedDirectProxyHandler ScriptedDirectProxyHandler::singleton;
@@ -2611,7 +2596,7 @@ Proxy::preventExtensions(JSContext *cx, HandleObject proxy)
 }
 
 bool
-Proxy::call(JSContext *cx, HandleObject proxy, unsigned argc, Value *vp)
+Proxy::call(JSContext *cx, HandleObject proxy, const CallArgs &args)
 {
     JS_CHECK_RECURSION(cx, return false);
     BaseProxyHandler *handler = GetProxyHandler(proxy);
@@ -2622,16 +2607,15 @@ Proxy::call(JSContext *cx, HandleObject proxy, unsigned argc, Value *vp)
     AutoEnterPolicy policy(cx, handler, proxy, JS::JSID_VOIDHANDLE,
                            BaseProxyHandler::CALL, true);
     if (!policy.allowed()) {
-        vp->setUndefined();
+        args.rval().setUndefined();
         return policy.returnValue();
     }
 
-    return handler->call(cx, proxy, argc, vp);
+    return handler->call(cx, proxy, args);
 }
 
 bool
-Proxy::construct(JSContext *cx, HandleObject proxy, unsigned argc, Value *argv,
-                 MutableHandleValue rval)
+Proxy::construct(JSContext *cx, HandleObject proxy, const CallArgs &args)
 {
     JS_CHECK_RECURSION(cx, return false);
     BaseProxyHandler *handler = GetProxyHandler(proxy);
@@ -2642,11 +2626,11 @@ Proxy::construct(JSContext *cx, HandleObject proxy, unsigned argc, Value *argv,
     AutoEnterPolicy policy(cx, handler, proxy, JS::JSID_VOIDHANDLE,
                            BaseProxyHandler::CALL, true);
     if (!policy.allowed()) {
-        rval.setUndefined();
+        args.rval().setUndefined();
         return policy.returnValue();
     }
 
-    return handler->construct(cx, proxy, argc, argv, rval);
+    return handler->construct(cx, proxy, args);
 }
 
 bool
@@ -3192,21 +3176,19 @@ JS_FRIEND_DATA(Class) js::OuterWindowProxyClass = {
 static JSBool
 proxy_Call(JSContext *cx, unsigned argc, Value *vp)
 {
-    RootedObject proxy(cx, &JS_CALLEE(cx, vp).toObject());
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedObject proxy(cx, &args.callee());
     JS_ASSERT(proxy->isProxy());
-    return Proxy::call(cx, proxy, argc, vp);
+    return Proxy::call(cx, proxy, args);
 }
 
 static JSBool
 proxy_Construct(JSContext *cx, unsigned argc, Value *vp)
 {
-    RootedObject proxy(cx, &JS_CALLEE(cx, vp).toObject());
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedObject proxy(cx, &args.callee());
     JS_ASSERT(proxy->isProxy());
-    RootedValue rval(cx, *vp);
-    if (!Proxy::construct(cx, proxy, argc, JS_ARGV(cx, vp), &rval))
-        return false;
-    *vp = rval;
-    return true;
+    return Proxy::construct(cx, proxy, args);
 }
 
 JS_FRIEND_DATA(Class) js::FunctionProxyClass = {
