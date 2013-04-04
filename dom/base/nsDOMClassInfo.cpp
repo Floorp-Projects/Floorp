@@ -302,7 +302,7 @@
 #include "nsIEventListenerService.h"
 #include "nsIMessageManager.h"
 #include "mozilla/dom/Element.h"
-#include "nsHTMLSelectElement.h"
+#include "mozilla/dom/HTMLSelectElement.h"
 #include "HTMLLegendElement.h"
 
 #include "DOMSVGStringList.h"
@@ -7328,8 +7328,8 @@ nsHTMLSelectElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext 
 {
   int32_t n = GetArrayIndexFromId(cx, id);
   if (n >= 0) {
-    nsHTMLSelectElement *s =
-      nsHTMLSelectElement::FromSupports(GetNative(wrapper, obj));
+    HTMLSelectElement *s =
+      HTMLSelectElement::FromSupports(GetNative(wrapper, obj));
 
     HTMLOptionsCollection *options = s->GetOptions();
     if (options) {
@@ -7356,8 +7356,8 @@ nsHTMLSelectElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
 
   nsresult rv = NS_OK;
   if (n >= 0) {
-    nsHTMLSelectElement *s =
-      nsHTMLSelectElement::FromSupports(GetNative(wrapper, obj));
+    HTMLSelectElement *s =
+      HTMLSelectElement::FromSupports(GetNative(wrapper, obj));
 
     HTMLOptionsCollection *options = s->GetOptions();
 
