@@ -35,10 +35,8 @@ static const PRUnichar sHTMLTagUnicodeName_article[] =
   {'a', 'r', 't', 'i', 'c', 'l', 'e', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_aside[] =
   {'a', 's', 'i', 'd', 'e', '\0'};
-#if defined(MOZ_MEDIA)
 static const PRUnichar sHTMLTagUnicodeName_audio[] =
   {'a', 'u', 'd', 'i', 'o', '\0'};
-#endif
 static const PRUnichar sHTMLTagUnicodeName_b[] =
   {'b', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_base[] =
@@ -225,10 +223,8 @@ static const PRUnichar sHTMLTagUnicodeName_select[] =
   {'s', 'e', 'l', 'e', 'c', 't', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_small[] =
   {'s', 'm', 'a', 'l', 'l', '\0'};
-#if defined(MOZ_MEDIA)
 static const PRUnichar sHTMLTagUnicodeName_source[] =
   {'s', 'o', 'u', 'r', 'c', 'e', '\0'};
-#endif
 static const PRUnichar sHTMLTagUnicodeName_spacer[] =
   {'s', 'p', 'a', 'c', 'e', 'r', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_span[] =
@@ -273,10 +269,8 @@ static const PRUnichar sHTMLTagUnicodeName_ul[] =
   {'u', 'l', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_var[] =
   {'v', 'a', 'r', '\0'};
-#if defined(MOZ_MEDIA)
 static const PRUnichar sHTMLTagUnicodeName_video[] =
   {'v', 'i', 'd', 'e', 'o', '\0'};
-#endif
 static const PRUnichar sHTMLTagUnicodeName_wbr[] =
   {'w', 'b', 'r', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_xmp[] =
