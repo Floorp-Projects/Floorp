@@ -58,6 +58,7 @@
 #include "nsHtml5SVGLoadDispatcher.h"
 #include "nsTextNode.h"
 #include "mozilla/dom/CDATASection.h"
+#include "mozilla/dom/Comment.h"
 #include "mozilla/dom/ProcessingInstruction.h"
 
 using namespace mozilla::dom;
@@ -1134,13 +1135,10 @@ nsXMLContentSink::HandleComment(const PRUnichar *aName)
 {
   FlushText();
 
-  nsCOMPtr<nsIContent> comment;
-  nsresult rv = NS_NewCommentNode(getter_AddRefs(comment), mNodeInfoManager);
-  if (comment) {
-    comment->SetText(nsDependentString(aName), false);
-    rv = AddContentAsLeaf(comment);
-    DidAddContent();
-  }
+  nsRefPtr<Comment> comment = new Comment(mNodeInfoManager);
+  comment->SetText(nsDependentString(aName), false);
+  nsresult rv = AddContentAsLeaf(comment);
+  DidAddContent();
 
   return NS_SUCCEEDED(rv) ? DidProcessATokenImpl() : rv;
 }

@@ -4811,25 +4811,19 @@ nsIDocument::CreateDocumentFragment(ErrorResult& rv) const
 NS_IMETHODIMP
 nsDocument::CreateComment(const nsAString& aData, nsIDOMComment** aReturn)
 {
-  ErrorResult rv;
-  *aReturn = nsIDocument::CreateComment(aData, rv).get();
-  return rv.ErrorCode();
+  *aReturn = nsIDocument::CreateComment(aData).get();
+  return NS_OK;
 }
 
 // Unfortunately, bareword "Comment" is ambiguous with some Mac system headers.
 already_AddRefed<dom::Comment>
-nsIDocument::CreateComment(const nsAString& aData, ErrorResult& rv) const
+nsIDocument::CreateComment(const nsAString& aData) const
 {
-  nsCOMPtr<nsIContent> comment;
-  nsresult res = NS_NewCommentNode(getter_AddRefs(comment), mNodeInfoManager);
-  if (NS_FAILED(res)) {
-    rv.Throw(res);
-    return nullptr;
-  }
+  nsRefPtr<dom::Comment> comment = new dom::Comment(mNodeInfoManager);
 
   // Don't notify; this node is still being created.
   comment->SetText(aData, false);
-  return static_cast<dom::Comment*>(comment.forget().get());
+  return comment.forget();
 }
 
 NS_IMETHODIMP

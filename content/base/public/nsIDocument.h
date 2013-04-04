@@ -1954,7 +1954,7 @@ public:
     CreateDocumentFragment(mozilla::ErrorResult& rv) const;
   already_AddRefed<nsTextNode> CreateTextNode(const nsAString& aData) const;
   already_AddRefed<mozilla::dom::Comment>
-    CreateComment(const nsAString& aData, mozilla::ErrorResult& rv) const;
+    CreateComment(const nsAString& aData) const;
   already_AddRefed<mozilla::dom::ProcessingInstruction>
     CreateProcessingInstruction(const nsAString& target, const nsAString& data,
                                 mozilla::ErrorResult& rv) const;

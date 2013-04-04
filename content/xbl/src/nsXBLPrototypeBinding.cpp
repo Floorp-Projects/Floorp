@@ -43,6 +43,7 @@
 #include "nsIStyleRuleProcessor.h"
 #include "nsXBLResourceLoader.h"
 #include "mozilla/dom/CDATASection.h"
+#include "mozilla/dom/Comment.h"
 #include "mozilla/dom/Element.h"
 
 #ifdef MOZ_XUL
@@ -1689,12 +1690,11 @@ nsXBLPrototypeBinding::ReadContentNode(nsIObjectInputStream* aStream,
         content = new CDATASection(aNim);
         break;
       case XBLBinding_Serialize_CommentNode:
-        rv = NS_NewCommentNode(getter_AddRefs(content), aNim);
+        content = new Comment(aNim);
         break;
       default:
         break;
     }
-    NS_ENSURE_SUCCESS(rv, rv);
 
     nsAutoString text;
     rv = aStream->ReadString(text);
