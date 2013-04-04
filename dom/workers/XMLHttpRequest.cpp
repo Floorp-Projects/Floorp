@@ -172,9 +172,10 @@ public:
 
       mXHR = new nsXMLHttpRequest();
 
+      nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(ownerWindow);
       if (NS_FAILED(mXHR->Init(mWorkerPrivate->GetPrincipal(),
                                mWorkerPrivate->GetScriptContext(),
-                               ownerWindow, mWorkerPrivate->GetBaseURI()))) {
+                               global, mWorkerPrivate->GetBaseURI()))) {
         mXHR = nullptr;
         return false;
       }

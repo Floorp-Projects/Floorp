@@ -2952,13 +2952,17 @@ CreateXMLHttpRequest(JSContext *cx, unsigned argc, jsval *vp)
     if (!subjectPrincipal)
         return false;
 
-    nsCOMPtr<nsIXMLHttpRequest> xhr = new nsXMLHttpRequest();
-    nsresult rv = xhr->Init(subjectPrincipal, NULL, NULL, NULL);
-    if (NS_FAILED(rv))
-        return false;
-
     JSObject *global = JS_GetGlobalForScopeChain(cx);
     MOZ_ASSERT(global);
+
+    nsIScriptObjectPrincipal *sop =
+        static_cast<nsIScriptObjectPrincipal *>(xpc_GetJSPrivate(global));
+    nsCOMPtr<nsIGlobalObject> iglobal = do_QueryInterface(sop);
+
+    nsCOMPtr<nsIXMLHttpRequest> xhr = new nsXMLHttpRequest();
+    nsresult rv = xhr->Init(subjectPrincipal, nullptr, iglobal, nullptr);
+    if (NS_FAILED(rv))
+        return false;
 
     rv = nsContentUtils::WrapNative(cx, global, xhr, vp);
     if (NS_FAILED(rv))

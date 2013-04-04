@@ -25,7 +25,7 @@ class nsDOMEvent;
 class nsDOMEventTargetHelper : public mozilla::dom::EventTarget
 {
 public:
-  nsDOMEventTargetHelper() : mOwner(nullptr), mHasOrHasHadOwner(false) {}
+  nsDOMEventTargetHelper() : mParentObject(nullptr), mOwnerWindow(nullptr), mHasOrHasHadOwnerWindow(false) {}
   virtual ~nsDOMEventTargetHelper();
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(nsDOMEventTargetHelper)
@@ -36,10 +36,9 @@ public:
 
   void GetParentObject(nsIScriptGlobalObject **aParentObject)
   {
-    if (mOwner) {
-      CallQueryInterface(mOwner, aParentObject);
-    }
-    else {
+    if (mParentObject) {
+      CallQueryInterface(mParentObject, aParentObject);
+    } else {
       *aParentObject = nullptr;
     }
   }
@@ -90,22 +89,24 @@ public:
 
   nsresult CheckInnerWindowCorrectness()
   {
-    NS_ENSURE_STATE(!mHasOrHasHadOwner || mOwner);
-    if (mOwner) {
-      NS_ASSERTION(mOwner->IsInnerWindow(), "Should have inner window here!\n");
-      nsPIDOMWindow* outer = mOwner->GetOuterWindow();
-      if (!outer || outer->GetCurrentInnerWindow() != mOwner) {
+    NS_ENSURE_STATE(!mHasOrHasHadOwnerWindow || mOwnerWindow);
+    if (mOwnerWindow) {
+      NS_ASSERTION(mOwnerWindow->IsInnerWindow(), "Should have inner window here!\n");
+      nsPIDOMWindow* outer = mOwnerWindow->GetOuterWindow();
+      if (!outer || outer->GetCurrentInnerWindow() != mOwnerWindow) {
         return NS_ERROR_FAILURE;
       }
     }
     return NS_OK;
   }
 
+  nsPIDOMWindow* GetOwner() const { return mOwnerWindow; }
+  void BindToOwner(nsIGlobalObject* aOwner);
   void BindToOwner(nsPIDOMWindow* aOwner);
   void BindToOwner(nsDOMEventTargetHelper* aOther);
   virtual void DisconnectFromOwner();                   
-  nsPIDOMWindow* GetOwner() const { return mOwner; }
-  bool HasOrHasHadOwner() { return mHasOrHasHadOwner; }
+  nsIGlobalObject* GetParentObject() const { return mParentObject; }
+  bool HasOrHasHadOwner() { return mHasOrHasHadOwnerWindow; }
 protected:
   nsRefPtr<nsEventListenerManager> mListenerManager;
   // Dispatch a trusted, non-cancellable and non-bubbling event to |this|.
@@ -113,9 +114,12 @@ protected:
   // Make |event| trusted and dispatch |aEvent| to |this|.
   nsresult DispatchTrustedEvent(nsIDOMEvent* aEvent);
 private:
-  // These may be null (native callers or xpcshell).
-  nsPIDOMWindow*             mOwner; // Inner window.
-  bool                       mHasOrHasHadOwner;
+  // Inner window or sandbox.
+  nsIGlobalObject*           mParentObject;
+  // mParentObject pre QI-ed and cached
+  // (it is needed for off main thread access)
+  nsPIDOMWindow*             mOwnerWindow;
+  bool                       mHasOrHasHadOwnerWindow;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsDOMEventTargetHelper,
