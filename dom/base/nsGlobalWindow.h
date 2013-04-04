@@ -260,7 +260,6 @@ class nsGlobalWindow : public mozilla::dom::EventTarget,
                        public nsPIDOMWindow,
                        public nsIScriptGlobalObject,
                        public nsIDOMJSWindow,
-                       public nsIScriptObjectPrincipal,
                        public nsIDOMStorageIndexedDB,
                        public nsSupportsWeakReference,
                        public nsIInterfaceRequestor,
@@ -297,9 +296,11 @@ public:
     return EnsureInnerWindow() ? GetWrapper() : nullptr;
   }
 
+  // nsIGlobalJSObjectHolder
+  virtual JSObject *GetGlobalJSObject();
+
   // nsIScriptGlobalObject
   virtual nsIScriptContext *GetContext();
-  virtual JSObject *GetGlobalJSObject();
   JSObject *FastGetGlobalJSObject()
   {
     return mJSObject;
