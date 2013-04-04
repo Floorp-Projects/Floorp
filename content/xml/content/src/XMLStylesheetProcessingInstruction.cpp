@@ -204,7 +204,6 @@ NS_NewXMLStylesheetProcessingInstruction(nsIContent** aInstancePtrResult,
                                      nullptr, kNameSpaceID_None,
                                      nsIDOMNode::PROCESSING_INSTRUCTION_NODE,
                                      nsGkAtoms::xml_stylesheet);
-  NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
 
   nsRefPtr<mozilla::dom::XMLStylesheetProcessingInstruction> instance =
     new mozilla::dom::XMLStylesheetProcessingInstruction(ni.forget(), aData);

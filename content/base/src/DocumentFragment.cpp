@@ -42,10 +42,6 @@ NS_NewDocumentFragment(nsNodeInfoManager* aNodeInfoManager,
     aNodeInfoManager->GetNodeInfo(nsGkAtoms::documentFragmentNodeName,
                                   nullptr, kNameSpaceID_None,
                                   nsIDOMNode::DOCUMENT_FRAGMENT_NODE);
-  if (!nodeInfo) {
-    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-    return nullptr;
-  }
 
   nsRefPtr<DocumentFragment> it = new DocumentFragment(nodeInfo.forget());
   return it.forget();
