@@ -490,14 +490,14 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     public ProgressiveUpdateData progressiveUpdateCallback(boolean aHasPendingNewThebesContent,
                                                            float x, float y, float width, float height,
                                                            float resolution, boolean lowPrecision) {
-        // Skip all low precision draws until we're at risk of checkerboarding
-        if (lowPrecision && !mProgressiveUpdateWasInDanger) {
-            mProgressiveUpdateData.abort = true;
-            return mProgressiveUpdateData;
-        }
-
-        // Reset the checkerboard risk flag
-        if (!lowPrecision && mLastProgressiveUpdateWasLowPrecision) {
+        // Reset the checkerboard risk flag when switching to low precision
+        // rendering.
+        if (lowPrecision && !mLastProgressiveUpdateWasLowPrecision) {
+            // Skip low precision rendering until we're at risk of checkerboarding.
+            if (!mProgressiveUpdateWasInDanger) {
+                mProgressiveUpdateData.abort = true;
+                return mProgressiveUpdateData;
+            }
             mProgressiveUpdateWasInDanger = false;
         }
         mLastProgressiveUpdateWasLowPrecision = lowPrecision;
@@ -530,6 +530,15 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
             }
         }
 
+        // If we're not doing low precision draws and we're about to
+        // checkerboard, enable low precision drawing.
+        if (!lowPrecision && !mProgressiveUpdateWasInDanger) {
+            if (DisplayPortCalculator.aboutToCheckerboard(viewportMetrics,
+                  mPanZoomController.getVelocityVector(), mProgressiveUpdateDisplayPort)) {
+                mProgressiveUpdateWasInDanger = true;
+            }
+        }
+
         // XXX All sorts of rounding happens inside Gecko that becomes hard to
         //     account exactly for. Given we align the display-port to tile
         //     boundaries (and so they rarely vary by sub-pixel amounts), just
@@ -547,15 +556,6 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
             return mProgressiveUpdateData;
         }
 
-        if (!lowPrecision && !mProgressiveUpdateWasInDanger) {
-            // If we're not doing low precision draws and we're about to
-            // checkerboard, give up and move onto low precision drawing.
-            if (DisplayPortCalculator.aboutToCheckerboard(viewportMetrics,
-                  mPanZoomController.getVelocityVector(), mProgressiveUpdateDisplayPort)) {
-                mProgressiveUpdateWasInDanger = true;
-            }
-        }
-
         // Abort updates when the display-port no longer contains the visible
         // area of the page (that is, the viewport cropped by the page
         // boundaries).
@@ -567,6 +567,11 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
             Math.min(viewportMetrics.viewportRectBottom, viewportMetrics.pageRectBottom) - 1 > y + height) {
             Log.d(LOGTAG, "Aborting update due to viewport not in display-port");
             mProgressiveUpdateData.abort = true;
+
+            // Enable low-precision drawing, as we're likely to be in danger if
+            // this situation has been encountered.
+            mProgressiveUpdateWasInDanger = true;
+
             return mProgressiveUpdateData;
         }
 
