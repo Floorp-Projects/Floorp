@@ -363,12 +363,7 @@ nsDOMAttributeMap::GetItemAt(uint32_t aIndex, nsresult *aResult)
     ni = mContent->NodeInfo()->NodeInfoManager()->
       GetNodeInfo(name->LocalName(), name->GetPrefix(), name->NamespaceID(),
                   nsIDOMNode::ATTRIBUTE_NODE);
-    if (ni) {
-      node = GetAttribute(ni, true);
-    }
-    else {
-      *aResult = NS_ERROR_OUT_OF_MEMORY;
-    }
+    node = GetAttribute(ni, true);
   }
 
   return node;
@@ -452,9 +447,6 @@ nsDOMAttributeMap::GetAttrNodeInfo(const nsAString& aNamespaceURI,
       ni = mContent->NodeInfo()->NodeInfoManager()->
         GetNodeInfo(nameAtom, name->GetPrefix(), nameSpaceID,
                     nsIDOMNode::ATTRIBUTE_NODE);
-      if (!ni) {
-        aError.Throw(NS_ERROR_OUT_OF_MEMORY);
-      }
 
       return ni.forget();
     }
