@@ -11,8 +11,6 @@
 #include "assembler/wtf/Platform.h"
 #include "prmjtime.h"
 
-#if defined(JS_METHODJIT) || ENABLE_YARR_JIT
-
 namespace js {
 
 #define JSPEW_CHAN_MAP(_)   \
@@ -36,13 +34,26 @@ enum JaegerSpewChannel {
     JSpew_Terminator
 };
 
-#if defined(DEBUG) && !defined(JS_METHODJIT_SPEW)
-# define JS_METHODJIT_SPEW
-#endif
-
-#if defined(JS_METHODJIT_SPEW)
+#ifdef JS_METHODJIT_SPEW
 
 void JMCheckLogging();
+bool IsJaegerSpewChannelActive(JaegerSpewChannel channel);
+
+#ifdef __GNUC__
+void JaegerSpew(JaegerSpewChannel channel, const char *fmt, ...) __attribute__ ((format (printf, 2, 3)));
+#else
+void JaegerSpew(JaegerSpewChannel channel, const char *fmt, ...);
+#endif
+
+#else
+
+static inline void JMCheckLogging() {}
+static inline bool IsJaegerSpewChannelActive(JaegerSpewChannel channel) { return false; }
+static inline void JaegerSpew(JaegerSpewChannel channel, const char *fmt, ...) {}
+
+#endif // JS_METHODJIT_SPEW
+
+#if defined(JS_METHODJIT_SPEW)
 
 struct ConditionalLog {
     uint32_t oldBits;
@@ -50,13 +61,6 @@ struct ConditionalLog {
     ConditionalLog(bool logging);
     ~ConditionalLog();
 };
-
-bool IsJaegerSpewChannelActive(JaegerSpewChannel channel);
-#ifdef __GNUC__
-void JaegerSpew(JaegerSpewChannel channel, const char *fmt, ...) __attribute__ ((format (printf, 2, 3)));
-#else
-void JaegerSpew(JaegerSpewChannel channel, const char *fmt, ...);
-#endif
 
 struct Profiler {
     int64_t t_start;
@@ -83,22 +87,8 @@ struct Profiler {
     }
 };
 
-#else
+#endif // JS_METHODJIT_SPEW
 
-static inline bool IsJaegerSpewChannelActive(JaegerSpewChannel channel)
-{
-    return false;
-}
-
-static inline void JaegerSpew(JaegerSpewChannel channel, const char *fmt, ...)
-{
-}
+} // namespace js
 
 #endif
-
-}
-
-#endif
-
-#endif
-
