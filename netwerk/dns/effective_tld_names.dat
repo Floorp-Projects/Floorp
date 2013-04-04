@@ -6557,19 +6557,42 @@ xxx
 // ===END ICANN DOMAINS===
 // ===BEGIN PRIVATE DOMAINS===
 
-// info.at : http://www.info.at/
-biz.at
-info.at
+// Amazon CloudFront : https://aws.amazon.com/cloudfront/
+// Requested by Donavan Miller <donavanm@amazon.com> 2013-03-22
+cloudfront.net
 
-// priv.at : http://www.nic.priv.at/
-// Submitted by registry <lendl@nic.at> 2008-06-09
-priv.at
+// Amazon Elastic Load Balancing : https://aws.amazon.com/elasticloadbalancing/
+// Requested by Scott Vidmar <svidmar@amazon.com> 2013-03-27
+elb.amazonaws.com
 
-// co.ca : http://registry.co.ca
-co.ca
+// Amazon S3 : https://aws.amazon.com/s3/
+// Requested by Courtney Eckhardt <coec@amazon.com> 2013-03-22
+s3.amazonaws.com
+s3-us-west-2.amazonaws.com
+s3-us-west-1.amazonaws.com
+s3-eu-west-1.amazonaws.com
+s3-ap-southeast-1.amazonaws.com
+s3-ap-southeast-2.amazonaws.com
+s3-ap-northeast-1.amazonaws.com
+s3-sa-east-1.amazonaws.com
+s3-us-gov-west-1.amazonaws.com
+s3-fips-us-gov-west-1.amazonaws.com
+s3-website-us-east-1.amazonaws.com
+s3-website-us-west-2.amazonaws.com
+s3-website-us-west-1.amazonaws.com
+s3-website-eu-west-1.amazonaws.com
+s3-website-ap-southeast-1.amazonaws.com
+s3-website-ap-southeast-2.amazonaws.com
+s3-website-ap-northeast-1.amazonaws.com
+s3-website-sa-east-1.amazonaws.com
+s3-website-us-gov-west-1.amazonaws.com
+
+// BetaInABox
+// Requested by adrian@betainabox.com 2012-09-13
+betainabox.com
 
 // CentralNic : http://www.centralnic.com/names/domains
-// Confirmed by registry <gavin.brown@centralnic.com> 2012-09-27
+// Requested by registry <gavin.brown@centralnic.com> 2012-09-27
 ae.org
 ar.com
 br.com
@@ -6598,79 +6621,19 @@ us.org
 uy.com
 za.com
 
-// Opera Software, A.S.A.
-// Requested by Yngve Pettersen <yngve@opera.com> 2009-11-26
-operaunite.com
+// c.la : http://www.c.la/
+c.la
 
-// Google, Inc.
-// Requested by Eduardo Vela <evn@google.com> 2012-10-24
-appspot.com
-blogspot.be
-blogspot.bj
-blogspot.ca
-blogspot.cf
-blogspot.ch
-blogspot.co.at
-blogspot.co.il
-blogspot.co.nz
-blogspot.co.uk
-blogspot.com
-blogspot.com.ar
-blogspot.com.au
-blogspot.com.br
-blogspot.com.es
-blogspot.cv
-blogspot.cz
-blogspot.de
-blogspot.dk
-blogspot.fi
-blogspot.fr
-blogspot.gr
-blogspot.hk
-blogspot.hu
-blogspot.ie
-blogspot.in
-blogspot.it
-blogspot.jp
-blogspot.kr
-blogspot.mr
-blogspot.mx
-blogspot.nl
-blogspot.no
-blogspot.pt
-blogspot.re
-blogspot.ro
-blogspot.se
-blogspot.sg
-blogspot.sk
-blogspot.td
-blogspot.tw
-codespot.com
-googleapis.com
-googlecode.com
+// co.ca : http://registry.co.ca/
+co.ca
+
+// CoDNS B.V.
+co.nl
+co.no
 
 // DreamHost : http://www.dreamhost.com/
 // Requested by Andrew Farmer <andrew.farmer@dreamhost.com> 2012-10-02
 dreamhosters.com
-
-// iki.fi : Submitted by Hannu Aronsson <haa@iki.fi> 2009-11-05
-iki.fi
-
-// c.la : http://www.c.la/
-c.la
-
-// ZaNiC : http://www.za.net/
-// Confirmed by registry <hostmaster@nic.za.net> 2009-10-03
-za.net
-za.org
-
-// CoDNS B.V.
-// Added 2010-05-23.
-co.nl
-co.no
-
-// Mainseek Sp. z o.o. : http://www.co.pl/
-co.pl
 
 // DynDNS.com : http://www.dyndns.com/services/dns/dyndns/
 dyndns-at-home.com
@@ -6953,46 +6916,83 @@ webhop.org
 worse-than.tv
 writesthisblog.com
 
-// BetaInABox
-// Requested by adrian@betainabox.com 2012-09-13
-betainabox.com
+// Google, Inc.
+// Requested by Eduardo Vela <evn@google.com> 2012-10-24
+appspot.com
+blogspot.be
+blogspot.bj
+blogspot.ca
+blogspot.cf
+blogspot.ch
+blogspot.co.at
+blogspot.co.il
+blogspot.co.nz
+blogspot.co.uk
+blogspot.com
+blogspot.com.ar
+blogspot.com.au
+blogspot.com.br
+blogspot.com.es
+blogspot.cv
+blogspot.cz
+blogspot.de
+blogspot.dk
+blogspot.fi
+blogspot.fr
+blogspot.gr
+blogspot.hk
+blogspot.hu
+blogspot.ie
+blogspot.in
+blogspot.it
+blogspot.jp
+blogspot.kr
+blogspot.mr
+blogspot.mx
+blogspot.nl
+blogspot.no
+blogspot.pt
+blogspot.re
+blogspot.ro
+blogspot.se
+blogspot.sg
+blogspot.sk
+blogspot.td
+blogspot.tw
+codespot.com
+googleapis.com
+googlecode.com
+
+// iki.fi
+// Requested by Hannu Aronsson <haa@iki.fi> 2009-11-05
+iki.fi
+
+// info.at : http://www.info.at/
+biz.at
+info.at
+
+// Michau Enterprises Limited : http://www.co.pl/
+co.pl
+
+// NYC.mn : http://www.information.nyc.mn
+// Requested by Matthew Brown <mattbrown@nyc.mn> 2013-03-11
+nyc.mn
+
+// Opera Software, A.S.A.
+// Requested by Yngve Pettersen <yngve@opera.com> 2009-11-26
+operaunite.com
 
 // Red Hat, Inc. OpenShift : https://openshift.redhat.com/
 // Requested by Tim Kramer <tkramer@rhcloud.com> 2012-10-24
 rhcloud.com
 
-// Amazon Elastic Load Balancing : https://aws.amazon.com/elasticloadbalancing/
-// Requested by Scott Vidmar <svidmar@amazon.com> 2013-03-27
-elb.amazonaws.com
+// priv.at : http://www.nic.priv.at/
+// Requested by registry <lendl@nic.at> 2008-06-09
+priv.at
 
-// Amazon S3 : https://aws.amazon.com/s3/
-// Requested by Courtney Eckhardt <coec@amazon.com> 2013-03-22
-s3.amazonaws.com
-s3-us-west-2.amazonaws.com
-s3-us-west-1.amazonaws.com
-s3-eu-west-1.amazonaws.com
-s3-ap-southeast-1.amazonaws.com
-s3-ap-southeast-2.amazonaws.com
-s3-ap-northeast-1.amazonaws.com
-s3-sa-east-1.amazonaws.com
-s3-us-gov-west-1.amazonaws.com
-s3-fips-us-gov-west-1.amazonaws.com
-s3-website-us-east-1.amazonaws.com
-s3-website-us-west-2.amazonaws.com
-s3-website-us-west-1.amazonaws.com
-s3-website-eu-west-1.amazonaws.com
-s3-website-ap-southeast-1.amazonaws.com
-s3-website-ap-southeast-2.amazonaws.com
-s3-website-ap-northeast-1.amazonaws.com
-s3-website-sa-east-1.amazonaws.com
-s3-website-us-gov-west-1.amazonaws.com
-
-// Amazon CloudFront : https://aws.amazon.com/cloudfront/
-// Requested by Donavan Miller <donavanm@amazon.com> 2013-03-22
-cloudfront.net
-
-// NYC.mn : http://www.information.nyc.mn
-// Requested by Matthew Brown <mattbrown@nyc.mn> 2013-03-11
-nyc.mn
+// ZaNiC : http://www.za.net/
+// Requested by registry <hostmaster@nic.za.net> 2009-10-03
+za.net
+za.org
 
 // ===END PRIVATE DOMAINS===
