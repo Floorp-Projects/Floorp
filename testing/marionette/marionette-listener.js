@@ -1394,7 +1394,7 @@ function clickElement(msg) {
   let el;
   try {
     el = elementManager.getKnownElement(msg.json.element, curWindow);
-    if (utils.isElementDisplayed(el)) {
+    if (checkVisible(el, command_id)) {
       if (utils.isElementEnabled(el)) {
         utils.synthesizeMouseAtCenter(el, {}, el.ownerDocument.defaultView)
       }
@@ -1405,7 +1405,6 @@ function clickElement(msg) {
     else {
       sendError("Element is not visible", 11, null, command_id)
     }
-    //utils.click(el);
     sendOk(command_id);
   }
   catch (e) {
