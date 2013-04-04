@@ -2742,7 +2742,7 @@ DataViewObject::class_constructor(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     RootedObject bufobj(cx);
-    if (!GetFirstArgumentAsObject(cx, args.length(), args.base(), "DataView constructor", &bufobj))
+    if (!GetFirstArgumentAsObject(cx, args, "DataView constructor", &bufobj))
         return false;
 
     if (bufobj->isWrapper() && UnwrapObject(bufobj)->isArrayBuffer()) {
@@ -2752,7 +2752,7 @@ DataViewObject::class_constructor(JSContext *cx, unsigned argc, Value *vp)
             return false;
 
         InvokeArgsGuard ag;
-        if (!cx->stack.pushInvokeArgs(cx, argc + 1, &ag))
+        if (!cx->stack.pushInvokeArgs(cx, args.length() + 1, &ag))
             return false;
         ag.setCallee(global->createDataViewForThis());
         ag.setThis(ObjectValue(*bufobj));
