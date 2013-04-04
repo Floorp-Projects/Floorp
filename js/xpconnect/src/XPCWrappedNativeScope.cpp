@@ -129,7 +129,11 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext *cx,
         mIsXBLScope(false)
 {
     // add ourselves to the scopes list
-    {   // scoped lock
+    {
+        MOZ_ASSERT(aGlobal);
+        MOZ_ASSERT(js::GetObjectClass(aGlobal)->flags & (JSCLASS_PRIVATE_IS_NSISUPPORTS |
+                                                         JSCLASS_HAS_PRIVATE)); 
+        // scoped lock
         XPCAutoLock lock(XPCJSRuntime::Get()->GetMapLock());
 
 #ifdef DEBUG
