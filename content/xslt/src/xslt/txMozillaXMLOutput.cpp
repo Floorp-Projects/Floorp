@@ -41,6 +41,7 @@
 #include "nsIFrame.h"
 #include <algorithm>
 #include "nsTextNode.h"
+#include "mozilla/dom/Comment.h"
 #include "mozilla/dom/ProcessingInstruction.h"
 
 using namespace mozilla::dom;
@@ -194,9 +195,7 @@ txMozillaXMLOutput::comment(const nsString& aData)
 
     TX_ENSURE_CURRENTNODE;
 
-    nsCOMPtr<nsIContent> comment;
-    rv = NS_NewCommentNode(getter_AddRefs(comment), mNodeInfoManager);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsRefPtr<Comment> comment = new Comment(mNodeInfoManager);
 
     rv = comment->SetText(aData, false);
     NS_ENSURE_SUCCESS(rv, rv);
