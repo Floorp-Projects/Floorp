@@ -5546,7 +5546,7 @@ ${className}::${className}(${args})${initializationList}
 
 class ClassDestructor(ClassItem):
     """
-    Used for adding a constructor to a CGClass.
+    Used for adding a destructor to a CGClass.
 
     inline should be True if the destructor should be marked inline.
 
@@ -5556,17 +5556,22 @@ class ClassDestructor(ClassItem):
     visibility determines the visibility of the destructor (public,
     protected, private), defaults to private.
 
-    body contains a string with the code for the destructor, defaults to None.
+    body contains a string with the code for the destructor, defaults to empty.
+
+    virtual determines whether the destructor is virtual, defaults to False.
     """
     def __init__(self, inline=False, bodyInHeader=False,
-                 visibility="private", body=None):
+                 visibility="private", body='', virtual=False):
         self.inline = inline or bodyInHeader
         self.bodyInHeader = bodyInHeader
         self.body = body
+        self.virtual = virtual
         ClassItem.__init__(self, None, visibility)
 
     def getDecorators(self, declaring):
         decorators = []
+        if self.virtual and declaring:
+            decorators.append('virtual')
         if self.inline and declaring:
             decorators.append('inline')
         if decorators:
@@ -5574,7 +5579,6 @@ class ClassDestructor(ClassItem):
         return ''
 
     def getBody(self):
-        assert self.body is not None
         return self.body
 
     def declare(self, cgClass):
@@ -8105,6 +8109,14 @@ class CGJSImplClass(CGBindingImplClass):
             "  NS_INTERFACE_MAP_ENTRY(nsISupports)\n"
             "NS_INTERFACE_MAP_END\n").substitute({ "ifaceName": self.descriptor.name })
 
+        if descriptor.interface.hasChildInterfaces():
+            decorators = ""
+            # We need a public virtual destructor our subclasses can use
+            destructor = ClassDestructor(virtual=True, visibility="public")
+        else:
+            decorators = "MOZ_FINAL"
+            destructor = None
+
         CGClass.__init__(self, descriptor.name,
                          bases=[ClassBase("nsISupports"),
                                 ClassBase("nsWrapperCache")],
@@ -8114,8 +8126,9 @@ class CGJSImplClass(CGBindingImplClass):
                                                         baseConstructors=["mImpl(aImpl)",
                                                                           "mParent(aParent)"],
                                                         body="SetIsDOMBinding();")],
+                         destructor=destructor,
                          methods=self.methodDecls,
-                         decorators="MOZ_FINAL",
+                         decorators=decorators,
                          extradeclarations=extradeclarations,
                          extradefinitions=extradefinitions)
 
