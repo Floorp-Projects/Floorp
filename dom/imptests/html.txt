@@ -1,6 +1,11 @@
-git+ssh://git@github.com:w3c/html-testsuite.git|html
-html/webappapis/scripting/events
+git+ssh://git@github.com:w3c/web-platform-tests.git|html
+domxpath
 html/browsers/browsing-the-web/read-media
 html/semantics/scripting-1/the-script-element
+html/semantics/text-level-semantics/the-time-element
+html/webappapis/scripting/events
 html/webappapis/scripting/processing-model-2
+js/builtins
 old-tests/submission/Opera/microdata
+typedarrays
+webgl
