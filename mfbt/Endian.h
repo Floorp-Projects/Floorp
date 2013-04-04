@@ -142,6 +142,18 @@
 #  error "Cannot determine endianness"
 #endif
 
+#if defined(__clang__)
+#  if __has_builtin(__builtin_bswap16)
+#    define MOZ_HAVE_BUILTIN_BYTESWAP16 __builtin_bswap16
+#  endif
+#elif defined(__GNUC__)
+#  if MOZ_GCC_VERSION_AT_LEAST(4, 8, 0)
+#    define MOZ_HAVE_BUILTIN_BYTESWAP16 __builtin_bswap16
+#  endif
+#elif defined(_MSC_VER)
+#    define MOZ_HAVE_BUILTIN_BYTESWAP16 _byteswap_ushort
+#endif
+
 namespace mozilla {
 
 namespace detail {
@@ -159,12 +171,8 @@ struct Swapper<T, 2>
 {
   static T swap(T value)
   {
-#if defined(__clang__)
-    return T(__builtin_bswap16(value));
-#elif defined(__GNUC__) && MOZ_GCC_VERSION_AT_LEAST(4, 8, 0)
-    return T(__builtin_bswap16(value));
-#elif defined(_MSC_VER)
-    return T(_byteswap_ushort(value));
+#if defined(MOZ_HAVE_BUILTIN_BYTESWAP16)
+    return MOZ_HAVE_BUILTIN_BYTESWAP16(value);
 #else
     return T(((value & 0x00ff) << 8) | ((value & 0xff00) >> 8));
 #endif
