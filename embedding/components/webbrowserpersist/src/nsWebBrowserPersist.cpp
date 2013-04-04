@@ -72,10 +72,8 @@
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIDOMHTMLDocument.h"
-#ifdef MOZ_MEDIA
 #include "nsIDOMHTMLSourceElement.h"
 #include "nsIDOMHTMLMediaElement.h"
-#endif // MOZ_MEDIA
  
 #include "nsIImageLoadingContent.h"
 
@@ -2719,7 +2717,6 @@ nsresult nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode)
         return NS_OK;
     }
 
-#ifdef MOZ_MEDIA
     nsCOMPtr<nsIDOMHTMLMediaElement> nodeAsMedia = do_QueryInterface(aNode);
     if (nodeAsMedia)
     {
@@ -2732,7 +2729,6 @@ nsresult nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode)
         StoreURIAttribute(aNode, "src");
         return NS_OK;
     }
-#endif // MOZ_MEDIA
 
     if (content->IsHTML(nsGkAtoms::body)) {
         StoreURIAttribute(aNode, "background");
@@ -3070,7 +3066,6 @@ nsWebBrowserPersist::CloneNodeWithFixedUpAttributes(
         return rv;
     }
 
-#ifdef MOZ_MEDIA
     nsCOMPtr<nsIDOMHTMLMediaElement> nodeAsMedia = do_QueryInterface(aNodeIn);
     if (nodeAsMedia)
     {
@@ -3094,7 +3089,6 @@ nsWebBrowserPersist::CloneNodeWithFixedUpAttributes(
 
         return rv;
     }
-#endif // MOZ_MEDIA
 
     if (content->IsSVG(nsGkAtoms::img))
     {

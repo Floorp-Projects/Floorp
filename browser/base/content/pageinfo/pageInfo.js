@@ -310,10 +310,8 @@ function onLoadPageInfo()
   gStrings.mediaEmbed = gBundle.getString("mediaEmbed");
   gStrings.mediaLink = gBundle.getString("mediaLink");
   gStrings.mediaInput = gBundle.getString("mediaInput");
-#ifdef MOZ_MEDIA
   gStrings.mediaVideo = gBundle.getString("mediaVideo");
   gStrings.mediaAudio = gBundle.getString("mediaAudio");
-#endif
 
   var args = "arguments" in window &&
              window.arguments.length >= 1 &&
@@ -677,14 +675,12 @@ function grabAll(elem)
       addImage(href, gStrings.mediaImg, "", elem, false);
     } catch (e) { }
   }
-#ifdef MOZ_MEDIA
   else if (elem instanceof HTMLVideoElement) {
     addImage(elem.currentSrc, gStrings.mediaVideo, "", elem, false);
   }
   else if (elem instanceof HTMLAudioElement) {
     addImage(elem.currentSrc, gStrings.mediaAudio, "", elem, false);
   }
-#endif
   else if (elem instanceof HTMLLinkElement) {
     if (elem.rel && /\bicon\b/i.test(elem.rel))
       addImage(elem.href, gStrings.mediaLink, "", elem, false);
@@ -1015,7 +1011,6 @@ function makePreview(row)
       document.getElementById("theimagecontainer").collapsed = false
       document.getElementById("brokenimagecontainer").collapsed = true;
     }
-#ifdef MOZ_MEDIA
     else if (item instanceof HTMLVideoElement && isProtocolAllowed) {
       newImage = document.createElementNS("http://www.w3.org/1999/xhtml", "video");
       newImage.id = "thepreviewimage";
@@ -1037,7 +1032,6 @@ function makePreview(row)
       document.getElementById("theimagecontainer").collapsed = false;
       document.getElementById("brokenimagecontainer").collapsed = true;
     }
-#endif
     else {
       // fallback image for protocols not allowed (e.g., javascript:)
       // or elements not [yet] handled (e.g., object, embed).
