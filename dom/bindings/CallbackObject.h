@@ -62,13 +62,18 @@ public:
       }
     }
 
-    // Set mCallback before we hold, on the off chance that a GC could somehow
-    // happen in there... (which would be pretty odd, granted).
-    mCallback = aCallback;
-    // Make sure we'll be able to drop as needed
-    nsLayoutStatics::AddRef();
-    NS_HOLD_JS_OBJECTS(this, CallbackObject);
+    Init(aCallback);
     *aInited = true;
+  }
+
+  /*
+   * Create a CallbackObject without any sort of interesting games with
+   * compartments, for cases when you want to just use the existing object
+   * as-is.  This constructor can never fail.
+   */
+  explicit CallbackObject(JSObject* aCallback)
+  {
+    Init(aCallback);
   }
 
   virtual ~CallbackObject()
@@ -101,16 +106,23 @@ public:
   };
 
 protected:
-  explicit CallbackObject(CallbackObject* aCallbackFunction)
-    : mCallback(aCallbackFunction->mCallback)
+  explicit CallbackObject(CallbackObject* aCallbackObject)
+  {
+    Init(aCallbackObject->mCallback);
+  }
+
+private:
+  inline void Init(JSObject* aCallback)
   {
     // Set mCallback before we hold, on the off chance that a GC could somehow
     // happen in there... (which would be pretty odd, granted).
+    mCallback = aCallback;
     // Make sure we'll be able to drop as needed
     nsLayoutStatics::AddRef();
     NS_HOLD_JS_OBJECTS(this, CallbackObject);
   }
 
+protected:
   void DropCallback()
   {
     if (mCallback) {
