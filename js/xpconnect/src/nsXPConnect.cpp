@@ -92,6 +92,7 @@ nsXPConnect::nsXPConnect()
 
 nsXPConnect::~nsXPConnect()
 {
+    mRuntime->DeleteJunkScope();
     nsCycleCollector_forgetJSRuntime();
 
     JSContext *cx = nullptr;
