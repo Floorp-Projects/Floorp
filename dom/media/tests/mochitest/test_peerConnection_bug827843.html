@@ -79,8 +79,8 @@
     ]
   ];
 
+  var test = new PeerConnectionTest();
   runTest(function () {
-    var test = new PeerConnectionTest();
     test.setMediaConstraints([{audio: true}], [{audio: true}]);
     test.chain.append(steps);
     test.run();
