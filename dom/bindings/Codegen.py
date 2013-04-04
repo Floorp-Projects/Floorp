@@ -8080,24 +8080,51 @@ class CGJSImplClass(CGBindingImplClass):
     def __init__(self, descriptor):
         CGBindingImplClass.__init__(self, descriptor, CGJSImplMethod, CGJSImplGetter, CGJSImplSetter)
 
+        if descriptor.interface.parent:
+            parentClass = descriptor.getDescriptor(
+                descriptor.interface.parent.identifier.name).nativeType
+            baseClasses = [ClassBase(parentClass)]
+            isupportsDecl = "NS_DECL_ISUPPORTS_INHERITED"
+            ccDecl = ("NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(%s, %s)" %
+                      (descriptor.name, parentClass))
+            constructorBody = (
+                "// Make sure we're an nsWrapperCache already\n"
+                "MOZ_ASSERT(static_cast<nsWrapperCache*>(this));\n"
+                "// And that our ancestor has called SetIsDOMBinding()\n"
+                "MOZ_ASSERT(IsDOMBinding());")
+            extradefinitions= string.Template(
+                "NS_IMPL_CYCLE_COLLECTION_INHERITED_2(${ifaceName}, ${parentClass}, mImpl, mParent)\n"
+                "NS_IMPL_ADDREF_INHERITED(${ifaceName}, ${parentClass})\n"
+                "NS_IMPL_RELEASE_INHERITED(${ifaceName}, ${parentClass})\n"
+                "NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(${ifaceName})\n"
+                "NS_INTERFACE_MAP_END_INHERITING(${parentClass})\n").substitute(
+                { "ifaceName": self.descriptor.name,
+                  "parentClass": parentClass })
+        else:
+            baseClasses = [ClassBase("nsISupports"),
+                           ClassBase("nsWrapperCache")]
+            isupportsDecl = "NS_DECL_CYCLE_COLLECTING_ISUPPORTS"
+            ccDecl = ("NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(%s)" %
+                      descriptor.name)
+            constructorBody = "SetIsDOMBinding();"
+            extradefinitions= string.Template(
+                "NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_2(${ifaceName}, mImpl, mParent)\n"
+                "NS_IMPL_CYCLE_COLLECTING_ADDREF(${ifaceName})\n"
+                "NS_IMPL_CYCLE_COLLECTING_RELEASE(${ifaceName})\n"
+                "NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(${ifaceName})\n"
+                "  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY\n"
+                "  NS_INTERFACE_MAP_ENTRY(nsISupports)\n"
+                "NS_INTERFACE_MAP_END\n").substitute({ "ifaceName": self.descriptor.name })
+
         extradeclarations=(
             "public:\n"
-            "  NS_DECL_CYCLE_COLLECTING_ISUPPORTS\n"
-            "  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(%s)\n"
+            "  %s\n"
+            "  %s\n"
             "\n"
             "private:\n"
             "  nsRefPtr<%s> mImpl;\n"
             "  nsCOMPtr<nsISupports> mParent;\n"
-            "\n" % (descriptor.name, jsImplName(descriptor.name)))
-
-        extradefinitions= string.Template(
-            "NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_2(${ifaceName}, mImpl, mParent)\n"
-            "NS_IMPL_CYCLE_COLLECTING_ADDREF(${ifaceName})\n"
-            "NS_IMPL_CYCLE_COLLECTING_RELEASE(${ifaceName})\n"
-            "NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(${ifaceName})\n"
-            "  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY\n"
-            "  NS_INTERFACE_MAP_ENTRY(nsISupports)\n"
-            "NS_INTERFACE_MAP_END\n").substitute({ "ifaceName": self.descriptor.name })
+            "\n" % (isupportsDecl, ccDecl, jsImplName(descriptor.name)))
 
         if descriptor.interface.hasChildInterfaces():
             decorators = ""
@@ -8107,18 +8134,26 @@ class CGJSImplClass(CGBindingImplClass):
             decorators = "MOZ_FINAL"
             destructor = None
 
+        baseConstructors=["mImpl(new %s(aJSImplObject))" % jsImplName(descriptor.name),
+                          "mParent(aParent)"]
+        parentInterface = descriptor.interface.parent
+        while parentInterface:
+            if parentInterface.isJSImplemented():
+                baseConstructors = (
+                    [ "%s(aJSImplObject, aParent)" % parentClass ] +
+                    baseConstructors )
+                break
+            parentInterface = parentInterface.parent
+
         constructor = ClassConstructor(
             [Argument("JSObject*", "aJSImplObject"),
              Argument("nsISupports*", "aParent")],
             visibility="public",
-            baseConstructors=["mImpl(new %s(aJSImplObject))" %
-                              jsImplName(descriptor.name),
-                              "mParent(aParent)"],
-            body="SetIsDOMBinding();")
+            baseConstructors=baseConstructors,
+            body=constructorBody)
 
         CGClass.__init__(self, descriptor.name,
-                         bases=[ClassBase("nsISupports"),
-                                ClassBase("nsWrapperCache")],
+                         bases=baseClasses,
                          constructors=[constructor],
                          destructor=destructor,
                          methods=self.methodDecls,
