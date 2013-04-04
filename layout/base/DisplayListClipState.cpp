@@ -62,15 +62,6 @@ DisplayListClipState::ClipContentDescendants(const nsRect& aRect,
   mCurrentCombinedClip = nullptr;
 }
 
-DisplayListClipState::AutoClipContainingBlockDescendantsToContentBox::
-AutoClipContainingBlockDescendantsToContentBox(nsDisplayListBuilder* aBuilder,
-                                               nsIFrame* aFrame,
-                                               uint32_t aFlags)
-  : AutoSaveRestore(aBuilder->ClipState())
-{
-  mState.ClipContainingBlockDescendantsToContentBox(aBuilder, aFrame, mClip, aFlags);
-}
-
 void
 DisplayListClipState::ClipContainingBlockDescendantsToContentBox(nsDisplayListBuilder* aBuilder,
                                                                  nsIFrame* aFrame,
@@ -90,5 +81,12 @@ DisplayListClipState::ClipContainingBlockDescendantsToContentBox(nsDisplayListBu
   ClipContainingBlockDescendants(clipRect, hasBorderRadius ? radii : nullptr,
                                  aClipOnStack);
 }
+
+DisplayListClipState::AutoSaveRestore::AutoSaveRestore(nsDisplayListBuilder* aBuilder)
+  : mState(aBuilder->ClipState())
+  , mSavedState(aBuilder->ClipState())
+  , mClipUsed(false)
+  , mRestored(false)
+{}
 
 }
