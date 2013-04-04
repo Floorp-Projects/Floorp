@@ -123,10 +123,6 @@ function StepIndices(shape, indices) {
   }
 }
 
-function IsInteger(v) {
-  return (v | 0) === v;
-}
-
 // Constructor
 //
 // We split the 3 construction cases so that we don't case on arguments.
@@ -835,8 +831,7 @@ function ParallelArrayScatter(targets, defaultValue, conflictFunc, length, mode)
 
       for (; indexPos < indexEnd; indexPos++) {
         var x = self.get(indexPos);
-        var t = targets[indexPos];
-        checkTarget(indexPos, t);
+        var t = checkTarget(indexPos, targets[indexPos]);
         if (t < outputStart || t >= outputEnd)
           continue;
         if (conflicts[t])
@@ -891,8 +886,7 @@ function ParallelArrayScatter(targets, defaultValue, conflictFunc, length, mode)
       var conflicts = localConflicts[sliceId];
       while (indexPos < indexEnd) {
         var x = self.get(indexPos);
-        var t = targets[indexPos];
-        checkTarget(indexPos, t);
+        var t = checkTarget(indexPos, targets[indexPos]);
         if (conflicts[t])
           x = collide(x, localbuffer[t]);
         UnsafeSetElement(localbuffer, t, x,
@@ -937,8 +931,7 @@ function ParallelArrayScatter(targets, defaultValue, conflictFunc, length, mode)
 
     for (var i = 0; i < targetsLength; i++) {
       var x = self.get(i);
-      var t = targets[i];
-      checkTarget(i, t);
+      var t = checkTarget(i, targets[i]);
       if (conflicts[t])
         x = collide(x, buffer[t]);
 
@@ -950,11 +943,14 @@ function ParallelArrayScatter(targets, defaultValue, conflictFunc, length, mode)
   }
 
   function checkTarget(i, t) {
-      if ((t | 0) !== t)
-        ThrowError(JSMSG_PAR_ARRAY_SCATTER_BAD_TARGET, i);
+    if (TO_INT32(t) !== t)
+      ThrowError(JSMSG_PAR_ARRAY_SCATTER_BAD_TARGET, i);
 
-      if (t < 0 || t >= length)
-        ThrowError(JSMSG_PAR_ARRAY_SCATTER_BOUNDS);
+    if (t < 0 || t >= length)
+      ThrowError(JSMSG_PAR_ARRAY_SCATTER_BOUNDS);
+
+    // It's not enough to return t, as -0 | 0 === -0.
+    return TO_INT32(t);
   }
 }
 
