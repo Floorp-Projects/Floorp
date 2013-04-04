@@ -13,6 +13,7 @@ toolkit.jar:
 + skin/classic/mozapps/extensions/category-extensions.png  (extensions/extensionGeneric.png)
 + skin/classic/mozapps/extensions/category-themes.png      (extensions/themeGeneric.png)
 + skin/classic/mozapps/extensions/category-plugins.png     (extensions/category-plugins.png)
++ skin/classic/mozapps/extensions/category-service.png     (extensions/category-service.png)
 + skin/classic/mozapps/extensions/category-dictionaries.png (extensions/category-dictionaries.png)
 + skin/classic/mozapps/extensions/category-recent.png      (extensions/category-recent.png)
 + skin/classic/mozapps/extensions/category-available.png   (extensions/category-available.png)
