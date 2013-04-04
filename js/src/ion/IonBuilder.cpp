@@ -6058,7 +6058,6 @@ IonBuilder::jsop_setelem_dense()
             return false;
     }
 
-    // Determine whether a write barrier is required.
     if (oracle->elementWriteNeedsBarrier(script(), pc))
         store->setNeedsBarrier();
 
