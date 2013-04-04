@@ -1685,7 +1685,7 @@ RescueOrphans(XPCCallContext& ccx, JSObject* obj)
     JSObject *parentObj = js::GetObjectParent(obj);
     if (!parentObj)
         return NS_OK; // Global object. We're done.
-    parentObj = js::UnwrapObject(parentObj, /* stopAtOuter = */ false);
+    parentObj = js::UncheckedUnwrap(parentObj, /* stopAtOuter = */ false);
 
     // PreCreate may touch dead compartments.
     js::AutoMaybeTouchDeadZones agc(parentObj);
@@ -1730,7 +1730,7 @@ RescueOrphans(XPCCallContext& ccx, JSObject* obj)
 
     // We've been orphaned. Find where our parent went, and follow it.
     if (isWN) {
-        JSObject *realParent = js::UnwrapObject(parentObj);
+        JSObject *realParent = js::UncheckedUnwrap(parentObj);
         XPCWrappedNative *wn =
             static_cast<XPCWrappedNative*>(js::GetObjectPrivate(obj));
         return wn->ReparentWrapperIfFound(ccx, GetObjectScope(parentObj),
