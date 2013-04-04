@@ -243,6 +243,7 @@
     "docshell/test/test_bug669671.html": " Test timed out.",
 
         "dom/bindings/test/test_InstanceOf.html":"",
+  "dom/imptests/html/webgl": "WebGL",
         "dom/imptests/webapps/DOMCore/tests/approved/test_interfaces.html":"",
         "dom/tests/mochitest/crypto/test_getRandomValues.html": "",
 	"dom/tests/mochitest/dom-level0/test_innerWidthHeight_script.html": "",
