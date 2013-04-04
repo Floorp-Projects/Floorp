@@ -279,8 +279,8 @@ this.UtteranceGenerator = {
     application: function application(aAccessible, aRoleStr, aStates, aFlags) {
       // Don't utter location of applications, it gets tiring.
       if (aAccessible.name != aAccessible.DOMNode.location)
-        return this.objectUtteranceFunctions.defaultFunc(
-          aAccessible, aRoleStr, aStates, aFlags);
+        return this.objectUtteranceFunctions.defaultFunc.apply(this,
+          [aAccessible, aRoleStr, aStates, aFlags]);
 
       return [];
     }

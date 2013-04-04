@@ -211,6 +211,7 @@ class Descriptor(DescriptorProvider):
                 nativeTypeDefault = "mozilla::dom::" + ifaceName
 
         self.nativeType = desc.get('nativeType', nativeTypeDefault)
+        self.jsImplParent = desc.get('jsImplParent', self.nativeType)
 
         # Do something sane for JSObject
         if self.nativeType == "JSObject":
@@ -229,6 +230,10 @@ class Descriptor(DescriptorProvider):
                 headerDefault = self.nativeType
                 headerDefault = headerDefault.replace("::", "/") + ".h"
         self.headerFile = desc.get('headerFile', headerDefault)
+        if self.jsImplParent == self.nativeType:
+            self.jsImplParentHeader = self.headerFile
+        else:
+            self.jsImplParentHeader = self.jsImplParent.replace("::", "/") + ".h"
 
         self.skipGen = desc.get('skipGen', False)
 

@@ -628,7 +628,7 @@ nsEventListenerManager::SetEventHandler(nsIAtom *aName,
 
     // We want to allow compiling an event handler even in an unloaded
     // document, so use GetScopeObject here, not GetScriptHandlingObject.
-    global = doc->GetScopeObject();
+    global = do_QueryInterface(doc->GetScopeObject());
   } else {
     nsCOMPtr<nsPIDOMWindow> win = GetTargetAsInnerWindow();
     if (win) {

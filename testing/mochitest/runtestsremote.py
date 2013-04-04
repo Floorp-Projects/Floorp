@@ -312,7 +312,6 @@ class MochiRemote(Mochitest):
             shutil.rmtree(os.path.join(options.profilePath, 'extensions', 'staged', 'mochikit@mozilla.org'))
             shutil.rmtree(os.path.join(options.profilePath, 'extensions', 'staged', 'worker-test@mozilla.org'))
             shutil.rmtree(os.path.join(options.profilePath, 'extensions', 'staged', 'workerbootstrap-test@mozilla.org'))
-            shutil.rmtree(os.path.join(options.profilePath, 'extensions', 'staged', 'special-powers@mozilla.org'))
             os.remove(os.path.join(options.profilePath, 'userChrome.css'))
             if os.path.exists(os.path.join(options.profilePath, 'tests.jar')):
                 os.remove(os.path.join(options.profilePath, 'tests.jar'))

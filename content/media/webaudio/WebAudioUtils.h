@@ -29,6 +29,15 @@ struct WebAudioUtils {
   }
 
   /**
+   * Computes an exponential smoothing rate for a time based variable
+   * over aDuration seconds.
+   */
+  static double ComputeSmoothingRate(double aDuration, double aSampleRate)
+  {
+    return 1.0 - std::exp(-1.0 / (aDuration * aSampleRate));
+  }
+
+  /**
    * Converts AudioParamTimeline floating point time values to tick values
    * with respect to a source and a destination AudioNodeStream.
    *

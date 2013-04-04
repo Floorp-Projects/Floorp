@@ -25,11 +25,13 @@
 #include "mozilla/dom/DOMJSClass.h"
 #include "nsMathUtils.h"
 #include "nsStringBuffer.h"
+#include "nsIGlobalObject.h"
 #include "mozilla/dom/BindingDeclarations.h"
 
 class nsIPrincipal;
 class nsIXPConnectWrappedJS;
 class nsScriptNameSpaceManager;
+class nsIGlobalObject;
 
 #ifndef BAD_TLS_INDEX
 #define BAD_TLS_INDEX ((uint32_t) -1)
@@ -400,6 +402,25 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
 bool
 Throw(JSContext *cx, nsresult rv);
 
+/**
+ * Every global should hold a native that implements the nsIGlobalObject interface.
+ */
+nsIGlobalObject *
+GetNativeForGlobal(JSObject *global);
+
+/**
+ * In some cases a native object does not really belong to any compartment (XBL,
+ * document created from by XHR of a worker, etc.). But when for some reason we
+ * have to wrap these natives (because of an event for example) instead of just
+ * wrapping them into some random compartment we find on the context stack (like
+ * we did previously) a default compartment is used. This function returns that
+ * compartment's global. It is a singleton on the runtime.
+ * If you find yourself wanting to use this compartment, you're probably doing
+ * something wrong. Callers MUST consult with the XPConnect module owner before
+ * using this compartment. If you don't, bholley will hunt you down.
+ */
+JSObject *
+GetJunkScope();
 } // namespace xpc
 
 nsCycleCollectionParticipant *

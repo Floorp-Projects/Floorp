@@ -24,14 +24,20 @@ import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.hardware.Camera.PreviewCallback;
 import android.util.Log;
+import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceHolder.Callback;
+
+import org.mozilla.gecko.GeckoApp;
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.util.ThreadUtils;
 
 public class VideoCaptureAndroid implements PreviewCallback, Callback {
 
     private final static String TAG = "WEBRTC-JC";
 
     private Camera camera;
+    private int cameraId;
     private AndroidVideoCaptureDevice currentDevice = null;
     public ReentrantLock previewBufferLock = new ReentrantLock();
     // This lock takes sync with StartCapture and SurfaceChanged
@@ -66,14 +72,74 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
         captureAndroid.camera.release();
         captureAndroid.camera = null;
         captureAndroid.context = 0;
+
+        GeckoApp.mAppContext.cameraView.getHolder().
+            removeCallback(captureAndroid);
+        ThreadUtils.getUiHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    GeckoApp.mAppContext.disableCameraView();
+                } catch (Exception e) {
+                    Log.e(TAG,
+                          "VideoCaptureAndroid disableCameraView exception: " +
+                          e.getLocalizedMessage());
+                }
+           }
+        });
     }
 
     public VideoCaptureAndroid(int in_id, long in_context, Camera in_camera,
-            AndroidVideoCaptureDevice in_device) {
+                               AndroidVideoCaptureDevice in_device,
+                               int in_cameraId) {
         id = in_id;
         context = in_context;
         camera = in_camera;
+        cameraId = in_cameraId;
         currentDevice = in_device;
+
+        try {
+            GeckoApp.mAppContext.cameraView.getHolder().addCallback(this);
+            ThreadUtils.getUiHandler().post(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        GeckoApp.mAppContext.enableCameraView();
+                    } catch (Exception e) {
+                        Log.e(TAG, 
+                              "VideoCaptureAndroid enableCameraView exception: "
+                               + e.getLocalizedMessage());
+                    }
+                }
+            });
+	} catch (Exception ex) {
+	  Log.e(TAG, "VideoCaptureAndroid constructor exception: " +
+                ex.getLocalizedMessage());
+	}
+    }
+
+    public int GetRotateAmount() {
+        android.hardware.Camera.CameraInfo info =
+            new android.hardware.Camera.CameraInfo();
+        android.hardware.Camera.getCameraInfo(cameraId, info);
+        int rotation = GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getRotation();
+        int degrees = 0;
+        switch (rotation) {
+            case Surface.ROTATION_0: degrees = 0; break;
+            case Surface.ROTATION_90: degrees = 90; break;
+            case Surface.ROTATION_180: degrees = 180; break;
+            case Surface.ROTATION_270: degrees = 270; break;
+        }
+
+        int result;
+        if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+            result = (info.orientation + degrees) % 360;
+            result = (360 - result) % 360;  // compensate the mirror
+        } else {  // back-facing
+            result = (info.orientation - degrees + 360) % 360;
+        }
+
+        return result;
     }
 
     private int tryStartCapture(int width, int height, int frameRate) {
@@ -84,9 +150,9 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
 
         Log.d(TAG, "tryStartCapture " + width +
                 " height " + height +" frame rate " + frameRate +
-                "isCaptureRunning " + isCaptureRunning +
-                "isSurfaceReady " + isSurfaceReady +
-                "isCaptureStarted " + isCaptureStarted);
+                " isCaptureRunning " + isCaptureRunning +
+                " isSurfaceReady " + isSurfaceReady +
+                " isCaptureStarted " + isCaptureStarted);
 
         if (isCaptureRunning || !isSurfaceReady || !isCaptureStarted) {
             return 0;
@@ -126,7 +192,7 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
 
         }
         catch (Exception ex) {
-            Log.e(TAG, "Failed to start camera");
+            Log.e(TAG, "Failed to start camera: " + ex.getMessage());
             return -1;
         }
 
@@ -137,12 +203,6 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
     public int StartCapture(int width, int height, int frameRate) {
         Log.d(TAG, "StartCapture width " + width +
                 " height " + height +" frame rate " + frameRate);
-        // Get the local preview SurfaceHolder from the static render class
-        localPreview = ViERenderer.GetLocalRenderer();
-        if (localPreview != null) {
-            localPreview.addCallback(this);
-        }
-
         captureLock.lock();
         isCaptureStarted = true;
         mCaptureWidth = width;
@@ -179,8 +239,8 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
         previewBufferLock.lock();
 
         // The following line is for debug only
-        // Log.v(TAG, "preview frame length " + data.length +
-        //            " context" + context);
+        Log.v(TAG, "preview frame length " + data.length +
+              " context" + context);
         if (isCaptureRunning) {
             // If StartCapture has been called but not StopCapture
             // Call the C++ layer with the captured frame
@@ -198,13 +258,14 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
     // Sets the rotation of the preview render window.
     // Does not affect the captured video image.
     public void SetPreviewRotation(int rotation) {
-        Log.v(TAG, "SetPreviewRotation:" + rotation);
+        Log.v(TAG, "SetPreviewRotation: " + rotation);
 
         if (camera != null) {
             previewBufferLock.lock();
             int width = 0;
             int height = 0;
             int framerate = 0;
+            boolean wasCaptureRunning = isCaptureRunning;
 
             if (isCaptureRunning) {
                 width = mCaptureWidth;
@@ -227,7 +288,7 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
             }
             camera.setDisplayOrientation(resultRotation);
 
-            if (isCaptureRunning) {
+            if (wasCaptureRunning) {
                 StartCapture(width, height, framerate);
             }
             previewBufferLock.unlock();

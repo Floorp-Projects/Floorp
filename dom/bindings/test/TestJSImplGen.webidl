@@ -311,22 +311,24 @@ interface TestJSImplInterface {
   //void passOptionalNullableTreatAsNullCallback(optional TestTreatAsNullCallback? arg);
   void passOptionalNullableTreatAsNullCallbackWithDefaultValue(optional TestTreatAsNullCallback? arg = null);
 
-/* The rest of these are untested.
   // Any types
   void passAny(any arg);
   void passOptionalAny(optional any arg);
   void passAnyDefaultNull(optional any arg = null);
   any receiveAny();
 
-  // object types
-  void passObject(object arg);
+  // object types.  Unfortunately, non-nullable object is inconsistently
+  // represented as either JSObject* (for callbacks) or JSObject& (for
+  // non-callbacks), so we can't handle those yet.  See bug 856911.
+  //(BUG 856911)  void passObject(object arg);
   void passNullableObject(object? arg);
-  void passOptionalObject(optional object arg);
+  //(BUG 856911)  void passOptionalObject(optional object arg);
   void passOptionalNullableObject(optional object? arg);
   void passOptionalNullableObjectWithDefaultValue(optional object? arg = null);
   object receiveObject();
   object? receiveNullableObject();
 
+/* The rest of these are untested.
   // Union types
   void passUnion((object or long) arg);
   void passUnionWithNullable((object? or long) arg);
@@ -412,4 +414,10 @@ interface TestJSImplInterface {
   [SetterThrows] attribute boolean throwingSetterAttr;
 */
   // If you add things here, add them to TestCodeGen as well
+};
+
+interface TestCImplementedInterface : TestJSImplInterface {
+};
+
+interface TestCImplementedInterface2 {
 };

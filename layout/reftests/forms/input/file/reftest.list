@@ -1,3 +1,4 @@
 fuzzy-if(OSX==10.6,8,128) == input-file-simple.html input-file-simple-ref.xul
 fuzzy-if(OSX==10.6,8,114) == input-file-rtl.html input-file-rtl-ref.xul
 fuzzy-if(OSX==10.6,8,128) == input-file-size.html input-file-simple-ref.xul
+fuzzy-if(OSX==10.6,8,128) == input-file-background.html input-file-background-ref.xul

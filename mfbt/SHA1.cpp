@@ -3,20 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Endian.h"
 #include "mozilla/SHA1.h"
 
 #include <string.h>
 
-// FIXME: We should probably create a more complete mfbt/Endian.h. This assumes
-// that any compiler that doesn't define these macros is little endian.
-#if defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__)
-#  if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-#    define MOZ_IS_LITTLE_ENDIAN
-#  endif
-#else
-#  define MOZ_IS_LITTLE_ENDIAN
-#endif
-
+using mozilla::NativeEndian;
 using mozilla::SHA1Sum;
 
 static inline uint32_t
@@ -24,18 +16,6 @@ SHA_ROTL(uint32_t t, uint32_t n)
 {
   MOZ_ASSERT(n < 32);
   return (t << n) | (t >> (32 - n));
-}
-
-static inline unsigned
-SHA_HTONL(unsigned x)
-{
-#ifdef MOZ_IS_LITTLE_ENDIAN
-  const unsigned int mask = 0x00FF00FF;
-  x = (x << 16) | (x >> 16);
-  return ((x & mask) << 8) | ((x >> 8) & mask);
-#else
-  return x;
-#endif
 }
 
 static void
@@ -160,16 +140,16 @@ SHA1Sum::finish(SHA1Sum::Hash& hashOut)
 
   /* Convert size from bytes to bits. */
   size2 <<= 3;
-  u.w[14] = SHA_HTONL(uint32_t(size2 >> 32));
-  u.w[15] = SHA_HTONL(uint32_t(size2));
+  u.w[14] = NativeEndian::swapToBigEndian(uint32_t(size2 >> 32));
+  u.w[15] = NativeEndian::swapToBigEndian(uint32_t(size2));
   shaCompress(&H[H2X], u.w);
 
   /* Output hash. */
-  u.w[0] = SHA_HTONL(H[0]);
-  u.w[1] = SHA_HTONL(H[1]);
-  u.w[2] = SHA_HTONL(H[2]);
-  u.w[3] = SHA_HTONL(H[3]);
-  u.w[4] = SHA_HTONL(H[4]);
+  u.w[0] = NativeEndian::swapToBigEndian(H[0]);
+  u.w[1] = NativeEndian::swapToBigEndian(H[1]);
+  u.w[2] = NativeEndian::swapToBigEndian(H[2]);
+  u.w[3] = NativeEndian::swapToBigEndian(H[3]);
+  u.w[4] = NativeEndian::swapToBigEndian(H[4]);
   memcpy(hashOut, u.w, 20);
   mDone = true;
 }
@@ -243,7 +223,7 @@ shaCompress(volatile unsigned *X, const uint32_t *inbuf)
 #define SHA_RND4(a, b, c, d, e, n) \
   a = SHA_ROTL(b ,5) + SHA_F4(c, d, e) + a + XW(n) + K3; c = SHA_ROTL(c, 30)
 
-#define LOAD(n) XW(n) = SHA_HTONL(inbuf[n])
+#define LOAD(n) XW(n) = NativeEndian::swapToBigEndian(inbuf[n])
 
   A = XH(0);
   B = XH(1);

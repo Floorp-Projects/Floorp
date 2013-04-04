@@ -16,6 +16,7 @@
 #include "nsXPCOMStrings.h"
 
 #include "AndroidBridge.h"
+#include "AndroidJNIWrapper.h"
 #include "nsAppShell.h"
 #include "nsOSHelperAppService.h"
 #include "nsWindow.h"
@@ -223,6 +224,8 @@ AndroidBridge::Init(JNIEnv *jEnv,
     } else {
         jEGLSurfacePointerField = 0;
     }
+
+    jGetContext = (jmethodID)jEnv->GetStaticMethodID(jGeckoAppShellClass, "getContext", "()Landroid/content/Context;");
 
     InitAndroidJavaWrappers(jEnv);
 
@@ -2032,6 +2035,25 @@ AndroidBridge::LockWindow(void *window, unsigned char **bits, int *width, int *h
     return true;
 }
 
+jobject
+AndroidBridge::GetGlobalContextRef() {
+    JNIEnv *env = GetJNIForThread();
+    if (!env)
+        return 0;
+
+    AutoLocalJNIFrame jniFrame(env, 0);
+
+    jobject context = env->CallStaticObjectMethod(mGeckoAppShellClass, jGetContext);
+    if (jniFrame.CheckForException()) {
+        return 0;
+    }
+
+    jobject globalRef = env->NewGlobalRef(context);
+    MOZ_ASSERT(globalRef);
+
+    return globalRef;
+}
+
 bool
 AndroidBridge::UnlockWindow(void* window)
 {
@@ -2558,54 +2580,3 @@ AndroidBridge::UnlockProfile()
     return ret;
 }
 
-extern "C" {
-  __attribute__ ((visibility("default")))
-  jclass
-  jsjni_FindClass(const char *className) {
-    JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) return NULL;
-    return env->FindClass(className);
-  }
-
-  __attribute__ ((visibility("default")))
-  jmethodID
-  jsjni_GetStaticMethodID(jclass methodClass,
-                    const char *methodName,
-                    const char *signature) {
-    JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) return NULL;
-    return env->GetStaticMethodID(methodClass, methodName, signature);
-  }
-
-  __attribute__ ((visibility("default")))
-  bool
-  jsjni_ExceptionCheck() {
-    JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) return NULL;
-    return env->ExceptionCheck();
-  }
-
-  __attribute__ ((visibility("default")))
-  void
-  jsjni_CallStaticVoidMethodA(jclass cls,
-                        jmethodID method,
-                        jvalue *values) {
-    JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) return;
-
-    AutoLocalJNIFrame jniFrame(env);
-    env->CallStaticVoidMethodA(cls, method, values);
-  }
-
-  __attribute__ ((visibility("default")))
-  int
-  jsjni_CallStaticIntMethodA(jclass cls,
-                       jmethodID method,
-                       jvalue *values) {
-    JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) return -1;
-
-    AutoLocalJNIFrame jniFrame(env);
-    return env->CallStaticIntMethodA(cls, method, values);
-  }
-}
