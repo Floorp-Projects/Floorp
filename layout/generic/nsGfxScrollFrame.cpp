@@ -2128,15 +2128,14 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   nsDisplayListCollection set;
   {
-    DisplayListClipState::AutoSaveRestore saveClipState(aBuilder->ClipState());
-    DisplayItemClip clipOnStack;
+    DisplayListClipState::AutoSaveRestore clipState(aBuilder);
 
     if (usingDisplayport) {
       nsRect clip = displayPort + aBuilder->ToReferenceFrame(mOuter);
       if (mIsRoot) {
-        aBuilder->ClipState().ClipContentDescendants(clip, clipOnStack);
+        clipState.ClipContentDescendants(clip);
       } else {
-        aBuilder->ClipState().ClipContainingBlockDescendants(clip, nullptr, clipOnStack);
+        clipState.ClipContainingBlockDescendants(clip, nullptr);
       }
     } else {
       nsRect clip = mScrollPort + aBuilder->ToReferenceFrame(mOuter);
@@ -2148,12 +2147,11 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 #endif
         NS_ASSERTION(!mOuter->GetPaddingBoxBorderRadii(radii),
                      "Roots with radii not supported");
-        aBuilder->ClipState().ClipContentDescendants(clip, clipOnStack);
+        clipState.ClipContentDescendants(clip);
       } else {
         nscoord radii[8];
         bool haveRadii = mOuter->GetPaddingBoxBorderRadii(radii);
-        aBuilder->ClipState().ClipContainingBlockDescendants(clip,
-            haveRadii ? radii : nullptr, clipOnStack);
+        clipState.ClipContainingBlockDescendants(clip, haveRadii ? radii : nullptr);
       }
     }
 

@@ -383,11 +383,9 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     aBuilder->EnterPresShell(subdocRootFrame, dirty);
   }
 
-  DisplayListClipState::AutoSaveRestore saveClip(aBuilder->ClipState());
-  DisplayItemClip clipOnStack;
+  DisplayListClipState::AutoSaveRestore clipState(aBuilder);
   if (ShouldClipSubdocument()) {
-    aBuilder->ClipState().ClipContainingBlockDescendantsToContentBox(aBuilder, this,
-      clipOnStack);
+    clipState.ClipContainingBlockDescendantsToContentBox(aBuilder, this);
   }
 
   nsIScrollableFrame *sf = presShell->GetRootScrollFrameAsScrollable();
@@ -398,13 +396,13 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsDisplayList childItems;
 
   {
-    DisplayListClipState::AutoSaveRestore willClearClip(aBuilder->ClipState());
+    DisplayListClipState::AutoSaveRestore nestedClipState(aBuilder);
     if (needsOwnLayer) {
       // Clear current clip. There's no point in propagating it down, since
       // the layer we will construct will be clipped by the current clip.
       // In fact for nsDisplayZoom propagating it down would be incorrect since
       // nsDisplayZoom changes the meaning of appunits.
-      aBuilder->ClipState().Clear();
+      nestedClipState.Clear();
     }
 
     if (subdocRootFrame) {

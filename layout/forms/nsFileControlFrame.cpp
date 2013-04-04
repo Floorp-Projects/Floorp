@@ -357,9 +357,8 @@ nsFileControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   nsDisplayListCollection tempList;
   {
-    DisplayListClipState::AutoSaveRestore saveClipState(aBuilder->ClipState());
-    DisplayItemClip clipOnStack;
-    aBuilder->ClipState().ClipContainingBlockDescendants(clipRect, nullptr, clipOnStack);
+    DisplayListClipState::AutoSaveRestore clipState(aBuilder);
+    clipState.ClipContainingBlockDescendants(clipRect, nullptr);
 
     // Our background is inherited to the text input, and we don't really want to
     // paint it or out padding and borders (which we never have anyway, per

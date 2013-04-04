@@ -518,13 +518,12 @@ nsPageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   nsDisplayList content;
   {
-    DisplayListClipState::AutoSaveRestore saveClip(aBuilder->ClipState());
+    DisplayListClipState::AutoSaveRestore clipState(aBuilder);
 
-    DisplayItemClip clipOnStack;
     // Overwrite current clip, since we're going to wrap in a transform
     // and the current clip is no longer meaningful.
-    aBuilder->ClipState().Clear();
-    aBuilder->ClipState().ClipContainingBlockDescendants(clipRect, nullptr, clipOnStack);
+    clipState.Clear();
+    clipState.ClipContainingBlockDescendants(clipRect, nullptr);
 
     child->BuildDisplayListForStackingContext(aBuilder,
       child->GetVisualOverflowRectRelativeToSelf(), &content);
