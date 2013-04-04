@@ -12,7 +12,7 @@ var Appbar = {
   activeTileset: null,
 
   init: function Appbar_init() {
-    window.addEventListener('MozContextUIShow', this, false);
+    window.addEventListener('MozAppbarShowing', this, false);
     window.addEventListener('MozPrecisePointer', this, false);
     window.addEventListener('MozImprecisePointer', this, false);
     window.addEventListener('MozContextActionsChange', this, false);
@@ -26,7 +26,7 @@ var Appbar = {
 
   handleEvent: function Appbar_handleEvent(aEvent) {
     switch (aEvent.type) {
-      case 'MozContextUIShow':
+      case 'MozAppbarShowing':
         this._updatePinButton();
         this._updateStarButton();
         break;
