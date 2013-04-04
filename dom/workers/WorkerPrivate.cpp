@@ -1412,12 +1412,11 @@ public:
   ~WorkerJSRuntimeStats()
   {
     for (size_t i = 0; i != zoneStatsVector.length(); i++) {
-      free(zoneStatsVector[i].extra1);
+      delete static_cast<xpc::ZoneStatsExtras*>(zoneStatsVector[i].extra);
     }
 
     for (size_t i = 0; i != compartmentStatsVector.length(); i++) {
-      free(compartmentStatsVector[i].extra1);
-      // No need to free |extra2| because it's a static string.
+      delete static_cast<xpc::CompartmentStatsExtras*>(compartmentStatsVector[i].extra);
     }
   }
 
@@ -1426,14 +1425,14 @@ public:
                      JS::ZoneStats* aZoneStats)
                      MOZ_OVERRIDE
   {
-    MOZ_ASSERT(!aZoneStats->extra1);
+    MOZ_ASSERT(!aZoneStats->extra);
 
     // ReportJSRuntimeExplicitTreeStats expects that
-    // aZoneStats->extra1 is a char pointer.
-
-    nsAutoCString pathPrefix(mRtPath);
-    pathPrefix += nsPrintfCString("zone(%p)/", (void *)aZone);
-    aZoneStats->extra1 = strdup(pathPrefix.get());
+    // aZoneStats->extra is a xpc::ZoneStatsExtras pointer.
+    xpc::ZoneStatsExtras* extras = new xpc::ZoneStatsExtras;
+    extras->pathPrefix = mRtPath;
+    extras->pathPrefix += nsPrintfCString("zone(%p)/", (void *)aZone);
+    aZoneStats->extra = extras;
   }
 
   virtual void
@@ -1441,25 +1440,25 @@ public:
                             JS::CompartmentStats* aCompartmentStats)
                             MOZ_OVERRIDE
   {
-    MOZ_ASSERT(!aCompartmentStats->extra1);
-    MOZ_ASSERT(!aCompartmentStats->extra2);
+    MOZ_ASSERT(!aCompartmentStats->extra);
 
     // ReportJSRuntimeExplicitTreeStats expects that
-    // aCompartmentStats->{extra1,extra2} are char pointers.
+    // aCompartmentStats->extra is a xpc::CompartmentStatsExtras pointer.
+    xpc::CompartmentStatsExtras* extras = new xpc::CompartmentStatsExtras;
 
-    // This is the |cJSPathPrefix|.  Each worker has exactly two compartments:
+    // This is the |jsPathPrefix|.  Each worker has exactly two compartments:
     // one for atoms, and one for everything else.
-    nsAutoCString cJSPathPrefix(mRtPath);
-    cJSPathPrefix += nsPrintfCString("zone(%p)/",
-                                     (void *)js::GetCompartmentZone(aCompartment));
-    cJSPathPrefix += js::IsAtomsCompartment(aCompartment)
-                   ? NS_LITERAL_CSTRING("compartment(web-worker-atoms)/")
-                   : NS_LITERAL_CSTRING("compartment(web-worker)/");
-    aCompartmentStats->extra1 = strdup(cJSPathPrefix.get());
+    extras->jsPathPrefix.Assign(mRtPath);
+    extras->jsPathPrefix += nsPrintfCString("zone(%p)/",
+                                            (void *)js::GetCompartmentZone(aCompartment));
+    extras->jsPathPrefix += js::IsAtomsCompartment(aCompartment)
+                            ? NS_LITERAL_CSTRING("compartment(web-worker-atoms)/")
+                            : NS_LITERAL_CSTRING("compartment(web-worker)/");
 
     // This should never be used when reporting with workers (hence the "?!").
-    static const char bogusMemoryReporterPath[] = "explicit/workers/?!/";
-    aCompartmentStats->extra2 = const_cast<char*>(bogusMemoryReporterPath);
+    extras->domPathPrefix.AssignLiteral("explicit/workers/?!/");
+
+    aCompartmentStats->extra = extras;
   }
 };
 

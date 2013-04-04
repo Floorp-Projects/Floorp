@@ -388,8 +388,40 @@ bool
 DOM_DefineQuickStubs(JSContext *cx, JSObject *proto, uint32_t flags,
                      uint32_t interfaceCount, const nsIID **interfaceArray);
 
+
+// ReportJSRuntimeExplicitTreeStats will expect this in the |extra| member
+// of JS::ZoneStats.
+class ZoneStatsExtras {
+public:
+    ZoneStatsExtras()
+    {}
+
+    nsAutoCString pathPrefix;
+
+private:
+    ZoneStatsExtras(const ZoneStatsExtras &other) MOZ_DELETE;
+    ZoneStatsExtras& operator=(const ZoneStatsExtras &other) MOZ_DELETE;
+};
+
+// ReportJSRuntimeExplicitTreeStats will expect this in the |extra| member
+// of JS::CompartmentStats.
+class CompartmentStatsExtras {
+public:
+    CompartmentStatsExtras()
+    {}
+
+    nsAutoCString jsPathPrefix;
+    nsAutoCString domPathPrefix;
+
+private:
+    CompartmentStatsExtras(const CompartmentStatsExtras &other) MOZ_DELETE;
+    CompartmentStatsExtras& operator=(const CompartmentStatsExtras &other) MOZ_DELETE;
+};
+
 // This reports all the stats in |rtStats| that belong in the "explicit" tree,
 // (which isn't all of them).
+// @see ZoneStatsExtras
+// @see CompartmentStatsExtras
 nsresult
 ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
                                  const nsACString &rtPath,
