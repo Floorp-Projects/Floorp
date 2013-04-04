@@ -3271,7 +3271,7 @@ MOZ_ARG_ENABLE_STRING(debug,
                            (using compiler flags DBG)],
 [ if test "$enableval" != "no"; then
     MOZ_DEBUG=1
-    if test "$ENABLE_METHODJIT"; then
+    if test "$ENABLE_METHODJIT" -o "$ENABLE_YARR_JIT"; then
          # needs MethodJIT or YarrJIT
          ENABLE_METHODJIT_SPEW=1
     fi
