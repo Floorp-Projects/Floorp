@@ -183,7 +183,7 @@ class IonBaselineStubFrameLayout : public IonCommonFrameLayout
         return -int(2 * sizeof(void *));
     }
 
-    inline ICStub *stubPtr() {
+    inline ICStub *maybeStubPtr() {
         uint8_t *fp = reinterpret_cast<uint8_t *>(this);
         return *reinterpret_cast<ICStub **>(fp + reverseOffsetOfStubPtr());
     }
