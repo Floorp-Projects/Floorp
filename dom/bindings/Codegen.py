@@ -7325,7 +7325,12 @@ class CGBindingRoot(CGThing):
         cgthings.extend([CGCallbackInterface(x) for x in callbackDescriptors])
 
         # Do codegen for JS implemented classes
-        for x in jsImplemented:
+        def getParentDescriptor(desc):
+            if not desc.interface.parent:
+                return set()
+            return { desc.getDescriptor(desc.interface.parent.identifier.name) }
+        for x in dependencySortObjects(jsImplemented, getParentDescriptor,
+                                       lambda d: d.interface.identifier.name):
             cgthings.append(CGCallbackInterface(x))
             cgthings.append(CGJSImplClass(x))
 
