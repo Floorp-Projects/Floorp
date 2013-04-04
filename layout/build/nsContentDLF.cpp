@@ -42,9 +42,7 @@ static NS_DEFINE_CID(kPluginDocumentCID, NS_PLUGINDOCUMENT_CID);
 static NS_DEFINE_IID(kHTMLDocumentCID, NS_HTMLDOCUMENT_CID);
 static NS_DEFINE_IID(kXMLDocumentCID, NS_XMLDOCUMENT_CID);
 static NS_DEFINE_IID(kSVGDocumentCID, NS_SVGDOCUMENT_CID);
-#ifdef MOZ_MEDIA
 static NS_DEFINE_IID(kVideoDocumentCID, NS_VIDEODOCUMENT_CID);
-#endif
 static NS_DEFINE_IID(kImageDocumentCID, NS_IMAGEDOCUMENT_CID);
 static NS_DEFINE_IID(kXULDocumentCID, NS_XULDOCUMENT_CID);
 
@@ -246,14 +244,12 @@ nsContentDLF::CreateInstance(const char* aCommand,
     }
   }
 
-#ifdef MOZ_MEDIA
   if (mozilla::DecoderTraits::ShouldHandleMediaType(aContentType)) {
     return CreateDocument(aCommand, 
                           aChannel, aLoadGroup,
                           aContainer, kVideoDocumentCID,
                           aDocListener, aDocViewer);
   }  
-#endif
 
   // Try image types
   if (IsImageContentType(aContentType)) {
