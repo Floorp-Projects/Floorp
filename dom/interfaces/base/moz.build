@@ -60,7 +60,7 @@ if CONFIG['MOZ_B2G']:
 
 if CONFIG['MOZ_WEBSPEECH']:
     XPIDL_SOURCES += [
-        'nsIDOMSpeechSynthesisGetter.idl'
+        'nsISpeechSynthesisGetter.idl'
     ]
 
 XPIDL_MODULE = 'dom_base'
