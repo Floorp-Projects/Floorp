@@ -14,24 +14,36 @@ function onContentLoaded()
   let outputNode = HUD.outputNode;
 
   let cssWarning = "Unknown property '-moz-opacity'.  Declaration dropped.";
+  let textFound = false;
+  let repeats = 0;
+
+  function displayResults()
+  {
+    ok(textFound, "css warning was found");
+    is(repeats, 2, "The unknown CSS property warning is displayed only once");
+  }
 
   waitForSuccess({
     name: "2 repeated CSS warnings",
-    validatorFn: function()
-    {
-      return outputNode.textContent.indexOf(cssWarning) > -1;
+    validatorFn: () => {
+      let node = outputNode.querySelector(".webconsole-msg-cssparser");
+      if (!node) {
+        return false;
+      }
+
+      textFound = node.textContent.indexOf(cssWarning) > -1;
+      repeats = node.querySelector(".webconsole-msg-repeat")
+                .getAttribute("value");
+      return textFound && repeats == 2;
     },
-    successFn: function()
-    {
-      let msg = "The unknown CSS property warning is displayed only once";
-      let node = outputNode.firstChild;
-
-      is(node.childNodes[2].textContent, cssWarning, "correct node");
-      is(node.childNodes[3].firstChild.getAttribute("value"), 2, msg);
-
+    successFn: () => {
+      displayResults();
       testConsoleLogRepeats();
     },
-    failureFn: finishTest,
+    failureFn: () => {
+      displayResults();
+      finishTest();
+    },
   });
 }
 
