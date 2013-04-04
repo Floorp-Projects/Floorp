@@ -77,6 +77,7 @@ class nsSmallVoidArray;
 class nsDOMCaretPosition;
 class nsViewportInfo;
 class nsDOMEvent;
+class nsIGlobalObject;
 
 namespace mozilla {
 class ErrorResult;
@@ -110,8 +111,8 @@ typedef CallbackObjectHolder<NodeFilter, nsIDOMNodeFilter> NodeFilterHolder;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID \
-{ 0x2adedf2, 0x8d85, 0x4a38, \
-  { 0xb6, 0x38, 0x91, 0xf4, 0xd2, 0xa4, 0x9b, 0x36 } }
+{ 0x8f33bc23, 0x5625, 0x448a, \
+  { 0xb3, 0x38, 0xfe, 0x88, 0x16, 0xe, 0xb3, 0xdb } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -806,7 +807,8 @@ public:
    * document is truly gone. Use this object when you're trying to find a
    * content wrapper in XPConnect.
    */
-  virtual nsIScriptGlobalObject* GetScopeObject() const = 0;
+  virtual nsIGlobalObject* GetScopeObject() const = 0;
+  virtual void SetScopeObject(nsIGlobalObject* aGlobal) = 0;
 
   /**
    * Return the window containing the document (the outer window).
@@ -1908,7 +1910,7 @@ public:
   }
 
   // WebIDL API
-  nsIScriptGlobalObject* GetParentObject() const
+  nsIGlobalObject* GetParentObject() const
   {
     return GetScopeObject();
   }

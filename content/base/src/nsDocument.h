@@ -637,8 +637,8 @@ public:
 
   virtual void SetScriptHandlingObject(nsIScriptGlobalObject* aScriptObject);
 
-  virtual nsIScriptGlobalObject* GetScopeObject() const;
-
+  virtual nsIGlobalObject* GetScopeObject() const;
+  void SetScopeObject(nsIGlobalObject* aGlobal);
   /**
    * Get the script loader for this document
    */

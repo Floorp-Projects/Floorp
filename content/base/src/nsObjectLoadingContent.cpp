@@ -2609,7 +2609,7 @@ nsObjectLoadingContent::NotifyContentObjectWrapper()
   if (!doc)
     return;
 
-  nsIScriptGlobalObject *sgo = doc->GetScopeObject();
+  nsCOMPtr<nsIScriptGlobalObject> sgo =  do_QueryInterface(doc->GetScopeObject());
   if (!sgo)
     return;
 
