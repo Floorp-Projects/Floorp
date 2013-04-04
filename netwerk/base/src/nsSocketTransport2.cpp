@@ -420,14 +420,7 @@ nsSocketInputStream::AsyncWait(nsIInputStreamCallback *callback,
             //
             // build event proxy
             //
-            // failure to create an event proxy (most likely out of memory)
-            // shouldn't alter the state of the transport.
-            //
-            nsCOMPtr<nsIInputStreamCallback> temp;
-            nsresult rv = NS_NewInputStreamReadyEvent(getter_AddRefs(temp),
-                                                      callback, target);
-            if (NS_FAILED(rv)) return rv;
-            mCallback = temp;
+            mCallback = NS_NewInputStreamReadyEvent(callback, target);
         }
         else
             mCallback = callback;
@@ -657,14 +650,7 @@ nsSocketOutputStream::AsyncWait(nsIOutputStreamCallback *callback,
             //
             // build event proxy
             //
-            // failure to create an event proxy (most likely out of memory)
-            // shouldn't alter the state of the transport.
-            //
-            nsCOMPtr<nsIOutputStreamCallback> temp;
-            nsresult rv = NS_NewOutputStreamReadyEvent(getter_AddRefs(temp),
-                                                       callback, target);
-            if (NS_FAILED(rv)) return rv;
-            mCallback = temp;
+            mCallback = NS_NewOutputStreamReadyEvent(callback, target);
         }
         else
             mCallback = callback;
