@@ -10,9 +10,14 @@
 
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-bug-599725-response-headers.sjs";
 
-function performTest(lastFinishedRequest, aConsole)
+let loads = 0;
+function performTest(aRequest, aConsole)
 {
-  ok(lastFinishedRequest, "page load was logged");
+  loads++;
+  ok(aRequest, "page load was logged");
+  if (loads != 2) {
+    return;
+  }
 
   let headers = null;
 
@@ -26,10 +31,10 @@ function performTest(lastFinishedRequest, aConsole)
     return null;
   }
 
-  aConsole.webConsoleClient.getResponseHeaders(lastFinishedRequest.actor,
+  aConsole.webConsoleClient.getResponseHeaders(aRequest.actor,
     function (aResponse) {
       headers = aResponse.headers;
-      ok(headers, "we have the response headers");
+      ok(headers, "we have the response headers for reload");
 
       let contentType = readHeader("Content-Type");
       let contentLength = readHeader("Content-Length");
@@ -53,13 +58,19 @@ function performTest(lastFinishedRequest, aConsole)
 
 function test()
 {
-  addTab(TEST_URI);
+  addTab("data:text/plain;charset=utf8,hello world");
 
   browser.addEventListener("load", function onLoad() {
     browser.removeEventListener("load", onLoad, true);
-    executeSoon(() => openConsole(null, () => {
+    openConsole(null, () => {
       HUDService.lastFinishedRequestCallback = performTest;
-      content.location.reload();
-    }));
+
+      browser.addEventListener("load", function onReload() {
+        browser.removeEventListener("load", onReload, true);
+        executeSoon(() => content.location.reload());
+      }, true);
+
+      executeSoon(() => content.location = TEST_URI);
+    });
   }, true);
 }
