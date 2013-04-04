@@ -301,8 +301,13 @@ class JSFunction : public JSObject
         return !!(flags & EXTENDED);
     }
 
-    /* Accessors for data stored in extended functions. */
+    /*
+     * Accessors for data stored in extended functions. Use setExtendedSlot if
+     * the function has already been initialized. Otherwise use
+     * initExtendedSlot.
+     */
     inline void initializeExtended();
+    inline void initExtendedSlot(size_t which, const js::Value &val);
     inline void setExtendedSlot(size_t which, const js::Value &val);
     inline const js::Value &getExtendedSlot(size_t which) const;
 

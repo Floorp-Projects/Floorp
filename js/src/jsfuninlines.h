@@ -92,6 +92,13 @@ JSFunction::initializeExtended()
 }
 
 inline void
+JSFunction::initExtendedSlot(size_t which, const js::Value &val)
+{
+    JS_ASSERT(which < mozilla::ArrayLength(toExtended()->extendedSlots));
+    toExtended()->extendedSlots[which].init(val);
+}
+
+inline void
 JSFunction::setExtendedSlot(size_t which, const js::Value &val)
 {
     JS_ASSERT(which < mozilla::ArrayLength(toExtended()->extendedSlots));
