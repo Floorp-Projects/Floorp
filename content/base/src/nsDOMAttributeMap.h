@@ -138,7 +138,7 @@ public:
    */
   uint32_t Enumerate(AttrCache::EnumReadFunction aFunc, void *aUserArg) const;
 
-  mozilla::dom::Attr* GetItemAt(uint32_t aIndex, nsresult *rv);
+  mozilla::dom::Attr* GetItemAt(uint32_t aIndex);
   mozilla::dom::Attr* GetNamedItem(const nsAString& aAttrName);
 
   static nsDOMAttributeMap* FromSupports(nsISupports* aSupports)
@@ -161,8 +161,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS(nsDOMAttributeMap)
 
   mozilla::dom::Attr* GetNamedItemNS(const nsAString& aNamespaceURI,
-                                 const nsAString& aLocalName,
-                                 mozilla::ErrorResult& aError);
+                                 const nsAString& aLocalName);
 
   already_AddRefed<mozilla::dom::Attr> SetNamedItemNS(nsIDOMAttr *aNode,
                                                   mozilla::ErrorResult& aError)
@@ -191,8 +190,7 @@ private:
 
   already_AddRefed<nsINodeInfo>
   GetAttrNodeInfo(const nsAString& aNamespaceURI,
-                  const nsAString& aLocalName,
-                  mozilla::ErrorResult& aError);
+                  const nsAString& aLocalName);
 
   mozilla::dom::Attr* GetAttribute(nsINodeInfo* aNodeInfo, bool aNsAware);
 

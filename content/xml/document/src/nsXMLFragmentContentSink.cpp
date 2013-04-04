@@ -26,6 +26,7 @@
 #include "nsIDocShell.h"
 #include "nsScriptLoader.h"
 #include "mozilla/css/Loader.h"
+#include "mozilla/dom/ProcessingInstruction.h"
 
 using namespace mozilla::dom;
 
@@ -264,19 +265,14 @@ nsXMLFragmentContentSink::HandleProcessingInstruction(const PRUnichar *aTarget,
 {
   FlushText();
 
-  nsresult result = NS_OK;
   const nsDependentString target(aTarget);
   const nsDependentString data(aData);
 
-  nsCOMPtr<nsIContent> node;
+  nsRefPtr<ProcessingInstruction> node =
+    NS_NewXMLProcessingInstruction(mNodeInfoManager, target, data);
 
-  result = NS_NewXMLProcessingInstruction(getter_AddRefs(node),
-                                          mNodeInfoManager, target, data);
-  if (NS_SUCCEEDED(result)) {
-    // no special processing here.  that should happen when the fragment moves into the document
-    result = AddContentAsLeaf(node);
-  }
-  return result;
+  // no special processing here.  that should happen when the fragment moves into the document
+  return AddContentAsLeaf(node);
 }
 
 NS_IMETHODIMP

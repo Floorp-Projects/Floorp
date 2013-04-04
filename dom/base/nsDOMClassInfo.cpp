@@ -6337,10 +6337,11 @@ nsISupports*
 nsNamedNodeMapSH::GetItemAt(nsISupports *aNative, uint32_t aIndex,
                             nsWrapperCache **aCache, nsresult *aResult)
 {
+  *aResult = NS_OK;
   nsDOMAttributeMap* map = nsDOMAttributeMap::FromSupports(aNative);
 
   nsINode *attr;
-  *aCache = attr = map->GetItemAt(aIndex, aResult);
+  *aCache = attr = map->GetItemAt(aIndex);
   return attr;
 }
 

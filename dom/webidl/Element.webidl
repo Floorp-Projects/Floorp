@@ -141,7 +141,6 @@ interface Element : Node {
   Attr? setAttributeNode(Attr newAttr);
   [Throws]
   Attr? removeAttributeNode(Attr oldAttr);
-  [Throws]
   Attr? getAttributeNodeNS(DOMString? namespaceURI, DOMString localName);
   [Throws]
   Attr? setAttributeNodeNS(Attr newAttr);
