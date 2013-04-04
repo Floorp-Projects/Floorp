@@ -12,7 +12,7 @@ interface nsIPrincipal;
 interface nsIScriptContext;
 interface nsIURI;
 interface nsIVariant;
-interface nsPIDOMWindow;
+interface nsIGlobalObject;
 interface nsIInputStream;
 interface nsIDOMBlob;
 
@@ -79,7 +79,7 @@ interface nsIXMLHttpRequestUpload : nsIXMLHttpRequestEventTarget {
  * you're aware of all the security implications.  And then think twice about
  * it.
  */
-[scriptable, uuid(cd31a34e-71b5-4bea-8366-c926de9d3d62)]
+[scriptable, uuid(977f1406-416a-40ac-ab89-ccd7ca0622ea)]
 interface nsIXMLHttpRequest : nsISupports
 {
   /**
@@ -301,13 +301,16 @@ interface nsIXMLHttpRequest : nsISupports
    *                  null.
    * @param scriptContext The script context to use for the request. May be
    *                      null.
-   * @param ownerWindow The associated window for the request. May be null.
+   * @param globalObject The associated global for the request. Can be the
+   *                     outer window, a sandbox, or a backstage pass.
+   *                     May be null, but then the request cannot create a
+   *                     document.
    * @param baseURI The base URI to use when resolving relative URIs. May be
    *                null.
    */
   [noscript] void init(in nsIPrincipal principal,
                        in nsIScriptContext scriptContext,
-                       in nsPIDOMWindow ownerWindow,
+                       in nsIGlobalObject globalObject,
                        in nsIURI baseURI);
 
   /**
