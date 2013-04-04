@@ -297,6 +297,7 @@ PushService.prototype = {
         Services.obs.addObserver(this,
                                  "network-interface-state-changed",
                                  false);
+        Services.obs.addObserver(this, "webapps-uninstall", false);
         break;
       case "final-ui-startup":
         Services.obs.removeObserver(this, "final-ui-startup");
@@ -351,6 +352,34 @@ PushService.prototype = {
         else if (aSubject == this._retryTimeoutTimer) {
           this._beginWSSetup();
         }
+        break;
+      case "webapps-uninstall":
+        debug("webapps-uninstall");
+        let appsService = Cc["@mozilla.org/AppsService;1"]
+                            .getService(Ci.nsIAppsService);
+        var app = appsService.getAppFromObserverMessage(aData);
+        if (!app) {
+          debug("webapps-uninstall: No app found " + aData.origin);
+          return;
+        }
+
+        this._db.getAllByManifestURL(app.manifestURL, function(records) {
+          debug("Got " + records.length);
+          for (var i = 0; i < records.length; i++) {
+            this._db.delete(records[i].channelID, null, function() {
+              debug("app uninstall: " + app.manifestURL + " Could not delete entry " + records[i].channelID);
+            });
+            // courtesy, but don't establish a connection
+            // just for it
+            if (this._ws) {
+              debug("Had a connection, so telling the server");
+              this._request("unregister", {channelID: records[i].channelID});
+            }
+          }
+        }.bind(this), function() {
+          debug("Error in getAllByManifestURL: url " + app.manifestURL);
+        });
+
     }
   },
 
