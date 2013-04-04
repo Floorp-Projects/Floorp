@@ -2929,7 +2929,7 @@ nsContentUtils::NameChanged(nsINodeInfo* aNodeInfo, nsIAtom* aName,
                                 aNodeInfo->NamespaceID(),
                                 aNodeInfo->NodeType(),
                                 aNodeInfo->GetExtraName()).get();
-  return *aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  return NS_OK;
 }
 
 

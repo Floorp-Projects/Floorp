@@ -250,7 +250,6 @@ txMozillaTextOutput::createXHTMLElement(nsIAtom* aName,
     ni = mDocument->NodeInfoManager()->
         GetNodeInfo(aName, nullptr, kNameSpaceID_XHTML,
                     nsIDOMNode::ELEMENT_NODE);
-    NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
 
     return NS_NewHTMLElement(aResult, ni.forget(), NOT_FROM_PARSER);
 }

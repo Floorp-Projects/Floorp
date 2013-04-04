@@ -35,13 +35,9 @@ NS_NewXMLProcessingInstruction(nsIContent** aInstancePtrResult,
                                      nullptr, kNameSpaceID_None,
                                      nsIDOMNode::PROCESSING_INSTRUCTION_NODE,
                                      target);
-  NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
 
   ProcessingInstruction *instance =
     new ProcessingInstruction(ni.forget(), aData);
-  if (!instance) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   NS_ADDREF(*aInstancePtrResult = instance);
 

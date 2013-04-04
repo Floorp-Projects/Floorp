@@ -20,12 +20,8 @@ NS_NewXMLCDATASection(nsIContent** aInstancePtrResult,
   ni = aNodeInfoManager->GetNodeInfo(nsGkAtoms::cdataTagName,
                                      nullptr, kNameSpaceID_None,
                                      nsIDOMNode::CDATA_SECTION_NODE);
-  NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
 
   CDATASection *instance = new CDATASection(ni.forget());
-  if (!instance) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   NS_ADDREF(*aInstancePtrResult = instance);
 

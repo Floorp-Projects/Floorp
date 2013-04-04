@@ -1829,7 +1829,6 @@ Element::SetAttrAndNotify(int32_t aNamespaceID,
     ni = mNodeInfo->NodeInfoManager()->GetNodeInfo(aName, aPrefix,
                                                    aNamespaceID,
                                                    nsIDOMNode::ATTRIBUTE_NODE);
-    NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
 
     rv = mAttrsAndChildren.SetAndTakeAttr(ni, aParsedValue);
   }
