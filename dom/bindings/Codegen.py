@@ -3921,8 +3921,9 @@ if (global.Failed()) {
 """ % globalObjectType))
             argsPre.append("global")
 
-        needsCx = needCx(returnType, arguments, self.extendedAttributes,
-                         descriptor)
+        needsCx = (not descriptor.interface.isJSImplemented() and
+                   needCx(returnType, arguments, self.extendedAttributes,
+                          descriptor))
         if needsCx and not (static and descriptor.workers):
             argsPre.append("cx")
 
@@ -8005,7 +8006,8 @@ class CGJSImplMethod(CGNativeMember):
                                 signature,
                                 descriptor.getExtendedAttributes(method),
                                 breakAfter=breakAfter,
-                                variadicIsSequence=True)
+                                variadicIsSequence=True,
+                                passCxAsNeeded=False)
         self.signature = signature
         if isConstructor:
             self.body = self.getConstructorImpl()
@@ -8068,7 +8070,8 @@ class CGJSImplGetter(CGNativeMember):
                                                                    attr),
                                 (attr.type, []),
                                 descriptor.getExtendedAttributes(attr,
-                                                                 getter=True))
+                                                                 getter=True),
+                                passCxAsNeeded=False)
         self.body = self.getImpl()
 
     def getImpl(self):
@@ -8083,7 +8086,8 @@ class CGJSImplSetter(CGNativeMember):
                                 (BuiltinTypes[IDLBuiltinType.Types.void],
                                  [FakeArgument(attr.type, attr)]),
                                 descriptor.getExtendedAttributes(attr,
-                                                                 setter=True))
+                                                                 setter=True),
+                                passCxAsNeeded=False)
         self.body = self.getImpl()
 
     def getImpl(self):
