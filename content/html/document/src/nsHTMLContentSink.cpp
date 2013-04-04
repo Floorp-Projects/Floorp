@@ -81,6 +81,7 @@
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
 #include "mozAutoDocUpdate.h"
+#include "nsTextNode.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1166,10 +1167,8 @@ SinkContext::FlushText(bool* aDidFlush, bool aReleaseLast)
         didFlush = true;
       }
     } else {
-      nsCOMPtr<nsIContent> textContent;
-      rv = NS_NewTextNode(getter_AddRefs(textContent),
-                          mSink->mNodeInfoManager);
-      NS_ENSURE_SUCCESS(rv, rv);
+      nsRefPtr<nsTextNode> textContent =
+        new nsTextNode(mSink->mNodeInfoManager);
 
       mLastTextNode = textContent;
 

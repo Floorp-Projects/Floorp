@@ -56,6 +56,7 @@
 #include "nsContentList.h"
 #include "mozilla/Likely.h"
 #include <algorithm>
+#include "nsTextNode.h"
 
 using namespace mozilla;
 
@@ -1191,9 +1192,7 @@ nsComboboxControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 
   nsNodeInfoManager *nimgr = mContent->NodeInfo()->NodeInfoManager();
 
-  NS_NewTextNode(getter_AddRefs(mDisplayContent), nimgr);
-  if (!mDisplayContent)
-    return NS_ERROR_OUT_OF_MEMORY;
+  mDisplayContent = new nsTextNode(nimgr);
 
   // set the value of the text node
   mDisplayedIndex = mListControlFrame->GetSelectedIndex();

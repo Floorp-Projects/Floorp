@@ -89,6 +89,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/XULDocumentBinding.h"
 #include "mozilla/Preferences.h"
+#include "nsTextNode.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -3049,10 +3050,8 @@ XULDocument::ResumeWalk()
                     // This does mean that text nodes that are direct children
                     // of <overlay> get ignored.
 
-                    nsCOMPtr<nsIContent> text;
-                    rv = NS_NewTextNode(getter_AddRefs(text),
-                                        mNodeInfoManager);
-                    NS_ENSURE_SUCCESS(rv, rv);
+                    nsRefPtr<nsTextNode> text =
+                        new nsTextNode(mNodeInfoManager);
 
                     nsXULPrototypeText* textproto =
                         static_cast<nsXULPrototypeText*>(childproto);

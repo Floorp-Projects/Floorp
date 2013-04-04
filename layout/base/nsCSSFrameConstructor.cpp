@@ -125,6 +125,7 @@
 #include "nsRefreshDriver.h"
 #include "nsRuleProcessorData.h"
 #include "GeckoProfiler.h"
+#include "nsTextNode.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1526,17 +1527,10 @@ nsCSSFrameConstructor::CreateGenConTextNode(nsFrameConstructorState& aState,
                                             nsCOMPtr<nsIDOMCharacterData>* aText,
                                             nsGenConInitializer* aInitializer)
 {
-  nsCOMPtr<nsIContent> content;
-  NS_NewTextNode(getter_AddRefs(content), mDocument->NodeInfoManager());
-  if (!content) {
-    // XXX The quotes/counters code doesn't like the text pointer
-    // being null in case of dynamic changes!
-    NS_ASSERTION(!aText, "this OOM case isn't handled very well");
-    return nullptr;
-  }
+  nsRefPtr<nsTextNode> content = new nsTextNode(mDocument->NodeInfoManager());
   content->SetText(aString, false);
   if (aText) {
-    *aText = do_QueryInterface(content);
+    *aText = content;
   }
   if (aInitializer) {
     content->SetProperty(nsGkAtoms::genConInitializerProperty, aInitializer,

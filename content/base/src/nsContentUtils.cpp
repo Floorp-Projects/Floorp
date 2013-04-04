@@ -157,6 +157,7 @@
 #include "nsSVGFeatures.h"
 #include "nsTextEditorState.h"
 #include "nsTextFragment.h"
+#include "nsTextNode.h"
 #include "nsThreadUtils.h"
 #include "nsUnicharUtilCIID.h"
 #include "nsUnicodeProperties.h"
@@ -4478,14 +4479,12 @@ nsContentUtils::SetNodeTextContent(nsIContent* aContent,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIContent> textContent;
-  nsresult rv = NS_NewTextNode(getter_AddRefs(textContent),
-                               aContent->NodeInfo()->NodeInfoManager());
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsRefPtr<nsTextNode> textContent =
+    new nsTextNode(aContent->NodeInfo()->NodeInfoManager());
 
   textContent->SetText(aValue, true);
 
-  rv = aContent->AppendChildTo(textContent, true);
+  nsresult rv = aContent->AppendChildTo(textContent, true);
   mb.NodesAdded();
   return rv;
 }

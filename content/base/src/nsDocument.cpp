@@ -4775,31 +4775,17 @@ nsIDocument::CreateElementNS(const nsAString& aNamespaceURI,
 NS_IMETHODIMP
 nsDocument::CreateTextNode(const nsAString& aData, nsIDOMText** aReturn)
 {
-  ErrorResult rv;
-  *aReturn = nsIDocument::CreateTextNode(aData, rv).get();
-  return rv.ErrorCode();
-}
-
-nsresult
-nsDocument::CreateTextNode(const nsAString& aData, nsIContent** aReturn)
-{
-  ErrorResult rv;
-  *aReturn = nsIDocument::CreateTextNode(aData, rv).get();
-  return rv.ErrorCode();
+  *aReturn = nsIDocument::CreateTextNode(aData).get();
+  return NS_OK;
 }
 
 already_AddRefed<nsTextNode>
-nsIDocument::CreateTextNode(const nsAString& aData, ErrorResult& rv) const
+nsIDocument::CreateTextNode(const nsAString& aData) const
 {
-  nsCOMPtr<nsIContent> content;
-  nsresult res = NS_NewTextNode(getter_AddRefs(content), mNodeInfoManager);
-  if (NS_FAILED(res)) {
-    rv.Throw(res);
-    return nullptr;
-  }
+  nsRefPtr<nsTextNode> text = new nsTextNode(mNodeInfoManager);
   // Don't notify; this node is still being created.
-  content->SetText(aData, false);
-  return static_cast<nsTextNode*>(content.forget().get());
+  text->SetText(aData, false);
+  return text.forget();
 }
 
 NS_IMETHODIMP

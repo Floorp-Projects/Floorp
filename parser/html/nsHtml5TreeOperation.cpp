@@ -38,6 +38,7 @@
 #include "nsNetUtil.h"
 #include "nsIHTMLDocument.h"
 #include "mozilla/Likely.h"
+#include "nsTextNode.h"
 
 namespace dom = mozilla::dom;
 
@@ -162,8 +163,7 @@ nsHtml5TreeOperation::AppendText(const PRUnichar* aBuffer,
                                 aBuilder);
   }
 
-  nsCOMPtr<nsIContent> text;
-  NS_NewTextNode(getter_AddRefs(text), aBuilder->GetNodeInfoManager());
+  nsRefPtr<nsTextNode> text = new nsTextNode(aBuilder->GetNodeInfoManager());
   NS_ASSERTION(text, "Infallible malloc failed?");
   rv = text->SetText(aBuffer, aLength, false);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -393,9 +393,8 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
                          : (aBuilder->BelongsToStringParser() ?
                             dom::FROM_PARSER_FRAGMENT :
                             dom::FROM_PARSER_DOCUMENT_WRITE)));
-          nsCOMPtr<nsIContent> optionText;
-          NS_NewTextNode(getter_AddRefs(optionText), 
-                         aBuilder->GetNodeInfoManager());
+          nsRefPtr<nsTextNode> optionText =
+            new nsTextNode(aBuilder->GetNodeInfoManager());
           (void) optionText->SetText(theContent[i], false);
           optionElt->AppendChildTo(optionText, false);
           newContent->AppendChildTo(optionElt, false);
@@ -498,8 +497,8 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
                                       aBuilder);
         }
         
-        nsCOMPtr<nsIContent> text;
-        NS_NewTextNode(getter_AddRefs(text), aBuilder->GetNodeInfoManager());
+        nsRefPtr<nsTextNode> text =
+          new nsTextNode(aBuilder->GetNodeInfoManager());
         NS_ASSERTION(text, "Infallible malloc failed?");
         rv = text->SetText(buffer, length, false);
         NS_ENSURE_SUCCESS(rv, rv);
