@@ -686,4 +686,32 @@ TransplantObjectWithWrapper(JSContext *cx,
     return newSameCompartmentWrapper;
 }
 
+nsIGlobalObject *
+GetNativeForGlobal(JSObject *obj)
+{
+    MOZ_ASSERT(JS_IsGlobalObject(obj));
+    if (!EnsureCompartmentPrivate(obj)->scope)
+        return nullptr;
+
+    // Every global needs to hold a native as its private.
+    MOZ_ASSERT(GetObjectClass(obj)->flags & (JSCLASS_PRIVATE_IS_NSISUPPORTS |
+                                             JSCLASS_HAS_PRIVATE));
+    nsISupports *native =
+        static_cast<nsISupports *>(js::GetObjectPrivate(obj));
+    MOZ_ASSERT(native);
+
+    // In some cases (like for windows) it is a wrapped native,
+    // in other cases (sandboxes, backstage passes) it's just
+    // a direct pointer to the native. If it's a wrapped native
+    // let's unwrap it first.
+    if (nsCOMPtr<nsIXPConnectWrappedNative> wn = do_QueryInterface(native)) {
+        native = wn->Native();
+    }
+
+    nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(native);
+    MOZ_ASSERT(global, "Native held by global needs to implement nsIGlobalObject!");
+
+    return global;
+}
+
 }
