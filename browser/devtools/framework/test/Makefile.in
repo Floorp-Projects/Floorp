@@ -23,6 +23,7 @@ MOCHITEST_BROWSER_FILES = \
 		browser_toolbox_sidebar.js \
 		browser_toolbox_window_shortcuts.js \
 		browser_toolbox_window_title_changes.js \
+		browser_toolbox_options.js \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
