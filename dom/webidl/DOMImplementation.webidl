@@ -23,5 +23,5 @@ interface DOMImplementation {
                           [TreatNullAs=EmptyString] DOMString qualifiedName,
                           DocumentType? doctype);
   [Throws]
-  Document createHTMLDocument(optional DOMString title);
+  Document createHTMLDocument(DOMString title);
 };
