@@ -177,7 +177,7 @@ public:
     if (aCols == 0) {
       aError.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     } else {
-      SetHTMLUnsignedIntAttr(nsGkAtoms::cols, aCols, aError);
+      SetUnsignedIntAttr(nsGkAtoms::cols, aCols, aError);
     }
   }
   bool Disabled()
@@ -237,7 +237,7 @@ public:
     if (aRows == 0) {
       aError.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     } else {
-      SetHTMLUnsignedIntAttr(nsGkAtoms::rows, aRows, aError);
+      SetUnsignedIntAttr(nsGkAtoms::rows, aRows, aError);
     }
   }
   // XPCOM GetWrap is fine
