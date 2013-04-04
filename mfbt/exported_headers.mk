@@ -17,6 +17,7 @@ EXPORTS_mozilla += \
   Compiler.h \
   Constants.h \
   DebugOnly.h \
+  Endian.h \
   EnumSet.h \
   FloatingPoint.h \
   GuardObjects.h \

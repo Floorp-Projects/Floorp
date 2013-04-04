@@ -296,6 +296,14 @@ EnableUniversalXPConnect(JSContext *cx)
     return nsXPCComponents::AttachComponentsObject(ccx, scope);
 }
 
+JSObject *
+GetJunkScope()
+{
+    XPCJSRuntime *self = nsXPConnect::GetRuntimeInstance();
+    NS_ENSURE_TRUE(self, nullptr);
+    return self->GetJunkScope();
+}
+
 }
 
 static void
@@ -2651,7 +2659,8 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    mWatchdogThread(nullptr),
    mWatchdogHibernating(false),
    mLastActiveTime(-1),
-   mExceptionManagerNotAvailable(false)
+   mExceptionManagerNotAvailable(false),
+   mJunkScope(nullptr)
 #ifdef DEBUG
    , mObjectToUnlink(nullptr)
 #endif
@@ -2999,4 +3008,37 @@ XPCJSRuntime::RemoveGCCallback(JSGCCallback cb)
     if (!found) {
         NS_ERROR("Removing a callback which was never added.");
     }
+}
+
+JSObject *
+XPCJSRuntime::GetJunkScope()
+{
+    if (!mJunkScope) {
+        JS::Value v;
+        SafeAutoJSContext cx;
+        SandboxOptions options;
+        options.sandboxName.AssignASCII("XPConnect Junk Compartment");
+        JSAutoRequest ac(cx);
+        nsresult rv = xpc_CreateSandboxObject(cx, &v,
+                                              nsContentUtils::GetSystemPrincipal(),
+                                              options);
+
+        NS_ENSURE_SUCCESS(rv, nullptr);
+
+        mJunkScope = js::UnwrapObject(&v.toObject());
+        JS_AddNamedObjectRoot(cx, &mJunkScope, "XPConnect Junk Compartment");
+    }
+    return mJunkScope;
+}
+
+void
+XPCJSRuntime::DeleteJunkScope()
+{
+    if(!mJunkScope)
+        return;
+
+    JSContext *cx = mJSContextStack->GetSafeJSContext();
+    JSAutoRequest ac(cx);
+    JS_RemoveObjectRoot(cx, &mJunkScope);
+    mJunkScope = nullptr;
 }

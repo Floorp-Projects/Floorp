@@ -26,8 +26,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDOMEventTargetHelper)
   if (MOZ_UNLIKELY(cb.WantDebugInfo())) {
     char name[512];
     nsAutoString uri;
-    if (tmp->mOwner && tmp->mOwner->GetExtantDocument()) {
-      tmp->mOwner->GetExtantDocument()->GetDocumentURI(uri);
+    if (tmp->mOwnerWindow && tmp->mOwnerWindow->GetExtantDocument()) {
+      tmp->mOwnerWindow->GetExtantDocument()->GetDocumentURI(uri);
     }
     PR_snprintf(name, sizeof(name), "nsDOMEventTargetHelper %s",
                 NS_ConvertUTF16toUTF8(uri).get());
@@ -77,8 +77,8 @@ NS_IMPL_DOMTARGET_DEFAULTS(nsDOMEventTargetHelper)
 
 nsDOMEventTargetHelper::~nsDOMEventTargetHelper()
 {
-  if (mOwner) {
-    static_cast<nsGlobalWindow*>(mOwner)->RemoveEventTargetObject(this);
+  if (nsPIDOMWindow* owner = GetOwner()) {
+    static_cast<nsGlobalWindow*>(owner)->RemoveEventTargetObject(this);
   }
   if (mListenerManager) {
     mListenerManager->Disconnect();
@@ -89,32 +89,51 @@ nsDOMEventTargetHelper::~nsDOMEventTargetHelper()
 void
 nsDOMEventTargetHelper::BindToOwner(nsPIDOMWindow* aOwner)
 {
-  if (mOwner) {
-    static_cast<nsGlobalWindow*>(mOwner)->RemoveEventTargetObject(this);
-    mOwner = nullptr;
-    mHasOrHasHadOwner = false;
+  nsCOMPtr<nsIGlobalObject> glob = do_QueryInterface(aOwner);
+  BindToOwner(glob);
+}
+
+void
+nsDOMEventTargetHelper::BindToOwner(nsIGlobalObject* aOwner)
+{
+  if (mParentObject) {
+    if (mOwnerWindow) {
+      static_cast<nsGlobalWindow*>(mOwnerWindow)->RemoveEventTargetObject(this);
+      mOwnerWindow = nullptr;
+    }
+    mParentObject = nullptr;
+    mHasOrHasHadOwnerWindow = false;
   }
   if (aOwner) {
-    mOwner = aOwner;
-    mHasOrHasHadOwner = true;
-    static_cast<nsGlobalWindow*>(mOwner)->AddEventTargetObject(this);
+    mParentObject = aOwner;
+    // Let's cache the result of this QI for fast access and off main thread usage
+    mOwnerWindow = nsCOMPtr<nsPIDOMWindow>(do_QueryInterface(aOwner)).get();
+    if (mOwnerWindow) {
+      mHasOrHasHadOwnerWindow = true;
+      static_cast<nsGlobalWindow*>(mOwnerWindow)->AddEventTargetObject(this);
+    }
   }
 }
 
 void
 nsDOMEventTargetHelper::BindToOwner(nsDOMEventTargetHelper* aOther)
 {
-  if (mOwner) {
-    static_cast<nsGlobalWindow*>(mOwner)->RemoveEventTargetObject(this);
-    mOwner = nullptr;
-    mHasOrHasHadOwner = false;
+  if (mOwnerWindow) {
+    static_cast<nsGlobalWindow*>(mOwnerWindow)->RemoveEventTargetObject(this);
+    mOwnerWindow = nullptr;
+    mParentObject = nullptr;
+    mHasOrHasHadOwnerWindow = false;
   }
   if (aOther) {
-    mHasOrHasHadOwner = aOther->HasOrHasHadOwner();
-    if (aOther->GetOwner()) {
-      mOwner = aOther->GetOwner();
-      mHasOrHasHadOwner = true;
-      static_cast<nsGlobalWindow*>(mOwner)->AddEventTargetObject(this);
+    mHasOrHasHadOwnerWindow = aOther->HasOrHasHadOwner();
+    if (aOther->GetParentObject()) {
+      mParentObject = aOther->GetParentObject();
+      // Let's cache the result of this QI for fast access and off main thread usage
+      mOwnerWindow = nsCOMPtr<nsPIDOMWindow>(do_QueryInterface(mParentObject)).get();
+      if (mOwnerWindow) {
+        mHasOrHasHadOwnerWindow = true;
+        static_cast<nsGlobalWindow*>(mOwnerWindow)->AddEventTargetObject(this);
+      }
     }
   }
 }
@@ -122,7 +141,8 @@ nsDOMEventTargetHelper::BindToOwner(nsDOMEventTargetHelper* aOther)
 void
 nsDOMEventTargetHelper::DisconnectFromOwner()
 {
-  mOwner = nullptr;
+  mOwnerWindow = nullptr;
+  mParentObject = nullptr;
   // Event listeners can't be handled anymore, so we can release them here.
   if (mListenerManager) {
     mListenerManager->Disconnect();
@@ -308,8 +328,9 @@ nsDOMEventTargetHelper::GetContextForEventHandlers(nsresult* aRv)
   if (NS_FAILED(*aRv)) {
     return nullptr;
   }
-  return mOwner ? static_cast<nsGlobalWindow*>(mOwner)->GetContextInternal()
-                : nullptr;
+  nsPIDOMWindow* owner = GetOwner();
+  return owner ? static_cast<nsGlobalWindow*>(owner)->GetContextInternal()
+               : nullptr;
 }
 
 void

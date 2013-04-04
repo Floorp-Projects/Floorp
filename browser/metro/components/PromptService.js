@@ -218,7 +218,7 @@ Prompt.prototype = {
 
     if (aCheck && aCheck.msg) {
       aDoc.getElementById("prompt-" + aType + "-checkbox").checked = aCheck.value;
-      this.setLabelForNode(aDoc.getElementById("prompt-" + aType + "-checkbox-label"), aCheck.msg);
+      this.setLabelForNode(aDoc.getElementById("prompt-" + aType + "-checkbox"), aCheck.msg);
       aDoc.getElementById("prompt-" + aType + "-checkbox").removeAttribute("collapsed");
     }
   },
