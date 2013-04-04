@@ -306,21 +306,19 @@ TabTarget.prototype = {
    * Setup listeners for remote debugging, updating existing ones as necessary.
    */
   _setupRemoteListeners: function TabTarget__setupRemoteListeners() {
+    // Reset any conflicting event handlers that were set before makeRemote().
+    if (this._webProgressListener) {
+      this._webProgressListener.destroy();
+    }
+
     this.client.addListener("tabDetached", this.destroy);
 
     this._onTabNavigated = function onRemoteTabNavigated(aType, aPacket) {
-      let event = Object.create(null);
-      event.url = aPacket.url;
-      event.title = aPacket.title;
-      // Send any stored event payload (DOMWindow or nsIRequest) for backwards
-      // compatibility with non-remotable tools.
-      event._navPayload = this._navPayload;
       if (aPacket.state == "start") {
-        this.emit("will-navigate", event);
+        this.emit("will-navigate", aPacket);
       } else {
-        this.emit("navigate", event);
+        this.emit("navigate", aPacket);
       }
-      this._navPayload = null;
     }.bind(this);
     this.client.addListener("tabNavigated", this._onTabNavigated);
   },
@@ -379,10 +377,6 @@ TabTarget.prototype = {
     this.off("thread-paused", this._handleThreadState);
 
     if (this._tab) {
-      if (this._webProgressListener) {
-        this._webProgressListener.destroy();
-      }
-
       this._tab.ownerDocument.defaultView.removeEventListener("unload", this);
       this._tab.removeEventListener("TabClose", this);
       this._tab.parentNode.removeEventListener("TabSelect", this);
@@ -391,6 +385,10 @@ TabTarget.prototype = {
     // If this target was not remoted, the promise will be resolved before the
     // function returns.
     if (this._tab && !this._client) {
+      if (this._webProgressListener) {
+        this._webProgressListener.destroy();
+      }
+
       targets.delete(this._tab);
       this._tab = null;
       this._client = null;
@@ -456,13 +454,7 @@ TabWebProgressListener.prototype = {
 
     // emit event if the top frame is navigating
     if (this.target && this.target.window == progress.DOMWindow) {
-      // Emit the event if the target is not remoted or store the payload for
-      // later emission otherwise.
-      if (this.target._client) {
-        this.target._navPayload = request;
-      } else {
-        this.target.emit("will-navigate", request);
-      }
+      this.target.emit("will-navigate", request);
     }
   },
 
@@ -474,13 +466,7 @@ TabWebProgressListener.prototype = {
     if (this.target &&
         !(flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT)) {
       let window = webProgress.DOMWindow;
-      // Emit the event if the target is not remoted or store the payload for
-      // later emission otherwise.
-      if (this.target._client) {
-        this.target._navPayload = window;
-      } else {
-        this.target.emit("navigate", window);
-      }
+      this.target.emit("navigate", window);
     }
   },
 
