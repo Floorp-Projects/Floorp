@@ -117,31 +117,24 @@ nsHTMLButtonControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     mRenderer.DisplayButton(aBuilder, aLists.BorderBackground(), &onTop);
   }
 
-  bool overflowClip =
-    IsInput() || StyleDisplay()->mOverflowX != NS_STYLE_OVERFLOW_VISIBLE;
-  nsRect rect;
-  nscoord radii[8];  
   nsDisplayListCollection set;
 
-  {
-    DisplayListClipState::AutoSaveRestore saveClipState(aBuilder->ClipState());
-    DisplayItemClip overflowClipOnStack;
+  // Do not allow the child subtree to receive events.
+  if (!aBuilder->IsForEventDelivery()) {
+    DisplayListClipState::AutoSaveRestore clipState(aBuilder);
 
-    if (overflowClip) {
+    if (IsInput() || StyleDisplay()->mOverflowX != NS_STYLE_OVERFLOW_VISIBLE) {
       nsMargin border = StyleBorder()->GetComputedBorder();
-      rect = nsRect(aBuilder->ToReferenceFrame(this), GetSize());
+      nsRect rect(aBuilder->ToReferenceFrame(this), GetSize());
       rect.Deflate(border);
+      nscoord radii[8];
       bool hasRadii = GetPaddingBoxBorderRadii(radii);
-      aBuilder->ClipState().ClipContainingBlockDescendants(rect,
-          hasRadii ? radii : nullptr, overflowClipOnStack);
+      clipState.ClipContainingBlockDescendants(rect, hasRadii ? radii : nullptr);
     }
 
-    // Do not allow the child subtree to receive events.
-    if (!aBuilder->IsForEventDelivery()) {
-      BuildDisplayListForChild(aBuilder, mFrames.FirstChild(), aDirtyRect, set,
-                               DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT);
-      // That should put the display items in set.Content()
-    }
+    BuildDisplayListForChild(aBuilder, mFrames.FirstChild(), aDirtyRect, set,
+                             DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT);
+    // That should put the display items in set.Content()
   }
   
   // Put the foreground outline and focus rects on top of the children

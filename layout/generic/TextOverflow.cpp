@@ -102,25 +102,23 @@ IsHorizontalOverflowVisible(nsIFrame* aFrame)
 }
 
 static void
-ClipMarker(nsDisplayListBuilder* aBuilder,
-           nsIFrame*             aFrame,
-           const nsRect&         aContentArea,
-           const nsRect&         aMarkerRect,
-           DisplayItemClip&      aClipOnStack)
+ClipMarker(const nsRect&                          aContentArea,
+           const nsRect&                          aMarkerRect,
+           DisplayListClipState::AutoSaveRestore& aClipState)
 {
   nscoord rightOverflow = aMarkerRect.XMost() - aContentArea.XMost();
   nsRect markerRect = aMarkerRect;
   if (rightOverflow > 0) {
     // Marker overflows on the right side (content width < marker width).
     markerRect.width -= rightOverflow;
-    aBuilder->ClipState().ClipContentDescendants(markerRect, aClipOnStack);
+    aClipState.ClipContentDescendants(markerRect);
   } else {
     nscoord leftOverflow = aContentArea.x - aMarkerRect.x;
     if (leftOverflow > 0) {
       // Marker overflows on the left side
       markerRect.width -= leftOverflow;
       markerRect.x += leftOverflow;
-      aBuilder->ClipState().ClipContentDescendants(markerRect, aClipOnStack);
+      aClipState.ClipContentDescendants(markerRect);
     }
   }
 }
@@ -708,16 +706,14 @@ TextOverflow::CreateMarkers(const nsLineBox* aLine,
                             const nsRect&    aInsideMarkersArea)
 {
   if (aCreateLeft) {
-    DisplayListClipState::AutoSaveRestore saveClip(mBuilder->ClipState());
+    DisplayListClipState::AutoSaveRestore clipState(mBuilder);
 
     nsRect markerRect = nsRect(aInsideMarkersArea.x - mLeft.mIntrinsicWidth,
                                aLine->mBounds.y,
                                mLeft.mIntrinsicWidth, aLine->mBounds.height);
     markerRect += mBuilder->ToReferenceFrame(mBlock);
-    DisplayItemClip clipOnStack;
-    ClipMarker(mBuilder, mBlock,
-               mContentArea + mBuilder->ToReferenceFrame(mBlock),
-               markerRect, clipOnStack);
+    ClipMarker(mContentArea + mBuilder->ToReferenceFrame(mBlock),
+               markerRect, clipState);
     nsDisplayItem* marker = new (mBuilder)
       nsDisplayTextOverflowMarker(mBuilder, mBlock, markerRect,
                                   aLine->GetAscent(), mLeft.mStyle, 0);
@@ -725,16 +721,14 @@ TextOverflow::CreateMarkers(const nsLineBox* aLine,
   }
 
   if (aCreateRight) {
-    DisplayListClipState::AutoSaveRestore saveClip(mBuilder->ClipState());
+    DisplayListClipState::AutoSaveRestore clipState(mBuilder);
 
     nsRect markerRect = nsRect(aInsideMarkersArea.XMost(),
                                aLine->mBounds.y,
                                mRight.mIntrinsicWidth, aLine->mBounds.height);
     markerRect += mBuilder->ToReferenceFrame(mBlock);
-    DisplayItemClip clipOnStack;
-    ClipMarker(mBuilder, mBlock,
-               mContentArea + mBuilder->ToReferenceFrame(mBlock),
-               markerRect, clipOnStack);
+    ClipMarker(mContentArea + mBuilder->ToReferenceFrame(mBlock),
+               markerRect, clipState);
     nsDisplayItem* marker = new (mBuilder)
       nsDisplayTextOverflowMarker(mBuilder, mBlock, markerRect,
                                   aLine->GetAscent(), mRight.mStyle, 1);

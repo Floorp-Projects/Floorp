@@ -8,6 +8,8 @@
 
 #include "DisplayItemClip.h"
 
+#include "mozilla/DebugOnly.h"
+
 class nsIFrame;
 class nsDisplayListBuilder;
 
@@ -40,14 +42,23 @@ public:
     return mClipContentDescendants;
   }
 
+  class AutoSaveRestore;
+  friend class AutoSaveRestore;
+
+  class AutoClipContainingBlockDescendantsToContentBox;
+  friend class AutoClipContainingBlockDescendantsToContentBox;
+
+  class AutoClipMultiple;
+  friend class AutoClipMultiple;
+
+  enum {
+    ASSUME_DRAWING_RESTRICTED_TO_CONTENT_RECT = 0x01
+  };
+
+private:
   void SetClipForContainingBlockDescendants(const DisplayItemClip* aClip)
   {
     mClipContainingBlockDescendants = aClip;
-    mCurrentCombinedClip = nullptr;
-  }
-  void SetClipForContentDescendants(const DisplayItemClip* aClip)
-  {
-    mClipContentDescendants = aClip;
     mCurrentCombinedClip = nullptr;
   }
 
@@ -70,9 +81,6 @@ public:
   void ClipContentDescendants(const nsRect& aRect,
                               DisplayItemClip& aClipOnStack);
 
-  enum {
-    ASSUME_DRAWING_RESTRICTED_TO_CONTENT_RECT = 0x01
-  };
   /**
    * Clips containing-block descendants to the frame's content-box,
    * taking border-radius into account.
@@ -84,14 +92,8 @@ public:
   void ClipContainingBlockDescendantsToContentBox(nsDisplayListBuilder* aBuilder,
                                                   nsIFrame* aFrame,
                                                   DisplayItemClip& aClipOnStack,
-                                                  uint32_t aFlags = 0);
+                                                  uint32_t aFlags);
 
-  class AutoSaveRestore;
-  friend class AutoSaveRestore;
-
-  class AutoClipContainingBlockDescendantsToContentBox;
-
-private:
   /**
    * All content descendants (i.e. following placeholder frames to their
    * out-of-flows if necessary) should be clipped by mClipContentDescendants.
@@ -115,32 +117,130 @@ private:
   const DisplayItemClip* mCurrentCombinedClip;
 };
 
+/**
+ * A class to automatically save and restore the current clip state. Also
+ * offers methods for modifying the clip state. Only one modification is allowed
+ * to be in scope at a time using one of these objects; multiple modifications
+ * require nested objects. The interface is written this way to prevent
+ * dangling pointers to DisplayItemClips.
+ */
 class DisplayListClipState::AutoSaveRestore {
 public:
-  AutoSaveRestore(DisplayListClipState& aState)
-    : mState(aState)
-    , mSavedState(aState)
-  {}
+  AutoSaveRestore(nsDisplayListBuilder* aBuilder);
   void Restore()
   {
     mState = mSavedState;
+    mRestored = true;
   }
   ~AutoSaveRestore()
   {
     mState = mSavedState;
   }
+
+  void Clear()
+  {
+    NS_ASSERTION(!mRestored, "Already restored!");
+    mState.Clear();
+    mClipUsed = false;
+  }
+
+  /**
+   * Intersects the given clip rect (with optional aRadii) with the current
+   * mClipContainingBlockDescendants and sets mClipContainingBlockDescendants to
+   * the result, stored in aClipOnStack.
+   */
+  void ClipContainingBlockDescendants(const nsRect& aRect,
+                                      const nscoord* aRadii)
+  {
+    NS_ASSERTION(!mRestored, "Already restored!");
+    NS_ASSERTION(!mClipUsed, "mClip already used");
+    mClipUsed = true;
+    mState.ClipContainingBlockDescendants(aRect, aRadii, mClip);
+  }
+
+  void ClipContentDescendants(const nsRect& aRect)
+  {
+    NS_ASSERTION(!mRestored, "Already restored!");
+    NS_ASSERTION(!mClipUsed, "mClip already used");
+    mClipUsed = true;
+    mState.ClipContentDescendants(aRect, mClip);
+  }
+
+  /**
+   * Clips containing-block descendants to the frame's content-box,
+   * taking border-radius into account.
+   * If aFlags contains ASSUME_DRAWING_RESTRICTED_TO_CONTENT_RECT then
+   * we assume display items will not draw outside the content rect, so
+   * clipping is only required if there is a border-radius. This is an
+   * optimization to reduce the amount of clipping required.
+   */
+  void ClipContainingBlockDescendantsToContentBox(nsDisplayListBuilder* aBuilder,
+                                                  nsIFrame* aFrame,
+                                                  uint32_t aFlags = 0)
+  {
+    NS_ASSERTION(!mRestored, "Already restored!");
+    NS_ASSERTION(!mClipUsed, "mClip already used");
+    mClipUsed = true;
+    mState.ClipContainingBlockDescendantsToContentBox(aBuilder, aFrame, mClip, aFlags);
+  }
+
 protected:
   DisplayListClipState& mState;
   DisplayListClipState mSavedState;
+  DisplayItemClip mClip;
+  DebugOnly<bool> mClipUsed;
+  DebugOnly<bool> mRestored;
 };
 
 class DisplayListClipState::AutoClipContainingBlockDescendantsToContentBox : public AutoSaveRestore {
 public:
   AutoClipContainingBlockDescendantsToContentBox(nsDisplayListBuilder* aBuilder,
                                                  nsIFrame* aFrame,
-                                                 uint32_t aFlags = 0);
+                                                 uint32_t aFlags = 0)
+    : AutoSaveRestore(aBuilder)
+  {
+    mClipUsed = true;
+    mState.ClipContainingBlockDescendantsToContentBox(aBuilder, aFrame, mClip, aFlags);
+  }
+};
+
+/**
+ * Do not use this outside of nsFrame::BuildDisplayListForChild, use
+ * multiple AutoSaveRestores instead. We provide this class just to ensure
+ * BuildDisplayListForChild is as efficient as possible.
+ */
+class DisplayListClipState::AutoClipMultiple : public AutoSaveRestore {
+public:
+  AutoClipMultiple(nsDisplayListBuilder* aBuilder)
+    : AutoSaveRestore(aBuilder)
+    , mExtraClipUsed(false)
+  {}
+
+  /**
+   * *aClip must survive longer than this object. Be careful!!!
+   */
+  void SetClipForContainingBlockDescendants(const DisplayItemClip* aClip)
+  {
+    mState.SetClipForContainingBlockDescendants(aClip);
+  }
+
+  /**
+   * Intersects the given clip rect (with optional aRadii) with the current
+   * mClipContainingBlockDescendants and sets mClipContainingBlockDescendants to
+   * the result, stored in aClipOnStack.
+   */
+  void ClipContainingBlockDescendantsExtra(const nsRect& aRect,
+                                           const nscoord* aRadii)
+  {
+    NS_ASSERTION(!mRestored, "Already restored!");
+    NS_ASSERTION(!mExtraClipUsed, "mExtraClip already used");
+    mExtraClipUsed = true;
+    mState.ClipContainingBlockDescendants(aRect, aRadii, mExtraClip);
+  }
+
 protected:
-  DisplayItemClip mClip;
+  DisplayItemClip mExtraClip;
+  DebugOnly<bool> mExtraClipUsed;
 };
 
 }
