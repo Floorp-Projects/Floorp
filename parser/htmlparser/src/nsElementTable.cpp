@@ -43,9 +43,7 @@ DECL_TAG_LIST(gAreaParent,{eHTMLTag_map})
 DECL_TAG_LIST(gParamParents,{eHTMLTag_applet COMMA eHTMLTag_object})
 DECL_TAG_LIST(gTRParents,{eHTMLTag_tbody COMMA eHTMLTag_tfoot COMMA eHTMLTag_thead COMMA eHTMLTag_table})
 DECL_TAG_LIST(gTREndParents,{eHTMLTag_tbody COMMA eHTMLTag_tfoot COMMA eHTMLTag_thead COMMA eHTMLTag_table COMMA eHTMLTag_applet})
-#ifdef MOZ_MEDIA
 DECL_TAG_LIST(gSourceParents,{eHTMLTag_video COMMA eHTMLTag_audio})
-#endif
 
 //*********************************************************************************************
 //  Next, define the set of taglists for tags with special kids...
@@ -90,10 +88,8 @@ DECL_TAG_LIST(gTableElemKids,{eHTMLTag_form COMMA eHTMLTag_noscript COMMA eHTMLT
 DECL_TAG_LIST(gTRKids,{eHTMLTag_td COMMA eHTMLTag_th COMMA eHTMLTag_form COMMA eHTMLTag_script})// Removed INPUT - Ref. Bug 20087, 25382 |  Removed MAP to fix 58942
 DECL_TAG_LIST(gTBodyKids,{eHTMLTag_tr COMMA eHTMLTag_form}) // Removed INPUT - Ref. Bug 20087, 25382
 DECL_TAG_LIST(gULKids,{eHTMLTag_li COMMA eHTMLTag_p})
-#ifdef MOZ_MEDIA
 DECL_TAG_LIST(gVideoKids,{eHTMLTag_source})
 DECL_TAG_LIST(gAudioKids,{eHTMLTag_source})
-#endif
 
 //*********************************************************************************************
 // The following tag lists are used to define common set of root notes for the HTML elements...
@@ -234,7 +230,6 @@ const nsHTMLElement gHTMLElements[] = {
     /*special props, prop-range*/       0,kDefaultPropRange,
     /*special parents,kids*/            0,0,
   },
-#if defined(MOZ_MEDIA)
   {
     /*tag*/                             eHTMLTag_audio,
     /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
@@ -244,7 +239,6 @@ const nsHTMLElement gHTMLElements[] = {
     /*special props, prop-range*/       0,kDefaultPropRange,
     /*special parents,kids*/            0,&gAudioKids,
   },
-#endif
   {
     /*tag*/                             eHTMLTag_b,
     /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
@@ -1074,7 +1068,6 @@ const nsHTMLElement gHTMLElements[] = {
     /*special props, prop-range*/       0, kDefaultPropRange,
     /*special parents,kids*/            0,0,
   },
-#if defined(MOZ_MEDIA)
   {
     /*tag*/                             eHTMLTag_source,
     /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
@@ -1084,7 +1077,6 @@ const nsHTMLElement gHTMLElements[] = {
     /*special props, prop-range*/       kNonContainer,kNoPropRange,
     /*special parents,kids*/            &gSourceParents,0,
   },
-#endif
   {
     
           // I made span a special% tag again, (instead of inline).
@@ -1282,7 +1274,6 @@ const nsHTMLElement gHTMLElements[] = {
     /*special props, prop-range*/       0,kDefaultPropRange,
     /*special parents,kids*/            0,0,
   },
-#if defined(MOZ_MEDIA)
   {
     /*tag*/                             eHTMLTag_video,
     /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
@@ -1292,7 +1283,6 @@ const nsHTMLElement gHTMLElements[] = {
     /*special props, prop-range*/       0,kDefaultPropRange,
     /*special parents,kids*/            0,&gVideoKids,
   },
-#endif
   {
     /*tag*/                             eHTMLTag_wbr,
     /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
