@@ -26,7 +26,8 @@ function runTests(findAndRunTests) {
         stdout.write("No tests were run\n");
       exit(0);
     } else {
-      printFailedTests(tests, cfxArgs.verbose, stdout.write);
+      if (cfxArgs.verbose || cfxArgs.parseable)
+        printFailedTests(tests, stdout.write);
       exit(1);
     }
   };
@@ -50,10 +51,7 @@ function runTests(findAndRunTests) {
   }, 0);
 }
 
-function printFailedTests(tests, verbose, print) {
-  if (!verbose)
-    return;
-
+function printFailedTests(tests, print) {
   let iterationNumber = 0;
   let singleIteration = tests.testRuns.length == 1;
   let padding = singleIteration ? "" : "  ";

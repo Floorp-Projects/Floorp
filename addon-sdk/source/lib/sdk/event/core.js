@@ -95,7 +95,8 @@ function emit(target, type, message /*, ...*/) {
  */
 emit.lazy = function lazy(target, type, message /*, ...*/) {
   let args = Array.slice(arguments, 2);
-  let listeners = observers(target, type).slice();
+  let state = observers(target, type);
+  let listeners = state.slice();
   let index = 0;
   let count = listeners.length;
 
@@ -103,7 +104,11 @@ emit.lazy = function lazy(target, type, message /*, ...*/) {
   // into a console.
   if (count === 0 && type === 'error') console.exception(message);
   while (index < count) {
-    try { yield listeners[index].apply(target, args); }
+    try {
+      let listener = listeners[index];
+      // Dispatch only if listener is still registered.
+      if (~state.indexOf(listener)) yield listener.apply(target, args);
+    }
     catch (error) {
       // If exception is not thrown by a error listener and error listener is
       // registered emit `error` event. Otherwise dump exception to the console.
