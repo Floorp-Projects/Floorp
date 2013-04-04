@@ -22,6 +22,8 @@ function LOG(str) {
   }
 }
 
+function ERROR(aMsg) Cu.reportError("[CustomizeMode] " + aMsg);
+
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource:///modules/CustomizableUI.jsm");
 
@@ -491,7 +493,13 @@ CustomizeMode.prototype = {
 
     // We need to determine the place that the widget is being dropped in
     // the target.
-    let position = Array.indexOf(targetParent.children, targetNode);
+    let placement = CustomizableUI.getPlacementOfWidget(targetNode.firstChild.id);
+    if (!placement) {
+      ERROR("Could not get a position for " + targetNode.firstChild.id);
+      return;
+    }
+
+    let position = placement.position;
 
     // Is the target area the customization palette? If so, we have two cases -
     // either the originArea was the palette, or a customizable area.
@@ -516,9 +524,15 @@ CustomizeMode.prototype = {
     // the possibility that the target is the customization palette, we know
     // that the widget is moving within a customizable area.
     if (targetArea === originArea) {
+      let properPlace = getPlaceForItem(targetNode);
+      // We unwrap the moving widget, as well as the widget that we're dropping
+      // on (the target) so that moveWidgetWithinArea can correctly insert the
+      // moving widget before the target widget.
       let widget = this.unwrapToolbarItem(draggedWrapper);
+      let targetWidget = this.unwrapToolbarItem(targetNode);
       CustomizableUI.moveWidgetWithinArea(draggedItemId, position);
-      this.wrapToolbarItem(widget, getPlaceForItem(targetNode));
+      this.wrapToolbarItem(targetWidget, properPlace);
+      this.wrapToolbarItem(widget, properPlace);
       return;
     }
 
@@ -528,10 +542,14 @@ CustomizeMode.prototype = {
 
     // A little hackery - we quickly unwrap the item and use CustomizableUI's
     // addWidgetToArea to move the widget to the right place for every window,
-    // then we re-wrap the widget.
+    // then we re-wrap the widget. We have to unwrap the target widget too so
+    // that addWidgetToArea inserts the new widget into the right place.
+    let properPlace = getPlaceForItem(targetNode);
     let widget = this.unwrapToolbarItem(draggedWrapper);
+    let targetWidget = this.unwrapToolbarItem(targetNode);
     CustomizableUI.addWidgetToArea(draggedItemId, targetArea.id, position);
-    draggedWrapper = this.wrapToolbarItem(widget, getPlaceForItem(targetNode));
+    this.wrapToolbarItem(targetWidget, properPlace);
+    draggedWrapper = this.wrapToolbarItem(widget, properPlace);
 
     // If necessary, add flex to accomodate new child.
     if (draggedWrapper.hasAttribute("flex")) {
