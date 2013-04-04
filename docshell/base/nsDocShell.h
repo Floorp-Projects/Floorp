@@ -50,7 +50,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIPrompt.h"
 #include "nsIRefreshURI.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIScriptGlobalObjectOwner.h"
 #include "nsISHistory.h"
 #include "nsILayoutHistoryState.h"
@@ -80,10 +79,11 @@
 #include "nsCRT.h"
 
 class nsDocShell;
-class nsIController;
-class OnLinkClickEvent;
-class nsIScrollableFrame;
 class nsDOMNavigationTiming;
+class nsGlobalWindow;
+class nsIController;
+class nsIScrollableFrame;
+class OnLinkClickEvent;
 
 /* load commands were moved to nsIDocShell.h */
 /* load types were moved to nsDocShellLoadTypes.h */
@@ -697,7 +697,7 @@ protected:
     // mCurrentURI should be marked immutable on set if possible.
     nsCOMPtr<nsIURI>           mCurrentURI;
     nsCOMPtr<nsIURI>           mReferrerURI;
-    nsCOMPtr<nsIScriptGlobalObject> mScriptGlobal;
+    nsRefPtr<nsGlobalWindow>   mScriptGlobal;
     nsCOMPtr<nsISHistory>      mSessionHistory;
     nsCOMPtr<nsIGlobalHistory2> mGlobalHistory;
     nsCOMPtr<nsIWebBrowserFind> mFind;
