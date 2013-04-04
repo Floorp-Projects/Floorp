@@ -7126,6 +7126,37 @@ class CGRegisterProtos(CGAbstractMethod):
     def definition_body(self):
         return self._defineMacro() + self._registerProtos() + self._undefineMacro()
 
+def dependencySortObjects(objects, dependencyGetter, nameGetter):
+    """
+    Sort IDL objects with dependencies on each other such that if A
+    depends on B then B will come before A.  This is needed for
+    declaring C++ classes in the right order, for example.  Objects
+    that have no dependencies are just sorted by name.
+
+    objects should be something that can produce a set of objects
+    (e.g. a set, iterator, list, etc).
+
+    dependencyGetter is something that, given an object, should return
+    the set of objects it depends on.
+    """
+    # XXXbz this will fail if we have two webidl files F1 and F2 such that F1
+    # declares an object which depends on an object in F2, and F2 declares an
+    # object (possibly a different one!) that depends on an object in F1.  The
+    # good news is that I expect this to never happen.
+    sortedObjects = []
+    objects = set(objects)
+    while len(objects) != 0:
+        # Find the dictionaries that don't depend on anything else
+        # anymore and move them over.
+        toMove = [o for o in objects if
+                  len(dependencyGetter(o) & objects) == 0]
+        if len(toMove) == 0:
+            raise TypeError("Loop in dependency graph\n" +
+                            "\n".join(o.location for o in objects))
+        objects = objects - set(toMove)
+        sortedObjects.extend(sorted(toMove, key=nameGetter))
+    return sortedObjects
+
 class CGBindingRoot(CGThing):
     """
     Root codegen class for binding generation. Instantiate the class, and call
@@ -7270,30 +7301,16 @@ class CGBindingRoot(CGThing):
         # here, because we have to generate these in order from least derived
         # to most derived so that class inheritance works out.  We also have to
         # generate members before the dictionary that contains them.
-        #
-        # XXXbz this will fail if we have two webidl files A and B such that A
-        # declares a dictionary which inherits from a dictionary in B and B
-        # declares a dictionary (possibly a different one!) that inherits from a
-        # dictionary in A.  The good news is that I expect this to never happen.
-        def sortDictionaries(dictionaries):
-            reSortedDictionaries = []
-            dictionaries = set(dictionaries)
-            while len(dictionaries) != 0:
-                # Find the dictionaries that don't depend on anything else
-                # anymore and move them over.
-                toMove = [d for d in dictionaries if
-                          len(CGDictionary.getDictionaryDependencies(d) &
-                              dictionaries) == 0]
-                if len(toMove) == 0:
-                    raise TypeError("Loop in dictionary dependency graph")
-                dictionaries = dictionaries - set(toMove)
-                reSortedDictionaries.extend(toMove)
-            return reSortedDictionaries
-
         cgthings.extend([CGDictionary(d, config.getDescriptorProvider(True))
-                         for d in sortDictionaries(workerDictionaries)])
+                         for d in
+                         dependencySortObjects(workerDictionaries,
+                                               CGDictionary.getDictionaryDependencies,
+                                               lambda d: d.identifier.name)])
         cgthings.extend([CGDictionary(d, config.getDescriptorProvider(False))
-                         for d in sortDictionaries(mainDictionaries)])
+                         for d in
+                         dependencySortObjects(mainDictionaries,
+                                               CGDictionary.getDictionaryDependencies,
+                                               lambda d: d.identifier.name)])
 
         # Do codegen for all the callbacks.  Only do non-worker codegen for now,
         # since we don't have a sane setup yet for invoking callbacks in workers
