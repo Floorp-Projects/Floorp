@@ -56,6 +56,7 @@
 #include "mozAutoDocUpdate.h"
 #include "nsMimeTypes.h"
 #include "nsHtml5SVGLoadDispatcher.h"
+#include "nsTextNode.h"
 
 using namespace mozilla::dom;
 
@@ -798,10 +799,7 @@ nsXMLContentSink::FlushText(bool aReleaseTextNode)
         mTextLength = 0;
       }
     } else {
-      nsCOMPtr<nsIContent> textContent;
-      rv = NS_NewTextNode(getter_AddRefs(textContent),
-                          mNodeInfoManager);
-      NS_ENSURE_SUCCESS(rv, rv);
+      nsRefPtr<nsTextNode> textContent = new nsTextNode(mNodeInfoManager);
 
       mLastTextNode = textContent;
       

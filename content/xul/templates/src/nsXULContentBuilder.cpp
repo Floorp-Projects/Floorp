@@ -31,6 +31,7 @@
 #include "nsAttrName.h"
 #include "nsNodeUtils.h"
 #include "mozAutoDocUpdate.h"
+#include "nsTextNode.h"
 
 #include "jsapi.h"
 #include "pldhash.h"
@@ -619,10 +620,8 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 rv = SubstituteText(aChild, attrValue, value);
                 if (NS_FAILED(rv)) return rv;
 
-                nsCOMPtr<nsIContent> content;
-                rv = NS_NewTextNode(getter_AddRefs(content),
-                                    mRoot->NodeInfo()->NodeInfoManager());
-                if (NS_FAILED(rv)) return rv;
+                nsRefPtr<nsTextNode> content =
+                  new nsTextNode(mRoot->NodeInfo()->NodeInfoManager());
 
                 content->SetText(value, false);
 

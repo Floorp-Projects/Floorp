@@ -35,6 +35,7 @@
 #include "nsCRT.h"
 #include "nsContentUtils.h"
 #include "nsTextFragment.h"
+#include "nsTextNode.h"
 
 #include "nsIScriptContext.h"
 #include "nsIScriptError.h"
@@ -514,12 +515,8 @@ nsXBLPrototypeBinding::AttributeChanged(nsIAtom* aAttribute,
           nsAutoString value;
           aChangedElement->GetAttr(aNameSpaceID, aAttribute, value);
           if (!value.IsEmpty()) {
-            nsCOMPtr<nsIContent> textContent;
-            NS_NewTextNode(getter_AddRefs(textContent),
-                           realElement->NodeInfo()->NodeInfoManager());
-            if (!textContent) {
-              continue;
-            }
+            nsRefPtr<nsTextNode> textContent =
+              new nsTextNode(realElement->NodeInfo()->NodeInfoManager());
 
             textContent->SetText(value, true);
             realElement->AppendChildTo(textContent, true);
@@ -890,12 +887,8 @@ bool SetAttrs(nsHashKey* aKey, void* aData, void* aClosure)
                                              kNameSpaceID_XUL) &&
              dst == nsGkAtoms::value && !value.IsEmpty())) {
 
-          nsCOMPtr<nsIContent> textContent;
-          NS_NewTextNode(getter_AddRefs(textContent),
-                         realElement->NodeInfo()->NodeInfoManager());
-          if (!textContent) {
-            continue;
-          }
+          nsRefPtr<nsTextNode> textContent =
+            new nsTextNode(realElement->NodeInfo()->NodeInfoManager());
 
           textContent->SetText(value, false);
           realElement->AppendChildTo(textContent, false);
@@ -1689,7 +1682,7 @@ nsXBLPrototypeBinding::ReadContentNode(nsIObjectInputStream* aStream,
       namespaceID == XBLBinding_Serialize_CommentNode) {
     switch (namespaceID) {
       case XBLBinding_Serialize_TextNode:
-        rv = NS_NewTextNode(getter_AddRefs(content), aNim);
+        content = new nsTextNode(aNim);
         break;
       case XBLBinding_Serialize_CDATANode:
         rv = NS_NewXMLCDATASection(getter_AddRefs(content), aNim);

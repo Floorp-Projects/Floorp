@@ -40,6 +40,7 @@
 #include "nsError.h"
 #include "nsIFrame.h"
 #include <algorithm>
+#include "nsTextNode.h"
 
 using namespace mozilla::dom;
 
@@ -599,9 +600,7 @@ txMozillaXMLOutput::closePrevious(bool aFlushText)
             rv = createTxWrapper();
             NS_ENSURE_SUCCESS(rv, rv);
         }
-        nsCOMPtr<nsIContent> text;
-        rv = NS_NewTextNode(getter_AddRefs(text), mNodeInfoManager);
-        NS_ENSURE_SUCCESS(rv, rv);
+        nsRefPtr<nsTextNode> text = new nsTextNode(mNodeInfoManager);
 
         rv = text->SetText(mText, false);
         NS_ENSURE_SUCCESS(rv, rv);

@@ -48,7 +48,7 @@ interface Document : Node {
   Element createElementNS(DOMString? namespace, DOMString qualifiedName);
   [Creator, Throws]
   DocumentFragment createDocumentFragment();
-  [Creator, Throws]
+  [Creator]
   Text createTextNode(DOMString data);
   [Creator, Throws]
   Comment createComment(DOMString data);
