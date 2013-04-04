@@ -16,6 +16,8 @@ var Appbar = {
     window.addEventListener('MozPrecisePointer', this, false);
     window.addEventListener('MozImprecisePointer', this, false);
     window.addEventListener('MozContextActionsChange', this, false);
+    Elements.browsers.addEventListener('URLChanged', this, true);
+    Elements.tabList.addEventListener('TabSelect', this, true);
 
     this._updateDebugButtons();
     this._updateZoomButtons();
@@ -26,6 +28,10 @@ var Appbar = {
 
   handleEvent: function Appbar_handleEvent(aEvent) {
     switch (aEvent.type) {
+      case 'URLChanged':
+      case 'TabSelect':
+        this.appbar.dismiss();
+        break;
       case 'MozAppbarShowing':
         this._updatePinButton();
         this._updateStarButton();
