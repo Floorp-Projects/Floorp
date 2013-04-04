@@ -698,10 +698,10 @@ MarkBaselineStubFrame(JSTracer *trc, const IonFrameIterator &frame)
     JS_ASSERT(frame.type() == IonFrame_BaselineStub);
     IonBaselineStubFrameLayout *layout = (IonBaselineStubFrameLayout *)frame.fp();
 
-    ICStub *stub = layout->stubPtr();
-    JS_ASSERT(ICStub::CanMakeCalls(stub->kind()));
-
-    stub->trace(trc);
+    if (ICStub *stub = layout->maybeStubPtr()) {
+        JS_ASSERT(ICStub::CanMakeCalls(stub->kind()));
+        stub->trace(trc);
+    }
 }
 
 void

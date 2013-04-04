@@ -779,7 +779,10 @@ IonRuntime::generateDebugTrapHandler(JSContext *cx)
     masm.mov(r11, scratch1);
     masm.subPtr(Imm32(BaselineFrame::Size()), scratch1);
 
-    // Call the HandleDebugTrap VM function.
+    // Enter a stub frame and call the HandleDebugTrap VM function. Ensure
+    // the stub frame has a NULL ICStub pointer, since this pointer is marked
+    // during GC.
+    masm.movePtr(ImmWord((void *)NULL), BaselineStubReg);
     EmitEnterStubFrame(masm, scratch2);
 
     IonCompartment *ion = cx->compartment->ionCompartment();
