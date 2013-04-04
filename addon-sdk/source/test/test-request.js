@@ -30,7 +30,7 @@ exports.testOptionsValidator = function(test) {
     Request({
       url: null
     });
-  }, 'The option "url" must be one of the following types: string');
+  }, 'The option "url" is invalid.');
 
   // Next we'll have a Request that doesn't throw from c'tor, but from a setter.
   let req = Request({
@@ -38,8 +38,8 @@ exports.testOptionsValidator = function(test) {
     onComplete: function () {}
   });
   test.assertRaises(function () {
-    req.url = null;
-  }, 'The option "url" must be one of the following types: string');
+    req.url = 'www.mozilla.org';
+  }, 'The option "url" is invalid.');
   // The url shouldn't have changed, so check that
   test.assertEqual(req.url, "http://playground.zpao.com/jetpack/request/text.php");
 }

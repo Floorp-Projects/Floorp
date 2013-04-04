@@ -20,6 +20,8 @@ function Options(options) {
     onOpen: { is: ["undefined", "function"] },
     onClose: { is: ["undefined", "function"] },
     onReady: { is: ["undefined", "function"] },
+    onLoad: { is: ["undefined", "function"] },
+    onPageShow: { is: ["undefined", "function"] },
     onActivate: { is: ["undefined", "function"] },
     onDeactivate: { is: ["undefined", "function"] }
   });
