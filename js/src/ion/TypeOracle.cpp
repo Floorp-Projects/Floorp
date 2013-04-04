@@ -640,8 +640,13 @@ TypeInferenceOracle::elementWriteNeedsBarrier(RawScript script, jsbytecode *pc)
 {
     // Return true if SETELEM-like instructions need a write barrier before modifying
     // a property. The object is the third value popped by SETELEM.
-    StackTypeSet *types = script->analysis()->poppedTypes(pc, 2);
-    return types->propertyNeedsBarrier(cx, JSID_VOID);
+    return elementWriteNeedsBarrier(script->analysis()->poppedTypes(pc, 2));
+}
+
+bool
+TypeInferenceOracle::elementWriteNeedsBarrier(StackTypeSet *obj)
+{
+    return obj->propertyNeedsBarrier(cx, JSID_VOID);
 }
 
 StackTypeSet *

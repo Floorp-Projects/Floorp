@@ -1001,6 +1001,9 @@ IonBuilder::inlineUnsafeSetDenseArrayElement(CallInfo &callInfo, uint32_t base)
                                               /* needsHoleCheck = */ false);
     store->setRacy();
 
+    if (oracle->elementWriteNeedsBarrier(getInlineArgTypeSet(callInfo, arri)))
+        store->setNeedsBarrier();
+
     current->add(store);
 
     if (!resumeAfter(store))
