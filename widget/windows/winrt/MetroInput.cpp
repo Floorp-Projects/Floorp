@@ -1265,6 +1265,23 @@ MetroInput::OnTapped(UI::Input::IGestureRecognizer* aSender,
     // Send the mouseup
     mouseEvent.message = NS_MOUSE_BUTTON_UP;
     DispatchEventIgnoreStatus(&mouseEvent);
+
+    // Send one more mousemove to avoid getting a hover state.
+    // In the Metro environment for any application, a tap does not imply a
+    // mouse cursor move.  In desktop environment for any application a tap
+    // does imply a cursor move.
+    POINT point;
+    if (GetCursorPos(&point)) {
+      ScreenToClient((HWND)mWidget->GetNativeData(NS_NATIVE_WINDOW), &point);
+      Foundation::Point oldMousePosition;
+      oldMousePosition.X = static_cast<FLOAT>(point.x);
+      oldMousePosition.Y = static_cast<FLOAT>(point.y);
+      mouseEvent.refPoint = MetroUtils::LogToPhys(oldMousePosition);
+      mouseEvent.message = NS_MOUSE_MOVE;
+      mouseEvent.button = 0;
+
+      DispatchEventIgnoreStatus(&mouseEvent);
+    }
   }
 
   return S_OK;
