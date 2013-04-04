@@ -61,12 +61,16 @@ class StructuredHumanFormatter(logging.Formatter):
     Because of this limitation, format() will fail with a KeyError if an
     unstructured record is passed or if the structured message is malformed.
     """
-    def __init__(self, start_time, write_interval=False):
+    def __init__(self, start_time, write_interval=False, write_times=True):
         self.start_time = start_time
         self.write_interval = write_interval
+        self.write_times = write_times
         self.last_time = None
 
     def format(self, record):
+        if not self.write_times:
+            return record.msg.format(**record.params)
+
         elapsed = self._time(record)
 
         return '%s %s' % (format_seconds(elapsed),

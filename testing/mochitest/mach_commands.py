@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 
+import logging
 import mozpack.path
 import os
 import platform
@@ -19,6 +20,14 @@ from mach.decorators import (
     CommandProvider,
     Command,
 )
+
+from mach.logging import StructuredHumanFormatter
+
+
+class UnexpectedFilter(logging.Filter):
+    def filter(self, record):
+        return 'TEST-UNEXPECTED-' in record.message
+
 
 
 class MochitestRunner(MozbuildObject):
@@ -70,6 +79,7 @@ class MochitestRunner(MozbuildObject):
             print('No failure file present. Did you run mochitests before?')
             return 1
 
+        from StringIO import StringIO
         from automation import Automation
 
         # runtests.py is ambiguous, so we load the file/module manually.
@@ -144,7 +154,28 @@ class MochitestRunner(MozbuildObject):
         if debugger:
             options.debugger = debugger
 
-        return runner.runTests(options)
+        # We need this to enable colorization of output.
+        self.log_manager.enable_unstructured()
+
+        # Output processing is a little funky here. The old make targets
+        # grepped the log output from TEST-UNEXPECTED-* and printed these lines
+        # after test execution. Ideally the test runner would expose a Python
+        # API for obtaining test results and we could just format failures
+        # appropriately. Unfortunately, it doesn't yet do that. So, we capture
+        # all output to a buffer then "grep" the buffer after test execution.
+        # Bug 858197 tracks a Python API that would facilitate this.
+        test_output = StringIO()
+        handler = logging.StreamHandler(test_output)
+        handler.addFilter(UnexpectedFilter())
+        handler.setFormatter(StructuredHumanFormatter(0, write_times=False))
+        logging.getLogger().addHandler(handler)
+
+        result = runner.runTests(options)
+
+        if test_output.getvalue():
+            print(test_output.getvalue())
+
+        return result
 
 
 def MochitestCommand(func):
