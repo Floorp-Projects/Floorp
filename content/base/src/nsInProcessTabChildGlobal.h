@@ -20,12 +20,14 @@
 #include "nsCOMArray.h"
 #include "nsThreadUtils.h"
 #include "nsIGlobalObject.h"
+#include "nsWeakReference.h"
 
 class nsInProcessTabChildGlobal : public nsDOMEventTargetHelper,
                                   public nsFrameScriptExecutor,
                                   public nsIInProcessContentFrameMessageManager,
                                   public nsIScriptContextPrincipal,
                                   public nsIGlobalObject,
+                                  public nsSupportsWeakReference,
                                   public mozilla::dom::ipc::MessageManagerCallback
 {
 public:
