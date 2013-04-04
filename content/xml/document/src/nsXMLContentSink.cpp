@@ -57,6 +57,8 @@
 #include "nsMimeTypes.h"
 #include "nsHtml5SVGLoadDispatcher.h"
 #include "nsTextNode.h"
+#include "mozilla/dom/CDATASection.h"
+#include "mozilla/dom/ProcessingInstruction.h"
 
 using namespace mozilla::dom;
 
@@ -1155,13 +1157,10 @@ nsXMLContentSink::HandleCDataSection(const PRUnichar *aData,
 
   FlushText();
   
-  nsCOMPtr<nsIContent> cdata;
-  nsresult rv = NS_NewXMLCDATASection(getter_AddRefs(cdata), mNodeInfoManager);
-  if (cdata) {
-    cdata->SetText(aData, aLength, false);
-    rv = AddContentAsLeaf(cdata);
-    DidAddContent();
-  }
+  nsRefPtr<CDATASection> cdata = new CDATASection(mNodeInfoManager);
+  cdata->SetText(aData, aLength, false);
+  nsresult rv = AddContentAsLeaf(cdata);
+  DidAddContent();
 
   return NS_SUCCEEDED(rv) ? DidProcessATokenImpl() : rv;
 }
@@ -1247,11 +1246,8 @@ nsXMLContentSink::HandleProcessingInstruction(const PRUnichar *aTarget,
   const nsDependentString target(aTarget);
   const nsDependentString data(aData);
 
-  nsCOMPtr<nsIContent> node;
-
-  nsresult rv = NS_NewXMLProcessingInstruction(getter_AddRefs(node),
-                                               mNodeInfoManager, target, data);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIContent> node =
+    NS_NewXMLProcessingInstruction(mNodeInfoManager, target, data);
 
   nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(node));
   if (ssle) {
@@ -1260,7 +1256,7 @@ nsXMLContentSink::HandleProcessingInstruction(const PRUnichar *aTarget,
     mPrettyPrintXML = false;
   }
 
-  rv = AddContentAsLeaf(node);
+  nsresult rv = AddContentAsLeaf(node);
   NS_ENSURE_SUCCESS(rv, rv);
   DidAddContent();
 

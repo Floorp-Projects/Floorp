@@ -349,10 +349,8 @@ nsDOMAttributeMap::RemoveNamedItem(const nsAString& aName,
 
 
 Attr*
-nsDOMAttributeMap::GetItemAt(uint32_t aIndex, nsresult *aResult)
+nsDOMAttributeMap::GetItemAt(uint32_t aIndex)
 {
-  *aResult = NS_OK;
-
   Attr* node = nullptr;
 
   const nsAttrName* name;
@@ -372,9 +370,8 @@ nsDOMAttributeMap::GetItemAt(uint32_t aIndex, nsresult *aResult)
 NS_IMETHODIMP
 nsDOMAttributeMap::Item(uint32_t aIndex, nsIDOMAttr** aReturn)
 {
-  nsresult rv;
-  NS_IF_ADDREF(*aReturn = GetItemAt(aIndex, &rv));
-  return rv;
+  NS_IF_ADDREF(*aReturn = GetItemAt(aIndex));
+  return NS_OK;
 }
 
 nsresult
@@ -397,17 +394,15 @@ nsDOMAttributeMap::GetNamedItemNS(const nsAString& aNamespaceURI,
                                   const nsAString& aLocalName,
                                   nsIDOMAttr** aReturn)
 {
-  ErrorResult rv;
-  NS_IF_ADDREF(*aReturn = GetNamedItemNS(aNamespaceURI, aLocalName, rv));
-  return rv.ErrorCode();
+  NS_IF_ADDREF(*aReturn = GetNamedItemNS(aNamespaceURI, aLocalName));
+  return NS_OK;
 }
 
 Attr*
 nsDOMAttributeMap::GetNamedItemNS(const nsAString& aNamespaceURI,
-                                  const nsAString& aLocalName,
-                                  ErrorResult& aError)
+                                  const nsAString& aLocalName)
 {
-  nsCOMPtr<nsINodeInfo> ni = GetAttrNodeInfo(aNamespaceURI, aLocalName, aError);
+  nsCOMPtr<nsINodeInfo> ni = GetAttrNodeInfo(aNamespaceURI, aLocalName);
   if (!ni) {
     return nullptr;
   }
@@ -417,8 +412,7 @@ nsDOMAttributeMap::GetNamedItemNS(const nsAString& aNamespaceURI,
 
 already_AddRefed<nsINodeInfo>
 nsDOMAttributeMap::GetAttrNodeInfo(const nsAString& aNamespaceURI,
-                                   const nsAString& aLocalName,
-                                   mozilla::ErrorResult& aError)
+                                   const nsAString& aLocalName)
 {
   if (!mContent) {
     return nullptr;
@@ -463,11 +457,7 @@ nsDOMAttributeMap::RemoveNamedItemNS(const nsAString& aNamespaceURI,
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nullptr;
 
-  ErrorResult error;
-  nsCOMPtr<nsINodeInfo> ni = GetAttrNodeInfo(aNamespaceURI, aLocalName, error);
-  if (error.Failed()) {
-    return error.ErrorCode();
-  }
+  nsCOMPtr<nsINodeInfo> ni = GetAttrNodeInfo(aNamespaceURI, aLocalName);
 
   if (!ni) {
     return NS_ERROR_DOM_NOT_FOUND_ERR;

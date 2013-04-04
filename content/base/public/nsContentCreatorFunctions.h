@@ -36,30 +36,6 @@ NS_NewXMLElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
 NS_NewCommentNode(nsIContent **aResult, nsNodeInfoManager *aNodeInfoManager);
 
-/**
- * aNodeInfoManager must not be null.
- */
-nsresult
-NS_NewXMLProcessingInstruction(nsIContent** aInstancePtrResult,
-                               nsNodeInfoManager *aNodeInfoManager,
-                               const nsAString& aTarget,
-                               const nsAString& aData);
-
-/**
- * aNodeInfoManager must not be null.
- */
-nsresult
-NS_NewXMLStylesheetProcessingInstruction(nsIContent** aInstancePtrResult,
-                                         nsNodeInfoManager *aNodeInfoManager,
-                                         const nsAString& aData);
-
-/**
- * aNodeInfoManager must not be null.
- */
-nsresult
-NS_NewXMLCDATASection(nsIContent** aInstancePtrResult,
-                      nsNodeInfoManager *aNodeInfoManager);
-
 nsresult
 NS_NewHTMLElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo,
                   mozilla::dom::FromParser aFromParser);

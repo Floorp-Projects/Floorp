@@ -87,6 +87,7 @@
 #include "nsCCUncollectableMarker.h"
 #include "nsURILoader.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/ProcessingInstruction.h"
 #include "mozilla/dom/XULDocumentBinding.h"
 #include "mozilla/Preferences.h"
 #include "nsTextNode.h"
@@ -2508,15 +2509,11 @@ XULDocument::CreateAndInsertPI(const nsXULPrototypePI* aProtoPI,
     NS_PRECONDITION(aProtoPI, "null ptr");
     NS_PRECONDITION(aParent, "null ptr");
 
+    nsRefPtr<ProcessingInstruction> node =
+        NS_NewXMLProcessingInstruction(mNodeInfoManager, aProtoPI->mTarget,
+                                       aProtoPI->mData);
+
     nsresult rv;
-    nsCOMPtr<nsIContent> node;
-
-    rv = NS_NewXMLProcessingInstruction(getter_AddRefs(node),
-                                        mNodeInfoManager,
-                                        aProtoPI->mTarget,
-                                        aProtoPI->mData);
-    if (NS_FAILED(rv)) return rv;
-
     if (aProtoPI->mTarget.EqualsLiteral("xml-stylesheet")) {
         rv = InsertXMLStylesheetPI(aProtoPI, aParent, aIndex, node);
     } else if (aProtoPI->mTarget.EqualsLiteral("xul-overlay")) {

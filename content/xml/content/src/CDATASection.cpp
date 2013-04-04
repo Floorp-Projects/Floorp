@@ -6,28 +6,6 @@
 #include "mozilla/dom/CDATASection.h"
 #include "mozilla/dom/CDATASectionBinding.h"
 
-nsresult
-NS_NewXMLCDATASection(nsIContent** aInstancePtrResult,
-                      nsNodeInfoManager *aNodeInfoManager)
-{
-  using mozilla::dom::CDATASection;
-
-  NS_PRECONDITION(aNodeInfoManager, "Missing nodeinfo manager");
-
-  *aInstancePtrResult = nullptr;
-
-  nsCOMPtr<nsINodeInfo> ni;
-  ni = aNodeInfoManager->GetNodeInfo(nsGkAtoms::cdataTagName,
-                                     nullptr, kNameSpaceID_None,
-                                     nsIDOMNode::CDATA_SECTION_NODE);
-
-  CDATASection *instance = new CDATASection(ni.forget());
-
-  NS_ADDREF(*aInstancePtrResult = instance);
-
-  return NS_OK;
-}
-
 namespace mozilla {
 namespace dom {
 

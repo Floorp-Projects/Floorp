@@ -41,6 +41,7 @@
 #include "nsIFrame.h"
 #include <algorithm>
 #include "nsTextNode.h"
+#include "mozilla/dom/ProcessingInstruction.h"
 
 using namespace mozilla::dom;
 
@@ -384,10 +385,8 @@ txMozillaXMLOutput::processingInstruction(const nsString& aTarget, const nsStrin
     rv = nsContentUtils::CheckQName(aTarget, false);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIContent> pi;
-    rv = NS_NewXMLProcessingInstruction(getter_AddRefs(pi),
-                                        mNodeInfoManager, aTarget, aData);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIContent> pi =
+      NS_NewXMLProcessingInstruction(mNodeInfoManager, aTarget, aData);
 
     nsCOMPtr<nsIStyleSheetLinkingElement> ssle;
     if (mCreatingNewDocument) {

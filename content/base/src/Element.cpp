@@ -876,20 +876,18 @@ Element::RemoveAttributeNS(const nsAString& aNamespaceURI,
 
 Attr*
 Element::GetAttributeNodeNS(const nsAString& aNamespaceURI,
-                            const nsAString& aLocalName,
-                            ErrorResult& aError)
+                            const nsAString& aLocalName)
 {
   OwnerDoc()->WarnOnceAbout(nsIDocument::eGetAttributeNodeNS);
 
-  return GetAttributeNodeNSInternal(aNamespaceURI, aLocalName, aError);
+  return GetAttributeNodeNSInternal(aNamespaceURI, aLocalName);
 }
 
 Attr*
 Element::GetAttributeNodeNSInternal(const nsAString& aNamespaceURI,
-                                    const nsAString& aLocalName,
-                                    ErrorResult& aError)
+                                    const nsAString& aLocalName)
 {
-  return Attributes()->GetNamedItemNS(aNamespaceURI, aLocalName, aError);
+  return Attributes()->GetNamedItemNS(aNamespaceURI, aLocalName);
 }
 
 already_AddRefed<Attr>
@@ -1863,9 +1861,8 @@ Element::SetAttrAndNotify(int32_t aNamespaceID,
 
     nsAutoString ns;
     nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNamespaceID, ns);
-    ErrorResult rv;
     Attr* attrNode =
-      GetAttributeNodeNSInternal(ns, nsDependentAtomString(aName), rv);
+      GetAttributeNodeNSInternal(ns, nsDependentAtomString(aName));
     mutation.mRelatedNode = attrNode;
 
     mutation.mAttrName = aName;
@@ -1994,8 +1991,7 @@ Element::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aName,
   if (hasMutationListeners) {
     nsAutoString ns;
     nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNameSpaceID, ns);
-    ErrorResult rv;
-    attrNode = GetAttributeNodeNSInternal(ns, nsDependentAtomString(aName), rv);
+    attrNode = GetAttributeNodeNSInternal(ns, nsDependentAtomString(aName));
   }
 
   // Clear binding to nsIDOMMozNamedAttrMap
