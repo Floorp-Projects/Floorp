@@ -361,7 +361,7 @@ ProcessSoftwareUpdateCommand(DWORD argc, LPWSTR *argv)
   }
 
   if (result && !updaterIsCorrect) {
-    LOG_WARN(("The updaters do not match, udpater will not run.")); 
+    LOG_WARN(("The updaters do not match, updater will not run.")); 
     result = FALSE;
   }
 
@@ -376,7 +376,7 @@ ProcessSoftwareUpdateCommand(DWORD argc, LPWSTR *argv)
     return FALSE;
   }
 
-  // Check to make sure the udpater.exe module has the unique updater identity.
+  // Check to make sure the updater.exe module has the unique updater identity.
   // This is a security measure to make sure that the signed executable that
   // we will run is actually an updater.
   HMODULE updaterModule = LoadLibraryEx(argv[0], NULL, 
@@ -469,6 +469,79 @@ ProcessSoftwareUpdateCommand(DWORD argc, LPWSTR *argv)
 }
 
 /**
+ * Obtains the updater path alongside a subdir of the service binary.
+ * The purpose of this function is to return a path that is likely high
+ * integrity and therefore more safe to execute code from.
+ *
+ * @param serviceUpdaterPath Out parameter for the path where the updater
+ *                           should be copied to.
+ * @return TRUE if a file path was obtained.
+ */
+BOOL
+GetSecureUpdaterPath(WCHAR serviceUpdaterPath[MAX_PATH + 1])
+{
+  if (!GetModuleFileNameW(NULL, serviceUpdaterPath, MAX_PATH)) {
+    LOG_WARN(("Could not obtain module filename when attempting to "
+              "use a secure updater path.  (%d)", GetLastError()));
+    return FALSE;
+  }
+
+  if (!PathRemoveFileSpecW(serviceUpdaterPath)) {
+    LOG_WARN(("Couldn't remove file spec when attempting to use a secure "
+              "updater path.  (%d)", GetLastError()));
+    return FALSE;
+  }
+
+  if (!PathAppendSafe(serviceUpdaterPath, L"update")) {
+    LOG_WARN(("Couldn't append file spec when attempting to use a secure "
+              "updater path.  (%d)", GetLastError()));
+    return FALSE;
+  }
+
+  CreateDirectoryW(serviceUpdaterPath, NULL);
+
+  if (!PathAppendSafe(serviceUpdaterPath, L"updater.exe")) {
+    LOG_WARN(("Couldn't append file spec when attempting to use a secure "
+              "updater path.  (%d)", GetLastError()));
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+/**
+ * Deletes the passed in updater path and the associated updater.ini file.
+ *
+ * @param serviceUpdaterPath The path to delete.
+ * @return TRUE if a file was deleted.
+ */
+BOOL
+DeleteSecureUpdater(WCHAR serviceUpdaterPath[MAX_PATH + 1])
+{
+  BOOL result = FALSE;
+  if (serviceUpdaterPath[0]) {
+    result = DeleteFileW(serviceUpdaterPath);
+    if (!result && GetLastError() != ERROR_PATH_NOT_FOUND &&
+        GetLastError() != ERROR_FILE_NOT_FOUND) {
+      LOG_WARN(("Could not delete service updater path: '%ls'.",
+                serviceUpdaterPath));
+    }
+
+    WCHAR updaterINIPath[MAX_PATH + 1] = { L'\0' };
+    if (PathGetSiblingFilePath(updaterINIPath, serviceUpdaterPath,
+                               L"updater.ini")) {
+      result = DeleteFileW(updaterINIPath);
+      if (!result && GetLastError() != ERROR_PATH_NOT_FOUND &&
+          GetLastError() != ERROR_FILE_NOT_FOUND) {
+        LOG_WARN(("Could not delete service updater INI path: '%ls'.",
+                  updaterINIPath));
+      }
+    }
+  }
+  return result;
+}
+
+/**
  * Executes a service command.
  *
  * @param argc The number of arguments in argv
@@ -500,7 +573,49 @@ ExecuteServiceCommand(int argc, LPWSTR *argv)
 
   BOOL result = FALSE;
   if (!lstrcmpi(argv[2], L"software-update")) {
+
+    // Use the passed in command line arguments for the update, except for the
+    // path to updater.exe.  We copy updater.exe to a the directory of the
+    // MozillaMaintenance service so that a low integrity process cannot
+    // replace the updater.exe at any point and use that for the update.
+    // It also makes DLL injection attacks harder.
+    LPWSTR oldUpdaterPath = argv[3];
+    WCHAR secureUpdaterPath[MAX_PATH + 1] = { L'\0' };
+    result = GetSecureUpdaterPath(secureUpdaterPath); // Does its own logging
+    if (result) {
+      LOG(("Passed in path: '%ls'; Using this path for updating: '%ls'.",
+           oldUpdaterPath, secureUpdaterPath));
+      DeleteSecureUpdater(secureUpdaterPath);
+      result = CopyFileW(oldUpdaterPath, secureUpdaterPath, FALSE);
+      if (!result) {
+        LOG_WARN(("Could not copy path to secure location.  (%d)",
+                  GetLastError()));
+      }
+    }
+
+    // If we obtained the path and copied it successfully update the path to
+    // use for the service update.  If there was a problem use the original
+    // path so things work like it used to.
+    if (result) {
+      argv[3] = secureUpdaterPath;
+
+      WCHAR oldUpdaterINIPath[MAX_PATH + 1] = { L'\0' };
+      WCHAR secureUpdaterINIPath[MAX_PATH + 1] = { L'\0' };
+      if (PathGetSiblingFilePath(secureUpdaterINIPath, secureUpdaterPath,
+                                 L"updater.ini") &&
+          PathGetSiblingFilePath(oldUpdaterINIPath, oldUpdaterPath,
+                                 L"updater.ini")) {
+        // This is non fatal if it fails there is no real harm
+        if (!CopyFileW(oldUpdaterINIPath, secureUpdaterINIPath, FALSE)) {
+          LOG_WARN(("Could not copy updater.ini from: '%ls' to '%ls'.  (%d)",
+                    oldUpdaterINIPath, secureUpdaterINIPath, GetLastError()));
+        }
+      }
+    }
+
     result = ProcessSoftwareUpdateCommand(argc - 3, argv + 3);
+    DeleteSecureUpdater(secureUpdaterPath);
+
     // We might not reach here if the service install succeeded
     // because the service self updates itself and the service
     // installer will stop the service.
