@@ -52,14 +52,12 @@ nsTextEditUtils::IsMozBR(nsIDOMNode *node)
 
 
 bool
-nsTextEditUtils::IsMozBR(nsINode* aNode)
+nsTextEditUtils::IsMozBR(dom::Element* aNode)
 {
   MOZ_ASSERT(aNode);
-  return aNode->IsElement() &&
-         aNode->AsElement()->IsHTML(nsGkAtoms::br) &&
-         aNode->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                                         NS_LITERAL_STRING("_moz"),
-                                         eIgnoreCase);
+  return aNode->IsHTML(nsGkAtoms::br) &&
+         aNode->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                            NS_LITERAL_STRING("_moz"), eIgnoreCase);
 }
 
 ///////////////////////////////////////////////////////////////////////////
