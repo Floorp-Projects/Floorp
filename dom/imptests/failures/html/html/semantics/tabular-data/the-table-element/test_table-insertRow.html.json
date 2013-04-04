@@ -1,0 +1,5 @@
+{
+  "insertRow should not copy prefixes": true,
+  "insertRow should insert into a tbody, not into a thead, if table.rows is empty": true,
+  "insertRow should insert into a tbody, not into a tfoot, if table.rows is empty": true
+}

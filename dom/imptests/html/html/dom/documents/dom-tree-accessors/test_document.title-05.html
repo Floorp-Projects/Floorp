@@ -1,0 +1,41 @@
+<!doctype html>
+<title>document.title and White_Space characters</title>
+<link rel="author" title="Ms2ger" href="mailto:ms2ger@gmail.com">
+<link rel="help" href="http://www.whatwg.org/html5/#document.title">
+<meta name="assert" content="Only HTML white space characters should be normalised.">
+<link rel="stylesheet" href="/resources/testharness.css">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<script>
+test(function() {
+  var White_Space = [
+    "\u000B",
+    "\u0085",
+    "\u00A0",
+    "\u1680",
+    "\u180E",
+    "\u2000",
+    "\u2001",
+    "\u2002",
+    "\u2003",
+    "\u2004",
+    "\u2005",
+    "\u2006",
+    "\u2007",
+    "\u2008",
+    "\u2009",
+    "\u200A",
+    "\u2028",
+    "\u2029",
+    "\u202F",
+    "\u205F",
+    "\u3000"];
+  for (var i = 0, il = White_Space.length; i < il; ++i) {
+    document.title = "a" + White_Space[i] + White_Space[i] + "b" +
+      White_Space[i] + "c" + i;
+    assert_equals(document.title, "a" + White_Space[i] + White_Space[i] + "b" +
+      White_Space[i] + "c" + i);
+  }
+});
+</script>
