@@ -262,7 +262,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventTarget* aTarget,
       boundDocument = content->OwnerDoc();
     }
 
-    boundGlobal = boundDocument->GetScopeObject();
+    boundGlobal = do_QueryInterface(boundDocument->GetScopeObject());
   }
 
   if (!boundGlobal)
