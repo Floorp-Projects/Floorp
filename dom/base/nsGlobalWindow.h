@@ -1113,7 +1113,6 @@ protected:
   nsRefPtr<nsDOMWindowUtils>    mWindowUtils;
   nsString                      mStatus;
   nsString                      mDefaultStatus;
-  // index 0->language_id 1, so index MAX-1 == language_id MAX
   nsGlobalWindowObserver*       mObserver;
   nsCOMPtr<nsIDOMCrypto>        mCrypto;
 
