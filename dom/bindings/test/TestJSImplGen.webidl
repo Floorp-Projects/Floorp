@@ -413,3 +413,9 @@ interface TestJSImplInterface {
 */
   // If you add things here, add them to TestCodeGen as well
 };
+
+interface TestCImplementedInterface : TestJSImplInterface {
+};
+
+interface TestCImplementedInterface2 {
+};
