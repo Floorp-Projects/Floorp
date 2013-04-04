@@ -713,9 +713,6 @@ protected:
   {
   }
 
-  static nsresult FindNamedItem(nsIForm *aForm, jsid id,
-                                nsISupports **aResult, nsWrapperCache **aCache);
-
 public:
   NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, jsid id, uint32_t flags,
