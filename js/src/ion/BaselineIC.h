@@ -3635,7 +3635,9 @@ class ICGetIntrinsic_Constant : public ICStub
     {}
 
   public:
-    static inline ICGetIntrinsic_Constant *New(ICStubSpace *space, IonCode *code, HandleValue value) {
+    static inline ICGetIntrinsic_Constant *New(ICStubSpace *space, IonCode *code,
+                                               HandleValue value)
+    {
         if (!code)
             return NULL;
         return space->allocate<ICGetIntrinsic_Constant>(code, value);

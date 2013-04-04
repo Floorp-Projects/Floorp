@@ -6652,6 +6652,11 @@ IonBuilder::jsop_getprop(HandlePropertyName name)
 {
     RootedId id(cx, NameToId(name));
 
+    // GetDefiniteSlot may cause type information to shift, and it's done inside
+    // getPropTryDefiniteSlot.  Do it here first to ensure that all type info changes
+    // occur before handling the op.
+    GetDefiniteSlot(cx, oracle->unaryTypes(script(), pc).inTypes, name);
+
     RootedScript scriptRoot(cx, script());
     types::StackTypeSet *barrier = oracle->propertyReadBarrier(scriptRoot, pc);
     types::StackTypeSet *types = oracle->propertyRead(script(), pc);
