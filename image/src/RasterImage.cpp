@@ -2817,7 +2817,7 @@ RasterImage::RequestDecodeCore(RequestDecodeType aDecodeType)
     // data, so signal that we want a full decode and give up for now.
     if (!mHasSize) {
       mWantFullDecode = true;
-      return NS_ERROR_NOT_AVAILABLE;
+      return NS_OK;
     }
   }
 
@@ -3525,7 +3525,8 @@ RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_D
     }
 
     // If we were a size decode and a full decode was requested, now's the time.
-    if (NS_SUCCEEDED(rv) && done && wasSize && image->mWantFullDecode) {
+    if (NS_SUCCEEDED(rv) && aIntent != eShutdownIntent_Error && done &&
+        wasSize && image->mWantFullDecode) {
       image->mWantFullDecode = false;
 
       // If we're not meant to be storing source data and we just got the size,
