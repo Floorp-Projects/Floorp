@@ -125,15 +125,8 @@ function fetchSources(callback) {
 }
 
 function performReload(callback) {
-  gDebugger.DebuggerController.client.addListener("tabNavigated", function onTabNavigated(aEvent, aPacket) {
-    dump("tabNavigated state " + aPacket.state + "\n");
-    if (aPacket.state == "start") {
-      testStateBeforeReload();
-      return;
-    }
-
-    gDebugger.DebuggerController.client.removeListener("tabNavigated", onTabNavigated);
-
+  gDebugger.DebuggerController._target.once("will-navigate", testStateBeforeReload);
+  gDebugger.DebuggerController._target.once("navigate", function onTabNavigated(aEvent, aPacket) {
     ok(true, "tabNavigated event was fired.");
     info("Still attached to the tab.");
 
