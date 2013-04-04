@@ -106,9 +106,6 @@ nsContentEventHandler::Init(nsQueryContentEvent* aEvent)
 
   nsRect r;
   nsIFrame* frame = caret->GetGeometry(mSelection, &r);
-  if (!frame) {
-    frame = mRootContent->GetPrimaryFrame();
-  }
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
   aEvent->mReply.mFocusedWidget = frame->GetNearestWidget();
@@ -233,10 +230,6 @@ static uint32_t CountNewlinesInNativeLength(nsIContent* aContent,
 nsContentEventHandler::GetNativeTextLength(nsIContent* aContent, uint32_t aMaxLength)
 {
   if (aContent->IsNodeOfType(nsINode::eTEXT)) {
-    // Skip text nodes without frames, e.g. inside script elements
-    if (!aContent->GetPrimaryFrame()) {
-      return 0;
-    }
     uint32_t textLengthDifference =
 #if defined(XP_MACOSX)
       // On Mac, the length of a native newline ("\r") is equal to the length of
@@ -316,10 +309,6 @@ static nsresult GenerateFlatTextContent(nsRange* aRange,
     nsIContent* content = static_cast<nsIContent*>(node);
 
     if (content->IsNodeOfType(nsINode::eTEXT)) {
-      // Skip text nodes without frames, e.g. inside script elements
-      if (!content->GetPrimaryFrame()) {
-        continue;
-      }
       if (content == startNode)
         AppendSubString(aString, content, aRange->StartOffset(),
                         content->TextLength() - aRange->StartOffset());
@@ -391,11 +380,6 @@ nsContentEventHandler::SetRangeFromFlatTextOffset(
 
   uint32_t nativeOffset = 0;
   uint32_t nativeEndOffset = aNativeOffset + aNativeLength;
-  // When we clip the end offset to the end of the root element, set it to after
-  // the last valid node. This way we don't include any extraneous nodes, such
-  // as the bogus editor BR node, in our range.
-  nsINode *lastValidNode = mRootContent;
-  uint32_t lastValidOffset = 0;
   bool startSet = false;
   for (; !iter->IsDone(); iter->Next()) {
     nsINode* node = iter->GetCurrentNode();
@@ -410,8 +394,6 @@ nsContentEventHandler::SetRangeFromFlatTextOffset(
     if (nativeTextLength == 0)
       continue;
 
-    lastValidNode = node->GetParent();
-    lastValidOffset = lastValidNode->IndexOf(node) + 1;
     if (nativeOffset <= aNativeOffset &&
         aNativeOffset < nativeOffset + nativeTextLength) {
       nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(content));
@@ -465,16 +447,17 @@ nsContentEventHandler::SetRangeFromFlatTextOffset(
     nativeOffset += nativeTextLength;
   }
 
-  NS_ENSURE_TRUE(aNativeOffset <= nativeOffset, NS_ERROR_FAILURE);
+  if (nativeOffset < aNativeOffset)
+    return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(lastValidNode));
+  nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(mRootContent));
   NS_ASSERTION(domNode, "lastContent doesn't have nsIDOMNode!");
   if (!startSet) {
-    MOZ_ASSERT(!domNode->IsNodeOfType(nsINode::eTEXT));
-    rv = aRange->SetStart(domNode, int32_t(lastValidOffset));
+    MOZ_ASSERT(!mRootContent->IsNodeOfType(nsINode::eTEXT));
+    rv = aRange->SetStart(domNode, int32_t(mRootContent->GetChildCount()));
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  rv = aRange->SetEnd(domNode, int32_t(lastValidOffset));
+  rv = aRange->SetEnd(domNode, int32_t(mRootContent->GetChildCount()));
   NS_ASSERTION(NS_SUCCEEDED(rv), "nsIDOMRange::SetEnd failed");
   return rv;
 }
