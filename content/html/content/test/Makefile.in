@@ -345,18 +345,13 @@ MOCHITEST_FILES = \
 		test_meta_attributes_reflection.html \
 		test_mod_attributes_reflection.html \
 		test_mozaudiochannel.html \
+		test_mozLoadFrom.html \
 		test_style_attributes_reflection.html \
 		test_bug629801.html \
 		test_bug839371.html \
 		test_element_prototype.html \
 		test_formData.html \
 		$(NULL)
-
-ifdef MOZ_MEDIA
-MOCHITEST_FILES += \
-		test_mozLoadFrom.html \
-		$(NULL)
-endif
 
 MOCHITEST_BROWSER_FILES = \
 		browser_bug649778.js \

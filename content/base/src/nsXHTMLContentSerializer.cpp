@@ -705,14 +705,12 @@ nsXHTMLContentSerializer::IsShorthandAttr(const nsIAtom* aAttrName,
     return true;
   }
 
-#ifdef MOZ_MEDIA
   // autoplay and controls
   if ((aElementName == nsGkAtoms::video || aElementName == nsGkAtoms::audio) &&
     (aAttrName == nsGkAtoms::autoplay || aAttrName == nsGkAtoms::muted ||
      aAttrName == nsGkAtoms::controls)) {
     return true;
   }
-#endif
 
   return false;
 }
