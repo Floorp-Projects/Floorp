@@ -7,11 +7,13 @@
 
 #include "nsIGlobalObject.h"
 #include "nsIPrincipal.h"
+#include "nsWeakReference.h"
 
 // This interface is public only because it is used in jsd.
 // Once jsd is gone this file should be moved back to xpconnect/src.
 
-class SandboxPrivate : public nsIGlobalObject
+class SandboxPrivate : public nsIGlobalObject,
+                       public nsSupportsWeakReference
 {
 public:
     SandboxPrivate(nsIPrincipal *principal, JSObject *global)

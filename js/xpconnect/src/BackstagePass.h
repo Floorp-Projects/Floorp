@@ -7,11 +7,13 @@
 #define BackstagePass_h__
 
 #include "nsISupports.h"
+#include "nsWeakReference.h"
 #include "nsIGlobalObject.h"
 
 class BackstagePass : public nsIGlobalObject,
                       public nsIXPCScriptable,
-                      public nsIClassInfo
+                      public nsIClassInfo,
+                      public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS
