@@ -3592,12 +3592,12 @@ class ICBindName_Fallback : public ICFallbackStub
 // GetIntrinsic
 //      JSOP_GETINTRINSIC
 //      JSOP_CALLINTRINSIC
-class ICGetIntrinsic_Fallback : public ICFallbackStub
+class ICGetIntrinsic_Fallback : public ICMonitoredFallbackStub
 {
     friend class ICStubSpace;
 
     ICGetIntrinsic_Fallback(IonCode *stubCode)
-      : ICFallbackStub(ICStub::GetIntrinsic_Fallback, stubCode)
+      : ICMonitoredFallbackStub(ICStub::GetIntrinsic_Fallback, stubCode)
     { }
 
   public:
@@ -3617,7 +3617,10 @@ class ICGetIntrinsic_Fallback : public ICFallbackStub
         { }
 
         ICStub *getStub(ICStubSpace *space) {
-            return ICGetIntrinsic_Fallback::New(space, getStubCode());
+            ICGetIntrinsic_Fallback *stub = ICGetIntrinsic_Fallback::New(space, getStubCode());
+            if (!stub || !stub->initMonitoringChain(cx, space))
+                return NULL;
+            return stub;
         }
     };
 };
@@ -5204,4 +5207,3 @@ class ICTypeOf_Typed : public ICFallbackStub
 } // namespace js
 
 #endif
-
