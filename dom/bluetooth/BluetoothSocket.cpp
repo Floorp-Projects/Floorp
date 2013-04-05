@@ -69,7 +69,7 @@ BluetoothSocket::ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aMessage)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mObserver);
-  mObserver->ReceiveSocketData(aMessage);
+  mObserver->ReceiveSocketData(this, aMessage);
 }
 
 void
@@ -77,7 +77,7 @@ BluetoothSocket::OnConnectSuccess()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mObserver);
-  mObserver->OnConnectSuccess();
+  mObserver->OnConnectSuccess(this);
 }
 
 void
@@ -85,7 +85,7 @@ BluetoothSocket::OnConnectError()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mObserver);
-  mObserver->OnConnectError();
+  mObserver->OnConnectError(this);
 }
 
 void
@@ -93,6 +93,6 @@ BluetoothSocket::OnDisconnect()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mObserver);
-  mObserver->OnDisconnect();
+  mObserver->OnDisconnect(this);
 }
 
