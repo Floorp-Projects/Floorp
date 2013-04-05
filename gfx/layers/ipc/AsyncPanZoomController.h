@@ -92,22 +92,17 @@ public:
   nsEventStatus ReceiveInputEvent(const InputData& aEvent);
 
   /**
-   * Special handler for nsInputEvents. |aEvent| is in screen relative
-   * co-ordinates.
+   * Special handler for nsInputEvents. Also sets |aOutEvent| (which is assumed
+   * to be an already-existing instance of an nsInputEvent which may be an
+   * nsTouchEvent) to have its touch points in DOM space. This is so that the
+   * touches can be passed through the DOM and content can handle them.
    *
-   * NOTE: This can only be called on the main thread. See widget/InputData.h
-   * for more information on why we have InputData and nsInputEvent separated.
+   * NOTE: Be careful of invoking the nsInputEvent variant. This can only be
+   * called on the main thread. See widget/InputData.h for more information on
+   * why we have InputData and nsInputEvent separated.
    */
-  nsEventStatus ReceiveMainThreadInputEvent(const nsInputEvent& aEvent);
-
-  /**
-   * Transform from frame relative co-ordinates to DOM relative co-ordinates.
-   * This method updates |aEvent| (which is assumed to be an already-existing
-   * instance of an nsInputEvent which may be an nsTouchEvent) to have its touch
-   * points in DOM space. This is so that the touches can be passed through the
-   * DOM and content can handle them.
-   */
-  void ApplyZoomCompensationToEvent(nsInputEvent* aEvent);
+  nsEventStatus ReceiveInputEvent(const nsInputEvent& aEvent,
+                                  nsInputEvent* aOutEvent);
 
   /**
    * Updates the composition bounds, i.e. the dimensions of the final size of

@@ -781,18 +781,11 @@ RenderFrameParent::OwnerContentChanged(nsIContent* aContent)
 }
 
 void
-RenderFrameParent::NotifyInputEvent(const nsInputEvent& aEvent)
+RenderFrameParent::NotifyInputEvent(const nsInputEvent& aEvent,
+                                    nsInputEvent* aOutEvent)
 {
   if (mPanZoomController) {
-    mPanZoomController->ReceiveMainThreadInputEvent(aEvent);
-  }
-}
-
-void
-RenderFrameParent::ApplyZoomCompensationToEvent(nsInputEvent* aEvent)
-{
-  if (mPanZoomController) {
-    mPanZoomController->ApplyZoomCompensationToEvent(aEvent);
+    mPanZoomController->ReceiveInputEvent(aEvent, aOutEvent);
   }
 }
 
