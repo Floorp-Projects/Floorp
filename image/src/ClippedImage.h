@@ -77,7 +77,7 @@ private:
   Maybe<bool> mShouldClip;        // Memoized ShouldClip() if present.
 
   friend class DrawSingleTileCallback;
-  friend class ImageFactory;
+  friend class ImageOps;
 };
 
 } // namespace image
