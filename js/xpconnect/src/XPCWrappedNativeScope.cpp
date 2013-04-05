@@ -272,6 +272,7 @@ JSObject *GetXBLScope(JSContext *cx, JSObject *contentScope)
 {
     JSAutoCompartment ac(cx, contentScope);
     JSObject *scope = EnsureCompartmentPrivate(contentScope)->scope->EnsureXBLScope(cx);
+    NS_ENSURE_TRUE(scope, nullptr); // See bug 858642.
     scope = js::UnwrapObject(scope);
     xpc_UnmarkGrayObject(scope);
     return scope;

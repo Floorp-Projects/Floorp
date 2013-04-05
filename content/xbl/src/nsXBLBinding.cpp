@@ -1434,6 +1434,7 @@ nsXBLBinding::LookupMember(JSContext* aCx, JS::HandleId aId,
   JS::Rooted<JSObject*> boundScope(aCx,
     js::GetGlobalForObjectCrossCompartment(mBoundElement->GetWrapper()));
   JS::Rooted<JSObject*> xblScope(aCx, xpc::GetXBLScope(aCx, boundScope));
+  NS_ENSURE_TRUE(xblScope, false);
   MOZ_ASSERT(boundScope != xblScope);
 
   // Enter the xbl scope and invoke the internal version.
