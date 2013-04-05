@@ -30,6 +30,7 @@ MobileMessageService::GetInstance()
 
 NS_IMETHODIMP
 MobileMessageService::CreateSmsMessage(int32_t aId,
+                                       uint64_t aThreadId,
                                        const nsAString& aDelivery,
                                        const nsAString& aDeliveryStatus,
                                        const nsAString& aSender,
@@ -42,6 +43,7 @@ MobileMessageService::CreateSmsMessage(int32_t aId,
                                        nsIDOMMozSmsMessage** aMessage)
 {
   return SmsMessage::Create(aId,
+                            aThreadId,
                             aDelivery,
                             aDeliveryStatus,
                             aSender,
@@ -56,6 +58,7 @@ MobileMessageService::CreateSmsMessage(int32_t aId,
 
 NS_IMETHODIMP
 MobileMessageService::CreateMmsMessage(int32_t               aId,
+                                       uint64_t              aThreadId,
                                        const nsAString&      aDelivery,
                                        const JS::Value&      aDeliveryStatus,
                                        const nsAString&      aSender,
@@ -69,6 +72,7 @@ MobileMessageService::CreateMmsMessage(int32_t               aId,
                                        nsIDOMMozMmsMessage** aMessage)
 {
   return MmsMessage::Create(aId,
+                            aThreadId,
                             aDelivery,
                             aDeliveryStatus,
                             aSender,
