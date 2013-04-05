@@ -61,8 +61,6 @@ var gContentPane = {
    *
    * dom.disable_open_during_load
    * - true if popups are blocked by default, false otherwise
-   * javascript.enabled
-   * - true if JavaScript is enabled, false otherwise
    */
 
   // POP-UPS
@@ -76,17 +74,6 @@ var gContentPane = {
     this._showExceptions("popup");
   },
 
-  // JAVASCRIPT
-
-  /**
-   * Displays the advanced JavaScript preferences for enabling or disabling
-   * various annoying behaviors.
-   */
-  showAdvancedJS: function ()
-  {
-    document.documentElement.openSubDialog("chrome://browser/content/preferences/advanced-scripts.xul",
-                                           "", null);  
-  },
 
   // FONTS
 
