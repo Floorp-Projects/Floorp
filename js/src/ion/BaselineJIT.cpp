@@ -148,6 +148,7 @@ EnterBaseline(JSContext *cx, StackFrame *fp, void *jitcode, bool osr)
         uint32_t numStackValues = osr ? fp->script()->nfixed + cx->regs().stackDepth() : 0;
         JS_ASSERT_IF(osr, !IsJSDEnabled(cx));
 
+        AutoFlushInhibitor afi(cx->compartment->ionCompartment());
         // Single transition point from Interpreter to Baseline.
         enter(jitcode, maxArgc, maxArgv, osr ? fp : NULL, calleeToken, scopeChain, numStackValues,
               result.address());

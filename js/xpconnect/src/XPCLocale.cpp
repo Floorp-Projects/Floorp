@@ -72,32 +72,32 @@ struct XPCLocaleCallbacks : public JSLocaleCallbacks
   }
 
   static JSBool
-  LocaleToUpperCase(JSContext *cx, JSString *src, jsval *rval)
+  LocaleToUpperCase(JSContext *cx, JSHandleString src, JSMutableHandleValue rval)
   {
     return ChangeCase(cx, src, rval, ToUpperCase);
   }
 
   static JSBool
-  LocaleToLowerCase(JSContext *cx, JSString *src, jsval *rval)
+  LocaleToLowerCase(JSContext *cx, JSHandleString src, JSMutableHandleValue rval)
   {
     return ChangeCase(cx, src, rval, ToLowerCase);
   }
 
   static JSBool
-  LocaleToUnicode(JSContext* cx, const char* src, jsval* rval)
+  LocaleToUnicode(JSContext* cx, const char* src, JSMutableHandleValue rval)
   {
     return This(JS_GetRuntime(cx))->ToUnicode(cx, src, rval);
   }
 
   static JSBool
-  LocaleCompare(JSContext *cx, JSString *src1, JSString *src2, jsval *rval)
+  LocaleCompare(JSContext *cx, JSHandleString src1, JSHandleString src2, JSMutableHandleValue rval)
   {
     return This(JS_GetRuntime(cx))->Compare(cx, src1, src2, rval);
   }
 
 private:
   static JSBool
-  ChangeCase(JSContext* cx, JSString* src, jsval* rval,
+  ChangeCase(JSContext* cx, JSHandleString src, JSMutableHandleValue rval,
              void(*changeCaseFnc)(const nsAString&, nsAString&))
   {
     nsDependentJSString depStr;
@@ -114,12 +114,12 @@ private:
       return false;
     }
 
-    *rval = STRING_TO_JSVAL(ucstr);
+    rval.set(STRING_TO_JSVAL(ucstr));
     return true;
   }
 
   JSBool
-  Compare(JSContext *cx, JSString *src1, JSString *src2, jsval *rval)
+  Compare(JSContext *cx, JSHandleString src1, JSHandleString src2, JSMutableHandleValue rval)
   {
     nsresult rv;
 
@@ -161,12 +161,12 @@ private:
       return false;
     }
 
-    *rval = INT_TO_JSVAL(result);
+    rval.set(INT_TO_JSVAL(result));
     return true;
   }
 
   JSBool
-  ToUnicode(JSContext* cx, const char* src, jsval* rval)
+  ToUnicode(JSContext* cx, const char* src, JSMutableHandleValue rval)
   {
     nsresult rv;
 
@@ -201,7 +201,6 @@ private:
       }
     }
 
-    JSString *str = nullptr;
     int32_t srcLength = PL_strlen(src);
 
     if (mDecoder) {
@@ -222,22 +221,18 @@ private:
             if (shrunkUnichars)
               unichars = shrunkUnichars;
           }
-          str = JS_NewUCString(cx,
-                               reinterpret_cast<jschar*>(unichars),
-                               unicharLength);
+          JSString *str = JS_NewUCString(cx, reinterpret_cast<jschar*>(unichars), unicharLength);
+          if (str) {
+            rval.setString(str);
+            return true;
+          }
         }
-        if (!str)
-          JS_free(cx, unichars);
+        JS_free(cx, unichars);
       }
     }
 
-    if (!str) {
-      xpc::Throw(cx, NS_ERROR_OUT_OF_MEMORY);
-      return false;
-    }
-
-    *rval = STRING_TO_JSVAL(str);
-    return true;
+    xpc::Throw(cx, NS_ERROR_OUT_OF_MEMORY);
+    return false;
   }
 
   void AssertThreadSafety()

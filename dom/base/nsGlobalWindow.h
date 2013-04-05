@@ -73,7 +73,7 @@
 #endif // MOZ_B2G
 
 #ifdef MOZ_WEBSPEECH
-#include "nsIDOMSpeechSynthesisGetter.h"
+#include "nsISpeechSynthesisGetter.h"
 #endif // MOZ_WEBSPEECH
 
 #define DEFAULT_HOME_PAGE "www.mozilla.org"
@@ -271,7 +271,7 @@ class nsGlobalWindow : public mozilla::dom::EventTarget,
                      , public nsIDOMWindowB2G
 #endif // MOZ_B2G
 #ifdef MOZ_WEBSPEECH
-                     , public nsIDOMSpeechSynthesisGetter
+                     , public nsISpeechSynthesisGetter
 #endif // MOZ_WEBSPEECH
 {
 public:
@@ -328,8 +328,8 @@ public:
 #endif // MOZ_B2G
 
 #ifdef MOZ_WEBSPEECH
-  // nsIDOMSpeechSynthesisGetter
-  NS_DECL_NSIDOMSPEECHSYNTHESISGETTER
+  // nsISpeechSynthesisGetter
+  NS_DECL_NSISPEECHSYNTHESISGETTER
 #endif // MOZ_WEBSPEECH
 
   // nsIDOMWindowPerformance

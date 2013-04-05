@@ -157,6 +157,7 @@ We'd like to thank our many Jetpack project contributors!  They include:
 * slash
 * Markus Stange
 * Dan Stevens
+* [J. Ryan Stinnett](https://github.com/jryans)
 * [Mihai Sucan](https://github.com/mihaisucan)
 
 <!--end-->

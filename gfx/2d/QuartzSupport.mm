@@ -940,8 +940,8 @@ nsresult nsCARenderer::DrawSurfaceToCGContext(CGContextRef aContext,
   if (aHeight + aY > ioHeight) 
     aHeight = ioHeight - aY;
 
-  if (aX < 0 || aX >= ioWidth ||
-      aY < 0 || aY >= ioHeight) {
+  if (aX < 0 || static_cast<size_t>(aX) >= ioWidth ||
+      aY < 0 || static_cast<size_t>(aY) >= ioHeight) {
     surf->Unlock();
     return NS_ERROR_FAILURE;
   }

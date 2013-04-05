@@ -255,6 +255,19 @@ SpecialPowersObserverAPI.prototype = {
         }
         break;
 
+      case "SPWebAppService":
+        let Webapps = {};
+        Components.utils.import("resource://gre/modules/Webapps.jsm", Webapps);
+        switch (aMessage.json.op) {
+          case "set-launchable":
+            let val = Webapps.DOMApplicationRegistry.allAppsLaunchable;
+            Webapps.DOMApplicationRegistry.allAppsLaunchable = aMessage.json.launchable;
+            return val;
+          default:
+            throw new SpecialPowersException("Invalid operation for SPWebAppsService");
+        }
+        break;
+
       default:
         throw new SpecialPowersException("Unrecognized Special Powers API");
     }

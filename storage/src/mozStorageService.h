@@ -69,6 +69,27 @@ public:
   static int32_t getSynchronousPref();
 
   /**
+   * Obtains the default page size for this platform. The default value is
+   * specified in the SQLite makefile (SQLITE_DEFAULT_PAGE_SIZE) but it may be
+   * overriden with the PREF_TS_PAGESIZE hidden preference.
+   */
+  static int32_t getDefaultPageSize()
+  {
+    return sDefaultPageSize;
+  }
+
+  /**
+   * Returns a boolean value indicating whether or not the given page size is
+   * valid (currently understood as a power of 2 between 512 and 65536).
+   */
+  static bool pageSizeIsValid(int32_t aPageSize)
+  {
+    return aPageSize == 512 || aPageSize == 1024 || aPageSize == 2048 ||
+           aPageSize == 4096 || aPageSize == 8192 || aPageSize == 16384 ||
+           aPageSize == 32768 || aPageSize == 65536;
+  }
+
+  /**
    * Registers the connection with the storage service.  Connections are
    * registered so they can be iterated over.
    *
@@ -160,6 +181,7 @@ private:
   static nsIXPConnect *sXPConnect;
 
   static int32_t sSynchronousPref;
+  static int32_t sDefaultPageSize;
 
   friend class ServiceMainThreadInitializer;
 };

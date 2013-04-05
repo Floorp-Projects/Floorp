@@ -116,10 +116,22 @@ nsHTMLButtonControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (IsVisibleForPainting(aBuilder)) {
     mRenderer.DisplayButton(aBuilder, aLists.BorderBackground(), &onTop);
   }
-  
+
   nsDisplayListCollection set;
+
   // Do not allow the child subtree to receive events.
   if (!aBuilder->IsForEventDelivery()) {
+    DisplayListClipState::AutoSaveRestore clipState(aBuilder);
+
+    if (IsInput() || StyleDisplay()->mOverflowX != NS_STYLE_OVERFLOW_VISIBLE) {
+      nsMargin border = StyleBorder()->GetComputedBorder();
+      nsRect rect(aBuilder->ToReferenceFrame(this), GetSize());
+      rect.Deflate(border);
+      nscoord radii[8];
+      bool hasRadii = GetPaddingBoxBorderRadii(radii);
+      clipState.ClipContainingBlockDescendants(rect, hasRadii ? radii : nullptr);
+    }
+
     BuildDisplayListForChild(aBuilder, mFrames.FirstChild(), aDirtyRect, set,
                              DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT);
     // That should put the display items in set.Content()
@@ -127,20 +139,7 @@ nsHTMLButtonControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   
   // Put the foreground outline and focus rects on top of the children
   set.Content()->AppendToTop(&onTop);
-
-  // clips to our padding box for <input>s but not <button>s, unless
-  // they have non-visible overflow..
-  if (IsInput() || StyleDisplay()->mOverflowX != NS_STYLE_OVERFLOW_VISIBLE) {
-    nsMargin border = StyleBorder()->GetComputedBorder();
-    nsRect rect(aBuilder->ToReferenceFrame(this), GetSize());
-    rect.Deflate(border);
-    nscoord radii[8];
-    GetPaddingBoxBorderRadii(radii);
-
-    OverflowClip(aBuilder, set, aLists, rect, radii);
-  } else {
-    set.MoveTo(aLists);
-  }
+  set.MoveTo(aLists);
   
   DisplayOutline(aBuilder, aLists);
 

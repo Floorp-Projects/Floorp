@@ -532,6 +532,7 @@ SmsRequest::NotifyThreadList(const JS::Value& aThreadList, JSContext* aCx)
         NS_ENSURE_SUCCESS(rv, rv);
 
         ThreadListItem* ipcItem = ipcItems.AppendElement();
+        ipcItem->id() = item.id;
         ipcItem->senderOrReceiver() = item.senderOrReceiver;
         ipcItem->timestamp() = item.timestamp;
         ipcItem->body() = item.body;
@@ -587,6 +588,8 @@ SmsRequest::NotifyThreadList(const InfallibleTArray<ThreadListItem>& aItems)
   for (uint32_t i = 0; i < aItems.Length(); i++) {
     const ThreadListItem& source = aItems[i];
 
+    jsval id = JS_NumberValue(double(source.id()));
+
     nsString temp = source.senderOrReceiver();
 
     JS::Value senderOrReceiver;
@@ -608,6 +611,9 @@ SmsRequest::NotifyThreadList(const InfallibleTArray<ThreadListItem>& aItems)
 
     JSObject* elementObj = JS_NewObject(cx, nullptr, nullptr, nullptr);
     NS_ENSURE_TRUE_VOID(elementObj);
+
+    ok = JS_SetProperty(cx, elementObj, "id", &id);
+    NS_ENSURE_TRUE_VOID(ok);
 
     ok = JS_SetProperty(cx, elementObj, "senderOrReceiver", &senderOrReceiver);
     NS_ENSURE_TRUE_VOID(ok);

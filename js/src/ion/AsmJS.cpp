@@ -1915,7 +1915,6 @@ class FunctionCompiler
             joinBlock->addPredecessor(curBlock_);
         }
         curBlock_ = joinBlock;
-        mirGraph().moveBlockToEnd(curBlock_);
     }
 
     MBasicBlock *switchToElse(MBasicBlock *elseBlock)
@@ -1924,7 +1923,6 @@ class FunctionCompiler
             return NULL;
         MBasicBlock *thenEnd = curBlock_;
         curBlock_ = elseBlock;
-        mirGraph().moveBlockToEnd(curBlock_);
         return thenEnd;
     }
 
@@ -2031,8 +2029,6 @@ class FunctionCompiler
             loopEntry->setBackedge(curBlock_);
         }
         curBlock_ = afterLoop;
-        if (curBlock_)
-            mirGraph().moveBlockToEnd(curBlock_);
         return bindUnlabeledBreaks(pn);
     }
 
@@ -2145,7 +2141,6 @@ class FunctionCompiler
                 (*cases)[i] = bb;
             }
         }
-        mirGraph().moveBlockToEnd(*defaultBlock);
         return true;
     }
 

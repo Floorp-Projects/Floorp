@@ -4,6 +4,7 @@
     "content": "",
     "docshell": "",
     "dom": "",
+    "dom/apps": "",
     "layout": ""
   },
 "excludetests": {

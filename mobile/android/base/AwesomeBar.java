@@ -136,7 +136,7 @@ public class AwesomeBar extends GeckoActivity {
                 BrowserToolbarBackground mAddressBarBg = (BrowserToolbarBackground) findViewById(R.id.address_bar_bg);
                 mAddressBarBg.setPrivateMode(true);
 
-                TabsButton mTabs = (TabsButton) findViewById(R.id.dummy_tab);
+                ShapedButton mTabs = (ShapedButton) findViewById(R.id.dummy_tab);
                 if (mTabs != null)
                     mTabs.setPrivateMode(true);
 

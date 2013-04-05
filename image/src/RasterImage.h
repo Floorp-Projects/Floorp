@@ -525,7 +525,12 @@ private:
 
   private: /* members */
 
+    // mThreadPoolMutex protects both mThreadPool and mShuttingDown. For all
+    // RasterImages R, R::mDecodingMutex must be acquired before
+    // mThreadPoolMutex if both are acquired; the other order may cause deadlock.
+    mozilla::Mutex          mThreadPoolMutex;
     nsCOMPtr<nsIThreadPool> mThreadPool;
+    bool                    mShuttingDown;
   };
 
   class DecodeDoneWorker : public nsRunnable

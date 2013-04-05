@@ -269,6 +269,10 @@ documenttab[selected] .documenttab-selection {
   -moz-stack-sizing: ignore;
 }
 
+.selection-overlay {
+  pointer-events: none;  
+}
+
 .selection-overlay:-moz-focusring {
   outline: 0 !important;
 }
@@ -823,8 +827,12 @@ setting[type="directory"] > .preferences-alignment {
   visibility: collapse;
 }
 
+/* a 'margin-top' is applied dynamically in ContentAreaObserver */
 #browsers {
   background: white;
+  transition-property: margin-top;
+  transition-duration: .3s;
+  transition-timing-function: ease-in-out;
 }
 
 /* Panel UI ---------------------------------------------------------------- */
@@ -991,16 +999,12 @@ setting[type="directory"] > .preferences-alignment {
 #selectionhandle-mark1,
 #selectionhandle-mark2,
 #selectionhandle-mark3 {
+  list-style-image: url("chrome://browser/skin/images/selection-monocle.png");
   border: 0px solid gray;
   padding: 0px;
   margin-top: -30px;
   margin-left: -18px;
-}
-
-#selectionhandle-mark1,
-#selectionhandle-mark2,
-#selectionhandle-mark3 {
-  list-style-image: url("chrome://browser/skin/images/selection-monocle.png");
+  pointer-events: auto;
 }
 
 /* Capture picker ------------------------------------------------------------- */

@@ -633,6 +633,8 @@ pref("ui.scrolling.min_scrollable_distance", -1);
 // Enable accessibility mode if platform accessibility is enabled.
 pref("accessibility.accessfu.activate", 2);
 pref("accessibility.accessfu.quicknav_modes", "Link,Heading,FormElement,ListItem");
+// Setting for an utterance order (0 - description first, 1 - description last).
+pref("accessibility.accessfu.utterance", 0);
 
 // Mobile manages state by autodetection
 pref("network.manage-offline-status", true);

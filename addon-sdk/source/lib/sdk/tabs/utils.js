@@ -303,3 +303,53 @@ function getTabForBrowser(browser) {
 }
 exports.getTabForBrowser = getTabForBrowser;
 
+function pin(tab) {
+  let gBrowser = getTabBrowserForTab(tab);
+  // TODO: Implement Fennec support
+  if (gBrowser) gBrowser.pinTab(tab);
+}
+exports.pin = pin;
+
+function unpin(tab) {
+  let gBrowser = getTabBrowserForTab(tab);
+  // TODO: Implement Fennec support
+  if (gBrowser) gBrowser.unpinTab(tab);
+}
+exports.unpin = unpin;
+
+function isPinned(tab) !!tab.pinned
+exports.isPinned = isPinned;
+
+function reload(tab) {
+  let gBrowser = getTabBrowserForTab(tab);
+  // Firefox
+  if (gBrowser) gBrowser.unpinTab(tab);
+  // Fennec
+  else if (tab.browser) tab.browser.reload();
+}
+exports.reload = reload
+
+function getIndex(tab) {
+  let gBrowser = getTabBrowserForTab(tab);
+  // Firefox
+  if (gBrowser) {
+    let document = getBrowserForTab(tab).contentDocument;
+    return gBrowser.getBrowserIndexForDocument(document);
+  }
+  // Fennec
+  else {
+    let window = getWindowHoldingTab(tab)
+    let tabs = window.BrowserApp.tabs;
+    for (let i = tabs.length; i >= 0; i--)
+      if (tabs[i] === tab) return i;
+  }
+}
+exports.getIndex = getIndex;
+
+function move(tab, index) {
+  let gBrowser = getTabBrowserForTab(tab);
+  // Firefox
+  if (gBrowser) gBrowser.moveTabTo(tab, index);
+  // TODO: Implement fennec support
+}
+exports.move = move;

@@ -114,57 +114,48 @@ exports.testWaitUntilErrorInCallback = function(test) {
 }
 
 exports.testWaitUntilTimeoutInCallback = function(test) {
-  test.waitUntilDone(1000);
+  test.waitUntilDone();
+
+  let expected = [];
+  let message = 0;
+  if (require("@test/options").parseable) {
+    expected.push(["print", "TEST-START | wait4ever\n"]);
+    expected.push(["error", "fail:", "Timed out"]);
+    expected.push(["error", "test assertion never became true:\n", "assertion failed, value is false\n"]);
+    expected.push(["print", "TEST-END | wait4ever\n"]);
+  }
+  else {
+    expected.push(["info",  "executing 'wait4ever'"]);
+    expected.push(["error", "fail:", "Timed out"]);
+    expected.push(["error", "test assertion never became true:\n", "assertion failed, value is false\n"]);
+  }
+
+  function checkExpected(name, args) {
+    if (expected.length == 0 || expected[0][0] != name) {
+      test.fail("Saw an unexpected console." + name + "() call " + args);
+      return;
+    }
+
+    message++;
+    let expectedArgs = expected.shift().slice(1);
+    for (let i = 0; i < expectedArgs.length; i++)
+      test.assertEqual(args[i], expectedArgs[i], "Should have seen the right message in argument " + i + " of message " + message);
+    if (expected.length == 0)
+      test.done();
+  }
 
   let runner = new (require("sdk/deprecated/unit-test").TestRunner)({
     console: {
-      calls: 0,
-      error: function(msg) {
-        this.calls++;
-        if (this.calls == 2) {
-          test.assertEqual(arguments[0], "test assertion never became true:\n");
-          test.assertEqual(arguments[1], "assertion failed, value is false\n");
-          // We could additionally check that arguments[1] contains the correct
-          // stack, but it would be difficult to do so given that it contains
-          // resource: URLs with a randomly generated string embedded in them
-          // (the ID of the test addon created to run the tests). And in any
-          // case, checking the arguments seems sufficient.
-
-          test.done();
-        }
-        else {
-          test.fail("We got unexpected console.error() calls from waitUntil" +
-                    " assertion callback: '" + arguments[1] + "'");
-        }
+      error: function() {
+        checkExpected("error", Array.slice(arguments));
       },
-      info: function (msg) {
-        this.calls++;
-        if (require("@test/options").parseable) {
-          test.fail("We got unexpected console.info() calls: " + msg)
-        }
-        else if (this.calls == 1) {
-          test.assertEqual(arguments[0], "executing 'wait4ever'");
-        }
-        else {
-          test.fail("We got unexpected console.info() calls: " + msg);
-        }
+      info: function () {
+        checkExpected("info", Array.slice(arguments));
       },
       trace: function () {},
       exception: function () {},
-      print: function (str) {
-        this.calls++;
-        if (!require("@test/options").parseable) {
-          test.fail("We got unexpected console.print() calls: " + str)
-        }
-        else if (this.calls == 1) {
-          test.assertEqual(str, "TEST-START | wait4ever\n");
-        }
-        else if (this.calls == 3) {
-          test.assertEqual(str, "TEST-END | wait4ever\n");
-        }
-        else {
-          test.fail("We got unexpected console.print() calls: " + str);
-        }
+      print: function () {
+        checkExpected("print", Array.slice(arguments));
       }
     }
   });
