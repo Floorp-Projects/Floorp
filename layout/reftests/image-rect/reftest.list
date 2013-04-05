@@ -7,7 +7,7 @@ random-if(bug685516) asserts(0-2) == background-draw-nothing-malformed-images.ht
 random-if(bug685516) == background-monster-rect.html background-monster-rect-ref.html
 random-if(bug685516) == background-over-size-rect.html background-over-size-rect-ref.html
 random-if(bug685516) == background-test-parser.html background-test-parser-ref.html
-random-if(bug685516) == background-with-other-properties.html background-with-other-properties-ref.html
+random-if(bug685516) fuzzy-if(Android||B2G,113,124) == background-with-other-properties.html background-with-other-properties-ref.html
 random-if(bug685516) == background-zoom-1.html background-zoom-1-ref.html
 random-if(bug685516) == background-zoom-2.html background-zoom-2-ref.html
 random-if(bug685516) == background-zoom-3.html background-zoom-3-ref.html
