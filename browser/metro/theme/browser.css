@@ -823,8 +823,12 @@ setting[type="directory"] > .preferences-alignment {
   visibility: collapse;
 }
 
+/* a 'margin-top' is applied dynamically in ContentAreaObserver */
 #browsers {
   background: white;
+  transition-property: margin-top;
+  transition-duration: .3s;
+  transition-timing-function: ease-in-out;
 }
 
 /* Panel UI ---------------------------------------------------------------- */
