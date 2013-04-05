@@ -27,12 +27,23 @@
   *
   *  The portion of the content area that is not obscured by the on-screen
   *  keyboard.
+  *
+  * ContentAreaObserver also manages soft keyboard related events. Events
+  * fired include:
+  *
+  *  KeyboardChanged - fired after the visibility of the soft keyboard changes
+  *  and after any view related changes are made to accomidate view dim
+  *  changes as a result.
+  *
+  *  MozDeckOffsetChanging, MozDeckOffsetChanged - interim events fired when
+  *  the browser deck is being repositioned to move focused elements out of
+  *  the way of the keyboard.
   */
 
 var ContentAreaObserver = {
   styles: {},
-  _keyboardState: false,
   _shiftAmount: 0,
+  _deckTransitioning: false,
 
   /*
    * Properties
@@ -60,6 +71,10 @@ var ContentAreaObserver = {
 
   get isKeyboardOpened() {
     return MetroUtils.keyboardVisible;
+  },
+
+  get isKeyboardTransitioning() {
+    return this._deckTransitioning;
   },
 
   /*
@@ -158,10 +173,6 @@ var ContentAreaObserver = {
    */
 
   _onKeyboardDisplayChanging: function _onKeyboardDisplayChanging(aNewState) {
-    this._keyboardState = aNewState;
-
-    this._dispatchWindowEvent("KeyboardChanged", aNewState);
-
     this.updateViewableArea();
 
     if (!aNewState) {
@@ -177,7 +188,7 @@ var ContentAreaObserver = {
   },
 
   _onRepositionResponse: function _onRepositionResponse(aJsonMsg) {
-    if (!aJsonMsg.reposition || !this._keyboardState) {
+    if (!aJsonMsg.reposition || !this.isKeyboardOpened) {
       this._shiftBrowserDeck(0);
       return;
     }
@@ -191,6 +202,9 @@ var ContentAreaObserver = {
     switch (aTopic) {
       case "metro_softkeyboard_hidden":
       case "metro_softkeyboard_shown":
+        // Mark that we are in a transition state. Auto-complete and other
+        // popups will wait for an event before displaying anything.
+        this._deckTransitioning = true;
         // This also insures tap events are delivered before we fire
         // this event. Form repositioning requires the selection handler
         // be running before we send this.
@@ -226,6 +240,11 @@ var ContentAreaObserver = {
    */
 
   _shiftBrowserDeck: function _shiftBrowserDeck(aAmount) {
+    if (aAmount == 0) {
+      this._deckTransitioning = false;
+      this._dispatchWindowEvent("KeyboardChanged", this.isKeyboardOpened);
+    }
+
     if (this._shiftAmount == aAmount)
       return;
 
@@ -236,7 +255,9 @@ var ContentAreaObserver = {
     let self = this;
     Elements.browsers.addEventListener("transitionend", function () {
       Elements.browsers.removeEventListener("transitionend", arguments.callee, true);
+      self._deckTransitioning = false;
       self._dispatchWindowEvent("MozDeckOffsetChanged", aAmount);
+      self._dispatchWindowEvent("KeyboardChanged", self.isKeyboardOpened);
     }, true);
 
     // selectAtPoint bug 858471
