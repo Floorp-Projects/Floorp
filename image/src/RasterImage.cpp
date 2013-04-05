@@ -3597,6 +3597,8 @@ RasterImage::DecodePool::Singleton()
 }
 
 RasterImage::DecodePool::DecodePool()
+  : mThreadPoolMutex("Thread Pool")
+  , mShuttingDown(false)
 {
   if (gMultithreadedDecoding) {
     mThreadPool = do_CreateInstance(NS_THREADPOOL_CONTRACTID);
@@ -3623,13 +3625,21 @@ RasterImage::DecodePool::~DecodePool()
 
 NS_IMETHODIMP
 RasterImage::DecodePool::Observe(nsISupports *subject, const char *topic,
-                                   const PRUnichar *data)
+                                 const PRUnichar *data)
 {
   NS_ASSERTION(strcmp(topic, "xpcom-shutdown-threads") == 0, "oops");
 
-  if (mThreadPool) {
-    mThreadPool->Shutdown();
+  nsCOMPtr<nsIThreadPool> threadPool;
+
+  {
+    MutexAutoLock threadPoolLock(mThreadPoolMutex);
+    threadPool = mThreadPool;
     mThreadPool = nullptr;
+    mShuttingDown = true;
+  }
+
+  if (threadPool) {
+    threadPool->Shutdown();
   }
 
   return NS_OK;
@@ -3639,7 +3649,6 @@ void
 RasterImage::DecodePool::RequestDecode(RasterImage* aImg)
 {
   MOZ_ASSERT(aImg->mDecoder);
-  MOZ_ASSERT(NS_IsMainThread());
   aImg->mDecodingMutex.AssertCurrentThreadOwns();
 
   // If we're currently waiting on a new frame for this image, we can't do any
@@ -3658,7 +3667,10 @@ RasterImage::DecodePool::RequestDecode(RasterImage* aImg)
 
     aImg->mDecodeRequest->mRequestStatus = DecodeRequest::REQUEST_PENDING;
     nsRefPtr<DecodeJob> job = new DecodeJob(aImg->mDecodeRequest, aImg);
-    if (!gMultithreadedDecoding || !mThreadPool) {
+    MutexAutoLock threadPoolLock(mThreadPoolMutex);
+    if (mShuttingDown) {
+      // Just drop the job on the floor; we won't need it.
+    } else if (!gMultithreadedDecoding || !mThreadPool) {
       NS_DispatchToMainThread(job);
     } else {
       mThreadPool->Dispatch(job, nsIEventTarget::DISPATCH_NORMAL);
