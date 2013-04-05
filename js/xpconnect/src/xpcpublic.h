@@ -51,6 +51,10 @@ TransplantObjectWithWrapper(JSContext *cx,
 //
 // The return value is not wrapped into cx->compartment, so be sure to enter
 // its compartment before doing anything meaningful.
+//
+// Also note that XBL scopes are lazily created, so the return-value should be
+// null-checked unless the caller can ensure that the scope must already
+// exist.
 JSObject *
 GetXBLScope(JSContext *cx, JSObject *contentScope);
 
