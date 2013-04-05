@@ -1395,18 +1395,47 @@ static void Sort(nsDisplayList* aList, int32_t aCount, nsDisplayList::SortLEQ aC
   }
 }
 
+static nsIContent* FindContentInDocument(nsIContent* aContent, nsIDocument* aDoc) {
+  nsIContent* c = aContent;
+  for (;;) {
+    nsIDocument* d = c->OwnerDoc();
+    if (d == aDoc) {
+      return c;
+    }
+    nsIDocument* parentDoc = d->GetParentDocument();
+    if (!parentDoc) {
+      return nullptr;
+    }
+    c = parentDoc->FindContentForSubDocument(d);
+    if (!c) {
+      NS_ERROR("No content for subdocument?");
+      return nullptr;
+    }
+  }
+}
+
 static bool IsContentLEQ(nsDisplayItem* aItem1, nsDisplayItem* aItem2,
-                           void* aClosure) {
-  // These GetUnderlyingFrame calls return non-null because we're only used
-  // in sorting
-  return nsLayoutUtils::CompareTreePosition(
-      aItem1->GetUnderlyingFrame()->GetContent(),
-      aItem2->GetUnderlyingFrame()->GetContent(),
-      static_cast<nsIContent*>(aClosure)) <= 0;
+                         void* aClosure) {
+  nsIContent* commonAncestor = static_cast<nsIContent*>(aClosure);
+  // It's possible that the nsIContent for aItem1 or aItem2 is in a subdocument
+  // of commonAncestor, because display items for subdocuments have been
+  // mixed into the same list. Ensure that we're looking at content
+  // in commonAncestor's document.
+  nsIDocument* commonAncestorDoc = commonAncestor->OwnerDoc();
+  nsIContent* content1 = FindContentInDocument(aItem1->GetUnderlyingFrame()->GetContent(),
+                                               commonAncestorDoc);
+  nsIContent* content2 = FindContentInDocument(aItem2->GetUnderlyingFrame()->GetContent(),
+                                               commonAncestorDoc);
+  if (!content1 || !content2) {
+    NS_ERROR("Document trees are mixed up!");
+    // Something weird going on
+    return true;
+  }
+  return nsLayoutUtils::CompareTreePosition(content1, content2, commonAncestor) <= 0;
 }
 
 static bool IsZOrderLEQ(nsDisplayItem* aItem1, nsDisplayItem* aItem2,
-                          void* aClosure) {
+                        void* aClosure) {
   // These GetUnderlyingFrame calls return non-null because we're only used
   // in sorting.  Note that we can't just take the difference of the two
   // z-indices here, because that might overflow a 32-bit int.
