@@ -238,7 +238,7 @@ var Browser = {
 
   shutdown: function shutdown() {
     BrowserUI.uninit();
-    ContentAreaObserver.uninit();
+    ContentAreaObserver.shutdown();
 
     messageManager.removeMessageListener("MozScrolledAreaChanged", this);
     messageManager.removeMessageListener("Browser:ViewportMetadata", this);
@@ -1579,8 +1579,10 @@ Tab.prototype = {
 
     let browser = this._browser = document.createElement("browser");
     browser.id = "browser-" + this._id;
-    browser.setAttribute("class", "viewable-width viewable-height");
     this._chromeTab.linkedBrowser = browser;
+
+    // let the content area manager know about this browser.
+    ContentAreaObserver.onBrowserCreated(browser);
 
     browser.setAttribute("type", "content");
 
