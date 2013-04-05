@@ -743,9 +743,9 @@ var Browser = {
     zoomLevel = tab.clampZoomLevel(zoomLevel);
 
     let browserRect = browser.getBoundingClientRect();
-    let center = browser.transformClientToBrowser(browserRect.width / 2,
-                                                  browserRect.height / 2);
-    let rect = this._getZoomRectForPoint(center.x, center.y, zoomLevel);
+    let center = browser.ptClientToBrowser(browserRect.width / 2,
+                                           browserRect.height / 2);
+    let rect = this._getZoomRectForPoint(center.xPos, center.yPos, zoomLevel);
     AnimatedZoom.animateTo(rect);
   },
 
