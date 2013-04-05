@@ -25,16 +25,8 @@ interface nsIFile;
  *
  * @threadsafe
  */
-[scriptable, uuid(b2a4b534-f92e-4387-9bd9-d10408173925)]
+[scriptable, uuid(c8646e4b-3e2d-4df3-98a9-e2bbf74f279c)]
 interface mozIStorageConnection : nsISupports {
-  /**
-   * The default size for SQLite database pages used by mozStorage for new
-   * databases.
-   * This value must stay in sync with the SQLITE_DEFAULT_PAGE_SIZE define in
-   * /db/sqlite3/src/Makefile.in
-   */
-  const long DEFAULT_PAGE_SIZE = 32768;
-
   /**
    * Closes a database connection.  Callers must finalize all statements created
    * for this connection prior to calling this method.  It is illegal to use
@@ -88,6 +80,12 @@ interface mozIStorageConnection : nsISupports {
    * @return the cloned database connection.
    */
   mozIStorageConnection clone([optional] in boolean aReadOnly);
+
+  /**
+   * The default size for SQLite database pages used by mozStorage for new
+   * databases.
+   */
+  readonly attribute long defaultPageSize;
 
   /**
    * Indicates if the connection is open and ready to use.  This will be false

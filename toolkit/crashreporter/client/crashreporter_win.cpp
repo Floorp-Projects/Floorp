@@ -7,6 +7,8 @@
 #undef WIN32_LEAN_AND_MEAN
 #endif
 
+#define NOMINMAX
+
 #include "crashreporter.h"
 
 #include <windows.h>
@@ -893,7 +895,7 @@ static BOOL CALLBACK CrashReporterDialogProc(HWND hwndDlg, UINT message,
 
     hwnd = GetDlgItem(hwndDlg, IDC_SUBMITREPORTCHECK);
     GetRelativeRect(hwnd, hwndDlg, &rect);
-    int maxdiff = ResizeControl(hwnd, rect, Str(ST_CHECKSUBMIT), false,
+    long maxdiff = ResizeControl(hwnd, rect, Str(ST_CHECKSUBMIT), false,
                                 gCheckboxPadding);
     SetDlgItemText(hwndDlg, IDC_SUBMITREPORTCHECK,
                    Str(ST_CHECKSUBMIT).c_str());
@@ -920,9 +922,9 @@ static BOOL CALLBACK CrashReporterDialogProc(HWND hwndDlg, UINT message,
 
     hwnd = GetDlgItem(hwndDlg, IDC_INCLUDEURLCHECK);
     GetRelativeRect(hwnd, hwndDlg, &rect);
-    int diff = ResizeControl(hwnd, rect, Str(ST_CHECKURL), false,
+    long diff = ResizeControl(hwnd, rect, Str(ST_CHECKURL), false,
                              gCheckboxPadding);
-    maxdiff = max(diff, maxdiff);
+    maxdiff = std::max(diff, maxdiff);
     SetDlgItemText(hwndDlg, IDC_INCLUDEURLCHECK, Str(ST_CHECKURL).c_str());
 
     // want this on by default
@@ -937,7 +939,7 @@ static BOOL CALLBACK CrashReporterDialogProc(HWND hwndDlg, UINT message,
     GetRelativeRect(hwnd, hwndDlg, &rect);
     diff = ResizeControl(hwnd, rect, Str(ST_CHECKEMAIL), false,
                          gCheckboxPadding);
-    maxdiff = max(diff, maxdiff);
+    maxdiff = std::max(diff, maxdiff);
     SetDlgItemText(hwndDlg, IDC_EMAILMECHECK, Str(ST_CHECKEMAIL).c_str());
 
     if (CheckBoolKey(gCrashReporterKey.c_str(), EMAIL_ME_VALUE, &enabled) &&
@@ -995,7 +997,7 @@ static BOOL CALLBACK CrashReporterDialogProc(HWND hwndDlg, UINT message,
       restartRect.right - restartRect.left + 6 * 3;
     GetClientRect(hwndDlg, &r);
     // We may already have resized one of the checkboxes above
-    maxdiff = max(maxdiff, neededSize - (r.right - r.left));
+    maxdiff = std::max(maxdiff, neededSize - (r.right - r.left));
 
     if (maxdiff > 0) {
       // widen window
@@ -1222,10 +1224,10 @@ static wstring UTF8ToWide(const string& utf8, bool *success)
   return str;
 }
 
-string WideToUTF8(const wstring& wide, bool* success)
+static string WideToMBCP(const wstring& wide, unsigned int cp, bool* success = nullptr)
 {
   char* buffer = NULL;
-  int buffer_size = WideCharToMultiByte(CP_UTF8, 0, wide.c_str(),
+  int buffer_size = WideCharToMultiByte(cp, 0, wide.c_str(),
                                         -1, NULL, 0, NULL, NULL);
   if(buffer_size == 0) {
     if (success)
@@ -1240,15 +1242,20 @@ string WideToUTF8(const wstring& wide, bool* success)
     return "";
   }
 
-  WideCharToMultiByte(CP_UTF8, 0, wide.c_str(),
+  WideCharToMultiByte(cp, 0, wide.c_str(),
                       -1, buffer, buffer_size, NULL, NULL);
-  string utf8 = buffer;
+  string mb = buffer;
   delete [] buffer;
 
   if (success)
     *success = true;
 
-  return utf8;
+  return mb;
+}
+
+string WideToUTF8(const wstring& wide, bool* success)
+{
+  return WideToMBCP(wide, CP_UTF8, success);
 }
 
 /* === Crashreporter UI Functions === */
@@ -1424,8 +1431,11 @@ ifstream* UIOpenRead(const string& filename)
 #if _MSC_VER >= 1400  // MSVC 2005/8
   ifstream* file = new ifstream();
   file->open(UTF8ToWide(filename).c_str(), ios::in);
-#else  // _MSC_VER >= 1400
+#elif defined(_MSC_VER)
   ifstream* file = new ifstream(_wfopen(UTF8ToWide(filename).c_str(), L"r"));
+#else   // GCC
+  ifstream* file = new ifstream(WideToMBCP(UTF8ToWide(filename), CP_ACP).c_str(),
+                                ios::in);
 #endif  // _MSC_VER >= 1400
 
   return file;
@@ -1443,9 +1453,12 @@ ofstream* UIOpenWrite(const string& filename, bool append) // append=false
   ofstream* file = new ofstream();
   file->open(UTF8ToWide(filename).c_str(), append ? ios::out | ios::app
                                                   : ios::out);
-#else  // _MSC_VER >= 1400
+#elif defined(_MSC_VER)
   ofstream* file = new ofstream(_wfopen(UTF8ToWide(filename).c_str(),
                                         append ? L"a" : L"w"));
+#else   // GCC
+  ofstream* file = new ofstream(WideToMBCP(UTF8ToWide(filename), CP_ACP).c_str(),
+                                append ? ios::out | ios::app : ios::out);
 #endif  // _MSC_VER >= 1400
 
   return file;

@@ -43,7 +43,7 @@ vacuumParticipant.prototype =
   classID: Components.ID("{52aa0b22-b82f-4e38-992a-c3675a3355d2}"),
   contractID: "@unit.test.com/test-vacuum-participant;1",
 
-  get expectedDatabasePageSize() Ci.mozIStorageConnection.DEFAULT_PAGE_SIZE,
+  get expectedDatabasePageSize() this._dbConn.defaultPageSize,
   get databaseConnection() this._dbConn,
 
   _grant: true,

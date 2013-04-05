@@ -659,8 +659,8 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
         bool enterMonitorChain = false;
         if (resumeAfter && (js_CodeSpec[op].format & JOF_TYPESET)) {
             // Not every monitored op has a monitored fallback stub, e.g.
-            // JSOP_GETINTRINSIC will always return the same value so does
-            // not need a monitor chain.
+            // JSOP_NEWOBJECT, which always returns the same type for a
+            // particular script/pc location.
             ICEntry &icEntry = baselineScript->icEntryFromPCOffset(pcOff);
             ICFallbackStub *fallbackStub = icEntry.firstStub()->getChainFallback();
             if (fallbackStub->isMonitoredFallback())

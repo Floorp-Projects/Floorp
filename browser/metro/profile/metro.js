@@ -24,16 +24,6 @@ pref("metro.debug.selection.dumpEvents", false);
 // Enable off main thread compositing
 pref("layers.offmainthreadcomposition.enabled", false);
 
-// Form helper options: 0 = disabled, 1 = enabled, 2 = dynamic depending on screen size
-pref("formhelper.mode", 0);
-// Auto zoom to form elements when they take focus 
-pref("formhelper.autozoom", true);
-// Auto zoom to the caret
-pref("formhelper.autozoom.caret", false);
-
-// form autocomplete service
-pref("browser.formfill.enable", true);
-
 // Enable Microsoft TSF support by default for imes.
 pref("intl.enable_tsf_support", true);
 

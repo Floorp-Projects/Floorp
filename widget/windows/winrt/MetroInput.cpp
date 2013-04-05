@@ -9,7 +9,7 @@
 #include "MetroUtils.h" // Logging, POINT_CEIL_*, ActivateGenericInstance, etc
 #include "MetroWidget.h" // MetroInput::mWidget
 #include "npapi.h" // NPEvent
-#include "nsDOMTouchEvent.h"  // nsDOMTouch
+#include "mozilla/dom/Touch.h"  // Touch
 #include "nsTArray.h" // Touch lists
 #include "nsIDOMSimpleGestureEvent.h" // Constants for gesture events
 
@@ -23,6 +23,7 @@
 using namespace ABI::Windows; // UI, System, Foundation namespaces
 using namespace Microsoft; // WRL namespace (ComPtr, possibly others)
 using namespace mozilla::widget::winrt;
+using namespace mozilla::dom;
 
 // File-scoped statics (unnamed namespace)
 namespace {
@@ -46,17 +47,17 @@ namespace {
   typedef ABI::Windows::UI::Core::ICoreAcceleratorKeys ICoreAcceleratorKeys;
 
   /**
-   * Creates and returns a new {@link nsDOMTouch} from the given
+   * Creates and returns a new {@link Touch} from the given
    * ABI::Windows::UI::Input::IPointerPoint.  Note that the caller is
-   * responsible for freeing the memory for the nsDOMTouch returned from
+   * responsible for freeing the memory for the Touch returned from
    * this function.
    *
    * @param aPoint the ABI::Windows::UI::Input::IPointerPoint containing the
-   *               metadata from which to create our new {@link nsDOMTouch}
-   * @return a new {@link nsDOMTouch} representing the touch point. The caller
+   *               metadata from which to create our new {@link Touch}
+   * @return a new {@link Touch} representing the touch point. The caller
    *         is responsible for freeing the memory for this touch point.
    */
-  nsDOMTouch*
+  Touch*
   CreateDOMTouch(UI::Input::IPointerPoint* aPoint) {
     WRL::ComPtr<UI::Input::IPointerPointProperties> props;
     Foundation::Point position;
@@ -74,28 +75,28 @@ namespace {
     nsIntPoint touchRadius;
     touchRadius.x = MetroUtils::LogToPhys(contactRect.Width) / 2;
     touchRadius.y = MetroUtils::LogToPhys(contactRect.Height) / 2;
-    return new nsDOMTouch(pointerId,
-                          touchPoint,
-                          // Rotation radius and angle.
-                          // W3C touch events v1 do not use these.
-                          // The draft for W3C touch events v2 explains that
-                          // radius and angle should describe the ellipse that
-                          // most closely circumscribes the touching area.  Since
-                          // Windows gives us a bounding rectangle rather than an
-                          // ellipse, we provide the ellipse that is most closely
-                          // circumscribed by the bounding rectangle that Windows
-                          // gave us.
-                          touchRadius,
-                          0.0f,
-                          // Pressure
-                          // W3C touch events v1 do not use this.
-                          // The current draft for W3C touch events v2 says that
-                          // this should be a value between 0.0 and 1.0, which is
-                          // consistent with what Windows provides us here.
-                          // XXX: Windows defaults to 0.5, but the current W3C
-                          // draft says that the value should be 0.0 if no value
-                          // known.
-                          pressure);
+    return new Touch(pointerId,
+                     touchPoint,
+                     // Rotation radius and angle.
+                     // W3C touch events v1 do not use these.
+                     // The draft for W3C touch events v2 explains that
+                     // radius and angle should describe the ellipse that
+                     // most closely circumscribes the touching area.  Since
+                     // Windows gives us a bounding rectangle rather than an
+                     // ellipse, we provide the ellipse that is most closely
+                     // circumscribed by the bounding rectangle that Windows
+                     // gave us.
+                     touchRadius,
+                     0.0f,
+                     // Pressure
+                     // W3C touch events v1 do not use this.
+                     // The current draft for W3C touch events v2 says that
+                     // this should be a value between 0.0 and 1.0, which is
+                     // consistent with what Windows provides us here.
+                     // XXX: Windows defaults to 0.5, but the current W3C
+                     // draft says that the value should be 0.0 if no value
+                     // known.
+                     pressure);
   }
 
   bool

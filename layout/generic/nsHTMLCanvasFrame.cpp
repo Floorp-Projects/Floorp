@@ -290,15 +290,14 @@ nsHTMLCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   DisplayBorderBackgroundOutline(aBuilder, aLists);
 
-  nsDisplayList replacedContent;
+  DisplayListClipState::AutoClipContainingBlockDescendantsToContentBox
+    clip(aBuilder, this, DisplayListClipState::ASSUME_DRAWING_RESTRICTED_TO_CONTENT_RECT);
 
-  replacedContent.AppendNewToTop(
+  aLists.Content()->AppendNewToTop(
     new (aBuilder) nsDisplayCanvas(aBuilder, this));
 
-  DisplaySelectionOverlay(aBuilder, &replacedContent,
+  DisplaySelectionOverlay(aBuilder, aLists.Content(),
                           nsISelectionDisplay::DISPLAY_IMAGES);
-
-  WrapReplacedContentForBorderRadius(aBuilder, &replacedContent, aLists);
 }
 
 nsIAtom*

@@ -18,6 +18,8 @@
 
 #include "ion/BaselineJIT.h"
 
+#include "jsscriptinlines.h"
+
 using namespace js;
 
 using mozilla::DebugOnly;

@@ -53,11 +53,8 @@ interface nsITimerCallback : nsISupports
  * methods) an existing instance to avoid the overhead of destroying and
  * creating a timer.  It is not necessary to cancel the timer in that case.
  *
- * It is not currently safe to initialize timers on any thread other than the
- * main thread (it will cause races on the timers' delay adjustment mechanism,
- * which may mess up timings).   You can, however, cancel() and/or release a
- * timer on a non-main thread (provided that its callback object has a
- * thread-safe release() function).
+ * By default a timer will fire on the thread that created it.  Set the .target
+ * attribute to fire on a different thread.
  */
 [scriptable, uuid(193fc37a-8aa4-4d29-aa57-1acd87c26b66)]
 interface nsITimer : nsISupports
@@ -164,6 +161,9 @@ interface nsITimer : nsISupports
    * timers -- you might want to cancel a TYPE_ONE_SHOT timer, and even reuse
    * it by re-initializing it (to avoid object destruction and creation costs
    * by conserving one timer instance).
+   * 
+   * You can cancel() a timer on a thread other than its target, as long as 
+   * its callback object has a thread-safe release() function.
    */
   void cancel();
   
@@ -194,6 +194,8 @@ interface nsITimer : nsISupports
   /**
    * The nsIEventTarget where the callback will be dispatched. Note that this
    * target may only be set before the call to one of the init methods above.
+   * 
+   * By default the target is the thread that created the timer.
    */
   attribute nsIEventTarget target;
 };

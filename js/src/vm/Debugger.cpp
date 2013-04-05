@@ -554,7 +554,7 @@ Debugger::slowPathOnLeaveFrame(JSContext *cx, AbstractFramePtr frame, bool frame
 
             RootedValue completion(cx);
             if (!dbg->newCompletionValue(cx, status, value, &completion)) {
-                status = dbg->handleUncaughtException(ac, NULL, false);
+                status = dbg->handleUncaughtException(ac, false);
                 break;
             }
 
@@ -1007,7 +1007,7 @@ Debugger::fireNewScript(JSContext *cx, HandleScript script)
 
     JSObject *dsobj = wrapScript(cx, script);
     if (!dsobj) {
-        handleUncaughtException(ac, NULL, false);
+        handleUncaughtException(ac, false);
         return;
     }
 
@@ -1015,7 +1015,7 @@ Debugger::fireNewScript(JSContext *cx, HandleScript script)
     argv[0].setObject(*dsobj);
     Value rv;
     if (!Invoke(cx, ObjectValue(*object), ObjectValue(*hook), 1, argv, &rv))
-        handleUncaughtException(ac, NULL, true);
+        handleUncaughtException(ac, true);
 }
 
 JSTrapStatus
@@ -1306,7 +1306,7 @@ Debugger::fireNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global, Muta
     AutoArrayRooter argvRooter(cx, ArrayLength(argv), argv);
     argv[0].setObject(*global);
     if (!wrapDebuggeeValue(cx, argvRooter.handleAt(0)))
-        return handleUncaughtException(ac, NULL, false);
+        return handleUncaughtException(ac, false);
 
     RootedValue rv(cx);
     bool ok = Invoke(cx, ObjectValue(*object), ObjectValue(*hook), 1, argv, rv.address());

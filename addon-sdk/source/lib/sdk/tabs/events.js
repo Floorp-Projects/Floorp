@@ -12,6 +12,8 @@ const TAB_PREFIX = "Tab";
 
 const EVENTS = {
   ready: "DOMContentLoaded",
+  load: "load", // Used for non-HTML content
+  pageshow: "pageshow", // Used for cached content
   open: "TabOpen",
   close: "TabClose",
   activate: "TabSelect",
