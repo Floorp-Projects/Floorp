@@ -29,18 +29,6 @@ final class InputMethods {
     public static final String METHOD_SWYPE_BETA = "com.nuance.swype.input/.IME";
     public static final String METHOD_TOUCHPAL_KEYBOARD = "com.cootek.smartinputv5/com.cootek.smartinput5.TouchPalIME";
 
-    /* These input method names are currently unused, but kept here for future reference:
-    public static final String METHOD_EYES_FREE_KEYBOARD = "com.googlecode.eyesfree.inputmethod.latin/.LatinIME";
-    public static final String METHOD_GO_KEYBOARD = "com.jb.gokeyboard/.GoKeyboard";
-    public static final String METHOD_GOOGLE_PINYIN = "com.google.android.inputmethod.pinyin/.PinyinIME";
-    public static final String METHOD_GOOGLE_TALKBACK = "com.google.android.marvin.talkback/com.googlecode.eyesfree.inputmethod.latin.LatinIME";
-    public static final String METHOD_HACKERS_KEYBOARD = "org.pocketworkstation.pckeyboard/.LatinIME";
-    public static final String METHOD_SAMSUNG_GALAXY_NOTE = "com.samsung.sec.android.inputmethod.axt9/.AxT9IME";
-    public static final String METHOD_SLIDE_IT_KEYBOARD = "com.dasur.slideit.vt.lite/com.dasur.slideit.SlideITIME";
-    public static final String METHOD_SWIFTKEY_TRIAL = "com.touchtype.swiftkey.phone.trial/com.touchtype.KeyboardService";
-    public static final String METHOD_TOUCHPAL_KEYBOARD = "com.cootek.smartinputv5/.TouchPalIME";
-    */
-
     // this is white list of IME support for hardware physical keyboard
     private static final Collection<String> sHKBWhiteList = Arrays.asList(new String[] {
                                                             METHOD_ATOK,
