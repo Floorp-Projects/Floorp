@@ -14,13 +14,34 @@ using namespace mozilla::ipc;
 
 BEGIN_BLUETOOTH_NAMESPACE
 
+class BluetoothSocket;
+
 class BluetoothSocketObserver
 {
 public:
-  virtual void ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aMessage) = 0;
-  virtual void OnConnectSuccess() = 0;
-  virtual void OnConnectError() = 0;
-  virtual void OnDisconnect() = 0;
+  virtual void ReceiveSocketData(BluetoothSocket* aSocket,
+                                 nsAutoPtr<UnixSocketRawData>& aMessage) = 0;
+ 
+   /**
+    * A callback function which would be called when a socket connection
+    * is established successfully. To be more specific, this would be called
+    * when socket state changes from CONNECTING/LISTENING to CONNECTED.
+    */
+  virtual void OnConnectSuccess(BluetoothSocket* aSocket) = 0;
+ 
+   /**
+    * A callback function which would be called when BluetoothSocket::Connect()
+    * fails.
+    */
+  virtual void OnConnectError(BluetoothSocket* aSocket) = 0;
+ 
+   /**
+    * A callback function which would be called when a socket connection
+    * is dropped. To be more specific, this would be called when socket state
+    * changes from CONNECTED/LISTENING to DISCONNECTED.
+    */
+  virtual void OnDisconnect(BluetoothSocket* aSocket) = 0;
+
 };
 
 END_BLUETOOTH_NAMESPACE
