@@ -57,7 +57,7 @@ NEW_BINDING(nsDOMEvent, Event);
 template <>                                                                   \
 MOZ_ALWAYS_INLINE JSBool                                                      \
 xpc_qsUnwrapThis<_interface>(JSContext *cx,                                   \
-                             JSObject *obj,                                   \
+                             JS::HandleObject obj,                            \
                              _interface **ppThis,                             \
                              nsISupports **pThisRef,                          \
                              jsval *pThisVal,                                 \
