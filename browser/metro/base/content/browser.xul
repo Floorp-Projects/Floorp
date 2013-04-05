@@ -463,11 +463,6 @@
       </settings>
     </flyoutpanel>
 
-    <!-- Form Helper form validation helper popup -->
-    <arrowbox id="form-helper-validation-container" class="arrowbox-dark" flex="1" hidden="true" offset="0" top="0" left="0">
-      <label/>
-    </arrowbox>
-
 #ifdef MOZ_SERVICES_SYNC
     <box id="syncsetup-container" class="perm-modal-block" hidden="true">
       <dialog id="syncsetup-dialog" class="content-dialog" flex="1">
