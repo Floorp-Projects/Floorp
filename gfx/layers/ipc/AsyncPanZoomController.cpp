@@ -225,8 +225,20 @@ WidgetSpaceToCompensatedViewportSpace(const gfx::Point& aPoint,
 }
 
 nsEventStatus
-AsyncPanZoomController::ReceiveMainThreadInputEvent(const nsInputEvent& aEvent)
+AsyncPanZoomController::ReceiveInputEvent(const nsInputEvent& aEvent,
+                                          nsInputEvent* aOutEvent)
 {
+  gfxFloat currentResolution;
+  gfx::Point currentScrollOffset, lastScrollOffset;
+  {
+    MonitorAutoLock monitor(mMonitor);
+    currentResolution = CalculateResolution(mFrameMetrics).width;
+    currentScrollOffset = gfx::Point(mFrameMetrics.mScrollOffset.x,
+                                     mFrameMetrics.mScrollOffset.y);
+    lastScrollOffset = gfx::Point(mLastContentPaintMetrics.mScrollOffset.x,
+                                  mLastContentPaintMetrics.mScrollOffset.y);
+  }
+
   nsEventStatus status;
   switch (aEvent.eventStructType) {
   case NS_TOUCH_EVENT: {
@@ -244,21 +256,9 @@ AsyncPanZoomController::ReceiveMainThreadInputEvent(const nsInputEvent& aEvent)
     break;
   }
 
-  return status;
-}
-
-void
-AsyncPanZoomController::ApplyZoomCompensationToEvent(nsInputEvent* aEvent)
-{
-  gfxFloat currentResolution;
-  {
-    MonitorAutoLock monitor(mMonitor);
-    currentResolution = CalculateResolution(mFrameMetrics).width;
-  }
-
-  switch (aEvent->eventStructType) {
+  switch (aEvent.eventStructType) {
   case NS_TOUCH_EVENT: {
-    nsTouchEvent* touchEvent = static_cast<nsTouchEvent*>(aEvent);
+    nsTouchEvent* touchEvent = static_cast<nsTouchEvent*>(aOutEvent);
     const nsTArray<nsCOMPtr<nsIDOMTouch> >& touches = touchEvent->touches;
     for (uint32_t i = 0; i < touches.Length(); ++i) {
       nsIDOMTouch* touch = touches[i];
@@ -273,12 +273,14 @@ AsyncPanZoomController::ApplyZoomCompensationToEvent(nsInputEvent* aEvent)
   }
   default: {
     gfx::Point refPoint = WidgetSpaceToCompensatedViewportSpace(
-      gfx::Point(aEvent->refPoint.x, aEvent->refPoint.y),
+      gfx::Point(aOutEvent->refPoint.x, aOutEvent->refPoint.y),
       currentResolution);
-    aEvent->refPoint = nsIntPoint(refPoint.x, refPoint.y);
+    aOutEvent->refPoint = nsIntPoint(refPoint.x, refPoint.y);
     break;
   }
   }
+
+  return status;
 }
 
 nsEventStatus AsyncPanZoomController::ReceiveInputEvent(const InputData& aEvent) {
