@@ -118,7 +118,7 @@ public:
 
   // Resolve all the fields for this binding and all ancestor bindings on the
   // object |obj|.  False return means a JS exception was set.
-  bool ResolveAllFields(JSContext *cx, JSObject *obj) const;
+  bool ResolveAllFields(JSContext *cx, JS::Handle<JSObject*> obj) const;
 
   // Get the list of insertion points for aParent. The nsInsertionPointList
   // is owned by the binding, you should not delete it.

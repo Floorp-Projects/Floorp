@@ -147,7 +147,7 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
                                   nsIScriptContext* aContext, 
                                   nsIContent* aBoundElement, 
                                   nsIXPConnectJSObjectHolder** aScriptObjectHolder, 
-                                  JSObject** aTargetClassObject,
+                                  JS::MutableHandle<JSObject*> aTargetClassObject,
                                   bool* aTargetIsNew)
 {
   nsresult rv = NS_OK;
@@ -181,19 +181,15 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
   NS_ENSURE_SUCCESS(rv, rv);
 
   JS::Rooted<JSObject*> value(cx, &v.toObject());
-  JS::Rooted<JSObject*> targetClassObject(cx, *aTargetClassObject);
 
   // All of the above code was just obtaining the bound element's script object and its immediate
   // concrete base class.  We need to alter the object so that our concrete class is interposed
   // between the object and its base class.  We become the new base class of the object, and the
   // object's old base class becomes the new class' base class.
-  rv = aBinding->InitClass(mClassName, cx, global, value,
-                           &targetClassObject, aTargetIsNew);
+  rv = aBinding->InitClass(mClassName, cx, global, value, aTargetClassObject, aTargetIsNew);
   if (NS_FAILED(rv)) {
     return rv;
   }
-
-  *aTargetClassObject = targetClassObject;
 
   nsContentUtils::PreserveWrapper(aBoundElement, aBoundElement);
 
@@ -299,7 +295,7 @@ nsXBLProtoImpl::FindField(const nsString& aFieldName) const
 }
 
 bool
-nsXBLProtoImpl::ResolveAllFields(JSContext *cx, JSObject *obj) const
+nsXBLProtoImpl::ResolveAllFields(JSContext *cx, JS::Handle<JSObject*> obj) const
 {
   AutoVersionChecker avc(cx);
   for (nsXBLProtoImplField* f = mFields; f; f = f->GetNext()) {
@@ -307,10 +303,10 @@ nsXBLProtoImpl::ResolveAllFields(JSContext *cx, JSObject *obj) const
     // PRUnichar* for the property name.  Let's just use the public API and
     // all.
     nsDependentString name(f->GetName());
-    JS::Value dummy;
+    JS::Rooted<JS::Value> dummy(cx);
     if (!::JS_LookupUCProperty(cx, obj,
                                reinterpret_cast<const jschar*>(name.get()),
-                               name.Length(), &dummy)) {
+                               name.Length(), dummy.address())) {
       return false;
     }
   }
@@ -319,7 +315,7 @@ nsXBLProtoImpl::ResolveAllFields(JSContext *cx, JSObject *obj) const
 }
 
 void
-nsXBLProtoImpl::UndefineFields(JSContext *cx, JSObject *obj) const
+nsXBLProtoImpl::UndefineFields(JSContext *cx, JS::Handle<JSObject*> obj) const
 {
   JSAutoRequest ar(cx);
   for (nsXBLProtoImplField* f = mFields; f; f = f->GetNext()) {
@@ -329,8 +325,8 @@ nsXBLProtoImpl::UndefineFields(JSContext *cx, JSObject *obj) const
     JSBool hasProp;
     if (::JS_AlreadyHasOwnUCProperty(cx, obj, s, name.Length(), &hasProp) &&
         hasProp) {
-      JS::Value dummy;
-      ::JS_DeleteUCProperty2(cx, obj, s, name.Length(), &dummy);
+      JS::Rooted<JS::Value> dummy(cx);
+      ::JS_DeleteUCProperty2(cx, obj, s, name.Length(), dummy.address());
     }
   }
 }
