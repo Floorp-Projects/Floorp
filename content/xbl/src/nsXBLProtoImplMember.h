@@ -74,7 +74,7 @@ public:
   const PRUnichar* GetName() { return mName; }
 
   virtual nsresult InstallMember(JSContext* aCx,
-                                 JSObject* aTargetClassObject) = 0;
+                                 JS::Handle<JSObject*> aTargetClassObject) = 0;
   virtual nsresult CompileMember(nsIScriptContext* aContext,
                                  const nsCString& aClassStr,
                                  JSObject* aClassObject) = 0;
