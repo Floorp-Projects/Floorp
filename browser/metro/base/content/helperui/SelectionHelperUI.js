@@ -419,26 +419,19 @@ var SelectionHelperUI = {
     messageManager.addMessageListener("Content:SelectionFail", this);
     messageManager.addMessageListener("Content:SelectionDebugRect", this);
 
-    // selection related events
+    window.addEventListener("keypress", this, true);
     window.addEventListener("click", this, false);
     window.addEventListener("dblclick", this, false);
-
-    // Picking up scroll attempts
     window.addEventListener("touchstart", this, true);
     window.addEventListener("touchend", this, true);
     window.addEventListener("touchmove", this, true);
-
-    // context ui display events
     window.addEventListener("MozContextUIShow", this, true);
     window.addEventListener("MozContextUIDismiss", this, true);
+    window.addEventListener("MozPrecisePointer", this, true);
 
-    // cancellation related events
-    window.addEventListener("keypress", this, true);
     Elements.browsers.addEventListener("URLChanged", this, true);
     Elements.browsers.addEventListener("SizeChanged", this, true);
     Elements.browsers.addEventListener("ZoomChanged", this, true);
-
-    window.addEventListener("MozPrecisePointer", this, true);
 
     this.overlay.enabled = true;
   },
@@ -449,22 +442,19 @@ var SelectionHelperUI = {
     messageManager.removeMessageListener("Content:SelectionFail", this);
     messageManager.removeMessageListener("Content:SelectionDebugRect", this);
 
+    window.removeEventListener("keypress", this, true);
     window.removeEventListener("click", this, false);
     window.removeEventListener("dblclick", this, false);
-
     window.removeEventListener("touchstart", this, true);
     window.removeEventListener("touchend", this, true);
     window.removeEventListener("touchmove", this, true);
-
     window.removeEventListener("MozContextUIShow", this, true);
     window.removeEventListener("MozContextUIDismiss", this, true);
+    window.removeEventListener("MozPrecisePointer", this, true);
 
-    window.removeEventListener("keypress", this, true);
     Elements.browsers.removeEventListener("URLChanged", this, true);
     Elements.browsers.removeEventListener("SizeChanged", this, true);
     Elements.browsers.removeEventListener("ZoomChanged", this, true);
-
-    window.removeEventListener("MozPrecisePointer", this, true);
 
     this._shutdownAllMarkers();
 
@@ -782,6 +772,30 @@ var SelectionHelperUI = {
     aEvent.preventDefault();
   },
 
+  _onKeypress: function _onKeypress() {
+    this.closeEditSession();
+  },
+
+  _onResize: function _onResize() {
+    this._sendAsyncMessage("Browser:SelectionUpdate", {});
+  },
+
+  _onContextUIVisibilityEvent: function _onContextUIVisibilityEvent(aType) {
+    // Manage display of monocles when the context ui is displayed.
+    if (!this.isActive)
+      return;
+    this.overlay.hidden = (aType == "MozContextUIShow");
+  },
+
+  /*
+   * Event handlers for message manager
+   */
+
+  _onDebugRectRequest: function _onDebugRectRequest(aMsg) {
+    this.overlay.addDebugRect(aMsg.left, aMsg.top, aMsg.right, aMsg.bottom,
+                              aMsg.color, aMsg.fill, aMsg.id);
+  },
+
   _onSelectionCopied: function _onSelectionCopied(json) {
     this.closeEditSessionAndClear();
   },
@@ -822,26 +836,6 @@ var SelectionHelperUI = {
   _onSelectionFail: function _onSelectionFail() {
     Util.dumpLn("failed to get a selection.");
     this.closeEditSession();
-  },
-
-  _onKeypress: function _onKeypress() {
-    this.closeEditSession();
-  },
-
-  _onResize: function _onResize() {
-    this._sendAsyncMessage("Browser:SelectionUpdate", {});
-  },
-
-  _onContextUIVisibilityEvent: function _onContextUIVisibilityEvent(aType) {
-    // Manage display of monocles when the context ui is displayed.
-    if (!this.isActive)
-      return;
-    this.overlay.hidden = (aType == "MozContextUIShow");
-  },
-
-  _onDebugRectRequest: function _onDebugRectRequest(aMsg) {
-    this.overlay.addDebugRect(aMsg.left, aMsg.top, aMsg.right, aMsg.bottom,
-                              aMsg.color, aMsg.fill, aMsg.id);
   },
 
   /*
@@ -893,22 +887,22 @@ var SelectionHelperUI = {
 
       case "keypress":
         this._onKeypress(aEvent);
-      break;
+        break;
 
       case "SizeChanged":
         this._onResize(aEvent);
-      break;
+        break;
 
       case "ZoomChanged":
       case "URLChanged":
       case "MozPrecisePointer":
         this.closeEditSessionAndClear();
-      break;
+        break;
 
       case "MozContextUIShow":
       case "MozContextUIDismiss":
         this._onContextUIVisibilityEvent(aEvent.type);
-      break;
+        break;
     }
   },
 
