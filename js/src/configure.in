@@ -1783,6 +1783,7 @@ ia64*-hpux*)
         if test -n "$GNU_CC"; then
             CFLAGS="$CFLAGS -mstackrealign -fno-keep-inline-dllexport"
             CXXFLAGS="$CXXFLAGS -mstackrealign -fno-keep-inline-dllexport"
+            LDFLAGS="$LDFLAGS -Wl,--large-address-aware"
         else
             DSO_LDOPTS="$DSO_LDOPTS -MACHINE:X86"
             LDFLAGS="$LDFLAGS -SAFESEH"
