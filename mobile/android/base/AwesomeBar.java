@@ -45,16 +45,9 @@ import android.widget.TabWidget;
 import android.widget.Toast;
 
 import java.net.URLEncoder;
-import java.util.Arrays;
-import java.util.Collection;
 
 public class AwesomeBar extends GeckoActivity {
     private static final String LOGTAG = "GeckoAwesomeBar";
-
-    private static final Collection<String> sSwypeInputMethods = Arrays.asList(new String[] {
-                                                                 InputMethods.METHOD_SWYPE,
-                                                                 InputMethods.METHOD_SWYPE_BETA,
-                                                                 });
 
     public static final String URL_KEY = "url";
     public static final String CURRENT_URL_KEY = "currenturl";
@@ -70,7 +63,7 @@ public class AwesomeBar extends GeckoActivity {
     private CustomEditText mText;
     private ImageButton mGoButton;
     private ContextMenuSubject mContextMenuSubject;
-    private boolean mIsUsingSwype;
+    private boolean mIsUsingGestureKeyboard;
     private boolean mDelayRestartInput;
 
     @Override
@@ -297,17 +290,15 @@ public class AwesomeBar extends GeckoActivity {
         if (!hasFocus)
             return;
 
-        boolean wasUsingSwype = mIsUsingSwype;
-        mIsUsingSwype = sSwypeInputMethods.contains(InputMethods.getCurrentInputMethod(this));
-
-        if (mIsUsingSwype == wasUsingSwype)
+        boolean wasUsingGestureKeyboard = mIsUsingGestureKeyboard;
+        mIsUsingGestureKeyboard = InputMethods.isGestureKeyboard(this);
+        if (mIsUsingGestureKeyboard == wasUsingGestureKeyboard)
             return;
 
         int currentInputType = mText.getInputType();
-        int newInputType = mIsUsingSwype
-                           ? (currentInputType & ~InputType.TYPE_TEXT_VARIATION_URI)    // URL=OFF
-                           : (currentInputType | InputType.TYPE_TEXT_VARIATION_URI);    // URL=ON
-
+        int newInputType = mIsUsingGestureKeyboard
+                           ? (currentInputType & ~InputType.TYPE_TEXT_VARIATION_URI) // Text mode
+                           : (currentInputType | InputType.TYPE_TEXT_VARIATION_URI); // URL mode
         mText.setRawInputType(newInputType);
     }
 
