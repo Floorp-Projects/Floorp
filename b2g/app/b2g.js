@@ -395,6 +395,8 @@ pref("services.push.serverURL", "");
 pref("services.push.userAgentID", "");
 // exponential back-off start is 5 seconds like in HTTP/1.1
 pref("services.push.retryBaseInterval", 5000);
+// WebSocket level ping transmit interval in seconds.
+pref("services.push.websocketPingInterval", 55);
 // exponential back-off end is 20 minutes
 pref("services.push.maxRetryInterval", 1200000);
 // How long before a DOMRequest errors as timeout

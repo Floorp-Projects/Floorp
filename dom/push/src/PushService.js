@@ -567,6 +567,7 @@ PushService.prototype = {
     debug("serverURL: " + uri.spec);
     this._wsListener = new PushWebSocketListener(this);
     this._ws.protocol = "push-notification";
+    this._ws.pingInterval = this._prefs.get("websocketPingInterval");
     this._ws.asyncOpen(uri, serverURL, this._wsListener, null);
     this._currentState = STATE_WAITING_FOR_WS_START;
   },
