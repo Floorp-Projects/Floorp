@@ -833,7 +833,7 @@ def writeQuickStub(f, customMethodCalls, stringtable, member, stubName,
     f.write("    XPC_QS_ASSERT_CONTEXT_OK(cx);\n")
 
     # Compute "this".
-    f.write("    JSObject *obj = JS_THIS_OBJECT(cx, vp);\n"
+    f.write("    JS::RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));\n"
             "    if (!obj)\n"
             "        return JS_FALSE;\n")
 
