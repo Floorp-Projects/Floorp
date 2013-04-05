@@ -335,7 +335,7 @@ var SyntheticGestures = (function() {
   // Swipe smoothly from (x1, y1) to (x2, y2) over duration ms
   // then invoke the then() callback.
   function swipe(target, x1, y1, x2, y2, duration, then) {
-    if (!SyntheticGestures.touchSupported) {
+    if (!SyntheticGestures.touchSupported || !target.ownerDocument.createTouch) {
       console.warn('swipe: touch events not supported; using mouse instead');
       return mouseswipe(target, x1, y1, x2, y2, duration, then);
     }
@@ -377,7 +377,7 @@ var SyntheticGestures = (function() {
   // or away from each other by the specified scale factor over duration ms.
   // Finally, invoke the then() callback
   function pinch(target, x1, y1, x2, y2, scale, duration, then) {
-    if (!SyntheticGestures.touchSupported) {
+    if (!SyntheticGestures.touchSupported || !target.ownerDocument.createTouch) {
       console.error('pinch: touch events not supported on this platform');
       return;
     }
