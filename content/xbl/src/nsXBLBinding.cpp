@@ -921,127 +921,127 @@ nsXBLBinding::UnhookEventHandlers()
 void
 nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocument)
 {
-  if (aOldDocument != aNewDocument) {
-    // Only style bindings get their prototypes unhooked.  First do ourselves.
-    if (mIsStyleBinding) {
-      // Now the binding dies.  Unhook our prototypes.
-      if (mPrototypeBinding->HasImplementation()) {
-        nsCOMPtr<nsIScriptGlobalObject> global =  do_QueryInterface(
-          aOldDocument->GetScopeObject());
-        if (global) {
-          JSObject *scope = global->GetGlobalJSObject();
+  if (aOldDocument == aNewDocument)
+    return;
+
+  // Only style bindings get their prototypes unhooked.  First do ourselves.
+  if (mIsStyleBinding) {
+    // Now the binding dies.  Unhook our prototypes.
+    if (mPrototypeBinding->HasImplementation()) {
+      nsCOMPtr<nsIScriptGlobalObject> global =  do_QueryInterface(
+        aOldDocument->GetScopeObject());
+      if (global) {
+        nsCOMPtr<nsIScriptContext> context = global->GetContext();
+        if (context) {
+          JSContext *cx = context->GetNativeContext();
+
+          nsCxPusher pusher;
+          pusher.Push(cx);
+
           // scope might be null if we've cycle-collected the global
           // object, since the Unlink phase of cycle collection happens
           // after JS GC finalization.  But in that case, we don't care
           // about fixing the prototype chain, since everything's going
           // away immediately.
+          JS::Rooted<JSObject*> scope(cx, global->GetGlobalJSObject());
+          JS::Rooted<JSObject*> scriptObject(cx, mBoundElement->GetWrapper());
+          if (scope && scriptObject) {
+            // XXX Stay in sync! What if a layered binding has an
+            // <interface>?!
+            // XXXbz what does that comment mean, really?  It seems to date
+            // back to when there was such a thing as an <interface>, whever
+            // that was...
 
-          nsCOMPtr<nsIScriptContext> context = global->GetContext();
-          if (context && scope) {
-            JSContext *cx = context->GetNativeContext();
- 
-            nsCxPusher pusher;
-            pusher.Push(cx);
+            // Find the right prototype.
+            JSAutoRequest ar(cx);
+            JSAutoCompartment ac(cx, scriptObject);
 
-            JSObject* scriptObject = mBoundElement->GetWrapper();
-            if (scriptObject) {
-              // XXX Stay in sync! What if a layered binding has an
-              // <interface>?!
-              // XXXbz what does that comment mean, really?  It seems to date
-              // back to when there was such a thing as an <interface>, whever
-              // that was...
-
-              // Find the right prototype.
-              JSObject* base = scriptObject;
-              JSObject* proto;
-              JSAutoRequest ar(cx);
-              JSAutoCompartment ac(cx, scriptObject);
-
-              for ( ; true; base = proto) { // Will break out on null proto
-                if (!JS_GetPrototype(cx, base, &proto)) {
-                  return;
-                }
-                if (!proto) {
-                  break;
-                }
-
-                JSClass* clazz = ::JS_GetClass(proto);
-                if (!clazz ||
-                    (~clazz->flags &
-                     (JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS)) ||
-                    JSCLASS_RESERVED_SLOTS(clazz) != 1 ||
-                    clazz->finalize != XBLFinalize) {
-                  // Clearly not the right class
-                  continue;
-                }
-
-                nsRefPtr<nsXBLDocumentInfo> docInfo =
-                  static_cast<nsXBLDocumentInfo*>(::JS_GetPrivate(proto));
-                if (!docInfo) {
-                  // Not the proto we seek
-                  continue;
-                }
-
-                JS::Value protoBinding = ::JS_GetReservedSlot(proto, 0);
-
-                if (JSVAL_TO_PRIVATE(protoBinding) != mPrototypeBinding) {
-                  // Not the right binding
-                  continue;
-                }
-
-                // Alright!  This is the right prototype.  Pull it out of the
-                // proto chain.
-                JSObject* grandProto;
-                if (!JS_GetPrototype(cx, proto, &grandProto)) {
-                  return;
-                }
-                ::JS_SetPrototype(cx, base, grandProto);
+            JS::Rooted<JSObject*> base(cx, scriptObject);
+            JS::Rooted<JSObject*> proto(cx);
+            for ( ; true; base = proto) { // Will break out on null proto
+              if (!JS_GetPrototype(cx, base, proto.address())) {
+                return;
+              }
+              if (!proto) {
                 break;
               }
 
-              mPrototypeBinding->UndefineFields(cx, scriptObject);
+              JSClass* clazz = ::JS_GetClass(proto);
+              if (!clazz ||
+                  (~clazz->flags &
+                   (JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS)) ||
+                  JSCLASS_RESERVED_SLOTS(clazz) != 1 ||
+                  clazz->finalize != XBLFinalize) {
+                // Clearly not the right class
+                continue;
+              }
 
-              // Don't remove the reference from the document to the
-              // wrapper here since it'll be removed by the element
-              // itself when that's taken out of the document.
+              nsRefPtr<nsXBLDocumentInfo> docInfo =
+                static_cast<nsXBLDocumentInfo*>(::JS_GetPrivate(proto));
+              if (!docInfo) {
+                // Not the proto we seek
+                continue;
+              }
+
+              JS::Value protoBinding = ::JS_GetReservedSlot(proto, 0);
+
+              if (JSVAL_TO_PRIVATE(protoBinding) != mPrototypeBinding) {
+                // Not the right binding
+                continue;
+              }
+
+              // Alright!  This is the right prototype.  Pull it out of the
+              // proto chain.
+              JS::Rooted<JSObject*> grandProto(cx);
+              if (!JS_GetPrototype(cx, proto, grandProto.address())) {
+                return;
+              }
+              ::JS_SetPrototype(cx, base, grandProto);
+              break;
             }
+
+            mPrototypeBinding->UndefineFields(cx, scriptObject);
+
+            // Don't remove the reference from the document to the
+            // wrapper here since it'll be removed by the element
+            // itself when that's taken out of the document.
           }
         }
       }
-
-      // Remove our event handlers
-      UnhookEventHandlers();
     }
 
-    {
-      nsAutoScriptBlocker scriptBlocker;
+    // Remove our event handlers
+    UnhookEventHandlers();
+  }
 
-      // Then do our ancestors.  This reverses the construction order, so that at
-      // all times things are consistent as far as everyone is concerned.
-      if (mNextBinding) {
-        mNextBinding->ChangeDocument(aOldDocument, aNewDocument);
-      }
+  {
+    nsAutoScriptBlocker scriptBlocker;
 
-      // Update the anonymous content.
-      // XXXbz why not only for style bindings?
-      nsIContent *anonymous = mContent;
-      if (anonymous) {
-        // Also kill the default content within all our insertion points.
-        if (mInsertionPointTable)
-          mInsertionPointTable->Enumerate(ChangeDocumentForDefaultContent,
-                                          nullptr);
+    // Then do our ancestors.  This reverses the construction order, so that at
+    // all times things are consistent as far as everyone is concerned.
+    if (mNextBinding) {
+      mNextBinding->ChangeDocument(aOldDocument, aNewDocument);
+    }
 
-        nsXBLBinding::UninstallAnonymousContent(aOldDocument, anonymous);
-      }
+    // Update the anonymous content.
+    // XXXbz why not only for style bindings?
+    nsIContent *anonymous = mContent;
+    if (anonymous) {
+      // Also kill the default content within all our insertion points.
+      if (mInsertionPointTable)
+        mInsertionPointTable->Enumerate(ChangeDocumentForDefaultContent,
+                                        nullptr);
 
-      // Make sure that henceforth we don't claim that mBoundElement's children
-      // have insertion parents in the old document.
-      nsBindingManager* bindingManager = aOldDocument->BindingManager();
-      for (nsIContent* child = mBoundElement->GetLastChild();
-           child;
-           child = child->GetPreviousSibling()) {
-        bindingManager->SetInsertionParent(child, nullptr);
-      }
+      nsXBLBinding::UninstallAnonymousContent(aOldDocument, anonymous);
+    }
+
+    // Make sure that henceforth we don't claim that mBoundElement's children
+    // have insertion parents in the old document.
+    nsBindingManager* bindingManager = aOldDocument->BindingManager();
+    for (nsIContent* child = mBoundElement->GetLastChild();
+         child;
+         child = child->GetPreviousSibling()) {
+      bindingManager->SetInsertionParent(child, nullptr);
     }
   }
 }
