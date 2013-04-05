@@ -669,3 +669,8 @@ pref("b2g.version", @MOZ_B2G_VERSION@);
 
 // Disable console buffering to save memory.
 pref("consoleservice.buffered", false);
+
+#ifdef MOZ_WIDGET_GONK
+// Performance testing suggests 2k is a better page size for SQLite.
+pref("toolkit.storage.pageSize", 2048);
+#endif
