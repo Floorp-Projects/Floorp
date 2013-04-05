@@ -55,7 +55,7 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aPrototypeBinding,
   // If the way this gets the script context changes, fix
   // nsXBLProtoImplAnonymousMethod::Execute
   nsIDocument* document = aBinding->GetBoundElement()->OwnerDoc();
-                                              
+
   nsCOMPtr<nsIScriptGlobalObject> global =  do_QueryInterface(document->GetScopeObject());
   if (!global) return NS_OK;
 
@@ -67,7 +67,7 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aPrototypeBinding,
   // This function also has the side effect of building up the prototype implementation if it has
   // not been built already.
   nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-  JSObject* targetClassObject = nullptr;
+  JS::Rooted<JSObject*> targetClassObject(context->GetNativeContext(), nullptr);
   bool targetObjectIsNew = false;
   nsresult rv = InitTargetObjects(aPrototypeBinding, context,
                                   aBinding->GetBoundElement(),
@@ -83,8 +83,8 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aPrototypeBinding,
   if (!targetObjectIsNew)
     return NS_OK;
 
-  JSObject * targetScriptObject;
-  holder->GetJSObject(&targetScriptObject);
+  JS::Rooted<JSObject*> targetScriptObject(context->GetNativeContext());
+  holder->GetJSObject(targetScriptObject.address());
 
   AutoPushJSContext cx(context->GetNativeContext());
   JSAutoRequest ar(cx);

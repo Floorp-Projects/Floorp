@@ -140,47 +140,49 @@ const char* gPropertyArgs[] = { "val" };
 
 nsresult
 nsXBLProtoImplProperty::InstallMember(JSContext *aCx,
-                                      JSObject* aTargetClassObject)
+                                      JS::Handle<JSObject*> aTargetClassObject)
 {
   NS_PRECONDITION(mIsCompiled,
                   "Should not be installing an uncompiled property");
   MOZ_ASSERT(js::IsObjectInContextCompartment(aTargetClassObject, aCx));
-  JSObject * globalObject = JS_GetGlobalForObject(aCx, aTargetClassObject);
-  JSObject * scopeObject = xpc::GetXBLScope(aCx, globalObject);
+  JS::Rooted<JSObject*> globalObject(aCx, JS_GetGlobalForObject(aCx, aTargetClassObject));
+  JS::Rooted<JSObject*> scopeObject(aCx, xpc::GetXBLScope(aCx, globalObject));
 
   // now we want to reevaluate our property using aContext and the script object for this window...
   if (mJSGetterObject || mJSSetterObject) {
-    JSObject * getter = nullptr;
-
     // First, enter the compartment of the scope object and clone the functions.
     JSAutoCompartment ac(aCx, scopeObject);
-    if (mJSGetterObject)
+
+    JS::Rooted<JSObject*> getter(aCx, nullptr);
+    if (mJSGetterObject) {
       if (!(getter = ::JS_CloneFunctionObject(aCx, mJSGetterObject, scopeObject)))
         return NS_ERROR_OUT_OF_MEMORY;
+    }
 
-    JSObject * setter = nullptr;
-    if (mJSSetterObject)
+    JS::Rooted<JSObject*> setter(aCx, nullptr);
+    if (mJSSetterObject) {
       if (!(setter = ::JS_CloneFunctionObject(aCx, mJSSetterObject, scopeObject)))
         return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     // Now, enter the content compartment, wrap the getter/setter, and define
     // them on the class object.
     JSAutoCompartment ac2(aCx, aTargetClassObject);
     nsDependentString name(mName);
-    if (!JS_WrapObject(aCx, &getter) ||
-        !JS_WrapObject(aCx, &setter) ||
+    if (!JS_WrapObject(aCx, getter.address()) ||
+        !JS_WrapObject(aCx, setter.address()) ||
         !::JS_DefineUCProperty(aCx, aTargetClassObject,
                                static_cast<const jschar*>(mName),
                                name.Length(), JSVAL_VOID,
-                               JS_DATA_TO_FUNC_PTR(JSPropertyOp, getter),
-                               JS_DATA_TO_FUNC_PTR(JSStrictPropertyOp, setter),
+                               JS_DATA_TO_FUNC_PTR(JSPropertyOp, getter.get()),
+                               JS_DATA_TO_FUNC_PTR(JSStrictPropertyOp, setter.get()),
                                mJSAttributes))
       return NS_ERROR_OUT_OF_MEMORY;
   }
   return NS_OK;
 }
 
-nsresult 
+nsresult
 nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCString& aClassStr,
                                       JSObject* aClassObject)
 {

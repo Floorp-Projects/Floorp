@@ -33,7 +33,7 @@ public:
   void SetSetterLineNumber(uint32_t aLineNumber);
 
   virtual nsresult InstallMember(JSContext* aCx,
-                                 JSObject* aTargetClassObject);
+                                 JS::Handle<JSObject*> aTargetClassObject);
   virtual nsresult CompileMember(nsIScriptContext* aContext,
                                  const nsCString& aClassStr,
                                  JSObject* aClassObject);
