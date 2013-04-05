@@ -3,6 +3,10 @@
   "installs_allowed_from": [ "*" ],
   "type": "web",
   "permissions": {
+    "storage": {
+      "access": "readcreate",
+      "description": "this permission is not needed by the test, it's here to test whether we will properly ignore permissions with the wrong 'access' entry in the manifest"
+    },
     "geolocation": {
       "description": "geolocate"
     },
