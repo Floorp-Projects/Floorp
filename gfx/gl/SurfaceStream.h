@@ -41,10 +41,11 @@ public:
         return (SurfaceStream*)handle;
     }
 
-    const SurfaceStreamType mType;
+    SurfaceStreamType Type() { return mType; }
 protected:
     // |mProd| is owned by us, but can be ripped away when
     // creating a new GLStream from this one.
+    SurfaceStreamType mType;
     SharedSurface* mProducer;
     std::set<SharedSurface*> mSurfaces;
     std::stack<SharedSurface*> mScraps;
@@ -59,7 +60,7 @@ protected:
         , mMonitor("SurfaceStream monitor")
         , mIsAlive(true)
     {
-        MOZ_ASSERT(!prevStream || mType != prevStream->mType,
+        MOZ_ASSERT(!prevStream || mType != prevStream->Type(),
                    "We should not need to create a SurfaceStream from another "
                    "of the same type.");
     }
