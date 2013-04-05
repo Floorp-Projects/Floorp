@@ -87,6 +87,7 @@ struct ReplyNoMessageInList
 
 struct ThreadListItem
 {
+  uint64_t id;
   nsString senderOrReceiver;
   uint64_t timestamp;
   nsString body;
