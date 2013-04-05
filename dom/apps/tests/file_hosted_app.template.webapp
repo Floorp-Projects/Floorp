@@ -1,0 +1,5 @@
+{
+  "name": "Really Rapid Release (hosted)",
+  "description": "Updated even faster than Firefox, just to annoy slashdotters.",
+  "launch_path": "/tests/dom/apps/tests/file_app.sjs?apptype=hosted"
+}

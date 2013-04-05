@@ -834,6 +834,16 @@ SpecialPowersAPI.prototype = {
     this.pushPrefEnv({set: [['dom.mozApps.auto_confirm_install', true]]}, cb);
   },
 
+  // Allow tests to disable the per platform app validity checks so we can
+  // test higher level WebApp functionality without full platform support.
+  setAllAppsLaunchable: function(launchable) {
+    var message = {
+      op: "set-launchable",
+      launchable: launchable
+    };
+    return this._sendSyncMessage("SPWebAppService", message);
+  },
+
   addObserver: function(obs, notification, weak) {
     var obsvc = Cc['@mozilla.org/observer-service;1']
                    .getService(Ci.nsIObserverService);
