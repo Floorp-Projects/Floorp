@@ -23,28 +23,6 @@ let manifest2 = { // used for testing install
   iconURL: "https://test1.example.com/browser/browser/base/content/test/moz.png"
 };
 
-function getManifestPrefname(aManifest) {
-  // is same as the generated name in SocialServiceInternal.getManifestPrefname
-  let originUri = Services.io.newURI(aManifest.origin, null, null);
-  return "social.manifest." + originUri.hostPort.replace('.','-');
-}
-
-function setBuiltinManifestPref(name, manifest) {
-  // we set this as a default pref, it must not be a user pref
-  manifest.builtin = true;
-  let string = Cc["@mozilla.org/supports-string;1"].
-               createInstance(Ci.nsISupportsString);
-  string.data = JSON.stringify(manifest);
-  Services.prefs.getDefaultBranch(null).setComplexValue(name, Ci.nsISupportsString, string);
-  // verify this is set on the default branch
-  let stored = Services.prefs.getComplexValue(name, Ci.nsISupportsString).data;
-  is(stored, string.data, "manifest '"+name+"' stored in default prefs");
-  // don't dirty our manifest, we'll need it without this flag later
-  delete manifest.builtin;
-  // verify we DO NOT have a user-level pref
-  ok(!Services.prefs.prefHasUserValue(name), "manifest '"+name+"' is not in user-prefs");
-}
-
 function test() {
   waitForExplicitFinish();
 
@@ -59,9 +37,7 @@ function test() {
     Services.prefs.clearUserPref("social.remote-install.enabled");
     // clear our builtin pref
     ok(!Services.prefs.prefHasUserValue(prefname), "manifest is not in user-prefs");
-    Services.prefs.getDefaultBranch(null).deleteBranch(prefname);
-    is(Services.prefs.getDefaultBranch(null).getPrefType(prefname),
-       Services.prefs.PREF_INVALID, "default pref removed");
+    resetBuiltinManifestPref(prefname);
     // just in case the tests failed, clear these here as well
     Services.prefs.clearUserPref("social.whitelist");
     Services.prefs.clearUserPref("social.directories");
@@ -222,7 +198,28 @@ var tests = {
       });
     });
   },
+  testBuiltinInstallWithoutManifest: function(next) {
+    // send installProvider null for the manifest
+    AddonManager.addAddonListener(installListener(next, manifest));
+
+    let prefname = getManifestPrefname(manifest);
+    let activationURL = manifest.origin + "/browser/browser/base/content/test/social/social_activate.html"
+    addTab(activationURL, function(tab) {
+      let doc = tab.linkedBrowser.contentDocument;
+      let installFrom = doc.nodePrincipal.origin;
+      is(SocialService.getOriginActivationType(installFrom), "builtin", "testing builtin install");
+      ok(!Services.prefs.prefHasUserValue(prefname), "manifest is not in user-prefs");
+      Social.installProvider(doc, null, function(addonManifest) {
+        ok(Services.prefs.prefHasUserValue(prefname), "manifest is in user-prefs");
+        SocialService.addBuiltinProvider(addonManifest.origin, function(provider) {
+          Social.uninstallProvider(addonManifest.origin);
+          gBrowser.removeTab(tab);
+        });
+      });
+    });
+  },
   testBuiltinInstall: function(next) {
+    // send installProvider a json object for the manifest
     AddonManager.addAddonListener(installListener(next, manifest));
 
     let prefname = getManifestPrefname(manifest);
