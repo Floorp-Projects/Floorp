@@ -44,7 +44,7 @@ interface nsIContactFindOptions : nsIContactFindSortOptions
   attribute unsigned long filterLimit;
 };
 
-[scriptable, uuid(0a6720d7-9cae-4467-989d-e9e450e21341)]
+[scriptable, uuid(6cb78b21-4218-414b-8a84-3b7bf0088b34)]
 interface nsIContactProperties : nsISupports
 {
   attribute jsval         name;               // DOMString[]
@@ -66,6 +66,6 @@ interface nsIContactProperties : nsISupports
   attribute jsval         note;               // DOMString[]
   attribute jsval         impp;               // ContactField[]
   attribute jsval         anniversary;        // Date
-  attribute jsval         sex;                // DOMString
-  attribute jsval         genderIdentity;     // DOMString
+  attribute DOMString     sex;
+  attribute DOMString     genderIdentity;
 };
