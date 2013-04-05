@@ -189,9 +189,11 @@ var ContextMenuUI = {
       return false;
     }
 
+    let coords =
+      aMessage.target.msgBrowserToClient(aMessage, true);
     this._menuPopup.show(Util.extend({}, this._defaultPositionOptions, {
-      xPos: aMessage.json.xPos,
-      yPos: aMessage.json.yPos,
+      xPos: coords.x,
+      yPos: coords.y,
       source: aMessage.json.source
     }));
     return true;
