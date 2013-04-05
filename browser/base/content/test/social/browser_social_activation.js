@@ -54,29 +54,29 @@ function addTab(url, callback) {
   }, true);
 }
 
-function sendActivationEvent(tab, callback) {
+function sendActivationEvent(tab, callback, nullManifest) {
   // hack Social.lastEventReceived so we don't hit the "too many events" check.
   Social.lastEventReceived = 0;
   let doc = tab.linkedBrowser.contentDocument;
   // if our test has a frame, use it
   if (doc.defaultView.frames[0])
     doc = doc.defaultView.frames[0].document;
-  let button = doc.getElementById("activation");
+  let button = doc.getElementById(nullManifest ? "activation-old" : "activation");
   EventUtils.synthesizeMouseAtCenter(button, {}, doc.defaultView);
   executeSoon(callback);
 }
 
-function activateProvider(domain, callback) {
+function activateProvider(domain, callback, nullManifest) {
   let activationURL = domain+"/browser/browser/base/content/test/social/social_activate.html"
   addTab(activationURL, function(tab) {
-    sendActivationEvent(tab, callback);
+    sendActivationEvent(tab, callback, nullManifest);
   });
 }
 
 function activateIFrameProvider(domain, callback) {
   let activationURL = domain+"/browser/browser/base/content/test/social/social_activate_iframe.html"
   addTab(activationURL, function(tab) {
-    sendActivationEvent(tab, callback);
+    sendActivationEvent(tab, callback, false);
   });
 }
 
@@ -153,6 +153,27 @@ var tests = {
         next();
       })
     });
+  },
+
+  testActivationBuiltin: function(next) {
+    let prefname = getManifestPrefname(gProviders[0]);
+    setBuiltinManifestPref(prefname, gProviders[0]);
+    is(SocialService.getOriginActivationType(gTestDomains[0]), "builtin", "manifest is builtin");
+    // first up we add a manifest entry for a single provider.
+    activateProvider(gTestDomains[0], function() {
+      ok(!SocialUI.activationPanel.hidden, "activation panel should be showing");
+      is(Social.provider.origin, gTestDomains[0], "new provider is active");
+      checkSocialUI();
+      // hit "undo"
+      document.getElementById("social-undoactivation-button").click();
+      executeSoon(function() {
+        // we deactivated leaving no providers left, so Social is disabled.
+        ok(!Social.provider, "should be no provider left after disabling");
+        checkSocialUI();
+        resetBuiltinManifestPref(prefname);
+        next();
+      })
+    }, true);
   },
 
   testActivationMultipleProvider: function(next) {

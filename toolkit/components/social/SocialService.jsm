@@ -493,7 +493,7 @@ this.SocialService = {
         // send the manifest with the dom event for activation.
         if (!manifest) {
           let prefname = getPrefnameFromOrigin(installOrigin);
-          manifest = Services.prefs.getDefaultBranch(prefname)
+          manifest = Services.prefs.getDefaultBranch(null)
                           .getComplexValue(prefname, Ci.nsISupportsString).data;
           manifest = JSON.parse(manifest);
           // ensure we override a builtin manifest by having a different value in it
