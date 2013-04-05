@@ -161,18 +161,18 @@ fails == flexbox-minSize-vert-1.xhtml  flexbox-minSize-vert-1-ref.xhtml # bug 85
 == flexbox-justify-content-vert-5.xhtml flexbox-justify-content-vert-5-ref.xhtml
 
 # Tests for inline content in a flexbox that gets wrapped in an anonymous block
-HTTP(..) == flexbox-inlinecontent-horiz-1a.xhtml flexbox-inlinecontent-horiz-1-ref.xhtml
-HTTP(..) == flexbox-inlinecontent-horiz-1b.xhtml flexbox-inlinecontent-horiz-1-ref.xhtml
+== flexbox-inlinecontent-horiz-1a.xhtml flexbox-inlinecontent-horiz-1-ref.xhtml
+== flexbox-inlinecontent-horiz-1b.xhtml flexbox-inlinecontent-horiz-1-ref.xhtml
 == flexbox-inlinecontent-horiz-2.xhtml  flexbox-inlinecontent-horiz-2-ref.xhtml
-HTTP(..) == flexbox-inlinecontent-horiz-3a.xhtml flexbox-inlinecontent-horiz-3-ref.xhtml
-HTTP(..) == flexbox-inlinecontent-horiz-3b.xhtml flexbox-inlinecontent-horiz-3-ref.xhtml
-HTTP(..) == flexbox-inlinecontent-horiz-3c.xhtml flexbox-inlinecontent-horiz-3-ref.xhtml
+== flexbox-inlinecontent-horiz-3a.xhtml flexbox-inlinecontent-horiz-3-ref.xhtml
+== flexbox-inlinecontent-horiz-3b.xhtml flexbox-inlinecontent-horiz-3-ref.xhtml
+== flexbox-inlinecontent-horiz-3c.xhtml flexbox-inlinecontent-horiz-3-ref.xhtml
 == flexbox-inlinecontent-horiz-4.xhtml  flexbox-inlinecontent-horiz-4-ref.xhtml
 == flexbox-inlinecontent-horiz-5.xhtml  flexbox-inlinecontent-horiz-5-ref.xhtml
 
 # Tests for intrinsic sizing of flexboxes
-HTTP(..) == flexbox-intrinsic-sizing-horiz-1a.xhtml flexbox-intrinsic-sizing-horiz-1-ref.xhtml
-HTTP(..) == flexbox-intrinsic-sizing-horiz-1b.xhtml flexbox-intrinsic-sizing-horiz-1-ref.xhtml
+== flexbox-intrinsic-sizing-horiz-1a.xhtml flexbox-intrinsic-sizing-horiz-1-ref.xhtml
+== flexbox-intrinsic-sizing-horiz-1b.xhtml flexbox-intrinsic-sizing-horiz-1-ref.xhtml
 == flexbox-intrinsic-sizing-horiz-2a.xhtml flexbox-intrinsic-sizing-horiz-2-ref.xhtml
 == flexbox-intrinsic-sizing-horiz-2b.xhtml flexbox-intrinsic-sizing-horiz-2-ref.xhtml
 
