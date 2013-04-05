@@ -1431,9 +1431,9 @@ nsXBLBinding::LookupMember(JSContext* aCx, JS::HandleId aId,
 
   // Get the scope of mBoundElement and the associated XBL scope. We should only
   // be calling into this machinery if we're running in a separate XBL scope.
-  JSObject* boundScope =
-    js::GetGlobalForObjectCrossCompartment(mBoundElement->GetWrapper());
-  JSObject* xblScope = xpc::GetXBLScope(aCx, boundScope);
+  JS::Rooted<JSObject*> boundScope(aCx,
+    js::GetGlobalForObjectCrossCompartment(mBoundElement->GetWrapper()));
+  JS::Rooted<JSObject*> xblScope(aCx, xpc::GetXBLScope(aCx, boundScope));
   MOZ_ASSERT(boundScope != xblScope);
 
   // Enter the xbl scope and invoke the internal version.
@@ -1455,7 +1455,7 @@ bool
 nsXBLBinding::LookupMemberInternal(JSContext* aCx, nsString& aName,
                                    JS::HandleId aNameAsId,
                                    JSPropertyDescriptor* aDesc,
-                                   JSObject* aXBLScope)
+                                   JS::Handle<JSObject*> aXBLScope)
 {
   // First, see if we have a JSClass. If we don't, it means that this binding
   // doesn't have a class object, and thus doesn't have any members. Skip it.
