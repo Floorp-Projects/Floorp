@@ -106,7 +106,7 @@ private:
   /**
    * RFCOMM socket status.
    */
-  enum mozilla::ipc::SocketConnectionStatus mSocketStatus;
+  mozilla::ipc::SocketConnectionStatus mPrevSocketStatus;
 
   /**
    * OBEX session status.
