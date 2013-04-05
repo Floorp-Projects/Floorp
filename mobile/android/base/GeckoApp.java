@@ -114,12 +114,6 @@ abstract public class GeckoApp
 {
     private static final String LOGTAG = "GeckoApp";
 
-    public static enum StartupMode {
-        NORMAL,
-        NEW_VERSION,
-        NEW_PROFILE
-    }
-
     private static enum StartupAction {
         NORMAL,     /* normal application start */
         URL,        /* launched with a passed URL */
@@ -144,7 +138,6 @@ abstract public class GeckoApp
     static public final int RESTORE_OOM = 1;
     static public final int RESTORE_CRASH = 2;
 
-    StartupMode mStartupMode = null;
     protected RelativeLayout mMainLayout;
     protected RelativeLayout mGeckoLayout;
     public View getView() { return mGeckoLayout; }
@@ -644,56 +637,6 @@ abstract public class GeckoApp
 
     void handleClearHistory() {
         BrowserDB.clearHistory(getContentResolver());
-    }
-
-    /**
-     * This function might perform synchronous IO. Don't call it
-     * from the main thread.
-     */
-    public StartupMode getStartupMode() {
-
-        synchronized(this) {
-            if (mStartupMode != null)
-                return mStartupMode;
-
-            String packageName = getPackageName();
-            SharedPreferences settings = getPreferences(Activity.MODE_PRIVATE);
-
-            // This key should be profile-dependent. For now, we're simply hardcoding
-            // the "default" profile here.
-            String profileName = getDefaultProfileName();
-            if (profileName == null)
-                profileName = "default";
-            String keyName = packageName + "." + profileName + ".startup_version";
-            String appVersion = null;
-
-            try {
-                PackageInfo pkgInfo = getPackageManager().getPackageInfo(packageName, 0);
-                appVersion = pkgInfo.versionName;
-            } catch(NameNotFoundException nnfe) {
-                // If, for some reason, we can't fetch the app version
-                // we fallback to NORMAL startup mode.
-                mStartupMode = StartupMode.NORMAL;
-                return mStartupMode;
-            }
-
-            String startupVersion = settings.getString(keyName, null);
-            if (startupVersion == null) {
-                mStartupMode = StartupMode.NEW_PROFILE;
-            } else {
-                if (startupVersion.equals(appVersion))
-                    mStartupMode = StartupMode.NORMAL;
-                else
-                    mStartupMode = StartupMode.NEW_VERSION;
-            }
-
-            if (mStartupMode != StartupMode.NORMAL)
-                settings.edit().putString(keyName, appVersion).commit();
-
-            Log.i(LOGTAG, "Startup mode: " + mStartupMode);
-
-            return mStartupMode;
-        }
     }
 
     public void addTab() { }
