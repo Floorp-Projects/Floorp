@@ -45,7 +45,7 @@ var ContextCommands = {
       if (ContextMenuUI.popupState.string) {
         this.sendCommand("cut");
 
-        SelectionHelperUI.closeEditSession(false, true);
+        SelectionHelperUI.closeEditSession(true);
       }
     } else {
       // chrome
@@ -66,7 +66,7 @@ var ContextCommands = {
       if (ContextMenuUI.popupState.string) {
         this.sendCommand("copy");
 
-        SelectionHelperUI.closeEditSession((false, true));
+        SelectionHelperUI.closeEditSession(true);
       }
     } else {
       // chrome

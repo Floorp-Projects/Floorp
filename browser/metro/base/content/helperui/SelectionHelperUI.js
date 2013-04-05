@@ -348,9 +348,10 @@ var SelectionHelperUI = {
    * that initiated the session.
    */
   attachToCaret: function attachToCaret(aBrowser, aX, aY) {
-    if (!this.isActive)
+    if (!this.isActive) {
       this._init(aBrowser);
-    this._setupDebugOptions();
+      this._setupDebugOptions();
+    }
 
     this._lastPoint = { xPos: aX, yPos: aY };
 
@@ -412,7 +413,6 @@ var SelectionHelperUI = {
 
     window.addEventListener("keypress", this, true);
     window.addEventListener("click", this, false);
-    window.addEventListener("dblclick", this, false);
     window.addEventListener("touchstart", this, true);
     window.addEventListener("touchend", this, true);
     window.addEventListener("touchmove", this, true);
@@ -437,7 +437,6 @@ var SelectionHelperUI = {
 
     window.removeEventListener("keypress", this, true);
     window.removeEventListener("click", this, false);
-    window.removeEventListener("dblclick", this, false);
     window.removeEventListener("touchstart", this, true);
     window.removeEventListener("touchend", this, true);
     window.removeEventListener("touchmove", this, true);
@@ -686,9 +685,12 @@ var SelectionHelperUI = {
    * Future: changing selection modes by tapping on a monocle.
    */
   _onTap: function _onTap(aEvent) {
+    let clientCoords =
+      this._msgTarget.ptBrowserToClient(aEvent.clientX, aEvent.clientY, true);
+
     // Check for a tap on a monocle
-    if (this.startMark.hitTest(aEvent.clientX, aEvent.clientY) ||
-        this.endMark.hitTest(aEvent.clientX, aEvent.clientY)) {
+    if (this.startMark.hitTest(clientCoords.x, clientCoords.y) ||
+        this.endMark.hitTest(clientCoords.x, clientCoords.y)) {
       aEvent.stopPropagation();
       aEvent.preventDefault();
       return;
@@ -698,18 +700,14 @@ var SelectionHelperUI = {
     // is useful if we are dealing with some sort of input control.
     // Not so much if the target is a page or div.
     let pointInTargetElement =
-      Util.pointWithinRect(aEvent.clientX, aEvent.clientY,
+      Util.pointWithinRect(clientCoords.x, clientCoords.y,
                            this._targetElementRect);
 
     // If the tap is within an editable element and the caret monocle is
     // active, update the caret.
     if (this.caretMark.visible && pointInTargetElement) {
-      // _setCaretPositionAtPoint takes browser relative client coords
-      let coords =
-        this._msgTarget.ptClientToBrowser(aEvent.clientX, aEvent.clientY,
-                                          true);
-      // Move the caret
-      this._setCaretPositionAtPoint(coords.x, coords.y);
+      // setCaretPositionAtPoint takes browser relative coords.
+      this._setCaretPositionAtPoint(aEvent.clientX, aEvent.clientY);
       return;
     }
 
@@ -719,7 +717,7 @@ var SelectionHelperUI = {
     if (this._targetIsEditable && !pointInTargetElement) {
       // shutdown but leave focus alone. the event will fall through
       // and the dom will update focus for us. If the user tapped on
-      // another input, we'll get a attachCaret call soonish on the
+      // another input, we'll get a attachToCaret call soonish on the
       // new input.
       this.closeEditSession(false);
       return;
@@ -740,36 +738,11 @@ var SelectionHelperUI = {
     // selection and flip back to caret mode.
     if (this.startMark.visible && pointInTargetElement &&
         this._targetIsEditable) {
-      this._transitionFromSelectionToCaret(aEvent.clientX, aEvent.clientY);
+      this._transitionFromSelectionToCaret(clientCoords.x, clientCoords.y);
     }
 
     // If we have active selection in anything else don't let the event get
     // to content. Prevents random taps from killing active selection.
-    aEvent.stopPropagation();
-    aEvent.preventDefault();
-  },
-
-  /*
-   * Checks to see if the tap event was on our selection rect.
-   * If it is, we select the underlying text and shutdown.
-   */
-  _onDblTap: function _onDblTap(aEvent) {
-    if (!this._hitTestSelection(aEvent)) {
-      // Clear and close
-      this.closeEditSession(true);
-      return;
-    }
-
-    let coords =
-      this._msgTarget.ptClientToBrowser(aEvent.clientX, aEvent.clientY,
-                                        true);
-
-    // Select and close
-    this._sendAsyncMessage("Browser:SelectionCopy", {
-      xPos: coords.x,
-      yPos: coords.y,
-    });
-
     aEvent.stopPropagation();
     aEvent.preventDefault();
   },
@@ -872,10 +845,6 @@ var SelectionHelperUI = {
     switch (aEvent.type) {
       case "click":
         this._onTap(aEvent);
-        break;
-
-      case "dblclick":
-        this._onDblTap(aEvent);
         break;
 
       case "touchstart": {
