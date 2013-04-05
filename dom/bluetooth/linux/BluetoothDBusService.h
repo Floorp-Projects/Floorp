@@ -87,13 +87,6 @@ public:
                       BluetoothReplyRunnable* aRunnable);
 
   virtual nsresult
-  ListenSocketViaService(int aChannel,
-                         BluetoothSocketType aType,
-                         bool aAuth,
-                         bool aEncrypt,
-                         mozilla::ipc::UnixSocketConsumer* aConsumer);
-
-  virtual nsresult
   CreatePairedDeviceInternal(const nsAString& aDeviceAddress,
                              int aTimeout,
                              BluetoothReplyRunnable* aRunnable);
