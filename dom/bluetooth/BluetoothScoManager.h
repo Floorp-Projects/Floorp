@@ -8,27 +8,22 @@
 #define mozilla_dom_bluetooth_bluetoothscomanager_h__
 
 #include "BluetoothCommon.h"
-#include "BluetoothSocketObserver.h"
+#include "mozilla/ipc/UnixSocket.h"
 #include "nsIObserver.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
 
 class BluetoothReplyRunnable;
 class BluetoothScoManagerObserver;
-class BluetoothSocket;
 
-class BluetoothScoManager : public BluetoothSocketObserver
+class BluetoothScoManager : public mozilla::ipc::UnixSocketConsumer
 {
 public:
-  static BluetoothScoManager* Get();
   ~BluetoothScoManager();
 
-  virtual void ReceiveSocketData(
-    BluetoothSocket* aSocket,
-    nsAutoPtr<mozilla::ipc::UnixSocketRawData>& aMessage) MOZ_OVERRIDE;
-  virtual void OnConnectSuccess(BluetoothSocket* aSocket) MOZ_OVERRIDE;
-  virtual void OnConnectError(BluetoothSocket* aSocket) MOZ_OVERRIDE;
-  virtual void OnDisconnect(BluetoothSocket* aSocket) MOZ_OVERRIDE;
+  static BluetoothScoManager* Get();
+  void ReceiveSocketData(nsAutoPtr<mozilla::ipc::UnixSocketRawData>& aMessage)
+    MOZ_OVERRIDE;
 
   bool Connect(const nsAString& aDeviceObjectPath);
   void Disconnect();
@@ -41,9 +36,11 @@ private:
   void Cleanup();
   nsresult HandleShutdown();
   void NotifyAudioManager(const nsAString& aAddress);
+  virtual void OnConnectSuccess() MOZ_OVERRIDE;
+  virtual void OnConnectError() MOZ_OVERRIDE;
+  virtual void OnDisconnect() MOZ_OVERRIDE;
 
-  SocketConnectionStatus mPrevSocketStatus;
-  nsRefPtr<BluetoothSocket> mSocket;
+  int mSocketStatus;
 };
 
 END_BLUETOOTH_NAMESPACE
