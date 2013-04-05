@@ -37,7 +37,7 @@ public:
                         bool* aDidInstall) const;
 
   nsresult InstallAccessors(JSContext* aCx,
-                            JSObject* aTargetClassObject);
+                            JS::Handle<JSObject*> aTargetClassObject);
 
   nsresult Read(nsIScriptContext* aContext, nsIObjectInputStream* aStream);
   nsresult Write(nsIScriptContext* aContext, nsIObjectOutputStream* aStream);
