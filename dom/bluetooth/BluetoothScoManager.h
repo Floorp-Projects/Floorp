@@ -24,11 +24,11 @@ public:
   ~BluetoothScoManager();
 
   virtual void ReceiveSocketData(
-                 nsAutoPtr<mozilla::ipc::UnixSocketRawData>& aMessage)
-                 MOZ_OVERRIDE;
-  virtual void OnConnectSuccess() MOZ_OVERRIDE;
-  virtual void OnConnectError() MOZ_OVERRIDE;
-  virtual void OnDisconnect() MOZ_OVERRIDE;
+    BluetoothSocket* aSocket,
+    nsAutoPtr<mozilla::ipc::UnixSocketRawData>& aMessage) MOZ_OVERRIDE;
+  virtual void OnConnectSuccess(BluetoothSocket* aSocket) MOZ_OVERRIDE;
+  virtual void OnConnectError(BluetoothSocket* aSocket) MOZ_OVERRIDE;
+  virtual void OnDisconnect(BluetoothSocket* aSocket) MOZ_OVERRIDE;
 
   bool Connect(const nsAString& aDeviceObjectPath);
   void Disconnect();
