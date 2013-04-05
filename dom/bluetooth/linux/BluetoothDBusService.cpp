@@ -833,17 +833,17 @@ public:
   {
     BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
     if (hfp) {
-      hfp->CloseSocket();
+      hfp->Disconnect();
     }
 
     BluetoothOppManager* opp = BluetoothOppManager::Get();
     if (opp) {
-      opp->CloseSocket();
+      opp->Disconnect();
     }
 
     BluetoothScoManager* sco = BluetoothScoManager::Get();
     if (sco) {
-      sco->CloseSocket();
+      sco->Disconnect();
     }
 
     return NS_OK;
