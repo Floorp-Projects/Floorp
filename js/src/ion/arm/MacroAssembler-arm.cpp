@@ -3263,15 +3263,15 @@ MacroAssemblerARMCompat::toggledJump(Label *label)
 CodeOffsetLabel
 MacroAssemblerARMCompat::toggledCall(IonCode *target, bool enabled)
 {
-    CodeOffsetLabel offset(size());
-    BufferOffset bo = m_buffer.nextOffset();
+    BufferOffset bo = nextOffset();
+    CodeOffsetLabel offset(bo.getOffset());
     addPendingJump(bo, target->raw(), Relocation::IONCODE);
-    ma_movPatchable(Imm32(uint32_t(target->raw())), ScratchRegister, Always, L_MOVWT);
+    ma_movPatchable(Imm32(uint32_t(target->raw())), ScratchRegister, Always, hasMOVWT() ? L_MOVWT : L_LDR);
     if (enabled)
         ma_blx(ScratchRegister);
     else
         ma_nop();
-    JS_ASSERT(size() - offset.offset() == ToggledCallSize());
+    JS_ASSERT(nextOffset().getOffset() - offset.offset() == ToggledCallSize());
     return offset;
 }
 

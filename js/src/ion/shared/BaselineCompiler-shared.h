@@ -120,8 +120,6 @@ class BaselineCompilerShared
         if (nentries > 0 && pcMappingEntries_[nentries - 1].pcOffset == unsigned(pc - script->code))
             return true;
 
-        masm.flushBuffer();
-
         PCMappingEntry entry;
         entry.pcOffset = pc - script->code;
         entry.nativeOffset = nativeOffset;
