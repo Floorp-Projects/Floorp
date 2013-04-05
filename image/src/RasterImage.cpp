@@ -513,14 +513,6 @@ RasterImage::Init(const char* aMimeType,
     discardable_source_bytes += mSourceData.Length();
   }
 
-  // If we're being called from ExtractFrame (used by borderimage),
-  // we don't actually do any decoding. Bail early.
-  // XXX - This should be removed when we fix borderimage
-  if (mSourceDataMimeType.Length() == 0) {
-    mInitialized = true;
-    return NS_OK;
-  }
-
   // Instantiate the decoder
   nsresult rv = InitDecoder(/* aDoSizeDecode = */ true);
   CONTAINER_ENSURE_SUCCESS(rv);
@@ -692,85 +684,6 @@ RasterImage::RequestRefresh(const mozilla::TimeStamp& aTime)
     if (mStatusTracker)
       mStatusTracker->FrameChanged(&dirtyRect);
   }
-}
-
-//******************************************************************************
-/* [noscript] imgIContainer extractFrame(uint32_t aWhichFrame,
- *                                       [const] in nsIntRect aRegion,
- *                                       in uint32_t aFlags); */
-NS_IMETHODIMP
-RasterImage::ExtractFrame(uint32_t aWhichFrame,
-                          const nsIntRect &aRegion,
-                          uint32_t aFlags,
-                          imgIContainer **_retval)
-{
-  NS_ENSURE_ARG_POINTER(_retval);
-
-  nsresult rv;
-
-  if (aWhichFrame > FRAME_MAX_VALUE)
-    return NS_ERROR_INVALID_ARG;
-
-  if (mError)
-    return NS_ERROR_FAILURE;
-
-  // Disallowed in the API
-  if (mInDecoder && (aFlags & imgIContainer::FLAG_SYNC_DECODE))
-    return NS_ERROR_FAILURE;
-
-  // Make a new container. This should switch to another class with bug 505959.
-  nsRefPtr<RasterImage> img(new RasterImage());
-
-  // We don't actually have a mimetype in this case. The empty string tells the
-  // init routine not to try to instantiate a decoder. This should be fixed in
-  // bug 505959.
-  img->Init("", INIT_FLAG_NONE);
-  img->SetSize(aRegion.width, aRegion.height);
-  img->mDecoded = true; // Also, we need to mark the image as decoded
-  img->mHasBeenDecoded = true;
-  img->mFrameDecodeFlags = aFlags & DECODE_FLAGS_MASK;
-
-  if (!ApplyDecodeFlags(aFlags))
-    return NS_ERROR_NOT_AVAILABLE;
-
-  // If a synchronous decode was requested, do it
-  if (aFlags & FLAG_SYNC_DECODE) {
-    rv = SyncDecode();
-    CONTAINER_ENSURE_SUCCESS(rv);
-  }
-
-  // Get the frame. If it's not there, it's probably the caller's fault for
-  // not waiting for the data to be loaded from the network or not passing
-  // FLAG_SYNC_DECODE
-  uint32_t frameIndex = (aWhichFrame == FRAME_FIRST) ?
-                        0 : GetCurrentImgFrameIndex();
-  imgFrame *frame = GetDrawableImgFrame(frameIndex);
-  if (!frame) {
-    *_retval = nullptr;
-    return NS_ERROR_FAILURE;
-  }
-
-  // The frame can be smaller than the image. We want to extract only the part
-  // of the frame that actually exists.
-  nsIntRect framerect = frame->GetRect();
-  framerect.IntersectRect(framerect, aRegion);
-
-  if (framerect.IsEmpty())
-    return NS_ERROR_NOT_AVAILABLE;
-
-  nsAutoPtr<imgFrame> subframe;
-  rv = frame->Extract(framerect, getter_Transfers(subframe));
-  if (NS_FAILED(rv))
-    return rv;
-
-  img->mFrames.AppendElement(subframe.forget());
-
-  img->mStatusTracker->RecordLoaded();
-  img->mStatusTracker->RecordDecoded();
-
-  *_retval = img.forget().get();
-
-  return NS_OK;
 }
 
 //******************************************************************************
@@ -2774,11 +2687,10 @@ RasterImage::WriteToDecoder(const char *aBuffer, uint32_t aCount)
 }
 
 // This function is called in situations where it's clear that we want the
-// frames in decoded form (Draw, GetFrame, CopyFrame, ExtractFrame, etc).
-// If we're completely decoded, this method resets the discard timer (if
-// we're discardable), since wanting the frames now is a good indicator of
-// wanting them again soon. If we're not decoded, this method kicks off
-// asynchronous decoding to generate the frames.
+// frames in decoded form (Draw, GetFrame, etc).  If we're completely decoded,
+// this method resets the discard timer (if we're discardable), since wanting
+// the frames now is a good indicator of wanting them again soon. If we're not
+// decoded, this method kicks off asynchronous decoding to generate the frames.
 nsresult
 RasterImage::WantDecodedFrames()
 {
