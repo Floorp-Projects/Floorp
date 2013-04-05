@@ -16,6 +16,12 @@ ifndef _MSC_VER
 FAIL_ON_WARNINGS = 1
 endif # !_MSC_VER
 
+EXPORTS_NAMESPACES = mozilla/dom
+
+EXPORTS_mozilla/dom = \
+		Touch.h \
+		$(NULL)
+
 EXPORTS		= \
 		nsEventStateManager.h \
 		nsEventListenerManager.h \
@@ -63,6 +69,7 @@ CPPSRCS		= \
 		nsDOMClipboardEvent.cpp \
 		DOMWheelEvent.cpp \
 		TextComposition.cpp \
+		Touch.cpp \
 		$(NULL)
 
 ifdef MOZ_GAMEPAD
