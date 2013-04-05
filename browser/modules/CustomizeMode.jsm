@@ -491,16 +491,6 @@ CustomizeMode.prototype = {
       return;
     }
 
-    // We need to determine the place that the widget is being dropped in
-    // the target.
-    let placement = CustomizableUI.getPlacementOfWidget(targetNode.firstChild.id);
-    if (!placement) {
-      ERROR("Could not get a position for " + targetNode.firstChild.id);
-      return;
-    }
-
-    let position = placement.position;
-
     // Is the target area the customization palette? If so, we have two cases -
     // either the originArea was the palette, or a customizable area.
     if (targetArea.id === kPaletteId) {
@@ -519,6 +509,16 @@ CustomizeMode.prototype = {
       }
       return;
     }
+
+    // We need to determine the place that the widget is being dropped in
+    // the target.
+    let placement = CustomizableUI.getPlacementOfWidget(targetNode.firstChild.id);
+    if (!placement) {
+      ERROR("Could not get a position for " + targetNode.firstChild.id);
+      return;
+    }
+
+    let position = placement.position;
 
     // Is the target area the same as the origin? Since we've already handled
     // the possibility that the target is the customization palette, we know
