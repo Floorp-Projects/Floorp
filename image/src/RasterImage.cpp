@@ -3763,7 +3763,8 @@ RasterImage::DecodePool::DecodeJob::Run()
   else if (mImage->mDecoder &&
            !mImage->mError &&
            !mImage->IsDecodeFinished() &&
-           bytesDecoded < mRequest->mBytesToDecode) {
+           bytesDecoded < mRequest->mBytesToDecode &&
+           bytesDecoded > 0) {
     DecodePool::Singleton()->RequestDecode(mImage);
   } else {
     // Nothing more for us to do - let everyone know what happened.
