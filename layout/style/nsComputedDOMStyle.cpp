@@ -386,17 +386,26 @@ nsComputedDOMStyle::GetAdjustedValuesForBoxSizing()
   nscoord borderPaddingTop = 0;
   nscoord borderPaddingBottom = 0;
 
-  nsMargin adjustment;
+  nsMargin border = mInnerFrame->GetUsedBorder();
+  nsMargin padding = mInnerFrame->GetUsedPadding();
+
   switch(stylePos->mBoxSizing) {
     case NS_STYLE_BOX_SIZING_BORDER:
-      adjustment += mInnerFrame->GetUsedBorder();
+      borderPaddingLeft += border.left;
+      borderPaddingRight += border.right;
+      borderPaddingTop += border.top;
+      borderPaddingBottom += border.bottom;
       // fall through
 
     case NS_STYLE_BOX_SIZING_PADDING:
-      adjustment += mInnerFrame->GetUsedPadding();
+      borderPaddingLeft += padding.left;
+      borderPaddingRight += padding.right;
+      borderPaddingTop += padding.top;
+      borderPaddingBottom += padding.bottom;
   }
 
-  return adjustment;
+  return nsMargin(borderPaddingTop, borderPaddingRight, borderPaddingBottom,
+                  borderPaddingLeft);
 }
 
 /* static */
