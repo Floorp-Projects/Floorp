@@ -11,7 +11,6 @@
 #include "BluetoothReplyRunnable.h"
 #include "BluetoothScoManager.h"
 #include "BluetoothService.h"
-#include "BluetoothSocket.h"
 #include "BluetoothUtils.h"
 #include "BluetoothUuid.h"
 
@@ -40,19 +39,17 @@
 #define TOA_UNKNOWN 0x81
 #define TOA_INTERNATIONAL 0x91
 
-#define CR_LF "\xd\xa";
-
 using namespace mozilla;
 using namespace mozilla::ipc;
 USING_BLUETOOTH_NAMESPACE
 
 namespace {
-  StaticAutoPtr<BluetoothHfpManager> gBluetoothHfpManager;
+  StaticRefPtr<BluetoothHfpManager> gBluetoothHfpManager;
   StaticRefPtr<BluetoothHfpManagerObserver> sHfpObserver;
   bool gInShutdown = false;
   static bool sStopSendingRingFlag = true;
+
   static int sRingInterval = 3000; //unit: ms
-  static const char kHfpCrlf[] = "\xd\xa";
 } // anonymous namespace
 
 /* CallState for sCINDItems[CINDType::CALL].value
@@ -263,7 +260,7 @@ BluetoothHfpManagerObserver::Observe(nsISupports* aSubject,
 
 NS_IMPL_ISUPPORTS1(BluetoothHfpManagerObserver, nsIObserver)
 
-class BluetoothHfpManager::SendRingIndicatorTask : public Task
+class SendRingIndicatorTask : public Task
 {
 public:
   SendRingIndicatorTask(const nsAString& aNumber, int aType)
@@ -287,19 +284,20 @@ public:
       return;
     }
 
+    const char* kHfpCrlf = "\xd\xa";
     nsAutoCString ringMsg(kHfpCrlf);
-    ringMsg.AppendLiteral("RING");
-    ringMsg.AppendLiteral(kHfpCrlf);
-    gBluetoothHfpManager->SendLine(ringMsg.get());
+    ringMsg += "RING";
+    ringMsg += kHfpCrlf;
+    gBluetoothHfpManager->SendSocketData(ringMsg);
 
     if (!mNumber.IsEmpty()) {
       nsAutoCString clipMsg(kHfpCrlf);
-      clipMsg.AppendLiteral("+CLIP: \"");
-      clipMsg.Append(NS_ConvertUTF16toUTF8(mNumber).get());
-      clipMsg.AppendLiteral("\",");
+      clipMsg += "+CLIP: \"";
+      clipMsg += NS_ConvertUTF16toUTF8(mNumber).get();
+      clipMsg += "\",";
       clipMsg.AppendInt(mType);
-      clipMsg.AppendLiteral(kHfpCrlf);
-      gBluetoothHfpManager->SendLine(clipMsg.get());
+      clipMsg += kHfpCrlf;
+      gBluetoothHfpManager->SendSocketData(clipMsg);
     }
 
     MessageLoop::current()->
@@ -393,11 +391,7 @@ BluetoothHfpManager::Init()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  mSocket = new BluetoothSocket(this,
-                                BluetoothSocketType::RFCOMM,
-                                true,
-                                true);
-  mPrevSocketStatus = mSocket->GetConnectionStatus();
+  mSocketStatus = GetConnectionStatus();
 
   sHfpObserver = new BluetoothHfpManagerObserver();
   if (!sHfpObserver->Init()) {
@@ -460,8 +454,12 @@ BluetoothHfpManager::Get()
   }
 
   // Create new instance, register, return
-  BluetoothHfpManager* manager = new BluetoothHfpManager();
-  NS_ENSURE_TRUE(manager->Init(), nullptr);
+  nsRefPtr<BluetoothHfpManager> manager = new BluetoothHfpManager();
+  NS_ENSURE_TRUE(manager, nullptr);
+
+  if (!manager->Init()) {
+    return nullptr;
+  }
 
   gBluetoothHfpManager = manager;
   return gBluetoothHfpManager;
@@ -476,8 +474,8 @@ BluetoothHfpManager::NotifySettings()
   type.AssignLiteral("bluetooth-hfp-status-changed");
 
   name.AssignLiteral("connected");
-  v = (mSocket->GetConnectionStatus() ==
-       SocketConnectionStatus::SOCKET_CONNECTED);
+  v = (GetConnectionStatus() == SocketConnectionStatus::SOCKET_CONNECTED)
+    ? true : false ;
   parameters.AppendElement(BluetoothNamedValue(name, v));
 
   name.AssignLiteral("address");
@@ -573,7 +571,7 @@ BluetoothHfpManager::HandleVolumeChanged(const nsAString& aData)
   }
 
   // Only send volume back when there's a connected headset
-  if (mSocket->GetConnectionStatus() == SocketConnectionStatus::SOCKET_CONNECTED) {
+  if (GetConnectionStatus() == SocketConnectionStatus::SOCKET_CONNECTED) {
     SendCommand("+VGS: ", mCurrentVgs);
   }
 
@@ -665,15 +663,14 @@ BluetoothHfpManager::HandleShutdown()
 {
   MOZ_ASSERT(NS_IsMainThread());
   gInShutdown = true;
-  Disconnect();
+  CloseSocket();
   gBluetoothHfpManager = nullptr;
   return NS_OK;
 }
 
 // Virtual function of class SocketConsumer
 void
-BluetoothHfpManager::ReceiveSocketData(BluetoothSocket* aSocket,
-                                       nsAutoPtr<UnixSocketRawData>& aMessage)
+BluetoothHfpManager::ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aMessage)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -745,9 +742,9 @@ BluetoothHfpManager::ReceiveSocketData(BluetoothSocket* aSocket,
   } else if (msg.Find("AT+COPS?") != -1) {
     nsAutoCString message("+COPS: ");
     message.AppendInt(mNetworkSelectionMode);
-    message.AppendLiteral(",0,\"");
-    message.Append(NS_ConvertUTF16toUTF8(mOperatorName));
-    message.AppendLiteral("\"");
+    message += ",0,\"";
+    message += NS_ConvertUTF16toUTF8(mOperatorName);
+    message += "\"";
     SendLine(message.get());
     return;
   } else if (msg.Find("AT+VTS=") != -1) {
@@ -911,10 +908,10 @@ BluetoothHfpManager::ReceiveSocketData(BluetoothSocket* aSocket,
   } else if (msg.Find("AT+CNUM") != -1) {
     if (!mMsisdn.IsEmpty()) {
       nsAutoCString message("+CNUM: ,\"");
-      message.Append(NS_ConvertUTF16toUTF8(mMsisdn).get());
-      message.AppendLiteral("\",");
+      message += NS_ConvertUTF16toUTF8(mMsisdn).get();
+      message += "\",";
       message.AppendInt(TOA_UNKNOWN);
-      message.AppendLiteral(",,4");
+      message += ",,4";
       SendLine(message.get());
     }
   } else {
@@ -945,15 +942,13 @@ BluetoothHfpManager::Connect(const nsAString& aDevicePath,
     return false;
   }
 
-  SocketConnectionStatus s = mSocket->GetConnectionStatus();
-
-  if (s == SocketConnectionStatus::SOCKET_CONNECTED ||
-      s == SocketConnectionStatus::SOCKET_CONNECTING) {
-    NS_WARNING("BluetoothHfpManager has been already connected");
+  if (GetConnectionStatus() == SocketConnectionStatus::SOCKET_CONNECTED ||
+      GetConnectionStatus() == SocketConnectionStatus::SOCKET_CONNECTING) {
+    NS_WARNING("BluetoothHfpManager has connected/is connecting to a headset!");
     return false;
   }
 
-  mSocket->Disconnect();
+  CloseSocket();
 
   BluetoothService* bs = BluetoothService::Get();
   NS_ENSURE_TRUE(bs, false);
@@ -972,7 +967,7 @@ BluetoothHfpManager::Connect(const nsAString& aDevicePath,
                                         BluetoothSocketType::RFCOMM,
                                         true,
                                         true,
-                                        mSocket,
+                                        this,
                                         mRunnable);
 
   return NS_FAILED(rv) ? false : true;
@@ -988,45 +983,56 @@ BluetoothHfpManager::Listen()
     return false;
   }
 
-  if (mSocket->GetConnectionStatus() ==
-      SocketConnectionStatus::SOCKET_LISTENING) {
+  if (GetConnectionStatus() == SocketConnectionStatus::SOCKET_LISTENING) {
     NS_WARNING("BluetoothHfpManager has been already listening");
     return true;
   }
 
-  mSocket->Disconnect();
+  CloseSocket();
 
-  if (!mSocket->Listen(BluetoothReservedChannels::CHANNEL_HANDSFREE_AG)) {
-    NS_WARNING("[HFP] Can't listen on socket!");
-    return false;
-  }
+  BluetoothService* bs = BluetoothService::Get();
+  NS_ENSURE_TRUE(bs, false);
 
-  mPrevSocketStatus = mSocket->GetConnectionStatus();
-  return true;
+  nsresult rv =
+    bs->ListenSocketViaService(BluetoothReservedChannels::CHANNEL_HANDSFREE_AG,
+                               BluetoothSocketType::RFCOMM,
+                               true,
+                               true,
+                               this);
+
+  mSocketStatus = GetConnectionStatus();
+
+  return NS_FAILED(rv) ? false : true;
 }
 
 void
 BluetoothHfpManager::Disconnect()
 {
-  mSocket->Disconnect();
+  if (GetConnectionStatus() == SocketConnectionStatus::SOCKET_DISCONNECTED) {
+    NS_WARNING("BluetoothHfpManager has been disconnected!");
+    return;
+  }
+
+  CloseSocket();
 }
 
 bool
 BluetoothHfpManager::SendLine(const char* aMessage)
 {
+  const char* kHfpCrlf = "\xd\xa";
   nsAutoCString msg;
 
-  msg.AppendLiteral(kHfpCrlf);
-  msg.Append(aMessage);
-  msg.AppendLiteral(kHfpCrlf);
+  msg += kHfpCrlf;
+  msg += aMessage;
+  msg += kHfpCrlf;
 
-  return mSocket->SendSocketData(msg);
+  return SendSocketData(msg);
 }
 
 bool
 BluetoothHfpManager::SendCommand(const char* aCommand, uint8_t aValue)
 {
-  if (mPrevSocketStatus != SocketConnectionStatus::SOCKET_CONNECTED) {
+  if (mSocketStatus != SocketConnectionStatus::SOCKET_CONNECTED) {
     return false;
   }
 
@@ -1046,22 +1052,22 @@ BluetoothHfpManager::SendCommand(const char* aCommand, uint8_t aValue)
     }
 
     message.AppendInt(aValue);
-    message.AppendLiteral(",");
+    message += ",";
     message.AppendInt(sCINDItems[aValue].value);
   } else if (!strcmp(aCommand, "+CIND: ")) {
     if (!aValue) {
       // Query for range
       for (uint8_t i = 1; i < ArrayLength(sCINDItems); i++) {
-        message.AppendLiteral("(\"");
-        message.Append(sCINDItems[i].name);
-        message.AppendLiteral("\",(");
-        message.Append(sCINDItems[i].range);
-        message.AppendLiteral(")");
+        message += "(\"";
+        message += sCINDItems[i].name;
+        message += "\",(";
+        message += sCINDItems[i].range;
+        message += ")";
         if (i == (ArrayLength(sCINDItems) - 1)) {
-          message.AppendLiteral(")");
+          message +=")";
           break;
         }
-        message.AppendLiteral("),");
+        message += "),";
       }
     } else {
       // Query for value
@@ -1070,7 +1076,7 @@ BluetoothHfpManager::SendCommand(const char* aCommand, uint8_t aValue)
         if (i == (ArrayLength(sCINDItems) - 1)) {
           break;
         }
-        message.AppendLiteral(",");
+        message += ",";
       }
     }
   } else if (!strcmp(aCommand, "+CLCC: ")) {
@@ -1084,9 +1090,9 @@ BluetoothHfpManager::SendCommand(const char* aCommand, uint8_t aValue)
 
       message.AssignLiteral("+CLCC: ");
       message.AppendInt(i);
-      message.AppendLiteral(",");
+      message += ",";
       message.AppendInt(call.mDirection);
-      message.AppendLiteral(",");
+      message += ",";
 
       switch (call.mState) {
         case nsITelephonyProvider::CALL_STATE_CONNECTED:
@@ -1108,9 +1114,9 @@ BluetoothHfpManager::SendCommand(const char* aCommand, uint8_t aValue)
           NS_WARNING("Not handling call status for CLCC");
           break;
       }
-      message.AppendLiteral(",0,0,\"");
-      message.Append(NS_ConvertUTF16toUTF8(call.mNumber));
-      message.AppendLiteral("\",");
+      message += ",0,0,\"";
+      message += NS_ConvertUTF16toUTF8(call.mNumber).get();
+      message += "\",";
       message.AppendInt(call.mType);
 
       rv &= SendLine(message.get());
@@ -1141,8 +1147,7 @@ BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
                                             const nsAString& aNumber,
                                             bool aSend)
 {
-  if (mSocket->GetConnectionStatus() !=
-      SocketConnectionStatus::SOCKET_CONNECTED) {
+  if (GetConnectionStatus() != SocketConnectionStatus::SOCKET_CONNECTED) {
     return;
   }
 
@@ -1176,8 +1181,8 @@ BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
       if (mCurrentCallIndex) {
         if (mCCWA) {
           nsAutoCString ccwaMsg("+CCWA: \"");
-          ccwaMsg.Append(NS_ConvertUTF16toUTF8(aNumber));
-          ccwaMsg.AppendLiteral("\",");
+          ccwaMsg += NS_ConvertUTF16toUTF8(aNumber).get();
+          ccwaMsg += "\",";
           ccwaMsg.AppendInt(mCurrentCallArray[aCallIndex].mType);
           SendLine(ccwaMsg.get());
         }
@@ -1201,7 +1206,7 @@ BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
       mCurrentCallArray[aCallIndex].mDirection = false;
       UpdateCIND(CINDType::CALLSETUP, CallSetupState::OUTGOING, aSend);
 
-      mSocket->GetAddress(address);
+      GetSocketAddr(address);
       OpenScoSocket(address);
       break;
     case nsITelephonyProvider::CALL_STATE_ALERTING:
@@ -1210,7 +1215,7 @@ BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
 
       // If there's an ongoing call when the headset is just connected, we have
       // to open a sco socket here.
-      mSocket->GetAddress(address);
+      GetSocketAddr(address);
       OpenScoSocket(address);
       break;
     case nsITelephonyProvider::CALL_STATE_CONNECTED:
@@ -1221,7 +1226,7 @@ BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
           // Incoming call, no break
           sStopSendingRingFlag = true;
 
-          mSocket->GetAddress(address);
+          GetSocketAddr(address);
           OpenScoSocket(address);
         case nsITelephonyProvider::CALL_STATE_ALERTING:
           // Outgoing call
@@ -1305,10 +1310,8 @@ BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
 }
 
 void
-BluetoothHfpManager::OnConnectSuccess(BluetoothSocket* aSocket)
+BluetoothHfpManager::OnConnectSuccess()
 {
-  MOZ_ASSERT(aSocket == mSocket);
-
   nsCOMPtr<nsITelephonyProvider> provider =
     do_GetService(NS_RILCONTENTHELPER_CONTRACTID);
   NS_ENSURE_TRUE_VOID(provider);
@@ -1325,17 +1328,15 @@ BluetoothHfpManager::OnConnectSuccess(BluetoothSocket* aSocket)
 
   // Cache device path for NotifySettings() since we can't get socket address
   // when a headset disconnect with us
-  mSocket->GetAddress(mDevicePath);
-  mPrevSocketStatus = mSocket->GetConnectionStatus();
+  GetSocketAddr(mDevicePath);
+  mSocketStatus = GetConnectionStatus();
 
   NotifySettings();
 }
 
 void
-BluetoothHfpManager::OnConnectError(BluetoothSocket* aSocket)
+BluetoothHfpManager::OnConnectError()
 {
-  MOZ_ASSERT(aSocket == mSocket);
-
   // For active connection request, we need to reply the DOMRequest
   if (mRunnable) {
     BluetoothValue v;
@@ -1347,30 +1348,23 @@ BluetoothHfpManager::OnConnectError(BluetoothSocket* aSocket)
   }
 
   // If connecting for some reason didn't work, restart listening
+  CloseSocket();
+  mSocketStatus = GetConnectionStatus();
   Listen();
 }
 
 void
-BluetoothHfpManager::OnDisconnect(BluetoothSocket* aSocket)
+BluetoothHfpManager::OnDisconnect()
 {
-  MOZ_ASSERT(aSocket == mSocket);
-
   // When we close a connected socket, then restart listening again and
   // notify Settings app.
-  if (mPrevSocketStatus == SocketConnectionStatus::SOCKET_CONNECTED) {
+  if (mSocketStatus == SocketConnectionStatus::SOCKET_CONNECTED) {
     Listen();
     NotifySettings();
-  } else if (mPrevSocketStatus == SocketConnectionStatus::SOCKET_CONNECTING) {
+  } else if (mSocketStatus == SocketConnectionStatus::SOCKET_CONNECTING) {
     NS_WARNING("BluetoothHfpManager got unexpected socket status!");
   }
 
   CloseScoSocket();
   Reset();
-}
-
-bool
-BluetoothHfpManager::IsConnected()
-{
-  return mSocket->GetConnectionStatus() ==
-         SocketConnectionStatus::SOCKET_CONNECTED;
 }
