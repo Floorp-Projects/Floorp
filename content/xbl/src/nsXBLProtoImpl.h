@@ -41,7 +41,7 @@ public:
   nsresult InitTargetObjects(nsXBLPrototypeBinding* aBinding, nsIScriptContext* aContext, 
                              nsIContent* aBoundElement, 
                              nsIXPConnectJSObjectHolder** aScriptObjectHolder,
-                             JSObject** aTargetClassObject,
+                             JS::MutableHandle<JSObject*> aTargetClassObject,
                              bool* aTargetIsNew);
   nsresult CompilePrototypeMembers(nsXBLPrototypeBinding* aBinding);
 
@@ -67,11 +67,11 @@ public:
 
   // Resolve all the fields for this implementation on the object |obj| False
   // return means a JS exception was set.
-  bool ResolveAllFields(JSContext *cx, JSObject *obj) const;
+  bool ResolveAllFields(JSContext *cx, JS::Handle<JSObject*> obj) const;
 
   // Undefine all our fields from object |obj| (which should be a
   // JSObject for a bound element).
-  void UndefineFields(JSContext* cx, JSObject* obj) const;
+  void UndefineFields(JSContext* cx, JS::Handle<JSObject*> obj) const;
 
   bool CompiledMembers() const {
     return mClassObject != nullptr;
