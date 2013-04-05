@@ -31,13 +31,18 @@ function sendSmsPduToEmulator(pdu) {
 }
 
 const TIMESTAMP = Date.UTC(2000, 0, 1);
-function checkMessage(message, id, messageClass) {
+function checkMessage(message, id, threadId, messageClass) {
   ok(message instanceof MozSmsMessage,
      "message is instanceof " + message.constructor);
   if (id == null) {
     ok(message.id > 0, "message.id");
   } else {
-    is(message.id, -1, "message.id");
+    is(message.id, id, "message.id");
+  }
+  if (threadId == null) {
+    ok(message.threadId > 0, "message.threadId");
+  } else {
+    is(message.threadId, threadId, "message.threadId");
   }
   is(message.delivery, "received", "message.delivery");
   is(message.deliveryStatus, "success", "message.deliveryStatus");
@@ -62,7 +67,7 @@ function test_message_class_0() {
       sms.removeEventListener("received", onReceived);
 
       let message = event.message;
-      checkMessage(message, -1, "class-0");
+      checkMessage(message, -1, 0, "class-0");
 
       // Make sure the message is not stored.
       let request = sms.getMessages(null, false);
@@ -107,7 +112,7 @@ function doTestMessageClassGeneric(allDCSs, messageClass, next) {
       sms.removeEventListener("received", onReceived);
 
       // Make sure we can correctly receive the message
-      checkMessage(event.message, null, messageClass);
+      checkMessage(event.message, null, null, messageClass);
 
       ++dcsIndex;
       if (dcsIndex >= allDCSs.length) {
@@ -157,7 +162,7 @@ function test_message_class_2() {
       function onReceived(event) {
         if (pidIndex == 0) {
           // Make sure we can correctly receive the message
-          checkMessage(event.message, null, "class-2");
+          checkMessage(event.message, null, null, "class-2");
 
           next();
           return;

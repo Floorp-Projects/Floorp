@@ -36,6 +36,7 @@ function simulateIncomingSms() {
     ok(incomingSms, "incoming sms");
     ok(incomingSms.id, "sms id");
     log("Received SMS (id: " + incomingSms.id + ").");
+    ok(incomingSms.threadId, "thread id");
     is(incomingSms.body.length, msgText.length, "msg body length");
     is(incomingSms.body, msgText, "msg body");
     is(incomingSms.delivery, "received", "delivery");

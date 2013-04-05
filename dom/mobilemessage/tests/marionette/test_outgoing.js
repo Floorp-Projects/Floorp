@@ -32,6 +32,7 @@ function checkMessage(message, delivery, body) {
      "message is instanceof " + message.constructor);
 
   ok(message.id, "message.id");
+  ok(message.threadId, "message.threadId");
   is(message.delivery, delivery, "message.delivery");
   is(message.deliveryStatus, "pending", "message.deliveryStatus");
   is(message.sender, SENDER, "message.sender");

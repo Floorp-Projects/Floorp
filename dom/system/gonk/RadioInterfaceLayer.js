@@ -1511,6 +1511,7 @@ RadioInterfaceLayer.prototype = {
     gSystemMessenger.broadcastMessage(aName, {
       type:           aDomMessage.type,
       id:             aDomMessage.id,
+      threadId:       aDomMessage.threadId,
       delivery:       aDomMessage.delivery,
       deliveryStatus: aDomMessage.deliveryStatus,
       sender:         aDomMessage.sender,
@@ -1591,12 +1592,14 @@ RadioInterfaceLayer.prototype = {
                                                                      notifyReceived);
     } else {
       message.id = -1;
+      message.threadId = 0;
       message.delivery = DOM_MOBILE_MESSAGE_DELIVERY_RECEIVED;
       message.deliveryStatus = RIL.GECKO_SMS_DELIVERY_STATUS_SUCCESS;
       message.read = false;
 
       let domMessage =
         gMobileMessageService.createSmsMessage(message.id,
+                                               message.threadId,
                                                message.delivery,
                                                message.deliveryStatus,
                                                message.sender,
