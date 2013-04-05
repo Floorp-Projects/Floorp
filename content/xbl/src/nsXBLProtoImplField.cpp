@@ -411,7 +411,7 @@ nsXBLProtoImplField::InstallAccessors(JSContext* aCx,
 
 nsresult
 nsXBLProtoImplField::InstallField(nsIScriptContext* aContext,
-                                  JSObject* aBoundNode,
+                                  JS::Handle<JSObject*> aBoundNode,
                                   nsIURI* aBindingDocURI,
                                   bool* aDidInstall) const
 {
@@ -434,11 +434,11 @@ nsXBLProtoImplField::InstallField(nsIScriptContext* aContext,
 
   nsAutoCString uriSpec;
   aBindingDocURI->GetSpec(uriSpec);
-  
+
   AutoPushJSContext cx(aContext->GetNativeContext());
   NS_ASSERTION(!::JS_IsExceptionPending(cx),
                "Shouldn't get here when an exception is pending!");
-  
+
   // compile the literal string
   nsCOMPtr<nsIScriptContext> context = aContext;
 
@@ -446,14 +446,14 @@ nsXBLProtoImplField::InstallField(nsIScriptContext* aContext,
 
   // First, enter the xbl scope, wrap the node, and use that as the scope for
   // the evaluation.
-  JSObject* scopeObject = xpc::GetXBLScope(cx, aBoundNode);
+  JS::Rooted<JSObject*> scopeObject(cx, xpc::GetXBLScope(cx, aBoundNode));
   JSAutoCompartment ac(cx, scopeObject);
-  JS::Value result = JSVAL_NULL;
 
-  JSObject* wrappedNode = aBoundNode;
-  if (!JS_WrapObject(cx, &wrappedNode))
+  JS::Rooted<JSObject*> wrappedNode(cx, aBoundNode);
+  if (!JS_WrapObject(cx, wrappedNode.address()))
       return NS_ERROR_OUT_OF_MEMORY;
 
+  JS::Rooted<JS::Value> result(cx);
   JS::CompileOptions options(cx);
   options.setFileAndLine(uriSpec.get(), mLineNumber)
          .setVersion(JSVERSION_LATEST)
@@ -462,7 +462,7 @@ nsXBLProtoImplField::InstallField(nsIScriptContext* aContext,
                                                  mFieldTextLength),
                                *wrappedNode, options,
                                /* aCoerceToString = */ false,
-                               &result);
+                               result.address());
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -472,7 +472,7 @@ nsXBLProtoImplField::InstallField(nsIScriptContext* aContext,
   // the bound node.
   JSAutoCompartment ac2(cx, aBoundNode);
   nsDependentString name(mName);
-  if (!JS_WrapValue(cx, &result) ||
+  if (!JS_WrapValue(cx, result.address()) ||
       !::JS_DefineUCProperty(cx, aBoundNode,
                              reinterpret_cast<const jschar*>(mName), 
                              name.Length(), result, nullptr, nullptr,
