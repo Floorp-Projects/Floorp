@@ -2547,8 +2547,7 @@ BluetoothDBusService::IsConnected(const uint16_t aProfileId)
   if (aProfileId == BluetoothServiceClass::HANDSFREE ||
       aProfileId == BluetoothServiceClass::HEADSET) {
     BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
-    return (hfp->GetConnectionStatus() ==
-            SocketConnectionStatus::SOCKET_CONNECTED);
+    return (hfp->IsConnected());
   } else if (aProfileId == BluetoothServiceClass::OBJECT_PUSH) {
     BluetoothOppManager* opp = BluetoothOppManager::Get();
     return opp->IsTransferring();
