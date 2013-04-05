@@ -1887,7 +1887,13 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   // might have placed child outline items between its own outline items.
   // The element's outline items need to all come before any child outline
   // items.
-  set.Outlines()->SortByContentOrder(aBuilder, GetContent());
+  nsIContent* content = GetContent();
+  if (!content) {
+    content = PresContext()->Document()->GetRootElement();
+  }
+  if (content) {
+    set.Outlines()->SortByContentOrder(aBuilder, content);
+  }
 #ifdef DEBUG
   DisplayDebugBorders(aBuilder, this, set);
 #endif
