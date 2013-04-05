@@ -77,7 +77,7 @@ public:
                                  JS::Handle<JSObject*> aTargetClassObject) = 0;
   virtual nsresult CompileMember(nsIScriptContext* aContext,
                                  const nsCString& aClassStr,
-                                 JSObject* aClassObject) = 0;
+                                 JS::Handle<JSObject*> aClassObject) = 0;
 
   virtual void Trace(TraceCallback aCallback, void *aClosure) const = 0;
 
