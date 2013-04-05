@@ -1601,7 +1601,9 @@ Accessible::ApplyARIAState(uint64_t* aState) const
 
   // ARIA gridcell inherits editable/readonly states from the grid until it's
   // overridden.
-  if (mRoleMapEntry->Is(nsGkAtoms::gridcell) &&
+  if ((mRoleMapEntry->Is(nsGkAtoms::gridcell) ||
+       mRoleMapEntry->Is(nsGkAtoms::columnheader) ||
+       mRoleMapEntry->Is(nsGkAtoms::rowheader)) &&
       !(*aState & (states::READONLY | states::EDITABLE))) {
     const TableCellAccessible* cell = AsTableCell();
     if (cell) {
