@@ -9,9 +9,9 @@
 using google_breakpad::ExceptionHandler;
 using std::wstring;
 
-BOOL WINAPI DummyEntryPoint(HINSTANCE instance,
-                            DWORD reason,
-                            void* reserved)
+extern "C" BOOL WINAPI DummyEntryPoint(HINSTANCE instance,
+                                       DWORD reason,
+                                       void* reserved)
 {
   __debugbreak();
 
