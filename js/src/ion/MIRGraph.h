@@ -482,6 +482,11 @@ class MIRGraph
 
     size_t numBlocks_;
 
+#ifdef DEBUG
+    // Is the graph in Reverse Post Order
+    bool inRPO_;
+#endif
+
   public:
     MIRGraph(TempAllocator *alloc)
       : alloc_(alloc),
@@ -491,6 +496,9 @@ class MIRGraph
         osrBlock_(NULL),
         osrStart_(NULL),
         numBlocks_(0)
+#ifdef DEBUG
+        , inRPO_(false)
+#endif
     { }
 
     template <typename T>
@@ -539,25 +547,28 @@ class MIRGraph
         return blocks_.end();
     }
     PostorderIterator poBegin() {
+        JS_ASSERT(inRPO_);
         return blocks_.rbegin();
     }
     PostorderIterator poEnd() {
+        JS_ASSERT(inRPO_);
         return blocks_.rend();
     }
     ReversePostorderIterator rpoBegin() {
+        JS_ASSERT(inRPO_);
         return blocks_.begin();
     }
     ReversePostorderIterator rpoEnd() {
+        JS_ASSERT(inRPO_);
         return blocks_.end();
     }
     void removeBlock(MBasicBlock *block) {
         blocks_.remove(block);
         numBlocks_--;
     }
-    void moveBlockToEnd(MBasicBlock *block) {
-        JS_ASSERT(block->id());
+    void moveBlockToBegin(MBasicBlock *block) {
         blocks_.remove(block);
-        blocks_.pushBack(block);
+        blocks_.pushFront(block);
     }
     size_t numBlocks() const {
         return numBlocks_;
@@ -611,6 +622,12 @@ class MIRGraph
     JSScript **scripts() {
         return scripts_.begin();
     }
+
+#ifdef DEBUG
+    void setInRPO() {
+        inRPO_ = true;
+    }
+#endif
 
     // The ParSlice is an instance of ForkJoinSlice*, it carries
     // "per-helper-thread" information.  So as not to modify the
