@@ -184,7 +184,7 @@ nsXBLProtoImplProperty::InstallMember(JSContext *aCx,
 
 nsresult
 nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCString& aClassStr,
-                                      JSObject* aClassObject)
+                                      JS::Handle<JSObject*> aClassObject)
 {
   NS_PRECONDITION(!mIsCompiled,
                   "Trying to compile an already-compiled property");
@@ -210,8 +210,6 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
   if (mGetterText && mGetterText->GetText()) {
     nsDependentString getter(mGetterText->GetText());
     if (!getter.IsEmpty()) {
-      // Compile into a temp object so we don't wipe out mGetterText
-      JSObject* getterObject = nullptr;
       AutoPushJSContext cx(aContext->GetNativeContext());
       JSAutoRequest ar(cx);
       JSAutoCompartment ac(cx, aClassObject);
@@ -221,8 +219,9 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
              .setUserBit(true); // Flag us as XBL
       nsCString name = NS_LITERAL_CSTRING("get_") + NS_ConvertUTF16toUTF8(mName);
       JS::RootedObject rootedNull(cx, nullptr); // See bug 781070.
+      JS::RootedObject getterObject(cx);
       rv = nsJSUtils::CompileFunction(cx, rootedNull, options, name, 0, nullptr,
-                                      getter, &getterObject);
+                                      getter, getterObject.address());
 
       // Make sure we free mGetterText here before setting mJSGetterObject, since
       // that'll overwrite mGetterText
@@ -260,8 +259,6 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
   if (mSetterText && mSetterText->GetText()) {
     nsDependentString setter(mSetterText->GetText());
     if (!setter.IsEmpty()) {
-      // Compile into a temp object so we don't wipe out mSetterText
-      JSObject* setterObject = nullptr;
       AutoPushJSContext cx(aContext->GetNativeContext());
       JSAutoRequest ar(cx);
       JSAutoCompartment ac(cx, aClassObject);
@@ -271,8 +268,9 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
              .setUserBit(true); // Flag us as XBL
       nsCString name = NS_LITERAL_CSTRING("set_") + NS_ConvertUTF16toUTF8(mName);
       JS::RootedObject rootedNull(cx, nullptr); // See bug 781070.
+      JS::RootedObject setterObject(cx);
       rv = nsJSUtils::CompileFunction(cx, rootedNull, options, name, 1,
-                                      gPropertyArgs, setter, &setterObject);
+                                      gPropertyArgs, setter, setterObject.address());
 
       // Make sure we free mSetterText here before setting mJSGetterObject, since
       // that'll overwrite mSetterText

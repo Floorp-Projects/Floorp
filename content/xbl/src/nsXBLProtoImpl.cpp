@@ -238,7 +238,7 @@ nsXBLProtoImpl::CompilePrototypeMembers(nsXBLPrototypeBinding* aBinding)
   for (nsXBLProtoImplMember* curr = mMembers;
        curr;
        curr = curr->GetNext()) {
-    nsresult rv = curr->CompileMember(context, mClassName, mClassObject);
+    nsresult rv = curr->CompileMember(context, mClassName, classObject);
     if (NS_FAILED(rv)) {
       DestroyMembers();
       return rv;
