@@ -288,11 +288,14 @@ var SelectionHelperUI = {
    * 
    * Attempts to select underlying text at a point and begins editing
    * the section.
+   *
+   * @param aContent - Browser object
+   * @param aX, aY - Browser relative client coordinates.
    */
-  openEditSession: function openEditSession(aContent, aClientX, aClientY) {
-    if (!aContent || this.isActive)
+  openEditSession: function openEditSession(aBrowser, aX, aY) {
+    if (!aBrowser || this.isActive)
       return;
-    this._init(aContent);
+    this._init(aBrowser);
     this._setupDebugOptions();
 
     // Send this over to SelectionHandler in content, they'll message us
@@ -300,8 +303,8 @@ var SelectionHelperUI = {
     // takes client coordinates.
     this._selectionHandlerActive = false;
     this._sendAsyncMessage("Browser:SelectionStart", {
-      xPos: aClientX,
-      yPos: aClientY
+      xPos: aX,
+      yPos: aY
     });
   },
 
@@ -309,11 +312,14 @@ var SelectionHelperUI = {
    * attachEditSession
    * 
    * Attaches to existing selection and begins editing.
+   *
+   * @param aBrowser - Browser object
+   * @param aX, aY - Browser relative client coordinates.
    */
-  attachEditSession: function attachEditSession(aContent, aClientX, aClientY) {
-    if (!aContent || this.isActive)
+  attachEditSession: function attachEditSession(aBrowser, aX, aY) {
+    if (!aBrowser || this.isActive)
       return;
-    this._init(aContent);
+    this._init(aBrowser);
     this._setupDebugOptions();
 
     // Send this over to SelectionHandler in content, they'll message us
@@ -321,8 +327,8 @@ var SelectionHelperUI = {
     // takes client coordinates.
     this._selectionHandlerActive = false;
     this._sendAsyncMessage("Browser:SelectionAttach", {
-      xPos: aClientX,
-      yPos: aClientY
+      xPos: aX,
+      yPos: aY
     });
   },
 
@@ -337,20 +343,21 @@ var SelectionHelperUI = {
    * Once the user starts a drag, the caret marker is hidden, and
    * the start and end markers take over.
    *
-   * @param aClientX, aClientY client coordiates of the tap that
-   * initiated the session.
+   * @param aBrowser - Browser object
+   * @param aX, aY - Browser relative client coordinates of the tap
+   * that initiated the session.
    */
-  attachToCaret: function attachToCaret(aContent, aClientX, aClientY) {
-    if (!aContent)
+  attachToCaret: function attachToCaret(aBrowser, aX, aY) {
+    if (!aBrowser)
       return;
     if (!this.isActive)
-      this._init(aContent);
+      this._init(aBrowser);
     this._setupDebugOptions();
 
     this._selectionHandlerActive = false;
     this._sendAsyncMessage("Browser:CaretAttach", {
-      xPos: aClientX,
-      yPos: aClientY
+      xPos: aX,
+      yPos: aY
     });
   },
 
@@ -525,8 +532,8 @@ var SelectionHelperUI = {
     this._sendAsyncMessage("Browser:SelectionSwitchMode", {
       newMode: "selection",
       change: targetMark.tag,
-      xPos: targetMark.xPos,
-      yPos: targetMark.yPos,
+      xPos: this._msgTarget.xctob(targetMark.xPos, true),
+      yPos: this._msgTarget.yctob(targetMark.yPos, true),
     });
   },
 
@@ -534,8 +541,11 @@ var SelectionHelperUI = {
    * _transitionFromSelectionToCaret
    *
    * Transitions from text selection mode to caret mode.
+   *
+   * @param aClientX, aClientY - client coordinates of the
+   * tap that initiates the change.
    */
-  _transitionFromSelectionToCaret: function _transitionFromSelectionToCaret(aX, aY) {
+  _transitionFromSelectionToCaret: function _transitionFromSelectionToCaret(aClientX, aClientY) {
     // clear existing selection and shutdown SelectionHandler
     this._sendAsyncMessage("Browser:SelectionClear", { clearFocus: false });
     this._sendAsyncMessage("Browser:SelectionClose");
@@ -548,16 +558,20 @@ var SelectionHelperUI = {
     this._shutdownAllMarkers();
     this._setupMonocleIdArray();
 
+    // Translate to browser relative client coordinates
+    let coords =
+      this._msgTarget.ptClientToBrowser(aClientX, aClientY, true);
+
     // Init SelectionHandler and turn on caret selection. Note the focus caret
     // will have been removed from the target element due to the shutdown call.
     // This won't set the caret position on its own.
     this._sendAsyncMessage("Browser:CaretAttach", {
-      xPos: aX,
-      yPos: aY
+      xPos: coords.x,
+      yPos: coords.y
     });
 
     // Set the caret position
-    this._setCaretPositionAtPoint(aX, aY);
+    this._setCaretPositionAtPoint(coords.x, coords.y);
   },
 
   /*
@@ -620,6 +634,11 @@ var SelectionHelperUI = {
     return false;
   },
 
+  /*
+   * _setCaretPositionAtPoint - sets the current caret position.
+   *
+   * @param aX, aY - browser relative client coordinates
+   */
   _setCaretPositionAtPoint: function _setCaretPositionAtPoint(aX, aY) {
     let json = this._getMarkerBaseMessage();
     json.change = "caret";
@@ -689,8 +708,12 @@ var SelectionHelperUI = {
     // If the tap is within an editable element and the caret monocle is
     // active, update the caret.
     if (this.caretMark.visible && pointInTargetElement) {
+      // _setCaretPositionAtPoint takes browser relative client coords
+      let coords =
+        this._msgTarget.ptClientToBrowser(aEvent.clientX, aEvent.clientY,
+                                          true);
       // Move the caret
-      this._setCaretPositionAtPoint(aEvent.clientX, aEvent.clientY);
+      this._setCaretPositionAtPoint(coords.x, coords.y);
       return;
     }
 
@@ -745,10 +768,14 @@ var SelectionHelperUI = {
       return;
     }
 
-    // Select and close    
+    let coords =
+      this._msgTarget.ptClientToBrowser(aEvent.clientX, aEvent.clientY,
+                                        true);
+
+    // Select and close
     this._sendAsyncMessage("Browser:SelectionCopy", {
-      xPos: aEvent.clientX,
-      yPos: aEvent.clientY,
+      xPos: coords.x,
+      yPos: coords.y,
     });
 
     aEvent.stopPropagation();
@@ -762,11 +789,13 @@ var SelectionHelperUI = {
   _onSelectionRangeChange: function _onSelectionRangeChange(json) {
     // start and end contain client coordinates.
     if (json.updateStart) {
-      this.startMark.position(json.start.xPos, json.start.yPos);
+      this.startMark.position(this._msgTarget.xbtoc(json.start.xPos, true),
+                              this._msgTarget.ybtoc(json.start.yPos, true));
       this.startMark.show();
     }
     if (json.updateEnd) {
-      this.endMark.position(json.end.xPos, json.end.yPos);
+      this.endMark.position(this._msgTarget.xbtoc(json.end.xPos, true),
+                            this._msgTarget.ybtoc(json.end.yPos, true));
       this.endMark.show();
     }
     if (json.updateCaret) {
@@ -774,16 +803,20 @@ var SelectionHelperUI = {
       // attach to. If not, there's no text in the control, and hence no caret
       // position information we can use.
       if (json.selectionRangeFound) {
-        this.caretMark.position(json.caret.xPos, json.caret.yPos);
+        this.caretMark.position(this._msgTarget.xbtoc(json.caret.xPos, true),
+                                this._msgTarget.ybtoc(json.caret.yPos, true));
         this.caretMark.show();
       } else {
         // Don't display anything, just shutdown.
         this.closeEditSession();
       }
     }
-    this._activeSelectionRect = json.selection;
-    this._targetElementRect = json.element;
+
     this._targetIsEditable = json.targetIsEditable;
+    this._activeSelectionRect =
+      this._msgTarget.rectBrowserToClient(json.selection, true);
+    this._targetElementRect =
+      this._msgTarget.rectBrowserToClient(json.element, true);
   },
 
   _onSelectionFail: function _onSelectionFail() {
@@ -907,9 +940,18 @@ var SelectionHelperUI = {
 
   _getMarkerBaseMessage: function _getMarkerBaseMessage() {
     return {
-      start: { xPos: this.startMark.xPos, yPos: this.startMark.yPos },
-      end: { xPos: this.endMark.xPos, yPos: this.endMark.yPos },
-      caret: { xPos: this.caretMark.xPos, yPos: this.caretMark.yPos },
+      start: {
+        xPos: this._msgTarget.xctob(this.startMark.xPos, true),
+        yPos: this._msgTarget.yctob(this.startMark.yPos, true)
+      },
+      end: {
+        xPos: this._msgTarget.xctob(this.endMark.xPos, true),
+        yPos: this._msgTarget.yctob(this.endMark.yPos, true)
+      },
+      caret: {
+        xPos: this._msgTarget.xctob(this.caretMark.xPos, true),
+        yPos: this._msgTarget.yctob(this.caretMark.yPos, true)
+      },
     };
   },
 
