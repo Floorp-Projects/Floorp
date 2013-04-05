@@ -373,29 +373,20 @@ var SelectionHelperUI = {
   },
 
   /*
-   * closeEditSession
+   * closeEditSession(aClearSelection)
    *
    * Closes an active edit session and shuts down. Does not clear existing
    * selection regions if they exist.
+   *
+   * @param aClearSelection bool indicating if the selection handler should also
+   * clear any selection. optional, the default is false.
    */
-  closeEditSession: function closeEditSession() {
-    this._sendAsyncMessage("Browser:SelectionClose");
+  closeEditSession: function closeEditSession(aClearSelection) {
+    let clearSelection = aClearSelection || false;
+    this._sendAsyncMessage("Browser:SelectionClose", {
+      clearSelection: clearSelection
+    });
     this._shutdown();
-  },
-
-  /*
-   * closeEditSessionAndClear
-   *
-   * Closes an active edit session and shuts down. Clears any selection region
-   * associated with the edit session.
-   *
-   * @param aClearFocus bool indicating if the selection handler should also
-   * clear the focus element. optional, the default is false.
-   */
-  closeEditSessionAndClear: function closeEditSessionAndClear(aClearFocus) {
-    let clearFocus = aClearFocus || false;
-    this._sendAsyncMessage("Browser:SelectionClear", { clearFocus: clearFocus });
-    this.closeEditSession();
   },
 
   /*
@@ -541,8 +532,7 @@ var SelectionHelperUI = {
    */
   _transitionFromSelectionToCaret: function _transitionFromSelectionToCaret(aClientX, aClientY) {
     // clear existing selection and shutdown SelectionHandler
-    this._sendAsyncMessage("Browser:SelectionClear", { clearFocus: false });
-    this._sendAsyncMessage("Browser:SelectionClose");
+    this.closeEditSession(true);
 
     // Reset some of our state
     this._selectionHandlerActive = false;
@@ -723,19 +713,15 @@ var SelectionHelperUI = {
       return;
     }
 
-    // if the target is editable and the user clicks off the target
-    // clear selection and remove focus from the input.
-    if (this.caretMark.visible) {
-      // shutdown and clear selection and remove focus
-      this.closeEditSessionAndClear(true);
-      return;
-    }
-
-    // If the target is editable, we have active selection, and
-    // the user taps off the input, clear selection and shutdown.
-    if (this.startMark.visible && !pointInTargetElement &&
-        this._targetIsEditable) {
-      this.closeEditSessionAndClear(true);
+    // if the target is editable, we have selection or a caret, and the
+    // user clicks off the target clear selection and remove focus from
+    // the input.
+    if (this._targetIsEditable && !pointInTargetElement) {
+      // shutdown but leave focus alone. the event will fall through
+      // and the dom will update focus for us. If the user tapped on
+      // another input, we'll get a attachCaret call soonish on the
+      // new input.
+      this.closeEditSession(false);
       return;
     }
 
@@ -770,7 +756,7 @@ var SelectionHelperUI = {
   _onDblTap: function _onDblTap(aEvent) {
     if (!this._hitTestSelection(aEvent)) {
       // Clear and close
-      this.closeEditSessionAndClear();
+      this.closeEditSession(true);
       return;
     }
 
@@ -833,10 +819,12 @@ var SelectionHelperUI = {
   },
 
   _onSelectionCopied: function _onSelectionCopied(json) {
-    this.closeEditSessionAndClear();
+    this.closeEditSession(true);
   },
 
   _onSelectionRangeChange: function _onSelectionRangeChange(json) {
+    let haveSelectionRect = true;
+
     // start and end contain client coordinates.
     if (json.updateStart) {
       this.startMark.position(this._msgTarget.xbtoc(json.start.xPos, true),
@@ -852,20 +840,18 @@ var SelectionHelperUI = {
       // If selectionRangeFound is set SelectionHelper found a range we can
       // attach to. If not, there's no text in the control, and hence no caret
       // position information we can use.
+      haveSelectionRect = json.selectionRangeFound;
       if (json.selectionRangeFound) {
         this.caretMark.position(this._msgTarget.xbtoc(json.caret.xPos, true),
                                 this._msgTarget.ybtoc(json.caret.yPos, true));
         this.caretMark.show();
-      } else {
-        // Don't display anything, just shutdown.
-        this.closeEditSession();
-        return;
       }
     }
 
     this._targetIsEditable = json.targetIsEditable;
-    this._activeSelectionRect =
-      this._msgTarget.rectBrowserToClient(json.selection, true);
+    this._activeSelectionRect = haveSelectionRect ?
+      this._msgTarget.rectBrowserToClient(json.selection, true) :
+      this._activeSelectionRect = Util.getCleanRect();
     this._targetElementRect =
       this._msgTarget.rectBrowserToClient(json.element, true);
   },
@@ -916,7 +902,7 @@ var SelectionHelperUI = {
         if (!this._checkForActiveDrag() && this._movement.active) {
           let distanceY = touch.clientY - this._movement.y;
           if (Math.abs(distanceY) > kDisableOnScrollDistance) {
-            this.closeEditSessionAndClear();
+            this.closeEditSession(true);
           }
         }
         break;
@@ -933,7 +919,7 @@ var SelectionHelperUI = {
       case "ZoomChanged":
       case "URLChanged":
       case "MozPrecisePointer":
-        this.closeEditSessionAndClear();
+        this.closeEditSession(true);
         break;
 
       case "MozContextUIShow":

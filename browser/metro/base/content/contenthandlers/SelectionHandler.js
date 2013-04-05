@@ -57,7 +57,6 @@ var SelectionHandler = {
     addMessageListener("Browser:SelectionMoveEnd", this);
     addMessageListener("Browser:SelectionUpdate", this);
     addMessageListener("Browser:SelectionClose", this);
-    addMessageListener("Browser:SelectionClear", this);
     addMessageListener("Browser:SelectionCopy", this);
     addMessageListener("Browser:SelectionDebug", this);
     addMessageListener("Browser:CaretAttach", this);
@@ -76,7 +75,6 @@ var SelectionHandler = {
     removeMessageListener("Browser:SelectionMoveEnd", this);
     removeMessageListener("Browser:SelectionUpdate", this);
     removeMessageListener("Browser:SelectionClose", this);
-    removeMessageListener("Browser:SelectionClear", this);
     removeMessageListener("Browser:SelectionCopy", this);
     removeMessageListener("Browser:SelectionDebug", this);
     removeMessageListener("Browser:CaretAttach", this);
@@ -363,21 +361,14 @@ var SelectionHandler = {
 
   /*
    * Selection close event handler
-   */
-  _onSelectionClose: function _onSelectionClose() {
-    this._closeSelection();
-  },
-
-  /*
-   * Selection clear message handler
    *
-   * @param aClearFocus requests that the focus also be cleared.
+   * @param aClearSelection requests that selection be cleared.
    */
-  _onSelectionClear: function _onSelectionClear(aClearFocus) {
-    this._clearSelection();
-    if (aClearFocus && this._targetElement) {
-      this._targetElement.blur();
+  _onSelectionClose: function _onSelectionClose(aClearSelection) {
+    if (aClearSelection) {
+      this._clearSelection();
     }
+    this._closeSelection();
   },
 
   /*
@@ -1207,7 +1198,7 @@ var SelectionHandler = {
         break;
 
       case "Browser:SelectionClose":
-        this._onSelectionClose();
+        this._onSelectionClose(json.clearSelection);
         break;
 
       case "Browser:SelectionMoveStart":
@@ -1224,10 +1215,6 @@ var SelectionHandler = {
 
       case "Browser:SelectionCopy":
         this._onSelectionCopy(json);
-        break;
-
-      case "Browser:SelectionClear":
-        this._onSelectionClear(json.clearFocus);
         break;
 
       case "Browser:SelectionDebug":
