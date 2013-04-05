@@ -66,8 +66,8 @@ public:
   // nsIScriptObjectPrincipal methods
   virtual nsIPrincipal* GetPrincipal();
 
-  static JSBool doCheckAccess(JSContext *cx, JSObject *obj, jsid id,
-                              uint32_t accessType);
+  static JSBool doCheckAccess(JSContext *cx, JS::Handle<JSObject*> obj,
+                              JS::Handle<jsid> id, uint32_t accessType);
 
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXBLDocGlobalObject,
                                            nsIScriptGlobalObject)
@@ -89,7 +89,8 @@ protected:
 };
 
 JSBool
-nsXBLDocGlobalObject::doCheckAccess(JSContext *cx, JSObject *obj, jsid id, uint32_t accessType)
+nsXBLDocGlobalObject::doCheckAccess(JSContext *cx, JS::Handle<JSObject*> obj,
+                                    JS::Handle<jsid> id, uint32_t accessType)
 {
   nsIScriptSecurityManager *ssm = nsContentUtils::GetSecurityManager();
   if (!ssm) {
@@ -99,17 +100,18 @@ nsXBLDocGlobalObject::doCheckAccess(JSContext *cx, JSObject *obj, jsid id, uint3
 
   // Make sure to actually operate on our object, and not some object further
   // down on the proto chain.
-  while (JS_GetClass(obj) != &nsXBLDocGlobalObject::gSharedGlobalClass) {
-    if (!::JS_GetPrototype(cx, obj, &obj)) {
+  JS::Rooted<JSObject*> base(cx, obj);
+  while (JS_GetClass(base) != &nsXBLDocGlobalObject::gSharedGlobalClass) {
+    if (!::JS_GetPrototype(cx, base, base.address())) {
       return JS_FALSE;
     }
-    if (!obj) {
+    if (!base) {
       ::JS_ReportError(cx, "Invalid access to a global object property.");
       return JS_FALSE;
     }
   }
 
-  nsresult rv = ssm->CheckPropertyAccess(cx, obj, JS_GetClass(obj)->name,
+  nsresult rv = ssm->CheckPropertyAccess(cx, base, JS_GetClass(base)->name,
                                          id, accessType);
   return NS_SUCCEEDED(rv);
 }
