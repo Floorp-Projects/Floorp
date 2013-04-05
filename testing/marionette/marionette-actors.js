@@ -41,6 +41,28 @@ Cu.import("resource://gre/modules/services-common/log4moz.js");
 let logger = Log4Moz.repository.getLogger("Marionette");
 logger.info('marionette-actors.js loaded');
 
+let bypassOffline = false;
+
+try {
+  XPCOMUtils.defineLazyGetter(this, "libcutils", function () {
+    Cu.import("resource://gre/modules/systemlibs.js");
+    return libcutils;
+  });
+  if (libcutils) {
+    let platform = libcutils.property_get("ro.product.device");
+    logger.info("Platform detected is " + platform);
+    bypassOffline = (platform == "generic" || platform == "panda");
+  }
+}
+catch(e) {}
+
+if (bypassOffline) {
+  logger.info("Bypassing offline status.");
+  Services.prefs.setBoolPref("network.gonk.manage-offline-status", false);
+  Services.io.manageOfflineStatus = false;
+  Services.io.offline = false;
+}
+
 // This is used to prevent newSession from returning before the telephony
 // API's are ready; see bug 792647.  This assumes that marionette-actors.js
 // will be loaded before the 'system-message-listener-ready' message
