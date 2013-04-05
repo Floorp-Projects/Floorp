@@ -379,14 +379,8 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
                     int width = mTabs.getWidth();
                     int tail = (width - height) / 2;
 
-                    Rect leftBounds = new Rect(0, 0, tail, height);
-                    Rect rightBounds = new Rect(width - tail, 0, width, height);
-
-                    TailTouchDelegate delegate = new TailTouchDelegate(leftBounds, mAddressBarView);
-
-                    if (mHasSoftMenuButton)
-                        delegate.add(rightBounds, mMenu);
-
+                    Rect bounds = new Rect(0, 0, tail, height);
+                    TailTouchDelegate delegate = new TailTouchDelegate(bounds, mAddressBarView);
                     mTabs.setTouchDelegate(delegate);
                 }
             });
