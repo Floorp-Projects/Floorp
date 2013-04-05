@@ -1058,9 +1058,8 @@ nsDisplayPlugin::ComputeVisibility(nsDisplayListBuilder* aBuilder,
         ReferenceFrame()->PresContext()->AppUnitsPerDevPixel();
       f->mNextConfigurationBounds = rAncestor.ToNearestPixels(appUnitsPerDevPixel);
 
-      bool snap;
       nsRegion visibleRegion;
-      visibleRegion.And(*aVisibleRegion, GetBounds(aBuilder, &snap));
+      visibleRegion.And(*aVisibleRegion, GetClippedBounds(aBuilder));
       // Make visibleRegion relative to f
       visibleRegion.MoveBy(-ToReferenceFrame());
 
