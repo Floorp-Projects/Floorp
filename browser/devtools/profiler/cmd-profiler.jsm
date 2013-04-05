@@ -84,7 +84,7 @@ gcli.addCommand({
       }
 
       panel.switchToProfile(profile, function () profile.start());
-      return gcli.lookup("profilerStarting");
+      return gcli.lookup("profilerStarting2");
     }
 
     return gDevTools.showToolbox(context.environment.target, "jsprofiler")
@@ -121,11 +121,11 @@ gcli.addCommand({
       }
 
       if (!profile.isStarted) {
-        throw gcli.lookup("profilerNotStarted");
+        throw gcli.lookup("profilerNotStarted2");
       }
 
       panel.switchToProfile(profile, function () profile.stop());
-      return gcli.lookup("profilerStopping");
+      return gcli.lookup("profilerStopping2");
     }
 
     return gDevTools.showToolbox(context.environment.target, "jsprofiler")
