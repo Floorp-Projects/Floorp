@@ -336,6 +336,7 @@ nsXBLProtoImplField::InstallAccessors(JSContext* aCx,
   MOZ_ASSERT(js::IsObjectInContextCompartment(aTargetClassObject, aCx));
   JS::Rooted<JSObject*> globalObject(aCx, JS_GetGlobalForObject(aCx, aTargetClassObject));
   JS::Rooted<JSObject*> scopeObject(aCx, xpc::GetXBLScope(aCx, globalObject));
+  NS_ENSURE_TRUE(scopeObject, NS_ERROR_OUT_OF_MEMORY);
 
   // Don't install it if the field is empty; see also InstallField which also must
   // implement the not-empty requirement.
@@ -447,6 +448,7 @@ nsXBLProtoImplField::InstallField(nsIScriptContext* aContext,
   // First, enter the xbl scope, wrap the node, and use that as the scope for
   // the evaluation.
   JS::Rooted<JSObject*> scopeObject(cx, xpc::GetXBLScope(cx, aBoundNode));
+  NS_ENSURE_TRUE(scopeObject, NS_ERROR_OUT_OF_MEMORY);
   JSAutoCompartment ac(cx, scopeObject);
 
   JS::Rooted<JSObject*> wrappedNode(cx, aBoundNode);

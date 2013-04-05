@@ -102,6 +102,7 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aPrototypeBinding,
   // the field accessors, so do this before installing them.
   JSObject* globalObject = JS_GetGlobalForObject(cx, targetClassObject);
   JSObject* scopeObject = xpc::GetXBLScope(cx, globalObject);
+  NS_ENSURE_TRUE(scopeObject, NS_ERROR_OUT_OF_MEMORY);
   if (scopeObject != globalObject) {
     JSAutoCompartment ac2(cx, scopeObject);
 
