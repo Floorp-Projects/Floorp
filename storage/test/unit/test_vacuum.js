@@ -182,7 +182,7 @@ function test_page_size_change()
   let stmt = conn.createStatement("PRAGMA page_size");
   try {
     while (stmt.executeStep()) {
-      do_check_eq(stmt.row.page_size,  Ci.mozIStorageConnection.DEFAULT_PAGE_SIZE);
+      do_check_eq(stmt.row.page_size,  conn.defaultPageSize);
     }
   }
   finally {
