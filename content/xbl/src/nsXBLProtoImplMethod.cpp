@@ -294,12 +294,12 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement)
 
   AutoPushJSContext cx(context->GetNativeContext());
 
-  JSObject* globalObject = global->GetGlobalJSObject();
+  JS::Rooted<JSObject*> globalObject(cx, global->GetGlobalJSObject());
 
   nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
-  JS::Value v;
+  JS::Rooted<JS::Value> v(cx);
   nsresult rv =
-    nsContentUtils::WrapNative(cx, globalObject, aBoundElement, &v,
+    nsContentUtils::WrapNative(cx, globalObject, aBoundElement, v.address(),
                                getter_AddRefs(wrapper));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -311,18 +311,18 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement)
   NS_ENSURE_STATE(pusher.Push(aBoundElement));
   MOZ_ASSERT(cx == nsContentUtils::GetCurrentJSContext());
 
-  JSObject* thisObject = JSVAL_TO_OBJECT(v);
-  JSObject* scopeObject = xpc::GetXBLScope(cx, globalObject);
+  JS::Rooted<JSObject*> thisObject(cx, &v.toObject());
+  JS::Rooted<JSObject*> scopeObject(cx, xpc::GetXBLScope(cx, globalObject));
 
   JSAutoRequest ar(cx);
   JSAutoCompartment ac(cx, scopeObject);
-  if (!JS_WrapObject(cx, &thisObject))
+  if (!JS_WrapObject(cx, thisObject.address()))
       return NS_ERROR_OUT_OF_MEMORY;
 
   // Clone the function object, using thisObject as the parent so "this" is in
   // the scope chain of the resulting function (for backwards compat to the
   // days when this was an event handler).
-  JSObject* method = ::JS_CloneFunctionObject(cx, mJSMethodObject, thisObject);
+  JS::Rooted<JSObject*> method(cx, ::JS_CloneFunctionObject(cx, mJSMethodObject, thisObject));
   if (!method)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -334,9 +334,9 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement)
 
   JSBool ok = JS_TRUE;
   if (NS_SUCCEEDED(rv)) {
-    JS::Value retval;
+    JS::Rooted<JS::Value> retval(cx);
     ok = ::JS_CallFunctionValue(cx, thisObject, OBJECT_TO_JSVAL(method),
-                                0 /* argc */, nullptr /* argv */, &retval);
+                                0 /* argc */, nullptr /* argv */, retval.address());
   }
 
   if (!ok) {
