@@ -16,7 +16,6 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
-#include "mozilla/Telemetry.h"
 
 #include "nsIHttpProtocolHandler.h"
 #include "nsIProtocolProxyService.h"
@@ -412,25 +411,6 @@ private:
     // Whether or not to block requests for non head js/css items (e.g. media)
     // while those elements load.
     bool           mCritialRequestPrioritization;
-
-
-public:
-    // For the Cache Effect Experiment (see StartCacheExperiment in cpp)
-
-    static void StartCacheExperiment(nsITimer * aTimer, void * aClosure);
-    static void FinishCacheExperiment(nsITimer * aTimer, void * aClosure);
-
-    const static uint32_t kExperimentStartupDelay = 1000 * 60 * 2; // 2 mins
-    const static uint32_t kExperimentStartupDuration = 1000 * 60 * 15; // 15 mins
-    const static mozilla::Telemetry::ID kNullTelemetryID = static_cast<mozilla::Telemetry::ID>(0);
-
-    mozilla::Telemetry::ID mCacheEffectExperimentTelemetryID;
-    bool     mCacheEffectExperimentOnce;
-    nsCOMPtr<nsITimer> mCacheEffectExperimentTimer;
-
-    // only update these on the socket thread, but reading them from the main thread is ok
-    uint64_t mCacheEffectExperimentSlowConn;
-    uint64_t mCacheEffectExperimentFastConn;
 };
 
 //-----------------------------------------------------------------------------
