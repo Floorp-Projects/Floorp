@@ -12,12 +12,11 @@ import "Inspectable.idl";
   interface IUIABridge : IInspectable {
     HRESULT Init([in] IInspectable* view, [in] IInspectable* window, [in] LONG_PTR inner);
     HRESULT Disconnect();
+    HRESULT FocusChangeEvent();
   };
 
   [uuid(2153B284-F946-4209-908D-AB8AA1FED09C)]
   interface IUIAElement : IInspectable {
     HRESULT SetFocusInternal([in] LONG_PTR accessible);
-    HRESULT CheckFocus([in] int X, [in] int y);
     HRESULT ClearFocus();
-    HRESULT HasFocus([out, retval] VARIANT_BOOL * hasFocus);
   };
