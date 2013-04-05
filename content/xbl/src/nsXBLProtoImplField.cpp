@@ -127,7 +127,7 @@ ValueHasISupportsPrivate(const JS::Value &v)
 static JSBool
 InstallXBLField(JSContext* cx,
                 JS::Handle<JSObject*> callee, JS::Handle<JSObject*> thisObj,
-                jsid* idp, bool* installed)
+                JS::MutableHandle<jsid> idp, bool* installed)
 {
   *installed = false;
 
@@ -175,11 +175,11 @@ InstallXBLField(JSContext* cx,
     JS::Rooted<JSObject*> xblProto(cx);
     xblProto = &js::GetFunctionNativeReserved(callee, XBLPROTO_SLOT).toObject();
 
-    JS::Value name = js::GetFunctionNativeReserved(callee, FIELD_SLOT);
+    JS::Rooted<JS::Value> name(cx, js::GetFunctionNativeReserved(callee, FIELD_SLOT));
     JSFlatString* fieldStr = JS_ASSERT_STRING_IS_FLAT(name.toString());
     fieldName.init(fieldStr);
 
-    MOZ_ALWAYS_TRUE(JS_ValueToId(cx, name, idp));
+    MOZ_ALWAYS_TRUE(JS_ValueToId(cx, name, idp.address()));
 
     // If a separate XBL scope is being used, the callee is not same-compartment
     // with the xbl prototype, and the object is a cross-compartment wrapper.
@@ -232,7 +232,7 @@ FieldGetterImpl(JSContext *cx, JS::CallArgs args)
   bool installed = false;
   JS::Rooted<JSObject*> callee(cx, js::UnwrapObject(&args.calleev().toObject()));
   JS::Rooted<jsid> id(cx);
-  if (!InstallXBLField(cx, callee, thisObj, id.address(), &installed)) {
+  if (!InstallXBLField(cx, callee, thisObj, &id, &installed)) {
     return false;
   }
 
@@ -301,7 +301,7 @@ FieldSetterImpl(JSContext *cx, JS::CallArgs args)
   bool installed = false;
   JS::Rooted<JSObject*> callee(cx, js::UnwrapObject(&args.calleev().toObject()));
   JS::Rooted<jsid> id(cx);
-  if (!InstallXBLField(cx, callee, thisObj, id.address(), &installed)) {
+  if (!InstallXBLField(cx, callee, thisObj, &id, &installed)) {
     return false;
   }
 
