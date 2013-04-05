@@ -119,8 +119,10 @@ public:
   }
 
   nsresult InitClass(const nsCString& aClassName, JSContext * aContext,
-                     JSObject * aGlobal, JSObject * aScriptObject,
-                     JSObject** aClassObject, bool* aNew);
+                     JS::Handle<JSObject*> aGlobal,
+                     JS::Handle<JSObject*> aScriptObject,
+                     JS::MutableHandle<JSObject*> aClassObject,
+                     bool* aNew);
 
   nsresult ConstructInterfaceTable(const nsAString& aImpls);
   
