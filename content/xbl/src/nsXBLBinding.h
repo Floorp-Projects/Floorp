@@ -143,10 +143,12 @@ public:
 
   nsINodeList* GetAnonymousNodes();
 
-  static nsresult DoInitJSClass(JSContext *cx, JSObject *global, JSObject *obj,
+  static nsresult DoInitJSClass(JSContext *cx, JS::Handle<JSObject*> global,
+                                JS::Handle<JSObject*> obj,
                                 const nsAFlatCString& aClassName,
                                 nsXBLPrototypeBinding* aProtoBinding,
-                                JSObject** aClassObject, bool* aNew);
+                                JS::MutableHandle<JSObject*> aClassObject,
+                                bool* aNew);
 
   bool AllowScripts();  // XXX make const
 
