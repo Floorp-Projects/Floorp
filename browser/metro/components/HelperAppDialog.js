@@ -25,7 +25,9 @@ HelperAppLauncherDialog.prototype = {
 
   show: function hald_show(aLauncher, aContext, aReason) {
     // Check to see if we can open this file or not
-    if (aLauncher.MIMEInfo.hasDefaultHandler) {
+    // If the file is an executable then launchWithApplication will fail in
+    // /uriloader nsMIMEInfoWin.cpp code. So always download in that case.
+    if (aLauncher.MIMEInfo.hasDefaultHandler && !aLauncher.targetFileIsExecutable) {
       aLauncher.MIMEInfo.preferredAction = Ci.nsIMIMEInfo.useSystemDefault;
       aLauncher.launchWithApplication(null, false);
     } else {
@@ -208,7 +210,7 @@ HelperAppLauncherDialog.prototype = {
     let notifier = Cc[aCallback ? "@mozilla.org/alerts-service;1" : "@mozilla.org/toaster-alerts-service;1"].getService(Ci.nsIAlertsService);
     notifier.showAlertNotification(URI_GENERIC_ICON_DOWNLOAD,
                                    bundle.GetStringFromName("alertDownloads"),
-                                   bundle.GetStringFromName("alertCantOpenDownload"),
+                                   bundle.GetStringFromName("alertTapToSave"),
                                    true, "", aCallback, "downloadopen-fail");
   }
 };
