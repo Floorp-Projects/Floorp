@@ -7,15 +7,6 @@
 <!ENTITY  popupExceptions.label       "Exceptions…">
 <!ENTITY  popupExceptions.accesskey   "E">
 
-<!ENTITY  enableJavaScript.label      "Enable JavaScript">
-<!ENTITY  enableJavaScript.accesskey  "J">
-<!ENTITY  advancedJS.label            "Advanced…">
-<!ENTITY  advancedJS.accesskey        "v">
-
-<!ENTITY  enableJava.label            "Enable Java">
-<!ENTITY  enableJava.accesskey        "n">
-
-
 <!ENTITY  fontsAndColors.label        "Fonts &amp; Colors">
 
 <!ENTITY  defaultFont.label           "Default font:">
