@@ -318,10 +318,12 @@ nsXBLProtoImplProperty::Read(nsIScriptContext* aContext,
                              nsIObjectInputStream* aStream,
                              XBLBindingSerializeDetails aType)
 {
+  JSContext *cx = aContext->GetNativeContext();
+
   if (aType == XBLBinding_Serialize_GetterProperty ||
       aType == XBLBinding_Serialize_GetterSetterProperty) {
-    JSObject* getterObject;
-    nsresult rv = XBL_DeserializeFunction(aContext, aStream, &getterObject);
+    JS::Rooted<JSObject*> getterObject(cx);
+    nsresult rv = XBL_DeserializeFunction(aContext, aStream, getterObject.address());
     NS_ENSURE_SUCCESS(rv, rv);
 
     mJSGetterObject = getterObject;
@@ -330,8 +332,8 @@ nsXBLProtoImplProperty::Read(nsIScriptContext* aContext,
 
   if (aType == XBLBinding_Serialize_SetterProperty ||
       aType == XBLBinding_Serialize_GetterSetterProperty) {
-    JSObject* setterObject;
-    nsresult rv = XBL_DeserializeFunction(aContext, aStream, &setterObject);
+    JS::Rooted<JSObject*> setterObject(cx);
+    nsresult rv = XBL_DeserializeFunction(aContext, aStream, setterObject.address());
     NS_ENSURE_SUCCESS(rv, rv);
 
     mJSSetterObject = setterObject;
