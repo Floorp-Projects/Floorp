@@ -93,6 +93,7 @@ Cu.import("resource://gre/modules/Geometry.jsm");
  */
 let ScriptContexts = {};
 [
+  ["ContentAreaObserver", "chrome://browser/content/ContentAreaObserver.js"],
   ["WebProgress", "chrome://browser/content/WebProgress.js"],
   ["FindHelperUI", "chrome://browser/content/helperui/FindHelperUI.js"],
   ["FormHelperUI", "chrome://browser/content/helperui/FormHelperUI.js"],
