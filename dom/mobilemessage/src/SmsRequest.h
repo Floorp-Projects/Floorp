@@ -92,16 +92,6 @@ private:
   nsresult SendMessageReply(const mobilemessage::MessageReply& aReply);
 
   /**
-   * Root mResult (JS::Value) to prevent garbage collection.
-   */
-  void RootResult();
-
-  /**
-   * Unroot mResult (JS::Value) to allow garbage collection.
-   */
-  void UnrootResult();
-
-  /**
    * Set the object in a success state with the result being aMessage.
    */
   void SetSuccess(nsIDOMMozSmsMessage* aMessage);
@@ -140,7 +130,6 @@ private:
   nsresult NotifyError(int32_t aError);
 
   JS::Value mResult;
-  bool      mResultRooted;
   bool      mDone;
   bool      mParentAlive;
   mobilemessage::SmsRequestParent* mParent;
