@@ -236,11 +236,14 @@ nsresult
 nsXBLProtoImplMethod::Read(nsIScriptContext* aContext,
                            nsIObjectInputStream* aStream)
 {
-  nsresult rv = XBL_DeserializeFunction(aContext, aStream, &mJSMethodObject);
+  JS::Rooted<JSObject*> methodObject(aContext->GetNativeContext());
+  nsresult rv = XBL_DeserializeFunction(aContext, aStream, &methodObject);
   if (NS_FAILED(rv)) {
     SetUncompiledMethod(nullptr);
     return rv;
   }
+
+  mJSMethodObject = methodObject;
 
 #ifdef DEBUG
   mIsCompiled = true;
