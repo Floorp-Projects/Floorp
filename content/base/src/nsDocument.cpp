@@ -3758,7 +3758,7 @@ nsDocument::RemoveStyleSheet(nsIStyleSheet* aSheet)
   nsCOMPtr<nsIStyleSheet> sheet = aSheet; // hold ref so it won't die too soon
 
   if (!mStyleSheets.RemoveObject(aSheet)) {
-    NS_NOTREACHED("stylesheet not found");
+    NS_ASSERTION(mInUnlinkOrDeletion, "stylesheet not found");
     return;
   }
 
