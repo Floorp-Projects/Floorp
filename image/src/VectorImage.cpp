@@ -301,12 +301,10 @@ NS_IMPL_ISUPPORTS3(VectorImage,
 VectorImage::VectorImage(imgStatusTracker* aStatusTracker,
                          nsIURI* aURI /* = nullptr */) :
   ImageResource(aStatusTracker, aURI), // invoke superclass's constructor
-  mRestrictedRegion(0, 0, 0, 0),
   mIsInitialized(false),
   mIsFullyLoaded(false),
   mIsDrawing(false),
-  mHaveAnimations(false),
-  mHaveRestrictedRegion(false)
+  mHaveAnimations(false)
 {
 }
 
@@ -326,8 +324,7 @@ VectorImage::Init(const char* aMimeType,
   if (mIsInitialized)
     return NS_ERROR_ILLEGAL_VALUE;
 
-  MOZ_ASSERT(!mIsFullyLoaded && !mHaveAnimations &&
-             !mHaveRestrictedRegion && !mError,
+  MOZ_ASSERT(!mIsFullyLoaded && !mHaveAnimations && !mError,
              "Flags unexpectedly set before initialization");
   MOZ_ASSERT(!strcmp(aMimeType, IMAGE_SVG_XML), "Unexpected mimetype");
 
@@ -595,14 +592,7 @@ VectorImage::GetFrame(uint32_t aWhichFrame,
   // ---------------------------------------------
   // Make our surface the size of what will ultimately be drawn to it.
   // (either the full image size, or the restricted region)
-  gfxIntSize surfaceSize;
-  if (mHaveRestrictedRegion) {
-    surfaceSize.width = mRestrictedRegion.width;
-    surfaceSize.height = mRestrictedRegion.height;
-  } else {
-    surfaceSize.width = imageIntSize.width;
-    surfaceSize.height = imageIntSize.height;
-  }
+  gfxIntSize surfaceSize(imageIntSize.width, imageIntSize.height);
 
   nsRefPtr<gfxImageSurface> surface =
     new gfxImageSurface(surfaceSize, gfxASurface::ImageFormatARGB32);
@@ -628,54 +618,6 @@ VectorImage::GetImageContainer(LayerManager* aManager,
                                mozilla::layers::ImageContainer** _retval)
 {
   *_retval = nullptr;
-  return NS_OK;
-}
-
-//******************************************************************************
-/* [noscript] imgIContainer extractFrame(uint32_t aWhichFrame,
- *                                       [const] in nsIntRect aRegion,
- *                                       in uint32_t aFlags); */
-NS_IMETHODIMP
-VectorImage::ExtractFrame(uint32_t aWhichFrame,
-                          const nsIntRect& aRegion,
-                          uint32_t aFlags,
-                          imgIContainer** _retval)
-{
-  NS_ENSURE_ARG_POINTER(_retval);
-  if (mError || !mIsFullyLoaded)
-    return NS_ERROR_FAILURE;
-
-  // XXXdholbert NOTE: This method assumes FRAME_CURRENT (not FRAME_FIRST)
-  // right now, because mozilla doesn't actually contain any clients of this
-  // method that use FRAME_FIRST.  If it's needed, we *could* handle
-  // FRAME_FIRST by saving the helper-doc's current SMIL time, seeking it to
-  // time 0, rendering to a RasterImage, and then restoring our saved time.
-  if (aWhichFrame != FRAME_CURRENT) {
-    NS_WARNING("VectorImage::ExtractFrame with something other than "
-               "FRAME_CURRENT isn't supported yet. Assuming FRAME_CURRENT.");
-  }
-
-  // XXXdholbert This method also doesn't actually freeze animation in the
-  // returned imgIContainer, because it shares our helper-document. To
-  // get a true snapshot, we need to clone the document - see bug 590792.
-
-  // Make a new container with same SVG document.
-  nsRefPtr<VectorImage> extractedImg = new VectorImage();
-  extractedImg->mSVGDocumentWrapper = mSVGDocumentWrapper;
-  extractedImg->mAnimationMode = kDontAnimMode;
-
-  extractedImg->mRestrictedRegion.x = aRegion.x;
-  extractedImg->mRestrictedRegion.y = aRegion.y;
-
-  // (disallow negative width/height on our restricted region)
-  extractedImg->mRestrictedRegion.width  = std::max(aRegion.width,  0);
-  extractedImg->mRestrictedRegion.height = std::max(aRegion.height, 0);
-
-  extractedImg->mIsInitialized = true;
-  extractedImg->mIsFullyLoaded = true;
-  extractedImg->mHaveRestrictedRegion = true;
-
-  *_retval = extractedImg.forget().get();
   return NS_OK;
 }
 
@@ -722,24 +664,19 @@ VectorImage::Draw(gfxContext* aContext,
   mSVGDocumentWrapper->UpdateViewportBounds(aViewportSize);
   mSVGDocumentWrapper->FlushImageTransformInvalidation();
 
-  nsIntSize imageSize = mHaveRestrictedRegion ?
-    mRestrictedRegion.Size() : aViewportSize;
-
   // XXXdholbert Do we need to convert image size from
   // CSS pixels to dev pixels here? (is gfxCallbackDrawable's 2nd arg in dev
   // pixels?)
-  gfxIntSize imageSizeGfx(imageSize.width, imageSize.height);
+  gfxIntSize imageSizeGfx(aViewportSize.width, aViewportSize.height);
 
   // Based on imgFrame::Draw
   gfxRect sourceRect = aUserSpaceToImageSpace.Transform(aFill);
-  gfxRect imageRect(0, 0, imageSize.width, imageSize.height);
+  gfxRect imageRect(0, 0, aViewportSize.width, aViewportSize.height);
   gfxRect subimage(aSubimage.x, aSubimage.y, aSubimage.width, aSubimage.height);
 
 
   nsRefPtr<gfxDrawingCallback> cb =
     new SVGDrawingCallback(mSVGDocumentWrapper,
-                           mHaveRestrictedRegion ?
-                           mRestrictedRegion :
                            nsIntRect(nsIntPoint(0, 0), aViewportSize),
                            aFlags);
 
@@ -750,12 +687,9 @@ VectorImage::Draw(gfxContext* aContext,
                              subimage, sourceRect, imageRect, aFill,
                              gfxASurface::ImageFormatARGB32, aFilter);
 
-  MOZ_ASSERT(mRenderingObserver || mHaveRestrictedRegion,
-      "Should have a rendering observer by now unless ExtractFrame created us");
-  if (mRenderingObserver) {
-    // Allow ourselves to fire FrameChanged and OnStopFrame again.
-    mRenderingObserver->ResumeListening();
-  }
+  // Allow ourselves to fire FrameChanged and OnStopFrame again.
+  MOZ_ASSERT(mRenderingObserver, "Should have a rendering observer by now");
+  mRenderingObserver->ResumeListening();
 
   return NS_OK;
 }
