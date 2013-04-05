@@ -125,7 +125,6 @@ const PanelUI = {
    */
   hide: function() {
     this.panel.hidePopup();
-    this.showMainView();
   },
 
   handleEvent: function(aEvent) {
@@ -141,6 +140,7 @@ const PanelUI = {
       case "popuphiding":
         // Fall through
       case "popuphidden": {
+        this.showMainView();
         this._updatePanelButton(aEvent.target);
         break;
       }
