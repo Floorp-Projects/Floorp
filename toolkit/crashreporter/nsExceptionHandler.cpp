@@ -22,7 +22,7 @@
 #include "client/windows/crash_generation/client_info.h"
 #include "client/windows/crash_generation/crash_generation_server.h"
 #include "client/windows/handler/exception_handler.h"
-#include <DbgHelp.h>
+#include <dbghelp.h>
 #include <string.h>
 #include "nsDirectoryServiceUtils.h"
 
