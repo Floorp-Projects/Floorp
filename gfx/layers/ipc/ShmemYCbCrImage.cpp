@@ -68,6 +68,12 @@ uint8_t* ShmemYCbCrImage::GetCrData()
   return reinterpret_cast<uint8_t*>(info) + info->mCrOffset;
 }
 
+uint8_t* ShmemYCbCrImage::GetData()
+{
+  YCbCrBufferInfo* info = GetYCbCrBufferInfo(mShmem, mOffset);
+  return (reinterpret_cast<uint8_t*>(info)) + MOZ_ALIGN_WORD(sizeof(YCbCrBufferInfo));
+}
+
 uint32_t ShmemYCbCrImage::GetYStride()
 {
   YCbCrBufferInfo* info = GetYCbCrBufferInfo(mShmem, mOffset);
@@ -117,6 +123,19 @@ size_t ShmemYCbCrImage::ComputeMinBufferSize(const gfxIntSize& aYSize,
   return ComputeOffset(aYSize.height, yStride)
          + 2 * ComputeOffset(aCbCrSize.height, CbCrStride)
          + MOZ_ALIGN_WORD(sizeof(YCbCrBufferInfo));
+}
+
+// Offset in bytes
+static size_t ComputeOffset(uint32_t aSize)
+{
+  return MOZ_ALIGN_WORD(aSize);
+}
+
+// Minimum required shmem size in bytes
+size_t ShmemYCbCrImage::ComputeMinBufferSize(uint32_t aSize)
+{
+
+  return ComputeOffset(aSize) + MOZ_ALIGN_WORD(sizeof(YCbCrBufferInfo));
 }
 
 void ShmemYCbCrImage::InitializeBufferInfo(uint8_t* aBuffer,
