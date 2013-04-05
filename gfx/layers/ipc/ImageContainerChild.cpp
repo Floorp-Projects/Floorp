@@ -29,15 +29,15 @@ namespace layers {
  * the number of active shared images for a given ImageContainerChild is equal
  * to the number of shared images allocated minus the number of shared images
  * dealocated by this ImageContainerChild. What can happen is that the compositor
- * hangs for a moment, while the ImageBridgeChild keep sending images. In such a 
- * scenario the compositor is not sending back shared images so the 
- * ImageContinerChild allocates new ones, and if the compositor hangs for too 
+ * hangs for a moment, while the ImageBridgeChild keep sending images. In such a
+ * scenario the compositor is not sending back shared images so the
+ * ImageContinerChild allocates new ones, and if the compositor hangs for too
  * long, we can run out of shared memory. MAX_ACTIVE_SHARED_IMAGES is there to
- * throttle that. So when the child side wants to allocate a new shared image 
+ * throttle that. So when the child side wants to allocate a new shared image
  * but is already at its maximum of active shared images, it just discards the
  * image (which is therefore not allocated and not sent to the compositor).
  *
- * The values for the two constants are arbitrary and should be tweaked if it 
+ * The values for the two constants are arbitrary and should be tweaked if it
  * happens that we run into shared memory problems.
  */
 static const unsigned int POOL_MAX_SHARED_IMAGES = 5;
@@ -45,10 +45,10 @@ static const unsigned int MAX_ACTIVE_SHARED_IMAGES = 10;
 
 ImageContainerChild::ImageContainerChild()
 : mImageContainerID(0), mActiveImageCount(0),
-  mStop(false), mDispatchedDestroy(false) 
+  mStop(false), mDispatchedDestroy(false)
 {
   MOZ_COUNT_CTOR(ImageContainerChild);
-  // the Release corresponding to this AddRef is in 
+  // the Release corresponding to this AddRef is in
   // ImageBridgeChild::DeallocPImageContainer
   AddRef();
 }
@@ -64,7 +64,7 @@ void ImageContainerChild::DispatchStop()
                   NewRunnableMethod(this, &ImageContainerChild::StopChildAndParent));
 }
 
-void ImageContainerChild::SetIdleNow() 
+void ImageContainerChild::SetIdleNow()
 {
   if (mStop) return;
 
@@ -94,7 +94,7 @@ void ImageContainerChild::SetIdle()
   MonitorAutoLock autoMon(barrier);
   bool done = false;
 
-  GetMessageLoop()->PostTask(FROM_HERE, 
+  GetMessageLoop()->PostTask(FROM_HERE,
                     NewRunnableMethod(this, &ImageContainerChild::SetIdleSync, &barrier, &done));
 
   while (!done) {
@@ -107,7 +107,7 @@ void ImageContainerChild::StopChildAndParent()
   if (mStop) {
     return;
   }
-  mStop = true;    
+  mStop = true;
 
   SendStop(); // IPC message
   DispatchDestroy();
@@ -118,7 +118,7 @@ void ImageContainerChild::StopChild()
   if (mStop) {
     return;
   }
-  mStop = true;    
+  mStop = true;
 
   DispatchDestroy();
 }
@@ -168,7 +168,7 @@ void ImageContainerChild::DestroySharedImage(const SharedImage& aImage)
 
 bool ImageContainerChild::CopyDataIntoSharedImage(Image* src, SharedImage* dest)
 {
-  if ((src->GetFormat() == PLANAR_YCBCR) && 
+  if ((src->GetFormat() == PLANAR_YCBCR) &&
       (dest->type() == SharedImage::TYCbCrImage)) {
     PlanarYCbCrImage *planarYCbCrImage = static_cast<PlanarYCbCrImage*>(src);
     const PlanarYCbCrImage::Data *data = planarYCbCrImage->GetData();
@@ -260,7 +260,7 @@ void ImageContainerChild::RecycleSharedImage(SharedImage* aImage)
 
 bool ImageContainerChild::AddSharedImageToPool(SharedImage* img)
 {
-  NS_ABORT_IF_FALSE(InImageBridgeChildThread(), 
+  NS_ABORT_IF_FALSE(InImageBridgeChildThread(),
                     "AddSharedImageToPool must be called in the ImageBridgeChild thread");
   if (mStop) {
     return false;
@@ -375,13 +375,13 @@ void ImageContainerChild::SendImageNow(Image* aImage)
 class ImageBridgeCopyAndSendTask : public Task
 {
 public:
-  ImageBridgeCopyAndSendTask(ImageContainerChild * child, 
-                             ImageContainer * aContainer, 
+  ImageBridgeCopyAndSendTask(ImageContainerChild * child,
+                             ImageContainer * aContainer,
                              Image * aImage)
   : mChild(child), mImageContainer(aContainer), mImage(aImage) {}
 
   void Run()
-  { 
+  {
     mChild->SendImageNow(mImage);
   }
 
@@ -406,9 +406,9 @@ void ImageContainerChild::SendImageAsync(ImageContainer* aContainer,
     return;
   }
 
-  // Sending images and (potentially) allocating shmems must be done 
+  // Sending images and (potentially) allocating shmems must be done
   // on the ImageBridgeChild thread.
-  Task *t = new ImageBridgeCopyAndSendTask(this, aContainer, aImage);   
+  Task *t = new ImageBridgeCopyAndSendTask(this, aContainer, aImage);
   GetMessageLoop()->PostTask(FROM_HERE, t);
 }
 
@@ -436,7 +436,7 @@ void ImageContainerChild::DispatchDestroy()
   }
   mDispatchedDestroy = true;
   AddRef(); // corresponds to the Release in DestroyNow
-  GetMessageLoop()->PostTask(FROM_HERE, 
+  GetMessageLoop()->PostTask(FROM_HERE,
                     NewRunnableMethod(this, &ImageContainerChild::DestroyNow));
 }
 
@@ -572,17 +572,51 @@ public:
     mData.mCrChannel = shmImg.GetCrData();
   }
 
-  virtual bool Allocate(PlanarYCbCrImage::Data& aData)
+  // needs to be overriden because the parent class sets mBuffer which we
+  // do not want to happen.
+  uint8_t* AllocateAndGetNewBuffer(uint32_t aSize) MOZ_OVERRIDE
+  {
+    size_t size = ShmemYCbCrImage::ComputeMinBufferSize(aSize);
+    // update buffer size
+    mBufferSize = size;
+
+    // get new buffer _without_ setting mBuffer.
+    AllocateBuffer(mBufferSize);
+    ShmemYCbCrImage shmImg(mShmem);
+
+    return shmImg.GetData();
+  }
+
+  virtual void
+  SetDataNoCopy(const Data &aData) MOZ_OVERRIDE
+  {
+    mData = aData;
+    mSize = aData.mPicSize;
+    ShmemYCbCrImage::InitializeBufferInfo(mShmem.get<uint8_t>(),
+                                          aData.mYSize,
+                                          aData.mCbCrSize);
+  }
+
+  virtual uint8_t* AllocateBuffer(uint32_t aSize) MOZ_OVERRIDE
   {
     NS_ABORT_IF_FALSE(!mAllocated, "This image already has allocated data");
-
     SharedMemory::SharedMemoryType shmType = OptimalShmemType();
+    if (!mImageContainerChild->AllocUnsafeShmemSync(aSize, shmType, &mShmem)) {
+      return nullptr;
+    }
+    mAllocated = true;
+    return mShmem.get<uint8_t>();
+  }
+
+  virtual bool Allocate(PlanarYCbCrImage::Data& aData)
+  {
     size_t size = ShmemYCbCrImage::ComputeMinBufferSize(aData.mYSize,
                                                         aData.mCbCrSize);
 
-    if (!mImageContainerChild->AllocUnsafeShmemSync(size, shmType, &mShmem)) {
+    if (AllocateBuffer(static_cast<uint32_t>(size)) == nullptr) {
       return false;
     }
+
     ShmemYCbCrImage::InitializeBufferInfo(mShmem.get<uint8_t>(),
                                           aData.mYSize,
                                           aData.mCbCrSize);
@@ -614,7 +648,6 @@ public:
     mData.mYStride = mData.mYSize.width;
     mData.mCbCrStride = mData.mCbCrSize.width;
 
-    mAllocated = true;
     return true;
   }
 
