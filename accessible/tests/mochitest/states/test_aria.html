@@ -113,11 +113,28 @@
       // readonly/editable on grid and gridcell
       testStates("aria_grid_default", 0, EXT_STATE_EDITABLE,
                  STATE_READONLY, 0);
+      testStates("aria_grid_default_colheader_readonly", STATE_READONLY, 0,
+                 0, EXT_STATE_EDITABLE);
+      testStates("aria_grid_default_colheader_inherited", 0, EXT_STATE_EDITABLE,
+                 STATE_READONLY, 0);
+      testStates("aria_grid_default_rowheader_readonly", STATE_READONLY, 0,
+                 0, EXT_STATE_EDITABLE);
+      testStates("aria_grid_default_rowheader_inherited", 0, EXT_STATE_EDITABLE,
+                 STATE_READONLY, 0);
       testStates("aria_grid_default_cell_readonly", STATE_READONLY, 0,
                  0, EXT_STATE_EDITABLE);
       testStates("aria_grid_default_cell_inherited", 0, EXT_STATE_EDITABLE,
                  STATE_READONLY, 0);
+
       testStates("aria_grid_readonly", STATE_READONLY, 0,
+                 0, EXT_STATE_EDITABLE);
+      testStates("aria_grid_readonly_colheader_editable", 0, EXT_STATE_EDITABLE,
+                 STATE_READONLY, 0);
+      testStates("aria_grid_readonly_colheader_inherited", STATE_READONLY, 0,
+                 0, EXT_STATE_EDITABLE);
+      testStates("aria_grid_readonly_rowheader_editable", 0, EXT_STATE_EDITABLE,
+                 STATE_READONLY, 0);
+      testStates("aria_grid_readonly_rowheader_inherited", STATE_READONLY, 0,
                  0, EXT_STATE_EDITABLE);
       testStates("aria_grid_readonly_cell_editable", 0, EXT_STATE_EDITABLE,
                  STATE_READONLY, 0);
@@ -288,18 +305,44 @@
 
   <div id="aria_grid_default" role="grid">
     <div role="row">
+      <div id="aria_grid_default_colheader_readonly"
+           role="columnheader" aria-readonly="true">colheader1</div>
+      <div id="aria_grid_default_colheader_inherited"
+           role="columnheader">colheader2</div>
+    </div>
+    <div role="row">
+      <div id="aria_grid_default_rowheader_readonly"
+           role="rowheader" aria-readonly="true">rowheader1</div>
+      <div id="aria_grid_default_rowheader_inherited"
+           role="rowheader">rowheader2</div>
+    </div>
+    <div role="row">
       <div id="aria_grid_default_cell_readonly"
            role="gridcell" aria-readonly="true">gridcell1</div>
       <div id="aria_grid_default_cell_inherited"
            role="gridcell">gridcell2</div>
+    </div>
   </div>
 
   <div id="aria_grid_readonly" role="grid" aria-readonly="true">
+    <div role="row">
+      <div id="aria_grid_readonly_colheader_editable"
+           role="columnheader" aria-readonly="false">colheader1</div>
+      <div id="aria_grid_readonly_colheader_inherited"
+           role="columnheader">colheader2</div>
+    </div>
+    <div role="row">
+      <div id="aria_grid_readonly_rowheader_editable"
+           role="rowheader" aria-readonly="false">rowheader1</div>
+      <div id="aria_grid_readonly_rowheader_inherited"
+           role="rowheader">rowheader2</div>
+    </div>
     <div role="row">
       <div id="aria_grid_readonly_cell_editable"
            role="gridcell" aria-readonly="false">gridcell1</div>
       <div id="aria_grid_readonly_cell_inherited"
            role="gridcell">gridcell2</div>
+    </div>
   </div>
 
   <div role="listbox">
