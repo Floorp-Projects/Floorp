@@ -200,19 +200,6 @@ ClippedImage::GetImageContainer(LayerManager* aManager, ImageContainer** _retval
   return NS_OK;
 }
 
-NS_IMETHODIMP
-ClippedImage::ExtractFrame(uint32_t /* aWhichFrame */,
-                           const nsIntRect& /* aRegion */,
-                           uint32_t /* aFlags */,
-                           imgIContainer** /* _retval */)
-{
-  // XXX(seth): This method has to be present in this patch because we haven't
-  // gotten to the point where we can remove ExtractFrame yet, but implementing
-  // it would be a waste of effort.
-  MOZ_ASSERT(false, "ClippedImage::ExtractFrame shouldn't be called");
-  return NS_ERROR_NOT_AVAILABLE;
-}
-
 bool
 ClippedImage::MustCreateSurface(gfxContext* aContext,
                                 const gfxMatrix& aTransform,

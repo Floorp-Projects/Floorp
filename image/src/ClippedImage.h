@@ -38,10 +38,6 @@ public:
                       gfxASurface** _retval) MOZ_OVERRIDE;
   NS_IMETHOD GetImageContainer(mozilla::layers::LayerManager* aManager,
                                mozilla::layers::ImageContainer** _retval) MOZ_OVERRIDE;
-  NS_IMETHOD ExtractFrame(uint32_t aWhichFrame,
-                          const nsIntRect& aRegion,
-                          uint32_t aFlags,
-                          imgIContainer** _retval) MOZ_OVERRIDE;
   NS_IMETHOD Draw(gfxContext* aContext,
                   gfxPattern::GraphicsFilter aFilter,
                   const gfxMatrix& aUserSpaceToImageSpace,
