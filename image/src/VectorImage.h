@@ -84,18 +84,11 @@ private:
   nsRefPtr<SVGLoadEventListener>     mLoadEventListener;
   nsRefPtr<SVGParseCompleteListener> mParseCompleteListener;
 
-  nsIntRect      mRestrictedRegion;       // If we were created by
-                                          // ExtractFrame, this is the region
-                                          // that we're restricted to using.
-                                          // Otherwise, this is ignored.
-
   bool           mIsInitialized;          // Have we been initalized?
   bool           mIsFullyLoaded;          // Has the SVG document finished loading?
   bool           mIsDrawing;              // Are we currently drawing?
   bool           mHaveAnimations;         // Is our SVG content SMIL-animated?
                                           // (Only set after mIsFullyLoaded.)
-  bool           mHaveRestrictedRegion;   // Are we a restricted-region clone
-                                          // created via ExtractFrame?
 
   friend class ImageFactory;
 };

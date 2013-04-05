@@ -52,13 +52,12 @@ native nsSize(nsSize);
 
 /**
  * imgIContainer is the interface that represents an image. It allows
- * access to frames as Thebes surfaces, and permits users to extract subregions
- * as other imgIContainers. It also allows drawing of images on to Thebes
- * contexts.
+ * access to frames as Thebes surfaces. It also allows drawing of images
+ * onto Thebes contexts.
  *
  * Internally, imgIContainer also manages animation of images.
  */
-[scriptable, builtinclass, uuid(01c4f92f-f883-4837-a127-d8f30920e374)]
+[scriptable, builtinclass, uuid(0c1caf24-bce7-4db5-971d-8e1b6ed07540)]
 interface imgIContainer : nsISupports
 {
   /**
@@ -179,19 +178,6 @@ interface imgIContainer : nsISupports
   [noscript] ImageContainer getImageContainer(in LayerManager aManager);
 
   /**
-   * Create a new imgContainer that contains only a single frame, which itself
-   * contains a subregion of the given frame.
-   *
-   * @param aWhichFrame Frame specifier of the FRAME_* variety.
-   * @param aRect the area of the current frame to be duplicated in the
-   *              returned imgContainer's frame.
-   * @param aFlags Flags of the FLAG_* variety
-   */
-  [noscript] imgIContainer extractFrame(in uint32_t aWhichFrame,
-                                        [const] in nsIntRect aRect,
-                                        in uint32_t aFlags);
-
-  /**
    * Draw a frame onto the context specified.
    *
    * @param aContext The Thebes context to draw the image to.
@@ -229,11 +215,10 @@ interface imgIContainer : nsISupports
 
   /*
    * Ensures that an image is decoding. Calling this function guarantees that
-   * the image will at some point fire off decode notifications. Calling draw(),
-   * getFrame(), copyFrame(), or extractCurrentFrame() triggers the same
-   * mechanism internally. Thus, if you want to be sure that the image will be
-   * decoded but don't want to access it until then, you must call
-   * requestDecode().
+   * the image will at some point fire off decode notifications. Calling draw()
+   * or getFrame() triggers the same mechanism internally. Thus, if you want to
+   * be sure that the image will be decoded but don't want to access it until
+   * then, you must call requestDecode().
    */
   void requestDecode();
 
