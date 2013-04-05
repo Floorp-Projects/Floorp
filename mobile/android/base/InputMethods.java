@@ -99,4 +99,10 @@ final class InputMethods {
         return METHOD_SAMSUNG.equals(inputMethod) ||
                METHOD_SWIFTKEY.equals(inputMethod);
     }
+
+    public static boolean isGestureKeyboard(Context context) {
+        String inputMethod = getCurrentInputMethod(context);
+        return METHOD_SWYPE.equals(inputMethod) ||
+               METHOD_SWYPE_BETA.equals(inputMethod);
+    }
 }
