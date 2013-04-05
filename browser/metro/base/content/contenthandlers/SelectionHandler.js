@@ -64,6 +64,7 @@ var SelectionHandler = {
     addMessageListener("Browser:CaretMove", this);
     addMessageListener("Browser:CaretUpdate", this);
     addMessageListener("Browser:SelectionSwitchMode", this);
+    addMessageListener("Browser:RepositionInfoRequest", this);
   },
 
   shutdown: function shutdown() {
@@ -82,11 +83,20 @@ var SelectionHandler = {
     removeMessageListener("Browser:CaretMove", this);
     removeMessageListener("Browser:CaretUpdate", this);
     removeMessageListener("Browser:SelectionSwitchMode", this);
+    removeMessageListener("Browser:RepositionInfoRequest", this);
   },
 
   /*************************************************
    * Properties
    */
+
+  get isActive() {
+    return !!this._targetElement;
+  },
+
+  get targetIsEditable() {
+    return this._targetIsEditable || false;
+  },
 
   /*
    * snap - enable or disable word snap for the active marker when a
@@ -402,6 +412,37 @@ var SelectionHandler = {
   _onSelectionDebug: function _onSelectionDebug(aMsg) {
     this._debugOptions = aMsg;
     this._debugEvents = aMsg.dumpEvents;
+  },
+
+  /*
+   * _repositionInfoRequest - fired at us by ContentAreaObserver when the
+   * soft keyboard is being displayed. CAO wants to make a decision about
+   * whether the browser deck needs repositioning.
+   */
+  _repositionInfoRequest: function _repositionInfoRequest(aJsonMsg) {
+    if (!this.isActive) {
+      Util.dumpLn("unexpected: repositionInfoRequest but selection isn't active.");
+      sendAsyncMessage("Content:RepositionInfoResponse", { reposition: false });
+      return;
+    }
+    
+    if (!this.targetIsEditable) {
+      Util.dumpLn("unexpected: repositionInfoRequest but targetIsEditable is false.");
+      sendAsyncMessage("Content:RepositionInfoResponse", { reposition: false });
+    }
+    
+    let result = this._calcNewContentPosition(aJsonMsg.viewHeight);
+
+    // no repositioning needed
+    if (result == 0) {
+      sendAsyncMessage("Content:RepositionInfoResponse", { reposition: false });
+      return;
+    }
+
+    sendAsyncMessage("Content:RepositionInfoResponse", {
+      reposition: true,
+      raiseContent: result,
+    });
   },
 
   /*************************************************
@@ -1048,6 +1089,75 @@ var SelectionHandler = {
   },
 
   /*
+   * _calcNewContentPosition - calculates the distance the browser should be
+   * raised to move the focused form input out of the way of the soft
+   * keyboard.
+   *
+   * @param aNewViewHeight the new content view height
+   * @return 0 if no positioning is required or a positive val equal to the
+   * distance content should be raised to center the target element.
+   */
+  _calcNewContentPosition: function _calcNewContentPosition(aNewViewHeight) {
+    // We don't support this on non-editable elements
+    if (!this._targetIsEditable) {
+      return 0;
+    }
+
+    // If the bottom of the target bounds is higher than the new height,
+    // there's no need to adjust. It will be above the keyboard.
+    if (this._cache.element.bottom <= aNewViewHeight) {
+      return 0;
+    }
+    
+    // height of the target element
+    let targetHeight = this._cache.element.bottom - this._cache.element.top;
+    // height of the browser view.
+    let viewBottom = this._targetElement.ownerDocument.defaultView.innerHeight;
+
+    // If the target is shorter than the new content height, we can go ahead
+    // and center it.
+    if (targetHeight <= aNewViewHeight) {
+      // Try to center the element vertically in the new content area, but
+      // don't position such that the bottom of the browser view moves above
+      // the top of the chrome. We purposely do not resize the browser window
+      // by making it taller when trying to center elements that are near the
+      // lower bounds. This would trigger reflow which can cause content to
+      // shift around. 
+      let splitMargin = Math.round((aNewViewHeight - targetHeight) * .5);
+      let distanceToPageBounds = viewBottom - this._cache.element.bottom;
+      let distanceFromChromeTop = this._cache.element.bottom - aNewViewHeight;
+      let distanceToCenter =
+        distanceFromChromeTop + Math.min(distanceToPageBounds, splitMargin);
+      return distanceToCenter;
+    }
+
+    // Special case: we are dealing with an input that is taller than the
+    // desired height of content. We need to center on the caret location.
+    let rect =
+      this._domWinUtils.sendQueryContentEvent(this._domWinUtils.QUERY_CARET_RECT,
+                                              this._targetElement.selectionEnd,
+                                              0, 0, 0);
+    if (!rect || !rect.succeeded) {
+      Util.dumpLn("no caret was present, unexpected.");
+      return 0;
+    }
+
+    // Note sendQueryContentEvent with QUERY_CARET_RECT is really buggy. If it
+    // can't find the exact location of the caret position it will "guess".
+    // Sometimes this can put the result in unexpected locations.
+    let caretLocation = Math.max(Math.min(Math.round(rect.top + (rect.height * .5)),
+                                          viewBottom), 0);
+
+    // Caret is above the bottom of the new view bounds, no need to shift.
+    if (caretLocation <= aNewViewHeight) {
+      return 0;
+    }
+
+    // distance from the top of the keyboard down to the caret location
+    return caretLocation - aNewViewHeight;
+  },
+
+  /*
    * Events
    */
 
@@ -1126,6 +1236,10 @@ var SelectionHandler = {
 
       case "Browser:SelectionUpdate":
         this._onSelectionUpdate();
+        break;
+
+      case "Browser:RepositionInfoRequest":
+        this._repositionInfoRequest(json);
         break;
     }
   },
