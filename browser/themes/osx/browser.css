@@ -2069,7 +2069,7 @@ window[tabsontop="false"] richlistitem[type~="action"][actiontype="switchtab"][s
 
 #sidebar,
 sidebarheader {
-  background-color: #d4dde5;
+  background-color: #e2e7ed;
 }
 
 #sidebar:-moz-window-inactive,
@@ -2089,7 +2089,7 @@ sidebarheader {
 
 .sidebar-splitter {
   -moz-border-start: none;
-  -moz-border-end: 1px solid #404040;
+  -moz-border-end: 1px solid #bdbdbd;
   min-width: 1px;
   width: 3px;
   background-image: none !important;
