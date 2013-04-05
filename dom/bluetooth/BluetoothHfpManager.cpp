@@ -397,7 +397,7 @@ BluetoothHfpManager::Init()
                                 BluetoothSocketType::RFCOMM,
                                 true,
                                 true);
-  mSocketStatus = mSocket->GetConnectionStatus();
+  mPrevSocketStatus = mSocket->GetConnectionStatus();
 
   sHfpObserver = new BluetoothHfpManagerObserver();
   if (!sHfpObserver->Init()) {
@@ -461,7 +461,6 @@ BluetoothHfpManager::Get()
 
   // Create new instance, register, return
   BluetoothHfpManager* manager = new BluetoothHfpManager();
-  NS_ENSURE_TRUE(manager, nullptr);
   NS_ENSURE_TRUE(manager->Init(), nullptr);
 
   gBluetoothHfpManager = manager;
@@ -1002,7 +1001,7 @@ BluetoothHfpManager::Listen()
     return false;
   }
 
-  mSocketStatus = mSocket->GetConnectionStatus();
+  mPrevSocketStatus = mSocket->GetConnectionStatus();
   return true;
 }
 
@@ -1027,7 +1026,7 @@ BluetoothHfpManager::SendLine(const char* aMessage)
 bool
 BluetoothHfpManager::SendCommand(const char* aCommand, uint8_t aValue)
 {
-  if (mSocketStatus != SocketConnectionStatus::SOCKET_CONNECTED) {
+  if (mPrevSocketStatus != SocketConnectionStatus::SOCKET_CONNECTED) {
     return false;
   }
 
@@ -1327,7 +1326,7 @@ BluetoothHfpManager::OnConnectSuccess(BluetoothSocket* aSocket)
   // Cache device path for NotifySettings() since we can't get socket address
   // when a headset disconnect with us
   mSocket->GetAddress(mDevicePath);
-  mSocketStatus = mSocket->GetConnectionStatus();
+  mPrevSocketStatus = mSocket->GetConnectionStatus();
 
   NotifySettings();
 }
@@ -1358,10 +1357,10 @@ BluetoothHfpManager::OnDisconnect(BluetoothSocket* aSocket)
 
   // When we close a connected socket, then restart listening again and
   // notify Settings app.
-  if (mSocketStatus == SocketConnectionStatus::SOCKET_CONNECTED) {
+  if (mPrevSocketStatus == SocketConnectionStatus::SOCKET_CONNECTED) {
     Listen();
     NotifySettings();
-  } else if (mSocketStatus == SocketConnectionStatus::SOCKET_CONNECTING) {
+  } else if (mPrevSocketStatus == SocketConnectionStatus::SOCKET_CONNECTING) {
     NS_WARNING("BluetoothHfpManager got unexpected socket status!");
   }
 
