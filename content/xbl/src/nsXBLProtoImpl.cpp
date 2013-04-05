@@ -172,23 +172,28 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
 
   // Because our prototype implementation has a class, we need to build up a corresponding
   // class for the concrete implementation in the bound document.
-  AutoPushJSContext jscontext(aContext->GetNativeContext());
-  JSObject* global = sgo->GetGlobalJSObject();
+  AutoPushJSContext cx(aContext->GetNativeContext());
+  JS::Rooted<JSObject*> global(cx, sgo->GetGlobalJSObject());
   nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
   JS::Value v;
-  rv = nsContentUtils::WrapNative(jscontext, global, aBoundElement, &v,
+  rv = nsContentUtils::WrapNative(cx, global, aBoundElement, &v,
                                   getter_AddRefs(wrapper));
   NS_ENSURE_SUCCESS(rv, rv);
+
+  JS::Rooted<JSObject*> value(cx, &v.toObject());
+  JS::Rooted<JSObject*> targetClassObject(cx, *aTargetClassObject);
 
   // All of the above code was just obtaining the bound element's script object and its immediate
   // concrete base class.  We need to alter the object so that our concrete class is interposed
   // between the object and its base class.  We become the new base class of the object, and the
   // object's old base class becomes the new class' base class.
-  rv = aBinding->InitClass(mClassName, jscontext, global, JSVAL_TO_OBJECT(v),
-                           aTargetClassObject, aTargetIsNew);
+  rv = aBinding->InitClass(mClassName, cx, global, value,
+                           &targetClassObject, aTargetIsNew);
   if (NS_FAILED(rv)) {
     return rv;
   }
+
+  *aTargetClassObject = targetClassObject;
 
   nsContentUtils::PreserveWrapper(aBoundElement, aBoundElement);
 
@@ -205,6 +210,7 @@ nsXBLProtoImpl::CompilePrototypeMembers(nsXBLPrototypeBinding* aBinding)
   // context.
   nsCOMPtr<nsIScriptGlobalObjectOwner> globalOwner(
       do_QueryObject(aBinding->XBLDocumentInfo()));
+
   nsIScriptGlobalObject* globalObject = globalOwner->GetScriptGlobalObject();
   NS_ENSURE_TRUE(globalObject, NS_ERROR_UNEXPECTED);
 
@@ -212,10 +218,9 @@ nsXBLProtoImpl::CompilePrototypeMembers(nsXBLPrototypeBinding* aBinding)
   NS_ENSURE_TRUE(context, NS_ERROR_OUT_OF_MEMORY);
 
   AutoPushJSContext cx(context->GetNativeContext());
-  JSObject *global = globalObject->GetGlobalJSObject();
-  
 
-  JSObject* classObject;
+  JS::Rooted<JSObject*> global(cx, globalObject->GetGlobalJSObject());
+  JS::Rooted<JSObject*> classObject(cx);
   bool classObjectIsNew = false;
   nsresult rv = aBinding->InitClass(mClassName, cx, global, global,
                                     &classObject, &classObjectIsNew);
@@ -349,9 +354,9 @@ nsXBLProtoImpl::Read(nsIScriptContext* aContext,
 {
   // Set up a class object first so that deserialization is possible
   AutoPushJSContext cx(aContext->GetNativeContext());
-  JSObject *global = aGlobal->GetGlobalJSObject();
+  JS::Rooted<JSObject*> global(cx, aGlobal->GetGlobalJSObject());
 
-  JSObject* classObject;
+  JS::Rooted<JSObject*> classObject(cx);
   bool classObjectIsNew = false;
   nsresult rv = aBinding->InitClass(mClassName, cx, global, global, &classObject,
                                     &classObjectIsNew);
