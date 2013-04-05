@@ -1972,34 +1972,6 @@
     "extended_statistics_ok": true,
     "description": "Time spent in nsDiskCacheStreamIO::Close() on the main thread (ms)"
   },
-  "HTTP_TRANSACTION_TIME_CONNFAST_CACHEON": {
-    "kind": "exponential",
-    "high": "10000",
-    "n_buckets": 50,
-    "extended_statistics_ok": true,
-    "description": "ms from ayncopen to onStopRequest for fast connections with cache enabled"
-  },
-  "HTTP_TRANSACTION_TIME_CONNFAST_CACHEOFF": {
-    "kind": "exponential",
-    "high": "10000",
-    "n_buckets": 50,
-    "extended_statistics_ok": true,
-    "description": "ms from ayncopen to onStopRequest for fast connections with cache disabled"
-  },
-  "HTTP_TRANSACTION_TIME_CONNSLOW_CACHEON": {
-    "kind": "exponential",
-    "high": "10000",
-    "n_buckets": 50,
-    "extended_statistics_ok": true,
-    "description": "ms from ayncopen to onStopRequest for slow connections with cache enabled"
-  },
-  "HTTP_TRANSACTION_TIME_CONNSLOW_CACHEOFF": {
-    "kind": "exponential",
-    "high": "10000",
-    "n_buckets": 50,
-    "extended_statistics_ok": true,
-    "description": "ms from ayncopen to onStopRequest for slow connections with cache disabled"
-  },
   "IDLE_NOTIFY_BACK_MS": {
     "kind": "exponential",
     "high": "5000",
