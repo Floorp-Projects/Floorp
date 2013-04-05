@@ -10,17 +10,28 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
+#alertNotification {
+  -moz-appearance: none;
+  background: transparent;
+}
+
 .alertBox {
-  border: 1px solid threedshadow;
-  border-radius: 3px;
-  background-color: -moz-Dialog;
+  border-radius: 5px;
+  overflow: hidden;
+  background-color: rgba(240,240,240,0.93);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.3);
 }
 
 .alertImageBox {
   padding: 8px 0;
   width: 64px;
   background-image: linear-gradient(rgba(255,255,255,0.7), rgba(255,255,255,0.6));
-  -moz-border-end: 1px solid rgba(0,0,0,.1);
+  -moz-border-end: 1px solid rgba(0,0,0,.08);
+}
+
+.alertTitle,
+.alertTextBox {
+  text-shadow: 0 1px white;
 }
 
 .alertTextBox {
@@ -80,7 +91,7 @@ label {
 .alertCloseButton {
   -moz-appearance: none;
   padding: 0;
-  margin: 0 2px;
+  margin: 2px;
   list-style-image: url("chrome://global/skin/icons/close.png");
   border: none;
   -moz-image-region: rect(0, 16px, 16px, 0);
