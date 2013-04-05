@@ -1309,7 +1309,7 @@ private:
     jsid                            mName;
     JSBool                          mStaticMemberIsLocal;
 
-    unsigned                        mArgc;
+    unsigned                           mArgc;
     jsval*                          mArgv;
     jsval*                          mRetVal;
 
@@ -1322,13 +1322,15 @@ public:
     XPCLazyCallContext(XPCCallContext& ccx)
         : mCallBeginRequest(DONT_CALL_BEGINREQUEST),
           mCcx(&ccx),
-          mCcxToDestroy(nullptr),
-          mCx(nullptr),
-          mCallerLanguage(JS_CALLER),
-          mObj(mCcx->GetJSContext(), nullptr),
-          mFlattenedJSObject(mCcx->GetJSContext(), nullptr),
-          mWrapper(nullptr),
-          mTearOff(nullptr)
+          mCcxToDestroy(nullptr)
+#ifdef DEBUG
+          , mCx(nullptr)
+          , mCallerLanguage(JS_CALLER)
+          , mObj(nullptr)
+          , mFlattenedJSObject(nullptr)
+          , mWrapper(nullptr)
+          , mTearOff(nullptr)
+#endif
     {
     }
     XPCLazyCallContext(XPCContext::LangType callerLanguage, JSContext* cx,
@@ -1342,8 +1344,8 @@ public:
           mCcxToDestroy(nullptr),
           mCx(cx),
           mCallerLanguage(callerLanguage),
-          mObj(cx, obj),
-          mFlattenedJSObject(cx, flattenedJSObject),
+          mObj(obj),
+          mFlattenedJSObject(flattenedJSObject),
           mWrapper(wrapper),
           mTearOff(tearoff)
     {
@@ -1435,8 +1437,8 @@ private:
     XPCCallContext *mCcxToDestroy;
     JSContext *mCx;
     XPCContext::LangType mCallerLanguage;
-    JS::RootedObject mObj;
-    JS::RootedObject mFlattenedJSObject;
+    JSObject *mObj;
+    JSObject *mFlattenedJSObject;
     XPCWrappedNative *mWrapper;
     XPCWrappedNativeTearOff *mTearOff;
     mozilla::AlignedStorage2<XPCCallContext> mData;

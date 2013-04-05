@@ -392,7 +392,7 @@ castNative(JSContext *cx,
 template <class T>
 inline JSBool
 xpc_qsUnwrapThis(JSContext *cx,
-                 JS::HandleObject obj,
+                 JSObject *obj,
                  T **ppThis,
                  nsISupports **pThisRef,
                  jsval *pThisVal,
@@ -401,10 +401,9 @@ xpc_qsUnwrapThis(JSContext *cx,
 {
     XPCWrappedNative *wrapper;
     XPCWrappedNativeTearOff *tearoff;
-    JS::RootedObject current(cx);
-    nsresult rv = getWrapper(cx, obj, &wrapper, current.address(), &tearoff);
+    nsresult rv = getWrapper(cx, obj, &wrapper, &obj, &tearoff);
     if (NS_SUCCEEDED(rv))
-        rv = castNative(cx, wrapper, current, tearoff, NS_GET_TEMPLATE_IID(T),
+        rv = castNative(cx, wrapper, obj, tearoff, NS_GET_TEMPLATE_IID(T),
                         reinterpret_cast<void **>(ppThis), pThisRef, pThisVal,
                         lccx);
 
