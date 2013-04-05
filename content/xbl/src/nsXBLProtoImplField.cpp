@@ -331,11 +331,11 @@ FieldSetter(JSContext *cx, unsigned argc, JS::Value *vp)
 
 nsresult
 nsXBLProtoImplField::InstallAccessors(JSContext* aCx,
-                                      JSObject* aTargetClassObject)
+                                      JS::Handle<JSObject*> aTargetClassObject)
 {
   MOZ_ASSERT(js::IsObjectInContextCompartment(aTargetClassObject, aCx));
-  JSObject* globalObject = JS_GetGlobalForObject(aCx, aTargetClassObject);
-  JSObject* scopeObject = xpc::GetXBLScope(aCx, globalObject);
+  JS::Rooted<JSObject*> globalObject(aCx, JS_GetGlobalForObject(aCx, aTargetClassObject));
+  JS::Rooted<JSObject*> scopeObject(aCx, xpc::GetXBLScope(aCx, globalObject));
 
   // Don't install it if the field is empty; see also InstallField which also must
   // implement the not-empty requirement.
@@ -347,9 +347,9 @@ nsXBLProtoImplField::InstallAccessors(JSContext* aCx,
   // object, when invoked.
 
   // Get the field name as an id.
-  jsid id;
+  JS::Rooted<jsid> id(aCx);
   JS::TwoByteChars chars(mName, NS_strlen(mName));
-  if (!JS_CharsToId(aCx, chars, &id))
+  if (!JS_CharsToId(aCx, chars, id.address()))
     return NS_ERROR_OUT_OF_MEMORY;
 
   // Properties/Methods have historically taken precendence over fields. We
@@ -366,13 +366,13 @@ nsXBLProtoImplField::InstallAccessors(JSContext* aCx,
 
   // First, enter the XBL scope, and compile the functions there.
   JSAutoCompartment ac(aCx, scopeObject);
-  JS::Value wrappedClassObj = JS::ObjectValue(*aTargetClassObject);
-  if (!JS_WrapValue(aCx, &wrappedClassObj) || !JS_WrapId(aCx, &id))
+  JS::Rooted<JS::Value> wrappedClassObj(aCx, JS::ObjectValue(*aTargetClassObject));
+  if (!JS_WrapValue(aCx, wrappedClassObj.address()) || !JS_WrapId(aCx, id.address()))
     return NS_ERROR_OUT_OF_MEMORY;
 
-  JSObject *get =
+  JS::Rooted<JSObject*> get(aCx,
     JS_GetFunctionObject(js::NewFunctionByIdWithReserved(aCx, FieldGetter,
-                                                         0, 0, scopeObject, id));
+                                                         0, 0, scopeObject, id)));
   if (!get) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -380,9 +380,9 @@ nsXBLProtoImplField::InstallAccessors(JSContext* aCx,
   js::SetFunctionNativeReserved(get, FIELD_SLOT,
                                 JS::StringValue(JSID_TO_STRING(id)));
 
-  JSObject *set =
+  JS::Rooted<JSObject*> set(aCx,
     JS_GetFunctionObject(js::NewFunctionByIdWithReserved(aCx, FieldSetter,
-                                                          1, 0, scopeObject, id));
+                                                          1, 0, scopeObject, id)));
   if (!set) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -393,15 +393,15 @@ nsXBLProtoImplField::InstallAccessors(JSContext* aCx,
   // Now, re-enter the class object's scope, wrap the getters/setters, and define
   // them there.
   JSAutoCompartment ac2(aCx, aTargetClassObject);
-  if (!JS_WrapObject(aCx, &get) || !JS_WrapObject(aCx, &set) ||
-      !JS_WrapId(aCx, &id))
+  if (!JS_WrapObject(aCx, get.address()) || !JS_WrapObject(aCx, set.address()) ||
+      !JS_WrapId(aCx, id.address()))
   {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   if (!::JS_DefinePropertyById(aCx, aTargetClassObject, id, JS::UndefinedValue(),
-                               JS_DATA_TO_FUNC_PTR(JSPropertyOp, get),
-                               JS_DATA_TO_FUNC_PTR(JSStrictPropertyOp, set),
+                               JS_DATA_TO_FUNC_PTR(JSPropertyOp, get.get()),
+                               JS_DATA_TO_FUNC_PTR(JSStrictPropertyOp, set.get()),
                                AccessorAttributes())) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
