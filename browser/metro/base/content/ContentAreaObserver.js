@@ -31,11 +31,19 @@
 
 var ContentAreaObserver = {
   styles: {},
-  
-  // In desktop mode avoids breaking window dims before
-  // the desktop window is displayed.
-  get width() { return window.innerWidth || 1366; },
-  get height() { return window.innerHeight || 768; },
+  _keyboardState: false,
+
+  /*
+   * Properties
+   */
+
+  get width() {
+    return window.innerWidth || 1366;
+  },
+
+  get height() {
+    return window.innerHeight || 768;
+  },
 
   get contentHeight() {
     return this._getContentHeightForWindow(this.height);
@@ -49,41 +57,31 @@ var ContentAreaObserver = {
     return this._getViewableHeightForContent(this.contentHeight);
   },
 
-  get isKeyboardOpened() { return MetroUtils.keyboardVisible; },
-  get hasVirtualKeyboard() { return true; },
+  get isKeyboardOpened() {
+    return MetroUtils.keyboardVisible;
+  },
 
-  init: function cao_init() {
+  /*
+   * Public apis
+   */
+
+  init: function init() {
     window.addEventListener("resize", this, false);
 
-    let os = Services.obs;
-    os.addObserver(this, "metro_softkeyboard_shown", false);
-    os.addObserver(this, "metro_softkeyboard_hidden", false);
+    // Observer msgs we listen for
+    Services.obs.addObserver(this, "metro_softkeyboard_shown", false);
+    Services.obs.addObserver(this, "metro_softkeyboard_hidden", false);
 
-    // Create styles for the following class names.  The 'width' and 'height'
-    // properties of these styles are updated whenever various parts of the UI
-    // are resized.
-    //
-    // * window-width, window-height: The innerWidth/innerHeight of the main
-    //     chrome window.
-    // * content-width, content-height: The area of the window dedicated to web
-    //     content; this is equal to the innerWidth/Height minus any toolbars
-    //     or similar chrome.
-    // * viewable-width, viewable-height: The portion of the content area that
-    //     is not obscured by the on-screen keyboard.
-    let stylesheet = document.styleSheets[0];
-    for (let style of ["window-width", "window-height",
-                       "content-height", "content-width",
-                       "viewable-height", "viewable-width"]) {
-      let index = stylesheet.insertRule("." + style + " {}", stylesheet.cssRules.length);
-      this.styles[style] = stylesheet.cssRules[index].style;
-    }
+    // initialize our custom width and height styles
+    this._initStyles();
+
+    // apply default styling
     this.update();
   },
 
-  uninit: function cao_uninit() {
-    let os = Services.obs;
-    os.removeObserver(this, "metro_softkeyboard_shown");
-    os.removeObserver(this, "metro_softkeyboard_hidden");
+  shutdown: function shutdown() {
+    Services.obs.removeObserver(this, "metro_softkeyboard_shown");
+    Services.obs.removeObserver(this, "metro_softkeyboard_hidden");
   },
 
   update: function cao_update (width, height) {
@@ -101,38 +99,8 @@ var ContentAreaObserver = {
     this.styles["window-height"].height = newHeight + "px";
     this.styles["window-height"].maxHeight = newHeight + "px";
 
-    let isStartup = !oldHeight && !oldWidth;
-    for (let i = Browser.tabs.length - 1; i >=0; i--) {
-      let tab = Browser.tabs[i];
-      let oldContentWindowWidth = tab.browser.contentWindowWidth;
-      tab.updateViewportSize(newWidth, newHeight); // contentWindowWidth may change here.
-      
-      // Don't bother updating the zoom level on startup
-      if (!isStartup) {
-        // If the viewport width is still the same, the page layout has not
-        // changed, so we can keep keep the same content on-screen.
-        if (tab.browser.contentWindowWidth == oldContentWindowWidth)
-          tab.restoreViewportPosition(oldWidth, newWidth);
-
-        tab.updateDefaultZoomLevel();
-      }
-    }
-
-    // We want to keep the current focused element into view if possible
-    if (!isStartup) {
-      let currentElement = document.activeElement;
-      let [scrollbox, scrollInterface] = ScrollUtils.getScrollboxFromElement(currentElement);
-      if (scrollbox && scrollInterface && currentElement && currentElement != scrollbox) {
-        // retrieve the direct child of the scrollbox
-        while (currentElement && currentElement.parentNode != scrollbox)
-          currentElement = currentElement.parentNode;
-  
-        setTimeout(function() { scrollInterface.ensureElementIsVisible(currentElement) }, 0);
-      }
-    }
-
     this.updateContentArea(newWidth, this._getContentHeightForWindow(newHeight));
-    this._fire("SizeChanged");
+    this._disatchBrowserEvent("SizeChanged");
   },
 
   updateContentArea: function cao_updateContentArea (width, height) {
@@ -151,7 +119,7 @@ var ContentAreaObserver = {
     this.styles["content-width"].maxWidth = newWidth + "px";
 
     this.updateViewableArea(newWidth, this._getViewableHeightForContent(newHeight));
-    this._fire("ContentSizeChanged");
+    this._disatchBrowserEvent("ContentSizeChanged");
   },
 
   updateViewableArea: function cao_updateViewableArea (width, height) {
@@ -169,46 +137,81 @@ var ContentAreaObserver = {
     this.styles["viewable-width"].width = newWidth + "px";
     this.styles["viewable-width"].maxWidth = newWidth + "px";
 
-    this._fire("ViewableSizeChanged");
+    this._disatchBrowserEvent("ViewableSizeChanged");
+  },
+
+  onBrowserCreated: function onBrowserCreated(aBrowser) {
+    aBrowser.classList.add("content-width");
+    aBrowser.classList.add("content-height");
+  },
+
+  /*
+   * Event handling
+   */
+
+  _onKeyboardDisplayChanging: function _onKeyboardDisplayChanging(aNewState) {
+    this._keyboardState = aNewState;
+
+    this._dispatchWindowEvent("KeyboardChanged", aNewState);
+
+    this.updateViewableArea();
   },
 
   observe: function cao_observe(aSubject, aTopic, aData) {
+    // Note these are fired before the transition starts. Also per MS specs
+    // we should not do anything "heavy" here. We have about 100ms before
+    // windows just ignores the event and starts the animation.
     switch (aTopic) {
+      case "metro_softkeyboard_hidden":
       case "metro_softkeyboard_shown":
-      case "metro_softkeyboard_hidden": {
-        let event = document.createEvent("UIEvents");
-        let eventDetails = {
-          opened: aTopic == "metro_softkeyboard_shown",
-          details: aData
-        };
-
-        event.initUIEvent("KeyboardChanged", true, false, window, eventDetails);
-        window.dispatchEvent(event);
-
-        this.updateViewableArea();
+        // This also insures tap events are delivered before we fire
+        // this event. Form repositioning requires the selection handler
+        // be running before we send this.
+        let self = this;
+        let state = aTopic == "metro_softkeyboard_shown";
+        Util.executeSoon(function () {
+          self._onKeyboardDisplayChanging(state);
+        });
         break;
-      }
-    };
+    }
   },
 
-  handleEvent: function cao_handleEvent(anEvent) {
-    switch (anEvent.type) {
+  handleEvent: function cao_handleEvent(aEvent) {
+    switch (aEvent.type) {
       case 'resize':
-        if (anEvent.target != window)
+        if (aEvent.target != window)
           return;
-
         ContentAreaObserver.update();
         break;
     }
   },
 
-  _fire: function (aName) {
-    // setTimeout(callback, 0) to ensure the resize event handler dispatch is finished
+  /*
+   * Internal helpers
+   */
+
+  _dispatchWindowEvent: function _dispatchWindowEvent(aEventName, aDetail) {
+    let event = document.createEvent("UIEvents");
+    event.initUIEvent(aEventName, true, false, window, aDetail);
+    window.dispatchEvent(event);
+  },
+
+  _disatchBrowserEvent: function (aName, aDetail) {
     setTimeout(function() {
       let event = document.createEvent("Events");
       event.initEvent(aName, true, false);
       Elements.browsers.dispatchEvent(event);
     }, 0);
+  },
+
+  _initStyles: function _initStyles() {
+    let stylesheet = document.styleSheets[0];
+    for (let style of ["window-width", "window-height",
+                       "content-height", "content-width",
+                       "viewable-height", "viewable-width"]) {
+      let index = stylesheet.insertRule("." + style + " {}", stylesheet.cssRules.length);
+      this.styles[style] = stylesheet.cssRules[index].style;
+    }
   },
 
   _getContentHeightForWindow: function (windowHeight) {
@@ -219,5 +222,17 @@ var ContentAreaObserver = {
   _getViewableHeightForContent: function (contentHeight) {
     let keyboardHeight = MetroUtils.keyboardHeight;
     return contentHeight - keyboardHeight;
+  },
+
+  _debugDumpDims: function _debugDumpDims() {
+    let width = parseInt(this.styles["window-width"].width);
+    let height = parseInt(this.styles["window-height"].height);
+    Util.dumpLn("window:", width, height);
+    width = parseInt(this.styles["content-width"].width);
+    height = parseInt(this.styles["content-height"].height);
+    Util.dumpLn("content:", width, height);
+    width = parseInt(this.styles["viewable-width"].width);
+    height = parseInt(this.styles["viewable-height"].height);
+    Util.dumpLn("viewable:", width, height);
   }
 };
