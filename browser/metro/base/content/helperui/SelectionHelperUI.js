@@ -770,8 +770,16 @@ var SelectionHelperUI = {
       this.endMark.show();
     }
     if (json.updateCaret) {
-      this.caretMark.position(json.caret.xPos, json.caret.yPos);
-      this.caretMark.show();
+      // If selectionRangeFound is set SelectionHelper found a range we can
+      // attach to. If not, there's no text in the control, and hence no caret
+      // position information we can use.
+      if (json.selectionRangeFound) {
+        this.caretMark.position(json.caret.xPos, json.caret.yPos);
+        this.caretMark.show();
+      } else {
+        // Don't display anything, just shutdown.
+        this.closeEditSession();
+      }
     }
     this._activeSelectionRect = json.selection;
     this._targetElementRect = json.element;
