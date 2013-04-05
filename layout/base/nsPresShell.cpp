@@ -81,7 +81,7 @@
 #include "nsILineIterator.h" // for ScrollContentIntoView
 #include "nsWeakPtr.h"
 #include "pldhash.h"
-#include "nsDOMTouchEvent.h"
+#include "mozilla/dom/Touch.h"
 #include "nsIObserverService.h"
 #include "nsIDocShell.h"        // for reflow observation
 #include "nsIBaseWindow.h"
@@ -6176,7 +6176,7 @@ PresShell::HandleEvent(nsIFrame        *aFrame,
         for (int32_t i = touchEvent->touches.Length(); i; ) {
           --i;
           nsIDOMTouch *touch = touchEvent->touches[i];
-          nsDOMTouch *domtouch = static_cast<nsDOMTouch*>(touch);
+          Touch *domtouch = static_cast<Touch*>(touch);
           touch->mMessage = aEvent->message;
 
           int32_t id = 0;
@@ -6708,7 +6708,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
         nsTArray<nsCOMPtr<nsIDOMTouch> >  &touches = touchEvent->touches;
         for (uint32_t i = 0; i < touches.Length(); ++i) {
           nsIDOMTouch *touch = touches[i];
-          nsDOMTouch *domtouch = static_cast<nsDOMTouch*>(touch);
+          Touch *domtouch = static_cast<Touch*>(touch);
           if (!touch) {
             continue;
           }
@@ -6742,7 +6742,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
         for (int32_t i = touches.Length(); i; ) {
           --i;
           nsIDOMTouch *touch = touches[i];
-          nsDOMTouch *domtouch = static_cast<nsDOMTouch*>(touch);
+          Touch *domtouch = static_cast<Touch*>(touch);
           if (!touch) {
             continue;
           }
