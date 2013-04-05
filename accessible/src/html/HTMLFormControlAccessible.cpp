@@ -300,6 +300,7 @@ HTMLTextFieldAccessible::
   HTMLTextFieldAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   HyperTextAccessibleWrap(aContent, aDoc)
 {
+  mType = eHTMLTextFieldType;
 }
 
 NS_IMPL_ISUPPORTS_INHERITED2(HTMLTextFieldAccessible,
