@@ -106,9 +106,8 @@
     ]
   ];
 
-  var test;
   runTest(function () {
-    test = new PeerConnectionTest();
+    var test = new PeerConnectionTest();
     test.setMediaConstraints([{audio: true, video: true}], [ ]);
     test.chain.replaceAfter("PC_LOCAL_GUM", steps);
     test.run();

@@ -15,9 +15,8 @@
     title: "Basic audio-only peer connection"
   });
 
-  var test;
   runTest(function () {
-    test = new PeerConnectionTest();
+    var test = new PeerConnectionTest();
     test.setMediaConstraints([{audio: true}], [{audio: true}]);
     test.run();
   }, true);
