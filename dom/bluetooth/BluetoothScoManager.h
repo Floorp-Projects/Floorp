@@ -42,7 +42,7 @@ private:
   nsresult HandleShutdown();
   void NotifyAudioManager(const nsAString& aAddress);
 
-  enum SocketConnectionStatus mSocketStatus;
+  SocketConnectionStatus mPrevSocketStatus;
   nsRefPtr<BluetoothSocket> mSocket;
 };
 
