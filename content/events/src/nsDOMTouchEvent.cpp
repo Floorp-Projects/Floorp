@@ -11,128 +11,9 @@
 #include "nsContentUtils.h"
 #include "mozilla/Preferences.h"
 #include "nsPresContext.h"
+#include "mozilla/dom/Touch.h"
 
 using namespace mozilla;
-
-DOMCI_DATA(Touch, nsDOMTouch)
-
-NS_IMPL_CYCLE_COLLECTION_1(nsDOMTouch, mTarget)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMTouch)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMTouch)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMTouch)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Touch)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMTouch)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMTouch)
-
-NS_IMETHODIMP
-nsDOMTouch::GetIdentifier(int32_t* aIdentifier)
-{
-  *aIdentifier = mIdentifier;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMTouch::GetTarget(nsIDOMEventTarget** aTarget)
-{
-  nsCOMPtr<nsIContent> content = do_QueryInterface(mTarget);
-  if (content && content->ChromeOnlyAccess() &&
-      !nsContentUtils::CanAccessNativeAnon()) {
-    content = content->FindFirstNonChromeOnlyAccessContent();
-    *aTarget = content.forget().get();
-    return NS_OK;
-  }
-  NS_IF_ADDREF(*aTarget = mTarget);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMTouch::GetScreenX(int32_t* aScreenX)
-{
-  *aScreenX = mScreenPoint.x;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMTouch::GetScreenY(int32_t* aScreenY)
-{
-  *aScreenY = mScreenPoint.y;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMTouch::GetClientX(int32_t* aClientX)
-{
-  *aClientX = mClientPoint.x;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMTouch::GetClientY(int32_t* aClientY)
-{
-  *aClientY = mClientPoint.y;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMTouch::GetPageX(int32_t* aPageX)
-{
-  *aPageX = mPagePoint.x;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMTouch::GetPageY(int32_t* aPageY)
-{
-  *aPageY = mPagePoint.y;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMTouch::GetRadiusX(int32_t* aRadiusX)
-{
-  *aRadiusX = mRadius.x;
-  return NS_OK;
-}
-                                             
-NS_IMETHODIMP
-nsDOMTouch::GetRadiusY(int32_t* aRadiusY)
-{
-  *aRadiusY = mRadius.y;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMTouch::GetRotationAngle(float* aRotationAngle)
-{
-  *aRotationAngle = mRotationAngle;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMTouch::GetForce(float* aForce)
-{
-  *aForce = mForce;
-  return NS_OK;
-}
-
-bool
-nsDOMTouch::Equals(nsIDOMTouch* aTouch)
-{
-  float force;
-  float orientation;
-  int32_t radiusX, radiusY;
-  aTouch->GetForce(&force);
-  aTouch->GetRotationAngle(&orientation);
-  aTouch->GetRadiusX(&radiusX);
-  aTouch->GetRadiusY(&radiusY);
-  return mRefPoint != aTouch->mRefPoint ||
-         (mForce != force) ||
-         (mRotationAngle != orientation) ||
-         (mRadius.x != radiusX) || (mRadius.y != radiusY);
-}
 
 // TouchList
 nsDOMTouchList::nsDOMTouchList(nsTArray<nsCOMPtr<nsIDOMTouch> > &aTouches)
@@ -197,7 +78,7 @@ nsDOMTouchEvent::nsDOMTouchEvent(mozilla::dom::EventTarget* aOwner,
 
     for (uint32_t i = 0; i < aEvent->touches.Length(); ++i) {
       nsIDOMTouch *touch = aEvent->touches[i];
-      nsDOMTouch *domtouch = static_cast<nsDOMTouch*>(touch);
+      dom::Touch *domtouch = static_cast<dom::Touch*>(touch);
       domtouch->InitializePoints(mPresContext, aEvent);
     }
   } else {

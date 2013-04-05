@@ -9,12 +9,51 @@
   %findBarDTD;
 ]>
 
-<bindings id="remoteBrowserBindings"
+<bindings id="browser-bindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <binding id="local-browser" extends="chrome://global/content/bindings/browser.xml#browser">
-    <implementation type="application/javascript" implements="nsIAccessibleProvider, nsIObserver, nsIDOMEventListener, nsIMessageListener">
+    <implementation type="application/javascript"
+      implements="nsIAccessibleProvider, nsIObserver, nsIDOMEventListener, nsIMessageListener">
+
+      <constructor>
+        <![CDATA[
+          this._frameLoader =
+            this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader;
+          this._contentViewManager =
+            this._frameLoader.QueryInterface(Components.interfaces.nsIContentViewManager);
+
+          let prefService =
+            Components.classes["@mozilla.org/preferences-service;1"]
+                      .getService(Components.interfaces.nsIPrefBranch);
+          this._cacheRatioWidth =
+            Math.max(1, prefService.getIntPref("toolkit.browser.cacheRatioWidth") / 1000);
+          this._cacheRatioHeight =
+            Math.max(1, prefService.getIntPref("toolkit.browser.cacheRatioHeight") / 1000);
+
+          if (this._contentViewPrototype) {
+            this._contentViewPrototype.kDieTime = prefService.getIntPref("toolkit.browser.contentViewExpire");
+          }
+
+          this.messageManager.loadFrameScript("chrome://browser/content/bindings/browser.js", true);
+          this.messageManager.addMessageListener("DOMTitleChanged", this._messageListenerLocal);
+          this.messageManager.addMessageListener("DOMLinkAdded", this._messageListenerLocal);
+          this.messageManager.addMessageListener("pageshow", this._messageListenerLocal);
+          this.messageManager.addMessageListener("pagehide", this._messageListenerLocal);
+          this.messageManager.addMessageListener("DOMPopupBlocked", this._messageListenerLocal);
+          this.messageManager.addMessageListener("MozScrolledAreaChanged", this._messageListenerLocal);
+          this.messageManager.addMessageListener("Content:UpdateDisplayPort", this._messageListenerLocal);
+
+          this._webProgress._init();
+
+          // Remove event listeners added by toolkit <browser> binding.
+          this.removeEventListener("pageshow", this.onPageShow, true);
+          this.removeEventListener("pagehide", this.onPageHide, true);
+          this.removeEventListener("DOMPopupBlocked", this.onPopupBlocked, true);
+        ]]>
+      </constructor>
+
       <field name="_securityUI">null</field>
       <property name="securityUI">
         <getter><![CDATA[
@@ -46,6 +85,220 @@
       <field name="_ios">
          Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
       </field>
+
+      <!--
+        * Point Conversion Routines - browsers may be shifted by UI such that
+        * a client point in an event does not coincide with a css position.
+        * Examples include the notification bar, which pushes the browser down,
+        * or deck movement when forms are positioned above the keyboard.
+        *
+        * Client to browser conversion:
+        *
+        * ptClientToBrowser
+        *  Convert client coordinates in device pixels to page-relative
+        *  coordinates in CSS pixels.
+        *
+        * @param aClientX, aClientY - client coordinates to convert.
+        * @param aIgnoreScroll ignore root frame scroll.
+        * @param aIgnoreScale ignore current scale factor.
+        * @return { x: converted x coordinate, y: converted y coordinate }
+        *
+        * xctob, yctob
+        *  Convert individual x and y coordinates.
+        *
+        * @param aX or aY - browser coordinate
+        * @param aIgnoreScroll ignore root frame scroll.
+        * @param aIgnoreScale ignore current scale factor.
+        * @return converted coordinate
+        *
+        * Browser to client conversion:
+        *
+        * ptBrowserToClient
+        *  Convert browser coordinates in css pixels to client (screen) coordinates
+        *  in device pixels. Useful in positioning UI elements at event targets.
+        *
+        * @param aBrowserX, aBrowserY - browser coordinates to convert.
+        * @param aIgnoreScroll ignore root frame scroll.
+        * @param aIgnoreScale ignore current scale factor.
+        * @return { x: converted x coordinate, y: converted y coordinate }
+        *
+        * msgBrowserToClient
+        *  Converts a message manager message with coordinates stored in
+        *  aMessage.json.xPos, aMessage.json.yPos.
+        *
+        * @param aMessage - message manager message
+        * @param aIgnoreScroll ignore root frame scroll.
+        * @param aIgnoreScale ignore current scale factor.
+        * @return { x: converted x coordinate, y: converted y coordinate }
+        *
+        * rectBrowserToClient
+        *  Converts a rect (left, top, right, bottom).
+        *
+        * @param aMessage - message manager message
+        * @param aIgnoreScroll ignore root frame scroll.
+        * @param aIgnoreScale ignore current scale factor.
+        * @return { left:, top:, right:, bottom: }
+        *
+        * xbtoc, ybtoc
+        *  Convert individual x and y coordinates.
+        *
+        * @param aX or aY - client coordinate
+        * @param aIgnoreScroll ignore root frame scroll.
+        * @param aIgnoreScale ignore current scale factor.
+        * @return converted coordinate
+      -->
+      <method name="ptClientToBrowser">
+        <parameter name="aClientX"/>
+        <parameter name="aClientY"/>
+        <parameter name="aIgnoreScroll"/>
+        <parameter name="aIgnoreScale"/>
+        <body>
+          <![CDATA[
+            let ignoreScroll = aIgnoreScroll || false;
+            let ignoreScale = aIgnoreScale || false;
+
+            let bcr = this.getBoundingClientRect();
+
+            let scrollX = 0;
+            let scrollY = 0;
+            if (!ignoreScroll) {
+              let scroll = this.getRootView().getPosition();
+              scrollX = scroll.x;
+              scrollY = scroll.y;
+            }
+
+            let scale = 1;
+            if (!ignoreScale) {
+              scale = this.scale;
+            }
+
+            return {
+              x: (aClientX + scrollX - bcr.left) / scale,
+              y: (aClientY + scrollY - bcr.top) / scale
+            };
+          ]]>
+        </body>
+      </method>
+
+      <method name="xctob">
+        <parameter name="aX"/>
+        <parameter name="aIgnoreScroll"/>
+        <parameter name="aIgnoreScale"/>
+        <body>
+          <![CDATA[
+            let y = 0;
+            let result = this.ptClientToBrowser(aX, y, aIgnoreScroll, aIgnoreScale);
+            return result.x;
+          ]]>
+        </body>
+      </method>
+
+      <method name="yctob">
+        <parameter name="aY"/>
+        <parameter name="aIgnoreScroll"/>
+        <parameter name="aIgnoreScale"/>
+        <body>
+          <![CDATA[
+            let x = 0;
+            let result = this.ptClientToBrowser(x, aY, aIgnoreScroll, aIgnoreScale);
+            return result.y;
+          ]]>
+        </body>
+      </method>
+
+      <method name="ptBrowserToClient">
+        <parameter name="aBrowserX"/>
+        <parameter name="aBrowserY"/>
+        <parameter name="aIgnoreScroll"/>
+        <parameter name="aIgnoreScale"/>
+        <body>
+          <![CDATA[
+            let ignoreScroll = aIgnoreScroll || false;
+            let ignoreScale = aIgnoreScale || false;
+
+            let bcr = this.getBoundingClientRect();
+
+            let scrollX = 0;
+            let scrollY = 0;
+            if (!ignoreScroll) {
+              let scroll = this.getRootView().getPosition();
+              scrollX = scroll.x;
+              scrollY = scroll.y;
+            }
+
+            let scale = 1;
+            if (!ignoreScale) {
+              scale = this.scale;
+            }
+
+            return {
+              x: (aBrowserX * scale - scrollX + bcr.left),
+              y: (aBrowserY * scale - scrollY + bcr.top)
+            };
+          ]]>
+        </body>
+      </method>
+
+      <method name="msgBrowserToClient">
+        <parameter name="aMessage"/>
+        <parameter name="aIgnoreScroll"/>
+        <parameter name="aIgnoreScale"/>
+        <body>
+          <![CDATA[
+            let x = aMessage.json.xPos;
+            let y = aMessage.json.yPos;
+            return this.ptBrowserToClient(x, y, aIgnoreScroll, aIgnoreScale);
+          ]]>
+        </body>
+      </method>
+
+      <method name="rectBrowserToClient">
+        <parameter name="aRect"/>
+        <parameter name="aIgnoreScroll"/>
+        <parameter name="aIgnoreScale"/>
+        <body>
+          <![CDATA[
+            let left = aRect.left;
+            let top = aRect.top;
+            let right = aRect.right;
+            let bottom = aRect.bottom;
+            let a = this.ptBrowserToClient(left, top, aIgnoreScroll, aIgnoreScale);
+            let b = this.ptBrowserToClient(right, bottom, aIgnoreScroll, aIgnoreScale);
+            return {
+              left: a.x,
+              top: a.y,
+              right: b.x,
+              bottom: b.y
+            };
+          ]]>
+        </body>
+      </method>
+
+      <method name="xbtoc">
+        <parameter name="aX"/>
+        <parameter name="aIgnoreScroll"/>
+        <parameter name="aIgnoreScale"/>
+        <body>
+          <![CDATA[
+            let y = 0;
+            let result = this.ptBrowserToClient(aX, y, aIgnoreScroll, aIgnoreScale);
+            return result.x;
+          ]]>
+        </body>
+      </method>
+
+      <method name="ybtoc">
+        <parameter name="aY"/>
+        <parameter name="aIgnoreScroll"/>
+        <parameter name="aIgnoreScale"/>
+        <body>
+          <![CDATA[
+            let x = 0;
+            let result = this.ptBrowserToClient(x, aY, aIgnoreScroll, aIgnoreScale);
+            return result.y;
+          ]]>
+        </body>
+      </method>
 
       <field name="_messageListenerLocal"><![CDATA[
         ({
@@ -495,66 +748,6 @@
         })
         ]]>
       </field>
-
-      <!-- Change client coordinates in device pixels to page-relative ones in CSS px. -->
-      <!-- (Does not take into account sub frame scroll) -->
-      <method name="transformClientToBrowser">
-        <parameter name="clientX"/>
-        <parameter name="clientY"/>
-        <body>
-          <![CDATA[
-            let bcr = this.getBoundingClientRect();
-            let scroll = this.getRootView().getPosition();
-            return { x: (clientX + scroll.x - bcr.left) / this.scale,
-                     y: (clientY + scroll.y - bcr.top) / this.scale };
-          ]]>
-        </body>
-      </method>
-
-      <method name="transformBrowserToClient">
-        <parameter name="browserX"/>
-        <parameter name="browserY"/>
-        <body>
-          <![CDATA[
-            let bcr = this.getBoundingClientRect();
-            let scroll = this.getRootView().getPosition();
-            return { x: (browserX * this.scale - scroll.x + bcr.left) ,
-                     y: (browserY * this.scale - scroll.y + bcr.top)};
-          ]]>
-        </body>
-      </method>
-
-      <constructor>
-        <![CDATA[
-          this._frameLoader = this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader;
-          this._contentViewManager = this._frameLoader.QueryInterface(Components.interfaces.nsIContentViewManager);
-
-          let prefService = Components.classes["@mozilla.org/preferences-service;1"]
-                                              .getService(Components.interfaces.nsIPrefBranch);
-
-          this._cacheRatioWidth = Math.max(1, prefService.getIntPref("toolkit.browser.cacheRatioWidth") / 1000);
-          this._cacheRatioHeight = Math.max(1, prefService.getIntPref("toolkit.browser.cacheRatioHeight") / 1000);
-
-          if (this._contentViewPrototype)
-            this._contentViewPrototype.kDieTime = prefService.getIntPref("toolkit.browser.contentViewExpire");
-
-          this.messageManager.loadFrameScript("chrome://browser/content/bindings/browser.js", true);
-          this.messageManager.addMessageListener("DOMTitleChanged", this._messageListenerLocal);
-          this.messageManager.addMessageListener("DOMLinkAdded", this._messageListenerLocal);
-          this.messageManager.addMessageListener("pageshow", this._messageListenerLocal);
-          this.messageManager.addMessageListener("pagehide", this._messageListenerLocal);
-          this.messageManager.addMessageListener("DOMPopupBlocked", this._messageListenerLocal);
-          this.messageManager.addMessageListener("MozScrolledAreaChanged", this._messageListenerLocal);
-          this.messageManager.addMessageListener("Content:UpdateDisplayPort", this._messageListenerLocal);
-
-          this._webProgress._init();
-
-          // Remove event listeners added by toolkit <browser> binding.
-          this.removeEventListener("pageshow", this.onPageShow, true);
-          this.removeEventListener("pagehide", this.onPageHide, true);
-          this.removeEventListener("DOMPopupBlocked", this.onPopupBlocked, true);
-        ]]>
-      </constructor>
 
       <method name="updateWindowId">
          <parameter name="aNewId"/>

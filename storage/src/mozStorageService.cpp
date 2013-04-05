@@ -40,6 +40,12 @@
 #define PREF_TS_SYNCHRONOUS "toolkit.storage.synchronous"
 #define PREF_TS_SYNCHRONOUS_DEFAULT 1
 
+#define PREF_TS_PAGESIZE "toolkit.storage.pageSize"
+
+// This value must be kept in sync with the value of SQLITE_DEFAULT_PAGE_SIZE in
+// db/sqlite3/src/Makefile.in.
+#define PREF_TS_PAGESIZE_DEFAULT 32768
+
 namespace mozilla {
 namespace storage {
 
@@ -230,17 +236,21 @@ public:
   ServiceMainThreadInitializer(Service *aService,
                                nsIObserver *aObserver,
                                nsIXPConnect **aXPConnectPtr,
-                               int32_t *aSynchronousPrefValPtr)
+                               int32_t *aSynchronousPrefValPtr,
+                               int32_t *aPageSizePtr)
   : mService(aService)
   , mObserver(aObserver)
   , mXPConnectPtr(aXPConnectPtr)
   , mSynchronousPrefValPtr(aSynchronousPrefValPtr)
+  , mPageSizePtr(aPageSizePtr)
   {
   }
 
   NS_IMETHOD Run()
   {
     NS_PRECONDITION(NS_IsMainThread(), "Must be running on the main thread!");
+    NS_PRECONDITION(*mPageSizePtr == PREF_TS_PAGESIZE_DEFAULT,
+                    "Must be set to the default value here!");
 
     // NOTE:  All code that can only run on the main thread and needs to be run
     //        during initialization should be placed here.  During the off-
@@ -269,6 +279,16 @@ public:
       Preferences::GetInt(PREF_TS_SYNCHRONOUS, PREF_TS_SYNCHRONOUS_DEFAULT);
     ::PR_ATOMIC_SET(mSynchronousPrefValPtr, synchronous);
 
+    // We need to obtain the toolkit.storage.pageSize preferences on the main
+    // thread because the preference service can only be accessed there.  This
+    // is cached in the service for all future Open[Unshared]Database calls.
+    int32_t pageSize =
+      Preferences::GetInt(PREF_TS_PAGESIZE, PREF_TS_PAGESIZE_DEFAULT);
+    if (Service::pageSizeIsValid(pageSize) &&
+        PREF_TS_PAGESIZE_DEFAULT != pageSize) {
+      ::PR_ATOMIC_SET(mPageSizePtr, pageSize);
+    }
+
     // Create and register our SQLite memory reporters.  Registration can only
     // happen on the main thread (otherwise you'll get cryptic crashes).
     mService->mStorageSQLiteReporter = new NS_MEMORY_REPORTER_NAME(StorageSQLite);
@@ -284,6 +304,7 @@ private:
   nsIObserver *mObserver;
   nsIXPConnect **mXPConnectPtr;
   int32_t *mSynchronousPrefValPtr;
+  int32_t *mPageSizePtr;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -359,6 +380,8 @@ Service::getSynchronousPref()
 {
   return sSynchronousPref;
 }
+
+int32_t Service::sDefaultPageSize = PREF_TS_PAGESIZE_DEFAULT;
 
 Service::Service()
 : mMutex("Service::mMutex")
@@ -582,7 +605,8 @@ Service::initialize()
 
   // Run the things that need to run on the main thread there.
   nsCOMPtr<nsIRunnable> event =
-    new ServiceMainThreadInitializer(this, this, &sXPConnect, &sSynchronousPref);
+    new ServiceMainThreadInitializer(this, this, &sXPConnect,
+                                     &sSynchronousPref, &sDefaultPageSize);
   if (event && ::NS_IsMainThread()) {
     (void)event->Run();
   }

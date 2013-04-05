@@ -103,7 +103,8 @@
      }
 
      /**
-      * Apply JSON.stringify to an argument of type object.
+      * Returns |arg.toString()| if available, otherwise
+      * applies JSON.stringify.
       * Return itself otherwise.
       *
       * @param arg An argument to be stringified if possible.
@@ -113,7 +114,20 @@
          return arg;
        }
        if (arg && typeof arg === "object") {
-         return JSON.stringify(arg);
+         let argToString = arg.toString();
+
+         /**
+           * The only way to detect whether this object has a non-default
+           * implementation of |toString| is to check whether it returns
+           * '[object Object]'. Unfortunately, we cannot simply compare |arg.toString|
+           * and |Object.prototype.toString| as |arg| typically comes from another
+           * compartment.
+           */
+         if (argToString === "[object Object]") {
+           return JSON.stringify(arg);
+         } else {
+           return argToString;
+         }
        }
        return arg;
      };

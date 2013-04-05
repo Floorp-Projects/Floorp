@@ -151,6 +151,8 @@
     <key id="key_addBoomkark" key="d" modifiers="accel" command="cmd_addBookmark"/>
     <key id="key_console" key="j" modifiers="accel,shift" oncommand="PanelUI.show('console-container')"/>
     <key id="key_options" key="o" modifiers="accel,shift" oncommand="Elements.prefsFlyout.show()"/>
+    <key id="key_options" key="s" modifiers="accel,shift" oncommand="Elements.syncFlyout.show()"/>
+    <key id="key_options" key="a" modifiers="accel,shift" oncommand="Elements.aboutFlyout.show()"/>
 
     <!-- manage tabs -->
     <key id="key_newTab" key="t" modifiers="accel" command="cmd_newTab"/>
@@ -462,11 +464,6 @@
         <setting pref="privacy.donottrackheader.enabled" title="&optionsHeader.privacy.doNotTrack.label;" type="bool"/>
       </settings>
     </flyoutpanel>
-
-    <!-- Form Helper form validation helper popup -->
-    <arrowbox id="form-helper-validation-container" class="arrowbox-dark" flex="1" hidden="true" offset="0" top="0" left="0">
-      <label/>
-    </arrowbox>
 
 #ifdef MOZ_SERVICES_SYNC
     <box id="syncsetup-container" class="perm-modal-block" hidden="true">

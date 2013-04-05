@@ -180,6 +180,7 @@
 #include "mozilla/dom/HTMLElementBinding.h"
 #include "nsXULAppAPI.h"
 #include "nsDOMTouchEvent.h"
+#include "mozilla/dom/Touch.h"
 #include "DictionaryHelpers.h"
 #include "GeneratedEvents.h"
 
@@ -9272,14 +9273,14 @@ nsIDocument::CreateTouch(nsIDOMWindow* aView,
                          float aForce)
 {
   nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(aTarget);
-  nsCOMPtr<nsIDOMTouch> touch = new nsDOMTouch(target,
-                                               aIdentifier,
-                                               aPageX, aPageY,
-                                               aScreenX, aScreenY,
-                                               aClientX, aClientY,
-                                               aRadiusX, aRadiusY,
-                                               aRotationAngle,
-                                               aForce);
+  nsCOMPtr<nsIDOMTouch> touch = new Touch(target,
+                                          aIdentifier,
+                                          aPageX, aPageY,
+                                          aScreenX, aScreenY,
+                                          aClientX, aClientY,
+                                          aRadiusX, aRadiusY,
+                                          aRotationAngle,
+                                          aForce);
   return touch.forget();
 }
 

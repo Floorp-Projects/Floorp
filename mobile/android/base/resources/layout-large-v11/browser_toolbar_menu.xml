@@ -11,11 +11,6 @@
     <RelativeLayout android:id="@+id/address_bar"
                     style="@style/AddressBar">
 
-        <view class="org.mozilla.gecko.TabsPanel$TabsPanelToolbar"
-              android:layout_width="84dip"
-              android:layout_height="fill_parent"
-              android:background="@color/background_tabs_dark"/>
-
         <org.mozilla.gecko.BrowserToolbarBackground android:id="@+id/address_bar_bg"
                                                     android:layout_width="fill_parent"
                                                     android:layout_height="fill_parent"
@@ -23,17 +18,16 @@
                                                     gecko:curveTowards="left"
                                                     android:background="@drawable/address_bar_bg"/>
 
-        <org.mozilla.gecko.TabsButton android:id="@+id/tabs"
-                                      style="@style/AddressBar.ImageButton"
-                                      android:layout_width="84dip"
-                                      android:layout_alignParentLeft="true"
-                                      gecko:curveTowards="left"
-                                      gecko:cropped="true"
-                                      android:background="@drawable/tabs_button"
-                                      android:gravity="center_vertical"
-                                      android:src="@drawable/tabs_level"
-                                      android:paddingLeft="6dip"
-                                      android:paddingRight="38dip"/>
+        <Gecko.ShapedButton android:id="@+id/tabs"
+                            style="@style/AddressBar.ImageButton"
+                            android:layout_width="84dip"
+                            android:layout_alignParentLeft="true"
+                            gecko:curveTowards="left"
+                            android:background="@drawable/shaped_button"
+                            android:gravity="center_vertical"
+                            android:src="@drawable/tabs_level"
+                            android:paddingLeft="6dip"
+                            android:paddingRight="38dip"/>
 
         <Gecko.TextSwitcher android:id="@+id/tabs_count"
                             style="@style/AddressBar.ImageButton"

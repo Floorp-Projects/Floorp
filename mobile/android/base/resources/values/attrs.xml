@@ -45,10 +45,6 @@
         </attr>
     </declare-styleable>
 
-    <declare-styleable name="TabsButton">
-        <attr name="cropped" format="boolean"/>
-    </declare-styleable>
-
     <declare-styleable name="TabsTray">
         <attr name="tabs">
             <flag name="tabs_normal" value="0x00" />

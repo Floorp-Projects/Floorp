@@ -1107,17 +1107,17 @@ typedef const JSErrorFormatString *
                     const unsigned errorNumber);
 
 typedef JSBool
-(* JSLocaleToUpperCase)(JSContext *cx, JSString *src, jsval *rval);
+(* JSLocaleToUpperCase)(JSContext *cx, JSHandleString src, JSMutableHandleValue rval);
 
 typedef JSBool
-(* JSLocaleToLowerCase)(JSContext *cx, JSString *src, jsval *rval);
+(* JSLocaleToLowerCase)(JSContext *cx, JSHandleString src, JSMutableHandleValue rval);
 
 typedef JSBool
-(* JSLocaleCompare)(JSContext *cx, JSString *src1, JSString *src2,
-                    jsval *rval);
+(* JSLocaleCompare)(JSContext *cx, JSHandleString src1, JSHandleString src2,
+                    JSMutableHandleValue rval);
 
 typedef JSBool
-(* JSLocaleToUnicode)(JSContext *cx, const char *src, jsval *rval);
+(* JSLocaleToUnicode)(JSContext *cx, const char *src, JSMutableHandleValue rval);
 
 /*
  * Security protocol types.

@@ -13,6 +13,23 @@ const INCLUDE_DESC = 0x01;
 const INCLUDE_NAME = 0x02;
 const INCLUDE_CUSTOM = 0x04;
 
+const UTTERANCE_DESC_FIRST = 0;
+
+// Read and observe changes to a setting for utterance order.
+let gUtteranceOrder;
+let prefsBranch = Cc['@mozilla.org/preferences-service;1']
+  .getService(Ci.nsIPrefService).getBranch('accessibility.accessfu.');
+let observeUtterance = function observeUtterance(aSubject, aTopic, aData) {
+  try {
+    gUtteranceOrder = prefsBranch.getIntPref('utterance');
+  } catch (x) {
+    gUtteranceOrder = UTTERANCE_DESC_FIRST;
+  }
+};
+// Set initial gUtteranceOrder.
+observeUtterance();
+prefsBranch.addObserver('utterance', observeUtterance, false);
+
 var gStringBundle = Cc['@mozilla.org/intl/stringbundle;1'].
   getService(Ci.nsIStringBundleService).
   createBundle('chrome://global/locale/AccessFu.properties');
@@ -53,6 +70,35 @@ this.UtteranceGenerator = {
     expand: 'expandAction',
     activate: 'activateAction',
     cycle: 'cycleAction'
+  },
+
+  /**
+   * Generates an utterance for a PivotContext.
+   * @param {PivotContext} aContext object that generates and caches
+   *    context information for a given accessible and its relationship with
+   *    another accessible.
+   * @return {Array} An array of strings. Depending on the utterance order,
+   *    the strings describe the context for an accessible object either
+   *    starting from the accessible's ancestry or accessible's subtree.
+   */
+  genForContext: function genForContext(aContext) {
+    let utterance = [];
+    let addUtterance = function addUtterance(aAccessible) {
+      utterance.push.apply(utterance,
+        UtteranceGenerator.genForObject(aAccessible));
+    };
+
+    if (gUtteranceOrder === UTTERANCE_DESC_FIRST) {
+      aContext.newAncestry.forEach(addUtterance);
+      addUtterance(aContext.accessible);
+      aContext.subtreePreorder.forEach(addUtterance);
+    } else {
+      aContext.subtreePostorder.forEach(addUtterance);
+      addUtterance(aContext.accessible);
+      aContext.newAncestry.reverse().forEach(addUtterance);
+    }
+
+    return utterance;
   },
 
 
@@ -213,9 +259,7 @@ this.UtteranceGenerator = {
         utterance.push(desc.join(' '));
       }
 
-      let name = (aFlags & INCLUDE_NAME) ? (aAccessible.name || '') : '';
-      if (name)
-        utterance.push(name);
+      this._addName(utterance, aAccessible, aFlags);
 
       return utterance;
     },
@@ -229,28 +273,23 @@ this.UtteranceGenerator = {
 
       utterance.push(desc.join(' '));
 
-      let name = (aFlags & INCLUDE_NAME) ? (aAccessible.name || '') : '';
-      if (name)
-        utterance.push(name);
+      this._addName(utterance, aAccessible, aFlags);
 
       return utterance;
     },
 
     heading: function heading(aAccessible, aRoleStr, aStates, aFlags) {
-      let name = (aFlags & INCLUDE_NAME) ? (aAccessible.name || '') : '';
       let level = {};
       aAccessible.groupPosition(level, {}, {});
       let utterance =
         [gStringBundle.formatStringFromName('headingLevel', [level.value], 1)];
 
-      if (name)
-        utterance.push(name);
+      this._addName(utterance, aAccessible, aFlags);
 
       return utterance;
     },
 
     listitem: function listitem(aAccessible, aRoleStr, aStates, aFlags) {
-      let name = (aFlags & INCLUDE_NAME) ? (aAccessible.name || '') : '';
       let itemno = {};
       let itemof = {};
       aAccessible.groupPosition({}, itemof, itemno);
@@ -260,8 +299,7 @@ this.UtteranceGenerator = {
       else if (itemno.value == itemof.value) // last item
         utterance.push(gStringBundle.GetStringFromName('listEnd'));
 
-      if (name)
-        utterance.push(name);
+      this._addName(utterance, aAccessible, aFlags);
 
       return utterance;
     },
@@ -283,6 +321,14 @@ this.UtteranceGenerator = {
           [aAccessible, aRoleStr, aStates, aFlags]);
 
       return [];
+    }
+  },
+
+  _addName: function _addName(utterance, aAccessible, aFlags) {
+    let name = (aFlags & INCLUDE_NAME) ? (aAccessible.name || '') : '';
+    if (name) {
+      utterance[gUtteranceOrder === UTTERANCE_DESC_FIRST ?
+        "push" : "unshift"](name);
     }
   },
 
@@ -325,7 +371,6 @@ this.UtteranceGenerator = {
   },
 
   _getListUtterance: function _getListUtterance(aAccessible, aRoleStr, aFlags, aItemCount) {
-    let name = (aFlags & INCLUDE_NAME) ? (aAccessible.name || '') : '';
     let desc = [];
     let roleStr = this._getLocalizedRole(aRoleStr);
     if (roleStr)
@@ -334,8 +379,7 @@ this.UtteranceGenerator = {
       (gStringBundle.formatStringFromName('listItemCount', [aItemCount], 1));
     let utterance = [desc.join(' ')];
 
-    if (name)
-      utterance.push(name);
+    this._addName(utterance, aAccessible, aFlags);
 
     return utterance;
   }

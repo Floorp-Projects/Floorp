@@ -31,6 +31,7 @@ NS_IMPL_ADDREF(MmsMessage)
 NS_IMPL_RELEASE(MmsMessage)
 
 MmsMessage::MmsMessage(int32_t                         aId,
+                       const uint64_t                  aThreadId,
                        DeliveryState                   aDelivery,
                        const nsTArray<DeliveryStatus>& aDeliveryStatus,
                        const nsAString&                aSender,
@@ -41,6 +42,7 @@ MmsMessage::MmsMessage(int32_t                         aId,
                        const nsAString&                aSmil,
                        const nsTArray<MmsAttachment>&  aAttachments)
   : mId(aId),
+    mThreadId(aThreadId),
     mDelivery(aDelivery),
     mDeliveryStatus(aDeliveryStatus),
     mSender(aSender),
@@ -55,6 +57,7 @@ MmsMessage::MmsMessage(int32_t                         aId,
 
 /* static */ nsresult
 MmsMessage::Create(int32_t               aId,
+                   const uint64_t        aThreadId,
                    const nsAString&      aDelivery,
                    const JS::Value&      aDeliveryStatus,
                    const nsAString&      aSender,
@@ -193,6 +196,7 @@ MmsMessage::Create(int32_t               aId,
   }
 
   nsCOMPtr<nsIDOMMozMmsMessage> message = new MmsMessage(aId,
+                                                         aThreadId,
                                                          delivery,
                                                          deliveryStatus,
                                                          aSender,
@@ -217,6 +221,13 @@ NS_IMETHODIMP
 MmsMessage::GetId(int32_t* aId)
 {
   *aId = mId;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+MmsMessage::GetThreadId(uint64_t* aThreadId)
+{
+  *aThreadId = mThreadId;
   return NS_OK;
 }
 

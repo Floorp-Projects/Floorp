@@ -24,4 +24,8 @@ include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/crashreporter/google-breakpad/src
+ifndef GNU_CC
 LDFLAGS += -ENTRY:DummyEntryPoint
+else
+LDFLAGS += -Wl,-e,_DummyEntryPoint@12
+endif

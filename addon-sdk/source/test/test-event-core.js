@@ -68,6 +68,19 @@ exports['test no side-effects in emit'] = function(assert) {
   emit(target, 'message');
 };
 
+exports['test can remove next listener'] = function(assert) {
+  let target = { name: 'target' };
+  function fail() assert.fail('Listener should be removed');
+
+  on(target, 'data', function() {
+    assert.pass('first litener called');
+    off(target, 'data', fail);
+  });
+  on(target, 'data', fail);
+
+  emit(target, 'data', 'hello');
+};
+
 exports['test order of propagation'] = function(assert) {
   let actual = [];
   let target = { name: 'target' };

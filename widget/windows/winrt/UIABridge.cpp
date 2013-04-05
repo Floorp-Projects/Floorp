@@ -77,58 +77,30 @@ UIATextElement_CreateInstance(IRawElementProviderFragmentRoot* aRoot)
 // IUIABridge
 
 HRESULT
-UIABridge::Init(IInspectable* view, IInspectable* window, LONG_PTR inner)
+UIABridge::Init(IInspectable* aView, IInspectable* aWindow, LONG_PTR aInnerPtr)
 {
   LogFunction();
-  NS_ASSERTION(view, "invalid framework view pointer");
-  NS_ASSERTION(window, "invalid window pointer");
-  NS_ASSERTION(inner, "invalid Accessible pointer");
+  NS_ASSERTION(aView, "invalid framework view pointer");
+  NS_ASSERTION(aWindow, "invalid window pointer");
+  NS_ASSERTION(aInnerPtr, "invalid Accessible pointer");
 
 #if defined(ACCESSIBILITY)
-  window->QueryInterface(IID_PPV_ARGS(&mWindow));
+  // init AccessibilityBridge and connect to accessibility
+  mAccBridge = new AccessibilityBridge();
+  if (!mAccBridge->Init(CastToUnknown(), (Accessible*)aInnerPtr)) {
+    return E_FAIL;
+  }
+
+  aWindow->QueryInterface(IID_PPV_ARGS(&mWindow));
 
   if (FAILED(UIATextElement_CreateInstance(this)))
     return E_FAIL;
 
-  // init AccessibilityBridge and connect to accessibility
-  mBridge = new AccessibilityBridge();
-  if (!mBridge->Init(CastToUnknown(), (Accessible*)inner))
-    return E_FAIL;
+  mAccessible = (Accessible*)aInnerPtr;
 
-  mConnected = true;
   return S_OK;
 #endif
   return E_FAIL;
-}
-
-HRESULT
-UIABridge::CheckFocus(int x, int y)
-{
-  LogFunction();
-  VARIANT_BOOL val = VARIANT_FALSE;
-  gElement->CheckFocus(x, y);
-  gElement->HasFocus(&val);
-  mHasFocus = (val == VARIANT_TRUE);
-  UiaRaiseAutomationEvent(this, UIA_AutomationFocusChangedEventId);
-  return S_OK;
-}
-
-HRESULT
-UIABridge::ClearFocus()
-{
-  LogFunction();
-  mHasFocus = false;
-  gElement->ClearFocus();
-  UiaRaiseAutomationEvent(this, UIA_AutomationFocusChangedEventId);
-  return S_OK;
-}
-
-HRESULT
-UIABridge::HasFocus(VARIANT_BOOL * hasFocus)
-{
-  LogFunction();
-  *hasFocus = mHasFocus ? VARIANT_TRUE : VARIANT_FALSE;
-  return S_OK;
 }
 
 HRESULT
@@ -136,12 +108,17 @@ UIABridge::Disconnect()
 {
   LogFunction();
 #if defined(ACCESSIBILITY)
-  mBridge->Disconnect();
-  mBridge = nullptr;
+  mAccBridge->Disconnect();
+  mAccessible = nullptr;
 #endif
-  mConnected = false;
   mWindow = nullptr;
   return S_OK;
+}
+
+bool
+UIABridge::Connected()
+{
+  return !!mAccessible;
 }
 
 // IUIAElement
@@ -149,23 +126,74 @@ UIABridge::Disconnect()
 HRESULT
 UIABridge::SetFocusInternal(LONG_PTR aAccessible)
 {
-  LogFunction();
-  mHasFocus = true;
-  ComPtr<IUIAElement> doc;
-  gElement.As(&doc);
-  if (doc)
-    doc->SetFocusInternal(aAccessible);
   return S_OK;
 }
 
-bool
-UIABridge::Connected()
+HRESULT
+UIABridge::ClearFocus()
 {
-#if defined(ACCESSIBILITY)
-  return !(!mConnected || !mBridge->Connected());
-#else
-  return false;
+  return S_OK;
+}
+
+static void
+DumpChildInfo(nsCOMPtr<nsIAccessible>& aChild)
+{
+#ifdef DEBUG
+  if (!aChild) {
+    return;
+  }
+  nsString str;
+  aChild->GetName(str);
+  Log(L"name: %s", str.BeginReading());
+  aChild->GetDescription(str);
+  Log(L"description: %s", str.BeginReading());
 #endif
+}
+
+static bool
+ChildHasFocus(nsCOMPtr<nsIAccessible>& aChild)
+{
+  Accessible* access = (Accessible*)aChild.get();
+  Log(L"Focus element flags: %d %d %d",
+    ((access->NativeState() & mozilla::a11y::states::EDITABLE) > 0),
+    ((access->NativeState() & mozilla::a11y::states::FOCUSABLE) > 0),
+    ((access->NativeState() & mozilla::a11y::states::READONLY) > 0));
+  return (((access->NativeState() & mozilla::a11y::states::EDITABLE) > 0) &&
+           ((access->NativeState() & mozilla::a11y::states::READONLY) == 0));
+}
+
+// Accessibility calls here to let us know about focus related changes.
+// The only event we are concerned with is lost focus, so that we can
+// signal UIA that the focus on our child has been lost.
+HRESULT
+UIABridge::FocusChangeEvent()
+{
+  LogFunction();
+
+  if (!Connected()) {
+    return UIA_E_ELEMENTNOTAVAILABLE;
+  }
+
+  nsCOMPtr<nsIAccessible> child;
+  nsresult rv = mAccessible->GetFocusedChild(getter_AddRefs(child));
+  if (!child) {
+    return S_OK;
+  }
+
+  DumpChildInfo(child);
+
+  if (!ChildHasFocus(child)) {
+    ComPtr<IUIAElement> element;
+    gElement.As(&element);
+    if (!element) {
+      return S_OK;
+    }
+
+    element->ClearFocus();
+    UiaRaiseAutomationEvent(this, UIA_AutomationFocusChangedEventId);
+  }
+
+  return S_OK;
 }
 
 // IRawElementProviderFragmentRoot
@@ -182,6 +210,9 @@ UIABridge::ElementProviderFromPoint(double x, double y, IRawElementProviderFragm
   return S_OK;
 }
 
+// Windows calls this looking for the current focus element. Windows
+// will call here before accessible sends up any observer events through
+// the accessibility bridge, so update child focus information.
 HRESULT
 UIABridge::GetFocus(IRawElementProviderFragment ** retVal)
 {
@@ -189,10 +220,28 @@ UIABridge::GetFocus(IRawElementProviderFragment ** retVal)
   if (!Connected()) {
     return UIA_E_ELEMENTNOTAVAILABLE;
   }
-  if (!mHasFocus)
-    return S_OK;
 
-  gElement.Get()->QueryInterface(IID_PPV_ARGS(retVal));
+  nsCOMPtr<nsIAccessible> child;
+  nsresult rv = mAccessible->GetFocusedChild(getter_AddRefs(child));
+  if (!child) {
+    return S_OK;
+  }
+
+  DumpChildInfo(child);
+
+  ComPtr<IUIAElement> element;
+  gElement.As(&element);
+  if (!element) {
+    return S_OK;
+  }
+
+  if (!ChildHasFocus(child)) {
+    element->ClearFocus();
+  } else {
+    element->SetFocusInternal((LONG_PTR)child.get());
+    element.Get()->QueryInterface(IID_PPV_ARGS(retVal));
+  }
+
   return S_OK;
 }
 
@@ -206,6 +255,7 @@ UIABridge::Navigate(NavigateDirection direction, IRawElementProviderFragment ** 
     return UIA_E_ELEMENTNOTAVAILABLE;
   }
   *retVal = nullptr;
+
   switch(direction) {
     case NavigateDirection_Parent:
     break;
@@ -239,7 +289,7 @@ UIABridge::GetRuntimeId(SAFEARRAY ** retVal)
       SafeArrayPutElement(*retVal, &index, &runtimeId[index]);
     }
   } else {
-      return E_OUTOFMEMORY;
+    return E_OUTOFMEMORY;
   }
   return S_OK;
 }
@@ -252,20 +302,15 @@ UIABridge::get_BoundingRectangle(UiaRect * retVal)
     return UIA_E_ELEMENTNOTAVAILABLE;
   }
 
-  // physical pixel value = (DIP x DPI) / 96
-  FLOAT dpi;
-  HRESULT hr;
-  ComPtr<ABI::Windows::Graphics::Display::IDisplayPropertiesStatics> dispProps;
-  hr = GetActivationFactory(HStringReference(RuntimeClass_Windows_Graphics_Display_DisplayProperties).Get(), dispProps.GetAddressOf());
-  AssertRetHRESULT(hr, hr);
-  AssertRetHRESULT(hr = dispProps->get_LogicalDpi(&dpi), hr);
-
+  // returns logical pixels
   Rect bounds;
   mWindow->get_Bounds(&bounds);
-  retVal->left = ((bounds.X * dpi) / 96.0);
-  retVal->top = ((bounds.Y * dpi) / 96.0);
-  retVal->width = ((bounds.Width * dpi) / 96.0);
-  retVal->height = ((bounds.Height * dpi) / 96.0);
+
+  // we need to return physical pixels
+  retVal->left = MetroUtils::LogToPhys(bounds.X);
+  retVal->top = MetroUtils::LogToPhys(bounds.Y);
+  retVal->width = MetroUtils::LogToPhys(bounds.Width);
+  retVal->height = MetroUtils::LogToPhys(bounds.Height);
 
   return S_OK;
 }
@@ -288,7 +333,6 @@ UIABridge::SetFocus()
   if (!Connected()) {
     return UIA_E_ELEMENTNOTAVAILABLE;
   }
-  UiaRaiseAutomationEvent(this, UIA_AutomationFocusChangedEventId);
   return S_OK;
 }
 
@@ -363,7 +407,7 @@ UIABridge::GetPropertyValue(PROPERTYID idProp, VARIANT * pRetVal)
 
     case UIA_HasKeyboardFocusPropertyId:
       pRetVal->vt = VT_BOOL;
-      pRetVal->boolVal = mHasFocus ? VARIANT_TRUE : VARIANT_FALSE;
+      pRetVal->boolVal = VARIANT_FALSE;
       break;
 
     case UIA_NamePropertyId:
@@ -409,55 +453,18 @@ UIATextElement::SetFocusInternal(LONG_PTR aAccessible)
 {
   LogFunction();
 #if defined(ACCESSIBILITY)
-  nsCOMPtr<nsIAccessible> item = (nsIAccessible*)aAccessible;
-  NS_ASSERTION(item, "Bad accessible pointer");
-  if (item) {
-    int32_t docX = 0, docY = 0, docWidth = 0, docHeight = 0;
-    item->GetBounds(&docX, &docY, &docWidth, &docHeight);
-    mBounds.X = (float)docX;
-    mBounds.Y = (float)docY;
-    mBounds.Width = (float)docWidth;
-    mBounds.Height = (float)docHeight;
-    SetFocus();
-  }
+  NS_ASSERTION(mAccessItem, "Bad accessible pointer");
+  mAccessItem = (nsIAccessible*)aAccessible;
   return S_OK;
 #endif
   return E_FAIL;
-}
-
-static bool
-RectContains(const Rect& rect, int x, int y)
-{
-  return ((x >= rect.X && x <= (rect.X + rect.Width) &&
-          (y >= rect.Y && y <= (rect.Y + rect.Height))));
-}
-
-HRESULT
-UIATextElement::CheckFocus(int x, int y)
-{
-  LogFunction();
-  if (RectContains(mBounds, x, y))
-    return S_OK;
-  Log(L"UIATextElement::CheckFocus CLEAR!");
-  mHasFocus = false;
-  UiaRaiseAutomationEvent(this, UIA_AutomationFocusChangedEventId);
-  return S_OK;
 }
 
 HRESULT
 UIATextElement::ClearFocus()
 {
   LogFunction();
-  mHasFocus = false;
-  UiaRaiseAutomationEvent(this, UIA_AutomationFocusChangedEventId);
-  return S_OK;
-}
-
-HRESULT
-UIATextElement::HasFocus(VARIANT_BOOL * hasFocus)
-{
-  LogFunction();
-  *hasFocus = mHasFocus ? VARIANT_TRUE : VARIANT_FALSE;
+  mAccessItem = nullptr;
   return S_OK;
 }
 
@@ -504,10 +511,18 @@ HRESULT
 UIATextElement::get_BoundingRectangle(UiaRect * retVal)
 {
   LogFunction();
-  retVal->left = mBounds.X;
-  retVal->top = mBounds.Y;
-  retVal->width = mBounds.Width;
-  retVal->height = mBounds.Height;
+  
+  if (!mAccessItem) {
+    return UIA_E_ELEMENTNOTAVAILABLE;
+  }
+
+  // bounds are in physical pixels
+  int32_t docX = 0, docY = 0, docWidth = 0, docHeight = 0;
+  mAccessItem->GetBounds(&docX, &docY, &docWidth, &docHeight);
+  retVal->left = (float)docX;
+  retVal->top = (float)docY;
+  retVal->width = (float)docWidth;
+  retVal->height = (float)docHeight;
   return S_OK;
 }
 
@@ -522,8 +537,6 @@ HRESULT
 UIATextElement::SetFocus()
 {
   LogFunction();
-  mHasFocus = true;
-  UiaRaiseAutomationEvent(this, UIA_AutomationFocusChangedEventId);
   return S_OK;
 }
 
@@ -607,10 +620,21 @@ UIATextElement::GetPropertyValue(PROPERTYID idProp, VARIANT * pRetVal)
     case UIA_LabeledByPropertyId:
       break;
 
-    case UIA_HasKeyboardFocusPropertyId:
+    case UIA_HasKeyboardFocusPropertyId: 
+    {
+      if (mAccessItem) {
+        uint32_t state, extraState;
+        if (NS_SUCCEEDED(mAccessItem->GetState(&state, &extraState)) &&
+            (state & nsIAccessibleStates::STATE_FOCUSED)) {
+          pRetVal->vt = VT_BOOL;
+          pRetVal->boolVal = VARIANT_TRUE;
+          return S_OK;
+        }
+      }
       pRetVal->vt = VT_BOOL;
-      pRetVal->boolVal = mHasFocus ? VARIANT_TRUE : VARIANT_FALSE;
+      pRetVal->boolVal = VARIANT_FALSE;
       break;
+    }
 
     case UIA_NamePropertyId:
       pRetVal->bstrVal = SysAllocString(L"MozillaDocument");

@@ -37,6 +37,7 @@ function sendSms() {
     ok(sentSms, "outgoing sms");
     ok(sentSms.id, "sms id");
     log("Sent SMS (id: " + sentSms.id + ").");
+    ok(sentSms.threadId, "thread id");
     is(sentSms.body.length, msgText.length, "text length");
     is(sentSms.body, msgText, "msg body");
     is(sentSms.delivery, "sent", "delivery");
@@ -78,6 +79,7 @@ function verifySmsExists(sentSms) {
     ok(event.target.result, "smsrequest event.target.result");
     let foundSms = event.target.result;
     is(foundSms.id, sentSms.id, "found SMS id matches");
+    is(foundSms.threadId, sentSms.threadId, "found SMS thread id matches");
     is(foundSms.body.length, sentSms.body.length, "found SMS text length");
     is(foundSms.body, sentSms.body, "found SMS msg text matches");
     log("Got SMS (id: " + foundSms.id + ") as expected.");

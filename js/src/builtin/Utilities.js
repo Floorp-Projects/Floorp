@@ -24,6 +24,7 @@
 */
 
 /* Utility macros */
+#define TO_INT32(x) (x | 0)
 #define TO_UINT32(x) (x >>> 0)
 
 /* cache built-in functions before applications can change them */

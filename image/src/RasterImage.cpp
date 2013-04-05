@@ -872,7 +872,18 @@ RasterImage::GetImgFrame(uint32_t framenum)
 imgFrame*
 RasterImage::GetDrawableImgFrame(uint32_t framenum)
 {
-  imgFrame *frame = GetImgFrame(framenum);
+  imgFrame* frame = nullptr;
+
+  if (mMultipart && framenum == GetCurrentImgFrameIndex()) {
+    // In the multipart case we prefer to use mMultipartDecodedFrame, which is
+    // the most recent one we completely decoded, rather than display the real
+    // current frame and risk severe tearing.
+    frame = mMultipartDecodedFrame;
+  }
+
+  if (!frame) {
+    frame = GetImgFrame(framenum);
+  }
 
   // We will return a paletted frame if it's not marked as compositing failed
   // so we can catch crashes for reasons we haven't investigated.
@@ -3219,19 +3230,9 @@ RasterImage::Draw(gfxContext *aContext,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  imgFrame* frame = nullptr;
-
-  if (mMultipart) {
-    // In the multipart case we prefer to use mMultipartDecodedFrame, which is
-    // the most recent one we completely decoded, rather than display the real
-    // current frame and risk severe tearing.
-    frame = mMultipartDecodedFrame;
-  }
-  if (!frame) {
-    uint32_t frameIndex = aWhichFrame == FRAME_FIRST ? 0
-                                                     : GetCurrentImgFrameIndex();
-    frame = GetDrawableImgFrame(frameIndex);
-  }
+  uint32_t frameIndex = aWhichFrame == FRAME_FIRST ? 0
+                                                   : GetCurrentImgFrameIndex();
+  imgFrame* frame = GetDrawableImgFrame(frameIndex);
   if (!frame) {
     return NS_OK; // Getting the frame (above) touches the image and kicks off decoding
   }
@@ -3596,6 +3597,8 @@ RasterImage::DecodePool::Singleton()
 }
 
 RasterImage::DecodePool::DecodePool()
+  : mThreadPoolMutex("Thread Pool")
+  , mShuttingDown(false)
 {
   if (gMultithreadedDecoding) {
     mThreadPool = do_CreateInstance(NS_THREADPOOL_CONTRACTID);
@@ -3622,13 +3625,21 @@ RasterImage::DecodePool::~DecodePool()
 
 NS_IMETHODIMP
 RasterImage::DecodePool::Observe(nsISupports *subject, const char *topic,
-                                   const PRUnichar *data)
+                                 const PRUnichar *data)
 {
   NS_ASSERTION(strcmp(topic, "xpcom-shutdown-threads") == 0, "oops");
 
-  if (mThreadPool) {
-    mThreadPool->Shutdown();
+  nsCOMPtr<nsIThreadPool> threadPool;
+
+  {
+    MutexAutoLock threadPoolLock(mThreadPoolMutex);
+    threadPool = mThreadPool;
     mThreadPool = nullptr;
+    mShuttingDown = true;
+  }
+
+  if (threadPool) {
+    threadPool->Shutdown();
   }
 
   return NS_OK;
@@ -3638,7 +3649,6 @@ void
 RasterImage::DecodePool::RequestDecode(RasterImage* aImg)
 {
   MOZ_ASSERT(aImg->mDecoder);
-  MOZ_ASSERT(NS_IsMainThread());
   aImg->mDecodingMutex.AssertCurrentThreadOwns();
 
   // If we're currently waiting on a new frame for this image, we can't do any
@@ -3657,7 +3667,10 @@ RasterImage::DecodePool::RequestDecode(RasterImage* aImg)
 
     aImg->mDecodeRequest->mRequestStatus = DecodeRequest::REQUEST_PENDING;
     nsRefPtr<DecodeJob> job = new DecodeJob(aImg->mDecodeRequest, aImg);
-    if (!gMultithreadedDecoding || !mThreadPool) {
+    MutexAutoLock threadPoolLock(mThreadPoolMutex);
+    if (mShuttingDown) {
+      // Just drop the job on the floor; we won't need it.
+    } else if (!gMultithreadedDecoding || !mThreadPool) {
       NS_DispatchToMainThread(job);
     } else {
       mThreadPool->Dispatch(job, nsIEventTarget::DISPATCH_NORMAL);
@@ -3762,7 +3775,8 @@ RasterImage::DecodePool::DecodeJob::Run()
   else if (mImage->mDecoder &&
            !mImage->mError &&
            !mImage->IsDecodeFinished() &&
-           bytesDecoded < mRequest->mBytesToDecode) {
+           bytesDecoded < mRequest->mBytesToDecode &&
+           bytesDecoded > 0) {
     DecodePool::Singleton()->RequestDecode(mImage);
   } else {
     // Nothing more for us to do - let everyone know what happened.
