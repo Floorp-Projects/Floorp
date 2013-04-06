@@ -86,6 +86,24 @@ bool sps_version2()
   return version == 2;
 }
 
+#if !defined(ANDROID)
+/* Has MOZ_PROFILER_VERBOSE been set? */
+bool moz_profiler_verbose()
+{
+  /* 0 = not checked, 1 = unset, 2 = set */
+  static int status = 0; // Raced on, potentially
+
+  if (status == 0) {
+    if (PR_GetEnv("MOZ_PROFILER_VERBOSE") != NULL)
+      status = 2;
+    else
+      status = 1;
+  }
+
+  return status == 2;
+}
+#endif
+
 static inline const char* name_UnwMode(UnwMode m)
 {
   switch (m) {
@@ -148,6 +166,12 @@ void read_env_vars()
   LOG( "SPS: ");
   LOG( "SPS:   MOZ_PROFILER_INTERVAL=<number>   (milliseconds, 1 to 1000)");
   LOG( "SPS:   If unset, platform default is used.");
+  LOG( "SPS: ");
+  LOG( "SPS:   MOZ_PROFILER_VERBOSE");
+  LOG( "SPS:   If set to any value, increases verbosity (recommended).");
+  LOG( "SPS: ");
+  LOG( "SPS:   MOZ_PROFILER_NEW");
+  LOG( "SPS:   Needs to be set to use Breakpad-based unwinding.");
   LOG( "SPS: ");
   LOGF("SPS:   This platform %s native unwinding.",
        nativeAvail ? "supports" : "does not support");

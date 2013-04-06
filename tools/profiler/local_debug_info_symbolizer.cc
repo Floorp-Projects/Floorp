@@ -26,7 +26,6 @@
 # error "Unknown platform"
 #endif
 
-#include "platform.h"
 #include "local_debug_info_symbolizer.h"
 
 namespace google_breakpad {
@@ -62,21 +61,16 @@ LocalDebugInfoSymbolizer::FillSourceLineInfo(const CodeModules* modules,
         no_symbol_modules_.end()) {
       return kNoError;
     }
-    LOG("BPUnw:");
-    LOGF("BPUnw: ReadSymbolData: BEGIN   %s", module->code_file().c_str());
     if (!ReadSymbolData(module->code_file(),
                         debug_dirs_,
                         ONLY_CFI,
                         &debug_info_module)) {
-      BPLOG(ERROR) << "ReadSymbolData failed for " << module->code_file();
-      LOGF("BPUnw: ReadSymbolData: FAIL    %s", module->code_file().c_str());
       if (debug_info_module)
         delete debug_info_module;
       no_symbol_modules_.insert(module->code_file());
       return kNoError;
     }
 
-    LOGF("BPUnw: ReadSymbolData: SUCCESS %s", module->code_file().c_str());
     symbols_[module->code_file()] = debug_info_module;
   } else {
     debug_info_module = it->second;

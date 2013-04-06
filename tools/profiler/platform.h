@@ -29,9 +29,6 @@
 #ifndef TOOLS_PLATFORM_H_
 #define TOOLS_PLATFORM_H_
 
-// Uncomment this line to force desktop logging
-//#define SPS_FORCE_LOG
-
 #ifdef ANDROID
 #include <android/log.h>
 #else
@@ -45,20 +42,29 @@
 #include "PlatformMacros.h"
 #include "v8-support.h"
 #include <vector>
+
 #define ASSERT(a) MOZ_ASSERT(a)
+
 #ifdef ANDROID
-#if defined(__arm__) || defined(__thumb__)
-#define ENABLE_SPS_LEAF_DATA
-#define ENABLE_ARM_LR_SAVING
-#endif
-#define LOG(text) __android_log_write(ANDROID_LOG_ERROR, "Profiler", text)
-#define LOGF(format, ...) __android_log_print(ANDROID_LOG_ERROR, "Profiler", format, __VA_ARGS__)
-#elif defined(SPS_FORCE_LOG)
-#define LOG(text) fprintf(stderr, "Profiler: %s\n", text)
-#define LOGF(format, ...) fprintf(stderr, "Profiler: " format "\n", __VA_ARGS__)
+# if defined(__arm__) || defined(__thumb__)
+#  define ENABLE_SPS_LEAF_DATA
+#  define ENABLE_ARM_LR_SAVING
+# endif
+# define LOG(text) \
+    __android_log_write(ANDROID_LOG_ERROR, "Profiler", text)
+# define LOGF(format, ...) \
+    __android_log_print(ANDROID_LOG_ERROR, "Profiler", format, __VA_ARGS__)
+
 #else
-#define LOG(TEXT) do {} while(0)
-#define LOGF(format, ...) do {} while(0)
+  extern bool moz_profiler_verbose();
+# define LOG(text) \
+    do { if (moz_profiler_verbose()) fprintf(stderr, "Profiler: %s\n", text); \
+    } while (0)
+# define LOGF(format, ...) \
+    do { if (moz_profiler_verbose()) fprintf(stderr, "Profiler: " format \
+                                             "\n", __VA_ARGS__);        \
+    } while (0)
+
 #endif
 
 #if defined(XP_MACOSX) || defined(XP_WIN)
