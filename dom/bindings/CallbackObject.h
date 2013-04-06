@@ -54,7 +54,7 @@ public:
     // If aOwner is not null, enter the compartment of aOwner's
     // underlying object.
     if (aOwner) {
-      aOwner = js::UncheckedUnwrap(aOwner);
+      aOwner = js::UnwrapObject(aOwner);
       JSAutoCompartment ac(cx, aOwner);
       if (!JS_WrapObject(cx, &aCallback)) {
         *aInited = false;
@@ -282,9 +282,9 @@ public:
     }
 
     JSObject* thisObj =
-      js::UncheckedUnwrap(GetWebIDLCallback()->CallbackPreserveColor());
+      js::UnwrapObject(GetWebIDLCallback()->CallbackPreserveColor());
     JSObject* otherObj =
-      js::UncheckedUnwrap(aOtherCallback->CallbackPreserveColor());
+      js::UnwrapObject(aOtherCallback->CallbackPreserveColor());
     return thisObj == otherObj;
   }
 
