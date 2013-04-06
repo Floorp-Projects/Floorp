@@ -2724,9 +2724,8 @@ TryGetTabChildGlobalAsEventTarget(nsISupports *aFrom)
     return NULL;
   }
 
-  nsCOMPtr<EventTarget> eventTarget =
-    do_QueryInterface(frameLoader->GetTabChildGlobalAsEventTarget());
-  return eventTarget.forget();
+  nsCOMPtr<EventTarget> target = frameLoader->GetTabChildGlobalAsEventTarget();
+  return target.forget();
 }
 
 void

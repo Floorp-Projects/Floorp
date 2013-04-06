@@ -286,7 +286,7 @@ nsEventTargetChainItem::HandleEventTargetChain(
 {
   uint32_t createdELMs = nsEventListenerManager::sCreatedCount;
   // Save the target so that it can be restored later.
-  nsCOMPtr<nsIDOMEventTarget> firstTarget = aVisitor.mEvent->target;
+  nsCOMPtr<EventTarget> firstTarget = aVisitor.mEvent->target;
 
   // Capture
   nsEventTargetChainItem* item = this;
@@ -306,7 +306,7 @@ nsEventTargetChainItem::HandleEventTargetChain(
       // item is at anonymous boundary. Need to retarget for the child items.
       nsEventTargetChainItem* nextTarget = item->mChild;
       while (nextTarget) {
-        nsIDOMEventTarget* newTarget = nextTarget->GetNewTarget();
+        EventTarget* newTarget = nextTarget->GetNewTarget();
         if (newTarget) {
           aVisitor.mEvent->target = newTarget;
           break;
@@ -336,7 +336,7 @@ nsEventTargetChainItem::HandleEventTargetChain(
   aVisitor.mEvent->mFlags.mInCapturePhase = false;
   item = item->mParent;
   while (item) {
-    nsIDOMEventTarget* newTarget = item->GetNewTarget();
+    EventTarget* newTarget = item->GetNewTarget();
     if (newTarget) {
       // Item is at anonymous boundary. Need to retarget for the current item
       // and for parent items.
@@ -428,7 +428,7 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
                             nsIDOMEvent* aDOMEvent,
                             nsEventStatus* aEventStatus,
                             nsDispatchingCallback* aCallback,
-                            nsCOMArray<nsIDOMEventTarget>* aTargets)
+                            nsCOMArray<EventTarget>* aTargets)
 {
   PROFILER_LABEL("nsEventDispatcher", "Dispatch");
   NS_ASSERTION(aEvent, "Trying to dispatch without nsEvent!");

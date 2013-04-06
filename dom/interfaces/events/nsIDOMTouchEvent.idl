@@ -29,9 +29,9 @@ interface nsIDOMTouch : nsISupports {
   readonly attribute float             rotationAngle;
   readonly attribute float             force;
   %{C++
-    nsCOMPtr<nsIDOMEventTarget> mTarget;
-    nsIDOMEventTarget *GetTarget() { return mTarget; }
-    void SetTarget(nsIDOMEventTarget *target) { mTarget = target; }
+    nsCOMPtr<mozilla::dom::EventTarget> mTarget;
+    mozilla::dom::EventTarget *GetTarget() { return mTarget; }
+    void SetTarget(mozilla::dom::EventTarget *target) { mTarget = target; }
     nsIntPoint mRefPoint;
     bool mChanged;
     uint32_t mMessage;

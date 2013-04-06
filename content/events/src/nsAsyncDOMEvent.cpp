@@ -36,7 +36,7 @@ NS_IMETHODIMP nsAsyncDOMEvent::Run()
         return NS_ERROR_INVALID_ARG;
       }
 
-      nsCOMPtr<nsIDOMEventTarget> target = window->GetParentTarget();
+      nsCOMPtr<EventTarget> target = window->GetParentTarget();
       if (!target) {
         return NS_ERROR_INVALID_ARG;
       }
