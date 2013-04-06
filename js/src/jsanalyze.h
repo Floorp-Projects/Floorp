@@ -115,7 +115,6 @@ class Bytecode
     bool getStringElement:1;    /* GETELEM which has accessed string properties. */
     bool nonNativeGetElement:1; /* GETELEM on a non-native, non-array object. */
     bool accessGetter: 1;       /* Property read on a shape with a getter hook. */
-    bool notIdempotent: 1;      /* Don't use an idempotent cache for this property read. */
 
     /* Stack depth before this opcode. */
     uint32_t stackDepth;

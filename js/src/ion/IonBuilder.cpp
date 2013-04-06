@@ -6896,10 +6896,7 @@ IonBuilder::getPropTryPolymorphic(bool *emitted, HandlePropertyName name, Handle
     // Try to mark the cache as idempotent. We only do this if JM is enabled
     // (its ICs are used to mark property reads as likely non-idempotent) or
     // if we are compiling eagerly (to improve test coverage).
-    if (unary.ival == MIRType_Object &&
-        (cx->methodJitEnabled || js_IonOptions.eagerCompilation) &&
-        !invalidatedIdempotentCache())
-    {
+    if (unary.ival == MIRType_Object && !invalidatedIdempotentCache()) {
         RootedScript scriptRoot(cx, script());
         if (oracle->propertyReadIdempotent(scriptRoot, pc, id))
             load->setIdempotent();
