@@ -13,7 +13,7 @@ from application_cache import ApplicationCache
 from keys import Keys
 from errors import *
 from emulator import Emulator
-from geckoinstance import GeckoInstance
+import geckoinstance
 
 
 class HTMLElement(object):
@@ -167,13 +167,14 @@ class Marionette(object):
     TIMEOUT_SCRIPT = 'script'
     TIMEOUT_PAGE = 'page load'
 
-    def __init__(self, host='localhost', port=2828, bin=None, profile=None,
-                 emulator=None, sdcard=None, emulatorBinary=None,
+    def __init__(self, host='localhost', port=2828, app=None, bin=None,
+                 profile=None, emulator=None, sdcard=None, emulatorBinary=None,
                  emulatorImg=None, emulator_res=None, gecko_path=None,
                  connectToRunningEmulator=False, homedir=None, baseurl=None,
                  noWindow=False, logcat_dir=None, busybox=None, symbols_path=None):
         self.host = host
         self.port = self.local_port = port
+        self.app = app
         self.bin = bin
         self.instance = None
         self.profile = profile
@@ -193,8 +194,17 @@ class Marionette(object):
             if not Marionette.is_port_available(port, host=self.host):
                 ex_msg = "%s:%d is unavailable." % (self.host, port)
                 raise MarionetteException(message=ex_msg)
-            self.instance = GeckoInstance(host=self.host, port=self.port,
-                                          bin=self.bin, profile=self.profile)
+            if app:
+                # select instance class for the given app
+                try:
+                    instance_class = geckoinstance.apps[app]
+                except KeyError:
+                    msg = 'Application "%s" unknown (should be one of %s)'
+                    raise NotImplementedError(msg % (app, geckoinstance.apps.keys()))
+            else:
+                instance_class = geckoinstance.GeckoInstance
+            self.instance = instance_class(host=self.host, port=self.port,
+                                           bin=self.bin, profile=self.profile)
             self.instance.start()
             assert(self.wait_for_port())
 

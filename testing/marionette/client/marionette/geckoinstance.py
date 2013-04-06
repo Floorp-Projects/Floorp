@@ -7,6 +7,10 @@ from mozrunner import Runner
 
 class GeckoInstance(object):
 
+    required_prefs = {"marionette.defaultPrefs.enabled": True,
+                      "marionette.defaultPrefs.port": 2828,
+                      "browser.warnOnQuit": False}
+
     def __init__(self, host, port, bin, profile):
         self.marionette_host = host
         self.marionette_port = port
@@ -15,18 +19,25 @@ class GeckoInstance(object):
         self.runner = None
 
     def start(self):
-        profile = self.profile
-        if not profile:
-            prefs = {"marionette.defaultPrefs.enabled": True,
-                     "marionette.defaultPrefs.port": 2828,
-                     "browser.warnOnQuit": False}
-            profile = {"preferences": prefs, "restore":False}
+        profile_path = self.profile
+        profile_args = {"preferences": self.required_prefs}
+        if not profile_path:
+            profile_args["restore"] = False
         else:
-            profile = {"profile": profile}
+            profile_args["profile"] = profile_path
         print "starting runner"
-        self.runner = Runner.create(binary=self.bin, profile_args=profile, cmdargs=['-no-remote'])
+        self.runner = Runner.create(binary=self.bin,
+                                    profile_args=profile_args,
+                                    cmdargs=['-no-remote'])
         self.runner.start()
 
     def close(self):
         self.runner.stop()
         self.runner.cleanup()
+
+
+class B2GDesktopInstance(GeckoInstance):
+
+    required_prefs = {"focusmanager.testmode": True}
+
+apps = {'b2gdesktop': B2GDesktopInstance}
