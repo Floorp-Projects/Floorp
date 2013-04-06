@@ -290,14 +290,9 @@ public class AwesomeBar extends GeckoActivity
 
         boolean wasUsingGestureKeyboard = mIsUsingGestureKeyboard;
         mIsUsingGestureKeyboard = InputMethods.isGestureKeyboard(this);
-        if (mIsUsingGestureKeyboard == wasUsingGestureKeyboard)
-            return;
-
-        int currentInputType = mText.getInputType();
-        int newInputType = mIsUsingGestureKeyboard
-                           ? (currentInputType & ~InputType.TYPE_TEXT_VARIATION_URI) // Text mode
-                           : (currentInputType | InputType.TYPE_TEXT_VARIATION_URI); // URL mode
-        mText.setRawInputType(newInputType);
+        if (mIsUsingGestureKeyboard != wasUsingGestureKeyboard) {
+            updateKeyboardInputType();
+        }
     }
 
     @Override
@@ -352,9 +347,24 @@ public class AwesomeBar extends GeckoActivity
             restartInput = true;
         }
         if (restartInput) {
+            updateKeyboardInputType();
             imm.restartInput(mText);
             mGoButton.setImageResource(imageResource);
             mGoButton.setContentDescription(contentDescription);
+        }
+    }
+
+    private void updateKeyboardInputType() {
+        // If the user enters a space, then we know they are entering search terms, not a URL. If
+        // we're using a gesture keyboard, we can then switch to text mode so the IME auto-inserts
+        // spaces between words.
+        String text = mText.getText().toString();
+        int currentInputType = mText.getInputType();
+        int newInputType = mIsUsingGestureKeyboard && StringUtils.isSearchQuery(text, false)
+                           ? (currentInputType & ~InputType.TYPE_TEXT_VARIATION_URI) // Text mode
+                           : (currentInputType | InputType.TYPE_TEXT_VARIATION_URI); // URL mode
+        if (newInputType != currentInputType) {
+            mText.setRawInputType(newInputType);
         }
     }
 
