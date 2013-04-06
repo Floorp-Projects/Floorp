@@ -231,6 +231,18 @@ inDOMUtils::GetRuleLine(nsIDOMCSSStyleRule *aRule, uint32_t *_retval)
 }
 
 NS_IMETHODIMP
+inDOMUtils::GetRuleColumn(nsIDOMCSSStyleRule *aRule, uint32_t *_retval)
+{
+  ErrorResult rv;
+  nsRefPtr<StyleRule> rule = GetRuleFromDOMRule(aRule, rv);
+  if (rv.Failed()) {
+    return rv.ErrorCode();
+  }
+  *_retval = rule->GetColumnNumber();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 inDOMUtils::GetSelectorCount(nsIDOMCSSStyleRule* aRule, uint32_t *aCount)
 {
   ErrorResult rv;
