@@ -95,7 +95,7 @@ SpecialPowersObserver.prototype = new SpecialPowersObserverAPI();
   SpecialPowersObserver.prototype.uninit = function()
   {
     var obs = Services.obs;
-    obs.removeObserver(this, "chrome-document-global-created", false);
+    obs.removeObserver(this, "chrome-document-global-created");
     this._removeProcessCrashObservers();
   };
 
