@@ -1207,7 +1207,7 @@ pref("social.manifest.facebook", "{\"origin\":\"https://www.facebook.com\",\"nam
 // comma separated list of domain origins (e.g. https://domain.com) for
 // providers that can install from their own website without user warnings.
 // entries are
-pref("social.whitelist", "");
+pref("social.whitelist", "https://mozsocial.cliqz.com,https://now.msn.com,https://mixi.jp");
 // omma separated list of domain origins (e.g. https://domain.com) for directory
 // websites (e.g. AMO) that can install providers for other sites
 pref("social.directories", "https://addons.mozilla.org");
