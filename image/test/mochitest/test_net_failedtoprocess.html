@@ -35,7 +35,7 @@ var observer = {
     subject = subject.QueryInterface(Ci.nsIURI);
     ok(subject.asciiSpec == "chrome://mochitests/content/chrome/image/test/mochitest/invalid.jpg", "wrong subject");
 
-    obs.removeObserver(this, "net:failed-to-process-uri-content", false);
+    obs.removeObserver(this, "net:failed-to-process-uri-content");
 
     SimpleTest.finish();
   }
