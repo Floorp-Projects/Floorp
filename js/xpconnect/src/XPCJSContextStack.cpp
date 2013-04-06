@@ -134,7 +134,7 @@ SafeFinalize(JSFreeOp *fop, JSObject* obj)
 static JSClass global_class = {
     "global_for_XPCJSContextStack_SafeJSContext",
     XPCONNECT_GLOBAL_FLAGS,
-    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+    JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     JS_EnumerateStub, SafeGlobalResolve, JS_ConvertStub, SafeFinalize,
     NULL, NULL, NULL, NULL, TraceXPCGlobal
 };

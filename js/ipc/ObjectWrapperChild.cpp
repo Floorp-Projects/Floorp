@@ -400,7 +400,7 @@ static const JSClass sCPOW_NewEnumerateState_JSClass = {
     "CPOW NewEnumerate State",
     JSCLASS_HAS_PRIVATE |
     JSCLASS_HAS_RESERVED_SLOTS(sNumNewEnumerateStateSlots),
-    JS_PropertyStub,  JS_PropertyStub,
+    JS_PropertyStub,  JS_DeletePropertyStub,
     JS_PropertyStub,  JS_StrictPropertyStub,
     JS_EnumerateStub, JS_ResolveStub,
     JS_ConvertStub,   CPOW_NewEnumerateState_Finalize
