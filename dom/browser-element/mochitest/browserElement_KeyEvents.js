@@ -36,16 +36,16 @@ function runTest() {
   iframe.src = browserElementTestHelpers.focusPage;
 
   var gotFocus = false;
-  var gotLoadstart = false;
+  var gotLoadend = false;
 
   function maybeTest2() {
-    if (gotFocus && gotLoadstart) {
+    if (gotFocus && gotLoadend) {
       SimpleTest.executeSoon(test2);
     }
   }
 
-  iframe.addEventListener('mozbrowserloadstart', function() {
-    gotLoadstart = true;
+  iframe.addEventListener('mozbrowserloadend', function() {
+    gotLoadend = true;
     maybeTest2();
   });
 
