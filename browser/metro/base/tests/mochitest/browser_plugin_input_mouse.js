@@ -20,6 +20,8 @@ gTests.push({
 
     let tab = yield addTab(chromeRoot + "browser_plugin_input.html");
 
+    yield hideContextUI();
+
     let doc = tab.browser.contentDocument;
     let plugin = doc.getElementById("plugin1");
     let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);

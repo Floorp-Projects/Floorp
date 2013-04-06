@@ -52,11 +52,8 @@
               this.clearSelection();
             }
             this._selectedItem = wasSelected ? null : anItem;
-            if(anItem.selected) {
-              anItem.removeAttribute("selected");
-            } else {
-              anItem.setAttribute("selected", true);
-            }
+            anItem.selected = !wasSelected;
+
             this._fireOnSelectionChange();
           ]]>
         </body>
@@ -508,7 +505,9 @@
                 onset="this._icon.src = val; this.setAttribute('iconURI', val);"
                 onget="return this._icon.src;" />
 
-      <property name="selected" onget="return this.hasAttribute('selected');" />
+      <property name="selected"
+                onget="return this.hasAttribute('selected');"
+                onset="if (val) this.setAttribute('selected', val); else this.removeAttribute('selected');" />
       <property name="url"
                 onget="return this.getAttribute('value')"
                 onset="this.setAttribute('value', val);"/>
@@ -527,6 +526,10 @@
       <method name="refresh">
         <body>
           <![CDATA[
+            // Prevent an exception in case binding is not done yet.
+            if (!this._icon)
+              return;
+
             // Seed the binding properties from bound-node attribute values
             // Usage: node.refresh()
             //        - reinitializes all binding properties from their associated attributes
