@@ -451,18 +451,23 @@ GfxInfo::Init()
     bool is64bitApp = sizeof(void*) == 8;
     const PRUnichar *dllFileName = is64bitApp
                                  ? L"igd10umd64.dll"
-                                 : L"igd10umd32.dll";
-    nsString dllVersion;
+                                 : L"igd10umd32.dll",
+                    *dllFileName2 = is64bitApp
+                                 ? L"igd10iumd64.dll"
+                                 : L"igd10iumd32.dll";
+    nsString dllVersion, dllVersion2;
     gfxWindowsPlatform::GetDLLVersion((PRUnichar*)dllFileName, dllVersion);
+    gfxWindowsPlatform::GetDLLVersion((PRUnichar*)dllFileName2, dllVersion2);
 
-    uint64_t dllNumericVersion = 0, driverNumericVersion = 0;
+    uint64_t dllNumericVersion = 0, dllNumericVersion2 = 0, driverNumericVersion = 0;
     ParseDriverVersion(dllVersion, &dllNumericVersion);
+    ParseDriverVersion(dllVersion2, &dllNumericVersion2);
     ParseDriverVersion(mDriverVersion, &driverNumericVersion);
 
     // if GetDLLVersion fails, it gives "0.0.0.0"
     // so if GetDLLVersion failed, we get dllNumericVersion = 0
     // so this test implicitly handles the case where GetDLLVersion failed
-    if (dllNumericVersion != driverNumericVersion)
+    if (dllNumericVersion != driverNumericVersion && dllNumericVersion2 != driverNumericVersion)
       mHasDriverVersionMismatch = true;
   }
 
