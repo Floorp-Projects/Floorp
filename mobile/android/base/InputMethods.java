@@ -16,17 +16,18 @@ import java.util.Collection;
 import java.util.Locale;
 
 final class InputMethods {
-
+    public static final String METHOD_ANDROID_LATINIME = "com.android.inputmethod.latin/.LatinIME";
     public static final String METHOD_ATOK = "com.justsystems.atokmobile.service/.AtokInputMethodService";
     public static final String METHOD_GOOGLE_JAPANESE_INPUT = "com.google.android.inputmethod.japanese/.MozcService";
+    public static final String METHOD_GOOGLE_LATINIME = "com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME";
     public static final String METHOD_IWNN = "jp.co.omronsoft.iwnnime.ml/.standardcommon.IWnnLanguageSwitcher";
     public static final String METHOD_OPENWNN_PLUS = "com.owplus.ime.openwnnplus/.OpenWnnJAJP";
     public static final String METHOD_SAMSUNG = "com.sec.android.inputmethod/.SamsungKeypad";
     public static final String METHOD_SIMEJI = "com.adamrocker.android.input.simeji/.OpenWnnSimeji";
-    public static final String METHOD_STOCK_LATINIME = "com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME";
     public static final String METHOD_SWIFTKEY = "com.touchtype.swiftkey/com.touchtype.KeyboardService";
     public static final String METHOD_SWYPE = "com.swype.android.inputmethod/.SwypeInputMethod";
     public static final String METHOD_SWYPE_BETA = "com.nuance.swype.input/.IME";
+    public static final String METHOD_TOUCHPAL_KEYBOARD = "com.cootek.smartinputv5/com.cootek.smartinput5.TouchPalIME";
 
     /* These input method names are currently unused, but kept here for future reference:
     public static final String METHOD_EYES_FREE_KEYBOARD = "com.googlecode.eyesfree.inputmethod.latin/.LatinIME";
@@ -90,8 +91,8 @@ final class InputMethods {
 
     public static boolean needsSoftResetWorkaround(String inputMethod) {
         // Stock latin IME on Android 4.2 and above
-        return Build.VERSION.SDK_INT >= 17 &&
-               METHOD_STOCK_LATINIME.equals(inputMethod);
+        return Build.VERSION.SDK_INT >= 17 && (METHOD_ANDROID_LATINIME.equals(inputMethod) ||
+                                               METHOD_GOOGLE_LATINIME.equals(inputMethod));
     }
 
     public static boolean shouldDelayAwesomebarUpdate(Context context) {
@@ -101,8 +102,13 @@ final class InputMethods {
     }
 
     public static boolean isGestureKeyboard(Context context) {
+        // SwiftKey is a gesture keyboard, but it doesn't seem to need any special-casing
+        // to do AwesomeBar auto-spacing.
         String inputMethod = getCurrentInputMethod(context);
-        return METHOD_SWYPE.equals(inputMethod) ||
-               METHOD_SWYPE_BETA.equals(inputMethod);
+        return (Build.VERSION.SDK_INT >= 17 && (METHOD_ANDROID_LATINIME.equals(inputMethod) ||
+                                                METHOD_GOOGLE_LATINIME.equals(inputMethod))) ||
+               METHOD_SWYPE.equals(inputMethod) ||
+               METHOD_SWYPE_BETA.equals(inputMethod) ||
+               METHOD_TOUCHPAL_KEYBOARD.equals(inputMethod);
     }
 }
