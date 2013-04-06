@@ -170,14 +170,13 @@ var RecommendedSearchResults = {
         addons: []
       };
 
-      // Avoid any NSS costs. Convert https to http.
-      addons.forEach(function(aAddon){
+      addons.forEach(function(aAddon) {
         json.addons.push({
           id: aAddon.id,
           name: aAddon.name,
           version: aAddon.version,
-          homepageURL: aAddon.homepageURL.replace(/^https/, "http"),
-          iconURL: aAddon.iconURL.replace(/^https/, "http")
+          homepageURL: aAddon.homepageURL,
+          iconURL: aAddon.iconURL
         })
       });
 
