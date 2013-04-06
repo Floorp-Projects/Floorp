@@ -230,7 +230,7 @@ public:
                            nsIDOMEvent* aDOMEvent = nullptr,
                            nsEventStatus* aEventStatus = nullptr,
                            nsDispatchingCallback* aCallback = nullptr,
-                           nsCOMArray<nsIDOMEventTarget>* aTargets = nullptr);
+                           nsCOMArray<mozilla::dom::EventTarget>* aTargets = nullptr);
 
   /**
    * Dispatches an event.
