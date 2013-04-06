@@ -465,7 +465,7 @@ JSValToNPVariant(NPP npp, JSContext *cx, JS::Value val, NPVariant *variant)
   // legitimate cases where a security wrapper ends up here (for example,
   // Location objects, which are _always_ behind security wrappers).
   JSObject *obj = JSVAL_TO_OBJECT(val);
-  obj = js::CheckedUnwrap(obj);
+  obj = js::UnwrapObjectChecked(obj);
   if (!obj) {
     obj = JSVAL_TO_OBJECT(val);
   }
@@ -1127,7 +1127,7 @@ nsJSObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, JSObject *obj)
 static JSObject *
 GetNPObjectWrapper(JSContext *cx, JSObject *obj, bool wrapResult = true)
 {
-  while (obj && (obj = js::CheckedUnwrap(obj))) {
+  while (obj && (obj = js::UnwrapObjectChecked(obj))) {
     if (JS_GetClass(obj) == &sNPObjectJSWrapperClass) {
       if (wrapResult && !JS_WrapObject(cx, &obj)) {
         return NULL;

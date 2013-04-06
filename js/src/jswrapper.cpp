@@ -71,7 +71,7 @@ Wrapper::wrappedObject(RawObject wrapper)
 }
 
 JS_FRIEND_API(JSObject *)
-js::UncheckedUnwrap(JSObject *wrapped, bool stopAtOuter, unsigned *flagsp)
+js::UnwrapObject(JSObject *wrapped, bool stopAtOuter, unsigned *flagsp)
 {
     unsigned flags = 0;
     while (wrapped->isWrapper() &&
@@ -85,7 +85,7 @@ js::UncheckedUnwrap(JSObject *wrapped, bool stopAtOuter, unsigned *flagsp)
 }
 
 JS_FRIEND_API(JSObject *)
-js::CheckedUnwrap(RawObject obj, bool stopAtOuter)
+js::UnwrapObjectChecked(RawObject obj, bool stopAtOuter)
 {
     while (true) {
         JSObject *wrapper = obj;
@@ -513,7 +513,7 @@ CrossCompartmentWrapper::nativeCall(JSContext *cx, IsAcceptableThis test, Native
 {
     RootedObject wrapper(cx, &srcArgs.thisv().toObject());
     JS_ASSERT(srcArgs.thisv().isMagic(JS_IS_CONSTRUCTING) ||
-              !UncheckedUnwrap(wrapper)->isCrossCompartmentWrapper());
+              !UnwrapObject(wrapper)->isCrossCompartmentWrapper());
 
     RootedObject wrapped(cx, wrappedObject(wrapper));
     {
@@ -942,7 +942,7 @@ js::NukeCrossCompartmentWrappers(JSContext* cx,
                 continue;
 
             AutoWrapperRooter wobj(cx, WrapperValue(e));
-            JSObject *wrapped = UncheckedUnwrap(wobj);
+            JSObject *wrapped = UnwrapObject(wobj);
 
             if (nukeReferencesToWindow == DontNukeWindowReferences &&
                 wrapped->getClass()->ext.innerObject)

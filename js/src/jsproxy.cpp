@@ -563,7 +563,7 @@ DirectProxyHandler::defaultValue(JSContext *cx, HandleObject proxy, JSType hint,
 JSObject *
 DirectProxyHandler::weakmapKeyDelegate(JSObject *proxy)
 {
-    return UncheckedUnwrap(proxy);
+    return UnwrapObject(proxy);
 }
 
 DirectProxyHandler::DirectProxyHandler(void *family)

@@ -850,7 +850,7 @@ XPC_WN_MaybeResolvingStrictPropertyStub(JSContext *cx, JSHandleObject obj, JSHan
 #define PRE_HELPER_STUB                                                       \
     XPCWrappedNative* wrapper;                                                \
     nsIXPCScriptable* si;                                                     \
-    JSObject *unwrapped = js::CheckedUnwrap(obj, false);                \
+    JSObject *unwrapped = js::UnwrapObjectChecked(obj, false);                \
     if (!unwrapped) {                                                         \
         JS_ReportError(cx, "Permission denied to operate on object.");        \
         return false;                                                         \
