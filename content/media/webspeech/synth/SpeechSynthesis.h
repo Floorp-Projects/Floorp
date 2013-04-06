@@ -62,7 +62,7 @@ private:
 
   nsCOMPtr<nsPIDOMWindow> mParent;
 
-  nsTArray<nsRefPtr<SpeechSynthesisUtterance>> mSpeechQueue;
+  nsTArray<nsRefPtr<SpeechSynthesisUtterance> > mSpeechQueue;
 
   nsRefPtr<nsSpeechTask> mCurrentTask;
 
