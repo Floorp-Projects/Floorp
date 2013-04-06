@@ -146,7 +146,7 @@ AboutReader.prototype = {
       case "Reader:FaviconReturn": {
         let info = JSON.parse(aData);
         this._loadFavicon(info.url, info.faviconUrl);
-        Services.obs.removeObserver(this, "Reader:FaviconReturn", false);
+        Services.obs.removeObserver(this, "Reader:FaviconReturn");
         break;
       }
     }
