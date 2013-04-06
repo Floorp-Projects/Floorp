@@ -7657,7 +7657,7 @@ nsDocument::CanSavePresentation(nsIRequest *aNewRequest)
   }
 
   // Check our event listener manager for unload/beforeunload listeners.
-  nsCOMPtr<nsIDOMEventTarget> piTarget = do_QueryInterface(mScriptGlobalObject);
+  nsCOMPtr<EventTarget> piTarget = do_QueryInterface(mScriptGlobalObject);
   if (piTarget) {
     nsEventListenerManager* manager =
       piTarget->GetListenerManager(false);
@@ -7991,7 +7991,7 @@ nsDocument::GetContentInThisDocument(nsIFrame* aFrame) const
 }
 
 void
-nsDocument::DispatchPageTransition(nsIDOMEventTarget* aDispatchTarget,
+nsDocument::DispatchPageTransition(EventTarget* aDispatchTarget,
                                    const nsAString& aType,
                                    bool aPersisted)
 {
@@ -8020,7 +8020,7 @@ NotifyPageShow(nsIDocument* aDocument, void* aData)
 
 void
 nsDocument::OnPageShow(bool aPersisted,
-                       nsIDOMEventTarget* aDispatchStartTarget)
+                       EventTarget* aDispatchStartTarget)
 {
   mVisible = true;
 
@@ -8060,7 +8060,7 @@ nsDocument::OnPageShow(bool aPersisted,
 
   UpdateVisibilityState();
 
-  nsCOMPtr<nsIDOMEventTarget> target = aDispatchStartTarget;
+  nsCOMPtr<EventTarget> target = aDispatchStartTarget;
   if (!target) {
     target = do_QueryInterface(GetWindow());
   }
@@ -8077,7 +8077,7 @@ NotifyPageHide(nsIDocument* aDocument, void* aData)
 
 void
 nsDocument::OnPageHide(bool aPersisted,
-                       nsIDOMEventTarget* aDispatchStartTarget)
+                       EventTarget* aDispatchStartTarget)
 {
   // Send out notifications that our <link> elements are detached,
   // but only if this is not a full unload.
@@ -8114,7 +8114,7 @@ nsDocument::OnPageHide(bool aPersisted,
   MozExitPointerLock();
 
   // Now send out a PageHide event.
-  nsCOMPtr<nsIDOMEventTarget> target = aDispatchStartTarget;
+  nsCOMPtr<EventTarget> target = aDispatchStartTarget;
   if (!target) {
     target = do_QueryInterface(GetWindow());
   }

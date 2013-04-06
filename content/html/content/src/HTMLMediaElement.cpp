@@ -3073,8 +3073,8 @@ nsresult HTMLMediaElement::DispatchAudioAvailableEvent(float* aFrameBuffer,
   nsAutoArrayPtr<float> frameBuffer(aFrameBuffer);
 
   nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(OwnerDoc());
-  nsCOMPtr<nsIDOMEventTarget> target(do_QueryObject(this));
-  NS_ENSURE_TRUE(domDoc && target, NS_ERROR_INVALID_ARG);
+  nsRefPtr<HTMLMediaElement> kungFuDeathGrip = this;
+  NS_ENSURE_TRUE(domDoc, NS_ERROR_INVALID_ARG);
 
   nsCOMPtr<nsIDOMEvent> event;
   nsresult rv = domDoc->CreateEvent(NS_LITERAL_STRING("MozAudioAvailableEvent"),
@@ -3088,7 +3088,7 @@ nsresult HTMLMediaElement::DispatchAudioAvailableEvent(float* aFrameBuffer,
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool dummy;
-  return target->DispatchEvent(event, &dummy);
+  return DispatchEvent(event, &dummy);
 }
 
 nsresult HTMLMediaElement::DispatchEvent(const nsAString& aName)

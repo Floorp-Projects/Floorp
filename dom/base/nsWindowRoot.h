@@ -39,11 +39,11 @@ public:
   virtual nsIDOMNode* GetPopupNode();
   virtual void SetPopupNode(nsIDOMNode* aNode);
 
-  virtual void SetParentTarget(nsIDOMEventTarget* aTarget)
+  virtual void SetParentTarget(mozilla::dom::EventTarget* aTarget)
   {
     mParent = aTarget;
   }
-  virtual nsIDOMEventTarget* GetParentTarget() { return mParent; }
+  virtual mozilla::dom::EventTarget* GetParentTarget() { return mParent; }
 
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsWindowRoot,
                                                          nsIDOMEventTarget)
@@ -56,11 +56,10 @@ protected:
 
   nsCOMPtr<nsIDOMNode> mPopupNode; // [OWNER]
 
-  nsCOMPtr<nsIDOMEventTarget> mParent;
+  nsCOMPtr<mozilla::dom::EventTarget> mParent;
 };
 
-extern nsresult
-NS_NewWindowRoot(nsPIDOMWindow* aWindow,
-                 nsIDOMEventTarget** aResult);
+extern already_AddRefed<mozilla::dom::EventTarget>
+NS_NewWindowRoot(nsPIDOMWindow* aWindow);
 
 #endif

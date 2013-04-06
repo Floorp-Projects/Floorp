@@ -857,7 +857,7 @@ nsGenericHTMLElement::GetEventListenerManagerForAttr(nsIAtom* aAttrName,
     // HTMLFramesetElement
     *aDefer = false;
     if ((win = document->GetInnerWindow()) && win->IsInnerWindow()) {
-      nsCOMPtr<nsIDOMEventTarget> piTarget(do_QueryInterface(win));
+      nsCOMPtr<EventTarget> piTarget(do_QueryInterface(win));
 
       return piTarget->GetListenerManager(true);
     }

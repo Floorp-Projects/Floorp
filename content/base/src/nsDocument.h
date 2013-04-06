@@ -696,9 +696,9 @@ public:
                                  nsAString& Standalone);
   virtual bool IsScriptEnabled();
 
-  virtual void OnPageShow(bool aPersisted, nsIDOMEventTarget* aDispatchStartTarget);
-  virtual void OnPageHide(bool aPersisted, nsIDOMEventTarget* aDispatchStartTarget);
-  
+  virtual void OnPageShow(bool aPersisted, mozilla::dom::EventTarget* aDispatchStartTarget);
+  virtual void OnPageHide(bool aPersisted, mozilla::dom::EventTarget* aDispatchStartTarget);
+
   virtual void WillDispatchMutationEvent(nsINode* aTarget);
   virtual void MutationEventDispatched(nsINode* aTarget);
 
@@ -1135,7 +1135,7 @@ protected:
   // Return whether all the presshells for this document are safe to flush
   bool IsSafeToFlush() const;
   
-  void DispatchPageTransition(nsIDOMEventTarget* aDispatchTarget,
+  void DispatchPageTransition(mozilla::dom::EventTarget* aDispatchTarget,
                               const nsAString& aType,
                               bool aPersisted);
 
