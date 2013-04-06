@@ -31,7 +31,7 @@ this.MozSocialAPI = {
       }
 
     } else {
-      Services.obs.removeObserver(injectController, "document-element-inserted", false);
+      Services.obs.removeObserver(injectController, "document-element-inserted");
     }
   }
 };
