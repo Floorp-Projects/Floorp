@@ -72,13 +72,13 @@ function runNextTest() {
   info(nextTest.desc);
 
   function preinit_observer() {
-    Services.obs.removeObserver(preinit_observer, "browser-permissions-preinit", false);
+    Services.obs.removeObserver(preinit_observer, "browser-permissions-preinit");
     nextTest.preInit();
   }
   Services.obs.addObserver(preinit_observer, "browser-permissions-preinit", false);
 
   function init_observer() {
-    Services.obs.removeObserver(init_observer, "browser-permissions-initialized", false);
+    Services.obs.removeObserver(init_observer, "browser-permissions-initialized");
     nextTest.run();
   }
   Services.obs.addObserver(init_observer, "browser-permissions-initialized", false);
