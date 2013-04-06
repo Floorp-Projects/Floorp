@@ -15,6 +15,7 @@
 #include "nsXULAppAPI.h"
 #include "nsIScreen.h"
 #include "nsIScreenManager.h"
+#include "nsILocaleService.h"
 
 #include "cairo.h"
 
@@ -126,6 +127,43 @@ gfxAndroidPlatform::CreateOffscreenSurface(const gfxIntSize& size,
     return newSurface.forget();
 }
 
+static bool
+IsJapaneseLocale()
+{
+    static bool sInitialized = false;
+    static bool sIsJapanese = false;
+
+    if (!sInitialized) {
+        sInitialized = true;
+
+        do { // to allow 'break' to abandon this block if a call fails
+            nsresult rv;
+            nsCOMPtr<nsILocaleService> ls =
+                do_GetService(NS_LOCALESERVICE_CONTRACTID, &rv);
+            if (NS_FAILED(rv)) {
+                break;
+            }
+            nsCOMPtr<nsILocale> appLocale;
+            rv = ls->GetApplicationLocale(getter_AddRefs(appLocale));
+            if (NS_FAILED(rv)) {
+                break;
+            }
+            nsString localeStr;
+            rv = appLocale->
+                GetCategory(NS_LITERAL_STRING(NSILOCALE_MESSAGE), localeStr);
+            if (NS_FAILED(rv)) {
+                break;
+            }
+            const nsAString& lang = nsDependentSubstring(localeStr, 0, 2);
+            if (lang.EqualsLiteral("ja")) {
+                sIsJapanese = true;
+            }
+        } while (false);
+    }
+
+    return sIsJapanese;
+}
+
 void
 gfxAndroidPlatform::GetCommonFallbackFonts(const uint32_t aCh,
                                            int32_t aRunScript,
@@ -161,10 +199,12 @@ gfxAndroidPlatform::GetCommonFallbackFonts(const uint32_t aCh,
             aFontList.AppendElement("Droid Sans Ethiopic");
             break;
         case 0xf9: case 0xfa:
-            aFontList.AppendElement(kDroidSansJapanese);
+            if (IsJapaneseLocale()) {
+                aFontList.AppendElement(kDroidSansJapanese);
+            }
             break;
         default:
-            if (block >= 0x2e && block <= 0x9f) {
+            if (block >= 0x2e && block <= 0x9f && IsJapaneseLocale()) {
                 aFontList.AppendElement(kDroidSansJapanese);
             }
             break;
