@@ -356,7 +356,7 @@ nsSMILTimeValueSpec::GetEventListenerManager(Element* aTarget)
 {
   NS_ABORT_IF_FALSE(aTarget, "null target; can't get EventListenerManager");
 
-  nsCOMPtr<nsIDOMEventTarget> target;
+  nsCOMPtr<EventTarget> target;
 
   if (mParams.mType == nsSMILTimeValueSpecParams::ACCESSKEY) {
     nsIDocument* doc = aTarget->GetCurrentDoc();

@@ -19,7 +19,7 @@ namespace dom {
 class Touch MOZ_FINAL : public nsIDOMTouch
 {
 public:
-  Touch(nsIDOMEventTarget* aTarget,
+  Touch(mozilla::dom::EventTarget* aTarget,
         int32_t aIdentifier,
         int32_t aPageX,
         int32_t aPageY,
@@ -87,7 +87,7 @@ public:
     mScreenPoint = nsDOMEvent::GetScreenCoords(aPresContext, aEvent, mRefPoint);
     mPointsInitialized = true;
   }
-  void SetTarget(nsIDOMEventTarget *aTarget)
+  void SetTarget(mozilla::dom::EventTarget *aTarget)
   {
     mTarget = aTarget;
   }

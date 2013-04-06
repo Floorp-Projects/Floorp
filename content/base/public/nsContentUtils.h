@@ -120,6 +120,7 @@ class Selection;
 namespace dom {
 class DocumentFragment;
 class Element;
+class EventTarget;
 } // namespace dom
 
 namespace layers {
@@ -2258,10 +2259,10 @@ public:
   ~nsCxPusher(); // Calls Pop();
 
   // Returns false if something erroneous happened.
-  bool Push(nsIDOMEventTarget *aCurrentTarget);
+  bool Push(mozilla::dom::EventTarget *aCurrentTarget);
   // If nothing has been pushed to stack, this works like Push.
   // Otherwise if context will change, Pop and Push will be called.
-  bool RePush(nsIDOMEventTarget *aCurrentTarget);
+  bool RePush(mozilla::dom::EventTarget *aCurrentTarget);
   // If a null JSContext is passed to Push(), that will cause no
   // push to happen and false to be returned.
   void Push(JSContext *cx);
