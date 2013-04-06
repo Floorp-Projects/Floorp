@@ -22,7 +22,7 @@ var ConsoleAPIObserver = {
         Services.obs.addObserver(this, "console-api-log-event", false);
         break;
       case "Browser:TabClose":
-        Services.obs.removeObserver(this, "console-api-log-event", false);
+        Services.obs.removeObserver(this, "console-api-log-event");
         break;
     }
   },

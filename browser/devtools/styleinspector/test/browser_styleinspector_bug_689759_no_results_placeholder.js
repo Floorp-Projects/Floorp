@@ -48,7 +48,7 @@ function runStyleInspectorTests()
 
 function SI_AddFilterText()
 {
-  Services.obs.removeObserver(SI_AddFilterText, "StyleInspector-populated", false);
+  Services.obs.removeObserver(SI_AddFilterText, "StyleInspector-populated");
 
   let searchbar = computedView.searchField;
   let searchTerm = "xxxxx";
@@ -63,7 +63,7 @@ function SI_AddFilterText()
 
 function SI_checkPlaceholderVisible()
 {
-  Services.obs.removeObserver(SI_checkPlaceholderVisible, "StyleInspector-populated", false);
+  Services.obs.removeObserver(SI_checkPlaceholderVisible, "StyleInspector-populated");
   info("SI_checkPlaceholderVisible called");
   let placeholder = computedView.noResults;
   let win = computedView.styleWindow;
@@ -87,7 +87,7 @@ function SI_ClearFilterText()
 
 function SI_checkPlaceholderHidden()
 {
-  Services.obs.removeObserver(SI_checkPlaceholderHidden, "StyleInspector-populated", false);
+  Services.obs.removeObserver(SI_checkPlaceholderHidden, "StyleInspector-populated");
   let placeholder = computedView.noResults;
   let win = computedView.styleWindow;
   let display = win.getComputedStyle(placeholder).display;

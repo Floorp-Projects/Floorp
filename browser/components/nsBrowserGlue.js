@@ -366,8 +366,8 @@ BrowserGlue.prototype = {
     os.removeObserver(this, "browser-lastwindow-close-granted");
 #endif
 #ifdef MOZ_SERVICES_SYNC
-    os.removeObserver(this, "weave:service:ready", false);
-    os.removeObserver(this, "weave:engine:clients:display-uri", false);
+    os.removeObserver(this, "weave:service:ready");
+    os.removeObserver(this, "weave:engine:clients:display-uri");
 #endif
     os.removeObserver(this, "session-save");
     if (this._isIdleObserver)
