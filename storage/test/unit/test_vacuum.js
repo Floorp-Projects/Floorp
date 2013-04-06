@@ -108,17 +108,17 @@ function test_common_vacuum()
   print("\n*** Test that a VACUUM correctly happens and all notifications are fired.");
   // Wait for VACUUM begin.
   let beginVacuumReceived = false;
-  Services.obs.addObserver(function (aSubject, aTopic, aData) {
-    Services.obs.removeObserver(arguments.callee, aTopic, false);
+  Services.obs.addObserver(function onVacuum(aSubject, aTopic, aData) {
+    Services.obs.removeObserver(onVacuum, aTopic);
     beginVacuumReceived = true;
   }, "test-begin-vacuum", false);
 
   // Wait for heavy IO notifications.
   let heavyIOTaskBeginReceived = false;
   let heavyIOTaskEndReceived = false;
-  Services.obs.addObserver(function (aSubject, aTopic, aData) {
+  Services.obs.addObserver(function onVacuum(aSubject, aTopic, aData) {
     if (heavyIOTaskBeginReceived && heavyIOTaskEndReceived) {
-      Services.obs.removeObserver(arguments.callee, aTopic, false);
+      Services.obs.removeObserver(onVacuum, aTopic);
     }
 
     if (aData == "vacuum-begin") {
@@ -130,8 +130,8 @@ function test_common_vacuum()
   }, "heavy-io-task", false);
 
   // Wait for VACUUM end.
-  Services.obs.addObserver(function (aSubject, aTopic, aData) {
-    Services.obs.removeObserver(arguments.callee, aTopic, false);
+  Services.obs.addObserver(function onVacuum(aSubject, aTopic, aData) {
+    Services.obs.removeObserver(onVacuum, aTopic);
     print("Check we received onBeginVacuum");
     do_check_true(beginVacuumReceived);
     print("Check we received heavy-io-task notifications");
