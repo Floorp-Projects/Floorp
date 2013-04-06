@@ -27,7 +27,7 @@ reset(JSContext *cx)
 }
 
 static JSClass ptestClass = {
-    "Prof", 0, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+    "Prof", 0, JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub,
     JS_StrictPropertyStub, JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub
 };
 
