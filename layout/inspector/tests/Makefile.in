@@ -20,6 +20,8 @@ MOCHITEST_FILES =\
 		test_bug557726.html \
 		test_bug609549.xhtml \
 		test_bug806192.html \
+		test_bug856317.html \
+		bug856317.css \
 		test_isinheritableproperty.html \
 		$(NULL)
 
