@@ -36,7 +36,7 @@ let tests = {
       profileURL: "http://en.wikipedia.org/wiki/Kuma_Lisa"
     }
     function ob(aSubject, aTopic, aData) {
-      Services.obs.removeObserver(ob, "social:profile-changed", false);
+      Services.obs.removeObserver(ob, "social:profile-changed");
       is(aData, provider.origin, "update of profile from our provider");
       let profile = provider.profile;
       is(profile.portrait, expect.portrait, "portrait is set");
@@ -56,7 +56,7 @@ let tests = {
       name: "test-ambient"
     }
     function ob(aSubject, aTopic, aData) {
-      Services.obs.removeObserver(ob, "social:ambient-notification-changed", false);
+      Services.obs.removeObserver(ob, "social:ambient-notification-changed");
       is(aData, provider.origin, "update is from our provider");
       let notif = provider.ambientNotificationIcons[expect.name];
       is(notif.name, expect.name, "ambientNotification reflected");
@@ -74,7 +74,7 @@ let tests = {
       userName: ""
     };
     function ob(aSubject, aTopic, aData) {
-      Services.obs.removeObserver(ob, "social:profile-changed", false);
+      Services.obs.removeObserver(ob, "social:profile-changed");
       is(aData, provider.origin, "update of profile from our provider");
       is(Object.keys(provider.profile).length, 0, "profile was cleared by empty username");
       is(Object.keys(provider.ambientNotificationIcons).length, 0, "icons were cleared by empty username");
