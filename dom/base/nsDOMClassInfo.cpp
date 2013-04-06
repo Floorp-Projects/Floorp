@@ -1386,7 +1386,7 @@ NS_INTERFACE_MAP_END
 
 static JSClass sDOMConstructorProtoClass = {
   "DOM Constructor.prototype", 0,
-  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+  JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, nullptr
 };
 
@@ -2681,8 +2681,7 @@ nsDOMClassInfo::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
 NS_IMETHODIMP
 nsDOMClassInfo::DelProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                            JSObject *obj, jsid id, jsval *vp,
-                            bool *_retval)
+                            JSObject *obj, jsid id, bool *_retval)
 {
   NS_WARNING("nsDOMClassInfo::DelProperty Don't call me!");
 
@@ -3176,7 +3175,7 @@ static JSClass sGlobalScopePolluterClass = {
   "Global Scope Polluter",
   JSCLASS_NEW_RESOLVE,
   JS_PropertyStub,
-  JS_PropertyStub,
+  JS_DeletePropertyStub,
   nsWindowSH::GlobalScopePolluterGetProperty,
   JS_StrictPropertyStub,
   JS_EnumerateStub,
@@ -6316,7 +6315,7 @@ static JSClass sHTMLDocumentAllClass = {
   JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_NEW_RESOLVE |
   JSCLASS_EMULATES_UNDEFINED | JSCLASS_HAS_RESERVED_SLOTS(1),
   JS_PropertyStub,                                         /* addProperty */
-  JS_PropertyStub,                                         /* delProperty */
+  JS_DeletePropertyStub,                                   /* delProperty */
   nsHTMLDocumentSH::DocumentAllGetProperty,                /* getProperty */
   JS_StrictPropertyStub,                                   /* setProperty */
   JS_EnumerateStub,
@@ -6332,7 +6331,7 @@ static JSClass sHTMLDocumentAllHelperClass = {
   "HTML document.all helper class",
   JSCLASS_NEW_RESOLVE,
   JS_PropertyStub,                                         /* addProperty */
-  JS_PropertyStub,                                         /* delProperty */
+  JS_DeletePropertyStub,                                   /* delProperty */
   nsHTMLDocumentSH::DocumentAllHelperGetProperty,          /* getProperty */
   JS_StrictPropertyStub,                                   /* setProperty */
   JS_EnumerateStub,
@@ -6345,7 +6344,7 @@ static JSClass sHTMLDocumentAllTagsClass = {
   "HTML document.all.tags class",
   JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
   JS_PropertyStub,                                         /* addProperty */
-  JS_PropertyStub,                                         /* delProperty */
+  JS_DeletePropertyStub,                                   /* delProperty */
   JS_PropertyStub,                                         /* getProperty */
   JS_StrictPropertyStub,                                   /* setProperty */
   JS_EnumerateStub,
@@ -7429,7 +7428,7 @@ nsStorage2SH::SetProperty(nsIXPConnectWrappedNative *wrapper,
 NS_IMETHODIMP
 nsStorage2SH::DelProperty(nsIXPConnectWrappedNative *wrapper,
                           JSContext *cx, JSObject *obj, jsid id,
-                          jsval *vp, bool *_retval)
+                          bool *_retval)
 {
   nsCOMPtr<nsIDOMStorage> storage(do_QueryWrappedNative(wrapper));
   NS_ENSURE_TRUE(storage, NS_ERROR_UNEXPECTED);
@@ -7441,11 +7440,12 @@ nsStorage2SH::DelProperty(nsIXPConnectWrappedNative *wrapper,
   NS_ENSURE_TRUE(keyStr.init(cx, key), NS_ERROR_UNEXPECTED);
 
   nsresult rv = storage->RemoveItem(keyStr);
-  if (NS_SUCCEEDED(rv)) {
-    rv = NS_SUCCESS_I_DID_SOMETHING;
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
-  return rv;
+  *_retval = true;
+  return NS_SUCCESS_I_DID_SOMETHING;
 }
 
 
