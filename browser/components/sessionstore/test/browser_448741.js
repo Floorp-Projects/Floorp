@@ -36,7 +36,7 @@ function test() {
 
     ok(valueWasCleaned, "found and removed the specific tab value");
     aSubject.data = JSON.stringify(state);
-    Services.obs.removeObserver(cleaningObserver, aTopic, false);
+    Services.obs.removeObserver(cleaningObserver, aTopic);
   }
 
   // make sure that all later observers don't see that value any longer
@@ -47,7 +47,7 @@ function test() {
 
     // clean up
     gBrowser.removeTab(tab);
-    Services.obs.removeObserver(checkingObserver, aTopic, false);
+    Services.obs.removeObserver(checkingObserver, aTopic);
     if (gPrefService.prefHasUserValue("browser.sessionstore.interval"))
       gPrefService.clearUserPref("browser.sessionstore.interval");
     finish();

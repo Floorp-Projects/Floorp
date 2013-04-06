@@ -13,5 +13,5 @@ function test() {
   ok(!Application.restart(), "Tried to restart - and didn't succeed");
 
   // clean up
-  Services.obs.removeObserver(quitRequestObserver, "quit-application-requested", false);
+  Services.obs.removeObserver(quitRequestObserver, "quit-application-requested");
 }

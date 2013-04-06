@@ -253,12 +253,12 @@ var Browser = {
 
     var os = Services.obs;
     os.removeObserver(SessionHistoryObserver, "browser:purge-session-history");
-    os.removeObserver(ActivityObserver, "application-background", false);
-    os.removeObserver(ActivityObserver, "application-foreground", false);
-    os.removeObserver(ActivityObserver, "system-active", false);
-    os.removeObserver(ActivityObserver, "system-idle", false);
-    os.removeObserver(ActivityObserver, "system-display-on", false);
-    os.removeObserver(ActivityObserver, "system-display-off", false);
+    os.removeObserver(ActivityObserver, "application-background");
+    os.removeObserver(ActivityObserver, "application-foreground");
+    os.removeObserver(ActivityObserver, "system-active");
+    os.removeObserver(ActivityObserver, "system-idle");
+    os.removeObserver(ActivityObserver, "system-display-on");
+    os.removeObserver(ActivityObserver, "system-display-off");
 
     window.controllers.removeController(this);
     window.controllers.removeController(BrowserUI);

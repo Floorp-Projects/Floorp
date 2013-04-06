@@ -6147,9 +6147,9 @@ var IndexedDBPromptHelper = {
 
   uninit:
   function IndexedDBPromptHelper_uninit() {
-    Services.obs.removeObserver(this, this._permissionsPrompt, false);
-    Services.obs.removeObserver(this, this._quotaPrompt, false);
-    Services.obs.removeObserver(this, this._quotaCancel, false);
+    Services.obs.removeObserver(this, this._permissionsPrompt);
+    Services.obs.removeObserver(this, this._quotaPrompt);
+    Services.obs.removeObserver(this, this._quotaCancel);
   },
 
   observe:

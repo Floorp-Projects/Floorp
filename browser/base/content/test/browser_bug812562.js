@@ -68,7 +68,7 @@ function testPart2() {
 }
 
 function testPart3() {
-  Services.obs.removeObserver(testPart3, "PopupNotifications-updateNotShowing", false);
+  Services.obs.removeObserver(testPart3, "PopupNotifications-updateNotShowing");
   var condition = function() PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
   waitForCondition(condition, testPart4, "test part 3: waited too long for click-to-play-plugin notification");
 }
