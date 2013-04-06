@@ -115,7 +115,7 @@ static JSBool
 NPObjWrapper_AddProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSMutableHandleValue vp);
 
 static JSBool
-NPObjWrapper_DelProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSMutableHandleValue vp);
+NPObjWrapper_DelProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool *succeeded);
 
 static JSBool
 NPObjWrapper_SetProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict,
@@ -188,7 +188,7 @@ NPObjectMember_Trace(JSTracer *trc, JSObject *obj);
 static JSClass sNPObjectMemberClass =
   {
     "NPObject Ambiguous Member class", JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS,
-    JS_PropertyStub, JS_PropertyStub,
+    JS_PropertyStub, JS_DeletePropertyStub,
     JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub,
     JS_ResolveStub, NPObjectMember_Convert,
     NPObjectMember_Finalize, nullptr, NPObjectMember_Call,
@@ -1197,7 +1197,7 @@ NPObjWrapper_AddProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSMut
 }
 
 static JSBool
-NPObjWrapper_DelProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSMutableHandleValue vp)
+NPObjWrapper_DelProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool *succeeded)
 {
   NPObject *npobj = GetNPObject(cx, obj);
 
@@ -1217,12 +1217,14 @@ NPObjWrapper_DelProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSMut
     if (!ReportExceptionIfPending(cx))
       return JS_FALSE;
 
-    if (!hasProperty)
+    if (!hasProperty) {
+      *succeeded = true;
       return JS_TRUE;
+    }
   }
 
   if (!npobj->_class->removeProperty(npobj, identifier))
-    vp.set(JSVAL_FALSE);
+    *succeeded = false;
 
   return ReportExceptionIfPending(cx);
 }
