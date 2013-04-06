@@ -216,6 +216,15 @@ class Thread {
 # define HAVE_NATIVE_UNWIND
 #endif
 
+/* Some values extracted at startup from environment variables, that
+   control the behaviour of the breakpad unwinder. */
+void read_profiler_env_vars();
+typedef  enum { UnwINVALID, UnwNATIVE, UnwPSEUDO, UnwCOMBINED }  UnwMode;
+extern UnwMode sUnwindMode;       /* what mode? */
+extern int     sUnwindInterval;   /* in milliseconds */
+extern int     sUnwindStackScan;  /* max # of dubious frames allowed */
+
+
 // ----------------------------------------------------------------------------
 // Sampler
 //
