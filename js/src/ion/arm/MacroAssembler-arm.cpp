@@ -2964,7 +2964,6 @@ MacroAssemblerARMCompat::passABIArg(const MoveOperand &from)
             // else nothing to do; the value is in the right register already
         } else {
             uint32_t disp = GetIntArgStackDisp(usedIntSlots_, usedFloatSlots_, &padding_);
-            fprintf(stderr, "Float on the stack! (%d)\n", disp);
             enoughMemory_ = moveResolver_.addMove(from, MoveOperand(sp, disp), Move::GENERAL);
         }
         usedIntSlots_++;
