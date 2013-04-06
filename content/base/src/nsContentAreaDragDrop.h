@@ -9,7 +9,6 @@
 
 #include "nsCOMPtr.h"
 
-#include "nsIDOMEventTarget.h"
 #include "nsIDOMEventListener.h"
 #include "nsITransferable.h"
 

@@ -35,8 +35,8 @@ public:
                                            nsIController** aResult) = 0;
   virtual nsresult GetControllers(nsIControllers** aResult) = 0;
 
-  virtual void SetParentTarget(nsIDOMEventTarget* aTarget) = 0;
-  virtual nsIDOMEventTarget* GetParentTarget() = 0;
+  virtual void SetParentTarget(mozilla::dom::EventTarget* aTarget) = 0;
+  virtual mozilla::dom::EventTarget* GetParentTarget() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPIWindowRoot, NS_IWINDOWROOT_IID)
