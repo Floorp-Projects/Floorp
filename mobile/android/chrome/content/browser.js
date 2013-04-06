@@ -81,7 +81,7 @@ var LazyNotificationGetter = {
   observers: [],
   shutdown: function lng_shutdown() {
     this.observers.forEach(function(o) {
-      Services.obs.removeObserver(o, o.notification, false);
+      Services.obs.removeObserver(o, o.notification);
     });
     this.observers = [];
   }
@@ -1277,7 +1277,7 @@ var BrowserApp = {
         storage.init();
 
         sendMessageToJava({ type: "Passwords:Init:Return" });
-        Services.obs.removeObserver(this, "Passwords:Init", false);
+        Services.obs.removeObserver(this, "Passwords:Init");
         break;
       }
 
@@ -1286,7 +1286,7 @@ var BrowserApp = {
         // Force creation/upgrade of formhistory.sqlite
         let db = fh.DBConnection;
         sendMessageToJava({ type: "FormHistory:Init:Return" });
-        Services.obs.removeObserver(this, "FormHistory:Init", false);
+        Services.obs.removeObserver(this, "FormHistory:Init");
         break;
       }
 
@@ -4922,7 +4922,7 @@ var ViewportHandler = {
 
   uninit: function uninit() {
     removeEventListener("DOMMetaAdded", this, false);
-    Services.obs.removeObserver(this, "Window:Resize", false);
+    Services.obs.removeObserver(this, "Window:Resize");
   },
 
   handleEvent: function handleEvent(aEvent) {
@@ -5201,9 +5201,9 @@ var IndexedDB = {
   },
 
   uninit: function IndexedDB_uninit() {
-    Services.obs.removeObserver(this, this._permissionsPrompt, false);
-    Services.obs.removeObserver(this, this._quotaPrompt, false);
-    Services.obs.removeObserver(this, this._quotaCancel, false);
+    Services.obs.removeObserver(this, this._permissionsPrompt);
+    Services.obs.removeObserver(this, this._quotaPrompt);
+    Services.obs.removeObserver(this, this._quotaCancel);
   },
 
   observe: function IndexedDB_observe(subject, topic, data) {
@@ -5428,8 +5428,8 @@ var CharacterEncoding = {
   },
 
   uninit: function uninit() {
-    Services.obs.removeObserver(this, "CharEncoding:Get", false);
-    Services.obs.removeObserver(this, "CharEncoding:Set", false);
+    Services.obs.removeObserver(this, "CharEncoding:Get");
+    Services.obs.removeObserver(this, "CharEncoding:Set");
   },
 
   observe: function observe(aSubject, aTopic, aData) {
@@ -5892,7 +5892,7 @@ var WebappsUI = {
     Services.obs.removeObserver(this, "webapps-launch");
     Services.obs.removeObserver(this, "webapps-sync-install");
     Services.obs.removeObserver(this, "webapps-sync-uninstall");
-    Services.obs.removeObserver(this, "webapps-install-error", false);
+    Services.obs.removeObserver(this, "webapps-install-error");
   },
 
   DEFAULT_PREFS_FILENAME: "default-prefs.js",
@@ -6624,8 +6624,8 @@ let Reader = {
   },
 
   uninit: function Reader_uninit() {
-    Services.obs.removeObserver(this, "Reader:Add", false);
-    Services.obs.removeObserver(this, "Reader:Remove", false);
+    Services.obs.removeObserver(this, "Reader:Add");
+    Services.obs.removeObserver(this, "Reader:Remove");
 
     let requests = this._requests;
     for (let url in requests) {
