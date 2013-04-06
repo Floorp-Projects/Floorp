@@ -322,9 +322,6 @@ TypeInferenceOracle::propertyReadBarrier(HandleScript script, jsbytecode *pc)
 bool
 TypeInferenceOracle::propertyReadIdempotent(HandleScript script, jsbytecode *pc, HandleId id)
 {
-    if (script->analysis()->getCode(pc).notIdempotent)
-        return false;
-
     if (id != IdToTypeId(id))
         return false;
 
