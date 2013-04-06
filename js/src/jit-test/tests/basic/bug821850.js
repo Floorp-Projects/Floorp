@@ -6,4 +6,4 @@ assertThrowsInstanceOf(function() {"use strict"; delete m.p;}, TypeError);
 
 x = new Proxy(m, {})
 assertEq(x.p, 3);
-assertEq((function fun() {"use strict"; return delete x.p; })(), false);
+assertThrowsInstanceOf(function fun() {"use strict"; return delete x.p; }, TypeError);

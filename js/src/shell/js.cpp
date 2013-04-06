@@ -2450,7 +2450,7 @@ sandbox_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
 static JSClass sandbox_class = {
     "sandbox",
     JSCLASS_NEW_RESOLVE | JSCLASS_GLOBAL_FLAGS,
-    JS_PropertyStub,   JS_PropertyStub,
+    JS_PropertyStub,   JS_DeletePropertyStub,
     JS_PropertyStub,   JS_StrictPropertyStub,
     sandbox_enumerate, (JSResolveOp)sandbox_resolve,
     JS_ConvertStub
@@ -2713,7 +2713,7 @@ resolver_enumerate(JSContext *cx, HandleObject obj)
 static JSClass resolver_class = {
     "resolver",
     JSCLASS_NEW_RESOLVE | JSCLASS_HAS_RESERVED_SLOTS(1),
-    JS_PropertyStub,   JS_PropertyStub,
+    JS_PropertyStub,   JS_DeletePropertyStub,
     JS_PropertyStub,   JS_StrictPropertyStub,
     resolver_enumerate, (JSResolveOp)resolver_resolve,
     JS_ConvertStub
@@ -3526,7 +3526,7 @@ ObjectEmulatingUndefined(JSContext *cx, unsigned argc, jsval *vp)
         "ObjectEmulatingUndefined",
         JSCLASS_EMULATES_UNDEFINED,
         JS_PropertyStub,
-        JS_PropertyStub,
+        JS_DeletePropertyStub,
         JS_PropertyStub,
         JS_StrictPropertyStub,
         JS_EnumerateStub,
@@ -4040,15 +4040,20 @@ its_addProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue
 }
 
 static JSBool
-its_delProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
+its_delProperty(JSContext *cx, HandleObject obj, HandleId id, JSBool *succeeded)
 {
-    if (!its_noisy)
+    if (!its_noisy) {
+        *succeeded = true;
         return true;
+    }
 
     ToStringHelper idString(cx, id);
+    if (idString.threw())
+        return false;
+
     fprintf(gOutFile, "deleting its property %s,", idString.getBytes());
-    ToStringHelper valueString(cx, vp);
-    fprintf(gOutFile, " initial value %s\n", valueString.getBytes());
+
+    *succeeded = true;
     return true;
 }
 
@@ -4397,7 +4402,7 @@ global_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
 
 JSClass global_class = {
     "global", JSCLASS_NEW_RESOLVE | JSCLASS_GLOBAL_FLAGS,
-    JS_PropertyStub,  JS_PropertyStub,
+    JS_PropertyStub,  JS_DeletePropertyStub,
     JS_PropertyStub,  JS_StrictPropertyStub,
     global_enumerate, (JSResolveOp) global_resolve,
     JS_ConvertStub,   NULL
@@ -4503,7 +4508,7 @@ env_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
 
 static JSClass env_class = {
     "environment", JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE,
-    JS_PropertyStub,  JS_PropertyStub,
+    JS_PropertyStub,  JS_DeletePropertyStub,
     JS_PropertyStub,  env_setProperty,
     env_enumerate, (JSResolveOp) env_resolve,
     JS_ConvertStub
@@ -4602,7 +4607,7 @@ static JSFunctionSpec dom_methods[] = {
 static JSClass dom_class = {
     "FakeDOMObject", JSCLASS_IS_DOMJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(2),
     JS_PropertyStub,       /* addProperty */
-    JS_PropertyStub,       /* delProperty */
+    JS_DeletePropertyStub, /* delProperty */
     JS_PropertyStub,       /* getProperty */
     JS_StrictPropertyStub, /* setProperty */
     JS_EnumerateStub,
