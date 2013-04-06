@@ -580,7 +580,7 @@ nsFrameLoader::Finalize()
 
 static void
 FirePageHideEvent(nsIDocShellTreeItem* aItem,
-                  nsIDOMEventTarget* aChromeEventHandler)
+                  EventTarget* aChromeEventHandler)
 {
   nsCOMPtr<nsIDOMDocument> doc = do_GetInterface(aItem);
   nsCOMPtr<nsIDocument> internalDoc = do_QueryInterface(doc);
@@ -608,7 +608,7 @@ FirePageHideEvent(nsIDocShellTreeItem* aItem,
 // loaded.
 static void
 FirePageShowEvent(nsIDocShellTreeItem* aItem,
-                  nsIDOMEventTarget* aChromeEventHandler,
+                  EventTarget* aChromeEventHandler,
                   bool aFireIfShowing)
 {
   int32_t childCount = 0;
@@ -636,7 +636,7 @@ FirePageShowEvent(nsIDocShellTreeItem* aItem,
 static void
 SetTreeOwnerAndChromeEventHandlerOnDocshellTree(nsIDocShellTreeItem* aItem,
                                                 nsIDocShellTreeOwner* aOwner,
-                                                nsIDOMEventTarget* aHandler)
+                                                EventTarget* aHandler)
 {
   NS_PRECONDITION(aItem, "Must have item");
 
@@ -1095,9 +1095,9 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   nsCOMPtr<nsIDOMElement> otherFrameElement =
     otherWindow->GetFrameElementInternal();
 
-  nsCOMPtr<nsIDOMEventTarget> ourChromeEventHandler =
+  nsCOMPtr<EventTarget> ourChromeEventHandler =
     do_QueryInterface(ourWindow->GetChromeEventHandler());
-  nsCOMPtr<nsIDOMEventTarget> otherChromeEventHandler =
+  nsCOMPtr<EventTarget> otherChromeEventHandler =
     do_QueryInterface(otherWindow->GetChromeEventHandler());
 
   NS_ASSERTION(SameCOMIdentity(ourFrameElement, ourContent) &&
@@ -2208,7 +2208,7 @@ public:
     nsInProcessTabChildGlobal* tabChild =
       static_cast<nsInProcessTabChildGlobal*>(mFrameLoader->mChildMessageManager.get());
     if (tabChild && tabChild->GetInnerManager()) {
-      nsFrameScriptCx cx(static_cast<nsIDOMEventTarget*>(tabChild), tabChild);
+      nsFrameScriptCx cx(static_cast<EventTarget*>(tabChild), tabChild);
 
       StructuredCloneData data;
       data.mData = mData.data();
@@ -2216,7 +2216,7 @@ public:
       data.mClosure = mClosure;
 
       nsRefPtr<nsFrameMessageManager> mm = tabChild->GetInnerManager();
-      mm->ReceiveMessage(static_cast<nsIDOMEventTarget*>(tabChild), mMessage,
+      mm->ReceiveMessage(static_cast<EventTarget*>(tabChild), mMessage,
                          false, &data, nullptr, nullptr, nullptr);
     }
     return NS_OK;

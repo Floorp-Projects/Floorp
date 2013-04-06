@@ -1789,9 +1789,10 @@ nsDocShell::SetChromeEventHandler(nsIDOMEventTarget* aChromeEventHandler)
 {
     // Weak reference. Don't addref.
     mChromeEventHandler = aChromeEventHandler;
+    nsCOMPtr<EventTarget> handler = do_QueryInterface(aChromeEventHandler);
 
     if (mScriptGlobal) {
-        mScriptGlobal->SetChromeEventHandler(aChromeEventHandler);
+        mScriptGlobal->SetChromeEventHandler(handler);
     }
 
     return NS_OK;
