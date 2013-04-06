@@ -18,7 +18,7 @@ XPCNativeMember::GetCallInfo(JSObject* funobj,
                              XPCNativeInterface** pInterface,
                              XPCNativeMember**    pMember)
 {
-    funobj = js::UncheckedUnwrap(funobj);
+    funobj = js::UnwrapObject(funobj);
     jsval ifaceVal = js::GetFunctionNativeReserved(funobj, 0);
     jsval memberVal = js::GetFunctionNativeReserved(funobj, 1);
 

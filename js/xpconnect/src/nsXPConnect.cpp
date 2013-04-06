@@ -1330,7 +1330,7 @@ nsXPConnect::GetNativeOfWrapper(JSContext * aJSContext,
         return nullptr;
     }
 
-    aJSObj = js::CheckedUnwrap(aJSObj, /* stopAtOuter = */ false);
+    aJSObj = js::UnwrapObjectChecked(aJSObj, /* stopAtOuter = */ false);
     if (!aJSObj) {
         JS_ReportError(aJSContext, "Permission denied to get native of security wrapper");
         return nullptr;
