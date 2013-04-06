@@ -52,7 +52,7 @@ public:
 
   virtual void NotifyBlockingChanged(MediaStreamGraph* aGraph, Blocking aBlocked)
   {
-    if (aBlocked == Blocking::UNBLOCKED && !mStarted) {
+    if (aBlocked == MediaStreamListener::UNBLOCKED && !mStarted) {
       mStarted = true;
       nsCOMPtr<nsIRunnable> event =
         NS_NewRunnableMethod(this, &SynthStreamListener::DoNotifyStarted);
