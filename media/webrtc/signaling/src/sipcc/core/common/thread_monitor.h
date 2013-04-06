@@ -30,6 +30,26 @@ typedef enum {
 void thread_started(thread_monitor_id_t monitor_id, cprThread_t thread);
 
 /*
+ * thread_ended
+ *
+ * Must be called by thread itself on THREAD_UNLOAD to unblock join_all_threads()
+ *
+ * Alerts if init_thread_monitor() has not been called.
+ *
+ * @param[in]  monitor_id     - enum of which thread created
+ */
+void thread_ended(thread_monitor_id_t monitor_id);
+
+typedef void (*thread_ended_funct)(thread_monitor_id_t);
+typedef void (*thread_ended_dispatcher_funct)(thread_ended_funct func, thread_monitor_id_t);
+typedef void (*join_wait_funct)();
+
+/*
+ * init_thread_monitor - see thread_monitor.c
+ */
+void init_thread_monitor(thread_ended_dispatcher_funct dispatch, join_wait_funct wait);
+
+/*
  * join_all_threads
  *
  * Join all threads that were started.
