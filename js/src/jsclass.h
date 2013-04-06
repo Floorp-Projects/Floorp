@@ -180,11 +180,11 @@ typedef JSBool
 typedef JSBool
 (* SpecialAttributesOp)(JSContext *cx, HandleObject obj, HandleSpecialId sid, unsigned *attrsp);
 typedef JSBool
-(* DeletePropertyOp)(JSContext *cx, HandleObject obj, HandlePropertyName name, MutableHandleValue vp, JSBool strict);
+(* DeletePropertyOp)(JSContext *cx, HandleObject obj, HandlePropertyName name, JSBool *succeeded);
 typedef JSBool
-(* DeleteElementOp)(JSContext *cx, HandleObject obj, uint32_t index, MutableHandleValue vp, JSBool strict);
+(* DeleteElementOp)(JSContext *cx, HandleObject obj, uint32_t index, JSBool *succeeded);
 typedef JSBool
-(* DeleteSpecialOp)(JSContext *cx, HandleObject obj, HandleSpecialId sid, MutableHandleValue vp, JSBool strict);
+(* DeleteSpecialOp)(JSContext *cx, HandleObject obj, HandleSpecialId sid, JSBool *succeeded);
 
 
 typedef JSObject *
@@ -198,7 +198,7 @@ typedef void
                                                                               \
     /* Mandatory non-null function pointer members. */                        \
     JSPropertyOp        addProperty;                                          \
-    JSPropertyOp        delProperty;                                          \
+    JSDeletePropertyOp  delProperty;                                          \
     JSPropertyOp        getProperty;                                          \
     JSStrictPropertyOp  setProperty;                                          \
     JSEnumerateOp       enumerate;                                            \

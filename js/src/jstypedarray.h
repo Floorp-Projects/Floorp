@@ -119,15 +119,12 @@ class ArrayBufferObject : public JSObject
     static JSBool obj_setSpecialAttributes(JSContext *cx, HandleObject obj,
                                            HandleSpecialId sid, unsigned *attrsp);
 
-    static JSBool obj_deleteProperty(JSContext *cx, HandleObject obj,
-                                     HandlePropertyName name, MutableHandleValue rval,
-                                     JSBool strict);
-    static JSBool obj_deleteElement(JSContext *cx, HandleObject obj,
-                                    uint32_t index, MutableHandleValue rval,
-                                    JSBool strict);
-    static JSBool obj_deleteSpecial(JSContext *cx, HandleObject obj,
-                                    HandleSpecialId sid, MutableHandleValue rval,
-                                    JSBool strict);
+    static JSBool obj_deleteProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
+                                     JSBool *succeeded);
+    static JSBool obj_deleteElement(JSContext *cx, HandleObject obj, uint32_t index,
+                                    JSBool *succeeded);
+    static JSBool obj_deleteSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
+                                    JSBool *succeeded);
 
     static JSBool obj_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
                                 MutableHandleValue statep, MutableHandleId idp);

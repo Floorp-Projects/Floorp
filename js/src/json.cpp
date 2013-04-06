@@ -45,7 +45,7 @@ Class js::JSONClass = {
     js_JSON_str,
     JSCLASS_HAS_CACHED_PROTO(JSProto_JSON),
     JS_PropertyStub,        /* addProperty */
-    JS_PropertyStub,        /* delProperty */
+    JS_DeletePropertyStub,  /* delProperty */
     JS_PropertyStub,        /* getProperty */
     JS_StrictPropertyStub,  /* setProperty */
     JS_EnumerateStub,
@@ -776,7 +776,8 @@ Walk(JSContext *cx, HandleObject holder, HandleId name, HandleValue reviver, Mut
 
                 if (newElement.isUndefined()) {
                     /* Step 2a(iii)(2). */
-                    if (!JSObject::deleteByValue(cx, obj, IdToValue(id), &newElement, false))
+                    JSBool succeeded;
+                    if (!JSObject::deleteByValue(cx, obj, IdToValue(id), &succeeded))
                         return false;
                 } else {
                     /* Step 2a(iii)(3). */
@@ -804,7 +805,8 @@ Walk(JSContext *cx, HandleObject holder, HandleId name, HandleValue reviver, Mut
 
                 if (newElement.isUndefined()) {
                     /* Step 2b(ii)(2). */
-                    if (!JSObject::deleteByValue(cx, obj, IdToValue(id), &newElement, false))
+                    JSBool succeeded;
+                    if (!JSObject::deleteByValue(cx, obj, IdToValue(id), &succeeded))
                         return false;
                 } else {
                     /* Step 2b(ii)(3). */

@@ -820,11 +820,9 @@ typedef js::RawValue    JSRawValue;
 /* JSClass operation signatures. */
 
 /*
- * Add, delete, or get a property named by id in obj.  Note the jsid id
- * type -- id may be a string (Unicode property identifier) or an int (element
- * index).  The *vp out parameter, on success, is the new property value after
- * an add or get.  After a successful delete, *vp is JSVAL_FALSE iff
- * obj[id] can't be deleted (because it's permanent).
+ * Add or get a property named by id in obj.  Note the jsid id type -- id may
+ * be a string (Unicode property identifier) or an int (element index).  The
+ * *vp out parameter, on success, is the new property value after the action.
  */
 typedef JSBool
 (* JSPropertyOp)(JSContext *cx, JSHandleObject obj, JSHandleId id, JSMutableHandleValue vp);
@@ -838,6 +836,24 @@ typedef JSBool
  */
 typedef JSBool
 (* JSStrictPropertyOp)(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, JSMutableHandleValue vp);
+
+/*
+ * Delete a property named by id in obj.
+ *
+ * If an error occurred, return false as per normal JSAPI error practice.
+ *
+ * If no error occurred, but the deletion attempt wasn't allowed (perhaps
+ * because the property was non-configurable), set *succeeded to false and
+ * return true.  This will cause |delete obj[id]| to evaluate to false in
+ * non-strict mode code, and to throw a TypeError in strict mode code.
+ *
+ * If no error occurred and the deletion wasn't disallowed (this is *not* the
+ * same as saying that a deletion actually occurred -- deleting a non-existent
+ * property, or an inherited property, is allowed -- it's just pointless),
+ * set *succeeded to true and return true.
+ */
+typedef JSBool
+(* JSDeletePropertyOp)(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool *succeeded);
 
 /*
  * This function type is used for callbacks that enumerate the properties of
@@ -2810,7 +2826,7 @@ struct JSClass {
 
     /* Mandatory non-null function pointer members. */
     JSPropertyOp        addProperty;
-    JSPropertyOp        delProperty;
+    JSDeletePropertyOp  delProperty;
     JSPropertyOp        getProperty;
     JSStrictPropertyOp  setProperty;
     JSEnumerateOp       enumerate;
@@ -2998,6 +3014,9 @@ JS_PropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, JSMutableHandl
 
 extern JS_PUBLIC_API(JSBool)
 JS_StrictPropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, JSMutableHandleValue vp);
+
+extern JS_PUBLIC_API(JSBool)
+JS_DeletePropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool *succeeded);
 
 extern JS_PUBLIC_API(JSBool)
 JS_EnumerateStub(JSContext *cx, JSHandleObject obj);

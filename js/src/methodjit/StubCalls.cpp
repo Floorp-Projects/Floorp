@@ -1357,8 +1357,11 @@ stubs::DelName(VMFrame &f, PropertyName *name_)
     f.regs.sp++;
     f.regs.sp[-1] = BooleanValue(true);
     if (prop) {
-        if (!JSObject::deleteProperty(f.cx, obj, name, MutableHandleValue::fromMarkedLocation(&f.regs.sp[-1]), false))
+        JSBool succeeded;
+        if (!JSObject::deleteProperty(f.cx, obj, name, &succeeded))
             THROW();
+        MutableHandleValue rval = MutableHandleValue::fromMarkedLocation(&f.regs.sp[-1]);
+        rval.setBoolean(succeeded);
     }
 }
 
@@ -1374,11 +1377,15 @@ stubs::DelProp(VMFrame &f, PropertyName *name_)
     if (!obj)
         THROW();
 
-    RootedValue rval(cx);
-    if (!JSObject::deleteProperty(cx, obj, name, &rval, strict))
+    JSBool succeeded;
+    if (!JSObject::deleteProperty(cx, obj, name, &succeeded))
         THROW();
+    if (strict && !succeeded) {
+        obj->reportNotConfigurable(cx, NameToId(name));
+        THROW();
+    }
 
-    f.regs.sp[-1] = rval;
+    f.regs.sp[-1] = BooleanValue(succeeded);
 }
 
 template void JS_FASTCALL stubs::DelProp<true>(VMFrame &f, PropertyName *name);
@@ -1396,10 +1403,22 @@ stubs::DelElem(VMFrame &f)
         THROW();
 
     const Value &propval = f.regs.sp[-1];
-    MutableHandleValue rval = MutableHandleValue::fromMarkedLocation(&f.regs.sp[-2]);
-
-    if (!JSObject::deleteByValue(cx, obj, propval, rval, strict))
+    JSBool succeeded;
+    if (!JSObject::deleteByValue(cx, obj, propval, &succeeded))
         THROW();
+    if (strict && !succeeded) {
+        // XXX This observably calls ToString(propval).  We should convert to
+        //     PropertyKey and use that to delete, and to report an error if
+        //     necessary -- but this code's all dying soon, so who cares?
+        RootedId id(cx);
+        if (!ValueToId<CanGC>(cx, propval, &id))
+            THROW();
+        obj->reportNotConfigurable(cx, id);
+        THROW();
+    }
+
+    MutableHandleValue rval = MutableHandleValue::fromMarkedLocation(&f.regs.sp[-2]);
+    rval.setBoolean(succeeded);
 }
 
 void JS_FASTCALL
