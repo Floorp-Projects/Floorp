@@ -46,7 +46,6 @@ members = [
     'nsIDOMWindow.onmouseleave',
     'nsIDOMWindowPerformance.performance',
     'nsIDOMJSWindow.dump',
-    'nsISpeechSynthesisGetter.speechSynthesis',
     # nsLocationSH has ~ALLOW_PROP_MODS_TO_PROTOTYPE, so don't try.
     #'nsIDOMLocation.hostname',
     #'nsIDOMLocation.href',
