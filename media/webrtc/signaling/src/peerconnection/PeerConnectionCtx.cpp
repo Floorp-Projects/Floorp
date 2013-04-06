@@ -24,7 +24,9 @@
 #include "nsIObserver.h"
 #include "mozilla/Services.h"
 #include "StaticPtr.h"
-#include "mozilla/SyncRunnable.h"
+extern "C" {
+#include "../sipcc/core/common/thread_monitor.h"
+}
 
 static const char* logTag = "PeerConnectionCtx";
 
@@ -100,10 +102,28 @@ PeerConnectionCtx* PeerConnectionCtx::gInstance;
 nsIThread* PeerConnectionCtx::gMainThread;
 StaticRefPtr<mozilla::PeerConnectionCtxShutdown> PeerConnectionCtx::gPeerConnectionCtxShutdown;
 
+// Since we have a pointer to main-thread, help make it safe for lower-level
+// SIPCC threads to use SyncRunnable without deadlocking, by exposing main's
+// dispatcher and waiter functions. See sipcc/core/common/thread_monitor.c.
+
+static void thread_ended_dispatcher(thread_ended_funct func, thread_monitor_id_t id)
+{
+  nsresult rv = PeerConnectionCtx::gMainThread->Dispatch(WrapRunnableNM(func, id),
+                                                         NS_DISPATCH_NORMAL);
+  if (NS_FAILED(rv)) {
+    CSFLogError( logTag, "%s(): Could not dispatch to main thread", __FUNCTION__);
+  }
+}
+
+static void join_waiter() {
+  NS_ProcessPendingEvents(PeerConnectionCtx::gMainThread);
+}
+
 nsresult PeerConnectionCtx::InitializeGlobal(nsIThread *mainThread) {
   if (!gMainThread) {
     gMainThread = mainThread;
     CSF::VcmSIPCCBinding::setMainThread(gMainThread);
+    init_thread_monitor(&thread_ended_dispatcher, &join_waiter);
   } else {
 #ifdef MOZILLA_INTERNAL_API
     MOZ_ASSERT(gMainThread == mainThread);
@@ -258,31 +278,40 @@ void PeerConnectionCtx::onDeviceEvent(ccapi_device_event_e aDeviceEvent,
   }
 }
 
+static void onCallEvent_m(nsAutoPtr<std::string> peerconnection,
+                          ccapi_call_event_e aCallEvent,
+                          CSF::CC_CallInfoPtr aInfo);
+
 void PeerConnectionCtx::onCallEvent(ccapi_call_event_e aCallEvent,
-                                      CSF::CC_CallPtr aCall,
-                                      CSF::CC_CallInfoPtr aInfo) {
+                                    CSF::CC_CallPtr aCall,
+                                    CSF::CC_CallInfoPtr aInfo) {
   // This is called on a SIPCC thread.
-  // CC_*Ptr is not thread-safe so we must not manipulate
-  // the ref count on multiple threads at once.
-  // SyncRunnable enforces this and because it doesn't process
-  // incoming events, we don't have to worry about reentrancy.
-  mozilla::SyncRunnable::DispatchToThread(gMainThread,
-                WrapRunnable(this,
-                             &PeerConnectionCtx::onCallEvent_m,
-                             aCallEvent, aCall, aInfo));
+  //
+  // We cannot use SyncRunnable to main thread, as that would deadlock on
+  // shutdown. Instead, we dispatch asynchronously. We copy getPeerConnection(),
+  // a "weak ref" to the PC, which is safe in shutdown, and CC_CallInfoPtr (an
+  // nsRefPtr) is thread-safe and keeps aInfo alive.
+  nsAutoPtr<std::string> pcDuped(new std::string(aCall->getPeerConnection()));
+
+  // DISPATCH_NORMAL with duped string
+  nsresult rv = gMainThread->Dispatch(WrapRunnableNM(&onCallEvent_m, pcDuped,
+                                                     aCallEvent, aInfo),
+                                      NS_DISPATCH_NORMAL);
+  if (NS_FAILED(rv)) {
+    CSFLogError( logTag, "%s(): Could not dispatch to main thread", __FUNCTION__);
+  }
 }
 
 // Demux the call event to the right PeerConnection
-void PeerConnectionCtx::onCallEvent_m(ccapi_call_event_e aCallEvent,
-                                      CSF::CC_CallPtr aCall,
-                                      CSF::CC_CallInfoPtr aInfo) {
+static void onCallEvent_m(nsAutoPtr<std::string> peerconnection,
+                          ccapi_call_event_e aCallEvent,
+                          CSF::CC_CallInfoPtr aInfo) {
   CSFLogDebug(logTag, "onCallEvent()");
-  PeerConnectionWrapper pc(aCall->getPeerConnection());
+  PeerConnectionWrapper pc(peerconnection->c_str());
   if (!pc.impl())  // This must be an event on a dead PC. Ignore
     return;
-
   CSFLogDebug(logTag, "Calling PC");
-  pc.impl()->onCallEvent(aCallEvent, aCall, aInfo);
+  pc.impl()->onCallEvent(aCallEvent, aInfo);
 }
 
 }  // namespace sipcc
