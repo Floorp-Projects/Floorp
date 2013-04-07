@@ -207,12 +207,6 @@ int nr_ice_fetch_turn_servers(int ct, nr_ice_turn_server **out)
         &servers[i].turn_server.u.addr))
         ABORT(r);
 
-      if(r=NR_reg_get2_uint4(child,NR_ICE_REG_TURN_SRV_BANDWIDTH,&servers[i].bandwidth_kbps))
-        if(r!=R_NOT_FOUND)
-          ABORT(r);
-      if(r=NR_reg_get2_uint4(child,NR_ICE_REG_TURN_SRV_LIFETIME,&servers[i].lifetime_secs))
-        if(r!=R_NOT_FOUND)
-          ABORT(r);
 
       if(r=NR_reg_alloc2_string(child,NR_ICE_REG_TURN_SRV_USERNAME,&servers[i].username)){
         if(r!=R_NOT_FOUND)

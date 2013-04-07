@@ -224,7 +224,7 @@ nr_stun_process_success_response(nr_stun_message *res)
 
 /* draft-ietf-behave-rfc3489bis-10.txt S 7.3.4 */
 int
-nr_stun_process_error_response(nr_stun_message *res)
+nr_stun_process_error_response(nr_stun_message *res, UINT2 *error_code)
 {
     int _status;
     nr_stun_message_attribute *attr;
@@ -237,6 +237,8 @@ nr_stun_process_error_response(nr_stun_message *res)
         r_log(NR_LOG_STUN, LOG_ERR, "Missing ERROR-CODE");
         ABORT(R_REJECTED);
     }
+
+    *error_code = attr->u.error_code.number;
 
     switch (attr->u.error_code.number / 100) {
     case 3:

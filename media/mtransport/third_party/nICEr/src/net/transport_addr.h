@@ -75,7 +75,7 @@ int nr_sockaddr_to_transport_addr(struct sockaddr *saddr, int saddr_len, int pro
 
 // addresses, ports in local byte order
 int nr_ip4_port_to_transport_addr(UINT4 ip4, UINT2 port, int protocol, nr_transport_addr *addr);
-int nr_ip4_str_port_to_transport_addr(char *ip4, UINT2 port, int protocol, nr_transport_addr *addr);
+int nr_ip4_str_port_to_transport_addr(const char *ip4, UINT2 port, int protocol, nr_transport_addr *addr);
 
 int nr_transport_addr_get_addrstring(nr_transport_addr *addr, char *str, int maxlen);
 int nr_transport_addr_get_port(nr_transport_addr *addr, int *port);
@@ -89,6 +89,7 @@ int nr_transport_addr_cmp(nr_transport_addr *addr1,nr_transport_addr *addr2,int 
 int nr_transport_addr_is_wildcard(nr_transport_addr *addr);
 int nr_transport_addr_is_loopback(nr_transport_addr *addr);
 int nr_transport_addr_copy(nr_transport_addr *to, nr_transport_addr *from);
+int nr_transport_addr_copy_keep_ifname(nr_transport_addr *to, nr_transport_addr *from);
 int nr_transport_addr_fmt_addr_string(nr_transport_addr *addr);
 int nr_transport_addr_set_port(nr_transport_addr *addr, int port);
 
