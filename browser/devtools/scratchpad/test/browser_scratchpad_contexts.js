@@ -15,10 +15,10 @@ function test()
   content.location = "data:text/html,test context switch in Scratchpad";
 }
 
+
 function runTests()
 {
   let sp = gScratchpadWindow.Scratchpad;
-
   let contentMenu = gScratchpadWindow.document.getElementById("sp-menu-content");
   let chromeMenu = gScratchpadWindow.document.getElementById("sp-menu-browser");
   let notificationBox = sp.notificationBox;
@@ -27,109 +27,148 @@ function runTests()
   ok(chromeMenu, "found #sp-menu-browser");
   ok(notificationBox, "found Scratchpad.notificationBox");
 
-  sp.setContentContext();
+  let tests = [{
+    method: "run",
+    prepare: function() {
+      sp.setContentContext();
 
-  is(sp.executionContext, gScratchpadWindow.SCRATCHPAD_CONTEXT_CONTENT,
-     "executionContext is content");
+      is(sp.executionContext, gScratchpadWindow.SCRATCHPAD_CONTEXT_CONTENT,
+         "executionContext is content");
 
-  is(contentMenu.getAttribute("checked"), "true",
-     "content menuitem is checked");
+      is(contentMenu.getAttribute("checked"), "true",
+         "content menuitem is checked");
 
-  isnot(chromeMenu.getAttribute("checked"), "true",
-     "chrome menuitem is not checked");
+      isnot(chromeMenu.getAttribute("checked"), "true",
+         "chrome menuitem is not checked");
 
-  ok(!notificationBox.currentNotification,
-     "there is no notification in content context");
+      ok(!notificationBox.currentNotification,
+         "there is no notification in content context");
 
-  let dsp = sp.contentSandbox.__SCRATCHPAD__;
+      let dsp = sp.contentSandbox.__SCRATCHPAD__;
 
-  ok(sp.contentSandbox.__SCRATCHPAD__,
-      "there is a variable named __SCRATCHPAD__");
+      ok(sp.contentSandbox.__SCRATCHPAD__,
+          "there is a variable named __SCRATCHPAD__");
 
-  ok(sp.contentSandbox.__SCRATCHPAD__.editor,
-      "scratchpad is actually an instance of Scratchpad");
+      ok(sp.contentSandbox.__SCRATCHPAD__.editor,
+          "scratchpad is actually an instance of Scratchpad");
 
-  sp.setText("window.foobarBug636725 = 'aloha';");
+      sp.setText("window.foobarBug636725 = 'aloha';");
 
-  ok(!content.wrappedJSObject.foobarBug636725,
-     "no content.foobarBug636725");
+      ok(!content.wrappedJSObject.foobarBug636725,
+         "no content.foobarBug636725");
+    },
+    then: function() {
+      is(content.wrappedJSObject.foobarBug636725, "aloha",
+         "content.foobarBug636725 has been set");
+    }
+  },
+  {
+    method: "run",
+    prepare: function() {
+      sp.setBrowserContext();
 
-  sp.run();
+      is(sp.executionContext, gScratchpadWindow.SCRATCHPAD_CONTEXT_BROWSER,
+         "executionContext is chrome");
 
-  is(content.wrappedJSObject.foobarBug636725, "aloha",
-     "content.foobarBug636725 has been set");
+      is(chromeMenu.getAttribute("checked"), "true",
+         "chrome menuitem is checked");
 
-  sp.setBrowserContext();
+      isnot(contentMenu.getAttribute("checked"), "true",
+         "content menuitem is not checked");
 
-  is(sp.executionContext, gScratchpadWindow.SCRATCHPAD_CONTEXT_BROWSER,
-     "executionContext is chrome");
+      ok(sp.chromeSandbox.__SCRATCHPAD__,
+        "there is a variable named __SCRATCHPAD__");
 
-  is(chromeMenu.getAttribute("checked"), "true",
-     "chrome menuitem is checked");
+      ok(sp.chromeSandbox.__SCRATCHPAD__.editor,
+          "scratchpad is actually an instance of Scratchpad");
 
-  isnot(contentMenu.getAttribute("checked"), "true",
-     "content menuitem is not checked");
+      ok(notificationBox.currentNotification,
+         "there is a notification in browser context");
 
-  ok(sp.chromeSandbox.__SCRATCHPAD__,
-    "there is a variable named __SCRATCHPAD__");
+      sp.setText("2'", 31, 32);
 
-  ok(sp.chromeSandbox.__SCRATCHPAD__.editor,
-      "scratchpad is actually an instance of Scratchpad");
+      is(sp.getText(), "window.foobarBug636725 = 'aloha2';",
+         "setText() worked");
+    },
+    then: function() {
+      is(window.foobarBug636725, "aloha2",
+         "window.foobarBug636725 has been set");
 
-  ok(notificationBox.currentNotification,
-     "there is a notification in browser context");
+      delete window.foobarBug636725;
+      ok(!window.foobarBug636725, "no window.foobarBug636725");
+    }
+  },
+  {
+    method: "run",
+    prepare: function() {
+      sp.setText("gBrowser", 7);
 
-  sp.setText("2'", 31, 33);
+      is(sp.getText(), "window.gBrowser",
+         "setText() worked with no end for the replace range");
+    },
+    then: function([, , result]) {
+      is(typeof result.addTab, "function",
+         "chrome context has access to chrome objects");
+    }
+  },
+  {
+    method: "run",
+    prepare: function() {
+      // Check that the sandbox is cached.
+      sp.setText("typeof foobarBug636725cache;");
+    },
+    then: function([, , result]) {
+      is(result, "undefined", "global variable does not exist");
+    }
+  },
+  {
+    method: "run",
+    prepare: function() {
+      sp.setText("var foobarBug636725cache = 'foo';" +
+                 "typeof foobarBug636725cache;");
+    },
+    then: function([, , result]) {
+      is(result, "string",
+         "global variable exists across two different executions");
+    }
+  },
+  {
+    method: "run",
+    prepare: function() {
+      sp.resetContext();
+      sp.setText("typeof foobarBug636725cache;");
+    },
+    then: function([, , result]) {
+      is(result, "undefined",
+         "global variable no longer exists after calling resetContext()");
+    }
+  },
+  {
+    method: "run",
+    prepare: function() {
+      sp.setText("var foobarBug636725cache2 = 'foo';" +
+                 "typeof foobarBug636725cache2;");
+    },
+    then: function([, , result]) {
+      is(result, "string",
+         "global variable exists across two different executions");
+    }
+  },
+  {
+    method: "run",
+    prepare: function() {
+      sp.setContentContext();
 
-  ok(sp.getText(), "window.foobarBug636725 = 'aloha2';",
-     "setText() worked");
+      is(sp.executionContext, gScratchpadWindow.SCRATCHPAD_CONTEXT_CONTENT,
+         "executionContext is content");
 
-  ok(!window.foobarBug636725, "no window.foobarBug636725");
+      sp.setText("typeof foobarBug636725cache2;");
+    },
+    then: function([, , result]) {
+      is(result, "undefined",
+         "global variable no longer exists after changing the context");
+    }
+  }];
 
-  sp.run();
-
-  is(window.foobarBug636725, "aloha2", "window.foobarBug636725 has been set");
-  delete window.foobarBug636725;
-
-  sp.setText("gBrowser", 7);
-
-  ok(sp.getText(), "window.gBrowser",
-     "setText() worked with no end for the replace range");
-
-  is(typeof sp.run()[2].addTab, "function",
-     "chrome context has access to chrome objects");
-
-  // Check that the sandbox is cached.
-
-  sp.setText("typeof foobarBug636725cache;");
-  is(sp.run()[2], "undefined", "global variable does not exist");
-
-  sp.setText("var foobarBug636725cache = 'foo';");
-  sp.run();
-
-  sp.setText("typeof foobarBug636725cache;");
-  is(sp.run()[2], "string",
-     "global variable exists across two different executions");
-
-  sp.resetContext();
-
-  is(sp.run()[2], "undefined",
-     "global variable no longer exists after calling resetContext()");
-
-  sp.setText("var foobarBug636725cache2 = 'foo';");
-  sp.run();
-
-  sp.setText("typeof foobarBug636725cache2;");
-  is(sp.run()[2], "string",
-     "global variable exists across two different executions");
-
-  sp.setContentContext();
-
-  is(sp.executionContext, gScratchpadWindow.SCRATCHPAD_CONTEXT_CONTENT,
-     "executionContext is content");
-
-  is(sp.run()[2], "undefined",
-     "global variable no longer exists after changing the context");
-
-  finish();
+  runAsyncCallbackTests(sp, tests).then(finish);
 }
