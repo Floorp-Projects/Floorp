@@ -719,13 +719,13 @@ GenerateNormal(float *N, const uint8_t *data, int32_t stride,
         { { -1, -2, -1}, { 1,  2,  1}, { 0,  0,  0} },
         { { -1, -2,  0}, { 1,  2,  0}, { 0,  0,  0} } } };
   static const float FACTORx[3][3] =
-    { { 2.0 / 3.0, 1.0 / 3.0, 2.0 / 3.0 },
+    { { 2.0f / 3.0f, 1.0f / 3.0f, 2.0f / 3.0f },
       { 1.0 / 2.0, 1.0 / 4.0, 1.0 / 2.0 },
-      { 2.0 / 3.0, 1.0 / 3.0, 2.0 / 3.0 } };
+      { 2.0f / 3.0f, 1.0f / 3.0f, 2.0f / 3.0f } };
   static const float FACTORy[3][3] =
-    { { 2.0 / 3.0, 1.0 / 2.0, 2.0 / 3.0 },
-      { 1.0 / 3.0, 1.0 / 4.0, 1.0 / 3.0 },
-      { 2.0 / 3.0, 1.0 / 2.0, 2.0 / 3.0 } };
+    { { 2.0f / 3.0f, 1.0 / 2.0, 2.0f / 3.0f },
+      { 1.0f / 3.0f, 1.0 / 4.0, 1.0f / 3.0f },
+      { 2.0f / 3.0f, 1.0 / 2.0, 2.0f / 3.0f } };
 
   // degenerate cases
   if (surfaceWidth == 1 || surfaceHeight == 1) {
@@ -820,7 +820,7 @@ nsSVGFELightingElement::Filter(nsSVGFilterInstance *instance,
   if (!distantLight && !pointLight && !spotLight)
     return NS_ERROR_FAILURE;
 
-  const float radPerDeg = M_PI/180.0;
+  const float radPerDeg = static_cast<float>(M_PI/180.0);
 
   float L[3];
   if (distantLight) {
