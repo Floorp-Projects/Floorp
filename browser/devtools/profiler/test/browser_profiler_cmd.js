@@ -3,6 +3,7 @@
 
 const URL = "data:text/html;charset=utf8,<p>JavaScript Profiler test</p>";
 
+let gcli = Cu.import("resource:///modules/devtools/gcli.jsm", {}).gcli;
 let gTarget, gPanel, gOptions;
 
 function cmd(typed, expected="") {
@@ -46,7 +47,7 @@ function testProfilerStart() {
     deferred.resolve();
   });
 
-  cmd("profiler start", "Starting...");
+  cmd("profiler start", gcli.lookup("profilerStarting2"));
   return deferred.promise;
 }
 
@@ -68,12 +69,12 @@ function testProfilerStop() {
     cmd('profiler stop "Profile 2"', "This profile has already been completed. " +
       "Use 'profile show' command to see its results");
     cmd('profiler stop "Profile 1"', "This profile has not been started yet. " +
-      "Use 'profile start' to start profliling");
+      "Use 'profile start' to start profiling");
     cmd('profiler stop "invalid"', "Profile not found")
     deferred.resolve();
   });
 
-  cmd('profiler stop "Profile 2"', "Stopping...");
+  cmd('profiler stop "Profile 2"', gcli.lookup("profilerStopping2"));
   return deferred.promise;
 }
 

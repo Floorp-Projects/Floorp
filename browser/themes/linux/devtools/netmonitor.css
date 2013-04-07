@@ -1,0 +1,304 @@
+/* vim:set ts=2 sw=2 sts=2 et: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Network requests table */
+
+#body {
+  background: url(background-noise-toolbar.png), hsl(208,11%,27%);
+}
+
+.requests-menu-empty-notice {
+  background: url(background-noise-toolbar.png), hsl(208,11%,27%);
+  padding: 12px;
+  font-size: 110%;
+  color: #fff;
+}
+
+#requests-menu-toolbar {
+  -moz-padding-start: 4px;
+}
+
+.requests-menu-header {
+  text-align: center;
+}
+
+.requests-menu-subitem {
+  padding: 0 4px;
+}
+
+.requests-menu-header:not(:last-of-type),
+.requests-menu-subitem:not(:last-child) {
+  -moz-border-end: 1px solid hsla(210,8%,5%,.25);
+  box-shadow: 1px 0 0 hsla(210,16%,76%,.1);
+}
+
+.requests-menu-status-and-method {
+  width: 6em;
+}
+
+.requests-menu-status {
+  background: #fff;
+  width: 10px;
+  height: 10px;
+  -moz-margin-start: 4px;
+  -moz-margin-end: 2px;
+  border-radius: 20px;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.4) inset,
+    0 -6px 4px 0 rgba(32,32,32,1.0) inset,
+    0 0 8px 0 rgba(32,0,0,0.4);
+  transition: box-shadow 0.5s ease-in-out;
+}
+
+.requests-menu-status[code^="1"] {
+  box-shadow:
+    0 0 2px 1px rgba(255,255,255,0.8) inset,
+    0 -6px 4px 0 rgba(0,0,64,1.0) inset,
+    0 0 8px 0 rgba(0,0,128,1.0);
+}
+
+.requests-menu-status[code^="2"] {
+  box-shadow:
+    0 0 2px 1px rgba(255,255,255,0.8) inset,
+    0 -6px 4px 0 rgba(0,64,0,1.0) inset,
+    0 0 8px 0 rgba(0,128,0,1.0);
+}
+
+.requests-menu-status[code^="3"] {
+  box-shadow:
+    0 0 2px 1px rgba(255,255,255,0.8) inset,
+    0 -6px 4px 0 rgba(64,32,0,1.0) inset,
+    0 0 8px 0 rgba(128,128,0,1.0);
+}
+
+.requests-menu-status[code^="4"] {
+  box-shadow:
+    0 0 2px 1px rgba(255,255,255,0.8) inset,
+    0 -6px 4px 0 rgba(64,0,0,1.0) inset,
+    0 0 8px 0 rgba(128,0,0,1.0);
+}
+
+.requests-menu-status[code^="5"] {
+  box-shadow:
+    0 0 2px 1px rgba(255,255,255,0.8) inset,
+    0 -6px 4px 0 rgba(64,0,64,1.0) inset,
+    0 0 8px 0 rgba(128,0,128,1.0);
+}
+
+.requests-menu-method {
+  text-align: center;
+  font-weight: 600;
+}
+
+.requests-menu-file {
+  width: 14em;
+}
+
+.requests-menu-domain {
+  width: 14em;
+}
+
+.requests-menu-type {
+  text-align: center;
+  width: 4em;
+}
+
+.requests-menu-size {
+  text-align: center;
+  width: 6em;
+}
+
+.requests-menu-header.requests-menu-waterfall {
+  -moz-padding-start: 8px;
+  -moz-padding-end: 8px;
+  text-align: center;
+}
+
+/* Network request waterfall */
+
+.requests-menu-subitem.requests-menu-waterfall {
+  -moz-padding-start: 4px;
+  -moz-padding-end: 4px;
+  background-size: 5px;
+  background-image:
+    -moz-linear-gradient(left,
+      transparent 25%,
+      rgba(255,255,255,0.02) 25%,
+      rgba(255,255,255,0.02) 75%,
+      transparent 75%);
+}
+
+.requests-menu-timings {
+  transform-origin: left center;
+}
+
+.requests-menu-timings-total {
+  -moz-padding-start: 4px;
+  font-size: 85%;
+  font-weight: 600;
+  transform-origin: -4px center; /* negative cap size */
+}
+
+.requests-menu-timings-cap {
+  width: 4px;
+  height: 10px;
+  border: 1px solid #fff;
+}
+
+.requests-menu-timings-cap.start {
+  -moz-border-end: none;
+  border-radius: 4px 0 0 4px;
+  transform-origin: right center;
+}
+
+.requests-menu-timings-cap.end {
+  -moz-border-start: none;
+  border-radius: 0 4px 4px 0;
+  transform-origin: left center;
+}
+
+.requests-menu-timings-box {
+  height: 10px;
+  border-top: 1px solid #fff;
+  border-bottom: 1px solid #fff;
+}
+
+.requests-menu-timings-box.blocked,
+.requests-menu-timings-cap.blocked {
+  background-color: rgba(255,32,32,0.8);
+  box-shadow: 0 0 8px 0 rgba(128,32,32,0.8),
+              0 0 4px 0 rgba(255,255,255,1.0) inset;
+}
+
+.requests-menu-timings-box.dns,
+.requests-menu-timings-cap.dns {
+  background-color: rgba(255,128,255,0.6);
+  box-shadow: 0 0 8px 0 rgba(128,128,255,1.0),
+              0 0 4px 0 rgba(255,255,255,1.0) inset;
+}
+
+.requests-menu-timings-box.connect,
+.requests-menu-timings-cap.connect {
+  background-color: rgba(255,128,16,0.4);
+  box-shadow: 0 0 8px 0 rgba(128,128,16,0.8),
+              0 0 4px 0 rgba(255,255,255,1.0) inset;
+}
+
+.requests-menu-timings-box.send,
+.requests-menu-timings-cap.send {
+  background-color: rgba(255,255,128,0.4);
+  box-shadow: 0 0 8px 0 rgba(128,255,128,0.8),
+              0 0 4px 0 rgba(255,255,255,1.0) inset;
+}
+
+.requests-menu-timings-box.wait,
+.requests-menu-timings-cap.wait {
+  background-color: rgba(255,255,255,0.2);
+  box-shadow: 0 0 8px 0 rgba(128,255,255,0.4),
+              0 0 4px 0 rgba(255,255,255,1.0) inset;
+}
+
+.requests-menu-timings-box.receive,
+.requests-menu-timings-cap.receive {
+  background-color: rgba(255,255,255,1.0);
+  box-shadow: 0 0 8px 0 rgba(128,255,255,1.0),
+              0 0 4px 0 rgba(255,255,255,1.0) inset;
+}
+
+.side-menu-widget-container,
+.side-menu-widget-item-or-group {
+  box-shadow: none !important;
+}
+
+.side-menu-widget-item:nth-child(even) {
+  background: rgba(255,255,255,0.05);
+}
+
+/* Network request details */
+
+#details-pane {
+  background: hsl(208,11%,27%);
+  max-width: 500px;
+}
+
+#details-pane-toggle {
+  background: none;
+  box-shadow: none;
+  border-color: transparent;
+  list-style-image: url("chrome://browser/skin/devtools/debugger-collapse.png");
+  -moz-image-region: rect(0px,16px,16px,0px);
+}
+
+#details-pane-toggle[pane-collapsed] {
+  list-style-image: url("chrome://browser/skin/devtools/debugger-expand.png");
+}
+
+#details-pane-toggle:active {
+  -moz-image-region: rect(0px,32px,16px,16px);
+}
+
+/* Network request details tabpanels */
+
+.tabpanel-content {
+  background: url(background-noise-toolbar.png), #3e4750;
+  box-shadow: 0 1px 0 hsla(204,45%,98%,.05) inset;
+  color: #fff;
+}
+
+.tabpanel-summary-container {
+  padding: 1px;
+}
+
+.tabpanel-summary-label {
+  -moz-padding-start: 4px;
+  -moz-padding-end: 3px;
+  font-weight: 600;
+  text-shadow: 0 1px 0 #000;
+  color: hsl(210,30%,85%);
+}
+
+.tabpanel-summary-value {
+  -moz-padding-start: 3px;
+  font-family: Menlo, Monaco, monospace;
+}
+
+/* Headers tabpanel */
+
+#headers-summary-status,
+#headers-summary-version {
+  padding-bottom: 2px;
+}
+
+#headers-summary-size {
+  padding-top: 2px;
+}
+
+/* Response tabpanel */
+
+#response-content-image-box {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+#response-content-image {
+  background: #fff;
+  border: 1px dashed GrayText;
+  margin-bottom: 10px;
+}
+
+/* Timings tabpanel */
+
+#timings-tabpanel .tabpanel-summary-label {
+  width: 10em;
+}
+
+#timings-tabpanel .requests-menu-timings-box {
+  transition: transform 0.2s ease-out;
+  min-width: 1px;
+}
+
+#timings-tabpanel .requests-menu-timings-total {
+  transition: transform 0.2s ease-out;
+}

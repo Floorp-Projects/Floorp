@@ -86,8 +86,9 @@ function testFocus(sw, hud) {
   Services.obs.addObserver(onMessage, "web-console-message-created", false);
 
   sp.setText("console.log('foo');");
-  let [selection, error, result] = sp.run();
-  is(selection, "console.log('foo');", "selection is correct");
-  is(error, undefined, "error is correct");
-  is(result, undefined, "result is correct");
+  sp.run().then(function ([selection, error, result]) {
+    is(selection, "console.log('foo');", "selection is correct");
+    is(error, undefined, "error is correct");
+    is(result, undefined, "result is correct");
+  });
 }
