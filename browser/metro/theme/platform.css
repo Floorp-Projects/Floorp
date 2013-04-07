@@ -206,11 +206,11 @@ menulist {
   color: black;
 }
 
-.menu-popup > richlistbox[left-hand] > richlistitem {
+.menu-popup > richlistbox[left-hand="true"] > richlistitem {
   padding-left: 50px;
 }
 
-.menu-popup > richlistbox[right-hand] > richlistitem {
+.menu-popup > richlistbox[left-hand="false"] > richlistitem {
   padding-right: 50px;
 }
 
