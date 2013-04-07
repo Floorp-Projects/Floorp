@@ -14,9 +14,7 @@ LIBRARY_NAME = imgdecoders_s
 FORCE_STATIC_LIB = 1
 MODULE_NAME = nsDecodersModule
 LIBXUL_LIBRARY  = 1
-ifndef _MSC_VER
 FAIL_ON_WARNINGS = 1
-endif # !_MSC_VER
 
 
 CPPSRCS = nsPNGDecoder.cpp nsJPEGDecoder.cpp nsGIFDecoder2.cpp \
