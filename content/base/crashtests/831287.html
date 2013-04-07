@@ -1,0 +1,11 @@
+<head dir=auto id=test1><body id=test2><div" id=test3 itemtype=http://example.com/bar style="speak-numeral:> "><canvas id=c><p id=test4>FAIL (fallback content)</p></canvas>
+
+><script>
+document.addEventListener("DOMContentLoaded", CFcrash, false);
+function CFcrash() {
+test1.appendChild(test4);
+test1.setAttribute("dir", "foopy");
+test1.appendChild(c);
+test4.textContent = test2.outerHTML;
+c.appendChild(test3);
+}</script>>
