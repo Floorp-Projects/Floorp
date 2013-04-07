@@ -454,7 +454,7 @@ DOMSVGPathSegList::RemoveItem(uint32_t aIndex,
   InternalList().mData.RemoveElementsAt(internalIndex, 1 + argCount);
   mItems.RemoveElementAt(aIndex);
 
-  UpdateListIndicesFromIndex(aIndex, -(argCount + 1));
+  UpdateListIndicesFromIndex(aIndex, 0 - (argCount + 1));
 
   Element()->DidChangePathSegList(emptyOrOldValue);
   if (AttrIsAnimating()) {
@@ -529,7 +529,7 @@ DOMSVGPathSegList::
   }
   animVal->mItems.RemoveElementAt(aIndex);
 
-  animVal->UpdateListIndicesFromIndex(aIndex, -(1 + aArgCountForItem));
+  animVal->UpdateListIndicesFromIndex(aIndex, 0 - (1 + aArgCountForItem));
 }
 
 void
