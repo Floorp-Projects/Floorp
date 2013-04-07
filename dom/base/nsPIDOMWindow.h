@@ -54,13 +54,12 @@ class nsPIWindowRoot;
 namespace mozilla {
 namespace dom {
 class AudioContext;
-class SpeechSynthesis;
 }
 }
 
 #define NS_PIDOMWINDOW_IID \
-{ 0x287be48c, 0x3a7a, 0x48ce, \
-  { 0x80, 0x0f, 0x05, 0x39, 0x52, 0x08, 0x2e, 0xe7 } }
+{ 0x01decdb6, 0xd8ca, 0x401b, \
+  { 0x8b, 0xd1, 0x85, 0x83, 0x2c, 0xe9, 0x92, 0x0e } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -652,10 +651,6 @@ public:
   static bool HasPerformanceSupport();
   nsPerformance* GetPerformance();
 
-#ifdef MOZ_WEBSPEECH
-  mozilla::dom::SpeechSynthesis* GetSpeechSynthesisInternal();
-#endif
-
 protected:
   // The nsPIDOMWindow constructor. The aOuterWindow argument should
   // be null if and only if the created window itself is an outer
@@ -694,11 +689,6 @@ protected:
 
   // mPerformance is only used on inner windows.
   nsRefPtr<nsPerformance>       mPerformance;
-
-#ifdef MOZ_WEBSPEECH
-  // mSpeechSynthesis is only used on inner windows.
-  nsRefPtr<mozilla::dom::SpeechSynthesis>     mSpeechSynthesis;
-#endif
 
   uint32_t               mModalStateDepth;
 
