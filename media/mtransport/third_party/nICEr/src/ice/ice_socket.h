@@ -49,7 +49,11 @@ typedef struct nr_ice_stun_ctx_ {
   union {
     nr_stun_client_ctx *client;
     nr_stun_server_ctx *server;
-    nr_turn_client_ctx *turn_client;
+    struct {
+      nr_turn_client_ctx *turn_client;
+      nr_socket *turn_sock;  /* The nr_socket_turn wrapped around
+                                turn_client */
+    } turn_client;
   } u;
 
   TAILQ_ENTRY(nr_ice_stun_ctx_) entry;
@@ -79,7 +83,7 @@ int nr_ice_socket_destroy(nr_ice_socket **isock);
 int nr_ice_socket_close(nr_ice_socket *isock);
 int nr_ice_socket_register_stun_client(nr_ice_socket *sock, nr_stun_client_ctx *srv,void **handle);
 int nr_ice_socket_register_stun_server(nr_ice_socket *sock, nr_stun_server_ctx *srv,void **handle);
-int nr_ice_socket_register_turn_client(nr_ice_socket *sock, nr_turn_client_ctx *srv,void **handle);
+int nr_ice_socket_register_turn_client(nr_ice_socket *sock, nr_turn_client_ctx *srv,nr_socket *turn_socket, void **handle);
 int nr_ice_socket_deregister(nr_ice_socket *sock, void *handle);
 
 #ifdef __cplusplus
