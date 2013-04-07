@@ -36,15 +36,16 @@ var AutofillMenuUI = {
   },
 
   _positionOptions: function _positionOptions() {
-    let options = {
-      forcePosition: true
+    return {
+      forcePosition: true,
+      bottomAligned: false,
+      leftAligned: true,
+      xPos: this._anchorRect.x,
+      yPos: this._anchorRect.y + this._anchorRect.height,
+      maxWidth: this._anchorRect.width,
+      maxHeight: 350,
+      source: Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH
     };
-    options.xPos = this._anchorRect.x;
-    options.yPos = this._anchorRect.y + this._anchorRect.height;
-    options.bottomAligned = false;
-    options.leftAligned = true;
-    options.source = Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH;
-    return options;
   },
 
   show: function show(aAnchorRect, aSuggestionsList) {
@@ -395,12 +396,26 @@ MenuPopup.prototype = {
     let aY = aPositionOptions.yPos;
     let aSource = aPositionOptions.source;
 
+    // Set these first so they are set when we do misc. calculations below.
+    if (aPositionOptions.maxWidth) {
+      this._popup.style.maxWidth = aPositionOptions.maxWidth + "px";
+    }
+    if (aPositionOptions.maxHeight) {
+      this._popup.style.maxHeight = aPositionOptions.maxHeight + "px";
+    }
+
     let width = this._popup.boxObject.width;
     let height = this._popup.boxObject.height;
     let halfWidth = width / 2;
     let halfHeight = height / 2;
     let screenWidth = ContentAreaObserver.width;
     let screenHeight = ContentAreaObserver.height;
+
+    // Add padding on the side of the menu per the user's hand preference
+    let leftHand = MetroUtils.handPreference == MetroUtils.handPreferenceLeft;
+    if (aSource && aSource == Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH) {
+      this._commands.setAttribute("left-hand", leftHand);
+    }
 
     if (aPositionOptions.forcePosition) {
       if (aPositionOptions.rightAligned)
@@ -412,19 +427,6 @@ MenuPopup.prototype = {
       if (aPositionOptions.centerHorizontally)
         aX -= halfWidth;
     } else {
-      let leftHand = MetroUtils.handPreference == MetroUtils.handPreferenceLeft;
-
-      // Add padding on the side of the menu per the user's hand preference
-      if (aSource && aSource == Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH) {
-        if (leftHand) {
-          this._commands.setAttribute("left-hand", true);
-          this._commands.removeAttribute("right-hand");
-        } else {
-          this._commands.setAttribute("right-hand", true);
-          this._commands.removeAttribute("left-hand");
-        }
-      }
-
       let hLeft = (aX - halfWidth - width - kPositionPadding) > kPositionPadding;
       let hRight = (aX + width + kPositionPadding) < screenWidth;
       let hCenter = (aX - halfWidth - kPositionPadding) > kPositionPadding;
@@ -474,11 +476,14 @@ MenuPopup.prototype = {
     this._panel.left = aX;
     this._panel.top = aY;
 
-    let excessY = (aY + height + kPositionPadding - screenHeight);
-    this._popup.style.maxHeight = (excessY > 0) ? (height - excessY) + "px" : "none";
-
-    let excessX = (aX + width + kPositionPadding - screenWidth);
-    this._popup.style.maxWidth = (excessX > 0) ? (width - excessX) + "px" : "none";
+    if (!aPositionOptions.maxWidth) {
+      let excessY = (aY + height + kPositionPadding - screenHeight);
+      this._popup.style.maxHeight = (excessY > 0) ? (height - excessY) + "px" : "none";
+    }
+    if (!aPositionOptions.maxHeight) {
+      let excessX = (aX + width + kPositionPadding - screenWidth);
+      this._popup.style.maxWidth = (excessX > 0) ? (width - excessX) + "px" : "none";
+    }
   },
 
   handleEvent: function handleEvent(aEvent) {
