@@ -162,6 +162,7 @@ Selection.prototype = {
 
   isNode: function SN_isNode() {
     return (this.node &&
+            !Components.utils.isDeadWrapper(this.node) &&
             this.node.ownerDocument &&
             this.node.ownerDocument.defaultView &&
             this.node instanceof this.node.ownerDocument.defaultView.Node);

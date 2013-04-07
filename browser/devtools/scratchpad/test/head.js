@@ -8,9 +8,12 @@ let tempScope = {};
 
 Cu.import("resource://gre/modules/NetUtil.jsm", tempScope);
 Cu.import("resource://gre/modules/FileUtils.jsm", tempScope);
+Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", tempScope);
+
 
 let NetUtil = tempScope.NetUtil;
 let FileUtils = tempScope.FileUtils;
+let Promise = tempScope.Promise;
 
 let gScratchpadWindow; // Reference to the Scratchpad chrome window object
 
@@ -103,6 +106,82 @@ function createTempFile(aName, aContent, aCallback=function(){})
     aCallback(aStatus, file);
   });
 }
+
+/**
+ * Run a set of asychronous tests sequentially defined by input and output.
+ *
+ * @param Scratchpad aScratchpad
+ *        The scratchpad to use in running the tests.
+ * @param array aTests
+ *        An array of test objects, each with the following properties:
+ *        - method
+ *          Scratchpad method to use, one of "run", "display", or "inspect".
+ *        - code
+ *          Code to run in the scratchpad.
+ *        - result
+ *          Expected code that will be in the scratchpad upon completion.
+ *        - label
+ *          The tests label which will be logged in the test runner output.
+ * @return Promise
+ *         The promise that will be resolved when all tests are finished.
+ */
+function runAsyncTests(aScratchpad, aTests)
+{
+  let deferred = Promise.defer();
+
+  (function runTest() {
+    if (aTests.length) {
+      let test = aTests.shift();
+      aScratchpad.setText(test.code);
+      aScratchpad[test.method]().then(function success() {
+        is(aScratchpad.getText(), test.result, test.label);
+        runTest();
+      }, function failure(error) {
+        ok(false, error.stack + " " + test.label);
+        runTest();
+      });
+    } else {
+      deferred.resolve();
+    }
+  })();
+
+  return deferred.promise;
+}
+
+/**
+ * Run a set of asychronous tests sequentially with callbacks to prepare each
+ * test and to be called when the test result is ready.
+ *
+ * @param Scratchpad aScratchpad
+ *        The scratchpad to use in running the tests.
+ * @param array aTests
+ *        An array of test objects, each with the following properties:
+ *        - method
+ *          Scratchpad method to use, one of "run", "display", or "inspect".
+ *        - prepare
+ *          The callback to run just prior to executing the scratchpad method.
+ *        - then
+ *          The callback to run when the scratchpad execution promise resolves.
+ * @return Promise
+ *         The promise that will be resolved when all tests are finished.
+ */
+function runAsyncCallbackTests(aScratchpad, aTests)
+{
+  let deferred = Promise.defer();
+
+  (function runTest() {
+    if (aTests.length) {
+      let test = aTests.shift();
+      test.prepare();
+      aScratchpad[test.method]().then(test.then.bind(test)).then(runTest);
+    } else {
+      deferred.resolve();
+    }
+  })();
+
+  return deferred.promise;
+}
+
 
 function cleanup()
 {
