@@ -40,14 +40,7 @@ function testInitialLoad() {
 function testLocationChange()
 {
   gDebugger.DebuggerController.activeThread.resume(function() {
-    gDebugger.DebuggerController.client.addListener("tabNavigated", function onTabNavigated(aEvent, aPacket) {
-      dump("tabNavigated state " + aPacket.state + "\n");
-      if (aPacket.state == "start") {
-        return;
-      }
-
-      gDebugger.DebuggerController.client.removeListener("tabNavigated", onTabNavigated);
-
+    gDebugger.DebuggerController._target.once("navigate", function onTabNavigated(aEvent, aPacket) {
       ok(true, "tabNavigated event was fired.");
       info("Still attached to the tab.");
 
@@ -66,14 +59,7 @@ function testLocationChange()
 
 function testBack()
 {
-  gDebugger.DebuggerController.client.addListener("tabNavigated", function onTabNavigated(aEvent, aPacket) {
-    dump("tabNavigated state " + aPacket.state + "\n");
-    if (aPacket.state == "start") {
-      return;
-    }
-
-    gDebugger.DebuggerController.client.removeListener("tabNavigated", onTabNavigated);
-
+  gDebugger.DebuggerController._target.once("navigate", function onTabNavigated(aEvent, aPacket) {
     ok(true, "tabNavigated event was fired after going back.");
     info("Still attached to the tab.");
 
@@ -93,14 +79,7 @@ function testBack()
 
 function testForward()
 {
-  gDebugger.DebuggerController.client.addListener("tabNavigated", function onTabNavigated(aEvent, aPacket) {
-    dump("tabNavigated state " + aPacket.state + "\n");
-    if (aPacket.state == "start") {
-      return;
-    }
-
-    gDebugger.DebuggerController.client.removeListener("tabNavigated", onTabNavigated);
-
+  gDebugger.DebuggerController._target.once("navigate", function onTabNavigated(aEvent, aPacket) {
     ok(true, "tabNavigated event was fired after going forward.");
     info("Still attached to the tab.");
 

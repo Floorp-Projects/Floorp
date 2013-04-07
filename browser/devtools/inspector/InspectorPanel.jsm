@@ -248,7 +248,8 @@ InspectorPanel.prototype = {
   /**
    * Reset the inspector on navigate away.
    */
-  onNavigatedAway: function InspectorPanel_onNavigatedAway(event, newWindow) {
+  onNavigatedAway: function InspectorPanel_onNavigatedAway(event, payload) {
+    let newWindow = payload._navPayload || payload;
     this.selection.setNode(null);
     this._destroyMarkup();
     this.isDirty = false;
@@ -503,7 +504,11 @@ InspectorPanel.prototype = {
    */
   clearPseudoClasses: function InspectorPanel_clearPseudoClasses() {
     this.breadcrumbs.nodeHierarchy.forEach(function(crumb) {
-      DOMUtils.clearPseudoClassLocks(crumb.node);
+      try {
+        DOMUtils.clearPseudoClassLocks(crumb.node);
+      } catch(e) {
+       // Ignore dead nodes after navigation.
+      }
     });
   },
 
