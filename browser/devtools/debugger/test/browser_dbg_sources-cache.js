@@ -84,7 +84,7 @@ function testSourcesCache()
     "There should be " + TOTAL_SOURCES + " groups cached");
 
   gPrevLabelsCache = gDebugger.SourceUtils._labelsCache;
-  gPrevLabelsCache = gDebugger.SourceUtils._groupsCache;
+  gPrevGroupsCache = gDebugger.SourceUtils._groupsCache;
 
   fetchSources(function() {
     performReload(function() {
@@ -125,15 +125,8 @@ function fetchSources(callback) {
 }
 
 function performReload(callback) {
-  gDebugger.DebuggerController.client.addListener("tabNavigated", function onTabNavigated(aEvent, aPacket) {
-    dump("tabNavigated state " + aPacket.state + "\n");
-    if (aPacket.state == "start") {
-      testStateBeforeReload();
-      return;
-    }
-
-    gDebugger.DebuggerController.client.removeListener("tabNavigated", onTabNavigated);
-
+  gDebugger.DebuggerController._target.once("will-navigate", testStateBeforeReload);
+  gDebugger.DebuggerController._target.once("navigate", function onTabNavigated(aEvent, aPacket) {
     ok(true, "tabNavigated event was fired.");
     info("Still attached to the tab.");
 
@@ -149,10 +142,10 @@ function testStateBeforeReload() {
     "There should be no sources present in the sources list during reload.");
   is(gControllerSources.getCache().length, 0,
     "The sources cache should be empty during reload.");
-  isnot(gDebugger.SourceUtils._labelsCache, gPrevLabelsCache,
-    "The labels cache has been refreshed during reload.")
-  isnot(gDebugger.SourceUtils._groupsCache, gPrevGroupsCache,
-    "The groups cache has been refreshed during reload.")
+  is(gDebugger.SourceUtils._labelsCache, gPrevLabelsCache,
+    "The labels cache has been refreshed during reload and no new objects were created.");
+  is(gDebugger.SourceUtils._groupsCache, gPrevGroupsCache,
+    "The groups cache has been refreshed during reload and no new objects were created.");
   is(gDebugger.SourceUtils._labelsCache.size, 0,
     "There should be no labels cached during reload");
   is(gDebugger.SourceUtils._groupsCache.size, 0,
