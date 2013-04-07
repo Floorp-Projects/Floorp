@@ -454,6 +454,8 @@ DOMSVGPathSegList::RemoveItem(uint32_t aIndex,
   InternalList().mData.RemoveElementsAt(internalIndex, 1 + argCount);
   mItems.RemoveElementAt(aIndex);
 
+  // Note: The subtraction from 0 below is necessary to fix
+  // MSVC build warning C4146 (negating an unsigned value).
   UpdateListIndicesFromIndex(aIndex, 0 - (argCount + 1));
 
   Element()->DidChangePathSegList(emptyOrOldValue);
@@ -529,6 +531,8 @@ DOMSVGPathSegList::
   }
   animVal->mItems.RemoveElementAt(aIndex);
 
+  // Note: The subtraction from 0 below is necessary to fix
+  // MSVC build warning C4146 (negating an unsigned value).
   animVal->UpdateListIndicesFromIndex(aIndex, 0 - (1 + aArgCountForItem));
 }
 
