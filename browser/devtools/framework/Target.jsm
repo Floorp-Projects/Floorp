@@ -19,6 +19,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "DebuggerClient",
   "resource://gre/modules/devtools/dbg-client.jsm");
 
 const targets = new WeakMap();
+const promiseTargets = new WeakMap();
 
 /**
  * Functions for creating Targets
@@ -26,9 +27,8 @@ const targets = new WeakMap();
 this.TargetFactory = {
   /**
    * Construct a Target
-   * @param {XULTab} | {Object} tab
-   *        The tab to use in creating a new target, or an options object in
-   *        case of remote targets.
+   * @param {XULTab} tab
+   *        The tab to use in creating a new target.
    *
    * @return A target object
    */
@@ -39,6 +39,28 @@ this.TargetFactory = {
       targets.set(tab, target);
     }
     return target;
+  },
+
+  /**
+   * Return a promise of a Target for a remote tab.
+   * @param {Object} options
+   *        The options object has the following properties:
+   *        {
+   *          form: the remote protocol form of a tab,
+   *          client: a DebuggerClient instance,
+   *          chrome: true if the remote target is the whole process
+   *        }
+   *
+   * @return A promise of a target object
+   */
+  forRemoteTab: function TF_forRemoteTab(options) {
+    let promise = promiseTargets.get(options);
+    if (promise == null) {
+      let target = new TabTarget(options);
+      promise = target.makeRemote().then(() => target);
+      promiseTargets.set(options, promise);
+    }
+    return promise;
   },
 
   /**
@@ -167,6 +189,10 @@ function TabTarget(tab) {
   if (tab && !["client", "form", "chrome"].every(tab.hasOwnProperty, tab)) {
     this._tab = tab;
     this._setupListeners();
+  } else {
+    this._form = tab.form;
+    this._client = tab.client;
+    this._chrome = tab.chrome;
   }
 }
 
@@ -226,23 +252,15 @@ TabTarget.prototype = {
    * Adds remote protocol capabilities to the target, so that it can be used
    * for tools that support the Remote Debugging Protocol even for local
    * connections.
-   *
-   * @param object aOptions
-   *        An optional object containing remote connection options that is
-   *        supplied when connecting to another instance.
    */
-  makeRemote: function TabTarget_makeRemote(aOptions) {
+  makeRemote: function TabTarget_makeRemote() {
     if (this._remote) {
       return this._remote.promise;
     }
 
     this._remote = Promise.defer();
 
-    if (aOptions) {
-      this._form = aOptions.form;
-      this._client = aOptions.client;
-      this._chrome = aOptions.chrome;
-    } else {
+    if (this.isLocalTab) {
       // Since a remote protocol connection will be made, let's start the
       // DebuggerServer here, once and for all tools.
       if (!DebuggerServer.initialized) {
@@ -257,7 +275,7 @@ TabTarget.prototype = {
 
     this._setupRemoteListeners();
 
-    if (aOptions) {
+    if (this.isRemote) {
       // In the remote debugging case, the protocol connection will have been
       // already initialized in the connection screen code.
       this._remote.resolve(null);
@@ -288,19 +306,21 @@ TabTarget.prototype = {
    * Setup listeners for remote debugging, updating existing ones as necessary.
    */
   _setupRemoteListeners: function TabTarget__setupRemoteListeners() {
-    // Reset any conflicting event handlers that were set before makeRemote().
-    if (this._webProgressListener) {
-      this._webProgressListener.destroy();
-    }
-
     this.client.addListener("tabDetached", this.destroy);
 
     this._onTabNavigated = function onRemoteTabNavigated(aType, aPacket) {
+      let event = Object.create(null);
+      event.url = aPacket.url;
+      event.title = aPacket.title;
+      // Send any stored event payload (DOMWindow or nsIRequest) for backwards
+      // compatibility with non-remotable tools.
+      event._navPayload = this._navPayload;
       if (aPacket.state == "start") {
-        this.emit("will-navigate", aPacket);
+        this.emit("will-navigate", event);
       } else {
-        this.emit("navigate", aPacket);
+        this.emit("navigate", event);
       }
+      this._navPayload = null;
     }.bind(this);
     this.client.addListener("tabNavigated", this._onTabNavigated);
   },
@@ -359,6 +379,10 @@ TabTarget.prototype = {
     this.off("thread-paused", this._handleThreadState);
 
     if (this._tab) {
+      if (this._webProgressListener) {
+        this._webProgressListener.destroy();
+      }
+
       this._tab.ownerDocument.defaultView.removeEventListener("unload", this);
       this._tab.removeEventListener("TabClose", this);
       this._tab.parentNode.removeEventListener("TabSelect", this);
@@ -366,12 +390,7 @@ TabTarget.prototype = {
 
     // If this target was not remoted, the promise will be resolved before the
     // function returns.
-    // if (!this._remote) {
     if (this._tab && !this._client) {
-      if (this._webProgressListener) {
-        this._webProgressListener.destroy();
-      }
-
       targets.delete(this._tab);
       this._tab = null;
       this._client = null;
@@ -386,8 +405,11 @@ TabTarget.prototype = {
       this.client.removeListener("tabDetached", this.destroy);
 
       this._client.close(function onClosed() {
-        let key = this._tab ? this._tab : this._form;
-        targets.delete(key);
+        if (this._tab) {
+          targets.delete(this._tab);
+        } else {
+          promiseTargets.delete(this._form);
+        }
         this._client = null;
         this._tab = null;
         this._form = null;
@@ -434,7 +456,13 @@ TabWebProgressListener.prototype = {
 
     // emit event if the top frame is navigating
     if (this.target && this.target.window == progress.DOMWindow) {
-      this.target.emit("will-navigate", request);
+      // Emit the event if the target is not remoted or store the payload for
+      // later emission otherwise.
+      if (this.target._client) {
+        this.target._navPayload = request;
+      } else {
+        this.target.emit("will-navigate", request);
+      }
     }
   },
 
@@ -446,7 +474,13 @@ TabWebProgressListener.prototype = {
     if (this.target &&
         !(flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT)) {
       let window = webProgress.DOMWindow;
-      this.target.emit("navigate", window);
+      // Emit the event if the target is not remoted or store the payload for
+      // later emission otherwise.
+      if (this.target._client) {
+        this.target._navPayload = window;
+      } else {
+        this.target.emit("navigate", window);
+      }
     }
   },
 

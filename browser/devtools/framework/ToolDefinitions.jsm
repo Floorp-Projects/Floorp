@@ -9,7 +9,8 @@ this.EXPORTED_SYMBOLS = [
                           "webConsoleDefinition",
                           "debuggerDefinition",
                           "inspectorDefinition",
-                          "styleEditorDefinition"
+                          "styleEditorDefinition",
+                          "netMonitorDefinition"
                         ];
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
@@ -19,6 +20,7 @@ const debuggerProps = "chrome://browser/locale/devtools/debugger.properties";
 const styleEditorProps = "chrome://browser/locale/devtools/styleeditor.properties";
 const webConsoleProps = "chrome://browser/locale/devtools/webconsole.properties";
 const profilerProps = "chrome://browser/locale/devtools/profiler.properties";
+const netMonitorProps = "chrome://browser/locale/devtools/netmonitor.properties";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -43,6 +45,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "InspectorPanel",
 XPCOMUtils.defineLazyModuleGetter(this, "ProfilerPanel",
   "resource:///modules/devtools/ProfilerPanel.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "NetMonitorPanel",
+  "resource:///modules/devtools/NetMonitorPanel.jsm");
+
 // Strings
 XPCOMUtils.defineLazyGetter(this, "webConsoleStrings",
   function() Services.strings.createBundle(webConsoleProps));
@@ -58,6 +63,9 @@ XPCOMUtils.defineLazyGetter(this, "inspectorStrings",
 
 XPCOMUtils.defineLazyGetter(this, "profilerStrings",
   function() Services.strings.createBundle(profilerProps));
+
+XPCOMUtils.defineLazyGetter(this, "netMonitorStrings",
+  function() Services.strings.createBundle(netMonitorProps));
 
 // Definitions
 let webConsoleDefinition = {
@@ -129,9 +137,9 @@ let styleEditorDefinition = {
   ordinal: 3,
   accesskey: l10n("open.accesskey", styleEditorStrings),
   modifiers: "shift",
-  label: l10n("ToolboxStyleEditor.label", styleEditorStrings),
   icon: "chrome://browser/skin/devtools/tool-styleeditor.png",
   url: "chrome://browser/content/styleeditor.xul",
+  label: l10n("ToolboxStyleEditor.label", styleEditorStrings),
   tooltip: l10n("ToolboxStyleEditor.tooltip", styleEditorStrings),
 
   isTargetSupported: function(target) {
@@ -151,9 +159,9 @@ let profilerDefinition = {
   ordinal: 4,
   modifiers: "shift",
   killswitch: "devtools.profiler.enabled",
+  icon: "chrome://browser/skin/devtools/tool-profiler.png",
   url: "chrome://browser/content/profiler.xul",
   label: l10n("profiler.label", profilerStrings),
-  icon: "chrome://browser/skin/devtools/tool-profiler.png",
   tooltip: l10n("profiler.tooltip", profilerStrings),
 
   isTargetSupported: function (target) {
@@ -166,12 +174,34 @@ let profilerDefinition = {
   }
 };
 
+let netMonitorDefinition = {
+  id: "netmonitor",
+  accesskey: l10n("netmonitor.accesskey", netMonitorStrings),
+  key: l10n("netmonitor.commandkey", netMonitorStrings),
+  ordinal: 5,
+  modifiers: osString == "Darwin" ? "accel,alt" : "accel,shift",
+  killswitch: "devtools.netmonitor.enabled",
+  icon: "chrome://browser/skin/devtools/tool-profiler.png",
+  url: "chrome://browser/content/devtools/netmonitor.xul",
+  label: l10n("netmonitor.label", netMonitorStrings),
+  tooltip: l10n("netmonitor.tooltip", netMonitorStrings),
+
+  isTargetSupported: function(target) {
+    return true;
+  },
+
+  build: function(iframeWindow, toolbox) {
+    let panel = new NetMonitorPanel(iframeWindow, toolbox);
+    return panel.open();
+  }
+};
 
 this.defaultTools = [
   styleEditorDefinition,
   webConsoleDefinition,
   debuggerDefinition,
   inspectorDefinition,
+  netMonitorDefinition
 ];
 
 if (Services.prefs.getBoolPref("devtools.profiler.enabled")) {
