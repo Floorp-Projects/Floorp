@@ -71,7 +71,6 @@ static void nr_ice_srvrflx_stun_finished_cb(NR_SOCKET sock, int how, void *cb_ar
 static int nr_ice_start_relay_turn(nr_ice_candidate *cand);
 static void nr_ice_turn_allocated_cb(NR_SOCKET sock, int how, void *cb_arg);
 static int nr_ice_candidate_resolved_cb(void *cb_arg, nr_transport_addr *addr);
-
 #endif /* USE_TURN */
 
 char *nr_ice_candidate_type_names[]={0,"host","srflx","prflx","relay",0};
@@ -246,11 +245,15 @@ int nr_ice_candidate_destroy(nr_ice_candidate **candp)
         break;
 #ifdef USE_TURN
       case RELAYED:
+        if (cand->u.relayed.turn_handle)
+          nr_ice_socket_deregister(cand->isock, cand->u.relayed.turn_handle);
         nr_turn_client_ctx_destroy(&cand->u.relayed.turn);
         nr_socket_destroy(&cand->u.relayed.turn_sock);
         break;
 #endif /* USE_TURN */
       case SERVER_REFLEXIVE:
+        if (cand->u.srvrflx.stun_handle)
+          nr_ice_socket_deregister(cand->isock, cand->u.srvrflx.stun_handle);
         nr_stun_client_ctx_destroy(&cand->u.srvrflx.stun);
         break;
       default:
@@ -570,6 +573,7 @@ static int nr_ice_srvrflx_start_stun(nr_ice_candidate *cand)
   {
     int r,_status;
 
+    assert(!cand->delay_timer);
     if(r=nr_stun_client_ctx_create(cand->label, cand->isock->sock,
       &cand->stun_server_addr, cand->stream->ctx->gather_rto,
       &cand->u.srvrflx.stun))
@@ -591,27 +595,15 @@ static void nr_ice_start_relay_turn_timer_cb(NR_SOCKET s, int how, void *cb_arg)
   {
     nr_ice_candidate *cand=cb_arg;
     int r,_status;
-    int i;
 
     cand->delay_timer=0;
 
-    if(r=nr_turn_client_allocate(cand->u.relayed.turn, cand->u.relayed.server->username, cand->u.relayed.server->password, cand->u.relayed.server->bandwidth_kbps, cand->u.relayed.server->lifetime_secs, nr_ice_turn_allocated_cb, cand))
+    if(r=nr_turn_client_allocate(cand->u.relayed.turn, nr_ice_turn_allocated_cb, cb_arg))
       ABORT(r);
 
-    assert((sizeof(cand->u.relayed.turn->stun_ctx)/sizeof(*cand->u.relayed.turn->stun_ctx))==3);
-#if __STDC_VERSION__ >= 201112L
-    _Static_assert((sizeof(cand->u.relayed.turn->stun_ctx)/sizeof(*cand->u.relayed.turn->stun_ctx))==3, "Invalid array size");
-#endif
-    for(i=0;i<3;i++){
-      if(cand->u.relayed.turn->stun_ctx[i]&&cand->u.relayed.turn->stun_ctx[i]->request){
-        if(r=nr_ice_ctx_remember_id(cand->ctx, cand->u.relayed.turn->stun_ctx[i]->request))
-          ABORT(r);
-      }
-    }
-
-    if(r=nr_ice_socket_register_turn_client(cand->isock,cand->u.relayed.turn,&cand->u.relayed.turn_handle))
+    if(r=nr_ice_socket_register_turn_client(cand->isock, cand->u.relayed.turn,
+                                            cand->osock, &cand->u.relayed.turn_handle))
       ABORT(r);
-
 
     _status=0;
   abort:
@@ -624,11 +616,15 @@ static void nr_ice_start_relay_turn_timer_cb(NR_SOCKET s, int how, void *cb_arg)
 static int nr_ice_start_relay_turn(nr_ice_candidate *cand)
   {
     int r,_status;
-
+    assert(!cand->delay_timer);
     if(r=nr_turn_client_ctx_create(cand->label, cand->isock->sock,
-      cand->osock,
-      &cand->stun_server->u.addr, cand->stream->ctx->gather_rto,
-      &cand->u.relayed.turn))
+                                   cand->u.relayed.server->username,
+                                   cand->u.relayed.server->password,
+                                   &cand->stun_server_addr,
+                                   &cand->u.relayed.turn))
+      ABORT(r);
+
+    if(r=nr_socket_turn_set_ctx(cand->osock, cand->u.relayed.turn))
       ABORT(r);
 
     NR_ASYNC_TIMER_SET(cand->stream->ctx->stun_delay,nr_ice_start_relay_turn_timer_cb,cand,&cand->delay_timer);
@@ -688,28 +684,28 @@ static void nr_ice_turn_allocated_cb(NR_SOCKET s, int how, void *cb_arg)
     int r,_status;
     nr_ice_candidate *cand=cb_arg;
     nr_turn_client_ctx *turn=cand->u.relayed.turn;
-    int i;
     char *label;
-
-    /* Deregister to suppress duplicates */
-    if(cand->u.relayed.turn_handle){ /* This test because we might have failed before CB registered */
-      nr_ice_socket_deregister(cand->isock,cand->u.relayed.turn_handle);
-      cand->u.relayed.turn_handle=0;
-    }
+    nr_transport_addr relay_addr;
 
     switch(turn->state){
-    /* OK, we should have a mapped address */
-    case NR_TURN_CLIENT_STATE_ALLOCATED:
-        /* switch candidate from TURN mode to STUN mode */
+      /* OK, we should have a mapped address */
+      case NR_TURN_CLIENT_STATE_ALLOCATED:
+        if (r=nr_turn_client_get_relayed_address(turn, &relay_addr))
+          ABORT(r);
 
-        if(r=nr_concat_strings(&label,"turn-relay(",cand->base.as_string,"|",turn->relay_addr.as_string,")",NULL))
+        if(r=nr_concat_strings(&label,"turn-relay(",cand->base.as_string,"|",
+                               relay_addr.as_string,")",NULL))
           ABORT(r);
 
         r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): Switching from TURN (%s) to RELAY (%s)",cand->u.relayed.turn->label,cand->label,label);
 
-        /* Copy out mapped address and relay address */
-        nr_transport_addr_copy(&turn->relay_addr, &cand->u.relayed.turn->stun_ctx[NR_TURN_CLIENT_PHASE_ALLOCATE_REQUEST2]->results.allocate_response2.relay_addr);
-        nr_transport_addr_copy(&cand->addr, &turn->relay_addr);
+        /* Copy the relayed address into the candidate addr and
+           into the candidate base. Note that we need to keep the
+           ifname in the base. */
+        if (r=nr_transport_addr_copy(&cand->addr, &relay_addr))
+          ABORT(r);
+        if (r=nr_transport_addr_copy_keep_ifname(&cand->base, &relay_addr))  /* Need to keep interface for priority calculation */
+          ABORT(r);
 
         r_log(LOG_ICE,LOG_DEBUG,"ICE-CANDIDATE(%s): base=%s, candidate=%s", cand->label, cand->base.as_string, cand->addr.as_string);
 
@@ -717,18 +713,16 @@ static void nr_ice_turn_allocated_cb(NR_SOCKET s, int how, void *cb_arg)
         cand->label=label;
         cand->state=NR_ICE_CAND_STATE_INITIALIZED;
 
-        nr_socket_turn_set_state(cand->osock, NR_TURN_CLIENT_STATE_ALLOCATED);
-        nr_socket_turn_set_relay_addr(cand->osock, &turn->relay_addr);
-
         /* Execute the ready callback */
         cand->done_cb(0,0,cand->cb_arg);
-
 
         /* We also need to activate the associated STUN candidate */
         if(cand->u.relayed.srvflx_candidate){
           nr_ice_candidate *cand2=cand->u.relayed.srvflx_candidate;
 
-          nr_transport_addr_copy(&cand2->addr, &cand->u.relayed.turn->stun_ctx[NR_TURN_CLIENT_PHASE_ALLOCATE_REQUEST2]->results.allocate_response2.mapped_addr);
+          if (r=nr_turn_client_get_mapped_address(cand->u.relayed.turn, &cand2->addr))
+            ABORT(r);
+
           cand2->state=NR_ICE_CAND_STATE_INITIALIZED;
           cand2->done_cb(0,0,cand2->cb_arg);
         }
@@ -736,8 +730,10 @@ static void nr_ice_turn_allocated_cb(NR_SOCKET s, int how, void *cb_arg)
         break;
 
     case NR_TURN_CLIENT_STATE_FAILED:
-    case NR_TURN_CLIENT_STATE_TIMED_OUT:
     case NR_TURN_CLIENT_STATE_CANCELLED:
+      r_log(NR_LOG_TURN, LOG_ERR,
+            "ICE-CANDIDATE(%s): nr_turn_allocated_cb called with state %d",
+            cand->label, turn->state);
       /* This failed, so go to the next TURN server if there is one */
       ABORT(R_NOT_FOUND);
       break;
@@ -746,16 +742,11 @@ static void nr_ice_turn_allocated_cb(NR_SOCKET s, int how, void *cb_arg)
       ABORT(R_INTERNAL);
     }
 
-    for(i=0;i<3;i++){
-      if(cand->u.relayed.turn->stun_ctx[i]&&cand->u.relayed.turn->stun_ctx[i]->request&&!cand->u.relayed.turn->stun_ctx[i]->response){
-        if(r=nr_ice_ctx_remember_id(cand->ctx, cand->u.relayed.turn->stun_ctx[i]->request))
-          ABORT(r);
-      }
-    }
-
     _status=0;
   abort:
     if(_status){
+      r_log(NR_LOG_TURN, LOG_ERR,
+            "ICE-CANDIDATE(%s): nr_turn_allocated_cb failed", cand->label);
       cand->state=NR_ICE_CAND_STATE_FAILED;
       cand->done_cb(0,0,cand->cb_arg);
 
@@ -766,7 +757,6 @@ static void nr_ice_turn_allocated_cb(NR_SOCKET s, int how, void *cb_arg)
         cand2->done_cb(0,0,cand2->cb_arg);
       }
     }
-    /*return(_status);*/
   }
 #endif /* USE_TURN */
 

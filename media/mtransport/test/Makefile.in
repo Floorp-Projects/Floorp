@@ -111,6 +111,7 @@ CPP_UNIT_TESTS = \
   sockettransportservice_unittest.cpp \
   transport_unittests.cpp \
   runnable_utils_unittest.cpp \
+  turn_unittest.cpp \
   TestSyncRunnable.cpp \
   $(NULL)
 ifdef MOZ_SCTP

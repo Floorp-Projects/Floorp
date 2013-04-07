@@ -64,6 +64,7 @@ extern "C" {
 #include "registry.h"
 #include "async_timer.h"
 #include "r_crc32.h"
+#include "r_memory.h"
 #include "ice_util.h"
 #include "transport_addr.h"
 #include "nr_crypto.h"
@@ -152,16 +153,39 @@ static int nr_crypto_nss_hmac(UCHAR *key, int keyl, UCHAR *buf, int bufl,
   return err;
 }
 
+static int nr_crypto_nss_md5(UCHAR *buf, int bufl, UCHAR *result) {
+  int err = R_INTERNAL;
+  SECStatus rv;
+
+  const SECHashObject *ho = HASH_GetHashObject(HASH_AlgMD5);
+  MOZ_ASSERT(ho);
+  if (!ho)
+    goto abort;
+
+  MOZ_ASSERT(ho->length == 16);
+
+  rv = HASH_HashBuf(ho->type, result, buf, bufl);
+  if (rv != SECSuccess)
+    goto abort;
+
+  err = 0;
+abort:
+  return err;
+}
+
 static nr_ice_crypto_vtbl nr_ice_crypto_nss_vtbl = {
   nr_crypto_nss_random_bytes,
-  nr_crypto_nss_hmac
+  nr_crypto_nss_hmac,
+  nr_crypto_nss_md5
 };
 
 
 
 
-nsresult NrIceStunServer::ToNicerStruct(nr_ice_stun_server *server) const {
+nsresult NrIceStunServer::ToNicerStunStruct(nr_ice_stun_server *server) const {
   int r;
+
+  memset(server, 0, sizeof(nr_ice_stun_server));
 
   if (has_addr_) {
     r = nr_praddr_to_transport_addr(&addr_, &server->u.addr, 0);
@@ -181,11 +205,46 @@ nsresult NrIceStunServer::ToNicerStruct(nr_ice_stun_server *server) const {
   return NS_OK;
 }
 
+
+nsresult NrIceTurnServer::ToNicerTurnStruct(nr_ice_turn_server *server) const {
+  memset(server, 0, sizeof(nr_ice_turn_server));
+
+  nsresult rv = ToNicerStunStruct(&server->turn_server);
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (username_.empty())
+    return NS_ERROR_INVALID_ARG;
+  if (password_.empty())
+    return NS_ERROR_INVALID_ARG;
+
+  if (!(server->username=r_strdup(username_.c_str())))
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  // TODO(ekr@rtfm.com): handle non-ASCII passwords somehow?
+  // STUN requires they be SASLpreped, but we don't know if
+  // they are at this point.
+
+  // C++03 23.2.4, Paragraph 1 stipulates that the elements
+  // in std::vector must be contiguous, and can therefore be
+  // used as input to functions expecting C arrays.
+  int r = r_data_create(&server->password,
+                        const_cast<UCHAR *>(&password_[0]),
+                        password_.size());
+  if (r) {
+    RFREE(server->username);
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return NS_OK;
+}
+
 // Handler callbacks
 int NrIceCtx::select_pair(void *obj,nr_ice_media_stream *stream,
                    int component_id, nr_ice_cand_pair **potentials,
                    int potential_ct) {
-  MOZ_MTLOG(PR_LOG_DEBUG, "select pair called: potential_ct = " << potential_ct);
+  MOZ_MTLOG(PR_LOG_DEBUG, "select pair called: potential_ct = "
+            << potential_ct);
 
   return 0;
 }
@@ -382,7 +441,7 @@ nsresult NrIceCtx::SetStunServers(const std::vector<NrIceStunServer>&
       new nr_ice_stun_server[stun_servers.size()]);
 
   for (size_t i=0; i < stun_servers.size(); ++i) {
-    nsresult rv = stun_servers[i].ToNicerStruct(&servers[i]);
+    nsresult rv = stun_servers[i].ToNicerStunStruct(&servers[i]);
     if (NS_FAILED(rv)) {
       MOZ_MTLOG(PR_LOG_ERROR, "Couldn't set STUN server for '" << name_ << "'");
       return NS_ERROR_FAILURE;
@@ -394,6 +453,35 @@ nsresult NrIceCtx::SetStunServers(const std::vector<NrIceStunServer>&
     MOZ_MTLOG(PR_LOG_ERROR, "Couldn't set STUN server for '" << name_ << "'");
     return NS_ERROR_FAILURE;
   }
+
+  return NS_OK;
+}
+
+// TODO(ekr@rtfm.com): This is just SetStunServers with s/Stun/Turn
+// Could we do a template or something?
+nsresult NrIceCtx::SetTurnServers(const std::vector<NrIceTurnServer>&
+                                  turn_servers) {
+  if (turn_servers.empty())
+    return NS_OK;
+
+  ScopedDeleteArray<nr_ice_turn_server> servers(
+      new nr_ice_turn_server[turn_servers.size()]);
+
+  for (size_t i=0; i < turn_servers.size(); ++i) {
+    nsresult rv = turn_servers[i].ToNicerTurnStruct(&servers[i]);
+    if (NS_FAILED(rv)) {
+      MOZ_MTLOG(PR_LOG_ERROR, "Couldn't set TURN server for '" << name_ << "'");
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  int r = nr_ice_ctx_set_turn_servers(ctx_, servers, turn_servers.size());
+  if (r) {
+    MOZ_MTLOG(PR_LOG_ERROR, "Couldn't set TURN server for '" << name_ << "'");
+    return NS_ERROR_FAILURE;
+  }
+
+  // TODO(ekr@rtfm.com): This leaks the username/password. Need to free that.
 
   return NS_OK;
 }

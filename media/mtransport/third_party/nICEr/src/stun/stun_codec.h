@@ -67,6 +67,7 @@ extern nr_stun_attr_codec nr_stun_attr_codec_quoted_string;
 extern nr_stun_attr_codec nr_stun_attr_codec_string;
 extern nr_stun_attr_codec nr_stun_attr_codec_unknown_attributes;
 extern nr_stun_attr_codec nr_stun_attr_codec_xor_mapped_address;
+extern nr_stun_attr_codec nr_stun_attr_codec_xor_peer_address;
 extern nr_stun_attr_codec nr_stun_attr_codec_old_xor_mapped_address;
 
 

@@ -85,6 +85,12 @@ typedef struct nr_stun_attr_xor_mapped_address_ {
         nr_transport_addr               unmasked;
 } nr_stun_attr_xor_mapped_address;
 
+typedef struct nr_stun_attr_data_ {
+    UCHAR  data[NR_STUN_MAX_MESSAGE_SIZE];
+    int    length;
+} nr_stun_attr_data;
+
+
 typedef struct nr_stun_encoded_attribute_ {
     UINT2                               type;
     UINT2                               length;
@@ -103,7 +109,7 @@ typedef struct nr_stun_message_attribute_ {
         nr_stun_attr_message_integrity  message_integrity;
         char                            nonce[NR_STUN_MAX_NONCE_BYTES+1];  /* +1 for \0 */
         char                            realm[NR_STUN_MAX_REALM_BYTES+1];  /* +1 for \0 */
-        nr_transport_addr               relay_address;
+        nr_stun_attr_xor_mapped_address relay_address;
         char                            server_name[NR_STUN_MAX_SERVER_BYTES+1];  /* +1 for \0 */
         nr_stun_attr_unknown_attributes unknown_attributes;
         char                            username[NR_STUN_MAX_USERNAME_BYTES+1];  /* +1 for \0 */
@@ -116,9 +122,10 @@ typedef struct nr_stun_message_attribute_ {
 #endif /* USE_ICE */
 
 #ifdef USE_TURN
-        UINT4                           bandwidth_kbps;
         UINT4                           lifetime_secs;
         nr_transport_addr               remote_address;
+        UCHAR                           requested_transport;
+        nr_stun_attr_data               data;
 #endif /* USE_TURN */
 
 #ifdef USE_STUND_0_96
@@ -184,10 +191,11 @@ int nr_stun_message_add_use_candidate_attribute(nr_stun_message *msg);
 #endif /* USE_ICE */
 
 #ifdef USE_TURN
-int nr_stun_message_add_bandwidth_attribute(nr_stun_message *msg, UINT4 bandwidth_kbps);
 int nr_stun_message_add_data_attribute(nr_stun_message *msg, UCHAR *data, int length);
 int nr_stun_message_add_lifetime_attribute(nr_stun_message *msg, UINT4 lifetime_secs);
-int nr_stun_message_add_remote_address_attribute(nr_stun_message *msg, nr_transport_addr *remote_address);
+int nr_stun_message_add_requested_transport_attribute(nr_stun_message *msg, UCHAR transport);
+int
+nr_stun_message_add_xor_peer_address_attribute(nr_stun_message *msg, nr_transport_addr *peer_address);
 #endif /* USE_TURN */
 
 #ifdef USE_STUND_0_96

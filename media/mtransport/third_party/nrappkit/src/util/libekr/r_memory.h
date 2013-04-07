@@ -47,7 +47,7 @@ void *r_malloc_compat(size_t size);
 void *r_calloc(int type,size_t number,size_t size);
 void r_free   (void *ptr);
 void *r_realloc(void *ptr,size_t size);
-char *r_strdup(char *str);
+char *r_strdup(const char *str);
 int r_mem_get_usage(UINT4 *usage);
 int r_memory_dump_stats(void);
 
