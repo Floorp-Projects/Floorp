@@ -3073,7 +3073,13 @@ nsCxPusher::Push(EventTarget *aCurrentTarget)
   nsresult rv;
   nsIScriptContext* scx =
     aCurrentTarget->GetContextForEventHandlers(&rv);
+#ifdef DEBUG_smaug
   NS_ENSURE_SUCCESS(rv, false);
+#else
+  if(NS_FAILED(rv)) {
+    return false;
+  }
+#endif
 
   if (!scx) {
     // The target may have a special JS context for event handlers.
