@@ -61,7 +61,7 @@ button {
   padding: 2px 6px;
   line-height: 1.2;
   background-color: hsla(210,30%,95%,.1);
-  background-image: -moz-linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
+  background-image: linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
   background-clip: padding-box;
   border: 1px solid hsla(210,15%,25%,.4);
   border-color: hsla(210,15%,25%,.3) hsla(210,15%,25%,.35) hsla(210,15%,25%,.4);

@@ -15,8 +15,8 @@
   -moz-appearance: none;
   padding: 18px;
   background-color: Window;
-  background-image: -moz-linear-gradient(top, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0) 160px),
-                    -moz-linear-gradient(-moz-dialog, Window 160px);
+  background-image: linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0) 160px),
+                    linear-gradient(-moz-dialog, Window 160px);
   color: WindowText;
 }
 
