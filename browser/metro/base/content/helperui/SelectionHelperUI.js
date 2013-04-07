@@ -516,8 +516,8 @@ var SelectionHelperUI = {
     this._sendAsyncMessage("Browser:SelectionSwitchMode", {
       newMode: "selection",
       change: targetMark.tag,
-      xPos: this._msgTarget.xctob(targetMark.xPos, true),
-      yPos: this._msgTarget.yctob(targetMark.yPos, true),
+      xPos: this._msgTarget.ctobx(targetMark.xPos, true),
+      yPos: this._msgTarget.ctoby(targetMark.yPos, true),
     });
   },
 
@@ -800,13 +800,13 @@ var SelectionHelperUI = {
 
     // start and end contain client coordinates.
     if (json.updateStart) {
-      this.startMark.position(this._msgTarget.xbtoc(json.start.xPos, true),
-                              this._msgTarget.ybtoc(json.start.yPos, true));
+      this.startMark.position(this._msgTarget.btocx(json.start.xPos, true),
+                              this._msgTarget.btocy(json.start.yPos, true));
       this.startMark.show();
     }
     if (json.updateEnd) {
-      this.endMark.position(this._msgTarget.xbtoc(json.end.xPos, true),
-                            this._msgTarget.ybtoc(json.end.yPos, true));
+      this.endMark.position(this._msgTarget.btocx(json.end.xPos, true),
+                            this._msgTarget.btocy(json.end.yPos, true));
       this.endMark.show();
     }
     if (json.updateCaret) {
@@ -815,8 +815,8 @@ var SelectionHelperUI = {
       // position information we can use.
       haveSelectionRect = json.selectionRangeFound;
       if (json.selectionRangeFound) {
-        this.caretMark.position(this._msgTarget.xbtoc(json.caret.xPos, true),
-                                this._msgTarget.ybtoc(json.caret.yPos, true));
+        this.caretMark.position(this._msgTarget.btocx(json.caret.xPos, true),
+                                this._msgTarget.btocy(json.caret.yPos, true));
         this.caretMark.show();
       }
     }
@@ -935,16 +935,16 @@ var SelectionHelperUI = {
   _getMarkerBaseMessage: function _getMarkerBaseMessage() {
     return {
       start: {
-        xPos: this._msgTarget.xctob(this.startMark.xPos, true),
-        yPos: this._msgTarget.yctob(this.startMark.yPos, true)
+        xPos: this._msgTarget.ctobx(this.startMark.xPos, true),
+        yPos: this._msgTarget.ctoby(this.startMark.yPos, true)
       },
       end: {
-        xPos: this._msgTarget.xctob(this.endMark.xPos, true),
-        yPos: this._msgTarget.yctob(this.endMark.yPos, true)
+        xPos: this._msgTarget.ctobx(this.endMark.xPos, true),
+        yPos: this._msgTarget.ctoby(this.endMark.yPos, true)
       },
       caret: {
-        xPos: this._msgTarget.xctob(this.caretMark.xPos, true),
-        yPos: this._msgTarget.yctob(this.caretMark.yPos, true)
+        xPos: this._msgTarget.ctobx(this.caretMark.xPos, true),
+        yPos: this._msgTarget.ctoby(this.caretMark.yPos, true)
       },
     };
   },
