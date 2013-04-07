@@ -103,7 +103,7 @@
         * @param aIgnoreScale ignore current scale factor.
         * @return { x: converted x coordinate, y: converted y coordinate }
         *
-        * xctob, yctob
+        * ctobx, ctoby
         *  Convert individual x and y coordinates.
         *
         * @param aX or aY - browser coordinate
@@ -139,7 +139,7 @@
         * @param aIgnoreScale ignore current scale factor.
         * @return { left:, top:, right:, bottom: }
         *
-        * xbtoc, ybtoc
+        * btocx, btocy
         *  Convert individual x and y coordinates.
         *
         * @param aX or aY - client coordinate
@@ -180,7 +180,7 @@
         </body>
       </method>
 
-      <method name="xctob">
+      <method name="ctobx">
         <parameter name="aX"/>
         <parameter name="aIgnoreScroll"/>
         <parameter name="aIgnoreScale"/>
@@ -193,7 +193,7 @@
         </body>
       </method>
 
-      <method name="yctob">
+      <method name="ctoby">
         <parameter name="aY"/>
         <parameter name="aIgnoreScroll"/>
         <parameter name="aIgnoreScale"/>
@@ -274,7 +274,7 @@
         </body>
       </method>
 
-      <method name="xbtoc">
+      <method name="btocx">
         <parameter name="aX"/>
         <parameter name="aIgnoreScroll"/>
         <parameter name="aIgnoreScale"/>
@@ -287,7 +287,7 @@
         </body>
       </method>
 
-      <method name="ybtoc">
+      <method name="btocy">
         <parameter name="aY"/>
         <parameter name="aIgnoreScroll"/>
         <parameter name="aIgnoreScale"/>
