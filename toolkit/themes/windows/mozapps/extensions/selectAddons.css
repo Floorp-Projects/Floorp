@@ -71,7 +71,7 @@
 #select-header .select-icon,
 #select-header .select-name,
 #select-header .select-action {
-  background-image: -moz-linear-gradient(top, #D6E5F5 0%, Window 100%);
+  background-image: linear-gradient(#D6E5F5 0%, Window 100%);
   background-size: 1px 100%;
   background-position: right;
   background-repeat: no-repeat;

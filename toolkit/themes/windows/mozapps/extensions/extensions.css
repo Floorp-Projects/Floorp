@@ -135,7 +135,7 @@
   color: #373D48;
   border: 1px solid #A8B8D1;
   border-radius: 8px;
-  background-image: -moz-linear-gradient(top, #FFF, #ECF1F7);
+  background-image: linear-gradient(#FFF, #ECF1F7);
   background-clip: padding-box;
   box-shadow: 2px 2px 4px #999; 
 }
@@ -604,8 +604,8 @@
 
 .addon[active="false"] {
   background-color: rgba(135, 135, 135, 0.1);
-  background-image: -moz-linear-gradient(rgba(135, 135, 135, 0),
-                                         rgba(135, 135, 135, 0.1));
+  background-image: linear-gradient(rgba(135, 135, 135, 0),
+                                    rgba(135, 135, 135, 0.1));
 }
 
 .addon-view[active="false"],
@@ -615,15 +615,15 @@
 
 .addon-view[notification="warning"] {
   background-image: url("chrome://mozapps/skin/extensions/stripes-warning.png"),
-                    -moz-linear-gradient(rgba(255, 255, 0, 0.04),
-                                         rgba(255, 255, 0, 0));
+                    linear-gradient(rgba(255, 255, 0, 0.04),
+                                    rgba(255, 255, 0, 0));
   background-repeat: repeat-x;
 }
 
 .addon-view[notification="error"] {
   background-image: url("chrome://mozapps/skin/extensions/stripes-error.png"),
-                    -moz-linear-gradient(rgba(255, 0, 0, 0.04),
-                                         rgba(255, 0, 0, 0));
+                    linear-gradient(rgba(255, 0, 0, 0.04),
+                                    rgba(255, 0, 0, 0));
   background-repeat: repeat-x;
 }
 
@@ -631,16 +631,16 @@
 .addon-view[pending="upgrade"],
 .addon-view[pending="install"] {
   background-image: url("chrome://mozapps/skin/extensions/stripes-info-positive.png"),
-                    -moz-linear-gradient(rgba(0, 255, 0, 0.04),
-                                         rgba(0, 255, 0, 0));
+                    linear-gradient(rgba(0, 255, 0, 0.04),
+                                    rgba(0, 255, 0, 0));
   background-repeat: repeat-x;
 }
 
 .addon-view[pending="disable"],
 .addon-view[pending="uninstall"] {
   background-image: url("chrome://mozapps/skin/extensions/stripes-info-negative.png"),
-                    -moz-linear-gradient(rgba(128, 128, 128, 0.04),
-                                         rgba(128, 128, 128, 0));
+                    linear-gradient(rgba(128, 128, 128, 0.04),
+                                    rgba(128, 128, 128, 0));
   background-repeat: repeat-x;
 }
 
@@ -768,7 +768,7 @@
 
 #detail-screenshot[loading] {
   background-image: url("chrome://global/skin/icons/loading_16.png"),
-                    -moz-linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0));
+                    linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0));
   background-position: 50% 50%;
   background-repeat: no-repeat;
   border-radius: 3px;
@@ -776,7 +776,7 @@
 
 #detail-screenshot[loading="error"] {
   background-image: url("chrome://global/skin/media/error.png"),
-                    -moz-linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0));
+                    linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0));
 }
 
 #detail-desc-container {
@@ -822,8 +822,8 @@
   border-radius: 3px;
   list-style-image: url("chrome://mozapps/skin/extensions/heart.png");
   background-color: #2F73EF;
-  background-image: -moz-linear-gradient(rgba(251, 252, 253, 0.70), rgba(246, 247, 248, 0.27) 49%, 
-                                         rgba(231, 232, 233, 0.25) 51%, rgba(225, 226, 229, 0.1));
+  background-image: linear-gradient(rgba(251, 252, 253, 0.70), rgba(246, 247, 248, 0.27) 49%, 
+                                    rgba(231, 232, 233, 0.25) 51%, rgba(225, 226, 229, 0.1));
 }
 
 #detail-contrib-btn .button-box {
@@ -881,8 +881,8 @@ setting {
 }
 
 #detail-view[active="false"]:not([pending]):not([notification]) {
-  background-image: -moz-linear-gradient(rgba(135, 135, 135, 0.1),
-                                         rgba(135, 135, 135, 0));
+  background-image: linear-gradient(rgba(135, 135, 135, 0.1),
+                                    rgba(135, 135, 135, 0));
 }
 
 setting[first-row="true"] {
@@ -952,8 +952,8 @@ menulist { /* Fixes some styling inconsistencies */
 
 .download-progress {
   background-color: rgba(151,152,153,.05);
-  background-image: -moz-linear-gradient(rgba(251, 252, 253, 0.95), rgba(246, 247, 248, 0.47) 49%, 
-                                         rgba(231, 232, 233, 0.45) 51%, rgba(225, 226, 229, 0.3));
+  background-image: linear-gradient(rgba(251, 252, 253, 0.95), rgba(246, 247, 248, 0.47) 49%, 
+                                    rgba(231, 232, 233, 0.45) 51%, rgba(225, 226, 229, 0.3));
   background-clip: padding-box;
   border-radius: 3px;
   border: 1px solid;
@@ -978,7 +978,7 @@ menulist { /* Fixes some styling inconsistencies */
 .download-progress[mode="undetermined"] .end-cap,
 .download-progress .progress .progress-bar {
   -moz-appearance: none;
-  background-image: -moz-linear-gradient(#92DDA0, #6FC483 49%, #5EB272 51%, #80CE91);
+  background-image: linear-gradient(#92DDA0, #6FC483 49%, #5EB272 51%, #80CE91);
   margin-top: -1px;
   margin-bottom: -1px;
   border: 1px solid;
@@ -1135,8 +1135,8 @@ button.button-link:not([disabled="true"]):active:hover {
   padding: 1px 3px;
   color: #444;
   text-shadow: 0 0 3px white;
-  background: -moz-linear-gradient(rgba(251, 252, 253, 0.95), rgba(246, 247, 248, 0) 49%, 
-                                   rgba(211, 212, 213, 0.45) 51%, rgba(225, 226, 229, 0.3));
+  background: linear-gradient(rgba(251, 252, 253, 0.95), rgba(246, 247, 248, 0) 49%, 
+                              rgba(211, 212, 213, 0.45) 51%, rgba(225, 226, 229, 0.3));
   background-clip: padding-box;
   border-radius: 2.5px;
   border: 1px solid rgba(31, 64, 100, 0.4);
