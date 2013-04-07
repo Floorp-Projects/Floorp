@@ -3314,12 +3314,12 @@ nsGlobalWindow::GetSpeechSynthesis(nsISupports** aSpeechSynthesis)
 {
   FORWARD_TO_INNER(GetSpeechSynthesis, (aSpeechSynthesis), NS_ERROR_NOT_INITIALIZED);
 
-  NS_IF_ADDREF(*aSpeechSynthesis = nsPIDOMWindow::GetSpeechSynthesisInternal());
+  NS_IF_ADDREF(*aSpeechSynthesis = GetSpeechSynthesisInternal());
   return NS_OK;
 }
 
 SpeechSynthesis*
-nsPIDOMWindow::GetSpeechSynthesisInternal()
+nsGlobalWindow::GetSpeechSynthesisInternal()
 {
   MOZ_ASSERT(IsInnerWindow());
 
