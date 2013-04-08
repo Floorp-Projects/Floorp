@@ -1695,6 +1695,10 @@ JSBool
 InterfaceHasInstance(JSContext* cx, JSHandleObject obj, JSMutableHandleValue vp,
                      JSBool* bp);
 
+// Helper for lenient getters/setters to report to console
+void
+ReportLenientThisUnwrappingFailure(JSContext* cx, JS::Handle<JSObject*> obj);
+
 } // namespace dom
 } // namespace mozilla
 
