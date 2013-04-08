@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+#parent {
+  width: 200px;
+  height: 200px;
+  overflow: hidden;
+  transform: translateX(10px);
+  background: green;
+}
+#child {
+  position: fixed;
+  top: -10px;
+  left: -10px;
+  width: 100px;
+  height: 100px;
+  background: red;
+}
+</style>
+</head>
+<body>
+<div id="parent">
+  <div id="child"></div>
+</div>
+</body>
+</html>
