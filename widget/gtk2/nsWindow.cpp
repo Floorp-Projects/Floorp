@@ -994,8 +994,9 @@ nsWindow::Show(bool aState)
 NS_IMETHODIMP
 nsWindow::Resize(double aWidth, double aHeight, bool aRepaint)
 {
-    int32_t width = NSToIntRound(aWidth);
-    int32_t height = NSToIntRound(aHeight);
+    double scale = GetDefaultScale();
+    int32_t width = NSToIntRound(scale * aWidth);
+    int32_t height = NSToIntRound(scale * aHeight);
     ConstrainSize(&width, &height);
 
     // For top-level windows, aWidth and aHeight should possibly be
@@ -1073,12 +1074,13 @@ NS_IMETHODIMP
 nsWindow::Resize(double aX, double aY, double aWidth, double aHeight,
                  bool aRepaint)
 {
-    int32_t width = NSToIntRound(aWidth);
-    int32_t height = NSToIntRound(aHeight);
+    double scale = GetDefaultScale();
+    int32_t width = NSToIntRound(scale * aWidth);
+    int32_t height = NSToIntRound(scale * aHeight);
     ConstrainSize(&width, &height);
 
-    int32_t x = NSToIntRound(aX);
-    int32_t y = NSToIntRound(aY);
+    int32_t x = NSToIntRound(scale * aX);
+    int32_t y = NSToIntRound(scale * aY);
     mBounds.x = x;
     mBounds.y = y;
     mBounds.SizeTo(width, height);
@@ -1160,8 +1162,9 @@ nsWindow::Move(double aX, double aY)
     LOG(("nsWindow::Move [%p] %f %f\n", (void *)this,
          aX, aY));
 
-    int32_t x = NSToIntRound(aX);
-    int32_t y = NSToIntRound(aY);
+    double scale = GetDefaultScale();
+    int32_t x = NSToIntRound(aX * scale);
+    int32_t y = NSToIntRound(aY * scale);
 
     if (mWindowType == eWindowType_toplevel ||
         mWindowType == eWindowType_dialog) {
