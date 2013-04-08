@@ -184,7 +184,7 @@ class Type(object):
         
         """
         start = data_pool + offset - 1
-        (data,) = Type._prefixdescriptor.unpack(map[start:start + Type._prefixdescriptor.size])
+        (data,) = Type._prefixdescriptor.unpack_from(map, start)
         # first three bits are the flags
         flags = data & 0xE0
         flags = Type.decodeflags(flags)
@@ -285,7 +285,7 @@ class InterfaceType(Type):
         if not flags['pointer']:
             return None, offset
         start = data_pool + offset - 1
-        (iface_index,) = InterfaceType._descriptor.unpack(map[start:start + InterfaceType._descriptor.size])
+        (iface_index,) = InterfaceType._descriptor.unpack_from(map, start)
         offset += InterfaceType._descriptor.size
         iface = None
         # interface indices are 1-based
@@ -339,7 +339,7 @@ class InterfaceIsType(Type):
         if not flags['pointer']:
             return None, offset
         start = data_pool + offset - 1
-        (param_index,) = InterfaceIsType._descriptor.unpack(map[start:start + InterfaceIsType._descriptor.size])
+        (param_index,) = InterfaceIsType._descriptor.unpack_from(map, start)
         offset += InterfaceIsType._descriptor.size
         if param_index not in InterfaceIsType._cache:
             InterfaceIsType._cache[param_index] = InterfaceIsType(param_index, **flags)
@@ -388,7 +388,7 @@ class ArrayType(Type):
         if not flags['pointer']:
             return None, offset
         start = data_pool + offset - 1
-        (size_is_arg_num, length_is_arg_num) = ArrayType._descriptor.unpack(map[start:start + ArrayType._descriptor.size])
+        (size_is_arg_num, length_is_arg_num) = ArrayType._descriptor.unpack_from(map, start)
         offset += ArrayType._descriptor.size
         t, offset = Type.read(typelib, map, data_pool, offset)
         return ArrayType(t, size_is_arg_num, length_is_arg_num, **flags), offset
@@ -437,7 +437,7 @@ class StringWithSizeType(Type):
         if not flags['pointer']:
             return None, offset
         start = data_pool + offset - 1
-        (size_is_arg_num, length_is_arg_num) = StringWithSizeType._descriptor.unpack(map[start:start + StringWithSizeType._descriptor.size])
+        (size_is_arg_num, length_is_arg_num) = StringWithSizeType._descriptor.unpack_from(map, start)
         offset += StringWithSizeType._descriptor.size
         return StringWithSizeType(size_is_arg_num, length_is_arg_num, **flags), offset
 
@@ -484,7 +484,7 @@ class WideStringWithSizeType(Type):
         if not flags['pointer']:
             return None, offset
         start = data_pool + offset - 1
-        (size_is_arg_num, length_is_arg_num) = WideStringWithSizeType._descriptor.unpack(map[start:start + WideStringWithSizeType._descriptor.size])
+        (size_is_arg_num, length_is_arg_num) = WideStringWithSizeType._descriptor.unpack_from(map, start)
         offset += WideStringWithSizeType._descriptor.size
         return WideStringWithSizeType(size_is_arg_num, length_is_arg_num, **flags), offset
 
@@ -574,7 +574,7 @@ class Param(object):
         following this ParamDescriptor.
         """
         start = data_pool + offset - 1
-        (flags,) = Param._descriptorstart.unpack(map[start:start + Param._descriptorstart.size])
+        (flags,) = Param._descriptorstart.unpack_from(map, start)
         # only the first five bits are flags
         flags &= 0xFC
         flags = Param.decodeflags(flags)
@@ -724,7 +724,7 @@ class Method(object):
         
         """
         start = data_pool + offset - 1
-        flags, name_offset, num_args = Method._descriptorstart.unpack(map[start:start + Method._descriptorstart.size])
+        flags, name_offset, num_args = Method._descriptorstart.unpack_from(map, start)
         # only the first seven bits are flags
         flags &= 0xFE
         flags = Method.decodeflags(flags)
@@ -792,7 +792,7 @@ class Constant(object):
         
         """
         start = data_pool + offset - 1
-        (name_offset,) = Constant._descriptorstart.unpack(map[start:start + Constant._descriptorstart.size])
+        (name_offset,) = Constant._descriptorstart.unpack_from(map, start)
         name = Typelib.read_string(map, data_pool, name_offset)
         offset += Constant._descriptorstart.size
         # Read TypeDescriptor
@@ -801,7 +801,7 @@ class Constant(object):
         if isinstance(t, SimpleType) and t.tag in Constant.typemap:
             tt = Constant.typemap[t.tag]
             start = data_pool + offset - 1
-            (val,) = struct.unpack(tt, map[start:start + struct.calcsize(tt)])
+            (val,) = struct.unpack_from(tt, map, start)
             offset += struct.calcsize(tt)
             c = Constant(name, t, val)
         return c, offset
@@ -909,7 +909,7 @@ class Interface(object):
         if offset == 0:
             return
         start = data_pool + offset - 1
-        parent, num_methods = Interface._descriptorstart.unpack(map[start:start + Interface._descriptorstart.size])
+        parent, num_methods = Interface._descriptorstart.unpack_from(map, start)
         if parent > 0 and parent <= len(typelib.interfaces):
             self.parent = typelib.interfaces[parent - 1]
         # Read methods
@@ -919,14 +919,14 @@ class Interface(object):
             self.methods.append(m)
         # Read constants
         start = data_pool + offset - 1
-        (num_constants, ) = struct.unpack(">H", map[start:start + struct.calcsize(">H")])
+        (num_constants, ) = struct.unpack_from(">H", map, start)
         offset = offset + struct.calcsize(">H")
         for i in range(num_constants):
             c, offset = Constant.read(typelib, map, data_pool, offset)
             self.constants.append(c)
         # Read flags
         start = data_pool + offset - 1
-        (flags, ) = struct.unpack(">B", map[start:start + struct.calcsize(">B")])
+        (flags, ) = struct.unpack_from(">B", map, start)
         offset = offset + struct.calcsize(">B")
         # only the first two bits are flags
         flags &= 0xE0
@@ -1080,7 +1080,7 @@ class Typelib(object):
          num_interfaces,
          file_length,
          interface_directory_offset,
-         data_pool_offset) = Typelib._header.unpack(data[:Typelib._header.size])
+         data_pool_offset) = Typelib._header.unpack_from(data)
         if magic != XPT_MAGIC:
             raise FileFormatError, "Bad magic: %s" % magic
         xpt = Typelib((major_ver, minor_ver))
@@ -1096,7 +1096,7 @@ class Typelib(object):
         # make a half-hearted attempt to read Annotations,
         # since XPIDL doesn't produce any anyway.
         start = Typelib._header.size
-        (anno, ) = struct.unpack(">B", data[start:start + struct.calcsize(">B")])
+        (anno, ) = struct.unpack_from(">B", data, start)
         islast = anno & 0x80
         tag = anno & 0x7F
         if tag == 0: # EmptyAnnotation
@@ -1106,8 +1106,7 @@ class Typelib(object):
         for i in range(num_interfaces):
             # iid, name, namespace, interface_descriptor
             start = interface_directory_offset + i * Interface._direntry.size
-            end = interface_directory_offset + (i+1) * Interface._direntry.size
-            ide = Interface._direntry.unpack(data[start:end])
+            ide = Interface._direntry.unpack_from(data, start)
             iid = Typelib.iid_to_string(ide[0])
             name = Typelib.read_string(data, data_pool_offset, ide[1])
             namespace = Typelib.read_string(data, data_pool_offset, ide[2])
