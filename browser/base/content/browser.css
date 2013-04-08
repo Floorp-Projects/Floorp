@@ -608,12 +608,8 @@ html|*#gcli-output-frame,
   transition: none;
 }
 
-.toolbarbutton-badge[badge]:not([badge=""])::after {
+.social-notification-container > .toolbarbutton-1[badge]:not([badge=""])::after {
   content: attr(badge);
-}
-
-toolbarbutton[type="badged"] {
-  -moz-binding: url("chrome://browser/content/urlbarBindings.xml#toolbarbutton-badged");
 }
 
 chatbox {
