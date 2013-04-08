@@ -378,7 +378,7 @@ TypeSet::intersectionEmpty(TypeSet *other)
     if (unknown() || other->unknown())
         return false;
 
-    if (unknownObject() && other->unknownObject())
+    if (unknownObject() && unknownObject())
         return false;
 
     if (unknownObject() && other->getObjectCount() > 0)
