@@ -2156,10 +2156,10 @@ toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
 }
 
 .popup-notification-icon[popupid="servicesInstall"] {
-  list-style-image: url("chrome://global/skin/icons/information-64.png");
+  list-style-image: url(chrome://browser/skin/social/services-64.png);
 }
 #servicesInstall-notification-icon {
-  list-style-image: url(chrome://global/skin/icons/information-16.png);
+  list-style-image: url(chrome://browser/skin/social/services-16.png);
 }
 #social-undoactivation-button,
 #servicesInstall-learnmore-link {

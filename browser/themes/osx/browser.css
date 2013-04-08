@@ -3663,11 +3663,21 @@ toolbar[mode="icons"] > *|* > .social-notification-container > .toolbarbutton-1[
 }
 
 .popup-notification-icon[popupid="servicesInstall"] {
-  list-style-image: url("chrome://global/skin/icons/information-64.png");
+  list-style-image: url(chrome://browser/skin/social/services-64.png);
 }
 #servicesInstall-notification-icon {
-  list-style-image: url(chrome://global/skin/icons/information-16.png);
+  list-style-image: url(chrome://browser/skin/social/services-16.png);
 }
+
+@media (min-resolution: 2dppx) {
+  .popup-notification-icon[popupid="servicesInstall"] {
+    list-style-image: url(chrome://browser/skin/social/services-64@2x.png);
+  }
+  #servicesInstall-notification-icon {
+    list-style-image: url(chrome://browser/skin/social/services-16@2x.png);
+  }
+}
+
 #social-undoactivation-button,
 #servicesInstall-learnmore-link {
   -moz-margin-start: 0; /* override default label margin to match description margin */
