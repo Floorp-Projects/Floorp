@@ -28,6 +28,8 @@ class ErrorCodes(object):
     INVALID_XPATH_SELECTOR = 51
     INVALID_XPATH_SELECTOR_RETURN_TYPER = 52
     INVALID_RESPONSE = 53
+    FRAME_SEND_NOT_INITIALIZED_ERROR = 54
+    FRAME_SEND_FAILURE_ERROR = 55
     MARIONETTE_ERROR = 500
 
 class MarionetteException(Exception):
@@ -97,3 +99,8 @@ class InvalidSelectorException(MarionetteException):
 class MoveTargetOutOfBoundsException(MarionetteException):
     pass
 
+class FrameSendNotInitializedError(MarionetteException):
+    pass
+
+class FrameSendFailureError(MarionetteException):
+    pass
