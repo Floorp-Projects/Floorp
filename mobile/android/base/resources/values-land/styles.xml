@@ -9,4 +9,12 @@
          <item name="android:orientation">horizontal</item>
     </style>
 
+    <style name="TabsItem">
+         <item name="android:nextFocusDown">@+id/close</item>
+    </style>
+
+    <style name="TabsItemClose">
+         <item name="android:nextFocusUp">@+id/info</item>
+    </style>
+
 </resources>
