@@ -463,6 +463,29 @@ protected:
   bool mHaveShutDown;
 };
 
+class CSPErrorQueue
+{
+  public:
+    /**
+     * Note this was designed to be passed string literals. If you give it
+     * a dynamically allocated string, it is your responsibility to make sure
+     * it never dies and is properly freed!
+     */
+    void Add(const char* aMessageName);
+    void Flush(nsIDocument* aDocument);
+
+    CSPErrorQueue()
+    {
+    }
+
+    ~CSPErrorQueue()
+    {
+    }
+
+  private:
+    nsAutoTArray<const char*,5> mErrors;
+};
+
 // Base class for our document implementations.
 //
 // Note that this class *implements* nsIDOMXMLDocument, but it's not
@@ -1320,6 +1343,11 @@ private:
   nsresult CheckFrameOptions();
   nsresult InitCSP(nsIChannel* aChannel);
 
+  void FlushCSPWebConsoleErrorQueue()
+  {
+    mCSPWebConsoleErrorQueue.Flush(this);
+  }
+
   /**
    * Find the (non-anonymous) content in this document for aFrame. It will
    * be aFrame's content node if that content is in this document and not
@@ -1417,6 +1445,8 @@ private:
 
   nsrefcnt mStackRefCnt;
   bool mNeedsReleaseAfterStackRefCntRelease;
+
+  CSPErrorQueue mCSPWebConsoleErrorQueue;
 
 #ifdef DEBUG
 protected:

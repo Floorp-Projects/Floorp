@@ -2361,6 +2361,24 @@ nsDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
   return NS_OK;
 }
 
+void
+CSPErrorQueue::Add(const char* aMessageName)
+{
+  mErrors.AppendElement(aMessageName);
+}
+
+void
+CSPErrorQueue::Flush(nsIDocument* aDocument)
+{
+  for (uint32_t i = 0; i < mErrors.Length(); i++) {
+    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+        "CSP", aDocument,
+        nsContentUtils::eDOM_PROPERTIES,
+        mErrors[i]);
+  }
+  mErrors.Clear();
+}
+
 nsresult
 nsDocument::InitCSP(nsIChannel* aChannel)
 {
@@ -2519,6 +2537,9 @@ nsDocument::InitCSP(nsIChannel* aChannel)
                                     nsContentUtils::eDOM_PROPERTIES,
                                     "OldCSPHeaderDeprecated");
 
+    // Additionally log deprecated warning to Web Console.
+    mCSPWebConsoleErrorQueue.Add("OldCSPHeaderDeprecated");
+
     // Also, if the new headers AND the old headers were present, warn
     // that the old headers will be ignored.
     if (cspSpecCompliant) {
@@ -2526,6 +2547,8 @@ nsDocument::InitCSP(nsIChannel* aChannel)
                                       "CSP", this,
                                       nsContentUtils::eDOM_PROPERTIES,
                                       "BothCSPHeadersPresent");
+      // Additionally log to Web Console.
+      mCSPWebConsoleErrorQueue.Add("BothCSPHeadersPresent");
     }
   }
 
@@ -2565,6 +2588,8 @@ nsDocument::InitCSP(nsIChannel* aChannel)
                                       "CSP", this,
                                       nsContentUtils::eDOM_PROPERTIES,
                                       "ReportOnlyCSPIgnored");
+      // Additionally log to Web Console.
+      mCSPWebConsoleErrorQueue.Add("ReportOnlyCSPIgnored");
 #ifdef PR_LOGGING
       PR_LOG(gCspPRLog, PR_LOG_DEBUG,
               ("Skipped report-only CSP init for document %p because another, enforced policy is set", this));
@@ -4134,6 +4159,10 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
   // having to QI every time it's asked for.
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(mScriptGlobalObject);
   mWindow = window;
+
+  // Now that we know what our window is, we can flush the CSP errors to the
+  // Web Console.
+  FlushCSPWebConsoleErrorQueue();
 
   // Set our visibility state, but do not fire the event.  This is correct
   // because either we're coming out of bfcache (in which case IsVisible() will
