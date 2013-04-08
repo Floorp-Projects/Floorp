@@ -11355,10 +11355,8 @@ let ICCContactHelper = {
             ICCRecordHelper.findFreeRecordId(ICC_EF_ADN, onsuccess, onerror);
             break;
           case CARD_APPTYPE_USIM:
-            let gotPbrCb = function gotPbrCb(pbr) {
-              if (pbr.adn) {
-                ICCRecordHelper.findFreeRecordId(pbr.adn.fileId, onsuccess, onerror);
-              }
+            let gotPbrCb = function gotPbrCb(pbrs) {
+              this.findUSimFreeADNRecordId(pbrs, onsuccess, onerror);
             }.bind(this);
 
             ICCRecordHelper.readPBR(gotPbrCb, onerror);
@@ -11374,6 +11372,31 @@ let ICCContactHelper = {
         }
         break;
     }
+  },
+
+   /**
+    * Find free ADN record id in USIM.
+    *
+    * @param pbrs          All Phonebook Reference Files read.
+    * @param onsuccess     Callback to be called when success.
+    * @param onerror       Callback to be called when error.
+    */
+  findUSimFreeADNRecordId: function findUSimFreeADNRecordId(pbrs, onsuccess, onerror) {
+    (function findFreeRecordId(pbrIndex) {
+      if (pbrIndex >= pbrs.length) {
+        let error = onerror || debug;
+        error("No free record found.");
+        return;
+      }
+
+      let pbr = pbrs[pbrIndex];
+      ICCRecordHelper.findFreeRecordId(
+        pbr.adn.fileId,
+        onsuccess,
+        function (errorMsg) {
+          findFreeRecordId.bind(this, pbrIndex + 1);
+        }.bind(this));
+    })(0);
   },
 
   /**
