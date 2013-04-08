@@ -372,7 +372,11 @@ class Marionette(object):
                  or status == ErrorCodes.INVALID_XPATH_SELECTOR_RETURN_TYPER:
                 raise InvalidSelectorException(message=message, status=status, stacktrace=stacktrace)
             elif status == ErrorCodes.MOVE_TARGET_OUT_OF_BOUNDS:
-                MoveTargetOutOfBoundsException(message=message, status=status, stacktrace=stacktrace)
+                raise MoveTargetOutOfBoundsException(message=message, status=status, stacktrace=stacktrace)
+            elif status == ErrorCodes.FRAME_SEND_NOT_INITIALIZED_ERROR:
+                raise FrameSendNotInitializedError(message=message, status=status, stacktrace=stacktrace)
+            elif status == ErrorCodes.FRAME_SEND_FAILURE_ERROR:
+                raise FrameSendFailureError(message=message, status=status, stacktrace=stacktrace)
             else:
                 raise MarionetteException(message=message, status=status, stacktrace=stacktrace)
         raise MarionetteException(message=response, status=500)
