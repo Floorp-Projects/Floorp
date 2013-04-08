@@ -16,7 +16,6 @@ import android.content.Context;
 import android.database.ContentObserver;
 import android.util.AttributeSet;
 import android.view.ContextMenu.ContextMenuInfo;
-import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
 import android.widget.ScrollView;
 
