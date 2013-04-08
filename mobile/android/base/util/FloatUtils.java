@@ -7,6 +7,8 @@ package org.mozilla.gecko.util;
 
 import android.graphics.PointF;
 
+import java.lang.IllegalArgumentException;
+
 public final class FloatUtils {
     private FloatUtils() {}
 
@@ -25,5 +27,17 @@ public final class FloatUtils {
      */
     public static float interpolate(float from, float to, float t) {
         return from + (to - from) * t;
+    }
+
+    /**
+     * Returns 'value', clamped so that it isn't any lower than 'low', and it
+     * isn't any higher than 'high'.
+     */
+    public static float clamp(float value, float low, float high) {
+        if (high < low) {
+          throw new IllegalArgumentException(
+              "clamp called with invalid parameters (" + high + " < " + low + ")" );
+        }
+        return Math.max(low, Math.min(high, value));
     }
 }
