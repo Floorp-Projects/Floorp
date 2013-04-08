@@ -22,7 +22,6 @@
 #include "nsCRT.h"
 #include "nsEnumeratorUtils.h"
 #include "nsEscape.h"
-#include "nsIEnumerator.h"
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
 #include "rdf.h"

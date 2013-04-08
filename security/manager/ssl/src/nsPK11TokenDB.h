@@ -12,7 +12,6 @@
 #include "nsISupports.h"
 #include "nsIPK11TokenDB.h"
 #include "nsIPK11Token.h"
-#include "nsISupportsArray.h"
 #include "nsNSSHelper.h"
 #include "pk11func.h"
 #include "nsNSSShutDown.h"

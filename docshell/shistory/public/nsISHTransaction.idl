@@ -6,8 +6,6 @@
 
 #include "nsISupports.idl"
 #include "nsISHEntry.idl"
-#include "nsIEnumerator.idl"
-
 
 /**
  * The nsISHTransaction.
