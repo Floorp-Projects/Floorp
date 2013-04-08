@@ -223,6 +223,12 @@ public final class ANRReporter extends BroadcastReceiver
                     if (DEBUG) {
                         Log.d(LOGTAG, "identifying line: " + String.valueOf(line));
                     }
+                    if (line == null) {
+                        if (DEBUG) {
+                            Log.d(LOGTAG, "reached end of traces file");
+                        }
+                        return false;
+                    }
                     if (pkgPattern.matcher(line).find()) {
                         // traces.txt file contains our package
                         return true;
