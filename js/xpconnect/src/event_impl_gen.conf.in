@@ -24,6 +24,8 @@ simple_events = [
     'DeviceLightEvent',
     'MozApplicationEvent',
     'SmartCardEvent',
+    'StyleSheetAddedEvent',
+    'StyleSheetRemovedEvent',
 #ifdef MOZ_B2G_BT
     'BluetoothDeviceEvent',
 #endif
@@ -41,6 +43,9 @@ simple_events = [
     'ElementReplaceEvent',
     'MozSmsEvent',
     'MozMmsEvent',
+#ifdef MOZ_WEBSPEECH
+    'SpeechSynthesisEvent',
+#endif
     'DeviceStorageChangeEvent',
     'PopupBlockedEvent',
     'BlobEvent',

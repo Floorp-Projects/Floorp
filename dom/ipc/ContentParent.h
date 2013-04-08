@@ -81,7 +81,8 @@ public:
      */
     static void JoinAllSubprocesses();
 
-    static ContentParent* GetNewOrUsed(bool aForBrowserElement = false);
+    static already_AddRefed<ContentParent>
+    GetNewOrUsed(bool aForBrowserElement = false);
 
     /**
      * Get or create a content process for the given TabContext.  aFrameElement
@@ -290,6 +291,10 @@ private:
     virtual PBluetoothParent* AllocPBluetooth();
     virtual bool DeallocPBluetooth(PBluetoothParent* aActor);
     virtual bool RecvPBluetoothConstructor(PBluetoothParent* aActor);
+
+    virtual PSpeechSynthesisParent* AllocPSpeechSynthesis();
+    virtual bool DeallocPSpeechSynthesis(PSpeechSynthesisParent* aActor);
+    virtual bool RecvPSpeechSynthesisConstructor(PSpeechSynthesisParent* aActor);
 
     virtual bool RecvReadPrefsArray(InfallibleTArray<PrefSetting>* aPrefs);
     virtual bool RecvReadFontList(InfallibleTArray<FontListEntry>* retValue);

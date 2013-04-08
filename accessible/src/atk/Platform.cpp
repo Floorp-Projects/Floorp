@@ -53,18 +53,18 @@ struct GnomeAccessibilityModule
 
 static GnomeAccessibilityModule sAtkBridge = {
 #ifdef AIX
-    "libatk-bridge.a(libatk-bridge.so.0)", NULL,
+    "libatk-bridge.a(libatk-bridge.so.0)", nullptr,
 #else
-    "libatk-bridge.so", NULL,
+    "libatk-bridge.so", nullptr,
 #endif
-    "gnome_accessibility_module_init", NULL,
-    "gnome_accessibility_module_shutdown", NULL
+    "gnome_accessibility_module_init", nullptr,
+    "gnome_accessibility_module_shutdown", nullptr
 };
 
 static GnomeAccessibilityModule sGail = {
-    "libgail.so", NULL,
-    "gnome_accessibility_module_init", NULL,
-    "gnome_accessibility_module_shutdown", NULL
+    "libgail.so", nullptr,
+    "gnome_accessibility_module_init", nullptr,
+    "gnome_accessibility_module_shutdown", nullptr
 };
 
 static nsresult
@@ -112,7 +112,7 @@ LoadGtkModule(GnomeAccessibilityModule& aModule)
 
         //fail, :(
         PR_UnloadLibrary(aModule.lib);
-        aModule.lib = NULL;
+        aModule.lib = nullptr;
         return NS_ERROR_FAILURE;
     }
     return NS_OK;
@@ -165,12 +165,12 @@ a11y::PlatformInit()
       g_signal_add_emission_hook(g_signal_lookup("show", GTK_TYPE_WINDOW),
                                  0, toplevel_event_watcher,
                                  reinterpret_cast<gpointer>(nsIAccessibleEvent::EVENT_SHOW),
-                                 NULL);
+                                 nullptr);
     sToplevel_hide_hook =
       g_signal_add_emission_hook(g_signal_lookup("hide", GTK_TYPE_WINDOW), 0,
                                  toplevel_event_watcher,
                                  reinterpret_cast<gpointer>(nsIAccessibleEvent::EVENT_HIDE),
-                                 NULL);
+                                 nullptr);
   }
 }
 
@@ -191,9 +191,9 @@ a11y::PlatformShutdown()
         // if (sAtkBridge.shutdown)
         //     (*sAtkBridge.shutdown)();
         // PR_UnloadLibrary(sAtkBridge.lib);
-        sAtkBridge.lib = NULL;
-        sAtkBridge.init = NULL;
-        sAtkBridge.shutdown = NULL;
+        sAtkBridge.lib = nullptr;
+        sAtkBridge.init = nullptr;
+        sAtkBridge.shutdown = nullptr;
     }
     if (sGail.lib) {
         // Do not shutdown gail because
@@ -202,9 +202,9 @@ a11y::PlatformShutdown()
         // if (sGail.shutdown)
         //   (*sGail.shutdown)();
         // PR_UnloadLibrary(sGail.lib);
-        sGail.lib = NULL;
-        sGail.init = NULL;
-        sGail.shutdown = NULL;
+        sGail.lib = nullptr;
+        sGail.init = nullptr;
+        sGail.shutdown = nullptr;
     }
     // if (sATKLib) {
     //     PR_UnloadLibrary(sATKLib);

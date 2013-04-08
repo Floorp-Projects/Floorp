@@ -18,7 +18,10 @@ import os
 import shutil
 import sys
 import tempfile
-import urllib2
+try:
+    from urllib2 import urlopen
+except ImportError:
+    from urllib.request import urlopen
 
 from optparse import OptionParser
 
@@ -51,7 +54,7 @@ def fetch_files(repo_url, repo_type):
         for path in REPOSITORY_PATHS:
             url = repo_url + '/raw-file/default/python/mozboot/' + path
 
-            req = urllib2.urlopen(url=url, timeout=30)
+            req = urlopen(url=url, timeout=30)
             files[path] = req.read()
     else:
         raise NotImplementedError('Not sure how to handle repo type.', repo_type)

@@ -1774,6 +1774,7 @@ public class BrowserProvider extends ContentProvider {
             // commands in parallel using multiple connections.
             if (Build.VERSION.SDK_INT >= 11) {
                 db.enableWriteAheadLogging();
+                db.setLockingEnabled(false);
             } else {
                 // Pre-Honeycomb, we can do some lesser optimizations.
                 cursor = null;

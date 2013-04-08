@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<title>Setting document.body to incorrect values</title>
+<link rel="author" title="Ms2ger" href="mailto:ms2ger@gmail.com">
+<link rel="help" href="http://www.whatwg.org/html5/#dom-document-body">
+<link rel="help" href="http://dev.w3.org/2006/webapi/WebIDL/#es-interface">
+<link rel="stylesheet" href="/resources/testharness.css">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<script>
+test(function() {
+  assert_throws(new TypeError(), function() { document.body = "text" })
+}, "Should throw a TypeError.");
+test(function() {
+  assert_throws("HIERARCHY_REQUEST_ERR", function() { document.body = document.createElement("div") })
+}, "Should throw a HIERARCHY_REQUEST_ERR.");
+</script>

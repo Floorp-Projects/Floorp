@@ -126,19 +126,19 @@ panel[type="arrow"][side="right"] {
   }
 
   .panel-arrowcontent[side="top"] {
-    background-image: -moz-linear-gradient(top, white 1px, rgba(255,255,255,0) 15px);
+    background-image: linear-gradient(white 1px, rgba(255,255,255,0) 15px);
   }
 
   .panel-arrowcontent[side="bottom"] {
-    background-image: -moz-linear-gradient(bottom, white 1px, rgba(255,255,255,0) 15px);
+    background-image: linear-gradient(to top, white 1px, rgba(255,255,255,0) 15px);
   }
 
   .panel-arrowcontent[side="left"] {
-    background-image: -moz-linear-gradient(left, white 1px, rgba(255,255,255,0) 15px);
+    background-image: linear-gradient(to right, white 1px, rgba(255,255,255,0) 15px);
   }
 
   .panel-arrowcontent[side="right"] {
-    background-image: -moz-linear-gradient(right, white 1px, rgba(255,255,255,0) 15px);
+    background-image: linear-gradient(to left, white 1px, rgba(255,255,255,0) 15px);
   }
 
   .panel-arrow[side="top"],

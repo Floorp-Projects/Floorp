@@ -10,7 +10,7 @@
 #include "nsSMILValue.h"
 #include "prdtoa.h"
 #include "SVGContentUtils.h"
-#include "SVGTransform.h"
+#include "nsSVGTransform.h"
 #include "SVGTransformListSMILType.h"
 
 namespace mozilla {

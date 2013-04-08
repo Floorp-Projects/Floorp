@@ -130,34 +130,34 @@ NS_DEFINE_NAMED_CID(NS_DOWNLOADHISTORY_CID);
 
 
 const mozilla::Module::CIDEntry kDocShellCIDs[] = {
-  { &kNS_DOCSHELL_CID, false, NULL, nsDocShellConstructor },
-  { &kNS_DEFAULTURIFIXUP_CID, false, NULL, nsDefaultURIFixupConstructor },
-  { &kNS_WEBNAVIGATION_INFO_CID, false, NULL, nsWebNavigationInfoConstructor },
-  { &kNS_ABOUT_REDIRECTOR_MODULE_CID, false, NULL, nsAboutRedirector::Create },
-  { &kNS_URI_LOADER_CID, false, NULL, nsURILoaderConstructor },
-  { &kNS_DOCUMENTLOADER_SERVICE_CID, false, NULL, nsDocLoaderConstructor },
-  { &kNS_EXTERNALHELPERAPPSERVICE_CID, false, NULL, nsOSHelperAppServiceConstructor },
-  { &kNS_EXTERNALPROTOCOLHANDLER_CID, false, NULL, nsExternalProtocolHandlerConstructor },
-  { &kNS_PREFETCHSERVICE_CID, false, NULL, nsPrefetchServiceConstructor },
-  { &kNS_OFFLINECACHEUPDATESERVICE_CID, false, NULL, nsOfflineCacheUpdateServiceConstructor },
-  { &kNS_OFFLINECACHEUPDATE_CID, false, NULL, nsOfflineCacheUpdateConstructor },
-  { &kNS_LOCALHANDLERAPP_CID, false, NULL, PlatformLocalHandlerApp_tConstructor },
+  { &kNS_DOCSHELL_CID, false, nullptr, nsDocShellConstructor },
+  { &kNS_DEFAULTURIFIXUP_CID, false, nullptr, nsDefaultURIFixupConstructor },
+  { &kNS_WEBNAVIGATION_INFO_CID, false, nullptr, nsWebNavigationInfoConstructor },
+  { &kNS_ABOUT_REDIRECTOR_MODULE_CID, false, nullptr, nsAboutRedirector::Create },
+  { &kNS_URI_LOADER_CID, false, nullptr, nsURILoaderConstructor },
+  { &kNS_DOCUMENTLOADER_SERVICE_CID, false, nullptr, nsDocLoaderConstructor },
+  { &kNS_EXTERNALHELPERAPPSERVICE_CID, false, nullptr, nsOSHelperAppServiceConstructor },
+  { &kNS_EXTERNALPROTOCOLHANDLER_CID, false, nullptr, nsExternalProtocolHandlerConstructor },
+  { &kNS_PREFETCHSERVICE_CID, false, nullptr, nsPrefetchServiceConstructor },
+  { &kNS_OFFLINECACHEUPDATESERVICE_CID, false, nullptr, nsOfflineCacheUpdateServiceConstructor },
+  { &kNS_OFFLINECACHEUPDATE_CID, false, nullptr, nsOfflineCacheUpdateConstructor },
+  { &kNS_LOCALHANDLERAPP_CID, false, nullptr, PlatformLocalHandlerApp_tConstructor },
 #ifdef MOZ_ENABLE_DBUS
-  { &kNS_DBUSHANDLERAPP_CID, false, NULL, nsDBusHandlerAppConstructor },
+  { &kNS_DBUSHANDLERAPP_CID, false, nullptr, nsDBusHandlerAppConstructor },
 #endif
 #if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_ENABLE_MEEGOTOUCHSHARE)
-  { &kNS_EXTERNALSHARINGAPPSERVICE_CID, false, NULL, nsExternalSharingAppServiceConstructor },
+  { &kNS_EXTERNALSHARINGAPPSERVICE_CID, false, nullptr, nsExternalSharingAppServiceConstructor },
 #endif
 #if defined(MOZ_WIDGET_ANDROID)
-  { &kNS_EXTERNALURLHANDLERSERVICE_CID, false, NULL, nsExternalURLHandlerServiceConstructor },
+  { &kNS_EXTERNALURLHANDLERSERVICE_CID, false, nullptr, nsExternalURLHandlerServiceConstructor },
 #endif
-  { &kNS_SHENTRY_CID, false, NULL, nsSHEntryConstructor },
-  { &kNS_HISTORYENTRY_CID, false, NULL, nsSHEntryConstructor },
-  { &kNS_SHTRANSACTION_CID, false, NULL, nsSHTransactionConstructor },
-  { &kNS_SHISTORY_CID, false, NULL, nsSHistoryConstructor },
-  { &kNS_SHISTORY_INTERNAL_CID, false, NULL, nsSHistoryConstructor },
-  { &kNS_DOWNLOADHISTORY_CID, false, NULL, nsDownloadHistoryConstructor },
-  { NULL }
+  { &kNS_SHENTRY_CID, false, nullptr, nsSHEntryConstructor },
+  { &kNS_HISTORYENTRY_CID, false, nullptr, nsSHEntryConstructor },
+  { &kNS_SHTRANSACTION_CID, false, nullptr, nsSHTransactionConstructor },
+  { &kNS_SHISTORY_CID, false, nullptr, nsSHistoryConstructor },
+  { &kNS_SHISTORY_INTERNAL_CID, false, nullptr, nsSHistoryConstructor },
+  { &kNS_DOWNLOADHISTORY_CID, false, nullptr, nsDownloadHistoryConstructor },
+  { nullptr }
 };
 
 const mozilla::Module::ContractIDEntry kDocShellContracts[] = {
@@ -208,15 +208,15 @@ const mozilla::Module::ContractIDEntry kDocShellContracts[] = {
   { NS_SHISTORY_CONTRACTID, &kNS_SHISTORY_CID },
   { NS_SHISTORY_INTERNAL_CONTRACTID, &kNS_SHISTORY_INTERNAL_CID },
   { NS_DOWNLOADHISTORY_CONTRACTID, &kNS_DOWNLOADHISTORY_CID },
-  { NULL }
+  { nullptr }
 };
 
 static const mozilla::Module kDocShellModule = {
   mozilla::Module::kVersion,
   kDocShellCIDs,
   kDocShellContracts,
-  NULL,
-  NULL,
+  nullptr,
+  nullptr,
   Initialize,
   Shutdown
 };

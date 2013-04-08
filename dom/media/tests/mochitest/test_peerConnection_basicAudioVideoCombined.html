@@ -16,8 +16,9 @@
     title: "Basic audio/video (combined) peer connection"
   });
 
+  var test;
   runTest(function () {
-    var test = new PeerConnectionTest();
+    test = new PeerConnectionTest();
     test.setMediaConstraints([{audio: true}, {video: true}],
                              [{audio: true}, {video: true}]);
     test.run();

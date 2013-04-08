@@ -30,6 +30,14 @@ public:
     return mDelay;
   }
 
+  virtual bool SupportsMediaStreams() const MOZ_OVERRIDE
+  {
+    return true;
+  }
+
+private:
+  static void SendDelayToStream(AudioNode* aNode);
+
 private:
   nsRefPtr<AudioParam> mDelay;
 };

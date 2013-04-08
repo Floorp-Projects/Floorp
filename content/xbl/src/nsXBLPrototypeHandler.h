@@ -24,10 +24,15 @@ class nsIContent;
 class nsIDOMUIEvent;
 class nsIDOMKeyEvent;
 class nsIDOMMouseEvent;
-class nsIDOMEventTarget;
 class nsIObjectInputStream;
 class nsIObjectOutputStream;
 class nsXBLPrototypeBinding;
+
+namespace mozilla {
+namespace dom {
+class EventTarget;
+}
+}
 
 #define NS_HANDLER_TYPE_XBL_JS              (1 << 0)
 #define NS_HANDLER_TYPE_XBL_COMMAND         (1 << 1)
@@ -99,7 +104,7 @@ public:
   nsXBLPrototypeHandler* GetNextHandler() { return mNextHandler; }
   void SetNextHandler(nsXBLPrototypeHandler* aHandler) { mNextHandler = aHandler; }
 
-  nsresult ExecuteHandler(nsIDOMEventTarget* aTarget, nsIDOMEvent* aEvent);
+  nsresult ExecuteHandler(mozilla::dom::EventTarget* aTarget, nsIDOMEvent* aEvent);
 
   already_AddRefed<nsIAtom> GetEventName();
   void SetEventName(nsIAtom* aName) { mEventName = aName; }
@@ -136,7 +141,7 @@ public:
 
 public:
   static uint32_t gRefCnt;
-  
+
 protected:
   void Init() {
     ++gRefCnt;
@@ -145,10 +150,10 @@ protected:
       InitAccessKeys();
   }
 
-  already_AddRefed<nsIController> GetController(nsIDOMEventTarget* aTarget);
-  
+  already_AddRefed<nsIController> GetController(mozilla::dom::EventTarget* aTarget);
+
   inline int32_t GetMatchingKeyCode(const nsAString& aKeyName);
-  void ConstructPrototype(nsIContent* aKeyElement, 
+  void ConstructPrototype(nsIContent* aKeyElement,
                           const PRUnichar* aEvent=nullptr, const PRUnichar* aPhase=nullptr,
                           const PRUnichar* aAction=nullptr, const PRUnichar* aCommand=nullptr,
                           const PRUnichar* aKeyCode=nullptr, const PRUnichar* aCharCode=nullptr,
@@ -161,7 +166,7 @@ protected:
   void GetEventType(nsAString& type);
   bool ModifiersMatchMask(nsIDOMUIEvent* aEvent,
                             bool aIgnoreShiftKey = false);
-  nsresult DispatchXBLCommand(nsIDOMEventTarget* aTarget, nsIDOMEvent* aEvent);
+  nsresult DispatchXBLCommand(mozilla::dom::EventTarget* aTarget, nsIDOMEvent* aEvent);
   nsresult DispatchXULKeyCommand(nsIDOMEvent* aEvent);
   nsresult EnsureEventHandler(nsIScriptGlobalObject* aGlobal,
                               nsIScriptContext *aBoundContext, nsIAtom *aName,

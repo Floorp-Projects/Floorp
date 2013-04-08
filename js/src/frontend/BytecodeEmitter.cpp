@@ -11,6 +11,7 @@
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/PodOperations.h"
 
 #ifdef HAVE_MEMORY_H
 #include <memory.h>
@@ -52,6 +53,7 @@ using namespace js::gc;
 using namespace js::frontend;
 
 using mozilla::DebugOnly;
+using mozilla::PodCopy;
 
 static bool
 SetSrcNoteOffset(JSContext *cx, BytecodeEmitter *bce, unsigned index, unsigned which, ptrdiff_t offset);

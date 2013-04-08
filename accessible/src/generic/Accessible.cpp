@@ -843,7 +843,7 @@ Accessible::ChildAtPoint(int32_t aX, int32_t aY,
   DocAccessible* contentDocAcc = GetAccService()->
     GetDocAccessible(content->OwnerDoc());
 
-  // contentDocAcc in some circumstances can be NULL. See bug 729861
+  // contentDocAcc in some circumstances can be nullptr. See bug 729861
   NS_ASSERTION(contentDocAcc, "could not get the document accessible");
   if (!contentDocAcc)
     return fallbackAnswer;
@@ -1601,7 +1601,9 @@ Accessible::ApplyARIAState(uint64_t* aState) const
 
   // ARIA gridcell inherits editable/readonly states from the grid until it's
   // overridden.
-  if (mRoleMapEntry->Is(nsGkAtoms::gridcell) &&
+  if ((mRoleMapEntry->Is(nsGkAtoms::gridcell) ||
+       mRoleMapEntry->Is(nsGkAtoms::columnheader) ||
+       mRoleMapEntry->Is(nsGkAtoms::rowheader)) &&
       !(*aState & (states::READONLY | states::EDITABLE))) {
     const TableCellAccessible* cell = AsTableCell();
     if (cell) {

@@ -57,6 +57,17 @@ function createAppInfo(id, name, version, platformVersion) {
                             XULAPPINFO_CONTRACTID, XULAppInfoFactory);
 }
 
+function initApp() {
+  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
+  // prepare a blocklist file for the blocklist service
+  var blocklistFile = gProfD.clone();
+  blocklistFile.append("blocklist.xml");
+  if (blocklistFile.exists())
+    blocklistFile.remove(false);
+  var source = do_get_file("blocklist.xml");
+  source.copyTo(gProfD, "blocklist.xml");
+}
+
 function AsyncRunner() {
   do_test_pending();
   do_register_cleanup((function () this.destroy()).bind(this));

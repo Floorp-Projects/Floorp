@@ -64,6 +64,7 @@ let initTable = [
   ["DOMRequest", "@mozilla.org/dom/dom-request-service;1", "nsIDOMRequestService"],
   ["focus", "@mozilla.org/focus-manager;1", "nsIFocusManager"],
   ["uriFixup", "@mozilla.org/docshell/urifixup;1", "nsIURIFixup"],
+  ["blocklist", "@mozilla.org/extensions/blocklist;1", "nsIBlocklistService"]
 ];
 
 initTable.forEach(function ([name, contract, intf])

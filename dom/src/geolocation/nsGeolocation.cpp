@@ -90,7 +90,7 @@ public:
     MOZ_COUNT_DTOR(GeolocationSettingsCallback);
   }
 
-  NS_IMETHOD Handle(const nsAString& aName, const jsval& aResult)
+  NS_IMETHOD Handle(const nsAString& aName, const JS::Value& aResult)
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -307,7 +307,7 @@ nsGeolocationRequest::~nsGeolocationRequest()
 
 
 static mozilla::idl::GeoPositionOptions*
-OptionsFromJSOptions(JSContext* aCx, const jsval& aOptions, nsresult* aRv)
+OptionsFromJSOptions(JSContext* aCx, const JS::Value& aOptions, nsresult* aRv)
 {
   *aRv = NS_OK;
   nsAutoPtr<mozilla::idl::GeoPositionOptions> options(nullptr);
@@ -867,7 +867,7 @@ nsGeolocationService::Update(nsIDOMGeoPosition *aSomewhere)
   return NS_OK;
 }
 
-PRBool
+bool
 nsGeolocationService::IsBetterPosition(nsIDOMGeoPosition *aSomewhere)
 {
   if (!aSomewhere) {
@@ -1129,20 +1129,16 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsGeolocation)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGeolocation)
   tmp->mPendingRequests.Clear();
-  tmp->mPendingCallbacks.Clear();
-  tmp->mWatchingCallbacks.Clear();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPendingCallbacks)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWatchingCallbacks)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGeolocation)
-  uint32_t i;
-  for (i = 0; i < tmp->mPendingRequests.Length(); ++i)
+  for (uint32_t i = 0; i < tmp->mPendingRequests.Length(); ++i)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPendingRequests[i].request)
 
-  for (i = 0; i < tmp->mPendingCallbacks.Length(); ++i)
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPendingCallbacks[i])
-
-  for (i = 0; i < tmp->mWatchingCallbacks.Length(); ++i)
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWatchingCallbacks[i])
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPendingCallbacks)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWatchingCallbacks)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 nsGeolocation::nsGeolocation()
@@ -1281,7 +1277,7 @@ nsGeolocation::Update(nsIDOMGeoPosition *aSomewhere, bool aIsBetter)
 NS_IMETHODIMP
 nsGeolocation::GetCurrentPosition(nsIDOMGeoPositionCallback *callback,
                                   nsIDOMGeoPositionErrorCallback *errorCallback,
-                                  const jsval& jsoptions,
+                                  const JS::Value& jsoptions,
                                   JSContext* cx)
 {
   nsresult rv;
@@ -1353,7 +1349,7 @@ nsGeolocation::GetCurrentPositionReady(nsGeolocationRequest* aRequest)
 NS_IMETHODIMP
 nsGeolocation::WatchPosition(nsIDOMGeoPositionCallback *callback,
                              nsIDOMGeoPositionErrorCallback *errorCallback,
-                             const jsval& jsoptions,
+                             const JS::Value& jsoptions,
                              JSContext* cx,
                              int32_t *_retval)
 {

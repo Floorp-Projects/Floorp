@@ -52,21 +52,21 @@ NS_DEFINE_NAMED_CID(NS_CJK_PSMDETECTOR_CID);
 NS_DEFINE_NAMED_CID(NS_CJK_STRING_PSMDETECTOR_CID);
 
 static const mozilla::Module::CIDEntry kChardetCIDs[] = {
-  { &kNS_UNIVERSAL_DETECTOR_CID, false, NULL, nsUniversalXPCOMDetectorConstructor },
-  { &kNS_UNIVERSAL_STRING_DETECTOR_CID, false, NULL, nsUniversalXPCOMStringDetectorConstructor },
-  { &kNS_JA_PSMDETECTOR_CID, false, NULL, nsJAPSMDetectorConstructor },
-  { &kNS_JA_STRING_PSMDETECTOR_CID, false, NULL, nsJAStringPSMDetectorConstructor },
-  { &kNS_KO_PSMDETECTOR_CID, false, NULL, nsKOPSMDetectorConstructor },
-  { &kNS_KO_STRING_PSMDETECTOR_CID, false, NULL, nsKOStringPSMDetectorConstructor },
-  { &kNS_ZHTW_PSMDETECTOR_CID, false, NULL, nsZHTWPSMDetectorConstructor },
-  { &kNS_ZHTW_STRING_PSMDETECTOR_CID, false, NULL, nsZHTWStringPSMDetectorConstructor },
-  { &kNS_ZHCN_PSMDETECTOR_CID, false, NULL, nsZHCNPSMDetectorConstructor },
-  { &kNS_ZHCN_STRING_PSMDETECTOR_CID, false, NULL, nsZHCNStringPSMDetectorConstructor },
-  { &kNS_ZH_PSMDETECTOR_CID, false, NULL, nsZHPSMDetectorConstructor },
-  { &kNS_ZH_STRING_PSMDETECTOR_CID, false, NULL, nsZHStringPSMDetectorConstructor },
-  { &kNS_CJK_PSMDETECTOR_CID, false, NULL, nsCJKPSMDetectorConstructor },
-  { &kNS_CJK_STRING_PSMDETECTOR_CID, false, NULL, nsCJKStringPSMDetectorConstructor },
-  { NULL }
+  { &kNS_UNIVERSAL_DETECTOR_CID, false, nullptr, nsUniversalXPCOMDetectorConstructor },
+  { &kNS_UNIVERSAL_STRING_DETECTOR_CID, false, nullptr, nsUniversalXPCOMStringDetectorConstructor },
+  { &kNS_JA_PSMDETECTOR_CID, false, nullptr, nsJAPSMDetectorConstructor },
+  { &kNS_JA_STRING_PSMDETECTOR_CID, false, nullptr, nsJAStringPSMDetectorConstructor },
+  { &kNS_KO_PSMDETECTOR_CID, false, nullptr, nsKOPSMDetectorConstructor },
+  { &kNS_KO_STRING_PSMDETECTOR_CID, false, nullptr, nsKOStringPSMDetectorConstructor },
+  { &kNS_ZHTW_PSMDETECTOR_CID, false, nullptr, nsZHTWPSMDetectorConstructor },
+  { &kNS_ZHTW_STRING_PSMDETECTOR_CID, false, nullptr, nsZHTWStringPSMDetectorConstructor },
+  { &kNS_ZHCN_PSMDETECTOR_CID, false, nullptr, nsZHCNPSMDetectorConstructor },
+  { &kNS_ZHCN_STRING_PSMDETECTOR_CID, false, nullptr, nsZHCNStringPSMDetectorConstructor },
+  { &kNS_ZH_PSMDETECTOR_CID, false, nullptr, nsZHPSMDetectorConstructor },
+  { &kNS_ZH_STRING_PSMDETECTOR_CID, false, nullptr, nsZHStringPSMDetectorConstructor },
+  { &kNS_CJK_PSMDETECTOR_CID, false, nullptr, nsCJKPSMDetectorConstructor },
+  { &kNS_CJK_STRING_PSMDETECTOR_CID, false, nullptr, nsCJKStringPSMDetectorConstructor },
+  { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kChardetContracts[] = {
@@ -84,7 +84,7 @@ static const mozilla::Module::ContractIDEntry kChardetContracts[] = {
   { NS_STRCDETECTOR_CONTRACTID_BASE "zh_parallel_state_machine", &kNS_ZH_STRING_PSMDETECTOR_CID },
   { NS_CHARSET_DETECTOR_CONTRACTID_BASE "cjk_parallel_state_machine", &kNS_CJK_PSMDETECTOR_CID },
   { NS_STRCDETECTOR_CONTRACTID_BASE "cjk_parallel_state_machine", &kNS_CJK_STRING_PSMDETECTOR_CID },
-  { NULL }
+  { nullptr }
 };
 
 static const mozilla::Module::CategoryEntry kChardetCategories[] = {
@@ -95,7 +95,7 @@ static const mozilla::Module::CategoryEntry kChardetCategories[] = {
   { NS_CHARSET_DETECTOR_CATEGORY, "zhcn_parallel_state_machine", NS_CHARSET_DETECTOR_CONTRACTID_BASE "zhcn_parallel_state_machine" },
   { NS_CHARSET_DETECTOR_CATEGORY, "zh_parallel_state_machine", NS_CHARSET_DETECTOR_CONTRACTID_BASE "zh_parallel_state_machine" },
   { NS_CHARSET_DETECTOR_CATEGORY, "cjk_parallel_state_machine", NS_CHARSET_DETECTOR_CONTRACTID_BASE "cjk_parallel_state_machine" },
-  { NULL }
+  { nullptr }
 };
 
 static const mozilla::Module kChardetModule = {

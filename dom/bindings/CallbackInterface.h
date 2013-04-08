@@ -37,6 +37,16 @@ public:
   {
   }
 
+  /*
+   * Create a CallbackInterface without any sort of interesting games with
+   * compartments, for cases when you want to just use the existing object
+   * as-is.  This constructor can never fail.
+   */
+  explicit CallbackInterface(JSObject* aCallback)
+    : CallbackObject(aCallback)
+  {
+  }
+
 protected:
   bool GetCallableProperty(JSContext* cx, const char* aPropName,
                            JS::Value* aCallable);

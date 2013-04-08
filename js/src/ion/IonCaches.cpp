@@ -1423,8 +1423,7 @@ SetPropertyIC::attachNativeAdding(JSContext *cx, IonScript *ion, JSObject *obj,
         masm.loadPtr(Address(protoReg, JSObject::offsetOfType()), protoReg);
         masm.loadPtr(Address(protoReg, offsetof(types::TypeObject, proto)), protoReg);
 
-        // ensure that the prototype is not NULL and that its shape matches
-        masm.branchTestPtr(Assembler::Zero, protoReg, protoReg, &protoFailures);
+        // Ensure that its shape matches.
         masm.branchTestObjShape(Assembler::NotEqual, protoReg, protoShape, &protoFailures);
 
         proto = proto->getProto();

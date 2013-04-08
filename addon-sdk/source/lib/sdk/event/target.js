@@ -75,6 +75,9 @@ const EventTarget = Class({
     // than intended. This way we make sure all arguments are passed and only
     // one listener is removed at most.
     off(this, type, listener);
+  },
+  off: function(type, listener) {
+    off(this, type, listener)
   }
 });
 exports.EventTarget = EventTarget;

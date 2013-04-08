@@ -1,0 +1,237 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=826058
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 826058</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript;version=1.7">
+
+  /** Test for Bug 826058 **/
+
+  SimpleTest.waitForExplicitFinish();
+
+  var gBaseURL = 'http://test/tests/dom/apps/tests/';
+  var gHostedManifestURL = gBaseURL + 'file_app.sjs?apptype=hosted&getmanifest=true';
+  var gCachedManifestURL = gBaseURL + 'file_app.sjs?apptype=cached&getmanifest=true';
+  var gGenerator = runTest();
+  var mozBrowserFramesEnabledValue = undefined;
+  var launchableValue = undefined;
+
+  function go() {
+    SpecialPowers.pushPermissions(
+      [{ "type": "browser", "allow": 1, "context": document },
+       { "type": "embed-apps", "allow": 1, "context": document },
+       { "type": "webapps-manage", "allow": 1, "context": document }],
+      function() { gGenerator.next() });
+  }
+
+  function continueTest() {
+    try { gGenerator.next(); }
+    catch (e) { dump("Got exception: " + e + "\n"); }
+  }
+
+  function cbError() {
+    ok(false, "Error callback invoked: " + this.error.name);
+    finish();
+  }
+
+  function runTest() {
+    // Set up.
+
+    try {
+      mozBrowserFramesEnabledValue =
+        SpecialPowers.getBoolPref("dom.mozBrowserFramesEnabled");
+    } catch(e) {}
+
+    launchableValue = SpecialPowers.setAllAppsLaunchable(true);
+    SpecialPowers.setBoolPref("dom.mozBrowserFramesEnabled", true);
+
+    setAppVersion(1, continueTest);
+    yield;
+    SpecialPowers.autoConfirmAppInstall(continueTest);
+    yield;
+
+    // Load the app, uninstalled.
+    checkAppState(null, false, 1, continueTest);
+    yield;
+
+    // Bump the version and install the app.
+    setAppVersion(2, continueTest);
+    yield;
+
+    var request = navigator.mozApps.install(gHostedManifestURL);
+    request.onerror = cbError;
+    request.onsuccess = continueTest;
+    yield;
+    var app = request.result;
+    ok(app, "App is non-null");
+
+    // Check the app a few times.
+    checkAppState(app, true, 2, continueTest);
+    yield;
+    checkAppState(app, true, 2, continueTest);
+    yield;
+
+    // Bump the version and check the app again. The app is not cached, so the
+    // version bump takes effect.
+    setAppVersion(3, continueTest);
+    yield;
+    checkAppState(app, true, 3, continueTest);
+    yield;
+
+    // Uninstall the app.
+    request = navigator.mozApps.mgmt.uninstall(app);
+    request.onerror = cbError;
+    request.onsuccess = continueTest;
+    yield;
+
+    // Check the uninstalled app.
+    checkAppState(app, false, 3, continueTest);
+    yield;
+
+    // Install the cached app.
+    setAppVersion(3, continueTest);
+    yield;
+    ok(true, "Installing cached app");
+    var request = navigator.mozApps.install(gCachedManifestURL);
+    request.onerror = cbError;
+    request.onsuccess = continueTest;
+    yield;
+    var app = request.result;
+    ok(app, "App is non-null");
+    if (app.installState == "pending") {
+      ok(true, "App is pending. Waiting for progress");
+      app.onprogress = function() ok(true, "Got download progress");
+      app.ondownloadsuccess = continueTest;
+      app.ondownloaderror = cbError;
+      yield;
+    }
+    is(app.installState, "installed", "App is installed");
+
+    // Check the cached app.
+    checkAppState(app, true, 3, continueTest);
+    yield;
+
+    // Check for updates. The current infrastructure always returns a new appcache
+    // manifest, so there should always be an update.
+    var lastCheck = app.lastUpdateCheck;
+    ok(true, "Setting callbacks");
+    app.ondownloadapplied = function() ok(true, "downloadapplied fired.");
+    app.ondownloadavailable = function() ok(false, "downloadavailable fired");
+    ok(true, "Checking for updates");
+    var request = app.checkForUpdate();
+    request.onerror = cbError;
+    request.onsuccess = continueTest;
+    yield;
+    todo(app.lastUpdateCheck > lastCheck, "lastUpdateCheck updated appropriately");
+
+
+    // Uninstall the app.
+    request = navigator.mozApps.mgmt.uninstall(app);
+    request.onerror = cbError;
+    request.onsuccess = continueTest;
+    yield;
+    ok(true, "Uninstalled app");
+
+    // Check the uninstalled app.
+    checkAppState(app, false, 3, continueTest);
+    yield;
+
+    // All done.
+    ok(true, "All done");
+    finish();
+  }
+
+  function setAppVersion(version, cb) {
+    var xhr = new XMLHttpRequest();
+    xhr.addEventListener("load", function() { is(xhr.responseText, "OK", "setVersion OK"); cb(); });
+    xhr.addEventListener("error", cbError);
+    xhr.addEventListener("abort", cbError);
+    xhr.open('GET', gBaseURL + 'file_app.sjs?setVersion=' + version, true);
+    xhr.send();
+  }
+
+  // This function checks the state of an installed app. It does the following:
+  //
+  // * Check various state on the app object itself.
+  // * Launch the app.
+  // * Listen for messages from the app, verifying state.
+  // * Close the app.
+  // * Invoke the callback.
+  function checkAppState(app, installed, version, cb) {
+    // Check state on the app object.
+    if (installed)
+      is(app.installState, "installed", "Checking installed app");
+    else
+      ok(true, "Checking uninstalled app");
+
+    // Set up the app. We need to set the attributes before the app is inserted
+    // into the DOM.
+    var ifr = document.createElement('iframe');
+    ifr.setAttribute('mozbrowser', 'true');
+    ifr.setAttribute('mozapp', app ? app.manifestURL : gHostedManifestURL);
+    ifr.setAttribute('src', getAppURL(app));
+    var domParent = document.getElementById('container');
+
+    // Set us up to listen for messages from the app.
+    var listener = function(e) {
+      var message = e.detail.message;
+      if (/OK/.exec(message)) {
+        ok(true, "Message from app: " + message);
+      } else if (/KO/.exec(message)) {
+        ok(false, "Message from app: " + message);
+      } else if (/IS_INSTALLED/.exec(message)) {
+        ok(installed, "App is installed");
+      } else if (/NOT_INSTALLED/.exec(message)) {
+        ok(!installed, "App is not installed");
+      } else if (/VERSION/.exec(message)) {
+        is(message, "VERSION: MyWebApp v" + version, "Version should be correct");
+      } else if (/DONE/.exec(message)) {
+        ok(true, "Messaging from app complete");
+        ifr.removeEventListener('mozbrowsershowmodalprompt', listener);
+        domParent.removeChild(ifr);
+        cb();
+      }
+    }
+    ifr.addEventListener('mozbrowsershowmodalprompt', listener, false);
+
+    // Add the iframe to the DOM, triggering the launch.
+    domParent.appendChild(ifr);
+  }
+
+  // Returns that appropriate path for the app associated with the manifest,
+  // or the base sjs file if app is null.
+  function getAppURL(app) {
+    if (!app)
+      return gBaseURL + "file_app.sjs?apptype=hosted";
+    return app.origin + app.manifest.launch_path;
+  }
+
+  function finish() {
+    SpecialPowers.setBoolPref("dom.mozBrowserFramesEnabled", mozBrowserFramesEnabledValue);
+    //SpecialPowers.setAllAppsLaunchable(launchableValue);
+    SimpleTest.finish();
+  }
+
+  function doReload() {
+    window.location.reload(true);
+  }
+
+  </script>
+</head>
+<body onload="go()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=826058">Mozilla Bug 826058</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+<div id="container"></div>
+<button onclick="doReload()">Reload Page</button>
+</body>
+</html>

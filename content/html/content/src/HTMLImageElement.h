@@ -100,7 +100,7 @@ public:
   }
   void SetWidth(uint32_t aWidth, ErrorResult& aError)
   {
-    SetHTMLUnsignedIntAttr(nsGkAtoms::width, aWidth, aError);
+    SetUnsignedIntAttr(nsGkAtoms::width, aWidth, aError);
   }
   uint32_t Height()
   {
@@ -108,7 +108,7 @@ public:
   }
   void SetHeight(uint32_t aHeight, ErrorResult& aError)
   {
-    SetHTMLUnsignedIntAttr(nsGkAtoms::height, aHeight, aError);
+    SetUnsignedIntAttr(nsGkAtoms::height, aHeight, aError);
   }
   uint32_t NaturalWidth();
   uint32_t NaturalHeight();

@@ -32,14 +32,14 @@ NS_ConstructAccessibilityService(nsISupports *aOuter, REFNSIID aIID, void **aRes
 NS_DEFINE_NAMED_CID(NS_ACCESSIBILITY_SERVICE_CID);
 
 static const mozilla::Module::CIDEntry kA11yCIDs[] = {
-    { &kNS_ACCESSIBILITY_SERVICE_CID, false, NULL, NS_ConstructAccessibilityService },
-    { NULL }
+    { &kNS_ACCESSIBILITY_SERVICE_CID, false, nullptr, NS_ConstructAccessibilityService },
+    { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kA11yContracts[] = {
     { "@mozilla.org/accessibilityService;1", &kNS_ACCESSIBILITY_SERVICE_CID },
     { "@mozilla.org/accessibleRetrieval;1", &kNS_ACCESSIBILITY_SERVICE_CID },
-    { NULL }
+    { nullptr }
 };
 
 static const mozilla::Module kA11yModule = {

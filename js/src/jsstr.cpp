@@ -19,6 +19,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/PodOperations.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -65,6 +66,8 @@ using namespace js::types;
 using namespace js::unicode;
 
 using mozilla::CheckedInt;
+using mozilla::PodCopy;
+using mozilla::PodEqual;
 
 typedef Handle<JSLinearString*> HandleLinearString;
 
@@ -684,7 +687,7 @@ str_toLocaleLowerCase(JSContext *cx, unsigned argc, Value *vp)
         if (!str)
             return false;
 
-        Value result;
+        RootedValue result(cx);
         if (!cx->runtime->localeCallbacks->localeToLowerCase(cx, str, &result))
             return false;
 
@@ -751,7 +754,7 @@ str_toLocaleUpperCase(JSContext *cx, unsigned argc, Value *vp)
         if (!str)
             return false;
 
-        Value result;
+        RootedValue result(cx);
         if (!cx->runtime->localeCallbacks->localeToUpperCase(cx, str, &result))
             return false;
 
@@ -777,7 +780,7 @@ str_localeCompare(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     if (cx->runtime->localeCallbacks && cx->runtime->localeCallbacks->localeCompare) {
-        Value result;
+        RootedValue result(cx);
         if (!cx->runtime->localeCallbacks->localeCompare(cx, str, thatStr, &result))
             return false;
 

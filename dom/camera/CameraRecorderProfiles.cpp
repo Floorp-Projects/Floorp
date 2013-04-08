@@ -35,7 +35,7 @@ RecorderVideoProfile::GetJsObject(JSContext* aCx, JSObject** aObject)
   NS_ENSURE_TRUE(codec, NS_ERROR_FAILURE);
 
   JSString* s = JS_NewStringCopyZ(aCx, codec);
-  jsval v = STRING_TO_JSVAL(s);
+  JS::Value v = STRING_TO_JSVAL(s);
   if (!JS_SetProperty(aCx, o, "codec", &v)) {
     return NS_ERROR_FAILURE;
   }
@@ -96,7 +96,7 @@ RecorderAudioProfile::GetJsObject(JSContext* aCx, JSObject** aObject)
   NS_ENSURE_TRUE(codec, NS_ERROR_FAILURE);
 
   JSString* s = JS_NewStringCopyZ(aCx, codec);
-  jsval v = STRING_TO_JSVAL(s);
+  JS::Value v = STRING_TO_JSVAL(s);
   if (!JS_SetProperty(aCx, o, "codec", &v)) {
     return NS_ERROR_FAILURE;
   }
@@ -183,7 +183,7 @@ RecorderProfileManager::GetJsObject(JSContext* aCx, JSObject** aObject) const
     JSObject* p;
     nsresult rv = profile->GetJsObject(aCx, &p);
     NS_ENSURE_SUCCESS(rv, rv);
-    jsval v = OBJECT_TO_JSVAL(p);
+    JS::Value v = OBJECT_TO_JSVAL(p);
 
     if (!JS_SetProperty(aCx, o, profileName, &v)) {
       return NS_ERROR_FAILURE;

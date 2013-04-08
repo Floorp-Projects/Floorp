@@ -60,9 +60,9 @@ sdp_result_e sdp_build_version (sdp_t *sdp_p, u16 level, flex_string *fs)
     return (SDP_SUCCESS);
 }
 
-static sdp_result_e sdp_verify_unsigned(const char *ptr, PRUint64 max_value)
+static sdp_result_e sdp_verify_unsigned(const char *ptr, uint64_t max_value)
 {
-    PRUint64 numeric_value;
+    uint64_t numeric_value;
     /* Checking for only numbers since PR_sscanf will ignore trailing
        characters */
     size_t end = strspn(ptr, "0123456789");
@@ -92,7 +92,7 @@ sdp_result_e sdp_parse_owner (sdp_t *sdp_p, u16 level, const char *ptr)
         integer.  The initial value of the version MUST be less than
         (2**62)-1, to avoid rollovers.
     */
-    PRUint64     max_value_sessid_version = ((((PRUint64) 1) << 62) - 2);
+    uint64_t     max_value_sessid_version = ((((uint64_t) 1) << 62) - 2);
 
     if (sdp_p->owner_name[0] != '\0') {
         sdp_p->conf_p->num_invalid_token_order++;

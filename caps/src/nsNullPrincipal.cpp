@@ -25,7 +25,7 @@
 
 using namespace mozilla;
 
-NS_IMPL_CLASSINFO(nsNullPrincipal, NULL, nsIClassInfo::MAIN_THREAD_ONLY,
+NS_IMPL_CLASSINFO(nsNullPrincipal, nullptr, nsIClassInfo::MAIN_THREAD_ONLY,
                   NS_NULLPRINCIPAL_CID)
 NS_IMPL_QUERY_INTERFACE2_CI(nsNullPrincipal,
                             nsIPrincipal,

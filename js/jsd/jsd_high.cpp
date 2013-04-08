@@ -37,10 +37,23 @@ void JSD_ASSERT_VALID_CONTEXT(JSDContext* jsdc)
 }
 #endif
 
+/***************************************************************************/
+/* xpconnect related utility functions implemented in jsd_xpc.cpp */
+
+extern void
+global_finalize(JSFreeOp* fop, JSObject* obj);
+
+extern JSObject*
+CreateJSDGlobal(JSContext *cx, JSClass *clasp);
+
+/***************************************************************************/
+
+
 static JSClass global_class = {
-    "JSDGlobal", JSCLASS_GLOBAL_FLAGS,
+    "JSDGlobal", JSCLASS_GLOBAL_FLAGS |
+    JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_StrictPropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub
+    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   global_finalize
 };
 
 static JSBool
@@ -108,7 +121,7 @@ _newJSDContext(JSRuntime*         jsrt,
     JS_BeginRequest(jsdc->dumbContext);
     JS_SetOptions(jsdc->dumbContext, JS_GetOptions(jsdc->dumbContext));
 
-    jsdc->glob = JS_NewGlobalObject(jsdc->dumbContext, &global_class, NULL);
+    jsdc->glob = CreateJSDGlobal(jsdc->dumbContext, &global_class);
 
     if( ! jsdc->glob )
         goto label_newJSDContext_failure;

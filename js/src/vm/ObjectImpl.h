@@ -294,19 +294,24 @@ struct PropDesc {
     bool wrapInto(JSContext *cx, HandleObject obj, const jsid &id, jsid *wrappedId,
                   PropDesc *wrappedDesc) const;
 
-    class AutoRooter : private AutoGCRooter
+    class AutoRooter : private JS::CustomAutoRooter
     {
       public:
         explicit AutoRooter(JSContext *cx, PropDesc *pd_
                             MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-          : AutoGCRooter(cx, PROPDESC), pd(pd_), skip(cx, pd_)
+          : CustomAutoRooter(cx), pd(pd_), skip(cx, pd_)
         {
             MOZ_GUARD_OBJECT_NOTIFIER_INIT;
         }
 
-        friend void AutoGCRooter::trace(JSTracer *trc);
-
       private:
+        virtual void trace(JSTracer *trc) {
+            traceValue(trc, &pd->pd_, "PropDesc::AutoRooter pd");
+            traceValue(trc, &pd->value_, "PropDesc::AutoRooter value");
+            traceValue(trc, &pd->get_, "PropDesc::AutoRooter get");
+            traceValue(trc, &pd->set_, "PropDesc::AutoRooter set");
+        }
+
         PropDesc *pd;
         SkipRoot skip;
         MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
@@ -1121,6 +1126,7 @@ class ObjectImpl : public gc::Cell
     inline const Value & getDenseElement(uint32_t idx);
     inline bool containsDenseElement(uint32_t idx);
     inline uint32_t getDenseInitializedLength();
+    inline uint32_t getDenseCapacity();
 
     bool makeElementsSparse(JSContext *cx) {
         NEW_OBJECT_REPRESENTATION_ONLY();

@@ -6,10 +6,12 @@
 #include "InputData.h"
 
 #include "nsGUIEvent.h"
-#include "nsDOMTouchEvent.h"
+#include "mozilla/dom/Touch.h"
 #include "nsDebug.h"
 
 namespace mozilla {
+
+using namespace dom;
 
 MultiTouchInput::MultiTouchInput(const nsTouchEvent& aTouchEvent)
   : InputData(MULTITOUCH_INPUT, aTouchEvent.time)
@@ -42,7 +44,7 @@ MultiTouchInput::MultiTouchInput(const nsTouchEvent& aTouchEvent)
   }
 
   for (size_t i = 0; i < aTouchEvent.touches.Length(); i++) {
-    nsDOMTouch* domTouch = (nsDOMTouch*)(aTouchEvent.touches[i].get());
+    Touch* domTouch = static_cast<Touch*>(aTouchEvent.touches[i].get());
 
     // Extract data from weird interfaces.
     int32_t identifier, radiusX, radiusY;

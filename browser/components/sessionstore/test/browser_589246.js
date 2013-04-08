@@ -153,7 +153,7 @@ function setupForTest(aConditions) {
 
 function onStateRestored(aSubject, aTopic, aData) {
   info("test #" + testNum + ": onStateRestored");
-  Services.obs.removeObserver(onStateRestored, "sessionstore-browser-state-restored", false);
+  Services.obs.removeObserver(onStateRestored, "sessionstore-browser-state-restored");
 
   // change this window's windowtype so that closing a new window will trigger
   // browser-lastwindow-close-granted.
@@ -204,7 +204,7 @@ function onStateRestored(aSubject, aTopic, aData) {
 // This will be called before the window is actually closed
 function onLastWindowClosed(aSubject, aTopic, aData) {
   info("test #" + testNum + ": onLastWindowClosed");
-  Services.obs.removeObserver(onLastWindowClosed, "browser-lastwindow-close-granted", false);
+  Services.obs.removeObserver(onLastWindowClosed, "browser-lastwindow-close-granted");
   gotLastWindowClosedTopic = true;
 }
 

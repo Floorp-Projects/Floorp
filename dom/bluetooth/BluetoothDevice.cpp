@@ -232,7 +232,7 @@ BluetoothDevice::GetConnected(bool* aConnected)
 }
 
 NS_IMETHODIMP
-BluetoothDevice::GetUuids(JSContext* aCx, jsval* aUuids)
+BluetoothDevice::GetUuids(JSContext* aCx, JS::Value* aUuids)
 {
   if (mJsUuids) {
     aUuids->setObject(*mJsUuids);
@@ -244,7 +244,7 @@ BluetoothDevice::GetUuids(JSContext* aCx, jsval* aUuids)
 }
 
 NS_IMETHODIMP
-BluetoothDevice::GetServices(JSContext* aCx, jsval* aServices)
+BluetoothDevice::GetServices(JSContext* aCx, JS::Value* aServices)
 {
   if (mJsServices) {
     aServices->setObject(*mJsServices);

@@ -1,0 +1,8 @@
+The source from this directory was copied from the kissfft hg repository using
+the update.sh script.  The only changes made were those applied by update.sh
+and the addition of moz.build and Makefile.in build files for the Mozilla build
+system.
+
+The kissfft hg repository is: http://hg.code.sf.net/p/kissfft/code
+
+The hg revision ID used was fbe1bb0bc7b94ec252842b8b7e3f3347ec75d92f.

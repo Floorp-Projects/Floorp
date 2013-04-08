@@ -10,6 +10,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLOptionElement.h"
 #include "mozilla/dom/HTMLOptionsCollectionBinding.h"
+#include "mozilla/dom/HTMLSelectElement.h"
 #include "mozilla/Util.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsError.h"
@@ -18,7 +19,6 @@
 #include "nsFormSubmission.h"
 #include "nsGkAtoms.h"
 #include "nsGUIEvent.h"
-#include "nsHTMLSelectElement.h"
 #include "nsIComboboxControlFrame.h"
 #include "nsIDocument.h"
 #include "nsIDOMEventTarget.h"
@@ -39,7 +39,7 @@ DOMCI_DATA(HTMLOptionsCollection, mozilla::dom::HTMLOptionsCollection)
 namespace mozilla {
 namespace dom {
 
-HTMLOptionsCollection::HTMLOptionsCollection(nsHTMLSelectElement* aSelect)
+HTMLOptionsCollection::HTMLOptionsCollection(HTMLSelectElement* aSelect)
 {
   SetIsDOMBinding();
 
@@ -95,23 +95,7 @@ HTMLOptionsCollection::GetOptionIndex(Element* aOption,
 }
 
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(HTMLOptionsCollection)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mElements)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(HTMLOptionsCollection)
-  {
-    uint32_t i;
-    for (i = 0; i < tmp->mElements.Length(); ++i) {
-      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mElements[i]");
-      cb.NoteXPCOMChild(static_cast<Element*>(tmp->mElements[i]));
-    }
-  }
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(HTMLOptionsCollection)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(HTMLOptionsCollection, mElements)
 
 // nsISupports
 

@@ -61,7 +61,6 @@ members = [
     'nsIDOMMozNamedAttrMap.item',
     'nsIDOMMozNamedAttrMap.length',
     'nsIDOMDOMStringList.*',
-    'nsIDOMXULDocument.getBoxObjectFor',
 
     'nsIDOMEvent.type',
     'nsIDOMEvent.target',
@@ -75,57 +74,26 @@ members = [
     'nsIDOMEvent.initEvent',
     'nsIDOMEvent.defaultPrevented',
     'nsIDOMEvent.stopImmediatePropagation',
-    'nsIDOMMouseEvent.*',
     'nsIDOMKeyEvent.*',
-    'nsIDOMMutationEvent.*',
     'nsIDOMDragEvent.*',
-    'nsIDOMScrollAreaEvent.*',
     'nsIDOMNotifyPaintEvent.*',
-    'nsIDOMMessageEvent.*',
     'nsIDOMMouseScrollEvent.*',
     'nsIDOMProgressEvent.lengthComputable',
     'nsIDOMProgressEvent.loaded',
     'nsIDOMProgressEvent.total',
     #XXX Can't quickstub initProgressEvent because it has long long parameters.
-    'nsIDOMUIEvent.which',
-    'nsIDOMUIEvent.rangeParent',
-    'nsIDOMUIEvent.rangeOffset',
-    'nsIDOMUIEvent.pageX',
-    'nsIDOMUIEvent.pageY',
-    'nsIDOMUIEvent.isChar',
 
     'nsIDOMTouch.*',
     'nsIDOMTouchList.*',
     'nsIDOMTouchEvent.*',
 
-    # dom/interfaces/geolocation - None.
-
     # dom/interfaces/html
-    'nsIDOMHTMLCommandElement.*',
     'nsIDOMHTMLFormElement.elements',
     'nsIDOMHTMLFormElement.name',
     'nsIDOMHTMLFormElement.submit',
     'nsIDOMHTMLFormElement.length',
     'nsIDOMHTMLFormElement.target',
     'nsIDOMHTMLFormElement.action',
-    'nsIDOMHTMLIFrameElement.src',
-    'nsIDOMHTMLIFrameElement.contentDocument',
-    'nsIDOMHTMLIFrameElement.contentWindow',
-    'nsIDOMHTMLInputElement.defaultChecked',
-    'nsIDOMHTMLInputElement.disabled',
-    'nsIDOMHTMLInputElement.select',
-    'nsIDOMHTMLInputElement.checked',
-    'nsIDOMHTMLInputElement.type',
-    'nsIDOMHTMLInputElement.form',
-    'nsIDOMHTMLInputElement.src',
-    'nsIDOMHTMLInputElement.name',
-    'nsIDOMHTMLInputElement.value',
-    'nsIDOMHTMLInputElement.files',
-    'nsIDOMHTMLInputElement.textLength',
-    'nsIDOMHTMLInputElement.selectionStart',
-    'nsIDOMHTMLInputElement.selectionEnd',
-    'nsIDOMHTMLInputElement.selectionDirection',
-    'nsIDOMHTMLInputElement.setSelectionRange',
     'nsIDOMHTMLSelectElement.name',
     'nsIDOMHTMLSelectElement.form',
     'nsIDOMHTMLSelectElement.add',
@@ -143,18 +111,6 @@ members = [
     'nsIDOMHTMLCanvasElement.getContext',
     'nsIDOMHTMLCanvasElement.toDataURL',
 
-    # dom/interfaces/json - None.
-    # All methods of nsIJSON call GetCurrentNativeCallContext.
-
-    # dom/interfaces/offline - None.
-
-    # dom/interfaces/range
-    'nsIDOMRange.*',
-
-    # dom/interfaces/sidebar - None.
-
-    # dom/interfaces/smil - None.
-
     # dom/interfaces/storage
     'nsIDOMToString.toString',
     'nsIDOMStorage.setItem',
@@ -164,14 +120,6 @@ members = [
     'nsIDOMStorage.removeItem',
     'nsIDOMStorage.clear',
     'nsIDOMStorageItem.value',
-
-    # dom/interfaces/stylesheets - None.
-
-    # dom/interfaces/svg - None.
-
-    # dom/interfaces/traversal
-
-    # dom/interfaces/xbl - None.
 
     # dom/interfaces/xpath
     'nsIDOMXPathExpression.evaluate',
@@ -200,7 +148,6 @@ members = [
     # Audio
     'nsIDOMNotifyAudioAvailableEvent.frameBuffer',
     'nsIDOMNotifyAudioAvailableEvent.time',
-    'nsIDOMHTMLAudioElement.mozWriteAudio',
 
     # dom/indexedDB
     'nsIIDBCursor.*',
@@ -301,6 +248,8 @@ customMethodCalls = {
     }
 
 newBindingProperties = {
+    # Once the last entry here goes away, we can make the sNativePropertyHooks
+    # of bindings static.
     'nsIDOMNode': 'mozilla::dom::NodeBinding::sNativePropertyHooks.mNativeProperties.regular',
     'nsIDOMElement': 'mozilla::dom::ElementBinding::sNativePropertyHooks.mNativeProperties.regular',
     'nsIDOMHTMLElement': 'mozilla::dom::HTMLElementBinding::sNativePropertyHooks.mNativeProperties.regular',

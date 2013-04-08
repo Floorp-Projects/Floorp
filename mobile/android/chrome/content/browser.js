@@ -81,7 +81,7 @@ var LazyNotificationGetter = {
   observers: [],
   shutdown: function lng_shutdown() {
     this.observers.forEach(function(o) {
-      Services.obs.removeObserver(o, o.notification, false);
+      Services.obs.removeObserver(o, o.notification);
     });
     this.observers = [];
   }
@@ -89,12 +89,13 @@ var LazyNotificationGetter = {
 
 [
 #ifdef MOZ_WEBRTC
-  ["WebRTC", ["getUserMedia:request"], "chrome://browser/content/WebRTC.js"],
+  ["WebrtcUI", ["getUserMedia:request"], "chrome://browser/content/WebrtcUI.js"],
 #endif
   ["MemoryObserver", ["memory-pressure", "Memory:Dump"], "chrome://browser/content/MemoryObserver.js"],
   ["ConsoleAPI", ["console-api-log-event"], "chrome://browser/content/ConsoleAPI.js"],
   ["FindHelper", ["FindInPage:Find", "FindInPage:Prev", "FindInPage:Next", "FindInPage:Closed", "Tab:Selected"], "chrome://browser/content/FindHelper.js"],
   ["PermissionsHelper", ["Permissions:Get", "Permissions:Clear"], "chrome://browser/content/PermissionsHelper.js"],
+  ["FeedHandler", ["Feeds:Subscribe"], "chrome://browser/content/FeedHandler.js"],
 ].forEach(function (aScript) {
   let [name, notifications, script] = aScript;
   XPCOMUtils.defineLazyGetter(window, name, function() {
@@ -1276,7 +1277,7 @@ var BrowserApp = {
         storage.init();
 
         sendMessageToJava({ type: "Passwords:Init:Return" });
-        Services.obs.removeObserver(this, "Passwords:Init", false);
+        Services.obs.removeObserver(this, "Passwords:Init");
         break;
       }
 
@@ -1285,7 +1286,7 @@ var BrowserApp = {
         // Force creation/upgrade of formhistory.sqlite
         let db = fh.DBConnection;
         sendMessageToJava({ type: "FormHistory:Init:Return" });
-        Services.obs.removeObserver(this, "FormHistory:Init", false);
+        Services.obs.removeObserver(this, "FormHistory:Init");
         break;
       }
 
@@ -3017,11 +3018,11 @@ Tab.prototype = {
         if (!target.href || target.disabled)
           return;
 
-        // ignore on frames and other documents
+        // Ignore on frames and other documents
         if (target.ownerDocument != this.browser.contentDocument)
           return;
 
-        // sanitize the rel string
+        // Sanitize the rel string
         let list = [];
         if (target.rel) {
           list = target.rel.toLowerCase().split(/\s+/);
@@ -3032,42 +3033,60 @@ Tab.prototype = {
             list.push("[" + rel + "]");
         }
 
-        // We only care about icon links
-        if (list.indexOf("[icon]") == -1)
-          return;
+        if (list.indexOf("[icon]") != -1) {
+          // We want to get the largest icon size possible for our UI.
+          let maxSize = 0;
 
-        // We want to get the largest icon size possible for our UI.
-        let maxSize = 0;
+          // We use the sizes attribute if available
+          // see http://www.whatwg.org/specs/web-apps/current-work/multipage/links.html#rel-icon
+          if (target.hasAttribute("sizes")) {
+            let sizes = target.getAttribute("sizes").toLowerCase();
 
-        // We use the sizes attribute if available
-        // see http://www.whatwg.org/specs/web-apps/current-work/multipage/links.html#rel-icon
-        if (target.hasAttribute("sizes")) {
-          let sizes = target.getAttribute("sizes").toLowerCase();
-
-          if (sizes == "any") {
-            // Since Java expects an integer, use -1 to represent icons with sizes="any"
-            maxSize = -1; 
-          } else {
-            let tokens = sizes.split(" ");
-            tokens.forEach(function(token) {
-              // TODO: check for invalid tokens
-              let [w, h] = token.split("x");
-              maxSize = Math.max(maxSize, Math.max(w, h));
-            });
+            if (sizes == "any") {
+              // Since Java expects an integer, use -1 to represent icons with sizes="any"
+              maxSize = -1; 
+            } else {
+              let tokens = sizes.split(" ");
+              tokens.forEach(function(token) {
+                // TODO: check for invalid tokens
+                let [w, h] = token.split("x");
+                maxSize = Math.max(maxSize, Math.max(w, h));
+              });
+            }
           }
+
+          let json = {
+            type: "Link:Favicon",
+            tabID: this.id,
+            href: resolveGeckoURI(target.href),
+            charset: target.ownerDocument.characterSet,
+            title: target.title,
+            rel: list.join(" "),
+            size: maxSize
+          };
+          sendMessageToJava(json);
+        } else if (list.indexOf("[alternate]") != -1) {
+          let type = target.type.toLowerCase().replace(/^\s+|\s*(?:;.*)?$/g, "");
+          let isFeed = (type == "application/rss+xml" || type == "application/atom+xml");
+
+          if (!isFeed)
+            return;
+
+          try {
+            // urlSecurityCeck will throw if things are not OK
+            ContentAreaUtils.urlSecurityCheck(target.href, target.ownerDocument.nodePrincipal, Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
+
+            if (!this.browser.feeds)
+              this.browser.feeds = [];
+            this.browser.feeds.push({ href: target.href, title: target.title, type: type });
+
+            let json = {
+              type: "Link:Feed",
+              tabID: this.id
+            };
+            sendMessageToJava(json);
+          } catch (e) {}
         }
-
-        let json = {
-          type: "DOMLinkAdded",
-          tabID: this.id,
-          href: resolveGeckoURI(target.href),
-          charset: target.ownerDocument.characterSet,
-          title: target.title,
-          rel: list.join(" "),
-          size: maxSize
-        };
-
-        sendMessageToJava(json);
         break;
       }
 
@@ -4393,6 +4412,8 @@ var ErrorPageEventHandler = {
           let isMalware = /e=malwareBlocked/.test(errorDoc.documentURI);
           let bucketName = isMalware ? "WARNING_MALWARE_PAGE_" : "WARNING_PHISHING_PAGE_";
           let nsISecTel = Ci.nsISecurityUITelemetry;
+          let isIframe = (aOwnerDoc.defaultView.parent === aOwnerDoc.defaultView);
+          bucketName += isIframe ? "TOP_" : "FRAME_";
 
           let formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].getService(Ci.nsIURLFormatter);
 
@@ -4901,7 +4922,7 @@ var ViewportHandler = {
 
   uninit: function uninit() {
     removeEventListener("DOMMetaAdded", this, false);
-    Services.obs.removeObserver(this, "Window:Resize", false);
+    Services.obs.removeObserver(this, "Window:Resize");
   },
 
   handleEvent: function handleEvent(aEvent) {
@@ -5180,9 +5201,9 @@ var IndexedDB = {
   },
 
   uninit: function IndexedDB_uninit() {
-    Services.obs.removeObserver(this, this._permissionsPrompt, false);
-    Services.obs.removeObserver(this, this._quotaPrompt, false);
-    Services.obs.removeObserver(this, this._quotaCancel, false);
+    Services.obs.removeObserver(this, this._permissionsPrompt);
+    Services.obs.removeObserver(this, this._quotaPrompt);
+    Services.obs.removeObserver(this, this._quotaCancel);
   },
 
   observe: function IndexedDB_observe(subject, topic, data) {
@@ -5407,8 +5428,8 @@ var CharacterEncoding = {
   },
 
   uninit: function uninit() {
-    Services.obs.removeObserver(this, "CharEncoding:Get", false);
-    Services.obs.removeObserver(this, "CharEncoding:Set", false);
+    Services.obs.removeObserver(this, "CharEncoding:Get");
+    Services.obs.removeObserver(this, "CharEncoding:Set");
   },
 
   observe: function observe(aSubject, aTopic, aData) {
@@ -5871,7 +5892,7 @@ var WebappsUI = {
     Services.obs.removeObserver(this, "webapps-launch");
     Services.obs.removeObserver(this, "webapps-sync-install");
     Services.obs.removeObserver(this, "webapps-sync-uninstall");
-    Services.obs.removeObserver(this, "webapps-install-error", false);
+    Services.obs.removeObserver(this, "webapps-install-error");
   },
 
   DEFAULT_PREFS_FILENAME: "default-prefs.js",
@@ -6603,8 +6624,8 @@ let Reader = {
   },
 
   uninit: function Reader_uninit() {
-    Services.obs.removeObserver(this, "Reader:Add", false);
-    Services.obs.removeObserver(this, "Reader:Remove", false);
+    Services.obs.removeObserver(this, "Reader:Add");
+    Services.obs.removeObserver(this, "Reader:Remove");
 
     let requests = this._requests;
     for (let url in requests) {

@@ -1001,6 +1001,9 @@ IonBuilder::inlineUnsafeSetDenseArrayElement(CallInfo &callInfo, uint32_t base)
                                               /* needsHoleCheck = */ false);
     store->setRacy();
 
+    if (oracle->elementWriteNeedsBarrier(getInlineArgTypeSet(callInfo, arri)))
+        store->setNeedsBarrier();
+
     current->add(store);
 
     if (!resumeAfter(store))
@@ -1151,7 +1154,7 @@ IonBuilder::inlineParallelArrayTail(CallInfo &callInfo,
     types::StackTypeSet *returnTypes = getInlineReturnTypeSet();
     if (returnTypes->getKnownTypeTag() != JSVAL_TYPE_OBJECT)
         return InliningStatus_NotInlined;
-    if (returnTypes->getObjectCount() != 1)
+    if (returnTypes->unknownObject() || returnTypes->getObjectCount() != 1)
         return InliningStatus_NotInlined;
     types::TypeObject *typeObject = returnTypes->getTypeObject(0);
 
@@ -1254,7 +1257,7 @@ IonBuilder::inlineNewDenseArrayForParallelExecution(CallInfo &callInfo)
     types::StackTypeSet *returnTypes = getInlineReturnTypeSet();
     if (returnTypes->getKnownTypeTag() != JSVAL_TYPE_OBJECT)
         return InliningStatus_NotInlined;
-    if (returnTypes->getObjectCount() != 1)
+    if (returnTypes->unknownObject() || returnTypes->getObjectCount() != 1)
         return InliningStatus_NotInlined;
     types::TypeObject *typeObject = returnTypes->getTypeObject(0);
 

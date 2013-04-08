@@ -15,7 +15,7 @@ function test() {
 
   Services.obs.addObserver(observe, NOTIFICATION, false);
   registerCleanupFunction(function () {
-    Services.obs.removeObserver(observe, NOTIFICATION, false);
+    Services.obs.removeObserver(observe, NOTIFICATION);
   });
 
   ss.setBrowserState(JSON.stringify({ windows: [] }));

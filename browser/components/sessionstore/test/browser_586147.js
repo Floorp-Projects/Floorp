@@ -4,8 +4,8 @@
 
 function observeOneRestore(callback) {
   let topic = "sessionstore-browser-state-restored";
-  Services.obs.addObserver(function() {
-    Services.obs.removeObserver(arguments.callee, topic, false);
+  Services.obs.addObserver(function onRestore() {
+    Services.obs.removeObserver(onRestore, topic);
     callback();
   }, topic, false);
 };

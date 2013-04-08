@@ -24,10 +24,8 @@
 #include "jsapi.h"
 #include "jsutil.h"
 
-#ifdef __cplusplus
 #include "js/HashTable.h"
 #include "js/Vector.h"
-#endif
 
 /*
  * Convenience constants.
@@ -65,10 +63,6 @@ typedef struct JSSpecializedNative  JSSpecializedNative;
  * may possibly be wrapped in an extern "C" block which does not agree with
  * templates.
  */
-#ifdef __cplusplus
-
-extern "C++" {
-
 class JSDependentString;
 class JSExtensibleString;
 class JSExternalString;
@@ -234,14 +228,6 @@ namespace WTF {
 class BumpPointerAllocator;
 
 } /* namespace WTF */
-
-} /* export "C++" */
-
-#else
-
-typedef struct JSAtom JSAtom;
-
-#endif  /* __cplusplus */
 
 /* "Friend" types used by jscntxt.h and jsdbgapi.h. */
 typedef enum JSTrapStatus {

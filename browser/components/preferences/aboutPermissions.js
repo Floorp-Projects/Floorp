@@ -437,10 +437,10 @@ let AboutPermissions = {
       Services.prefs.removeObserver("plugins.click_to_play", this, false);
       Services.prefs.removeObserver("full-screen-api.enabled", this, false);
 
-      Services.obs.removeObserver(this, "perm-changed", false);
-      Services.obs.removeObserver(this, "passwordmgr-storage-changed", false);
-      Services.obs.removeObserver(this, "cookie-changed", false);
-      Services.obs.removeObserver(this, "browser:purge-domain-data", false);
+      Services.obs.removeObserver(this, "perm-changed");
+      Services.obs.removeObserver(this, "passwordmgr-storage-changed");
+      Services.obs.removeObserver(this, "cookie-changed");
+      Services.obs.removeObserver(this, "browser:purge-domain-data");
     }
 
     gSitesStmt.finalize();

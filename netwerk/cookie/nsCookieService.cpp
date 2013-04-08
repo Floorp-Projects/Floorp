@@ -781,23 +781,19 @@ nsCookieService::TryInitDB(bool aRecreateDB)
     NS_ENSURE_SUCCESS(rv, RESULT_FAILURE);
   }
 
-  Telemetry::ID histID;
-  TimeStamp start = TimeStamp::Now();
-  // rand() is being used here as a poor-man's solution for a/b testing
-  if (rand() % 2) {
-    histID = Telemetry::MOZ_SQLITE_COOKIES_OPEN_READAHEAD_MS;
+  // This block provides scope for the Telemetry AutoTimer
+  {
+    Telemetry::AutoTimer<Telemetry::MOZ_SQLITE_COOKIES_OPEN_READAHEAD_MS>
+      telemetry;
     ReadAheadFile(mDefaultDBState->cookieFile);
-  } else {
-    histID = Telemetry::MOZ_SQLITE_COOKIES_OPEN_MS;
-  }
 
-  // open a connection to the cookie database, and only cache our connection
-  // and statements upon success. The connection is opened unshared to eliminate
-  // cache contention between the main and background threads.
-  rv = mStorageService->OpenUnsharedDatabase(mDefaultDBState->cookieFile,
-    getter_AddRefs(mDefaultDBState->dbConn));
-  NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
-  Telemetry::AccumulateDelta_impl<Telemetry::Millisecond>::compute(histID, start);
+    // open a connection to the cookie database, and only cache our connection
+    // and statements upon success. The connection is opened unshared to eliminate
+    // cache contention between the main and background threads.
+    rv = mStorageService->OpenUnsharedDatabase(mDefaultDBState->cookieFile,
+      getter_AddRefs(mDefaultDBState->dbConn));
+    NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
+  }
 
   // Set up our listeners.
   mDefaultDBState->insertListener = new InsertCookieDBListener(mDefaultDBState);

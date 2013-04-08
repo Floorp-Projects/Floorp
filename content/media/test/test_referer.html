@@ -47,7 +47,7 @@ function loadedMetadata(evt) {
 for (var i=0; i<gSmallTests.length; ++i) {
   var test = gSmallTests[i];
   var type;
-  if (/^video/.test(test.type) || /^application\/dash\+xml/.test(test.type)) {
+  if (/^video/.test(test.type)) {
     type = "video"
   } else {
     type = "audio";

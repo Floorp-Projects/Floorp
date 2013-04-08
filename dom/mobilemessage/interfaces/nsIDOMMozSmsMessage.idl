@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, builtinclass, uuid(d4d848c4-88a6-11e2-b6da-6f252cbfa716)]
+[scriptable, builtinclass, uuid(b755a401-d5cb-4d35-a93e-47c89d2e15ca)]
 interface nsIDOMMozSmsMessage : nsISupports
 {
   /**
@@ -13,6 +13,8 @@ interface nsIDOMMozSmsMessage : nsISupports
   readonly attribute DOMString type;
 
   readonly attribute long      id;
+
+  readonly attribute unsigned long long threadId;
 
   /**
    * Should be "received", "sending", "sent" or "error".

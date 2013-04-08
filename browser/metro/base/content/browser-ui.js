@@ -145,7 +145,6 @@ var BrowserUI = {
         DialogUI.init();
         FormHelperUI.init();
         FindHelperUI.init();
-        FullScreenVideo.init();
         PdfJs.init();
 #ifdef MOZ_SERVICES_SYNC
         WeaveGlue.init();
@@ -576,7 +575,7 @@ var BrowserUI = {
     } else if (!Util.isURLEmpty(url)) {
       tabCaption = url;
     } else {
-      tabCaption = Strings.browser.GetStringFromName("tabs.emptyTabTitle");
+      tabCaption = Util.getEmptyURLTabTitle();
     }
 
     let tab = Browser.getTabForBrowser(aBrowser);

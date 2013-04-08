@@ -2042,7 +2042,6 @@ Element::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aName,
   }
 
   if (hasMutationListeners) {
-    nsCOMPtr<nsIDOMEventTarget> node = do_QueryObject(this);
     nsMutationEvent mutation(true, NS_MUTATION_ATTRMODIFIED);
 
     mutation.mRelatedNode = attrNode;

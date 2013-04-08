@@ -44,7 +44,7 @@
 using namespace mozilla::dom;
 
 #define TX_ENSURE_CURRENTNODE                           \
-    NS_ASSERTION(mCurrentNode, "mCurrentNode is NULL"); \
+    NS_ASSERTION(mCurrentNode, "mCurrentNode is nullptr"); \
     if (!mCurrentNode)                                  \
         return NS_ERROR_UNEXPECTED
 

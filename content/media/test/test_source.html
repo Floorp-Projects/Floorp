@@ -57,9 +57,6 @@ v1.addEventListener('loadeddata', loaded, false);
 a1.addEventListener('loadeddata', loaded, false);
 
 var videoSource = newSource(/^video/);
-if (videoSource == null) {
-  videoSource = newSource(/^application\/dash\+xml/);
-}
 if (videoSource) {
   v1.appendChild(videoSource);
   v1.load();

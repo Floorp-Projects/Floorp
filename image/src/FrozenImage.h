@@ -40,10 +40,6 @@ public:
   NS_IMETHOD_(bool) FrameIsOpaque(uint32_t aWhichFrame) MOZ_OVERRIDE;
   NS_IMETHOD GetImageContainer(layers::LayerManager* aManager,
                                layers::ImageContainer** _retval) MOZ_OVERRIDE;
-  NS_IMETHOD ExtractFrame(uint32_t aWhichFrame,
-                          const nsIntRect& aRegion,
-                          uint32_t aFlags,
-                          imgIContainer** _retval) MOZ_OVERRIDE;
   NS_IMETHOD Draw(gfxContext* aContext,
                   gfxPattern::GraphicsFilter aFilter,
                   const gfxMatrix& aUserSpaceToImageSpace,
@@ -62,7 +58,7 @@ protected:
   FrozenImage(Image* aImage) : ImageWrapper(aImage) { }
 
 private:
-  friend class ImageFactory;
+  friend class ImageOps;
 };
 
 } // namespace image

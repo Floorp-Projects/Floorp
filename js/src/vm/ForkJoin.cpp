@@ -289,6 +289,8 @@ ForkJoinShared::executeFromWorker(uint32_t workerId, uintptr_t stackLimit)
 
     PerThreadData thisThread(cx_->runtime);
     TlsPerThreadData.set(&thisThread);
+    // Don't use setIonStackLimit() because that acquires the ionStackLimitLock, and the
+    // lock has not been initialized in these cases.
     thisThread.ionStackLimit = stackLimit;
     executePortion(&thisThread, workerId);
     TlsPerThreadData.set(NULL);
@@ -549,6 +551,9 @@ ForkJoinSlice::triggerAbort()
     // In principle, we probably ought to set the ionStackLimit's for
     // the other threads too, but right now the various slice objects
     // are not on a central list so that's not possible.
+
+    // Don't use setIonStackLimit() because that acquires the ionStackLimitLock, and the
+    // lock has not been initialized in these cases.
     perThreadData->ionStackLimit = -1;
 }
 

@@ -230,8 +230,8 @@ nsPropertyTable::SetPropertyInternal(nsPropertyOwner     aObject,
                                            (PL_DHashTableOperate(&propertyList->mObjectValueMap, aObject, PL_DHASH_ADD));
   if (!entry)
     return NS_ERROR_OUT_OF_MEMORY;
-  // A NULL entry->key is the sign that the entry has just been allocated
-  // for us.  If it's non-NULL then we have an existing entry.
+  // A nullptr entry->key is the sign that the entry has just been allocated
+  // for us.  If it's non-nullptr then we have an existing entry.
   if (entry->key) {
     if (aOldValue)
       *aOldValue = entry->value;
@@ -343,7 +343,7 @@ size_t
 nsPropertyTable::PropertyList::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf)
 {
   size_t n = aMallocSizeOf(this);
-  n += PL_DHashTableSizeOfExcludingThis(&mObjectValueMap, NULL, aMallocSizeOf);
+  n += PL_DHashTableSizeOfExcludingThis(&mObjectValueMap, nullptr, aMallocSizeOf);
   return n;
 }
 

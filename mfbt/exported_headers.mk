@@ -17,6 +17,7 @@ EXPORTS_mozilla += \
   Compiler.h \
   Constants.h \
   DebugOnly.h \
+  Endian.h \
   EnumSet.h \
   FloatingPoint.h \
   GuardObjects.h \
@@ -27,6 +28,7 @@ EXPORTS_mozilla += \
   MemoryChecking.h \
   MSStdInt.h \
   NullPtr.h \
+  PodOperations.h \
   Range.h \
   RangedPtr.h \
   RefPtr.h \

@@ -1401,7 +1401,7 @@ TabChild::DispatchMessageManagerMessage(const nsAString& aMessageName,
                                         const nsACString& aJSONData)
 {
     JSAutoRequest ar(mCx);
-    jsval json = JSVAL_NULL;
+    JS::Value json = JSVAL_NULL;
     StructuredCloneData cloneData;
     JSAutoStructuredCloneBuffer buffer;
     if (JS_ParseJSON(mCx,
@@ -1620,11 +1620,11 @@ TabChild::DispatchSynthesizedMouseEvent(uint32_t aMsg, uint64_t aTime,
   DispatchWidgetEvent(event);
 }
 
-static nsDOMTouch*
+static Touch*
 GetTouchForIdentifier(const nsTouchEvent& aEvent, int32_t aId)
 {
   for (uint32_t i = 0; i < aEvent.touches.Length(); ++i) {
-    nsDOMTouch* touch = static_cast<nsDOMTouch*>(aEvent.touches[i].get());
+    Touch* touch = static_cast<Touch*>(aEvent.touches[i].get());
     if (touch->mIdentifier == aId) {
       return touch;
     }
@@ -1664,7 +1664,7 @@ TabChild::UpdateTapState(const nsTouchEvent& aEvent, nsEventStatus aStatus)
       return;
     }
 
-    nsDOMTouch* touch = static_cast<nsDOMTouch*>(aEvent.touches[0].get());
+    Touch* touch = static_cast<Touch*>(aEvent.touches[0].get());
     mGestureDownPoint = touch->mRefPoint;
     mActivePointerId = touch->mIdentifier;
     if (sClickHoldContextMenusEnabled) {
@@ -1682,7 +1682,7 @@ TabChild::UpdateTapState(const nsTouchEvent& aEvent, nsEventStatus aStatus)
   if (!currentlyTrackingTouch) {
     return;
   }
-  nsDOMTouch* trackedTouch = GetTouchForIdentifier(aEvent, mActivePointerId);
+  Touch* trackedTouch = GetTouchForIdentifier(aEvent, mActivePointerId);
   if (!trackedTouch) {
     return;
   }
@@ -2104,10 +2104,15 @@ TabChild::InitRenderingState()
     if (id != 0) {
         // Pushing layers transactions directly to a separate
         // compositor context.
+        PCompositorChild* compositorChild = CompositorChild::Get();
+        if (!compositorChild) {
+          NS_WARNING("failed to get CompositorChild instance");
+          return false;
+        }
         shadowManager =
-            CompositorChild::Get()->SendPLayersConstructor(be, id,
-                                                           &be,
-                                                           &maxTextureSize);
+            compositorChild->SendPLayersConstructor(be, id,
+                                                    &be,
+                                                    &maxTextureSize);
     } else {
         // Pushing transactions to the parent content.
         shadowManager = remoteFrame->SendPLayersConstructor();

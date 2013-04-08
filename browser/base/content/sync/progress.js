@@ -31,10 +31,10 @@ function onUnload(event) {
 
 function cleanUpObservers() {
   try {
-    Services.obs.removeObserver(onEngineSync, "weave:engine:sync:finish", false);
-    Services.obs.removeObserver(onEngineSync, "weave:engine:sync:error", false);
-    Services.obs.removeObserver(onServiceSync, "weave:service:sync:finish", false);
-    Services.obs.removeObserver(onServiceSync, "weave:service:sync:error", false);
+    Services.obs.removeObserver(onEngineSync, "weave:engine:sync:finish");
+    Services.obs.removeObserver(onEngineSync, "weave:engine:sync:error");
+    Services.obs.removeObserver(onServiceSync, "weave:service:sync:finish");
+    Services.obs.removeObserver(onServiceSync, "weave:service:sync:error");
   }
   catch (e) {
     // may be double called by unload & exit. Ignore.

@@ -417,7 +417,7 @@
         </vbox>
         <vbox class="permission" id="permPointerLockRow" >
           <label class="permissionLabel" id="permPointerLockLabel"
-                 value="&permPointerLock;" control="pointerLockRadioGroup"/>
+                 value="&permPointerLock2;" control="pointerLockRadioGroup"/>
           <hbox id="permPointerLockBox" role="group" aria-labelledby="permPointerLockLabel">
             <checkbox id="pointerLockDef" command="cmd_pointerLockDef" label="&permAskAlways;"/>
             <spacer flex="1"/>

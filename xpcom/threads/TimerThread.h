@@ -81,7 +81,7 @@ struct TimerAdditionComparator {
 #endif
   {}
 
-  PRBool LessThan(nsTimerImpl *fromArray, nsTimerImpl *newTimer) const {
+  bool LessThan(nsTimerImpl *fromArray, nsTimerImpl *newTimer) const {
     NS_ABORT_IF_FALSE(newTimer == timerToInsert, "Unexpected timer ordering");
 
     // Skip any overdue timers.
@@ -89,8 +89,8 @@ struct TimerAdditionComparator {
            fromArray->mTimeout <= newTimer->mTimeout;
   }
 
-  PRBool Equals(nsTimerImpl* fromArray, nsTimerImpl* newTimer) const {
-    return PR_FALSE;
+  bool Equals(nsTimerImpl* fromArray, nsTimerImpl* newTimer) const {
+    return false;
   }
 
 private:

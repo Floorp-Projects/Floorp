@@ -24,7 +24,6 @@
 #include "nsIDOMWindow.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDocument.h"
-#include "nsIDOMEventTarget.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptSecurityManager.h"
@@ -33,6 +32,7 @@
 #include "nsHTMLReflowState.h"
 #include "nsIObjectLoadingContent.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/FragmentOrElement.h"
 
 // for event firing in context menus
@@ -43,8 +43,10 @@
 #include "nsViewManager.h"
 #include "nsError.h"
 #include "nsMenuFrame.h"
+#include "nsDOMEvent.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 // on win32 and os/2, context menus come up on mouse up. On other platforms,
 // they appear on mouse down. Certain bits of code care about this difference.
@@ -113,8 +115,7 @@ nsXULPopupListener::HandleEvent(nsIDOMEvent* aEvent)
   }
 
   // Get the node that was clicked on.
-  nsCOMPtr<nsIDOMEventTarget> target;
-  mouseEvent->GetTarget(getter_AddRefs(target));
+  EventTarget* target = mouseEvent->InternalDOMEvent()->GetTarget();
   nsCOMPtr<nsIDOMNode> targetNode = do_QueryInterface(target);
 
   if (!targetNode && mIsContext) {

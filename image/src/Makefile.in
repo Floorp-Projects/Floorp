@@ -20,13 +20,16 @@ FAIL_ON_WARNINGS = 1
 EXPORTS		=  imgLoader.h \
 		   imgRequest.h \
 		   imgRequestProxy.h \
+		   ImageOps.h \
 		   $(NULL)
 
 CPPSRCS		= \
 			Image.cpp \
 			ImageFactory.cpp \
                         ImageMetadata.cpp \
+			ImageOps.cpp \
 			ImageWrapper.cpp \
+			ClippedImage.cpp \
 			Decoder.cpp \
 			DiscardTracker.cpp \
 			FrozenImage.cpp \

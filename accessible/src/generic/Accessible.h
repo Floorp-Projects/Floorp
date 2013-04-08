@@ -521,6 +521,8 @@ public:
 
   bool IsTableRow() const { return HasGenericType(eTableRow); }
 
+  bool IsTextField() const { return mType == eHTMLTextFieldType; }
+
   bool IsTextLeaf() const { return mType == eTextLeafType; }
   TextLeafAccessible* AsTextLeaf();
 

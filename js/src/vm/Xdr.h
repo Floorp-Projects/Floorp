@@ -8,6 +8,8 @@
 #ifndef Xdr_h___
 #define Xdr_h___
 
+#include "mozilla/Endian.h"
+
 #include "jsapi.h"
 #include "jsprvtd.h"
 #include "jsnum.h"
@@ -88,40 +90,9 @@ class XDRBuffer {
     uint8_t     *limit;
 };
 
-/* We use little-endian byteorder for all encoded data */
-
-#if defined IS_LITTLE_ENDIAN
-
-inline uint32_t
-NormalizeByteOrder32(uint32_t x)
-{
-    return x;
-}
-
-inline uint16_t
-NormalizeByteOrder16(uint16_t x)
-{
-    return x;
-}
-
-#elif defined IS_BIG_ENDIAN
-
-inline uint32_t
-NormalizeByteOrder32(uint32_t x)
-{
-    return (x >> 24) | ((x >> 8) & 0xff00) | ((x << 8) & 0xff0000) | (x << 24);
-}
-
-inline uint16_t
-NormalizeByteOrder16(uint16_t x)
-{
-    return (x >> 8) | (x << 8);
-}
-
-#else
-#error "unknown byte order"
-#endif
-
+/*
+ * XDR serialization state.  All data is encoded in little endian.
+ */
 template <XDRMode mode>
 class XDRState {
   public:
@@ -153,31 +124,27 @@ class XDRState {
     }
 
     bool codeUint16(uint16_t *n) {
-        uint16_t tmp;
         if (mode == XDR_ENCODE) {
-            uint8_t *ptr = buf.write(sizeof tmp);
+            uint8_t *ptr = buf.write(sizeof *n);
             if (!ptr)
                 return false;
-            tmp = NormalizeByteOrder16(*n);
-            memcpy(ptr, &tmp, sizeof tmp);
+            mozilla::LittleEndian::writeUint16(ptr, *n);
         } else {
-            memcpy(&tmp, buf.read(sizeof tmp), sizeof tmp);
-            *n = NormalizeByteOrder16(tmp);
+            const uint8_t *ptr = buf.read(sizeof *n);
+            *n = mozilla::LittleEndian::readUint16(ptr);
         }
         return true;
     }
 
     bool codeUint32(uint32_t *n) {
-        uint32_t tmp;
         if (mode == XDR_ENCODE) {
-            uint8_t *ptr = buf.write(sizeof tmp);
+            uint8_t *ptr = buf.write(sizeof *n);
             if (!ptr)
                 return false;
-            tmp = NormalizeByteOrder32(*n);
-            memcpy(ptr, &tmp, sizeof tmp);
+            mozilla::LittleEndian::writeUint32(ptr, *n);
         } else {
-            memcpy(&tmp, buf.read(sizeof tmp), sizeof tmp);
-            *n = NormalizeByteOrder32(tmp);
+            const uint8_t *ptr = buf.read(sizeof *n);
+            *n = mozilla::LittleEndian::readUint32(ptr);
         }
         return true;
     }
@@ -187,24 +154,10 @@ class XDRState {
             uint8_t *ptr = buf.write(sizeof(*n));
             if (!ptr)
                 return false;
-            ptr[0] = (*n >>  0) & 0xFF;
-            ptr[1] = (*n >>  8) & 0xFF;
-            ptr[2] = (*n >> 16) & 0xFF;
-            ptr[3] = (*n >> 24) & 0xFF;
-            ptr[4] = (*n >> 32) & 0xFF;
-            ptr[5] = (*n >> 40) & 0xFF;
-            ptr[6] = (*n >> 48) & 0xFF;
-            ptr[7] = (*n >> 56) & 0xFF;
+            mozilla::LittleEndian::writeUint64(ptr, *n);
         } else {
             const uint8_t *ptr = buf.read(sizeof(*n));
-            *n = (uint64_t(ptr[0]) <<  0) |
-                 (uint64_t(ptr[1]) <<  8) |
-                 (uint64_t(ptr[2]) << 16) |
-                 (uint64_t(ptr[3]) << 24) |
-                 (uint64_t(ptr[4]) << 32) |
-                 (uint64_t(ptr[5]) << 40) |
-                 (uint64_t(ptr[6]) << 48) |
-                 (uint64_t(ptr[7]) << 56);
+            *n = mozilla::LittleEndian::readUint64(ptr);
         }
         return true;
     }

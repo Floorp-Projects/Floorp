@@ -22,7 +22,7 @@ tests.gatTest = function(options) {
   };
 
   let onGatReady = function() {
-    Services.obs.removeObserver(onGatReadyInterjection, "gcli_addon_commands_ready", false);
+    Services.obs.removeObserver(onGatReadyInterjection, "gcli_addon_commands_ready");
     info("gcli_addon_commands_ready notification received, running tests");
 
     let auditDone = helpers.audit(options, [

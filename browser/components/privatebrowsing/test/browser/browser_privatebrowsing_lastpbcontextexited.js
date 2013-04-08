@@ -15,14 +15,14 @@ function test() {
           is(aTopic, "last-pb-context-exiting", "Correct topic should be dispatched (exiting)");
           is(expectedExiting, true, "notification not expected yet (exiting)");
           expectedExited = true;
-          Services.obs.removeObserver(observerExiting, "last-pb-context-exiting", false);
+          Services.obs.removeObserver(observerExiting, "last-pb-context-exiting");
         }
       };
       let observerExited = {
         observe: function(aSubject, aTopic, aData) {
           is(aTopic, "last-pb-context-exited", "Correct topic should be dispatched (exited)");
           is(expectedExited, true, "notification not expected yet (exited)");
-          Services.obs.removeObserver(observerExited, "last-pb-context-exited", false);
+          Services.obs.removeObserver(observerExited, "last-pb-context-exited");
           aCallback();
         }
       };

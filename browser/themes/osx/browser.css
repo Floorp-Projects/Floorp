@@ -3662,6 +3662,45 @@ toolbar[mode="icons"] > *|* > .social-notification-container > .toolbarbutton-1[
   left: -2px;
 }
 
+.popup-notification-icon[popupid="servicesInstall"] {
+  list-style-image: url("chrome://global/skin/icons/information-64.png");
+}
+#servicesInstall-notification-icon {
+  list-style-image: url(chrome://global/skin/icons/information-16.png);
+}
+#social-undoactivation-button,
+#servicesInstall-learnmore-link {
+  -moz-margin-start: 0; /* override default label margin to match description margin */
+}
+
+.social-activation-icon {
+  width: auto;
+  height: auto;
+  max-height: 64px;
+  max-width: 64px;
+}
+
+#social-activation-message {
+  max-width: 250px;
+}
+
+#social-activation-message > label {
+  margin: 0;
+}
+
+#social-activation-button {
+  @hudButton@
+  min-height: 0px;
+}
+
+#social-activation-button:focus {
+  @hudButtonFocused@
+}
+
+#social-activation-button:hover:active {
+  @hudButtonPressed@
+}
+
 /* === end of social toolbar button === */
 
 /* === social toolbar provider menu  === */

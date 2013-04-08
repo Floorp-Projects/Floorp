@@ -256,19 +256,7 @@ nsContentView::GetId(nsContentViewId* aId)
 // we'd need to re-institute a fixed version of bug 98158.
 #define MAX_DEPTH_CONTENT_FRAMES 10
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsFrameLoader)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocShell)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mMessageManager)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mChildMessageManager)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsFrameLoader)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocShell)
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "nsFrameLoader::mMessageManager");
-  cb.NoteXPCOMChild(static_cast<nsIContentFrameMessageManager*>(tmp->mMessageManager.get()));
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChildMessageManager)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
+NS_IMPL_CYCLE_COLLECTION_3(nsFrameLoader, mDocShell, mMessageManager, mChildMessageManager)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsFrameLoader)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsFrameLoader)
 
@@ -580,7 +568,7 @@ nsFrameLoader::Finalize()
 
 static void
 FirePageHideEvent(nsIDocShellTreeItem* aItem,
-                  nsIDOMEventTarget* aChromeEventHandler)
+                  EventTarget* aChromeEventHandler)
 {
   nsCOMPtr<nsIDOMDocument> doc = do_GetInterface(aItem);
   nsCOMPtr<nsIDocument> internalDoc = do_QueryInterface(doc);
@@ -608,7 +596,7 @@ FirePageHideEvent(nsIDocShellTreeItem* aItem,
 // loaded.
 static void
 FirePageShowEvent(nsIDocShellTreeItem* aItem,
-                  nsIDOMEventTarget* aChromeEventHandler,
+                  EventTarget* aChromeEventHandler,
                   bool aFireIfShowing)
 {
   int32_t childCount = 0;
@@ -636,7 +624,7 @@ FirePageShowEvent(nsIDocShellTreeItem* aItem,
 static void
 SetTreeOwnerAndChromeEventHandlerOnDocshellTree(nsIDocShellTreeItem* aItem,
                                                 nsIDocShellTreeOwner* aOwner,
-                                                nsIDOMEventTarget* aHandler)
+                                                EventTarget* aHandler)
 {
   NS_PRECONDITION(aItem, "Must have item");
 
@@ -942,7 +930,7 @@ nsFrameLoader::ShowRemoteFrame(const nsIntSize& size,
     nsCOMPtr<nsIObserverService> os = services::GetObserverService();
     if (OwnerIsBrowserOrAppFrame() && os && !mRemoteBrowserInitialized) {
       os->NotifyObservers(NS_ISUPPORTS_CAST(nsIFrameLoader*, this),
-                          "remote-browser-frame-shown", NULL);
+                          "remote-browser-frame-shown", nullptr);
       mRemoteBrowserInitialized = true;
     }
   } else {
@@ -1095,9 +1083,9 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   nsCOMPtr<nsIDOMElement> otherFrameElement =
     otherWindow->GetFrameElementInternal();
 
-  nsCOMPtr<nsIDOMEventTarget> ourChromeEventHandler =
+  nsCOMPtr<EventTarget> ourChromeEventHandler =
     do_QueryInterface(ourWindow->GetChromeEventHandler());
-  nsCOMPtr<nsIDOMEventTarget> otherChromeEventHandler =
+  nsCOMPtr<EventTarget> otherChromeEventHandler =
     do_QueryInterface(otherWindow->GetChromeEventHandler());
 
   NS_ASSERTION(SameCOMIdentity(ourFrameElement, ourContent) &&
@@ -1679,7 +1667,7 @@ nsFrameLoader::MaybeCreateDocShell()
     nsCOMPtr<nsIObserverService> os = services::GetObserverService();
     if (os) {
       os->NotifyObservers(NS_ISUPPORTS_CAST(nsIFrameLoader*, this),
-                          "in-process-browser-or-app-frame-shown", NULL);
+                          "in-process-browser-or-app-frame-shown", nullptr);
     }
 
     if (mMessageManager) {
@@ -2208,7 +2196,7 @@ public:
     nsInProcessTabChildGlobal* tabChild =
       static_cast<nsInProcessTabChildGlobal*>(mFrameLoader->mChildMessageManager.get());
     if (tabChild && tabChild->GetInnerManager()) {
-      nsFrameScriptCx cx(static_cast<nsIDOMEventTarget*>(tabChild), tabChild);
+      nsFrameScriptCx cx(static_cast<EventTarget*>(tabChild), tabChild);
 
       StructuredCloneData data;
       data.mData = mData.data();
@@ -2216,7 +2204,7 @@ public:
       data.mClosure = mClosure;
 
       nsRefPtr<nsFrameMessageManager> mm = tabChild->GetInnerManager();
-      mm->ReceiveMessage(static_cast<nsIDOMEventTarget*>(tabChild), mMessage,
+      mm->ReceiveMessage(static_cast<EventTarget*>(tabChild), mMessage,
                          false, &data, nullptr, nullptr, nullptr);
     }
     return NS_OK;
@@ -2389,7 +2377,7 @@ nsFrameLoader::EnsureMessageManager()
   return NS_OK;
 }
 
-nsIDOMEventTarget*
+EventTarget*
 nsFrameLoader::GetTabChildGlobalAsEventTarget()
 {
   return static_cast<nsInProcessTabChildGlobal*>(mChildMessageManager.get());

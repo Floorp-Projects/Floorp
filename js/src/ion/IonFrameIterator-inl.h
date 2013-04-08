@@ -8,6 +8,7 @@
 #ifndef jsion_frame_iterator_inl_h__
 #define jsion_frame_iterator_inl_h__
 
+#include "ion/BaselineFrame.h"
 #include "ion/IonFrameIterator.h"
 #include "ion/Bailouts.h"
 #include "ion/Ion.h"
@@ -195,6 +196,31 @@ InlineFrameIteratorMaybeGC<allowGC>::operator++()
 {
     findNextFrame();
     return *this;
+}
+
+template <class Op>
+inline void
+IonFrameIterator::forEachCanonicalActualArg(Op op, unsigned start, unsigned count) const
+{
+    JS_ASSERT(isBaselineJS());
+
+    unsigned nactual = numActualArgs();
+    if (count == unsigned(-1))
+        count = nactual - start;
+
+    unsigned end = start + count;
+    JS_ASSERT(start <= end && end <= nactual);
+
+    Value *argv = actualArgs();
+    for (unsigned i = start; i < end; i++)
+        op(argv[i]);
+}
+
+inline BaselineFrame *
+IonFrameIterator::baselineFrame() const
+{
+    JS_ASSERT(isBaselineJS());
+    return (BaselineFrame *)(fp() - BaselineFrame::FramePointerOffset - BaselineFrame::Size());
 }
 
 } // namespace ion

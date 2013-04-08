@@ -57,6 +57,7 @@ SpecialPowersObserver.prototype = new SpecialPowersObserverAPI();
           this._messageManager.addMessageListener("SPPingService", this);
           this._messageManager.addMessageListener("SpecialPowers.Quit", this);
           this._messageManager.addMessageListener("SPPermissionManager", this);
+          this._messageManager.addMessageListener("SPWebAppService", this);
 
           this._messageManager.loadFrameScript(CHILD_LOGGER_SCRIPT, true);
           this._messageManager.loadFrameScript(CHILD_SCRIPT_API, true);
@@ -94,7 +95,7 @@ SpecialPowersObserver.prototype = new SpecialPowersObserverAPI();
   SpecialPowersObserver.prototype.uninit = function()
   {
     var obs = Services.obs;
-    obs.removeObserver(this, "chrome-document-global-created", false);
+    obs.removeObserver(this, "chrome-document-global-created");
     this._removeProcessCrashObservers();
   };
 

@@ -2762,7 +2762,7 @@ ToLocaleFormatHelper(JSContext *cx, HandleObject obj, const char *format, Mutabl
     }
 
     if (cx->runtime->localeCallbacks && cx->runtime->localeCallbacks->localeToUnicode)
-        return cx->runtime->localeCallbacks->localeToUnicode(cx, buf, rval.address());
+        return cx->runtime->localeCallbacks->localeToUnicode(cx, buf, rval);
 
     RawString str = JS_NewStringCopyZ(cx, buf);
     if (!str)

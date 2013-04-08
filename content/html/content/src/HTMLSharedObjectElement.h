@@ -153,11 +153,11 @@ public:
   }
   uint32_t Hspace()
   {
-    return GetHTMLUnsignedIntAttr(nsGkAtoms::hspace, 0);
+    return GetUnsignedIntAttr(nsGkAtoms::hspace, 0);
   }
   void SetHspace(uint32_t aValue, ErrorResult& aRv)
   {
-    SetHTMLUnsignedIntAttr(nsGkAtoms::hspace, aValue, aRv);
+    SetUnsignedIntAttr(nsGkAtoms::hspace, aValue, aRv);
   }
   void GetName(DOMString& aValue)
   {
@@ -172,13 +172,13 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::object, aValue, aRv);
   }
-    uint32_t Vspace()
+  uint32_t Vspace()
   {
-    return GetHTMLUnsignedIntAttr(nsGkAtoms::vspace, 0);
+    return GetUnsignedIntAttr(nsGkAtoms::vspace, 0);
   }
   void SetVspace(uint32_t aValue, ErrorResult& aRv)
   {
-    SetHTMLUnsignedIntAttr(nsGkAtoms::vspace, aValue, aRv);
+    SetUnsignedIntAttr(nsGkAtoms::vspace, aValue, aRv);
   }
   void GetWidth(DOMString& aValue)
   {

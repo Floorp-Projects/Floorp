@@ -19,6 +19,7 @@ namespace ion {
 
 class CodeGenerator;
 class CallInfo;
+class BaselineInspector;
 
 class IonBuilder : public MIRGenerator
 {
@@ -173,7 +174,8 @@ class IonBuilder : public MIRGenerator
 
   public:
     IonBuilder(JSContext *cx, TempAllocator *temp, MIRGraph *graph,
-               TypeOracle *oracle, CompileInfo *info, size_t inliningDepth = 0, uint32_t loopDepth = 0);
+               TypeOracle *oracle, BaselineInspector *inspector, CompileInfo *info,
+               size_t inliningDepth = 0, uint32_t loopDepth = 0);
 
     bool build();
     bool buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoint,
@@ -548,6 +550,7 @@ class IonBuilder : public MIRGenerator
     Vector<ControlFlowInfo, 2, IonAllocPolicy> labels_;
     Vector<MInstruction *, 2, IonAllocPolicy> iterators_;
     TypeOracle *oracle;
+    BaselineInspector *inspector;
 
     size_t inliningDepth_;
     Vector<MDefinition *, 0, IonAllocPolicy> inlinedArguments_;

@@ -17,6 +17,7 @@
 #include "nsFrameManager.h"
 #include "nsRefreshDriver.h"
 #include "nsDOMTouchEvent.h"
+#include "mozilla/dom/Touch.h"
 #include "nsIDOMTouchEvent.h"
 #include "nsObjectLoadingContent.h"
 #include "nsFrame.h"
@@ -849,11 +850,11 @@ nsDOMWindowUtils::SendTouchEvent(const nsAString& aType,
   event.touches.SetCapacity(aCount);
   for (uint32_t i = 0; i < aCount; ++i) {
     nsIntPoint pt = ToWidgetPoint(aXs[i], aYs[i], offset, presContext);
-    nsCOMPtr<nsIDOMTouch> t(new nsDOMTouch(aIdentifiers[i],
-                                           pt,
-                                           nsIntPoint(aRxs[i], aRys[i]),
-                                           aRotationAngles[i],
-                                           aForces[i]));
+    nsCOMPtr<nsIDOMTouch> t(new Touch(aIdentifiers[i],
+                                      pt,
+                                      nsIntPoint(aRxs[i], aRys[i]),
+                                      aRotationAngles[i],
+                                      aForces[i]));
     event.touches.AppendElement(t);
   }
 
@@ -1608,7 +1609,7 @@ nsDOMWindowUtils::FindElementWithViewId(nsViewID aID,
     }
 
     nsIDocument* document = presContext->Document();
-    mozilla::dom::Element* rootElement = document->GetRootElement();
+    Element* rootElement = document->GetRootElement();
     if (!rootElement) {
       return NS_ERROR_NOT_AVAILABLE;
     }

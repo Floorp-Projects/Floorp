@@ -115,8 +115,8 @@ nsXBLResourceLoader::LoadResources(bool* aResult)
       }
 
       // Now kick off the image load...
-      // Passing NULL for pretty much everything -- cause we don't care!
-      // XXX: initialDocumentURI is NULL! 
+      // Passing nullptr for pretty much everything -- cause we don't care!
+      // XXX: initialDocumentURI is nullptr! 
       nsRefPtr<imgRequestProxy> req;
       nsContentUtils::LoadImage(url, doc, docPrincipal, docURL, nullptr,
                                 nsIRequest::LOAD_BACKGROUND,

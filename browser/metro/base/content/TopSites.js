@@ -6,6 +6,7 @@
  let prefs = Components.classes["@mozilla.org/preferences-service;1"].
       getService(Components.interfaces.nsIPrefBranch);
 Cu.import("resource://gre/modules/PageThumbs.jsm");
+Cu.import("resource:///modules/colorUtils.jsm");
 
 /**
  * singleton to provide data-level functionality to the views
@@ -97,13 +98,29 @@ let TopSites = {
     if (!(aSite && aSite.url)) {
       throw Cr.NS_ERROR_INVALID_ARG
     }
-    // FIXME: implementation needed, covered by bug 812291
+
+    aSite._restorePinIndex = NewTabUtils.pinnedLinks._indexOfLink(aSite);
+    // blocked state is a pref, using Storage apis therefore sync
+    NewTabUtils.blockedLinks.block(aSite);
+    // clear out the cache, we'll fetch and re-render
+    this._sites = null;
+    this._sitesDirty.clear();
+    this.update();
   },
   restoreSite: function(aSite) {
     if (!(aSite && aSite.url)) {
       throw Cr.NS_ERROR_INVALID_ARG
     }
-    // FIXME: implementation needed, covered by bug 812291
+    NewTabUtils.blockedLinks.unblock(aSite);
+    let pinIndex = aSite._restorePinIndex;
+
+    if (!isNaN(pinIndex) && pinIndex > -1) {
+      NewTabUtils.pinnedLinks.pin(aSite, pinIndex);
+    }
+    // clear out the cache, we'll fetch and re-render
+    this._sites = null;
+    this._sitesDirty.clear();
+    this.update();
   },
   _linkFromNode: function _linkFromNode(aNode) {
     return {
@@ -123,6 +140,9 @@ function TopSitesView(aGrid, aMaxSites, aUseThumbnails) {
   // handle selectionchange DOM events from the grid/tile group
   this._set.addEventListener("context-action", this, false);
 
+  // clean up state when the appbar closes
+  window.addEventListener('MozAppbarDismissing', this, false);
+
   let history = Cc["@mozilla.org/browser/nav-history-service;1"].
                 getService(Ci.nsINavHistoryService);
   history.addObserver(this, false);
@@ -140,6 +160,8 @@ function TopSitesView(aGrid, aMaxSites, aUseThumbnails) {
 TopSitesView.prototype = {
   _set:null,
   _topSitesMax: null,
+  // _lastSelectedSites used to temporarily store blocked/removed sites for undo/restore-ing
+  _lastSelectedSites: null,
   // isUpdating used only for testing currently
   isUpdating: false,
 
@@ -148,52 +170,77 @@ TopSitesView.prototype = {
     BrowserUI.goToURI(url);
   },
 
-  doActionOnSelectedTiles: function(aActionName) {
+  doActionOnSelectedTiles: function(aActionName, aEvent) {
     let tileGroup = this._set;
     let selectedTiles = tileGroup.selectedItems;
+    let nextContextActions = new Set();
 
     switch (aActionName){
       case "delete":
         Array.forEach(selectedTiles, function(aNode) {
           let site = TopSites._linkFromNode(aNode);
           // add some class to transition element before deletion?
+          aNode.contextActions.delete('delete');
+          // we need new context buttons to show (the tile node will go away though)
+          nextContextActions.add('restore');
           TopSites.hideSite(site);
-          if (aNode.contextActions){
-            aNode.contextActions.delete('delete');
-            aNode.contextActions.add('restore');
+          if (!this._lastSelectedSites) {
+            this._lastSelectedSites = [];
           }
-        });
+          this._lastSelectedSites.push(site);
+        }, this);
+        break;
+      case "restore":
+        // usually restore is an undo action, so there's no tiles/selection to act on
+        if (this._lastSelectedSites) {
+          for (let site of this._lastSelectedSites) {
+            TopSites.restoreSite(site);
+          }
+        }
         break;
       case "pin":
         Array.forEach(selectedTiles, function(aNode) {
           let site = TopSites._linkFromNode(aNode);
           let index = Array.indexOf(aNode.control.children, aNode);
+          aNode.contextActions.delete('pin');
+          aNode.contextActions.add('unpin');
           TopSites.pinSite(site, index);
-          if (aNode.contextActions) {
-            aNode.contextActions.delete('pin');
-            aNode.contextActions.add('unpin');
-          }
         });
         break;
       case "unpin":
         Array.forEach(selectedTiles, function(aNode) {
           let site = TopSites._linkFromNode(aNode);
+          aNode.contextActions.delete('unpin');
+          aNode.contextActions.add('pin');
           TopSites.unpinSite(site);
-          if (aNode.contextActions) {
-            aNode.contextActions.delete('unpin');
-            aNode.contextActions.add('pin');
-          }
         });
         break;
       // default: no action
+    }
+    if (nextContextActions.size) {
+      // stop the appbar from dismissing
+      aEvent.preventDefault();
+      // at next tick, re-populate the context appbar
+      setTimeout(function(){
+        // fire a MozContextActionsChange event to update the context appbar
+        let event = document.createEvent("Events");
+        event.actions = [...nextContextActions];
+        event.initEvent("MozContextActionsChange", true, false);
+        tileGroup.dispatchEvent(event);
+      },0);
     }
   },
 
   handleEvent: function(aEvent) {
     switch (aEvent.type){
       case "context-action":
-        this.doActionOnSelectedTiles(aEvent.action);
+        this.doActionOnSelectedTiles(aEvent.action, aEvent);
+        aEvent.stopPropagation(); // event is handled, no need to let it bubble further
         break;
+      case "MozAppbarDismissing":
+        // clean up when the context appbar is dismissed - we don't remember selections
+        this._lastSelectedSites = null;
+        this._set.clearSelection();
     }
   },
 
@@ -223,6 +270,22 @@ TopSitesView.prototype = {
   },
 
   updateTile: function(aTileNode, aSite, aArrangeGrid) {
+    PlacesUtils.favicons.getFaviconURLForPage(Util.makeURI(aSite.url), function(iconURLfromSiteURL) {
+      if (!iconURLfromSiteURL) {
+        return;
+      }
+      aTileNode.iconSrc = iconURLfromSiteURL;
+      let faviconURL = (PlacesUtils.favicons.getFaviconLinkForIcon(iconURLfromSiteURL)).spec;
+      let xpFaviconURI = Util.makeURI(faviconURL.replace("moz-anno:favicon:",""));
+      ColorUtils.getForegroundAndBackgroundIconColors(xpFaviconURI, function(foreground, background) {
+        aTileNode.style.color = foreground; //color text
+        aTileNode.setAttribute("customColor", background);
+        if (aTileNode.refresh) {
+          aTileNode.refresh();
+        }
+      });
+    });
+
     if (this._useThumbs) {
       aSite.backgroundImage = 'url("'+PageThumbs.getThumbnailURL(aSite.url)+'")';
     } else {
@@ -280,6 +343,7 @@ TopSitesView.prototype = {
       Services.obs.removeObserver(this, "Metro:RefreshTopsiteThumbnail");
       PageThumbs.removeExpirationFilter(this);
     }
+    window.removeEventListener('MozAppbarDismissing', this, false);
   },
 
   // nsIObservers
