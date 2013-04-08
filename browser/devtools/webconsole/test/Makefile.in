@@ -117,6 +117,9 @@ MOCHITEST_BROWSER_FILES = \
 	browser_netpanel_longstring_expand.js \
 	browser_repeated_messages_accuracy.js \
 	head.js \
+	browser_webconsole_bug_821877_csp_errors.js \
+	test-bug-821877-csperrors.html \
+	test-bug-821877-csperrors.html^headers^ \
 	$(NULL)
 
 ifeq ($(OS_ARCH), Darwin)
