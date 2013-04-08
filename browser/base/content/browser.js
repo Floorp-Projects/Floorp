@@ -1807,6 +1807,10 @@ var gBrowserInit = {
 
     SocialUI.nonBrowserWindowInit();
 
+    if (PrivateBrowsingUtils.permanentPrivateBrowsing) {
+      document.getElementById("macDockMenuNewWindow").hidden = true;
+    }
+
     this._delayedStartupTimeoutId = setTimeout(this.nonBrowserWindowDelayedStartup.bind(this), 0);
   },
 
