@@ -65,7 +65,7 @@ addLoadEvent(function() {
                       expectJSAllowed(true, enterDesignMode, function() {
                         expectJSAllowed(true, leaveDesignMode, function() {
                           expectJSAllowed(false, disableJS, function() {
-                            expectJSAllowed(true, enterDesignMode, function() {
+                            expectJSAllowed(false, enterDesignMode, function() {
                               expectJSAllowed(false, leaveDesignMode, function() {
                                 expectJSAllowed(true, enableJS, function() {
                                   testDocumentDisabledJS();
@@ -94,7 +94,7 @@ function testDocumentDisabledJS() {
   document.designMode = "off";
   iframe.contentDocument.designMode = "off";
 
-  // Javascriont enabled on the main iframe
+  // Javascript enabled on the main iframe
   enableJS();
 
   var doc = iframe.contentDocument;
