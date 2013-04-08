@@ -752,7 +752,10 @@ bool nsIDNService::isLabelSafe(const nsAString &label)
   int32_t lastScript = MOZ_SCRIPT_INVALID;
   uint32_t previousChar = 0;
   uint32_t savedNumberingSystem = 0;
+// Simplified/Traditional Chinese check temporarily disabled -- bug 857481
+#if 0
   HanVariantType savedHanVariant = HVT_NotHan;
+#endif
 
   int32_t savedScript = -1;
 
@@ -807,6 +810,9 @@ bool nsIDNService::isLabelSafe(const nsAString &label)
       return false;
     }
 
+    // Simplified/Traditional Chinese check temporarily disabled -- bug 857481
+#if 0
+
     // Check for both simplified-only and traditional-only Chinese characters
     HanVariantType hanVariant = GetHanVariant(ch);
     if (hanVariant == HVT_SimplifiedOnly || hanVariant == HVT_TraditionalOnly) {
@@ -816,6 +822,7 @@ bool nsIDNService::isLabelSafe(const nsAString &label)
         return false;
       }
     }
+#endif
 
     previousChar = ch;
   }
