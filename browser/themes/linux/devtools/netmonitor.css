@@ -135,10 +135,10 @@
 }
 
 .requests-menu-timings-total {
-  -moz-padding-start: 4px;
+  -moz-padding-start: 8px;
   font-size: 85%;
   font-weight: 600;
-  transform-origin: -4px center; /* negative cap size */
+  transform-origin: left center;
 }
 
 .requests-menu-timings-cap {
