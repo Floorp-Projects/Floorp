@@ -997,7 +997,10 @@ nsHostResolver::ThreadFunc(void *arg)
         nsresult status;
         AddrInfo *ai = nullptr;
         if (prai) {
-            ai = new AddrInfo(rec->host, prai, disableIPv4);
+            const char *cname = nullptr;
+            if (rec->flags & RES_CANON_NAME)
+                cname = PR_GetCanonNameFromAddrInfo(prai);
+            ai = new AddrInfo(rec->host, prai, disableIPv4, cname);
             PR_FreeAddrInfo(prai);
             if (ai->mAddresses.isEmpty()) {
                 delete ai;
