@@ -7,7 +7,7 @@
 //---------------------------------------------------------------------------
 // This script diffs two memory report dumps produced by about:memory.  Run it
 // using a JS shell.  View the result in about:memory using its diff mode, e.g.
-// visit "about:memory?diff" or "about:memory?verbose&diff".
+// visit "about:memory?diff" or "about:memory?diff".
 //
 // A simple test can be performed by running:
 //
