@@ -10,10 +10,6 @@
 #include "nsISimpleEnumerator.idl"
 #include "nsIRDFObserver.idl"
 
-%{C++
-#include "nsISupportsArray.h"
-%}
-
 [scriptable, uuid(0F78DA58-8321-11d2-8EAC-00805F29F370)]
 interface nsIRDFDataSource : nsISupports
 {

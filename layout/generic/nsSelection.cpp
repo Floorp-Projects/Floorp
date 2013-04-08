@@ -15,7 +15,6 @@
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
 #include "nsIFactory.h"
-#include "nsIEnumerator.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsFrameSelection.h"
