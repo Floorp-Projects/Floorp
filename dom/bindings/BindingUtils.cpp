@@ -1688,5 +1688,15 @@ InterfaceHasInstance(JSContext* cx, JSHandleObject obj, JSMutableHandleValue vp,
   return InterfaceHasInstance(cx, obj, &vp.toObject(), bp);
 }
 
+void
+ReportLenientThisUnwrappingFailure(JSContext* cx, JS::Handle<JSObject*> obj)
+{
+  GlobalObject global(cx, obj);
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(global.Get());
+  if (window && window->GetDoc()) {
+    window->GetDoc()->WarnOnceAbout(nsIDocument::eLenientThis);
+  }
+}
+
 } // namespace dom
 } // namespace mozilla
