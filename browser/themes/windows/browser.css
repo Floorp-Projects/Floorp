@@ -509,8 +509,21 @@
   list-style-image: url("chrome://browser/skin/Privacy-16.png");
 }
 
+@media (min-resolution: 1.25dppx) {
+  #appmenu_privateBrowsing,
+  #appmenu_newPrivateWindow {
+    list-style-image: url("chrome://browser/skin/Privacy-32.png");
+  }
+}
+
 #appmenu_addons {
   list-style-image: url("chrome://mozapps/skin/extensions/extensionGeneric-16.png");
+}
+
+@media (min-resolution: 1.25dppx) {
+  #appmenu_addons {
+    list-style-image: url("chrome://mozapps/skin/extensions/extensionGeneric.png");
+  }
 }
 
 #BMB_bookmarkThisPage,
