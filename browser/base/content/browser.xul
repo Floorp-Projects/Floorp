@@ -191,8 +191,8 @@
         <hbox pack="start" align="center" class="popup-notification-button-container">
           <label  id="social-undoactivation-button"
                   class="text-link"
-                  value="&social.activated.undobutton.label;"
-                  accesskey="&social.activated.undobutton.accesskey;"
+                  value="&social.activated.undo.label;"
+                  accesskey="&social.activated.undo.accesskey;"
                   onclick="SocialUI.undoActivation(this);"/>
           <spacer flex="1"/>
           <button id="social-activation-button"
