@@ -77,6 +77,12 @@ private:
     nsRefPtr<txResultRecycler> mRecycler;
 };
 
+inline nsISupports*
+ToSupports(nsXPathEvaluator* e)
+{
+    return static_cast<nsIDOMXPathEvaluator*>(e);
+}
+
 /* d0a75e02-b5e7-11d5-a7f2-df109fb8a1fc */
 #define TRANSFORMIIX_XPATH_EVALUATOR_CID   \
 { 0xd0a75e02, 0xb5e7, 0x11d5, { 0xa7, 0xf2, 0xdf, 0x10, 0x9f, 0xb8, 0xa1, 0xfc } }
