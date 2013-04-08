@@ -388,12 +388,15 @@ public class AwesomeBar extends GeckoActivity {
         String keywordUrl = null;
         String keywordSearch = null;
 
-        if (index == -1) {
-            keywordUrl = BrowserDB.getUrlForKeyword(getContentResolver(), url);
-            keywordSearch = "";
-        } else {
-            keywordUrl = BrowserDB.getUrlForKeyword(getContentResolver(), url.substring(0, index));
-            keywordSearch = url.substring(index + 1);
+        // Check for a keyword if the URL looks like a search query
+        if (StringUtils.isSearchQuery(url, true)) {
+            if (index == -1) {
+                keywordUrl = BrowserDB.getUrlForKeyword(getContentResolver(), url);
+                keywordSearch = "";
+            } else {
+                keywordUrl = BrowserDB.getUrlForKeyword(getContentResolver(), url.substring(0, index));
+                keywordSearch = url.substring(index + 1);
+            }
         }
 
         if (keywordUrl != null) {
