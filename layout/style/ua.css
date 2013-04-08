@@ -185,7 +185,7 @@
   /* Collection of pages in print/print preview. Visual styles may only appear
    * in print preview. */
   display: block !important;
-  background: -moz-linear-gradient(top, #606060, #8a8a8a) fixed;
+  background: linear-gradient(#606060, #8a8a8a) fixed;
   height: 100%;
 }
 
