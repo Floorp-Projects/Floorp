@@ -339,6 +339,76 @@
                                       ThreeDLightShadow 27px, ThreeDHighlight 27px,
                                       ThreeDHighlight 28px, #f1f5fb 28px);
   }
+
+  /* Hi-DPI overrides of the menu backgrounds, to adjust where the gutter line falls */
+  @media (min-resolution: 1.25dppx) {
+    #appmenuPrimaryPane menupopup {
+      background-image: linear-gradient(to right, white 22.4px, ThreeDLightShadow 22.4px,
+                                        ThreeDLightShadow 23.2px, ThreeDHighlight 23.2px,
+                                        ThreeDHighlight 24px, white 24px);
+    }
+    #appmenuSecondaryPane menupopup {
+      background-image: linear-gradient(to right, #f1f5fb 22.4px, ThreeDLightShadow 22.4px,
+                                        ThreeDLightShadow 23.2px, ThreeDHighlight 23.2px,
+                                        ThreeDHighlight 24px, #f1f5fb 24px);
+    }
+    #appmenuPrimaryPane menupopup:-moz-locale-dir(rtl) {
+      background-image: linear-gradient(to left, white 22.4px, ThreeDLightShadow 22.4px,
+                                        ThreeDLightShadow 23.2px, ThreeDHighlight 23.2px,
+                                        ThreeDHighlight 24px, white 24px);
+    }
+    #appmenuSecondaryPane menupopup:-moz-locale-dir(rtl) {
+      background-image: linear-gradient(to left, #f1f5fb 22.4px, ThreeDLightShadow 22.4px,
+                                        ThreeDLightShadow 23.2px, ThreeDHighlight 23.2px,
+                                        ThreeDHighlight 24px, #f1f5fb 24px);
+    }
+  }
+
+  @media (min-resolution: 1.5dppx) {
+    #appmenuPrimaryPane menupopup {
+      background-image: linear-gradient(to right, white 20.6667px, ThreeDLightShadow 20.6667px,
+                                        ThreeDLightShadow 21.3333px, ThreeDHighlight 21.3333px,
+                                        ThreeDHighlight 22px, white 22px);
+    }
+    #appmenuSecondaryPane menupopup {
+      background-image: linear-gradient(to right, #f1f5fb 20.6667px, ThreeDLightShadow 20.6667px,
+                                        ThreeDLightShadow 21.3333px, ThreeDHighlight 21.3333px,
+                                        ThreeDHighlight 22px, #f1f5fb 22px);
+    }
+    #appmenuPrimaryPane menupopup:-moz-locale-dir(rtl) {
+      background-image: linear-gradient(to left, white 20.6667px, ThreeDLightShadow 20.6667px,
+                                        ThreeDLightShadow 21.3333px, ThreeDHighlight 21.3333px,
+                                        ThreeDHighlight 22px, white 22px);
+    }
+    #appmenuSecondaryPane menupopup:-moz-locale-dir(rtl) {
+      background-image: linear-gradient(to left, #f1f5fb 20.6667px, ThreeDLightShadow 20.6667px,
+                                        ThreeDLightShadow 21.3333px, ThreeDHighlight 21.3333px,
+                                        ThreeDHighlight 22px, #f1f5fb 22px);
+    }
+  }
+
+  @media (min-resolution: 2dppx) {
+    #appmenuPrimaryPane menupopup {
+      background-image: linear-gradient(to right, white 19.5px, ThreeDLightShadow 19.5px,
+                                        ThreeDLightShadow 20px, ThreeDHighlight 20px,
+                                        ThreeDHighlight 20.5px, white 20.5px);
+    }
+    #appmenuSecondaryPane menupopup {
+      background-image: linear-gradient(to right, #f1f5fb 19.5px, ThreeDLightShadow 19.5px,
+                                        ThreeDLightShadow 20px, ThreeDHighlight 20px,
+                                        ThreeDHighlight 20.5px, #f1f5fb 20.5px);
+    }
+    #appmenuPrimaryPane menupopup:-moz-locale-dir(rtl) {
+      background-image: linear-gradient(to left, white 19.5px, ThreeDLightShadow 19.5px,
+                                        ThreeDLightShadow 20px, ThreeDHighlight 20px,
+                                        ThreeDHighlight 20.5px, white 20.5px);
+    }
+    #appmenuSecondaryPane menupopup:-moz-locale-dir(rtl) {
+      background-image: linear-gradient(to left, #f1f5fb 19.5px, ThreeDLightShadow 19.5px,
+                                        ThreeDLightShadow 20px, ThreeDHighlight 20px,
+                                        ThreeDHighlight 20.5px, #f1f5fb 20.5px);
+    }
+  }
 %endif
 
   .appmenu-menuseparator {
@@ -354,6 +424,24 @@
     border-top: 1px solid #d6e5f5;
     border-bottom: none;
   }
+
+%ifdef WINDOWS_AERO
+  @media (min-resolution: 1.25dppx) {
+    .appmenu-menuseparator {
+      -moz-margin-start: 25px;
+    }
+  }
+  @media (min-resolution: 1.5dppx) {
+    .appmenu-menuseparator {
+      -moz-margin-start: 24px;
+    }
+  }
+  @media (min-resolution: 2dppx) {
+    .appmenu-menuseparator {
+      -moz-margin-start: 22px;
+    }
+  }
+%endif
 
   .appmenu-edit-button:not([disabled]):hover {
     border: 1px solid #b8d6fb;
