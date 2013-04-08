@@ -1311,6 +1311,7 @@ var BrowserApp = {
 
       case "Viewport:FixedMarginsChanged":
         gViewportMargins = JSON.parse(aData);
+        this.selectedTab.updateViewportSize(gScreenWidth);
         break;
 
       case "nsPref:changed":
@@ -2952,13 +2953,13 @@ Tab.prototype = {
     // within the screen size, so remeasure when the page size remains within
     // the threshold of screen + margins, in case it's sizing itself relative
     // to the viewport.
-    if (!this.updatingViewportForPageSizeChange) {
+    if (!this.updatingViewportForPageSizeChange && aPageSizeUpdate) {
       this.updatingViewportForPageSizeChange = true;
-      if (((viewport.pageBottom - viewport.pageTop
-              < gScreenHeight + gViewportMargins.top + gViewportMargins.bottom)
+      if (((Math.round(viewport.pageBottom - viewport.pageTop)
+              <= gScreenHeight + gViewportMargins.top + gViewportMargins.bottom)
              != this.viewportExcludesVerticalMargins) ||
-          ((viewport.pageRight - viewport.pageLeft
-              < gScreenWidth + gViewportMargins.left + gViewportMargins.right)
+          ((Math.round(viewport.pageRight - viewport.pageLeft)
+              <= gScreenWidth + gViewportMargins.left + gViewportMargins.right)
              != this.viewportExcludesHorizontalMargins)) {
         this.updateViewportSize(gScreenWidth);
       }
