@@ -526,6 +526,8 @@ def main():
         dm.killProcess(procName)
 
     if options.robocop != "":
+        # sut may wait up to 300 s for a robocop am process before returning
+        dm.default_timeout = 320
         mp = manifestparser.TestManifest(strict=False)
         # TODO: pull this in dynamically
         mp.read(options.robocop)
