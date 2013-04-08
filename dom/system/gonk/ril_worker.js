@@ -11671,18 +11671,19 @@ let ICCContactHelper = {
    * @param onerror       Callback to be called when error.
    */
   updateUSimContact: function updateUSimContact(contact, onsuccess, onerror) {
-    let gotPbrCb = function gotPbrCb(pbr) {
-      if (pbr.adn) {
-        ICCRecordHelper.updateADNLike(pbr.adn.fileId, contact, null, onsuccess, onerror);
-      } else {
-        if (onerror) {
-          onerror("Cannot access ADN.");
-        }
-      }
+    let gotPbrCb = function gotPbrCb(pbrs) {
+      let pbrIndex = Math.floor(contact.recordId / ICC_MAX_LINEAR_FIXED_RECORDS);
+      let pbr = pbrs[pbrIndex];
+      this.updatePhonebookSet(pbr, contact, onsuccess, onerror);
     }.bind(this);
 
     ICCRecordHelper.readPBR(gotPbrCb, onerror);
   },
+
+  updatePhonebookSet: function updatePhonebookSet(pbr, contact, onsuccess, onerror) {
+    // TODO: Bug 859659, update EF_Email and EF_ANR.
+    ICCRecordHelper.updateADNLike(pbr.adn.fileId, contact, null, onsuccess, onerror);
+  }
 };
 
 let RuimRecordHelper = {
