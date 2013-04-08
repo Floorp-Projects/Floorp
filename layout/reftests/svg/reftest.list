@@ -166,7 +166,7 @@ skip-if(B2G) == foreignObject-start-hidden-01.svg pass.svg # followup from Bug 5
 skip-if(B2G) == foreignObject-start-hidden-02.svg pass.svg
 skip-if(B2G) == foreignObject-style-change-01.svg pass.svg
 == foreignObject-dynamic-abspos-01.html foreignObject-dynamic-abspos-01-ref.html
-== foreignObject-fixedpos-01.html foreignObject-dynamic-abspos-01-ref.html
+fuzzy-if(Android,9,314) == foreignObject-fixedpos-01.html foreignObject-dynamic-abspos-01-ref.html
 == foreignObject-dynamic-fixedpos-01.html foreignObject-dynamic-abspos-01-ref.html
 == getElementById-a-element-01.svg pass.svg
 fuzzy-if(Android,9,980) == gradient-live-01a.svg gradient-live-01-ref.svg
