@@ -220,8 +220,8 @@ final class GeckoEditable
             case Action.TYPE_SET_SPAN:
             case Action.TYPE_REMOVE_SPAN:
             case Action.TYPE_SET_HANDLER:
-                GeckoAppShell.sendEventToGecko(
-                        GeckoEvent.createIMEEvent(GeckoEvent.IME_SYNCHRONIZE));
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createIMEEvent(
+                        GeckoEvent.ImeAction.IME_SYNCHRONIZE));
                 break;
             case Action.TYPE_REPLACE_TEXT:
                 // try key events first
@@ -231,7 +231,7 @@ final class GeckoEditable
                 break;
             case Action.TYPE_ACKNOWLEDGE_FOCUS:
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createIMEEvent(
-                        GeckoEvent.IME_ACKNOWLEDGE_FOCUS));
+                        GeckoEvent.ImeAction.IME_ACKNOWLEDGE_FOCUS));
                 break;
             }
             ++mIcUpdateSeqno;
@@ -426,7 +426,7 @@ final class GeckoEditable
                         GeckoEvent.createIMESelectEvent(selStart, selEnd));
             } else {
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createIMEEvent(
-                        GeckoEvent.IME_REMOVE_COMPOSITION));
+                        GeckoEvent.ImeAction.IME_REMOVE_COMPOSITION));
             }
             return;
         }
