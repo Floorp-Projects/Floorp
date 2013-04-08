@@ -40,6 +40,7 @@
 #include "nsDOMClassInfo.h"
 #include "nsDOMEvent.h"
 #ifdef MOZ_B2G_RIL
+#include "IccManager.h"
 #include "MobileConnection.h"
 #include "mozilla/dom/CellBroadcast.h"
 #include "mozilla/dom/Voicemail.h"
@@ -131,6 +132,7 @@ NS_INTERFACE_MAP_BEGIN(Navigator)
   NS_INTERFACE_MAP_ENTRY(nsIMozNavigatorMobileConnection)
   NS_INTERFACE_MAP_ENTRY(nsIMozNavigatorCellBroadcast)
   NS_INTERFACE_MAP_ENTRY(nsIMozNavigatorVoicemail)
+  NS_INTERFACE_MAP_ENTRY(nsIMozNavigatorIccManager)
 #endif
 #ifdef MOZ_B2G_BT
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorBluetooth)
@@ -213,6 +215,11 @@ Navigator::Invalidate()
 
   if (mCellBroadcast) {
     mCellBroadcast = nullptr;
+  }
+
+  if (mIccManager) {
+    mIccManager->Shutdown();
+    mIccManager = nullptr;
   }
 #endif
 
@@ -1305,6 +1312,31 @@ Navigator::GetMozVoicemail(nsIDOMMozVoicemail** aVoicemail)
   }
 
   NS_ADDREF(*aVoicemail = mVoicemail);
+  return NS_OK;
+}
+
+//*****************************************************************************
+//    nsNavigator::nsIMozNavigatorIccManager
+//*****************************************************************************
+
+NS_IMETHODIMP
+Navigator::GetMozIccManager(nsIDOMMozIccManager** aIccManager)
+{
+  *aIccManager = nullptr;
+
+  if (!mIccManager) {
+    nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
+    NS_ENSURE_TRUE(window && window->GetDocShell(), NS_OK);
+
+    if (!CheckPermission("mobileconnection")) {
+      return NS_OK;
+    }
+
+    mIccManager = new icc::IccManager();
+    mIccManager->Init(window);
+  }
+
+  NS_ADDREF(*aIccManager = mIccManager);
   return NS_OK;
 }
 
