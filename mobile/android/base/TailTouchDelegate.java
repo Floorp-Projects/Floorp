@@ -6,8 +6,8 @@
 package org.mozilla.gecko;
 
 import android.graphics.Rect;
-import android.view.TouchDelegate;
 import android.view.MotionEvent;
+import android.view.TouchDelegate;
 import android.view.View;
 
 /**

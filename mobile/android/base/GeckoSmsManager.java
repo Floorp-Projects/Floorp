@@ -23,9 +23,9 @@ import android.telephony.SmsManager;
 import android.telephony.SmsMessage;
 import android.util.Log;
 
-import java.util.ArrayList;
-
 import static android.telephony.SmsMessage.MessageClass;
+
+import java.util.ArrayList;
 
 /**
  * This class is returning unique ids for PendingIntent requestCode attribute.

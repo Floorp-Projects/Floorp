@@ -8,21 +8,21 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.util.ThreadUtils;
 
-import android.view.accessibility.*;
-import android.view.View;
-import android.util.Log;
-import android.os.Build;
-import android.os.Bundle;
-import android.content.Context;
-import android.graphics.Rect;
+import org.json.*;
+
 import android.app.ActivityManager;
 import android.app.ActivityManager.RunningServiceInfo;
+import android.content.Context;
+import android.graphics.Rect;
+import android.os.Build;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.view.accessibility.*;
 
-import java.util.HashSet;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
-
-import org.json.*;
 
 public class GeckoAccessibility {
     private static final String LOGTAG = "GeckoAccessibility";
