@@ -1,0 +1,55 @@
+<html>
+<head>
+<style>
+body {
+	width: 100%;
+	margin: 0px;
+	transition: transform 300ms ease;
+	overflow-x: hidden;
+}
+
+body.section1 {
+	transform: translateX(0%);
+}
+
+body.section2 {
+	transform: translateX(-100%);
+}
+
+section {
+	width: 100%;
+	height: 100%;
+	position: absolute;
+}
+
+#section1 {
+	left: 0px;	
+}
+
+#section2 {
+	left: 100%;
+}
+.mypossie {
+  position:absolute;
+  left: -1000px;
+}
+</style>
+
+</head>
+	<body class="section1">
+		<section id="section1">
+			<div id="assertMe1">
+				<p>Section 1</p>
+			</div>
+			<button id="b1" onclick="var sect = document.getElementsByTagName('body')[0]; sect.classList.add('section2'); sect.classList.remove('section1');">Show section 2</button>
+		</section>
+
+		<section id="section2">
+			<div id="assertMe2">
+				<p>Section 2</p>
+			</div>
+			<button id="b2" onclick="var sect = document.getElementsByTagName('body')[0]; sect.classList.add('section1'); sect.classList.remove('section2'); ">Show section 1</button>
+		</section>
+    <section class='mypossie'>out in left field!</section>
+	</body>
+</html>
