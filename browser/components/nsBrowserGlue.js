@@ -1223,7 +1223,7 @@ BrowserGlue.prototype = {
   },
 
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 9;
+    const UI_VERSION = 10;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul#";
     let currentUIVersion = 0;
     try {
@@ -1365,6 +1365,21 @@ BrowserGlue.prototype = {
       Services.prefs.clearUserPref("browser.download.useToolkitUI");
       Services.prefs.clearUserPref("browser.library.useNewDownloadsView");
     }
+
+#ifdef XP_WIN
+    if (currentUIVersion < 10) {
+      // For Windows systems with display set to > 96dpi (i.e. systemDefaultScale
+      // will return a value > 1.0), we want to discard any saved full-zoom settings,
+      // as we'll now be scaling the content according to the system resolution
+      // scale factor (Windows "logical DPI" setting)
+      let sm = Cc["@mozilla.org/gfx/screenmanager;1"].getService(Ci.nsIScreenManager);
+      if (sm.systemDefaultScale > 1.0) {
+        let cps2 = Cc["@mozilla.org/content-pref/service;1"].
+                   getService(Ci.nsIContentPrefService2);
+        cps2.removeByName("browser.content.full-zoom", null);
+      }
+    }
+#endif
 
     if (this._dirty)
       this._dataSource.QueryInterface(Ci.nsIRDFRemoteDataSource).Flush();
