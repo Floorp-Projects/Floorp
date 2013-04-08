@@ -1910,10 +1910,6 @@ def AssertInheritanceChain(descriptor):
             "             reinterpret_cast<%s*>(aObject));\n" %
             (desc.nativeType, desc.nativeType))
         iface = iface.parent
-    if descriptor.nativeOwnership == 'nsisupports':
-        asserts += (
-            "  MOZ_ASSERT(ToSupports(aObject) == \n"
-            "             reinterpret_cast<nsISupports*>(aObject));\n")
     return asserts
 
 class CGWrapWithCacheMethod(CGAbstractMethod):
@@ -1934,14 +1930,8 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
         if self.descriptor.workers:
             return """  return aObject->GetJSObject();"""
 
-        if self.descriptor.nativeOwnership == 'nsisupports':
-            assertISupportsInheritance = (
-                '  MOZ_ASSERT(reinterpret_cast<nsWrapperCache*>(aObject) != aCache,\n'
-                '             "nsISupports must be on our primary inheritance chain");\n')
-        else:
-            assertISupportsInheritance = ""
         return """%s
-%s
+
   JSObject* parent = WrapNativeParent(aCx, aScope, aObject->GetParentObject());
   if (!parent) {
     return NULL;
@@ -1969,7 +1959,6 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
   aCache->SetWrapper(obj);
 
   return obj;""" % (AssertInheritanceChain(self.descriptor),
-                    assertISupportsInheritance,
                     CreateBindingJSObject(self.descriptor, "parent"),
                     InitUnforgeableProperties(self.descriptor, self.properties))
 
