@@ -1223,7 +1223,7 @@ BrowserGlue.prototype = {
   },
 
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 10;
+    const UI_VERSION = 11;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul#";
     let currentUIVersion = 0;
     try {
@@ -1380,6 +1380,14 @@ BrowserGlue.prototype = {
       }
     }
 #endif
+
+    if (currentUIVersion < 11) {
+      Services.prefs.clearUserPref("dom.disable_window_move_resize");
+      Services.prefs.clearUserPref("dom.disable_window_flip");
+      Services.prefs.clearUserPref("dom.event.contextmenu.enabled");
+      Services.prefs.clearUserPref("javascript.enabled");
+      Services.prefs.clearUserPref("permissions.default.image");
+    }
 
     if (this._dirty)
       this._dataSource.QueryInterface(Ci.nsIRDFRemoteDataSource).Flush();
