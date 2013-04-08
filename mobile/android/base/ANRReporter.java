@@ -7,6 +7,8 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.util.ThreadUtils;
 
+import org.json.JSONObject;
+
 import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -18,23 +20,21 @@ import android.os.Looper;
 import android.util.Base64;
 import android.util.Log;
 
-import org.json.JSONObject;
-
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.InputStreamReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
-import java.util.regex.Pattern;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 public final class ANRReporter extends BroadcastReceiver
 {

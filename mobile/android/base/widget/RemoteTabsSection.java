@@ -13,8 +13,8 @@ import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.util.GamepadUtils;
 
 import android.content.Context;
-import android.util.AttributeSet;
 import android.text.TextUtils;
+import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TextView;
