@@ -5,11 +5,9 @@
 /*
  * This file is used for both about:memory and about:compartments.
  *
- * Portions of this file are based on
- * toolkit/themes/windows/global/about.css.
- *
- * A version used for mobile is located at
+ * The version used for mobile is located at
  * mobile/android/themes/core/aboutMemory.css.
+ * Desktop-specific stuff is at the bottom of this file.
  */
 
 html {
@@ -24,20 +22,41 @@ body {
   margin: auto;
 }
 
-div.section, div.footer {
-  margin: 2em 0;
-  box-sizing: border-box;
-  -moz-box-sizing: border-box;
+div.ancillary {
+  margin: 0.5em 0;
+  -moz-user-select: none;
 }
 
 div.section {
-  padding: 3em;
+  padding: 2em;
+  margin: 1em 0em;
   border: 1px solid ThreeDShadow;
   border-radius: 10px;
   background: -moz-Field;
 }
 
-body.non-verbose pre.entries {
+div.opsRow {
+  padding: 0.5em;
+  margin-right: 0.5em;
+  margin-top: 0.5em;
+  border: 1px solid ThreeDShadow;
+  border-radius: 10px;
+  background: -moz-Field;
+  display: inline-block;
+}
+
+div.opsRowLabel {
+  display: block;
+  margin-bottom: 0.2em;
+  font-weight: bold;
+}
+
+.opsRowLabel label {
+  margin-left: 1em;
+  font-weight: normal;
+}
+
+div.non-verbose pre.entries {
   overflow-x: hidden;
   text-overflow: ellipsis;
 }
@@ -91,6 +110,10 @@ h2 {
   text-decoration: underline;
 }
 
+.noselect {
+  -moz-user-select: none;  /* no need to include this when cutting+pasting */
+}
+
 .option {
   font-size: 80%;
   -moz-user-select: none;  /* no need to include this when cutting+pasting */
@@ -112,5 +135,11 @@ h2 {
 .invalid {
   color: #fff;
   background-color: #f00;
+}
+
+/* Desktop-specific parts go here. */
+
+.hasKids:hover {
+  text-decoration: underline;
 }
 

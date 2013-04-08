@@ -2,7 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* This file is used for both about:memory and about:compartments. */
+/*
+ * This file is used for both about:memory and about:compartments.
+ *
+ * The version used for desktop is located at
+ * toolkit/components/aboutmemory/content/aboutMemory.css.
+ * Mobile-specific stuff is at the bottom of this file.
+ */
 
 html {
   background: -moz-Dialog;
@@ -16,20 +22,41 @@ body {
   margin: auto;
 }
 
-div.section, div.footer {
-  margin: 2em 0;
-  box-sizing: border-box;
-  -moz-box-sizing: border-box;
+div.ancillary {
+  margin: 0.5em 0;
+  -moz-user-select: none;
 }
 
 div.section {
-  padding: 3em;
+  padding: 2em;
+  margin: 1em 0em;
   border: 1px solid ThreeDShadow;
   border-radius: 10px;
   background: -moz-Field;
 }
 
-body.non-verbose pre.entries {
+div.opsRow {
+  padding: 0.5em;
+  margin-right: 0.5em;
+  margin-top: 0.5em;
+  border: 1px solid ThreeDShadow;
+  border-radius: 10px;
+  background: -moz-Field;
+  display: inline-block;
+}
+
+div.opsRowLabel {
+  display: block;
+  margin-bottom: 0.2em;
+  font-weight: bold;
+}
+
+.opsRowLabel label {
+  margin-left: 1em;
+  font-weight: normal;
+}
+
+div.non-verbose pre.entries {
   overflow-x: hidden;
   text-overflow: ellipsis;
 }
@@ -44,14 +71,8 @@ h2 {
   padding-left: .1em;
 }
 
-/* buttons are different sizes and overlapping without this */
-button {
-  margin: 1%;
-  padding: 2%;
-}
-
 .accuracyWarning {
-  color: #f00;
+  color: #d22;
 }
 
 .badInputWarning {
@@ -85,6 +106,14 @@ button {
   cursor: pointer;
 }
 
+.hasKids:hover {
+  text-decoration: underline;
+}
+
+.noselect {
+  -moz-user-select: none;  /* no need to include this when cutting+pasting */
+}
+
 .option {
   font-size: 80%;
   -moz-user-select: none;  /* no need to include this when cutting+pasting */
@@ -93,10 +122,6 @@ button {
 .legend {
   font-size: 80%;
   -moz-user-select: none;  /* no need to include this when cutting+pasting */
-}
-
-.hiddenOnMobile {
-  display: none;
 }
 
 .debug {
@@ -110,5 +135,17 @@ button {
 .invalid {
   color: #fff;
   background-color: #f00;
+}
+
+/* Mobile-specific parts go here. */
+
+/* buttons are different sizes and overlapping without this */
+button {
+  margin: 1%;
+  padding: 2%;
+}
+
+.hiddenOnMobile {
+  display: none;
 }
 
