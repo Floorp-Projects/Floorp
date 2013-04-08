@@ -20,14 +20,14 @@ function test() {
         "POST", SIMPLE_SJS + "?foo=bar&baz=42&type=urlencoded", {
           status: 200,
           type: "plain",
-          size: "0.01kb",
+          size: L10N.getFormatStr("networkMenu.sizeKB", 0.01),
           time: true
         });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(1),
         "POST", SIMPLE_SJS + "?foo=bar&baz=42&type=multipart", {
           status: 200,
           type: "plain",
-          size: "0.01kb",
+          size: L10N.getFormatStr("networkMenu.sizeKB", 0.01),
           time: true
         });
 

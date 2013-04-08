@@ -71,7 +71,7 @@ function test() {
 
       is(responseScope.querySelector(".name").getAttribute("value"),
         L10N.getStr("responseHeaders") + " (" +
-        L10N.getFormatStr("networkMenu.size", "0.169") + ")",
+        L10N.getFormatStr("networkMenu.sizeKB", "0.169") + ")",
         "The response headers scope doesn't have the correct title.");
 
       ok(requestScope.querySelector(".name").getAttribute("value").contains(
@@ -196,27 +196,27 @@ function test() {
         "The timings tab in the network details pane should be selected.");
 
       ok(tabpanel.querySelector("#timings-summary-blocked .requests-menu-timings-total")
-        .getAttribute("value").match(/[0-9]+ms$/),
+        .getAttribute("value").match(/[0-9]+/),
         "The blocked timing info does not appear to be correct.");
 
       ok(tabpanel.querySelector("#timings-summary-dns .requests-menu-timings-total")
-        .getAttribute("value").match(/[0-9]+ms$/),
+        .getAttribute("value").match(/[0-9]+/),
         "The dns timing info does not appear to be correct.");
 
       ok(tabpanel.querySelector("#timings-summary-connect .requests-menu-timings-total")
-        .getAttribute("value").match(/[0-9]+ms$/),
+        .getAttribute("value").match(/[0-9]+/),
         "The connect timing info does not appear to be correct.");
 
       ok(tabpanel.querySelector("#timings-summary-send .requests-menu-timings-total")
-        .getAttribute("value").match(/[0-9]+ms$/),
+        .getAttribute("value").match(/[0-9]+/),
         "The send timing info does not appear to be correct.");
 
       ok(tabpanel.querySelector("#timings-summary-wait .requests-menu-timings-total")
-        .getAttribute("value").match(/[0-9]+ms$/),
+        .getAttribute("value").match(/[0-9]+/),
         "The wait timing info does not appear to be correct.");
 
       ok(tabpanel.querySelector("#timings-summary-receive .requests-menu-timings-total")
-        .getAttribute("value").match(/[0-9]+ms$/),
+        .getAttribute("value").match(/[0-9]+/),
         "The receive timing info does not appear to be correct.");
     }
 
