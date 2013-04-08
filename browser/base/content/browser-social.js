@@ -933,11 +933,19 @@ SocialToolbar = {
         SharedFrame.updateURL(notificationFrameId, icon.contentPanel);
       }
 
+      let toolbarButtonContainerId = "social-notification-container-" + icon.name;
       let toolbarButtonId = "social-notification-icon-" + icon.name;
+      let toolbarButtonContainer = document.getElementById(toolbarButtonContainerId);
       let toolbarButton = document.getElementById(toolbarButtonId);
-      if (!toolbarButton) {
+      if (!toolbarButtonContainer) {
+        // The container is used to fix an issue with position:absolute on
+        // generated content not being constrained to the bounding box of a
+        // parent toolbarbutton that has position:relative.
+        toolbarButtonContainer = document.createElement("toolbaritem");
+        toolbarButtonContainer.classList.add("social-notification-container");
+        toolbarButtonContainer.setAttribute("id", toolbarButtonContainerId);
+
         toolbarButton = document.createElement("toolbarbutton");
-        toolbarButton.setAttribute("type", "badged");
         toolbarButton.classList.add("toolbarbutton-1");
         toolbarButton.setAttribute("id", toolbarButtonId);
         toolbarButton.setAttribute("notificationFrameId", notificationFrameId);
@@ -946,7 +954,8 @@ SocialToolbar = {
             SocialToolbar.showAmbientPopup(toolbarButton);
         });
 
-        toolbarButtons.appendChild(toolbarButton);
+        toolbarButtonContainer.appendChild(toolbarButton);
+        toolbarButtons.appendChild(toolbarButtonContainer);
       }
 
       toolbarButton.style.listStyleImage = "url(" + icon.iconURL + ")";
@@ -954,7 +963,7 @@ SocialToolbar = {
       toolbarButton.setAttribute("tooltiptext", icon.label);
 
       let badge = icon.counter || "";
-      toolbarButton.setAttribute("badge", 1+badge);
+      toolbarButton.setAttribute("badge", badge);
       let ariaLabel = icon.label;
       // if there is a badge value, we must use a localizable string to insert it.
       if (badge)
@@ -1040,7 +1049,7 @@ SocialToolbar = {
     let navBar = document.getElementById("nav-bar");
     let anchor = navBar.getAttribute("mode") == "text" ?
                    document.getAnonymousElementByAttribute(aToolbarButton, "class", "toolbarbutton-text") :
-                   document.getAnonymousElementByAttribute(aToolbarButton, "class", "toolbarbutton-badge-container");
+                   document.getAnonymousElementByAttribute(aToolbarButton, "class", "toolbarbutton-icon");
     // Bug 849216 - open the popup in a setTimeout so we avoid the auto-rollup
     // handling from preventing it being opened in some cases.
     setTimeout(function() {
