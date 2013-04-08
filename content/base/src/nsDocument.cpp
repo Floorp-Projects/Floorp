@@ -6635,9 +6635,6 @@ nsIDocument::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv)
 
   nsCOMArray<nsINode> nodesWithProperties;
   rv = nsNodeUtils::Adopt(adoptedNode, sameDocument ? nullptr : mNodeInfoManager,
-                          // The nsNodeUtils API requires that cx be non-null iff
-                          // newscope is non-null.
-                          newScope ? (JSContext*) cx : nullptr,
                           newScope, nodesWithProperties);
   if (rv.Failed()) {
     // Disconnect all nodes from their parents, since some have the old document
