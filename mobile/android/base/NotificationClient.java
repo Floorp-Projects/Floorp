@@ -5,12 +5,12 @@
 
 package org.mozilla.gecko;
 
-import java.util.LinkedList;
-import java.util.concurrent.ConcurrentHashMap;
-
 import android.app.PendingIntent;
 import android.text.TextUtils;
 import android.util.Log;
+
+import java.util.LinkedList;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Client for posting notifications through a NotificationHandler.

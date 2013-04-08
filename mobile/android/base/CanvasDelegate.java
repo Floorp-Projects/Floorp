@@ -8,12 +8,12 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
-import android.graphics.PorterDuffXfermode;
 import android.graphics.PorterDuff.Mode;
+import android.graphics.PorterDuffXfermode;
 import android.graphics.Shader;
 import android.os.Build;
 
-public class CanvasDelegate { 
+public class CanvasDelegate {
     Paint mPaint;
     PorterDuffXfermode mMode;
     DrawManager mDrawManager;
