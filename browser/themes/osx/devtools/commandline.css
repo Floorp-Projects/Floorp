@@ -13,7 +13,7 @@
   border: 1px solid hsl(210,11%,10%);
   box-shadow: 0 1px 0 hsla(209,29%,72%,.25) inset;
   background-image: url(background-noise-toolbar.png),
-                    -moz-linear-gradient(top, hsla(209,18%,18%,0.9), hsl(210,11%,16%));
+                    linear-gradient(hsla(209,18%,18%,0.9), hsl(210,11%,16%));
   border-radius: 3px;
 }
 
