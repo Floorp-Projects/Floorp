@@ -2737,7 +2737,7 @@ typedef enum JSGCParamKey {
     JSGC_ANALYSIS_PURGE_TRIGGER = 19,
 
     /* Lower limit after which we limit the heap growth. */
-    JSGC_ALLOCATION_THRESHOLD = 20,
+    JSGC_ALLOCATION_THRESHOLD = 20
 } JSGCParamKey;
 
 typedef enum JSGCMode {
@@ -4965,7 +4965,7 @@ namespace JS {
 extern JS_PUBLIC_DATA(const HandleId) JSID_VOIDHANDLE;
 extern JS_PUBLIC_DATA(const HandleId) JSID_EMPTYHANDLE;
 
-};
+} /* namespace JS */
 
 namespace js {
 
@@ -5044,6 +5044,6 @@ using JS::MutableHandleValue;
 
 using JS::Zone;
 
-}  /* namespace js */
+} /* namespace js */
 
 #endif /* jsapi_h___ */
