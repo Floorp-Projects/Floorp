@@ -581,7 +581,7 @@ typedef InfallibleTArray<Animation> AnimationArray;
 struct AnimData {
   InfallibleTArray<nsStyleAnimation::Value> mStartValues;
   InfallibleTArray<nsStyleAnimation::Value> mEndValues;
-  InfallibleTArray<mozilla::css::ComputedTimingFunction*> mFunctions;
+  InfallibleTArray<nsAutoPtr<mozilla::css::ComputedTimingFunction> > mFunctions;
 };
 
 /**
