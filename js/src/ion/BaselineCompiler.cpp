@@ -1312,7 +1312,7 @@ BaselineCompiler::emit_JSOP_NEWOBJECT()
     }
 
     RootedObject baseObject(cx, script->getObject(pc));
-    RootedObject templateObject(cx, CopyInitializerObject(cx, baseObject, MaybeSingletonObject));
+    RootedObject templateObject(cx, CopyInitializerObject(cx, baseObject, TenuredObject));
     if (!templateObject)
         return false;
 
@@ -1359,7 +1359,7 @@ BaselineCompiler::emit_JSOP_NEWINIT()
         JS_ASSERT(key == JSProto_Object);
 
         RootedObject templateObject(cx);
-        templateObject = NewBuiltinClassInstance(cx, &ObjectClass, MaybeSingletonObject);
+        templateObject = NewBuiltinClassInstance(cx, &ObjectClass, TenuredObject);
         if (!templateObject)
             return false;
 
