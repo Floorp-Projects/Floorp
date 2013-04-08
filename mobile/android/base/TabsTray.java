@@ -55,7 +55,7 @@ public class TabsTray extends TwoWayView
         mCloseAnimationCount = 0;
         mPendingClosedTabs = new ArrayList<View>();
 
-        //setItemsCanFocus(true);
+        setItemsCanFocus(true);
 
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.TabsTray);
         boolean isPrivate = (a.getInt(R.styleable.TabsTray_tabs, 0x0) == 1);
