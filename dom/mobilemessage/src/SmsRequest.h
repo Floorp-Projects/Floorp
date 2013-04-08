@@ -92,16 +92,6 @@ private:
   nsresult SendMessageReply(const mobilemessage::MessageReply& aReply);
 
   /**
-   * Root mResult (jsval) to prevent garbage collection.
-   */
-  void RootResult();
-
-  /**
-   * Unroot mResult (jsval) to allow garbage collection.
-   */
-  void UnrootResult();
-
-  /**
    * Set the object in a success state with the result being aMessage.
    */
   void SetSuccess(nsIDOMMozSmsMessage* aMessage);
@@ -117,9 +107,9 @@ private:
   void SetSuccess(nsIDOMMozSmsCursor* aCursor);
 
   /**
-   * Set the object in a success state with the result being the given jsval.
+   * Set the object in a success state with the result being the given JS::Value.
    */
-  void SetSuccess(const jsval& aVal);
+  void SetSuccess(const JS::Value& aVal);
 
   /**
    * Set the object in an error state with the error type being aError.
@@ -139,8 +129,7 @@ private:
   nsresult NotifySuccess(T aParam);
   nsresult NotifyError(int32_t aError);
 
-  jsval     mResult;
-  bool      mResultRooted;
+  JS::Value mResult;
   bool      mDone;
   bool      mParentAlive;
   mobilemessage::SmsRequestParent* mParent;

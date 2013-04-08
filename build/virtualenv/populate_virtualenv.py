@@ -210,7 +210,11 @@ class VirtualenvManager(object):
                 path = os.path.join(self.topsrcdir, package[1])
 
                 with open(os.path.join(python_lib, package[0]), 'a') as f:
-                    f.write("%s\n" % path)
+                    # This path is relative to the .pth file.  Using a
+                    # relative path allows the srcdir/objdir combination
+                    # to be moved around (as long as the paths relative to
+                    # each other remain the same).
+                    f.write("%s\n" % os.path.relpath(path, python_lib))
 
                 return True
 

@@ -1,0 +1,6 @@
+{
+  "name": "Really Rapid Release (cached)",
+  "description": "Updated even faster than Firefox, just to annoy slashdotters.",
+  "launch_path": "/tests/dom/apps/tests/file_app.sjs?apptype=cached",
+  "appcache_path": "/tests/dom/apps/tests/file_app.sjs?apptype=cached&getappcache=true"
+}

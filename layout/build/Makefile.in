@@ -20,9 +20,7 @@ EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsLayoutModule
 LIBXUL_LIBRARY	= 1
-ifndef _MSC_VER
 FAIL_ON_WARNINGS = 1
-endif # !_MSC_VER
 
 
 CPPSRCS		= \
@@ -210,7 +208,8 @@ endif
 
 ifdef MOZ_WEBSPEECH
 SHARED_LIBRARY_LIBS += \
-  $(DEPTH)/content/media/webspeech/$(LIB_PREFIX)gkconwebspeech_s.$(LIB_SUFFIX) \
+  $(DEPTH)/content/media/webspeech/recognition/$(LIB_PREFIX)gkconwebspeechrecognition_s.$(LIB_SUFFIX) \
+  $(DEPTH)/content/media/webspeech/synth/$(LIB_PREFIX)gkconwebspeechsynth_s.$(LIB_SUFFIX) \
   $(NULL)
 endif
 
@@ -340,6 +339,10 @@ endif #}
 
 ifdef MOZ_B2G_BT #{
 LOCAL_INCLUDES	+= -I$(topsrcdir)/dom/bluetooth
+endif #}
+
+ifdef MOZ_WEBSPEECH #{
+LOCAL_INCLUDES	+= -I$(topsrcdir)/content/media/webspeech/synth
 endif #}
 
 LOCAL_INCLUDES	+= -I$(topsrcdir)/dom/camera

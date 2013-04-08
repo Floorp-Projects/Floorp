@@ -26,7 +26,6 @@ class nsCopySupport
     static nsresult HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, int16_t aClipboardID);
     static nsresult DoHooks(nsIDocument *aDoc, nsITransferable *aTrans,
                             bool *aDoPutOnClipboard);
-    static nsresult IsPlainTextContext(nsISelection *aSel, nsIDocument *aDoc, bool *aIsPlainTextContext);
 
     // Get the selection, or entire document, in the format specified by the mime type
     // (text/html or text/plain). If aSel is non-null, use it, otherwise get the entire

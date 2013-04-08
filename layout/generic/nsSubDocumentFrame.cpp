@@ -363,8 +363,6 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   nsPresContext* presContext = presShell->GetPresContext();
 
-  nsDisplayList childItems;
-
   int32_t parentAPD = PresContext()->AppUnitsPerDevPixel();
   int32_t subdocAPD = presContext->AppUnitsPerDevPixel();
 
@@ -385,66 +383,75 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     aBuilder->EnterPresShell(subdocRootFrame, dirty);
   }
 
-  nsRect subdocBoundsInParentUnits =
-    mInnerView->GetBounds() + aBuilder->ToReferenceFrame(this);
-
-  if (subdocRootFrame) {
-    subdocRootFrame->
-      BuildDisplayListForStackingContext(aBuilder, dirty, &childItems);
-  }
-
-  if (!aBuilder->IsForEventDelivery()) {
-    // If we are going to use a displayzoom below then any items we put under
-    // it need to have underlying frames from the subdocument. So we need to
-    // calculate the bounds based on which frame will be the underlying frame
-    // for the canvas background color item.
-    nsRect bounds;
-    if (subdocRootFrame) {
-      bounds = subdocBoundsInParentUnits.ConvertAppUnitsRoundOut(parentAPD, subdocAPD);
-    } else {
-      bounds = subdocBoundsInParentUnits;
-    }
-
-    // If we are in print preview/page layout we want to paint the grey
-    // background behind the page, not the canvas color. The canvas color gets
-    // painted on the page itself.
-    if (nsLayoutUtils::NeedsPrintPreviewBackground(presContext)) {
-      presShell->AddPrintPreviewBackgroundItem(
-        *aBuilder, childItems, subdocRootFrame ? subdocRootFrame : this,
-        bounds);
-    } else {
-      // Add the canvas background color to the bottom of the list. This
-      // happens after we've built the list so that AddCanvasBackgroundColorItem
-      // can monkey with the contents if necessary.
-      uint32_t flags = nsIPresShell::FORCE_DRAW;
-      presShell->AddCanvasBackgroundColorItem(
-        *aBuilder, childItems, subdocRootFrame ? subdocRootFrame : this,
-        bounds, NS_RGBA(0,0,0,0), flags);
-    }
-  }
-
-  bool addedLayer = false;
-
-  if (subdocRootFrame && parentAPD != subdocAPD) {
-    NS_WARN_IF_FALSE(!addedLayer,
-                     "Two container layers have been added. "
-                      "Performance may suffer.");
-    addedLayer = true;
-
-    nsDisplayZoom* zoomItem =
-      new (aBuilder) nsDisplayZoom(aBuilder, subdocRootFrame, &childItems,
-                                   subdocAPD, parentAPD, 
-                                   nsDisplayOwnLayer::GENERATE_SUBDOC_INVALIDATIONS);
-    childItems.AppendToTop(zoomItem);
+  DisplayListClipState::AutoSaveRestore clipState(aBuilder);
+  if (ShouldClipSubdocument()) {
+    clipState.ClipContainingBlockDescendantsToContentBox(aBuilder, this);
   }
 
   nsIScrollableFrame *sf = presShell->GetRootScrollFrameAsScrollable();
-  if (!addedLayer &&
-      (presContext->IsRootContentDocument() ||
-       (sf && sf->IsScrollingActive()))) {
+  bool constructZoomItem = subdocRootFrame && parentAPD != subdocAPD;
+  bool needsOwnLayer = constructZoomItem ||
+    presContext->IsRootContentDocument() || (sf && sf->IsScrollingActive());
+
+  nsDisplayList childItems;
+
+  {
+    DisplayListClipState::AutoSaveRestore nestedClipState(aBuilder);
+    if (needsOwnLayer) {
+      // Clear current clip. There's no point in propagating it down, since
+      // the layer we will construct will be clipped by the current clip.
+      // In fact for nsDisplayZoom propagating it down would be incorrect since
+      // nsDisplayZoom changes the meaning of appunits.
+      nestedClipState.Clear();
+    }
+
+    if (subdocRootFrame) {
+      subdocRootFrame->
+        BuildDisplayListForStackingContext(aBuilder, dirty, &childItems);
+    }
+
+    if (!aBuilder->IsForEventDelivery()) {
+      // If we are going to use a displayzoom below then any items we put under
+      // it need to have underlying frames from the subdocument. So we need to
+      // calculate the bounds based on which frame will be the underlying frame
+      // for the canvas background color item.
+      nsRect bounds;
+      nsRect subdocBoundsInParentUnits = GetContentRectRelativeToSelf();
+      if (subdocRootFrame) {
+        bounds = subdocBoundsInParentUnits.ConvertAppUnitsRoundOut(parentAPD, subdocAPD);
+      } else {
+        bounds = subdocBoundsInParentUnits;
+      }
+
+      // If we are in print preview/page layout we want to paint the grey
+      // background behind the page, not the canvas color. The canvas color gets
+      // painted on the page itself.
+      if (nsLayoutUtils::NeedsPrintPreviewBackground(presContext)) {
+        presShell->AddPrintPreviewBackgroundItem(
+          *aBuilder, childItems, subdocRootFrame ? subdocRootFrame : this,
+          bounds);
+      } else {
+        // Add the canvas background color to the bottom of the list. This
+        // happens after we've built the list so that AddCanvasBackgroundColorItem
+        // can monkey with the contents if necessary.
+        uint32_t flags = nsIPresShell::FORCE_DRAW;
+        presShell->AddCanvasBackgroundColorItem(
+          *aBuilder, childItems, subdocRootFrame ? subdocRootFrame : this,
+          bounds, NS_RGBA(0,0,0,0), flags);
+      }
+    }
+  }
+
+  if (constructZoomItem) {
+    nsDisplayZoom* zoomItem =
+      new (aBuilder) nsDisplayZoom(aBuilder, subdocRootFrame, &childItems,
+                                   subdocAPD, parentAPD,
+                                   nsDisplayOwnLayer::GENERATE_SUBDOC_INVALIDATIONS);
+    childItems.AppendToTop(zoomItem);
+  } else if (needsOwnLayer) {
     // We always want top level content documents to be in their own layer.
     nsDisplayOwnLayer* layerItem = new (aBuilder) nsDisplayOwnLayer(
-      aBuilder, subdocRootFrame ? subdocRootFrame : this, 
+      aBuilder, subdocRootFrame ? subdocRootFrame : this,
       &childItems, nsDisplayOwnLayer::GENERATE_SUBDOC_INVALIDATIONS);
     childItems.AppendToTop(layerItem);
   }
@@ -453,27 +460,13 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     aBuilder->LeavePresShell(subdocRootFrame, dirty);
   }
 
-  if (ShouldClipSubdocument()) {
-    nsDisplayClip* item =
-      new (aBuilder) nsDisplayClip(aBuilder, this, &childItems,
-                                   subdocBoundsInParentUnits);
-    // Clip children to the child root frame's rectangle
-    childItems.AppendToTop(item);
-  }
-
   if (aBuilder->IsForImageVisibility()) {
     // We don't add the childItems to the return list as we're dealing with them here.
     presShell->RebuildImageVisibility(childItems);
+    childItems.DeleteAll();
   } else {
-    if (mIsInline) {
-      WrapReplacedContentForBorderRadius(aBuilder, &childItems, aLists);
-    } else {
-      aLists.Content()->AppendToTop(&childItems);
-    }
+    aLists.Content()->AppendToTop(&childItems);
   }
-
-  // delete childItems in case of OOM
-  childItems.DeleteAll();
 }
 
 nscoord
@@ -677,28 +670,19 @@ nsSubDocumentFrame::Reflow(nsPresContext*           aPresContext,
   NS_ASSERTION(mContent->GetPrimaryFrame() == this,
                "Shouldn't happen");
 
+  // XUL <iframe> or <browser>, or HTML <iframe>, <object> or <embed>
+  nsresult rv = nsLeafFrame::DoReflow(aPresContext, aDesiredSize, aReflowState,
+                                      aStatus);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // "offset" is the offset of our content area from our frame's
   // top-left corner.
-  nsPoint offset(0, 0);
-  
-  if (IsInline()) {
-    // XUL <iframe> or <browser>, or HTML <iframe>, <object> or <embed>
-    nsresult rv = nsLeafFrame::DoReflow(aPresContext, aDesiredSize, aReflowState,
-                                        aStatus);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    offset = nsPoint(aReflowState.mComputedBorderPadding.left,
-                     aReflowState.mComputedBorderPadding.top);
-  } else {
-    // HTML <frame>
-    SizeToAvailSize(aReflowState, aDesiredSize);
-  }
+  nsPoint offset = nsPoint(aReflowState.mComputedBorderPadding.left,
+                           aReflowState.mComputedBorderPadding.top);
 
   nsSize innerSize(aDesiredSize.width, aDesiredSize.height);
-  if (IsInline()) {
-    innerSize.width  -= aReflowState.mComputedBorderPadding.LeftRight();
-    innerSize.height -= aReflowState.mComputedBorderPadding.TopBottom();
-  }
+  innerSize.width  -= aReflowState.mComputedBorderPadding.LeftRight();
+  innerSize.height -= aReflowState.mComputedBorderPadding.TopBottom();
 
   if (mInnerView) {
     nsViewManager* vm = mInnerView->GetViewManager();

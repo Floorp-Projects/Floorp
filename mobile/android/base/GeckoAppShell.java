@@ -1697,6 +1697,10 @@ public class GeckoAppShell
         }
     }
 
+    public static Context getContext() {
+        return GeckoApp.mAppContext;
+    }
+
     public static android.hardware.Camera sCamera = null;
 
     static native void cameraCallbackBridge(byte[] data);

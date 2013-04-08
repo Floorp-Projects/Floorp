@@ -14,7 +14,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840388
   var counter = 0;
   var origBlockActive = SpecialPowers.getBoolPref("security.mixed_content.block_active_content");
 
-  SpecialPowers.setBoolPref("security.mixed_content.block_active_content", true);
+  SpecialPowers.setBoolPref("security.mixed_content.block_active_content", false);
   var blockActive = SpecialPowers.getBoolPref("security.mixed_content.block_active_content");
 
 
@@ -61,7 +61,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840388
        }
       //call to change the preferences
       counter++;
-      SpecialPowers.setBoolPref("security.mixed_content.block_active_content", false);
+      SpecialPowers.setBoolPref("security.mixed_content.block_active_content", true);
       blockActive = SpecialPowers.getBoolPref("security.mixed_content.block_active_content");
       log("blockActive set to "+blockActive+".");
       secureTestsStarted = false;

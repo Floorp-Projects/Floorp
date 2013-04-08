@@ -6147,9 +6147,9 @@ var IndexedDBPromptHelper = {
 
   uninit:
   function IndexedDBPromptHelper_uninit() {
-    Services.obs.removeObserver(this, this._permissionsPrompt, false);
-    Services.obs.removeObserver(this, this._quotaPrompt, false);
-    Services.obs.removeObserver(this, this._quotaCancel, false);
+    Services.obs.removeObserver(this, this._permissionsPrompt);
+    Services.obs.removeObserver(this, this._quotaPrompt);
+    Services.obs.removeObserver(this, this._quotaCancel);
   },
 
   observe:
@@ -6344,8 +6344,9 @@ function warnAboutClosingWindow() {
       return false;
   }
 
-  if (!isPBWindow && nonPopupPresent)
-    return gBrowser.warnAboutClosingTabs(true);
+  if (nonPopupPresent) {
+    return isPBWindow || gBrowser.warnAboutClosingTabs(true);
+  }
 
   let os = Services.obs;
 
@@ -6551,9 +6552,7 @@ function convertFromUnicode(charset, str)
 function undoCloseTab(aIndex) {
   // wallpaper patch to prevent an unnecessary blank tab (bug 343895)
   var blankTabToRemove = null;
-  if (gBrowser.tabs.length == 1 &&
-      !gPrefService.getBoolPref("browser.tabs.autoHide") &&
-      isTabEmpty(gBrowser.selectedTab))
+  if (gBrowser.tabs.length == 1 && isTabEmpty(gBrowser.selectedTab))
     blankTabToRemove = gBrowser.selectedTab;
 
   var tab = null;

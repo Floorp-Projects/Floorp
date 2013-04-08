@@ -236,26 +236,32 @@ function test()
     isnot(gEditor.getText().indexOf("firstCall"), -1,
       "The first script is displayed.");
 
-    executeSoon(function() {
-      info("remove the second breakpoint using the mouse");
-      gEditor.addEventListener(SourceEditor.EVENTS.BREAKPOINT_CHANGE, onEditorBreakpointRemoveSecond);
+    let window = gEditor.editorElement.contentWindow;
+    executeSoon(() => window.mozRequestAnimationFrame(onReadyForClick));
+  }
 
-      let iframe = gEditor.editorElement;
-      let testWin = iframe.ownerDocument.defaultView;
+  function onReadyForClick()
+  {
+    info("remove the second breakpoint using the mouse");
+    gEditor.addEventListener(SourceEditor.EVENTS.BREAKPOINT_CHANGE, onEditorBreakpointRemoveSecond);
 
-      // flush the layout for the iframe
-      info("rect " + iframe.contentDocument.documentElement.getBoundingClientRect());
+    let iframe = gEditor.editorElement;
+    let testWin = iframe.ownerDocument.defaultView;
 
-      let utils = testWin.QueryInterface(Ci.nsIInterfaceRequestor)
-                  .getInterface(Ci.nsIDOMWindowUtils);
+    // flush the layout for the iframe
+    info("rect " + iframe.contentDocument.documentElement.getBoundingClientRect());
 
-      let rect = iframe.getBoundingClientRect();
-      let left = rect.left + 10;
-      let top = rect.top + 70;
-      utils.sendMouseEventToWindow("mousedown", left, top, 0, 1, 0, false, 0, 0);
-      utils.sendMouseEventToWindow("mouseup", left, top, 0, 1, 0, false, 0, 0);
-    });
+    let utils = testWin.QueryInterface(Ci.nsIInterfaceRequestor)
+                .getInterface(Ci.nsIDOMWindowUtils);
 
+    let lineOffset = gEditor.getLineStart(4);
+    let coords = gEditor.getLocationAtOffset(lineOffset);
+
+    let rect = iframe.getBoundingClientRect();
+    let left = rect.left + 10;
+    let top = rect.top + coords.y + 4;
+    utils.sendMouseEventToWindow("mousedown", left, top, 0, 1, 0, false, 0, 0);
+    utils.sendMouseEventToWindow("mouseup", left, top, 0, 1, 0, false, 0, 0);
   }
 
   function onEditorBreakpointRemoveSecond(aEvent)

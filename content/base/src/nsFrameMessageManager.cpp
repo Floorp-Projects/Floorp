@@ -380,7 +380,7 @@ nsFrameMessageManager::SendSyncMessage(const nsAString& aMessageName,
   if (mCallback->DoSendSyncMessage(aMessageName, data, &retval)) {
     JSAutoRequest ar(aCx);
     uint32_t len = retval.Length();
-    JSObject* dataArray = JS_NewArrayObject(aCx, len, NULL);
+    JSObject* dataArray = JS_NewArrayObject(aCx, len, nullptr);
     NS_ENSURE_TRUE(dataArray, NS_ERROR_OUT_OF_MEMORY);
 
     for (uint32_t i = 0; i < len; ++i) {
@@ -657,7 +657,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         JSAutoCompartment ac(ctx, object);
 
         // The parameter for the listener function.
-        JSObject* param = JS_NewObject(ctx, NULL, NULL, NULL);
+        JSObject* param = JS_NewObject(ctx, nullptr, nullptr, nullptr);
         NS_ENSURE_TRUE(param, NS_ERROR_OUT_OF_MEMORY);
 
         JS::Value targetv;
@@ -670,7 +670,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         if (!aObjectsArray) {
           // Because we want JS messages to have always the same properties,
           // create array even if len == 0.
-          aObjectsArray = JS_NewArrayObject(ctx, 0, NULL);
+          aObjectsArray = JS_NewArrayObject(ctx, 0, nullptr);
           if (!aObjectsArray) {
             return NS_ERROR_OUT_OF_MEMORY;
           }
@@ -692,14 +692,14 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
                               static_cast<const jschar*>(aMessage.BeginReading()),
                               aMessage.Length());
         NS_ENSURE_TRUE(jsMessage, NS_ERROR_OUT_OF_MEMORY);
-        JS_DefineProperty(ctx, param, "target", targetv, NULL, NULL, JSPROP_ENUMERATE);
+        JS_DefineProperty(ctx, param, "target", targetv, nullptr, nullptr, JSPROP_ENUMERATE);
         JS_DefineProperty(ctx, param, "name",
-                          STRING_TO_JSVAL(jsMessage), NULL, NULL, JSPROP_ENUMERATE);
+                          STRING_TO_JSVAL(jsMessage), nullptr, nullptr, JSPROP_ENUMERATE);
         JS_DefineProperty(ctx, param, "sync",
-                          BOOLEAN_TO_JSVAL(aSync), NULL, NULL, JSPROP_ENUMERATE);
-        JS_DefineProperty(ctx, param, "json", json, NULL, NULL, JSPROP_ENUMERATE); // deprecated
-        JS_DefineProperty(ctx, param, "data", json, NULL, NULL, JSPROP_ENUMERATE);
-        JS_DefineProperty(ctx, param, "objects", objectsv.jsval_value(), NULL, NULL, JSPROP_ENUMERATE);
+                          BOOLEAN_TO_JSVAL(aSync), nullptr, nullptr, JSPROP_ENUMERATE);
+        JS_DefineProperty(ctx, param, "json", json, nullptr, nullptr, JSPROP_ENUMERATE); // deprecated
+        JS_DefineProperty(ctx, param, "data", json, nullptr, nullptr, JSPROP_ENUMERATE);
+        JS_DefineProperty(ctx, param, "objects", objectsv.jsval_value(), nullptr, nullptr, JSPROP_ENUMERATE);
 
         JS::Value thisValue = JSVAL_VOID;
 
@@ -1084,7 +1084,7 @@ nsFrameScriptExecutor::TryCacheLoadAndCompileScript(const nsAString& aURL,
         options.setNoScriptRval(true)
                .setFileAndLine(url.get(), 1)
                .setPrincipals(nsJSPrincipals::get(mPrincipal));
-        JS::RootedObject empty(mCx, NULL);
+        JS::RootedObject empty(mCx, nullptr);
         JSScript* script = JS::Compile(mCx, empty, options,
                                        dataString.get(), dataString.Length());
 

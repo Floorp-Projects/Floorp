@@ -1,0 +1,184 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=753984
+-->
+  <head>
+    <title>[AccessFu] utterance order test</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css"
+          href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+    <script type="application/javascript"
+            src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript"
+            src="../common.js"></script>
+    <script type="application/javascript">
+
+      const Cu = Components.utils;
+      const PREF_UTTERANCE_ORDER = "accessibility.accessfu.utterance";
+
+      Cu.import('resource://gre/modules/accessibility/Utils.jsm');
+      Cu.import("resource://gre/modules/accessibility/UtteranceGenerator.jsm",
+        this);
+
+      // Test UtteranceGenerator.genForContext utterance order for
+      // a particular accessible context with an optional old accessible.
+      function testContextUtterance(expected, aAccOrElmOrID, oldAAccOrElmOrID) {
+        oldAAccOrElmOrID = oldAAccOrElmOrID || "root";
+        var accessible = getAccessible(aAccOrElmOrID);
+        var oldAccessible = getAccessible(oldAAccOrElmOrID);
+        var context = new PivotContext(accessible, oldAccessible);
+        var utterance = UtteranceGenerator.genForContext(context);
+        isDeeply(utterance, expected,
+          "Utterance order is correct for " + aAccOrElmOrID);
+      }
+
+      // Test UtteranceGenerator.genForObject for a particular aAccOrElmOrID.
+      function testUtterance(utteranceOrder, aAccOrElmOrID) {
+        var accessible = getAccessible(aAccOrElmOrID);
+        var utterance = UtteranceGenerator.genForObject(accessible);
+        var expectedNameIndex = utteranceOrder === 0 ? utterance.length - 1 : 0;
+
+        if (aAccOrElmOrID === "li_one" || aAccOrElmOrID === "cell") {
+          // List item's and table cell's name is not included into an object
+          // utterance.
+          expectedNameIndex = -1;
+        }
+        ok(utterance.indexOf(accessible.name) === expectedNameIndex,
+          "Object utterance is correct for " + aAccOrElmOrID);
+      }
+
+      function doTest() {
+        // Test the following aAccOrElmOrID (with optional old aAccOrElmOrID).
+        // Note: each aAccOrElmOrID entry maps to a unique object utterance
+        // generator function within the UtteranceGenerator.
+        var tests = [{
+          aAccOrElmOrID: "anchor",
+          expected: [["link", "title"], ["title", "link"]]
+        }, {
+          aAccOrElmOrID: "textarea",
+          expected: [[
+            "text area", "Test Text Area", "This is the text area text.", "\n"
+          ], [
+            "This is the text area text.", "\n", "Test Text Area", "text area"
+          ]]
+        }, {
+          aAccOrElmOrID: "heading",
+          expected: [
+            ["heading level 1", "Test heading"],
+            ["Test heading", "heading level 1"]
+          ]
+        }, {
+          aAccOrElmOrID: "list",
+          expected: [
+            ["list 1 items", "Test List", "First item", "1. ", "list one"],
+            ["1. ", "list one", "First item", "Test List", "list 1 items"]
+          ]
+        }, {
+          aAccOrElmOrID: "dlist",
+          expected: [
+            ["definition list 0.5 items", "Test Definition List", "dd one "],
+            ["dd one ", "Test Definition List", "definition list 0.5 items"]
+          ]
+        }, {
+          aAccOrElmOrID: "li_one",
+          expected: [
+            ["list 1 items", "Test List", "First item", "1. ", "list one"],
+            ["1. ", "list one", "First item", "Test List", "list 1 items"]
+          ]
+        }, {
+          aAccOrElmOrID: "cell",
+          expected: [[
+            "table", "Fruits and vegetables", "list 4 items", "First item", " ",
+            "link", "Apples", " ", "link", "Bananas", " ", "link", "Peaches",
+            "Last item", " ", "link", "Plums"
+          ], [
+            " ", "Apples", "link", "First item", " ", "Bananas", "link", " ",
+            "Peaches", "link", " ", "Plums", "link", "Last item",
+            "list 4 items", "Fruits and vegetables", "table"
+          ]]
+        }, {
+          // Test pivot to list from li_one.
+          aAccOrElmOrID: "list",
+          oldAAccOrElmOrID: "li_one",
+          expected: [
+            ["list 1 items", "Test List", "First item", "1. ", "list one"],
+            ["1. ", "list one", "First item", "Test List", "list 1 items"]
+          ]
+        }, {
+          // Test pivot to "apples" link from the table cell.
+          aAccOrElmOrID: "apples",
+          oldAAccOrElmOrID: "cell",
+          expected: [
+            ["list 4 items", "First item", "link", "Apples"],
+            ["Apples", "link", "First item", "list 4 items"]
+          ]
+        }, {
+          // Test pivot to 'bananas' link from 'apples' link.
+          aAccOrElmOrID: "bananas",
+          oldAAccOrElmOrID: "apples",
+          expected: [["link", "Bananas"], ["Bananas", "link"]]
+        }];
+
+        // Test all possible utterance order preference values.
+        tests.forEach(function run(test) {
+          var utteranceOrderValues = [0, 1];
+          utteranceOrderValues.forEach(
+            function testUtteranceOrder(utteranceOrder) {
+              SpecialPowers.setIntPref(PREF_UTTERANCE_ORDER, utteranceOrder);
+              testContextUtterance(test.expected[utteranceOrder],
+                test.aAccOrElmOrID, test.oldAAccOrElmOrID);
+              // Just need to test object utterance for individual
+              // aAccOrElmOrID.
+              if (test.oldAAccOrElmOrID) {
+                return;
+              }
+              testUtterance(utteranceOrder, test.aAccOrElmOrID);
+            }
+          );
+        });
+
+        // If there was an original utterance order preference, revert to it.
+        SpecialPowers.clearUserPref(PREF_UTTERANCE_ORDER);
+        SimpleTest.finish();
+      }
+
+      SimpleTest.waitForExplicitFinish();
+      addA11yLoadEvent(doTest);
+
+    </script>
+  </head>
+  <body>
+    <div id="root">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=753984"
+         title="[AccessFu] utterance order test">
+         Mozilla Bug 753984</a>
+      <p id="display"></p>
+      <div id="content" style="display: none"></div>
+      <pre id="test"></pre>
+      <a id="anchor" href="#test" title="title"></a>
+      <textarea id="textarea" title="Test Text Area" cols="80" rows="5">This is the text area text.</textarea>
+      <h1 id="heading" title="Test heading"></h1>
+      <ol id="list" title="Test List">
+        <li id="li_one">list one</li>
+      </ol>
+      <dl id="dlist" title="Test Definition List">
+        <dd id="dd_one">dd one</li>
+      </dl>
+      <table>
+        <caption>Fruits and vegetables</caption>
+        <tr>
+          <td id="cell">
+            <ul style="list-style-type: none;">
+              <li><a id="apples" href="#">Apples</a></li>
+              <li><a id="bananas" href="#">Bananas</a></li>
+              <li><a href="#">Peaches</a></li>
+              <li><a href="#">Plums</a></li>
+            </ul>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

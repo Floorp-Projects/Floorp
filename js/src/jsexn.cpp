@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "mozilla/PodOperations.h"
 #include "mozilla/Util.h"
 
 #include "jstypes.h"
@@ -45,6 +46,8 @@ using namespace js::gc;
 using namespace js::types;
 
 using mozilla::ArrayLength;
+using mozilla::PodArrayZero;
+using mozilla::PodZero;
 
 /* Forward declarations for ErrorClass's initializer. */
 static JSBool

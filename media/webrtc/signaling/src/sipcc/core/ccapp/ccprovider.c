@@ -52,6 +52,7 @@
 #include "prlog.h"
 #include "prlock.h"
 #include "prcvar.h"
+#include "thread_monitor.h"
 
 /*---------------------------------------------------------
  *
@@ -2080,6 +2081,7 @@ void ccp_handler(void* msg, int type) {
         break;
 
     case CCAPP_THREAD_UNLOAD:
+        thread_ended(THREADMON_CCAPP);
         destroy_ccapp_thread();
         break;
     default:

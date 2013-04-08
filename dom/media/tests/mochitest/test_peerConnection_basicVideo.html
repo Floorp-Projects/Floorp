@@ -15,8 +15,9 @@
     title: "Basic video-only peer connection"
   });
 
+  var test;
   runTest(function () {
-    var test = new PeerConnectionTest();
+    test = new PeerConnectionTest();
     test.setMediaConstraints([{video: true}], [{video: true}]);
     test.run();
   }, true);

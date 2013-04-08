@@ -16,6 +16,8 @@
 #include "trace.h"
 #include "video_capture_android.h"
 
+#include "AndroidJNIWrapper.h"
+
 namespace webrtc
 {
 
@@ -172,8 +174,8 @@ WebRtc_Word32 DeviceInfoAndroid::CreateCapabilityMap(
     return -1;
 
   // Find the capability class
-  jclass javaCapClassLocal = env->FindClass(AndroidJavaCaptureCapabilityClass);
-  if (javaCapClassLocal == NULL) {
+  jclass javaCapClass = jsjni_GetGlobalClassRef(AndroidJavaCaptureCapabilityClass);
+  if (javaCapClass == NULL) {
     VideoCaptureAndroid::ReleaseAndroidDeviceInfoObjects(attached);
     WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
                  "%s: Can't find java class VideoCaptureCapabilityAndroid.",
@@ -216,9 +218,9 @@ WebRtc_Word32 DeviceInfoAndroid::CreateCapabilityMap(
     return -1;
   }
 
-  jfieldID widthField = env->GetFieldID(javaCapClassLocal, "width", "I");
-  jfieldID heigtField = env->GetFieldID(javaCapClassLocal, "height", "I");
-  jfieldID maxFpsField = env->GetFieldID(javaCapClassLocal, "maxFPS", "I");
+  jfieldID widthField = env->GetFieldID(javaCapClass, "width", "I");
+  jfieldID heigtField = env->GetFieldID(javaCapClass, "height", "I");
+  jfieldID maxFpsField = env->GetFieldID(javaCapClass, "maxFPS", "I");
   if (widthField == NULL || heigtField == NULL || maxFpsField == NULL) {
     VideoCaptureAndroid::ReleaseAndroidDeviceInfoObjects(attached);
     WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
@@ -256,6 +258,8 @@ WebRtc_Word32 DeviceInfoAndroid::CreateCapabilityMap(
   VideoCaptureAndroid::ReleaseAndroidDeviceInfoObjects(attached);
   WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCapture, _id,
                "CreateCapabilityMap %d", _captureCapabilities.Size());
+
+  env->DeleteGlobalRef(javaCapClass);
 
   return _captureCapabilities.Size();
 }

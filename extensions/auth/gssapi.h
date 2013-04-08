@@ -245,7 +245,7 @@ typedef struct gss_channel_bindings_struct {
 #define GSS_C_NO_CONTEXT ((gss_ctx_id_t) 0)
 #define GSS_C_NO_CREDENTIAL ((gss_cred_id_t) 0)
 #define GSS_C_NO_CHANNEL_BINDINGS ((gss_channel_bindings_t) 0)
-#define GSS_C_EMPTY_BUFFER {0, NULL}
+#define GSS_C_EMPTY_BUFFER {0, nullptr}
 
 /*
  * Some alternate names for a couple of the above

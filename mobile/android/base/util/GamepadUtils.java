@@ -39,11 +39,28 @@ public final class GamepadUtils {
         return (isGamepadKey(event) && (event.getKeyCode() == KeyEvent.KEYCODE_BUTTON_B));
     }
 
+    public static boolean isValueInDeadZone(MotionEvent event, int axis) {
+        float value = event.getAxisValue(axis);
+        // The 1e-2 here should really be range.getFlat() + range.getFuzz() (where range is
+        // event.getDevice().getMotionRange(axis)), but the values those functions return
+        // on the Ouya are zero so we're just hard-coding it for now.
+        return (Math.abs(value) < 1e-2);
+    }
+
     public static boolean isPanningControl(MotionEvent event) {
-        if (Build.VERSION.SDK_INT >= 12) {
-            return (event.getSource() & InputDevice.SOURCE_CLASS_MASK) == InputDevice.SOURCE_CLASS_JOYSTICK;
+        if (Build.VERSION.SDK_INT < 12) {
+            return false;
         }
-        return false;
+        if ((event.getSource() & InputDevice.SOURCE_CLASS_MASK) != InputDevice.SOURCE_CLASS_JOYSTICK) {
+            return false;
+        }
+        if (isValueInDeadZone(event, MotionEvent.AXIS_X)
+                && isValueInDeadZone(event, MotionEvent.AXIS_Y)
+                && isValueInDeadZone(event, MotionEvent.AXIS_Z)
+                && isValueInDeadZone(event, MotionEvent.AXIS_RZ)) {
+            return false;
+        }
+        return true;
     }
 
     public static View.OnKeyListener getClickDispatcher() {

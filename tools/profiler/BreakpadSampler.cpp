@@ -51,8 +51,9 @@
 
 /* These will be set to something sensible before we take the first
    sample. */
-UnwMode sUnwindMode     = UnwINVALID;
-int     sUnwindInterval = 0;
+UnwMode sUnwindMode      = UnwINVALID;
+int     sUnwindInterval  = 0;
+int     sUnwindStackScan = 0;
 
 using std::string;
 using namespace mozilla;

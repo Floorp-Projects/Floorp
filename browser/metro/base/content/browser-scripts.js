@@ -93,6 +93,7 @@ Cu.import("resource://gre/modules/Geometry.jsm");
  */
 let ScriptContexts = {};
 [
+  ["ContentAreaObserver", "chrome://browser/content/ContentAreaObserver.js"],
   ["WebProgress", "chrome://browser/content/WebProgress.js"],
   ["FindHelperUI", "chrome://browser/content/helperui/FindHelperUI.js"],
   ["FormHelperUI", "chrome://browser/content/helperui/FormHelperUI.js"],
@@ -106,7 +107,6 @@ let ScriptContexts = {};
   ["OfflineApps", "chrome://browser/content/helperui/OfflineApps.js"],
   ["SelectHelperUI", "chrome://browser/content/helperui/SelectHelperUI.js"],
   ["SelectionHelperUI", "chrome://browser/content/helperui/SelectionHelperUI.js"],
-  ["FullScreenVideo", "chrome://browser/content/video.js"],
   ["AnimatedZoom", "chrome://browser/content/AnimatedZoom.js"],
   ["CommandUpdater", "chrome://browser/content/commandUtil.js"],
   ["ContextCommands", "chrome://browser/content/ContextCommands.js"],

@@ -198,9 +198,6 @@
 #include "nsIDOMHTMLIFrameElement.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLObjectElement.h"
-#include "nsIDOMTimeRanges.h"
-#include "nsIDOMHTMLVideoElement.h"
-#include "nsIDOMHTMLAudioElement.h"
 #include "nsIDOMCSSCharsetRule.h"
 #include "nsIDOMCSSImportRule.h"
 #include "nsIDOMCSSMediaRule.h"
@@ -302,7 +299,7 @@
 #include "nsIEventListenerService.h"
 #include "nsIMessageManager.h"
 #include "mozilla/dom/Element.h"
-#include "nsHTMLSelectElement.h"
+#include "mozilla/dom/HTMLSelectElement.h"
 #include "HTMLLegendElement.h"
 
 #include "DOMSVGStringList.h"
@@ -940,15 +937,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(CSSFontFaceRule, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
-#if defined(MOZ_MEDIA)
-  NS_DEFINE_CLASSINFO_DATA(HTMLVideoElement, nsElementSH,
-                           ELEMENT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(HTMLAudioElement, nsElementSH,
-                           ELEMENT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(TimeRanges, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-#endif
 
   // DOM Traversal NodeIterator class
   NS_DEFINE_CLASSINFO_DATA(NodeIterator, nsDOMGenericSH,
@@ -1775,6 +1763,9 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(Window, nsIDOMWindow)
     DOM_CLASSINFO_WINDOW_MAP_ENTRIES(nsGlobalWindow::HasIndexedDBSupport())
+#ifdef MOZ_WEBSPEECH
+    DOM_CLASSINFO_MAP_ENTRY(nsISpeechSynthesisGetter)
+#endif
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(WindowUtils, nsIDOMWindowUtils)
@@ -2116,6 +2107,9 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ChromeWindow, nsIDOMWindow)
     DOM_CLASSINFO_WINDOW_MAP_ENTRIES(true)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMChromeWindow)
+#ifdef MOZ_WEBSPEECH
+    DOM_CLASSINFO_MAP_ENTRY(nsISpeechSynthesisGetter)
+#endif
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(ImageDocument, nsIImageDocument)
@@ -2304,6 +2298,9 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ModalContentWindow, nsIDOMWindow)
     DOM_CLASSINFO_WINDOW_MAP_ENTRIES(nsGlobalWindow::HasIndexedDBSupport())
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMModalContentWindow)
+#ifdef MOZ_WEBSPEECH
+    DOM_CLASSINFO_MAP_ENTRY(nsISpeechSynthesisGetter)
+#endif
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(DataContainerEvent, nsIDOMDataContainerEvent)
@@ -2403,22 +2400,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(CSSFontFaceRule, nsIDOMCSSFontFaceRule)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSFontFaceRule)
   DOM_CLASSINFO_MAP_END
-
-#if defined (MOZ_MEDIA)
-  DOM_CLASSINFO_MAP_BEGIN(HTMLVideoElement, nsIDOMHTMLVideoElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLVideoElement)
-    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(HTMLAudioElement, nsIDOMHTMLAudioElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLAudioElement)
-    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(TimeRanges, nsIDOMTimeRanges)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMTimeRanges)
-  DOM_CLASSINFO_MAP_END
-#endif
 
   DOM_CLASSINFO_MAP_BEGIN(DataTransfer, nsIDOMDataTransfer)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDataTransfer)
@@ -7162,32 +7143,6 @@ nsHTMLDocumentSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
 
 // HTMLFormElement helper
 
-// static
-nsresult
-nsHTMLFormElementSH::FindNamedItem(nsIForm *aForm, jsid id,
-                                   nsISupports **aResult,
-                                   nsWrapperCache **aCache)
-{
-  nsDependentJSString name(id);
-
-  *aResult = aForm->ResolveName(name).get();
-  // FIXME Get the wrapper cache from nsIForm::ResolveName
-  *aCache = nullptr;
-
-  if (!*aResult) {
-    nsCOMPtr<nsIContent> content(do_QueryInterface(aForm));
-
-    nsCOMPtr<nsIHTMLDocument> html_doc =
-      do_QueryInterface(content->GetDocument());
-
-    if (html_doc && content) {
-      *aResult = html_doc->ResolveName(name, content, aCache).get();
-    }
-  }
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsHTMLFormElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
                                 JSContext *cx, JSObject *obj, jsid id,
@@ -7199,10 +7154,11 @@ nsHTMLFormElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
       (!ObjectIsNativeWrapper(cx, obj) ||
        xpc::WrapperFactory::XrayWrapperNotShadowing(obj, id))) {
     nsCOMPtr<nsIForm> form(do_QueryWrappedNative(wrapper, obj));
-    nsCOMPtr<nsISupports> result;
-    nsWrapperCache *cache;
 
-    FindNamedItem(form, id, getter_AddRefs(result), &cache);
+    nsDependentJSString name(id);
+    nsWrapperCache* cache;
+    nsCOMPtr<nsISupports> result =
+      static_cast<nsHTMLFormElement*>(form.get())->FindNamedItem(name, &cache);
 
     if (result) {
       JSAutoRequest ar(cx);
@@ -7228,10 +7184,10 @@ nsHTMLFormElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
 
   if (JSID_IS_STRING(id)) {
     // For native wrappers, do not get random names on form
-    nsCOMPtr<nsISupports> result;
-    nsWrapperCache *cache;
-
-    FindNamedItem(form, id, getter_AddRefs(result), &cache);
+    nsDependentJSString name(id);
+    nsWrapperCache* cache;
+    nsCOMPtr<nsISupports> result =
+      static_cast<nsHTMLFormElement*>(form.get())->FindNamedItem(name, &cache);
 
     if (result) {
       // Wrap result, result can be either an element or a list of
@@ -7344,8 +7300,8 @@ nsHTMLSelectElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext 
 {
   int32_t n = GetArrayIndexFromId(cx, id);
   if (n >= 0) {
-    nsHTMLSelectElement *s =
-      nsHTMLSelectElement::FromSupports(GetNative(wrapper, obj));
+    HTMLSelectElement *s =
+      HTMLSelectElement::FromSupports(GetNative(wrapper, obj));
 
     HTMLOptionsCollection *options = s->GetOptions();
     if (options) {
@@ -7372,8 +7328,8 @@ nsHTMLSelectElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
 
   nsresult rv = NS_OK;
   if (n >= 0) {
-    nsHTMLSelectElement *s =
-      nsHTMLSelectElement::FromSupports(GetNative(wrapper, obj));
+    HTMLSelectElement *s =
+      HTMLSelectElement::FromSupports(GetNative(wrapper, obj));
 
     HTMLOptionsCollection *options = s->GetOptions();
 

@@ -42,6 +42,8 @@ class TestMozbuildObject(unittest.TestCase):
             self.assertIsNotNone(base.topobjdir)
             self.assertEqual(len(base.topobjdir.split()), 1)
             self.assertTrue(base.topobjdir.endswith(base._config_guess))
+            self.assertTrue(os.path.isabs(base.topobjdir))
+            self.assertTrue(base.topobjdir.startswith(topsrcdir))
 
         del os.environ[b'MOZCONFIG']
 

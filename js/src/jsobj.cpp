@@ -327,16 +327,16 @@ js::GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id, Mutab
 }
 
 bool
-js::GetFirstArgumentAsObject(JSContext *cx, unsigned argc, Value *vp, const char *method,
+js::GetFirstArgumentAsObject(JSContext *cx, const CallArgs &args, const char *method,
                              MutableHandleObject objp)
 {
-    if (argc == 0) {
+    if (args.length() == 0) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
                              method, "0", "s");
         return false;
     }
 
-    RootedValue v(cx, vp[2]);
+    HandleValue v = args.handleAt(0);
     if (!v.isObject()) {
         char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NullPtr());
         if (!bytes)
@@ -1826,7 +1826,7 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *aArg, JSObject *bArg,
             return false;
     } else {
         reserved.newbshape = EmptyShape::getInitialShape(cx, aClass, aProto, a->getParent(),
-                                                         b->numFixedSlots());
+                                                         b->tenuredGetAllocKind());
         if (!reserved.newbshape)
             return false;
     }
@@ -1835,7 +1835,7 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *aArg, JSObject *bArg,
             return false;
     } else {
         reserved.newashape = EmptyShape::getInitialShape(cx, bClass, bProto, b->getParent(),
-                                                         a->numFixedSlots());
+                                                         a->tenuredGetAllocKind());
         if (!reserved.newashape)
             return false;
     }
@@ -3755,8 +3755,11 @@ GetPropertyHelperInline(JSContext *cx,
          * Give a strict warning if foo.bar is evaluated by a script for an
          * object foo with no property named 'bar'.
          */
-        jsbytecode *pc;
-        if (vp.isUndefined() && ((pc = js_GetCurrentBytecodePC(cx)) != NULL)) {
+        if (vp.isUndefined()) {
+            jsbytecode *pc = NULL;
+            RootedScript script(cx, cx->stack.currentScript(&pc));
+            if (!pc)
+                return true;
             JSOp op = (JSOp) *pc;
 
             if (op == JSOP_GETXPROP) {
@@ -3772,7 +3775,6 @@ GetPropertyHelperInline(JSContext *cx,
                 return true;
 
             /* Don't warn repeatedly for the same script. */
-            RootedScript script(cx, cx->stack.currentScript());
             if (!script || script->warnedAboutUndefinedProp)
                 return true;
 
@@ -3791,7 +3793,7 @@ GetPropertyHelperInline(JSContext *cx,
             }
 
             unsigned flags = JSREPORT_WARNING | JSREPORT_STRICT;
-            cx->stack.currentScript()->warnedAboutUndefinedProp = true;
+            script->warnedAboutUndefinedProp = true;
 
             /* Ok, bad undefined property reference: whine about it. */
             RootedValue val(cx, IdToValue(id));

@@ -188,7 +188,7 @@ MarkContentViewer(nsIContentViewer* aViewer, bool aCleanupJS,
       if (elm) {
         elm->MarkForCC();
       }
-      nsCOMPtr<nsIDOMEventTarget> win = do_QueryInterface(doc->GetInnerWindow());
+      nsCOMPtr<EventTarget> win = do_QueryInterface(doc->GetInnerWindow());
       if (win) {
         elm = win->GetListenerManager(false);
         if (elm) {

@@ -93,6 +93,10 @@
 #include "mozilla/dom/bluetooth/PBluetoothChild.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 
+#ifdef MOZ_WEBSPEECH
+#include "mozilla/dom/PSpeechSynthesisChild.h"
+#endif
+
 #include "nsDOMFile.h"
 #include "nsIRemoteBlob.h"
 #include "ProcessUtils.h"
@@ -869,6 +873,28 @@ ContentChild::DeallocPBluetooth(PBluetoothChild* aActor)
     return true;
 #else
     MOZ_NOT_REACHED("No support for bluetooth on this platform!");
+    return false;
+#endif
+}
+
+PSpeechSynthesisChild*
+ContentChild::AllocPSpeechSynthesis()
+{
+#ifdef MOZ_WEBSPEECH
+    MOZ_NOT_REACHED("No one should be allocating PSpeechSynthesisChild actors");
+    return nullptr;
+#else
+    return nullptr;
+#endif
+}
+
+bool
+ContentChild::DeallocPSpeechSynthesis(PSpeechSynthesisChild* aActor)
+{
+#ifdef MOZ_WEBSPEECH
+    delete aActor;
+    return true;
+#else
     return false;
 #endif
 }

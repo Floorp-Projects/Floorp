@@ -14,6 +14,7 @@
 #include "Ion.h"
 #include "IonAnalysis.h"
 #include "IonSpewer.h"
+#include "BaselineInspector.h"
 #include "builtin/Eval.h"
 #include "frontend/BytecodeEmitter.h"
 
@@ -32,7 +33,8 @@ using namespace js::ion;
 using mozilla::DebugOnly;
 
 IonBuilder::IonBuilder(JSContext *cx, TempAllocator *temp, MIRGraph *graph,
-                       TypeOracle *oracle, CompileInfo *info, size_t inliningDepth, uint32_t loopDepth)
+                       TypeOracle *oracle, BaselineInspector *inspector, CompileInfo *info,
+                       size_t inliningDepth, uint32_t loopDepth)
   : MIRGenerator(cx->compartment, temp, graph, info),
     backgroundCodegen_(NULL),
     recompileInfo(cx->compartment->types.compiledInfo),
@@ -42,6 +44,7 @@ IonBuilder::IonBuilder(JSContext *cx, TempAllocator *temp, MIRGraph *graph,
     callerResumePoint_(NULL),
     callerBuilder_(NULL),
     oracle(oracle),
+    inspector(inspector),
     inliningDepth_(inliningDepth),
     failedBoundsCheck_(info->script()->failedBoundsCheck),
     failedShapeGuard_(info->script()->failedShapeGuard),
@@ -201,6 +204,15 @@ IonBuilder::canInlineTarget(JSFunction *target, CallInfo &callInfo)
     ExecutionMode executionMode = info().executionMode();
     if (!CanIonCompile(inlineScript, executionMode)) {
         IonSpew(IonSpew_Inlining, "Cannot inline due to disable Ion compilation");
+        return false;
+    }
+
+    // Don't inline functions which don't have baseline scripts compiled for them.
+    if (executionMode == SequentialExecution &&
+        ion::IsBaselineEnabled(cx) &&
+        !inlineScript->hasBaselineScript())
+    {
+        IonSpew(IonSpew_Inlining, "Cannot inline target with no baseline jitcode");
         return false;
     }
 
@@ -1253,7 +1265,6 @@ IonBuilder::processIfEnd(CFGState &state)
     }
 
     current = state.branch.ifFalse;
-    graph().moveBlockToEnd(current);
     pc = current->pc();
     return ControlStatus_Joined;
 }
@@ -1268,7 +1279,6 @@ IonBuilder::processIfElseTrueEnd(CFGState &state)
     state.stopAt = state.branch.falseEnd;
     pc = state.branch.ifFalse->pc();
     current = state.branch.ifFalse;
-    graph().moveBlockToEnd(current);
     return ControlStatus_Jumped;
 }
 
@@ -1327,10 +1337,7 @@ IonBuilder::processBrokenLoop(CFGState &state)
     // structure never actually loops, the condition itself can still fail and
     // thus we must resume at the successor, if one exists.
     current = state.loop.successor;
-    if (current) {
-        JS_ASSERT(current->loopDepth() == loopDepth_);
-        graph().moveBlockToEnd(current);
-    }
+    JS_ASSERT_IF(current, current->loopDepth() == loopDepth_);
 
     // Join the breaks together and continue parsing.
     if (state.loop.breaks) {
@@ -1372,10 +1379,8 @@ IonBuilder::finishLoop(CFGState &state, MBasicBlock *successor)
     // including the successor.
     if (!state.loop.entry->setBackedge(current))
         return ControlStatus_Error;
-    if (successor) {
-        graph().moveBlockToEnd(successor);
+    if (successor)
         successor->inheritPhis(state.loop.entry);
-    }
 
     if (state.loop.breaks) {
         // Propagate phis placed in the header to individual break exit points.
@@ -1630,9 +1635,6 @@ IonBuilder::processNextTableSwitchCase(CFGState &state)
         successor->addPredecessor(current);
     }
 
-    // Insert successor after the current block, to maintain RPO.
-    graph().moveBlockToEnd(successor);
-
     // If this is the last successor the block should stop at the end of the tableswitch
     // Else it should stop at the start of the next successor
     if (state.tableswitch.currentBlock+1 < state.tableswitch.ins->numBlocks())
@@ -1656,7 +1658,6 @@ IonBuilder::processAndOrEnd(CFGState &state)
         return ControlStatus_Error;
 
     current = state.branch.ifFalse;
-    graph().moveBlockToEnd(current);
     pc = current->pc();
     return ControlStatus_Joined;
 }
@@ -2203,9 +2204,6 @@ IonBuilder::tableSwitch(JSOp op, jssrcnote *sn)
         pc2 += JUMP_OFFSET_LEN;
     }
 
-    // Move defaultcase to the end, to maintain RPO.
-    graph().moveBlockToEnd(defaultcase);
-
     JS_ASSERT(tableswitch->numCases() == (uint32_t)(high - low + 1));
     JS_ASSERT(tableswitch->numSuccessors() > 0);
 
@@ -2530,9 +2528,6 @@ IonBuilder::processCondSwitchBody(CFGState &state)
     // Get the next body
     MBasicBlock *nextBody = bodies[currentIdx++];
     JS_ASSERT_IF(current, pc == nextBody->pc());
-
-    // Fix the reverse post-order iteration.
-    graph().moveBlockToEnd(nextBody);
 
     // The last body continue into the new one.
     if (current) {
@@ -2971,8 +2966,10 @@ IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
 
     RootedScript calleeScript(cx, target->nonLazyScript());
     TypeInferenceOracle oracle;
-    if (!oracle.init(cx, calleeScript))
+    if (!oracle.init(cx, calleeScript, /* inlinedCall = */ true))
         return false;
+
+    BaselineInspector inspector(cx, target->nonLazyScript());
 
     // Copy the CallInfo as the addTypeBarrier is mutating it.
     bool argsBarrier = callInfo.argsBarrier();
@@ -3002,7 +2999,8 @@ IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
     AutoAccumulateExits aae(graph(), saveExits);
 
     // Build the graph.
-    IonBuilder inlineBuilder(cx, &temp(), &graph(), &oracle, info, inliningDepth_ + 1, loopDepth_);
+    IonBuilder inlineBuilder(cx, &temp(), &graph(), &oracle, &inspector, info, inliningDepth_ + 1,
+                             loopDepth_);
     if (!inlineBuilder.buildInline(this, outerResumePoint, thisCall)) {
         JS_ASSERT(calleeScript->hasAnalysis());
 
@@ -3854,7 +3852,6 @@ IonBuilder::inlineCalls(CallInfo &callInfo, AutoObjectVector &targets,
     // Check the depth change: +1 for retval
     JS_ASSERT(returnBlock->stackDepth() == dispatchBlock->stackDepth() - callInfo.numFormals() + 1);
 
-    graph().moveBlockToEnd(returnBlock);
     current = returnBlock;
     return true;
 }
@@ -6043,7 +6040,6 @@ IonBuilder::jsop_setelem_dense()
             return false;
     }
 
-    // Determine whether a write barrier is required.
     if (oracle->elementWriteNeedsBarrier(script(), pc))
         store->setNeedsBarrier();
 
@@ -6060,6 +6056,11 @@ IonBuilder::jsop_setelem_typed(int arrayType)
     MDefinition *id = current->pop();
     MDefinition *obj = current->pop();
 
+    SetElemICInspector icInspect(inspector->setElemICInspector(pc));
+    bool expectOOB = icInspect.sawOOBTypedArrayWrite();
+    if (expectOOB)
+        spew("Emitting OOB TypedArray SetElem");
+
     // Ensure id is an integer.
     MInstruction *idInt32 = MToInt32::New(id);
     current->add(idInt32);
@@ -6069,26 +6070,31 @@ IonBuilder::jsop_setelem_typed(int arrayType)
     MInstruction *length = getTypedArrayLength(obj);
     current->add(length);
 
-    // Bounds check.
-    id = addBoundsCheck(id, length);
+    if (!expectOOB) {
+        // Bounds check.
+        id = addBoundsCheck(id, length);
+    }
 
     // Get the elements vector.
     MInstruction *elements = getTypedArrayElements(obj);
     current->add(elements);
 
     // Clamp value to [0, 255] for Uint8ClampedArray.
-    MDefinition *unclampedValue = value;
+    MDefinition *toWrite = value;
     if (arrayType == TypedArray::TYPE_UINT8_CLAMPED) {
-        value = MClampToUint8::New(value);
-        current->add(value->toInstruction());
+        toWrite = MClampToUint8::New(value);
+        current->add(toWrite->toInstruction());
     }
 
     // Store the value.
-    MStoreTypedArrayElement *store = MStoreTypedArrayElement::New(elements, id, value, arrayType);
-    current->add(store);
-
-    current->push(unclampedValue);
-    return resumeAfter(store);
+    MInstruction *ins;
+    if (expectOOB)
+        ins = MStoreTypedArrayElementHole::New(elements, length, id, toWrite, arrayType);
+    else
+        ins = MStoreTypedArrayElement::New(elements, id, toWrite, arrayType);
+    current->add(ins);
+    current->push(value);
+    return resumeAfter(ins);
 }
 
 bool
@@ -6627,6 +6633,11 @@ IonBuilder::jsop_getprop(HandlePropertyName name)
 {
     RootedId id(cx, NameToId(name));
 
+    // GetDefiniteSlot may cause type information to shift, and it's done inside
+    // getPropTryDefiniteSlot.  Do it here first to ensure that all type info changes
+    // occur before handling the op.
+    GetDefiniteSlot(cx, oracle->unaryTypes(script(), pc).inTypes, name);
+
     RootedScript scriptRoot(cx, script());
     types::StackTypeSet *barrier = oracle->propertyReadBarrier(scriptRoot, pc);
     types::StackTypeSet *types = oracle->propertyRead(script(), pc);
@@ -6830,6 +6841,9 @@ IonBuilder::getPropTryMonomorphic(bool *emitted, HandleId id, types::StackTypeSe
         return true;
 
     RootedShape objShape(cx, mjit::GetPICSingleShape(cx, script(), pc, info().constructing()));
+    if (!objShape)
+        objShape = inspector->maybeMonomorphicShapeForPropertyOp(pc);
+
     if (!objShape || objShape->inDictionary()) {
         spew("GETPROP not monomorphic");
         return true;
@@ -6882,10 +6896,7 @@ IonBuilder::getPropTryPolymorphic(bool *emitted, HandlePropertyName name, Handle
     // Try to mark the cache as idempotent. We only do this if JM is enabled
     // (its ICs are used to mark property reads as likely non-idempotent) or
     // if we are compiling eagerly (to improve test coverage).
-    if (unary.ival == MIRType_Object &&
-        (cx->methodJitEnabled || js_IonOptions.eagerCompilation) &&
-        !invalidatedIdempotentCache())
-    {
+    if (unary.ival == MIRType_Object && !invalidatedIdempotentCache()) {
         RootedScript scriptRoot(cx, script());
         if (oracle->propertyReadIdempotent(scriptRoot, pc, id))
             load->setIdempotent();
@@ -6995,6 +7006,9 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
         ins = MCallSetProperty::New(obj, value, name, script()->strict);
     } else {
         RawShape objShape = mjit::GetPICSingleShape(cx, script(), pc, info().constructing());
+        if (!objShape)
+            objShape = inspector->maybeMonomorphicShapeForPropertyOp(pc);
+
         if (objShape && !objShape->inDictionary()) {
             // The JM IC was monomorphic, so we inline the property access as
             // long as the shape is not in dictionary mode. We cannot be sure

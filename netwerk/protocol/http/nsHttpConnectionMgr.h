@@ -451,7 +451,6 @@ private:
         bool                           mSpeculative;
 
         mozilla::TimeStamp             mPrimarySynStarted;
-        mozilla::TimeDuration          mPrimarySynRTT;
         mozilla::TimeStamp             mBackupSynStarted;
 
         // for syn retry

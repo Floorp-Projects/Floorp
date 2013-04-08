@@ -2146,6 +2146,12 @@ HyperTextAccessible::ContentToRenderedOffset(nsIFrame* aFrame, int32_t aContentO
     *aRenderedOffset = 0;
     return NS_OK;
   }
+
+  if (IsTextField()) {
+    *aRenderedOffset = aContentOffset;
+    return NS_OK;
+  }
+
   NS_ASSERTION(aFrame->GetType() == nsGkAtoms::textFrame,
                "Need text frame for offset conversion");
   NS_ASSERTION(aFrame->GetPrevContinuation() == nullptr,
@@ -2170,6 +2176,11 @@ nsresult
 HyperTextAccessible::RenderedToContentOffset(nsIFrame* aFrame, uint32_t aRenderedOffset,
                                              int32_t* aContentOffset)
 {
+  if (IsTextField()) {
+    *aContentOffset = aRenderedOffset;
+    return NS_OK;
+  }
+
   *aContentOffset = 0;
   NS_ENSURE_TRUE(aFrame, NS_ERROR_FAILURE);
 

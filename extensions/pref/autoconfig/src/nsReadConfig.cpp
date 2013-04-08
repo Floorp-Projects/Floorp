@@ -168,7 +168,7 @@ nsresult nsReadConfig::readConfigFile()
 
         mRead = true;
     }
-    // If the lockFileName is NULL return ok, because no lockFile will be used
+    // If the lockFileName is nullptr return ok, because no lockFile will be used
   
   
     // Once the config file is read, we should check that the vendor name 
@@ -200,7 +200,7 @@ nsresult nsReadConfig::readConfigFile()
   
     rv = prefBranch->GetCharPref("general.config.vendor", 
                                   getter_Copies(lockVendor));
-    // If vendor is not NULL, do this check
+    // If vendor is not nullptr, do this check
     if (NS_SUCCEEDED(rv)) {
 
         fileNameLen = PL_strlen(lockFileName);

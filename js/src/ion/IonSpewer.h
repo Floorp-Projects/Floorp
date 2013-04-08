@@ -55,7 +55,24 @@ namespace ion {
     /* Calls to js::ion::Trace() */         \
     _(Trace)                                \
     /* Debug info about the I$ */           \
-    _(CacheFlush)
+    _(CacheFlush)                           \
+                                            \
+    /* BASELINE COMPILER SPEW */            \
+                                            \
+    /* Aborting Script Compilation. */      \
+    _(BaselineAbort)                        \
+    /* Script Compilation. */               \
+    _(BaselineScripts)                      \
+    /* Detailed op-specific spew. */        \
+    _(BaselineOp)                           \
+    /* Inline caches. */                    \
+    _(BaselineIC)                           \
+    /* Inline cache fallbacks. */           \
+    _(BaselineICFallback)                   \
+    /* OSR from Baseline => Ion. */         \
+    _(BaselineOSR)                          \
+    /* Bailouts. */                         \
+    _(BaselineBailouts)
 
 
 enum IonSpewChannel {

@@ -163,6 +163,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     void branchTestObjShape(Condition cond, Register obj, const Shape *shape, Label *label) {
         branchPtr(cond, Address(obj, JSObject::offsetOfShape()), ImmGCPtr(shape), label);
     }
+    void branchTestObjShape(Condition cond, Register obj, Register shape, Label *label) {
+        branchPtr(cond, Address(obj, JSObject::offsetOfShape()), shape, label);
+    }
 
     // Branches to |label| if |reg| is false. |reg| should be a C++ bool.
     void branchIfFalseBool(const Register &reg, Label *label) {
@@ -284,6 +287,11 @@ class MacroAssembler : public MacroAssemblerSpecific
             storeCallResultValue(dest.typedReg());
     }
 
+    template <typename T>
+    Register extractString(const T &source, Register scratch) {
+        return extractObject(source, scratch);
+    }
+
     void PushRegsInMask(RegisterSet set);
     void PushRegsInMask(GeneralRegisterSet set) {
         PushRegsInMask(RegisterSet(set, FloatRegisterSet()));
@@ -377,6 +385,12 @@ class MacroAssembler : public MacroAssemblerSpecific
         framePushed_ += sizeof(Value);
     }
 
+    void PushValue(const Address &addr) {
+        JS_ASSERT(addr.base != StackPointer);
+        pushValue(addr);
+        framePushed_ += sizeof(Value);
+    }
+
     void adjustStack(int amount) {
         if (amount > 0)
             freeStack(amount);
@@ -441,7 +455,10 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     template <typename T>
     void patchableCallPreBarrier(const T &address, MIRType type) {
-        JS_ASSERT(type == MIRType_Value || type == MIRType_String || type == MIRType_Object);
+        JS_ASSERT(type == MIRType_Value ||
+                  type == MIRType_String ||
+                  type == MIRType_Object ||
+                  type == MIRType_Shape);
 
         Label done;
 
@@ -520,6 +537,22 @@ class MacroAssembler : public MacroAssemblerSpecific
     // This function clobbers the input register.
     void clampDoubleToUint8(FloatRegister input, Register output);
 
+    using MacroAssemblerSpecific::ensureDouble;
+
+    void ensureDouble(const Address &source, FloatRegister dest, Label *failure) {
+        Label isDouble, done;
+        branchTestDouble(Assembler::Equal, source, &isDouble);
+        branchTestInt32(Assembler::NotEqual, source, failure);
+
+        convertInt32ToDouble(source, dest);
+        jump(&done);
+
+        bind(&isDouble);
+        unboxDouble(source, dest);
+
+        bind(&done);
+    }
+
     // Inline allocation.
     void newGCThing(const Register &result, JSObject *templateObject, Label *fail);
     void parNewGCThing(const Register &result,
@@ -589,7 +622,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     void maybeRemoveOsrFrame(Register scratch);
 
     // Generates code used to complete a bailout.
-    void generateBailoutTail(Register scratch);
+    void generateBailoutTail(Register scratch, Register bailoutInfo);
 
     // These functions exist as small wrappers around sites where execution can
     // leave the currently running stream of instructions. They exist so that
@@ -642,6 +675,21 @@ class MacroAssembler : public MacroAssemblerSpecific
         uint32_t ret = currentOffset();
         reenterSPSFrame();
         return ret;
+    }
+
+    Condition branchTestObjectTruthy(bool truthy, Register objReg, Register scratch,
+                                     Label *slowCheck)
+    {
+        // The branches to out-of-line code here implement a conservative version
+        // of the JSObject::isWrapper test performed in EmulatesUndefined.  If none
+        // of the branches are taken, we can check class flags directly.
+        loadObjClass(objReg, scratch);
+        branchPtr(Assembler::Equal, scratch, ImmWord(&ObjectProxyClass), slowCheck);
+        branchPtr(Assembler::Equal, scratch, ImmWord(&OuterWindowProxyClass), slowCheck);
+        branchPtr(Assembler::Equal, scratch, ImmWord(&FunctionProxyClass), slowCheck);
+
+        test32(Address(scratch, Class::offsetOfFlags()), Imm32(JSCLASS_EMULATES_UNDEFINED));
+        return truthy ? Assembler::Zero : Assembler::NonZero;
     }
 
   private:
@@ -703,16 +751,46 @@ class MacroAssembler : public MacroAssemblerSpecific
         bind(&stackFull);
     }
 
+    void spsUpdatePCIdx(SPSProfiler *p, Register idx, Register temp) {
+        Label stackFull;
+        spsProfileEntryAddress(p, -1, temp, &stackFull);
+        store32(idx, Address(temp, ProfileEntry::offsetOfPCIdx()));
+        bind(&stackFull);
+    }
+
     void spsPushFrame(SPSProfiler *p, const char *str, RawScript s, Register temp) {
         Label stackFull;
         spsProfileEntryAddress(p, 0, temp, &stackFull);
 
         storePtr(ImmWord(str),    Address(temp, ProfileEntry::offsetOfString()));
         storePtr(ImmGCPtr(s),     Address(temp, ProfileEntry::offsetOfScript()));
-        storePtr(ImmWord((void*) NULL),
-                 Address(temp, ProfileEntry::offsetOfStackAddress()));
-        store32(Imm32(ProfileEntry::NullPCIndex),
-                Address(temp, ProfileEntry::offsetOfPCIdx()));
+        storePtr(ImmWord((void*) NULL), Address(temp, ProfileEntry::offsetOfStackAddress()));
+        store32(Imm32(ProfileEntry::NullPCIndex), Address(temp, ProfileEntry::offsetOfPCIdx()));
+
+        /* Always increment the stack size, whether or not we actually pushed. */
+        bind(&stackFull);
+        movePtr(ImmWord(p->sizePointer()), temp);
+        add32(Imm32(1), Address(temp, 0));
+    }
+
+    void spsPushFrame(SPSProfiler *p, const Address &str, const Address &script,
+                      Register temp, Register temp2)
+    {
+        Label stackFull;
+        spsProfileEntryAddress(p, 0, temp, &stackFull);
+
+        loadPtr(str, temp2);
+        storePtr(temp2, Address(temp, ProfileEntry::offsetOfString()));
+
+        loadPtr(script, temp2);
+        storePtr(temp2, Address(temp, ProfileEntry::offsetOfScript()));
+
+        storePtr(ImmWord((void*) 0), Address(temp, ProfileEntry::offsetOfStackAddress()));
+
+        // Store 0 for PCIdx because that's what interpreter does.
+        // (See Probes::enterScript, which calls spsProfiler.enter, which pushes an entry
+        //  with 0 pcIdx).
+        store32(Imm32(0), Address(temp, ProfileEntry::offsetOfPCIdx()));
 
         /* Always increment the stack size, whether or not we actually pushed. */
         bind(&stackFull);
@@ -725,8 +803,21 @@ class MacroAssembler : public MacroAssemblerSpecific
         add32(Imm32(-1), Address(temp, 0));
     }
 
+    void loadBaselineOrIonCode(Register script, Register scratch, Label *failure);
+
+    void loadBaselineFramePtr(Register framePtr, Register dest);
+
+    void pushBaselineFramePtr(Register framePtr, Register scratch) {
+        loadBaselineFramePtr(framePtr, scratch);
+        push(scratch);
+    }
+
     void printf(const char *output);
     void printf(const char *output, Register value);
+
+    void copyMem(Register copyFrom, Register copyEnd, Register copyTo, Register temp);
+
+    void convertInt32ValueToDouble(const Address &address, Register scratch, Label *done);
 };
 
 static inline Assembler::DoubleCondition
@@ -750,6 +841,55 @@ JSOpToDoubleCondition(JSOp op)
       default:
         JS_NOT_REACHED("Unexpected comparison operation");
         return Assembler::DoubleEqual;
+    }
+}
+
+// Note: the op may have been inverted during lowering (to put constants in a
+// position where they can be immediates), so it is important to use the
+// lir->jsop() instead of the mir->jsop() when it is present.
+static inline Assembler::Condition
+JSOpToCondition(JSOp op, bool isSigned)
+{
+    if (isSigned) {
+        switch (op) {
+          case JSOP_EQ:
+          case JSOP_STRICTEQ:
+            return Assembler::Equal;
+          case JSOP_NE:
+          case JSOP_STRICTNE:
+            return Assembler::NotEqual;
+          case JSOP_LT:
+            return Assembler::LessThan;
+          case JSOP_LE:
+            return Assembler::LessThanOrEqual;
+          case JSOP_GT:
+            return Assembler::GreaterThan;
+          case JSOP_GE:
+            return Assembler::GreaterThanOrEqual;
+          default:
+            JS_NOT_REACHED("Unrecognized comparison operation");
+            return Assembler::Equal;
+        }
+    } else {
+        switch (op) {
+          case JSOP_EQ:
+          case JSOP_STRICTEQ:
+            return Assembler::Equal;
+          case JSOP_NE:
+          case JSOP_STRICTNE:
+            return Assembler::NotEqual;
+          case JSOP_LT:
+            return Assembler::Below;
+          case JSOP_LE:
+            return Assembler::BelowOrEqual;
+          case JSOP_GT:
+            return Assembler::Above;
+          case JSOP_GE:
+            return Assembler::AboveOrEqual;
+          default:
+            JS_NOT_REACHED("Unrecognized comparison operation");
+            return Assembler::Equal;
+        }
     }
 }
 

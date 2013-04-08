@@ -34,6 +34,7 @@
 
 #include "base/basictypes.h"
 #include "base/cpu.h"
+#include "mozilla/Assertions.h"
 #include "skia/SkTypes.h"
 
 // avoid confusion with Mac OS X's math library (Carbon)
@@ -73,7 +74,8 @@ class ConvolutionFilter1D {
     // The cast relies on Fixed being a short, implying that on
     // the platforms we care about all (16) bits will fit into
     // the mantissa of a (32-bit) float.
-    COMPILE_ASSERT(sizeof(Fixed) == 2, fixed_type_should_fit_in_float_mantissa);
+    MOZ_STATIC_ASSERT(sizeof(Fixed) == 2,
+                      "fixed type should fit in float mantissa");
     float raw = static_cast<float>(x);
     return ldexpf(raw, -kShiftBits);
   }

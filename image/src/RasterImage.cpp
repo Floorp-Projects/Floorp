@@ -385,6 +385,7 @@ RasterImage::RasterImage(imgStatusTracker* aStatusTracker,
   ImageResource(aStatusTracker, aURI), // invoke superclass's constructor
   mSize(0,0),
   mFrameDecodeFlags(DECODE_FLAGS_DEFAULT),
+  mMultipartDecodedFrame(nullptr),
   mAnim(nullptr),
   mLoopCount(-1),
   mLockCount(0),
@@ -458,6 +459,8 @@ RasterImage::~RasterImage()
   for (unsigned int i = 0; i < mFrames.Length(); ++i)
     delete mFrames[i];
 
+  delete mMultipartDecodedFrame;
+
   // Total statistics
   num_containers--;
   total_source_bytes -= mSourceData.Length();
@@ -508,14 +511,6 @@ RasterImage::Init(const char* aMimeType,
   if (mDiscardable) {
     num_discardable_containers++;
     discardable_source_bytes += mSourceData.Length();
-  }
-
-  // If we're being called from ExtractFrame (used by borderimage),
-  // we don't actually do any decoding. Bail early.
-  // XXX - This should be removed when we fix borderimage
-  if (mSourceDataMimeType.Length() == 0) {
-    mInitialized = true;
-    return NS_OK;
   }
 
   // Instantiate the decoder
@@ -692,85 +687,6 @@ RasterImage::RequestRefresh(const mozilla::TimeStamp& aTime)
 }
 
 //******************************************************************************
-/* [noscript] imgIContainer extractFrame(uint32_t aWhichFrame,
- *                                       [const] in nsIntRect aRegion,
- *                                       in uint32_t aFlags); */
-NS_IMETHODIMP
-RasterImage::ExtractFrame(uint32_t aWhichFrame,
-                          const nsIntRect &aRegion,
-                          uint32_t aFlags,
-                          imgIContainer **_retval)
-{
-  NS_ENSURE_ARG_POINTER(_retval);
-
-  nsresult rv;
-
-  if (aWhichFrame > FRAME_MAX_VALUE)
-    return NS_ERROR_INVALID_ARG;
-
-  if (mError)
-    return NS_ERROR_FAILURE;
-
-  // Disallowed in the API
-  if (mInDecoder && (aFlags & imgIContainer::FLAG_SYNC_DECODE))
-    return NS_ERROR_FAILURE;
-
-  // Make a new container. This should switch to another class with bug 505959.
-  nsRefPtr<RasterImage> img(new RasterImage());
-
-  // We don't actually have a mimetype in this case. The empty string tells the
-  // init routine not to try to instantiate a decoder. This should be fixed in
-  // bug 505959.
-  img->Init("", INIT_FLAG_NONE);
-  img->SetSize(aRegion.width, aRegion.height);
-  img->mDecoded = true; // Also, we need to mark the image as decoded
-  img->mHasBeenDecoded = true;
-  img->mFrameDecodeFlags = aFlags & DECODE_FLAGS_MASK;
-
-  if (!ApplyDecodeFlags(aFlags))
-    return NS_ERROR_NOT_AVAILABLE;
-
-  // If a synchronous decode was requested, do it
-  if (aFlags & FLAG_SYNC_DECODE) {
-    rv = SyncDecode();
-    CONTAINER_ENSURE_SUCCESS(rv);
-  }
-
-  // Get the frame. If it's not there, it's probably the caller's fault for
-  // not waiting for the data to be loaded from the network or not passing
-  // FLAG_SYNC_DECODE
-  uint32_t frameIndex = (aWhichFrame == FRAME_FIRST) ?
-                        0 : GetCurrentImgFrameIndex();
-  imgFrame *frame = GetDrawableImgFrame(frameIndex);
-  if (!frame) {
-    *_retval = nullptr;
-    return NS_ERROR_FAILURE;
-  }
-
-  // The frame can be smaller than the image. We want to extract only the part
-  // of the frame that actually exists.
-  nsIntRect framerect = frame->GetRect();
-  framerect.IntersectRect(framerect, aRegion);
-
-  if (framerect.IsEmpty())
-    return NS_ERROR_NOT_AVAILABLE;
-
-  nsAutoPtr<imgFrame> subframe;
-  rv = frame->Extract(framerect, getter_Transfers(subframe));
-  if (NS_FAILED(rv))
-    return rv;
-
-  img->mFrames.AppendElement(subframe.forget());
-
-  img->mStatusTracker->RecordLoaded();
-  img->mStatusTracker->RecordDecoded();
-
-  *_retval = img.forget().get();
-
-  return NS_OK;
-}
-
-//******************************************************************************
 /* readonly attribute int32_t width; */
 NS_IMETHODIMP
 RasterImage::GetWidth(int32_t *aWidth)
@@ -869,7 +785,18 @@ RasterImage::GetImgFrame(uint32_t framenum)
 imgFrame*
 RasterImage::GetDrawableImgFrame(uint32_t framenum)
 {
-  imgFrame *frame = GetImgFrame(framenum);
+  imgFrame* frame = nullptr;
+
+  if (mMultipart && framenum == GetCurrentImgFrameIndex()) {
+    // In the multipart case we prefer to use mMultipartDecodedFrame, which is
+    // the most recent one we completely decoded, rather than display the real
+    // current frame and risk severe tearing.
+    frame = mMultipartDecodedFrame;
+  }
+
+  if (!frame) {
+    frame = GetImgFrame(framenum);
+  }
 
   // We will return a paletted frame if it's not marked as compositing failed
   // so we can catch crashes for reasons we haven't investigated.
@@ -1518,22 +1445,6 @@ RasterImage::EnsureFrame(uint32_t aFramenum, int32_t aX, int32_t aY,
                      aFrame);
 }
 
-void
-RasterImage::FrameUpdated(uint32_t aFrameNum, nsIntRect &aUpdatedRect)
-{
-  NS_ABORT_IF_FALSE(aFrameNum < mFrames.Length(), "Invalid frame index!");
-
-  imgFrame *frame = GetImgFrameNoDecode(aFrameNum);
-  NS_ABORT_IF_FALSE(frame, "Calling FrameUpdated on frame that doesn't exist!");
-
-  frame->ImageUpdated(aUpdatedRect);
-
-  if (aFrameNum == GetCurrentImgFrameIndex() &&
-      !IsInUpdateImageContainer()) {
-    mImageContainer = nullptr;
-  }
-}
-
 nsresult
 RasterImage::SetFrameAsNonPremult(uint32_t aFrameNum, bool aIsNonPremult)
 {
@@ -1585,6 +1496,25 @@ RasterImage::DecodingComplete()
   if ((mFrames.Length() == 1) && !mMultipart) {
     rv = mFrames[0]->Optimize();
     NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Double-buffer our frame in the multipart case, since we'll start decoding
+  // into mFrames again immediately and this produces severe tearing.
+  if (mMultipart) {
+    if (mFrames.Length() == 1) {
+      imgFrame* swapFrame = mMultipartDecodedFrame;
+      mMultipartDecodedFrame = GetImgFrameNoDecode(GetCurrentFrameIndex());
+      mFrames.Clear();
+      if (swapFrame) {
+        mFrames.AppendElement(swapFrame);
+      }
+    } else {
+      // Don't double buffer for animated multipart images. It entails more
+      // complexity and it's not really needed since we already are smart about
+      // not displaying the still-decoding frame of an animated image. We may
+      // have already stored an extra frame, though, so we'll release it here.
+      delete mMultipartDecodedFrame;
+    }
   }
 
   return NS_OK;
@@ -2489,6 +2419,10 @@ RasterImage::Discard(bool force)
   mScaleResult.status = SCALE_INVALID;
   mScaleResult.frame = nullptr;
 
+  // Clear the last decoded multipart frame.
+  delete mMultipartDecodedFrame;
+  mMultipartDecodedFrame = nullptr;
+
   // Flag that we no longer have decoded frames for this image
   mDecoded = false;
 
@@ -2753,11 +2687,10 @@ RasterImage::WriteToDecoder(const char *aBuffer, uint32_t aCount)
 }
 
 // This function is called in situations where it's clear that we want the
-// frames in decoded form (Draw, GetFrame, CopyFrame, ExtractFrame, etc).
-// If we're completely decoded, this method resets the discard timer (if
-// we're discardable), since wanting the frames now is a good indicator of
-// wanting them again soon. If we're not decoded, this method kicks off
-// asynchronous decoding to generate the frames.
+// frames in decoded form (Draw, GetFrame, etc).  If we're completely decoded,
+// this method resets the discard timer (if we're discardable), since wanting
+// the frames now is a good indicator of wanting them again soon. If we're not
+// decoded, this method kicks off asynchronous decoding to generate the frames.
 nsresult
 RasterImage::WantDecodedFrames()
 {
@@ -2833,7 +2766,7 @@ RasterImage::RequestDecodeCore(RequestDecodeType aDecodeType)
     // data, so signal that we want a full decode and give up for now.
     if (!mHasSize) {
       mWantFullDecode = true;
-      return NS_ERROR_NOT_AVAILABLE;
+      return NS_OK;
     }
   }
 
@@ -3211,7 +3144,7 @@ RasterImage::Draw(gfxContext *aContext,
 
   uint32_t frameIndex = aWhichFrame == FRAME_FIRST ? 0
                                                    : GetCurrentImgFrameIndex();
-  imgFrame *frame = GetDrawableImgFrame(frameIndex);
+  imgFrame* frame = GetDrawableImgFrame(frameIndex);
   if (!frame) {
     return NS_OK; // Getting the frame (above) touches the image and kicks off decoding
   }
@@ -3343,35 +3276,38 @@ bool
 RasterImage::IsDecodeFinished()
 {
   // Precondition
+  mDecodingMutex.AssertCurrentThreadOwns();
   NS_ABORT_IF_FALSE(mDecoder, "Can't call IsDecodeFinished() without decoder!");
+  MOZ_ASSERT(mDecodeRequest);
 
-  // Assume it's not finished
-  bool decodeFinished = false;
-
-  // The decode is complete if we got what we wanted...
+  // The decode is complete if we got what we wanted.
   if (mDecoder->IsSizeDecode()) {
-    if (mHasSize)
-      decodeFinished = true;
+    if (mDecoder->HasSize()) {
+      return true;
+    }
+  } else if (mDecoder->GetDecodeDone()) {
+    return true;
   }
-  else {
-    if (mDecoded)
-      decodeFinished = true;
+  
+  // If the decoder returned because it needed a new frame and we haven't
+  // written to it since then, the decoder may be storing data that it hasn't
+  // decoded yet.
+  if (mDecoder->NeedsNewFrame() || mDecodeRequest->mAllocatedNewFrame) {
+    return false;
   }
-
-  // ... but if we're waiting for a new frame, we're not done.
-  if (mDecoder && mDecoder->NeedsNewFrame())
-    decodeFinished = false;
 
   // Otherwise, if we have all the source data and wrote all the source data,
   // we're done.
   //
-  // (NB - This can be distinct from the above case even for non-erroneous
-  // images because the decoder might not call DecodingComplete() until we
-  // call Close() in ShutdownDecoder())
-  else if (mHasSourceData && (mBytesDecoded == mSourceData.Length()))
-    decodeFinished = true;
+  // (NB - This can be the case even for non-erroneous images because
+  // Decoder::GetDecodeDone() might not return true until after we call
+  // Decoder::Finish() in ShutdownDecoder())
+  if (mHasSourceData && (mBytesDecoded == mSourceData.Length())) {
+    return true;
+  }
 
-  return decodeFinished;
+  // If we get here, assume it's not finished.
+  return false;
 }
 
 // Indempotent error flagging routine. If a decoder is open, shuts it down.
@@ -3487,8 +3423,7 @@ RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_D
 
     // If the decode finished, or we're specifically being told to shut down,
     // tell the image and shut down the decoder.
-    if (image->mDecoder->GetDecodeDone() || image->IsDecodeFinished() ||
-        aIntent != eShutdownIntent_Done) {
+    if (image->IsDecodeFinished() || aIntent != eShutdownIntent_Done) {
       done = true;
 
       // Hold on to a reference to the decoder until we're done with it
@@ -3539,7 +3474,8 @@ RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_D
     }
 
     // If we were a size decode and a full decode was requested, now's the time.
-    if (NS_SUCCEEDED(rv) && done && wasSize && image->mWantFullDecode) {
+    if (NS_SUCCEEDED(rv) && aIntent != eShutdownIntent_Error && done &&
+        wasSize && image->mWantFullDecode) {
       image->mWantFullDecode = false;
 
       // If we're not meant to be storing source data and we just got the size,
@@ -3573,6 +3509,8 @@ RasterImage::DecodePool::Singleton()
 }
 
 RasterImage::DecodePool::DecodePool()
+  : mThreadPoolMutex("Thread Pool")
+  , mShuttingDown(false)
 {
   if (gMultithreadedDecoding) {
     mThreadPool = do_CreateInstance(NS_THREADPOOL_CONTRACTID);
@@ -3599,13 +3537,21 @@ RasterImage::DecodePool::~DecodePool()
 
 NS_IMETHODIMP
 RasterImage::DecodePool::Observe(nsISupports *subject, const char *topic,
-                                   const PRUnichar *data)
+                                 const PRUnichar *data)
 {
   NS_ASSERTION(strcmp(topic, "xpcom-shutdown-threads") == 0, "oops");
 
-  if (mThreadPool) {
-    mThreadPool->Shutdown();
+  nsCOMPtr<nsIThreadPool> threadPool;
+
+  {
+    MutexAutoLock threadPoolLock(mThreadPoolMutex);
+    threadPool = mThreadPool;
     mThreadPool = nullptr;
+    mShuttingDown = true;
+  }
+
+  if (threadPool) {
+    threadPool->Shutdown();
   }
 
   return NS_OK;
@@ -3615,7 +3561,6 @@ void
 RasterImage::DecodePool::RequestDecode(RasterImage* aImg)
 {
   MOZ_ASSERT(aImg->mDecoder);
-  MOZ_ASSERT(NS_IsMainThread());
   aImg->mDecodingMutex.AssertCurrentThreadOwns();
 
   // If we're currently waiting on a new frame for this image, we can't do any
@@ -3634,7 +3579,10 @@ RasterImage::DecodePool::RequestDecode(RasterImage* aImg)
 
     aImg->mDecodeRequest->mRequestStatus = DecodeRequest::REQUEST_PENDING;
     nsRefPtr<DecodeJob> job = new DecodeJob(aImg->mDecodeRequest, aImg);
-    if (!gMultithreadedDecoding || !mThreadPool) {
+    MutexAutoLock threadPoolLock(mThreadPoolMutex);
+    if (mShuttingDown) {
+      // Just drop the job on the floor; we won't need it.
+    } else if (!gMultithreadedDecoding || !mThreadPool) {
       NS_DispatchToMainThread(job);
     } else {
       mThreadPool->Dispatch(job, nsIEventTarget::DISPATCH_NORMAL);
@@ -3699,7 +3647,7 @@ RasterImage::DecodePool::DecodeJob::Run()
   }
 
   // If someone came along and synchronously decoded us, there's nothing for us to do.
-  if (!mRequest->mAllocatedNewFrame && (!mImage->mDecoder || mImage->IsDecodeFinished())) {
+  if (!mImage->mDecoder || mImage->IsDecodeFinished()) {
     DecodeDoneWorker::NotifyFinishedSomeDecoding(mImage, mRequest);
     return NS_OK;
   }
@@ -3739,7 +3687,8 @@ RasterImage::DecodePool::DecodeJob::Run()
   else if (mImage->mDecoder &&
            !mImage->mError &&
            !mImage->IsDecodeFinished() &&
-           bytesDecoded < mRequest->mBytesToDecode) {
+           bytesDecoded < mRequest->mBytesToDecode &&
+           bytesDecoded > 0) {
     DecodePool::Singleton()->RequestDecode(mImage);
   } else {
     // Nothing more for us to do - let everyone know what happened.
@@ -3921,11 +3870,6 @@ RasterImage::DecodeDoneWorker::Run()
   MutexAutoLock lock(mImage->mDecodingMutex);
 
   mImage->FinishedSomeDecoding(eShutdownIntent_Done, mRequest);
-
-  // If we didn't finish decoding yet, try again
-  if (mImage->mDecoder) {
-    DecodePool::Singleton()->RequestDecode(mImage);
-  }
 
   return NS_OK;
 }

@@ -215,13 +215,43 @@ void TestEventRemoval()
   is(timeline.GetEventCount(), 1u, "Should successfully delete two events");
 }
 
-void TestBeforeFirstEvent()
+void TestBeforeFirstEventSetValue()
 {
   Timeline timeline(10.0f);
 
   ErrorResultMock rv;
 
   timeline.SetValueAtTime(20.0f, 1.0, rv);
+  is(timeline.GetValueAtTime(0.5), 10.0f, "Retrun the default value before the first event");
+}
+
+void TestBeforeFirstEventSetTarget()
+{
+  Timeline timeline(10.0f);
+
+  ErrorResultMock rv;
+
+  timeline.SetTargetAtTime(20.0f, 1.0, 5.0, rv);
+  is(timeline.GetValueAtTime(0.5), 10.0f, "Retrun the default value before the first event");
+}
+
+void TestBeforeFirstEventLinearRamp()
+{
+  Timeline timeline(10.0f);
+
+  ErrorResultMock rv;
+
+  timeline.LinearRampToValueAtTime(20.0f, 1.0, rv);
+  is(timeline.GetValueAtTime(0.5), 10.0f, "Retrun the default value before the first event");
+}
+
+void TestBeforeFirstEventExponentialRamp()
+{
+  Timeline timeline(10.0f);
+
+  ErrorResultMock rv;
+
+  timeline.ExponentialRampToValueAtTime(20.0f, 1.0, rv);
   is(timeline.GetValueAtTime(0.5), 10.0f, "Retrun the default value before the first event");
 }
 
@@ -361,7 +391,10 @@ int main()
   TestInvalidEvents();
   TestEventReplacement();
   TestEventRemoval();
-  TestBeforeFirstEvent();
+  TestBeforeFirstEventSetValue();
+  TestBeforeFirstEventSetTarget();
+  TestBeforeFirstEventLinearRamp();
+  TestBeforeFirstEventExponentialRamp();
   TestAfterLastValueEvent();
   TestAfterLastTargetValueEvent();
   TestAfterLastTargetValueEventWithValueSet();

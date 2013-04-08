@@ -183,7 +183,10 @@ sub get_manager_address
     sleep(1);
 
     my $log_data = `cat $log_file`;
-    $log_data =~ /Listening on ([\.\:0-9]*)/ or die;
+    my ($port) = $log_data =~ /Listening on ([\.\:0-9]*)/
+	or die "no manager found";
+    print OUT "Connecting to manager on port $port\n";
+    print "Connecting to manager on port $port.\n";
     return $1;
 }
 

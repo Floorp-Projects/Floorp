@@ -70,7 +70,7 @@ function test() {
   }
 
   function testShrink() {
-    Services.obs.removeObserver(testShrink, "StyleInspector-populated", false);
+    Services.obs.removeObserver(testShrink, "StyleInspector-populated");
 
     computedView = inspector.sidebar.getWindowForTab("computedview").computedview.view;
     ok(computedView, "We have access to the Computed View object");

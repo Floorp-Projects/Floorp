@@ -72,6 +72,8 @@ using namespace js;
 using namespace js::gc;
 
 using mozilla::DebugOnly;
+using mozilla::PodArrayZero;
+using mozilla::PodZero;
 using mozilla::PointerRangeSize;
 
 bool
@@ -168,7 +170,7 @@ JSRuntime::triggerOperationCallback()
      * into a weird state where interrupt is stuck at 0 but ionStackLimit is
      * MAXADDR.
      */
-    mainThread.ionStackLimit = -1;
+    mainThread.setIonStackLimit(-1);
 
     /*
      * Use JS_ATOMIC_SET in the hope that it ensures the write will become
@@ -1152,12 +1154,6 @@ js_HandleExecutionInterrupt(JSContext *cx)
     if (cx->runtime->interrupt)
         result = js_InvokeOperationCallback(cx) && result;
     return result;
-}
-
-jsbytecode*
-js_GetCurrentBytecodePC(JSContext* cx)
-{
-    return cx->hasfp() ? cx->regs().pc : NULL;
 }
 
 JSContext::JSContext(JSRuntime *rt)

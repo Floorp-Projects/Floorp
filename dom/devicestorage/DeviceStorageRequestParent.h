@@ -211,9 +211,11 @@ private:
  class PostAvailableResultEvent : public CancelableRunnable
  {
     public:
-      PostAvailableResultEvent(DeviceStorageRequestParent* aParent);
+      PostAvailableResultEvent(DeviceStorageRequestParent* aParent, const nsAString& aPath);
       virtual ~PostAvailableResultEvent();
       virtual nsresult CancelableRun();
+    private:
+      nsString mPath;
  };
 
 protected:

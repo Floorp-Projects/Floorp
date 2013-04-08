@@ -25,7 +25,7 @@ using namespace mozilla::a11y;
 STDMETHODIMP
 ia2AccessibleTableCell::QueryInterface(REFIID iid, void** ppv)
 {
-  *ppv = NULL;
+  *ppv = nullptr;
 
   if (IID_IAccessibleTableCell == iid) {
     *ppv = static_cast<IAccessibleTableCell*>(this);
@@ -44,7 +44,7 @@ ia2AccessibleTableCell::get_table(IUnknown** aTable)
 {
   A11Y_TRYBLOCK_BEGIN
 
-  *aTable = NULL;
+  *aTable = nullptr;
   if (!mTableCell)
     return CO_E_OBJNOTCONNECTED;
 
@@ -82,7 +82,7 @@ ia2AccessibleTableCell::get_columnHeaderCells(IUnknown*** aCellAccessibles,
 {
   A11Y_TRYBLOCK_BEGIN
 
-  *aCellAccessibles = NULL;
+  *aCellAccessibles = nullptr;
   *aNColumnHeaderCells = 0;
   if (!mTableCell)
     return CO_E_OBJNOTCONNECTED;
@@ -145,7 +145,7 @@ ia2AccessibleTableCell::get_rowHeaderCells(IUnknown*** aCellAccessibles,
 {
   A11Y_TRYBLOCK_BEGIN
 
-  *aCellAccessibles = NULL;
+  *aCellAccessibles = nullptr;
   *aNRowHeaderCells = 0;
   if (!mTableCell)
     return CO_E_OBJNOTCONNECTED;

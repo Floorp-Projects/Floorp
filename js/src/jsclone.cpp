@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Endian.h"
 #include "mozilla/FloatingPoint.h"
 
 #include "jsclone.h"
@@ -17,6 +18,8 @@
 #include "vm/StringObject-inl.h"
 
 using namespace js;
+using mozilla::LittleEndian;
+using mozilla::NativeEndian;
 
 enum StructuredDataType {
     /* Structured data types provided by the engine */
@@ -74,52 +77,6 @@ JS_STATIC_ASSERT(SCTAG_END_OF_BUILTIN_TYPES <= JS_SCTAG_USER_MIN);
 JS_STATIC_ASSERT(JS_SCTAG_USER_MIN <= JS_SCTAG_USER_MAX);
 JS_STATIC_ASSERT(TypedArray::TYPE_INT8 == 0);
 
-static uint8_t
-SwapBytes(uint8_t u)
-{
-    return u;
-}
-
-static uint16_t
-SwapBytes(uint16_t u)
-{
-#ifdef IS_BIG_ENDIAN
-    return ((u & 0x00ff) << 8) | ((u & 0xff00) >> 8);
-#else
-    return u;
-#endif
-}
-
-static uint32_t
-SwapBytes(uint32_t u)
-{
-#ifdef IS_BIG_ENDIAN
-    return ((u & 0x000000ffU) << 24) |
-           ((u & 0x0000ff00U) << 8) |
-           ((u & 0x00ff0000U) >> 8) |
-           ((u & 0xff000000U) >> 24);
-#else
-    return u;
-#endif
-}
-
-static uint64_t
-SwapBytes(uint64_t u)
-{
-#ifdef IS_BIG_ENDIAN
-    return ((u & 0x00000000000000ffLLU) << 56) |
-           ((u & 0x000000000000ff00LLU) << 40) |
-           ((u & 0x0000000000ff0000LLU) << 24) |
-           ((u & 0x00000000ff000000LLU) << 8) |
-           ((u & 0x000000ff00000000LLU) >> 8) |
-           ((u & 0x0000ff0000000000LLU) >> 24) |
-           ((u & 0x00ff000000000000LLU) >> 40) |
-           ((u & 0xff00000000000000LLU) >> 56);
-#else
-    return u;
-#endif
-}
-
 bool
 js::WriteStructuredClone(JSContext *cx, HandleValue v, uint64_t **bufp, size_t *nbytesp,
                          const JSStructuredCloneCallbacks *cb, void *cbClosure,
@@ -149,15 +106,15 @@ js::ClearStructuredClone(const uint64_t *data, size_t nbytes)
     const uint64_t *point = data;
     const uint64_t *end = data + nbytes / 8;
 
-    uint64_t u = SwapBytes(*point++);
+    uint64_t u = LittleEndian::readUint64(point++);
     uint32_t tag = uint32_t(u >> 32);
     if (tag == SCTAG_TRANSFER_MAP_HEADER) {
         if ((TransferableMapHeader)uint32_t(u) == SCTAG_TM_NOT_MARKED) {
             while (point != end) {
-                uint64_t u = SwapBytes(*point++);
+                uint64_t u = LittleEndian::readUint64(point++);
                 uint32_t tag = uint32_t(u >> 32);
                 if (tag == SCTAG_TRANSFER_MAP) {
-                    u = SwapBytes(*point++);
+                    u = LittleEndian::readUint64(point++);
                     js_free(reinterpret_cast<void*>(u));
                 }
             }
@@ -174,7 +131,7 @@ js::StructuredCloneHasTransferObjects(const uint64_t *data, size_t nbytes, bool 
     *hasTransferable = false;
 
     if (data) {
-        uint64_t u = SwapBytes(*data);
+        uint64_t u = LittleEndian::readUint64(data);
         uint32_t tag = uint32_t(u >> 32);
         if (tag == SCTAG_TRANSFER_MAP_HEADER) {
             *hasTransferable = true;
@@ -211,7 +168,7 @@ SCInput::read(uint64_t *p)
         *p = 0;  /* initialize to shut GCC up */
         return eof();
     }
-    *p = SwapBytes(*point++);
+    *p = LittleEndian::readUint64(point++);
     return true;
 }
 
@@ -232,7 +189,7 @@ SCInput::get(uint64_t *p)
 {
     if (point == end)
         return eof();
-    *p = SwapBytes(*point);
+    *p = LittleEndian::readUint64(point);
     return true;
 }
 
@@ -253,7 +210,7 @@ SCInput::replace(uint64_t u)
 {
     if (point == end)
        return eof();
-    *point = SwapBytes(u);
+    LittleEndian::writeUint64(point, u);
     return true;
 }
 
@@ -286,6 +243,20 @@ SCInput::readDouble(double *p)
     return true;
 }
 
+template <typename T>
+static void
+copyAndSwapFromLittleEndian(T *dest, const void *src, size_t nelems)
+{
+    NativeEndian::copyAndSwapFromLittleEndian(dest, src, nelems);
+}
+
+template <>
+void
+copyAndSwapFromLittleEndian(uint8_t *dest, const void *src, size_t nelems)
+{
+    memcpy(dest, src, nelems);
+}
+
 template <class T>
 bool
 SCInput::readArray(T *p, size_t nelems)
@@ -300,14 +271,7 @@ SCInput::readArray(T *p, size_t nelems)
     if (nelems + sizeof(uint64_t) / sizeof(T) - 1 < nelems || nwords > size_t(end - point))
         return eof();
 
-    if (sizeof(T) == 1) {
-        js_memcpy(p, point, nelems);
-    } else {
-        const T *q = (const T *) point;
-        const T *qend = q + nelems;
-        while (q != qend)
-            *p++ = ::SwapBytes(*q++);
-    }
+    copyAndSwapFromLittleEndian(p, point, nelems);
     point += nwords;
     return true;
 }
@@ -341,7 +305,7 @@ SCOutput::SCOutput(JSContext *cx) : cx(cx), buf(cx) {}
 bool
 SCOutput::write(uint64_t u)
 {
-    return buf.append(SwapBytes(u));
+    return buf.append(NativeEndian::swapToLittleEndian(u));
 }
 
 bool
@@ -393,6 +357,20 @@ SCOutput::writeDouble(double d)
     return write(ReinterpretDoubleAsUInt64(CanonicalizeNan(d)));
 }
 
+template <typename T>
+static void
+copyAndSwapToLittleEndian(void *dest, const T *src, size_t nelems)
+{
+    NativeEndian::copyAndSwapToLittleEndian(dest, src, nelems);
+}
+
+template <>
+void
+copyAndSwapToLittleEndian(void *dest, const uint8_t *src, size_t nelems)
+{
+    memcpy(dest, src, nelems);
+}
+
 template <class T>
 bool
 SCOutput::writeArray(const T *p, size_t nelems)
@@ -415,13 +393,7 @@ SCOutput::writeArray(const T *p, size_t nelems)
     buf.back() = 0;  /* zero-pad to an 8-byte boundary */
 
     T *q = (T *) &buf[start];
-    if (sizeof(T) == 1) {
-        js_memcpy(q, p, nelems);
-    } else {
-        const T *pend = p + nelems;
-        while (p != pend)
-            *q++ = ::SwapBytes(*p++);
-    }
+    copyAndSwapToLittleEndian(q, p, nelems);
     return true;
 }
 

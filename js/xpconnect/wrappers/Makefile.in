@@ -12,6 +12,9 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME	= xpcwrappers_s
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
+EXPORTS = \
+  WrapperFactory.h \
+  $(NULL)
 
 CPPSRCS = \
   AccessCheck.cpp \

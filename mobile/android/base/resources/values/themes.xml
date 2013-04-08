@@ -40,9 +40,7 @@
         <item name="android:windowBackground">@color/background_normal</item>
     </style>
 
-    <style name="Gecko.Light.AwesomeBar">
-        <item name="android:windowBackground">@null</item>
-    </style>
+    <style name="Gecko.Light.AwesomeBar"/>
     
     <style name="Gecko.TitleBar.Preferences">
         <item name="android:windowBackground">@color/background_normal</item>

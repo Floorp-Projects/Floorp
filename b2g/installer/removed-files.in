@@ -11,6 +11,7 @@ run-mozilla.sh
 defaults/preferences/services-sync.js
 defaults/preferences/healthreport-prefs.js
 components/dom_sms.xpt
+components/dom_webspeech.xpt
 #ifdef MOZ_FOLD_LIBS
 @DLL_PREFIX@nspr4@DLL_SUFFIX@
 @DLL_PREFIX@plds4@DLL_SUFFIX@

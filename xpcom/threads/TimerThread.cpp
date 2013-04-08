@@ -273,7 +273,7 @@ NS_IMETHODIMP TimerThread::Run()
         double microseconds = (timeout - now).ToMilliseconds()*1000;
         if (microseconds < halfMicrosecondsIntervalResolution)
           goto next; // round down; execute event now
-        waitFor = PR_MicrosecondsToInterval(static_cast<PRUint32>(microseconds)); // Floor is accurate enough.
+        waitFor = PR_MicrosecondsToInterval(static_cast<uint32_t>(microseconds)); // Floor is accurate enough.
         if (waitFor == 0)
           waitFor = 1; // round up, wait the minimum time we can wait
       }

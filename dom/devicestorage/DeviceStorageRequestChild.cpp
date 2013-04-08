@@ -51,7 +51,7 @@ DeviceStorageRequestChild::Recv__delete__(const DeviceStorageResponseValue& aVal
 
     case DeviceStorageResponseValue::TSuccessResponse:
     {
-      jsval result = StringToJsval(mRequest->GetOwner(), mFile->mPath);
+      JS::Value result = StringToJsval(mRequest->GetOwner(), mFile->mPath);
       mRequest->FireSuccess(result);
       break;
     }
@@ -63,7 +63,8 @@ DeviceStorageRequestChild::Recv__delete__(const DeviceStorageResponseValue& aVal
       nsCOMPtr<nsIDOMBlob> blob = actor->GetBlob();
 
       nsCOMPtr<nsIDOMFile> file = do_QueryInterface(blob);
-      jsval result = InterfaceToJsval(mRequest->GetOwner(), file, &NS_GET_IID(nsIDOMFile));
+      JS::Value result = InterfaceToJsval(mRequest->GetOwner(), file,
+                                          &NS_GET_IID(nsIDOMFile));
       mRequest->FireSuccess(result);
       break;
     }
@@ -71,7 +72,7 @@ DeviceStorageRequestChild::Recv__delete__(const DeviceStorageResponseValue& aVal
     case DeviceStorageResponseValue::TFreeSpaceStorageResponse:
     {
       FreeSpaceStorageResponse r = aValue;
-      jsval result = JS_NumberValue(double(r.freeBytes()));
+      JS::Value result = JS_NumberValue(double(r.freeBytes()));
       mRequest->FireSuccess(result);
       break;
     }
@@ -79,7 +80,7 @@ DeviceStorageRequestChild::Recv__delete__(const DeviceStorageResponseValue& aVal
     case DeviceStorageResponseValue::TUsedSpaceStorageResponse:
     {
       UsedSpaceStorageResponse r = aValue;
-      jsval result = JS_NumberValue(double(r.usedBytes()));
+      JS::Value result = JS_NumberValue(double(r.usedBytes()));
       mRequest->FireSuccess(result);
       break;
     }
@@ -87,7 +88,7 @@ DeviceStorageRequestChild::Recv__delete__(const DeviceStorageResponseValue& aVal
     case DeviceStorageResponseValue::TAvailableStorageResponse:
     {
       AvailableStorageResponse r = aValue;
-      jsval result = StringToJsval(mRequest->GetOwner(), r.mountState());
+      JS::Value result = StringToJsval(mRequest->GetOwner(), r.mountState());
       mRequest->FireSuccess(result);
       break;
     }

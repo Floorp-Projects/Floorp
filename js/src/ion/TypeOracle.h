@@ -141,6 +141,9 @@ class TypeOracle
     virtual bool elementWriteNeedsBarrier(RawScript script, jsbytecode *pc) {
         return true;
     }
+    virtual bool elementWriteNeedsBarrier(types::StackTypeSet *obj) {
+        return true;
+    }
     virtual MIRType elementWrite(RawScript script, jsbytecode *pc) {
         return MIRType_None;
     }
@@ -238,10 +241,15 @@ class TypeInferenceOracle : public TypeOracle
     MIRType getMIRType(types::StackTypeSet *types);
     MIRType getMIRType(types::HeapTypeSet *types);
 
+    bool analyzeTypesForInlinableCallees(JSContext *cx, JSScript *script,
+                                         Vector<JSScript*> &seen);
+    bool analyzeTypesForInlinableCallees(JSContext *cx, types::StackTypeSet *calleeTypes,
+                                         Vector<JSScript*> &seen);
+
   public:
     TypeInferenceOracle() : cx(NULL), script_(NULL) {}
 
-    bool init(JSContext *cx, JSScript *script);
+    bool init(JSContext *cx, JSScript *script, bool inlinedCall);
 
     RawScript script() { return script_.get(); }
 
@@ -283,6 +291,7 @@ class TypeInferenceOracle : public TypeOracle
     bool propertyWriteCanSpecialize(RawScript script, jsbytecode *pc);
     bool propertyWriteNeedsBarrier(RawScript script, jsbytecode *pc, RawId id);
     bool elementWriteNeedsBarrier(RawScript script, jsbytecode *pc);
+    bool elementWriteNeedsBarrier(types::StackTypeSet *obj);
     MIRType elementWrite(RawScript script, jsbytecode *pc);
     bool canInlineCall(HandleScript caller, jsbytecode *pc);
     types::TypeBarrier *callArgsBarrier(HandleScript caller, jsbytecode *pc);
@@ -411,4 +420,3 @@ IsNullOrUndefined(MIRType type)
 } /* js */
 
 #endif // js_ion_type_oracle_h__
-

@@ -140,7 +140,7 @@ SmsManager::GetSegmentInfoForText(const nsAString& aText,
 
 nsresult
 SmsManager::Send(JSContext* aCx, JSObject* aGlobal, JSString* aNumber,
-                 const nsAString& aMessage, jsval* aRequest)
+                 const nsAString& aMessage, JS::Value* aRequest)
 {
   nsCOMPtr<nsISmsService> smsService = do_GetService(SMS_SERVICE_CONTRACTID);
   if (!smsService) {
@@ -167,7 +167,7 @@ SmsManager::Send(JSContext* aCx, JSObject* aGlobal, JSString* aNumber,
 }
 
 NS_IMETHODIMP
-SmsManager::Send(const jsval& aNumber, const nsAString& aMessage, jsval* aReturn)
+SmsManager::Send(const JS::Value& aNumber, const nsAString& aMessage, JS::Value* aReturn)
 {
   nsresult rv;
   nsIScriptContext* sc = GetContextForEventHandlers(&rv);
@@ -196,10 +196,10 @@ SmsManager::Send(const jsval& aNumber, const nsAString& aMessage, jsval* aReturn
   uint32_t size;
   JS_ALWAYS_TRUE(JS_GetArrayLength(cx, &numbers, &size));
 
-  jsval* requests = new jsval[size];
+  JS::Value* requests = new JS::Value[size];
 
   for (uint32_t i=0; i<size; ++i) {
-    jsval number;
+    JS::Value number;
     if (!JS_GetElement(cx, &numbers, i, &number)) {
       return NS_ERROR_INVALID_ARG;
     }
@@ -244,7 +244,7 @@ SmsManager::Delete(int32_t aId, nsIDOMMozSmsRequest** aRequest)
 }
 
 NS_IMETHODIMP
-SmsManager::Delete(const jsval& aParam, nsIDOMMozSmsRequest** aRequest)
+SmsManager::Delete(const JS::Value& aParam, nsIDOMMozSmsRequest** aRequest)
 {
   if (aParam.isInt32()) {
     return Delete(aParam.toInt32(), aRequest);

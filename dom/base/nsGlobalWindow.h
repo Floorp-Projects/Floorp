@@ -72,6 +72,10 @@
 #include "nsIDOMWindowB2G.h"
 #endif // MOZ_B2G
 
+#ifdef MOZ_WEBSPEECH
+#include "nsISpeechSynthesisGetter.h"
+#endif // MOZ_WEBSPEECH
+
 #define DEFAULT_HOME_PAGE "www.mozilla.org"
 #define PREF_BROWSER_STARTUP_HOMEPAGE "browser.startup.homepage"
 
@@ -119,6 +123,7 @@ namespace mozilla {
 namespace dom {
 class Navigator;
 class URL;
+class SpeechSynthesis;
 namespace indexedDB {
 class IDBFactory;
 } // namespace indexedDB
@@ -256,7 +261,6 @@ class nsGlobalWindow : public mozilla::dom::EventTarget,
                        public nsPIDOMWindow,
                        public nsIScriptGlobalObject,
                        public nsIDOMJSWindow,
-                       public nsIScriptObjectPrincipal,
                        public nsIDOMStorageIndexedDB,
                        public nsSupportsWeakReference,
                        public nsIInterfaceRequestor,
@@ -267,6 +271,9 @@ class nsGlobalWindow : public mozilla::dom::EventTarget,
 #ifdef MOZ_B2G
                      , public nsIDOMWindowB2G
 #endif // MOZ_B2G
+#ifdef MOZ_WEBSPEECH
+                     , public nsISpeechSynthesisGetter
+#endif // MOZ_WEBSPEECH
 {
 public:
   typedef mozilla::TimeStamp TimeStamp;
@@ -290,9 +297,11 @@ public:
     return EnsureInnerWindow() ? GetWrapper() : nullptr;
   }
 
+  // nsIGlobalJSObjectHolder
+  virtual JSObject *GetGlobalJSObject();
+
   // nsIScriptGlobalObject
   virtual nsIScriptContext *GetContext();
-  virtual JSObject *GetGlobalJSObject();
   JSObject *FastGetGlobalJSObject()
   {
     return mJSObject;
@@ -302,6 +311,7 @@ public:
 
   virtual nsIScriptContext *GetScriptContext();
 
+  void PoisonOuterWindowProxy(JSObject *aObject);
   virtual void OnFinalize(JSObject* aObject);
   virtual void SetScriptsEnabled(bool aEnabled, bool aFireTimeouts);
 
@@ -317,6 +327,11 @@ public:
   // nsIDOMWindowB2G
   NS_DECL_NSIDOMWINDOWB2G
 #endif // MOZ_B2G
+
+#ifdef MOZ_WEBSPEECH
+  // nsISpeechSynthesisGetter
+  NS_DECL_NSISPEECHSYNTHESISGETTER
+#endif // MOZ_WEBSPEECH
 
   // nsIDOMWindowPerformance
   NS_DECL_NSIDOMWINDOWPERFORMANCE
@@ -338,7 +353,7 @@ public:
   virtual NS_HIDDEN_(void) ActivateOrDeactivate(bool aActivate);
   virtual NS_HIDDEN_(void) SetActive(bool aActive);
   virtual NS_HIDDEN_(void) SetIsBackground(bool aIsBackground);
-  virtual NS_HIDDEN_(void) SetChromeEventHandler(nsIDOMEventTarget* aChromeEventHandler);
+  virtual NS_HIDDEN_(void) SetChromeEventHandler(mozilla::dom::EventTarget* aChromeEventHandler);
 
   virtual NS_HIDDEN_(void) SetInitialPrincipalToSubject();
 
@@ -400,12 +415,12 @@ public:
   static nsGlobalWindow *FromSupports(nsISupports *supports)
   {
     // Make sure this matches the casts we do in QueryInterface().
-    return (nsGlobalWindow *)(nsIDOMEventTarget *)supports;
+    return (nsGlobalWindow *)(mozilla::dom::EventTarget *)supports;
   }
   static nsISupports *ToSupports(nsGlobalWindow *win)
   {
     // Make sure this matches the casts we do in QueryInterface().
-    return (nsISupports *)(nsIDOMEventTarget *)win;
+    return (nsISupports *)(mozilla::dom::EventTarget *)win;
   }
   static nsGlobalWindow *FromWrapper(nsIXPConnectWrappedNative *wrapper)
   {
@@ -616,13 +631,13 @@ public:
   }
 
 #ifdef MOZ_GAMEPAD
-  void AddGamepad(PRUint32 aIndex, nsDOMGamepad* aGamepad);
-  void RemoveGamepad(PRUint32 aIndex);
-  already_AddRefed<nsDOMGamepad> GetGamepad(PRUint32 aIndex);
+  void AddGamepad(uint32_t aIndex, nsDOMGamepad* aGamepad);
+  void RemoveGamepad(uint32_t aIndex);
+  already_AddRefed<nsDOMGamepad> GetGamepad(uint32_t aIndex);
   void SetHasSeenGamepadInput(bool aHasSeen);
   bool HasSeenGamepadInput();
   void SyncGamepadState();
-  static PLDHashOperator EnumGamepadsForSync(const PRUint32& aKey,
+  static PLDHashOperator EnumGamepadsForSync(const uint32_t& aKey,
                                              nsDOMGamepad* aData,
                                              void* userArg);
 #endif
@@ -688,6 +703,10 @@ public:
 #undef BEFOREUNLOAD_EVENT
 #undef ERROR_EVENT
 #undef EVENT
+
+#ifdef MOZ_WEBSPEECH
+  mozilla::dom::SpeechSynthesis* GetSpeechSynthesisInternal();
+#endif
 
 protected:
   // Array of idle observers that are notified of idle events.
@@ -968,8 +987,10 @@ protected:
 
   void UpdateCanvasFocus(bool aFocusChanged, nsIContent* aNewContent);
 
-  already_AddRefed<nsPIWindowRoot> GetTopWindowRoot();
+public:
+  virtual already_AddRefed<nsPIWindowRoot> GetTopWindowRoot() MOZ_OVERRIDE;
 
+protected:
   static void NotifyDOMWindowDestroyed(nsGlobalWindow* aWindow);
   void NotifyWindowIDDestroyed(const char* aTopic);
 
@@ -1098,7 +1119,6 @@ protected:
   nsRefPtr<nsDOMWindowUtils>    mWindowUtils;
   nsString                      mStatus;
   nsString                      mDefaultStatus;
-  // index 0->language_id 1, so index MAX-1 == language_id MAX
   nsGlobalWindowObserver*       mObserver;
   nsCOMPtr<nsIDOMCrypto>        mCrypto;
 
@@ -1177,6 +1197,11 @@ protected:
   nsTHashtable<nsPtrHashKey<nsDOMEventTargetHelper> > mEventTargetObjects;
 
   nsTArray<uint32_t> mEnabledSensors;
+
+#ifdef MOZ_WEBSPEECH
+  // mSpeechSynthesis is only used on inner windows.
+  nsRefPtr<mozilla::dom::SpeechSynthesis> mSpeechSynthesis;
+#endif
 
   friend class nsDOMScriptableHelper;
   friend class nsDOMWindowUtils;

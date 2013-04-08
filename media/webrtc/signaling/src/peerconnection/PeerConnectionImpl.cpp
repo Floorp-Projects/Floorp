@@ -1259,10 +1259,9 @@ PeerConnectionImpl::virtualDestroyNSSReference()
 
 void
 PeerConnectionImpl::onCallEvent(ccapi_call_event_e aCallEvent,
-                                CSF::CC_CallPtr aCall, CSF::CC_CallInfoPtr aInfo)
+                                CSF::CC_CallInfoPtr aInfo)
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
-  MOZ_ASSERT(aCall.get());
   MOZ_ASSERT(aInfo.get());
 
   cc_call_state_t event = aInfo->getCallState();

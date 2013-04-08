@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Dataset - element.dataset is an instance of DOMStringMap</title>
+    <script src="/resources/testharness.js"></script>
+    <script src="/resources/testharnessreport.js"></script>
+  </head>
+  <body>
+    <h1>Dataset - element.dataset is an instance of DOMStringMap</h1>
+    <div id="log"></div>
+    <script>
+      test(function() { assert_true(document.createElement("div").dataset instanceof window.DOMStringMap); },
+        "An elements dataset property is an instance of a DOMStringMap");
+    </script>
+  </body>
+</html>

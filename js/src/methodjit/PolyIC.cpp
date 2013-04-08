@@ -779,17 +779,6 @@ struct GetPropHelper {
 namespace js {
 namespace mjit {
 
-inline void
-MarkNotIdempotent(RawScript script, jsbytecode *pc)
-{
-    if (!script->hasAnalysis())
-        return;
-    analyze::Bytecode *code = script->analysis()->maybeCode(pc);
-    if (!code)
-        return;
-    code->notIdempotent = true;
-}
-
 class GetPropCompiler : public PICStubCompiler
 {
     RootedObject obj;
@@ -1371,8 +1360,6 @@ class GetPropCompiler : public PICStubCompiler
         }
 
         if (shape && !shape->hasDefaultGetter()) {
-            MarkNotIdempotent(f.script(), f.pc());
-
             if (shape->hasGetterValue()) {
                 generateNativeGetterStub(masm, shape, start, shapeMismatches);
             } else {
@@ -1472,19 +1459,8 @@ class GetPropCompiler : public PICStubCompiler
             /* Don't touch the IC if it may have been destroyed. */
             if (!monitor.recompiled())
                 pic.hadUncacheable = true;
-            MarkNotIdempotent(f.script(), f.pc());
             return status;
         }
-
-        // Mark as not idempotent to avoid recompilation in Ion Monkey
-        // GetPropertyCache.
-        if (!obj->hasIdempotentProtoChain())
-            MarkNotIdempotent(f.script(), f.pc());
-
-        // The property is missing, Mark as not idempotent to avoid
-        // recompilation in Ion Monkey GetPropertyCache.
-        if (!getprop.holder)
-            MarkNotIdempotent(f.script(), f.pc());
 
         if (hadGC())
             return Lookup_Uncacheable;

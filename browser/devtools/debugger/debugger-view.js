@@ -12,7 +12,6 @@ const STACK_FRAMES_SOURCE_URL_TRIM_SECTION = "center";
 const STACK_FRAMES_POPUP_SOURCE_URL_MAX_LENGTH = 32; // chars
 const STACK_FRAMES_POPUP_SOURCE_URL_TRIM_SECTION = "center";
 const STACK_FRAMES_SCROLL_DELAY = 100; // ms
-const PANES_APPEARANCE_DELAY = 50; // ms
 const BREAKPOINT_LINE_TOOLTIP_MAX_LENGTH = 1000; // chars
 const BREAKPOINT_CONDITIONAL_POPUP_POSITION = "before_start";
 const BREAKPOINT_CONDITIONAL_POPUP_OFFSET_X = 7; // px
@@ -416,67 +415,30 @@ let DebuggerView = {
    * @return boolean
    */
   get instrumentsPaneHidden()
-    this._instrumentsPaneToggleButton.hasAttribute("toggled"),
+    this._instrumentsPane.hasAttribute("pane-collapsed"),
 
   /**
    * Sets the instruments pane hidden or visible.
    *
-   * @param object aFlags [optional]
-   *        An object containing some of the following boolean properties:
-   *        - visible: true if the pane should be shown, false for hidden
+   * @param object aFlags
+   *        An object containing some of the following properties:
+   *        - visible: true if the pane should be shown, false to hide
    *        - animated: true to display an animation on toggle
    *        - delayed: true to wait a few cycles before toggle
    *        - callback: a function to invoke when the toggle finishes
    */
-  toggleInstrumentsPane: function DV__toggleInstrumentsPane(aFlags = {}) {
-    // Avoid useless toggles.
-    if (aFlags.visible == !this.instrumentsPaneHidden) {
-      if (aFlags.callback) aFlags.callback();
-      return;
-    }
+  toggleInstrumentsPane: function DV__toggleInstrumentsPane(aFlags) {
+    let pane = this._instrumentsPane;
+    let button = this._instrumentsPaneToggleButton;
 
-    // Computes and sets the pane margins in order to hide or show it.
-    function set() {
-      if (aFlags.visible) {
-        this._instrumentsPane.style.marginLeft = "0";
-        this._instrumentsPane.style.marginRight = "0";
-        this._instrumentsPaneToggleButton.removeAttribute("toggled");
-        this._instrumentsPaneToggleButton.setAttribute("tooltiptext", this._collapsePaneString);
-      } else {
-        let margin = ~~(this._instrumentsPane.getAttribute("width")) + 1;
-        this._instrumentsPane.style.marginLeft = -margin + "px";
-        this._instrumentsPane.style.marginRight = -margin + "px";
-        this._instrumentsPaneToggleButton.setAttribute("toggled", "true");
-        this._instrumentsPaneToggleButton.setAttribute("tooltiptext", this._expandPaneString);
-      }
+    ViewHelpers.togglePane(aFlags, pane);
 
-      if (aFlags.animated) {
-        // Displaying the panes may have the effect of triggering scrollbars to
-        // appear in the source editor, which would render the currently
-        // highlighted line to appear behind them in some cases.
-        window.addEventListener("transitionend", function onEvent() {
-          window.removeEventListener("transitionend", onEvent, false);
-          DebuggerView.updateEditor();
-
-          // Invoke the callback when the transition ended.
-          if (aFlags.callback) aFlags.callback();
-        }, false);
-      } else {
-        // Invoke the callback immediately since there's no transition.
-        if (aFlags.callback) aFlags.callback();
-      }
-    }
-
-    if (aFlags.animated) {
-      this._instrumentsPane.setAttribute("animated", "");
+    if (aFlags.visible) {
+      button.removeAttribute("pane-collapsed");
+      button.setAttribute("tooltiptext", this._collapsePaneString);
     } else {
-      this._instrumentsPane.removeAttribute("animated");
-    }
-
-    if (aFlags.delayed) {
-      window.setTimeout(set.bind(this), PANES_APPEARANCE_DELAY);
-    } else {
-      set.call(this);
+      button.setAttribute("pane-collapsed", "");
+      button.setAttribute("tooltiptext", this._expandPaneString);
     }
   },
 

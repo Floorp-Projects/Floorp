@@ -797,12 +797,6 @@ protected:
   {
     GetURIAttr(aName, nullptr, aResult);
   }
-  uint32_t GetHTMLUnsignedIntAttr(nsIAtom* aName, uint32_t aDefault)
-  {
-    uint32_t result;
-    GetUnsignedIntAttr(aName, aDefault, &result);
-    return result;
-  }
 
   void SetHTMLAttr(nsIAtom* aName, const nsAString& aValue)
   {
@@ -825,13 +819,6 @@ protected:
     }
   }
   void SetHTMLIntAttr(nsIAtom* aName, int32_t aValue, mozilla::ErrorResult& aError)
-  {
-    nsAutoString value;
-    value.AppendInt(aValue);
-
-    SetHTMLAttr(aName, value, aError);
-  }
-  void SetHTMLUnsignedIntAttr(nsIAtom* aName, uint32_t aValue, mozilla::ErrorResult& aError)
   {
     nsAutoString value;
     value.AppendInt(aValue);
@@ -879,10 +866,8 @@ protected:
    *
    * @param aAttr    name of attribute.
    * @param aDefault default-value to return if attribute isn't set.
-   * @param aResult  result value [out]
    */
-  NS_HIDDEN_(nsresult) GetUnsignedIntAttr(nsIAtom* aAttr, uint32_t aDefault,
-                                          uint32_t* aValue);
+  uint32_t GetUnsignedIntAttr(nsIAtom* aAttr, uint32_t aDefault) const;
 
   /**
    * Helper method for NS_IMPL_UINT_ATTR macro.
@@ -892,7 +877,14 @@ protected:
    * @param aAttr    name of attribute.
    * @param aValue   Integer value of attribute.
    */
-  NS_HIDDEN_(nsresult) SetUnsignedIntAttr(nsIAtom* aAttr, uint32_t aValue);
+  void SetUnsignedIntAttr(nsIAtom* aName, uint32_t aValue,
+                          mozilla::ErrorResult& aError)
+  {
+    nsAutoString value;
+    value.AppendInt(aValue);
+
+    SetHTMLAttr(aName, value, aError);
+  }
 
   /**
    * Sets value of attribute to specified double. Only works for attributes
@@ -1267,12 +1259,15 @@ protected:
   NS_IMETHODIMP                                                           \
   _class::Get##_method(uint32_t* aValue)                                  \
   {                                                                       \
-    return GetUnsignedIntAttr(nsGkAtoms::_atom, _default, aValue);        \
+    *aValue = GetUnsignedIntAttr(nsGkAtoms::_atom, _default);             \
+    return NS_OK;                                                         \
   }                                                                       \
   NS_IMETHODIMP                                                           \
   _class::Set##_method(uint32_t aValue)                                   \
   {                                                                       \
-    return SetUnsignedIntAttr(nsGkAtoms::_atom, aValue);                  \
+    mozilla::ErrorResult rv;                                              \
+    SetUnsignedIntAttr(nsGkAtoms::_atom, aValue, rv);                     \
+    return rv.ErrorCode();                                                \
   }
 
 /**
@@ -1288,7 +1283,8 @@ protected:
   NS_IMETHODIMP                                                           \
   _class::Get##_method(uint32_t* aValue)                                  \
   {                                                                       \
-    return GetUnsignedIntAttr(nsGkAtoms::_atom, _default, aValue);        \
+    *aValue = GetUnsignedIntAttr(nsGkAtoms::_atom, _default);             \
+    return NS_OK;                                                         \
   }                                                                       \
   NS_IMETHODIMP                                                           \
   _class::Set##_method(uint32_t aValue)                                   \
@@ -1296,7 +1292,9 @@ protected:
     if (aValue == 0) {                                                    \
       return NS_ERROR_DOM_INDEX_SIZE_ERR;                                 \
     }                                                                     \
-    return SetUnsignedIntAttr(nsGkAtoms::_atom, aValue);                  \
+    mozilla::ErrorResult rv;                                              \
+    SetUnsignedIntAttr(nsGkAtoms::_atom, aValue, rv);                     \
+    return rv.ErrorCode();                                                \
   }
 
 /**

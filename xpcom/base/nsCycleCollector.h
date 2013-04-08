@@ -29,7 +29,7 @@ bool nsCycleCollector_init();
 
 enum CCThreadingModel {
     CCSingleThread,
-    CCWithTraverseThread,
+    CCWithTraverseThread
 };
 
 nsresult nsCycleCollector_startup(CCThreadingModel aThreadingModel);

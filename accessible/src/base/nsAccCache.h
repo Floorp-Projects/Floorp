@@ -21,7 +21,7 @@ template <class T>
 static PLDHashOperator
 ClearCacheEntry(const void* aKey, nsRefPtr<T>& aAccessible, void* aUserArg)
 {
-  NS_ASSERTION(aAccessible, "Calling ClearCacheEntry with a NULL pointer!");
+  NS_ASSERTION(aAccessible, "Calling ClearCacheEntry with a nullptr pointer!");
   if (aAccessible)
     aAccessible->Shutdown();
 

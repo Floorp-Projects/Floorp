@@ -8,6 +8,7 @@ import os
 import re
 import subprocess
 
+from collections import defaultdict
 from mach.mixin.process import ProcessExecutionMixin
 
 
@@ -139,7 +140,7 @@ class MozconfigLoader(ProcessExecutionMixin):
 
         return None
 
-    def read_mozconfig(self, path=None):
+    def read_mozconfig(self, path=None, moz_build_app=None):
         """Read the contents of a mozconfig into a data structure.
 
         This takes the path to a mozconfig to load. If it is not defined, we
@@ -227,10 +228,13 @@ class MozconfigLoader(ProcessExecutionMixin):
 
         result['env'] = changed
 
-        result['configure_args'] = \
-            [o.replace('@TOPSRCDIR@', self.topsrcdir) for o in parsed['ac']]
+        result['configure_args'] = [self._expand(o) for o in parsed['ac']]
 
-        mk = [o.replace('@TOPSRCDIR@', self.topsrcdir) for o in parsed['mk']]
+        if moz_build_app is not None:
+            result['configure_args'].extend(self._expand(o) for o in
+                parsed['ac_app'][moz_build_app])
+
+        mk = [self._expand(o) for o in parsed['mk']]
 
         for o in mk:
             match = self.RE_MAKE_VARIABLE.match(o)
@@ -256,6 +260,7 @@ class MozconfigLoader(ProcessExecutionMixin):
     def _parse_loader_output(self, output):
         mk_options = []
         ac_options = []
+        ac_app_options = defaultdict(list)
         before_source = {}
         after_source = {}
 
@@ -290,6 +295,9 @@ class MozconfigLoader(ProcessExecutionMixin):
                     ac_options.append('\n'.join(current))
                 elif current_type == 'MK_OPTION':
                     mk_options.append('\n'.join(current))
+                elif current_type == 'AC_APP_OPTION':
+                    app = current.pop(0)
+                    ac_app_options[app].append('\n'.join(current))
 
                 current = None
                 current_type = None
@@ -372,7 +380,10 @@ class MozconfigLoader(ProcessExecutionMixin):
         return {
             'mk': mk_options,
             'ac': ac_options,
+            'ac_app': ac_app_options,
             'vars_before': before_source,
             'vars_after': after_source,
         }
 
+    def _expand(self, s):
+        return s.replace('@TOPSRCDIR@', self.topsrcdir)

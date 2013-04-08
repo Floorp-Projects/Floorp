@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=525444
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 525444: Web Speech API, check speech synth queue</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onunload="synthCleanup();">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=525444">Mozilla Bug 525444</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 525444 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var englishJamaican = synthAddVoice('TestSpeechServiceNoAudio',
+                                    'Bob Marley', 'en-JM', true);
+var englishBritish = synthAddVoice('TestSpeechServiceNoAudio',
+                                   'Amy Winehouse', 'en-GB', true);
+var englishCanadian = synthAddVoice('TestSpeechServiceNoAudio',
+                                    'Leonard Cohen', 'en-CA', true);
+var frenchCanadian = synthAddVoice('TestSpeechServiceNoAudio',
+                                   'Celine Dion', 'fr-CA', true);
+var spanishMexican = synthAddVoice('TestSpeechServiceNoAudio',
+                                   'Julieta Venegas', 'es-MX', true);
+
+synthSetDefault(englishBritish, true);
+
+synthTestQueue(
+  [[{text: "Hello, world."},
+    { uri: englishBritish }],
+   [{text: "Bonjour tout le monde .", lang: "fr", rate: 0.5, pitch: 0.75},
+    { uri: frenchCanadian, rate: 0.5, pitch: 0.75}],
+   [{text: "How are you doing?", lang: "en-GB"},
+    { rate: 1, pitch: 1, uri: englishBritish}],
+   [{text: "¡hasta mañana", lang: "es-ES"},
+    { uri: spanishMexican }]],
+  function () {
+    synthSetDefault(englishJamaican, true);
+    var test_data = [[{text: "I shot the  sheriff."},
+                      { uri: englishJamaican }]];
+    var voices = speechSynthesis.getVoices();
+    for (var i in voices) {
+      test_data.push([{text: "Hello world", voice: voices[i]},
+                      {uri: voices[i].voiceURI}]);
+    }
+
+    synthTestQueue(test_data,
+                   function () {
+                     synthCleanup();
+                     SimpleTest.finish();
+                   });
+  });
+
+
+
+</script>
+</pre>
+</body>
+</html>

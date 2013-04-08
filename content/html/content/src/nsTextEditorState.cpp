@@ -1513,7 +1513,7 @@ nsTextEditorState::UnbindFromFrame(nsTextControlFrame* aFrame)
   {
     mTextListener->SetFrame(nullptr);
 
-    nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mTextCtrlElement);
+    nsCOMPtr<EventTarget> target = do_QueryInterface(mTextCtrlElement);
     nsEventListenerManager* manager =
       target->GetListenerManager(false);
     if (manager) {
@@ -1926,7 +1926,7 @@ void
 nsTextEditorState::InitializeKeyboardEventListeners()
 {
   //register key listeners
-  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mTextCtrlElement);
+  nsCOMPtr<EventTarget> target = do_QueryInterface(mTextCtrlElement);
   nsEventListenerManager* manager = target->GetListenerManager(true);
   if (manager) {
     manager->AddEventListenerByType(mTextListener,

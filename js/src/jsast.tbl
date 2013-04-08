@@ -12,6 +12,7 @@ ASTDEF(AST_IDENTIFIER,            "Identifier",                     "identifier"
 ASTDEF(AST_LITERAL,               "Literal",                        "literal")
 ASTDEF(AST_PROPERTY,              "Property",                       "property")
 
+ASTDEF(AST_MODULE_DECL,           "ModuleDeclaration",              "moduleDeclaration")
 ASTDEF(AST_FUNC_DECL,             "FunctionDeclaration",            "functionDeclaration")
 ASTDEF(AST_VAR_DECL,              "VariableDeclaration",            "variableDeclaration")
 ASTDEF(AST_VAR_DTOR,              "VariableDeclarator",             "variableDeclarator")

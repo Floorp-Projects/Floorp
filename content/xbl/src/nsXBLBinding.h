@@ -89,7 +89,7 @@ protected:
    * Internal version. Requires that aCx is in appropriate xbl scope.
    */
   bool LookupMemberInternal(JSContext* aCx, nsString& aName, JS::HandleId aNameAsId,
-                            JSPropertyDescriptor* aDesc, JSObject* aXBLScope);
+                            JSPropertyDescriptor* aDesc, JS::Handle<JSObject*> aXBLScope);
 
 public:
 
@@ -118,7 +118,7 @@ public:
 
   // Resolve all the fields for this binding and all ancestor bindings on the
   // object |obj|.  False return means a JS exception was set.
-  bool ResolveAllFields(JSContext *cx, JSObject *obj) const;
+  bool ResolveAllFields(JSContext *cx, JS::Handle<JSObject*> obj) const;
 
   // Get the list of insertion points for aParent. The nsInsertionPointList
   // is owned by the binding, you should not delete it.
@@ -143,10 +143,12 @@ public:
 
   nsINodeList* GetAnonymousNodes();
 
-  static nsresult DoInitJSClass(JSContext *cx, JSObject *global, JSObject *obj,
+  static nsresult DoInitJSClass(JSContext *cx, JS::Handle<JSObject*> global,
+                                JS::Handle<JSObject*> obj,
                                 const nsAFlatCString& aClassName,
                                 nsXBLPrototypeBinding* aProtoBinding,
-                                JSObject** aClassObject, bool* aNew);
+                                JS::MutableHandle<JSObject*> aClassObject,
+                                bool* aNew);
 
   bool AllowScripts();  // XXX make const
 

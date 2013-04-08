@@ -1326,20 +1326,33 @@ nsImageLoadingContent::UntrackImage(imgIRequest* aImage, uint32_t aFlags /* = 0 
   MOZ_ASSERT(aImage == mCurrentRequest || aImage == mPendingRequest,
              "Why haven't we heard of this request?");
 
-  // If GetOurDocument() returns null here, we've outlived our document.
-  // That's fine, because the document empties out the tracker and unlocks
-  // all locked images on destruction.
+  // We may not be in the document.  If we're not in the document because it
+  // has already been unlinked that's fine; the document empties out the tracker
+  // and unlocks all locked images on destruction.  If we were really not in the
+  // document we may need to force discarding the image here, since this is the
+  // only chance we have, even though we couldn't possibly have been in the
+  // tracker.
   nsIDocument* doc = GetOurCurrentDoc();
-  if (doc) {
-    if (aImage == mCurrentRequest && (mCurrentRequestFlags & REQUEST_IS_TRACKED)) {
+  if (aImage == mCurrentRequest) {
+    if (doc && (mCurrentRequestFlags & REQUEST_IS_TRACKED)) {
       mCurrentRequestFlags &= ~REQUEST_IS_TRACKED;
       doc->RemoveImage(mCurrentRequest,
                        (aFlags & REQUEST_DISCARD) ? nsIDocument::REQUEST_DISCARD : 0);
     }
-    if (aImage == mPendingRequest && (mPendingRequestFlags & REQUEST_IS_TRACKED)) {
+    else if (aFlags & REQUEST_DISCARD) {
+      // If we're not in the document we may still need to be discarded.
+      aImage->RequestDiscard();
+    }
+  }
+  if (aImage == mPendingRequest) {
+    if (doc && (mPendingRequestFlags & REQUEST_IS_TRACKED)) {
       mPendingRequestFlags &= ~REQUEST_IS_TRACKED;
       doc->RemoveImage(mPendingRequest,
                        (aFlags & REQUEST_DISCARD) ? nsIDocument::REQUEST_DISCARD : 0);
+    }
+    else if (aFlags & REQUEST_DISCARD) {
+      // If we're not in the document we may still need to be discarded.
+      aImage->RequestDiscard();
     }
   }
   return NS_OK;

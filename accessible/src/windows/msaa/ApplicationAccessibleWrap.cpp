@@ -47,7 +47,7 @@ ApplicationAccessibleWrap::NativeAttributes()
 STDMETHODIMP
 ApplicationAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
 {
-  *ppv = NULL;
+  *ppv = nullptr;
 
   if (IID_IAccessibleApplication == iid) {
     *ppv = static_cast<IAccessibleApplication*>(this);
@@ -66,7 +66,7 @@ ApplicationAccessibleWrap::get_appName(BSTR* aName)
 {
   A11Y_TRYBLOCK_BEGIN
 
-  *aName = NULL;
+  *aName = nullptr;
 
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
@@ -90,7 +90,7 @@ ApplicationAccessibleWrap::get_appVersion(BSTR* aVersion)
 {
   A11Y_TRYBLOCK_BEGIN
 
-  *aVersion = NULL;
+  *aVersion = nullptr;
 
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
@@ -136,7 +136,7 @@ ApplicationAccessibleWrap::get_toolkitVersion(BSTR* aVersion)
 {
   A11Y_TRYBLOCK_BEGIN
 
-  *aVersion = NULL;
+  *aVersion = nullptr;
 
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;

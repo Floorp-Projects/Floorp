@@ -24,6 +24,7 @@
 #include "platform_api.h"
 #include <sys/stat.h>
 #include "prprf.h"
+#include "thread_monitor.h"
 
 /*---------------------------------------------------------
  *
@@ -309,6 +310,7 @@ void sip_platform_task_msgqwait (void *arg)
 
             switch (syshdr->Cmd) {
             case THREAD_UNLOAD:
+                thread_ended(THREADMON_MSGQ);
                 quit_thread = TRUE;
                     break;
                 default:

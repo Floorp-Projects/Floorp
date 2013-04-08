@@ -113,7 +113,6 @@
 #include "cpr_stdlib.h"
 #include "cpr_stdio.h"
 #include "cpr_timers.h"
-#include "cpr_android_locks.h"
 #include "cpr_android_timers.h"
 #include "plat_api.h"
 #include <errno.h>

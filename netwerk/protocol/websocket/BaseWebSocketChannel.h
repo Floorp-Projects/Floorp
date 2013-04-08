@@ -42,10 +42,10 @@ class BaseWebSocketChannel : public nsIWebSocketChannel,
   NS_IMETHOD GetExtensions(nsACString &aExtensions);
   NS_IMETHOD GetProtocol(nsACString &aProtocol);
   NS_IMETHOD SetProtocol(const nsACString &aProtocol);
-  NS_IMETHOD GetPingInterval(uint32_t *aMilliSeconds);
-  NS_IMETHOD SetPingInterval(uint32_t aMilliSeconds);
-  NS_IMETHOD GetPingTimeout(uint32_t *aMilliSeconds);
-  NS_IMETHOD SetPingTimeout(uint32_t aMilliSeconds);
+  NS_IMETHOD GetPingInterval(uint32_t *aSeconds);
+  NS_IMETHOD SetPingInterval(uint32_t aSeconds);
+  NS_IMETHOD GetPingTimeout(uint32_t *aSeconds);
+  NS_IMETHOD SetPingTimeout(uint32_t aSeconds);
 
  protected:
   nsCOMPtr<nsIURI>                mOriginalURI;

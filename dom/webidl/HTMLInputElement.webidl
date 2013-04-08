@@ -15,103 +15,103 @@
 interface nsIControllers;
 
 interface HTMLInputElement : HTMLElement {
-           [Pure, SetterThrows]
+  [Pure, SetterThrows]
            attribute DOMString accept;
-           [Pure, SetterThrows]
+  [Pure, SetterThrows]
            attribute DOMString alt;
-           [Pure, SetterThrows]
+  [Pure, SetterThrows]
            attribute DOMString autocomplete;
-           [Pure, SetterThrows]
+  [Pure, SetterThrows]
            attribute boolean autofocus;
-           [Pure, SetterThrows]
+  [Pure, SetterThrows]
            attribute boolean defaultChecked;
-           [Pure]
+  [Pure]
            attribute boolean checked;
            // Bug 850337 - attribute DOMString dirName;
-           [Pure, SetterThrows]
+  [Pure, SetterThrows]
            attribute boolean disabled;
   readonly attribute HTMLFormElement? form;
-           [Pure]
+  [Pure]
   readonly attribute FileList? files;
-           [Pure, SetterThrows]
+  [Pure, SetterThrows]
            attribute DOMString formAction;
-           [Pure, SetterThrows]
+  [Pure, SetterThrows]
            attribute DOMString formEnctype;
-           [Pure, SetterThrows]
+  [Pure, SetterThrows]
            attribute DOMString formMethod;
-           [Pure, SetterThrows]
+  [Pure, SetterThrows]
            attribute boolean formNoValidate;
-           [Pure, SetterThrows]
+  [Pure, SetterThrows]
            attribute DOMString formTarget;
-           [Pure, SetterThrows]
+  [Pure, SetterThrows]
            attribute unsigned long height;
-           [Pure]
+  [Pure]
            attribute boolean indeterminate;
-           [Pure, SetterThrows]
+  [Pure, SetterThrows]
            attribute DOMString inputMode;
-           [Pure]
+  [Pure]
   readonly attribute HTMLElement? list;
-           [Pure, SetterThrows]
+  [Pure, SetterThrows]
            attribute DOMString max;
-           [Pure, SetterThrows]
+  [Pure, SetterThrows]
            attribute long maxLength;
-           [Pure, SetterThrows]
+  [Pure, SetterThrows]
            attribute DOMString min;
-           [Pure, SetterThrows]
+  [Pure, SetterThrows]
            attribute boolean multiple;
-           [Pure, SetterThrows]
+  [Pure, SetterThrows]
            attribute DOMString name;
-           [Pure, SetterThrows]
+  [Pure, SetterThrows]
            attribute DOMString pattern;
-           [Pure, SetterThrows]
+  [Pure, SetterThrows]
            attribute DOMString placeholder;
-           [Pure, SetterThrows]
+  [Pure, SetterThrows]
            attribute boolean readOnly;
-           [Pure, SetterThrows]
+  [Pure, SetterThrows]
            attribute boolean required;
-           [Pure, SetterThrows]
+  [Pure, SetterThrows]
            attribute unsigned long size;
-           [Pure, SetterThrows]
+  [Pure, SetterThrows]
            attribute DOMString src;
-           [Pure, SetterThrows]
+  [Pure, SetterThrows]
            attribute DOMString step;
-           [Pure, SetterThrows]
+  [Pure, SetterThrows]
            attribute DOMString type;
-           [Pure, SetterThrows]
+  [Pure, SetterThrows]
            attribute DOMString defaultValue;
-           [Pure, TreatNullAs=EmptyString, SetterThrows]
+  [Pure, TreatNullAs=EmptyString, SetterThrows]
            attribute DOMString value;
            // Bug 742206 - any to Date?
-           [Throws]
+  [Throws]
            attribute any valueAsDate;
-           [Pure, SetterThrows]
+  [Pure, SetterThrows]
            attribute unrestricted double valueAsNumber;
            attribute unsigned long width;
 
-           [Throws]
-           void stepUp(optional long n);
-           [Throws]
-           void stepDown(optional long n);
+  [Throws]
+  void stepUp(optional long n = 1);
+  [Throws]
+  void stepDown(optional long n = 1);
 
-           [Pure]
+  [Pure]
   readonly attribute boolean willValidate;
-           [Pure]
+  [Pure]
   readonly attribute ValidityState validity;
-           [GetterThrows]
+  [GetterThrows]
   readonly attribute DOMString validationMessage;
-           boolean checkValidity();
-           void setCustomValidity(DOMString error);
+  boolean checkValidity();
+  void setCustomValidity(DOMString error);
 
   // Bug 850365 readonly attribute NodeList labels;
 
-           void select();
+  void select();
 
-           [Throws]
+  [Throws]
            // TODO: unsigned vs signed
            attribute long selectionStart;
-           [Throws]
+  [Throws]
            attribute long selectionEnd;
-           [Throws]
+  [Throws]
            attribute DOMString selectionDirection;
   // Bug 850364 void setRangeText(DOMString replacement);
   // Bug 850364 setRangeText(DOMString replacement, unsigned long start, unsigned long end, optional SelectionMode selectionMode);
@@ -120,54 +120,49 @@ interface HTMLInputElement : HTMLElement {
 };
 
 partial interface HTMLInputElement {
-           [Pure, SetterThrows]
+  [Pure, SetterThrows]
            attribute DOMString align;
-           [Pure, SetterThrows]
+  [Pure, SetterThrows]
            attribute DOMString useMap;
 };
 
 // Mozilla extensions
 
 partial interface HTMLInputElement {
-           [Throws]
-           void setSelectionRange(long start, long end, optional DOMString direction);
+  [Throws]
+  void setSelectionRange(long start, long end, optional DOMString direction);
 
-           [GetterThrows]
+  [GetterThrows]
   readonly attribute nsIControllers        controllers;
-           [GetterThrows]
+  [GetterThrows]
   readonly attribute long                  textLength;
 
-           [ChromeOnly]
-           sequence<DOMString> mozGetFileNameArray();
+  [ChromeOnly]
+  sequence<DOMString> mozGetFileNameArray();
 
-           [ChromeOnly]
-           void mozSetFileNameArray(sequence<DOMString> fileNames);
+  [ChromeOnly]
+  void mozSetFileNameArray(sequence<DOMString> fileNames);
 
-           /**
-            * This non-standard method prevents to check types manually to know if the
-            * element is a text field.
-            */
-           boolean mozIsTextField(boolean aExcludePassword);
+  boolean mozIsTextField(boolean aExcludePassword);
 };
 
 partial interface HTMLInputElement {
-           // Mirrored chrome-only nsIDOMNSEditableElement methods.  Please make sure
-           // to update this list if nsIDOMNSEditableElement changes.
+  // Mirrored chrome-only nsIDOMNSEditableElement methods.  Please make sure
+  // to update this list if nsIDOMNSEditableElement changes.
 
-           [Pure, ChromeOnly]
+  [Pure, ChromeOnly]
   readonly attribute nsIEditor? editor;
 
-           // This is similar to set .value on nsIDOMInput/TextAreaElements, but
-           // handling of the value change is closer to the normal user input, so
-           // 'change' event for example will be dispatched when focusing out the
-           // element.
-           [ChromeOnly]
-           void setUserInput(DOMString input);
+  // This is similar to set .value on nsIDOMInput/TextAreaElements, but handling
+  // of the value change is closer to the normal user input, so 'change' event
+  // for example will be dispatched when focusing out the element.
+  [ChromeOnly]
+  void setUserInput(DOMString input);
 };
 
 [NoInterfaceObject]
 interface MozPhonetic {
-           [Pure, ChromeOnly]
+  [Pure, ChromeOnly]
   readonly attribute DOMString phonetic;
 };
 

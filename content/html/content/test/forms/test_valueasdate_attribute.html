@@ -11,6 +11,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=769370
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=769370">Mozilla Bug 769370</a>
+<iframe name="testFrame" style="display: none"></iframe>
 <p id="display"></p>
 <pre id="test">
 <script type="application/javascript">
@@ -223,6 +224,9 @@ function checkDateSet()
     element.valueAsDate = new Date(data[0]);
     is(element.value, data[1], "valueAsDate should set the value to "
                                 + data[1]);
+    element.valueAsDate = new testFrame.Date(data[0]);
+    is(element.value, data[1], "valueAsDate with other-global date should " +
+                               "set the value to " + data[1]);
   }
 }
 

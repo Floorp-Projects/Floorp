@@ -5,6 +5,7 @@
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/debug.js");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -22,8 +23,6 @@ const TYPE_MAYBE_FEED = "application/vnd.mozilla.maybe.feed";
 const TYPE_MAYBE_VIDEO_FEED = "application/vnd.mozilla.maybe.video.feed";
 const TYPE_MAYBE_AUDIO_FEED = "application/vnd.mozilla.maybe.audio.feed";
 const TYPE_ANY = "*/*";
-
-const FEEDHANDLER_URI = "about:feeds";
 
 const PREF_SELECTED_APP = "browser.feeds.handlers.application";
 const PREF_SELECTED_WEB = "browser.feeds.handlers.webservice";
@@ -246,12 +245,14 @@ FeedConverter.prototype = {
         feedService.addFeedResult(result);
 
         // Now load the actual XUL document.
-        var chromeURI = ios.newURI(FEEDHANDLER_URI, null, null);
-        chromeChannel = ios.newChannelFromURI(chromeURI, null);
+        var aboutFeedsURI = ios.newURI("about:feeds", null, null);
+        chromeChannel = ios.newChannelFromURI(aboutFeedsURI, null);
         chromeChannel.originalURI = result.uri;
-      }
-      else
+        chromeChannel.owner =
+          Services.scriptSecurityManager.getNoAppCodebasePrincipal(aboutFeedsURI);
+      } else {
         chromeChannel = ios.newChannelFromURI(result.uri, null);
+      }
 
       chromeChannel.loadGroup = this._request.loadGroup;
       chromeChannel.asyncOpen(this._listener, null);

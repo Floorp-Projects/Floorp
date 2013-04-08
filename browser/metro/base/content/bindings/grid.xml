@@ -39,8 +39,6 @@
             for (let childItem of this.selectedItems) {
               childItem.removeAttribute("selected");
             }
-            // reset context actions
-            this._contextActions = null;
           ]]>
         </body>
       </method>
@@ -107,16 +105,10 @@
           ]]>
         </body>
       </method>
-
-      <field name="_contextActions">null</field>
       <property name="contextActions">
         <getter>
           <![CDATA[
             // return the subset of verbs that apply to all selected tiles
-            // use cached list, it'll get cleared out when selection changes
-            if (this._contextActions) {
-              return this._contextActions;
-            }
             let tileNodes = this.selectedItems;
             if (!tileNodes.length) {
               return new Set();
@@ -145,10 +137,8 @@
                 }
               }
             }
-
-            this._contextActions = verbSet;
             // returns Set
-            return this._contextActions;
+            return verbSet;
           ]]>
         </getter>
       </property>
@@ -215,7 +205,6 @@
               this.removeChild(this.firstChild);
             }
             this._grid.style.width = "0px";
-            this._contextActions = null;
           ]]>
         </body>
       </method>
@@ -476,8 +465,6 @@
         <body>
           <![CDATA[
             // flush out selection-related cached properties so they get recalc'd next time
-            this._contextActions = null;
-
             // fire an event?
             if (this.suppressOnSelect || this._suppressOnSelect)
               return;
@@ -505,6 +492,7 @@
 
     <implementation>
       <property name="_box" onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'anon-richgrid-item');"/>
+      <property name="_textbox" onget="return document.getAnonymousElementByAttribute(this, 'class', 'richgrid-item-desc');"/>
       <property name="_icon" onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'anon-richgrid-item-icon');"/>
       <property name="_label" onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'anon-richgrid-item-label');"/>
       <property name="iconSrc"
@@ -541,8 +529,8 @@
             // selected getter just looks directly at attribute
             // pinned getter just looks directly at attribute
             // value getter just looks directly at attribute
-            this.refreshBackgroundImage();
             this._contextActions = null;
+            this.refreshBackgroundImage();
           ]]>
         </body>
       </method>
@@ -564,9 +552,11 @@
           if (val) {
             this.setAttribute("customColor", val);
             this._box.style.backgroundColor = val;
+            this._textbox.style.backgroundColor = val;
           } else {
             this.removeAttribute("customColor");
             this._box.style.removeProperty("background-color");
+            this._textbox.style.removeProperty("background-color");
           }
         ]]></setter>
       </property>
@@ -609,18 +599,6 @@
             return this._contextActions;
           ]]>
         </getter>
-        <setter>
-          <![CDATA[
-            let actionSet = this._contextActions = new Set();
-            let actions = val;
-            if (actions) {
-              actions.split(/[,\s]+/).forEach(function(verb){
-                actionSet.add(verb);
-              });
-            }
-            return this._contextActions;
-          ]]>
-        </setter>
       </property>
     </implementation>
 

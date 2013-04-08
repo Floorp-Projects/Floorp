@@ -4,12 +4,14 @@
 
 #include "domstubs.idl"
 interface nsIDOMDeviceStorage;
+interface nsIVariant;
 
 /**
  * Property that extends the navigator object.
  */
-[scriptable, uuid(da1fbf6e-259c-40bc-ba8c-4ae81748dca3)]
+[scriptable, uuid(1caeaf6d-6529-4e1f-b080-da17ab6aa266)]
 interface nsIDOMNavigatorDeviceStorage : nsISupports
 {
   nsIDOMDeviceStorage getDeviceStorage(in DOMString type);
+  nsIVariant getDeviceStorages(in DOMString type);
 };

@@ -97,6 +97,8 @@ MOCHITEST_CHROME_FILES =	\
 		test_private_hidden_window.html \
     docshell_helpers.js \
     generic.html \
+    test_bug846906.xul \
+    bug846906.html \
     $(NULL)
 
 ifneq ($(MOZ_WIDGET_TOOLKIT),gtk2)

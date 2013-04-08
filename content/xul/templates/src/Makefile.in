@@ -50,6 +50,7 @@ include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES	= -I$(srcdir)/../../../base/src \
 		  -I$(srcdir)/../../content/src \
+		  -I$(srcdir)/../../../../dom/base \
 		  -I$(srcdir)/../../../../layout/xul/tree/ \
 		  $(NULL)
 

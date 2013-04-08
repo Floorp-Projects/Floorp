@@ -572,12 +572,14 @@ ccUnload (void)
     }
     /*
      * We are going to send an unload msg to each of the thread, which on
-     * receiving the msg, will kill itself.
+     * receiving the msg, will notify us back with async dispatch before
+     * killing itself. Main thread is assumed here. We have to do this to
+     * avoid deadlock because the threads use SyncRunnable to main.
     */
     send_task_unload_msg(CC_SRC_SIP);
     send_task_unload_msg(CC_SRC_GSM);
 
-    if (FALSE == gHardCodeSDPMode) {
+    if (!gHardCodeSDPMode) {
     	send_task_unload_msg(CC_SRC_MISC_APP);
     }
 
@@ -586,7 +588,7 @@ ccUnload (void)
     gStopTickTask = TRUE;
 
     /*
-     * Here we are waiting until all threads that were started exit.
+     * Here we are waiting until all threads that were started notify and exit.
      */
     join_all_threads();
 }

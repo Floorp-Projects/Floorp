@@ -31,6 +31,8 @@ extern PRLogModuleInfo *GetLayoutPrintingLog();
 #define PR_PL(_p1)
 #endif
 
+using namespace mozilla;
+
 nsIFrame*
 NS_NewPageFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
@@ -397,19 +399,15 @@ nsPageFrame::DrawHeaderFooter(nsRenderingContext& aRenderingContext,
 
 /**
  * Remove all leaf display items that are not for descendants of
- * aBuilder->GetReferenceFrame() from aList, and move all nsDisplayClip
- * wrappers to their correct locations.
+ * aBuilder->GetReferenceFrame() from aList.
  * @param aPage the page we're constructing the display list for
  * @param aExtraPage the page we constructed aList for
- * @param aY the Y-coordinate where aPage would be positioned relative
- * to the main page (aBuilder->GetReferenceFrame()), considering only
- * the content and ignoring page margins and dead space
  * @param aList the list that is modified in-place
  */
 static void
 PruneDisplayListForExtraPage(nsDisplayListBuilder* aBuilder,
                              nsPageFrame* aPage, nsIFrame* aExtraPage,
-                             nscoord aY, nsDisplayList* aList)
+                             nsDisplayList* aList)
 {
   nsDisplayList newList;
 
@@ -419,46 +417,26 @@ PruneDisplayListForExtraPage(nsDisplayListBuilder* aBuilder,
       break;
     nsDisplayList* subList = i->GetSameCoordinateSystemChildren();
     if (subList) {
-      PruneDisplayListForExtraPage(aBuilder, aPage, aExtraPage, aY, subList);
-      nsDisplayItem::Type type = i->GetType();
-      if (type == nsDisplayItem::TYPE_CLIP ||
-          type == nsDisplayItem::TYPE_CLIP_ROUNDED_RECT) {
-        // This might clip an element which should appear on the first
-        // page, and that element might be visible if this uses a 'clip'
-        // property with a negative top.
-        // The clip area needs to be moved because the frame geometry doesn't
-        // put page content frames for adjacent pages vertically adjacent,
-        // there are page margins and dead space between them in print
-        // preview, and in printing all pages are at (0,0)...
-        // XXX we have no way to test this right now that I know of;
-        // the 'clip' property requires an abs-pos element and we never
-        // paint abs-pos elements that start after the main page
-        // (bug 426909).
-        nsDisplayClip* clip = static_cast<nsDisplayClip*>(i);
-        clip->SetClipRect(clip->GetClipRect() + nsPoint(0, aY) -
-                aExtraPage->GetOffsetToCrossDoc(aBuilder->FindReferenceFrameFor(aPage)));
-      }
-      newList.AppendToTop(i);
+      PruneDisplayListForExtraPage(aBuilder, aPage, aExtraPage, subList);
+      i->UpdateBounds(aBuilder);
     } else {
       nsIFrame* f = i->GetUnderlyingFrame();
-      if (f && nsLayoutUtils::IsProperAncestorFrameCrossDoc(aPage, f)) {
-        // This one is in the page we care about, keep it
-        newList.AppendToTop(i);
-      } else {
+      if (!f || !nsLayoutUtils::IsProperAncestorFrameCrossDoc(aPage, f)) {
         // We're throwing this away so call its destructor now. The memory
         // is owned by aBuilder which destroys all items at once.
         i->~nsDisplayItem();
+        continue;
       }
     }
+    newList.AppendToTop(i);
   }
   aList->AppendToTop(&newList);
 }
 
-
 static nsresult
 BuildDisplayListForExtraPage(nsDisplayListBuilder* aBuilder,
                              nsPageFrame* aPage, nsIFrame* aExtraPage,
-                             nscoord aY, nsDisplayList* aList)
+                             nsDisplayList* aList)
 {
   nsDisplayList list;
   // Pass an empty dirty rect since we're only interested in finding
@@ -468,7 +446,7 @@ BuildDisplayListForExtraPage(nsDisplayListBuilder* aBuilder,
   // Note that we should still do a prune step since we don't want to
   // rely on dirty-rect checking for correctness.
   aExtraPage->BuildDisplayListForStackingContext(aBuilder, nsRect(), &list);
-  PruneDisplayListForExtraPage(aBuilder, aPage, aExtraPage, aY, &list);
+  PruneDisplayListForExtraPage(aBuilder, aPage, aExtraPage, &list);
   aList->AppendToTop(&list);
   return NS_OK;
 }
@@ -516,33 +494,7 @@ nsPageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     DisplayBorderBackgroundOutline(aBuilder, aLists);
   }
 
-  nsDisplayList content;
   nsIFrame *child = mFrames.FirstChild();
-  child->BuildDisplayListForStackingContext(aBuilder,
-      child->GetVisualOverflowRectRelativeToSelf(), &content);
-
-  // We may need to paint out-of-flow frames whose placeholders are
-  // on other pages. Add those pages to our display list. Note that
-  // out-of-flow frames can't be placed after their placeholders so
-  // we don't have to process earlier pages. The display lists for
-  // these extra pages are pruned so that only display items for the
-  // page we currently care about (which we would have reached by
-  // following placeholders to their out-of-flows) end up on the list.
-  nsIFrame* page = child;
-  nscoord y = child->GetSize().height;
-  while ((page = GetNextPage(page)) != nullptr) {
-    BuildDisplayListForExtraPage(aBuilder, this, page, y, &content);
-    y += page->GetSize().height;
-  }
-  
-  // Add the canvas background color to the bottom of the list. This
-  // happens after we've built the list so that AddCanvasBackgroundColorItem
-  // can monkey with the contents if necessary.
-  nsRect backgroundRect =
-    nsRect(aBuilder->ToReferenceFrame(child), child->GetSize());
-  PresContext()->GetPresShell()->AddCanvasBackgroundColorItem(
-    *aBuilder, content, child, backgroundRect, NS_RGBA(0,0,0,0));
-
   float scale = PresContext()->GetPageScale();
   nsRect clipRect(nsPoint(0, 0), child->GetSize());
   // Note: this computation matches how we compute maxSize.height
@@ -556,14 +508,47 @@ nsPageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // y-value matches the top edge of the current page.  So, to clip to the
     // current page's content (in coordinates *relative* to the page content
     // frame), we just negate its y-position and add the top margin.
-    clipRect.y = NSToCoordCeil((-child->GetRect().y + 
+    clipRect.y = NSToCoordCeil((-child->GetRect().y +
                                 mPD->mReflowMargin.top) / scale);
     clipRect.height = expectedPageContentHeight;
     NS_ASSERTION(clipRect.y < child->GetSize().height,
                  "Should be clipping to region inside the page content bounds");
   }
   clipRect += aBuilder->ToReferenceFrame(child);
-  content.AppendNewToTop(new (aBuilder) nsDisplayClip(aBuilder, child, &content, clipRect));
+
+  nsDisplayList content;
+  {
+    DisplayListClipState::AutoSaveRestore clipState(aBuilder);
+
+    // Overwrite current clip, since we're going to wrap in a transform
+    // and the current clip is no longer meaningful.
+    clipState.Clear();
+    clipState.ClipContainingBlockDescendants(clipRect, nullptr);
+
+    child->BuildDisplayListForStackingContext(aBuilder,
+      child->GetVisualOverflowRectRelativeToSelf(), &content);
+
+    // We may need to paint out-of-flow frames whose placeholders are
+    // on other pages. Add those pages to our display list. Note that
+    // out-of-flow frames can't be placed after their placeholders so
+    // we don't have to process earlier pages. The display lists for
+    // these extra pages are pruned so that only display items for the
+    // page we currently care about (which we would have reached by
+    // following placeholders to their out-of-flows) end up on the list.
+    nsIFrame* page = child;
+    while ((page = GetNextPage(page)) != nullptr) {
+      BuildDisplayListForExtraPage(aBuilder, this, page, &content);
+    }
+
+    // Add the canvas background color to the bottom of the list. This
+    // happens after we've built the list so that AddCanvasBackgroundColorItem
+    // can monkey with the contents if necessary.
+    nsRect backgroundRect =
+      nsRect(aBuilder->ToReferenceFrame(child), child->GetSize());
+    PresContext()->GetPresShell()->AddCanvasBackgroundColorItem(
+      *aBuilder, content, child, backgroundRect, NS_RGBA(0,0,0,0));
+  }
+
   content.AppendNewToTop(new (aBuilder) nsDisplayTransform(aBuilder, child, &content, ::ComputePageTransform));
 
   set.Content()->AppendToTop(&content);

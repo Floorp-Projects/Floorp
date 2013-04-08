@@ -7,6 +7,7 @@
 #ifndef jsatominlines_h___
 #define jsatominlines_h___
 
+#include "mozilla/PodOperations.h"
 #include "mozilla/RangedPtr.h"
 
 #include "jsatom.h"
@@ -169,7 +170,7 @@ AtomHasher::match(const AtomStateEntry &entry, const Lookup &lookup)
         return lookup.atom == key;
     if (key->length() != lookup.length)
         return false;
-    return PodEqual(key->chars(), lookup.chars, lookup.length);
+    return mozilla::PodEqual(key->chars(), lookup.chars, lookup.length);
 }
 
 inline Handle<PropertyName*>

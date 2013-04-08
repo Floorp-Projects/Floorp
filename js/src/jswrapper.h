@@ -111,9 +111,8 @@ class JS_FRIEND_API(CrossCompartmentWrapper) : public Wrapper
 
     /* Spidermonkey extensions. */
     virtual bool isExtensible(JSObject *proxy) MOZ_OVERRIDE;
-    virtual bool call(JSContext *cx, HandleObject wrapper, unsigned argc, Value *vp) MOZ_OVERRIDE;
-    virtual bool construct(JSContext *cx, HandleObject wrapper, unsigned argc, Value *argv,
-                           MutableHandleValue rval) MOZ_OVERRIDE;
+    virtual bool call(JSContext *cx, HandleObject wrapper, const CallArgs &args) MOZ_OVERRIDE;
+    virtual bool construct(JSContext *cx, HandleObject wrapper, const CallArgs &args) MOZ_OVERRIDE;
     virtual bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
                             CallArgs args) MOZ_OVERRIDE;
     virtual bool hasInstance(JSContext *cx, HandleObject wrapper, MutableHandleValue v,
@@ -190,9 +189,8 @@ class JS_FRIEND_API(DeadObjectProxy) : public BaseProxyHandler
 
     /* Spidermonkey extensions. */
     virtual bool isExtensible(JSObject *proxy) MOZ_OVERRIDE;
-    virtual bool call(JSContext *cx, HandleObject proxy, unsigned argc, Value *vp);
-    virtual bool construct(JSContext *cx, HandleObject proxy, unsigned argc,
-                           Value *argv, MutableHandleValue rval);
+    virtual bool call(JSContext *cx, HandleObject proxy, const CallArgs &args) MOZ_OVERRIDE;
+    virtual bool construct(JSContext *cx, HandleObject proxy, const CallArgs &args) MOZ_OVERRIDE;
     virtual bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
                             CallArgs args) MOZ_OVERRIDE;
     virtual bool hasInstance(JSContext *cx, HandleObject proxy, MutableHandleValue v, bool *bp);

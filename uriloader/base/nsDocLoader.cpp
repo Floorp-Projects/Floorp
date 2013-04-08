@@ -191,8 +191,8 @@ nsDocLoader::~nsDocLoader()
 /*
  * Implementation of ISupports methods...
  */
-NS_IMPL_THREADSAFE_ADDREF(nsDocLoader)
-NS_IMPL_THREADSAFE_RELEASE(nsDocLoader)
+NS_IMPL_ADDREF(nsDocLoader)
+NS_IMPL_RELEASE(nsDocLoader)
 
 NS_INTERFACE_MAP_BEGIN(nsDocLoader)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIRequestObserver)

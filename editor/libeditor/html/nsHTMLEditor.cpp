@@ -161,6 +161,7 @@ nsHTMLEditor::HideAnonymousEditingUIs()
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsHTMLEditor, nsPlaintextEditor)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTypeInState)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mStyleSheets)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTextServices)
 
   tmp->HideAnonymousEditingUIs();
@@ -168,6 +169,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLEditor, nsPlaintextEditor)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTypeInState)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStyleSheets)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTextServices)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTopLeftHandle)
@@ -3919,7 +3921,7 @@ nsresult
 nsHTMLEditor::GetPriorHTMLSibling(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode)
 {
   NS_ENSURE_TRUE(outNode, NS_ERROR_NULL_POINTER);
-  *outNode = NULL;
+  *outNode = nullptr;
 
   nsCOMPtr<nsINode> node = do_QueryInterface(inNode);
   NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
@@ -3952,7 +3954,7 @@ nsresult
 nsHTMLEditor::GetPriorHTMLSibling(nsIDOMNode *inParent, int32_t inOffset, nsCOMPtr<nsIDOMNode> *outNode)
 {
   NS_ENSURE_TRUE(outNode, NS_ERROR_NULL_POINTER);
-  *outNode = NULL;
+  *outNode = nullptr;
 
   nsCOMPtr<nsINode> parent = do_QueryInterface(inParent);
   NS_ENSURE_TRUE(parent, NS_ERROR_NULL_POINTER);
@@ -4016,7 +4018,7 @@ nsresult
 nsHTMLEditor::GetNextHTMLSibling(nsIDOMNode *inParent, int32_t inOffset, nsCOMPtr<nsIDOMNode> *outNode)
 {
   NS_ENSURE_TRUE(outNode, NS_ERROR_NULL_POINTER);
-  *outNode = NULL;
+  *outNode = nullptr;
 
   nsCOMPtr<nsINode> parent = do_QueryInterface(inParent);
   NS_ENSURE_TRUE(parent, NS_ERROR_NULL_POINTER);

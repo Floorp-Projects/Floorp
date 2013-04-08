@@ -22,8 +22,6 @@
 
 #include "nsWindowsHelpers.h"
 
-namespace {
-
 typedef const unsigned char* FileView;
 
 template<>
@@ -42,8 +40,6 @@ public:
       UnmapViewOfFile(aView);
   }
 };
-
-} // anonymous namespace
 
 #ifndef IMAGE_SIZEOF_BASE_RELOCATION
 // Vista SDKs no longer define IMAGE_SIZEOF_BASE_RELOCATION!?
@@ -436,5 +432,5 @@ static void* MemoryGetProcAddress(PMEMORYMODULE module, const char *name)
   }
 
   // AddressOfFunctions contains the RVAs to the "real" functions
-  return (FARPROC) (module->remoteCodeBase + (*(DWORD *) (localCodeBase + exports->AddressOfFunctions + (idx*4))));
+  return module->remoteCodeBase + (*(DWORD *) (localCodeBase + exports->AddressOfFunctions + (idx*4)));
 }

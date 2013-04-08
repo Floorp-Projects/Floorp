@@ -1,0 +1,3 @@
+  button, vbox, menu, menuitem, menupopup  {
+    -moz-box-sizing: content-box;
+  }

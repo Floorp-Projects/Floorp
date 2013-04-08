@@ -10,6 +10,7 @@
  */
 #include <string.h>
 
+#include "mozilla/PodOperations.h"
 #include "mozilla/RangedPtr.h"
 #include "mozilla/Util.h"
 
@@ -71,6 +72,7 @@ using namespace js::types;
 using namespace js::frontend;
 
 using mozilla::ArrayLength;
+using mozilla::PodCopy;
 
 static JSBool
 fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, MutableHandleValue vp)
@@ -877,6 +879,27 @@ js_fun_call(JSContext *cx, unsigned argc, Value *vp)
     return ok;
 }
 
+#ifdef JS_ION
+static bool
+PushBaselineFunApplyArguments(JSContext *cx, ion::IonFrameIterator &frame, InvokeArgsGuard &args,
+                              Value *vp)
+{
+    unsigned length = frame.numActualArgs();
+    JS_ASSERT(length <= StackSpace::ARGS_LENGTH_MAX);
+
+    if (!cx->stack.pushInvokeArgs(cx, length, &args))
+        return false;
+
+    /* Push fval, obj, and aobj's elements as args. */
+    args.setCallee(vp[1]);
+    args.setThis(vp[2]);
+
+    /* Steps 7-8. */
+    frame.forEachCanonicalActualArg(CopyTo(args.array()), 0, -1);
+    return true;
+}
+#endif
+
 /* ES5 15.3.4.3 */
 JSBool
 js_fun_apply(JSContext *cx, unsigned argc, Value *vp)
@@ -916,23 +939,45 @@ js_fun_apply(JSContext *cx, unsigned argc, Value *vp)
         if (fp->beginsIonActivation()) {
             ion::IonActivationIterator activations(cx);
             ion::IonFrameIterator frame(activations);
-            JS_ASSERT(frame.isNative());
-            // Stop on the next Ion JS Frame.
-            ++frame;
-            ion::InlineFrameIterator iter(cx, &frame);
+            if (frame.isNative()) {
+                // Stop on the next Ion JS Frame.
+                ++frame;
+                if (frame.isOptimizedJS()) {
+                    ion::InlineFrameIterator iter(cx, &frame);
 
-            unsigned length = iter.numActualArgs();
-            JS_ASSERT(length <= StackSpace::ARGS_LENGTH_MAX);
+                    unsigned length = iter.numActualArgs();
+                    JS_ASSERT(length <= StackSpace::ARGS_LENGTH_MAX);
 
-            if (!cx->stack.pushInvokeArgs(cx, length, &args))
-                return false;
+                    if (!cx->stack.pushInvokeArgs(cx, length, &args))
+                        return false;
 
-            /* Push fval, obj, and aobj's elements as args. */
-            args.setCallee(fval);
-            args.setThis(vp[2]);
+                    /* Push fval, obj, and aobj's elements as args. */
+                    args.setCallee(fval);
+                    args.setThis(vp[2]);
 
-            /* Steps 7-8. */
-            iter.forEachCanonicalActualArg(cx, CopyTo(args.array()), 0, -1);
+                    /* Steps 7-8. */
+                    iter.forEachCanonicalActualArg(cx, CopyTo(args.array()), 0, -1);
+                } else {
+                    JS_ASSERT(frame.isBaselineStub());
+
+                    ++frame;
+                    JS_ASSERT(frame.isBaselineJS());
+
+                    if (!PushBaselineFunApplyArguments(cx, frame, args, vp))
+                        return false;
+                }
+            } else {
+                JS_ASSERT(frame.type() == ion::IonFrame_Exit);
+
+                ++frame;
+                JS_ASSERT(frame.isBaselineStub());
+
+                ++frame;
+                JS_ASSERT(frame.isBaselineJS());
+
+                if (!PushBaselineFunApplyArguments(cx, frame, args, vp))
+                    return false;
+            }
         } else
 #endif
         {
@@ -1522,7 +1567,7 @@ js::CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent, 
         clone->flags |= JSFunction::EXTENDED;
         if (fun->isExtended() && fun->compartment() == cx->compartment) {
             for (unsigned i = 0; i < FunctionExtended::NUM_EXTENDED_SLOTS; i++)
-                clone->setExtendedSlot(i, fun->getExtendedSlot(i));
+                clone->initExtendedSlot(i, fun->getExtendedSlot(i));
         } else {
             clone->initializeExtended();
         }

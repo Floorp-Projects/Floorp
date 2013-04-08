@@ -12,10 +12,10 @@
 #include "nsIJSNativeInitializer.h"
 #include "nsHTMLFormElement.h"
 
-class nsHTMLSelectElement;
-
 namespace mozilla {
 namespace dom {
+
+class HTMLSelectElement;
 
 class HTMLOptionElement : public nsGenericHTMLElement,
                           public nsIDOMHTMLOptionElement
@@ -137,7 +137,7 @@ protected:
    * intentionally does not return nsresult, all we care about is if
    * there's a select associated with this option or not.
    */
-  nsHTMLSelectElement* GetSelect();
+  HTMLSelectElement* GetSelect();
 
   bool mSelectedChanged;
   bool mIsSelected;

@@ -28,7 +28,7 @@ using mozilla::unused;
 
 #include "nsRenderingContext.h"
 #include "nsIDOMSimpleGestureEvent.h"
-#include "nsDOMTouchEvent.h"
+#include "mozilla/dom/Touch.h"
 
 #include "nsGkAtoms.h"
 #include "nsWidgetsCID.h"
@@ -53,6 +53,7 @@ using mozilla::unused;
 #include "nsStringGlue.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 using namespace mozilla::widget;
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsBaseWidget)
@@ -1188,6 +1189,10 @@ bool nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)
 {
     nsRefPtr<nsWindow> kungFuDeathGrip(this);
 
+    // End any composition in progress in case the touch event listener
+    // modifies the input field value (see bug 856155)
+    RemoveIMEComposition();
+
     // This is set to true once we have called SetPreventPanning() exactly
     // once for a given sequence of touch events. It is reset on the start
     // of the next sequence.
@@ -1267,21 +1272,21 @@ nsWindow::DispatchMultitouchEvent(nsTouchEvent &event, AndroidGeckoEvent *ae)
         action == AndroidMotionEvent::ACTION_POINTER_UP) {
         event.touches.SetCapacity(1);
         int pointerIndex = ae->PointerIndex();
-        nsCOMPtr<nsIDOMTouch> t(new nsDOMTouch(ae->PointIndicies()[pointerIndex],
-                                               ae->Points()[pointerIndex] - offset,
-                                               ae->PointRadii()[pointerIndex],
-                                               ae->Orientations()[pointerIndex],
-                                               ae->Pressures()[pointerIndex]));
+        nsCOMPtr<nsIDOMTouch> t(new Touch(ae->PointIndicies()[pointerIndex],
+                                          ae->Points()[pointerIndex] - offset,
+                                          ae->PointRadii()[pointerIndex],
+                                          ae->Orientations()[pointerIndex],
+                                          ae->Pressures()[pointerIndex]));
         event.touches.AppendElement(t);
     } else {
         int count = ae->Count();
         event.touches.SetCapacity(count);
         for (int i = 0; i < count; i++) {
-            nsCOMPtr<nsIDOMTouch> t(new nsDOMTouch(ae->PointIndicies()[i],
-                                                   ae->Points()[i] - offset,
-                                                   ae->PointRadii()[i],
-                                                   ae->Orientations()[i],
-                                                   ae->Pressures()[i]));
+            nsCOMPtr<nsIDOMTouch> t(new Touch(ae->PointIndicies()[i],
+                                              ae->Points()[i] - offset,
+                                              ae->PointRadii()[i],
+                                              ae->Orientations()[i],
+                                              ae->Pressures()[i]));
             event.touches.AppendElement(t);
         }
     }

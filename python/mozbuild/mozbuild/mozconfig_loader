@@ -19,8 +19,13 @@ ac_add_options() {
 }
 
 ac_add_app_options() {
-  echo "ac_add_app_options is not supported."
-  exit 1
+  local app opt
+  app=$1
+  shift
+  echo "------BEGIN_AC_APP_OPTION"
+  echo $app
+  echo "$*"
+  echo "------END_AC_APP_OPTION"
 }
 
 mk_add_options() {

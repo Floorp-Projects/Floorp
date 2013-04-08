@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <stddef.h>                     // for NULL
+#include <stddef.h>                     // for nullptr
 
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/mozalloc.h"           // for operator new, etc
@@ -2063,7 +2063,7 @@ nsTextServicesDocument::GetDocumentContentRootNode(nsIDOMNode **aNode)
 nsresult
 nsTextServicesDocument::CreateDocumentContentRange(nsIDOMRange **aRange)
 {
-  *aRange = NULL;
+  *aRange = nullptr;
 
   nsCOMPtr<nsIDOMNode> node;
   nsresult rv = GetDocumentContentRootNode(getter_AddRefs(node));

@@ -700,7 +700,7 @@ var tests = [
     onHidden: function (popup) {
       ok(!this.notifyObj.mainActionClicked, "mainAction was not clicked because it was too soon");
       ok(this.notifyObj.dismissalCallbackTriggered, "dismissal callback was triggered");
-    },
+    }
   },
   { // Test #24  - test security delay - after delay
     run: function () {
@@ -723,7 +723,7 @@ var tests = [
       ok(this.notifyObj.mainActionClicked, "mainAction was clicked after the delay");
       ok(!this.notifyObj.dismissalCallbackTriggered, "dismissal callback was not triggered");
       PopupNotifications.buttonDelay = PREF_SECURITY_DELAY_INITIAL;
-    },
+    }
   },
   { // Test #25 - reload removes notification
     run: function () {
@@ -827,6 +827,37 @@ var tests = [
         });
       });
     }
+  },
+  { // Test #29 -  Existing popup notification shouldn't disappear when adding a dismissed notification
+    run: function () {
+      this.notifyObj1 = new basicNotification();
+      this.notifyObj1.id += "_1";
+      this.notifyObj1.anchorID = "default-notification-icon";
+      this.notification1 = showNotification(this.notifyObj1);
+    },
+    onShown: function (popup) {
+      // Now show a dismissed notification, and check that it doesn't clobber
+      // the showing one.
+      this.notifyObj2 = new basicNotification();
+      this.notifyObj2.id += "_2";
+      this.notifyObj2.anchorID = "geo-notification-icon";
+      this.notifyObj2.options.dismissed = true;
+      this.notification2 = showNotification(this.notifyObj2);
+
+      checkPopup(popup, this.notifyObj1);
+
+      // check that both anchor icons are showing
+      is(document.getElementById("default-notification-icon").getAttribute("showing"), "true",
+         "notification1 anchor should be visible");
+      is(document.getElementById("geo-notification-icon").getAttribute("showing"), "true",
+         "notification2 anchor should be visible");
+
+      dismissNotification(popup);
+    },
+    onHidden: function(popup) {
+      this.notification1.remove();
+      this.notification2.remove();
+    }
   }
 ];
 
@@ -846,8 +877,10 @@ function checkPopup(popup, notificationObj) {
   ok(notificationObj.shownCallbackTriggered, "shown callback was triggered");
 
   let notifications = popup.childNodes;
-  is(notifications.length, 1, "only one notification displayed");
+  is(notifications.length, 1, "one notification displayed");
   let notification = notifications[0];
+  if (!notification)
+    return;
   let icon = document.getAnonymousElementByAttribute(notification, "class", "popup-notification-icon");
   if (notificationObj.id == "geolocation") {
     isnot(icon.boxObject.width, 0, "icon for geo displayed");

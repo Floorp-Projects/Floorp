@@ -633,7 +633,7 @@ bool SetStringProperty(JSContext *cx, JSObject *aObject, const char *aProperty,
   }
   JSString* strValue = JS_NewUCStringCopyZ(cx, aValue.get());
   NS_ENSURE_TRUE(strValue, false);
-  jsval valValue = STRING_TO_JSVAL(strValue);
+  JS::Value valValue = STRING_TO_JSVAL(strValue);
   return JS_SetProperty(cx, aObject, aProperty, &valValue);
 }
 
@@ -706,7 +706,7 @@ bool DefineOSFileConstants(JSContext *cx, JSObject *global)
       return false;
     }
 
-    jsval valVersion = STRING_TO_JSVAL(strVersion);
+    JS::Value valVersion = STRING_TO_JSVAL(strVersion);
     if (!JS_SetProperty(cx, objSys, "Name", &valVersion)) {
       return false;
     }

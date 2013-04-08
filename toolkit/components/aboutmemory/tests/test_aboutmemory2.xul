@@ -167,8 +167,8 @@
   let startExpected =
 "\
 Main Process\n\
-\n\
 Explicit Allocations\n\
+\n\
 250.00 MB (100.0%) -- explicit\n\
 ├──120.20 MB (48.08%) -- a\n\
 │  ├───50.00 MB (20.00%) ── b\n\
@@ -185,6 +185,7 @@ Explicit Allocations\n\
 └────0.80 MB (00.32%) ++ j\n\
 \n\
 Other Measurements\n\
+\n\
 250.00 MB ── heap-allocated\n\
 \n\
 ";
@@ -192,8 +193,8 @@ Other Measurements\n\
   let acCollapsedExpected =
 "\
 Main Process\n\
-\n\
 Explicit Allocations\n\
+\n\
 250.00 MB (100.0%) -- explicit\n\
 ├──120.20 MB (48.08%) -- a\n\
 │  ├───50.00 MB (20.00%) ── b\n\
@@ -208,6 +209,7 @@ Explicit Allocations\n\
 └────0.80 MB (00.32%) ++ j\n\
 \n\
 Other Measurements\n\
+\n\
 250.00 MB ── heap-allocated\n\
 \n\
 ";
@@ -215,8 +217,8 @@ Other Measurements\n\
   let alExpandedExpected =
 "\
 Main Process\n\
-\n\
 Explicit Allocations\n\
+\n\
 250.00 MB (100.0%) -- explicit\n\
 ├──120.20 MB (48.08%) -- a\n\
 │  ├───50.00 MB (20.00%) ── b\n\
@@ -233,6 +235,7 @@ Explicit Allocations\n\
 └────0.80 MB (00.32%) ++ j\n\
 \n\
 Other Measurements\n\
+\n\
 250.00 MB ── heap-allocated\n\
 \n\
 ";
@@ -240,8 +243,8 @@ Other Measurements\n\
   let aCollapsedExpected =
 "\
 Main Process\n\
-\n\
 Explicit Allocations\n\
+\n\
 250.00 MB (100.0%) -- explicit\n\
 ├──120.20 MB (48.08%) ++ a\n\
 ├──100.00 MB (40.00%) ── g\n\
@@ -252,6 +255,7 @@ Explicit Allocations\n\
 └────0.80 MB (00.32%) ++ j\n\
 \n\
 Other Measurements\n\
+\n\
 250.00 MB ── heap-allocated\n\
 \n\
 ";
@@ -259,8 +263,8 @@ Other Measurements\n\
   let hCollapsedExpected =
 "\
 Main Process\n\
-\n\
 Explicit Allocations\n\
+\n\
 250.00 MB (100.0%) -- explicit\n\
 ├──120.20 MB (48.08%) ++ a\n\
 ├──100.00 MB (40.00%) ── g\n\
@@ -269,6 +273,7 @@ Explicit Allocations\n\
 └────0.80 MB (00.32%) ++ j\n\
 \n\
 Other Measurements\n\
+\n\
 250.00 MB ── heap-allocated\n\
 \n\
 ";
@@ -276,8 +281,8 @@ Other Measurements\n\
   let jExpandedExpected =
 "\
 Main Process\n\
-\n\
 Explicit Allocations\n\
+\n\
 250.00 MB (100.0%) -- explicit\n\
 ├──120.20 MB (48.08%) ++ a\n\
 ├──100.00 MB (40.00%) ── g\n\
@@ -288,6 +293,7 @@ Explicit Allocations\n\
      └──0.30 MB (00.12%) ── k2\n\
 \n\
 Other Measurements\n\
+\n\
 250.00 MB ── heap-allocated\n\
 \n\
 ";
@@ -298,8 +304,8 @@ Other Measurements\n\
   let updatedExpected =
 "\
 Main Process\n\
-\n\
 Explicit Allocations\n\
+\n\
 250.00 MB (100.0%) -- explicit\n\
 ├──120.20 MB (48.08%) ++ a\n\
 ├──100.00 MB (40.00%) ── g\n\
@@ -310,6 +316,7 @@ Explicit Allocations\n\
 └────0.80 MB (00.32%) ++ h\n\
 \n\
 Other Measurements\n\
+\n\
 250.00 MB ── heap-allocated\n\
 \n\
 ";
@@ -317,8 +324,8 @@ Other Measurements\n\
   let aExpandedExpected =
 "\
 Main Process\n\
-\n\
 Explicit Allocations\n\
+\n\
 250.00 MB (100.0%) -- explicit\n\
 ├──120.20 MB (48.08%) -- a\n\
 │  ├───50.00 MB (20.00%) ── b\n\
@@ -335,6 +342,7 @@ Explicit Allocations\n\
 └────0.80 MB (00.32%) ++ h\n\
 \n\
 Other Measurements\n\
+\n\
 250.00 MB ── heap-allocated\n\
 \n\
 ";
@@ -342,8 +350,8 @@ Other Measurements\n\
   let acExpandedExpected =
 "\
 Main Process\n\
-\n\
 Explicit Allocations\n\
+\n\
 250.00 MB (100.0%) -- explicit\n\
 ├──120.20 MB (48.08%) -- a\n\
 │  ├───50.00 MB (20.00%) ── b\n\
@@ -362,6 +370,7 @@ Explicit Allocations\n\
 └────0.80 MB (00.32%) ++ h\n\
 \n\
 Other Measurements\n\
+\n\
 250.00 MB ── heap-allocated\n\
 \n\
 ";
@@ -369,8 +378,8 @@ Other Measurements\n\
   let alCollapsedExpected =
 "\
 Main Process\n\
-\n\
 Explicit Allocations\n\
+\n\
 250.00 MB (100.0%) -- explicit\n\
 ├──120.20 MB (48.08%) -- a\n\
 │  ├───50.00 MB (20.00%) ── b\n\
@@ -387,6 +396,7 @@ Explicit Allocations\n\
 └────0.80 MB (00.32%) ++ h\n\
 \n\
 Other Measurements\n\
+\n\
 250.00 MB ── heap-allocated\n\
 \n\
 ";

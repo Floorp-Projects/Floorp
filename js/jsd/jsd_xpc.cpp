@@ -31,6 +31,8 @@
 /* XXX DOM dependency */
 #include "nsIScriptContext.h"
 #include "nsIJSContextStack.h"
+#include "SandboxPrivate.h"
+#include "nsJSPrincipals.h"
 
 /*
  * defining CAUTIOUS_SCRIPTHOOK makes jsds disable GC while calling out to the
@@ -2410,33 +2412,11 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(jsdService)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, jsdIDebuggerService)
 NS_INTERFACE_MAP_END
 
-/* NS_IMPL_CYCLE_COLLECTION_10(jsdService, ...) */
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(jsdService)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mErrorHook)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mBreakpointHook)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDebugHook)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDebuggerHook)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mInterruptHook)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mScriptHook)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mThrowHook)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTopLevelHook)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFunctionHook)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mActivationCallback)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(jsdService)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mErrorHook)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBreakpointHook)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDebugHook)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDebuggerHook)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mInterruptHook)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mScriptHook)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mThrowHook)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTopLevelHook)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFunctionHook)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mActivationCallback)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
+NS_IMPL_CYCLE_COLLECTION_10(jsdService,
+                            mErrorHook, mBreakpointHook, mDebugHook,
+                            mDebuggerHook, mInterruptHook, mScriptHook,
+                            mThrowHook, mTopLevelHook, mFunctionHook,
+                            mActivationCallback)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(jsdService)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(jsdService)
 
@@ -3433,6 +3413,36 @@ static const mozilla::Module kJSDModule = {
 };
 
 NSMODULE_DEFN(JavaScript_Debugger) = &kJSDModule;
+
+void
+global_finalize(JSFreeOp *aFop, JSObject *aObj)
+{
+    nsIScriptObjectPrincipal *sop =
+        static_cast<nsIScriptObjectPrincipal *>(js::GetObjectPrivate(aObj));
+    MOZ_ASSERT(sop);
+    static_cast<SandboxPrivate *>(sop)->ForgetGlobalObject();
+    NS_IF_RELEASE(sop);
+}
+
+JSObject *
+CreateJSDGlobal(JSContext *aCx, JSClass *aClasp)
+{
+    nsresult rv;
+    nsCOMPtr<nsIPrincipal> nullPrin = do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);
+    NS_ENSURE_SUCCESS(rv, nullptr);
+
+    JSPrincipals *jsPrin = nsJSPrincipals::get(nullPrin);
+    JSObject *global = JS_NewGlobalObject(aCx, aClasp, jsPrin);
+    NS_ENSURE_TRUE(global, nullptr);
+
+    // We have created a new global let's attach a private to it
+    // that implements nsIGlobalObject.
+    nsCOMPtr<nsIScriptObjectPrincipal> sbp =
+        new SandboxPrivate(nullPrin, global);
+    JS_SetPrivate(global, sbp.forget().get());
+
+    return global;
+}
 
 /********************************************************************************
  ********************************************************************************

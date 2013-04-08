@@ -7,7 +7,7 @@
 #define nsGUIEventIPC_h__
 
 #include "ipc/IPCMessageUtils.h"
-#include "nsDOMTouchEvent.h"
+#include "mozilla/dom/Touch.h"
 #include "nsGUIEvent.h"
 
 namespace IPC
@@ -204,12 +204,12 @@ struct ParamTraits<nsTouchEvent>
   static void Write(Message* aMsg, const paramType& aParam)
   {
     WriteParam(aMsg, static_cast<const nsInputEvent&>(aParam));
-    // Sigh, nsDOMTouch bites us again!  We want to be able to do
+    // Sigh, Touch bites us again!  We want to be able to do
     //   WriteParam(aMsg, aParam.touches);
     const nsTArray<nsCOMPtr<nsIDOMTouch> >& touches = aParam.touches;
     WriteParam(aMsg, touches.Length());
     for (uint32_t i = 0; i < touches.Length(); ++i) {
-      nsDOMTouch* touch = static_cast<nsDOMTouch*>(touches[i].get());
+      mozilla::dom::Touch* touch = static_cast<mozilla::dom::Touch*>(touches[i].get());
       WriteParam(aMsg, touch->mIdentifier);
       WriteParam(aMsg, touch->mRefPoint);
       WriteParam(aMsg, touch->mRadius);
@@ -239,7 +239,7 @@ struct ParamTraits<nsTouchEvent>
           return false;
         }
         aResult->touches.AppendElement(
-          new nsDOMTouch(identifier, refPoint, radius, rotationAngle, force));
+          new mozilla::dom::Touch(identifier, refPoint, radius, rotationAngle, force));
     }
     return true;
   }

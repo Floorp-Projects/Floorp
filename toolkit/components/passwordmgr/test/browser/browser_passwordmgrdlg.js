@@ -99,7 +99,7 @@ function test() {
 
             Services.obs.addObserver(function (aSubject, aTopic, aData) {
                 if (aTopic == "passwordmgr-password-toggle-complete") {
-                    Services.obs.removeObserver(arguments.callee, aTopic, false);
+                    Services.obs.removeObserver(arguments.callee, aTopic);
                     func();
                 }
             }, "passwordmgr-password-toggle-complete", false);

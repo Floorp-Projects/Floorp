@@ -15,11 +15,6 @@ hasFeature(const char** aFeatures, uint32_t aFeatureCount, const char* aFeature)
   return false;
 }
 
-void read_env_vars();
-typedef  enum { UnwINVALID, UnwNATIVE, UnwPSEUDO, UnwCOMBINED }  UnwMode;
-extern UnwMode sUnwindMode;
-extern int     sUnwindInterval;
-
 extern TimeStamp sLastTracerEvent;
 extern int sFrameNumber;
 extern int sLastFrameNumber;

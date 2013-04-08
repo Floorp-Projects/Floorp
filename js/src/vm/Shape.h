@@ -427,19 +427,26 @@ struct StackBaseShape
     static inline HashNumber hash(const StackBaseShape *lookup);
     static inline bool match(RawUnownedBaseShape key, const StackBaseShape *lookup);
 
-    class AutoRooter : private AutoGCRooter
+    class AutoRooter : private JS::CustomAutoRooter
     {
       public:
         explicit AutoRooter(JSContext *cx, const StackBaseShape *base_
                             MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-          : AutoGCRooter(cx, STACKBASESHAPE), base(base_), skip(cx, base_)
+          : CustomAutoRooter(cx), base(base_), skip(cx, base_)
         {
             MOZ_GUARD_OBJECT_NOTIFIER_INIT;
         }
 
-        friend void AutoGCRooter::trace(JSTracer *trc);
-
       private:
+        virtual void trace(JSTracer *trc) {
+            if (base->parent)
+                traceObject(trc, (JSObject**)&base->parent, "StackBaseShape::AutoRooter parent");
+            if ((base->flags & BaseShape::HAS_GETTER_OBJECT) && base->rawGetter)
+                traceObject(trc, (JSObject**)&base->rawGetter, "StackBaseShape::AutoRooter getter");
+            if ((base->flags & BaseShape::HAS_SETTER_OBJECT) && base->rawSetter)
+                traceObject(trc, (JSObject**)&base->rawSetter, "StackBaseShape::AutoRooter setter");
+        }
+
         const StackBaseShape *base;
         SkipRoot skip;
         MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
@@ -851,22 +858,27 @@ class Shape : public js::gc::Cell
 
 class AutoRooterGetterSetter
 {
-    class Inner : private AutoGCRooter
+    class Inner : private JS::CustomAutoRooter
     {
       public:
         Inner(JSContext *cx, uint8_t attrs,
               PropertyOp *pgetter_, StrictPropertyOp *psetter_)
-            : AutoGCRooter(cx, GETTERSETTER), attrs(attrs),
-              pgetter(pgetter_), psetter(psetter_),
-              getterRoot(cx, pgetter_), setterRoot(cx, psetter_)
+          : CustomAutoRooter(cx), attrs(attrs),
+            pgetter(pgetter_), psetter(psetter_),
+            getterRoot(cx, pgetter_), setterRoot(cx, psetter_)
         {
             JS_ASSERT_IF(attrs & JSPROP_GETTER, !IsPoisonedPtr(*pgetter));
             JS_ASSERT_IF(attrs & JSPROP_SETTER, !IsPoisonedPtr(*psetter));
         }
 
-        friend void AutoGCRooter::trace(JSTracer *trc);
-
       private:
+        virtual void trace(JSTracer *trc) {
+            if ((attrs & JSPROP_GETTER) && *pgetter)
+                traceObject(trc, (JSObject**) pgetter, "AutoRooterGetterSetter getter");
+            if ((attrs & JSPROP_SETTER) && *psetter)
+                traceObject(trc, (JSObject**) psetter, "AutoRooterGetterSetter setter");
+        }
+
         uint8_t attrs;
         PropertyOp *pgetter;
         StrictPropertyOp *psetter;
@@ -882,8 +894,6 @@ class AutoRooterGetterSetter
             inner.construct(cx, attrs, pgetter, psetter);
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
-
-    friend void AutoGCRooter::trace(JSTracer *trc);
 
   private:
     mozilla::Maybe<Inner> inner;
@@ -1006,19 +1016,19 @@ struct StackShape
 
     inline HashNumber hash() const;
 
-    class AutoRooter : private AutoGCRooter
+    class AutoRooter : private JS::CustomAutoRooter
     {
       public:
         explicit AutoRooter(JSContext *cx, const StackShape *shape_
                             MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-          : AutoGCRooter(cx, STACKSHAPE), shape(shape_), skip(cx, shape_)
+          : CustomAutoRooter(cx), shape(shape_), skip(cx, shape_)
         {
             MOZ_GUARD_OBJECT_NOTIFIER_INIT;
         }
 
-        friend void AutoGCRooter::trace(JSTracer *trc);
-
       private:
+        virtual void trace(JSTracer *trc);
+
         const StackShape *shape;
         SkipRoot skip;
         MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER

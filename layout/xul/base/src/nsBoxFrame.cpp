@@ -33,7 +33,7 @@
 
 #include "nsBoxLayoutState.h"
 #include "nsBoxFrame.h"
-#include "nsDOMTouchEvent.h"
+#include "mozilla/dom/Touch.h"
 #include "nsStyleContext.h"
 #include "nsPresContext.h"
 #include "nsCOMPtr.h"
@@ -66,6 +66,7 @@
 #include "nsIURI.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 //define DEBUG_REDRAW
 
@@ -2071,12 +2072,12 @@ nsBoxFrame::GetEventPoint(nsGUIEvent* aEvent, nsIntPoint &aPoint) {
     if (touchEvent->touches.Length() != 1) {
       return false;
     }
-  
+
     nsIDOMTouch *touch = touchEvent->touches.SafeElementAt(0);
     if (!touch) {
       return false;
     }
-    nsDOMTouch* domtouch = static_cast<nsDOMTouch*>(touch);
+    Touch* domtouch = static_cast<Touch*>(touch);
     aPoint = domtouch->mRefPoint;
   } else {
     aPoint = aEvent->refPoint;
