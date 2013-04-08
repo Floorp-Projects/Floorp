@@ -853,15 +853,16 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
         if (urls.size() == 0)
             return;
 
-        (new UiAsyncTask<Void, Void, Cursor>(ThreadUtils.getBackgroundHandler()) {
+        (new UiAsyncTask<Void, Void, Void>(ThreadUtils.getBackgroundHandler()) {
             @Override
-            public Cursor doInBackground(Void... params) {
-                return BrowserDB.getFaviconsForUrls(getContentResolver(), urls);
+            public Void doInBackground(Void... params) {
+                Cursor cursor = BrowserDB.getFaviconsForUrls(getContentResolver(), urls);
+                storeFaviconsInMemCache(cursor);
+                return null;
             }
 
             @Override
-            public void onPostExecute(Cursor c) {
-                storeFaviconsInMemCache(c);
+            public void onPostExecute(Void result) {
                 postUpdateFavicons();
             }
         }).execute();
