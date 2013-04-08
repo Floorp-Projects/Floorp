@@ -389,11 +389,14 @@ pref("dom.mozContacts.enabled", true);
 pref("dom.mozAlarms.enabled", true);
 
 // SimplePush
+pref("services.push.enabled", true);
 // serverURL to be assigned by services team
 pref("services.push.serverURL", "");
 pref("services.push.userAgentID", "");
 // exponential back-off start is 5 seconds like in HTTP/1.1
 pref("services.push.retryBaseInterval", 5000);
+// WebSocket level ping transmit interval in seconds.
+pref("services.push.websocketPingInterval", 55);
 // exponential back-off end is 20 minutes
 pref("services.push.maxRetryInterval", 1200000);
 // How long before a DOMRequest errors as timeout
@@ -668,3 +671,8 @@ pref("b2g.version", @MOZ_B2G_VERSION@);
 
 // Disable console buffering to save memory.
 pref("consoleservice.buffered", false);
+
+#ifdef MOZ_WIDGET_GONK
+// Performance testing suggests 2k is a better page size for SQLite.
+pref("toolkit.storage.pageSize", 2048);
+#endif

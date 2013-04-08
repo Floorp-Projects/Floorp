@@ -72,18 +72,14 @@ class PeerConnectionCtx : public CSF::CC_Observer {
     mSipccState = aState;
   }
 
-  virtual void onCallEvent_m(ccapi_call_event_e callEvent,
-			     CSF::CC_CallPtr call,
-			     CSF::CC_CallInfoPtr info);
-
   // SIPCC objects
   PeerConnectionImpl::SipccState mSipccState;  // TODO(ekr@rtfm.com): refactor this out? What does it do?
   CSF::CallControlManagerPtr mCCM;
   CSF::CC_DevicePtr mDevice;
 
   static PeerConnectionCtx *gInstance;
-  static nsIThread *gMainThread;
 public:
+  static nsIThread *gMainThread;
   static StaticRefPtr<mozilla::PeerConnectionCtxShutdown> gPeerConnectionCtxShutdown;
 };
 

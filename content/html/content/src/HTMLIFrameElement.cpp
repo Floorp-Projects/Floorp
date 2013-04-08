@@ -222,7 +222,7 @@ HTMLIFrameElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
 
       if (docshell) {
         uint32_t newFlags = 0;
-        // If a NULL aValue is passed in, we want to clear the sandbox flags
+        // If a nullptr aValue is passed in, we want to clear the sandbox flags
         // which we will do by setting them to 0.
         if (aValue) {
           nsAutoString strValue;

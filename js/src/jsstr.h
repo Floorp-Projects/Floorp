@@ -8,6 +8,8 @@
 #ifndef jsstr_h___
 #define jsstr_h___
 
+#include "mozilla/PodOperations.h"
+
 #include <ctype.h>
 #include "jsapi.h"
 #include "jsatom.h"
@@ -213,7 +215,7 @@ js_strchr_limit(const jschar *s, jschar c, const jschar *limit);
 static JS_ALWAYS_INLINE void
 js_strncpy(jschar *dst, const jschar *src, size_t nelem)
 {
-    return js::PodCopy(dst, src, nelem);
+    return mozilla::PodCopy(dst, src, nelem);
 }
 
 extern jschar *

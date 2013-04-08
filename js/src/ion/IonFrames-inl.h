@@ -29,9 +29,12 @@ SizeOfFramePrefix(FrameType type)
     switch (type) {
       case IonFrame_Entry:
         return IonEntryFrameLayout::Size();
+      case IonFrame_BaselineJS:
       case IonFrame_OptimizedJS:
       case IonFrame_Unwound_OptimizedJS:
         return IonJSFrameLayout::Size();
+      case IonFrame_BaselineStub:
+        return IonBaselineStubFrameLayout::Size();
       case IonFrame_Rectifier:
         return IonRectifierFrameLayout::Size();
       case IonFrame_Unwound_Rectifier:
@@ -73,6 +76,24 @@ IonFrameIterator::prevType() const
     return current->prevType();
 }
 
+inline bool
+IonFrameIterator::isFakeExitFrame() const
+{
+    bool res = (prevType() == IonFrame_Unwound_Rectifier ||
+                prevType() == IonFrame_Unwound_OptimizedJS ||
+                prevType() == IonFrame_Unwound_BaselineStub);
+    JS_ASSERT_IF(res, type() == IonFrame_Exit || type() == IonFrame_BaselineJS);
+    return res;
+}
+
+inline IonExitFrameLayout *
+IonFrameIterator::exitFrame() const
+{
+    JS_ASSERT(type() == IonFrame_Exit);
+    JS_ASSERT(!isFakeExitFrame());
+    return (IonExitFrameLayout *) fp();
+}
+
 size_t
 IonFrameIterator::frameSize() const
 {
@@ -96,8 +117,25 @@ GetTopIonJSScript(JSContext *cx, const SafepointIndex **safepointIndexOut, void 
     if (returnAddrOut)
         *returnAddrOut = (void *) iter.returnAddressToFp();
 
+    if (iter.isBaselineStub()) {
+        ++iter;
+        JS_ASSERT(iter.isBaselineJS());
+    }
+
     JS_ASSERT(iter.isScripted());
     return iter.script();
+}
+
+inline BaselineFrame *
+GetTopBaselineFrame(JSContext *cx)
+{
+    IonFrameIterator iter(cx->mainThread().ionTop);
+    JS_ASSERT(iter.type() == IonFrame_Exit);
+    ++iter;
+    if (iter.isBaselineStub())
+        ++iter;
+    JS_ASSERT(iter.isBaselineJS());
+    return iter.baselineFrame();
 }
 
 } // namespace ion

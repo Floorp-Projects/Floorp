@@ -96,6 +96,7 @@
 
 #ifdef MOZ_WEBSPEECH
 #include "mozilla/dom/FakeSpeechRecognitionService.h"
+#include "mozilla/dom/nsSynthVoiceRegistry.h"
 #endif
 
 #ifdef MOZ_B2G_RIL
@@ -182,11 +183,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLEditor)
 class nsIDocumentLoaderFactory;
 
 #define PRODUCT_NAME "Gecko"
-
-#ifdef MOZ_MEDIA
-#define NS_HTMLAUDIOELEMENT_CONTRACTID \
-  "@mozilla.org/content/element/html;1?name=audio"
-#endif
 
 /* 0ddf4df8-4dbb-4133-8b79-9afb966514f5 */
 #define NS_PLUGINDOCLOADERFACTORY_CID \
@@ -295,6 +291,11 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(SystemWorkerManager,
 #ifdef MOZ_B2G_BT
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(BluetoothService,
                                          BluetoothService::FactoryCreate)
+#endif
+
+#ifdef MOZ_WEBSPEECH
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsSynthVoiceRegistry,
+                                         nsSynthVoiceRegistry::GetInstanceForService)
 #endif
 
 #ifdef MOZ_WIDGET_GONK
@@ -548,7 +549,6 @@ MAKE_CTOR2(CreatePreContentIterator,      nsIContentIterator,          NS_NewPre
 MAKE_CTOR2(CreateSubtreeIterator,         nsIContentIterator,          NS_NewContentSubtreeIterator)
 // CreateHTMLImgElement, see below
 // CreateHTMLOptionElement, see below
-// CreateHTMLAudioElement, see below
 MAKE_CTOR(CreateTextEncoder,              nsIDocumentEncoder,          NS_NewTextEncoder)
 MAKE_CTOR(CreateHTMLCopyTextEncoder,      nsIDocumentEncoder,          NS_NewHTMLCopyTextEncoder)
 MAKE_CTOR(CreateXMLContentSerializer,     nsIContentSerializer,        NS_NewXMLContentSerializer)
@@ -643,20 +643,6 @@ CreateHTMLOptionElement(nsISupports* aOuter, REFNSIID aIID, void** aResult)
   return rv;
 }
 
-#ifdef MOZ_MEDIA
-static nsresult
-CreateHTMLAudioElement(nsISupports* aOuter, REFNSIID aIID, void** aResult)
-{
-  *aResult = nullptr;
-  if (aOuter)
-    return NS_ERROR_NO_AGGREGATION;
-  // Note! NS_NewHTMLAudioElement is special cased to handle a null nodeinfo
-  nsCOMPtr<nsINodeInfo> ni;
-  nsCOMPtr<nsIContent> inst(NS_NewHTMLAudioElement(ni.forget()));
-  return inst ? inst->QueryInterface(aIID, aResult) : NS_ERROR_OUT_OF_MEMORY;
-}
-#endif
-
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMScriptObjectFactory)
 
 #define NS_GEOLOCATION_CID \
@@ -742,9 +728,6 @@ NS_DEFINE_NAMED_CID(NS_PRECONTENTITERATOR_CID);
 NS_DEFINE_NAMED_CID(NS_SUBTREEITERATOR_CID);
 NS_DEFINE_NAMED_CID(NS_HTMLIMAGEELEMENT_CID);
 NS_DEFINE_NAMED_CID(NS_HTMLOPTIONELEMENT_CID);
-#ifdef MOZ_MEDIA
-NS_DEFINE_NAMED_CID(NS_HTMLAUDIOELEMENT_CID);
-#endif
 NS_DEFINE_NAMED_CID(NS_CANVASRENDERINGCONTEXTWEBGL_CID);
 NS_DEFINE_NAMED_CID(NS_TEXT_ENCODER_CID);
 NS_DEFINE_NAMED_CID(NS_HTMLCOPY_TEXT_ENCODER_CID);
@@ -865,6 +848,7 @@ NS_DEFINE_NAMED_CID(NS_GAMEPAD_TEST_CID);
 #endif
 #ifdef MOZ_WEBSPEECH
 NS_DEFINE_NAMED_CID(NS_FAKE_SPEECH_RECOGNITION_SERVICE_CID);
+NS_DEFINE_NAMED_CID(NS_SYNTHVOICEREGISTRY_CID);
 #endif
 
 static nsresult
@@ -1032,9 +1016,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_SUBTREEITERATOR_CID, false, NULL, CreateSubtreeIterator },
   { &kNS_HTMLIMAGEELEMENT_CID, false, NULL, CreateHTMLImgElement },
   { &kNS_HTMLOPTIONELEMENT_CID, false, NULL, CreateHTMLOptionElement },
-#ifdef MOZ_MEDIA
-  { &kNS_HTMLAUDIOELEMENT_CID, false, NULL, CreateHTMLAudioElement },
-#endif
   { &kNS_CANVASRENDERINGCONTEXTWEBGL_CID, false, NULL, CreateCanvasRenderingContextWebGL },
   { &kNS_TEXT_ENCODER_CID, false, NULL, CreateTextEncoder },
   { &kNS_HTMLCOPY_TEXT_ENCODER_CID, false, NULL, CreateHTMLCopyTextEncoder },
@@ -1116,6 +1097,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_FOCUSMANAGER_CID, false, NULL, CreateFocusManager },
 #ifdef MOZ_WEBSPEECH
   { &kNS_FAKE_SPEECH_RECOGNITION_SERVICE_CID, false, NULL, FakeSpeechRecognitionServiceConstructor },
+  { &kNS_SYNTHVOICEREGISTRY_CID, true, NULL, nsSynthVoiceRegistryConstructor },
 #endif
   { &kCSPSERVICE_CID, false, NULL, CSPServiceConstructor },
   { &kNS_MIXEDCONTENTBLOCKER_CID, false, NULL, nsMixedContentBlockerConstructor },
@@ -1182,9 +1164,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { "@mozilla.org/content/subtree-content-iterator;1", &kNS_SUBTREEITERATOR_CID },
   { "@mozilla.org/content/element/html;1?name=img", &kNS_HTMLIMAGEELEMENT_CID },
   { "@mozilla.org/content/element/html;1?name=option", &kNS_HTMLOPTIONELEMENT_CID },
-#ifdef MOZ_MEDIA
-  { NS_HTMLAUDIOELEMENT_CONTRACTID, &kNS_HTMLAUDIOELEMENT_CID },
-#endif
   { "@mozilla.org/content/canvas-rendering-context;1?id=moz-webgl", &kNS_CANVASRENDERINGCONTEXTWEBGL_CID },
   { "@mozilla.org/content/canvas-rendering-context;1?id=experimental-webgl", &kNS_CANVASRENDERINGCONTEXTWEBGL_CID },
   { NS_DOC_ENCODER_CONTRACTID_BASE "text/xml", &kNS_TEXT_ENCODER_CID },
@@ -1265,6 +1244,7 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { "@mozilla.org/focus-manager;1", &kNS_FOCUSMANAGER_CID },
 #ifdef MOZ_WEBSPEECH
   { NS_SPEECH_RECOGNITION_SERVICE_CONTRACTID_PREFIX "fake", &kNS_FAKE_SPEECH_RECOGNITION_SERVICE_CID },
+  { NS_SYNTHVOICEREGISTRY_CONTRACTID, &kNS_SYNTHVOICEREGISTRY_CID },
 #endif
   { CSPSERVICE_CONTRACTID, &kCSPSERVICE_CID },
   { NS_MIXEDCONTENTBLOCKER_CONTRACTID, &kNS_MIXEDCONTENTBLOCKER_CID },
@@ -1307,10 +1287,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
 
 static const mozilla::Module::CategoryEntry kLayoutCategories[] = {
   XPCONNECT_CATEGORIES
-#ifdef MOZ_MEDIA
-  { JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY, "Audio", NS_HTMLAUDIOELEMENT_CONTRACTID },
-  { JAVASCRIPT_GLOBAL_CONSTRUCTOR_PROTO_ALIAS_CATEGORY, "Audio", "HTMLAudioElement" },
-#endif
   { "content-policy", NS_DATADOCUMENTCONTENTPOLICY_CONTRACTID, NS_DATADOCUMENTCONTENTPOLICY_CONTRACTID },
   { "content-policy", NS_NODATAPROTOCOLCONTENTPOLICY_CONTRACTID, NS_NODATAPROTOCOLCONTENTPOLICY_CONTRACTID },
   { "content-policy", "CSPService", CSPSERVICE_CONTRACTID },

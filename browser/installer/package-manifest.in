@@ -213,7 +213,7 @@
 @BINPATH@/components/dom_stylesheets.xpt
 @BINPATH@/components/dom_traversal.xpt
 #ifdef MOZ_WEBSPEECH
-@BINPATH@/components/dom_webspeech.xpt
+@BINPATH@/components/dom_webspeechrecognition.xpt
 #endif
 @BINPATH@/components/dom_xbl.xpt
 @BINPATH@/components/dom_xpath.xpt
@@ -538,6 +538,10 @@
 @BINPATH@/chrome/marionette.manifest
 @BINPATH@/components/MarionetteComponents.manifest
 @BINPATH@/components/marionettecomponent.js
+#endif
+
+#ifdef MOZ_WEBSPEECH
+@BINPATH@/components/dom_webspeechsynth.xpt
 #endif
 
 ; Modules

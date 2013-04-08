@@ -89,10 +89,10 @@ public:
   void SetLineNumber(uint32_t aLineNumber);
   
   virtual nsresult InstallMember(JSContext* aCx,
-                                 JSObject* aTargetClassObject);
+                                 JS::Handle<JSObject*> aTargetClassObject);
   virtual nsresult CompileMember(nsIScriptContext* aContext,
                                  const nsCString& aClassStr,
-                                 JSObject* aClassObject);
+                                 JS::Handle<JSObject*> aClassObject);
 
   virtual void Trace(TraceCallback aCallback, void *aClosure) const;
 
@@ -138,7 +138,7 @@ public:
   // binding instantiations (though they may hang out in mMembers on the
   // prototype implementation).
   virtual nsresult InstallMember(JSContext* aCx,
-                                 JSObject* aTargetClassObject) {
+                                 JS::Handle<JSObject*> aTargetClassObject) {
     return NS_OK;
   }
 

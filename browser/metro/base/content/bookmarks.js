@@ -17,32 +17,6 @@ var Bookmarks = {
     }
   },
 
-  /*
-   * fixupColorFormat - convert a decimal color value to a valid
-   * css color string of the format '#123456'
-   */ 
-  fixupColorFormat: function bv_fixupColorFormat(aColor) {
-    let color = aColor.toString(16);
-    while (color.length < 6)
-      color = "0" + color;
-    return "#" + color;
-  },
-
-  getFaveIconPrimaryColor: function bh_getFaveIconPrimaryColor(aBookmarkId) {
-    if (PlacesUtils.annotations.itemHasAnnotation(aBookmarkId, 'metro/faveIconColor'))
-      return PlacesUtils.annotations.getItemAnnotation(aBookmarkId, 'metro/faveIconColor');
-    return "";
-  },
-
-  setFaveIconPrimaryColor: function bh_setFaveIconPrimaryColor(aBookmarkId, aColorStr) {
-    var anno = [{ name: "metro/faveIconColor",
-                  type: Ci.nsIAnnotationService.TYPE_STRING,
-                  flags: 0,
-                  value: aColorStr,
-                  expires: Ci.nsIAnnotationService.EXPIRE_NEVER }];
-    PlacesUtils.setAnnotationsForItem(aBookmarkId, anno);
-  },
-
   addForURI: function bh_addForURI(aURI, aTitle, callback) {
     this.isURIBookmarked(aURI, function (isBookmarked) {
       if (isBookmarked)
@@ -217,23 +191,16 @@ BookmarksView.prototype = {
 
   _gotIcon: function _gotIcon(aBookmarkId, aItem, aIconUri) {
     aItem.setAttribute("iconURI", aIconUri ? aIconUri.spec : "");
-
-    let color = Bookmarks.getFaveIconPrimaryColor(aBookmarkId);
-    if (color) {
-      aItem.color = color;
-      return;
-    }
     if (!aIconUri) {
       return;
     }
-    let url = Services.io.newURI(aIconUri.spec.replace("moz-anno:favicon:",""), "", null)
-    let ca = Components.classes["@mozilla.org/places/colorAnalyzer;1"]
-                       .getService(Components.interfaces.mozIColorAnalyzer);
-    ca.findRepresentativeColor(url, function (success, color) {
-      let colorStr = Bookmarks.fixupColorFormat(color);
-      Bookmarks.setFaveIconPrimaryColor(aBookmarkId, colorStr);
-      aItem.color = colorStr;
-    }, this);
+    ColorUtils.getForegroundAndBackgroundIconColors(aIconUri, function(foregroundColor, backgroundColor) {
+      aItem.style.color = foregroundColor; //color text
+      aItem.setAttribute("customColor", backgroundColor); //set background
+      if (aItem.refresh) {
+        aItem.refresh();
+      }
+    });
   },
 
   updateBookmark: function bv_updateBookmark(aBookmarkId) {

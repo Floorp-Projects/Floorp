@@ -14,7 +14,7 @@ function postTestCleanup(callback) {
   tabsToRemove = [];
   // theses tests use the notification panel but don't bother waiting for it
   // to fully open - the end result is that the panel might stay open
-  SocialUI.notificationPanel.hidePopup();
+  SocialUI.activationPanel.hidePopup();
 
   Services.prefs.clearUserPref("social.whitelist");
 
@@ -42,7 +42,7 @@ function postTestCleanup(callback) {
 }
 
 function addBuiltinManifest(manifest) {
-  Services.prefs.setCharPref("social.manifest." + manifest.origin, JSON.stringify(manifest));
+  setManifestPref("social.manifest."+manifest.origin, manifest);
 }
 
 function addTab(url, callback) {
@@ -54,29 +54,29 @@ function addTab(url, callback) {
   }, true);
 }
 
-function sendActivationEvent(tab, callback) {
+function sendActivationEvent(tab, callback, nullManifest) {
   // hack Social.lastEventReceived so we don't hit the "too many events" check.
   Social.lastEventReceived = 0;
   let doc = tab.linkedBrowser.contentDocument;
   // if our test has a frame, use it
   if (doc.defaultView.frames[0])
     doc = doc.defaultView.frames[0].document;
-  let button = doc.getElementById("activation");
+  let button = doc.getElementById(nullManifest ? "activation-old" : "activation");
   EventUtils.synthesizeMouseAtCenter(button, {}, doc.defaultView);
   executeSoon(callback);
 }
 
-function activateProvider(domain, callback) {
+function activateProvider(domain, callback, nullManifest) {
   let activationURL = domain+"/browser/browser/base/content/test/social/social_activate.html"
   addTab(activationURL, function(tab) {
-    sendActivationEvent(tab, callback);
+    sendActivationEvent(tab, callback, nullManifest);
   });
 }
 
 function activateIFrameProvider(domain, callback) {
   let activationURL = domain+"/browser/browser/base/content/test/social/social_activate_iframe.html"
   addTab(activationURL, function(tab) {
-    sendActivationEvent(tab, callback);
+    sendActivationEvent(tab, callback, false);
   });
 }
 
@@ -117,7 +117,7 @@ var tests = {
     Services.prefs.setBoolPref("social.remote-install.enabled", false);
     activateProvider(gTestDomains[0], function() {
       is(SocialUI.enabled, false, "SocialUI is not enabled");
-      ok(SocialUI.notificationPanel.hidden, "activation panel still hidden");
+      ok(SocialUI.activationPanel.hidden, "activation panel still hidden");
       checkSocialUI();
       Services.prefs.clearUserPref("social.remote-install.enabled");
       next();
@@ -129,7 +129,7 @@ var tests = {
     activateIFrameProvider(gTestDomains[0], function() {
       is(SocialUI.enabled, false, "SocialUI is not enabled");
       ok(!Social.provider, "provider is not installed");
-      ok(SocialUI.notificationPanel.hidden, "activation panel still hidden");
+      ok(SocialUI.activationPanel.hidden, "activation panel still hidden");
       checkSocialUI();
       Services.prefs.clearUserPref("social.whitelist");
       next();
@@ -140,7 +140,7 @@ var tests = {
     Services.prefs.setCharPref("social.whitelist", gTestDomains.join(","));
     // first up we add a manifest entry for a single provider.
     activateProvider(gTestDomains[0], function() {
-      ok(!SocialUI.notificationPanel.hidden, "activation panel should be showing");
+      ok(!SocialUI.activationPanel.hidden, "activation panel should be showing");
       is(Social.provider.origin, gTestDomains[0], "new provider is active");
       checkSocialUI();
       // hit "undo"
@@ -153,6 +153,27 @@ var tests = {
         next();
       })
     });
+  },
+
+  testActivationBuiltin: function(next) {
+    let prefname = getManifestPrefname(gProviders[0]);
+    setBuiltinManifestPref(prefname, gProviders[0]);
+    is(SocialService.getOriginActivationType(gTestDomains[0]), "builtin", "manifest is builtin");
+    // first up we add a manifest entry for a single provider.
+    activateProvider(gTestDomains[0], function() {
+      ok(!SocialUI.activationPanel.hidden, "activation panel should be showing");
+      is(Social.provider.origin, gTestDomains[0], "new provider is active");
+      checkSocialUI();
+      // hit "undo"
+      document.getElementById("social-undoactivation-button").click();
+      executeSoon(function() {
+        // we deactivated leaving no providers left, so Social is disabled.
+        ok(!Social.provider, "should be no provider left after disabling");
+        checkSocialUI();
+        resetBuiltinManifestPref(prefname);
+        next();
+      })
+    }, true);
   },
 
   testActivationMultipleProvider: function(next) {
@@ -169,7 +190,7 @@ var tests = {
         // activate the last provider.
         addBuiltinManifest(gProviders[2]);
         activateProvider(gTestDomains[2], function() {
-          ok(!SocialUI.notificationPanel.hidden, "activation panel should be showing");
+          ok(!SocialUI.activationPanel.hidden, "activation panel should be showing");
           is(Social.provider.origin, gTestDomains[2], "new provider is active");
           checkSocialUI();
           // hit "undo"
@@ -195,7 +216,7 @@ var tests = {
         // activate the last provider.
         addBuiltinManifest(gProviders[2]);
         activateProvider(gTestDomains[2], function() {
-          ok(!SocialUI.notificationPanel.hidden, "activation panel should be showing");
+          ok(!SocialUI.activationPanel.hidden, "activation panel should be showing");
           is(Social.provider.origin, gTestDomains[2], "new provider is active");
           checkSocialUI();
           // A bit contrived, but set a new provider current while the

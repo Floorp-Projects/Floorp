@@ -13,6 +13,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/LinkedList.h"
+#include "mozilla/PodOperations.h"
 
 #include <string.h>
 
@@ -70,7 +71,7 @@ struct CallsiteCloneKey {
     /* The offset of the call. */
     uint32_t offset;
 
-    CallsiteCloneKey() { PodZero(this); }
+    CallsiteCloneKey() { mozilla::PodZero(this); }
 
     typedef CallsiteCloneKey Lookup;
 
@@ -185,7 +186,7 @@ struct ConservativeGCData
     } registerSnapshot;
 
     ConservativeGCData() {
-        PodZero(this);
+        mozilla::PodZero(this);
     }
 
     ~ConservativeGCData() {
@@ -268,13 +269,14 @@ class NativeIterCache
     PropertyIteratorObject *last;
 
     NativeIterCache()
-      : last(NULL) {
-        PodArrayZero(data);
+      : last(NULL)
+    {
+        mozilla::PodArrayZero(data);
     }
 
     void purge() {
         last = NULL;
-        PodArrayZero(data);
+        mozilla::PodArrayZero(data);
     }
 
     PropertyIteratorObject *get(uint32_t key) const {
@@ -336,8 +338,8 @@ class NewObjectCache
 
     typedef int EntryIndex;
 
-    NewObjectCache() { PodZero(this); }
-    void purge() { PodZero(this); }
+    NewObjectCache() { mozilla::PodZero(this); }
+    void purge() { mozilla::PodZero(this); }
 
     /*
      * Get the entry index for the given lookup, return whether there was a hit
@@ -482,6 +484,36 @@ class PerThreadData : public js::PerThreadDataFriendFields
     uint8_t             *ionTop;
     JSContext           *ionJSContext;
     uintptr_t            ionStackLimit;
+
+# ifdef JS_THREADSAFE
+    /*
+     * Synchronizes setting of ionStackLimit so signals by triggerOperationCallback don't
+     * get lost.
+     */
+    PRLock *ionStackLimitLock_;
+
+    class IonStackLimitLock {
+        PerThreadData &data_;
+      public:
+        IonStackLimitLock(PerThreadData &data) : data_(data) {
+            JS_ASSERT(data_.ionStackLimitLock_);
+            PR_Lock(data_.ionStackLimitLock_);
+        }
+        ~IonStackLimitLock() {
+            JS_ASSERT(data_.ionStackLimitLock_);
+            PR_Unlock(data_.ionStackLimitLock_);
+        }
+    };
+#else
+    class IonStackLimitLock {
+      public:
+        IonStackLimitLock(PerThreadData &data) {}
+    };
+# endif
+    void setIonStackLimit(uintptr_t limit) {
+        IonStackLimitLock lock(*this);
+        ionStackLimit = limit;
+    }
 
     /*
      * This points to the most recent Ion activation running on the thread.
@@ -774,6 +806,8 @@ struct JSRuntime : private JS::shadow::Runtime,
                                        js::Handle<JSFunction*> targetFun);
     bool cloneSelfHostedValue(JSContext *cx, js::Handle<js::PropertyName*> name,
                               js::MutableHandleValue vp);
+    bool maybeWrappedSelfHostedFunction(JSContext *cx, js::Handle<js::PropertyName*> name,
+                                        js::MutableHandleValue funVal);
 
     //-------------------------------------------------------------------------
     // Locale information
@@ -1270,8 +1304,10 @@ struct JSRuntime : private JS::shadow::Runtime,
 
     bool                jitHardening;
 
+    // Used to reset stack limit after a signaled interrupt (i.e. ionStackLimit_ = -1)
+    // has been noticed by Ion/Baseline.
     void resetIonStackLimit() {
-        mainThread.ionStackLimit = mainThread.nativeStackLimit;
+        mainThread.setIonStackLimit(mainThread.nativeStackLimit);
     }
 
     // Cache for ion::GetPcScript().
@@ -2089,9 +2125,6 @@ js_InvokeOperationCallback(JSContext *cx);
 extern JSBool
 js_HandleExecutionInterrupt(JSContext *cx);
 
-extern jsbytecode*
-js_GetCurrentBytecodePC(JSContext* cx);
-
 /*
  * If the operation callback flag was set, call the operation callback.
  * This macro can run the full GC. Return true if it is OK to continue and
@@ -2121,13 +2154,13 @@ namespace js {
 static JS_ALWAYS_INLINE void
 MakeRangeGCSafe(Value *vec, size_t len)
 {
-    PodZero(vec, len);
+    mozilla::PodZero(vec, len);
 }
 
 static JS_ALWAYS_INLINE void
 MakeRangeGCSafe(Value *beg, Value *end)
 {
-    PodZero(beg, end - beg);
+    mozilla::PodZero(beg, end - beg);
 }
 
 static JS_ALWAYS_INLINE void
@@ -2146,13 +2179,13 @@ MakeRangeGCSafe(jsid *vec, size_t len)
 static JS_ALWAYS_INLINE void
 MakeRangeGCSafe(Shape **beg, Shape **end)
 {
-    PodZero(beg, end - beg);
+    mozilla::PodZero(beg, end - beg);
 }
 
 static JS_ALWAYS_INLINE void
 MakeRangeGCSafe(Shape **vec, size_t len)
 {
-    PodZero(vec, len);
+    mozilla::PodZero(vec, len);
 }
 
 static JS_ALWAYS_INLINE void

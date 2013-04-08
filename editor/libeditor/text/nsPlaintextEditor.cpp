@@ -830,7 +830,7 @@ nsresult
 nsPlaintextEditor::UpdateIMEComposition(const nsAString& aCompositionString,
                                         nsIPrivateTextRangeList* aTextRangeList)
 {
-  NS_ABORT_IF_FALSE(aTextRangeList, "aTextRangeList must not be NULL");
+  NS_ABORT_IF_FALSE(aTextRangeList, "aTextRangeList must not be nullptr");
 
   nsCOMPtr<nsIPresShell> ps = GetPresShell();
   NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);

@@ -160,13 +160,22 @@ this.PushDB.prototype = {
       }
       return;
     }
+
+    var self = this;
     this.newTxn(
       "readonly",
       kPUSHDB_STORE_NAME,
       function txnCb(aTxn, aStore) {
         var index = aStore.index("manifestURL");
-        index.mozGetAll().onsuccess = function(event) {
-          aTxn.result = event.target.result;
+        var range = self.dbGlobal.IDBKeyRange.only(aManifestURL);
+        aTxn.result = [];
+        index.openCursor(range).onsuccess = function(event) {
+          var cursor = event.target.result;
+          if (cursor) {
+            debug(cursor.value.manifestURL + " " + cursor.value.channelID);
+            aTxn.result.push(cursor.value);
+            cursor.continue();
+          }
         }
       },
       aSuccessCb,
@@ -280,11 +289,15 @@ PushService.prototype = {
   observe: function observe(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "app-startup":
+        if (!this._prefs.get("enabled"))
+          return;
+
         Services.obs.addObserver(this, "final-ui-startup", false);
         Services.obs.addObserver(this, "profile-change-teardown", false);
         Services.obs.addObserver(this,
                                  "network-interface-state-changed",
                                  false);
+        Services.obs.addObserver(this, "webapps-uninstall", false);
         break;
       case "final-ui-startup":
         Services.obs.removeObserver(this, "final-ui-startup");
@@ -339,6 +352,34 @@ PushService.prototype = {
         else if (aSubject == this._retryTimeoutTimer) {
           this._beginWSSetup();
         }
+        break;
+      case "webapps-uninstall":
+        debug("webapps-uninstall");
+        let appsService = Cc["@mozilla.org/AppsService;1"]
+                            .getService(Ci.nsIAppsService);
+        var app = appsService.getAppFromObserverMessage(aData);
+        if (!app) {
+          debug("webapps-uninstall: No app found " + aData.origin);
+          return;
+        }
+
+        this._db.getAllByManifestURL(app.manifestURL, function(records) {
+          debug("Got " + records.length);
+          for (var i = 0; i < records.length; i++) {
+            this._db.delete(records[i].channelID, null, function() {
+              debug("app uninstall: " + app.manifestURL + " Could not delete entry " + records[i].channelID);
+            });
+            // courtesy, but don't establish a connection
+            // just for it
+            if (this._ws) {
+              debug("Had a connection, so telling the server");
+              this._request("unregister", {channelID: records[i].channelID});
+            }
+          }
+        }.bind(this), function() {
+          debug("Error in getAllByManifestURL: url " + app.manifestURL);
+        });
+
     }
   },
 
@@ -526,6 +567,7 @@ PushService.prototype = {
     debug("serverURL: " + uri.spec);
     this._wsListener = new PushWebSocketListener(this);
     this._ws.protocol = "push-notification";
+    this._ws.pingInterval = this._prefs.get("websocketPingInterval");
     this._ws.asyncOpen(uri, serverURL, this._wsListener, null);
     this._currentState = STATE_WAITING_FOR_WS_START;
   },

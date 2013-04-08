@@ -69,7 +69,7 @@ public:
   // aContent must be:
   //   If the editor is for <input> or <textarea>, the element.
   //   If the editor is for contenteditable, the active editinghost.
-  //   If the editor is for designMode, NULL.
+  //   If the editor is for designMode, nullptr.
   static void OnClickInEditor(nsPresContext* aPresContext,
                               nsIContent* aContent,
                               nsIDOMMouseEvent* aMouseEvent);
@@ -78,7 +78,7 @@ public:
   // aContent must be:
   //   If the editor is for <input> or <textarea>, the element.
   //   If the editor is for contenteditable, the active editinghost.
-  //   If the editor is for designMode, NULL.
+  //   If the editor is for designMode, nullptr.
   static void OnFocusInEditor(nsPresContext* aPresContext,
                               nsIContent* aContent);
 

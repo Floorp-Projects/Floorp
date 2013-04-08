@@ -30,7 +30,7 @@ HyperTextAccessibleWrap::QueryInterface(REFIID aIID, void** aInstancePtr)
   if (!aInstancePtr)
     return E_FAIL;
 
-  *aInstancePtr = NULL;
+  *aInstancePtr = nullptr;
 
   if (IsTextRole()) {
     if (aIID == IID_IAccessibleText)

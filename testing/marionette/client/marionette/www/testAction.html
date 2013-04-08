@@ -37,6 +37,8 @@
     // here is second for a tap
     second.addEventListener("touchstart", function(){changePressText("mozLinkCopy")}, false);
     second.addEventListener("touchend", function(){changeClickText("mozLinkCopy")}, false);
+    // change for contextmenu
+    second.addEventListener("contextmenu", onContextMenuChange, false);
     // here is third for horizontal move
     third.addEventListener("touchstart", function(){changePressText("mozLinkStart")}, false);
     third.addEventListener("touchmove", changeHorizontalMove, false);
@@ -95,7 +97,7 @@
 
     function changeClickText(strId) {
       var second = document.getElementById(strId);
-      if (second.innerHTML == "Start") {
+      if (second.innerHTML == "Start" || second.innerHTML == "Context") {
         second.innerHTML = "End";
       }
       else {
@@ -128,6 +130,11 @@
       if (checkPosition(event, "delayed")) {
         document.getElementById("delayed").innerHTML = "End";
       }
+    }
+
+    function onContextMenuChange() {
+      var context = document.getElementById("mozLinkCopy");
+      context.innerHTML = "Context";
     }
   </script>
 </body>

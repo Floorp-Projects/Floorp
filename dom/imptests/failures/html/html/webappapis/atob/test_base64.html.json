@@ -1,0 +1,14 @@
+{
+  "btoa(null) == \"bnVsbA==\"": true,
+  "atob(\" abcd\") == \"i\u00b7\\x1d\"": true,
+  "atob(\"abcd \") == \"i\u00b7\\x1d\"": true,
+  "atob(\"ab\\tcd\") == \"i\u00b7\\x1d\"": true,
+  "atob(\"ab\\ncd\") == \"i\u00b7\\x1d\"": true,
+  "atob(\"ab\\fcd\") == \"i\u00b7\\x1d\"": true,
+  "atob(\"ab\\rcd\") == \"i\u00b7\\x1d\"": true,
+  "atob(\"ab cd\") == \"i\u00b7\\x1d\"": true,
+  "atob(\"ab\\t\\n\\f\\r cd\") == \"i\u00b7\\x1d\"": true,
+  "atob(\" \\t\\n\\f\\r ab\\t\\n\\f\\r cd\\t\\n\\f\\r \") == \"i\u00b7\\x1d\"": true,
+  "atob(\"ab\\t\\n\\f\\r =\\t\\n\\f\\r =\\t\\n\\f\\r \") == \"i\"": true,
+  "atob(null) == \"\u009e\u00e9e\"": true
+}

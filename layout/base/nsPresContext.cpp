@@ -1768,7 +1768,7 @@ nsPresContext::MediaFeatureValuesChanged(StyleRebuildType aShouldRebuild,
 
     if (!notifyList.IsEmpty()) {
       nsPIDOMWindow *win = mDocument->GetInnerWindow();
-      nsCOMPtr<nsIDOMEventTarget> et = do_QueryInterface(win);
+      nsCOMPtr<EventTarget> et = do_QueryInterface(win);
       nsCxPusher pusher;
 
       for (uint32_t i = 0, i_end = notifyList.Length(); i != i_end; ++i) {

@@ -93,8 +93,9 @@
 
   <statusbar>
     <statusbarpanel flex="1" pack="start">
-      <label value="&filter2.label;" accesskey="&filter2.accesskey;" control="Filter"/>
-      <textbox type="search" id="Filter" oncommand="changeFilter();"/>
+      <label value="&filter2.label;" control="Filter"/>
+      <textbox accesskey="&filter2.accesskey;" type="search"
+               id="Filter" oncommand="changeFilter();"/>
     </statusbarpanel>
   </statusbar>
 </window>

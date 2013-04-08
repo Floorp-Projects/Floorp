@@ -296,8 +296,6 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
         NS_ENSURE_SUCCESS(rv, rv);
         sandboxObj = js::UnwrapObject(sandboxObj);
         JSAutoCompartment ac(cx, sandboxObj);
-        rv = xpc->HoldObject(cx, sandboxObj, getter_AddRefs(sandbox));
-        NS_ENSURE_SUCCESS(rv, rv);
 
         // Push our JSContext on the context stack so the JS_ValueToString call (and
         // JS_ReportPendingException, if relevant) will use the principal of cx.
@@ -311,8 +309,9 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
             return rv;
         }
 
-        rv = xpc->EvalInSandboxObject(NS_ConvertUTF8toUTF16(script), cx,
-                                      sandbox, true, &v);
+        rv = xpc->EvalInSandboxObject(NS_ConvertUTF8toUTF16(script),
+                                      /* filename = */ nullptr, cx,
+                                      sandboxObj, true, &v);
 
         // Propagate and report exceptions that happened in the
         // sandbox.

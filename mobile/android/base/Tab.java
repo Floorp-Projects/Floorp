@@ -38,6 +38,7 @@ public class Tab {
     private Bitmap mFavicon;
     private String mFaviconUrl;
     private int mFaviconSize;
+    private boolean mFeedsEnabled;
     private JSONObject mIdentityData;
     private boolean mReaderEnabled;
     private BitmapDrawable mThumbnail;
@@ -76,6 +77,7 @@ public class Tab {
         mFavicon = null;
         mFaviconUrl = null;
         mFaviconSize = 0;
+        mFeedsEnabled = false;
         mIdentityData = null;
         mReaderEnabled = false;
         mEnteringReaderMode = false;
@@ -187,6 +189,10 @@ public class Tab {
 
     public synchronized String getFaviconURL() {
         return mFaviconUrl;
+    }
+
+    public boolean getFeedsEnabled() {
+        return mFeedsEnabled;
     }
 
     public String getSecurityMode() {
@@ -310,6 +316,10 @@ public class Tab {
         mFavicon = null;
         mFaviconUrl = null;
         mFaviconSize = 0;
+    }
+
+    public void setFeedsEnabled(boolean feedsEnabled) {
+        mFeedsEnabled = feedsEnabled;
     }
 
     public void updateIdentityData(JSONObject identityData) {
@@ -525,6 +535,7 @@ public class Tab {
 
         setContentType(message.getString("contentType"));
         clearFavicon();
+        setFeedsEnabled(false);
         updateTitle(null);
         updateIdentityData(null);
         setReaderEnabled(false);

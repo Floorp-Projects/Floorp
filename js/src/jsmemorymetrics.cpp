@@ -17,6 +17,7 @@
 #include "jsobj.h"
 #include "jsscript.h"
 
+#include "ion/BaselineJIT.h"
 #include "ion/Ion.h"
 #include "ion/IonCode.h"
 #include "vm/Shape.h"
@@ -119,7 +120,8 @@ StatsCompartmentCallback(JSRuntime *rt, void *data, JSCompartment *compartment)
                                      &cStats.shapesCompartmentTables,
                                      &cStats.crossCompartmentWrappersTable,
                                      &cStats.regexpCompartment,
-                                     &cStats.debuggeesSet);
+                                     &cStats.debuggeesSet,
+                                     &cStats.baselineOptimizedStubs);
 }
 
 static void
@@ -256,7 +258,12 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
 #ifdef JS_METHODJIT
         cStats->jaegerData += script->sizeOfJitScripts(rtStats->mallocSizeOf_);
 # ifdef JS_ION
-        cStats->ionData += ion::MemoryUsed(script, rtStats->mallocSizeOf_);
+        size_t baselineData = 0, baselineFallbackStubs = 0;
+        ion::SizeOfBaselineData(script, rtStats->mallocSizeOf_, &baselineData,
+                                &baselineFallbackStubs);
+        cStats->baselineData += baselineData;
+        cStats->baselineFallbackStubs += baselineFallbackStubs;
+        cStats->ionData += ion::SizeOfIonData(script, rtStats->mallocSizeOf_);
 # endif
 #endif
 

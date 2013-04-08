@@ -52,7 +52,7 @@ function SI_inspectNode()
 
 function SI_check()
 {
-  Services.obs.removeObserver(SI_check, "StyleInspector-populated", false);
+  Services.obs.removeObserver(SI_check, "StyleInspector-populated");
   is(propertyVisible("color"), true,
     "span #matches color property is visible");
   is(propertyVisible("background-color"), false,
@@ -73,7 +73,7 @@ function SI_toggleDefaultStyles()
 
 function SI_checkDefaultStyles()
 {
-  Services.obs.removeObserver(SI_checkDefaultStyles, "StyleInspector-populated", false);
+  Services.obs.removeObserver(SI_checkDefaultStyles, "StyleInspector-populated");
   // Check that the default styles are now applied.
   is(propertyVisible("color"), true,
       "span color property is visible");

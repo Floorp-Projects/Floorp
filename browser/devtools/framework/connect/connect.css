@@ -1,3 +1,7 @@
+:root {
+  font: caption;
+}
+
 html {
   background-color: #111;
   background-image: url("chrome://browser/skin/newtab/noise.png");
@@ -25,13 +29,11 @@ h1 {
 label {
   display: block;
   margin: 10px;
-  font-size: 0;
 }
 
 label > span {
   display: inline-block;
   min-width: 150px;
-  font-size: 0.8rem;
   text-align: right;
   margin-right: 10px;
 }
@@ -80,7 +82,6 @@ body.connecting > #connecting {
 
 .actors {
   padding-left: 0;
-  font-size: 0.9rem;
 }
 
 .actors > a {

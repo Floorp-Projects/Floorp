@@ -16,7 +16,7 @@ nsresult
 PredicateList::evaluatePredicates(txNodeSet* nodes,
                                   txIMatchContext* aContext)
 {
-    NS_ASSERTION(nodes, "called evaluatePredicates with NULL NodeSet");
+    NS_ASSERTION(nodes, "called evaluatePredicates with nullptr NodeSet");
     nsresult rv = NS_OK;
 
     uint32_t i, len = mPredicates.Length();

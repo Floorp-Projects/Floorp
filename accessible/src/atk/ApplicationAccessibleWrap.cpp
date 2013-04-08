@@ -69,7 +69,7 @@ toplevel_event_watcher(GSignalInvocationHint* ihint,
                         (g_object_get_qdata(G_OBJECT(child), sQuark_gecko_acc_obj));
       if (windowAcc) {
         GetAccService()->RemoveNativeRootAccessible(windowAcc);
-        g_object_set_qdata(G_OBJECT(child), sQuark_gecko_acc_obj, NULL);
+        g_object_set_qdata(G_OBJECT(child), sQuark_gecko_acc_obj, nullptr);
       }
 
     }
@@ -97,7 +97,7 @@ ApplicationAccessibleWrap::GetNativeInterface(void** aOutAccessible)
     if (!mAtkObject) {
         mAtkObject =
             reinterpret_cast<AtkObject *>
-                            (g_object_new(MAI_TYPE_ATK_OBJECT, NULL));
+                            (g_object_new(MAI_TYPE_ATK_OBJECT, nullptr));
         NS_ENSURE_TRUE(mAtkObject, NS_ERROR_OUT_OF_MEMORY);
 
         atk_object_initialize(mAtkObject, this);
@@ -119,7 +119,7 @@ gboolean fireRootAccessibleAddedCB(gpointer data)
 {
     AtkRootAccessibleAddedEvent* eventData = (AtkRootAccessibleAddedEvent*)data;
     g_signal_emit_by_name(eventData->app_accessible, "children_changed::add",
-                          eventData->index, eventData->root_accessible, NULL);
+                          eventData->index, eventData->root_accessible, nullptr);
     g_object_unref(eventData->app_accessible);
     g_object_unref(eventData->root_accessible);
     free(data);
@@ -160,9 +160,9 @@ ApplicationAccessibleWrap::RemoveChild(Accessible* aChild)
   int32_t index = aChild->IndexInParent();
 
   AtkObject* atkAccessible = AccessibleWrap::GetAtkObject(aChild);
-  atk_object_set_parent(atkAccessible, NULL);
+  atk_object_set_parent(atkAccessible, nullptr);
   g_signal_emit_by_name(mAtkObject, "children_changed::remove", index,
-                        atkAccessible, NULL);
+                        atkAccessible, nullptr);
 
   return ApplicationAccessible::RemoveChild(aChild);
 }

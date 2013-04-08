@@ -33,7 +33,7 @@ uiaRawElmProvider::GetObjectForChild(long aIdChild,
   if (!aAccEx)
     return E_INVALIDARG;
 
-  *aAccEx = NULL;
+  *aAccEx = nullptr;
 
   return mAcc->IsDefunct() ? CO_E_OBJNOTCONNECTED : S_OK;
 
@@ -49,7 +49,7 @@ uiaRawElmProvider::GetIAccessiblePair(__RPC__deref_out_opt IAccessible** aAcc,
   if (!aAcc || !aIdChild)
     return E_INVALIDARG;
 
-  *aAcc = NULL;
+  *aAcc = nullptr;
   *aIdChild = 0;
 
   if (mAcc->IsDefunct())
@@ -94,9 +94,9 @@ uiaRawElmProvider::ConvertReturnedElement(__RPC__in_opt IRawElementProviderSimpl
   if (!aRawElmProvider || !aAccEx)
     return E_INVALIDARG;
 
-  *aAccEx = NULL;
+  *aAccEx = nullptr;
 
-  void* instancePtr = NULL;
+  void* instancePtr = nullptr;
   HRESULT hr = aRawElmProvider->QueryInterface(IID_IAccessibleEx, &instancePtr);
   if (SUCCEEDED(hr))
     *aAccEx = static_cast<IAccessibleEx*>(instancePtr);
@@ -133,7 +133,7 @@ uiaRawElmProvider::GetPatternProvider(PATTERNID aPatternId,
   if (!aPatternProvider)
     return E_INVALIDARG;
 
-  *aPatternProvider = NULL;
+  *aPatternProvider = nullptr;
   return S_OK;
 
   A11Y_TRYBLOCK_END
@@ -239,7 +239,7 @@ uiaRawElmProvider::get_HostRawElementProvider(__RPC__deref_out_opt IRawElementPr
     return E_INVALIDARG;
 
   // This method is not used with IAccessibleEx implementations.
-  *aRawElmProvider = NULL;
+  *aRawElmProvider = nullptr;
   return S_OK;
 
   A11Y_TRYBLOCK_END

@@ -43,33 +43,25 @@ public:
   RefPtr* GetWeak(KeyType aKey, bool* aFound = nullptr) const;
 };
 
-/**
- * Thread-safe version of nsRefPtrHashtable
- * @param KeyClass a wrapper-class for the hashtable key, see nsHashKeys.h
- *   for a complete specification.
- * @param RefPtr the reference-type being wrapped
- */
-template<class KeyClass, class RefPtr>
-class nsRefPtrHashtableMT :
-  public nsBaseHashtableMT< KeyClass, nsRefPtr<RefPtr> , RefPtr* >
+template <typename K, typename T>
+inline void
+ImplCycleCollectionUnlink(nsRefPtrHashtable<K, T>& aField)
 {
-public:
-  typedef typename KeyClass::KeyType KeyType;
-  typedef RefPtr* UserDataType;
-  typedef nsBaseHashtableMT< KeyClass, nsRefPtr<RefPtr> , RefPtr* > base_type;
+  aField.Clear();
+}
 
-  /**
-   * @copydoc nsBaseHashtable::Get
-   * @param pData This is an XPCOM getter, so pData is already_addrefed.
-   *   If the key doesn't exist, pData will be set to nullptr.
-   */
-  bool Get(KeyType aKey, UserDataType* pData) const;
+template <typename K, typename T>
+inline void
+ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                            nsRefPtrHashtable<K, T>& aField,
+                            const char* aName,
+                            uint32_t aFlags = 0)
+{
+  nsBaseHashtableCCTraversalData userData(aCallback, aName, aFlags);
 
-  // GetWeak does not make sense on a multi-threaded hashtable, where another
-  // thread may remove the entry (and hence release it) as soon as GetWeak
-  // returns
-};
-
+  aField.EnumerateRead(ImplCycleCollectionTraverse_EnumFunc<typename K::KeyType,T*>,
+                       &userData);
+}
 
 //
 // nsRefPtrHashtable definitions
@@ -121,43 +113,6 @@ nsRefPtrHashtable<KeyClass,RefPtr>::GetWeak
   if (aFound)
     *aFound = false;
   return nullptr;
-}
-
-//
-// nsRefPtrHashtableMT definitions
-//
-
-template<class KeyClass, class RefPtr>
-bool
-nsRefPtrHashtableMT<KeyClass,RefPtr>::Get
-  (KeyType aKey, UserDataType* pRefPtr) const
-{
-  PR_Lock(this->mLock);
-
-  typename base_type::EntryType* ent = this->GetEntry(aKey);
-
-  if (ent)
-  {
-    if (pRefPtr)
-    {
-      *pRefPtr = ent->mData;
-
-      NS_IF_ADDREF(*pRefPtr);
-    }
-
-    PR_Unlock(this->mLock);
-
-    return true;
-  }
-
-  // if the key doesn't exist, set *pRefPtr to null
-  // so that it is a valid XPCOM getter
-  if (pRefPtr)
-    *pRefPtr = nullptr;
-
-  PR_Unlock(this->mLock);
-
-  return false;
 }
 
 #endif // nsRefPtrHashtable_h__

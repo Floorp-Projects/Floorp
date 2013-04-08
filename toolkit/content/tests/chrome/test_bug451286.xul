@@ -34,7 +34,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=451286
 
       // We trigger assertions that happen during the GC of our parent
       // window.
-      SimpleTest.expectAssertions(2, 5); // bug 683159
+      SimpleTest.expectAssertions(0, 5); // bug 683159, bug 849394
 
       // To be called by the window we open.
       function parentFinish() {

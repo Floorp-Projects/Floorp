@@ -76,7 +76,7 @@ interface nsPIExternalAppLauncher : nsISupports
  * Note that cancelling the load via the nsICancelable interface will release
  * the reference to the launcher dialog.
  */
-[scriptable, uuid(d9a19faf-497b-408c-b995-777d956b72c0)]
+[scriptable, uuid(acf2a516-7d7f-4771-8b22-6c4a559c088e)]
 interface nsIHelperAppLauncher : nsICancelable
 {
   /**
@@ -109,6 +109,13 @@ interface nsIHelperAppLauncher : nsICancelable
    * @param aRememberThisPreference TRUE if we should remember this choice.
    */
   void launchWithApplication(in nsIFile aApplication, in boolean aRememberThisPreference);
+
+  /**
+   * Callback invoked by nsIHelperAppLauncherDialog::promptForSaveToFileAsync
+   * after the user has chosen a file through the File Picker (or dismissed it).
+   * @param aFile The file that was chosen by the user (or null if dialog was dismissed).
+   */
+  void saveDestinationAvailable(in nsIFile aFile);
 
   /**
    * The following methods are used by the progress dialog to get or set

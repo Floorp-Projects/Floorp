@@ -3,14 +3,4 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'content'
-
-XPIDL_MODULE = 'dom_webspeech'
-
-XPIDL_SOURCES = [
-  'nsIDOMSpeechRecognitionEvent.idl',
-  'nsIDOMSpeechRecognitionError.idl',
-  'nsISpeechRecognitionService.idl'
-]
-
-TEST_DIRS += ['recognition/test']
+PARALLEL_DIRS = ['recognition', 'synth']

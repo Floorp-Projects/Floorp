@@ -1994,7 +1994,17 @@ nsresult nsExternalAppHandler::CreateProgressListener()
   return rv;
 }
 
-nsresult nsExternalAppHandler::PromptForSaveToFile(nsIFile ** aNewFile, const nsAFlatString &aDefaultFile, const nsAFlatString &aFileExtension)
+nsresult nsExternalAppHandler::SaveDestinationAvailable(nsIFile * aFile)
+{
+  if (aFile)
+    ContinueSave(aFile);
+  else
+    Cancel(NS_BINDING_ABORTED);
+
+  return NS_OK;
+}
+
+void nsExternalAppHandler::RequestSaveDestination(const nsAFlatString &aDefaultFile, const nsAFlatString &aFileExtension)
 {
   // invoke the dialog!!!!! use mWindowContext as the window context parameter for the dialog request
   // Convert to use file picker? No, then embeddors could not do any sort of
@@ -2004,7 +2014,10 @@ nsresult nsExternalAppHandler::PromptForSaveToFile(nsIFile ** aNewFile, const ns
   {
     // Get helper app launcher dialog.
     mDialog = do_CreateInstance( NS_HELPERAPPLAUNCHERDLG_CONTRACTID, &rv );
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (rv != NS_OK) {
+      Cancel(NS_BINDING_ABORTED);
+      return;
+    }
   }
 
   // we want to explicitly unescape aDefaultFile b4 passing into the dialog. we can't unescape
@@ -2015,14 +2028,25 @@ nsresult nsExternalAppHandler::PromptForSaveToFile(nsIFile ** aNewFile, const ns
   // picker is up would cause Cancel() to be called, and the dialog would be
   // released, which would release this object too, which would crash.
   // See Bug 249143
+  nsIFile* fileToUse;
   nsRefPtr<nsExternalAppHandler> kungFuDeathGrip(this);
   nsCOMPtr<nsIHelperAppLauncherDialog> dlg(mDialog);
-  rv = mDialog->PromptForSaveToFile(this, 
+  rv = mDialog->PromptForSaveToFile(this,
                                     mWindowContext,
                                     aDefaultFile.get(),
                                     aFileExtension.get(),
-                                    mForceSave, aNewFile);
-  return rv;
+                                    mForceSave, &fileToUse);
+
+  if (rv == NS_ERROR_NOT_AVAILABLE) {
+    // we need to use the async version -> nsIHelperAppLauncherDialog.promptForSaveToFileAsync.
+    rv = mDialog->PromptForSaveToFileAsync(this, 
+                                           mWindowContext,
+                                           aDefaultFile.get(),
+                                           aFileExtension.get(),
+                                           mForceSave);
+  } else {
+    SaveDestinationAvailable(rv == NS_OK ? fileToUse : nullptr);
+  }
 }
 
 nsresult nsExternalAppHandler::MoveFile(nsIFile * aNewFileLocation)
@@ -2089,7 +2113,6 @@ nsresult nsExternalAppHandler::MoveFile(nsIFile * aNewFileLocation)
 
 NS_IMETHODIMP nsExternalAppHandler::SaveToDisk(nsIFile * aNewFileLocation, bool aRememberThisPreference)
 {
-  nsresult rv = NS_OK;
   if (mCanceled)
     return NS_OK;
 
@@ -2098,11 +2121,9 @@ NS_IMETHODIMP nsExternalAppHandler::SaveToDisk(nsIFile * aNewFileLocation, bool 
   // The helper app dialog has told us what to do.
   mReceivedDispositionInfo = true;
 
-  nsCOMPtr<nsIFile> fileToUse = do_QueryInterface(aNewFileLocation);
-  if (!fileToUse)
-  {
+  if (!aNewFileLocation) {
     if (mSuggestedFileName.IsEmpty())
-      rv = PromptForSaveToFile(getter_AddRefs(fileToUse), mTempLeafName, mTempFileExtension);
+      RequestSaveDestination(mTempLeafName, mTempFileExtension);
     else
     {
       nsAutoString fileExt;
@@ -2112,15 +2133,20 @@ NS_IMETHODIMP nsExternalAppHandler::SaveToDisk(nsIFile * aNewFileLocation, bool 
       if (fileExt.IsEmpty())
         fileExt = mTempFileExtension;
 
-      rv = PromptForSaveToFile(getter_AddRefs(fileToUse), mSuggestedFileName, fileExt);
+      RequestSaveDestination(mSuggestedFileName, fileExt);
     }
-
-    if (NS_FAILED(rv) || !fileToUse) {
-      Cancel(NS_BINDING_ABORTED);
-      return NS_ERROR_FAILURE;
-    }
+  } else {
+    ContinueSave(aNewFileLocation);
   }
-  
+
+  return NS_OK;
+}
+nsresult nsExternalAppHandler::ContinueSave(nsIFile * aNewFileLocation)
+{
+  NS_PRECONDITION(aNewFileLocation, "Must be called with a non-null file");
+
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIFile> fileToUse = do_QueryInterface(aNewFileLocation);
   mFinalFileDestination = do_QueryInterface(fileToUse);
 
   // Move what we have in the final directory, but append .part

@@ -150,20 +150,32 @@ class RegExpStatics
 
     /* PreserveRegExpStatics helpers. */
 
-    class AutoRooter : private AutoGCRooter
+    class AutoRooter : private JS::CustomAutoRooter
     {
       public:
         explicit AutoRooter(JSContext *cx, RegExpStatics *statics_
                             MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-          : AutoGCRooter(cx, REGEXPSTATICS), statics(statics_), skip(cx, statics_)
+          : CustomAutoRooter(cx), statics(statics_), skip(cx, statics_)
         {
             MOZ_GUARD_OBJECT_NOTIFIER_INIT;
         }
 
-        friend void AutoGCRooter::trace(JSTracer *trc);
-        void trace(JSTracer *trc);
-
       private:
+        virtual void trace(JSTracer *trc) {
+            if (statics->matchesInput) {
+                traceString(trc, reinterpret_cast<JSString**>(&statics->matchesInput),
+                               "RegExpStatics::AutoRooter matchesInput");
+            }
+            if (statics->lazySource) {
+                traceString(trc, reinterpret_cast<JSString**>(&statics->lazySource),
+                               "RegExpStatics::AutoRooter lazySource");
+            }
+            if (statics->pendingInput) {
+                traceString(trc, reinterpret_cast<JSString**>(&statics->pendingInput),
+                               "RegExpStatics::AutoRooter pendingInput");
+            }
+        }
+
         RegExpStatics *statics;
         SkipRoot skip;
         MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER

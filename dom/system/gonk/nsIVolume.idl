@@ -45,6 +45,9 @@ interface nsIVolume : nsISupports
   // the wakelock every time the volume becomes mounted.
   readonly attribute DOMString mountLockName;
 
+  // Determines if a mountlock is currently being held against this volume.
+  readonly attribute boolean isMountLocked;
+
   nsIVolumeStat getStats();
 };
 

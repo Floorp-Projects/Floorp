@@ -567,7 +567,7 @@ nsSMILAnimationController::DoMilestoneSamples()
 
     for (uint32_t i = 0; i < length; ++i) {
       SVGAnimationElement* elem = params.mElements[i].get();
-      NS_ABORT_IF_FALSE(elem, "NULL animation element in list");
+      NS_ABORT_IF_FALSE(elem, "nullptr animation element in list");
       nsSMILTimeContainer* container = elem->GetTimeContainer();
       if (!container)
         // The container may be nullptr if the element has been detached from its

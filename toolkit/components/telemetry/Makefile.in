@@ -17,10 +17,7 @@ MODULE_NAME = telemetry
 LIBXUL_LIBRARY = 1
 EXPORT_LIBRARY = 1
 IS_COMPONENT = 1
-ifndef _MSC_VER
-# Note: Bug 851306 tracks the MSVC-only build warnings in this directory.
 FAIL_ON_WARNINGS = 1
-endif # !_MSC_VER
 
 LIBRARY_NAME = telemetry
 

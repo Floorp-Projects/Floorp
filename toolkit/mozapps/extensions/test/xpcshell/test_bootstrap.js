@@ -487,7 +487,7 @@ function run_test_8() {
     do_check_true(b1.isActive);
     do_check_eq(getInstalledVersion(), 1);
     do_check_eq(getActiveVersion(), 1);
-    do_check_eq(getStartupReason(), APP_STARTUP);
+    do_check_eq(getStartupReason(), ADDON_INSTALL);
     do_check_eq(getStartupOldVersion(), 0);
     do_check_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
 
@@ -666,7 +666,7 @@ function run_test_12() {
     do_check_true(b1.isActive);
     do_check_eq(getInstalledVersion(), 1);
     do_check_eq(getActiveVersion(), 1);
-    do_check_eq(getStartupReason(), APP_STARTUP);
+    do_check_eq(getStartupReason(), ADDON_INSTALL);
     do_check_eq(getStartupOldVersion(), 0);
     do_check_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
 

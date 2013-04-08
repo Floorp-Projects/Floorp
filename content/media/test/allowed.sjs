@@ -17,8 +17,7 @@ var types = {
   ogv: "video/ogg",
   oga: "audio/ogg",
   webm: "video/webm",
-  wav: "audio/x-wav",
-  mpd: "application/dash+xml"
+  wav: "audio/x-wav"
 };
 
 // Return file with name as per the query string with access control

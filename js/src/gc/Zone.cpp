@@ -14,6 +14,7 @@
 #include "gc/GCInternals.h"
 
 #ifdef JS_ION
+#include "ion/BaselineJIT.h"
 #include "ion/IonCompartment.h"
 #include "ion/Ion.h"
 #endif
@@ -175,6 +176,18 @@ Zone::discardJitCode(FreeOp *fop, bool discardConstraints)
         PurgeJITCaches(this);
     } else {
 # ifdef JS_ION
+
+#  ifdef DEBUG
+        /* Assert no baseline scripts are marked as active. */
+        for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
+            JSScript *script = i.get<JSScript>();
+            JS_ASSERT_IF(script->hasBaselineScript(), !script->baseline->active());
+        }
+#  endif
+
+        /* Mark baseline scripts on the stack as active. */
+        ion::MarkActiveBaselineScripts(this);
+
         /* Only mark OSI points if code is being discarded. */
         ion::InvalidateAll(fop, this);
 # endif
@@ -184,6 +197,12 @@ Zone::discardJitCode(FreeOp *fop, bool discardConstraints)
             mjit::ReleaseScriptCode(fop, script);
 # ifdef JS_ION
             ion::FinishInvalidation(fop, script);
+
+            /*
+             * Discard baseline script if it's not marked as active. Note that
+             * this also resets the active flag.
+             */
+            ion::FinishDiscardBaselineScript(fop, script);
 # endif
 
             /*
@@ -194,8 +213,15 @@ Zone::discardJitCode(FreeOp *fop, bool discardConstraints)
             script->resetUseCount();
         }
 
-        for (CompartmentsInZoneIter comp(this); !comp.done(); comp.next())
+        for (CompartmentsInZoneIter comp(this); !comp.done(); comp.next()) {
+#ifdef JS_ION
+            /* Free optimized baseline stubs. */
+            if (comp->ionCompartment())
+                comp->ionCompartment()->optimizedStubSpace()->free();
+#endif
+
             comp->types.sweepCompilerOutputs(fop, discardConstraints);
+        }
     }
 #endif /* JS_METHODJIT */
 }

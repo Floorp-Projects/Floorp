@@ -355,11 +355,11 @@ interface nsIMemoryReporterManager : nsISupports
 // that individual reporters should be referenced with |nsIMemoryReporter *|
 // instead of nsCOMPtr<nsIMemoryReporter>.
 
-nsresult NS_RegisterMemoryReporter(nsIMemoryReporter *reporter);
-nsresult NS_RegisterMemoryMultiReporter(nsIMemoryMultiReporter *reporter);
+XPCOM_API(nsresult) NS_RegisterMemoryReporter(nsIMemoryReporter *reporter);
+XPCOM_API(nsresult) NS_RegisterMemoryMultiReporter(nsIMemoryMultiReporter *reporter);
 
-nsresult NS_UnregisterMemoryReporter(nsIMemoryReporter *reporter);
-nsresult NS_UnregisterMemoryMultiReporter(nsIMemoryMultiReporter *reporter);
+XPCOM_API(nsresult) NS_UnregisterMemoryReporter(nsIMemoryReporter *reporter);
+XPCOM_API(nsresult) NS_UnregisterMemoryMultiReporter(nsIMemoryMultiReporter *reporter);
 
 #if defined(MOZ_DMD)
 namespace mozilla {

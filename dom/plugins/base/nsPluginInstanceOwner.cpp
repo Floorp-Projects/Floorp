@@ -1749,7 +1749,7 @@ void nsPluginInstanceOwner::ExitFullScreen(jobject view) {
 nsresult nsPluginInstanceOwner::DispatchFocusToPlugin(nsIDOMEvent* aFocusEvent)
 {
 #ifdef MOZ_WIDGET_ANDROID
-  {
+  if (mInstance) {
     ANPEvent event;
     event.inSize = sizeof(ANPEvent);
     event.eventType = kLifecycle_ANPEventType;
@@ -1906,6 +1906,8 @@ nsresult nsPluginInstanceOwner::DispatchMouseToPlugin(nsIDOMEvent* aMouseEvent)
 nsresult
 nsPluginInstanceOwner::HandleEvent(nsIDOMEvent* aEvent)
 {
+  NS_ASSERTION(mInstance, "Should have a valid plugin instance or not receive events.");
+
   nsAutoString eventType;
   aEvent->GetType(eventType);
   if (eventType.EqualsLiteral("focus")) {

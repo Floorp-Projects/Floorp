@@ -37,7 +37,7 @@
 #ifndef mozilla_dom_SVGMatrix_h
 #define mozilla_dom_SVGMatrix_h
 
-#include "DOMSVGTransform.h"
+#include "mozilla/dom/SVGTransform.h"
 #include "gfxMatrix.h"
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
@@ -57,14 +57,14 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(SVGMatrix)
 
   /**
-   * Ctor for SVGMatrix objects that belong to a DOMSVGTransform.
+   * Ctor for SVGMatrix objects that belong to a SVGTransform.
    */
-  SVGMatrix(DOMSVGTransform& aTransform) : mTransform(&aTransform) {
+  SVGMatrix(SVGTransform& aTransform) : mTransform(&aTransform) {
     SetIsDOMBinding();
   }
 
   /**
-   * Ctors for SVGMatrix objects created independently of a DOMSVGTransform.
+   * Ctors for SVGMatrix objects created independently of a SVGTransform.
    */
   // Default ctor for gfxMatrix will produce identity mx
   SVGMatrix() {
@@ -80,7 +80,7 @@ public:
   }
 
   // WebIDL
-  DOMSVGTransform* GetParentObject() const;
+  SVGTransform* GetParentObject() const;
   virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 
   float A() const { return static_cast<float>(Matrix().xx); }
@@ -123,7 +123,7 @@ private:
     return mTransform ? mTransform->IsAnimVal() : false;
   }
 
-  nsRefPtr<DOMSVGTransform> mTransform;
+  nsRefPtr<SVGTransform> mTransform;
 
   // Typically we operate on the matrix data accessed via mTransform but for
   // matrices that exist independently of an SVGTransform we use mMatrix below.

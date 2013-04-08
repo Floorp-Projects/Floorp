@@ -29,13 +29,13 @@ class nsSVGImageFrame;
 
 namespace mozilla {
 class DOMSVGAnimatedPreserveAspectRatio;
-class DOMSVGTransform;
 class SVGFragmentIdentifier;
 class AutoSVGRenderingState;
 
 namespace dom {
 class SVGAngle;
 class SVGMatrix;
+class SVGTransform;
 class SVGViewElement;
 class SVGIRect;
 
@@ -241,8 +241,8 @@ public:
   already_AddRefed<nsISVGPoint> CreateSVGPoint();
   already_AddRefed<SVGMatrix> CreateSVGMatrix();
   already_AddRefed<SVGIRect> CreateSVGRect();
-  already_AddRefed<DOMSVGTransform> CreateSVGTransform();
-  already_AddRefed<DOMSVGTransform> CreateSVGTransformFromMatrix(SVGMatrix& matrix);
+  already_AddRefed<SVGTransform> CreateSVGTransform();
+  already_AddRefed<SVGTransform> CreateSVGTransformFromMatrix(SVGMatrix& matrix);
   Element* GetElementById(const nsAString& elementId, ErrorResult& rv);
   already_AddRefed<nsIDOMSVGAnimatedRect> ViewBox();
   already_AddRefed<DOMSVGAnimatedPreserveAspectRatio> PreserveAspectRatio();

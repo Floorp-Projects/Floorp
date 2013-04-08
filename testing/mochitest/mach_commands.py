@@ -61,7 +61,7 @@ class MochitestRunner(MozbuildObject):
         if test_file:
             test_path = self._wrap_path_argument(test_file).relpath()
 
-        tests_dir = os.path.abspath(os.path.join(self.topobjdir, '_tests'))
+        tests_dir = os.path.join(self.topobjdir, '_tests')
         mochitest_dir = os.path.join(tests_dir, 'testing', 'mochitest')
 
         failure_file_path = os.path.join(self.statedir, 'mochitest_failures.json')

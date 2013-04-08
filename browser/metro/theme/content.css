@@ -131,11 +131,11 @@ button {
 }
 
 input[type="checkbox"] {
-  background: white -moz-linear-gradient(top, rgba(115,115,115,0.5) 0, rgba(215,215,215,0.5) 2px, rgba(255,255,255,0.2) 6px);
+  background: white linear-gradient(rgba(115,115,115,0.5) 0, rgba(215,215,215,0.5) 2px, rgba(255,255,255,0.2) 6px);
 }
 
 input[type="radio"] {
-  background: -moz-radial-gradient(6px 6px, cover, rgba(255,255,255,0.2) 3px, rgba(195,195,195,0.5) 5px, rgba(115,115,115,0.5) 100%);
+  background: radial-gradient(at 6px 6px, rgba(255,255,255,0.2) 3px, rgba(195,195,195,0.5) 5px, rgba(115,115,115,0.5) 100%);
 }
 
 select {
@@ -186,11 +186,11 @@ input[type="radio"]:focus {
 }
 
 input[type="checkbox"]:focus {
-  background: white -moz-linear-gradient(top, rgba(27,113,177,0.5) 0, rgba(198,225,246,0.2) 2px, rgba(255,255,255,0.2) 6px);
+  background: white linear-gradient(rgba(27,113,177,0.5) 0, rgba(198,225,246,0.2) 2px, rgba(255,255,255,0.2) 6px);
 }
 
 input[type="radio"]:focus {
-  background: -moz-radial-gradient(6px 6px, cover, rgba(255,255,255,0.2) 3px, rgba(198,225,246,0.2) 5px, rgba(27,113,177,0.5) 100%);
+  background: radial-gradient(at 6px 6px, rgba(255,255,255,0.2) 3px, rgba(198,225,246,0.2) 5px, rgba(27,113,177,0.5) 100%);
 }
 
 /* we need to be specific for selects because the above rules are specific too */
@@ -206,13 +206,13 @@ button[disabled],
   border-color: rgba(125,125,125,0.4);
   border-style: solid;
   border-width: 1px;
-  background: transparent -moz-linear-gradient(top, rgba(185,185,185,0.4) 0, rgba(235,235,235,0.4) 3px, rgba(255,255,255,0.4) 100%);
+  background: transparent linear-gradient(rgba(185,185,185,0.4) 0, rgba(235,235,235,0.4) 3px, rgba(255,255,255,0.4) 100%);
 }
 
 select:not([size]):not([multiple])[disabled],
 select[size="0"][disabled],
 select[size="1"][disabled] {
-  background: transparent -moz-linear-gradient(top, rgba(255,255,255,0.4) 0, rgba(235,235,235,0.4) 3px, rgba(185,185,185,0.4) 100%);
+  background: transparent linear-gradient(rgba(255,255,255,0.4) 0, rgba(235,235,235,0.4) 3px, rgba(185,185,185,0.4) 100%);
 }
 
 input[type="button"][disabled],
@@ -220,7 +220,7 @@ input[type="submit"][disabled],
 input[type="reset"][disabled],
 button[disabled] {
   padding: 0 7px 0 7px;
-  background: transparent -moz-linear-gradient(top, rgba(255,255,255,0.4) 0, rgba(235,235,235,0.4) 3px, rgba(185,185,185,0.4) 100%);
+  background: transparent linear-gradient(rgba(255,255,255,0.4) 0, rgba(235,235,235,0.4) 3px, rgba(185,185,185,0.4) 100%);
 }
 
 input[type="radio"][disabled],

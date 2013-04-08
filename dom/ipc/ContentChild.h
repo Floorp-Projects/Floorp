@@ -148,6 +148,9 @@ public:
     virtual PBluetoothChild* AllocPBluetooth();
     virtual bool DeallocPBluetooth(PBluetoothChild* aActor);
 
+    virtual PSpeechSynthesisChild* AllocPSpeechSynthesis();
+    virtual bool DeallocPSpeechSynthesis(PSpeechSynthesisChild* aActor);
+
     virtual bool RecvRegisterChrome(const InfallibleTArray<ChromePackage>& packages,
                                     const InfallibleTArray<ResourceMapping>& resources,
                                     const InfallibleTArray<OverrideMapping>& overrides,

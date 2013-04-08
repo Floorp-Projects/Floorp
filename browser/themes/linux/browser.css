@@ -2155,6 +2155,32 @@ toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
   right: auto;
 }
 
+.popup-notification-icon[popupid="servicesInstall"] {
+  list-style-image: url("chrome://global/skin/icons/information-64.png");
+}
+#servicesInstall-notification-icon {
+  list-style-image: url(chrome://global/skin/icons/information-16.png);
+}
+#social-undoactivation-button,
+#servicesInstall-learnmore-link {
+  -moz-margin-start: 0; /* override default label margin to match description margin */
+}
+
+.social-activation-icon {
+  width: auto;
+  height: auto;
+  max-height: 64px;
+  max-width: 64px;
+}
+
+#social-activation-message {
+  max-width: 250px;
+}
+
+#social-activation-message > label {
+  margin: 0;
+}
+
 /* social toolbar provider menu */
 #social-statusarea-popup {
   margin-top: 0;

@@ -657,6 +657,15 @@ public:
                                            const nscoord aRadii[8],
                                            const nsRect& aContainedRect);
 
+  /**
+   * Return whether any part of aTestRect is inside of the rounded
+   * rectangle formed by aBounds and aRadii (which are indexed by the
+   * NS_CORNER_* constants in nsStyleConsts.h). This is precise.
+   */
+  static bool RoundedRectIntersectsRect(const nsRect& aRoundedRect,
+                                        const nscoord aRadii[8],
+                                        const nsRect& aTestRect);
+
   enum {
     PAINT_IN_TRANSFORM = 0x01,
     PAINT_SYNC_DECODE_IMAGES = 0x02,

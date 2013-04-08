@@ -637,8 +637,8 @@ public:
 
   virtual void SetScriptHandlingObject(nsIScriptGlobalObject* aScriptObject);
 
-  virtual nsIScriptGlobalObject* GetScopeObject() const;
-
+  virtual nsIGlobalObject* GetScopeObject() const;
+  void SetScopeObject(nsIGlobalObject* aGlobal);
   /**
    * Get the script loader for this document
    */
@@ -696,9 +696,9 @@ public:
                                  nsAString& Standalone);
   virtual bool IsScriptEnabled();
 
-  virtual void OnPageShow(bool aPersisted, nsIDOMEventTarget* aDispatchStartTarget);
-  virtual void OnPageHide(bool aPersisted, nsIDOMEventTarget* aDispatchStartTarget);
-  
+  virtual void OnPageShow(bool aPersisted, mozilla::dom::EventTarget* aDispatchStartTarget);
+  virtual void OnPageHide(bool aPersisted, mozilla::dom::EventTarget* aDispatchStartTarget);
+
   virtual void WillDispatchMutationEvent(nsINode* aTarget);
   virtual void MutationEventDispatched(nsINode* aTarget);
 
@@ -1135,7 +1135,7 @@ protected:
   // Return whether all the presshells for this document are safe to flush
   bool IsSafeToFlush() const;
   
-  void DispatchPageTransition(nsIDOMEventTarget* aDispatchTarget,
+  void DispatchPageTransition(mozilla::dom::EventTarget* aDispatchTarget,
                               const nsAString& aType,
                               bool aPersisted);
 
@@ -1179,11 +1179,6 @@ protected:
 
   // Array of observers
   nsTObserverArray<nsIDocumentObserver*> mObservers;
-
-  // If document is created for example using
-  // document.implementation.createDocument(...), mScriptObject points to
-  // the script global object of the original document.
-  nsWeakPtr mScriptObject;
 
   // Weak reference to the scope object (aka the script global object)
   // that, unlike mScriptGlobalObject, is never unset once set. This
@@ -1316,6 +1311,8 @@ private:
   friend class nsUnblockOnloadEvent;
   // Recomputes the visibility state but doesn't set the new value.
   mozilla::dom::VisibilityState GetVisibilityState() const;
+  void NotifyStyleSheetAdded(nsIStyleSheet* aSheet, bool aDocumentSheet);
+  void NotifyStyleSheetRemoved(nsIStyleSheet* aSheet, bool aDocumentSheet);
 
   void PostUnblockOnloadEvent();
   void DoUnblockOnload();

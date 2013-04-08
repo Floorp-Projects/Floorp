@@ -6,7 +6,6 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.background.announcements.AnnouncementsBroadcastService;
-import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.gfx.Layer;
 import org.mozilla.gecko.gfx.LayerView;
@@ -1929,9 +1928,6 @@ abstract public class GeckoApp
                 SharedPreferences.Editor editor = prefs.edit();
                 editor.putBoolean(GeckoApp.PREFS_WAS_STOPPED, true);
                 editor.commit();
-
-                BrowserDB.expireHistory(getContentResolver(),
-                                        BrowserContract.ExpirePriority.NORMAL);
             }
         });
 
@@ -2547,6 +2543,19 @@ abstract public class GeckoApp
             }
             case R.id.share: {
                 shareCurrentUrl();
+                return true;
+            }
+            case R.id.subscribe: {
+                Tab tab = Tabs.getInstance().getSelectedTab();
+                if (tab != null && tab.getFeedsEnabled()) {
+                    JSONObject args = new JSONObject();
+                    try {
+                        args.put("tabId", tab.getId());
+                    } catch (JSONException e) {
+                        Log.e(LOGTAG, "error building json arguments");
+                    }
+                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Feeds:Subscribe", args.toString()));
+                }
                 return true;
             }
             case R.id.copyurl: {

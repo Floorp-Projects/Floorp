@@ -101,7 +101,7 @@ MakeSN(const char *principal, nsCString &result)
     // The service name looks like "protocol@hostname", we need to map
     // this to a value that SSPI expects.  To be consistent with IE, we
     // need to map '@' to '/' and canonicalize the hostname.
-    PRInt32 index = buf.FindChar('@');
+    int32_t index = buf.FindChar('@');
     if (index == kNotFound)
         return NS_ERROR_UNEXPECTED;
     
@@ -262,13 +262,13 @@ nsAuthSSPI::Init(const char *serviceName,
         pai = &ai;
     }
 
-    rc = (sspi->AcquireCredentialsHandleW)(NULL,
+    rc = (sspi->AcquireCredentialsHandleW)(nullptr,
                                            package,
                                            SECPKG_CRED_OUTBOUND,
-                                           NULL,
+                                           nullptr,
                                            pai,
-                                           NULL,
-                                           NULL,
+                                           nullptr,
+                                           nullptr,
                                            &mCred,
                                            &useBefore);
     if (rc != SEC_E_OK)
@@ -432,7 +432,7 @@ nsAuthSSPI::GetNextToken(const void *inToken,
             LOG(("Cannot restart authentication sequence!"));
             return NS_ERROR_UNEXPECTED;
         }
-        ctxIn = NULL;
+        ctxIn = nullptr;
         mIsFirst = false;
     }
 
@@ -458,7 +458,7 @@ nsAuthSSPI::GetNextToken(const void *inToken,
                                             ctxReq,
                                             0,
                                             SECURITY_NATIVE_DREP,
-                                            inToken ? &ibd : NULL,
+                                            inToken ? &ibd : nullptr,
                                             0,
                                             &mCtxt,
                                             &obd,
@@ -477,7 +477,7 @@ nsAuthSSPI::GetNextToken(const void *inToken,
             
         if (!ob.cbBuffer) {
             nsMemory::Free(ob.pvBuffer);
-            ob.pvBuffer = NULL;
+            ob.pvBuffer = nullptr;
         }
         *outToken = ob.pvBuffer;
         *outTokenLen = ob.cbBuffer;
@@ -520,13 +520,13 @@ nsAuthSSPI::Unwrap(const void *inToken,
     // app data
     ib[1].BufferType = SECBUFFER_DATA;
     ib[1].cbBuffer = 0;
-    ib[1].pvBuffer = NULL;
+    ib[1].pvBuffer = nullptr;
 
     rc = (sspi->DecryptMessage)(
                                 &mCtxt,
                                 &ibd,
                                 0, // no sequence numbers
-                                NULL
+                                nullptr
                                 );
 
     if (SEC_SUCCESS(rc)) {

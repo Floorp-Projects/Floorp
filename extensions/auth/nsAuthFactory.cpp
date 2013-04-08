@@ -189,18 +189,18 @@ NS_DEFINE_NAMED_CID(NS_AUTHSASL_CID);
 
 
 static const mozilla::Module::CIDEntry kAuthCIDs[] = {
-  { &kNS_GSSAUTH_CID, false, NULL, nsKerbGSSAPIAuthConstructor },
-  { &kNS_NEGOTIATEAUTH_CID, false, NULL, nsGSSAPIAuthConstructor },
+  { &kNS_GSSAUTH_CID, false, nullptr, nsKerbGSSAPIAuthConstructor },
+  { &kNS_NEGOTIATEAUTH_CID, false, nullptr, nsGSSAPIAuthConstructor },
 #if defined( USE_SSPI )
-  { &kNS_NEGOTIATEAUTHSSPI_CID, false, NULL, nsAuthSSPIConstructor },
-  { &kNS_KERBAUTHSSPI_CID, false, NULL, nsKerbSSPIAuthConstructor },
-  { &kNS_SYSNTLMAUTH_CID, false, NULL, nsSysNTLMAuthConstructor },
+  { &kNS_NEGOTIATEAUTHSSPI_CID, false, nullptr, nsAuthSSPIConstructor },
+  { &kNS_KERBAUTHSSPI_CID, false, nullptr, nsKerbSSPIAuthConstructor },
+  { &kNS_SYSNTLMAUTH_CID, false, nullptr, nsSysNTLMAuthConstructor },
 #else
-  { &kNS_SAMBANTLMAUTH_CID, false, NULL, nsSambaNTLMAuthConstructor },
+  { &kNS_SAMBANTLMAUTH_CID, false, nullptr, nsSambaNTLMAuthConstructor },
 #endif
-  { &kNS_HTTPNEGOTIATEAUTH_CID, false, NULL, nsHttpNegotiateAuthConstructor },
-  { &kNS_AUTHSASL_CID, false, NULL, nsAuthSASLConstructor },
-  { NULL }
+  { &kNS_HTTPNEGOTIATEAUTH_CID, false, nullptr, nsHttpNegotiateAuthConstructor },
+  { &kNS_AUTHSASL_CID, false, nullptr, nsAuthSASLConstructor },
+  { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kAuthContracts[] = {
@@ -215,7 +215,7 @@ static const mozilla::Module::ContractIDEntry kAuthContracts[] = {
 #endif
   { NS_HTTP_AUTHENTICATOR_CONTRACTID_PREFIX "negotiate", &kNS_HTTPNEGOTIATEAUTH_CID },
   { NS_AUTH_MODULE_CONTRACTID_PREFIX "sasl-gssapi", &kNS_AUTHSASL_CID },
-  { NULL }
+  { nullptr }
 };
 
 //-----------------------------------------------------------------------------
@@ -243,8 +243,8 @@ static const mozilla::Module kAuthModule = {
   mozilla::Module::kVersion,
   kAuthCIDs,
   kAuthContracts,
-  NULL,
-  NULL,
+  nullptr,
+  nullptr,
   InitNegotiateAuth,
   DestroyNegotiateAuth
 };

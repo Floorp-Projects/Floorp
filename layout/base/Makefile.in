@@ -21,6 +21,8 @@ endif # !_MSC_VER
 EXPORTS_NAMESPACES = mozilla
 
 EXPORTS		= \
+		DisplayItemClip.h \
+		DisplayListClipState.h \
 		FrameLayerBuilder.h \
 		FramePropertyTable.h \
 		nsArenaMemoryStats.h \
@@ -58,10 +60,11 @@ EXPORTS_mozilla = \
   $(NULL)
 
 CPPSRCS		= \
+		DisplayItemClip.cpp \
+		DisplayListClipState.cpp \
 		FrameLayerBuilder.cpp \
-		MaskLayerImageCache.cpp \
 		FramePropertyTable.cpp \
-		RestyleTracker.cpp \
+		MaskLayerImageCache.cpp \
 		nsCSSColorUtils.cpp \
 		nsCSSFrameConstructor.cpp \
 		nsCSSRendering.cpp \
@@ -87,6 +90,7 @@ CPPSRCS		= \
 		nsStyleSheetService.cpp \
 		PaintTracker.cpp \
  		PositionedEventTargeting.cpp \
+		RestyleTracker.cpp \
 		StackArena.cpp \
 		$(NULL)
 

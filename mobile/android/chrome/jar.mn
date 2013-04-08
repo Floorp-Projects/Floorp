@@ -48,6 +48,7 @@ chrome.jar:
   content/MasterPassword.js            (content/MasterPassword.js)
   content/FindHelper.js                (content/FindHelper.js)
   content/PermissionsHelper.js         (content/PermissionsHelper.js)
+  content/FeedHandler.js               (content/FeedHandler.js)
 
 % content branding %content/branding/
 

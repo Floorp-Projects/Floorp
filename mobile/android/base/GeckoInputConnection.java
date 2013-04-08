@@ -17,6 +17,7 @@ import android.os.SystemClock;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.Selection;
+import android.text.SpannableString;
 import android.text.method.KeyListener;
 import android.text.method.TextKeyListener;
 import android.util.DisplayMetrics;
@@ -313,8 +314,11 @@ class GeckoInputConnection
         extract.selectionStart = selStart;
         extract.selectionEnd = selEnd;
         extract.startOffset = 0;
-        extract.text = editable;
-
+        if ((req.flags & GET_TEXT_WITH_STYLES) != 0) {
+            extract.text = new SpannableString(editable);
+        } else {
+            extract.text = editable.toString();
+        }
         return extract;
     }
 
@@ -428,8 +432,11 @@ class GeckoInputConnection
         mUpdateExtract.selectionEnd =
                 Selection.getSelectionEnd(editable);
         mUpdateExtract.startOffset = 0;
-        mUpdateExtract.text = editable;
-
+        if ((mUpdateRequest.flags & GET_TEXT_WITH_STYLES) != 0) {
+            mUpdateExtract.text = new SpannableString(editable);
+        } else {
+            mUpdateExtract.text = editable.toString();
+        }
         imm.updateExtractedText(v, mUpdateRequest.token,
                                 mUpdateExtract);
     }

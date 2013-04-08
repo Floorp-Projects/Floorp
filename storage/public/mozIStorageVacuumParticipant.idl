@@ -23,8 +23,8 @@ interface mozIStorageVacuumParticipant : nsISupports {
    *
    * @note If the database is using the WAL journal mode, the page size won't
   *        be changed to the requested value.  See bug 634374.
-   * @note Valid page size values are from 512 to 65536.
-   *       The suggested value is mozIStorageConnection::DEFAULT_PAGE_SIZE.
+   * @note Valid page size values are powers of 2 between 512 and 65536.
+   *       The suggested value is mozIStorageConnection::defaultPageSize.
    */
   readonly attribute long expectedDatabasePageSize;
 

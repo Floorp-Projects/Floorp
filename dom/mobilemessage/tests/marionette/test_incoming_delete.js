@@ -27,6 +27,7 @@ function simulateIncomingSms() {
     ok(incomingSms, "incoming sms");
     ok(incomingSms.id, "sms id");
     log("Received SMS (id: " + incomingSms.id + ").");
+    ok(incomingSms.threadId, "thread id");
     is(incomingSms.body, msgText, "msg body");
     is(incomingSms.delivery, "received", "delivery");
     is(incomingSms.deliveryStatus, "success", "deliveryStatus");
@@ -53,6 +54,7 @@ function verifySmsExists(incomingSms) {
     ok(event.target.result, "smsrequest event.target.result");
     let foundSms = event.target.result;
     is(foundSms.id, incomingSms.id, "found SMS id matches");
+    is(foundSms.threadId, incomingSms.threadId, "found SMS thread id matches");
     is(foundSms.body, msgText, "found SMS msg text matches");
     is(foundSms.delivery, "received", "delivery");
     is(foundSms.deliveryStatus, "success", "deliveryStatus");

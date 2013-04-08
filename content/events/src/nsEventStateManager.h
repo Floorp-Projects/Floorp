@@ -526,7 +526,7 @@ protected:
    * @param aScrollableFrame    A frame which will be scrolled by the event.
    *                            The result of ComputeScrollTarget() is
    *                            expected for this value.
-   *                            This can be NULL if there is no scrollable
+   *                            This can be nullptr if there is no scrollable
    *                            frame.  Then, this method uses root frame's
    *                            line height or visible area's width and height.
    */

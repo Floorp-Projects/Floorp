@@ -34,7 +34,7 @@ function openComputedView(aInspector)
 
 function SI_checkText()
 {
-  Services.obs.removeObserver(SI_checkText, "StyleInspector-populated", false);
+  Services.obs.removeObserver(SI_checkText, "StyleInspector-populated");
 
   let propertyView = null;
   computedView.propertyViews.some(function(aView) {

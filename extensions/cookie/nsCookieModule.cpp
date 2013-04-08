@@ -27,11 +27,11 @@ NS_DEFINE_NAMED_CID(NS_COOKIEPERMISSION_CID);
 
 
 static const mozilla::Module::CIDEntry kCookieCIDs[] = {
-    { &kNS_PERMISSIONMANAGER_CID, false, NULL, nsIPermissionManagerConstructor },
-    { &kNS_POPUPWINDOWMANAGER_CID, false, NULL, nsPopupWindowManagerConstructor },
-    { &kNS_COOKIEPROMPTSERVICE_CID, false, NULL, nsCookiePromptServiceConstructor },
-    { &kNS_COOKIEPERMISSION_CID, false, NULL, nsCookiePermissionConstructor },
-    { NULL }
+    { &kNS_PERMISSIONMANAGER_CID, false, nullptr, nsIPermissionManagerConstructor },
+    { &kNS_POPUPWINDOWMANAGER_CID, false, nullptr, nsPopupWindowManagerConstructor },
+    { &kNS_COOKIEPROMPTSERVICE_CID, false, nullptr, nsCookiePromptServiceConstructor },
+    { &kNS_COOKIEPERMISSION_CID, false, nullptr, nsCookiePermissionConstructor },
+    { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kCookieContracts[] = {
@@ -39,7 +39,7 @@ static const mozilla::Module::ContractIDEntry kCookieContracts[] = {
     { NS_POPUPWINDOWMANAGER_CONTRACTID, &kNS_POPUPWINDOWMANAGER_CID },
     { NS_COOKIEPROMPTSERVICE_CONTRACTID, &kNS_COOKIEPROMPTSERVICE_CID },
     { NS_COOKIEPERMISSION_CONTRACTID, &kNS_COOKIEPERMISSION_CID },
-    { NULL }
+    { nullptr }
 };
 
 static const mozilla::Module kCookieModule = {

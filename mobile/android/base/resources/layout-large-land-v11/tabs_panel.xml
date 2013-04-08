@@ -13,7 +13,7 @@
         <view class="org.mozilla.gecko.TabsPanel$TabsPanelToolbar"
               android:layout_width="fill_parent"
               android:layout_height="fill_parent"
-              android:background="@color/background_tabs_dark">
+              android:background="@color/background_tabs">
 
             <include layout="@layout/tabs_panel_header"/>
 
@@ -66,7 +66,7 @@
         <view class="org.mozilla.gecko.TabsPanel$TabsPanelToolbar"
               android:layout_width="fill_parent"
               android:layout_height="fill_parent"
-              android:background="@color/background_tabs_dark">
+              android:background="@color/background_tabs">
 
             <include layout="@layout/tabs_panel_footer"/>
 

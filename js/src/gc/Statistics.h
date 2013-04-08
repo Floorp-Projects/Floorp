@@ -12,6 +12,7 @@
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/GuardObjects.h"
+#include "mozilla/PodOperations.h"
 
 #include "jsfriendapi.h"
 #include "jspubtd.h"
@@ -126,7 +127,7 @@ struct Statistics {
         SliceData(JS::gcreason::Reason reason, int64_t start, size_t startFaults)
           : reason(reason), resetReason(NULL), start(start), startFaults(startFaults)
         {
-            PodArrayZero(phaseTimes);
+            mozilla::PodArrayZero(phaseTimes);
         }
 
         JS::gcreason::Reason reason;

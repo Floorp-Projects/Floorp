@@ -9,6 +9,7 @@
  */
 
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/PodOperations.h"
 #include "mozilla/RangedPtr.h"
 
 #include "double-conversion.h"
@@ -58,6 +59,7 @@
 using namespace js;
 using namespace js::types;
 
+using mozilla::PodCopy;
 using mozilla::RangedPtr;
 
 /*
@@ -723,7 +725,7 @@ num_toLocaleString_impl(JSContext *cx, CallArgs args)
 
     if (cx->runtime->localeCallbacks && cx->runtime->localeCallbacks->localeToUnicode) {
         Rooted<Value> v(cx, StringValue(str));
-        bool ok = !!cx->runtime->localeCallbacks->localeToUnicode(cx, buf, v.address());
+        bool ok = !!cx->runtime->localeCallbacks->localeToUnicode(cx, buf, &v);
         if (ok)
             args.rval().set(v);
         js_free(buf);

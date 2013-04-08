@@ -112,7 +112,6 @@ FENNEC_JAVA_FILES = \
   LightweightThemeDrawable.java \
   LinkPreference.java \
   MemoryMonitor.java \
-  MenuButton.java \
   MenuItemActionBar.java \
   MenuItemDefault.java \
   MenuPanel.java \
@@ -146,7 +145,6 @@ FENNEC_JAVA_FILES = \
   SurfaceBits.java \
   Tab.java \
   Tabs.java \
-  TabsButton.java \
   TabsPanel.java \
   TabsTray.java \
   TabsAccessor.java \
@@ -220,6 +218,18 @@ FENNEC_JAVA_FILES = \
 
 ifdef MOZ_WEBSMS_BACKEND
 FENNEC_JAVA_FILES += GeckoSmsManager.java
+endif
+
+ifdef MOZ_WEBRTC
+WEBRTC_VIDEO_CAPTURE_JAVA_FILES = \
+  CaptureCapabilityAndroid.java \
+  VideoCaptureAndroid.java \
+  VideoCaptureDeviceInfoAndroid.java \
+  $(NULL)
+
+WEBRTC_JAVA_FILES = \
+  $(addprefix $(DEPTH)/media/webrtc/trunk/webrtc/modules/video_capture/android/java/org/webrtc/videoengine/, $(WEBRTC_VIDEO_CAPTURE_JAVA_FILES)) \
+  $(NULL)
 endif
 
 ifdef MOZ_ANDROID_ANR_REPORTER
@@ -905,7 +915,6 @@ RES_DRAWABLE_LAND_XHDPI_V14 = \
   $(NULL)
 
 RES_DRAWABLE_LARGE_LAND_V11 = \
-  res/drawable-large-land-v11/tabs_button.xml \
   res/drawable-large-land-v11/tabs_level.xml \
   $(NULL)
 
@@ -1015,18 +1024,17 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/ic_menu_desktop_mode_off.xml           \
   mobile/android/base/resources/drawable/ic_menu_desktop_mode_on.xml            \
   mobile/android/base/resources/drawable/ic_menu_quit.xml                       \
-  mobile/android/base/resources/drawable/menu_button.xml                        \
   mobile/android/base/resources/drawable/menu_item_state.xml                    \
   mobile/android/base/resources/drawable/menu_level.xml                         \
   mobile/android/base/resources/drawable/progress_spinner.xml                   \
   mobile/android/base/resources/drawable/remote_tabs_child_divider.xml          \
+  mobile/android/base/resources/drawable/shaped_button.xml                      \
   mobile/android/base/resources/drawable/site_security_level.xml                \
   mobile/android/base/resources/drawable/spinner.xml                            \
   mobile/android/base/resources/drawable/suggestion_selector.xml                \
   mobile/android/base/resources/drawable/tab_new_level.xml                      \
   mobile/android/base/resources/drawable/tab_row.xml                            \
   mobile/android/base/resources/drawable/tab_thumbnail.xml                      \
-  mobile/android/base/resources/drawable/tabs_button.xml                        \
   mobile/android/base/resources/drawable/tabs_level.xml                         \
   mobile/android/base/resources/drawable/tabs_panel_indicator.xml               \
   mobile/android/base/resources/drawable/webapp_titlebar_bg.xml                 \
@@ -1075,6 +1083,17 @@ RES_DIRS= \
   res/menu-xlarge-v11           \
   $(NULL)
 
+ALL_JARS = \
+  jars/gecko-browser.jar \
+  jars/gecko-util.jar \
+  jars/sync-thirdparty.jar \
+  jars/gecko-mozglue.jar \
+  $(NULL)
+
+ifdef MOZ_WEBRTC
+ALL_JARS += jars/webrtc.jar
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 # Override the Java settings with some specific android settings
@@ -1085,7 +1104,7 @@ include $(topsrcdir)/config/android-common.mk
 # Sync dependencies are provided in a single jar. Sync classes themselves are delivered as source,
 # because Android resource classes must be compiled together in order to avoid overlapping resource
 # indices.
-classes.dex: jars/gecko-browser.jar
+classes.dex: $(ALL_JARS)
 	@echo "DX classes.dex"
 	$(DX) --dex --output=classes.dex jars $(ANDROID_COMPAT_LIB)
 
@@ -1112,6 +1131,14 @@ jars/sync-thirdparty.jar: $(addprefix $(srcdir)/,$(SYNC_THIRDPARTY_JAVA_FILES)) 
 	$(NSINSTALL) -D classes/sync-thirdparty
 	$(JAVAC) $(JAVAC_FLAGS) -d classes/sync-thirdparty $(addprefix $(srcdir)/,$(SYNC_THIRDPARTY_JAVA_FILES))
 	$(JAR) cMf jars/sync-thirdparty.jar -C classes/sync-thirdparty .
+
+ifdef MOZ_WEBRTC
+jars/webrtc.jar: $(addprefix $(srcdir)/, $(WEBRTC_JAVA_FILES)) jars jars/gecko-browser.jar jars/gecko-util.jar
+	@echo "JAR webrtc.jar"
+	$(NSINSTALL) -D classes/webrtc
+	$(JAVAC) $(JAVAC_FLAGS) -d classes/webrtc -classpath classes/gecko-browser:classes/gecko-util $(addprefix $(srcdir)/,$(WEBRTC_JAVA_FILES))
+	$(JAR) cMf jars/webrtc.jar -C classes/webrtc .
+endif
 
 jars:
 	@echo "MKDIR jars"

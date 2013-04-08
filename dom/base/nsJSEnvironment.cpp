@@ -969,6 +969,8 @@ static const char js_memlog_option_str[]      = JS_OPTIONS_DOT_STR "mem.log";
 static const char js_memnotify_option_str[]   = JS_OPTIONS_DOT_STR "mem.notify";
 static const char js_disable_explicit_compartment_gc[] =
   JS_OPTIONS_DOT_STR "mem.disable_explicit_compartment_gc";
+static const char js_baselinejit_content_str[] = JS_OPTIONS_DOT_STR "baselinejit.content";
+static const char js_baselinejit_chrome_str[]  = JS_OPTIONS_DOT_STR "baselinejit.chrome";
 static const char js_ion_content_str[]        = JS_OPTIONS_DOT_STR "ion.content";
 static const char js_asmjs_content_str[]      = JS_OPTIONS_DOT_STR "experimental_asmjs";
 static const char js_ion_parallel_compilation_str[] = JS_OPTIONS_DOT_STR "ion.parallel_compilation";
@@ -1010,6 +1012,9 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   bool useMethodJITAlways = Preferences::GetBool(js_methodjit_always_str);
   bool useTypeInference = !chromeWindow && contentWindow && Preferences::GetBool(js_typeinfer_str);
   bool useHardening = Preferences::GetBool(js_jit_hardening_str);
+  bool useBaselineJIT = Preferences::GetBool(chromeWindow || !contentWindow ?
+                                               js_baselinejit_chrome_str :
+                                               js_baselinejit_content_str);
   bool useIon = Preferences::GetBool(js_ion_content_str);
   bool useAsmJS = Preferences::GetBool(js_asmjs_content_str);
   bool parallelIonCompilation = Preferences::GetBool(js_ion_parallel_compilation_str);
@@ -1023,6 +1028,7 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
       useTypeInference = false;
       useMethodJITAlways = true;
       useHardening = false;
+      useBaselineJIT = false;
       useIon = false;
       useAsmJS = false;
     }
@@ -1047,6 +1053,11 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
     newDefaultJSOptions |= JSOPTION_TYPE_INFERENCE;
   else
     newDefaultJSOptions &= ~JSOPTION_TYPE_INFERENCE;
+
+  if (useBaselineJIT)
+    newDefaultJSOptions |= JSOPTION_BASELINE;
+  else
+    newDefaultJSOptions &= ~JSOPTION_BASELINE;
 
   if (useIon)
     newDefaultJSOptions |= JSOPTION_ION;

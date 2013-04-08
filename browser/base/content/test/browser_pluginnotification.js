@@ -354,7 +354,7 @@ function test11b() {
 
 // Tests that the going back will reshow the notification for click-to-play plugins (part 3/4)
 function test11c() {
-  Services.obs.removeObserver(test11c, "PopupNotifications-updateNotShowing", false);
+  Services.obs.removeObserver(test11c, "PopupNotifications-updateNotShowing");
   var condition = function() PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
   waitForCondition(condition, test11d, "Test 11c, waited too long for click-to-play-plugin notification");
 }

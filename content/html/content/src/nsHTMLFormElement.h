@@ -57,7 +57,6 @@ public:
   // nsIForm
   NS_IMETHOD_(nsIFormControl*) GetElementAt(int32_t aIndex) const;
   NS_IMETHOD_(uint32_t) GetElementCount() const;
-  NS_IMETHOD_(already_AddRefed<nsISupports>) ResolveName(const nsAString& aName);
   NS_IMETHOD_(int32_t) IndexOfControl(nsIFormControl* aControl);
   NS_IMETHOD_(nsIFormControl*) GetDefaultSubmitElement() const;
 
@@ -240,6 +239,13 @@ public:
    */
   bool HasEverTriedInvalidSubmit() const { return mEverTriedInvalidSubmit; }
 
+  /**
+   * Implements form[name]. Returns form controls in this form with the correct
+   * value of the name attribute.
+   */
+  already_AddRefed<nsISupports>
+  FindNamedItem(const nsAString& aName, nsWrapperCache** aCache);
+
 protected:
   void PostPasswordEvent();
   void EventHandled() { mFormPasswordEvent = nullptr; }
@@ -325,7 +331,8 @@ protected:
                                  bool aEarlyNotify);
 
   /**
-   * Just like ResolveName(), but takes an arg for whether to flush
+   * Find form controls in this form with the correct value in the name
+   * attribute.
    */
   already_AddRefed<nsISupports> DoResolveName(const nsAString& aName, bool aFlushContent);
 

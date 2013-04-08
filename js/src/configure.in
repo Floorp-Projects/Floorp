@@ -1687,8 +1687,12 @@ ia64*-hpux*)
         _DEFINES_CXXFLAGS='-FI $(DEPTH)/js-confdefs.h -DMOZILLA_CLIENT'
         CFLAGS="$CFLAGS -W3 -Gy -Fd\$(COMPILE_PDBFILE)"
         CXXFLAGS="$CXXFLAGS -W3 -Gy -Fd\$(COMPILE_PDBFILE)"
-        # MSVC warning C4244 is ubiquitous, useless, and annoying.
         # khuey says we can safely ignore MSVC warning C4251
+        # MSVC warning C4244 (implicit type conversion may lose data) warns
+        # and requires workarounds for perfectly valid code.  Also, GCC/clang
+        # don't warn about it by default. So for consistency/sanity, we turn
+        # it off on MSVC, too.
+        CFLAGS="$CFLAGS -wd4244"
         CXXFLAGS="$CXXFLAGS -wd4244 -wd4251"
         # make 'foo == bar;' error out
         CFLAGS="$CFLAGS -we4553"
@@ -1779,6 +1783,7 @@ ia64*-hpux*)
         if test -n "$GNU_CC"; then
             CFLAGS="$CFLAGS -mstackrealign -fno-keep-inline-dllexport"
             CXXFLAGS="$CXXFLAGS -mstackrealign -fno-keep-inline-dllexport"
+            LDFLAGS="$LDFLAGS -Wl,--large-address-aware"
         else
             DSO_LDOPTS="$DSO_LDOPTS -MACHINE:X86"
             LDFLAGS="$LDFLAGS -SAFESEH"
@@ -3267,7 +3272,7 @@ MOZ_ARG_ENABLE_STRING(debug,
                            (using compiler flags DBG)],
 [ if test "$enableval" != "no"; then
     MOZ_DEBUG=1
-    if test "$ENABLE_METHODJIT"; then
+    if test "$ENABLE_METHODJIT" -o "$ENABLE_YARR_JIT"; then
          # needs MethodJIT or YarrJIT
          ENABLE_METHODJIT_SPEW=1
     fi

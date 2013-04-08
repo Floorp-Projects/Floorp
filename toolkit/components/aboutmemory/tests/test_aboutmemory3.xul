@@ -163,13 +163,14 @@
   let expectedGood =
 "\
 Main Process\n\
-\n\
 Explicit Allocations\n\
+\n\
 2.86 MB (100.0%) -- explicit\n\
 ├──1.91 MB (66.67%) ── foo/bar\n\
 └──0.95 MB (33.33%) ── heap-unclassified\n\
 \n\
 Other Measurements\n\
+\n\
 0.00 MB (100.0%) -- a\n\
 ├──0.00 MB (50.00%) ── b\n\
 └──0.00 MB (50.00%) ── c\n\

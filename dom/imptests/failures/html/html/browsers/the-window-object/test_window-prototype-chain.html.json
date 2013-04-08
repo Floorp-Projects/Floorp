@@ -1,0 +1,6 @@
+{
+  "Window.prototype": true,
+  "Global scope polluter": true,
+  "EventTarget.prototype": true,
+  "Object.prototype": true
+}

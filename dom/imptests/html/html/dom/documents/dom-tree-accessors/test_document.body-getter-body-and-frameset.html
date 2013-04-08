@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<title>document.body and framesets</title>
+<link rel="author" title="Ms2ger" href="mailto:ms2ger@gmail.com">
+<link rel="help" href="http://www.whatwg.org/html5/#dom-document-body">
+<link rel="stylesheet" href="/resources/testharness.css">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script>
+var b =
+  document.documentElement.appendChild(document.createElement("body"));
+document.documentElement.appendChild(document.createElement("frameset"));
+</script>
+<div id="log"></div>
+<script>
+test(function() {
+  assert_equals(document.body, b);
+});
+</script>

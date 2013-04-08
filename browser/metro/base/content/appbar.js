@@ -12,9 +12,12 @@ var Appbar = {
   activeTileset: null,
 
   init: function Appbar_init() {
-    window.addEventListener('MozContextUIShow', this, false);
+    window.addEventListener('MozAppbarShowing', this, false);
     window.addEventListener('MozPrecisePointer', this, false);
     window.addEventListener('MozImprecisePointer', this, false);
+    window.addEventListener('MozContextActionsChange', this, false);
+    Elements.browsers.addEventListener('URLChanged', this, true);
+    Elements.tabList.addEventListener('TabSelect', this, true);
 
     this._updateDebugButtons();
     this._updateZoomButtons();
@@ -25,13 +28,22 @@ var Appbar = {
 
   handleEvent: function Appbar_handleEvent(aEvent) {
     switch (aEvent.type) {
-      case 'MozContextUIShow':
+      case 'URLChanged':
+      case 'TabSelect':
+        this.appbar.dismiss();
+        break;
+      case 'MozAppbarShowing':
         this._updatePinButton();
         this._updateStarButton();
         break;
       case 'MozPrecisePointer':
       case 'MozImprecisePointer':
         this._updateZoomButtons();
+        break;
+      case 'MozContextActionsChange':
+        let actions = aEvent.actions;
+        // could transition in old, new buttons?
+        this.showContextualActions(actions);
         break;
       case "selectionchange":
         let nodeName = aEvent.target.nodeName;
@@ -139,13 +151,13 @@ var Appbar = {
       // but we keep coupling loose so grid doesn't need to know about appbar
       let event = document.createEvent("Events");
       event.action = aActionName;
-      event.initEvent("context-action", true, false);
+      event.initEvent("context-action", true, true); // is cancelable
       activeTileset.dispatchEvent(event);
-
-      // done with this selection, explicitly clear it
-      activeTileset.clearSelection();
+      if (!event.defaultPrevented) {
+        activeTileset.clearSelection();
+        this.appbar.dismiss();
+      }
     }
-    this.appbar.dismiss();
   },
 
   showContextualActions: function(aVerbs){
@@ -198,11 +210,14 @@ var Appbar = {
     let contextActions = activeTileset.contextActions;
     let verbs = [v for (v of contextActions)];
 
-    // could transition in old, new buttons?
-    this.showContextualActions(verbs);
+    // fire event with these verbs as payload
+    let event = document.createEvent("Events");
+    event.actions = verbs;
+    event.initEvent("MozContextActionsChange", true, false);
+    this.appbar.dispatchEvent(event);
 
     if (verbs.length) {
-      this.appbar.show();
+      this.appbar.show(); // should be no-op if we're already showing
     } else {
       this.appbar.dismiss();
     }

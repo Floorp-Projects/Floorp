@@ -2128,12 +2128,10 @@ this.PlacesUtils = {
    * Gets the last saved character-set for a URI.
    *
    * @param aURI nsIURI
-   * @param [optional] aCallback
-   *        the callback method that reruns a character-set or null.
    * @return {Promise}
    * @resolve a character-set or null.
    */
-  getCharsetForURI: function PU_getCharsetForURI(aURI, aCallback) {
+  getCharsetForURI: function PU_getCharsetForURI(aURI) {
     let deferred = Promise.defer();
 
     Services.tm.mainThread.dispatch(function() {
@@ -2144,11 +2142,7 @@ this.PlacesUtils = {
                                                             PlacesUtils.CHARSET_ANNO);
       } catch (ex) { }
 
-      if (aCallback) {
-        aCallback(charset);
-      }
       deferred.resolve(charset);
-
     }, Ci.nsIThread.DISPATCH_NORMAL);
 
     return deferred.promise;

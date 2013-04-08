@@ -40,6 +40,7 @@ EXPORTS = \
   nsDOMString.h \
   nsIDOMClassInfo.h \
   nsIDOMScriptObjectFactory.h \
+  nsIGlobalObject.h \
   nsIJSEventListener.h \
   nsIJSNativeInitializer.h \
   nsIScriptContext.h	\

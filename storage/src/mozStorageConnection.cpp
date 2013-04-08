@@ -562,10 +562,11 @@ Connection::initializeInternal(nsIFile* aDatabaseFile)
                                       leafName.get(), this));
 #endif
 
+  int64_t pageSize = Service::getDefaultPageSize();
+
   // Set page_size to the preferred default value.  This is effective only if
   // the database has just been created, otherwise, if the database does not
   // use WAL journal mode, a VACUUM operation will updated its page_size.
-  int64_t pageSize = DEFAULT_PAGE_SIZE;
   nsAutoCString pageSizeQuery(MOZ_STORAGE_UNIQUIFY_QUERY_STR
                               "PRAGMA page_size = ");
   pageSizeQuery.AppendInt(pageSize);
@@ -1041,6 +1042,13 @@ Connection::Clone(bool aReadOnly,
   (void)mFunctions.EnumerateRead(copyFunctionEnumerator, clone);
 
   NS_ADDREF(*_connection = clone);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+Connection::GetDefaultPageSize(int32_t *_defaultPageSize)
+{
+  *_defaultPageSize = Service::getDefaultPageSize();
   return NS_OK;
 }
 

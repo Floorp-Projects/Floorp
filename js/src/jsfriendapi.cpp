@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/GuardObjects.h"
+#include "mozilla/PodOperations.h"
 #include "mozilla/StandardInteger.h"
 
 #include "jscntxt.h"
@@ -22,6 +23,8 @@
 
 using namespace js;
 using namespace JS;
+
+using mozilla::PodArrayZero;
 
 // Required by PerThreadDataFriendFields::getMainThread()
 JS_STATIC_ASSERT(offsetof(JSRuntime, mainThread) ==

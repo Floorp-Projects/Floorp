@@ -26,13 +26,13 @@ MetadataHelper::DoAsyncRun(nsISupports* aStream)
 
 nsresult
 MetadataHelper::GetSuccessResult(JSContext* aCx,
-                                 jsval* aVal)
+                                 JS::Value* aVal)
 {
   JSObject* obj = JS_NewObject(aCx, nullptr, nullptr, nullptr);
   NS_ENSURE_TRUE(obj, NS_ERROR_OUT_OF_MEMORY);
 
   if (mParams->SizeRequested()) {
-    jsval val = JS_NumberValue(mParams->Size());
+    JS::Value val = JS_NumberValue(mParams->Size());
 
     if (!JS_DefineProperty(aCx, obj, "size", val, nullptr, nullptr,
                            JSPROP_ENUMERATE)) {

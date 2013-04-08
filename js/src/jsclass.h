@@ -16,8 +16,6 @@
 #include "jsapi.h"
 #include "jsprvtd.h"
 
-#ifdef __cplusplus
-
 namespace js {
 
 class PropertyName;
@@ -363,7 +361,7 @@ Valueify(const JSClass *c)
  */
 enum ESClassValue {
     ESClass_Array, ESClass_Number, ESClass_String, ESClass_Boolean,
-    ESClass_RegExp, ESClass_ArrayBuffer
+    ESClass_RegExp, ESClass_ArrayBuffer, ESClass_Date
 };
 
 /*
@@ -395,7 +393,5 @@ template <> struct RootMethods<SpecialId>
 };
 
 }  /* namespace js */
-
-#endif  /* __cplusplus */
 
 #endif  /* jsclass_h__ */

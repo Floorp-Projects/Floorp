@@ -8,6 +8,9 @@
 #include "jsinfer.h"
 
 #include "ion/Bailouts.h"
+#include "ion/BaselineIC.h"
+#include "ion/BaselineJIT.h"
+#include "ion/BaselineRegisters.h"
 #include "ion/IonMacroAssembler.h"
 #include "ion/MIR.h"
 #include "js/RootingAPI.h"
@@ -675,7 +678,7 @@ MacroAssembler::performOsr()
 }
 
 void
-MacroAssembler::generateBailoutTail(Register scratch)
+MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
 {
     enterExitFrame();
 
@@ -686,6 +689,7 @@ MacroAssembler::generateBailoutTail(Register scratch)
     Label boundscheck;
     Label overrecursed;
     Label invalidate;
+    Label baseline;
 
     // The return value from Bailout is tagged as:
     // - 0x0: done (thunk to interpreter)
@@ -697,6 +701,7 @@ MacroAssembler::generateBailoutTail(Register scratch)
     // - 0x6: force invalidation
     // - 0x7: overrecursed
     // - 0x8: cached shape guard failure
+    // - 0x9: bailout to baseline
 
     branch32(LessThan, ReturnReg, Imm32(BAILOUT_RETURN_FATAL_ERROR), &interpret);
     branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_FATAL_ERROR), &exception);
@@ -706,6 +711,7 @@ MacroAssembler::generateBailoutTail(Register scratch)
     branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_BOUNDS_CHECK), &boundscheck);
     branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_OVERRECURSED), &overrecursed);
     branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_SHAPE_GUARD), &invalidate);
+    branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_BASELINE), &baseline);
 
     // Fall-through: cached shape guard failure.
     {
@@ -794,6 +800,184 @@ MacroAssembler::generateBailoutTail(Register scratch)
     {
         handleException();
     }
+
+    bind(&baseline);
+    {
+        // Prepare a register set for use in this case.
+        GeneralRegisterSet regs(GeneralRegisterSet::All());
+        JS_ASSERT(!regs.has(BaselineStackReg));
+        regs.take(bailoutInfo);
+
+        // Reset SP to the point where clobbering starts.
+        loadPtr(Address(bailoutInfo, offsetof(BaselineBailoutInfo, incomingStack)),
+                BaselineStackReg);
+
+        Register copyCur = regs.takeAny();
+        Register copyEnd = regs.takeAny();
+        Register temp = regs.takeAny();
+
+        // Copy data onto stack.
+        loadPtr(Address(bailoutInfo, offsetof(BaselineBailoutInfo, copyStackTop)), copyCur);
+        loadPtr(Address(bailoutInfo, offsetof(BaselineBailoutInfo, copyStackBottom)), copyEnd);
+        {
+            Label copyLoop;
+            Label endOfCopy;
+            bind(&copyLoop);
+            branchPtr(Assembler::BelowOrEqual, copyCur, copyEnd, &endOfCopy);
+            subPtr(Imm32(4), copyCur);
+            subPtr(Imm32(4), BaselineStackReg);
+            load32(Address(copyCur, 0), temp);
+            store32(temp, Address(BaselineStackReg, 0));
+            jump(&copyLoop);
+            bind(&endOfCopy);
+        }
+
+        // Enter exit frame for the FinishBailoutToBaseline call.
+        loadPtr(Address(bailoutInfo, offsetof(BaselineBailoutInfo, resumeFramePtr)), temp);
+        load32(Address(temp, BaselineFrame::reverseOffsetOfFrameSize()), temp);
+        makeFrameDescriptor(temp, IonFrame_BaselineJS);
+        push(temp);
+        push(Imm32(0)); // Fake return address.
+        enterFakeExitFrame();
+
+        // If monitorStub is non-null, handle resumeAddr appropriately.
+        Label noMonitor;
+        Label done;
+        branchPtr(Assembler::Equal,
+                  Address(bailoutInfo, offsetof(BaselineBailoutInfo, monitorStub)),
+                  ImmWord((void*) 0),
+                  &noMonitor);
+
+        //
+        // Resuming into a monitoring stub chain.
+        //
+        {
+            // Save needed values onto stack temporarily.
+            pushValue(Address(bailoutInfo, offsetof(BaselineBailoutInfo, valueR0)));
+            loadPtr(Address(bailoutInfo, offsetof(BaselineBailoutInfo, resumeFramePtr)), temp);
+            push(temp);
+            loadPtr(Address(bailoutInfo, offsetof(BaselineBailoutInfo, resumeAddr)), temp);
+            push(temp);
+            loadPtr(Address(bailoutInfo, offsetof(BaselineBailoutInfo, monitorStub)), temp);
+            push(temp);
+
+            // Call a stub to free allocated memory and create arguments objects.
+            setupUnalignedABICall(1, temp);
+            passABIArg(bailoutInfo);
+            callWithABI(JS_FUNC_TO_DATA_PTR(void *, FinishBailoutToBaseline));
+            branchTest32(Zero, ReturnReg, ReturnReg, &exception);
+
+            // Restore values where they need to be and resume execution.
+            GeneralRegisterSet enterMonRegs(GeneralRegisterSet::All());
+            enterMonRegs.take(R0);
+            enterMonRegs.take(BaselineStubReg);
+            enterMonRegs.take(BaselineFrameReg);
+            enterMonRegs.takeUnchecked(BaselineTailCallReg);
+            Register jitcodeReg = enterMonRegs.takeAny();
+
+            pop(BaselineStubReg);
+            pop(BaselineTailCallReg);
+            pop(BaselineFrameReg);
+            popValue(R0);
+
+            // Discard exit frame.
+            addPtr(Imm32(IonExitFrameLayout::SizeWithFooter()), StackPointer);
+
+            loadPtr(Address(BaselineStubReg, ICStub::offsetOfStubCode()), jitcodeReg);
+#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
+            push(BaselineTailCallReg);
+#endif
+            jump(jitcodeReg);
+        }
+
+        //
+        // Resuming into main jitcode.
+        //
+        bind(&noMonitor);
+        {
+            // Save needed values onto stack temporarily.
+            pushValue(Address(bailoutInfo, offsetof(BaselineBailoutInfo, valueR0)));
+            pushValue(Address(bailoutInfo, offsetof(BaselineBailoutInfo, valueR1)));
+            loadPtr(Address(bailoutInfo, offsetof(BaselineBailoutInfo, resumeFramePtr)), temp);
+            push(temp);
+            loadPtr(Address(bailoutInfo, offsetof(BaselineBailoutInfo, resumeAddr)), temp);
+            push(temp);
+
+            // Call a stub to free allocated memory and create arguments objects.
+            setupUnalignedABICall(1, temp);
+            passABIArg(bailoutInfo);
+            callWithABI(JS_FUNC_TO_DATA_PTR(void *, FinishBailoutToBaseline));
+            branchTest32(Zero, ReturnReg, ReturnReg, &exception);
+
+            // Restore values where they need to be and resume execution.
+            GeneralRegisterSet enterRegs(GeneralRegisterSet::All());
+            enterRegs.take(R0);
+            enterRegs.take(R1);
+            enterRegs.take(BaselineFrameReg);
+            Register jitcodeReg = enterRegs.takeAny();
+
+            pop(jitcodeReg);
+            pop(BaselineFrameReg);
+            popValue(R1);
+            popValue(R0);
+
+            // Discard exit frame.
+            addPtr(Imm32(IonExitFrameLayout::SizeWithFooter()), StackPointer);
+
+            jump(jitcodeReg);
+        }
+    }
+}
+
+void
+MacroAssembler::loadBaselineOrIonCode(Register script, Register scratch, Label *failure)
+{
+    bool baselineEnabled = ion::IsBaselineEnabled(GetIonContext()->cx);
+
+    Label noIonScript, done;
+    Address scriptIon(script, offsetof(JSScript, ion));
+    branchPtr(Assembler::BelowOrEqual, scriptIon, ImmWord(ION_COMPILING_SCRIPT),
+              &noIonScript);
+    {
+        // Load IonScript method.
+        loadPtr(scriptIon, scratch);
+
+        // Check bailoutExpected flag
+        if (baselineEnabled || failure) {
+            Address bailoutExpected(scratch, IonScript::offsetOfBailoutExpected());
+            branch32(Assembler::NotEqual, bailoutExpected, Imm32(0), &noIonScript);
+        }
+
+        loadPtr(Address(scratch, IonScript::offsetOfMethod()), script);
+        jump(&done);
+    }
+    bind(&noIonScript);
+    {
+        // The script does not have an IonScript. If |failure| is NULL,
+        // assume the script has a baseline script.
+        if (baselineEnabled) {
+            loadPtr(Address(script, offsetof(JSScript, baseline)), script);
+            if (failure)
+                branchPtr(Assembler::BelowOrEqual, script, ImmWord(BASELINE_DISABLED_SCRIPT), failure);
+            loadPtr(Address(script, BaselineScript::offsetOfMethod()), script);
+        } else if (failure) {
+            jump(failure);
+        } else {
+#ifdef DEBUG
+            breakpoint();
+            breakpoint();
+#endif
+        }
+    }
+
+    bind(&done);
+}
+
+void
+MacroAssembler::loadBaselineFramePtr(Register framePtr, Register dest)
+{
+    movePtr(framePtr, dest);
+    subPtr(Imm32(BaselineFrame::Size()), dest);
 }
 
 void printf0_(const char *output) {
@@ -841,6 +1025,30 @@ MacroAssembler::printf(const char *output, Register value)
     PopRegsInMask(RegisterSet::Volatile());
 }
 
+void
+MacroAssembler::copyMem(Register copyFrom, Register copyEnd, Register copyTo, Register temp)
+{
+    Label copyDone;
+    Label copyLoop;
+    bind(&copyLoop);
+    branchPtr(Assembler::AboveOrEqual, copyFrom, copyEnd, &copyDone);
+    load32(Address(copyFrom, 0), temp);
+    store32(temp, Address(copyTo, 0));
+    addPtr(Imm32(4), copyTo);
+    addPtr(Imm32(4), copyFrom);
+    jump(&copyLoop);
+    bind(&copyDone);
+}
+
+void
+MacroAssembler::convertInt32ValueToDouble(const Address &address, Register scratch, Label *done)
+{
+    branchTestInt32(Assembler::NotEqual, address, done);
+    unboxInt32(address, scratch);
+    convertInt32ToDouble(scratch, ScratchFloatReg);
+    storeDouble(ScratchFloatReg, address);
+}
+
 #ifdef JS_ASMJS
 ABIArgIter::ABIArgIter(const MIRTypeVector &types)
   : gen_(),
@@ -860,4 +1068,3 @@ ABIArgIter::operator++(int)
         gen_.next(types_[i_]);
 }
 #endif
-

@@ -36,7 +36,7 @@ NS_INTERFACE_MAP_BEGIN(StkCommandEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
 
 NS_IMETHODIMP
-StkCommandEvent::GetCommand(JSContext* aCx, jsval* aCommand)
+StkCommandEvent::GetCommand(JSContext* aCx, JS::Value* aCommand)
 
 {
   nsCOMPtr<nsIJSON> json(new nsJSON());

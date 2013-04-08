@@ -45,8 +45,6 @@ struct Zone;
  * oblivious to the change. This feature can be explicitly disabled in debug
  * builds by defining JS_NO_JSVAL_JSID_STRUCT_TYPES.
  */
-#ifdef __cplusplus
-
 # if defined(DEBUG) && !defined(JS_NO_JSVAL_JSID_STRUCT_TYPES)
 #  define JS_USE_JSID_STRUCT_TYPES
 # endif
@@ -63,10 +61,6 @@ struct jsid
 typedef ptrdiff_t jsid;
 #  define JSID_BITS(id) (id)
 # endif  /* defined(JS_USE_JSID_STRUCT_TYPES) */
-#else  /* defined(__cplusplus) */
-typedef ptrdiff_t jsid;
-# define JSID_BITS(id) (id)
-#endif
 
 #ifdef WIN32
 typedef wchar_t   jschar;
@@ -190,20 +184,12 @@ typedef struct JSStructuredCloneReader      JSStructuredCloneReader;
 typedef struct JSStructuredCloneWriter      JSStructuredCloneWriter;
 typedef struct JSTracer                     JSTracer;
 
-#ifdef __cplusplus
 class                                       JSFlatString;
 class                                       JSFunction;
 class                                       JSObject;
 class                                       JSScript;
 class                                       JSStableString;  // long story
 class                                       JSString;
-#else
-typedef struct JSFlatString                 JSFlatString;
-typedef struct JSFunction                   JSFunction;
-typedef struct JSObject                     JSObject;
-typedef struct JSScript                     JSScript;
-typedef struct JSString                     JSString;
-#endif /* !__cplusplus */
 
 #ifdef JS_THREADSAFE
 typedef struct PRCallOnceType    JSCallOnceType;
@@ -211,8 +197,6 @@ typedef struct PRCallOnceType    JSCallOnceType;
 typedef JSBool                   JSCallOnceType;
 #endif
 typedef JSBool                 (*JSInitCallback)(void);
-
-#ifdef __cplusplus
 
 namespace JS {
 namespace shadow {
@@ -382,7 +366,5 @@ struct PerThreadDataFriendFields
 };
 
 } /* namespace js */
-
-#endif /* __cplusplus */
 
 #endif /* jspubtd_h___ */

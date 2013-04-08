@@ -45,6 +45,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIScriptError.h"
 #include "nsXBLSerialize.h"
+#include "nsDOMEvent.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPrototypeCache.h"
@@ -55,6 +56,7 @@
 #include "mozilla/Attributes.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 #define NS_MAX_XBL_BINDING_RECURSION 20
 
@@ -240,9 +242,8 @@ nsXBLStreamListener::OnStartRequest(nsIRequest* request, nsISupports* aCtxt)
 
   // Make sure to add ourselves as a listener after StartDocumentLoad,
   // since that resets the event listners on the document.
-  nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(doc));
-  target->AddEventListener(NS_LITERAL_STRING("load"), this, false);
-  
+  doc->AddEventListener(NS_LITERAL_STRING("load"), this, false);
+
   return mInner->OnStartRequest(request, aCtxt);
 }
 
@@ -286,8 +287,8 @@ nsXBLStreamListener::HandleEvent(nsIDOMEvent* aEvent)
 
   // Get the binding document; note that we don't hold onto it in this object
   // to avoid creating a cycle
-  nsCOMPtr<nsIDOMEventTarget> target;
-  aEvent->GetCurrentTarget(getter_AddRefs(target));
+  nsDOMEvent* event = aEvent->InternalDOMEvent();
+  EventTarget* target = event->GetCurrentTarget();
   nsCOMPtr<nsIDocument> bindingDocument = do_QueryInterface(target);
   NS_ASSERTION(bindingDocument, "Event not targeted at document?!");
 
@@ -558,11 +559,11 @@ nsXBLService::FlushStyleBindings(nsIContent* aContent)
 // then extra work needs to be done to hook it up to the document (XXX WHY??)
 //
 nsresult
-nsXBLService::AttachGlobalKeyHandler(nsIDOMEventTarget* aTarget)
+nsXBLService::AttachGlobalKeyHandler(EventTarget* aTarget)
 {
   // check if the receiver is a content node (not a document), and hook
   // it to the document if that is the case.
-  nsCOMPtr<nsIDOMEventTarget> piTarget = aTarget;
+  nsCOMPtr<EventTarget> piTarget = aTarget;
   nsCOMPtr<nsIContent> contentNode(do_QueryInterface(aTarget));
   if (contentNode) {
     // Only attach if we're really in a document
@@ -572,7 +573,7 @@ nsXBLService::AttachGlobalKeyHandler(nsIDOMEventTarget* aTarget)
   }
 
   nsEventListenerManager* manager = piTarget->GetListenerManager(true);
-    
+
   if (!piTarget || !manager)
     return NS_ERROR_FAILURE;
 
@@ -612,9 +613,9 @@ nsXBLService::AttachGlobalKeyHandler(nsIDOMEventTarget* aTarget)
 // Removes a key handler added by DeatchGlobalKeyHandler.
 //
 nsresult
-nsXBLService::DetachGlobalKeyHandler(nsIDOMEventTarget* aTarget)
+nsXBLService::DetachGlobalKeyHandler(EventTarget* aTarget)
 {
-  nsCOMPtr<nsIDOMEventTarget> piTarget = aTarget;
+  nsCOMPtr<EventTarget> piTarget = aTarget;
   nsCOMPtr<nsIContent> contentNode(do_QueryInterface(aTarget));
   if (!contentNode) // detaching is only supported for content nodes
     return NS_ERROR_FAILURE;
@@ -625,7 +626,7 @@ nsXBLService::DetachGlobalKeyHandler(nsIDOMEventTarget* aTarget)
     piTarget = do_QueryInterface(doc);
 
   nsEventListenerManager* manager = piTarget->GetListenerManager(true);
-    
+
   if (!piTarget || !manager)
     return NS_ERROR_FAILURE;
 

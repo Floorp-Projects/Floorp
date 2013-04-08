@@ -5,14 +5,7 @@
 Cu.import("resource://gre/modules/Services.jsm");
 
 function run_test() {
-  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
-  // prepare a blocklist file for the blocklist service
-  var blocklistFile = gProfD.clone();
-  blocklistFile.append("blocklist.xml");
-  if (blocklistFile.exists())
-    blocklistFile.remove(false);
-  var source = do_get_file("blocklist.xml");
-  source.copyTo(gProfD, "blocklist.xml");
+  initApp();
 
   // NOTE: none of the manifests here can have a workerURL set, or we attempt
   // to create a FrameWorker and that fails under xpcshell...

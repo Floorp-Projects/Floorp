@@ -65,7 +65,7 @@ public:
   }
 
   virtual bool
-  ParseSuccessfulReply(jsval* aValue) MOZ_OVERRIDE
+  ParseSuccessfulReply(JS::Value* aValue) MOZ_OVERRIDE
   {
     MOZ_NOT_REACHED("This should never be called!");
     return false;

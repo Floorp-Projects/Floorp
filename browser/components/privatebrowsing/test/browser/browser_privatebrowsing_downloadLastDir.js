@@ -43,7 +43,6 @@ function test() {
       let gDownloadLastDir = new DownloadLastDir(win);
       aCallback(win, gDownloadLastDir);
       gDownloadLastDir.cleanupPrivateFile();
-      win.close();
     });
   }
 
@@ -60,21 +59,26 @@ function test() {
 
     MockFilePicker.returnFiles = [aFile];
     MockFilePicker.displayDirectory = null;
-    let file =
-      launcherDialog.promptForSaveToFile(launcher, context, null, null, null);
-    ok(!!file, "promptForSaveToFile correctly returned a file");
 
-    // File picker should start with expected display dir.
-    is(MockFilePicker.displayDirectory.path, aDisplayDir.path,
-      "File picker should start with browser.download.lastDir");
-    // browser.download.lastDir should be modified on not private windows
-    is(prefs.getComplexValue("lastDir", Ci.nsIFile).path, aLastDir.path,
-       "LastDir should be the expected last dir");
-    // gDownloadLastDir should be usable outside of private windows
-    is(gDownloadLastDir.file.path, aGlobalLastDir.path,
-       "gDownloadLastDir should be the expected global last dir");
+    launcher.saveDestinationAvailable = function (file) {
+      ok(!!file, "promptForSaveToFile correctly returned a file");
 
-    aCallback();
+      // File picker should start with expected display dir.
+      is(MockFilePicker.displayDirectory.path, aDisplayDir.path,
+        "File picker should start with browser.download.lastDir");
+      // browser.download.lastDir should be modified on not private windows
+      is(prefs.getComplexValue("lastDir", Ci.nsIFile).path, aLastDir.path,
+         "LastDir should be the expected last dir");
+      // gDownloadLastDir should be usable outside of private windows
+      is(gDownloadLastDir.file.path, aGlobalLastDir.path,
+         "gDownloadLastDir should be the expected global last dir");
+
+      launcher.saveDestinationAvailable = null;
+      aWin.close();
+      aCallback();
+    };
+
+    launcherDialog.promptForSaveToFileAsync(launcher, context, null, null, null);
   }
 
   testOnWindow(false, function(win, downloadDir) {

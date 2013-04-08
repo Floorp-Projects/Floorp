@@ -29,7 +29,7 @@ TestPilotComponent.prototype = {
     case "sessionstore-windows-restored":
       /* Stop oberver, to ensure that globalStartup doesn't get
        * called more than once. */
-      os.removeObserver(this, "sessionstore-windows-restored", false);
+      os.removeObserver(this, "sessionstore-windows-restored");
       /* Call global startup on a timer so that it's off of the main
        * thread... delay a few seconds to give firefox time to finish
        * starting up.

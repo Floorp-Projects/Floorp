@@ -9,6 +9,7 @@
 #ifndef jsanalyze_h___
 #define jsanalyze_h___
 
+#include "mozilla/PodOperations.h"
 #include "mozilla/TypeTraits.h"
 
 #include "jsautooplen.h"
@@ -63,7 +64,7 @@ class Bytecode
     friend class ScriptAnalysis;
 
   public:
-    Bytecode() { PodZero(this); }
+    Bytecode() { mozilla::PodZero(this); }
 
     /* --------- Bytecode analysis --------- */
 
@@ -114,7 +115,6 @@ class Bytecode
     bool getStringElement:1;    /* GETELEM which has accessed string properties. */
     bool nonNativeGetElement:1; /* GETELEM on a non-native, non-array object. */
     bool accessGetter: 1;       /* Property read on a shape with a getter hook. */
-    bool notIdempotent: 1;      /* Don't use an idempotent cache for this property read. */
 
     /* Stack depth before this opcode. */
     uint32_t stackDepth;
@@ -668,7 +668,7 @@ class SSAValue
 #endif
 
     void clear() {
-        PodZero(this);
+        mozilla::PodZero(this);
         JS_ASSERT(kind() == EMPTY);
     }
 
@@ -753,7 +753,7 @@ struct SSAPhiNode
     uint32_t length;
     SSAValue *options;
     SSAUseChain *uses;
-    SSAPhiNode() { PodZero(this); }
+    SSAPhiNode() { mozilla::PodZero(this); }
 };
 
 inline uint32_t
@@ -795,7 +795,7 @@ class SSAUseChain
     } u;
     SSAUseChain *next;
 
-    SSAUseChain() { PodZero(this); }
+    SSAUseChain() { mozilla::PodZero(this); }
 };
 
 class SlotValue
@@ -859,7 +859,7 @@ class ScriptAnalysis
   public:
 
     ScriptAnalysis(RawScript script) {
-        PodZero(this);
+        mozilla::PodZero(this);
         this->script_ = script;
 #ifdef DEBUG
         this->originalDebugMode_ = script_->compartment()->debugMode();

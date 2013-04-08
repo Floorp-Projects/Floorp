@@ -1,18 +1,16 @@
 <!DOCTYPE HTML>
 <html>
-<!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=377624
-https://bugzilla.mozilla.org/show_bug.cgi?id=565274
--->
 <head>
-  <title>Test for Bug 377624</title>
+  <title>Test for &lt;input type='file'&gt; file picker</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=377624">Mozilla Bug 36619</a>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=377624">Mozilla Bug 377624</a>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=565274">Mozilla Bug 565274</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=701353">Mozilla Bug 701353</a>
 <p id="display"></p>
 <div id="content">
   <input id='a' type='file' accept="image/*">
@@ -37,11 +35,24 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=565274
   <input id='right-click' type='file'>
   <input id='middle-click' type='file'>
   <input id='left-click' type='file'>
+  <label id='label-1'>foo<input type='file'></label>
+  <label id='label-2' for='labeled-2'>foo</label><input id='labeled-2' type='file'></label>
+  <label id='label-3'>foo<input type='file'></label>
+  <label id='label-4' for='labeled-4'>foo</label><input id='labeled-4' type='file'></label>
+  <input id='by-button' type='file'>
+  <button id='button-click' onclick="document.getElementById('by-button').click();">foo</button>
+  <button id='button-down' onclick="document.getElementById('by-button').click();">foo</button>
+  <button id='button-up' onclick="document.getElementById('by-button').click();">foo</button>
 </div>
 <pre id="test">
 <script type="application/javascript">
 
-/** Test for Bug 377624 and Bug 565274 **/
+/**
+ * This test checks various scenarios and make sure that a file picker is being
+ * shown in all of them (minus a few exceptions).
+ * |testData| defines the tests to do and |launchNextTest| can be used to have
+ * specific behaviour for some tests. Everything else should just work.
+ */
 
 SimpleTest.waitForExplicitFinish();
 
@@ -76,6 +87,13 @@ var testData = [["a", 1, MockFilePicker.filterImages, 1],
                 ["right-click", 0, undefined, 0, true],
                 ["middle-click", 0, undefined, 0, true],
                 ["left-click", 0, undefined, 0],
+                ["label-1", 0, undefined, 0],
+                ["label-2", 0, undefined, 0],
+                ["label-3", 0, undefined, 0],
+                ["label-4", 0, undefined, 0],
+                ["button-click", 0, undefined, 0],
+                ["button-down", 0, undefined, 0],
+                ["button-up", 0, undefined, 0],
                ];
 
 var currentTest = 0;
@@ -92,6 +110,10 @@ function launchNextTest() {
   filterAllAdded = false;
   filters = [];
   filterIndex = 0;
+
+  // Focusing the element will scroll them into view so making sure the clicks
+  // will work.
+  document.getElementById(testData[currentTest][0]).focus();
 
   if (testData[currentTest][0] == "untrusted-click") {
     var e = document.createEvent('MouseEvents');
@@ -127,6 +149,13 @@ function launchNextTest() {
       ++currentTest;
       launchNextTest();
     }, 500);
+  } else if (testData[currentTest][0] == 'label-3' ||
+             testData[currentTest][0] == 'label-4') {
+    synthesizeMouse(document.getElementById(testData[currentTest][0]), 5, 5, {});
+  } else if (testData[currentTest][0] == 'button-click' ||
+             testData[currentTest][0] == 'button-down' ||
+             testData[currentTest][0] == 'button-up') {
+    synthesizeMouseAtCenter(document.getElementById(testData[currentTest][0]), {});
   } else {
     document.getElementById(testData[currentTest][0]).click();
   }

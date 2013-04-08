@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/PodOperations.h"
 
 #include "jsapi.h"
 #include "jsautooplen.h"
@@ -25,6 +26,7 @@
 #include "jsworkers.h"
 
 #ifdef JS_ION
+#include "ion/BaselineJIT.h"
 #include "ion/Ion.h"
 #include "ion/IonCompartment.h"
 #endif
@@ -56,6 +58,9 @@ using namespace js::types;
 using namespace js::analyze;
 
 using mozilla::DebugOnly;
+using mozilla::PodArrayZero;
+using mozilla::PodCopy;
+using mozilla::PodZero;
 
 static inline jsid
 id_prototype(JSContext *cx) {
@@ -2465,6 +2470,9 @@ FindPreviousInnerInitializer(HandleScript script, jsbytecode *initpc)
     if (!script->hasAnalysis())
         return NULL;
 
+    if (!script->analysis()->maybeCode(initpc))
+        return NULL;
+
     /*
      * Pattern match the following bytecode, which will appear between
      * adjacent initializer elements:
@@ -2919,6 +2927,10 @@ TypeCompartment::addPendingRecompile(JSContext *cx, RawScript script, jsbytecode
 
 # ifdef JS_ION
     CancelOffThreadIonCompile(cx->compartment, script);
+
+    // Let the script warm up again before attempting another compile.
+    if (ion::IsBaselineEnabled(cx))
+        script->resetUseCount();
 
     if (script->hasIonScript())
         addPendingRecompile(cx, script->ionScript()->recompileInfo());

@@ -5,11 +5,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* JS script descriptor. */
+
 #ifndef jsscript_h___
 #define jsscript_h___
-/*
- * JS script descriptor.
- */
+
+#include "mozilla/PodOperations.h"
 
 #include "jsdbgapi.h"
 #include "jsinfer.h"
@@ -25,11 +26,14 @@ namespace js {
 
 namespace ion {
     struct IonScript;
+    struct BaselineScript;
     struct IonScriptCounts;
 }
 
 # define ION_DISABLED_SCRIPT ((js::ion::IonScript *)0x1)
 # define ION_COMPILING_SCRIPT ((js::ion::IonScript *)0x2)
+
+# define BASELINE_DISABLED_SCRIPT ((js::ion::BaselineScript *)0x1)
 
 class Shape;
 
@@ -590,7 +594,6 @@ class JSScript : public js::gc::Cell
     bool hasIonScript() const {
         return ion && ion != ION_DISABLED_SCRIPT && ion != ION_COMPILING_SCRIPT;
     }
-
     bool canIonCompile() const {
         return ion != ION_DISABLED_SCRIPT;
     }
@@ -603,6 +606,19 @@ class JSScript : public js::gc::Cell
         JS_ASSERT(hasIonScript());
         return ion;
     }
+
+    /* Information attached by the baseline compiler. */
+    js::ion::BaselineScript *baseline;
+
+    bool hasBaselineScript() const {
+        return baseline && baseline != BASELINE_DISABLED_SCRIPT;
+    }
+    js::ion::BaselineScript *baselineScript() const {
+        JS_ASSERT(hasBaselineScript());
+        return baseline;
+    }
+
+    uint32_t padding0;
 
     /* Information attached by Ion: script for parallel mode execution */
     js::ion::IonScript *parallelIon;
@@ -742,6 +758,7 @@ class JSScript : public js::gc::Cell
     uint32_t getUseCount() const  { return useCount; }
     uint32_t incUseCount(uint32_t amount = 1) { return useCount += amount; }
     uint32_t *addressOfUseCount() { return &useCount; }
+    static size_t offsetOfUseCount() { return offsetof(JSScript, useCount); }
     void resetUseCount() { useCount = 0; }
 
     void resetLoopCount() {
@@ -1280,7 +1297,7 @@ struct ScriptBytecodeHasher
     static bool match(SharedScriptData *entry, const Lookup &lookup) {
         if (entry->length != lookup.length)
             return false;
-        return PodEqual<jsbytecode>(entry->data, lookup.code, lookup.length);
+        return mozilla::PodEqual<jsbytecode>(entry->data, lookup.code, lookup.length);
     }
 };
 

@@ -27,8 +27,10 @@
           iframe.webNavigation.loadURI("about:socialerror?mode=compactInfo", null, null, null, null);
         });
         let iframeWindow = this.iframe.contentWindow;
-        this.addEventListener("DOMContentLoaded", function DOMContentLoaded() {
-          this.removeEventListener("DOMContentLoaded", DOMContentLoaded);
+        this.addEventListener("DOMContentLoaded", function DOMContentLoaded(event) {
+          if (event.target != this.iframe.contentDocument)
+            return;
+          this.removeEventListener("DOMContentLoaded", DOMContentLoaded, true);
           this.isActive = !this.minimized;
           // process this._callbacks, then set to null so the chatbox creator
           // knows to make new callbacks immediately.
@@ -48,7 +50,7 @@
             iframeWindow.removeEventListener("unload", unload);
             iframeWindow.removeEventListener("socialChatActivity", chatActivity);
           });
-        });
+        }, true);
         this.setAttribute("src", this.src);
       ]]></constructor>
 

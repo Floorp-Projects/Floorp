@@ -61,7 +61,7 @@ function test() {
   });
 
   function observer() {
-    Services.obs.removeObserver(observer, "browser-permissions-initialized", false);
+    Services.obs.removeObserver(observer, "browser-permissions-initialized");
     runNextTest();
   }
   Services.obs.addObserver(observer, "browser-permissions-initialized", false);

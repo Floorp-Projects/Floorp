@@ -10,8 +10,11 @@
 #include <UIAutomation.h>
 #include <UIAutomationCore.h>
 #include <UIAutomationCoreApi.h>
-#include <wrl.h>
 
+#include "mozwrlbase.h"
+
+#include "nsCOMPtr.h"
+#include "mozilla/a11y/Accessible.h"
 #include "UIAAccessibilityBridge.h"
 
 // generated
@@ -37,20 +40,16 @@ class UIABridge : public RuntimeClass<RuntimeClassFlags<RuntimeClassType::WinRtC
   InspectableClass(L"IUIABridge", BaseTrust);
 
 public:
-  UIABridge() :
-    mConnected(false),
-    mHasFocus(false)
-  {}
+  UIABridge() {}
 
   // IUIABridge
   IFACEMETHODIMP Init(IInspectable* view, IInspectable* window, LONG_PTR inner);
   IFACEMETHODIMP Disconnect();
+  IFACEMETHODIMP FocusChangeEvent();
 
   // IUIAElement
   IFACEMETHODIMP SetFocusInternal(LONG_PTR aAccessible);
-  IFACEMETHODIMP CheckFocus(int x, int y);
   IFACEMETHODIMP ClearFocus();
-  IFACEMETHODIMP HasFocus(VARIANT_BOOL * hasFocus);
 
   // IRawElementProviderFragmentRoot
   IFACEMETHODIMP ElementProviderFromPoint(double x, double y, IRawElementProviderFragment ** retVal);
@@ -74,12 +73,11 @@ protected:
   bool Connected();
 
 private:
-  bool mConnected;
   Microsoft::WRL::ComPtr<ICoreWindow> mWindow;
 #if defined(ACCESSIBILITY)
-  nsRefPtr<AccessibilityBridge> mBridge;
+  nsRefPtr<AccessibilityBridge> mAccBridge;
+  nsRefPtr<mozilla::a11y::Accessible> mAccessible;
 #endif
-  bool mHasFocus;
 };
 
 [uuid("4438135F-F624-43DE-A417-275CE7A1A0CD")]
@@ -95,15 +93,12 @@ class UIATextElement : public RuntimeClass<RuntimeClassFlags<RuntimeClassType::W
   InspectableClass(L"UIATextElement", BaseTrust);
 
 public:
-  UIATextElement() :
-    mHasFocus(false)
-  {}
+  UIATextElement() {}
 
   // IUIAElement
   IFACEMETHODIMP SetFocusInternal(LONG_PTR aAccessible);
-  IFACEMETHODIMP CheckFocus(int x, int y);
   IFACEMETHODIMP ClearFocus();
-  IFACEMETHODIMP HasFocus(VARIANT_BOOL * hasFocus);
+  IFACEMETHODIMP FocusChangeEvent();
 
   // IRawElementProviderFragment
   IFACEMETHODIMP Navigate(NavigateDirection direction, IRawElementProviderFragment ** retVal);
@@ -138,8 +133,7 @@ public:
 
 private:
   int mIndexID;
-  Rect mBounds;
-  bool mHasFocus;
+  nsCOMPtr<nsIAccessible> mAccessItem;
 };
 
 } } }

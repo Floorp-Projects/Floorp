@@ -1,0 +1,41 @@
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Network Monitor test page</title>
+  </head>
+
+  <body>
+    <p>Status codes test</p>
+
+    <script type="text/javascript">
+      function get(aAddress, aCallback) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", aAddress, true);
+
+        xhr.onreadystatechange = function() {
+          if (this.readyState == this.DONE) {
+            aCallback();
+          }
+        };
+        xhr.send(null);
+      }
+
+      function performRequests() {
+        get("sjs_status-codes-test-server.sjs?sts=100", function() {
+          get("sjs_status-codes-test-server.sjs?sts=200", function() {
+            get("sjs_status-codes-test-server.sjs?sts=300", function() {
+              get("sjs_status-codes-test-server.sjs?sts=400", function() {
+                get("sjs_status-codes-test-server.sjs?sts=500", function() {
+                  // Done.
+                });
+              });
+            });
+          });
+        });
+      }
+    </script>
+  </body>
+
+</html>

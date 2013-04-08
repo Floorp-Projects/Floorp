@@ -6,6 +6,7 @@
 
 const {Cc, Ci, Cu, Cm, components} = require('chrome');
 Cu.import("resource://gre/modules/AddonManager.jsm", this);
+const xulApp = require("sdk/system/xul-app");
 
 exports.testSelf = function(test) {
   var self = require("sdk/self");
@@ -30,8 +31,12 @@ exports.testSelf = function(test) {
   test.assert(self.name == "addon-sdk", "self.name is addon-sdk");
 
   // loadReason may change here, as we change the way tests addons are installed
-  test.assertEqual(self.loadReason, "startup",
-                   "self.loadReason is always `startup` on test runs");
+  // Bug 854937 fixed loadReason and is now install
+  let testLoadReason = xulApp.versionInRange(xulApp.platformVersion,
+                                             "23.0a1", "*") ? "install"
+                                                            : "startup";
+  test.assertEqual(self.loadReason, testLoadReason,
+                   "self.loadReason is either startup or install on test runs");
 
   test.assertEqual(self.isPrivateBrowsingSupported, false,
                    'usePrivateBrowsing property is false by default');

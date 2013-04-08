@@ -14,6 +14,9 @@
     <item android:id="@+id/share"
           android:title="@string/contextmenu_share"/>
 
+    <item android:id="@+id/subscribe"
+          android:title="@string/contextmenu_subscribe"/>
+
     <item android:id="@+id/copyurl"
           android:title="@string/contextmenu_copyurl"/>
 
