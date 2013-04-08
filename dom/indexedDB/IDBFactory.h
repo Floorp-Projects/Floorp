@@ -81,6 +81,9 @@ public:
                 const nsACString& aOrigin);
 
   static nsresult
+  SetDefaultPragmas(mozIStorageConnection* aConnection);
+
+  static nsresult
   LoadDatabaseInformation(mozIStorageConnection* aConnection,
                           nsIAtom* aDatabaseId,
                           uint64_t* aVersion,
