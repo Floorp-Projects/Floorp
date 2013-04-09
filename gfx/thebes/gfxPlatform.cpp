@@ -833,7 +833,7 @@ gfxPlatform::CreateDrawTargetForFBO(unsigned int aFBOID, mozilla::gl::GLContext*
     GrContext* ctx = reinterpret_cast<GrContext*>(aGLContext->GetUserData(&sGrContextKey));
     if (!ctx) {
       GrGLInterface* grInterface = CreateGrInterfaceFromGLContext(aGLContext);
-      ctx = GrContext::Create(kOpenGL_Shaders_GrEngine, (GrPlatform3DContext)grInterface);
+      ctx = GrContext::Create(kOpenGL_GrBackend, (GrBackendContext)grInterface);
       aGLContext->SetUserData(&sGrContextKey, ctx);
     }
 
