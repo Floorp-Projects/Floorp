@@ -41,7 +41,7 @@ struct MarkMessageReadRequest
   bool value;
 };
 
-struct GetThreadListRequest
+struct CreateThreadCursorRequest
 {
 };
 
@@ -51,7 +51,12 @@ union IPCSmsRequest
   GetMessageRequest;
   DeleteMessageRequest;
   MarkMessageReadRequest;
-  GetThreadListRequest;
+};
+
+union IPCMobileMessageCursor
+{
+  CreateMessageCursorRequest;
+  CreateThreadCursorRequest;
 };
 
 sync protocol PSms {
@@ -86,7 +91,7 @@ parent:
   /**
    * Sent when the child makes an asynchronous cursor to the parent.
    */
-  PMobileMessageCursor(CreateMessageCursorRequest request);
+  PMobileMessageCursor(IPCMobileMessageCursor request);
 
   sync HasSupport()
       returns (bool aHasSupport);
