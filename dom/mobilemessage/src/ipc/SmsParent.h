@@ -58,10 +58,10 @@ protected:
 
   virtual bool
   RecvPMobileMessageCursorConstructor(PMobileMessageCursorParent* aActor,
-                                      const CreateMessageCursorRequest& aRequest) MOZ_OVERRIDE;
+                                      const IPCMobileMessageCursor& aCursor) MOZ_OVERRIDE;
 
   virtual PMobileMessageCursorParent*
-  AllocPMobileMessageCursor(const CreateMessageCursorRequest& aRequest) MOZ_OVERRIDE;
+  AllocPMobileMessageCursor(const IPCMobileMessageCursor& aCursor) MOZ_OVERRIDE;
 
   virtual bool
   DeallocPMobileMessageCursor(PMobileMessageCursorParent* aActor) MOZ_OVERRIDE;
@@ -95,9 +95,6 @@ protected:
 
   bool
   DoRequest(const MarkMessageReadRequest& aRequest);
-
-  bool
-  DoRequest(const GetThreadListRequest& aRequest);
 };
 
 class MobileMessageCursorParent : public PMobileMessageCursorParent
@@ -130,6 +127,9 @@ protected:
 
   bool
   DoRequest(const CreateMessageCursorRequest& aRequest);
+
+  bool
+  DoRequest(const CreateThreadCursorRequest& aRequest);
 };
 
 } // namespace mobilemessage
