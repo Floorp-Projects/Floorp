@@ -20,7 +20,6 @@ webidl_files = \
   AudioListener.webidl \
   AudioNode.webidl \
   AudioParam.webidl \
-  AudioSourceNode.webidl \
   BatteryManager.webidl \
   BeforeUnloadEvent.webidl \
   BiquadFilterNode.webidl \
