@@ -33,10 +33,25 @@ GfxFormatToSkiaConfig(SurfaceFormat format)
       return SkBitmap::kRGB_565_Config;
     case FORMAT_A8:
       return SkBitmap::kA8_Config;
-
+    default:
+      return SkBitmap::kARGB_8888_Config;
   }
+}
 
-  return SkBitmap::kARGB_8888_Config;
+static inline SurfaceFormat
+SkiaConfigToGfxFormat(SkBitmap::Config config)
+{
+  switch (config)
+  {
+    case SkBitmap::kARGB_8888_Config:
+      return FORMAT_B8G8R8A8;
+    case SkBitmap::kRGB_565_Config:
+      return FORMAT_R5G6B5;
+    case SkBitmap::kA8_Config:
+      return FORMAT_A8;
+    default:
+      return FORMAT_B8G8R8A8;
+  }
 }
 
 #ifdef USE_SKIA_GPU
