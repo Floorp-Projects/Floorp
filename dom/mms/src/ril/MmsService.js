@@ -42,6 +42,7 @@ const TIME_TO_RELEASE_MMS_CONNECTION = 30000;
 const PREF_RETRIEVAL_MODE      = 'dom.mms.retrieval_mode';
 const RETRIEVAL_MODE_MANUAL    = "manual";
 const RETRIEVAL_MODE_AUTOMATIC = "automatic";
+const RETRIEVAL_MODE_AUTOMATIC_HOME = "automatic-home";
 const RETRIEVAL_MODE_NEVER     = "never";
 
 
@@ -158,6 +159,17 @@ XPCOMUtils.defineLazyGetter(this, "gMmsConnection", function () {
               "available later.");
         this.clearMmsProxySettings();
       }
+    },
+
+    /**
+     * Return the roaming status of data connection.
+     *
+     * @return true if data connection is roaming.
+     */
+    isDataConnRoaming: function isDataConnRoaming() {
+      let isRoaming = gRIL.rilContext.data.roaming;
+      debug("isDataConnRoaming = " + isRoaming);
+      return isRoaming;
     },
 
     /**
@@ -1078,7 +1090,10 @@ MmsService.prototype = {
         retrievalMode = Services.prefs.getCharPref(PREF_RETRIEVAL_MODE);
       } catch (e) {}
 
-      if (RETRIEVAL_MODE_AUTOMATIC !== retrievalMode) {
+      let isRoaming = gMmsConnection.isDataConnRoaming();
+      if ((retrievalMode === RETRIEVAL_MODE_AUTOMATIC_HOME && isRoaming) ||
+          RETRIEVAL_MODE_MANUAL === retrievalMode ||
+          RETRIEVAL_MODE_NEVER === retrievalMode) {
         let mmsStatus = RETRIEVAL_MODE_NEVER === retrievalMode
                       ? MMS.MMS_PDU_STATUS_REJECTED
                       : MMS.MMS_PDU_STATUS_DEFERRED;
@@ -1094,7 +1109,8 @@ MmsService.prototype = {
         return;
       }
 
-      // For RETRIEVAL_MODE_AUTOMATIC, proceed to retrieve MMS.
+      // For RETRIEVAL_MODE_AUTOMATIC or RETRIEVAL_MODE_AUTOMATIC_HOME but not
+      // roaming, proceed to retrieve MMS.
       this.retrieveMessage(url, (function responseNotify(mmsStatus,
                                                          retrievedMessage) {
         debug("retrievedMessage = " + JSON.stringify(retrievedMessage));
