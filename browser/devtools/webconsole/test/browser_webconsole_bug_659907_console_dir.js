@@ -16,41 +16,14 @@ function test() {
 }
 
 function consoleOpened(hud) {
-  outputNode = hud.outputNode;
-  content.console.dir(content.document);
-  waitForSuccess({
-    name: "console.dir displayed",
-    validatorFn: function()
-    {
-      return outputNode.textContent.indexOf("[object HTMLDocument") > -1;
-    },
-    successFn: testConsoleDir.bind(null, outputNode),
-    failureFn: finishTest,
-  });
+  hud.jsterm.execute("console.dir(document)");
+  hud.jsterm.once("variablesview-fetched", testConsoleDir.bind(null, hud));
 }
 
-function testConsoleDir(outputNode) {
-  let msg = outputNode.querySelectorAll(".webconsole-msg-inspector");
-  is(msg.length, 1, "one message node displayed");
-  let view = msg[0].propertyTreeView;
-  let foundQSA = false;
-  let foundLocation = false;
-  let foundWrite = false;
-  for (let i = 0; i < view.rowCount; i++) {
-    let text = view.getCellText(i);
-    if (text == "querySelectorAll: function querySelectorAll()") {
-      foundQSA = true;
-    }
-    else if (text  == "location: Location") {
-      foundLocation = true;
-    }
-    else if (text  == "write: function write()") {
-      foundWrite = true;
-    }
-  }
-  ok(foundQSA, "found document.querySelectorAll");
-  ok(foundLocation, "found document.location");
-  ok(foundWrite, "found document.write");
-  msg = view = outputNode = null;
-  executeSoon(finishTest);
+function testConsoleDir(hud, ev, view) {
+  findVariableViewProperties(view, [
+    { name: "__proto__.querySelectorAll", value: "[object Function]" },
+    { name: "location", value: "[object Location]" },
+    { name: "__proto__.write", value: "[object Function]" },
+  ], { webconsole: hud }).then(finishTest);
 }

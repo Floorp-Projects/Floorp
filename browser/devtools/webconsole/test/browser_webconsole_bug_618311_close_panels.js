@@ -30,8 +30,6 @@ function performTest() {
   let hudId = HUDService.getHudIdByWindow(content);
   let HUD = HUDService.hudReferences[hudId];
 
-  HUD.jsterm.execute("document");
-
   let networkMessage = HUD.outputNode.querySelector(".webconsole-msg-network");
   ok(networkMessage, "found network message");
 
@@ -45,66 +43,48 @@ function performTest() {
   let hiddenPopups = 0;
 
   let onpopupshown = function() {
+    document.removeEventListener("popupshown", onpopupshown, false);
     popupsShown++;
-    if (popupsShown == 2) {
-      document.removeEventListener("popupshown", onpopupshown, false);
 
-      executeSoon(function() {
-        let popups = popupset.querySelectorAll("panel[hudId=" + hudId + "]");
-        is(popups.length, 2, "found two popups");
+    executeSoon(function() {
+      let popups = popupset.querySelectorAll("panel[hudId=" + hudId + "]");
+      is(popups.length, 1, "found one popup");
 
-        document.addEventListener("popuphidden", onpopuphidden, false);
+      document.addEventListener("popuphidden", onpopuphidden, false);
 
-        registerCleanupFunction(function() {
-          is(hiddenPopups, 2, "correct number of popups hidden");
-          if (hiddenPopups != 2) {
-            document.removeEventListener("popuphidden", onpopuphidden, false);
-          }
-        });
-
-        executeSoon(closeConsole);
+      registerCleanupFunction(function() {
+        is(hiddenPopups, 1, "correct number of popups hidden");
+        if (hiddenPopups != 1) {
+          document.removeEventListener("popuphidden", onpopuphidden, false);
+        }
       });
-    }
+
+      executeSoon(closeConsole);
+    });
   };
 
   let onpopuphidden = function() {
+    document.removeEventListener("popuphidden", onpopuphidden, false);
     hiddenPopups++;
-    if (hiddenPopups == 2) {
-      document.removeEventListener("popuphidden", onpopuphidden, false);
 
-      executeSoon(function() {
-        let popups = popupset.querySelectorAll("panel[hudId=" + hudId + "]");
-        is(popups.length, 0, "no popups found");
+    executeSoon(function() {
+      let popups = popupset.querySelectorAll("panel[hudId=" + hudId + "]");
+      is(popups.length, 0, "no popups found");
 
-        executeSoon(finishTest);
-      });
-    }
+      executeSoon(finishTest);
+    });
   };
 
   document.addEventListener("popupshown", onpopupshown, false);
 
   registerCleanupFunction(function() {
-    is(popupsShown, 2, "correct number of popups shown");
-    if (popupsShown != 2) {
+    is(popupsShown, 1, "correct number of popups shown");
+    if (popupsShown != 1) {
       document.removeEventListener("popupshown", onpopupshown, false);
     }
   });
 
-  waitForSuccess({
-    name: "jsterm output message",
-    validatorFn: function()
-    {
-      return HUD.outputNode.querySelector(".webconsole-msg-output");
-    },
-    successFn: function()
-    {
-      let jstermMessage = HUD.outputNode.querySelector(".webconsole-msg-output");
-      EventUtils.sendMouseEvent({ type: "mousedown" }, jstermMessage, HUD.iframeWindow);
-      EventUtils.sendMouseEvent({ type: "click" }, jstermMessage, HUD.iframeWindow);
-      EventUtils.sendMouseEvent({ type: "mousedown" }, networkLink, HUD.iframeWindow);
-      EventUtils.sendMouseEvent({ type: "mouseup" }, networkLink, HUD.iframeWindow);
-      EventUtils.sendMouseEvent({ type: "click" }, networkLink, HUD.iframeWindow);
-    },
-    failureFn: finishTest,
-  });
+  EventUtils.sendMouseEvent({ type: "mousedown" }, networkLink, HUD.iframeWindow);
+  EventUtils.sendMouseEvent({ type: "mouseup" }, networkLink, HUD.iframeWindow);
+  EventUtils.sendMouseEvent({ type: "click" }, networkLink, HUD.iframeWindow);
 }

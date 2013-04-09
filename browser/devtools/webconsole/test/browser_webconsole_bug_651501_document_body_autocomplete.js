@@ -14,7 +14,7 @@ function test() {
   }, true);
 }
 
-var gHUD;
+let gHUD;
 
 function consoleOpened(aHud) {
   gHUD = aHud;
@@ -81,8 +81,7 @@ function testPropertyPanel()
 {
   let jsterm = gHUD.jsterm;
   jsterm.clearOutput();
-  jsterm.setInputValue("document");
-  jsterm.execute();
+  jsterm.execute("document");
 
   waitForSuccess({
     name: "jsterm document object output",
@@ -92,11 +91,7 @@ function testPropertyPanel()
     },
     successFn: function()
     {
-      document.addEventListener("popupshown", function onShown(aEvent) {
-        document.removeEventListener("popupshown", onShown, false);
-        executeSoon(propertyPanelShown.bind(null, aEvent.target));
-      }, false);
-
+      jsterm.once("variablesview-fetched", onVariablesViewReady);
       let node = gHUD.outputNode.querySelector(".webconsole-msg-output");
       EventUtils.synthesizeMouse(node, 2, 2, {}, gHUD.iframeWindow);
     },
@@ -104,34 +99,10 @@ function testPropertyPanel()
   });
 }
 
-function propertyPanelShown(aPanel)
+function onVariablesViewReady(aEvent, aView)
 {
-  let tree = aPanel.querySelector("tree");
-  let view = tree.view;
-  let col = tree.columns[0];
-  ok(view.rowCount, "Property Panel rowCount");
-
-  let foundBody = false;
-  let propPanelProps = [];
-  for (let idx = 0; idx < view.rowCount; ++idx) {
-    let text = view.getCellText(idx, col);
-    if (text == "body: HTMLBodyElement" || text == "body: Object")
-      foundBody = true;
-    propPanelProps.push(text.split(":")[0]);
-  }
-
-  // NB: We pull the properties off the prototype, rather than off object itself,
-  // so that expandos like |constructor|, which the propPanel can't see, are not
-  // included.
-  for (let prop in Object.getPrototypeOf(content.document).wrappedObject) {
-    if (prop == "inputEncoding") {
-      continue;
-    }
-    ok(propPanelProps.indexOf(prop) != -1, "Property |" + prop + "| should be reflected in propertyPanel");
-  }
-
-  ok(foundBody, "found document.body");
-
-  executeSoon(finishTest);
+  findVariableViewProperties(aView, [
+    { name: "__proto__.body", value: "[object HTMLBodyElement]" },
+  ], { webconsole: gHUD }).then(finishTest);
 }
 
