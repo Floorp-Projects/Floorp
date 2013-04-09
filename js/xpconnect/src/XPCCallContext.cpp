@@ -14,12 +14,18 @@
 using namespace mozilla;
 using namespace xpc;
 
+static inline JSContext *
+GetSafeJSContext()
+{
+    return XPCJSRuntime::Get()->GetJSContextStack()->GetSafeJSContext();
+}
+
 XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
                                JSContext* cx    /* = nullptr    */,
                                JSObject* obj    /* = nullptr    */,
                                JSObject* funobj /* = nullptr    */,
                                jsid name        /* = JSID_VOID */,
-                               unsigned argc       /* = NO_ARGS   */,
+                               unsigned argc    /* = NO_ARGS   */,
                                jsval *argv      /* = nullptr    */,
                                jsval *rval      /* = nullptr    */)
     :   mState(INIT_FAILED),
@@ -29,9 +35,11 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
         mContextPopRequired(false),
         mDestroyJSContextInDestructor(false),
         mCallerLanguage(callerLanguage),
-        mFlattenedJSObject(nullptr),
+        mScopeForNewJSObjects(GetSafeJSContext()),
+        mFlattenedJSObject(GetSafeJSContext()),
         mWrapper(nullptr),
-        mTearOff(nullptr)
+        mTearOff(nullptr),
+        mName(GetSafeJSContext())
 {
     Init(callerLanguage, callerLanguage == NATIVE_CALLER, obj, funobj,
          INIT_SHOULD_LOOKUP_WRAPPER, name, argc, argv, rval);
@@ -51,9 +59,11 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
         mContextPopRequired(false),
         mDestroyJSContextInDestructor(false),
         mCallerLanguage(callerLanguage),
-        mFlattenedJSObject(flattenedJSObject),
+        mScopeForNewJSObjects(GetSafeJSContext()),
+        mFlattenedJSObject(GetSafeJSContext(), flattenedJSObject),
         mWrapper(wrapper),
-        mTearOff(tearOff)
+        mTearOff(tearOff),
+        mName(GetSafeJSContext())
 {
     Init(callerLanguage, callBeginRequest, obj, nullptr,
          WRAPPER_PASSED_TO_CONSTRUCTOR, JSID_VOID, NO_ARGS,

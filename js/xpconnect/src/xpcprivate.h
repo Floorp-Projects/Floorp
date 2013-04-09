@@ -1150,7 +1150,7 @@ public:
                    JSObject* obj    = nullptr,
                    JSObject* funobj = nullptr,
                    jsid id          = JSID_VOID,
-                   unsigned argc       = NO_ARGS,
+                   unsigned argc    = NO_ARGS,
                    jsval *argv      = nullptr,
                    jsval *rval      = nullptr);
 
@@ -1295,8 +1295,8 @@ private:
 
     XPCCallContext*                 mPrevCallContext;
 
-    JSObject*                       mScopeForNewJSObjects;
-    JSObject*                       mFlattenedJSObject;
+    JS::RootedObject                mScopeForNewJSObjects;
+    JS::RootedObject                mFlattenedJSObject;
     XPCWrappedNative*               mWrapper;
     XPCWrappedNativeTearOff*        mTearOff;
 
@@ -1306,7 +1306,7 @@ private:
     XPCNativeInterface*             mInterface;
     XPCNativeMember*                mMember;
 
-    jsid                            mName;
+    JS::RootedId                    mName;
     JSBool                          mStaticMemberIsLocal;
 
     unsigned                        mArgc;
