@@ -256,10 +256,6 @@ endif
 DIST_FILES =
 
 # Place the files in the order they are going to be opened by the linker
-ifdef MOZ_CRASHREPORTER
-DIST_FILES += lib.id
-endif
-
 DIST_FILES += libmozalloc.so
 ifndef MOZ_FOLD_LIBS
 DIST_FILES += \
@@ -362,11 +358,6 @@ INNER_MAKE_PACKAGE	= \
   ( cd $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && \
     mkdir -p lib/$(ABI_DIR) && \
     mv libmozglue.so $(MOZ_CHILD_PROCESS_NAME) lib/$(ABI_DIR) && \
-    rm -f lib.id && \
-    for SOMELIB in *.so ; \
-    do \
-      printf "`basename $$SOMELIB`:`$(_ABS_DIST)/host/bin/file_id $$SOMELIB`\n" >> lib.id ; \
-    done && \
     unzip -o $(_ABS_DIST)/gecko.ap_ && \
     rm $(_ABS_DIST)/gecko.ap_ && \
     $(if $(SZIP_LIBRARIES),$(ZIP) -0 $(_ABS_DIST)/gecko.ap_ $(SZIP_LIBRARIES) && ) \
