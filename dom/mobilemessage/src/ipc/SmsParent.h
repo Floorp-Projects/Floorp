@@ -10,6 +10,7 @@
 #include "mozilla/dom/mobilemessage/PSmsRequestParent.h"
 #include "mozilla/dom/mobilemessage/PMobileMessageCursorParent.h"
 #include "nsIDOMDOMCursor.h"
+#include "nsIMobileMessageCallback.h"
 #include "nsIMobileMessageCursorCallback.h"
 #include "nsIObserver.h"
 
@@ -17,7 +18,6 @@ namespace mozilla {
 namespace dom {
 
 class ContentParent;
-class SmsRequest;
 
 namespace mobilemessage {
 
@@ -68,18 +68,27 @@ protected:
 };
 
 class SmsRequestParent : public PSmsRequestParent
+                       , public nsIMobileMessageCallback
 {
   friend class SmsParent;
 
-  nsRefPtr<SmsRequest> mSmsRequest;
+  bool mActorDestroyed;
 
 public:
-  void
-  SendReply(const MessageReply& aReply);
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIMOBILEMESSAGECALLBACK
 
 protected:
-  SmsRequestParent();
-  virtual ~SmsRequestParent();
+  SmsRequestParent()
+    : mActorDestroyed(false)
+  {
+    MOZ_COUNT_CTOR(SmsRequestParent);
+  }
+
+  virtual ~SmsRequestParent()
+  {
+    MOZ_COUNT_DTOR(SmsRequestParent);
+  }
 
   virtual void
   ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
@@ -95,6 +104,9 @@ protected:
 
   bool
   DoRequest(const MarkMessageReadRequest& aRequest);
+
+  nsresult
+  SendReply(const MessageReply& aReply);
 };
 
 class MobileMessageCursorParent : public PMobileMessageCursorParent

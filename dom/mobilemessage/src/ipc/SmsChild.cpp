@@ -8,7 +8,6 @@
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
 #include "mozilla/dom/ContentChild.h"
-#include "SmsRequest.h"
 #include "MobileMessageThread.h"
 
 using namespace mozilla;
