@@ -891,7 +891,7 @@ bool
 OptimizeMIR(MIRGenerator *mir)
 {
     IonSpewPass("BuildSSA");
-    // Note: don't call AssertGraphCoherency before ReorderBlocks,
+    // Note: don't call AssertGraphCoherency before SplitCriticalEdges,
     // the graph is not in RPO at this point.
 
     MIRGraph &graph = mir->graph();
@@ -902,22 +902,9 @@ OptimizeMIR(MIRGenerator *mir)
     if (!SplitCriticalEdges(graph))
         return false;
     IonSpewPass("Split Critical Edges");
+    AssertGraphCoherency(graph);
 
     if (mir->shouldCancel("Split Critical Edges"))
-        return false;
-
-    if (!RecalculateLoopDepth(graph))
-        return false;
-    // No spew: graph not changed.
-
-    if (mir->shouldCancel("Recalculate Loop Depth"))
-        return false;
-
-    if (!ReorderBlocks(graph))
-        return false;
-    // No spew: wait for right block numbers
-
-    if (mir->shouldCancel("ReorderBlocks"))
         return false;
 
     if (!RenumberBlocks(graph))
