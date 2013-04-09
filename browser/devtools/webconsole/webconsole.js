@@ -226,6 +226,13 @@ WebConsoleFrame.prototype = {
   get popupset() this.owner.mainPopupSet,
 
   /**
+   * Holds the initialization Promise object.
+   * @private
+   * @type object
+   */
+  _initDefer: null,
+
+  /**
    * Holds the network requests currently displayed by the Web Console. Each key
    * represents the connection ID and the value is network request information.
    * @private
@@ -377,30 +384,27 @@ WebConsoleFrame.prototype = {
    */
   _initConnection: function WCF__initConnection()
   {
-    let deferred = Promise.defer();
+    if (this._initDefer) {
+      return this._initDefer.promise;
+    }
 
+    this._initDefer = Promise.defer();
     this.proxy = new WebConsoleConnectionProxy(this, this.owner.target);
 
-    let onSuccess = function() {
+    this.proxy.connect().then(() => { // on success
       this.saveRequestAndResponseBodies = this._saveRequestAndResponseBodies;
-      deferred.resolve(this);
-    }.bind(this);
-
-    let onFailure = function(aReason) {
+      this._initDefer.resolve(this);
+    }, (aReason) => { // on failure
       let node = this.createMessageNode(CATEGORY_JS, SEVERITY_ERROR,
                                         aReason.error + ": " + aReason.message);
       this.outputMessage(CATEGORY_JS, node);
-      deferred.reject(aReason);
-    }.bind(this);
-
-    let sendNotification = function() {
+      this._initDefer.reject(aReason);
+    }).then(() => {
       let id = WebConsoleUtils.supportsString(this.hudId);
       Services.obs.notifyObservers(id, "web-console-created", null);
-    }.bind(this);
+    });
 
-    this.proxy.connect().then(onSuccess, onFailure).then(sendNotification);
-
-    return deferred.promise;
+    return this._initDefer.promise;
   },
 
   /**
@@ -2682,7 +2686,7 @@ JSTerm.prototype = {
    */
   init: function JST_init()
   {
-    let chromeDocument = this.hud.owner.chromeDocument;
+    let chromeDocument = this.hud.owner.chromeWindow.document;
     let autocompleteOptions = {
       onSelect: this.onAutocompleteSelect.bind(this),
       onClick: this.acceptProposedCompletion.bind(this),
@@ -4143,7 +4147,7 @@ JSTerm.prototype = {
     this.autocompletePopup.destroy();
     this.autocompletePopup = null;
 
-    let popup = this.hud.owner.chromeDocument
+    let popup = this.hud.owner.chromeWindow.document
                 .getElementById("webConsole_autocompletePopup");
     if (popup) {
       popup.parentNode.removeChild(popup);
@@ -4321,6 +4325,8 @@ CommandController.prototype = {
       case "cmd_fontSizeReset":
       case "cmd_selectAll":
         return true;
+      case "cmd_close":
+        return this.owner.owner._browserConsole;
     }
   },
 
@@ -4347,6 +4353,9 @@ CommandController.prototype = {
         break;
       case "cmd_fontSizeReset":
         this.owner.changeFontSize("");
+        break;
+      case "cmd_close":
+        this.owner.window.close();
         break;
     }
   }
