@@ -6,6 +6,7 @@
 
 interface nsIDOMMozSmsMessage;
 interface nsIDOMMozMmsMessage;
+interface nsIDOMMozMobileMessageThread;
 interface nsIDOMMozSmsSegmentInfo;
 
 %{C++
@@ -13,7 +14,7 @@ interface nsIDOMMozSmsSegmentInfo;
 #define MOBILE_MESSAGE_SERVICE_CONTRACTID "@mozilla.org/mobilemessage/mobilemessageservice;1"
 %}
 
-[scriptable, builtinclass, uuid(944297ed-0dc7-4dee-89a6-c962ea0218d3)]
+[scriptable, builtinclass, uuid(18e4b86e-4e19-4ee5-90bf-a29328149677)]
 interface nsIMobileMessageService : nsISupports
 {
   [implicit_jscontext]
@@ -44,4 +45,11 @@ interface nsIMobileMessageService : nsISupports
   nsIDOMMozSmsSegmentInfo createSmsSegmentInfo(in long segments,
                                                in long charsPerSegment,
                                                in long charsAvailableInLastSegment);
+
+  [implicit_jscontext]
+  nsIDOMMozMobileMessageThread createThread(in unsigned long long id,
+                                            in jsval              participants,
+                                            in jsval              timestamp,
+                                            in DOMString          body,
+                                            in unsigned long long unreadCount);
 };

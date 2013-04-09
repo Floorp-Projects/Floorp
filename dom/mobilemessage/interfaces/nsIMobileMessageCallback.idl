@@ -13,7 +13,7 @@ dictionary SmsThreadListItem
   unsigned long long unreadCount;
 };
 
-[scriptable, builtinclass, uuid(47498737-972d-49c9-8d4e-80ae2da51778)]
+[scriptable, builtinclass, uuid(5e993cfc-fb34-46a8-bb14-3df5c09ff748)]
 interface nsIMobileMessageCallback : nsISupports
 {
   /**
@@ -44,8 +44,4 @@ interface nsIMobileMessageCallback : nsISupports
 
   void notifyMessageMarkedRead(in boolean read);
   void notifyMarkMessageReadFailed(in long error);
-
-  [implicit_jscontext]
-  void notifyThreadList(in jsval threadList);
-  void notifyThreadListFailed(in long error);
 };
