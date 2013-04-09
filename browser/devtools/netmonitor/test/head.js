@@ -178,7 +178,7 @@ function verifyRequestItemTarget(aRequestItem, aMethod, aUrl, aData = {}) {
   info("> Verifying: " + aMethod + " " + aUrl + " " + aData.toSource());
   info("> Request: " + aRequestItem.attachment.toSource());
 
-  let { status, type, size, time } = aData;
+  let { status, statusText, type, fullMimeType, size, time } = aData;
   let { attachment, target } = aRequestItem
 
   let uri = Services.io.newURI(aUrl, null, null).QueryInterface(Ci.nsIURL);
@@ -197,28 +197,44 @@ function verifyRequestItemTarget(aRequestItem, aMethod, aUrl, aData = {}) {
 
   is(target.querySelector(".requests-menu-file").getAttribute("value"),
     name + (query ? "?" + query : ""), "The displayed file is incorrect.");
+  is(target.querySelector(".requests-menu-file").getAttribute("tooltiptext"),
+    name + (query ? "?" + query : ""), "The tooltip file is incorrect.");
 
   is(target.querySelector(".requests-menu-domain").getAttribute("value"),
     hostPort, "The displayed domain is incorrect.");
+  is(target.querySelector(".requests-menu-domain").getAttribute("tooltiptext"),
+    hostPort, "The tooltip domain is incorrect.");
 
   if (status !== undefined) {
     let value = target.querySelector(".requests-menu-status").getAttribute("code");
+    let tooltip = target.querySelector(".requests-menu-status-and-method").getAttribute("tooltiptext");
     info("Displayed status: " + value);
+    info("Tooltip status: " + tooltip);
     is(value, status, "The displayed status is incorrect.");
+    is(tooltip, status + " " + statusText, "The tooltip status is incorrect.");
   }
   if (type !== undefined) {
     let value = target.querySelector(".requests-menu-type").getAttribute("value");
+    let tooltip = target.querySelector(".requests-menu-type").getAttribute("tooltiptext");
     info("Displayed type: " + value);
+    info("Tooltip type: " + tooltip);
     is(value, type, "The displayed type is incorrect.");
+    is(tooltip, fullMimeType, "The tooltip type is incorrect.");
   }
   if (size !== undefined) {
     let value = target.querySelector(".requests-menu-size").getAttribute("value");
+    let tooltip = target.querySelector(".requests-menu-size").getAttribute("tooltiptext");
     info("Displayed size: " + value);
+    info("Tooltip size: " + tooltip);
     is(value, size, "The displayed size is incorrect.");
+    is(tooltip, size, "The tooltip size is incorrect.");
   }
   if (time !== undefined) {
     let value = target.querySelector(".requests-menu-timings-total").getAttribute("value");
+    let tooltip = target.querySelector(".requests-menu-timings-total").getAttribute("tooltiptext");
     info("Displayed time: " + value);
+    info("Tooltip time: " + tooltip);
     ok(~~(value.match(/[0-9]+/)) >= 0, "The displayed time is incorrect.");
+    ok(~~(tooltip.match(/[0-9]+/)) >= 0, "The tooltip time is incorrect.");
   }
 }
