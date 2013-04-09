@@ -100,6 +100,13 @@ nsScreenManagerQt::GetNumberOfScreens(uint32_t *aNumberOfScreens)
 }
 
 NS_IMETHODIMP
+nsScreenManagerQt::GetSystemDefaultScale(float *aDefaultScale)
+{
+    *aDefaultScale = 1.0f;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsScreenManagerQt :: ScreenForNativeWidget (void *aWidget, nsIScreen **outScreen)
 {
     // I don't know how to go from GtkWindow to nsIScreen, especially
