@@ -12,6 +12,9 @@ const testcases = [
     // non-XID character
     ["I♥NY",     "xn--iny-zx5a",                     false, false, false],
 
+    // U+30FB KATAKANA MIDDLE DOT is excluded from non-XID characters (bug 857490)
+    ["乾燥肌・石けん", "xn--08j4gylj12hz80b0uhfup",     false, true,  true],
+
     // Cyrillic alone
     ["толсто́й",  "xn--lsa83dealbred",                false, true,  true],
 
