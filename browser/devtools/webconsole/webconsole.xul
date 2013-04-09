@@ -60,7 +60,7 @@
     </menupopup>
   </popupset>
 
-  <vbox class="hud-outer-wrapper" flex="1">
+  <hbox class="hud-outer-wrapper" flex="1">
     <vbox class="hud-console-wrapper" flex="1">
       <toolbar class="hud-console-filter-toolbar devtools-toolbar" mode="full">
         <toolbarbutton label="&btnPageNet.label;" type="menu-button"
@@ -114,13 +114,15 @@
         <spacer flex="1"/>
 
         <textbox class="compact hud-filter-box devtools-searchinput" type="search"
-                 placeholder="&filterBox.placeholder;"/>
+                 placeholder="&filterOutput.placeholder;"/>
         <toolbarbutton class="webconsole-clear-console-button devtools-toolbarbutton"
                        label="&btnClear.label;" tooltiptext="&btnClear.tooltip;"/>
       </toolbar>
+
       <richlistbox class="hud-output-node" orient="vertical" flex="1"
                    seltype="multiple" context="output-contextmenu"
                    style="direction:ltr;"/>
+
       <hbox class="jsterm-input-container" style="direction:ltr">
         <stack class="jsterm-stack-node" flex="1">
           <textbox class="jsterm-complete-node" multiline="true" rows="1"
@@ -129,5 +131,12 @@
         </stack>
       </hbox>
     </vbox>
-  </vbox>
+
+    <splitter class="devtools-side-splitter" collapse="after" state="collapsed" />
+
+    <tabbox id="webconsole-sidebar" class="devtools-sidebar-tabs" hidden="true" width="300">
+      <tabs/>
+      <tabpanels flex="1"/>
+    </tabbox>
+  </hbox>
 </window>
