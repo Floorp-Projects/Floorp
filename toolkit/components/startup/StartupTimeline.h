@@ -21,7 +21,7 @@ mozilla_StartupTimeline_Event(FIRST_LOAD_URI, "firstLoadURI")
 #ifndef mozilla_StartupTimeline
 #define mozilla_StartupTimeline
 
-#include "mozilla/TimeStamp.h"
+#include "prtime.h"
 #include "nscore.h"
 #include "GeckoProfiler.h"
 
@@ -41,7 +41,6 @@ namespace mozilla {
 
 void RecordShutdownEndTimeStamp();
 void RecordShutdownStartTimeStamp();
-void StartupTimelineRecordExternal(int, uint64_t);
 
 class StartupTimeline {
 public:
@@ -52,7 +51,7 @@ public:
     MAX_EVENT_ID
   };
 
-  static TimeStamp Get(Event ev) {
+  static PRTime Get(Event ev) {
     return sStartupTimeline[ev];
   }
 
@@ -62,10 +61,10 @@ public:
 
   static void Record(Event ev) {
     PROFILER_MARKER(Describe(ev));
-    Record(ev, TimeStamp::Now());
+    Record(ev, PR_Now());
   }
 
-  static void Record(Event ev, TimeStamp when) {
+  static void Record(Event ev, PRTime when) {
     sStartupTimeline[ev] = when;
 #ifdef MOZ_LINKER
     if (__moz_linker_stats)
@@ -79,11 +78,11 @@ public:
   }
 
   static bool HasRecord(Event ev) {
-    return !sStartupTimeline[ev].IsNull();
+    return sStartupTimeline[ev];
   }
 
 private:
-  static NS_EXTERNAL_VIS_(TimeStamp) sStartupTimeline[MAX_EVENT_ID];
+  static NS_EXTERNAL_VIS_(PRTime) sStartupTimeline[MAX_EVENT_ID];
   static NS_EXTERNAL_VIS_(const char *) sStartupTimelineDesc[MAX_EVENT_ID];
 };
 
