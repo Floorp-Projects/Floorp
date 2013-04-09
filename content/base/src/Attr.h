@@ -79,6 +79,23 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+  // WebIDL
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
+
+  // XPCOM GetName() is OK
+  // XPCOM GetValue() is OK
+
+  void SetValue(const nsAString& aValue, ErrorResult& aRv);
+
+  bool Specified() const;
+
+  // XPCOM GetNamespaceURI() is OK
+  // XPCOM GetPrefix() is OK
+  // XPCOM GetLocalName() is OK
+
+  Element* GetOwnerElement(ErrorResult& aRv);
+
 protected:
   virtual mozilla::dom::Element* GetNameSpaceElement()
   {
