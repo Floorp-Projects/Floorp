@@ -33,9 +33,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=650295
   ];
 
   function doNextTest() {
-    SpecialPowers.setBoolPref("media.webspeech.test.fake_fsm_events", true);
-    SpecialPowers.setBoolPref("media.webspeech.test.fake_recognition_service", true);
-
     var nextEvent = eventsToAbortOn[nextEventIdx];
     var expectedEvents = {
       "start": null,
@@ -59,12 +56,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=650295
 
     nextEventIdx++;
 
-    performTest([
-      "EVENT_START",
-      "EVENT_AUDIO_DATA"
-      ],
-      expectedEvents,
-      (nextEventIdx < eventsToAbortOn.length) ? doNextTest : SimpleTest.finish);
+    performTest({
+      eventsToRequest: ["EVENT_START", "EVENT_AUDIO_DATA"],
+      expectedEvents: expectedEvents,
+      doneFunc: (nextEventIdx < eventsToAbortOn.length) ? doNextTest : SimpleTest.finish,
+      prefs: [["media.webspeech.test.fake_fsm_events", true], ["media.webspeech.test.fake_recognition_service", true]]
+    });
   }
 
   doNextTest();
