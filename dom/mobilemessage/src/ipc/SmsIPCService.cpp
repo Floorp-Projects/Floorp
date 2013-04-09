@@ -10,7 +10,6 @@
 #include "mozilla/dom/mobilemessage/SmsChild.h"
 #include "SmsMessage.h"
 #include "SmsFilter.h"
-#include "SmsRequest.h"
 #include "SmsSegmentInfo.h"
 
 using namespace mozilla::dom;
