@@ -6,6 +6,7 @@
 #include "AndroidJavaWrappers.h"
 #include "AndroidBridge.h"
 #include "nsIAndroidBridge.h"
+#include "nsIDOMKeyEvent.h"
 
 using namespace mozilla;
 
@@ -53,6 +54,9 @@ jfieldID AndroidGeckoEvent::jScreenOrientationField = 0;
 jfieldID AndroidGeckoEvent::jByteBufferField = 0;
 jfieldID AndroidGeckoEvent::jWidthField = 0;
 jfieldID AndroidGeckoEvent::jHeightField = 0;
+
+jclass AndroidGeckoEvent::jDomKeyLocationClass = 0;
+jfieldID AndroidGeckoEvent::jDomKeyLocationValueField = 0;
 
 jclass AndroidPoint::jPointClass = 0;
 jfieldID AndroidPoint::jXField = 0;
@@ -248,6 +252,10 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
     jByteBufferField = getField("mBuffer", "Ljava/nio/ByteBuffer;");
     jWidthField = getField("mWidth", "I");
     jHeightField = getField("mHeight", "I");
+
+    // Init GeckoEvent.DomKeyLocation enum
+    jDomKeyLocationClass = getClassGlobalRef("org/mozilla/gecko/GeckoEvent$DomKeyLocation");
+    jDomKeyLocationValueField = getField("value", "I");
 }
 
 void
@@ -497,6 +505,18 @@ AndroidGeckoEvent::Init(int aType, nsIntRect const& aRect)
     mRect = aRect;
 }
 
+uint32_t
+AndroidGeckoEvent::ReadDomKeyLocation(JNIEnv* jenv, jobject jGeckoEventObj)
+{
+    jobject enumObject = jenv->GetObjectField(jGeckoEventObj,
+                                             jDomKeyLocationField);
+    MOZ_ASSERT(enumObject);
+    int enumValue = jenv->GetIntField(enumObject, jDomKeyLocationValueField);
+    MOZ_ASSERT(enumValue >= nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD &&
+               enumValue <= nsIDOMKeyEvent::DOM_KEY_LOCATION_JOYSTICK);
+    return static_cast<uint32_t>(enumValue);
+}
+
 void
 AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
 {
@@ -520,7 +540,7 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
         case IME_KEY_EVENT:
             mTime = jenv->GetLongField(jobj, jTimeField);
             mMetaState = jenv->GetIntField(jobj, jMetaStateField);
-            mDomKeyLocation = jenv->GetIntField(jobj, jDomKeyLocationField);
+            mDomKeyLocation = ReadDomKeyLocation(jenv, jobj);
             mFlags = jenv->GetIntField(jobj, jFlagsField);
             mKeyCode = jenv->GetIntField(jobj, jKeyCodeField);
             mUnicodeChar = jenv->GetIntField(jobj, jUnicodeCharField);

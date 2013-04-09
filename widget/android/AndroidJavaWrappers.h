@@ -633,7 +633,7 @@ public:
     nsAString& CharactersExtra() { return mCharactersExtra; }
     int KeyCode() { return mKeyCode; }
     int MetaState() { return mMetaState; }
-    int DomKeyLocation() { return mDomKeyLocation; }
+    uint32_t DomKeyLocation() { return mDomKeyLocation; }
     bool IsAltPressed() const { return (mMetaState & AndroidKeyEvent::META_ALT_MASK) != 0; }
     bool IsShiftPressed() const { return (mMetaState & AndroidKeyEvent::META_SHIFT_MASK) != 0; }
     bool IsCtrlPressed() const { return (mMetaState & AndroidKeyEvent::META_CTRL_MASK) != 0; }
@@ -673,7 +673,7 @@ protected:
     nsTArray<float> mPressures;
     nsIntRect mRect;
     int mFlags, mMetaState;
-    int mDomKeyLocation;
+    uint32_t mDomKeyLocation;
     int mKeyCode, mUnicodeChar, mBaseUnicodeChar;
     int mRepeatCount;
     int mCount;
@@ -706,6 +706,8 @@ protected:
     void ReadRectField(JNIEnv *jenv);
     void ReadCharactersField(JNIEnv *jenv);
     void ReadCharactersExtraField(JNIEnv *jenv);
+
+    uint32_t ReadDomKeyLocation(JNIEnv* jenv, jobject jGeckoEventObj);
 
     static jclass jGeckoEventClass;
     static jfieldID jActionField;
@@ -754,6 +756,9 @@ protected:
 
     static jfieldID jWidthField;
     static jfieldID jHeightField;
+
+    static jclass jDomKeyLocationClass;
+    static jfieldID jDomKeyLocationValueField;
 
 public:
     enum {
