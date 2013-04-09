@@ -5,9 +5,9 @@
 #include "nsIDOMEventTarget.idl"
 
 interface nsIDOMEventListener;
-interface nsIDOMMozSmsRequest;
 interface nsIDOMMozSmsFilter;
 interface nsIDOMMozSmsSegmentInfo;
+interface nsIDOMDOMCursor;
 interface nsIDOMDOMRequest;
 interface nsIDOMBlob;
 
@@ -19,15 +19,15 @@ dictionary MmsParameters
   jsval      attachments; // MmsAttachment[]
 };
 
-[scriptable, builtinclass, uuid(645161ca-b009-461b-bd13-45c3075cdfba)]
+[scriptable, builtinclass, uuid(a7984cb3-27c8-4e3d-82a4-01553e93c078)]
 interface nsIDOMMozMobileMessageManager : nsIDOMEventTarget
 {
   nsIDOMMozSmsSegmentInfo getSegmentInfoForText(in DOMString text);
 
   // The first parameter can be either a DOMString (only one number) or an array
   // of DOMStrings.
-  // The method returns a SmsRequest object if one number has been passed.
-  // An array of SmsRequest objects otherwise.
+  // The method returns a DOMRequest object if one number has been passed.
+  // An array of DOMRequest objects otherwise.
   jsval send(in jsval number, in DOMString message);
 
   nsIDOMDOMRequest sendMMS(in jsval parameters /* MmsParameters */);
@@ -38,11 +38,13 @@ interface nsIDOMMozMobileMessageManager : nsIDOMEventTarget
   // The parameter can be either a message id or a nsIDOMMoz{Mms,Sms}Message.
   nsIDOMDOMRequest delete(in jsval param);
 
-  nsIDOMMozSmsRequest getMessages(in nsIDOMMozSmsFilter filter, in boolean reverse);
+  // Iterates through nsIDOMMoz{Mms,Sms}Message.
+  nsIDOMDOMCursor getMessages(in nsIDOMMozSmsFilter filter, in boolean reverse);
 
   nsIDOMDOMRequest markMessageRead(in long id, in boolean aValue);
 
-  nsIDOMMozSmsRequest getThreadList();
+  // Iterates through nsIDOMMozMobileMessageThread.
+  nsIDOMDOMCursor getThreads();
 
   [implicit_jscontext] attribute jsval onreceived;
   [implicit_jscontext] attribute jsval onsending;

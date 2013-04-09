@@ -5,9 +5,8 @@
 
 package org.mozilla.gecko.updater;
 
-import org.mozilla.gecko.R;
-
 import org.mozilla.apache.commons.codec.binary.Hex;
+import org.mozilla.gecko.R;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -28,17 +27,17 @@ import android.net.Uri;
 import android.os.Environment;
 import android.util.Log;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Proxy;
 import java.net.ProxySelector;
 import java.net.URL;
 import java.net.URLConnection;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.security.MessageDigest;
 import java.util.Calendar;
 import java.util.GregorianCalendar;

@@ -21,16 +21,14 @@ function deleteAllMsgs(nextFunction) {
   let msgList = new Array();
   let filter = new MozSmsFilter;
 
-  let request = sms.getMessages(filter, false);
-  ok(request instanceof MozSmsRequest,
-      "request is instanceof " + request.constructor);
+  let cursor = sms.getMessages(filter, false);
+  ok(cursor instanceof DOMCursor,
+      "cursor is instanceof " + cursor.constructor);
 
-  request.onsuccess = function(event) {
-    ok(event.target.result, "smsrequest event.target.result");
-    cursor = event.target.result;
+  cursor.onsuccess = function(event) {
     // Check if message was found
-    if (cursor.message) {
-      msgList.push(cursor.message.id);
+    if (cursor.result) {
+      msgList.push(cursor.result.id);
       // Now get next message in the list
       cursor.continue();
     } else {
@@ -45,8 +43,8 @@ function deleteAllMsgs(nextFunction) {
     }
   };
 
-  request.onerror = function(event) {
-    log("Received 'onerror' smsrequest event.");
+  cursor.onerror = function(event) {
+    log("Received 'onerror' event.");
     ok(event.target.error, "domerror obj");
     log("sms.getMessages error: " + event.target.error.name);
     ok(false,"Could not get SMS messages");
@@ -59,7 +57,7 @@ function deleteMsgs(msgList, nextFunction) {
 
   log("Deleting SMS (id: " + smsId + ").");
   let request = sms.delete(smsId);
-  ok(request instanceof MozSmsRequest,
+  ok(request instanceof DOMRequest,
       "request is instanceof " + request.constructor);
 
   request.onsuccess = function(event) {
@@ -147,7 +145,7 @@ function sendSms() {
   };
 
   let request = sms.send(remoteNumber, text);
-  ok(request instanceof MozSmsRequest,
+  ok(request instanceof DOMRequest,
       "request is instanceof " + request.constructor);
 
   request.onsuccess = function(event) {
@@ -182,20 +180,18 @@ function getMsgs() {
   filter.delivery = "received";
 
   log("Getting the received SMS messages.");
-  let request = sms.getMessages(filter, false);
-  ok(request instanceof MozSmsRequest,
-      "request is instanceof " + request.constructor);
+  let cursor = sms.getMessages(filter, false);
+  ok(cursor instanceof DOMCursor,
+      "cursor is instanceof " + cursor.constructor);
 
-  request.onsuccess = function(event) {
-    log("Received 'onsuccess' smsrequest event.");
-    ok(event.target.result, "smsrequest event.target.result");
-    cursor = event.target.result;
+  cursor.onsuccess = function(event) {
+    log("Received 'onsuccess' event.");
 
-    if (cursor.message) {
+    if (cursor.result) {
       // Another message found
-      log("Got SMS (id: " + cursor.message.id + ").");
+      log("Got SMS (id: " + cursor.result.id + ").");
       // Store found message
-      foundSmsList.push(cursor.message);
+      foundSmsList.push(cursor.result);
       // Now get next message in the list
       cursor.continue();
     } else {
@@ -213,8 +209,8 @@ function getMsgs() {
     }
   };
 
-  request.onerror = function(event) {
-    log("Received 'onerror' smsrequest event.");
+  cursor.onerror = function(event) {
+    log("Received 'onerror' event.");
     ok(event.target.error, "domerror obj");
     log("sms.getMessages error: " + event.target.error.name);
     ok(false,"Could not get SMS messages");

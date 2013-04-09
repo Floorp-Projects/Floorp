@@ -71,7 +71,7 @@
 .scrollbutton-up,
 .scrollbutton-down {
   -moz-appearance: none;
-  background: -moz-linear-gradient(hsla(212,7%,57%,.35), hsla(212,7%,57%,.1)) padding-box;
+  background: linear-gradient(hsla(212,7%,57%,.35), hsla(212,7%,57%,.1)) padding-box;
   box-shadow: 0 1px 0 hsla(210,16%,76%,.15) inset,
               0 0 0 1px hsla(210,16%,76%,.15) inset,
               0 1px 0 hsla(210,16%,76%,.15);
@@ -81,7 +81,7 @@
 
 .scrollbutton-up:not([disabled]):active:hover,
 .scrollbutton-down:not([disabled]):active:hover {
-  background: -moz-linear-gradient(hsla(220,6%,10%,.3), hsla(212,7%,57%,.15) 65%, hsla(212,7%,57%,.3));
+  background: linear-gradient(hsla(220,6%,10%,.3), hsla(212,7%,57%,.15) 65%, hsla(212,7%,57%,.3));
   box-shadow: 0 0 3px hsla(210,8%,5%,.25) inset,
               0 1px 3px hsla(210,8%,5%,.25) inset,
               0 1px 0 hsla(210,16%,76%,.15);
@@ -312,7 +312,7 @@
 }
 
 .side-menu-widget-item.selected {
-  background: -moz-linear-gradient(hsl(206,61%,40%), hsl(206,61%,31%)) repeat-x top left !important;
+  background: linear-gradient(hsl(206,61%,40%), hsl(206,61%,31%)) repeat-x top left !important;
   box-shadow: inset 0 1px 0 hsla(210,40%,83%,.15),
               inset 0 -1px 0 hsla(210,40%,83%,.05);
   border-top: 0;
@@ -331,12 +331,12 @@
 }
 
 .side-menu-widget-item.selected > .side-menu-widget-item-arrow:-moz-locale-dir(ltr) {
-  background-image: url(itemArrow-ltr.png), -moz-linear-gradient(left, black, black);
+  background-image: url(itemArrow-ltr.png), linear-gradient(to right, black, black);
   background-position: center right, top right;
 }
 
 .side-menu-widget-item.selected > .side-menu-widget-item-arrow:-moz-locale-dir(rtl) {
-  background-image: url(itemArrow-rtl.png), -moz-linear-gradient(left, black, black);
+  background-image: url(itemArrow-rtl.png), linear-gradient(to right, black, black);
   background-position: center left, top left;
 }
 

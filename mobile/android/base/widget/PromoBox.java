@@ -7,8 +7,8 @@ package org.mozilla.gecko.widget;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.db.BrowserDB;
-import org.mozilla.gecko.sync.setup.activities.SetupSyncActivity;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
+import org.mozilla.gecko.sync.setup.activities.SetupSyncActivity;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
 

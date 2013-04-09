@@ -1801,10 +1801,8 @@ let RIL = {
    *        String containing the recipient number.
    * @param body
    *        String containing the message text.
-   * @param requestId
-   *        String identifying the sms request used by the SmsRequestManager.
-   * @param processId
-   *        String containing the processId for the SmsRequestManager.
+   * @param envelopeId
+   *        Numeric value identifying the sms request.
    */
   sendSMS: function sendSMS(options) {
     options.langIndex = options.langIndex || PDU_NL_IDENTIFIER_DEFAULT;
