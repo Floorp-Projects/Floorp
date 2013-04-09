@@ -42,8 +42,8 @@
 struct rtcweb_datachannel_open_request {
   uint8_t  msg_type; // DATA_CHANNEL_OPEN
   uint8_t  channel_type;  
-  uint16_t reliability_params;
   int16_t  priority;
+  uint32_t reliability_param;
   uint16_t label_length;
   uint16_t protocol_length;
   char     label[1]; // (and protocol) keep VC++ happy...

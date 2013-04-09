@@ -697,7 +697,7 @@ meter {
   display: inline-block;
   vertical-align: -0.2em;
 
-  background: -moz-linear-gradient(top, #e6e6e6, #e6e6e6, #eeeeee 20%, #cccccc 45%, #cccccc 55%);
+  background: linear-gradient(#e6e6e6, #e6e6e6, #eeeeee 20%, #cccccc 45%, #cccccc 55%);
 }
 
 ::-moz-meter-bar {
@@ -714,15 +714,15 @@ meter {
 
 :-moz-meter-optimum::-moz-meter-bar {
   /* green. */
-  background: -moz-linear-gradient(top, #ad7, #ad7, #cea 20%, #7a3 45%, #7a3 55%);
+  background: linear-gradient(#ad7, #ad7, #cea 20%, #7a3 45%, #7a3 55%);
 }
 :-moz-meter-sub-optimum::-moz-meter-bar {
   /* orange. */
-  background: -moz-linear-gradient(top, #fe7, #fe7, #ffc 20%, #db3 45%, #db3 55%);
+  background: linear-gradient(#fe7, #fe7, #ffc 20%, #db3 45%, #db3 55%);
 }
 :-moz-meter-sub-sub-optimum::-moz-meter-bar {
   /* red. */
-  background: -moz-linear-gradient(top, #f77, #f77, #fcc 20%, #d44 45%, #d44 55%);
+  background: linear-gradient(#f77, #f77, #fcc 20%, #d44 45%, #d44 55%);
 }
 
 input[type=range] {

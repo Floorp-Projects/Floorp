@@ -55,51 +55,12 @@ struct ReplyMessageDeleteFail
   int32_t error;
 };
 
-struct ReplyCreateMessageList
-{
-  int32_t listId;
-  SmsMessageData messageData;
-};
-
-struct ReplyCreateMessageListFail
-{
-  int32_t error;
-};
-
-struct ReplyGetNextMessage
-{
-  SmsMessageData messageData;
-};
-
 struct ReplyMarkeMessageRead
 {
   bool read;
 };
 
 struct ReplyMarkeMessageReadFail
-{
-  int32_t error;
-};
-
-struct ReplyNoMessageInList
-{
-};
-
-struct ThreadListItem
-{
-  uint64_t id;
-  nsString senderOrReceiver;
-  uint64_t timestamp;
-  nsString body;
-  uint64_t unreadCount;
-};
-
-struct ReplyThreadList
-{
-  ThreadListItem[] items;
-};
-
-struct ReplyThreadListFail
 {
   int32_t error;
 };
@@ -112,14 +73,8 @@ union MessageReply
   ReplyGetMessageFail;
   ReplyMessageDelete;
   ReplyMessageDeleteFail;
-  ReplyNoMessageInList;
-  ReplyCreateMessageList;
-  ReplyCreateMessageListFail;
-  ReplyGetNextMessage;
   ReplyMarkeMessageRead;
   ReplyMarkeMessageReadFail;
-  ReplyThreadList;
-  ReplyThreadListFail;
 };
 
 } // namespace mobilemessage

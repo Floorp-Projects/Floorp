@@ -1,0 +1,26 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, builtinclass, uuid(ebc1db1a-07f9-4d79-b487-150298900ccc)]
+interface nsIDOMMozMobileMessageThread : nsISupports
+{
+  // Unique identity of the thread.
+  readonly attribute unsigned long long id;
+
+  // Message body of the last message in the thread.
+  readonly attribute DOMString          body;
+
+  // Total unread messages in the thread.
+  readonly attribute unsigned long long unreadCount;
+
+  // Participant addresses of the thread.
+  [implicit_jscontext]
+  readonly attribute jsval              participants; // DOMString[]
+
+  // Timestamp of the last message in the thread.
+  [implicit_jscontext]
+  readonly attribute jsval              timestamp; // jsval is for Date.
+};

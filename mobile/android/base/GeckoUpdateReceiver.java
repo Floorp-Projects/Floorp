@@ -7,10 +7,11 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.updater.UpdateServiceHelper;
 
-import android.content.*;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
 
-public class GeckoUpdateReceiver
-    extends BroadcastReceiver
+public class GeckoUpdateReceiver extends BroadcastReceiver
 {
     @Override
     public void onReceive(Context context, Intent intent) {

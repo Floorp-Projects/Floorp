@@ -5,12 +5,12 @@
 
 package org.mozilla.gecko;
 
-import java.lang.reflect.Field;
-import java.util.concurrent.ConcurrentHashMap;
-
 import android.app.PendingIntent;
 import android.content.Context;
 import android.net.Uri;
+
+import java.lang.reflect.Field;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class NotificationHandler {
     private final ConcurrentHashMap<Integer, AlertNotification>

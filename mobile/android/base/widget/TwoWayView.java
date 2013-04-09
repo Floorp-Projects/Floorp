@@ -23,9 +23,6 @@ package org.mozilla.gecko.widget;
 
 import org.mozilla.gecko.R;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -69,6 +66,9 @@ import android.widget.AdapterView;
 import android.widget.Checkable;
 import android.widget.ListAdapter;
 import android.widget.Scroller;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /*
  * Implementation Notes:

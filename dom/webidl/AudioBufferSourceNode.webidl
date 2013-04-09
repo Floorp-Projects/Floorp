@@ -11,7 +11,7 @@
  */
 
 [PrefControlled]
-interface AudioBufferSourceNode : AudioSourceNode {
+interface AudioBufferSourceNode : AudioNode {
 
     //const unsigned short UNSCHEDULED_STATE = 0;
     //const unsigned short SCHEDULED_STATE = 1;

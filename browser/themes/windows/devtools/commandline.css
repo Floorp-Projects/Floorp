@@ -12,7 +12,7 @@
 #gcli-tooltip-root {
   border: 1px solid hsl(210,24%,10%);
   box-shadow: 0 1px 0 hsla(209,29%,72%,.25) inset;
-  background-image: -moz-linear-gradient(top, hsla(209,18%,18%,0.9), hsl(210,24%,16%));
+  background-image: linear-gradient(hsla(209,18%,18%,0.9), hsl(210,24%,16%));
   border-radius: 3px;
 }
 

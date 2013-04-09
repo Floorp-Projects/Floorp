@@ -528,10 +528,7 @@ interface nsIDocShell : nsIDocShellTreeItem
   /**
    * Whether this docshell can execute scripts based on its hierarchy.
    * The rule of thumb here is that we disable js if this docshell or any
-   * of its parents disallow scripting, unless the only reason for js being
-   * disabled in this docshell is a parent docshell having a document that
-   * is in design mode.  In that case, we explicitly allow scripting on the
-   * current docshell.
+   * of its parents disallow scripting.
    */
   readonly attribute boolean canExecuteScripts;
 
