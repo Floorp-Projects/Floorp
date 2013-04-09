@@ -15,6 +15,7 @@
 #include "nsIStringBundle.h"
 #include "nsIStreamListenerTee.h"
 #include "nsISeekableStream.h"
+#include "nsILoadGroupChild.h"
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
 #include "prprf.h"
@@ -684,23 +685,20 @@ nsHttpChannel::SetupTransactionLoadGroupInfo()
     // Find the loadgroup at the end of the chain in order
     // to make sure all channels derived from the load group
     // use the same connection scope.
-    nsCOMPtr<nsILoadGroup> rootLoadGroup = mLoadGroup;
-    while (rootLoadGroup) {
-        nsCOMPtr<nsILoadGroup> tmp;
-        rootLoadGroup->GetLoadGroup(getter_AddRefs(tmp));
-        if (tmp)
-            rootLoadGroup.swap(tmp);
-        else
-            break;
-    }
+    nsCOMPtr<nsILoadGroupChild> childLoadGroup = do_QueryInterface(mLoadGroup);
+    if (!childLoadGroup)
+        return;
+
+    nsCOMPtr<nsILoadGroup> rootLoadGroup;
+    childLoadGroup->GetRootLoadGroup(getter_AddRefs(rootLoadGroup));
+    if (!rootLoadGroup)
+        return;
 
     // Set the load group connection scope on the transaction
-    if (rootLoadGroup) {
-        nsCOMPtr<nsILoadGroupConnectionInfo> ci;
-        rootLoadGroup->GetConnectionInfo(getter_AddRefs(ci));
-        if (ci)
-            mTransaction->SetLoadGroupConnectionInfo(ci);
-    }
+    nsCOMPtr<nsILoadGroupConnectionInfo> ci;
+    rootLoadGroup->GetConnectionInfo(getter_AddRefs(ci));
+    if (ci)
+        mTransaction->SetLoadGroupConnectionInfo(ci);
 }
 
 nsresult
