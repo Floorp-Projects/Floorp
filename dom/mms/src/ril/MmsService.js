@@ -1356,6 +1356,17 @@ MmsService.prototype = {
         return;
       }
 
+      // Cite 6.2 "Multimedia Message Notification" in OMA-TS-MMS_ENC-V1_3-20110913-A:
+      //   The field has only one format, relative. The recipient client calculates this
+      //   length of time relative to the time it receives the notification.
+      let expiriedDate = aMessageRecord.timestamp +
+        aMessageRecord.headers["x-mms-expiry"] * 1000;
+      if (expiriedDate < Date.now()) {
+        aRequest.notifyGetMessageFailed(Ci.nsIMobileMessageCallback.NOT_FOUND_ERROR);
+        debug("This notification indication is expired.");
+        return;
+      }
+
       let url =  aMessageRecord.headers["x-mms-content-location"].uri;
       // For X-Mms-Report-Allowed
       let wish = aMessageRecord.headers["x-mms-delivery-report"];
