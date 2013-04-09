@@ -9,6 +9,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/dom/ContentChild.h"
 #include "SmsRequest.h"
+#include "MobileMessageThread.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -97,7 +98,7 @@ SmsChild::DeallocPSmsRequest(PSmsRequestChild* aActor)
 }
 
 PMobileMessageCursorChild*
-SmsChild::AllocPMobileMessageCursor(const CreateMessageCursorRequest& aRequest)
+SmsChild::AllocPMobileMessageCursor(const IPCMobileMessageCursor& aCursor)
 {
   MOZ_NOT_REACHED("Caller is supposed to manually construct a cursor!");
   return nullptr;
@@ -162,14 +163,6 @@ SmsRequestChild::Recv__delete__(const MessageReply& aReply)
     case MessageReply::TReplyMarkeMessageReadFail:
       mReplyRequest->NotifyMarkMessageReadFailed(aReply.get_ReplyMarkeMessageReadFail().error());
       break;
-    case MessageReply::TReplyThreadList: {
-      SmsRequestForwarder* forwarder = static_cast<SmsRequestForwarder*>(mReplyRequest.get());
-      SmsRequest* request = static_cast<SmsRequest*>(forwarder->GetRealRequest());
-      request->NotifyThreadList(aReply.get_ReplyThreadList().items());
-    } break;
-    case MessageReply::TReplyThreadListFail:
-      mReplyRequest->NotifyThreadListFailed(aReply.get_ReplyThreadListFail().error());
-      break;
     default:
       MOZ_NOT_REACHED("Received invalid response parameters!");
       return false;
@@ -198,11 +191,23 @@ MobileMessageCursorChild::ActorDestroy(ActorDestroyReason aWhy)
 }
 
 bool
-MobileMessageCursorChild::RecvNotifyResult(const SmsMessageData& aMessageData)
+MobileMessageCursorChild::RecvNotifyResult(const MobileMessageCursorData& aData)
 {
   MOZ_ASSERT(mCursorCallback);
 
-  nsCOMPtr<nsISupports> result = new SmsMessage(aMessageData);
+  nsCOMPtr<nsISupports> result;
+  switch(aData.type()) {
+    case MobileMessageCursorData::TSmsMessageData:
+      result = new SmsMessage(aData.get_SmsMessageData());
+      break;
+    case MobileMessageCursorData::TThreadData:
+      result = new MobileMessageThread(aData.get_ThreadData());
+      break;
+    default:
+      MOZ_NOT_REACHED("Received invalid response parameters!");
+      return false;
+  }
+
   mCursorCallback->NotifyCursorResult(result);
   return true;
 }
