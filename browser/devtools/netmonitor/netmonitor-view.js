@@ -259,7 +259,7 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
   initialize: function NVRM_initialize() {
     dumpn("Initializing the RequestsMenuView");
 
-    this.node = new SideMenuWidget($("#requests-menu-contents"));
+    this.node = new SideMenuWidget($("#requests-menu-contents"), false);
 
     this.node.addEventListener("mousedown", this._onMouseDown, false);
     this.node.addEventListener("select", this._onSelect, false);
@@ -458,18 +458,23 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
     let hostPort = NetworkHelper.convertToUnicode(unescape(uri.hostPort));
 
     let template = $("#requests-menu-item-template");
-    let requestsMenuItem = template.firstChild.cloneNode(true);
+    let fragment = document.createDocumentFragment();
 
-    $(".requests-menu-method", requestsMenuItem)
+    $(".requests-menu-method", template)
       .setAttribute("value", aMethod);
 
-    $(".requests-menu-file", requestsMenuItem)
+    $(".requests-menu-file", template)
       .setAttribute("value", name + (query ? "?" + query : ""));
 
-    $(".requests-menu-domain", requestsMenuItem)
+    $(".requests-menu-domain", template)
       .setAttribute("value", hostPort);
 
-    return requestsMenuItem;
+    // Flatten the DOM by removing one redundant box (the template container).
+    for (let node of template.childNodes) {
+      fragment.appendChild(node.cloneNode(true));
+    }
+
+    return fragment;
   },
 
   /**

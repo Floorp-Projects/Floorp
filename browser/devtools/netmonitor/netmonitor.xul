@@ -55,35 +55,33 @@
       <label class="plain requests-menu-empty-notice"
              value="&netmonitorUI.emptyNotice;"/>
       <vbox id="requests-menu-contents" flex="1">
-        <template id="requests-menu-item-template">
-          <hbox class="requests-menu-item">
-            <hbox class="requests-menu-subitem requests-menu-status-and-method"
+        <hbox id="requests-menu-item-template" hidden="true">
+          <hbox class="requests-menu-subitem requests-menu-status-and-method"
+                align="center">
+            <hbox class="requests-menu-status"/>
+            <label class="plain requests-menu-method"
+                   crop="end"
+                   flex="1"/>
+          </hbox>
+          <label class="plain requests-menu-subitem requests-menu-file"
+                 crop="end"/>
+          <label class="plain requests-menu-subitem requests-menu-domain"
+                 crop="end"/>
+          <label class="plain requests-menu-subitem requests-menu-type"
+                 crop="end"/>
+          <label class="plain requests-menu-subitem requests-menu-size"
+                 crop="end"/>
+          <hbox class="requests-menu-subitem requests-menu-waterfall"
+                align="center"
+                flex="1">
+            <hbox class="requests-menu-timings"
                   align="center">
-              <hbox class="requests-menu-status"/>
-              <label class="plain requests-menu-method"
-                     crop="end"
-                     flex="1"/>
-            </hbox>
-            <label class="plain requests-menu-subitem requests-menu-file"
-                   crop="end"/>
-            <label class="plain requests-menu-subitem requests-menu-domain"
-                   crop="end"/>
-            <label class="plain requests-menu-subitem requests-menu-type"
-                   crop="end"/>
-            <label class="plain requests-menu-subitem requests-menu-size"
-                   crop="end"/>
-            <hbox class="requests-menu-subitem requests-menu-waterfall"
-                  align="center"
-                  flex="1">
-              <hbox class="requests-menu-timings"
-                    align="center">
-                <hbox class="start requests-menu-timings-cap" hidden="true"/>
-                <hbox class="end requests-menu-timings-cap" hidden="true"/>
-                <label class="plain requests-menu-timings-total"/>
-              </hbox>
+              <hbox class="start requests-menu-timings-cap" hidden="true"/>
+              <hbox class="end requests-menu-timings-cap" hidden="true"/>
+              <label class="plain requests-menu-timings-total"/>
             </hbox>
           </hbox>
-        </template>
+        </hbox>
       </vbox>
     </vbox>
 
