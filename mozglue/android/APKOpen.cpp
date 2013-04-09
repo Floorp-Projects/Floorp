@@ -11,6 +11,7 @@
 
 #include <jni.h>
 #include <android/log.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
@@ -19,7 +20,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <zlib.h>
@@ -56,6 +56,7 @@ extern "C" {
 }
 
 typedef int mozglueresult;
+typedef int64_t MOZTime;
 
 enum StartupEvent {
 #define mozilla_StartupTimeline_Event(ev, z) ev,
@@ -66,22 +67,11 @@ enum StartupEvent {
 
 using namespace mozilla;
 
-/**
- * Local TimeStamp::Now()-compatible implementation used to record timestamps
- * which will be passed to XRE_StartupTimelineRecord().
- */
-
-static uint64_t TimeStamp_Now()
+static MOZTime MOZ_Now()
 {
-  struct timespec ts;
-  int rv = clock_gettime(CLOCK_MONOTONIC, &ts);
-
-  if (rv != 0) {
-    return 0;
-  }
-
-  uint64_t baseNs = (uint64_t)ts.tv_sec * 1000000000;
-  return baseNs + (uint64_t)ts.tv_nsec;
+  struct timeval tm;
+  gettimeofday(&tm, 0);
+  return (((MOZTime)tm.tv_sec * 1000000LL) + (MOZTime)tm.tv_usec);
 }
 
 static struct mapping_info * lib_mapping = NULL;
@@ -161,7 +151,7 @@ loadGeckoLibs(const char *apkName)
 {
   chdir(getenv("GRE_HOME"));
 
-  uint64_t t0 = TimeStamp_Now();
+  MOZTime t0 = MOZ_Now();
   struct rusage usage1;
   getrusage(RUSAGE_THREAD, &usage1);
   
@@ -181,10 +171,10 @@ loadGeckoLibs(const char *apkName)
 #include "jni-stubs.inc"
 #undef JNI_BINDINGS
 
-  void (*XRE_StartupTimelineRecord)(int, uint64_t);
+  void (*XRE_StartupTimelineRecord)(int, MOZTime);
   xul_dlsym("XRE_StartupTimelineRecord", &XRE_StartupTimelineRecord);
 
-  uint64_t t1 = TimeStamp_Now();
+  MOZTime t1 = MOZ_Now();
   struct rusage usage2;
   getrusage(RUSAGE_THREAD, &usage2);
 
