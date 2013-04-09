@@ -98,23 +98,7 @@ LOCAL_INCLUDES += \
   $(NULL)
 endif
 
-# XXXkhuey this is a terrible hack to avoid blowing out the command line
-ifneq (,$(filter-out all chrome default export realchrome tools clean clobber clobber_all distclean realclean,$(MAKECMDGOALS)))
-$(shell echo "$(addsuffix .pp,$(binding_header_files))" > hpp.list)
-$(shell echo "$(addsuffix .pp,$(binding_cpp_files))" > cpp.list)
-
-# The script mddepend.pl checks the dependencies and writes to stdout
-# one rule to force out-of-date objects. For example,
-#   foo.o boo.o: FORCE
-# The script has an advantage over including the *.pp files directly
-# because it handles the case when header files are removed from the build.
-# 'make' would complain that there is no way to build missing headers.
-HPP_PP_RESULTS = $(shell cat hpp.list | $(PERL) $(BUILD_TOOLS)/mddepend.pl)
-$(eval $(HPP_PP_RESULTS))
-CPP_PP_RESULTS = $(shell cat cpp.list | $(PERL) $(BUILD_TOOLS)/mddepend.pl)
-$(eval $(CPP_PP_RESULTS))
-
-endif
+EXTRA_MDDEPEND_FILES := $(addsuffix .pp,$(binding_cpp_files) $(binding_header_files))
 
 EXPORTS_GENERATED_FILES := $(exported_binding_headers)
 EXPORTS_GENERATED_DEST := $(DIST)/include/$(binding_include_path)
@@ -171,11 +155,11 @@ $(binding_header_files): %Binding.h: $(bindinggen_dependencies) \
 	  $(srcdir)/BindingGen.py header \
 	  $(srcdir)/Bindings.conf \
 	  $*Binding \
-	  $(topsrcdir)/dom/webidl/ \
+	  $(CURDIR)/ \
 	  $*.webidl
 
 $(binding_cpp_files): %Binding.cpp: $(bindinggen_dependencies) \
-                                    %.webidl \
+                                    $(CURDIR)/%.webidl \
                                     $(call mkdir_deps,$(MDDEPDIR)) \
                                     $(NULL)
 	PYTHONDONTWRITEBYTECODE=1 $(PYTHON) $(topsrcdir)/config/pythonpath.py \
@@ -183,7 +167,7 @@ $(binding_cpp_files): %Binding.cpp: $(bindinggen_dependencies) \
 	  $(srcdir)/BindingGen.py cpp \
 	  $(srcdir)/Bindings.conf \
 	  $*Binding \
-	  $(topsrcdir)/dom/webidl/ \
+	  $(CURDIR) \
 	  $*.webidl
 
 $(globalgen_targets): ParserResults.pkl
