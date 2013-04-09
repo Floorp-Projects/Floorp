@@ -91,17 +91,12 @@ CPPSRCS		= \
 		TextOverflow.cpp \
 		nsTextRunTransformations.cpp \
 		nsViewportFrame.cpp \
+		nsVideoFrame.cpp \
 		$(NULL)
 
 ifdef MOZ_FLEXBOX
 CPPSRCS		+= \
 		nsFlexContainerFrame.cpp \
-		$(NULL)
-endif
-
-ifdef MOZ_MEDIA
-CPPSRCS		+= \
-		nsVideoFrame.cpp \
 		$(NULL)
 endif
 

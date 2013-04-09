@@ -53,8 +53,6 @@ static cc_rcs_t lsm_stop_tone (lsm_lcb_t *lcb, cc_action_data_tone_t *data);
 
 static lsm_lcb_t *lsm_lcbs;
 static uint32_t lsm_call_perline[MAX_REG_LINES];
-boolean lsm_mnc_reached[MAX_REG_LINES]; // maxnumcalls reached
-static boolean lsm_bt_reached[MAX_REG_LINES]; //busy trigger reached
 
 /* This variable is used locally to reflect the CFA state (set/clear)
  * when in CCM mode.
@@ -1543,31 +1541,15 @@ int lsm_get_all_used_instances_cnt ()
  */
 void lsm_increment_call_chn_cnt (line_t line)
 {
-    uint32_t  maxnumcalls = 0;
-    uint32_t  busy_trigger = 0;
-    static const char fname[] = "lsm_increment_call_chn_cnt";
-
     if ( line <=0 || line > MAX_REG_LINES ) {
-        LSM_ERR_MSG(LSM_F_PREFIX"invalid line (%d)\n", fname, line);
+        LSM_ERR_MSG(LSM_F_PREFIX"invalid line (%d)\n", __FUNCTION__, line);
         return;
     }
     lsm_call_perline[line-1]++;
-    config_get_line_value(CFGID_LINE_MAXNUMCALLS, &maxnumcalls, sizeof(maxnumcalls), line);
-    config_get_line_value(CFGID_LINE_BUSY_TRIGGER, &busy_trigger, sizeof(busy_trigger), line);
-    if (lsm_call_perline[line-1] ==  maxnumcalls) {
-        lsm_mnc_reached[line-1] = TRUE;;
-        ui_mnc_reached(line, TRUE);
-    }
-    if (lsm_call_perline[line - 1] ==  busy_trigger) {
-        lsm_bt_reached[line - 1] = TRUE;;
-    }
 
     LSM_DEBUG(DEB_F_PREFIX"number of calls on line[%d]=%d"
-        "MaxNumCalls[%d]_reached=%s BusyTrigger[%d]_reached=%s\n",
-        DEB_F_PREFIX_ARGS(LSM, fname),
-        line, lsm_call_perline[line-1],
-        maxnumcalls, (lsm_mnc_reached[line-1] == TRUE) ? "TRUE" : "FALSE",
-        busy_trigger,(lsm_bt_reached[line-1] == TRUE) ? "TRUE" : "FALSE");
+        DEB_F_PREFIX_ARGS(LSM, __FUNCTION__),
+        line, lsm_call_perline[line-1]);
 }
 
 /*
@@ -1582,31 +1564,16 @@ void lsm_increment_call_chn_cnt (line_t line)
  */
 void lsm_decrement_call_chn_cnt (line_t line)
 {
-    uint32_t  maxnumcalls = 0;
-    uint32_t  busy_trigger = 0;
-    static const char fname[] = "lsm_decrement_call_chn_cnt";
-
     if ( line <=0 || line > MAX_REG_LINES ) {
-        LSM_ERR_MSG(LSM_F_PREFIX"invalid line (%d)\n", fname, line);
+        LSM_ERR_MSG(LSM_F_PREFIX"invalid line (%d)\n", __FUNCTION__, line);
         return;
     }
 
     lsm_call_perline[line-1]--;
-    config_get_line_value(CFGID_LINE_MAXNUMCALLS, &maxnumcalls, sizeof(maxnumcalls), line);
-    config_get_line_value(CFGID_LINE_BUSY_TRIGGER, &busy_trigger, sizeof(busy_trigger), line);
-    if (lsm_call_perline[line-1] <=  (maxnumcalls-1)) {
-        lsm_mnc_reached[line-1] = FALSE;
-        ui_mnc_reached(line, FALSE);
-    }
-    if (lsm_call_perline[line - 1] ==  (busy_trigger -1)) {
-        lsm_bt_reached[line - 1] = FALSE;;
-    }
+
     LSM_DEBUG(DEB_F_PREFIX"number of calls on line[%d]=%d"
-        "MaxNumCalls[%d]_reached=%s BusyTrigger[%d]_reached=%s\n",
-        DEB_F_PREFIX_ARGS(LSM, fname),
-        line, lsm_call_perline[line-1],
-        maxnumcalls, (lsm_mnc_reached[line-1] == TRUE) ? "TRUE" : "FALSE",
-        busy_trigger,(lsm_bt_reached[line-1] == TRUE) ? "TRUE" : "FALSE");
+        DEB_F_PREFIX_ARGS(LSM, __FUNCTION__),
+        line, lsm_call_perline[line-1]);
 }
 
 #define NO_ROLLOVER 0
@@ -1632,15 +1599,6 @@ line_t lsm_find_next_available_line (line_t line, boolean same_dn, boolean incom
     char dn_name[MAX_LINE_NAME_SIZE];
     uint32_t line_feature;
     line_t  i, j;
-    boolean *limit_reached;
-
-    /* determine whether to use MNC or BT limit */
-    if (incoming == TRUE) {
-        limit_reached = lsm_bt_reached;
-    }
-    else {
-        limit_reached = lsm_mnc_reached;
-    }
 
     config_get_line_string(CFGID_LINE_NAME, current_line_dn_name, line, sizeof(current_line_dn_name));
     /* This line has exhausted its  limit, start rollover */
@@ -1652,17 +1610,15 @@ line_t lsm_find_next_available_line (line_t line, boolean same_dn, boolean incom
         if (line_feature != cfgLineFeatureDN) {
             continue;
         }
-        /* Does this line have room to take the call */
-        if (limit_reached[i-1] == FALSE) {
-            if (same_dn == TRUE) {
-                config_get_line_string(CFGID_LINE_NAME, dn_name, i, sizeof(dn_name));
-                /* Does this line have the same DN */
-                if (cpr_strcasecmp(dn_name, current_line_dn_name) == 0) {
-                    return (i);
-                }
-            } else {
+
+        if (same_dn == TRUE) {
+            config_get_line_string(CFGID_LINE_NAME, dn_name, i, sizeof(dn_name));
+            /* Does this line have the same DN */
+            if (cpr_strcasecmp(dn_name, current_line_dn_name) == 0) {
                 return (i);
             }
+        } else {
+            return (i);
         }
     }
     /*
@@ -1678,18 +1634,16 @@ line_t lsm_find_next_available_line (line_t line, boolean same_dn, boolean incom
         if (line_feature != cfgLineFeatureDN) {
             continue;
         }
-        /* Does this line have room to take the call */
-        if (limit_reached[j-1] == FALSE) {
-            if (same_dn == TRUE) {
-                config_get_line_string(CFGID_LINE_NAME, dn_name, j, sizeof(dn_name));
-                /* Does this line have the same DN */
-                if (cpr_strcasecmp(dn_name, current_line_dn_name) == 0) {
-                    return (j);
-                }
-            } else {
+
+        if (same_dn == TRUE) {
+            config_get_line_string(CFGID_LINE_NAME, dn_name, j, sizeof(dn_name));
+            /* Does this line have the same DN */
+            if (cpr_strcasecmp(dn_name, current_line_dn_name) == 0) {
                 return (j);
             }
-         }
+        } else {
+            return (j);
+        }
     }
 
     return (NO_LINES_AVAILABLE);
@@ -1707,46 +1661,7 @@ line_t lsm_find_next_available_line (line_t line, boolean same_dn, boolean incom
  */
 line_t lsm_get_newcall_line (line_t line)
 {
-    static const char fname[] = "lsm_get_newcall_line";
-    int rollover;
-    line_t found_line;
-
-    if (!lsm_mnc_reached[line-1]) {
-        /* Still room for extra calls on this line */
-        return (line);
-    }
-
-    config_get_value(CFGID_ROLLOVER, &rollover, sizeof(int));
-
-    if (rollover == NO_ROLLOVER) {
-        DEF_DEBUG(DEB_F_PREFIX"NO Rollover, no lines\n", DEB_F_PREFIX_ARGS(LSM, fname));
-        return (NO_LINES_AVAILABLE);
-    }
-
-
-    if (rollover == ROLLOVER_ACROSS_SAME_DN) {
-        /* Look for a line with the same DN */
-        return (lsm_find_next_available_line(line, TRUE, FALSE));
-    }
-
-    if (rollover == ROLLOVER_NEXT_AVAILABLE_LINE) {
-        /* Look for a line with the same DN first */
-        found_line = lsm_find_next_available_line(line, TRUE, FALSE);
-
-        if (found_line == NO_LINES_AVAILABLE) {
-            /*
-             * If nothing found, just look for any line, does
-             * not necessarily have to have the same DN
-             */
-            return (lsm_find_next_available_line(line, FALSE, FALSE));
-        } else {
-            return (found_line);
-        }
-    }
-
-    DEF_DEBUG(DEB_F_PREFIX"No lines available\n", DEB_F_PREFIX_ARGS(LSM, fname));
-
-    return (NO_LINES_AVAILABLE);
+    return line;
 }
 
 /*
@@ -1762,21 +1677,7 @@ line_t lsm_get_newcall_line (line_t line)
  */
 line_t lsm_get_available_line (boolean incoming)
 {
-    line_t line = 1; /* start with line 1 */
-
-    if (incoming == FALSE) {
-        if (!lsm_mnc_reached[line-1]) {
-            /* Still room for extra calls on this line */
-            return (line);
-        }
-    }
-    else {
-        if (!lsm_bt_reached[line-1]) {
-            /* Still room for extra calls on this line */
-            return (line);
-        }
-    }
-    return (lsm_find_next_available_line(line, FALSE, incoming));
+    return 1;
 }
 
 /*
@@ -1792,19 +1693,7 @@ line_t lsm_get_available_line (boolean incoming)
  */
 boolean lsm_is_line_available (line_t line, boolean incoming)
 {
-    if (incoming == FALSE) {
-        if (!lsm_mnc_reached[line-1]) {
-            /* Still room for extra calls on this line */
-            return (TRUE);
-        }
-    }
-    else {
-        if (!lsm_bt_reached[line-1]) {
-            /* Still room for incoming calls on this line */
-            return (TRUE);
-        }
-    }
-    return (FALSE);
+    return TRUE;
 }
 
 /*
@@ -5021,8 +4910,6 @@ lsm_init (void)
 
     for (i=0 ; i<MAX_REG_LINES; i++) {
         lsm_call_perline[i] = 0;
-        lsm_mnc_reached[i] = FALSE;
-        lsm_bt_reached[i] = FALSE;
     }
 
     memset(cfwdall_state_in_ccm_mode, 0, sizeof(cfwdall_state_in_ccm_mode));
@@ -5062,8 +4949,6 @@ lsm_reset (void)
 
     for (i=0 ; i<MAX_REG_LINES; i++) {
         lsm_call_perline[i] = 0;
-        lsm_mnc_reached[i] = FALSE;
-        lsm_bt_reached[i] = FALSE;
     }
 
     for (line=0; line < MAX_REG_LINES+1; line++) {

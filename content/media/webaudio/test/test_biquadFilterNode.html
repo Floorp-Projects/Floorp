@@ -37,14 +37,8 @@ addLoadEvent(function() {
 
   // Verify default values
   is(filter.type, 0, "Correct default value for type");
-  near(filter.frequency.minValue, 10, "Correct min value for filter frequency");
-  near(filter.frequency.maxValue, context.sampleRate/2, "Correct max value for filter frequency");
   near(filter.frequency.defaultValue, 350, "Correct default value for filter frequency");
-  near(filter.Q.minValue, 0.001, "Correct min value for filter Q");
-  near(filter.Q.maxValue, 1000, "Correct max value for filter Q");
   near(filter.Q.defaultValue, 1, "Correct default value for filter Q");
-  near(filter.gain.minValue, -40, "Correct min value for filter gain");
-  near(filter.gain.maxValue, 40, "Correct max value for filter gain");
   near(filter.gain.defaultValue, 0, "Correct default value for filter gain");
 
   // Make sure that we can set all of the valid type values

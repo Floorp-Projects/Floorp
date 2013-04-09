@@ -44,22 +44,6 @@ addLoadEvent(function() {
     near(release.defaultValue, 0.25, "Correct default value for release");
   }
 
-  // Verify min/max values
-  with (compressor) {
-    near(threshold.minValue, -100, "Correct min value for threshold");
-    near(knee.minValue, 0, "Correct min value for knee");
-    near(ratio.minValue, 1, "Correct min value for ratio");
-    near(reduction.minValue, -20, "Correct min value for reduction");
-    near(attack.minValue, 0, "Correct min value for attack");
-    near(release.minValue, 0, "Correct min value for release");
-    near(threshold.maxValue, 0, "Correct max value for threshold");
-    near(knee.maxValue, 40, "Correct max value for knee");
-    near(ratio.maxValue, 20, "Correct max value for ratio");
-    near(reduction.maxValue, 0, "Correct max value for reduction");
-    near(attack.maxValue, 1, "Correct max value for attack");
-    near(release.maxValue, 1, "Correct max value for release");
-  }
-
   source.start(0);
   SimpleTest.executeSoon(function() {
     source.stop(0);
