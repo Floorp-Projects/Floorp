@@ -17,6 +17,16 @@
 namespace mozilla {
 namespace dom {
 
+// TODO: fix the spec to expose both pressed and value:
+// https://www.w3.org/Bugs/Public/show_bug.cgi?id=21388
+struct GamepadButton
+{
+  bool pressed;
+  double value;
+
+  GamepadButton(): pressed(false), value(0.0) {}
+};
+
 class Gamepad : public nsIDOMGamepad
               , public nsWrapperCache
 {
@@ -28,7 +38,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Gamepad)
 
   void SetConnected(bool aConnected);
-  void SetButton(uint32_t aButton, double aValue);
+  void SetButton(uint32_t aButton, bool aPressed, double aValue);
   void SetAxis(uint32_t aAxis, double aValue);
   void SetIndex(uint32_t aIndex);
 
@@ -91,7 +101,7 @@ protected:
   bool mConnected;
 
   // Current state of buttons, axes.
-  nsTArray<double> mButtons;
+  nsTArray<GamepadButton> mButtons;
   nsTArray<double> mAxes;
 };
 
