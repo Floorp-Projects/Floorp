@@ -260,18 +260,25 @@ ifdef MOZ_CRASHREPORTER
 DIST_FILES += lib.id
 endif
 
+DIST_FILES += libmozalloc.so
+ifndef MOZ_FOLD_LIBS
 DIST_FILES += \
-  libmozalloc.so \
   libnspr4.so \
   libplc4.so \
   libplds4.so \
   libmozsqlite3.so \
   libnssutil3.so \
-  libnss3.so \
+  $(NULL)
+endif
+DIST_FILES += libnss3.so
+ifndef MOZ_FOLD_LIBS
+DIST_FILES += \
   libssl3.so \
   libsmime3.so \
+  $(NULL)
+endif
+DIST_FILES += \
   libxul.so \
-  libxpcom.so \
   libnssckbi.so \
   libfreebl3.so \
   libsoftokn3.so \

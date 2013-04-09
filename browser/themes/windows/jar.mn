@@ -50,6 +50,7 @@ browser.jar:
         skin/classic/browser/pointerLock-16.png
         skin/classic/browser/pointerLock-64.png
         skin/classic/browser/Privacy-16.png
+        skin/classic/browser/Privacy-32.png
         skin/classic/browser/Privacy-48.png
         skin/classic/browser/privatebrowsing-light.png
         skin/classic/browser/privatebrowsing-dark.png
@@ -121,7 +122,8 @@ browser.jar:
         skin/classic/browser/preferences/in-content/preferences.css  (preferences/in-content/preferences.css)
         skin/classic/browser/preferences/applications.css            (preferences/applications.css)
         skin/classic/browser/preferences/aboutPermissions.css        (preferences/aboutPermissions.css)
-        skin/classic/browser/social/social.png                       (social/social.png)
+        skin/classic/browser/social/services-16.png                  (social/services-16.png)
+        skin/classic/browser/social/services-64.png                  (social/services-64.png)
         skin/classic/browser/social/chat-close.png                   (social/chat-close.png)
         skin/classic/browser/tabbrowser/newtab.png                   (tabbrowser/newtab.png)
         skin/classic/browser/tabbrowser/newtab-inverted.png          (tabbrowser/newtab-inverted.png)
@@ -291,6 +293,7 @@ browser.jar:
         skin/classic/aero/browser/pointerLock-16.png                 (pointerLock-16.png)
         skin/classic/aero/browser/pointerLock-64.png                 (pointerLock-64.png)
         skin/classic/aero/browser/Privacy-16.png                     (Privacy-16-aero.png)
+        skin/classic/aero/browser/Privacy-32.png                     (Privacy-32-aero.png)
         skin/classic/aero/browser/Privacy-48.png                     (Privacy-48-aero.png)
         skin/classic/aero/browser/privatebrowsing-light.png
         skin/classic/aero/browser/privatebrowsing-dark.png
@@ -362,7 +365,8 @@ browser.jar:
         skin/classic/aero/browser/preferences/in-content/preferences.css (preferences/in-content/preferences.css)
         skin/classic/aero/browser/preferences/applications.css       (preferences/applications.css)
         skin/classic/aero/browser/preferences/aboutPermissions.css   (preferences/aboutPermissions.css)
-        skin/classic/aero/browser/social/social.png                  (social/social.png)
+        skin/classic/aero/browser/social/services-16.png             (social/services-16.png)
+        skin/classic/aero/browser/social/services-64.png             (social/services-64.png)
         skin/classic/aero/browser/social/chat-close.png              (social/chat-close.png)
         skin/classic/aero/browser/tabbrowser/newtab.png              (tabbrowser/newtab.png)
         skin/classic/aero/browser/tabbrowser/newtab-inverted.png     (tabbrowser/newtab-inverted.png)

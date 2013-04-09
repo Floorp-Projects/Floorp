@@ -360,6 +360,16 @@ function PCT_setMediaConstraints(constraintsLocal, constraintsRemote) {
 };
 
 /**
+ * Sets the media constraints used on a createOffer call in the test.
+ *
+ * @param {object} constraints the media constraints to use on createOffer
+ */
+PeerConnectionTest.prototype.setOfferConstraints =
+function PCT_setOfferConstraints(constraints) {
+  this.pcLocal.offerConstraints = constraints;
+};
+
+/**
  * Start running the tests as assigned to the command chain.
  */
 PeerConnectionTest.prototype.run = function PCT_run() {
@@ -399,6 +409,7 @@ function PeerConnectionWrapper(label, configuration) {
   this.label = label;
 
   this.constraints = [ ];
+  this.offerConstraints = {};
   this.streams = [ ];
 
   info("Creating new PeerConnectionWrapper: " + this.label);
@@ -525,7 +536,7 @@ PeerConnectionWrapper.prototype = {
       info("Got offer: " + JSON.stringify(offer));
       self._last_offer = offer;
       onSuccess(offer);
-    }, unexpectedCallbackAndFinish);
+    }, unexpectedCallbackAndFinish, this.offerConstraints);
   },
 
   /**

@@ -477,10 +477,7 @@ nsDOMMutationObserver::Observe(nsINode& aTarget,
       aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
       return;
     }
-    if (!filters.SetCapacity(len)) {
-      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-      return;
-    }
+    filters.SetCapacity(len);
 
     for (uint32_t i = 0; i < len; ++i) {
       nsCOMPtr<nsIAtom> a = do_GetAtom(filtersAsString[i]);

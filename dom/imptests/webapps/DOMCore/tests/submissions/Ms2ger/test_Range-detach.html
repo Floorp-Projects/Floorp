@@ -8,6 +8,6 @@
 test(function() {
   var r = document.createRange();
   r.detach()
-  assert_throws("INVALID_STATE_ERR", function() { r.detach() })
+  r.detach()
 })
 </script>

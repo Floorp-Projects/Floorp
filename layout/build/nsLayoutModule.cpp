@@ -34,7 +34,6 @@
 #include "nsINodeInfo.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
-#include "nsIPresShell.h"
 #include "nsIScriptNameSpaceManager.h"
 #include "nsISelection.h"
 #include "nsCaret.h"
@@ -517,7 +516,6 @@ MAKE_CTOR(CreateNewLayoutDebugger,        nsILayoutDebugger,           NS_NewLay
 #endif
 
 MAKE_CTOR(CreateNewFrameTraversal,      nsIFrameTraversal,      NS_CreateFrameTraversal)
-MAKE_CTOR(CreateNewPresShell,           nsIPresShell,           NS_NewPresShell)
 MAKE_CTOR(CreateNewBoxObject,           nsIBoxObject,           NS_NewBoxObject)
 
 #ifdef MOZ_XUL
@@ -699,7 +697,6 @@ NS_DEFINE_NAMED_CID(NS_FRAME_UTIL_CID);
 NS_DEFINE_NAMED_CID(NS_LAYOUT_DEBUGGER_CID);
 #endif
 NS_DEFINE_NAMED_CID(NS_FRAMETRAVERSAL_CID);
-NS_DEFINE_NAMED_CID(NS_PRESSHELL_CID);
 NS_DEFINE_NAMED_CID(NS_BOXOBJECT_CID);
 #ifdef MOZ_XUL
 NS_DEFINE_NAMED_CID(NS_LISTBOXOBJECT_CID);
@@ -987,7 +984,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_LAYOUT_DEBUGGER_CID, false, NULL, CreateNewLayoutDebugger },
 #endif
   { &kNS_FRAMETRAVERSAL_CID, false, NULL, CreateNewFrameTraversal },
-  { &kNS_PRESSHELL_CID, false, NULL, CreateNewPresShell },
   { &kNS_BOXOBJECT_CID, false, NULL, CreateNewBoxObject },
 #ifdef MOZ_XUL
   { &kNS_LISTBOXOBJECT_CID, false, NULL, CreateNewListBoxObject },
