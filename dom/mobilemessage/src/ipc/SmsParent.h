@@ -8,6 +8,9 @@
 
 #include "mozilla/dom/mobilemessage/PSmsParent.h"
 #include "mozilla/dom/mobilemessage/PSmsRequestParent.h"
+#include "mozilla/dom/mobilemessage/PMobileMessageCursorParent.h"
+#include "nsIDOMDOMCursor.h"
+#include "nsIMobileMessageCursorCallback.h"
 #include "nsIObserver.h"
 
 namespace mozilla {
@@ -34,11 +37,11 @@ protected:
   virtual bool
   RecvGetSegmentInfoForText(const nsString& aText, SmsSegmentInfoData* aResult) MOZ_OVERRIDE;
 
-  virtual bool
-  RecvClearMessageList(const int32_t& aListId) MOZ_OVERRIDE;
-
   SmsParent();
-  virtual ~SmsParent();
+  virtual ~SmsParent()
+  {
+    MOZ_COUNT_DTOR(SmsParent);
+  }
 
   virtual void
   ActorDestroy(ActorDestroyReason why);
@@ -52,6 +55,16 @@ protected:
 
   virtual bool
   DeallocPSmsRequest(PSmsRequestParent* aActor) MOZ_OVERRIDE;
+
+  virtual bool
+  RecvPMobileMessageCursorConstructor(PMobileMessageCursorParent* aActor,
+                                      const CreateMessageCursorRequest& aRequest) MOZ_OVERRIDE;
+
+  virtual PMobileMessageCursorParent*
+  AllocPMobileMessageCursor(const CreateMessageCursorRequest& aRequest) MOZ_OVERRIDE;
+
+  virtual bool
+  DeallocPMobileMessageCursor(PMobileMessageCursorParent* aActor) MOZ_OVERRIDE;
 };
 
 class SmsRequestParent : public PSmsRequestParent
@@ -81,16 +94,42 @@ protected:
   DoRequest(const DeleteMessageRequest& aRequest);
 
   bool
-  DoRequest(const CreateMessageListRequest& aRequest);
-
-  bool
-  DoRequest(const GetNextMessageInListRequest& aRequest);
-
-  bool
   DoRequest(const MarkMessageReadRequest& aRequest);
 
   bool
   DoRequest(const GetThreadListRequest& aRequest);
+};
+
+class MobileMessageCursorParent : public PMobileMessageCursorParent
+                                , public nsIMobileMessageCursorCallback
+{
+  friend class SmsParent;
+
+  nsCOMPtr<nsICursorContinueCallback> mContinueCallback;
+
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIMOBILEMESSAGECURSORCALLBACK
+
+protected:
+  MobileMessageCursorParent()
+  {
+    MOZ_COUNT_CTOR(MobileMessageCursorParent);
+  }
+
+  virtual ~MobileMessageCursorParent()
+  {
+    MOZ_COUNT_DTOR(MobileMessageCursorParent);
+  }
+
+  virtual void
+  ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+
+  virtual bool
+  RecvContinue() MOZ_OVERRIDE;
+
+  bool
+  DoRequest(const CreateMessageCursorRequest& aRequest);
 };
 
 } // namespace mobilemessage
