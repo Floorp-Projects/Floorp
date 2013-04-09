@@ -148,6 +148,28 @@ class TestRecursiveMakeBackend(BackendTester):
         ])
         self.assertEqual(lines[9], 'XPIDL_MODULE := module_name')
 
+    def test_exports(self):
+        """Ensure EXPORTS is written out correctly."""
+        env = self._consume('exports', RecursiveMakeBackend)
+
+        backend_path = os.path.join(env.topobjdir, 'backend.mk')
+        lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:-1]]
+
+        self.assertEqual(lines, [
+            'MOZBUILD_DERIVED := 1',
+            'NO_MAKEFILE_RULE := 1',
+            'NO_SUBMAKEFILES_RULE := 1',
+            'EXPORTS += foo.h',
+            'EXPORTS_NAMESPACES += mozilla',
+            'EXPORTS_mozilla += mozilla1.h mozilla2.h',
+            'EXPORTS_NAMESPACES += mozilla/dom',
+            'EXPORTS_mozilla/dom += dom1.h dom2.h',
+            'EXPORTS_NAMESPACES += mozilla/gfx',
+            'EXPORTS_mozilla/gfx += gfx.h',
+            'EXPORTS_NAMESPACES += nspr/private',
+            'EXPORTS_nspr/private += pprio.h',
+        ])
+
 
 if __name__ == '__main__':
     main()
