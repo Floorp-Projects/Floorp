@@ -63,8 +63,7 @@ ToAtom(JSContext *cx, const js::Value &v)
 
 template <AllowGC allowGC>
 inline bool
-ValueToId(JSContext* cx, JSObject *obj, const Value &v,
-          typename MaybeRooted<jsid, allowGC>::MutableHandleType idp)
+ValueToId(JSContext* cx, const Value &v, typename MaybeRooted<jsid, allowGC>::MutableHandleType idp)
 {
     int32_t i;
     if (ValueFitsInInt32(v, &i) && INT_FITS_IN_JSID(i)) {
@@ -78,14 +77,6 @@ ValueToId(JSContext* cx, JSObject *obj, const Value &v,
 
     idp.set(AtomToId(atom));
     return true;
-}
-
-template <AllowGC allowGC>
-inline bool
-ValueToId(JSContext* cx, const Value &v,
-          typename MaybeRooted<jsid, allowGC>::MutableHandleType idp)
-{
-    return ValueToId<allowGC>(cx, NULL, v, idp);
 }
 
 /*
