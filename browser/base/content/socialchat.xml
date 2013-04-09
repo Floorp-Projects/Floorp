@@ -63,7 +63,8 @@
           return this.getAttribute("minimized") == "true";
         </getter>
         <setter><![CDATA[
-          this.isActive = !val;
+          // Note that this.isActive is set via our transitionend handler so
+          // the content doesn't see intermediate values.
           let parent = this.parentNode;
           if (val) {
             this.setAttribute("minimized", "true");
@@ -144,6 +145,10 @@
         this.setAttribute('image', uri.spec);
         this.parentNode.updateTitlebar(this);
       ]]></handler>
+      <handler event="transitionend">
+        if (this.isActive == this.minimized)
+          this.isActive = !this.minimized;
+      </handler>
     </handlers>
   </binding>
 
