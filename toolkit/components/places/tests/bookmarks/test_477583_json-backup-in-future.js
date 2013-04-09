@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 function run_test() {
+  do_test_pending();
+
   let bookmarksBackupDir = PlacesUtils.backups.folder;
   // Remove all files from backups folder.
   let files = bookmarksBackupDir.directoryEntries;
@@ -28,19 +30,22 @@ function run_test() {
 
   do_check_eq(PlacesUtils.backups.entries.length, 0);
 
-  PlacesUtils.backups.create();
+  Task.spawn(function() {
+    yield PlacesUtils.backups.create();
+    // Check that a backup for today has been created.
+    do_check_eq(PlacesUtils.backups.entries.length, 1);
+    let mostRecentBackupFile = PlacesUtils.backups.getMostRecent();
+    do_check_neq(mostRecentBackupFile, null);
+    let todayName = PlacesUtils.backups.getFilenameForDate();
+    do_check_eq(mostRecentBackupFile.leafName, todayName);
 
-  // Check that a backup for today has been created.
-  do_check_eq(PlacesUtils.backups.entries.length, 1);
-  let mostRecentBackupFile = PlacesUtils.backups.getMostRecent();
-  do_check_neq(mostRecentBackupFile, null);
-  let todayName = PlacesUtils.backups.getFilenameForDate();
-  do_check_eq(mostRecentBackupFile.leafName, todayName);
+    // Check that future backup has been removed.
+    do_check_false(futureBackupFile.exists());
 
-  // Check that future backup has been removed.
-  do_check_false(futureBackupFile.exists());
+    // Cleanup.
+    mostRecentBackupFile.remove(false);
+    do_check_false(mostRecentBackupFile.exists());
 
-  // Cleanup.
-  mostRecentBackupFile.remove(false);
-  do_check_false(mostRecentBackupFile.exists());
+    do_test_finished()
+  });
 }
