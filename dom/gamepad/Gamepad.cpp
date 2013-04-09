@@ -32,7 +32,7 @@ Gamepad::Gamepad(nsISupports* aParent,
     mConnected(true)
 {
   SetIsDOMBinding();
-  mButtons.InsertElementsAt(0, aNumButtons, 0);
+  mButtons.InsertElementsAt(0, aNumButtons);
   mAxes.InsertElementsAt(0, aNumAxes, 0.0f);
 }
 
@@ -49,10 +49,11 @@ Gamepad::SetConnected(bool aConnected)
 }
 
 void
-Gamepad::SetButton(uint32_t aButton, double aValue)
+Gamepad::SetButton(uint32_t aButton, bool aPressed, double aValue)
 {
   MOZ_ASSERT(aButton < mButtons.Length());
-  mButtons[aButton] = aValue;
+  mButtons[aButton].pressed = aPressed;
+  mButtons[aButton].value = aValue;
 }
 
 void
@@ -78,7 +79,7 @@ Gamepad::GetButtons(nsIVariant** aButtons)
     NS_ENSURE_TRUE(array, NS_ERROR_OUT_OF_MEMORY);
 
     for (uint32_t i = 0; i < mButtons.Length(); ++i) {
-      array[i] = mButtons[i];
+      array[i] = mButtons[i].value;
     }
 
     nsresult rv = out->SetAsArray(nsIDataType::VTYPE_DOUBLE,
