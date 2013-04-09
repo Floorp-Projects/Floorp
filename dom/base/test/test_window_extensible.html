@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=856384
+-->
+<head>
+  <meta charset="UTF-8">
+  <title>Test for Bug 856384</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=856384">Mozilla Bug 856384</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<iframe name="constructor" src="about:blank"></iframe>
+<pre id="test">
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+function run()
+{
+  is(Object.isExtensible(window), true, "Windows are extensible by default");
+
+  try
+  {
+    Object.preventExtensions(window);
+    throw "didn't throw";
+  }
+  catch (e)
+  {
+    is(e instanceof TypeError, true,
+       "preventExtensions(window) should throw a TypeError, instead got: " + e);
+    is(Object.isExtensible(window), true,
+       'Windows are extensible after an extensibility "change" attempt');
+  }
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", run, false);
+</script>
+</pre>
+</body>
+</html>

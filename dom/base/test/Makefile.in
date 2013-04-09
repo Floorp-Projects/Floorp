@@ -23,6 +23,7 @@ MOCHITEST_FILES = \
   test_screen_orientation.html \
   test_window_constructor.html \
   test_window_enumeration.html \
+  test_window_extensible.html \
   test_window_indexing.html \
   test_writable-replaceable.html \
   test_domcursor.html \
