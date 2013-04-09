@@ -552,8 +552,8 @@ diff --git -r 85dd7094b78d -r 636cfcab9682 src/common/logging.cc
 +}
 diff --git -r 85dd7094b78d -r 636cfcab9682 src/common/logging.h
 --- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/src/common/logging.h	Thu Mar 28 18:06:39 2013 +0100
-@@ -0,0 +1,170 @@
++++ b/src/common/logging.h	Thu Apr 04 21:02:11 2013 +0200
+@@ -0,0 +1,182 @@
 +// Copyright (c) 2007, Google Inc.
 +// All rights reserved.
 +//
@@ -624,6 +624,18 @@ diff --git -r 85dd7094b78d -r 636cfcab9682 src/common/logging.h
 +#include BP_LOGGING_INCLUDE
 +#endif  // BP_LOGGING_INCLUDE
 +
++#ifndef THIRD_PARTY_BREAKPAD_GOOGLE_GLUE_LOGGING_H_
++namespace base_logging {
++
++// The open-source copy of logging.h has diverged from Google's internal copy
++// (temporarily, at least).  To support the transition to structured logging
++// a definition for base_logging::LogMessage is needed, which is a ostream-
++// like object for streaming arguments to construct a log message.
++typedef std::ostream LogMessage;
++
++}  // namespace base_logging
++#endif  // THIRD_PARTY_BREAKPAD_GOOGLE_GLUE_LOGGING_H_
++
 +namespace google_breakpad {
 +
 +// These are defined in Microsoft headers.
@@ -675,7 +687,7 @@ diff --git -r 85dd7094b78d -r 636cfcab9682 src/common/logging.h
 +
 +  // This has to be an operator with a precedence lower than << but higher
 +  // than ?:
-+  void operator&(std::ostream &) {}
++  void operator&(base_logging::LogMessage &) {}
 +};
 +
 +// Returns number formatted as a hexadecimal string, such as "0x7b".
@@ -1166,9 +1178,9 @@ diff --git -r 85dd7094b78d -r 636cfcab9682 src/processor/logging.cc
 -
 -}  // namespace google_breakpad
 diff --git -r 85dd7094b78d -r 636cfcab9682 src/processor/logging.h
---- a/src/processor/logging.h	Thu Mar 28 18:38:05 2013 +0100
+--- a/src/processor/logging.h        Thu Apr 04 21:00:31 2013 +0200
 +++ /dev/null	Thu Jan 01 00:00:00 1970 +0000
-@@ -1,163 +0,0 @@
+@@ -1,175 +0,0 @@
 -// Copyright (c) 2007, Google Inc.
 -// All rights reserved.
 -//
@@ -1238,6 +1250,18 @@ diff --git -r 85dd7094b78d -r 636cfcab9682 src/processor/logging.h
 -#include BP_LOGGING_INCLUDE
 -#endif  // BP_LOGGING_INCLUDE
 -
+-#ifndef THIRD_PARTY_BREAKPAD_GOOGLE_GLUE_LOGGING_H_
+-namespace base_logging {
+-
+-// The open-source copy of logging.h has diverged from Google's internal copy
+-// (temporarily, at least).  To support the transition to structured logging
+-// a definition for base_logging::LogMessage is needed, which is a ostream-
+-// like object for streaming arguments to construct a log message.
+-typedef std::ostream LogMessage;
+-
+-}  // namespace base_logging
+-#endif  // THIRD_PARTY_BREAKPAD_GOOGLE_GLUE_LOGGING_H_
+-
 -namespace google_breakpad {
 -
 -// These are defined in Microsoft headers.
@@ -1286,7 +1310,7 @@ diff --git -r 85dd7094b78d -r 636cfcab9682 src/processor/logging.h
 -
 -  // This has to be an operator with a precedence lower than << but higher
 -  // than ?:
--  void operator&(std::ostream &) {}
+-  void operator&(base_logging::LogMessage &) {}
 -};
 -
 -// Returns number formatted as a hexadecimal string, such as "0x7b".
