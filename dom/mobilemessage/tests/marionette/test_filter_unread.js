@@ -57,7 +57,7 @@ function deleteMsgs(msgList, nextFunction) {
 
   log("Deleting SMS (id: " + smsId + ").");
   let request = sms.delete(smsId);
-  ok(request instanceof MozSmsRequest,
+  ok(request instanceof DOMRequest,
       "request is instanceof " + request.constructor);
 
   request.onsuccess = function(event) {
@@ -128,7 +128,7 @@ function markMsgRead() {
   // Mark first message read so not all will be found by filter
   log("Marking SMS (id: " + smsList[0].id + ") as read.");
   let request = sms.markMessageRead(smsList[0].id, true);
-  ok(request instanceof MozSmsRequest,
+  ok(request instanceof DOMRequest,
       "request is instanceof " + request.constructor);
 
   request.onsuccess = function(event) {
