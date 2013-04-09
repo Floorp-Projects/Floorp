@@ -243,3 +243,18 @@
 .jsterm-complete-node > .textbox-input-box > .textbox-textarea {
   color: GrayText;
 }
+
+.webconsole-msg-inspector iframe {
+  height: 7em;
+  margin-bottom: 15px;
+}
+
+.devtools-side-splitter {
+  background: #666;
+  width: 2px;
+}
+
+#webconsole-sidebar > tabs {
+  height: 0;
+  overflow: hidden;
+}

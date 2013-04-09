@@ -9,7 +9,7 @@ function test() {
   initNetMonitor(CONTENT_TYPE_URL).then(([aTab, aDebuggee, aMonitor]) => {
     info("Starting test... ");
 
-    let { document, SourceEditor, NetMonitorView } = aMonitor.panelWin;
+    let { document, L10N, SourceEditor, NetMonitorView } = aMonitor.panelWin;
     let { RequestsMenu } = NetMonitorView;
 
     RequestsMenu.lazyUpdate = false;
@@ -19,42 +19,42 @@ function test() {
         "GET", CONTENT_TYPE_SJS + "?fmt=xml", {
           status: 200,
           type: "xml",
-          size: "0.04kb",
+          size: L10N.getFormatStr("networkMenu.sizeKB", 0.04),
           time: true
         });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(1),
         "GET", CONTENT_TYPE_SJS + "?fmt=css", {
           status: 200,
           type: "css",
-          size: "0.03kb",
+          size: L10N.getFormatStr("networkMenu.sizeKB", 0.03),
           time: true
         });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(2),
         "GET", CONTENT_TYPE_SJS + "?fmt=js", {
           status: 200,
           type: "js",
-          size: "0.03kb",
+          size: L10N.getFormatStr("networkMenu.sizeKB", 0.03),
           time: true
         });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(3),
         "GET", CONTENT_TYPE_SJS + "?fmt=json", {
           status: 200,
           type: "json",
-          size: "0.03kb",
+          size: L10N.getFormatStr("networkMenu.sizeKB", 0.03),
           time: true
         });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(4),
         "GET", CONTENT_TYPE_SJS + "?fmt=bogus", {
           status: 404,
           type: "html",
-          size: "0.02kb",
+          size: L10N.getFormatStr("networkMenu.sizeKB", 0.02),
           time: true
         });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(5),
         "GET", TEST_IMAGE, {
           status: 200,
           type: "png",
-          size: "0.76kb",
+          size: L10N.getFormatStr("networkMenu.sizeKB", 0.76),
           time: true
         });
 

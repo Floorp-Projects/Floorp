@@ -91,7 +91,7 @@ function onSimpleEval(aResponse)
     result: 4,
   });
 
-  ok(!aResponse.error, "no js error");
+  ok(!aResponse.exception, "no eval exception");
   ok(!aResponse.helperResult, "no helper result");
 
   nextTest();
@@ -99,23 +99,23 @@ function onSimpleEval(aResponse)
 
 function doWindowEval()
 {
-  info("test eval 'window'");
-  gState.client.evaluateJS("window", onWindowEval);
+  info("test eval 'document'");
+  gState.client.evaluateJS("document", onWindowEval);
 }
 
 function onWindowEval(aResponse)
 {
   checkObject(aResponse, {
     from: gState.actor,
-    input: "window",
+    input: "document",
     result: {
       type: "object",
-      className: "Window",
+      class: "XULDocument",
       actor: /[a-z]/,
     },
   });
 
-  ok(!aResponse.error, "no js error");
+  ok(!aResponse.exception, "no eval exception");
   ok(!aResponse.helperResult, "no helper result");
 
   nextTest();
@@ -135,10 +135,10 @@ function onEvalWithException(aResponse)
     result: {
       type: "undefined",
     },
-    errorMessage: /doTheImpossible/,
+    exceptionMessage: /doTheImpossible/,
   });
 
-  ok(aResponse.error, "js error object");
+  ok(aResponse.exception, "js eval exception");
   ok(!aResponse.helperResult, "no helper result");
 
   nextTest();
@@ -161,7 +161,7 @@ function onEvalWithHelper(aResponse)
     helperResult: { type: "clearOutput" },
   });
 
-  ok(!aResponse.error, "no js error");
+  ok(!aResponse.exception, "no eval exception");
 
   nextTest();
 }
