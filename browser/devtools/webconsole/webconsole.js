@@ -2617,13 +2617,6 @@ JSTerm.prototype = {
   sidebar: null,
 
   /**
-   * The Web Console splitter between output and the sidebar.
-   * @private
-   * @type nsIDOMElement
-   */
-  _splitter: null,
-
-  /**
    * The Variables View instance shown in the sidebar.
    * @private
    * @type object
@@ -2706,8 +2699,6 @@ JSTerm.prototype = {
     this.inputNode.addEventListener("keypress", this._keyPress, false);
     this.inputNode.addEventListener("input", this._inputEventHandler, false);
     this.inputNode.addEventListener("keyup", this._inputEventHandler, false);
-
-    this._splitter = doc.querySelector(".devtools-side-splitter");
 
     this.lastInputValue && this.setInputValue(this.lastInputValue);
   },
@@ -3025,7 +3016,6 @@ JSTerm.prototype = {
       this.sidebar = new ToolSidebar(tabbox, this);
     }
     this.sidebar.show();
-    this._splitter.setAttribute("state", "open");
   },
 
   /**

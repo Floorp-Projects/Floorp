@@ -139,7 +139,7 @@
       </hbox>
     </vbox>
 
-    <splitter class="devtools-side-splitter" collapse="after" state="collapsed" />
+    <splitter class="devtools-side-splitter"/>
 
     <tabbox id="webconsole-sidebar" class="devtools-sidebar-tabs" hidden="true" width="300">
       <tabs/>
