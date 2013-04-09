@@ -124,7 +124,7 @@ IonBailoutIterator::IonBailoutIterator(const IonActivationIterator &activations,
     current_ = fp;
     type_ = IonFrame_OptimizedJS;
     topFrameSize_ = current_ - sp;
-    topIonScript_ = script()->ion;
+    topIonScript_ = script()->ionScript();
 
     if (bailout->frameClass() == FrameSizeClass::None()) {
         snapshotOffset_ = bailout->snapshotOffset();

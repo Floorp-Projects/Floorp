@@ -223,7 +223,7 @@ ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
     // determine if we have a critical sequence of bailout.
     //
     // Note: frame conversion only occurs in sequential mode
-    if (it.script()->ion == it.ionScript()) {
+    if (it.script()->maybeIonScript() == it.ionScript()) {
         IonSpew(IonSpew_Bailouts, " Current script use count is %u",
                 it.script()->getUseCount());
     }
@@ -539,8 +539,7 @@ ion::ShapeGuardFailure()
     JSContext *cx = GetIonContext()->cx;
     RawScript script = GetBailedJSScript(cx);
 
-    JS_ASSERT(script->hasIonScript());
-    JS_ASSERT(!script->ion->invalidated());
+    JS_ASSERT(!script->ionScript()->invalidated());
 
     script->failedShapeGuard = true;
 
@@ -555,15 +554,14 @@ ion::CachedShapeGuardFailure()
     JSContext *cx = GetIonContext()->cx;
     RawScript script = GetBailedJSScript(cx);
 
-    JS_ASSERT(script->hasIonScript());
-    JS_ASSERT(!script->ion->invalidated());
+    JS_ASSERT(!script->ionScript()->invalidated());
 
     script->failedShapeGuard = true;
 
     // Purge JM caches in the script and all inlined script, to avoid baking in
     // the same shape guard next time.
-    for (size_t i = 0; i < script->ion->scriptEntries(); i++)
-        mjit::PurgeCaches(script->ion->getScript(i));
+    for (size_t i = 0; i < script->ionScript()->scriptEntries(); i++)
+        mjit::PurgeCaches(script->ionScript()->getScript(i));
 
     IonSpew(IonSpew_Invalidate, "Invalidating due to shape guard failure");
 

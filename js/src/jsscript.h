@@ -588,9 +588,15 @@ class JSScript : public js::gc::Cell
         return hasIonScript() || hasParallelIonScript();
     }
 
-    /* Information attached by Ion: script for sequential mode execution */
+  private:
+    /* Information attached by Baseline/Ion for sequential mode execution. */
     js::ion::IonScript *ion;
+    js::ion::BaselineScript *baseline;
 
+    /* Information attached by Ion for parallel mode execution */
+    js::ion::IonScript *parallelIon;
+
+  public:
     bool hasIonScript() const {
         return ion && ion != ION_DISABLED_SCRIPT && ion != ION_COMPILING_SCRIPT;
     }
@@ -606,22 +612,31 @@ class JSScript : public js::gc::Cell
         JS_ASSERT(hasIonScript());
         return ion;
     }
-
-    /* Information attached by the baseline compiler. */
-    js::ion::BaselineScript *baseline;
+    js::ion::IonScript *maybeIonScript() const {
+        return ion;
+    }
+    js::ion::IonScript *const *addressOfIonScript() const {
+        return &ion;
+    }
+    void setIonScript(js::ion::IonScript *ionScript) {
+        ion = ionScript;
+    }
 
     bool hasBaselineScript() const {
         return baseline && baseline != BASELINE_DISABLED_SCRIPT;
+    }
+    bool canBaselineCompile() const {
+        return baseline != BASELINE_DISABLED_SCRIPT;
     }
     js::ion::BaselineScript *baselineScript() const {
         JS_ASSERT(hasBaselineScript());
         return baseline;
     }
+    void setBaselineScript(js::ion::BaselineScript *baselineScript) {
+        baseline = baselineScript;
+    }
 
     uint32_t padding0;
-
-    /* Information attached by Ion: script for parallel mode execution */
-    js::ion::IonScript *parallelIon;
 
     bool hasParallelIonScript() const {
         return parallelIon && parallelIon != ION_DISABLED_SCRIPT && parallelIon != ION_COMPILING_SCRIPT;
@@ -638,6 +653,22 @@ class JSScript : public js::gc::Cell
     js::ion::IonScript *parallelIonScript() const {
         JS_ASSERT(hasParallelIonScript());
         return parallelIon;
+    }
+    js::ion::IonScript *maybeParallelIonScript() const {
+        return parallelIon;
+    }
+    void setParallelIonScript(js::ion::IonScript *ionScript) {
+        parallelIon = ionScript;
+    }
+
+    static size_t offsetOfBaselineScript() {
+        return offsetof(JSScript, baseline);
+    }
+    static size_t offsetOfIonScript() {
+        return offsetof(JSScript, ion);
+    }
+    static size_t offsetOfParallelIonScript() {
+        return offsetof(JSScript, parallelIon);
     }
 
     /*
