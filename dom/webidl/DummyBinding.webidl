@@ -14,7 +14,6 @@ interface DummyInterface {
   CFStateChangeEventDict cfstateChangeEvent();
   USSDReceivedEventDict ussdReceivedEvent();
   InspectorRGBTriple rgbTriple();
-  Function getFunction();
 };
 
 interface DummyInterfaceWorkers {
