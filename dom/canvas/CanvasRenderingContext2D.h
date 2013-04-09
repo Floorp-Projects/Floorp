@@ -10,6 +10,7 @@
 #include "nsIDOMCanvasRenderingContext2D.h"
 #include "nsICanvasRenderingContextInternal.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Monitor.h"
 #include "nsColor.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/HTMLVideoElement.h"
@@ -27,6 +28,7 @@
 #include "mozilla/EnumeratedArray.h"
 #include "FilterSupport.h"
 #include "nsSVGEffects.h"
+#include "MediaTaskQueue.h"
 
 class nsGlobalWindow;
 class nsXULElement;
@@ -52,6 +54,7 @@ template<typename T> class Optional;
 struct CanvasBidiProcessor;
 class CanvasRenderingContext2DUserData;
 class CanvasDrawObserver;
+class CanvasShutdownObserver;
 
 /**
  ** CanvasRenderingContext2D
@@ -442,14 +445,7 @@ public:
                             const char16_t* aEncoderOptions,
                             nsIInputStream **aStream) override;
 
-  mozilla::TemporaryRef<mozilla::gfx::SourceSurface> GetSurfaceSnapshot(bool* aPremultAlpha = nullptr) override
-  {
-    EnsureTarget();
-    if (aPremultAlpha) {
-      *aPremultAlpha = true;
-    }
-    return mTarget->Snapshot();
-  }
+  mozilla::TemporaryRef<mozilla::gfx::SourceSurface> GetSurfaceSnapshot(bool* aPremultAlpha = nullptr) override;
 
   NS_IMETHOD SetIsOpaque(bool isOpaque) override;
   bool GetIsOpaque() override { return mOpaque; }
@@ -521,6 +517,7 @@ public:
   }
 
   friend class CanvasRenderingContext2DUserData;
+  friend class CanvasShutdownObserver;
 
   virtual void GetImageBuffer(uint8_t** aImageBuffer, int32_t* aFormat) override;
 
@@ -531,6 +528,21 @@ public:
 
   // return true and fills in the bound rect if element has a hit region.
   bool GetHitRegionRect(Element* aElement, nsRect& aRect) override;
+
+  /**
+   * Deferred rendering functions
+   */
+
+  /**
+   * Called when the event loop reaches a stable
+   * state, and trigger us to flush any outstanding
+   * commands to the rendering thread.
+   */
+  void StableStateReached()
+  {
+    mScheduledFlush = false;
+    FlushDelayedTarget();
+  }
 
 protected:
   nsresult GetImageDataArray(JSContext* aCx, int32_t aX, int32_t aY,
@@ -549,6 +561,8 @@ protected:
 
   nsresult InitializeWithTarget(mozilla::gfx::DrawTarget *surface,
                                 int32_t width, int32_t height);
+
+  void ShutdownTaskQueue();
 
   /**
     * The number of living nsCanvasRenderingContexts.  When this goes down to
@@ -712,6 +726,54 @@ protected:
   // accessing it. In the event of an error it will be equal to
   // sErrorTarget.
   mozilla::RefPtr<mozilla::gfx::DrawTarget> mTarget;
+
+  /**
+   * Deferred rendering implementation
+   */
+
+  // If we are using deferred rendering, then this is the current
+  // deferred rendering target. It is the same pointer as mTarget.
+  mozilla::RefPtr<mozilla::gfx::DrawTargetCapture> mDelayedTarget;
+
+  // If we are using deferred rendering, then this is the actual destination
+  // buffer.
+  mozilla::RefPtr<mozilla::gfx::DrawTarget> mFinalTarget;
+
+  /**
+   * Add the current DelayedDrawTarget to the rendering queue,
+   * schedule a rendering job if required, and create a new
+   * DelayedDrawTarget.
+   */
+  void FlushDelayedTarget();
+
+  /**
+   * Make sure all commands have been flushed to
+   * the rendering thread, and block until they
+   * are completed.
+   */
+  void FinishDelayedRendering();
+
+  /**
+   * Called when a command is added to the current
+   * delayed draw target.
+   *
+   * Either flushes the current batch of commands to
+   * the rendering thread, or ensures that this happens
+   * the next time the event loop reaches a stable state.
+   */
+  void RecordCommand();
+
+  // The number of commands currently waiting to be sent
+  // to the rendering thread.
+  uint32_t mPendingCommands;
+
+  // True if we have scheduled FlushDelayedTarget to be
+  // called in the next browser stable state.
+  bool mScheduledFlush;
+
+  nsRefPtr<MediaTaskQueue> mTaskQueue;
+
+  nsRefPtr<CanvasShutdownObserver> mShutdownObserver;
 
   uint32_t SkiaGLTex() const;
 
