@@ -155,6 +155,13 @@ nsScreenManagerWin :: GetNumberOfScreens(uint32_t *aNumberOfScreens)
 } // GetNumberOfScreens
 
 NS_IMETHODIMP
+nsScreenManagerWin::GetSystemDefaultScale(float *aDefaultScale)
+{
+  *aDefaultScale = float(gfxWindowsPlatform::GetPlatform()->GetDPIScale());
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsScreenManagerWin :: ScreenForNativeWidget(void *aWidget, nsIScreen **outScreen)
 {
   HMONITOR mon = MonitorFromWindow ((HWND) aWidget, MONITOR_DEFAULTTOPRIMARY);

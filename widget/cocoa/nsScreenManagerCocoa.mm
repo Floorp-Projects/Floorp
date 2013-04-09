@@ -97,6 +97,13 @@ nsScreenManagerCocoa::GetNumberOfScreens (uint32_t *aNumberOfScreens)
 }
 
 NS_IMETHODIMP
+nsScreenManagerCocoa::GetSystemDefaultScale(float *aDefaultScale)
+{
+    *aDefaultScale = 1.0f;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsScreenManagerCocoa::ScreenForNativeWidget (void *nativeWidget, nsIScreen **outScreen)
 {
     NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
