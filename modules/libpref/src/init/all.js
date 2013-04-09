@@ -4158,10 +4158,11 @@ pref("dom.placeholder.show_on_focus", true);
 pref("wap.UAProf.url", "");
 pref("wap.UAProf.tagname", "x-wap-profile");
 
-//Retrieval mode for MMS
-//manual: Manual retrieval mode.
-//automatic: Automatic retrieval mode.
-//never: Never retrieval mode.
+// Retrieval mode for MMS
+// manual: Manual retrieval mode.
+// automatic: Automatic retrieval mode even in roaming.
+// automatic-home: Automatic retrieval mode in home network.
+// never: Never retrieval mode.
 pref("dom.mms.retrieval_mode", "manual");
 pref("dom.mms.retrievalRetryCount", 3);
 pref("dom.mms.retrievalRetryInterval", 300000);
