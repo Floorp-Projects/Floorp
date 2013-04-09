@@ -50,7 +50,6 @@ public class AwesomeBar extends GeckoActivity {
     private static final String LOGTAG = "GeckoAwesomeBar";
 
     public static final String URL_KEY = "url";
-    public static final String TAB_KEY = "tab";
     public static final String CURRENT_URL_KEY = "currenturl";
     public static final String TARGET_KEY = "target";
     public static final String SEARCH_KEY = "search";
@@ -106,13 +105,6 @@ public class AwesomeBar extends GeckoActivity {
                         imm.showSoftInput(mText, InputMethodManager.SHOW_IMPLICIT);
                     }
                 });
-            }
-
-            @Override
-            public void switchToTab(final int tabId) {
-                Intent resultIntent = new Intent();
-                resultIntent.putExtra(TAB_KEY, Integer.toString(tabId));
-                finishWithResult(resultIntent);
             }
         });
 
@@ -549,25 +541,6 @@ public class AwesomeBar extends GeckoActivity {
         final int display = mContextMenuSubject.display;
 
         switch (item.getItemId()) {
-            case R.id.open_private_tab:
-            case R.id.open_new_tab: {
-                if (url == null) {
-                    Log.e(LOGTAG, "Can't open in new tab because URL is null");
-                    break;
-                }
-
-                String newTabUrl = url;
-                if (display == Combined.DISPLAY_READER)
-                    newTabUrl = ReaderModeUtils.getAboutReaderForUrl(url, true);
-
-                int flags = Tabs.LOADURL_NEW_TAB;
-                if (item.getItemId() == R.id.open_private_tab)
-                    flags |= Tabs.LOADURL_PRIVATE;
-
-                Tabs.getInstance().loadUrl(newTabUrl, flags);
-                Toast.makeText(this, R.string.new_tab_opened, Toast.LENGTH_SHORT).show();
-                break;
-            }
             case R.id.open_in_reader: {
                 if (url == null) {
                     Log.e(LOGTAG, "Can't open in reader mode because URL is null");

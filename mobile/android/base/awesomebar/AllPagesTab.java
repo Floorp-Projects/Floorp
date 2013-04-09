@@ -147,8 +147,6 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
 
     @Override
     public void destroy() {
-        super.destroy();
-
         unregisterEventListener("SearchEngines:Data");
 
         mHandler.removeMessages(MESSAGE_UPDATE_FAVICONS);
@@ -260,9 +258,13 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
 
         @Override
         public void onClick() {
+            AwesomeBarTabs.OnUrlOpenListener listener = getUrlListener();
+            if (listener == null)
+                return;
+
             String url = mCursor.getString(mCursor.getColumnIndexOrThrow(URLColumns.URL));
             String title = mCursor.getString(mCursor.getColumnIndexOrThrow(URLColumns.TITLE));
-            sendToListener(url, title);
+            listener.onUrlOpen(url, title);
         }
 
         @Override
@@ -779,12 +781,17 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
         if (subject == null)
             return subject;
 
-        setupMenu(menu, subject);
-
+        MenuInflater inflater = new MenuInflater(mContext);
+        inflater.inflate(R.menu.awesomebar_contextmenu, menu);
         menu.findItem(R.id.remove_bookmark).setVisible(false);
         menu.findItem(R.id.edit_bookmark).setVisible(false);
         menu.findItem(R.id.open_in_reader).setVisible(subject.display == Combined.DISPLAY_READER);
 
+        // Hide "Remove" item if there isn't a valid history ID
+        if (subject.id < 0)
+            menu.findItem(R.id.remove_history).setVisible(false);
+
+        menu.setHeaderTitle(subject.title);
         return subject;
     }
 

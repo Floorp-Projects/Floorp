@@ -7,7 +7,6 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.util.ActivityResultHandler;
 
 import android.content.Intent;
-import android.util.Log;
 
 class AwesomebarResultHandler implements ActivityResultHandler {
     private static final String LOGTAG = "GeckoAwesomebarResultHandler";
@@ -15,12 +14,6 @@ class AwesomebarResultHandler implements ActivityResultHandler {
     @Override
     public void onActivityResult(int resultCode, Intent data) {
         if (data != null) {
-            String tab = data.getStringExtra(AwesomeBar.TAB_KEY);
-            if (tab != null) {
-                Tabs.getInstance().selectTab(Integer.parseInt(tab));
-                return;
-            }
-
             String url = data.getStringExtra(AwesomeBar.URL_KEY);
             AwesomeBar.Target target = AwesomeBar.Target.valueOf(data.getStringExtra(AwesomeBar.TARGET_KEY));
             String searchEngine = data.getStringExtra(AwesomeBar.SEARCH_KEY);
