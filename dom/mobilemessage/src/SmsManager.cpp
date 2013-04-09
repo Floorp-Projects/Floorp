@@ -20,6 +20,8 @@
 #include "nsIXPConnect.h"
 #include "nsIPermissionManager.h"
 #include "GeneratedEvents.h"
+#include "MobileMessageCursorCallback.h"
+#include "DOMCursor.h"
 
 #define RECEIVED_EVENT_NAME         NS_LITERAL_STRING("received")
 #define SENDING_EVENT_NAME          NS_LITERAL_STRING("sending")
@@ -269,23 +271,30 @@ SmsManager::Delete(const JS::Value& aParam, nsIDOMMozSmsRequest** aRequest)
 }
 
 NS_IMETHODIMP
-SmsManager::GetMessages(nsIDOMMozSmsFilter* aFilter, bool aReverse,
-                        nsIDOMMozSmsRequest** aRequest)
+SmsManager::GetMessages(nsIDOMMozSmsFilter* aFilter,
+                        bool aReverse,
+                        nsIDOMDOMCursor** aCursor)
 {
+  nsCOMPtr<nsIMobileMessageDatabaseService> dbService =
+    do_GetService(MOBILE_MESSAGE_DATABASE_SERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(dbService, NS_ERROR_FAILURE);
+
   nsCOMPtr<nsIDOMMozSmsFilter> filter = aFilter;
-  
   if (!filter) {
     filter = new SmsFilter();
   }
 
-  nsCOMPtr<nsIDOMMozSmsRequest> req = SmsRequest::Create(this);
-  nsCOMPtr<nsIMobileMessageDatabaseService> mobileMessageDBService =
-    do_GetService(MOBILE_MESSAGE_DATABASE_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(mobileMessageDBService, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIMobileMessageCallback> forwarder =
-    new SmsRequestForwarder(static_cast<SmsRequest*>(req.get()));
-  mobileMessageDBService->CreateMessageList(filter, aReverse, forwarder);
-  req.forget(aRequest);
+  nsRefPtr<MobileMessageCursorCallback> cursorCallback =
+    new MobileMessageCursorCallback();
+
+  nsCOMPtr<nsICursorContinueCallback> continueCallback;
+  nsresult rv = dbService->CreateMessageCursor(filter, aReverse, cursorCallback,
+                                               getter_AddRefs(continueCallback));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  cursorCallback->mDOMCursor = new DOMCursor(GetOwner(), continueCallback);
+  NS_ADDREF(*aCursor = cursorCallback->mDOMCursor);
+
   return NS_OK;
 }
 

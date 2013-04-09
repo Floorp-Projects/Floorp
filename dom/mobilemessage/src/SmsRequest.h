@@ -11,7 +11,6 @@
 #include "nsDOMEventTargetHelper.h"
 
 class nsIDOMMozSmsMessage;
-class nsIDOMMozSmsCursor;
 
 namespace mozilla {
 namespace dom {
@@ -56,8 +55,6 @@ class SmsRequest : public nsDOMEventTargetHelper
                  , public nsIMobileMessageCallback
 {
 public:
-  friend class SmsCursor;
-
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMDOMREQUEST
   NS_DECL_NSIMOBILEMESSAGECALLBACK
@@ -72,8 +69,6 @@ public:
   static already_AddRefed<nsIDOMMozSmsRequest> Create(MobileMessageManager* aManager);
 
   static already_AddRefed<SmsRequest> Create(mobilemessage::SmsRequestParent* requestParent);
-  void Reset();
-
   void SetActorDied() {
     mParentAlive = false;
   }
@@ -100,11 +95,6 @@ private:
    * Set the object in a success state with the result being a boolean.
    */
   void SetSuccess(bool aResult);
-
-  /**
-   * Set the object in a success state with the result being a SmsCursor.
-   */
-  void SetSuccess(nsIDOMMozSmsCursor* aCursor);
 
   /**
    * Set the object in a success state with the result being the given JS::Value.
@@ -134,7 +124,6 @@ private:
   bool      mParentAlive;
   mobilemessage::SmsRequestParent* mParent;
   nsCOMPtr<nsIDOMDOMError> mError;
-  nsCOMPtr<nsIDOMMozSmsCursor> mCursor;
 };
 
 } // namespace dom

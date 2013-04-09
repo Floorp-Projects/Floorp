@@ -11,7 +11,6 @@
 #include "nsIDOMMozSmsMessage.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsPIDOMWindow.h"
-#include "SmsCursor.h"
 #include "SmsMessage.h"
 #include "SmsManager.h"
 #include "MobileMessageManager.h"
@@ -36,14 +35,12 @@ NS_IMPL_ISUPPORTS1(SmsRequestForwarder, nsIMobileMessageCallback)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(SmsRequest,
                                                   nsDOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCursor)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mError)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(SmsRequest,
                                                 nsDOMEventTargetHelper)
   tmp->mResult = JSVAL_VOID;
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCursor)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mError)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -143,21 +140,6 @@ SmsRequest::SetSuccess(bool aResult)
 }
 
 void
-SmsRequest::SetSuccess(nsIDOMMozSmsCursor* aCursor)
-{
-  if (!SetSuccessInternal(aCursor)) {
-    return;
-  }
-
-  NS_ASSERTION(!mCursor || mCursor == aCursor,
-               "SmsRequest can't change it's cursor!");
-
-  if (!mCursor) {
-    mCursor = aCursor;
-  }
-}
-
-void
 SmsRequest::SetSuccess(const JS::Value& aResult)
 {
   NS_PRECONDITION(!mDone, "mDone shouldn't have been set to true already!");
@@ -213,7 +195,6 @@ SmsRequest::SetError(int32_t aError)
                   "Can't call SetError() with SUCCESS_NO_ERROR!");
 
   mDone = true;
-  mCursor = nullptr;
 
   switch (aError) {
     case nsIMobileMessageCallback::NO_SIGNAL_ERROR:
@@ -386,75 +367,6 @@ SmsRequest::NotifyDeleteMessageFailed(int32_t aError)
     return SendMessageReply(MessageReply(ReplyMessageDeleteFail(aError)));
   }
   return NotifyError(aError);
-}
-
-NS_IMETHODIMP
-SmsRequest::NotifyMessageListCreated(int32_t aListId, nsISupports *aMessage)
-{
-  // We only support nsIDOMMozSmsMessage for SmsRequest.
-  nsCOMPtr<nsIDOMMozSmsMessage> message(do_QueryInterface(aMessage));
-  if (!message) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  SmsMessage* smsMessage = static_cast<SmsMessage*>(message.get());
-
-  if (mParent) {
-    SmsMessageData data = SmsMessageData(smsMessage->GetData());
-    return SendMessageReply(MessageReply(ReplyCreateMessageList(aListId, data)));
-  } else {
-    nsCOMPtr<SmsCursor> cursor = new SmsCursor(aListId, this);
-    cursor->SetMessage(smsMessage);
-    return NotifySuccess<nsIDOMMozSmsCursor*>(cursor);
-  }
-}
-
-NS_IMETHODIMP
-SmsRequest::NotifyReadMessageListFailed(int32_t aError)
-{
-  if (mParent) {
-    return SendMessageReply(MessageReply(ReplyCreateMessageListFail(aError)));
-  }
-  if (mCursor) {
-    static_cast<SmsCursor*>(mCursor.get())->Disconnect();
-  }
-  return NotifyError(aError);
-}
-
-NS_IMETHODIMP
-SmsRequest::NotifyNextMessageInListGot(nsISupports *aMessage)
-{
-  // We only support nsIDOMMozSmsMessage for SmsRequest.
-  nsCOMPtr<nsIDOMMozSmsMessage> message(do_QueryInterface(aMessage));
-  if (!message) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  SmsMessage* smsMessage = static_cast<SmsMessage*>(message.get());
-
-  if (mParent) {
-    SmsMessageData data = SmsMessageData(smsMessage->GetData());
-    return SendMessageReply(MessageReply(ReplyGetNextMessage(data)));
-  }
-  nsCOMPtr<SmsCursor> cursor = static_cast<SmsCursor*>(mCursor.get());
-  NS_ASSERTION(cursor, "Request should have an cursor in that case!");
-  cursor->SetMessage(smsMessage);
-  return NotifySuccess<nsIDOMMozSmsCursor*>(cursor);
-}
-
-NS_IMETHODIMP
-SmsRequest::NotifyNoMessageInList()
-{
-  if (mParent) {
-    return SendMessageReply(MessageReply(ReplyNoMessageInList()));
-  }
-  nsCOMPtr<nsIDOMMozSmsCursor> cursor = mCursor;
-  if (!cursor) {
-    cursor = new SmsCursor();
-  } else {
-    static_cast<SmsCursor*>(cursor.get())->Disconnect();
-  }
-  return NotifySuccess<nsIDOMMozSmsCursor*>(cursor);
 }
 
 NS_IMETHODIMP
