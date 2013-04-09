@@ -203,11 +203,12 @@ class RemoteSourceStreamInfo {
  public:
   typedef mozilla::DOMMediaStream DOMMediaStream;
 
-RemoteSourceStreamInfo(DOMMediaStream* aMediaStream, PeerConnectionMedia *aParent)
-    : mMediaStream(already_AddRefed<DOMMediaStream>(aMediaStream)),
+RemoteSourceStreamInfo(already_AddRefed<DOMMediaStream> aMediaStream,
+                       PeerConnectionMedia *aParent)
+    : mMediaStream(aMediaStream),
       mPipelines(),
       mParent(aParent) {
-      MOZ_ASSERT(aMediaStream);
+      MOZ_ASSERT(mMediaStream);
     }
 
   DOMMediaStream* GetMediaStream() {
