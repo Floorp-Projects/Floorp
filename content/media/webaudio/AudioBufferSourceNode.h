@@ -7,14 +7,14 @@
 #ifndef AudioBufferSourceNode_h_
 #define AudioBufferSourceNode_h_
 
-#include "AudioSourceNode.h"
+#include "AudioNode.h"
 #include "AudioBuffer.h"
 #include "mozilla/dom/BindingUtils.h"
 
 namespace mozilla {
 namespace dom {
 
-class AudioBufferSourceNode : public AudioSourceNode,
+class AudioBufferSourceNode : public AudioNode,
                               public MainThreadMediaStreamListener
 {
 public:
@@ -26,11 +26,15 @@ public:
     if (mStream) {
       mStream->RemoveMainThreadListener(this);
     }
-    AudioSourceNode::DestroyMediaStream();
+    AudioNode::DestroyMediaStream();
   }
   virtual bool SupportsMediaStreams() const MOZ_OVERRIDE
   {
     return true;
+  }
+  virtual uint32_t NumberOfInputs() const MOZ_FINAL MOZ_OVERRIDE
+  {
+    return 0;
   }
 
   void JSBindingFinalized()
@@ -40,11 +44,11 @@ public:
     if (!mStartCalled) {
       SetProduceOwnOutput(false);
     }
-    AudioSourceNode::JSBindingFinalized();
+    AudioNode::JSBindingFinalized();
   }
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(AudioBufferSourceNode, AudioSourceNode)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(AudioBufferSourceNode, AudioNode)
 
   virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope);
 

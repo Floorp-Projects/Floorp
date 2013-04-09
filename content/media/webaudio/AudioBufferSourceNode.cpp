@@ -13,13 +13,13 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(AudioBufferSourceNode, AudioSourceNode, mBuffer)
+NS_IMPL_CYCLE_COLLECTION_INHERITED_1(AudioBufferSourceNode, AudioNode, mBuffer)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(AudioBufferSourceNode)
-NS_INTERFACE_MAP_END_INHERITING(AudioSourceNode)
+NS_INTERFACE_MAP_END_INHERITING(AudioNode)
 
-NS_IMPL_ADDREF_INHERITED(AudioBufferSourceNode, AudioSourceNode)
-NS_IMPL_RELEASE_INHERITED(AudioBufferSourceNode, AudioSourceNode)
+NS_IMPL_ADDREF_INHERITED(AudioBufferSourceNode, AudioNode)
+NS_IMPL_RELEASE_INHERITED(AudioBufferSourceNode, AudioNode)
 
 class AudioBufferSourceNodeEngine : public AudioNodeEngine
 {
@@ -220,7 +220,7 @@ public:
 };
 
 AudioBufferSourceNode::AudioBufferSourceNode(AudioContext* aContext)
-  : AudioSourceNode(aContext)
+  : AudioNode(aContext)
   , mLoopStart(0.0)
   , mLoopEnd(0.0)
   , mLoop(false)
