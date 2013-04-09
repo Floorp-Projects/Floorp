@@ -18,7 +18,7 @@ protocol PMobileMessageCursor
   manager PSms;
 
 child:
-  NotifyResult(SmsMessageData aMessageData);
+  NotifyResult(MobileMessageCursorData aData);
 
   /**
    * Sent when the asynchronous cursor request has completed.
