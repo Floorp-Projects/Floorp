@@ -17,8 +17,6 @@ MOCHITEST_BROWSER_TESTS = \
 	$(browser_dbg_cmd_break.js disabled until bug 722727 is fixed) \
 	browser_dbg_createChrome.js \
 	$(browser_dbg_createRemote.js disabled for intermittent failures, bug 753225) \
-	$(browser_dbg_debugger-tab-switch.js disabled until issues 106, 40 are fixed) \
-	$(browser_dbg_debugger-tab-switch-window.js disabled until issues 106, 40 are fixed) \
 	browser_dbg_debuggerstatement.js \
 	browser_dbg_listtabs.js \
 	browser_dbg_tabactor-01.js \
