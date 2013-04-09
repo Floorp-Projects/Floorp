@@ -427,6 +427,9 @@ TiltUtils.DOM = {
    *                 the window content holding the document
    * @param {Object} aProperties
    *                 optional, an object containing the following properties:
+   *        {Function} nodeCallback
+   *                   a function to call instead of TiltUtils.DOM.getNodePosition
+   *                   to get the position and depth to display nodes
    *        {Object} invisibleElements
    *                 elements which should be ignored
    *        {Number} minSize
@@ -448,6 +451,8 @@ TiltUtils.DOM = {
     let aMaxX = aProperties.maxX || Number.MAX_VALUE;
     let aMaxY = aProperties.maxY || Number.MAX_VALUE;
 
+    let nodeCallback = aProperties.nodeCallback || this.getNodePosition.bind(this);
+
     let nodes = aContentWindow.document.childNodes;
     let store = { info: [], nodes: [] };
     let depth = 0;
@@ -466,7 +471,7 @@ TiltUtils.DOM = {
           continue;
         }
 
-        let coord = this.getNodePosition(aContentWindow, node, parentPosition);
+        let coord = nodeCallback(aContentWindow, node, parentPosition);
         if (!coord) {
           continue;
         }
