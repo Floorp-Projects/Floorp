@@ -604,15 +604,16 @@ DrawTargetSkia::Init(const IntSize &aSize, SurfaceFormat aFormat)
 void
 DrawTargetSkia::InitWithFBO(unsigned int aFBOID, GrContext* aGrContext, const IntSize &aSize, SurfaceFormat aFormat)
 {
-  GrPlatformRenderTargetDesc targetDescriptor;
+  GrBackendRenderTargetDesc targetDescriptor;
 
   targetDescriptor.fWidth = aSize.width;
   targetDescriptor.fHeight = aSize.height;
   targetDescriptor.fConfig = GfxFormatToGrConfig(aFormat);
+  targetDescriptor.fOrigin = kBottomLeft_GrSurfaceOrigin;
   targetDescriptor.fSampleCnt = 0;
   targetDescriptor.fRenderTargetHandle = aFBOID;
 
-  SkAutoTUnref<GrRenderTarget> target(aGrContext->createPlatformRenderTarget(targetDescriptor));
+  SkAutoTUnref<GrRenderTarget> target(aGrContext->wrapBackendRenderTarget(targetDescriptor));
 
   SkAutoTUnref<SkDevice> device(new SkGpuDevice(aGrContext, target.get()));
   SkAutoTUnref<SkCanvas> canvas(new SkCanvas(device.get()));
