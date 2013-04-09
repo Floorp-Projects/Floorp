@@ -5,32 +5,32 @@
 #include "nsIDOMEventTarget.idl"
 
 interface nsIDOMDOMCursor;
+interface nsIDOMDOMRequest;
 interface nsIDOMEventListener;
-interface nsIDOMMozSmsRequest;
 interface nsIDOMMozSmsFilter;
 interface nsIDOMMozSmsSegmentInfo;
 
-[scriptable, builtinclass, uuid(7371acd3-136b-4081-b368-8f5c69a22103)]
+[scriptable, builtinclass, uuid(8ce00d77-71b4-43f6-92a1-2eae7c9581b9)]
 interface nsIDOMMozSmsManager : nsIDOMEventTarget
 {
   nsIDOMMozSmsSegmentInfo getSegmentInfoForText(in DOMString text);
 
   // The first parameter can be either a DOMString (only one number) or an array
   // of DOMStrings.
-  // The method returns a SmsRequest object if one number has been passed.
-  // An array of SmsRequest objects otherwise.
+  // The method returns a DOMRequest object if one number has been passed.
+  // An array of DOMRequest objects otherwise.
   jsval send(in jsval number, in DOMString message);
 
   [binaryname(GetMessageMoz)]
-  nsIDOMMozSmsRequest getMessage(in long id);
+  nsIDOMDOMRequest getMessage(in long id);
 
   // The parameter can be either a message id or a SmsMessage.
-  nsIDOMMozSmsRequest delete(in jsval param);
+  nsIDOMDOMRequest delete(in jsval param);
 
   // Iterates through nsIDOMMozSmsMessage.
   nsIDOMDOMCursor getMessages(in nsIDOMMozSmsFilter filter, in boolean reverse);
 
-  nsIDOMMozSmsRequest markMessageRead(in long id, in boolean aValue);
+  nsIDOMDOMRequest markMessageRead(in long id, in boolean aValue);
 
   // Iterates through nsIDOMMozMobileMessageThread.
   nsIDOMDOMCursor getThreads();
