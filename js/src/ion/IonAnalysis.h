@@ -40,12 +40,6 @@ bool
 ApplyTypeInformation(MIRGenerator *mir, MIRGraph &graph);
 
 bool
-RecalculateLoopDepth(MIRGraph &graph);
-
-bool
-ReorderBlocks(MIRGraph &graph);
-
-bool
 RenumberBlocks(MIRGraph &graph);
 
 bool
