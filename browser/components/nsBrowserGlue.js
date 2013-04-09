@@ -528,11 +528,6 @@ BrowserGlue.prototype = {
 
   // All initial windows have opened.
   _onWindowsRestored: function BG__onWindowsRestored() {
-    // Show about:rights notification, if needed.
-    if (this._shouldShowRights()) {
-      this._showRightsNotification();
-    }
-
     // Show update notification, if needed.
     if (Services.prefs.prefHasUserValue("app.update.postupdate"))
       this._showUpdateNotification();
@@ -759,78 +754,6 @@ BrowserGlue.prototype = {
       }
       break;
     }
-  },
-
-  /*
-   * _shouldShowRights - Determines if the user should be shown the
-   * about:rights notification. The notification should *not* be shown if
-   * we've already shown the current version, or if the override pref says to
-   * never show it. The notification *should* be shown if it's never been seen
-   * before, if a newer version is available, or if the override pref says to
-   * always show it.
-   */
-  _shouldShowRights: function BG__shouldShowRights() {
-    // Look for an unconditional override pref. If set, do what it says.
-    // (true --> never show, false --> always show)
-    try {
-      return !Services.prefs.getBoolPref("browser.rights.override");
-    } catch (e) { }
-    // Ditto, for the legacy EULA pref.
-    try {
-      return !Services.prefs.getBoolPref("browser.EULA.override");
-    } catch (e) { }
-
-#ifndef OFFICIAL_BUILD
-    // Non-official builds shouldn't shouldn't show the notification.
-    return false;
-#endif
-
-    // Look to see if the user has seen the current version or not.
-    var currentVersion = Services.prefs.getIntPref("browser.rights.version");
-    try {
-      return !Services.prefs.getBoolPref("browser.rights." + currentVersion + ".shown");
-    } catch (e) { }
-
-    // Legacy: If the user accepted a EULA, we won't annoy them with the
-    // equivalent about:rights page until the version changes.
-    try {
-      return !Services.prefs.getBoolPref("browser.EULA." + currentVersion + ".accepted");
-    } catch (e) { }
-
-    // We haven't shown the notification before, so do so now.
-    return true;
-  },
-
-  _showRightsNotification: function BG__showRightsNotification() {
-    // Stick the notification onto the selected tab of the active browser window.
-    var win = this.getMostRecentBrowserWindow();
-    var notifyBox = win.gBrowser.getNotificationBox();
-
-    var brandBundle  = Services.strings.createBundle("chrome://branding/locale/brand.properties");
-    var rightsBundle = Services.strings.createBundle("chrome://global/locale/aboutRights.properties");
-
-    var buttonLabel      = rightsBundle.GetStringFromName("buttonLabel");
-    var buttonAccessKey  = rightsBundle.GetStringFromName("buttonAccessKey");
-    var productName      = brandBundle.GetStringFromName("brandFullName");
-    var notifyRightsText = rightsBundle.formatStringFromName("notifyRightsText", [productName], 1);
-
-    var buttons = [
-                    {
-                      label:     buttonLabel,
-                      accessKey: buttonAccessKey,
-                      popup:     null,
-                      callback: function(aNotificationBar, aButton) {
-                        win.openUILinkIn("about:rights", "tab");
-                      }
-                    }
-                  ];
-
-    // Set pref to indicate we've shown the notification.
-    var currentVersion = Services.prefs.getIntPref("browser.rights.version");
-    Services.prefs.setBoolPref("browser.rights." + currentVersion + ".shown", true);
-
-    var notification = notifyBox.appendNotification(notifyRightsText, "about-rights", null, notifyBox.PRIORITY_INFO_LOW, buttons);
-    notification.persistence = -1; // Until user closes it
   },
 
   _showUpdateNotification: function BG__showUpdateNotification() {
