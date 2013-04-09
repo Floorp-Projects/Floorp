@@ -11,7 +11,6 @@ relativesrcdir	= dom/tests/mochitest/gamepad
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES = \
-  test_gamepad_basic.html \
   test_gamepad.html \
   test_gamepad_frame_state_sync.html \
   gamepad_frame_state.html \
