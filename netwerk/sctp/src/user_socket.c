@@ -930,66 +930,6 @@ usrsctp_sendv(struct socket *so,
 }
 
 
-struct mbuf* mbufalloc(size_t size, void* data, unsigned char fill)
-{
-    size_t left;
-    int resv_upfront = sizeof(struct sctp_data_chunk);
-    int cancpy, willcpy;
-    struct mbuf *m, *head;
-    int cpsz=0;
-
-    /* First one gets a header equal to sizeof(struct sctp_data_chunk) */
-    left = size;
-    head = m = sctp_get_mbuf_for_msg((left + resv_upfront), 1, M_WAITOK, 0, MT_DATA);
-    if (m == NULL) {
-        SCTP_PRINTF("%s: ENOMEN: Memory allocation failure\n", __func__);
-        return (NULL);
-    }
-    /*-
-     * Skipping space for chunk header. __Userspace__ Is this required?
-     */
-    SCTP_BUF_RESV_UF(m, resv_upfront);
-    cancpy = M_TRAILINGSPACE(m);
-    willcpy = min(cancpy, left);
-
-    while (left > 0) {
-
-        if (data != NULL){
-            /* fill in user data */
-            memcpy(mtod(m, caddr_t), ((char *)data) + cpsz, willcpy);
-        } else if (fill != '\0') {
-            memset(mtod(m, caddr_t), fill, willcpy);
-        }
-
-        SCTP_BUF_LEN(m) = willcpy;
-        left -= willcpy;
-        cpsz += willcpy;
-        if (left > 0) {
-            SCTP_BUF_NEXT(m) = sctp_get_mbuf_for_msg(left, 0, M_WAITOK, 0, MT_DATA);
-            if (SCTP_BUF_NEXT(m) == NULL) {
-                /*
-                 * the head goes back to caller, he can free
-                 * the rest
-                 */
-                sctp_m_freem(head);
-                SCTP_LTRACE_ERR_RET(NULL, NULL, NULL, SCTP_FROM_SCTP_OUTPUT, ENOMEM);
-                SCTP_PRINTF("%s: ENOMEN: Memory allocation failure\n", __func__);
-                return (NULL);
-            }
-            m = SCTP_BUF_NEXT(m);
-            cancpy = M_TRAILINGSPACE(m);
-            willcpy = min(cancpy, left);
-        } else {
-            SCTP_BUF_NEXT(m) = NULL;
-        }
-    }
-
-    /* The following overwrites data in head->m_hdr.mh_data , if M_PKTHDR isn't set */
-    SCTP_HEADER_LEN(head) = cpsz;
-
-    return (head);
-}
-
 ssize_t
 userspace_sctp_sendmbuf(struct socket *so,
     struct mbuf* mbufdata,
@@ -1561,8 +1501,8 @@ soreserve(struct socket *so, u_long sndcc, u_long rcvcc)
 		so->so_rcv.sb_lowat = 1;
 	if (so->so_snd.sb_lowat == 0)
 		so->so_snd.sb_lowat = MCLBYTES;
-	if (so->so_snd.sb_lowat > so->so_snd.sb_hiwat)
-		so->so_snd.sb_lowat = so->so_snd.sb_hiwat;
+	if (so->so_snd.sb_lowat > (int)so->so_snd.sb_hiwat)
+		so->so_snd.sb_lowat = (int)so->so_snd.sb_hiwat;
 	SOCKBUF_UNLOCK(&so->so_rcv);
 	SOCKBUF_UNLOCK(&so->so_snd);
 	return (0);
@@ -3236,7 +3176,7 @@ usrsctp_conninput(void *addr, const void *buffer, size_t length, uint8_t ecn_bit
 		return;
 	}
 	m_copyback(m, 0, length, (caddr_t)buffer);
-	if (SCTP_BUF_LEN(m) < sizeof(struct sctphdr) + sizeof(struct sctp_chunkhdr)) {
+	if (SCTP_BUF_LEN(m) < (int)(sizeof(struct sctphdr) + sizeof(struct sctp_chunkhdr))) {
 		if ((m = m_pullup(m, sizeof(struct sctphdr) + sizeof(struct sctp_chunkhdr))) == NULL) {
 			SCTP_STAT_INCR(sctps_hdrops);
 			return;
