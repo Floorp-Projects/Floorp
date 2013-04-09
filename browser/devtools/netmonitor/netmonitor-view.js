@@ -492,7 +492,7 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
       case "contentSize": {
         let size = (aValue / 1024).toFixed(CONTENT_SIZE_DECIMALS);
         let node = $(".requests-menu-size", aItem.target);
-        node.setAttribute("value", L10N.getFormatStr("networkMenu.size", size));
+        node.setAttribute("value", L10N.getFormatStr("networkMenu.sizeKB", size));
         break;
       }
       case "mimeType": {
@@ -503,7 +503,7 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
       }
       case "totalTime": {
         let node = $(".requests-menu-timings-total", aItem.target);
-        node.setAttribute("value", L10N.getFormatStr("networkMenu.total", aValue));
+        node.setAttribute("value", L10N.getFormatStr("networkMenu.totalMS", aValue));
         break;
       }
     }
@@ -858,7 +858,7 @@ create({ constructor: NetworkDetailsView, proto: MenuContainer.prototype }, {
    */
   _addHeaders: function NVND__addHeaders(aName, aResponse) {
     let kb = (aResponse.headersSize / 1024).toFixed(HEADERS_SIZE_DECIMALS);
-    let size = L10N.getFormatStr("networkMenu.size", kb);
+    let size = L10N.getFormatStr("networkMenu.sizeKB", kb);
     let headersScope = this._headers.addScope(aName + " (" + size + ")");
     headersScope.expanded = true;
 
@@ -1083,32 +1083,32 @@ create({ constructor: NetworkDetailsView, proto: MenuContainer.prototype }, {
     $("#timings-summary-blocked .requests-menu-timings-box")
       .setAttribute("width", blocked * scale);
     $("#timings-summary-blocked .requests-menu-timings-total")
-      .setAttribute("value", L10N.getFormatStr("networkMenu.total", blocked));
+      .setAttribute("value", L10N.getFormatStr("networkMenu.totalMS", blocked));
 
     $("#timings-summary-dns .requests-menu-timings-box")
       .setAttribute("width", dns * scale);
     $("#timings-summary-dns .requests-menu-timings-total")
-      .setAttribute("value", L10N.getFormatStr("networkMenu.total", dns));
+      .setAttribute("value", L10N.getFormatStr("networkMenu.totalMS", dns));
 
     $("#timings-summary-connect .requests-menu-timings-box")
       .setAttribute("width", connect * scale);
     $("#timings-summary-connect .requests-menu-timings-total")
-      .setAttribute("value", L10N.getFormatStr("networkMenu.total", connect));
+      .setAttribute("value", L10N.getFormatStr("networkMenu.totalMS", connect));
 
     $("#timings-summary-send .requests-menu-timings-box")
       .setAttribute("width", send * scale);
     $("#timings-summary-send .requests-menu-timings-total")
-      .setAttribute("value", L10N.getFormatStr("networkMenu.total", send));
+      .setAttribute("value", L10N.getFormatStr("networkMenu.totalMS", send));
 
     $("#timings-summary-wait .requests-menu-timings-box")
       .setAttribute("width", wait * scale);
     $("#timings-summary-wait .requests-menu-timings-total")
-      .setAttribute("value", L10N.getFormatStr("networkMenu.total", wait));
+      .setAttribute("value", L10N.getFormatStr("networkMenu.totalMS", wait));
 
     $("#timings-summary-receive .requests-menu-timings-box")
       .setAttribute("width", receive * scale);
     $("#timings-summary-receive .requests-menu-timings-total")
-      .setAttribute("value", L10N.getFormatStr("networkMenu.total", receive));
+      .setAttribute("value", L10N.getFormatStr("networkMenu.totalMS", receive));
 
     $("#timings-summary-dns .requests-menu-timings-box")
       .style.transform = "translateX(" + (scale * blocked) + "px)";

@@ -34,7 +34,7 @@ function testOutputOrder(hud) {
       let nodes = outputNode.querySelectorAll(".hud-msg-node");
       let executedStringFirst =
         /console\.log\('foo', 'bar'\);/.test(nodes[0].textContent);
-      let outputSecond = /foo bar/.test(nodes[2].textContent);
+      let outputSecond = /"foo" "bar"/.test(nodes[2].textContent);
       ok(executedStringFirst && outputSecond, "executed string comes first");
 
       finishTest();

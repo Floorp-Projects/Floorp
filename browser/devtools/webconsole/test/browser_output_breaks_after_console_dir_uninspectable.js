@@ -21,13 +21,14 @@ function performTest(hud)
 {
   hud.jsterm.clearOutput(true);
 
-  content.console.log("fooBug773466a");
-  content.console.dir(function funBug773466(){});
+  hud.jsterm.execute("console.log('fooBug773466a')");
+  hud.jsterm.execute("myObj = Object.create(null)");
+  hud.jsterm.execute("console.dir(myObj)");
   waitForSuccess({
     name: "eval results are shown",
     validatorFn: function()
     {
-      return hud.outputNode.textContent.indexOf("funBug773466") > -1;
+      return hud.outputNode.querySelector(".webconsole-msg-inspector");
     },
     successFn: function()
     {

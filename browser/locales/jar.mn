@@ -38,6 +38,7 @@
     locale/browser/devtools/styleinspector.properties (%chrome/browser/devtools/styleinspector.properties)
     locale/browser/devtools/styleinspector.dtd        (%chrome/browser/devtools/styleinspector.dtd)
     locale/browser/devtools/webConsole.dtd            (%chrome/browser/devtools/webConsole.dtd)
+    locale/browser/devtools/VariablesView.dtd         (%chrome/browser/devtools/VariablesView.dtd)
     locale/browser/devtools/sourceeditor.properties   (%chrome/browser/devtools/sourceeditor.properties)
     locale/browser/devtools/sourceeditor.dtd          (%chrome/browser/devtools/sourceeditor.dtd)
     locale/browser/devtools/profiler.dtd              (%chrome/browser/devtools/profiler.dtd)

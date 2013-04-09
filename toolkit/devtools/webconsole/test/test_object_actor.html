@@ -30,121 +30,95 @@ function onAttach(aState, aResponse)
 
   let longString = (new Array(DebuggerServer.LONG_STRING_LENGTH + 3)).join("\u0629");
 
-  window.foobarObject = Object.create(null);
+  // Here we put the objects in the correct window, to avoid having them all
+  // wrapped by proxies for cross-compartment access.
+
+  let foobarObject = top.Object.create(null);
   foobarObject.tamarbuta = longString;
   foobarObject.foo = 1;
   foobarObject.foobar = "hello";
-  foobarObject.foobaz = document;
   foobarObject.omg = null;
   foobarObject.testfoo = false;
-  foobarObject.notInspectable = {};
-  foobarObject.omgfn = function _omgfn() {
-    return "myResult";
-  };
-  foobarObject.abArray = ["a", "b"];
+  foobarObject.notInspectable = top.Object.create(null);
+  foobarObject.omgfn = new top.Function("return 'myResult'");
+  foobarObject.abArray = new top.Array("a", "b");
+  foobarObject.foobaz = top.document;
 
-  Object.defineProperty(foobarObject, "getterAndSetter", {
+  top.Object.defineProperty(foobarObject, "getterAndSetter", {
     enumerable: true,
-    get: function fooGet() { return "foo"; },
-    set: function fooSet() { 1+2 },
+    get: new top.Function("return 'foo';"),
+    set: new top.Function("1+2"),
   });
 
-  foobarObject.longStringObj = {
-    toSource: function() longString,
-    toString: function() longString,
-    boom: "explode",
-  };
+  foobarObject.longStringObj = top.Object.create(null);
+  foobarObject.longStringObj.toSource = new top.Function("'" + longString + "'");
+  foobarObject.longStringObj.toString = new top.Function("'" + longString + "'");
+  foobarObject.longStringObj.boom = "explode";
 
-  console.log("hello", foobarObject);
+  top.wrappedJSObject.foobarObject = foobarObject;
+  top.console.log("hello", top.wrappedJSObject.foobarObject);
 
-  expectedProps = [
-    {
-      name: "abArray",
+  expectedProps = {
+    "abArray": {
       value: {
         type: "object",
-        className: "Array",
+        class: "Array",
         actor: /[a-z]/,
-        inspectable: true,
       },
     },
-    {
-      name: "foo",
+    "foo": {
       configurable: true,
       enumerable: true,
       writable: true,
       value: 1,
     },
-    {
-      name: "foobar",
+    "foobar": {
       value: "hello",
     },
-    {
-      name: "foobaz",
+    "foobaz": {
       value: {
         type: "object",
-        className: "HTMLDocument",
-        displayString: /\[object HTMLDocument/,
-        inspectable: true,
+        class: "XULDocument",
         actor: /[a-z]/,
       },
     },
-    {
-      name: "getterAndSetter",
+    "getterAndSetter": {
       get: {
-        type: "function",
-        className: "Function",
-        displayString: /function fooGet/,
+        type: "object",
+        class: "Function",
         actor: /[a-z]/,
-        inspectable: false,
       },
       set: {
-        type: "function",
-        className: "Function",
-        displayString: /function fooSet/,
+        type: "object",
+        class: "Function",
         actor: /[a-z]/,
-        inspectable: false,
       },
     },
-    {
-      name: "longStringObj",
+    "longStringObj": {
       value: {
         type: "object",
-        className: "Object",
+        class: "Object",
         actor: /[a-z]/,
-        inspectable: true,
-        displayString: {
-          type: "longString",
-          initial: longString.substring(0,
-            DebuggerServer.LONG_STRING_INITIAL_LENGTH),
-          length: longString.length,
-        },
       },
     },
-    {
-      name: "notInspectable",
+    "notInspectable": {
       value: {
         type: "object",
-        className: "Object",
+        class: "Object",
         actor: /[a-z]/,
-        inspectable: false,
       },
     },
-    {
-      name: "omg",
+    "omg": {
       value: { type: "null" },
     },
-    {
-      name: "omgfn",
+    "omgfn": {
       value: {
-        type: "function",
-        className: "Function",
-        displayString: /function _omgfn/,
+        type: "object",
+        class: "Function",
         actor: /[a-z]/,
-        inspectable: false,
       },
     },
-    {
-      name: "tamarbuta",
+    "tamarbuta": {
       value: {
         type: "longString",
         initial: longString.substring(0,
@@ -152,11 +126,10 @@ function onAttach(aState, aResponse)
         length: longString.length,
       },
     },
-    {
-      name: "testfoo",
+    "testfoo": {
       value: false,
     },
-  ];
+  };
 }
 
 function onConsoleCall(aState, aType, aPacket)
@@ -172,7 +145,6 @@ function onConsoleCall(aState, aType, aPacket)
     arguments: ["hello", {
       type: "object",
       actor: /[a-z]/,
-      inspectable: true,
     }],
   });
 
@@ -181,13 +153,15 @@ function onConsoleCall(aState, aType, aPacket)
   info("inspecting object properties");
   let args = aPacket.message.arguments;
   onProperties = onProperties.bind(null, aState);
-  aState.client.inspectObjectProperties(args[1].actor, onProperties);
+
+  let client = new GripClient(aState.dbgClient, args[1]);
+  client.getPrototypeAndProperties(onProperties);
 }
 
 function onProperties(aState, aResponse)
 {
-  let props = aResponse.properties;
-  is(props.length, expectedProps.length,
+  let props = aResponse.ownProperties;
+  is(Object.keys(props).length, Object.keys(expectedProps).length,
      "number of enumerable properties");
   checkObject(props, expectedProps);
 

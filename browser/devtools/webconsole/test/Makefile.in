@@ -42,7 +42,6 @@ MOCHITEST_BROWSER_FILES = \
 	browser_webconsole_jsterm.js \
 	browser_webconsole_null_and_undefined_output.js \
 	browser_webconsole_output_order.js \
-	browser_webconsole_property_panel.js \
 	browser_webconsole_property_provider.js \
 	browser_webconsole_bug_587617_output_copy.js \
 	browser_webconsole_bug_585237_line_limit.js \
@@ -116,10 +115,12 @@ MOCHITEST_BROWSER_FILES = \
 	browser_output_longstring_expand.js \
 	browser_netpanel_longstring_expand.js \
 	browser_repeated_messages_accuracy.js \
-	head.js \
 	browser_webconsole_bug_821877_csp_errors.js \
-	test-bug-821877-csperrors.html \
-	test-bug-821877-csperrors.html^headers^ \
+	browser_eval_in_debugger_stackframe.js \
+	browser_console_variables_view.js \
+	browser_console_variables_view_while_debugging.js \
+	browser_console.js \
+	head.js \
 	$(NULL)
 
 ifeq ($(OS_ARCH), Darwin)
@@ -217,6 +218,9 @@ MOCHITEST_BROWSER_FILES += \
 	test-bug-766001-console-log.js \
 	test-bug-766001-js-console-links.html \
 	test-bug-766001-js-errors.js \
+	test-bug-821877-csperrors.html \
+	test-bug-821877-csperrors.html^headers^ \
+	test-eval-in-stackframe.html \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
