@@ -17,6 +17,12 @@
 namespace mozilla {
 namespace dom {
 
+enum GamepadMappingType
+{
+  NoMapping = 0,
+  StandardMapping = 1
+};
+
 // TODO: fix the spec to expose both pressed and value:
 // https://www.w3.org/Bugs/Public/show_bug.cgi?id=21388
 struct GamepadButton
@@ -33,6 +39,7 @@ class Gamepad : public nsIDOMGamepad
 public:
   Gamepad(nsISupports* aParent,
           const nsAString& aID, uint32_t aIndex,
+          GamepadMappingType aMapping,
           uint32_t aNumButtons, uint32_t aNumAxes);
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Gamepad)
@@ -60,6 +67,15 @@ public:
   void GetId(nsAString& aID) const
   {
     aID = mID;
+  }
+
+  void GetMapping(nsAString& aMapping) const
+  {
+    if (mMapping == StandardMapping) {
+      aMapping = NS_LITERAL_STRING("standard");
+    } else {
+      aMapping = NS_LITERAL_STRING("");
+    }
   }
 
   bool Connected() const
@@ -96,6 +112,9 @@ protected:
   nsCOMPtr<nsISupports> mParent;
   nsString mID;
   uint32_t mIndex;
+
+  // The mapping in use.
+  GamepadMappingType mMapping;
 
   // true if this gamepad is currently connected.
   bool mConnected;
