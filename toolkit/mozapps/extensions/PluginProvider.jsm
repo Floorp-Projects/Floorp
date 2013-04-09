@@ -300,12 +300,8 @@ function PluginWrapper(aId, aName, aDescription, aTags) {
     if (aTags[0].disabled == aVal)
       return;
 
-    for (let tag of aTags) {
-      if (aVal === true)
-        tag.enabledState = Ci.nsIPluginTag.STATE_DISABLED;
-      else
-        tag.enabledState = Ci.nsIPluginTag.STATE_ENABLED;
-    }
+    for (let tag of aTags)
+      tag.disabled = aVal;
     AddonManagerPrivate.callAddonListeners(aVal ? "onDisabling" : "onEnabling", this, false);
     AddonManagerPrivate.callAddonListeners(aVal ? "onDisabled" : "onEnabled", this);
     return aVal;

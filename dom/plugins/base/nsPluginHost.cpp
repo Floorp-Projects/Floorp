@@ -2043,7 +2043,7 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile *pluginsDir,
              pluginTag->SetBlocklisted(true);
           }
           if (state == nsIBlocklistService::STATE_SOFTBLOCKED && !seenBefore) {
-             pluginTag->SetEnabledState(nsIPluginTag::STATE_DISABLED);
+             pluginTag->SetDisabled(true);
           }
           if (state == nsIBlocklistService::STATE_OUTDATED && !seenBefore) {
              warnOutdated = true;
