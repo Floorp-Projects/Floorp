@@ -31,6 +31,7 @@ BROWSER_TESTS = \
   text-block.html \
   browser_sanitize_ui.js \
   browser_topsites.js \
+  browser_tabs.js \
   $(NULL)
 
 BROWSER_TEST_RESOURCES = \

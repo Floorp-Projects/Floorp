@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import os
+import time
 from marionette_test import MarionetteTestCase
 
 class TestClick(MarionetteTestCase):
@@ -17,8 +17,13 @@ class TestClick(MarionetteTestCase):
         test_html = self.marionette.absolute_url("clicks.html")
         self.marionette.navigate(test_html)
         self.marionette.find_element("link text", "333333").click()
-        self.marionette.set_search_timeout(5000)
-        self.marionette.find_element("id", "username")
+        count = 0
+        while len(self.marionette.find_elements("id", "username")) == 0:
+            count += 1
+            time.sleep(1)
+            if count == 30:
+                self.fail("Element id=username not found after 30 seconds")
+
         self.assertEqual(self.marionette.title, "XHTML Test Page")
 
 class TestClickChrome(MarionetteTestCase):

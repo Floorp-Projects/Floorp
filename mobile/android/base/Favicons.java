@@ -11,6 +11,7 @@ import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
 
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.entity.BufferedHttpEntity;
 
@@ -38,6 +39,7 @@ public class Favicons {
     private static final String LOGTAG = "GeckoFavicons";
 
     public static final long NOT_LOADING = 0;
+    public static final long FAILED_EXPIRY_NEVER = -1;
 
     private static int sFaviconSmallSize = -1;
     private static int sFaviconLargeSize = -1;
@@ -47,6 +49,7 @@ public class Favicons {
     private Map<Long,LoadFaviconTask> mLoadTasks;
     private long mNextFaviconLoadId;
     private LruCache<String, Bitmap> mFaviconsCache;
+    private LruCache<String, Long> mFailedCache;
     private static final String USER_AGENT = GeckoApp.mAppContext.getDefaultUAString();
     private AndroidHttpClient mHttpClient;
 
@@ -67,6 +70,9 @@ public class Favicons {
                 return image.getRowBytes() * image.getHeight();
             }
         };
+
+        // Create a failed favicon memory cache that has up to 64 entries
+        mFailedCache = new LruCache<String, Long>(64);
     }
 
     private synchronized AndroidHttpClient getHttpClient() {
@@ -105,6 +111,12 @@ public class Favicons {
             return -1;
         }
 
+        // Check if favicon has failed
+        if (isFailedFavicon(pageUrl)) {
+            dispatchResult(pageUrl, null, listener);
+            return -1;
+        }
+
         // Check if favicon is mem cached
         Bitmap image = getFaviconFromMemCache(pageUrl);
         if (image != null) {
@@ -132,6 +144,22 @@ public class Favicons {
 
     public void clearMemCache() {
         mFaviconsCache.evictAll();
+    }
+
+    public boolean isFailedFavicon(String pageUrl) {
+        Long fetchTime = mFailedCache.get(pageUrl);
+        if (fetchTime == null)
+            return false;
+        // We don't have any other rules yet.
+        return true;
+    }
+
+    public void putFaviconInFailedCache(String pageUrl, long fetchTime) {
+        mFailedCache.put(pageUrl, fetchTime);
+    }
+
+    public void clearFailedCache() {
+        mFailedCache.evictAll();
     }
 
     public boolean cancelFaviconLoad(long taskId) {
@@ -261,7 +289,28 @@ public class Favicons {
             Bitmap image = null;
             try {
                 HttpGet request = new HttpGet(faviconUrl.toURI());
-                HttpEntity entity = getHttpClient().execute(request).getEntity();
+                HttpResponse response = getHttpClient().execute(request);
+                if (response == null)
+                    return null;
+                if (response.getStatusLine() != null) {
+                    // Was the response a failure?
+                    int status = response.getStatusLine().getStatusCode();
+                    if (status >= 400) {
+                        putFaviconInFailedCache(mPageUrl, FAILED_EXPIRY_NEVER);
+                        return null;
+                    }
+                }
+
+                HttpEntity entity = response.getEntity();
+                if (entity == null)
+                    return null;
+                if (entity.getContentType() != null) {
+                    // Is the content type valid? Might be a captive portal.
+                    String contentType = entity.getContentType().getValue();
+                    if (contentType.indexOf("image") == -1)
+                        return null;
+                }
+
                 BufferedHttpEntity bufferedEntity = new BufferedHttpEntity(entity);
                 InputStream contentStream = bufferedEntity.getContent();
                 image = BitmapFactory.decodeStream(contentStream);

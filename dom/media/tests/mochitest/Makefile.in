@@ -30,6 +30,9 @@ MOCHITEST_FILES = \
   test_peerConnection_basicAudioVideoCombined.html \
   test_peerConnection_basicVideo.html \
   test_peerConnection_errorCallbacks.html \
+  test_peerConnection_offerRequiresReceiveAudio.html \
+  test_peerConnection_offerRequiresReceiveVideo.html \
+  test_peerConnection_offerRequiresReceiveVideoAudio.html \
   test_peerConnection_bug822674.html \
   test_peerConnection_bug825703.html \
   test_peerConnection_bug827843.html \

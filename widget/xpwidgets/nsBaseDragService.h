@@ -9,7 +9,6 @@
 #include "nsIDragService.h"
 #include "nsIDragSession.h"
 #include "nsITransferable.h"
-#include "nsISupportsArray.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDataTransfer.h"
 #include "nsCOMPtr.h"

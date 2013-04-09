@@ -315,7 +315,7 @@ GLScreenBuffer::Morph(SurfaceFactory_GL* newFactory, SurfaceStreamType streamTyp
         mFactory = newFactory;
     }
 
-    if (mStream->Type() == streamType)
+    if (mStream->mType == streamType)
         return;
 
     SurfaceStream* newStream = SurfaceStream::CreateForType(streamType, mStream);

@@ -8,6 +8,9 @@
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js">
   </script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/chrome-harness.js">
+  </script>
 
   <script type="application/javascript" src="../common.js"></script>
   <script type="application/javascript" src="../browser.js"></script>
@@ -102,7 +105,7 @@
          document. */
       openBrowserWindow(
         doTest,
-        "chrome://mochitests/content/a11y/accessible/pivot/doc_virtualcursor.html");
+        getRootDirectory(window.location.href) + "doc_virtualcursor.html");
     });
   </script>
 </head>

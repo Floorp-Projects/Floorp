@@ -28,10 +28,10 @@ var tests = {
     }
 
     function triggerIconPanel() {
-      let statusIcon = document.querySelector("#social-toolbar-item > .social-notification-container > .toolbarbutton-1");
+      let statusIcon = document.getElementById("social-provider-button").nextSibling;
       info("status icon is " + statusIcon);
       waitForCondition(function() {
-        statusIcon = document.querySelector("#social-toolbar-item > .social-notification-container > .toolbarbutton-1");
+        statusIcon = document.getElementById("social-provider-button").nextSibling;
         info("status icon is " + statusIcon);
         return !!statusIcon;
       }, function() {

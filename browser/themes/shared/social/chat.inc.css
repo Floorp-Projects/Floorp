@@ -72,8 +72,7 @@
 }
 
 .chatbar-button {
-  /* XXX get a real image for this */
-  list-style-image: url("chrome://browser/skin/social/social.png");
+  list-style-image: url("chrome://browser/skin/social/services-16.png");
   border: none;
   margin: 0;
   padding: 2px;
@@ -81,6 +80,12 @@
   width: 21px;
   border-top: 1px solid #ccc;
   -moz-border-end: 1px solid #ccc;
+}
+
+@media (min-resolution: 2dppx) {
+  .chatbar-button {
+    list-style-image: url("chrome://browser/skin/social/services-16@2x.png");
+  }
 }
 
 .chatbar-button > menupopup > .menuitem-iconic > .menu-iconic-left > .menu-iconic-icon {

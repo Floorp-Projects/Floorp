@@ -49,13 +49,13 @@ class nsFrameManager : public nsFrameManagerBase
   typedef nsIFrame::ChildListID ChildListID;
 
 public:
-  nsFrameManager(nsIPresShell *aPresShell) NS_HIDDEN {
+  nsFrameManager(nsIPresShell *aPresShell, nsStyleSet* aStyleSet) NS_HIDDEN {
     mPresShell = aPresShell;
+    mStyleSet = aStyleSet;
+    MOZ_ASSERT(mPresShell, "need a pres shell");
+    MOZ_ASSERT(mStyleSet, "need a style set");
   }
   ~nsFrameManager() NS_HIDDEN;
-
-  // Initialization
-  NS_HIDDEN_(nsresult) Init(nsStyleSet* aStyleSet);
 
   /*
    * After Destroy is called, it is an error to call any FrameManager methods.

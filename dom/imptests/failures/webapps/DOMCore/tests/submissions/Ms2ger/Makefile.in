@@ -11,18 +11,11 @@ include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES := \
   test_CharacterData-remove.html.json \
-  test_DOMImplementation-createDocument.html.json \
-  test_DOMImplementation-createHTMLDocument.html.json \
   test_Document-createElementNS.html.json \
   test_Document-getElementsByTagName.html.json \
   test_DocumentType-remove.html.json \
   test_Element-remove.html.json \
   test_Node-isEqualNode.xhtml.json \
-  test_NodeFilter-constants.html.json \
-  test_Range-attributes.html.json \
-  test_Range-commonAncestorContainer.html.json \
-  test_Range-comparePoint.html.json \
-  test_Range-detach.html.json \
   test_attributes.html.json \
   test_case.html.json \
   test_historical.html.json \
