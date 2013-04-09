@@ -37,7 +37,6 @@ EXPORTS_mozilla/dom = \
   MobileMessageManager.h \
   SmsMessage.h \
   MmsMessage.h \
-  SmsRequest.h \
   SmsSegmentInfo.h \
   SmsFilter.h \
   $(NULL)
@@ -66,7 +65,6 @@ CPPSRCS = \
   MmsMessage.cpp \
   Constants.cpp \
   SmsChild.cpp \
-  SmsRequest.cpp \
   MobileMessageCallback.cpp \
   SmsFilter.cpp \
   SmsSegmentInfo.cpp \
