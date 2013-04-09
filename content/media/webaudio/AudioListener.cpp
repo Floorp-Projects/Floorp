@@ -49,6 +49,7 @@ AudioListener::RegisterPannerNode(PannerNode* aPannerNode)
   aPannerNode->SendThreeDPointParameterToStream(PannerNode::LISTENER_VELOCITY, mVelocity);
   aPannerNode->SendDoubleParameterToStream(PannerNode::LISTENER_DOPPLER_FACTOR, mDopplerFactor);
   aPannerNode->SendDoubleParameterToStream(PannerNode::LISTENER_SPEED_OF_SOUND, mSpeedOfSound);
+  UpdatePannersVelocity();
 }
 
 void
@@ -67,6 +68,15 @@ AudioListener::SendThreeDPointParameterToStream(uint32_t aIndex, const ThreeDPoi
   for (uint32_t i = 0; i < mPanners.Length(); ++i) {
     if (mPanners[i]) {
       mPanners[i]->SendThreeDPointParameterToStream(aIndex, aValue);
+    }
+  }
+}
+
+void AudioListener::UpdatePannersVelocity()
+{
+  for (uint32_t i = 0; i < mPanners.Length(); ++i) {
+    if (mPanners[i]) {
+      mPanners[i]->SendDopplerToSourcesIfNeeded();
     }
   }
 }
