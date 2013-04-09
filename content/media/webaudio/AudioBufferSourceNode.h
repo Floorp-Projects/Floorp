@@ -9,7 +9,6 @@
 
 #include "AudioNode.h"
 #include "AudioBuffer.h"
-#include "AudioParam.h"
 #include "mozilla/dom/BindingUtils.h"
 
 namespace mozilla {
@@ -36,19 +35,6 @@ public:
   virtual uint32_t NumberOfInputs() const MOZ_FINAL MOZ_OVERRIDE
   {
     return 0;
-  }
-
-  virtual AudioBufferSourceNode* AsAudioBufferSourceNode() MOZ_OVERRIDE
-  {
-    return this;
-  }
-
-  void UnregisterPannerNode() {
-    mPannerNode = nullptr;
-  }
-
-  void RegisterPannerNode(PannerNode* aPannerNode) {
-    mPannerNode = aPannerNode;
   }
 
   void JSBindingFinalized()
@@ -106,7 +92,6 @@ public:
   {
     mLoopEnd = aEnd;
   }
-  void SendDopplerShiftToStream(double aDopplerShift);
 
   virtual void NotifyMainThreadStateChanged() MOZ_OVERRIDE;
 
@@ -118,7 +103,6 @@ private:
   bool mLoop;
   bool mStartCalled;
   nsRefPtr<AudioParam> mPlaybackRate;
-  PannerNode* mPannerNode;
 };
 
 }
