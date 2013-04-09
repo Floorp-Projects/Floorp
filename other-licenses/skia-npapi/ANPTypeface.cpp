@@ -26,6 +26,7 @@
 // must include config.h first for webkit to fiddle with new/delete
 #include "SkANP.h"
 #include "SkFontHost.h"
+#include "SkStream.h"
 
 static ANPTypeface* anp_createFromName(const char name[], ANPTypefaceStyle s) {
     SkTypeface* tf = SkTypeface::CreateFromName(name,
@@ -59,9 +60,9 @@ static ANPTypefaceStyle anp_getStyle(const ANPTypeface* tf) {
 
 static int32_t anp_getFontPath(const ANPTypeface* tf, char fileName[],
                                int32_t length, int32_t* index) {
-    size_t size = SkFontHost::GetFileName(SkTypeface::UniqueID(tf), fileName,
-                                          length, index);
-    return static_cast<int32_t>(size);
+    SkStream* stream = tf->openStream(index);
+    strcpy(fileName, stream->getFileName());
+    return strlen(fileName);
 }
 
 static const char* gFontDir;
