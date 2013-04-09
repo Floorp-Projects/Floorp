@@ -70,11 +70,12 @@ function test_message_class_0() {
       checkMessage(message, -1, 0, "class-0");
 
       // Make sure the message is not stored.
-      let cursor = sms.getMessages(null, false);
-      cursor.onsuccess = function onsuccess() {
-        if (cursor.result) {
+      let request = sms.getMessages(null, false);
+      request.onsuccess = function onsuccess() {
+        let cursor = request.result;
+        if (cursor.message) {
           // Here we check whether there is any message of the same sender.
-          isnot(cursor.result.sender, message.sender, "cursor.result.sender");
+          isnot(cursor.message.sender, message.sender, "cursor.message.sender");
 
           cursor.continue();
           return;
@@ -88,7 +89,7 @@ function test_message_class_0() {
           window.setTimeout(do_test.bind(null, dcsIndex), 0);
         }
       };
-      cursor.onerror = function onerror() {
+      request.onerror = function onerror() {
         ok(false, "Can't fetch messages from SMS database");
       };
     });

@@ -16,6 +16,7 @@
 #include "nsIDOMMozMmsEvent.h"
 #include "nsIDOMMozSmsMessage.h"
 #include "nsIDOMMozMmsMessage.h"
+#include "SmsRequest.h"
 #include "nsJSUtils.h"
 #include "nsContentUtils.h"
 #include "nsIMobileMessageDatabaseService.h"
@@ -25,8 +26,6 @@
 #include "DOMRequest.h"
 #include "nsIMobileMessageCallback.h"
 #include "MobileMessageCallback.h"
-#include "MobileMessageCursorCallback.h"
-#include "DOMCursor.h"
 
 #define RECEIVED_EVENT_NAME         NS_LITERAL_STRING("received")
 #define SENDING_EVENT_NAME          NS_LITERAL_STRING("sending")
@@ -119,21 +118,21 @@ MobileMessageManager::Send(JSContext* aCx, JSObject* aGlobal, JSString* aNumber,
                            const nsAString& aMessage, JS::Value* aRequest)
 {
   nsCOMPtr<nsISmsService> smsService = do_GetService(SMS_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(smsService, NS_ERROR_FAILURE);
+  if (!smsService) {
+    NS_ERROR("No SMS Service!");
+    return NS_ERROR_FAILURE;
+  }
 
+  nsCOMPtr<nsIDOMMozSmsRequest> request = SmsRequest::Create(this);
   nsDependentJSString number;
   number.init(aCx, aNumber);
 
-  nsRefPtr<DOMRequest> request = new DOMRequest(GetOwner());
-  nsCOMPtr<nsIMobileMessageCallback> msgCallback =
-    new MobileMessageCallback(request);
+  nsCOMPtr<nsIMobileMessageCallback> forwarder =
+    new SmsRequestForwarder(static_cast<SmsRequest*>(request.get()));
 
-  nsresult rv = smsService->Send(number, aMessage, msgCallback);
-  NS_ENSURE_SUCCESS(rv, rv);
+  smsService->Send(number, aMessage, forwarder);
 
-  rv = nsContentUtils::WrapNative(aCx, aGlobal,
-                                  static_cast<nsIDOMDOMRequest*>(request.get()),
-                                  aRequest);
+  nsresult rv = nsContentUtils::WrapNative(aCx, aGlobal, request, aRequest);
   if (NS_FAILED(rv)) {
     NS_ERROR("Failed to create the js value!");
     return rv;
@@ -272,30 +271,23 @@ MobileMessageManager::Delete(const JS::Value& aParam, nsIDOMDOMRequest** aReques
 }
 
 NS_IMETHODIMP
-MobileMessageManager::GetMessages(nsIDOMMozSmsFilter* aFilter,
-                                  bool aReverse,
-                                  nsIDOMDOMCursor** aCursor)
+MobileMessageManager::GetMessages(nsIDOMMozSmsFilter* aFilter, bool aReverse,
+                                  nsIDOMMozSmsRequest** aRequest)
 {
-  nsCOMPtr<nsIMobileMessageDatabaseService> dbService =
-    do_GetService(MOBILE_MESSAGE_DATABASE_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(dbService, NS_ERROR_FAILURE);
-
   nsCOMPtr<nsIDOMMozSmsFilter> filter = aFilter;
+  
   if (!filter) {
     filter = new SmsFilter();
   }
 
-  nsRefPtr<MobileMessageCursorCallback> cursorCallback =
-    new MobileMessageCursorCallback();
-
-  nsCOMPtr<nsICursorContinueCallback> continueCallback;
-  nsresult rv = dbService->CreateMessageCursor(filter, aReverse, cursorCallback,
-                                               getter_AddRefs(continueCallback));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  cursorCallback->mDOMCursor = new DOMCursor(GetOwner(), continueCallback);
-  NS_ADDREF(*aCursor = cursorCallback->mDOMCursor);
-
+  nsCOMPtr<nsIDOMMozSmsRequest> req = SmsRequest::Create(this);
+  nsCOMPtr<nsIMobileMessageDatabaseService> mobileMessageDBService =
+    do_GetService(MOBILE_MESSAGE_DATABASE_SERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(mobileMessageDBService, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIMobileMessageCallback> forwarder =
+    new SmsRequestForwarder(static_cast<SmsRequest*>(req.get()));
+  mobileMessageDBService->CreateMessageList(filter, aReverse, forwarder);
+  req.forget(aRequest);
   return NS_OK;
 }
 
@@ -317,23 +309,16 @@ MobileMessageManager::MarkMessageRead(int32_t aId, bool aValue,
 }
 
 NS_IMETHODIMP
-MobileMessageManager::GetThreads(nsIDOMDOMCursor** aCursor)
+MobileMessageManager::GetThreadList(nsIDOMMozSmsRequest** aRequest)
 {
-  nsCOMPtr<nsIMobileMessageDatabaseService> dbService =
+  nsCOMPtr<nsIDOMMozSmsRequest> req = SmsRequest::Create(this);
+  nsCOMPtr<nsIMobileMessageDatabaseService> mobileMessageDBService =
     do_GetService(MOBILE_MESSAGE_DATABASE_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(dbService, NS_ERROR_FAILURE);
-
-  nsRefPtr<MobileMessageCursorCallback> cursorCallback =
-    new MobileMessageCursorCallback();
-
-  nsCOMPtr<nsICursorContinueCallback> continueCallback;
-  nsresult rv = dbService->CreateThreadCursor(cursorCallback,
-                                              getter_AddRefs(continueCallback));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  cursorCallback->mDOMCursor = new DOMCursor(GetOwner(), continueCallback);
-  NS_ADDREF(*aCursor = cursorCallback->mDOMCursor);
-
+  NS_ENSURE_TRUE(mobileMessageDBService, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIMobileMessageCallback> forwarder =
+    new SmsRequestForwarder(static_cast<SmsRequest*>(req.get()));
+  mobileMessageDBService->GetThreadList(forwarder);
+  req.forget(aRequest);
   return NS_OK;
 }
 

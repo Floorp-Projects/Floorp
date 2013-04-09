@@ -8,10 +8,8 @@
 
 #include "mozilla/dom/mobilemessage/PSmsChild.h"
 #include "mozilla/dom/mobilemessage/PSmsRequestChild.h"
-#include "mozilla/dom/mobilemessage/PMobileMessageCursorChild.h"
-#include "nsIDOMDOMCursor.h"
-#include "nsIMobileMessageCallback.h"
-#include "nsIMobileMessageCursorCallback.h"
+
+class nsIMobileMessageCallback;
 
 namespace mozilla {
 namespace dom {
@@ -20,16 +18,10 @@ namespace mobilemessage {
 class SmsChild : public PSmsChild
 {
 public:
-  SmsChild()
-  {
-    MOZ_COUNT_CTOR(SmsChild);
-  }
+  SmsChild();
 
 protected:
-  virtual ~SmsChild()
-  {
-    MOZ_COUNT_DTOR(SmsChild);
-  }
+  virtual ~SmsChild();
 
   virtual void
   ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
@@ -57,12 +49,6 @@ protected:
 
   virtual bool
   DeallocPSmsRequest(PSmsRequestChild* aActor) MOZ_OVERRIDE;
-
-  virtual PMobileMessageCursorChild*
-  AllocPMobileMessageCursor(const IPCMobileMessageCursor& aCursor) MOZ_OVERRIDE;
-
-  virtual bool
-  DeallocPMobileMessageCursor(PMobileMessageCursorChild* aActor) MOZ_OVERRIDE;
 };
 
 class SmsRequestChild : public PSmsRequestChild
@@ -75,45 +61,13 @@ public:
   SmsRequestChild(nsIMobileMessageCallback* aReplyRequest);
 
 protected:
-  virtual ~SmsRequestChild()
-  {
-    MOZ_COUNT_DTOR(SmsRequestChild);
-  }
+  virtual ~SmsRequestChild();
 
   virtual void
   ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
 
   virtual bool
   Recv__delete__(const MessageReply& aReply) MOZ_OVERRIDE;
-};
-
-class MobileMessageCursorChild : public PMobileMessageCursorChild
-                               , public nsICursorContinueCallback
-{
-  friend class SmsChild;
-
-  nsCOMPtr<nsIMobileMessageCursorCallback> mCursorCallback;
-
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSICURSORCONTINUECALLBACK
-
-  MobileMessageCursorChild(nsIMobileMessageCursorCallback* aCallback);
-
-protected:
-  virtual ~MobileMessageCursorChild()
-  {
-    MOZ_COUNT_DTOR(MobileMessageCursorChild);
-  }
-
-  virtual void
-  ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
-
-  virtual bool
-  RecvNotifyResult(const MobileMessageCursorData& aData) MOZ_OVERRIDE;
-
-  virtual bool
-  Recv__delete__(const int32_t& aError) MOZ_OVERRIDE;
 };
 
 } // namespace mobilemessage
