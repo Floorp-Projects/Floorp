@@ -28,6 +28,7 @@ const TEST_MANIFEST_URL =
 const TEST_ORIGIN_URL = "http://mochi.test:8888";
 
 const installedPermsToTest = {
+  "storage": "unknown",
   "geolocation": "prompt",
   "alarms": "allow",
   "desktop-notification": "allow",

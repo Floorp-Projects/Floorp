@@ -385,13 +385,51 @@ var BrowserUI = {
     this.newTab(aURI, aOwner);
   },
 
+  setOnTabAnimationEnd: function setOnTabAnimationEnd(aCallback) {
+    Elements.tabs.addEventListener("animationend", function onAnimationEnd() {
+      Elements.tabs.removeEventListener("animationend", onAnimationEnd);
+      aCallback();
+    });
+  },
+
   closeTab: function closeTab(aTab) {
     // If we only have one tab, open a new one
-    if (Browser.tabs.length == 1)
+    if (Browser.tabs.length === 1 && !StartUI.isStartURI())
       Browser.addTab(Browser.getHomePage());
 
+    // We only have the start tab
+    if (Browser.tabs.length === 1)
+      return;
+
     // If no tab is passed in, assume the current tab
-    Browser.closeTab(aTab || Browser.selectedTab);
+    let tab = aTab || Browser.selectedTab;
+    let tabToClose = tab instanceof XULElement ? Browser.getTabFromChrome(tab) : tab;
+
+    if (this.isTabsOnly) {
+      Browser.closeTab(tabToClose);
+    } else {
+      let nextTab = Browser.getNextTab(tabToClose);
+
+      if (!nextTab)
+        return;
+
+      if (nextTab)
+        Browser.selectedTab = nextTab;
+
+      // Trigger closing animation
+      tabToClose.chromeTab.setAttribute("closing", "true");
+
+      let wasCollapsed = !ContextUI.isExpanded;
+      if (wasCollapsed) {
+        ContextUI.displayTabs();
+      }
+
+      this.setOnTabAnimationEnd(function() {
+        Browser.closeTab(tabToClose);
+        if (wasCollapsed)
+          ContextUI.dismissWithDelay(kNewTabAnimationDelayMsec);
+      });
+    }
   },
 
   /**
@@ -614,16 +652,17 @@ var BrowserUI = {
   _urlbarClicked: function _urlbarClicked() {
     // If the urlbar is not already focused, focus it and select the contents.
     if (Elements.urlbarState.getAttribute("mode") != "edit")
-      this._editURI();
+      this._editURI(true);
   },
 
-  _editURI: function _editURI() {
+  _editURI: function _editURI(aShouldDismiss) {
     this._edit.focus();
     this._edit.select();
 
     Elements.urlbarState.setAttribute("mode", "edit");
     StartUI.show();
-    ContextUI.dismissTabs();
+    if (aShouldDismiss)
+      ContextUI.dismissTabs();
   },
 
   _urlbarBlurred: function _urlbarBlurred() {
@@ -986,7 +1025,7 @@ var BrowserUI = {
         break;
       case "cmd_openLocation":
         ContextUI.displayNavbar();
-        this._editURI();
+        this._editURI(true);
         break;
       case "cmd_addBookmark":
         Elements.appbar.show();
@@ -1014,7 +1053,7 @@ var BrowserUI = {
         break;
       case "cmd_newTab":
         this.newTab();
-        this._editURI();
+        this._editURI(false);
         break;
       case "cmd_closeTab":
         this.closeTab();
@@ -1154,14 +1193,17 @@ var ContextUI = {
 
   /** Briefly show the tab bar and then hide it */
   peekTabs: function peekTabs() {
-    if (this.isExpanded)
-      return;
+    if (this.isExpanded) {
+      setTimeout(function () {
+        ContextUI.dismissWithDelay(kNewTabAnimationDelayMsec);
+      }, 0);
+    } else {
+      BrowserUI.setOnTabAnimationEnd(function () {
+        ContextUI.dismissWithDelay(kNewTabAnimationDelayMsec);
+      });
 
-    Elements.tabs.addEventListener("animationend", function onAnimationEnd() {
-      Elements.tabs.removeEventListener("animationend", onAnimationEnd);
-      ContextUI.dismissWithDelay(kNewTabAnimationDelayMsec);
-    });
-    this.displayTabs();
+      this.displayTabs();
+    }
   },
 
   // Dismiss all context UI.

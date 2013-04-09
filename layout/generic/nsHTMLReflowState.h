@@ -364,6 +364,12 @@ public:
     uint16_t mDummyParentReflowState:1; // a "fake" reflow state made
                                         // in order to be the parent
                                         // of a real one
+    uint16_t mMustReflowPlaceholders:1; // Should this frame reflow its place-
+                                        // holder children? If the available
+                                        // height of this frame didn't change,
+                                        // but its in a paginated environment
+                                        // (e.g. columns), it should always
+                                        // reflow its placeholder children.
   } mFlags;
 
   // Note: The copy constructor is written by the compiler automatically. You

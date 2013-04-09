@@ -5274,6 +5274,31 @@ if test -n "$MOZ_WEBRTC"; then
     esac
 fi
 
+# target_arch is from {ia32|x64|arm|ppc}
+case "$CPU_ARCH" in
+x86_64 | ia64)
+    WEBRTC_TARGET_ARCH=x64
+    ;;
+
+arm*)
+    WEBRTC_TARGET_ARCH=arm
+    ;;
+
+x86)
+    WEBRTC_TARGET_ARCH=ia32
+    ;;
+
+ppc*)
+    WEBRTC_TARGET_ARCH=ppc
+    ;;
+*)
+# unsupported arch for webrtc
+    WEBRTC_TARGET_ARCH=unknown
+    MOZ_WEBRTC=
+    ;;
+
+esac
+
 dnl ========================================================
 dnl = Disable WebRTC code
 dnl ========================================================
@@ -9062,31 +9087,6 @@ case "$host" in
 *)
     FIXED_EGREP="egrep"
     ;;
-esac
-
-# target_arch is from {ia32|x64|arm|ppc}
-case "$CPU_ARCH" in
-x86_64 | ia64)
-    WEBRTC_TARGET_ARCH=x64
-    ;;
-
-arm*)
-    WEBRTC_TARGET_ARCH=arm
-    ;;
-
-x86)
-    WEBRTC_TARGET_ARCH=ia32
-    ;;
-
-ppc*)
-    WEBRTC_TARGET_ARCH=ppc
-    ;;
-*)
-# unsupported arch for webrtc
-    WEBRTC_TARGET_ARCH=unknown
-    MOZ_WEBRTC=
-    ;;
-
 esac
 
 # Generate Makefiles for WebRTC directly from .gyp files

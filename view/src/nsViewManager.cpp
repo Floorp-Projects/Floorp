@@ -10,7 +10,6 @@
 #include "nsViewManager.h"
 #include "nsGfxCIID.h"
 #include "nsView.h"
-#include "nsISupportsArray.h"
 #include "nsCOMPtr.h"
 #include "nsGUIEvent.h"
 #include "nsRegion.h"

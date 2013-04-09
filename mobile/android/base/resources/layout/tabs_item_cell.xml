@@ -4,8 +4,8 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <Gecko.TabRow xmlns:android="http://schemas.android.com/apk/res/android"
+              style="@style/TabsItem"
               android:focusable="true"
-              android:nextFocusRight="@+id/close"
               android:id="@+id/info"
               android:layout_width="fill_parent"
               android:layout_height="wrap_content"
@@ -47,7 +47,7 @@
                       android:duplicateParentState="true"/>
 
             <ImageButton android:id="@+id/close"
-                         android:nextFocusLeft="@+id/info"
+                         style="@style/TabsItemClose"
                          android:layout_width="32dip"
                          android:layout_height="fill_parent"
                          android:background="@drawable/action_bar_button_inverse"

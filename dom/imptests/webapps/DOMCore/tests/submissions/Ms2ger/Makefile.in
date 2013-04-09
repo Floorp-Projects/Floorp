@@ -17,7 +17,6 @@ MOCHITEST_FILES := \
   test_CharacterData-insertData.html \
   test_CharacterData-remove.html \
   test_CharacterData-replaceData.html \
-  test_ChildNode-remove.js \
   test_Document-adoptNode.html \
   test_Document-createComment.html \
   test_Document-createElement.html \
@@ -27,6 +26,7 @@ MOCHITEST_FILES := \
   test_Document-createProcessingInstruction-literal-1.xhtml \
   test_Document-createProcessingInstruction-literal-2.xhtml \
   test_Document-createProcessingInstruction.xhtml \
+  test_Document-createTreeWalker.html \
   test_Document-getElementById.html \
   test_Document-getElementsByTagName.html \
   test_Document-getElementsByTagNameNS.html \
@@ -47,6 +47,7 @@ MOCHITEST_FILES := \
   test_Event-defaultPrevented.html \
   test_Event-initEvent.html \
   test_EventTarget-dispatchEvent.html \
+  test_Event-type.html \
   test_historical.html \
   test_interfaces.html \
   test_Node-appendChild.html \
@@ -73,6 +74,7 @@ MOCHITEST_FILES := \
   case.js \
   creators.js \
   constants.js \
+  ChildNode-remove.js \
   Document-createProcessingInstruction.js \
   productions.js \
   $(NULL)
