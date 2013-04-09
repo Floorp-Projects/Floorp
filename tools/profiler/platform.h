@@ -35,22 +35,13 @@
 #define __android_log_print(a, ...)
 #endif
 
-#ifdef XP_UNIX
-#include <pthread.h>
-#endif
-
 #include "mozilla/StandardInteger.h"
 #include "mozilla/Util.h"
 #include "mozilla/unused.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/Mutex.h"
 #include "PlatformMacros.h"
 #include "v8-support.h"
 #include <vector>
-
-#ifdef XP_WIN
-#include <windows.h>
-#endif
 
 #define ASSERT(a) MOZ_ASSERT(a)
 
@@ -192,16 +183,13 @@ class Thread {
   // prctl().
   static const int kMaxThreadNameLength = 16;
 
-#ifdef XP_WIN
-  HANDLE thread_;
-  unsigned thread_id_;
-#endif
-#if defined(XP_MACOSX)
-  pthread_t thread_;
-#endif
+  class PlatformData;
+  PlatformData* data() { return data_; }
 
  private:
   void set_name(const char *name);
+
+  PlatformData* data_;
 
   char name_[kMaxThreadNameLength];
   int stack_size_;
@@ -244,9 +232,6 @@ extern int     sUnwindStackScan;  /* max # of dubious frames allowed */
 // (if used for profiling) the program counter and stack pointer for
 // the thread that created it.
 
-class PseudoStack;
-class ThreadProfile;
-
 // TickSample captures the information collected for each sample.
 class TickSample {
  public:
@@ -270,22 +255,22 @@ class TickSample {
   Address function;  // The last called JS function.
   void*   context;   // The context from the signal handler, if available. On
                      // Win32 this may contain the windows thread context.
-  ThreadProfile* threadProfile;
   static const int kMaxFramesCount = 64;
+  Address stack[kMaxFramesCount];  // Call stack.
   int frames_count;  // Number of captured frames.
   mozilla::TimeStamp timestamp;
 };
 
-class ThreadInfo;
-class PlatformData;
-class TableTicker;
 class Sampler {
  public:
   // Initialize sampler.
-  explicit Sampler(int interval, bool profiling, int entrySize);
+  explicit Sampler(int interval, bool profiling);
   virtual ~Sampler();
 
   int interval() const { return interval_; }
+
+  // Performs stack sampling.
+  virtual void SampleStack(TickSample* sample) = 0;
 
   // This method is called for each sampling period with the current
   // program counter.
@@ -310,14 +295,9 @@ class Sampler {
   bool IsPaused() const { return paused_; }
   void SetPaused(bool value) { NoBarrier_Store(&paused_, value); }
 
-  virtual bool ProfileThreads() const = 0;
+  class PlatformData;
 
-  int EntrySize() { return entrySize_; }
-
-  // We can't new/delete the type safely without defining it
-  // (-Wdelete-incomplete). Use these Alloc/Free functions instead.
-  static PlatformData* AllocPlatformData(int aThreadId);
-  static void FreePlatformData(PlatformData*);
+  PlatformData* platform_data() { return data_; }
 
   // If we move the backtracing code into the platform files we won't
   // need to have these hacks
@@ -328,39 +308,6 @@ class Sampler {
 #ifdef XP_MACOSX
   static pthread_t GetProfiledThread(PlatformData*);
 #endif
-
-  static std::vector<ThreadInfo*> GetRegisteredThreads() {
-    mozilla::MutexAutoLock lock(*sRegisteredThreadsMutex);
-
-    return *sRegisteredThreads;
-  }
-
-  static bool RegisterCurrentThread(const char* aName, PseudoStack* aPseudoStack, bool aIsMainThread);
-  static void UnregisterCurrentThread();
-
-  static void Startup() {
-    sRegisteredThreads = new std::vector<ThreadInfo*>();
-    sRegisteredThreadsMutex = new mozilla::Mutex("sRegisteredThreads mutex");
-  }
-
-  // Should only be called on shutdown
-  static void Shutdown() {
-    while (sRegisteredThreads->size() > 0) {
-      sRegisteredThreads->pop_back();
-    }
-
-    delete sRegisteredThreadsMutex;
-    delete sRegisteredThreads;
-  }
-
-  static TableTicker* GetActiveSampler() { return sActiveSampler; }
-  static void SetActiveSampler(TableTicker* sampler) { sActiveSampler = sampler; }
-
- protected:
-  static std::vector<ThreadInfo*>* sRegisteredThreads;
-  static mozilla::Mutex* sRegisteredThreadsMutex;
-  static TableTicker* sActiveSampler;
-
  private:
   void SetActive(bool value) { NoBarrier_Store(&active_, value); }
 
@@ -368,47 +315,7 @@ class Sampler {
   const bool profiling_;
   Atomic32 paused_;
   Atomic32 active_;
-  const int entrySize_;
-
-  // Refactor me!
-#if defined(SPS_OS_linux) || defined(SPS_OS_android)
-  bool signal_handler_installed_;
-  struct sigaction old_sigprof_signal_handler_;
-  struct sigaction old_sigsave_signal_handler_;
-  bool signal_sender_launched_;
-  pthread_t signal_sender_thread_;
-#endif
-};
-
-class ThreadInfo {
- public:
-  ThreadInfo(const char* aName, int aThreadId, bool aIsMainThread, PseudoStack* aPseudoStack)
-    : mName(strdup(aName))
-    , mThreadId(aThreadId)
-    , mIsMainThread(aIsMainThread)
-    , mPseudoStack(aPseudoStack)
-    , mPlatformData(Sampler::AllocPlatformData(aThreadId))
-    , mProfile(NULL) {}
-
-  virtual ~ThreadInfo();
-
-  const char* Name() const { return mName; }
-  int ThreadId() const { return mThreadId; }
-
-  bool IsMainThread() const { return mIsMainThread; }
-  PseudoStack* Stack() const { return mPseudoStack; }
-  
-  void SetProfile(ThreadProfile* aProfile) { mProfile = aProfile; }
-  ThreadProfile* Profile() const { return mProfile; }
-
-  PlatformData* GetPlatformData() const { return mPlatformData; }
- private:
-  char* mName;
-  int mThreadId;
-  const bool mIsMainThread;
-  PseudoStack* mPseudoStack;
-  PlatformData* mPlatformData;
-  ThreadProfile* mProfile;
+  PlatformData* data_;  // Platform specific data.
 };
 
 #endif /* ndef TOOLS_PLATFORM_H_ */
