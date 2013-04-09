@@ -28,10 +28,24 @@ MobileMessageDatabaseService::DeleteMessage(int32_t aMessageId,
 }
 
 NS_IMETHODIMP
-MobileMessageDatabaseService::CreateMessageCursor(nsIDOMMozSmsFilter* aFilter,
-                                                  bool aReverse,
-                                                  nsIMobileMessageCursorCallback* aCallback,
-                                                  nsICursorContinueCallback** aResult)
+MobileMessageDatabaseService::CreateMessageList(nsIDOMMozSmsFilter* aFilter,
+                                                bool aReverse,
+                                                nsIMobileMessageCallback* aRequest)
+{
+  NS_ERROR("We should not be here!");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+MobileMessageDatabaseService::GetNextMessageInList(int32_t aListId,
+                                                   nsIMobileMessageCallback* aRequest)
+{
+  NS_ERROR("We should not be here!");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+MobileMessageDatabaseService::ClearMessageList(int32_t aListId)
 {
   NS_ERROR("We should not be here!");
   return NS_OK;
@@ -47,8 +61,7 @@ MobileMessageDatabaseService::MarkMessageRead(int32_t aMessageId,
 }
 
 NS_IMETHODIMP
-MobileMessageDatabaseService::CreateThreadCursor(nsIMobileMessageCursorCallback* aCallback,
-                                                 nsICursorContinueCallback** aResult)
+MobileMessageDatabaseService::GetThreadList(nsIMobileMessageCallback* aRequest)
 {
   NS_ERROR("We should not be here!");
   return NS_OK;

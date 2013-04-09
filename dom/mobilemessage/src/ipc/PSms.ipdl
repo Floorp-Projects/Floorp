@@ -6,12 +6,19 @@
 
 include protocol PContent;
 include protocol PSmsRequest;
-include protocol PMobileMessageCursor;
 include SmsTypes;
 
 namespace mozilla {
 namespace dom {
 namespace mobilemessage {
+
+struct SmsFilterData {
+  uint64_t      startDate;
+  uint64_t      endDate;
+  nsString[]    numbers;
+  DeliveryState delivery;
+  ReadState     read;  
+};
 
 struct SendMessageRequest
 {
@@ -29,10 +36,15 @@ struct DeleteMessageRequest
   int32_t messageId;
 };
 
-struct CreateMessageCursorRequest
+struct CreateMessageListRequest
 {
   SmsFilterData filter;
   bool reverse;
+};
+
+struct GetNextMessageInListRequest
+{
+  int32_t aListId;
 };
 
 struct MarkMessageReadRequest
@@ -41,7 +53,7 @@ struct MarkMessageReadRequest
   bool value;
 };
 
-struct CreateThreadCursorRequest
+struct GetThreadListRequest
 {
 };
 
@@ -50,19 +62,15 @@ union IPCSmsRequest
   SendMessageRequest;
   GetMessageRequest;
   DeleteMessageRequest;
+  CreateMessageListRequest;
+  GetNextMessageInListRequest;
   MarkMessageReadRequest;
-};
-
-union IPCMobileMessageCursor
-{
-  CreateMessageCursorRequest;
-  CreateThreadCursorRequest;
+  GetThreadListRequest;
 };
 
 sync protocol PSms {
     manager PContent;
     manages PSmsRequest;
-    manages PMobileMessageCursor;
 
 child:
   NotifyReceivedMessage(SmsMessageData aMessageData);
@@ -88,16 +96,13 @@ parent:
    */
   PSmsRequest(IPCSmsRequest request);
 
-  /**
-   * Sent when the child makes an asynchronous cursor to the parent.
-   */
-  PMobileMessageCursor(IPCMobileMessageCursor request);
-
   sync HasSupport()
       returns (bool aHasSupport);
 
   sync GetSegmentInfoForText(nsString aText)
       returns (SmsSegmentInfoData aResult);
+
+  ClearMessageList(int32_t aListId);
 };
 
 } // namespace mobilemessage

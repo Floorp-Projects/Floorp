@@ -330,10 +330,7 @@ MmsMessage::GetReceivers(JSContext* aCx, JS::Value* aReceivers)
 NS_IMETHODIMP
 MmsMessage::GetTimestamp(JSContext* cx, JS::Value* aDate)
 {
-  JSObject *obj = JS_NewDateObjectMsec(cx, mTimestamp);
-  NS_ENSURE_TRUE(obj, NS_ERROR_FAILURE);
-
-  *aDate = OBJECT_TO_JSVAL(obj);
+  *aDate = OBJECT_TO_JSVAL(JS_NewDateObjectMsec(cx, mTimestamp));
   return NS_OK;
 }
 

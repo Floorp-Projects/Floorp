@@ -8,16 +8,13 @@
 
 #include "mozilla/dom/mobilemessage/PSmsParent.h"
 #include "mozilla/dom/mobilemessage/PSmsRequestParent.h"
-#include "mozilla/dom/mobilemessage/PMobileMessageCursorParent.h"
-#include "nsIDOMDOMCursor.h"
-#include "nsIMobileMessageCallback.h"
-#include "nsIMobileMessageCursorCallback.h"
 #include "nsIObserver.h"
 
 namespace mozilla {
 namespace dom {
 
 class ContentParent;
+class SmsRequest;
 
 namespace mobilemessage {
 
@@ -37,11 +34,11 @@ protected:
   virtual bool
   RecvGetSegmentInfoForText(const nsString& aText, SmsSegmentInfoData* aResult) MOZ_OVERRIDE;
 
+  virtual bool
+  RecvClearMessageList(const int32_t& aListId) MOZ_OVERRIDE;
+
   SmsParent();
-  virtual ~SmsParent()
-  {
-    MOZ_COUNT_DTOR(SmsParent);
-  }
+  virtual ~SmsParent();
 
   virtual void
   ActorDestroy(ActorDestroyReason why);
@@ -55,40 +52,21 @@ protected:
 
   virtual bool
   DeallocPSmsRequest(PSmsRequestParent* aActor) MOZ_OVERRIDE;
-
-  virtual bool
-  RecvPMobileMessageCursorConstructor(PMobileMessageCursorParent* aActor,
-                                      const IPCMobileMessageCursor& aCursor) MOZ_OVERRIDE;
-
-  virtual PMobileMessageCursorParent*
-  AllocPMobileMessageCursor(const IPCMobileMessageCursor& aCursor) MOZ_OVERRIDE;
-
-  virtual bool
-  DeallocPMobileMessageCursor(PMobileMessageCursorParent* aActor) MOZ_OVERRIDE;
 };
 
 class SmsRequestParent : public PSmsRequestParent
-                       , public nsIMobileMessageCallback
 {
   friend class SmsParent;
 
-  bool mActorDestroyed;
+  nsRefPtr<SmsRequest> mSmsRequest;
 
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIMOBILEMESSAGECALLBACK
+  void
+  SendReply(const MessageReply& aReply);
 
 protected:
-  SmsRequestParent()
-    : mActorDestroyed(false)
-  {
-    MOZ_COUNT_CTOR(SmsRequestParent);
-  }
-
-  virtual ~SmsRequestParent()
-  {
-    MOZ_COUNT_DTOR(SmsRequestParent);
-  }
+  SmsRequestParent();
+  virtual ~SmsRequestParent();
 
   virtual void
   ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
@@ -103,45 +81,16 @@ protected:
   DoRequest(const DeleteMessageRequest& aRequest);
 
   bool
+  DoRequest(const CreateMessageListRequest& aRequest);
+
+  bool
+  DoRequest(const GetNextMessageInListRequest& aRequest);
+
+  bool
   DoRequest(const MarkMessageReadRequest& aRequest);
 
-  nsresult
-  SendReply(const MessageReply& aReply);
-};
-
-class MobileMessageCursorParent : public PMobileMessageCursorParent
-                                , public nsIMobileMessageCursorCallback
-{
-  friend class SmsParent;
-
-  nsCOMPtr<nsICursorContinueCallback> mContinueCallback;
-
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIMOBILEMESSAGECURSORCALLBACK
-
-protected:
-  MobileMessageCursorParent()
-  {
-    MOZ_COUNT_CTOR(MobileMessageCursorParent);
-  }
-
-  virtual ~MobileMessageCursorParent()
-  {
-    MOZ_COUNT_DTOR(MobileMessageCursorParent);
-  }
-
-  virtual void
-  ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
-
-  virtual bool
-  RecvContinue() MOZ_OVERRIDE;
-
   bool
-  DoRequest(const CreateMessageCursorRequest& aRequest);
-
-  bool
-  DoRequest(const CreateThreadCursorRequest& aRequest);
+  DoRequest(const GetThreadListRequest& aRequest);
 };
 
 } // namespace mobilemessage
