@@ -45,7 +45,7 @@ class TransportLayer : public sigslot::has_slots<> {
   TransportLayer(Mode mode = STREAM) :
     mode_(mode),
     state_(TS_NONE),
-    flow_id_(),
+    flow_(nullptr),
     downward_(nullptr) {}
 
   virtual ~TransportLayer() {}
@@ -82,11 +82,6 @@ class TransportLayer : public sigslot::has_slots<> {
   // Must be implemented by derived classes
   virtual TransportResult SendPacket(const unsigned char *data, size_t len) = 0;
 
-  // Get the thread.
-  const nsCOMPtr<nsIEventTarget> GetThread() const {
-    return target_;
-  }
-
   // Event definitions that one can register for
   // State has changed
   sigslot::signal2<TransportLayer*, State> SignalStateChange;
@@ -98,21 +93,19 @@ class TransportLayer : public sigslot::has_slots<> {
   virtual const std::string id() = 0;
 
   // The id of the flow
-  const std::string& flow_id() {
-    return flow_id_;
-  }
+  virtual const std::string& flow_id();
 
  protected:
   virtual void WasInserted() {}
   virtual void SetState(State state);
-  // Check if we are on the right thread
+
   void CheckThread() {
     NS_ABORT_IF_FALSE(CheckThreadInt(), "Wrong thread");
   }
 
   Mode mode_;
   State state_;
-  std::string flow_id_;
+  TransportFlow *flow_;  // The flow this is part of
   TransportLayer *downward_; // The next layer in the stack
   nsCOMPtr<nsIEventTarget> target_;
 
@@ -121,10 +114,7 @@ class TransportLayer : public sigslot::has_slots<> {
 
   bool CheckThreadInt() {
     bool on;
-
-    if (!target_)  // OK if no thread set.
-      return true;
-
+    NS_ENSURE_TRUE(target_, false);
     NS_ENSURE_SUCCESS(target_->IsOnCurrentThread(&on), false);
     NS_ENSURE_TRUE(on, false);
 
