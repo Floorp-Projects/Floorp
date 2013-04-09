@@ -298,8 +298,8 @@ protected:
   /**
    * Cancels and nulls-out the "current" and "pending" requests if they exist.
    */
-  void ClearCurrentRequest(nsresult aReason);
-  void ClearPendingRequest(nsresult aReason);
+  void ClearCurrentRequest(nsresult aReason, uint32_t aFlags);
+  void ClearPendingRequest(nsresult aReason, uint32_t aFlags);
 
   /**
    * Retrieve a pointer to the 'registered with the refresh driver' flag for
