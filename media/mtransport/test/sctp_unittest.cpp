@@ -124,19 +124,13 @@ class TransportTestPeer : public sigslot::has_slots<> {
     usrsctp_deregister_address(static_cast<void *>(this));
 
     test_utils->sts_target()->Dispatch(WrapRunnable(this,
-                                                   &TransportTestPeer::Disconnect_s),
+                                                   &TransportTestPeer::DisconnectInt),
                                       NS_DISPATCH_SYNC);
 
     std::cerr << "~TransportTestPeer() completed" << std::endl;
   }
 
   void ConnectSocket(TransportTestPeer *peer) {
-    test_utils->sts_target()->Dispatch(WrapRunnable(
-        this, &TransportTestPeer::ConnectSocket_s, peer),
-                                       NS_DISPATCH_SYNC);
-  }
-
-  void ConnectSocket_s(TransportTestPeer *peer) {
     loopback_->Connect(peer->loopback_);
 
     ASSERT_EQ((nsresult)NS_OK, flow_->PushLayer(loopback_));
@@ -156,7 +150,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
     ASSERT_GE(0, r);
   }
 
-  void Disconnect_s() {
+  void DisconnectInt() {
     if (flow_) {
       flow_ = nullptr;
     }
@@ -197,18 +191,8 @@ class TransportTestPeer : public sigslot::has_slots<> {
   int received() const { return received_; }
   bool connected() const { return connected_; }
 
-  TransportResult SendPacket_s(const unsigned char* data, size_t len) {
-    return flow_->SendPacket(data, len);
-  }
-
   TransportResult SendPacket(const unsigned char* data, size_t len) {
-    TransportResult res;
-
-    test_utils->sts_target()->Dispatch(WrapRunnableRet(
-        this, &TransportTestPeer::SendPacket_s, data, len, &res),
-                                       NS_DISPATCH_SYNC);
-
-    return res;
+    return flow_->SendPacket(data, len);
   }
 
   void PacketReceived(TransportFlow * flow, const unsigned char* data,
