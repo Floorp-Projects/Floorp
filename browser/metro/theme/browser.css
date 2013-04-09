@@ -643,7 +643,21 @@ appbar toolbarbutton[disabled] {
 #star-button[checked] {
   -moz-image-region: rect(80px, 360px, 120px, 320px) !important;
 }
+
 /* Tile-selection-Specific */
+#contextualactions-tray > toolbarbutton {
+  opacity: 1;
+}
+#contextualactions-tray > toolbarbutton[fade] {
+  opacity: 0;
+}
+#contextualactions-tray > toolbarbutton:not([immediate]) {
+  transition-property: opacity;
+  transition-duration: .3s;
+  transition-timing-function: ease-in;
+  transition-delay: 80ms;
+}
+
 #pin-selected-button {
   -moz-image-region: rect(0px, 240px, 40px, 200px) !important;
 }
@@ -653,17 +667,15 @@ appbar toolbarbutton[disabled] {
 #pin-selected-button:active {
   -moz-image-region: rect(80px, 240px, 120px, 200px) !important;
 }
-
 #unpin-selected-button {
-  -moz-image-region: rect(80px, 240px, 120px, 200px) !important;
+  -moz-image-region: rect(0px, 280px, 40px, 240px) !important;
 }
 #unpin-selected-button:hover {
-  -moz-image-region: rect(40px, 240px, 80px, 200px) !important;
+  -moz-image-region: rect(40px, 280px, 80px, 240px) !important;
 }
 #unpin-selected-button:active {
-  -moz-image-region: rect(0px, 240px, 40px, 200px) !important;
+  -moz-image-region: rect(80px, 280px, 120px, 240px) !important;
 }
-
 #delete-selected-button {
   -moz-image-region: rect(0px, 480px, 40px, 440px) !important;
 }
@@ -672,6 +684,25 @@ appbar toolbarbutton[disabled] {
 }
 #delete-selected-button:active {
   -moz-image-region: rect(80px, 480px, 120px, 440px) !important;
+}
+#clear-selected-button {
+  -moz-image-region: rect(0px, 520px, 40px, 480px) !important;
+}
+#clear-selected-button:hover {
+  -moz-image-region: rect(40px, 520px, 80px, 480px) !important;
+}
+#clear-selected-button:active {
+  -moz-image-region: rect(80px, 520px, 120px, 480px) !important;
+}
+
+#restore-selected-button {
+  -moz-image-region: rect(0px, 560px, 40px, 520px) !important;
+}
+#restore-selected-button:hover {
+  -moz-image-region: rect(40px, 560px, 80px, 520px) !important;
+}
+#restore-selected-button:active {
+  -moz-image-region: rect(80px, 560px, 120px, 520px) !important;
 }
 
 /* Flyouts ---------------------------------------------------------------- */
