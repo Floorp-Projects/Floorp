@@ -10,8 +10,6 @@ var gThreadClient;
 // and that they can communicate over the protocol to fetch the source text for
 // a given script.
 
-Cu.import("resource://gre/modules/NetUtil.jsm");
-
 function run_test()
 {
   initTestDebuggerServer();
@@ -60,15 +58,9 @@ function test_source()
         do_check_true(!aResponse.error);
         do_check_true(!!aResponse.source);
 
-        let f = do_get_file("test_source-01.js", false);
-        let s = Cc["@mozilla.org/network/file-input-stream;1"]
-          .createInstance(Ci.nsIFileInputStream);
-        s.init(f, -1, -1, false);
-
-        do_check_eq(NetUtil.readInputStreamToString(s, s.available()),
+        do_check_eq(readFile("test_source-01.js"),
                     aResponse.source);
 
-        s.close();
         gThreadClient.resume(function () {
           finishClient(gClient);
         });
