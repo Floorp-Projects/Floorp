@@ -261,6 +261,8 @@ let DebuggerController = {
         if (aCallback) {
           aCallback();
         }
+      }, {
+        useSourceMaps: Services.prefs.getBoolPref("devtools.debugger.source-maps-enabled")
       });
     });
   },
@@ -1112,7 +1114,7 @@ SourceScripts.prototype = {
    */
   _onSourcesAdded: function SS__onSourcesAdded(aResponse) {
     if (aResponse.error) {
-      Cu.reportError("Error getting sources: " + aResponse.message);
+      Cu.reportError(new Error("Error getting sources: " + aResponse.message));
       return;
     }
 
