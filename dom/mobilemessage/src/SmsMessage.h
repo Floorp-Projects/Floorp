@@ -6,7 +6,7 @@
 #ifndef mozilla_dom_mobilemessage_SmsMessage_h
 #define mozilla_dom_mobilemessage_SmsMessage_h
 
-#include "mozilla/dom/mobilemessage/PSms.h"
+#include "mozilla/dom/mobilemessage/SmsTypes.h"
 #include "nsIDOMMozSmsMessage.h"
 #include "nsString.h"
 #include "jspubtd.h"

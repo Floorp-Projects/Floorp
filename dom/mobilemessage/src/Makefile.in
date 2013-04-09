@@ -53,6 +53,7 @@ EXPORTS_mozilla/dom/mobilemessage = \
   $(NULL)
 
 CPPSRCS = \
+  MobileMessageCursorCallback.cpp \
   SmsManager.cpp \
   MobileMessageManager.cpp \
   SmsService.cpp \
@@ -68,7 +69,6 @@ CPPSRCS = \
   MobileMessageCallback.cpp \
   SmsFilter.cpp \
   SmsSegmentInfo.cpp \
-  SmsCursor.cpp \
   $(NULL)
 
 LOCAL_INCLUDES = \
