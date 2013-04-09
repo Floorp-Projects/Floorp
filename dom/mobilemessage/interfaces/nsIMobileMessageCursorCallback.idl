@@ -1,0 +1,13 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, builtinclass, uuid(8fd0dba2-032e-4190-a751-07cc3782e93e)]
+interface nsIMobileMessageCursorCallback : nsISupports
+{
+  void notifyCursorError(in long error);
+  void notifyCursorResult(in nsISupports result);
+  void notifyCursorDone();
+};
