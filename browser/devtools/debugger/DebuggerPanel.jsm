@@ -86,10 +86,4 @@ DebuggerPanel.prototype = {
   getAllBreakpoints: function() {
     return this._bkp.store;
   },
-
-  // Private
-
-  _ensureOnlyOneRunningDebugger: function() {
-    // FIXME
-  },
 };
