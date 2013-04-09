@@ -4462,6 +4462,13 @@ IonBuilder::makeCallHelper(HandleFunction target, CallInfo &callInfo,
     if (!call)
         return NULL;
 
+    // Save the script for inspection by visitCallKnown().
+    if (target && target->isInterpreted()) {
+        if (!target->getOrCreateScript(cx))
+            return NULL;
+        call->rootTargetScript(target);
+    }
+
     // Explicitly pad any missing arguments with |undefined|.
     // This permits skipping the argumentsRectifier.
     for (int i = targetArgs; i > (int)callInfo.argc(); i--) {
