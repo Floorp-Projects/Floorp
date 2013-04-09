@@ -65,16 +65,6 @@ struct ReplyMarkeMessageReadFail
   int32_t error;
 };
 
-struct ReplyThreadList
-{
-  ThreadListItem[] items;
-};
-
-struct ReplyThreadListFail
-{
-  int32_t error;
-};
-
 union MessageReply
 {
   ReplyMessageSend;
@@ -85,8 +75,6 @@ union MessageReply
   ReplyMessageDeleteFail;
   ReplyMarkeMessageRead;
   ReplyMarkeMessageReadFail;
-  ReplyThreadList;
-  ReplyThreadListFail;
 };
 
 } // namespace mobilemessage
