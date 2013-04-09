@@ -20,11 +20,11 @@ interface AudioBufferSourceNode : AudioNode {
 
     //readonly attribute unsigned short playbackState;
 
-    // Playback this in-memory audio asset
-    // Many sources can share the same buffer
+    // Playback this in-memory audio asset  
+    // Many sources can share the same buffer  
     attribute AudioBuffer? buffer;
 
-    readonly attribute AudioParam playbackRate;
+    //attribute AudioParam playbackRate;
 
     attribute boolean loop;
     attribute double loopStart;
