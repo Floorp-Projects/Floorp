@@ -96,6 +96,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_bfcache.js \
 	browser_dbg_progress-listener-bug.js \
 	browser_dbg_chrome-debugging.js \
+	browser_dbg_source_maps-01.js \
 	head.js \
 	helpers.js \
 	$(NULL)
@@ -127,6 +128,10 @@ MOCHITEST_BROWSER_PAGES = \
 	test-function-search-01.js \
 	test-function-search-02.js \
 	test-function-search-03.js \
+	binary_search.html \
+	binary_search.coffee \
+	binary_search.js \
+	binary_search.map \
 	$(NULL)
 
 MOCHITEST_BROWSER_FILES_PARTS = MOCHITEST_BROWSER_TESTS MOCHITEST_BROWSER_PAGES

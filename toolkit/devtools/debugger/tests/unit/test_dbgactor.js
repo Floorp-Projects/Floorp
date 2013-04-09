@@ -38,6 +38,7 @@ function run_test()
 function test_attach(aContext)
 {
   gClient.request({ to: aContext.actor, type: "attach" }, function(aResponse) {
+    do_check_true(!aResponse.error);
     do_check_eq(aResponse.type, "paused");
 
     // Resume the thread and test the debugger statement.
