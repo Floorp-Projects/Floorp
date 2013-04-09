@@ -976,6 +976,42 @@ setting[type="directory"] > .preferences-alignment {
   -moz-margin-end: @margin_large@;
 }
 
+/* overlay buttons */
+.overlay-button {
+  position: fixed;
+  top: 50%;
+  left: -72px;
+  margin-top: -66px;
+  width: 120px;
+  height: 120px;
+  background-image: url(chrome://browser/skin/images/overlay-back.png);
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  background-size: 60px;
+  background-color: hsla(210,30%,10%,.2);
+  background-origin: padding-box;
+  background-clip: padding-box;
+  border: 6px solid hsla(0,0%,100%,.7);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px hsla(0,0%,0%,.04),
+              0 0 12px 0 hsla(0,0%,0%,.1);
+  transition-duration: 550ms;
+  transition-timing-function: cubic-bezier(0.1, 0.9, 0.2, 1);
+}
+
+.overlay-button[disabled] {
+  box-shadow: none;
+  transform: translateX(-54px);
+}
+
+.overlay-button:not([disabled]):hover {
+  background-position: right 12px center;
+  background-size: 78px;
+  background-color: hsla(210,30%,10%,.4);
+  border-color: hsla(0,0%,100%,.9);
+  transform: translateX(40px) scale(1.2);
+}
+
 /* helperapp (save-as) popup ----------------------------------------------- */
 #helperapp-target {
   font-size: @font_small@ !important;
