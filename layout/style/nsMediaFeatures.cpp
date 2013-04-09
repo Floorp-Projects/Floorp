@@ -579,6 +579,14 @@ nsMediaFeatures::features[] = {
         GetWindowsTheme
     },
 
+    {
+        &nsGkAtoms::_moz_swipe_animation_enabled,
+        nsMediaFeature::eMinMaxNotAllowed,
+        nsMediaFeature::eBoolInteger,
+        { &nsGkAtoms::swipe_animation_enabled },
+        GetSystemMetric
+    },
+
     // Internal -moz-is-glyph media feature: applies only inside SVG glyphs.
     // Internal because it is really only useful in the user agent anyway
     //  and therefore not worth standardizing.

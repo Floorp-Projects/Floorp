@@ -566,6 +566,9 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
     case eIntID_ScrollbarButtonAutoRepeatBehavior:
         aResult = 1;
         break;
+    case eIntID_SwipeAnimationEnabled:
+        aResult = 0;
+        break;
     default:
         aResult = 0;
         res     = NS_ERROR_FAILURE;

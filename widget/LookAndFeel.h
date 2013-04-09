@@ -355,7 +355,13 @@ public:
     /**
      * Dealy before showing a tooltip.
      */
-    eIntID_TooltipDelay
+    eIntID_TooltipDelay,
+
+    /*
+     * A Boolean value to determine whether Mac OS X Lion style swipe animations
+     * should be used.
+     */
+    eIntID_SwipeAnimationEnabled
   };
 
   /**

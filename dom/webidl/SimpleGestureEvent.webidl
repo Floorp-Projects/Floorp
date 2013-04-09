@@ -18,6 +18,8 @@ interface SimpleGestureEvent : MouseEvent
   const unsigned long ROTATION_COUNTERCLOCKWISE = 1;
   const unsigned long ROTATION_CLOCKWISE = 2;
 
+  attribute unsigned long allowedDirections;
+
   readonly attribute unsigned long direction;
 
   readonly attribute double delta;
@@ -40,6 +42,7 @@ interface SimpleGestureEvent : MouseEvent
                               boolean metaKeyArg,
                               unsigned short buttonArg,
                               EventTarget? relatedTargetArg,
+                              unsigned long allowedDirectionsArg,
                               unsigned long directionArg,
                               double deltaArg,
                               unsigned long clickCount);
