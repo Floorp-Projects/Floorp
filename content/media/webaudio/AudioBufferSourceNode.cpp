@@ -9,7 +9,6 @@
 #include "nsMathUtils.h"
 #include "AudioNodeEngine.h"
 #include "AudioNodeStream.h"
-#include "speex/speex_resampler.h"
 
 namespace mozilla {
 namespace dom {
@@ -27,24 +26,14 @@ class AudioBufferSourceNodeEngine : public AudioNodeEngine
 public:
   AudioBufferSourceNodeEngine() :
     mStart(0), mStop(TRACK_TICKS_MAX),
-    mResampler(nullptr),
     mOffset(0), mDuration(0),
-    mLoopStart(0), mLoopEnd(0),
-    mSampleRate(0), mPosition(0), mChannels(0), mLoop(false)
+    mLoop(false), mLoopStart(0), mLoopEnd(0)
   {}
-
-  ~AudioBufferSourceNodeEngine()
-  {
-    if (mResampler) {
-      speex_resampler_destroy(mResampler);
-    }
-  }
 
   // START, OFFSET and DURATION are always set by start() (along with setting
   // mBuffer to something non-null).
   // STOP is set by stop().
   enum Parameters {
-    SAMPLE_RATE,
     START,
     STOP,
     OFFSET,
@@ -65,7 +54,6 @@ public:
   virtual void SetInt32Parameter(uint32_t aIndex, int32_t aParam)
   {
     switch (aIndex) {
-    case SAMPLE_RATE: mSampleRate = aParam; break;
     case OFFSET: mOffset = aParam; break;
     case DURATION: mDuration = aParam; break;
     case LOOP: mLoop = !!aParam; break;
@@ -78,23 +66,6 @@ public:
   virtual void SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList> aBuffer)
   {
     mBuffer = aBuffer;
-  }
-
-  SpeexResamplerState* Resampler(uint32_t aChannels)
-  {
-    if (aChannels != mChannels && mResampler) {
-      speex_resampler_destroy(mResampler);
-      mResampler = nullptr;
-    }
-
-    if (!mResampler) {
-      mChannels = aChannels;
-      mResampler = speex_resampler_init(mChannels, mSampleRate,
-                                        IdealAudioRate(),
-                                        SPEEX_RESAMPLER_QUALITY_DEFAULT,
-                                        nullptr);
-    }
-    return mResampler;
   }
 
   // Borrow a full buffer of size WEBAUDIO_BLOCK_SIZE from the source buffer
@@ -125,52 +96,6 @@ public:
       memcpy(baseChannelData + aBufferOffset,
              mBuffer->GetData(i) + aSourceOffset,
              aNumberOfFrames * sizeof(float));
-    }
-  }
-
-  // Resamples input data to an output buffer, according to |mSampleRate|
-  // The number of frames consumed/produced depends on the amount of space
-  // remaining in both the input and output buffer, and the playback rate (that
-  // is, the ratio between the output samplerate and the input samplerate).
-  void CopyFromInputBufferWithResampling(AudioChunk* aOutput,
-                                         uint32_t aChannels,
-                                         uintptr_t aSourceOffset,
-                                         uintptr_t aBufferOffset,
-                                         uint32_t aAvailableInInputBuffer,
-                                         uint32_t& aFramesRead,
-                                         uint32_t& aFramesWritten) {
-    // Compute the sample rate we want to resample to.
-    double finalSampleRate = mSampleRate;
-    double finalPlaybackRate = finalSampleRate / IdealAudioRate();
-    uint32_t availableInOuputBuffer = WEBAUDIO_BLOCK_SIZE - aBufferOffset;
-    uint32_t inputSamples, outputSamples;
-
-    // Check if we are short on input or output buffer.
-    if (aAvailableInInputBuffer < availableInOuputBuffer * finalPlaybackRate) {
-      outputSamples = ceil(aAvailableInInputBuffer / finalPlaybackRate);
-      inputSamples = aAvailableInInputBuffer;
-    } else {
-      inputSamples = ceil(availableInOuputBuffer * finalPlaybackRate);
-      outputSamples = availableInOuputBuffer;
-    }
-
-    SpeexResamplerState* resampler = Resampler(aChannels);
-
-    for (uint32_t i = 0; i < aChannels; ++i) {
-      uint32_t inSamples = inputSamples;
-      uint32_t outSamples = outputSamples;
-
-      const float* inputData = mBuffer->GetData(i) + aSourceOffset;
-      float* outputData =
-        static_cast<float*>(const_cast<void*>(aOutput->mChannelData[i])) +
-        aBufferOffset;
-
-      speex_resampler_process_float(resampler, i,
-                                    inputData, &inSamples,
-                                    outputData, &outSamples);
-
-      aFramesRead = inSamples;
-      aFramesWritten = outSamples;
     }
   }
 
@@ -221,41 +146,16 @@ public:
     uint32_t numFrames = std::min(std::min(WEBAUDIO_BLOCK_SIZE - *aOffsetWithinBlock,
                                            aBufferMax - aBufferOffset),
                                   uint32_t(mStop - *aCurrentPosition));
-    if (numFrames == WEBAUDIO_BLOCK_SIZE &&
-        mSampleRate == IdealAudioRate()) {
+    if (numFrames == WEBAUDIO_BLOCK_SIZE) {
       BorrowFromInputBuffer(aOutput, aChannels, aBufferOffset);
-      *aOffsetWithinBlock += numFrames;
-      *aCurrentPosition += numFrames;
-      mPosition += numFrames;
     } else {
       if (aOutput->IsNull()) {
-        MOZ_ASSERT(*aOffsetWithinBlock == 0);
         AllocateAudioBlock(aChannels, aOutput);
       }
-      if (mSampleRate == IdealAudioRate()) {
-        CopyFromInputBuffer(aOutput, aChannels, aBufferOffset, *aOffsetWithinBlock, numFrames);
-        *aOffsetWithinBlock += numFrames;
-        *aCurrentPosition += numFrames;
-        mPosition += numFrames;
-      } else {
-        uint32_t framesRead, framesWritten, availableInInputBuffer;
-
-        availableInInputBuffer = aBufferMax - aBufferOffset;
-
-        CopyFromInputBufferWithResampling(aOutput, aChannels, aBufferOffset, *aOffsetWithinBlock, availableInInputBuffer, framesRead, framesWritten);
-        *aOffsetWithinBlock += framesWritten;
-        *aCurrentPosition += framesRead;
-        mPosition += framesRead;
-      }
+      CopyFromInputBuffer(aOutput, aChannels, aBufferOffset, *aOffsetWithinBlock, numFrames);
     }
-  }
-
-  TrackTicks GetPosition(AudioNodeStream* aStream)
-  {
-    if (aStream->GetCurrentPosition() < mStart) {
-      return aStream->GetCurrentPosition();
-    }
-    return mStart + mPosition;
+    *aOffsetWithinBlock += numFrames;
+    *aCurrentPosition += numFrames;
   }
 
   virtual void ProduceAudioBlock(AudioNodeStream* aStream,
@@ -273,7 +173,7 @@ public:
     }
 
     uint32_t written = 0;
-    TrackTicks currentPosition = GetPosition(aStream);
+    TrackTicks currentPosition = aStream->GetCurrentPosition();
     while (written < WEBAUDIO_BLOCK_SIZE) {
       if (mStop != TRACK_TICKS_MAX &&
           currentPosition >= mStop) {
@@ -312,15 +212,11 @@ public:
   TrackTicks mStart;
   TrackTicks mStop;
   nsRefPtr<ThreadSharedFloatArrayBufferList> mBuffer;
-  SpeexResamplerState* mResampler;
   int32_t mOffset;
   int32_t mDuration;
+  bool mLoop;
   int32_t mLoopStart;
   int32_t mLoopEnd;
-  int32_t mSampleRate;
-  uint32_t mPosition;
-  uint32_t mChannels;
-  bool mLoop;
 };
 
 AudioBufferSourceNode::AudioBufferSourceNode(AudioContext* aContext)
@@ -331,9 +227,8 @@ AudioBufferSourceNode::AudioBufferSourceNode(AudioContext* aContext)
   , mStartCalled(false)
 {
   SetProduceOwnOutput(true);
-  mStream = aContext->Graph()->CreateAudioNodeStream(
-      new AudioBufferSourceNodeEngine(),
-      MediaStreamGraph::INTERNAL_STREAM);
+  mStream = aContext->Graph()->CreateAudioNodeStream(new AudioBufferSourceNodeEngine(),
+                                                     MediaStreamGraph::INTERNAL_STREAM);
   mStream->AddMainThreadListener(this);
 }
 
@@ -364,15 +259,14 @@ AudioBufferSourceNode::Start(JSContext* aCx, double aWhen, double aOffset,
     return;
   }
 
-  uint32_t rate;
+  uint32_t rate = Context()->GetRate();
   uint32_t lengthSamples;
   nsRefPtr<ThreadSharedFloatArrayBufferList> data =
-    mBuffer->GetThreadSharedChannelsForRate(aCx, &rate, &lengthSamples);
-  double length = double(lengthSamples) / rate;
+    mBuffer->GetThreadSharedChannelsForRate(aCx, rate, &lengthSamples);
+  double length = double(lengthSamples)/rate;
   double offset = std::max(0.0, aOffset);
   double endOffset = aDuration.WasPassed() ?
       std::min(aOffset + aDuration.Value(), length) : length;
-
   if (offset >= endOffset) {
     return;
   }
@@ -410,7 +304,6 @@ AudioBufferSourceNode::Start(JSContext* aCx, double aWhen, double aOffset,
   }
   ns->SetInt32Parameter(AudioBufferSourceNodeEngine::DURATION,
       NS_lround(endOffset*rate) - offsetTicks);
-  ns->SetInt32Parameter(AudioBufferSourceNodeEngine::SAMPLE_RATE, rate);
 }
 
 void
