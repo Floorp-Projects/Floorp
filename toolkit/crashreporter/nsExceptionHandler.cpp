@@ -90,6 +90,9 @@ using mozilla::InjectCrashRunnable;
 #if defined(XP_MACOSX)
 CFStringRef reporterClientAppID = CFSTR("org.mozilla.crashreporter");
 #endif
+#if defined(MOZ_WIDGET_ANDROID)
+#include "common/linux/file_id.h"
+#endif
 
 #include "nsIUUIDGenerator.h"
 
@@ -347,30 +350,12 @@ static posix_spawnattr_t spawnattr;
 // libraries that are mapped into anonymous mappings.
 typedef struct {
   std::string name;
-  std::string debug_id;
   uintptr_t   start_address;
   size_t      length;
   size_t      file_offset;
 } mapping_info;
 static std::vector<mapping_info> library_mappings;
 typedef std::map<uint32_t,google_breakpad::MappingList> MappingMap;
-
-void FileIDToGUID(const char* file_id, u_int8_t guid[sizeof(MDGUID)])
-{
-  for (int i = 0; i < sizeof(MDGUID); i++) {
-    int c;
-    sscanf(file_id, "%02X", &c);
-    guid[i] = (u_int8_t)(c & 0xFF);
-    file_id += 2;
-  }
-  // GUIDs are stored in network byte order.
-  uint32_t* data1 = reinterpret_cast<uint32_t*>(guid);
-  *data1 = htonl(*data1);
-  uint16_t* data2 = reinterpret_cast<uint16_t*>(guid + 4);
-  *data2 = htons(*data2);
-  uint16_t* data3 = reinterpret_cast<uint16_t*>(guid + 6);
-  *data3 = htons(*data3);
-}
 #endif
 
 #ifdef XP_LINUX
@@ -1028,7 +1013,7 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
 #if defined(MOZ_WIDGET_ANDROID)
   for (unsigned int i = 0; i < library_mappings.size(); i++) {
     u_int8_t guid[sizeof(MDGUID)];
-    FileIDToGUID(library_mappings[i].debug_id.c_str(), guid);
+    google_breakpad::FileID::ElfFileIdentifierFromMappedFile((void const *)library_mappings[i].start_address, guid);
     gExceptionHandler->AddMappingInfo(library_mappings[i].name,
                                       guid,
                                       library_mappings[i].start_address,
@@ -2824,7 +2809,6 @@ UnsetRemoteExceptionHandler()
 
 #if defined(MOZ_WIDGET_ANDROID)
 void AddLibraryMapping(const char* library_name,
-                       const char* file_id,
                        uintptr_t   start_address,
                        size_t      mapping_length,
                        size_t      file_offset)
@@ -2832,7 +2816,6 @@ void AddLibraryMapping(const char* library_name,
   if (!gExceptionHandler) {
     mapping_info info;
     info.name = library_name;
-    info.debug_id = file_id;
     info.start_address = start_address;
     info.length = mapping_length;
     info.file_offset = file_offset;
@@ -2840,7 +2823,7 @@ void AddLibraryMapping(const char* library_name,
   }
   else {
     u_int8_t guid[sizeof(MDGUID)];
-    FileIDToGUID(file_id, guid);
+    google_breakpad::FileID::ElfFileIdentifierFromMappedFile((void const *)start_address, guid);
     gExceptionHandler->AddMappingInfo(library_name,
                                       guid,
                                       start_address,

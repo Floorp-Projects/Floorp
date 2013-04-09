@@ -186,7 +186,6 @@ bool UnsetRemoteExceptionHandler();
 // info about the shared libraries that are mapped into these anonymous
 // mappings.
 void AddLibraryMapping(const char* library_name,
-                       const char* file_id,
                        uintptr_t   start_address,
                        size_t      mapping_length,
                        size_t      file_offset);
