@@ -17,7 +17,7 @@ dictionary SmsThreadListItem
 interface nsIMobileMessageCallback : nsISupports
 {
   /**
-   * All SMS related errors that could apply to SmsRequest objects.
+   * All SMS related errors.
    * Make sure to keep this list in sync with the list in:
    * mobile/android/GeckoSmsManager.java
    */
