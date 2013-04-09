@@ -5,19 +5,23 @@
 #ifndef nsDomGamepad_h
 #define nsDomGamepad_h
 
+#include "mozilla/ErrorResult.h"
 #include "mozilla/StandardInteger.h"
+#include "nsCOMPtr.h"
 #include "nsIDOMGamepad.h"
 #include "nsString.h"
-#include "nsCOMPtr.h"
 #include "nsTArray.h"
+#include "nsWrapperCache.h"
 
 class nsDOMGamepad : public nsIDOMGamepad
+                   , public nsWrapperCache
 {
 public:
-  nsDOMGamepad(const nsAString& aID, uint32_t aIndex,
+  nsDOMGamepad(nsISupports* aParent,
+               const nsAString& aID, uint32_t aIndex,
                uint32_t aNumButtons, uint32_t aNumAxes);
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMGAMEPAD
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsDOMGamepad)
 
   nsDOMGamepad();
   void SetConnected(bool aConnected);
@@ -28,13 +32,55 @@ public:
   // Make the state of this gamepad equivalent to other.
   void SyncState(nsDOMGamepad* other);
 
-  // Return a new nsDOMGamepad containing the same data as this object.
-  already_AddRefed<nsDOMGamepad> Clone();
+  // Return a new nsDOMGamepad containing the same data as this object,
+  // parented to aParent.
+  already_AddRefed<nsDOMGamepad> Clone(nsISupports* aParent);
+
+  nsISupports* GetParentObject() const
+  {
+    return mParent;
+  }
+
+  virtual JSObject*
+  WrapObject(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
+
+  void GetId(nsAString& aID) const
+  {
+    aID = mID;
+  }
+
+  bool Connected() const
+  {
+    return mConnected;
+  }
+
+  uint32_t Index() const
+  {
+    return mIndex;
+  }
+
+  already_AddRefed<nsIVariant> GetButtons(mozilla::ErrorResult& aRv)
+  {
+    nsCOMPtr<nsIVariant> buttons;
+    aRv = GetButtons(getter_AddRefs(buttons));
+    return buttons.forget();
+  }
+
+  already_AddRefed<nsIVariant> GetAxes(mozilla::ErrorResult& aRv)
+  {
+    nsCOMPtr<nsIVariant> axes;
+    aRv = GetAxes(getter_AddRefs(axes));
+    return axes.forget();
+  }
 
 private:
   virtual ~nsDOMGamepad() {}
 
+  nsresult GetButtons(nsIVariant** aButtons);
+  nsresult GetAxes(nsIVariant** aAxes);
+
 protected:
+  nsCOMPtr<nsISupports> mParent;
   nsString mID;
   uint32_t mIndex;
 

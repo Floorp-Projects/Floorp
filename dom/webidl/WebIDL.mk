@@ -71,6 +71,7 @@ webidl_files = \
   FormData.webidl \
   Function.webidl \
   GainNode.webidl \
+  Gamepad.webidl \
   HTMLAnchorElement.webidl \
   HTMLAppletElement.webidl \
   HTMLAreaElement.webidl \
