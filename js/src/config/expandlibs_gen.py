@@ -44,4 +44,7 @@ if __name__ == '__main__':
     if options.depend:
         ensureParentDir(options.depend)
         with open(options.depend, 'w') as depfile:
-            depfile.write("%s : %s\n" % (options.output, ' '.join(ExpandLibsDeps(args))))
+            deps = ExpandLibsDeps(args)
+            depfile.write("%s : %s\n" % (options.output, ' '.join(deps)))
+            for dep in deps:
+                depfile.write("%s :\n" % dep)
