@@ -604,10 +604,6 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
     }
   }
 
-  if (et) {
-    et->mStyleRule = nullptr;
-  }
-
   if (!startedAny) {
     return nullptr;
   }
