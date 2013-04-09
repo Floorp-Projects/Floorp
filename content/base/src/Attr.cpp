@@ -7,7 +7,7 @@
  * Implementation of DOM Core's nsIDOMAttr node.
  */
 
-#include "nsDOMAttribute.h"
+#include "mozilla/dom/Attr.h"
 #include "mozilla/dom/Element.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsINameSpaceManager.h"
@@ -28,15 +28,17 @@
 #include "nsAsyncDOMEvent.h"
 #include "nsWrapperCacheInlines.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+DOMCI_NODE_DATA(Attr, mozilla::dom::Attr)
+
+namespace mozilla {
+namespace dom {
 
 //----------------------------------------------------------------------
-bool nsDOMAttribute::sInitialized;
+bool Attr::sInitialized;
 
-nsDOMAttribute::nsDOMAttribute(nsDOMAttributeMap *aAttrMap,
-                               already_AddRefed<nsINodeInfo> aNodeInfo,
-                               const nsAString   &aValue, bool aNsAware)
+Attr::Attr(nsDOMAttributeMap *aAttrMap,
+           already_AddRefed<nsINodeInfo> aNodeInfo,
+           const nsAString  &aValue, bool aNsAware)
   : nsIAttribute(aAttrMap, aNodeInfo, aNsAware), mValue(aValue)
 {
   NS_ABORT_IF_FALSE(mNodeInfo, "We must get a nodeinfo here!");
@@ -47,7 +49,7 @@ nsDOMAttribute::nsDOMAttribute(nsDOMAttributeMap *aAttrMap,
   // to drop our reference when it goes away.
 }
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMAttribute)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Attr)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 
   if (!nsINode::Traverse(tmp, cb)) {
@@ -55,22 +57,20 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMAttribute)
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsDOMAttribute)
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(Attr)
   nsINode::Trace(tmp, aCallback, aClosure);
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMAttribute)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Attr)
   nsINode::Unlink(tmp);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-DOMCI_NODE_DATA(Attr, nsDOMAttribute)
-
-// QueryInterface implementation for nsDOMAttribute
-NS_INTERFACE_TABLE_HEAD(nsDOMAttribute)
+// QueryInterface implementation for Attr
+NS_INTERFACE_TABLE_HEAD(Attr)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_NODE_INTERFACE_TABLE5(nsDOMAttribute, nsIDOMAttr, nsIAttribute, nsIDOMNode,
+  NS_NODE_INTERFACE_TABLE5(Attr, nsIDOMAttr, nsIAttribute, nsIDOMNode,
                            nsIDOMEventTarget, EventTarget)
-  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsDOMAttribute)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(Attr)
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsISupportsWeakReference,
                                  new nsNodeSupportsWeakRefTearoff(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMXPathNSResolver,
@@ -78,12 +78,12 @@ NS_INTERFACE_TABLE_HEAD(nsDOMAttribute)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Attr)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMAttribute)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_DESTROY(nsDOMAttribute,
+NS_IMPL_CYCLE_COLLECTING_ADDREF(Attr)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_DESTROY(Attr,
                                               nsNodeUtils::LastRelease(this))
 
 void
-nsDOMAttribute::SetMap(nsDOMAttributeMap *aMap)
+Attr::SetMap(nsDOMAttributeMap *aMap)
 {
   if (mAttrMap && !aMap && sInitialized) {
     // We're breaking a relationship with content and not getting a new one,
@@ -95,18 +95,18 @@ nsDOMAttribute::SetMap(nsDOMAttributeMap *aMap)
 }
 
 nsIContent*
-nsDOMAttribute::GetContent() const
+Attr::GetContent() const
 {
   return GetContentInternal();
 }
 
 nsresult
-nsDOMAttribute::SetOwnerDocument(nsIDocument* aDocument)
+Attr::SetOwnerDocument(nsIDocument* aDocument)
 {
   NS_ASSERTION(aDocument, "Missing document");
 
   nsIDocument *doc = OwnerDoc();
-  NS_ASSERTION(doc != aDocument, "bad call to nsDOMAttribute::SetOwnerDocument");
+  NS_ASSERTION(doc != aDocument, "bad call to Attr::SetOwnerDocument");
   doc->DeleteAllPropertiesFor(this);
 
   nsCOMPtr<nsINodeInfo> newNodeInfo;
@@ -122,14 +122,14 @@ nsDOMAttribute::SetOwnerDocument(nsIDocument* aDocument)
 }
 
 NS_IMETHODIMP
-nsDOMAttribute::GetName(nsAString& aName)
+Attr::GetName(nsAString& aName)
 {
   aName = NodeName();
   return NS_OK;
 }
 
 already_AddRefed<nsIAtom>
-nsDOMAttribute::GetNameAtom(nsIContent* aContent)
+Attr::GetNameAtom(nsIContent* aContent)
 {
   nsIAtom* result = nullptr;
   if (!mNsAware &&
@@ -150,7 +150,7 @@ nsDOMAttribute::GetNameAtom(nsIContent* aContent)
 }
 
 NS_IMETHODIMP
-nsDOMAttribute::GetValue(nsAString& aValue)
+Attr::GetValue(nsAString& aValue)
 {
   nsIContent* content = GetContentInternal();
   if (content) {
@@ -165,7 +165,7 @@ nsDOMAttribute::GetValue(nsAString& aValue)
 }
 
 NS_IMETHODIMP
-nsDOMAttribute::SetValue(const nsAString& aValue)
+Attr::SetValue(const nsAString& aValue)
 {
   nsIContent* content = GetContentInternal();
   if (!content) {
@@ -183,7 +183,7 @@ nsDOMAttribute::SetValue(const nsAString& aValue)
 
 
 NS_IMETHODIMP
-nsDOMAttribute::GetSpecified(bool* aSpecified)
+Attr::GetSpecified(bool* aSpecified)
 {
   NS_ENSURE_ARG_POINTER(aSpecified);
   OwnerDoc()->WarnOnceAbout(nsIDocument::eSpecified);
@@ -193,7 +193,7 @@ nsDOMAttribute::GetSpecified(bool* aSpecified)
 }
 
 NS_IMETHODIMP
-nsDOMAttribute::GetOwnerElement(nsIDOMElement** aOwnerElement)
+Attr::GetOwnerElement(nsIDOMElement** aOwnerElement)
 {
   NS_ENSURE_ARG_POINTER(aOwnerElement);
   OwnerDoc()->WarnOnceAbout(nsIDocument::eOwnerElement);
@@ -209,7 +209,7 @@ nsDOMAttribute::GetOwnerElement(nsIDOMElement** aOwnerElement)
 }
 
 void
-nsDOMAttribute::GetNodeValueInternal(nsAString& aNodeValue)
+Attr::GetNodeValueInternal(nsAString& aNodeValue)
 {
   OwnerDoc()->WarnOnceAbout(nsIDocument::eNodeValue);
 
@@ -217,7 +217,7 @@ nsDOMAttribute::GetNodeValueInternal(nsAString& aNodeValue)
 }
 
 void
-nsDOMAttribute::SetNodeValueInternal(const nsAString& aNodeValue, ErrorResult& aError)
+Attr::SetNodeValueInternal(const nsAString& aNodeValue, ErrorResult& aError)
 {
   OwnerDoc()->WarnOnceAbout(nsIDocument::eNodeValue);
 
@@ -225,13 +225,13 @@ nsDOMAttribute::SetNodeValueInternal(const nsAString& aNodeValue, ErrorResult& a
 }
 
 nsresult
-nsDOMAttribute::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
+Attr::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 {
   nsAutoString value;
-  const_cast<nsDOMAttribute*>(this)->GetValue(value);
+  const_cast<Attr*>(this)->GetValue(value);
 
   nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
-  *aResult = new nsDOMAttribute(nullptr, ni.forget(), value, mNsAware);
+  *aResult = new Attr(nullptr, ni.forget(), value, mNsAware);
   if (!*aResult) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -242,7 +242,7 @@ nsDOMAttribute::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 }
 
 already_AddRefed<nsIURI>
-nsDOMAttribute::GetBaseURI() const
+Attr::GetBaseURI() const
 {
   nsINode *parent = GetContentInternal();
 
@@ -250,7 +250,7 @@ nsDOMAttribute::GetBaseURI() const
 }
 
 void
-nsDOMAttribute::GetTextContentInternal(nsAString& aTextContent)
+Attr::GetTextContentInternal(nsAString& aTextContent)
 {
   OwnerDoc()->WarnOnceAbout(nsIDocument::eTextContent);
 
@@ -258,8 +258,8 @@ nsDOMAttribute::GetTextContentInternal(nsAString& aTextContent)
 }
 
 void
-nsDOMAttribute::SetTextContentInternal(const nsAString& aTextContent,
-                                       ErrorResult& aError)
+Attr::SetTextContentInternal(const nsAString& aTextContent,
+                             ErrorResult& aError)
 {
   OwnerDoc()->WarnOnceAbout(nsIDocument::eTextContent);
 
@@ -267,7 +267,7 @@ nsDOMAttribute::SetTextContentInternal(const nsAString& aTextContent,
 }
 
 NS_IMETHODIMP
-nsDOMAttribute::GetIsId(bool* aReturn)
+Attr::GetIsId(bool* aReturn)
 {
   nsIContent* content = GetContentInternal();
   if (!content)
@@ -288,69 +288,72 @@ nsDOMAttribute::GetIsId(bool* aReturn)
 }
 
 bool
-nsDOMAttribute::IsNodeOfType(uint32_t aFlags) const
+Attr::IsNodeOfType(uint32_t aFlags) const
 {
     return !(aFlags & ~eATTRIBUTE);
 }
 
 uint32_t
-nsDOMAttribute::GetChildCount() const
+Attr::GetChildCount() const
 {
   return 0;
 }
 
 nsIContent *
-nsDOMAttribute::GetChildAt(uint32_t aIndex) const
+Attr::GetChildAt(uint32_t aIndex) const
 {
   return nullptr;
 }
 
 nsIContent * const *
-nsDOMAttribute::GetChildArray(uint32_t* aChildCount) const
+Attr::GetChildArray(uint32_t* aChildCount) const
 {
   *aChildCount = 0;
   return nullptr;
 }
 
 int32_t
-nsDOMAttribute::IndexOf(const nsINode* aPossibleChild) const
+Attr::IndexOf(const nsINode* aPossibleChild) const
 {
   return -1;
 }
 
 nsresult
-nsDOMAttribute::InsertChildAt(nsIContent* aKid, uint32_t aIndex,
+Attr::InsertChildAt(nsIContent* aKid, uint32_t aIndex,
                               bool aNotify)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
-nsDOMAttribute::AppendChildTo(nsIContent* aKid, bool aNotify)
+Attr::AppendChildTo(nsIContent* aKid, bool aNotify)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 void
-nsDOMAttribute::RemoveChildAt(uint32_t aIndex, bool aNotify)
+Attr::RemoveChildAt(uint32_t aIndex, bool aNotify)
 {
 }
 
 nsresult
-nsDOMAttribute::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+Attr::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
   aVisitor.mCanHandle = true;
   return NS_OK;
 }
 
 void
-nsDOMAttribute::Initialize()
+Attr::Initialize()
 {
   sInitialized = true;
 }
 
 void
-nsDOMAttribute::Shutdown()
+Attr::Shutdown()
 {
   sInitialized = false;
 }
+
+} // namespace dom
+} // namespace mozilla

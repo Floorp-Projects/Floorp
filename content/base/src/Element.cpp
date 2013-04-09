@@ -14,7 +14,7 @@
 
 #include "mozilla/dom/Element.h"
 
-#include "nsDOMAttribute.h"
+#include "mozilla/dom/Attr.h"
 #include "nsDOMAttributeMap.h"
 #include "nsIAtom.h"
 #include "nsINodeInfo.h"
