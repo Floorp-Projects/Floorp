@@ -80,11 +80,6 @@ public:
     SendThreeDPointParameterToStream(PannerNode::LISTENER_POSITION, mPosition);
   }
 
-  const ThreeDPoint& Position() const
-  {
-    return mPosition;
-  }
-
   void SetOrientation(double aX, double aY, double aZ,
                       double aXUp, double aYUp, double aZUp)
   {
@@ -106,11 +101,6 @@ public:
     SendThreeDPointParameterToStream(PannerNode::LISTENER_UPVECTOR, mUpVector);
   }
 
-  const ThreeDPoint& Velocity() const
-  {
-    return mVelocity;
-  }
-
   void SetVelocity(double aX, double aY, double aZ)
   {
     if (WebAudioUtils::FuzzyEqual(mVelocity.x, aX) &&
@@ -122,7 +112,6 @@ public:
     mVelocity.y = aY;
     mVelocity.z = aZ;
     SendThreeDPointParameterToStream(PannerNode::LISTENER_VELOCITY, mVelocity);
-    UpdatePannersVelocity();
   }
 
   void RegisterPannerNode(PannerNode* aPannerNode);
@@ -130,7 +119,6 @@ public:
 private:
   void SendDoubleParameterToStream(uint32_t aIndex, double aValue);
   void SendThreeDPointParameterToStream(uint32_t aIndex, const ThreeDPoint& aValue);
-  void UpdatePannersVelocity();
 
 private:
   friend class PannerNode;

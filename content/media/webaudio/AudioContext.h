@@ -126,9 +126,6 @@ public:
 
   MediaStreamGraph* Graph() const;
   MediaStream* DestinationStream() const;
-  void UnregisterAudioBufferSourceNode(AudioBufferSourceNode* aNode);
-  void UnregisterPannerNode(PannerNode* aNode);
-  void UpdatePannerSource();
 
 private:
   void RemoveFromDecodeQueue(WebAudioDecodeJob* aDecodeJob);
@@ -141,10 +138,6 @@ private:
   nsRefPtr<AudioListener> mListener;
   MediaBufferDecoder mDecoder;
   nsTArray<nsAutoPtr<WebAudioDecodeJob> > mDecodeJobs;
-  // Two arrays containing all the PannerNodes and AudioBufferSourceNodes,
-  // to compute the doppler shift. Those are weak pointers.
-  nsTArray<PannerNode*> mPannerNodes;
-  nsTArray<AudioBufferSourceNode*> mAudioBufferSourceNodes;
 };
 
 }
