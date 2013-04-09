@@ -358,6 +358,30 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
 }
 %endif
 
+/* History Swipe Animation */
+
+#historySwipeAnimationContainer {
+  overflow: hidden;
+}
+
+#historySwipeAnimationPreviousPage,
+#historySwipeAnimationCurrentPage,
+#historySwipeAnimationNextPage {
+  background: none top left no-repeat white;
+}
+
+#historySwipeAnimationPreviousPage {
+  background-image: -moz-element(#historySwipeAnimationPreviousPageSnapshot);
+}
+
+#historySwipeAnimationCurrentPage {
+  background-image: -moz-element(#historySwipeAnimationCurrentPageSnapshot);
+}
+
+#historySwipeAnimationNextPage {
+  background-image: -moz-element(#historySwipeAnimationNextPageSnapshot);
+}
+
 /* Identity UI */
 #identity-popup-content-box.unknownIdentity > #identity-popup-connectedToLabel ,
 #identity-popup-content-box.unknownIdentity > #identity-popup-runByLabel ,
