@@ -934,10 +934,10 @@ DataChannelConnection::SendOpenRequestMessage(const nsACString& label,
 
   req->reliability_params = htons((uint16_t)prValue); /* XXX Why 16-bit */
   req->priority = htons(0); /* XXX: add support */
-  req->label_length = label_len;
-  req->protocol_length = proto_len;
+  req->label_length = htons(label_len);
+  req->protocol_length = htons(proto_len);
   memcpy(&req->label[0], PromiseFlatCString(label).get(), label_len);
-  memcpy(&req->label[req->label_length], PromiseFlatCString(protocol).get(), proto_len);
+  memcpy(&req->label[label_len], PromiseFlatCString(protocol).get(), proto_len);
 
   // sizeof(*req) already includes +1 byte for label, need nul for both strings
   int32_t result = SendControlMessage(req, (sizeof(*req)-1) + label_len + proto_len, stream);
@@ -1068,10 +1068,10 @@ DataChannelConnection::HandleOpenRequestMessage(const struct rtcweb_datachannel_
 
   mLock.AssertCurrentThreadOwns();
 
-  if (length != (sizeof(*req) - 1) + req->label_length + req->protocol_length) {
+  if (length != (sizeof(*req) - 1) + ntohs(req->label_length) + ntohs(req->protocol_length)) {
     LOG(("Inconsistent length: %u, should be %u", length,
-         (sizeof(*req) - 1) + req->label_length + req->protocol_length));
-    if (length < (sizeof(*req) - 1) + req->label_length + req->protocol_length)
+         (sizeof(*req) - 1) + ntohs(req->label_length) + ntohs(req->protocol_length)));
+    if (length < (sizeof(*req) - 1) + ntohs(req->label_length) + ntohs(req->protocol_length))
       return;
   }
 
@@ -1116,9 +1116,9 @@ DataChannelConnection::HandleOpenRequestMessage(const struct rtcweb_datachannel_
     return;
   }
 
-  nsCString label(nsDependentCSubstring(&req->label[0], req->label_length));
-  nsCString protocol(nsDependentCSubstring(&req->label[req->label_length],
-                                           req->protocol_length));
+  nsCString label(nsDependentCSubstring(&req->label[0], ntohs(req->label_length)));
+  nsCString protocol(nsDependentCSubstring(&req->label[ntohs(req->label_length)],
+                                           ntohs(req->protocol_length)));
 
   channel = new DataChannel(this,
                             stream,
