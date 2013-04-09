@@ -767,21 +767,17 @@ bool nsIDNService::isLabelSafe(const nsAString &label)
       ch = SURROGATE_TO_UCS4(ch, *current++);
     }
 
+    // Check for restricted characters; aspirational scripts are permitted
+    XidmodType xm = GetIdentifierModification(ch);
     int32_t script = GetScriptCode(ch);
-
-    // Special case U+30FB KATAKANA MIDDLE DOT, see bug 857490
-    if (ch != 0x30fb) {
-      // Check for restricted characters; aspirational scripts are permitted
-      XidmodType xm = GetIdentifierModification(ch);
-      if (xm > XIDMOD_RECOMMENDED &&
-          !(xm == XIDMOD_LIMITED_USE &&
-            (script == MOZ_SCRIPT_CANADIAN_ABORIGINAL ||
-             script == MOZ_SCRIPT_MIAO ||
-             script == MOZ_SCRIPT_MONGOLIAN ||
-             script == MOZ_SCRIPT_TIFINAGH ||
-             script == MOZ_SCRIPT_YI))) {
-        return false;
-      }
+    if (xm > XIDMOD_RECOMMENDED &&
+        !(xm == XIDMOD_LIMITED_USE &&
+          (script == MOZ_SCRIPT_CANADIAN_ABORIGINAL ||
+           script == MOZ_SCRIPT_MIAO ||
+           script == MOZ_SCRIPT_MONGOLIAN ||
+           script == MOZ_SCRIPT_TIFINAGH ||
+           script == MOZ_SCRIPT_YI))) {
+      return false;
     }
 
     // Check for mixed script
