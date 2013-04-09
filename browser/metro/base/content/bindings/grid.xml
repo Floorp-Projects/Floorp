@@ -114,21 +114,11 @@
               return new Set();
             }
 
-            function cloneSet(aSet) {
-              let clone = new Set();
-              if (aSet) {
-                for (let item of aSet) {
-                  clone.add(item);
-                }
-              }
-              return clone;
-            }
-
             // given one or more sets of values,
             // return a set with only those values present in each
             let initialItem = tileNodes[0];
 
-            let verbSet = cloneSet(initialItem.contextActions);
+            let verbSet = new Set(initialItem.contextActions);
             for (let i=1; i<tileNodes.length; i++){
               let set = tileNodes[i].contextActions;
               for (let item of verbSet) {
