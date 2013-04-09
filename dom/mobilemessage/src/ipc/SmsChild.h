@@ -59,7 +59,7 @@ protected:
   DeallocPSmsRequest(PSmsRequestChild* aActor) MOZ_OVERRIDE;
 
   virtual PMobileMessageCursorChild*
-  AllocPMobileMessageCursor(const CreateMessageCursorRequest& aRequest) MOZ_OVERRIDE;
+  AllocPMobileMessageCursor(const IPCMobileMessageCursor& aCursor) MOZ_OVERRIDE;
 
   virtual bool
   DeallocPMobileMessageCursor(PMobileMessageCursorChild* aActor) MOZ_OVERRIDE;
@@ -110,7 +110,7 @@ protected:
   ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
 
   virtual bool
-  RecvNotifyResult(const SmsMessageData& aMessageData) MOZ_OVERRIDE;
+  RecvNotifyResult(const MobileMessageCursorData& aData) MOZ_OVERRIDE;
 
   virtual bool
   Recv__delete__(const int32_t& aError) MOZ_OVERRIDE;

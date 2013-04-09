@@ -15,6 +15,7 @@
 #include "SmsFilter.h"
 #include "SmsRequest.h"
 #include "SmsSegmentInfo.h"
+#include "MobileMessageThread.h"
 
 namespace mozilla {
 namespace dom {
@@ -183,14 +184,11 @@ SmsParent::RecvPSmsRequestConstructor(PSmsRequestParent* aActor,
       return actor->DoRequest(aRequest.get_DeleteMessageRequest());
     case IPCSmsRequest::TMarkMessageReadRequest:
       return actor->DoRequest(aRequest.get_MarkMessageReadRequest());
-    case IPCSmsRequest::TGetThreadListRequest:
-      return actor->DoRequest(aRequest.get_GetThreadListRequest());
     default:
       MOZ_NOT_REACHED("Unknown type!");
-      return false;
+      break;
   }
 
-  MOZ_NOT_REACHED("Should never get here!");
   return false;
 }
 
@@ -209,16 +207,26 @@ SmsParent::DeallocPSmsRequest(PSmsRequestParent* aActor)
 
 bool
 SmsParent::RecvPMobileMessageCursorConstructor(PMobileMessageCursorParent* aActor,
-                                               const CreateMessageCursorRequest& aRequest)
+                                               const IPCMobileMessageCursor& aRequest)
 {
   MobileMessageCursorParent* actor =
     static_cast<MobileMessageCursorParent*>(aActor);
 
-  return actor->DoRequest(aRequest);
+  switch (aRequest.type()) {
+    case IPCMobileMessageCursor::TCreateMessageCursorRequest:
+      return actor->DoRequest(aRequest.get_CreateMessageCursorRequest());
+    case IPCMobileMessageCursor::TCreateThreadCursorRequest:
+      return actor->DoRequest(aRequest.get_CreateThreadCursorRequest());
+    default:
+      MOZ_NOT_REACHED("Unknown type!");
+      break;
+  }
+
+  return false;
 }
 
 PMobileMessageCursorParent*
-SmsParent::AllocPMobileMessageCursor(const CreateMessageCursorRequest& aRequest)
+SmsParent::AllocPMobileMessageCursor(const IPCMobileMessageCursor& aRequest)
 {
   MobileMessageCursorParent* actor = new MobileMessageCursorParent();
   // Add an extra ref for IPDL. Will be released in
@@ -327,21 +335,6 @@ SmsRequestParent::DoRequest(const MarkMessageReadRequest& aRequest)
   return true;
 }
 
-bool
-SmsRequestParent::DoRequest(const GetThreadListRequest& aRequest)
-{
-  nsCOMPtr<nsIMobileMessageDatabaseService> mobileMessageDBService =
-    do_GetService(MOBILE_MESSAGE_DATABASE_SERVICE_CONTRACTID);
-
-  NS_ENSURE_TRUE(mobileMessageDBService, true);
-  mSmsRequest = SmsRequest::Create(this);
-  nsCOMPtr<nsIMobileMessageCallback> forwarder = new SmsRequestForwarder(mSmsRequest);
-  nsresult rv = mobileMessageDBService->GetThreadList(forwarder);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  return true;
-}
-
 /*******************************************************************************
  * MobileMessageCursorParent
  ******************************************************************************/
@@ -393,6 +386,25 @@ MobileMessageCursorParent::DoRequest(const CreateMessageCursorRequest& aRequest)
   return true;
 }
 
+bool
+MobileMessageCursorParent::DoRequest(const CreateThreadCursorRequest& aRequest)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIMobileMessageDatabaseService> dbService =
+    do_GetService(MOBILE_MESSAGE_DATABASE_SERVICE_CONTRACTID);
+  if (dbService) {
+    rv = dbService->CreateThreadCursor(this,
+                                       getter_AddRefs(mContinueCallback));
+  }
+
+  if (NS_FAILED(rv)) {
+    return NS_SUCCEEDED(NotifyCursorError(nsIMobileMessageCallback::INTERNAL_ERROR));
+  }
+
+  return true;
+}
+
 // nsIMobileMessageCursorCallback
 
 NS_IMETHODIMP
@@ -416,8 +428,22 @@ MobileMessageCursorParent::NotifyCursorResult(nsISupports* aResult)
   // error here to avoid sending a message to the dead process.
   NS_ENSURE_TRUE(mContinueCallback, NS_ERROR_FAILURE);
 
-  SmsMessage* message = static_cast<SmsMessage*>(aResult);
-  return SendNotifyResult(message->GetData()) ? NS_OK : NS_ERROR_FAILURE;
+  nsCOMPtr<nsIDOMMozSmsMessage> iMessage = do_QueryInterface(aResult);
+  if (iMessage) {
+    SmsMessage* message = static_cast<SmsMessage*>(aResult);
+    return SendNotifyResult(MobileMessageCursorData(message->GetData()))
+      ? NS_OK : NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIDOMMozMobileMessageThread> iThread = do_QueryInterface(aResult);
+  if (iThread) {
+    MobileMessageThread* thread = static_cast<MobileMessageThread*>(aResult);
+    return SendNotifyResult(MobileMessageCursorData(thread->GetData()))
+      ? NS_OK : NS_ERROR_FAILURE;
+  }
+
+  MOZ_NOT_REACHED("Received invalid response parameters!");
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
