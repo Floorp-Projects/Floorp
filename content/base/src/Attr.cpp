@@ -8,6 +8,7 @@
  */
 
 #include "mozilla/dom/Attr.h"
+#include "mozilla/dom/AttrBinding.h"
 #include "mozilla/dom/Element.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsINameSpaceManager.h"
@@ -47,6 +48,8 @@ Attr::Attr(nsDOMAttributeMap *aAttrMap,
 
   // We don't add a reference to our content. It will tell us
   // to drop our reference when it goes away.
+
+  SetIsDOMBinding();
 }
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Attr)
@@ -164,32 +167,51 @@ Attr::GetValue(nsAString& aValue)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-Attr::SetValue(const nsAString& aValue)
+void
+Attr::SetValue(const nsAString& aValue, ErrorResult& aRv)
 {
   nsIContent* content = GetContentInternal();
   if (!content) {
     mValue = aValue;
-    return NS_OK;
+    return;
   }
 
   nsCOMPtr<nsIAtom> nameAtom = GetNameAtom(content);
-  return content->SetAttr(mNodeInfo->NamespaceID(),
-                          nameAtom,
-                          mNodeInfo->GetPrefixAtom(),
-                          aValue,
-                          true);
+  aRv = content->SetAttr(mNodeInfo->NamespaceID(),
+                         nameAtom,
+                         mNodeInfo->GetPrefixAtom(),
+                         aValue,
+                         true);
 }
 
+NS_IMETHODIMP
+Attr::SetValue(const nsAString& aValue)
+{
+  ErrorResult rv;
+  SetValue(aValue, rv);
+  return rv.ErrorCode();
+}
+
+bool
+Attr::Specified() const
+{
+  OwnerDoc()->WarnOnceAbout(nsIDocument::eSpecified);
+  return true;
+}
 
 NS_IMETHODIMP
 Attr::GetSpecified(bool* aSpecified)
 {
   NS_ENSURE_ARG_POINTER(aSpecified);
-  OwnerDoc()->WarnOnceAbout(nsIDocument::eSpecified);
-
-  *aSpecified = true;
+  *aSpecified = Specified();
   return NS_OK;
+}
+
+Element*
+Attr::GetOwnerElement(ErrorResult& aRv)
+{
+  OwnerDoc()->WarnOnceAbout(nsIDocument::eOwnerElement);
+  return GetContentInternal();
 }
 
 NS_IMETHODIMP
@@ -353,6 +375,12 @@ void
 Attr::Shutdown()
 {
   sInitialized = false;
+}
+
+JSObject*
+Attr::WrapObject(JSContext* aCx, JSObject* aScope)
+{
+  return AttrBinding::Wrap(aCx, aScope, this);
 }
 
 } // namespace dom
