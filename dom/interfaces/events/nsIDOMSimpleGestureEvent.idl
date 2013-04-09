@@ -12,8 +12,38 @@
  *
  * The following events are generated:
  *
- * MozSwipeGesture - Generated when the user completes a swipe across
- * across the input device.
+ * MozSwipeGestureStart - Generated when the user starts a horizontal
+ * swipe across the input device.  This event not only acts as a signal,
+ * but also asks two questions:  Should a swipe really be started, and
+ * in which directions should the user be able to swipe?  The first
+ * question is answered by event listeners by calling or not calling
+ * preventDefault() on the event.  Since a swipe swallows all scroll
+ * events, the default action of the swipe start event is *not* to
+ * start a swipe. Call preventDefault() if you want a swipe to be
+ * started.
+ * The second question (swipe-able directions) is answered in the
+ * allowedDirections field.
+ * If this event has preventDefault() called on it (and thus starts
+ * a swipe), it guarantees a future MozSwipeGestureEnd event that
+ * will signal the end of a swipe animation.
+ *
+ * MozSwipeGestureUpdate - Generated periodically while the user is
+ * continuing a horizontal swipe gesture.  The "delta" value represents
+ * the current absolute gesture amount.  This event may even be sent
+ * after a MozSwipeGesture event fired in order to allow for fluid
+ * completion of a swipe animation.  The direction value is meaningless
+ * on swipe update events.
+ *
+ * MozSwipeGestureEnd - Generated when the swipe animation is completed.
+ *
+ * MozSwipeGesture - Generated when the user releases a swipe across
+ * across the input device.  This event signals that the actual swipe
+ * operation is complete, even though the animation might not be finished
+ * yet.  This event can be sent without accompanying start / update / end
+ * events, and it can also be handled on its own if the consumer doesn't
+ * want to handle swipe animation events.
+ * Only the direction value has any significance, the delta value is
+ * meaningless.
  *
  * MozMagnifyGestureStart - Generated when the user begins the magnify
  * ("pinch") gesture.  The "delta" value represents the initial
@@ -69,7 +99,7 @@
  * consuming events.
  */
 
-[scriptable, builtinclass, uuid(0cd3fde1-0c99-49cc-a74e-9a9348864307)]
+[scriptable, builtinclass, uuid(d78656ab-9d68-4f03-83f9-7c7bee071aa7)]
 interface nsIDOMSimpleGestureEvent : nsIDOMMouseEvent
 {
   /* Swipe direction constants */
@@ -77,10 +107,27 @@ interface nsIDOMSimpleGestureEvent : nsIDOMMouseEvent
   const unsigned long DIRECTION_DOWN = 2;
   const unsigned long DIRECTION_LEFT = 4;
   const unsigned long DIRECTION_RIGHT = 8;
-  
+
   /* Rotational direction constants */
   const unsigned long ROTATION_COUNTERCLOCKWISE = 1;
   const unsigned long ROTATION_CLOCKWISE = 2;
+
+  /* Read-write value for swipe events.
+   *
+   * Reports the directions that can be swiped to; multiple directions
+   * should be OR'ed together.
+   *
+   * The allowedDirections field is designed to be set on SwipeGestureStart
+   * events by event listeners.  Its value after event dispatch determines
+   * the behavior of the swipe animation that is about to begin.
+   * Specifically, if the user swipes in a direction that can't be swiped
+   * to, the animation will have a bounce effect.
+   * Future SwipeGestureUpdate, SwipeGesture and SwipeGestureEnd events
+   * will carry the allowDirections value that was set on the SwipeStart
+   * event.  Changing this field on non-SwipeGestureStart events doesn't
+   * have any effect.
+   */
+  attribute unsigned long allowedDirections;
 
   /* Direction of a gesture. Diagonals are indicated by OR'ing the
    * applicable constants together.
@@ -94,8 +141,8 @@ interface nsIDOMSimpleGestureEvent : nsIDOMMouseEvent
    */
   readonly attribute unsigned long direction;
 
-  /* Delta value for magnify and rotate gestures.
-   * 
+  /* Delta value for magnify, rotate and swipe gestures.
+   *
    * For rotation, the value is in degrees and is positive for
    * clockwise rotation and negative for counterclockwise
    * rotation.
@@ -110,6 +157,14 @@ interface nsIDOMSimpleGestureEvent : nsIDOMMouseEvent
    * undocumented.  The values are typically in the range of 0.0 to
    * 100.0, but it is only safe currently to rely on the delta being
    * positive or negative.
+   *
+   * For swipe start, update and end events, the value is a fraction
+   * of one "page".  If the resulting swipe will have DIRECTION_LEFT, the
+   * delta value will be positive; for DIRECTION_RIGHT, delta is negative.
+   * If this seems backwards to you, look at it this way:  If the current
+   * page is pushed to the right during the animation (positive delta),
+   * the page left to the current page will be visible after the swipe
+   * (DIRECTION_LEFT).
    *
    * Units on Windows represent the difference between the initial
    * and current/final width between the two touch points on the input
@@ -135,6 +190,7 @@ interface nsIDOMSimpleGestureEvent : nsIDOMMouseEvent
                               in boolean metaKeyArg,
                               in unsigned short buttonArg,
                               in nsIDOMEventTarget relatedTargetArg,
+                              in unsigned long allowedDirectionsArg,
                               in unsigned long directionArg,
                               in double deltaArg,
                               in unsigned long clickCount);
