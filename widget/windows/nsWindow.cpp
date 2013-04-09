@@ -1632,7 +1632,7 @@ NS_METHOD nsWindow::ConstrainPosition(bool aAllowSlop,
   if (!mIsTopWidgetWindow) // only a problem for top-level windows
     return NS_OK;
 
-  float dpiScale = gfxWindowsPlatform::GetPlatform()->GetDPIScale();
+  double dpiScale = GetDefaultScale();
 
   // we need to use the window size in logical screen pixels
   int32_t logWidth = std::max<int32_t>(NSToIntRound(mBounds.width / dpiScale), 1);

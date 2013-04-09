@@ -6,6 +6,7 @@
 #include "nsScreenManagerWin.h"
 #include "nsScreenWin.h"
 #include "gfxWindowsPlatform.h"
+#include "nsIWidget.h"
 
 
 BOOL CALLBACK CountMonitors ( HMONITOR, HDC, LPRECT, LPARAM ioCount ) ;
@@ -78,7 +79,10 @@ nsScreenManagerWin :: ScreenForRect ( int32_t inLeft, int32_t inTop, int32_t inW
   }
 
   // convert coordinates from logical to device pixels for MonitorFromRect
-  FLOAT dpiScale = gfxWindowsPlatform::GetPlatform()->GetDPIScale();
+  double dpiScale = nsIWidget::DefaultScaleOverride();
+  if (dpiScale <= 0.0) {
+    dpiScale = gfxWindowsPlatform::GetPlatform()->GetDPIScale(); 
+  }
   RECT globalWindowBounds = {
     NSToIntRound(dpiScale * inLeft),
     NSToIntRound(dpiScale * inTop),
