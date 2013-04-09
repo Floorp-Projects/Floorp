@@ -1593,7 +1593,6 @@ nsXPConnect::CreateSandbox(JSContext *cx, nsIPrincipal *principal,
     *_retval = nullptr;
 
     RootedValue rval(cx, JSVAL_VOID);
-    AUTO_MARK_JSVAL(ccx, rval.address());
 
     SandboxOptions options(cx);
     nsresult rv = xpc_CreateSandboxObject(cx, rval.address(), principal, options);
