@@ -9,12 +9,14 @@
 #include "nsMathUtils.h"
 #include "AudioNodeEngine.h"
 #include "AudioNodeStream.h"
+#include "AudioDestinationNode.h"
 #include "speex/speex_resampler.h"
 
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(AudioBufferSourceNode, AudioNode, mBuffer)
+NS_IMPL_CYCLE_COLLECTION_INHERITED_2(AudioBufferSourceNode, AudioNode,
+                                     mBuffer, mPlaybackRate)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(AudioBufferSourceNode)
 NS_INTERFACE_MAP_END_INHERITING(AudioNode)
@@ -25,12 +27,14 @@ NS_IMPL_RELEASE_INHERITED(AudioBufferSourceNode, AudioNode)
 class AudioBufferSourceNodeEngine : public AudioNodeEngine
 {
 public:
-  AudioBufferSourceNodeEngine() :
+  explicit AudioBufferSourceNodeEngine(AudioDestinationNode* aDestination) :
     mStart(0), mStop(TRACK_TICKS_MAX),
     mResampler(nullptr),
     mOffset(0), mDuration(0),
     mLoopStart(0), mLoopEnd(0),
-    mSampleRate(0), mPosition(0), mChannels(0), mLoop(false)
+    mSampleRate(0), mPosition(0), mChannels(0), mPlaybackRate(1.0f),
+    mDestination(static_cast<AudioNodeStream*>(aDestination->Stream())),
+    mPlaybackRateTimeline(1.0f), mLoop(false)
   {}
 
   ~AudioBufferSourceNodeEngine()
@@ -51,8 +55,29 @@ public:
     DURATION,
     LOOP,
     LOOPSTART,
-    LOOPEND
+    LOOPEND,
+    PLAYBACKRATE
   };
+  virtual void SetTimelineParameter(uint32_t aIndex, const dom::AudioParamTimeline& aValue)
+  {
+    switch (aIndex) {
+    case PLAYBACKRATE:
+      mPlaybackRateTimeline = aValue;
+      // If we have a simple value that is 1.0 (i.e. intrinsic speed), and our
+      // input buffer is already at the ideal audio rate, and we have a
+      // resampler, we can release it.
+      if (mResampler && mPlaybackRateTimeline.HasSimpleValue() &&
+          mPlaybackRateTimeline.GetValue() == 1.0 &&
+          mSampleRate == IdealAudioRate()) {
+        speex_resampler_destroy(mResampler);
+        mResampler = nullptr;
+      }
+      WebAudioUtils::ConvertAudioParamToTicks(mPlaybackRateTimeline, nullptr, mDestination);
+      break;
+    default:
+      NS_ERROR("Bad GainNodeEngine TimelineParameter");
+    }
+  }
   virtual void SetStreamTimeParameter(uint32_t aIndex, TrackTicks aParam)
   {
     switch (aIndex) {
@@ -128,7 +153,8 @@ public:
     }
   }
 
-  // Resamples input data to an output buffer, according to |mSampleRate|
+  // Resamples input data to an output buffer, according to |mSampleRate| and
+  // the playbackRate.
   // The number of frames consumed/produced depends on the amount of space
   // remaining in both the input and output buffer, and the playback rate (that
   // is, the ratio between the output samplerate and the input samplerate).
@@ -140,7 +166,7 @@ public:
                                          uint32_t& aFramesRead,
                                          uint32_t& aFramesWritten) {
     // Compute the sample rate we want to resample to.
-    double finalSampleRate = mSampleRate;
+    double finalSampleRate = mSampleRate / mPlaybackRate;
     double finalPlaybackRate = finalSampleRate / IdealAudioRate();
     uint32_t availableInOuputBuffer = WEBAUDIO_BLOCK_SIZE - aBufferOffset;
     uint32_t inputSamples, outputSamples;
@@ -222,7 +248,8 @@ public:
                                            aBufferMax - aBufferOffset),
                                   uint32_t(mStop - *aCurrentPosition));
     if (numFrames == WEBAUDIO_BLOCK_SIZE &&
-        mSampleRate == IdealAudioRate()) {
+        mSampleRate == IdealAudioRate() &&
+        mPlaybackRate == 1.0f) {
       BorrowFromInputBuffer(aOutput, aChannels, aBufferOffset);
       *aOffsetWithinBlock += numFrames;
       *aCurrentPosition += numFrames;
@@ -232,7 +259,7 @@ public:
         MOZ_ASSERT(*aOffsetWithinBlock == 0);
         AllocateAudioBlock(aChannels, aOutput);
       }
-      if (mSampleRate == IdealAudioRate()) {
+      if (mSampleRate == IdealAudioRate() && mPlaybackRate == 1.0f) {
         CopyFromInputBuffer(aOutput, aChannels, aBufferOffset, *aOffsetWithinBlock, numFrames);
         *aOffsetWithinBlock += numFrames;
         *aCurrentPosition += numFrames;
@@ -270,6 +297,20 @@ public:
     if (!channels) {
       aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
       return;
+    }
+
+    // WebKit treats the playbackRate as a k-rate parameter in their code,
+    // despite the spec saying that it should be an a-rate parameter. We treat
+    // it as k-rate. Spec bug: https://www.w3.org/Bugs/Public/show_bug.cgi?id=21592
+    float newPlaybackRate;
+    if (mPlaybackRateTimeline.HasSimpleValue()) {
+      newPlaybackRate = mPlaybackRateTimeline.GetValue();
+    } else {
+      newPlaybackRate = mPlaybackRateTimeline.GetValueAtTime<TrackTicks>(aStream->GetCurrentPosition());
+    }
+    if (newPlaybackRate != mPlaybackRate) {
+      mPlaybackRate = newPlaybackRate;
+      speex_resampler_set_rate(Resampler(mChannels), mSampleRate, mSampleRate / mPlaybackRate);
     }
 
     uint32_t written = 0;
@@ -320,6 +361,9 @@ public:
   int32_t mSampleRate;
   uint32_t mPosition;
   uint32_t mChannels;
+  float mPlaybackRate;
+  AudioNodeStream* mDestination;
+  AudioParamTimeline mPlaybackRateTimeline;
   bool mLoop;
 };
 
@@ -329,10 +373,11 @@ AudioBufferSourceNode::AudioBufferSourceNode(AudioContext* aContext)
   , mLoopEnd(0.0)
   , mLoop(false)
   , mStartCalled(false)
+  , mPlaybackRate(new AudioParam(this, SendPlaybackRateToStream, 1.0f))
 {
   SetProduceOwnOutput(true);
   mStream = aContext->Graph()->CreateAudioNodeStream(
-      new AudioBufferSourceNodeEngine(),
+      new AudioBufferSourceNodeEngine(aContext->Destination()),
       MediaStreamGraph::INTERNAL_STREAM);
   mStream->AddMainThreadListener(this);
 }
@@ -438,6 +483,13 @@ AudioBufferSourceNode::NotifyMainThreadStateChanged()
   if (mStream->IsFinished()) {
     SetProduceOwnOutput(false);
   }
+}
+
+void
+AudioBufferSourceNode::SendPlaybackRateToStream(AudioNode* aNode)
+{
+  AudioBufferSourceNode* This = static_cast<AudioBufferSourceNode*>(aNode);
+  SendTimelineParameterToStream(This, AudioBufferSourceNodeEngine::PLAYBACKRATE, *This->mPlaybackRate);
 }
 
 }
