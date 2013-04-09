@@ -260,6 +260,27 @@ gfxPlatform::GetPlatform()
     return gPlatform;
 }
 
+int RecordingPrefChanged(const char *aPrefName, void *aClosure)
+{
+  if (Preferences::GetBool("gfx.2d.recording", false)) {
+    nsAutoCString fileName;
+    nsAdoptingString prefFileName = Preferences::GetString("gfx.2d.recordingfile");
+
+    if (prefFileName) {
+      fileName.Append(NS_ConvertUTF16toUTF8(prefFileName));
+    } else {
+      fileName.AssignLiteral("browserrecording.aer");
+    }
+
+    gPlatform->mRecorder = Factory::CreateEventRecorderForFile(fileName.BeginReading());
+    Factory::SetGlobalEventRecorder(gPlatform->mRecorder);
+  } else {
+    Factory::SetGlobalEventRecorder(nullptr);
+  }
+
+  return 0;
+}
+
 void
 gfxPlatform::Init()
 {
@@ -378,20 +399,7 @@ gfxPlatform::Init()
     nsCOMPtr<nsISupports> forceReg
         = do_CreateInstance("@mozilla.org/gfx/init;1");
 
-    if (Preferences::GetBool("gfx.2d.recording", false)) {
-
-      nsAutoCString fileName;
-      nsAdoptingString prefFileName = Preferences::GetString("gfx.2d.recordingfile");
-
-      if (prefFileName) {
-        fileName.Append(NS_ConvertUTF16toUTF8(prefFileName));
-      } else {
-        fileName.AssignLiteral("browserrecording.aer");
-      }
-
-      gPlatform->mRecorder = Factory::CreateEventRecorderForFile(fileName.BeginReading());
-      Factory::SetGlobalEventRecorder(gPlatform->mRecorder);
-    }
+    Preferences::RegisterCallbackAndCall(RecordingPrefChanged, "gfx.2d.recording", nullptr);
 
     gPlatform->mOrientationSyncMillis = Preferences::GetUint("layers.orientation.sync.timeout", (uint32_t)0);
 
