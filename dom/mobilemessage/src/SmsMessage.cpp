@@ -261,10 +261,7 @@ SmsMessage::GetMessageClass(nsAString& aMessageClass)
 NS_IMETHODIMP
 SmsMessage::GetTimestamp(JSContext* cx, JS::Value* aDate)
 {
-  JSObject *obj = JS_NewDateObjectMsec(cx, mData.timestamp());
-  NS_ENSURE_TRUE(obj, NS_ERROR_FAILURE);
-
-  *aDate = OBJECT_TO_JSVAL(obj);
+  *aDate = OBJECT_TO_JSVAL(JS_NewDateObjectMsec(cx, mData.timestamp()));
   return NS_OK;
 }
 

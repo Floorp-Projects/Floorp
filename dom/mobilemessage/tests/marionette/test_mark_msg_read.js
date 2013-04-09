@@ -97,7 +97,7 @@ function sendSms() {
 
 function markMessageAndVerify(smsId, readBool, nextFunction) {
   let request = sms.markMessageRead(smsId, readBool);
-  ok(request instanceof DOMRequest,
+  ok(request instanceof MozSmsRequest,
       "request is instanceof " + request.constructor);
 
   request.onsuccess = function(event) {
@@ -188,7 +188,7 @@ function deleteMsgs() {
 
   log("Deleting SMS (id: " + smsId + ").");
   let request = sms.delete(smsId);
-  ok(request instanceof DOMRequest,
+  ok(request instanceof MozSmsRequest,
       "request is instanceof " + request.constructor);
 
   request.onsuccess = function(event) {

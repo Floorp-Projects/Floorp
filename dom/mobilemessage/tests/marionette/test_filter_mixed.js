@@ -64,9 +64,10 @@ function getAllMessages(callback, filter, reverse) {
   let messages = [];
   let request = sms.getMessages(filter, reverse || false);
   request.onsuccess = function(event) {
-    if (request.result) {
-      messages.push(request.result);
-      request.continue();
+    let cursor = event.target.result;
+    if (cursor.message) {
+      messages.push(cursor.message);
+      cursor.continue();
       return;
     }
 

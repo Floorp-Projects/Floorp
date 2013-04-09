@@ -93,9 +93,9 @@ function doSendMessageAndCheckSuccess(receivers, body, callback) {
   }
 
   function onRequestSuccess(event) {
-    log("request.onsuccess event received.");
+    log("SmsRequest.onsuccess event received.");
 
-    ok(event.target instanceof DOMRequest,
+    ok(event.target instanceof MozSmsRequest,
        "event.target is instanceof " + event.target.constructor);
     event.target.removeEventListener("success", onRequestSuccess);
 
@@ -158,7 +158,7 @@ function doSendMessageAndCheckSuccess(receivers, body, callback) {
 
   for (let i = 0; i < result.length; i++) {
     let request = result[i];
-    ok(request instanceof DOMRequest,
+    ok(request instanceof MozSmsRequest,
        "request is instanceof " + request.constructor);
     request.addEventListener("success", onRequestSuccess);
   }
