@@ -480,10 +480,7 @@ SystemWorkerManager::RegisterRilWorker(unsigned int aClientId,
 {
   NS_ENSURE_TRUE(!JSVAL_IS_PRIMITIVE(aWorker), NS_ERROR_UNEXPECTED);
 
-  if (!mRilConsumers.EnsureLengthAtLeast(aClientId + 1)) {
-    NS_WARNING("Failed to ensure minimum length of mRilConsumers");
-    return NS_ERROR_FAILURE;
-  }
+  mRilConsumers.EnsureLengthAtLeast(aClientId + 1);
 
   if (mRilConsumers[aClientId]) {
     NS_WARNING("RilConsumer already registered");
