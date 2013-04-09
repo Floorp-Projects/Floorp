@@ -310,20 +310,24 @@ PeerConnectionImpl::~PeerConnectionImpl()
   */
 }
 
-// One level of indirection so we can use WrapRunnable in CreateMediaStream.
-nsresult
-PeerConnectionImpl::MakeMediaStream(nsIDOMWindow* aWindow,
-                                    uint32_t aHint, nsIDOMMediaStream** aRetval)
+already_AddRefed<DOMMediaStream>
+PeerConnectionImpl::MakeMediaStream(nsPIDOMWindow* aWindow,
+                                    uint32_t aHint)
 {
-  MOZ_ASSERT(aRetval);
-
   nsRefPtr<DOMMediaStream> stream =
     DOMMediaStream::CreateSourceStream(aWindow, aHint);
-  NS_ADDREF(*aRetval = stream);
+#ifdef MOZILLA_INTERNAL_API
+  nsIDocument* doc = aWindow->GetExtantDoc();
+  if (!doc) {
+    return nullptr;
+  }
+  // Make the stream data (audio/video samples) accessible to the receiving page.
+  stream->CombineWithPrincipal(doc->NodePrincipal());
+#endif
 
   CSFLogDebug(logTag, "Created media stream %p, inner: %p", stream.get(), stream->GetStream());
 
-  return NS_OK;
+  return stream.forget();
 }
 
 nsresult
@@ -333,22 +337,19 @@ PeerConnectionImpl::CreateRemoteSourceStreamInfo(nsRefPtr<RemoteSourceStreamInfo
   MOZ_ASSERT(aInfo);
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
-  nsIDOMMediaStream* stream;
-
   // We need to pass a dummy hint here because FakeMediaStream currently
   // needs to actually propagate a hint for local streams.
   // TODO(ekr@rtfm.com): Clean up when we have explicit track lists.
   // See bug 834835.
-  nsresult res = MakeMediaStream(mWindow, 0, &stream);
-  if (NS_FAILED(res)) {
-    return res;
+  nsRefPtr<DOMMediaStream> stream = MakeMediaStream(mWindow, 0);
+  if (!stream) {
+    return NS_ERROR_FAILURE;
   }
 
-  DOMMediaStream* comstream = static_cast<DOMMediaStream*>(stream);
-  static_cast<mozilla::SourceMediaStream*>(comstream->GetStream())->SetPullEnabled(true);
+  static_cast<mozilla::SourceMediaStream*>(stream->GetStream())->SetPullEnabled(true);
 
   nsRefPtr<RemoteSourceStreamInfo> remote;
-  remote = new RemoteSourceStreamInfo(comstream, mMedia);
+  remote = new RemoteSourceStreamInfo(stream.forget(), mMedia);
   *aInfo = remote;
 
   return NS_OK;
@@ -608,21 +609,22 @@ PeerConnectionImpl::CreateFakeMediaStream(uint32_t aHint, nsIDOMMediaStream** aR
     aHint &= ~MEDIA_STREAM_MUTE;
   }
 
-  nsresult res = MakeMediaStream(mWindow, aHint, aRetval);
-  if (NS_FAILED(res)) {
-    return res;
+  nsRefPtr<DOMMediaStream> stream = MakeMediaStream(mWindow, aHint);
+  if (!stream) {
+    return NS_ERROR_FAILURE;
   }
 
   if (!mute) {
     if (aHint & DOMMediaStream::HINT_CONTENTS_AUDIO) {
-      new Fake_AudioGenerator(static_cast<DOMMediaStream*>(*aRetval));
+      new Fake_AudioGenerator(stream);
     } else {
 #ifdef MOZILLA_INTERNAL_API
-    new Fake_VideoGenerator(static_cast<DOMMediaStream*>(*aRetval));
+    new Fake_VideoGenerator(stream);
 #endif
     }
   }
 
+  *aRetval = stream.forget().get();
   return NS_OK;
 }
 

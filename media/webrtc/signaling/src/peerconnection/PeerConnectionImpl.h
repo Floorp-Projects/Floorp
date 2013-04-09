@@ -157,8 +157,8 @@ public:
     IceConfiguration *aDst, JSContext* aCx);
   static nsresult ConvertConstraints(
     const JS::Value& aConstraints, MediaConstraints* aObj, JSContext* aCx);
-  static nsresult MakeMediaStream(nsIDOMWindow* aWindow,
-                                  uint32_t aHint, nsIDOMMediaStream** aStream);
+  static already_AddRefed<DOMMediaStream> MakeMediaStream(nsPIDOMWindow* aWindow,
+                                                          uint32_t aHint);
 
   Role GetRole() const {
     PC_AUTO_ENTER_API_CALL_NO_CHECK();
