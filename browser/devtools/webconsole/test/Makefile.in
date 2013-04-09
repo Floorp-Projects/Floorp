@@ -119,6 +119,7 @@ MOCHITEST_BROWSER_FILES = \
 	browser_eval_in_debugger_stackframe.js \
 	browser_console_variables_view.js \
 	browser_console_variables_view_while_debugging.js \
+	browser_console.js \
 	head.js \
 	$(NULL)
 

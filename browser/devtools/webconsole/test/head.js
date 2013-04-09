@@ -234,6 +234,11 @@ function finishTest()
 {
   browser = hudId = hud = filterBox = outputNode = cs = null;
 
+  if (HUDConsoleUI.browserConsole) {
+    HUDConsoleUI.toggleBrowserConsole().then(finishTest);
+    return;
+  }
+
   let hud = HUDService.getHudByWindow(content);
   if (!hud) {
     finish();
@@ -250,6 +255,10 @@ function finishTest()
 
 function tearDown()
 {
+  if (HUDConsoleUI.browserConsole) {
+    HUDConsoleUI.toggleBrowserConsole();
+  }
+
   let target = TargetFactory.forTab(gBrowser.selectedTab);
   gDevTools.closeToolbox(target);
   while (gBrowser.tabs.length > 1) {

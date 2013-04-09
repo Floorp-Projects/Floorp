@@ -207,6 +207,8 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 
 <!ENTITY remoteWebConsoleCmd.label    "Remote Web Console">
 
+<!ENTITY browserConsoleCmd.label      "Browser Console">
+
 <!ENTITY inspectContextMenu.label     "Inspect Element">
 <!ENTITY inspectContextMenu.accesskey "Q">
 
