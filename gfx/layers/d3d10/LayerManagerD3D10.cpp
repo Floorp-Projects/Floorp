@@ -755,6 +755,17 @@ LayerManagerD3D10::Render(EndTransactionFlags aFlags)
 
   static_cast<LayerD3D10*>(mRoot->ImplData())->RenderLayer();
 
+  // See bug 630197 - we have some reasons to believe if an earlier call
+  // returned an error, the upcoming present call may raise an exception.
+  // This will check if any of the calls done recently has returned an error
+  // and bails on composition. On the -next- frame we will then abandon
+  // hardware acceleration from gfxWindowsPlatform::VerifyD2DDevice.
+  // This might not be the 'optimal' solution but it will help us assert
+  // whether our thoughts of the causes of the issues are correct.
+  if (FAILED(mDevice->GetDeviceRemovedReason())) {
+    return;
+  }
+
   if (mTarget) {
     PaintToTarget();
   } else if (mBackBuffer) {
