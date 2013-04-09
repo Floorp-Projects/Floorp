@@ -13,21 +13,24 @@ const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/te
 function performTest(lastFinishedRequest, aConsole)
 {
   ok(lastFinishedRequest, "charset test page was loaded and logged");
-
-  aConsole.webConsoleClient.getResponseContent(lastFinishedRequest.actor,
-    function (aResponse) {
-      ok(!aResponse.contentDiscarded, "response body was not discarded");
-
-      let body = aResponse.content.text;
-      ok(body, "we have the response body");
-
-      let chars = "\u7684\u95ee\u5019!"; // 的问候!
-      isnot(body.indexOf("<p>" + chars + "</p>"), -1,
-        "found the chinese simplified string");
-      executeSoon(finishTest);
-    });
-
   HUDService.lastFinishedRequestCallback = null;
+
+  executeSoon(() => {
+    aConsole.webConsoleClient.getResponseContent(lastFinishedRequest.actor,
+      (aResponse) => {
+        ok(!aResponse.contentDiscarded, "response body was not discarded");
+
+        let body = aResponse.content.text;
+        ok(body, "we have the response body");
+
+        let chars = "\u7684\u95ee\u5019!"; // 的问候!
+        isnot(body.indexOf("<p>" + chars + "</p>"), -1,
+          "found the chinese simplified string");
+
+        HUDService.lastFinishedRequestCallback = null;
+        executeSoon(finishTest);
+      });
+  });
 }
 
 function test()

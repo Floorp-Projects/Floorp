@@ -19,6 +19,8 @@ let openTabs = [];
 let loadedTabCount = 0;
 
 function test() {
+  requestLongerTimeout(2);
+
   // Add two tabs in the main window.
   addTabs(win1);
 
@@ -64,7 +66,7 @@ function openConsoles() {
   }
 
   waitForSuccess({
-    timeout: 10000,
+    timeout: 15000,
     name: "4 web consoles opened",
     validatorFn: function()
     {
