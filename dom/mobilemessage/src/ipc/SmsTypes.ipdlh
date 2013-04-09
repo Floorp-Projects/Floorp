@@ -45,13 +45,19 @@ struct SmsFilterData
   ReadState     read;
 };
 
-struct ThreadListItem
+struct ThreadData
 {
   uint64_t id;
-  nsString senderOrReceiver;
+  nsString[] participants;
   uint64_t timestamp;
   nsString body;
   uint64_t unreadCount;
+};
+
+union MobileMessageCursorData
+{
+  SmsMessageData;
+  ThreadData;
 };
 
 }
