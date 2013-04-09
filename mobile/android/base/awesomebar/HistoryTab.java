@@ -124,6 +124,8 @@ public class HistoryTab extends AwesomeBarTab {
 
     @Override
     public void destroy() {
+        super.destroy();
+
         if (mContentObserver != null)
             BrowserDB.unregisterContentObserver(getContentResolver(), mContentObserver);
     }
@@ -183,11 +185,8 @@ public class HistoryTab extends AwesomeBarTab {
             String title = (String) historyItem.get(URLColumns.TITLE);
             String url = (String) historyItem.get(URLColumns.URL);
 
-            if (TextUtils.isEmpty(title))
-                title = url;
-
-            viewHolder.titleView.setText(title);
-            viewHolder.urlView.setText(url);
+            updateTitle(viewHolder.titleView, title, url);
+            updateUrl(viewHolder.urlView, url);
 
             byte[] b = (byte[]) historyItem.get(URLColumns.FAVICON);
             Bitmap favicon = null;
@@ -412,9 +411,7 @@ public class HistoryTab extends AwesomeBarTab {
 
         String url = (String) historyItem.get(URLColumns.URL);
         String title = (String) historyItem.get(URLColumns.TITLE);
-        AwesomeBarTabs.OnUrlOpenListener listener = getUrlListener();
-        if (!TextUtils.isEmpty(url) && listener != null)
-            listener.onUrlOpen(url, title);
+        sendToListener(url, title);
 
         return true;
     }
