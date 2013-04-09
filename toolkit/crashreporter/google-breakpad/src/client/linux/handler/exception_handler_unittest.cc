@@ -54,6 +54,27 @@ using namespace google_breakpad;
 
 namespace {
 
+// Flush the instruction cache for a given memory range.
+// Only required on ARM.
+void FlushInstructionCache(const char* memory, uint32_t memory_size) {
+#if defined(__arm__)
+  long begin = reinterpret_cast<long>(memory);
+  long end = begin + static_cast<long>(memory_size);
+# if defined(__ANDROID__)
+  // Provided by Android's <unistd.h>
+  cacheflush(begin, end, 0);
+# elif defined(__linux__)
+  // GLibc/ARM doesn't provide a wrapper for it, do a direct syscall.
+#  ifndef __ARM_NR_cacheflush
+#  define __ARM_NR_cacheflush 0xf0002
+#  endif
+  syscall(__ARM_NR_cacheflush, begin, end, 0);
+# else
+#   error "Your operating system is not supported yet"
+# endif
+#endif
+}
+
 // Length of a formatted GUID string =
 // sizeof(MDGUID) * 2 + 4 (for dashes) + 1 (null terminator)
 const int kGUIDStringSize = 37;
@@ -449,6 +470,7 @@ TEST(ExceptionHandlerTest, InstructionPointerMemory) {
     // of the block of memory, because the minidump should contain 128
     // bytes on either side of the instruction pointer.
     memcpy(memory + kOffset, instructions, sizeof(instructions));
+    FlushInstructionCache(memory, kMemorySize);
 
     // Now execute the instructions, which should crash.
     typedef void (*void_function)(void);
@@ -541,6 +563,7 @@ TEST(ExceptionHandlerTest, InstructionPointerMemoryMinBound) {
     // of the block of memory, because the minidump should contain 128
     // bytes on either side of the instruction pointer.
     memcpy(memory + kOffset, instructions, sizeof(instructions));
+    FlushInstructionCache(memory, kMemorySize);
 
     // Now execute the instructions, which should crash.
     typedef void (*void_function)(void);
@@ -632,6 +655,7 @@ TEST(ExceptionHandlerTest, InstructionPointerMemoryMaxBound) {
     // of the block of memory, because the minidump should contain 128
     // bytes on either side of the instruction pointer.
     memcpy(memory + kOffset, instructions, sizeof(instructions));
+    FlushInstructionCache(memory, kMemorySize);
 
     // Now execute the instructions, which should crash.
     typedef void (*void_function)(void);

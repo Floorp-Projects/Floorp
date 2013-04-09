@@ -199,7 +199,7 @@ TEST(MinidumpWriterTest, MappingInfo) {
   // Read the minidump. Load the module list, and ensure that
   // the mmap'ed |memory| is listed with the given module name
   // and debug ID.
-  Minidump minidump(templ.c_str());
+  Minidump minidump(templ);
   ASSERT_TRUE(minidump.Read());
 
   MinidumpModuleList* module_list = minidump.GetModuleList();
@@ -318,7 +318,7 @@ TEST(MinidumpWriterTest, MappingInfoContained) {
   // Read the minidump. Load the module list, and ensure that
   // the mmap'ed |memory| is listed with the given module name
   // and debug ID.
-  Minidump minidump(dumpfile.c_str());
+  Minidump minidump(dumpfile);
   ASSERT_TRUE(minidump.Read());
 
   MinidumpModuleList* module_list = minidump.GetModuleList();
@@ -400,7 +400,7 @@ TEST(MinidumpWriterTest, DeletedBinary) {
   ASSERT_EQ(0, stat(templ.c_str(), &st));
   ASSERT_GT(st.st_size, 0);
 
-  Minidump minidump(templ.c_str());
+  Minidump minidump(templ);
   ASSERT_TRUE(minidump.Read());
 
   // Check that the main module filename is correct.
@@ -481,7 +481,7 @@ TEST(MinidumpWriterTest, AdditionalMemory) {
                             mappings, memory_list));
 
   // Read the minidump. Ensure that the memory region is present
-  Minidump minidump(templ.c_str());
+  Minidump minidump(templ);
   ASSERT_TRUE(minidump.Read());
 
   MinidumpMemoryList* dump_memory_list = minidump.GetMemoryList();
@@ -551,7 +551,7 @@ TEST(MinidumpWriterTest, InvalidStackPointer) {
   ASSERT_TRUE(WriteMinidump(templ.c_str(), child, &context, sizeof(context)));
 
   // Read the minidump. Ensure that the memory region is present
-  Minidump minidump(templ.c_str());
+  Minidump minidump(templ);
   ASSERT_TRUE(minidump.Read());
 
   // TODO(ted.mielczarek,mkrebs): Enable this part of the test once
@@ -652,7 +652,7 @@ TEST(MinidumpWriterTest, MinidumpSizeLimit) {
     ASSERT_GT(st.st_size, 0);
     normal_file_size = st.st_size;
 
-    Minidump minidump(normal_dump.c_str());
+    Minidump minidump(normal_dump);
     ASSERT_TRUE(minidump.Read());
     MinidumpThreadList* dump_thread_list = minidump.GetThreadList();
     ASSERT_TRUE(dump_thread_list);
@@ -719,7 +719,7 @@ TEST(MinidumpWriterTest, MinidumpSizeLimit) {
     // in like it was supposed to.
     EXPECT_LT(st.st_size, normal_file_size);
 
-    Minidump minidump(limit_dump.c_str());
+    Minidump minidump(limit_dump);
     ASSERT_TRUE(minidump.Read());
     MinidumpThreadList* dump_thread_list = minidump.GetThreadList();
     ASSERT_TRUE(dump_thread_list);

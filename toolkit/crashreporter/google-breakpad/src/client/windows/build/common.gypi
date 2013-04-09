@@ -199,14 +199,6 @@
     # to ~/.gyp/include.gypi, gclient runhooks --force, and do a release build.
     'win_use_allocator_shim%': 1, # 0 = shim allocator via libcmt; 1 = msvcrt
 
-    # To do a shared build on linux we need to be able to choose between type
-    # static_library and shared_library. We default to doing a static build
-    # but you can override this with "gyp -Dlibrary=shared_library" or you
-    # can add the following line (without the #) to ~/.gyp/include.gypi
-    # {'variables': {'library': 'shared_library'}}
-    # to compile as shared by default
-    'library%': 'static_library',
-
     # Whether usage of OpenMAX is enabled.
     'enable_openmax%': 0,
 
@@ -831,7 +823,7 @@
           'IMPLICIT_COMMAND_DEPENDENCIES': 0,
           # -rpath is only used when building with shared libraries.
           'conditions': [
-            [ 'library=="shared_library"', {
+            [ 'component=="shared_library"', {
               'RPATH': '$LIB_DIR',
             }],
           ],
