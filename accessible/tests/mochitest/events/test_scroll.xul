@@ -97,7 +97,7 @@
     {
       gQueue = new eventQueue();
 
-      var url = "http://mochi.test:8888/a11y/accessible/events/scroll.html#link1";
+      var url = "http://mochi.test:8888/a11y/accessible/tests/mochitest/events/scroll.html#link1";
       gQueue.push(new loadTab(url));
       gQueue.push(new loadTabInBackground(url));
       gQueue.push(new switchToBackgroundTab());

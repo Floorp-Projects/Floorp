@@ -42,6 +42,7 @@ import android.os.SystemClock;
 import android.support.v4.util.LongSparseArray;
 import android.support.v4.util.SparseArrayCompat;
 import android.support.v4.view.AccessibilityDelegateCompat;
+import android.support.v4.view.KeyEventCompat;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v4.view.VelocityTrackerCompat;
 import android.support.v4.view.ViewCompat;
@@ -51,8 +52,11 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.ContextMenu.ContextMenuInfo;
+import android.view.FocusFinder;
 import android.view.HapticFeedbackConstants;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
+import android.view.SoundEffectConstants;
 import android.view.VelocityTracker;
 import android.view.View;
 import android.view.ViewConfiguration;
@@ -120,6 +124,10 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
 
     private static final int CHECK_POSITION_SEARCH_DISTANCE = 20;
 
+    private static final float MAX_SCROLL_FACTOR = 0.33f;
+
+    private static final int MIN_SCROLL_PREVIEW_PIXELS = 10;
+
     public static enum ChoiceMode {
         NONE,
         SINGLE,
@@ -169,10 +177,13 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
 
     private final Rect mTempRect;
 
+    private final ArrowScrollFocusResult mArrowScrollFocusResult;
+
     private Rect mTouchFrame;
     private int mMotionPosition;
     private CheckForTap mPendingCheckForTap;
     private CheckForLongPress mPendingCheckForLongPress;
+    private CheckForKeyLongPress mPendingCheckForKeyLongPress;
     private PerformClick mPerformClick;
     private Runnable mTouchModeReset;
     private int mResurrectToPosition;
@@ -336,6 +347,8 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         mItemsCanFocus = false;
 
         mTempRect = new Rect();
+
+        mArrowScrollFocusResult = new ArrowScrollFocusResult();
 
         mSelectorPosition = INVALID_POSITION;
 
@@ -1316,6 +1329,8 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
             if (maybeStartScrolling(delta)) {
                 return true;
             }
+            
+            break;
         }
 
         case MotionEvent.ACTION_CANCEL:
@@ -1637,6 +1652,21 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
     }
 
     @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        return handleKeyEvent(keyCode, 1, event);
+    }
+
+    @Override
+    public boolean onKeyMultiple(int keyCode, int repeatCount, KeyEvent event) {
+        return handleKeyEvent(keyCode, repeatCount, event);
+    }
+
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        return handleKeyEvent(keyCode, 1, event);
+    }
+
+    @Override
     public void sendAccessibilityEvent(int eventType) {
         // Since this class calls onScrollChanged even if the mFirstPosition and the
         // child count have not changed we will avoid sending duplicate accessibility
@@ -1723,6 +1753,885 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         }
 
         return false;
+    }
+
+    /**
+     * Return true if child is an ancestor of parent, (or equal to the parent).
+     */
+    private boolean isViewAncestorOf(View child, View parent) {
+        if (child == parent) {
+            return true;
+        }
+
+        final ViewParent theParent = child.getParent();
+
+        return (theParent instanceof ViewGroup) &&
+                 isViewAncestorOf((View) theParent, parent);
+    }
+
+    private void forceValidFocusDirection(int direction) {
+        if (mIsVertical && direction != View.FOCUS_UP && direction != View.FOCUS_DOWN)  {
+            throw new IllegalArgumentException("Focus direction must be one of"
+                    + " {View.FOCUS_UP, View.FOCUS_DOWN} for vertical orientation");
+        } else if (!mIsVertical && direction != View.FOCUS_LEFT && direction != View.FOCUS_RIGHT)  {
+            throw new IllegalArgumentException("Focus direction must be one of"
+                    + " {View.FOCUS_LEFT, View.FOCUS_RIGHT} for vertical orientation");
+        }
+    }
+
+    private void forceValidInnerFocusDirection(int direction) {
+        if (mIsVertical && direction != View.FOCUS_LEFT && direction != View.FOCUS_RIGHT)  {
+            throw new IllegalArgumentException("Direction must be one of"
+                    + " {View.FOCUS_LEFT, View.FOCUS_RIGHT} for vertical orientation");
+        } else if (!mIsVertical && direction != View.FOCUS_UP && direction != View.FOCUS_DOWN)  {
+            throw new IllegalArgumentException("direction must be one of"
+                    + " {View.FOCUS_UP, View.FOCUS_DOWN} for horizontal orientation");
+        }
+    }
+
+    /**
+     * Scrolls up or down by the number of items currently present on screen.
+     *
+     * @param direction either {@link View#FOCUS_UP} or {@link View#FOCUS_DOWN} or
+     *        {@link View#FOCUS_LEFT} or {@link View#FOCUS_RIGHT} depending on the
+     *        current view orientation.
+     *
+     * @return whether selection was moved
+     */
+    boolean pageScroll(int direction) {
+        forceValidFocusDirection(direction);
+
+        boolean forward = false;
+        int nextPage = -1;
+
+        if (direction == View.FOCUS_UP || direction == View.FOCUS_LEFT) {
+            nextPage = Math.max(0, mSelectedPosition - getChildCount() - 1);
+        } else if (direction == View.FOCUS_DOWN || direction == View.FOCUS_RIGHT) {
+            nextPage = Math.min(mItemCount - 1, mSelectedPosition + getChildCount() - 1);
+            forward = true;
+        }
+
+        if (nextPage < 0) {
+            return false;
+        }
+
+        final int position = lookForSelectablePosition(nextPage, forward);
+        if (position >= 0) {
+            mLayoutMode = LAYOUT_SPECIFIC;
+            mSpecificStart = (mIsVertical ? getPaddingTop() : getPaddingLeft());
+
+            if (forward && position > mItemCount - getChildCount()) {
+                mLayoutMode = LAYOUT_FORCE_BOTTOM;
+            }
+
+            if (!forward && position < getChildCount()) {
+                mLayoutMode = LAYOUT_FORCE_TOP;
+            }
+
+            setSelectionInt(position);
+            invokeOnItemScrollListener();
+
+            if (!awakenScrollbarsInternal()) {
+                invalidate();
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Go to the last or first item if possible (not worrying about panning across or navigating
+     * within the internal focus of the currently selected item.)
+     *
+     * @param direction either {@link View#FOCUS_UP} or {@link View#FOCUS_DOWN} or
+     *        {@link View#FOCUS_LEFT} or {@link View#FOCUS_RIGHT} depending on the
+     *        current view orientation.
+     *
+     * @return whether selection was moved
+     */
+    boolean fullScroll(int direction) {
+        forceValidFocusDirection(direction);
+
+        boolean moved = false;
+        if (direction == View.FOCUS_UP || direction == View.FOCUS_LEFT) {
+            if (mSelectedPosition != 0) {
+                int position = lookForSelectablePosition(0, true);
+                if (position >= 0) {
+                    mLayoutMode = LAYOUT_FORCE_TOP;
+                    setSelectionInt(position);
+                    invokeOnItemScrollListener();
+                }
+
+                moved = true;
+            }
+        } else if (direction == View.FOCUS_DOWN || direction == View.FOCUS_RIGHT) {
+            if (mSelectedPosition < mItemCount - 1) {
+                int position = lookForSelectablePosition(mItemCount - 1, true);
+                if (position >= 0) {
+                    mLayoutMode = LAYOUT_FORCE_BOTTOM;
+                    setSelectionInt(position);
+                    invokeOnItemScrollListener();
+                }
+
+                moved = true;
+            }
+        }
+
+        if (moved && !awakenScrollbarsInternal()) {
+            awakenScrollbarsInternal();
+            invalidate();
+        }
+
+        return moved;
+    }
+
+    /**
+     * To avoid horizontal/vertical focus searches changing the selected item,
+     * we manually focus search within the selected item (as applicable), and
+     * prevent focus from jumping to something within another item.
+     *
+     * @param direction either {@link View#FOCUS_UP} or {@link View#FOCUS_DOWN} or
+     *        {@link View#FOCUS_LEFT} or {@link View#FOCUS_RIGHT} depending on the
+     *        current view orientation.
+     *
+     * @return Whether this consumes the key event.
+     */
+    private boolean handleFocusWithinItem(int direction) {
+        forceValidInnerFocusDirection(direction);
+
+        final int numChildren = getChildCount();
+
+        if (mItemsCanFocus && numChildren > 0 && mSelectedPosition != INVALID_POSITION) {
+            final View selectedView = getSelectedView();
+
+            if (selectedView != null && selectedView.hasFocus() &&
+                    selectedView instanceof ViewGroup) {
+
+                final View currentFocus = selectedView.findFocus();
+                final View nextFocus = FocusFinder.getInstance().findNextFocus(
+                        (ViewGroup) selectedView, currentFocus, direction);
+
+                if (nextFocus != null) {
+                    // Do the math to get interesting rect in next focus' coordinates
+                    currentFocus.getFocusedRect(mTempRect);
+                    offsetDescendantRectToMyCoords(currentFocus, mTempRect);
+                    offsetRectIntoDescendantCoords(nextFocus, mTempRect);
+
+                    if (nextFocus.requestFocus(direction, mTempRect)) {
+                        return true;
+                    }
+                }
+
+                // We are blocking the key from being handled (by returning true)
+                // if the global result is going to be some other view within this
+                // list. This is to achieve the overall goal of having horizontal/vertical
+                // d-pad navigation remain in the current item depending on the current
+                // orientation in this view.
+                final View globalNextFocus = FocusFinder.getInstance().findNextFocus(
+                        (ViewGroup) getRootView(), currentFocus, direction);
+
+                if (globalNextFocus != null) {
+                    return isViewAncestorOf(globalNextFocus, this);
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Scrolls to the next or previous item if possible.
+     *
+     * @param direction either {@link View#FOCUS_UP} or {@link View#FOCUS_DOWN} or
+     *        {@link View#FOCUS_LEFT} or {@link View#FOCUS_RIGHT} depending on the
+     *        current view orientation.
+     *
+     * @return whether selection was moved
+     */
+    private boolean arrowScroll(int direction) {
+        forceValidFocusDirection(direction);
+
+        try {
+            mInLayout = true;
+
+            final boolean handled = arrowScrollImpl(direction);
+            if (handled) {
+                playSoundEffect(SoundEffectConstants.getContantForFocusDirection(direction));
+            }
+
+            return handled;
+        } finally {
+            mInLayout = false;
+        }
+    }
+
+    /**
+     * When selection changes, it is possible that the previously selected or the
+     * next selected item will change its size.  If so, we need to offset some folks,
+     * and re-layout the items as appropriate.
+     *
+     * @param selectedView The currently selected view (before changing selection).
+     *   should be <code>null</code> if there was no previous selection.
+     * @param direction either {@link View#FOCUS_UP} or {@link View#FOCUS_DOWN} or
+     *        {@link View#FOCUS_LEFT} or {@link View#FOCUS_RIGHT} depending on the
+     *        current view orientation.
+     * @param newSelectedPosition The position of the next selection.
+     * @param newFocusAssigned whether new focus was assigned.  This matters because
+     *        when something has focus, we don't want to show selection (ugh).
+     */
+    private void handleNewSelectionChange(View selectedView, int direction, int newSelectedPosition,
+            boolean newFocusAssigned) {
+        forceValidFocusDirection(direction);
+
+        if (newSelectedPosition == INVALID_POSITION) {
+            throw new IllegalArgumentException("newSelectedPosition needs to be valid");
+        }
+
+        // Whether or not we are moving down/right or up/left, we want to preserve the
+        // top/left of whatever view is at the start:
+        // - moving down/right: the view that had selection
+        // - moving up/left: the view that is getting selection
+        final int selectedIndex = mSelectedPosition - mFirstPosition;
+        final int nextSelectedIndex = newSelectedPosition - mFirstPosition;
+        int startViewIndex, endViewIndex;
+        boolean topSelected = false;
+        View startView;
+        View endView;
+
+        if (direction == View.FOCUS_UP || direction == View.FOCUS_LEFT) {
+            startViewIndex = nextSelectedIndex;
+            endViewIndex = selectedIndex;
+            startView = getChildAt(startViewIndex);
+            endView = selectedView;
+            topSelected = true;
+        } else {
+            startViewIndex = selectedIndex;
+            endViewIndex = nextSelectedIndex;
+            startView = selectedView;
+            endView = getChildAt(endViewIndex);
+        }
+
+        final int numChildren = getChildCount();
+
+        // start with top view: is it changing size?
+        if (startView != null) {
+            startView.setSelected(!newFocusAssigned && topSelected);
+            measureAndAdjustDown(startView, startViewIndex, numChildren);
+        }
+
+        // is the bottom view changing size?
+        if (endView != null) {
+            endView.setSelected(!newFocusAssigned && !topSelected);
+            measureAndAdjustDown(endView, endViewIndex, numChildren);
+        }
+    }
+
+    /**
+     * Re-measure a child, and if its height changes, lay it out preserving its
+     * top, and adjust the children below it appropriately.
+     *
+     * @param child The child
+     * @param childIndex The view group index of the child.
+     * @param numChildren The number of children in the view group.
+     */
+    private void measureAndAdjustDown(View child, int childIndex, int numChildren) {
+        int oldHeight = child.getHeight();
+        measureChild(child);
+
+        if (child.getMeasuredHeight() == oldHeight) {
+            return;
+        }
+
+        // lay out the view, preserving its top
+        relayoutMeasuredChild(child);
+
+        // adjust views below appropriately
+        final int heightDelta = child.getMeasuredHeight() - oldHeight;
+        for (int i = childIndex + 1; i < numChildren; i++) {
+            getChildAt(i).offsetTopAndBottom(heightDelta);
+        }
+    }
+
+    /**
+     * Do an arrow scroll based on focus searching.  If a new view is
+     * given focus, return the selection delta and amount to scroll via
+     * an {@link ArrowScrollFocusResult}, otherwise, return null.
+     *
+     * @param direction either {@link View#FOCUS_UP} or {@link View#FOCUS_DOWN} or
+     *        {@link View#FOCUS_LEFT} or {@link View#FOCUS_RIGHT} depending on the
+     *        current view orientation.
+     *
+     * @return The result if focus has changed, or <code>null</code>.
+     */
+    private ArrowScrollFocusResult arrowScrollFocused(final int direction) {
+        forceValidFocusDirection(direction);
+
+        final View selectedView = getSelectedView();
+        final View newFocus;
+        final int searchPoint;
+
+        if (selectedView != null && selectedView.hasFocus()) {
+            View oldFocus = selectedView.findFocus();
+            newFocus = FocusFinder.getInstance().findNextFocus(this, oldFocus, direction);
+        } else {
+            if (direction == View.FOCUS_DOWN || direction == View.FOCUS_RIGHT) {
+                final int start = (mIsVertical ? getPaddingTop() : getPaddingLeft());
+
+                final int selectedStart;
+                if (selectedView != null) {
+                    selectedStart = (mIsVertical ? selectedView.getTop() : selectedView.getLeft());
+                } else {
+                    selectedStart = start;
+                }
+
+                searchPoint = Math.max(selectedStart, start);
+            } else {
+                final int end = (mIsVertical ? getHeight() - getPaddingBottom() :
+                    getWidth() - getPaddingRight());
+
+                final int selectedEnd;
+                if (selectedView != null) {
+                    selectedEnd = (mIsVertical ? selectedView.getBottom() : selectedView.getRight());
+                } else {
+                    selectedEnd = end;
+                }
+
+                searchPoint = Math.min(selectedEnd, end);
+            }
+
+            final int x = (mIsVertical ? 0 : searchPoint);
+            final int y = (mIsVertical ? searchPoint : 0);
+            mTempRect.set(x, y, x, y);
+
+            newFocus = FocusFinder.getInstance().findNextFocusFromRect(this, mTempRect, direction);
+        }
+
+        if (newFocus != null) {
+            final int positionOfNewFocus = positionOfNewFocus(newFocus);
+
+            // If the focus change is in a different new position, make sure
+            // we aren't jumping over another selectable position.
+            if (mSelectedPosition != INVALID_POSITION && positionOfNewFocus != mSelectedPosition) {
+                final int selectablePosition = lookForSelectablePositionOnScreen(direction);
+
+                final boolean movingForward =
+                        (direction == View.FOCUS_DOWN || direction == View.FOCUS_RIGHT);
+                final boolean movingBackward =
+                        (direction == View.FOCUS_UP || direction == View.FOCUS_LEFT);
+
+                if (selectablePosition != INVALID_POSITION &&
+                        ((movingForward && selectablePosition < positionOfNewFocus) ||
+                         (movingBackward && selectablePosition > positionOfNewFocus))) {
+                    return null;
+                }
+            }
+
+            int focusScroll = amountToScrollToNewFocus(direction, newFocus, positionOfNewFocus);
+
+            final int maxScrollAmount = getMaxScrollAmount();
+            if (focusScroll < maxScrollAmount) {
+                // Not moving too far, safe to give next view focus
+                newFocus.requestFocus(direction);
+                mArrowScrollFocusResult.populate(positionOfNewFocus, focusScroll);
+                return mArrowScrollFocusResult;
+            } else if (distanceToView(newFocus) < maxScrollAmount){
+                // Case to consider:
+                // Too far to get entire next focusable on screen, but by going
+                // max scroll amount, we are getting it at least partially in view,
+                // so give it focus and scroll the max amount.
+                newFocus.requestFocus(direction);
+                mArrowScrollFocusResult.populate(positionOfNewFocus, maxScrollAmount);
+                return mArrowScrollFocusResult;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @return The maximum amount a list view will scroll in response to
+     *   an arrow event.
+     */
+    public int getMaxScrollAmount() {
+        return (int) (MAX_SCROLL_FACTOR * getHeight());
+    }
+
+    /**
+     * @return The amount to preview next items when arrow scrolling.
+     */
+    private int getArrowScrollPreviewLength() {
+        // FIXME: TwoWayView has no fading edge support just yet but using it
+        // makes it convenient for defining the next item's previous length.
+        int fadingEdgeLength =
+                (mIsVertical ? getVerticalFadingEdgeLength() : getHorizontalFadingEdgeLength());
+
+        return mItemMargin + Math.max(MIN_SCROLL_PREVIEW_PIXELS, fadingEdgeLength);
+    }
+
+    /**
+     * @param newFocus The view that would have focus.
+     * @return the position that contains newFocus
+     */
+    private int positionOfNewFocus(View newFocus) {
+        final int numChildren = getChildCount();
+
+        for (int i = 0; i < numChildren; i++) {
+            final View child = getChildAt(i);
+            if (isViewAncestorOf(newFocus, child)) {
+                return mFirstPosition + i;
+            }
+        }
+
+        throw new IllegalArgumentException("newFocus is not a child of any of the"
+                + " children of the list!");
+    }
+
+    /**
+     * Handle an arrow scroll going up or down.  Take into account whether items are selectable,
+     * whether there are focusable items, etc.
+     *
+     * @param direction either {@link View#FOCUS_UP} or {@link View#FOCUS_DOWN} or
+     *        {@link View#FOCUS_LEFT} or {@link View#FOCUS_RIGHT} depending on the
+     *        current view orientation.
+     *
+     * @return Whether any scrolling, selection or focus change occurred.
+     */
+    private boolean arrowScrollImpl(int direction) {
+        forceValidFocusDirection(direction);
+
+        if (getChildCount() <= 0) {
+            return false;
+        }
+
+        View selectedView = getSelectedView();
+        int selectedPos = mSelectedPosition;
+
+        int nextSelectedPosition = lookForSelectablePositionOnScreen(direction);
+        int amountToScroll = amountToScroll(direction, nextSelectedPosition);
+
+        // If we are moving focus, we may OVERRIDE the default behaviour
+        final ArrowScrollFocusResult focusResult = (mItemsCanFocus ? arrowScrollFocused(direction) : null);
+        if (focusResult != null) {
+            nextSelectedPosition = focusResult.getSelectedPosition();
+            amountToScroll = focusResult.getAmountToScroll();
+        }
+
+        boolean needToRedraw = (focusResult != null);
+        if (nextSelectedPosition != INVALID_POSITION) {
+            handleNewSelectionChange(selectedView, direction, nextSelectedPosition, focusResult != null);
+
+            setSelectedPositionInt(nextSelectedPosition);
+            setNextSelectedPositionInt(nextSelectedPosition);
+
+            selectedView = getSelectedView();
+            selectedPos = nextSelectedPosition;
+
+            if (mItemsCanFocus && focusResult == null) {
+                // There was no new view found to take focus, make sure we
+                // don't leave focus with the old selection.
+                final View focused = getFocusedChild();
+                if (focused != null) {
+                    focused.clearFocus();
+                }
+            }
+
+            needToRedraw = true;
+            checkSelectionChanged();
+        }
+
+        if (amountToScroll > 0) {
+            trackMotionScroll(direction == View.FOCUS_UP || direction == View.FOCUS_LEFT ?
+                    amountToScroll : -amountToScroll);
+            needToRedraw = true;
+        }
+
+        // If we didn't find a new focusable, make sure any existing focused
+        // item that was panned off screen gives up focus.
+        if (mItemsCanFocus && focusResult == null &&
+                selectedView != null && selectedView.hasFocus()) {
+            final View focused = selectedView.findFocus();
+            if (!isViewAncestorOf(focused, this) || distanceToView(focused) > 0) {
+                focused.clearFocus();
+            }
+        }
+
+        // If the current selection is panned off, we need to remove the selection
+        if (nextSelectedPosition == INVALID_POSITION && selectedView != null
+                && !isViewAncestorOf(selectedView, this)) {
+            selectedView = null;
+            hideSelector();
+
+            // But we don't want to set the ressurect position (that would make subsequent
+            // unhandled key events bring back the item we just scrolled off)
+            mResurrectToPosition = INVALID_POSITION;
+        }
+
+        if (needToRedraw) {
+            if (selectedView != null) {
+                positionSelector(selectedPos, selectedView);
+                mSelectedStart = selectedView.getTop();
+            }
+
+            if (!awakenScrollbarsInternal()) {
+                invalidate();
+            }
+
+            invokeOnItemScrollListener();
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Determine how much we need to scroll in order to get the next selected view
+     * visible. The amount is capped at {@link #getMaxScrollAmount()}.
+     *
+     * @param direction either {@link View#FOCUS_UP} or {@link View#FOCUS_DOWN} or
+     *        {@link View#FOCUS_LEFT} or {@link View#FOCUS_RIGHT} depending on the
+     *        current view orientation.
+     * @param nextSelectedPosition The position of the next selection, or
+     *        {@link #INVALID_POSITION} if there is no next selectable position
+     *
+     * @return The amount to scroll. Note: this is always positive!  Direction
+     *         needs to be taken into account when actually scrolling.
+     */
+    private int amountToScroll(int direction, int nextSelectedPosition) {
+        forceValidFocusDirection(direction);
+
+        final int numChildren = getChildCount();
+
+        if (direction == View.FOCUS_DOWN || direction == View.FOCUS_RIGHT) {
+            final int end = (mIsVertical ? getHeight() - getPaddingBottom() :
+                getWidth() - getPaddingRight());
+
+            int indexToMakeVisible = numChildren - 1;
+            if (nextSelectedPosition != INVALID_POSITION) {
+                indexToMakeVisible = nextSelectedPosition - mFirstPosition;
+            }
+
+            final int positionToMakeVisible = mFirstPosition + indexToMakeVisible;
+            final View viewToMakeVisible = getChildAt(indexToMakeVisible);
+
+            int goalEnd = end;
+            if (positionToMakeVisible < mItemCount - 1) {
+                goalEnd -= getArrowScrollPreviewLength();
+            }
+
+            final int viewToMakeVisibleStart =
+                    (mIsVertical ? viewToMakeVisible.getTop() : viewToMakeVisible.getLeft());
+            final int viewToMakeVisibleEnd =
+                    (mIsVertical ? viewToMakeVisible.getBottom() : viewToMakeVisible.getRight());
+
+            if (viewToMakeVisibleEnd <= goalEnd) {
+                // Target item is fully visible
+                return 0;
+            }
+
+            if (nextSelectedPosition != INVALID_POSITION &&
+                    (goalEnd - viewToMakeVisibleStart) >= getMaxScrollAmount()) {
+                // Item already has enough of it visible, changing selection is good enough
+                return 0;
+            }
+
+            int amountToScroll = (viewToMakeVisibleEnd - goalEnd);
+
+            if (mFirstPosition + numChildren == mItemCount) {
+                final View lastChild = getChildAt(numChildren - 1);
+                final int lastChildEnd = (mIsVertical ? lastChild.getBottom() : lastChild.getRight());
+
+                // Last is last in list -> Make sure we don't scroll past it
+                final int max = lastChildEnd - end;
+                amountToScroll = Math.min(amountToScroll, max);
+            }
+
+            return Math.min(amountToScroll, getMaxScrollAmount());
+        } else {
+            final int start = (mIsVertical ? getPaddingTop() : getPaddingLeft());
+
+            int indexToMakeVisible = 0;
+            if (nextSelectedPosition != INVALID_POSITION) {
+                indexToMakeVisible = nextSelectedPosition - mFirstPosition;
+            }
+
+            final int positionToMakeVisible = mFirstPosition + indexToMakeVisible;
+            final View viewToMakeVisible = getChildAt(indexToMakeVisible);
+
+            int goalStart = start;
+            if (positionToMakeVisible > 0) {
+                goalStart += getArrowScrollPreviewLength();
+            }
+
+            final int viewToMakeVisibleStart =
+                    (mIsVertical ? viewToMakeVisible.getTop() : viewToMakeVisible.getLeft());
+            final int viewToMakeVisibleEnd =
+                    (mIsVertical ? viewToMakeVisible.getBottom() : viewToMakeVisible.getRight());
+
+            if (viewToMakeVisibleStart >= goalStart) {
+                // Item is fully visible
+                return 0;
+            }
+
+            if (nextSelectedPosition != INVALID_POSITION &&
+                    (viewToMakeVisibleEnd - goalStart) >= getMaxScrollAmount()) {
+                // Item already has enough of it visible, changing selection is good enough
+                return 0;
+            }
+
+            int amountToScroll = (goalStart - viewToMakeVisibleStart);
+
+            if (mFirstPosition == 0) {
+                final View firstChild = getChildAt(0);
+                final int firstChildStart = (mIsVertical ? firstChild.getTop() : firstChild.getLeft()); 
+
+                // First is first in list -> make sure we don't scroll past it
+                final int max = start - firstChildStart;
+                amountToScroll = Math.min(amountToScroll,  max);
+            }
+
+            return Math.min(amountToScroll, getMaxScrollAmount());
+        }
+    }
+
+    /**
+     * Determine how much we need to scroll in order to get newFocus in view.
+     *
+     * @param direction either {@link View#FOCUS_UP} or {@link View#FOCUS_DOWN} or
+     *        {@link View#FOCUS_LEFT} or {@link View#FOCUS_RIGHT} depending on the
+     *        current view orientation.
+     * @param newFocus The view that would take focus.
+     * @param positionOfNewFocus The position of the list item containing newFocus
+     *
+     * @return The amount to scroll. Note: this is always positive! Direction
+     *   needs to be taken into account when actually scrolling.
+     */
+    private int amountToScrollToNewFocus(int direction, View newFocus, int positionOfNewFocus) {
+        forceValidFocusDirection(direction);
+
+        int amountToScroll = 0;
+
+        newFocus.getDrawingRect(mTempRect);
+        offsetDescendantRectToMyCoords(newFocus, mTempRect);
+
+        if (direction == View.FOCUS_UP || direction == View.FOCUS_LEFT) {
+            final int start = (mIsVertical ? getPaddingTop() : getPaddingLeft());
+            final int newFocusStart = (mIsVertical ? mTempRect.top : mTempRect.left);
+
+            if (newFocusStart < start) {
+                amountToScroll = start - newFocusStart;
+                if (positionOfNewFocus > 0) {
+                    amountToScroll += getArrowScrollPreviewLength();
+                }
+            }
+        } else {
+            final int end = (mIsVertical ? getHeight() - getPaddingBottom() :
+                getWidth() - getPaddingRight());
+            final int newFocusEnd = (mIsVertical ? mTempRect.bottom : mTempRect.right);
+
+            if (newFocusEnd > end) {
+                amountToScroll = newFocusEnd - end;
+                if (positionOfNewFocus < mItemCount - 1) {
+                    amountToScroll += getArrowScrollPreviewLength();
+                }
+            }
+        }
+
+        return amountToScroll;
+    }
+
+    /**
+     * Determine the distance to the nearest edge of a view in a particular
+     * direction.
+     *
+     * @param descendant A descendant of this list.
+     * @return The distance, or 0 if the nearest edge is already on screen.
+     */
+    private int distanceToView(View descendant) {
+        descendant.getDrawingRect(mTempRect);
+        offsetDescendantRectToMyCoords(descendant, mTempRect);
+
+        final int start = (mIsVertical ? getPaddingTop() : getPaddingLeft());
+        final int end = (mIsVertical ? getHeight() - getPaddingBottom() :
+            getWidth() - getPaddingRight());
+
+        final int viewStart = (mIsVertical ? mTempRect.top : mTempRect.left);
+        final int viewEnd = (mIsVertical ? mTempRect.bottom : mTempRect.right);
+
+        int distance = 0;
+        if (viewEnd < start) {
+            distance = start - viewEnd;
+        } else if (viewStart > end) {
+            distance = viewStart - end;
+        }
+
+        return distance;
+    }
+
+    private boolean handleKeyScroll(KeyEvent event, int count, int direction) {
+        boolean handled = false;
+
+        if (KeyEventCompat.hasNoModifiers(event)) {
+            handled = resurrectSelectionIfNeeded();
+            if (!handled) {
+                while (count-- > 0) {
+                    if (arrowScroll(direction)) {
+                        handled = true;
+                    } else {
+                        break;
+                    }
+                }
+            }
+        } else if (KeyEventCompat.hasModifiers(event, KeyEvent.META_ALT_ON)) {
+            handled = resurrectSelectionIfNeeded() || fullScroll(direction);
+        }
+
+        return handled;
+    }
+
+    private boolean handleKeyEvent(int keyCode, int count, KeyEvent event) {
+        if (mAdapter == null || !mIsAttached) {
+            return false;
+        }
+
+        if (mDataChanged) {
+            layoutChildren();
+        }
+
+        boolean handled = false;
+        final int action = event.getAction();
+
+        if (action != KeyEvent.ACTION_UP) {
+            switch (keyCode) {
+            case KeyEvent.KEYCODE_DPAD_UP:
+                if (mIsVertical) {
+                    handled = handleKeyScroll(event, count, View.FOCUS_UP);
+                } else if (KeyEventCompat.hasNoModifiers(event)) {
+                    handled = handleFocusWithinItem(View.FOCUS_UP);
+                }
+                break;
+
+            case KeyEvent.KEYCODE_DPAD_DOWN: {
+                if (mIsVertical) {
+                    handled = handleKeyScroll(event, count, View.FOCUS_DOWN);
+                } else if (KeyEventCompat.hasNoModifiers(event)) {
+                    handled = handleFocusWithinItem(View.FOCUS_DOWN);
+                }
+                break;
+            }
+
+            case KeyEvent.KEYCODE_DPAD_LEFT:
+                if (!mIsVertical) {
+                    handled = handleKeyScroll(event, count, View.FOCUS_LEFT);
+                } else if (KeyEventCompat.hasNoModifiers(event)) {
+                    handled = handleFocusWithinItem(View.FOCUS_LEFT);
+                }
+                break;
+
+            case KeyEvent.KEYCODE_DPAD_RIGHT:
+                if (!mIsVertical) {
+                    handled = handleKeyScroll(event, count, View.FOCUS_RIGHT);
+                } else if (KeyEventCompat.hasNoModifiers(event)) {
+                    handled = handleFocusWithinItem(View.FOCUS_RIGHT);
+                }
+                break;
+
+            case KeyEvent.KEYCODE_DPAD_CENTER:
+            case KeyEvent.KEYCODE_ENTER:
+                if (KeyEventCompat.hasNoModifiers(event)) {
+                    handled = resurrectSelectionIfNeeded();
+                    if (!handled
+                            && event.getRepeatCount() == 0 && getChildCount() > 0) {
+                        keyPressed();
+                        handled = true;
+                    }
+                }
+                break;
+
+            case KeyEvent.KEYCODE_SPACE:
+                if (KeyEventCompat.hasNoModifiers(event)) {
+                    handled = resurrectSelectionIfNeeded() ||
+                            pageScroll(mIsVertical ? View.FOCUS_DOWN : View.FOCUS_RIGHT);
+                } else if (KeyEventCompat.hasModifiers(event, KeyEvent.META_SHIFT_ON)) {
+                    handled = resurrectSelectionIfNeeded() ||
+                            fullScroll(mIsVertical ? View.FOCUS_UP : View.FOCUS_LEFT);
+                }
+
+                handled = true;
+                break;
+
+            case KeyEvent.KEYCODE_PAGE_UP:
+                if (KeyEventCompat.hasNoModifiers(event)) {
+                    handled = resurrectSelectionIfNeeded() ||
+                            pageScroll(mIsVertical ? View.FOCUS_UP : View.FOCUS_LEFT);
+                } else if (KeyEventCompat.hasModifiers(event, KeyEvent.META_ALT_ON)) {
+                    handled = resurrectSelectionIfNeeded() ||
+                            fullScroll(mIsVertical ? View.FOCUS_UP : View.FOCUS_LEFT);
+                }
+                break;
+
+            case KeyEvent.KEYCODE_PAGE_DOWN:
+                if (KeyEventCompat.hasNoModifiers(event)) {
+                    handled = resurrectSelectionIfNeeded() ||
+                            pageScroll(mIsVertical ? View.FOCUS_DOWN : View.FOCUS_RIGHT);
+                } else if (KeyEventCompat.hasModifiers(event, KeyEvent.META_ALT_ON)) {
+                    handled = resurrectSelectionIfNeeded() ||
+                            fullScroll(mIsVertical ? View.FOCUS_DOWN : View.FOCUS_RIGHT);
+                }
+                break;
+
+            case KeyEvent.KEYCODE_MOVE_HOME:
+                if (KeyEventCompat.hasNoModifiers(event)) {
+                    handled = resurrectSelectionIfNeeded() ||
+                            fullScroll(mIsVertical ? View.FOCUS_UP : View.FOCUS_LEFT);
+                }
+                break;
+
+            case KeyEvent.KEYCODE_MOVE_END:
+                if (KeyEventCompat.hasNoModifiers(event)) {
+                    handled = resurrectSelectionIfNeeded() ||
+                            fullScroll(mIsVertical ? View.FOCUS_DOWN : View.FOCUS_RIGHT);
+                }
+                break;
+            }
+        }
+
+        if (handled) {
+            return true;
+        }
+
+        switch (action) {
+        case KeyEvent.ACTION_DOWN:
+            return super.onKeyDown(keyCode, event);
+
+        case KeyEvent.ACTION_UP:
+            if (!isEnabled()) {
+                return true;
+            }
+
+            if (isClickable() && isPressed() &&
+                    mSelectedPosition >= 0 && mAdapter != null &&
+                    mSelectedPosition < mAdapter.getCount()) {
+
+                final View child = getChildAt(mSelectedPosition - mFirstPosition);
+                if (child != null) {
+                    performItemClick(child, mSelectedPosition, mSelectedRowId);
+                    child.setPressed(false);
+                }
+
+                setPressed(false);
+                return true;
+            }
+
+            return false;
+
+        case KeyEvent.ACTION_MULTIPLE:
+            return super.onKeyMultiple(keyCode, count, event);
+
+        default:
+            return false;
+        }
     }
 
     private void initOrResetVelocityTracker() {
@@ -2431,6 +3340,55 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         }
     }
 
+    /**
+     * Sets the selector state to "pressed" and posts a CheckForKeyLongPress to see if
+     * this is a long press.
+     */
+    private void keyPressed() {
+        if (!isEnabled() || !isClickable()) {
+            return;
+        }
+
+        final Drawable selector = mSelector;
+        final Rect selectorRect = mSelectorRect;
+
+        if (selector != null && (isFocused() || touchModeDrawsInPressedState())
+                && !selectorRect.isEmpty()) {
+
+            final View child = getChildAt(mSelectedPosition - mFirstPosition);
+
+            if (child != null) {
+                if (child.hasFocusable()) {
+                    return;
+                }
+
+                child.setPressed(true);
+            }
+
+            setPressed(true);
+
+            final boolean longClickable = isLongClickable();
+            final Drawable d = selector.getCurrent();
+            if (d != null && d instanceof TransitionDrawable) {
+                if (longClickable) {
+                    ((TransitionDrawable) d).startTransition(
+                            ViewConfiguration.getLongPressTimeout());
+                } else {
+                    ((TransitionDrawable) d).resetTransition();
+                }
+            }
+
+            if (longClickable && !mDataChanged) {
+                if (mPendingCheckForKeyLongPress == null) {
+                    mPendingCheckForKeyLongPress = new CheckForKeyLongPress();
+                }
+
+                mPendingCheckForKeyLongPress.rememberWindowAttachCount();
+                postDelayed(mPendingCheckForKeyLongPress, ViewConfiguration.getLongPressTimeout());
+            }
+        }
+    }
+
     private void updateSelectorState() {
         if (mSelector != null) {
             if (shouldShowSelector()) {
@@ -2531,6 +3489,67 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
 
             return position;
         }
+    }
+
+    /**
+     * @param direction either {@link View#FOCUS_UP} or {@link View#FOCUS_DOWN} or
+     *        {@link View#FOCUS_LEFT} or {@link View#FOCUS_RIGHT} depending on the
+     *        current view orientation.
+     *
+     * @return The position of the next selectable position of the views that
+     *         are currently visible, taking into account the fact that there might
+     *         be no selection.  Returns {@link #INVALID_POSITION} if there is no
+     *         selectable view on screen in the given direction.
+     */
+    private int lookForSelectablePositionOnScreen(int direction) {
+        forceValidFocusDirection(direction);
+
+        final int firstPosition = mFirstPosition;
+        final ListAdapter adapter = getAdapter();
+
+        if (direction == View.FOCUS_DOWN || direction == View.FOCUS_RIGHT) {
+            int startPos = (mSelectedPosition != INVALID_POSITION ?
+                    mSelectedPosition + 1 : firstPosition);
+
+            if (startPos >= adapter.getCount()) {
+                return INVALID_POSITION;
+            }
+
+            if (startPos < firstPosition) {
+                startPos = firstPosition;
+            }
+
+            final int lastVisiblePos = getLastVisiblePosition();
+
+            for (int pos = startPos; pos <= lastVisiblePos; pos++) {
+                if (adapter.isEnabled(pos)
+                        && getChildAt(pos - firstPosition).getVisibility() == View.VISIBLE) {
+                    return pos;
+                }
+            }
+        } else {
+            final int last = firstPosition + getChildCount() - 1;
+
+            int startPos = (mSelectedPosition != INVALID_POSITION) ?
+                    mSelectedPosition - 1 : firstPosition + getChildCount() - 1;
+
+            if (startPos < 0 || startPos >= adapter.getCount()) {
+                return INVALID_POSITION;
+            }
+
+            if (startPos > last) {
+                startPos = last;
+            }
+
+            for (int pos = startPos; pos >= firstPosition; pos--) {
+                if (adapter.isEnabled(pos)
+                        && getChildAt(pos - firstPosition).getVisibility() == View.VISIBLE) {
+                    return pos;
+                }
+            }
+        }
+
+        return INVALID_POSITION;
     }
 
     @Override
@@ -2662,6 +3681,23 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
 
             requestLayout();
         }
+    }
+
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        // Dispatch in the normal way
+        boolean handled = super.dispatchKeyEvent(event);
+        if (!handled) {
+            // If we didn't handle it...
+            final View focused = getFocusedChild();
+            if (focused != null && event.getAction() == KeyEvent.ACTION_DOWN) {
+                // ... and our focused child didn't handle it
+                // ... give it to ourselves so we can scroll if necessary
+                handled = onKeyDown(event.getKeyCode(), event);
+            }
+        }
+
+        return handled;
     }
 
     @Override
@@ -3443,6 +4479,19 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         return selectedPosition >= 0;
     }
 
+    /**
+     * If there is a selection returns false.
+     * Otherwise resurrects the selection and returns true if resurrected.
+     */
+    boolean resurrectSelectionIfNeeded() {
+        if (mSelectedPosition < 0 && resurrectSelection()) {
+            updateSelectorState();
+            return true;
+        }
+
+        return false;
+    }
+
     private int getChildWidthMeasureSpec(LayoutParams lp) {
         if (!mIsVertical && lp.width == LayoutParams.WRAP_CONTENT) {
             return MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED);
@@ -3465,10 +4514,26 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         }
     }
 
+    private void measureChild(View child) {
+        measureChild(child, (LayoutParams) child.getLayoutParams());
+    }
+
     private void measureChild(View child, LayoutParams lp) {
         final int widthSpec = getChildWidthMeasureSpec(lp);
         final int heightSpec = getChildHeightMeasureSpec(lp);
         child.measure(widthSpec, heightSpec);
+    }
+
+    private void relayoutMeasuredChild(View child) {
+        final int w = child.getMeasuredWidth();
+        final int h = child.getMeasuredHeight();
+
+        final int childLeft = getPaddingLeft();
+        final int childRight = childLeft + w;
+        final int childTop = child.getTop();
+        final int childBottom = childTop + h;
+
+        child.layout(childLeft, childTop, childRight, childBottom);
     }
 
     private void measureScrapChild(View scrapChild, int position, int secondaryMeasureSpec) {
@@ -5336,7 +6401,58 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         }
     }
 
-    class ListItemAccessibilityDelegate extends AccessibilityDelegateCompat {
+    private class CheckForKeyLongPress extends WindowRunnnable implements Runnable {
+        public void run() {
+            if (!isPressed() || mSelectedPosition < 0) {
+                return;
+            }
+
+            final int index = mSelectedPosition - mFirstPosition;
+            final View v = getChildAt(index);
+
+            if (!mDataChanged) {
+                boolean handled = false;
+
+                if (sameWindow()) {
+                    handled = performLongPress(v, mSelectedPosition, mSelectedRowId);
+                }
+
+                if (handled) {
+                    setPressed(false);
+                    v.setPressed(false);
+                }
+            } else {
+                setPressed(false);
+
+                if (v != null) {
+                    v.setPressed(false);
+                }
+            }
+        }
+    }
+
+    private static class ArrowScrollFocusResult {
+        private int mSelectedPosition;
+        private int mAmountToScroll;
+
+        /**
+         * How {@link TwoWayView#arrowScrollFocused} returns its values.
+         */
+        void populate(int selectedPosition, int amountToScroll) {
+            mSelectedPosition = selectedPosition;
+            mAmountToScroll = amountToScroll;
+        }
+
+        public int getSelectedPosition() {
+            return mSelectedPosition;
+        }
+
+        public int getAmountToScroll() {
+            return mAmountToScroll;
+        }
+    }
+
+    private class ListItemAccessibilityDelegate extends AccessibilityDelegateCompat {
         @Override
         public void onInitializeAccessibilityNodeInfo(View host, AccessibilityNodeInfoCompat info) {
             super.onInitializeAccessibilityNodeInfo(host, info);

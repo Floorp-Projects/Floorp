@@ -1,5 +1,14 @@
 {
-  "CharacterData.remove": true,
-  "CharacterData.remove 1": true,
-  "CharacterData.remove 2": true
+  "text should support remove()": true,
+  "remove() should work if text doesn't have a parent": true,
+  "remove() should work if text does have a parent": true,
+  "remove() should work if text does have a parent and siblings": true,
+  "comment should support remove()": true,
+  "remove() should work if comment doesn't have a parent": true,
+  "remove() should work if comment does have a parent": true,
+  "remove() should work if comment does have a parent and siblings": true,
+  "PI should support remove()": true,
+  "remove() should work if PI doesn't have a parent": true,
+  "remove() should work if PI does have a parent": true,
+  "remove() should work if PI does have a parent and siblings": true
 }

@@ -93,14 +93,21 @@ public class BookmarksTab extends AwesomeBarTab {
 
     @Override
     public void destroy() {
-        BookmarksListAdapter adapter = getCursorAdapter();
-        if (adapter == null) {
-            return;
+        // Can't use getters for adapter. It will create one if null.
+        if (mCursorAdapter != null && mView != null) {
+            ListView list = (ListView)mView;
+            list.setAdapter(null);
+            final Cursor cursor = mCursorAdapter.getCursor();
+            // Gingerbread locks the DB when closing a cursor, so do it in the
+            // background.
+            ThreadUtils.postToBackgroundThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (cursor != null && !cursor.isClosed())
+                        cursor.close();
+                }
+            });
         }
-
-        Cursor cursor = adapter.getCursor();
-        if (cursor != null)
-            cursor.close();
     }
 
     @Override

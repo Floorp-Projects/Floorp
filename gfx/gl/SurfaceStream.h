@@ -41,11 +41,10 @@ public:
         return (SurfaceStream*)handle;
     }
 
-    SurfaceStreamType Type() { return mType; }
+    const SurfaceStreamType mType;
 protected:
     // |mProd| is owned by us, but can be ripped away when
     // creating a new GLStream from this one.
-    SurfaceStreamType mType;
     SharedSurface* mProducer;
     std::set<SharedSurface*> mSurfaces;
     std::stack<SharedSurface*> mScraps;
@@ -60,7 +59,7 @@ protected:
         , mMonitor("SurfaceStream monitor")
         , mIsAlive(true)
     {
-        MOZ_ASSERT(!prevStream || mType != prevStream->Type(),
+        MOZ_ASSERT(!prevStream || mType != prevStream->mType,
                    "We should not need to create a SurfaceStream from another "
                    "of the same type.");
     }
@@ -175,10 +174,18 @@ protected:
     // Returns true if we were able to wait, false if not
     virtual bool WaitForCompositor() { return false; }
 
+    // To support subclasses initializing the mType.
+    SurfaceStream_TripleBuffer(SurfaceStreamType type, SurfaceStream* prevStream);
+
 public:
     SurfaceStream_TripleBuffer(SurfaceStream* prevStream);
     virtual ~SurfaceStream_TripleBuffer();
 
+private:
+    // Common constructor code.
+    void Init(SurfaceStream* prevStream);
+
+public:
     // Done writing to prod, swap prod and staging
     virtual SharedSurface* SwapProducer(SurfaceFactory* factory,
                                         const gfxIntSize& size);

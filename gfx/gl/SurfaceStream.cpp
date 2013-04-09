@@ -351,12 +351,7 @@ SurfaceStream_TripleBuffer_Copy::SwapConsumer_NoWait()
     return mConsumer;
 }
 
-
-
-SurfaceStream_TripleBuffer::SurfaceStream_TripleBuffer(SurfaceStream* prevStream)
-    : SurfaceStream(SurfaceStreamType::TripleBuffer, prevStream)
-    , mStaging(nullptr)
-    , mConsumer(nullptr)
+void SurfaceStream_TripleBuffer::Init(SurfaceStream* prevStream)
 {
     if (!prevStream)
         return;
@@ -370,6 +365,23 @@ SurfaceStream_TripleBuffer::SurfaceStream_TripleBuffer(SurfaceStream* prevStream
 
     mProducer = Absorb(prevProducer);
     mConsumer = Absorb(prevConsumer);
+}
+
+
+SurfaceStream_TripleBuffer::SurfaceStream_TripleBuffer(SurfaceStreamType type, SurfaceStream* prevStream)
+    : SurfaceStream(type, prevStream)
+    , mStaging(nullptr)
+    , mConsumer(nullptr)
+{
+    SurfaceStream_TripleBuffer::Init(prevStream);
+}
+
+SurfaceStream_TripleBuffer::SurfaceStream_TripleBuffer(SurfaceStream* prevStream)
+    : SurfaceStream(SurfaceStreamType::TripleBuffer, prevStream)
+    , mStaging(nullptr)
+    , mConsumer(nullptr)
+{
+    SurfaceStream_TripleBuffer::Init(prevStream);
 }
 
 SurfaceStream_TripleBuffer::~SurfaceStream_TripleBuffer()
@@ -431,9 +443,8 @@ SurfaceStream_TripleBuffer::SwapConsumer_NoWait()
 }
 
 SurfaceStream_TripleBuffer_Async::SurfaceStream_TripleBuffer_Async(SurfaceStream* prevStream)
-    : SurfaceStream_TripleBuffer(prevStream)
+    : SurfaceStream_TripleBuffer(SurfaceStreamType::TripleBuffer_Async, prevStream)
 {
-    mType = SurfaceStreamType::TripleBuffer_Async;
 }
 
 SurfaceStream_TripleBuffer_Async::~SurfaceStream_TripleBuffer_Async()

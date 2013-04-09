@@ -28,7 +28,6 @@ MediaOmxReader::MediaOmxReader(AbstractMediaDecoder *aDecoder) :
   mHasAudio(false),
   mVideoSeekTimeUs(-1),
   mAudioSeekTimeUs(-1),
-  mLastVideoFrame(nullptr),
   mSkipCount(0)
 {
 }
@@ -114,10 +113,6 @@ nsresult MediaOmxReader::ResetDecode()
     container->ClearCurrentFrame();
   }
 
-  if (mLastVideoFrame) {
-    delete mLastVideoFrame;
-    mLastVideoFrame = nullptr;
-  }
   mOmxDecoder.clear();
   return NS_OK;
 }
@@ -130,12 +125,6 @@ bool MediaOmxReader::DecodeVideoFrame(bool &aKeyframeSkip,
   uint32_t parsed = 0, decoded = 0;
   AbstractMediaDecoder::AutoNotifyDecoded autoNotify(mDecoder, parsed, decoded);
 
-  // Throw away the currently buffered frame if we are seeking.
-  if (mLastVideoFrame && mVideoSeekTimeUs != -1) {
-    delete mLastVideoFrame;
-    mLastVideoFrame = nullptr;
-  }
-
   bool doSeek = mVideoSeekTimeUs != -1;
   if (doSeek) {
     aTimeThreshold = mVideoSeekTimeUs;
@@ -147,18 +136,6 @@ bool MediaOmxReader::DecodeVideoFrame(bool &aKeyframeSkip,
     frame.mGraphicBuffer = nullptr;
     frame.mShouldSkip = false;
     if (!mOmxDecoder->ReadVideo(&frame, aTimeThreshold, aKeyframeSkip, doSeek)) {
-      // We reached the end of the video stream. If we have a buffered
-      // video frame, push it the video queue using the total duration
-      // of the video as the end time.
-      if (mLastVideoFrame) {
-        int64_t durationUs;
-        mOmxDecoder->GetDuration(&durationUs);
-        mLastVideoFrame->mEndTime = (durationUs > mLastVideoFrame->mTime)
-                                  ? durationUs
-                                  : mLastVideoFrame->mTime;
-        mVideoQueue.Push(mLastVideoFrame);
-        mLastVideoFrame = nullptr;
-      }
       mVideoQueue.Finish();
       return false;
     }
@@ -244,28 +221,7 @@ bool MediaOmxReader::DecodeVideoFrame(bool &aKeyframeSkip,
     decoded++;
     NS_ASSERTION(decoded <= parsed, "Expect to decode fewer frames than parsed in MediaPlugin...");
 
-    // Seeking hack
-    if (mLastVideoFrame && mLastVideoFrame->mTime > v->mTime) {
-      delete mLastVideoFrame;
-      mLastVideoFrame = v;
-      continue;
-    }
-
-    // Since MPAPI doesn't give us the end time of frames, we keep one frame
-    // buffered in MediaOmxReader and push it into the queue as soon
-    // we read the following frame so we can use that frame's start time as
-    // the end time of the buffered frame.
-    if (!mLastVideoFrame) {
-      mLastVideoFrame = v;
-      continue;
-    }
-
-    mLastVideoFrame->mEndTime = v->mTime;
-
-    mVideoQueue.Push(mLastVideoFrame);
-
-    // Buffer the current frame we just decoded.
-    mLastVideoFrame = v;
+    mVideoQueue.Push(v);
 
     break;
   }

@@ -7,7 +7,7 @@ DEPTH		= @DEPTH@
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-relativesrcdir  = accessible/table
+relativesrcdir	= @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 

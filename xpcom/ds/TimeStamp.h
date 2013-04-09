@@ -229,6 +229,28 @@ public:
    */
   static TimeStamp Now() { return Now(true); }
   static TimeStamp NowLoRes() { return Now(false); }
+
+  /**
+   * Return a timestamp representing the time when the current process was
+   * created which will be comparable with other timestamps taken with this
+   * class. If the actual process creation time is detected to be inconsistent
+   * the @a aIsInconsistent parameter will be set to true, the returned
+   * timestamp however will still be valid though inaccurate.
+   *
+   * @param aIsInconsistent Set to true if an inconsistency was detected in the
+   * process creation time
+   * @returns A timestamp representing the time when the process was created,
+   * this timestamp is always valid even when errors are reported
+   */
+  static TimeStamp ProcessCreation(bool& aIsInconsistent);
+
+  /**
+   * Records a process restart. After this call ProcessCreation() will return
+   * the time when the browser was restarted instead of the actual time when
+   * the process was created.
+   */
+  static void RecordProcessRestart();
+
   /**
    * Compute the difference between two timestamps. Both must be non-null.
    */
@@ -311,6 +333,7 @@ public:
 
 private:
   friend struct IPC::ParamTraits<mozilla::TimeStamp>;
+  friend void StartupTimelineRecordExternal(int, uint64_t);
 
   TimeStamp(TimeStampValue aValue) : mValue(aValue) {}
 
@@ -330,6 +353,19 @@ private:
    * When using a system clock, a value is system dependent.
    */
   TimeStampValue mValue;
+
+  /**
+   * First timestamp taken when the class static initializers are run. This
+   * timestamp is used to sanitize timestamps coming from different sources.
+   */
+  static TimeStamp sFirstTimeStamp;
+
+  /**
+   * Timestamp representing the time when the process was created. This field
+   * is populated lazily the first time this information is required and is
+   * replaced every time the process is restarted.
+   */
+  static TimeStamp sProcessCreation;
 };
 
 }

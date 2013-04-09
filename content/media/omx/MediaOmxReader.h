@@ -31,7 +31,6 @@ class MediaOmxReader : public MediaDecoderReader
   nsIntSize mInitialFrame;
   int64_t mVideoSeekTimeUs;
   int64_t mAudioSeekTimeUs;
-  VideoData *mLastVideoFrame;
   int32_t mSkipCount;
 public:
   MediaOmxReader(AbstractMediaDecoder* aDecoder);
