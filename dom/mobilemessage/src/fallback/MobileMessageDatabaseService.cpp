@@ -47,7 +47,8 @@ MobileMessageDatabaseService::MarkMessageRead(int32_t aMessageId,
 }
 
 NS_IMETHODIMP
-MobileMessageDatabaseService::GetThreadList(nsIMobileMessageCallback* aRequest)
+MobileMessageDatabaseService::CreateThreadCursor(nsIMobileMessageCursorCallback* aCallback,
+                                                 nsICursorContinueCallback** aResult)
 {
   NS_ERROR("We should not be here!");
   return NS_OK;
