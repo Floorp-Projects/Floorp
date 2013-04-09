@@ -19,6 +19,8 @@
 #include "nsSVGEffects.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
+#include "nsWidgetsCID.h"
+#include "nsIAppShell.h"
 
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIFrame.h"
@@ -114,6 +116,7 @@
 #include "nsDeviceContext.h"
 #include "nsFontMetrics.h"
 #include "Units.h"
+#include "mozilla/Services.h"
 
 #undef free // apparently defined by some windows header, clashing with a free()
             // method in SkTypes.h
@@ -178,6 +181,64 @@ public:
 };
 
 NS_IMPL_ISUPPORTS(Canvas2dPixelsReporter, nsIMemoryReporter)
+
+class CanvasShutdownObserver : public nsIObserver
+{
+  virtual ~CanvasShutdownObserver() {}
+
+public:
+  NS_DECL_ISUPPORTS
+
+  explicit CanvasShutdownObserver(CanvasRenderingContext2D* aCanvas)
+    : mCanvas(aCanvas)
+  {
+    nsCOMPtr<nsIObserverService> observerService =
+      mozilla::services::GetObserverService();
+    observerService->AddObserver(this, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID, false);
+  }
+
+  void Shutdown() {
+    nsCOMPtr<nsIObserverService> observerService =
+      mozilla::services::GetObserverService();
+    observerService->RemoveObserver(this, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID);
+  }
+
+  NS_IMETHOD Observe(nsISupports* aSubject,
+                     const char* aTopic,
+                     const char16_t* aData) override
+  {
+    mCanvas->ShutdownTaskQueue();
+    return NS_OK;
+  }
+
+private:
+  CanvasRenderingContext2D* mCanvas;
+};
+
+NS_IMPL_ISUPPORTS(CanvasShutdownObserver, nsIObserver);
+
+
+static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
+
+void
+CanvasRenderingContext2D::RecordCommand()
+{
+  static uint32_t kBatchSize = 5;
+  if (++mPendingCommands > kBatchSize) {
+    mPendingCommands = 0;
+    FlushDelayedTarget();
+    return;
+  }
+
+  if (mScheduledFlush) {
+    return;
+  }
+
+  mScheduledFlush = true;
+  nsCOMPtr<nsIAppShell> appShell = do_GetService(kAppShellCID);
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethod(this, &CanvasRenderingContext2D::StableStateReached);
+  appShell->RunInStableState(r);
+}
 
 class CanvasRadialGradient : public CanvasGradient
 {
@@ -393,6 +454,11 @@ public:
       mCtx->CurrentState().filterAdditionalImages,
       mPostFilterBounds.TopLeft() - mOffset,
       DrawOptions(1.0f, mCompositionOp));
+
+    // DrawTargetCapture doesn't properly support filter nodes because they are
+    // mutable. Block until drawing is done to avoid races.
+    mCtx->FlushDelayedTarget();
+    mCtx->FinishDelayedRendering();
   }
 
   DrawTarget* DT()
@@ -817,6 +883,9 @@ public:
     if (!context || !context->mTarget)
       return;
 
+    context->FlushDelayedTarget();
+    context->FinishDelayedRendering();
+
     // Since SkiaGL default to store drawing command until flush
     // We will have to flush it before present.
     context->mTarget->Flush();
@@ -938,12 +1007,23 @@ CanvasRenderingContext2D::CanvasRenderingContext2D()
   , mZero(false), mOpaque(false)
   , mResetLayer(true)
   , mIPC(false)
+  , mPendingCommands(0)
+  , mScheduledFlush(false)
   , mDrawObserver(nullptr)
   , mIsEntireFrameInvalid(false)
   , mPredictManyRedrawCalls(false), mPathTransformWillUpdate(false)
   , mInvalidateCount(0)
 {
   sNumLivingContexts++;
+  EnsureMediaPromiseLog();
+
+#ifdef XP_MACOSX
+  // Restrict async rendering to OSX for now until the failures on other
+  // platforms get resolved.
+  mTaskQueue = new MediaTaskQueue(SharedThreadPool::Get(NS_LITERAL_CSTRING("Canvas Rendering"),
+                                                        4));
+  mShutdownObserver = new CanvasShutdownObserver(this);
+#endif
 
   // The default is to use OpenGL mode
   if (!gfxPlatform::GetPlatform()->UseAcceleratedSkiaCanvas()) {
@@ -957,6 +1037,9 @@ CanvasRenderingContext2D::CanvasRenderingContext2D()
 
 CanvasRenderingContext2D::~CanvasRenderingContext2D()
 {
+  if (mTaskQueue) {
+    ShutdownTaskQueue();
+  }
   RemoveDrawObserver();
   RemovePostRefreshObserver();
   Reset();
@@ -978,6 +1061,19 @@ CanvasRenderingContext2D::~CanvasRenderingContext2D()
 
   RemoveDemotableContext(this);
 }
+
+void
+CanvasRenderingContext2D::ShutdownTaskQueue()
+{
+  mShutdownObserver->Shutdown();
+  mShutdownObserver = nullptr;
+  FlushDelayedTarget();
+  FinishDelayedRendering();
+  mTaskQueue->BeginShutdown();
+  mTaskQueue = nullptr;
+  mDelayedTarget = nullptr;
+}
+
 
 JSObject*
 CanvasRenderingContext2D::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
@@ -1034,7 +1130,10 @@ CanvasRenderingContext2D::Reset()
     gCanvasAzureMemoryUsed -= mWidth * mHeight * 4;
   }
 
+  FinishDelayedRendering();
   mTarget = nullptr;
+  mDelayedTarget = nullptr;
+  mFinalTarget = nullptr;
 
   // reset hit regions
   mHitRegionsOptions.ClearAndRetainStorage();
@@ -1101,6 +1200,8 @@ CanvasRenderingContext2D::StyleColorToString(const nscolor& aColor, nsAString& a
 nsresult
 CanvasRenderingContext2D::Redraw()
 {
+  RecordCommand();
+
   if (mIsEntireFrameInvalid) {
     return NS_OK;
   }
@@ -1122,6 +1223,7 @@ CanvasRenderingContext2D::Redraw()
 void
 CanvasRenderingContext2D::Redraw(const mgfx::Rect &r)
 {
+  RecordCommand();
   ++mInvalidateCount;
 
   if (mIsEntireFrameInvalid) {
@@ -1144,6 +1246,18 @@ CanvasRenderingContext2D::Redraw(const mgfx::Rect &r)
   mCanvasElement->InvalidateCanvasContent(&r);
 }
 
+TemporaryRef<SourceSurface>
+CanvasRenderingContext2D::GetSurfaceSnapshot(bool* aPremultAlpha /* = nullptr */)
+{
+  EnsureTarget();
+  if (aPremultAlpha) {
+    *aPremultAlpha = true;
+  }
+  FlushDelayedTarget();
+  FinishDelayedRendering();
+  return mFinalTarget->Snapshot();
+}
+
 void
 CanvasRenderingContext2D::DidRefresh()
 {
@@ -1161,6 +1275,7 @@ CanvasRenderingContext2D::RedrawUser(const gfxRect& r)
 {
   if (mIsEntireFrameInvalid) {
     ++mInvalidateCount;
+    RecordCommand();
     return;
   }
 
@@ -1186,7 +1301,7 @@ bool CanvasRenderingContext2D::SwitchRenderingMode(RenderingMode aRenderingMode)
   }
 #endif
 
-  RefPtr<SourceSurface> snapshot = mTarget->Snapshot();
+  RefPtr<SourceSurface> snapshot = GetSurfaceSnapshot();
   RefPtr<DrawTarget> oldTarget = mTarget;
   mTarget = nullptr;
   mResetLayer = true;
@@ -1360,6 +1475,8 @@ CanvasRenderingContext2D::EnsureTarget(RenderingMode aRenderingMode)
         SkiaGLGlue* glue = gfxPlatform::GetPlatform()->GetSkiaGLGlue();
 
         if (glue && glue->GetGrContext() && glue->GetGLContext()) {
+          // Don't use mFinalTarget (async canvas drawing) with SkiaGL, because we currently
+          // use a single GLContext and need them all to be on the same thread.
           mTarget = Factory::CreateDrawTargetSkiaWithGrContext(glue->GetGrContext(), size, format);
           if (mTarget) {
             AddDemotableContext(this);
@@ -1370,17 +1487,31 @@ CanvasRenderingContext2D::EnsureTarget(RenderingMode aRenderingMode)
         }
 #endif
         if (!mTarget) {
-          mTarget = layerManager->CreateDrawTarget(size, format);
+          mFinalTarget = layerManager->CreateDrawTarget(size, format);
         }
       } else {
-        mTarget = layerManager->CreateDrawTarget(size, format);
+        mFinalTarget = layerManager->CreateDrawTarget(size, format);
         mode = RenderingMode::SoftwareBackendMode;
       }
      } else {
-        mTarget = gfxPlatform::GetPlatform()->CreateOffscreenCanvasDrawTarget(size, format);
+        mFinalTarget = gfxPlatform::GetPlatform()->CreateOffscreenCanvasDrawTarget(size, format);
         mode = RenderingMode::SoftwareBackendMode;
      }
   }
+
+  // Restrict async canvas drawing to OSX for now since we get test failures
+  // on other platforms.
+#ifdef XP_MACOSX
+  if (mFinalTarget) {
+    mTarget = mDelayedTarget = mFinalTarget->CreateCaptureDT(size);
+  } else {
+    mFinalTarget = mTarget;
+  }
+#else
+  mFinalTarget = mTarget;
+#endif
+
+  mPendingCommands = 0;
 
   if (mTarget) {
     static bool registered = false;
@@ -1415,7 +1546,7 @@ CanvasRenderingContext2D::EnsureTarget(RenderingMode aRenderingMode)
     Redraw();
   } else {
     EnsureErrorTarget();
-    mTarget = sErrorTarget;
+    mTarget = mFinalTarget = sErrorTarget;
   }
 
   return mode;
@@ -1434,6 +1565,51 @@ CanvasRenderingContext2D::GetHeight() const
   return mHeight;
 }
 #endif
+
+class DrawCaptureTask : public nsRunnable
+{
+public:
+  DrawCaptureTask(DrawTargetCapture *aReplay, DrawTarget* aDest)
+    : mReplay(aReplay)
+    , mDest(aDest)
+  {
+  }
+
+  NS_IMETHOD Run()
+  {
+    mDest->DrawCapturedDT(mReplay, Matrix());
+    return NS_OK;
+  }
+
+private:
+  RefPtr<DrawTargetCapture> mReplay;
+  RefPtr<DrawTarget> mDest;
+};
+
+void
+CanvasRenderingContext2D::FlushDelayedTarget()
+{
+  if (!mDelayedTarget) {
+    return;
+  }
+  mPendingCommands = 0;
+
+  nsCOMPtr<nsIRunnable> task = new DrawCaptureTask(mDelayedTarget, mFinalTarget);
+  mTaskQueue->Dispatch(task.forget());
+
+  mDelayedTarget = mFinalTarget->CreateCaptureDT(IntSize(mWidth, mHeight));
+
+  mDelayedTarget->SetTransform(mTarget->GetTransform());
+  mTarget = mDelayedTarget;
+}
+
+void
+CanvasRenderingContext2D::FinishDelayedRendering()
+{
+  if (mTaskQueue) {
+    mTaskQueue->AwaitIdle();
+  }
+}
 
 NS_IMETHODIMP
 CanvasRenderingContext2D::SetDimensions(int32_t width, int32_t height)
@@ -1584,7 +1760,7 @@ CanvasRenderingContext2D::GetImageBuffer(uint8_t** aImageBuffer,
   *aFormat = 0;
 
   EnsureTarget();
-  RefPtr<SourceSurface> snapshot = mTarget->Snapshot();
+  RefPtr<SourceSurface> snapshot = GetSurfaceSnapshot();
   if (!snapshot) {
     return;
   }
@@ -2003,7 +2179,7 @@ CanvasRenderingContext2D::CreatePattern(const HTMLImageOrCanvasOrVideoElement& e
   // of animated images
   nsLayoutUtils::SurfaceFromElementResult res =
     nsLayoutUtils::SurfaceFromElement(htmlElement,
-      nsLayoutUtils::SFE_WANT_FIRST_FRAME, mTarget);
+      nsLayoutUtils::SFE_WANT_FIRST_FRAME, mFinalTarget);
 
   if (!res.mSourceSurface) {
     error.Throw(NS_ERROR_NOT_AVAILABLE);
@@ -4314,7 +4490,7 @@ CanvasRenderingContext2D::DrawImage(const HTMLImageOrCanvasOrVideoElement& image
     nsLayoutUtils::SurfaceFromElementResult res =
       CachedSurfaceFromElement(element);
     if (!res.mSourceSurface)
-      res = nsLayoutUtils::SurfaceFromElement(element, sfeFlags, mTarget);
+      res = nsLayoutUtils::SurfaceFromElement(element, sfeFlags, mFinalTarget);
 
     if (!res.mSourceSurface && !res.mDrawInfo.mImgContainer) {
       // The spec says to silently do nothing in the following cases:
@@ -4658,7 +4834,12 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& window, double x,
   if (gfxPlatform::GetPlatform()->SupportsAzureContentForDrawTarget(mTarget) &&
       GlobalAlpha() == 1.0f)
   {
-    thebes = new gfxContext(mTarget);
+    // Complete any async rendering and use synchronous rendering for DrawWindow
+    // until we're confident it works for all content.
+    FlushDelayedTarget();
+    FinishDelayedRendering();
+
+    thebes = new gfxContext(mFinalTarget);
     thebes->SetMatrix(gfxMatrix(matrix._11, matrix._12, matrix._21,
                                 matrix._22, matrix._31, matrix._32));
   } else {
@@ -4915,7 +5096,7 @@ CanvasRenderingContext2D::GetImageDataArray(JSContext* aCx,
   IntRect srcReadRect = srcRect.Intersect(destRect);
   RefPtr<DataSourceSurface> readback;
   if (!srcReadRect.IsEmpty() && !mZero) {
-    RefPtr<SourceSurface> snapshot = mTarget->Snapshot();
+    RefPtr<SourceSurface> snapshot = GetSurfaceSnapshot();
     if (snapshot) {
       readback = snapshot->GetDataSurface();
     }
@@ -5289,7 +5470,7 @@ CanvasRenderingContext2D::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
     return nullptr;
   }
 
-  mTarget->Flush();
+  FlushDelayedTarget();
 
   if (!mResetLayer && aOldLayer) {
     CanvasRenderingContext2DUserData* userData =
@@ -5338,6 +5519,8 @@ CanvasRenderingContext2D::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
   userData = new CanvasRenderingContext2DUserData(this);
   canvasLayer->SetDidTransactionCallback(
           CanvasRenderingContext2DUserData::DidTransactionCallback, userData);
+  canvasLayer->SetPreTransactionCallback(
+          CanvasRenderingContext2DUserData::PreTransactionCallback, userData);
   canvasLayer->SetUserData(&g2DContextLayerUserData, userData);
 
   CanvasLayer::Data data;
@@ -5346,16 +5529,13 @@ CanvasRenderingContext2D::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
 
   GLuint skiaGLTex = SkiaGLTex();
   if (skiaGLTex) {
-    canvasLayer->SetPreTransactionCallback(
-            CanvasRenderingContext2DUserData::PreTransactionCallback, userData);
-
     SkiaGLGlue* glue = gfxPlatform::GetPlatform()->GetSkiaGLGlue();
     MOZ_ASSERT(glue);
 
     data.mGLContext = glue->GetGLContext();
     data.mFrontbufferGLTex = skiaGLTex;
   } else {
-    data.mDrawTarget = mTarget;
+    data.mDrawTarget = mFinalTarget;
   }
 
   canvasLayer->Initialize(data);
