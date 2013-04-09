@@ -54,6 +54,7 @@ EXPORTS_mozilla/dom/mobilemessage = \
 
 CPPSRCS = \
   MobileMessageCursorCallback.cpp \
+  MobileMessageThread.cpp \
   SmsManager.cpp \
   MobileMessageManager.cpp \
   SmsService.cpp \
