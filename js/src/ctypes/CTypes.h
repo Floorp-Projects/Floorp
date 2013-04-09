@@ -319,7 +319,7 @@ JSBool ConvertToJS(JSContext* cx, JSHandleObject typeObj, JSHandleObject dataObj
 JSBool ImplicitConvert(JSContext* cx, jsval val, JSObject* targetType,
   void* buffer, bool isArgument, bool* freePointer);
 
-JSBool ExplicitConvert(JSContext* cx, jsval val, JSHandleObject targetType,
+JSBool ExplicitConvert(JSContext* cx, JSHandleValue val, JSHandleObject targetType,
   void* buffer);
 
 /*******************************************************************************

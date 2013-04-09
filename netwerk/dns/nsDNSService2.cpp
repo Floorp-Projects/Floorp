@@ -83,7 +83,9 @@ nsDNSRecord::GetCanonicalName(nsACString &result)
     {
         MutexAutoLock lock(mHostRecord->addr_info_lock);
         if (mHostRecord->addr_info)
-            cname = mHostRecord->addr_info->mHostName;
+            cname = mHostRecord->addr_info->mCanonicalName ?
+                mHostRecord->addr_info->mCanonicalName :
+                mHostRecord->addr_info->mHostName;
         else
             cname = mHostRecord->host;
         result.Assign(cname);

@@ -7,7 +7,7 @@
 #include "nsIComponentManager.h"
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
-#include "nsIEnumerator.h"
+#include "nsISimpleEnumerator.h"
 #include "nsStringGlue.h"
 #include "nsWeakReference.h"
 #include "nsComponentManagerUtils.h"

@@ -138,7 +138,7 @@ nsStyleSet::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
   return n;
 }
 
-nsresult
+void
 nsStyleSet::Init(nsPresContext *aPresContext)
 {
   mFirstLineRule = new nsEmptyStyleRule;
@@ -149,8 +149,6 @@ nsStyleSet::Init(nsPresContext *aPresContext)
 
   GatherRuleProcessors(eAnimationSheet);
   GatherRuleProcessors(eTransitionSheet);
-
-  return NS_OK;
 }
 
 nsresult

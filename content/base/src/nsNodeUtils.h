@@ -152,7 +152,7 @@ public:
                         nsCOMArray<nsINode> &aNodesWithProperties,
                         nsINode **aResult)
   {
-    return CloneAndAdopt(aNode, true, aDeep, aNewNodeInfoManager, nullptr,
+    return CloneAndAdopt(aNode, true, aDeep, aNewNodeInfoManager,
                          nullptr, aNodesWithProperties, nullptr, aResult);
   }
 
@@ -162,14 +162,14 @@ public:
   static nsresult Clone(nsINode *aNode, bool aDeep, nsINode **aResult)
   {
     nsCOMArray<nsINode> dummyNodeWithProperties;
-    return CloneAndAdopt(aNode, true, aDeep, nullptr, nullptr, nullptr,
+    return CloneAndAdopt(aNode, true, aDeep, nullptr, nullptr,
                          dummyNodeWithProperties, aNode->GetParent(), aResult);
   }
 
   /**
    * Walks aNode, its attributes and descendant nodes. If aNewNodeInfoManager is
    * not null, it is used to create new nodeinfos for the nodes. Also reparents
-   * the XPConnect wrappers for the nodes in aNewScope if aCx is not null.
+   * the XPConnect wrappers for the nodes into aReparentScope if non-null.
    * aNodesWithProperties will be filled with all the nodes that have
    * properties.
    *
@@ -178,20 +178,18 @@ public:
    *                            nodeinfos for aNode and its attributes and
    *                            descendants. May be null if the nodeinfos
    *                            shouldn't be changed.
-   * @param aCx Context to use for reparenting the wrappers, or null if no
-   *            reparenting should be done. Must be null if aNewNodeInfoManager
-   *            is null.
-   * @param aNewScope New scope for the wrappers. May be null if aCx is null.
+   * @param aReparentScope New scope for the wrappers, or null if no reparenting
+   *                       should be done.
    * @param aNodesWithProperties All nodes (from amongst aNode and its
    *                             descendants) with properties.
    */
   static nsresult Adopt(nsINode *aNode, nsNodeInfoManager *aNewNodeInfoManager,
-                        JSContext *aCx, JSObject *aNewScope,
+                        JSObject *aReparentScope,
                         nsCOMArray<nsINode> &aNodesWithProperties)
   {
     nsCOMPtr<nsINode> node;
     nsresult rv = CloneAndAdopt(aNode, false, true, aNewNodeInfoManager,
-                                aCx, aNewScope, aNodesWithProperties,
+                                aReparentScope, aNodesWithProperties,
                                 nullptr, getter_AddRefs(node));
 
     nsMutationGuard::DidMutate();
@@ -269,7 +267,7 @@ private:
    * Walks aNode, its attributes and, if aDeep is true, its descendant nodes.
    * If aClone is true the nodes will be cloned. If aNewNodeInfoManager is
    * not null, it is used to create new nodeinfos for the nodes. Also reparents
-   * the XPConnect wrappers for the nodes in aNewScope if aCx is not null.
+   * the XPConnect wrappers for the nodes into aReparentScope if non-null.
    * aNodesWithProperties will be filled with all the nodes that have
    * properties.
    *
@@ -282,10 +280,8 @@ private:
    *                            nodeinfos for aNode and its attributes and
    *                            descendants. May be null if the nodeinfos
    *                            shouldn't be changed.
-   * @param aCx Context to use for reparenting the wrappers, or null if no
-   *            reparenting should be done. Must be null if aClone is true or
-   *            if aNewNodeInfoManager is null.
-   * @param aNewScope New scope for the wrappers. May be null if aCx is null.
+   * @param aReparentScope Scope into which wrappers should be reparented, or
+   *                             null if no reparenting should be done.
    * @param aNodesWithProperties All nodes (from amongst aNode and its
    *                             descendants) with properties. If aClone is
    *                             true every node will be followed by its
@@ -298,7 +294,7 @@ private:
    */
   static nsresult CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
                                 nsNodeInfoManager *aNewNodeInfoManager,
-                                JSContext *aCx, JSObject *aNewScope,
+                                JSObject *aReparentScope,
                                 nsCOMArray<nsINode> &aNodesWithProperties,
                                 nsINode *aParent, nsINode **aResult);
 };

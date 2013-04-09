@@ -10,6 +10,7 @@ relativesrcdir := @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES := \
+  test_FormData-append.html \
   test_interfaces.html \
   test_setrequestheader-invalid-arguments.htm \
   $(NULL)

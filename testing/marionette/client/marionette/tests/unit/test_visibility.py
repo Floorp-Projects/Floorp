@@ -74,3 +74,9 @@ class TestVisibility(MarionetteTestCase):
         self.marionette.navigate(test_html)
         negative_percent__tranform = self.marionette.find_element("id", 'negative-percentage-transformY')
         self.assertTrue(negative_percent__tranform.is_displayed())
+
+    def testShouldSayElementIsInvisibleWhenOverflowXIsHiddenAndOutOfViewport(self):
+        test_html = self.marionette.absolute_url("bug814037.html")
+        self.marionette.navigate(test_html)
+        overflow_x = self.marionette.find_element("id", "assertMe2")
+        self.assertFalse(overflow_x.is_displayed())

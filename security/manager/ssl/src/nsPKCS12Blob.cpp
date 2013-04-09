@@ -6,7 +6,6 @@
 #include "prmem.h"
 #include "prprf.h"
 
-#include "nsISupportsArray.h"
 #include "nsIFile.h"
 #include "nsNetUtil.h"
 #include "nsIDirectoryService.h"

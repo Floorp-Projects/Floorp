@@ -538,6 +538,10 @@ const DownloadsIndicatorView = {
     let name = {};
     let url = browserDragAndDrop.drop(aEvent, name);
     if (url) {
+      if (url.startsWith("about:")) {
+        return;
+      }
+
       let sourceDoc = dt.mozSourceNode ? dt.mozSourceNode.ownerDocument : document;
       saveURL(url, name.value, null, true, true, null, sourceDoc);
       aEvent.preventDefault();

@@ -607,16 +607,26 @@ class LTypeOfV : public LInstructionHelper<1, BOX_PIECES, 0>
     }
 };
 
-class LToIdV : public LCallInstructionHelper<BOX_PIECES, 2 * BOX_PIECES, 0>
+class LToIdV : public LInstructionHelper<BOX_PIECES, 2 * BOX_PIECES, 1>
 {
   public:
     LIR_HEADER(ToIdV)
+    BOX_OUTPUT_ACCESSORS()
+
+    LToIdV(const LDefinition &temp)
+    {
+        setTemp(0, temp);
+    }
 
     static const size_t Object = 0;
     static const size_t Index = BOX_PIECES;
 
     MToId *mir() const {
         return mir_->toToId();
+    }
+
+    const LDefinition *tempFloat() {
+        return getTemp(0);
     }
 };
 

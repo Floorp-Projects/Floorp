@@ -176,11 +176,19 @@ NetAddrElement::~NetAddrElement()
 }
 
 AddrInfo::AddrInfo(const char *host, const PRAddrInfo *prAddrInfo,
-                   bool disableIPv4)
+                   bool disableIPv4, const char *cname)
 {
   size_t hostlen = strlen(host);
   mHostName = static_cast<char*>(moz_xmalloc(hostlen + 1));
   memcpy(mHostName, host, hostlen + 1);
+  if (cname) {
+      size_t cnameLen = strlen(cname);
+      mCanonicalName = static_cast<char*>(moz_xmalloc(cnameLen + 1));
+      memcpy(mCanonicalName, cname, cnameLen + 1);
+  }
+  else {
+      mCanonicalName = nullptr;
+  }
 
   PRNetAddr tmpAddr;
   void *iter = nullptr;
@@ -200,6 +208,7 @@ AddrInfo::~AddrInfo()
     delete addrElement;
   }
   moz_free(mHostName);
+  moz_free(mCanonicalName);
 }
 
 } // namespace dns

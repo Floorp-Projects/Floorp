@@ -172,10 +172,10 @@ const testcases = [
     ["万城",     "xn--chq31v",                       false, true,  true],
 
     // Simplified-only and Traditional-only Chinese in the same label
-    ["万萬城",   "xn--chq31vsl1b",                   false, false, false],
+    ["万萬城",   "xn--chq31vsl1b",                   false, true,  true],
 
     // Traditional-only and Simplified-only Chinese in the same label
-    ["萬万城",   "xn--chq31vrl1b",                   false, false, false],
+    ["萬万城",   "xn--chq31vrl1b",                   false, true,  true],
 
     // Han and Latin and Bopomofo
     ["注音符号bopomofoㄅㄆㄇㄈ",

@@ -561,7 +561,7 @@ SmsRequest::NotifyThreadList(const InfallibleTArray<ThreadListItem>& aItems)
   for (uint32_t i = 0; i < aItems.Length(); i++) {
     const ThreadListItem& source = aItems[i];
 
-    jsval id = JS_NumberValue(double(source.id()));
+    JS::Value id = JS_NumberValue(double(source.id()));
 
     nsString temp = source.senderOrReceiver();
 

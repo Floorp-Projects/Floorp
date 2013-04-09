@@ -1515,11 +1515,4 @@ protected:
   nscoord mMaxLineBoxWidth;
 };
 
-/**
- * Create a new empty presentation shell. Upon success, call Init
- * before attempting to use the shell.
- */
-nsresult
-NS_NewPresShell(nsIPresShell** aInstancePtrResult);
-
 #endif /* nsIPresShell_h___ */

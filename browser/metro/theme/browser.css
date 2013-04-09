@@ -127,10 +127,25 @@
   }
 }
 
-#tray:not([tabsonly]) documenttab > .documenttab-container {
-  animation: open-documenttab;
-  animation-duration: 0.4s;
-  animation-timing-function: ease-out;
+@-moz-keyframes close-documenttab {
+  0% {
+    opacity: 1;
+    transform: scale(1, 1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(0, 0);
+  }
+}
+
+#tray:not([tabsonly]) .documenttab-container {
+  animation: open-documenttab 0.4s ease-out;
+}
+
+#tray:not([tabsonly]) documenttab[closing] > .documenttab-container {
+  animation: close-documenttab 0.4s ease-out;
+  animation-fill-mode: forwards;
 }
 
 #tray:not([tabsonly]) .documenttab-favicon {
