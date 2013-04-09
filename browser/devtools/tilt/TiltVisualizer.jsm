@@ -110,6 +110,14 @@ this.TiltVisualizer = function TiltVisualizer(aProperties)
 TiltVisualizer.prototype = {
 
   /**
+   * Initializes the visualizer
+   */
+  init: function TV_init()
+  {
+    this.presenter.init();
+  },
+
+  /**
    * Checks if this object was initialized properly.
    *
    * @return {Boolean} true if the object was initialized properly
@@ -310,6 +318,11 @@ TiltVisualizer.Presenter = function TV_Presenter(
   this.NOTIFICATIONS = aNotifications;
 
   /**
+   * Use the default node callback function
+   */
+  this.nodeCallback = null;
+
+  /**
    * Create the renderer, containing useful functions for easy drawing.
    */
   this._renderer = new TiltGL.Renderer(aCanvas, onError, onLoad);
@@ -375,13 +388,18 @@ TiltVisualizer.Presenter = function TV_Presenter(
   this._delta = 0;
   this._prevFrameTime = 0;
   this._currFrameTime = 0;
-
-
-  this._setup();
-  this._loop();
 };
 
 TiltVisualizer.Presenter.prototype = {
+
+  /**
+   * Initializes the presenter and starts the animation loop
+   */
+  init: function TVP_init()
+  {
+    this._setup();
+    this._loop();
+  },
 
   /**
    * The initialization logic.
@@ -718,6 +736,7 @@ TiltVisualizer.Presenter.prototype = {
 
     // traverse the document and get the depths, coordinates and local names
     this._traverseData = TiltUtils.DOM.traverse(this.contentWindow, {
+      nodeCallback: this.nodeCallback,
       invisibleElements: INVISIBLE_ELEMENTS,
       minSize: ELEMENT_MIN_SIZE,
       maxX: this._texture.width,
@@ -851,7 +870,7 @@ TiltVisualizer.Presenter.prototype = {
       this._currentSelection = -1;
       this._highlight.disabled = true;
 
-      Services.obs.notifyObservers(null, this.NOTIFICATIONS.UNHIGHLIGHTING, null);
+      Services.obs.notifyObservers(this.contentWindow, this.NOTIFICATIONS.UNHIGHLIGHTING, null);
       return;
     }
 
@@ -888,7 +907,7 @@ TiltVisualizer.Presenter.prototype = {
         vec3.scale(this._highlight.v1, this.transforms.zoom, []), 0.5));
     }
 
-    Services.obs.notifyObservers(null, this.NOTIFICATIONS.HIGHLIGHTING, null);
+    Services.obs.notifyObservers(this.contentWindow, this.NOTIFICATIONS.HIGHLIGHTING, null);
   },
 
   /**
@@ -920,7 +939,7 @@ TiltVisualizer.Presenter.prototype = {
     this._highlight.disabled = true;
     this._redraw = true;
 
-    Services.obs.notifyObservers(null, this.NOTIFICATIONS.NODE_REMOVED, null);
+    Services.obs.notifyObservers(this.contentWindow, this.NOTIFICATIONS.NODE_REMOVED, null);
   },
 
   /**
@@ -1044,7 +1063,7 @@ TiltVisualizer.Presenter.prototype = {
        !this._isExecutingDestruction) {
 
       this._isInitializationFinished = true;
-      Services.obs.notifyObservers(null, this.NOTIFICATIONS.INITIALIZED, null);
+      Services.obs.notifyObservers(this.contentWindow, this.NOTIFICATIONS.INITIALIZED, null);
 
       if ("function" === typeof this._onInitializationFinished) {
         this._onInitializationFinished();
@@ -1056,7 +1075,7 @@ TiltVisualizer.Presenter.prototype = {
         this._isExecutingDestruction) {
 
       this._isDestructionFinished = true;
-      Services.obs.notifyObservers(null, this.NOTIFICATIONS.BEFORE_DESTROYED, null);
+      Services.obs.notifyObservers(this.contentWindow, this.NOTIFICATIONS.BEFORE_DESTROYED, null);
 
       if ("function" === typeof this._onDestructionFinished) {
         this._onDestructionFinished();
