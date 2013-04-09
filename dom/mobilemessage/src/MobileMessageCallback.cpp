@@ -139,18 +139,6 @@ MobileMessageCallback::NotifyMarkMessageReadFailed(int32_t aError)
   return NotifyError(aError);
 }
 
-NS_IMETHODIMP
-MobileMessageCallback::NotifyThreadList(const JS::Value& aThreadList, JSContext* aCx)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-MobileMessageCallback::NotifyThreadListFailed(int32_t aError)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 } // namesapce mobilemessage
 } // namespace dom
 } // namespace mozilla

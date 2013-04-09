@@ -314,16 +314,23 @@ SmsManager::MarkMessageRead(int32_t aId, bool aValue,
 }
 
 NS_IMETHODIMP
-SmsManager::GetThreadList(nsIDOMMozSmsRequest** aRequest)
+SmsManager::GetThreads(nsIDOMDOMCursor** aCursor)
 {
-  nsCOMPtr<nsIDOMMozSmsRequest> req = SmsRequest::Create(this);
-  nsCOMPtr<nsIMobileMessageDatabaseService> mobileMessageDBService =
+  nsCOMPtr<nsIMobileMessageDatabaseService> dbService =
     do_GetService(MOBILE_MESSAGE_DATABASE_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(mobileMessageDBService, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIMobileMessageCallback> forwarder =
-    new SmsRequestForwarder(static_cast<SmsRequest*>(req.get()));
-  mobileMessageDBService->GetThreadList(forwarder);
-  req.forget(aRequest);
+  NS_ENSURE_TRUE(dbService, NS_ERROR_FAILURE);
+
+  nsRefPtr<MobileMessageCursorCallback> cursorCallback =
+    new MobileMessageCursorCallback();
+
+  nsCOMPtr<nsICursorContinueCallback> continueCallback;
+  nsresult rv = dbService->CreateThreadCursor(cursorCallback,
+                                              getter_AddRefs(continueCallback));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  cursorCallback->mDOMCursor = new DOMCursor(GetOwner(), continueCallback);
+  NS_ADDREF(*aCursor = cursorCallback->mDOMCursor);
+
   return NS_OK;
 }
 
