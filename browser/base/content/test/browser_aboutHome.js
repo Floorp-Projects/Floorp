@@ -114,7 +114,7 @@ let gTests = [
   run: function () {
     try {
       let cm = Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
-      cm.getCategoryEntry("healthreport-js-provider", "SearchesProvider");
+      cm.getCategoryEntry("healthreport-js-provider-default", "SearchesProvider");
     } catch (ex) {
       // Health Report disabled, or no SearchesProvider.
       return Promise.resolve();
