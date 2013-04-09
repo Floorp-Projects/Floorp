@@ -145,9 +145,21 @@ define('test/source-map/util', ['require', 'exports', 'module' ,  'lib/source-ma
       assert.equal(origMapping.column, originalColumn,
                    'Incorrect column, expected ' + JSON.stringify(originalColumn)
                    + ', got ' + JSON.stringify(origMapping.column));
-      assert.equal(origMapping.source,
-                   originalSource ? util.join(map._sourceRoot, originalSource) : null,
-                   'Incorrect source, expected ' + JSON.stringify(originalSource)
+
+      var expectedSource;
+
+      if (originalSource && map.sourceRoot && originalSource.indexOf(map.sourceRoot) === 0) {
+        expectedSource = originalSource;
+      } else if (originalSource) {
+        expectedSource = map.sourceRoot
+          ? util.join(map.sourceRoot, originalSource)
+          : originalSource;
+      } else {
+        expectedSource = null;
+      }
+
+      assert.equal(origMapping.source, expectedSource,
+                   'Incorrect source, expected ' + JSON.stringify(expectedSource)
                    + ', got ' + JSON.stringify(origMapping.source));
     }
 
@@ -238,10 +250,34 @@ define('lib/source-map/util', ['require', 'exports', 'module' , ], function(requ
   }
   exports.getArg = getArg;
 
+  var urlRegexp = /([\w+\-.]+):\/\/((\w+:\w+)@)?([\w.]+)?(:(\d+))?(\S+)?/;
+
+  function urlParse(aUrl) {
+    var match = aUrl.match(urlRegexp);
+    if (!match) {
+      return null;
+    }
+    return {
+      scheme: match[1],
+      auth: match[3],
+      host: match[4],
+      port: match[6],
+      path: match[7]
+    };
+  }
+
   function join(aRoot, aPath) {
-    return aPath.charAt(0) === '/'
-      ? aPath
-      : aRoot.replace(/\/$/, '') + '/' + aPath;
+    var url;
+
+    if (aPath.match(urlRegexp)) {
+      return aPath;
+    }
+
+    if (aPath.charAt(0) === '/' && (url = urlParse(aRoot))) {
+      return aRoot.replace(url.path, '') + aPath;
+    }
+
+    return aRoot.replace(/\/$/, '') + '/' + aPath;
   }
   exports.join = join;
 
