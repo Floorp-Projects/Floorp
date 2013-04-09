@@ -209,9 +209,11 @@ PreviewController.prototype = {
   },
 
   get zoom() {
-    // We use this property instead of the fullZoom property because this
-    // accurately reflects the actual zoom factor used when drawing.
-    return this.winutils.screenPixelsPerCSSPixel;
+    // Note that winutils.fullZoom accounts for "quantization" of the zoom factor
+    // from nsIMarkupDocumentViewer due to conversion through appUnits.
+    // We do -not- want screenPixelsPerCSSPixel here, because that would -also-
+    // incorporate any scaling that is applied due to hi-dpi resolution options.
+    return this.winutils.fullZoom;
   },
 
   // Updates the controller's canvas with the parts of the <browser> that need
@@ -301,18 +303,33 @@ PreviewController.prototype = {
   },
 
   previewTabCallback: function (ctx) {
+    // This will extract the resolution-scale component of the scaling we need,
+    // which should be applied to both chrome and content;
+    // the page zoom component is applied (to content only) within updateCanvasPreview.
+    let scale = this.winutils.screenPixelsPerCSSPixel / this.winutils.fullZoom;
+    ctx.save();
+    ctx.scale(scale, scale);
     let width = this.win.width;
     let height = this.win.height;
     // Draw our toplevel window
     ctx.drawWindow(this.win.win, 0, 0, width, height, "transparent");
 
-    // Compositor, where art thou?
-    // Draw the tab content on top of the toplevel window
-    this.updateCanvasPreview();
+    // XXX (jfkthame): Pending tabs don't seem to draw with the proper scaling
+    // unless we use this block of code; but doing this for "normal" (loaded) tabs
+    // results in blurry rendering on hidpi systems, so we avoid it if possible.
+    // I don't understand why pending and loaded tabs behave differently here...
+    // (see bug 857061).
+    if (this.tab.hasAttribute("pending")) {
+      // Compositor, where art thou?
+      // Draw the tab content on top of the toplevel window
+      this.updateCanvasPreview();
 
-    let boxObject = this.linkedBrowser.boxObject;
-    ctx.translate(boxObject.x, boxObject.y);
-    ctx.drawImage(this.canvasPreview, 0, 0);
+      let boxObject = this.linkedBrowser.boxObject;
+      ctx.translate(boxObject.x, boxObject.y);
+      ctx.drawImage(this.canvasPreview, 0, 0);
+    }
+
+    ctx.restore();
   },
 
   drawThumbnail: function (ctx, width, height) {
