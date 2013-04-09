@@ -9,7 +9,7 @@ function test() {
   try {
     let cm = Components.classes["@mozilla.org/categorymanager;1"]
                        .getService(Components.interfaces.nsICategoryManager);
-    cm.getCategoryEntry("healthreport-js-provider", "SearchesProvider");
+    cm.getCategoryEntry("healthreport-js-provider-default", "SearchesProvider");
   } catch (ex) {
     // Health Report disabled, or no SearchesProvider.
     // We need a test or else we'll be marked as failure.
