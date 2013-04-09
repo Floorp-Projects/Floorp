@@ -113,12 +113,12 @@ private:
 
 DynamicsCompressorNode::DynamicsCompressorNode(AudioContext* aContext)
   : AudioNode(aContext)
-  , mThreshold(new AudioParam(this, SendThresholdToStream, -24.f, -100.f, 0.f))
-  , mKnee(new AudioParam(this, SendKneeToStream, 30.f, 0.f, 40.f))
-  , mRatio(new AudioParam(this, SendRatioToStream, 12.f, 1.f, 20.f))
-  , mReduction(new AudioParam(this, SendReductionToStream, 0.f, -20.f, 0.f))
-  , mAttack(new AudioParam(this, SendAttackToStream, 0.003f, 0.f, 1.f))
-  , mRelease(new AudioParam(this, SendReleaseToStream, 0.25f, 0.f, 1.f))
+  , mThreshold(new AudioParam(this, SendThresholdToStream, -24.f))
+  , mKnee(new AudioParam(this, SendKneeToStream, 30.f))
+  , mRatio(new AudioParam(this, SendRatioToStream, 12.f))
+  , mReduction(new AudioParam(this, SendReductionToStream, 0.f))
+  , mAttack(new AudioParam(this, SendAttackToStream, 0.003f))
+  , mRelease(new AudioParam(this, SendReleaseToStream, 0.25f))
 {
   DynamicsCompressorNodeEngine* engine = new DynamicsCompressorNodeEngine(aContext->Destination());
   mStream = aContext->Graph()->CreateAudioNodeStream(engine, MediaStreamGraph::INTERNAL_STREAM);
