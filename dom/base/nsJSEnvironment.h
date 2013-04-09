@@ -61,6 +61,9 @@ public:
   virtual nsresult ExecuteScript(JSScript* aScriptObject,
                                  JSObject* aScopeObject);
 
+  virtual nsresult CallEventHandler(nsISupports* aTarget, JSObject* aScope,
+                                    JSObject* aHandler,
+                                    nsIArray *argv, nsIVariant **rv);
   virtual nsresult BindCompiledEventHandler(nsISupports *aTarget,
                                             JSObject *aScope,
                                             JSObject* aHandler,
