@@ -444,18 +444,12 @@ public class HistoryTab extends AwesomeBarTab {
                                                      (String) map.get(URLColumns.TITLE),
                                                      null);
 
-        MenuInflater inflater = new MenuInflater(mContext);
-        inflater.inflate(R.menu.awesomebar_contextmenu, menu);
-        
+        setupMenu(menu, subject);
+
         menu.findItem(R.id.remove_bookmark).setVisible(false);
         menu.findItem(R.id.edit_bookmark).setVisible(false);
         menu.findItem(R.id.open_in_reader).setVisible(false);
 
-        // Hide "Remove" item if there isn't a valid history ID
-        if (subject.id < 0)
-            menu.findItem(R.id.remove_history).setVisible(false);
-
-        menu.setHeaderTitle(subject.title);
         return subject;
     }
 }
