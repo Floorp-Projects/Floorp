@@ -92,6 +92,14 @@ const RIL_IPC_MOBILECONNECTION_MSG_NAMES = [
   "RIL:SetCardLock",
   "RIL:SendMMI",
   "RIL:CancelMMI",
+  "RIL:RegisterMobileConnectionMsg",
+  "RIL:SetCallForwardingOption",
+  "RIL:GetCallForwardingOption",
+  "RIL:SetCallWaitingOption",
+  "RIL:GetCallWaitingOption"
+];
+
+const RIL_IPC_ICCMANAGER_MSG_NAMES = [
   "RIL:SendStkResponse",
   "RIL:SendStkMenuSelection",
   "RIL:SendStkTimerExpiration",
@@ -101,12 +109,7 @@ const RIL_IPC_MOBILECONNECTION_MSG_NAMES = [
   "RIL:IccCloseChannel",
   "RIL:ReadIccContacts",
   "RIL:UpdateIccContact",
-  "RIL:RegisterMobileConnectionMsg",
-  "RIL:RegisterIccMsg",
-  "RIL:SetCallForwardingOption",
-  "RIL:GetCallForwardingOption",
-  "RIL:SetCallWaitingOption",
-  "RIL:GetCallWaitingOption"
+  "RIL:RegisterIccMsg"
 ];
 
 const RIL_IPC_VOICEMAIL_MSG_NAMES = [
@@ -332,6 +335,9 @@ function RadioInterfaceLayer() {
   for (let msgname of RIL_IPC_MOBILECONNECTION_MSG_NAMES) {
     ppmm.addMessageListener(msgname, this);
   }
+  for (let msgName of RIL_IPC_ICCMANAGER_MSG_NAMES) {
+    ppmm.addMessageListener(msgName, this);
+  }
   for (let msgname of RIL_IPC_VOICEMAIL_MSG_NAMES) {
     ppmm.addMessageListener(msgname, this);
   }
@@ -389,6 +395,12 @@ RadioInterfaceLayer.prototype = {
     } else if (RIL_IPC_MOBILECONNECTION_MSG_NAMES.indexOf(msg.name) != -1) {
       if (!msg.target.assertPermission("mobileconnection")) {
         debug("MobileConnection message " + msg.name +
+              " from a content process with no 'mobileconnection' privileges.");
+        return null;
+      }
+    } else if (RIL_IPC_ICCMANAGER_MSG_NAMES.indexOf(msg.name) != -1) {
+      if (!msg.target.assertPermission("mobileconnection")) {
+        debug("IccManager message " + msg.name +
               " from a content process with no 'mobileconnection' privileges.");
         return null;
       }
@@ -1904,6 +1916,9 @@ RadioInterfaceLayer.prototype = {
         }
         for (let msgname of RIL_IPC_MOBILECONNECTION_MSG_NAMES) {
           ppmm.removeMessageListener(msgname, this);
+        }
+        for (let msgName of RIL_IPC_ICCMANAGER_MSG_NAMES) {
+          ppmm.removeMessageListener(msgName, this);
         }
         for (let msgname of RIL_IPC_VOICEMAIL_MSG_NAMES) {
           ppmm.removeMessageListener(msgname, this);
