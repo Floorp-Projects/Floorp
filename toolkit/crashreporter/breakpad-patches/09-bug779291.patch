@@ -1,0 +1,27 @@
+changeset:   124512:8b366545161d
+user:        Julian Seward <jseward@acm.org>
+date:        Sun Mar 10 23:00:23 2013 +0100
+summary:     Bug 779291: Implement SPS stackwalk using the breakpad unwinder. r=bgirard,glandium
+
+diff --git a/src/common/linux/dump_symbols.cc b/src/common/linux/dump_symbols.cc
+--- a/src/common/linux/dump_symbols.cc
++++ b/src/common/linux/dump_symbols.cc
+@@ -621,17 +621,17 @@ bool LoadSymbols(const string& obj_file,
+       bool result =
+           LoadDwarfCFI<ElfClass>(obj_file, elf_header, ".eh_frame",
+                                  eh_frame_section, true,
+                                  got_section, text_section, big_endian, module);
+       found_usable_info = found_usable_info || result;
+     }
+   }
+ 
+-  if (!found_debug_info_section) {
++  if (!found_debug_info_section && symbol_data != ONLY_CFI) {
+     fprintf(stderr, "%s: file contains no debugging information"
+             " (no \".stab\" or \".debug_info\" sections)\n",
+             obj_file.c_str());
+ 
+     // Failed, but maybe there's a .gnu_debuglink section?
+     if (read_gnu_debug_link) {
+       const Shdr* gnu_debuglink_section
+           = FindElfSectionByName<ElfClass>(".gnu_debuglink", SHT_PROGBITS,
