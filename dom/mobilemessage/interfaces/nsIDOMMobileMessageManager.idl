@@ -8,6 +8,7 @@ interface nsIDOMEventListener;
 interface nsIDOMMozSmsRequest;
 interface nsIDOMMozSmsFilter;
 interface nsIDOMMozSmsSegmentInfo;
+interface nsIDOMDOMCursor;
 interface nsIDOMDOMRequest;
 interface nsIDOMBlob;
 
@@ -19,7 +20,7 @@ dictionary MmsParameters
   jsval      attachments; // MmsAttachment[]
 };
 
-[scriptable, builtinclass, uuid(645161ca-b009-461b-bd13-45c3075cdfba)]
+[scriptable, builtinclass, uuid(44346294-6c8f-4a06-a412-1f38f7d45f2e)]
 interface nsIDOMMozMobileMessageManager : nsIDOMEventTarget
 {
   nsIDOMMozSmsSegmentInfo getSegmentInfoForText(in DOMString text);
@@ -38,7 +39,7 @@ interface nsIDOMMozMobileMessageManager : nsIDOMEventTarget
   // The parameter can be either a message id or a nsIDOMMoz{Mms,Sms}Message.
   nsIDOMDOMRequest delete(in jsval param);
 
-  nsIDOMMozSmsRequest getMessages(in nsIDOMMozSmsFilter filter, in boolean reverse);
+  nsIDOMDOMCursor getMessages(in nsIDOMMozSmsFilter filter, in boolean reverse);
 
   nsIDOMDOMRequest markMessageRead(in long id, in boolean aValue);
 

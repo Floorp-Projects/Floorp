@@ -13,7 +13,7 @@ dictionary SmsThreadListItem
   unsigned long long unreadCount;
 };
 
-[scriptable, builtinclass, uuid(edb1de12-8d58-11e2-b382-7bf132b20cb2)]
+[scriptable, builtinclass, uuid(47498737-972d-49c9-8d4e-80ae2da51778)]
 interface nsIMobileMessageCallback : nsISupports
 {
   /**
@@ -41,15 +41,6 @@ interface nsIMobileMessageCallback : nsISupports
 
   void notifyMessageDeleted(in boolean deleted);
   void notifyDeleteMessageFailed(in long error);
-
-  /**
-   * |message| can be nsIDOMMoz{Mms,Sms}Message.
-   */
-  void notifyMessageListCreated(in long listId,
-                                in nsISupports message);
-  void notifyReadMessageListFailed(in long error);
-  void notifyNextMessageInListGot(in nsISupports message);
-  void notifyNoMessageInList();
 
   void notifyMessageMarkedRead(in boolean read);
   void notifyMarkMessageReadFailed(in long error);

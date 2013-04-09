@@ -11,10 +11,12 @@
 #define MOBILE_MESSAGE_DATABASE_SERVICE_CONTRACTID "@mozilla.org/mobilemessage/mobilemessagedatabaseservice;1"
 %}
 
+interface nsICursorContinueCallback;
 interface nsIDOMMozSmsFilter;
 interface nsIMobileMessageCallback;
+interface nsIMobileMessageCursorCallback;
 
-[scriptable, uuid(4000064a-86d2-11e2-b4a6-ef0f30bd1e59)]
+[scriptable, uuid(487d15e1-fd23-40cc-ba45-7c0115032e17)]
 interface nsIMobileMessageDatabaseService : nsISupports
 {
   [binaryname(GetMessageMoz)]
@@ -24,14 +26,9 @@ interface nsIMobileMessageDatabaseService : nsISupports
   void deleteMessage(in long messageId,
                      in nsIMobileMessageCallback request);
 
-  void createMessageList(in nsIDOMMozSmsFilter filter,
-                         in boolean reverse,
-                         in nsIMobileMessageCallback request);
-
-  void getNextMessageInList(in long listId,
-                            in nsIMobileMessageCallback request);
-
-  void clearMessageList(in long listId);
+  nsICursorContinueCallback createMessageCursor(in nsIDOMMozSmsFilter filter,
+                                                in boolean reverse,
+                                                in nsIMobileMessageCursorCallback callback);
 
   void markMessageRead(in long messageId,
                        in boolean value,
