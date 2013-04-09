@@ -52,6 +52,8 @@ function test() {
 
       is(tabpanel.querySelector("#headers-summary-url-value").getAttribute("value"),
         SIMPLE_SJS, "The url summary value is incorrect.");
+      is(tabpanel.querySelector("#headers-summary-url-value").getAttribute("tooltiptext"),
+        SIMPLE_SJS, "The url summary tooltiptext is incorrect.");
       is(tabpanel.querySelector("#headers-summary-method-value").getAttribute("value"),
         "GET", "The method summary value is incorrect.");
       is(tabpanel.querySelector("#headers-summary-status-circle").getAttribute("code"),
