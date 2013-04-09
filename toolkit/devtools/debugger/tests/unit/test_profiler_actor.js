@@ -147,21 +147,23 @@ function test_profile(aClient, aProfiler)
 function test_profiler_status()
 {
   var connectionClosed = DebuggerServer._connectionClosed;
-  DebuggerServer._connectionClosed = function (conn) {
-    connectionClosed.call(this, conn);
-    // Check that closing the connection stops the profiler
-    do_check_false(Profiler.IsActive());
-    do_test_finished();
-  };
-
   var client = new DebuggerClient(DebuggerServer.connectPipe());
-  client.connect(function () {
-    client.listTabs(function(aResponse) {
+
+  client.connect(() => {
+    client.listTabs((aResponse) => {
+      DebuggerServer._connectionClosed = function (conn) {
+        connectionClosed.call(this, conn);
+
+        // Check that closing the last (only?) connection stops the profiler.
+        do_check_false(Profiler.IsActive());
+        do_test_finished();
+      }
+
       var profiler = aResponse.profilerActor;
       do_check_false(Profiler.IsActive());
-      client.request({ to: profiler, type: "startProfiler", features: [] }, function (aResponse) {
+      client.request({ to: profiler, type: "startProfiler", features: [] }, (aResponse) => {
         do_check_true(Profiler.IsActive());
-        client.close(function() { });
+        client.close(function () {});
       });
     });
   });
