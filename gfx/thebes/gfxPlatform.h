@@ -594,6 +594,8 @@ private:
 
     static void CreateCMSOutputProfile();
 
+    friend int RecordingPrefChanged(const char *aPrefName, void *aClosure);
+
     virtual qcms_profile* GetPlatformCMSOutputProfile();
 
     nsRefPtr<gfxASurface> mScreenReferenceSurface;
