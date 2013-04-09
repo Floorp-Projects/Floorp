@@ -42,7 +42,8 @@ class GamepadService : public nsIObserver
   void RemoveListener(nsGlobalWindow* aWindow);
 
   // Add a gamepad to the list of known gamepads, and return its index.
-  uint32_t AddGamepad(const char* aID, uint32_t aNumButtons, uint32_t aNumAxes);
+  uint32_t AddGamepad(const char* aID, GamepadMappingType aMapping,
+                      uint32_t aNumButtons, uint32_t aNumAxes);
   // Remove the gamepad at |aIndex| from the list of known gamepads.
   void RemoveGamepad(uint32_t aIndex);
 
