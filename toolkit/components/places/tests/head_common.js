@@ -36,6 +36,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
 
 // This imports various other objects in addition to PlacesUtils.
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
+Cu.import("resource://gre/modules/BookmarkJSONUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "SMALLPNG_DATA_URI", function() {
   return NetUtil.newURI(
