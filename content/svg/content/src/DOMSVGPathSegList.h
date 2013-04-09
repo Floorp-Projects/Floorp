@@ -212,7 +212,7 @@ private:
                                       uint32_t aInternalIndex,
                                       uint32_t aArgCountForItem);
   void MaybeRemoveItemFromAnimValListAt(uint32_t aIndex,
-                                        uint32_t aArgCountForItem);
+                                        int32_t aArgCountForItem);
 
   // Calls UpdateListIndex on all elements in |mItems| that satisfy ItemAt(),
   // from |aStartingIndex| to the end of |mItems|.  Also adjusts
