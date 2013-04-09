@@ -872,3 +872,10 @@ nsScreenManagerGonk::GetNumberOfScreens(uint32_t *aNumberOfScreens)
     *aNumberOfScreens = 1;
     return NS_OK;
 }
+
+NS_IMETHODIMP
+nsScreenManagerGonk::GetSystemDefaultScale(float *aDefaultScale)
+{
+    *aDefaultScale = 1.0f;
+    return NS_OK;
+}
