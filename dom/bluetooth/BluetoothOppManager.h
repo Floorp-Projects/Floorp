@@ -176,6 +176,12 @@ private:
   nsAutoArrayPtr<uint8_t> mReceivedDataBuffer;
 
   nsCOMPtr<nsIDOMBlob> mBlob;
+
+  /**
+   * A seperate member thread is required because our read calls can block
+   * execution, which is not allowed to happen on the IOThread.
+   * 
+   */
   nsCOMPtr<nsIThread> mReadFileThread;
   nsCOMPtr<nsIOutputStream> mOutputStream;
   nsCOMPtr<nsIInputStream> mInputStream;
