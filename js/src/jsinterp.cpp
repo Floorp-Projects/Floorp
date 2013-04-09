@@ -2992,7 +2992,7 @@ BEGIN_CASE(JSOP_INITELEM)
 {
     JS_ASSERT(regs.stackDepth() >= 3);
     HandleValue val = HandleValue::fromMarkedLocation(&regs.sp[-1]);
-    MutableHandleValue id = MutableHandleValue::fromMarkedLocation(&regs.sp[-2]);
+    HandleValue id = HandleValue::fromMarkedLocation(&regs.sp[-2]);
 
     RootedObject &obj = rootObject0;
     obj = &regs.sp[-3].toObject();
@@ -3682,8 +3682,7 @@ js::SetObjectElement(JSContext *cx, HandleObject obj, HandleValue index, HandleV
                      JSBool strict)
 {
     RootedId id(cx);
-    RootedValue indexval(cx, index);
-    if (!FetchElementId(cx, obj, indexval, &id, &indexval))
+    if (!ValueToId<CanGC>(cx, index, &id))
         return false;
     return SetObjectElementOperation(cx, obj, id, value, strict);
 }
@@ -3694,8 +3693,7 @@ js::SetObjectElement(JSContext *cx, HandleObject obj, HandleValue index, HandleV
 {
     JS_ASSERT(pc);
     RootedId id(cx);
-    RootedValue indexval(cx, index);
-    if (!FetchElementId(cx, obj, indexval, &id, &indexval))
+    if (!ValueToId<CanGC>(cx, index, &id))
         return false;
     return SetObjectElementOperation(cx, obj, id, value, strict, script, pc);
 }
