@@ -134,10 +134,37 @@ let Util = {
     aElement.style.border = "2px solid red";
   },
 
+  transitionElementVisibility: function(aNodes, aVisible) {
+    // accept single node or a collection of nodes
+    aNodes = aNodes.length ? aNodes : [aNodes];
+    let defd = Promise.defer();
+    let pending = 0;
+    Array.forEach(aNodes, function(aNode) {
+      if (aVisible) {
+        aNode.hidden = false;
+        aNode.removeAttribute("fade"); // trigger transition to full opacity
+      } else {
+        aNode.setAttribute("fade", true); // trigger transition to 0 opacity
+      }
+      aNode.addEventListener("transitionend", function onTransitionEnd(aEvent){
+        aNode.removeEventListener("transitionend", onTransitionEnd);
+        if (!aVisible) {
+          aNode.hidden = true;
+        }
+        pending--;
+        if (!pending){
+          defd.resolve(true);
+        }
+      }, false);
+      pending++;
+    });
+    return defd.promise;
+  },
+
   getHrefForElement: function getHrefForElement(target) {
     let link = null;
     while (target) {
-      if (target instanceof Ci.nsIDOMHTMLAnchorElement || 
+      if (target instanceof Ci.nsIDOMHTMLAnchorElement ||
           target instanceof Ci.nsIDOMHTMLAreaElement ||
           target instanceof Ci.nsIDOMHTMLLinkElement) {
           if (target.hasAttribute("href"))
@@ -441,7 +468,7 @@ Util.Timeout.prototype = {
     return this;
   },
 
-  // Return true if we are waiting for a callback. 
+  // Return true if we are waiting for a callback.
   isPending: function isPending() {
     return this._type !== null;
   }
