@@ -156,6 +156,28 @@ class Rule(Statement):
         self.doublecolon = doublecolon
 
     def execute(self, makefile, context):
+        if context.weak:
+            self._executeweak(makefile, context)
+        else:
+            self._execute(makefile, context)
+
+    def _executeweak(self, makefile, context):
+        """
+        If the context is weak (we're just handling dependencies) we can make a number of assumptions here.
+        This lets us go really fast and is generally good.
+        """
+        assert context.weak
+        assert len(self.targetexp.resolvesplit(makefile, makefile.variables)) == 1
+        target = self.targetexp.resolvesplit(makefile, makefile.variables)[0]
+        deps = self.depexp.resolvesplit(makefile, makefile.variables)
+        rule = data.Rule(deps, self.doublecolon, loc=self.targetexp.loc, weakdeps=True)
+        makefile.gettarget(target).addrule(rule)
+        makefile.foundtarget(target)
+        context.currule = rule
+
+    def _execute(self, makefile, context):
+        assert not context.weak
+
         atargets = data.stripdotslashes(self.targetexp.resolvesplit(makefile, makefile.variables))
         targets = [data.Pattern(p) for p in _expandwildcards(makefile, atargets)]
 
@@ -168,15 +190,12 @@ class Rule(Statement):
             raise data.DataError("Mixed implicit and normal rule", self.targetexp.loc)
         ispattern, = ispatterns
 
-        if ispattern and context.weak:
-            raise data.DataError("Pattern rules not allowed in includedeps", self.targetexp.loc)
-
-        deps = [p for p in _expandwildcards(makefile, data.stripdotslashes(self.depexp.resolvesplit(makefile, makefile.variables)))]
+        deps = list(_expandwildcards(makefile, data.stripdotslashes(self.depexp.resolvesplit(makefile, makefile.variables))))
         if ispattern:
             rule = data.PatternRule(targets, map(data.Pattern, deps), self.doublecolon, loc=self.targetexp.loc)
             makefile.appendimplicitrule(rule)
         else:
-            rule = data.Rule(deps, self.doublecolon, loc=self.targetexp.loc, weakdeps=context.weak)
+            rule = data.Rule(deps, self.doublecolon, loc=self.targetexp.loc, weakdeps=False)
             for t in targets:
                 makefile.gettarget(t.gettarget()).addrule(rule)
 
