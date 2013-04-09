@@ -105,6 +105,7 @@ MOCHITEST_FILES = \
   test_bug785324.html \
   test_bug791616.html \
   test_bug831780.html \
+  test_bug841361.html \
   $(NULL)
 
 MOCHITEST_CHROME_FILES = \
