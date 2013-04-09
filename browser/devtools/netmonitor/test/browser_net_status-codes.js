@@ -22,35 +22,35 @@ function test() {
         "GET", STATUS_CODES_SJS + "?sts=100", {
           status: 101,
           type: "plain",
-          size: "0.00kb",
+          size: L10N.getFormatStr("networkMenu.sizeKB", "0.00"),
           time: true
         });
       verifyRequestItemTarget(requestItems[1] = RequestsMenu.getItemAtIndex(1),
         "GET", STATUS_CODES_SJS + "?sts=200", {
           status: 202,
           type: "plain",
-          size: "0.02kb",
+          size: L10N.getFormatStr("networkMenu.sizeKB", 0.02),
           time: true
         });
       verifyRequestItemTarget(requestItems[2] = RequestsMenu.getItemAtIndex(2),
         "GET", STATUS_CODES_SJS + "?sts=300", {
           status: 303,
           type: "plain",
-          size: "0.00kb",
+          size: L10N.getFormatStr("networkMenu.sizeKB", "0.00"),
           time: true
         });
       verifyRequestItemTarget(requestItems[3] = RequestsMenu.getItemAtIndex(3),
         "GET", STATUS_CODES_SJS + "?sts=400", {
           status: 404,
           type: "plain",
-          size: "0.02kb",
+          size: L10N.getFormatStr("networkMenu.sizeKB", 0.02),
           time: true
         });
       verifyRequestItemTarget(requestItems[4] = RequestsMenu.getItemAtIndex(4),
         "GET", STATUS_CODES_SJS + "?sts=500", {
           status: 501,
           type: "plain",
-          size: "0.02kb",
+          size: L10N.getFormatStr("networkMenu.sizeKB", 0.02),
           time: true
         });
 

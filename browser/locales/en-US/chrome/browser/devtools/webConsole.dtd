@@ -9,6 +9,7 @@
   - documentation on web development on the web. -->
 
 <!ENTITY window.title "Web Console">
+<!ENTITY browserConsole.title "Browser Console">
 
 <!ENTITY networkPanel.requestURLColon             "Request URL:">
 <!ENTITY networkPanel.requestMethodColon          "Request Method:">
@@ -60,7 +61,7 @@
 <!ENTITY btnConsoleWarnings     "Warnings">
 <!ENTITY btnConsoleLog          "Log">
 
-<!ENTITY filterBox.placeholder "Filter">
+<!ENTITY filterOutput.placeholder "Filter output">
 <!ENTITY btnClear.label        "Clear">
 <!ENTITY btnClear.tooltip      "Clear the Web Console output">
 
@@ -76,3 +77,5 @@
 
 <!ENTITY copyURLCmd.label     "Copy Link Location">
 <!ENTITY copyURLCmd.accesskey "a">
+
+<!ENTITY closeCmd.key  "W">

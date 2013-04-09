@@ -19,7 +19,7 @@ function testExecutionScope(hud) {
   let jsterm = hud.jsterm;
 
   jsterm.clearOutput();
-  jsterm.execute("window.location;");
+  jsterm.execute("window.location.href;");
 
   waitForSuccess({
     name: "jsterm execution output (two nodes)",
@@ -31,8 +31,8 @@ function testExecutionScope(hud) {
     {
       let nodes = jsterm.outputNode.querySelectorAll(".hud-msg-node");
 
-      is(/window.location;/.test(nodes[0].textContent), true,
-        "'window.location;' written to output");
+      is(/window.location.href;/.test(nodes[0].textContent), true,
+        "'window.location.href;' written to output");
 
       isnot(nodes[1].textContent.indexOf(TEST_URI), -1,
         "command was executed in the window scope");

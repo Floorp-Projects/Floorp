@@ -149,6 +149,8 @@
                     observes="devtoolsMenuBroadcaster_DevToolbar"/>
           <menuitem id="appmenu_chromeDebugger"
                     observes="devtoolsMenuBroadcaster_ChromeDebugger"/>
+          <menuitem id="appmenu_browserConsole"
+                    observes="devtoolsMenuBroadcaster_BrowserConsole"/>
           <menuitem id="appmenu_responsiveUI"
                     observes="devtoolsMenuBroadcaster_ResponsiveUI"/>
           <menuitem id="appmenu_scratchpad"

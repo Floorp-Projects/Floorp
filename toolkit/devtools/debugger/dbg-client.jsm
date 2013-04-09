@@ -13,7 +13,8 @@ const Cr = Components.results;
 this.EXPORTED_SYMBOLS = ["DebuggerTransport",
                          "DebuggerClient",
                          "debuggerSocketConnect",
-                         "LongStringClient"];
+                         "LongStringClient",
+                         "GripClient"];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
@@ -173,7 +174,6 @@ const UnsolicitedNotifications = {
   "consoleAPICall": "consoleAPICall",
   "eventNotification": "eventNotification",
   "fileActivity": "fileActivity",
-  "locationChange": "locationChange",
   "networkEvent": "networkEvent",
   "networkEventUpdate": "networkEventUpdate",
   "newGlobal": "newGlobal",
@@ -514,7 +514,7 @@ DebuggerClient.prototype = {
         }
       } catch(ex) {
         dumpn("Error handling response: " + ex + " - stack:\n" + ex.stack);
-        Cu.reportError(ex.message + "\n" + ex.stack);
+        Cu.reportError(ex + "\n" + ex.stack);
       }
 
       this._sendRequests();
