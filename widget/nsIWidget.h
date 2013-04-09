@@ -608,6 +608,19 @@ class nsIWidget : public nsISupports {
     double GetDefaultScale();
 
     /**
+     * Return the Gecko override of the system default scale, if any;
+     * returns <= 0.0 if the system scale should be used as-is.
+     * nsIWidget::GetDefaultScale() [above] takes this into account.
+     * It is exposed here so that code that wants to check for a
+     * default-scale override without having a widget on hand can
+     * easily access the same value.
+     * Note that any scale override is a browser-wide value, whereas
+     * the default GetDefaultScale value (when no override is present)
+     * may vary between widgets (or screens).
+     */
+    static double DefaultScaleOverride();
+
+    /**
      * Return the first child of this widget.  Will return null if
      * there are no children.
      */
