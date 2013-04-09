@@ -118,6 +118,14 @@ LinuxGamepadService::AddDevice(struct udev_device* dev)
     mUdev.udev_device_get_property_value(dev, "ID_VENDOR_ID");
   const char* model_id =
     mUdev.udev_device_get_property_value(dev, "ID_MODEL_ID");
+  if (!vendor_id || !model_id) {
+    struct udev_device* parent =
+      mUdev.udev_device_get_parent_with_subsystem_devtype(dev, "input", NULL);
+    if (parent) {
+      vendor_id = mUdev.udev_device_get_sysattr_value(parent, "id/vendor");
+      model_id = mUdev.udev_device_get_sysattr_value(parent, "id/product");
+    }
+  }
   snprintf(gamepad.idstring, sizeof(gamepad.idstring),
            "%s-%s-%s",
            vendor_id ? vendor_id : "unknown",
