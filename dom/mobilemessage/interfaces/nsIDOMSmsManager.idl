@@ -4,12 +4,13 @@
 
 #include "nsIDOMEventTarget.idl"
 
+interface nsIDOMDOMCursor;
 interface nsIDOMEventListener;
 interface nsIDOMMozSmsRequest;
 interface nsIDOMMozSmsFilter;
 interface nsIDOMMozSmsSegmentInfo;
 
-[scriptable, builtinclass, uuid(9bc1d6fc-6b53-48f6-99e8-793e746e5dbb)]
+[scriptable, builtinclass, uuid(aa03b43e-82ec-4325-906e-a1ea018e1b01)]
 interface nsIDOMMozSmsManager : nsIDOMEventTarget
 {
   nsIDOMMozSmsSegmentInfo getSegmentInfoForText(in DOMString text);
@@ -26,7 +27,7 @@ interface nsIDOMMozSmsManager : nsIDOMEventTarget
   // The parameter can be either a message id or a SmsMessage.
   nsIDOMMozSmsRequest delete(in jsval param);
 
-  nsIDOMMozSmsRequest getMessages(in nsIDOMMozSmsFilter filter, in boolean reverse);
+  nsIDOMDOMCursor getMessages(in nsIDOMMozSmsFilter filter, in boolean reverse);
 
   nsIDOMMozSmsRequest markMessageRead(in long id, in boolean aValue);
 
