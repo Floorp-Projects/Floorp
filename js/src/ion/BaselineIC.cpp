@@ -3218,8 +3218,7 @@ static bool TryAttachNativeGetElemStub(JSContext *cx, HandleScript script,
                                        HandleValue key)
 {
     RootedId id(cx);
-    RootedValue idval(cx);
-    if (!FetchElementId(cx, obj, key, &id, &idval))
+    if (!ValueToId<CanGC>(cx, key, &id))
         return false;
 
     uint32_t dummy;
@@ -3759,8 +3758,7 @@ DoSetElemFallback(JSContext *cx, BaselineFrame *frame, ICSetElem_Fallback *stub,
     }
 
     if (op == JSOP_INITELEM) {
-        RootedValue nindex(cx, index);
-        if (!InitElemOperation(cx, obj, &nindex, rhs))
+        if (!InitElemOperation(cx, obj, index, rhs))
             return false;
     } else if (op == JSOP_INITELEM_ARRAY) {
         JS_ASSERT(uint32_t(index.toInt32()) == GET_UINT24(pc));

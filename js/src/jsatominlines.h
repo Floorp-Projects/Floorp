@@ -29,6 +29,18 @@ js::AtomStateEntry::asPtr() const
 
 namespace js {
 
+inline jsid
+AtomToId(JSAtom *atom)
+{
+    JS_STATIC_ASSERT(JSID_INT_MIN == 0);
+
+    uint32_t index;
+    if (atom->isIndex(&index) && index <= JSID_INT_MAX)
+        return INT_TO_JSID(int32_t(index));
+
+    return JSID_FROM_BITS(size_t(atom));
+}
+
 template <AllowGC allowGC>
 inline JSAtom *
 ToAtom(JSContext *cx, const js::Value &v)
@@ -60,7 +72,12 @@ ValueToId(JSContext* cx, JSObject *obj, const Value &v,
         return true;
     }
 
-    return InternNonIntElementId<allowGC>(cx, obj, v, idp);
+    JSAtom *atom = ToAtom<allowGC>(cx, v);
+    if (!atom)
+        return false;
+
+    idp.set(AtomToId(atom));
+    return true;
 }
 
 template <AllowGC allowGC>
@@ -127,18 +144,6 @@ IndexToIdNoGC(JSContext *cx, uint32_t index, jsid *idp)
     }
 
     return IndexToIdSlow<NoGC>(cx, index, idp);
-}
-
-inline jsid
-AtomToId(JSAtom *atom)
-{
-    JS_STATIC_ASSERT(JSID_INT_MIN == 0);
-
-    uint32_t index;
-    if (atom->isIndex(&index) && index <= JSID_INT_MAX)
-        return INT_TO_JSID((int32_t) index);
-
-    return JSID_FROM_BITS((size_t)atom);
 }
 
 static JS_ALWAYS_INLINE JSFlatString *

@@ -1867,7 +1867,7 @@ GetElementIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
     AutoDetectInvalidation adi(cx, res.address(), ion);
 
     RootedId id(cx);
-    if (!FetchElementId(cx, obj, idval, &id, res))
+    if (!ValueToId<CanGC>(cx, idval, &id))
         return false;
 
     bool attachedStub = false;
