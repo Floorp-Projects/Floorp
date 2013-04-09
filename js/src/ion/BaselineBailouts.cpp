@@ -1106,8 +1106,7 @@ HandleBoundsCheckFailure(JSContext *cx, HandleScript outerScript, HandleScript i
             innerScript->filename(), innerScript->lineno,
             outerScript->filename(), outerScript->lineno);
 
-    JS_ASSERT(outerScript->hasIonScript());
-    JS_ASSERT(!outerScript->ion->invalidated());
+    JS_ASSERT(!outerScript->ionScript()->invalidated());
 
     // TODO: Currently this mimic's Ion's handling of this case.  Investigate setting
     // the flag on innerScript as opposed to outerScript, and maybe invalidating both
@@ -1126,8 +1125,7 @@ HandleShapeGuardFailure(JSContext *cx, HandleScript outerScript, HandleScript in
             innerScript->filename(), innerScript->lineno,
             outerScript->filename(), outerScript->lineno);
 
-    JS_ASSERT(outerScript->hasIonScript());
-    JS_ASSERT(!outerScript->ion->invalidated());
+    JS_ASSERT(!outerScript->ionScript()->invalidated());
 
     // TODO: Currently this mimic's Ion's handling of this case.  Investigate setting
     // the flag on innerScript as opposed to outerScript, and maybe invalidating both
@@ -1144,8 +1142,7 @@ HandleCachedShapeGuardFailure(JSContext *cx, HandleScript outerScript, HandleScr
             innerScript->filename(), innerScript->lineno,
             outerScript->filename(), outerScript->lineno);
 
-    JS_ASSERT(outerScript->hasIonScript());
-    JS_ASSERT(!outerScript->ion->invalidated());
+    JS_ASSERT(!outerScript->ionScript()->invalidated());
 
     outerScript->failedShapeGuard = true;
 
