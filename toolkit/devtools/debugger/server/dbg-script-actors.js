@@ -525,7 +525,9 @@ ThreadActor.prototype = {
                                                             originalLine)
     return locationPromise.then((aLocation) => {
       let line = aLocation.line;
-      if (this.dbg.findScripts({ url: aLocation.url }).length == 0 || line < 0) {
+      if (this.dbg.findScripts({ url: aLocation.url }).length == 0 ||
+          line < 0 ||
+          line == null) {
         return { error: "noScript" };
       }
 
@@ -2405,7 +2407,7 @@ ThreadSources.prototype = {
         ];
       }, (e) => {
         reportError(e);
-        delete this._sourceMaps[aScript.sourceMapURL];
+        delete this._sourceMaps[this._normalize(aScript.sourceMapURL, aScript.url)];
         delete this._sourceMapsByGeneratedSource[aScript.url];
         return [this.source(aScript.url)];
       })
@@ -2422,7 +2424,9 @@ ThreadSources.prototype = {
       return this._sourceMapsByGeneratedSource[aScript.url];
     }
     dbg_assert(aScript.sourceMapURL);
-    let map = this._fetchSourceMap(aScript.sourceMapURL)
+    let sourceMapURL = this._normalize(aScript.sourceMapURL,
+                                       aScript.url);
+    let map = this._fetchSourceMap(sourceMapURL)
       .then((aSourceMap) => {
         for (let s of aSourceMap.sources) {
           this._generatedUrlsByOriginalUrl[s] = aScript.url;
@@ -2437,14 +2441,21 @@ ThreadSources.prototype = {
   /**
    * Fetch the source map located at the given url.
    */
-  _fetchSourceMap: function TS__featchSourceMap(aSourceMapURL) {
-    if (aSourceMapURL in this._sourceMaps) {
-      return this._sourceMaps[aSourceMapURL];
+  _fetchSourceMap: function TS__fetchSourceMap(aAbsSourceMapURL) {
+    if (aAbsSourceMapURL in this._sourceMaps) {
+      return this._sourceMaps[aAbsSourceMapURL];
     } else {
-      let promise = fetch(aSourceMapURL).then(function (rawSourceMap) {
-        return new SourceMapConsumer(rawSourceMap);
+      let promise = fetch(aAbsSourceMapURL).then((rawSourceMap) => {
+        let map =  new SourceMapConsumer(rawSourceMap);
+        let base = aAbsSourceMapURL.replace(/\/[^\/]+$/, '/');
+        if (base.indexOf("data:") !== 0) {
+          map.sourceRoot = map.sourceRoot
+            ? this._normalize(map.sourceRoot, base)
+            : base;
+        }
+        return map;
       });
-      this._sourceMaps[aSourceMapURL] = promise;
+      this._sourceMaps[aAbsSourceMapURL] = promise;
       return promise;
     }
   },
@@ -2505,6 +2516,19 @@ ThreadSources.prototype = {
       url: aSourceUrl,
       line: aLine
     });
+  },
+
+  /**
+   * Normalize multiple relative paths towards the base paths on the right.
+   */
+  _normalize: function TS__normalize(...aURLs) {
+    dbg_assert(aURLs.length > 1);
+    let base = Services.io.newURI(aURLs.pop(), null, null);
+    let url;
+    while ((url = aURLs.pop())) {
+      base = Services.io.newURI(url, null, base);
+    }
+    return base.spec;
   },
 
   iter: function TS_iter() {
