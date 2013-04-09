@@ -4821,7 +4821,7 @@ js::ReleaseAllJITCode(FreeOp *fop)
         /* Assert no baseline scripts are marked as active. */
         for (CellIter i(zone, FINALIZE_SCRIPT); !i.done(); i.next()) {
             JSScript *script = i.get<JSScript>();
-            JS_ASSERT_IF(script->hasBaselineScript(), !script->baseline->active());
+            JS_ASSERT_IF(script->hasBaselineScript(), !script->baselineScript()->active());
         }
 #  endif
 

@@ -61,9 +61,8 @@ IonFrameIterator::checkInvalidation(IonScript **ionScriptOut) const
     RawScript script = this->script();
     // N.B. the current IonScript is not the same as the frame's
     // IonScript if the frame has since been invalidated.
-    IonScript *currentIonScript = script->ion;
     bool invalidated = !script->hasIonScript() ||
-        !currentIonScript->containsReturnAddress(returnAddr);
+        !script->ionScript()->containsReturnAddress(returnAddr);
     if (!invalidated)
         return false;
 
@@ -180,7 +179,7 @@ IonFrameIterator::baselineScriptAndPc(JSScript **scriptRes, jsbytecode **pcRes) 
         *scriptRes = script;
     uint8_t *retAddr = returnAddressToFp();
     if (pcRes)
-        *pcRes = script->baseline->icEntryFromReturnAddress(retAddr).pc(script);
+        *pcRes = script->baselineScript()->icEntryFromReturnAddress(retAddr).pc(script);
 }
 
 Value *
@@ -389,7 +388,7 @@ HandleException(JSContext *cx, const IonFrameIterator &frame, ResumeFromExceptio
                 // Resume at the start of the catch block.
                 rfe->kind = ResumeFromException::RESUME_CATCH;
                 jsbytecode *catchPC = script->main() + tn->start + tn->length;
-                rfe->target = script->baseline->nativeCodeForPC(script, catchPC);
+                rfe->target = script->baselineScript()->nativeCodeForPC(script, catchPC);
                 return;
             }
             break;
@@ -639,9 +638,9 @@ MarkIonJSFrame(JSTracer *trc, const IonFrameIterator &frame)
         // is now NULL or recompiled). Manually trace it here.
         IonScript::Trace(trc, ionScript);
     } else if (CalleeTokenIsFunction(layout->calleeToken())) {
-        ionScript = CalleeTokenToFunction(layout->calleeToken())->nonLazyScript()->ion;
+        ionScript = CalleeTokenToFunction(layout->calleeToken())->nonLazyScript()->ionScript();
     } else {
-        ionScript = CalleeTokenToScript(layout->calleeToken())->ion;
+        ionScript = CalleeTokenToScript(layout->calleeToken())->ionScript();
     }
 
     if (CalleeTokenIsFunction(layout->calleeToken()))

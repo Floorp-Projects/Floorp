@@ -4533,6 +4533,9 @@ CodeGenerator::link()
                      cacheList_.length(), runtimeData_.length(),
                      safepoints_.size(), graph.mir().numScripts(),
 					 executionMode == ParallelExecution ? ForkJoinSlices(cx) : 0);
+
+    ionScript->setMethod(code);
+
     SetIonScript(script, executionMode, ionScript);
 
     if (!ionScript)
@@ -4551,7 +4554,6 @@ CodeGenerator::link()
     ptrdiff_t real_invalidate = masm.actualOffset(invalidate_.offset());
     ionScript->setInvalidationEpilogueOffset(real_invalidate);
 
-    ionScript->setMethod(code);
     ionScript->setDeoptTable(deoptTable_);
 
     // for generating inline caches during the execution.
