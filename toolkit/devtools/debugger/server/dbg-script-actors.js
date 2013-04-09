@@ -155,14 +155,14 @@ ThreadActor.prototype = {
           aGlobal.hostAnnotations.type == "document" &&
           aGlobal.hostAnnotations.element === this.global) {
         this.addDebuggee(aGlobal);
+        // Notify the client.
+        this.conn.send({
+          from: this.actorID,
+          type: "newGlobal",
+          // TODO: after bug 801084 lands see if we need to JSONify this.
+          hostAnnotations: aGlobal.hostAnnotations
+        });
       }
-      // Notify the client.
-      this.conn.send({
-        from: this.actorID,
-        type: "newGlobal",
-        // TODO: after bug 801084 lands see if we need to JSONify this.
-        hostAnnotations: aGlobal.hostAnnotations
-      });
     }
   },
 
@@ -268,6 +268,18 @@ ThreadActor.prototype = {
    * Handle a protocol request to resume execution of the debuggee.
    */
   onResume: function TA_onResume(aRequest) {
+    // In case of multiple nested event loops (due to multiple debuggers open in
+    // different tabs or multiple debugger clients connected to the same tab)
+    // only allow resumption in a LIFO order.
+    if (DebuggerServer.xpcInspector.eventLoopNestLevel > 1) {
+      let lastNestRequestor = DebuggerServer.xpcInspector.lastNestRequestor;
+      if (lastNestRequestor.connection != this.conn) {
+        return { error: "wrongOrder",
+                 message: "trying to resume in the wrong order.",
+                 lastPausedUrl: lastNestRequestor.url };
+      }
+    }
+
     if (aRequest && aRequest.forceCompletion) {
       // TODO: remove this when Debugger.Frame.prototype.pop is implemented in
       // bug 736733.
@@ -728,7 +740,10 @@ ThreadActor.prototype = {
       var nestData = this._hooks.preNest();
     }
 
-    DebuggerServer.xpcInspector.enterNestedEventLoop();
+    let requestor = Object.create(null);
+    requestor.url = this._hooks.url;
+    requestor.connection = this.conn;
+    DebuggerServer.xpcInspector.enterNestedEventLoop(requestor);
 
     dbg_assert(this.state === "running");
 
