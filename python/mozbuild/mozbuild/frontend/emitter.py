@@ -10,6 +10,7 @@ from .data import (
     ConfigFileSubstitution,
     DirectoryTraversal,
     VariablePassthru,
+    Exports,
     ReaderSummary,
 )
 
@@ -85,6 +86,10 @@ class TreeMetadataEmitter(object):
 
         if passthru.variables:
             yield passthru
+
+        exports = sandbox.get('EXPORTS')
+        if exports:
+            yield Exports(sandbox, exports)
 
     def _emit_directory_traversal_from_sandbox(self, sandbox):
         o = DirectoryTraversal(sandbox)

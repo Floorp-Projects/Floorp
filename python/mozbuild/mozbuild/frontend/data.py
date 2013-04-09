@@ -136,3 +136,15 @@ class VariablePassthru(SandboxDerived):
         SandboxDerived.__init__(self, sandbox)
         self.variables = {}
 
+class Exports(SandboxDerived):
+    """Sandbox container object for EXPORTS, which is a HierarchicalStringList.
+
+    We need an object derived from SandboxDerived for use in the backend, so
+    this object fills that role. It just has a reference to the underlying
+    HierarchicalStringList, which is created when parsing EXPORTS.
+    """
+    __slots__ = ('exports')
+
+    def __init__(self, sandbox, exports):
+        SandboxDerived.__init__(self, sandbox)
+        self.exports = exports

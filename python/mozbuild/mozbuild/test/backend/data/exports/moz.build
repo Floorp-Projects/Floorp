@@ -1,0 +1,8 @@
+# Any copyright is dedicated to the Public Domain.
+# http://creativecommons.org/publicdomain/zero/1.0/
+
+EXPORTS += ['foo.h']
+EXPORTS.mozilla += ['mozilla1.h', 'mozilla2.h']
+EXPORTS.mozilla.dom += ['dom1.h', 'dom2.h']
+EXPORTS.mozilla.gfx += ['gfx.h']
+EXPORTS.nspr.private += ['pprio.h']

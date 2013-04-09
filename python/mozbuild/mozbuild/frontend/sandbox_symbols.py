@@ -18,6 +18,7 @@ the Sandbox consists of, you've come to the right place.
 from __future__ import unicode_literals
 
 from collections import OrderedDict
+from mozbuild.util import HierarchicalStringList
 
 
 def doc_to_paragraphs(doc):
@@ -149,6 +150,21 @@ VARIABLES = {
         it is used as the XPIDL module name if XPIDL_MODULE is not defined, but
         using XPIDL_MODULE directly is preferred. MODULE will likely be removed
         in the future.
+        """),
+
+    'EXPORTS': (HierarchicalStringList, HierarchicalStringList(),
+        """List of files to be exported, and in which subdirectories.
+
+        EXPORTS is generally used to list the include files to be exported to
+        dist/include, but it can be used for other files as well. This variable
+        behaves as a list when appending filenames for export in the top-level
+        directory. Files can also be appended to a field to indicate which
+        subdirectory they should be exported to. For example, to export 'foo.h'
+        to the top-level directory, and 'bar.h' to mozilla/dom/, append to
+        EXPORTS like so:
+
+        EXPORTS += ['foo.h']
+        EXPORTS.mozilla.dom += ['bar.h']
         """),
 
     # IDL Generation.
