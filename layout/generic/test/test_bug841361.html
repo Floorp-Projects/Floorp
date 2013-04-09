@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=841361
+-->
+<head>
+  <title>Test for Bug 841361</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=841361">Mozilla Bug 841361</a>
+<p id="display">
+
+<div style="width:500px; height:0;" id="a"></div>
+
+<div style="width:0; height:500px;" id="b"></div>
+
+<div style="width:500px;" id="c">
+  <div style="width:50px; height:50px; float:left; background:yellow"></div>
+  <div style="width:200px; height:50px; float:left; background:green"></div>
+</div>
+
+<div style="width:500px; height:0; overflow:hidden" id="d"></div>
+
+<div style="width:0; height:500px; overflow:hidden" id="e"></div>
+
+<div style="width:500px; overflow:hidden" id="f">
+  <div style="width:50px; height:50px; float:left; background:yellow"></div>
+  <div style="width:200px; height:50px; float:left; background:green"></div>
+</div>
+
+</p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function doTest(id, w, h) {
+  var e = document.getElementById(id);
+  is(e.scrollWidth, w, "scrollWidth for element '" + id + "'");
+  is(e.scrollHeight, h, "scrollHeight for element '" + id + "'");
+}
+
+doTest("a", 500, 0);
+doTest("b", 0, 500);
+doTest("c", 500, 50);
+doTest("d", 500, 0);
+doTest("e", 0, 500);
+doTest("f", 500, 50);
+
+</script>
+</pre>
+</body>
+</html>
