@@ -50,6 +50,7 @@ const DEFAULT_HTML = "data:text/html," +
 
 let Tilt = TiltManager.getTiltForBrowser(window);
 
+const STARTUP = Tilt.NOTIFICATIONS.STARTUP;
 const INITIALIZING = Tilt.NOTIFICATIONS.INITIALIZING;
 const INITIALIZED = Tilt.NOTIFICATIONS.INITIALIZED;
 const DESTROYING = Tilt.NOTIFICATIONS.DESTROYING;
