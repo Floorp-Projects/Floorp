@@ -25,10 +25,12 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(Gamepad, mParent)
 
 Gamepad::Gamepad(nsISupports* aParent,
                  const nsAString& aID, uint32_t aIndex,
+                 GamepadMappingType aMapping,
                  uint32_t aNumButtons, uint32_t aNumAxes)
   : mParent(aParent),
     mID(aID),
     mIndex(aIndex),
+    mMapping(aMapping),
     mConnected(true)
 {
   SetIsDOMBinding();
@@ -146,7 +148,8 @@ already_AddRefed<Gamepad>
 Gamepad::Clone(nsISupports* aParent)
 {
   nsRefPtr<Gamepad> out =
-    new Gamepad(aParent, mID, mIndex, mButtons.Length(), mAxes.Length());
+    new Gamepad(aParent, mID, mIndex, mMapping,
+                mButtons.Length(), mAxes.Length());
   out->SyncState(this);
   return out.forget();
 }
