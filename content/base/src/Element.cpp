@@ -591,9 +591,17 @@ static nsSize GetScrollRectSizeForOverflowVisibleFrame(nsIFrame* aFrame)
 
   nsRect paddingRect = aFrame->GetPaddingRectRelativeToSelf();
   nsOverflowAreas overflowAreas(paddingRect, paddingRect);
+  // Add the scrollable overflow areas of children (if any) to the paddingRect.
+  // It's important to start with the paddingRect, otherwise if there are no
+  // children the overflow rect will be 0,0,0,0 which will force the point 0,0
+  // to be included in the final rect.
   nsLayoutUtils::UnionChildOverflow(aFrame, overflowAreas);
+  // Make sure that an empty padding-rect's edges are included, by adding
+  // the padding-rect in again with UnionEdges.
+  nsRect overflowRect =
+    overflowAreas.ScrollableOverflow().UnionEdges(paddingRect);
   return nsLayoutUtils::GetScrolledRect(aFrame,
-      overflowAreas.ScrollableOverflow(), paddingRect.Size(),
+      overflowRect, paddingRect.Size(),
       aFrame->StyleVisibility()->mDirection).Size();
 }
 
