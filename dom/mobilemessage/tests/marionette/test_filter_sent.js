@@ -57,7 +57,7 @@ function deleteMsgs(msgList, nextFunction) {
 
   log("Deleting SMS (id: " + smsId + ").");
   let request = sms.delete(smsId);
-  ok(request instanceof MozSmsRequest,
+  ok(request instanceof DOMRequest,
       "request is instanceof " + request.constructor);
 
   request.onsuccess = function(event) {
@@ -108,7 +108,7 @@ function sendSms() {
   };
 
   let request = sms.send(remoteNumber, text);
-  ok(request instanceof MozSmsRequest,
+  ok(request instanceof DOMRequest,
       "request is instanceof " + request.constructor);
 
   request.onsuccess = function(event) {

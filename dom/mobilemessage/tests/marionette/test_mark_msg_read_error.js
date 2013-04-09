@@ -80,7 +80,7 @@ function test2() {
 function deleteMsg() {
   log("Deleting SMS (id: " + smsId + ").");
   let request = sms.delete(smsId);
-  ok(request instanceof MozSmsRequest,
+  ok(request instanceof DOMRequest,
       "request is instanceof " + request.constructor);
 
   request.onsuccess = function(event) {
