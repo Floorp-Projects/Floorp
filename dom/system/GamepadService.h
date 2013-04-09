@@ -70,6 +70,8 @@ class GamepadService : public nsIObserver
                            nsDOMGamepad* aGamepad,
                            bool aConnected);
 
+  // true if this feature is enabled in preferences
+  bool mEnabled;
   // true if the platform-specific backend has started work
   bool mStarted;
   // true when shutdown has begun

@@ -4,6 +4,7 @@
 
 #include "mozilla/Hal.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/StaticPtr.h"
 
 #include "GamepadService.h"
@@ -29,6 +30,7 @@ namespace mozilla {
 namespace dom {
 
 namespace {
+const char* kGamepadEnabledPref = "dom.gamepad.enabled";
 // Amount of time to wait before cleaning up gamepad resources
 // when no pages are listening for events.
 const int kCleanupDelayMS = 2000;
@@ -41,12 +43,13 @@ StaticRefPtr<GamepadService> gGamepadServiceSingleton;
 
 bool GamepadService::sShutdown = false;
 
-NS_IMPL_ISUPPORTS0(GamepadService)
+NS_IMPL_ISUPPORTS1(GamepadService, nsIObserver)
 
 GamepadService::GamepadService()
   : mStarted(false),
     mShuttingDown(false)
 {
+  mEnabled = Preferences::GetBool(kGamepadEnabledPref, false);
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();
   observerService->AddObserver(this,
@@ -61,8 +64,7 @@ GamepadService::Observe(nsISupports* aSubject,
 {
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();
-  nsCOMPtr<nsIObserver> observer = do_QueryInterface(this);
-  observerService->RemoveObserver(observer, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID);
+  observerService->RemoveObserver(this, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID);
 
   BeginShutdown();
   return NS_OK;
@@ -75,8 +77,10 @@ GamepadService::BeginShutdown()
   if (mTimer) {
     mTimer->Cancel();
   }
-  mozilla::hal::StopMonitoringGamepadStatus();
-  mStarted = false;
+  if (mStarted) {
+    mozilla::hal::StopMonitoringGamepadStatus();
+    mStarted = false;
+  }
   // Don't let windows call back to unregister during shutdown
   for (uint32_t i = 0; i < mListeners.Length(); i++) {
     mListeners[i]->SetHasGamepadEventListener(false);
@@ -97,7 +101,7 @@ GamepadService::AddListener(nsGlobalWindow* aWindow)
     return; // already exists
   }
 
-  if (!mStarted) {
+  if (!mStarted && mEnabled) {
     mozilla::hal::StartMonitoringGamepadStatus();
     mStarted = true;
   }
@@ -120,7 +124,7 @@ GamepadService::RemoveListener(nsGlobalWindow* aWindow)
 
   mListeners.RemoveElement(aWindow);
 
-  if (mListeners.Length() == 0 && !mShuttingDown) {
+  if (mListeners.Length() == 0 && !mShuttingDown && mStarted) {
     StartCleanupTimer();
   }
 }
@@ -371,7 +375,7 @@ GamepadService::FireConnectionEvent(EventTarget* aTarget,
 void
 GamepadService::SyncGamepadState(uint32_t aIndex, nsDOMGamepad* aGamepad)
 {
-  if (mShuttingDown || aIndex > mGamepads.Length()) {
+  if (mShuttingDown || !mEnabled || aIndex > mGamepads.Length()) {
     return;
   }
 
