@@ -64,10 +64,7 @@ public:
   {
     mBuffer = aBuffer;
   }
-  AudioParam* PlaybackRate() const
-  {
-    return mPlaybackRate;
-  }
+
   bool Loop() const
   {
     return mLoop;
@@ -96,13 +93,11 @@ public:
   virtual void NotifyMainThreadStateChanged() MOZ_OVERRIDE;
 
 private:
-  static void SendPlaybackRateToStream(AudioNode* aNode);
   nsRefPtr<AudioBuffer> mBuffer;
   double mLoopStart;
   double mLoopEnd;
   bool mLoop;
   bool mStartCalled;
-  nsRefPtr<AudioParam> mPlaybackRate;
 };
 
 }
