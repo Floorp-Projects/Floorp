@@ -124,8 +124,6 @@ public class HistoryTab extends AwesomeBarTab {
 
     @Override
     public void destroy() {
-        super.destroy();
-
         if (mContentObserver != null)
             BrowserDB.unregisterContentObserver(getContentResolver(), mContentObserver);
     }
@@ -185,8 +183,11 @@ public class HistoryTab extends AwesomeBarTab {
             String title = (String) historyItem.get(URLColumns.TITLE);
             String url = (String) historyItem.get(URLColumns.URL);
 
-            updateTitle(viewHolder.titleView, title, url);
-            updateUrl(viewHolder.urlView, url);
+            if (TextUtils.isEmpty(title))
+                title = url;
+
+            viewHolder.titleView.setText(title);
+            viewHolder.urlView.setText(url);
 
             byte[] b = (byte[]) historyItem.get(URLColumns.FAVICON);
             Bitmap favicon = null;
@@ -411,7 +412,9 @@ public class HistoryTab extends AwesomeBarTab {
 
         String url = (String) historyItem.get(URLColumns.URL);
         String title = (String) historyItem.get(URLColumns.TITLE);
-        sendToListener(url, title);
+        AwesomeBarTabs.OnUrlOpenListener listener = getUrlListener();
+        if (!TextUtils.isEmpty(url) && listener != null)
+            listener.onUrlOpen(url, title);
 
         return true;
     }
@@ -444,12 +447,18 @@ public class HistoryTab extends AwesomeBarTab {
                                                      (String) map.get(URLColumns.TITLE),
                                                      null);
 
-        setupMenu(menu, subject);
-
+        MenuInflater inflater = new MenuInflater(mContext);
+        inflater.inflate(R.menu.awesomebar_contextmenu, menu);
+        
         menu.findItem(R.id.remove_bookmark).setVisible(false);
         menu.findItem(R.id.edit_bookmark).setVisible(false);
         menu.findItem(R.id.open_in_reader).setVisible(false);
 
+        // Hide "Remove" item if there isn't a valid history ID
+        if (subject.id < 0)
+            menu.findItem(R.id.remove_history).setVisible(false);
+
+        menu.setHeaderTitle(subject.title);
         return subject;
     }
 }
