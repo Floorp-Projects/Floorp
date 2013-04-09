@@ -1955,9 +1955,9 @@ add_test(function test_update_adn_like() {
 });
 
 /**
- * Verify ICCRecordHelper.getFreeRecordId.
+ * Verify ICCRecordHelper.findFreeRecordId.
  */
-add_test(function test_get_free_record_id() {
+add_test(function test_find_free_record_id() {
   let worker = newUint8Worker();
   let helper = worker.GsmPDUHelper;
   let record = worker.ICCRecordHelper;
@@ -1998,7 +1998,7 @@ add_test(function test_get_free_record_id() {
   };
 
   let fileId = 0x0000; // Dummy.
-  record.getFreeRecordId(
+  record.findFreeRecordId(
     fileId,
     function (recordId) {
       do_check_eq(recordId, 2);
