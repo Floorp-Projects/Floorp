@@ -46,8 +46,10 @@ class GamepadService : public nsIObserver
   // Remove the gamepad at |aIndex| from the list of known gamepads.
   void RemoveGamepad(uint32_t aIndex);
 
-  //TODO: the spec uses double values for buttons, to allow for analog
-  // buttons.
+  // aPressed is used for digital buttons, aValue is for analog buttons.
+  void NewButtonEvent(uint32_t aIndex, uint32_t aButton, bool aPressed,
+                      double aValue);
+  // When only a digital button is available the value will be synthesized.
   void NewButtonEvent(uint32_t aIndex, uint32_t aButton, bool aPressed);
   void NewAxisMoveEvent(uint32_t aIndex, uint32_t aAxis, double aValue);
 
