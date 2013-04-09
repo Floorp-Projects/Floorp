@@ -88,7 +88,7 @@ struct IonOptions
 
     // Toggles whether compilation occurs off the main thread.
     //
-    // Default: true iff the build is JS_THREADSAFE.
+    // Default: true iff there are at least two CPUs available
     bool parallelCompilation;
 
     // How many invocations or loop iterations are needed before functions
@@ -202,11 +202,7 @@ struct IonOptions
         rangeAnalysis(true),
         uce(true),
         eaa(true),
-#ifdef JS_THREADSAFE
-        parallelCompilation(true),
-#else
         parallelCompilation(false),
-#endif
         baselineUsesBeforeCompile(10),
         usesBeforeCompile(1000),
         usesBeforeCompileNoJaeger(40),
