@@ -35,7 +35,6 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsCategoryManager.h"
 #include "nsCategoryManagerUtils.h"
-#include "nsIEnumerator.h"
 #include "xptiprivate.h"
 #include "nsIConsoleService.h"
 #include "nsIMemoryReporter.h"

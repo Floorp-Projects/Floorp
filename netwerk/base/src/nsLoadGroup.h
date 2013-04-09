@@ -20,7 +20,6 @@
 #include "pldhash.h"
 #include "mozilla/TimeStamp.h"
 
-class  nsISupportsArray;
 class  nsILoadGroupConnectionInfo;
 
 class nsLoadGroup : public nsILoadGroup,

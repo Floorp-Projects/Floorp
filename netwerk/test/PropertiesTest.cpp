@@ -14,7 +14,6 @@
 #include "nsNetCID.h"
 #include "nsIChannel.h"
 #include "nsIComponentManager.h"
-#include "nsIEnumerator.h"
 #include <stdio.h>
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"

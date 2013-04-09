@@ -9,7 +9,6 @@
 #include "nsIDirectoryService.h"
 #include "nsHashtable.h"
 #include "nsIFile.h"
-#include "nsISupportsArray.h"
 #include "nsIAtom.h"
 #include "nsTArray.h"
 #include "mozilla/Attributes.h"

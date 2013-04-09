@@ -11,7 +11,6 @@
 #include "nsITreeView.h"
 #include "nsITreeBoxObject.h"
 #include "nsITreeSelection.h"
-#include "nsISupportsArray.h"
 #include "nsIMutableArray.h"
 #include "nsTArray.h"
 #include "pldhash.h"

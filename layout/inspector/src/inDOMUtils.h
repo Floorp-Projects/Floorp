@@ -7,8 +7,6 @@
 
 #include "inIDOMUtils.h"
 
-#include "nsISupportsArray.h"
-
 class nsRuleNode;
 class nsStyleContext;
 class nsIAtom;

@@ -8,6 +8,8 @@
 
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/chrome-harness.js" />
 
   <script type="application/javascript"
           src="../treeview.js" />
@@ -77,7 +79,7 @@
 
     SimpleTest.waitForExplicitFinish();
     openBrowserWindow(prepareTest,
-                      "chrome://mochitests/content/a11y/accessible/hittest/zoom_tree.xul",
+                      getRootDirectory(window.location.href) + "zoom_tree.xul",
                       { left: 100, top: 100 });
   ]]>
   </script>

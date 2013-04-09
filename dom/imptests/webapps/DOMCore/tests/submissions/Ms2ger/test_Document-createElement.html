@@ -10,6 +10,18 @@
 <script src="/resources/testharnessreport.js"></script>
 <div id="log"></div>
 <script>
+function toASCIIUppercase(str) {
+  var diff = "a".charCodeAt(0) - "A".charCodeAt(0);
+  var res = "";
+  for (var i = 0; i < str.length; ++i) {
+    if ("a" <= str[i] && str[i] <= "z") {
+      res += String.fromCharCode(str.charCodeAt(i) - diff);
+    } else {
+      res += str[i];
+    }
+  }
+  return res;
+}
 test(function() {
   var HTMLNS = "http://www.w3.org/1999/xhtml",
       valid = [
@@ -32,7 +44,10 @@ test(function() {
         ["xmlfoo:bar", "xmlfoo:bar"],
         ["svg", "svg"],
         ["math", "math"],
-        ["FOO", "foo"]
+        ["FOO", "foo"],
+        ["mar\u212a", "mar\u212a"],
+        ["\u0130nput", "\u0130nput"],
+        ["\u0131nput", "\u0131nput"]
      ],
      invalid = [
        "",
@@ -56,7 +71,7 @@ test(function() {
       assert_true(elt instanceof Element)
       assert_true(elt instanceof Node)
       assert_equals(elt.localName, t[1])
-      assert_equals(elt.tagName, t[1].toUpperCase())
+      assert_equals(elt.tagName, toASCIIUppercase(t[1]))
       assert_equals(elt.prefix, null)
       assert_equals(elt.namespaceURI, HTMLNS)
     }, "createElement(" + format_value(t[0]) + ")");

@@ -1,0 +1,25 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="head.js"></script>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "850275",
+    title: "Simple offer media constraint test with video"
+  });
+
+  runTest(function() {
+    var test = new PeerConnectionTest();
+    test.setOfferConstraints({ mandatory: { OfferToReceiveVideo: true } });
+    test.run();
+  }, true);
+</script>
+</pre>
+</body>
+</html>

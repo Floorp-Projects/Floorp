@@ -55,7 +55,8 @@ public:
   typedef mozilla::css::RestyleTracker RestyleTracker;
   typedef mozilla::css::OverflowChangedTracker OverflowChangedTracker;
 
-  nsCSSFrameConstructor(nsIDocument *aDocument, nsIPresShell* aPresShell);
+  nsCSSFrameConstructor(nsIDocument *aDocument, nsIPresShell* aPresShell,
+                        nsStyleSet* aStyleSet);
   ~nsCSSFrameConstructor(void) {
     NS_ASSERTION(mUpdateCount == 0, "Dying in the middle of our own update?");
   }

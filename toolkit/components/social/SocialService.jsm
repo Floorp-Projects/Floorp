@@ -139,10 +139,10 @@ function migrateSettings() {
       if (!Services.prefs.prefHasUserValue(prefname)) {
         // if we've got an active *builtin* provider, ensure that the pref
         // is set at a user-level as that will signify *installed* status.
-        let manifest = JSON.parse(MANIFEST_PREFS.getComplexValue(prefname, Ci.nsISupportsString).data);
-        // ensure we override a builtin manifest by having a different value in it
-        if (manifest.builtin)
-          delete manifest.builtin;
+        let manifest = JSON.parse(Services.prefs.getComplexValue(prefname, Ci.nsISupportsString).data);
+        // our default manifests have been updated with the builtin flags as of
+        // fx22, delete it so we can set the user-pref
+        delete manifest.builtin;
 
         let string = Cc["@mozilla.org/supports-string;1"].
                      createInstance(Ci.nsISupportsString);
@@ -169,12 +169,14 @@ function migrateSettings() {
     try {
       let manifest = JSON.parse(manifestPrefs.getComplexValue(pref, Ci.nsISupportsString).data);
       if (manifest && typeof(manifest) == "object" && manifest.origin) {
-        // ensure we override a builtin manifest by having a different value in it
-        if (manifest.builtin)
-          delete manifest.builtin;
+        // our default manifests have been updated with the builtin flags as of
+        // fx22, delete it so we can set the user-pref
+        delete manifest.builtin;
+
         let string = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
         string.data = JSON.stringify(manifest);
-        Services.prefs.setComplexValue(pref, Ci.nsISupportsString, string);
+        // pref here is just the branch name, set the full pref name
+        Services.prefs.setComplexValue("social.manifest." + pref, Ci.nsISupportsString, string);
         ActiveProviders.add(manifest.origin);
         ActiveProviders.flush();
         // social.active was used at a time that there was only one

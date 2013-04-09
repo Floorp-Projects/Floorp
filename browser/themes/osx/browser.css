@@ -3601,40 +3601,59 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 /* === social toolbar button === */
 
-toolbar[mode="icons"] > *|* > .social-notification-container {
-  -moz-appearance: toolbarbutton;
-}
-
-.social-notification-container > .toolbarbutton-1 {
-  -moz-appearance: none;
+#social-toolbar-item > .toolbarbutton-1 {
   margin-left: 0;
   margin-right: 0;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
-#social-toolbar-item {
-  margin: 0 4px;
+#social-toolbar-item > .toolbarbutton-1:-moz-locale-dir(ltr) {
+  -moz-border-end-width: 0;
+}
+#social-toolbar-item > .toolbarbutton-1:last-child:-moz-locale-dir(ltr) {
+  -moz-border-end-width: 1px;
+}
+#social-toolbar-item > .toolbarbutton-1:-moz-locale-dir(rtl) {
+  -moz-border-start-width: 0;
+}
+#social-toolbar-item > .toolbarbutton-1:first-child:-moz-locale-dir(rtl) {
+  -moz-border-start-width: 1px;
+}
+
+#social-toolbar-item > .toolbarbutton-1:-moz-locale-dir(ltr):first-child,
+#social-toolbar-item > .toolbarbutton-1:-moz-locale-dir(rtl):last-child {
+  margin-left: 4px;
+  border-top-left-radius: 3px;
+  border-bottom-left-radius: 3px;
+}
+#social-toolbar-item > .toolbarbutton-1:-moz-locale-dir(rtl):first-child,
+#social-toolbar-item > .toolbarbutton-1:-moz-locale-dir(ltr):last-child {
+  margin-right: 4px;
+  border-top-right-radius: 3px;
+  border-bottom-right-radius: 3px;
 }
 
 #social-provider-button {
   -moz-image-region: rect(0, 16px, 16px, 0);
-  /* Needed to make the adjacent buttons combine */
-  margin-left: 0;
-  margin-right: 0;
 }
 
 #social-provider-button > .toolbarbutton-menu-dropmarker {
   display: none;
 }
 
-.social-notification-container {
-  /* position:relative on .toolbarbutton-1 does not get position:absolute
-     to work as expected on .toolbarbutton-1 generated content. Placing a
-     simple container outside of .toolbarbutton-1 and setting position:relative
-     on the simple container however will work. */
+.toolbarbutton-badge-container {
+  margin: 0;
+  padding: 0;
   position: relative;
 }
+.toolbarbutton-badge-container > .toolbarbutton-icon {
+  margin: 2px;
+}
 
-.social-notification-container > .toolbarbutton-1[badge]:not([badge=""])::after {
+.toolbarbutton-badge[badge]:not([badge=""])::after {
   /* The |content| property is set in the content stylesheet. */
   font-size: 9px;
   font-weight: bold;
@@ -3645,29 +3664,39 @@ toolbar[mode="icons"] > *|* > .social-notification-container {
   border-radius: 2px;
   box-shadow: 0 1px 0 rgba(0,39,121,0.77);
   position: absolute;
-  top: 2px;
+  top: 0;
   right: 0;
 }
 
-.social-notification-container > .toolbarbutton-1[badge]:not([badge=""]):-moz-locale-dir(rtl)::after {
+.toolbarbutton-badge[badge]:not([badge=""]):-moz-locale-dir(rtl)::after {
   left: 0;
   right: auto;
 }
 
-toolbar[mode="icons"] > *|* > .social-notification-container > .toolbarbutton-1[badge]:not([badge=""])::after {
+toolbar[mode="icons"] > *|* > .toolbarbutton-badge[badge]:not([badge=""])::after {
   right: -2px;
 }
 
-toolbar[mode="icons"] > *|* > .social-notification-container > .toolbarbutton-1[badge]:not([badge=""]):-moz-locale-dir(rtl)::after {
+toolbar[mode="icons"] > *|* > .toolbarbutton-badge[badge]:not([badge=""]):-moz-locale-dir(rtl)::after {
   left: -2px;
 }
 
 .popup-notification-icon[popupid="servicesInstall"] {
-  list-style-image: url("chrome://global/skin/icons/information-64.png");
+  list-style-image: url(chrome://browser/skin/social/services-64.png);
 }
 #servicesInstall-notification-icon {
-  list-style-image: url(chrome://global/skin/icons/information-16.png);
+  list-style-image: url(chrome://browser/skin/social/services-16.png);
 }
+
+@media (min-resolution: 2dppx) {
+  .popup-notification-icon[popupid="servicesInstall"] {
+    list-style-image: url(chrome://browser/skin/social/services-64@2x.png);
+  }
+  #servicesInstall-notification-icon {
+    list-style-image: url(chrome://browser/skin/social/services-16@2x.png);
+  }
+}
+
 #social-undoactivation-button,
 #servicesInstall-learnmore-link {
   -moz-margin-start: 0; /* override default label margin to match description margin */
