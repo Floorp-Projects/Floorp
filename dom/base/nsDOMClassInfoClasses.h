@@ -193,6 +193,7 @@ DOMCI_CLASS(MozMmsMessage)
 DOMCI_CLASS(MozSmsRequest)
 DOMCI_CLASS(MozSmsFilter)
 DOMCI_CLASS(MozSmsSegmentInfo)
+DOMCI_CLASS(MozMobileMessageThread)
 
 DOMCI_CLASS(MozConnection)
 #ifdef MOZ_B2G_RIL
