@@ -24,7 +24,6 @@
 
 }).call(this);
 
-// TODO bug 849069: this should just be "binary_search.map", not a full path.
 /*
-//@ sourceMappingURL=http://example.com/browser/browser/devtools/debugger/test/binary_search.map
+//@ sourceMappingURL=binary_search.map
 */
