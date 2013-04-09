@@ -71,7 +71,6 @@ AudioContext::CreateBufferSource()
 {
   nsRefPtr<AudioBufferSourceNode> bufferNode =
     new AudioBufferSourceNode(this);
-  mAudioBufferSourceNodes.AppendElement(bufferNode);
   return bufferNode.forget();
 }
 
@@ -129,7 +128,6 @@ already_AddRefed<PannerNode>
 AudioContext::CreatePanner()
 {
   nsRefPtr<PannerNode> pannerNode = new PannerNode(this);
-  mPannerNodes.AppendElement(pannerNode);
   return pannerNode.forget();
 }
 
@@ -187,29 +185,6 @@ void
 AudioContext::RemoveFromDecodeQueue(WebAudioDecodeJob* aDecodeJob)
 {
   mDecodeJobs.RemoveElement(aDecodeJob);
-}
-
-void
-AudioContext::UnregisterAudioBufferSourceNode(AudioBufferSourceNode* aNode)
-{
-  mAudioBufferSourceNodes.RemoveElement(aNode);
-}
-
-void
-AudioContext::UnregisterPannerNode(PannerNode* aNode)
-{
-  mPannerNodes.RemoveElement(aNode);
-}
-
-void
-AudioContext::UpdatePannerSource()
-{
-  for (unsigned i = 0; i < mAudioBufferSourceNodes.Length(); i++) {
-    mAudioBufferSourceNodes[i]->UnregisterPannerNode();
-  }
-  for (unsigned i = 0; i < mPannerNodes.Length(); i++) {
-    mPannerNodes[i]->FindConnectedSources();
-  }
 }
 
 MediaStreamGraph*
