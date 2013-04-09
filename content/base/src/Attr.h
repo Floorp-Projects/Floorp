@@ -7,8 +7,8 @@
  * Implementation of DOM Core's nsIDOMAttr node.
  */
 
-#ifndef nsDOMAttribute_h___
-#define nsDOMAttribute_h___
+#ifndef mozilla_dom_Attr_h
+#define mozilla_dom_Attr_h
 
 #include "nsIAttribute.h"
 #include "nsIDOMAttr.h"
@@ -21,17 +21,20 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsStubMutationObserver.h"
 
+namespace mozilla {
+namespace dom {
+
 // Attribute helper class used to wrap up an attribute with a dom
 // object that implements nsIDOMAttr and nsIDOMNode
-class nsDOMAttribute : public nsIAttribute,
-                       public nsIDOMAttr
+class Attr : public nsIAttribute,
+             public nsIDOMAttr
 {
 public:
-  nsDOMAttribute(nsDOMAttributeMap* aAttrMap,
-                 already_AddRefed<nsINodeInfo> aNodeInfo,
-                 const nsAString& aValue,
-                 bool aNsAware);
-  virtual ~nsDOMAttribute() {}
+  Attr(nsDOMAttributeMap* aAttrMap,
+       already_AddRefed<nsINodeInfo> aNodeInfo,
+       const nsAString& aValue,
+       bool aNsAware);
+  virtual ~Attr() {}
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
@@ -70,7 +73,7 @@ public:
   static void Initialize();
   static void Shutdown();
 
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsDOMAttribute,
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(Attr,
                                                          nsIAttribute)
 
   virtual nsXPCClassInfo* GetClassInfo();
@@ -94,5 +97,7 @@ private:
   nsString mValue;
 };
 
+} // namespace dom
+} // namespace mozilla
 
-#endif /* nsDOMAttribute_h___ */
+#endif /* mozilla_dom_Attr_h */

@@ -18,18 +18,18 @@
 #include "mozilla/ErrorResult.h"
 
 class nsIAtom;
-class nsDOMAttribute;
 class nsINodeInfo;
 class nsIDocument;
 
 namespace mozilla {
 namespace dom {
+class Attr;
 class Element;
 } // namespace dom
 } // namespace mozilla
 
 /**
- * Structure used as a key for caching nsDOMAttributes in nsDOMAttributeMap's mAttributeCache.
+ * Structure used as a key for caching Attrs in nsDOMAttributeMap's mAttributeCache.
  */
 class nsAttrKey
 {
@@ -128,7 +128,7 @@ public:
    */
   uint32_t Count() const;
 
-  typedef nsRefPtrHashtable<nsAttrHashKey, nsDOMAttribute> AttrCache;
+  typedef nsRefPtrHashtable<nsAttrHashKey, mozilla::dom::Attr> AttrCache;
 
   /**
    * Enumerates over the attribute nodess in the map and calls aFunc for each
@@ -138,8 +138,8 @@ public:
    */
   uint32_t Enumerate(AttrCache::EnumReadFunction aFunc, void *aUserArg) const;
 
-  nsDOMAttribute* GetItemAt(uint32_t aIndex, nsresult *rv);
-  nsDOMAttribute* GetNamedItem(const nsAString& aAttrName);
+  mozilla::dom::Attr* GetItemAt(uint32_t aIndex, nsresult *rv);
+  mozilla::dom::Attr* GetNamedItem(const nsAString& aAttrName);
 
   static nsDOMAttributeMap* FromSupports(nsISupports* aSupports)
   {
@@ -160,11 +160,11 @@ public:
 
   NS_DECL_CYCLE_COLLECTION_CLASS(nsDOMAttributeMap)
 
-  nsDOMAttribute* GetNamedItemNS(const nsAString& aNamespaceURI,
+  mozilla::dom::Attr* GetNamedItemNS(const nsAString& aNamespaceURI,
                                  const nsAString& aLocalName,
                                  mozilla::ErrorResult& aError);
 
-  already_AddRefed<nsDOMAttribute> SetNamedItemNS(nsIDOMAttr *aNode,
+  already_AddRefed<mozilla::dom::Attr> SetNamedItemNS(nsIDOMAttr *aNode,
                                                   mozilla::ErrorResult& aError)
   {
     return SetNamedItemInternal(aNode, true, aError);
@@ -176,7 +176,7 @@ private:
   Element *mContent; // Weak reference
 
   /**
-   * Cache of nsDOMAttributes.
+   * Cache of Attrs.
    */
   AttrCache mAttributeCache;
 
@@ -184,7 +184,7 @@ private:
    * SetNamedItem() (aWithNS = false) and SetNamedItemNS() (aWithNS =
    * true) implementation.
    */
-  already_AddRefed<nsDOMAttribute>
+  already_AddRefed<mozilla::dom::Attr>
     SetNamedItemInternal(nsIDOMAttr *aNode,
                          bool aWithNS,
                          mozilla::ErrorResult& aError);
@@ -194,12 +194,12 @@ private:
                   const nsAString& aLocalName,
                   mozilla::ErrorResult& aError);
 
-  nsDOMAttribute* GetAttribute(nsINodeInfo* aNodeInfo, bool aNsAware);
+  mozilla::dom::Attr* GetAttribute(nsINodeInfo* aNodeInfo, bool aNsAware);
 
   /**
    * Remove an attribute, returns the removed node.
    */
-  already_AddRefed<nsDOMAttribute> RemoveAttribute(nsINodeInfo* aNodeInfo);
+  already_AddRefed<mozilla::dom::Attr> RemoveAttribute(nsINodeInfo* aNodeInfo);
 };
 
 
