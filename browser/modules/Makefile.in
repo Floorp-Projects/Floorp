@@ -12,7 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/config.mk
 
 EXTRA_JS_MODULES = \
-	AboutHomeUtils.jsm \
 	BrowserNewTabPreloader.jsm \
 	openLocationLastURL.jsm \
 	NetworkPrioritizer.jsm \
@@ -25,6 +24,7 @@ EXTRA_JS_MODULES = \
 	$(NULL)
 
 EXTRA_PP_JS_MODULES = \
+	AboutHomeUtils.jsm \
 	RecentWindow.jsm \
 	$(NULL)
 
@@ -34,6 +34,10 @@ EXTRA_JS_MODULES += \
 	WindowsJumpLists.jsm \
 	WindowsPreviewPerTab.jsm \
 	$(NULL)
+endif
+
+ifdef MOZILLA_OFFICIAL
+DEFINES += -DMOZILLA_OFFICIAL=1
 endif
 
 include $(topsrcdir)/config/rules.mk
