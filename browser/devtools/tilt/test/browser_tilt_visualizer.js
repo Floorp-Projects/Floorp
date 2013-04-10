@@ -32,6 +32,7 @@ function test() {
       webGLLoad = true;
     }
   });
+  visualizer.init();
 
   ok(webGLError ^ webGLLoad,
     "The WebGL context should either be created or not.");
