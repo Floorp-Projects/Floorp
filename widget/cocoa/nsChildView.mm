@@ -2201,6 +2201,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
     mClickThroughMouseDownEvent = nil;
     mDragService = nullptr;
 
+    [self setAcceptsTouchEvents:YES];
+
     mGestureState = eGestureState_None;
     mCumulativeMagnification = 0.0;
     mCumulativeRotation = 0.0;
@@ -3105,9 +3107,88 @@ NSEvent* gLastDragMouseDownEvent = nil;
  * was necessary to obtain the methods' prototypes. Thus, Apple may
  * change the interface in the future without notice.
  *
+ * XXX - The tapWithEvent is a custom gesture that is set up below.
+ *       Cocoa doesn't recognize double-taps by default, so the
+ *       recognition is done mainly by touchesBeganWithEvent.
+ *
  * The prototypes were obtained from the following link:
  * http://cocoadex.com/2008/02/nsevent-modifications-swipe-ro.html
  */
+
+- (void)touchesBeganWithEvent:(NSEvent *)anEvent
+{
+  if (!anEvent) {
+    return;
+  }
+
+  // Set up for recognition of a double tap gesture
+  NSSet* touches =
+    [anEvent touchesMatchingPhase:NSTouchPhaseTouching inView:self];
+  NSUInteger touchCount = [touches count];
+  if (touchCount != 2) {
+    // Cancel double tap if 3+ fingers touch
+    if (mGestureState == eGestureState_TapGesture && touchCount > 2) {
+      mGestureState = eGestureState_None;
+    }
+    return;
+  }
+
+  if (mGestureState == eGestureState_TapGesture) {
+    NSTimeInterval deltaTapTime =
+      [NSDate timeIntervalSinceReferenceDate] - mFirstTapTime;
+    if (deltaTapTime <= [NSEvent doubleClickInterval] &&
+        deltaTapTime > 0.00) {
+      [self tapWithEvent: anEvent];
+      return;
+    }
+  }
+  mGestureState = eGestureState_TapGesture;
+  mFirstTapTime = [NSDate timeIntervalSinceReferenceDate];
+}
+
+- (void)touchesMovedWithEvent:(NSEvent *)anEvent
+{
+  // Cancel double tap if there's movement
+  if (mGestureState == eGestureState_TapGesture) {
+    mGestureState = eGestureState_None;
+  }
+}
+
+- (void)touchesEndedWithEvent:(NSEvent *)anEvent
+{
+  return;
+}
+
+- (void)touchesCancelledWithEvent:(NSEvent *)anEvent
+{
+  // Clear the gestures state.
+  mGestureState = eGestureState_None;
+}
+
+- (void)tapWithEvent:(NSEvent *)anEvent
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  if (!anEvent) {
+    return;
+  }
+
+  nsAutoRetainCocoaObject kungFuDeathGrip(self);
+
+  // Setup the "double tap" event.
+  nsSimpleGestureEvent geckoEvent(true, NS_SIMPLE_GESTURE_TAP,
+                                  mGeckoChild, 0, 0.0);
+  [self convertCocoaMouseEvent:anEvent toGeckoEvent:&geckoEvent];
+  geckoEvent.clickCount = 1;
+
+  // Send the event.
+  mGeckoChild->DispatchWindowEvent(geckoEvent);
+
+  // Clear the gesture state
+  mGestureState = eGestureState_None;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
 
 - (void)swipeWithEvent:(NSEvent *)anEvent
 {
@@ -3179,6 +3260,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   case eGestureState_None:
   case eGestureState_RotateGesture:
+  case eGestureState_TapGesture:
   default:
     return;
   }
@@ -3220,6 +3302,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   case eGestureState_None:
   case eGestureState_MagnifyGesture:
+  case eGestureState_TapGesture:
   default:
     return;
   }
@@ -3289,6 +3372,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   case eGestureState_None:
   case eGestureState_StartGesture:
+  case eGestureState_TapGesture:
   default:
     break;
   }
