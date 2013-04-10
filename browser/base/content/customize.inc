@@ -21,9 +21,12 @@
         </vbox>
         <vbox>
           <vbox id="customization-panelWrapper">
-            <box anonid="arrowbox" class="panel-arrowbox">
+            <html:style html:type="text/html" scoped="scoped">
+              @import url(chrome://global/skin/popup.css);
+            </html:style>
+            <box class="panel-arrowbox">
               <box flex="1"/>
-              <image anonid="arrow" class="panel-arrow" side="top"/>
+              <image class="panel-arrow" side="top"/>
             </box>
             <box class="panel-arrowcontent" flex="1">
               <hbox id="customization-panelHolder"/>
