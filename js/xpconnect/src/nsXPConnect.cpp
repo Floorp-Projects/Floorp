@@ -1660,14 +1660,20 @@ nsXPConnect::CreateSandbox(JSContext *cx, nsIPrincipal *principal,
 
 NS_IMETHODIMP
 nsXPConnect::EvalInSandboxObject(const nsAString& source, const char *filename,
-                                 JSContext *cx, JSObject *sandbox,
-                                 bool returnStringOnly, jsval *rval)
+                                 JSContext *cx, JSObject *sandboxArg,
+                                 bool returnStringOnly, JS::Value *rvalArg)
 {
-    if (!sandbox)
+    if (!sandboxArg)
         return NS_ERROR_INVALID_ARG;
 
-    return xpc_EvalInSandbox(cx, sandbox, source, filename ? filename : "x-bogus://XPConnect/Sandbox",
-                             1, JSVERSION_DEFAULT, returnStringOnly, rval);
+    JS::RootedObject sandbox(cx, sandboxArg);
+    JS::RootedValue rval(cx);
+    nsresult rv = xpc_EvalInSandbox(cx, sandbox, source, filename ? filename :
+                                    "x-bogus://XPConnect/Sandbox", 1, JSVERSION_DEFAULT,
+                                    returnStringOnly, &rval);
+    NS_ENSURE_SUCCESS(rv, rv);
+    *rvalArg = rval;
+    return NS_OK;
 }
 
 /* nsIXPConnectJSObjectHolder getWrappedNativePrototype (in JSContextPtr aJSContext, in JSObjectPtr aScope, in nsIClassInfo aClassInfo); */
