@@ -4660,8 +4660,9 @@ NS_IMETHODIMP
 nsXPCComponents::GetHelperForLanguage(uint32_t language,
                                       nsISupports **retval)
 {
-    *retval = static_cast<nsIXPCComponents*>(this);
-    NS_ADDREF(this);
+    nsCOMPtr<nsISupports> supports =
+        do_QueryInterface(static_cast<nsIXPCComponents *>(this));
+    supports.forget(retval);
     return NS_OK;
 }
 
