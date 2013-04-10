@@ -525,9 +525,7 @@ ThreadActor.prototype = {
                                                             originalLine)
     return locationPromise.then(function (aLocation) {
       let line = aLocation.line;
-      if (this.dbg.findScripts({ url: aLocation.url }).length == 0 ||
-          line < 0 ||
-          line == null) {
+      if (this.dbg.findScripts({ url: aLocation.url }).length == 0 || line < 0) {
         return { error: "noScript" };
       }
 
@@ -2421,13 +2419,16 @@ ThreadSources.prototype = {
     }
 
     return this.sourceMap(aScript)
-      .then((aSourceMap) => [this.source(s) for (s of aSourceMap.sources)])
-      .then(null, (e) => {
+      .then(function (aSourceMap) {
+        return [
+          this.source(s) for (s of aSourceMap.sources)
+        ];
+      }.bind(this), function (e) {
         reportError(e);
-        delete this._sourceMaps[this._normalize(aScript.sourceMapURL, aScript.url)];
+        delete this._sourceMaps[aScript.sourceMapURL];
         delete this._sourceMapsByGeneratedSource[aScript.url];
         return [this.source(aScript.url)];
-      })
+      }.bind(this))
       .then(function (aSources) {
         return aSources.filter(isNotNull);
       });
@@ -2441,16 +2442,14 @@ ThreadSources.prototype = {
       return this._sourceMapsByGeneratedSource[aScript.url];
     }
     dbg_assert(aScript.sourceMapURL);
-    let sourceMapURL = this._normalize(aScript.sourceMapURL,
-                                       aScript.url);
-    let map = this._fetchSourceMap(sourceMapURL)
-      .then((aSourceMap) => {
+    let map = this._fetchSourceMap(aScript.sourceMapURL)
+      .then(function (aSourceMap) {
         for (let s of aSourceMap.sources) {
           this._generatedUrlsByOriginalUrl[s] = aScript.url;
           this._sourceMapsByOriginalSource[s] = resolve(aSourceMap);
         }
         return aSourceMap;
-      });
+      }.bind(this));
     this._sourceMapsByGeneratedSource[aScript.url] = map;
     return map;
   },
@@ -2458,21 +2457,14 @@ ThreadSources.prototype = {
   /**
    * Fetch the source map located at the given url.
    */
-  _fetchSourceMap: function TS__fetchSourceMap(aAbsSourceMapURL) {
-    if (aAbsSourceMapURL in this._sourceMaps) {
-      return this._sourceMaps[aAbsSourceMapURL];
+  _fetchSourceMap: function TS__featchSourceMap(aSourceMapURL) {
+    if (aSourceMapURL in this._sourceMaps) {
+      return this._sourceMaps[aSourceMapURL];
     } else {
-      let promise = fetch(aAbsSourceMapURL).then((rawSourceMap) => {
-        let map =  new SourceMapConsumer(rawSourceMap);
-        let base = aAbsSourceMapURL.replace(/\/[^\/]+$/, '/');
-        if (base.indexOf("data:") !== 0) {
-          map.sourceRoot = map.sourceRoot
-            ? this._normalize(map.sourceRoot, base)
-            : base;
-        }
-        return map;
+      let promise = fetch(aSourceMapURL).then(function (rawSourceMap) {
+        return new SourceMapConsumer(rawSourceMap);
       });
-      this._sourceMaps[aAbsSourceMapURL] = promise;
+      this._sourceMaps[aSourceMapURL] = promise;
       return promise;
     }
   },
@@ -2515,7 +2507,7 @@ ThreadSources.prototype = {
   getGeneratedLocation: function TS_getGeneratedLocation(aSourceUrl, aLine) {
     if (aSourceUrl in this._sourceMapsByOriginalSource) {
       return this._sourceMapsByOriginalSource[aSourceUrl]
-        .then((aSourceMap) => {
+        .then(function (aSourceMap) {
           let { line } = aSourceMap.generatedPositionFor({
             source: aSourceUrl,
             line: aLine,
@@ -2525,7 +2517,7 @@ ThreadSources.prototype = {
             url: this._generatedUrlsByOriginalUrl[aSourceUrl],
             line: line
           };
-        });
+        }.bind(this));
     }
 
     // No source map
@@ -2533,19 +2525,6 @@ ThreadSources.prototype = {
       url: aSourceUrl,
       line: aLine
     });
-  },
-
-  /**
-   * Normalize multiple relative paths towards the base paths on the right.
-   */
-  _normalize: function TS__normalize(...aURLs) {
-    dbg_assert(aURLs.length > 1);
-    let base = Services.io.newURI(aURLs.pop(), null, null);
-    let url;
-    while ((url = aURLs.pop())) {
-      base = Services.io.newURI(url, null, base);
-    }
-    return base.spec;
   },
 
   iter: function TS_iter() {

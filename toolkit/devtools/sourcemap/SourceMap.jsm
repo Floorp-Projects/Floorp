@@ -470,34 +470,10 @@ define('source-map/util', ['require', 'exports', 'module' , ], function(require,
   }
   exports.getArg = getArg;
 
-  var urlRegexp = /([\w+\-.]+):\/\/((\w+:\w+)@)?([\w.]+)?(:(\d+))?(\S+)?/;
-
-  function urlParse(aUrl) {
-    var match = aUrl.match(urlRegexp);
-    if (!match) {
-      return null;
-    }
-    return {
-      scheme: match[1],
-      auth: match[3],
-      host: match[4],
-      port: match[6],
-      path: match[7]
-    };
-  }
-
   function join(aRoot, aPath) {
-    var url;
-
-    if (aPath.match(urlRegexp)) {
-      return aPath;
-    }
-
-    if (aPath.charAt(0) === '/' && (url = urlParse(aRoot))) {
-      return aRoot.replace(url.path, '') + aPath;
-    }
-
-    return aRoot.replace(/\/$/, '') + '/' + aPath;
+    return aPath.charAt(0) === '/'
+      ? aPath
+      : aRoot.replace(/\/$/, '') + '/' + aPath;
   }
   exports.join = join;
 
