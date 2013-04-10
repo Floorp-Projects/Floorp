@@ -403,7 +403,7 @@ class ParallelIonInvoke
         IonCode *code = ion->method();
         jitcode_ = code->raw();
         enter_ = cx->compartment->ionCompartment()->enterJIT();
-        calleeToken_ = CalleeToToken(callee);
+        calleeToken_ = CalleeToParallelToken(callee);
     }
 
     bool invoke(JSContext *cx) {

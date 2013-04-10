@@ -546,4 +546,3 @@ GetTempRegForIntArg(uint32_t usedIntArgs, uint32_t usedFloatArgs, Register *out)
 } // namespace js
 
 #endif // jsion_cpu_x86_assembler_h__
-

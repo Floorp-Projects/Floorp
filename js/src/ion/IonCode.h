@@ -431,6 +431,7 @@ struct IonScript
     }
     void toggleBarriers(bool enabled);
     void purgeCaches(JS::Zone *zone);
+    void destroyCaches();
     void copySnapshots(const SnapshotWriter *writer);
     void copyBailoutTable(const SnapshotOffset *table);
     void copyConstants(const HeapValue *vp);
