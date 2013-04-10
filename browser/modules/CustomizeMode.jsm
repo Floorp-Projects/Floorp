@@ -160,11 +160,6 @@ CustomizeMode.prototype = {
     let window = this.window;
     let document = this.document;
 
-    // Let everybody in this window know that we're finished customizing.
-    let evt = document.createEvent("CustomEvent");
-    evt.initCustomEvent("CustomizationEnd", true, true, {changed: this._changed});
-    window.dispatchEvent(evt);
-
     if (this._changed) {
       // XXXmconley: At first, it seems strange to also persist the old way with
       //             currentset - but this might actually be useful for switching
@@ -187,6 +182,11 @@ CustomizeMode.prototype = {
 
     // And drop all area references.
     this.areas = [];
+
+    // Let everybody in this window know that we're finished customizing.
+    let evt = document.createEvent("CustomEvent");
+    evt.initCustomEvent("CustomizationEnd", true, true, {changed: this._changed});
+    window.dispatchEvent(evt);
 
     window.PanelUI.replaceMainView(window.PanelUI.mainView);
 
