@@ -766,8 +766,8 @@ nsScreenGonk::SetRotation(uint32_t aRotation)
 
     sScreenRotation = aRotation;
     sRotationMatrix =
-        ComputeGLTransformForRotation(gScreenBounds,
-                                      ScreenRotation(EffectiveScreenRotation()));
+        ComputeTransformForRotation(gScreenBounds,
+                                    ScreenRotation(EffectiveScreenRotation()));
     uint32_t rotation = EffectiveScreenRotation();
     if (rotation == nsIScreen::ROTATION_90_DEG ||
         rotation == nsIScreen::ROTATION_270_DEG) {

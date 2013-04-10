@@ -6,9 +6,9 @@
 #ifndef GFX_LAYERMANAGEROGL_H
 #define GFX_LAYERMANAGEROGL_H
 
+#include "Layers.h"
 #include "LayerManagerOGLProgram.h"
 
-#include "mozilla/layers/ShadowLayers.h"
 #include "mozilla/TimeStamp.h"
 #include "nsPoint.h"
 
@@ -22,6 +22,7 @@
 #include "gfx3DMatrix.h"
 #include "nsIWidget.h"
 #include "GLContextTypes.h"
+#include "GLDefs.h"
 
 namespace mozilla {
 namespace gl {
@@ -40,10 +41,9 @@ struct FPSState;
 
 /**
  * This is the LayerManager used for OpenGL 2.1 and OpenGL ES 2.0.
- * This can be used either on the main thread or the compositor.
+ * This should be used only on the main thread.
  */
-class THEBES_API LayerManagerOGL :
-    public ShadowLayerManager
+class THEBES_API LayerManagerOGL : public LayerManager
 {
   typedef mozilla::gl::GLContext GLContext;
   typedef mozilla::gl::ShaderProgramType ProgramType;
@@ -55,18 +55,13 @@ public:
 
   void Destroy();
 
-
   /**
    * Initializes the layer manager with a given GLContext. If aContext is null
    * then the layer manager will try to create one for the associated widget.
    *
-   * \param aContext an existing GL context to use. Can be created with CreateContext()
-   *
    * \return True is initialization was succesful, false when it was not.
    */
   bool Initialize(bool force = false);
-
-  bool Initialize(nsRefPtr<GLContext> aContext, bool force = false);
 
   /**
    * Sets the clipping region for this layer manager. This is important on 
@@ -82,11 +77,6 @@ public:
   /**
    * LayerManager implementation.
    */
-  virtual ShadowLayerManager* AsShadowManager()
-  {
-    return this;
-  }
-
   void BeginTransaction();
 
   void BeginTransactionWithTarget(gfxContext* aTarget);
@@ -94,7 +84,6 @@ public:
   void EndConstruction();
 
   virtual bool EndEmptyTransaction(EndTransactionFlags aFlags = END_DEFAULT);
-  virtual void NotifyShadowTreeTransaction();
   virtual void EndTransaction(DrawThebesLayerCallback aCallback,
                               void* aCallbackData,
                               EndTransactionFlags aFlags = END_DEFAULT);
@@ -119,13 +108,6 @@ public:
   virtual already_AddRefed<ColorLayer> CreateColorLayer();
 
   virtual already_AddRefed<CanvasLayer> CreateCanvasLayer();
-
-  virtual already_AddRefed<ShadowThebesLayer> CreateShadowThebesLayer();
-  virtual already_AddRefed<ShadowContainerLayer> CreateShadowContainerLayer();
-  virtual already_AddRefed<ShadowImageLayer> CreateShadowImageLayer();
-  virtual already_AddRefed<ShadowColorLayer> CreateShadowColorLayer();
-  virtual already_AddRefed<ShadowCanvasLayer> CreateShadowCanvasLayer();
-  virtual already_AddRefed<ShadowRefLayer> CreateShadowRefLayer();
 
   virtual LayersBackend GetBackendType() { return LAYERS_OPENGL; }
   virtual void GetBackendName(nsAString& name) { name.AssignLiteral("OpenGL"); }
@@ -207,6 +189,7 @@ public:
                          mThebesLayerCallbackData);
   }
 
+
   GLenum FBOTextureTarget() { return mFBOTextureTarget; }
 
   /**
@@ -244,6 +227,7 @@ public:
   void QuadVBOFlippedTexCoordsAttrib(GLuint aAttribIndex);
 
   // Super common
+
   void BindAndDrawQuad(GLuint aVertAttribIndex,
                        GLuint aTexCoordAttribIndex,
                        bool aFlipped = false);
@@ -257,6 +241,13 @@ public:
                     aFlipped);
   }
 
+  // |aTexCoordRect| is the rectangle from the texture that we want to
+  // draw using the given program.  The program already has a necessary
+  // offset and scale, so the geometry that needs to be drawn is a unit
+  // square from 0,0 to 1,1.
+  //
+  // |aTexSize| is the actual size of the texture, as it can be larger
+  // than the rectangle given by |aTexCoordRect|.
   void BindAndDrawQuadWithTextureRect(ShaderProgramOGL *aProg,
                                       const nsIntRect& aTexCoordRect,
                                       const nsIntSize& aTexSize,
@@ -297,7 +288,7 @@ public:
    * Set the size of the surface we're rendering to.
    */
   void SetSurfaceSize(int width, int height);
-
+ 
   bool CompositingDisabled() { return mCompositingDisabled; }
   void SetCompositingDisabled(bool aCompositingDisabled) { mCompositingDisabled = aCompositingDisabled; }
 
@@ -356,7 +347,7 @@ private:
    *  including vertex coords and texcoords for both
    *  flipped and unflipped textures */
   GLuint mQuadVBO;
-
+  
   /** Region we're clipping our current drawing to. */
   nsIntRegion mClippingRegion;
 
@@ -436,40 +427,6 @@ private:
   static bool sFrameCounter;
 };
 
-enum LayerRenderStateFlags {
-  LAYER_RENDER_STATE_Y_FLIPPED = 1 << 0,
-  LAYER_RENDER_STATE_BUFFER_ROTATION = 1 << 1
-};
-
-struct LayerRenderState {
-  LayerRenderState() : mSurface(nullptr), mFlags(0), mHasOwnOffset(false)
-  {}
-
-  LayerRenderState(SurfaceDescriptor* aSurface, uint32_t aFlags = 0)
-    : mSurface(aSurface)
-    , mFlags(aFlags)
-    , mHasOwnOffset(false)
-  {}
-
-  LayerRenderState(SurfaceDescriptor* aSurface, nsIntPoint aOffset, uint32_t aFlags = 0)
-    : mSurface(aSurface)
-    , mFlags(aFlags)
-    , mOffset(aOffset)
-    , mHasOwnOffset(true)
-  {}
-
-  bool YFlipped() const
-  { return mFlags & LAYER_RENDER_STATE_Y_FLIPPED; }
-
-  bool BufferRotated() const
-  { return mFlags & LAYER_RENDER_STATE_BUFFER_ROTATION; }
-
-  SurfaceDescriptor* mSurface;
-  uint32_t mFlags;
-  nsIntPoint mOffset;
-  bool mHasOwnOffset;
-};
-
 /**
  * General information and tree management for OGL layers.
  */
@@ -504,7 +461,7 @@ public:
   GLContext *gl() const { return mOGLManager->gl(); }
   virtual void CleanupResources() = 0;
 
-  /*
+  /**
    * Loads the result of rendering the layer as an OpenGL texture in aTextureUnit.
    * Will try to use an existing texture if possible, or a temporary
    * one if not. It is the callee's responsibility to release the texture.
@@ -524,6 +481,7 @@ protected:
   LayerManagerOGL *mOGLManager;
   bool mDestroyed;
 };
+
 
 } /* layers */
 } /* mozilla */

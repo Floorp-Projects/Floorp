@@ -52,8 +52,9 @@
 #include "Layers.h"
 #include "LayerManagerOGL.h"
 #include "GLTextureImage.h"
-#include "GLContext.h"
+#include "LayerManagerComposite.h"
 #include "mozilla/layers/CompositorCocoaWidgetHelper.h"
+#include "mozilla/layers/CompositorOGL.h"
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
 #include "mozilla/a11y/Platform.h"
@@ -1829,10 +1830,18 @@ nsChildView::CreateCompositor()
 {
   nsBaseWidget::CreateCompositor();
   if (mCompositorChild) {
-    LayerManagerOGL *manager =
-      static_cast<LayerManagerOGL*>(compositor::GetLayerManager(mCompositorParent));
+    LayerManagerComposite *manager =
+      compositor::GetLayerManager(mCompositorParent);
+    Compositor *compositor = manager->GetCompositor();
 
-    NSOpenGLContext *glContext = (NSOpenGLContext *)manager->GetNSOpenGLContext();
+    LayersBackend backend = compositor->GetBackend();
+    if (backend != LAYERS_OPENGL) {
+      NS_RUNTIMEABORT("Unexpected OMTC backend");
+    }
+
+    CompositorOGL *compositorOGL = static_cast<CompositorOGL*>(compositor);
+
+    NSOpenGLContext *glContext = (NSOpenGLContext *)compositorOGL->gl()->GetNativeData(GLContext::NativeGLContext);
 
     [(ChildView *)mView setGLContext:glContext];
     [(ChildView *)mView setUsingOMTCompositor:true];

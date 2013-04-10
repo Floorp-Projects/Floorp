@@ -176,7 +176,7 @@ endif
 # Usage: |make [EXTRA_TEST_ARGS=...] *test|.
 RUN_REFTEST = rm -f ./$@.log && $(PYTHON) _tests/reftest/runreftest.py \
   --extra-profile-file=$(DIST)/plugins \
-  $(SYMBOLS_PATH) $(EXTRA_TEST_ARGS) "$(1)" | tee ./$@.log
+  $(SYMBOLS_PATH) $(EXTRA_TEST_ARGS) $(1) | tee ./$@.log
 
 REMOTE_REFTEST = rm -f ./$@.log && $(PYTHON) _tests/reftest/remotereftest.py \
   --dm_trans=$(DM_TRANS) --ignore-window-size \
@@ -199,7 +199,7 @@ endif #}
 
 reftest: TEST_PATH?=layout/reftests/reftest.list
 reftest:
-	$(call RUN_REFTEST,$(topsrcdir)/$(TEST_PATH))
+	$(call RUN_REFTEST,"$(topsrcdir)/$(TEST_PATH)")
 	$(CHECK_TEST_ERROR)
 
 reftest-remote: TEST_PATH?=layout/reftests/reftest.list
@@ -233,27 +233,27 @@ reftest-b2g:
 
 reftest-ipc: TEST_PATH?=layout/reftests/reftest.list
 reftest-ipc:
-	$(call RUN_REFTEST,$(topsrcdir)/$(TEST_PATH) $(OOP_CONTENT))
+	$(call RUN_REFTEST,"$(topsrcdir)/$(TEST_PATH)" $(OOP_CONTENT))
 	$(CHECK_TEST_ERROR)
 
 reftest-ipc-gpu: TEST_PATH?=layout/reftests/reftest.list
 reftest-ipc-gpu:
-	$(call RUN_REFTEST,$(topsrcdir)/$(TEST_PATH) $(OOP_CONTENT) $(GPU_RENDERING))
+	$(call RUN_REFTEST,"$(topsrcdir)/$(TEST_PATH)" $(OOP_CONTENT) $(GPU_RENDERING))
 	$(CHECK_TEST_ERROR)
 
 crashtest: TEST_PATH?=testing/crashtest/crashtests.list
 crashtest:
-	$(call RUN_REFTEST,$(topsrcdir)/$(TEST_PATH))
+	$(call RUN_REFTEST,"$(topsrcdir)/$(TEST_PATH)")
 	$(CHECK_TEST_ERROR)
 
 crashtest-ipc: TEST_PATH?=testing/crashtest/crashtests.list
 crashtest-ipc:
-	$(call RUN_REFTEST,$(topsrcdir)/$(TEST_PATH) $(OOP_CONTENT))
+	$(call RUN_REFTEST,"$(topsrcdir)/$(TEST_PATH)" $(OOP_CONTENT))
 	$(CHECK_TEST_ERROR)
 
 crashtest-ipc-gpu: TEST_PATH?=testing/crashtest/crashtests.list
 crashtest-ipc-gpu:
-	$(call RUN_REFTEST,$(topsrcdir)/$(TEST_PATH) $(OOP_CONTENT) $(GPU_RENDERING))
+	$(call RUN_REFTEST,"$(topsrcdir)/$(TEST_PATH)" $(OOP_CONTENT) $(GPU_RENDERING))
 	$(CHECK_TEST_ERROR)
 
 jstestbrowser: TESTS_PATH?=test-package-stage/jsreftest/tests/
@@ -261,7 +261,7 @@ jstestbrowser:
 	$(MAKE) -C $(DEPTH)/config
 	$(MAKE) -C $(DEPTH)/js/src/config
 	$(MAKE) stage-jstests
-	$(call RUN_REFTEST,$(DIST)/$(TESTS_PATH)/jstests.list --extra-profile-file=$(DIST)/test-package-stage/jsreftest/tests/user.js)
+	$(call RUN_REFTEST,"$(DIST)/$(TESTS_PATH)/jstests.list" --extra-profile-file=$(DIST)/test-package-stage/jsreftest/tests/user.js)
 	$(CHECK_TEST_ERROR)
 
 GARBAGE += $(addsuffix .log,$(MOCHITESTS) reftest crashtest jstestbrowser)

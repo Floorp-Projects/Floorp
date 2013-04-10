@@ -4,10 +4,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include LayersSurfaces;
+include LayerTransaction;
 include protocol PGrallocBuffer;
-include protocol PImageContainer;
+include protocol PCompositable;
+include protocol PTexture;
+
+include "mozilla/layers/CompositorTypes.h";
 
 using ImageHandle;
+using mozilla::layers::CompositableType;
 
 namespace mozilla {
 namespace layers {
@@ -17,12 +22,15 @@ namespace layers {
  * frames directly to the compositor thread/process without relying on the main thread
  * which might be too busy dealing with content script.
  */
-/*FIXME: sync*/rpc protocol PImageBridge
+/*FIXME: sync*/ rpc protocol PImageBridge
 {
-  manages PImageContainer;
+  manages PCompositable;
   manages PGrallocBuffer;
 
 parent:
+
+  sync Update(CompositableOperation[] ops) returns (EditReply[] reply);
+  async UpdateNoSwap(CompositableOperation[] ops);
 
   // Allocates a gralloc buffer that may not suitable to use with
   // gfxImageSurface but allows hardware decoder to write to the
@@ -31,17 +39,17 @@ parent:
   // flag. See GraphicBuffer.h and gralloc.h.
   sync PGrallocBuffer(gfxIntSize size, uint32_t format, uint32_t usage)
     returns (MaybeMagicGrallocBufferHandle handle);
-  
+
   // First step of the destruction sequence. This puts all the ImageContainerParents
-  // in a state in which they can't send asynchronous messages to their child 
-  // counterpart so as to not race with the upcomming __delete__ message. 
+  // in a state in which they can't send asynchronous messages to their child
+  // counterpart so as to not race with the upcomming __delete__ message.
   // In the child side, the __delete__ messages are not sent right after Stop,
-  // they are scheduled in the ImageBridgeChild's message queue in order to ensure 
+  // they are scheduled in the ImageBridgeChild's message queue in order to ensure
   // that all the messages from the parent side have been received and processed
   // before sending __delete__.
   sync Stop();
 
-  sync PImageContainer() returns (uint64_t id);
+  sync PCompositable(CompositableType aType) returns (uint64_t id);
 };
 
 

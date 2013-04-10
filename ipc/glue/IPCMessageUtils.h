@@ -32,7 +32,8 @@
 #include "nsRegion.h"
 #include "gfxASurface.h"
 #include "jsapi.h"
-#include "LayersTypes.h"
+#include "mozilla/layers/LayersTypes.h"
+#include "mozilla/layers/CompositorTypes.h"
 #include "FrameMetrics.h"
 #include "nsCSSProperty.h"
 
@@ -1052,6 +1053,51 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
             ReadParam(aMsg, aIter, &aResult->mMayHaveTouchListeners));
   }
 };
+
+template<>
+struct ParamTraits<mozilla::layers::TextureFactoryIdentifier>
+{
+  typedef mozilla::layers::TextureFactoryIdentifier paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mParentBackend);
+    WriteParam(aMsg, aParam.mMaxTextureSize);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    return ReadParam(aMsg, aIter, &aResult->mParentBackend) &&
+           ReadParam(aMsg, aIter, &aResult->mMaxTextureSize);
+  }
+};
+
+template<>
+struct ParamTraits<mozilla::layers::TextureInfo>
+{
+  typedef mozilla::layers::TextureInfo paramType;
+  
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mCompositableType);
+    WriteParam(aMsg, aParam.mTextureHostFlags);
+    WriteParam(aMsg, aParam.mTextureFlags);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    return ReadParam(aMsg, aIter, &aResult->mCompositableType) &&
+           ReadParam(aMsg, aIter, &aResult->mTextureHostFlags) &&
+           ReadParam(aMsg, aIter, &aResult->mTextureFlags);
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::layers::CompositableType>
+  : public EnumSerializer<mozilla::layers::CompositableType,
+                          mozilla::layers::BUFFER_UNKNOWN,
+                          mozilla::layers::BUFFER_COUNT>
+{};
 
 } /* namespace IPC */
 
