@@ -2941,7 +2941,7 @@ let RIL = {
       // For type SIM, we need to check EF_phase first.
       // Other types of ICC we can send Terminal_Profile immediately.
       if (this.appType == CARD_APPTYPE_SIM) {
-        ICCRecordHelper.getICCPhase();
+        ICCRecordHelper.readICCPhase();
         ICCRecordHelper.fetchICCRecords();
       } else if (this.appType == CARD_APPTYPE_USIM) {
         this.sendStkTerminalProfile(STK_SUPPORTED_TERMINAL_PROFILE);
@@ -10031,19 +10031,19 @@ let ICCRecordHelper = {
    * Fetch ICC records.
    */
   fetchICCRecords: function fetchICCRecords() {
-    this.getICCID();
+    this.readICCID();
     RIL.getIMSI();
-    this.getMSISDN();
-    this.getAD();
-    this.getSST();
-    this.getMBDN();
+    this.readMSISDN();
+    this.readAD();
+    this.readSST();
+    this.readMBDN();
   },
 
   /**
-   * Get EF_phase.
+   * Read EF_phase.
    * This EF is only available in SIM.
    */
-  getICCPhase: function getICCPhase() {
+  readICCPhase: function readICCPhase() {
     function callback() {
       let length = Buf.readUint32();
 
@@ -10064,7 +10064,7 @@ let ICCRecordHelper = {
   /**
    * Read the ICCID.
    */
-  getICCID: function getICCID() {
+  readICCID: function readICCID() {
     function callback() {
       let length = Buf.readUint32();
       RIL.iccInfo.iccid = GsmPDUHelper.readSwappedNibbleBcdString(length / 2);
@@ -10083,7 +10083,7 @@ let ICCRecordHelper = {
   /**
    * Read the MSISDN from the ICC.
    */
-  getMSISDN: function getMSISDN() {
+  readMSISDN: function readMSISDN() {
     function callback(options) {
       let contact = GsmPDUHelper.readAlphaIdDiallingNumber(options.recordSize);
       if (!contact || RIL.iccInfo.msisdn === contact.number) {
@@ -10101,7 +10101,7 @@ let ICCRecordHelper = {
   /**
    * Read the AD (Administrative Data) from the ICC.
    */
-  getAD: function getAD() {
+  readAD: function readAD() {
     function callback() {
       let length = Buf.readUint32();
       // Each octet is encoded into two chars.
@@ -10135,7 +10135,7 @@ let ICCRecordHelper = {
   /**
    * Read the SPN (Service Provider Name) from the ICC.
    */
-  getSPN: function getSPN() {
+  readSPN: function readSPN() {
     function callback() {
       let length = Buf.readUint32();
       // Each octet is encoded into two chars.
@@ -10166,7 +10166,7 @@ let ICCRecordHelper = {
   /**
    * Read the (U)SIM Service Table from the ICC.
    */
-  getSST: function getSST() {
+  readSST: function readSST() {
     function callback() {
       let length = Buf.readUint32();
       // Each octet is encoded into two chars.
@@ -10185,14 +10185,14 @@ let ICCRecordHelper = {
       // Fetch SPN and PLMN list, if some of them are available.
       if (ICCUtilsHelper.isICCServiceAvailable("SPN")) {
         if (DEBUG) debug("SPN: SPN is available");
-        this.getSPN();
+        this.readSPN();
       } else {
         if (DEBUG) debug("SPN: SPN service is not available");
       }
 
       if (ICCUtilsHelper.isICCServiceAvailable("SPDI")) {
         if (DEBUG) debug("SPDI: SPDI available.");
-        this.getSPDI();
+        this.readSPDI();
       } else {
         if (DEBUG) debug("SPDI: SPDI service is not available");
       }
@@ -10206,18 +10206,18 @@ let ICCRecordHelper = {
 
       if (ICCUtilsHelper.isICCServiceAvailable("OPL")) {
         if (DEBUG) debug("OPL: OPL is available");
-        this.getOPL();
+        this.readOPL();
       } else {
         if (DEBUG) debug("OPL: OPL is not available");
       }
 
       if (ICCUtilsHelper.isICCServiceAvailable("CBMI")) {
-        this.getCBMI();
+        this.readCBMI();
       } else {
         RIL.cellBroadcastConfigs.CBMI = null;
       }
       if (ICCUtilsHelper.isICCServiceAvailable("CBMIR")) {
-        this.getCBMIR();
+        this.readCBMIR();
       } else {
         RIL.cellBroadcastConfigs.CBMIR = null;
       }
@@ -10302,11 +10302,11 @@ let ICCRecordHelper = {
   },
 
   /**
-   * Get ICC MBDN. (Mailbox Dialling Number)
+   * Read ICC MBDN. (Mailbox Dialling Number)
    *
    * @see TS 131.102, clause 4.2.60
    */
-  getMBDN: function getMBDN() {
+  readMBDN: function readMBDN() {
     function callback(options) {
       let contact = GsmPDUHelper.readAlphaIdDiallingNumber(options.recordSize);
       if (!contact || RIL.iccInfo.mbdn === contact.number){
@@ -10538,7 +10538,7 @@ let ICCRecordHelper = {
    *
    * See ETSI TS 100.977 section 10.3.4 EF_PLMNsel
    */
-  getPLMNSelector: function getPLMNSelector() {
+  readPLMNSelector: function readPLMNSelector() {
     function callback() {
       if (DEBUG) debug("PLMN Selector: Process PLMN Selector");
 
@@ -10564,7 +10564,7 @@ let ICCRecordHelper = {
    * See TS 131.102 section 4.2.66 for USIM and TS 51.011 section 10.3.50
    * for SIM.
    */
-  getSPDI: function getSPDI() {
+  readSPDI: function readSPDI() {
     function callback() {
       let length = Buf.readUint32();
       let readLen = 0;
@@ -10612,7 +10612,7 @@ let ICCRecordHelper = {
    *
    * @see 3GPP TS 31.102 v110.02.0 section 4.2.14 EFcbmi
    */
-  getCBMI: function getCBMI() {
+  readCBMI: function readCBMI() {
     function callback() {
       let strLength = Buf.readUint32();
 
@@ -10655,7 +10655,7 @@ let ICCRecordHelper = {
    *
    * @see 3GPP TS 31.102 v110.02.0 section 4.2.22 EFcbmir
    */
-  getCBMIR: function getCBMIR() {
+  readCBMIR: function readCBMIR() {
     function callback() {
       let strLength = Buf.readUint32();
 
@@ -10703,7 +10703,7 @@ let ICCRecordHelper = {
    * See 3GPP TS 31.102 Sec. 4.2.59 for USIM
    *     3GPP TS 51.011 Sec. 10.3.42 for SIM.
    */
-  getOPL: function getOPL() {
+  readOPL: function readOPL() {
     let opl = [];
     function callback(options) {
       let len = Buf.readUint32();
@@ -11688,7 +11688,7 @@ let ICCContactHelper = {
 
 let RuimRecordHelper = {
   fetchRuimRecords: function fetchRuimRecords() {
-    ICCRecordHelper.getICCID();
+    ICCRecordHelper.readICCID();
     RIL.getIMSI();
     this.readCST();
     this.readCDMAHome();
