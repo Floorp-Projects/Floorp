@@ -236,15 +236,7 @@ class BaselineFrame
         return flags_ & HAS_CALL_OBJ;
     }
 
-    CallObject &callObj() const {
-        JS_ASSERT(hasCallObj());
-        JS_ASSERT(fun()->isHeavyweight());
-
-        JSObject *obj = scopeChain();
-        while (!obj->isCall())
-            obj = obj->enclosingScope();
-        return obj->asCall();
-    }
+    inline CallObject &callObj() const;
 
     void setFlags(uint32_t flags) {
         flags_ = flags;
