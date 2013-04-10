@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsDesktopNotification_h
-#define nsDesktopNotification_h
+#ifndef mozilla_dom_DesktopNotification_h
+#define mozilla_dom_DesktopNotification_h
 
 #include "PCOMContentPermissionRequestChild.h"
 
@@ -28,19 +28,22 @@
 #include "nsIDOMEvent.h"
 #include "nsIDocument.h"
 
+namespace mozilla {
+namespace dom {
+
 class AlertServiceObserver;
 
 /*
- * nsDesktopNotificationCenter
- * Object hangs off of the navigator object and hands out nsDOMDesktopNotification objects
+ * DesktopNotificationCenter
+ * Object hangs off of the navigator object and hands out DesktopNotification objects
  */
-class nsDesktopNotificationCenter : public nsIDOMDesktopNotificationCenter
+class DesktopNotificationCenter : public nsIDOMDesktopNotificationCenter
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMDESKTOPNOTIFICATIONCENTER
 
-  nsDesktopNotificationCenter(nsPIDOMWindow *aWindow)
+  DesktopNotificationCenter(nsPIDOMWindow *aWindow)
   {
     mOwner = aWindow;
 
@@ -51,7 +54,7 @@ public:
     mPrincipal = doc->NodePrincipal();
   }
 
-  virtual ~nsDesktopNotificationCenter()
+  virtual ~DesktopNotificationCenter()
   {
   }
 
@@ -65,22 +68,22 @@ private:
 };
 
 
-class nsDOMDesktopNotification : public nsDOMEventTargetHelper,
-                                 public nsIDOMDesktopNotification
+class DesktopNotification : public nsDOMEventTargetHelper,
+                            public nsIDOMDesktopNotification
 {
-  friend class nsDesktopNotificationRequest;
+  friend class DesktopNotificationRequest;
 
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMDESKTOPNOTIFICATION
 
-  nsDOMDesktopNotification(const nsAString & title,
-                           const nsAString & description,
-                           const nsAString & iconURL,
-                           nsPIDOMWindow *aWindow,
-                           nsIPrincipal* principal);
+  DesktopNotification(const nsAString & title,
+                      const nsAString & description,
+                      const nsAString & iconURL,
+                      nsPIDOMWindow *aWindow,
+                      nsIPrincipal* principal);
 
-  virtual ~nsDOMDesktopNotification();
+  virtual ~DesktopNotification();
 
   void Init();
 
@@ -116,16 +119,16 @@ protected:
 /*
  * Simple Request
  */
-class nsDesktopNotificationRequest : public nsIContentPermissionRequest,
-                                     public nsRunnable, 
-                                     public PCOMContentPermissionRequestChild
+class DesktopNotificationRequest : public nsIContentPermissionRequest,
+                                   public nsRunnable,
+                                   public PCOMContentPermissionRequestChild
 
 {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICONTENTPERMISSIONREQUEST
 
-  nsDesktopNotificationRequest(nsDOMDesktopNotification* notification)
+  DesktopNotificationRequest(DesktopNotification* notification)
     : mDesktopNotification(notification) {}
 
   NS_IMETHOD Run()
@@ -138,7 +141,7 @@ class nsDesktopNotificationRequest : public nsIContentPermissionRequest,
     return NS_OK;
   }
 
-  ~nsDesktopNotificationRequest()
+  ~DesktopNotificationRequest()
   {
   }
 
@@ -152,17 +155,17 @@ class nsDesktopNotificationRequest : public nsIContentPermissionRequest,
  }
  void IPDLRelease() { Release(); }
 
-  nsRefPtr<nsDOMDesktopNotification> mDesktopNotification;
+  nsRefPtr<DesktopNotification> mDesktopNotification;
 };
 
 class AlertServiceObserver: public nsIObserver
 {
  public:
   NS_DECL_ISUPPORTS
-    
-    AlertServiceObserver(nsDOMDesktopNotification* notification)
+
+    AlertServiceObserver(DesktopNotification* notification)
     : mNotification(notification) {}
-  
+
   virtual ~AlertServiceObserver() {}
 
   void Disconnect() { mNotification = nullptr; }
@@ -185,7 +188,10 @@ class AlertServiceObserver: public nsIObserver
   };
 
  private:
-  nsDOMDesktopNotification* mNotification;
+  DesktopNotification* mNotification;
 };
 
-#endif /* nsDesktopNotification_h */
+} // namespace dom
+} // namespace mozilla
+
+#endif /* mozilla_dom_DesktopNotification_h */

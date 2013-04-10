@@ -58,7 +58,7 @@
 #include "nsPluginHost.h"
 #include "nsIPluginInstanceOwner.h"
 #include "nsGeolocation.h"
-#include "nsDesktopNotification.h"
+#include "mozilla/dom/DesktopNotification.h"
 #include "nsContentCID.h"
 #include "nsLayoutStatics.h"
 #include "nsCycleCollector.h"
