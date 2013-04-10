@@ -296,6 +296,12 @@ LIRGeneratorARM::newLTableSwitchV(MTableSwitch *tableswitch)
     return new LTableSwitchV(temp(), tempFloat(), tableswitch);
 }
 
+LGetPropertyCacheT *
+LIRGeneratorARM::newLGetPropertyCacheT(MGetPropertyCache *ins)
+{
+    return new LGetPropertyCacheT(useRegister(ins->object()), LDefinition::BogusTemp());
+}
+
 bool
 LIRGeneratorARM::visitGuardShape(MGuardShape *ins)
 {

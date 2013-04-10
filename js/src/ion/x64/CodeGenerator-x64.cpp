@@ -141,7 +141,7 @@ CodeGeneratorX64::visitUnbox(LUnbox *unbox)
         JS_NOT_REACHED("Given MIRType cannot be unboxed.");
         break;
     }
-    
+
     return true;
 }
 
@@ -516,3 +516,10 @@ CodeGeneratorX64::visitAsmJSLoadFFIFunc(LAsmJSLoadFFIFunc *ins)
     return gen->noteGlobalAccess(label.offset(), mir->globalDataOffset());
 }
 
+void
+ParallelGetPropertyIC::initializeAddCacheState(LInstruction *ins, AddCacheState *addState)
+{
+    // Can always use the scratch register on x64.
+    JS_ASSERT(ins->isGetPropertyCacheV() || ins->isGetPropertyCacheT());
+    addState->dispatchScratch = ScratchReg;
+}
