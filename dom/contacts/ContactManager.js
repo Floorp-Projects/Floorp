@@ -700,10 +700,6 @@ ContactManager.prototype = {
   },
 
   init: function(aWindow) {
-    // Set navigator.mozContacts to null.
-    if (!Services.prefs.getBoolPref("dom.mozContacts.enabled"))
-      return null;
-
     this.initHelper(aWindow, ["Contacts:Find:Return:OK", "Contacts:Find:Return:KO",
                               "Contacts:Clear:Return:OK", "Contacts:Clear:Return:KO",
                               "Contact:Save:Return:OK", "Contact:Save:Return:KO",

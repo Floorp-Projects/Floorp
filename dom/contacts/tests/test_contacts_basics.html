@@ -228,11 +228,13 @@ function checkContacts(contact1, contact2) {
   }
 }
 
+function tests() {
+
 var req;
 var index = 0;
 
 var mozContacts = window.navigator.mozContacts;
-
+ok(mozContacts, "mozContacts exists");
 var steps = [
   function () {
     ok(true, "Deleting database");
@@ -1245,11 +1247,12 @@ function permissionTest() {
   }
 }
 
-var gContactsEnabled = SpecialPowers.getBoolPref("dom.mozContacts.enabled");
-SimpleTest.waitForExplicitFinish();
-addLoadEvent(permissionTest);
+permissionTest();
+};
 
-ok(true, "test passed");
+var gContactsEnabled = SpecialPowers.getBoolPref("dom.mozContacts.enabled");
+addLoadEvent(tests);
+SimpleTest.waitForExplicitFinish();
 </script>
 </pre>
 </body>
