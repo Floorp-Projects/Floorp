@@ -98,12 +98,20 @@ LayerManagerD3D10::~LayerManagerD3D10()
   Destroy();
 }
 
+_inline void
+SetHRESULT(HRESULT* aHresultPtr, HRESULT aHresult)
+{
+  if (aHresultPtr) {
+    *aHresultPtr = aHresult;
+  }
+}
+ 
 bool
-LayerManagerD3D10::Initialize(bool force)
+LayerManagerD3D10::Initialize(bool force, HRESULT* aHresultPtr)
 {
   ScopedGfxFeatureReporter reporter("D3D10 Layers", force);
 
-  HRESULT hr;
+  HRESULT hr = E_UNEXPECTED;
 
   /* Create an Nv3DVUtils instance */
   if (!mNv3DVUtils) {
@@ -120,6 +128,7 @@ LayerManagerD3D10::Initialize(bool force)
 
   mDevice = gfxWindowsPlatform::GetPlatform()->GetD3D10Device();
   if (!mDevice) {
+      SetHRESULT(aHresultPtr, hr);
       return false;
   }
 
@@ -147,10 +156,11 @@ LayerManagerD3D10::Initialize(bool force)
     attachments = new DeviceAttachments;
     mDevice->SetPrivateData(sDeviceAttachments, sizeof(attachments), &attachments);
 
+    SetLastError(0);
     D3D10CreateEffectFromMemoryFunc createEffect = (D3D10CreateEffectFromMemoryFunc)
-	GetProcAddress(LoadLibraryA("d3d10_1.dll"), "D3D10CreateEffectFromMemory");
-
+      GetProcAddress(LoadLibraryA("d3d10_1.dll"), "D3D10CreateEffectFromMemory");
     if (!createEffect) {
+      SetHRESULT(aHresultPtr, HRESULT_FROM_WIN32(GetLastError()));
       return false;
     }
 
@@ -162,6 +172,7 @@ LayerManagerD3D10::Initialize(bool force)
                       getter_AddRefs(mEffect));
     
     if (FAILED(hr)) {
+      SetHRESULT(aHresultPtr, hr);
       return false;
     }
 
@@ -182,6 +193,7 @@ LayerManagerD3D10::Initialize(bool force)
                                     getter_AddRefs(mInputLayout));
     
     if (FAILED(hr)) {
+      SetHRESULT(aHresultPtr, hr);
       return false;
     }
 
@@ -195,6 +207,7 @@ LayerManagerD3D10::Initialize(bool force)
     hr = mDevice->CreateBuffer(&bufferDesc, &data, getter_AddRefs(mVertexBuffer));
 
     if (FAILED(hr)) {
+      SetHRESULT(aHresultPtr, hr);
       return false;
     }
 
@@ -247,7 +260,8 @@ LayerManagerD3D10::Initialize(bool force)
            dxgiDevice, (IUnknown *)mWidget->GetNativeData(NS_NATIVE_ICOREWINDOW),
            &swapDesc, nullptr, getter_AddRefs(swapChain1));
     if (FAILED(hr)) {
-        return false;
+      SetHRESULT(aHresultPtr, hr);
+      return false;
     }
     mSwapChain = swapChain1;
   } else
