@@ -1733,6 +1733,25 @@ ParallelCompileContext::checkScriptSize(JSContext *cx, RawScript script)
     return Method_Compiled;
 }
 
+class AutoEnterTransitiveCompilation
+{
+    JSContext *cx_;
+
+  public:
+    AutoEnterTransitiveCompilation(JSContext *cx, AutoScriptVector &worklist)
+      : cx_(cx)
+    {
+        JS_ASSERT(!cx->compartment->types.transitiveCompilationWorklist);
+        cx->compartment->types.transitiveCompilationWorklist = &worklist;
+    }
+
+    ~AutoEnterTransitiveCompilation()
+    {
+        JS_ASSERT(cx_->compartment->types.transitiveCompilationWorklist);
+        cx_->compartment->types.transitiveCompilationWorklist = NULL;
+    }
+};
+
 MethodStatus
 ParallelCompileContext::compileTransitively()
 {
@@ -1741,6 +1760,8 @@ ParallelCompileContext::compileTransitively()
 
     if (worklist_.empty())
         return Method_Skipped;
+
+    AutoEnterTransitiveCompilation transCompile(cx_, worklist_);
 
     RootedFunction fun(cx_);
     RootedScript script(cx_);
