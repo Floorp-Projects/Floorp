@@ -82,16 +82,16 @@ CustomizeMode.prototype = {
     customizer.parentNode.selectedPanel = customizer;
 
     window.PanelUI.hide();
+    // Move the mainView in the panel to the holder so that we can see it
+    // while customizing.
+    let panelHolder = document.getElementById("customization-panelHolder");
+    panelHolder.appendChild(window.PanelUI.mainView);
+
 
     let self = this;
     let deck = document.getElementById("tab-view-deck");
     deck.addEventListener("transitionend", function customizeTransitionEnd() {
       deck.removeEventListener("transitionend", customizeTransitionEnd);
-
-      // Move the mainView in the panel to the holder so that we can see it
-      // while customizing.
-      let panelHolder = document.getElementById("customization-panelHolder");
-      panelHolder.appendChild(window.PanelUI.mainView);
 
       // Add drag-and-drop event handlers to all of the customizable areas.
       self.areas = [];
