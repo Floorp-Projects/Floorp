@@ -18,6 +18,23 @@ const STARTPAGE_VERSION = 4;
 this.AboutHomeUtils = {
   get snippetsVersion() STARTPAGE_VERSION,
 
+  /**
+   * Returns an object containing the name and searchURL of the original default
+   * search engine.
+   */
+  get defaultSearchEngine() {
+    let defaultEngine = Services.search.defaultEngine;
+    let submission = defaultEngine.getSubmission("_searchTerms_", null, "homepage");
+    if (submission.postData) {
+      throw new Error("Home page does not support POST search engines.");
+    }
+  
+    return Object.freeze({
+      name: defaultEngine.name,
+      searchURL: submission.uri.spec
+    });
+  },
+
   /*
    * showKnowYourRights - Determines if the user should be shown the
    * about:rights notification. The notification should *not* be shown if
@@ -58,23 +75,6 @@ this.AboutHomeUtils = {
     return true;
   }
 };
-
-/**
- * Returns an object containing the name and searchURL of the original default
- * search engine.
- */
-XPCOMUtils.defineLazyGetter(AboutHomeUtils, "defaultSearchEngine", function() {
-  let defaultEngine = Services.search.defaultEngine;
-  let submission = defaultEngine.getSubmission("_searchTerms_", null, "homepage");
-  if (submission.postData) {
-    throw new Error("Home page does not support POST search engines.");
-  }
-
-  return Object.freeze({
-    name: defaultEngine.name,
-    searchURL: submission.uri.spec
-  });
-});
 
 /**
  * Returns the URL to fetch snippets from, in the urlFormatter service format.
