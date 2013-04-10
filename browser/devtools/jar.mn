@@ -38,7 +38,6 @@ browser.jar:
     content/browser/debugger-toolbar.js           (debugger/debugger-toolbar.js)
     content/browser/debugger-panes.js             (debugger/debugger-panes.js)
     content/browser/profiler.xul                  (profiler/profiler.xul)
-    content/browser/profiler.css                  (profiler/profiler.css)
     content/browser/devtools/cleopatra.html       (profiler/cleopatra/cleopatra.html)
     content/browser/devtools/profiler/cleopatra/css/ui.css              (profiler/cleopatra/css/ui.css)
     content/browser/devtools/profiler/cleopatra/css/tree.css            (profiler/cleopatra/css/tree.css)
