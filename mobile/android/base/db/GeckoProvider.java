@@ -2,8 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#filter substitution
-package @ANDROID_PACKAGE_NAME@.db;
+package org.mozilla.gecko.db;
 
 import java.io.File;
 import java.util.HashMap;
@@ -236,7 +235,7 @@ public abstract class GeckoProvider extends ContentProvider {
             if (useTransaction) {
                 db.beginTransaction();
             }
- 
+
             // onPreInsert does a check for the item in the deleted table in some cases
             // so we put it inside this transaction
             onPreInsert(values, uri, db);

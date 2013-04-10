@@ -229,7 +229,7 @@
                   android:configChanges="orientation|screenSize"
                   android:excludeFromRecents="true"/>
 
-        <provider android:name="@ANDROID_PACKAGE_NAME@.db.BrowserProvider"
+        <provider android:name="org.mozilla.gecko.db.BrowserProvider"
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.browser"
                   android:permission="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER">
 
@@ -244,17 +244,17 @@
           Fennec versions into the same process. (Bug 749727.)
           Process name is a mangled version to avoid a Talos bug. (Bug 750548.)
           -->
-        <provider android:name="@ANDROID_PACKAGE_NAME@.db.PasswordsProvider"
+        <provider android:name="org.mozilla.gecko.db.PasswordsProvider"
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.passwords"
                   android:permission="@ANDROID_PACKAGE_NAME@.permissions.PASSWORD_PROVIDER"
                   android:process="@MANGLED_ANDROID_PACKAGE_NAME@.PasswordsProvider"/>
 
-        <provider android:name="@ANDROID_PACKAGE_NAME@.db.FormHistoryProvider"
+        <provider android:name="org.mozilla.gecko.db.FormHistoryProvider"
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.formhistory"
                   android:permission="@ANDROID_PACKAGE_NAME@.permissions.FORMHISTORY_PROVIDER"
                   android:protectionLevel="signature"/>
 
-        <provider android:name="@ANDROID_PACKAGE_NAME@.db.TabsProvider"
+        <provider android:name="org.mozilla.gecko.db.TabsProvider"
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.tabs"
                   android:permission="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"/>
 
