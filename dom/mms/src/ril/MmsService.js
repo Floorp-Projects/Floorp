@@ -18,10 +18,10 @@ const RIL_MMSSERVICE_CID = Components.ID("{217ddd76-75db-4210-955d-8806cd8d87f9}
 
 const DEBUG = false;
 
-const kMmsSendingObserverTopic           = "mms-sending";
-const kMmsSentObserverTopic              = "mms-sent";
-const kMmsFailedObserverTopic            = "mms-failed";
-const kMmsReceivedObserverTopic          = "mms-received";
+const kSmsSendingObserverTopic           = "sms-sending";
+const kSmsSentObserverTopic              = "sms-sent";
+const kSmsFailedObserverTopic            = "sms-failed";
+const kSmsReceivedObserverTopic          = "sms-received";
 
 const kNetworkInterfaceStateChangedTopic = "network-interface-state-changed";
 const kXpcomShutdownObserverTopic        = "xpcom-shutdown";
@@ -1083,7 +1083,7 @@ MmsService.prototype = {
       this.broadcastMmsSystemMessage("sms-received", domMessage);
 
       // Notifying observers a new notification indication is coming.
-      Services.obs.notifyObservers(domMessage, kMmsReceivedObserverTopic, null);
+      Services.obs.notifyObservers(domMessage, kSmsReceivedObserverTopic, null);
 
       let retrievalMode = RETRIEVAL_MODE_MANUAL;
       try {
@@ -1163,7 +1163,7 @@ MmsService.prototype = {
           this.broadcastMmsSystemMessage("sms-received", domMessage);
 
           // Notifying observers an MMS message is received.
-          Services.obs.notifyObservers(domMessage, kMmsReceivedObserverTopic, null);
+          Services.obs.notifyObservers(domMessage, kSmsReceivedObserverTopic, null);
         }).bind(this));
       }).bind(this));
     }).bind(this));
@@ -1303,13 +1303,13 @@ MmsService.prototype = {
         // TODO bug 832140 handle !Components.isSuccessCode(aRv)
         if (!aIsSentSuccess) {
           aRequest.notifySendMessageFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
-          Services.obs.notifyObservers(aDomMessage, kMmsFailedObserverTopic, null);
+          Services.obs.notifyObservers(aDomMessage, kSmsFailedObserverTopic, null);
           return;
         }
 
         self.broadcastMmsSystemMessage("sms-sent", aDomMessage);
         aRequest.notifyMessageSent(aDomMessage);
-        Services.obs.notifyObservers(aDomMessage, kMmsSentObserverTopic, null);
+        Services.obs.notifyObservers(aDomMessage, kSmsSentObserverTopic, null);
       });
     };
 
@@ -1319,7 +1319,7 @@ MmsService.prototype = {
                           function notifySendingResult(aRv, aDomMessage) {
       debug("Saving sending message is done. Start to send.");
       // TODO bug 832140 handle !Components.isSuccessCode(aRv)
-      Services.obs.notifyObservers(aDomMessage, kMmsSendingObserverTopic, null);
+      Services.obs.notifyObservers(aDomMessage, kSmsSendingObserverTopic, null);
       let sendTransaction;
       try {
         sendTransaction = new SendTransaction(savableMessage);
@@ -1413,7 +1413,7 @@ MmsService.prototype = {
           aRequest.notifyMessageGot(domMessage);
           // Broadcasting an 'sms-received' system message to open apps.
           this.broadcastMmsSystemMessage("sms-received", domMessage);
-          Services.obs.notifyObservers(domMessage, kMmsReceivedObserverTopic, null);
+          Services.obs.notifyObservers(domMessage, kSmsReceivedObserverTopic, null);
           let transaction = new AcknowledgeTransaction(transactionId, reportAllowed);
           transaction.run();
         }).bind(this));
