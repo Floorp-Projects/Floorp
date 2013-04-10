@@ -4599,20 +4599,22 @@ nsSVGTextFrame2::DoGlyphPositioning()
   if (!deltas.IsEmpty()) {
     mPositions[0].mPosition += deltas[0];
   }
+
+  double factor = cssPxPerDevPx / mFontSizeScaleFactor;
   for (uint32_t i = 1; i < mPositions.Length(); i++) {
     // Fill in unspecified x position.
     if (!mPositions[i].IsXSpecified()) {
       nscoord d = charPositions[i].x - charPositions[i - 1].x;
       mPositions[i].mPosition.x =
         mPositions[i - 1].mPosition.x +
-        presContext->AppUnitsToGfxUnits(d) * cssPxPerDevPx / mFontSizeScaleFactor;
+        presContext->AppUnitsToGfxUnits(d) * factor;
     }
     // Fill in unspecified y position.
     if (!mPositions[i].IsYSpecified()) {
       nscoord d = charPositions[i].y - charPositions[i - 1].y;
       mPositions[i].mPosition.y =
         mPositions[i - 1].mPosition.y +
-        presContext->AppUnitsToGfxUnits(d) * cssPxPerDevPx / mFontSizeScaleFactor;
+        presContext->AppUnitsToGfxUnits(d) * factor;
     }
     // Add in dx/dy.
     if (i < deltas.Length()) {
