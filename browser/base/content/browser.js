@@ -1279,6 +1279,8 @@ var gBrowserInit = {
     window.addEventListener("CustomizationStart", CustomizationHandler, false);
     window.addEventListener("CustomizationEnd", CustomizationHandler, false);
 
+    gCustomizeMode.init();
+
     // End startup crash tracking after a delay to catch crashes while restoring
     // tabs and to postpone saving the pref to disk.
     try {
@@ -1374,6 +1376,7 @@ var gBrowserInit = {
       IndexedDBPromptHelper.uninit();
       AddonManager.removeAddonListener(AddonsMgrListener);
       SocialUI.uninit();
+      gCustomizeMode.uninit();
       PanelUI.uninit();
     }
 

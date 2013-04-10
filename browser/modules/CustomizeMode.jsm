@@ -10,6 +10,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 const kPrefCustomizationDebug = "browser.uiCustomization.debug";
 const kPaletteId = "customization-palette";
+const kAboutURI = "about:customizing";
 
 let gDebug = false;
 try {
@@ -30,11 +31,7 @@ Cu.import("resource:///modules/CustomizableUI.jsm");
 function CustomizeMode(aWindow) {
   this.window = aWindow;
   this.document = aWindow.document;
-  // There are two palettes - there's the palette that can be overlayed with
-  // toolbar items in browser.xul. This is invisible, and never seen by the
-  // user. Then there's the visible palette, which gets populated and displayed
-  // to the user when in customizing mode.
-  this.visiblePalette = this.document.getElementById(kPaletteId);
+  this.browser = aWindow.gBrowser;
 };
 
 CustomizeMode.prototype = {
@@ -52,10 +49,33 @@ CustomizeMode.prototype = {
   // customization mode.
   _stowedPalette: null,
   _dragOverItem: null,
+  _customizing: false,
+
+  init: function() {
+    // There are two palettes - there's the palette that can be overlayed with
+    // toolbar items in browser.xul. This is invisible, and never seen by the
+    // user. Then there's the visible palette, which gets populated and displayed
+    // to the user when in customizing mode.
+    this.visiblePalette = this.document.getElementById(kPaletteId);
+
+    this.browser.tabContainer.addEventListener("TabSelect", this, false);
+    this.browser.addTabsProgressListener(this);
+  },
+
+  uninit: function() {
+    this.browser.tabContainer.removeEventListener("TabSelect", this, false);
+    this.browser.removeTabsProgressListener(this);
+  },
 
   enter: function() {
     let window = this.window;
     let document = this.document;
+
+    // We don't need to switch to kAboutURI, or open a new tab at
+    // kAboutURI if we're already on it.
+    if (this.browser.selectedBrowser.currentURI.spec != kAboutURI) {
+      this.window.switchToTabHavingURI(kAboutURI, true);
+    }
 
     CustomizableUI.addListener(this);
 
@@ -116,9 +136,10 @@ CustomizeMode.prototype = {
     this.visiblePalette.addEventListener("drop", this);
 
     document.documentElement.setAttribute("customizing", true);
+    this._customizing = true;
   },
 
-  exit: function(aToolboxChanged) {
+  exit: function() {
     CustomizableUI.removeListener(this);
 
     let tabViewDeck = this.document.getElementById("tab-view-deck");
@@ -168,7 +189,23 @@ CustomizeMode.prototype = {
 
     let browser = document.getElementById("browser");
     browser.parentNode.selectedPanel = browser;
+
+    if (this.browser.selectedBrowser.currentURI.spec == kAboutURI) {
+      let custBrowser = this.browser.selectedBrowser;
+      if (custBrowser.canGoBack) {
+        // If there's history to this tab, just go back.
+        custBrowser.goBack();
+      } else {
+        let customizationTab = this.browser.selectedTab;
+        if (this.browser.browsers.length == 1) {
+          this.window.BrowserOpenTab();
+        }
+        this.browser.removeTab(customizationTab);
+      }
+    }
+
     this._changed = false;
+    this._customizing = false;
   },
 
   populatePalette: function() {
@@ -404,6 +441,9 @@ CustomizeMode.prototype = {
           aEvent.preventDefault();
         }
         break;
+      case "TabSelect":
+        this._onTabSelect(aEvent);
+        break;
     }
   },
 
@@ -456,7 +496,7 @@ CustomizeMode.prototype = {
     }
 
     // XXXjaws Only handling the toolbar case first.
-    if (targetArea.localName === "toolbar") {
+    if (targetArea.localName == "toolbar") {
       this._setDragActive(dragOverItem, true);
     }
     this._dragOverItem = dragOverItem;
@@ -489,7 +529,7 @@ CustomizeMode.prototype = {
 
     // Is the target area the customization palette? If so, we have two cases -
     // either the originArea was the palette, or a customizable area.
-    if (targetArea.id === kPaletteId) {
+    if (targetArea.id == kPaletteId) {
       if (originArea.id !== kPaletteId) {
         this._removeParentFlex(draggedWrapper);
         let widget = this.unwrapToolbarItem(draggedWrapper);
@@ -519,7 +559,7 @@ CustomizeMode.prototype = {
     // Is the target area the same as the origin? Since we've already handled
     // the possibility that the target is the customization palette, we know
     // that the widget is moving within a customizable area.
-    if (targetArea === originArea) {
+    if (targetArea == originArea) {
       let properPlace = getPlaceForItem(targetNode);
       // We unwrap the moving widget, as well as the widget that we're dropping
       // on (the target) so that moveWidgetWithinArea can correctly insert the
@@ -628,6 +668,34 @@ CustomizeMode.prototype = {
       aElement = aElement.parentNode;
     }
     return aElement;
+  },
+
+  _onTabSelect: function(aEvent) {
+    this._toggleCustomizationModeIfNecessary();
+  },
+
+  onLocationChange: function(aBrowser, aProgress, aRequest, aLocation, aFlags) {
+    if (this.browser.selectedBrowser != aBrowser) {
+      return;
+    }
+
+    this._toggleCustomizationModeIfNecessary();
+  },
+
+  /**
+   * Looks at the currently selected browser tab, and if the location
+   * is set to kAboutURI and we're not customizing, enters customize mode.
+   * If we're not at kAboutURI and we are customizing, exits customize mode.
+   */
+  _toggleCustomizationModeIfNecessary: function() {
+    let browser = this.browser.selectedBrowser;
+    if (browser.currentURI.spec == kAboutURI &&
+        !this._customizing) {
+      this.enter();
+    } else if (browser.currentURI.spec != kAboutURI &&
+               this._customizing) {
+      this.exit();
+    }
   }
 };
 
