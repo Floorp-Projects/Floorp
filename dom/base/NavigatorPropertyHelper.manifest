@@ -1,3 +1,0 @@
-component {f0d03420-a0ce-11e2-9e96-0800200c9a66} NavigatorPropertyHelper.js
-contract @mozilla.org/navigatorPropertyHelper;1 {f0d03420-a0ce-11e2-9e96-0800200c9a66}
-category app-startup NavigatorPropertyHelper service,@mozilla.org/navigatorPropertyHelper;1

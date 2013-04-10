@@ -228,13 +228,11 @@ function checkContacts(contact1, contact2) {
   }
 }
 
-function tests() {
-
 var req;
 var index = 0;
 
 var mozContacts = window.navigator.mozContacts;
-ok(mozContacts, "mozContacts exists");
+
 var steps = [
   function () {
     ok(true, "Deleting database");
@@ -1247,12 +1245,11 @@ function permissionTest() {
   }
 }
 
-permissionTest();
-};
-
 var gContactsEnabled = SpecialPowers.getBoolPref("dom.mozContacts.enabled");
-addLoadEvent(tests);
 SimpleTest.waitForExplicitFinish();
+addLoadEvent(permissionTest);
+
+ok(true, "test passed");
 </script>
 </pre>
 </body>

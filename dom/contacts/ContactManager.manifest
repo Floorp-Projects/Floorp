@@ -22,4 +22,4 @@ category JavaScript-global-constructor mozContact @mozilla.org/contact;1
 
 component {1d70322b-f11b-4f19-9586-7bf291f212aa} ContactManager.js
 contract @mozilla.org/contactManager;1 {1d70322b-f11b-4f19-9586-7bf291f212aa}
-category JavaScript-navigator-property-maybe dom.mozContacts.enabled mozContacts,@mozilla.org/contactManager;1
+category JavaScript-navigator-property mozContacts @mozilla.org/contactManager;1
