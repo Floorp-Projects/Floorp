@@ -1874,7 +1874,7 @@ static void freeRcvdInfo(session_rcvd_info_t *rcvdInfo)
 
 void dump_msg(char * name, unsigned int *msg, int len, unsigned int cmd) {
 int i,j;
-  CCAPP_DEBUG(DEB_F_PREFIX"\n%s %x %d cmd=%d\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "dump_msg"), name, msg, len, cmd);
+  CCAPP_DEBUG(DEB_F_PREFIX"%s %p %d cmd=%d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "dump_msg"), name, msg, len, cmd);
   for ( j=0;j<10;j++) {
     for(i=0;i<16;i++) {
       CCAPP_DEBUG(DEB_F_PREFIX"%08X ", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "dump_msg"), msg[i+j]);
@@ -2043,7 +2043,7 @@ void ccp_handler(void* msg, int type) {
 
         length = strlen((const char*)rcvdInfo->info.generic_raw.message_body);
         if (data != NULL) {
-            CCAPP_DEBUG(DEB_F_PREFIX"rcvdInfo: addr=%x length=%d, xml=%s\n",
+            CCAPP_DEBUG(DEB_F_PREFIX"rcvdInfo: addr=%p length=%d, xml=%s",
                     DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONFPARSE"),
                     &data->call_conference, length, rcvdInfo->info.generic_raw.message_body);
 

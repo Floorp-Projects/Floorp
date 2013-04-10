@@ -660,7 +660,7 @@ cc_calllog_ref_t  CCAPI_CallInfo_getCallLogRef(cc_callinfo_ref_t handle)
   CCAPP_DEBUG(DEB_F_PREFIX"Entering\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
 
   if ( data != NULL){
-     CCAPP_DEBUG(DEB_F_PREFIX"returned %x\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), &data->call_log);
+     CCAPP_DEBUG(DEB_F_PREFIX"returned %p", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), &data->call_log);
      return &data->call_log;
   }
 

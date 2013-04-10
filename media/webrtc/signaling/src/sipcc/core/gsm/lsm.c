@@ -380,7 +380,7 @@ void lsm_set_lcb_prevent_ringing (callid_t call_id)
         return;
     }
 
-    LSM_DEBUG(DEB_L_C_F_PREFIX"gcid=%d.\n",
+    LSM_DEBUG(DEB_L_C_F_PREFIX"gcid=%s",
               DEB_L_C_F_PREFIX_ARGS(LSM, lcb->line, call_id, "lsm_set_lcb_prevent_ringing"), gcid);
 
     FSM_FOR_ALL_CBS(lcb, lsm_lcbs, LSM_MAX_LCBS) {
@@ -410,7 +410,7 @@ void lsm_remove_lcb_prevent_ringing (callid_t call_id)
         return;
     }
 
-    LSM_DEBUG(DEB_L_C_F_PREFIX"gcid=%d.\n",
+    LSM_DEBUG(DEB_L_C_F_PREFIX"gcid=%s",
               DEB_L_C_F_PREFIX_ARGS(LSM, lcb->line, call_id, "lsm_remove_lcb_prevent_ringing"), gcid);
 
     FSM_FOR_ALL_CBS(lcb, lsm_lcbs, LSM_MAX_LCBS) {
@@ -418,7 +418,7 @@ void lsm_remove_lcb_prevent_ringing (callid_t call_id)
             if ((lcb->gcid != NULL) && (strncmp(gcid, lcb->gcid, CC_GCID_LEN) == 0)) {
                 //FSM_RESET_FLAGS(lcb->flags, LSM_FLAGS_ANSWER_PENDING);
                 lcb->flags = 0;
-                LSM_DEBUG(DEB_L_C_F_PREFIX"found ringing call, gcid=%d, lcb->flags=%d.\n",
+                LSM_DEBUG(DEB_L_C_F_PREFIX"found ringing call, gcid=%s, lcb->flags=%d.",
                           DEB_L_C_F_PREFIX_ARGS(LSM, lcb->line, lcb->call_id, "lsm_remove_lcb_prevent_ringing"), gcid, lcb->flags);
             }
             break;
@@ -1547,7 +1547,7 @@ void lsm_increment_call_chn_cnt (line_t line)
     }
     lsm_call_perline[line-1]++;
 
-    LSM_DEBUG(DEB_F_PREFIX"number of calls on line[%d]=%d"
+    LSM_DEBUG(DEB_F_PREFIX"number of calls on line[%d]=%d",
         DEB_F_PREFIX_ARGS(LSM, __FUNCTION__),
         line, lsm_call_perline[line-1]);
 }
@@ -1571,7 +1571,7 @@ void lsm_decrement_call_chn_cnt (line_t line)
 
     lsm_call_perline[line-1]--;
 
-    LSM_DEBUG(DEB_F_PREFIX"number of calls on line[%d]=%d"
+    LSM_DEBUG(DEB_F_PREFIX"number of calls on line[%d]=%d",
         DEB_F_PREFIX_ARGS(LSM, __FUNCTION__),
         line, lsm_call_perline[line-1]);
 }
@@ -2727,9 +2727,9 @@ lsm_set_beep_only_settings (fsmdef_dcb_t *dcb, vcm_tones_t *toneMode_p)
          */
         if (sip_regmgr_get_cc_mode(dcb->line) == REG_MODE_CCM) {
             dcb->alerting_tone = VCM_CALL_WAITING_TONE;
-            LSM_DEBUG(DEB_F_PREFIX"%s - Overriding value in Alert-Info header as line %d is \
-                      connected to a Call Manager.\n",
-                      DEB_F_PREFIX_ARGS(LSM, "lsm_set_beep_only_settings"), dcb->line);
+            LSM_DEBUG(DEB_F_PREFIX" - Overriding value in Alert-Info header as line %d is \
+                      connected to a Call Manager.",
+                      DEB_F_PREFIX_ARGS(LSM, __FUNCTION__), dcb->line);
         }
         *toneMode_p = dcb->alerting_tone;
         switch (dcb->alerting_tone) {
@@ -3520,10 +3520,10 @@ lsm_far_end_alerting (lsm_lcb_t *lcb, cc_state_data_far_end_alerting_t *data)
                 continue;
             }
             LSM_DEBUG(DEB_L_C_F_PREFIX"direction_set:%d direction:%d"
-                      " dest_addr:0x%x is_multicast:%d\n",
+                      " dest_addr:%p is_multicast:%d",
                       DEB_L_C_F_PREFIX_ARGS(LSM, dcb->line, dcb->call_id, fname),
                       media->direction_set,
-                      media->direction, media->dest_addr,
+                      media->direction, &media->dest_addr,
                       media->is_multicast);
 
             if (media->direction_set) {
@@ -3758,11 +3758,11 @@ lsm_update_media (lsm_lcb_t *lcb, const char *caller_fname)
             for (i = 0; i < media->num_payloads; i++)
             {
                 LSM_DEBUG(DEB_L_C_F_PREFIX"%d rx, tx refresh's are %d %d"
-                          ", dir=%d, payload=%d addr=%s, multicast=%d\n",
+                          ", dir=%d, payload=%p addr=%s, multicast=%d\n",
                           DEB_L_C_F_PREFIX_ARGS(LSM, dcb->line,
                           dcb->call_id, fname), media->refid, rx_refresh,
                           tx_refresh, media->direction,
-                          media->payloads[i], addr_str, media->is_multicast );
+                          &media->payloads[i], addr_str, media->is_multicast );
             }
         }
         if (rx_refresh ||

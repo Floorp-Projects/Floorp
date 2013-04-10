@@ -1608,7 +1608,7 @@ void ui_create_offer(call_events event, line_t nLine, callid_t nCallID,
 {
     va_list ap;
 
-    TNP_DEBUG(DEB_L_C_F_PREFIX"state=%d attr=%d call_instance=%d\n",
+    TNP_DEBUG(DEB_L_C_F_PREFIX"state=%d call_instance=%d",
               DEB_L_C_F_PREFIX_ARGS(UI_API, nLine, nCallID, __FUNCTION__),
               event, call_instance_id);
 
