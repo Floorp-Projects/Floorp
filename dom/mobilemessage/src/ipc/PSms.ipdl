@@ -34,6 +34,11 @@ union SendMessageRequest
   SendSmsMessageRequest;
 };
 
+struct RetrieveMessageRequest
+{
+  int32_t messageId;
+};
+
 struct GetMessageRequest
 {
   int32_t messageId;
@@ -63,6 +68,7 @@ struct CreateThreadCursorRequest
 union IPCSmsRequest
 {
   SendMessageRequest;
+  RetrieveMessageRequest;
   GetMessageRequest;
   DeleteMessageRequest;
   MarkMessageReadRequest;
