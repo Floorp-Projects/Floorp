@@ -39,8 +39,6 @@ let CustomizationHandler = {
     BookmarksMenuButton.customizeStart();
     DownloadsButton.customizeStart();
     TabsInTitlebar.allowedBy("customizing-toolbars", false);
-
-    gBrowser.selectedTab = window.gBrowser.addTab("about:customizing");
   },
 
   _customizationEnd: function(aDetails) {
@@ -70,10 +68,6 @@ let CustomizationHandler = {
     PlacesToolbarHelper.customizeDone();
     BookmarksMenuButton.customizeDone();
     DownloadsButton.customizeDone();
-
-    if (gBrowser.selectedBrowser.currentURI.spec == "about:customizing") {
-      gBrowser.removeCurrentTab();
-    }
 
     // The url bar splitter state is dependent on whether stop/reload
     // and the location bar are combined, so we need this ordering
