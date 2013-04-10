@@ -4856,6 +4856,14 @@ nsSVGTextFrame2::UpdateFontSizeScaleFactor(bool aForceGlobalTransform)
   gfxPoint p = m.Transform(gfxPoint(1, 1)) - m.Transform(gfxPoint(0, 0));
   double contextScale = SVGContentUtils::ComputeNormalizedHypotenuse(p.x, p.y);
 
+  // But we want to ignore any scaling required due to HiDPI displays, since
+  // regular CSS text frames will still create text runs using the font size
+  // in CSS pixels, and we want SVG text to have the same rendering as HTML
+  // text for regular font sizes.
+  float cssPxPerDevPx =
+    presContext->AppUnitsToFloatCSSPixels(presContext->AppUnitsPerDevPixel());
+  contextScale *= cssPxPerDevPx;
+
   double minTextRunSize = minSize * contextScale;
   double maxTextRunSize = maxSize * contextScale;
 
