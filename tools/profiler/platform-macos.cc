@@ -31,7 +31,6 @@
 #include "nsThreadUtils.h"
 
 #include "platform.h"
-#include "TableTicker.h"
 #include "UnwinderThread2.h"  /* uwt__register_thread_for_profiling */
 
 // this port is based off of v8 svn revision 9837
@@ -92,13 +91,21 @@ void OS::Sleep(int milliseconds) {
   usleep(1000 * milliseconds);
 }
 
+class Thread::PlatformData : public Malloced {
+ public:
+  PlatformData() : thread_(kNoThread) {}
+  pthread_t thread_;  // Thread handle for pthread.
+};
+
 Thread::Thread(const char* name)
-    : stack_size_(0) {
+    : data_(new PlatformData),
+      stack_size_(0) {
   set_name(name);
 }
 
 
 Thread::~Thread() {
+  delete data_;
 }
 
 
@@ -134,9 +141,9 @@ static void* ThreadEntry(void* arg) {
   }
   // END temp hack for SPS v1-vs-v2
 
-  thread->thread_ = pthread_self();
+  thread->data()->thread_ = pthread_self();
   SetThreadName(thread->name());
-  ASSERT(thread->thread_ != kNoThread);
+  ASSERT(thread->data()->thread_ != kNoThread);
   thread->Run();
   return NULL;
 }
@@ -156,15 +163,15 @@ void Thread::Start() {
     pthread_attr_setstacksize(&attr, static_cast<size_t>(stack_size_));
     attr_ptr = &attr;
   }
-  pthread_create(&thread_, attr_ptr, ThreadEntry, this);
-  ASSERT(thread_ != kNoThread);
+  pthread_create(&data_->thread_, attr_ptr, ThreadEntry, this);
+  ASSERT(data_->thread_ != kNoThread);
 }
 
 void Thread::Join() {
-  pthread_join(thread_, NULL);
+  pthread_join(data_->thread_, NULL);
 }
 
-class PlatformData : public Malloced {
+class Sampler::PlatformData : public Malloced {
  public:
   PlatformData() : profiled_thread_(mach_thread_self())
   {
@@ -190,17 +197,6 @@ class PlatformData : public Malloced {
   pthread_t profiled_pthread_;
 };
 
-/* static */ PlatformData*
-Sampler::AllocPlatformData(int aThreadId)
-{
-  return new PlatformData;
-}
-
-/* static */ void
-Sampler::FreePlatformData(PlatformData* aData)
-{
-  delete aData;
-}
 
 class SamplerThread : public Thread {
  public:
@@ -209,7 +205,7 @@ class SamplerThread : public Thread {
       , interval_(interval) {}
 
   static void AddActiveSampler(Sampler* sampler) {
-    mozilla::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
+    ScopedLock lock(mutex_);
     SamplerRegistry::AddActiveSampler(sampler);
     if (instance_ == NULL) {
       instance_ = new SamplerThread(sampler->interval());
@@ -220,42 +216,37 @@ class SamplerThread : public Thread {
   }
 
   static void RemoveActiveSampler(Sampler* sampler) {
-    mozilla::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
+    ScopedLock lock(mutex_);
     instance_->Join();
     //XXX: unlike v8 we need to remove the active sampler after doing the Join
     // because we drop the sampler immediately
     SamplerRegistry::RemoveActiveSampler(sampler);
     delete instance_;
     instance_ = NULL;
+    /*
+    if (SamplerRegistry::GetState() == SamplerRegistry::HAS_NO_SAMPLERS) {
+      RuntimeProfiler::StopRuntimeProfilerThreadBeforeShutdown(instance_);
+      delete instance_;
+      instance_ = NULL;
+    }
+    */
   }
 
   // Implement Thread::Run().
   virtual void Run() {
     while (SamplerRegistry::sampler->IsActive()) {
-      std::vector<ThreadInfo*> threads =
-        SamplerRegistry::sampler->GetRegisteredThreads();
-      for (uint32_t i = 0; i < threads.size(); i++) {
-        ThreadInfo* info = threads[i];
-
-        // This will be null if we're not interested in profiling this thread.
-        if (!info->Profile())
-          continue;
-
-        ThreadProfile* thread_profile = info->Profile();
-
-        if (!SamplerRegistry::sampler->IsPaused())
-          SampleContext(SamplerRegistry::sampler, thread_profile);
-      }
+      if (!SamplerRegistry::sampler->IsPaused())
+        SampleContext(SamplerRegistry::sampler);
       OS::Sleep(interval_);
     }
   }
 
-  void SampleContext(Sampler* sampler, ThreadProfile* thread_profile) {
-    thread_act_t profiled_thread =
-      thread_profile->GetPlatformData()->profiled_thread();
-
+  void SampleContext(Sampler* sampler) {
+    thread_act_t profiled_thread = sampler->platform_data()->profiled_thread();
     TickSample sample_obj;
     TickSample* sample = &sample_obj;
+    //TickSample* sample = CpuProfiler::TickSampleEvent(sampler->isolate());
+    //if (sample == NULL) sample = &sample_obj;
 
     if (KERN_SUCCESS != thread_suspend(profiled_thread)) return;
 
@@ -285,11 +276,13 @@ class SamplerThread : public Thread {
                          flavor,
                          reinterpret_cast<natural_t*>(&state),
                          &count) == KERN_SUCCESS) {
+      //sample->state = sampler->isolate()->current_vm_state();
       sample->pc = reinterpret_cast<Address>(state.REGISTER_FIELD(ip));
       sample->sp = reinterpret_cast<Address>(state.REGISTER_FIELD(sp));
       sample->fp = reinterpret_cast<Address>(state.REGISTER_FIELD(bp));
       sample->timestamp = mozilla::TimeStamp::Now();
-      sample->threadProfile = thread_profile;
+      sample->threadProfile = NULL;
+      sampler->SampleStack(sample);
       sampler->Tick(sample);
     }
     thread_resume(profiled_thread);
@@ -307,7 +300,10 @@ class SamplerThread : public Thread {
 
 #undef REGISTER_FIELD
 
+
+Mutex* SamplerThread::mutex_ = OS::CreateMutex();
 SamplerThread* SamplerThread::instance_ = NULL;
+
 
 Sampler::Sampler(int interval, bool profiling, int entrySize)
     : // isolate_(isolate),
@@ -317,11 +313,13 @@ Sampler::Sampler(int interval, bool profiling, int entrySize)
       active_(false),
       entrySize_(entrySize) /*,
       samples_taken_(0)*/ {
+  data_ = new PlatformData;
 }
 
 
 Sampler::~Sampler() {
   ASSERT(!IsActive());
+  delete data_;
 }
 
 
@@ -339,38 +337,27 @@ void Sampler::Stop() {
 }
 
 pthread_t
-Sampler::GetProfiledThread(PlatformData* aData)
+Sampler::GetProfiledThread(Sampler::PlatformData* aData)
 {
   return aData->profiled_pthread();
-}
-
-#include <sys/syscall.h>
-pid_t gettid()
-{
-  return (pid_t) syscall(SYS_thread_selfid);
 }
 
 bool Sampler::RegisterCurrentThread(const char* aName, PseudoStack* aPseudoStack, bool aIsMainThread)
 {
   mozilla::MutexAutoLock lock(*sRegisteredThreadsMutex);
 
-  ThreadInfo* info = new ThreadInfo(aName, gettid(),
-    aIsMainThread, aPseudoStack);
+  if (!aIsMainThread)
+    return false;
 
-  bool profileThread = sActiveSampler &&
-    (aIsMainThread || sActiveSampler->ProfileThreads());
+  ThreadInfo* info = new ThreadInfo(aName, 0, true, aPseudoStack);
 
-  if (profileThread) {
+  if (sActiveSampler) {
     // We need to create the ThreadProfile now
     info->SetProfile(new ThreadProfile(info->Name(),
                                        sActiveSampler->EntrySize(),
                                        info->Stack(),
                                        info->ThreadId(),
-                                       info->GetPlatformData(),
-                                       aIsMainThread));
-    if (sActiveSampler->ProfileJS()) {
-      info->Profile()->GetPseudoStack()->enableJSSampling();
-    }
+                                       true));
   }
 
   sRegisteredThreads->push_back(info);
@@ -379,16 +366,5 @@ bool Sampler::RegisterCurrentThread(const char* aName, PseudoStack* aPseudoStack
 
 void Sampler::UnregisterCurrentThread()
 {
-  mozilla::MutexAutoLock lock(*sRegisteredThreadsMutex);
-
-  int id = gettid();
-
-  for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
-    ThreadInfo* info = sRegisteredThreads->at(i);
-    if (info->ThreadId() == id) {
-      delete info;
-      sRegisteredThreads->erase(sRegisteredThreads->begin() + i);
-      break;
-    }
-  }
+  // We only have the main thread currently and that will never be unregistered
 }

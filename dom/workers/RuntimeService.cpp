@@ -265,10 +265,6 @@ JSBool
 OperationCallback(JSContext* aCx)
 {
   WorkerPrivate* worker = GetWorkerPrivateFromContext(aCx);
-
-  // Now is a good time to turn on profiling if it's pending.
-  profiler_js_operation_callback();
-
   return worker->OperationCallback(aCx);
 }
 
@@ -521,18 +517,14 @@ public:
       return NS_ERROR_FAILURE;
     }
 
-    JSRuntime* rt = JS_GetRuntime(cx);
-
     profiler_register_thread("WebWorker");
-#ifdef MOZ_ENABLE_PROFILER_SPS
-    if (PseudoStack* stack = mozilla_get_pseudo_stack())
-      stack->sampleRuntime(rt);
-#endif
 
     {
       JSAutoRequest ar(cx);
       workerPrivate->DoRunLoop(cx);
     }
+
+    JSRuntime* rt = JS_GetRuntime(cx);
 
     // XXX Bug 666963 - CTypes can create another JSContext for use with
     // closures, and then it holds that context in a reserved slot on the CType
@@ -552,10 +544,6 @@ public:
       JS_DestroyContext(cx);
     }
 
-#ifdef MOZ_ENABLE_PROFILER_SPS
-    if (PseudoStack* stack = mozilla_get_pseudo_stack())
-      stack->sampleRuntime(nullptr);
-#endif
     JS_DestroyRuntime(rt);
 
     workerPrivate->ScheduleDeletion(false);

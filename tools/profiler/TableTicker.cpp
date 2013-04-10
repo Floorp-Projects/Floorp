@@ -179,10 +179,6 @@ void TableTicker::BuildJSObject(JSAObjectBuilder& b, JSCustomObject* profile)
     mozilla::MutexAutoLock lock(*sRegisteredThreadsMutex);
 
     for (size_t i = 0; i < sRegisteredThreads->size(); i++) {
-      // Thread not being profiled, skip it
-      if (!sRegisteredThreads->at(i)->Profile())
-        continue;
-
       MutexAutoLock lock(*sRegisteredThreads->at(i)->Profile()->GetMutex());
 
       JSCustomObject* threadSamples = b.CreateObject();
@@ -295,7 +291,7 @@ void StackWalkCallback(void* aPC, void* aSP, void* aClosure)
 void TableTicker::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample)
 {
 #ifndef XP_MACOSX
-  uintptr_t thread = GetThreadHandle(aSample->threadProfile->GetPlatformData());
+  uintptr_t thread = GetThreadHandle(platform_data());
   MOZ_ASSERT(thread);
 #endif
   void* pc_array[1000];
@@ -312,7 +308,7 @@ void TableTicker::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample
 
   uint32_t maxFrames = uint32_t(array.size - array.count);
 #ifdef XP_MACOSX
-  pthread_t pt = GetProfiledThread(aSample->threadProfile->GetPlatformData());
+  pthread_t pt = GetProfiledThread(platform_data());
   void *stackEnd = reinterpret_cast<void*>(-1);
   if (pt)
     stackEnd = static_cast<char*>(pthread_get_stackaddr_np(pt));
@@ -393,6 +389,11 @@ void doSampleStackTrace(PseudoStack *aStack, ThreadProfile &aProfile, TickSample
 
 void TableTicker::Tick(TickSample* sample)
 {
+  if (!sample->threadProfile) {
+    // Platform doesn't support multithread, so use the main thread profile we created
+    sample->threadProfile = GetPrimaryThreadProfile();
+  }
+
   ThreadProfile& currThreadProfile = *sample->threadProfile;
 
   // Marker(s) come before the sample
@@ -473,7 +474,7 @@ void mozilla_sampler_print_location1()
   }
 
   ThreadProfile threadProfile("Temp", PROFILE_DEFAULT_ENTRY, stack,
-                              0, Sampler::AllocPlatformData(0), false);
+                              0, false);
   doSampleStackTrace(stack, threadProfile, NULL);
 
   threadProfile.flush();
