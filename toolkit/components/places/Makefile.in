@@ -63,6 +63,7 @@ EXTRA_JS_MODULES = \
   ColorConversion.js \
   ClusterLib.js \
   BookmarkJSONUtils.jsm \
+  PlacesBackups.jsm \
   $(NULL)
 
 EXTRA_PP_JS_MODULES = \
