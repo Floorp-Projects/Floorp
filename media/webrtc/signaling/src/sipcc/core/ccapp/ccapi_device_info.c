@@ -61,7 +61,7 @@ cc_boolean CCAPI_DeviceInfo_isPhoneIdle(cc_deviceinfo_ref_t handle)
             break;
         }
     }
-    CCAPP_DEBUG(DEB_F_PREFIX"idle state=%d session_id=0x%x call-state=%d handle=%x\n",
+    CCAPP_DEBUG(DEB_F_PREFIX"idle state=%d session_id=0x%x call-state=%d handle=%p",
         DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), ret,
         (session_data != NULL)? session_data->sess_id: 0,
         (session_data != NULL)? session_data->state: 0,
@@ -317,7 +317,7 @@ cc_string_t CCAPI_DeviceInfo_getNotifyPrompt (cc_deviceinfo_ref_t handle)
     CCAPP_DEBUG(DEB_F_PREFIX"Entering\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
 
     if (ref != NULL) {
-        CCAPP_DEBUG(DEB_F_PREFIX"returned %02X\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), (ref->not_prompt));
+        CCAPP_DEBUG(DEB_F_PREFIX"returned %p", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), (ref->not_prompt));
         return ref->not_prompt;
     }
 

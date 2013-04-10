@@ -414,7 +414,7 @@ gsmsdp_alloc_media (void)
     if (media == NULL) {
         /* no free element from cache, allocate it from the pool */
         media = cpr_malloc(sizeof(fsmdef_media_t));
-        GSM_DEBUG(DEB_F_PREFIX"get from dynamic pool, media %x\n",
+        GSM_DEBUG(DEB_F_PREFIX"get from dynamic pool, media %p",
                                DEB_F_PREFIX_ARGS(GSM, fname), media);
     }
     return (media);
@@ -463,7 +463,7 @@ gsmsdp_free_media (fsmdef_media_t *media)
     } else {
         /* this element is from the dynamic pool, free it back */
         cpr_free(media);
-        GSM_DEBUG(DEB_F_PREFIX"free media 0x%x to dynamic pool\n",
+        GSM_DEBUG(DEB_F_PREFIX"free media %p to dynamic pool",
                   DEB_F_PREFIX_ARGS(GSM, fname), media);
     }
 }
