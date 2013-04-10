@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#filter substitution
-
 package org.mozilla.gecko;
 
 import android.app.Activity;
@@ -38,19 +36,21 @@ public class GeckoActivity extends Activity implements GeckoActivityStatus {
         }
     }
 
-#ifdef MOZ_ANDROID_ANR_REPORTER
     @Override
     public void onCreate(android.os.Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        ANRReporter.register(getApplicationContext());
+        if (AppConstants.MOZ_ANDROID_ANR_REPORTER) {
+            ANRReporter.register(getApplicationContext());
+        }
     }
 
     @Override
     public void onDestroy() {
-        ANRReporter.unregister();
+        if (AppConstants.MOZ_ANDROID_ANR_REPORTER) {
+            ANRReporter.unregister();
+        }
         super.onDestroy();
     }
-#endif
 
     @Override
     public void startActivity(Intent intent) {
@@ -69,9 +69,8 @@ public class GeckoActivity extends Activity implements GeckoActivityStatus {
         // If we call an activity from another package, or an open intent (leaving android to resolve)
         // component has a different package name or it is null.
         ComponentName component = intent.getComponent();
-        return (component != null
-                && component.getPackageName() != null
-                && component.getPackageName().equals("@ANDROID_PACKAGE_NAME@"));
+        return (component != null &&
+                AppConstants.ANDROID_PACKAGE_NAME.equals(component.getPackageName()));
     }
 
     @Override
