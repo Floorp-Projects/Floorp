@@ -1190,7 +1190,13 @@ nsDOMWindowUtils::SendSimpleGestureEvent(const nsAString& aType,
     return NS_ERROR_FAILURE;
 
   int32_t msg;
-  if (aType.EqualsLiteral("MozSwipeGesture"))
+  if (aType.EqualsLiteral("MozSwipeGestureStart"))
+    msg = NS_SIMPLE_GESTURE_SWIPE_START;
+  else if (aType.EqualsLiteral("MozSwipeGestureUpdate"))
+    msg = NS_SIMPLE_GESTURE_SWIPE_UPDATE;
+  else if (aType.EqualsLiteral("MozSwipeGestureEnd"))
+    msg = NS_SIMPLE_GESTURE_SWIPE_END;
+  else if (aType.EqualsLiteral("MozSwipeGesture"))
     msg = NS_SIMPLE_GESTURE_SWIPE;
   else if (aType.EqualsLiteral("MozMagnifyGestureStart"))
     msg = NS_SIMPLE_GESTURE_MAGNIFY_START;
@@ -2198,6 +2204,25 @@ nsDOMWindowUtils::GetLayerManagerType(nsAString& aType)
 
   mgr->GetBackendName(aType);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetLayerManagerRemote(bool* retval)
+{
+  if (!nsContentUtils::IsCallerChrome()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget)
+    return NS_ERROR_FAILURE;
+
+  LayerManager *mgr = widget->GetLayerManager();
+  if (!mgr)
+    return NS_ERROR_FAILURE;
+
+  *retval = !!mgr->AsShadowForwarder();
   return NS_OK;
 }
 

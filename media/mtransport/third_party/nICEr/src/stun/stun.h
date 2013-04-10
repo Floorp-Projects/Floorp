@@ -108,15 +108,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifdef USE_TURN
 /* TURN attributes */
 #define NR_STUN_ATTR_LIFETIME                0x000d
-#define NR_STUN_ATTR_BANDWIDTH               0x0010
-#define NR_STUN_ATTR_REMOTE_ADDRESS          0x0012
+#define NR_STUN_ATTR_XOR_PEER_ADDRESS        0x0012
 #define NR_STUN_ATTR_DATA                    0x0013
-#define NR_STUN_ATTR_RELAY_ADDRESS           0x0016
-//#define NR_STUN_ATTR_REQUESTED_PORT_PROPS    0x0018    /* UINT4 */
-//#define NR_STUN_ATTR_REQUESTED_TRANSPORT     0x0019    /* UINT4 */
-//#define NR_STUN_ATTR_TIMER_VAL               0x0021    /* ? */
-//#define NR_STUN_ATTR_REQUIRED_IP             0x0022    /* address */
-//#define NR_STUN_ATTR_CONNECT_STAT            0x0023    /* UINT4 */
+#define NR_STUN_ATTR_XOR_RELAY_ADDRESS       0x0016
+#define NR_STUN_ATTR_REQUESTED_TRANSPORT     0x0019
+
+#define NR_STUN_ATTR_REQUESTED_TRANSPORT_UDP     17
 #endif /* USE_TURN */
 
 /*
@@ -162,11 +159,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifdef USE_TURN
 /* building blocks for TURN message types */
 #define NR_METHOD_ALLOCATE                 0x003
-#define NR_METHOD_SET_ACTIVE_DEST          0x004
-#define NR_METHOD_CONNECT                  0x005
+#define NR_METHOD_REFRESH                  0x004
+
 #define NR_METHOD_SEND                     0x006
 #define NR_METHOD_DATA                     0x007
-#define NR_METHOD_CONNECT_STATUS           0x008
+#define NR_METHOD_CREATE_PERMISSION        0x008
+#define NR_METHOD_CHANNEL_BIND             0x009
 
 /* define types for a TURN message */
 #define NR_STUN_MSG_ALLOCATE_REQUEST                NR_STUN_TYPE(NR_METHOD_ALLOCATE, \
@@ -175,26 +173,33 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                                                                  NR_CLASS_RESPONSE)
 #define NR_STUN_MSG_ALLOCATE_ERROR_RESPONSE         NR_STUN_TYPE(NR_METHOD_ALLOCATE, \
                                                                  NR_CLASS_ERROR_RESPONSE)
-#define NR_STUN_MSG_SET_ACTIVE_DEST_REQUEST         NR_STUN_TYPE(NR_METHOD_SET_ACTIVE_DEST, \
+#define NR_STUN_MSG_REFRESH_REQUEST                 NR_STUN_TYPE(NR_METHOD_REFRESH, \
                                                                  NR_CLASS_REQUEST)
-#define NR_STUN_MSG_SET_ACTIVE_DEST_RESPONSE        NR_STUN_TYPE(NR_METHOD_SET_ACTIVE_DEST, \
+#define NR_STUN_MSG_REFRESH_RESPONSE                NR_STUN_TYPE(NR_METHOD_REFRESH, \
                                                                  NR_CLASS_RESPONSE)
-#define NR_STUN_MSG_SET_ACTIVE_DEST_ERROR_RESPONSE  NR_STUN_TYPE(NR_METHOD_SET_ACTIVE_DEST, \
+#define NR_STUN_MSG_REFRESH_ERROR_RESPONSE          NR_STUN_TYPE(NR_METHOD_REFRESH, \
                                                                  NR_CLASS_ERROR_RESPONSE)
+
 #define NR_STUN_MSG_SEND_INDICATION                 NR_STUN_TYPE(NR_METHOD_SEND, \
                                                                  NR_CLASS_INDICATION)
 #define NR_STUN_MSG_DATA_INDICATION                 NR_STUN_TYPE(NR_METHOD_DATA, \
                                                                  NR_CLASS_INDICATION)
-#if 0
-#define NR_STUN_MSG_CONNECT_REQUEST                 NR_STUN_TYPE(NR_METHOD_CONNECT, \
-                                                                 NR_CLASS_REQUEST)
-#define NR_STUN_MSG_CONNECT_RESPONSE                NR_STUN_TYPE(NR_METHOD_CONNECT, \
-                                                                 NR_CLASS_RESPONSE)
-#define NR_STUN_MSG_CONNECT_ERROR_RESPONSE          NR_STUN_TYPE(NR_METHOD_CONNECT, \
-                                                                 NR_CLASS_ERROR_RESPONSE)
-#define NR_STUN_MSG_CONNECT_STATUS_INDICATION       NR_STUN_TYPE(NR_METHOD_CONNECT_STATUS, \
-                                                                 NR_CLASS_INDICATION)
-#endif
+
+#define NR_STUN_MSG_PERMISSION_REQUEST                 NR_STUN_TYPE(NR_METHOD_CREATE_PERMISSION, \
+                                                                    NR_CLASS_REQUEST)
+#define NR_STUN_MSG_PERMISSION_RESPONSE                NR_STUN_TYPE(NR_METHOD_CREATE_PERMISSION, \
+                                                                    NR_CLASS_RESPONSE)
+#define NR_STUN_MSG_PERMISSION_ERROR_RESPONSE          NR_STUN_TYPE(NR_METHOD_CREATE_PERMISSION, \
+                                                                    NR_CLASS_ERROR_RESPONSE)
+
+#define NR_STUN_MSG_CHANNEL_BIND_REQUEST                 NR_STUN_TYPE(NR_METHOD_CHANNEL_BIND, \
+                                                                      NR_CLASS_REQUEST)
+#define NR_STUN_MSG_CHANNEL_BIND_RESPONSE                NR_STUN_TYPE(NR_METHOD_CHANNEL_BIND, \
+                                                                      NR_CLASS_RESPONSE)
+#define NR_STUN_MSG_CHANNEL_BIND_ERROR_RESPONSE          NR_STUN_TYPE(NR_METHOD_CHANNEL_BIND, \
+                                                                      NR_CLASS_ERROR_RESPONSE)
+
+
 #endif /* USE_TURN */
 
 

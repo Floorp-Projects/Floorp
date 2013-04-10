@@ -14,6 +14,8 @@
 #include "AsmJSModule.h"
 #include "frontend/BytecodeCompiler.h"
 
+#include "Ion.h"
+
 using namespace js;
 using namespace js::ion;
 using namespace mozilla;
@@ -200,6 +202,12 @@ DynamicallyLinkModule(JSContext *cx, CallArgs args, AsmJSModule &module)
             JSC::X86Assembler::setPointer(access.patchLengthAt(code), heapLength);
             JSC::X86Assembler::setPointer(access.patchOffsetAt(code), heapOffset);
         }
+#elif defined(JS_CPU_ARM)
+        // Now the length of the array is know, patch all of the bounds check sites
+        // with the new length.
+        ion::IonContext ic(cx, NULL);
+        module.patchBoundsChecks(heap->byteLength());
+
 #endif
     }
 
@@ -323,8 +331,13 @@ CallAsmJS(JSContext *cx, unsigned argc, Value *vp)
         AsmJSActivation activation(cx, module);
 
         // Call into generated code.
+#ifdef JS_CPU_ARM
+        if (!func.code()(coercedArgs.begin(), module.globalData()))
+            return false;
+#else
         if (!func.code()(coercedArgs.begin()))
             return false;
+#endif
     }
 
     switch (func.returnType()) {

@@ -101,53 +101,6 @@ protected:
   }
 };
 
-// NB: eventually we'll have separate shadow canvas2d and shadow
-// canvas3d layers, but currently they look the same from the
-// perspective of the compositor process
-class ShadowCanvasLayerOGL : public ShadowCanvasLayer,
-                             public LayerOGL
-{
-  typedef gl::TextureImage TextureImage;
-
-public:
-  ShadowCanvasLayerOGL(LayerManagerOGL* aManager);
-  virtual ~ShadowCanvasLayerOGL();
-
-  // CanvasLayer impl
-  virtual void Initialize(const Data& aData);
-  virtual void Init(const CanvasSurface& aNewFront, bool needYFlip);
-
-  // This isn't meaningful for shadow canvas.
-  virtual void Updated(const nsIntRect&) {}
-
-  // ShadowCanvasLayer impl
-  virtual void Swap(const CanvasSurface& aNewFront,
-                    bool needYFlip,
-                    CanvasSurface* aNewBack);
-
-  virtual void DestroyFrontBuffer();
-
-  virtual void Disconnect();
-
-  // LayerOGL impl
-  void Destroy();
-  Layer* GetLayer();
-  virtual LayerRenderState GetRenderState() MOZ_OVERRIDE;
-  virtual void RenderLayer(int aPreviousFrameBuffer,
-                           const nsIntPoint& aOffset);
-  virtual void CleanupResources();
-
-private:
-  nsRefPtr<TextureImage> mTexImage;
-
-  bool mNeedsYFlip;
-  SurfaceDescriptor mFrontBufferDescriptor;
-  GLuint mUploadTexture;
-  GLuint mCurTexture;
-  EGLImage mGrallocImage;
-  gl::ShaderProgramType mShaderType;
-};
-
 } /* layers */
 } /* mozilla */
 #endif /* GFX_IMAGELAYEROGL_H */

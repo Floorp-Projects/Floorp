@@ -330,41 +330,12 @@ NS_IMETHODIMP nsDefaultURIFixup::KeywordToURI(const nsACString& aKeyword,
     }
     keyword.Trim(" ");
 
-    nsAdoptingCString url = Preferences::GetLocalizedCString("keyword.URL");
-    if (!url) {
-        // Fall back to a non-localized pref, for backwards compat
-        url = Preferences::GetCString("keyword.URL");
-    }
-
-    // If the pref is set and non-empty, use it.
-    if (!url.IsEmpty()) {
-        // Escape keyword, then prepend URL
-        nsAutoCString spec;
-        if (!NS_Escape(keyword, spec, url_XPAlphas)) {
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
-
-        spec.Insert(url, 0);
-
-        nsresult rv = NS_NewURI(aURI, spec);
-        if (NS_FAILED(rv))
-            return rv;
-
-        nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
-        if (obsSvc) {
-            obsSvc->NotifyObservers(*aURI,
-                                    "defaultURIFixup-using-keyword-pref",
-                                    nullptr);
-        }
-        return NS_OK;
-    }
-
 #ifdef MOZ_TOOLKIT_SEARCH
     // Try falling back to the search service's default search engine
     nsCOMPtr<nsIBrowserSearchService> searchSvc = do_GetService("@mozilla.org/browser/search-service;1");
     if (searchSvc) {
         nsCOMPtr<nsISearchEngine> defaultEngine;
-        searchSvc->GetOriginalDefaultEngine(getter_AddRefs(defaultEngine));
+        searchSvc->GetDefaultEngine(getter_AddRefs(defaultEngine));
         if (defaultEngine) {
             nsCOMPtr<nsISearchSubmission> submission;
             // We allow default search plugins to specify alternate

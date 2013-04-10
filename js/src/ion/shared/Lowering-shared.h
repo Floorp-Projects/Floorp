@@ -79,6 +79,11 @@ class LIRGeneratorShared : public MInstructionVisitorWithDefaults
     // and only registers on ARM.
     inline LAllocation useAny(MDefinition *mir);
     inline LAllocation useAnyOrConstant(MDefinition *mir);
+    // "Storable" is architecture dependend, and will include registers and constants on X86
+    // and only registers on ARM.
+    // this is a generic "things we can expect to write into memory in 1 instruction"
+    inline LAllocation useStorable(MDefinition *mir);
+    inline LAllocation useStorableAtStart(MDefinition *mir);
     inline LAllocation useKeepaliveOrConstant(MDefinition *mir);
     inline LAllocation useRegisterOrConstant(MDefinition *mir);
     inline LAllocation useRegisterOrConstantAtStart(MDefinition *mir);

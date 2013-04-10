@@ -12,9 +12,9 @@ import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.RelativeLayout;
+import android.widget.LinearLayout;
 
-public class FindInPageBar extends RelativeLayout implements TextWatcher, View.OnClickListener {
+public class FindInPageBar extends LinearLayout implements TextWatcher, View.OnClickListener {
     private static final String LOGTAG = "GeckoFindInPagePopup";
 
     private final Context mContext;

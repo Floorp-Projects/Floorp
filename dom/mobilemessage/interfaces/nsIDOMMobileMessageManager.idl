@@ -46,6 +46,8 @@ interface nsIDOMMozMobileMessageManager : nsIDOMEventTarget
   // Iterates through nsIDOMMozMobileMessageThread.
   nsIDOMDOMCursor getThreads();
 
+  nsIDOMDOMRequest retrieveMMS(in long id);
+
   [implicit_jscontext] attribute jsval onreceived;
   [implicit_jscontext] attribute jsval onsending;
   [implicit_jscontext] attribute jsval onsent;

@@ -312,5 +312,13 @@ add_tier_dir('t1', 'bat', static=True)
         self.assertEqual(sandbox['CONFIG']['BAD_UTF8'],
             u'\ufffd\ufffd\ufffd\ufffd:')
 
+    def test_invalid_exports_set_base(self):
+        sandbox = self.sandbox()
+
+        with self.assertRaises(SandboxExecutionError) as se:
+            sandbox.exec_source('EXPORTS = "foo.h"', 'foo.py')
+
+        self.assertEqual(se.exception.exc_type, ValueError)
+
 if __name__ == '__main__':
     main()

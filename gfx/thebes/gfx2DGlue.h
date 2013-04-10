@@ -9,7 +9,9 @@
 #include "gfxPlatform.h"
 #include "gfxRect.h"
 #include "gfxMatrix.h"
+#include "gfx3DMatrix.h"
 #include "gfxContext.h"
+#include "mozilla/gfx/Matrix.h"
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/gfx/2D.h"
 
@@ -337,6 +339,48 @@ inline gfxContext::GraphicsOperator ThebesOp(CompositionOp aOp)
   default:
     return gfxContext::OPERATOR_OVER;
   }
+}
+
+inline void
+ToMatrix4x4(const gfx3DMatrix& aIn, Matrix4x4& aOut)
+{
+  aOut._11 = aIn._11;
+  aOut._12 = aIn._12;
+  aOut._13 = aIn._13;
+  aOut._14 = aIn._14;
+  aOut._21 = aIn._21;
+  aOut._22 = aIn._22;
+  aOut._23 = aIn._23;
+  aOut._24 = aIn._24;
+  aOut._31 = aIn._31;
+  aOut._32 = aIn._32;
+  aOut._33 = aIn._33;
+  aOut._34 = aIn._34;
+  aOut._41 = aIn._41;
+  aOut._42 = aIn._42;
+  aOut._43 = aIn._43;
+  aOut._44 = aIn._44;
+}
+
+inline void
+To3DMatrix(const Matrix4x4& aIn, gfx3DMatrix& aOut)
+{
+  aOut._11 = aIn._11;
+  aOut._12 = aIn._12;
+  aOut._13 = aIn._13;
+  aOut._14 = aIn._14;
+  aOut._21 = aIn._21;
+  aOut._22 = aIn._22;
+  aOut._23 = aIn._23;
+  aOut._24 = aIn._24;
+  aOut._31 = aIn._31;
+  aOut._32 = aIn._32;
+  aOut._33 = aIn._33;
+  aOut._34 = aIn._34;
+  aOut._41 = aIn._41;
+  aOut._42 = aIn._42;
+  aOut._43 = aIn._43;
+  aOut._44 = aIn._44;
 }
 
 }

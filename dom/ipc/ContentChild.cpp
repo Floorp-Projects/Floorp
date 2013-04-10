@@ -494,14 +494,14 @@ ContentChild::DeallocPMemoryReportRequest(PMemoryReportRequestChild* actor)
 }
 
 bool
-ContentChild::RecvDumpMemoryReportsToFile(const nsString& aIdentifier,
+ContentChild::RecvDumpMemoryInfoToTempDir(const nsString& aIdentifier,
                                           const bool& aMinimizeMemoryUsage,
                                           const bool& aDumpChildProcesses)
 {
     nsCOMPtr<nsIMemoryInfoDumper> dumper = do_GetService("@mozilla.org/memory-info-dumper;1");
 
-    dumper->DumpMemoryReportsToFile(
-        aIdentifier, aMinimizeMemoryUsage, aDumpChildProcesses);
+    dumper->DumpMemoryInfoToTempDir(aIdentifier, aMinimizeMemoryUsage,
+                                    aDumpChildProcesses);
     return true;
 }
 

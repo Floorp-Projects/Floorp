@@ -21,6 +21,7 @@
 #include "mozilla/Preferences.h"
 #include "BasicLayers.h"
 #include "LayerManagerOGL.h"
+#include "mozilla/layers/Compositor.h"
 #include "nsIXULRuntime.h"
 #include "nsIXULWindow.h"
 #include "nsIBaseWindow.h"
@@ -34,6 +35,7 @@
 #include "prenv.h"
 #include "mozilla/Attributes.h"
 #include "nsContentUtils.h"
+#include "gfxPlatform.h"
 
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
@@ -122,7 +124,9 @@ nsBaseWidget::nsBaseWidget()
 static void DeferredDestroyCompositor(CompositorParent* aCompositorParent,
                               CompositorChild* aCompositorChild)
 {
-    aCompositorChild->Destroy();
+    // Bug 848949 needs to be fixed before
+    // we can close the channel properly
+    //aCompositorChild->Close();
     aCompositorParent->Release();
     aCompositorChild->Release();
 }
@@ -131,6 +135,7 @@ void nsBaseWidget::DestroyCompositor()
 {
   if (mCompositorChild) {
     mCompositorChild->SendWillStop();
+    mCompositorChild->Destroy();
 
     // The call just made to SendWillStop can result in IPC from the
     // CompositorParent to the CompositorChild (e.g. caused by the destruction
@@ -381,6 +386,18 @@ float nsBaseWidget::GetDPI()
 
 double nsIWidget::GetDefaultScale()
 {
+  double devPixelsPerCSSPixel = DefaultScaleOverride();
+
+  if (devPixelsPerCSSPixel <= 0.0) {
+    devPixelsPerCSSPixel = GetDefaultScaleInternal();
+  }
+
+  return devPixelsPerCSSPixel;
+}
+
+/* static */
+double nsIWidget::DefaultScaleOverride()
+{
   // The number of device pixels per CSS pixel. A value <= 0 means choose
   // automatically based on the DPI. A positive value is used as-is. This effectively
   // controls the size of a CSS "px".
@@ -389,10 +406,6 @@ double nsIWidget::GetDefaultScale()
   nsAdoptingCString prefString = Preferences::GetCString("layout.css.devPixelsPerPx");
   if (!prefString.IsEmpty()) {
     devPixelsPerCSSPixel = PR_strtod(prefString, nullptr);
-  }
-
-  if (devPixelsPerCSSPixel <= 0.0) {
-    devPixelsPerCSSPixel = GetDefaultScaleInternal();
   }
 
   return devPixelsPerCSSPixel;
@@ -807,10 +820,8 @@ nsBaseWidget::ComputeShouldAccelerate(bool aDefault)
   bool isSmallPopup = ((mWindowType == eWindowType_popup) &&
                       (mPopupType != ePopupTypePanel));
   // we should use AddBoolPrefVarCache
-  bool disableAcceleration = isSmallPopup ||
-    Preferences::GetBool("layers.acceleration.disabled", false);
-  mForceLayersAcceleration =
-    Preferences::GetBool("layers.acceleration.force-enabled", false);
+  bool disableAcceleration = isSmallPopup || gfxPlatform::GetPrefLayersAccelerationDisabled() || (mWindowType == eWindowType_invisible);
+  mForceLayersAcceleration = gfxPlatform::GetPrefLayersAccelerationForceEnabled();
 
   const char *acceleratedEnv = PR_GetEnv("MOZ_ACCELERATED");
   accelerateByDefault = accelerateByDefault ||
@@ -876,19 +887,18 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
 #endif
   mCompositorParent =
     new CompositorParent(this, renderToEGLSurface, aWidth, aHeight);
+  AsyncChannel *parentChannel = mCompositorParent->GetIPCChannel();
   LayerManager* lm = CreateBasicLayerManager();
   MessageLoop *childMessageLoop = CompositorParent::CompositorLoop();
   mCompositorChild = new CompositorChild(lm);
-  AsyncChannel *parentChannel = mCompositorParent->GetIPCChannel();
   AsyncChannel::Side childSide = mozilla::ipc::AsyncChannel::Child;
   mCompositorChild->Open(parentChannel, childMessageLoop, childSide);
-  int32_t maxTextureSize;
+
+  TextureFactoryIdentifier textureFactoryIdentifier;
   PLayersChild* shadowManager;
-  mozilla::layers::LayersBackend backendHint =
-    mUseLayersAcceleration ? mozilla::layers::LAYERS_OPENGL : mozilla::layers::LAYERS_BASIC;
-  mozilla::layers::LayersBackend parentBackend;
+  mozilla::layers::LayersBackend backendHint = mozilla::layers::LAYERS_OPENGL;
   shadowManager = mCompositorChild->SendPLayersConstructor(
-    backendHint, 0, &parentBackend, &maxTextureSize);
+    backendHint, 0, &textureFactoryIdentifier);
 
   if (shadowManager) {
     ShadowLayerForwarder* lf = lm->AsShadowForwarder();
@@ -898,8 +908,7 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
       return;
     }
     lf->SetShadowManager(shadowManager);
-    lf->SetParentBackendType(parentBackend);
-    lf->SetMaxTextureSize(maxTextureSize);
+    lf->IdentifyTextureHost(textureFactoryIdentifier);
 
     mLayerManager = lm;
   } else {
@@ -913,7 +922,7 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
 bool nsBaseWidget::ShouldUseOffMainThreadCompositing()
 {
   bool isSmallPopup = ((mWindowType == eWindowType_popup) &&
-                      (mPopupType != ePopupTypePanel));
+                      (mPopupType != ePopupTypePanel)) || (mWindowType == eWindowType_invisible);
   return CompositorParent::CompositorLoop() && !isSmallPopup;
 }
 
@@ -1188,11 +1197,10 @@ nsBaseWidget::SetLayersAcceleration(bool aEnabled)
   if (usedAcceleration == mUseLayersAcceleration) {
     return NS_OK;
   }
-
   if (mLayerManager) {
     mLayerManager->Destroy();
   }
-  mLayerManager = NULL;
+  mLayerManager = nullptr;
   return NS_OK;
 }
 

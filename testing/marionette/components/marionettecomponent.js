@@ -13,7 +13,7 @@ const MARIONETTE_FORCELOCAL_PREF = 'marionette.force-local';
 
 const ServerSocket = CC("@mozilla.org/network/server-socket;1",
                         "nsIServerSocket",
-                        "init");
+                        "initSpecialConnection");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -89,9 +89,10 @@ MarionetteComponent.prototype = {
         if (!marionette_forcelocal) {
           // See bug 800138.  Because the first socket that opens with
           // force-local=false fails, we open a dummy socket that will fail.
+	  // keepWhenOffline=true so that it still work when offline (local).
           // This allows the following attempt by Marionette to open a socket
           // to succeed.
-          let insaneSacrificialGoat = new ServerSocket(666, false, 4);
+          let insaneSacrificialGoat = new ServerSocket(666, Ci.nsIServerSocket.KeepWhenOffline, 4);
           insaneSacrificialGoat.asyncListen(this);
         }
 

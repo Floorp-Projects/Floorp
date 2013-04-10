@@ -7,30 +7,12 @@ var gTests = [
   {
     name: "normal search (search service)",
     testText: "test search",
-    searchURL: Services.search.originalDefaultEngine.getSubmission("test search", null, "keyword").uri.spec
+    searchURL: Services.search.defaultEngine.getSubmission("test search", null, "keyword").uri.spec
   },
   {
     name: "?-prefixed search (search service)",
     testText: "?   foo  ",
-    searchURL: Services.search.originalDefaultEngine.getSubmission("foo", null, "keyword").uri.spec
-  },
-  {
-    name: "normal search (keyword.url)",
-    testText: "test search",
-    keywordURLPref: "http://example.com/?q=",
-    searchURL: "http://example.com/?q=test+search"
-  },
-  {
-    name: "?-prefixed search (keyword.url)",
-    testText: "?   foo  ",
-    keywordURLPref: "http://example.com/?q=",
-    searchURL: "http://example.com/?q=foo"
-  },
-  {
-    name: "encoding test (keyword.url)",
-    testText: "test encoded+%/",
-    keywordURLPref: "http://example.com/?q=",
-    searchURL: "http://example.com/?q=test+encoded%2B%25%2F"
+    searchURL: Services.search.defaultEngine.getSubmission("foo", null, "keyword").uri.spec
   }
 ];
 

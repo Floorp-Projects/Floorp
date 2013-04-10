@@ -2,10 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ImageContainerChild.h"
 #include "ShadowLayers.h"
 #include "SharedRGBImage.h"
+#include "mozilla/layers/LayersSurfaces.h"
 #include "Shmem.h"
+#include "mozilla/layers/ISurfaceAllocator.h"
 
 // Just big enough for a 1080p RGBA32 frame
 #define MAX_FRAME_SIZE (16 * 1024 * 1024)
@@ -13,20 +14,25 @@
 namespace mozilla {
 namespace layers {
 
-SharedRGBImage::SharedRGBImage(ImageContainerChild *aImageContainerChild) :
+SharedRGBImage::SharedRGBImage(ISurfaceAllocator *aAllocator) :
   Image(nullptr, SHARED_RGB),
   mSize(0, 0),
-  mImageContainerChild(aImageContainerChild),
+  mSurfaceAllocator(aAllocator),
   mAllocated(false),
   mShmem(new ipc::Shmem())
 {
-  mImageContainerChild->AddRef();
+  MOZ_COUNT_CTOR(SharedRGBImage);
 }
 
 SharedRGBImage::~SharedRGBImage()
 {
-  mImageContainerChild->DeallocShmemAsync(*mShmem);
-  mImageContainerChild->Release();
+  MOZ_COUNT_DTOR(SharedRGBImage);
+
+  if (mAllocated) {
+    SurfaceDescriptor desc;
+    DropToSurfaceDescriptor(desc);
+    mSurfaceAllocator->DestroySharedSurface(&desc);
+  }
   delete mShmem;
 }
 
@@ -96,8 +102,7 @@ SharedRGBImage::AllocateBuffer(nsIntSize aSize, gfxImageFormat aImageFormat)
   if (size == 0 || size > MAX_FRAME_SIZE) {
     NS_WARNING("Invalid frame size");
   }
-
-  if (mImageContainerChild->AllocUnsafeShmemSync(size, OptimalShmemType(), mShmem)) {
+  if (mSurfaceAllocator->AllocUnsafeShmem(size, OptimalShmemType(), mShmem)) {
     mAllocated = true;
   }
 
@@ -110,16 +115,48 @@ SharedRGBImage::GetAsSurface()
   return nullptr;
 }
 
-SharedImage *
-SharedRGBImage::ToSharedImage()
+bool
+SharedRGBImage::ToSurfaceDescriptor(SurfaceDescriptor& aResult)
 {
   if (!mAllocated) {
+    return false;
+  }
+  this->AddRef();
+  aResult = RGBImage(*mShmem,
+                     nsIntRect(0, 0, mSize.width, mSize.height),
+                     mImageFormat,
+                     reinterpret_cast<uint64_t>(this));
+  return true;
+}
+
+bool
+SharedRGBImage::DropToSurfaceDescriptor(SurfaceDescriptor& aResult)
+{
+  if (!mAllocated) {
+    return false;
+  }
+  aResult = RGBImage(*mShmem,
+                     nsIntRect(0, 0, mSize.width, mSize.height),
+                     mImageFormat,
+                     0);
+  *mShmem = ipc::Shmem();
+  mAllocated = false;
+  return true;
+}
+
+SharedRGBImage*
+SharedRGBImage::FromSurfaceDescriptor(const SurfaceDescriptor& aDescriptor)
+{
+  if (aDescriptor.type() != SurfaceDescriptor::TRGBImage) {
     return nullptr;
   }
-  return new SharedImage(RGBImage(*mShmem,
-                                  nsIntRect(0, 0, mSize.width, mSize.height),
-                                  mImageFormat));
+  const RGBImage& rgb = aDescriptor.get_RGBImage();
+  if (rgb.owner() == 0) {
+    return nullptr;
+  }
+  return reinterpret_cast<SharedRGBImage*>(rgb.owner());
 }
+
 
 } // namespace layers
 } // namespace mozilla

@@ -40,6 +40,22 @@ typedef struct nr_stun_client_ctx_ nr_stun_client_ctx;
 
 #include "stun.h"
 
+/* Checklist for adding new STUN transaction types
+
+   1. Add new method type in stun.h (NR_METHOD_*)
+   2. Add new MSGs in stun.h (NR_STUN_MSG_*)
+   3. Add new messages to stun_util.c:nr_stun_msg_type
+   4. Add new request type to stun_build.h
+   4. Add new message builder to stun_build.c
+   5. Add new response type to stun_client_ctx.h
+   6. Add new arm to stun_client_ctx.c:nr_stun_client_send_request
+   7. Add new arms to nr_stun_client_process_response
+   8. Add new arms to stun_hint.c:nr_is_stun_message
+*/
+
+
+
+
 typedef union nr_stun_client_params_ {
 
     nr_stun_client_stun_binding_request_params               stun_binding_request;
@@ -54,11 +70,10 @@ typedef union nr_stun_client_params_ {
 #endif /* USE_ICE */
 
 #ifdef USE_TURN
-    nr_stun_client_allocate_request1_params                  allocate_request1;
-    nr_stun_client_allocate_request2_params                  allocate_request2;
+    nr_stun_client_allocate_request_params                   allocate_request;
+    nr_stun_client_refresh_request_params                    refresh_request;
+    nr_stun_client_permission_request_params                 permission_request;
     nr_stun_client_send_indication_params                    send_indication;
-    nr_stun_client_set_active_dest_request_params            set_active_dest_request;
-    nr_stun_client_data_indication_params                    data_indication;
 #endif /* USE_TURN */
 
 } nr_stun_client_params;
@@ -84,21 +99,20 @@ typedef struct nr_stun_client_ice_binding_response_results_ {
 #endif /* USE_ICE */
 
 #ifdef USE_TURN
-typedef struct nr_stun_client_allocate_response1_results_ {
-    char *realm;
-    char *nonce;
-} nr_stun_client_allocate_response1_results;
-
-typedef struct nr_stun_client_allocate_response2_results_ {
+typedef struct nr_stun_client_allocate_response_results_ {
     nr_transport_addr relay_addr;
     nr_transport_addr mapped_addr;
-} nr_stun_client_allocate_response2_results;
+    UINT4 lifetime_secs;
+} nr_stun_client_allocate_response_results;
 
-typedef struct nr_stun_client_set_active_dest_response_results_ {
-#ifdef WIN32  // silly VC++ gives error if no members
-    int dummy;
-#endif
-} nr_stun_client_set_active_dest_response_results;
+typedef struct nr_stun_client_refresh_response_results_ {
+    UINT4 lifetime_secs;
+} nr_stun_client_refresh_response_results;
+
+typedef struct nr_stun_client_permission_response_results_ {
+    UINT4 lifetime_secs;
+} nr_stun_client_permission_response_results;
+
 #endif /* USE_TURN */
 
 typedef union nr_stun_client_results_ {
@@ -111,9 +125,8 @@ typedef union nr_stun_client_results_ {
 #endif /* USE_ICE */
 
 #ifdef USE_TURN
-    nr_stun_client_allocate_response1_results                  allocate_response1;
-    nr_stun_client_allocate_response2_results                  allocate_response2;
-    nr_stun_client_set_active_dest_response_results            set_active_dest_response;
+    nr_stun_client_allocate_response_results                   allocate_response;
+    nr_stun_client_refresh_response_results                    refresh_response;
 #endif /* USE_TURN */
 } nr_stun_client_results;
 
@@ -137,17 +150,18 @@ struct nr_stun_client_ctx_ {
 #define NR_ICE_CLIENT_MODE_BINDING_REQUEST                11
 #endif /* USE_ICE */
 #ifdef USE_TURN
-#define NR_TURN_CLIENT_MODE_ALLOCATE_REQUEST1             20
-#define NR_TURN_CLIENT_MODE_ALLOCATE_REQUEST2             21
+#define NR_TURN_CLIENT_MODE_ALLOCATE_REQUEST              20
+#define NR_TURN_CLIENT_MODE_REFRESH_REQUEST               21
 #define NR_TURN_CLIENT_MODE_SEND_INDICATION               22
-#define NR_TURN_CLIENT_MODE_SET_ACTIVE_DEST_REQUEST       23
 #define NR_TURN_CLIENT_MODE_DATA_INDICATION               24
+#define NR_TURN_CLIENT_MODE_PERMISSION_REQUEST            25
 #endif /* USE_TURN */
 
   char *label;
   nr_transport_addr my_addr;
   nr_transport_addr peer_addr;
   nr_socket *sock;
+  nr_stun_client_auth_params auth_params;
   nr_stun_client_params params;
   nr_stun_client_results results;
   char *nonce;
@@ -165,6 +179,7 @@ struct nr_stun_client_ctx_ {
   void *cb_arg;
   nr_stun_message *request;
   nr_stun_message *response;
+  UINT2 error_code;
 };
 
 int nr_stun_client_ctx_create(char *label, nr_socket *sock, nr_transport_addr *peer, UINT4 RTO, nr_stun_client_ctx **ctxp);

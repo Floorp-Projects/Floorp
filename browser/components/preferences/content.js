@@ -36,8 +36,7 @@ var gContentPane = {
    * The exceptions types which may be passed to this._showExceptions().
    */
   _exceptionsParams: {
-    popup:   { blockVisible: false, sessionVisible: false, allowVisible: true, prefilledHost: "", permissionType: "popup"   },
-    image:   { blockVisible: true,  sessionVisible: false, allowVisible: true, prefilledHost: "", permissionType: "image"   }
+    popup:   { blockVisible: false, sessionVisible: false, allowVisible: true, prefilledHost: "", permissionType: "popup"   }
   },
 
   /**
@@ -62,15 +61,6 @@ var gContentPane = {
    *
    * dom.disable_open_during_load
    * - true if popups are blocked by default, false otherwise
-   * permissions.default.image
-   * - an integer:
-   *     1   all images should be loaded,
-   *     2   no images should be loaded,
-   *     3   load only images from the site on which the current page resides
-   *         (i.e., if viewing foo.example.com, foo.example.com/foo.jpg and
-   *         bar.foo.example.com/bar.jpg load but example.com/quux.jpg does not)
-   * javascript.enabled
-   * - true if JavaScript is enabled, false otherwise
    */
 
   // POP-UPS
@@ -84,48 +74,6 @@ var gContentPane = {
     this._showExceptions("popup");
   },
 
-  // IMAGES
-
-  /**
-   * Converts the value of the permissions.default.image preference into a
-   * Boolean value for use in determining the state of the "load images"
-   * checkbox, returning true if images should be loaded and false otherwise.
-   */
-  readLoadImages: function ()
-  {
-    var pref = document.getElementById("permissions.default.image");
-    return (pref.value == 1 || pref.value == 3);
-  },
-
-  /**
-   * Returns the "load images" preference value which maps to the state of the
-   * preferences UI.
-   */
-  writeLoadImages: function ()
-  { 
-    return (document.getElementById("loadImages").checked) ? 1 : 2;
-  },
-
-  /**
-   * Displays image exception preferences for which websites can and cannot
-   * load images.
-   */
-  showImageExceptions: function ()
-  {
-    this._showExceptions("image");
-  },
-
-  // JAVASCRIPT
-
-  /**
-   * Displays the advanced JavaScript preferences for enabling or disabling
-   * various annoying behaviors.
-   */
-  showAdvancedJS: function ()
-  {
-    document.documentElement.openSubDialog("chrome://browser/content/preferences/advanced-scripts.xul",
-                                           "", null);  
-  },
 
   // FONTS
 

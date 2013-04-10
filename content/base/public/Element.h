@@ -41,7 +41,7 @@
 #include "nsINodeList.h"
 #include "mozilla/ErrorResult.h"
 #include "nsIScrollableFrame.h"
-#include "nsIDOMAttr.h"
+#include "mozilla/dom/Attr.h"
 #include "nsISMILAttr.h"
 #include "nsClientRect.h"
 #include "nsEvent.h"
@@ -644,16 +644,16 @@ public:
   {
     OwnerDoc()->RequestPointerLock(this);
   }
-  nsIDOMAttr* GetAttributeNode(const nsAString& aName);
-  already_AddRefed<nsIDOMAttr> SetAttributeNode(nsIDOMAttr* aNewAttr,
-                                                ErrorResult& aError);
-  already_AddRefed<nsIDOMAttr> RemoveAttributeNode(nsIDOMAttr* aOldAttr,
-                                                   ErrorResult& aError);
-  nsIDOMAttr* GetAttributeNodeNS(const nsAString& aNamespaceURI,
-                                 const nsAString& aLocalName,
-                                 ErrorResult& aError);
-  already_AddRefed<nsIDOMAttr> SetAttributeNodeNS(nsIDOMAttr* aNewAttr,
-                                                  ErrorResult& aError);
+  Attr* GetAttributeNode(const nsAString& aName);
+  already_AddRefed<Attr> SetAttributeNode(Attr& aNewAttr,
+                                          ErrorResult& aError);
+  already_AddRefed<Attr> RemoveAttributeNode(Attr& aOldAttr,
+                                             ErrorResult& aError);
+  Attr* GetAttributeNodeNS(const nsAString& aNamespaceURI,
+                           const nsAString& aLocalName,
+                           ErrorResult& aError);
+  already_AddRefed<Attr> SetAttributeNodeNS(Attr& aNewAttr,
+                                            ErrorResult& aError);
 
   already_AddRefed<nsClientRectList> GetClientRects();
   already_AddRefed<nsClientRect> GetBoundingClientRect();
@@ -1064,9 +1064,9 @@ protected:
     return this;
   }
 
-  nsIDOMAttr* GetAttributeNodeNSInternal(const nsAString& aNamespaceURI,
-                                         const nsAString& aLocalName,
-                                         ErrorResult& aError);
+  Attr* GetAttributeNodeNSInternal(const nsAString& aNamespaceURI,
+                                   const nsAString& aLocalName,
+                                   ErrorResult& aError);
 
   void RegisterFreezableElement() {
     OwnerDoc()->RegisterFreezableElement(this);
@@ -1394,7 +1394,8 @@ NS_IMETHOD SetAttributeNode(nsIDOMAttr* newAttr,                              \
     return NS_ERROR_INVALID_POINTER;                                          \
   }                                                                           \
   mozilla::ErrorResult rv;                                                    \
-  *_retval = Element::SetAttributeNode(newAttr, rv).get();                    \
+  mozilla::dom::Attr* attr = static_cast<mozilla::dom::Attr*>(newAttr);       \
+  *_retval = Element::SetAttributeNode(*attr, rv).get();                      \
   return rv.ErrorCode();                                                      \
 }                                                                             \
 NS_IMETHOD RemoveAttributeNode(nsIDOMAttr* oldAttr,                           \
@@ -1404,7 +1405,8 @@ NS_IMETHOD RemoveAttributeNode(nsIDOMAttr* oldAttr,                           \
     return NS_ERROR_INVALID_POINTER;                                          \
   }                                                                           \
   mozilla::ErrorResult rv;                                                    \
-  *_retval = Element::RemoveAttributeNode(oldAttr, rv).get();                 \
+  mozilla::dom::Attr* attr = static_cast<mozilla::dom::Attr*>(oldAttr);       \
+  *_retval = Element::RemoveAttributeNode(*attr, rv).get();                   \
   return rv.ErrorCode();                                                      \
 }                                                                             \
 NS_IMETHOD GetAttributeNodeNS(const nsAString& namespaceURI,                  \
@@ -1421,7 +1423,8 @@ NS_IMETHOD SetAttributeNodeNS(nsIDOMAttr* newAttr,                            \
                               nsIDOMAttr** _retval) MOZ_FINAL                 \
 {                                                                             \
   mozilla::ErrorResult rv;                                                    \
-  *_retval = Element::SetAttributeNodeNS(newAttr, rv).get();                  \
+  mozilla::dom::Attr* attr = static_cast<mozilla::dom::Attr*>(newAttr);       \
+  *_retval = Element::SetAttributeNodeNS(*attr, rv).get();                    \
   return rv.ErrorCode();                                                      \
 }                                                                             \
 NS_IMETHOD GetElementsByTagName(const nsAString& name,                        \

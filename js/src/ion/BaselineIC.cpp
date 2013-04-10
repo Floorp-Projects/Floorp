@@ -670,12 +670,11 @@ EnsureCanEnterIon(JSContext *cx, ICUseCount_Fallback *stub, BaselineFrame *frame
     if (stat != Method_Compiled) {
         // TODO: If stat == Method_CantCompile, insert stub that just skips the useCount
         // entirely, instead of resetting it.
-        if (stat == Method_CantCompile ||
-            (script->hasIonScript() && script->ion->bailoutExpected()))
-        {
+        bool bailoutExpected = script->hasIonScript() && script->ionScript()->bailoutExpected();
+        if (stat == Method_CantCompile || bailoutExpected) {
             IonSpew(IonSpew_BaselineOSR, "  Reset UseCount cantCompile=%s bailoutExpected=%s!",
                     stat == Method_CantCompile ? "yes" : "no",
-                    (script->hasIonScript() && script->ion->bailoutExpected()) ? "yes" : "no");
+                    bailoutExpected ? "yes" : "no");
             script->resetUseCount();
         }
         return true;
@@ -3218,8 +3217,7 @@ static bool TryAttachNativeGetElemStub(JSContext *cx, HandleScript script,
                                        HandleValue key)
 {
     RootedId id(cx);
-    RootedValue idval(cx);
-    if (!FetchElementId(cx, obj, key, &id, &idval))
+    if (!ValueToId<CanGC>(cx, key, &id))
         return false;
 
     uint32_t dummy;
@@ -3759,8 +3757,7 @@ DoSetElemFallback(JSContext *cx, BaselineFrame *frame, ICSetElem_Fallback *stub,
     }
 
     if (op == JSOP_INITELEM) {
-        RootedValue nindex(cx, index);
-        if (!InitElemOperation(cx, obj, &nindex, rhs))
+        if (!InitElemOperation(cx, obj, index, rhs))
             return false;
     } else if (op == JSOP_INITELEM_ARRAY) {
         JS_ASSERT(uint32_t(index.toInt32()) == GET_UINT24(pc));

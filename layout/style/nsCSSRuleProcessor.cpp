@@ -1180,6 +1180,12 @@ InitSystemMetrics()
     sSystemMetrics->AppendElement(nsGkAtoms::maemo_classic);
   }
 
+  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_SwipeAnimationEnabled,
+                           &metricResult);
+  if (NS_SUCCEEDED(rv) && metricResult) {
+    sSystemMetrics->AppendElement(nsGkAtoms::swipe_animation_enabled);
+  }
+
 #ifdef XP_WIN
   if (NS_SUCCEEDED(
         LookAndFeel::GetInt(LookAndFeel::eIntID_WindowsThemeIdentifier,

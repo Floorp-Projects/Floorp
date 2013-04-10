@@ -151,7 +151,7 @@ CompilerOutput::isValid() const
       case Ion:
 #ifdef JS_ION
         if (script->hasIonScript()) {
-            JS_ASSERT(this == script->ion->recompileInfo().compilerOutput(types));
+            JS_ASSERT(this == script->ionScript()->recompileInfo().compilerOutput(types));
             return true;
         }
         if (script->isIonCompilingOffThread())

@@ -19,7 +19,7 @@ namespace dom {
 
 /**
  * TabContext encapsulates information about an iframe that may be a mozbrowser
- * or mozapp.  You can ask whether a TabContext correspodns to a mozbrowser or
+ * or mozapp.  You can ask whether a TabContext corresponds to a mozbrowser or
  * mozapp, get the app that contains the browser, and so on.
  *
  * TabParent and TabChild both inherit from TabContext, and you can also have

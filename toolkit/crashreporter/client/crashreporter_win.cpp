@@ -23,6 +23,7 @@
 #include "resource.h"
 #include "client/windows/sender/crash_report_sender.h"
 #include "common/windows/string_utils-inl.h"
+#include "mozilla/NullPtr.h"
 
 #define CRASH_REPORTER_VALUE L"Enabled"
 #define SUBMIT_REPORT_VALUE  L"SubmitCrashReport"

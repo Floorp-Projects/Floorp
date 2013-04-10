@@ -92,6 +92,13 @@ nsScreenManagerOS2 :: GetNumberOfScreens(uint32_t *aNumberOfScreens)
 } // GetNumberOfScreens
 
 NS_IMETHODIMP
+nsScreenManagerOS2::GetSystemDefaultScale(float *aDefaultScale)
+{
+  *aDefaultScale = 1.0f;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsScreenManagerOS2 :: ScreenForNativeWidget(void *nativeWidget, nsIScreen **aScreen)
 {
   *aScreen = CreateNewScreenObject();    // addrefs

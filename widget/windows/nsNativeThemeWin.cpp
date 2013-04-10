@@ -202,7 +202,10 @@ GetGutterSize(HANDLE theme, HDC hdc)
     GetThemePartSize(theme, hdc, MENU_POPUPITEM, MPI_NORMAL, NULL, TS_TRUE, &itemSize);
 
     // Figure out how big the menuitem's icon will be (if present) at current DPI
-    FLOAT scaleFactor = gfxWindowsPlatform::GetPlatform()->GetDPIScale();
+    double scaleFactor = nsIWidget::DefaultScaleOverride();
+    if (scaleFactor <= 0.0) {
+      scaleFactor = gfxWindowsPlatform::GetPlatform()->GetDPIScale();
+    }
     int iconDevicePixels = NSToIntRound(16 * scaleFactor);
     SIZE iconSize = {
       iconDevicePixels, iconDevicePixels
