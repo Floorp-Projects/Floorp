@@ -21,7 +21,7 @@
 #include "nsWidgetInitData.h"
 #include "nsTArray.h"
 #include "nsXULAppAPI.h"
-#include "LayersTypes.h"
+#include "mozilla/layers/LayersTypes.h"
 
 // forward declarations
 class   nsFontMetrics;
@@ -1155,17 +1155,11 @@ class nsIWidget : public nsISupports {
 
     /**
      * Called before the LayerManager draws the layer tree.
-     *
-     * @param aManager The drawing LayerManager.
-     * @param aWidgetRect The current widget rect that is being drawn.
      */
     virtual void DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect) = 0;
 
     /**
      * Called after the LayerManager draws the layer tree
-     *
-     * @param aManager The drawing LayerManager.
-     * @param aRect Current widget rect that is being drawn.
      */
     virtual void DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect) = 0;
 

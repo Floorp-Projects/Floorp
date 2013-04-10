@@ -15,6 +15,7 @@ namespace layers {
 
 class LayerManager;
 class CompositorParent;
+struct TextureFactoryIdentifier;
 
 class CompositorChild : public PCompositorChild
 {
@@ -39,18 +40,10 @@ public:
 protected:
   virtual PLayersChild* AllocPLayers(const LayersBackend& aBackendHint,
                                      const uint64_t& aId,
-                                     LayersBackend* aBackend,
-                                     int* aMaxTextureSize);
-  virtual bool DeallocPLayers(PLayersChild *aChild);
+                                     TextureFactoryIdentifier* aTextureFactoryIdentifier) MOZ_OVERRIDE;
+  virtual bool DeallocPLayers(PLayersChild *aChild) MOZ_OVERRIDE;
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
-
-  virtual PGrallocBufferChild* AllocPGrallocBuffer(
-    const gfxIntSize&, const uint32_t&, const uint32_t&,
-    MaybeMagicGrallocBufferHandle*) MOZ_OVERRIDE
-  { return nullptr; }
-  virtual bool DeallocPGrallocBuffer(PGrallocBufferChild*)
-  { return false; }
 
 private:
   nsRefPtr<LayerManager> mLayerManager;

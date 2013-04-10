@@ -298,14 +298,11 @@ gfxPlatform::Init()
 #endif
 
     bool useOffMainThreadCompositing = false;
+    useOffMainThreadCompositing = GetPrefLayersOffMainThreadCompositionEnabled() ||
+        Preferences::GetBool("browser.tabs.remote", false);
 #ifdef MOZ_X11
-    // On X11 platforms only use OMTC if firefox was initalized with thread-safe
-    // X11 (else it would crash).
-    useOffMainThreadCompositing = (PR_GetEnv("MOZ_USE_OMTC") != NULL);
-#else
-    useOffMainThreadCompositing = Preferences::GetBool(
-          "layers.offmainthreadcomposition.enabled",
-          false);
+    useOffMainThreadCompositing &= (PR_GetEnv("MOZ_USE_OMTC") != NULL) ||
+                                   (PR_GetEnv("MOZ_OMTC_ENABLED") != NULL);
 #endif
 
     if (useOffMainThreadCompositing && (XRE_GetProcessType() ==
@@ -1760,4 +1757,67 @@ uint32_t
 gfxPlatform::GetOrientationSyncMillis() const
 {
   return mOrientationSyncMillis;
+}
+
+/**
+ * There are a number of layers acceleration (or layers in general) preferences
+ * that should be consistent for the lifetime of the application (bug 840967).
+ * As such, we will evaluate them all as soon as one of them is evaluated
+ * and remember the values.  Changing these preferences during the run will
+ * not have any effect until we restart.
+ */
+static bool sPrefLayersOffMainThreadCompositionEnabled = false;
+static bool sPrefLayersOffMainThreadCompositionTestingEnabled = false;
+static bool sPrefLayersAccelerationForceEnabled = false;
+static bool sPrefLayersAccelerationDisabled = false;
+static bool sPrefLayersPreferOpenGL = false;
+static bool sPrefLayersPreferD3D9 = false;
+
+void InitLayersAccelerationPrefs()
+{
+  static bool sLayersAccelerationPrefsInitialized = false;
+  if (!sLayersAccelerationPrefsInitialized)
+  {
+    sPrefLayersOffMainThreadCompositionEnabled = Preferences::GetBool("layers.offmainthreadcomposition.enabled", false);
+    sPrefLayersOffMainThreadCompositionTestingEnabled = Preferences::GetBool("layers.offmainthreadcomposition.testing.enabled", false);
+    sPrefLayersAccelerationForceEnabled = Preferences::GetBool("layers.acceleration.force-enabled", false) ||
+                                          Preferences::GetBool("browser.tabs.remote", false);
+    sPrefLayersAccelerationDisabled = Preferences::GetBool("layers.acceleration.disabled", false);
+    sPrefLayersPreferOpenGL = Preferences::GetBool("layers.prefer-opengl", false);
+    sPrefLayersPreferD3D9 = Preferences::GetBool("layers.prefer-d3d9", false);
+
+    sLayersAccelerationPrefsInitialized = true;
+  }
+}
+
+bool gfxPlatform::GetPrefLayersOffMainThreadCompositionEnabled()
+{
+  InitLayersAccelerationPrefs();
+  return sPrefLayersOffMainThreadCompositionEnabled ||
+         sPrefLayersOffMainThreadCompositionTestingEnabled;
+}
+
+bool gfxPlatform::GetPrefLayersAccelerationForceEnabled()
+{
+  InitLayersAccelerationPrefs();
+  return sPrefLayersAccelerationForceEnabled;
+}
+
+bool
+gfxPlatform::GetPrefLayersAccelerationDisabled()
+{
+  InitLayersAccelerationPrefs();
+  return sPrefLayersAccelerationDisabled;
+}
+
+bool gfxPlatform::GetPrefLayersPreferOpenGL()
+{
+  InitLayersAccelerationPrefs();
+  return sPrefLayersPreferOpenGL;
+}
+
+bool gfxPlatform::GetPrefLayersPreferD3D9()
+{
+  InitLayersAccelerationPrefs();
+  return sPrefLayersPreferD3D9;
 }

@@ -52,8 +52,8 @@ ConvertYVU420SPToRGB565(void *aYData, uint32_t aYStride,
 
   uint16_t *rgb = (uint16_t*)aOut;
 
-  for (int i = 0; i < aHeight; i++) {
-    for (int j = 0; j < aWidth; j++) {
+  for (size_t i = 0; i < aHeight; i++) {
+    for (size_t j = 0; j < aWidth; j++) {
       int8_t d = uv[j | 1] - 128;
       int8_t e = uv[j & ~1] - 128;
 
@@ -121,8 +121,9 @@ GonkIOSurfaceImage::GetAsSurface()
     uint32_t alignedHeight = ALIGN(height, 32);
     uint32_t uvOffset = ALIGN(alignedHeight * alignedWidth, 4096);
     uint32_t uvStride = 2 * ALIGN(width / 2, 32);
+    uint8_t* buffer_as_bytes = static_cast<uint8_t*>(buffer);
     ConvertYVU420SPToRGB565(buffer, alignedWidth,
-                            buffer + uvOffset, uvStride,
+                            buffer_as_bytes + uvOffset, uvStride,
                             imageSurface->Data(),
                             width, height);
 

@@ -2208,6 +2208,25 @@ nsDOMWindowUtils::GetLayerManagerType(nsAString& aType)
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::GetLayerManagerRemote(bool* retval)
+{
+  if (!nsContentUtils::IsCallerChrome()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget)
+    return NS_ERROR_FAILURE;
+
+  LayerManager *mgr = widget->GetLayerManager();
+  if (!mgr)
+    return NS_ERROR_FAILURE;
+
+  *retval = !!mgr->AsShadowForwarder();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::StartFrameTimeRecording(uint32_t *startIndex)
 {
   if (!nsContentUtils::IsCallerChrome()) {

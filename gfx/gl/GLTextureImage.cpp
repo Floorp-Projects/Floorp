@@ -9,7 +9,8 @@
 #include "gfxPlatform.h"
 #include "gfxUtils.h"
 
-using namespace mozilla::gl;
+namespace mozilla {
+namespace gl {
 
 already_AddRefed<TextureImage>
 TextureImage::Create(GLContext* gl,
@@ -584,3 +585,32 @@ TextureImage::ScopedBindTexture::ScopedBindTexture(TextureImage* aTexture,
         mTexture->BindTexture(aTextureUnit);
     }
 }
+
+already_AddRefed<TextureImage>
+CreateBasicTextureImage(GLContext* aGL,
+                        const nsIntSize& aSize,
+                        TextureImage::ContentType aContentType,
+                        GLenum aWrapMode,
+                        TextureImage::Flags aFlags)
+{
+    bool useNearestFilter = aFlags & TextureImage::UseNearestFilter;
+    aGL->MakeCurrent();
+
+    GLuint texture = 0;
+    aGL->fGenTextures(1, &texture);
+
+    ScopedBindTexture bind(aGL, texture);
+
+    GLint texfilter = useNearestFilter ? LOCAL_GL_NEAREST : LOCAL_GL_LINEAR;
+    aGL->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, texfilter);
+    aGL->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, texfilter);
+    aGL->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, aWrapMode);
+    aGL->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, aWrapMode);
+
+    nsRefPtr<BasicTextureImage> texImage =
+        new BasicTextureImage(texture, aSize, aWrapMode, aContentType, aGL, aFlags);
+    return texImage.forget();
+}
+
+} // namespace
+} // namespace
