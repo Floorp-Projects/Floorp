@@ -8,6 +8,7 @@
 include "mozilla/dom/mobilemessage/Types.h";
 
 include protocol PSms;
+include protocol PBlob;
 include SmsTypes;
 
 namespace mozilla {
@@ -27,7 +28,7 @@ child:
 
 struct ReplyMessageSend
 {
-  SmsMessageData messageData;
+  MobileMessageData messageData;
 };
 
 struct ReplyMessageSendFail
@@ -37,7 +38,7 @@ struct ReplyMessageSendFail
 
 struct ReplyGetMessage
 {
-  SmsMessageData messageData;
+  MobileMessageData messageData;
 };
 
 struct ReplyGetMessageFail
