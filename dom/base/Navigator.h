@@ -33,7 +33,6 @@
 class nsPluginArray;
 class nsMimeTypeArray;
 class nsGeolocation;
-class nsDesktopNotificationCenter;
 class nsPIDOMWindow;
 class nsIDOMMozConnection;
 
@@ -66,6 +65,7 @@ namespace battery {
 class BatteryManager;
 } // namespace battery
 
+class DesktopNotificationCenter;
 class SmsManager;
 class MobileMessageManager;
 
@@ -196,7 +196,7 @@ private:
   nsRefPtr<nsMimeTypeArray> mMimeTypes;
   nsRefPtr<nsPluginArray> mPlugins;
   nsRefPtr<nsGeolocation> mGeolocation;
-  nsRefPtr<nsDesktopNotificationCenter> mNotification;
+  nsRefPtr<DesktopNotificationCenter> mNotification;
   nsRefPtr<battery::BatteryManager> mBatteryManager;
   nsRefPtr<power::PowerManager> mPowerManager;
   nsRefPtr<SmsManager> mSmsManager;
