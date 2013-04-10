@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/DesktopNotification.h"
+#include "mozilla/dom/DesktopNotificationBinding.h"
 
 #include "nsContentPermissionHelper.h"
 #include "nsXULAppAPI.h"
@@ -12,10 +13,6 @@
 #include "mozilla/Preferences.h"
 #include "nsGlobalWindow.h"
 #include "nsIAppsService.h"
-#include "nsIDOMDesktopNotification.h"
-
-DOMCI_DATA(DesktopNotification, mozilla::dom::DesktopNotification)
-DOMCI_DATA(DesktopNotificationCenter, mozilla::dom::DesktopNotificationCenter)
 
 namespace mozilla {
 namespace dom {
@@ -35,8 +32,9 @@ uint32_t DesktopNotification::sCount = 0;
 nsresult
 DesktopNotification::PostDesktopNotification()
 {
-  if (!mObserver)
+  if (!mObserver) {
     mObserver = new AlertServiceObserver(this);
+  }
 
 #ifdef MOZ_B2G
   nsCOMPtr<nsIAppNotificationService> appNotifier =
@@ -58,8 +56,9 @@ DesktopNotification::PostDesktopNotification()
 #endif
 
   nsCOMPtr<nsIAlertsService> alerts = do_GetService("@mozilla.org/alerts-service;1");
-  if (!alerts)
+  if (!alerts) {
     return NS_ERROR_NOT_IMPLEMENTED;
+  }
 
   // Generate a unique name (which will also be used as a cookie) because
   // the nsIAlertsService will coalesce notifications with the same name.
@@ -75,17 +74,6 @@ DesktopNotification::PostDesktopNotification()
                                        NS_LITERAL_STRING("auto"),
                                        EmptyString());
 }
-
-NS_INTERFACE_MAP_BEGIN(DesktopNotification)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMDesktopNotification)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(DesktopNotification)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
-
-NS_IMPL_ADDREF_INHERITED(DesktopNotification, nsDOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(DesktopNotification, nsDOMEventTargetHelper)
-
-NS_IMPL_EVENT_HANDLER(DesktopNotification, click)
-NS_IMPL_EVENT_HANDLER(DesktopNotification, close)
 
 DesktopNotification::DesktopNotification(const nsAString & title,
                                          const nsAString & description,
@@ -110,6 +98,8 @@ DesktopNotification::DesktopNotification(const nsAString & title,
       Preferences::GetBool("notification.prompt.testing.allow", true)) {
     mAllow = true;
   }
+
+  SetIsDOMBinding();
 }
 
 void
@@ -179,8 +169,9 @@ DesktopNotification::SetAllow(bool aAllow)
   mAllow = aAllow;
 
   // if we have called Show() already, lets go ahead and post a notification
-  if (mShowHasBeenCalled && aAllow)
+  if (mShowHasBeenCalled && aAllow) {
     return PostDesktopNotification();
+  }
 
   return NS_OK;
 }
@@ -188,8 +179,9 @@ DesktopNotification::SetAllow(bool aAllow)
 void
 DesktopNotification::HandleAlertServiceNotification(const char *aTopic)
 {
-  if (NS_FAILED(CheckInnerWindowCorrectness()))
+  if (NS_FAILED(CheckInnerWindowCorrectness())) {
     return;
+  }
 
   if (!strcmp("alertclickcallback", aTopic)) {
     DispatchNotificationEvent(NS_LITERAL_STRING("click"));
@@ -198,47 +190,58 @@ DesktopNotification::HandleAlertServiceNotification(const char *aTopic)
   }
 }
 
-NS_IMETHODIMP
-DesktopNotification::Show()
+void
+DesktopNotification::Show(ErrorResult& aRv)
 {
   mShowHasBeenCalled = true;
 
-  if (!mAllow)
-    return NS_OK;
+  if (!mAllow) {
+    return;
+  }
 
-  return PostDesktopNotification();
+  aRv = PostDesktopNotification();
+}
+
+JSObject*
+DesktopNotification::WrapObject(JSContext* aCx, JSObject* aScope)
+{
+  return DesktopNotificationBinding::Wrap(aCx, aScope, this);
 }
 
 /* ------------------------------------------------------------------------ */
 /* DesktopNotificationCenter                                                */
 /* ------------------------------------------------------------------------ */
 
-NS_INTERFACE_MAP_BEGIN(DesktopNotificationCenter)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMDesktopNotificationCenter)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMDesktopNotificationCenter)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(DesktopNotificationCenter)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(DesktopNotificationCenter)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(DesktopNotificationCenter)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(DesktopNotificationCenter)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DesktopNotificationCenter)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF(DesktopNotificationCenter)
-NS_IMPL_RELEASE(DesktopNotificationCenter)
-
-NS_IMETHODIMP
-DesktopNotificationCenter::CreateNotification(const nsAString & title,
-                                              const nsAString & description,
-                                              const nsAString & iconURL,
-                                              nsIDOMDesktopNotification **aResult)
+already_AddRefed<DesktopNotification>
+DesktopNotificationCenter::CreateNotification(const nsAString& aTitle,
+                                              const nsAString& aDescription,
+                                              const nsAString& aIconURL)
 {
-  NS_ENSURE_STATE(mOwner);
-  nsRefPtr<DesktopNotification> notification = new DesktopNotification(title,
-                                                                       description,
-                                                                       iconURL,
-                                                                       mOwner,
-                                                                       mPrincipal);
+  MOZ_ASSERT(mOwner);
+
+  nsRefPtr<DesktopNotification> notification =
+    new DesktopNotification(aTitle,
+                            aDescription,
+                            aIconURL,
+                            mOwner,
+                            mPrincipal);
   notification->Init();
-  notification.forget(aResult);
-  return NS_OK;
+  return notification.forget();
 }
 
+JSObject*
+DesktopNotificationCenter::WrapObject(JSContext* aCx, JSObject* aScope)
+{
+  return DesktopNotificationCenterBinding::Wrap(aCx, aScope, this);
+}
 
 /* ------------------------------------------------------------------------ */
 /* DesktopNotificationRequest                                               */
@@ -251,8 +254,9 @@ NS_IMPL_ISUPPORTS2(DesktopNotificationRequest,
 NS_IMETHODIMP
 DesktopNotificationRequest::GetPrincipal(nsIPrincipal * *aRequestingPrincipal)
 {
-  if (!mDesktopNotification)
+  if (!mDesktopNotification) {
     return NS_ERROR_NOT_INITIALIZED;
+  }
 
   NS_IF_ADDREF(*aRequestingPrincipal = mDesktopNotification->mPrincipal);
   return NS_OK;
@@ -261,12 +265,11 @@ DesktopNotificationRequest::GetPrincipal(nsIPrincipal * *aRequestingPrincipal)
 NS_IMETHODIMP
 DesktopNotificationRequest::GetWindow(nsIDOMWindow * *aRequestingWindow)
 {
-  if (!mDesktopNotification)
+  if (!mDesktopNotification) {
     return NS_ERROR_NOT_INITIALIZED;
+  }
 
-  nsCOMPtr<nsIDOMWindow> window =
-    do_QueryInterface(mDesktopNotification->GetOwner());
-  NS_IF_ADDREF(*aRequestingWindow = window);
+  NS_IF_ADDREF(*aRequestingWindow = mDesktopNotification->GetOwner());
   return NS_OK;
 }
 

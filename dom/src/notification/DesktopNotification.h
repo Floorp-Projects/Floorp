@@ -7,13 +7,11 @@
 
 #include "PCOMContentPermissionRequestChild.h"
 
-#include "nsDOMClassInfoID.h"
 #include "nsIPrincipal.h"
 #include "nsIJSContextStack.h"
 
 #include "nsIAlertsService.h"
 
-#include "nsIDOMDesktopNotification.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIContentPermissionPrompt.h"
 
@@ -28,30 +26,36 @@
 #include "nsIDOMEvent.h"
 #include "nsIDocument.h"
 
+#include "mozilla/Attributes.h"
+#include "mozilla/ErrorResult.h"
+#include "nsWrapperCache.h"
+
+
 namespace mozilla {
 namespace dom {
 
 class AlertServiceObserver;
+class DesktopNotification;
 
 /*
  * DesktopNotificationCenter
  * Object hangs off of the navigator object and hands out DesktopNotification objects
  */
-class DesktopNotificationCenter : public nsIDOMDesktopNotificationCenter
+class DesktopNotificationCenter MOZ_FINAL : public nsISupports,
+                                            public nsWrapperCache
 {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMDESKTOPNOTIFICATIONCENTER
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DesktopNotificationCenter)
 
   DesktopNotificationCenter(nsPIDOMWindow *aWindow)
   {
     mOwner = aWindow;
 
     // Grab the uri of the document
-    nsCOMPtr<nsIDOMDocument> domdoc;
-    mOwner->GetDocument(getter_AddRefs(domdoc));
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
-    mPrincipal = doc->NodePrincipal();
+    mPrincipal = mOwner->GetDoc()->NodePrincipal();
+
+    SetIsDOMBinding();
   }
 
   virtual ~DesktopNotificationCenter()
@@ -62,24 +66,33 @@ public:
     mOwner = nullptr;
   }
 
+  nsPIDOMWindow* GetParentObject() const
+  {
+    return mOwner;
+  }
+
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
+
+  already_AddRefed<DesktopNotification>
+  CreateNotification(const nsAString& title,
+                     const nsAString& description,
+                     const nsAString& iconURL);
+
 private:
   nsCOMPtr<nsPIDOMWindow> mOwner;
   nsCOMPtr<nsIPrincipal> mPrincipal;
 };
 
 
-class DesktopNotification : public nsDOMEventTargetHelper,
-                            public nsIDOMDesktopNotification
+class DesktopNotification MOZ_FINAL : public nsDOMEventTargetHelper
 {
   friend class DesktopNotificationRequest;
 
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMDESKTOPNOTIFICATION
 
-  DesktopNotification(const nsAString & title,
-                      const nsAString & description,
-                      const nsAString & iconURL,
+  DesktopNotification(const nsAString& aTitle,
+                      const nsAString& aDescription,
+                      const nsAString& aIconURL,
                       nsPIDOMWindow *aWindow,
                       nsIPrincipal* principal);
 
@@ -101,6 +114,20 @@ public:
   void DispatchNotificationEvent(const nsString& aName);
 
   void HandleAlertServiceNotification(const char *aTopic);
+
+  // WebIDL
+
+  nsPIDOMWindow* GetParentObject() const
+  {
+    return GetOwner();
+  }
+
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
+
+  void Show(ErrorResult& aRv);
+
+  IMPL_EVENT_HANDLER(click)
+  IMPL_EVENT_HANDLER(close)
 
 protected:
 
