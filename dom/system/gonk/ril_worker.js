@@ -9908,7 +9908,7 @@ let ICCIOHelper = {
    * Process a ICC_COMMAND_GET_RESPONSE type command for REQUEST_SIM_IO.
    */
   processICCIOGetResponse: function processICCIOGetResponse(options) {
-    let length = Buf.readUint32();
+    let strLen = Buf.readUint32();
 
     // The format is from TS 51.011, clause 9.2.1
 
@@ -9955,7 +9955,7 @@ let ICCIOHelper = {
       Buf.seekIncoming(1 * PDU_HEX_OCTET_SIZE);
     }
 
-    Buf.readStringDelimiter(length);
+    Buf.readStringDelimiter(strLen);
 
     if (options.callback) {
       options.callback(options);
@@ -10045,7 +10045,7 @@ let ICCRecordHelper = {
    */
   readICCPhase: function readICCPhase() {
     function callback() {
-      let length = Buf.readUint32();
+      let strLen = Buf.readUint32();
 
       let phase = GsmPDUHelper.readHexOctet();
       // If EF_phase is coded '03' or greater, an ME supporting STK shall
@@ -10054,7 +10054,7 @@ let ICCRecordHelper = {
         RIL.sendStkTerminalProfile(STK_SUPPORTED_TERMINAL_PROFILE);
       }
 
-      Buf.readStringDelimiter(length);
+      Buf.readStringDelimiter(strLen);
     }
 
     ICCIOHelper.loadTransparentEF({fileId: ICC_EF_PHASE,
@@ -10066,9 +10066,10 @@ let ICCRecordHelper = {
    */
   readICCID: function readICCID() {
     function callback() {
-      let length = Buf.readUint32();
-      RIL.iccInfo.iccid = GsmPDUHelper.readSwappedNibbleBcdString(length / 2);
-      Buf.readStringDelimiter(length);
+      let strLen = Buf.readUint32();
+      let octetLen = strLen / 2;
+      RIL.iccInfo.iccid = GsmPDUHelper.readSwappedNibbleBcdString(octetLen);
+      Buf.readStringDelimiter(strLen);
 
       if (DEBUG) debug("ICCID: " + RIL.iccInfo.iccid);
       if (RIL.iccInfo.iccid) {
@@ -10103,11 +10104,11 @@ let ICCRecordHelper = {
    */
   readAD: function readAD() {
     function callback() {
-      let length = Buf.readUint32();
+      let strLen = Buf.readUint32();
       // Each octet is encoded into two chars.
-      let len = length / 2;
-      let ad = GsmPDUHelper.readHexOctetArray(len);
-      Buf.readStringDelimiter(length);
+      let octetLen = strLen / 2;
+      let ad = GsmPDUHelper.readHexOctetArray(octetLen);
+      Buf.readStringDelimiter(strLen);
 
       if (DEBUG) {
         let str = "";
@@ -10137,13 +10138,13 @@ let ICCRecordHelper = {
    */
   readSPN: function readSPN() {
     function callback() {
-      let length = Buf.readUint32();
+      let strLen = Buf.readUint32();
       // Each octet is encoded into two chars.
-      // Minus 1 because the first octet is used to store display condition.
-      let len = (length / 2) - 1;
+      let octetLen = strLen / 2;
       let spnDisplayCondition = GsmPDUHelper.readHexOctet();
-      let spn = GsmPDUHelper.readAlphaIdentifier(len);
-      Buf.readStringDelimiter(length);
+      // Minus 1 because the first octet is used to store display condition.
+      let spn = GsmPDUHelper.readAlphaIdentifier(octetLen - 1);
+      Buf.readStringDelimiter(strLen);
 
       if (DEBUG) {
         debug("SPN: spn = " + spn +
@@ -10168,11 +10169,11 @@ let ICCRecordHelper = {
    */
   readSST: function readSST() {
     function callback() {
-      let length = Buf.readUint32();
+      let strLen = Buf.readUint32();
       // Each octet is encoded into two chars.
-      let len = length / 2;
-      let sst = GsmPDUHelper.readHexOctetArray(len);
-      Buf.readStringDelimiter(length);
+      let octetLen = strLen / 2;
+      let sst = GsmPDUHelper.readHexOctetArray(octetLen);
+      Buf.readStringDelimiter(strLen);
       RIL.iccInfoPrivate.sst = sst;
       if (DEBUG) {
         let str = "";
@@ -10534,31 +10535,6 @@ let ICCRecordHelper = {
   },
 
   /**
-   * Read the PLMNsel (Public Land Mobile Network) from the ICC.
-   *
-   * See ETSI TS 100.977 section 10.3.4 EF_PLMNsel
-   */
-  readPLMNSelector: function readPLMNSelector() {
-    function callback() {
-      if (DEBUG) debug("PLMN Selector: Process PLMN Selector");
-
-      let length = Buf.readUint32();
-      RIL.iccInfoPrivate.PLMN = this.readPLMNEntries(length/3);
-      Buf.readStringDelimiter(length);
-
-      if (DEBUG) debug("PLMN Selector: " + JSON.stringify(RIL.iccInfoPrivate.PLMN));
-
-      if (RIL.updateDisplayCondition()) {
-        this.handleICCInfoChange();
-      }
-    }
-
-    // PLMN List is Service 7 in SIM, EF_PLMNsel
-    ICCIOHelper.loadTransparentEF({fileId: ICC_EF_PLMNsel,
-                                   callback: callback.bind(this)});
-  },
-
-  /**
    * Read the SPDI (Service Provider Display Information) from the ICC.
    *
    * See TS 131.102 section 4.2.66 for USIM and TS 51.011 section 10.3.50
@@ -10566,11 +10542,12 @@ let ICCRecordHelper = {
    */
   readSPDI: function readSPDI() {
     function callback() {
-      let length = Buf.readUint32();
+      let strLen = Buf.readUint32();
+      let octetLen = strLen / 2;
       let readLen = 0;
       let endLoop = false;
       RIL.iccInfoPrivate.SPDI = null;
-      while ((readLen < length / 2) && !endLoop) {
+      while ((readLen < octetLen) && !endLoop) {
         let tlvTag = GsmPDUHelper.readHexOctet();
         let tlvLen = GsmPDUHelper.readHexOctet();
         readLen += 2; // For tag and length fields.
@@ -10593,8 +10570,8 @@ let ICCRecordHelper = {
       }
 
       // Consume unread octets.
-      Buf.seekIncoming((length / 2 - readLen) * PDU_HEX_OCTET_SIZE);
-      Buf.readStringDelimiter(length);
+      Buf.seekIncoming((octetLen - readLen) * PDU_HEX_OCTET_SIZE);
+      Buf.readStringDelimiter(strLen);
 
       if (DEBUG) debug("SPDI: " + JSON.stringify(RIL.iccInfoPrivate.SPDI));
       if (ICCUtilsHelper.updateDisplayCondition()) {
@@ -10706,7 +10683,7 @@ let ICCRecordHelper = {
   readOPL: function readOPL() {
     let opl = [];
     function callback(options) {
-      let len = Buf.readUint32();
+      let strLen = Buf.readUint32();
       // The first 7 bytes are LAI (for UMTS) and the format of LAI is defined
       // in 3GPP TS 23.003, Sec 4.1
       //    +-------------+---------+
@@ -10754,7 +10731,7 @@ let ICCRecordHelper = {
       } else {
         Buf.seekIncoming(5 * PDU_HEX_OCTET_SIZE);
       }
-      Buf.readStringDelimiter(len);
+      Buf.readStringDelimiter(strLen);
 
       if (options.p1 < options.totalRecords) {
         ICCIOHelper.loadNextRecord(options);
