@@ -68,6 +68,10 @@ let touchIds = {};
 let multiLast = {};
 // last touch for single finger
 let lastTouch = null;
+// last touch type
+let isTouchStart = false;
+// whether to send mouse event
+let mouseEvent = true;
 /**
  * Called when listener is first started up. 
  * The listener sends its unique window ID and its current URI to the actor.
@@ -113,6 +117,7 @@ function startListeners() {
   addMessageListenerId("Marionette:cancelTouch", cancelTouch);
   addMessageListenerId("Marionette:actionChain", actionChain);
   addMessageListenerId("Marionette:multiAction", multiAction);
+  addMessageListenerId("Marionette:sendMouseEvent", sendMouseEvent);
   addMessageListenerId("Marionette:setSearchTimeout", setSearchTimeout);
   addMessageListenerId("Marionette:goUrl", goUrl);
   addMessageListenerId("Marionette:getUrl", getUrl);
@@ -207,6 +212,7 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:cancelTouch", cancelTouch);
   removeMessageListenerId("Marionette:actionChain", actionChain);
   removeMessageListenerId("Marionette:multiAction", multiAction);
+  removeMessageListenerId("Marionette:sendMouseEvent", sendMouseEvent);
   removeMessageListenerId("Marionette:setSearchTimeout", setSearchTimeout);
   removeMessageListenerId("Marionette:goUrl", goUrl);
   removeMessageListenerId("Marionette:getTitle", getTitle);
@@ -563,12 +569,95 @@ function executeWithCallback(msg, useFinish) {
 }
 
 /**
+ * This function sets a value for mouseEvent to decide if we want to send mouse events
+ */
+function sendMouseEvent(msg) {
+  let command_id = msg.json.command_id;
+  if (typeof msg.json.value === 'boolean') {
+      mouseEvent = msg.json.value;
+      sendOk(msg.json.command_id);
+  }
+  else {
+    sendError("Json value is not boolean as expected", 500, null, command_id);
+  }
+}
+
+/**
  * This function creates a touch event given a touch type and a touch
  */
 function emitTouchEvent(type, touch) {
   // Using domWindowUtils
   let domWindowUtils = curWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindowUtils);
   domWindowUtils.sendTouchEvent(type, [touch.identifier], [touch.screenX], [touch.screenY], [touch.radiusX], [touch.radiusY], [touch.rotationAngle], [touch.force], 1, 0);
+}
+
+/**
+ * This function emit mouse event
+ *   @param: doc is the current document
+ *           type is the type of event to dispatch
+ *           detail is the number of clicks, button notes the mouse button
+ *           elClientX and elClientY are the coordinates of the mouse relative to the viewport
+ */
+function emitMouseEvent(doc, type, detail, button, elClientX, elClientY) {
+  var win = doc.defaultView;
+  // Figure out the element the mouse would be over at (x, y)
+  var target = doc.elementFromPoint(elClientX, elClientY);
+  utils.synthesizeMouse(target, win.mozInnerScreenX, win.mozInnerScreenY, {type: type, button: button, clickCount: detail}, win);
+}
+
+/**
+ * This function create a mouse and emit mouse events
+ * @param 'xt' and 'yt' are functions of t that specify the mouse coordinates at time t
+ */
+function mouse(doc, duration, xt, yt, then, detail, button) {
+  detail = detail || 1;
+  button = button || 0;
+  var x = xt;
+  if (typeof xt !== 'function') {
+    x = function(t) {
+      return xt[0] + t / duration * (xt[1] - xt[0]);
+    }
+  }
+  var y = yt;
+  if (typeof yt !== 'function') {
+    y = function(t) {
+      return yt[0] + t / duration * (yt[1] - yt[0]);
+    }
+  }
+  // viewport coordinates
+  var clientX = Math.round(x(0)), clientY = Math.round(y(0));
+  // Remember the coordinates
+  var lastX = clientX, lastY = clientY;
+  emitMouseEvent(doc, 'mousedown', detail, button, clientX, clientY);
+  // now send a sequence of mousemove events followed by mouse up
+  let startTime = Date.now();
+  checkTimer.initWithCallback(nextEvent, EVENT_INTERVAL, Ci.nsITimer.TYPE_ONE_SHOT);
+  function nextEvent() {
+    // figure out if we've sent all the mousemove events
+    var time = Date.now();
+    var dt = time - startTime;
+    let last = dt + EVENT_INTERVAL / 2 > duration;
+    // New coordinates of the touch
+    clientX = Math.round(x(dt));
+    clientY = Math.round(y(dt));
+    // If we moved, send a move event
+    if (clientX !== lastX || clientY !== lastY) { // If we moved
+      lastX = clientX;
+      lastY = clientY;
+      emitMouseEvent(doc, 'mousemove', detail, button, clientX, clientY);
+    }
+    // If this was the last move, send a mouse up and call the callback
+    // Otherwise, schedule the next move event
+    if (last) {
+      emitMouseEvent(doc, 'mouseup', detail, button, lastX, lastY);
+      if (then) {
+        checkTimer.initWithCallback(then, 0, Ci.nsITimer.TYPE_ONE_SHOT);
+      }
+    }
+    else {
+      checkTimer.initWithCallback(nextEvent, EVENT_INTERVAL, Ci.nsITimer.TYPE_ONE_SHOT);
+    }
+  }
 }
 
 /**
@@ -775,12 +864,30 @@ function singleTap(msg) {
       y = '50%';
     }
     let c = coordinates(el, x, y);
-    touch(el, 3000, [c.x0, c.x0], [c.y0, c.y0], null);
+    if (mouseEvent) {
+      touch(el, 25, [c.x0, c.x0], [c.y0, c.y0], function() {
+        mousetap(el, 25, c.x0, c.y0, 1, 0, null);
+      });
+    }
+    else {
+      touch(el, 25, [c.x0, c.x0], [c.y0, c.y0], null);
+    }
     sendOk(msg.json.command_id);
   }
   catch (e) {
     sendError(e.message, e.code, e.stack, msg.json.command_id);
   }
+}
+
+/**
+ * Function that perform a mouse tap
+ */
+function mousetap(target, duration, x, y, detail, button, then) {
+  var doc = target.ownerDocument;
+  detail = detail || 1;
+  button = button || 0;
+  emitMouseEvent(doc, 'mousemove', detail, button, x, y);
+  mouse(doc, duration, [x, x], [y, y], then, detail, button);
 }
 
 /**
@@ -804,13 +911,36 @@ function doubleTap(msg) {
       y = '50%';
     }
     let c = coordinates(el, x, y);
-    touch(el, 25, [c.x0, c.x0], [c.y0, c.y0], function() {
-      // When the first tap is done, start a timer for interval ms
-      checkTimer.initWithCallback(function() {
-          //After interval ms, send the second tap
-          touch(el, 25, [c.x0, c.x0], [c.y0, c.y0], null);
-      }, 50, Ci.nsITimer.TYPE_ONE_SHOT);
-    });
+    if (mouseEvent) {
+      touch(el, 25, [c.x0, c.x0], [c.y0, c.y0], function() {
+        // When the first tap is done, start a timer for interval ms
+        checkTimer.initWithCallback(function() {
+          //After interval ms, send the first mouse tap
+          mousetap(el, 25, c.x0, c.y0, 1, 0, function() {
+            // when the first tap is done, start a timer for interval ms
+            checkTimer.initWithCallback(function() {
+              //After interval ms, send the second tap
+              touch(el, 25, [c.x0, c.x0], [c.y0, c.y0], function() {
+                // when the second tap is done, start a timer for interval ms
+                checkTimer.initWithCallback(function() {
+                  //After interval ms, send the mousetap
+                  mousetap(el, 25, c.x0, c.y0, 2, 0, null);
+                }, 50, Ci.nsITimer.TYPE_ONE_SHOT);
+              });
+            }, 50, Ci.nsITimer.TYPE_ONE_SHOT);
+          });
+        }, 50, Ci.nsITimer.TYPE_ONE_SHOT);
+      });
+    }
+    else {
+      touch(el, 25, [c.x0, c.x0], [c.y0, c.y0], function() {
+        // When the first tap is done, start a timer for interval ms
+        checkTimer.initWithCallback(function() {
+            //After interval ms, send the second tap
+            touch(el, 25, [c.x0, c.x0], [c.y0, c.y0], null);
+        }, 50, Ci.nsITimer.TYPE_ONE_SHOT);
+      });
+    }
     sendOk(msg.json.command_id);
   }
   catch (e) {
@@ -883,6 +1013,7 @@ function release(msg) {
       el = startTouch.target;
       let corx = msg.json.corx;
       let cory = msg.json.cory;
+      var isTap = true;
       if (!checkVisible(el, command_id)) {
         sendError("Element is not currently visible and may not be manipulated", 11, null, command_id);
         return;
@@ -891,8 +1022,12 @@ function release(msg) {
       if (touch.clientX != startTouch.clientX ||
           touch.clientY != startTouch.clientY) {
         emitTouchEvent('touchmove', touch);
+        isTap = false;
       }
       emitTouchEvent('touchend', touch);
+      if (isTap && mouseEvent) {
+        mousetap(el, 25, touch.clientX, touch.clientY, 1, 0, null);
+      }
       delete touchIds[id];
       sendOk(msg.json.command_id);
     }
@@ -946,6 +1081,7 @@ function actions(finger, touchId, command_id, i){
   let corx;
   let cory;
   let touch;
+  let contextmenu = false;
   i++;
   switch(command) {
     case 'press':
@@ -959,15 +1095,8 @@ function actions(finger, touchId, command_id, i){
       }
       touch = createATouch(el, corx, cory, touchId);
       lastTouch = touch;
+      isTouchStart = true;
       emitTouchEvent('touchstart', touch);
-      // check if it's a long press
-      // standard waiting time to fire contextmenu
-      let standard = Services.prefs.getIntPref("ui.click_hold_context_menus.delay");
-      // long press only happens when wait follows press
-      if (finger[i] != undefined && finger[i][0] == 'wait' && finger[i][1] != null && finger[i][1]*1000 >= standard) {
-        finger[i][1] = finger[i][1] - standard/1000;
-        finger.splice(i, 0, ['wait', standard/1000], ['longPress']);
-      }
       actions(finger,touchId, command_id, i);
       break;
     case 'release':
@@ -978,6 +1107,10 @@ function actions(finger, touchId, command_id, i){
       touch = lastTouch;
       lastTouch = null;
       emitTouchEvent('touchend', touch);
+      if (isTouchStart && mouseEvent) {
+        mousetap(touch.target, 25, touch.clientX, touch.clientY, 1, 0, null);
+      }
+      isTouchStart = false;
       actions(finger, touchId, command_id, i);
       break;
     case 'move':
@@ -993,6 +1126,7 @@ function actions(finger, touchId, command_id, i){
       cory = boxTarget.top - boxStart.top + boxTarget.height * 0.5;
       touch = createATouch(startElement, corx, cory, touchId);
       lastTouch = touch;
+      isTouchStart = false;
       emitTouchEvent('touchmove', touch);
       actions(finger, touchId, command_id, i);
       break;
@@ -1012,12 +1146,19 @@ function actions(finger, touchId, command_id, i){
           screenY = clientY + win.mozInnerScreenY;
       touch = doc.createTouch(win, el, touchId, pageX, pageY, screenX, screenY, clientX, clientY);
       lastTouch = touch;
+      isTouchStart = false;
       emitTouchEvent('touchmove', touch);
       actions(finger, touchId, command_id, i);
       break;
     case 'wait':
       if (pack[1] != null ) {
         let time = pack[1]*1000;
+        // standard waiting time to fire contextmenu
+        let standard = Services.prefs.getIntPref("ui.click_hold_context_menus.delay");
+        if (time >= standard && isTouchStart && !contextmenu) {
+            finger.splice(i, 0, ['longPress'], ['wait', (time-standard)/1000]);
+            time = standard;
+        }
         checkTimer.initWithCallback(function(){actions(finger, touchId, command_id, i);}, time, Ci.nsITimer.TYPE_ONE_SHOT);
       }
       else {
@@ -1028,9 +1169,12 @@ function actions(finger, touchId, command_id, i){
       touch = lastTouch;
       emitTouchEvent('touchcancel', touch);
       lastTouch = null;
+      isTouchStart = false;
       actions(finger, touchId, command_id, i);
       break;
     case 'longPress':
+      isTouchStart = false;
+      contextmenu = true;
       let event = curWindow.document.createEvent('HTMLEvents');
       event.initEvent('contextmenu',
                       true,
