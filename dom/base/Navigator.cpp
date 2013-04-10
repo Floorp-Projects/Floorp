@@ -1161,7 +1161,7 @@ Navigator::MozGetUserMediaDevices(nsIGetUserMediaDevicesSuccessCallback* aOnSucc
 //    Navigator::nsIDOMNavigatorDesktopNotification
 //*****************************************************************************
 
-NS_IMETHODIMP Navigator::GetMozNotification(nsIDOMDesktopNotificationCenter** aRetVal)
+NS_IMETHODIMP Navigator::GetMozNotification(nsISupports** aRetVal)
 {
   NS_ENSURE_ARG_POINTER(aRetVal);
   *aRetVal = nullptr;

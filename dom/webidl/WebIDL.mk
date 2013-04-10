@@ -43,6 +43,7 @@ webidl_files = \
   CSSValue.webidl \
   CSSValueList.webidl \
   DelayNode.webidl \
+  DesktopNotification.webidl \
   Document.webidl \
   DocumentFragment.webidl \
   DocumentType.webidl \
