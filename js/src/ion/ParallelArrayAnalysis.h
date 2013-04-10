@@ -26,7 +26,7 @@ class ParallelCompileContext
     JSContext *cx_;
 
     // Compilation is transitive from some set of root(s).
-    AutoObjectVector worklist_;
+    AutoScriptVector worklist_;
 
     // Is a function compilable for parallel execution?
     bool analyzeAndGrowWorklist(MIRGenerator *mir, MIRGraph &graph);
@@ -40,8 +40,8 @@ class ParallelCompileContext
         worklist_(cx)
     { }
 
-    // Should we append a function to the worklist?
-    bool appendToWorklist(HandleFunction fun);
+    // Should we append a script to the worklist?
+    bool appendToWorklist(HandleScript script);
 
     ExecutionMode executionMode() {
         return ParallelExecution;
