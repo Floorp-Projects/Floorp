@@ -1406,8 +1406,34 @@ ne_find_seek_for_id(struct ebml_list_node * seek_head, uint64_t id)
   return NULL;
 }
 
+static struct cue_track_positions *
+ne_find_cue_position_for_track(nestegg * ctx, struct ebml_list_node * node, unsigned int track)
+{
+  struct cue_track_positions * pos = NULL;
+  uint64_t track_number;
+  unsigned int t;
+
+  while (node) {
+    assert(node->id == ID_CUE_TRACK_POSITIONS);
+    pos = node->data;
+    if (ne_get_uint(pos->track, &track_number) != 0)
+      return NULL;
+
+    if (ne_map_track_number_to_index(ctx, track_number, &t) != 0)
+      return NULL;
+
+    if (t == track) {
+      return pos;
+    }
+
+    node = node->next;
+  }
+
+  return NULL;
+}
+
 static struct cue_point *
-ne_find_cue_point_for_tstamp(struct ebml_list_node * cue_point, uint64_t scale, uint64_t tstamp)
+ne_find_cue_point_for_tstamp(nestegg * ctx, struct ebml_list_node * cue_point, unsigned int track, uint64_t scale, uint64_t tstamp)
 {
   uint64_t time;
   struct cue_point * c, * prev = NULL;
@@ -1422,7 +1448,9 @@ ne_find_cue_point_for_tstamp(struct ebml_list_node * cue_point, uint64_t scale, 
     if (ne_get_uint(c->time, &time) == 0 && time * scale > tstamp)
       break;
 
-    prev = cue_point->data;
+    if (ne_find_cue_position_for_track(ctx, c->cue_track_positions.head, track) != NULL)
+      prev = c;
+
     cue_point = cue_point->next;
   }
 
@@ -1505,7 +1533,6 @@ ne_init_cue_points(nestegg * ctx, int64_t max_offset)
 
   return 0;
 }
-
 
 /* Three functions that implement the nestegg_io interface, operating on a
  * sniff_buffer. */
@@ -1831,49 +1858,29 @@ nestegg_track_seek(nestegg * ctx, unsigned int track, uint64_t tstamp)
   int r;
   struct cue_point * cue_point;
   struct cue_track_positions * pos;
-  uint64_t seek_pos, tc_scale, track_number;
-  unsigned int t;
-  struct ebml_list_node * node = ctx->segment.cues.cue_point.head;
+  uint64_t seek_pos, tc_scale;
 
   /* If there are no cues loaded, check for cues element in the seek head
      and load it. */
-  if (!node) {
+  if (!ctx->segment.cues.cue_point.head) {
     r = ne_init_cue_points(ctx, -1);
     if (r != 0)
-      return -1;
-
-    /* Check cues were loaded. */
-    node = ctx->segment.cues.cue_point.head;
-    if (!node)
       return -1;
   }
 
   tc_scale = ne_get_timecode_scale(ctx);
 
-  cue_point = ne_find_cue_point_for_tstamp(ctx->segment.cues.cue_point.head, tc_scale, tstamp);
+  cue_point = ne_find_cue_point_for_tstamp(ctx, ctx->segment.cues.cue_point.head,
+                                           track, tc_scale, tstamp);
   if (!cue_point)
     return -1;
 
-  node = cue_point->cue_track_positions.head;
+  pos = ne_find_cue_position_for_track(ctx, cue_point->cue_track_positions.head, track);
+  if (pos == NULL)
+    return -1;
 
-  seek_pos = 0;
-
-  while (node) {
-    assert(node->id == ID_CUE_TRACK_POSITIONS);
-    pos = node->data;
-    if (ne_get_uint(pos->track, &track_number) != 0)
-      return -1;
-
-    if (ne_map_track_number_to_index(ctx, track_number, &t) != 0)
-      return -1;
-
-    if (t == track) {
-      if (ne_get_uint(pos->cluster_position, &seek_pos) != 0)
-        return -1;
-      break;
-    }
-    node = node->next;
-  }
+  if (ne_get_uint(pos->cluster_position, &seek_pos) != 0)
+    return -1;
 
   /* Seek and set up parser state for segment-level element (Cluster). */
   r = nestegg_offset_seek(ctx, ctx->segment_offset + seek_pos);
