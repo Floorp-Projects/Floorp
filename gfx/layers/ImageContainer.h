@@ -9,7 +9,7 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "gfxASurface.h" // for gfxImageFormat
-#include "LayersTypes.h" // for LayersBackend
+#include "mozilla/layers/LayersTypes.h" // for LayersBackend
 #include "mozilla/TimeStamp.h"
 #include "ImageTypes.h"
 #include "nsTArray.h"
@@ -36,10 +36,10 @@ class CrossProcessMutex;
 namespace ipc {
 class Shmem;
 }
-    
+
 namespace layers {
 
-class ImageContainerChild;
+class ImageClient;
 class SharedPlanarYCbCrImage;
 
 struct ImageBackendData
@@ -302,7 +302,7 @@ public:
    * Implementations must call CurrentImageChanged() while holding
    * mReentrantMonitor.
    *
-   * If this ImageContainer has an ImageContainerChild for async video: 
+   * If this ImageContainer has an ImageClient for async video:
    * Schelude a task to send the image to the compositor using the 
    * PImageBridge protcol without using the main thread.
    */
@@ -311,7 +311,7 @@ public:
   /**
    * Set an Image as the current image to display. The Image must have
    * been created by this ImageContainer.
-   * Must be called on the main thread, within a layers transaction. 
+   * Must be called on the main thread, within a layers transaction.
    * 
    * This method takes mReentrantMonitor
    * when accessing thread-shared state.
@@ -336,9 +336,9 @@ public:
    * If this ImageContainer uses ImageBridge, returns the ID associated to
    * this container, for use in the ImageBridge protocol.
    * Returns 0 if this ImageContainer does not use ImageBridge. Note that
-   * 0 is always an invalid ID for asynchronous image containers. 
+   * 0 is always an invalid ID for asynchronous image containers.
    *
-   * Can be called from ay thread.
+   * Can be called from any thread.
    */
   uint64_t GetAsyncContainerID() const;
 
@@ -558,14 +558,14 @@ protected:
 
   CompositionNotifySink *mCompositionNotifySink;
 
-  // This member points to an ImageContainerChild if this ImageContainer was 
+  // This member points to an ImageClient if this ImageContainer was
   // sucessfully created with ENABLE_ASYNC, or points to null otherwise.
-  // 'unsuccessful' in this case only means that the ImageContainerChild could not
+  // 'unsuccessful' in this case only means that the ImageClient could not
   // be created, most likely because off-main-thread compositing is not enabled.
-  // In this case the ImageContainer is perfectly usable, but it will forward 
-  // frames to the compositor through transactions in the main thread rather than 
+  // In this case the ImageContainer is perfectly usable, but it will forward
+  // frames to the compositor through transactions in the main thread rather than
   // asynchronusly using the ImageBridge IPDL protocol.
-  nsRefPtr<ImageContainerChild> mImageContainerChild;
+  ImageClient* mImageClient;
 };
 
 class AutoLockImage
@@ -879,7 +879,6 @@ public:
   gfxIntSize mSize;
   RemoteImageData::Format mFormat;
 };
-
 
 } //namespace
 } //namespace

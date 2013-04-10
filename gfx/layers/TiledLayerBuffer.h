@@ -7,12 +7,12 @@
 
 #define TILEDLAYERBUFFER_TILE_SIZE 256
 
-// Debug defines
 #ifdef MOZ_ANDROID_OMTC
   // This needs to go away as we enabled tiled
   // layers everywhere.
   #define FORCE_BASICTILEDTHEBESLAYER
 #endif
+// Debug defines
 //#define GFX_TILEDLAYER_DEBUG_OVERLAY
 //#define GFX_TILEDLAYER_PREF_WARNINGS
 
@@ -189,8 +189,6 @@ public:
    * is retained until it has been uploaded/copyed and unlocked.
    */
   virtual void PaintedTiledLayerBuffer(const BasicTiledLayerBuffer* aTiledBuffer) = 0;
-
-  virtual void MemoryPressure() = 0;
 
   /**
    * If some part of the buffer is being rendered at a lower precision, this

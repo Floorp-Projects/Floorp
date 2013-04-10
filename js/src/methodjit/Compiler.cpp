@@ -960,7 +960,7 @@ IonGetsFirstChance(JSContext *cx, JSScript *script, jsbytecode *pc, CompileReque
         return false;
 
     // If we cannot enter Ion because bailouts are expected, let JM take over.
-    if (script->hasIonScript() && script->ion->bailoutExpected())
+    if (script->hasIonScript() && script->ionScript()->bailoutExpected())
         return false;
 
     // If we cannot enter Ion because it was compiled for OSR at a different PC,
@@ -976,7 +976,7 @@ IonGetsFirstChance(JSContext *cx, JSScript *script, jsbytecode *pc, CompileReque
 
     // If ion compilation is pending or in progress on another thread, continue
     // using JM until that compilation finishes.
-    if (script->ion == ION_COMPILING_SCRIPT)
+    if (script->isIonCompilingOffThread())
         return false;
 
     return true;
@@ -4024,7 +4024,7 @@ mjit::Compiler::ionCompileHelper()
     if (!recompileCheckForIon)
         return;
 
-    void *ionScriptAddress = &script_->ion;
+    const void *ionScriptAddress = script_->addressOfIonScript();
 
 #ifdef JS_CPU_X64
     // Allocate a temp register. Note that we have to do this before calling
@@ -4055,7 +4055,8 @@ mjit::Compiler::ionCompileHelper()
     trigger.inlineJump = masm.branch32(Assembler::GreaterThanOrEqual,
                                        AbsoluteAddress(useCountAddress),
                                        Imm32(minUses));
-    Jump scriptJump = stubcc.masm.branch32(Assembler::Equal, AbsoluteAddress(ionScriptAddress),
+    Jump scriptJump = stubcc.masm.branch32(Assembler::Equal,
+                                           AbsoluteAddress((void *)ionScriptAddress),
                                            Imm32(0));
 #elif defined(JS_CPU_X64)
     /* Handle processors that can't load from absolute addresses. */
@@ -4063,7 +4064,7 @@ mjit::Compiler::ionCompileHelper()
     trigger.inlineJump = masm.branch32(Assembler::GreaterThanOrEqual,
                                        Address(reg),
                                        Imm32(minUses));
-    stubcc.masm.move(ImmPtr(ionScriptAddress), reg);
+    stubcc.masm.move(ImmPtr((void *)ionScriptAddress), reg);
     Jump scriptJump = stubcc.masm.branchPtr(Assembler::Equal, Address(reg), ImmPtr(NULL));
     frame.freeReg(reg);
 #else

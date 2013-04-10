@@ -38,6 +38,7 @@ static char *RCSSTRING __UNUSED__="$Id: stun_build.c,v 1.2 2008/04/28 18:21:30 e
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "nr_api.h"
 #include "stun.h"
@@ -285,8 +286,114 @@ nr_stun_build_req_ice(nr_stun_client_ice_binding_request_params *params, nr_stun
 #endif /* USE_ICE */
 
 #ifdef USE_TURN
+
+/* Long-term passwords are computed over the key:
+
+            key = MD5(username ":" realm ":" SASLprep(password))
+
+   Per RFC 5389 S 15.4
+*/
 int
-nr_stun_build_allocate_request1(nr_stun_client_allocate_request1_params *params, nr_stun_message **msg)
+nr_stun_compute_lt_message_integrity_password(const char *username, const char *realm,
+                                              Data *password, Data *hmac_key)
+{
+  char digest_input[1000];
+  int i;
+  int r, _status;
+  size_t len;
+
+  /* First check that the password is ASCII. We are supposed to
+     SASLprep but we don't support this yet
+     TODO(ekr@rtfm.com): Add SASLprep for password.
+ */
+  for (i=0; i<password->len; i++) {
+    if (!isascii(password->data[i]))
+      ABORT(R_BAD_DATA);
+  }
+
+  if (hmac_key->len < 16)
+    ABORT(R_BAD_ARGS);
+
+  snprintf(digest_input, sizeof(digest_input), "%s:%s:", username, realm);
+  if ((sizeof(digest_input) - strlen(digest_input)) < password->len)
+    ABORT(R_BAD_DATA);
+
+  len = strlen(digest_input);
+  memcpy(digest_input + len, password->data, password->len);
+
+
+  if (r=nr_crypto_md5((UCHAR *)digest_input, len + password->len, hmac_key->data))
+    ABORT(r);
+  hmac_key->len=16;
+
+  _status=0;
+abort:
+  return(_status);
+}
+
+static int
+nr_stun_build_auth_params(nr_stun_client_auth_params *auth, nr_stun_message *req)
+{
+  int r, _status;
+  UCHAR hmac_key_d[16];
+  Data hmac_key;
+
+  ATTACH_DATA(hmac_key, hmac_key_d);
+
+  if (!auth->authenticate)
+    goto done;
+
+  assert(auth->username);
+  assert(auth->password.len);
+  assert(auth->realm);
+  assert(auth->nonce);
+
+  if (r=nr_stun_compute_lt_message_integrity_password(auth->username,
+                                                      auth->realm,
+                                                      &auth->password,
+                                                      &hmac_key))
+    ABORT(r);
+
+  if (!auth->username) {
+    r_log(NR_LOG_STUN, LOG_ERR, "STUN authentication requested but no username provided");
+    ABORT(R_INTERNAL);
+  }
+
+  if (!auth->password.len) {
+    r_log(NR_LOG_STUN, LOG_ERR, "STUN authentication requested but no password provided");
+    ABORT(R_INTERNAL);
+  }
+
+  if (!auth->realm) {
+    r_log(NR_LOG_STUN, LOG_ERR, "STUN authentication requested but no realm provided");
+    ABORT(R_INTERNAL);
+  }
+
+  if (!auth->nonce) {
+    r_log(NR_LOG_STUN, LOG_ERR, "STUN authentication requested but no nonce provided");
+    ABORT(R_INTERNAL);
+  }
+
+  if ((r=nr_stun_message_add_username_attribute(req, auth->username)))
+    ABORT(r);
+
+  if ((r=nr_stun_message_add_realm_attribute(req, auth->realm)))
+    ABORT(r);
+
+  if ((r=nr_stun_message_add_nonce_attribute(req, auth->nonce)))
+    ABORT(r);
+
+  if ((r=nr_stun_message_add_message_integrity_attribute(req, &hmac_key)))
+    ABORT(r);
+
+done:
+  _status=0;
+abort:
+  return(_status);
+}
+
+int
+nr_stun_build_allocate_request(nr_stun_client_auth_params *auth, nr_stun_client_allocate_request_params *params, nr_stun_message **msg)
 {
    int r,_status;
    nr_stun_message *req = 0;
@@ -294,7 +401,15 @@ nr_stun_build_allocate_request1(nr_stun_client_allocate_request1_params *params,
    if ((r=nr_stun_form_request_or_indication(NR_STUN_MODE_STUN, NR_STUN_MSG_ALLOCATE_REQUEST, &req)))
        ABORT(r);
 
-   if ((r=nr_stun_message_add_username_attribute(req, params->username)))
+   if ((r=nr_stun_message_add_requested_transport_attribute(req, NR_STUN_ATTR_REQUESTED_TRANSPORT_UDP)))
+       ABORT(r);
+
+  if ((r=nr_stun_message_add_lifetime_attribute(req, params->lifetime_secs)))
+       ABORT(r);
+
+  /* TODO(ekr@rtfm.com): Add the SOFTWARE attribute (Firefox bug 857666) */
+
+  if ((r=nr_stun_build_auth_params(auth, req)))
        ABORT(r);
 
    *msg = req;
@@ -305,31 +420,45 @@ nr_stun_build_allocate_request1(nr_stun_client_allocate_request1_params *params,
    return _status;
 }
 
-int
-nr_stun_build_allocate_request2(nr_stun_client_allocate_request2_params *params, nr_stun_message **msg)
+
+int nr_stun_build_refresh_request(nr_stun_client_auth_params *auth, nr_stun_client_refresh_request_params *params, nr_stun_message **msg)
 {
    int r,_status;
    nr_stun_message *req = 0;
 
-   if ((r=nr_stun_form_request_or_indication(NR_STUN_MODE_STUN, NR_STUN_MSG_ALLOCATE_REQUEST, &req)))
+   if ((r=nr_stun_form_request_or_indication(NR_STUN_MODE_STUN, NR_STUN_MSG_REFRESH_REQUEST, &req)))
        ABORT(r);
 
-   if ((r=nr_stun_message_add_username_attribute(req, params->username)))
+  if ((r=nr_stun_message_add_lifetime_attribute(req, params->lifetime_secs)))
        ABORT(r);
 
-   if ((r=nr_stun_message_add_message_integrity_attribute(req, params->password)))
+
+  /* TODO(ekr@rtfm.com): Add the SOFTWARE attribute (Firefox bug 857666) */
+
+  if ((r=nr_stun_build_auth_params(auth, req)))
        ABORT(r);
 
-   if ((r=nr_stun_message_add_realm_attribute(req, params->realm)))
+  *msg = req;
+
+   _status=0;
+ abort:
+   if (_status) nr_stun_message_destroy(&req);
+   return _status;
+}
+
+
+int nr_stun_build_permission_request(nr_stun_client_auth_params *auth, nr_stun_client_permission_request_params *params, nr_stun_message **msg)
+{
+   int r,_status;
+   nr_stun_message *req = 0;
+
+   if ((r=nr_stun_form_request_or_indication(NR_STUN_MODE_STUN, NR_STUN_MSG_PERMISSION_REQUEST, &req)))
        ABORT(r);
 
-   if ((r=nr_stun_message_add_nonce_attribute(req, params->nonce)))
+   if ((r=nr_stun_message_add_xor_peer_address_attribute(req, &params->remote_addr)))
        ABORT(r);
 
-   if ((r=nr_stun_message_add_bandwidth_attribute(req, params->bandwidth_kbps)))
-       ABORT(r);
-
-   if ((r=nr_stun_message_add_lifetime_attribute(req, params->lifetime_secs)))
+   if ((r=nr_stun_build_auth_params(auth, req)))
        ABORT(r);
 
    *msg = req;
@@ -349,7 +478,7 @@ nr_stun_build_send_indication(nr_stun_client_send_indication_params *params, nr_
    if ((r=nr_stun_form_request_or_indication(NR_STUN_MODE_STUN, NR_STUN_MSG_SEND_INDICATION, &ind)))
        ABORT(r);
 
-   if ((r=nr_stun_message_add_remote_address_attribute(ind, &params->remote_addr)))
+   if ((r=nr_stun_message_add_xor_peer_address_attribute(ind, &params->remote_addr)))
        ABORT(r);
 
    if ((r=nr_stun_message_add_data_attribute(ind, params->data.data, params->data.len)))
@@ -364,26 +493,6 @@ nr_stun_build_send_indication(nr_stun_client_send_indication_params *params, nr_
 }
 
 int
-nr_stun_build_set_active_dest_request(nr_stun_client_set_active_dest_request_params *params, nr_stun_message **msg)
-{
-   int r,_status;
-   nr_stun_message *req = 0;
-
-   if ((r=nr_stun_form_request_or_indication(NR_STUN_MODE_STUN, NR_STUN_MSG_SET_ACTIVE_DEST_REQUEST, &req)))
-       ABORT(r);
-
-   if ((r=nr_stun_message_add_remote_address_attribute(req, &params->remote_addr)))
-       ABORT(r);
-
-   *msg = req;
-
-   _status=0;
- abort:
-   if (_status) nr_stun_message_destroy(&req);
-   return _status;
-}
-
-int
 nr_stun_build_data_indication(nr_stun_client_data_indication_params *params, nr_stun_message **msg)
 {
    int r,_status;
@@ -392,7 +501,7 @@ nr_stun_build_data_indication(nr_stun_client_data_indication_params *params, nr_
    if ((r=nr_stun_form_request_or_indication(NR_STUN_MODE_STUN, NR_STUN_MSG_DATA_INDICATION, &ind)))
        ABORT(r);
 
-   if ((r=nr_stun_message_add_remote_address_attribute(ind, &params->remote_addr)))
+   if ((r=nr_stun_message_add_xor_peer_address_attribute(ind, &params->remote_addr)))
        ABORT(r);
 
    if ((r=nr_stun_message_add_data_attribute(ind, params->data.data, params->data.len)))

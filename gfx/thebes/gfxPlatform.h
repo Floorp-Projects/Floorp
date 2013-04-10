@@ -439,6 +439,16 @@ public:
 
     static bool OffMainThreadCompositingEnabled();
 
+    /** Use gfxPlatform::GetPref* methods instead of direct calls to Preferences
+     * to get the values for layers preferences.  These will only be evaluated
+     * only once, and remain the same until restart.
+     */
+    static bool GetPrefLayersOffMainThreadCompositionEnabled();
+    static bool GetPrefLayersAccelerationForceEnabled();
+    static bool GetPrefLayersAccelerationDisabled();
+    static bool GetPrefLayersPreferOpenGL();
+    static bool GetPrefLayersPreferD3D9();
+
     /**
      * Are we going to try color management?
      */
@@ -593,6 +603,8 @@ private:
     static void Init();
 
     static void CreateCMSOutputProfile();
+
+    friend int RecordingPrefChanged(const char *aPrefName, void *aClosure);
 
     virtual qcms_profile* GetPlatformCMSOutputProfile();
 

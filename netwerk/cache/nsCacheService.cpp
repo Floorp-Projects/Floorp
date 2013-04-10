@@ -36,6 +36,7 @@
 #include <math.h>  // for log()
 #include "mozilla/Services.h"
 #include "nsITimer.h"
+#include "mozIStorageService.h"
 
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/VisualEventTracer.h"
@@ -1133,10 +1134,15 @@ nsCacheService::Init()
 
     CACHE_LOG_INIT();
 
+    nsresult rv;
+
+    mStorageService = do_GetService("@mozilla.org/storage/service;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     MOZ_EVENT_TRACER_NAME_OBJECT(nsCacheService::gService, "nsCacheService");
 
-    nsresult rv = NS_NewNamedThread("Cache I/O",
-                                    getter_AddRefs(mCacheIOThread));
+    rv = NS_NewNamedThread("Cache I/O",
+                           getter_AddRefs(mCacheIOThread));
     if (NS_FAILED(rv)) {
         NS_RUNTIMEABORT("Can't create cache IO thread");
     }
@@ -1709,9 +1715,9 @@ nsCacheService::CreateCustomOfflineDevice(nsIFile *aProfileDir,
     (*aDevice)->SetCacheParentDirectory(aProfileDir);
     (*aDevice)->SetCapacity(aQuota);
 
-    nsresult rv = (*aDevice)->Init();
+    nsresult rv = (*aDevice)->InitWithSqlite(mStorageService);
     if (NS_FAILED(rv)) {
-        CACHE_LOG_DEBUG(("OfflineDevice->Init() failed (0x%.8x)\n", rv));
+        CACHE_LOG_DEBUG(("OfflineDevice->InitWithSqlite() failed (0x%.8x)\n", rv));
         CACHE_LOG_DEBUG(("    - disabling offline cache for this session.\n"));
 
         NS_RELEASE(*aDevice);
@@ -2395,7 +2401,7 @@ nsCacheService::OnProfileChanged()
         gService->mOfflineDevice->SetCapacity(gService->mObserver->OfflineCacheCapacity());
 
         // XXX initialization of mOfflineDevice could be made lazily, if mEnableOfflineDevice is false
-        nsresult rv = gService->mOfflineDevice->Init();
+        nsresult rv = gService->mOfflineDevice->InitWithSqlite(gService->mStorageService);
         if (NS_FAILED(rv)) {
             NS_ERROR("nsCacheService::OnProfileChanged: Re-initializing offline device failed");
             gService->mEnableOfflineDevice = false;

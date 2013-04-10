@@ -542,6 +542,9 @@ public:
   virtual void finalize(JSFreeOp *fop, JSObject *proxy) MOZ_OVERRIDE;
 
   // Fundamental traps
+  virtual bool isExtensible(JSObject *proxy) MOZ_OVERRIDE;
+  virtual bool preventExtensions(JSContext *cx,
+                                 JS::Handle<JSObject*> proxy) MOZ_OVERRIDE;
   virtual bool getPropertyDescriptor(JSContext* cx,
                                      JS::Handle<JSObject*> proxy,
                                      JS::Handle<jsid> id,
@@ -609,6 +612,24 @@ protected:
                                   JS::AutoIdVector &props);
 };
 
+bool
+nsOuterWindowProxy::isExtensible(JSObject *proxy)
+{
+  // If [[Extensible]] could be false, then navigating a window could navigate
+  // to a window that's [[Extensible]] after being at one that wasn't: an
+  // invariant violation.  So always report true for this.
+  return true;
+}
+
+bool
+nsOuterWindowProxy::preventExtensions(JSContext *cx,
+                                      JS::Handle<JSObject*> proxy)
+{
+  // See above.
+  JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                       JSMSG_CANT_CHANGE_EXTENSIBILITY);
+  return false;
+}
 
 JSString *
 nsOuterWindowProxy::obj_toString(JSContext *cx, JS::Handle<JSObject*> proxy)

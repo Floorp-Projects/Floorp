@@ -47,7 +47,7 @@ GeckoStart(void *data, const nsXREAppData *appData)
 #ifdef MOZ_CRASHREPORTER
     const struct mapping_info *info = getLibraryMapping();
     while (info->name) {
-      CrashReporter::AddLibraryMapping(info->name, info->file_id, info->base,
+      CrashReporter::AddLibraryMapping(info->name, info->base,
                                        info->len, info->offset);
       info++;
     }

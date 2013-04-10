@@ -21,7 +21,7 @@
 #include "nsWidgetInitData.h"
 #include "nsTArray.h"
 #include "nsXULAppAPI.h"
-#include "LayersTypes.h"
+#include "mozilla/layers/LayersTypes.h"
 
 // forward declarations
 class   nsFontMetrics;
@@ -608,6 +608,19 @@ class nsIWidget : public nsISupports {
     double GetDefaultScale();
 
     /**
+     * Return the Gecko override of the system default scale, if any;
+     * returns <= 0.0 if the system scale should be used as-is.
+     * nsIWidget::GetDefaultScale() [above] takes this into account.
+     * It is exposed here so that code that wants to check for a
+     * default-scale override without having a widget on hand can
+     * easily access the same value.
+     * Note that any scale override is a browser-wide value, whereas
+     * the default GetDefaultScale value (when no override is present)
+     * may vary between widgets (or screens).
+     */
+    static double DefaultScaleOverride();
+
+    /**
      * Return the first child of this widget.  Will return null if
      * there are no children.
      */
@@ -1142,17 +1155,11 @@ class nsIWidget : public nsISupports {
 
     /**
      * Called before the LayerManager draws the layer tree.
-     *
-     * @param aManager The drawing LayerManager.
-     * @param aWidgetRect The current widget rect that is being drawn.
      */
     virtual void DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect) = 0;
 
     /**
      * Called after the LayerManager draws the layer tree
-     *
-     * @param aManager The drawing LayerManager.
-     * @param aRect Current widget rect that is being drawn.
      */
     virtual void DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect) = 0;
 

@@ -1,0 +1,354 @@
+/* -*- Mode: Java; tab-width: 20; indent-tabs-mode: nil; -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+package org.mozilla.gecko;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.InputStreamReader;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.util.zip.GZIPOutputStream;
+
+import android.app.Activity;
+import android.app.ProgressDialog;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Build;
+import android.os.Bundle;
+import android.os.Handler;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.CheckBox;
+
+public class CrashReporter extends Activity
+{
+    private static final String LOGTAG = "GeckoCrashReporter";
+
+    private static final String PASSED_MINI_DUMP_KEY = "minidumpPath";
+    private static final String MINI_DUMP_PATH_KEY = "upload_file_minidump";
+    private static final String PAGE_URL_KEY = "URL";
+    private static final String NOTES_KEY = "Notes";
+    private static final String SERVER_URL_KEY = "ServerURL";
+
+    private static final String CRASH_REPORT_SUFFIX = "/mozilla/Crash Reports/";
+    private static final String PENDING_SUFFIX = CRASH_REPORT_SUFFIX + "pending";
+    private static final String SUBMITTED_SUFFIX = CRASH_REPORT_SUFFIX + "submitted";
+
+    private Handler mHandler;
+    private ProgressDialog mProgressDialog;
+    private File mPendingMinidumpFile;
+    private File mPendingExtrasFile;
+    private HashMap<String, String> mExtrasStringMap;
+
+    private boolean moveFile(File inFile, File outFile) {
+        Log.i(LOGTAG, "moving " + inFile + " to " + outFile);
+        if (inFile.renameTo(outFile))
+            return true;
+        try {
+            outFile.createNewFile();
+            Log.i(LOGTAG, "couldn't rename minidump file");
+            // so copy it instead
+            FileChannel inChannel = new FileInputStream(inFile).getChannel();
+            FileChannel outChannel = new FileOutputStream(outFile).getChannel();
+            long transferred = inChannel.transferTo(0, inChannel.size(), outChannel);
+            inChannel.close();
+            outChannel.close();
+
+            if (transferred > 0)
+                inFile.delete();
+        } catch (Exception e) {
+            Log.e(LOGTAG, "exception while copying minidump file: ", e);
+            return false;
+        }
+        return true;
+    }
+
+    private void doFinish() {
+        if (mHandler != null) {
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    finish();
+                }
+            });
+        }
+    }
+
+    @Override
+    public void finish() {
+        try {
+            if (mProgressDialog.isShowing()) {
+                mProgressDialog.dismiss();
+            }
+        } catch (Exception e) {
+            Log.e(LOGTAG, "exception while closing progress dialog: ", e);
+        }
+        super.finish();
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        // mHandler is created here so runnables can be run on the main thread
+        mHandler = new Handler();
+        setContentView(R.layout.crash_reporter);
+        mProgressDialog = new ProgressDialog(this);
+        mProgressDialog.setMessage(getString(R.string.sending_crash_report));
+
+        final Button restartButton = (Button) findViewById(R.id.restart);
+        final Button closeButton = (Button) findViewById(R.id.close);
+        String passedMinidumpPath = getIntent().getStringExtra(PASSED_MINI_DUMP_KEY);
+        File passedMinidumpFile = new File(passedMinidumpPath);
+        File pendingDir = new File(getFilesDir(), PENDING_SUFFIX);
+        pendingDir.mkdirs();
+        mPendingMinidumpFile = new File(pendingDir, passedMinidumpFile.getName());
+        moveFile(passedMinidumpFile, mPendingMinidumpFile);
+
+        File extrasFile = new File(passedMinidumpPath.replaceAll(".dmp", ".extra"));
+        mPendingExtrasFile = new File(pendingDir, extrasFile.getName());
+        moveFile(extrasFile, mPendingExtrasFile);
+
+        mExtrasStringMap = new HashMap<String, String>();
+        readStringsFromFile(mPendingExtrasFile.getPath(), mExtrasStringMap);
+
+        // Set the flag that indicates we were stopped as expected, as
+        // we will send a crash report, so it is not a silent OOM crash.
+        SharedPreferences prefs =
+            getSharedPreferences(GeckoApp.PREFS_NAME, 0);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putBoolean(GeckoApp.PREFS_WAS_STOPPED, true);
+        editor.putBoolean(GeckoApp.PREFS_CRASHED, true);
+        editor.commit();
+    }
+
+    private void backgroundSendReport() {
+        final CheckBox sendReportCheckbox = (CheckBox) findViewById(R.id.send_report);
+        if (!sendReportCheckbox.isChecked()) {
+            doFinish();
+            return;
+        }
+
+        mProgressDialog.show();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                sendReport(mPendingMinidumpFile, mExtrasStringMap, mPendingExtrasFile);
+            }
+        }, "CrashReporter Thread").start();
+    }
+
+    public void onCloseClick(View v) {  // bound via crash_reporter.xml
+        backgroundSendReport();
+    }
+
+    public void onRestartClick(View v) {  // bound via crash_reporter.xml
+        doRestart();
+        backgroundSendReport();
+    }
+
+    private boolean readStringsFromFile(String filePath, Map<String, String> stringMap) {
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(filePath));
+            return readStringsFromReader(reader, stringMap);
+        } catch (Exception e) {
+            Log.e(LOGTAG, "exception while reading strings: ", e);
+            return false;
+        }
+    }
+
+    private boolean readStringsFromReader(BufferedReader reader, Map<String, String> stringMap) throws IOException {
+        String line;
+        while ((line = reader.readLine()) != null) {
+            int equalsPos = -1;
+            if ((equalsPos = line.indexOf('=')) != -1) {
+                String key = line.substring(0, equalsPos);
+                String val = unescape(line.substring(equalsPos + 1));
+                stringMap.put(key, val);
+            }
+        }
+        reader.close();
+        return true;
+    }
+
+    private String generateBoundary() {
+        // Generate some random numbers to fill out the boundary
+        int r0 = (int)((double)Integer.MAX_VALUE * Math.random());
+        int r1 = (int)((double)Integer.MAX_VALUE * Math.random());
+        return String.format("---------------------------%08X%08X", r0, r1);
+    }
+
+    private void sendPart(OutputStream os, String boundary, String name, String data) {
+        try {
+            os.write(("--" + boundary + "\r\n" +
+                      "Content-Disposition: form-data; name=\"" + name + "\"\r\n" +
+                      "\r\n" +
+                      data + "\r\n"
+                     ).getBytes());
+        } catch (Exception ex) {
+            Log.e(LOGTAG, "Exception when sending \"" + name + "\"", ex);
+        }
+    }
+
+    private void sendFile(OutputStream os, String boundary, String name, File file) throws IOException {
+        os.write(("--" + boundary + "\r\n" +
+                  "Content-Disposition: form-data; name=\"" + name + "\"; " +
+                  "filename=\"" + file.getName() + "\"\r\n" +
+                  "Content-Type: application/octet-stream\r\n" +
+                  "\r\n"
+                 ).getBytes());
+        FileChannel fc = new FileInputStream(file).getChannel();
+        fc.transferTo(0, fc.size(), Channels.newChannel(os));
+        fc.close();
+    }
+
+    private String readLogcat() {
+        BufferedReader br = null;
+        try {
+            // get the last 200 lines of logcat
+            Process proc = Runtime.getRuntime().exec(new String[] {
+                "logcat", "-v", "threadtime", "-t", "200", "-d", "*:D"
+            });
+            StringBuffer sb = new StringBuffer();
+            br = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+            for (String s = br.readLine(); s != null; s = br.readLine()) {
+                sb.append(s).append('\n');
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            return "Unable to get logcat: " + e.toString();
+        } finally {
+            if (br != null) {
+                try {
+                    br.close();
+                } catch (Exception e) {
+                    // ignore
+                }
+            }
+        }
+    }
+
+    private void sendReport(File minidumpFile, Map<String, String> extras, File extrasFile) {
+        Log.i(LOGTAG, "sendReport: " + minidumpFile.getPath());
+        final CheckBox includeURLCheckbox = (CheckBox) findViewById(R.id.include_url);
+
+        String spec = extras.get(SERVER_URL_KEY);
+        if (spec == null) {
+            doFinish();
+            return;
+        }
+
+        Log.i(LOGTAG, "server url: " + spec);
+        try {
+            URL url = new URL(spec);
+            HttpURLConnection conn = (HttpURLConnection)url.openConnection();
+            conn.setRequestMethod("POST");
+            String boundary = generateBoundary();
+            conn.setDoOutput(true);
+            conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
+            conn.setRequestProperty("Content-Encoding", "gzip");
+
+            OutputStream os = new GZIPOutputStream(conn.getOutputStream());
+            for (String key : extras.keySet()) {
+                if (key.equals(PAGE_URL_KEY)) {
+                    if (includeURLCheckbox.isChecked())
+                        sendPart(os, boundary, key, extras.get(key));
+                } else if (!key.equals(SERVER_URL_KEY) && !key.equals(NOTES_KEY)) {
+                    sendPart(os, boundary, key, extras.get(key));
+                }
+            }
+
+            // Add some extra information to notes so its displayed by
+            // crash-stats.mozilla.org. Remove this when bug 607942 is fixed.
+            StringBuffer sb = new StringBuffer();
+            sb.append(extras.containsKey(NOTES_KEY) ? extras.get(NOTES_KEY) + "\n" : "");
+            if (AppConstants.MOZ_MIN_CPU_VERSION < 7) {
+                sb.append("nothumb Build\n");
+            }
+            sb.append(Build.MANUFACTURER).append(' ')
+              .append(Build.MODEL).append('\n')
+              .append(Build.FINGERPRINT);
+            sendPart(os, boundary, NOTES_KEY, sb.toString());
+
+            sendPart(os, boundary, "Min_ARM_Version", Integer.toString(AppConstants.MOZ_MIN_CPU_VERSION));
+            sendPart(os, boundary, "Android_Manufacturer", Build.MANUFACTURER);
+            sendPart(os, boundary, "Android_Model", Build.MODEL);
+            sendPart(os, boundary, "Android_Board", Build.BOARD);
+            sendPart(os, boundary, "Android_Brand", Build.BRAND);
+            sendPart(os, boundary, "Android_Device", Build.DEVICE);
+            sendPart(os, boundary, "Android_Display", Build.DISPLAY);
+            sendPart(os, boundary, "Android_Fingerprint", Build.FINGERPRINT);
+            sendPart(os, boundary, "Android_CPU_ABI", Build.CPU_ABI);
+            if (Build.VERSION.SDK_INT >= 8) {
+                try {
+                    sendPart(os, boundary, "Android_CPU_ABI2", Build.CPU_ABI2);
+                    sendPart(os, boundary, "Android_Hardware", Build.HARDWARE);
+                } catch (Exception ex) {
+                    Log.e(LOGTAG, "Exception while sending SDK version 8 keys", ex);
+                }
+            }
+            sendPart(os, boundary, "Android_Version",  Build.VERSION.SDK_INT + " (" + Build.VERSION.CODENAME + ")");
+            if (Build.VERSION.SDK_INT >= 16 && includeURLCheckbox.isChecked()) {
+                sendPart(os, boundary, "Android_Logcat", readLogcat());
+            }
+
+            sendFile(os, boundary, MINI_DUMP_PATH_KEY, minidumpFile);
+            os.write(("\r\n--" + boundary + "--\r\n").getBytes());
+            os.flush();
+            os.close();
+            BufferedReader br = new BufferedReader(
+                new InputStreamReader(conn.getInputStream()));
+            HashMap<String, String>  responseMap = new HashMap<String, String>();
+            readStringsFromReader(br, responseMap);
+
+            if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
+                File submittedDir = new File(getFilesDir(),
+                                             SUBMITTED_SUFFIX);
+                submittedDir.mkdirs();
+                minidumpFile.delete();
+                extrasFile.delete();
+                String crashid = responseMap.get("CrashID");
+                File file = new File(submittedDir, crashid + ".txt");
+                FileOutputStream fos = new FileOutputStream(file);
+                fos.write("Crash ID: ".getBytes());
+                fos.write(crashid.getBytes());
+                fos.close();
+            } else {
+                Log.i(LOGTAG, "Received failure HTTP response code from server: " + conn.getResponseCode());
+            }
+        } catch (IOException e) {
+            Log.e(LOGTAG, "exception during send: ", e);
+        }
+
+        doFinish();
+    }
+
+    private void doRestart() {
+        try {
+            String action = "android.intent.action.MAIN";
+            Intent intent = new Intent(action);
+            intent.setClassName(AppConstants.ANDROID_PACKAGE_NAME,
+                                AppConstants.BROWSER_INTENT_CLASS);
+            Log.i(LOGTAG, intent.toString());
+            startActivity(intent);
+        } catch (Exception e) {
+            Log.e(LOGTAG, "error while trying to restart", e);
+        }
+    }
+
+    private String unescape(String string) {
+        return string.replaceAll("\\\\\\\\", "\\").replaceAll("\\\\n", "\n").replaceAll("\\\\t", "\t");
+    }
+}

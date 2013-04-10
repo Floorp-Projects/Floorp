@@ -228,7 +228,7 @@ interface nsIMemoryMultiReporter : nsISupports
   readonly attribute int64_t explicitNonHeap;
 };
 
-[scriptable, builtinclass, uuid(0baaa958-3112-4952-b557-2a0c57eabb8f)]
+[scriptable, builtinclass, uuid(70b0e608-8dbf-4dc7-b88f-f1c745c1b48c)]
 interface nsIMemoryReporterManager : nsISupports
 {
   /*
@@ -266,6 +266,14 @@ interface nsIMemoryReporterManager : nsISupports
    * Unregister the given memory multi-reporter.
    */
   void unregisterMultiReporter (in nsIMemoryMultiReporter reporter);
+
+  /**
+   * These functions should only be used for testing purposes.
+   */
+  void blockRegistration();
+  void unblockRegistration();
+  void registerReporterEvenIfBlocked(in nsIMemoryReporter aReporter);
+  void registerMultiReporterEvenIfBlocked(in nsIMemoryMultiReporter aReporter);
 
   /*
    * Initialize.

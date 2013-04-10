@@ -43,8 +43,7 @@ LayerManagerD3D9::Initialize(bool force)
   ScopedGfxFeatureReporter reporter("D3D9 Layers", force);
 
   /* XXX: this preference and blacklist code should move out of the layer manager */
-  bool forceAccelerate =
-    Preferences::GetBool("layers.acceleration.force-enabled", false);
+  bool forceAccelerate = gfxPlatform::GetPrefLayersAccelerationForceEnabled();
 
   nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
   if (gfxInfo) {
@@ -218,56 +217,6 @@ LayerManagerD3D9::CreateReadbackLayer()
 {
   nsRefPtr<ReadbackLayer> layer = new ReadbackLayerD3D9(this);
   return layer.forget();
-}
-
-already_AddRefed<ShadowThebesLayer>
-LayerManagerD3D9::CreateShadowThebesLayer()
-{
-  if (LayerManagerD3D9::mDestroyed) {
-    NS_WARNING("Call on destroyed layer manager");
-    return nullptr;
-  }
-  return nsRefPtr<ShadowThebesLayerD3D9>(new ShadowThebesLayerD3D9(this)).forget();
-}
-
-already_AddRefed<ShadowContainerLayer>
-LayerManagerD3D9::CreateShadowContainerLayer()
-{
-  if (LayerManagerD3D9::mDestroyed) {
-    NS_WARNING("Call on destroyed layer manager");
-    return nullptr;
-  }
-  return nsRefPtr<ShadowContainerLayerD3D9>(new ShadowContainerLayerD3D9(this)).forget();
-}
-
-already_AddRefed<ShadowImageLayer>
-LayerManagerD3D9::CreateShadowImageLayer()
-{
-  if (LayerManagerD3D9::mDestroyed) {
-    NS_WARNING("Call on destroyed layer manager");
-    return nullptr;
-  }
-  return nsRefPtr<ShadowImageLayerD3D9>(new ShadowImageLayerD3D9(this)).forget();
-}
-
-already_AddRefed<ShadowColorLayer>
-LayerManagerD3D9::CreateShadowColorLayer()
-{
-  if (LayerManagerD3D9::mDestroyed) {
-    NS_WARNING("Call on destroyed layer manager");
-    return nullptr;
-  }
-  return nsRefPtr<ShadowColorLayerD3D9>(new ShadowColorLayerD3D9(this)).forget();
-}
-
-already_AddRefed<ShadowCanvasLayer>
-LayerManagerD3D9::CreateShadowCanvasLayer()
-{
-  if (LayerManagerD3D9::mDestroyed) {
-    NS_WARNING("Call on destroyed layer manager");
-    return nullptr;
-  }
-  return nsRefPtr<ShadowCanvasLayerD3D9>(new ShadowCanvasLayerD3D9(this)).forget();
 }
 
 void ReleaseTexture(void *texture)

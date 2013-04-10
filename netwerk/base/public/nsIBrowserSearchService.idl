@@ -154,7 +154,7 @@ interface nsIBrowserSearchInitObserver : nsISupports
   void onInitComplete(in nsresult aStatus);
 };
 
-[scriptable, uuid(a676eb70-6987-4429-a668-3e253b6f7c7c)]
+[scriptable, uuid(89beea9f-61a8-45d3-818d-b259f00195fe)]
 interface nsIBrowserSearchService : nsISupports
 {
   /**
@@ -330,20 +330,13 @@ interface nsIBrowserSearchService : nsISupports
    * The default search engine. Returns the first visible engine if the default
    * engine is hidden. May be null if there are no visible search engines.
    */
-  readonly attribute nsISearchEngine defaultEngine;
+  attribute nsISearchEngine defaultEngine;
 
   /**
    * The currently active search engine. May be null if there are no visible
    * search engines.
    */
   attribute nsISearchEngine currentEngine;
-
-  /**
-   * The original default engine. This differs from the "defaultEngine"
-   * attribute in that it always returns a given build's default engine,
-   * regardless of whether it is hidden.
-   */
-  readonly attribute nsISearchEngine originalDefaultEngine;
 };
 
 %{ C++
@@ -382,5 +375,12 @@ interface nsIBrowserSearchService : nsISupports
  * Sent when the "current" engine is changed.
  */
 #define SEARCH_ENGINE_CURRENT      "engine-current";
+
+/**
+ * Sent when the "default" engine is changed.
+ */
+#define SEARCH_ENGINE_DEFAULT      "engine-default";
+
+
 
 %}

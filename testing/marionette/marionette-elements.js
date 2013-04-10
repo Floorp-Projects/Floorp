@@ -72,12 +72,12 @@ ElementManager.prototype = {
   */
   addToKnownElements: function EM_addToKnownElements(element) {
     for (let i in this.seenItems) {
-      if (XPCNativeWrapper(this.seenItems[i]) == XPCNativeWrapper(element)) {
+      if (XPCNativeWrapper(this.seenItems[i].get()) == XPCNativeWrapper(element)) {
         return i;
       }
     }
     var id = uuidGen.generateUUID().toString();
-    this.seenItems[id] = element;
+    this.seenItems[id] = Components.utils.getWeakReference(element);
     return id;
   },
   
@@ -97,6 +97,7 @@ ElementManager.prototype = {
     if (!el) {
       throw new ElementException("Element has not been seen before", 17, null);
     }
+    el = el.get();
     // use XPCNativeWrapper to compare elements; see bug 834266
     if (!(XPCNativeWrapper(el).ownerDocument == XPCNativeWrapper(win).document)) {
       throw new ElementException("Stale element reference", 10, null);
@@ -137,7 +138,7 @@ ElementManager.prototype = {
         }
         else if (val.nodeType == 1) {
           for(let i in this.seenItems) {
-            if (this.seenItems[i] == val) {
+            if (this.seenItems[i].get() == val) {
               result = {'ELEMENT': i};
             }
           }

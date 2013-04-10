@@ -41,9 +41,27 @@ Cu.import("resource://gre/modules/services-common/log4moz.js");
 let logger = Log4Moz.repository.getLogger("Marionette");
 logger.info('marionette-actors.js loaded');
 
-Services.prefs.setBoolPref("network.gonk.manage-offline-status", false);
-Services.io.manageOfflineStatus = false;
-Services.io.offline = false;
+let bypassOffline = false;
+
+try {
+  XPCOMUtils.defineLazyGetter(this, "libcutils", function () {
+    Cu.import("resource://gre/modules/systemlibs.js");
+    return libcutils;
+  });
+  if (libcutils) {
+    let platform = libcutils.property_get("ro.product.device");
+    logger.info("Platform detected is " + platform);
+    bypassOffline = (platform == "generic" || platform == "panda");
+  }
+}
+catch(e) {}
+
+if (bypassOffline) {
+  logger.info("Bypassing offline status.");
+  Services.prefs.setBoolPref("network.gonk.manage-offline-status", false);
+  Services.io.manageOfflineStatus = false;
+  Services.io.offline = false;
+}
 
 // This is used to prevent newSession from returning before the telephony
 // API's are ready; see bug 792647.  This assumes that marionette-actors.js
@@ -392,7 +410,7 @@ MarionetteDriverActor.prototype = {
     this.curBrowser = this.browsers[winId];
     if (this.curBrowser.elementManager.seenItems[winId] == undefined) {
       //add this to seenItems so we can guarantee the user will get winId as this window's id
-      this.curBrowser.elementManager.seenItems[winId] = win;
+      this.curBrowser.elementManager.seenItems[winId] = Cu.getWeakReference(win);
     }
   },
 
@@ -2148,7 +2166,7 @@ MarionetteDriverActor.prototype = {
           reg.id = this.curBrowser.register(this.generateFrameId(message.json.value),
                                          message.json.href); 
         }
-        this.curBrowser.elementManager.seenItems[reg.id] = listenerWindow; //add to seenItems
+        this.curBrowser.elementManager.seenItems[reg.id] = Cu.getWeakReference(listenerWindow); //add to seenItems
         reg.importedScripts = this.importedScripts.path;
         if (nullPrevious && (this.curBrowser.curFrameId != null)) {
           this.sendAsync("newSession", {B2G: (appName == "B2G")});

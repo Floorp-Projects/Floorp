@@ -40,7 +40,16 @@ addLoadEvent(function() {
     analyser.fftSize = 1;
   }, DOMException.INDEX_SIZE_ERR);
   expectException(function() {
+    analyser.fftSize = 8;
+  }, DOMException.INDEX_SIZE_ERR);
+  expectException(function() {
     analyser.fftSize = 100; // non-power of two
+  }, DOMException.INDEX_SIZE_ERR);
+  expectException(function() {
+    analyser.fftSize = 2049;
+  }, DOMException.INDEX_SIZE_ERR);
+  expectException(function() {
+    analyser.fftSize = 4096;
   }, DOMException.INDEX_SIZE_ERR);
   analyser.fftSize = 1024;
   is(analyser.frequencyBinCount, 512, "Correct new value for frequencyBinCount");

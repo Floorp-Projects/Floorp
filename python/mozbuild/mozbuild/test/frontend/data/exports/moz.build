@@ -1,0 +1,15 @@
+# Any copyright is dedicated to the Public Domain.
+# http://creativecommons.org/publicdomain/zero/1.0/
+
+EXPORTS += ['foo.h']
+EXPORTS += ['bar.h', 'baz.h']
+EXPORTS.mozilla += ['mozilla1.h']
+EXPORTS.mozilla += ['mozilla2.h']
+EXPORTS.mozilla.dom += ['dom1.h']
+EXPORTS.mozilla.dom += ['dom2.h', 'dom3.h']
+EXPORTS.mozilla.gfx += ['gfx.h']
+EXPORTS.vpx = ['mem.h']
+EXPORTS.vpx += ['mem2.h']
+EXPORTS.nspr.private = ['pprio.h', 'pprthred.h']
+EXPORTS.overwrite = ['old.h']
+EXPORTS.overwrite = ['new.h']

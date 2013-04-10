@@ -34,6 +34,7 @@ namespace mozilla {
 
 namespace layers {
 struct FrameMetrics;
+struct TextureFactoryIdentifier;
 }
 
 namespace layout {
@@ -96,8 +97,7 @@ public:
     virtual bool RecvEvent(const RemoteDOMEvent& aEvent);
     virtual bool RecvPRenderFrameConstructor(PRenderFrameParent* actor,
                                              ScrollingBehavior* scrolling,
-                                             LayersBackend* backend,
-                                             int32_t* maxTextureSize,
+                                             TextureFactoryIdentifier* identifier,
                                              uint64_t* layersId);
     virtual bool RecvBrowserFrameOpenWindow(PBrowserParent* aOpener,
                                             const nsString& aURL,
@@ -191,7 +191,7 @@ public:
     virtual POfflineCacheUpdateParent* AllocPOfflineCacheUpdate(
             const URIParams& aManifestURI,
             const URIParams& aDocumentURI,
-            const bool& stickDocument);
+            const bool& stickDocument) MOZ_OVERRIDE;
     virtual bool DeallocPOfflineCacheUpdate(POfflineCacheUpdateParent* actor);
 
     JSBool GetGlobalJSObject(JSContext* cx, JSObject** globalp);
@@ -255,8 +255,7 @@ protected:
     bool AllowContentIME();
 
     virtual PRenderFrameParent* AllocPRenderFrame(ScrollingBehavior* aScrolling,
-                                                  LayersBackend* aBackend,
-                                                  int32_t* aMaxTextureSize,
+                                                  TextureFactoryIdentifier* aTextureFactoryIdentifier,
                                                   uint64_t* aLayersId) MOZ_OVERRIDE;
     virtual bool DeallocPRenderFrame(PRenderFrameParent* aFrame) MOZ_OVERRIDE;
 

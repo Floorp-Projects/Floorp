@@ -15,7 +15,16 @@ interface nsIRilMobileMessageDatabaseCallback : nsISupports
   void notify(in nsresult aRv, in nsISupports aDomMessage);
 };
 
-[scriptable, uuid(a31b1716-8631-11e2-afaa-2fbd087f426e)]
+[scriptable, function, uuid(2be52603-5885-412c-9225-f78a78f1bbbd)]
+interface nsIRilMobileMessageDatabaseRecordCallback : nsISupports
+{
+  /**
+   * |aMessageRecord| Object: the mobile-message database record
+   */
+  void notify(in nsresult aRv, in jsval aMessageRecord);
+};
+
+[scriptable, uuid(8f49216f-bc0c-420e-b77e-7f1cbdcd245f)]
 interface nsIRilMobileMessageDatabaseService : nsIMobileMessageDatabaseService
 {
   /**
@@ -65,4 +74,12 @@ interface nsIRilMobileMessageDatabaseService : nsIMobileMessageDatabaseService
                           in DOMString aDelivery,
                           in DOMString aDeliveryStatus,
                [optional] in nsIRilMobileMessageDatabaseCallback aCallback);
+
+  /**
+   * |aMessageId| Number: the message's DB record ID.
+   * |aCallback| nsIRilMobileMessageDatabaseCallback: a callback which takes
+   *   result flag and message record as parameters.
+   */
+  void getMessageRecordById(in long aMessageId,
+                            in nsIRilMobileMessageDatabaseRecordCallback aCallback);
 };

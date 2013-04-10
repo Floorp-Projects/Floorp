@@ -4,7 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #filter substitution
-package @ANDROID_PACKAGE_NAME@;
+
+package org.mozilla.gecko;
 
 public final class WebApps {
 

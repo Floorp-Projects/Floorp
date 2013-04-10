@@ -34,8 +34,12 @@ protected:
                       MaybeMagicGrallocBufferHandle*) MOZ_OVERRIDE;
   virtual bool
   DeallocPGrallocBuffer(PGrallocBufferChild* actor) MOZ_OVERRIDE;
+
   virtual PLayerChild* AllocPLayer() MOZ_OVERRIDE;
   virtual bool DeallocPLayer(PLayerChild* actor) MOZ_OVERRIDE;
+
+  virtual PCompositableChild* AllocPCompositable(const CompositableType& aType) MOZ_OVERRIDE;
+  virtual bool DeallocPCompositable(PCompositableChild* actor) MOZ_OVERRIDE;
 };
 
 } // namespace layers

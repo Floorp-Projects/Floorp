@@ -553,6 +553,8 @@ while (<FH>) {
   }
 }
 close FH;
+# special case U+30FB KATAKANA MIDDLE DOT -- see bug 857490
+$xidmod[0x30FB] = 1;
 
 open FH, "< $ARGV[1]/Unihan_Variants.txt" or die "can't open UCD file Unihan_Variants.txt (from Unihan.zip)\n";
 push @versionInfo, "";

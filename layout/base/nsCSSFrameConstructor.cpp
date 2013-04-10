@@ -1955,7 +1955,11 @@ nsCSSFrameConstructor::ConstructTable(nsFrameConstructorState& aState,
 
   // Mark the table frame as an absolute container if needed
   newFrame->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
-  if (display->IsPositioned(aParentFrame)) {
+  if ((display->IsRelativelyPositionedStyle() ||
+       display->IsAbsolutelyPositionedStyle() ||
+       (display->HasTransformStyle() &&
+        aParentFrame->IsFrameOfType(nsIFrame::eSupportsCSSTransforms))) &&
+      !aParentFrame->IsSVGText()) {
     aState.PushAbsoluteContainingBlock(newFrame, absoluteSaveState);
   }
   if (aItem.mFCData->mBits & FCDATA_USE_CHILD_ITEMS) {
@@ -3567,7 +3571,6 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
 
     // If we need to create a block formatting context to wrap our
     // kids, do it now.
-    const nsStyleDisplay* maybeAbsoluteContainingBlockDisplay = display;
     nsIFrame* maybeAbsoluteContainingBlock = newFrame;
     nsIFrame* possiblyLeafFrame = newFrame;
     if (bits & FCDATA_CREATE_BLOCK_WRAPPER_FOR_ALL_KIDS) {
@@ -3587,7 +3590,6 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
       // positioned, otherwise the former.
       const nsStyleDisplay* blockDisplay = blockContext->StyleDisplay();
       if (blockDisplay->IsPositioned(blockFrame)) {
-        maybeAbsoluteContainingBlockDisplay = blockDisplay;
         maybeAbsoluteContainingBlock = blockFrame;
       }
       
@@ -3620,7 +3622,7 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
     } else if (!(bits & FCDATA_SKIP_ABSPOS_PUSH)) {
       nsIFrame* cb = maybeAbsoluteContainingBlock;
       cb->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
-      if (maybeAbsoluteContainingBlockDisplay->IsPositioned(cb)) {
+      if (cb->IsPositioned()) {
         aState.PushAbsoluteContainingBlock(cb, absoluteSaveState);
       }
     }
@@ -4238,8 +4240,7 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay* aDisplay,
   // XXX Ignore tables for the time being
   // XXXbz it would be nice to combine this with the other block
   // case... Think about how do do this?
-  if ((aParentFrame ? aDisplay->IsBlockInside(aParentFrame) :
-                      aDisplay->IsBlockInsideStyle()) &&
+  if (aDisplay->IsBlockInsideStyle() &&
       aDisplay->IsScrollableOverflow() &&
       !propagatedScrollToViewport) {
     // Except we don't want to do that for paginated contexts for
@@ -4260,8 +4261,7 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay* aDisplay,
   }
 
   // Handle various non-scrollable blocks
-  if ((aParentFrame ? aDisplay->IsBlockInside(aParentFrame) :
-                      aDisplay->IsBlockInsideStyle())) {
+  if (aDisplay->IsBlockInsideStyle()) {
     static const FrameConstructionData sNonScrollableBlockData =
       FULL_CTOR_FCDATA(0, &nsCSSFrameConstructor::ConstructNonScrollableBlock);
     return &sNonScrollableBlockData;
@@ -4327,8 +4327,7 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay* aDisplay,
                        &nsCSSFrameConstructor::ConstructTableCell) }
   };
 
-  return FindDataByInt((aParentFrame ? aDisplay->GetDisplay(aParentFrame) :
-                                       aDisplay->mDisplay),
+  return FindDataByInt(aDisplay->mDisplay,
                        aElement, aStyleContext, sDisplayData,
                        ArrayLength(sDisplayData));
 }
@@ -5290,8 +5289,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
        (!aParentFrame || // No aParentFrame means inline
         aParentFrame->StyleDisplay()->mDisplay == NS_STYLE_DISPLAY_INLINE)) ||
       // Things that are inline-outside but aren't inline frames are inline
-      (aParentFrame ? display->IsInlineOutside(aParentFrame) :
-                      display->IsInlineOutsideStyle()) ||
+      display->IsInlineOutsideStyle() ||
       // Popups that are certainly out of flow.
       isPopup;
 
@@ -10451,7 +10449,7 @@ nsCSSFrameConstructor::CreateLetterFrame(nsIFrame* aBlockFrame,
 
     // Create the right type of first-letter frame
     const nsStyleDisplay* display = sc->StyleDisplay();
-    if (display->IsFloating(aParentFrame)) {
+    if (display->IsFloatingStyle() && !aParentFrame->IsSVGText()) {
       // Make a floating first-letter frame
       CreateFloatingLetterFrame(state, aBlockFrame, aTextContent, textFrame,
                                 blockContent, aParentFrame, sc, aResult);

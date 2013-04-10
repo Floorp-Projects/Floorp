@@ -6,61 +6,10 @@
 #filter substitution
 package @ANDROID_PACKAGE_NAME@;
 
-import android.view.MenuItem;
-
 import org.mozilla.gecko.BrowserApp;
-import org.mozilla.gecko.GeckoProfile;
-import org.mozilla.gecko.R;
-import org.mozilla.gecko.util.HardwareUtils;
 
-public class App extends BrowserApp {
-    @Override
-    public int getLayout() { return R.layout.gecko_app; }
-
-    @Override
-    public String getPackageName() {
-        return "@ANDROID_PACKAGE_NAME@";
-    }
-
-    @Override
-    public String getContentProcessName() {
-        return "@MOZ_CHILD_PROCESS_NAME@";
-    }
-
-    @Override
-    protected String getDefaultProfileName() {
-        String profile = GeckoProfile.findDefaultProfile(this);
-        return (profile != null ? profile : "default");
-    }
-
-    @Override
-    public String getDefaultUAString() {
-        String deviceType = "Mobile";
-        if (HardwareUtils.isTablet())
-            deviceType = "Tablet";
-        return "Mozilla/5.0 (Android; " + deviceType + "; rv:@MOZ_APP_VERSION@) Gecko/@MOZ_APP_VERSION@ Firefox/@MOZ_APP_VERSION@";
-    }
-
-    @Override
-    public String getUAStringForHost(String host) {
-        // With our standard UA String, we get a 200 response code and 
-        // client-side redirect from t.co. This bot-like UA gives us a 
-        // 301 response code
-        if ("t.co".equals(host))
-            return "Redirector/@MOZ_APP_VERSION@ (Android; rv:@MOZ_APP_VERSION@)";
-        return getDefaultUAString();
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-#ifdef MOZ_PROFILING
-        if (item.getItemId() == org.mozilla.gecko.R.id.toggle_profiling) {
-            org.mozilla.gecko.GeckoAppShell.sendEventToGecko(
-                org.mozilla.gecko.GeckoEvent.createBroadcastEvent("ToggleProfiling", null));
-            return true;
-        }
-#endif
-        return super.onOptionsItemSelected(item);
-    }
-}
+/**
+ * This class serves only as a namespace wrapper for BrowserApp.
+ */
+public class App extends BrowserApp {}
 

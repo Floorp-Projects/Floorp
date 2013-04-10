@@ -249,7 +249,7 @@ static void nr_ice_candidate_pair_stun_cb(NR_SOCKET s, int how, void *cb_arg)
           break;
         }
         request_src=&pair->stun_client->my_addr;
-        nr_socket_getaddr(pair->local->isock->sock,&response_dst);
+        nr_socket_getaddr(pair->local->osock,&response_dst);
         if (nr_transport_addr_cmp(request_src,&response_dst,NR_TRANSPORT_ADDR_CMP_MODE_ALL)){
           r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s): Address mismatch %s/%s",pair->pctx->label, request_src->as_string,response_dst.as_string);
           nr_ice_candidate_pair_set_state(pair->pctx,pair,NR_ICE_PAIR_STATE_FAILED);
