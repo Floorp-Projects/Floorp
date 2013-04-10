@@ -93,7 +93,7 @@ static void InitAxisPrefs()
 }
 
 Axis::Axis(AsyncPanZoomController* aAsyncPanZoomController)
-  : mPos(0.0f),
+  : mPos(0),
     mVelocity(0.0f),
     mAcceleration(0),
     mAsyncPanZoomController(aAsyncPanZoomController)
