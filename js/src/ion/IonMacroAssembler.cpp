@@ -980,6 +980,101 @@ MacroAssembler::loadBaselineFramePtr(Register framePtr, Register dest)
     subPtr(Imm32(BaselineFrame::Size()), dest);
 }
 
+void
+MacroAssembler::enterParallelExitFrameAndLoadSlice(const VMFunction *f, Register slice,
+                                                   Register scratch)
+{
+    // Load the current ForkJoinSlice *. If we need a parallel exit frame,
+    // chances are we are about to do something very slow anyways, so just
+    // call ParForkJoinSlice again instead of using the cached version.
+    setupUnalignedABICall(0, scratch);
+    callWithABI(JS_FUNC_TO_DATA_PTR(void *, ParForkJoinSlice));
+    if (ReturnReg != slice)
+        movePtr(ReturnReg, slice);
+    // Load the PerThreadData from from the slice.
+    loadPtr(Address(slice, offsetof(ForkJoinSlice, perThreadData)), scratch);
+    linkParallelExitFrame(scratch);
+    // Push the ioncode.
+    exitCodePatch_ = PushWithPatch(ImmWord(-1));
+    // Push the VMFunction pointer, to mark arguments.
+    Push(ImmWord(f));
+}
+
+void
+MacroAssembler::enterExitFrameAndLoadContext(const VMFunction *f, Register cxReg, Register scratch,
+                                             ExecutionMode executionMode)
+{
+    switch (executionMode) {
+      case SequentialExecution:
+        // The scratch register is not used for sequential execution.
+        enterExitFrame(f);
+        loadJSContext(cxReg);
+        break;
+      case ParallelExecution:
+        enterParallelExitFrameAndLoadSlice(f, cxReg, scratch);
+        break;
+      default:
+        JS_NOT_REACHED("No such execution mode");
+    }
+}
+
+void
+MacroAssembler::handleFailure(ExecutionMode executionMode)
+{
+    // Re-entry code is irrelevant because the exception will leave the
+    // running function and never come back
+    if (sps_)
+        sps_->skipNextReenter();
+    leaveSPSFrame();
+
+    void *handler;
+    switch (executionMode) {
+      case SequentialExecution:
+        handler = JS_FUNC_TO_DATA_PTR(void *, ion::HandleException);
+        break;
+      case ParallelExecution:
+        handler = JS_FUNC_TO_DATA_PTR(void *, ion::HandleParallelFailure);
+        break;
+      default:
+        JS_NOT_REACHED("No such execution mode");
+    }
+    MacroAssemblerSpecific::handleFailureWithHandler(handler);
+
+    // Doesn't actually emit code, but balances the leave()
+    if (sps_)
+        sps_->reenter(*this, InvalidReg);
+}
+
+void
+MacroAssembler::tagCallee(Register callee, ExecutionMode mode)
+{
+    switch (mode) {
+      case SequentialExecution:
+        // CalleeToken_Function is untagged, so we don't need to do anything.
+        return;
+      case ParallelExecution:
+        orPtr(Imm32(CalleeToken_ParallelFunction), callee);
+        return;
+      default:
+        JS_NOT_REACHED("No such execution mode");
+    }
+}
+
+void
+MacroAssembler::clearCalleeTag(Register callee, ExecutionMode mode)
+{
+    switch (mode) {
+      case SequentialExecution:
+        // CalleeToken_Function is untagged, so we don't need to do anything.
+        return;
+      case ParallelExecution:
+        andPtr(Imm32(~0x3), callee);
+        return;
+      default:
+        JS_NOT_REACHED("No such execution mode");
+    }
+}
+
 void printf0_(const char *output) {
     printf("%s", output);
 }

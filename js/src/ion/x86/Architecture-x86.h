@@ -70,7 +70,9 @@ class Registers {
         (1 << JSC::X86Registers::edi) |
         (1 << JSC::X86Registers::ebp);
 
-    static const uint32_t WrapperMask = VolatileMask;
+    static const uint32_t WrapperMask =
+        VolatileMask |
+        (1 << JSC::X86Registers::ebx);
 
     static const uint32_t SingleByteRegs =
         (1 << JSC::X86Registers::eax) |
