@@ -29,10 +29,6 @@ Cu.import("resource:///modules/CustomizableUI.jsm");
 
 function CustomizeMode(aWindow) {
   this.window = aWindow;
-  // We register this window to have its customization data cleaned up when
-  // unloading.
-  CustomizableUI.registerWindow(this.window);
-
   this.document = aWindow.document;
   // There are two palettes - there's the palette that can be overlayed with
   // toolbar items in browser.xul. This is invisible, and never seen by the
