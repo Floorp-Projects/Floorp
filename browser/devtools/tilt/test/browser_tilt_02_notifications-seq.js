@@ -19,6 +19,7 @@ function test() {
 
   createTab(function() {
     Services.obs.addObserver(finalize, DESTROYED, false);
+    Services.obs.addObserver(obs_STARTUP, STARTUP, false);
     Services.obs.addObserver(obs_INITIALIZING, INITIALIZING, false);
     Services.obs.addObserver(obs_INITIALIZED, INITIALIZED, false);
     Services.obs.addObserver(obs_DESTROYING, DESTROYING, false);
@@ -34,39 +35,51 @@ function test() {
   });
 }
 
-function obs_INITIALIZING() {
+function obs_STARTUP(win) {
+  info("Handling the STARTUP notification.");
+  is(win, gBrowser.selectedBrowser.contentWindow, "Saw the correct window");
+  tabEvents += "STARTUP;";
+}
+
+function obs_INITIALIZING(win) {
   info("Handling the INITIALIZING notification.");
+  is(win, gBrowser.selectedBrowser.contentWindow, "Saw the correct window");
   tabEvents += "INITIALIZING;";
 }
 
-function obs_INITIALIZED() {
+function obs_INITIALIZED(win) {
   info("Handling the INITIALIZED notification.");
+  is(win, gBrowser.selectedBrowser.contentWindow, "Saw the correct window");
   tabEvents += "INITIALIZED;";
 
   Tilt.destroy(Tilt.currentWindowId, true);
 }
 
-function obs_DESTROYING() {
+function obs_DESTROYING(win) {
   info("Handling the DESTROYING( notification.");
+  is(win, gBrowser.selectedBrowser.contentWindow, "Saw the correct window");
   tabEvents += "DESTROYING;";
 }
 
-function obs_BEFORE_DESTROYED() {
+function obs_BEFORE_DESTROYED(win) {
   info("Handling the BEFORE_DESTROYED notification.");
+  is(win, gBrowser.selectedBrowser.contentWindow, "Saw the correct window");
   tabEvents += "BEFORE_DESTROYED;";
 }
 
-function obs_DESTROYED() {
+function obs_DESTROYED(win) {
   info("Handling the DESTROYED notification.");
+  is(win, gBrowser.selectedBrowser.contentWindow, "Saw the correct window");
   tabEvents += "DESTROYED;";
 }
 
-function finalize() {
+function finalize(win) {
   if (!tabEvents) {
     return;
   }
 
-  is(tabEvents, "INITIALIZING;INITIALIZED;DESTROYING;BEFORE_DESTROYED;DESTROYED;",
+  is(win, gBrowser.selectedBrowser.contentWindow, "Saw the correct window");
+  is(tabEvents, "STARTUP;INITIALIZING;INITIALIZED;DESTROYING;BEFORE_DESTROYED;DESTROYED;",
     "The notifications weren't fired in the correct order.");
 
   cleanup();

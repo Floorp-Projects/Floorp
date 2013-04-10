@@ -74,12 +74,8 @@ function ElementStyle(aElement, aStore)
     this.store.userProperties = new UserProperties();
   }
 
-  if (this.store.disabled) {
-    this.store.disabled = aStore.disabled;
-  } else {
-    // FIXME: This should be a WeakMap once bug 753517 is fixed.
-    // See Bug 777373 for details.
-    this.store.disabled = new Map();
+  if (!("disabled" in this.store)) {
+    this.store.disabled = new WeakMap();
   }
 
   let doc = aElement.ownerDocument;
@@ -1666,9 +1662,7 @@ TextPropertyEditor.prototype = {
  */
 function UserProperties()
 {
-  // FIXME: This should be a WeakMap once bug 753517 is fixed.
-  // See Bug 777373 for details.
-  this.map = new Map();
+  this.weakMap = new WeakMap();
 }
 
 UserProperties.prototype = {
@@ -1688,7 +1682,7 @@ UserProperties.prototype = {
    *          otherwise.
    */
   getProperty: function UP_getProperty(aStyle, aName, aComputedValue) {
-    let entry = this.map.get(aStyle, null);
+    let entry = this.weakMap.get(aStyle, null);
 
     if (entry && aName in entry) {
       let item = entry[aName];
@@ -1717,13 +1711,13 @@ UserProperties.prototype = {
    *        The value of the property to set.
    */
   setProperty: function UP_setProperty(aStyle, aName, aComputedValue, aUserValue) {
-    let entry = this.map.get(aStyle, null);
+    let entry = this.weakMap.get(aStyle, null);
     if (entry) {
       entry[aName] = { computed: aComputedValue, user: aUserValue };
     } else {
       let props = {};
       props[aName] = { computed: aComputedValue, user: aUserValue };
-      this.map.set(aStyle, props);
+      this.weakMap.set(aStyle, props);
     }
   },
 
@@ -1736,7 +1730,7 @@ UserProperties.prototype = {
    *        The name of the property to check.
    */
   contains: function UP_contains(aStyle, aName) {
-    let entry = this.map.get(aStyle, null);
+    let entry = this.weakMap.get(aStyle, null);
     return !!entry && aName in entry;
   },
 };

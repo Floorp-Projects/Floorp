@@ -575,3 +575,48 @@ add_test(function() {
     close_manager(gManagerWindow, run_next_test);
   });
 });
+
+// Test for Bug 601442 - extensions.getAddons.showPane need to be update 
+// for the new addon manager.
+function bug_601442_test_elements(visible) {
+  open_manager("addons://list/extension", function(aWindow) {
+    gManagerWindow = aWindow;
+    gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+    if(visible)
+      ok(gCategoryUtilities.isTypeVisible("discover"), "Discover category should be visible");
+    else
+      ok(!gCategoryUtilities.isTypeVisible("discover"), "Discover category should not be visible");
+
+    gManagerWindow.loadView("addons://list/dictionary");
+    wait_for_view_load(gManagerWindow, function(aManager) {
+      var button = aManager.document.getElementById("discover-button-install");
+      if(visible)
+        ok(!is_hidden(button), "Discover button should be visible!");
+      else
+        ok(is_hidden(button), "Discover button should not be visible!");
+
+      close_manager(gManagerWindow, run_next_test);
+    });
+  });
+}
+
+add_test(function() {
+  Services.prefs.setBoolPref(PREF_DISCOVER_ENABLED, false);
+  Services.prefs.setBoolPref(PREF_XPI_ENABLED, true);
+  bug_601442_test_elements(false);
+});
+add_test(function() {
+  Services.prefs.setBoolPref(PREF_DISCOVER_ENABLED, true);
+  Services.prefs.setBoolPref(PREF_XPI_ENABLED, false);
+  bug_601442_test_elements(false);
+});
+add_test(function() {
+  Services.prefs.setBoolPref(PREF_DISCOVER_ENABLED, false);
+  Services.prefs.setBoolPref(PREF_XPI_ENABLED, false);
+  bug_601442_test_elements(false);
+});
+add_test(function() {
+  Services.prefs.setBoolPref(PREF_DISCOVER_ENABLED, true);
+  Services.prefs.setBoolPref(PREF_XPI_ENABLED, true);
+  bug_601442_test_elements(true);
+});

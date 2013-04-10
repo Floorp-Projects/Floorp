@@ -18,42 +18,54 @@ function test() {
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(0),
         "GET", CONTENT_TYPE_SJS + "?fmt=xml", {
           status: 200,
+          statusText: "OK",
           type: "xml",
+          fullMimeType: "text/xml; charset=utf-8",
           size: L10N.getFormatStr("networkMenu.sizeKB", 0.04),
           time: true
         });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(1),
         "GET", CONTENT_TYPE_SJS + "?fmt=css", {
           status: 200,
+          statusText: "OK",
           type: "css",
+          fullMimeType: "text/css; charset=utf-8",
           size: L10N.getFormatStr("networkMenu.sizeKB", 0.03),
           time: true
         });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(2),
         "GET", CONTENT_TYPE_SJS + "?fmt=js", {
           status: 200,
+          statusText: "OK",
           type: "js",
+          fullMimeType: "application/javascript; charset=utf-8",
           size: L10N.getFormatStr("networkMenu.sizeKB", 0.03),
           time: true
         });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(3),
         "GET", CONTENT_TYPE_SJS + "?fmt=json", {
           status: 200,
+          statusText: "OK",
           type: "json",
+          fullMimeType: "application/json; charset=utf-8",
           size: L10N.getFormatStr("networkMenu.sizeKB", 0.03),
           time: true
         });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(4),
         "GET", CONTENT_TYPE_SJS + "?fmt=bogus", {
           status: 404,
+          statusText: "Not Found",
           type: "html",
+          fullMimeType: "text/html; charset=utf-8",
           size: L10N.getFormatStr("networkMenu.sizeKB", 0.02),
           time: true
         });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(5),
         "GET", TEST_IMAGE, {
           status: 200,
+          statusText: "OK",
           type: "png",
+          fullMimeType: "image/png",
           size: L10N.getFormatStr("networkMenu.sizeKB", 0.76),
           time: true
         });

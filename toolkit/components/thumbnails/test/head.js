@@ -240,3 +240,17 @@ function whenFileRemoved(aFile, aCallback) {
 
   executeSoon(callback || next);
 }
+
+/**
+ * Makes sure that a given list of URLs is not implicitly expired.
+ *
+ * @param aURLs The list of URLs that should not be expired.
+ */
+function dontExpireThumbnailURLs(aURLs) {
+  let dontExpireURLs = (cb) => cb(aURLs);
+  PageThumbs.addExpirationFilter(dontExpireURLs);
+
+  registerCleanupFunction(function () {
+    PageThumbs.removeExpirationFilter(dontExpireURLs);
+  });
+}
