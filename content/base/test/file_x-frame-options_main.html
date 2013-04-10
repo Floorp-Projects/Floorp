@@ -22,5 +22,21 @@ window.addEventListener('load', parent.testFramesLoaded, false);
 <iframe id="allow-from-allow" src="http://example.com/tests/content/base/test/file_x-frame-options_page.sjs?testid=allow-from-allow&xfo=afa"></iframe><br>
 <iframe id="allow-from-deny" src="http://example.com/tests/content/base/test/file_x-frame-options_page.sjs?testid=allow-from-deny&xfo=afd"></iframe><br>
 
+<!-- added for bug 836132 -->
+<script type="text/javascript">
+
+  function addFrame(test, xfo) {
+    var baseurl = "http://mochi.test:8888/tests/content/base/test/file_x-frame-options_page.sjs";
+    var ifr = "<iframe id='" + test + "'" + "src='" + baseurl + "?testid=" + test + "&xfo=" + xfo + "' style='border:2px solid red;'></iframe>";
+    document.write(ifr);
+  }
+
+  addFrame("allow-from-allow-1", "afa1");
+  for (var i = 1; i<=14; i++)
+    addFrame("allow-from-deny-"+i, "afd"+i);
+
+</script>
+
+
 </body>
 </html>
