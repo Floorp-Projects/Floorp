@@ -535,17 +535,7 @@ var SelectionHandler = {
     this._contentWindow = contentWindow;
     this._contentOffset = offset;
     this._domWinUtils = utils;
-    this._targetIsEditable = false;
-    if (this._isTextInput(this._targetElement)) {
-      this._targetIsEditable = true;
-      // Since we have an overlay, focus will not get set, so set it. There
-      // are ways around this if this causes trouble - we have the selection
-      // controller, so we can turn selection display on manually. (Selection
-      // display is setup on edits when focus changes.) I think web pages will
-      // prefer that focus be set when we are interacting with selection in
-      // the element.
-      this._targetElement.focus();
-    }
+    this._targetIsEditable = this._isTextInput(this._targetElement);
     return true;
   },
 
