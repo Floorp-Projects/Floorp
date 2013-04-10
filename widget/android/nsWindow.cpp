@@ -40,6 +40,7 @@ using mozilla::unused;
 #include "Layers.h"
 #include "BasicLayers.h"
 #include "LayerManagerOGL.h"
+#include "LayerManagerComposite.h"
 #include "GLContext.h"
 #include "GLContextProvider.h"
 
@@ -2340,8 +2341,8 @@ float
 nsWindow::ComputeRenderIntegrity()
 {
     if (sCompositorParent) {
-        mozilla::layers::LayerManagerOGL* manager =
-          static_cast<mozilla::layers::LayerManagerOGL*>(sCompositorParent->GetLayerManager());
+        mozilla::layers::LayerManagerComposite* manager =
+          static_cast<mozilla::layers::LayerManagerComposite*>(sCompositorParent->GetLayerManager());
         if (manager) {
             return manager->ComputeRenderIntegrity();
         }

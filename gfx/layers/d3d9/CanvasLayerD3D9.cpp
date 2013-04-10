@@ -6,8 +6,6 @@
 
 #include "ipc/AutoOpenSurface.h"
 #include "mozilla/layers/PLayers.h"
-#include "mozilla/layers/ShadowLayers.h"
-#include "ShadowBufferD3D9.h"
 
 #include "gfxImageSurface.h"
 #include "gfxWindowsSurface.h"
@@ -258,98 +256,6 @@ CanvasLayerD3D9::CreateTexture()
     return;
   }
 }
-
-ShadowCanvasLayerD3D9::ShadowCanvasLayerD3D9(LayerManagerD3D9* aManager)
-  : ShadowCanvasLayer(aManager, nullptr)
-  , LayerD3D9(aManager)
-  , mNeedsYFlip(false)
-{
-  mImplData = static_cast<LayerD3D9*>(this);
-}
- 
-ShadowCanvasLayerD3D9::~ShadowCanvasLayerD3D9()
-{}
-
-void
-ShadowCanvasLayerD3D9::Initialize(const Data& aData)
-{
-  NS_RUNTIMEABORT("Non-shadow layer API unexpectedly used for shadow layer");
-}
-
-void
-ShadowCanvasLayerD3D9::Init(bool needYFlip)
-{
-  if (!mBuffer) {
-    mBuffer = new ShadowBufferD3D9(this);
-  }
-
-  mNeedsYFlip = needYFlip;
-}
-
-void
-ShadowCanvasLayerD3D9::Swap(const CanvasSurface& aNewFront,
-                            bool needYFlip,
-                            CanvasSurface* aNewBack)
-{
-  NS_ASSERTION(aNewFront.type() == CanvasSurface::TSurfaceDescriptor, 
-    "ShadowCanvasLayerD3D9::Swap expected CanvasSurface surface");
-
-  AutoOpenSurface surf(OPEN_READ_ONLY, aNewFront);
-  if (!mBuffer) {
-    Init(needYFlip);
-  }
-  mBuffer->Upload(surf.Get(), GetVisibleRegion().GetBounds());
-
-  *aNewBack = aNewFront;
-}
-
-void
-ShadowCanvasLayerD3D9::DestroyFrontBuffer()
-{
-  Destroy();
-}
-
-void
-ShadowCanvasLayerD3D9::Disconnect()
-{
-  Destroy();
-}
-
-void
-ShadowCanvasLayerD3D9::Destroy()
-{
-  mBuffer = nullptr;
-}
-
-void
-ShadowCanvasLayerD3D9::CleanResources()
-{
-  Destroy();
-}
-
-void
-ShadowCanvasLayerD3D9::LayerManagerDestroyed()
-{
-  mD3DManager->deviceManager()->mLayersWithResources.RemoveElement(this);
-  mD3DManager = nullptr;
-}
-
-Layer*
-ShadowCanvasLayerD3D9::GetLayer()
-{
-  return this;
-}
-
-void
-ShadowCanvasLayerD3D9::RenderLayer()
-{
-  if (!mBuffer || mD3DManager->CompositingDisabled()) {
-    return;
-  }
-
-  mBuffer->RenderTo(mD3DManager, GetEffectiveVisibleRegion());
-}
-
 
 } /* namespace layers */
 } /* namespace mozilla */

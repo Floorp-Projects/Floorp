@@ -15,7 +15,6 @@ namespace mozilla {
 namespace layers {
 
 class ReadbackProcessor;
-class ShadowBufferD3D9;
 
 class ThebesLayerD3D9 : public ThebesLayer,
                         public LayerD3D9
@@ -79,34 +78,6 @@ private:
   void CopyRegion(IDirect3DTexture9* aSrc, const nsIntPoint &aSrcOffset,
                   IDirect3DTexture9* aDest, const nsIntPoint &aDestOffset,
                   const nsIntRegion &aCopyRegion, nsIntRegion* aValidRegion);
-};
-
-class ShadowThebesLayerD3D9 : public ShadowThebesLayer,
-                              public LayerD3D9
-{
-public:
-  ShadowThebesLayerD3D9(LayerManagerD3D9 *aManager);
-  virtual ~ShadowThebesLayerD3D9();
-
-  virtual void
-  Swap(const ThebesBuffer& aNewFront, const nsIntRegion& aUpdatedRegion,
-       OptionalThebesBuffer* aNewBack, nsIntRegion* aNewBackValidRegion,
-       OptionalThebesBuffer* aReadOnlyFront, nsIntRegion* aFrontUpdatedRegion);
-  virtual void DestroyFrontBuffer();
-
-  virtual void Disconnect();
-
-  // LayerD3D9 impl
-  Layer* GetLayer();
-  virtual bool IsEmpty();
-  virtual void RenderLayer() { RenderThebesLayer(); }
-  virtual void CleanResources();
-  virtual void LayerManagerDestroyed();
-
-  void RenderThebesLayer();
-
-private:
-  nsRefPtr<ShadowBufferD3D9> mBuffer;
 };
 
 } /* layers */

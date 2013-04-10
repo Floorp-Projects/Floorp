@@ -10,7 +10,7 @@
 namespace mozilla {
 
 gfxMatrix
-ComputeGLTransformForRotation(const nsIntRect& aBounds,
+ComputeTransformForRotation(const nsIntRect& aBounds,
                               ScreenRotation aRotation)
 {
     gfxMatrix transform;
