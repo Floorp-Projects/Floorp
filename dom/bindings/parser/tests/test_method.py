@@ -156,3 +156,16 @@ def WebIDLTest(parser, harness):
     except Exception, x:
         threw = True
     harness.ok(threw, "Should not allow [SetterThrows] on methods")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+          interface A {
+            [Throw] void foo();
+          };
+        """)
+        results = parser.finish()
+    except Exception, x:
+        threw = True
+    harness.ok(threw, "Should spell [Throws] correctly on methods")
