@@ -774,6 +774,8 @@ bin/libfreebl_32int64_3.so
 @BINPATH@/metro/chrome.manifest
 @BINPATH@/metro/searchplugins
 @BINPATH@/metro/metroapp.ini
+@BINPATH@/metro/chrome/browser@JAREXT@
+@BINPATH@/metro/chrome/browser.manifest
 @BINPATH@/metro/chrome/chrome@JAREXT@
 @BINPATH@/metro/chrome/chrome.manifest
 @BINPATH@/metro/chrome/@AB_CD@@JAREXT@
