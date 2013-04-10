@@ -4538,7 +4538,7 @@ CodeGenerator::link()
                      safepointIndices_.length(), osiIndices_.length(),
                      cacheList_.length(), runtimeData_.length(),
                      safepoints_.size(), graph.mir().numScripts(),
-                     executionMode == ParallelExecution ? ForkJoinSlices(cx) : 0);
+                     graph.mir().numCallTargets());
 
     ionScript->setMethod(code);
 
@@ -4585,9 +4585,8 @@ CodeGenerator::link()
         ionScript->copyConstants(graph.constantPool());
     JS_ASSERT(graph.mir().numScripts() > 0);
     ionScript->copyScriptEntries(graph.mir().scripts());
-
-    if (executionMode == ParallelExecution)
-        ionScript->zeroParallelInvalidatedScripts();
+    if (graph.mir().numCallTargets() > 0)
+        ionScript->copyCallTargetEntries(graph.mir().callTargets());
 
     // The correct state for prebarriers is unknown until the end of compilation,
     // since a GC can occur during code generation. All barriers are emitted

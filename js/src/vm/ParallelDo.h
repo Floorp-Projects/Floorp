@@ -50,7 +50,7 @@ void Spew(SpewChannel channel, const char *fmt, ...);
 void SpewBeginOp(JSContext *cx, const char *name);
 void SpewBailout(uint32_t count);
 ExecutionStatus SpewEndOp(ExecutionStatus status);
-void SpewBeginCompile(HandleFunction fun);
+void SpewBeginCompile(HandleScript script);
 ion::MethodStatus SpewEndCompile(ion::MethodStatus status);
 void SpewMIR(ion::MDefinition *mir, const char *fmt, ...);
 void SpewBailoutIR(uint32_t bblockId, uint32_t lirId,
@@ -63,7 +63,7 @@ static inline void Spew(SpewChannel channel, const char *fmt, ...) { }
 static inline void SpewBeginOp(JSContext *cx, const char *name) { }
 static inline void SpewBailout(uint32_t count) {}
 static inline ExecutionStatus SpewEndOp(ExecutionStatus status) { return status; }
-static inline void SpewBeginCompile(HandleFunction fun) { }
+static inline void SpewBeginCompile(HandleScript script) { }
 #ifdef JS_ION
 static inline ion::MethodStatus SpewEndCompile(ion::MethodStatus status) { return status; }
 static inline void SpewMIR(ion::MDefinition *mir, const char *fmt, ...) { }
