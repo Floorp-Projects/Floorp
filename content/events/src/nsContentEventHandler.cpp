@@ -701,6 +701,13 @@ nsContentEventHandler::OnQueryCaretRect(nsQueryContentEvent* aEvent)
     uint32_t offset;
     rv = GetFlatTextOffsetOfRange(mRootContent, mFirstSelectedRange, &offset);
     NS_ENSURE_SUCCESS(rv, rv);
+    // strip out native new lines, we want the non-native offset. The offsets
+    // handed in here are from selection, caretPositionFromPoint, and editable
+    // element offset properties. We need to match those or things break. 
+    nsINode* startNode = mFirstSelectedRange->GetStartParent();
+    if (startNode && startNode->IsNodeOfType(nsINode::eTEXT)) {
+      offset = ConvertToXPOffset(static_cast<nsIContent*>(startNode), offset);
+    }
     if (offset == aEvent->mInput.mOffset) {
       nsRect rect;
       nsIFrame* caretFrame = caret->GetGeometry(mSelection, &rect);
