@@ -400,7 +400,7 @@ parent:
     PSms();
 
     PSpeechSynthesis();
-    
+
     PStorage(StorageConstructData data);
 
     PBluetooth();
