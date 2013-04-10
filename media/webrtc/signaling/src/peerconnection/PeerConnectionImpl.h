@@ -265,6 +265,9 @@ public:
   // is called to start the list over.
   void ClearSdpParseErrorMessages();
 
+  // Called to retreive the list of parsing errors.
+  const std::vector<std::string> &GetSdpParseErrors();
+
 private:
   PeerConnectionImpl(const PeerConnectionImpl&rhs);
   PeerConnectionImpl& operator=(PeerConnectionImpl);
