@@ -111,7 +111,7 @@ function getTestGlobalContext(aClient, aName, aCallback) {
 
 function attachTestGlobalClient(aClient, aName, aCallback) {
   getTestGlobalContext(aClient, aName, function(aContext) {
-    aClient.attachThread(aContext.actor, aCallback, { useSourceMaps: true });
+    aClient.attachThread(aContext.actor, aCallback);
   });
 }
 
@@ -147,7 +147,7 @@ function attachTestTabAndResume(aClient, aName, aCallback) {
       aThreadClient.resume(function (aResponse) {
         aCallback(aResponse, aTabClient, aThreadClient);
       });
-    }, { useSourceMaps: true });
+    });
   });
 }
 
