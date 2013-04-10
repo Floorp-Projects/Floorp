@@ -1413,14 +1413,47 @@ nsSocketTransport::GetFD_Locked()
     return mFD;
 }
 
+class ThunkPRClose : public nsRunnable
+{
+public:
+  ThunkPRClose(PRFileDesc *fd) : mFD(fd) {}
+
+  NS_IMETHOD Run()
+  {
+    PR_Close(mFD);
+    return NS_OK;
+  }
+private:
+  PRFileDesc *mFD;
+};
+
+void
+STS_PRCloseOnSocketTransport(PRFileDesc *fd)
+{
+  if (gSocketTransportService) {
+    // Can't PR_Close() a socket off STS thread. Thunk it to STS to die
+    // FIX - Should use RUN_ON_THREAD once it's generally available
+    // RUN_ON_THREAD(gSocketThread,WrapRunnableNM(&PR_Close, mFD);
+    gSocketTransportService->Dispatch(new ThunkPRClose(fd), NS_DISPATCH_NORMAL);
+  } else {
+    // something horrible has happened
+    NS_ASSERTION(gSocketTransportService, "No STS service");
+  }
+}
+
 void
 nsSocketTransport::ReleaseFD_Locked(PRFileDesc *fd)
 {
     NS_ASSERTION(mFD == fd, "wrong fd");
 
     if (--mFDref == 0) {
-        SOCKET_LOG(("nsSocketTransport: calling PR_Close [this=%x]\n", this));
-        PR_Close(mFD);
+        if (PR_GetCurrentThread() == gSocketThread) {
+            SOCKET_LOG(("nsSocketTransport: calling PR_Close [this=%x]\n", this));
+            PR_Close(mFD);
+        } else {
+            // Can't PR_Close() a socket off STS thread. Thunk it to STS to die
+            STS_PRCloseOnSocketTransport(mFD);
+        }
         mFD = nullptr;
     }
 }
