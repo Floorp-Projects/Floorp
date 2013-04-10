@@ -13,6 +13,7 @@
 #include "mozilla/Mutex.h"
 
 class ThreadProfile;
+class ThreadProfile;
 
 class ProfileEntry
 {
@@ -56,9 +57,7 @@ typedef void (*IterateTagsCallback)(const ProfileEntry& entry, const char* tagSt
 class ThreadProfile
 {
 public:
-  ThreadProfile(const char* aName, int aEntrySize, PseudoStack *aStack,
-                int aThreadId, PlatformData* aPlatformData,
-                bool aIsMainThread);
+  ThreadProfile(const char* aName, int aEntrySize, PseudoStack *aStack, int aThreadId, bool aIsMainThread);
   ~ThreadProfile();
   void addTag(ProfileEntry aTag);
   void flush();
@@ -77,7 +76,6 @@ public:
   const char* Name() const { return mName; }
   int ThreadId() const { return mThreadId; }
 
-  PlatformData* GetPlatformData() { return mPlatformData; }
 private:
   // Circular buffer 'Keep One Slot Open' implementation
   // for simplicity
@@ -91,7 +89,6 @@ private:
   char*          mName;
   int            mThreadId;
   bool           mIsMainThread;
-  PlatformData*  mPlatformData;  // Platform specific data.
 };
 
 std::ostream& operator<<(std::ostream& stream, const ThreadProfile& profile);

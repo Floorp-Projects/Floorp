@@ -28,10 +28,9 @@ mozilla::ThreadLocal<TableTicker *> tlsTicker;
 // it as the flag itself.
 bool stack_key_initialized;
 
-TimeStamp   sLastTracerEvent; // is raced on
-int         sFrameNumber = 0;
-int         sLastFrameNumber = 0;
-static bool sIsProfiling = false; // is raced on
+TimeStamp sLastTracerEvent; // is raced on
+int       sFrameNumber = 0;
+int       sLastFrameNumber = 0;
 
 /* used to keep track of the last event that we sampled during */
 unsigned int sLastSampledEventGeneration = 0;
@@ -45,33 +44,16 @@ unsigned int sCurrentEventGeneration = 0;
  * a problem if 2^32 events happen between samples that we need
  * to know are associated with different events */
 
-std::vector<ThreadInfo*>* Sampler::sRegisteredThreads = nullptr;
-mozilla::Mutex* Sampler::sRegisteredThreadsMutex = nullptr;
+std::vector<ThreadInfo*>* Sampler::sRegisteredThreads = new std::vector<ThreadInfo*>();
+mozilla::Mutex* Sampler::sRegisteredThreadsMutex = new mozilla::Mutex("sRegisteredThreads mutex");
 
-TableTicker* Sampler::sActiveSampler;
-
-void Sampler::Startup() {
-  sRegisteredThreads = new std::vector<ThreadInfo*>();
-  sRegisteredThreadsMutex = new mozilla::Mutex("sRegisteredThreads mutex");
-}
-
-void Sampler::Shutdown() {
-  while (sRegisteredThreads->size() > 0) {
-    delete sRegisteredThreads->back();
-    sRegisteredThreads->pop_back();
-  }
-
-  delete sRegisteredThreadsMutex;
-  delete sRegisteredThreads;
-}
+Sampler* Sampler::sActiveSampler;
 
 ThreadInfo::~ThreadInfo() {
   free(mName);
 
   if (mProfile)
     delete mProfile;
-
-  Sampler::FreePlatformData(mPlatformData);
 }
 
 bool sps_version2()
@@ -253,12 +235,8 @@ void mozilla_sampler_init()
   }
   stack_key_initialized = true;
 
-  Sampler::Startup();
-
   PseudoStack *stack = new PseudoStack();
   tlsPseudoStack.set(stack);
-
-  Sampler::RegisterCurrentThread("Gecko", stack, true);
 
   if (sps_version2()) {
     // Read mode settings from MOZ_PROFILER_MODE and interval
@@ -328,10 +306,9 @@ void mozilla_sampler_shutdown()
     uwt__deinit();
   }
 
+  Sampler::FreeRegisteredThreads();
+
   profiler_stop();
-
-  Sampler::Shutdown();
-
   // We can't delete the Stack because we can be between a
   // sampler call_enter/call_exit point.
   // TODO Need to find a safe time to delete Stack
@@ -390,7 +367,6 @@ const char** mozilla_sampler_get_features()
 #endif
     "jank",
     "js",
-    "threads",
     NULL
   };
 
@@ -422,28 +398,16 @@ void mozilla_sampler_start(int aProfileEntries, int aInterval,
   if (sps_version2()) {
     t = new BreakpadSampler(aInterval ? aInterval : PROFILE_DEFAULT_INTERVAL,
                            aProfileEntries ? aProfileEntries : PROFILE_DEFAULT_ENTRY,
-                           aFeatures, aFeatureCount);
+                           stack, aFeatures, aFeatureCount);
   } else {
     t = new TableTicker(aInterval ? aInterval : PROFILE_DEFAULT_INTERVAL,
                         aProfileEntries ? aProfileEntries : PROFILE_DEFAULT_ENTRY,
-                        aFeatures, aFeatureCount);
+                        stack, aFeatures, aFeatureCount);
   }
   tlsTicker.set(t);
   t->Start();
-  if (t->ProfileJS()) {
-      std::vector<ThreadInfo*> threads = t->GetRegisteredThreads();
-
-      for (uint32_t i = 0; i < threads.size(); i++) {
-        ThreadInfo* info = threads[i];
-        ThreadProfile* thread_profile = info->Profile();
-        if (!thread_profile) {
-          continue;
-        }
-        thread_profile->GetPseudoStack()->enableJSSampling();
-      }
-  }
-
-  sIsProfiling = true;
+  if (t->ProfileJS())
+      stack->enableJSSampling();
 
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os)
@@ -471,8 +435,6 @@ void mozilla_sampler_stop()
   if (disableJS)
     stack->disableJSSampling();
 
-  sIsProfiling = false;
-
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os)
     os->NotifyObservers(nullptr, "profiler-stopped", nullptr);
@@ -480,7 +442,15 @@ void mozilla_sampler_stop()
 
 bool mozilla_sampler_is_active()
 {
-  return sIsProfiling;
+  if (!stack_key_initialized)
+    profiler_init();
+
+  TableTicker *t = tlsTicker.get();
+  if (!t) {
+    return false;
+  }
+
+  return t->IsActive();
 }
 
 static double sResponsivenessTimes[100];
