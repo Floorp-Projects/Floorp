@@ -7,8 +7,8 @@
 <?xml-stylesheet href="chrome://global/skin/global.css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/common.css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/splitview.css"?>
+<?xml-stylesheet href="chrome://browser/skin/devtools/profiler.css"?>
 <?xml-stylesheet href="chrome://browser/content/splitview.css"?>
-<?xml-stylesheet href="chrome://browser/content/profiler.css"?>
 
 <!DOCTYPE window [
 <!ENTITY % profilerDTD SYSTEM "chrome://browser/locale/devtools/profiler.dtd">
