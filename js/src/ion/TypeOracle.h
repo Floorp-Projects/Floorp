@@ -247,7 +247,7 @@ class TypeInferenceOracle : public TypeOracle
                                          Vector<JSScript*> &seen);
 
   public:
-    TypeInferenceOracle() : cx(NULL), script_(NULL) {}
+    TypeInferenceOracle();
 
     bool init(JSContext *cx, JSScript *script, bool inlinedCall);
 
