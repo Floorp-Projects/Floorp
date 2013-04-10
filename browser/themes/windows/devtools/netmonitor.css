@@ -207,11 +207,6 @@
               0 0 4px 0 rgba(255,255,255,1.0) inset;
 }
 
-.side-menu-widget-container,
-.side-menu-widget-item-or-group {
-  box-shadow: none !important;
-}
-
 .side-menu-widget-item:nth-child(even) {
   background: rgba(255,255,255,0.05);
 }

@@ -21,35 +21,45 @@ function test() {
       verifyRequestItemTarget(requestItems[0] = RequestsMenu.getItemAtIndex(0),
         "GET", STATUS_CODES_SJS + "?sts=100", {
           status: 101,
+          statusText: "Switching Protocols",
           type: "plain",
+          fullMimeType: "text/plain; charset=utf-8",
           size: L10N.getFormatStr("networkMenu.sizeKB", "0.00"),
           time: true
         });
       verifyRequestItemTarget(requestItems[1] = RequestsMenu.getItemAtIndex(1),
         "GET", STATUS_CODES_SJS + "?sts=200", {
           status: 202,
+          statusText: "Created",
           type: "plain",
+          fullMimeType: "text/plain; charset=utf-8",
           size: L10N.getFormatStr("networkMenu.sizeKB", 0.02),
           time: true
         });
       verifyRequestItemTarget(requestItems[2] = RequestsMenu.getItemAtIndex(2),
         "GET", STATUS_CODES_SJS + "?sts=300", {
           status: 303,
+          statusText: "See Other",
           type: "plain",
+          fullMimeType: "text/plain; charset=utf-8",
           size: L10N.getFormatStr("networkMenu.sizeKB", "0.00"),
           time: true
         });
       verifyRequestItemTarget(requestItems[3] = RequestsMenu.getItemAtIndex(3),
         "GET", STATUS_CODES_SJS + "?sts=400", {
           status: 404,
+          statusText: "Not Found",
           type: "plain",
+          fullMimeType: "text/plain; charset=utf-8",
           size: L10N.getFormatStr("networkMenu.sizeKB", 0.02),
           time: true
         });
       verifyRequestItemTarget(requestItems[4] = RequestsMenu.getItemAtIndex(4),
         "GET", STATUS_CODES_SJS + "?sts=500", {
           status: 501,
+          statusText: "Not Implemented",
           type: "plain",
+          fullMimeType: "text/plain; charset=utf-8",
           size: L10N.getFormatStr("networkMenu.sizeKB", 0.02),
           time: true
         });

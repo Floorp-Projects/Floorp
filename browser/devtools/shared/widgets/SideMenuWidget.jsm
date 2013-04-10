@@ -33,15 +33,19 @@ this.EXPORTED_SYMBOLS = ["SideMenuWidget"];
  *
  * @param nsIDOMNode aNode
  *        The element associated with the widget.
+ * @param boolean aShowArrows
+ *        Specifies if items in this container should display horizontal arrows.
  */
-this.SideMenuWidget = function SideMenuWidget(aNode) {
+this.SideMenuWidget = function SideMenuWidget(aNode, aShowArrows = true) {
   this._parent = aNode;
+  this._showArrows = aShowArrows;
 
   // Create an internal scrollbox container.
   this._list = this.document.createElement("scrollbox");
   this._list.className = "side-menu-widget-container";
   this._list.setAttribute("flex", "1");
   this._list.setAttribute("orient", "vertical");
+  this._list.setAttribute("with-arrow", aShowArrows);
   this._parent.appendChild(this._list);
   this._boxObject = this._list.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
 
@@ -83,7 +87,7 @@ SideMenuWidget.prototype = {
     this.ensureSelectionIsVisible(true, true); // Don't worry, it's delayed.
 
     let group = this._getGroupForName(aGroup);
-    return group.insertItemAt(aIndex, aContents, aTooltip);
+    return group.insertItemAt(aIndex, aContents, aTooltip, this._showArrows);
   },
 
   /**
@@ -150,9 +154,11 @@ SideMenuWidget.prototype = {
     }
     for (let node of menuElementsArray) {
       if (node == aChild) {
+        node.classList.add("selected");
         node.parentNode.classList.add("selected");
         this._selectedItem = node;
       } else {
+        node.classList.remove("selected");
         node.parentNode.classList.remove("selected");
       }
     }
@@ -397,13 +403,15 @@ SideMenuGroup.prototype = {
    *        The string or node displayed in the container.
    * @param string aTooltip [optional]
    *        A tooltip attribute for the displayed item.
+   * @param boolean aArrowFlag
+   *        True if a horizontal arrow should be shown.
    * @return nsIDOMNode
    *         The element associated with the displayed item.
    */
-  insertItemAt: function SMG_insertItemAt(aIndex, aContents, aTooltip) {
+  insertItemAt: function SMG_insertItemAt(aIndex, aContents, aTooltip, aArrowFlag) {
     let list = this._list;
     let menuArray = this._menuElementsArray;
-    let item = new SideMenuItem(this, aContents, aTooltip);
+    let item = new SideMenuItem(this, aContents, aTooltip, aArrowFlag);
 
     // Invalidate any notices set on the owner widget.
     this.ownerView.removeAttribute("notice");
@@ -475,24 +483,39 @@ SideMenuGroup.prototype = {
  *        A tooltip attribute for the displayed item.
  * @param string | nsIDOMNode aContents
  *        The string or node displayed in the container.
+ * @param boolean aArrowFlag
+ *        True if a horizontal arrow should be shown.
  */
-function SideMenuItem(aGroup, aContents, aTooltip = "") {
+function SideMenuItem(aGroup, aContents, aTooltip, aArrowFlag) {
   this.ownerView = aGroup;
 
   let document = this.document;
-  let target = this._target = document.createElement("vbox");
-  target.className = "side-menu-widget-item-contents";
-  target.setAttribute("flex", "1");
+
+  // Show a horizontal arrow towards the content.
+  if (aArrowFlag) {
+    let target = this._target = document.createElement("vbox");
+    target.className = "side-menu-widget-item-contents";
+
+    let arrow = this._arrow = document.createElement("hbox");
+    arrow.className = "side-menu-widget-item-arrow";
+
+    let container = this._container = document.createElement("hbox");
+    container.className = "side-menu-widget-item side-menu-widget-item-or-group";
+    container.setAttribute("tooltiptext", aTooltip);
+    container.appendChild(target);
+    container.appendChild(arrow);
+  }
+  // Skip a few redundant nodes when no horizontal arrow is shown.
+  else {
+    let target = this._target = this._container = document.createElement("hbox");
+    target.className =
+      "side-menu-widget-item " +
+      "side-menu-widget-item-or-group " +
+      "side-menu-widget-item-contents";
+  }
+
+  this._target.setAttribute("flex", "1");
   this.contents = aContents;
-
-  let arrow = this._arrow = document.createElement("hbox");
-  arrow.className = "side-menu-widget-item-arrow";
-
-  let container = this._container = document.createElement("hbox");
-  container.className = "side-menu-widget-item side-menu-widget-item-or-group";
-  container.setAttribute("tooltiptext", aTooltip);
-  container.appendChild(target);
-  container.appendChild(arrow);
 }
 
 SideMenuItem.prototype = {

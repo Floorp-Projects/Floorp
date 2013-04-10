@@ -30,31 +30,92 @@ gcli.addCommand({
 gcli.addCommand({
   name: "break list",
   description: gcli.lookup("breaklistDesc"),
-  returnType: "html",
+  returnType: "breakpoints",
   exec: function(args, context) {
-    let dbg = getPanel(context, "jsdebugger");
-    if (!dbg) {
-      return gcli.lookup("debuggerStopped");
-    }
-
-    let breakpoints = dbg.getAllBreakpoints();
-
-    if (Object.keys(breakpoints).length === 0) {
-      return gcli.lookup("breaklistNone");
-    }
-
-    let reply = gcli.lookup("breaklistIntro");
-    reply += "<ol>";
-    for each (let breakpoint in breakpoints) {
-      let text = gcli.lookupFormat("breaklistLineEntry",
-                                  [breakpoint.location.url,
-                                    breakpoint.location.line]);
-      reply += "<li>" + text + "</li>";
-    };
-    reply += "</ol>";
-    return reply;
+    let panel = getPanel(context, "jsdebugger", {ensure_opened: true});
+    return panel.then(function(dbg) {
+      let breakpoints = [];
+      for (let source in dbg.panelWin.DebuggerView.Sources) {
+        for (let { attachment: breakpoint } in source) {
+          breakpoints.push({
+            url: source.value,
+            label: source.label,
+            lineNumber: breakpoint.lineNumber,
+            lineText: breakpoint.lineText
+          });
+        }
+      }
+      return breakpoints;
+    });
   }
 });
+
+gcli.addConverter({
+  from: "breakpoints",
+  to: "view",
+  exec: function(breakpoints, context) {
+    let dbg = getPanel(context, "jsdebugger");
+    if (dbg && breakpoints.length) {
+      let SourceUtils = dbg.panelWin.SourceUtils;
+      let index = 0;
+      return context.createView({
+        html: breakListHtml,
+        data: {
+          breakpoints: breakpoints.map(function(breakpoint) {
+            return {
+              index: index++,
+              url: breakpoint.url,
+              label: SourceUtils.trimUrlLength(
+                breakpoint.label + ":" + breakpoint.lineNumber,
+                MAX_LABEL_LENGTH,
+                "start"),
+              lineText: breakpoint.lineText,
+              truncatedLineText: SourceUtils.trimUrlLength(
+                breakpoint.lineText,
+                MAX_LINE_TEXT_LENGTH,
+                "end")
+            };
+          }),
+          onclick: createUpdateHandler(context),
+          ondblclick: createExecuteHandler(context)
+        }
+      });
+    } else {
+      return context.createView({
+        html: "<p>${message}</p>",
+        data: { message: gcli.lookup("breaklistNone") }
+      });
+    }
+  }
+});
+
+var breakListHtml = "" +
+      "<table>" +
+      " <thead>" +
+      "  <th>Source</th>" +
+      "  <th>Line</th>" +
+      "  <th>Actions</th>" +
+      " </thead>" +
+      " <tbody>" +
+      "  <tr foreach='breakpoint in ${breakpoints}'>" +
+      "    <td class='gcli-breakpoint-label'>${breakpoint.label}</td>" +
+      "    <td class='gcli-breakpoint-lineText'>" +
+      "      ${breakpoint.truncatedLineText}" +
+      "    </td>" +
+      "    <td>" +
+      "      <span class='gcli-out-shortcut'" +
+      "            data-command='break del ${breakpoint.index}'" +
+      "            onclick='${onclick}'" +
+      "            ondblclick='${ondblclick}'" +
+      "          >" + gcli.lookup("breaklistOutRemove") + "</span>" +
+      "    </td>" +
+      "  </tr>" +
+      " </tbody>" +
+      "</table>" +
+      "";
+
+var MAX_LINE_TEXT_LENGTH = 30;
+var MAX_LABEL_LENGTH = 20;
 
 /**
  * 'break add' command
@@ -349,13 +410,70 @@ function createXHTMLElement(document, tagname) {
 }
 
 /**
+ * Helper to find the 'data-command' attribute and call some action on it.
+ * @see |updateCommand()| and |executeCommand()|
+ */
+function withCommand(element, action) {
+  var command = element.getAttribute("data-command");
+  if (!command) {
+    command = element.querySelector("*[data-command]")
+      .getAttribute("data-command");
+  }
+
+  if (command) {
+    action(command);
+  }
+  else {
+    console.warn("Missing data-command for " + util.findCssSelector(element));
+  }
+}
+
+/**
+ * Create a handler to update the requisition to contain the text held in the
+ * first matching data-command attribute under the currentTarget of the event.
+ * @param context Either a Requisition or an ExecutionContext or another object
+ * that contains an |update()| function that follows a similar contract.
+ */
+function createUpdateHandler(context) {
+  return function(ev) {
+    withCommand(ev.currentTarget, function(command) {
+      context.update(command);
+    });
+  }
+}
+
+/**
+ * Create a handler to execute the text held in the data-command attribute
+ * under the currentTarget of the event.
+ * @param context Either a Requisition or an ExecutionContext or another object
+ * that contains an |update()| function that follows a similar contract.
+ */
+function createExecuteHandler(context) {
+  return function(ev) {
+    withCommand(ev.currentTarget, function(command) {
+      context.exec({
+        visible: true,
+        typed: command
+      });
+    });
+  }
+}
+
+/**
  * A helper to go from a command context to a debugger panel
  */
-function getPanel(context, id) {
+function getPanel(context, id, opts) {
   if (context == null) {
     return undefined;
   }
 
-  let toolbox = gDevTools.getToolbox(context.environment.target);
-  return toolbox == null ? undefined : toolbox.getPanel(id);
+  let target = context.environment.target;
+  if (opts && opts.ensure_opened) {
+    return gDevTools.showToolbox(target, id).then(function(toolbox) {
+      return toolbox.getPanel(id);
+    });
+  } else {
+    let toolbox = gDevTools.getToolbox(target);
+    return toolbox && toolbox.getPanel(id);
+  }
 }
