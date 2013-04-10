@@ -198,22 +198,29 @@ IonRuntime::initialize(JSContext *cx)
     if (!functionWrappers_ || !functionWrappers_->init())
         return false;
 
-    if (!bailoutTables_.reserve(FrameSizeClass::ClassLimit().classId()))
-        return false;
+    if (cx->runtime->jitSupportsFloatingPoint) {
+        // Initialize some Ion-only stubs that require floating-point support.
+        if (!bailoutTables_.reserve(FrameSizeClass::ClassLimit().classId()))
+            return false;
 
-    for (uint32_t id = 0;; id++) {
-        FrameSizeClass class_ = FrameSizeClass::FromClass(id);
-        if (class_ == FrameSizeClass::ClassLimit())
-            break;
-        bailoutTables_.infallibleAppend((IonCode *)NULL);
-        bailoutTables_[id] = generateBailoutTable(cx, id);
-        if (!bailoutTables_[id])
+        for (uint32_t id = 0;; id++) {
+            FrameSizeClass class_ = FrameSizeClass::FromClass(id);
+            if (class_ == FrameSizeClass::ClassLimit())
+                break;
+            bailoutTables_.infallibleAppend((IonCode *)NULL);
+            bailoutTables_[id] = generateBailoutTable(cx, id);
+            if (!bailoutTables_[id])
+                return false;
+        }
+
+        bailoutHandler_ = generateBailoutHandler(cx);
+        if (!bailoutHandler_)
+            return false;
+
+        invalidator_ = generateInvalidator(cx);
+        if (!invalidator_)
             return false;
     }
-
-    bailoutHandler_ = generateBailoutHandler(cx);
-    if (!bailoutHandler_)
-        return false;
 
     argumentsRectifier_ = generateArgumentsRectifier(cx, SequentialExecution, &argumentsRectifierReturnAddr_);
     if (!argumentsRectifier_)
@@ -224,10 +231,6 @@ IonRuntime::initialize(JSContext *cx)
     if (!parallelArgumentsRectifier_)
         return false;
 #endif
-
-    invalidator_ = generateInvalidator(cx);
-    if (!invalidator_)
-        return false;
 
     enterJIT_ = generateEnterJIT(cx, EnterJitOptimized);
     if (!enterJIT_)
