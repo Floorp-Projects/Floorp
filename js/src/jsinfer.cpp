@@ -2382,31 +2382,6 @@ class TypeConstraintFreezeStack : public TypeConstraint
 // TypeCompartment
 /////////////////////////////////////////////////////////////////////
 
-static inline bool
-TypeInferenceSupported()
-{
-#ifdef JS_METHODJIT
-    // JM+TI will generate FPU instructions with TI enabled. As a workaround,
-    // we disable TI to prevent this on platforms which do not have FPU
-    // support.
-    JSC::MacroAssembler masm;
-    if (!masm.supportsFloatingPoint())
-        return false;
-#endif
-
-#if WTF_ARM_ARCH_VERSION == 6
-#ifdef  JS_ION
-    return js::ion::hasVFP();
-#else
-    // If building for ARMv6 targets, we can't be guaranteed an FPU,
-    // so we hardcode TI off for consistency (see bug 793740).
-    return false;
-#endif
-#endif
-
-    return true;
-}
-
 TypeCompartment::TypeCompartment()
 {
     PodZero(this);
@@ -2418,7 +2393,7 @@ TypeZone::init(JSContext *cx)
 {
     if (!cx ||
         !cx->hasOption(JSOPTION_TYPE_INFERENCE) ||
-        !TypeInferenceSupported())
+        !cx->runtime->jitSupportsFloatingPoint)
     {
         return;
     }
