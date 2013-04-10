@@ -317,6 +317,8 @@ SmsParent::RecvPSmsRequestConstructor(PSmsRequestParent* aActor,
   switch (aRequest.type()) {
     case IPCSmsRequest::TSendMessageRequest:
       return actor->DoRequest(aRequest.get_SendMessageRequest());
+    case IPCSmsRequest::TRetrieveMessageRequest:
+      return actor->DoRequest(aRequest.get_RetrieveMessageRequest());
     case IPCSmsRequest::TGetMessageRequest:
       return actor->DoRequest(aRequest.get_GetMessageRequest());
     case IPCSmsRequest::TDeleteMessageRequest:
@@ -433,6 +435,23 @@ SmsRequestParent::DoRequest(const SendMessageRequest& aRequest)
     MOZ_NOT_REACHED("Unknown type of SendMessageRequest!");
     return false;
   }
+  return true;
+}
+
+bool
+SmsRequestParent::DoRequest(const RetrieveMessageRequest& aRequest)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIMmsService> mmsService = do_GetService(MMS_SERVICE_CONTRACTID);
+  if (mmsService) {
+    rv = mmsService->Retrieve(aRequest.messageId(), this);
+  }
+
+  if (NS_FAILED(rv)) {
+    return NS_SUCCEEDED(NotifyGetMessageFailed(nsIMobileMessageCallback::INTERNAL_ERROR));
+  }
+
   return true;
 }
 
