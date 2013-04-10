@@ -2741,6 +2741,17 @@ TypeCompartment::processPendingRecompiles(FreeOp *fop)
             break;
           case CompilerOutput::Ion:
           case CompilerOutput::ParallelIon:
+# ifdef JS_THREADSAFE
+            /*
+             * If we are inside transitive compilation, which is a worklist
+             * fixpoint algorithm, we need to be re-add invalidated scripts to
+             * the worklist.
+             */
+            if (transitiveCompilationWorklist) {
+                transitiveCompilationWorklist->insert(transitiveCompilationWorklist->begin(),
+                                                      co.script);
+            }
+# endif
             break;
         }
     }
