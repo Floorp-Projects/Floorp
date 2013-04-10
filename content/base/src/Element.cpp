@@ -129,6 +129,7 @@
 #include "nsXBLService.h"
 #include "nsContentCID.h"
 #include "nsITextControlElement.h"
+#include "mozilla/dom/DocumentFragment.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -3393,13 +3394,8 @@ Element::SetOuterHTML(const nsAString& aOuterHTML, ErrorResult& aError)
       localName = nsGkAtoms::body;
       namespaceID = kNameSpaceID_XHTML;
     }
-    nsCOMPtr<nsIDOMDocumentFragment> df;
-    aError = NS_NewDocumentFragment(getter_AddRefs(df),
-                                    OwnerDoc()->NodeInfoManager());
-    if (aError.Failed()) {
-      return;
-    }
-    nsCOMPtr<nsIContent> fragment = do_QueryInterface(df);
+    nsRefPtr<DocumentFragment> fragment =
+      new DocumentFragment(OwnerDoc()->NodeInfoManager());
     nsContentUtils::ParseFragmentHTML(aOuterHTML,
                                       fragment,
                                       localName,

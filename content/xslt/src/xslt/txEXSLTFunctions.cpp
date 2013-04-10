@@ -23,8 +23,10 @@
 #include "nsIDOMDocumentFragment.h"
 #include "txMozillaXMLOutput.h"
 #include "nsTextNode.h"
+#include "mozilla/dom/DocumentFragment.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 class txStylesheetCompilerState;
 
@@ -46,15 +48,13 @@ convertRtfToNode(txIEvalContext *aContext, txResultTreeFragment *aRtf)
     const txXPathNode& document = es->getSourceDocument();
 
     nsIDocument *doc = txXPathNativeNode::getDocument(document);
-    nsCOMPtr<nsIDOMDocumentFragment> domFragment;
-    nsresult rv = NS_NewDocumentFragment(getter_AddRefs(domFragment),
-                                         doc->NodeInfoManager());
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIDOMDocumentFragment> domFragment =
+      new DocumentFragment(doc->NodeInfoManager());
 
     txOutputFormat format;
     txMozillaXMLOutput mozHandler(&format, domFragment, true);
 
-    rv = aRtf->flushToHandler(&mozHandler);
+    nsresult rv = aRtf->flushToHandler(&mozHandler);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = mozHandler.closePrevious(true);
@@ -96,25 +96,23 @@ createTextNode(txIEvalContext *aContext, nsString& aValue,
     return NS_OK;
 }
 
-static nsresult
-createDocFragment(txIEvalContext *aContext, nsIContent** aResult)
+static already_AddRefed<DocumentFragment>
+createDocFragment(txIEvalContext *aContext)
 {
     txExecutionState* es = 
         static_cast<txExecutionState*>(aContext->getPrivateContext());
     if (!es) {
         NS_ERROR("Need txExecutionState!");
 
-        return NS_ERROR_UNEXPECTED;
+        return nullptr;
     }
 
     const txXPathNode& document = es->getSourceDocument();
     nsIDocument *doc = txXPathNativeNode::getDocument(document);
-    nsCOMPtr<nsIDOMDocumentFragment> domFragment;
-    nsresult rv = NS_NewDocumentFragment(getter_AddRefs(domFragment),
-                                         doc->NodeInfoManager());
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsRefPtr<DocumentFragment> fragment =
+      new DocumentFragment(doc->NodeInfoManager());
 
-    return CallQueryInterface(domFragment, aResult);
+    return fragment.forget();
 }
 
 static nsresult
@@ -490,9 +488,8 @@ txEXSLTFunctionCall::evaluate(txIEvalContext *aContext,
             }
 
             // Set up holders for the result
-            nsCOMPtr<nsIContent> docFrag;
-            rv = createDocFragment(aContext, getter_AddRefs(docFrag));
-            NS_ENSURE_SUCCESS(rv, rv);
+            nsRefPtr<DocumentFragment> docFrag = createDocFragment(aContext);
+            NS_ENSURE_STATE(docFrag);
 
             nsRefPtr<txNodeSet> resultSet;
             rv = aContext->recycler()->getNodeSet(getter_AddRefs(resultSet));

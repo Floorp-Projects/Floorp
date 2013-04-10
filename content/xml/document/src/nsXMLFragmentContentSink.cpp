@@ -26,6 +26,7 @@
 #include "nsIDocShell.h"
 #include "nsScriptLoader.h"
 #include "mozilla/css/Loader.h"
+#include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/ProcessingInstruction.h"
 
 using namespace mozilla::dom;
@@ -158,13 +159,9 @@ nsXMLFragmentContentSink::WillBuildModel(nsDTDMode aDTDMode)
 
   NS_ASSERTION(mTargetDocument, "Need a document!");
 
-  nsCOMPtr<nsIDOMDocumentFragment> frag;
-  nsresult rv = NS_NewDocumentFragment(getter_AddRefs(frag), mNodeInfoManager);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mRoot = do_QueryInterface(frag);
+  mRoot = new DocumentFragment(mNodeInfoManager);
   
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
