@@ -1,0 +1,212 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>nsIDOMWindowUtils::sendQueryContentEvent w/QUERY_CARET_RECT test</title>
+<script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+
+<style>
+  #text {
+  position: absolute;
+  left: 0em;
+  top: 0em;
+  font-size: 10pt;
+  font-family: monospace;
+  line-height: 20px;
+  letter-spacing: 0px;
+  margin-top:-1px; /* nix the text area border */
+  overflow: hidden;
+  width:800px;
+  height:400px;
+  }
+  #div-hor {
+  position: absolute;
+  left: 0em;
+  border-top:1px solid lightgray;
+  width: 1000px;
+  pointer-events:none;
+  }
+  #div-ver {
+  position: absolute;
+  top: 0em;
+  border-left:1px solid lightgray;
+  height: 500px;
+  pointer-events:none;
+ }
+</style>
+
+<script type="application/javascript;version=1.8">
+  let SimpleTest = window.opener.SimpleTest;
+  let Ci = Components.interfaces;
+
+  function ok() { window.opener.ok.apply(window.opener, arguments); }
+  function done() { window.opener.done.apply(window.opener, arguments); }
+
+  function dumpLn() {
+    for (let idx = 0; idx < arguments.length; idx++)
+      dump(arguments[idx] + " ");
+    dump("\n");
+  }
+
+  // drawn grid is 20x20
+  function drawGrid() {
+    for (var idx = 0; idx < 20; idx++) {
+      var e = document.createElement("div");
+      e.setAttribute("id", "div-hor");
+      e.style.top = (idx*20) + "px";
+      document.getElementById("container").appendChild(e);
+    }
+    for (var idx = 0; idx < 40; idx++) {
+      var e = document.createElement("div");
+      e.setAttribute("id", "div-ver");
+      e.style.left = (idx*20) + "px";
+      document.getElementById("container").appendChild(e);
+    }
+  }
+
+  function getSelection(aElement) {
+    if (aElement instanceof Ci.nsIDOMNSEditableElement) {
+      return aElement.QueryInterface(Ci.nsIDOMNSEditableElement)
+                     .editor.selection;
+    }
+    return null;
+  }
+
+  function testCaretPosition(aDomWinUtils, aOffset, aRectDims) {
+    let rect = aDomWinUtils.sendQueryContentEvent(aDomWinUtils.QUERY_CARET_RECT,
+                                                  aOffset, 0, 0, 0);
+    ok(rect, "rect returned");
+    ok(rect.succeeded, "call succeeded");
+
+    info("left:" + rect.left + " top:" + rect.top);
+
+    ok(rect.left > aRectDims.min.left, "rect.left > " + aRectDims.min.left);
+    ok(rect.left < aRectDims.max.left, "rect.left < " + aRectDims.max.left);
+    ok(rect.top > aRectDims.min.top, "rect.top > " + aRectDims.min.top);
+    ok(rect.top < aRectDims.max.top, "rect.top < " + aRectDims.max.top);
+  }
+
+  function doTest() {
+    let domWinUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                            .getInterface(Ci.nsIDOMWindowUtils);
+
+    let text = document.getElementById("text");
+
+    text.focus();
+
+    let textrect = text.getBoundingClientRect();
+
+    let cp = document.caretPositionFromPoint(10, 395);
+    let input = cp.offsetNode;
+    let offset = cp.offset;
+    input.selectionStart = input.selectionEnd = offset;
+
+    let selection = getSelection(text);
+
+    testCaretPosition(domWinUtils, input.selectionStart, {
+      min: { left: 5, top: 380 },
+      max: { left: 25, top: 390 },
+    });
+
+    testCaretPosition(domWinUtils, input.selectionEnd, {
+      min: { left: 5, top: 380 },
+      max: { left: 25, top: 390 },
+    });
+
+    testCaretPosition(domWinUtils, text.selectionStart, {
+      min: { left: 5, top: 380 },
+      max: { left: 25, top: 390 },
+    });
+
+    testCaretPosition(domWinUtils, text.selectionEnd, {
+      min: { left: 5, top: 380 },
+      max: { left: 25, top: 390 },
+    });
+
+    testCaretPosition(domWinUtils, selection.anchorOffset, {
+      min: { left: 5, top: 380 },
+      max: { left: 25, top: 390 },
+    });
+
+    testCaretPosition(domWinUtils, selection.focusOffset, {
+      min: { left: 5, top: 380 },
+      max: { left: 25, top: 390 },
+    });
+
+    cp = document.caretPositionFromPoint(395, 395);
+    input = cp.offsetNode;
+    offset = cp.offset;
+    input.selectionStart = input.selectionEnd = offset;
+
+    let selection = getSelection(text);
+
+    testCaretPosition(domWinUtils, input.selectionStart, {
+      min: { left: 390, top: 380 },
+      max: { left: 400, top: 390 },
+    });
+
+    testCaretPosition(domWinUtils, input.selectionEnd, {
+      min: { left: 390, top: 380 },
+      max: { left: 400, top: 390 },
+    });
+
+    testCaretPosition(domWinUtils, text.selectionStart, {
+      min: { left: 390, top: 380 },
+      max: { left: 400, top: 390 },
+    });
+
+    testCaretPosition(domWinUtils, text.selectionEnd, {
+      min: { left: 390, top: 380 },
+      max: { left: 400, top: 390 },
+    });
+
+    testCaretPosition(domWinUtils, selection.anchorOffset, {
+      min: { left: 390, top: 380 },
+      max: { left: 400, top: 390 },
+    });
+
+    testCaretPosition(domWinUtils, selection.focusOffset, {
+      min: { left: 390, top: 380 },
+      max: { left: 400, top: 390 },
+    });
+
+    done();
+  }
+
+</script>
+
+<body onload="doTest()">
+<textarea id="text" wrap="on">
+Alice was beginning to get very tired of sitting by her sister on the bank, 
+and of having nothing to do: once or twice she had peeped into the book 
+her sister was reading, but it had no pictures or conversations in it, 
+`and what is the use of a book,' thought Alice `without pictures or 
+conversation?'
+
+So she was considering in her own mind (as well as she could, for the 
+hot day made her feel very sleepy and stupid), whether the pleasure of 
+making a daisy-chain would be worth the trouble of getting up and 
+picking the daisies, when suddenly a White Rabbit with pink In another 
+moment down went Alice after it, never once considering how in the world
+she was to get out again. 
+
+The rabbit-hole went straight on like a tunnel for some way, and then 
+dipped suddenly down, so suddenly that Alice had not a moment to think 
+about stopping herself before she found herself falling down a very deep
+well.
+
+Either the well was very deep, or she fell very slowly, for she had 
+plenty of time as she went down to look about her and to wonder what was
+ going to happen next. First, she tried to look down and make out what 
+she was coming to, but it was too dark to see anything; then she looked 
+at the sides of the well, and noticed that they were filled with 
+cupboards and book-shelves; here and there she saw maps and pictures 
+hung upon pegs. She took down a jar from one of the shelves as she 
+passed; it was labelled `ORANGE MARMALADE', but to her great 
+disappointment it was empty: she did not like to drop the jar for fear 
+of killing somebody, so managed to put it into one of the cupboards as 
+she fell past it. 
+</textarea>
+<div id="container"></div>
+</body>
+</html>
