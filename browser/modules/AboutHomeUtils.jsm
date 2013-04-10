@@ -24,7 +24,7 @@ this.AboutHomeUtils = {
  * search engine.
  */
 XPCOMUtils.defineLazyGetter(AboutHomeUtils, "defaultSearchEngine", function() {
-  let defaultEngine = Services.search.originalDefaultEngine;
+  let defaultEngine = Services.search.defaultEngine;
   let submission = defaultEngine.getSubmission("_searchTerms_", null, "homepage");
   if (submission.postData) {
     throw new Error("Home page does not support POST search engines.");
