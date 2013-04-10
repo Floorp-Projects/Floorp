@@ -242,6 +242,7 @@ var BrowserApp = {
     Services.obs.addObserver(this, "FormHistory:Init", false);
     Services.obs.addObserver(this, "ToggleProfiling", false);
     Services.obs.addObserver(this, "gather-telemetry", false);
+    Services.obs.addObserver(this, "keyword-search", false);
 
     Services.obs.addObserver(this, "sessionstore-state-purge-complete", false);
 
@@ -687,10 +688,12 @@ var BrowserApp = {
     let referrerURI = "referrerURI" in aParams ? aParams.referrerURI : null;
     let charset = "charset" in aParams ? aParams.charset : null;
 
-    if ("showProgress" in aParams) {
+    if ("showProgress" in aParams || "userSearch" in aParams) {
       let tab = this.getTabForBrowser(aBrowser);
-      if (tab)
-        tab.showProgress = aParams.showProgress;
+      if (tab) {
+        if ("showProgress" in aParams) tab.showProgress = aParams.showProgress;
+        if ("userSearch" in aParams) tab.userSearch = aParams.userSearch;
+      }
     }
 
     try {
@@ -1199,6 +1202,7 @@ var BrowserApp = {
         if (data.engine) {
           let engine = Services.search.getEngineByName(data.engine);
           if (engine) {
+            params.userSearch = url;
             let submission = engine.getSubmission(url);
             url = submission.uri.spec;
             params.postData = submission.postData;
@@ -1222,6 +1226,11 @@ var BrowserApp = {
 
       case "Tab:Closed":
         this._handleTabClosed(this.getTabForId(parseInt(aData)));
+        break;
+
+      case "keyword-search":
+        // This assumes the user can only perform a keyword serach on the selected tab.
+        this.selectedTab.userSearch = aData;
         break;
 
       case "Browser:Quit":
@@ -2444,6 +2453,9 @@ Tab.prototype = {
       // This determines whether or not we show the progress throbber in the urlbar
       this.showProgress = "showProgress" in aParams ? aParams.showProgress : true;
 
+      // The search term the user entered to load the current URL
+      this.userSearch = "userSearch" in aParams ? aParams.userSearch : "";
+
       try {
         this.browser.loadURIWithFlags(aURL, flags, referrerURI, charset, postData);
       } catch(e) {
@@ -3283,12 +3295,16 @@ Tab.prototype = {
       type: "Content:LocationChange",
       tabID: this.id,
       uri: fixedURI.spec,
+      userSearch: this.userSearch || "",
       documentURI: documentURI,
       contentType: (contentType ? contentType : ""),
       sameDocument: sameDocument
     };
 
     sendMessageToJava(message);
+
+    // The search term is only valid for this location change event, so reset it here.
+    this.userSearch = "";
 
     if (!sameDocument) {
       // XXX This code assumes that this is the earliest hook we have at which
