@@ -316,6 +316,10 @@ let CustomizableUIInternal = {
 
     let placements = gPlacements.get(area);
     this.buildArea(area, placements, aToolbar);
+
+    // We register this window to have its customization data cleaned up when
+    // unloading.
+    this.registerBuildWindow(document.defaultView);
   },
 
   buildArea: function(aArea, aPlacements, aAreaNode) {
@@ -442,10 +446,6 @@ let CustomizableUIInternal = {
     this.registerBuildArea(CustomizableUI.AREA_PANEL, aPanel);
   },
 
-  registerWindow: function(aWindow) {
-    aWindow.addEventListener("unload", this, false);
-  },
-
   onWidgetAdded: function(aWidgetId, aArea, aPosition) {
     let areaNodes = gBuildAreas.get(aArea);
     if (!areaNodes) {
@@ -542,6 +542,10 @@ let CustomizableUIInternal = {
     }
 
     gBuildAreas.get(aArea).add(aNode);
+  },
+
+  registerBuildWindow: function(aWindow) {
+    aWindow.addEventListener("unload", this, false);
   },
 
   unregisterBuildWindow: function(aWindow) {
@@ -1394,9 +1398,6 @@ this.CustomizableUI = {
   },
   registerMenuPanel: function(aPanel) {
     CustomizableUIInternal.registerMenuPanel(aPanel);
-  },
-  registerWindow: function(aWindow) {
-    CustomizableUIInternal.registerWindow(aWindow);
   },
   addWidgetToArea: function(aWidgetId, aArea, aPosition) {
     CustomizableUIInternal.addWidgetToArea(aWidgetId, aArea, aPosition);
