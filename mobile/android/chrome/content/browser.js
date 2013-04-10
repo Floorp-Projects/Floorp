@@ -5775,8 +5775,7 @@ var SearchEngines = {
 
   getSuggestionEngine: function () {
     let engines = [ Services.search.currentEngine,
-                    Services.search.defaultEngine,
-                    Services.search.originalDefaultEngine ];
+                    Services.search.defaultEngine ];
 
     for (let i = 0; i < engines.length; i++) {
       let engine = engines[i];
