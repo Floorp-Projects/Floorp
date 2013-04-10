@@ -256,19 +256,6 @@ function onSearchSubmit(aEvent)
 
 function setupSearchEngine()
 {
-  let searchEngineName = document.documentElement.getAttribute("searchEngineName");
-  let searchEngineInfo = SEARCH_ENGINES[searchEngineName];
-  if (!searchEngineInfo) {
-    return;
-  }
-
-  // Add search engine logo.
-  if (searchEngineInfo.image) {
-    let logoElt = document.getElementById("searchEngineLogo");
-    logoElt.src = searchEngineInfo.image;
-    logoElt.alt = searchEngineName;
-  }
-
   // The "autofocus" attribute doesn't focus the form element
   // immediately when the element is first drawn, so the
   // attribute is also used for styling when the page first loads.
@@ -277,6 +264,26 @@ function setupSearchEngine()
     searchText.removeEventListener("blur", searchText_onBlur);
     searchText.removeAttribute("autofocus");
   });
+ 
+  let searchEngineName = document.documentElement.getAttribute("searchEngineName");
+  let searchEngineInfo = SEARCH_ENGINES[searchEngineName];
+  let logoElt = document.getElementById("searchEngineLogo");
+
+  // Add search engine logo.
+  if (searchEngineInfo && searchEngineInfo.image) {
+    logoElt.parentNode.hidden = false;
+    logoElt.src = searchEngineInfo.image;
+#ifdef XP_MACOSX
+    if (searchEngineInfo.imageHD && !window.matchMedia("(max-resolution: 1dppx)").matches)
+      logoElt.src = searchEngineInfo.imageHD;
+#endif
+    logoElt.alt = searchEngineName;
+    searchText.placeholder = "";
+  }
+  else {
+    logoElt.parentNode.hidden = true;
+    searchText.placeholder = searchEngineName;
+  }
 
 }
 
