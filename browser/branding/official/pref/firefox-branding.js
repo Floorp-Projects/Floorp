@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-pref("startup.homepage_override_url","http://www.mozilla.com/%LOCALE%/%APP%/%VERSION%/whatsnew/?oldversion=%OLD_VERSION%");
-pref("startup.homepage_welcome_url","http://www.mozilla.com/%LOCALE%/%APP%/%VERSION%/firstrun/");
+pref("startup.homepage_override_url","http://www.mozilla.com/%LOCALE%/firefox/%VERSION%/whatsnew/?oldversion=%OLD_VERSION%");
+pref("startup.homepage_welcome_url","http://www.mozilla.com/%LOCALE%/firefox/%VERSION%/firstrun/");
 // Interval: Time between checks for a new version (in seconds)
 pref("app.update.interval", 43200); // 12 hours
 // The time interval between the downloading of mar file chunks in the
@@ -16,11 +16,11 @@ pref("app.update.promptWaitTime", 86400);
 pref("app.update.url.manual", "http://www.firefox.com");
 // A default value for the "More information about this update" link
 // supplied in the "An update is available" page of the update wizard. 
-pref("app.update.url.details", "http://www.mozilla.com/%LOCALE%/%APP%/releases/");
+pref("app.update.url.details", "http://www.mozilla.com/%LOCALE%/firefox/releases/");
 
 // Release notes and vendor URLs
-pref("app.releaseNotesURL", "http://www.mozilla.com/%LOCALE%/%APP%/%VERSION%/releasenotes/");
-pref("app.vendorURL", "http://www.mozilla.com/%LOCALE%/%APP%/");
+pref("app.releaseNotesURL", "http://www.mozilla.com/%LOCALE%/firefox/%VERSION%/releasenotes/");
+pref("app.vendorURL", "http://www.mozilla.com/%LOCALE%/firefox/");
 
 pref("browser.search.param.ms-pc", "MOZI");
 pref("browser.search.param.yahoo-fr", "moz35");
