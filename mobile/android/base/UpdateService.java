@@ -5,8 +5,10 @@
 
 package org.mozilla.gecko.updater;
 
-import org.mozilla.apache.commons.codec.binary.Hex;
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.R;
+
+import org.mozilla.apache.commons.codec.binary.Hex;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -136,8 +138,8 @@ public class UpdateService extends IntentService {
         int interval;
         if (isRetry) {
             interval = INTERVAL_RETRY;
-        } else if (UpdateServiceHelper.UPDATE_CHANNEL.equals("nightly") ||
-                   UpdateServiceHelper.UPDATE_CHANNEL.equals("aurora")) {
+        } else if (AppConstants.MOZ_UPDATE_CHANNEL.equals("nightly") ||
+                   AppConstants.MOZ_UPDATE_CHANNEL.equals("aurora")) {
             interval = INTERVAL_SHORT;
         } else {
             interval = INTERVAL_LONG;

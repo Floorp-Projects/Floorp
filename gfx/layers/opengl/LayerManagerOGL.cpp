@@ -17,7 +17,6 @@
 #include "ImageLayerOGL.h"
 #include "ColorLayerOGL.h"
 #include "CanvasLayerOGL.h"
-#include "TiledThebesLayerOGL.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Preferences.h"
 #include "TexturePoolOGL.h"
@@ -29,6 +28,8 @@
 
 #include "GLContext.h"
 #include "GLContextProvider.h"
+#include "Composer2D.h"
+#include "FPSCounter.h"
 
 #include "nsIServiceManager.h"
 #include "nsIConsoleService.h"
@@ -49,16 +50,6 @@ namespace layers {
 
 using namespace mozilla::gfx;
 using namespace mozilla::gl;
-
-#ifdef CHECK_CURRENT_PROGRAM
-int ShaderProgramOGL::sCurrentProgramKey = 0;
-#endif
-
-bool
-LayerManagerOGL::Initialize(bool force)
-{
-  return Initialize(CreateContext(), force);
-}
 
 int32_t
 LayerManagerOGL::GetMaxTextureSize() const
@@ -140,242 +131,6 @@ LayerManagerOGL::BindAndDrawQuad(GLuint aVertAttribIndex,
   if (aTexCoordAttribIndex != GLuint(-1)) {
     mGLContext->fDisableVertexAttribArray(aTexCoordAttribIndex);
   }
-}
-
-static const double kFpsWindowMs = 250.0;
-static const size_t kNumFrameTimeStamps = 16;
-struct FPSCounter {
-  FPSCounter() : mCurrentFrameIndex(0) {}
-
-  // We keep a circular buffer of the time points at which the last K
-  // frames were drawn.  To estimate FPS, we count the number of
-  // frames we've drawn within the last kFPSWindowMs milliseconds and
-  // divide by the amount time since the first of those frames.
-  TimeStamp mFrames[kNumFrameTimeStamps];
-  size_t mCurrentFrameIndex;
-
-  void AddFrame(TimeStamp aNewFrame) {
-    mFrames[mCurrentFrameIndex] = aNewFrame;
-    mCurrentFrameIndex = (mCurrentFrameIndex + 1) % kNumFrameTimeStamps;
-  }
-
-  double AddFrameAndGetFps(TimeStamp aCurrentFrame) {
-    AddFrame(aCurrentFrame);
-    return EstimateFps(aCurrentFrame);
-  }
-
-  double GetFpsAt(TimeStamp aNow) {
-    return EstimateFps(aNow);
-  }
-
-private:
-  double EstimateFps(TimeStamp aNow) {
-    TimeStamp beginningOfWindow =
-      (aNow - TimeDuration::FromMilliseconds(kFpsWindowMs));
-    TimeStamp earliestFrameInWindow = aNow;
-    size_t numFramesDrawnInWindow = 0;
-    for (size_t i = 0; i < kNumFrameTimeStamps; ++i) {
-      const TimeStamp& frame = mFrames[i];
-      if (!frame.IsNull() && frame > beginningOfWindow) {
-        ++numFramesDrawnInWindow;
-        earliestFrameInWindow = std::min(earliestFrameInWindow, frame);
-      }
-    }
-    double realWindowSecs = (aNow - earliestFrameInWindow).ToSeconds();
-    if (realWindowSecs == 0.0 || numFramesDrawnInWindow == 1) {
-      return 0.0;
-    }
-    return double(numFramesDrawnInWindow - 1) / realWindowSecs;
-  }
-};
-
-struct FPSState {
-  GLuint mTexture;
-  FPSCounter mCompositionFps;
-  FPSCounter mTransactionFps;
-
-  FPSState() : mTexture(0) { }
-
-  void DrawFPS(TimeStamp, GLContext*, ShaderProgramOGL*);
-
-  static void DrawFrameCounter(GLContext* context);
-
-  void NotifyShadowTreeTransaction() {
-    mTransactionFps.AddFrame(TimeStamp::Now());
-  }
-};
-
-
-void
-FPSState::DrawFPS(TimeStamp aNow,
-                  GLContext* context, ShaderProgramOGL* copyprog)
-{
-  int fps = int(mCompositionFps.AddFrameAndGetFps(aNow));
-  int txnFps = int(mTransactionFps.GetFpsAt(aNow));
-
-  GLint viewport[4];
-  context->fGetIntegerv(LOCAL_GL_VIEWPORT, viewport);
-
-  if (!mTexture) {
-    // Bind the number of textures we need, in this case one.
-    context->fGenTextures(1, &mTexture);
-    context->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
-    context->fTexParameteri(LOCAL_GL_TEXTURE_2D,LOCAL_GL_TEXTURE_MIN_FILTER,LOCAL_GL_NEAREST);
-    context->fTexParameteri(LOCAL_GL_TEXTURE_2D,LOCAL_GL_TEXTURE_MAG_FILTER,LOCAL_GL_NEAREST);
-
-    unsigned char text[] = {
-      0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-      0, 255, 255, 255,   0, 255, 255,   0,   0, 255, 255, 255,   0, 255, 255, 255,   0, 255,   0, 255,   0, 255, 255, 255,   0, 255, 255, 255,   0, 255, 255, 255,   0, 255, 255, 255,   0, 255, 255, 255,   0,
-      0, 255,   0, 255,   0,   0, 255,   0,   0,   0,   0, 255,   0,   0,   0, 255,   0, 255,   0, 255,   0, 255,   0,   0,   0, 255,   0,   0,   0,   0,   0, 255,   0, 255,   0, 255,   0, 255,   0, 255,   0,
-      0, 255,   0, 255,   0,   0, 255,   0,   0, 255, 255, 255,   0, 255, 255, 255,   0, 255, 255, 255,   0, 255, 255, 255,   0, 255, 255, 255,   0,   0,   0, 255,   0, 255, 255, 255,   0, 255, 255, 255,   0,
-      0, 255,   0, 255,   0,   0, 255,   0,   0, 255,   0,   0,   0,   0,   0, 255,   0,   0,   0, 255,   0,   0,   0, 255,   0, 255,   0, 255,   0,   0,   0, 255,   0, 255,   0, 255,   0,   0,   0, 255,   0,
-      0, 255, 255, 255,   0, 255, 255, 255,   0, 255, 255, 255,   0, 255, 255, 255,   0,   0,   0, 255,   0, 255, 255, 255,   0, 255, 255, 255,   0,   0,   0, 255,   0, 255, 255, 255,   0,   0,   0, 255,   0,
-      0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-    };
-
-    // convert from 8 bit to 32 bit so that don't have to write the text above out in 32 bit format
-    // we rely on int being 32 bits
-    unsigned int* buf = (unsigned int*)malloc(64 * 8 * 4);
-    for (int i = 0; i < 7; i++) {
-      for (int j = 0; j < 41; j++) {
-        unsigned int purple = 0xfff000ff;
-        unsigned int white  = 0xffffffff;
-        buf[i * 64 + j] = (text[i * 41 + j] == 0) ? purple : white;
-      }
-    }
-    context->fTexImage2D(LOCAL_GL_TEXTURE_2D, 0, LOCAL_GL_RGBA, 64, 8, 0, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, buf);
-    free(buf);
-  }
-
-  struct Vertex2D {
-    float x,y;
-  };
-  const Vertex2D vertices[] = {
-    { -1.0f, 1.0f - 42.f / viewport[3] },
-    { -1.0f, 1.0f},
-    { -1.0f + 22.f / viewport[2], 1.0f - 42.f / viewport[3] },
-    { -1.0f + 22.f / viewport[2], 1.0f },
-
-    {  -1.0f + 22.f / viewport[2], 1.0f - 42.f / viewport[3] },
-    {  -1.0f + 22.f / viewport[2], 1.0f },
-    {  -1.0f + 44.f / viewport[2], 1.0f - 42.f / viewport[3] },
-    {  -1.0f + 44.f / viewport[2], 1.0f },
-
-    { -1.0f + 44.f / viewport[2], 1.0f - 42.f / viewport[3] },
-    { -1.0f + 44.f / viewport[2], 1.0f },
-    { -1.0f + 66.f / viewport[2], 1.0f - 42.f / viewport[3] },
-    { -1.0f + 66.f / viewport[2], 1.0f }
-  };
-
-  const Vertex2D vertices2[] = {
-    { -1.0f + 80.f / viewport[2], 1.0f - 42.f / viewport[3] },
-    { -1.0f + 80.f / viewport[2], 1.0f },
-    { -1.0f + 102.f / viewport[2], 1.0f - 42.f / viewport[3] },
-    { -1.0f + 102.f / viewport[2], 1.0f },
-    
-    { -1.0f + 102.f / viewport[2], 1.0f - 42.f / viewport[3] },
-    { -1.0f + 102.f / viewport[2], 1.0f },
-    { -1.0f + 124.f / viewport[2], 1.0f - 42.f / viewport[3] },
-    { -1.0f + 124.f / viewport[2], 1.0f },
-    
-    { -1.0f + 124.f / viewport[2], 1.0f - 42.f / viewport[3] },
-    { -1.0f + 124.f / viewport[2], 1.0f },
-    { -1.0f + 146.f / viewport[2], 1.0f - 42.f / viewport[3] },
-    { -1.0f + 146.f / viewport[2], 1.0f },
-  };
-
-  int v1   = fps % 10;
-  int v10  = (fps % 100) / 10;
-  int v100 = (fps % 1000) / 100;
-
-  int txn1 = txnFps % 10;
-  int txn10  = (txnFps % 100) / 10;
-  int txn100 = (txnFps % 1000) / 100;
-
-  // Feel free to comment these texture coordinates out and use one
-  // of the ones below instead, or play around with your own values.
-  const GLfloat texCoords[] = {
-    (v100 * 4.f) / 64, 7.f / 8,
-    (v100 * 4.f) / 64, 0.0f,
-    (v100 * 4.f + 4) / 64, 7.f / 8,
-    (v100 * 4.f + 4) / 64, 0.0f,
-
-    (v10 * 4.f) / 64, 7.f / 8,
-    (v10 * 4.f) / 64, 0.0f,
-    (v10 * 4.f + 4) / 64, 7.f / 8,
-    (v10 * 4.f + 4) / 64, 0.0f,
-
-    (v1 * 4.f) / 64, 7.f / 8,
-    (v1 * 4.f) / 64, 0.0f,
-    (v1 * 4.f + 4) / 64, 7.f / 8,
-    (v1 * 4.f + 4) / 64, 0.0f,
-  };
-
-  const GLfloat texCoords2[] = {
-    (txn100 * 4.f) / 64, 7.f / 8,
-    (txn100 * 4.f) / 64, 0.0f,
-    (txn100 * 4.f + 4) / 64, 7.f / 8,
-    (txn100 * 4.f + 4) / 64, 0.0f,
-
-    (txn10 * 4.f) / 64, 7.f / 8,
-    (txn10 * 4.f) / 64, 0.0f,
-    (txn10 * 4.f + 4) / 64, 7.f / 8,
-    (txn10 * 4.f + 4) / 64, 0.0f,
-
-    (txn1 * 4.f) / 64, 7.f / 8,
-    (txn1 * 4.f) / 64, 0.0f,
-    (txn1 * 4.f + 4) / 64, 7.f / 8,
-    (txn1 * 4.f + 4) / 64, 0.0f,
-  };
-
-  // Turn necessary features on
-  context->fEnable(LOCAL_GL_BLEND);
-  context->fBlendFunc(LOCAL_GL_ONE, LOCAL_GL_SRC_COLOR);
-
-  context->fActiveTexture(LOCAL_GL_TEXTURE0);
-  context->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
-
-  copyprog->Activate();
-  copyprog->SetTextureUnit(0);
-
-  // we're going to use client-side vertex arrays for this.
-  context->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
-
-  // "COPY"
-  context->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ZERO,
-                              LOCAL_GL_ONE, LOCAL_GL_ZERO);
-
-  // enable our vertex attribs; we'll call glVertexPointer below
-  // to fill with the correct data.
-  GLint vcattr = copyprog->AttribLocation(ShaderProgramOGL::VertexCoordAttrib);
-  GLint tcattr = copyprog->AttribLocation(ShaderProgramOGL::TexCoordAttrib);
-
-  context->fEnableVertexAttribArray(vcattr);
-  context->fEnableVertexAttribArray(tcattr);
-
-  context->fVertexAttribPointer(vcattr,
-                                2, LOCAL_GL_FLOAT,
-                                LOCAL_GL_FALSE,
-                                0, vertices);
-
-  context->fVertexAttribPointer(tcattr,
-                                2, LOCAL_GL_FLOAT,
-                                LOCAL_GL_FALSE,
-                                0, texCoords);
-
-  context->fDrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 12);
-
-  context->fVertexAttribPointer(vcattr,
-                                2, LOCAL_GL_FLOAT,
-                                LOCAL_GL_FALSE,
-                                0, vertices2);
-
-  context->fVertexAttribPointer(tcattr,
-                                2, LOCAL_GL_FLOAT,
-                                LOCAL_GL_FALSE,
-                                0, texCoords2);
-
-  context->fDrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 12);
 }
 
 /**
@@ -497,22 +252,26 @@ LayerManagerOGL::ReadDrawFPSPref::Run()
 }
 
 bool
-LayerManagerOGL::Initialize(nsRefPtr<GLContext> aContext, bool force)
+LayerManagerOGL::Initialize(bool force)
 {
   ScopedGfxFeatureReporter reporter("GL Layers", force);
 
   // Do not allow double initialization
   NS_ABORT_IF_FALSE(mGLContext == nullptr, "Don't reinitialize layer managers");
 
+  nsRefPtr<GLContext> ctx = CreateContext();
+
 #ifdef MOZ_WIDGET_ANDROID
-  if (!aContext)
+  if (!ctx) {
     NS_RUNTIMEABORT("We need a context on Android");
+  }
 #endif
 
-  if (!aContext)
+  if (!ctx) {
     return false;
+  }
 
-  mGLContext = aContext;
+  mGLContext = ctx;
   mGLContext->SetFlipped(true);
 
   MakeCurrent();
@@ -794,9 +553,9 @@ LayerManagerOGL::EndTransaction(DrawThebesLayerCallback aCallback,
         CopyToTarget(mTarget);
         mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
       }
+
       MOZ_ASSERT(!needGLRender);
     }
-
     if (needGLRender) {
       Render();
     }
@@ -929,30 +688,6 @@ LayerManagerOGL::RootLayer() const
 bool LayerManagerOGL::sDrawFPS = false;
 bool LayerManagerOGL::sFrameCounter = false;
 
-static uint16_t sFrameCount = 0;
-void
-FPSState::DrawFrameCounter(GLContext* context)
-{
-  profiler_set_frame_number(sFrameCount);
-
-  context->fEnable(LOCAL_GL_SCISSOR_TEST);
-
-  uint16_t frameNumber = sFrameCount;
-  for (size_t i = 0; i < 16; i++) {
-    context->fScissor(3*i, 0, 3, 3);
-
-    // We should do this using a single draw call
-    // instead of 16 glClear()
-    if ((frameNumber >> i) & 0x1) {
-      context->fClearColor(0.0, 0.0, 0.0, 0.0);
-    } else {
-      context->fClearColor(1.0, 1.0, 1.0, 0.0);
-    }
-    context->fClear(LOCAL_GL_COLOR_BUFFER_BIT);
-  }
-  // We intentionally overflow at 2^16.
-  sFrameCount++;
-}
 
 // |aTexCoordRect| is the rectangle from the texture that we want to
 // draw using the given program.  The program already has a necessary
@@ -1026,14 +761,6 @@ LayerManagerOGL::BindAndDrawQuadWithTextureRect(ShaderProgramOGL *aProg,
       mGLContext->fDisableVertexAttribArray(vertAttribIndex);
     }
     mGLContext->fDisableVertexAttribArray(texCoordAttribIndex);
-  }
-}
-
-void
-LayerManagerOGL::NotifyShadowTreeTransaction()
-{
-  if (mFPS) {
-    mFPS->NotifyShadowTreeTransaction();
   }
 }
 
@@ -1559,73 +1286,9 @@ LayerManagerOGL::CreateFBOWithTexture(const nsIntRect& aRect, InitMode aInit,
   *aTexture = tex;
 }
 
-already_AddRefed<ShadowThebesLayer>
-LayerManagerOGL::CreateShadowThebesLayer()
-{
-  if (LayerManagerOGL::mDestroyed) {
-    NS_WARNING("Call on destroyed layer manager");
-    return nullptr;
-  }
-#ifdef FORCE_BASICTILEDTHEBESLAYER
-  return nsRefPtr<ShadowThebesLayer>(new TiledThebesLayerOGL(this)).forget();
-#else
-  return nsRefPtr<ShadowThebesLayerOGL>(new ShadowThebesLayerOGL(this)).forget();
-#endif
-}
-
-already_AddRefed<ShadowContainerLayer>
-LayerManagerOGL::CreateShadowContainerLayer()
-{
-  if (LayerManagerOGL::mDestroyed) {
-    NS_WARNING("Call on destroyed layer manager");
-    return nullptr;
-  }
-  return nsRefPtr<ShadowContainerLayerOGL>(new ShadowContainerLayerOGL(this)).forget();
-}
-
-already_AddRefed<ShadowImageLayer>
-LayerManagerOGL::CreateShadowImageLayer()
-{
-  if (LayerManagerOGL::mDestroyed) {
-    NS_WARNING("Call on destroyed layer manager");
-    return nullptr;
-  }
-  return nsRefPtr<ShadowImageLayerOGL>(new ShadowImageLayerOGL(this)).forget();
-}
-
-already_AddRefed<ShadowColorLayer>
-LayerManagerOGL::CreateShadowColorLayer()
-{
-  if (LayerManagerOGL::mDestroyed) {
-    NS_WARNING("Call on destroyed layer manager");
-    return nullptr;
-  }
-  return nsRefPtr<ShadowColorLayerOGL>(new ShadowColorLayerOGL(this)).forget();
-}
-
-already_AddRefed<ShadowCanvasLayer>
-LayerManagerOGL::CreateShadowCanvasLayer()
-{
-  if (LayerManagerOGL::mDestroyed) {
-    NS_WARNING("Call on destroyed layer manager");
-    return nullptr;
-  }
-  return nsRefPtr<ShadowCanvasLayerOGL>(new ShadowCanvasLayerOGL(this)).forget();
-}
-
-already_AddRefed<ShadowRefLayer>
-LayerManagerOGL::CreateShadowRefLayer()
-{
-  if (LayerManagerOGL::mDestroyed) {
-    NS_WARNING("Call on destroyed layer manager");
-    return nullptr;
-  }
-  return nsRefPtr<ShadowRefLayerOGL>(new ShadowRefLayerOGL(this)).forget();
-}
-
 TemporaryRef<DrawTarget>
 LayerManagerOGL::CreateDrawTarget(const IntSize &aSize,
-                               SurfaceFormat aFormat)
+                                  SurfaceFormat aFormat)
 {
 #ifdef XP_MACOSX
   // We don't want to accelerate if the surface is too small which indicates
@@ -1641,226 +1304,6 @@ LayerManagerOGL::CreateDrawTarget(const IntSize &aSize,
   }
 #endif
   return LayerManager::CreateDrawTarget(aSize, aFormat);
-}
-
-static void
-SubtractTransformedRegion(nsIntRegion& aRegion,
-                          const nsIntRegion& aRegionToSubtract,
-                          const gfx3DMatrix& aTransform)
-{
-  if (aRegionToSubtract.IsEmpty()) {
-    return;
-  }
-
-  // For each rect in the region, find out its bounds in screen space and
-  // subtract it from the screen region.
-  nsIntRegionRectIterator it(aRegionToSubtract);
-  while (const nsIntRect* rect = it.Next()) {
-    gfxRect incompleteRect = aTransform.TransformBounds(gfxRect(*rect));
-    aRegion.Sub(aRegion, nsIntRect(incompleteRect.x,
-                                   incompleteRect.y,
-                                   incompleteRect.width,
-                                   incompleteRect.height));
-  }
-}
-
-/* static */ void
-LayerManagerOGL::ComputeRenderIntegrityInternal(Layer* aLayer,
-                                                nsIntRegion& aScreenRegion,
-                                                nsIntRegion& aLowPrecisionScreenRegion,
-                                                const gfx3DMatrix& aTransform)
-{
-  if (aLayer->GetOpacity() <= 0.f ||
-      (aScreenRegion.IsEmpty() && aLowPrecisionScreenRegion.IsEmpty())) {
-    return;
-  }
-
-  // If the layer's a container, recurse into all of its children
-  ContainerLayer* container = aLayer->AsContainerLayer();
-  if (container) {
-    // Accumulate the transform of intermediate surfaces
-    gfx3DMatrix transform = aTransform;
-    if (container->UseIntermediateSurface()) {
-      transform = aLayer->GetEffectiveTransform();
-      transform.PreMultiply(aTransform);
-    }
-    for (Layer* child = aLayer->GetFirstChild(); child;
-         child = child->GetNextSibling()) {
-      ComputeRenderIntegrityInternal(child, aScreenRegion, aLowPrecisionScreenRegion, transform);
-    }
-    return;
-  }
-
-  // Only thebes layers can be incomplete
-  ThebesLayer* thebesLayer = aLayer->AsThebesLayer();
-  if (!thebesLayer) {
-    return;
-  }
-
-  // See if there's any incomplete rendering
-  nsIntRegion incompleteRegion = aLayer->GetEffectiveVisibleRegion();
-  incompleteRegion.Sub(incompleteRegion, thebesLayer->GetValidRegion());
-
-  if (!incompleteRegion.IsEmpty()) {
-    // Calculate the transform to get between screen and layer space
-    gfx3DMatrix transformToScreen = aLayer->GetEffectiveTransform();
-    transformToScreen.PreMultiply(aTransform);
-
-    SubtractTransformedRegion(aScreenRegion, incompleteRegion, transformToScreen);
-
-    // See if there's any incomplete low-precision rendering
-    TiledLayerComposer* composer = nullptr;
-    ShadowLayer* shadow = aLayer->AsShadowLayer();
-    if (shadow) {
-      composer = shadow->AsTiledLayerComposer();
-      if (composer) {
-        incompleteRegion.Sub(incompleteRegion, composer->GetValidLowPrecisionRegion());
-        if (!incompleteRegion.IsEmpty()) {
-          SubtractTransformedRegion(aLowPrecisionScreenRegion, incompleteRegion, transformToScreen);
-        }
-      }
-    }
-
-    // If we can't get a valid low precision region, assume it's the same as
-    // the high precision region.
-    if (!composer) {
-      SubtractTransformedRegion(aLowPrecisionScreenRegion, incompleteRegion, transformToScreen);
-    }
-  }
-}
-
-static int
-GetRegionArea(const nsIntRegion& aRegion)
-{
-  int area = 0;
-  nsIntRegionRectIterator it(aRegion);
-  while (const nsIntRect* rect = it.Next()) {
-    area += rect->width * rect->height;
-  }
-  return area;
-}
-
-#ifdef MOZ_ANDROID_OMTC
-static float
-GetDisplayportCoverage(const gfx::Rect& aDisplayPort,
-                       const gfx3DMatrix& aTransformToScreen,
-                       const nsIntRect& aScreenRect)
-{
-  gfxRect transformedDisplayport =
-    aTransformToScreen.TransformBounds(gfxRect(aDisplayPort.x,
-                                               aDisplayPort.y,
-                                               aDisplayPort.width,
-                                               aDisplayPort.height));
-  transformedDisplayport.RoundOut();
-  nsIntRect displayport = nsIntRect(transformedDisplayport.x,
-                                    transformedDisplayport.y,
-                                    transformedDisplayport.width,
-                                    transformedDisplayport.height);
-  if (!displayport.Contains(aScreenRect)) {
-    nsIntRegion coveredRegion;
-    coveredRegion.And(aScreenRect, displayport);
-    return GetRegionArea(coveredRegion) / (float)(aScreenRect.width * aScreenRect.height);
-  }
-
-  return 1.0f;
-}
-#endif // MOZ_ANDROID_OMTC
-
-float
-LayerManagerOGL::ComputeRenderIntegrity()
-{
-  // We only ever have incomplete rendering when progressive tiles are enabled.
-  Layer* root = GetRoot();
-  if (!gfxPlatform::UseProgressiveTilePainting() || !root) {
-    return 1.f;
-  }
-
-  const FrameMetrics& rootMetrics = root->AsContainerLayer()->GetFrameMetrics();
-  nsIntRect screenRect(rootMetrics.mCompositionBounds.x,
-                       rootMetrics.mCompositionBounds.y,
-                       rootMetrics.mCompositionBounds.width,
-                       rootMetrics.mCompositionBounds.height);
-
-  float lowPrecisionMultiplier = 1.0f;
-  float highPrecisionMultiplier = 1.0f;
-#ifdef MOZ_ANDROID_OMTC
-  // Use the transform on the primary scrollable layer and its FrameMetrics
-  // to find out how much of the viewport the current displayport covers
-  Layer* primaryScrollable = GetPrimaryScrollableLayer();
-  if (primaryScrollable) {
-    // This is derived from the code in
-    // gfx/layers/ipc/CompositorParent.cpp::TransformShadowTree.
-    const gfx3DMatrix& rootTransform = root->GetTransform();
-    float devPixelRatioX = 1 / rootTransform.GetXScale();
-    float devPixelRatioY = 1 / rootTransform.GetYScale();
-
-    gfx3DMatrix transform = primaryScrollable->GetEffectiveTransform();
-    transform.ScalePost(devPixelRatioX, devPixelRatioY, 1);
-    const FrameMetrics& metrics = primaryScrollable->AsContainerLayer()->GetFrameMetrics();
-
-    // Clip the screen rect to the document bounds
-    gfxRect documentBounds =
-      transform.TransformBounds(gfxRect(metrics.mScrollableRect.x - metrics.mScrollOffset.x,
-                                        metrics.mScrollableRect.y - metrics.mScrollOffset.y,
-                                        metrics.mScrollableRect.width,
-                                        metrics.mScrollableRect.height));
-    documentBounds.RoundOut();
-    screenRect = screenRect.Intersect(nsIntRect(documentBounds.x, documentBounds.y,
-                                                documentBounds.width, documentBounds.height));
-
-    // If the screen rect is empty, the user has scrolled entirely into
-    // over-scroll and so we can be considered to have full integrity.
-    if (screenRect.IsEmpty()) {
-      return 1.0f;
-    }
-
-    // Work out how much of the critical display-port covers the screen
-    bool hasLowPrecision = false;
-    if (!metrics.mCriticalDisplayPort.IsEmpty()) {
-      hasLowPrecision = true;
-      highPrecisionMultiplier =
-        GetDisplayportCoverage(metrics.mCriticalDisplayPort, transform, screenRect);
-    }
-
-    // Work out how much of the display-port covers the screen
-    if (!metrics.mDisplayPort.IsEmpty()) {
-      if (hasLowPrecision) {
-        lowPrecisionMultiplier =
-          GetDisplayportCoverage(metrics.mDisplayPort, transform, screenRect);
-      } else {
-        lowPrecisionMultiplier = highPrecisionMultiplier =
-          GetDisplayportCoverage(metrics.mDisplayPort, transform, screenRect);
-      }
-    }
-  }
-
-  // If none of the screen is covered, we have zero integrity.
-  if (highPrecisionMultiplier <= 0.0f && lowPrecisionMultiplier <= 0.0f) {
-    return 0.0f;
-  }
-#endif // MOZ_ANDROID_OMTC
-
-  nsIntRegion screenRegion(screenRect);
-  nsIntRegion lowPrecisionScreenRegion(screenRect);
-  gfx3DMatrix transform;
-  ComputeRenderIntegrityInternal(root, screenRegion,
-                                 lowPrecisionScreenRegion, transform);
-
-  if (!screenRegion.IsEqual(screenRect)) {
-    // Calculate the area of the region. All rects in an nsRegion are
-    // non-overlapping.
-    float screenArea = screenRect.width * screenRect.height;
-    float highPrecisionIntegrity = GetRegionArea(screenRegion) / screenArea;
-    float lowPrecisionIntegrity = 1.f;
-    if (!lowPrecisionScreenRegion.IsEqual(screenRect)) {
-      lowPrecisionIntegrity = GetRegionArea(lowPrecisionScreenRegion) / screenArea;
-    }
-
-    return ((highPrecisionIntegrity * highPrecisionMultiplier) +
-            (lowPrecisionIntegrity * lowPrecisionMultiplier)) / 2;
-  }
-
-  return 1.f;
 }
 
 } /* layers */

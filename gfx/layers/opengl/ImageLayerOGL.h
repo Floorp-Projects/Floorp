@@ -7,7 +7,6 @@
 #define GFX_IMAGELAYEROGL_H
 
 #include "mozilla/layers/PLayers.h"
-#include "mozilla/layers/ShadowLayers.h"
 
 #include "LayerManagerOGL.h"
 #include "ImageLayers.h"
@@ -16,9 +15,6 @@
 #include "mozilla/Mutex.h"
 
 namespace mozilla {
-namespace ipc {
-class Shmem;
-}
 namespace layers {
 
 class CairoImage;
@@ -37,7 +33,8 @@ class ShmemYCbCrImage;
  *
  * Initially the texture is not allocated --- it's in a "null" state.
  */
-class GLTexture {
+class GLTexture
+{
   typedef mozilla::gl::GLContext GLContext;
 
 public:
@@ -154,67 +151,6 @@ struct CairoOGLBackendData : public ImageBackendData
   GLTexture mTexture;
   gl::ShaderProgramType mLayerProgram;
   gfxIntSize mTextureSize;
-};
-
-class ShadowImageLayerOGL : public ShadowImageLayer,
-                            public LayerOGL
-{
-  typedef gl::TextureImage TextureImage;
-
-public:
-  ShadowImageLayerOGL(LayerManagerOGL* aManager);
-  virtual ~ShadowImageLayerOGL();
-
-  // ShadowImageLayer impl
-  virtual void Swap(const SharedImage& aFront,
-                    SharedImage* aNewBack);
-
-  virtual void Disconnect();
-
-  // LayerOGL impl
-  virtual void Destroy();
-  virtual bool LoadAsTexture(GLuint aTextureUnit, gfxIntSize* aSize);
-
-  virtual Layer* GetLayer();
-  virtual LayerRenderState GetRenderState() MOZ_OVERRIDE;
-
-  virtual void RenderLayer(int aPreviousFrameBuffer,
-                           const nsIntPoint& aOffset);
-
-  virtual void CleanupResources();
-
-private:
-  bool Init(const SharedImage& aFront);
-  // Will be replaced by UploadSharedYCbCrToTexture after the layers 
-  // refactoring. 
-  void UploadSharedYUVToTexture(const YUVImage& yuv);
-
-  void UploadSharedYCbCrToTexture(ShmemYCbCrImage& aImage,
-                                  nsIntRect aPictureRect);
-
-  void UploadSharedRGBToTexture(ipc::Shmem *aShmem,
-                                nsIntRect aPictureRect,
-                                uint32_t aRgbFormat);
-
-
-  nsRefPtr<TextureImage> mTexImage;
-
-  // For SharedTextureHandle
-  gl::SharedTextureHandle mSharedHandle;
-  gl::GLContext::SharedTextureShareType mShareType;
-  bool mInverted;
-  GLuint mTexture;
-
-  // For direct texturing with OES_EGL_image_external extension. This
-  // texture is allocated when the image supports binding with
-  // BindExternalBuffer.
-  GLTexture mExternalBufferTexture;
-
-  GLTexture mYUVTexture[3];
-  GLTexture mRGBTexture;
-  gfxIntSize mSize;
-  gfxIntSize mCbCrSize;
-  nsIntRect mPictureRect;
 };
 
 } /* layers */

@@ -310,20 +310,24 @@ PeerConnectionImpl::~PeerConnectionImpl()
   */
 }
 
-// One level of indirection so we can use WrapRunnable in CreateMediaStream.
-nsresult
-PeerConnectionImpl::MakeMediaStream(nsIDOMWindow* aWindow,
-                                    uint32_t aHint, nsIDOMMediaStream** aRetval)
+already_AddRefed<DOMMediaStream>
+PeerConnectionImpl::MakeMediaStream(nsPIDOMWindow* aWindow,
+                                    uint32_t aHint)
 {
-  MOZ_ASSERT(aRetval);
-
   nsRefPtr<DOMMediaStream> stream =
     DOMMediaStream::CreateSourceStream(aWindow, aHint);
-  NS_ADDREF(*aRetval = stream);
+#ifdef MOZILLA_INTERNAL_API
+  nsIDocument* doc = aWindow->GetExtantDoc();
+  if (!doc) {
+    return nullptr;
+  }
+  // Make the stream data (audio/video samples) accessible to the receiving page.
+  stream->CombineWithPrincipal(doc->NodePrincipal());
+#endif
 
   CSFLogDebug(logTag, "Created media stream %p, inner: %p", stream.get(), stream->GetStream());
 
-  return NS_OK;
+  return stream.forget();
 }
 
 nsresult
@@ -333,22 +337,19 @@ PeerConnectionImpl::CreateRemoteSourceStreamInfo(nsRefPtr<RemoteSourceStreamInfo
   MOZ_ASSERT(aInfo);
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
-  nsIDOMMediaStream* stream;
-
   // We need to pass a dummy hint here because FakeMediaStream currently
   // needs to actually propagate a hint for local streams.
   // TODO(ekr@rtfm.com): Clean up when we have explicit track lists.
   // See bug 834835.
-  nsresult res = MakeMediaStream(mWindow, 0, &stream);
-  if (NS_FAILED(res)) {
-    return res;
+  nsRefPtr<DOMMediaStream> stream = MakeMediaStream(mWindow, 0);
+  if (!stream) {
+    return NS_ERROR_FAILURE;
   }
 
-  DOMMediaStream* comstream = static_cast<DOMMediaStream*>(stream);
-  static_cast<mozilla::SourceMediaStream*>(comstream->GetStream())->SetPullEnabled(true);
+  static_cast<mozilla::SourceMediaStream*>(stream->GetStream())->SetPullEnabled(true);
 
   nsRefPtr<RemoteSourceStreamInfo> remote;
-  remote = new RemoteSourceStreamInfo(comstream, mMedia);
+  remote = new RemoteSourceStreamInfo(stream.forget(), mMedia);
   *aInfo = remote;
 
   return NS_OK;
@@ -375,7 +376,7 @@ Warn(JSContext* aCx, const nsCString& aMsg) {
  * In JS, an RTCConfiguration looks like this:
  *
  * { "iceServers": [ { url:"stun:23.21.150.121" },
- *                   { url:"turn:user@turn.example.org", credential:"mypass"} ] }
+ *                   { url:"turn:turn.example.org", credential:"mypass", "username"} ] }
  *
  * This function converts an already-validated jsval that looks like the above
  * into an IceConfiguration object.
@@ -415,17 +416,8 @@ PeerConnectionImpl::ConvertRTCConfiguration(const JS::Value& aSrc,
     nsAutoCString spec;
     rv = url->GetSpec(spec);
     NS_ENSURE_SUCCESS(rv, rv);
-    if (!server.mCredential.IsEmpty()) {
-      // TODO(jib@mozilla.com): Support username, credentials & TURN servers
-      Warn(aCx, nsPrintfCString(ICE_PARSING
-          ": Credentials not yet implemented. Omitting \"%s\"", spec.get()));
-      continue;
-    }
-    if (isTurn || isTurns) {
-      Warn(aCx, nsPrintfCString(ICE_PARSING
-          ": TURN servers not yet supported. Treating as STUN: \"%s\"", spec.get()));
-    }
-    // TODO(jib@mozilla.com): Revisit once nsURI supports host and port on STUN
+
+    // TODO(jib@mozilla.com): Revisit once nsURI has STUN host+port (Bug 833509)
     int32_t port;
     nsAutoCString host;
     {
@@ -442,13 +434,26 @@ PeerConnectionImpl::ConvertRTCConfiguration(const JS::Value& aSrc,
       if (!hostLen) {
         return NS_ERROR_FAILURE;
       }
+      if (hostPos > 1)  /* The username was removed */
+        return NS_ERROR_FAILURE;
       path.Mid(host, hostPos, hostLen);
     }
     if (port == -1)
       port = (isStuns || isTurns)? 5349 : 3478;
-    if (!aDst->addServer(host.get(), port)) {
-      Warn(aCx, nsPrintfCString(ICE_PARSING
-          ": FQDN not yet implemented (only IP-#s). Omitting \"%s\"", spec.get()));
+
+    if (isTurn || isTurns) {
+      NS_ConvertUTF16toUTF8 credential(server.mCredential);
+      NS_ConvertUTF16toUTF8 username(server.mUsername);
+
+      if (!aDst->addTurnServer(host.get(), port,
+                               username.get(),
+                               credential.get())) {
+        return NS_ERROR_FAILURE;
+      }
+    } else {
+      if (!aDst->addStunServer(host.get(), port)) {
+        return NS_ERROR_FAILURE;
+      }
     }
   }
 #endif
@@ -522,9 +527,10 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
     IceConfiguration ic;
     res = ConvertRTCConfiguration(*aRTCConfiguration, &ic, aCx);
     NS_ENSURE_SUCCESS(res, res);
-    res = mMedia->Init(ic.getServers());
+    res = mMedia->Init(ic.getStunServers(), ic.getTurnServers());
   } else {
-    res = mMedia->Init(aConfiguration->getServers());
+    res = mMedia->Init(aConfiguration->getStunServers(),
+                       aConfiguration->getTurnServers());
   }
   if (NS_FAILED(res)) {
     CSFLogError(logTag, "%s: Couldn't initialize media object", __FUNCTION__);
@@ -608,21 +614,22 @@ PeerConnectionImpl::CreateFakeMediaStream(uint32_t aHint, nsIDOMMediaStream** aR
     aHint &= ~MEDIA_STREAM_MUTE;
   }
 
-  nsresult res = MakeMediaStream(mWindow, aHint, aRetval);
-  if (NS_FAILED(res)) {
-    return res;
+  nsRefPtr<DOMMediaStream> stream = MakeMediaStream(mWindow, aHint);
+  if (!stream) {
+    return NS_ERROR_FAILURE;
   }
 
   if (!mute) {
     if (aHint & DOMMediaStream::HINT_CONTENTS_AUDIO) {
-      new Fake_AudioGenerator(static_cast<DOMMediaStream*>(*aRetval));
+      new Fake_AudioGenerator(stream);
     } else {
 #ifdef MOZILLA_INTERNAL_API
-    new Fake_VideoGenerator(static_cast<DOMMediaStream*>(*aRetval));
+    new Fake_VideoGenerator(stream);
 #endif
     }
   }
 
+  *aRetval = stream.forget().get();
   return NS_OK;
 }
 

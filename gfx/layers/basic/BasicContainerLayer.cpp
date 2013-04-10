@@ -235,21 +235,6 @@ BasicShadowLayerManager::CreateRefLayer()
   return layer.forget();
 }
 
-already_AddRefed<ShadowContainerLayer>
-BasicShadowLayerManager::CreateShadowContainerLayer()
-{
-  NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
-  nsRefPtr<ShadowContainerLayer> layer = new BasicShadowContainerLayer(this);
-  return layer.forget();
-}
-
-already_AddRefed<ShadowRefLayer>
-BasicShadowLayerManager::CreateShadowRefLayer()
-{
-  NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
-  // FIXME/IMPL
-  return nullptr;
-}
 
 }
 }

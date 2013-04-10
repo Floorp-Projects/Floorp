@@ -56,41 +56,6 @@ public:
   }
 };
 
-// This is a bare-bones implementation of a container layer, only
-// enough to contain a shadow "window texture".  This impl doesn't
-// honor the transform/cliprect/etc. when rendering.
-class ShadowContainerLayerD3D10 : public ShadowContainerLayer,
-                                  public LayerD3D10
-{
-  template<class Container>
-  friend void ContainerInsertAfter(Container* aContainer, Layer* aChild, Layer* aAfter);
-  template<class Container>
-  friend void ContainerRemoveChild(Container* aContainer, Layer* aChild);
-  template<class Container>
-  friend void ContainerRepositionChild(Container* aContainer, Layer* aChild, Layer* aAfter);
-public:
-  ShadowContainerLayerD3D10(LayerManagerD3D10 *aManager);
-  ~ShadowContainerLayerD3D10();
-
-  void InsertAfter(Layer* aChild, Layer* aAfter);
-
-  void RemoveChild(Layer* aChild);
-
-  void RepositionChild(Layer* aChild, Layer* aAfter);
-
-  virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface);
-
-  /* LayerD3D10 implementation */
-  virtual LayerD3D10 *GetFirstChildD3D10();
-  virtual Layer* GetLayer() { return this; }
-  virtual void RenderLayer();
-  virtual void Validate();
-  virtual void LayerManagerDestroyed();
-
-private:
-    
-};
-
 } /* layers */
 } /* mozilla */
 

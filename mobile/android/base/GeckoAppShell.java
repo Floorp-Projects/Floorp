@@ -581,7 +581,8 @@ public class GeckoAppShell
         Intent intent = new Intent();
         intent.setAction(GeckoApp.ACTION_WEBAPP_PREFIX + aIndex);
         intent.setData(Uri.parse(aURI));
-        intent.setClassName(GeckoApp.mAppContext, GeckoApp.mAppContext.getPackageName() + ".WebApps$WebApp" + aIndex);
+        intent.setClassName(AppConstants.ANDROID_PACKAGE_NAME,
+                            "org.mozilla.gecko.WebApps$WebApp" + aIndex);
         return intent;
     }
 
@@ -619,8 +620,8 @@ public class GeckoAppShell
                     shortcutIntent = new Intent();
                     shortcutIntent.setAction(GeckoApp.ACTION_BOOKMARK);
                     shortcutIntent.setData(Uri.parse(aURI));
-                    shortcutIntent.setClassName(GeckoApp.mAppContext,
-                                                GeckoApp.mAppContext.getPackageName() + ".App");
+                    shortcutIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME,
+                                                AppConstants.BROWSER_INTENT_CLASS);
                 }
         
                 Intent intent = new Intent();
@@ -658,8 +659,8 @@ public class GeckoAppShell
                 } else {
                     shortcutIntent = new Intent();
                     shortcutIntent.setAction(GeckoApp.ACTION_BOOKMARK);
-                    shortcutIntent.setClassName(GeckoApp.mAppContext,
-                                                GeckoApp.mAppContext.getPackageName() + ".App");
+                    shortcutIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME,
+                                                AppConstants.BROWSER_INTENT_CLASS);
                     shortcutIntent.setData(Uri.parse(aURI));
                 }
         
@@ -1067,7 +1068,7 @@ public class GeckoAppShell
         if ("vnd.youtube".equals(scheme) && getHandlersForURL(targetURI, action).length == 0) {
             // Special case youtube to fallback to our own player
             intent = new Intent(VideoPlayer.VIDEO_ACTION);
-            intent.setClassName(GeckoApp.mAppContext.getPackageName(),
+            intent.setClassName(AppConstants.ANDROID_PACKAGE_NAME,
                                 "org.mozilla.gecko.VideoPlayer");
         } else {
             intent = getIntentForActionString(action);
@@ -1208,7 +1209,7 @@ public class GeckoAppShell
         // The intent to launch when the user clicks the expanded notification
         String app = GeckoApp.mAppContext.getClass().getName();
         Intent notificationIntent = new Intent(GeckoApp.ACTION_ALERT_CALLBACK);
-        notificationIntent.setClassName(GeckoApp.mAppContext, app);
+        notificationIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, app);
         notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
         int notificationID = aAlertName.hashCode();

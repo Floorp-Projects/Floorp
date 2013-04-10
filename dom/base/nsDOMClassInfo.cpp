@@ -169,7 +169,7 @@
 // includes needed for the prototype chain interfaces
 #include "nsIDOMNavigator.h"
 #include "nsIDOMBarProp.h"
-#include "nsDOMAttribute.h"
+#include "mozilla/dom/Attr.h"
 #include "nsIDOMDataContainerEvent.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMCompositionEvent.h"

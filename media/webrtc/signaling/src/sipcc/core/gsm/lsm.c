@@ -5172,26 +5172,38 @@ lsm_stop_media (lsm_lcb_t *lcb, callid_t call_id, line_t line,
  *   [in]  call_id - GSM call ID
  *   [in]  media - media line to add as remote stream
  *   [out] pc_stream_id
- * Returns: None
+ *
+ * Returns: CC_RC_SUCCESS or CC_RC_ERROR if unable to create or add stream
  */
-void lsm_add_remote_stream (line_t line, callid_t call_id, fsmdef_media_t *media, int *pc_stream_id)
+cc_rcs_t
+lsm_add_remote_stream (line_t line, callid_t call_id, fsmdef_media_t *media, int *pc_stream_id)
 {
-    static const char fname[] = "lsm_add_remote_stream";
-    fsmdef_dcb_t   *dcb;
     lsm_lcb_t *lcb;
+    fsmdef_dcb_t *dcb;
+    int vcm_ret;
 
     lcb = lsm_get_lcb_by_call_id(call_id);
-    if (lcb != NULL) {
-        dcb = lcb->dcb;
-        if (dcb == NULL) {
-            LSM_ERR_MSG(get_debug_string(DEBUG_INPUT_NULL), fname);
-            return;
-        }
-
-        vcmCreateRemoteStream(media->cap_index, dcb->peerconnection,
-                pc_stream_id);
-
+    if (!lcb) {
+        CSFLogError(logTag, "%s: lcb is null", __FUNCTION__);
+        return CC_RC_ERROR;
     }
+
+    dcb = lcb->dcb;
+    if (!dcb) {
+        CSFLogError(logTag, "%s: dcb is null", __FUNCTION__);
+        return CC_RC_ERROR;
+    }
+
+    vcm_ret = vcmCreateRemoteStream(media->cap_index, dcb->peerconnection,
+            pc_stream_id);
+
+    if (vcm_ret) {
+        CSFLogError(logTag, "%s: vcmCreateRemoteStream returned error: %d",
+            __FUNCTION__, vcm_ret);
+        return CC_RC_ERROR;
+    }
+
+    return CC_RC_SUCCESS;
 }
 
 /*

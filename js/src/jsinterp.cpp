@@ -1648,10 +1648,10 @@ BEGIN_CASE(JSOP_AND)
 }
 END_CASE(JSOP_AND)
 
-#define FETCH_ELEMENT_ID(obj, n, id)                                          \
+#define FETCH_ELEMENT_ID(n, id)                                               \
     JS_BEGIN_MACRO                                                            \
         const Value &idval_ = regs.sp[n];                                     \
-        if (!ValueToId<CanGC>(cx, obj, idval_, &id))                          \
+        if (!ValueToId<CanGC>(cx, idval_, &id))                               \
             goto error;                                                       \
     JS_END_MACRO
 
@@ -1681,7 +1681,7 @@ BEGIN_CASE(JSOP_IN)
     RootedObject &obj = rootObject0;
     obj = &rref.toObject();
     RootedId &id = rootId0;
-    FETCH_ELEMENT_ID(obj, -2, id);
+    FETCH_ELEMENT_ID(-2, id);
     RootedObject &obj2 = rootObject1;
     RootedShape &prop = rootShape0;
     if (!JSObject::lookupGeneric(cx, obj, id, &obj2, &prop))
@@ -1804,7 +1804,7 @@ BEGIN_CASE(JSOP_ENUMCONSTELEM)
     RootedObject &obj = rootObject0;
     FETCH_OBJECT(cx, -2, obj);
     RootedId &id = rootId0;
-    FETCH_ELEMENT_ID(obj, -1, id);
+    FETCH_ELEMENT_ID(-1, id);
     if (!JSObject::defineGeneric(cx, obj, id, rval,
                                  JS_PropertyStub, JS_StrictPropertyStub,
                                  JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY)) {
@@ -2308,7 +2308,7 @@ BEGIN_CASE(JSOP_SETELEM)
     RootedObject &obj = rootObject0;
     FETCH_OBJECT(cx, -3, obj);
     RootedId &id = rootId0;
-    FETCH_ELEMENT_ID(obj, -2, id);
+    FETCH_ELEMENT_ID(-2, id);
     Value &value = regs.sp[-1];
     if (!SetObjectElementOperation(cx, obj, id, value, script->strict))
         goto error;
@@ -2325,7 +2325,7 @@ BEGIN_CASE(JSOP_ENUMELEM)
     /* Funky: the value to set is under the [obj, id] pair. */
     FETCH_OBJECT(cx, -2, obj);
     RootedId &id = rootId0;
-    FETCH_ELEMENT_ID(obj, -1, id);
+    FETCH_ELEMENT_ID(-1, id);
     rval = regs.sp[-3];
     if (!JSObject::setGeneric(cx, obj, obj, id, &rval, script->strict))
         goto error;
@@ -2851,7 +2851,7 @@ BEGIN_CASE(JSOP_SETTER)
 
     /* Ensure that id has a type suitable for use with obj. */
     if (JSID_IS_VOID(id))
-        FETCH_ELEMENT_ID(obj, i, id);
+        FETCH_ELEMENT_ID(i, id);
 
     if (!js_IsCallable(rval)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_GETTER_OR_SETTER,
@@ -2992,7 +2992,7 @@ BEGIN_CASE(JSOP_INITELEM)
 {
     JS_ASSERT(regs.stackDepth() >= 3);
     HandleValue val = HandleValue::fromMarkedLocation(&regs.sp[-1]);
-    MutableHandleValue id = MutableHandleValue::fromMarkedLocation(&regs.sp[-2]);
+    HandleValue id = HandleValue::fromMarkedLocation(&regs.sp[-2]);
 
     RootedObject &obj = rootObject0;
     obj = &regs.sp[-3].toObject();
@@ -3682,8 +3682,7 @@ js::SetObjectElement(JSContext *cx, HandleObject obj, HandleValue index, HandleV
                      JSBool strict)
 {
     RootedId id(cx);
-    RootedValue indexval(cx, index);
-    if (!FetchElementId(cx, obj, indexval, &id, &indexval))
+    if (!ValueToId<CanGC>(cx, index, &id))
         return false;
     return SetObjectElementOperation(cx, obj, id, value, strict);
 }
@@ -3694,8 +3693,7 @@ js::SetObjectElement(JSContext *cx, HandleObject obj, HandleValue index, HandleV
 {
     JS_ASSERT(pc);
     RootedId id(cx);
-    RootedValue indexval(cx, index);
-    if (!FetchElementId(cx, obj, indexval, &id, &indexval))
+    if (!ValueToId<CanGC>(cx, index, &id))
         return false;
     return SetObjectElementOperation(cx, obj, id, value, strict, script, pc);
 }

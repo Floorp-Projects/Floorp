@@ -296,7 +296,7 @@ uniform sampler2D uTexture;
 void main()
 {
 $FRAGMENT_CALC_MASK<mask>$
-  gl_FragColor = vec4(texture2D(uTexture, vTexCoord).rgb, 1.0) * uLayerOpacity * mask; 
+  gl_FragColor = vec4(texture2D(uTexture, vTexCoord).rgb, 1.0) * uLayerOpacity * mask;
 }
 @end
 

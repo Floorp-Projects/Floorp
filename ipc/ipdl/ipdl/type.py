@@ -306,6 +306,15 @@ class ProtocolType(IPDLType):
             if mgr is not self:
                 return mgr.toplevel()
 
+    def toplevels(self):
+        if self.isToplevel():
+            return [self]
+        toplevels = list()
+        for mgr in self.managers:
+            if mgr is not self:
+                toplevels.extend(mgr.toplevels())
+        return set(toplevels)
+
     def isManagerOf(self, pt):
         for managed in self.manages:
             if pt is managed:

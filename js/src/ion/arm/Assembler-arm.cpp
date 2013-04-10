@@ -18,6 +18,84 @@
 using namespace js;
 using namespace js::ion;
 
+ABIArgGenerator::ABIArgGenerator() :
+#if defined(JS_CPU_ARM_HARDFP)
+    intRegIndex_(0),
+    floatRegIndex_(0),
+#else
+    argRegIndex_(0),
+#endif
+    stackOffset_(0),
+    current_()
+{}
+
+ABIArg
+ABIArgGenerator::next(MIRType type)
+{
+#if defined(JS_CPU_ARM_HARDFP)
+    switch (type) {
+      case MIRType_Int32:
+      case MIRType_Pointer:
+        if (intRegIndex_ == NumIntArgRegs) {
+            current_ = ABIArg(stackOffset_);
+            stackOffset_ += sizeof(uint32_t);
+            break;
+        }
+        current_ = ABIArg(Register::FromCode(intRegIndex_));
+        intRegIndex_++;
+        break;
+      case MIRType_Double:
+        if (floatRegIndex_ == NumFloatArgRegs) {
+            static const int align = sizeof(double) - 1;
+            stackOffset_ = (stackOffset_ + align) & ~align;
+            current_ = ABIArg(stackOffset_);
+            stackOffset_ += sizeof(uint64_t);
+            break;
+        }
+        current_ = ABIArg(FloatRegister::FromCode(floatRegIndex_));
+        floatRegIndex_++;
+        break;
+      default:
+        JS_NOT_REACHED("Unexpected argument type");
+    }
+    return current_;
+#else
+    switch (type) {
+      case MIRType_Int32:
+      case MIRType_Pointer:
+        if (argRegIndex_ == NumIntArgRegs) {
+            current_ = ABIArg(stackOffset_);
+            stackOffset_ += sizeof(uint32_t);
+            break;
+        }
+        current_ = ABIArg(Register::FromCode(argRegIndex_));
+        argRegIndex_++;
+        break;
+      case MIRType_Double: {
+        unsigned alignedArgRegIndex_ = (argRegIndex_ + 1) & ~1;
+        if (alignedArgRegIndex_ + 1 > NumIntArgRegs) {
+            static const int align = sizeof(double) - 1;
+            stackOffset_ = (stackOffset_ + align) & ~align;
+            current_ = ABIArg(stackOffset_);
+            stackOffset_ += sizeof(uint64_t);
+            argRegIndex_ = NumIntArgRegs;
+            break;
+        }
+        argRegIndex_ = alignedArgRegIndex_;
+        current_ = ABIArg(FloatRegister::FromCode(argRegIndex_ >> 1));
+
+        argRegIndex_+=2;
+      }
+        break;
+      default:
+        JS_NOT_REACHED("Unexpected argument type");
+    }
+    return current_;
+#endif
+}
+const Register ABIArgGenerator::NonArgReturnVolatileReg0 = r4;
+const Register ABIArgGenerator::NonArgReturnVolatileReg1 = r5;
+
 // Encode a standard register when it is being used as src1, the dest, and
 // an extra register. These should never be called with an InvalidReg.
 uint32_t
@@ -400,6 +478,11 @@ InstALU::checkOp1(Register rn)
 {
     return rn == toRN(*this);
 }
+Operand2
+InstALU::extractOp2()
+{
+    return Operand2(encode());
+}
 
 InstCMP *
 InstCMP::asTHIS(const Instruction &i)
@@ -412,7 +495,34 @@ InstCMP::asTHIS(const Instruction &i)
 bool
 InstCMP::isTHIS(const Instruction &i)
 {
-    return InstALU::isTHIS(i) && InstALU::asTHIS(i)->checkDest(r0);
+    return InstALU::isTHIS(i) && InstALU::asTHIS(i)->checkDest(r0) && InstALU::asTHIS(i)->checkOp(op_cmp);
+}
+
+InstMOV *
+InstMOV::asTHIS(const Instruction &i)
+{
+    if (isTHIS(i))
+        return (InstMOV*) (&i);
+    return NULL;
+}
+
+bool
+InstMOV::isTHIS(const Instruction &i)
+{
+    return InstALU::isTHIS(i) && InstALU::asTHIS(i)->checkOp1(r0) && InstALU::asTHIS(i)->checkOp(op_mov);
+}
+
+Op2Reg
+Operand2::toOp2Reg() {
+    return *(Op2Reg*)this;
+}
+O2RegImmShift
+Op2Reg::toO2RegImmShift() {
+    return *(O2RegImmShift*)this;
+}
+O2RegRegShift
+Op2Reg::toO2RegRegShift() {
+    return *(O2RegRegShift*)this;
 }
 
 Imm16::Imm16(Instruction &inst)
@@ -1237,10 +1347,20 @@ BufferOffset
 Assembler::align(int alignment)
 {
     BufferOffset ret;
-    while (!m_buffer.isAligned(alignment)) {
-        BufferOffset tmp = as_nop();
-        if (!ret.assigned())
-            ret = tmp;
+    if (alignment == 8) {
+        while (!m_buffer.isAligned(alignment)) {
+            BufferOffset tmp = as_nop();
+            if (!ret.assigned())
+                ret = tmp;
+        }
+    } else {
+        flush();
+        JS_ASSERT((alignment & (alignment - 1)) == 0);
+        while (size() & (alignment-1)) {
+            BufferOffset tmp = as_nop();
+            if (!ret.assigned())
+                ret = tmp;
+        }
     }
     return ret;
 
@@ -1252,17 +1372,19 @@ Assembler::as_nop()
 }
 BufferOffset
 Assembler::as_alu(Register dest, Register src1, Operand2 op2,
-                ALUOp op, SetCond_ sc, Condition c)
+                  ALUOp op, SetCond_ sc, Condition c, Instruction *instdest)
 {
     return writeInst((int)op | (int)sc | (int) c | op2.encode() |
                      ((dest == InvalidReg) ? 0 : RD(dest)) |
-                     ((src1 == InvalidReg) ? 0 : RN(src1)));
+                     ((src1 == InvalidReg) ? 0 : RN(src1)), (uint32_t*)instdest);
 }
+
 BufferOffset
-Assembler::as_mov(Register dest, Operand2 op2, SetCond_ sc, Condition c)
+Assembler::as_mov(Register dest, Operand2 op2, SetCond_ sc, Condition c, Instruction *instdest)
 {
-    return as_alu(dest, InvalidReg, op2, op_mov, sc, c);
+    return as_alu(dest, InvalidReg, op2, op_mov, sc, c, instdest);
 }
+
 BufferOffset
 Assembler::as_mvn(Register dest, Operand2 op2, SetCond_ sc, Condition c)
 {
@@ -1759,12 +1881,19 @@ Assembler::as_blx(Register r, Condition c)
 BufferOffset
 Assembler::as_bl(BOffImm off, Condition c)
 {
+    m_buffer.markNextAsBranch();
     return writeInst(((int)c) | op_bl | off.encode());
 }
 
 BufferOffset
 Assembler::as_bl(Label *l, Condition c)
 {
+    if (m_buffer.oom()) {
+        BufferOffset ret;
+        return ret;
+    }
+    //as_bkpt();
+    m_buffer.markNextAsBranch();
     if (l->bound()) {
         BufferOffset ret = as_nop();
         as_bl(BufferOffset(l).diffB<BOffImm>(ret), c, ret);
@@ -1793,6 +1922,20 @@ Assembler::as_bl(BOffImm off, Condition c, BufferOffset inst)
 {
     *editSrc(inst) = InstBLImm(off, c);
     return inst;
+}
+
+BufferOffset
+Assembler::as_mrs(Register r, Condition c)
+{
+    return writeInst(0x010f0000 | int(c) | RD(r));
+}
+
+BufferOffset
+Assembler::as_msr(Register r, Condition c)
+{
+    // hardcode the 'mask' field to 0b11 for now.  it is bits 18 and 19, which are the two high bits of the 'c' in this constant.
+    JS_ASSERT((r.code() & ~0xf) == 0);
+    return writeInst(0x012cf000 | int(c) | r.code());
 }
 
 // VFP instructions!
@@ -2060,6 +2203,12 @@ Assembler::as_vmrs(Register r, Condition c)
     return writeInst(c | 0x0ef10a10 | RT(r));
 }
 
+BufferOffset
+Assembler::as_vmsr(Register r, Condition c)
+{
+    return writeInst(c | 0x0ee10a10 | RT(r));
+}
+
 bool
 Assembler::nextLink(BufferOffset b, BufferOffset *next)
 {
@@ -2244,8 +2393,11 @@ void
 Assembler::retargetNearBranch(Instruction *i, int offset, Condition cond, bool final)
 {
     // Retargeting calls is totally unsupported!
-    JS_ASSERT_IF(i->is<InstBranchImm>(), i->is<InstBImm>());
-    new (i) InstBImm(BOffImm(offset), cond);
+    JS_ASSERT_IF(i->is<InstBranchImm>(), i->is<InstBImm>() || i->is<InstBLImm>());
+    if (i->is<InstBLImm>())
+        new (i) InstBLImm(BOffImm(offset), cond);
+    else
+        new (i) InstBImm(BOffImm(offset), cond);
 
     // Flush the cache, since an instruction was overwritten
     if (final)
@@ -2558,10 +2710,34 @@ Assembler::ToggleCall(CodeLocationLabel inst_, bool enabled)
     AutoFlushCache::updateTop(uintptr_t(inst), 4);
 }
 
+void Assembler::updateBoundsCheck(uint32_t logHeapSize, Instruction *inst)
+{
+    JS_ASSERT(inst->is<InstMOV>());
+    InstMOV *mov = inst->as<InstMOV>();
+    JS_ASSERT(mov->checkDest(ScratchRegister));
+
+    Operand2 op = mov->extractOp2();
+    JS_ASSERT(op.isO2Reg());
+
+    Op2Reg reg = op.toOp2Reg();
+    Register index;
+    reg.getRM(&index);
+    JS_ASSERT(reg.isO2RegImmShift());
+    // O2RegImmShift shift = reg.toO2RegImmShift();
+
+    *inst = InstALU(ScratchRegister, InvalidReg, lsr(index, logHeapSize), op_mov, SetCond, Always);
+    AutoFlushCache::updateTop(uintptr_t(inst), 4);
+}
+
 void
 AutoFlushCache::update(uintptr_t newStart, size_t len)
 {
     uintptr_t newStop = newStart + len;
+    if (this == NULL) {
+        // just flush right here and now.
+        JSC::ExecutableAllocator::cacheFlush((void*)newStart, len);
+        return;
+    }
     used_ = true;
     if (!start_) {
         IonSpewCont(IonSpew_CacheFlush,  ".");

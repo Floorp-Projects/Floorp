@@ -89,9 +89,9 @@ typedef struct Data_ {
      int len;
 } Data;
 
-int r_data_create(Data **dp,UCHAR *d,int l);
+int r_data_create(Data **dp,const UCHAR *d,int l);
 int r_data_alloc(Data **dp, int l);
-int r_data_make(Data *dp, UCHAR *d,int l);
+int r_data_make(Data *dp, const UCHAR *d,int l);
 int r_data_alloc_mem(Data *d,int l);
 int r_data_destroy(Data **dp);
 int r_data_destroy_v(void *v);

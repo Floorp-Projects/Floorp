@@ -53,9 +53,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "webrtcUI",
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "KeywordURLResetPrompter",
-                                  "resource:///modules/KeywordURLResetPrompter.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
                                   "resource:///modules/RecentWindow.jsm");
 
@@ -264,13 +261,6 @@ BrowserGlue.prototype = {
           this._initPlaces(false);
         }
         break;
-      case "defaultURIFixup-using-keyword-pref":
-        if (KeywordURLResetPrompter.shouldPrompt) {
-          let keywordURI = subject.QueryInterface(Ci.nsIURI);
-          KeywordURLResetPrompter.prompt(this.getMostRecentBrowserWindow(),
-                                         keywordURI);
-        }
-        break;
       case "initial-migration-will-import-default-bookmarks":
         this._migrationImportsDefaultBookmarks = true;
         break;
@@ -344,7 +334,6 @@ BrowserGlue.prototype = {
     os.addObserver(this, "distribution-customization-complete", false);
     os.addObserver(this, "places-shutdown", false);
     this._isPlacesShutdownObserver = true;
-    os.addObserver(this, "defaultURIFixup-using-keyword-pref", false);
     os.addObserver(this, "handle-xul-text-link", false);
     os.addObserver(this, "profile-before-change", false);
 #ifdef MOZ_SERVICES_HEALTHREPORT
@@ -378,7 +367,6 @@ BrowserGlue.prototype = {
       os.removeObserver(this, "places-database-locked");
     if (this._isPlacesShutdownObserver)
       os.removeObserver(this, "places-shutdown");
-    os.removeObserver(this, "defaultURIFixup-using-keyword-pref");
     os.removeObserver(this, "handle-xul-text-link");
     os.removeObserver(this, "profile-before-change");
 #ifdef MOZ_SERVICES_HEALTHREPORT
@@ -563,9 +551,6 @@ BrowserGlue.prototype = {
         })
       });
     }
-
-    let keywordURLUserSet = Services.prefs.prefHasUserValue("keyword.URL");
-    Services.telemetry.getHistogramById("FX_KEYWORD_URL_USERSET").add(keywordURLUserSet);
 
     // Perform default browser checking.
     var shell;
@@ -1223,7 +1208,7 @@ BrowserGlue.prototype = {
   },
 
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 9;
+    const UI_VERSION = 11;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul#";
     let currentUIVersion = 0;
     try {
@@ -1364,6 +1349,29 @@ BrowserGlue.prototype = {
 
       Services.prefs.clearUserPref("browser.download.useToolkitUI");
       Services.prefs.clearUserPref("browser.library.useNewDownloadsView");
+    }
+
+#ifdef XP_WIN
+    if (currentUIVersion < 10) {
+      // For Windows systems with display set to > 96dpi (i.e. systemDefaultScale
+      // will return a value > 1.0), we want to discard any saved full-zoom settings,
+      // as we'll now be scaling the content according to the system resolution
+      // scale factor (Windows "logical DPI" setting)
+      let sm = Cc["@mozilla.org/gfx/screenmanager;1"].getService(Ci.nsIScreenManager);
+      if (sm.systemDefaultScale > 1.0) {
+        let cps2 = Cc["@mozilla.org/content-pref/service;1"].
+                   getService(Ci.nsIContentPrefService2);
+        cps2.removeByName("browser.content.full-zoom", null);
+      }
+    }
+#endif
+
+    if (currentUIVersion < 11) {
+      Services.prefs.clearUserPref("dom.disable_window_move_resize");
+      Services.prefs.clearUserPref("dom.disable_window_flip");
+      Services.prefs.clearUserPref("dom.event.contextmenu.enabled");
+      Services.prefs.clearUserPref("javascript.enabled");
+      Services.prefs.clearUserPref("permissions.default.image");
     }
 
     if (this._dirty)

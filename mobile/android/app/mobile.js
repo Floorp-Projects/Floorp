@@ -219,7 +219,6 @@ pref("dom.disable_window_print", true);
 pref("dom.disable_window_find", true);
 
 pref("keyword.enabled", true);
-pref("keyword.URL", "");
 
 pref("accessibility.typeaheadfind", false);
 pref("accessibility.typeaheadfind.timeout", 5000);

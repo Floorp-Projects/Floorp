@@ -60,11 +60,5 @@ ColorLayerD3D9::RenderLayer()
   return RenderColorLayerD3D9(this, mD3DManager);
 }
 
-void
-ShadowColorLayerD3D9::RenderLayer()
-{
-  return RenderColorLayerD3D9(this, mD3DManager);
-}
-
 } /* layers */
 } /* mozilla */

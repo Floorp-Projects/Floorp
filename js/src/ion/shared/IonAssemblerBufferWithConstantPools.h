@@ -47,18 +47,18 @@ struct Pool
     BufferOffset limitingUser;
     int limitingUsee;
 
-    Pool(int maxOffset_, int immSize_, int instSize_, int bias_, int alignment_,
+    Pool(int maxOffset_, int immSize_, int instSize_, int bias_, int alignment_, LifoAlloc &LifoAlloc_,
          bool isBackref_ = false, bool canDedup_ = false, Pool *other_ = NULL)
         : maxOffset(maxOffset_), immSize(immSize_), instSize(instSize),
           bias(bias_), alignment(alignment_),
           isBackref(isBackref_), canDedup(canDedup_), other(other_),
-          poolData(static_cast<uint8_t *>(malloc_(8*immSize))), numEntries(0),
+          poolData(static_cast<uint8_t *>(LifoAlloc_.alloc(8*immSize))), numEntries(0),
           buffSize(8), loadOffsets(), limitingUser(), limitingUsee(INT_MIN)
     {
     }
     static const int garbage=0xa5a5a5a5;
     Pool() : maxOffset(garbage), immSize(garbage), instSize(garbage), bias(garbage),
-             alignment(garbage), isBackref(garbage), canDedup(garbage)
+             alignment(garbage), isBackref(garbage), canDedup(garbage), other((Pool*)garbage)
     {
     }
     // Sometimes, when we are adding large values to a pool, the limiting use may change.
@@ -127,34 +127,35 @@ struct Pool
     }
 
     // By the time this function is called, we'd damn well better know that this is going to succeed.
-    uint32_t insertEntry(uint8_t *data, BufferOffset off) {
+    uint32_t insertEntry(uint8_t *data, BufferOffset off, LifoAlloc &LifoAlloc_) {
         if (numEntries == buffSize) {
             buffSize <<= 1;
-            poolData = static_cast<uint8_t*>(realloc_(poolData, immSize * numEntries,
-                                                      immSize * buffSize));
+            uint8_t *tmp = static_cast<uint8_t*>(LifoAlloc_.alloc(immSize * buffSize));
+            memcpy(tmp, poolData,  immSize * numEntries);
             if (poolData == NULL) {
                 buffSize = 0;
                 return -1;
             }
+            poolData = tmp;
         }
         memcpy(&poolData[numEntries * immSize], data, immSize);
         loadOffsets.append(off.getOffset());
         return numEntries++;
     }
 
-    bool reset() {
+    bool reset(LifoAlloc &a) {
         numEntries = 0;
         buffSize = 8;
-        poolData = static_cast<uint8_t*>(malloc_(buffSize * immSize));
+        poolData = static_cast<uint8_t*>(a.alloc(buffSize * immSize));
         if (poolData == NULL)
             return false;
 
-        void *otherSpace = malloc_(sizeof(Pool));
+        void *otherSpace = a.alloc(sizeof(Pool));
         if (otherSpace == NULL)
             return false;
 
         other = new (otherSpace) Pool(other->maxOffset, other->immSize, other->instSize,
-                                      other->bias, other->alignment, other->isBackref,
+                                      other->bias, other->alignment, a, other->isBackref,
                                       other->canDedup);
         new (&loadOffsets) LoadOffsets;
 
@@ -214,6 +215,12 @@ struct BufferSliceTail : public BufferSlice<SliceSize> {
     void markNextAsBranch() {
         int idx = this->nodeSize / InstBaseSize;
         isBranch[idx >> 3] |= 1 << (idx & 0x7);
+    }
+    bool isNextBranch() {
+        if (this->nodeSize == InstBaseSize)
+            return false;
+        int idx = this->nodeSize / InstBaseSize;
+        return (isBranch[idx >> 3] >> (idx & 0x7)) & 1;
     }
 };
 
@@ -351,8 +358,8 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
         return (BufferSlice**)&this->tail;
     }
 
-    virtual BufferSlice *newSlice() {
-        BufferSlice *tmp = static_cast<BufferSlice*>(this->malloc_(sizeof(BufferSlice)));
+    virtual BufferSlice *newSlice(LifoAlloc &a) {
+        BufferSlice *tmp = static_cast<BufferSlice*>(a.alloc(sizeof(BufferSlice)));
         if (!tmp) {
             this->m_oom = true;
             return NULL;
@@ -378,7 +385,7 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
     // We need to wait until an AutoIonContextAlloc is created by the
     // IonMacroAssembler, before allocating any space.
     void initWithAllocator() {
-        poolInfo = static_cast<PoolInfo*>(this->calloc_(sizeof(PoolInfo) * (1 << logBasePoolInfo)));
+        poolInfo = static_cast<PoolInfo*>(this->LifoAlloc_.alloc(sizeof(PoolInfo) * (1 << logBasePoolInfo)));
     }
 
     const PoolInfo & getInfo(int x) const {
@@ -523,7 +530,7 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
                 poolOffset += tmp->immSize;
             }
         }
-        return p->numEntries + p->other->insertEntry(data, this->nextOffset());
+        return p->numEntries + p->other->insertEntry(data, this->nextOffset(), this->LifoAlloc_);
     }
 
     // Simultaneously insert an instSized instruction into the stream,
@@ -580,7 +587,7 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
         if (p == NULL) {
             return INT_MIN;
         }
-        return p->insertEntry(data, this->nextOffset());
+        return p->insertEntry(data, this->nextOffset(), this->LifoAlloc_);
     }
     BufferOffset putInt(uint32_t value) {
         return insertEntry(sizeof(uint32_t) / sizeof(uint8_t), (uint8_t*)&value, NULL, NULL);
@@ -675,13 +682,14 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
         JS_ASSERT(perforatedNode != NULL);
         if (numDumps >= (1<<logBasePoolInfo) && (numDumps & (numDumps-1)) == 0) {
             // need to resize.
-            poolInfo = static_cast<PoolInfo*>(
-                this->realloc_(poolInfo, sizeof(PoolInfo) * numDumps,
-                               sizeof(PoolInfo) * numDumps * 2));
-            if (poolInfo == NULL) {
+            PoolInfo *tmp = static_cast<PoolInfo*>(this->LifoAlloc_.alloc(sizeof(PoolInfo) * numDumps * 2));
+            if (tmp == NULL) {
                 this->fail_oom();
                 return;
             }
+            memcpy(tmp, poolInfo, sizeof(PoolInfo) * numDumps);
+            poolInfo = tmp;
+
         }
 
         // In order to figure out how to fix up the loads for the second half of the pool
@@ -774,7 +782,7 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
         }
         // bind the current pool to the perforation point.
         Pool **tmp = &perforatedNode->data;
-        *tmp = static_cast<Pool*>(this->malloc_(sizeof(Pool) * numPoolKinds));
+        *tmp = static_cast<Pool*>(this->LifoAlloc_.alloc(sizeof(Pool) * numPoolKinds));
         if (tmp == NULL) {
             this->fail_oom();
             return;
@@ -790,7 +798,7 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
 
         // reset everything to the state that it was in when we started
         for (int poolIdx = 0; poolIdx < numPoolKinds; poolIdx++) {
-            if (!pools[poolIdx].reset()) {
+            if (!pools[poolIdx].reset(this->LifoAlloc_)) {
                 this->fail_oom();
                 return;
             }
@@ -814,7 +822,7 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
                 pools[poolIdx].updateLimiter(*iter);
                 Inst *inst = this->getInst(*iter);
                 Asm::insertTokenIntoTag(pools[poolIdx].instSize, (uint8_t*)inst, outcasts[poolIdx].end()-1-iter);
-                pools[poolIdx].insertEntry(&outcastEntries[poolIdx][idx*pools[poolIdx].immSize], *iter);
+                pools[poolIdx].insertEntry(&outcastEntries[poolIdx][idx*pools[poolIdx].immSize], *iter, this->LifoAlloc_);
             }
             delete[] outcastEntries[poolIdx];
         }
@@ -855,12 +863,15 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
             IonSpew(IonSpew_Pools, "[%d] No Perforation point selected, generating a new one", id);
             // There isn't a perforation here, we need to dump the pool with a guard.
             BufferOffset branch = this->nextOffset();
+            bool shouldMarkAsBranch = this->isNextBranch();
             this->markNextAsBranch();
             this->putBlob(guardSize, NULL);
             BufferOffset afterPool = this->nextOffset();
             Asm::writePoolGuard(branch, this->getInst(branch), afterPool);
             markGuard();
             perforatedNode->isNatural = false;
+            if (shouldMarkAsBranch)
+                this->markNextAsBranch();
         }
 
         // We have a perforation.  Time to cut the instruction stream, patch in the pool
@@ -882,7 +893,7 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
                     IonSpew(IonSpew_Pools, "[%d] Pushing entry %d in pool %d into the backwards section.", id, idx, poolIdx);
                     // insert this into the rear part of the pool.
                     int offset = idx * p->immSize;
-                    p->other->insertEntry(&p->poolData[offset], BufferOffset(*iter));
+                    p->other->insertEntry(&p->poolData[offset], BufferOffset(*iter), this->LifoAlloc_);
                     // update the limiting entry for this pool.
                     p->other->updateLimiter(*iter);
 
@@ -943,7 +954,8 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
             return;
         int destOffset = branch.getOffset() + offset;
         if (offset > 0) {
-            while (poolInfo[curpool].offset <= destOffset && curpool < numDumps) {
+
+            while (curpool < numDumps && poolInfo[curpool].offset <= destOffset) {
                 offset += poolInfo[curpool].size;
                 curpool++;
             }
@@ -1016,13 +1028,18 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
         return &pools[idx];
     }
     void markNextAsBranch() {
-        JS_ASSERT(*this->getTail() != NULL);
         // If the previous thing inserted was the last instruction of
         // the node, then whoops, we want to mark the first instruction of
         // the next node.
         this->ensureSpace(InstBaseSize);
+        JS_ASSERT(*this->getTail() != NULL);
         (*this->getTail())->markNextAsBranch();
     }
+    bool isNextBranch() {
+        JS_ASSERT(*this->getTail() != NULL);
+        return (*this->getTail())->isNextBranch();
+    }
+
     int uncheckedSize() const {
         PoolInfo pi = getPoolData();
         int codeEnd = this->nextOffset().getOffset();

@@ -414,6 +414,13 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
     case eIntID_ScrollbarButtonAutoRepeatBehavior:
       aResult = 0;
       break;
+    case eIntID_SwipeAnimationEnabled:
+      aResult = 0;
+      if ([NSEvent respondsToSelector:@selector(
+            isSwipeTrackingFromScrollEventsEnabled)]) {
+        aResult = [NSEvent isSwipeTrackingFromScrollEventsEnabled] ? 1 : 0;
+      }
+      break;
     default:
       aResult = 0;
       res = NS_ERROR_FAILURE;

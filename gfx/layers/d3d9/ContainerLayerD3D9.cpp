@@ -385,58 +385,5 @@ ContainerLayerD3D9::LayerManagerDestroyed()
   }
 }
 
-ShadowContainerLayerD3D9::ShadowContainerLayerD3D9(LayerManagerD3D9 *aManager)
-  : ShadowContainerLayer(aManager, NULL)
-  , LayerD3D9(aManager)
-{
-  mImplData = static_cast<LayerD3D9*>(this);
-}
- 
-ShadowContainerLayerD3D9::~ShadowContainerLayerD3D9()
-{
-  Destroy();
-}
-
-void
-ShadowContainerLayerD3D9::InsertAfter(Layer* aChild, Layer* aAfter)
-{
-  ContainerInsertAfter(this, aChild, aAfter);
-}
-
-void
-ShadowContainerLayerD3D9::RemoveChild(Layer *aChild)
-{
-  ContainerRemoveChild(this, aChild);
-}
-
-void
-ShadowContainerLayerD3D9::RepositionChild(Layer* aChild, Layer* aAfter)
-{
-  ContainerRepositionChild(this, aChild, aAfter);
-}
-
-void
-ShadowContainerLayerD3D9::Destroy()
-{
-  while (mFirstChild) {
-    RemoveChild(mFirstChild);
-  }
-}
-
-LayerD3D9*
-ShadowContainerLayerD3D9::GetFirstChildD3D9()
-{
-  if (!mFirstChild) {
-    return nullptr;
-   }
-  return static_cast<LayerD3D9*>(mFirstChild->ImplData());
-}
- 
-void
-ShadowContainerLayerD3D9::RenderLayer()
-{
-  ContainerRender(this, mD3DManager);
-}
-
 } /* layers */
 } /* mozilla */

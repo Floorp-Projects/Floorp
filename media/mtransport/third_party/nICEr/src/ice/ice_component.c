@@ -89,15 +89,17 @@ int nr_ice_component_destroy(nr_ice_component **componentp)
       }
     }
 
-    STAILQ_FOREACH_SAFE(s1, &component->sockets, entry, s2){
-      STAILQ_REMOVE(&component->sockets,s1,nr_ice_socket_,entry);
-      nr_ice_socket_destroy(&s1);
-    }
 
-
+    /* candidates MUST be destroyed before the sockets so that
+       they can deregister */
     TAILQ_FOREACH_SAFE(c1, &component->candidates, entry_comp, c2){
       TAILQ_REMOVE(&component->candidates,c1,entry_comp);
       nr_ice_candidate_destroy(&c1);
+    }
+
+    STAILQ_FOREACH_SAFE(s1, &component->sockets, entry, s2){
+      STAILQ_REMOVE(&component->sockets,s1,nr_ice_socket_,entry);
+      nr_ice_socket_destroy(&s1);
     }
 
     if(component->keepalive_timer)
@@ -198,7 +200,7 @@ int nr_ice_component_initialize(struct nr_ice_ctx_ *ctx,nr_ice_component *compon
         srvflx_cand=cand;
 
         /* relayed*/
-        if(r=nr_socket_turn_create(sock, 0, &turn_sock))
+        if(r=nr_socket_turn_create(sock, &turn_sock))
           ABORT(r);
         if(r=nr_ice_candidate_create(ctx,component,
           isock,turn_sock,RELAYED,

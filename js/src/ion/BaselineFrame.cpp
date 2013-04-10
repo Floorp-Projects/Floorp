@@ -157,7 +157,7 @@ BaselineFrame::initForOsr(StackFrame *fp, uint32_t numStackValues)
         // debug prologue/epilogue calls).
         IonFrameIterator iter(cx->mainThread().ionTop);
         JS_ASSERT(iter.returnAddress() == NULL);
-        BaselineScript *baseline = fp->script()->baseline;
+        BaselineScript *baseline = fp->script()->baselineScript();
         iter.current()->setReturnAddress(baseline->returnAddressForIC(baseline->icEntry(0)));
 
         if (!Debugger::handleBaselineOsr(cx, fp, this))

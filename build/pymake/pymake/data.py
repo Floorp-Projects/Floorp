@@ -1692,6 +1692,7 @@ class Makefile(object):
     def hastarget(self, target):
         return target in self._targets
 
+    _globcheck = re.compile('[[*?]')
     def gettarget(self, target):
         assert isinstance(target, str_type)
 
@@ -1699,8 +1700,7 @@ class Makefile(object):
 
         assert target != '', "empty target?"
 
-        if target.find('*') != -1 or target.find('?') != -1 or target.find('[') != -1:
-            raise DataError("wildcards should have been expanded by the parser: '%s'" % (target,))
+        assert not self._globcheck.match(target)
 
         t = self._targets.get(target, None)
         if t is None:
@@ -1757,7 +1757,10 @@ class Makefile(object):
         self.included.append((path, required))
         fspath = util.normaljoin(self.workdir, path)
         if os.path.exists(fspath):
-            stmts = parser.parsefile(fspath)
+            if weak:
+                stmts = parser.parsedepfile(fspath)
+            else:
+                stmts = parser.parsefile(fspath)
             self.variables.append('MAKEFILE_LIST', Variables.SOURCE_AUTOMATIC, path, None, self)
             stmts.execute(self, weak=weak)
             self.gettarget(path).explicit = True

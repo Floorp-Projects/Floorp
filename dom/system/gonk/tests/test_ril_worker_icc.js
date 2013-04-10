@@ -522,7 +522,7 @@ add_test(function test_icc_get_card_lock_fdn() {
     this.readUint32();
 
     // String Array Length.
-    do_check_eq(this.readUint32(), 4);
+    do_check_eq(this.readUint32(), worker.RILQUIRKS_V5_LEGACY ? 3 : 4);
 
     // Facility.
     do_check_eq(this.readString(), ICC_CB_FACILITY_FDN);
@@ -535,8 +535,10 @@ add_test(function test_icc_get_card_lock_fdn() {
                                     ICC_SERVICE_CLASS_DATA  |
                                     ICC_SERVICE_CLASS_FAX).toString());
 
-    // AID. Ignore because it's from modem.
-    this.readUint32();
+    if (!worker.RILQUIRKS_V5_LEGACY) {
+      // AID. Ignore because it's from modem.
+      this.readUint32();
+    }
 
     run_next_test();
   };
@@ -1931,8 +1933,10 @@ add_test(function test_update_adn_like() {
       do_check_eq(this.readString(), "1111");
     }
 
-    // AID. Ignore because it's from modem.
-    this.readUint32();
+    if (!worker.RILQUIRKS_V5_LEGACY) {
+      // AID. Ignore because it's from modem.
+      this.readUint32();
+    }
 
     if (fileId == ICC_EF_FDN) {
       run_next_test();

@@ -68,6 +68,18 @@
 #include BP_LOGGING_INCLUDE
 #endif  // BP_LOGGING_INCLUDE
 
+#ifndef THIRD_PARTY_BREAKPAD_GOOGLE_GLUE_LOGGING_H_
+namespace base_logging {
+
+// The open-source copy of logging.h has diverged from Google's internal copy
+// (temporarily, at least).  To support the transition to structured logging
+// a definition for base_logging::LogMessage is needed, which is a ostream-
+// like object for streaming arguments to construct a log message.
+typedef std::ostream LogMessage;
+
+}  // namespace base_logging
+#endif  // THIRD_PARTY_BREAKPAD_GOOGLE_GLUE_LOGGING_H_
+
 namespace google_breakpad {
 
 // These are defined in Microsoft headers.
@@ -119,7 +131,7 @@ class LogMessageVoidify {
 
   // This has to be an operator with a precedence lower than << but higher
   // than ?:
-  void operator&(std::ostream &) {}
+  void operator&(base_logging::LogMessage &) {}
 };
 
 // Returns number formatted as a hexadecimal string, such as "0x7b".

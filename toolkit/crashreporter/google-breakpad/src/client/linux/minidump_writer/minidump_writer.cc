@@ -1220,9 +1220,11 @@ class MinidumpWriter {
       bool found;
     } cpu_info_table[] = {
       { "processor", -1, false },
+#if defined(__i386) || defined(__x86_64)
       { "model", 0, false },
       { "stepping",  0, false },
       { "cpu family", 0, false },
+#endif
     };
 
     // processor_architecture should always be set, do this first
@@ -1324,9 +1326,11 @@ class MinidumpWriter {
     cpu_info_table[0].value++;
 
     sys_info->number_of_processors = cpu_info_table[0].value;
+#if defined(__i386) || defined(__x86_64)
     sys_info->processor_level      = cpu_info_table[3].value;
     sys_info->processor_revision   = cpu_info_table[1].value << 8 |
                                      cpu_info_table[2].value;
+#endif
 
     if (vendor_id[0] != '\0') {
       my_memcpy(sys_info->cpu.x86_cpu_info.vendor_id, vendor_id,

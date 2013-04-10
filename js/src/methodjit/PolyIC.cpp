@@ -2615,13 +2615,9 @@ ic::GetElement(VMFrame &f, ic::GetElementIC *ic)
     if (!obj)
         THROW();
 
-    Rooted<jsid> id(cx);
-    if (idval.isInt32() && INT_FITS_IN_JSID(idval.toInt32())) {
-        id = INT_TO_JSID(idval.toInt32());
-    } else {
-        if (!InternNonIntElementId<CanGC>(cx, obj, idval, &id))
+    RootedId id(cx);
+    if (!ValueToId<CanGC>(cx, idval, &id))
             THROW();
-    }
 
     MutableHandleValue res = MutableHandleValue::fromMarkedLocation(&f.regs.sp[-2]);
 

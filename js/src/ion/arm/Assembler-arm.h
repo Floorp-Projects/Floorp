@@ -57,9 +57,36 @@ static const Register CallTempReg3 = r8;
 static const Register CallTempReg4 = r0;
 static const Register CallTempReg5 = r1;
 
+
+static const Register IntArgReg0 = r0;
+static const Register IntArgReg1 = r1;
+static const Register IntArgReg2 = r2;
+static const Register IntArgReg3 = r3;
+static const Register GlobalReg = r10;
+static const Register HeapReg = r11;
 static const Register CallTempNonArgRegs[] = { r5, r6, r7, r8 };
 static const uint32_t NumCallTempNonArgRegs =
     mozilla::ArrayLength(CallTempNonArgRegs);
+class ABIArgGenerator
+{
+#if defined(JS_CPU_ARM_HARDFP)
+    unsigned intRegIndex_;
+    unsigned floatRegIndex_;
+#else
+    unsigned argRegIndex_;
+#endif
+    uint32_t stackOffset_;
+    ABIArg current_;
+
+  public:
+    ABIArgGenerator();
+    ABIArg next(MIRType argType);
+    ABIArg &current() { return current_; }
+    uint32_t stackBytesConsumedSoFar() const { return stackOffset_; }
+    static const Register NonArgReturnVolatileReg0;
+    static const Register NonArgReturnVolatileReg1;
+
+};
 
 static const Register PreBarrierReg = r1;
 
@@ -73,6 +100,8 @@ static const Register FramePointer = InvalidReg;
 static const Register ReturnReg = r0;
 static const FloatRegister ReturnFloatReg = { FloatRegisters::d0 };
 static const FloatRegister ScratchFloatReg = { FloatRegisters::d1 };
+
+static const FloatRegister NANReg = { FloatRegisters::d15 };
 
 static const FloatRegister d0  = {FloatRegisters::d0};
 static const FloatRegister d1  = {FloatRegisters::d1};
@@ -97,9 +126,12 @@ static const FloatRegister d15 = {FloatRegisters::d15};
 // Also, the ARM abi wants the stack to be 8 byte aligned at
 // function boundaries.  I'm trying to make sure this is always true.
 static const uint32_t StackAlignment = 8;
+static const uint32_t CodeAlignment = 8;
 static const bool StackKeptAligned = true;
 static const uint32_t NativeFrameSize = sizeof(void*);
-static const uint32_t AlignmentAtPrologue = sizeof(void*);
+static const uint32_t AlignmentAtPrologue = 0;
+static const uint32_t AlignmentMidPrologue = 4;
+
 
 static const Scale ScalePointer = TimesFour;
 
@@ -372,7 +404,7 @@ bool condsAreSafe(ALUOp op);
 ALUOp getDestVariant(ALUOp op);
 
 static const ValueOperand JSReturnOperand = ValueOperand(JSReturnReg_Type, JSReturnReg_Data);
-
+static const ValueOperand softfpReturnOperand = ValueOperand(r1, r0);
 // All of these classes exist solely to shuffle data into the various operands.
 // For example Operand2 can be an imm8, a register-shifted-by-a-constant or
 // a register-shifted-by-a-register.  I represent this in C++ by having a
@@ -391,6 +423,9 @@ static const ValueOperand JSReturnOperand = ValueOperand(JSReturnReg_Type, JSRet
 // but have all of them take up only a single word of storage.
 // I also wanted to avoid passing around raw integers at all
 // since they are error prone.
+class Op2Reg;
+class O2RegImmShift;
+class O2RegRegShift;
 namespace datastore {
 struct Reg
 {
@@ -410,6 +445,9 @@ struct Reg
 
     uint32_t encode() {
         return RM | RRS << 4 | Type << 5 | ShiftAmount << 7;
+    }
+    explicit Reg(const Op2Reg &op) {
+        memcpy(this, &op, sizeof(*this));
     }
 };
 
@@ -534,6 +572,7 @@ struct RIS
     {
         JS_ASSERT(ShiftAmount == imm);
     }
+    explicit RIS(Reg r) : ShiftAmount(ShiftAmount) { }
 };
 
 struct RRS
@@ -557,15 +596,21 @@ struct RRS
 
 class MacroAssemblerARM;
 class Operand;
-
 class Operand2
 {
     friend class Operand;
     friend class MacroAssemblerARM;
-
+    friend class InstALU;
   public:
     uint32_t oper : 31;
     uint32_t invalid : 1;
+    bool isO2Reg() {
+        return !(oper & IsImmOp2);
+    }
+    Op2Reg toOp2Reg();
+    bool isImm8() {
+        return oper & IsImmOp2;
+    }
 
   protected:
     Operand2(datastore::Imm8mData base)
@@ -651,6 +696,30 @@ class Op2Reg : public Operand2
     Op2Reg(Register rm, ShiftType type, datastore::RRS shiftReg)
       : Operand2(datastore::Reg(rm.code(), type, 1, shiftReg.encode()))
     { }
+    bool isO2RegImmShift() {
+        datastore::Reg r(*this);
+        return !r.RRS;
+    }
+    O2RegImmShift toO2RegImmShift();
+    bool isO2RegRegShift() {
+        datastore::Reg r(*this);
+        return r.RRS;
+    }
+    O2RegRegShift toO2RegRegShift();
+
+    bool checkType(ShiftType type) {
+        datastore::Reg r(*this);
+        return r.Type == type;
+    }
+    bool checkRM(Register rm) {
+        datastore::Reg r(*this);
+        return r.RM == rm.code();
+    }
+    bool getRM(Register *rm) {
+        datastore::Reg r(*this);
+        *rm = Register::FromCode(r.RM);
+        return true;
+    }
 };
 
 class O2RegImmShift : public Op2Reg
@@ -659,6 +728,12 @@ class O2RegImmShift : public Op2Reg
     O2RegImmShift(Register rn, ShiftType type, uint32_t shift)
       : Op2Reg(rn, type, datastore::RIS(shift))
     { }
+    int getShift() {
+        datastore::Reg r(*this);
+        datastore::RIS ris(r);
+        return ris.ShiftAmount;
+        
+    }
 };
 
 class O2RegRegShift : public Op2Reg
@@ -1179,19 +1254,11 @@ class Assembler
 
     // TODO: this should actually be a pool-like object
     //       It is currently a big hack, and probably shouldn't exist
-    class JumpPool;
     js::Vector<CodeLabel, 0, SystemAllocPolicy> codeLabels_;
     js::Vector<RelativePatch, 8, SystemAllocPolicy> jumps_;
-    js::Vector<JumpPool *, 0, SystemAllocPolicy> jumpPools_;
     js::Vector<BufferOffset, 0, SystemAllocPolicy> tmpJumpRelocations_;
     js::Vector<BufferOffset, 0, SystemAllocPolicy> tmpDataRelocations_;
     js::Vector<BufferOffset, 0, SystemAllocPolicy> tmpPreBarriers_;
-    class JumpPool : TempObject
-    {
-        BufferOffset start;
-        uint32_t size;
-        bool fixup(IonCode *code, uint8_t *data);
-    };
 
     CompactBufferWriter jumpRelocations_;
     CompactBufferWriter dataRelocations_;
@@ -1235,13 +1302,13 @@ class Assembler
         m_buffer.initWithAllocator();
 
         // Set up the backwards double region
-        new (&pools_[2]) Pool (1024, 8, 4, 8, 8, true);
+        new (&pools_[2]) Pool (1024, 8, 4, 8, 8, m_buffer.LifoAlloc_, true);
         // Set up the backwards 32 bit region
-        new (&pools_[3]) Pool (4096, 4, 4, 8, 4, true, true);
+        new (&pools_[3]) Pool (4096, 4, 4, 8, 4, m_buffer.LifoAlloc_, true, true);
         // Set up the forwards double region
-        new (doublePool) Pool (1024, 8, 4, 8, 8, false, false, &pools_[2]);
+        new (doublePool) Pool (1024, 8, 4, 8, 8, m_buffer.LifoAlloc_, false, false, &pools_[2]);
         // Set up the forwards 32 bit region
-        new (int32Pool) Pool (4096, 4, 4, 8, 4, false, true, &pools_[3]);
+        new (int32Pool) Pool (4096, 4, 4, 8, 4, m_buffer.LifoAlloc_, false, true, &pools_[3]);
         for (int i = 0; i < 4; i++) {
             if (pools_[i].poolData == NULL) {
                 m_buffer.fail_oom();
@@ -1301,7 +1368,6 @@ class Assembler
   public:
     void finish();
     void executableCopy(void *buffer);
-    void processCodeLabels(uint8_t *rawCode);
     void copyJumpRelocationTable(uint8_t *dest);
     void copyDataRelocationTable(uint8_t *dest);
     void copyPreBarrierTable(uint8_t *dest);
@@ -1334,10 +1400,10 @@ class Assembler
     BufferOffset align(int alignment);
     BufferOffset as_nop();
     BufferOffset as_alu(Register dest, Register src1, Operand2 op2,
-                ALUOp op, SetCond_ sc = NoSetCond, Condition c = Always);
+                ALUOp op, SetCond_ sc = NoSetCond, Condition c = Always, Instruction *instdest = NULL);
 
     BufferOffset as_mov(Register dest,
-                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always);
+                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always, Instruction *instdest = NULL);
     BufferOffset as_mvn(Register dest, Operand2 op2,
                 SetCond_ sc = NoSetCond, Condition c = Always);
     // logical operations
@@ -1448,6 +1514,8 @@ class Assembler
     BufferOffset as_bl(Label *l, Condition c);
     BufferOffset as_bl(BOffImm off, Condition c, BufferOffset inst);
 
+    BufferOffset as_mrs(Register r, Condition c = Always);
+    BufferOffset as_msr(Register r, Condition c = Always);
     // VFP instructions!
   private:
 
@@ -1539,6 +1607,7 @@ class Assembler
     BufferOffset as_vimm(VFPRegister vd, VFPImm imm, Condition c = Always);
 
     BufferOffset as_vmrs(Register r, Condition c = Always);
+    BufferOffset as_vmsr(Register r, Condition c = Always);
     // label operations
     bool nextLink(BufferOffset b, BufferOffset *next);
     void bind(Label *label, BufferOffset boff = BufferOffset());
@@ -1549,6 +1618,7 @@ class Assembler
     void retarget(Label *label, Label *target);
     // I'm going to pretend this doesn't exist for now.
     void retarget(Label *label, void *target, Relocation::Kind reloc);
+    //    void Bind(IonCode *code, AbsoluteLabel *label, const void *address);
     void Bind(uint8_t *rawCode, AbsoluteLabel *label, const void *address);
 
     void call(Label *label);
@@ -1718,6 +1788,10 @@ class Assembler
     static void ToggleToCmp(CodeLocationLabel inst_);
 
     static void ToggleCall(CodeLocationLabel inst_, bool enabled);
+
+    static void updateBoundsCheck(uint32_t logHeapSize, Instruction *inst);
+    void processCodeLabels(uint8_t *rawCode);
+
 }; // Assembler
 
 // An Instruction is a structure for both encoding and decoding any and all ARM instructions.
@@ -1956,7 +2030,7 @@ class InstALU : public Instruction
     static const int32_t ALUMask = 0xc << 24;
   public:
     InstALU (Register rd, Register rn, Operand2 op2, ALUOp op, SetCond_ sc, Assembler::Condition c)
-        : Instruction(RD(rd) | RN(rn) | op2.encode() | op | sc | c)
+        : Instruction(maybeRD(rd) | maybeRN(rn) | op2.encode() | op | sc, c)
     { }
     static bool isTHIS (const Instruction &i);
     static InstALU *asTHIS (const Instruction &i);
@@ -1966,13 +2040,21 @@ class InstALU : public Instruction
     bool checkDest(Register rd);
     void extractOp1(Register *ret);
     bool checkOp1(Register rn);
-    void extractOp2(Operand2 *ret);
+    Operand2 extractOp2();
 };
+
 class InstCMP : public InstALU
 {
   public:
     static bool isTHIS (const Instruction &i);
     static InstCMP *asTHIS (const Instruction &i);
+};
+
+class InstMOV : public InstALU
+{
+  public:
+    static bool isTHIS (const Instruction &i);
+    static InstMOV *asTHIS (const Instruction &i);
 };
 
 

@@ -39,12 +39,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 typedef struct nr_ice_crypto_vtbl_ {
   int (*random_bytes)(UCHAR *buf, int len);
   int (*hmac_sha1)(UCHAR *key, int key_l, UCHAR *buf, int buf_l, UCHAR digest[20]);
+  int (*md5)(UCHAR *buf, int buf_l, UCHAR digest[16]);
 } nr_ice_crypto_vtbl;
 
 extern nr_ice_crypto_vtbl *nr_crypto_vtbl;
 
 #define nr_crypto_random_bytes(a,b) nr_crypto_vtbl->random_bytes(a,b)
 #define nr_crypto_hmac_sha1(a,b,c,d,e) nr_crypto_vtbl->hmac_sha1(a,b,c,d,e)
+#define nr_crypto_md5(a,b,c) nr_crypto_vtbl->md5(a,b,c)
 
 #endif
 

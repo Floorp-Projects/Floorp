@@ -324,7 +324,7 @@ public class testBrowserProvider extends ContentProviderTest {
 
     @Override
     public void setUp() throws Exception {
-        super.setUp("@ANDROID_PACKAGE_NAME@.db.BrowserProvider", "AUTHORITY");
+        super.setUp("org.mozilla.gecko.db.BrowserProvider", "AUTHORITY");
         loadContractInfo();
 
         mTests.add(new TestSpecialFolders());

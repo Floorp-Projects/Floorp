@@ -1723,6 +1723,9 @@ GK_ATOM(seconds, "seconds")
 GK_ATOM(secondsFromDateTime, "seconds-from-dateTime")
 
 // Simple gestures support
+GK_ATOM(onMozSwipeGestureStart, "onMozSwipeGestureStart")
+GK_ATOM(onMozSwipeGestureUpdate, "onMozSwipeGestureUpdate")
+GK_ATOM(onMozSwipeGestureEnd, "onMozSwipeGestureEnd")
 GK_ATOM(onMozSwipeGesture, "onMozSwipeGesture")
 GK_ATOM(onMozMagnifyGestureStart, "onMozMagnifyGestureStart")
 GK_ATOM(onMozMagnifyGestureUpdate, "onMozMagnifyGestureUpdate")
@@ -1984,6 +1987,7 @@ GK_ATOM(windows_glass, "windows-glass")
 GK_ATOM(touch_enabled, "touch-enabled")
 GK_ATOM(maemo_classic, "maemo-classic")
 GK_ATOM(menubar_drag, "menubar-drag")
+GK_ATOM(swipe_animation_enabled, "swipe-animation-enabled")
 
 // windows theme selector metrics
 GK_ATOM(windows_classic, "windows-classic")
@@ -2016,6 +2020,7 @@ GK_ATOM(_moz_menubar_drag, "-moz-menubar-drag")
 GK_ATOM(_moz_device_pixel_ratio, "-moz-device-pixel-ratio")
 GK_ATOM(_moz_device_orientation, "-moz-device-orientation")
 GK_ATOM(_moz_is_resource_document, "-moz-is-resource-document")
+GK_ATOM(_moz_swipe_animation_enabled, "-moz-swipe-animation-enabled")
 
 // application commands
 GK_ATOM(Back, "Back")

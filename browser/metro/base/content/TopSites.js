@@ -136,13 +136,8 @@ function TopSitesView(aGrid, aMaxSites, aUseThumbnails) {
   this._set.controller = this;
   this._topSitesMax = aMaxSites;
   this._useThumbs = aUseThumbnails;
-
-  // handle selectionchange DOM events from the grid/tile group
-  this._set.addEventListener("context-action", this, false);
-
   // clean up state when the appbar closes
   window.addEventListener('MozAppbarDismissing', this, false);
-
   let history = Cc["@mozilla.org/browser/nav-history-service;1"].
                 getService(Ci.nsINavHistoryService);
   history.addObserver(this, false);
@@ -230,13 +225,8 @@ TopSitesView.prototype = {
       },0);
     }
   },
-
   handleEvent: function(aEvent) {
     switch (aEvent.type){
-      case "context-action":
-        this.doActionOnSelectedTiles(aEvent.action, aEvent);
-        aEvent.stopPropagation(); // event is handled, no need to let it bubble further
-        break;
       case "MozAppbarDismissing":
         // clean up when the context appbar is dismissed - we don't remember selections
         this._lastSelectedSites = null;

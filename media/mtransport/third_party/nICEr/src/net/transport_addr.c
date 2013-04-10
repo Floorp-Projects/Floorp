@@ -126,6 +126,27 @@ int nr_transport_addr_copy(nr_transport_addr *to, nr_transport_addr *from)
     return(0);
   }
 
+int nr_transport_addr_copy_keep_ifname(nr_transport_addr *to, nr_transport_addr *from)
+  {
+    int r,_status;
+    char save_ifname[MAXIFNAME];
+
+    strncpy(save_ifname, to->ifname, MAXIFNAME);
+    save_ifname[MAXIFNAME-1]=0;  /* Ensure null termination */
+
+    if (r=nr_transport_addr_copy(to, from))
+      ABORT(r);
+
+    strncpy(to->ifname, save_ifname, MAXIFNAME);
+
+    if (r=nr_transport_addr_fmt_addr_string(to))
+      ABORT(r);
+
+    _status=0;
+ abort:
+    return _status;
+  }
+
 /* Convenience fxn. Is this the right API?*/
 int nr_ip4_port_to_transport_addr(UINT4 ip4, UINT2 port, int protocol, nr_transport_addr *addr)
   {
@@ -152,12 +173,14 @@ int nr_ip4_port_to_transport_addr(UINT4 ip4, UINT2 port, int protocol, nr_transp
     return(_status);
   }
 
-int nr_ip4_str_port_to_transport_addr(char *ip4, UINT2 port, int protocol, nr_transport_addr *addr)
+int nr_ip4_str_port_to_transport_addr(const char *ip4, UINT2 port, int protocol, nr_transport_addr *addr)
   {
     int r,_status;
     in_addr_t ip_addr;
 
     ip_addr=inet_addr(ip4);
+    if (ip_addr == INADDR_NONE)
+      ABORT(R_BAD_DATA);
     /* Assume v4 for now */
     if(r=nr_ip4_port_to_transport_addr(ntohl(ip_addr),port,protocol,addr))
       ABORT(r);

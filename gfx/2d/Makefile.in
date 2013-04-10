@@ -91,12 +91,10 @@ CPPSRCS	+= \
 endif
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-ifdef MOZ_ENABLE_SKIA
 CPPSRCS += \
         ScaledFontMac.cpp \
         $(NULL)
 
-endif
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),$(findstring $(MOZ_WIDGET_TOOLKIT),android gtk2 gonk qt))

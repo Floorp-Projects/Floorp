@@ -76,7 +76,7 @@ InvokeFunction(JSContext *cx, HandleFunction fun0, uint32_t argc, Value *argv, V
         if (cx->methodJitEnabled && !fun->nonLazyScript()->canIonCompile()) {
             RawScript script = GetTopIonJSScript(cx);
             if (script->hasIonScript() &&
-                ++script->ion->slowCallCount >= js_IonOptions.slowCallLimit)
+                ++script->ionScript()->slowCallCount >= js_IonOptions.slowCallLimit)
             {
                 AutoFlushCache afc("InvokeFunction");
 
@@ -495,9 +495,8 @@ SPSExit(JSContext *cx, HandleScript script)
 bool
 OperatorIn(JSContext *cx, HandleValue key, HandleObject obj, JSBool *out)
 {
-    RootedValue dummy(cx); // Disregards atomization changes: no way to propagate.
     RootedId id(cx);
-    if (!FetchElementId(cx, obj, key, &id, &dummy))
+    if (!ValueToId<CanGC>(cx, key, &id))
         return false;
 
     RootedObject obj2(cx);
@@ -679,8 +678,8 @@ HandleDebugTrap(JSContext *cx, BaselineFrame *frame, uint8_t *retAddr, JSBool *m
 {
     *mustReturn = false;
 
-    RootedScript script(cx, GetTopIonJSScript(cx));
-    jsbytecode *pc = script->baseline->icEntryFromReturnAddress(retAddr).pc(script);
+    RootedScript script(cx, frame->script());
+    jsbytecode *pc = script->baselineScript()->icEntryFromReturnAddress(retAddr).pc(script);
 
     JS_ASSERT(cx->compartment->debugMode());
     JS_ASSERT(script->stepModeEnabled() || script->hasBreakpointsAt(pc));

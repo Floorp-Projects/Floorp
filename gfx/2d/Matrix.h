@@ -168,6 +168,60 @@ private:
   }
 };
 
+class Matrix4x4
+{
+public:
+  Matrix4x4()
+    : _11(1.0f), _12(0.0f), _13(0.0f), _14(0.0f)
+    , _21(0.0f), _22(1.0f), _23(0.0f), _24(0.0f)
+    , _31(0.0f), _32(0.0f), _33(1.0f), _34(0.0f)
+    , _41(0.0f), _42(0.0f), _43(0.0f), _44(1.0f)
+  {}
+
+  Float _11, _12, _13, _14;
+  Float _21, _22, _23, _24;
+  Float _31, _32, _33, _34;
+  Float _41, _42, _43, _44;
+
+  /**
+   * Returns true if the matrix is isomorphic to a 2D affine transformation.
+   */
+  bool Is2D() const
+  {
+    if (_13 != 0.0f || _14 != 0.0f ||
+        _23 != 0.0f || _24 != 0.0f ||
+        _31 != 0.0f || _32 != 0.0f || _33 != 1.0f || _34 != 0.0f ||
+        _43 != 0.0f || _44 != 1.0f) {
+      return false;
+    }
+    return true;
+  }
+
+  Matrix As2D() const
+  {
+    MOZ_ASSERT(Is2D(), "Matrix is not a 2D affine transform");
+
+    return Matrix(_11, _12, _21, _22, _41, _42);
+  }
+
+  // Apply a scale to this matrix. This scale will be applied -before- the
+  // existing transformation of the matrix.
+  Matrix4x4 &Scale(Float aX, Float aY, Float aZ)
+  {
+    _11 *= aX;
+    _12 *= aX;
+    _13 *= aX;
+    _21 *= aY;
+    _22 *= aY;
+    _23 *= aY;
+    _31 *= aZ;
+    _32 *= aZ;
+    _33 *= aZ;
+
+    return *this;
+  }
+};
+
 }
 }
 
