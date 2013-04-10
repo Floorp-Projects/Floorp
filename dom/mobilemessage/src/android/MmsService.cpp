@@ -22,6 +22,14 @@ MmsService::Send(const JS::Value& aParameters,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+MmsService::Retrieve(int32_t aId, nsIMobileMessageCallback *aRequest)
+{
+  // TODO: Bug 860174, implement this function.
+  NS_NOTYETIMPLEMENTED("Implement me!");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 } // namespace mobilemessage
 } // namespace dom
 } // namespace mozilla

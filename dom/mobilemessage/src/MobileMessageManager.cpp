@@ -331,7 +331,7 @@ NS_IMETHODIMP
 MobileMessageManager::RetrieveMMS(int32_t id,
                                   nsIDOMDOMRequest** aRequest)
 {
-    nsCOMPtr<nsIMmsService> mmsService = do_GetService(RIL_MMSSERVICE_CONTRACTID);
+    nsCOMPtr<nsIMmsService> mmsService = do_GetService(MMS_SERVICE_CONTRACTID);
     NS_ENSURE_TRUE(mmsService, NS_ERROR_FAILURE);
 
     nsRefPtr<DOMRequest> request = new DOMRequest(GetOwner());

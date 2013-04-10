@@ -115,7 +115,7 @@ SmsIPCService::Send(const nsAString& aNumber,
 {
   return SendRequest(SendMessageRequest(SendSmsMessageRequest(nsString(aNumber),
                                                               nsString(aMessage))),
-                     aRequest) ? NS_OK : NS_ERROR_FAILURE;
+                     aRequest);
 }
 
 /*
@@ -256,3 +256,8 @@ SmsIPCService::Send(const JS::Value& aParameters,
   return SendRequest(SendMessageRequest(req), aRequest);
 }
 
+NS_IMETHODIMP
+SmsIPCService::Retrieve(int32_t aId, nsIMobileMessageCallback *aRequest)
+{
+  return SendRequest(RetrieveMessageRequest(aId), aRequest);
+}
