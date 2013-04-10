@@ -7,16 +7,31 @@
 include protocol PContent;
 include protocol PSmsRequest;
 include protocol PMobileMessageCursor;
+include protocol PBlob;
 include SmsTypes;
 
 namespace mozilla {
 namespace dom {
 namespace mobilemessage {
 
-struct SendMessageRequest
+struct SendMmsMessageRequest
+{
+  nsString[] receivers;
+  nsString subject;
+  nsString smil;
+  MmsAttachmentData[] attachments;
+};
+
+struct SendSmsMessageRequest
 {
   nsString number;
   nsString message;
+};
+
+union SendMessageRequest
+{
+  SendMmsMessageRequest;
+  SendSmsMessageRequest;
 };
 
 struct GetMessageRequest
@@ -65,17 +80,17 @@ sync protocol PSms {
     manages PMobileMessageCursor;
 
 child:
-  NotifyReceivedMessage(SmsMessageData aMessageData);
+  NotifyReceivedMessage(MobileMessageData aMessageData);
 
-  NotifySendingMessage(SmsMessageData aMessageData);
+  NotifySendingMessage(MobileMessageData aMessageData);
 
-  NotifySentMessage(SmsMessageData aMessageData);
+  NotifySentMessage(MobileMessageData aMessageData);
 
-  NotifyFailedMessage(SmsMessageData aMessageData);
+  NotifyFailedMessage(MobileMessageData aMessageData);
 
-  NotifyDeliverySuccessMessage(SmsMessageData aMessageData);
+  NotifyDeliverySuccessMessage(MobileMessageData aMessageData);
 
-  NotifyDeliveryErrorMessage(SmsMessageData aMessageData);
+  NotifyDeliveryErrorMessage(MobileMessageData aMessageData);
 
 parent:
   /**
