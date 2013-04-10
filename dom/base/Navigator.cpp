@@ -38,7 +38,6 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
 #include "Connection.h"
-#include "nsIObserverService.h"
 #ifdef MOZ_B2G_RIL
 #include "MobileConnection.h"
 #include "mozilla/dom/CellBroadcast.h"
@@ -104,10 +103,6 @@ Navigator::Navigator(nsPIDOMWindow* aWindow)
 {
   NS_ASSERTION(aWindow->IsInnerWindow(),
                "Navigator must get an inner window!");
-  nsCOMPtr<nsIObserverService> obsService =
-    mozilla::services::GetObserverService();
-  if (obsService)
-    obsService->AddObserver(this, "plugin-info-updated", false);
 }
 
 Navigator::~Navigator()
@@ -125,7 +120,6 @@ NS_INTERFACE_MAP_BEGIN(Navigator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorDesktopNotification)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozNavigatorSms)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozNavigatorMobileMessage)
-  NS_INTERFACE_MAP_ENTRY(nsIObserver)
 #ifdef MOZ_MEDIA_NAVIGATOR
   NS_INTERFACE_MAP_ENTRY(nsINavigatorUserMedia)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorUserMedia)
@@ -160,12 +154,6 @@ void
 Navigator::Invalidate()
 {
   mWindow = nullptr;
-
-  nsCOMPtr<nsIObserverService> obsService =
-    mozilla::services::GetObserverService();
-  if (obsService) {
-    obsService->RemoveObserver(this, "plugin-info-updated");
-  }
 
   if (mPlugins) {
     mPlugins->Invalidate();
@@ -266,20 +254,6 @@ Navigator::GetWindow()
   nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mWindow));
 
   return win;
-}
-
-//*****************************************************************************
-//    Navigator::nsIObserver
-//*****************************************************************************
-
-NS_IMETHODIMP
-Navigator::Observe(nsISupports *aSubject, const char *aTopic,
-                   const PRUnichar *aData) {
-  if (!nsCRT::strcmp(aTopic, "plugin-info-updated") && mPlugins) {
-    mPlugins->Refresh(false);
-  }
-
-  return NS_OK;
 }
 
 //*****************************************************************************
@@ -479,6 +453,7 @@ Navigator::GetPlugins(nsIDOMPluginArray** aPlugins)
     nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mWindow));
 
     mPlugins = new nsPluginArray(this, win ? win->GetDocShell() : nullptr);
+    mPlugins->Init();
   }
 
   NS_ADDREF(*aPlugins = mPlugins);
