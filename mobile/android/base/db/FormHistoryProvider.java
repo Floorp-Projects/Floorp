@@ -2,8 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#filter substitution
-package @ANDROID_PACKAGE_NAME@.db;
+package org.mozilla.gecko.db;
 
 import java.lang.IllegalArgumentException;
 import java.util.HashMap;

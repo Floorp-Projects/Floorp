@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#filter substitution
 package org.mozilla.gecko.db;
 
 import org.mozilla.gecko.AppConstants;
@@ -244,7 +243,7 @@ public class BrowserContract {
 
         // Title of the tab.
         public static final String TITLE = "title";
-        
+
         // Topmost URL from the history array. Allows processing of this tab without
         // parsing that array.
         public static final String URL = "url";
@@ -280,7 +279,7 @@ public class BrowserContract {
         // Sync-assigned GUID for client device. NULL for local tabs.
         public static final String GUID = "guid";
 
-        // Last modified time for the client's tab record. For remote records, a server 
+        // Last modified time for the client's tab record. For remote records, a server
         // timestamp provided by Sync during insertion.
         public static final String LAST_MODIFIED = "last_modified";
     }
