@@ -38,7 +38,7 @@ class TableTicker: public Sampler {
     //XXX: It's probably worth splitting the jank profiler out from the regular profiler at some point
     mJankOnly = hasFeature(aFeatures, aFeatureCount, "jank");
     mProfileJS = hasFeature(aFeatures, aFeatureCount, "js");
-    mProfileThreads = true || hasFeature(aFeatures, aFeatureCount, "threads");
+    mProfileThreads = hasFeature(aFeatures, aFeatureCount, "threads");
     mAddLeafAddresses = hasFeature(aFeatures, aFeatureCount, "leaf");
 
     {
