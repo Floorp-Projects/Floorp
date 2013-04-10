@@ -45,7 +45,6 @@ var gEngineManagerDialog = {
         break;
       case "engine-removed":
       case "engine-current":
-      case "engine-default":
         // Not relevant
         break;
       }
