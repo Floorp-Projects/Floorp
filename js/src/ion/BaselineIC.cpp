@@ -7251,5 +7251,281 @@ ICTypeOf_Typed::Compiler::generateStubCode(MacroAssembler &masm)
     return true;
 }
 
+ICProfiler_PushFunction::ICProfiler_PushFunction(IonCode *stubCode, const char *str,
+                                                 HandleScript script)
+  : ICStub(ICStub::Profiler_PushFunction, stubCode),
+    str_(str),
+    script_(script)
+{ }
+
+ICTypeMonitor_SingleObject::ICTypeMonitor_SingleObject(IonCode *stubCode, HandleObject obj)
+  : ICStub(TypeMonitor_SingleObject, stubCode),
+    obj_(obj)
+{ }
+
+ICTypeMonitor_TypeObject::ICTypeMonitor_TypeObject(IonCode *stubCode, HandleTypeObject type)
+  : ICStub(TypeMonitor_TypeObject, stubCode),
+    type_(type)
+{ }
+
+ICTypeUpdate_SingleObject::ICTypeUpdate_SingleObject(IonCode *stubCode, HandleObject obj)
+  : ICStub(TypeUpdate_SingleObject, stubCode),
+    obj_(obj)
+{ }
+
+ICTypeUpdate_TypeObject::ICTypeUpdate_TypeObject(IonCode *stubCode, HandleTypeObject type)
+  : ICStub(TypeUpdate_TypeObject, stubCode),
+    type_(type)
+{ }
+
+ICGetElemNativeStub::ICGetElemNativeStub(ICStub::Kind kind, IonCode *stubCode,
+                                         ICStub *firstMonitorStub,
+                                         HandleShape shape, HandleValue idval,
+                                         bool isFixedSlot, uint32_t offset)
+  : ICMonitoredStub(kind, stubCode, firstMonitorStub),
+    shape_(shape),
+    idval_(idval),
+    offset_(offset)
+{
+    extra_ = isFixedSlot;
+}
+
+ICGetElemNativeStub::~ICGetElemNativeStub()
+{ }
+
+ICGetElem_NativePrototype::ICGetElem_NativePrototype(IonCode *stubCode, ICStub *firstMonitorStub,
+                                                     HandleShape shape, HandleValue idval,
+                                                     bool isFixedSlot, uint32_t offset,
+                                                     HandleObject holder, HandleShape holderShape)
+  : ICGetElemNativeStub(ICStub::GetElem_NativePrototype, stubCode, firstMonitorStub, shape,
+                        idval, isFixedSlot, offset),
+    holder_(holder),
+    holderShape_(holderShape)
+{ }
+
+ICGetElem_Dense::ICGetElem_Dense(IonCode *stubCode, ICStub *firstMonitorStub, HandleShape shape)
+    : ICMonitoredStub(GetElem_Dense, stubCode, firstMonitorStub),
+      shape_(shape)
+{ }
+
+ICGetElem_TypedArray::ICGetElem_TypedArray(IonCode *stubCode, HandleShape shape, uint32_t type)
+  : ICStub(GetElem_TypedArray, stubCode),
+    shape_(shape)
+{
+    extra_ = uint16_t(type);
+    JS_ASSERT(extra_ == type);
+}
+
+ICSetElem_Dense::ICSetElem_Dense(IonCode *stubCode, HandleShape shape, HandleTypeObject type)
+  : ICUpdatedStub(SetElem_Dense, stubCode),
+    shape_(shape),
+    type_(type)
+{ }
+
+ICSetElem_DenseAdd::ICSetElem_DenseAdd(IonCode *stubCode, types::TypeObject *type,
+                                       size_t protoChainDepth)
+  : ICUpdatedStub(SetElem_DenseAdd, stubCode),
+    type_(type)
+{
+    JS_ASSERT(protoChainDepth <= MAX_PROTO_CHAIN_DEPTH);
+    extra_ = protoChainDepth;
+}
+
+template <size_t ProtoChainDepth>
+ICUpdatedStub *
+ICSetElemDenseAddCompiler::getStubSpecific(ICStubSpace *space, const AutoShapeVector *shapes)
+{
+    return ICSetElem_DenseAddImpl<ProtoChainDepth>::New(space, getStubCode(), obj_->getType(cx),
+                                                        shapes);
+}
+
+ICSetElem_TypedArray::ICSetElem_TypedArray(IonCode *stubCode, HandleShape shape, uint32_t type,
+                                           bool expectOutOfBounds)
+  : ICStub(SetElem_TypedArray, stubCode),
+    shape_(shape)
+{
+    extra_ = uint8_t(type);
+    JS_ASSERT(extra_ == type);
+    extra_ |= (static_cast<uint16_t>(expectOutOfBounds) << 8);
+}
+
+ICGetName_Global::ICGetName_Global(IonCode *stubCode, ICStub *firstMonitorStub, HandleShape shape,
+                                   uint32_t slot)
+  : ICMonitoredStub(GetName_Global, stubCode, firstMonitorStub),
+    shape_(shape),
+    slot_(slot)
+{ }
+
+template <size_t NumHops>
+ICGetName_Scope<NumHops>::ICGetName_Scope(IonCode *stubCode, ICStub *firstMonitorStub,
+                                          AutoShapeVector *shapes, uint32_t offset)
+  : ICMonitoredStub(GetStubKind(), stubCode, firstMonitorStub),
+    offset_(offset)
+{
+    JS_STATIC_ASSERT(NumHops <= MAX_HOPS);
+    JS_ASSERT(shapes->length() == NumHops + 1);
+    for (size_t i = 0; i < NumHops + 1; i++)
+        shapes_[i].init((*shapes)[i]);
+}
+
+ICGetIntrinsic_Constant::ICGetIntrinsic_Constant(IonCode *stubCode, HandleValue value)
+  : ICStub(GetIntrinsic_Constant, stubCode),
+    value_(value)
+{ }
+
+ICGetIntrinsic_Constant::~ICGetIntrinsic_Constant()
+{ }
+
+ICGetProp_String::ICGetProp_String(IonCode *stubCode, ICStub *firstMonitorStub,
+                                   HandleShape stringProtoShape, uint32_t offset)
+  : ICMonitoredStub(GetProp_String, stubCode, firstMonitorStub),
+    stringProtoShape_(stringProtoShape),
+    offset_(offset)
+{ }
+
+ICGetPropNativeStub::ICGetPropNativeStub(ICStub::Kind kind, IonCode *stubCode,
+                                         ICStub *firstMonitorStub,
+                                         HandleShape shape, uint32_t offset)
+  : ICMonitoredStub(kind, stubCode, firstMonitorStub),
+    shape_(shape),
+    offset_(offset)
+{ }
+
+ICGetProp_NativePrototype::ICGetProp_NativePrototype(IonCode *stubCode, ICStub *firstMonitorStub,
+                                                     HandleShape shape, uint32_t offset,
+                                                     HandleObject holder, HandleShape holderShape)
+  : ICGetPropNativeStub(GetProp_NativePrototype, stubCode, firstMonitorStub, shape, offset),
+    holder_(holder),
+    holderShape_(holderShape)
+{ }
+
+ICGetPropCallGetter::ICGetPropCallGetter(Kind kind, IonCode *stubCode, ICStub *firstMonitorStub,
+                                         HandleShape shape, HandleObject holder,
+                                         HandleShape holderShape,
+                                         HandleFunction getter, uint32_t pcOffset)
+  : ICMonitoredStub(kind, stubCode, firstMonitorStub),
+    shape_(shape),
+    holder_(holder),
+    holderShape_(holderShape),
+    getter_(getter),
+    pcOffset_(pcOffset)
+{
+    JS_ASSERT(kind == ICStub::GetProp_CallScripted || kind == ICStub::GetProp_CallNative);
+}
+
+ICSetProp_Native::ICSetProp_Native(IonCode *stubCode, HandleTypeObject type, HandleShape shape,
+                                   uint32_t offset)
+  : ICUpdatedStub(SetProp_Native, stubCode),
+    type_(type),
+    shape_(shape),
+    offset_(offset)
+{ }
+
+ICUpdatedStub *
+ICSetProp_Native::Compiler::getStub(ICStubSpace *space)
+{
+    RootedTypeObject type(cx, obj_->getType(cx));
+    RootedShape shape(cx, obj_->lastProperty());
+    ICUpdatedStub *stub = ICSetProp_Native::New(space, getStubCode(), type, shape, offset_);
+    if (!stub || !stub->initUpdatingChain(cx, space))
+        return NULL;
+    return stub;
+}
+
+ICSetProp_NativeAdd::ICSetProp_NativeAdd(IonCode *stubCode, HandleTypeObject type,
+                                         size_t protoChainDepth,
+                                         HandleShape newShape, uint32_t offset)
+  : ICUpdatedStub(SetProp_NativeAdd, stubCode),
+    type_(type),
+    newShape_(newShape),
+    offset_(offset)
+{
+    JS_ASSERT(protoChainDepth <= MAX_PROTO_CHAIN_DEPTH);
+    extra_ = protoChainDepth;
+}
+
+template <size_t ProtoChainDepth>
+ICSetProp_NativeAddImpl<ProtoChainDepth>::ICSetProp_NativeAddImpl(IonCode *stubCode,
+                                                                  HandleTypeObject type,
+                                                                  const AutoShapeVector *shapes,
+                                                                  HandleShape newShape,
+                                                                  uint32_t offset)
+  : ICSetProp_NativeAdd(stubCode, type, ProtoChainDepth, newShape, offset)
+{
+    JS_ASSERT(shapes->length() == NumShapes);
+    for (size_t i = 0; i < NumShapes; i++)
+        shapes_[i].init((*shapes)[i]);
+}
+
+ICSetPropNativeAddCompiler::ICSetPropNativeAddCompiler(JSContext *cx, HandleObject obj,
+                                                       HandleShape oldShape,
+                                                       size_t protoChainDepth, bool isFixedSlot,
+                                                       uint32_t offset)
+  : ICStubCompiler(cx, ICStub::SetProp_NativeAdd),
+    obj_(cx, obj),
+    oldShape_(cx, oldShape),
+    protoChainDepth_(protoChainDepth),
+    isFixedSlot_(isFixedSlot),
+    offset_(offset)
+{
+    JS_ASSERT(protoChainDepth_ <= ICSetProp_NativeAdd::MAX_PROTO_CHAIN_DEPTH);
+}
+
+ICSetPropCallSetter::ICSetPropCallSetter(Kind kind, IonCode *stubCode, HandleShape shape,
+                                         HandleObject holder, HandleShape holderShape,
+                                         HandleFunction setter, uint32_t pcOffset)
+  : ICStub(kind, stubCode),
+    shape_(shape),
+    holder_(holder),
+    holderShape_(holderShape),
+    setter_(setter),
+    pcOffset_(pcOffset)
+{
+    JS_ASSERT(kind == ICStub::SetProp_CallScripted || kind == ICStub::SetProp_CallNative);
+}
+
+ICCall_Scripted::ICCall_Scripted(IonCode *stubCode, ICStub *firstMonitorStub,
+                                 HandleScript calleeScript, uint32_t pcOffset)
+  : ICMonitoredStub(ICStub::Call_Scripted, stubCode, firstMonitorStub),
+    calleeScript_(calleeScript),
+    pcOffset_(pcOffset)
+{ }
+
+ICCall_Native::ICCall_Native(IonCode *stubCode, ICStub *firstMonitorStub, HandleFunction callee,
+                             uint32_t pcOffset)
+  : ICMonitoredStub(ICStub::Call_Native, stubCode, firstMonitorStub),
+    callee_(callee),
+    pcOffset_(pcOffset)
+{ }
+
+ICGetProp_CallListBaseNative::ICGetProp_CallListBaseNative(IonCode *stubCode, ICStub *firstMonitorStub,
+                                                           HandleShape shape, BaseProxyHandler *proxyHandler,
+                                                           HandleShape expandoShape, HandleObject holder,
+                                                           HandleShape holderShape, HandleFunction getter,
+                                                           uint32_t pcOffset)
+  : ICMonitoredStub(GetProp_CallListBaseNative, stubCode, firstMonitorStub),
+    shape_(shape),
+    proxyHandler_(proxyHandler),
+    expandoShape_(expandoShape),
+    holder_(holder),
+    holderShape_(holderShape),
+    getter_(getter),
+    pcOffset_(pcOffset)
+{ }
+
+ICGetProp_CallListBaseNative::Compiler::Compiler(JSContext *cx, ICStub *firstMonitorStub, HandleObject obj,
+                                                 HandleObject holder, HandleFunction getter,
+                                                 uint32_t pcOffset)
+  : ICStubCompiler(cx, ICStub::GetProp_CallListBaseNative),
+    firstMonitorStub_(firstMonitorStub),
+    obj_(cx, obj),
+    holder_(cx, holder),
+    getter_(cx, getter),
+    pcOffset_(pcOffset)
+{
+    JS_ASSERT(obj_->isProxy());
+    JS_ASSERT(GetProxyHandler(obj_)->family() == GetListBaseHandlerFamily());
+}
+
 } // namespace ion
 } // namespace js
