@@ -364,7 +364,7 @@ NS_IMETHODIMP nsDefaultURIFixup::KeywordToURI(const nsACString& aKeyword,
     nsCOMPtr<nsIBrowserSearchService> searchSvc = do_GetService("@mozilla.org/browser/search-service;1");
     if (searchSvc) {
         nsCOMPtr<nsISearchEngine> defaultEngine;
-        searchSvc->GetOriginalDefaultEngine(getter_AddRefs(defaultEngine));
+        searchSvc->GetDefaultEngine(getter_AddRefs(defaultEngine));
         if (defaultEngine) {
             nsCOMPtr<nsISearchSubmission> submission;
             // We allow default search plugins to specify alternate
