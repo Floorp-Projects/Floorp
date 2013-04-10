@@ -20,9 +20,6 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(SharedObject)
 
-DOMCI_DATA(HTMLAppletElement, mozilla::dom::HTMLSharedObjectElement)
-DOMCI_DATA(HTMLEmbedElement, mozilla::dom::HTMLSharedObjectElement)
-
 namespace mozilla {
 namespace dom {
 
@@ -94,18 +91,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_ADDREF_INHERITED(HTMLSharedObjectElement, Element)
 NS_IMPL_RELEASE_INHERITED(HTMLSharedObjectElement, Element)
 
-nsIClassInfo*
-HTMLSharedObjectElement::GetClassInfoInternal()
-{
-  if (mNodeInfo->Equals(nsGkAtoms::applet)) {
-    return NS_GetDOMClassInfoInstance(eDOMClassInfo_HTMLAppletElement_id);
-  }
-  if (mNodeInfo->Equals(nsGkAtoms::embed)) {
-    return NS_GetDOMClassInfoInstance(eDOMClassInfo_HTMLEmbedElement_id);
-  }
-  return nullptr;
-}
-
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLSharedObjectElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_AMBIGUOUS_BEGIN(HTMLSharedObjectElement,
                                                   nsIDOMHTMLAppletElement)
@@ -125,7 +110,6 @@ NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLSharedObjectElement)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLAppletElement, applet)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLEmbedElement, embed)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMGetSVGDocument, embed)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_GETTER(GetClassInfoInternal)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 NS_IMPL_ELEMENT_CLONE(HTMLSharedObjectElement)
@@ -380,16 +364,6 @@ HTMLSharedObjectElement::WrapNode(JSContext* aCx, JSObject* aScope)
   }
   SetupProtoChain(aCx, obj);
   return obj;
-}
-
-JSObject*
-HTMLSharedObjectElement::GetCanonicalPrototype(JSContext* aCx, JSObject* aGlobal)
-{
-  if (mNodeInfo->Equals(nsGkAtoms::applet)) {
-    return HTMLAppletElementBinding::GetProtoObject(aCx, aGlobal);
-  }
-  MOZ_ASSERT(mNodeInfo->Equals(nsGkAtoms::embed));
-  return HTMLEmbedElementBinding::GetProtoObject(aCx, aGlobal);
 }
 
 } // namespace dom

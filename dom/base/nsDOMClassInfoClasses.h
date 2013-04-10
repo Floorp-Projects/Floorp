@@ -45,12 +45,9 @@ DOMCI_CLASS(DeviceRotationRate)
 DOMCI_CLASS(HTMLDocument)
 
 // HTML element classes
-DOMCI_CLASS(HTMLAppletElement)
-DOMCI_CLASS(HTMLEmbedElement)
 DOMCI_CLASS(HTMLFormElement)
 DOMCI_CLASS(HTMLIFrameElement)
 DOMCI_CLASS(HTMLInputElement)
-DOMCI_CLASS(HTMLObjectElement)
 DOMCI_CLASS(HTMLSelectElement)
 DOMCI_CLASS(ValidityState)
 
