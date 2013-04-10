@@ -3,8 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#filter substitution
-package @ANDROID_PACKAGE_NAME@;
+package org.mozilla.gecko;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -23,17 +22,9 @@ import android.view.animation.AnimationUtils;
 import android.view.animation.Animation;
 import android.widget.ImageView;
 import android.view.Display;
+
 import java.net.URL;
 import java.io.File;
-
-import org.mozilla.gecko.GeckoApp;
-import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoThread;
-import org.mozilla.gecko.WebAppAllocator;
-import org.mozilla.gecko.Tab;
-import org.mozilla.gecko.Tabs;
-import org.mozilla.gecko.R;
-import org.mozilla.gecko.util.HardwareUtils;
 
 public class WebApp extends GeckoApp {
     private static final String LOGTAG = "WebApp";
@@ -155,25 +146,6 @@ public class WebApp extends GeckoApp {
 
         return "webapp" + action.substring(ACTION_WEBAPP_PREFIX.length());
     }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-#ifdef MOZ_PROFILING
-        if (item.getItemId() == org.mozilla.gecko.R.id.toggle_profiling) {
-            org.mozilla.gecko.GeckoAppShell.sendEventToGecko(
-                org.mozilla.gecko.GeckoEvent.createBroadcastEvent("ToggleProfiling", null));
-            return true;
-        }
-#endif
-        return super.onOptionsItemSelected(item);
-    }
-
-#ifdef MOZ_LINKER_EXTRACT
-    @Override
-    public boolean linkerExtract() {
-        return true;
-    }
-#endif
 
     @Override
     protected boolean shouldRestoreSession() {
