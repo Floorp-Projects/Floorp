@@ -58,7 +58,6 @@ const SEARCH_ENGINE_ADDED        = "engine-added";
 const SEARCH_ENGINE_CHANGED      = "engine-changed";
 const SEARCH_ENGINE_LOADED       = "engine-loaded";
 const SEARCH_ENGINE_CURRENT      = "engine-current";
-const SEARCH_ENGINE_DEFAULT      = "engine-default";
 
 // The following constants are left undocumented in nsIBrowserSearchService.idl
 // For the moment, they are meant for testing/debugging purposes only.
@@ -3464,22 +3463,15 @@ SearchService.prototype = {
       FAIL("no engine passed to removeEngine!");
 
     var engineToRemove = null;
-    for (var e in this._engines) {
+    for (var e in this._engines)
       if (aEngine.wrappedJSObject == this._engines[e])
         engineToRemove = this._engines[e];
-    }
 
     if (!engineToRemove)
       FAIL("removeEngine: Can't find engine to remove!", Cr.NS_ERROR_FILE_NOT_FOUND);
 
-    if (engineToRemove == this.currentEngine) {
+    if (engineToRemove == this.currentEngine)
       this._currentEngine = null;
-    }
-    
-    if (engineToRemove == this.defaultEngine) {
-      this._defaultEngine = null;
-      Services.prefs.clearUserPref(BROWSER_SEARCH_PREF + "defaultenginename");
-    }
 
     if (engineToRemove._readOnly) {
       // Just hide it (the "hidden" setter will notify) and remove its alias to
@@ -3572,36 +3564,18 @@ SearchService.prototype = {
     }
   },
 
-  get defaultEngine() {
+  get originalDefaultEngine() {
     this._ensureInitialized();
-    if (!this._defaultEngine || this._defaultEngine.hidden) {
-      let defPref = BROWSER_SEARCH_PREF + "defaultenginename";
-      let defaultEngine = this.getEngineByName(getLocalizedPref(defPref, ""))
-      if (!defaultEngine || defaultEngine.hidden)
-        defaultEngine = this._getSortedEngines(false)[0] || null;
-      this._defaultEngine = defaultEngine;
-    }
-    return this._defaultEngine;
+    const defPref = BROWSER_SEARCH_PREF + "defaultenginename";
+    return this.getEngineByName(getLocalizedPref(defPref, ""));
   },
 
-  set defaultEngine(val) {
+  get defaultEngine() {
     this._ensureInitialized();
-    if (!(val instanceof Ci.nsISearchEngine))
-      FAIL("Invalid argument passed to defaultEngine setter");
-
-    let newDefaultEngine = this.getEngineByName(val.name);
-    if (!newDefaultEngine)
-      FAIL("Can't find engine in store!", Cr.NS_ERROR_UNEXPECTED);
-
-    if (newDefaultEngine == this._defaultEngine)
-      return;
-
-    this._defaultEngine = newDefaultEngine;
-
-    let defPref = BROWSER_SEARCH_PREF + "defaultenginename";
-    setLocalizedPref(defPref, this._defaultEngine.name);
-
-    notifyAction(this._defaultEngine, SEARCH_ENGINE_DEFAULT);
+    let defaultEngine = this.originalDefaultEngine;
+    if (!defaultEngine || defaultEngine.hidden)
+      defaultEngine = this._getSortedEngines(false)[0] || null;
+    return defaultEngine;
   },
 
   get currentEngine() {
@@ -3616,7 +3590,6 @@ SearchService.prototype = {
       this._currentEngine = this.defaultEngine;
     return this._currentEngine;
   },
-
   set currentEngine(val) {
     this._ensureInitialized();
     if (!(val instanceof Ci.nsISearchEngine))
@@ -3625,9 +3598,6 @@ SearchService.prototype = {
     var newCurrentEngine = this.getEngineByName(val.name);
     if (!newCurrentEngine)
       FAIL("Can't find engine in store!", Cr.NS_ERROR_UNEXPECTED);
-
-    if (newCurrentEngine == this._currentEngine)
-      return;
 
     this._currentEngine = newCurrentEngine;
 

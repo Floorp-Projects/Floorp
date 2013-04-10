@@ -121,12 +121,8 @@
       <field name="searchButton">document.getAnonymousElementByAttribute(this,
           "anonid", "searchbar-engine-button");</field>
 
-      <property name="currentEngine">
-        <setter><![CDATA[
-          let ss = this.searchService;
-          ss.defaultEngine = ss.currentEngine = val;
-          return val;
-        ]]></setter>
+      <property name="currentEngine"
+                onset="this.searchService.currentEngine = val; return val;">
         <getter><![CDATA[
           var currentEngine = this.searchService.currentEngine;
           // Return a dummy engine if there is no currentEngine
@@ -426,9 +422,8 @@
           var newIndex = this.engines.indexOf(this.currentEngine);
           newIndex += isNextEngine ? 1 : -1;
 
-          if (newIndex >= 0 && newIndex < this.engines.length) {
+          if (newIndex >= 0 && newIndex < this.engines.length)
             this.currentEngine = this.engines[newIndex];
-          }
 
           aEvent.preventDefault();
           aEvent.stopPropagation();

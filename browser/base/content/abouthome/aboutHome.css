@@ -140,8 +140,7 @@ a {
 }
 
 #defaultSnippet1,
-#defaultSnippet2,
-#rightsSnippet {
+#defaultSnippet2 {
   display: block;
   min-height: 38px;
   background: 30px center no-repeat;
@@ -149,13 +148,8 @@ a {
   -moz-padding-start: 79px;
 }
 
-#rightsSnippet[hidden] {
-  display: none;
-}
-
 #defaultSnippet1:-moz-dir(rtl),
-#defaultSnippet2:-moz-dir(rtl),
-#rightsSnippet:-moz-dir(rtl) {
+#defaultSnippet2:-moz-dir(rtl) {
   background-position: right 30px center;
 }
 
@@ -357,8 +351,7 @@ body[narrow] #restorePreviousSession::before {
  */
 @media not all and (max-resolution: 1dppx) {
   #defaultSnippet1,
-  #defaultSnippet2,
-  #rightsSnippet {
+  #defaultSnippet2 {
     background-size: 40px;
   }
 
