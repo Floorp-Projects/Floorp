@@ -254,7 +254,6 @@ FENNEC_PP_JAVA_FILES = \
   App.java \
   WebApp.java \
   WebApps.java \
-  GeckoAppInfo.java \
   db/BrowserContract.java \
   db/BrowserProvider.java \
   db/PasswordsProvider.java \
