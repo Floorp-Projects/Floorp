@@ -57,7 +57,7 @@ function test() {
   let engine = Services.search.getEngineByName("Google");
   ok(engine, "Google");
 
-  is(Services.search.originalDefaultEngine, engine, "Check that Google is the default search engine");
+  is(Services.search.defaultEngine, engine, "Check that Google is the default search engine");
 
   let distributionID;
   try {
