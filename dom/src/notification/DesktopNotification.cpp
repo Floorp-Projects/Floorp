@@ -1,19 +1,16 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 #include "mozilla/dom/DesktopNotification.h"
 #include "mozilla/dom/DesktopNotificationBinding.h"
-
 #include "nsContentPermissionHelper.h"
 #include "nsXULAppAPI.h"
-
 #include "mozilla/dom/PBrowserChild.h"
+#include "nsIDOMDesktopNotification.h"
 #include "TabChild.h"
 #include "mozilla/Preferences.h"
 #include "nsGlobalWindow.h"
 #include "nsIAppsService.h"
-
 namespace mozilla {
 namespace dom {
 
