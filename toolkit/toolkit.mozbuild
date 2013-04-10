@@ -76,8 +76,7 @@ if CONFIG['MOZ_OPUS']:
 if CONFIG['MOZ_WEBM']:
     add_tier_dir('platform', 'media/libnestegg')
 
-if CONFIG['MOZ_WEBVTT']:
-    add_tier_dir('platform', 'media/webvtt')
+add_tier_dir('platform', 'media/webvtt')
 
 if CONFIG['MOZ_VP8'] and not CONFIG['MOZ_NATIVE_LIBVPX']:
     add_tier_dir('platform', 'media/libvpx')
