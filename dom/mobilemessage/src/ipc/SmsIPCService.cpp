@@ -11,6 +11,9 @@
 #include "SmsMessage.h"
 #include "SmsFilter.h"
 #include "SmsSegmentInfo.h"
+#include "DictionaryHelpers.h"
+#include "nsJSUtils.h"
+#include "nsContentUtils.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::dom::mobilemessage;
@@ -68,7 +71,6 @@ SendCursorRequest(const IPCMobileMessageCursor& aRequest,
   actor.forget(aResult);
   return NS_OK;
 }
-
 } // anonymous namespace
 
 NS_IMPL_ISUPPORTS3(SmsIPCService,
@@ -111,8 +113,9 @@ SmsIPCService::Send(const nsAString& aNumber,
                     const nsAString& aMessage,
                     nsIMobileMessageCallback* aRequest)
 {
-  return SendRequest(SendMessageRequest(nsString(aNumber), nsString(aMessage)),
-                     aRequest);
+  return SendRequest(SendMessageRequest(SendSmsMessageRequest(nsString(aNumber),
+                                                              nsString(aMessage))),
+                     aRequest) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 /*
@@ -161,10 +164,95 @@ SmsIPCService::CreateThreadCursor(nsIMobileMessageCursorCallback* aCursorCallbac
                            aResult);
 }
 
+bool
+GetSendMmsMessageRequestFromParams(const JS::Value& aParam,
+                                   SendMmsMessageRequest& request) {
+  if (aParam.isUndefined() || aParam.isNull() || !aParam.isObject()) {
+    return false;
+  }
+
+  mozilla::AutoJSContext cx;
+  mozilla::idl::MmsParameters params;
+  nsresult rv = params.Init(cx, &aParam);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  uint32_t len;
+
+  // SendMobileMessageRequest.receivers
+  if (!params.receivers.isObject()) {
+    return false;
+  }
+  JSObject &receiversObj = params.receivers.toObject();
+  if (!JS_GetArrayLength(cx, &receiversObj, &len)) {
+    return false;
+  }
+
+  request.receivers().SetCapacity(len);
+
+  for (uint32_t i = 0; i < len; i++) {
+    JS::Value val;
+    if (!JS_GetElement(cx, &receiversObj, i, &val)) {
+      return false;
+    }
+
+    if (!val.isString()) {
+      return false;
+    }
+
+    nsDependentJSString str;
+    if (!str.init(cx, val.toString())) {
+      return false;
+    }
+
+    request.receivers().AppendElement(str);
+  }
+
+  // SendMobileMessageRequest.attachments
+  mozilla::dom::ContentChild* cc = mozilla::dom::ContentChild::GetSingleton();
+
+  if (!params.attachments.isObject()) {
+    return false;
+  }
+  JSObject &attachmentsObj = params.attachments.toObject();
+  if (!JS_GetArrayLength(cx, &attachmentsObj, &len)) {
+    return false;
+  }
+  request.attachments().SetCapacity(len);
+
+  for (uint32_t i = 0; i < len; i++) {
+    JS::Value val;
+    if (!JS_GetElement(cx, &attachmentsObj, i, &val)) {
+      return false;
+    }
+
+    mozilla::idl::MmsAttachment attachment;
+    rv = attachment.Init(cx, &val);
+    NS_ENSURE_SUCCESS(rv, false);
+
+    MmsAttachmentData mmsAttachment;
+    mmsAttachment.id().Assign(attachment.id);
+    mmsAttachment.location().Assign(attachment.location);
+    mmsAttachment.contentChild() = cc->GetOrCreateActorForBlob(attachment.content);
+    if (!mmsAttachment.contentChild()) {
+      return false;
+    }
+    request.attachments().AppendElement(mmsAttachment);
+  }
+
+  request.smil() = params.smil;
+  request.subject() = params.subject;
+
+  return true;
+}
+
 NS_IMETHODIMP
 SmsIPCService::Send(const JS::Value& aParameters,
                     nsIMobileMessageCallback *aRequest)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  SendMmsMessageRequest req;
+  if (!GetSendMmsMessageRequestFromParams(aParameters, req)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  return SendRequest(SendMessageRequest(req), aRequest);
 }
 
