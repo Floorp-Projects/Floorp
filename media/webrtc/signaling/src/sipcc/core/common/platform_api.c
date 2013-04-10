@@ -288,7 +288,7 @@ shutdownCCAck (void)
     msg.featureID = CCAPP_SHUTDOWN_ACK;
 
     if ( ccappTaskPostMsg(CCAPP_SHUTDOWN_ACK, &msg, sizeof(feature_update_t), CCAPP_CCPROVIER) != CPR_SUCCESS ) {
-        CCAPP_ERROR(PLT_F_PREFIX"failed to send shutdownCCAck(%d) msg \n", fname);
+        CCAPP_ERROR(PLT_F_PREFIX"failed to send shutdownCCAck msg", fname);
     }
 }
 
@@ -389,7 +389,7 @@ platform_logout_reset_req(void){
     msg.featureID = CCAPP_LOGOUT_RESET;
 
     if ( ccappTaskPostMsg(CCAPP_FALLBACK_IND, &msg, sizeof(feature_update_t), CCAPP_CCPROVIER) != CPR_SUCCESS ) {
-        CCAPP_ERROR(PLT_F_PREFIX"failed to send Logout_Reset(%d) msg \n", fname);
+        CCAPP_ERROR(PLT_F_PREFIX"failed to send Logout_Reset msg", fname);
     }
     return;
 }
