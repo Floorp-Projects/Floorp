@@ -36,7 +36,7 @@ public final class GeckoAppInfo
     }
 
     public static String getUpdateChannel() {
-        return UpdateServiceHelper.UPDATE_CHANNEL;
+        return AppConstants.MOZ_UPDATE_CHANNEL;
     }
 
     public static String getPlatformBuildID() {

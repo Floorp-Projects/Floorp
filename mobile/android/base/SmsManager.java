@@ -5,22 +5,18 @@
 
 package org.mozilla.gecko;
 
-#ifdef MOZ_WEBSMS_BACKEND
-import org.mozilla.gecko.GeckoSmsManager;
-#endif
-
 class SmsManager
 {
-  static private ISmsManager sInstance = null;
+    static private ISmsManager sInstance = null;
 
-  static public ISmsManager getInstance() {
-#ifdef MOZ_WEBSMS_BACKEND
-    if (sInstance == null) {
-      sInstance = new GeckoSmsManager();
+    static public ISmsManager getInstance() {
+        if (AppConstants.MOZ_WEBSMS_BACKEND) {
+            if (sInstance == null) {
+                sInstance = new GeckoSmsManager();
+            }
+        }
+        return sInstance;
     }
-#endif
-    return sInstance;
-  }
 }
 
 interface ISmsManager

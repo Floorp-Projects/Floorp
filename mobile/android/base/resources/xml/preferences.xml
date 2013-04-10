@@ -1,4 +1,3 @@
-#filter substitution
 <?xml version="1.0" encoding="utf-8"?>
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,20 +8,19 @@
                   xmlns:gecko="http://schemas.android.com/apk/res-auto"
                   android:enabled="false">
 
-    <PreferenceCategory android:title="@string/pref_category_general">
+    <PreferenceCategory android:title="@string/pref_category_general"
+                        android:key="category_general">
         <org.mozilla.gecko.LinkPreference android:title="@string/pref_about_firefox"
                                           url="about:" />
 
         <org.mozilla.gecko.SyncPreference android:title="@string/pref_sync"
                                           android:persistent="false" />
 
-#ifdef MOZ_UPDATER
         <ListPreference android:key="app.update.autodownload"
                         android:title="@string/pref_update_autodownload"
                         android:entries="@array/pref_update_autodownload_entries"
                         android:entryValues="@array/pref_update_autodownload_values"
                         android:persistent="false" />
-#endif
 
     </PreferenceCategory>
 
@@ -55,7 +53,8 @@
 
     </PreferenceCategory>
 
-    <PreferenceCategory android:title="@string/pref_category_privacy">
+    <PreferenceCategory android:title="@string/pref_category_privacy"
+                        android:key="category_privacy">
 
         <ListPreference android:key="network.cookie.cookieBehavior"
                         android:title="@string/pref_cookies_menu"
@@ -93,16 +92,9 @@
                             android:defaultValue="true"
                             android:persistent="false" />
 
-#ifdef MOZ_TELEMETRY_REPORTING
-        <CheckBoxPreference
-#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
-                            android:key="toolkit.telemetry.enabledPreRelease"
-#else
-                            android:key="toolkit.telemetry.enabled"
-#endif
+        <CheckBoxPreference android:key="toolkit.telemetry.enabled"
                             android:title="@string/pref_telemetry"
                             android:persistent="false" />
-#endif
 
         <CheckBoxPreference android:key="android.not_a_preference.privacy.announcements.enabled"
                             android:title="@string/pref_show_product_announcements"
