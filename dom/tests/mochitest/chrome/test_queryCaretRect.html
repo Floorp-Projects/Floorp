@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>nsIDOMWindowUtils::sendQueryContentEvent w/QUERY_CARET_RECT test</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+<script type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+  function done() {
+    testwindow.close();
+    SimpleTest.finish();
+  }
+  var isWindows = ("@mozilla.org/windows-registry-key;1" in Components.classes);
+  var testwindow = window.open("queryCaretRect" + (isWindows ? "Win" : "Unix") + ".html",
+                               "_new", "width=800,height=800");
+</script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</body>
+</html>
