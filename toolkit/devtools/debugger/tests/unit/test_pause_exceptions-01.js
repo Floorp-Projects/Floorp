@@ -30,12 +30,10 @@ function test_pause_frame()
     gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
       do_check_eq(aPacket.why.type, "exception");
       do_check_eq(aPacket.why.exception, 42);
-
       gThreadClient.resume(function () {
         finishClient(gClient);
       });
     });
-
     gThreadClient.pauseOnExceptions(true);
     gThreadClient.resume();
   });

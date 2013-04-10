@@ -16,6 +16,14 @@ function run_test()
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
+  gClient.request = (function (request) {
+    return function (aRequest, aOnResponse) {
+      if (aRequest.type === "sources") {
+        ++gNumTimesSourcesSent;
+      }
+      return request.call(this, aRequest, aOnResponse);
+    };
+  }(gClient.request));
   gClient.connect(function () {
     attachTestGlobalClientAndResume(gClient, "test-stack", function (aResponse, aThreadClient) {
       gThreadClient = aThreadClient;

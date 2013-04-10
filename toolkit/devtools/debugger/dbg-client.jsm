@@ -322,10 +322,7 @@ DebuggerClient.prototype = {
    */
   attachTab: function DC_attachTab(aTabActor, aOnResponse) {
     let self = this;
-    let packet = {
-      to: aTabActor,
-      type: "attach"
-    };
+    let packet = { to: aTabActor, type: "attach" };
     this.request(packet, function(aResponse) {
       let tabClient;
       if (!aResponse.error) {
@@ -375,17 +372,10 @@ DebuggerClient.prototype = {
    * @param function aOnResponse
    *        Called with the response packet and a ThreadClient
    *        (which will be undefined on error).
-   * @param object aOptions
-   *        Configuration options.
-   *        - useSourceMaps: whether to use source maps or not.
    */
-  attachThread: function DC_attachThread(aThreadActor, aOnResponse, aOptions={}) {
+  attachThread: function DC_attachThread(aThreadActor, aOnResponse) {
     let self = this;
-    let packet = {
-      to: aThreadActor,
-      type: "attach",
-      options: aOptions
-    };
+    let packet = { to: aThreadActor, type: "attach" };
     this.request(packet, function(aResponse) {
       if (!aResponse.error) {
         var threadClient = new ThreadClient(self, aThreadActor);
@@ -443,7 +433,7 @@ DebuggerClient.prototype = {
    */
   _sendRequests: function DC_sendRequests() {
     let self = this;
-    this._pendingRequests = this._pendingRequests.filter(function (request) {
+    this._pendingRequests = this._pendingRequests.filter(function(request) {
       if (request.to in self._activeRequests) {
         return true;
       }
@@ -470,7 +460,7 @@ DebuggerClient.prototype = {
       ? aPacket
       : this.compat.onPacket(aPacket);
 
-    resolve(packet).then((aPacket) => {
+    resolve(packet).then(function (aPacket) {
       if (!this._connected) {
         // Hello packet.
         this._connected = true;
@@ -480,53 +470,55 @@ DebuggerClient.prototype = {
         return;
       }
 
-      if (!aPacket.from) {
-        let msg = "Server did not specify an actor, dropping packet: " +
-                  JSON.stringify(aPacket);
-        Cu.reportError(msg);
-        dumpn(msg);
-        return;
-      }
+      try {
+        if (!aPacket.from) {
+          let msg = "Server did not specify an actor, dropping packet: " +
+                    JSON.stringify(aPacket);
+          Cu.reportError(msg);
+          dumpn(msg);
+          return;
+        }
 
-      let onResponse;
-      // Don't count unsolicited notifications or pauses as responses.
-      if (aPacket.from in this._activeRequests &&
-          !(aPacket.type in UnsolicitedNotifications) &&
-          !(aPacket.type == ThreadStateTypes.paused &&
-            aPacket.why.type in UnsolicitedPauses)) {
-        onResponse = this._activeRequests[aPacket.from].onResponse;
-        delete this._activeRequests[aPacket.from];
-      }
+        let onResponse;
+        // Don't count unsolicited notifications or pauses as responses.
+        if (aPacket.from in this._activeRequests &&
+            !(aPacket.type in UnsolicitedNotifications) &&
+            !(aPacket.type == ThreadStateTypes.paused &&
+              aPacket.why.type in UnsolicitedPauses)) {
+          onResponse = this._activeRequests[aPacket.from].onResponse;
+          delete this._activeRequests[aPacket.from];
+        }
 
-      // Packets that indicate thread state changes get special treatment.
-      if (aPacket.type in ThreadStateTypes &&
-          aPacket.from in this._threadClients) {
-        this._threadClients[aPacket.from]._onThreadState(aPacket);
-      }
-      // On navigation the server resumes, so the client must resume as well.
-      // We achieve that by generating a fake resumption packet that triggers
-      // the client's thread state change listeners.
-      if (this.activeThread &&
-          aPacket.type == UnsolicitedNotifications.tabNavigated &&
-          aPacket.from in this._tabClients) {
-        let resumption = { from: this.activeThread._actor, type: "resumed" };
-        this.activeThread._onThreadState(resumption);
-      }
-      // Only try to notify listeners on events, not responses to requests
-      // that lack a packet type.
-      if (aPacket.type) {
-        this.notify(aPacket.type, aPacket);
-      }
+        // Packets that indicate thread state changes get special treatment.
+        if (aPacket.type in ThreadStateTypes &&
+            aPacket.from in this._threadClients) {
+          this._threadClients[aPacket.from]._onThreadState(aPacket);
+        }
+        // On navigation the server resumes, so the client must resume as well.
+        // We achieve that by generating a fake resumption packet that triggers
+        // the client's thread state change listeners.
+        if (this.activeThread &&
+            aPacket.type == UnsolicitedNotifications.tabNavigated &&
+            aPacket.from in this._tabClients) {
+          let resumption = { from: this.activeThread._actor, type: "resumed" };
+          this.activeThread._onThreadState(resumption);
+        }
+        // Only try to notify listeners on events, not responses to requests
+        // that lack a packet type.
+        if (aPacket.type) {
+          this.notify(aPacket.type, aPacket);
+        }
 
-      if (onResponse) {
-        onResponse(aPacket);
+        if (onResponse) {
+          onResponse(aPacket);
+        }
+      } catch(ex) {
+        dumpn("Error handling response: " + ex + " - stack:\n" + ex.stack);
+        Cu.reportError(ex + "\n" + ex.stack);
       }
 
       this._sendRequests();
-    }, function (ex) {
-      dumpn("Error handling response: " + ex + " - stack:\n" + ex.stack);
-      Cu.reportError(ex.message + "\n" + ex.stack);
-    });
+    }.bind(this));
   },
 
   /**
