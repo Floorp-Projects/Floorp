@@ -2200,6 +2200,10 @@ chatbox {
   border-radius: 2px;
 }
 
+#customization-panelWrapper {
+  padding: 0px 8px;
+}
+
 #customization-palette > toolbarpaletteitem {
   display: inline-block;
   -moz-orient: vertical;

@@ -20,7 +20,16 @@
           <vbox id="customization-palette" flex="1" style="display: block;"/>
         </vbox>
         <vbox>
-          <hbox id="customization-panelHolder"/>
+          <vbox id="customization-panelWrapper">
+            <box anonid="arrowbox" class="panel-arrowbox">
+              <box flex="1"/>
+              <image anonid="arrow" class="panel-arrow" side="top"/>
+            </box>
+            <box class="panel-arrowcontent" flex="1">
+              <hbox id="customization-panelHolder"/>
+              <box class="panel-inner-arrowcontentfooter" hidden="true"/>
+            </box>
+          </vbox>
           <spacer flex="1"/>
         </vbox>
       </hbox>
