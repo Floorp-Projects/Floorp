@@ -2,8 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#filter substitution
-package @ANDROID_PACKAGE_NAME@.db;
+package org.mozilla.gecko.db;
 
 import java.io.File;
 import java.util.Collections;
@@ -358,7 +357,7 @@ public class TabsProvider extends ContentProvider {
         } else {
             deleted = deleteInTransaction(uri, selection, selectionArgs);
         }
-        
+
         if (deleted > 0)
             getContext().getContentResolver().notifyChange(uri, null);
 

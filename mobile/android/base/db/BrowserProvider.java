@@ -3,8 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#filter substitution
-package @ANDROID_PACKAGE_NAME@.db;
+package org.mozilla.gecko.db;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -618,7 +617,7 @@ public class BrowserProvider extends ContentProvider {
                                     qualifyColumn(TABLE_BOOKMARKS, Bookmarks.IS_DELETED)  + " = 0 AND " +
                                     qualifyColumn(TABLE_BOOKMARKS, Bookmarks.URL) +
                                         " NOT IN (SELECT " + History.URL + " FROM " + TABLE_HISTORY + ")" +
-                        " UNION ALL" +                
+                        " UNION ALL" +
                         // History with and without bookmark.
                         " SELECT " + qualifyColumn(TABLE_BOOKMARKS, Bookmarks._ID) + " AS " + Combined.BOOKMARK_ID + ", " +
                                      qualifyColumn(TABLE_HISTORY, History.URL) + " AS " + Combined.URL + ", " +
@@ -1028,7 +1027,7 @@ public class BrowserProvider extends ContentProvider {
                     if (bookmark.has("pinned")) {
                         try {
                             // Create a fake bookmark in the hidden pinned folder to pin bookmark
-                            // to about:home top sites. Pass pos as the pinned position to pin 
+                            // to about:home top sites. Pass pos as the pinned position to pin
                             // sites in the order that bookmarks are specified in bookmarks.json.
                             if (bookmark.getBoolean("pinned")) {
                                 createBookmark(db, title, url, pos, Bookmarks.FIXED_PINNED_LIST_ID);
@@ -1980,7 +1979,7 @@ public class BrowserProvider extends ContentProvider {
     /**
      * Remove any thumbnails that for sites that aren't likely to be ever shown.
      * Items will be removed according to a frecency calculation and only if they are not pinned
-     * 
+     *
      * Call this method within a transaction.
      */
     private void expireThumbnails(final SQLiteDatabase db) {
@@ -3172,7 +3171,7 @@ public class BrowserProvider extends ContentProvider {
                 + " WHERE " + Bookmarks.IS_DELETED + " = 0"
                 + " AND " + Bookmarks.URL + " IS NOT NULL)";
 
-        return deleteFavicons(uri, faviconSelection, null) + 
+        return deleteFavicons(uri, faviconSelection, null) +
                deleteThumbnails(uri, thumbnailSelection, null);
     }
 
