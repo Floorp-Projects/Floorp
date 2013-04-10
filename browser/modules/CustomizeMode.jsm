@@ -84,10 +84,13 @@ CustomizeMode.prototype = {
     // is really not going to work.
     window.PanelUI.ensureRegistered();
 
-    // Add a keypress listener to the tab-view-deck so that we can quickly
-    // exit customization mode when pressing ESC
-    let tabViewDeck = document.getElementById("tab-view-deck");
-    tabViewDeck.addEventListener("keypress", this, false);
+    // Add a keypress listener and click listener to the tab-view-deck so that
+    // we can quickly exit customization mode when pressing ESC or clicking on
+    // the blueprint outside the customization container.
+    let deck = document.getElementById("tab-view-deck");
+    deck.addEventListener("keypress", this, false);
+    deck.addEventListener("click", this, false);
+
     // Same goes for the menu button - if we're customizing, a click to the
     // menu button means a quick exit from customization mode.
     window.PanelUI.menuButton.addEventListener("click", this, false);
@@ -109,7 +112,6 @@ CustomizeMode.prototype = {
 
 
     let self = this;
-    let deck = document.getElementById("tab-view-deck");
     deck.addEventListener("transitionend", function customizeTransitionEnd() {
       deck.removeEventListener("transitionend", customizeTransitionEnd);
 
@@ -142,8 +144,9 @@ CustomizeMode.prototype = {
   exit: function() {
     CustomizableUI.removeListener(this);
 
-    let tabViewDeck = this.document.getElementById("tab-view-deck");
-    tabViewDeck.removeEventListener("keypress", this, false);
+    let deck = this.document.getElementById("tab-view-deck");
+    deck.removeEventListener("keypress", this, false);
+    deck.removeEventListener("click", this, false);
     this.window.PanelUI.menuButton.removeEventListener("click", this, false);
     this.window.PanelUI.menuButton.disabled = false;
 
@@ -430,13 +433,14 @@ CustomizeMode.prototype = {
         this._onMouseUp(aEvent);
         break;
       case "keypress":
-        if (aEvent.keyCode === aEvent.DOM_VK_ESCAPE) {
+        if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE) {
           this.exit();
         }
         break;
       case "click":
         if (aEvent.button == 0 &&
-            aEvent.originalTarget == this.window.PanelUI.menuButton) {
+            (aEvent.originalTarget == this.window.PanelUI.menuButton) ||
+            (aEvent.originalTarget == this.document.getElementById("tab-view-deck"))) {
           this.exit();
           aEvent.preventDefault();
         }
