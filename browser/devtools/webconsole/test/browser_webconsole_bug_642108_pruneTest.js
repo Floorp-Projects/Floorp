@@ -10,8 +10,6 @@
 
 const TEST_URI = "data:text/html;charset=utf-8,<p>test for bug 642108.";
 const LOG_LIMIT = 20;
-const CATEGORY_CSS = 1;
-const SEVERITY_WARNING = 1;
 
 function test() {
   addTab(TEST_URI);

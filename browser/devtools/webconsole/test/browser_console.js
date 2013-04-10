@@ -32,7 +32,7 @@ function consoleOpened(hud)
 
   // Check for network requests.
   let xhr = new XMLHttpRequest();
-  xhr.onload = () => info("xhr loaded, status is: " + xhr.status);
+  xhr.onload = () => console.log("xhr loaded, status is: " + xhr.status);
   xhr.open("get", TEST_URI, true);
   xhr.send();
 
