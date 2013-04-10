@@ -582,7 +582,7 @@ public class GeckoAppShell
         intent.setAction(GeckoApp.ACTION_WEBAPP_PREFIX + aIndex);
         intent.setData(Uri.parse(aURI));
         intent.setClassName(AppConstants.ANDROID_PACKAGE_NAME,
-                            AppConstants.ANDROID_PACKAGE_NAME + ".WebApps$WebApp" + aIndex);
+                            "org.mozilla.gecko.WebApps$WebApp" + aIndex);
         return intent;
     }
 
