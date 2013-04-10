@@ -251,12 +251,10 @@ FENNEC_PP_JAVA_VIEW_FILES = \
 
 FENNEC_PP_JAVA_FILES = \
   App.java \
-  MarketplaceApp.java \
   WebApp.java \
   WebApps.java \
   GeckoActivity.java \
   GeckoAppInfo.java \
-  LauncherShortcuts.java \
   Restarter.java \
   db/BrowserContract.java \
   db/BrowserProvider.java \
