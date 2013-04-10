@@ -134,10 +134,7 @@ std::ostream& operator<<(std::ostream& stream, const ProfileEntry& entry)
 
 #define DYNAMIC_MAX_STRING 512
 
-ThreadProfile::ThreadProfile(const char* aName, int aEntrySize,
-                             PseudoStack *aStack, int aThreadId,
-                             PlatformData* aPlatform,
-                             bool aIsMainThread)
+ThreadProfile::ThreadProfile(const char* aName, int aEntrySize, PseudoStack *aStack, int aThreadId, bool aIsMainThread)
   : mWritePos(0)
   , mLastFlushPos(0)
   , mReadPos(0)
@@ -147,7 +144,6 @@ ThreadProfile::ThreadProfile(const char* aName, int aEntrySize,
   , mName(strdup(aName))
   , mThreadId(aThreadId)
   , mIsMainThread(aIsMainThread)
-  , mPlatformData(aPlatform)
 {
   mEntries = new ProfileEntry[mEntrySize];
 }

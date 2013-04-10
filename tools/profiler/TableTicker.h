@@ -26,7 +26,7 @@ class BreakpadSampler;
 
 class TableTicker: public Sampler {
  public:
-  TableTicker(int aInterval, int aEntrySize,
+  TableTicker(int aInterval, int aEntrySize, PseudoStack *aStack,
               const char** aFeatures, uint32_t aFeatureCount)
     : Sampler(aInterval, true, aEntrySize)
     , mPrimaryThreadProfile(nullptr)
@@ -38,7 +38,6 @@ class TableTicker: public Sampler {
     //XXX: It's probably worth splitting the jank profiler out from the regular profiler at some point
     mJankOnly = hasFeature(aFeatures, aFeatureCount, "jank");
     mProfileJS = hasFeature(aFeatures, aFeatureCount, "js");
-    mProfileThreads = true || hasFeature(aFeatures, aFeatureCount, "threads");
     mAddLeafAddresses = hasFeature(aFeatures, aFeatureCount, "leaf");
 
     {
@@ -47,15 +46,10 @@ class TableTicker: public Sampler {
       // Create ThreadProfile for each registered thread
       for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
         ThreadInfo* info = sRegisteredThreads->at(i);
-
-        if (!info->IsMainThread() && !mProfileThreads)
-          continue;
-
         ThreadProfile* profile = new ThreadProfile(info->Name(),
                                                    aEntrySize,
                                                    info->Stack(),
                                                    info->ThreadId(),
-                                                   info->GetPlatformData(),
                                                    info->IsMainThread());
         profile->addTag(ProfileEntry('m', "Start"));
 
@@ -86,6 +80,8 @@ class TableTicker: public Sampler {
       }
     }
   }
+
+  virtual void SampleStack(TickSample* sample) {}
 
   // Called within a signal. This function must be reentrant
   virtual void Tick(TickSample* sample);
@@ -119,8 +115,7 @@ class TableTicker: public Sampler {
   virtual JSObject *ToJSObject(JSContext *aCx);
   JSCustomObject *GetMetaJSCustomObject(JSAObjectBuilder& b);
 
-  bool ProfileJS() const { return mProfileJS; }
-  bool ProfileThreads() const { return mProfileThreads; }
+  const bool ProfileJS() { return mProfileJS; }
 
   virtual BreakpadSampler* AsBreakpadSampler() { return nullptr; }
 
@@ -138,14 +133,13 @@ protected:
   bool mUseStackWalk;
   bool mJankOnly;
   bool mProfileJS;
-  bool mProfileThreads;
 };
 
 class BreakpadSampler: public TableTicker {
  public:
-  BreakpadSampler(int aInterval, int aEntrySize,
+  BreakpadSampler(int aInterval, int aEntrySize, PseudoStack *aStack,
               const char** aFeatures, uint32_t aFeatureCount)
-    : TableTicker(aInterval, aEntrySize, aFeatures, aFeatureCount)
+    : TableTicker(aInterval, aEntrySize, aStack, aFeatures, aFeatureCount)
   {}
 
   // Called within a signal. This function must be reentrant
