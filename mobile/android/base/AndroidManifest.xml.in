@@ -71,7 +71,7 @@
 		 android:debuggable="true">
 #endif
 
-        <activity android:name="App"
+        <activity android:name=".App"
                   android:label="@MOZ_APP_DISPLAYNAME@"
                   android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize"
                   android:windowSoftInputMode="stateUnspecified|adjustResize"
@@ -186,7 +186,7 @@
             </intent-filter>
         </receiver>
 
-        <activity android:name="Restarter"
+        <activity android:name="org.mozilla.gecko.Restarter"
                   android:process="@ANDROID_PACKAGE_NAME@Restarter"
                   android:theme="@style/Gecko">
           <intent-filter>
@@ -199,7 +199,7 @@
 #include ../services/manifests/SyncAndroidManifest_activities.xml.in
 
 #if MOZ_CRASHREPORTER
-  <activity android:name="CrashReporter"
+  <activity android:name="org.mozilla.gecko.CrashReporter"
             android:label="@string/crash_reporter_title"
             android:icon="@drawable/crash_reporter"
             android:theme="@style/Gecko"

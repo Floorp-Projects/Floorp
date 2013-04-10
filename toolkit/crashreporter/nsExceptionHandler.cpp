@@ -837,7 +837,7 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
 #else
     // On Android, we launch using the application package name
     // instead of a filename, so use ANDROID_PACKAGE_NAME to do that here.
-    nsCString package(ANDROID_PACKAGE_NAME "/.CrashReporter");
+    nsCString package(ANDROID_PACKAGE_NAME "/org.mozilla.gecko.CrashReporter");
     crashReporterPath = ToNewCString(package);
 #endif
   }

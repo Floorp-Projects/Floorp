@@ -3,8 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#filter substitution
-package @ANDROID_PACKAGE_NAME@;
+package org.mozilla.gecko;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,10 +32,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
-
-import org.mozilla.gecko.GeckoApp;
-import org.mozilla.gecko.R;
-
 
 public class CrashReporter extends Activity
 {
@@ -279,14 +274,15 @@ public class CrashReporter extends Activity
             // crash-stats.mozilla.org. Remove this when bug 607942 is fixed.
             StringBuffer sb = new StringBuffer();
             sb.append(extras.containsKey(NOTES_KEY) ? extras.get(NOTES_KEY) + "\n" : "");
-            if (@MOZ_MIN_CPU_VERSION@ < 7)
+            if (AppConstants.MOZ_MIN_CPU_VERSION < 7) {
                 sb.append("nothumb Build\n");
+            }
             sb.append(Build.MANUFACTURER).append(' ')
               .append(Build.MODEL).append('\n')
               .append(Build.FINGERPRINT);
             sendPart(os, boundary, NOTES_KEY, sb.toString());
 
-            sendPart(os, boundary, "Min_ARM_Version", "@MOZ_MIN_CPU_VERSION@");
+            sendPart(os, boundary, "Min_ARM_Version", Integer.toString(AppConstants.MOZ_MIN_CPU_VERSION));
             sendPart(os, boundary, "Android_Manufacturer", Build.MANUFACTURER);
             sendPart(os, boundary, "Android_Model", Build.MODEL);
             sendPart(os, boundary, "Android_Board", Build.BOARD);
@@ -343,8 +339,8 @@ public class CrashReporter extends Activity
         try {
             String action = "android.intent.action.MAIN";
             Intent intent = new Intent(action);
-            intent.setClassName("@ANDROID_PACKAGE_NAME@",
-                                "@ANDROID_PACKAGE_NAME@.App");
+            intent.setClassName(AppConstants.ANDROID_PACKAGE_NAME,
+                                AppConstants.BROWSER_INTENT_CLASS);
             Log.i(LOGTAG, intent.toString());
             startActivity(intent);
         } catch (Exception e) {

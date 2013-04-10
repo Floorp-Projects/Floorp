@@ -3,22 +3,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#filter substitution
-package @ANDROID_PACKAGE_NAME@;
+package org.mozilla.gecko;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 
-import org.mozilla.gecko.GeckoAppShell;
-
 public class Restarter extends Activity {
     private static final String LOGTAG = "GeckoRestarter";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        Log.i(LOGTAG, "trying to restart @MOZ_APP_NAME@");
+        Log.i(LOGTAG, "Trying to restart " + AppConstants.MOZ_APP_NAME);
         try {
             int countdown = 40;
             while (GeckoAppShell.checkForGeckoProcs() &&  --countdown > 0) {
@@ -27,7 +24,7 @@ public class Restarter extends Activity {
                     Thread.sleep(100);
                 } catch (InterruptedException ie) {}
             }
-            
+
             if (countdown <= 0) {
                 // if the countdown expired, something is hung
                 GeckoAppShell.killAnyZombies();
@@ -44,8 +41,8 @@ public class Restarter extends Activity {
         }
         try {
             Intent intent = new Intent(Intent.ACTION_MAIN);
-            intent.setClassName("@ANDROID_PACKAGE_NAME@",
-                                "@ANDROID_PACKAGE_NAME@.App");
+            intent.setClassName(AppConstants.ANDROID_PACKAGE_NAME,
+                                AppConstants.BROWSER_INTENT_CLASS);
             Bundle b = getIntent().getExtras();
             if (b != null)
                 intent.putExtras(b);

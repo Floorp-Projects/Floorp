@@ -30,8 +30,8 @@
 
     <item android:id="@+id/share"
           android:icon="@drawable/ic_menu_share"
-          android:title="@string/share" /> 
-    
+          android:title="@string/share" />
+
     <item android:id="@+id/find_in_page"
           android:icon="@drawable/ic_menu_find_in_page"
           android:title="@string/find_in_page" />
@@ -73,8 +73,7 @@
           android:icon="@drawable/ic_menu_settings"
           android:title="@string/settings" />
 
-#ifdef MOZ_PROFILING
     <item android:id="@+id/toggle_profiling"
+          android:visible="false"
           android:title="@string/toggle_profiling" />
-#endif
 </menu>

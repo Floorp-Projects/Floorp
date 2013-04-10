@@ -54,10 +54,14 @@ public class GeckoPreferences
     private static final String NON_PREF_PREFIX = "android.not_a_preference.";
 
     // These match keys in resources/xml/preferences.xml.in.
-    public static String PREFS_MP_ENABLED         = "privacy.masterpassword.enabled";
-    public static String PREFS_MENU_CHAR_ENCODING = "browser.menu.showCharacterEncoding";
-    public static String PREFS_ANNOUNCEMENTS_ENABLED = NON_PREF_PREFIX + "privacy.announcements.enabled";
-    public static String PREFS_UPDATER_AUTODOWNLOAD  = "app.update.autodownload";
+    private static String PREFS_ANNOUNCEMENTS_ENABLED = NON_PREF_PREFIX + "privacy.announcements.enabled";
+    private static String PREFS_CATEGORY_GENERAL = "category_general";
+    private static String PREFS_CATEGORY_PRIVACY = "category_privacy";
+    private static String PREFS_MENU_CHAR_ENCODING = "browser.menu.showCharacterEncoding";
+    private static String PREFS_MP_ENABLED = "privacy.masterpassword.enabled";
+    private static String PREFS_TELEMETRY_ENABLED = "toolkit.telemetry.enabled";
+    private static String PREFS_TELEMETRY_ENABLED_PRERELEASE = "toolkit.telemetry.enabledPreRelease";
+    private static String PREFS_UPDATER_AUTODOWNLOAD = "app.update.autodownload";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +71,23 @@ public class GeckoPreferences
 
         if (Build.VERSION.SDK_INT >= 14)
             getActionBar().setHomeButtonEnabled(true);
+
+        mPreferenceScreen = getPreferenceScreen();
+        if (!AppConstants.MOZ_UPDATER) {
+            ((PreferenceGroup) mPreferenceScreen.findPreference(PREFS_CATEGORY_GENERAL))
+                    .removePreference(findPreference(PREFS_UPDATER_AUTODOWNLOAD));
+        }
+
+        Preference telemetryPref = findPreference(PREFS_TELEMETRY_ENABLED);
+        if (AppConstants.MOZ_TELEMETRY_REPORTING) {
+            if (AppConstants.MOZ_TELEMETRY_ON_BY_DEFAULT) {
+                telemetryPref.setKey(PREFS_TELEMETRY_ENABLED_PRERELEASE);
+            }
+        } else {
+            ((PreferenceGroup) mPreferenceScreen.findPreference(PREFS_CATEGORY_PRIVACY))
+                    .removePreference(telemetryPref);
+        }
+
     }
 
     @Override
@@ -75,7 +96,6 @@ public class GeckoPreferences
             return;
 
         mPreferencesList = new ArrayList<String>();
-        mPreferenceScreen = getPreferenceScreen();
         initGroups(mPreferenceScreen);
         initValues();
     }
