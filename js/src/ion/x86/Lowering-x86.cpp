@@ -286,3 +286,17 @@ LIRGeneratorX86::visitAsmJSLoadFuncPtr(MAsmJSLoadFuncPtr *ins)
 {
     return define(new LAsmJSLoadFuncPtr(useRegisterAtStart(ins->index())), ins);
 }
+
+LGetPropertyCacheT *
+LIRGeneratorX86::newLGetPropertyCacheT(MGetPropertyCache *ins)
+{
+    // Since x86 doesn't have a scratch register and we need one for the
+    // indirect jump for dispatch-style ICs, we need a temporary in the case
+    // of a double output type as we can't get a scratch from the output.
+    LDefinition scratch;
+    if (ins->type() == MIRType_Double)
+        scratch = temp();
+    else
+        scratch = LDefinition::BogusTemp();
+    return new LGetPropertyCacheT(useRegister(ins->object()), scratch);
+}

@@ -350,8 +350,7 @@ class Assembler : public AssemblerX86Shared
         movsd(src, Operand(StackPointer, 0));
     }
     CodeOffsetLabel pushWithPatch(const ImmWord &word) {
-        movq(word, ScratchReg);
-        CodeOffsetLabel label = masm.currentOffset();
+        CodeOffsetLabel label = movWithPatch(word, ScratchReg);
         push(ScratchReg);
         return label;
     }

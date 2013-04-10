@@ -558,6 +558,7 @@ IonScript::IonScript()
     scriptList_(0),
     scriptEntries_(0),
     parallelInvalidatedScriptList_(0),
+    parallelInvalidatedScriptEntries_(0),
     refcount_(0),
     recompileInfo_(),
     slowCallCount(0)
@@ -651,7 +652,7 @@ IonScript::New(JSContext *cx, uint32_t frameSlots, uint32_t frameSize, size_t sn
 
     script->parallelInvalidatedScriptList_ = offsetCursor;
     script->parallelInvalidatedScriptEntries_ = parallelInvalidatedScriptEntries;
-    offsetCursor += parallelInvalidatedScriptEntries;
+    offsetCursor += paddedParallelInvalidatedScriptSize;
 
     script->frameSlots_ = frameSlots;
     script->frameSize_ = frameSize;
@@ -839,6 +840,7 @@ IonScript::Trace(JSTracer *trc, IonScript *script)
 void
 IonScript::Destroy(FreeOp *fop, IonScript *script)
 {
+    script->destroyCaches();
     fop->free_(script);
 }
 
@@ -863,6 +865,13 @@ IonScript::purgeCaches(Zone *zone)
     AutoFlushCache afc("purgeCaches", zone->rt->ionRuntime());
     for (size_t i = 0; i < numCaches(); i++)
         getCache(i).reset();
+}
+
+void
+IonScript::destroyCaches()
+{
+    for (size_t i = 0; i < numCaches(); i++)
+        getCache(i).destroy();
 }
 
 void
