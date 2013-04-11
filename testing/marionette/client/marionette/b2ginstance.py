@@ -117,7 +117,7 @@ class B2GInstance(object):
         local_profiles_ini = tempfile.NamedTemporaryFile()
         self.dm.getFile(remote_profiles_ini, local_profiles_ini.name)
         cfg = ConfigParser()
-        cfg.readfp(local_profiles_ini)
+        cfg.read(local_profiles_ini.name)
 
         remote_profiles = []
         for section in cfg.sections():
