@@ -1048,9 +1048,16 @@ create({ constructor: NetworkDetailsView, proto: MenuContainer.prototype }, {
       // Handle json.
       if (mimeType.contains("/json")) {
         $("#response-content-json-box").hidden = false;
-        let jsonScope = this._json.addScope("JSON");
-        let sanitizedText = aString.replace(/^[a-zA-Z0-9_$]+\(|\)$/g, ""); // JSONP
-        jsonScope.addVar().populate(JSON.parse(sanitizedText), { expanded: true });
+        let jsonpRegex = /^[a-zA-Z0-9_$]+\(|\)$/g; // JSONP with callback.
+        let sanitizedJSON = aString.replace(jsonpRegex, "");
+        let callbackPadding = aString.match(jsonpRegex);
+
+        let jsonScopeName = callbackPadding
+          ? L10N.getFormatStr("jsonpScopeName", callbackPadding[0].slice(0, -1))
+          : L10N.getStr("jsonScopeName");
+
+        let jsonScope = this._json.addScope(jsonScopeName);
+        jsonScope.addVar().populate(JSON.parse(sanitizedJSON), { expanded: true });
         jsonScope.expanded = true;
       }
       // Handle images.
