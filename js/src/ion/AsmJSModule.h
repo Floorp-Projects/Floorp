@@ -62,7 +62,7 @@ class AsmJSModule
                 uint32_t index_;
                 VarInitKind initKind_;
                 union {
-                    Value constant_;
+                    Value constant_; // will only contain int32/double
                     AsmJSCoercion coercion_;
                 } init;
             } var;
@@ -79,6 +79,8 @@ class AsmJSModule
         void trace(JSTracer *trc) {
             if (name_)
                 MarkString(trc, &name_, "asm.js global name");
+            JS_ASSERT_IF(which_ == Variable && u.var.initKind_ == InitConstant,
+                         !u.var.init.constant_.isMarkable());
         }
 
       public:
@@ -370,6 +372,7 @@ class AsmJSModule
     }
 
     bool addGlobalVarInitConstant(const Value &v, uint32_t *globalIndex) {
+        JS_ASSERT(!v.isMarkable());
         if (numGlobalVars_ == UINT32_MAX)
             return false;
         Global g(Global::Variable);
@@ -451,7 +454,7 @@ class AsmJSModule
     unsigned numGlobals() const {
         return globals_.length();
     }
-    Global global(unsigned i) const {
+    Global &global(unsigned i) {
         return globals_[i];
     }
     unsigned numFuncPtrTableElems() const {
