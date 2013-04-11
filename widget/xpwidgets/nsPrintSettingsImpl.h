@@ -92,8 +92,6 @@ protected:
   int32_t       mOrientation;  // see orientation consts
   nsString      mColorspace;
   nsString      mResolutionName;
-  int32_t       mResolution;
-  int32_t       mDuplex;
   bool          mDownloadFonts;
   nsString      mPrintCommand;
   int32_t       mNumCopies;
