@@ -33,7 +33,6 @@ this.RecentWindow = {
 
     function isSuitableBrowserWindow(win) {
       return (!win.closed &&
-              win.toolbar.visible &&
               (allowPopups || win.toolbar.visible) &&
               (!checkPrivacy ||
                PrivateBrowsingUtils.permanentPrivateBrowsing ||
