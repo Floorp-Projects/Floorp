@@ -163,10 +163,10 @@ protected:
   nsresult ConvertSupportsTojsvals(nsISupports *aArgs,
                                    JSObject *aScope,
                                    uint32_t *aArgc,
-                                   jsval **aArgv,
+                                   JS::Value **aArgv,
                                    mozilla::Maybe<nsRootedJSValueArray> &aPoolRelease);
 
-  nsresult AddSupportsPrimitiveTojsvals(nsISupports *aArg, jsval *aArgv);
+  nsresult AddSupportsPrimitiveTojsvals(nsISupports *aArg, JS::Value *aArgv);
 
   // given an nsISupports object (presumably an event target or some other
   // DOM object), get (or create) the JSObject wrapping it.
@@ -306,8 +306,8 @@ class nsIJSArgArray : public nsIArray
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IJSARGARRAY_IID)
   // Bug 312003 describes why this must be "void **", but after calling argv
-  // may be cast to jsval* and the args found at:
-  //    ((jsval*)argv)[0], ..., ((jsval*)argv)[argc - 1]
+  // may be cast to JS::Value* and the args found at:
+  //    ((JS::Value*)argv)[0], ..., ((JS::Value*)argv)[argc - 1]
   virtual nsresult GetArgs(uint32_t *argc, void **argv) = 0;
 };
 

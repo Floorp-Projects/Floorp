@@ -6442,7 +6442,7 @@ nsGlobalWindow::OpenDialog(const nsAString& aUrl, const nsAString& aName,
   NS_ENSURE_SUCCESS(rv, rv);
 
   uint32_t argc;
-  jsval *argv = nullptr;
+  JS::Value *argv = nullptr;
 
   // XXX - need to get this as nsISupports?
   ncc->GetArgc(&argc);
@@ -6625,7 +6625,7 @@ PostMessageReadStructuredClone(JSContext* cx,
     if (JS_ReadBytes(reader, &supports, sizeof(supports))) {
       JSObject* global = JS_GetGlobalForScopeChain(cx);
       if (global) {
-        jsval val;
+        JS::Value val;
         nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
         if (NS_SUCCEEDED(nsContentUtils::WrapNative(cx, global, supports,
                                                     &val,
@@ -6763,7 +6763,7 @@ PostMessageEvent::Run()
   }
 
   // Deserialize the structured clone data
-  jsval messageData;
+  JS::Value messageData;
   {
     JSAutoRequest ar(cx);
     StructuredCloneInfo scInfo;
@@ -6818,9 +6818,9 @@ PostMessageEvent::Run()
 }
 
 NS_IMETHODIMP
-nsGlobalWindow::PostMessageMoz(const jsval& aMessage,
+nsGlobalWindow::PostMessageMoz(const JS::Value& aMessage,
                                const nsAString& aOrigin,
-                               const jsval& aTransfer,
+                               const JS::Value& aTransfer,
                                JSContext* aCx)
 {
   FORWARD_TO_OUTER(PostMessageMoz, (aMessage, aOrigin, aTransfer, aCx),
@@ -6906,7 +6906,7 @@ nsGlobalWindow::PostMessageMoz(const jsval& aMessage,
                          providedOrigin,
                          nsContentUtils::IsCallerChrome());
 
-  // We *must* clone the data here, or the jsval could be modified
+  // We *must* clone the data here, or the JS::Value could be modified
   // by script
   JSAutoStructuredCloneBuffer buffer;
   StructuredCloneInfo scInfo;
@@ -11803,13 +11803,13 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
 
 #define EVENT(name_, id_, type_, struct_)                                    \
   NS_IMETHODIMP nsGlobalWindow::GetOn##name_(JSContext *cx,                  \
-                                             jsval *vp) {                    \
+                                             JS::Value *vp) {                \
     EventHandlerNonNull* h = GetOn##name_();                                 \
     vp->setObjectOrNull(h ? h->Callable() : nullptr);                        \
     return NS_OK;                                                            \
   }                                                                          \
   NS_IMETHODIMP nsGlobalWindow::SetOn##name_(JSContext *cx,                  \
-                                             const jsval &v) {               \
+                                             const JS::Value &v) {           \
     JSObject *obj = mJSObject;                                               \
     if (!obj) {                                                              \
       /* Just silently do nothing */                                         \
@@ -11831,7 +11831,7 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
   }
 #define ERROR_EVENT(name_, id_, type_, struct_)                              \
   NS_IMETHODIMP nsGlobalWindow::GetOn##name_(JSContext *cx,                  \
-                                             jsval *vp) {                    \
+                                             JS::Value *vp) {                \
     nsEventListenerManager *elm = GetListenerManager(false);                 \
     if (elm) {                                                               \
       OnErrorEventHandlerNonNull* h = elm->GetOnErrorEventHandler();         \
@@ -11844,7 +11844,7 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
     return NS_OK;                                                            \
   }                                                                          \
   NS_IMETHODIMP nsGlobalWindow::SetOn##name_(JSContext *cx,                  \
-                                             const jsval &v) {               \
+                                             const JS::Value &v) {           \
     nsEventListenerManager *elm = GetListenerManager(true);                  \
     if (!elm) {                                                              \
       return NS_ERROR_OUT_OF_MEMORY;                                         \
@@ -11868,7 +11868,7 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
   }
 #define BEFOREUNLOAD_EVENT(name_, id_, type_, struct_)                       \
   NS_IMETHODIMP nsGlobalWindow::GetOn##name_(JSContext *cx,                  \
-                                             jsval *vp) {                    \
+                                             JS::Value *vp) {                \
     nsEventListenerManager *elm = GetListenerManager(false);                 \
     if (elm) {                                                               \
       BeforeUnloadEventHandlerNonNull* h =                                   \
@@ -11882,7 +11882,7 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
     return NS_OK;                                                            \
   }                                                                          \
   NS_IMETHODIMP nsGlobalWindow::SetOn##name_(JSContext *cx,                  \
-                                             const jsval &v) {               \
+                                             const JS::Value &v) {           \
     nsEventListenerManager *elm = GetListenerManager(true);                  \
     if (!elm) {                                                              \
       return NS_ERROR_OUT_OF_MEMORY;                                         \

@@ -22,7 +22,7 @@ class DOMRequest : public nsDOMEventTargetHelper,
                    public nsIDOMDOMRequest
 {
 protected:
-  jsval mResult;
+  JS::Value mResult;
   nsCOMPtr<nsIDOMDOMError> mError;
   bool mDone;
   bool mRooted;
@@ -69,7 +69,7 @@ public:
   IMPL_EVENT_HANDLER(error)
 
 
-  void FireSuccess(jsval aResult);
+  void FireSuccess(JS::Value aResult);
   void FireError(const nsAString& aError);
   void FireError(nsresult aError);
 

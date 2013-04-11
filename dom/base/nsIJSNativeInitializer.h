@@ -17,7 +17,7 @@
  * A JavaScript specific interface used to initialize new
  * native objects, created as a result of calling a
  * JavaScript constructor. The arguments are passed in
- * their raw form as jsval's.
+ * their raw form as JS::Value's.
  */
 
 class nsIJSNativeInitializer : public nsISupports {
@@ -29,7 +29,7 @@ public:
    * constructor and the parameters passed into the JavaScript constructor.
    */
   NS_IMETHOD Initialize(nsISupports* aOwner, JSContext *cx, JSObject *obj,
-                        uint32_t argc, jsval *argv) = 0;
+                        uint32_t argc, JS::Value *argv) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIJSNativeInitializer,
