@@ -659,9 +659,9 @@ function test_storage_cleared()
     let principal = Cc["@mozilla.org/scriptsecuritymanager;1"].
                     getService(Ci.nsIScriptSecurityManager).
                     getNoAppCodebasePrincipal(aURI);
-    let dsm = Cc["@mozilla.org/dom/storagemanager;1"].
+    let dsm = Cc["@mozilla.org/dom/localStorage-manager;1"].
               getService(Ci.nsIDOMStorageManager);
-    return dsm.getLocalStorageForPrincipal(principal, "");
+    return dsm.createStorage(principal, "");
   }
 
   let s = [

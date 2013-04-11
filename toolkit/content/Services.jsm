@@ -50,7 +50,7 @@ let initTable = [
   ["search", "@mozilla.org/browser/search-service;1", "nsIBrowserSearchService"],
 #endif
   ["storage", "@mozilla.org/storage/service;1", "mozIStorageService"],
-  ["domStorageManager", "@mozilla.org/dom/storagemanager;1", "nsIDOMStorageManager"],
+  ["domStorageManager", "@mozilla.org/dom/localStorage-manager;1", "nsIDOMStorageManager"],
   ["strings", "@mozilla.org/intl/stringbundle;1", "nsIStringBundleService"],
   ["telemetry", "@mozilla.org/base/telemetry;1", "nsITelemetry"],
   ["tm", "@mozilla.org/thread-manager;1", "nsIThreadManager"],
