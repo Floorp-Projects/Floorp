@@ -2138,8 +2138,10 @@ nsCSSOffsetState::InitOffsets(nscoord aHorizontalPercentBasis,
                               const nsMargin *aBorder,
                               const nsMargin *aPadding)
 {
-  // XXXdholbert This macro probably needs to take aVerticalPercentBasis too
-  DISPLAY_INIT_OFFSETS(frame, this, aHorizontalPercentBasis, aBorder, aPadding);
+  DISPLAY_INIT_OFFSETS(frame, this,
+                       aHorizontalPercentBasis,
+                       aVerticalPercentBasis,
+                       aBorder, aPadding);
 
   // Since we are in reflow, we don't need to store these properties anymore
   // unless they are dependent on width, in which case we store the new value.
