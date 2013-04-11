@@ -1120,6 +1120,10 @@ class CGClassHasInstanceHook(CGAbstractStaticMethod):
         hasInstanceCode = """
   const DOMClass* domClass = GetDOMClass(js::UnwrapObject(instance));
   *bp = false;
+  if (!domClass) {
+    // Not a DOM object, so certainly not an instance of this interface
+    return true;
+  }
   """
         # Sort interaces implementing self by name so we get stable output.
         for iface in sorted(self.descriptor.interface.interfacesImplementingSelf,
