@@ -285,9 +285,7 @@ extern int32_t nbuginf(const char *_format, ...);
 
 
 #define CAC_L_C_F_PREFIX "CAC : %d/%d : %s : " // requires 3 args: line_id, call_id, fname
-#define CAC_F_PREFIX "CAC : %s : " // requires 1 arg: fname
 #define DCSM_L_C_F_PREFIX "DCSM : %d/%d : %s : " // requires 3 args: line_id, call_id, fname
-#define DCSM_F_PREFIX "DCSM : %s : " // requires 1 arg: fname
 #define CFG_F_PREFIX "CFG : %s : " // requires 1 arg: fname
 #define PLAT_COMMON_F_PREFIX "PLAT_COMMON : %s : " // requires 1 arg: fname
 #define MED_F_PREFIX "MED : %s : "

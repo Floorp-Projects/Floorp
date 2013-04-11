@@ -720,7 +720,8 @@ static short vcmSetIceCandidate_m(const char *peerconnection,
                               NS_DISPATCH_NORMAL);
 
   if (!NS_SUCCEEDED(rv)) {
-    CSFLogError( logTag, "%s(): Could not dispatch to ICE thread", __FUNCTION__, level);
+    CSFLogError( logTag, "%s(): Could not dispatch to ICE thread, level %u",
+      __FUNCTION__, level);
     return VCM_ERROR;
   }
 

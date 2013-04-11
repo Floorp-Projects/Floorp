@@ -202,7 +202,7 @@ cc_return_t CCAPI_Call_endConsultativeCall(cc_call_handle_t handle){
     attr != CC_ATTR_XFR_CONSULT &&
     attr != CC_ATTR_LOCAL_CONF_CONSULT &&
     attr != CC_ATTR_LOCAL_XFER_CONSULT) {
-    DEF_DEBUG(DEB_F_PREFIX"This method only calls on a consultative call",
+    DEF_DEBUG(DEB_F_PREFIX"This method only calls on a consultative call, handle %u",
       DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI_Call_endConsultativeCall"), handle);
     return CC_FAILURE;
   }
