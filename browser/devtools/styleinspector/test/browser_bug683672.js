@@ -12,7 +12,9 @@ let computedView;
 const TEST_URI = "http://example.com/browser/browser/devtools/styleinspector/test/browser_bug683672.html";
 
 let tempScope = {};
-let {CssHtmlTree, PropertyView} = devtools.require("devtools/styleinspector/computed-view");
+Cu.import("resource:///modules/devtools/CssHtmlTree.jsm", tempScope);
+let CssHtmlTree = tempScope.CssHtmlTree;
+let PropertyView = tempScope.PropertyView;
 
 function test()
 {
