@@ -4,28 +4,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
+const {Cc, Ci, Cu, Cr} = require("chrome");
 
-this.EXPORTED_SYMBOLS = ["InspectorPanel"];
-
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
-Cu.import("resource:///modules/devtools/EventEmitter.jsm");
-Cu.import("resource:///modules/devtools/CssLogic.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "MarkupView",
-  "resource:///modules/devtools/MarkupView.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Selection",
-  "resource:///modules/devtools/Selection.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "HTMLBreadcrumbs",
-  "resource:///modules/devtools/Breadcrumbs.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Highlighter",
-  "resource:///modules/devtools/Highlighter.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ToolSidebar",
-  "resource:///modules/devtools/Sidebar.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "SelectorSearch",
-  "resource:///modules/devtools/SelectorSearch.jsm");
+let Promise = require("sdk/core/promise");
+let EventEmitter = require("devtools/shared/event-emitter");
+let {CssLogic} = require("devtools/styleinspector/css-logic");
+
+loader.lazyGetter(this, "MarkupView", () => require("devtools/markupview/markup-view").MarkupView);
+loader.lazyGetter(this, "Selection", () => require ("devtools/inspector/selection").Selection);
+loader.lazyGetter(this, "HTMLBreadcrumbs", () => require("devtools/inspector/breadcrumbs").HTMLBreadcrumbs);
+loader.lazyGetter(this, "Highlighter", () => require("devtools/inspector/highlighter").Highlighter);
+loader.lazyGetter(this, "ToolSidebar", () => require("devtools/framework/sidebar").ToolSidebar);
+loader.lazyGetter(this, "SelectorSearch", () => require("devtools/inspector/selector-search").SelectorSearch);
 
 const LAYOUT_CHANGE_TIMER = 250;
 
@@ -35,7 +27,7 @@ const LAYOUT_CHANGE_TIMER = 250;
  * the markup view, and the sidebar (computed view, rule view
  * and layout view).
  */
-this.InspectorPanel = function InspectorPanel(iframeWindow, toolbox) {
+function InspectorPanel(iframeWindow, toolbox) {
   this._toolbox = toolbox;
   this._target = toolbox._target;
   this.panelDoc = iframeWindow.document;
@@ -44,6 +36,8 @@ this.InspectorPanel = function InspectorPanel(iframeWindow, toolbox) {
 
   EventEmitter.decorate(this);
 }
+
+exports.InspectorPanel = InspectorPanel;
 
 InspectorPanel.prototype = {
   /**
@@ -623,18 +617,18 @@ InspectorPanel.prototype = {
 /////////////////////////////////////////////////////////////////////////
 //// Initializers
 
-XPCOMUtils.defineLazyGetter(InspectorPanel.prototype, "strings",
+loader.lazyGetter(InspectorPanel.prototype, "strings",
   function () {
     return Services.strings.createBundle(
             "chrome://browser/locale/devtools/inspector.properties");
   });
 
-XPCOMUtils.defineLazyGetter(this, "clipboardHelper", function() {
+loader.lazyGetter(this, "clipboardHelper", function() {
   return Cc["@mozilla.org/widget/clipboardhelper;1"].
     getService(Ci.nsIClipboardHelper);
 });
 
 
-XPCOMUtils.defineLazyGetter(this, "DOMUtils", function () {
+loader.lazyGetter(this, "DOMUtils", function () {
   return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
 });
