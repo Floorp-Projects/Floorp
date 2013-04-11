@@ -752,7 +752,7 @@ nsXPCWrappedJSClass::GetRootJSObject(JSContext* cx, JSObject* aJSObj)
                                                     NS_GET_IID(nsISupports));
     if (!result)
         return aJSObj;
-    JSObject* inner = js::UnwrapObject(result);
+    JSObject* inner = js::UncheckedUnwrap(result);
     if (inner)
         return inner;
     return result;

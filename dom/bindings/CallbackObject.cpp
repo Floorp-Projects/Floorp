@@ -50,7 +50,7 @@ CallbackObject::CallSetup::CallSetup(JSObject* const aCallback,
   // callable.
 
   // First, find the real underlying callback.
-  JSObject* realCallback = js::UnwrapObject(aCallback);
+  JSObject* realCallback = js::UncheckedUnwrap(aCallback);
 
   // Now get the nsIScriptGlobalObject for this callback.
   JSContext* cx = nullptr;
@@ -106,7 +106,7 @@ CallbackObject::CallSetup::CallSetup(JSObject* const aCallback,
   // Make sure to unwrap aCallback before passing it in, because
   // getting principals from wrappers is silly.
   nsresult rv = nsContentUtils::GetSecurityManager()->
-    CheckFunctionAccess(cx, js::UnwrapObject(aCallback), nullptr);
+    CheckFunctionAccess(cx, js::UncheckedUnwrap(aCallback), nullptr);
 
   // Construct a termination func holder even if we're not planning to
   // run any script.  We need this because we're going to call
