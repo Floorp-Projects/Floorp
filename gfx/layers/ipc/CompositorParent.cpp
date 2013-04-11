@@ -1114,28 +1114,6 @@ CompositorParent::SyncViewportInfo(const nsIntRect& aDisplayPort,
 #endif
 }
 
-/*
-void
-CompositorParent::ShadowLayersUpdated(ShadowLayersParent* aLayerTree,
-                                      const TargetConfig& aTargetConfig,
-                                      bool isFirstPaint)
-{
-  mTargetConfig = aTargetConfig;
-  mIsFirstPaint = mIsFirstPaint || isFirstPaint;
-  mLayersUpdated = true;
-  Layer* root = aLayerTree->GetRoot();
-  mLayerManager->SetRoot(root);
-  if (root) {
-    SetShadowProperties(root);
-  }
-  ScheduleComposition();
-  ShadowLayerManager *shadow = mLayerManager->AsShadowManager();
-  if (shadow) {
-    shadow->NotifyShadowTreeTransaction();
-  }
-}
-*/
-
 PLayersParent*
 CompositorParent::AllocPLayers(const LayersBackend& aBackendHint,
                                const uint64_t& aId,
