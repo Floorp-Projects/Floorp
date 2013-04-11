@@ -8,17 +8,19 @@ interface nsIDOMWindow;
 interface nsIDOMDOMRequest;
 interface nsIDOMContact;
 
-[scriptable, uuid(f383a42b-0961-4bb0-b45e-dbc345d59237)]
+[scriptable, uuid(dca08580-a25a-11e2-9e96-0800200c9a66)]
 interface nsIIccListener : nsISupports
 {
   void notifyStkCommand(in DOMString aMessage);
   void notifyStkSessionEnd();
+  void notifyIccCardLockError(in DOMString lockType,
+                              in unsigned long retryCount);
 };
 
 /**
  * XPCOM component (in the content process) that provides the ICC information.
  */
-[scriptable, uuid(041aee4f-fad0-4ed8-a11c-774b1aedd09e)]
+[scriptable, uuid(e60ec460-a25a-11e2-9e96-0800200c9a66)]
 interface nsIIccProvider : nsISupports
 {
   /**
@@ -42,6 +44,13 @@ interface nsIIccProvider : nsISupports
                               in jsval        timer);
   void sendStkEventDownload(in nsIDOMWindow window,
                             in jsval        event);
+
+  /**
+   * Card lock interfaces.
+   */
+  nsIDOMDOMRequest getCardLockState(in nsIDOMWindow window, in DOMString lockType);
+  nsIDOMDOMRequest unlockCardLock(in nsIDOMWindow window, in jsval info);
+  nsIDOMDOMRequest setCardLock(in nsIDOMWindow window, in jsval info);
 
   /**
    * Phonebook interfaces.
