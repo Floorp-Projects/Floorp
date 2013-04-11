@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <map>
 #include <sys/stat.h>
+#include <string>
+#include <sstream>
 #include <cstring>
 #include <cstdlib>
 #include <zlib.h>
@@ -206,13 +208,13 @@ int SzipDecompress::run(const char *name, Buffer &origBuf,
 {
   size_t origSize = origBuf.GetLength();
   if (origSize < sizeof(SeekableZStreamHeader)) {
-    log("%s is not a seekable zstream", name);
-    return 1;
+    log("%s is not compressed", name);
+    return 0;
   }
 
   SeekableZStream zstream;
   if (!zstream.Init(origBuf, origSize))
-    return 1;
+    return 0;
 
   size_t size = zstream.GetUncompressedSize();
 
@@ -236,6 +238,10 @@ int SzipCompress::run(const char *name, Buffer &origBuf,
   if (origSize == 0) {
     log("Won't compress %s: it's empty", name);
     return 1;
+  }
+  if (SeekableZStreamHeader::validate(origBuf)) {
+    log("Skipping %s: it's already a szip", name);
+    return 0;
   }
   bool compressed = false;
   log("Size = %" PRIuSize, origSize);
@@ -462,7 +468,7 @@ int main(int argc, char* argv[])
   SeekableZStream::FilterId filter = SzipCompress::DEFAULT_FILTER;
   size_t dictSize = (size_t) 0;
 
-  for (firstArg = &argv[1]; argc > 3; argc--, firstArg++) {
+  for (firstArg = &argv[1]; argc > 2; argc--, firstArg++) {
     if (!firstArg[0] || firstArg[0][0] != '-')
       break;
     if (strcmp(firstArg[0], "-d") == 0) {
@@ -508,10 +514,9 @@ int main(int argc, char* argv[])
     }
   }
 
-  if (argc != 3 || !firstArg[0] || !firstArg[1] ||
-      (strcmp(firstArg[0], firstArg[1]) == 0)) {
-    log("usage: %s [-d] [-c CHUNKSIZE] [-f FILTER] [-D DICTSIZE] "
-        "in_file out_file", argv[0]);
+  if (argc != 2 || !firstArg[0]) {
+    log("usage: %s [-d] [-c CHUNKSIZE] [-f FILTER] [-D DICTSIZE] file",
+        argv[0]);
     return 1;
   }
 
@@ -522,41 +527,56 @@ int main(int argc, char* argv[])
       log("-c is incompatible with -d");
       return 1;
     }
-    if (dictSize != (size_t) -1) {
+    if (dictSize) {
       log("-D is incompatible with -d");
       return 1;
     }
     action = new SzipDecompress();
   }
 
-  FileBuffer origBuf;
-  if (!origBuf.Init(firstArg[0])) {
-    log("Couldn't open %s: %s", firstArg[0], strerror(errno));
-    return 1;
-  }
-
+  std::stringstream tmpOutStream;
+  tmpOutStream << firstArg[0] << ".sz." << getpid();
+  std::string tmpOut(tmpOutStream.str());
+  int ret;
   struct stat st;
-  int ret = fstat(origBuf.getFd(), &st);
-  if (ret == -1) {
-    log("Couldn't stat %s: %s", firstArg[0], strerror(errno));
-    return 1;
+  {
+    FileBuffer origBuf;
+    if (!origBuf.Init(firstArg[0])) {
+      log("Couldn't open %s: %s", firstArg[0], strerror(errno));
+      return 1;
+    }
+
+    ret = fstat(origBuf.getFd(), &st);
+    if (ret == -1) {
+      log("Couldn't stat %s: %s", firstArg[0], strerror(errno));
+      return 1;
+    }
+
+    size_t origSize = st.st_size;
+
+    /* Mmap the original file */
+    if (!origBuf.Resize(origSize)) {
+      log("Couldn't mmap %s: %s", firstArg[0], strerror(errno));
+      return 1;
+    }
+
+    /* Create the compressed file */
+    FileBuffer outBuf;
+    if (!outBuf.Init(tmpOut.c_str(), true)) {
+      log("Couldn't open %s: %s", tmpOut.c_str(), strerror(errno));
+      return 1;
+    }
+
+    ret = action->run(firstArg[0], origBuf, tmpOut.c_str(), outBuf);
+    if ((ret == 0) && (fstat(outBuf.getFd(), &st) == -1)) {
+      st.st_size = 0;
+    }
   }
 
-  size_t origSize = st.st_size;
-
-  /* Mmap the original file */
-  if (!origBuf.Resize(origSize)) {
-    log("Couldn't mmap %s: %s", firstArg[0], strerror(errno));
-    return 1;
+  if ((ret == 0) && st.st_size) {
+    rename(tmpOut.c_str(), firstArg[0]);
+  } else {
+    unlink(tmpOut.c_str());
   }
-
-  /* Create the compressed file */
-  FileBuffer outBuf;
-  if (!outBuf.Init(firstArg[1], true)) {
-    log("Couldn't open %s: %s", firstArg[1], strerror(errno));
-    return 1;
-  }
-
-  ret = action->run(firstArg[0], origBuf, firstArg[1], outBuf);
   return ret;
 }
