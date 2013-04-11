@@ -30,8 +30,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "PageErrorListener",
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
                                   "resource://gre/modules/PluralForm.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
-                                  "resource:///modules/devtools/Target.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "devtools",
+                                  "resource:///modules/devtools/gDevTools.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "require",
                                   "resource://gre/modules/devtools/Require.jsm");
@@ -162,7 +162,7 @@ let CommandUtils = {
     Object.defineProperty(environment, "target", {
       get: function() {
         let tab = chromeDocument.defaultView.getBrowser().selectedTab;
-        return TargetFactory.forTab(tab);
+        return devtools.TargetFactory.forTab(tab);
       },
       enumerable: true
     });
