@@ -17,7 +17,7 @@
       <hbox id="customization-widgets">
         <vbox flex="1">
           <label value="&customizeMode.menuAndToolbars.header;"/>
-          <vbox id="customization-palette" flex="1" style="display: block;"/>
+          <vbox id="customization-palette" flex="1"/>
         </vbox>
         <vbox>
           <vbox id="customization-panelWrapper">
