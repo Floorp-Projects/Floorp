@@ -177,7 +177,7 @@ function testEditProperty()
     }
   });
 
-  EventUtils.synthesizeMouse(propEditor.nameSpan, 1, 1,
+  EventUtils.synthesizeMouse(propEditor.nameSpan, 32, 1,
                              { },
                              ruleDialog);
 }
