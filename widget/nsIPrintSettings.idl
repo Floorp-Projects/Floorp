@@ -22,7 +22,7 @@ interface nsIPrintSession;
 /**
  * Simplified graphics interface for JS rendering.
  */
-[scriptable, uuid(a65cfa37-b381-4fe9-81b7-db08853f54ad)]
+[scriptable, uuid(1bcfc611-8941-4c39-9e06-7116e564a1ce)]
 
 interface nsIPrintSettings : nsISupports
 {
@@ -39,8 +39,8 @@ interface nsIPrintSettings : nsISupports
   const unsigned long kInitSaveBGColors       = 0x00000080;
   const unsigned long kInitSaveBGImages       = 0x00000100;
   const unsigned long kInitSavePaperSize      = 0x00000200;
-  /* Flag 0x00000400 is unused */
-  /* Flag 0x00000800 is unused */
+  const unsigned long kInitSaveResolution     = 0x00000400;
+  const unsigned long kInitSaveDuplex         = 0x00000800;
   /* Flag 0x00001000 is unused */
   const unsigned long kInitSavePaperData      = 0x00002000;
   const unsigned long kInitSaveUnwriteableMargins = 0x00004000;
@@ -248,7 +248,11 @@ interface nsIPrintSettings : nsISupports
   attribute short   outputFormat;
 
   attribute long    printPageDelay; /* in milliseconds */
-  
+
+  attribute long    resolution;     /* print resolution (dpi) */
+
+  attribute long    duplex;         /* duplex mode */
+
   /* initialize helpers */
   /**
    * This attribute tracks whether the PS has been initialized 
