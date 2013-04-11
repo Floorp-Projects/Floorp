@@ -350,6 +350,7 @@ let CustomizableUIInternal = {
       }
 
       container.insertBefore(node, currentNode);
+      this._addParentFlex(node);
     }
 
     if (currentNode) {
@@ -476,6 +477,7 @@ let CustomizableUIInternal = {
 
       let nextNode = container.querySelector("#" + nextNodeId);
       container.insertBefore(widgetNode, nextNode);
+      this._addParentFlex(widgetNode);
     }
   },
 
@@ -492,6 +494,8 @@ let CustomizableUIInternal = {
         ERROR("Widget not found, unable to remove");
         continue;
       }
+
+      this._removeParentFlex(widgetNode);
 
       if (gPalette.has(aWidgetId) || this.isSpecialWidget(aWidgetId)) {
         container.removeChild(widgetNode);
@@ -1366,6 +1370,25 @@ let CustomizableUIInternal = {
   reset: function() {
     Services.prefs.clearUserPref(kPrefCustomizationState);
     LOG("State reset");
+  },
+
+  _addParentFlex: function(aElement) {
+    // If necessary, add flex to accomodate new child.
+    if (aElement.hasAttribute("flex")) {
+      let parent = aElement.parentNode;
+      let parentFlex = parent.hasAttribute("flex") ? parseInt(parent.getAttribute("flex"), 10) : 0;
+      let elementFlex = parseInt(aElement.getAttribute("flex"), 10);
+      parent.setAttribute("flex", parentFlex + elementFlex);
+    }
+  },
+
+  _removeParentFlex: function(aElement) {
+    if (aElement.parentNode.hasAttribute("flex") && aElement.hasAttribute("flex")) {
+      let parent = aElement.parentNode;
+      let parentFlex = parseInt(parent.getAttribute("flex"), 10);
+      let elementFlex = parseInt(aElement.getAttribute("flex"), 10);
+      parent.setAttribute("flex", Math.max(0, parentFlex - elementFlex));
+    }
   }
 };
 Object.freeze(CustomizableUIInternal);

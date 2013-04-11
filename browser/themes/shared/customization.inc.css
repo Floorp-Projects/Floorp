@@ -35,6 +35,12 @@
   border-radius: 2px;
 }
 
+#main-window[customizing] .customization-target {
+  min-width: 100px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
 #customization-panelWrapper {
   padding: 0px 8px;
 }
