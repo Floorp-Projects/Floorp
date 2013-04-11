@@ -260,11 +260,11 @@ public:
   void SetCapacity(JSContext *cx, size_t capacity) {
     vals.SetCapacity(capacity);
     // Values must be safe for the GC to inspect (they must not contain garbage).
-    memset(vals.Elements(), 0, vals.Capacity() * sizeof(jsval));
+    memset(vals.Elements(), 0, vals.Capacity() * sizeof(JS::Value));
     resetRooter(cx);
   }
 
-  jsval *Elements() {
+  JS::Value *Elements() {
     return vals.Elements();
   }
 
@@ -273,7 +273,7 @@ private:
     avr.changeArray(vals.Elements(), vals.Length());
   }
 
-  nsAutoTArray<jsval, 16> vals;
+  nsAutoTArray<JS::Value, 16> vals;
   JS::AutoArrayRooter avr;
 };
 
@@ -1431,7 +1431,7 @@ nsJSContext::ExecuteScript(JSScript* aScriptObject,
     // The result of evaluation, used only if there were no errors. This need
     // not be a GC root currently, provided we run the GC only from the
     // operation callback or from ScriptEvaluated.
-    jsval val;
+    JS::Value val;
     if (!JS_ExecuteScript(mContext, aScopeObject, aScriptObject, &val)) {
       ReportPendingException();
     }
@@ -1481,7 +1481,7 @@ nsJSContext::JSObjectFromInterface(nsISupports* aTarget, JSObject* aScope, JSObj
   // Get the jsobject associated with this target
   // We don't wrap here because we trust the JS engine to wrap the target
   // later.
-  jsval v;
+  JS::Value v;
   nsresult rv = nsContentUtils::WrapNative(mContext, aScope, aTarget, &v);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1663,7 +1663,7 @@ nsresult
 nsJSContext::SetProperty(JSObject* aTarget, const char* aPropName, nsISupports* aArgs)
 {
   uint32_t  argc;
-  jsval    *argv = nullptr;
+  JS::Value *argv = nullptr;
 
   nsCxPusher pusher;
   pusher.Push(mContext);
@@ -1675,7 +1675,7 @@ nsJSContext::SetProperty(JSObject* aTarget, const char* aPropName, nsISupports* 
     ConvertSupportsTojsvals(aArgs, GetNativeGlobal(), &argc, &argv, tempStorage);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  jsval vargs;
+  JS::Value vargs;
 
   // got the arguments, now attach them.
 
@@ -1705,7 +1705,7 @@ nsresult
 nsJSContext::ConvertSupportsTojsvals(nsISupports *aArgs,
                                      JSObject *aScope,
                                      uint32_t *aArgc,
-                                     jsval **aArgv,
+                                     JS::Value **aArgv,
                                      Maybe<nsRootedJSValueArray> &aTempStorage)
 {
   nsresult rv = NS_OK;
@@ -1744,12 +1744,12 @@ nsJSContext::ConvertSupportsTojsvals(nsISupports *aArgs,
   // Use the caller's auto guards to release and unroot.
   aTempStorage.construct(mContext);
   aTempStorage.ref().SetCapacity(mContext, argCount);
-  jsval *argv = aTempStorage.ref().Elements();
+  JS::Value *argv = aTempStorage.ref().Elements();
 
   if (argsArray) {
     for (uint32_t argCtr = 0; argCtr < argCount && NS_SUCCEEDED(rv); argCtr++) {
       nsCOMPtr<nsISupports> arg;
-      jsval *thisval = argv + argCtr;
+      JS::Value *thisval = argv + argCtr;
       argsArray->QueryElementAt(argCtr, NS_GET_IID(nsISupports),
                                 getter_AddRefs(arg));
       if (!arg) {
@@ -1775,7 +1775,7 @@ nsJSContext::ConvertSupportsTojsvals(nsISupports *aArgs,
                        "Don't pass nsISupportsPrimitives - use nsIVariant!");
 #endif
           nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
-          jsval v;
+          JS::Value v;
           rv = nsContentUtils::WrapNative(mContext, aScope, arg, &v,
                                           getter_AddRefs(wrapper));
           if (NS_SUCCEEDED(rv)) {
@@ -1802,7 +1802,7 @@ nsJSContext::ConvertSupportsTojsvals(nsISupports *aArgs,
 
 // This really should go into xpconnect somewhere...
 nsresult
-nsJSContext::AddSupportsPrimitiveTojsvals(nsISupports *aArg, jsval *aArgv)
+nsJSContext::AddSupportsPrimitiveTojsvals(nsISupports *aArg, JS::Value *aArgv)
 {
   NS_PRECONDITION(aArg, "Empty arg");
 
@@ -1976,7 +1976,7 @@ nsJSContext::AddSupportsPrimitiveTojsvals(nsISupports *aArg, jsval *aArgv)
 
       nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
       JSObject *global = xpc_UnmarkGrayObject(::JS_GetGlobalObject(cx));
-      jsval v;
+      JS::Value v;
       nsresult rv = nsContentUtils::WrapNative(cx, global,
                                                data, iid, &v,
                                                getter_AddRefs(wrapper));
@@ -2026,7 +2026,7 @@ CheckUniversalXPConnectForTraceMalloc(JSContext *cx)
 }
 
 static JSBool
-TraceMallocDisable(JSContext *cx, unsigned argc, jsval *vp)
+TraceMallocDisable(JSContext *cx, unsigned argc, JS::Value *vp)
 {
     if (!CheckUniversalXPConnectForTraceMalloc(cx))
         return JS_FALSE;
@@ -2037,7 +2037,7 @@ TraceMallocDisable(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static JSBool
-TraceMallocEnable(JSContext *cx, unsigned argc, jsval *vp)
+TraceMallocEnable(JSContext *cx, unsigned argc, JS::Value *vp)
 {
     if (!CheckUniversalXPConnectForTraceMalloc(cx))
         return JS_FALSE;
@@ -2048,7 +2048,7 @@ TraceMallocEnable(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static JSBool
-TraceMallocOpenLogFile(JSContext *cx, unsigned argc, jsval *vp)
+TraceMallocOpenLogFile(JSContext *cx, unsigned argc, JS::Value *vp)
 {
     int fd;
     JSString *str;
@@ -2076,7 +2076,7 @@ TraceMallocOpenLogFile(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static JSBool
-TraceMallocChangeLogFD(JSContext *cx, unsigned argc, jsval *vp)
+TraceMallocChangeLogFD(JSContext *cx, unsigned argc, JS::Value *vp)
 {
     if (!CheckUniversalXPConnectForTraceMalloc(cx))
         return JS_FALSE;
@@ -2098,7 +2098,7 @@ TraceMallocChangeLogFD(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static JSBool
-TraceMallocCloseLogFD(JSContext *cx, unsigned argc, jsval *vp)
+TraceMallocCloseLogFD(JSContext *cx, unsigned argc, JS::Value *vp)
 {
     if (!CheckUniversalXPConnectForTraceMalloc(cx))
         return JS_FALSE;
@@ -2114,7 +2114,7 @@ TraceMallocCloseLogFD(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static JSBool
-TraceMallocLogTimestamp(JSContext *cx, unsigned argc, jsval *vp)
+TraceMallocLogTimestamp(JSContext *cx, unsigned argc, JS::Value *vp)
 {
     if (!CheckUniversalXPConnectForTraceMalloc(cx))
         return JS_FALSE;
@@ -2131,7 +2131,7 @@ TraceMallocLogTimestamp(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static JSBool
-TraceMallocDumpAllocations(JSContext *cx, unsigned argc, jsval *vp)
+TraceMallocDumpAllocations(JSContext *cx, unsigned argc, JS::Value *vp)
 {
     if (!CheckUniversalXPConnectForTraceMalloc(cx))
         return JS_FALSE;
@@ -2174,7 +2174,7 @@ namespace dmd {
 // how to use DMD.
 
 static JSBool
-ReportAndDump(JSContext *cx, unsigned argc, jsval *vp)
+ReportAndDump(JSContext *cx, unsigned argc, JS::Value *vp)
 {
   JSString *str = JS_ValueToString(cx, argc ? JS_ARGV(cx, vp)[0] : JSVAL_VOID);
   if (!str)
@@ -2228,7 +2228,7 @@ void NS_JProfStopProfiling();
 void NS_JProfClearCircular();
 
 static JSBool
-JProfStartProfilingJS(JSContext *cx, unsigned argc, jsval *vp)
+JProfStartProfilingJS(JSContext *cx, unsigned argc, JS::Value *vp)
 {
   NS_JProfStartProfiling();
   return JS_TRUE;
@@ -2270,7 +2270,7 @@ void NS_JProfStartProfiling()
 }
 
 static JSBool
-JProfStopProfilingJS(JSContext *cx, unsigned argc, jsval *vp)
+JProfStopProfilingJS(JSContext *cx, unsigned argc, JS::Value *vp)
 {
   NS_JProfStopProfiling();
   return JS_TRUE;
@@ -2284,7 +2284,7 @@ NS_JProfStopProfiling()
 }
 
 static JSBool
-JProfClearCircularJS(JSContext *cx, unsigned argc, jsval *vp)
+JProfClearCircularJS(JSContext *cx, unsigned argc, JS::Value *vp)
 {
   NS_JProfClearCircular();
   return JS_TRUE;
@@ -2298,7 +2298,7 @@ NS_JProfClearCircular()
 }
 
 static JSBool
-JProfSaveCircularJS(JSContext *cx, unsigned argc, jsval *vp)
+JProfSaveCircularJS(JSContext *cx, unsigned argc, JS::Value *vp)
 {
   // Not ideal...
   NS_JProfStopProfiling();
@@ -3400,7 +3400,7 @@ NS_DOMReadStructuredClone(JSContext* cx,
     // Construct the ImageData.
     nsRefPtr<ImageData> imageData = new ImageData(width, height,
                                                   dataArray.toObject());
-    // Wrap it in a jsval.
+    // Wrap it in a JS::Value.
     JSObject* global = JS_GetGlobalForScopeChain(cx);
     if (!global) {
       return nullptr;
@@ -3626,7 +3626,8 @@ nsresult NS_CreateJSRuntime(nsIScriptRuntime **aRuntime)
 // on-the-fly.
 class nsJSArgArray MOZ_FINAL : public nsIJSArgArray {
 public:
-  nsJSArgArray(JSContext *aContext, uint32_t argc, jsval *argv, nsresult *prv);
+  nsJSArgArray(JSContext *aContext, uint32_t argc, JS::Value *argv,
+               nsresult *prv);
   ~nsJSArgArray();
   // nsISupports
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -3643,11 +3644,11 @@ public:
 
 protected:
   JSContext *mContext;
-  jsval *mArgv;
+  JS::Value *mArgv;
   uint32_t mArgc;
 };
 
-nsJSArgArray::nsJSArgArray(JSContext *aContext, uint32_t argc, jsval *argv,
+nsJSArgArray::nsJSArgArray(JSContext *aContext, uint32_t argc, JS::Value *argv,
                            nsresult *prv) :
     mContext(aContext),
     mArgv(nullptr),
@@ -3656,7 +3657,7 @@ nsJSArgArray::nsJSArgArray(JSContext *aContext, uint32_t argc, jsval *argv,
   // copy the array - we don't know its lifetime, and ours is tied to xpcom
   // refcounting.  Alloc zero'd array so cleanup etc is safe.
   if (argc) {
-    mArgv = (jsval *) PR_CALLOC(argc * sizeof(jsval));
+    mArgv = (JS::Value *) PR_CALLOC(argc * sizeof(JS::Value));
     if (!mArgv) {
       *prv = NS_ERROR_OUT_OF_MEMORY;
       return;
@@ -3703,9 +3704,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsJSArgArray)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsJSArgArray)
-  jsval *argv = tmp->mArgv;
+  JS::Value *argv = tmp->mArgv;
   if (argv) {
-    jsval *end;
+    JS::Value *end;
     for (end = argv + tmp->mArgc; argv < end; ++argv) {
       if (JSVAL_IS_GCTHING(*argv))
         NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(JSVAL_TO_GCTHING(*argv),
@@ -3771,7 +3772,7 @@ nsresult NS_CreateJSArgv(JSContext *aContext, uint32_t argc, void *argv,
 {
   nsresult rv;
   nsJSArgArray *ret = new nsJSArgArray(aContext, argc,
-                                       static_cast<jsval *>(argv), &rv);
+                                       static_cast<JS::Value *>(argv), &rv);
   if (ret == nullptr)
     return NS_ERROR_OUT_OF_MEMORY;
   if (NS_FAILED(rv)) {

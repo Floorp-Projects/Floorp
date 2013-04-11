@@ -180,7 +180,7 @@ nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, bool *aIsInterval,
   NS_ENSURE_SUCCESS(rv, rv);
 
   uint32_t argc;
-  jsval *argv = nullptr;
+  JS::Value *argv = nullptr;
 
   ncc->GetArgc(&argc);
   ncc->GetArgvPtr(&argv);
