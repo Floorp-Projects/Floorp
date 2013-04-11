@@ -97,6 +97,7 @@ class nsScriptObjectTracer;
 class nsStringHashKey;
 class nsTextFragment;
 class nsViewportInfo;
+class nsIFrame;
 
 struct JSContext;
 struct JSPropertyDescriptor;
@@ -2114,6 +2115,21 @@ public:
                                         Element* aRoot,
                                         int32_t& aOutStartOffset,
                                         int32_t& aOutEndOffset);
+
+  /**
+   * Takes a frame for anonymous content within a text control (<input> or
+   * <textarea>), and returns an offset in the text content, adjusted for a
+   * trailing <br> frame.
+   *
+   * @param aOffsetFrame      Frame for the text content in which the offset
+   *                          lies
+   * @param aOffset           Offset as calculated by GetContentOffsetsFromPoint
+   * @param aOutOffset        Output adjusted offset
+   *
+   * @see GetSelectionInTextControl for the original basis of this function.
+   */
+  static int32_t GetAdjustedOffsetInTextControl(nsIFrame* aOffsetFrame,
+                                                int32_t aOffset);
 
   static nsIEditor* GetHTMLEditor(nsPresContext* aPresContext);
 
