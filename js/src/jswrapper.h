@@ -43,7 +43,7 @@ class JS_FRIEND_API(Wrapper) : public DirectProxyHandler
      * Wrappers can explicitly specify that they are unsafe to unwrap from a
      * security perspective (as is the case for SecurityWrappers). If a wrapper
      * is not safe to unwrap, operations requiring full access to the underlying
-     * object (via UnwrapObjectChecked) will throw. Otherwise, they will succeed.
+     * object (via CheckedUnwrap) will throw. Otherwise, they will succeed.
      */
     void setSafeToUnwrap(bool safe) { mSafeToUnwrap = safe; }
     virtual bool isSafeToUnwrap() { return mSafeToUnwrap; }
@@ -224,14 +224,14 @@ IsWrapper(RawObject obj)
 // previously wrapped. Otherwise, this returns the first object for
 // which JSObject::isWrapper returns false.
 JS_FRIEND_API(JSObject *)
-UnwrapObject(JSObject *obj, bool stopAtOuter = true, unsigned *flagsp = NULL);
+UncheckedUnwrap(JSObject *obj, bool stopAtOuter = true, unsigned *flagsp = NULL);
 
 // Given a JSObject, returns that object stripped of wrappers. At each stage,
 // the security wrapper has the opportunity to veto the unwrap. Since checked
 // code should never be unwrapping outer window wrappers, we always stop at
 // outer windows.
 JS_FRIEND_API(JSObject *)
-UnwrapObjectChecked(RawObject obj, bool stopAtOuter = true);
+CheckedUnwrap(RawObject obj, bool stopAtOuter = true);
 
 // Unwrap only the outermost security wrapper, with the same semantics as
 // above. This is the checked version of Wrapper::wrappedObject.

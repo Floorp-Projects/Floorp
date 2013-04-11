@@ -64,7 +64,7 @@ XrayWrapperConstructor(JSContext *cx, unsigned argc, jsval *vp)
     return true;
   }
 
-  obj = js::UnwrapObject(obj);
+  obj = js::UncheckedUnwrap(obj);
 
   *vp = OBJECT_TO_JSVAL(obj);
   return JS_WrapValue(cx, vp);
@@ -92,7 +92,7 @@ JSObject *
 UnsafeUnwrapSecurityWrapper(JSObject *obj)
 {
   if (js::IsProxy(obj)) {
-    return js::UnwrapObject(obj);
+    return js::UncheckedUnwrap(obj);
   }
 
   return obj;
