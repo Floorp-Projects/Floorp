@@ -5,7 +5,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const Cu = Components.utils;
+const {Cu} = require("chrome");
+
+let {TiltVisualizer} = require("devtools/tilt/tilt-visualizer");
+let TiltGL = require("devtools/tilt/tilt-gl");
+let TiltUtils = require("devtools/tilt/tilt-utils");
+let EventEmitter = require("devtools/shared/event-emitter");
+
+Cu.import("resource://gre/modules/Services.jsm");
 
 // Tilt notifications dispatched through the nsIObserverService.
 const TILT_NOTIFICATIONS = {
@@ -45,15 +52,7 @@ const TILT_NOTIFICATIONS = {
   NODE_REMOVED: "tilt-node-removed"
 };
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource:///modules/devtools/TiltGL.jsm");
-Cu.import("resource:///modules/devtools/TiltUtils.jsm");
-Cu.import("resource:///modules/devtools/EventEmitter.jsm");
-Cu.import("resource:///modules/devtools/TiltVisualizer.jsm");
-
-this.EXPORTED_SYMBOLS = ["TiltManager"];
-
-this.TiltManager = {
+let TiltManager = {
   _instances: new WeakMap(),
   getTiltForBrowser: function(aChromeWindow)
   {
@@ -67,13 +66,15 @@ this.TiltManager = {
   },
 }
 
+exports.TiltManager = TiltManager;
+
 /**
  * Object managing instances of the visualizer.
  *
  * @param {Window} aWindow
  *                 the chrome window used by each visualizer instance
  */
-this.Tilt = function Tilt(aWindow)
+function Tilt(aWindow)
 {
   /**
    * Save a reference to the top-level window.

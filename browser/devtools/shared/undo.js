@@ -3,9 +3,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-const Cu = Components.utils;
-
-this.EXPORTED_SYMBOLS = ["UndoStack"];
 
 /**
  * A simple undo stack manager.
@@ -19,11 +16,13 @@ this.EXPORTED_SYMBOLS = ["UndoStack"];
  * @param integer aMaxUndo Maximum number of undo steps.
  *   defaults to 50.
  */
-this.UndoStack = function UndoStack(aMaxUndo)
+function UndoStack(aMaxUndo)
 {
   this.maxUndo = aMaxUndo || 50;
   this._stack = [];
 }
+
+exports.UndoStack = UndoStack;
 
 UndoStack.prototype = {
   // Current index into the undo stack.  Is positioned after the last
