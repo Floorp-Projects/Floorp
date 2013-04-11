@@ -19,7 +19,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/ExternalHelperAppChild.h"
 #include "mozilla/dom/PCrashReporterChild.h"
-#include "mozilla/dom/DOMStorageIPC.h"
+#include "mozilla/dom/StorageChild.h"
 #include "mozilla/Hal.h"
 #include "mozilla/hal_sandbox/PHalChild.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
@@ -839,7 +839,7 @@ ContentChild::DeallocPSms(PSmsChild* aSms)
 }
 
 PStorageChild*
-ContentChild::AllocPStorage()
+ContentChild::AllocPStorage(const StorageConstructData& aData)
 {
     NS_NOTREACHED("We should never be manually allocating PStorageChild actors");
     return nullptr;
@@ -848,7 +848,7 @@ ContentChild::AllocPStorage()
 bool
 ContentChild::DeallocPStorage(PStorageChild* aActor)
 {
-    DOMStorageDBChild* child = static_cast<DOMStorageDBChild*>(aActor);
+    StorageChild* child = static_cast<StorageChild*>(aActor);
     child->ReleaseIPDLReference();
     return true;
 }

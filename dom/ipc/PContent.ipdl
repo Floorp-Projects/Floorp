@@ -50,6 +50,23 @@ using gfxIntSize;
 namespace mozilla {
 namespace dom {
 
+// Data required to clone an existing DOMStorageImpl in the parent
+struct StorageClone
+{
+    // Existing cross-process storage actor to clone
+    PStorage actor;
+    // Result of calling IsCallerSecure() in the child
+    bool callerSecure;
+};
+
+// When creating a new PStorage protocol, an existing one can be
+// cloned (see nsDOMStorage2::Clone)
+union StorageConstructData
+{
+    null_t;
+    StorageClone;
+};
+
 struct FontListEntry {
     nsString  familyName;
     nsString  faceName;
@@ -384,7 +401,7 @@ parent:
 
     PSpeechSynthesis();
 
-    PStorage();
+    PStorage(StorageConstructData data);
 
     PBluetooth();
 
