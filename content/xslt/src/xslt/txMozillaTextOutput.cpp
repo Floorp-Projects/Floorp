@@ -18,6 +18,7 @@
 #include "nsContentUtils.h"
 #include "nsGkAtoms.h"
 #include "mozilla/dom/EncodingUtils.h"
+#include "nsTextNode.h"
 
 using namespace mozilla::dom;
 
@@ -74,13 +75,10 @@ txMozillaTextOutput::endDocument(nsresult aResult)
 {
     NS_ENSURE_TRUE(mDocument && mTextParent, NS_ERROR_FAILURE);
 
-    nsCOMPtr<nsIContent> text;
-    nsresult rv = NS_NewTextNode(getter_AddRefs(text),
-                                 mDocument->NodeInfoManager());
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsRefPtr<nsTextNode> text = new nsTextNode(mDocument->NodeInfoManager());
     
     text->SetText(mText, false);
-    rv = mTextParent->AppendChildTo(text, true);
+    nsresult rv = mTextParent->AppendChildTo(text, true);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (NS_SUCCEEDED(aResult)) {
@@ -250,7 +248,6 @@ txMozillaTextOutput::createXHTMLElement(nsIAtom* aName,
     ni = mDocument->NodeInfoManager()->
         GetNodeInfo(aName, nullptr, kNameSpaceID_XHTML,
                     nsIDOMNode::ELEMENT_NODE);
-    NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
 
     return NS_NewHTMLElement(aResult, ni.forget(), NOT_FROM_PARSER);
 }

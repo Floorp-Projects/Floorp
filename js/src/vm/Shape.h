@@ -516,6 +516,7 @@ class Shape : public js::gc::Cell
 
     static inline RawShape search(JSContext *cx, Shape *start, jsid id,
                                   Shape ***pspp, bool adding = false);
+    static inline Shape *searchNoHashify(Shape *start, jsid id);
 
     inline void removeFromDictionary(ObjectImpl *obj);
     inline void insertIntoDictionary(HeapPtrShape *dictp);
@@ -1090,6 +1091,30 @@ Shape::search(JSContext *cx, Shape *start, jsid id, Shape ***pspp, bool adding)
     }
 
     for (RawShape shape = start; shape; shape = shape->parent) {
+        if (shape->propidRef() == id)
+            return shape;
+    }
+
+    return NULL;
+}
+
+/*
+ * Keep this function in sync with search. It should return false whenever
+ * search would transition to a ShapeTable.
+ */
+inline Shape *
+Shape::searchNoHashify(Shape *start, jsid id)
+{
+    /*
+     * If we have a table, search in the shape table, else do a linear
+     * search. We never hashify into a table in parallel.
+     */
+    if (start->hasTable()) {
+        Shape **spp = start->table().search(id, false);
+        return SHAPE_FETCH(spp);
+    }
+
+    for (Shape *shape = start; shape; shape = shape->parent) {
         if (shape->propidRef() == id)
             return shape;
     }

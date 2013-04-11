@@ -25,7 +25,7 @@ interface nsIURI;
  * interface to mirror this interface when changing it.
  */
 
-[scriptable, uuid(e2ef99fe-f7d3-422f-a7b4-834e8bdde710)]
+[scriptable, uuid(24a35de3-40e4-498e-9c1b-2fd0a2d4cae5)]
 interface nsIObjectLoadingContent : nsISupports
 {
   /**
@@ -148,16 +148,6 @@ interface nsIObjectLoadingContent : nsISupports
    *  - The caller will continue to pass channel events to us as a listener
    */
   [noscript] void initializeFromChannel(in nsIRequest request);
-
-  /**
-   * Requests the plugin instance for scripting, attempting to spawn it if
-   * appropriate.
-   *
-   * The first time content js tries to access a pre-empted plugin
-   * (click-to-play or play preview), an event is dispatched.
-   */
-  [noscript] nsNPAPIPluginInstancePtr
-    scriptRequestPluginInstance(in bool callerIsContentJS);
 
   /**
    * The URL of the data/src loaded in the object. This may be null (i.e.

@@ -107,7 +107,6 @@ var SelectHelperUI = {
     let p1 = browser.ptBrowserToClient(aRect.right, aRect.bottom);
 
     return {
-      forcePosition: true,
       xPos: p0.x,
       yPos: p1.y,
       bottomAligned: false,

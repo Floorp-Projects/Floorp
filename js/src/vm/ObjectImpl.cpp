@@ -307,6 +307,13 @@ js::ObjectImpl::nativeLookup(JSContext *cx, jsid id)
 # pragma optimize("", on)
 #endif
 
+Shape *
+js::ObjectImpl::nativeLookupPure(jsid id)
+{
+    MOZ_ASSERT(isNative());
+    return Shape::searchNoHashify(lastProperty(), id);
+}
+
 void
 js::ObjectImpl::markChildren(JSTracer *trc)
 {

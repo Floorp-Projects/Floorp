@@ -42,8 +42,8 @@ class OutOfLineUpdateCache :
 {
   private:
     LInstruction *lir_;
-    RepatchLabel repatchEntry_;
     size_t cacheIndex_;
+    AddCacheState state_;
 
   public:
     OutOfLineUpdateCache(LInstruction *lir, size_t cacheIndex)
@@ -52,7 +52,8 @@ class OutOfLineUpdateCache :
     { }
 
     void bind(MacroAssembler *masm) {
-        masm->bind(&repatchEntry_);
+        // The binding of the initial jump is done in
+        // CodeGenerator::visitOutOfLineCache.
     }
 
     size_t getCacheIndex() const {
@@ -61,8 +62,8 @@ class OutOfLineUpdateCache :
     LInstruction *lir() const {
         return lir_;
     }
-    RepatchLabel *repatchEntry() {
-        return &repatchEntry_;
+    AddCacheState &state() {
+        return state_;
     }
 
     bool accept(CodeGenerator *codegen) {
@@ -98,11 +99,12 @@ CodeGeneratorShared::addCache(LInstruction *lir, size_t cacheIndex)
     if (!addOutOfLineCode(ool))
         return false;
 
-    CodeOffsetJump jump = masm.jumpWithPatch(ool->repatchEntry());
-    CodeOffsetLabel label = masm.labelForPatch();
+    // OOL-specific state depends on the type of cache.
+    cache->initializeAddCacheState(lir, &ool->state());
+
+    cache->emitInitialJump(masm, ool->state());
     masm.bind(ool->rejoin());
 
-    cache->setInlineJump(jump, label);
     return true;
 }
 
@@ -114,6 +116,7 @@ CodeGenerator::visitOutOfLineCache(OutOfLineUpdateCache *ool)
 
     // Register the location of the OOL path in the IC.
     cache->setFallbackLabel(masm.labelForPatch());
+    cache->bindInitialJump(masm, ool->state());
 
     // Dispatch to ICs' accept functions.
     return cache->accept(this, ool);
@@ -776,6 +779,7 @@ CodeGenerator::visitCallee(LCallee *lir)
     Address ptr(StackPointer, frameSize() + IonJSFrameLayout::offsetOfCalleeToken());
 
     masm.loadPtr(ptr, callee);
+    masm.clearCalleeTag(callee, gen->info().executionMode());
     return true;
 }
 
@@ -1293,7 +1297,10 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
     // Construct the IonFramePrefix.
     uint32_t descriptor = MakeFrameDescriptor(masm.framePushed(), IonFrame_OptimizedJS);
     masm.Push(Imm32(call->numActualArgs()));
+    masm.tagCallee(calleereg, executionMode);
     masm.Push(calleereg);
+    // Clear the tag after pushing it, as we load nargs below.
+    masm.clearCalleeTag(calleereg, executionMode);
     masm.Push(Imm32(descriptor));
 
     // Check whether the provided arguments satisfy target argc.
@@ -1431,8 +1438,11 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
 
     // Construct the IonFramePrefix.
     uint32_t descriptor = MakeFrameDescriptor(masm.framePushed(), IonFrame_OptimizedJS);
+    masm.tagCallee(calleereg, executionMode);
     masm.Push(Imm32(call->numActualArgs()));
     masm.Push(calleereg);
+    // Clear the tag after pushing it.
+    masm.clearCalleeTag(calleereg, executionMode);
     masm.Push(Imm32(descriptor));
 
     // Finally call the function in objreg.
@@ -4528,7 +4538,7 @@ CodeGenerator::link()
                      safepointIndices_.length(), osiIndices_.length(),
                      cacheList_.length(), runtimeData_.length(),
                      safepoints_.size(), graph.mir().numScripts(),
-					 executionMode == ParallelExecution ? ForkJoinSlices(cx) : 0);
+                     graph.mir().numCallTargets());
 
     ionScript->setMethod(code);
 
@@ -4575,9 +4585,8 @@ CodeGenerator::link()
         ionScript->copyConstants(graph.constantPool());
     JS_ASSERT(graph.mir().numScripts() > 0);
     ionScript->copyScriptEntries(graph.mir().scripts());
-
-    if (executionMode == ParallelExecution)
-        ionScript->zeroParallelInvalidatedScripts();
+    if (graph.mir().numCallTargets() > 0)
+        ionScript->copyCallTargetEntries(graph.mir().callTargets());
 
     // The correct state for prebarriers is unknown until the end of compilation,
     // since a GC can occur during code generation. All barriers are emitted
@@ -4810,6 +4819,25 @@ CodeGenerator::visitNameIC(OutOfLineUpdateCache *ool, NameIC *ic)
 }
 
 bool
+CodeGenerator::addGetPropertyCache(LInstruction *ins, RegisterSet liveRegs, Register objReg,
+                                   PropertyName *name, TypedOrValueRegister output,
+                                   bool allowGetters)
+{
+    switch (gen->info().executionMode()) {
+      case SequentialExecution: {
+        GetPropertyIC cache(liveRegs, objReg, name, output, allowGetters);
+        return addCache(ins, allocateCache(cache));
+      }
+      case ParallelExecution: {
+        ParallelGetPropertyIC cache(objReg, name, output);
+        return addCache(ins, allocateCache(cache));
+      }
+      default:
+        JS_NOT_REACHED("Bad execution mode");
+    }
+}
+
+bool
 CodeGenerator::visitGetPropertyCacheV(LGetPropertyCacheV *ins)
 {
     RegisterSet liveRegs = ins->safepoint()->liveRegs();
@@ -4818,8 +4846,7 @@ CodeGenerator::visitGetPropertyCacheV(LGetPropertyCacheV *ins)
     bool allowGetters = ins->mir()->allowGetters();
     TypedOrValueRegister output = TypedOrValueRegister(GetValueOutput(ins));
 
-    GetPropertyIC cache(liveRegs, objReg, name, output, allowGetters);
-    return addCache(ins, allocateCache(cache));
+    return addGetPropertyCache(ins, liveRegs, objReg, name, output, allowGetters);
 }
 
 bool
@@ -4831,8 +4858,7 @@ CodeGenerator::visitGetPropertyCacheT(LGetPropertyCacheT *ins)
     bool allowGetters = ins->mir()->allowGetters();
     TypedOrValueRegister output(ins->mir()->type(), ToAnyRegister(ins->getDef(0)));
 
-    GetPropertyIC cache(liveRegs, objReg, name, output, allowGetters);
-    return addCache(ins, allocateCache(cache));
+    return addGetPropertyCache(ins, liveRegs, objReg, name, output, allowGetters);
 }
 
 typedef bool (*GetPropertyICFn)(JSContext *, size_t, HandleObject, MutableHandleValue);
@@ -4848,6 +4874,28 @@ CodeGenerator::visitGetPropertyIC(OutOfLineUpdateCache *ool, GetPropertyIC *ic)
     pushArg(ic->object());
     pushArg(Imm32(ool->getCacheIndex()));
     if (!callVM(GetPropertyIC::UpdateInfo, lir))
+        return false;
+    StoreValueTo(ic->output()).generate(this);
+    restoreLiveIgnore(lir, StoreValueTo(ic->output()).clobbered());
+
+    masm.jump(ool->rejoin());
+    return true;
+}
+
+typedef ParallelResult (*ParallelGetPropertyICFn)(ForkJoinSlice *, size_t, HandleObject,
+                                                  MutableHandleValue);
+const VMFunction ParallelGetPropertyIC::UpdateInfo =
+    FunctionInfo<ParallelGetPropertyICFn>(ParallelGetPropertyIC::update);
+
+bool
+CodeGenerator::visitParallelGetPropertyIC(OutOfLineUpdateCache *ool, ParallelGetPropertyIC *ic)
+{
+    LInstruction *lir = ool->lir();
+    saveLive(lir);
+
+    pushArg(ic->object());
+    pushArg(Imm32(ool->getCacheIndex()));
+    if (!callVM(ParallelGetPropertyIC::UpdateInfo, lir))
         return false;
     StoreValueTo(ic->output()).generate(this);
     restoreLiveIgnore(lir, StoreValueTo(ic->output()).clobbered());
@@ -5994,4 +6042,3 @@ CodeGenerator::visitAsmJSCheckOverRecursed(LAsmJSCheckOverRecursed *lir)
 
 } // namespace ion
 } // namespace js
-

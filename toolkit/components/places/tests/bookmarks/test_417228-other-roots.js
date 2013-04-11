@@ -121,6 +121,8 @@ tests.push({
 });
 
 function run_test() {
+  do_test_pending();
+
   do_check_eq(typeof PlacesUtils, "object");
 
   // make json file
@@ -145,24 +147,28 @@ function run_test() {
       excludedItemsFromRestore = excludedItems.concat(aTest.excludedItemsFromRestore);
   });
 
-  try {
-    PlacesUtils.backups.saveBookmarksToJSONFile(jsonFile);
-  } catch(ex) { do_throw("couldn't export to file: " + ex); }
+  Task.spawn(function() {
+    try {
+      yield BookmarkJSONUtils.exportToFile(jsonFile);
+    } catch(ex) { do_throw("couldn't export to file: " + ex); }
 
-  tests.forEach(function(aTest) {
-    aTest.inbetween();
+    tests.forEach(function(aTest) {
+      aTest.inbetween();
+    });
+
+    // restore json file
+    try {
+      PlacesUtils.restoreBookmarksFromJSONFile(jsonFile, excludedItemsFromRestore);
+    } catch(ex) { do_throw("couldn't import the exported file: " + ex); }
+
+    // validate
+    tests.forEach(function(aTest) {
+      aTest.validate();
+    });
+
+    // clean up
+    jsonFile.remove(false);
+
+    do_test_finished();
   });
-
-  // restore json file
-  try {
-    PlacesUtils.restoreBookmarksFromJSONFile(jsonFile, excludedItemsFromRestore);
-  } catch(ex) { do_throw("couldn't import the exported file: " + ex); }
-
-  // validate
-  tests.forEach(function(aTest) {
-    aTest.validate();
-  });
-
-  // clean up
-  jsonFile.remove(false);
 }

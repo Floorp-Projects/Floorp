@@ -249,7 +249,8 @@ struct BaselineScript
     }
 };
 
-inline bool IsBaselineEnabled(JSContext *cx)
+inline bool
+IsBaselineEnabled(JSContext *cx)
 {
     return cx->hasOption(JSOPTION_BASELINE);
 }

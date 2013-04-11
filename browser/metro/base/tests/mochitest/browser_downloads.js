@@ -46,14 +46,6 @@ function equalNumbers(){
   return true;
 }
 
-function waitForMs(aDelay) {
-  let deferred = Promise.defer();
-  let timerID = setTimeout(function(){
-    deferred.resolve(true);
-  }, aDelay || 0);
-  return deferred.promise;
-}
-
 function getPromisedDbResult(aStatement) {
   let dbConnection = Downloads.manager.DBConnection;
   let statement = ("string" == typeof aStatement) ?
@@ -120,6 +112,7 @@ let gDownloadRowTemplate = {
 // Test Infrastructure
 
 function test() {
+  DownloadsPanelView._view.clearDownloads();
   PanelUI.show("downloads-container");
   runTests();
 }
@@ -254,10 +247,6 @@ gTests.push({
     DownloadsPanelView._view.getDownloads();
 
     yield isReady;
-
-    if (!isReady || isReady instanceof Error){
-      ok(false, "DownloadsReady event never fired");
-    }
 
     let count = downloadslist.children.length;
     is(count, 0, "Zero items in grid view with empty downloads db");

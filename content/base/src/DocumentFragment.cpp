@@ -18,53 +18,8 @@
 #include "nsContentUtils.h"
 #include "mozilla/dom/DocumentFragmentBinding.h"
 
-nsresult
-NS_NewDocumentFragment(nsIDOMDocumentFragment** aInstancePtrResult,
-                       nsNodeInfoManager *aNodeInfoManager)
-{
-  mozilla::ErrorResult rv;
-  *aInstancePtrResult = NS_NewDocumentFragment(aNodeInfoManager, rv).get();
-  return rv.ErrorCode();
-}
-
-already_AddRefed<mozilla::dom::DocumentFragment>
-NS_NewDocumentFragment(nsNodeInfoManager* aNodeInfoManager,
-                       mozilla::ErrorResult& aRv)
-{
-  using namespace mozilla::dom;
-
-  if (!aNodeInfoManager) {
-    aRv.Throw(NS_ERROR_INVALID_ARG);
-    return nullptr;
-  }
-
-  nsCOMPtr<nsINodeInfo> nodeInfo =
-    aNodeInfoManager->GetNodeInfo(nsGkAtoms::documentFragmentNodeName,
-                                  nullptr, kNameSpaceID_None,
-                                  nsIDOMNode::DOCUMENT_FRAGMENT_NODE);
-  if (!nodeInfo) {
-    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-    return nullptr;
-  }
-
-  nsRefPtr<DocumentFragment> it = new DocumentFragment(nodeInfo.forget());
-  return it.forget();
-}
-
 namespace mozilla {
 namespace dom {
-
-DocumentFragment::DocumentFragment(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : FragmentOrElement(aNodeInfo), mHost(nullptr)
-{
-  NS_ABORT_IF_FALSE(mNodeInfo->NodeType() ==
-                    nsIDOMNode::DOCUMENT_FRAGMENT_NODE &&
-                    mNodeInfo->Equals(nsGkAtoms::documentFragmentNodeName,
-                                      kNameSpaceID_None),
-                    "Bad NodeType in aNodeInfo");
-
-  SetIsDOMBinding();
-}
 
 JSObject*
 DocumentFragment::WrapNode(JSContext *aCx, JSObject *aScope)

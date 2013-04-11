@@ -167,8 +167,7 @@ TransactionThreadPool::MaybeUnblockTransaction(nsPtrHashKey<TransactionInfo>* aK
   NS_ASSERTION(maybeUnblockedInfo->blockedOn.Contains(finishedInfo),
                "Huh?");
   maybeUnblockedInfo->blockedOn.RemoveEntry(finishedInfo);
-  if (!maybeUnblockedInfo->blockedOn.Count() &&
-      !maybeUnblockedInfo->transaction->IsAborted()) {
+  if (!maybeUnblockedInfo->blockedOn.Count()) {
     // Let this transaction run.
     maybeUnblockedInfo->queue->Unblock();
   }

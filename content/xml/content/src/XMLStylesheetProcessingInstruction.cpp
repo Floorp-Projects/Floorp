@@ -189,27 +189,3 @@ XMLStylesheetProcessingInstruction::CloneDataNode(nsINodeInfo *aNodeInfo,
 
 } // namespace dom
 } // namespace mozilla
-
-nsresult
-NS_NewXMLStylesheetProcessingInstruction(nsIContent** aInstancePtrResult,
-                                         nsNodeInfoManager *aNodeInfoManager,
-                                         const nsAString& aData)
-{
-  NS_PRECONDITION(aNodeInfoManager, "Missing nodeinfo manager");
-
-  *aInstancePtrResult = nullptr;
-  
-  nsCOMPtr<nsINodeInfo> ni;
-  ni = aNodeInfoManager->GetNodeInfo(nsGkAtoms::processingInstructionTagName,
-                                     nullptr, kNameSpaceID_None,
-                                     nsIDOMNode::PROCESSING_INSTRUCTION_NODE,
-                                     nsGkAtoms::xml_stylesheet);
-  NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
-
-  nsRefPtr<mozilla::dom::XMLStylesheetProcessingInstruction> instance =
-    new mozilla::dom::XMLStylesheetProcessingInstruction(ni.forget(), aData);
-
-  instance.forget(aInstancePtrResult);
-
-  return NS_OK;
-}

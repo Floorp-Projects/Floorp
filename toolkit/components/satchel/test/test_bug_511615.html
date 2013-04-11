@@ -36,20 +36,20 @@ autocompletePopup.style.direction = "ltr";
 var input = $_(1, "field1");
 
 // Get the form history service
-var fh = SpecialPowers.Cc["@mozilla.org/satchel/form-history;1"].
-         getService(SpecialPowers.Ci.nsIFormHistory2);
-ok(fh != null, "got form history service");
-
-fh.removeAllEntries();
-fh.addEntry("field1", "value1");
-fh.addEntry("field1", "value2");
-fh.addEntry("field1", "value3");
-fh.addEntry("field1", "value4");
-fh.addEntry("field1", "value5");
-fh.addEntry("field1", "value6");
-fh.addEntry("field1", "value7");
-fh.addEntry("field1", "value8");
-fh.addEntry("field1", "value9");
+function setupFormHistory(aCallback) {
+  updateFormHistory([
+    { op : "remove" },
+    { op : "add", fieldname : "field1", value : "value1" },
+    { op : "add", fieldname : "field1", value : "value2" },
+    { op : "add", fieldname : "field1", value : "value3" },
+    { op : "add", fieldname : "field1", value : "value4" },
+    { op : "add", fieldname : "field1", value : "value5" },
+    { op : "add", fieldname : "field1", value : "value6" },
+    { op : "add", fieldname : "field1", value : "value7" },
+    { op : "add", fieldname : "field1", value : "value8" },
+    { op : "add", fieldname : "field1", value : "value9" },
+  ], aCallback);
+}
 
 function checkForm(expectedValue) {
   var formID = input.parentNode.id;
@@ -117,6 +117,29 @@ function doClickUnprivileged() {
     input.dispatchEvent(ckEvent);
 }
 
+var testNum = 0;
+var expectingPopup = false;
+
+function expectPopup()
+{
+  info("expecting popup for test " + testNum);
+  expectingPopup = true;
+}
+
+function popupShownListener()
+{
+  info("popup shown for test " + testNum);
+  if (expectingPopup) {
+    expectingPopup = false;
+    SimpleTest.executeSoon(runTest);
+  }
+  else {
+    ok(false, "Autocomplete popup not expected" + testNum);
+  }
+}
+
+SpecialPowers.addAutoCompletePopupEventListener(window, "popupshown", popupShownListener);
+
 /*
  * Main section of test...
  *
@@ -125,7 +148,9 @@ function doClickUnprivileged() {
  * setTimeout() calls. The case statements are executed in order, one per
  * timeout.
  */
-function runTest(testNum) {
+function runTest() {
+  testNum++;
+
   ok(true, "Starting test #" + testNum);
 
   switch(testNum) {
@@ -218,7 +243,9 @@ function runTest(testNum) {
         // We're privileged for this test, so open the popup.
         checkPopupOpen(false);
         checkForm("");
+        expectPopup();
         doKey("down");
+        return;
         break;
     case 21:
         checkPopupOpen(true, -1);
@@ -336,20 +363,22 @@ function runTest(testNum) {
         checkForm("");
         is(autocompletePopup.style.direction, "rtl", "direction should have been changed from ltr to rtl");
 
+        SpecialPowers.removeAutoCompletePopupEventListener(window, "popupshown", popupShownListener);
         SimpleTest.finish();
         return;
 
     default:
         ok(false, "Unexpected invocation of test #" + testNum);
+        SpecialPowers.removeAutoCompletePopupEventListener(window, "popupshown", popupShownListener);
         SimpleTest.finish();
         return;
   }
 
-  setTimeout(runTest, 50, testNum + 1);
+  SimpleTest.executeSoon(runTest);
 }
 
 function startTest() {
-  runTest(1);
+  setupFormHistory(runTest);
 }
 
 window.onload = startTest;

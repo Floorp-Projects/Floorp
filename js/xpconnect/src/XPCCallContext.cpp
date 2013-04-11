@@ -19,7 +19,7 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
                                JSObject* obj    /* = nullptr    */,
                                JSObject* funobj /* = nullptr    */,
                                jsid name        /* = JSID_VOID */,
-                               unsigned argc       /* = NO_ARGS   */,
+                               unsigned argc    /* = NO_ARGS   */,
                                jsval *argv      /* = nullptr    */,
                                jsval *rval      /* = nullptr    */)
     :   mState(INIT_FAILED),
@@ -29,9 +29,11 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
         mContextPopRequired(false),
         mDestroyJSContextInDestructor(false),
         mCallerLanguage(callerLanguage),
-        mFlattenedJSObject(nullptr),
+        mScopeForNewJSObjects(xpc_GetSafeJSContext()),
+        mFlattenedJSObject(xpc_GetSafeJSContext()),
         mWrapper(nullptr),
-        mTearOff(nullptr)
+        mTearOff(nullptr),
+        mName(xpc_GetSafeJSContext())
 {
     Init(callerLanguage, callerLanguage == NATIVE_CALLER, obj, funobj,
          INIT_SHOULD_LOOKUP_WRAPPER, name, argc, argv, rval);
@@ -51,9 +53,11 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
         mContextPopRequired(false),
         mDestroyJSContextInDestructor(false),
         mCallerLanguage(callerLanguage),
-        mFlattenedJSObject(flattenedJSObject),
+        mScopeForNewJSObjects(xpc_GetSafeJSContext()),
+        mFlattenedJSObject(xpc_GetSafeJSContext(), flattenedJSObject),
         mWrapper(wrapper),
-        mTearOff(tearOff)
+        mTearOff(tearOff),
+        mName(xpc_GetSafeJSContext())
 {
     Init(callerLanguage, callBeginRequest, obj, nullptr,
          WRAPPER_PASSED_TO_CONSTRUCTOR, JSID_VOID, NO_ARGS,

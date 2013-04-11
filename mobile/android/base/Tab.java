@@ -35,6 +35,7 @@ public class Tab {
     private final int mId;
     private long mLastUsed;
     private String mUrl;
+    private String mUserSearch;
     private String mTitle;
     private Bitmap mFavicon;
     private String mFaviconUrl;
@@ -72,6 +73,7 @@ public class Tab {
         mId = id;
         mLastUsed = 0;
         mUrl = url;
+        mUserSearch = "";
         mExternal = external;
         mParentId = parentId;
         mTitle = title == null ? "" : title;
@@ -123,6 +125,11 @@ public class Tab {
     // may be null if user-entered query hasn't yet been resolved to a URI
     public synchronized String getURL() {
         return mUrl;
+    }
+
+    // mUserSearch should never be null, but it may be an empty string
+    public synchronized String getUserSearch() {
+        return mUserSearch;
     }
 
     // mTitle should never be null, but it may be an empty string
@@ -230,6 +237,10 @@ public class Tab {
             mUrl = url;
             updateBookmark();
         }
+    }
+
+    private synchronized void updateUserSearch(String userSearch) {
+        mUserSearch = userSearch;
     }
 
     public void setDocumentURI(String documentURI) {
@@ -527,6 +538,7 @@ public class Tab {
         final String uri = message.getString("uri");
         mEnteringReaderMode = ReaderModeUtils.isEnteringReaderMode(mUrl, uri);
         updateURL(uri);
+        updateUserSearch(message.getString("userSearch"));
 
         setDocumentURI(message.getString("documentURI"));
         if (message.getBoolean("sameDocument")) {

@@ -109,6 +109,8 @@ container.src = '%s';
         interpolation = { "server": "%s:%s" % (options.webServer, options.httpPort),
                           "OOP": "true" if self.OOP else "false" }
         prefs = json.loads(json.dumps(prefs) % interpolation)
+        for pref in prefs:
+            prefs[pref] = Preferences.cast(prefs[pref])
 
         self.profile = Profile(addons=self.getExtensionsToInstall(options),
                                apps=self.webapps,

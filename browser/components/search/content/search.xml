@@ -109,6 +109,9 @@
           "anonid", "searchbar-popup");</field>
       <field name="_ss">null</field>
       <field name="_engines">null</field>
+      <field name="FormHistory" readonly="true">
+        (Components.utils.import("resource://gre/modules/FormHistory.jsm", {})).FormHistory;
+      </field>
 
       <property name="engines" readonly="true">
         <getter><![CDATA[
@@ -455,12 +458,13 @@
 
           // Save the current value in the form history
           if (textValue && !PrivateBrowsingUtils.isWindowPrivate(window)) {
-            try {
-              textBox._formHistSvc.addEntry(textBox.getAttribute("autocompletesearchparam"),
-                                            textValue);
-            } catch (ex) {
-              Components.utils.reportError("Saving search to form history failed: " + ex);
-            }
+            this.FormHistory.update(
+              { op : "bump",
+                fieldname : textBox.getAttribute("autocompletesearchparam"),
+                value : textValue },
+              { handleError : function(aError) {
+                  Components.utils.reportError("Saving search to form history failed: " + aError.message);
+              }});
           }
 
           this.doSearch(textValue, where);
@@ -554,7 +558,6 @@
       ]]></destructor>
 
       <field name="_stringBundle"/>
-      <field name="_formHistSvc"/>
       <field name="_prefBranch"/>
       <field name="_suggestMenuItem"/>
       <field name="_suggestEnabled"/>
@@ -565,9 +568,6 @@
             "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
           // Initialize fields
           this._stringBundle = document.getBindingParent(this)._stringBundle;
-          this._formHistSvc =
-                   Components.classes["@mozilla.org/satchel/form-history;1"]
-                             .getService(Components.interfaces.nsIFormHistory2);
           this._prefBranch =
                     Components.classes["@mozilla.org/preferences-service;1"]
                               .getService(Components.interfaces.nsIPrefBranch);
@@ -748,10 +748,6 @@
         },
 
         isCommandEnabled: function(aCommand) {
-          if (aCommand == "cmd_clearhistory") {
-            var param = this._self.getAttribute("autocompletesearchparam");
-            return this._self._formHistSvc.nameExists(param);
-          }
           return true;
         },
 
@@ -759,7 +755,10 @@
           switch (aCommand) {
             case "cmd_clearhistory":
               var param = this._self.getAttribute("autocompletesearchparam");
-              this._self._formHistSvc.removeEntriesForName(param);
+
+              let searchBar = this._self.parentNode;
+
+              BrowserSearch.searchBar.FormHistory.update({ op : "remove", fieldname : param }, null);
               this._self.value = "";
               break;
             case "cmd_togglesuggest":

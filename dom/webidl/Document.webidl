@@ -46,11 +46,11 @@ interface Document : Node {
   Element createElement(DOMString localName);
   [Creator, Throws]
   Element createElementNS(DOMString? namespace, DOMString qualifiedName);
-  [Creator, Throws]
+  [Creator]
   DocumentFragment createDocumentFragment();
-  [Creator, Throws]
+  [Creator]
   Text createTextNode(DOMString data);
-  [Creator, Throws]
+  [Creator]
   Comment createComment(DOMString data);
   [Creator, Throws]
   ProcessingInstruction createProcessingInstruction(DOMString target, DOMString data);

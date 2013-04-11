@@ -1354,6 +1354,12 @@ struct TypeCompartment
     Vector<RecompileInfo> *pendingRecompiles;
 
     /*
+     * Worklist of the current transitive compilation for parallel
+     * execution. Otherwise NULL.
+     */
+    AutoScriptVector *transitiveCompilationWorklist;
+
+    /*
      * Number of recompilation events and inline frame expansions that have
      * occurred in this compartment. If these change, code should not count on
      * compiled code or the current stack being intact.
