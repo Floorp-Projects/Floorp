@@ -22,7 +22,7 @@ interface nsIPrintSession;
 /**
  * Simplified graphics interface for JS rendering.
  */
-[scriptable, uuid(a65cfa37-b381-4fe9-81b7-db08853f54ad)]
+[scriptable, uuid(4672dfe2-7310-4afb-89c9-5ecd9f1d010a)]
 
 interface nsIPrintSettings : nsISupports
 {
@@ -248,7 +248,11 @@ interface nsIPrintSettings : nsISupports
   attribute short   outputFormat;
 
   attribute long    printPageDelay; /* in milliseconds */
-  
+
+  attribute long    resolution;     /* print resolution (dpi) */
+
+  attribute long    duplex;         /* duplex mode */
+
   /* initialize helpers */
   /**
    * This attribute tracks whether the PS has been initialized 
