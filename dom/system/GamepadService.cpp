@@ -133,8 +133,7 @@ GamepadService::AddGamepad(const char* aId,
 {
   //TODO: bug 852258: get initial button/axis state
   nsRefPtr<nsDOMGamepad> gamepad =
-    new nsDOMGamepad(nullptr,
-                     NS_ConvertUTF8toUTF16(nsDependentCString(aId)),
+    new nsDOMGamepad(NS_ConvertUTF8toUTF16(nsDependentCString(aId)),
                      0,
                      aNumButtons,
                      aNumAxes);
@@ -414,8 +413,7 @@ GamepadService::SetWindowHasSeenGamepad(nsGlobalWindow* aWindow,
 
   if (aHasSeen) {
     aWindow->SetHasSeenGamepadInput(true);
-    nsCOMPtr<nsISupports> window = nsGlobalWindow::ToSupports(aWindow);
-    nsRefPtr<nsDOMGamepad> gamepad = mGamepads[aIndex]->Clone(window);
+    nsRefPtr<nsDOMGamepad> gamepad = mGamepads[aIndex]->Clone();
     aWindow->AddGamepad(aIndex, gamepad);
   } else {
     aWindow->RemoveGamepad(aIndex);
