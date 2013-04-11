@@ -137,7 +137,7 @@ let DebuggerController = {
 
     if (!window._isChromeDebugger) {
       let target = this._target;
-      let { client, form } = target;
+      let { client, form, threadActor } = target;
       target.on("close", this._onTabDetached);
       target.on("navigate", this._onTabNavigated);
       target.on("will-navigate", this._onTabNavigated);
@@ -145,7 +145,7 @@ let DebuggerController = {
       if (target.chrome) {
         this._startChromeDebugging(client, form.chromeDebugger, deferred.resolve);
       } else {
-        this._startDebuggingTab(client, form, deferred.resolve);
+        this._startDebuggingTab(client, threadActor, deferred.resolve);
       }
 
       return deferred.promise;
@@ -176,18 +176,17 @@ let DebuggerController = {
     if (!this.client) {
       return;
     }
-    this.client.removeListener("tabNavigated", this._onTabNavigated);
-    this.client.removeListener("tabDetached", this._onTabDetached);
 
     // When debugging local or a remote instance, the connection is closed by
     // the RemoteTarget.
     if (window._isChromeDebugger) {
+      this.client.removeListener("tabNavigated", this._onTabNavigated);
+      this.client.removeListener("tabDetached", this._onTabDetached);
       this.client.close();
     }
 
     this._connection = null;
     this.client = null;
-    this.tabClient = null;
     this.activeThread = null;
   },
 
@@ -227,41 +226,33 @@ let DebuggerController = {
    *
    * @param DebuggerClient aClient
    *        The debugger client.
-   * @param object aTabGrip
+   * @param string aThreadActor
    *        The remote protocol grip of the tab.
    * @param function aCallback
    *        A function to invoke once the client attached to the active thread.
    */
-  _startDebuggingTab: function DC__startDebuggingTab(aClient, aTabGrip, aCallback) {
+  _startDebuggingTab: function DC__startDebuggingTab(aClient, aThreadActor, aCallback) {
     if (!aClient) {
       Cu.reportError("No client found!");
       return;
     }
     this.client = aClient;
 
-    aClient.attachTab(aTabGrip.actor, (aResponse, aTabClient) => {
-      if (!aTabClient) {
-        Cu.reportError("No tab client found!");
+    aClient.attachThread(aThreadActor, (aResponse, aThreadClient) => {
+      if (!aThreadClient) {
+        Cu.reportError("Couldn't attach to thread: " + aResponse.error);
         return;
       }
-      this.tabClient = aTabClient;
+      this.activeThread = aThreadClient;
 
-      aClient.attachThread(aResponse.threadActor, (aResponse, aThreadClient) => {
-        if (!aThreadClient) {
-          Cu.reportError("Couldn't attach to thread: " + aResponse.error);
-          return;
-        }
-        this.activeThread = aThreadClient;
+      this.ThreadState.connect();
+      this.StackFrames.connect();
+      this.SourceScripts.connect();
+      aThreadClient.resume(this._ensureResumptionOrder);
 
-        this.ThreadState.connect();
-        this.StackFrames.connect();
-        this.SourceScripts.connect();
-        aThreadClient.resume(this._ensureResumptionOrder);
-
-        if (aCallback) {
-          aCallback();
-        }
-      });
+      if (aCallback) {
+        aCallback();
+      }
     });
   },
 
@@ -331,7 +322,6 @@ let DebuggerController = {
   _shutdown: null,
   _connection: null,
   client: null,
-  tabClient: null,
   activeThread: null
 };
 
@@ -1719,9 +1709,6 @@ Object.defineProperties(window, {
   },
   "gClient": {
     get: function() DebuggerController.client
-  },
-  "gTabClient": {
-    get: function() DebuggerController.tabClient
   },
   "gThreadClient": {
     get: function() DebuggerController.activeThread
