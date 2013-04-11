@@ -26,7 +26,7 @@ public class testPermissions extends PixelTest {
         waitForText("wants your location");
 
         // Uncheck the "Don't ask again for this site" checkbox
-        ArrayList<CheckBox> checkBoxes = mSolo.getCurrentCheckBoxes();
+        ArrayList<CheckBox> checkBoxes = mSolo.getCurrentViews(CheckBox.class);
         mAsserter.ok(checkBoxes.size() == 1, "checkbox count", "only one checkbox visible");
         mAsserter.ok(mSolo.isCheckBoxChecked(0), "checkbox checked", "checkbox is checked");
         mSolo.clickOnCheckBox(0);

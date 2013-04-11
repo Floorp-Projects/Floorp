@@ -15,7 +15,7 @@ include $(DEPTH)/config/autoconf.mk
 
 ANDROID_APK_NAME := robocop-debug
 
-ROBOTIUM_PATH = $(srcdir)/robotium-solo-3.6.jar
+ROBOTIUM_PATH = $(srcdir)/robotium-solo-4.2.jar
 
 JAVAFILES = \
   R.java \
