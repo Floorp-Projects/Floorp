@@ -6817,12 +6817,12 @@ class CGDictionary(CGThing):
                 "\n" +
                 ("  bool Init(const nsAString& aJSON)\n"
                  "  {\n"
-                 "    mozilla::Maybe<JSAutoRequest> ar;\n"
-                 "    mozilla::Maybe<JSAutoCompartment> ac;\n"
-                 "    jsval json = JSVAL_VOID;\n"
+                 "    Maybe<JSAutoRequest> ar;\n"
+                 "    Maybe<JSAutoCompartment> ac;\n"
+                 "    Maybe< JS::Rooted<JS::Value> > json;\n"
                  "    JSContext* cx = ParseJSON(aJSON, ar, ac, json);\n"
                  "    NS_ENSURE_TRUE(cx, false);\n"
-                 "    return Init(cx, nullptr, json);\n"
+                 "    return Init(cx, nullptr, json.ref());\n"
                  "  }\n" if not self.workers else "") +
                 "\n" +
                 "\n".join(memberDecls) + "\n"
