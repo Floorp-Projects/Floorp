@@ -331,13 +331,12 @@ public class AwesomeBar extends GeckoActivity {
             contentDescription = getString(R.string.search);
             imeAction = EditorInfo.IME_ACTION_SEARCH;
         }
-        mGoButton.setImageResource(imageResource);
-        mGoButton.setContentDescription(contentDescription);
 
         InputMethodManager imm = InputMethods.getInputMethodManager(mText.getContext());
         if (imm == null) {
             return;
         }
+        boolean restartInput = false;
         if (actionBits != imeAction) {
             int optionBits = mText.getImeOptions() & ~EditorInfo.IME_MASK_ACTION;
             mText.setImeOptions(optionBits | imeAction);
@@ -345,14 +344,19 @@ public class AwesomeBar extends GeckoActivity {
             mDelayRestartInput = (imeAction == EditorInfo.IME_ACTION_GO) &&
                                  (InputMethods.shouldDelayAwesomebarUpdate(mText.getContext()));
             if (!mDelayRestartInput) {
-                imm.restartInput(mText);
+                restartInput = true;
             }
         } else if (mDelayRestartInput) {
             // Only call delayed restartInput when actionBits == imeAction
             // so if there are two restarts in a row, the first restarts will
             // be discarded and the second restart will be properly delayed
             mDelayRestartInput = false;
+            restartInput = true;
+        }
+        if (restartInput) {
             imm.restartInput(mText);
+            mGoButton.setImageResource(imageResource);
+            mGoButton.setContentDescription(contentDescription);
         }
     }
 
