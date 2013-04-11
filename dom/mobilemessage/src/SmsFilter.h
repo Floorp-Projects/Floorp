@@ -6,7 +6,7 @@
 #ifndef mozilla_dom_mobilemessage_SmsFilter_h
 #define mozilla_dom_mobilemessage_SmsFilter_h
 
-#include "mozilla/dom/mobilemessage/PSms.h"
+#include "mozilla/dom/mobilemessage/SmsTypes.h"
 #include "nsIDOMSmsFilter.h"
 #include "Types.h"
 #include "mozilla/Attributes.h"

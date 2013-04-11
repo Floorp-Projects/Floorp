@@ -14,7 +14,6 @@
 #endif
 
 #include "prlink.h"
-#include "nsWindow.h"
 #include "nsGTKToolkit.h"
 #include "nsIRollupListener.h"
 #include "nsIDOMNode.h"
@@ -69,7 +68,7 @@
 #include "nsIStringBundle.h"
 #include "nsGfxCIID.h"
 #include "nsIObserverService.h"
-#include "LayersTypes.h"
+#include "mozilla/layers/LayersTypes.h"
 #include "nsIIdleServiceInternal.h"
 #include "nsIPropertyBag2.h"
 
@@ -113,10 +112,12 @@ extern "C" {
 #include "gfxXlibSurface.h"
 #include "cairo-xlib.h"
 #endif
-
+  
 #include "nsShmImage.h"
 
 #include "nsIDOMWheelEvent.h"
+
+#include "nsWindow.h"
 
 using namespace mozilla;
 using namespace mozilla::widget;

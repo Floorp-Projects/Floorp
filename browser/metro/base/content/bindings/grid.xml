@@ -114,21 +114,11 @@
               return new Set();
             }
 
-            function cloneSet(aSet) {
-              let clone = new Set();
-              if (aSet) {
-                for (let item of aSet) {
-                  clone.add(item);
-                }
-              }
-              return clone;
-            }
-
             // given one or more sets of values,
             // return a set with only those values present in each
             let initialItem = tileNodes[0];
 
-            let verbSet = cloneSet(initialItem.contextActions);
+            let verbSet = new Set(initialItem.contextActions);
             for (let i=1; i<tileNodes.length; i++){
               let set = tileNodes[i].contextActions;
               for (let item of verbSet) {
@@ -136,6 +126,10 @@
                   verbSet.delete(item);
                 }
               }
+            }
+            // add the clear-selection button if more than one tiles are selected
+            if (tileNodes.length > 1) {
+              verbSet.add('clear');
             }
             // returns Set
             return verbSet;
@@ -475,10 +469,25 @@
           ]]>
         </body>
       </method>
-
     </implementation>
+    <handlers>
+      <handler event="context-action">
+        <![CDATA[
+          // context-action is an event fired by the appbar typically
+          // which directs us to do something to the selected tiles
+          switch (event.action) {
+            case "clear":
+              this.clearSelection();
+              break;
+            default:
+              if (this.controller && this.controller.doActionOnSelectedTiles) {
+                this.controller.doActionOnSelectedTiles(event.action, event);
+              }
+          }
+        ]]>
+      </handler>
+    </handlers>
   </binding>
-
   <binding id="richgrid-item">
     <content>
       <xul:vbox anonid="anon-richgrid-item" class="richgrid-item-content" xbl:inherits="customImage">

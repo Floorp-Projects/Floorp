@@ -33,7 +33,7 @@ public:
    * Set the ImageContainer. aContainer must have the same layer manager
    * as this layer.
    */
-  void SetContainer(ImageContainer* aContainer);
+  virtual void SetContainer(ImageContainer* aContainer);
 
   /**
    * CONSTRUCTION PHASE ONLY

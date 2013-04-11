@@ -56,74 +56,83 @@ nsStyleBorder::GetSubImage(uint8_t aIndex) const
 }
 
 bool
-nsStyleText::HasTextShadow(const nsIFrame* aFrame) const
+nsStyleText::HasTextShadow(const nsIFrame* aContextFrame) const
 {
-  return mTextShadow && !aFrame->IsSVGText();
+  NS_ASSERTION(aContextFrame->StyleText() == this, "unexpected aContextFrame");
+  return mTextShadow && !aContextFrame->IsSVGText();
 }
 
 nsCSSShadowArray*
-nsStyleText::GetTextShadow(const nsIFrame* aFrame) const
+nsStyleText::GetTextShadow(const nsIFrame* aContextFrame) const
 {
-  if (aFrame->IsSVGText()) {
+  NS_ASSERTION(aContextFrame->StyleText() == this, "unexpected aContextFrame");
+  if (aContextFrame->IsSVGText()) {
     return nullptr;
   }
   return mTextShadow;
 }
 
 bool
-nsStyleText::WhiteSpaceCanWrap(const nsIFrame* aFrame) const
+nsStyleText::WhiteSpaceCanWrap(const nsIFrame* aContextFrame) const
 {
-  return WhiteSpaceCanWrapStyle() && !aFrame->IsSVGText();
+  NS_ASSERTION(aContextFrame->StyleText() == this, "unexpected aContextFrame");
+  return WhiteSpaceCanWrapStyle() && !aContextFrame->IsSVGText();
 }
 
 bool
-nsStyleText::WordCanWrap(const nsIFrame* aFrame) const
+nsStyleText::WordCanWrap(const nsIFrame* aContextFrame) const
 {
-  return WordCanWrapStyle() && !aFrame->IsSVGText();
+  NS_ASSERTION(aContextFrame->StyleText() == this, "unexpected aContextFrame");
+  return WordCanWrapStyle() && !aContextFrame->IsSVGText();
 }
 
 bool
-nsStyleDisplay::IsBlockInside(const nsIFrame* aFrame) const
+nsStyleDisplay::IsBlockInside(const nsIFrame* aContextFrame) const
 {
-  if (aFrame->IsSVGText()) {
-    return aFrame->GetType() == nsGkAtoms::blockFrame;
+  NS_ASSERTION(aContextFrame->StyleDisplay() == this, "unexpected aContextFrame");
+  if (aContextFrame->IsSVGText()) {
+    return aContextFrame->GetType() == nsGkAtoms::blockFrame;
   }
   return IsBlockInsideStyle();
 }
 
 bool
-nsStyleDisplay::IsBlockOutside(const nsIFrame* aFrame) const
+nsStyleDisplay::IsBlockOutside(const nsIFrame* aContextFrame) const
 {
-  if (aFrame->IsSVGText()) {
-    return aFrame->GetType() == nsGkAtoms::blockFrame;
+  NS_ASSERTION(aContextFrame->StyleDisplay() == this, "unexpected aContextFrame");
+  if (aContextFrame->IsSVGText()) {
+    return aContextFrame->GetType() == nsGkAtoms::blockFrame;
   }
   return IsBlockOutsideStyle();
 }
 
 bool
-nsStyleDisplay::IsInlineOutside(const nsIFrame* aFrame) const
+nsStyleDisplay::IsInlineOutside(const nsIFrame* aContextFrame) const
 {
-  if (aFrame->IsSVGText()) {
-    return aFrame->GetType() != nsGkAtoms::blockFrame;
+  NS_ASSERTION(aContextFrame->StyleDisplay() == this, "unexpected aContextFrame");
+  if (aContextFrame->IsSVGText()) {
+    return aContextFrame->GetType() != nsGkAtoms::blockFrame;
   }
   return IsInlineOutsideStyle();
 }
 
 bool
-nsStyleDisplay::IsOriginalDisplayInlineOutside(const nsIFrame* aFrame) const
+nsStyleDisplay::IsOriginalDisplayInlineOutside(const nsIFrame* aContextFrame) const
 {
-  if (aFrame->IsSVGText()) {
-    return aFrame->GetType() != nsGkAtoms::blockFrame;
+  NS_ASSERTION(aContextFrame->StyleDisplay() == this, "unexpected aContextFrame");
+  if (aContextFrame->IsSVGText()) {
+    return aContextFrame->GetType() != nsGkAtoms::blockFrame;
   }
   return IsOriginalDisplayInlineOutsideStyle();
 }
 
 uint8_t
-nsStyleDisplay::GetDisplay(const nsIFrame* aFrame) const
+nsStyleDisplay::GetDisplay(const nsIFrame* aContextFrame) const
 {
-  if (aFrame->IsSVGText() &&
+  NS_ASSERTION(aContextFrame->StyleDisplay() == this, "unexpected aContextFrame");
+  if (aContextFrame->IsSVGText() &&
       mDisplay != NS_STYLE_DISPLAY_NONE) {
-    return aFrame->GetType() == nsGkAtoms::blockFrame ?
+    return aContextFrame->GetType() == nsGkAtoms::blockFrame ?
              NS_STYLE_DISPLAY_BLOCK :
              NS_STYLE_DISPLAY_INLINE;
   }
@@ -131,36 +140,42 @@ nsStyleDisplay::GetDisplay(const nsIFrame* aFrame) const
 }
 
 bool
-nsStyleDisplay::IsFloating(const nsIFrame* aFrame) const
+nsStyleDisplay::IsFloating(const nsIFrame* aContextFrame) const
 {
-  return IsFloatingStyle() && !aFrame->IsSVGText();
+  NS_ASSERTION(aContextFrame->StyleDisplay() == this, "unexpected aContextFrame");
+  return IsFloatingStyle() && !aContextFrame->IsSVGText();
 }
 
 bool
-nsStyleDisplay::HasTransform(const nsIFrame* aFrame) const
+nsStyleDisplay::HasTransform(const nsIFrame* aContextFrame) const
 {
-  return HasTransformStyle() && aFrame->IsFrameOfType(nsIFrame::eSupportsCSSTransforms);
+  NS_ASSERTION(aContextFrame->StyleDisplay() == this, "unexpected aContextFrame");
+  return HasTransformStyle() && aContextFrame->IsFrameOfType(nsIFrame::eSupportsCSSTransforms);
 }
 
 bool
-nsStyleDisplay::IsPositioned(const nsIFrame* aFrame) const
+nsStyleDisplay::IsPositioned(const nsIFrame* aContextFrame) const
 {
+  NS_ASSERTION(aContextFrame->StyleDisplay() == this,
+               "unexpected aContextFrame");
   return (IsAbsolutelyPositionedStyle() ||
           IsRelativelyPositionedStyle() ||
-          HasTransform(aFrame)) &&
-         !aFrame->IsSVGText();
+          HasTransform(aContextFrame)) &&
+         !aContextFrame->IsSVGText();
 }
 
 bool
-nsStyleDisplay::IsRelativelyPositioned(const nsIFrame* aFrame) const
+nsStyleDisplay::IsRelativelyPositioned(const nsIFrame* aContextFrame) const
 {
-  return IsRelativelyPositionedStyle() && !aFrame->IsSVGText();
+  NS_ASSERTION(aContextFrame->StyleDisplay() == this, "unexpected aContextFrame");
+  return IsRelativelyPositionedStyle() && !aContextFrame->IsSVGText();
 }
 
 bool
-nsStyleDisplay::IsAbsolutelyPositioned(const nsIFrame* aFrame) const
+nsStyleDisplay::IsAbsolutelyPositioned(const nsIFrame* aContextFrame) const
 {
-  return IsAbsolutelyPositionedStyle() && !aFrame->IsSVGText();
+  NS_ASSERTION(aContextFrame->StyleDisplay() == this, "unexpected aContextFrame");
+  return IsAbsolutelyPositionedStyle() && !aContextFrame->IsSVGText();
 }
 
 uint8_t

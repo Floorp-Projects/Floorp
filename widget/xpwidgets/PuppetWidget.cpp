@@ -762,5 +762,12 @@ PuppetScreenManager::GetNumberOfScreens(uint32_t* aNumberOfScreens)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+PuppetScreenManager::GetSystemDefaultScale(float *aDefaultScale)
+{
+  *aDefaultScale = 1.0f;
+  return NS_OK;
+}
+
 }  // namespace widget
 }  // namespace mozilla

@@ -802,6 +802,20 @@ class AsmJSHeapAccess
 
 typedef Vector<AsmJSHeapAccess, 0, IonAllocPolicy> AsmJSHeapAccessVector;
 
+#ifdef JS_CPU_ARM
+struct AsmJSBoundsCheck
+{
+    unsigned offset_;
+    AsmJSBoundsCheck(unsigned offset)
+    : offset_(offset)
+    {}
+    void setOffset(uint32_t offset) { offset_ = offset; }
+    unsigned offset() {return offset_;}
+};
+
+typedef Vector<AsmJSBoundsCheck, 0, IonAllocPolicy> AsmJSBoundsCheckVector;
+#endif
+
 } // namespace ion
 } // namespace js
 

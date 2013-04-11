@@ -27,8 +27,8 @@ function test() {
         stringBundle.GetStringFromName("netmonitor.label"),
         "The getStr() method didn't return the expected string.");
 
-      is(L10N.getFormatStr("networkMenu.total", "foo"),
-        stringBundle.formatStringFromName("networkMenu.total", ["foo"], 1),
+      is(L10N.getFormatStr("networkMenu.totalMS", "foo"),
+        stringBundle.formatStringFromName("networkMenu.totalMS", ["foo"], 1),
         "The getFormatStr() method didn't return the expected string.");
     }
 

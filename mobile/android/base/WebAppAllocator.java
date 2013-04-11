@@ -5,13 +5,13 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.gfx.BitmapUtils;
+import org.mozilla.gecko.util.ThreadUtils;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.util.Log;
-
-import org.mozilla.gecko.gfx.BitmapUtils;
-import org.mozilla.gecko.util.ThreadUtils;
 
 public class WebAppAllocator {
     private final String LOGTAG = "GeckoWebAppAllocator";

@@ -20,11 +20,8 @@ CPPSRCS		= \
 		ImageDocument.cpp \
 		MediaDocument.cpp \
 		PluginDocument.cpp \
+		VideoDocument.cpp \
 		$(NULL)
-
-ifdef MOZ_MEDIA
-CPPSRCS += VideoDocument.cpp
-endif
 
 EXPORTS		= \
 		nsIHTMLDocument.h \

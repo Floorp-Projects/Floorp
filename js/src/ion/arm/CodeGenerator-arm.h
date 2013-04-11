@@ -141,9 +141,31 @@ class CodeGeneratorARM : public CodeGeneratorShared
 
     bool visitInterruptCheck(LInterruptCheck *lir);
 
-    bool generateInvalidateEpilogue();
+    bool visitNegI(LNegI *lir);
+    bool visitNegD(LNegD *lir);
+    bool visitAsmJSLoadHeap(LAsmJSLoadHeap *ins);
+    bool visitAsmJSStoreHeap(LAsmJSStoreHeap *ins);
+    bool visitAsmJSLoadGlobalVar(LAsmJSLoadGlobalVar *ins);
+    bool visitAsmJSStoreGlobalVar(LAsmJSStoreGlobalVar *ins);
+    bool visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr *ins);
+    bool visitAsmJSLoadFFIFunc(LAsmJSLoadFFIFunc *ins);
 
-    void postAsmJSCall(LAsmJSCall *lir) {}
+    bool visitAsmJSPassStackArg(LAsmJSPassStackArg *ins);
+
+    bool generateInvalidateEpilogue();
+  protected:
+    bool generateAsmJSPrologue(const MIRTypeVector &argTypes, MIRType returnType,
+                             Label *internalEntry);
+    void postAsmJSCall(LAsmJSCall *lir) {
+#if  !defined(JS_CPU_ARM_HARDFP)
+        if (lir->mir()->type() == MIRType_Double) {
+            masm.ma_vxfer(r0, r1, d0);
+        }
+#endif
+}
+ 
+    bool visitEffectiveAddress(LEffectiveAddress *ins);
+    bool visitAsmJSDivOrMod(LAsmJSDivOrMod *ins);
 };
 
 typedef CodeGeneratorARM CodeGeneratorSpecific;

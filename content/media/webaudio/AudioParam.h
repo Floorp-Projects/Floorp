@@ -34,9 +34,7 @@ public:
 
   AudioParam(AudioNode* aNode,
              CallbackType aCallback,
-             float aDefaultValue,
-             float aMinValue,
-             float aMaxValue);
+             float aDefaultValue);
   virtual ~AudioParam();
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(AudioParam)
@@ -96,16 +94,6 @@ public:
     mCallback(mNode);
   }
 
-  float MinValue() const
-  {
-    return mMinValue;
-  }
-
-  float MaxValue() const
-  {
-    return mMaxValue;
-  }
-
   float DefaultValue() const
   {
     return mDefaultValue;
@@ -115,8 +103,6 @@ private:
   nsRefPtr<AudioNode> mNode;
   CallbackType mCallback;
   const float mDefaultValue;
-  const float mMinValue;
-  const float mMaxValue;
 };
 
 }

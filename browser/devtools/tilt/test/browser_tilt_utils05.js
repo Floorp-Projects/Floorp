@@ -74,13 +74,13 @@ function test() {
     let store = dom.traverse(iframe.contentWindow);
 
     let expected = [
-      { name: "html",   depth: 0 * STACK_THICKNESS },
-      { name: "head",   depth: 1 * STACK_THICKNESS },
-      { name: "body",   depth: 1 * STACK_THICKNESS },
-      { name: "style",  depth: 2 * STACK_THICKNESS },
-      { name: "script", depth: 2 * STACK_THICKNESS },
-      { name: "div",    depth: 2 * STACK_THICKNESS },
-      { name: "span",   depth: 3 * STACK_THICKNESS },
+      { name: "html",   depth: 0 * STACK_THICKNESS, thickness: STACK_THICKNESS },
+      { name: "head",   depth: 1 * STACK_THICKNESS, thickness: STACK_THICKNESS },
+      { name: "body",   depth: 1 * STACK_THICKNESS, thickness: STACK_THICKNESS },
+      { name: "style",  depth: 2 * STACK_THICKNESS, thickness: STACK_THICKNESS },
+      { name: "script", depth: 2 * STACK_THICKNESS, thickness: STACK_THICKNESS },
+      { name: "div",    depth: 2 * STACK_THICKNESS, thickness: STACK_THICKNESS },
+      { name: "span",   depth: 3 * STACK_THICKNESS, thickness: STACK_THICKNESS },
     ];
 
     is(store.nodes.length, expected.length,
@@ -93,6 +93,8 @@ function test() {
         "traversed node " + (i + 1) + " isn't the expected one.");
       is(store.info[i].coord.depth, expected[i].depth,
         "traversed node " + (i + 1) + " doesn't have the expected depth.");
+      is(store.info[i].coord.thickness, expected[i].thickness,
+        "traversed node " + (i + 1) + " doesn't have the expected thickness.");
     }
   });
 }

@@ -130,6 +130,10 @@ ErrorResult::ThrowJSException(JSContext* cx, JS::Value exn)
     delete mMessage;
   }
 
+  // Make sure mJSException is initialized _before_ we try to root it.  But
+  // don't set it to exn yet, because we don't want to do that until after we
+  // root.
+  mJSException = JS::UndefinedValue();
   if (!JS_AddNamedValueRoot(cx, &mJSException, "ErrorResult::mJSException")) {
     // Don't use NS_ERROR_DOM_JS_EXCEPTION, because that indicates we have
     // in fact rooted mJSException.
@@ -1686,6 +1690,16 @@ InterfaceHasInstance(JSContext* cx, JSHandleObject obj, JSMutableHandleValue vp,
   }
 
   return InterfaceHasInstance(cx, obj, &vp.toObject(), bp);
+}
+
+void
+ReportLenientThisUnwrappingFailure(JSContext* cx, JS::Handle<JSObject*> obj)
+{
+  GlobalObject global(cx, obj);
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(global.Get());
+  if (window && window->GetDoc()) {
+    window->GetDoc()->WarnOnceAbout(nsIDocument::eLenientThis);
+  }
 }
 
 } // namespace dom

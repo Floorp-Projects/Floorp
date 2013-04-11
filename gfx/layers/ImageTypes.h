@@ -33,12 +33,12 @@ enum ImageFormat {
   /**
    * The CAIRO_SURFACE format creates a CairoImage. All backends should
    * support this format, because video rendering sometimes requires it.
-   * 
+   *
    * This format is useful even though a ThebesLayer could be used.
    * It makes it easy to render a cairo surface when another Image format
    * could be used. It can also avoid copying the surface data in some
    * cases.
-   * 
+   *
    * Images in CAIRO_SURFACE format should only be created and
    * manipulated on the main thread, since the underlying cairo surface
    * is main-thread-only.

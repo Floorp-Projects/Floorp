@@ -13,8 +13,13 @@
                  type="text/css"?>
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        id="devtools-webconsole"
+        macanimationtype="document"
+        fullscreenbutton="true"
         title="&window.title;"
+        browserConsoleTitle="&browserConsole.title;"
         windowtype="devtools:webconsole"
+        width="900" height="350"
         persist="screenX screenY width height sizemode">
   <script type="text/javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="text/javascript" src="webconsole.js"/>
@@ -32,8 +37,9 @@
     <command id="cmd_fullZoomEnlarge" oncommand="goDoCommand('cmd_fontSizeEnlarge');"/>
     <command id="cmd_fullZoomReduce" oncommand="goDoCommand('cmd_fontSizeReduce');"/>
     <command id="cmd_fullZoomReset" oncommand="goDoCommand('cmd_fontSizeReset');"/>
+    <command id="cmd_close" oncommand="goDoCommand('cmd_close');"/>
   </commandset>
-  <keyset id="fontSizeChangeSet">
+  <keyset id="consoleKeys">
     <key id="key_fullZoomReduce"  key="&fullZoomReduceCmd.commandkey;" command="cmd_fullZoomReduce"  modifiers="accel"/>
     <key key="&fullZoomReduceCmd.commandkey2;"  command="cmd_fullZoomReduce" modifiers="accel"/>
     <key id="key_fullZoomEnlarge" key="&fullZoomEnlargeCmd.commandkey;" command="cmd_fullZoomEnlarge" modifiers="accel"/>
@@ -41,6 +47,7 @@
     <key key="&fullZoomEnlargeCmd.commandkey3;" command="cmd_fullZoomEnlarge" modifiers="accel"/>
     <key id="key_fullZoomReset" key="&fullZoomResetCmd.commandkey;" command="cmd_fullZoomReset" modifiers="accel"/>
     <key key="&fullZoomResetCmd.commandkey2;" command="cmd_fullZoomReset" modifiers="accel"/>
+    <key key="&closeCmd.key;" command="cmd_close" modifiers="accel"/>
   </keyset>
   <keyset id="editMenuKeys"/>
 
@@ -60,7 +67,7 @@
     </menupopup>
   </popupset>
 
-  <vbox class="hud-outer-wrapper" flex="1">
+  <hbox class="hud-outer-wrapper" flex="1">
     <vbox class="hud-console-wrapper" flex="1">
       <toolbar class="hud-console-filter-toolbar devtools-toolbar" mode="full">
         <toolbarbutton label="&btnPageNet.label;" type="menu-button"
@@ -114,13 +121,15 @@
         <spacer flex="1"/>
 
         <textbox class="compact hud-filter-box devtools-searchinput" type="search"
-                 placeholder="&filterBox.placeholder;"/>
+                 placeholder="&filterOutput.placeholder;"/>
         <toolbarbutton class="webconsole-clear-console-button devtools-toolbarbutton"
                        label="&btnClear.label;" tooltiptext="&btnClear.tooltip;"/>
       </toolbar>
+
       <richlistbox class="hud-output-node" orient="vertical" flex="1"
                    seltype="multiple" context="output-contextmenu"
                    style="direction:ltr;"/>
+
       <hbox class="jsterm-input-container" style="direction:ltr">
         <stack class="jsterm-stack-node" flex="1">
           <textbox class="jsterm-complete-node" multiline="true" rows="1"
@@ -129,5 +138,12 @@
         </stack>
       </hbox>
     </vbox>
-  </vbox>
+
+    <splitter class="devtools-side-splitter" collapse="after" state="collapsed" />
+
+    <tabbox id="webconsole-sidebar" class="devtools-sidebar-tabs" hidden="true" width="300">
+      <tabs/>
+      <tabpanels flex="1"/>
+    </tabbox>
+  </hbox>
 </window>

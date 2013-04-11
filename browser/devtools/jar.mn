@@ -4,6 +4,7 @@
 
 browser.jar:
     content/browser/devtools/widgets.css          (shared/widgets/widgets.css)
+    content/browser/devtools/widgets/VariablesView.xul (shared/widgets/VariablesView.xul)
     content/browser/devtools/markup-view.xhtml    (markupview/markup-view.xhtml)
     content/browser/devtools/markup-view.css      (markupview/markup-view.css)
     content/browser/devtools/netmonitor.xul           (netmonitor/netmonitor.xul)

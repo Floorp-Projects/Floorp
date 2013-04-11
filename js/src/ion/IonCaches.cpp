@@ -1581,7 +1581,7 @@ SetPropertyIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
     void *returnAddr;
     const SafepointIndex *safepointIndex;
     RootedScript script(cx, GetTopIonJSScript(cx, &safepointIndex, &returnAddr));
-    IonScript *ion = script->ion;
+    IonScript *ion = script->ionScript();
     SetPropertyIC &cache = ion->getCache(cacheIndex).toSetProperty();
     RootedPropertyName name(cx, cache.name());
     RootedId id(cx, AtomToId(name));
@@ -1867,7 +1867,7 @@ GetElementIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
     AutoDetectInvalidation adi(cx, res.address(), ion);
 
     RootedId id(cx);
-    if (!FetchElementId(cx, obj, idval, &id, res))
+    if (!ValueToId<CanGC>(cx, idval, &id))
         return false;
 
     bool attachedStub = false;

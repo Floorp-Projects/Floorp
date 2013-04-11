@@ -2092,7 +2092,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     || child->IsTransformed()
     || nsSVGIntegrationUtils::UsingEffectsForFrame(child);
 
-  bool isPositioned = !isSVG && disp->IsPositioned(child);
+  bool isPositioned = disp->IsPositioned(child);
   bool isStackingContext =
     (isPositioned && pos->mZIndex.GetUnit() == eStyleUnit_Integer) ||
      isVisuallyAtomic || (aFlags & DISPLAY_CHILD_FORCE_STACKING_CONTEXT);

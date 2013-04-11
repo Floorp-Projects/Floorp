@@ -251,6 +251,14 @@
 
 /* Toolbar Controls */
 
+#resumption-panel-desc {
+  width: 200px;
+}
+
+#resumption-order-panel {
+  -moz-margin-start: -8px;
+}
+
 #resume {
   list-style-image: url("chrome://browser/skin/devtools/debugger-play.png");
   -moz-image-region: rect(0px,16px,16px,0px);

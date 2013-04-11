@@ -36,28 +36,6 @@ public:
   virtual void CleanupResources() {};
 };
 
-class ShadowColorLayerOGL : public ShadowColorLayer,
-                            public LayerOGL
-{
-public:
-  ShadowColorLayerOGL(LayerManagerOGL *aManager)
-    : ShadowColorLayer(aManager, NULL)
-    , LayerOGL(aManager)
-  { 
-    mImplData = static_cast<LayerOGL*>(this);
-  }
-  ~ShadowColorLayerOGL() { Destroy(); }
-
-  // LayerOGL Implementation
-  virtual Layer* GetLayer() { return this; }
-
-  virtual void Destroy() { mDestroyed = true; }
-
-  virtual void RenderLayer(int aPreviousFrameBuffer,
-                           const nsIntPoint& aOffset);
-  virtual void CleanupResources() {};
-};
-
 } /* layers */
 } /* mozilla */
 #endif /* GFX_COLORLAYEROGL_H */

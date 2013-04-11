@@ -643,7 +643,21 @@ appbar toolbarbutton[disabled] {
 #star-button[checked] {
   -moz-image-region: rect(80px, 360px, 120px, 320px) !important;
 }
+
 /* Tile-selection-Specific */
+#contextualactions-tray > toolbarbutton {
+  opacity: 1;
+}
+#contextualactions-tray > toolbarbutton[fade] {
+  opacity: 0;
+}
+#contextualactions-tray > toolbarbutton:not([immediate]) {
+  transition-property: opacity;
+  transition-duration: .3s;
+  transition-timing-function: ease-in;
+  transition-delay: 80ms;
+}
+
 #pin-selected-button {
   -moz-image-region: rect(0px, 240px, 40px, 200px) !important;
 }
@@ -653,17 +667,15 @@ appbar toolbarbutton[disabled] {
 #pin-selected-button:active {
   -moz-image-region: rect(80px, 240px, 120px, 200px) !important;
 }
-
 #unpin-selected-button {
-  -moz-image-region: rect(80px, 240px, 120px, 200px) !important;
+  -moz-image-region: rect(0px, 280px, 40px, 240px) !important;
 }
 #unpin-selected-button:hover {
-  -moz-image-region: rect(40px, 240px, 80px, 200px) !important;
+  -moz-image-region: rect(40px, 280px, 80px, 240px) !important;
 }
 #unpin-selected-button:active {
-  -moz-image-region: rect(0px, 240px, 40px, 200px) !important;
+  -moz-image-region: rect(80px, 280px, 120px, 240px) !important;
 }
-
 #delete-selected-button {
   -moz-image-region: rect(0px, 480px, 40px, 440px) !important;
 }
@@ -672,6 +684,25 @@ appbar toolbarbutton[disabled] {
 }
 #delete-selected-button:active {
   -moz-image-region: rect(80px, 480px, 120px, 440px) !important;
+}
+#clear-selected-button {
+  -moz-image-region: rect(0px, 520px, 40px, 480px) !important;
+}
+#clear-selected-button:hover {
+  -moz-image-region: rect(40px, 520px, 80px, 480px) !important;
+}
+#clear-selected-button:active {
+  -moz-image-region: rect(80px, 520px, 120px, 480px) !important;
+}
+
+#restore-selected-button {
+  -moz-image-region: rect(0px, 560px, 40px, 520px) !important;
+}
+#restore-selected-button:hover {
+  -moz-image-region: rect(40px, 560px, 80px, 520px) !important;
+}
+#restore-selected-button:active {
+  -moz-image-region: rect(80px, 560px, 120px, 520px) !important;
 }
 
 /* Flyouts ---------------------------------------------------------------- */
@@ -943,6 +974,67 @@ setting[type="directory"] > .preferences-alignment {
 
 #alerts-container {
   -moz-margin-end: @margin_large@;
+}
+
+/* overlay buttons */
+
+.overlay-button {
+  position: fixed;
+  top: 50%;
+  margin-top: -66px;
+  width: 120px;
+  height: 120px;
+  background-color: hsla(210,30%,10%,.2);
+  background-size: 60px;
+  background-repeat: no-repeat;
+  background-origin: padding-box;
+  background-clip: padding-box;
+  border: 6px solid hsla(0,0%,100%,.7);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px hsla(0,0%,0%,.04),
+              0 0 9px 0 hsla(0,0%,0%,.1);
+  transition-duration: 550ms;
+  transition-timing-function: cubic-bezier(0.1, 0.9, 0.2, 1);
+}
+
+#overlay-back {
+  left: -72px;
+  background-image: url(chrome://browser/skin/images/overlay-back.png);
+  background-position: right 6px center;
+}
+
+#overlay-plus {
+  right: -72px;
+  background-image: url(chrome://browser/skin/images/overlay-plus.png);
+  background-position: left 6px center;
+}
+
+.overlay-button[disabled] {
+  box-shadow: none;
+}
+
+#overlay-back[disabled] {
+  transform: translateX(-60px);
+}
+
+#overlay-plus[disabled] {
+  transform: translateX(60px);
+}
+
+.overlay-button:not([disabled]):hover {
+  background-color: hsla(210,30%,10%,.4);
+  background-size: 78px;
+  border-color: hsla(0,0%,100%,.9);
+}
+
+#overlay-back:not([disabled]):hover {
+  background-position: right 12px center;
+  transform: translateX(40px) scale(1.2);
+}
+
+#overlay-plus:not([disabled]):hover {
+  background-position: left 12px center;
+  transform: translateX(-40px) scale(1.2);
 }
 
 /* helperapp (save-as) popup ----------------------------------------------- */

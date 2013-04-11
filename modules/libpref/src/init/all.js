@@ -19,7 +19,6 @@
  *  - Computed values (e.g. 50 * 1024) don't work.
  */
 
-pref("keyword.URL", "https://www.google.com/search?ie=UTF-8&oe=utf-8&q=");
 pref("keyword.enabled", false);
 pref("general.useragent.locale", "chrome://global/locale/intl.properties");
 pref("general.useragent.compatMode.firefox", false);
@@ -191,6 +190,7 @@ pref("media.peerconnection.use_document_iceservers", true);
 // These values (aec, agc, and noice) are from media/webrtc/trunk/webrtc/common_types.h
 // kXxxUnchanged = 0, kXxxDefault = 1, and higher values are specific to each 
 // setting (for Xxx = Ec, Agc, or Ns).  Defaults are all set to kXxxDefault here.
+pref("media.peerconnection.turn.disable", false);
 pref("media.peerconnection.aec_enabled", true);
 pref("media.peerconnection.aec", 1);
 pref("media.peerconnection.agc_enabled", false);
@@ -3950,6 +3950,10 @@ pref("layers.acceleration.force-enabled", false);
 
 pref("layers.acceleration.draw-fps", false);
 
+pref("layers.offmainthreadcomposition.enabled", false);
+// same effect as layers.offmainthreadcomposition.enabled, but specifically for
+// use with tests.
+pref("layers.offmainthreadcomposition.testing.enabled", false);
 // Whether to animate simple opacity and transforms on the compositor
 pref("layers.offmainthreadcomposition.animate-opacity", false);
 pref("layers.offmainthreadcomposition.animate-transform", false);
@@ -4158,10 +4162,11 @@ pref("dom.placeholder.show_on_focus", true);
 pref("wap.UAProf.url", "");
 pref("wap.UAProf.tagname", "x-wap-profile");
 
-//Retrieval mode for MMS
-//manual: Manual retrieval mode.
-//automatic: Automatic retrieval mode.
-//never: Never retrieval mode.
+// Retrieval mode for MMS
+// manual: Manual retrieval mode.
+// automatic: Automatic retrieval mode even in roaming.
+// automatic-home: Automatic retrieval mode in home network.
+// never: Never retrieval mode.
 pref("dom.mms.retrieval_mode", "manual");
 pref("dom.mms.retrievalRetryCount", 3);
 pref("dom.mms.retrievalRetryInterval", 300000);

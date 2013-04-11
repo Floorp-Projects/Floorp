@@ -35,6 +35,7 @@ union MaybeMagicGrallocBufferHandle {
 
 struct SurfaceDescriptorD3D10 {
   WindowsHandle handle;
+  bool hasAlpha;
 };
 
 struct SharedTextureDescriptor {
@@ -63,13 +64,23 @@ struct SurfaceDescriptorGralloc {
   bool external;
 };
 
-struct SharedImageID {
-  uint64_t id;
-};
-
 struct SurfaceStreamDescriptor {
   SurfaceStreamHandle handle;
   bool yflip;
+};
+
+struct YCbCrImage {
+  Shmem data;
+  size_t offset;
+  uint64_t owner;
+};
+
+// XXX remove RGBImage (see bug 847914)
+struct RGBImage {
+  Shmem data;
+  nsIntRect picture;
+  uint32_t rgbFormat;
+  uint64_t owner;
 };
 
 union SurfaceDescriptor {
@@ -77,36 +88,10 @@ union SurfaceDescriptor {
   SurfaceDescriptorD3D10;
   SurfaceDescriptorGralloc;
   SurfaceDescriptorX11;
+  YCbCrImage;
+  RGBImage;
   SharedTextureDescriptor;
   SurfaceStreamDescriptor;
-};
-
-struct YCbCrImage {
-  Shmem data;
-  size_t offset;
-  nsIntRect picture;
-};
-
-struct RGBImage {
-  Shmem data;
-  nsIntRect picture;
-  uint32_t rgbFormat;
-};
-
-// Will be removed in the near future
-struct YUVImage {
-  Shmem Ydata;
-  Shmem Udata;
-  Shmem Vdata;
-  nsIntRect picture;
-};
-
-union SharedImage {
-  SurfaceDescriptor;
-  RGBImage;
-  YCbCrImage;
-  YUVImage;
-  SharedImageID;
   null_t;
 };
 

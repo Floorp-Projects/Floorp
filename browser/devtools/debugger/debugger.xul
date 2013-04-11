@@ -340,4 +340,14 @@
     </vbox>
   </panel>
 
+  <panel id="resumption-order-panel"
+         type="arrow"
+         noautofocus="true"
+         position="before_start">
+    <hbox align="start">
+      <image class="alert-icon"/>
+      <label id="resumption-panel-desc" class="description"/>
+    </hbox>
+  </panel>
+
 </window>

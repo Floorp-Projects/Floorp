@@ -503,5 +503,14 @@ ShaderProgramOGL::SetMatrixUniform(GLint aLocation, const float *aFloatValues)
   mGL->fUniformMatrix4fv(aLocation, 1, false, aFloatValues);
 }
 
+void
+ShaderProgramOGL::SetUniform(GLint aLocation, const gfx::Color& aColor) {
+  ASSERT_THIS_PROGRAM;
+  NS_ASSERTION(aLocation >= 0, "Invalid location");
+
+  mGL->fUniform4f(aLocation, float(aColor.r), float(aColor.g), float(aColor.b), float(aColor.a));
+}
+
+
 } /* layers */
 } /* mozilla */

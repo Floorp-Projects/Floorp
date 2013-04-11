@@ -105,3 +105,9 @@ nsScreenManagerAndroid::GetNumberOfScreens(uint32_t *aNumberOfScreens)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsScreenManagerAndroid::GetSystemDefaultScale(float *aDefaultScale)
+{
+    *aDefaultScale = 1.0f;
+    return NS_OK;
+}

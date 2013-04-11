@@ -285,6 +285,13 @@ nsScreenManagerGtk :: GetNumberOfScreens(uint32_t *aNumberOfScreens)
 } // GetNumberOfScreens
 
 NS_IMETHODIMP
+nsScreenManagerGtk::GetSystemDefaultScale(float *aDefaultScale)
+{
+  *aDefaultScale = 1.0f;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsScreenManagerGtk :: ScreenForNativeWidget (void *aWidget, nsIScreen **outScreen)
 {
   nsresult rv;

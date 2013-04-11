@@ -13,7 +13,6 @@
 
 struct mapping_info {
   char * name;
-  char * file_id;
   uintptr_t base;
   size_t len;
   size_t offset;

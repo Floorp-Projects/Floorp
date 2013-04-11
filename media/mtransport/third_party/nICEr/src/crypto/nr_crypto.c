@@ -51,9 +51,17 @@ static int nr_ice_crypto_dummy_hmac_sha1(UCHAR *key, int key_l, UCHAR *buf, int 
     exit(1);
   }
 
+static int nr_ice_crypto_dummy_md5(UCHAR *buf, int buf_l, UCHAR digest[16])
+  {
+    fprintf(stderr,"Need to define crypto API implementation\n");
+
+    exit(1);
+  }
+
 static nr_ice_crypto_vtbl nr_ice_crypto_dummy_vtbl= {
   nr_ice_crypto_dummy_random_bytes,
-  nr_ice_crypto_dummy_hmac_sha1
+  nr_ice_crypto_dummy_hmac_sha1,
+  nr_ice_crypto_dummy_md5
 };
 
 

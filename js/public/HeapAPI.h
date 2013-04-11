@@ -149,9 +149,8 @@ GCThingIsMarkedGray(void *thing)
 }
 
 static JS_ALWAYS_INLINE bool
-IsIncrementalBarrierNeededOnGCThing(void *thing, JSGCTraceKind kind)
+IsIncrementalBarrierNeededOnGCThing(shadow::Runtime *rt, void *thing, JSGCTraceKind kind)
 {
-    shadow::Runtime *rt = js::gc::GetGCThingRuntime(thing);
     if (!rt->needsBarrier_)
         return false;
     js::Zone *zone = GetGCThingZone(thing);

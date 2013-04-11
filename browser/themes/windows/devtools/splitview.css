@@ -48,8 +48,8 @@
 
 .splitview-nav > li.splitview-active {
   background-image: url(itemArrow-ltr.png),
-                    -moz-linear-gradient(left, black, black),
-                    -moz-linear-gradient(hsl(200,100%,33%), hsl(200,100%,25%));
+                    linear-gradient(to right, black, black),
+                    linear-gradient(hsl(200,100%,33%), hsl(200,100%,25%));
   background-repeat: no-repeat, no-repeat, repeat-x;
   background-position: center right, top right, top left;
   background-size: auto, 1px 100%, auto;
@@ -60,8 +60,8 @@
 
 .splitview-nav > li.splitview-active:-moz-locale-dir(rtl) {
   background-image: url(itemArrow-rtl.png),
-                    -moz-linear-gradient(left, black, black),
-                    -moz-linear-gradient(hsl(200,100%,33%), hsl(200,100%,25%));
+                    linear-gradient(to right, black, black),
+                    linear-gradient(hsl(200,100%,33%), hsl(200,100%,25%));
   background-repeat: no-repeat, no-repeat, repeat-x;
   background-position: center left, top left, top right;
 }
@@ -99,7 +99,7 @@
 .splitview-landscape-resizer {
   -moz-appearance: none;
   width: 7px;
-  background-image: -moz-linear-gradient(left, black 1px, rgba(255,255,255,0.2) 1px);
+  background-image: linear-gradient(to right, black 1px, rgba(255,255,255,0.2) 1px);
   background-size: 2px 10px;
   background-clip: padding-box;
   background-repeat: repeat-x;
@@ -116,8 +116,8 @@
 
 .splitview-portrait-resizer {
   -moz-appearance: none;
-  background: -moz-linear-gradient(top, black 1px, rgba(255,255,255,0.2) 1px),
-              -moz-linear-gradient(top, hsl(209,18%,34%), hsl(210,24%,16%));
+  background: linear-gradient(black 1px, rgba(255,255,255,0.2) 1px),
+              linear-gradient(hsl(209,18%,34%), hsl(210,24%,16%));
   height: 12px;
   background-size: 10px 2px, 100% 12px;
   background-clip: content-box, border-box;

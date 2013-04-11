@@ -469,7 +469,12 @@ TransactionThreadPool::MaybeFireCallback(DatabasesCompleteCallback& aCallback)
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   for (uint32_t index = 0; index < aCallback.mDatabases.Length(); index++) {
-    if (mTransactionsInProgress.Get(aCallback.mDatabases[index]->Id(),
+    IDBDatabase* database = aCallback.mDatabases[index];
+    if (!database) {
+      MOZ_CRASH();
+    }
+
+    if (mTransactionsInProgress.Get(database->Id(),
                                     nullptr)) {
       return false;
     }

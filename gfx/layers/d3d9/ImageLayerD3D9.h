@@ -14,8 +14,6 @@
 namespace mozilla {
 namespace layers {
 
-class ShadowBufferD3D9;
-
 class THEBES_API ImageLayerD3D9 : public ImageLayer,
                                   public LayerD3D9
 {
@@ -55,33 +53,6 @@ struct PlanarYCbCrD3D9BackendData : public ImageBackendData
   nsRefPtr<IDirect3DTexture9> mYTexture;
   nsRefPtr<IDirect3DTexture9> mCrTexture;
   nsRefPtr<IDirect3DTexture9> mCbTexture;
-};
-
-class ShadowImageLayerD3D9 : public ShadowImageLayer,
-                            public LayerD3D9
-{
-public:
-  ShadowImageLayerD3D9(LayerManagerD3D9* aManager);
-  virtual ~ShadowImageLayerD3D9();
-
-  // ShadowImageLayer impl
-  virtual void Swap(const SharedImage& aFront,
-                    SharedImage* aNewBack);
-
-  virtual void Disconnect();
-
-  // LayerD3D9 impl
-  virtual void Destroy();
-
-  virtual Layer* GetLayer();
-
-  virtual void RenderLayer();
-
-  virtual already_AddRefed<IDirect3DTexture9> GetAsTexture(gfxIntSize* aSize);
-
-private:
-  nsRefPtr<ShadowBufferD3D9> mBuffer;
-  nsRefPtr<PlanarYCbCrImage> mYCbCrImage;
 };
 
 } /* layers */

@@ -1455,5 +1455,26 @@ CodeGeneratorX86Shared::generateInvalidateEpilogue()
     return true;
 }
 
+bool
+CodeGeneratorX86Shared::visitNegI(LNegI *ins)
+{
+    Register input = ToRegister(ins->input());
+    JS_ASSERT(input == ToRegister(ins->output()));
+
+    masm.neg32(input);
+    return true;
+}
+
+bool
+CodeGeneratorX86Shared::visitNegD(LNegD *ins)
+{
+    FloatRegister input = ToFloatRegister(ins->input());
+    JS_ASSERT(input == ToFloatRegister(ins->output()));
+
+    masm.negateDouble(input);
+    return true;
+}
+
+
 } // namespace ion
 } // namespace js

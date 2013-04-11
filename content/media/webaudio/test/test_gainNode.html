@@ -33,13 +33,9 @@ addLoadEvent(function() {
   ok(gain.gain, "The audioparam member must exist");
   is(gain.gain.value, 1.0, "Correct initial value");
   is(gain.gain.defaultValue, 1.0, "Correct default value");
-  is(gain.gain.minValue, 0, "Correct min value");
-  is(gain.gain.maxValue, 1.0, "Correct max value");
   gain.gain.value = 0.5;
   is(gain.gain.value, 0.5, "Correct initial value");
   is(gain.gain.defaultValue, 1.0, "Correct default value");
-  is(gain.gain.minValue, 0, "Correct min value");
-  is(gain.gain.maxValue, 1.0, "Correct max value");
 
   source.start(0);
   SimpleTest.executeSoon(function() {

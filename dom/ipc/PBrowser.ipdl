@@ -23,12 +23,12 @@ include "mozilla/dom/TabMessageUtils.h";
 include "mozilla/dom/ScreenOrientation.h";
 include "mozilla/dom/PermissionMessageUtils.h";
 include "mozilla/layout/RenderFrameUtils.h";
+include "mozilla/layers/CompositorTypes.h";
 
 using IPC::Principal;
 using gfxMatrix;
 using gfxRect;
 using gfxSize;
-using mozilla::layers::LayersBackend;
 using mozilla::layers::FrameMetrics;
 using mozilla::layout::ScrollingBehavior;
 using mozilla::void_t;
@@ -50,7 +50,7 @@ using nsTextEvent;
 using nsTouchEvent;
 using RemoteDOMEvent;
 using mozilla::dom::ScreenOrientation;
-
+using mozilla::layers::TextureFactoryIdentifier;
 namespace mozilla {
 namespace dom {
 
@@ -209,7 +209,7 @@ parent:
      */
     sync PRenderFrame()
         returns (ScrollingBehavior scrolling,
-                 LayersBackend backend, int32_t maxTextureSize, uint64_t layersId);
+                 TextureFactoryIdentifier textureFactoryIdentifier, uint64_t layersId);
 
     /** 
      * Starts an offline application cache update.

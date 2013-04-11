@@ -210,9 +210,6 @@ pref("xpinstall.whitelist.add.180", "marketplace.firefox.com");
 pref("lightweightThemes.update.enabled", true);
 
 pref("keyword.enabled", true);
-// Override the default keyword.URL. Empty value means
-// "use the search service's default engine"
-pref("keyword.URL", "");
 
 pref("general.useragent.locale", "@AB_CD@");
 pref("general.skins.selectedSkin", "classic/1.0");
@@ -539,6 +536,8 @@ pref("browser.gesture.twist.right", "cmd_gestureRotateRight");
 pref("browser.gesture.twist.left", "cmd_gestureRotateLeft");
 pref("browser.gesture.twist.end", "cmd_gestureRotateEnd");
 pref("browser.gesture.tap", "cmd_fullZoomReset");
+
+pref("browser.snapshots.limit", 0);
 
 // 0: Nothing happens
 // 1: Scrolling contents

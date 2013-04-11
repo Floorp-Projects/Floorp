@@ -424,30 +424,49 @@ public:
         return true;
     }
 
-    bool BindExternalBuffer(GLuint texture, void* buffer)
+#ifdef MOZ_WIDGET_GONK
+    EGLImage CreateEGLImageForNativeBuffer(void* buffer) MOZ_OVERRIDE
     {
-#if defined(MOZ_WIDGET_GONK)
         EGLint attrs[] = {
             LOCAL_EGL_IMAGE_PRESERVED, LOCAL_EGL_TRUE,
             LOCAL_EGL_NONE, LOCAL_EGL_NONE
         };
-        EGLImage image = sEGLLibrary.fCreateImage(EGL_DISPLAY(),
-                                                  EGL_NO_CONTEXT,
-                                                  LOCAL_EGL_NATIVE_BUFFER_ANDROID,
-                                                  buffer, attrs);
+        return sEGLLibrary.fCreateImage(EGL_DISPLAY(),
+                                        EGL_NO_CONTEXT,
+                                        LOCAL_EGL_NATIVE_BUFFER_ANDROID,
+                                        buffer, attrs);
+    }
+
+    void DestroyEGLImage(EGLImage image) MOZ_OVERRIDE
+    {
+        sEGLLibrary.fDestroyImage(EGL_DISPLAY(), image);
+    }
+#endif
+
+
+    bool BindExternalBuffer(GLuint texture, void* buffer) MOZ_OVERRIDE
+    {
+#ifdef MOZ_WIDGET_GONK
+        EGLImage image = CreateEGLImageForNativeBuffer(buffer);
+        // FIXME [bjacob] There is a bug here: GL_TEXTURE_EXTERNAL here is incompatible
+        // with GL_TEXTURE_2D in UnbindExternalBuffer. Specifically, binding a texture to
+        // two different texture targets in a GL_INVALID_OPERATION.
         fBindTexture(LOCAL_GL_TEXTURE_EXTERNAL, texture);
         fEGLImageTargetTexture2D(LOCAL_GL_TEXTURE_EXTERNAL, image);
-        sEGLLibrary.fDestroyImage(EGL_DISPLAY(), image);
+        DestroyEGLImage(image);
         return true;
 #else
         return false;
 #endif
     }
 
-    bool UnbindExternalBuffer(GLuint texture)
+    bool UnbindExternalBuffer(GLuint texture) MOZ_OVERRIDE
     {
 #if defined(MOZ_WIDGET_GONK)
         fActiveTexture(LOCAL_GL_TEXTURE0);
+        // FIXME [bjacob] There is a bug here: GL_TEXTURE_2D here is incompatible
+        // with GL_TEXTURE_EXTERNAL in BindExternalBuffer. Specifically, binding a texture to
+        // two different texture targets in a GL_INVALID_OPERATION.
         fBindTexture(LOCAL_GL_TEXTURE_2D, texture);
         fTexImage2D(LOCAL_GL_TEXTURE_2D, 0,
                     LOCAL_GL_RGBA,

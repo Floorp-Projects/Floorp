@@ -5,8 +5,8 @@
 
 package org.mozilla.gecko.db;
 
-import org.mozilla.gecko.db.BrowserContract.ExpirePriority;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
+import org.mozilla.gecko.db.BrowserContract.ExpirePriority;
 
 import android.content.ContentResolver;
 import android.database.ContentObserver;

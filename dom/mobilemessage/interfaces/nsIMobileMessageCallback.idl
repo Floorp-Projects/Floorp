@@ -13,11 +13,11 @@ dictionary SmsThreadListItem
   unsigned long long unreadCount;
 };
 
-[scriptable, builtinclass, uuid(edb1de12-8d58-11e2-b382-7bf132b20cb2)]
+[scriptable, builtinclass, uuid(5e993cfc-fb34-46a8-bb14-3df5c09ff748)]
 interface nsIMobileMessageCallback : nsISupports
 {
   /**
-   * All SMS related errors that could apply to SmsRequest objects.
+   * All SMS related errors.
    * Make sure to keep this list in sync with the list in:
    * mobile/android/GeckoSmsManager.java
    */
@@ -42,19 +42,6 @@ interface nsIMobileMessageCallback : nsISupports
   void notifyMessageDeleted(in boolean deleted);
   void notifyDeleteMessageFailed(in long error);
 
-  /**
-   * |message| can be nsIDOMMoz{Mms,Sms}Message.
-   */
-  void notifyMessageListCreated(in long listId,
-                                in nsISupports message);
-  void notifyReadMessageListFailed(in long error);
-  void notifyNextMessageInListGot(in nsISupports message);
-  void notifyNoMessageInList();
-
   void notifyMessageMarkedRead(in boolean read);
   void notifyMarkMessageReadFailed(in long error);
-
-  [implicit_jscontext]
-  void notifyThreadList(in jsval threadList);
-  void notifyThreadListFailed(in long error);
 };

@@ -1013,6 +1013,11 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         uint8_t *target = code + codeBytes + globalDataOffset;
         ((int32_t *)nextInsn)[-1] = target - nextInsn;
     }
+    void memIntToValue(Address Source, Address Dest) {
+        load32(Source, ScratchReg);
+        storeValue(JSVAL_TYPE_INT32, ScratchReg, Dest);
+    }
+
 };
 
 typedef MacroAssemblerX64 MacroAssemblerSpecific;

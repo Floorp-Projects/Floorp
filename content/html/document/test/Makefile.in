@@ -74,6 +74,7 @@ MOCHITEST_FILES = 	test_bug1682.html \
 		test_bug741266.html \
 		test_non-ascii-cookie.html \
 		test_non-ascii-cookie.html^headers^ \
+		test_bug765780.html \
 		$(NULL)
 
 MOCHITEST_BROWSER_FILES = \

@@ -18,6 +18,7 @@ MOCHITEST_BROWSER_TESTS = \
 		browser_profiler_run.js \
 		browser_profiler_controller.js \
 		browser_profiler_bug_830664_multiple_profiles.js \
+		browser_profiler_bug_855244_multiple_tabs.js \
 		head.js \
 		$(NULL)
 

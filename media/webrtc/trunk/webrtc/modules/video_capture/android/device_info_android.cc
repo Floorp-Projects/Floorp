@@ -255,11 +255,11 @@ WebRtc_Word32 DeviceInfoAndroid::CreateCapabilityMap(
          deviceUniqueIdUTF8,
          _lastUsedDeviceNameLength + 1);
 
+  env->DeleteGlobalRef(javaCapClass);
+
   VideoCaptureAndroid::ReleaseAndroidDeviceInfoObjects(attached);
   WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCapture, _id,
                "CreateCapabilityMap %d", _captureCapabilities.Size());
-
-  env->DeleteGlobalRef(javaCapClass);
 
   return _captureCapabilities.Size();
 }
