@@ -69,9 +69,9 @@ WakeLock::Init(const nsAString &aTopic, nsIDOMWindow *aWindow)
    * is always considered invisible.
    */
   if (window) {
-    nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
-    NS_ENSURE_STATE(doc);
-    mHidden = doc->Hidden();
+    nsCOMPtr<nsIDOMDocument> domDoc = window->GetExtantDocument();
+    NS_ENSURE_STATE(domDoc);
+    domDoc->GetHidden(&mHidden);
   }
 
   AttachEventListener();
@@ -168,16 +168,17 @@ void
 WakeLock::AttachEventListener()
 {
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
-
+  
   if (window) {
-    nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
-    if (doc) {
-      doc->AddSystemEventListener(NS_LITERAL_STRING("visibilitychange"),
-                                  this,
-                                  /* useCapture = */ true,
-                                  /* wantsUntrusted = */ false);
+    nsCOMPtr<nsIDOMDocument> domDoc = window->GetExtantDocument();
+    if (domDoc) {
+      nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(domDoc);
+      target->AddSystemEventListener(NS_LITERAL_STRING("visibilitychange"),
+                                     this,
+                                     /* useCapture = */ true,
+                                     /* wantsUntrusted = */ false);
 
-      nsCOMPtr<EventTarget> target = do_QueryInterface(window);
+      target = do_QueryInterface(window);
       target->AddSystemEventListener(NS_LITERAL_STRING("pagehide"),
                                      this,
                                      /* useCapture = */ true,
@@ -196,12 +197,13 @@ WakeLock::DetachEventListener()
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
 
   if (window) {
-    nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
-    if (doc) {
-      doc->RemoveSystemEventListener(NS_LITERAL_STRING("visibilitychange"),
-                                     this,
-                                     /* useCapture = */ true);
-      nsCOMPtr<EventTarget> target = do_QueryInterface(window);
+    nsCOMPtr<nsIDOMDocument> domDoc = window->GetExtantDocument();
+    if (domDoc) {
+      nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(domDoc);
+      target->RemoveSystemEventListener(NS_LITERAL_STRING("visibilitychange"),
+                                        this,
+                                        /* useCapture = */ true);
+      target = do_QueryInterface(window);
       target->RemoveSystemEventListener(NS_LITERAL_STRING("pagehide"),
                                         this,
                                         /* useCapture = */ true);
@@ -242,12 +244,12 @@ WakeLock::HandleEvent(nsIDOMEvent *aEvent)
   aEvent->GetType(type);
 
   if (type.EqualsLiteral("visibilitychange")) {
-    nsCOMPtr<nsIDocument> doc =
-      do_QueryInterface(aEvent->InternalDOMEvent()->GetTarget());
-    NS_ENSURE_STATE(doc);
-
+    nsCOMPtr<nsIDOMEventTarget> target;
+    aEvent->GetTarget(getter_AddRefs(target));
+    nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(target);
+    NS_ENSURE_STATE(domDoc);
     bool oldHidden = mHidden;
-    mHidden = doc->Hidden();
+    domDoc->GetHidden(&mHidden);
 
     if (mLocked && oldHidden != mHidden) {
       hal::ModifyWakeLock(mTopic,

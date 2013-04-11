@@ -7753,8 +7753,9 @@ nsEventListenerThisTranslator::TranslateThis(nsISupports *aInitialThis,
   nsCOMPtr<nsIDOMEvent> event(do_QueryInterface(aInitialThis));
   NS_ENSURE_TRUE(event, NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<EventTarget> target = event->InternalDOMEvent()->GetTarget();
-  *_retval = target.forget().get();
+  nsCOMPtr<nsIDOMEventTarget> target;
+  event->GetCurrentTarget(getter_AddRefs(target));
+  target.forget(_retval);
   return NS_OK;
 }
 
