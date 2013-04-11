@@ -766,8 +766,8 @@ nsHTMLReflowState::ComputeRelativeOffsets(uint8_t aCBDirection,
     } else {
       // 'Right' isn't 'auto' so compute its value
       aComputedOffsets.right = nsLayoutUtils::
-        ComputeWidthDependentValue(aContainingBlockWidth,
-                                   position->mOffset.GetRight());
+        ComputeCBDependentValue(aContainingBlockWidth,
+                                position->mOffset.GetRight());
 
       // Computed value for 'left' is minus the value of 'right'
       aComputedOffsets.left = -aComputedOffsets.right;
@@ -778,8 +778,8 @@ nsHTMLReflowState::ComputeRelativeOffsets(uint8_t aCBDirection,
     
     // 'Left' isn't 'auto' so compute its value
     aComputedOffsets.left = nsLayoutUtils::
-      ComputeWidthDependentValue(aContainingBlockWidth,
-                                 position->mOffset.GetLeft());
+      ComputeCBDependentValue(aContainingBlockWidth,
+                              position->mOffset.GetLeft());
 
     // Computed value for 'right' is minus the value of 'left'
     aComputedOffsets.right = -aComputedOffsets.left;
@@ -944,11 +944,11 @@ nsHTMLReflowState::CalculateHorizBorderPaddingMargin(
   if (!mStylePadding->GetPadding(padding)) {
     // We have to compute the left and right values
     padding.left = nsLayoutUtils::
-      ComputeWidthDependentValue(aContainingBlockWidth,
-                                 mStylePadding->mPadding.GetLeft());
+      ComputeCBDependentValue(aContainingBlockWidth,
+                              mStylePadding->mPadding.GetLeft());
     padding.right = nsLayoutUtils::
-      ComputeWidthDependentValue(aContainingBlockWidth,
-                                 mStylePadding->mPadding.GetRight());
+      ComputeCBDependentValue(aContainingBlockWidth,
+                              mStylePadding->mPadding.GetRight());
   }
 
   // See if the style system can provide us the margin directly
@@ -959,16 +959,16 @@ nsHTMLReflowState::CalculateHorizBorderPaddingMargin(
       margin.left = 0;  // just ignore
     } else {
       margin.left = nsLayoutUtils::
-        ComputeWidthDependentValue(aContainingBlockWidth,
-                                   mStyleMargin->mMargin.GetLeft());
+        ComputeCBDependentValue(aContainingBlockWidth,
+                                mStyleMargin->mMargin.GetLeft());
     }
     if (eStyleUnit_Auto == mStyleMargin->mMargin.GetRightUnit()) {
       // XXX FIXME (or does CalculateBlockSideMargins do this?)
       margin.right = 0;  // just ignore
     } else {
       margin.right = nsLayoutUtils::
-        ComputeWidthDependentValue(aContainingBlockWidth,
-                                   mStyleMargin->mMargin.GetRight());
+        ComputeCBDependentValue(aContainingBlockWidth,
+                                mStyleMargin->mMargin.GetRight());
     }
   }
 
@@ -1309,16 +1309,16 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
     leftIsAuto = true;
   } else {
     mComputedOffsets.left = nsLayoutUtils::
-      ComputeWidthDependentValue(containingBlockWidth,
-                                 mStylePosition->mOffset.GetLeft());
+      ComputeCBDependentValue(containingBlockWidth,
+                              mStylePosition->mOffset.GetLeft());
   }
   if (eStyleUnit_Auto == mStylePosition->mOffset.GetRightUnit()) {
     mComputedOffsets.right = 0;
     rightIsAuto = true;
   } else {
     mComputedOffsets.right = nsLayoutUtils::
-      ComputeWidthDependentValue(containingBlockWidth,
-                                 mStylePosition->mOffset.GetRight());
+      ComputeCBDependentValue(containingBlockWidth,
+                              mStylePosition->mOffset.GetRight());
   }
 
   // Use the horizontal component of the hypothetical box in the cases
@@ -2432,22 +2432,22 @@ nsCSSOffsetState::ComputeMargin(nscoord aContainingBlockWidth)
   if (isWidthDependent) {
     // We have to compute the value
     mComputedMargin.left = nsLayoutUtils::
-      ComputeWidthDependentValue(aContainingBlockWidth,
-                                 styleMargin->mMargin.GetLeft());
+      ComputeCBDependentValue(aContainingBlockWidth,
+                              styleMargin->mMargin.GetLeft());
     mComputedMargin.right = nsLayoutUtils::
-      ComputeWidthDependentValue(aContainingBlockWidth,
-                                 styleMargin->mMargin.GetRight());
+      ComputeCBDependentValue(aContainingBlockWidth,
+                              styleMargin->mMargin.GetRight());
 
     // According to the CSS2 spec, margin percentages are
     // calculated with respect to the *width* of the containing
     // block, even for margin-top and margin-bottom.
     // XXX This isn't true for page boxes, if we implement them.
     mComputedMargin.top = nsLayoutUtils::
-      ComputeWidthDependentValue(aContainingBlockWidth,
-                                 styleMargin->mMargin.GetTop());
+      ComputeCBDependentValue(aContainingBlockWidth,
+                              styleMargin->mMargin.GetTop());
     mComputedMargin.bottom = nsLayoutUtils::
-      ComputeWidthDependentValue(aContainingBlockWidth,
-                                 styleMargin->mMargin.GetBottom());
+      ComputeCBDependentValue(aContainingBlockWidth,
+                              styleMargin->mMargin.GetBottom());
   }
 
   nscoord marginAdjustment = FontSizeInflationListMarginAdjustment(frame);
@@ -2482,20 +2482,20 @@ nsCSSOffsetState::ComputePadding(nscoord aContainingBlockWidth, nsIAtom* aFrameT
     // We have to compute the value
     // clamp negative calc() results to 0
     mComputedPadding.left = std::max(0, nsLayoutUtils::
-      ComputeWidthDependentValue(aContainingBlockWidth,
-                                 stylePadding->mPadding.GetLeft()));
+      ComputeCBDependentValue(aContainingBlockWidth,
+                              stylePadding->mPadding.GetLeft()));
     mComputedPadding.right = std::max(0, nsLayoutUtils::
-      ComputeWidthDependentValue(aContainingBlockWidth,
-                                 stylePadding->mPadding.GetRight()));
+      ComputeCBDependentValue(aContainingBlockWidth,
+                              stylePadding->mPadding.GetRight()));
 
     // According to the CSS2 spec, percentages are calculated with respect to
     // containing block width for padding-top and padding-bottom
     mComputedPadding.top = std::max(0, nsLayoutUtils::
-      ComputeWidthDependentValue(aContainingBlockWidth,
-                                 stylePadding->mPadding.GetTop()));
+      ComputeCBDependentValue(aContainingBlockWidth,
+                              stylePadding->mPadding.GetTop()));
     mComputedPadding.bottom = std::max(0, nsLayoutUtils::
-      ComputeWidthDependentValue(aContainingBlockWidth,
-                                 stylePadding->mPadding.GetBottom()));
+      ComputeCBDependentValue(aContainingBlockWidth,
+                              stylePadding->mPadding.GetBottom()));
   }
   return isWidthDependent;
 }
