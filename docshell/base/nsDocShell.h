@@ -23,7 +23,6 @@
 #include "nsITextScroll.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIContentViewerContainer.h"
-#include "nsIDOMStorageManager.h"
 
 #include "nsDocLoader.h"
 #include "nsIURILoader.h"
@@ -147,8 +146,7 @@ class nsDocShell : public nsDocLoader,
                    public nsILoadContext,
                    public nsIWebShellServices,
                    public nsILinkHandler,
-                   public nsIClipboardCommands,
-                   public nsIDOMStorageManager
+                   public nsIClipboardCommands
 {
     friend class nsDSURIContentListener;
 
@@ -180,7 +178,6 @@ public:
     NS_DECL_NSIOBSERVER
     NS_DECL_NSICLIPBOARDCOMMANDS
     NS_DECL_NSIWEBSHELLSERVICES
-    NS_FORWARD_SAFE_NSIDOMSTORAGEMANAGER(TopSessionStorageManager())
 
     NS_IMETHOD Stop() {
         // Need this here because otherwise nsIWebNavigation::Stop
@@ -631,8 +628,10 @@ protected:
     
     void ReattachEditorToWindow(nsISHEntry *aSHEntry);
 
-    nsCOMPtr<nsIDOMStorageManager> mSessionStorageManager;
-    nsIDOMStorageManager* TopSessionStorageManager();
+    nsresult GetSessionStorageForURI(nsIURI* aURI,
+                                     const nsSubstring& aDocumentURI,
+                                     bool create,
+                                     nsIDOMStorage** aStorage);
 
     // helpers for executing commands
     nsresult GetControllerForCommand(const char *inCommand,
@@ -676,6 +675,9 @@ protected:
     FrameType GetInheritedFrameType();
 
     bool HasUnloadedParent();
+
+    // hash of session storages, keyed by domain
+    nsInterfaceHashtable<nsCStringHashKey, nsIDOMStorage> mStorages;
 
     // Dimensions of the docshell
     nsIntRect                  mBounds;

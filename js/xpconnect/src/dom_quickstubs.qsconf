@@ -119,6 +119,7 @@ members = [
     'nsIDOMStorage.key',
     'nsIDOMStorage.removeItem',
     'nsIDOMStorage.clear',
+    'nsIDOMStorageItem.value',
 
     # dom/interfaces/xpath
     'nsIDOMXPathExpression.evaluate',
