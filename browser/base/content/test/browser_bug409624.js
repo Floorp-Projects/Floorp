@@ -11,10 +11,10 @@ function test() {
   // This test relies on the form history being empty to start with delete
   // all the items first.
   FormHistory.update({ op: "remove" },
-                     { onSuccess: function () { test2(); },
-                       onFailure: function (error) {
-                         do_throw("Error occurred removing form history: " + error);
-                       }
+                     { handleError: function (error) {
+                         do_throw("Error occurred updating form history: " + error);
+                       },
+                       handleCompletion: function (reason) { if (!reason) test2(); },
                      });
 }
 

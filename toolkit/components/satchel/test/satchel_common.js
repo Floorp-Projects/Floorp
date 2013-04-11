@@ -135,17 +135,27 @@ function getFormSubmitButton(formNum) {
 
 // Count the number of entries with the given name and value, and call then(number)
 // when done. If name or value is null, then the value of that field does not matter.
-function countEntries(name, value, then){
+function countEntries(name, value, then) {
   var obj = {};
   if (name !== null)
     obj.fieldname = name;
   if (value !== null)
     obj.value = value;
 
-  SpecialPowers.formHistory.count(obj,
-    { onSuccess: then,
-      onFailure: function (error) {
-        do_throw("Error occurred searching form history: " + error);
-      }
-    });
+  var count = 0;
+  SpecialPowers.formHistory.count(obj, { handleResult: function (result) { count = result },
+                                         handleError: function (error) {
+                                           do_throw("Error occurred searching form history: " + error);
+                                         },
+                                         handleCompletion: function (reason) { if (!reason) then(count); }
+                                       });
+}
+
+// Wrapper around FormHistory.update which handles errors. Calls then() when done.
+function updateFormHistory(changes, then) {
+  SpecialPowers.formHistory.update(changes, { handleError: function (error) {
+                                                do_throw("Error occurred updating form history: " + error);
+                                              },
+                                              handleCompletion: function (reason) { if (!reason) then(); },
+                                            });
 }

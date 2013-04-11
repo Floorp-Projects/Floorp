@@ -15,8 +15,6 @@ let Sanitizer = tempScope.Sanitizer;
 
 let FormHistory = (Components.utils.import("resource://gre/modules/FormHistory.jsm", {})).FormHistory;
 
-let formHistoryPromise;
-
 function promiseFormHistoryRemoved() {
   let deferred = Promise.defer();
   Services.obs.addObserver(function onfh() {
@@ -44,12 +42,20 @@ function countEntries(name, message, check) {
   if (name !== null)
     obj.fieldname = name;
 
-  FormHistory.count(obj, { onSuccess: function (num) { check(num, message); deferred.resolve(); },
-                           onFailure: function (error) {
+  let count;
+  FormHistory.count(obj, { handleResult: function (result) count = result,
+                           handleError: function (error) {
                              do_throw("Error occurred searching form history: " + error);
                              deferred.reject(error)
-                           }
+                           },
+                           handleCompletion: function (reason) {
+                             if (!reason) {
+                               check(count, message);
+                               deferred.resolve();
+                             }
+                           },
                          });
+
   return deferred.promise;
 }
 
@@ -428,10 +434,14 @@ function setupFormHistory() {
 
   function searchEntries(terms, params) {
     let deferred = Promise.defer();
-    FormHistory.search(terms, params, { onSuccess: function (results) deferred.resolve(results),
-                                        onFailure: function (error) {
+
+    let results = [];
+    FormHistory.search(terms, params, { handleResult: function (result) results.push(result),
+                                        handleError: function (error) {
                                           do_throw("Error occurred searching form history: " + error);
-                                        }
+                                          deferred.reject(error);
+                                        },
+                                        handleCompletion: function (reason) { deferred.resolve(results); }
                                       });
     return deferred.promise;
   }
@@ -439,11 +449,11 @@ function setupFormHistory() {
   function update(changes)
   {
     let deferred = Promise.defer();
-    FormHistory.update(changes, { onSuccess: function () { deferred.resolve(); },
-                                  onFailure: function (error) {
-                                    do_throw("Error occurred updating form history: " + error);
-                                    deferred.reject(error)
-                                  }
+    FormHistory.update(changes, { handleError: function (error) {
+                                    do_throw("Error occurred searching form history: " + error);
+                                    deferred.reject(error);
+                                  },
+                                  handleCompletion: function (reason) { deferred.resolve(); }
                                 });
     return deferred.promise;
   }

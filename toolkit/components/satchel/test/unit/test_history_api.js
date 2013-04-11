@@ -61,25 +61,28 @@ function promiseUpdateEntry(op, name, value)
 function promiseUpdate(change)
 {
   let deferred = Promise.defer();
-  FormHistory.update(change, { onSuccess: function (results) { deferred.resolve(); },
-                               onFailure: function (error) {
-                                 do_throw("Error occurred updating form history: " + error);
-                                 deferred.reject();
-                               }
-                             });
+  FormHistory.update(change,
+                     { handleError: function (error) {
+                         do_throw("Error occurred updating form history: " + error);
+                         deferred.reject(error);
+                       },
+                       handleCompletion: function (reason) { if (!reason) deferred.resolve(); }
+                     });
   return deferred.promise;
 }
 
 function promiseSearchEntries(terms, params)
 {
   let deferred = Promise.defer();
-  FormHistory.search(terms, params, { onSuccess: function (results) { deferred.resolve(results); },
-                                      onFailure: function (error) {
-                                        do_throw("Error occurred searching form history: " + error);
-                                        deferred.reject();
-                                      }
-                                    });
-
+  let results = [];
+  FormHistory.search(terms, params,
+                     { handleResult: function(result) results.push(result),
+                       handleError: function (error) {
+                         do_throw("Error occurred searching form history: " + error);
+                         deferred.reject(error);
+                       },
+                       handleCompletion: function (reason) { if (!reason) deferred.resolve(results); }
+                     });
   return deferred.promise;
 }
 
@@ -158,12 +161,17 @@ add_task(function ()
   yield promiseCountEntries("", "value-A", checkNotExists);
   yield promiseCountEntries(null, "value-A", checkExists);
 
+  // Cannot use promiseCountEntries when name and value are null because it treats null values as not set
+  // and here a search should be done explicity for null.
+  deferred = Promise.defer();
   yield FormHistory.count({ fieldname: null, value: null },
-                          { onSuccess: checkNotExists,
-                            onFailure: function (error) {
+                          { handleResult: function(result) checkNotExists(result),
+                            handleError: function (error) {
                               do_throw("Error occurred searching form history: " + error);
-                            }
+                            },
+                            handleCompletion: function(reason) { if (!reason) deferred.resolve() }
                           });
+  yield deferred.promise;
 
   // ===== 3 =====
   // Test removeEntriesForName with a single matching value

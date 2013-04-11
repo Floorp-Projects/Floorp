@@ -24,15 +24,6 @@ function getFormExpiryDays() {
         return DEFAULT_EXPIRE_DAYS;
 }
 
-function update(changes, then)
-{
-  FormHistory.update(changes, { onSuccess: then,
-                                onFailure: function (error) {
-                                  do_throw("Error occurred updating form history: " + error);
-                                }
-                              });
-}
-
 function run_test() {
     // ===== test init =====
     var testfile = do_get_file("formhistory_autocomplete.sqlite");
@@ -75,31 +66,17 @@ add_test(function test0() {
                        timesUsed: 1, firstUsed: useDate, lastUsed: useDate });
     }
 
-    update(changes, run_next_test);
+    updateFormHistory(changes, run_next_test);
 });
 
 add_test(function test1() {
     do_log_info("Check initial state is as expected");
 
-    FormHistory.count({}, {
-      onSuccess : function(aNumEntries) {
-          do_check_eq(numRecords, aNumEntries);
-
-          FormHistory.count({ fieldname : "field1" }, {
-              onSuccess : function(aFieldEntries) {
-                  do_check_true(aFieldEntries > 0);
-                  run_next_test();
-              },
-
-              onFailure : function(aError) {
-                  do_throw("Count 2 failed");
-              }
-          });
-      },
-
-      onFailure : function(aError) {
-          do_throw("Count 1 failed");
-      }
+    countEntries(null, null, function (count) {
+      countEntries("field1", null, function (count) {
+        do_check_true(count > 0);
+        run_next_test();
+      });
     });
 });
 
@@ -156,7 +133,7 @@ add_test(function test5() {
                        timesUsed: timesUsed * timeGroupingSize, firstUsed: now, lastUsed: now };
         changes.push(change);
     }
-    update(changes, run_next_test);
+    updateFormHistory(changes, run_next_test);
 });
 
 add_test(function test6() {
@@ -197,7 +174,7 @@ add_test(function test8() {
                    timesUsed: 100, firstUsed: (agedDate + 60 * 1000 * 1000), lastUsed: now });
     changes.push({ op : "add", fieldname: "field3", value: "senior citizen",
                    timesUsed: 100, firstUsed: (agedDate - 60 * 1000 * 1000), lastUsed: now });
-    update(changes, run_next_test);
+    updateFormHistory(changes, run_next_test);
 });
 
 add_test(function test9() {
@@ -220,7 +197,7 @@ add_test(function test10() {
                    timesUsed: 1, firstUsed: 0, lastUsed: now * 2 });
     changes.push({ op : "add", fieldname: "field4", value: "in the future 2",
                    timesUsed: 1, firstUsed: now * 2, lastUsed: now * 2 });
-    update(changes, run_next_test);
+    updateFormHistory(changes, run_next_test);
 });
 
 add_test(function test11() {
@@ -241,7 +218,7 @@ add_test(function test12() {
     for (let value of syncValues) {
       changes.push({ op : "add", fieldname: "field5", value: value });
     }
-    update(changes, run_next_test);
+    updateFormHistory(changes, run_next_test);
 });
 
 add_test(function test13() {

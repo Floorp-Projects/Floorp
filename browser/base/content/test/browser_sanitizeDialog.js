@@ -949,10 +949,10 @@ function addFormEntryWithMinutesAgo(then, aMinutesAgo) {
   let timestamp = now_uSec - (aMinutesAgo * kUsecPerMin);
 
   FormHistory.update({ op: "add", fieldname: name, value: "dummy", firstUsed: timestamp },
-                     { onSuccess: function () { then.next(); },
-                       onFailure: function (error) {
+                     { handleError: function (error) {
                          do_throw("Error occurred updating form history: " + error);
-                       }
+                       },
+                       handleCompletion: function (reason) { then.next(); }
                      });
   return name;
 }
@@ -964,13 +964,17 @@ function formNameExists(name)
 {
   let deferred = Promise.defer();
 
-   FormHistory.count({ fieldname: name },
-                     { onSuccess: function(num) deferred.resolve(num),
-                       onFailure: function (error) {
-                         do_throw("Error occurred searching form history: " + error);
-                         deferred.reject(error)
-                       }
-                     });
+  let count = 0;
+  FormHistory.count({ fieldname: name },
+                    { handleResult: function (result) count = result,
+                      handleError: function (error) {
+                        do_throw("Error occurred searching form history: " + error);
+                        deferred.reject(error);
+                      },
+                      handleCompletion: function (reason) {
+                          if (!reason) deferred.resolve(count);
+                      }
+                    });
 
   return deferred.promise;
 }
@@ -984,13 +988,12 @@ function blankSlate() {
 
   let deferred = Promise.defer();
   FormHistory.update({ op: "remove" },
-                     { onSuccess: function () { deferred.resolve(); },
-                       onFailure: function (error) {
+                     { handleError: function (error) {
                          do_throw("Error occurred updating form history: " + error);
-                         deferred.reject(error)
-                       }
+                         deferred.reject(error);
+                       },
+                       handleCompletion: function (reason) { if (!reason) deferred.resolve(); }
                      });
-
   return deferred.promise;
 }
 

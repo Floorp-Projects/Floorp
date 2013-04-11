@@ -258,19 +258,23 @@ FormAutoComplete.prototype = {
 
         this.stopAutoCompleteSearch();
 
-        let self = this;
+        let results = [];
         let processResults = {
-          onSuccess: function(aResults) {
-            self._pendingQuery = null;
-            callback(aResults);
+          handleResult: aResult => {
+            results.push(aResult);
           },
-          onFailure: function(aError) {
-            self.log("getAutocompleteValues failed: " + aError.message);
-            self._pendingQuery = null;
+          handleError: aError => {
+            this.log("getAutocompleteValues failed: " + aError.message);
+          },
+          handleCompletion: aReason => {
+            this._pendingQuery = null;
+            if (!aReason) {
+              callback(results);
+            }
           }
         };
 
-        self._pendingQuery = FormHistory.getAutoCompleteResults(searchString, params, processResults);
+        this._pendingQuery = FormHistory.getAutoCompleteResults(searchString, params, processResults);
     },
 
     /*

@@ -66,17 +66,11 @@ var rect = input.getBoundingClientRect();
 
 // Get the form history service
 function setupFormHistory() {
-  SpecialPowers.formHistory.update(
-    [
-      { op : "remove" },
-      { op : "add", fieldname : "field1", value : "value1" },
-      { op : "add", fieldname : "field1", value : "value2" },
-    ], {
-      onSuccess : function() runTest(1),
-      onFailure : function(aError) {
-        do_throw("Error occurred updating form history: " + aError);
-      }
-    });
+  updateFormHistory([
+    { op : "remove" },
+    { op : "add", fieldname : "field1", value : "value1" },
+    { op : "add", fieldname : "field1", value : "value2" },
+  ], function() runTest(1));
 }
 
 function checkForm(expectedValue) {
