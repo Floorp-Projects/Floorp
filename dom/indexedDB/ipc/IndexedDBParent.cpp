@@ -293,9 +293,7 @@ IndexedDBDatabaseParent::HandleEvent(nsIDOMEvent* aEvent)
   nsresult rv = aEvent->GetType(type);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDOMEventTarget> target;
-  rv = aEvent->GetTarget(getter_AddRefs(target));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<EventTarget> target = aEvent->InternalDOMEvent()->GetTarget();
 
   if (mDatabase &&
       SameCOMIdentity(target, NS_ISUPPORTS_CAST(nsIDOMEventTarget*,
@@ -715,14 +713,9 @@ IndexedDBTransactionParent::HandleEvent(nsIDOMEvent* aEvent)
   else if (type.EqualsLiteral(ABORT_EVT_STR)) {
 #ifdef DEBUG
     {
-      nsCOMPtr<nsIDOMEventTarget> target;
-      if (NS_FAILED(aEvent->GetTarget(getter_AddRefs(target)))) {
-        NS_WARNING("Failed to get target!");
-      }
-      else {
-        MOZ_ASSERT(SameCOMIdentity(target, NS_ISUPPORTS_CAST(nsIDOMEventTarget*,
-                                                             mTransaction)));
-      }
+      nsCOMPtr<EventTarget> target = aEvent->InternalDOMEvent()->GetTarget();
+      MOZ_ASSERT(SameCOMIdentity(target, NS_ISUPPORTS_CAST(nsIDOMEventTarget*,
+                                                           mTransaction)));
     }
 #endif
     params = AbortResult(mTransaction->GetAbortCode());
