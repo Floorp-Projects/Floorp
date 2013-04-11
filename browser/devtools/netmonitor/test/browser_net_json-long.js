@@ -6,8 +6,12 @@
  */
 
 function test() {
-  initNetMonitor(JSONP_URL).then(([aTab, aDebuggee, aMonitor]) => {
+  initNetMonitor(JSON_LONG_URL).then(([aTab, aDebuggee, aMonitor]) => {
     info("Starting test... ");
+
+    // This is receiving over 80 KB of json and will populate over 6000 items
+    // in a variables view instance. Debug builds are slow.
+    requestLongerTimeout(2);
 
     let { document, L10N, SourceEditor, NetMonitorView } = aMonitor.panelWin;
     let { RequestsMenu } = NetMonitorView;
@@ -16,12 +20,12 @@ function test() {
 
     waitForNetworkEvents(aMonitor, 1).then(() => {
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(0),
-        "GET", CONTENT_TYPE_SJS + "?fmt=jsonp&jsonp=$_0123Fun", {
+        "GET", CONTENT_TYPE_SJS + "?fmt=json-long", {
           status: 200,
           statusText: "OK",
           type: "json",
           fullMimeType: "text/json; charset=utf-8",
-          size: L10N.getFormatStr("networkMenu.sizeKB", 0.04),
+          size: L10N.getFormatStr("networkMenu.sizeKB", 83.96),
           time: true
         });
 
@@ -30,8 +34,10 @@ function test() {
       EventUtils.sendMouseEvent({ type: "mousedown" },
         document.querySelectorAll("#details-pane tab")[3]);
 
-      testResponseTab();
-      teardown(aMonitor).then(finish);
+      aMonitor.panelWin.once("NetMonitor:ResponseBodyAvailable", () => {
+        testResponseTab();
+        teardown(aMonitor).then(finish);
+      });
 
       function testResponseTab() {
         let tab = document.querySelectorAll("#details-pane tab")[3];
@@ -54,25 +60,32 @@ function test() {
 
         is(tabpanel.querySelectorAll(".variables-view-scope").length, 1,
           "There should be 1 json scope displayed in this tabpanel.");
-        is(tabpanel.querySelectorAll(".variables-view-property").length, 2,
-          "There should be 2 json properties displayed in this tabpanel.");
+        is(tabpanel.querySelectorAll(".variables-view-property").length, 6057,
+          "There should be 6057 json properties displayed in this tabpanel.");
         is(tabpanel.querySelectorAll(".variables-view-empty-notice").length, 0,
           "The empty notice should not be displayed in this tabpanel.");
 
         let jsonScope = tabpanel.querySelectorAll(".variables-view-scope")[0];
+        let names = ".variables-view-property .name";
+        let values = ".variables-view-property .value";
 
         is(jsonScope.querySelector(".name").getAttribute("value"),
           "JSON", "The json scope doesn't have the correct title.");
 
-        is(jsonScope.querySelectorAll(".variables-view-property .name")[0].getAttribute("value"),
-          "greeting", "The first json property name was incorrect.");
-        is(jsonScope.querySelectorAll(".variables-view-property .value")[0].getAttribute("value"),
-          "\"Hello JSONP!\"", "The first json property value was incorrect.");
+        is(jsonScope.querySelectorAll(names)[0].getAttribute("value"),
+          "0", "The first json property name was incorrect.");
+        is(jsonScope.querySelectorAll(values)[0].getAttribute("value"),
+          "[object Object]", "The first json property value was incorrect.");
 
-        is(jsonScope.querySelectorAll(".variables-view-property .name")[1].getAttribute("value"),
-          "__proto__", "The second json property name was incorrect.");
-        is(jsonScope.querySelectorAll(".variables-view-property .value")[1].getAttribute("value"),
-          "[object Object]", "The second json property value was incorrect.");
+        is(jsonScope.querySelectorAll(names)[1].getAttribute("value"),
+          "greeting", "The second json property name was incorrect.");
+        is(jsonScope.querySelectorAll(values)[1].getAttribute("value"),
+          "\"Hello long string JSON!\"", "The second json property value was incorrect.");
+
+        is(Array.slice(jsonScope.querySelectorAll(names), -1).shift().getAttribute("value"),
+          "__proto__", "The last json property name was incorrect.");
+        is(Array.slice(jsonScope.querySelectorAll(values), -1).shift().getAttribute("value"),
+          "[object Object]", "The last json property value was incorrect.");
       }
     });
 
