@@ -8303,14 +8303,17 @@ DR_init_constraints_cookie::~DR_init_constraints_cookie()
 DR_init_offsets_cookie::DR_init_offsets_cookie(
                      nsIFrame*                aFrame,
                      nsCSSOffsetState*        aState,
-                     nscoord                  aCBWidth,
+                     nscoord                  aHorizontalPercentBasis,
+                     nscoord                  aVerticalPercentBasis,
                      const nsMargin*          aMargin,
                      const nsMargin*          aPadding)
   : mFrame(aFrame)
   , mState(aState)
 {
   MOZ_COUNT_CTOR(DR_init_offsets_cookie);
-  mValue = nsCSSOffsetState::DisplayInitOffsetsEnter(mFrame, mState, aCBWidth,
+  mValue = nsCSSOffsetState::DisplayInitOffsetsEnter(mFrame, mState,
+                                                     aHorizontalPercentBasis,
+                                                     aVerticalPercentBasis,
                                                      aMargin, aPadding);
 }
 
@@ -9251,7 +9254,8 @@ nsHTMLReflowState::DisplayInitConstraintsExit(nsIFrame* aFrame,
 /* static */ void*
 nsCSSOffsetState::DisplayInitOffsetsEnter(nsIFrame* aFrame,
                                           nsCSSOffsetState* aState,
-                                          nscoord aContainingBlockWidth,
+                                          nscoord aHorizontalPercentBasis,
+                                          nscoord aVerticalPercentBasis,
                                           const nsMargin* aBorder,
                                           const nsMargin* aPadding)
 {
@@ -9266,9 +9270,12 @@ nsCSSOffsetState::DisplayInitOffsetsEnter(nsIFrame* aFrame,
   if (treeNode && treeNode->mDisplay) {
     DR_state->DisplayFrameTypeInfo(aFrame, treeNode->mIndent);
 
-    char width[16];
-    DR_state->PrettyUC(aContainingBlockWidth, width);
-    printf("InitOffsets cbw=%s", width);
+    char horizPctBasisStr[16];
+    char vertPctBasisStr[16];
+    DR_state->PrettyUC(aHorizontalPercentBasis, horizPctBasisStr);
+    DR_state->PrettyUC(aVerticalPercentBasis,   vertPctBasisStr);
+    printf("InitOffsets pct_basis=%s,%s", horizPctBasisStr, vertPctBasisStr);
+
     DR_state->PrintMargin("b", aBorder);
     DR_state->PrintMargin("p", aPadding);
     putchar('\n');
