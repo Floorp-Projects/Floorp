@@ -16,12 +16,11 @@
         <item name="doorhangerWidth">fill_parent</item>
     </style>
 
-    <style name="GeckoDialogBase" parent="@android:style/Theme.Holo.Dialog">
+    <style name="GeckoDialogBase" parent="@android:style/Theme.Holo.Light.Dialog">
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>
     </style>
-    
 
     <style name="GeckoAwesomeBarBase" parent="GeckoBase">
         <item name="android:windowBackground">@null</item>
