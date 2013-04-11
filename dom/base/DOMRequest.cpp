@@ -101,7 +101,7 @@ DOMRequest::GetReadyState(nsAString& aReadyState)
 }
 
 NS_IMETHODIMP
-DOMRequest::GetResult(jsval* aResult)
+DOMRequest::GetResult(JS::Value* aResult)
 {
   *aResult = Result();
   return NS_OK;
@@ -115,7 +115,7 @@ DOMRequest::GetError(nsIDOMDOMError** aError)
 }
 
 void
-DOMRequest::FireSuccess(jsval aResult)
+DOMRequest::FireSuccess(JS::Value aResult)
 {
   NS_ASSERTION(!mDone, "mDone shouldn't have been set to true already!");
   NS_ASSERTION(!mError, "mError shouldn't have been set!");
@@ -219,7 +219,7 @@ DOMRequestService::CreateCursor(nsIDOMWindow* aWindow,
 
 NS_IMETHODIMP
 DOMRequestService::FireSuccess(nsIDOMDOMRequest* aRequest,
-                               const jsval& aResult)
+                               const JS::Value& aResult)
 {
   NS_ENSURE_STATE(aRequest);
   static_cast<DOMRequest*>(aRequest)->FireSuccess(aResult);
@@ -241,7 +241,7 @@ class FireSuccessAsyncTask : public nsRunnable
 {
 public:
   FireSuccessAsyncTask(DOMRequest* aRequest,
-                       const jsval& aResult) :
+                       const JS::Value& aResult) :
     mReq(aRequest),
     mResult(aResult)
   {
@@ -276,7 +276,7 @@ public:
   }
 private:
   nsRefPtr<DOMRequest> mReq;
-  jsval mResult;
+  JS::Value mResult;
 };
 
 class FireErrorAsyncTask : public nsRunnable
@@ -302,7 +302,7 @@ private:
 
 NS_IMETHODIMP
 DOMRequestService::FireSuccessAsync(nsIDOMDOMRequest* aRequest,
-                                    const jsval& aResult)
+                                    const JS::Value& aResult)
 {
   NS_ENSURE_STATE(aRequest);
   nsCOMPtr<nsIRunnable> asyncTask =
