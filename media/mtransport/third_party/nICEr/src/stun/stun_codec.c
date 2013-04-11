@@ -281,6 +281,55 @@ nr_stun_attr_username_illegal(nr_stun_attr_info *attr_info, int attrlen, void *d
 }
 
 static int
+nr_stun_attr_codec_UCHAR_print(nr_stun_attr_info *attr_info, char *msg, void *data)
+{
+    r_log(NR_LOG_STUN, LOG_DEBUG, "%s %s: %u", msg, attr_info->name, *(UCHAR*)data);
+    return 0;
+}
+
+static int
+nr_stun_attr_codec_UCHAR_encode(nr_stun_attr_info *attr_info, void *data, int offset, int buflen, UCHAR *buf, int *attrlen)
+{
+    int start = offset;
+    UINT4 tmp = *((UCHAR *)data);
+    tmp <<= 24;
+
+    if (nr_stun_encode_htons(attr_info->type    , buflen, buf, &offset)
+     || nr_stun_encode_htons(sizeof(UINT4)      , buflen, buf, &offset)
+     || nr_stun_encode_htonl(tmp                , buflen, buf, &offset))
+        return R_FAILED;
+
+    *attrlen = offset - start;
+
+    return 0;
+}
+
+static int
+nr_stun_attr_codec_UCHAR_decode(nr_stun_attr_info *attr_info, int attrlen, UCHAR *buf, int offset, int buflen, void *data)
+{
+    UINT4 tmp;
+
+    if (attrlen != sizeof(UINT4)) {
+        r_log(NR_LOG_STUN, LOG_WARNING, "Integer is illegal size: %d", attrlen);
+        return R_FAILED;
+    }
+
+    if (nr_stun_decode_htonl(buf, buflen, &offset, &tmp))
+        return R_FAILED;
+
+    *((UCHAR *)data) = (tmp >> 24) & 0xff;
+
+    return 0;
+}
+
+nr_stun_attr_codec nr_stun_attr_codec_UCHAR = {
+    "UCHAR",
+    nr_stun_attr_codec_UCHAR_print,
+    nr_stun_attr_codec_UCHAR_encode,
+    nr_stun_attr_codec_UCHAR_decode
+};
+
+static int
 nr_stun_attr_codec_UINT4_print(nr_stun_attr_info *attr_info, char *msg, void *data)
 {
     r_log(NR_LOG_STUN, LOG_DEBUG, "%s %s: %u", msg, attr_info->name, *(UINT4*)data);
@@ -474,15 +523,10 @@ nr_stun_attr_codec nr_stun_attr_codec_addr = {
     nr_stun_attr_codec_addr_decode
 };
 
-typedef struct nr_ice_attr_data_ {
-    UCHAR  data[NR_STUN_MAX_MESSAGE_SIZE];
-    int    length;
-} nr_ice_attr_data;
-
 static int
 nr_stun_attr_codec_data_print(nr_stun_attr_info *attr_info, char *msg, void *data)
 {
-    nr_ice_attr_data *d = data;
+    nr_stun_attr_data *d = data;
     r_dump(NR_LOG_STUN, LOG_DEBUG, attr_info->name, (char*)d->data, d->length);
     return 0;
 }
@@ -490,7 +534,7 @@ nr_stun_attr_codec_data_print(nr_stun_attr_info *attr_info, char *msg, void *dat
 static int
 nr_stun_attr_codec_data_encode(nr_stun_attr_info *attr_info, void *data, int offset, int buflen, UCHAR *buf, int *attrlen)
 {
-    nr_ice_attr_data *d = data;
+    nr_stun_attr_data *d = data;
     int start = offset;
 
     if (nr_stun_encode_htons(attr_info->type     , buflen, buf, &offset)
@@ -507,7 +551,7 @@ static int
 nr_stun_attr_codec_data_decode(nr_stun_attr_info *attr_info, int attrlen, UCHAR *buf, int offset, int buflen, void *data)
 {
     int _status;
-    nr_ice_attr_data *result = data;
+    nr_stun_attr_data *result = data;
 
     /* -1 because it is going to be null terminated just to be safe */
     if (attrlen >= (sizeof(result->data) - 1)) {
@@ -1102,6 +1146,12 @@ nr_stun_attr_codec nr_stun_attr_codec_old_xor_mapped_address = {
     nr_stun_attr_codec_xor_mapped_address_decode
 };
 
+nr_stun_attr_codec nr_stun_attr_codec_xor_peer_address = {
+    "xor_peer_address",
+    nr_stun_attr_codec_xor_mapped_address_print,
+    nr_stun_attr_codec_xor_mapped_address_encode,
+    nr_stun_attr_codec_xor_mapped_address_decode
+};
 
 #define NR_ADD_STUN_ATTRIBUTE(type, name, codec, illegal) \
  { (type), (name), &(codec), illegal },
@@ -1134,11 +1184,11 @@ static nr_stun_attr_info attrs[] = {
 #endif
 
 #ifdef USE_TURN
-   NR_ADD_STUN_ATTRIBUTE(NR_STUN_ATTR_BANDWIDTH, "BANDWIDTH", nr_stun_attr_codec_UINT4, 0)
    NR_ADD_STUN_ATTRIBUTE(NR_STUN_ATTR_DATA, "DATA", nr_stun_attr_codec_data, 0)
    NR_ADD_STUN_ATTRIBUTE(NR_STUN_ATTR_LIFETIME, "LIFETIME", nr_stun_attr_codec_UINT4, 0)
-   NR_ADD_STUN_ATTRIBUTE(NR_STUN_ATTR_RELAY_ADDRESS, "RELAY-ADDRESS", nr_stun_attr_codec_addr, 0)
-   NR_ADD_STUN_ATTRIBUTE(NR_STUN_ATTR_REMOTE_ADDRESS, "REMOTE-ADDRESS", nr_stun_attr_codec_addr, 0)
+   NR_ADD_STUN_ATTRIBUTE(NR_STUN_ATTR_XOR_RELAY_ADDRESS, "XOR-RELAY-ADDRESS", nr_stun_attr_codec_xor_mapped_address, 0)
+   NR_ADD_STUN_ATTRIBUTE(NR_STUN_ATTR_XOR_PEER_ADDRESS, "XOR-PEER-ADDRESS", nr_stun_attr_codec_xor_peer_address, 0)
+   NR_ADD_STUN_ATTRIBUTE(NR_STUN_ATTR_REQUESTED_TRANSPORT, "REQUESTED-TRANSPORT", nr_stun_attr_codec_UCHAR, 0)
 #endif /* USE_TURN */
 
    /* for backwards compatibilty */
@@ -1402,7 +1452,7 @@ nr_stun_decode_message(nr_stun_message *msg, int (*get_password)(void *arg, nr_s
             attr->type_name = attr_info->codec->name;
 
             if (attr->type == NR_STUN_ATTR_MESSAGE_INTEGRITY) {
-                if (get_password(arg, msg, &password) == 0) {
+                if (get_password && get_password(arg, msg, &password) == 0) {
                     if (password->len > sizeof(attr->u.message_integrity.password)) {
                         r_log(NR_LOG_STUN, LOG_WARNING, "Password too long: %d bytes", password->len);
                         ABORT(R_FAILED);

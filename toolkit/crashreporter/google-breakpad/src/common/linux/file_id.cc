@@ -55,22 +55,34 @@ FileID::FileID(const char* path) {
   strncpy(path_, path, sizeof(path_));
 }
 
-// These six functions are also used inside the crashed process, so be safe
+// ELF note name and desc are 32-bits word padded.
+#define NOTE_PADDING(a) ((a + 3) & ~3)
+
+// These functions are also used inside the crashed process, so be safe
 // and use the syscall/libc wrappers instead of direct syscalls or libc.
 
 template<typename ElfClass>
-static bool ElfClassBuildIDNoteIdentifier(const void *section,
+static bool ElfClassBuildIDNoteIdentifier(const void *section, int length,
                                           uint8_t identifier[kMDGUIDSize]) {
   typedef typename ElfClass::Nhdr Nhdr;
 
+  const void* section_end = reinterpret_cast<const char*>(section) + length;
   const Nhdr* note_header = reinterpret_cast<const Nhdr*>(section);
-  if (note_header->n_type != NT_GNU_BUILD_ID ||
+  while (reinterpret_cast<const void *>(note_header) < section_end) {
+    if (note_header->n_type == NT_GNU_BUILD_ID)
+      break;
+    note_header = reinterpret_cast<const Nhdr*>(
+                  reinterpret_cast<const char*>(note_header) + sizeof(Nhdr) +
+                  NOTE_PADDING(note_header->n_namesz) +
+                  NOTE_PADDING(note_header->n_descsz));
+  }
+  if (reinterpret_cast<const void *>(note_header) >= section_end ||
       note_header->n_descsz == 0) {
     return false;
   }
 
-  const char* build_id = reinterpret_cast<const char*>(section) +
-    sizeof(Nhdr) + note_header->n_namesz;
+  const char* build_id = reinterpret_cast<const char*>(note_header) +
+    sizeof(Nhdr) + NOTE_PADDING(note_header->n_namesz);
   // Copy as many bits of the build ID as will fit
   // into the GUID space.
   my_memset(identifier, 0, kMDGUIDSize);
@@ -86,16 +98,21 @@ static bool FindElfBuildIDNote(const void *elf_mapped_base,
                                uint8_t identifier[kMDGUIDSize]) {
   void* note_section;
   int note_size, elfclass;
-  if (!FindElfSection(elf_mapped_base, ".note.gnu.build-id", SHT_NOTE,
-                      (const void**)&note_section, &note_size, &elfclass) ||
-      note_size == 0) {
+  if ((!FindElfSegment(elf_mapped_base, PT_NOTE,
+                       (const void**)&note_section, &note_size, &elfclass) ||
+      note_size == 0)  &&
+      (!FindElfSection(elf_mapped_base, ".note.gnu.build-id", SHT_NOTE,
+                       (const void**)&note_section, &note_size, &elfclass) ||
+      note_size == 0)) {
     return false;
   }
 
   if (elfclass == ELFCLASS32) {
-    return ElfClassBuildIDNoteIdentifier<ElfClass32>(note_section, identifier);
+    return ElfClassBuildIDNoteIdentifier<ElfClass32>(note_section, note_size,
+                                                     identifier);
   } else if (elfclass == ELFCLASS64) {
-    return ElfClassBuildIDNoteIdentifier<ElfClass64>(note_section, identifier);
+    return ElfClassBuildIDNoteIdentifier<ElfClass64>(note_section, note_size,
+                                                     identifier);
   }
 
   return false;

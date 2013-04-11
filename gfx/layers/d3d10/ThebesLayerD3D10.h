@@ -74,32 +74,6 @@ private:
                   const nsIntRegion &aCopyRegion, nsIntRegion* aValidRegion);
 };
 
-class ShadowThebesLayerD3D10 : public ShadowThebesLayer,
-                               public LayerD3D10
-{
-public:
-  ShadowThebesLayerD3D10(LayerManagerD3D10* aManager);
-  virtual ~ShadowThebesLayerD3D10();
-
-  virtual void
-  Swap(const ThebesBuffer& aNewFront, const nsIntRegion& aUpdatedRegion,
-       OptionalThebesBuffer* aNewBack, nsIntRegion* aNewBackValidRegion,
-       OptionalThebesBuffer* aReadOnlyFront, nsIntRegion* aFrontUpdatedRegion);
-  virtual void DestroyFrontBuffer();
-
-  virtual void Disconnect();
-
-  /* LayerD3D10 implementation */
-  virtual Layer* GetLayer() { return this; }
-  virtual void RenderLayer();
-  virtual void Validate();
-  virtual void LayerManagerDestroyed();
-
-private:
-  /* Texture with our surface data */
-  nsRefPtr<ID3D10Texture2D> mTexture;
-};
-
 } /* layers */
 } /* mozilla */
 #endif /* GFX_THEBESLAYERD3D10_H */

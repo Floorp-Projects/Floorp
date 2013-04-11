@@ -810,6 +810,15 @@ PeerConnectionObserver.prototype = {
         this._dompc._onSetLocalDescriptionSuccess.onCallback();
       } catch(e) {}
     }
+
+    // Until we support generating trickle ICE candidates,
+    // we go ahead and trigger a call of onicecandidate here.
+    // This is to provide some level of compatibility with
+    // scripts that expect this behavior (which is how Chrome
+    // signals that no further trickle candidates will be sent).
+    // TODO: This needs to be removed when Bug 842459 lands.
+    this.foundIceCandidate(null);
+
     this._dompc._executeNext();
   },
 

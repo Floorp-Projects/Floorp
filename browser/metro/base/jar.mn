@@ -3,7 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
 chrome.jar:
 % content browser %content/
 
@@ -69,7 +68,6 @@ chrome.jar:
   content/shell.html                           (content/jsshell/shell.html)
   content/browser.css                          (content/browser.css)
   content/cursor.css                           (content/cursor.css)
-% content branding %content/branding/
   content/sanitize.js                          (content/sanitize.js)
   content/sanitizeUI.js                        (content/sanitizeUI.js)
   content/input.js                             (content/input.js)

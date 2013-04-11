@@ -34,24 +34,16 @@ addLoadEvent(function() {
   ok(delay.delayTime, "The audioparam member must exist");
   is(delay.delayTime.value, 0, "Correct initial value");
   is(delay.delayTime.defaultValue, 0, "Correct default value");
-  is(delay.delayTime.minValue, 0, "Correct min value");
-  is(delay.delayTime.maxValue, 1.0, "Correct max value");
   delay.delayTime.value = 0.5;
   is(delay.delayTime.value, 0.5, "Correct initial value");
   is(delay.delayTime.defaultValue, 0, "Correct default value");
-  is(delay.delayTime.minValue, 0, "Correct min value");
-  is(delay.delayTime.maxValue, 1.0, "Correct max value");
 
   var delay2 = context.createDelay(2);
   is(delay2.delayTime.value, 0, "Correct initial value");
   is(delay2.delayTime.defaultValue, 0, "Correct default value");
-  is(delay2.delayTime.minValue, 0, "Correct min value");
-  is(delay2.delayTime.maxValue, 2.0, "Correct max value");
   delay2.delayTime.value = 0.5;
   is(delay2.delayTime.value, 0.5, "Correct initial value");
   is(delay2.delayTime.defaultValue, 0, "Correct default value");
-  is(delay2.delayTime.minValue, 0, "Correct min value");
-  is(delay2.delayTime.maxValue, 2.0, "Correct max value");
 
   expectException(function() {
     context.createDelay(0);

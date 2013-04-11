@@ -6,6 +6,7 @@
 #include "ContainerLayerOGL.h"
 #include "gfxUtils.h"
 #include "gfxPlatform.h"
+#include "GLContext.h"
 
 namespace mozilla {
 namespace layers {
@@ -222,8 +223,8 @@ ContainerRender(Container* aContainer,
       if (HasOpaqueAncestorLayer(aContainer) &&
           transform3D.Is2D(&transform) && !transform.HasNonIntegerTranslation()) {
         mode = gfxPlatform::GetPlatform()->UsesSubpixelAATextRendering() ?
-		LayerManagerOGL::InitModeCopy :
-		LayerManagerOGL::InitModeClear;
+          LayerManagerOGL::InitModeCopy :
+          LayerManagerOGL::InitModeClear;
         framebufferRect.x += transform.x0;
         framebufferRect.y += transform.y0;
         aContainer->mSupportsComponentAlphaChildren = gfxPlatform::GetPlatform()->UsesSubpixelAATextRendering();
@@ -395,116 +396,6 @@ void
 ContainerLayerOGL::CleanupResources()
 {
   ContainerCleanupResources(this);
-}
-
-ShadowContainerLayerOGL::ShadowContainerLayerOGL(LayerManagerOGL *aManager)
-  : ShadowContainerLayer(aManager, NULL)
-  , LayerOGL(aManager)
-{
-  mImplData = static_cast<LayerOGL*>(this);
-}
- 
-ShadowContainerLayerOGL::~ShadowContainerLayerOGL()
-{
-  // We don't Destroy() on destruction here because this destructor
-  // can be called after remote content has crashed, and it may not be
-  // safe to free the IPC resources of our children.  Those resources
-  // are automatically cleaned up by IPDL-generated code.
-  //
-  // In the common case of normal shutdown, either
-  // LayerManagerOGL::Destroy(), a parent
-  // *ContainerLayerOGL::Destroy(), or Disconnect() will trigger
-  // cleanup of our resources.
-  while (mFirstChild) {
-    ContainerRemoveChild(this, mFirstChild);
-  }
-}
-
-void
-ShadowContainerLayerOGL::InsertAfter(Layer* aChild, Layer* aAfter)
-{
-  ContainerInsertAfter(this, aChild, aAfter);
-}
-
-void
-ShadowContainerLayerOGL::RemoveChild(Layer *aChild)
-{
-  ContainerRemoveChild(this, aChild);
-}
-
-void
-ShadowContainerLayerOGL::RepositionChild(Layer* aChild, Layer* aAfter)
-{
-  ContainerRepositionChild(this, aChild, aAfter);
-}
-
-void
-ShadowContainerLayerOGL::Destroy()
-{
-  ContainerDestroy(this);
-}
-
-LayerOGL*
-ShadowContainerLayerOGL::GetFirstChildOGL()
-{
-  if (!mFirstChild) {
-    return nullptr;
-   }
-  return static_cast<LayerOGL*>(mFirstChild->ImplData());
-}
- 
-void
-ShadowContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
-                                     const nsIntPoint& aOffset)
-{
-  ContainerRender(this, aPreviousFrameBuffer, aOffset, mOGLManager);
-}
-
-void
-ShadowContainerLayerOGL::CleanupResources()
-{
-  ContainerCleanupResources(this);
-}
-
-ShadowRefLayerOGL::ShadowRefLayerOGL(LayerManagerOGL* aManager)
-  : ShadowRefLayer(aManager, NULL)
-  , LayerOGL(aManager)
-{
-  mImplData = static_cast<LayerOGL*>(this);
-}
-
-ShadowRefLayerOGL::~ShadowRefLayerOGL()
-{
-  Destroy();
-}
-
-void
-ShadowRefLayerOGL::Destroy()
-{
-  MOZ_ASSERT(!mFirstChild);
-  mDestroyed = true;
-}
-
-LayerOGL*
-ShadowRefLayerOGL::GetFirstChildOGL()
-{
-  if (!mFirstChild) {
-    return nullptr;
-   }
-  return static_cast<LayerOGL*>(mFirstChild->ImplData());
-}
-
-void
-ShadowRefLayerOGL::RenderLayer(int aPreviousFrameBuffer,
-                               const nsIntPoint& aOffset)
-{
-  ContainerRender(this, aPreviousFrameBuffer, aOffset, mOGLManager);
-}
-
-void
-ShadowRefLayerOGL::CleanupResources()
-{
-  MOZ_ASSERT(!mFirstChild);
 }
 
 } /* layers */

@@ -20,6 +20,8 @@ Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/services-common/preferences.js");
 Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
 
+const prefs = new Preferences("services.push.");
+
 const kPUSHDB_DB_NAME = "push";
 const kPUSHDB_DB_VERSION = 1; // Change this if the IndexedDB format changes
 const kPUSHDB_STORE_NAME = "push";
@@ -289,7 +291,8 @@ PushService.prototype = {
   observe: function observe(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "app-startup":
-        if (!this._prefs.get("enabled"))
+
+        if (!prefs.get("enabled"))
           return;
 
         Services.obs.addObserver(this, "final-ui-startup", false);
@@ -326,7 +329,7 @@ PushService.prototype = {
       case "nsPref:changed":
         if (aData == "services.push.serverURL") {
           debug("services.push.serverURL changed! websocket. new value " +
-                this._prefs.get("serverURL"));
+                prefs.get("serverURL"));
           this._shutdownWS();
         }
         break;
@@ -383,10 +386,8 @@ PushService.prototype = {
     }
   },
 
-  _prefs : new Preferences("services.push."),
-
   get _UAID() {
-    return this._prefs.get("userAgentID");
+    return prefs.get("userAgentID");
   },
 
   set _UAID(newID) {
@@ -396,7 +397,7 @@ PushService.prototype = {
       return;
     }
     debug("New _UAID: " + newID);
-    this._prefs.set("userAgentID", newID);
+    prefs.set("userAgentID", newID);
   },
 
   // keeps requests buffered if the websocket disconnects or is not connected
@@ -450,9 +451,9 @@ PushService.prototype = {
         ppmm.addMessageListener(msgName, this);
     }.bind(this));
 
-    this._requestTimeout = this._prefs.get("requestTimeout");
+    this._requestTimeout = prefs.get("requestTimeout");
 
-    this._udpPort = this._prefs.get("udp.port");
+    this._udpPort = prefs.get("udp.port");
 
     this._db.getAllChannelIDs(
       function(channelIDs) {
@@ -469,7 +470,7 @@ PushService.prototype = {
 
     // This is only used for testing. Different tests require connecting to
     // slightly different URLs.
-    this._prefs.observe("serverURL", this);
+    prefs.observe("serverURL", this);
   },
 
   _shutdownWS: function() {
@@ -506,13 +507,13 @@ PushService.prototype = {
     debug("socketError()");
 
     // Calculate new timeout, but cap it to
-    var retryTimeout = this._prefs.get("retryBaseInterval") *
-                        Math.pow(2, this._retryFailCount);
+    var retryTimeout = prefs.get("retryBaseInterval") *
+                       Math.pow(2, this._retryFailCount);
 
     // It is easier to express the max interval as a pref in milliseconds,
     // rather than have it as a number and make people do the calculation of
     // retryBaseInterval * 2^maxRetryFailCount.
-    retryTimeout = Math.min(retryTimeout, this._prefs.get("maxRetryInterval"));
+    retryTimeout = Math.min(retryTimeout, prefs.get("maxRetryInterval"));
 
     this._retryFailCount++;
 
@@ -536,7 +537,7 @@ PushService.prototype = {
       return;
     }
 
-    var serverURL = this._prefs.get("serverURL");
+    var serverURL = prefs.get("serverURL");
     if (!serverURL) {
       debug("No services.push.serverURL found!");
       return;
@@ -567,7 +568,7 @@ PushService.prototype = {
     debug("serverURL: " + uri.spec);
     this._wsListener = new PushWebSocketListener(this);
     this._ws.protocol = "push-notification";
-    this._ws.pingInterval = this._prefs.get("websocketPingInterval");
+    this._ws.pingInterval = prefs.get("websocketPingInterval");
     this._ws.asyncOpen(uri, serverURL, this._wsListener, null);
     this._currentState = STATE_WAITING_FOR_WS_START;
   },
@@ -617,20 +618,10 @@ PushService.prototype = {
     // re-register.
     if (this._UAID && this._UAID != reply.uaid) {
       debug("got new UAID: all re-register");
-      this._dropRegistrations()
-        .then(
-          function() {
-            // Apps that have no prior registrations, but are in the pending
-            // queue won't get a push-register, which is correct.
-            this._notifyAllAppsRegister();
-            finishHandshake.bind(this)();
-          }.bind(this),
-          function(error) {
-            debug("Error deleting all registrations. SHOULD NEVER HAPPEN!");
-            this._shutdownWS();
-            return;
-          }.bind(this)
-        );
+
+      this._notifyAllAppsRegister()
+          .then(this._dropRegistrations.bind(this))
+          .then(finishHandshake.bind(this));
 
       return;
     }
@@ -839,11 +830,42 @@ PushService.prototype = {
                             recoverNoSuchChannelID.bind(this));
   },
 
+  // Fires a push-register system message to all applications that have
+  // registrations.
   _notifyAllAppsRegister: function() {
     debug("notifyAllAppsRegister()");
-    let messenger = Cc["@mozilla.org/system-message-internal;1"]
-                      .getService(Ci.nsISystemMessagesInternal);
-    messenger.broadcastMessage('push-register', {});
+    var deferred = Promise.defer();
+
+    // records are objects describing the registrations as stored in IndexedDB.
+    function wakeupRegisteredApps(records) {
+      // Pages to be notified.
+      // wakeupTable[manifestURL] -> [ pageURL ]
+      var wakeupTable = {};
+      for (var i = 0; i < records.length; i++) {
+        var record = records[i];
+        if (!(record.manifestURL in wakeupTable))
+          wakeupTable[record.manifestURL] = [];
+
+        wakeupTable[record.manifestURL].push(record.pageURL);
+      }
+
+      let messenger = Cc["@mozilla.org/system-message-internal;1"]
+                        .getService(Ci.nsISystemMessagesInternal);
+
+      for (var manifestURL in wakeupTable) {
+        wakeupTable[manifestURL].forEach(function(pageURL) {
+          messenger.sendMessage('push-register', {},
+                                Services.io.newURI(pageURL, null, null),
+                                Services.io.newURI(manifestURL, null, null));
+        });
+      }
+
+      deferred.resolve();
+    }
+
+    this._db.getAllChannelIDs(wakeupRegisteredApps, deferred.reject);
+
+    return deferred.promise;
   },
 
   _notifyApp: function(aPushRecord) {
@@ -1234,7 +1256,7 @@ PushService.prototype = {
       return;
     }
 
-    if (!this._prefs.get("udp.wakeupEnabled")) {
+    if (!prefs.get("udp.wakeupEnabled")) {
       debug("UDP support disabled");
       return;
     }

@@ -405,7 +405,8 @@ this.MigrationUtils = Object.freeze({
    */
   getLocalizedString: function MU_getLocalizedString(aKey, aReplacements) {
     const OVERRIDES = {
-      "4_firefox": "4_firefox_history_and_bookmarks"
+      "4_firefox": "4_firefox_history_and_bookmarks",
+      "64_firefox": "64_firefox_other"
     };
     aKey = OVERRIDES[aKey] || aKey;
 

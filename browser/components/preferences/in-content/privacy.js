@@ -146,13 +146,14 @@ var gPrivacyPane = {
    */
   getTrackingPrefs: function PPP_getTrackingPrefs()
   {
-    let dntValuePref = document.getElementById("privacy.donottrackheader.value"),
-        dntEnabledPref = document.getElementById("privacy.donottrackheader.enabled");
+    // XXX avoid using bindings that might not be attached, see bug 859982
+    let dntValue = Services.prefs.getBoolPref("privacy.donottrackheader.value"),
+        dntEnabled = Services.prefs.getBoolPref("privacy.donottrackheader.enabled");
 
     // if DNT is enbaled, select the value from the selected radio
     // button, otherwise choose the "no preference" radio button
-    if (dntEnabledPref.value)
-      return dntValuePref.value;
+    if (dntEnabled)
+      return dntValue;
 
     return document.getElementById("dntnopref").value;
   },

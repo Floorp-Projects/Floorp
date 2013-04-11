@@ -10,8 +10,14 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PhoneNumberUtils.jsm");
 
-const RIL_MOBILEMESSAGEDATABASESERVICE_CONTRACTID = "@mozilla.org/mobilemessage/rilmobilemessagedatabaseservice;1";
-const RIL_MOBILEMESSAGEDATABASESERVICE_CID = Components.ID("{29785f90-6b5b-11e2-9201-3b280170b2ec}");
+const RIL_MOBILEMESSAGEDATABASESERVICE_CONTRACTID =
+  "@mozilla.org/mobilemessage/rilmobilemessagedatabaseservice;1";
+const RIL_MOBILEMESSAGEDATABASESERVICE_CID =
+  Components.ID("{29785f90-6b5b-11e2-9201-3b280170b2ec}");
+const RIL_GETMESSAGESCURSOR_CID =
+  Components.ID("{484d1ad8-840e-4782-9dc4-9ebc4d914937}");
+const RIL_GETTHREADSCURSOR_CID =
+  Components.ID("{95ee7c3e-d6f2-4ec4-ade5-0c453c036d35}");
 
 const DEBUG = false;
 const DB_NAME = "sms";
@@ -46,6 +52,10 @@ const READ_ONLY = "readonly";
 const READ_WRITE = "readwrite";
 const PREV = "prev";
 const NEXT = "next";
+
+const COLLECT_ID_END = 0;
+const COLLECT_ID_ERROR = -1;
+const COLLECT_TIMESTAMP_UNUSED = 0;
 
 XPCOMUtils.defineLazyServiceGetter(this, "gMobileMessageService",
                                    "@mozilla.org/mobilemessage/mobilemessageservice;1",
@@ -94,8 +104,6 @@ function MobileMessageDatabaseService() {
       }
     };
   });
-
-  this.messageLists = {};
 }
 MobileMessageDatabaseService.prototype = {
 
@@ -108,14 +116,6 @@ MobileMessageDatabaseService.prototype = {
    * Cache the DB here.
    */
   db: null,
-
-  /**
-   * This object keeps the message lists associated with each search. Each
-   * message list is stored as an array of primary keys.
-   */
-  messageLists: null,
-
-  lastMessageListId: 0,
 
   /**
    * Last sms/mms object store key value in the database.
@@ -621,228 +621,6 @@ MobileMessageDatabaseService.prototype = {
                                                     smil,
                                                     attachments);
     }
-  },
-
-  /**
-   * Queue up passed message id, reply if necessary. 'aMessageId' = 0 for no
-   * more messages, negtive for errors and valid otherwise.
-   */
-  onNextMessageInListGot: function onNextMessageInListGot(
-      aMessageStore, aMessageList, aMessageId) {
-
-    if (DEBUG) {
-      debug("onNextMessageInListGot - listId: "
-            + aMessageList.listId + ", messageId: " + aMessageId);
-    }
-    if (aMessageId) {
-      // Queue up any id but '0' and replies later accordingly.
-      aMessageList.results.push(aMessageId);
-    }
-    if (aMessageId <= 0) {
-      // No more processing on '0' or negative values passed.
-      aMessageList.processing = false;
-    }
-
-    if (!aMessageList.requestWaiting) {
-      if (DEBUG) debug("Cursor.continue() not called yet");
-      return;
-    }
-
-    // We assume there is only one request waiting throughout the message list
-    // retrieving process. So we don't bother continuing to process further
-    // waiting requests here. This assumption comes from SmsCursor::Continue()
-    // implementation.
-    let request = aMessageList.requestWaiting;
-    aMessageList.requestWaiting = null;
-
-    if (!aMessageList.results.length) {
-      // No fetched results yet.
-      if (!aMessageList.processing) {
-        if (DEBUG) debug("No messages matching the filter criteria");
-        request.notifyNoMessageInList();
-      }
-      // No fetched results yet and still processing. Let's wait a bit more.
-      return;
-    }
-
-    if (aMessageList.results[0] < 0) {
-      // An previous error found. Keep the answer in results so that we can
-      // reply INTERNAL_ERROR for further requests.
-      if (DEBUG) debug("An previous error found");
-      request.notifyReadMessageListFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
-      return;
-    }
-
-    let firstMessageId = aMessageList.results.shift();
-    if (DEBUG) debug ("Fetching message " + firstMessageId);
-
-    let getRequest = aMessageStore.get(firstMessageId);
-    let self = this;
-    getRequest.onsuccess = function onsuccess(event) {
-      let messageRecord = event.target.result;
-      let domMessage = self.createDomMessageFromRecord(messageRecord);
-      if (aMessageList.listId >= 0) {
-        if (DEBUG) {
-          debug("notifyNextMessageInListGot - listId: "
-                + aMessageList.listId + ", messageId: " + firstMessageId);
-        }
-        request.notifyNextMessageInListGot(domMessage);
-      } else {
-        self.lastMessageListId += 1;
-        aMessageList.listId = self.lastMessageListId;
-        self.messageLists[self.lastMessageListId] = aMessageList;
-        if (DEBUG) {
-          debug("notifyMessageListCreated - listId: "
-                + aMessageList.listId + ", messageId: " + firstMessageId);
-        }
-        request.notifyMessageListCreated(aMessageList.listId, domMessage);
-      }
-    };
-    getRequest.onerror = function onerror(event) {
-      if (DEBUG) {
-        debug("notifyReadMessageListFailed - listId: "
-              + aMessageList.listId + ", messageId: " + firstMessageId);
-      }
-      request.notifyReadMessageListFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
-    };
-  },
-
-  /**
-   * Queue up {aMessageId, aTimestamp} pairs, find out intersections and report
-   * to onNextMessageInListGot. Return true if it is still possible to have
-   * another match.
-   */
-  onNextMessageInMultiFiltersGot: function onNextMessageInMultiFiltersGot(
-      aMessageStore, aMessageList, aContextIndex, aMessageId, aTimestamp) {
-
-    if (DEBUG) {
-      debug("onNextMessageInMultiFiltersGot: "
-            + aContextIndex + ", " + aMessageId + ", " + aTimestamp);
-    }
-    let contexts = aMessageList.contexts;
-
-    if (!aMessageId) {
-      contexts[aContextIndex].processing = false;
-      for (let i = 0; i < contexts.length; i++) {
-        if (contexts[i].processing) {
-          return false;
-        }
-      }
-
-      this.onNextMessageInListGot(aMessageStore, aMessageList, 0);
-      return false;
-    }
-
-    // Search id in other existing results. If no other results has it,
-    // and A) the last timestamp is smaller-equal to current timestamp,
-    // we wait for further results; either B) record timestamp is larger
-    // then current timestamp or C) no more processing for a filter, then we
-    // drop this id because there can't be a match anymore.
-    for (let i = 0; i < contexts.length; i++) {
-      if (i == aContextIndex) {
-        continue;
-      }
-
-      let ctx = contexts[i];
-      let results = ctx.results;
-      let found = false;
-      for (let j = 0; j < results.length; j++) {
-        let result = results[j];
-        if (result.id == aMessageId) {
-          found = true;
-          break;
-        }
-        if ((!aMessageList.reverse && (result.timestamp > aTimestamp)) ||
-            (aMessageList.reverse && (result.timestamp < aTimestamp))) {
-          // B) Cannot find a match anymore. Drop.
-          return true;
-        }
-      }
-
-      if (!found) {
-        if (!ctx.processing) {
-          // C) Cannot find a match anymore. Drop.
-          if (results.length) {
-            let lastResult = results[results.length - 1];
-            if ((!aMessageList.reverse && (lastResult.timestamp >= aTimestamp)) ||
-                (aMessageList.reverse && (lastResult.timestamp <= aTimestamp))) {
-              // Still have a chance to get another match. Return true.
-              return true;
-            }
-          }
-
-          // Impossible to find another match because all results in ctx have
-          // timestamps smaller than aTimestamp.
-          return this.onNextMessageInMultiFiltersGot(aMessageStore, aMessageList,
-                                                     aContextIndex, 0, 0);
-        }
-
-        // A) Pending.
-        contexts[aContextIndex].results.push({
-          id: aMessageId,
-          timestamp: aTimestamp
-        });
-        return true;
-      }
-    }
-
-    // Now id is found in all other results. Report it.
-    this.onNextMessageInListGot(aMessageStore, aMessageList, aMessageId);
-    return true;
-  },
-
-  onNextMessageInMultiNumbersGot: function onNextMessageInMultiNumbersGot(
-      aMessageStore, aMessageList, aContextIndex,
-      aQueueIndex, aMessageId, aTimestamp) {
-
-    if (DEBUG) {
-      debug("onNextMessageInMultiNumbersGot: "
-            + aQueueIndex + ", " + aMessageId + ", " + aTimestamp);
-    }
-    let queues = aMessageList.numberQueues;
-    let q = queues[aQueueIndex];
-    if (aMessageId) {
-      if (!aQueueIndex) {
-        // Timestamp.
-        q.results.push({
-          id: aMessageId,
-          timestamp: aTimestamp
-        });
-      } else {
-        // Numbers.
-        q.results.push(aMessageId);
-      }
-      return true;
-    }
-
-    q.processing -= 1;
-    if (queues[0].processing || queues[1].processing) {
-      // At least one queue is still processing, but we got here because
-      // current cursor gives 0 as aMessageId meaning no more messages are
-      // available. Return false here to stop further cursor.continue() calls.
-      return false;
-    }
-
-    let tres = queues[0].results;
-    let qres = queues[1].results;
-    tres = tres.filter(function (element) {
-      return qres.indexOf(element.id) != -1;
-    });
-    if (aContextIndex == null) {
-      for (let i = 0; i < tres.length; i++) {
-        this.onNextMessageInListGot(aMessageStore, aMessageList, tres[i].id);
-      }
-      this.onNextMessageInListGot(aMessageStore, aMessageList, 0);
-    } else {
-      for (let i = 0; i < tres.length; i++) {
-        this.onNextMessageInMultiFiltersGot(aMessageStore, aMessageList,
-                                            aContextIndex,
-                                            tres[i].id, tres[i].timestamp);
-      }
-      this.onNextMessageInMultiFiltersGot(aMessageStore, aMessageList,
-                                          aContextIndex, 0, 0);
-    }
-    return false;
   },
 
   findParticipantRecordByAddress: function findParticipantRecordByAddress(
@@ -1494,9 +1272,9 @@ MobileMessageDatabaseService.prototype = {
     }, [MESSAGE_STORE_NAME, THREAD_STORE_NAME]);
   },
 
-  createMessageList: function createMessageList(filter, reverse, aRequest) {
+  createMessageCursor: function createMessageCursor(filter, reverse, callback) {
     if (DEBUG) {
-      debug("Creating a message list. Filters:" +
+      debug("Creating a message cursor. Filters:" +
             " startDate: " + filter.startDate +
             " endDate: " + filter.endDate +
             " delivery: " + filter.delivery +
@@ -1505,359 +1283,16 @@ MobileMessageDatabaseService.prototype = {
             " reverse: " + reverse);
     }
 
+    let cursor = new GetMessagesCursor(this, callback);
+
     let self = this;
-    this.newTxn(READ_ONLY, function (error, txn, stores) {
-      if (error) {
-        //TODO look at event.target.errorCode, pick appropriate error constant.
-        if (DEBUG) debug("IDBRequest error " + error.target.errorCode);
-        aRequest.notifyReadMessageListFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
-        return;
-      }
-
-      let messageStore = stores[0];
-      let participantStore = stores[1];
-
-      let messageList = {
-        listId: -1,
-        reverse: reverse,
-        processing: true,
-        stop: false,
-        // Local contexts for multiple filter targets' case.
-        contexts: null,
-        // Result queues for multiple numbers filter's case.
-        numberQueues: null,
-        // Pending createMessageList or getNextMessageInList request.
-        requestWaiting: aRequest,
-        results: []
-      };
-
-      let onNextMessageInListGotCb =
-        self.onNextMessageInListGot.bind(self, messageStore, messageList);
-
-      let singleFilterSuccessCb = function onsfsuccess(event) {
-        if (messageList.stop) {
-          // Client called clearMessageList(). Return.
-          return;
-        }
-
-        let cursor = event.target.result;
-        // Once the cursor has retrieved all keys that matches its key range,
-        // the filter search is done.
-        if (cursor) {
-          onNextMessageInListGotCb(cursor.primaryKey);
-          cursor.continue();
-        } else {
-          onNextMessageInListGotCb(0);
-        }
-      };
-
-      let singleFilterErrorCb = function onsferror(event) {
-        if (messageList.stop) {
-          // Client called clearMessageList(). Return.
-          return;
-        }
-
-        if (DEBUG && event) debug("IDBRequest error " + event.target.errorCode);
-        onNextMessageInListGotCb(-1);
-      };
-
-      let direction = reverse ? PREV : NEXT;
-
-      // We support filtering by date range only (see `else` block below) or
-      // by number/delivery status/read status with an optional date range.
-      if (filter.delivery || filter.numbers || filter.read != undefined) {
-        let multiFiltersGotCb = self.onNextMessageInMultiFiltersGot
-                                    .bind(self, messageStore, messageList);
-
-        let multiFiltersSuccessCb = function onmfsuccess(contextIndex, event) {
-          if (messageList.stop) {
-            // Client called clearMessageList(). Return.
-            return;
-          }
-
-          let cursor = event.target.result;
-          if (cursor) {
-            if (multiFiltersGotCb(contextIndex,
-                                  cursor.primaryKey, cursor.key[1])) {
-              cursor.continue();
-            }
-          } else {
-            multiFiltersGotCb(contextIndex, 0, 0);
-          }
-        };
-
-        let multiFiltersErrorCb = function onmferror(contextIndex, event) {
-          if (messageList.stop) {
-            // Client called clearMessageList(). Return.
-            return;
-          }
-
-          // Act as no more matched records.
-          multiFiltersGotCb(contextIndex, 0, 0);
-        };
-
-        // Numeric 0 is smaller than any time stamp, and empty string is larger
-        // than all numeric values.
-        let startDate = 0, endDate = "";
-        if (filter.startDate != null) {
-          startDate = filter.startDate.getTime();
-        }
-        if (filter.endDate != null) {
-          endDate = filter.endDate.getTime();
-        }
-
-        let singleFilter;
-        {
-          let numberOfContexts = 0;
-          if (filter.delivery) numberOfContexts++;
-          if (filter.numbers) numberOfContexts++;
-          if (filter.read != undefined) numberOfContexts++;
-          singleFilter = numberOfContexts == 1;
-        }
-
-        if (!singleFilter) {
-          messageList.contexts = [];
-        }
-
-        let numberOfContexts = 0;
-
-        let createRangedRequest = function crr(indexName, key) {
-          let range = IDBKeyRange.bound([key, startDate], [key, endDate]);
-          return messageStore.index(indexName).openKeyCursor(range, direction);
-        };
-
-        let createSimpleRangedRequest = function csrr(indexName, key, contextIndex) {
-          let request = createRangedRequest(indexName, key);
-          if (singleFilter) {
-            request.onsuccess = singleFilterSuccessCb;
-            request.onerror = singleFilterErrorCb;
-          } else {
-            if (contextIndex == null) {
-              contextIndex = numberOfContexts++;
-              messageList.contexts.push({
-                processing: true,
-                results: []
-              });
-            }
-            request.onsuccess = multiFiltersSuccessCb.bind(null, contextIndex);
-            request.onerror = multiFiltersErrorCb.bind(null, contextIndex);
-          }
-        };
-
-        // Retrieve the keys from the 'delivery' index that matches the
-        // value of filter.delivery.
-        if (filter.delivery) {
-          if (DEBUG) debug("filter.delivery " + filter.delivery);
-          createSimpleRangedRequest("delivery", filter.delivery);
-        }
-
-        // Retrieve the keys from the 'sender' and 'receiver' indexes that
-        // match the values of filter.numbers
-        if (filter.numbers) {
-          if (DEBUG) debug("filter.numbers " + filter.numbers.join(", "));
-          let contextIndex;
-          if (!singleFilter) {
-            contextIndex = numberOfContexts++;
-            messageList.contexts.push({
-              processing: true,
-              results: []
-            });
-          }
-          self.findParticipantIdsByAddresses(participantStore, filter.numbers,
-                                             false, true,
-                                             function (participantIds) {
-            if (!participantIds || !participantIds.length) {
-              // Oops! No such participant at all.
-
-              if (messageList.stop) {
-                // Client called clearMessageList(). Return.
-                return;
-              }
-
-              if (singleFilter) {
-                onNextMessageInListGotCb(0);
-              } else {
-                multiFiltersGotCb(contextIndex, 0, 0);
-              }
-              return;
-            }
-
-            if (participantIds.length == 1) {
-              createSimpleRangedRequest("participantIds", participantIds[0],
-                                        contextIndex);
-              return;
-            }
-
-            let multiNumbersGotCb =
-              self.onNextMessageInMultiNumbersGot
-                  .bind(self, messageStore, messageList, contextIndex);
-
-            let multiNumbersSuccessCb = function onmnsuccess(queueIndex, event) {
-              if (messageList.stop) {
-                // Client called clearMessageList(). Return.
-                return;
-              }
-
-              let cursor = event.target.result;
-              if (cursor) {
-                // If queueIndex is non-zero, it's timestamp result queue;
-                // otherwise, it's per phone number result queue.
-                let key = queueIndex ? cursor.key[1] : cursor.key;
-                if (multiNumbersGotCb(queueIndex, cursor.primaryKey, key)) {
-                  cursor.continue();
-                }
-              } else {
-                multiNumbersGotCb(queueIndex, 0, 0);
-              }
-            };
-
-            let multiNumbersErrorCb = function onmnerror(queueIndex, event) {
-              if (messageList.stop) {
-                // Client called clearMessageList(). Return.
-                return;
-              }
-
-              // Act as no more matched records.
-              multiNumbersGotCb(queueIndex, 0, 0);
-            };
-
-            messageList.numberQueues = [{
-              // For timestamp.
-              processing: 1,
-              results: []
-            }, {
-              // For all numbers.
-              processing: participantIds.length,
-              results: []
-            }];
-
-            let timeRange = null;
-            if (filter.startDate != null && filter.endDate != null) {
-              timeRange = IDBKeyRange.bound(filter.startDate.getTime(),
-                                            filter.endDate.getTime());
-            } else if (filter.startDate != null) {
-              timeRange = IDBKeyRange.lowerBound(filter.startDate.getTime());
-            } else if (filter.endDate != null) {
-              timeRange = IDBKeyRange.upperBound(filter.endDate.getTime());
-            }
-
-            let timeRequest = messageStore.index("timestamp")
-                                          .openKeyCursor(timeRange, direction);
-            timeRequest.onsuccess = multiNumbersSuccessCb.bind(null, 0);
-            timeRequest.onerror = multiNumbersErrorCb.bind(null, 0);
-
-            for (let i = 0; i < participantIds.length; i++) {
-              let request = createRangedRequest("participantIds",
-                                                participantIds[i]);
-              request.onsuccess = multiNumbersSuccessCb.bind(null, 1);
-              request.onerror = multiNumbersErrorCb.bind(null, 1);
-            }
-          });
-        }
-
-        // Retrieve the keys from the 'read' index that matches the value of
-        // filter.read
-        if (filter.read != undefined) {
-          let read = filter.read ? FILTER_READ_READ : FILTER_READ_UNREAD;
-          if (DEBUG) debug("filter.read " + read);
-          createSimpleRangedRequest("read", read);
-        }
-      } else {
-        // Filtering by date range only.
-        if (DEBUG) {
-          debug("filter.timestamp " + filter.startDate + ", " + filter.endDate);
-        }
-
-        let range = null;
-        if (filter.startDate != null && filter.endDate != null) {
-          range = IDBKeyRange.bound(filter.startDate.getTime(),
-                                    filter.endDate.getTime());
-        } else if (filter.startDate != null) {
-          range = IDBKeyRange.lowerBound(filter.startDate.getTime());
-        } else if (filter.endDate != null) {
-          range = IDBKeyRange.upperBound(filter.endDate.getTime());
-        }
-
-        let request = messageStore.index("timestamp").openKeyCursor(range, direction);
-        request.onsuccess = singleFilterSuccessCb;
-        request.onerror = singleFilterErrorCb;
-      }
-
-      if (DEBUG) {
-        txn.oncomplete = function oncomplete(event) {
-          debug("Transaction " + txn + " completed.");
-        };
-      }
-
-      txn.onerror = singleFilterErrorCb;
+    self.newTxn(READ_ONLY, function (error, txn, stores) {
+      let collector = cursor.collector;
+      let collect = collector.collect.bind(collector);
+      FilterSearcherHelper.transact(self, txn, error, filter, reverse, collect);
     }, [MESSAGE_STORE_NAME, PARTICIPANT_STORE_NAME]);
-  },
 
-  getNextMessageInList: function getNextMessageInList(listId, aRequest) {
-    if (DEBUG) debug("Getting next message in list " + listId);
-    let messageId;
-    let list = this.messageLists[listId];
-    if (!list) {
-      if (DEBUG) debug("Wrong list id");
-      aRequest.notifyReadMessageListFailed(Ci.nsIMobileMessageCallback.NOT_FOUND_ERROR);
-      return;
-    }
-    if (list.processing) {
-      // Database transaction ongoing, let it reply for us so that we won't get
-      // blocked by the existing transaction.
-      if (list.requestWaiting) {
-        if (DEBUG) debug("Already waiting for another request!");
-        return;
-      }
-      list.requestWaiting = aRequest;
-      return;
-    }
-    if (!list.results.length) {
-      if (DEBUG) debug("Reached the end of the list!");
-      aRequest.notifyNoMessageInList();
-      return;
-    }
-    if (list.results[0] < 0) {
-      aRequest.notifyReadMessageListFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
-      return;
-    }
-    messageId = list.results.shift();
-    let self = this;
-    this.newTxn(READ_ONLY, function (error, txn, messageStore) {
-      if (DEBUG) debug("Fetching message " + messageId);
-      let request = messageStore.get(messageId);
-      let messageRecord;
-      request.onsuccess = function onsuccess(event) {
-        messageRecord = request.result;
-      };
-
-      txn.oncomplete = function oncomplete(event) {
-        if (DEBUG) debug("Transaction " + txn + " completed.");
-        if (!messageRecord) {
-          if (DEBUG) debug("Could not get message id " + messageId);
-          aRequest.notifyReadMessageListFailed(Ci.nsIMobileMessageCallback.NOT_FOUND_ERROR);
-        }
-        let domMessage = self.createDomMessageFromRecord(messageRecord);
-        aRequest.notifyNextMessageInListGot(domMessage);
-      };
-
-      txn.onerror = function onerror(event) {
-        //TODO check event.target.errorCode
-        if (DEBUG) {
-          debug("Error retrieving message id: " + messageId +
-                ". Error code: " + event.target.errorCode);
-        }
-        aRequest.notifyReadMessageListFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
-      };
-    });
-  },
-
-  clearMessageList: function clearMessageList(listId) {
-    if (DEBUG) debug("Clearing message list: " + listId);
-    if (this.messageLists[listId]) {
-      this.messageLists[listId].stop = true;
-      delete this.messageLists[listId];
-    }
+    return cursor;
   },
 
   markMessageRead: function markMessageRead(messageId, value, aRequest) {
@@ -1927,36 +1362,676 @@ MobileMessageDatabaseService.prototype = {
     }, [MESSAGE_STORE_NAME, THREAD_STORE_NAME]);
   },
 
-  getThreadList: function getThreadList(aRequest) {
+  createThreadCursor: function createThreadCursor(callback) {
     if (DEBUG) debug("Getting thread list");
+
+    let cursor = new GetThreadsCursor(this, callback);
     this.newTxn(READ_ONLY, function (error, txn, threadStore) {
+      let collector = cursor.collector;
       if (error) {
         if (DEBUG) debug(error);
-        aRequest.notifyThreadListFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
+        collector.collect(null, COLLECT_ID_ERROR, COLLECT_TIMESTAMP_UNUSED);
         return;
       }
       txn.onerror = function onerror(event) {
         if (DEBUG) debug("Caught error on transaction ", event.target.errorCode);
-        aRequest.notifyThreadListFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
+        collector.collect(null, COLLECT_ID_ERROR, COLLECT_TIMESTAMP_UNUSED);
       };
-      let request = threadStore.index("lastTimestamp").mozGetAll();
+      let request = threadStore.index("lastTimestamp").openKeyCursor();
       request.onsuccess = function(event) {
-        // TODO: keep backward compatibility of original API interface only.
-        let results = [];
-        for each (let item in event.target.result) {
-          results.push({
-            id: item.id,
-            senderOrReceiver: item.participantAddresses[0],
-            timestamp: item.lastTimestamp,
-            body: item.subject,
-            unreadCount: item.unreadCount
-          });
+        let cursor = event.target.result;
+        if (cursor) {
+          if (collector.collect(txn, cursor.primaryKey, cursor.key)) {
+            cursor.continue();
+          }
+        } else {
+          collector.collect(txn, COLLECT_ID_END, COLLECT_TIMESTAMP_UNUSED);
         }
-        aRequest.notifyThreadList(results);
       };
     }, [THREAD_STORE_NAME]);
+
+    return cursor;
   }
 };
+
+let FilterSearcherHelper = {
+
+  /**
+   * @param index
+   *        The name of a message store index to filter on.
+   * @param range
+   *        A IDBKeyRange.
+   * @param direction
+   *        NEXT or PREV.
+   * @param txn
+   *        Ongoing IDBTransaction context object.
+   * @param collect
+   *        Result colletor function. It takes three parameters -- txn, message
+   *        id, and message timestamp.
+   */
+  filterIndex: function filterIndex(index, range, direction, txn, collect) {
+    let messageStore = txn.objectStore(MESSAGE_STORE_NAME);
+    let request = messageStore.index(index).openKeyCursor(range, direction);
+    request.onsuccess = function onsuccess(event) {
+      let cursor = event.target.result;
+      // Once the cursor has retrieved all keys that matches its key range,
+      // the filter search is done.
+      if (cursor) {
+        let timestamp = Array.isArray(cursor.key) ? cursor.key[1] : cursor.key;
+        if (collect(txn, cursor.primaryKey, timestamp)) {
+          cursor.continue();
+        }
+      } else {
+        collect(txn, COLLECT_ID_END, COLLECT_TIMESTAMP_UNUSED);
+      }
+    };
+    request.onerror = function onerror(event) {
+      if (DEBUG && event) debug("IDBRequest error " + event.target.errorCode);
+      collect(txn, COLLECT_ID_ERROR, COLLECT_TIMESTAMP_UNUSED);
+    };
+  },
+
+  /**
+   * Explicitly fiter message on the timestamp index.
+   *
+   * @param startDate
+   *        Timestamp of the starting date.
+   * @param endDate
+   *        Timestamp of the ending date.
+   * @param direction
+   *        NEXT or PREV.
+   * @param txn
+   *        Ongoing IDBTransaction context object.
+   * @param collect
+   *        Result colletor function. It takes three parameters -- txn, message
+   *        id, and message timestamp.
+   */
+  filterTimestamp: function filterTimestamp(startDate, endDate, direction, txn,
+                                            collect) {
+    let range = null;
+    if (startDate != null && endDate != null) {
+      range = IDBKeyRange.bound(startDate.getTime(), endDate.getTime());
+    } else if (startDate != null) {
+      range = IDBKeyRange.lowerBound(startDate.getTime());
+    } else if (endDate != null) {
+      range = IDBKeyRange.upperBound(endDate.getTime());
+    }
+    this.filterIndex("timestamp", range, direction, txn, collect);
+  },
+
+  /**
+   * Instanciate a filtering transaction.
+   *
+   * @param service
+   *        A MobileMessageDatabaseService. Used to create
+   * @param txn
+   *        Ongoing IDBTransaction context object.
+   * @param error
+   *        Previous error while creating the transaction.
+   * @param filter
+   *        A SmsFilter object.
+   * @param reverse
+   *        A boolean value indicating whether we should filter message in
+   *        reversed order.
+   * @param collect
+   *        Result colletor function. It takes three parameters -- txn, message
+   *        id, and message timestamp.
+   */
+  transact: function transact(service, txn, error, filter, reverse, collect) {
+    if (error) {
+      //TODO look at event.target.errorCode, pick appropriate error constant.
+      if (DEBUG) debug("IDBRequest error " + error.target.errorCode);
+      collect(txn, COLLECT_ID_ERROR, COLLECT_TIMESTAMP_UNUSED);
+      return;
+    }
+
+    let direction = reverse ? PREV : NEXT;
+
+    // We support filtering by date range only (see `else` block below) or by
+    // number/delivery status/read status with an optional date range.
+    if (filter.delivery == null &&
+        filter.numbers == null &&
+        filter.read == null) {
+      // Filtering by date range only.
+      if (DEBUG) {
+        debug("filter.timestamp " + filter.startDate + ", " + filter.endDate);
+      }
+
+      this.filterTimestamp(filter.startDate, filter.endDate, direction, txn,
+                           collect);
+      return;
+    }
+
+    // Numeric 0 is smaller than any time stamp, and empty string is larger
+    // than all numeric values.
+    let startDate = 0, endDate = "";
+    if (filter.startDate != null) {
+      startDate = filter.startDate.getTime();
+    }
+    if (filter.endDate != null) {
+      endDate = filter.endDate.getTime();
+    }
+
+    let single, intersectionCollector;
+    {
+      let num = 0;
+      if (filter.delivery) num++;
+      if (filter.numbers) num++;
+      if (filter.read != undefined) num++;
+      single = (num == 1);
+    }
+
+    if (!single) {
+      intersectionCollector = new IntersectionResultsCollector(collect, reverse);
+    }
+
+    // Retrieve the keys from the 'delivery' index that matches the value of
+    // filter.delivery.
+    if (filter.delivery) {
+      if (DEBUG) debug("filter.delivery " + filter.delivery);
+      let delivery = filter.delivery;
+      let range = IDBKeyRange.bound([delivery, startDate], [delivery, endDate]);
+      this.filterIndex("delivery", range, direction, txn,
+                       single ? collect : intersectionCollector.newContext());
+    }
+
+    // Retrieve the keys from the 'read' index that matches the value of
+    // filter.read.
+    if (filter.read != undefined) {
+      if (DEBUG) debug("filter.read " + filter.read);
+      let read = filter.read ? FILTER_READ_READ : FILTER_READ_UNREAD;
+      let range = IDBKeyRange.bound([read, startDate], [read, endDate]);
+      this.filterIndex("read", range, direction, txn,
+                       single ? collect : intersectionCollector.newContext());
+    }
+
+    // Retrieve the keys from the 'sender' and 'receiver' indexes that
+    // match the values of filter.numbers
+    if (filter.numbers) {
+      if (DEBUG) debug("filter.numbers " + filter.numbers.join(", "));
+
+      if (!single) {
+        collect = intersectionCollector.newContext();
+      }
+
+      let participantStore = txn.objectStore(PARTICIPANT_STORE_NAME);
+      service.findParticipantIdsByAddresses(participantStore, filter.numbers,
+                                            false, true,
+                                            (function (participantIds) {
+        if (!participantIds || !participantIds.length) {
+          // Oops! No such participant at all.
+
+          collect(txn, COLLECT_ID_END, COLLECT_TIMESTAMP_UNUSED);
+          return;
+        }
+
+        if (participantIds.length == 1) {
+          let id = participantIds[0];
+          let range = IDBKeyRange.bound([id, startDate], [id, endDate]);
+          this.filterIndex("participantIds", range, direction, txn, collect);
+          return;
+        }
+
+        let unionCollector = new UnionResultsCollector(collect);
+
+        this.filterTimestamp(filter.startDate, filter.endDate, direction, txn,
+                             unionCollector.newTimestampContext());
+
+        for (let i = 0; i < participantIds.length; i++) {
+          let id = participantIds[i];
+          let range = IDBKeyRange.bound([id, startDate], [id, endDate]);
+          this.filterIndex("participantIds", range, direction, txn,
+                           unionCollector.newContext());
+        }
+      }).bind(this));
+    }
+  }
+};
+
+function ResultsCollector() {
+  this.results = [];
+  this.done = false;
+}
+ResultsCollector.prototype = {
+  results: null,
+  requestWaiting: null,
+  done: null,
+
+  /**
+   * Queue up passed id, reply if necessary.
+   *
+   * @param txn
+   *        Ongoing IDBTransaction context object.
+   * @param id
+   *        COLLECT_ID_END(0) for no more results, COLLECT_ID_ERROR(-1) for
+   *        errors and valid otherwise.
+   * @param timestamp
+   *        We assume this function is always called in timestamp order. So
+   *        this parameter is actually unused.
+   *
+   * @return true if expects more. false otherwise.
+   */
+  collect: function collect(txn, id, timestamp) {
+    if (this.done) {
+      return false;
+    }
+
+    if (DEBUG) {
+      debug("collect: message ID = " + id);
+    }
+    if (id) {
+      // Queue up any id but '0' and replies later accordingly.
+      this.results.push(id);
+    }
+    if (id <= 0) {
+      // No more processing on '0' or negative values passed.
+      this.done = true;
+    }
+
+    if (!this.requestWaiting) {
+      if (DEBUG) debug("Cursor.continue() not called yet");
+      return !this.done;
+    }
+
+    // We assume there is only one request waiting throughout the message list
+    // retrieving process. So we don't bother continuing to process further
+    // waiting requests here. This assumption comes from DOMCursor::Continue()
+    // implementation.
+    let callback = this.requestWaiting;
+    this.requestWaiting = null;
+
+    this.drip(txn, callback);
+
+    return !this.done;
+  },
+
+  /**
+   * Callback right away with the first queued result entry if the filtering is
+   * done. Or queue up the request and callback when a new entry is available.
+   *
+   * @param callback
+   *        A callback function that accepts a numeric id.
+   */
+  squeeze: function squeeze(callback) {
+    if (this.requestWaiting) {
+      throw new Error("Already waiting for another request!");
+    }
+
+    if (!this.done) {
+      // Database transaction ongoing, let it reply for us so that we won't get
+      // blocked by the existing transaction.
+      this.requestWaiting = callback;
+      return;
+    }
+
+    this.drip(null, callback);
+  },
+
+  /**
+   * @param txn
+   *        Ongoing IDBTransaction context object or null.
+   * @param callback
+   *        A callback function that accepts a numeric id.
+   */
+  drip: function drip(txn, callback) {
+    if (!this.results.length) {
+      if (DEBUG) debug("No messages matching the filter criteria");
+      callback(txn, COLLECT_ID_END);
+      return;
+    }
+
+    if (this.results[0] < 0) {
+      // An previous error found. Keep the answer in results so that we can
+      // reply INTERNAL_ERROR for further requests.
+      if (DEBUG) debug("An previous error found");
+      callback(txn, COLLECT_ID_ERROR);
+      return;
+    }
+
+    let firstMessageId = this.results.shift();
+    callback(txn, firstMessageId);
+  }
+};
+
+function IntersectionResultsCollector(collect, reverse) {
+  this.cascadedCollect = collect;
+  this.reverse = reverse;
+  this.contexts = [];
+}
+IntersectionResultsCollector.prototype = {
+  cascadedCollect: null,
+  reverse: false,
+  contexts: null,
+
+  /**
+   * Queue up {id, timestamp} pairs, find out intersections and report to
+   * |cascadedCollect|. Return true if it is still possible to have another match.
+   */
+  collect: function collect(contextIndex, txn, id, timestamp) {
+    if (DEBUG) {
+      debug("IntersectionResultsCollector: "
+            + contextIndex + ", " + id + ", " + timestamp);
+    }
+
+    let contexts = this.contexts;
+    let context = contexts[contextIndex];
+
+    if (id < 0) {
+      // Act as no more matched records.
+      id = 0;
+    }
+    if (!id) {
+      context.done = true;
+
+      if (!context.results.length) {
+        // Already empty, can't have further intersection results.
+        return this.cascadedCollect(txn, COLLECT_ID_END, COLLECT_TIMESTAMP_UNUSED);
+      }
+
+      for (let i = 0; i < contexts.length; i++) {
+        if (!contexts[i].done) {
+          // Don't call |this.cascadedCollect| because |context.results| might not
+          // be empty, so other contexts might still have a chance here.
+          return false;
+        }
+      }
+
+      // It was the last processing context and is no more processing.
+      return this.cascadedCollect(txn, COLLECT_ID_END, COLLECT_TIMESTAMP_UNUSED);
+    }
+
+    // Search id in other existing results. If no other results has it,
+    // and A) the last timestamp is smaller-equal to current timestamp,
+    // we wait for further results; either B) record timestamp is larger
+    // then current timestamp or C) no more processing for a filter, then we
+    // drop this id because there can't be a match anymore.
+    for (let i = 0; i < contexts.length; i++) {
+      if (i == contextIndex) {
+        continue;
+      }
+
+      let ctx = contexts[i];
+      let results = ctx.results;
+      let found = false;
+      for (let j = 0; j < results.length; j++) {
+        let result = results[j];
+        if (result.id == id) {
+          found = true;
+          break;
+        }
+        if ((!this.reverse && (result.timestamp > timestamp)) ||
+            (this.reverse && (result.timestamp < timestamp))) {
+          // B) Cannot find a match anymore. Drop.
+          return true;
+        }
+      }
+
+      if (!found) {
+        if (ctx.done) {
+          // C) Cannot find a match anymore. Drop.
+          if (results.length) {
+            let lastResult = results[results.length - 1];
+            if ((!this.reverse && (lastResult.timestamp >= timestamp)) ||
+                (this.reverse && (lastResult.timestamp <= timestamp))) {
+              // Still have a chance to get another match. Return true.
+              return true;
+            }
+          }
+
+          // Impossible to find another match because all results in ctx have
+          // timestamps smaller than timestamp.
+          context.done = true;
+          return this.cascadedCollect(txn, COLLECT_ID_END, COLLECT_TIMESTAMP_UNUSED);
+        }
+
+        // A) Pending.
+        context.results.push({
+          id: id,
+          timestamp: timestamp
+        });
+        return true;
+      }
+    }
+
+    // Now id is found in all other results. Report it.
+    return this.cascadedCollect(txn, id, timestamp);
+  },
+
+  newContext: function newContext() {
+    let contextIndex = this.contexts.length;
+    this.contexts.push({
+      results: [],
+      done: false
+    });
+    return this.collect.bind(this, contextIndex);
+  }
+};
+
+function UnionResultsCollector(collect) {
+  this.cascadedCollect = collect;
+  this.contexts = [{
+    // Timestamp.
+    processing: 1,
+    results: []
+  }, {
+    processing: 0,
+    results: []
+  }];
+}
+UnionResultsCollector.prototype = {
+  cascadedCollect: null,
+  contexts: null,
+
+  collect: function collect(contextIndex, txn, id, timestamp) {
+    if (DEBUG) {
+      debug("UnionResultsCollector: "
+            + contextIndex + ", " + id + ", " + timestamp);
+    }
+
+    let contexts = this.contexts;
+    let context = contexts[contextIndex];
+
+    if (id < 0) {
+      // Act as no more matched records.
+      id = 0;
+    }
+    if (id) {
+      if (!contextIndex) {
+        // Timestamp.
+        context.results.push({
+          id: id,
+          timestamp: timestamp
+        });
+      } else {
+        context.results.push(id);
+      }
+      return true;
+    }
+
+    context.processing -= 1;
+    if (contexts[0].processing || contexts[1].processing) {
+      // At least one queue is still processing, but we got here because
+      // current cursor gives 0 as id meaning no more messages are
+      // available. Return false here to stop further cursor.continue() calls.
+      return false;
+    }
+
+    let tres = contexts[0].results;
+    let qres = contexts[1].results;
+    tres = tres.filter(function (element) {
+      return qres.indexOf(element.id) != -1;
+    });
+
+    for (let i = 0; i < tres.length; i++) {
+      this.cascadedCollect(txn, tres[i].id, tres[i.timestamp]);
+    }
+    this.cascadedCollect(txn, COLLECT_ID_END, COLLECT_TIMESTAMP_UNUSED);
+
+    return false;
+  },
+
+  newTimestampContext: function newTimestampContext() {
+    return this.collect.bind(this, 0);
+  },
+
+  newContext: function newContext() {
+    this.contexts[1].processing++;
+    return this.collect.bind(this, 1);
+  }
+};
+
+function GetMessagesCursor(service, callback) {
+  this.service = service;
+  this.callback = callback;
+  this.collector = new ResultsCollector();
+
+  this.handleContinue(); // Trigger first run.
+}
+GetMessagesCursor.prototype = {
+  classID: RIL_GETMESSAGESCURSOR_CID,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsICursorContinueCallback]),
+
+  service: null,
+  callback: null,
+  collector: null,
+
+  getMessageTxn: function getMessageTxn(messageStore, messageId) {
+    if (DEBUG) debug ("Fetching message " + messageId);
+
+    let getRequest = messageStore.get(messageId);
+    let self = this;
+    getRequest.onsuccess = function onsuccess(event) {
+      if (DEBUG) {
+        debug("notifyNextMessageInListGot - messageId: " + messageId);
+      }
+      let domMessage =
+        self.service.createDomMessageFromRecord(event.target.result);
+      self.callback.notifyCursorResult(domMessage);
+    };
+    getRequest.onerror = function onerror(event) {
+      if (DEBUG) {
+        debug("notifyCursorError - messageId: " + messageId);
+      }
+      self.callback.notifyCursorError(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
+    };
+  },
+
+  notify: function notify(txn, messageId) {
+    if (!messageId) {
+      this.callback.notifyCursorDone();
+      return;
+    }
+
+    if (messageId < 0) {
+      this.callback.notifyCursorError(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
+      return;
+    }
+
+    // When filter transaction is not yet completed, we're called with current
+    // ongoing transaction object.
+    if (txn) {
+      let messageStore = txn.objectStore(MESSAGE_STORE_NAME);
+      this.getMessageTxn(messageStore, messageId);
+      return;
+    }
+
+    // Or, we have to open another transaction ourselves.
+    let self = this;
+    this.service.newTxn(READ_ONLY, function (error, txn, messageStore) {
+      if (error) {
+        self.callback.notifyCursorError(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
+        return;
+      }
+      self.getMessageTxn(messageStore, messageId);
+    }, [MESSAGE_STORE_NAME]);
+  },
+
+  // nsICursorContinueCallback
+
+  handleContinue: function handleContinue() {
+    if (DEBUG) debug("Getting next message in list");
+    this.collector.squeeze(this.notify.bind(this));
+  }
+};
+
+function GetThreadsCursor(service, callback) {
+  this.service = service;
+  this.callback = callback;
+  this.collector = new ResultsCollector();
+
+  this.handleContinue(); // Trigger first run.
+}
+GetThreadsCursor.prototype = {
+  classID: RIL_GETTHREADSCURSOR_CID,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsICursorContinueCallback]),
+
+  service: null,
+  callback: null,
+  collector: null,
+
+  getThreadTxn: function getThreadTxn(threadStore, threadId) {
+    if (DEBUG) debug ("Fetching message " + threadId);
+
+    let getRequest = threadStore.get(threadId);
+    let self = this;
+    getRequest.onsuccess = function onsuccess(event) {
+      if (DEBUG) {
+        debug("notifyCursorResult - threadId: " + threadId);
+      }
+      let threadRecord = event.target.result;
+      let thread =
+        gMobileMessageService.createThread(threadRecord.id,
+                                           threadRecord.participantAddresses,
+                                           threadRecord.lastTimestamp,
+                                           threadRecord.subject,
+                                           threadRecord.unreadCount);
+      self.callback.notifyCursorResult(thread);
+    };
+    getRequest.onerror = function onerror(event) {
+      if (DEBUG) {
+        debug("notifyCursorError - threadId: " + threadId);
+      }
+      self.callback.notifyCursorError(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
+    };
+  },
+
+  notify: function notify(txn, threadId) {
+    if (!threadId) {
+      this.callback.notifyCursorDone();
+      return;
+    }
+
+    if (threadId < 0) {
+      this.callback.notifyCursorError(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
+      return;
+    }
+
+    // When filter transaction is not yet completed, we're called with current
+    // ongoing transaction object.
+    if (txn) {
+      let threadStore = txn.objectStore(THREAD_STORE_NAME);
+      this.getThreadTxn(threadStore, threadId);
+      return;
+    }
+
+    // Or, we have to open another transaction ourselves.
+    let self = this;
+    this.service.newTxn(READ_ONLY, function (error, txn, threadStore) {
+      if (error) {
+        self.callback.notifyCursorError(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
+        return;
+      }
+      self.getThreadTxn(threadStore, threadId);
+    }, [THREAD_STORE_NAME]);
+  },
+
+  // nsICursorContinueCallback
+
+  handleContinue: function handleContinue() {
+    if (DEBUG) debug("Getting next thread in list");
+    this.collector.squeeze(this.notify.bind(this));
+  }
+}
 
 XPCOMUtils.defineLazyServiceGetter(MobileMessageDatabaseService.prototype, "mRIL",
                                    "@mozilla.org/ril;1",

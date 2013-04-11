@@ -4,30 +4,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/*
-
-  The Sidebar API for 3rd parties
-
-*/
-
 #include "nsISupports.idl"
 
-[scriptable, uuid(41a22fb6-39e2-45e1-95c5-7e8cea36575d)]
+[scriptable, uuid(351887ca-56b2-4458-96fc-88baeb57b6e7)]
 interface nsISidebar : nsISupports
 {
-    void addPanel(in wstring aTitle, in string aContentURL,
-                  in string aCustomizeURL);
-    void addPersistentPanel(in wstring aTitle, in string aContentURL,
-                            in string aCustomizeURL);
-    void addSearchEngine(in string engineURL, in string iconURL,
-                         in wstring suggestedTitle, in wstring suggestedCategory);
+  void addSearchEngine(in DOMString engineURL, in DOMString iconURL,
+                       in DOMString suggestedTitle, in DOMString suggestedCategory);
 };
 
-[scriptable, uuid(4350fb73-9305-41df-a669-11d26222d420)]
+[scriptable, uuid(5895076f-e28e-434a-9fdb-a69f94eb323f)]
 interface nsISidebarExternal : nsISupports
 {
-    void AddSearchProvider(in string aDescriptionURL);
-		unsigned long IsSearchProviderInstalled(in string aSearchURL);
+  void AddSearchProvider(in DOMString aDescriptionURL);
+  unsigned long IsSearchProviderInstalled(in DOMString aSearchURL);
 };
 
 %{ C++
@@ -37,9 +27,3 @@ interface nsISidebarExternal : nsISupports
 
 #define NS_SIDEBAR_CONTRACTID "@mozilla.org/sidebar;1"
 %}
-
-/*
- var isidebar = Components.interfaces.nsISidebar;
- var csidebar = Components.classes['@mozilla.org/sidebar;1'];
- var sidebar = csidebar.createInstance(isidebar);
-*/

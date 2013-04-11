@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "./../../mozilla-config.h"     // for MOZ_MEDIA
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/Util.h"               // for ArrayLength
 #include "mozilla/dom/Element.h"        // for Element, nsINode
@@ -623,9 +622,7 @@ static const nsElementInfo kElements[eHTMLTag_userdefined] = {
   ELEM(area, false, false, GROUP_MAP_CONTENT, GROUP_NONE),
   ELEM(article, true, true, GROUP_BLOCK, GROUP_FLOW_ELEMENT),
   ELEM(aside, true, true, GROUP_BLOCK, GROUP_FLOW_ELEMENT),
-#if defined(MOZ_MEDIA)
   ELEM(audio, false, false, GROUP_NONE, GROUP_NONE),
-#endif
   ELEM(b, true, true, GROUP_FONTSTYLE, GROUP_INLINE_ELEMENT),
   ELEM(base, false, false, GROUP_HEAD_CONTENT, GROUP_NONE),
   ELEM(basefont, false, false, GROUP_SPECIAL, GROUP_NONE),
@@ -735,9 +732,7 @@ static const nsElementInfo kElements[eHTMLTag_userdefined] = {
   ELEM(section, true, true, GROUP_BLOCK, GROUP_FLOW_ELEMENT),
   ELEM(select, true, false, GROUP_FORMCONTROL, GROUP_SELECT_CONTENT),
   ELEM(small, true, true, GROUP_FONTSTYLE, GROUP_INLINE_ELEMENT),
-#if defined(MOZ_MEDIA)
   ELEM(source, false, false, GROUP_NONE, GROUP_NONE),
-#endif
   ELEM(span, true, true, GROUP_SPECIAL, GROUP_INLINE_ELEMENT),
   ELEM(strike, true, true, GROUP_FONTSTYLE, GROUP_INLINE_ELEMENT),
   ELEM(strong, true, true, GROUP_PHRASE, GROUP_INLINE_ELEMENT),
@@ -761,9 +756,7 @@ static const nsElementInfo kElements[eHTMLTag_userdefined] = {
   ELEM(ul, true, true, GROUP_BLOCK | GROUP_OL_UL,
        GROUP_LI | GROUP_OL_UL),
   ELEM(var, true, true, GROUP_PHRASE, GROUP_INLINE_ELEMENT),
-#if defined(MOZ_MEDIA)
   ELEM(video, false, false, GROUP_NONE, GROUP_NONE),
-#endif
   ELEM(wbr, false, false, GROUP_NONE, GROUP_NONE),
   ELEM(xmp, false, false, GROUP_NONE, GROUP_NONE),
 

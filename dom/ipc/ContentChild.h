@@ -116,7 +116,7 @@ public:
     RecvAudioChannelNotify();
 
     virtual bool
-    RecvDumpMemoryReportsToFile(const nsString& aIdentifier,
+    RecvDumpMemoryInfoToTempDir(const nsString& aIdentifier,
                                 const bool& aMinimizeMemoryUsage,
                                 const bool& aDumpChildProcesses);
     virtual bool

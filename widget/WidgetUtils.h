@@ -22,8 +22,8 @@ enum ScreenRotation {
   ROTATION_COUNT
 };
 
-gfxMatrix ComputeGLTransformForRotation(const nsIntRect& aBounds,
-                                        ScreenRotation aRotation);
+gfxMatrix ComputeTransformForRotation(const nsIntRect& aBounds,
+                                      ScreenRotation aRotation);
 
 } // namespace mozilla
 

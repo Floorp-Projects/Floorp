@@ -57,6 +57,7 @@ def InvokeClWithDependencyGeneration(cmdline):
     f = open(depstarget, "w")
     for dep in sorted(deps):
         print >>f, "%s: %s" % (target, dep)
+        print >>f, "%s:" % dep
 
 if __name__ == "__main__":
     InvokeClWithDependencyGeneration(sys.argv[1:])

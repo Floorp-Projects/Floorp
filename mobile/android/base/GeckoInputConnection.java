@@ -572,7 +572,14 @@ class GeckoInputConnection
         else if (mIMEModeHint.equalsIgnoreCase("digit"))
             outAttrs.inputType = InputType.TYPE_CLASS_NUMBER;
         else {
-            outAttrs.inputType |= InputType.TYPE_TEXT_FLAG_AUTO_CORRECT;
+            // TYPE_TEXT_FLAG_IME_MULTI_LINE flag makes the fullscreen IME line wrap
+            outAttrs.inputType |= InputType.TYPE_TEXT_FLAG_AUTO_CORRECT |
+                                  InputType.TYPE_TEXT_FLAG_IME_MULTI_LINE;
+            if (mIMETypeHint.equalsIgnoreCase("textarea") ||
+                    mIMETypeHint.length() == 0) {
+                // empty mIMETypeHint indicates contentEditable/designMode documents
+                outAttrs.inputType |= InputType.TYPE_TEXT_FLAG_MULTI_LINE;
+            }
             if (mIMEModeHint.equalsIgnoreCase("uppercase"))
                 outAttrs.inputType |= InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS;
             else if (mIMEModeHint.equalsIgnoreCase("titlecase"))

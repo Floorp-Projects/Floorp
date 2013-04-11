@@ -6,7 +6,7 @@
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
   <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
-  <!-- This file tests the loading of memory reports from file in
+  <!-- This file tests the saving and loading of memory reports to/from file in
        about:memory. -->
 
   <!-- test results are displayed in the html:body -->
@@ -24,6 +24,7 @@
 
   // Remove all the real reporters and multi-reporters;  save them to
   // restore at the end.
+  mgr.blockRegistration();
   let e = mgr.enumerateReporters();
   let realReporters = [];
   while (e.hasMoreElements()) {
@@ -46,32 +47,34 @@
   const OTHER = Ci.nsIMemoryReporter.KIND_OTHER;
   const BYTES = Ci.nsIMemoryReporter.UNITS_BYTES;
 
-  function f(aPath, aKind, aAmount) {
+  function f(aPath, aKind, aAmount, aDesc) {
     return {
       process:     "",
       path:        aPath,
       kind:        aKind,
       units:       BYTES,
-      description: "Desc.",
-      amount:      aAmount
+      amount:      aAmount,
+      description: aDesc
     };
   }
 
   let fakeReporters = [
-    f("heap-allocated",     OTHER,   250 * MB),
-    f("explicit/a/b",       HEAP,     50 * MB),
-    f("other",              OTHER,   0.1 * MB),
+    f("heap-allocated",     OTHER,   250 * MB, "Heap allocated."),
+    f("explicit/a/b",       HEAP,     50 * MB, "A b."),
+    f("other/a",            OTHER,   0.2 * MB, "Other a."),
+    f("other/b",            OTHER,   0.1 * MB, "Other b."),
   ];
 
   for (let i = 0; i < fakeReporters.length; i++) {
-    mgr.registerReporter(fakeReporters[i]);
+    mgr.registerReporterEvenIfBlocked(fakeReporters[i]);
   }
 
   ]]>
   </script>
 
-  <iframe id="amGoodFrame" height="400" src="about:memory"></iframe>
-  <iframe id="amBadFrame"  height="400" src="about:memory"></iframe>
+  <iframe id="amGoodFrame"  height="200" src="about:memory"></iframe>
+  <iframe id="amGoodFrame2" height="200" src="about:memory"></iframe>
+  <iframe id="amBadFrame"   height="200" src="about:memory"></iframe>
 
   <script type="application/javascript">
   <![CDATA[
@@ -84,17 +87,19 @@
       mgr.unregisterReporter(fakeReporters[i]);
     }
     for (let i = 0; i < realReporters.length; i++) {
-      mgr.registerReporter(realReporters[i]);
+      mgr.registerReporterEvenIfBlocked(realReporters[i]);
     }
     for (let i = 0; i < realMultiReporters.length; i++) {
-      mgr.registerMultiReporter(realMultiReporters[i]);
+      mgr.registerMultiReporterEvenIfBlocked(realMultiReporters[i]);
     }
+    mgr.unblockRegistration();
+
     SimpleTest.finish();
   }
 
   // Load the given file into the frame, then copy+paste the entire frame and
   // check that the cut text matches what we expect.
-  function test(aFrameId, aFilename, aExpected, aNext) {
+  function test(aFrameId, aFilename, aExpected, aDumpFirst, aNext) {
     let frame = document.getElementById(aFrameId);
     frame.focus();
 
@@ -107,6 +112,15 @@
     file.append("aboutmemory");
     file.append("tests");
     file.append(aFilename);
+
+    if (aDumpFirst) {
+        let dumper = Cc["@mozilla.org/memory-info-dumper;1"].
+                        getService(Ci.nsIMemoryInfoDumper);
+
+        dumper.dumpMemoryReportsToNamedFile(file.path,
+                                            /* minimizeMemoryUsage = */ false,
+                                            /* dumpChildProcesses = */ false);
+    }
 
     let input = frame.contentWindow.document.getElementById("fileInput");
     input.value = file.path;    // this works because it's a chrome test
@@ -123,10 +137,12 @@
     // Because the file load is async, we don't know when it will finish and
     // the output will show up.  So we poll.
     function copyPasteAndCheck() {
-      // Copy and paste frame contents.
+      // Copy and paste frame contents, and filter out non-deterministic
+      // differences.
       synthesizeKey("A", {accelKey: true});
       synthesizeKey("C", {accelKey: true});
       let actual = SpecialPowers.getClipboardData("text/unicode");
+      actual = actual.replace(/\(pid \d+\)/, "(pid NNN)");
 
       if (actual === aExpected) {
         SimpleTest.ok(true, "Clipboard has the expected contents");
@@ -134,6 +150,7 @@
       } else {
         numFailures++;
         if (numFailures === maxFailures) {
+          ok(false, "pasted text doesn't match");
           dump("******EXPECTED******\n");
           dump(aExpected);
           dump("*******ACTUAL*******\n");
@@ -152,7 +169,7 @@
   function chain(aFrameIds) {
     let x = aFrameIds.shift();
     if (x) {
-      return function() { test(x.frameId, x.filename, x.expected, chain(aFrameIds)); }
+      return function() { test(x.frameId, x.filename, x.expected, x.dumpFirst, chain(aFrameIds)); }
     } else {
       return function() { finish(); };
     }
@@ -162,31 +179,38 @@
   // the loading of data from file.  If we got this far, we're doing fine.
   let expectedGood =
 "\
-Main Process\n\
+Main Process (pid NNN)\n\
 Explicit Allocations\n\
 \n\
-2.86 MB (100.0%) -- explicit\n\
-├──1.91 MB (66.67%) ── foo/bar\n\
-└──0.95 MB (33.33%) ── heap-unclassified\n\
+250.00 MB (100.0%) -- explicit\n\
+├──200.00 MB (80.00%) ── heap-unclassified\n\
+└───50.00 MB (20.00%) ── a/b\n\
 \n\
 Other Measurements\n\
 \n\
-0.00 MB (100.0%) -- a\n\
-├──0.00 MB (50.00%) ── b\n\
-└──0.00 MB (50.00%) ── c\n\
+0.30 MB (100.0%) -- other\n\
+├──0.20 MB (66.67%) ── a\n\
+└──0.10 MB (33.33%) ── b\n\
 \n\
-2.86 MB ── heap-allocated\n\
+250.00 MB ── heap-allocated\n\
 \n\
 ";
 
   // This is the output for a malformed data file.
   let expectedBad =
 "\
-Invalid memory report(s): missing 'hasMozMallocUsableSize' property";
+Invalid memory report(s): missing 'hasMozMallocUsableSize' property\n\
+";
 
   let frames = [
-    { frameId: "amGoodFrame", filename: "memory-reports-good.json", expected: expectedGood },
-    { frameId: "amBadFrame",  filename: "memory-reports-bad.json",  expected: expectedBad }
+    // This loads a pre-existing file that is valid.
+    { frameId: "amGoodFrame", filename: "memory-reports-good.json", expected: expectedGood, dumpFirst: false },
+
+    // This dumps to a file and then reads it back in.  The output is the same as the first test.
+    { frameId: "amGoodFrame2", filename: "memory-reports-dumped.json.gz", expected: expectedGood, dumpFirst: true },
+
+    // This loads a pre-existing file that is invalid.
+    { frameId: "amBadFrame",  filename: "memory-reports-bad.json",  expected: expectedBad, dumpFirst: false }
   ];
 
   SimpleTest.waitForFocus(chain(frames));

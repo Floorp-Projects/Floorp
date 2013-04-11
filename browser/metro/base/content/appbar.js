@@ -159,42 +159,39 @@ var Appbar = {
       }
     }
   },
-
   showContextualActions: function(aVerbs){
     let doc = document;
-
     // button element id to action verb lookup
     let buttonsMap = new Map();
     for (let verb of aVerbs) {
       let id = verb + "-selected-button";
-      let buttonNode = doc.getElementById(id);
-      if (buttonNode) {
-        buttonsMap.set(id, verb);
-      } else {
-        Util.dumpLn("Appbar.showContextualActions: no button for " + verb);
+      if (!doc.getElementById(id)) {
+        throw new Error("Appbar.showContextualActions: no button for " + verb);
       }
+      buttonsMap.set(id, verb);
     }
 
-    // hide/show buttons as appropriate
-    let buttons = doc.querySelectorAll("#contextualactions-tray > toolbarbutton");
-
-    for (let btnNode of buttons) {
-      if (buttonsMap.has(btnNode.id)){
-        btnNode.hidden = false;
-      } else {
-        btnNode.hidden = true;
+    // sort buttons into 2 buckets - needing showing and needing hiding
+    let toHide = [],
+        toShow = [];
+    for (let btnNode of this.appbar.querySelectorAll("#contextualactions-tray > toolbarbutton")) {
+      // correct the hidden state for each button;
+      // .. buttons present in the map should be visible, otherwise not
+      if (buttonsMap.has(btnNode.id)) {
+        if (btnNode.hidden) toShow.push(btnNode);
+      } else if (!btnNode.hidden) {
+        toHide.push(btnNode);
       }
-    };
-
-    if (buttonsMap.size) {
-      // there are buttons to show
-      // TODO: show the contextual actions tray?
-    } else {
-      // 0 actions to show;
-      // TODO: hide the contextual actions tray entirely?
     }
+    return Task.spawn(function() {
+      if (toHide.length) {
+        yield Util.transitionElementVisibility(toHide, false);
+      }
+      if (toShow.length) {
+        yield Util.transitionElementVisibility(toShow, true);
+      }
+    });
   },
-
   _onTileSelectionChanged: function _onTileSelectionChanged(aEvent){
     let activeTileset = aEvent.target;
 

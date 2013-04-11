@@ -30,6 +30,7 @@ void
 WriteZeroesToAudioBlock(AudioChunk* aChunk, uint32_t aStart, uint32_t aLength)
 {
   MOZ_ASSERT(aStart + aLength <= WEBAUDIO_BLOCK_SIZE);
+  MOZ_ASSERT(!aChunk->IsNull(), "You should pass a non-null chunk");
   if (aLength == 0)
     return;
   for (uint32_t i = 0; i < aChunk->mChannelData.Length(); ++i) {

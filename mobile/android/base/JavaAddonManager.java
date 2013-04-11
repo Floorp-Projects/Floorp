@@ -9,6 +9,9 @@ import org.mozilla.gecko.util.EventDispatcher;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.GeckoEventResponder;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
@@ -16,9 +19,6 @@ import android.os.Message;
 import android.util.Log;
 
 import dalvik.system.DexClassLoader;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.File;
 import java.lang.reflect.Constructor;

@@ -55,7 +55,7 @@ struct Rect :
 
     GFX2D_API void NudgeToIntegers();
 
-    bool ToIntRect(IntRect *aOut)
+    bool ToIntRect(IntRect *aOut) const
     {
       *aOut = IntRect(int32_t(X()), int32_t(Y()),
                     int32_t(Width()), int32_t(Height()));

@@ -135,7 +135,7 @@ function testJSTerm(hud)
 
   jsterm.clearOutput();
   jsterm.execute("pprint({b:2, a:1})");
-  checkResult("a: 1\n  b: 2", "pprint()", 1);
+  checkResult('"  b: 2\n  a: 1"', "pprint()", 1);
   yield;
 
   // check instanceof correctness, bug 599940
@@ -171,7 +171,7 @@ function testJSTerm(hud)
   // bug 614561
   jsterm.clearOutput();
   jsterm.execute("pprint('hi')");
-  checkResult('0: "h"\n  1: "i"', "pprint('hi')", 1);
+  checkResult('"  0: "h"\n  1: "i""', "pprint('hi')", 1);
   yield;
 
   // check that pprint(function) shows function source, bug 618344

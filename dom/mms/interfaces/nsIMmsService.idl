@@ -10,9 +10,12 @@ interface nsIDOMBlob;
 #define RIL_MMSSERVICE_CONTRACTID "@mozilla.org/mms/rilmmsservice;1"
 %}
 
-[scriptable, uuid(3ec33286-8559-11e2-9f38-e76b58650568)]
+[scriptable, uuid(e5ef630a-eab7-425a-ac42-650ef5c4fcef)]
 interface nsIMmsService : nsISupports
 {
   void send(in jsval parameters /* MmsParameters */,
             in nsIMobileMessageCallback request);
+
+  void retrieve(in long id,
+                in nsIMobileMessageCallback request);
 };

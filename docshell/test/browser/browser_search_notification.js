@@ -11,7 +11,7 @@ function test() {
     Services.obs.removeObserver(observer, "keyword-search");
     is(topic, "keyword-search", "Got keyword-search notification");
 
-    let engine = Services.search.originalDefaultEngine;
+    let engine = Services.search.defaultEngine;
     ok(engine, "Have default search engine.");
     is(engine.name, data, "Notification data is engine name.");
 

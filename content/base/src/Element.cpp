@@ -14,7 +14,7 @@
 
 #include "mozilla/dom/Element.h"
 
-#include "nsDOMAttribute.h"
+#include "mozilla/dom/Attr.h"
 #include "nsDOMAttributeMap.h"
 #include "nsIAtom.h"
 #include "nsINodeInfo.h"
@@ -769,46 +769,48 @@ Element::RemoveAttribute(const nsAString& aName, ErrorResult& aError)
   aError = UnsetAttr(name->NamespaceID(), name->LocalName(), true);
 }
 
-nsIDOMAttr*
+Attr*
 Element::GetAttributeNode(const nsAString& aName)
 {
   OwnerDoc()->WarnOnceAbout(nsIDocument::eGetAttributeNode);
   return Attributes()->GetNamedItem(aName);
 }
 
-already_AddRefed<nsIDOMAttr>
-Element::SetAttributeNode(nsIDOMAttr* aNewAttr, ErrorResult& aError)
+already_AddRefed<Attr>
+Element::SetAttributeNode(Attr& aNewAttr, ErrorResult& aError)
 {
   OwnerDoc()->WarnOnceAbout(nsIDocument::eSetAttributeNode);
 
-  nsCOMPtr<nsIDOMAttr> returnAttr;
-  aError = Attributes()->SetNamedItem(aNewAttr, getter_AddRefs(returnAttr));
+  nsCOMPtr<nsIDOMAttr> attr;
+  aError = Attributes()->SetNamedItem(&aNewAttr, getter_AddRefs(attr));
   if (aError.Failed()) {
     return nullptr;
   }
 
+  nsRefPtr<Attr> returnAttr = static_cast<Attr*>(attr.get());
   return returnAttr.forget();
 }
 
-already_AddRefed<nsIDOMAttr>
-Element::RemoveAttributeNode(nsIDOMAttr* aAttribute,
+already_AddRefed<Attr>
+Element::RemoveAttributeNode(Attr& aAttribute,
                              ErrorResult& aError)
 {
   OwnerDoc()->WarnOnceAbout(nsIDocument::eRemoveAttributeNode);
 
   nsAutoString name;
 
-  aError = aAttribute->GetName(name);
+  aError = aAttribute.GetName(name);
   if (aError.Failed()) {
     return nullptr;
   }
 
-  nsCOMPtr<nsIDOMAttr> returnAttr;
-  aError = Attributes()->RemoveNamedItem(name, getter_AddRefs(returnAttr));
+  nsCOMPtr<nsIDOMAttr> attr;
+  aError = Attributes()->RemoveNamedItem(name, getter_AddRefs(attr));
   if (aError.Failed()) {
     return nullptr;
   }
 
+  nsRefPtr<Attr> returnAttr = static_cast<Attr*>(attr.get());
   return returnAttr.forget();
 }
 
@@ -872,7 +874,7 @@ Element::RemoveAttributeNS(const nsAString& aNamespaceURI,
   aError = UnsetAttr(nsid, name, true);
 }
 
-nsIDOMAttr*
+Attr*
 Element::GetAttributeNodeNS(const nsAString& aNamespaceURI,
                             const nsAString& aLocalName,
                             ErrorResult& aError)
@@ -882,7 +884,7 @@ Element::GetAttributeNodeNS(const nsAString& aNamespaceURI,
   return GetAttributeNodeNSInternal(aNamespaceURI, aLocalName, aError);
 }
 
-nsIDOMAttr*
+Attr*
 Element::GetAttributeNodeNSInternal(const nsAString& aNamespaceURI,
                                     const nsAString& aLocalName,
                                     ErrorResult& aError)
@@ -890,12 +892,12 @@ Element::GetAttributeNodeNSInternal(const nsAString& aNamespaceURI,
   return Attributes()->GetNamedItemNS(aNamespaceURI, aLocalName, aError);
 }
 
-already_AddRefed<nsIDOMAttr>
-Element::SetAttributeNodeNS(nsIDOMAttr* aNewAttr,
+already_AddRefed<Attr>
+Element::SetAttributeNodeNS(Attr& aNewAttr,
                             ErrorResult& aError)
 {
   OwnerDoc()->WarnOnceAbout(nsIDocument::eSetAttributeNodeNS);
-  return Attributes()->SetNamedItemNS(aNewAttr, aError);
+  return Attributes()->SetNamedItemNS(&aNewAttr, aError);
 }
 
 already_AddRefed<nsIHTMLCollection>
@@ -1863,7 +1865,7 @@ Element::SetAttrAndNotify(int32_t aNamespaceID,
     nsAutoString ns;
     nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNamespaceID, ns);
     ErrorResult rv;
-    nsIDOMAttr* attrNode =
+    Attr* attrNode =
       GetAttributeNodeNSInternal(ns, nsDependentAtomString(aName), rv);
     mutation.mRelatedNode = attrNode;
 
@@ -1989,7 +1991,7 @@ Element::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                          this);
 
   // Grab the attr node if needed before we remove it from the attr map
-  nsCOMPtr<nsIDOMAttr> attrNode;
+  nsRefPtr<Attr> attrNode;
   if (hasMutationListeners) {
     nsAutoString ns;
     nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNameSpaceID, ns);

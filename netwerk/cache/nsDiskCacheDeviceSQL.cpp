@@ -1093,6 +1093,13 @@ struct StatementSql {
 nsresult
 nsOfflineCacheDevice::Init()
 {
+  MOZ_ASSERT(false, "Need to be initialized with sqlite");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsOfflineCacheDevice::InitWithSqlite(mozIStorageService * ss)
+{
   NS_ENSURE_TRUE(!mDB, NS_ERROR_ALREADY_INITIALIZED);
 
   // SetCacheParentDirectory must have been called
@@ -1109,9 +1116,8 @@ nsOfflineCacheDevice::Init()
   rv = indexFile->AppendNative(NS_LITERAL_CSTRING("index.sqlite"));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<mozIStorageService> ss =
-      do_GetService("@mozilla.org/storage/service;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_ASSERT(ss, "nsOfflineCacheDevice::InitWithSqlite called before nsCacheService::Init() ?");
+  NS_ENSURE_TRUE(ss, NS_ERROR_UNEXPECTED);
 
   rv = ss->OpenDatabase(indexFile, getter_AddRefs(mDB));
   NS_ENSURE_SUCCESS(rv, rv);

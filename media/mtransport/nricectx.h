@@ -71,15 +71,16 @@ typedef struct nr_ice_handler_ nr_ice_handler;
 typedef struct nr_ice_handler_vtbl_ nr_ice_handler_vtbl;
 typedef struct nr_ice_cand_pair_ nr_ice_cand_pair;
 typedef struct nr_ice_stun_server_ nr_ice_stun_server;
+typedef struct nr_ice_turn_server_ nr_ice_turn_server;
 typedef struct nr_resolver_ nr_resolver;
-
-namespace mozilla {
 
 typedef void* NR_SOCKET;
 
+namespace mozilla {
+
 class NrIceMediaStream;
 
-struct NrIceStunServer {
+class NrIceStunServer {
  public:
   NrIceStunServer(const PRNetAddr& addr) : has_addr_(true) {
     memcpy(&addr_, &addr, sizeof(addr));
@@ -97,9 +98,9 @@ struct NrIceStunServer {
     return server.forget();
   }
 
-  nsresult ToNicerStruct(nr_ice_stun_server *server) const;
+  nsresult ToNicerStunStruct(nr_ice_stun_server *server) const;
 
- private:
+ protected:
   NrIceStunServer() : addr_() {}
 
   nsresult Init(const std::string& addr, uint16_t port) {
@@ -128,10 +129,30 @@ struct NrIceStunServer {
   PRNetAddr addr_;
 };
 
-struct NrIceTurnServer {
-  PRNetAddr addr;
-  std::string username;
-  std::string password;
+class NrIceTurnServer : public NrIceStunServer {
+ public:
+  static NrIceTurnServer *Create(const std::string& addr, uint16_t port,
+                                 const std::string& username,
+                                 const std::vector<unsigned char>& password) {
+    ScopedDeletePtr<NrIceTurnServer> server(
+        new NrIceTurnServer(username, password));
+
+    nsresult rv = server->Init(addr, port);
+    if (NS_FAILED(rv))
+      return nullptr;
+
+    return server.forget();
+  }
+
+  nsresult ToNicerTurnStruct(nr_ice_turn_server *server) const;
+
+ private:
+  NrIceTurnServer(const std::string& username,
+                  const std::vector<unsigned char>& password) :
+      username_(username), password_(password) {}
+
+  std::string username_;
+  std::vector<unsigned char> password_;
 };
 
 class NrIceCtx {
@@ -181,6 +202,10 @@ class NrIceCtx {
   // Set the STUN servers. Must be called before StartGathering
   // (if at all).
   nsresult SetStunServers(const std::vector<NrIceStunServer>& stun_servers);
+
+  // Set the TURN servers. Must be called before StartGathering
+  // (if at all).
+  nsresult SetTurnServers(const std::vector<NrIceTurnServer>& turn_servers);
 
   // Provide the resolution provider. Must be called before
   // StartGathering.

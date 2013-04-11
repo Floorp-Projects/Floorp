@@ -2664,8 +2664,8 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    mWatchdogThread(nullptr),
    mWatchdogHibernating(false),
    mLastActiveTime(-1),
-   mExceptionManagerNotAvailable(false),
-   mJunkScope(nullptr)
+   mJunkScope(nullptr),
+   mExceptionManagerNotAvailable(false)
 #ifdef DEBUG
    , mObjectToUnlink(nullptr)
 #endif

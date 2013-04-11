@@ -1,0 +1,40 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsILoadGroup.idl"
+
+/**
+ * nsILoadGroupChild provides a hierarchy of load groups so that the
+ * root load group can be used to conceptually tie a series of loading
+ * operations into a logical whole while still leaving them separate
+ * for the purposes of cancellation and status events.
+ */
+
+[scriptable, uuid(02efe8e2-fbbc-4718-a299-b8a09c60bf6b)]
+interface nsILoadGroupChild : nsISupports
+{
+    /**
+     * The parent of this load group. It is stored with
+     * a nsIWeakReference/nsWeakPtr so there is no requirement for the
+     * parentLoadGroup to out live the child, nor will the child keep a
+     * reference count on the parent.
+     */
+    attribute nsILoadGroup parentLoadGroup;
+
+    /**
+     * The nsILoadGroup associated with this nsILoadGroupChild
+     */
+    readonly attribute nsILoadGroup childLoadGroup;
+
+    /**
+     * The rootLoadGroup is the recursive parent of this
+     * load group where parent is defined as parentlLoadGroup if set
+     * or childLoadGroup.loadGroup as a backup. (i.e. parentLoadGroup takes
+     * precedence.) The nsILoadGroup child is the root if neither parent
+     * nor loadgroup attribute is specified.
+     */
+    readonly attribute nsILoadGroup rootLoadGroup;
+};
+

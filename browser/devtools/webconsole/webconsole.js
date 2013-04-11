@@ -19,11 +19,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "clipboardHelper",
                                    "@mozilla.org/widget/clipboardhelper;1",
                                    "nsIClipboardHelper");
 
-XPCOMUtils.defineLazyModuleGetter(this, "PropertyPanel",
-                                  "resource:///modules/PropertyPanel.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "PropertyTreeView",
-                                  "resource:///modules/PropertyPanel.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "GripClient",
+                                  "resource://gre/modules/devtools/dbg-client.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "NetworkPanel",
                                   "resource:///modules/NetworkPanel.jsm");
@@ -37,6 +34,15 @@ XPCOMUtils.defineLazyModuleGetter(this, "WebConsoleUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/commonjs/sdk/core/promise.js");
 
+XPCOMUtils.defineLazyModuleGetter(this, "VariablesView",
+                                  "resource:///modules/devtools/VariablesView.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "ToolSidebar",
+                                  "resource:///modules/devtools/Sidebar.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
+                                  "resource:///modules/devtools/EventEmitter.jsm");
+
 const STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
 let l10n = new WebConsoleUtils.l10n(STRINGS_URI);
 
@@ -47,6 +53,12 @@ const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const MIXED_CONTENT_LEARN_MORE = "https://developer.mozilla.org/en/Security/MixedContent";
 
 const HELP_URL = "https://developer.mozilla.org/docs/Tools/Web_Console/Helpers";
+
+const VARIABLES_VIEW_URL = "chrome://browser/content/devtools/widgets/VariablesView.xul";
+
+const CONSOLE_DIR_VIEW_HEIGHT = 0.6;
+
+const IGNORED_SOURCE_URLS = ["debugger eval code", "self-hosted"];
 
 // The amount of time in milliseconds that must pass between messages to
 // trigger the display of a new group.
@@ -214,6 +226,13 @@ WebConsoleFrame.prototype = {
   get popupset() this.owner.mainPopupSet,
 
   /**
+   * Holds the initialization Promise object.
+   * @private
+   * @type object
+   */
+  _initDefer: null,
+
+  /**
    * Holds the network requests currently displayed by the Web Console. Each key
    * represents the connection ID and the value is network request information.
    * @private
@@ -365,30 +384,27 @@ WebConsoleFrame.prototype = {
    */
   _initConnection: function WCF__initConnection()
   {
-    let deferred = Promise.defer();
+    if (this._initDefer) {
+      return this._initDefer.promise;
+    }
 
+    this._initDefer = Promise.defer();
     this.proxy = new WebConsoleConnectionProxy(this, this.owner.target);
 
-    let onSuccess = function() {
+    this.proxy.connect().then(() => { // on success
       this.saveRequestAndResponseBodies = this._saveRequestAndResponseBodies;
-      deferred.resolve(this);
-    }.bind(this);
-
-    let onFailure = function(aReason) {
+      this._initDefer.resolve(this);
+    }, (aReason) => { // on failure
       let node = this.createMessageNode(CATEGORY_JS, SEVERITY_ERROR,
                                         aReason.error + ": " + aReason.message);
       this.outputMessage(CATEGORY_JS, node);
-      deferred.reject(aReason);
-    }.bind(this);
-
-    let sendNotification = function() {
+      this._initDefer.reject(aReason);
+    }).then(() => {
       let id = WebConsoleUtils.supportsString(this.hudId);
       Services.obs.notifyObservers(id, "web-console-created", null);
-    }.bind(this);
+    });
 
-    this.proxy.connect().then(onSuccess, onFailure).then(sendNotification);
-
-    return deferred.promise;
+    return this._initDefer.promise;
   },
 
   /**
@@ -954,19 +970,14 @@ WebConsoleFrame.prototype = {
     let sourceLine = aMessage.lineNumber;
     let level = aMessage.level;
     let args = aMessage.arguments;
-    let objectActors = [];
+    let objectActors = new Set();
 
     // Gather the actor IDs.
-    args.forEach(function(aValue) {
-      if (aValue && typeof aValue == "object" && aValue.actor) {
-        objectActors.push(aValue.actor);
-        let displayStringIsLong = typeof aValue.displayString == "object" &&
-                                  aValue.displayString.type == "longString";
-        if (displayStringIsLong) {
-          objectActors.push(aValue.displayString.actor);
-        }
+    args.forEach((aValue) => {
+      if (WebConsoleUtils.isActorGrip(aValue)) {
+        objectActors.add(aValue.actor);
       }
-    }, this);
+    });
 
     switch (level) {
       case "log":
@@ -974,25 +985,17 @@ WebConsoleFrame.prototype = {
       case "warn":
       case "error":
       case "debug":
-      case "dir":
-      case "groupEnd": {
+      case "dir": {
         body = { arguments: args };
         let clipboardArray = [];
-        args.forEach(function(aValue) {
-          clipboardArray.push(WebConsoleUtils.objectActorGripToString(aValue));
-          if (aValue && typeof aValue == "object" && aValue.actor) {
-            let displayStringIsLong = typeof aValue.displayString == "object" &&
-                                      aValue.displayString.type == "longString";
-            if (aValue.type == "longString" || displayStringIsLong) {
-              clipboardArray.push(l10n.getStr("longStringEllipsis"));
-            }
+        args.forEach((aValue) => {
+          clipboardArray.push(VariablesView.getString(aValue));
+          if (aValue && typeof aValue == "object" &&
+              aValue.type == "longString") {
+            clipboardArray.push(l10n.getStr("longStringEllipsis"));
           }
-        }, this);
+        });
         clipboardText = clipboardArray.join(" ");
-
-        if (level == "dir") {
-          body.objectProperties = aMessage.objectProperties;
-        }
         break;
       }
 
@@ -1020,6 +1023,12 @@ WebConsoleFrame.prototype = {
       case "groupCollapsed":
         clipboardText = body = aMessage.groupName;
         this.groupDepth++;
+        break;
+
+      case "groupEnd":
+        if (this.groupDepth > 0) {
+          this.groupDepth--;
+        }
         break;
 
       case "time": {
@@ -1060,14 +1069,13 @@ WebConsoleFrame.prototype = {
       case "trace":
       case "time":
       case "timeEnd":
-        objectActors.forEach(this._releaseObject, this);
-        objectActors = [];
+        for (let actor of objectActors) {
+          this._releaseObject(actor);
+        }
+        objectActors.clear();
     }
 
     if (level == "groupEnd") {
-      if (this.groupDepth > 0) {
-        this.groupDepth--;
-      }
       return; // no need to continue
     }
 
@@ -1075,37 +1083,17 @@ WebConsoleFrame.prototype = {
                                       sourceURL, sourceLine, clipboardText,
                                       level, aMessage.timeStamp);
 
-    if (objectActors.length) {
+    if (objectActors.size > 0) {
       node._objectActors = objectActors;
     }
 
-    // Make the node bring up the property panel, to allow the user to inspect
+    // Make the node bring up the variables view, to allow the user to inspect
     // the stack trace.
     if (level == "trace") {
       node._stacktrace = aMessage.stacktrace;
 
-      this.makeOutputMessageLink(node, function _traceNodeClickCallback() {
-        if (node._panelOpen) {
-          return;
-        }
-
-        let options = {
-          anchor: node,
-          data: { object: node._stacktrace },
-        };
-
-        let propPanel = this.jsterm.openPropertyPanel(options);
-        propPanel.panel.setAttribute("hudId", this.hudId);
-      }.bind(this));
-    }
-
-    if (level == "dir") {
-      // Initialize the inspector message node, by setting the PropertyTreeView
-      // object on the tree view. This has to be done *after* the node is
-      // shown, because the tree binding must be attached first.
-      node._onOutput = function _onMessageOutput() {
-        node.querySelector("tree").view = node.propertyTreeView;
-      };
+      this.makeOutputMessageLink(node, () =>
+        this.jsterm.openVariablesView({ rawObject: node._stacktrace }));
     }
 
     return node;
@@ -1128,49 +1116,19 @@ WebConsoleFrame.prototype = {
    * window.console API.
    *
    * @private
-   * @param nsIDOMNode aMessage
-   *        The message element this handler corresponds to.
    * @param nsIDOMNode aAnchor
    *        The object inspector anchor element. This is the clickable element
    *        in the console.log message we display.
    * @param object aObjectActor
    *        The object actor grip.
    */
-  _consoleLogClick:
-  function WCF__consoleLogClick(aMessage, aAnchor, aObjectActor)
+  _consoleLogClick: function WCF__consoleLogClick(aAnchor, aObjectActor)
   {
-    if (aAnchor._panelOpen) {
-      return;
-    }
-
     let options = {
-      title: aAnchor.textContent,
-      anchor: aAnchor,
-
-      // Data to inspect.
-      data: {
-        objectPropertiesProvider: this.objectPropertiesProvider.bind(this),
-        releaseObject: this._releaseObject.bind(this),
-      },
+      label: aAnchor.textContent,
+      objectActor: aObjectActor,
     };
-
-    let propPanel;
-    let onPopupHide = function _onPopupHide() {
-      propPanel.panel.removeEventListener("popuphiding", onPopupHide, false);
-
-      if (!aMessage.parentNode && aMessage._objectActors) {
-        aMessage._objectActors.forEach(this._releaseObject, this);
-        aMessage._objectActors = null;
-      }
-    }.bind(this);
-
-    this.objectPropertiesProvider(aObjectActor.actor,
-      function _onObjectProperties(aProperties) {
-        options.data.objectProperties = aProperties;
-        propPanel = this.jsterm.openPropertyPanel(options);
-        propPanel.panel.setAttribute("hudId", this.hudId);
-        propPanel.panel.addEventListener("popuphiding", onPopupHide, false);
-      }.bind(this));
+    this.jsterm.openVariablesView(options);
   },
 
   /**
@@ -1908,9 +1866,11 @@ WebConsoleFrame.prototype = {
   _pruneItemFromQueue: function WCF__pruneItemFromQueue(aItem)
   {
     let [category, methodOrNode, args] = aItem;
-    if (typeof methodOrNode != "function" &&
-        methodOrNode._objectActors && !methodOrNode._panelOpen) {
-      methodOrNode._objectActors.forEach(this._releaseObject, this);
+    if (typeof methodOrNode != "function" && methodOrNode._objectActors) {
+      for (let actor of methodOrNode._objectActors) {
+        this._releaseObject(actor);
+      }
+      methodOrNode._objectActors.clear();
     }
 
     if (category == CATEGORY_NETWORK) {
@@ -1928,30 +1888,11 @@ WebConsoleFrame.prototype = {
     }
     else if (category == CATEGORY_WEBDEV &&
              methodOrNode == this.logConsoleAPIMessage) {
-      let level = args[0].level;
-      let releaseObject = function _releaseObject(aValue) {
-        if (aValue && typeof aValue == "object" && aValue.actor) {
+      args[0].arguments.forEach((aValue) => {
+        if (WebConsoleUtils.isActorGrip(aValue)) {
           this._releaseObject(aValue.actor);
         }
-      }.bind(this);
-      switch (level) {
-        case "log":
-        case "info":
-        case "warn":
-        case "error":
-        case "debug":
-        case "dir":
-        case "groupEnd": {
-          args[0].arguments.forEach(releaseObject);
-          if (level == "dir") {
-            args[0].objectProperties.forEach(function(aObject) {
-              ["value", "get", "set"].forEach(function(aProp) {
-                releaseObject(aObject[aProp]);
-              });
-            });
-          }
-        }
-      }
+      });
     }
   },
 
@@ -1979,27 +1920,6 @@ WebConsoleFrame.prototype = {
   },
 
   /**
-   * Destroy the property inspector message node. This performs the necessary
-   * cleanup for the tree widget and removes it from the DOM.
-   *
-   * @param nsIDOMNode aMessageNode
-   *        The message node that contains the property inspector from a
-   *        console.dir call.
-   */
-  pruneConsoleDirNode: function WCF_pruneConsoleDirNode(aMessageNode)
-  {
-    if (aMessageNode.parentNode) {
-      aMessageNode.parentNode.removeChild(aMessageNode);
-    }
-
-    let tree = aMessageNode.querySelector("tree");
-    tree.parentNode.removeChild(tree);
-    aMessageNode.propertyTreeView.data = null;
-    aMessageNode.propertyTreeView = null;
-    tree.view = null;
-  },
-
-  /**
    * Remove a given message from the output.
    *
    * @param nsIDOMNode aNode
@@ -2007,8 +1927,11 @@ WebConsoleFrame.prototype = {
    */
   removeOutputMessage: function WCF_removeOutputMessage(aNode)
   {
-    if (aNode._objectActors && !aNode._panelOpen) {
-      aNode._objectActors.forEach(this._releaseObject, this);
+    if (aNode._objectActors) {
+      for (let actor of aNode._objectActors) {
+        this._releaseObject(actor);
+      }
+      aNode._objectActors.clear();
     }
 
     if (aNode.classList.contains("webconsole-msg-cssparser")) {
@@ -2023,8 +1946,15 @@ WebConsoleFrame.prototype = {
       this._releaseObject(aNode._connectionId);
     }
     else if (aNode.classList.contains("webconsole-msg-inspector")) {
-      this.pruneConsoleDirNode(aNode);
-      return;
+      let view = aNode._variablesView;
+      let actors = view ?
+                   this.jsterm._objectActorsInVariablesViews.get(view) :
+                   new Set();
+      for (let actor of actors) {
+        this._releaseObject(actor);
+      }
+      actors.clear();
+      aNode._variablesView = null;
     }
 
     if (aNode.parentNode) {
@@ -2115,8 +2045,7 @@ WebConsoleFrame.prototype = {
     bodyNode.flex = 1;
     bodyNode.classList.add("webconsole-msg-body");
 
-    // Store the body text, since it is needed later for the property tree
-    // case.
+    // Store the body text, since it is needed later for the variables view.
     let body = aBody;
     // If a string was supplied for the body, turn it into a DOM node and an
     // associated clipboard string now.
@@ -2133,7 +2062,7 @@ WebConsoleFrame.prototype = {
     else {
       let str = undefined;
       if (aLevel == "dir") {
-        str = WebConsoleUtils.objectActorGripToString(aBody.arguments[0]);
+        str = VariablesView.getString(aBody.arguments[0]);
       }
       else if (["log", "info", "warn", "error", "debug"].indexOf(aLevel) > -1 &&
                typeof aBody == "object") {
@@ -2168,7 +2097,7 @@ WebConsoleFrame.prototype = {
     // Create the source location (e.g. www.example.com:6) that sits on the
     // right side of the message, if applicable.
     let locationNode;
-    if (aSourceURL) {
+    if (aSourceURL && IGNORED_SOURCE_URLS.indexOf(aSourceURL) == -1) {
       locationNode = this.createLocationNode(aSourceURL, aSourceLine);
     }
 
@@ -2180,42 +2109,28 @@ WebConsoleFrame.prototype = {
 
     node.appendChild(timestampNode);
     node.appendChild(iconContainer);
-    // Display the object tree after the message node.
+
+    // Display the variables view after the message node.
     if (aLevel == "dir") {
-      // Make the body container, which is a vertical box, for grouping the text
-      // and tree widgets.
+      let viewContainer = this.document.createElement("hbox");
+      viewContainer.flex = 1;
+      viewContainer.height = this.outputNode.clientHeight *
+                             CONSOLE_DIR_VIEW_HEIGHT;
+
+      let options = {
+        objectActor: body.arguments[0],
+        targetElement: viewContainer,
+        hideFilterInput: true,
+      };
+      this.jsterm.openVariablesView(options)
+        .then((aView) => node._variablesView = aView);
+
       let bodyContainer = this.document.createElement("vbox");
       bodyContainer.flex = 1;
       bodyContainer.appendChild(bodyNode);
-      // Create the tree.
-      let tree = this.document.createElement("tree");
-      tree.setAttribute("hidecolumnpicker", "true");
-      tree.flex = 1;
-
-      let treecols = this.document.createElement("treecols");
-      let treecol = this.document.createElement("treecol");
-      treecol.setAttribute("primary", "true");
-      treecol.setAttribute("hideheader", "true");
-      treecol.setAttribute("ignoreincolumnpicker", "true");
-      treecol.flex = 1;
-      treecols.appendChild(treecol);
-      tree.appendChild(treecols);
-
-      tree.appendChild(this.document.createElement("treechildren"));
-
-      bodyContainer.appendChild(tree);
+      bodyContainer.appendChild(viewContainer);
       node.appendChild(bodyContainer);
       node.classList.add("webconsole-msg-inspector");
-      // Create the treeView object.
-      let treeView = node.propertyTreeView = new PropertyTreeView();
-
-      treeView.data = {
-        objectPropertiesProvider: this.objectPropertiesProvider.bind(this),
-        releaseObject: this._releaseObject.bind(this),
-        objectProperties: body.objectProperties,
-      };
-
-      tree.setAttribute("rows", treeView.rowCount);
     }
     else {
       node.appendChild(bodyNode);
@@ -2263,29 +2178,22 @@ WebConsoleFrame.prototype = {
         aContainer.appendChild(this.document.createTextNode(" "));
       }
 
-      let text = WebConsoleUtils.objectActorGripToString(aItem);
+      let text = VariablesView.getString(aItem);
+      let inspectable = !VariablesView.isPrimitive({ value: aItem });
 
-      if (aItem && typeof aItem != "object" || !aItem.inspectable) {
+      if (aItem && typeof aItem != "object" || !inspectable) {
         aContainer.appendChild(this.document.createTextNode(text));
 
-        let longString = null;
         if (aItem.type == "longString") {
-          longString = aItem;
-        }
-        else if (!aItem.inspectable &&
-                 typeof aItem.displayString == "object" &&
-                 aItem.displayString.type == "longString") {
-          longString = aItem.displayString;
-        }
-
-        if (longString) {
           let ellipsis = this.document.createElement("description");
           ellipsis.classList.add("hud-clickable");
           ellipsis.classList.add("longStringEllipsis");
           ellipsis.textContent = l10n.getStr("longStringEllipsis");
 
+          let formatter = function(s) '"' + s + '"';
+
           this._addMessageLinkCallback(ellipsis,
-            this._longStringClick.bind(this, aMessage, longString, null));
+            this._longStringClick.bind(this, aMessage, aItem, formatter));
 
           aContainer.appendChild(ellipsis);
         }
@@ -2299,7 +2207,7 @@ WebConsoleFrame.prototype = {
       elem.appendChild(this.document.createTextNode(text));
 
       this._addMessageLinkCallback(elem,
-        this._consoleLogClick.bind(this, aMessage, elem, aItem));
+        this._consoleLogClick.bind(this, elem, aItem));
 
       aContainer.appendChild(elem);
     }, this);
@@ -2682,16 +2590,64 @@ function JSTerm(aWebConsoleFrame)
   this.history = [];
   this.historyIndex = 0;
   this.historyPlaceHolder = 0;  // this.history.length;
+  this._objectActorsInVariablesViews = new Map();
+
   this._keyPress = this.keyPress.bind(this);
   this._inputEventHandler = this.inputEventHandler.bind(this);
+  this._fetchVarProperties = this._fetchVarProperties.bind(this);
+  this._fetchVarLongString = this._fetchVarLongString.bind(this);
+
+  EventEmitter.decorate(this);
 }
 
 JSTerm.prototype = {
+  SELECTED_FRAME: -1,
+
   /**
    * Stores the data for the last completion.
    * @type object
    */
   lastCompletion: null,
+
+  /**
+   * The Web Console sidebar.
+   * @see this._createSidebar()
+   * @see Sidebar.jsm
+   */
+  sidebar: null,
+
+  /**
+   * The Web Console splitter between output and the sidebar.
+   * @private
+   * @type nsIDOMElement
+   */
+  _splitter: null,
+
+  /**
+   * The Variables View instance shown in the sidebar.
+   * @private
+   * @type object
+   */
+  _variablesView: null,
+
+  /**
+   * Tells if you want the variables view UI updates to be lazy or not. Tests
+   * disable lazy updates.
+   *
+   * @private
+   * @type boolean
+   */
+  _lazyVariablesView: true,
+
+  /**
+   * Holds a map between VariablesView instances and sets of ObjectActor IDs
+   * that have been retrieved from the server. This allows us to release the
+   * objects when needed.
+   *
+   * @private
+   * @type Map
+   */
+  _objectActorsInVariablesViews: null,
 
   /**
    * Last input value.
@@ -2730,7 +2686,7 @@ JSTerm.prototype = {
    */
   init: function JST_init()
   {
-    let chromeDocument = this.hud.owner.chromeDocument;
+    let chromeDocument = this.hud.owner.chromeWindow.document;
     let autocompleteOptions = {
       onSelect: this.onAutocompleteSelect.bind(this),
       onClick: this.acceptProposedCompletion.bind(this),
@@ -2750,6 +2706,8 @@ JSTerm.prototype = {
     this.inputNode.addEventListener("keypress", this._keyPress, false);
     this.inputNode.addEventListener("input", this._inputEventHandler, false);
     this.inputNode.addEventListener("keyup", this._inputEventHandler, false);
+
+    this._splitter = doc.querySelector(".devtools-side-splitter");
 
     this.lastInputValue && this.setInputValue(this.lastInputValue);
   },
@@ -2773,15 +2731,20 @@ JSTerm.prototype = {
     if (!this.hud) {
       return;
     }
-
-    let errorMessage = aResponse.errorMessage;
+    if (aResponse.error) {
+      Cu.reportError("Evaluation error " + aResponse.error + ": " +
+                     aResponse.message);
+      return;
+    }
+    let errorMessage = aResponse.exceptionMessage;
     let result = aResponse.result;
-    let inspectable = result && typeof result == "object" && result.inspectable;
+    let inspectable = false;
+    if (result && !VariablesView.isPrimitive({ value: result })) {
+      inspectable = true;
+    }
     let helperResult = aResponse.helperResult;
     let helperHasRawOutput = !!(helperResult || {}).rawOutput;
-    let resultString =
-      WebConsoleUtils.objectActorGripToString(result,
-                                              !helperHasRawOutput);
+    let resultString = VariablesView.getString(result);
 
     if (helperResult && helperResult.type) {
       switch (helperResult.type) {
@@ -2789,7 +2752,16 @@ JSTerm.prototype = {
           this.clearOutput();
           break;
         case "inspectObject":
-          this.handleInspectObject(helperResult.input, helperResult.object);
+          if (aAfterNode) {
+            if (!aAfterNode._objectActors) {
+              aAfterNode._objectActors = new Set();
+            }
+            aAfterNode._objectActors.add(helperResult.object.actor);
+          }
+          this.openVariablesView({
+            label: VariablesView.getString(helperResult.object),
+            objectActor: helperResult.object,
+          });
           break;
         case "error":
           try {
@@ -2838,38 +2810,30 @@ JSTerm.prototype = {
                               aAfterNode, aResponse.timestamp);
     }
 
-    if (result && typeof result == "object" && result.actor) {
-      node._objectActors = [result.actor];
-      if (typeof result.displayString == "object" &&
-          result.displayString.type == "longString") {
-        node._objectActors.push(result.displayString.actor);
-      }
+    node._objectActors = new Set();
 
-      // Add an ellipsis to expand the short string if the object is not
-      // inspectable.
-      let longString = null;
-      let formatter = null;
+    let error = aResponse.exception;
+    if (WebConsoleUtils.isActorGrip(error)) {
+      node._objectActors.add(error.actor);
+    }
+
+    if (WebConsoleUtils.isActorGrip(result)) {
+      node._objectActors.add(result.actor);
+
       if (result.type == "longString") {
-        longString = result;
-        if (!helperHasRawOutput) {
-          formatter = WebConsoleUtils.formatResultString.bind(WebConsoleUtils);
-        }
-      }
-      else if (!inspectable && !errorMessage &&
-               typeof result.displayString == "object" &&
-               result.displayString.type == "longString") {
-        longString = result.displayString;
-      }
+        // Add an ellipsis to expand the short string if the object is not
+        // inspectable.
 
-      if (longString) {
         let body = node.querySelector(".webconsole-msg-body");
         let ellipsis = this.hud.document.createElement("description");
         ellipsis.classList.add("hud-clickable");
         ellipsis.classList.add("longStringEllipsis");
         ellipsis.textContent = l10n.getStr("longStringEllipsis");
 
-        this.hud._addMessageLinkCallback(ellipsis,
-          this.hud._longStringClick.bind(this.hud, node, longString, formatter));
+        let formatter = function(s) '"' + s + '"';
+        let onclick = this.hud._longStringClick.bind(this.hud, node, result,
+                                                    formatter);
+        this.hud._addMessageLinkCallback(ellipsis, onclick);
 
         body.appendChild(ellipsis);
 
@@ -2900,7 +2864,8 @@ JSTerm.prototype = {
     let node = this.writeOutput(aExecuteString, CATEGORY_INPUT, SEVERITY_LOG);
     let onResult = this._executeResultCallback.bind(this, node, aCallback);
 
-    this.webConsoleClient.evaluateJS(aExecuteString, onResult);
+    let options = { frame: this.SELECTED_FRAME };
+    this.requestEvaluation(aExecuteString, options).then(onResult, onResult);
 
     this.history.push(aExecuteString);
     this.historyIndex++;
@@ -2910,61 +2875,606 @@ JSTerm.prototype = {
   },
 
   /**
-   * Opens a new property panel that allows the inspection of the given object.
-   * The object information can be retrieved both async and sync, depending on
-   * the given options.
+   * Request a JavaScript string evaluation from the server.
+   *
+   * @param string aString
+   *        String to execute.
+   * @param object [aOptions]
+   *        Options for evaluation:
+   *        - bindObjectActor: tells the ObjectActor ID for which you want to do
+   *        the evaluation. The Debugger.Object of the OA will be bound to
+   *        |_self| during evaluation, such that it's usable in the string you
+   *        execute.
+   *        - frame: tells the stackframe depth to evaluate the string in. If
+   *        the jsdebugger is paused, you can pick the stackframe to be used for
+   *        evaluation. Use |this.SELECTED_FRAME| to always pick the
+   *        user-selected stackframe.
+   *        If you do not provide a |frame| the string will be evaluated in the
+   *        global content window.
+   * @return object
+   *         A Promise object that is resolved when the server response is
+   *         received.
+   */
+  requestEvaluation: function JST_requestEvaluation(aString, aOptions = {})
+  {
+    let deferred = Promise.defer();
+
+    function onResult(aResponse) {
+      if (!aResponse.error) {
+        deferred.resolve(aResponse);
+      }
+      else {
+        deferred.reject(aResponse);
+      }
+    }
+
+    let frameActor = null;
+    if ("frame" in aOptions) {
+      frameActor = this.getFrameActor(aOptions.frame);
+    }
+
+    let evalOptions = {
+      bindObjectActor: aOptions.bindObjectActor,
+      frameActor: frameActor,
+    };
+
+    this.webConsoleClient.evaluateJS(aString, onResult, evalOptions);
+    return deferred.promise;
+  },
+
+  /**
+   * Retrieve the FrameActor ID given a frame depth.
+   *
+   * @param number aFrame
+   *        Frame depth.
+   * @return string|null
+   *         The FrameActor ID for the given frame depth.
+   */
+  getFrameActor: function JST_getFrameActor(aFrame)
+  {
+    let state = this.hud.owner.getDebuggerFrames();
+    if (!state) {
+      return null;
+    }
+
+    let grip;
+    if (aFrame == this.SELECTED_FRAME) {
+      grip = state.frames[state.selected];
+    }
+    else {
+      grip = state.frames[aFrame];
+    }
+
+    return grip ? grip.actor : null;
+  },
+
+  /**
+   * Opens a new variables view that allows the inspection of the given object.
    *
    * @param object aOptions
-   *        Property panel options:
-   *        - title:
-   *        Panel title.
-   *        - anchor:
-   *        The DOM element you want the panel to be anchored to.
-   *        - updateButtonCallback:
-   *        An optional function you want invoked when the user clicks the
-   *        Update button. If this function is not provided the Update button is
-   *        not shown.
-   *        - data:
-   *        An object that represents the object you want to inspect. Please see
-   *        the PropertyPanel documentation - this object is passed to the
-   *        PropertyPanel constructor
+   *        Options for the variables view:
+   *        - objectActor: grip of the ObjectActor you want to show in the
+   *        variables view.
+   *        - rawObject: the raw object you want to show in the variables view.
+   *        - label: label to display in the variables view for inspected
+   *        object.
+   *        - hideFilterInput: optional boolean, |true| if you want to hide the
+   *        variables view filter input.
+   *        - targetElement: optional nsIDOMElement to append the variables view
+   *        to. An iframe element is used as a container for the view. If this
+   *        option is not used, then the variables view opens in the sidebar.
    * @return object
-   *         The new instance of PropertyPanel.
+   *         A Promise object that is resolved when the variables view has
+   *         opened. The new variables view instance is given to the callbacks.
    */
-  openPropertyPanel: function JST_openPropertyPanel(aOptions)
+  openVariablesView: function JST_openVariablesView(aOptions)
   {
-    // The property panel has one button:
-    //    `Update`: reexecutes the string executed on the command line. The
-    //    result will be inspected by this panel.
-    let buttons = [];
+    let onContainerReady = (aWindow) => {
+      let container = aWindow.document.querySelector("#variables");
+      let view = this._variablesView;
+      if (!view || aOptions.targetElement) {
+        let viewOptions = {
+          container: container,
+          hideFilterInput: aOptions.hideFilterInput,
+        };
+        view = this._createVariablesView(viewOptions);
+        if (!aOptions.targetElement) {
+          this._variablesView = view;
+        }
+      }
+      aOptions.view = view;
+      this._updateVariablesView(aOptions);
+      this.emit("variablesview-open", view, aOptions);
+      return view;
+    };
 
-    if (aOptions.updateButtonCallback) {
-      buttons.push({
-        label: l10n.getStr("update.button"),
-        accesskey: l10n.getStr("update.accesskey"),
-        oncommand: aOptions.updateButtonCallback,
-      });
+    let promise;
+    if (aOptions.targetElement) {
+      let deferred = Promise.defer();
+      promise = deferred.promise;
+      let document = aOptions.targetElement.ownerDocument;
+      let iframe = document.createElement("iframe");
+
+      iframe.addEventListener("load", function onIframeLoad(aEvent) {
+        iframe.removeEventListener("load", onIframeLoad, true);
+        deferred.resolve(iframe.contentWindow);
+      }, true);
+
+      iframe.flex = 1;
+      iframe.setAttribute("src", VARIABLES_VIEW_URL);
+      aOptions.targetElement.appendChild(iframe);
+    }
+    else {
+      this._createSidebar();
+      promise = this._addVariablesViewSidebarTab();
     }
 
-    let parent = this.hud.popupset;
-    let title = aOptions.title ?
-                l10n.getFormatStr("jsPropertyInspectTitle", [aOptions.title]) :
-                l10n.getStr("jsPropertyTitle");
+    return promise.then(onContainerReady);
+  },
 
-    let propPanel = new PropertyPanel(parent, title, aOptions.data, buttons);
+  /**
+   * Create the Web Console sidebar.
+   *
+   * @see Sidebar.jsm
+   * @private
+   */
+  _createSidebar: function JST__createSidebar()
+  {
+    if (!this.sidebar) {
+      let tabbox = this.hud.document.querySelector("#webconsole-sidebar");
+      this.sidebar = new ToolSidebar(tabbox, this);
+    }
+    this.sidebar.show();
+    this._splitter.setAttribute("state", "open");
+  },
 
-    propPanel.panel.openPopup(aOptions.anchor, "after_pointer", 0, 0, false, false);
-    propPanel.panel.sizeTo(350, 450);
+  /**
+   * Add the variables view tab to the sidebar.
+   *
+   * @private
+   * @return object
+   *         A Promise object for the adding of the new tab.
+   */
+  _addVariablesViewSidebarTab: function JST__addVariablesViewSidebarTab()
+  {
+    let deferred = Promise.defer();
 
-    if (aOptions.anchor) {
-      propPanel.panel.addEventListener("popuphiding", function onPopupHide() {
-        propPanel.panel.removeEventListener("popuphiding", onPopupHide, false);
-        aOptions.anchor._panelOpen = false;
-      }, false);
-      aOptions.anchor._panelOpen = true;
+    let onTabReady = () => {
+      let window = this.sidebar.getWindowForTab("variablesview");
+      deferred.resolve(window);
+    };
+
+    let tab = this.sidebar.getTab("variablesview");
+    if (tab) {
+      if (this.sidebar.getCurrentTabID() == "variablesview") {
+        onTabReady();
+      }
+      else {
+        this.sidebar.once("variablesview-selected", onTabReady);
+        this.sidebar.select("variablesview");
+      }
+    }
+    else {
+      this.sidebar.once("variablesview-ready", onTabReady);
+      this.sidebar.addTab("variablesview", VARIABLES_VIEW_URL, true);
     }
 
-    return propPanel;
+    return deferred.promise;
+  },
+
+  /**
+   * Create a variables view instance.
+   *
+   * @private
+   * @param object aOptions
+   *        Options for the new Variables View instance:
+   *        - container: the DOM element where the variables view is inserted.
+   *        - hideFilterInput: boolean, if true the variables filter input is
+   *        hidden.
+   * @return object
+   *         The new Variables View instance.
+   */
+  _createVariablesView: function JST__createVariablesView(aOptions)
+  {
+    let view = new VariablesView(aOptions.container);
+    view.searchPlaceholder = l10n.getStr("propertiesFilterPlaceholder");
+    view.emptyText = l10n.getStr("emptyPropertiesList");
+    view.searchEnabled = !aOptions.hideFilterInput;
+    view.lazyEmpty = this._lazyVariablesView;
+    view.lazyAppend = this._lazyVariablesView;
+    this._objectActorsInVariablesViews.set(view, new Set());
+    return view;
+  },
+
+  /**
+   * Update the variables view.
+   *
+   * @private
+   * @param object aOptions
+   *        Options for updating the variables view:
+   *        - view: the view you want to update.
+   *        - objectActor: the grip of the new ObjectActor you want to show in
+   *        the view.
+   *        - rawObject: the new raw object you want to show.
+   *        - label: the new label for the inspected object.
+   */
+  _updateVariablesView: function JST__updateVariablesView(aOptions)
+  {
+    let view = aOptions.view;
+    view.createHierarchy();
+    view.empty();
+
+    let actors = this._objectActorsInVariablesViews.get(view);
+    for (let actor of actors) {
+      // We need to avoid pruning the object inspection starting point.
+      // That one is pruned when the console message is removed.
+      if (view._consoleLastObjectActor != actor) {
+        this.hud._releaseObject(actor);
+      }
+    }
+
+    actors.clear();
+
+    if (aOptions.objectActor) {
+      // Make sure eval works in the correct context.
+      view.eval = this._variablesViewEvaluate.bind(this, aOptions);
+      view.switch = this._variablesViewSwitch.bind(this, aOptions);
+      view.delete = this._variablesViewDelete.bind(this, aOptions);
+    }
+    else {
+      view.eval = null;
+      view.switch = null;
+      view.delete = null;
+    }
+
+    let scope = view.addScope(aOptions.label);
+    scope.expanded = true;
+    scope.locked = true;
+
+    let container = scope.addVar();
+    container.evaluationMacro = this._variablesViewSimpleValueEvalMacro;
+
+    if (aOptions.objectActor) {
+      this._fetchVarProperties(container, aOptions.objectActor);
+      view._consoleLastObjectActor = aOptions.objectActor.actor;
+    }
+    else if (aOptions.rawObject) {
+      container.populate(aOptions.rawObject);
+      view.commitHierarchy();
+      view._consoleLastObjectActor = null;
+    }
+    else {
+      throw new Error("Variables View cannot open without giving it an object " +
+                      "display.");
+    }
+
+    this.emit("variablesview-updated", view, aOptions);
+  },
+
+  /**
+   * The evaluation function used by the variables view when editing a property
+   * value.
+   *
+   * @private
+   * @param object aOptions
+   *        The options used for |this._updateVariablesView()|.
+   * @param string aString
+   *        The string that the variables view wants to evaluate.
+   */
+  _variablesViewEvaluate: function JST__variablesViewEvaluate(aOptions, aString)
+  {
+    let updater = this._updateVariablesView.bind(this, aOptions);
+    let onEval = this._silentEvalCallback.bind(this, updater);
+
+    let evalOptions = {
+      frame: this.SELECTED_FRAME,
+      bindObjectActor: aOptions.objectActor.actor,
+    };
+
+    this.requestEvaluation(aString, evalOptions).then(onEval, onEval);
+  },
+
+  /**
+   * Generates the string evaluated when performing simple value changes in the
+   * variables view.
+   *
+   * @private
+   * @param Variable | Property aItem
+   *        The current variable or property.
+   * @param string aCurrentString
+   *        The trimmed user inputted string.
+   * @return string
+   *         The string to be evaluated.
+   */
+  _variablesViewSimpleValueEvalMacro:
+  function JST__variablesViewSimpleValueEvalMacro(aItem, aCurrentString)
+  {
+    return "_self" + aItem.symbolicName + "=" + aCurrentString;
+  },
+
+
+  /**
+   * Generates the string evaluated when overriding getters and setters with
+   * plain values in the variables view.
+   *
+   * @private
+   * @param Property aItem
+   *        The current getter or setter property.
+   * @param string aCurrentString
+   *        The trimmed user inputted string.
+   * @return string
+   *         The string to be evaluated.
+   */
+  _variablesViewOverrideValueEvalMacro:
+  function JST__variablesViewOverrideValueEvalMacro(aItem, aCurrentString)
+  {
+    let parent = aItem.ownerView;
+    let symbolicName = parent.symbolicName;
+    if (symbolicName.indexOf("_self") != 0) {
+      parent._symbolicName = "_self" + symbolicName;
+    }
+
+    let result = VariablesView.overrideValueEvalMacro.apply(this, arguments);
+
+    parent._symbolicName = symbolicName;
+
+    return result;
+  },
+
+  /**
+   * Generates the string evaluated when performing getters and setters changes
+   * in the variables view.
+   *
+   * @private
+   * @param Property aItem
+   *        The current getter or setter property.
+   * @param string aCurrentString
+   *        The trimmed user inputted string.
+   * @return string
+   *         The string to be evaluated.
+   */
+  _variablesViewGetterOrSetterEvalMacro:
+  function JST__variablesViewGetterOrSetterEvalMacro(aItem, aCurrentString)
+  {
+    let propertyObject = aItem.ownerView;
+    let parentObject = propertyObject.ownerView;
+    let parent = parentObject.symbolicName;
+    parentObject._symbolicName = "_self" + parent;
+
+    let result = VariablesView.getterOrSetterEvalMacro.apply(this, arguments);
+
+    parentObject._symbolicName = parent;
+
+    return result;
+  },
+
+  /**
+   * The property deletion function used by the variables view when a property
+   * is deleted.
+   *
+   * @private
+   * @param object aOptions
+   *        The options used for |this._updateVariablesView()|.
+   * @param object aVar
+   *        The Variable object instance for the deleted property.
+   */
+  _variablesViewDelete: function JST__variablesViewDelete(aOptions, aVar)
+  {
+    let onEval = this._silentEvalCallback.bind(this, null);
+
+    let evalOptions = {
+      frame: this.SELECTED_FRAME,
+      bindObjectActor: aOptions.objectActor.actor,
+    };
+
+    this.requestEvaluation("delete _self" + aVar.symbolicName, evalOptions)
+        .then(onEval, onEval);
+  },
+
+  /**
+   * The property rename function used by the variables view when a property
+   * is renamed.
+   *
+   * @private
+   * @param object aOptions
+   *        The options used for |this._updateVariablesView()|.
+   * @param object aVar
+   *        The Variable object instance for the renamed property.
+   * @param string aNewName
+   *        The new name for the property.
+   */
+  _variablesViewSwitch:
+  function JST__variablesViewSwitch(aOptions, aVar, aNewName)
+  {
+    let updater = this._updateVariablesView.bind(this, aOptions);
+    let onEval = this._silentEvalCallback.bind(this, updater);
+
+    let evalOptions = {
+      frame: this.SELECTED_FRAME,
+      bindObjectActor: aOptions.objectActor.actor,
+    };
+
+    let newSymbolicName = aVar.ownerView.symbolicName + '["' + aNewName + '"]';
+    if (newSymbolicName == aVar.symbolicName) {
+      return;
+    }
+
+    let code = "_self" + newSymbolicName + " = _self" + aVar.symbolicName + ";" +
+               "delete _self" + aVar.symbolicName;
+
+    this.requestEvaluation(code, evalOptions).then(onEval, onEval);
+  },
+
+  /**
+   * A noop callback for JavaScript evaluation. This method releases any
+   * result ObjectActors that come from the server for evaluation requests. This
+   * is used for editing, renaming and deleting properties in the variables
+   * view.
+   *
+   * Exceptions are displayed in the output.
+   *
+   * @private
+   * @param function aCallback
+   *        Function to invoke once the response is received.
+   * @param object aResponse
+   *        The response packet received from the server.
+   */
+  _silentEvalCallback: function JST__silentEvalCallback(aCallback, aResponse)
+  {
+    if (aResponse.error) {
+      Cu.reportError("Web Console evaluation failed. " + aResponse.error + ":" +
+                     aResponse.message);
+
+      aCallback && aCallback(aResponse);
+      return;
+    }
+
+    let exception = aResponse.exception;
+    if (exception) {
+      let node = this.writeOutput(aResponse.exceptionMessage,
+                                  CATEGORY_OUTPUT, SEVERITY_ERROR,
+                                  null, aResponse.timestamp);
+      node._objectActors = new Set();
+      if (WebConsoleUtils.isActorGrip(exception)) {
+        node._objectActors.add(exception.actor);
+      }
+    }
+
+    let helper = aResponse.helperResult || { type: null };
+    let helperGrip = null;
+    if (helper.type == "inspectObject") {
+      helperGrip = helper.object;
+    }
+
+    let grips = [aResponse.result, helperGrip];
+    for (let grip of grips) {
+      if (WebConsoleUtils.isActorGrip(grip)) {
+        this.hud._releaseObject(grip.actor);
+      }
+    }
+
+    aCallback && aCallback(aResponse);
+  },
+
+  /**
+   * Adds properties to a variable in the view. Triggered when a variable is
+   * expanded. It does not expand the variable.
+   *
+   * @param object aVar
+   *        The VariablseView Variable instance where the properties get added.
+   * @param object [aGrip]
+   *        Optional, the object actor grip of the variable. If the grip is not
+   *        provided, then the aVar.value is used as the object actor grip.
+   */
+  _fetchVarProperties: function JST__fetchVarProperties(aVar, aGrip)
+  {
+    // Retrieve the properties only once.
+    if (aVar._fetched) {
+      return;
+    }
+    aVar._fetched = true;
+
+    let grip = aGrip || aVar.value;
+    if (!grip) {
+      throw new Error("No object actor grip was given for the variable.");
+    }
+
+    let view = aVar._variablesView;
+    let actors = this._objectActorsInVariablesViews.get(view);
+
+    function addActorForDescriptor(aGrip) {
+      if (WebConsoleUtils.isActorGrip(aGrip)) {
+        actors.add(aGrip.actor);
+      }
+    }
+
+    let onNewProperty = (aProperty) => {
+      if (aProperty.getter || aProperty.setter) {
+        aProperty.evaluationMacro = this._variablesViewOverrideValueEvalMacro;
+        let getter = aProperty.get("get");
+        let setter = aProperty.get("set");
+        if (getter) {
+          getter.evaluationMacro = this._variablesViewGetterOrSetterEvalMacro;
+        }
+        if (setter) {
+          setter.evaluationMacro = this._variablesViewGetterOrSetterEvalMacro;
+        }
+      }
+      else {
+        aProperty.evaluationMacro = this._variablesViewSimpleValueEvalMacro;
+      }
+
+      let grips = [aProperty.value, aProperty.gettter, aProperty.settter];
+      grips.forEach(addActorForDescriptor);
+
+      let inspectable = !VariablesView.isPrimitive({ value: aProperty.value });
+      let longString = WebConsoleUtils.isActorGrip(aProperty.value) &&
+                       aProperty.value.type == "longString";
+      if (inspectable) {
+        aProperty.onexpand = this._fetchVarProperties;
+      }
+      else if (longString) {
+        aProperty.onexpand = this._fetchVarLongString;
+        aProperty.showArrow();
+      }
+    };
+
+    let client = new GripClient(this.hud.proxy.client, grip);
+    client.getPrototypeAndProperties((aResponse) => {
+      let { ownProperties, prototype } = aResponse;
+      let sortable = VariablesView.NON_SORTABLE_CLASSES.indexOf(grip.class) == -1;
+
+      // Add all the variable properties.
+      if (ownProperties) {
+        aVar.addProperties(ownProperties, {
+          sorted: sortable,
+          callback: onNewProperty,
+        });
+      }
+
+      // Add the variable's __proto__.
+      if (prototype && prototype.type != "null") {
+        let proto = aVar.addProperty("__proto__", { value: prototype });
+        onNewProperty(proto);
+      }
+
+      aVar._retrieved = true;
+      view.commitHierarchy();
+      this.emit("variablesview-fetched", aVar);
+    });
+  },
+
+  /**
+   * Fetch the full string for a given variable that displays a long string.
+   *
+   * @param object aVar
+   *        The VariablesView Variable instance where the properties get added.
+   */
+  _fetchVarLongString: function JST__fetchVarLongString(aVar)
+  {
+    if (aVar._fetched) {
+      return;
+    }
+    aVar._fetched = true;
+
+    let grip = aVar.value;
+    if (!grip) {
+      throw new Error("No long string actor grip was given for the variable.");
+    }
+
+    let client = this.webConsoleClient.longString(grip);
+    client.substring(grip.initial.length, grip.length, (aResponse) => {
+      if (aResponse.error) {
+        Cu.reportError("JST__fetchVarLongString substring failure: " +
+                       aResponse.error + ": " + aResponse.message);
+        return;
+      }
+
+      aVar.onexpand = null;
+      aVar.setGrip(grip.initial + aResponse.substring);
+      aVar.hideArrow();
+      aVar._retrieved = true;
+    });
   },
 
   /**
@@ -3598,154 +4108,18 @@ JSTerm.prototype = {
   },
 
   /**
-   * The JSTerm InspectObject remote message handler. This allows the remote
-   * process to open the Property Panel for a given object.
-   *
-   * @param object aRequest
-   *        The request message from the content process. This message includes
-   *        the user input string that was evaluated to inspect an object and
-   *        the result object which is to be inspected.
-   */
-  handleInspectObject: function JST_handleInspectObject(aInput, aActor)
-  {
-    let options = {
-      title: aInput,
-
-      data: {
-        objectPropertiesProvider: this.hud.objectPropertiesProvider.bind(this.hud),
-        releaseObject: this.hud._releaseObject.bind(this.hud),
-      },
-    };
-
-    let propPanel;
-
-    let onPopupHide = function JST__onPopupHide() {
-      propPanel.panel.removeEventListener("popuphiding", onPopupHide, false);
-      this.hud._releaseObject(aActor.actor);
-    }.bind(this);
-
-    this.hud.objectPropertiesProvider(aActor.actor,
-      function _onObjectProperties(aProperties) {
-        options.data.objectProperties = aProperties;
-        propPanel = this.openPropertyPanel(options);
-        propPanel.panel.setAttribute("hudId", this.hudId);
-        propPanel.panel.addEventListener("popuphiding", onPopupHide, false);
-      }.bind(this));
-  },
-
-  /**
    * The click event handler for evaluation results in the output.
    *
    * @private
    * @param object aResponse
    *        The JavaScript evaluation response received from the server.
-   * @param nsIDOMNode aLink
-   *        The message node for which we are handling events.
    */
-  _evalOutputClick: function JST__evalOutputClick(aResponse, aLinkNode)
+  _evalOutputClick: function JST__evalOutputClick(aResponse)
   {
-    if (aLinkNode._panelOpen) {
-      return;
-    }
-
-    let options = {
-      title: aResponse.input,
-      anchor: aLinkNode,
-
-      // Data to inspect.
-      data: {
-        objectPropertiesProvider: this.hud.objectPropertiesProvider.bind(this.hud),
-        releaseObject: this.hud._releaseObject.bind(this.hud),
-      },
-    };
-
-    let propPanel;
-
-    options.updateButtonCallback = function JST__evalUpdateButton() {
-      let onResult =
-        this._evalOutputUpdatePanelCallback.bind(this, options, propPanel,
-                                                 aResponse);
-      this.webConsoleClient.evaluateJS(aResponse.input, onResult);
-    }.bind(this);
-
-    let onPopupHide = function JST__evalInspectPopupHide() {
-      propPanel.panel.removeEventListener("popuphiding", onPopupHide, false);
-
-      if (!aLinkNode.parentNode && aLinkNode._objectActors) {
-        aLinkNode._objectActors.forEach(this.hud._releaseObject, this.hud);
-        aLinkNode._objectActors = null;
-      }
-    }.bind(this);
-
-    this.hud.objectPropertiesProvider(aResponse.result.actor,
-      function _onObjectProperties(aProperties) {
-        options.data.objectProperties = aProperties;
-        propPanel = this.openPropertyPanel(options);
-        propPanel.panel.setAttribute("hudId", this.hudId);
-        propPanel.panel.addEventListener("popuphiding", onPopupHide, false);
-      }.bind(this));
-  },
-
-  /**
-   * The callback used for updating the Property Panel when the user clicks the
-   * Update button.
-   *
-   * @private
-   * @param object aOptions
-   *        The options object used for opening the initial Property Panel.
-   * @param object aPropPanel
-   *        The Property Panel instance.
-   * @param object aOldResponse
-   *        The previous JSTerm:EvalResult message received from the content
-   *        process.
-   * @param object aNewResponse
-   *        The new JSTerm:EvalResult message received after the user clicked
-   *        the Update button.
-   */
-  _evalOutputUpdatePanelCallback:
-  function JST__updatePanelCallback(aOptions, aPropPanel, aOldResponse,
-                                    aNewResponse)
-  {
-    if (aNewResponse.errorMessage) {
-      this.writeOutput(aNewResponse.errorMessage, CATEGORY_OUTPUT,
-                       SEVERITY_ERROR);
-      return;
-    }
-
-    let result = aNewResponse.result;
-    let inspectable = result && typeof result == "object" && result.inspectable;
-    let newActor = result && typeof result == "object" ? result.actor : null;
-
-    let anchor = aOptions.anchor;
-    if (anchor && newActor) {
-      if (!anchor._objectActors) {
-        anchor._objectActors = [];
-      }
-      if (anchor._objectActors.indexOf(newActor) == -1) {
-        anchor._objectActors.push(newActor);
-      }
-    }
-
-    if (!inspectable) {
-      this.writeOutput(l10n.getStr("JSTerm.updateNotInspectable"), CATEGORY_OUTPUT, SEVERITY_ERROR);
-      return;
-    }
-
-    // Update the old response object such that when the panel is reopen, the
-    // user sees the new response.
-    aOldResponse.result = aNewResponse.result;
-    aOldResponse.error = aNewResponse.error;
-    aOldResponse.errorMessage = aNewResponse.errorMessage;
-    aOldResponse.timestamp = aNewResponse.timestamp;
-
-    this.hud.objectPropertiesProvider(newActor,
-      function _onObjectProperties(aProperties) {
-        aOptions.data.objectProperties = aProperties;
-        // TODO: This updates the value of the tree.
-        // However, the states of open nodes is not saved.
-        // See bug 586246.
-        aPropPanel.treeView.data = aOptions.data;
-      }.bind(this));
+    this.openVariablesView({
+      label: VariablesView.getString(aResponse.result),
+      objectActor: aResponse.result,
+    });
   },
 
   /**
@@ -3753,13 +4127,27 @@ JSTerm.prototype = {
    */
   destroy: function JST_destroy()
   {
+    if (this._variablesView) {
+      let actors = this._objectActorsInVariablesViews.get(this._variablesView);
+      for (let actor of actors) {
+        this.hud._releaseObject(actor);
+      }
+      actors.clear();
+      this._variablesView = null;
+    }
+
+    if (this.sidebar) {
+      this.sidebar.destroy();
+      this.sidebar = null;
+    }
+
     this.clearCompletion();
     this.clearOutput();
 
     this.autocompletePopup.destroy();
     this.autocompletePopup = null;
 
-    let popup = this.hud.owner.chromeDocument
+    let popup = this.hud.owner.chromeWindow.document
                 .getElementById("webConsole_autocompletePopup");
     if (popup) {
       popup.parentNode.removeChild(popup);
@@ -3937,6 +4325,8 @@ CommandController.prototype = {
       case "cmd_fontSizeReset":
       case "cmd_selectAll":
         return true;
+      case "cmd_close":
+        return this.owner.owner._browserConsole;
     }
   },
 
@@ -3963,6 +4353,9 @@ CommandController.prototype = {
         break;
       case "cmd_fontSizeReset":
         this.owner.changeFontSize("");
+        break;
+      case "cmd_close":
+        this.owner.window.close();
         break;
     }
   }

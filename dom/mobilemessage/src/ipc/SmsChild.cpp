@@ -8,7 +8,7 @@
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
 #include "mozilla/dom/ContentChild.h"
-#include "SmsRequest.h"
+#include "MobileMessageThread.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -34,16 +34,6 @@ NotifyObserversWithSmsMessage(const char* aEventName,
 namespace mozilla {
 namespace dom {
 namespace mobilemessage {
-
-SmsChild::SmsChild()
-{
-  MOZ_COUNT_CTOR(SmsChild);
-}
-
-SmsChild::~SmsChild()
-{
-  MOZ_COUNT_DTOR(SmsChild);
-}
 
 void
 SmsChild::ActorDestroy(ActorDestroyReason aWhy)
@@ -106,20 +96,31 @@ SmsChild::DeallocPSmsRequest(PSmsRequestChild* aActor)
   return true;
 }
 
+PMobileMessageCursorChild*
+SmsChild::AllocPMobileMessageCursor(const IPCMobileMessageCursor& aCursor)
+{
+  MOZ_NOT_REACHED("Caller is supposed to manually construct a cursor!");
+  return nullptr;
+}
+
+bool
+SmsChild::DeallocPMobileMessageCursor(PMobileMessageCursorChild* aActor)
+{
+  // MobileMessageCursorChild is refcounted, must not be freed manually.
+  // Originally AddRefed in SendCursorRequest() in SmsIPCService.cpp.
+  static_cast<MobileMessageCursorChild*>(aActor)->Release();
+  return true;
+}
+
 /*******************************************************************************
  * SmsRequestChild
  ******************************************************************************/
 
 SmsRequestChild::SmsRequestChild(nsIMobileMessageCallback* aReplyRequest)
-: mReplyRequest(aReplyRequest)
+  : mReplyRequest(aReplyRequest)
 {
   MOZ_COUNT_CTOR(SmsRequestChild);
   MOZ_ASSERT(aReplyRequest);
-}
-
-SmsRequestChild::~SmsRequestChild()
-{
-  MOZ_COUNT_DTOR(SmsRequestChild);
 }
 
 void
@@ -155,34 +156,11 @@ SmsRequestChild::Recv__delete__(const MessageReply& aReply)
     case MessageReply::TReplyMessageDeleteFail:
       mReplyRequest->NotifyMessageDeleted(aReply.get_ReplyMessageDeleteFail().error());
       break;
-    case MessageReply::TReplyNoMessageInList:
-      mReplyRequest->NotifyNoMessageInList();
-      break;
-    case MessageReply::TReplyCreateMessageList:
-      message = new SmsMessage(aReply.get_ReplyCreateMessageList().messageData());
-      mReplyRequest->NotifyMessageListCreated(aReply.get_ReplyCreateMessageList().listId(), 
-                                              message);
-      break;
-    case MessageReply::TReplyCreateMessageListFail:
-      mReplyRequest->NotifyReadMessageListFailed(aReply.get_ReplyCreateMessageListFail().error());
-      break;
-    case MessageReply::TReplyGetNextMessage:
-      message = new SmsMessage(aReply.get_ReplyGetNextMessage().messageData());
-      mReplyRequest->NotifyNextMessageInListGot(message);
-      break;
     case MessageReply::TReplyMarkeMessageRead:
       mReplyRequest->NotifyMessageMarkedRead(aReply.get_ReplyMarkeMessageRead().read());
       break;
     case MessageReply::TReplyMarkeMessageReadFail:
       mReplyRequest->NotifyMarkMessageReadFailed(aReply.get_ReplyMarkeMessageReadFail().error());
-      break;
-    case MessageReply::TReplyThreadList: {
-      SmsRequestForwarder* forwarder = static_cast<SmsRequestForwarder*>(mReplyRequest.get());
-      SmsRequest* request = static_cast<SmsRequest*>(forwarder->GetRealRequest());
-      request->NotifyThreadList(aReply.get_ReplyThreadList().items());
-    } break;
-    case MessageReply::TReplyThreadListFail:
-      mReplyRequest->NotifyThreadListFailed(aReply.get_ReplyThreadListFail().error());
       break;
     default:
       MOZ_NOT_REACHED("Received invalid response parameters!");
@@ -190,6 +168,73 @@ SmsRequestChild::Recv__delete__(const MessageReply& aReply)
   }
 
   return true;
+}
+
+/*******************************************************************************
+ * MobileMessageCursorChild
+ ******************************************************************************/
+
+NS_IMPL_ISUPPORTS1(MobileMessageCursorChild, nsICursorContinueCallback)
+
+MobileMessageCursorChild::MobileMessageCursorChild(nsIMobileMessageCursorCallback* aCallback)
+  : mCursorCallback(aCallback)
+{
+  MOZ_COUNT_CTOR(MobileMessageCursorChild);
+  MOZ_ASSERT(aCallback);
+}
+
+void
+MobileMessageCursorChild::ActorDestroy(ActorDestroyReason aWhy)
+{
+  // Nothing needed here.
+}
+
+bool
+MobileMessageCursorChild::RecvNotifyResult(const MobileMessageCursorData& aData)
+{
+  MOZ_ASSERT(mCursorCallback);
+
+  nsCOMPtr<nsISupports> result;
+  switch(aData.type()) {
+    case MobileMessageCursorData::TSmsMessageData:
+      result = new SmsMessage(aData.get_SmsMessageData());
+      break;
+    case MobileMessageCursorData::TThreadData:
+      result = new MobileMessageThread(aData.get_ThreadData());
+      break;
+    default:
+      MOZ_NOT_REACHED("Received invalid response parameters!");
+      return false;
+  }
+
+  mCursorCallback->NotifyCursorResult(result);
+  return true;
+}
+
+bool
+MobileMessageCursorChild::Recv__delete__(const int32_t& aError)
+{
+  MOZ_ASSERT(mCursorCallback);
+
+  if (aError != nsIMobileMessageCallback::SUCCESS_NO_ERROR) {
+    mCursorCallback->NotifyCursorError(aError);
+  } else {
+    mCursorCallback->NotifyCursorDone();
+  }
+  mCursorCallback = nullptr;
+
+  return true;
+}
+
+// nsICursorContinueCallback
+
+NS_IMETHODIMP
+MobileMessageCursorChild::HandleContinue()
+{
+  MOZ_ASSERT(mCursorCallback);
+
+  SendContinue();
+  return NS_OK;
 }
 
 } // namespace mobilemessage

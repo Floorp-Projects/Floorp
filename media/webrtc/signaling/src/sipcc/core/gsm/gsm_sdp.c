@@ -4305,6 +4305,7 @@ gsmsdp_negotiate_media_lines (fsm_fcb_t *fcb_p, cc_sdp_t *sdp_p, boolean initial
     tinybool        rtcp_mux = FALSE;
     sdp_result_e    sdp_res;
     boolean         created_media_stream = FALSE;
+    int             lsm_rc;
 
     config_get_value(CFGID_SDPMODE, &sdpmode, sizeof(sdpmode));
 
@@ -4620,19 +4621,23 @@ gsmsdp_negotiate_media_lines (fsm_fcb_t *fcb_p, cc_sdp_t *sdp_p, boolean initial
                              TODO(ekr@rtfm.com): revisit when we have media
                              assigned to streams in the SDP */
                           if (!created_media_stream){
-                              lsm_add_remote_stream (dcb_p->line,
-                                                     dcb_p->call_id,
-                                                     media,
-                                                     &pc_stream_id);
-                              MOZ_ASSERT(pc_stream_id == 0);
-                              /* Use index 0 because we only have one stream */
-                              result = gsmsdp_add_remote_stream(0,
-                                                                pc_stream_id,
-                                                                dcb_p);
-                              MOZ_ASSERT(result);  /* TODO(ekr@rtfm.com)
-                                                      add real error checking,
-                                                      but this "can't fail" */
-                              created_media_stream = TRUE;
+                              lsm_rc = lsm_add_remote_stream (dcb_p->line,
+                                                              dcb_p->call_id,
+                                                              media,
+                                                              &pc_stream_id);
+                              if (lsm_rc) {
+                                cause = CC_CAUSE_NO_MEDIA;
+                              } else {
+                                MOZ_ASSERT(pc_stream_id == 0);
+                                /* Use index 0 because we only have one stream */
+                                result = gsmsdp_add_remote_stream(0,
+                                                                  pc_stream_id,
+                                                                  dcb_p);
+                                MOZ_ASSERT(result);  /* TODO(ekr@rtfm.com)
+                                                        add real error checking,
+                                                        but this "can't fail" */
+                                created_media_stream = TRUE;
+                              }
                           }
 
                           /* Now add the track to the single media stream.

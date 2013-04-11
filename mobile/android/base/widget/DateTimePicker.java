@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-
 package org.mozilla.gecko.widget;
+
+import org.mozilla.gecko.R;
 
 import android.content.Context;
 import android.os.Build;
@@ -23,11 +24,11 @@ import android.text.format.DateFormat;
 import android.text.format.DateUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.accessibility.AccessibilityEvent;
 import android.view.Display;
-import android.view.inputmethod.InputMethodManager;
 import android.view.LayoutInflater;
 import android.view.WindowManager;
+import android.view.accessibility.AccessibilityEvent;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.CalendarView;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -38,8 +39,6 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Locale;
-
-import org.mozilla.gecko.R;
 
 public class DateTimePicker extends FrameLayout {
 

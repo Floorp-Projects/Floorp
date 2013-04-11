@@ -11,7 +11,7 @@
  */
 
 [PrefControlled]
-interface AudioBufferSourceNode : AudioSourceNode {
+interface AudioBufferSourceNode : AudioNode {
 
     //const unsigned short UNSCHEDULED_STATE = 0;
     //const unsigned short SCHEDULED_STATE = 1;
@@ -20,11 +20,11 @@ interface AudioBufferSourceNode : AudioSourceNode {
 
     //readonly attribute unsigned short playbackState;
 
-    // Playback this in-memory audio asset  
-    // Many sources can share the same buffer  
+    // Playback this in-memory audio asset
+    // Many sources can share the same buffer
     attribute AudioBuffer? buffer;
 
-    //attribute AudioParam playbackRate;
+    readonly attribute AudioParam playbackRate;
 
     attribute boolean loop;
     attribute double loopStart;

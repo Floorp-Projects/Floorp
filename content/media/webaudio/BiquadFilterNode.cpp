@@ -96,18 +96,12 @@ private:
   AudioParamTimeline mGain;
 };
 
-static float
-Nyquist(AudioContext* aContext)
-{
-  return 0.5f * aContext->SampleRate();
-}
-
 BiquadFilterNode::BiquadFilterNode(AudioContext* aContext)
   : AudioNode(aContext)
   , mType(BiquadTypeEnum::LOWPASS)
-  , mFrequency(new AudioParam(this, SendFrequencyToStream, 350.f, 10.f, Nyquist(aContext)))
-  , mQ(new AudioParam(this, SendQToStream, 1.f, 0.0001f, 1000.f))
-  , mGain(new AudioParam(this, SendGainToStream, 0.f, -40.f, 40.f))
+  , mFrequency(new AudioParam(this, SendFrequencyToStream, 350.f))
+  , mQ(new AudioParam(this, SendQToStream, 1.f))
+  , mGain(new AudioParam(this, SendGainToStream, 0.f))
 {
   BiquadFilterNodeEngine* engine = new BiquadFilterNodeEngine(aContext->Destination());
   mStream = aContext->Graph()->CreateAudioNodeStream(engine, MediaStreamGraph::INTERNAL_STREAM);

@@ -39,12 +39,13 @@ EXPORTS		= \
 		nsDOMAttributeMap.h \
 		nsMappedAttributeElement.h \
 		nsStyledElement.h \
-    nsSandboxFlags.h \
+		nsSandboxFlags.h \
 		$(NULL)
 
 EXPORTS_NAMESPACES = mozilla/dom
 
 EXPORTS_mozilla/dom = \
+  Attr.h \
   Comment.h \
   DocumentFragment.h \
   DocumentType.h \
@@ -79,7 +80,7 @@ CPPSRCS		= \
 		nsCrossSiteListenerProxy.cpp \
 		nsCSPService.cpp \
 		nsDataDocumentContentPolicy.cpp \
-		nsDOMAttribute.cpp \
+		Attr.cpp \
 		nsDOMAttributeMap.cpp \
 		nsDOMBlobBuilder.cpp \
 		nsDOMCaretPosition.cpp \
