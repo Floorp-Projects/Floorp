@@ -51,20 +51,19 @@ CreateTextureHostOGL(SurfaceDescriptorType aDescriptorType,
 }
 
 static void
-MakeTextureIfNeeded(gl::GLContext* gl, GLenum aTarget, GLuint& aTexture)
+MakeTextureIfNeeded(gl::GLContext* gl, GLuint& aTexture)
 {
   if (aTexture != 0)
     return;
 
   gl->fGenTextures(1, &aTexture);
 
-  gl->fActiveTexture(LOCAL_GL_TEXTURE0);
-  gl->fBindTexture(aTarget, aTexture);
+  gl->fBindTexture(LOCAL_GL_TEXTURE_2D, aTexture);
 
-  gl->fTexParameteri(aTarget, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
-  gl->fTexParameteri(aTarget, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
-  gl->fTexParameteri(aTarget, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
-  gl->fTexParameteri(aTarget, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
+  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
+  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
+  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
+  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
 }
 
 static gl::TextureImage::Flags
@@ -251,21 +250,27 @@ SharedTextureHostOGL::SwapTexturesImpl(const SurfaceDescriptor& aImage,
   if (texture.inverted()) {
     mFlags |= NeedsYFlip;
   }
+
+  if (mSharedHandle && mSharedHandle != newHandle) {
+    mGL->ReleaseSharedHandle(mShareType, mSharedHandle);
+  }
+
   mShareType = texture.shareType();
   mSharedHandle = newHandle;
 
   GLContext::SharedHandleDetails handleDetails;
-  if (mGL->GetSharedHandleDetails(mShareType, mSharedHandle, handleDetails)) {
+  if (mSharedHandle && mGL->GetSharedHandleDetails(mShareType, mSharedHandle, handleDetails)) {
     mTextureTarget = handleDetails.mTarget;
     mShaderProgram = handleDetails.mProgramType;
     mFormat = FormatFromShaderType(mShaderProgram);
+    mTextureTransform = handleDetails.mTextureTransform;
   }
 }
 
 bool
 SharedTextureHostOGL::Lock()
 {
-  MakeTextureIfNeeded(mGL, mTextureTarget, mTextureHandle);
+  MakeTextureIfNeeded(mGL, mTextureHandle);
 
   mGL->fActiveTexture(LOCAL_GL_TEXTURE0);
   mGL->fBindTexture(mTextureTarget, mTextureHandle);
