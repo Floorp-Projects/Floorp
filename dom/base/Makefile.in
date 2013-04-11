@@ -21,6 +21,8 @@ EXTRA_COMPONENTS = \
   SiteSpecificUserAgent.manifest \
   ConsoleAPI.js \
   ConsoleAPI.manifest \
+  NavigatorPropertyHelper.js \
+  NavigatorPropertyHelper.manifest \
   $(NULL)
 
 EXTRA_JS_MODULES = ConsoleAPIStorage.jsm \
