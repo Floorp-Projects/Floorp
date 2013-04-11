@@ -411,7 +411,9 @@
 	"dom/tests/mochitest/localstorage/test_localStorageReplace.html":"",
 
         "dom/tests/mochitest/pointerlock/test_pointerlock-api.html":"",
+	"dom/tests/mochitest/sessionstorage/test_cookieSession.html":"",
 	"dom/tests/mochitest/sessionstorage/test_sessionStorageBase.html":"",
+	"dom/tests/mochitest/sessionstorage/test_sessionStorageBaseSessionOnly.html":"",
 	"dom/tests/mochitest/sessionstorage/test_sessionStorageClone.html":"",
 	"dom/tests/mochitest/sessionstorage/test_sessionStorageHttpHttps.html":"",
 	"dom/tests/mochitest/sessionstorage/test_sessionStorageReplace.html":"",

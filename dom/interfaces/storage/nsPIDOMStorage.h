@@ -8,43 +8,44 @@
 #define __nsPIDOMStorage_h_
 
 #include "nsISupports.h"
+#include "nsString.h"
 #include "nsTArray.h"
 
-class nsIDOMStorageObsolete;
-class nsIURI;
 class nsIPrincipal;
 
+namespace mozilla {
+namespace dom {
+
+class DOMStorageCache;
+class DOMStorageManager;
+
+} // ::dom
+} // ::mozilla
+
+// {09198A51-5D27-4992-97E4-38A9CEA2A65D}
 #define NS_PIDOMSTORAGE_IID \
-{ 0x9c292365, 0x6ae4, 0x461b,                           \
-  { 0x86, 0x98, 0xf5, 0x23, 0x6f, 0xfa, 0xd2, 0x30 } }
+  { 0x9198a51, 0x5d27, 0x4992, \
+    { 0x97, 0xe4, 0x38, 0xa9, 0xce, 0xa2, 0xa6, 0x5d } }
 
 class nsPIDOMStorage : public nsISupports
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_PIDOMSTORAGE_IID)
 
-  typedef enum {
-    Unknown = 0,
+  enum StorageType {
     LocalStorage = 1,
     SessionStorage = 2
-  } nsDOMStorageType;
+  };
 
-  virtual nsresult InitAsSessionStorage(nsIPrincipal *aPrincipal, const nsSubstring &aDocumentURI,
-                                        bool aPrivate) = 0;
-  virtual nsresult InitAsLocalStorage(nsIPrincipal *aPrincipal, const nsSubstring &aDocumentURI,
-                                      bool aPrivate) = 0;
+  virtual StorageType GetType() const = 0;
+  virtual mozilla::dom::DOMStorageManager* GetManager() const = 0;
+  virtual const mozilla::dom::DOMStorageCache* GetCache() const = 0;
 
-  virtual already_AddRefed<nsIDOMStorage> Clone() = 0;
-  virtual already_AddRefed<nsIDOMStorage> Fork(const nsSubstring &aDocumentURI) = 0;
-  virtual bool IsForkOf(nsIDOMStorage* aThat) = 0;
+  virtual nsTArray<nsString>* GetKeys() = 0;
 
-  virtual nsTArray<nsString> *GetKeys() = 0;
-
-  virtual nsIPrincipal* Principal() = 0;
+  virtual nsIPrincipal* GetPrincipal() = 0;
+  virtual bool PrincipalEquals(nsIPrincipal* principal) = 0;
   virtual bool CanAccess(nsIPrincipal *aPrincipal) = 0;
-
-  virtual nsDOMStorageType StorageType() = 0;
-
   virtual bool IsPrivate() = 0;
 };
 

@@ -85,7 +85,12 @@ let DomStorage = {
     for (let [host, data] in Iterator(aStorageData)) {
       let uri = Services.io.newURI(host, null, null);
       let principal = Services.scriptSecurityManager.getDocShellCodebasePrincipal(uri, aDocShell);
-      let storage = aDocShell.getSessionStorageForPrincipal(principal, "", true);
+      let storageManager = aDocShell.QueryInterface(Components.interfaces.nsIDOMStorageManager);
+
+      // There is no need to pass documentURI, it's only used to fill documentURI property of
+			// domstorage event, which in this case has no consumer.  Prevention of events in case
+			// of missing documentURI will be solved in a followup bug to bug 600307.
+      let storage = storageManager.createStorage(principal, "", aDocShell.usePrivateBrowsing);
 
       for (let [key, value] in Iterator(data)) {
         try {
@@ -110,12 +115,8 @@ let DomStorage = {
     let storage;
 
     try {
-      // Using getSessionStorageForPrincipal instead of
-      // getSessionStorageForURI just to be able to pass aCreate = false,
-      // that avoids creation of the sessionStorage object for the page
-      // earlier than the page really requires it. It was causing problems
-      // while accessing a storage when a page later changed its domain.
-      storage = aDocShell.getSessionStorageForPrincipal(aPrincipal, "", false);
+      let storageManager = aDocShell.QueryInterface(Components.interfaces.nsIDOMStorageManager);
+      storage = storageManager.getStorage(aPrincipal);
     } catch (e) {
       // sessionStorage might throw if it's turned off, see bug 458954
     }

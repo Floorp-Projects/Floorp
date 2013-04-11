@@ -1,0 +1,166 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>bug 600307</title>
+
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="text/javascript" src="localStorageCommon.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script type="text/javascript">
+
+/*
+This is strictly implementation specific test for dom storage code from bug 600307.
+It exercises code for asynchronous data flushing with regard to cache life time and its preload.
+
+"flush + reload" means to tell the database to store all pending data then wipe the cached content and reload it from the db
+
+"reload" only means to simulate situation when there is a pending flush for an origin but a new cache is about to preload
+which is a corner case happening rarely ; this helps check the next preload operation will load correct data from the database anyway
+
+Case 1: set | flush + reload | remove | set | remove | flush + reload | get ?= null
+        checks coalescing optimization for single key changes does work correctly for repeated removals of a key
+
+Case 2: set | set | clear | flush + reload | count ?= 0
+        checks whether clear operation superseeds setting keys, the database must be empty for the origin
+
+Case 3: set | set | clear | reload | count ?= 0
+        check the corner case when a data clear flush is pending but a new cache is about to preload
+*/
+
+function startTest()
+{
+  // Have an untouched land
+  localStorage.clear();
+
+  // Initial flush
+  localStorageFlush(function() {
+  is(localStorage.length, 0, "localStorage empty at the test start");
+
+  // Basic test 1 (set a key, check presence after reload):
+  localStorage.setItem("item", "value");
+  localStorageFlushAndReload(function() {
+  is(localStorage.getItem("item"), "value", "Basic persistance works");
+  is(localStorage.length, 1, "1 item in localStorage");
+
+  // Basic test 2 (set a key twice, check presence of the last value):
+  localStorage.setItem("item", "value2");
+  localStorage.setItem("item", "value3");
+  localStorageFlushAndReload(function() {
+  is(localStorage.getItem("item"), "value3", "Basic persistance 2 works");
+
+  // Basic test 3 (remove a key, check it has been deleted):
+  localStorage.removeItem("item");
+  localStorageFlushAndReload(function() {
+  is(localStorage.getItem("item"), null, "Basic delete works");
+
+  // Basic test 4 (set and remove a key, check it is not present):
+  localStorage.setItem("item", "value4");
+  localStorage.removeItem("item");
+  localStorageFlushAndReload(function() {
+  is(localStorage.getItem("item"), null, "Basic delete 2 works");
+
+
+  // Case 1:
+  localStorage.setItem("item", "value");
+  localStorageFlushAndReload(function() {
+  localStorage.removeItem("item");
+  localStorage.setItem("item", "value2");
+  localStorage.removeItem("item");
+  localStorageFlushAndReload(function() {
+  is(localStorage.getItem("item"), null, "Item deleted in case 1");
+
+  // Case 2:
+  localStorage.setItem("item", "value");
+  localStorage.setItem("item2", "value2");
+  localStorage.clear();
+  localStorageFlushAndReload(function() {
+  is(localStorage.length, 0, "localStorage clean in case 2");
+
+  // Case 3:
+  localStorageFlush(function() {
+  localStorage.setItem("item", "value");
+  localStorage.setItem("item2", "value2");
+  localStorage.clear();
+  localStorageReload();
+  is(localStorage.length, 0, "localStorage clean in case 4");
+
+  if (SpecialPowers.Cc["@mozilla.org/xre/app-info;1"].getService(
+      SpecialPowers.Ci.nsIXULRuntime).processType != SpecialPowers.Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
+    // Following tests cannot be run in a child/plugin process type
+    SimpleTest.finish();
+    return;
+  }
+
+  // Cookies clean 1
+  localStorageFlush(function() {
+  localStorage.setItem("item", "value");
+  localStorageClearAll();
+  is(localStorage.length, 0, "localStorage clean after cookies deletion");
+  localStorage.setItem("item2", "value2");
+  is(localStorage.getItem("item"), null, "Unexpected key 1, cookies delete");
+  is(localStorage.getItem("item2"), "value2", "Expected key 2, cookies delete");
+  localStorageFlushAndReload(function() {
+  is(localStorage.getItem("item"), null, "Unexpected key 1, cookies delete");
+  is(localStorage.getItem("item2"), "value2", "Expected key 2, cookies delete");
+
+  // Cookies clean 2
+  localStorage.clear();
+  localStorageFlush(function() {
+  localStorage.setItem("item", "value");
+  localStorageClearAll();
+  is(localStorage.length, 0, "localStorage clean after cookies deletion 2");
+  localStorageFlushAndReload(function() {
+  is(localStorage.length, 0, "localStorage clean after cookies deletion 2");
+
+
+  // Domain clean 1
+  localStorageFlush(function() {
+  localStorage.setItem("item", "value");
+  localStorageClearDomain("test");
+  is(localStorage.length, 0, "localStorage clean after domain deletion");
+  localStorage.setItem("item2", "value2");
+  is(localStorage.getItem("item"), null, "Unexpected key 1, domain delete");
+  is(localStorage.getItem("item2"), "value2", "Expected key 2, domain delete");
+  localStorageFlushAndReload(function() {
+  is(localStorage.getItem("item"), null, "Unexpected key 1, domain delete");
+  is(localStorage.getItem("item2"), "value2", "Expected key 2, domain delete");
+
+  // Domain clean 2
+  localStorage.clear();
+  localStorageFlush(function() {
+  localStorage.setItem("item", "value");
+  localStorageClearDomain("test");
+  is(localStorage.length, 0, "localStorage clean after domain deletion 2");
+  localStorageFlushAndReload(function() {
+  is(localStorage.length, 0, "localStorage clean after domain deletion 2");
+
+  SimpleTest.finish();
+
+  });
+  });
+  });
+  });
+  });
+  });
+  });
+  });
+  });
+  });
+  });
+  });
+  });
+  });
+  });
+  });
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</head>
+
+<body onload="startTest();">
+</body>
+</html>
