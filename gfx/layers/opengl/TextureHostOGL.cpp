@@ -647,6 +647,12 @@ void GrallocTextureHostOGL::BindTexture(GLenum aTextureUnit)
   mGL->fActiveTexture(LOCAL_GL_TEXTURE0);
 }
 
+bool
+GrallocTextureHostOGL::IsValid() const
+{
+  return !!mGraphicBuffer.get();
+}
+
 GrallocTextureHostOGL::~GrallocTextureHostOGL()
 {
   DeleteTextures();

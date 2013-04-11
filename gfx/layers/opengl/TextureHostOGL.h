@@ -582,11 +582,7 @@ public:
     return LOCAL_GL_CLAMP_TO_EDGE;
   }
 
-
-  bool IsValid() const MOZ_OVERRIDE
-  {
-    return !!mGLTexture;
-  }
+  bool IsValid() const MOZ_OVERRIDE;
 
 #ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char* Name() { return "GrallocTextureHostOGL"; }
