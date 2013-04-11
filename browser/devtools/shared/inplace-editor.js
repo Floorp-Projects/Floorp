@@ -24,8 +24,7 @@
 
 "use strict";
 
-const Ci = Components.interfaces;
-const Cu = Components.utils;
+const {Ci, Cu} = require("chrome");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
@@ -34,11 +33,6 @@ const FOCUS_BACKWARD = Ci.nsIFocusManager.MOVEFOCUS_BACKWARD;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
-this.EXPORTED_SYMBOLS = ["editableItem",
-                         "editableField",
-                         "getInplaceEditorForSpan",
-                         "InplaceEditor"];
 
 /**
  * Mark a span editable.  |editableField| will listen for the span to
@@ -81,6 +75,8 @@ function editableField(aOptions)
   });
 }
 
+exports.editableField = editableField;
+
 /**
  * Handle events for an element that should respond to
  * clicks and sit in the editing tab order, and call
@@ -94,7 +90,7 @@ function editableField(aOptions)
  * @param {function} aCallback
  *        Called when the editor is activated.
  */
-this.editableItem = function editableItem(aOptions, aCallback)
+function editableItem(aOptions, aCallback)
 {
   let trigger = aOptions.trigger || "click"
   let element = aOptions.element;
@@ -136,16 +132,20 @@ this.editableItem = function editableItem(aOptions, aCallback)
   element._editable = true;
 }
 
+exports.editableItem = this.editableItem;
+
 /*
  * Various API consumers (especially tests) sometimes want to grab the
  * inplaceEditor expando off span elements. However, when each global has its
  * own compartment, those expandos live on Xray wrappers that are only visible
  * within this JSM. So we provide a little workaround here.
  */
-this.getInplaceEditorForSpan = function getInplaceEditorForSpan(aSpan)
+
+function getInplaceEditorForSpan(aSpan)
 {
   return aSpan.inplaceEditor;
 };
+exports.getInplaceEditorForSpan = getInplaceEditorForSpan;
 
 function InplaceEditor(aOptions, aEvent)
 {
@@ -205,6 +205,8 @@ function InplaceEditor(aOptions, aEvent)
     aOptions.start(this, aEvent);
   }
 }
+
+exports.InplaceEditor = InplaceEditor;
 
 InplaceEditor.prototype = {
   _createInput: function InplaceEditor_createEditor()

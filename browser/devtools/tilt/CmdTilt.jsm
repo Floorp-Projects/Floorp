@@ -7,9 +7,18 @@ this.EXPORTED_SYMBOLS = [ ];
 
 Components.utils.import('resource://gre/modules/XPCOMUtils.jsm');
 Components.utils.import("resource:///modules/devtools/gcli.jsm");
+Components.utils.import("resource:///modules/devtools/gDevTools.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "TiltManager",
-                                  "resource:///modules/devtools/Tilt.jsm");
+// Fetch TiltManager using the current loader, but don't save a
+// reference to it, because it might change with a tool reload.
+// We can clean this up once the command line is loadered.
+Object.defineProperty(this, "TiltManager", {
+  get: function() {
+    return devtools.require("devtools/tilt/tilt").TiltManager;
+  },
+  enumerable: true
+});
+
 /**
  * 'tilt' command
  */

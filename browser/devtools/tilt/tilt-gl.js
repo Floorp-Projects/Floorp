@@ -5,22 +5,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
+const {Cc, Ci, Cu} = require("chrome");
+
+let TiltUtils = require("devtools/tilt/tilt-utils");
+let {TiltMath, mat4} = require("devtools/tilt/tilt-math");
+
+Cu.import("resource://gre/modules/Services.jsm");
 
 const WEBGL_CONTEXT_NAME = "experimental-webgl";
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource:///modules/devtools/TiltMath.jsm");
-Cu.import("resource:///modules/devtools/TiltUtils.jsm");
-
-this.EXPORTED_SYMBOLS = ["TiltGL"];
 
 /**
  * Module containing thin wrappers around low-level WebGL functions.
  */
-this.TiltGL = {};
+let TiltGL = {};
+module.exports = TiltGL;
 
 /**
  * Contains commonly used helper methods used in any 3D application.

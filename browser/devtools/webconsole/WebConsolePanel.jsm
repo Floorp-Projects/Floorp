@@ -17,7 +17,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "HUDService",
     "resource:///modules/HUDService.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
-    "resource:///modules/devtools/EventEmitter.jsm");
+    "resource:///modules/devtools/shared/event-emitter.js");
 
 /**
  * A DevToolPanel that controls the Web Console.
@@ -77,16 +77,18 @@ WebConsolePanel.prototype = {
 
         let webConsoleUIWindow = iframe.contentWindow.wrappedJSObject;
         let chromeWindow = iframe.ownerDocument.defaultView;
-
+        dump("a\n");
         return HUDService.openWebConsole(this.target, webConsoleUIWindow,
                                          chromeWindow);
       })
       .then((aWebConsole) => {
+        dump("b\n");
         this.hud = aWebConsole;
         this._isReady = true;
         this.emit("ready");
         return this;
       }, (aReason) => {
+        dump(aReason.stack + "\n");
         let msg = "WebConsolePanel open failed. " +
                   aReason.error + ": " + aReason.message;
         dump(msg + "\n");

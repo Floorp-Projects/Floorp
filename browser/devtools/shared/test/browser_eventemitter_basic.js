@@ -8,7 +8,7 @@ function test() {
 
 
 function testEmitter(aObject) {
-  Cu.import("resource:///modules/devtools/EventEmitter.jsm", this);
+  Cu.import("resource:///modules/devtools/shared/event-emitter.js", this);
 
   let emitter;
 

@@ -3,11 +3,7 @@
 
 function test() {
   const Cu = Components.utils;
-  let tempScope = {};
-  Cu.import("resource:///modules/devtools/gDevTools.jsm", tempScope);
-  Cu.import("resource:///modules/devtools/Target.jsm", tempScope);
-  Cu.import("resource:///modules/devtools/Sidebar.jsm", tempScope);
-  let {TargetFactory: TargetFactory, gDevTools: gDevTools, ToolSidebar: ToolSidebar} = tempScope;
+  let {ToolSidebar} = devtools.require("devtools/framework/sidebar");
 
   const toolURL = "data:text/xml;charset=utf8,<?xml version='1.0'?>" +
                   "<?xml-stylesheet href='chrome://browser/skin/devtools/common.css' type='text/css'?>" +
