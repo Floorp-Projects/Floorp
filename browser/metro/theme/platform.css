@@ -160,7 +160,6 @@ menulist {
 .menu-container {
   position: absolute;
   opacity: 0;
-  transition: opacity ease-out 0.2s;
 }
 
 .menu-container[showingfrom="below"] {
@@ -171,10 +170,15 @@ menulist {
   transform: translateY(-@metro_spacing_normal@);
 }
 
+.menu-container[hiding],
+.menu-container[showing] {
+  transition: opacity ease-out 0.2s,
+              transform ease-out 0.2s;
+}
+
 .menu-container[showing] {
   opacity: 1;
   transform: none;
-  transition: all ease-out 0.2s;
 }
 
 .menu-popup > richlistbox {
