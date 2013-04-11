@@ -103,13 +103,6 @@
               type="bool"/>
 
   <!-- Encryption tab -->
-  <preference id="security.enable_ssl3"
-              name="security.enable_ssl3"
-              type="bool"/>
-  <preference id="security.enable_tls"
-              name="security.enable_tls"
-              type="bool"/>
-
   <preference id="security.default_personal_cert"
               name="security.default_personal_cert"
               type="string"/>
@@ -146,7 +139,7 @@
 #endif
     <tab id="networkTab" label="&networkTab.label;" helpTopic="prefs-advanced-network"/>
     <tab id="updateTab" label="&updateTab.label;"  helpTopic="prefs-advanced-update"/>
-    <tab id="encryptionTab" label="&encryptionTab.label;" helpTopic="prefs-advanced-encryption"/>
+    <tab id="encryptionTab" label="&certificateTab.label;" helpTopic="prefs-advanced-encryption"/>
   </tabs>
 
   <tabpanels flex="1">
@@ -403,38 +396,8 @@
       </groupbox>
     </tabpanel>
 
-    <!-- Encryption -->
+    <!-- Certificates -->
     <tabpanel id="encryptionPanel" orient="vertical">
-
-      <!-- Protocols -->
-      <groupbox id="protocolsGroup">
-        <caption label="&protocols.label;"/>
-
-        <grid>
-          <columns>
-            <column flex="1"/>
-            <column flex="1"/>
-          </columns>
-          <rows>
-            <row>
-              <hbox>
-                <checkbox id="useSSL3" label="&useSSL3.label;"
-                          accesskey="&useSSL3.accesskey;"
-                          preference="security.enable_ssl3"/>
-              </hbox>
-              <hbox>
-                <checkbox id="useTLS1" label="&useTLS1.label;"
-                          accesskey="&useTLS1.accesskey;"
-                          preference="security.enable_tls"/>
-              </hbox>
-            </row>
-          </rows>
-        </grid>
-      </groupbox>
-
-      <!-- Certificates -->
-      <groupbox id="certificatesGroup">
-        <caption id="CertGroupCaption" label="&certificates.label;"/>
 
         <description id="CertSelectionDesc" control="certSelection">&certSelection.description;</description>
 
@@ -445,7 +408,7 @@
         -->
         <radiogroup id="certSelection" orient="horizontal" preftype="string"
                     preference="security.default_personal_cert"
-                    aria-labelledby="CertGroupCaption CertSelectionDesc">
+                    aria-labelledby="CertSelectionDesc">
           <radio label="&certs.auto;" accesskey="&certs.auto.accesskey;"
                 value="Select Automatically"/>
           <radio label="&certs.ask;" accesskey="&certs.ask.accesskey;"
@@ -481,7 +444,6 @@
 #ifdef XP_MACOSX
         </vbox>
 #endif
-      </groupbox>
     </tabpanel>
   </tabpanels>
 </tabbox>
