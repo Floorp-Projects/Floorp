@@ -2420,24 +2420,9 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
       return inst->SetTransparent(bTransparent);
     }
 
-    case NPPVjavascriptPushCallerBool:
-      {
-        nsresult rv;
-        nsCOMPtr<nsIJSContextStack> contextStack =
-          do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
-        if (NS_SUCCEEDED(rv)) {
-          NPBool bPushCaller = (result != nullptr);
-          if (bPushCaller) {
-            JSContext *cx;
-            rv = inst->GetJSContext(&cx);
-            if (NS_SUCCEEDED(rv))
-              rv = contextStack->Push(cx);
-          } else {
-            rv = contextStack->Pop(nullptr);
-          }
-        }
-        return NS_SUCCEEDED(rv) ? NPERR_NO_ERROR : NPERR_GENERIC_ERROR;
-      }
+    case NPPVjavascriptPushCallerBool: {
+      return NPERR_NO_ERROR;
+    }
 
     case NPPVpluginKeepLibraryInMemory: {
       NPBool bCached = (result != nullptr);
