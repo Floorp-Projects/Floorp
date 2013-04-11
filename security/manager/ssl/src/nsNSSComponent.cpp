@@ -1123,6 +1123,40 @@ void nsNSSComponent::setValidationOptions(nsIPrefBranch * pref)
   SSL_ClearSessionCache();
 }
 
+// Enable the TLS versions given in the prefs, defaulting to SSL 3.0 and
+// TLS 1.0 when the prefs aren't set or when they are set to invalid values.
+nsresult
+nsNSSComponent::setEnabledTLSVersions(nsIPrefBranch * prefBranch)
+{
+  // keep these values in sync with security-prefs.js and firefox.js
+  static const PRInt32 PSM_DEFAULT_MIN_TLS_VERSION = 0;
+  static const PRInt32 PSM_DEFAULT_MAX_TLS_VERSION = 1;
+
+  PRInt32 minVersion = PSM_DEFAULT_MIN_TLS_VERSION;
+  PRInt32 maxVersion = PSM_DEFAULT_MAX_TLS_VERSION;
+  mPrefBranch->GetIntPref("security.tls.version.min", &minVersion);
+  mPrefBranch->GetIntPref("security.tls.version.max", &maxVersion);
+
+  // 0 means SSL 3.0, 1 means TLS 1.0, 2 means TLS 1.1, etc.
+  minVersion += SSL_LIBRARY_VERSION_3_0;
+  maxVersion += SSL_LIBRARY_VERSION_3_0;
+
+  SSLVersionRange range = { (PRUint16) minVersion, (PRUint16) maxVersion };
+
+  if (minVersion != (PRInt32) range.min || // prevent truncation
+      maxVersion != (PRInt32) range.max || // prevent truncation
+      SSL_VersionRangeSetDefault(ssl_variant_stream, &range) != SECSuccess) {
+    range.min = SSL_LIBRARY_VERSION_3_0 + PSM_DEFAULT_MIN_TLS_VERSION;
+    range.max = SSL_LIBRARY_VERSION_3_0 + PSM_DEFAULT_MAX_TLS_VERSION;
+    if (SSL_VersionRangeSetDefault(ssl_variant_stream, &range)
+          != SECSuccess) {
+      return NS_ERROR_UNEXPECTED;
+    }
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsNSSComponent::SkipOcsp()
 {
@@ -1733,11 +1767,15 @@ nsNSSComponent::InitializeNSS(bool showWarningBox)
 
       SSL_OptionSetDefault(SSL_ENABLE_SSL2, false);
       SSL_OptionSetDefault(SSL_V2_COMPATIBLE_HELLO, false);
-      bool enabled;
-      mPrefBranch->GetBoolPref("security.enable_ssl3", &enabled);
-      SSL_OptionSetDefault(SSL_ENABLE_SSL3, enabled);
-      mPrefBranch->GetBoolPref("security.enable_tls", &enabled);
-      SSL_OptionSetDefault(SSL_ENABLE_TLS, enabled);
+
+      rv = setEnabledTLSVersions(mPrefBranch);
+      if (NS_FAILED(rv)) {
+        nsPSMInitPanic::SetPanic();
+        return NS_ERROR_UNEXPECTED;
+      }
+
+      bool enabled = true; // XXX: see bug 733644
+
       mPrefBranch->GetBoolPref("security.enable_md5_signatures", &enabled);
       configureMD5(enabled);
 
@@ -2218,13 +2256,9 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
     bool enabled;
     NS_ConvertUTF16toUTF8  prefName(someData);
 
-    if (prefName.Equals("security.enable_ssl3")) {
-      mPrefBranch->GetBoolPref("security.enable_ssl3", &enabled);
-      SSL_OptionSetDefault(SSL_ENABLE_SSL3, enabled);
-      clearSessionCache = true;
-    } else if (prefName.Equals("security.enable_tls")) {
-      mPrefBranch->GetBoolPref("security.enable_tls", &enabled);
-      SSL_OptionSetDefault(SSL_ENABLE_TLS, enabled);
+    if (prefName.Equals("security.tls.version.min") ||
+        prefName.Equals("security.tls.version.max")) {
+      (void) setEnabledTLSVersions(mPrefBranch);
       clearSessionCache = true;
     } else if (prefName.Equals("security.enable_md5_signatures")) {
       mPrefBranch->GetBoolPref("security.enable_md5_signatures", &enabled);
