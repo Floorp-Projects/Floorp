@@ -1910,10 +1910,11 @@ TabChild::RecvActivateFrameEvent(const nsString& aType, const bool& capture)
 {
   nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(mWebNav);
   NS_ENSURE_TRUE(window, true);
-  nsCOMPtr<EventTarget> chromeHandler =
+  nsCOMPtr<nsIDOMEventTarget> chromeHandler =
     do_QueryInterface(window->GetChromeEventHandler());
   NS_ENSURE_TRUE(chromeHandler, true);
   nsRefPtr<ContentListener> listener = new ContentListener(this);
+  NS_ENSURE_TRUE(listener, true);
   chromeHandler->AddEventListener(aType, listener, capture);
   return true;
 }
@@ -2047,11 +2048,13 @@ TabChild::InitTabChildGlobal(FrameScriptLoading aScriptLoading)
   if (!mCx && !mTabChildGlobal) {
     nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(mWebNav);
     NS_ENSURE_TRUE(window, false);
-    nsCOMPtr<EventTarget> chromeHandler =
+    nsCOMPtr<nsIDOMEventTarget> chromeHandler =
       do_QueryInterface(window->GetChromeEventHandler());
     NS_ENSURE_TRUE(chromeHandler, false);
 
     nsRefPtr<TabChildGlobal> scope = new TabChildGlobal(this);
+    NS_ENSURE_TRUE(scope, false);
+
     mTabChildGlobal = scope;
 
     nsISupports* scopeSupports = NS_ISUPPORTS_CAST(nsIDOMEventTarget*, scope);
