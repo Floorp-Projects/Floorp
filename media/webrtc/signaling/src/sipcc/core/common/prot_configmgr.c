@@ -75,8 +75,6 @@ int i;
   for (i=0; i< MAX_CONFIG_LINES; i++) {
     initCfgTblEntry(CFGID_LINE_INDEX+i, "Index", CFGVAR(line[i].index), PA_INT, PR_INT, 0);
     initCfgTblEntry(CFGID_LINE_FEATURE+i, "Feat", CFGVAR(line[i].feature), PA_INT, PR_INT, 0);
-    initCfgTblEntry(CFGID_LINE_MAXNUMCALLS+i, "MNC", CFGVAR(line[i].maxnumcalls), PA_INT, PR_INT, 0);
-    initCfgTblEntry(CFGID_LINE_BUSY_TRIGGER+i, "BT", CFGVAR(line[i].busy_trigger), PA_INT, PR_INT, 0);
     initCfgTblEntry(CFGID_PROXY_ADDRESS+i, "ProxyAddr", CFGVAR(line[i].proxy_address), PA_STR, PR_STR, 0);
     initCfgTblEntry(CFGID_PROXY_PORT+i, "ProxyPort", CFGVAR(line[i].proxy_port), PA_INT, PR_INT, 0);
     initCfgTblEntry(CFGID_LINE_CALL_WAITING+i, "CWait", CFGVAR(line[i].call_waiting), PA_INT, PR_INT, 0);

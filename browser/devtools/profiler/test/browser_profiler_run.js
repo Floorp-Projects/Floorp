@@ -13,23 +13,9 @@ function test() {
     gPanel = panel;
 
     panel.once("started", onStart);
-    panel.once("stopped", onStop);
     panel.once("parsed", onParsed);
 
     testUI();
-  });
-}
-
-function attemptTearDown() {
-  gAttempts += 1;
-
-  if (gAttempts < 2) {
-    return;
-  }
-
-  tearDown(gTab, function onTearDown() {
-    gPanel = null;
-    gTab = null;
   });
 }
 
@@ -58,13 +44,6 @@ function onStart() {
   });
 }
 
-function onStop() {
-  gPanel.controller.isActive(function (err, isActive) {
-    ok(!isActive, "Profiler is idle");
-    attemptTearDown();
-  });
-}
-
 function onParsed() {
   function assertSample() {
     let [win,doc] = getProfileInternals();
@@ -76,7 +55,11 @@ function onParsed() {
 
     ok(sample.length > 0, "We have some items displayed");
     is(sample[0].innerHTML, "100.0%", "First percentage is 100%");
-    attemptTearDown();
+
+    tearDown(gTab, function onTearDown() {
+      gPanel = null;
+      gTab = null;
+    });
   }
 
   assertSample();

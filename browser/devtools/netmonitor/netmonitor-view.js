@@ -259,7 +259,7 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
   initialize: function NVRM_initialize() {
     dumpn("Initializing the RequestsMenuView");
 
-    this.node = new SideMenuWidget($("#requests-menu-contents"));
+    this.node = new SideMenuWidget($("#requests-menu-contents"), false);
 
     this.node.addEventListener("mousedown", this._onMouseDown, false);
     this.node.addEventListener("select", this._onSelect, false);
@@ -403,6 +403,9 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
             break;
           case "statusText":
             requestItem.attachment.statusText = value;
+            this._updateMenuView(requestItem, key,
+              requestItem.attachment.status + " " +
+              requestItem.attachment.statusText);
             break;
           case "headersSize":
             requestItem.attachment.headersSize = value;
@@ -458,18 +461,24 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
     let hostPort = NetworkHelper.convertToUnicode(unescape(uri.hostPort));
 
     let template = $("#requests-menu-item-template");
-    let requestsMenuItem = template.firstChild.cloneNode(true);
+    let fragment = document.createDocumentFragment();
 
-    $(".requests-menu-method", requestsMenuItem)
-      .setAttribute("value", aMethod);
+    $(".requests-menu-method", template).setAttribute("value", aMethod);
 
-    $(".requests-menu-file", requestsMenuItem)
-      .setAttribute("value", name + (query ? "?" + query : ""));
+    let file = $(".requests-menu-file", template);
+    file.setAttribute("value", name + (query ? "?" + query : ""));
+    file.setAttribute("tooltiptext", name + (query ? "?" + query : ""));
 
-    $(".requests-menu-domain", requestsMenuItem)
-      .setAttribute("value", hostPort);
+    let domain = $(".requests-menu-domain", template);
+    domain.setAttribute("value", hostPort);
+    domain.setAttribute("tooltiptext", hostPort);
 
-    return requestsMenuItem;
+    // Flatten the DOM by removing one redundant box (the template container).
+    for (let node of template.childNodes) {
+      fragment.appendChild(node.cloneNode(true));
+    }
+
+    return fragment;
   },
 
   /**
@@ -489,21 +498,32 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
         node.setAttribute("code", aValue);
         break;
       }
+      case "statusText": {
+        let node = $(".requests-menu-status-and-method", aItem.target);
+        node.setAttribute("tooltiptext", aValue);
+        break;
+      }
       case "contentSize": {
         let size = (aValue / 1024).toFixed(CONTENT_SIZE_DECIMALS);
         let node = $(".requests-menu-size", aItem.target);
-        node.setAttribute("value", L10N.getFormatStr("networkMenu.size", size));
+        let text = L10N.getFormatStr("networkMenu.sizeKB", size);
+        node.setAttribute("value", text);
+        node.setAttribute("tooltiptext", text);
         break;
       }
       case "mimeType": {
         let type = aValue.split(";")[0].split("/")[1] || "?";
         let node = $(".requests-menu-type", aItem.target);
-        node.setAttribute("value", CONTENT_MIME_TYPE_ABBREVIATIONS[type] || type);
+        let text = CONTENT_MIME_TYPE_ABBREVIATIONS[type] || type;
+        node.setAttribute("value", text);
+        node.setAttribute("tooltiptext", aValue);
         break;
       }
       case "totalTime": {
         let node = $(".requests-menu-timings-total", aItem.target);
-        node.setAttribute("value", L10N.getFormatStr("networkMenu.total", aValue));
+        let text = L10N.getFormatStr("networkMenu.totalMS", aValue);
+        node.setAttribute("value", text);
+        node.setAttribute("tooltiptext", text);
         break;
       }
     }
@@ -795,6 +815,7 @@ create({ constructor: NetworkDetailsView, proto: MenuContainer.prototype }, {
     if (aData.url) {
       let unicodeUrl = NetworkHelper.convertToUnicode(unescape(aData.url));
       $("#headers-summary-url-value").setAttribute("value", unicodeUrl);
+      $("#headers-summary-url-value").setAttribute("tooltiptext", unicodeUrl);
       $("#headers-summary-url").removeAttribute("hidden");
     } else {
       $("#headers-summary-url").setAttribute("hidden", "true");
@@ -858,7 +879,7 @@ create({ constructor: NetworkDetailsView, proto: MenuContainer.prototype }, {
    */
   _addHeaders: function NVND__addHeaders(aName, aResponse) {
     let kb = (aResponse.headersSize / 1024).toFixed(HEADERS_SIZE_DECIMALS);
-    let size = L10N.getFormatStr("networkMenu.size", kb);
+    let size = L10N.getFormatStr("networkMenu.sizeKB", kb);
     let headersScope = this._headers.addScope(aName + " (" + size + ")");
     headersScope.expanded = true;
 
@@ -1083,32 +1104,32 @@ create({ constructor: NetworkDetailsView, proto: MenuContainer.prototype }, {
     $("#timings-summary-blocked .requests-menu-timings-box")
       .setAttribute("width", blocked * scale);
     $("#timings-summary-blocked .requests-menu-timings-total")
-      .setAttribute("value", L10N.getFormatStr("networkMenu.total", blocked));
+      .setAttribute("value", L10N.getFormatStr("networkMenu.totalMS", blocked));
 
     $("#timings-summary-dns .requests-menu-timings-box")
       .setAttribute("width", dns * scale);
     $("#timings-summary-dns .requests-menu-timings-total")
-      .setAttribute("value", L10N.getFormatStr("networkMenu.total", dns));
+      .setAttribute("value", L10N.getFormatStr("networkMenu.totalMS", dns));
 
     $("#timings-summary-connect .requests-menu-timings-box")
       .setAttribute("width", connect * scale);
     $("#timings-summary-connect .requests-menu-timings-total")
-      .setAttribute("value", L10N.getFormatStr("networkMenu.total", connect));
+      .setAttribute("value", L10N.getFormatStr("networkMenu.totalMS", connect));
 
     $("#timings-summary-send .requests-menu-timings-box")
       .setAttribute("width", send * scale);
     $("#timings-summary-send .requests-menu-timings-total")
-      .setAttribute("value", L10N.getFormatStr("networkMenu.total", send));
+      .setAttribute("value", L10N.getFormatStr("networkMenu.totalMS", send));
 
     $("#timings-summary-wait .requests-menu-timings-box")
       .setAttribute("width", wait * scale);
     $("#timings-summary-wait .requests-menu-timings-total")
-      .setAttribute("value", L10N.getFormatStr("networkMenu.total", wait));
+      .setAttribute("value", L10N.getFormatStr("networkMenu.totalMS", wait));
 
     $("#timings-summary-receive .requests-menu-timings-box")
       .setAttribute("width", receive * scale);
     $("#timings-summary-receive .requests-menu-timings-total")
-      .setAttribute("value", L10N.getFormatStr("networkMenu.total", receive));
+      .setAttribute("value", L10N.getFormatStr("networkMenu.totalMS", receive));
 
     $("#timings-summary-dns .requests-menu-timings-box")
       .style.transform = "translateX(" + (scale * blocked) + "px)";

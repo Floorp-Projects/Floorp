@@ -20,19 +20,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=650295
 <script type="text/javascript">
   SimpleTest.waitForExplicitFinish();
 
-  SpecialPowers.setBoolPref("media.webspeech.test.fake_fsm_events", true);
-  SpecialPowers.setBoolPref("media.webspeech.test.fake_recognition_service", true);
-
-  performTest([
-    "EVENT_START",
-    "EVENT_AUDIO_DATA"
-  ], {
-    "start": null,
-    "audiostart": null,
-    "audioend": null,
-    "error": buildErrorCallback(errorCodes.NO_SPEECH),
-    "end": null
-  }, SimpleTest.finish, "silence.ogg");
+  performTest({
+    eventsToRequest: [
+      "EVENT_START",
+      "EVENT_AUDIO_DATA"
+    ],
+    expectedEvents: {
+      "start": null,
+      "audiostart": null,
+      "audioend": null,
+      "error": buildErrorCallback(errorCodes.NO_SPEECH),
+      "end": null
+    },
+    doneFunc: SimpleTest.finish,
+    audioSampleFile: "silence.ogg",
+    prefs: [["media.webspeech.test.fake_fsm_events", true], ["media.webspeech.test.fake_recognition_service", true]]
+  });
 
 </script>
 </pre>

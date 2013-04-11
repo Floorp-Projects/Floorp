@@ -3,13 +3,13 @@
   [{"type":"text/x-moz-place-container","title":"@bookmarks_title@","annos":[{"name":"metro/bookmarksRoot","expires":4,"type":1,"value":1}],
     "children":
      [
-       {"index":1,"title":"@firefox_about@", "type":"text/x-moz-place", "uri":"http://www.mozilla.com/@AB_CD@/about/",
+       {"index":1,"title":"@firefox_about@", "type":"text/x-moz-place", "uri":"http://www.mozilla.org/@AB_CD@/about/",
         "iconUri":"chrome://branding/content/favicon32.png"
        },
-       {"index":2,"title":"@getting_started@",  "type":"text/x-moz-place", "uri":"http://www.mozilla.com/@AB_CD@/firefox/central/",
+       {"index":2,"title":"@getting_started@",  "type":"text/x-moz-place", "uri":"http://www.mozilla.org/@AB_CD@/firefox/central/",
         "iconUri":"chrome://branding/content/favicon32.png"
        },
-       {"index":3,"title":"@firefox_community@",  "type":"text/x-moz-place", "uri":"http://www.mozilla.com/@AB_CD@/firefox/community/",
+       {"index":3,"title":"@firefox_community@",  "type":"text/x-moz-place", "uri":"http://www.mozilla.org/@AB_CD@/firefox/community/",
         "iconUri":"chrome://branding/content/favicon32.png"
        },
      ]

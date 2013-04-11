@@ -128,7 +128,7 @@ function testConsoleLoggingAPI(aMethod) {
     validatorFn: function()
     {
       let node = outputNode.querySelector(".hud-msg-node");
-      return node && /foo bar/.test(node.textContent);
+      return node && /"foo" "bar"/.test(node.textContent);
     },
     successFn: nextTest,
     failureFn: nextTest,

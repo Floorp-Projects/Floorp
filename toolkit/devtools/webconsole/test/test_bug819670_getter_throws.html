@@ -34,33 +34,33 @@ function onEvaluate(aState, aResponse)
     result: {
       type: "object",
       actor: /[a-z]/,
-      inspectable: true,
     },
   });
 
-  ok(!aResponse.error, "no js error");
+  ok(!aResponse.exception, "no eval exception");
   ok(!aResponse.helperResult, "no helper result");
 
   onInspect = onInspect.bind(null, aState);
-  aState.client.inspectObjectProperties(aResponse.result.actor, onInspect);
+  let client = new GripClient(aState.dbgClient, aResponse.result);
+  client.getPrototypeAndProperties(onInspect);
 }
 
 function onInspect(aState, aResponse)
 {
   ok(!aResponse.error, "no response error");
 
-  let expectedProps = [
-    { name: "ATTRIBUTE_NODE", value: 2 },
-    { name: "CDATA_SECTION_NODE", value: 4 },
-    { name: "COMMENT_NODE", value: 8 },
-    { name: "DOCUMENT_FRAGMENT_NODE", value: 11 },
-  ];
+  let expectedProps = {
+    "addBroadcastListenerFor": { value: { type: "object" } },
+    "commandDispatcher": { get: { type: "object" } },
+    "getBoxObjectFor": { value: { type: "object" } },
+    "getElementsByAttribute": { value: { type: "object" } },
+  };
 
-  let props = aResponse.properties;
+  let props = aResponse.ownProperties;
   ok(props, "response properties available");
 
   if (props) {
-    ok(props.length > expectedProps.length,
+    ok(Object.keys(props).length > Object.keys(expectedProps).length,
        "number of enumerable properties");
     checkObject(props, expectedProps);
   }

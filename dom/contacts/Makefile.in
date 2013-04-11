@@ -2,20 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH		= @DEPTH@
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH            = \
-  $(srcdir)        \
-  $(NULL)
+DEPTH     = @DEPTH@
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
 VPATH += $(srcdir)/fallback
-
-LIBRARY_NAME   = jsdomcontacts_s
-LIBXUL_LIBRARY = 1
-
 
 EXTRA_COMPONENTS =        \
   ContactManager.js       \
@@ -27,12 +21,4 @@ EXTRA_JS_MODULES =   \
   ContactDB.jsm      \
   $(NULL)
 
-# Add VPATH to LOCAL_INCLUDES so we are going to include the correct backend
-# subdirectory (and the ipc one).
-LOCAL_INCLUDES += $(VPATH:%=-I%)
-
-include $(topsrcdir)/config/config.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
-
-DEFINES += -D_IMPL_NS_LAYOUT

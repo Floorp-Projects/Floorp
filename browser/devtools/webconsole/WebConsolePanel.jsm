@@ -41,26 +41,52 @@ WebConsolePanel.prototype = {
   {
     let parentDoc = this._toolbox.doc;
     let iframe = parentDoc.getElementById("toolbox-panel-iframe-webconsole");
-    let promise;
+    iframe.className = "web-console-frame";
 
-    // Local debugging needs to make the target remote.
-    if (!this.target.isRemote) {
-      promise = this.target.makeRemote();
-    } else {
-      promise = Promise.resolve(this.target);
+    // Make sure the iframe content window is ready.
+    let deferredIframe = Promise.defer();
+    let win, doc;
+    if ((win = iframe.contentWindow) &&
+        (doc = win.document) &&
+        doc.readyState == "complete") {
+      deferredIframe.resolve(null);
+    }
+    else {
+      iframe.addEventListener("load", function onIframeLoad() {
+        iframe.removeEventListener("load", onIframeLoad, true);
+        deferredIframe.resolve(null);
+      }, true);
     }
 
-    return promise
-      .then(function(aTarget) {
+    // Local debugging needs to make the target remote.
+    let promiseTarget;
+    if (!this.target.isRemote) {
+      promiseTarget = this.target.makeRemote();
+    }
+    else {
+      promiseTarget = Promise.resolve(this.target);
+    }
+
+    // 1. Wait for the iframe to load.
+    // 2. Wait for the remote target.
+    // 3. Open the Web Console.
+    return deferredIframe.promise
+      .then(() => promiseTarget)
+      .then((aTarget) => {
         this._frameWindow._remoteTarget = aTarget;
-        return HUDService.openWebConsole(this.target, iframe);
-      }.bind(this))
-      .then(function onSuccess(aWebConsole) {
+
+        let webConsoleUIWindow = iframe.contentWindow.wrappedJSObject;
+        let chromeWindow = iframe.ownerDocument.defaultView;
+
+        return HUDService.openWebConsole(this.target, webConsoleUIWindow,
+                                         chromeWindow);
+      })
+      .then((aWebConsole) => {
         this.hud = aWebConsole;
         this._isReady = true;
         this.emit("ready");
         return this;
-      }.bind(this), function onError(aReason) {
+      }, (aReason) => {
         let msg = "WebConsolePanel open failed. " +
                   aReason.error + ": " + aReason.message;
         dump(msg + "\n");
@@ -80,9 +106,7 @@ WebConsolePanel.prototype = {
     }
 
     this._destroyer = this.hud.destroy();
-    this._destroyer.then(function() {
-      this.emit("destroyed");
-    }.bind(this));
+    this._destroyer.then(() => this.emit("destroyed"));
 
     return this._destroyer;
   },

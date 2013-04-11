@@ -300,19 +300,38 @@ IDBFactory::GetConnection(const nsAString& aDatabaseFilePath,
   rv = ss->OpenDatabaseWithFileURL(dbFileUrl, getter_AddRefs(connection));
   NS_ENSURE_SUCCESS(rv, nullptr);
 
-  // Turn on foreign key constraints and recursive triggers.
-  // The "INSERT OR REPLACE" statement doesn't fire the update trigger,
-  // instead it fires only the insert trigger. This confuses the update
-  // refcount function. This behavior changes with enabled recursive triggers,
-  // so the statement fires the delete trigger first and then the insert
-  // trigger.
-  rv = connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "PRAGMA foreign_keys = ON; "
-    "PRAGMA recursive_triggers = ON;"
-  ));
+  rv = SetDefaultPragmas(connection);
   NS_ENSURE_SUCCESS(rv, nullptr);
 
   return connection.forget();
+}
+
+// static
+nsresult
+IDBFactory::SetDefaultPragmas(mozIStorageConnection* aConnection)
+{
+  NS_ASSERTION(aConnection, "Null connection!");
+
+  static const char query[] =
+#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
+    // Switch the journaling mode to TRUNCATE to avoid changing the directory
+    // structure at the conclusion of every transaction for devices with slower
+    // file systems.
+    "PRAGMA journal_mode = TRUNCATE; "
+#endif
+    // We use foreign keys in lots of places.
+    "PRAGMA foreign_keys = ON; "
+    // The "INSERT OR REPLACE" statement doesn't fire the update trigger,
+    // instead it fires only the insert trigger. This confuses the update
+    // refcount function. This behavior changes with enabled recursive triggers,
+    // so the statement fires the delete trigger first and then the insert
+    // trigger.
+    "PRAGMA recursive_triggers = ON;";
+
+  nsresult rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(query));
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  return NS_OK;
 }
 
 inline

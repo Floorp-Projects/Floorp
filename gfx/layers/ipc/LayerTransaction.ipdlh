@@ -1,0 +1,341 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=8 et :
+ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include LayersSurfaces;
+include protocol PCompositable;
+include protocol PCompositor;
+include protocol PGrallocBuffer;
+include protocol PLayer;
+include protocol PRenderFrame;
+include protocol PTexture;
+
+include "mozilla/WidgetUtils.h";
+include "mozilla/TimeStamp.h";
+include "mozilla/dom/ScreenOrientation.h";
+include "nsCSSProperty.h";
+include "gfxipc/ShadowLayerUtils.h";
+
+using gfxPoint3D;
+using nscoord;
+using nsRect;
+using nsPoint;
+using mozilla::TimeDuration;
+using mozilla::TimeStamp;
+using mozilla::ScreenRotation;
+using nsCSSProperty;
+using mozilla::dom::ScreenOrientation;
+using mozilla::layers::CompositableType;
+using mozilla::gfx::Margin;
+
+namespace mozilla {
+namespace layers {
+
+struct TargetConfig {
+  nsIntRect naturalBounds;
+  ScreenRotation rotation;
+  nsIntRect clientBounds;
+  ScreenOrientation orientation;
+};
+
+// Create a shadow layer for |layer|
+struct OpCreateThebesLayer     { PLayer layer; };
+struct OpCreateContainerLayer  { PLayer layer; };
+struct OpCreateImageLayer      { PLayer layer; };
+struct OpCreateColorLayer      { PLayer layer; };
+struct OpCreateCanvasLayer     { PLayer layer; };
+struct OpCreateRefLayer        { PLayer layer; };
+
+struct OpAttachCompositable {
+  PLayer layer;
+  PCompositable compositable;
+};
+
+struct OpAttachAsyncCompositable {
+  PLayer layer;
+  uint64_t containerID;
+};
+
+struct ThebesBufferData {
+  nsIntRect rect;
+  nsIntPoint rotation;
+};
+
+struct CubicBezierFunction {
+  float x1;
+  float y1;
+  float x2;
+  float y2;
+};
+
+struct StepFunction {
+  int steps;
+  // 1 = nsTimingFunction::StepStart, 2 = nsTimingFunction::StepEnd
+  int type;
+};
+
+union TimingFunction {
+  CubicBezierFunction;
+  StepFunction;
+};
+
+struct LayerColor { gfxRGBA value; };
+struct Perspective { float value; };
+struct RotationX { float radians; };
+struct RotationY { float radians; };
+struct RotationZ { float radians; };
+struct Rotation { float radians; };
+struct Rotation3D {
+  float x;
+  float y;
+  float z;
+  float radians;
+};
+struct Scale {
+  float x;
+  float y;
+  float z;
+};
+struct SkewX { float x; };
+struct SkewY { float y; };
+struct TransformMatrix { gfx3DMatrix value; };
+struct Translation {
+  float x;
+  float y;
+  float z;
+};
+
+union TransformFunction {
+  Perspective;
+  RotationX;
+  RotationY;
+  RotationZ;
+  Rotation;
+  Rotation3D;
+  Scale;
+  SkewX;
+  SkewY;
+  Translation;
+  TransformMatrix;
+};
+
+union Animatable {
+  float;
+  TransformFunction[];
+};
+
+struct AnimationSegment {
+  Animatable startState;
+  Animatable endState;
+  float startPortion;
+  float endPortion;
+  TimingFunction sampleFn;
+};
+
+// Transforms need extra information to correctly convert the list of transform
+// functions to a gfx3DMatrix that can be applied directly to the layer.
+struct TransformData {
+  // the origin of the frame being transformed in app units
+  nsPoint origin;
+  // the -moz-transform-origin property for the transform in css pixels
+  gfxPoint3D mozOrigin;
+  // the -moz-perspective-origin property for the transform in css pixels
+  gfxPoint3D perspectiveOrigin;
+  nsRect bounds;
+  nscoord perspective;
+  int32_t appUnitsPerDevPixel;
+};
+
+union AnimationData {
+  null_t;
+  TransformData;
+};
+
+struct Animation {
+  // Unlike in nsAnimationManager, this start time is at the end of the
+  // delay.  If the delay is changed dynamically, the layer's data will
+  // be updated.
+  TimeStamp startTime;
+  TimeDuration duration;
+  // For each frame, the interpolation point is computed based on the
+  // startTime, the direction, the duration, and the current time.
+  // The segments must uniquely cover the portion from 0.0 to 1.0
+  AnimationSegment[] segments;
+  // How many times to repeat the animation.  < 0 means "forever".
+  float numIterations;
+  // This uses the NS_STYLE_ANIMATION_DIRECTION_* constants.
+  int32_t direction;
+  nsCSSProperty property;
+  AnimationData data;
+};
+
+// Change a layer's attributes
+struct CommonLayerAttributes {
+  nsIntRegion visibleRegion;
+  TransformMatrix transform;
+  float postXScale;
+  float postYScale;
+  uint32_t contentFlags;
+  float opacity;
+  bool useClipRect;
+  nsIntRect clipRect;
+  bool isFixedPosition;
+  gfxPoint fixedPositionAnchor;
+  Margin fixedPositionMargin;
+  nullable PLayer maskLayer;
+  // Animated colors will only honored for ColorLayers.
+  Animation[] animations;
+ };
+
+struct ThebesLayerAttributes {
+  nsIntRegion validRegion;
+};
+struct ContainerLayerAttributes {
+  FrameMetrics metrics;
+  float preXScale;
+  float preYScale;
+  float inheritedXScale;
+  float inheritedYScale;
+};
+struct ColorLayerAttributes     { LayerColor color; };
+struct CanvasLayerAttributes    { GraphicsFilterType filter; nsIntRect bounds; };
+struct RefLayerAttributes       { int64_t id; };
+struct ImageLayerAttributes     { GraphicsFilterType filter; };
+
+union SpecificLayerAttributes {
+  null_t;
+  ThebesLayerAttributes;
+  ContainerLayerAttributes;
+  ColorLayerAttributes;
+  CanvasLayerAttributes;
+  RefLayerAttributes;
+  ImageLayerAttributes;
+};
+
+struct LayerAttributes {
+  CommonLayerAttributes common;
+  SpecificLayerAttributes specific;
+};
+
+struct OpSetLayerAttributes {
+  PLayer layer;
+  LayerAttributes attrs;
+};
+
+// Monkey with the tree structure
+struct OpSetRoot          { PLayer root; };
+struct OpInsertAfter      { PLayer container; PLayer childLayer; PLayer after; };
+struct OpAppendChild      { PLayer container; PLayer childLayer; };
+struct OpRemoveChild      { PLayer container; PLayer childLayer; };
+struct OpRepositionChild  { PLayer container; PLayer childLayer; PLayer after; };
+struct OpRaiseToTopChild  { PLayer container; PLayer childLayer; };
+
+
+// Paint (buffer update)
+struct OpPaintTiledLayerBuffer {
+  PLayer layer;
+  // Bug 747811
+  // FIXME: We need to support sharing tile across process.
+  uintptr_t tiledLayerBuffer;
+};
+
+struct OpCreatedSingleBuffer {
+  PCompositable compositable;
+  PTexture buffer;
+  SurfaceDescriptor descriptor;
+};
+struct OpCreatedDoubleBuffer {
+  PCompositable compositable;
+  PTexture front;
+  SurfaceDescriptor frontDescriptor;
+  PTexture back;
+  SurfaceDescriptor backDescriptor;
+};
+
+struct OpDestroyThebesBuffer {
+  PCompositable compositable;
+};
+
+struct OpPaintTexture {
+  PTexture texture;
+  SurfaceDescriptor image;
+};
+
+struct OpPaintTextureRegion {
+  PCompositable compositable;
+  ThebesBufferData bufferData;
+  nsIntRegion updatedRegion;
+};
+
+struct OpUpdatePictureRect {
+  PCompositable compositable;
+  nsIntRect picture;
+};
+
+union CompositableOperation {
+  OpUpdatePictureRect;
+
+  OpCreatedSingleBuffer;
+  OpCreatedDoubleBuffer;
+  OpDestroyThebesBuffer;
+
+  OpPaintTexture;
+  OpPaintTextureRegion;
+};
+
+// A unit of a changeset; a set of these comprise a changeset
+union Edit {
+  OpCreateThebesLayer;
+  OpCreateContainerLayer;
+  OpCreateImageLayer;
+  OpCreateColorLayer;
+  OpCreateCanvasLayer;
+  OpCreateRefLayer;
+
+  OpSetLayerAttributes;
+
+  OpSetRoot;
+  OpInsertAfter;
+  OpAppendChild;
+  OpRemoveChild;
+  OpRepositionChild;
+  OpRaiseToTopChild;
+
+  OpAttachCompositable;
+  OpAttachAsyncCompositable;
+
+  OpPaintTiledLayerBuffer;
+  CompositableOperation;
+};
+
+
+// Replies to operations
+
+struct OpContentBufferSwap {
+  PCompositable compositable;
+  nsIntRegion frontUpdatedRegion;
+};
+
+struct OpTextureSwap {
+  PTexture texture;
+  SurfaceDescriptor image;
+};
+
+// Unit of a "changeset reply".  This is a weird abstraction, probably
+// only to be used for buffer swapping.
+union EditReply {
+  OpContentBufferSwap;
+  OpTextureSwap;
+};
+
+struct OpTextureReply {
+  PTexture texture;
+  SurfaceDescriptor image;
+};
+
+
+} // namespace
+} // namespace

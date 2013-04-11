@@ -5,46 +5,27 @@
 
 #include "nsISupports.idl"
 
-[scriptable, builtinclass, uuid(ede09623-d793-4355-9682-b3adfe307126)]
+[scriptable, builtinclass, uuid(73d23ad8-e77c-4079-b8c0-d71bf0ebc5b2)]
 interface nsIMemoryInfoDumper : nsISupports
 {
   /**
-   * DumpMemoryReportsToFile dumps the memory reports for this process and
-   * possibly our child processes (and their children, recursively) to a file in
-   * the tmp directory called memory-reports-<identifier>-<pid>.json.gz (or
-   * something similar, such as memory-reports-<identifier>-<pid>-1.json.gz; no
-   * existing file will be overwritten).
+   * This dumps gzipped memory reports for this process.  If a file of the
+   * given name exists, it will be overwritten.  Nothing is done for any child
+   * processes (and their children, recursively).  
    *
-   * @param aIdentifier this identifier will appear in the filename of our
-   *   about:memory dump and those of our children (if aDumpChildProcesses is
-   *   true).
-   *
-   *   If the identifier is empty, the dumpMemoryReportsToFile implementation
-   *   may set it arbitrarily and use that new value for its own dump and the
-   *   dumps of its child processes.  For example, the dumpMemoryReportsToFile
-   *   implementation may set |aIdentifier| to the number of seconds since the
-   *   epoch.
-   *
-   * @param aMinimizeMemoryUsage indicates whether we should run a series of
-   *   gc/cc's in an attempt to reduce our memory usage before collecting our
-   *   memory report.
-   *
-   * @param aDumpChildProcesses indicates whether we should call
-   *   dumpMemoryReportsToFile in our child processes.  If so, the child
-   *   processes will also dump their children, and so on.
-   *
+   * @param aFilename The output file.
    *
    * Sample output:
    *
    * {
    *   "hasMozMallocUsableSize":true,
    *   "reports": [
-   *     {"process":"", "path":"explicit/foo/bar", "kind":1, "units":0,
-   *      "amount":2000000, "description":"Foo bar."},
-   *     {"process":"", "path":"heap-allocated", "kind":1, "units":0,
-   *      "amount":3000000, "description":"Heap allocated."},
-   *     {"process":"", "path":"vsize", "kind":1, "units":0,
-   *      "amount":10000000, "description":"Vsize."}
+   *     {"process":"Main Process (pid 12345)", "path":"explicit/foo/bar",
+   *      "kind":1, "units":0, "amount":2000000, "description":"Foo bar."},
+   *     {"process":"Main Process (pid 12345)", "path":"heap-allocated",
+   *      "kind":1, "units":0, "amount":3000000, "description":"Heap allocated."},
+   *     {"process":"Main Process (pid 12345)", "path":"vsize",
+   *      "kind":1, "units":0, "amount":10000000, "description":"Vsize."}
    *   ]
    * }
    *
@@ -102,9 +83,41 @@ interface nsIMemoryInfoDumper : nsISupports
    *   }
    * }
    */
-  void dumpMemoryReportsToFile(in AString aIdentifier,
-                               in bool aMinimizeMemoryUsage,
-                               in bool aDumpChildProcesses);
+  void dumpMemoryReportsToNamedFile(in AString aFilename);
+
+  /**
+   * Similar to dumpMemoryReportsToNamedFile, this method dumps gzipped memory
+   * reports for this process and possibly our child processes (and their
+   * children, recursively) to a file in the tmp directory called
+   * memory-reports-<identifier>-<pid>.json.gz (or something similar, such as
+   * memory-reports-<identifier>-<pid>-1.json.gz; no existing file will be
+   * overwritten).
+   *
+   * If DMD is enabled, this method also dump gzipped DMD output to a file in
+   * the tmp directory called dmd-<identifier>-<pid>.txt.gz (or something
+   * similar; again, no existing file will be overwritten).
+   *
+   * @param aIdentifier this identifier will appear in the filename of our
+   *   about:memory dump and those of our children (if aDumpChildProcesses is
+   *   true).
+   *
+   *   If the identifier is empty, the implementation may set it arbitrarily
+   *   and use that new value for its own dump and the dumps of its child
+   *   processes.  For example, the implementation may set |aIdentifier| to the
+   *   number of seconds since the epoch.
+   *
+   * @param aMinimizeMemoryUsage indicates whether we should run a series of
+   *   gc/cc's in an attempt to reduce our memory usage before collecting our
+   *   memory report.
+   *
+   * @param aDumpChildProcesses indicates whether we should call
+   *   dumpMemoryInfoToTempDir in our child processes.  If
+   *   so, the child processes will also dump their children, and so on.
+   */
+  void dumpMemoryInfoToTempDir(
+    in AString aIdentifier,
+    in bool aMinimizeMemoryUsage,
+    in bool aDumpChildProcesses);
 
   /**
    * Dump GC and CC logs to files in the OS's temp directory (or in

@@ -33,7 +33,7 @@
   text-shadow: 0 -1px 0 hsla(210,8%,5%,.45);
   border: 1px solid hsla(211,68%,6%,.5);
   border-radius: 3px;
-  background: -moz-linear-gradient(hsla(209,13%,54%,.35), hsla(209,13%,54%,.1) 85%, hsla(209,13%,54%,.2)) padding-box;
+  background: linear-gradient(hsla(209,13%,54%,.35), hsla(209,13%,54%,.1) 85%, hsla(209,13%,54%,.2)) padding-box;
   box-shadow: 0 1px 0 hsla(209,29%,72%,.15) inset, 0 0 0 1px hsla(209,29%,72%,.1) inset, 0 0 0 1px hsla(209,29%,72%,.1), 0 1px 0 hsla(210,16%,76%,.1);
   margin: 0;
   -moz-margin-end: 3px;
@@ -64,7 +64,7 @@
 
 .devtools-toolbarbutton:not([checked=true]):hover:active {
   background-color: hsla(210,18%,9%,.1);
-  background-image: -moz-linear-gradient(hsla(209,13%,54%,.35), hsla(209,13%,54%,.1) 85%, hsla(209,13%,54%,.2));
+  background-image: linear-gradient(hsla(209,13%,54%,.35), hsla(209,13%,54%,.1) 85%, hsla(209,13%,54%,.2));
   box-shadow: 0 1px 3px hsla(211,68%,6%,.5) inset, 0 0 0 1px hsla(209,29%,72%,.1), 0 1px 0 hsla(210,16%,76%,.1);
 }
 
@@ -72,7 +72,7 @@
 .devtools-toolbarbutton[open=true],
 .devtools-toolbarbutton[checked=true] {
   border-color: hsla(211,68%,6%,.6);
-  background: -moz-linear-gradient(hsla(211,68%,6%,.1), hsla(211,68%,6%,.2));
+  background: linear-gradient(hsla(211,68%,6%,.1), hsla(211,68%,6%,.2));
   box-shadow: 0 1px 3px hsla(211,68%,6%,.5) inset, 0 0 0 1px hsla(209,29%,72%,.1), 0 1px 0 hsla(210,16%,76%,.1);
 }
 
@@ -147,7 +147,7 @@
   box-shadow: inset 0 1px 0 hsla(211,68%,6%,.05), 0 0 0 1px hsla(210,40%,83%,.1);
   border-radius: 2px;
   background-color: transparent;
-  background-image: -moz-linear-gradient(hsla(210,16%,76%,.15), hsla(210,16%,76%,.35));
+  background-image: linear-gradient(hsla(210,16%,76%,.15), hsla(210,16%,76%,.35));
   padding: 3px;
   transition-property: background-color, border-color, box-shadow;
   transition-duration: 150ms;
@@ -156,7 +156,7 @@
 }
 
 .devtools-searchinput {
-  background-image: url(magnifying-glass.png), -moz-linear-gradient(hsla(210,16%,76%,.15), hsla(210,16%,76%,.35));
+  background-image: url(magnifying-glass.png), linear-gradient(hsla(210,16%,76%,.15), hsla(210,16%,76%,.35));
   background-repeat: no-repeat;
   background-position: 4px center, top left, top left;
   padding-top: 0;
@@ -189,7 +189,7 @@
 .devtools-no-search-result {
   box-shadow: inset 0 0 0 1px hsla(0,68%,6%,.35);
   border-color: hsl(10,70%,40%) hsl(10,75%,37%) hsl(10,80%,35%) !important;
-  background-image: url(magnifying-glass.png), -moz-linear-gradient(hsla(1,16%,76%,.45), hsla(1,16%,76%,.75));
+  background-image: url(magnifying-glass.png), linear-gradient(hsla(1,16%,76%,.45), hsla(1,16%,76%,.75));
 }
 
 /* Close button */

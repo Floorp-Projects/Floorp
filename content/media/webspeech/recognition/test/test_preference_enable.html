@@ -17,20 +17,26 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=650295
 </div>
 <pre id="test">
 <script type="text/javascript">
-  SpecialPowers.setBoolPref("media.webspeech.recognition.enable", false);
+  SimpleTest.waitForExplicitFinish();
 
-  var objects = [
-    "SpeechRecognition",
-    "SpeechGrammar",
-    "SpeechRecognitionResult",
-    "SpeechRecognitionResultList",
-    "SpeechRecognitionAlternative"
-  ];
+  SpecialPowers.pushPrefEnv({
+    set: [["media.webspeech.recognition.enable", false]]
+  }, function() {
+    var objects = [
+      "SpeechRecognition",
+      "SpeechGrammar",
+      "SpeechRecognitionResult",
+      "SpeechRecognitionResultList",
+      "SpeechRecognitionAlternative"
+    ];
 
-  for (var i = 0; i < objects.length; i++) {
-    is(window[objects[i]], undefined,
-       objects[i] + " should be undefined with pref off");
-  }
+    for (var i = 0; i < objects.length; i++) {
+      is(window[objects[i]], undefined,
+         objects[i] + " should be undefined with pref off");
+    }
+
+    SimpleTest.finish();
+  });
 </script>
 </pre>
 </body>

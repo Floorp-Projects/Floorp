@@ -135,10 +135,10 @@
 }
 
 .requests-menu-timings-total {
-  -moz-padding-start: 4px;
+  -moz-padding-start: 8px;
   font-size: 85%;
   font-weight: 600;
-  transform-origin: -4px center; /* negative cap size */
+  transform-origin: left center;
 }
 
 .requests-menu-timings-cap {
@@ -205,11 +205,6 @@
   background-color: rgba(255,255,255,1.0);
   box-shadow: 0 0 8px 0 rgba(128,255,255,1.0),
               0 0 4px 0 rgba(255,255,255,1.0) inset;
-}
-
-.side-menu-widget-container,
-.side-menu-widget-item-or-group {
-  box-shadow: none !important;
 }
 
 .side-menu-widget-item:nth-child(even) {

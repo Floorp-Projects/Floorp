@@ -53,12 +53,10 @@
  0xa6cf90f5, 0x15b3, 0x11d2,                      \
  {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
 
-#ifdef MOZ_MEDIA
 #define NS_HTMLAUDIOELEMENT_CID                   \
 { /* 1d40026b-4c44-4f6f-b158-26bb5e9c65e9 */      \
  0x1d40026b, 0x4c44, 0x4f6f,                      \
  {0xb1, 0x58, 0x26, 0xbb, 0x5e, 0x9c, 0x65, 0xe9}}
-#endif
 
 #define NS_NAMESPACEMANAGER_CID                   \
 { /* d9783472-8fe9-11d2-9d3c-0060088f9ff7 */      \
@@ -151,14 +149,10 @@
   0xb7f44954, 0x11d1, 0x11b2,                     \
   {0x8c, 0x2e, 0xc2, 0xfe, 0xab, 0x41, 0x86, 0xbc}}
 
-#ifdef MOZ_MEDIA
-
 // {d899a152-9412-46b2-b651-2e71c5c2f05f}
 #define NS_VIDEODOCUMENT_CID   \
 { 0xd899a152, 0x9412, 0x46b2,  \
   { 0xb6, 0x51, 0x2e, 0x71, 0xc5, 0xc2, 0xf0, 0x5f } }
-
-#endif
 
 #define NS_EVENTLISTENERSERVICE_CID                 \
  { /* baa34652-f1f1-4185-b224-244ee82a413a */       \

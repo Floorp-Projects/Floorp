@@ -247,7 +247,7 @@ BreakpointSite::recompile(FreeOp *fop)
 
 #ifdef JS_ION
     if (script->hasBaselineScript())
-        script->baseline->toggleDebugTraps(script, pc);
+        script->baselineScript()->toggleDebugTraps(script, pc);
 #endif
 }
 
@@ -4779,6 +4779,14 @@ DebuggerObject_unwrap(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+static JSBool
+DebuggerObject_unsafeDereference(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_DEBUGOBJECT_REFERENT(cx, argc, vp, "unsafeDereference", args, referent);
+    args.rval().setObject(*referent);
+    return cx->compartment->wrap(cx, args.rval());
+}
+
 static JSPropertySpec DebuggerObject_properties[] = {
     JS_PSG("proto", DebuggerObject_getProto, 0),
     JS_PSG("class", DebuggerObject_getClass, 0),
@@ -4810,6 +4818,7 @@ static JSFunctionSpec DebuggerObject_methods[] = {
     JS_FN("evalInGlobal", DebuggerObject_evalInGlobal, 1, 0),
     JS_FN("evalInGlobalWithBindings", DebuggerObject_evalInGlobalWithBindings, 2, 0),
     JS_FN("unwrap", DebuggerObject_unwrap, 0, 0),
+    JS_FN("unsafeDereference", DebuggerObject_unsafeDereference, 0, 0),
     JS_FS_END
 };
 

@@ -108,6 +108,14 @@ this.ViewHelpers = {
    *        The element representing the pane to toggle.
    */
   togglePane: function VH_togglePane(aFlags, aPane) {
+    // Hiding is always handled via margins, not the hidden attribute.
+    aPane.removeAttribute("hidden");
+
+    // Add a class to the pane to handle min-widths, margins and animations.
+    if (!aPane.classList.contains("generic-toggled-side-pane")) {
+      aPane.classList.add("generic-toggled-side-pane");
+    }
+
     // Avoid useless toggles.
     if (aFlags.visible == !aPane.hasAttribute("pane-collapsed")) {
       if (aFlags.callback) aFlags.callback();
@@ -139,14 +147,6 @@ this.ViewHelpers = {
         if (aFlags.callback) aFlags.callback();
       }
     }
-
-    // Add a class to the pane to handle min-widths, margins and animations.
-    if (!aPane.classList.contains("generic-toggled-side-pane")) {
-      aPane.classList.add("generic-toggled-side-pane");
-    }
-
-    // Hiding is always handled via margins, not the hidden attribute.
-    aPane.removeAttribute("hidden");
 
     // The "animated" attributes enables animated toggles (slide in-out).
     if (aFlags.animated) {

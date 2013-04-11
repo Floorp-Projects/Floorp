@@ -99,15 +99,14 @@ LinuxDumper::ElfFileIdentifierForMapping(const MappingInfo& mapping,
 
   // Special-case linux-gate because it's not a real file.
   if (my_strcmp(mapping.name, kLinuxGateLibraryName) == 0) {
-    const uintptr_t kPageSize = getpagesize();
     void* linux_gate = NULL;
     if (pid_ == sys_getpid()) {
       linux_gate = reinterpret_cast<void*>(mapping.start_addr);
     } else {
-      linux_gate = allocator_.Alloc(kPageSize);
+      linux_gate = allocator_.Alloc(mapping.size);
       CopyFromProcess(linux_gate, pid_,
                       reinterpret_cast<const void*>(mapping.start_addr),
-                      kPageSize);
+                      mapping.size);
     }
     return FileID::ElfFileIdentifierFromMappedFile(linux_gate, identifier);
   }

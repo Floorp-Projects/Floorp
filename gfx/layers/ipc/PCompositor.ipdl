@@ -8,12 +8,15 @@
 include LayersSurfaces;
 include protocol PGrallocBuffer;
 include protocol PLayers;
+include "mozilla/layers/CompositorTypes.h";
 
-using mozilla::layers::LayersBackend;
 using mozilla::null_t;
+using mozilla::layers::TextureFactoryIdentifier;
+using mozilla::layers::LayersBackend;
 
 namespace mozilla {
 namespace layers {
+
 
 /**
  * The PCompositor protocol is used to manage communication between
@@ -24,14 +27,10 @@ namespace layers {
 // for Bug 716631.
 rpc protocol PCompositor
 {
-  manages PGrallocBuffer;
   // A Compositor manages a single Layer Manager (PLayers)
   manages PLayers;
 
-parent:  
-
-  // Release disposable memory. This will clear the tile store (stale tiles).
-  async MemoryPressure();
+parent:
 
   // The child is about to be destroyed, so perform any necessary cleanup.
   sync WillStop();
@@ -54,12 +53,8 @@ parent:
   sync MakeSnapshot(SurfaceDescriptor inSnapshot)
     returns (SurfaceDescriptor outSnapshot);
 
-  sync PLayers(LayersBackend backendHint, uint64_t id)
-    returns (LayersBackend backend, int32_t maxTextureSize);
-
-  // FIXME/bug 783451
-  sync PGrallocBuffer(gfxIntSize size, uint32_t format, uint32_t usage)
-    returns (MaybeMagicGrallocBufferHandle handle);
+  sync PLayers(LayersBackend layersBackendHint, uint64_t id)
+    returns (TextureFactoryIdentifier textureFactoryIdentifier);
 };
 
 } // layers

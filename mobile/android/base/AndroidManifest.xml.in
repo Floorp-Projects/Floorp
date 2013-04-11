@@ -71,7 +71,7 @@
 		 android:debuggable="true">
 #endif
 
-        <activity android:name="App"
+        <activity android:name=".App"
                   android:label="@MOZ_APP_DISPLAYNAME@"
                   android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize"
                   android:windowSoftInputMode="stateUnspecified|adjustResize"
@@ -142,7 +142,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".WebApp"
+        <activity android:name="org.mozilla.gecko.WebApp"
                   android:label="@string/webapp_generic_name"
                   android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize"
                   android:windowSoftInputMode="stateUnspecified|adjustResize"
@@ -186,7 +186,7 @@
             </intent-filter>
         </receiver>
 
-        <activity android:name="Restarter"
+        <activity android:name="org.mozilla.gecko.Restarter"
                   android:process="@ANDROID_PACKAGE_NAME@Restarter"
                   android:theme="@style/Gecko">
           <intent-filter>
@@ -199,7 +199,7 @@
 #include ../services/manifests/SyncAndroidManifest_activities.xml.in
 
 #if MOZ_CRASHREPORTER
-  <activity android:name="CrashReporter"
+  <activity android:name="org.mozilla.gecko.CrashReporter"
             android:label="@string/crash_reporter_title"
             android:icon="@drawable/crash_reporter"
             android:theme="@style/Gecko"
@@ -209,17 +209,6 @@
           </intent-filter>
 	</activity>
 #endif
-
-        <!-- Bug 715260: Hiding Webapps support
-        <activity android:name="LauncherShortcuts"
-                  android:label="@string/launcher_shortcuts_title"
-                  android:theme="@style/Gecko.Translucent">
-            <intent-filter>
-                <action android:name="android.intent.action.CREATE_SHORTCUT" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
-        -->
 
         <activity android:name="org.mozilla.gecko.VideoPlayer"
                   android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation"
@@ -240,7 +229,7 @@
                   android:configChanges="orientation|screenSize"
                   android:excludeFromRecents="true"/>
 
-        <provider android:name="@ANDROID_PACKAGE_NAME@.db.BrowserProvider"
+        <provider android:name="org.mozilla.gecko.db.BrowserProvider"
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.browser"
                   android:permission="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER">
 
@@ -255,17 +244,17 @@
           Fennec versions into the same process. (Bug 749727.)
           Process name is a mangled version to avoid a Talos bug. (Bug 750548.)
           -->
-        <provider android:name="@ANDROID_PACKAGE_NAME@.db.PasswordsProvider"
+        <provider android:name="org.mozilla.gecko.db.PasswordsProvider"
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.passwords"
                   android:permission="@ANDROID_PACKAGE_NAME@.permissions.PASSWORD_PROVIDER"
                   android:process="@MANGLED_ANDROID_PACKAGE_NAME@.PasswordsProvider"/>
 
-        <provider android:name="@ANDROID_PACKAGE_NAME@.db.FormHistoryProvider"
+        <provider android:name="org.mozilla.gecko.db.FormHistoryProvider"
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.formhistory"
                   android:permission="@ANDROID_PACKAGE_NAME@.permissions.FORMHISTORY_PROVIDER"
                   android:protectionLevel="signature"/>
 
-        <provider android:name="@ANDROID_PACKAGE_NAME@.db.TabsProvider"
+        <provider android:name="org.mozilla.gecko.db.TabsProvider"
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.tabs"
                   android:permission="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"/>
 

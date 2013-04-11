@@ -22,7 +22,7 @@ function test() {
   const tab3URL = "data:text/html;charset=utf8,<title>3</title><p>3</p>";
 
   let panelDoc;
-
+  let tab1Selected = false;
   let registeredTabs = {};
   let readyTabs = {};
 
@@ -63,24 +63,27 @@ function test() {
       });
 
       panel.sidebar.once("tab1-ready", function(event) {
+        info(event);
         readyTabs.tab1 = true;
-        if (readyTabs.tab1 && readyTabs.tab2 && readyTabs.tab3) {
-          allTabsReady(panel);
-        }
+        allTabsReady(panel);
       });
 
       panel.sidebar.once("tab2-ready", function(event) {
+        info(event);
         readyTabs.tab2 = true;
-        if (readyTabs.tab1 && readyTabs.tab2 && readyTabs.tab3) {
-          allTabsReady(panel);
-        }
+        allTabsReady(panel);
       });
 
       panel.sidebar.once("tab3-ready", function(event) {
+        info(event);
         readyTabs.tab3 = true;
-        if (readyTabs.tab1 && readyTabs.tab2 && readyTabs.tab3) {
-          allTabsReady(panel);
-        }
+        allTabsReady(panel);
+      });
+
+      panel.sidebar.once("tab1-selected", function(event) {
+        info(event);
+        tab1Selected = true;
+        allTabsReady(panel);
       });
 
       panel.sidebar.addTab("tab1", tab1URL, true);
@@ -92,6 +95,10 @@ function test() {
   });
 
   function allTabsReady(panel) {
+    if (!tab1Selected || !readyTabs.tab1 || !readyTabs.tab2 || !readyTabs.tab3) {
+      return;
+    }
+
     ok(registeredTabs.tab1, "tab1 registered");
     ok(registeredTabs.tab2, "tab2 registered");
     ok(registeredTabs.tab3, "tab3 registered");

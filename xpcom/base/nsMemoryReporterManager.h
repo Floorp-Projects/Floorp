@@ -23,9 +23,14 @@ public:
   virtual ~nsMemoryReporterManager();
 
 private:
+  nsresult RegisterReporterHelper(nsIMemoryReporter *reporter, bool aForce);
+  nsresult RegisterMultiReporterHelper(nsIMemoryMultiReporter *reporter,
+                                       bool aForce);
+
   nsTHashtable<nsISupportsHashKey> mReporters;
   nsTHashtable<nsISupportsHashKey> mMultiReporters;
   Mutex mMutex;
+  bool mIsRegistrationBlocked;
 };
 
 #define NS_MEMORY_REPORTER_MANAGER_CID \

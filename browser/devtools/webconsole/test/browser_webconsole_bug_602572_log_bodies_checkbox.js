@@ -20,7 +20,6 @@ function test()
     browser.removeEventListener(aEvent.type, onLoad1, true);
 
     openConsole(null, function(aHud) {
-      info("iframe1 height " + aHud.iframe.clientHeight);
       info("iframe1 root height " + aHud.ui.rootElement.clientHeight);
 
       // open tab 2
@@ -31,7 +30,6 @@ function test()
         browser.removeEventListener(aEvent.type, onLoad2, true);
 
         openConsole(null, function(aHud) {
-          info("iframe2 height " + aHud.iframe.clientHeight);
           info("iframe2 root height " + aHud.ui.rootElement.clientHeight);
           waitForFocus(startTest, aHud.iframeWindow);
         });
@@ -115,7 +113,6 @@ function onpopupshown2b(aEvent)
       let hudId1 = HUDService.getHudIdByWindow(win1);
       huds[0] = HUDService.hudReferences[hudId1];
 
-      info("iframe1 height " + huds[0].iframe.clientHeight);
       info("iframe1 root height " + huds[0].ui.rootElement.clientHeight);
 
       menuitems[0] = huds[0].ui.rootElement.querySelector("#saveBodies");

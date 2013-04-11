@@ -6,4 +6,5 @@ IPDLSRCS = \
   SmsTypes.ipdlh \
   PSms.ipdl \
   PSmsRequest.ipdl \
+  PMobileMessageCursor.ipdl \
   $(NULL)

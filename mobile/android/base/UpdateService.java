@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.updater;
 
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.R;
 
 import org.mozilla.apache.commons.codec.binary.Hex;
@@ -28,17 +29,17 @@ import android.net.Uri;
 import android.os.Environment;
 import android.util.Log;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Proxy;
 import java.net.ProxySelector;
 import java.net.URL;
 import java.net.URLConnection;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.security.MessageDigest;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
@@ -137,8 +138,8 @@ public class UpdateService extends IntentService {
         int interval;
         if (isRetry) {
             interval = INTERVAL_RETRY;
-        } else if (UpdateServiceHelper.UPDATE_CHANNEL.equals("nightly") ||
-                   UpdateServiceHelper.UPDATE_CHANNEL.equals("aurora")) {
+        } else if (AppConstants.MOZ_UPDATE_CHANNEL.equals("nightly") ||
+                   AppConstants.MOZ_UPDATE_CHANNEL.equals("aurora")) {
             interval = INTERVAL_SHORT;
         } else {
             interval = INTERVAL_LONG;

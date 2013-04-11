@@ -21,7 +21,7 @@ h1 {
   padding: 3px 10px;
   vertical-align: bottom;
   margin: 0px;
-  background: -moz-linear-gradient(top, #BBB, #999);
+  background: linear-gradient(#BBB, #999);
   border-radius: 2px;
   text-shadow: #FFF 0px 1px 0px;
 }
@@ -37,7 +37,7 @@ h1 .info {
 
 .property-table {
   padding: 2px 5px;
-  background: -moz-linear-gradient(top, #FFF, #F8F8F8);
+  background: linear-gradient(#FFF, #F8F8F8);
   color: #333;
   width: 100%;
   max-height: 330px;

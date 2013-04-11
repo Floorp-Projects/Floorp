@@ -11,9 +11,14 @@ import copy
 import errno
 import hashlib
 import os
+import sys
 
 from StringIO import StringIO
 
+if sys.version_info[0] == 3:
+    str_type = str
+else:
+    str_type = basestring
 
 def hash_file(path):
     """Hashes a file specified by the path given and returns the hex digest."""
@@ -212,3 +217,79 @@ def resolve_target_to_make(topobjdir, target):
 
         target = os.path.join(os.path.basename(reldir), target)
         reldir = os.path.dirname(reldir)
+
+class MozbuildDeletionError(Exception):
+    pass
+
+class HierarchicalStringList(object):
+    """A hierarchy of lists of strings.
+
+    Each instance of this object contains a list of strings, which can be set or
+    appended to. A sub-level of the hierarchy is also an instance of this class,
+    can be added by appending to an attribute instead.
+
+    For example, the moz.build variable EXPORTS is an instance of this class. We
+    can do:
+
+    EXPORTS += ['foo.h']
+    EXPORTS.mozilla.dom += ['bar.h']
+
+    In this case, we have 3 instances (EXPORTS, EXPORTS.mozilla, and
+    EXPORTS.mozilla.dom), and the first and last each have one element in their
+    list.
+    """
+    __slots__ = ('_strings', '_children')
+
+    def __init__(self):
+        self._strings = []
+        self._children = {}
+
+    def get_children(self):
+        return self._children
+
+    def get_strings(self):
+        return self._strings
+
+    def __setattr__(self, name, value):
+        if name in self.__slots__:
+            return object.__setattr__(self, name, value)
+
+        # __setattr__ can be called with a list when a simple assignment is
+        # used:
+        #
+        # EXPORTS.foo = ['file.h']
+        #
+        # In this case, we need to overwrite foo's current list of strings.
+        #
+        # However, __setattr__ is also called with a HierarchicalStringList
+        # to try to actually set the attribute. We want to ignore this case,
+        # since we don't actually create an attribute called 'foo', but just add
+        # it to our list of children (using _get_exportvariable()).
+        exports = self._get_exportvariable(name)
+        if not isinstance(value, HierarchicalStringList):
+            exports._check_list(value)
+            exports._strings = value
+
+    def __getattr__(self, name):
+        if name.startswith('__'):
+            return object.__getattr__(self, name)
+        return self._get_exportvariable(name)
+
+    def __delattr__(self, name):
+        raise MozbuildDeletionError('Unable to delete attributes for this object')
+
+    def __iadd__(self, other):
+        self._check_list(other)
+        self._strings += other
+        return self
+
+    def _get_exportvariable(self, name):
+        return self._children.setdefault(name, HierarchicalStringList())
+
+    def _check_list(self, value):
+        if not isinstance(value, list):
+            raise ValueError('Expected a list of strings, not %s' % type(value))
+        for v in value:
+            if not isinstance(v, str_type):
+                raise ValueError(
+                    'Expected a list of strings, not an element of %s' % type(v))

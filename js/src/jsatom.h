@@ -239,21 +239,6 @@ template <AllowGC allowGC>
 inline JSAtom *
 ToAtom(JSContext *cx, const js::Value &v);
 
-template <AllowGC allowGC>
-bool
-InternNonIntElementId(JSContext *cx, JSObject *obj, const Value &idval,
-                      typename MaybeRooted<jsid, allowGC>::MutableHandleType idp,
-                      typename MaybeRooted<Value, allowGC>::MutableHandleType vp);
-
-template <AllowGC allowGC>
-inline bool
-InternNonIntElementId(JSContext *cx, JSObject *obj, const Value &idval,
-                      typename MaybeRooted<jsid, allowGC>::MutableHandleType idp)
-{
-    typename MaybeRooted<Value, allowGC>::RootType dummy(cx);
-    return InternNonIntElementId<allowGC>(cx, obj, idval, idp, &dummy);
-}
-
 template<XDRMode mode>
 bool
 XDRAtom(XDRState<mode> *xdr, js::MutableHandleAtom atomp);

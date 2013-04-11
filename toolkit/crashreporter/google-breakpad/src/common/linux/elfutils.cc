@@ -75,6 +75,35 @@ void FindElfClassSection(const char *elf_base,
   }
 }
 
+template<typename ElfClass>
+void FindElfClassSegment(const char *elf_base,
+                         typename ElfClass::Word segment_type,
+                         const void **segment_start,
+                         int *segment_size) {
+  typedef typename ElfClass::Ehdr Ehdr;
+  typedef typename ElfClass::Phdr Phdr;
+
+  assert(elf_base);
+  assert(segment_start);
+  assert(segment_size);
+
+  assert(my_strncmp(elf_base, ELFMAG, SELFMAG) == 0);
+
+  const Ehdr* elf_header = reinterpret_cast<const Ehdr*>(elf_base);
+  assert(elf_header->e_ident[EI_CLASS] == ElfClass::kClass);
+
+  const Phdr* phdrs =
+    GetOffset<ElfClass,Phdr>(elf_header, elf_header->e_phoff);
+
+  for (int i = 0; i < elf_header->e_phnum; ++i) {
+    if (phdrs[i].p_type == segment_type) {
+      *segment_start = elf_base + phdrs[i].p_offset;
+      *segment_size = phdrs[i].p_filesz;
+      return;
+    }
+  }
+}
+
 }  // namespace
 
 bool IsValidElf(const void* elf_base) {
@@ -121,6 +150,42 @@ bool FindElfSection(const void *elf_mapped_base,
     FindElfClassSection<ElfClass64>(elf_base, section_name, section_type,
                                     section_start, section_size);
     return *section_start != NULL;
+  }
+
+  return false;
+}
+
+bool FindElfSegment(const void *elf_mapped_base,
+                    uint32_t segment_type,
+                    const void **segment_start,
+                    int *segment_size,
+                    int *elfclass) {
+  assert(elf_mapped_base);
+  assert(segment_start);
+  assert(segment_size);
+
+  *segment_start = NULL;
+  *segment_size = 0;
+
+  if (!IsValidElf(elf_mapped_base))
+    return false;
+
+  int cls = ElfClass(elf_mapped_base);
+  if (elfclass) {
+    *elfclass = cls;
+  }
+
+  const char* elf_base =
+    static_cast<const char*>(elf_mapped_base);
+
+  if (cls == ELFCLASS32) {
+    FindElfClassSegment<ElfClass32>(elf_base, segment_type,
+                                    segment_start, segment_size);
+    return *segment_start != NULL;
+  } else if (cls == ELFCLASS64) {
+    FindElfClassSegment<ElfClass64>(elf_base, segment_type,
+                                    segment_start, segment_size);
+    return *segment_start != NULL;
   }
 
   return false;

@@ -7,6 +7,8 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.util.ThreadUtils;
 
+import org.json.JSONObject;
+
 import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -18,23 +20,22 @@ import android.os.Looper;
 import android.util.Base64;
 import android.util.Log;
 
-import org.json.JSONObject;
-
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.InputStreamReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
-import java.util.regex.Pattern;
 import java.util.UUID;
+import java.util.Locale;
+import java.util.regex.Pattern;
 
 public final class ANRReporter extends BroadcastReceiver
 {
@@ -207,9 +208,9 @@ public final class ANRReporter extends BroadcastReceiver
             // Regex for finding our package name in the traces file
             Pattern pkgPattern = Pattern.compile(Pattern.quote(pkgName) + END_OF_PACKAGE_NAME);
             Pattern mangledPattern = null;
-            if (!GeckoAppInfo.getMangledPackageName().equals(pkgName)) {
+            if (!AppConstants.MANGLED_ANDROID_PACKAGE_NAME.equals(pkgName)) {
                 mangledPattern = Pattern.compile(Pattern.quote(
-                    GeckoAppInfo.getMangledPackageName()) + END_OF_PACKAGE_NAME);
+                    AppConstants.MANGLED_ANDROID_PACKAGE_NAME) + END_OF_PACKAGE_NAME);
             }
             if (DEBUG) {
                 Log.d(LOGTAG, "trying to match package: " + pkgName);
@@ -273,6 +274,12 @@ public final class ANRReporter extends BroadcastReceiver
         return 0L;
     }
 
+    private static String getLocale() {
+        // Having a different locale than system locale is not
+        // supported right now; assume we are using the system locale
+        return Locale.getDefault().toString().replace('_', '-');
+    }
+
     /*
         a saved telemetry ping file consists of JSON in the following format,
             {
@@ -329,15 +336,16 @@ public final class ANRReporter extends BroadcastReceiver
             "}," +
             "\"info\":{" +
                 "\"reason\":\"android-anr-report\"," +
-                "\"OS\":" + JSONObject.quote(GeckoAppInfo.getOS()) + "," +
+                "\"OS\":" + JSONObject.quote(AppConstants.OS_TARGET) + "," +
                 "\"version\":\"" + String.valueOf(Build.VERSION.SDK_INT) + "\"," +
-                "\"appID\":" + JSONObject.quote(GeckoAppInfo.getID()) + "," +
-                "\"appVersion\":" + JSONObject.quote(GeckoAppInfo.getVersion()) + "," +
-                "\"appName\":" + JSONObject.quote(GeckoAppInfo.getName()) + "," +
-                "\"appBuildID\":" + JSONObject.quote(GeckoAppInfo.getBuildID()) + "," +
-                "\"appUpdateChannel\":" + JSONObject.quote(GeckoAppInfo.getUpdateChannel()) + "," +
-                "\"platformBuildID\":" + JSONObject.quote(GeckoAppInfo.getPlatformBuildID()) + "," +
-                "\"locale\":" + JSONObject.quote(GeckoAppInfo.getLocale()) + "," +
+                "\"appID\":" + JSONObject.quote(AppConstants.MOZ_APP_ID) + "," +
+                "\"appVersion\":" + JSONObject.quote(AppConstants.MOZ_APP_VERSION)+ "," +
+                "\"appName\":" + JSONObject.quote(AppConstants.MOZ_APP_BASENAME) + "," +
+                "\"appBuildID\":" + JSONObject.quote(AppConstants.MOZ_APP_BUILDID) + "," +
+                "\"appUpdateChannel\":" + JSONObject.quote(AppConstants.MOZ_UPDATE_CHANNEL) + "," +
+                // Technically the platform build ID may be different, but we'll never know
+                "\"platformBuildID\":" + JSONObject.quote(AppConstants.MOZ_APP_BUILDID) + "," +
+                "\"locale\":" + JSONObject.quote(getLocale()) + "," +
                 "\"cpucount\":" + String.valueOf(Runtime.getRuntime().availableProcessors()) + "," +
                 "\"memsize\":" + String.valueOf(getTotalMem()) + "," +
                 "\"arch\":" + JSONObject.quote(System.getProperty("os.arch")) + "," +

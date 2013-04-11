@@ -9,7 +9,7 @@ function test() {
   initNetMonitor(SIMPLE_SJS).then(([aTab, aDebuggee, aMonitor]) => {
     info("Starting test... ");
 
-    let { NetMonitorView } = aMonitor.panelWin;
+    let { L10N, NetMonitorView } = aMonitor.panelWin;
     let { RequestsMenu } = NetMonitorView;
 
     RequestsMenu.lazyUpdate = false;
@@ -148,7 +148,8 @@ function test() {
         "The headersSize attachment has an incorrect value.");
 
       verifyRequestItemTarget(requestItem, "GET", SIMPLE_SJS, {
-        status: "200"
+        status: "200",
+        statusText: "Och Aye"
       });
     });
 
@@ -162,7 +163,8 @@ function test() {
 
       verifyRequestItemTarget(requestItem, "GET", SIMPLE_SJS, {
         type: "plain",
-        size: "0.01kb"
+        fullMimeType: "text/plain; charset=utf-8",
+        size: L10N.getFormatStr("networkMenu.sizeKB", 0.01),
       });
     });
 
@@ -180,7 +182,8 @@ function test() {
 
       verifyRequestItemTarget(requestItem, "GET", SIMPLE_SJS, {
         type: "plain",
-        size: "0.01kb"
+        fullMimeType: "text/plain; charset=utf-8",
+        size: L10N.getFormatStr("networkMenu.sizeKB", 0.01),
       });
     });
 

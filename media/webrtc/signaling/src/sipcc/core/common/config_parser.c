@@ -91,8 +91,6 @@ boolean is_cfgid_in_restart_list(int cfgid) {
         (cfgid >= CFGID_LINE_RING_SETTING_IDLE && cfgid < (CFGID_LINE_RING_SETTING_IDLE + MAX_CONFIG_LINES)) ||
         (cfgid >= CFGID_LINE_RING_SETTING_ACTIVE && cfgid < (CFGID_LINE_RING_SETTING_ACTIVE + MAX_CONFIG_LINES)) ||
         (cfgid >= CFGID_LINE_CONTACT && cfgid < (CFGID_LINE_CONTACT + MAX_CONFIG_LINES)) ||
-        (cfgid >= CFGID_LINE_MAXNUMCALLS && cfgid < (CFGID_LINE_MAXNUMCALLS + MAX_CONFIG_LINES)) ||
-        (cfgid >= CFGID_LINE_BUSY_TRIGGER && cfgid < (CFGID_LINE_BUSY_TRIGGER + MAX_CONFIG_LINES)) ||
         (cfgid >= CFGID_LINE_AUTOANSWER_ENABLED && cfgid < (CFGID_LINE_AUTOANSWER_ENABLED + MAX_CONFIG_LINES)) ||
         (cfgid >= CFGID_LINE_AUTOANSWER_MODE && cfgid < (CFGID_LINE_AUTOANSWER_MODE + MAX_CONFIG_LINES))
        )
@@ -469,8 +467,6 @@ void config_setup_elements (const char *sipUser, const char *sipPassword, const 
         compare_or_set_byte_value(CFGID_LINE_RING_SETTING_IDLE + line, gRingSettingIdle, (const unsigned char *) "ringSettingIdle");
         compare_or_set_byte_value(CFGID_LINE_RING_SETTING_ACTIVE + line, gRingSettingActive, (const unsigned char *) "ringSettingActive");
         compare_or_set_string_value(CFGID_LINE_CONTACT + line, sipUser, (const unsigned char *) "contact");
-        compare_or_set_int_value(CFGID_LINE_MAXNUMCALLS + line, gMaxNumCalls, (const unsigned char *) "maxNumCalls");
-        compare_or_set_int_value(CFGID_LINE_BUSY_TRIGGER + line, gBusyTrigger, (const unsigned char *) "busyTrigger");
         compare_or_set_byte_value(CFGID_LINE_AUTOANSWER_ENABLED + line, gAutoAnswerEnabled, (const unsigned char *) "autoAnswerEnabled");
         compare_or_set_byte_value(CFGID_LINE_CALL_WAITING + line, gCallWaiting, (const unsigned char *) "callWaiting");
         compare_or_set_string_value(CFGID_LINE_AUTHNAME + line, sipUser, (const unsigned char *)"authName");

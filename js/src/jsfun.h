@@ -212,6 +212,7 @@ class JSFunction : public JSObject
 
     js::RawScript getOrCreateScript(JSContext *cx) {
         JS_ASSERT(isInterpreted());
+				JS_ASSERT(cx);
         if (isInterpretedLazy()) {
             JS::RootedFunction self(cx, this);
             js::MaybeCheckStackRoots(cx);

@@ -4,21 +4,9 @@
 
 <preferences id="contentPreferences">
 
-  <!-- Popups, images, and JavaScript -->
+  <!-- Popups -->
   <preference id="dom.disable_open_during_load"
               name="dom.disable_open_during_load"
-              type="bool"/>
-  <preference id="permissions.default.image"
-              name="permissions.default.image"
-              type="int"/>
-  <preference id="javascript.enabled"
-              name="javascript.enabled"
-              type="bool"/>
-  <preference id="pref.advanced.images.disable_button.view_image"
-              name="pref.advanced.images.disable_button.view_image"
-              type="bool"/>
-  <preference id="pref.advanced.javascript.disable_button.advanced"
-              name="pref.advanced.javascript.disable_button.advanced"
               type="bool"/>
 
   <!-- Fonts -->
@@ -55,36 +43,6 @@
         <button id="popupPolicyButton" label="&popupExceptions.label;"
                 oncommand="gContentPane.showPopupExceptions();"
                 accesskey="&popupExceptions.accesskey;"/>
-      </row>
-      <row id="enableImagesRow">
-        <vbox align="start">
-          <checkbox id="loadImages"
-                    label="&loadImages.label;"
-                    accesskey="&loadImages.accesskey;"
-                    preference="permissions.default.image"
-                    onsyncfrompreference="return gContentPane.readLoadImages();"
-                    onsynctopreference="return gContentPane.writeLoadImages();"/>
-        </vbox>
-        <vbox>
-          <button label="&exceptions.label;"
-                  accesskey="&exceptions.accesskey;"
-                  oncommand="gContentPane.showImageExceptions();"
-                  preference="pref.advanced.images.disable_button.view_image"/>
-        </vbox>
-      </row>
-      <row id="enableJavaScriptRow">
-        <vbox align="start">
-          <checkbox id="enableJavaScript" preference="javascript.enabled"
-                    label="&enableJavaScript.label;" accesskey="&enableJavaScript.accesskey;"
-                    onsyncfrompreference="return gContentPane.updateButtons('advancedJSButton',
-                                                                        'javascript.enabled');"/>
-        </vbox>
-        <vbox>
-          <button id="advancedJSButton" label="&advancedJS.label;"
-                  accesskey="&advancedJS.accesskey;"
-                  oncommand="gContentPane.showAdvancedJS();"
-                  preference="pref.advanced.javascript.disable_button.advanced"/>
-        </vbox>
       </row>
     </rows>
   </grid>

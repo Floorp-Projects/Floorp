@@ -26,6 +26,7 @@
 
   // Remove all the real reporters and multi-reporters;  save them to
   // restore at the end.
+  mgr.blockRegistration();
   var e = mgr.enumerateReporters();
   var realReporters = [];
   while (e.hasMoreElements()) {
@@ -131,10 +132,10 @@
   ];
 
   for (var i = 0; i < fakeReporters.length; i++) {
-    mgr.registerReporter(fakeReporters[i]);
+    mgr.registerReporterEvenIfBlocked(fakeReporters[i]);
   }
   for (var i = 0; i < fakeMultiReporters.length; i++) {
-    mgr.registerMultiReporter(fakeMultiReporters[i]);
+    mgr.registerMultiReporterEvenIfBlocked(fakeMultiReporters[i]);
   }
   ]]>
   </script>
@@ -193,11 +194,13 @@ Ghost Windows\n\
       mgr.unregisterMultiReporter(fakeMultiReporters[i]);
     }
     for (var i = 0; i < realReporters.length; i++) {
-      mgr.registerReporter(realReporters[i]);
+      mgr.registerReporterEvenIfBlocked(realReporters[i]);
     }
     for (var i = 0; i < realMultiReporters.length; i++) {
-      mgr.registerMultiReporter(realMultiReporters[i]);
+      mgr.registerMultiReporterEvenIfBlocked(realMultiReporters[i]);
     }
+    mgr.unblockRegistration();
+
     SimpleTest.finish();
   }
 

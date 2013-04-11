@@ -6,8 +6,6 @@
 #ifndef GFX_LAYERMANAGERD3D10_H
 #define GFX_LAYERMANAGERD3D10_H
 
-#include "mozilla/layers/PLayers.h"
-#include "mozilla/layers/ShadowLayers.h"
 #include "Layers.h"
 
 #include <windows.h>
@@ -48,12 +46,10 @@ extern cairo_user_data_key_t gKeyD3D10Texture;
  * This is the LayerManager used for Direct3D 10. For now this will
  * render on the main thread.
  *
- * For the time being, LayerManagerD3D10 both forwards layers
- * transactions and receives forwarded transactions.  In the Azure
- * future, it will only be a ShadowLayerManager.
+ * For the time being, LayerManagerD3D10 forwards layers
+ * transactions.
  */
-class THEBES_API LayerManagerD3D10 : public ShadowLayerManager,
-                                     public ShadowLayerForwarder {
+class THEBES_API LayerManagerD3D10 : public LayerManager {
 public:
   LayerManagerD3D10(nsIWidget *aWidget);
   virtual ~LayerManagerD3D10();
@@ -72,12 +68,6 @@ public:
    * LayerManager implementation.
    */
   virtual void Destroy();
-
-  virtual ShadowLayerForwarder* AsShadowForwarder()
-  { return this; }
-
-  virtual ShadowLayerManager* AsShadowManager()
-  { return this; }
 
   virtual void SetRoot(Layer *aLayer);
 
@@ -113,23 +103,10 @@ public:
   }
 
   virtual already_AddRefed<ThebesLayer> CreateThebesLayer();
-  virtual already_AddRefed<ShadowThebesLayer> CreateShadowThebesLayer();
-
   virtual already_AddRefed<ContainerLayer> CreateContainerLayer();
-  virtual already_AddRefed<ShadowContainerLayer> CreateShadowContainerLayer();
-
   virtual already_AddRefed<ImageLayer> CreateImageLayer();
-  virtual already_AddRefed<ShadowImageLayer> CreateShadowImageLayer()
-  { return nullptr; }
-
   virtual already_AddRefed<ColorLayer> CreateColorLayer();
-  virtual already_AddRefed<ShadowColorLayer> CreateShadowColorLayer()
-  { return nullptr; }
-
   virtual already_AddRefed<CanvasLayer> CreateCanvasLayer();
-  virtual already_AddRefed<ShadowCanvasLayer> CreateShadowCanvasLayer()
-  { return nullptr; }
-
   virtual already_AddRefed<ReadbackLayer> CreateReadbackLayer();
 
   virtual already_AddRefed<gfxASurface>
@@ -204,28 +181,6 @@ private:
    * Context target, NULL when drawing directly to our swap chain.
    */
   nsRefPtr<gfxContext> mTarget;
-
-  /*
-   * We use a double-buffered "window surface" to display our content
-   * in the compositor process, if we're remote.  The textures act
-   * like the backing store for an OS window --- we render the layer
-   * tree into the back texture and send it to the compositor, then
-   * swap back/front textures.  This means, obviously, that we've lost
-   * all layer tree information after rendering.
-   *
-   * The remote front buffer is the texture currently being displayed
-   * by chrome.  We keep a reference to it to simplify resource
-   * management; if we didn't, then there can be periods during IPC
-   * transport when neither process holds a "real" ref.  That's
-   * solvable but not worth the complexity.
-   */
-  nsRefPtr<ID3D10Texture2D> mBackBuffer;
-  nsRefPtr<ID3D10Texture2D> mRemoteFrontBuffer;
-  /*
-   * If we're remote content, this is the root of the shadowable tree
-   * we send to the compositor.
-   */
-  nsRefPtr<DummyRoot> mRootForShadowTree;
 
   /*
    * Copies the content of our backbuffer to the set transaction target.
@@ -322,45 +277,6 @@ protected:
   const static uint8_t SHADER_SOLID = 0x28;
 
   LayerManagerD3D10 *mD3DManager;
-};
-
-/**
- * WindowLayer is a simple, special kinds of shadowable layer into
- * which layer trees are rendered.  It represents something like an OS
- * window.  It exists only to allow sharing textures with the
- * compositor while reusing existing shadow-layer machinery.
- *
- * WindowLayer being implemented as a thebes layer isn't an important
- * detail; other layer types could have been used.
- */
-class WindowLayer : public ThebesLayer, public ShadowableLayer {
-public:
-  WindowLayer(LayerManagerD3D10* aManager);
-  virtual ~WindowLayer();
-
-  void InvalidateRegion(const nsIntRegion&) {}
-  Layer* AsLayer() { return this; }
-
-  void SetShadow(PLayerChild* aChild) { mShadow = aChild; }
-};
-
-/**
- * DummyRoot is the root of the shadowable layer tree created by
- * remote content.  It exists only to contain WindowLayers.  It always
- * has exactly one child WindowLayer.
- */
-class DummyRoot : public ContainerLayer, public ShadowableLayer {
-public:
-  DummyRoot(LayerManagerD3D10* aManager);
-  virtual ~DummyRoot();
-
-  void ComputeEffectiveTransforms(const gfx3DMatrix&) {}
-  void InsertAfter(Layer*, Layer*);
-  void RemoveChild(Layer*);
-  void RepositionChild(Layer*, Layer*);
-  Layer* AsLayer() { return this; }
-
-  void SetShadow(PLayerChild* aChild) { mShadow = aChild; }
 };
 
 } /* layers */

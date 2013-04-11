@@ -45,6 +45,7 @@ nsServerSocket::nsServerSocket()
   : mLock("nsServerSocket.mLock")
   , mFD(nullptr)
   , mAttached(false)
+  , mKeepWhenOffline(false)
 {
   // we want to be able to access the STS directly, and it may not have been
   // constructed yet.  the STS constructor sets gSocketTransportService.
@@ -233,6 +234,12 @@ nsServerSocket::IsLocal(bool *aIsLocal)
   *aIsLocal = PR_IsNetAddrType(&mAddr, PR_IpAddrLoopback);
 }
 
+void
+nsServerSocket::KeepWhenOffline(bool *aKeepWhenOffline)
+{
+  *aKeepWhenOffline = mKeepWhenOffline;
+}
+
 //-----------------------------------------------------------------------------
 // nsServerSocket::nsISupports
 //-----------------------------------------------------------------------------
@@ -247,17 +254,25 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsServerSocket, nsIServerSocket)
 NS_IMETHODIMP
 nsServerSocket::Init(int32_t aPort, bool aLoopbackOnly, int32_t aBackLog)
 {
+  return InitSpecialConnection(aPort, aLoopbackOnly ? LoopbackOnly : 0, aBackLog);
+}
+
+NS_IMETHODIMP
+nsServerSocket::InitSpecialConnection(int32_t aPort, nsServerSocketFlag aFlags,
+                                      int32_t aBackLog)
+{
   PRNetAddrValue val;
   PRNetAddr addr;
 
   if (aPort < 0)
     aPort = 0;
-  if (aLoopbackOnly)
+  if (aFlags & nsIServerSocket::LoopbackOnly)
     val = PR_IpAddrLoopback;
   else
     val = PR_IpAddrAny;
   PR_SetNetAddr(val, PR_AF_INET, aPort, &addr);
 
+  mKeepWhenOffline = ((aFlags & nsIServerSocket::KeepWhenOffline) != 0);
   return InitWithAddress(&addr, aBackLog);
 }
 

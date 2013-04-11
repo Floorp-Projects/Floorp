@@ -12,10 +12,7 @@ DOM_SRCDIRS = \
   dom/quota \
   dom/media \
   dom/network/src \
-  dom/settings \
   dom/phonenumberutils \
-  dom/contacts \
-  dom/permission \
   dom/alarm \
   dom/src/events \
   dom/src/storage \

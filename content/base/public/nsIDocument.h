@@ -87,6 +87,7 @@ class ImageLoader;
 } // namespace css
 
 namespace dom {
+class Attr;
 class CDATASection;
 class Comment;
 class DocumentFragment;
@@ -1983,9 +1984,9 @@ public:
   // Deprecated WebIDL bits
   already_AddRefed<mozilla::dom::CDATASection>
     CreateCDATASection(const nsAString& aData, mozilla::ErrorResult& rv);
-  already_AddRefed<nsIDOMAttr>
+  already_AddRefed<mozilla::dom::Attr>
     CreateAttribute(const nsAString& aName, mozilla::ErrorResult& rv);
-  already_AddRefed<nsIDOMAttr>
+  already_AddRefed<mozilla::dom::Attr>
     CreateAttributeNS(const nsAString& aNamespaceURI,
                       const nsAString& aQualifiedName,
                       mozilla::ErrorResult& rv);
@@ -2490,10 +2491,8 @@ NS_NewSVGDocument(nsIDocument** aInstancePtrResult);
 nsresult
 NS_NewImageDocument(nsIDocument** aInstancePtrResult);
 
-#ifdef MOZ_MEDIA
 nsresult
 NS_NewVideoDocument(nsIDocument** aInstancePtrResult);
-#endif
 
 already_AddRefed<mozilla::dom::DocumentFragment>
 NS_NewDocumentFragment(nsNodeInfoManager* aNodeInfoManager,

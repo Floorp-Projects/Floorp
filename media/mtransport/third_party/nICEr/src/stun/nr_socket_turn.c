@@ -31,7 +31,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-
 static char *RCSSTRING __UNUSED__="$Id: nr_socket_turn.c,v 1.2 2008/04/28 18:21:30 ekr Exp $";
 
 #ifdef USE_TURN
@@ -43,17 +42,15 @@ static char *RCSSTRING __UNUSED__="$Id: nr_socket_turn.c,v 1.2 2008/04/28 18:21:
 #include <assert.h>
 
 #include "stun.h"
-#include "nr_socket_turn.h"
 #include "turn_client_ctx.h"
+#include "nr_socket_turn.h"
 
 
 static char *nr_socket_turn_magic_cookie = "nr_socket_turn";
 
 typedef struct nr_socket_turn_ {
   char *magic_cookie;
-  int turn_state;
-  nr_socket *sock;
-  nr_transport_addr relay_addr;
+  nr_turn_client_ctx *turn;
 } nr_socket_turn;
 
 
@@ -75,7 +72,7 @@ static nr_socket_vtbl nr_socket_turn_vtbl={
   nr_socket_turn_close
 };
 
-int nr_socket_turn_create(nr_socket *sock, int turn_state, nr_socket **sockp)
+int nr_socket_turn_create(nr_socket *sock, nr_socket **sockp)
   {
     int r,_status;
     nr_socket_turn *sturn=0;
@@ -84,8 +81,6 @@ int nr_socket_turn_create(nr_socket *sock, int turn_state, nr_socket **sockp)
       ABORT(R_NO_MEMORY);
 
     sturn->magic_cookie = nr_socket_turn_magic_cookie;
-    sturn->sock=sock;
-    sturn->turn_state=turn_state;
 
     if(r=nr_socket_create_int(sturn, &nr_socket_turn_vtbl, sockp))
       ABORT(r);
@@ -97,23 +92,6 @@ int nr_socket_turn_create(nr_socket *sock, int turn_state, nr_socket **sockp)
     }
     return(_status);
   }
-
-void nr_socket_turn_set_state(nr_socket *sock, int turn_state)
-{
-    nr_socket_turn *sturn=(nr_socket_turn*)sock->obj;
-    assert(sturn->magic_cookie == nr_socket_turn_magic_cookie);
-
-    sturn->turn_state=turn_state;
-}
-
-void nr_socket_turn_set_relay_addr(nr_socket *sock, nr_transport_addr *relay)
-{
-    nr_socket_turn *sturn=(nr_socket_turn*)sock->obj;
-    assert(sturn->magic_cookie == nr_socket_turn_magic_cookie);
-
-    nr_transport_addr_copy(&sturn->relay_addr, relay);
-}
-
 
 static int nr_socket_turn_destroy(void **objp)
   {
@@ -133,7 +111,6 @@ static int nr_socket_turn_destroy(void **objp)
     RFREE(sturn);
 
     _status=0;
-/*  abort:*/
     return(_status);
   }
 
@@ -142,31 +119,13 @@ static int nr_socket_turn_sendto(void *obj,const void *msg, size_t len,
   {
     int r,_status;
     nr_socket_turn *sturn=obj;
-    assert(sturn->magic_cookie == nr_socket_turn_magic_cookie);
 
-    switch (sturn->turn_state) {
-    case NR_TURN_CLIENT_STATE_INITTED:
-        if ((r=nr_socket_sendto(sturn->sock,msg,len,flags,addr)))
-            ABORT(r);
-        break;
-#if 0
-/* ACTIVE mode not implemented yet */
-    case NR_TURN_CLIENT_STATE_ACTIVE:
-        if (!nr_has_stun_cookie((char*)msg,len)) {
-            if ((r=nr_socket_sendto(sturn->sock,msg,len,flags,addr)))
-                ABORT(r);
-            break;  /* BREAK */
-        }
-        /* FALL THROUGH */
-#endif
-    case NR_TURN_CLIENT_STATE_ALLOCATED:
-        if ((r=nr_turn_client_relay_indication_data(sturn->sock, msg, len, flags, &sturn->relay_addr, addr)))
-            ABORT(r);
-        break;
-    default:
-        ABORT(R_INTERNAL);
-        break;
-    }
+    assert(sturn->magic_cookie == nr_socket_turn_magic_cookie);
+    assert(sturn->turn);
+
+    if ((r = nr_turn_client_send_indication(sturn->turn, msg, len, flags,
+                                            addr)))
+      ABORT(r);
 
     _status=0;
   abort:
@@ -176,83 +135,41 @@ static int nr_socket_turn_sendto(void *obj,const void *msg, size_t len,
 static int nr_socket_turn_recvfrom(void *obj,void * restrict buf,
   size_t maxlen, size_t *len, int flags, nr_transport_addr *addr)
   {
-    int r,_status;
-    nr_socket_turn *sturn=obj;
+    /* Reading from TURN sockets is done by the indication
+       processing code in turn_client_ctx. */
+    assert(0);
 
-    assert(sturn->magic_cookie == nr_socket_turn_magic_cookie);
-
-    if ((r=nr_socket_recvfrom(sturn->sock,buf,maxlen,len,flags,addr)))
-        ABORT(r);
-
-    switch (sturn->turn_state) {
-    case NR_TURN_CLIENT_STATE_INITTED:
-        /* just pass the data through verbatim */
-        break;
-#if 0
-/* ACTIVE mode not implemented yet */
-    case NR_TURN_CLIENT_STATE_ACTIVE:
-       if (!nr_has_stun_cookie(buf,len)) {
-           break;  /* BREAK */
-       }
-       /* FALL THROUGH */
-#endif
-    case NR_TURN_CLIENT_STATE_ALLOCATED:
-        assert(nr_has_stun_cookie(buf,*len));
-        if ((r=nr_turn_client_rewrite_indication_data(buf, *len, len, addr))) {
-            if (!nr_is_stun_message(buf,*len)) {
-                r_log_nr(NR_LOG_TURN,LOG_WARNING,r,"TURN_SOCKET: Discarding unexpected data");
-
-            }
-            else {
-                r_log(NR_LOG_TURN,LOG_DEBUG,"TURN_SOCKET: Discarding unexpected or retransmitted message");
-            }
-
-            *len = 0;
-        }
-        break;
-    default:
-        ABORT(R_INTERNAL);
-        break;
-    }
-
-    _status=0;
-  abort:
-    return(_status);
+    return(R_INTERNAL);
   }
 
 static int nr_socket_turn_getfd(void *obj, NR_SOCKET *fd)
   {
-    nr_socket_turn *sturn=obj;
-    assert(sturn->magic_cookie == nr_socket_turn_magic_cookie);
-    return nr_socket_getfd(sturn->sock,fd);
+    /* You should never directly be touching this fd. */
+    assert(0);
+
+    return(R_INTERNAL);
   }
 
 static int nr_socket_turn_getaddr(void *obj, nr_transport_addr *addrp)
   {
     nr_socket_turn *sturn=obj;
-    assert(sturn->magic_cookie == nr_socket_turn_magic_cookie);
-#if 0
-//    return nr_socket_getaddr(sturn->sock,addrp);
-// not sure if this the following is correct, but the above doesn't
-// seem to work either
-#endif
-    switch (sturn->turn_state) {
-    case NR_TURN_CLIENT_STATE_INITTED:
-        return nr_socket_getaddr(sturn->sock,addrp);
-        break;
-    case NR_TURN_CLIENT_STATE_ALLOCATED:
-        return nr_transport_addr_copy(addrp, &sturn->relay_addr);
-        break;
-    default:
-        assert(0);
-        break;
-    }
+    int r, _status;
 
-    return R_FAILED;
+    assert(sturn->magic_cookie == nr_socket_turn_magic_cookie);
+    assert(sturn->turn);
+
+    /* This returns the relayed address */
+    if ((r=nr_turn_client_get_relayed_address(sturn->turn, addrp)))
+      ABORT(r);
+
+    _status=0;
+ abort:
+    return(_status);
   }
 
 static int nr_socket_turn_close(void *obj)
   {
+    /* No-op */
 #ifndef NDEBUG
     nr_socket_turn *sturn=obj;
     assert(sturn->magic_cookie == nr_socket_turn_magic_cookie);
@@ -260,5 +177,16 @@ static int nr_socket_turn_close(void *obj)
 
     return 0;
   }
+
+int nr_socket_turn_set_ctx(nr_socket *sock, nr_turn_client_ctx *ctx)
+{
+  nr_socket_turn *sturn=(nr_socket_turn*)sock->obj;
+  assert(sturn->magic_cookie == nr_socket_turn_magic_cookie);
+  assert(!sturn->turn);
+
+  sturn->turn = ctx;
+
+  return 0;
+}
 
 #endif /* USE_TURN */

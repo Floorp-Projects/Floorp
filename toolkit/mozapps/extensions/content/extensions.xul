@@ -298,7 +298,9 @@
             <spacer class="alert-spacer-before"/>
             <vbox class="alert">
               <label value="&listEmpty.search.label;"/>
-              <button label="&listEmpty.button.label;"
+              <button class="discover-button"
+                      id="discover-button-search"
+                      label="&listEmpty.button.label;"
                       command="cmd_goToDiscoverPane"/>
             </vbox>
             <spacer class="alert-spacer-after"/>
@@ -358,7 +360,9 @@
             <spacer class="alert-spacer-before"/>
             <vbox class="alert">
               <label value="&listEmpty.installed.label;"/>
-              <button label="&listEmpty.button.label;"
+              <button class="discover-button"
+                      id="discover-button-install"
+                      label="&listEmpty.button.label;"
                       command="cmd_goToDiscoverPane"/>
             </vbox>
             <spacer class="alert-spacer-after"/>

@@ -20,7 +20,7 @@ webidl_files = \
   AudioListener.webidl \
   AudioNode.webidl \
   AudioParam.webidl \
-  AudioSourceNode.webidl \
+  Attr.webidl \
   BatteryManager.webidl \
   BeforeUnloadEvent.webidl \
   BiquadFilterNode.webidl \
@@ -122,6 +122,7 @@ webidl_files = \
   HTMLPropertiesCollection.webidl \
   HTMLQuoteElement.webidl \
   HTMLScriptElement.webidl \
+  HTMLSourceElement.webidl \
   HTMLSpanElement.webidl \
   HTMLStyleElement.webidl \
   HTMLTableCaptionElement.webidl \
@@ -143,6 +144,7 @@ webidl_files = \
   LinkStyle.webidl \
   LocalMediaStream.webidl \
   Location.webidl \
+  MediaError.webidl \
   MediaStream.webidl \
   MessageEvent.webidl \
   MouseEvent.webidl \
@@ -297,13 +299,6 @@ webidl_files = \
 ifdef MOZ_AUDIO_CHANNEL_MANAGER
 webidl_files += \
   AudioChannelManager.webidl \
-  $(NULL)
-endif
-
-ifdef MOZ_MEDIA
-webidl_files += \
-  HTMLSourceElement.webidl \
-  MediaError.webidl \
   $(NULL)
 endif
 
