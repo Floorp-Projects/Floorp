@@ -108,13 +108,13 @@ XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",
                                    "@mozilla.org/uuid-generator;1",
                                    "nsIUUIDGenerator");
 
-function MobileICCCardLockResult(options) {
+function MobileIccCardLockResult(options) {
   this.lockType = options.lockType;
   this.enabled = options.enabled;
   this.retryCount = options.retryCount;
   this.success = options.success;
 }
-MobileICCCardLockResult.prototype = {
+MobileIccCardLockResult.prototype = {
   __exposedProps__ : {lockType: 'r',
                       enabled: 'r',
                       retryCount: 'r',
@@ -559,14 +559,14 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  getCardLock: function getCardLock(window, lockType) {
+  getCardLockState: function getCardLockState(window, lockType) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
     }
     let request = Services.DOMRequest.createRequest(window);
     let requestId = this.getRequestId(request);
-    cpmm.sendAsyncMessage("RIL:GetCardLock", {lockType: lockType, requestId: requestId});
+    cpmm.sendAsyncMessage("RIL:GetCardLockState", {lockType: lockType, requestId: requestId});
     return request;
   },
 
@@ -1188,12 +1188,12 @@ RILContentHelper.prototype = {
         break;
       case "RIL:CardLockResult":
         if (msg.json.success) {
-          let result = new MobileICCCardLockResult(msg.json);
+          let result = new MobileIccCardLockResult(msg.json);
           this.fireRequestSuccess(msg.json.requestId, result);
         } else {
           if (msg.json.rilMessageType == "iccSetCardLock" ||
               msg.json.rilMessageType == "iccUnlockCardLock") {
-            this._deliverEvent("_mobileConnectionListeners",
+            this._deliverEvent("_iccListeners",
                                "notifyIccCardLockError",
                                [msg.json.lockType, msg.json.retryCount]);
           }
