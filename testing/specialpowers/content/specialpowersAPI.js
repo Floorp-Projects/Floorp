@@ -972,6 +972,11 @@ SpecialPowersAPI.prototype = {
                                                            listener,
                                                            false);
   },
+  get formHistory() {
+    let tmp = {};
+    Cu.import("resource://gre/modules/FormHistory.jsm", tmp);
+    return wrapPrivileged(tmp.FormHistory);
+  },
   getFormFillController: function(window) {
     return Components.classes["@mozilla.org/satchel/form-fill-controller;1"]
                      .getService(Components.interfaces.nsIFormFillController);
