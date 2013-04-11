@@ -65,10 +65,6 @@ class JS_FRIEND_API(Wrapper) : public DirectProxyHandler
 
     virtual ~Wrapper();
 
-    /* ES5 Harmony fundamental wrapper traps. */
-    virtual bool defaultValue(JSContext *cx, HandleObject wrapper, JSType hint,
-                              MutableHandleValue vp) MOZ_OVERRIDE;
-
     static Wrapper singleton;
     static Wrapper singletonWithPrototype;
 
@@ -150,6 +146,8 @@ class JS_FRIEND_API(SecurityWrapper) : public Base
                        bool *bp) MOZ_OVERRIDE;
     virtual bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
                             CallArgs args) MOZ_OVERRIDE;
+    virtual bool defaultValue(JSContext *cx, HandleObject wrapper, JSType hint,
+                              MutableHandleValue vp) MOZ_OVERRIDE;
     virtual bool objectClassIs(HandleObject obj, ESClassValue classValue,
                                JSContext *cx) MOZ_OVERRIDE;
     virtual bool regexp_toShared(JSContext *cx, HandleObject proxy, RegExpGuard *g) MOZ_OVERRIDE;
