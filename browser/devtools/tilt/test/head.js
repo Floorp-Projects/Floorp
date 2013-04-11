@@ -2,23 +2,15 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
+let {devtools} = Components.utils.import("resource:///modules/devtools/gDevTools.jsm", {});
+let TiltManager = devtools.require("devtools/tilt/tilt").TiltManager;
+let TiltGL = devtools.require("devtools/tilt/tilt-gl");
+let {EPSILON, TiltMath, vec3, mat3, mat4, quat4} = devtools.require("devtools/tilt/tilt-math");
+let TiltUtils = devtools.require("devtools/tilt/tilt-utils");
+let {TiltVisualizer} = devtools.require("devtools/tilt/tilt-visualizer");
+
 let tempScope = {};
-Components.utils.import("resource:///modules/devtools/Tilt.jsm", tempScope);
-Components.utils.import("resource:///modules/devtools/TiltGL.jsm", tempScope);
-Components.utils.import("resource:///modules/devtools/TiltMath.jsm", tempScope);
-Components.utils.import("resource:///modules/devtools/TiltUtils.jsm", tempScope);
-Components.utils.import("resource:///modules/devtools/TiltVisualizer.jsm", tempScope);
 Components.utils.import("resource:///modules/devtools/LayoutHelpers.jsm", tempScope);
-let TiltManager = tempScope.TiltManager;
-let TiltGL = tempScope.TiltGL;
-let EPSILON = tempScope.EPSILON;
-let TiltMath = tempScope.TiltMath;
-let vec3 = tempScope.vec3;
-let mat3 = tempScope.mat3;
-let mat4 = tempScope.mat4;
-let quat4 = tempScope.quat4;
-let TiltUtils = tempScope.TiltUtils;
-let TiltVisualizer = tempScope.TiltVisualizer;
 let LayoutHelpers = tempScope.LayoutHelpers;
 
 

@@ -37,11 +37,11 @@ XPCOMUtils.defineLazyModuleGetter(this, "Promise",
 XPCOMUtils.defineLazyModuleGetter(this, "VariablesView",
                                   "resource:///modules/devtools/VariablesView.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "ToolSidebar",
-                                  "resource:///modules/devtools/Sidebar.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
-                                  "resource:///modules/devtools/EventEmitter.jsm");
+                                  "resource:///modules/devtools/shared/event-emitter.js");
+
+XPCOMUtils.defineLazyModuleGetter(this, "devtools",
+                                  "resource:///modules/devtools/gDevTools.jsm");
 
 const STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
 let l10n = new WebConsoleUtils.l10n(STRINGS_URI);
@@ -370,7 +370,9 @@ WebConsoleFrame.prototype = {
    */
   init: function WCF_init()
   {
+    dump("initing ui\n");
     this._initUI();
+    dump("initting connection\n");
     return this._initConnection();
   },
 
@@ -418,6 +420,7 @@ WebConsoleFrame.prototype = {
     this.window = window;
     this.document = this.window.document;
     this.rootElement = this.document.documentElement;
+    dump("@\n");
 
     this._initDefaultFilterPrefs();
 
@@ -434,6 +437,7 @@ WebConsoleFrame.prototype = {
 
     this._setFilterTextBoxEvents();
     this._initFilterButtons();
+    dump("#\n");
 
     let fontSize = Services.prefs.getIntPref("devtools.webconsole.fontSize");
 
@@ -459,6 +463,8 @@ WebConsoleFrame.prototype = {
                             !this.getFilterState("network");
     }.bind(this));
 
+    dump("!\n");
+
     // Remove this part when context menu entry is removed.
     let saveBodiesContextMenu = doc.getElementById("saveBodiesContextMenu");
     saveBodiesContextMenu.addEventListener("command", function() {
@@ -482,9 +488,12 @@ WebConsoleFrame.prototype = {
       this.jsterm.clearOutput(true);
     }.bind(this));
 
+dump("before jsterm\n");
+
     this.jsterm = new JSTerm(this);
     this.jsterm.init();
     this.jsterm.inputNode.focus();
+    dump("after jsterm\n");
   },
 
   /**
@@ -3006,13 +3015,14 @@ JSTerm.prototype = {
   /**
    * Create the Web Console sidebar.
    *
-   * @see Sidebar.jsm
+   * @see devtools/framework/sidebar.js
    * @private
    */
   _createSidebar: function JST__createSidebar()
   {
     if (!this.sidebar) {
       let tabbox = this.hud.document.querySelector("#webconsole-sidebar");
+      let ToolSidebar = devtools.require("devtools/framework/sidebar").ToolSidebar;
       this.sidebar = new ToolSidebar(tabbox, this);
     }
     this.sidebar.show();

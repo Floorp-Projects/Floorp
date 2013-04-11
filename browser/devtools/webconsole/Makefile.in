@@ -17,3 +17,6 @@ EXTRA_JS_MODULES = \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+libs::
+	$(NSINSTALL) $(srcdir)/*.js $(FINAL_TARGET)/modules/devtools/framework

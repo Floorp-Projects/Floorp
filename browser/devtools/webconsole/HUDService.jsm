@@ -13,11 +13,14 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+dump("q\n");
+
 XPCOMUtils.defineLazyModuleGetter(this, "gDevTools",
     "resource:///modules/devtools/gDevTools.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
-    "resource:///modules/devtools/Target.jsm");
+dump("r\n");
+XPCOMUtils.defineLazyModuleGetter(this, "devtools",
+    "resource:///modules/devtools/gDevTools.jsm");
+dump("s\n");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
     "resource://gre/modules/Services.jsm");
@@ -31,14 +34,12 @@ XPCOMUtils.defineLazyModuleGetter(this, "DebuggerClient",
 XPCOMUtils.defineLazyModuleGetter(this, "WebConsoleUtils",
     "resource://gre/modules/devtools/WebConsoleUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "webConsoleDefinition",
-    "resource:///modules/devtools/ToolDefinitions.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
     "resource://gre/modules/commonjs/sdk/core/promise.js");
 
 XPCOMUtils.defineLazyModuleGetter(this, "ViewHelpers",
     "resource:///modules/devtools/ViewHelpers.jsm");
+dump("t\n");
 
 const STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
 let l10n = new WebConsoleUtils.l10n(STRINGS_URI);
@@ -84,7 +85,7 @@ HUD_SERVICE.prototype =
   /**
    * Open a Web Console for the given target.
    *
-   * @see devtools/framework/Target.jsm for details about targets.
+   * @see devtools/framework/target.js for details about targets.
    *
    * @param object aTarget
    *        The target that the web console will connect to.
@@ -98,7 +99,9 @@ HUD_SERVICE.prototype =
   openWebConsole:
   function HS_openWebConsole(aTarget, aIframeWindow, aChromeWindow)
   {
+    dump("w\n");
     let hud = new WebConsole(aTarget, aIframeWindow, aChromeWindow);
+    dump("x\n");
     this.hudReferences[hud.hudId] = hud;
     return hud.init();
   },
@@ -255,6 +258,7 @@ WebConsole.prototype = {
   init: function WC_init()
   {
     this.ui = new this.iframeWindow.WebConsoleFrame(this);
+    dump("y: " + this.ui + "\n");
     return this.ui.init().then(() => this);
   },
 
@@ -609,7 +613,9 @@ var HeadsUpDisplayUICommands = {
   toggleHUD: function UIC_toggleHUD()
   {
     let window = HUDService.currentContext();
-    let target = TargetFactory.forTab(window.gBrowser.selectedTab);
+    dump("about to toggle hud\n");
+    let target = devtools.TargetFactory.forTab(window.gBrowser.selectedTab);
+    dump("done toggling hud\n");
     let toolbox = gDevTools.getToolbox(target);
 
     return toolbox && toolbox.currentToolId == "webconsole" ?
@@ -627,10 +633,10 @@ var HeadsUpDisplayUICommands = {
   getOpenHUD: function UIC_getOpenHUD()
   {
     let tab = HUDService.currentContext().gBrowser.selectedTab;
-    if (!tab || !TargetFactory.isKnownTab(tab)) {
+    if (!tab || !devtools.TargetFactory.isKnownTab(tab)) {
       return null;
     }
-    let target = TargetFactory.forTab(tab);
+    let target = devtools.TargetFactory.forTab(tab);
     let toolbox = gDevTools.getToolbox(target);
     let panel = toolbox ? toolbox.getPanel("webconsole") : null;
     return panel ? panel.hud : null;
@@ -679,7 +685,7 @@ var HeadsUpDisplayUICommands = {
         chrome: true,
       };
 
-      return TargetFactory.forRemoteTab(options);
+      return devtools.TargetFactory.forRemoteTab(options);
     }
 
     function openWindow(aTarget)
@@ -688,7 +694,7 @@ var HeadsUpDisplayUICommands = {
 
       let deferred = Promise.defer();
 
-      let win = Services.ww.openWindow(null, webConsoleDefinition.url, "_blank",
+      let win = Services.ww.openWindow(null, devtools.Tools.webConsole.url, "_blank",
                                        BROWSER_CONSOLE_WINDOW_FEATURES, null);
       win.addEventListener("load", function onLoad() {
         win.removeEventListener("load", onLoad);
@@ -715,3 +721,4 @@ var HeadsUpDisplayUICommands = {
 };
 
 const HUDService = new HUD_SERVICE();
+

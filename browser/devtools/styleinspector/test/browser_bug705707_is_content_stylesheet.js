@@ -18,9 +18,8 @@ const XUL_PRINCIPAL =  Components.classes["@mozilla.org/scriptsecuritymanager;1"
                                  .getService(Ci.nsIScriptSecurityManager)
                                  .getNoAppCodebasePrincipal(XUL_URI);
 
-let tempScope = {};
-Cu.import("resource:///modules/devtools/CssLogic.jsm", tempScope);
-let CssLogic = tempScope.CssLogic;
+
+let {CssLogic} = devtools.require("devtools/styleinspector/css-logic");
 
 function test()
 {
