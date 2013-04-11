@@ -24,8 +24,9 @@
 
     <script type="application/javascript;version=1.8">
       window.setPanel = function(panel, iframe) {
-        Components.utils.import("resource:///modules/devtools/StyleInspector.jsm");
-        this.ruleview = new RuleViewTool(panel, window, iframe);
+        let {devtools} = Components.utils.import("resource:///modules/devtools/gDevTools.jsm", {});
+        let inspector = devtools.require("devtools/styleinspector/style-inspector");
+        this.ruleview = new inspector.RuleViewTool(panel, window, iframe);
       }
       window.onunload = function() {
         if (this.ruleview) {

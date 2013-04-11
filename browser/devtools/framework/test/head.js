@@ -2,13 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+let TargetFactory = gDevTools.TargetFactory;
+
 let tempScope = {};
-Components.utils.import("resource:///modules/devtools/Target.jsm", tempScope);
-let TargetFactory = tempScope.TargetFactory;
 Components.utils.import("resource://gre/modules/devtools/Console.jsm", tempScope);
 let console = tempScope.console;
 Components.utils.import("resource://gre/modules/commonjs/sdk/core/promise.js", tempScope);
 let Promise = tempScope.Promise;
+
+let {devtools} = Components.utils.import("resource:///modules/devtools/gDevTools.jsm", {});
+let TargetFactory = devtools.TargetFactory;
 
 /**
  * Open a new tab at a URL and call a callback on load

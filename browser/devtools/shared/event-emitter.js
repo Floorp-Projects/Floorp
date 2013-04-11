@@ -2,12 +2,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = ["EventEmitter"];
-
 /**
  * EventEmitter.
  */
+
 this.EventEmitter = function EventEmitter() {};
+
+if (typeof(require) === "function") {
+   module.exports = EventEmitter;
+   var {Cu} = require("chrome");
+} else {
+  var EXPORTED_SYMBOLS = ["EventEmitter"];
+  var Cu = this["Components"].utils;
+}
 
 /**
  * Decorate an object with event emitter functionality.
@@ -102,7 +109,7 @@ EventEmitter.prototype = {
         catch (ex) {
           // Prevent a bad listener from interfering with the others.
           let msg = ex + ": " + ex.stack;
-          Components.utils.reportError(msg);
+          Cu.reportError(msg);
           dump(msg + "\n");
         }
       }

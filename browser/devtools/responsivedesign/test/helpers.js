@@ -24,7 +24,8 @@ let require = (Cu.import("resource://gre/modules/devtools/Require.jsm", {})).req
 Components.utils.import("resource:///modules/devtools/gcli.jsm", {});
 
 let console = (Cu.import("resource://gre/modules/devtools/Console.jsm", {})).console;
-let TargetFactory = (Cu.import("resource:///modules/devtools/Target.jsm", {})).TargetFactory;
+let devtools = (Cu.import("resource:///modules/devtools/gDevTools.jsm", {})).devtools;
+let TargetFactory = devtools.TargetFactory;
 
 let Promise = (Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {})).Promise;
 let assert = { ok: ok, is: is, log: info };

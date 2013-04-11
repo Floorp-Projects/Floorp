@@ -11,8 +11,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/devtools/gDevTools.jsm");
 Cu.import("resource:///modules/devtools/FloatingScrollbars.jsm");
-Cu.import("resource:///modules/devtools/EventEmitter.jsm");
-Cu.import("resource:///modules/devtools/Target.jsm");
+Cu.import("resource:///modules/devtools/shared/event-emitter.js");
 
 this.EXPORTED_SYMBOLS = ["ResponsiveUIManager"];
 
