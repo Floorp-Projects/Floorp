@@ -40,7 +40,7 @@ default alldep all:: CLOBBER $(topsrcdir)/configure config.status
 	$(RM) -r $(DIST)/include
 	$(RM) -r $(DIST)/private
 	$(RM) -r $(DIST)/public
-	$(RM) $(DIST)/bin/chrome.manifest $(DIST)/bin/components/components.manifest
+	$(RM) -r $(DIST)/bin
 	$(RM) -r _tests
 
 CLOBBER: $(topsrcdir)/CLOBBER
