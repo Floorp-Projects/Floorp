@@ -4,16 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const Cu = Components.utils;
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+const {Cu, Cc, Ci} = require("chrome");
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource:///modules/devtools/LayoutHelpers.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource:///modules/devtools/EventEmitter.jsm");
 
-this.EXPORTED_SYMBOLS = ["Highlighter"];
+let EventEmitter = require("devtools/shared/event-emitter");
 
 const PSEUDO_CLASSES = [":hover", ":active", ":focus"];
   // add ":visited" and ":link" after bug 713106 is fixed
@@ -74,7 +71,7 @@ const PSEUDO_CLASSES = [":hover", ":active", ":focus"];
  * @param aInspector Inspector panel.
  * @param aToolbox The toolbox holding the inspector.
  */
-this.Highlighter = function Highlighter(aTarget, aInspector, aToolbox)
+function Highlighter(aTarget, aInspector, aToolbox)
 {
   this.target = aTarget;
   this.tab = aTarget.tab;
@@ -88,6 +85,8 @@ this.Highlighter = function Highlighter(aTarget, aInspector, aToolbox)
 
   this._init();
 }
+
+exports.Highlighter = Highlighter;
 
 Highlighter.prototype = {
   get selection() {
