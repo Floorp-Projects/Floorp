@@ -9,8 +9,11 @@ do_get_profile();
 
 Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
 Cu.import("resource://gre/modules/osfile.jsm");
+Cu.import("resource://gre/modules/FileUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Sqlite.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 // To spin the event loop in test.
 Cu.import("resource://services-common/async.js");
@@ -516,7 +519,7 @@ add_task(function test_in_progress_counts() {
     outer();
   });
 
-  // … and wait for both queries to have finished before we go on and 
+  // … and wait for both queries to have finished before we go on and
   // test postconditions.
   outer.wait();
 
@@ -570,5 +573,84 @@ add_task(function test_discard_cached() {
   do_check_eq(0, c._cachedStatements.size);
 
   yield c.close();
+});
+
+/**
+ * Test that direct binding of params and execution through mozStorage doesn't
+ * error when we manually create a transaction. See Bug 856925.
+ */
+add_task(function test_direct() {
+  let file = FileUtils.getFile("TmpD", ["test_direct.sqlite"]);
+  file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
+  print("Opening " + file.path);
+
+  let db = Services.storage.openDatabase(file);
+  print("Opened " + db);
+
+  db.executeSimpleSQL("CREATE TABLE types (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, UNIQUE (name))");
+  print("Executed setup.");
+
+  let statement = db.createAsyncStatement("INSERT INTO types (name) VALUES (:name)");
+  let params = statement.newBindingParamsArray();
+  let one = params.newBindingParams();
+  one.bindByName("name", null);
+  params.addParams(one);
+  let two = params.newBindingParams();
+  two.bindByName("name", "bar");
+  params.addParams(two);
+
+  print("Beginning transaction.");
+  let begin = db.createAsyncStatement("BEGIN DEFERRED TRANSACTION");
+  let end = db.createAsyncStatement("COMMIT TRANSACTION");
+
+  let deferred = Promise.defer();
+  begin.executeAsync({
+    handleCompletion: function (reason) {
+      deferred.resolve();
+    }
+  });
+  yield deferred.promise;
+
+  statement.bindParameters(params);
+
+  deferred = Promise.defer();
+  print("Executing async.");
+  statement.executeAsync({
+    handleResult: function (resultSet) {
+    },
+
+    handleError:  function (error) {
+      print("Error when executing SQL (" + error.result + "): " +
+            error.message);
+      print("Original error: " + error.error);
+      errors.push(error);
+      deferred.reject();
+    },
+
+    handleCompletion: function (reason) {
+      print("Completed.");
+      deferred.resolve();
+    }
+  });
+
+  yield deferred.promise;
+
+  deferred = Promise.defer();
+  end.executeAsync({
+    handleCompletion: function (reason) {
+      deferred.resolve();
+    }
+  });
+  yield deferred.promise;
+
+  statement.finalize();
+  begin.finalize();
+  end.finalize();
+
+  deferred = Promise.defer();
+  db.asyncClose(function () {
+    deferred.resolve()
+  });
+  yield deferred.promise;
 });
 
