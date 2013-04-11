@@ -858,6 +858,11 @@ setting[type="directory"] > .preferences-alignment {
   visibility: collapse;
 }
 
+/*tile content should be on same line in snapped view */
+#snapped-topsites-grid > richgriditem > .richgrid-item-content {
+  -moz-box-orient: horizontal;
+}
+
 /* if snapped, hide the fullscreen awesome screen, if viewstate is anything
  *  other than snapped, hide the snapped awesome screen */
 #start[viewstate="snapped"],
