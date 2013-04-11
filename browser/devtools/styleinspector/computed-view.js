@@ -4,25 +4,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const Ci = Components.interfaces;
-const Cc = Components.classes;
-const Cu = Components.utils;
-const FILTER_CHANGED_TIMEOUT = 300;
+const {Cc, Ci, Cu} = require("chrome");
 
-const HTML_NS = "http://www.w3.org/1999/xhtml";
-const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+let ToolDefinitions = require("main").Tools;
+let {CssLogic} = require("devtools/styleinspector/css-logic");
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PluralForm.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource:///modules/devtools/CssLogic.jsm");
 Cu.import("resource:///modules/devtools/Templater.jsm");
-Cu.import("resource:///modules/devtools/ToolDefinitions.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "gDevTools",
-                                  "resource:///modules/devtools/gDevTools.jsm");
+Cu.import("resource:///modules/devtools/gDevTools.jsm");
 
-this.EXPORTED_SYMBOLS = ["CssHtmlTree", "PropertyView"];
+const FILTER_CHANGED_TIMEOUT = 300;
+
+const HTML_NS = "http://www.w3.org/1999/xhtml";
+const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 /**
  * Helper for long-running processes that should yield occasionally to
@@ -46,7 +43,7 @@ this.EXPORTED_SYMBOLS = ["CssHtmlTree", "PropertyView"];
 function UpdateProcess(aWin, aGenerator, aOptions)
 {
   this.win = aWin;
-  this.iter = Iterator(aGenerator);
+  this.iter = devtools._Iterator(aGenerator);
   this.onItem = aOptions.onItem || function() {};
   this.onBatch = aOptions.onBatch || function () {};
   this.onDone = aOptions.onDone || function() {};
@@ -120,7 +117,7 @@ UpdateProcess.prototype = {
  * @params {StyleInspector} aStyleInspector The owner of this CssHtmlTree
  * @constructor
  */
-this.CssHtmlTree = function CssHtmlTree(aStyleInspector)
+function CssHtmlTree(aStyleInspector)
 {
   this.styleWindow = aStyleInspector.window;
   this.styleDocument = aStyleInspector.window.document;
@@ -533,7 +530,7 @@ CssHtmlTree.prototype = {
  * @param {string} aName the CSS property name for which this PropertyView
  * instance will render the rules.
  */
-this.PropertyView = function PropertyView(aTree, aName)
+function PropertyView(aTree, aName)
 {
   this.tree = aTree;
   this.name = aName;
@@ -826,7 +823,7 @@ SelectorView.prototype = {
    *
    * These statuses are localized inside the styleinspector.properties string
    * bundle.
-   * @see CssLogic.jsm - the CssLogic.STATUS array.
+   * @see css-logic.js - the CssLogic.STATUS array.
    *
    * @return {void}
    */
@@ -935,7 +932,7 @@ SelectorView.prototype = {
     if (contentSheet) {
       let target = inspector.target;
 
-      if (styleEditorDefinition.isTargetSupported(target)) {
+      if (ToolDefinitions.styleEditor.isTargetSupported(target)) {
         gDevTools.showToolbox(target, "styleeditor").then(function(toolbox) {
           toolbox.getCurrentPanel().selectStyleSheet(styleSheet, line);
         });
@@ -951,3 +948,6 @@ SelectorView.prototype = {
     }
   },
 };
+
+exports.CssHtmlTree = CssHtmlTree;
+exports.PropertyView = PropertyView;

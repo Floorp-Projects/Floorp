@@ -12,14 +12,14 @@ Cu.import("resource://gre/modules/devtools/dbg-server.jsm", tempScope);
 Cu.import("resource://gre/modules/devtools/dbg-client.jsm", tempScope);
 Cu.import("resource:///modules/source-editor.jsm", tempScope);
 Cu.import("resource:///modules/devtools/gDevTools.jsm", tempScope);
-Cu.import("resource:///modules/devtools/Target.jsm", tempScope);
 let Services = tempScope.Services;
 let SourceEditor = tempScope.SourceEditor;
 let DebuggerServer = tempScope.DebuggerServer;
 let DebuggerTransport = tempScope.DebuggerTransport;
 let DebuggerClient = tempScope.DebuggerClient;
 let gDevTools = tempScope.gDevTools;
-let TargetFactory = tempScope.TargetFactory;
+let devtools = tempScope.devtools;
+let TargetFactory = devtools.TargetFactory;
 
 // Import the GCLI test helper
 let testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));

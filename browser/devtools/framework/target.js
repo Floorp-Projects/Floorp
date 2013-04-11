@@ -4,17 +4,14 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [ "TargetFactory" ];
+const {Cc, Ci, Cu} = require("chrome");
 
-const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+var Promise = require("sdk/core/promise");
+var EventEmitter = require("devtools/shared/event-emitter");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
-Cu.import("resource:///modules/devtools/EventEmitter.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "DebuggerServer",
   "resource://gre/modules/devtools/dbg-server.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "DebuggerClient",
   "resource://gre/modules/devtools/dbg-client.jsm");
 
@@ -24,7 +21,7 @@ const promiseTargets = new WeakMap();
 /**
  * Functions for creating Targets
  */
-this.TargetFactory = {
+exports.TargetFactory = {
   /**
    * Construct a Target
    * @param {XULTab} tab
@@ -95,8 +92,8 @@ this.TargetFactory = {
    */
   allTargets: function TF_allTargets() {
     let windows = [];
-    let wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                       .getService(Components.interfaces.nsIWindowMediator);
+    let wm = Cc["@mozilla.org/appshell/window-mediator;1"]
+                       .getService(Ci.nsIWindowMediator);
     let en = wm.getXULWindowEnumerator(null);
     while (en.hasMoreElements()) {
       windows.push(en.getNext());

@@ -5,18 +5,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const Cu = Components.utils;
-
-Cu.import("resource:///modules/devtools/TiltMath.jsm");
-
-this.EXPORTED_SYMBOLS = ["TiltVisualizerStyle"];
+let {TiltMath} = require("devtools/tilt/tilt-math");
 let rgba = TiltMath.hex2rgba;
 
 /**
  * Various colors and style settings used throughout Tilt.
  */
-this.TiltVisualizerStyle = {
-
+module.exports = {
   canvas: {
     background: "linear-gradient(#454545 0%, #000 100%)",
   },
