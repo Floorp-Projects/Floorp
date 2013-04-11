@@ -28,7 +28,7 @@ if (!SpecialPowers.getBoolPref("dom.mozContacts.enabled")) {
   comp.utils.import("resource://gre/modules/PermissionPromptHelper.jsm");
   SpecialPowers.setBoolPref("dom.mozContacts.enabled", true);
 }
-    
+
 SpecialPowers.addPermission("contacts-write", true, document);
 SpecialPowers.addPermission("contacts-read", true, document);
 SpecialPowers.addPermission("contacts-create", true, document);
@@ -140,8 +140,16 @@ function onFailure() {
 }
 
 function checkStr(str1, str2, msg) {
-  if (str1)
-    ok(typeof str1 == "string" ? [str1] : str1, (typeof str2 == "string") ? [str2] : str2, msg);
+  // comparing /[null(,null)+]/ and undefined should pass
+  function nonNull(e) {
+    return e != null;
+  }
+  if ((Array.isArray(str1) && str1.filter(nonNull).length == 0 && str2 == undefined)
+     ||(Array.isArray(str2) && str2.filter(nonNull).length == 0 && str1 == undefined)) {
+    ok(true, msg);
+  } else if (str1) {
+    is(JSON.stringify(typeof str1 == "string" ? [str1] : str1), JSON.stringify(typeof str2 == "string" ? [str2] : str2), msg);
+  }
 }
 
 function checkAddress(adr1, adr2) {
