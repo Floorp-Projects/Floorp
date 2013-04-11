@@ -13,7 +13,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES	= \
     frameAppIsolation.html \
-    frameBug624047.html \
     frameChromeSlave.html \
     frameKeySync.html \
     frameMasterEqual.html \
@@ -27,9 +26,10 @@ MOCHITEST_FILES	= \
     interOriginFrame.js \
     interOriginTest.js \
     interOriginTest2.js \
+    localStorageCommon.js \
     test_appIsolation.html \
     test_brokenUTF-16.html \
-    test_bug624047.html \
+    test_bug600307-DBOps.html \
     test_bug746272-1.html \
     test_bug746272-2.html \
     test_cookieBlock.html \
