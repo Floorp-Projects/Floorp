@@ -11,20 +11,7 @@
  * Part B tests this when the columns do *not* match, so the DB is reset.
  */
 
-let iter = tests();
-
 function run_test()
-{
-  do_test_pending();
-  iter.next();
-}
-
-function next_test()
-{
-  iter.next();
-}
-
-function tests()
 {
   try {
   var testnum = 0;
@@ -47,46 +34,43 @@ function tests()
   testfile.copyTo(profileDir, "formhistory.sqlite");
   do_check_eq(999, getDBVersion(testfile));
 
-  let checkZero = function(num) { do_check_eq(num, 0); next_test(); }
-  let checkOne = function(num) { do_check_eq(num, 1); next_test(); }
-
   // ===== 1 =====
   testnum++;
-
   // Open the DB, ensure that a backup of the corrupt DB is made.
+  do_check_false(bakFile.exists());
+  var fh = Cc["@mozilla.org/satchel/form-history;1"].
+           getService(Ci.nsIFormHistory2);
   // DB init is done lazily so the DB shouldn't be created yet.
   do_check_false(bakFile.exists());
   // Doing any request to the DB should create it.
-  yield countEntries("", "", next_test);
-
+  fh.DBConnection;
   do_check_true(bakFile.exists());
   bakFile.remove(false);
 
   // ===== 2 =====
   testnum++;
   // File should be empty
-  yield countEntries(null, null, function(num) { do_check_false(num); next_test(); });
-  yield countEntries("name-A", "value-A", checkZero);
+  do_check_false(fh.hasEntries);
+  do_check_false(fh.entryExists("name-A", "value-A"));
   // check for current schema.
-  do_check_eq(CURRENT_SCHEMA, FormHistory.schemaVersion);
+  do_check_eq(CURRENT_SCHEMA, fh.DBConnection.schemaVersion);
 
   // ===== 3 =====
   testnum++;
   // Try adding an entry
-  yield updateEntry("add", "name-A", "value-A", next_test);
-  yield countEntries(null, null, checkOne);
-  yield countEntries("name-A", "value-A", checkOne);
+  fh.addEntry("name-A", "value-A");
+  do_check_true(fh.hasEntries);
+  do_check_true(fh.entryExists("name-A", "value-A"));
+
 
   // ===== 4 =====
   testnum++;
   // Try removing an entry
-  yield updateEntry("remove", "name-A", "value-A", next_test);
-  yield countEntries(null, null, checkZero);
-  yield countEntries("name-A", "value-A", checkZero);
+  fh.removeEntry("name-A", "value-A");
+  do_check_false(fh.hasEntries);
+  do_check_false(fh.entryExists("name-A", "value-A"));
 
   } catch (e) {
     throw "FAILED in test #" + testnum + " -- " + e;
   }
-
-  do_test_finished();
 }

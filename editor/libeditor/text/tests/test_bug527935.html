@@ -37,7 +37,7 @@ SimpleTest.waitForFocus(function() {
       function listener() {
         popupShown = true;
       }
-      SpecialPowers.addAutoCompletePopupEventListener(window, "popupshowing", listener);
+      SpecialPowers.addAutoCompletePopupEventListener(window, listener);
 
       var event = document.createEvent("KeyboardEvent");
 
@@ -49,7 +49,7 @@ SimpleTest.waitForFocus(function() {
 
       hitEventLoop(function() {
         ok(!popupShown, "Popup must not be opened");
-        SpecialPowers.removeAutoCompletePopupEventListener(window, "popupshowing", listener);
+        SpecialPowers.removeAutoCompletePopupEventListener(window, listener);
         SimpleTest.finish();
       }, 100);
     }, 0);
