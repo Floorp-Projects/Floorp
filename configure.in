@@ -2485,6 +2485,7 @@ if test -n "$MOZ_LINKER"; then
   AC_DEFINE(MOZ_LINKER)
 fi
 AC_SUBST(MOZ_ENABLE_SZIP)
+AC_SUBST(MOZ_SZIP_FLAGS)
 
 dnl Only one oddball right now (QNX), but this gives us flexibility
 dnl if any other platforms need to override this in the future.

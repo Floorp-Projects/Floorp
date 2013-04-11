@@ -5,3 +5,8 @@
 # This file is included at the top of all native android mozconfigs
 
 . "$topsrcdir/build/mozconfig.common"
+
+# Set the most aggressive settings for szip. Not the default because it's
+# much slower and we didn't want to slow down developers builds.
+# Has no effect when MOZ_ENABLE_SZIP is not set in mobile/android/confvars.sh.
+MOZ_SZIP_FLAGS="-D auto -f auto"
