@@ -14,6 +14,8 @@
 #ifndef ION_SPEW_DIR
 # if defined(_WIN32)
 #  define ION_SPEW_DIR ""
+# elif defined(__ANDROID__)
+#  define ION_SPEW_DIR "/data/local/tmp/"
 # else
 #  define ION_SPEW_DIR "/tmp/"
 # endif
