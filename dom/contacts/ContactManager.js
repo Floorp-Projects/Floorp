@@ -25,8 +25,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "nsIMessageSender");
 
 const nsIClassInfo            = Ci.nsIClassInfo;
-const CONTACTPROPERTIES_CID   = Components.ID("{0a6720d7-9cae-4467-989d-e9e450e21341}");
-const nsIContactProperties    = Ci.nsIContactProperties;
+const CONTACTPROPERTIES_CID   = Components.ID("{f5181640-89e8-11e1-b0c4-0800200c9a66}");
+const nsIDOMContactProperties = Ci.nsIDOMContactProperties;
 
 // ContactProperties is not directly instantiated. It is used as interface.
 
@@ -38,17 +38,17 @@ ContactProperties.prototype = {
   classInfo : XPCOMUtils.generateCI({classID: CONTACTPROPERTIES_CID,
                                      contractID:"@mozilla.org/contactProperties;1",
                                      classDescription: "ContactProperties",
-                                     interfaces: [nsIContactProperties],
+                                     interfaces: [nsIDOMContactProperties],
                                      flags: nsIClassInfo.DOM_OBJECT}),
 
-  QueryInterface : XPCOMUtils.generateQI([nsIContactProperties])
+  QueryInterface : XPCOMUtils.generateQI([nsIDOMContactProperties])
 }
 
 //ContactAddress
 
 const CONTACTADDRESS_CONTRACTID = "@mozilla.org/contactAddress;1";
-const CONTACTADDRESS_CID        = Components.ID("{c5d6eb73-a079-4a9f-8cd5-618194f73b30}");
-const nsIContactAddress         = Components.interfaces.nsIContactAddress;
+const CONTACTADDRESS_CID        = Components.ID("{eba48030-89e8-11e1-b0c4-0800200c9a66}");
+const nsIDOMContactAddress      = Components.interfaces.nsIDOMContactAddress;
 
 function ContactAddress(aType, aStreetAddress, aLocality, aRegion, aPostalCode, aCountryName) {
   this.type = aType || null;
@@ -73,17 +73,17 @@ ContactAddress.prototype = {
   classInfo : XPCOMUtils.generateCI({classID: CONTACTADDRESS_CID,
                                      contractID: CONTACTADDRESS_CONTRACTID,
                                      classDescription: "ContactAddress",
-                                     interfaces: [nsIContactAddress],
+                                     interfaces: [nsIDOMContactAddress],
                                      flags: nsIClassInfo.DOM_OBJECT}),
 
-  QueryInterface : XPCOMUtils.generateQI([nsIContactAddress])
+  QueryInterface : XPCOMUtils.generateQI([nsIDOMContactAddress])
 }
 
 //ContactField
 
 const CONTACTFIELD_CONTRACTID = "@mozilla.org/contactField;1";
-const CONTACTFIELD_CID        = Components.ID("{474b8c6d-f984-431f-9636-e523ca3ec34d}");
-const nsIContactField         = Components.interfaces.nsIContactField;
+const CONTACTFIELD_CID        = Components.ID("{e2cb19c0-e4aa-11e1-9b23-0800200c9a66}");
+const nsIDOMContactField      = Components.interfaces.nsIDOMContactField;
 
 function ContactField(aType, aValue) {
   this.type = aType || null;
@@ -100,17 +100,17 @@ ContactField.prototype = {
   classInfo : XPCOMUtils.generateCI({classID: CONTACTFIELD_CID,
                                      contractID: CONTACTFIELD_CONTRACTID,
                                      classDescription: "ContactField",
-                                     interfaces: [nsIContactField],
+                                     interfaces: [nsIDOMContactField],
                                      flags: nsIClassInfo.DOM_OBJECT}),
 
-  QueryInterface : XPCOMUtils.generateQI([nsIContactField])
+  QueryInterface : XPCOMUtils.generateQI([nsIDOMContactField])
 }
 
 //ContactTelField
 
 const CONTACTTELFIELD_CONTRACTID = "@mozilla.org/contactTelField;1";
-const CONTACTTELFIELD_CID        = Components.ID("{4d42c5a9-ea5d-4102-80c3-40cc986367ca}");
-const nsIContactTelField         = Components.interfaces.nsIContactTelField;
+const CONTACTTELFIELD_CID        = Components.ID("{ed0ab260-e4aa-11e1-9b23-0800200c9a66}");
+const nsIDOMContactTelField      = Components.interfaces.nsIDOMContactTelField;
 
 function ContactTelField(aType, aValue, aCarrier) {
   this.type = aType || null;
@@ -129,17 +129,17 @@ ContactTelField.prototype = {
   classInfo : XPCOMUtils.generateCI({classID: CONTACTTELFIELD_CID,
                                      contractID: CONTACTTELFIELD_CONTRACTID,
                                      classDescription: "ContactTelField",
-                                     interfaces: [nsIContactTelField],
+                                     interfaces: [nsIDOMContactTelField],
                                      flags: nsIClassInfo.DOM_OBJECT}),
 
-  QueryInterface : XPCOMUtils.generateQI([nsIContactTelField])
+  QueryInterface : XPCOMUtils.generateQI([nsIDOMContactTelField])
 }
 
 //ContactFindSortOptions
 
 const CONTACTFINDSORTOPTIONS_CONTRACTID = "@mozilla.org/contactFindSortOptions;1"
-const CONTACTFINDSORTOPTIONS_CID        = Components.ID("{0a5b1fab-70da-46dd-b902-619904d920c2}");
-const nsIContactFindSortOptions         = Ci.nsIContactFindSortOptions;
+const CONTACTFINDSORTOPTIONS_CID        = Components.ID("{cb008c06-3bf8-495c-8865-f9ca1673a1e1}");
+const nsIDOMContactFindSortOptions      = Ci.nsIDOMContactFindSortOptions;
 
 function ContactFindSortOptions () { }
 
@@ -148,16 +148,16 @@ ContactFindSortOptions.prototype = {
   classInfo: XPCOMUtils.generateCI({classID: CONTACTFINDSORTOPTIONS_CID,
                                     contractID: CONTACTFINDSORTOPTIONS_CONTRACTID,
                                     classDescription: "ContactFindSortOptions",
-                                    interfaces: [nsIContactFindSortOptions],
+                                    interfaces: [nsIDOMContactFindSortOptions],
                                     flags: nsIClassInfo.DOM_OBJECT}),
-  QueryInterface: XPCOMUtils.generateQI([nsIContactFindSortOptions])
+  QueryInterface: XPCOMUtils.generateQI([nsIDOMContactFindSortOptions])
 };
 
 //ContactFindOptions
 
 const CONTACTFINDOPTIONS_CONTRACTID = "@mozilla.org/contactFindOptions;1";
-const CONTACTFINDOPTIONS_CID        = Components.ID("{28ce07d0-45d9-4b7a-8843-521df4edd8bc}");
-const nsIContactFindOptions         = Components.interfaces.nsIContactFindOptions;
+const CONTACTFINDOPTIONS_CID        = Components.ID("{e31daea0-0cb6-11e1-be50-0800200c9a66}");
+const nsIDOMContactFindOptions      = Components.interfaces.nsIDOMContactFindOptions;
 
 function ContactFindOptions() { };
 
@@ -167,18 +167,18 @@ ContactFindOptions.prototype = {
   classInfo : XPCOMUtils.generateCI({classID: CONTACTFINDOPTIONS_CID,
                                      contractID: CONTACTFINDOPTIONS_CONTRACTID,
                                      classDescription: "ContactFindOptions",
-                                     interfaces: [nsIContactFindSortOptions,
-                                                  nsIContactFindOptions],
+                                     interfaces: [nsIDOMContactFindSortOptions,
+                                                  nsIDOMContactFindOptions],
                                      flags: nsIClassInfo.DOM_OBJECT}),
 
-  QueryInterface : XPCOMUtils.generateQI([nsIContactFindSortOptions,
-                                          nsIContactFindOptions])
+  QueryInterface : XPCOMUtils.generateQI([nsIDOMContactFindSortOptions,
+                                          nsIDOMContactFindOptions])
 }
 
 //Contact
 
 const CONTACT_CONTRACTID = "@mozilla.org/contact;1";
-const CONTACT_CID        = Components.ID("{72a5ee28-81d8-4af8-90b3-ae935396cc66}");
+const CONTACT_CID        = Components.ID("{da0f7040-388b-11e1-b86c-0800200c9a66}");
 const nsIDOMContact      = Components.interfaces.nsIDOMContact;
 
 function Contact() { };
@@ -329,16 +329,16 @@ Contact.prototype = {
   classInfo : XPCOMUtils.generateCI({classID: CONTACT_CID,
                                      contractID: CONTACT_CONTRACTID,
                                      classDescription: "Contact",
-                                     interfaces: [nsIDOMContact, nsIContactProperties],
+                                     interfaces: [nsIDOMContact, nsIDOMContactProperties],
                                      flags: nsIClassInfo.DOM_OBJECT}),
 
-  QueryInterface : XPCOMUtils.generateQI([nsIDOMContact, nsIContactProperties])
+  QueryInterface : XPCOMUtils.generateQI([nsIDOMContact, nsIDOMContactProperties])
 }
 
 // ContactManager
 
 const CONTACTMANAGER_CONTRACTID = "@mozilla.org/contactManager;1";
-const CONTACTMANAGER_CID        = Components.ID("{4efae3f8-dd69-4622-97c8-f16e4d38d95c}");
+const CONTACTMANAGER_CID        = Components.ID("{1d70322b-f11b-4f19-9586-7bf291f212aa}");
 const nsIDOMContactManager      = Components.interfaces.nsIDOMContactManager;
 
 function ContactManager()

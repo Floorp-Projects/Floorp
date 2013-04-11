@@ -4,8 +4,11 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(c5d6eb73-a079-4a9f-8cd5-618194f73b30)]
-interface nsIContactAddress : nsISupports
+interface nsIArray;
+interface nsIDOMContact;
+
+[scriptable, uuid(eba48030-89e8-11e1-b0c4-0800200c9a66)]
+interface nsIDOMContactAddress : nsISupports
 {
   attribute DOMString type;
   attribute DOMString streetAddress;
@@ -15,28 +18,28 @@ interface nsIContactAddress : nsISupports
   attribute DOMString countryName;
 };
 
-[scriptable, uuid(474b8c6d-f984-431f-9636-e523ca3ec34d)]
-interface nsIContactField : nsISupports
+[scriptable, uuid(e2cb19c0-e4aa-11e1-9b23-0800200c9a66)]
+interface nsIDOMContactField : nsISupports
 {
   attribute jsval type; // DOMString[] for primary/favorite (use:"PREF"), "home", "work", etc.
   attribute DOMString value;
 };
 
-[scriptable, uuid(4d42c5a9-ea5d-4102-80c3-40cc986367ca)]
-interface nsIContactTelField : nsIContactField
+[scriptable, uuid(ed0ab260-e4aa-11e1-9b23-0800200c9a66)]
+interface nsIDOMContactTelField : nsIDOMContactField
 {
   attribute DOMString carrier;
 };
 
-[scriptable, uuid(0a5b1fab-70da-46dd-b902-619904d920c2)]
-interface nsIContactFindSortOptions : nsISupports
+[scriptable, uuid(cb008c06-3bf8-495c-8865-f9ca1673a1e1)]
+interface nsIDOMContactFindSortOptions : nsISupports
 {
   attribute DOMString sortBy;       // "givenName" or "familyName"
   attribute DOMString sortOrder;    // e.g. "descending"
 };
 
-[scriptable, uuid(28ce07d0-45d9-4b7a-8843-521df4edd8bc)]
-interface nsIContactFindOptions : nsIContactFindSortOptions
+[scriptable, uuid(e13ca4c5-c9cd-40bb-95e9-b636d42f5edf)]
+interface nsIDOMContactFindOptions : nsIDOMContactFindSortOptions
 {
   attribute DOMString filterValue;  // e.g. "Tom"
   attribute DOMString filterOp;     // e.g. "contains"
@@ -44,8 +47,8 @@ interface nsIContactFindOptions : nsIContactFindSortOptions
   attribute unsigned long filterLimit;
 };
 
-[scriptable, uuid(0a6720d7-9cae-4467-989d-e9e450e21341)]
-interface nsIContactProperties : nsISupports
+[scriptable, uuid(f0ddb360-e4aa-11e1-9b23-0800200c9a66)]
+interface nsIDOMContactProperties : nsISupports
 {
   attribute jsval         name;               // DOMString[]
   attribute jsval         honorificPrefix;    // DOMString[]
