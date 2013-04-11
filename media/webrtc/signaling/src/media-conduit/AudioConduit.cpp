@@ -640,7 +640,7 @@ int WebrtcAudioConduit::SendPacket(int channel, const void* data, int len)
     {
       return mOtherDirection->SendPacket(channel, data, len);
     }
-    CSFLogDebug(logTag,  "%s : Asked to send RTP without an RTP sender",
+    CSFLogDebug(logTag,  "%s : Asked to send RTP without an RTP sender on channel %d",
                 __FUNCTION__, channel);
     return -1;
   } else {
@@ -665,7 +665,7 @@ int WebrtcAudioConduit::SendRTCPPacket(int channel, const void* data, int len)
     {
       return mOtherDirection->SendRTCPPacket(channel, data, len);
     }
-    CSFLogDebug(logTag,  "%s : Asked to send RTCP without an RTP receiver",
+    CSFLogDebug(logTag,  "%s : Asked to send RTCP without an RTP receiver on channel %d",
                 __FUNCTION__, channel);
     return -1;
   } else {
