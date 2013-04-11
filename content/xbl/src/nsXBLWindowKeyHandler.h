@@ -17,17 +17,10 @@ class nsIDOMEventTarget;
 class nsXBLSpecialDocInfo;
 class nsXBLPrototypeHandler;
 
-namespace mozilla {
-namespace dom {
-class Element;
-class EventTarget;
-}
-}
-
 class nsXBLWindowKeyHandler : public nsIDOMEventListener
 {
 public:
-  nsXBLWindowKeyHandler(nsIDOMElement* aElement, mozilla::dom::EventTarget* aTarget);
+  nsXBLWindowKeyHandler(nsIDOMElement* aElement, nsIDOMEventTarget* aTarget);
   virtual ~nsXBLWindowKeyHandler();
 
   NS_DECL_ISUPPORTS
@@ -63,10 +56,10 @@ protected:
 
   // Returns the element which was passed as a parameter to the constructor,
   // unless the element has been removed from the document.
-  already_AddRefed<mozilla::dom::Element> GetElement();
+  already_AddRefed<nsIDOMElement> GetElement();
   // Using weak pointer to the DOM Element.
   nsWeakPtr              mWeakPtrForElement;
-  mozilla::dom::EventTarget* mTarget; // weak ref
+  nsIDOMEventTarget*    mTarget; // weak ref
 
   // these are not owning references; the prototype handlers are owned
   // by the prototype bindings which are owned by the docinfo.
@@ -78,8 +71,9 @@ protected:
   static uint32_t sRefCnt;
 };
 
-already_AddRefed<nsXBLWindowKeyHandler>
+nsresult
 NS_NewXBLWindowKeyHandler(nsIDOMElement* aElement,
-                          mozilla::dom::EventTarget* aTarget);
+                          nsIDOMEventTarget* aTarget,
+                          nsXBLWindowKeyHandler** aResult);
 
 #endif

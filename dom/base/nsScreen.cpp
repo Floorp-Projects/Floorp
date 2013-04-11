@@ -71,7 +71,7 @@ nsScreen::Reset()
   hal::UnlockScreenOrientation();
 
   if (mEventListener) {
-    nsCOMPtr<EventTarget> target = do_QueryInterface(GetOwner());
+    nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(GetOwner());
     if (target) {
       target->RemoveSystemEventListener(NS_LITERAL_STRING("mozfullscreenchange"),
                                         mEventListener, /* usecapture */ true);
@@ -368,7 +368,7 @@ nsScreen::MozLockOrientation(const Sequence<nsString>& aOrientations,
       // and when we will have to unlock the screen.
       // This needs to be done before LockScreenOrientation call to make sure
       // the locking can be unlocked.
-      nsCOMPtr<EventTarget> target = do_QueryInterface(GetOwner());
+      nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(GetOwner());
       if (!target) {
         return false;
       }
@@ -426,7 +426,8 @@ nsScreen::FullScreenEventListener::HandleEvent(nsIDOMEvent* aEvent)
   MOZ_ASSERT(eventType.EqualsLiteral("mozfullscreenchange"));
 #endif
 
-  nsCOMPtr<EventTarget> target = aEvent->InternalDOMEvent()->GetCurrentTarget();
+  nsCOMPtr<nsIDOMEventTarget> target;
+  aEvent->GetCurrentTarget(getter_AddRefs(target));
 
   // We have to make sure that the event we got is the event sent when
   // fullscreen is disabled because we could get one when fullscreen
