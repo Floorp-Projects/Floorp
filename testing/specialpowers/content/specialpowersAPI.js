@@ -962,13 +962,13 @@ SpecialPowersAPI.prototype = {
     return this._getTopChromeWindow(window).document
                                            .getElementById("PopupAutoComplete");
   },
-  addAutoCompletePopupEventListener: function(window, listener) {
-    this._getAutoCompletePopup(window).addEventListener("popupshowing",
+  addAutoCompletePopupEventListener: function(window, eventname, listener) {
+    this._getAutoCompletePopup(window).addEventListener(eventname,
                                                         listener,
                                                         false);
   },
-  removeAutoCompletePopupEventListener: function(window, listener) {
-    this._getAutoCompletePopup(window).removeEventListener("popupshowing",
+  removeAutoCompletePopupEventListener: function(window, eventname, listener) {
+    this._getAutoCompletePopup(window).removeEventListener(eventname,
                                                            listener,
                                                            false);
   },
