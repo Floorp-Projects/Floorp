@@ -30,14 +30,7 @@ add_test(function test_corruptFormHistoryDB_lazyCorruptInit1() {
   // DB init is done lazily so the DB shouldn't be created yet.
   do_check_false(bakFile.exists());
   // Doing any request to the DB should create it.
-  FormHistory.count({}, {
-    onSuccess : function(aNumEntries) {
-      run_next_test();
-    },
-    onFailure : function(aError) {
-      do_throw("DB initialization failed.");
-    }
-  });
+  countEntries(null, null, run_next_test);
 });
 
 add_test(function test_corruptFormHistoryDB_lazyCorruptInit2() {
@@ -51,19 +44,19 @@ add_test(function test_corruptFormHistoryDB_emptyInit() {
   do_log_info("test that FormHistory initializes an empty DB in place of corrupt DB.");
 
   FormHistory.count({}, {
-    onSuccess : function(aNumEntries) {
+    handleResult : function(aNumEntries) {
       do_check_true(aNumEntries == 0);
       FormHistory.count({ fieldname : "name-A", value : "value-A" }, {
-        onSuccess : function(aNumEntries2) {
+        handleResult : function(aNumEntries2) {
           do_check_true(aNumEntries2 == 0);
           run_next_test();
         },
-        onFailure : function(aError2) {
+        handleError : function(aError2) {
           do_throw("DB initialized after reading a corrupt DB file found an entry.");
         }
       });
     },
-    onFailure : function (aError) {
+    handleError : function (aError) {
       do_throw("DB initialized after reading a corrupt DB file is not empty.");
     }
   });
@@ -72,49 +65,25 @@ add_test(function test_corruptFormHistoryDB_emptyInit() {
 add_test(function test_corruptFormHistoryDB_addEntry() {
   do_log_info("test adding an entry to the empty DB.");
 
-  FormHistory.update({
-    op : "add",
-    fieldname : "name-A",
-    value : "value-A"
-  }, {
-    onSuccess : function() {
-      FormHistory.count({ fieldname : "name-A", value : "value-A" }, {
-        onSuccess : function(aNumEntries) {
-          do_check_true(aNumEntries == 1);
+  updateEntry("add", "name-A", "value-A",
+    function() {
+      countEntries("name-A", "value-A",
+        function(count) {
+          do_check_true(count == 1);
           run_next_test();
-        },
-        onFailure : function(aError) {
-          do_throw("Newly added entry cannot be found in DB.");
-        }
-      });
-    },
-    onFailure : function(aError) {
-      do_throw("Unable to add new entry to empty DB.");
-    }
+        });
+    });
   });
-});
 
 add_test(function test_corruptFormHistoryDB_removeEntry() {
   do_log_info("test removing an entry to the empty DB.");
 
-  FormHistory.update({
-    op : "remove",
-    fieldname : "name-A",
-    value : "value-A"
-  }, {
-    onSuccess : function() {
-      FormHistory.count({ fieldname : "name-A", value : "value-A" }, {
-        onSuccess : function(aNumEntries) {
-          do_check_true(aNumEntries == 0);
+  updateEntry("remove", "name-A", "value-A",
+    function() {
+      countEntries("name-A", "value-A",
+        function(count) {
+          do_check_true(count == 0);
           run_next_test();
-        },
-        onFailure : function(aError) {
-          do_throw("Removed entry still being counted in DB.");
-        }
-      });
-    },
-    onFailure : function(aError) {
-      do_throw("Unable to remove entry in DB.");
-    }
+        });
+    });
   });
-});

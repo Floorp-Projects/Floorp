@@ -38,10 +38,12 @@ const isGUID = /[A-Za-z0-9\+\/]{16}/;
 
 // Find form history entries.
 function searchEntries(terms, params, iter) {
-  FormHistory.search(terms, params, { onSuccess: function (results) { iter.send(results); },
-                                      onFailure: function (error) {
+  let results = [];
+  FormHistory.search(terms, params, { handleResult: function (result) results.push(result),
+                                      handleError: function (error) {
                                         do_throw("Error occurred searching form history: " + error);
-                                      }
+                                      },
+                                      handleCompletion: function (reason) { if (!reason) iter.send(results); }
                                     });
 }
 
@@ -54,10 +56,12 @@ function countEntries(name, value, then) {
   if (value !== null)
     obj.value = value;
 
-  FormHistory.count(obj, { onSuccess: function (num) then(num),
-                           onFailure: function (error) {
+  let count = 0;
+  FormHistory.count(obj, { handleResult: function (result) count = result,
+                           handleError: function (error) {
                              do_throw("Error occurred searching form history: " + error);
-                           }
+                           },
+                           handleCompletion: function (reason) { if (!reason) then(count); }
                          });
 }
 
@@ -80,10 +84,10 @@ function addEntry(name, value, then) {
 
 // Wrapper around FormHistory.update which handles errors. Calls then() when done.
 function updateFormHistory(changes, then) {
-  FormHistory.update(changes, { onSuccess: then,
-                                onFailure: function (error) {
+  FormHistory.update(changes, { handleError: function (error) {
                                   do_throw("Error occurred updating form history: " + error);
-                                }
+                                },
+                                handleCompletion: function (reason) { if (!reason) then(); },
                               });
 }
 

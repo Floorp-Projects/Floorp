@@ -284,15 +284,15 @@ Sanitizer.prototype = {
           }
         }
 
+        let count = 0;
         let countDone = {
-          onSuccess : function(aNumEntries) {
-            aCallback("formdata", aNumEntries > 0, aArg);
-          },
-          onFailure : function(aError) {
-            aCallback("formdata", false, aArg);
-          }
+          handleResult : function(aResult) count = aResult,
+          handleError : function(aError) Components.utils.reportError(aError),
+          handleCompletion :
+            function(aReason) { aCallback("formdata", aReason == 0 && count > 0, aArg); }
         };
         FormHistory.count({}, countDone);
+        return false;
       }
     },
     
