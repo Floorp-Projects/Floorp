@@ -8,7 +8,9 @@ XPIDL_SOURCES += [
     'nsIDOMStorage.idl',
     'nsIDOMStorageEvent.idl',
     'nsIDOMStorageIndexedDB.idl',
+    'nsIDOMStorageItem.idl',
     'nsIDOMStorageManager.idl',
+    'nsIDOMStorageObsolete.idl',
     'nsIDOMToString.idl',
 ]
 
