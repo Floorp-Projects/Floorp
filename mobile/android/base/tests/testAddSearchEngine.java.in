@@ -137,7 +137,7 @@ public class testAddSearchEngine extends PixelTest {
             public boolean test() {
                 ArrayList<ListView> views;
                 int searchEngineCount = 0;
-                views = mSolo.getCurrentListViews();
+                views = mSolo.getCurrentViews(ListView.class);
                 for (ListView view : views) {
                     ListAdapter adapter = view.getAdapter();
                     if (adapter != null) {
