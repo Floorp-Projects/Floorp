@@ -1,10 +1,8 @@
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-
 // Bug 453440 - Test the timespan-based logic of the sanitizer code
 var now_uSec = Date.now() * 1000;
 
 const dm = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
+const formhist = Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
 
 const kUsecPerMin = 60 * 1000000;
 
@@ -13,50 +11,14 @@ Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader)
                                            .loadSubScript("chrome://browser/content/sanitize.js", tempScope);
 let Sanitizer = tempScope.Sanitizer;
 
-let FormHistory = (Components.utils.import("resource://gre/modules/FormHistory.jsm", {})).FormHistory;
-
-function promiseFormHistoryRemoved() {
-  let deferred = Promise.defer();
-  Services.obs.addObserver(function onfh() {
-    Services.obs.removeObserver(onfh, "satchel-storage-changed", false);
-    deferred.resolve();
-  }, "satchel-storage-changed", false);
-  return deferred.promise;
-}
-
 function test() {
   waitForExplicitFinish();
 
-  Task.spawn(function() {
-    setupDownloads();
-    yield setupFormHistory();
-    yield setupHistory();
-    yield onHistoryReady();
-  }).then(finish);
-}
-
-function countEntries(name, message, check) {
-  let deferred = Promise.defer();
-
-  var obj = {};
-  if (name !== null)
-    obj.fieldname = name;
-
-  let count;
-  FormHistory.count(obj, { handleResult: function (result) count = result,
-                           handleError: function (error) {
-                             do_throw("Error occurred searching form history: " + error);
-                             deferred.reject(error)
-                           },
-                           handleCompletion: function (reason) {
-                             if (!reason) {
-                               check(count, message);
-                               deferred.resolve();
-                             }
-                           },
-                         });
-
-  return deferred.promise;
+  setupDownloads();
+  setupFormHistory();
+  setupHistory(function() {
+    Task.spawn(onHistoryReady).then(finish);
+  });
 }
 
 function onHistoryReady() {
@@ -85,8 +47,6 @@ function onHistoryReady() {
   s.sanitize();
   s.range = null;
 
-  yield promiseFormHistoryRemoved();
-
   ok(!(yield promiseIsURIVisited(makeURI("http://10minutes.com"))),
      "Pretend visit to 10minutes.com should now be deleted");
   ok((yield promiseIsURIVisited(makeURI("http://1hour.com"))),
@@ -108,19 +68,16 @@ function onHistoryReady() {
   ok((yield promiseIsURIVisited(makeURI("http://before-today.com"))),
     "Pretend visit to before-today.com should still exist");
 
-  let checkZero = function(num, message) { is(num, 0, message); }
-  let checkOne = function(num, message) { is(num, 1, message); }
-
-  yield countEntries("10minutes", "10minutes form entry should be deleted", checkZero);
-  yield countEntries("1hour", "1hour form entry should still exist", checkOne);
-  yield countEntries("1hour10minutes", "1hour10minutes form entry should still exist", checkOne);
-  yield countEntries("2hour", "2hour form entry should still exist", checkOne);
-  yield countEntries("2hour10minutes", "2hour10minutes form entry should still exist", checkOne);
-  yield countEntries("4hour", "4hour form entry should still exist", checkOne);
-  yield countEntries("4hour10minutes", "4hour10minutes form entry should still exist", checkOne);
+  ok(!formhist.nameExists("10minutes"), "10minutes form entry should be deleted");
+  ok(formhist.nameExists("1hour"), "1hour form entry should still exist");
+  ok(formhist.nameExists("1hour10minutes"), "1hour10minutes form entry should still exist");
+  ok(formhist.nameExists("2hour"), "2hour form entry should still exist");
+  ok(formhist.nameExists("2hour10minutes"), "2hour10minutes form entry should still exist");
+  ok(formhist.nameExists("4hour"), "4hour form entry should still exist");
+  ok(formhist.nameExists("4hour10minutes"), "4hour10minutes form entry should still exist");
   if (minutesSinceMidnight > 10)
-    yield countEntries("today", "today form entry should still exist", checkOne);
-  yield countEntries("b4today", "b4today form entry should still exist", checkOne);
+    ok(formhist.nameExists("today"), "today form entry should still exist");
+  ok(formhist.nameExists("b4today"), "b4today form entry should still exist");
 
   ok(!downloadExists(5555555), "10 minute download should now be deleted");
   ok(downloadExists(5555551), "<1 hour download should still be present");
@@ -137,8 +94,6 @@ function onHistoryReady() {
   // Clear 1 hour
   Sanitizer.prefs.setIntPref("timeSpan", 1);
   s.sanitize();
-
-  yield promiseFormHistoryRemoved();
 
   ok(!(yield promiseIsURIVisited(makeURI("http://1hour.com"))),
      "Pretend visit to 1hour.com should now be deleted");
@@ -159,15 +114,15 @@ function onHistoryReady() {
   ok((yield promiseIsURIVisited(makeURI("http://before-today.com"))),
     "Pretend visit to before-today.com should still exist");
 
-  yield countEntries("1hour", "1hour form entry should be deleted", checkZero);
-  yield countEntries("1hour10minutes", "1hour10minutes form entry should still exist", checkOne);
-  yield countEntries("2hour", "2hour form entry should still exist", checkOne);
-  yield countEntries("2hour10minutes", "2hour10minutes form entry should still exist", checkOne);
-  yield countEntries("4hour", "4hour form entry should still exist", checkOne);
-  yield countEntries("4hour10minutes", "4hour10minutes form entry should still exist", checkOne);
+  ok(!formhist.nameExists("1hour"), "1hour form entry should be deleted");
+  ok(formhist.nameExists("1hour10minutes"), "1hour10minutes form entry should still exist");
+  ok(formhist.nameExists("2hour"), "2hour form entry should still exist");
+  ok(formhist.nameExists("2hour10minutes"), "2hour10minutes form entry should still exist");
+  ok(formhist.nameExists("4hour"), "4hour form entry should still exist");
+  ok(formhist.nameExists("4hour10minutes"), "4hour10minutes form entry should still exist");
   if (hoursSinceMidnight > 1)
-    yield countEntries("today", "today form entry should still exist", checkOne);
-  yield countEntries("b4today", "b4today form entry should still exist", checkOne);
+    ok(formhist.nameExists("today"), "today form entry should still exist");
+  ok(formhist.nameExists("b4today"), "b4today form entry should still exist");
 
   ok(!downloadExists(5555551), "<1 hour download should now be deleted");
   ok(downloadExists(5555556), "1 hour 10 minute download should still be present");
@@ -184,8 +139,6 @@ function onHistoryReady() {
   s.range = [now_uSec - 70*60*1000000, now_uSec];
   s.sanitize();
   s.range = null;
-
-  yield promiseFormHistoryRemoved();
 
   ok(!(yield promiseIsURIVisited(makeURI("http://1hour10minutes.com"))),
      "Pretend visit to 1hour10minutes.com should now be deleted");
@@ -204,14 +157,14 @@ function onHistoryReady() {
   ok((yield promiseIsURIVisited(makeURI("http://before-today.com"))),
     "Pretend visit to before-today.com should still exist");
 
-  yield countEntries("1hour10minutes", "1hour10minutes form entry should be deleted", checkZero);
-  yield countEntries("2hour", "2hour form entry should still exist", checkOne);
-  yield countEntries("2hour10minutes", "2hour10minutes form entry should still exist", checkOne);
-  yield countEntries("4hour", "4hour form entry should still exist", checkOne);
-  yield countEntries("4hour10minutes", "4hour10minutes form entry should still exist", checkOne);
+  ok(!formhist.nameExists("1hour10minutes"), "1hour10minutes form entry should be deleted");
+  ok(formhist.nameExists("2hour"), "2hour form entry should still exist");
+  ok(formhist.nameExists("2hour10minutes"), "2hour10minutes form entry should still exist");
+  ok(formhist.nameExists("4hour"), "4hour form entry should still exist");
+  ok(formhist.nameExists("4hour10minutes"), "4hour10minutes form entry should still exist");
   if (minutesSinceMidnight > 70)
-    yield countEntries("today", "today form entry should still exist", checkOne);
-  yield countEntries("b4today", "b4today form entry should still exist", checkOne);
+    ok(formhist.nameExists("today"), "today form entry should still exist");
+  ok(formhist.nameExists("b4today"), "b4today form entry should still exist");
 
   ok(!downloadExists(5555556), "1 hour 10 minute old download should now be deleted");
   ok(downloadExists(5555550), "Year old download should still be present");
@@ -225,8 +178,6 @@ function onHistoryReady() {
   // Clear 2 hours
   Sanitizer.prefs.setIntPref("timeSpan", 2);
   s.sanitize();
-
-  yield promiseFormHistoryRemoved();
 
   ok(!(yield promiseIsURIVisited(makeURI("http://2hour.com"))),
      "Pretend visit to 2hour.com should now be deleted");
@@ -243,14 +194,15 @@ function onHistoryReady() {
   ok((yield promiseIsURIVisited(makeURI("http://before-today.com"))),
     "Pretend visit to before-today.com should still exist");
 
-  yield countEntries("2hour", "2hour form entry should be deleted", checkZero);
-  yield countEntries("2hour10minutes", "2hour10minutes form entry should still exist", checkOne);
-  yield countEntries("4hour", "4hour form entry should still exist", checkOne);
-  yield countEntries("4hour10minutes", "4hour10minutes form entry should still exist", checkOne);
+  ok(!formhist.nameExists("2hour"), "2hour form entry should be deleted");
+  ok(formhist.nameExists("2hour10minutes"), "2hour10minutes form entry should still exist");
+  ok(formhist.nameExists("4hour"), "4hour form entry should still exist");
+  ok(formhist.nameExists("4hour10minutes"), "4hour10minutes form entry should still exist");
   if (hoursSinceMidnight > 2)
-    yield countEntries("today", "today form entry should still exist", checkOne);
-  yield countEntries("b4today", "b4today form entry should still exist", checkOne);
+    ok(formhist.nameExists("today"), "today form entry should still exist");
+  ok(formhist.nameExists("b4today"), "b4today form entry should still exist");
 
+  ok(formhist.nameExists("b4today"), "b4today form entry should still exist");
   ok(!downloadExists(5555552), "<2 hour old download should now be deleted");
   ok(downloadExists(5555550), "Year old download should still be present");
   ok(downloadExists(5555557), "2 hour 10 minute download should still be present");
@@ -263,8 +215,6 @@ function onHistoryReady() {
   s.range = [now_uSec - 130*60*1000000, now_uSec];
   s.sanitize();
   s.range = null;
-
-  yield promiseFormHistoryRemoved();
 
   ok(!(yield promiseIsURIVisited(makeURI("http://2hour10minutes.com"))),
      "Pretend visit to 2hour10minutes.com should now be deleted");
@@ -279,12 +229,12 @@ function onHistoryReady() {
   ok((yield promiseIsURIVisited(makeURI("http://before-today.com"))),
     "Pretend visit to before-today.com should still exist");
 
-  yield countEntries("2hour10minutes", "2hour10minutes form entry should be deleted", checkZero);
-  yield countEntries("4hour", "4hour form entry should still exist", checkOne);
-  yield countEntries("4hour10minutes", "4hour10minutes form entry should still exist", checkOne);
+  ok(!formhist.nameExists("2hour10minutes"), "2hour10minutes form entry should be deleted");
+  ok(formhist.nameExists("4hour"), "4hour form entry should still exist");
+  ok(formhist.nameExists("4hour10minutes"), "4hour10minutes form entry should still exist");
   if (minutesSinceMidnight > 130)
-    yield countEntries("today", "today form entry should still exist", checkOne);
-  yield countEntries("b4today", "b4today form entry should still exist", checkOne);
+    ok(formhist.nameExists("today"), "today form entry should still exist");
+  ok(formhist.nameExists("b4today"), "b4today form entry should still exist");
 
   ok(!downloadExists(5555557), "2 hour 10 minute old download should now be deleted");
   ok(downloadExists(5555553), "<4 hour old download should still be present");
@@ -297,8 +247,6 @@ function onHistoryReady() {
   Sanitizer.prefs.setIntPref("timeSpan", 3);
   s.sanitize();
 
-  yield promiseFormHistoryRemoved();
-
   ok(!(yield promiseIsURIVisited(makeURI("http://4hour.com"))),
      "Pretend visit to 4hour.com should now be deleted");
   ok((yield promiseIsURIVisited(makeURI("http://4hour10minutes.com"))),
@@ -310,11 +258,11 @@ function onHistoryReady() {
   ok((yield promiseIsURIVisited(makeURI("http://before-today.com"))),
     "Pretend visit to before-today.com should still exist");
 
-  yield countEntries("4hour", "4hour form entry should be deleted", checkZero);
-  yield countEntries("4hour10minutes", "4hour10minutes form entry should still exist", checkOne);
+  ok(!formhist.nameExists("4hour"), "4hour form entry should be deleted");
+  ok(formhist.nameExists("4hour10minutes"), "4hour10minutes form entry should still exist");
   if (hoursSinceMidnight > 4)
-    yield countEntries("today", "today form entry should still exist", checkOne);
-  yield countEntries("b4today", "b4today form entry should still exist", checkOne);
+    ok(formhist.nameExists("today"), "today form entry should still exist");
+  ok(formhist.nameExists("b4today"), "b4today form entry should still exist");
 
   ok(!downloadExists(5555553), "<4 hour old download should now be deleted");
   ok(downloadExists(5555558), "4 hour 10 minute download should still be present");
@@ -327,8 +275,6 @@ function onHistoryReady() {
   s.sanitize();
   s.range = null;
 
-  yield promiseFormHistoryRemoved();
-
   ok(!(yield promiseIsURIVisited(makeURI("http://4hour10minutes.com"))),
      "Pretend visit to 4hour10minutes.com should now be deleted");
   if (minutesSinceMidnight > 250) {
@@ -337,12 +283,12 @@ function onHistoryReady() {
   }
   ok((yield promiseIsURIVisited(makeURI("http://before-today.com"))),
     "Pretend visit to before-today.com should still exist");
-
-  yield countEntries("4hour10minutes", "4hour10minutes form entry should be deleted", checkZero);
-  if (minutesSinceMidnight > 250)
-    yield countEntries("today", "today form entry should still exist", checkOne);
-  yield countEntries("b4today", "b4today form entry should still exist", checkOne);
   
+  ok(!formhist.nameExists("4hour10minutes"), "4hour10minutes form entry should be deleted");
+  if (minutesSinceMidnight > 250)
+    ok(formhist.nameExists("today"), "today form entry should still exist");
+  ok(formhist.nameExists("b4today"), "b4today form entry should still exist");
+
   ok(!downloadExists(5555558), "4 hour 10 minute download should now be deleted");
   ok(downloadExists(5555550), "Year old download should still be present");
   if (minutesSinceMidnight > 250)
@@ -351,8 +297,6 @@ function onHistoryReady() {
   // Clear Today
   Sanitizer.prefs.setIntPref("timeSpan", 4);
   s.sanitize();
-
-  yield promiseFormHistoryRemoved();
 
   // Be careful.  If we add our objectss just before midnight, and sanitize
   // runs immediately after, they won't be expired.  This is expected, but
@@ -363,33 +307,28 @@ function onHistoryReady() {
   if (today) {
     ok(!(yield promiseIsURIVisited(makeURI("http://today.com"))),
        "Pretend visit to today.com should now be deleted");
-
-    yield countEntries("today", "today form entry should be deleted", checkZero);
+    ok(!formhist.nameExists("today"), "today form entry should be deleted");
     ok(!downloadExists(5555554), "'Today' download should now be deleted");
   }
 
   ok((yield promiseIsURIVisited(makeURI("http://before-today.com"))),
      "Pretend visit to before-today.com should still exist");
-  yield countEntries("b4today", "b4today form entry should still exist", checkOne);
+  ok(formhist.nameExists("b4today"), "b4today form entry should still exist");
   ok(downloadExists(5555550), "Year old download should still be present");
 
   // Choose everything
   Sanitizer.prefs.setIntPref("timeSpan", 0);
   s.sanitize();
 
-  yield promiseFormHistoryRemoved();
-
   ok(!(yield promiseIsURIVisited(makeURI("http://before-today.com"))),
      "Pretend visit to before-today.com should now be deleted");
 
-  yield countEntries("b4today", "b4today form entry should be deleted", checkZero);
+  ok(!formhist.nameExists("b4today"), "b4today form entry should be deleted");
 
   ok(!downloadExists(5555550), "Year old download should now be deleted");
 }
 
-function setupHistory() {
-  let deferred = Promise.defer();
-
+function setupHistory(aCallback) {
   let places = [];
 
   function addPlace(aURI, aTitle, aVisitDate) {
@@ -424,140 +363,73 @@ function setupHistory() {
   PlacesUtils.asyncHistory.updatePlaces(places, {
     handleError: function () ok(false, "Unexpected error in adding visit."),
     handleResult: function () { },
-    handleCompletion: function () deferred.resolve()
+    handleCompletion: function () aCallback()
   });
-
-  return deferred.promise;
 }
 
 function setupFormHistory() {
+  // Make sure we've got a clean DB to start with.
+  formhist.removeAllEntries();
 
-  function searchEntries(terms, params) {
-    let deferred = Promise.defer();
-
-    let results = [];
-    FormHistory.search(terms, params, { handleResult: function (result) results.push(result),
-                                        handleError: function (error) {
-                                          do_throw("Error occurred searching form history: " + error);
-                                          deferred.reject(error);
-                                        },
-                                        handleCompletion: function (reason) { deferred.resolve(results); }
-                                      });
-    return deferred.promise;
-  }
-
-  function update(changes)
-  {
-    let deferred = Promise.defer();
-    FormHistory.update(changes, { handleError: function (error) {
-                                    do_throw("Error occurred searching form history: " + error);
-                                    deferred.reject(error);
-                                  },
-                                  handleCompletion: function (reason) { deferred.resolve(); }
-                                });
-    return deferred.promise;
-  }
-
-  // Make sure we've got a clean DB to start with, then add the entries we'll be testing.
-  yield update(
-    [{
-        op: "remove"
-     },
-     {
-        op : "add",
-        fieldname : "10minutes",
-        value : "10m"
-      }, {
-        op : "add",
-        fieldname : "1hour",
-        value : "1h"
-      }, {
-        op : "add",
-        fieldname : "1hour10minutes",
-        value : "1h10m"
-      }, {
-        op : "add",
-        fieldname : "2hour",
-        value : "2h"
-      }, {
-        op : "add",
-        fieldname : "2hour10minutes",
-        value : "2h10m"
-      }, {
-        op : "add",
-        fieldname : "4hour",
-        value : "4h"
-      }, {
-        op : "add",
-        fieldname : "4hour10minutes",
-        value : "4h10m"
-      }, {
-        op : "add",
-        fieldname : "today",
-        value : "1d"
-      }, {
-        op : "add",
-        fieldname : "b4today",
-        value : "1y"
-      }]);
+  // Add the entries we'll be testing.
+  formhist.addEntry("10minutes", "10m");
+  formhist.addEntry("1hour", "1h");
+  formhist.addEntry("1hour10minutes", "1h10m");
+  formhist.addEntry("2hour", "2h");
+  formhist.addEntry("2hour10minutes", "2h10m");
+  formhist.addEntry("4hour", "4h");
+  formhist.addEntry("4hour10minutes", "4h10m");
+  formhist.addEntry("today", "1d");
+  formhist.addEntry("b4today", "1y");
 
   // Artifically age the entries to the proper vintage.
+  let db = formhist.DBConnection;
   let timestamp = now_uSec - 10 * kUsecPerMin;
-  let results = yield searchEntries(["guid"], { fieldname: "10minutes" });
-  yield update({ op: "update", firstUsed: timestamp, guid: results[0].guid });
-
+  db.executeSimpleSQL("UPDATE moz_formhistory SET firstUsed = " +
+                      timestamp +  " WHERE fieldname = '10minutes'");
   timestamp = now_uSec - 45 * kUsecPerMin;
-  results = yield searchEntries(["guid"], { fieldname: "1hour" });
-  yield update({ op: "update", firstUsed: timestamp, guid: results[0].guid });
-
+  db.executeSimpleSQL("UPDATE moz_formhistory SET firstUsed = " +
+                      timestamp +  " WHERE fieldname = '1hour'");
   timestamp = now_uSec - 70 * kUsecPerMin;
-  results = yield searchEntries(["guid"], { fieldname: "1hour10minutes" });
-  yield update({ op: "update", firstUsed: timestamp, guid: results[0].guid });
-
+  db.executeSimpleSQL("UPDATE moz_formhistory SET firstUsed = " +
+                      timestamp +  " WHERE fieldname = '1hour10minutes'");
   timestamp = now_uSec - 90 * kUsecPerMin;
-  results = yield searchEntries(["guid"], { fieldname: "2hour" });
-  yield update({ op: "update", firstUsed: timestamp, guid: results[0].guid });
-
+  db.executeSimpleSQL("UPDATE moz_formhistory SET firstUsed = " +
+                      timestamp +  " WHERE fieldname = '2hour'");
   timestamp = now_uSec - 130 * kUsecPerMin;
-  results = yield searchEntries(["guid"], { fieldname: "2hour10minutes" });
-  yield update({ op: "update", firstUsed: timestamp, guid: results[0].guid });
-
+  db.executeSimpleSQL("UPDATE moz_formhistory SET firstUsed = " +
+                      timestamp +  " WHERE fieldname = '2hour10minutes'");
   timestamp = now_uSec - 180 * kUsecPerMin;
-  results = yield searchEntries(["guid"], { fieldname: "4hour" });
-  yield update({ op: "update", firstUsed: timestamp, guid: results[0].guid });
-
+  db.executeSimpleSQL("UPDATE moz_formhistory SET firstUsed = " +
+                      timestamp +  " WHERE fieldname = '4hour'");
   timestamp = now_uSec - 250 * kUsecPerMin;
-  results = yield searchEntries(["guid"], { fieldname: "4hour10minutes" });
-  yield update({ op: "update", firstUsed: timestamp, guid: results[0].guid });
+  db.executeSimpleSQL("UPDATE moz_formhistory SET firstUsed = " +
+                      timestamp +  " WHERE fieldname = '4hour10minutes'");
 
   let today = new Date();
   today.setHours(0);
   today.setMinutes(0);
   today.setSeconds(1);
   timestamp = today.getTime() * 1000;
-  results = yield searchEntries(["guid"], { fieldname: "today" });
-  yield update({ op: "update", firstUsed: timestamp, guid: results[0].guid });
+  db.executeSimpleSQL("UPDATE moz_formhistory SET firstUsed = " +
+                      timestamp +  " WHERE fieldname = 'today'");
 
   let lastYear = new Date();
   lastYear.setFullYear(lastYear.getFullYear() - 1);
   timestamp = lastYear.getTime() * 1000;
-  results = yield searchEntries(["guid"], { fieldname: "b4today" });
-  yield update({ op: "update", firstUsed: timestamp, guid: results[0].guid });
-
-  var checks = 0;
-  let checkOne = function(num, message) { is(num, 1, message); checks++; }
+  db.executeSimpleSQL("UPDATE moz_formhistory SET firstUsed = " +
+                      timestamp +  " WHERE fieldname = 'b4today'");
 
   // Sanity check.
-  yield countEntries("10minutes", "Checking for 10minutes form history entry creation", checkOne);
-  yield countEntries("1hour", "Checking for 1hour form history entry creation", checkOne);
-  yield countEntries("1hour10minutes", "Checking for 1hour10minutes form history entry creation", checkOne);
-  yield countEntries("2hour", "Checking for 2hour form history entry creation", checkOne);
-  yield countEntries("2hour10minutes", "Checking for 2hour10minutes form history entry creation", checkOne);
-  yield countEntries("4hour", "Checking for 4hour form history entry creation", checkOne);
-  yield countEntries("4hour10minutes", "Checking for 4hour10minutes form history entry creation", checkOne);
-  yield countEntries("today", "Checking for today form history entry creation", checkOne);
-  yield countEntries("b4today", "Checking for b4today form history entry creation", checkOne);
-  is(checks, 9, "9 checks made");
+  ok(formhist.nameExists("10minutes"), "Checking for 10minutes form history entry creation");
+  ok(formhist.nameExists("1hour"), "Checking for 1hour form history entry creation");
+  ok(formhist.nameExists("1hour10minutes"), "Checking for 1hour10minutes form history entry creation");
+  ok(formhist.nameExists("2hour"), "Checking for 2hour form history entry creation");
+  ok(formhist.nameExists("2hour10minutes"), "Checking for 2hour10minutes form history entry creation");
+  ok(formhist.nameExists("4hour"), "Checking for 4hour form history entry creation");
+  ok(formhist.nameExists("4hour10minutes"), "Checking for 4hour10minutes form history entry creation");
+  ok(formhist.nameExists("today"), "Checking for today form history entry creation");
+  ok(formhist.nameExists("b4today"), "Checking for b4today form history entry creation");
 }
 
 function setupDownloads() {
