@@ -535,7 +535,6 @@ CustomizeMode.prototype = {
     // either the originArea was the palette, or a customizable area.
     if (targetArea.id == kPaletteId) {
       if (originArea.id !== kPaletteId) {
-        this._removeParentFlex(draggedWrapper);
         let widget = this.unwrapToolbarItem(draggedWrapper);
         CustomizableUI.removeWidgetFromArea(draggedItemId);
         draggedWrapper = this.wrapToolbarItem(widget, "palette");
@@ -547,6 +546,15 @@ CustomizeMode.prototype = {
       } else {
         this.visiblePalette.insertBefore(draggedWrapper, targetNode);
       }
+      return;
+    }
+
+    // Is the target the customization area itself? If so, we just add the
+    // widget to the end of the area.
+    if (targetNode == targetArea.customizationTarget) {
+      let widget = this.unwrapToolbarItem(draggedWrapper);
+      CustomizableUI.addWidgetToArea(draggedItemId, targetArea.id);
+      this.wrapToolbarItem(widget, getPlaceForItem(targetNode));
       return;
     }
 
@@ -576,10 +584,6 @@ CustomizeMode.prototype = {
       return;
     }
 
-    // We're moving from one customization area to another. Remove any flexing
-    // that we might have added.
-    this._removeParentFlex(draggedWrapper);
-
     // A little hackery - we quickly unwrap the item and use CustomizableUI's
     // addWidgetToArea to move the widget to the right place for every window,
     // then we re-wrap the widget. We have to unwrap the target widget too so
@@ -590,14 +594,6 @@ CustomizeMode.prototype = {
     CustomizableUI.addWidgetToArea(draggedItemId, targetArea.id, position);
     this.wrapToolbarItem(targetWidget, properPlace);
     draggedWrapper = this.wrapToolbarItem(widget, properPlace);
-
-    // If necessary, add flex to accomodate new child.
-    if (draggedWrapper.hasAttribute("flex")) {
-      let parent = draggedWrapper.parentNode;
-      let parentFlex = parent.hasAttribute("flex") ? parseInt(parent.getAttribute("flex"), 10) : 0;
-      let itemFlex = parseInt(draggedWrapper.getAttribute("flex"), 10);
-      parent.setAttribute("flex", parentFlex + itemFlex);
-    }
   },
 
   _onDragExit: function(aEvent) {
@@ -627,15 +623,6 @@ CustomizeMode.prototype = {
       }
     } else {
       node.removeAttribute("dragover");
-    }
-  },
-
-  _removeParentFlex: function(aElement) {
-    if (aElement.parentNode.hasAttribute("flex") && aElement.hasAttribute("flex")) {
-      let parent = aElement.parentNode;
-      let parentFlex = parseInt(parent.getAttribute("flex"), 10);
-      let elementFlex = parseInt(aElement.getAttribute("flex"), 10);
-      parent.setAttribute("flex", Math.max(0, parentFlex - elementFlex));
     }
   },
 
