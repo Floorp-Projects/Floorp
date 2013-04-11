@@ -35,6 +35,13 @@ function handleRequest(request, response) {
         response.write("{ \"greeting\": \"Hello JSON!\" }");
         response.finish();
         break;
+      case "jsonp":
+        let fun = params.filter((s) => s.contains("jsonp="))[0].split("=")[1];
+        response.setStatusLine(request.httpVersion, 200, "OK");
+        response.setHeader("Content-Type", "text/json; charset=utf-8", false);
+        response.write(fun + "({ \"greeting\": \"Hello JSONP!\" })");
+        response.finish();
+        break;
       default:
         response.setStatusLine(request.httpVersion, 404, "Not Found");
         response.setHeader("Content-Type", "text/html; charset=utf-8", false);
