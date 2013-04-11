@@ -70,11 +70,11 @@ MetroApp::Initialize()
   static bool xpcomInit;
   if (!xpcomInit) {
     xpcomInit = true;
-    Log(L"XPCOM startup initialization began");
+    Log("XPCOM startup initialization began");
     nsresult rv = XRE_metroStartup(true);
-    Log(L"XPCOM startup initialization complete");
+    Log("XPCOM startup initialization complete");
     if (NS_FAILED(rv)) {
-      Log(L"XPCOM startup initialization failed, bailing. rv=%X", rv);
+      Log("XPCOM startup initialization failed, bailing. rv=%X", rv);
       CoreExit();
       return;
     }
@@ -152,7 +152,7 @@ HRESULT
 MetroApp::OnAsyncTileCreated(ABI::Windows::Foundation::IAsyncOperation<bool>* aOperation,
                              AsyncStatus aStatus)
 {
-  Log(L"Async operation status: %d", aStatus);
+  Log("Async operation status: %d", aStatus);
   return S_OK;
 }
 
@@ -255,7 +255,7 @@ XRE_MetroCoreApplicationRun()
   hr = sCoreApp->Run(sMetroApp.Get());
   sFrameworkView = nullptr;
 
-  Log(L"Exiting CoreApplication::Run");
+  Log("Exiting CoreApplication::Run");
 
   sCoreApp = nullptr;
   sMetroApp = nullptr;

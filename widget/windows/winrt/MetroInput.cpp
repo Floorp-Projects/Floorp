@@ -343,7 +343,7 @@ MetroInput::OnAcceleratorKeyActivated(UI::Core::ICoreDispatcher* sender,
 
 #ifdef DEBUG_INPUT
   LogFunction();
-  Log(L"Accelerator key! Type: %d Value: %d", type, vkey);
+  Log("Accelerator key! Type: %d Value: %d", type, vkey);
 #endif
 
   switch(type) {
