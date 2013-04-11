@@ -15,7 +15,7 @@ import tarfile
 import subprocess
 import platform
 import sys
-import simplejson
+import json
 
 def check_run(args):
     r = subprocess.call(args)
@@ -90,10 +90,10 @@ def build_tooltool_manifest():
     manifest = 'clang.manifest'
     check_run(['python', tooltool, '-m', manifest, 'add',
                setup, 'clang.tar.bz2'])
-    data = simplejson.load(file(manifest))
+    data = json.load(file(manifest))
     data = [{'clang_version' : 'r%s' % llvm_revision }] + data
     out = file(manifest,'w')
-    simplejson.dump(data, out, indent=0, item_sort_key=key_sort)
+    json.dump(data, out, indent=0, item_sort_key=key_sort)
     out.write('\n')
 
     assert data[2]['filename'] == 'clang.tar.bz2'
