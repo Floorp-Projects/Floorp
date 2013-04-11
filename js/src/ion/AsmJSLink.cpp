@@ -31,7 +31,7 @@ LinkFail(JSContext *cx, const char *str)
 }
 
 static bool
-ValidateGlobalVariable(JSContext *cx, const AsmJSModule &module, AsmJSModule::Global global,
+ValidateGlobalVariable(JSContext *cx, const AsmJSModule &module, AsmJSModule::Global &global,
                        HandleValue importVal)
 {
     JS_ASSERT(global.which() == AsmJSModule::Global::Variable);
@@ -71,7 +71,7 @@ ValidateGlobalVariable(JSContext *cx, const AsmJSModule &module, AsmJSModule::Gl
 }
 
 static bool
-ValidateFFI(JSContext *cx, AsmJSModule::Global global, HandleValue importVal,
+ValidateFFI(JSContext *cx, AsmJSModule::Global &global, HandleValue importVal,
             AutoObjectVector *ffis)
 {
     RootedPropertyName field(cx, global.ffiField());
@@ -87,7 +87,7 @@ ValidateFFI(JSContext *cx, AsmJSModule::Global global, HandleValue importVal,
 }
 
 static bool
-ValidateArrayView(JSContext *cx, AsmJSModule::Global global, HandleValue globalVal,
+ValidateArrayView(JSContext *cx, AsmJSModule::Global &global, HandleValue globalVal,
                   HandleValue bufferVal)
 {
     RootedPropertyName field(cx, global.viewName());
@@ -102,7 +102,7 @@ ValidateArrayView(JSContext *cx, AsmJSModule::Global global, HandleValue globalV
 }
 
 static bool
-ValidateMathBuiltin(JSContext *cx, AsmJSModule::Global global, HandleValue globalVal)
+ValidateMathBuiltin(JSContext *cx, AsmJSModule::Global &global, HandleValue globalVal)
 {
     RootedValue v(cx);
     if (!GetProperty(cx, globalVal, cx->names().Math, &v))
@@ -137,7 +137,7 @@ ValidateMathBuiltin(JSContext *cx, AsmJSModule::Global global, HandleValue globa
 }
 
 static bool
-ValidateGlobalConstant(JSContext *cx, AsmJSModule::Global global, HandleValue globalVal)
+ValidateGlobalConstant(JSContext *cx, AsmJSModule::Global &global, HandleValue globalVal)
 {
     RootedPropertyName field(cx, global.constantName());
     RootedValue v(cx);
@@ -216,7 +216,7 @@ DynamicallyLinkModule(JSContext *cx, CallArgs args, AsmJSModule &module)
         return false;
 
     for (unsigned i = 0; i < module.numGlobals(); i++) {
-        AsmJSModule::Global global = module.global(i);
+        AsmJSModule::Global &global = module.global(i);
         switch (global.which()) {
           case AsmJSModule::Global::Variable:
             if (!ValidateGlobalVariable(cx, module, global, importVal))
