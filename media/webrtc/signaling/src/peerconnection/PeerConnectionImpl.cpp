@@ -277,7 +277,7 @@ PeerConnectionImpl::PeerConnectionImpl()
   , mWindow(NULL)
   , mIdentity(NULL)
   , mSTSThread(NULL)
-  , mMedia(NULL)
+  , mMedia(new PeerConnectionMedia(this))
   , mNumAudioStreams(0)
   , mNumVideoStreams(0)
   , mHaveDataStream(false) {
@@ -525,8 +525,6 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
     CSFLogError(logTag, "%s: Couldn't Create Call Object", __FUNCTION__);
     return NS_ERROR_FAILURE;
   }
-
-  mMedia = new PeerConnectionMedia(this);
 
   // Connect ICE slots.
   mMedia->SignalIceGatheringCompleted.connect(this, &PeerConnectionImpl::IceGatheringCompleted);
