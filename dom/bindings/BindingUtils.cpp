@@ -121,7 +121,7 @@ ErrorResult::ClearMessage()
 }
 
 void
-ErrorResult::ThrowJSException(JSContext* cx, JS::Value exn)
+ErrorResult::ThrowJSException(JSContext* cx, JS::Handle<JS::Value> exn)
 {
   MOZ_ASSERT(mMightHaveUnreportedJSException,
              "Why didn't you tell us you planned to throw a JS exception?");
