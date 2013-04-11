@@ -59,6 +59,9 @@ MOCHITEST_CHROME_FILES = \
 		test_bug830858.xul \
 		file_bug830858.xul \
 		test_indexedSetter.html \
+		test_queryCaretRect.html \
+		queryCaretRectWin.html \
+		queryCaretRectUnix.html \
 		$(NULL)
 
 ifeq (WINNT,$(OS_ARCH))

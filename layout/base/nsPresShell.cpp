@@ -6930,7 +6930,8 @@ PresShell::DispatchTouchEvent(nsEvent *aEvent,
     tmpStatus = nsEventStatus_eIgnore;
     nsEventDispatcher::Dispatch(targetPtr, context,
                                 &newEvent, nullptr, &tmpStatus, aEventCB);
-    if (nsEventStatus_eConsumeNoDefault == tmpStatus) {
+    if (nsEventStatus_eConsumeNoDefault == tmpStatus ||
+        newEvent.mFlags.mMultipleActionsPrevented) {
       preventDefault = true;
     }
 

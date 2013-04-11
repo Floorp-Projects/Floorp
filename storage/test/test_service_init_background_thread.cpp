@@ -21,8 +21,10 @@ class ServiceInitializer : public nsRunnable
 public:
   NS_IMETHOD Run()
   {
-    nsCOMPtr<mozIStorageService> service = getService();
-    do_check_true(service);
+    // Use an explicit do_GetService instead of getService so that the check in
+    // getService doesn't blow up.
+    nsCOMPtr<mozIStorageService> service = do_GetService("@mozilla.org/storage/service;1");
+    do_check_false(service);
     return NS_OK;
   }
 };

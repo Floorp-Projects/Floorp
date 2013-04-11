@@ -273,10 +273,6 @@ function setupSearchEngine()
   if (searchEngineInfo && searchEngineInfo.image) {
     logoElt.parentNode.hidden = false;
     logoElt.src = searchEngineInfo.image;
-#ifdef XP_MACOSX
-    if (searchEngineInfo.imageHD && !window.matchMedia("(max-resolution: 1dppx)").matches)
-      logoElt.src = searchEngineInfo.imageHD;
-#endif
     logoElt.alt = searchEngineName;
     searchText.placeholder = "";
   }

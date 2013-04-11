@@ -54,6 +54,11 @@ private:
   void NotifyBytesConsumed();
   int64_t QueryDuration();
 
+  /* Called once the pipeline is setup to check that the stream only contains
+   * supported formats
+   */
+  nsresult CheckSupportedFormats();
+
   /* Gst callbacks */
 
   /* Called on the source-setup signal emitted by playbin. Used to

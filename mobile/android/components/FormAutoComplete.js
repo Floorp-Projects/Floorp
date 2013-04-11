@@ -102,7 +102,21 @@ FormAutoComplete.prototype = {
     });
   },
 
+  // This method is obsolete. Use autoCompleteSearchAsync instead.
   autoCompleteSearch: function autoCompleteSearch(aName, aQuery, aField, aPrev) {
+    let result = null;
+    let listener = function() { result = r; };
+    this._autoCompleteSearchAsync(aName, aQuery, aField, aPrev, listener);
+
+    let thread = Components.classes["@mozilla.org/thread-manager;1"].getService().currentThread;
+    while (!result) {
+      thread.processNextEvent(true);
+    }
+
+    return result;
+  },
+
+  autoCompleteSearchAsync: function autoCompleteSearch(aName, aQuery, aField, aPrev, aCallback) {
     if (!Services.prefs.getBoolPref("browser.formfill.enable"))
       return null;
 
@@ -113,23 +127,27 @@ FormAutoComplete.prototype = {
     // Don't allow duplicates get merged into the final results
     let dupCheck = {};
 
-    // Use the base form autocomplete for non-contact searches
-    let normal = FAC.autoCompleteSearch(aName, aQuery, aField, aPrev);
-    if (normal.matchCount > 0) {
-      for (let i = 0; i < normal.matchCount; i++) {
-        dupCheck[normal.getValueAt(i)] = true;
-        result.appendMatch(normal.getValueAt(i), normal.getCommentAt(i), normal.getImageAt(i), normal.getStyleAt(i));
+    let callback = aNormalResults => {
+      if (aNormalResults.matchCount > 0) {
+        for (let i = 0; i < aNormalResults.matchCount; i++) {
+          dupCheck[aNormalResults.getValueAt(i)] = true;
+          result.appendMatch(aNormalResults.getValueAt(i), aNormalResults.getCommentAt(i),
+                             aNormalResults.getImageAt(i), aNormalResults.getStyleAt(i));
+        }
       }
-    }
 
-    // Do searches for certain input fields
-    let type = this.checkQueryType(aName, aField);
-    if (type != null)
-      this.findContact(aQuery, type, result, dupCheck);
+      // Do searches for certain input fields
+      let type = this.checkQueryType(aName, aField);
+      if (type != null)
+        this.findContact(aQuery, type, result, dupCheck);
 
-    let resultCode = result.matchCount ? "RESULT_SUCCESS" : "RESULT_NOMATCH";
-    result.setSearchResult(Ci.nsIAutoCompleteResult[resultCode]);
-    return result;
+      let resultCode = result.matchCount ? "RESULT_SUCCESS" : "RESULT_NOMATCH";
+      result.setSearchResult(Ci.nsIAutoCompleteResult[resultCode]);
+      if (aCallback && aCallback.onSearchCompletion)
+        aCallback.onSearchCompletion(result);
+    };
+
+    FAC.autoCompleteSearchAsync(aName, aQuery, aField, aPrev, callback);
   }
 };
 

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+
+<filter id="f"/>
+<g filter="url(#f)"><text>ab</text></g>
+
+<script>
+
+function boom()
+{
+    var svgtext = document.getElementsByTagName("text")[0];
+    var text1 = svgtext.firstChild ;
+    var text2 = text1.splitText(1);
+
+    setTimeout(function() {
+        text1.data = "c";
+        svgtext.removeChild(text2);
+    }, 200);
+}
+
+window.addEventListener("load", boom, false);
+
+</script>
+
+</svg>

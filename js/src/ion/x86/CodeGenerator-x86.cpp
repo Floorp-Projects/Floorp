@@ -564,3 +564,15 @@ CodeGeneratorX86::postAsmJSCall(LAsmJSCall *lir)
     masm.movsd(Operand(esp, 0), ReturnFloatReg);
     masm.freeStack(sizeof(double));
 }
+
+void
+ParallelGetPropertyIC::initializeAddCacheState(LInstruction *ins, AddCacheState *addState)
+{
+    // We don't have a scratch register, but only use the temp if we needed
+    // one, it's BogusTemp otherwise.
+    JS_ASSERT(ins->isGetPropertyCacheV() || ins->isGetPropertyCacheT());
+    if (ins->isGetPropertyCacheV() || ins->toGetPropertyCacheT()->temp()->isBogusTemp())
+        addState->dispatchScratch = output_.scratchReg().gpr();
+    else
+        addState->dispatchScratch = ToRegister(ins->toGetPropertyCacheT()->temp());
+}

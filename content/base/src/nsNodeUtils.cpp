@@ -433,7 +433,6 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
                                                nodeInfo->NamespaceID(),
                                                nodeInfo->NodeType(),
                                                nodeInfo->GetExtraName());
-    NS_ENSURE_TRUE(newNodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
     nodeInfo = newNodeInfo;
   }

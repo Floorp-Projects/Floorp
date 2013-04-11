@@ -962,15 +962,20 @@ SpecialPowersAPI.prototype = {
     return this._getTopChromeWindow(window).document
                                            .getElementById("PopupAutoComplete");
   },
-  addAutoCompletePopupEventListener: function(window, listener) {
-    this._getAutoCompletePopup(window).addEventListener("popupshowing",
+  addAutoCompletePopupEventListener: function(window, eventname, listener) {
+    this._getAutoCompletePopup(window).addEventListener(eventname,
                                                         listener,
                                                         false);
   },
-  removeAutoCompletePopupEventListener: function(window, listener) {
-    this._getAutoCompletePopup(window).removeEventListener("popupshowing",
+  removeAutoCompletePopupEventListener: function(window, eventname, listener) {
+    this._getAutoCompletePopup(window).removeEventListener(eventname,
                                                            listener,
                                                            false);
+  },
+  get formHistory() {
+    let tmp = {};
+    Cu.import("resource://gre/modules/FormHistory.jsm", tmp);
+    return wrapPrivileged(tmp.FormHistory);
   },
   getFormFillController: function(window) {
     return Components.classes["@mozilla.org/satchel/form-fill-controller;1"]

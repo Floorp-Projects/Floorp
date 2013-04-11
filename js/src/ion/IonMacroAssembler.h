@@ -593,6 +593,12 @@ class MacroAssembler : public MacroAssemblerSpecific
         Push(ImmWord(uintptr_t(NULL)));
     }
 
+    void enterParallelExitFrameAndLoadSlice(const VMFunction *f, Register slice,
+                                            Register scratch);
+
+    void enterExitFrameAndLoadContext(const VMFunction *f, Register cxReg, Register scratch,
+                                      ExecutionMode executionMode);
+
     void leaveExitFrame() {
         freeStack(IonExitFooterFrame::Size());
     }
@@ -639,16 +645,10 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     void handleException() {
-        // Re-entry code is irrelevant because the exception will leave the
-        // running function and never come back
-        if (sps_)
-            sps_->skipNextReenter();
-        leaveSPSFrame();
-        MacroAssemblerSpecific::handleException();
-        // Doesn't actually emit code, but balances the leave()
-        if (sps_)
-            sps_->reenter(*this, InvalidReg);
+        handleFailure(SequentialExecution);
     }
+
+    void handleFailure(ExecutionMode executionMode);
 
     // see above comment for what is returned
     uint32_t callIon(const Register &callee) {
@@ -691,6 +691,9 @@ class MacroAssembler : public MacroAssemblerSpecific
         test32(Address(scratch, Class::offsetOfFlags()), Imm32(JSCLASS_EMULATES_UNDEFINED));
         return truthy ? Assembler::Zero : Assembler::NonZero;
     }
+
+    void tagCallee(Register callee, ExecutionMode mode);
+    void clearCalleeTag(Register callee, ExecutionMode mode);
 
   private:
     // These two functions are helpers used around call sites throughout the
@@ -921,4 +924,3 @@ class ABIArgIter
 } // namespace js
 
 #endif // jsion_macro_assembler_h__
-

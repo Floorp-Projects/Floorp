@@ -173,7 +173,7 @@ XPCJSContextStack::GetSafeJSContext()
     if (!mSafeJSContext)
         return NULL;
 
-    JSObject *glob;
+    JS::RootedObject glob(mSafeJSContext);
     {
         // scoped JS Request
         JSAutoRequest req(mSafeJSContext);

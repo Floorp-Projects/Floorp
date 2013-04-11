@@ -7,19 +7,6 @@
 
 #define MAX_TRACKS 8
 
-enum StatusCode {
-    PC_OK = 0,
-    PC_INVALID_HINTS,
-    PC_INVALID_OFFER,
-    PC_INVALID_REMOTE_SDP,
-    PC_INVALID_LOCAL_SDP,
-    PC_NO_OBSERVER,
-    PC_SDPCHANGED,
-    PC_SETLOCALDESCERROR,
-    PC_SETREMOTEDESCERROR,
-    PC_INTERNAL_ERROR
-};
-
 typedef struct MediaTrack {
     unsigned int    media_stream_track_id;
     int             video;

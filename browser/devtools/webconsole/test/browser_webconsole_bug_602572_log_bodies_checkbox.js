@@ -76,6 +76,8 @@ function onpopupshown2(aEvent)
   menupopups[1].addEventListener("popuphidden", function _onhidden(aEvent) {
     menupopups[1].removeEventListener(aEvent.type, _onhidden, false);
 
+    info("menupopups[1] hidden");
+
     // Reopen the context menu.
     menupopups[1].addEventListener("popupshown", onpopupshown2b, false);
     executeSoon(function() {
@@ -105,6 +107,8 @@ function onpopupshown2b(aEvent)
   menupopups[1].addEventListener("popuphidden", function _onhidden(aEvent) {
     menupopups[1].removeEventListener(aEvent.type, _onhidden, false);
 
+    info("menupopups[1] hidden");
+
     // Switch to tab 1 and open the Web Console context menu from there.
     gBrowser.selectedTab = tabs[runCount*2];
     waitForFocus(function() {
@@ -119,7 +123,7 @@ function onpopupshown2b(aEvent)
       menupopups[0] = huds[0].ui.rootElement.querySelector("menupopup");
 
       menupopups[0].addEventListener("popupshown", onpopupshown1, false);
-      menupopups[0].openPopup();
+      executeSoon(() => menupopups[0].openPopup());
     }, tabs[runCount*2].linkedBrowser.contentWindow);
   }, false);
 
@@ -142,6 +146,8 @@ function onpopupshown1(aEvent)
   // Close the menu, and switch back to tab 2.
   menupopups[0].addEventListener("popuphidden", function _onhidden(aEvent) {
     menupopups[0].removeEventListener(aEvent.type, _onhidden, false);
+
+    info("menupopups[0] hidden");
 
     gBrowser.selectedTab = tabs[runCount*2 + 1];
     waitForFocus(function() {
@@ -174,10 +180,13 @@ function onpopupshown2c(aEvent)
   menupopups[1].addEventListener("popuphidden", function _onhidden(aEvent) {
     menupopups[1].removeEventListener(aEvent.type, _onhidden, false);
 
+    info("menupopups[1] hidden");
+
     // Done if on second run
     closeConsole(gBrowser.selectedTab, function() {
       if (runCount == 0) {
         runCount++;
+        info("start second run");
         executeSoon(test);
       }
       else {

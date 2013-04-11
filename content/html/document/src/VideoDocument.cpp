@@ -99,7 +99,6 @@ VideoDocument::CreateSyntheticVideoDocument(nsIChannel* aChannel,
   nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::video, nullptr,
                                            kNameSpaceID_XHTML,
                                            nsIDOMNode::ELEMENT_NODE);
-  NS_ENSURE_TRUE(nodeInfo, NS_ERROR_FAILURE);
 
   nsRefPtr<HTMLMediaElement> element =
     static_cast<HTMLMediaElement*>(NS_NewHTMLVideoElement(nodeInfo.forget(),
