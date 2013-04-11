@@ -5,7 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {Cc, Ci, Cu} = require("chrome");
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -13,11 +15,12 @@ Cu.import("resource:///modules/devtools/LayoutHelpers.jsm");
 
 const STACK_THICKNESS = 15;
 
+this.EXPORTED_SYMBOLS = ["TiltUtils"];
+
 /**
  * Module containing various helper functions used throughout Tilt.
  */
 this.TiltUtils = {};
-module.exports = this.TiltUtils;
 
 /**
  * Various console/prompt output functions required by the engine.

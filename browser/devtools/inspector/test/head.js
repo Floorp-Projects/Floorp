@@ -8,10 +8,8 @@ const Cc = Components.classes;
 let tempScope = {};
 Cu.import("resource:///modules/devtools/LayoutHelpers.jsm", tempScope);
 let LayoutHelpers = tempScope.LayoutHelpers;
-
-let {devtools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", tempScope);
-let TargetFactory = devtools.TargetFactory;
-
+Cu.import("resource:///modules/devtools/Target.jsm", tempScope);
+let TargetFactory = tempScope.TargetFactory;
 Components.utils.import("resource://gre/modules/devtools/Console.jsm", tempScope);
 let console = tempScope.console;
 
@@ -148,4 +146,3 @@ function focusSearchBoxUsingShortcut(panelWin, callback) {
   }, false);
   EventUtils.synthesizeKey(name, modifiers);
 }
-
