@@ -71,9 +71,7 @@ function getAutocompletePopup() {
 
 
 function cleanUpFormHist() {
-  var formhist = SpecialPowers.Cc["@mozilla.org/satchel/form-history;1"].
-                 getService(SpecialPowers.Ci.nsIFormHistory2);
-  formhist.removeAllEntries();
+  SpecialPowers.formHistory.update({ op : "remove" });
 }
 cleanUpFormHist();
 
@@ -90,7 +88,7 @@ var checkObserver = {
   },
 
   observe: function(subject, topic, data) {
-    if (data != "addEntry" && data != "modifyEntry")
+    if (data != "formhistory-add" && data != "formhistory-update")
       return;
     ok(this.verifyStack.length > 0, "checking if saved form data was expected");
 
@@ -104,13 +102,16 @@ var checkObserver = {
     // - if there are too many messages, test will error out here
     //
     var expected = this.verifyStack.shift();
-    ok(fh.entryExists(expected.name, expected.value), expected.message);
 
-    if (this.verifyStack.length == 0) {
-      var callback = this.callback;
-      this.callback = null;
-      callback();
-    }
+    countEntries(expected.name, expected.value,
+      function(num) {
+        ok(num > 0, expected.message);
+        if (checkObserver.verifyStack.length == 0) {
+          var callback = checkObserver.callback;
+          checkObserver.callback = null;
+          callback();
+        }
+      });
   }
 };
 
@@ -130,4 +131,31 @@ function getFormSubmitButton(formNum) {
   ok(button != null, "getting form submit button");
 
   return button;
+}
+
+// Count the number of entries with the given name and value, and call then(number)
+// when done. If name or value is null, then the value of that field does not matter.
+function countEntries(name, value, then) {
+  var obj = {};
+  if (name !== null)
+    obj.fieldname = name;
+  if (value !== null)
+    obj.value = value;
+
+  var count = 0;
+  SpecialPowers.formHistory.count(obj, { handleResult: function (result) { count = result },
+                                         handleError: function (error) {
+                                           do_throw("Error occurred searching form history: " + error);
+                                         },
+                                         handleCompletion: function (reason) { if (!reason) then(count); }
+                                       });
+}
+
+// Wrapper around FormHistory.update which handles errors. Calls then() when done.
+function updateFormHistory(changes, then) {
+  SpecialPowers.formHistory.update(changes, { handleError: function (error) {
+                                                do_throw("Error occurred updating form history: " + error);
+                                              },
+                                              handleCompletion: function (reason) { if (!reason) then(); },
+                                            });
 }

@@ -94,12 +94,6 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(HTMLSharedObjectElement,
                                                      nsGenericHTMLElement)
 
-  virtual nsXPCClassInfo* GetClassInfo()
-  {
-    return static_cast<nsXPCClassInfo*>(GetClassInfoInternal());
-  }
-  nsIClassInfo* GetClassInfoInternal();
-
   virtual nsIDOMNode* AsDOMNode()
   {
     return static_cast<nsIDOMHTMLAppletElement*>(this);
@@ -246,8 +240,6 @@ private:
   virtual void SetItemValueText(const nsAString& text);
 
   virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope) MOZ_OVERRIDE;
-  virtual JSObject* GetCanonicalPrototype(JSContext* aCx,
-                                          JSObject* aGlobal) MOZ_OVERRIDE;
 };
 
 } // namespace dom

@@ -300,3 +300,16 @@ def WebIDLTest(parser, harness):
     except Exception, x:
         threw = True
     harness.ok(threw, "Should not allow [SetterThrows] on readonly attributes")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+          interface A {
+            [Throw] readonly attribute boolean foo;
+          };
+        """)
+        results = parser.finish()
+    except Exception, x:
+        threw = True
+    harness.ok(threw, "Should spell [Throws] correctly")

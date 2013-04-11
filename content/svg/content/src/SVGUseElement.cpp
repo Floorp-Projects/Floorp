@@ -295,8 +295,6 @@ SVGUseElement::CreateAnonymousContent()
     nodeInfo = nodeInfoManager->GetNodeInfo(nsGkAtoms::svg, nullptr,
                                             kNameSpaceID_SVG,
                                             nsIDOMNode::ELEMENT_NODE);
-    if (!nodeInfo)
-      return nullptr;
 
     nsCOMPtr<nsIContent> svgNode;
     NS_NewSVGSVGElement(getter_AddRefs(svgNode), nodeInfo.forget(),

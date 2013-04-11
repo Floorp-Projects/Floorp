@@ -12,6 +12,8 @@
 #include "nsContentUtils.h"
 #include "nsIDOMFile.h"
 #include "nsTArrayHelpers.h"
+#include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/mobilemessage/SmsTypes.h"
 
 using namespace mozilla::idl;
 using namespace mozilla::dom::mobilemessage;
@@ -53,6 +55,35 @@ MmsMessage::MmsMessage(int32_t                         aId,
     mSmil(aSmil),
     mAttachments(aAttachments)
 {
+}
+
+MmsMessage::MmsMessage(const mobilemessage::MmsMessageData& aData)
+  : mId(aData.id())
+  , mDelivery(aData.delivery())
+  , mDeliveryStatus(aData.deliveryStatus())
+  , mSender(aData.sender())
+  , mReceivers(aData.receivers())
+  , mTimestamp(aData.timestamp())
+  , mRead(aData.read())
+  , mSubject(aData.subject())
+  , mSmil(aData.smil())
+{
+  uint32_t len = aData.attachments().Length();
+  mAttachments.SetCapacity(len);
+  for (uint32_t i = 0; i < len; i++) {
+    MmsAttachment att;
+    const MmsAttachmentData &element = aData.attachments()[i];
+    att.id = element.id();
+    att.location = element.location();
+    if (element.contentParent()) {
+      att.content = static_cast<BlobParent*>(element.contentParent())->GetBlob();
+    } else if (element.contentChild()) {
+      att.content = static_cast<BlobChild*>(element.contentChild())->GetBlob();
+    } else {
+      NS_WARNING("MmsMessage: Unable to get attachment content.");
+    }
+    mAttachments.AppendElement(att);
+  }
 }
 
 /* static */ nsresult
@@ -208,6 +239,38 @@ MmsMessage::Create(int32_t               aId,
                                                          attachments);
   message.forget(aMessage);
   return NS_OK;
+}
+
+bool
+MmsMessage::GetData(ContentParent* aParent,
+                    mobilemessage::MmsMessageData& aData)
+{
+  NS_ASSERTION(aParent, "aParent is null");
+
+  aData.id() = mId;
+  aData.delivery() = mDelivery;
+  aData.deliveryStatus() = mDeliveryStatus;
+  aData.sender().Assign(mSender);
+  aData.receivers() = mReceivers;
+  aData.timestamp() = mTimestamp;
+  aData.read() = mRead;
+  aData.subject() = mSubject;
+  aData.smil() = mSmil;
+
+  aData.attachments().SetCapacity(mAttachments.Length());
+  for (uint32_t i = 0; i < mAttachments.Length(); i++) {
+    MmsAttachmentData mma;
+    const MmsAttachment &element = mAttachments[i];
+    mma.id().Assign(element.id);
+    mma.location().Assign(element.location);
+    mma.contentParent() = aParent->GetOrCreateActorForBlob(element.content);
+    if (!mma.contentParent()) {
+      return false;
+    }
+    aData.attachments().AppendElement(mma);
+  }
+
+  return true;
 }
 
 NS_IMETHODIMP

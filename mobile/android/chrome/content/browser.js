@@ -242,6 +242,7 @@ var BrowserApp = {
     Services.obs.addObserver(this, "FormHistory:Init", false);
     Services.obs.addObserver(this, "ToggleProfiling", false);
     Services.obs.addObserver(this, "gather-telemetry", false);
+    Services.obs.addObserver(this, "keyword-search", false);
 
     Services.obs.addObserver(this, "sessionstore-state-purge-complete", false);
 
@@ -687,10 +688,12 @@ var BrowserApp = {
     let referrerURI = "referrerURI" in aParams ? aParams.referrerURI : null;
     let charset = "charset" in aParams ? aParams.charset : null;
 
-    if ("showProgress" in aParams) {
+    if ("showProgress" in aParams || "userSearch" in aParams) {
       let tab = this.getTabForBrowser(aBrowser);
-      if (tab)
-        tab.showProgress = aParams.showProgress;
+      if (tab) {
+        if ("showProgress" in aParams) tab.showProgress = aParams.showProgress;
+        if ("userSearch" in aParams) tab.userSearch = aParams.userSearch;
+      }
     }
 
     try {
@@ -1199,6 +1202,7 @@ var BrowserApp = {
         if (data.engine) {
           let engine = Services.search.getEngineByName(data.engine);
           if (engine) {
+            params.userSearch = url;
             let submission = engine.getSubmission(url);
             url = submission.uri.spec;
             params.postData = submission.postData;
@@ -1222,6 +1226,11 @@ var BrowserApp = {
 
       case "Tab:Closed":
         this._handleTabClosed(this.getTabForId(parseInt(aData)));
+        break;
+
+      case "keyword-search":
+        // This assumes the user can only perform a keyword serach on the selected tab.
+        this.selectedTab.userSearch = aData;
         break;
 
       case "Browser:Quit":
@@ -2444,6 +2453,9 @@ Tab.prototype = {
       // This determines whether or not we show the progress throbber in the urlbar
       this.showProgress = "showProgress" in aParams ? aParams.showProgress : true;
 
+      // The search term the user entered to load the current URL
+      this.userSearch = "userSearch" in aParams ? aParams.userSearch : "";
+
       try {
         this.browser.loadURIWithFlags(aURL, flags, referrerURI, charset, postData);
       } catch(e) {
@@ -3283,12 +3295,16 @@ Tab.prototype = {
       type: "Content:LocationChange",
       tabID: this.id,
       uri: fixedURI.spec,
+      userSearch: this.userSearch || "",
       documentURI: documentURI,
       contentType: (contentType ? contentType : ""),
       sameDocument: sameDocument
     };
 
     sendMessageToJava(message);
+
+    // The search term is only valid for this location change event, so reset it here.
+    this.userSearch = "";
 
     if (!sameDocument) {
       // XXX This code assumes that this is the earliest hook we have at which
@@ -4514,7 +4530,7 @@ var FormAssistant = {
 
           if (this._showValidationMessage(focused))
             break;
-          this._showAutoCompleteSuggestions(focused);
+          this._showAutoCompleteSuggestions(focused, function () {});
         } else {
           // temporarily hide the form assist popup while we're panning or zooming the page
           this._hideFormAssistPopup();
@@ -4584,8 +4600,14 @@ var FormAssistant = {
         // only be available if an invalid form was submitted)
         if (this._showValidationMessage(currentElement))
           break;
-        if (!this._showAutoCompleteSuggestions(currentElement))
-          this._hideFormAssistPopup();
+
+        let checkResultsClick = hasResults => {
+          if (!hasResults) {
+            this._hideFormAssistPopup();
+          }
+        };
+
+        this._showAutoCompleteSuggestions(currentElement, checkResultsClick);
         break;
 
       case "input":
@@ -4593,13 +4615,18 @@ var FormAssistant = {
 
         // Since we can only show one popup at a time, prioritze autocomplete
         // suggestions over a form validation message
-        if (this._showAutoCompleteSuggestions(currentElement))
-          break;
-        if (this._showValidationMessage(currentElement))
-          break;
+        let checkResultsInput = hasResults => {
+          if (hasResults)
+            return;
 
-        // If we're not showing autocomplete suggestions, hide the form assist popup
-        this._hideFormAssistPopup();
+          if (!this._showValidationMessage(currentElement))
+            return;
+
+          // If we're not showing autocomplete suggestions, hide the form assist popup
+          this._hideFormAssistPopup();
+        };
+
+        this._showAutoCompleteSuggestions(currentElement, checkResultsInput);
         break;
 
       // Reset invalid submit state on each pageshow
@@ -4623,27 +4650,31 @@ var FormAssistant = {
   },
 
   // Retrieves autocomplete suggestions for an element from the form autocomplete service.
-  _getAutoCompleteSuggestions: function _getAutoCompleteSuggestions(aSearchString, aElement) {
+  // aCallback(array_of_suggestions) is called when results are available.
+  _getAutoCompleteSuggestions: function _getAutoCompleteSuggestions(aSearchString, aElement, aCallback) {
     // Cache the form autocomplete service for future use
     if (!this._formAutoCompleteService)
       this._formAutoCompleteService = Cc["@mozilla.org/satchel/form-autocomplete;1"].
                                       getService(Ci.nsIFormAutoComplete);
 
-    let results = this._formAutoCompleteService.autoCompleteSearch(aElement.name || aElement.id,
-                                                                   aSearchString, aElement, null);
-    let suggestions = [];
-    for (let i = 0; i < results.matchCount; i++) {
-      let value = results.getValueAt(i);
+    let resultsAvailable = function (results) {
+      let suggestions = [];
+      for (let i = 0; i < results.matchCount; i++) {
+        let value = results.getValueAt(i);
 
-      // Do not show the value if it is the current one in the input field
-      if (value == aSearchString)
-        continue;
+        // Do not show the value if it is the current one in the input field
+        if (value == aSearchString)
+          continue;
 
-      // Supply a label and value, since they can differ for datalist suggestions
-      suggestions.push({ label: value, value: value });
-    }
+        // Supply a label and value, since they can differ for datalist suggestions
+        suggestions.push({ label: value, value: value });
+        aCallback(suggestions);
+      }
+    };
 
-    return suggestions;
+    this._formAutoCompleteService.autoCompleteSearchAsync(aElement.name || aElement.id,
+                                                          aSearchString, aElement, null,
+                                                          resultsAvailable);
   },
 
   /**
@@ -4680,40 +4711,47 @@ var FormAssistant = {
   },
 
   // Retrieves autocomplete suggestions for an element from the form autocomplete service
-  // and sends the suggestions to the Java UI, along with element position data.
-  // Returns true if there are suggestions to show, false otherwise.
-  _showAutoCompleteSuggestions: function _showAutoCompleteSuggestions(aElement) {
-    if (!this._isAutoComplete(aElement))
-      return false;
+  // and sends the suggestions to the Java UI, along with element position data. As
+  // autocomplete queries are asynchronous, calls aCallback when done with a true
+  // argument if results were found and false if no results were found.
+  _showAutoCompleteSuggestions: function _showAutoCompleteSuggestions(aElement, aCallback) {
+    if (!this._isAutoComplete(aElement)) {
+      aCallback(false);
+      return;
+    }
 
     // Don't display the form auto-complete popup after the user starts typing
     // to avoid confusing somes IME. See bug 758820 and bug 632744.
     if (this._isBlocklisted && aElement.value.length > 0) {
-      return false;
+      aCallback(false);
+      return;
     }
 
-    let autoCompleteSuggestions = this._getAutoCompleteSuggestions(aElement.value, aElement);
-    let listSuggestions = this._getListSuggestions(aElement);
+    let resultsAvailable = autoCompleteSuggestions => {
+      // On desktop, we show datalist suggestions below autocomplete suggestions,
+      // without duplicates removed.
+      let listSuggestions = this._getListSuggestions(aElement);
+      let suggestions = autoCompleteSuggestions.concat(listSuggestions);
 
-    // On desktop, we show datalist suggestions below autocomplete suggestions,
-    // without duplicates removed.
-    let suggestions = autoCompleteSuggestions.concat(listSuggestions);
+      // Return false if there are no suggestions to show
+      if (!suggestions.length) {
+        aCallback(false);
+        return;
+      }
 
-    // Return false if there are no suggestions to show
-    if (!suggestions.length)
-      return false;
+      sendMessageToJava({
+        type:  "FormAssist:AutoComplete",
+        suggestions: suggestions,
+        rect: ElementTouchHelper.getBoundingContentRect(aElement)
+      });
 
-    sendMessageToJava({
-      type:  "FormAssist:AutoComplete",
-      suggestions: suggestions,
-      rect: ElementTouchHelper.getBoundingContentRect(aElement)
-    });
+      // Keep track of input element so we can fill it in if the user
+      // selects an autocomplete suggestion
+      this._currentInputElement = aElement;
+      aCallback(true);
+    };
 
-    // Keep track of input element so we can fill it in if the user
-    // selects an autocomplete suggestion
-    this._currentInputElement = aElement;
-
-    return true;
+    this._getAutoCompleteSuggestions(aElement.value, aElement, resultsAvailable);
   },
 
   // Only show a validation message if the user submitted an invalid form,

@@ -121,14 +121,6 @@ xul_dlsym(const char *symbolName, T *value)
   *value = (T) (uintptr_t) __wrap_dlsym(xul_handle, symbolName);
 }
 
-static struct lib_cache_info *cache_mapping = NULL;
-
-NS_EXPORT const struct lib_cache_info *
-getLibraryCache()
-{
-  return cache_mapping;
-}
-
 static int mapping_count = 0;
 
 #define MAX_MAPPING_INFO 32
@@ -377,9 +369,6 @@ ChildProcessInit(int argc, char* argv[])
   if (loadGeckoLibs(argv[i]) != SUCCESS) {
     return FAILURE;
   }
-
-  // don't pass the last arg - it's only recognized by the lib cache
-  argc--;
 
   GeckoProcessType (*fXRE_StringToChildProcessType)(char*);
   xul_dlsym("XRE_StringToChildProcessType", &fXRE_StringToChildProcessType);

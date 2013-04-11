@@ -1080,31 +1080,31 @@ session_data_t * getDeepCopyOfSessionData(session_data_t *data)
 void cleanSessionData(session_data_t *data)
 {
    if ( data != NULL ) {
-	strlib_free(data->clg_name);
+        strlib_free(data->clg_name);
         data->clg_name = strlib_empty();
-	strlib_free(data->clg_number);
+        strlib_free(data->clg_number);
         data->clg_number = strlib_empty();
-	strlib_free(data->alt_number);
+        strlib_free(data->alt_number);
         data->alt_number = strlib_empty();
-	strlib_free(data->cld_name);
+        strlib_free(data->cld_name);
         data->cld_name = strlib_empty();
-	strlib_free(data->cld_number);
+        strlib_free(data->cld_number);
         data->cld_number = strlib_empty();
-	strlib_free(data->orig_called_name);
+        strlib_free(data->orig_called_name);
         data->orig_called_name = strlib_empty();
-	strlib_free(data->orig_called_number);
+        strlib_free(data->orig_called_number);
         data->orig_called_number = strlib_empty();
-	strlib_free(data->last_redir_name);
+        strlib_free(data->last_redir_name);
         data->last_redir_name = strlib_empty();
-	strlib_free(data->last_redir_number);
+        strlib_free(data->last_redir_number);
         data->last_redir_number = strlib_empty();
-	strlib_free(data->plcd_name);
+        strlib_free(data->plcd_name);
         data->plcd_name = strlib_empty();
-	strlib_free(data->plcd_number);
+        strlib_free(data->plcd_number);
         data->plcd_number = strlib_empty();
-	strlib_free(data->status);
+        strlib_free(data->status);
         data->status = strlib_empty();
-	strlib_free(data->sdp);
+        strlib_free(data->sdp);
         data->sdp = strlib_empty();
         calllogger_free_call_log(&data->call_log);
     }
@@ -1461,6 +1461,8 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
                     state_data.media_stream_track_id;
                 data->media_stream_id = sessUpd->update.ccSessionUpd.data.
                     state_data.media_stream_id;
+                data->status =
+                  sessUpd->update.ccSessionUpd.data.state_data.reason_text;
                 break;
             default:
                 break;

@@ -975,7 +975,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void callWithABI(void *fun, Result result = GENERAL);
     void callWithABI(Address fun, Result result = GENERAL);
 
-    void handleException();
+    void handleFailureWithHandler(void *handler);
 
     void makeFrameDescriptor(Register frameSizeReg, FrameType type) {
         shlq(Imm32(FRAMESIZE_SHIFT), frameSizeReg);
@@ -983,7 +983,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
 
     // Save an exit frame (which must be aligned to the stack pointer) to
-    // ThreadData::ionTop.
+    // ThreadData::ionTop of the main thread.
     void linkExitFrame() {
         mov(ImmWord(GetIonContext()->runtime), ScratchReg);
         mov(StackPointer, Operand(ScratchReg, offsetof(JSRuntime, mainThread.ionTop)));
@@ -994,6 +994,12 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         makeFrameDescriptor(dynStack, IonFrame_OptimizedJS);
         Push(dynStack);
         call(target);
+    }
+
+    // Save an exit frame to the thread data of the current thread, given a
+    // register that holds a PerThreadData *.
+    void linkParallelExitFrame(const Register &pt) {
+        mov(StackPointer, Operand(pt, offsetof(PerThreadData, ionTop)));
     }
 
     void enterOsr(Register calleeToken, Register code) {

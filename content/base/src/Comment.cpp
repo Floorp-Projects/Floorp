@@ -15,27 +15,6 @@
 using namespace mozilla;
 using namespace dom;
 
-nsresult
-NS_NewCommentNode(nsIContent** aInstancePtrResult,
-                  nsNodeInfoManager *aNodeInfoManager)
-{
-  NS_PRECONDITION(aNodeInfoManager, "Missing nodeinfo manager");
-
-  *aInstancePtrResult = nullptr;
-
-  nsCOMPtr<nsINodeInfo> ni = aNodeInfoManager->GetCommentNodeInfo();
-  NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
-
-  Comment *instance = new Comment(ni.forget());
-  if (!instance) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  NS_ADDREF(*aInstancePtrResult = instance);
-
-  return NS_OK;
-}
-
 namespace mozilla {
 namespace dom {
 

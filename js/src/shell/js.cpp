@@ -5295,6 +5295,8 @@ main(int argc, char **argv, char **envp)
         || !op.addIntOption('\0', "baseline-uses-before-compile", "COUNT",
                             "Wait for COUNT calls or iterations before baseline-compiling "
                             "(default: 10)", -1)
+        || !op.addBoolOption('\0', "no-fpu", "Pretend CPU does not support floating-point operations "
+                             "to test JIT codegen (no-op on platforms other than x86).")
 #ifdef JSGC_GENERATIONAL
         || !op.addBoolOption('\0', "ggc", "Enable Generational GC")
 #endif
@@ -5329,6 +5331,11 @@ main(int argc, char **argv, char **envp)
         OOM_maxAllocations = op.getIntOption('A');
     if (op.getBoolOption('O'))
         OOM_printAllocationCount = true;
+
+#if defined(JS_CPU_X86)
+    if (op.getBoolOption("no-fpu"))
+        JSC::MacroAssembler::SetFloatingPointDisabled();
+#endif
 #endif
 
     /* Use the same parameters as the browser in xpcjsruntime.cpp. */

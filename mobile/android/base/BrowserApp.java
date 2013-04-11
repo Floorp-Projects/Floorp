@@ -385,6 +385,40 @@ abstract public class BrowserApp extends GeckoApp
             }
         }
 
+        // Check if this was a shortcut. Meta keys exists only on 11+.
+        final Tab tab = Tabs.getInstance().getSelectedTab();
+        if (Build.VERSION.SDK_INT >= 11 && tab != null && event.isCtrlPressed()) {
+            switch (keyCode) {
+                case KeyEvent.KEYCODE_LEFT_BRACKET:
+                    tab.doBack();
+                    return true;
+
+                case KeyEvent.KEYCODE_RIGHT_BRACKET:
+                    tab.doForward();
+                    return true;
+
+                case KeyEvent.KEYCODE_R:
+                    tab.doReload();
+                    return true;
+
+                case KeyEvent.KEYCODE_PERIOD:
+                    tab.doStop();
+                    return true;
+
+                case KeyEvent.KEYCODE_T:
+                    addTab();
+                    return true;
+
+                case KeyEvent.KEYCODE_W:
+                    Tabs.getInstance().closeTab(tab);
+                    return true;
+
+                case KeyEvent.KEYCODE_F:
+                    mFindInPageBar.show();
+                return true;
+            }
+        }
+
         return false;
     }
 

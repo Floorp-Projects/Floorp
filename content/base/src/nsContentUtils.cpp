@@ -157,6 +157,7 @@
 #include "nsSVGFeatures.h"
 #include "nsTextEditorState.h"
 #include "nsTextFragment.h"
+#include "nsTextNode.h"
 #include "nsThreadUtils.h"
 #include "nsUnicharUtilCIID.h"
 #include "nsUnicodeProperties.h"
@@ -2929,7 +2930,7 @@ nsContentUtils::NameChanged(nsINodeInfo* aNodeInfo, nsIAtom* aName,
                                 aNodeInfo->NamespaceID(),
                                 aNodeInfo->NodeType(),
                                 aNodeInfo->GetExtraName()).get();
-  return *aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  return NS_OK;
 }
 
 
@@ -4152,7 +4153,7 @@ nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
 
   if (isHTML) {
     nsRefPtr<DocumentFragment> frag =
-      NS_NewDocumentFragment(document->NodeInfoManager(), aRv);
+      new DocumentFragment(document->NodeInfoManager());
     
     nsCOMPtr<nsIContent> contextAsContent = do_QueryInterface(aContextNode);
     if (contextAsContent && !contextAsContent->IsElement()) {
@@ -4478,14 +4479,12 @@ nsContentUtils::SetNodeTextContent(nsIContent* aContent,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIContent> textContent;
-  nsresult rv = NS_NewTextNode(getter_AddRefs(textContent),
-                               aContent->NodeInfo()->NodeInfoManager());
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsRefPtr<nsTextNode> textContent =
+    new nsTextNode(aContent->NodeInfo()->NodeInfoManager());
 
   textContent->SetText(aValue, true);
 
-  rv = aContent->AppendChildTo(textContent, true);
+  nsresult rv = aContent->AppendChildTo(textContent, true);
   mb.NodesAdded();
   return rv;
 }

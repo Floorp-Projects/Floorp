@@ -470,7 +470,7 @@ var PlacesOrganizer = {
     let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     let fpCallback = function fpCallback_done(aResult) {
       if (aResult != Ci.nsIFilePicker.returnCancel) {
-        PlacesUtils.backups.saveBookmarksToJSONFile(fp.file);
+        BookmarkJSONUtils.exportToFile(fp.file);
       }
     };
 

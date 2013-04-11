@@ -25,6 +25,7 @@ CPPSRCS = \
 
 EXTRA_COMPONENTS = \
   nsFormAutoComplete.js \
+  FormHistoryStartup.js \
   nsInputListAutoComplete.js \
   satchel.manifest \
   $(NULL)
@@ -36,5 +37,9 @@ EXTRA_PP_COMPONENTS = \
 EXTRA_JS_MODULES = \
   nsFormAutoCompleteResult.jsm \
   $(NULL)
+
+EXTRA_PP_JS_MODULES = \
+  FormHistory.jsm \
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

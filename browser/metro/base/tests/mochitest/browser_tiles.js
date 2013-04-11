@@ -193,6 +193,7 @@ gTests.push({
     is(grid.selectedIndex, 1, "selectedIndex is correct");
 
     grid.toggleItemSelection(grid.children[1]);
+    ok(!grid.children[1].selected, "toggleItemSelection sets falsy selected prop on previously-selected item");
     is(grid.selectedIndex, -1, "selectedIndex reports correctly with nothing selected");
 
     // item selection
@@ -221,7 +222,7 @@ gTests.push({
     info("calling selectItem, currently it is:" + grid.children[0].selected);
     // Note: A richgrid in seltype=single mode fires "select" events from selectItem
     grid.selectItem(grid.children[0]);
-    info("/calling selectItem, now it is:" + grid.children[0].selected);
+    info("calling selectItem, now it is:" + grid.children[0].selected);
     yield waitForMs(0);
 
     is(handlerStub.callCount, 1, "select event handler was called when we selected an item");

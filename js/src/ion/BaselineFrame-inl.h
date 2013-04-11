@@ -64,6 +64,18 @@ BaselineFrame::popBlock(JSContext *cx)
     setBlockChain(*blockChain_->enclosingBlock());
 }
 
+inline CallObject &
+BaselineFrame::callObj() const
+{
+    JS_ASSERT(hasCallObj());
+    JS_ASSERT(fun()->isHeavyweight());
+
+    JSObject *obj = scopeChain();
+    while (!obj->isCall())
+        obj = obj->enclosingScope();
+    return obj->asCall();
+}
+
 } // namespace ion
 } // namespace js
 

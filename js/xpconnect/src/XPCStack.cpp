@@ -116,7 +116,7 @@ XPCJSStackFrame::CreateStack(JSContext* cx, XPCJSStackFrame** stack)
 
         JSFunction* fun = desc->frames[i].fun;
         if (fun) {
-            JSString *funid = JS_GetFunctionDisplayId(fun);
+            JS::RootedString funid(cx, JS_GetFunctionDisplayId(fun));
             if (funid) {
                 size_t length = JS_GetStringEncodingLength(cx, funid);
                 if (length != size_t(-1)) {
