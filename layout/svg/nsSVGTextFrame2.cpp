@@ -2999,7 +2999,7 @@ nsSVGTextFrame2::MutationObserver::ContentAppended(nsIDocument* aDocument,
                                                    nsIContent* aFirstNewContent,
                                                    int32_t aNewIndexInContainer)
 {
-  mFrame->NotifyGlyphMetricsChange();
+  mFrame->NotifyGlyphMetricsChange(ePositioningDirtyDueToMutation);
 }
 
 void
@@ -3009,7 +3009,7 @@ nsSVGTextFrame2::MutationObserver::ContentInserted(
                                         nsIContent* aChild,
                                         int32_t aIndexInContainer)
 {
-  mFrame->NotifyGlyphMetricsChange();
+  mFrame->NotifyGlyphMetricsChange(ePositioningDirtyDueToMutation);
 }
 
 void
@@ -3020,7 +3020,7 @@ nsSVGTextFrame2::MutationObserver::ContentRemoved(
                                        int32_t aIndexInContainer,
                                        nsIContent* aPreviousSibling)
 {
-  mFrame->NotifyGlyphMetricsChange();
+  mFrame->NotifyGlyphMetricsChange(ePositioningDirtyDueToMutation);
 }
 
 void
