@@ -2130,6 +2130,10 @@ var UserAgent = {
   },
 
   getUserAgentForUriAndTab: function ua_getUserAgentForUriAndTab(aUri, aTab, defaultUA) {
+    // Send desktop UA if "Request Desktop Site" is enabled.
+    if (aTab.desktopMode)
+      return this.DESKTOP_UA;
+
     // Not all schemes have a host member.
     if (aUri.schemeIs("http") || aUri.schemeIs("https")) {
       if (this.YOUTUBE_DOMAIN.test(aUri.host)) {
@@ -2138,10 +2142,6 @@ var UserAgent = {
           return defaultUA.replace("Android;", "Android; Mobile;");
       }
     }
-
-    // Send desktop UA if "Request Desktop Site" is enabled
-    if (aTab.desktopMode)
-      return this.DESKTOP_UA;
 
     return defaultUA;
   },
