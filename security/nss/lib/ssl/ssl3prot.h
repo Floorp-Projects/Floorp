@@ -5,7 +5,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: ssl3prot.h,v 1.22 2012/04/25 14:50:12 gerv%gerv.net Exp $ */
+/* $Id$ */
 
 #ifndef __ssl3proto_h_
 #define __ssl3proto_h_
@@ -129,6 +129,7 @@ typedef enum {
     certificate_verify	= 15, 
     client_key_exchange	= 16, 
     finished		= 20,
+    certificate_status  = 22,
     next_proto		= 67
 } SSL3HandshakeType;
 

@@ -4,7 +4,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: lginit.c,v 1.18 2012/06/26 22:27:32 rrelyea%redhat.com Exp $ */
+/* $Id$ */
 
 #include "lowkeyi.h"
 #include "pcert.h"

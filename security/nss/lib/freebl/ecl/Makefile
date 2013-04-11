@@ -77,7 +77,8 @@ LIBOBJS = ecl.o ecl_curve.o ecl_mult.o ecl_gf.o \
 	ec2_163.o ec2_193.o ec2_233.o \
 	ecp_aff.o ecp_jac.o ecp_mont.o \
 	ec_naf.o ecp_jm.o \
-	ecp_192.o ecp_224.o ecp_256.o ecp_384.o ecp_521.o
+	ecp_192.o ecp_224.o ecp_256.o ecp_384.o ecp_521.o \
+	ecp_256_32.o
 ifeq ($(ECL_USE_FP),1)
 LIBOBJS+= ecp_fp160.o ecp_fp192.o ecp_fp224.o ecp_fp.o
 endif

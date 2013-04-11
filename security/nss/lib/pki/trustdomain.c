@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.63 $ $Date: 2012/04/25 14:50:07 $";
+static const char CVS_ID[] = "@(#) $RCSfile$ $Revision$ $Date$";
 #endif /* DEBUG */
 
 #ifndef DEV_H

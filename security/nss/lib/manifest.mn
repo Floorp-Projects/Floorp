@@ -2,8 +2,8 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-CORE_DEPTH = ../..
-DEPTH      = ../..
+CORE_DEPTH = ..
+DEPTH      = ..
 
 #
 # organized by DLL
@@ -16,7 +16,7 @@ DEPTH      = ../..
 #  smime
 #  ckfw (builtins module)
 #  crmf jar (not dll's)
-DIRS =  util freebl $(SQLITE_SRCDIR) softoken \
+DIRS =  util freebl $(SQLITE_SRCDIR) $(DBM_SRCDIR) softoken \
 	base dev pki \
 	libpkix \
 	certdb certhigh pk11wrap cryptohi nss \

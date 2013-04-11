@@ -236,6 +236,9 @@ mp_err ec_group_set_gf2m163(ECGroup *group, ECCurveName name);
 mp_err ec_group_set_gf2m193(ECGroup *group, ECCurveName name);
 mp_err ec_group_set_gf2m233(ECGroup *group, ECCurveName name);
 
+/* Optimized point multiplication */
+mp_err ec_group_set_gfp256_32(ECGroup *group, ECCurveName name);
+
 /* Optimized floating-point arithmetic */
 #ifdef ECL_USE_FP
 mp_err ec_group_set_secp160r1_fp(ECGroup *group);

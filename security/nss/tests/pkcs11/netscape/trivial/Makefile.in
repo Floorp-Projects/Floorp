@@ -3,7 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MAKEFILE_IN_CVS_ID = "@(#) $RCSfile: Makefile.in,v $ $Revision: 1.4 $ $Date: 2012/03/20 14:47:45 $"
+MAKEFILE_IN_CVS_ID = "@(#) $RCSfile$ $Revision$ $Date$"
 
 SHELL = /bin/sh
 .SUFFIXES:

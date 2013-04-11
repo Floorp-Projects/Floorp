@@ -5,7 +5,7 @@
 /*
  * CMS miscellaneous utility functions.
  *
- * $Id: cmsutil.c,v 1.18 2012/04/25 14:50:09 gerv%gerv.net Exp $
+ * $Id$
  */
 
 #include "cmslocal.h"

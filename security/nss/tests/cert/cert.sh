@@ -74,6 +74,23 @@ cert_log() ######################    write the cert_status file
     echo $* >>${CERT_LOG_FILE}
 }
 
+########################################################################
+# function wraps calls to pk12util, also: writes action and options
+# to stdout.
+# Params are the same as to pk12util.
+# Returns pk12util status
+#
+pk12u()
+{
+    echo "${CU_ACTION} --------------------------"
+
+    echo "pk12util $@"
+    ${BINDIR}/pk12util $@
+    RET=$?
+
+    return $RET
+}
+
 ################################ certu #################################
 # local shell function to call certutil, also: writes action and options to
 # stdout, sets variable RET and writes results to the html file results
@@ -921,6 +938,12 @@ cert_ssl()
   else
       cert_log "SUCCESS: SSL passed"
   fi
+
+  echo "$SCRIPTNAME: Creating database for OCSP stapling tests  ==============="
+  echo "cp -rv ${SERVERDIR} ${STAPLINGDIR}"
+  cp -rv ${R_SERVERDIR} ${R_STAPLINGDIR}
+  pk12u -o ${R_STAPLINGDIR}/ca.p12 -n TestCA -k ${R_PWFILE} -w ${R_PWFILE} -d ${R_CADIR}
+  pk12u -i ${R_STAPLINGDIR}/ca.p12 -k ${R_PWFILE} -w ${R_PWFILE} -d ${R_STAPLINGDIR}
 }
 ############################## cert_stresscerts ################################
 # local shell function to create client certs for SSL stresstest
