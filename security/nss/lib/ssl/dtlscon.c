@@ -5,7 +5,7 @@
 /*
  * DTLS Protocol
  */
-/* $Id: dtlscon.c,v 1.5 2012/09/28 01:46:45 wtc%google.com Exp $ */
+/* $Id$ */
 
 #include "ssl.h"
 #include "sslimpl.h"

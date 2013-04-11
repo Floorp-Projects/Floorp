@@ -38,7 +38,7 @@ CERT_CertTimesValid(CERTCertificate *c)
  * verify the signature of a signed data object with the given DER publickey
  */
 SECStatus
-CERT_VerifySignedDataWithPublicKey(CERTSignedData *sd, 
+CERT_VerifySignedDataWithPublicKey(const CERTSignedData *sd,
                                    SECKEYPublicKey *pubKey,
 		                   void *wincx)
 {

@@ -12,7 +12,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# $Id: test-arrays.txt,v 1.3 2012/04/25 14:49:50 gerv%gerv.net Exp $
+# $Id$
 #
 list:test_list:print out a list of the available test suites
 copy:test_copy:test assignment of mp-int structures

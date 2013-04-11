@@ -42,6 +42,10 @@ SYSINIT_SRCDIR = sysinit  # Add the sysinit directory to DIRS.
 endif
 endif
 
+ifndef NSS_DISABLE_DBM
+DBM_SRCDIR = dbm  # Add the dbm directory to DIRS.
+endif
+
 #######################################################################
 # (5) Execute "global" rules. (OPTIONAL)                              #
 #######################################################################

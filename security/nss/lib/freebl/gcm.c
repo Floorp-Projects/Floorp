@@ -230,7 +230,7 @@ gcm_getX(gcmHashContext *ghash, unsigned char *T, unsigned int blocksize)
 	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
 	return SECFailure;
     }
-    gcm_reverse(T, X, blocksize);
+    gcm_reverse(T, tmp_buf, blocksize);
     return SECSuccess;
 }
 
@@ -453,7 +453,9 @@ gcmHash_Update(gcmHashContext *ghash, const unsigned char *buf,
      * we can hash it */
     if (ghash->bufLen) {
 	unsigned int needed = PR_MIN(len, blocksize - ghash->bufLen);
-	PORT_Memcpy(ghash->buffer+ghash->bufLen, buf, needed);
+	if (needed != 0) {
+	    PORT_Memcpy(ghash->buffer+ghash->bufLen, buf, needed);
+	}
 	buf += needed;
 	len -= needed;
 	ghash->bufLen += needed;
@@ -814,7 +816,7 @@ GCM_DecryptUpdate(GCMContext *gcm, unsigned char *outbuf,
 
     /* get the authentication block */
     if (inlen < tagBytes) {
-	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	PORT_SetError(SEC_ERROR_INPUT_LEN);
 	return SECFailure;
     }
 

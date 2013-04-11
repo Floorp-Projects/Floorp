@@ -7,7 +7,7 @@
 #
 # smime.pl - frontend for S/MIME message generation and parsing
 #
-# $Id: smime,v 1.10 2012/03/20 14:47:20 gerv%gerv.net Exp $
+# $Id$
 #
 
 use Getopt::Std;
