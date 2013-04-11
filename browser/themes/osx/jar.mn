@@ -216,6 +216,8 @@ browser.jar:
   skin/classic/browser/devtools/goto-mdn.png                (devtools/goto-mdn.png)
   skin/classic/browser/devtools/ruleview.css                (devtools/ruleview.css)
   skin/classic/browser/devtools/commandline.css             (devtools/commandline.css)
+  skin/classic/browser/devtools/checkbox-dark.png           (devtools/checkbox-dark.png)
+  skin/classic/browser/devtools/checkbox-light.png          (devtools/checkbox-light.png)
   skin/classic/browser/devtools/markup-view.css             (devtools/markup-view.css)
   skin/classic/browser/devtools/orion.css                   (devtools/orion.css)
   skin/classic/browser/devtools/orion-container.css         (devtools/orion-container.css)
