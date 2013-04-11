@@ -744,6 +744,9 @@ function checkVisible(el, command_id) {
   if (!visible) {
     return false;
   }
+  if (el.tagName.toLowerCase() === 'body') {
+    return true;
+  }
   if (!elementInViewport(el)) {
     //check if scroll function exist. If so, call it.
     if (el.scrollIntoView) {
@@ -1520,8 +1523,13 @@ function sendKeysToElement(msg) {
   let command_id = msg.json.command_id;
   try {
     let el = elementManager.getKnownElement(msg.json.element, curWindow);
-    utils.type(curWindow.document, el, msg.json.value.join(""), true);
-    sendOk(command_id);
+    if (checkVisible(el, command_id)) {
+      utils.type(curWindow.document, el, msg.json.value.join(""), true);
+      sendOk(command_id);
+    }
+    else {
+      sendError("Element is not visible", 11, null, command_id)
+    }
   }
   catch (e) {
     sendError(e.message, e.code, e.stack, command_id);

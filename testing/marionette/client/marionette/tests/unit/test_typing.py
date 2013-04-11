@@ -4,6 +4,7 @@
 
 from marionette_test import MarionetteTestCase
 from keys import Keys
+from errors import ElementNotVisibleException
 
 
 class TestTyping(MarionetteTestCase):
@@ -27,7 +28,7 @@ class TestTyping(MarionetteTestCase):
     def testShouldFireKeyUpEvents(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
-        
+
         keyReporter = self.marionette.find_element("id", "keyReporter")
         keyReporter.send_keys("a")
         result = self.marionette.find_element("id", "result")
@@ -36,39 +37,39 @@ class TestTyping(MarionetteTestCase):
     def testShouldTypeLowerCaseLetters(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
-        
+
         keyReporter = self.marionette.find_element("id", "keyReporter")
         keyReporter.send_keys("abc def")
         self.assertEqual(keyReporter.get_attribute("value"), "abc def")
-    
+
     def testShouldBeAbleToTypeCapitalLetters(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
-        
+
         keyReporter = self.marionette.find_element("id", "keyReporter")
         keyReporter.send_keys("ABC DEF")
         self.assertEqual(keyReporter.get_attribute("value"), "ABC DEF")
-    
+
     def testShouldBeAbleToTypeQuoteMarks(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
-        
+
         keyReporter = self.marionette.find_element("id", "keyReporter")
         keyReporter.send_keys("\"")
         self.assertEqual(keyReporter.get_attribute("value"), "\"")
-    
+
     def testShouldBeAbleToTypeTheAtCharacter(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
-        
+
         keyReporter = self.marionette.find_element("id", "keyReporter")
         keyReporter.send_keys("@")
         self.assertEqual(keyReporter.get_attribute("value"), "@")
-    
+
     def testShouldBeAbleToMixUpperAndLowerCaseLetters(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
-        
+
         keyReporter = self.marionette.find_element("id", "keyReporter")
         keyReporter.send_keys("me@eXample.com")
         self.assertEqual(keyReporter.get_attribute("value"), "me@eXample.com")
@@ -76,7 +77,7 @@ class TestTyping(MarionetteTestCase):
     def testArrowKeysShouldNotBePrintable(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
-        
+
         keyReporter = self.marionette.find_element("id", "keyReporter")
         keyReporter.send_keys(Keys.ARROW_LEFT)
         self.assertEqual(keyReporter.get_attribute("value"), "")
@@ -84,7 +85,7 @@ class TestTyping(MarionetteTestCase):
     def testWillSimulateAKeyUpWhenEnteringTextIntoInputElements(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
-        
+
         element = self.marionette.find_element("id", "keyUp")
         element.send_keys("I like cheese")
         result = self.marionette.find_element("id", "result")
@@ -93,7 +94,7 @@ class TestTyping(MarionetteTestCase):
     def testWillSimulateAKeyDownWhenEnteringTextIntoInputElements(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
-        
+
         element = self.marionette.find_element("id", "keyDown")
         element.send_keys("I like cheese")
         result = self.marionette.find_element("id", "result")
@@ -104,7 +105,7 @@ class TestTyping(MarionetteTestCase):
     def testWillSimulateAKeyPressWhenEnteringTextIntoInputElements(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
-        
+
         element = self.marionette.find_element("id", "keyPress")
         element.send_keys("I like cheese")
         result = self.marionette.find_element("id", "result")
@@ -115,7 +116,7 @@ class TestTyping(MarionetteTestCase):
     def testWillSimulateAKeyUpWhenEnteringTextIntoTextAreas(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
-        
+
         element = self.marionette.find_element("id", "keyUpArea")
         element.send_keys("I like cheese")
         result = self.marionette.find_element("id", "result")
@@ -124,7 +125,7 @@ class TestTyping(MarionetteTestCase):
     def testWillSimulateAKeyDownWhenEnteringTextIntoTextAreas(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
-        
+
         element = self.marionette.find_element("id", "keyDownArea")
         element.send_keys("I like cheese")
         result = self.marionette.find_element("id", "result")
@@ -135,7 +136,7 @@ class TestTyping(MarionetteTestCase):
     def testWillSimulateAKeyPressWhenEnteringTextIntoTextAreas(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
-        
+
         element = self.marionette.find_element("id", "keyPressArea")
         element.send_keys("I like cheese")
         result = self.marionette.find_element("id", "result")
@@ -146,7 +147,7 @@ class TestTyping(MarionetteTestCase):
     def testShouldReportKeyCodeOfArrowKeysUpDownEvents(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
-        
+
         result = self.marionette.find_element("id", "result")
         element = self.marionette.find_element("id", "keyReporter")
         element.send_keys(Keys.ARROW_DOWN)
@@ -171,7 +172,7 @@ class TestTyping(MarionetteTestCase):
     def testNumericShiftKeys(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
-        
+
         result = self.marionette.find_element("id", "result")
         element = self.marionette.find_element("id", "keyReporter")
         numericShiftsEtc = "~!@#$%^&*()_+{}:i\"<>?|END~"
@@ -182,7 +183,7 @@ class TestTyping(MarionetteTestCase):
     def testLowerCaseAlphaKeys(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
-        
+
         element = self.marionette.find_element("id", "keyReporter")
         lowerAlphas = "abcdefghijklmnopqrstuvwxyz"
         element.send_keys(lowerAlphas)
@@ -191,7 +192,7 @@ class TestTyping(MarionetteTestCase):
     def testUppercaseAlphaKeys(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
-        
+
         result = self.marionette.find_element("id", "result")
         element = self.marionette.find_element("id", "keyReporter")
         upperAlphas = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -202,7 +203,7 @@ class TestTyping(MarionetteTestCase):
     def testAllPrintableKeys(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
-        
+
         result = self.marionette.find_element("id", "result")
         element = self.marionette.find_element("id", "keyReporter")
         allPrintable = "!\"#$%&'()*+,-./0123456789:<=>?@ ABCDEFGHIJKLMNOPQRSTUVWXYZ [\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
@@ -214,7 +215,7 @@ class TestTyping(MarionetteTestCase):
     def testSpecialSpaceKeys(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
-        
+
         element = self.marionette.find_element("id", "keyReporter")
         element.send_keys("abcd" + Keys.SPACE + "fgh" + Keys.SPACE + "ij")
         self.assertEqual(element.get_attribute("value"), "abcd fgh ij")
@@ -233,3 +234,9 @@ class TestTyping(MarionetteTestCase):
 
         # If we don't get an error below we are good
         self.marionette.find_element('tag name', 'body').send_keys('foo')
+
+    def testShouldThrowElementNotVisibleWhenInputHidden(self):
+        test_html = self.marionette.absolute_url("javascriptPage.html")
+        self.marionette.navigate(test_html)
+        not_displayed = self.marionette.find_element('id', 'notDisplayed')
+        self.assertRaises(ElementNotVisibleException, not_displayed.send_keys, 'foo')
