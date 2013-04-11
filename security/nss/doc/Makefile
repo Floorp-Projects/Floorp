@@ -24,7 +24,7 @@ prepare: date-and-version
 	
 clean:
 	rm -f date.xml version.xml *.tar.bz2
-	rm -fr $(name) ascii html nroff
+	rm -fr $(name) ascii
 
 date-and-version: date.xml version.xml
 
@@ -55,13 +55,13 @@ tarball:
 # manpages
 #--------------------------------------------------------
 
-%.1 : %.xml prepare
+nroff/%.1 : %.xml
 	$(COMPILE.1) $<
 	
 MANPAGES = \
-certutil.1 cmsutil.1 crlutil.1 pk12util.1 \
-modutil.1 ssltap.1 derdump.1 signtool.1 signver.1 \
-pp.1 vfychain.1 vfyserv.1
+nroff/certutil.1 nroff/cmsutil.1 nroff/crlutil.1 nroff/pk12util.1 \
+nroff/modutil.1 nroff/ssltap.1 nroff/derdump.1 nroff/signtool.1 nroff/signver.1 \
+nroff/pp.1 nroff/vfychain.1 nroff/vfyserv.1
 
 all-man: prepare $(MANPAGES)
 
@@ -69,14 +69,13 @@ all-man: prepare $(MANPAGES)
 # html pages
 #--------------------------------------------------------
 
-%.html : %.xml
+html/%.html : %.xml
 	$(COMPILE.html) $<
-	mv html/index.html html/$@
+	mv html/index.html $@
 
 HTMLPAGES = \
-certutil.html cmsutil.html crlutil.html pk12util.html  modutil.html \
-ssltap.html derdump.html signtool.html signver.html pp.html \
-vfychain.html vfyserv.html
+html/certutil.html html/cmsutil.html html/crlutil.html html/pk12util.html html/modutil.html \
+html/ssltap.html html/derdump.html html/signtool.html html/signver.html html/pp.html \
+html/vfychain.html html/vfyserv.html
 
 all-html: prepare $(HTMLPAGES)
-

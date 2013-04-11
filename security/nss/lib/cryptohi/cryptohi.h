@@ -4,7 +4,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: cryptohi.h,v 1.17 2012/06/25 21:48:39 rrelyea%redhat.com Exp $ */
+/* $Id$ */
 
 #ifndef _CRYPTOHI_H_
 #define _CRYPTOHI_H_

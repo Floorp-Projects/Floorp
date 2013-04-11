@@ -298,11 +298,12 @@ NSS_SRCDIR = $(topsrcdir)
 endif
 
 NSS_DIRS =
-ifndef NSS_DISABLE_DBM
-NSS_DIRS += dbm
-endif
 ifndef MOZ_FOLD_LIBS
 NSS_DIRS += nss/lib
+else
+ifndef NSS_DISABLE_DBM
+NSS_DIRS += nss/lib/dbm
+endif
 endif
 NSS_DIRS += \
   nss/cmd/lib \
@@ -440,7 +441,7 @@ libs-nss/lib/ckfw: libs-nss/lib/nss/../base $(NSPR_IMPORT_LIBS)
 libs-nss/lib/softoken: $(NSPR_IMPORT_LIBS) $(SQLITE_IMPORT_LIB)
 libs-nss/lib/softoken: libs-nss/lib/freebl
 ifndef NSS_DISABLE_DBM
-libs-nss/lib/softoken: libs-dbm
+libs-nss/lib/softoken: libs-nss/lib/dbm
 endif
 libs-nss/lib/softoken: $(DIST)/lib/$(IMPORT_PREFIX)nssutil3$(IMPORT_SUFFIX)
 libs-nss/lib/freebl: $(DIST)/lib/$(IMPORT_PREFIX)nssutil3$(IMPORT_SUFFIX) $(NSPR_IMPORT_LIBS)
@@ -488,10 +489,6 @@ $(NSS_CMD_TARGETS): libs-nss/cmd/lib
 else
 $(NSS_CMD_TARGETS): libs-nss/lib libs-nss/cmd/lib
 endif # MOZ_FOLD_LIBS
-
-ifndef NSS_DISABLE_DBM
-libs-nss/lib: libs-dbm
-endif
 
 # Work around NSS build system race condition creating certdata.c in
 # security/nss/lib/ckfw/builtins. See bug #836220.

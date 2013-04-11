@@ -410,7 +410,7 @@ CERT_AddRDN(CERTName *name, CERTRDN *rdn)
 }
 
 SECStatus
-CERT_CopyName(PRArenaPool *arena, CERTName *to, CERTName *from)
+CERT_CopyName(PRArenaPool *arena, CERTName *to, const CERTName *from)
 {
     CERTRDN **rdns, *frdn, *trdn;
     SECStatus rv = SECSuccess;

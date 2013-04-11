@@ -5,7 +5,7 @@
 /*
  * Interfaces of the CMS implementation.
  *
- * $Id: cms.h,v 1.27 2012/04/25 14:50:08 gerv%gerv.net Exp $
+ * $Id$
  */
 
 #ifndef _CMS_H_

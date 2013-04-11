@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * $Id: camellia.c,v 1.5 2012/04/25 14:49:43 gerv%gerv.net Exp $
+ * $Id$
  */
 
 #ifdef FREEBL_NO_DEPEND

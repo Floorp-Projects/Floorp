@@ -20,6 +20,9 @@
 	0	aes_ecb_-D	AES_ECB_Decrypt
 	0	aes_cbc_-E	AES_CBC_Encrypt
 	0	aes_cbc_-D	AES_CBC_Decrypt
+	0	aes_ctr		AES_CTR
+	0	aes_cts		AES_CTS
+	0	aes_gcm		AES_GCM
 	0	camellia_ecb_-E	Camellia_ECB_Encrypt
 	0	camellia_ecb_-D	Camellia_ECB_Decrypt
 	0	camellia_cbc_-E	Camellia_CBC_Encrypt

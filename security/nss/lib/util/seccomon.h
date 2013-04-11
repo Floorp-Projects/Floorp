@@ -9,7 +9,7 @@
  * for security libraries.  It should not be dependent on any other
  * headers, and should not require linking with any libraries.
  *
- * $Id: seccomon.h,v 1.8 2012/04/25 14:50:16 gerv%gerv.net Exp $
+ * $Id$
  */
 
 #ifndef _SECCOMMON_H_
@@ -53,6 +53,13 @@ typedef struct SECItemStr SECItem;
 struct SECItemStr {
     SECItemType type;
     unsigned char *data;
+    unsigned int len;
+};
+
+typedef struct SECItemArrayStr SECItemArray;
+
+struct SECItemArrayStr {
+    SECItem *items;
     unsigned int len;
 };
 

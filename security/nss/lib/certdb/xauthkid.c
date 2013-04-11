@@ -78,7 +78,7 @@ SECStatus CERT_EncodeAuthKeyID (PRArenaPool *arena, CERTAuthKeyID *value, SECIte
 }
 
 CERTAuthKeyID *
-CERT_DecodeAuthKeyID (PRArenaPool *arena, SECItem *encodedValue)
+CERT_DecodeAuthKeyID (PRArenaPool *arena, const SECItem *encodedValue)
 {
     CERTAuthKeyID * value = NULL;
     SECStatus       rv    = SECFailure;

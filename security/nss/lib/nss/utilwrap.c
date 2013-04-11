@@ -402,7 +402,7 @@ SECStatus DER_Lengths(SECItem *item, int *header_len_p,
     return DER_Lengths_Util(item, header_len_p, contents_len_p);
 }
 
-long DER_GetInteger(SECItem *src)
+long DER_GetInteger(const SECItem *src)
 {
     return DER_GetInteger_Util(src);
 }

@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: montmulf.c,v 1.8 2012/04/25 14:49:50 gerv%gerv.net Exp $ */
+/* $Id$ */
 
 #ifdef SOLARIS
 #define RF_INLINE_MACROS 1
