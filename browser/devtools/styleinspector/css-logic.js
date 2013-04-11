@@ -37,9 +37,8 @@
  * - how browsers process CSS
  * @constructor
  */
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
+
+const {Cc, Ci, Cu} = require("chrome");
 
 const RX_UNIVERSAL_SELECTOR = /\s*\*\s*/g;
 const RX_NOT = /:not\((.*?)\)/g;
@@ -52,13 +51,13 @@ const RX_PSEUDO = /\s*:?:([\w-]+)(\(?\)?)\s*/g;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-this.EXPORTED_SYMBOLS = ["CssLogic", "CssSelector"];
-
-this.CssLogic = function CssLogic()
+function CssLogic()
 {
   // The cache of examined CSS properties.
   _propertyInfos: {};
 }
+
+exports.CssLogic = CssLogic;
 
 /**
  * Special values for filter, in addition to an href these values can be used
@@ -1261,7 +1260,7 @@ CssRule.prototype = {
  * @param {string} aSelector The selector that we wish to investigate.
  * @param {Number} aIndex The index of the selector within it's rule.
  */
-this.CssSelector = function CssSelector(aCssRule, aSelector, aIndex)
+function CssSelector(aCssRule, aSelector, aIndex)
 {
   this._cssRule = aCssRule;
   this.text = aSelector;
@@ -1269,6 +1268,8 @@ this.CssSelector = function CssSelector(aCssRule, aSelector, aIndex)
   this._specificity = null;
   this.selectorIndex = aIndex;
 }
+
+exports.CssSelector = CssSelector;
 
 CssSelector.prototype = {
   _matchId: null,
