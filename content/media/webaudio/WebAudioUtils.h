@@ -66,6 +66,13 @@ struct WebAudioUtils {
   {
     return std::pow(10.0f, 0.05f * aDecibel);
   }
+
+  static void FixNaN(double& aDouble)
+  {
+    if (MOZ_DOUBLE_IS_NaN(aDouble) || MOZ_DOUBLE_IS_INFINITE(aDouble)) {
+      aDouble = 0.0;
+    }
+  }
 };
 
 }
