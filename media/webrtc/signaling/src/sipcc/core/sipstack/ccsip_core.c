@@ -4409,7 +4409,7 @@ ccsip_handle_sentbye_ev_sip_fxx (ccsipCCB_t *ccb, sipSMEvent_t *event)
         if (cred_get_credentials_r(ccb, &credentials) == FALSE) {
             CCSIP_DEBUG_STATE(DEB_L_C_F_PREFIX"retries exceeded: %d/%d\n",
                               DEB_L_C_F_PREFIX_ARGS(SIP_CALL_STATUS, ccb->dn_line, ccb->gsm_id, fname),
-							  ccb->index, ccb->authen.cred_type, MAX_RETRIES_401);
+							  ccb->index, MAX_RETRIES_401);
 
             free_sip_message(response);
             sip_cc_release_complete(ccb->gsm_id, ccb->dn_line, CC_CAUSE_ERROR);

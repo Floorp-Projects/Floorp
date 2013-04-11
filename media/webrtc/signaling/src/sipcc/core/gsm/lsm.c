@@ -386,7 +386,7 @@ void lsm_set_lcb_prevent_ringing (callid_t call_id)
     FSM_FOR_ALL_CBS(lcb, lsm_lcbs, LSM_MAX_LCBS) {
         if (lcb->state == LSM_S_RINGIN) {
             if ((lcb->gcid != NULL) && (strncmp(gcid, lcb->gcid, CC_GCID_LEN) == 0)) {
-                LSM_DEBUG(DEB_L_C_F_PREFIX"found ringing call.\n",
+                LSM_DEBUG(DEB_L_C_F_PREFIX"found ringing call, gcid %s",
                           DEB_L_C_F_PREFIX_ARGS(LSM, lcb->line, lcb->call_id, "lsm_set_lcb_prevent_ringing"), gcid);
                 FSM_SET_FLAGS(lcb->flags, LSM_FLAGS_PREVENT_RINGING);
             }

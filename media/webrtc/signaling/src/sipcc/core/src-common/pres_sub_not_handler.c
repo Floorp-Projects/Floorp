@@ -800,7 +800,7 @@ unsolicited_notify_ind_cb (ccsip_sub_not_data_t *msg_data)
     presentity_url = strchr(event_body_p->presence_body.entity, ':');
     if (presentity_url == NULL)
     {
-        BLF_ERROR("MSC:  Error parsing presentity_url", fname);
+        BLF_ERROR("MSC: %s: Error parsing presentity_url", fname);
         return;
     }
 
@@ -960,7 +960,7 @@ static void sub_handler_initialized (void)
         presentity_url = strchr(pending_notify_p->presentity, ':');
         if (presentity_url == NULL)
         {
-            BLF_ERROR("MSC:  Error parsing presentity_url", fname);
+            BLF_ERROR("MSC: %s: Error parsing presentity_url", fname);
             return;
         }
 

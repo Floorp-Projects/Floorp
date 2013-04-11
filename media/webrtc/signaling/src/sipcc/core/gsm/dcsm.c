@@ -269,7 +269,7 @@ static void dcsm_add_call_id_to_list (callid_t call_id)
         /* Should never happen as there is a space to store call_id
          * for each calls
         */
-        DCSM_ERROR(DCSM_F_PREFIX"DCSM No space to store call_id.\n",
+        DCSM_ERROR(DEB_F_PREFIX"DCSM No space to store call_id.\n",
                                     DEB_F_PREFIX_ARGS("DCSM", fname));
         return;
     }
@@ -380,7 +380,7 @@ dcsm_update_gsm_state (fsm_fcb_t *fcb, callid_t call_id, int state)
                  */
                 if (sll_count(dcsm_cb.s_msg_list) > 0 ) {
                     if (gsm_send_msg(DCSM_EV_READY, NULL, 0) == CPR_FAILURE) {
-                        DCSM_ERROR(DCSM_F_PREFIX"send DCSM_EV_READY ERROR.\n",
+                        DCSM_ERROR(DEB_F_PREFIX"send DCSM_EV_READY ERROR.\n",
                                         DEB_F_PREFIX_ARGS(DCSM, fname));
                     }
                 }
@@ -679,7 +679,7 @@ dcsm_init (void)
                             dcsm_match_event);
 
     if (dcsm_cb.s_msg_list == NULL) {
-        DCSM_ERROR(DCSM_F_PREFIX"DCSM CB creation failed.\n",
+        DCSM_ERROR(DEB_F_PREFIX"DCSM CB creation failed.\n",
                                     DEB_F_PREFIX_ARGS("DCSM", fname));
 
     }
