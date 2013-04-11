@@ -671,7 +671,7 @@ QueryInterface(JSContext* cx, unsigned argc, JS::Value* vp)
   // Get the object. It might be a security wrapper, in which case we do a checked
   // unwrap.
   JSObject* origObj = JSVAL_TO_OBJECT(thisv);
-  JSObject* obj = js::UnwrapObjectChecked(origObj);
+  JSObject* obj = js::CheckedUnwrap(origObj);
   if (!obj) {
       JS_ReportError(cx, "Permission denied to access object");
       return false;
@@ -1249,7 +1249,7 @@ HasPropertyOnPrototype(JSContext* cx, JSObject* proxy, DOMProxyHandler* handler,
 {
   Maybe<JSAutoCompartment> ac;
   if (xpc::WrapperFactory::IsXrayWrapper(proxy)) {
-    proxy = js::UnwrapObject(proxy);
+    proxy = js::UncheckedUnwrap(proxy);
     ac.construct(cx, proxy);
   }
   MOZ_ASSERT(js::IsProxy(proxy) && js::GetProxyHandler(proxy) == handler);
@@ -1592,7 +1592,7 @@ GetGlobalObject(JSContext* aCx, JSObject* aObject,
                 Maybe<JSAutoCompartment>& aAutoCompartment)
 {
   if (js::IsWrapper(aObject)) {
-    aObject = js::UnwrapObjectChecked(aObject, /* stopAtOuter = */ false);
+    aObject = js::CheckedUnwrap(aObject, /* stopAtOuter = */ false);
     if (!aObject) {
       Throw<mainThread>(aCx, NS_ERROR_XPC_SECURITY_MANAGER_VETO);
       return nullptr;
@@ -1641,7 +1641,7 @@ InterfaceHasInstance(JSContext* cx, JSHandleObject obj, JSObject* instance,
   const DOMIfaceAndProtoJSClass* clasp =
     DOMIfaceAndProtoJSClass::FromJSClass(js::GetObjectClass(obj));
 
-  const DOMClass* domClass = GetDOMClass(js::UnwrapObject(instance));
+  const DOMClass* domClass = GetDOMClass(js::UncheckedUnwrap(instance));
 
   MOZ_ASSERT(!domClass || clasp->mPrototypeID != prototypes::id::_ID_Count,
              "Why do we have a hasInstance hook if we don't have a prototype "
