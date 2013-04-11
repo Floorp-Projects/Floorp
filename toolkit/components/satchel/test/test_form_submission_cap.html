@@ -28,10 +28,15 @@
 var numSubmittedForms = 0;
 var numInputFields = 101;
 
-function startTest() {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  ok(!fh.hasEntries, "checking for initially empty storage");
+function checkInitialState() {
+  countEntries(null, null,
+    function (num) {
+      ok(!num, "checking for initially empty storage");
+      startTest();
+    });
+}
 
+function startTest() {
   var form = document.getElementById("form1");
   for (i = 1; i <= numInputFields; i++) {
     var newField = document.createElement("input");
@@ -55,8 +60,6 @@ function startTest() {
 
 // Called by each form's onsubmit handler.
 function checkSubmit(formNum) {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
   ok(true, "form " + formNum + " submitted");
   numSubmittedForms++;
 
@@ -65,33 +68,14 @@ function checkSubmit(formNum) {
     checkForSave("test" + i, i, "checking saved value " + i);
   }
 
-  // End the test at the last form.
-  if (formNum == 1) {
-    is(numSubmittedForms, 1, "Ensuring all forms were submitted.");
-    Services.obs.removeObserver(checkObserver, "satchel-storage-changed");
-    SimpleTest.finish();
-    return false; // return false to cancel current form submission
-  }
-
-  checkObserver.waitForChecks(function() {
-    // submit the next form.
-    var button = getFormSubmitButton(formNum + 1);
-    button.click();
-  });
-
-  return false; // cancel current form submission
+  // End the test.
+  is(numSubmittedForms, 1, "Ensuring all forms were submitted.");
+  SimpleTest.finish();
+  return false; // return false to cancel current form submission
 }
 
 
-netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
-var fh = Components.classes["@mozilla.org/satchel/form-history;1"].
-         getService(Components.interfaces.nsIFormHistory2);
-ok(fh != null, "Got formHistory service");
-
-window.onload = startTest;
-
-Services.obs.addObserver(checkObserver, "satchel-storage-changed", false);
+window.onload = checkInitialState;
 
 SimpleTest.waitForExplicitFinish();
 
