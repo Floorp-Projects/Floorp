@@ -34,9 +34,9 @@ struct MainThreadDictionaryBase
 {
 protected:
   JSContext* ParseJSON(const nsAString& aJSON,
-                       mozilla::Maybe<JSAutoRequest>& aAr,
-                       mozilla::Maybe<JSAutoCompartment>& aAc,
-                       JS::Value& aVal);
+                       Maybe<JSAutoRequest>& aAr,
+                       Maybe<JSAutoCompartment>& aAc,
+                       Maybe< JS::Rooted<JS::Value> >& aVal);
 };
 
 struct EnumEntry {

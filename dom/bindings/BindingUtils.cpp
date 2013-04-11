@@ -1307,21 +1307,22 @@ SetXrayExpandoChain(JSObject* obj, JSObject* chain)
 
 JSContext*
 MainThreadDictionaryBase::ParseJSON(const nsAString& aJSON,
-                                    mozilla::Maybe<JSAutoRequest>& aAr,
-                                    mozilla::Maybe<JSAutoCompartment>& aAc,
-                                    JS::Value& aVal)
+                                    Maybe<JSAutoRequest>& aAr,
+                                    Maybe<JSAutoCompartment>& aAc,
+                                    Maybe< JS::Rooted<JS::Value> >& aVal)
 {
   JSContext* cx = nsContentUtils::ThreadJSContextStack()->GetSafeJSContext();
   NS_ENSURE_TRUE(cx, nullptr);
   JSObject* global = JS_GetGlobalObject(cx);
   aAr.construct(cx);
   aAc.construct(cx, global);
+  aVal.construct(cx, JS::UndefinedValue());
   if (aJSON.IsEmpty()) {
     return cx;
   }
   if (!JS_ParseJSON(cx,
                     static_cast<const jschar*>(PromiseFlatString(aJSON).get()),
-                    aJSON.Length(), &aVal)) {
+                    aJSON.Length(), aVal.ref().address())) {
     return nullptr;
   }
   return cx;
