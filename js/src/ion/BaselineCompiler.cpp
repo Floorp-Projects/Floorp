@@ -42,23 +42,6 @@ BaselineCompiler::init()
     return true;
 }
 
-bool
-BaselineCompiler::addPCMappingEntry(bool addIndexEntry)
-{
-    // Don't add multiple entries for a single pc.
-    size_t nentries = pcMappingEntries_.length();
-    if (nentries > 0 && pcMappingEntries_[nentries - 1].pcOffset == unsigned(pc - script->code))
-        return true;
-
-    PCMappingEntry entry;
-    entry.pcOffset = pc - script->code;
-    entry.nativeOffset = masm.currentOffset();
-    entry.slotInfo = getStackTopSlotInfo();
-    entry.addIndexEntry = addIndexEntry;
-
-    return pcMappingEntries_.append(entry);
-}
-
 MethodStatus
 BaselineCompiler::compile()
 {
