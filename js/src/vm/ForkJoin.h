@@ -242,16 +242,18 @@ struct ForkJoinOp
 // Locks a JSContext for its scope.
 class LockedJSContext
 {
+#if defined(JS_THREADSAFE) && defined(JS_ION)
     ForkJoinSlice *slice_;
+#endif
     JSContext *cx_;
 
   public:
     LockedJSContext(ForkJoinSlice *slice)
-      : slice_(slice),
 #if defined(JS_THREADSAFE) && defined(JS_ION)
+      : slice_(slice),
         cx_(slice->acquireContext())
 #else
-        cx_(NULL)
+      : cx_(NULL)
 #endif
     { }
 
