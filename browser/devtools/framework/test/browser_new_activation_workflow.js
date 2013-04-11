@@ -8,8 +8,6 @@ const Cu = Components.utils;
 let toolbox, target;
 
 let tempScope = {};
-Cu.import("resource:///modules/devtools/Target.jsm", tempScope);
-let TargetFactory = tempScope.TargetFactory;
 
 function test() {
   addTab("about:blank", function(aBrowser, aTab) {

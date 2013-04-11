@@ -3,9 +3,8 @@
 
 "use strict";
 
-let tempScope = {};
-Cu.import("resource:///modules/devtools/Target.jsm", tempScope);
-let TargetFactory = tempScope.TargetFactory;
+let {devtools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
+let TargetFactory = devtools.TargetFactory;
 
 // Import the GCLI test helper
 let testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
