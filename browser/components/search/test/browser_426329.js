@@ -196,9 +196,16 @@ function test() {
   }
 
   function countEntries(name, value, message) {
+    let count = 0;
     FormHistory.count({ fieldname: name, value: value },
-                      { onSuccess: function(num) { ok(num > 0, message); testIterator.next(); },
-                        onFailure: function(error) { throw error; }
+                      { handleResult: function(result) { count = result; },
+                        handleError: function(error) { throw error; },
+                        handleCompletion: function(reason) {
+                          if (!reason) {
+                            ok(count > 0, message);
+                            testIterator.next();
+                          }
+                        }
                       });
   }
 
@@ -225,9 +232,16 @@ function test() {
     let controller = searchBar.textbox.controllers.getControllerForCommand("cmd_clearhistory")
     ok(controller.isCommandEnabled("cmd_clearhistory"), "Clear history command enabled");
     controller.doCommand("cmd_clearhistory");
+    let count = 0;
     FormHistory.count({ },
-                      { onSuccess: function(num) { ok(!num, "History cleared"); finalize(); },
-                        onFailure: function(error) { throw error; }
+                      { handleResult: function(result) { count = result; },
+                        handleError: function(error) { throw error; },
+                        handleCompletion: function(reason) {
+                          if (!reason) {
+                            ok(count == 0, "History cleared");
+                            finalize();
+                          }
+                        }
                       });
   }
 

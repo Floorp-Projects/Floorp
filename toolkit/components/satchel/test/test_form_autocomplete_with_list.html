@@ -48,17 +48,11 @@ var input = $_(1, "field1");
 const shiftModifier = Components.interfaces.nsIDOMEvent.SHIFT_MASK;
 
 function setupFormHistory(aCallback) {
-  SpecialPowers.formHistory.update(
-    [
-      { op : "remove" },
-      { op : "add", fieldname : "field1", value : "historyvalue" },
-      { op : "add", fieldname : "field2", value : "othervalue" },
-    ], {
-      onSuccess : aCallback,
-      onFailure : function(aError) {
-        do_throw("Error occurred updating form history: " + aError);
-      }
-    });
+  updateFormHistory([
+    { op : "remove" },
+    { op : "add", fieldname : "field1", value : "historyvalue" },
+    { op : "add", fieldname : "field2", value : "othervalue" },
+  ], aCallback);
 }
 
 function setForm(value) {

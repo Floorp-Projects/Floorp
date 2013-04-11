@@ -32,13 +32,17 @@ function test() {
         doneCheck();
       }, true);
 
+      let count = 0;
       FormHistory.count({ fieldname: "field", value: "value" },
-        { onSuccess: function(num) {
-            is(num >= 1, aShouldValueExist, "Checking value exists in form history");
-            doneCheck();
+        { handleResult: function(result) {
+            count = result;
           },
-          onFailure: function (error) {
+          handleError: function (error) {
             do_throw("Error occurred searching form history: " + error);
+          },
+          handleCompletion: function(num) {
+            is(count >= 1, aShouldValueExist, "Checking value exists in form history");
+            doneCheck();
           }
         });
     }, true);
