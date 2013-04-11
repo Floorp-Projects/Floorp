@@ -280,12 +280,20 @@ TabTarget.prototype = {
       // already initialized in the connection screen code.
       this._remote.resolve(null);
     } else {
-      this._client.connect(function(aType, aTraits) {
-        this._client.listTabs(function(aResponse) {
+      this._client.connect((aType, aTraits) => {
+        this._client.listTabs(aResponse => {
           this._form = aResponse.tabs[aResponse.selected];
-          this._remote.resolve(null);
-        }.bind(this));
-      }.bind(this));
+
+          this._client.attachTab(this._form.actor, (aResponse, aTabClient) => {
+            if (!aTabClient) {
+              this._remote.reject("Unable to attach to the tab");
+              return;
+            }
+            this.threadActor = aResponse.threadActor;
+            this._remote.resolve(null);
+          });
+        });
+      });
     }
 
     return this._remote.promise;
