@@ -6182,7 +6182,7 @@ nsGlobalWindow::FirePopupBlockedEvent(nsIDOMDocument* aDoc,
                                   aPopupWindowFeatures);
       event->SetTrusted(true);
 
-      nsCOMPtr<nsIDOMEventTarget> targ(do_QueryInterface(aDoc));
+      nsCOMPtr<EventTarget> targ = do_QueryInterface(aDoc);
       bool defaultActionEnabled;
       targ->DispatchEvent(event, &defaultActionEnabled);
     }
@@ -8015,7 +8015,7 @@ nsGlobalWindow::GetListenerManager(bool aCreateIfNotFound)
 
   if (!mListenerManager && aCreateIfNotFound) {
     mListenerManager =
-      new nsEventListenerManager(static_cast<nsIDOMEventTarget*>(this));
+      new nsEventListenerManager(static_cast<EventTarget*>(this));
   }
 
   return mListenerManager;
@@ -8628,7 +8628,7 @@ nsGlobalWindow::DispatchSyncPopState()
 
   domEvent->SetTrusted(true);
 
-  nsCOMPtr<nsIDOMEventTarget> outerWindow =
+  nsCOMPtr<EventTarget> outerWindow =
     do_QueryInterface(GetOuterWindow());
   NS_ENSURE_TRUE(outerWindow, NS_ERROR_UNEXPECTED);
 
