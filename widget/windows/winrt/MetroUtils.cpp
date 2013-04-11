@@ -84,7 +84,7 @@ void Log(const wchar_t *fmt, ...)
   OutputDebugStringW(L"\n");
 
   // desktop console
-  wprintf(L"%s\n", szDebugString);
+  //wprintf(L"%s\n", szDebugString);
 
 #ifdef PR_LOGGING
   NS_ASSERTION(metroWidgetLog, "Called MetroUtils Log() but MetroWidget "
