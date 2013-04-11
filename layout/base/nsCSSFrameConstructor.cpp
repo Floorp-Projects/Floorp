@@ -3565,6 +3565,7 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
 
     // If we need to create a block formatting context to wrap our
     // kids, do it now.
+    const nsStyleDisplay* maybeAbsoluteContainingBlockDisplay = display;
     nsIFrame* maybeAbsoluteContainingBlock = newFrame;
     nsIFrame* possiblyLeafFrame = newFrame;
     if (bits & FCDATA_CREATE_BLOCK_WRAPPER_FOR_ALL_KIDS) {
@@ -3584,6 +3585,7 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
       // positioned, otherwise the former.
       const nsStyleDisplay* blockDisplay = blockContext->StyleDisplay();
       if (blockDisplay->IsPositioned(blockFrame)) {
+        maybeAbsoluteContainingBlockDisplay = blockDisplay;
         maybeAbsoluteContainingBlock = blockFrame;
       }
       
@@ -3616,7 +3618,11 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
     } else if (!(bits & FCDATA_SKIP_ABSPOS_PUSH)) {
       nsIFrame* cb = maybeAbsoluteContainingBlock;
       cb->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
-      if (cb->IsPositioned()) {
+      if ((maybeAbsoluteContainingBlockDisplay->IsAbsolutelyPositionedStyle() ||
+           maybeAbsoluteContainingBlockDisplay->IsRelativelyPositionedStyle() ||
+           (maybeAbsoluteContainingBlockDisplay->HasTransformStyle() &&
+            cb->IsFrameOfType(nsIFrame::eSupportsCSSTransforms))) &&
+          !cb->IsSVGText()) {
         aState.PushAbsoluteContainingBlock(cb, absoluteSaveState);
       }
     }
