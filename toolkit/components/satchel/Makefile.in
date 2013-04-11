@@ -35,8 +35,11 @@ EXTRA_PP_COMPONENTS = \
 	$(NULL)
 
 EXTRA_JS_MODULES = \
-  FormHistory.jsm \
   nsFormAutoCompleteResult.jsm \
   $(NULL)
+
+EXTRA_PP_JS_MODULES = \
+  FormHistory.jsm \
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

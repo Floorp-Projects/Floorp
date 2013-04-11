@@ -91,6 +91,13 @@ const DB_SCHEMA_VERSION = 4;
 const DAY_IN_MS  = 86400000; // 1 day in milliseconds
 const NOOP = function noop() {};
 
+let supportsDeletedTable =
+#ifdef ANDROID
+  true;
+#else
+  false;
+#endif
+
 let Prefs = {
   initialized: false,
 
@@ -152,6 +159,11 @@ const dbSchema = {
       "lastUsed"  : "INTEGER",
       "guid"      : "TEXT",
     },
+    moz_deleted_formhistory: {
+        "id"          : "INTEGER PRIMARY KEY",
+        "timeDeleted" : "INTEGER",
+        "guid"        : "TEXT"
+    }
   },
   indices : {
     moz_formhistory_index : {
@@ -299,6 +311,30 @@ function makeUpdateStatement(aGuid, aNewData, aBindingArrays) {
   return dbCreateAsyncStatement(query, aNewData, aBindingArrays);
 }
 
+function makeMoveToDeletedStatement(aGuid, aNow, aData, aBindingArrays) {
+  if (supportsDeletedTable) {
+    let query = "INSERT INTO moz_deleted_formhistory (guid, timeDeleted)";
+    let queryTerms = makeQueryPredicates(aData);
+
+    if (aGuid) {
+      query += " VALUES (:guid, :timeDeleted)";
+    } else {
+      // TODO: Add these items to the deleted items table once we've sorted
+      //       out the issues from bug 756701
+      if (!queryTerms)
+        return;
+
+      query += " SELECT guid, :timeDeleted FROM moz_formhistory WHERE " + queryTerms;
+    }
+
+    aData.timeDeleted = aNow;
+
+    return dbCreateAsyncStatement(query, aData, aBindingArrays);
+  }
+
+  return null;
+}
+
 function generateGUID() {
   // string like: "{f60d9eac-9421-4abc-8491-8e8322b063d4}"
   let uuid = uuidService.generateUUID().toString();
@@ -414,6 +450,7 @@ function dbCreate() {
   for (let name in dbSchema.tables) {
     let table = dbSchema.tables[name];
     let tSQL = [[col, table[col]].join(" ") for (col in table)].join(", ");
+    log("Creating table " + name + " with " + tSQL);
     _dbConnection.createTable(name, tSQL);
   }
 
@@ -451,40 +488,39 @@ function dbMigrate(oldVersion) {
     return;
   }
 
-  // Upgrade to newer version...
-  let migrateStmts = [];
-  for (let v = oldVersion + 1; v <= DB_SCHEMA_VERSION; v++) {
-    log("Upgrading to version " + v + "...");
-    let migrateFunction = "dbMigrateToVersion" + v;
-    for each (let stmt in this[migrateFunction]()) {
-      migrateStmts.push(stmt);
+  // Note that migration is currently performed synchronously.
+  _dbConnection.beginTransaction();
+
+  try {
+    for (let v = oldVersion + 1; v <= DB_SCHEMA_VERSION; v++) {
+      this.log("Upgrading to version " + v + "...");
+      Migrators["dbMigrateToVersion" + v]();
     }
+  } catch (e) {
+    this.log("Migration failed: "  + e);
+    this.dbConnection.rollbackTransaction();
+    throw e;
   }
 
-  _dbConnection.executeAsync(migrateStmts, migrateStmts.length, {
-    handleResult : NOOP,
-    handleError : function dbMigrateHandleError(aError) {
-      throw Components.Exception(aError.message,
-                                 Cr.NS_ERROR_UNEXPECTED);
-    },
-    handleCompletion : function dbMigrateHandleCompletion(aReason) {
-      if (aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED) {
-        _dbConnection.schemaVersion = DB_SCHEMA_VERSION;
-      }
-    }
-  });
+  _dbConnection.schemaVersion = DB_SCHEMA_VERSION;
+  _dbConnection.commitTransaction();
 
   log("DB migration completed.");
 }
 
-// dbMigrateToVersion1 (bug 463154) -- unsupported as of Firefox 11
-// dbMigrateToVersion2 (bug 243136) -- unsupported as of Firefox 11
-// dbMigrateToVersion3 (bug 506402) -- unsupported as of Firefox 11
-
-// WARNING: Newer dbMigrateToVersionXXX functions should return an
-// ordered list of mozIStorageAsyncStatements (e.g. through
-// dbCreateAsyncStatement) that modify and update the database rather than
-// executing them from the function.
+var Migrators = {
+  /*
+   * Updates the DB schema to v3 (bug 506402).
+   * Adds deleted form history table.
+   */
+  dbMigrateToVersion4: function dbMigrateToVersion4() {
+    if (!_dbConnection.tableExists("moz_deleted_formhistory")) {
+      let table = dbSchema.tables["moz_deleted_formhistory"];
+      let tSQL = [[col, table[col]].join(" ") for (col in table)].join(", ");
+      _dbConnection.createTable("moz_deleted_formhistory", tSQL);
+    }
+  }
+};
 
 /**
  * dbAreExpectedColumnsPresent
@@ -586,6 +622,11 @@ function updateFormHistoryWrite(aChanges, aCallbacks) {
     switch (operation) {
       case "remove":
         log("Remove from form history  " + change);
+        let delStmt = makeMoveToDeletedStatement(change.guid, now, change, bindingArrays);
+        if (delStmt && stmts.indexOf(delStmt) == -1)
+          stmts.push(delStmt);
+        if ("timeDeleted" in change)
+          delete change.timeDeleted;
         stmt = makeRemoveStatement(change, bindingArrays);
         notifications.push([ "formhistory-remove", null ]);
         break;
@@ -1011,6 +1052,14 @@ const FormHistory = {
 
   get schemaVersion() {
     return dbConnection.schemaVersion;
+  },
+
+  // This is used only so that the test can verify deleted table support.
+  get _supportsDeletedTable() {
+    return supportsDeletedTable;
+  },
+  set _supportsDeletedTable(val) {
+    supportsDeletedTable = val;
   },
 
   // The remaining methods are called by FormHistoryStartup.js
