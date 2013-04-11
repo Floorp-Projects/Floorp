@@ -6855,11 +6855,11 @@ class CGDictionary(CGThing):
                               "if (!%s::ToObject(cx, parentObject, vp)) {\n"
                               "  return false;\n"
                               "}\n" % self.makeClassName(d.parent))
-            ensureObject = "JSObject* obj = &vp->toObject();\n"
+            ensureObject = "JS::Rooted<JSObject*> obj(cx, &vp->toObject());\n"
         else:
             initParent = ""
             toObjectParent = ""
-            ensureObject = ("JSObject* obj = JS_NewObject(cx, nullptr, nullptr, nullptr);\n"
+            ensureObject = ("JS::Rooted<JSObject*> obj(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));\n"
                             "if (!obj) {\n"
                             "  return false;\n"
                             "}\n"
