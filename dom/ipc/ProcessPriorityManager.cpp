@@ -348,7 +348,7 @@ ProcessPriorityManager::OnContentDocumentGlobalCreated(
     return;
   }
 
-  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(innerWindow);
+  nsCOMPtr<EventTarget> target = do_QueryInterface(innerWindow);
   NS_ENSURE_TRUE_VOID(target);
 
   nsWeakPtr weakWin = do_GetWeakReference(innerWindow);
