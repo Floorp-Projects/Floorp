@@ -6,9 +6,13 @@
 
 "use strict";
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
+const {Cc, Ci, Cu} = require("chrome");
+
+let {CssLogic} = require("devtools/styleinspector/css-logic");
+let {InplaceEditor, editableField, editableItem} = require("devtools/shared/inplace-editor");
+
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -27,16 +31,8 @@ const CSS_PROP_RE = /\s*([^:\s]*)\s*:\s*(.*?)\s*(?:! (important))?;?$/;
 // Used to parse an external resource from a property value
 const CSS_RESOURCE_RE = /url\([\'\"]?(.*?)[\'\"]?\)/;
 
-const IOService = Components.classes["@mozilla.org/network/io-service;1"]
-                  .getService(Components.interfaces.nsIIOService);
-
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource:///modules/devtools/CssLogic.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource:///modules/devtools/InplaceEditor.jsm");
-
-this.EXPORTED_SYMBOLS = ["CssRuleView",
-                         "_ElementStyle"];
+const IOService = Cc["@mozilla.org/network/io-service;1"]
+                  .getService(Ci.nsIIOService);
 
 /**
  * Our model looks like this:
@@ -94,7 +90,7 @@ function ElementStyle(aElement, aStore)
   this.populate();
 }
 // We're exporting _ElementStyle for unit tests.
-this._ElementStyle = ElementStyle;
+exports._ElementStyle = ElementStyle;
 
 ElementStyle.prototype = {
 
@@ -869,7 +865,7 @@ TextProperty.prototype = {
  *        The iframe containing the ruleview.
  * @constructor
  */
-this.CssRuleView = function CssRuleView(aDoc, aStore)
+function CssRuleView(aDoc, aStore)
 {
   this.doc = aDoc;
   this.store = aStore;
@@ -882,6 +878,8 @@ this.CssRuleView = function CssRuleView(aDoc, aStore)
 
   this._showEmpty();
 }
+
+exports.CssRuleView = CssRuleView;
 
 CssRuleView.prototype = {
   // The element that we're inspecting.

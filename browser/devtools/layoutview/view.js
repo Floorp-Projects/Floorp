@@ -9,8 +9,9 @@
 const Cu = Components.utils;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource:///modules/devtools/LayoutHelpers.jsm");
-Cu.import("resource:///modules/devtools/CssLogic.jsm");
 Cu.import("resource:///modules/devtools/gDevTools.jsm");
+
+let {CssLogic} = devtools.require("devtools/styleinspector/css-logic");
 
 function LayoutView(aInspector, aWindow)
 {
