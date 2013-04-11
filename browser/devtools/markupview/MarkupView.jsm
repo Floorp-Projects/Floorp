@@ -4,7 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {Cc, Cu, Ci} = require("chrome");
+const Cc = Components.classes;
+const Cu = Components.utils;
+const Ci = Components.interfaces;
 
 // Page size for pageup/pagedown
 const PAGE_SIZE = 10;
@@ -12,13 +14,15 @@ const PAGE_SIZE = 10;
 const PREVIEW_AREA = 700;
 const DEFAULT_MAX_CHILDREN = 100;
 
-let {UndoStack} = require("devtools/shared/undo");
-let EventEmitter = require("devtools/shared/event-emitter");
-let {editableField, InplaceEditor} = require("devtools/shared/inplace-editor");
+this.EXPORTED_SYMBOLS = ["MarkupView"];
 
 Cu.import("resource:///modules/devtools/LayoutHelpers.jsm");
+Cu.import("resource:///modules/devtools/CssRuleView.jsm");
+Cu.import("resource:///modules/devtools/InplaceEditor.jsm");
 Cu.import("resource:///modules/devtools/Templater.jsm");
+Cu.import("resource:///modules/devtools/Undo.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 /**
  * Vocabulary for the purposes of this file:
@@ -38,7 +42,7 @@ Cu.import("resource://gre/modules/Services.jsm");
  * @param iframe aFrame
  *        An iframe in which the caller has kindly loaded markup-view.xhtml.
  */
-function MarkupView(aInspector, aFrame, aControllerWindow)
+this.MarkupView = function MarkupView(aInspector, aFrame, aControllerWindow)
 {
   this._inspector = aInspector;
   this._frame = aFrame;
@@ -70,8 +74,6 @@ function MarkupView(aInspector, aFrame, aControllerWindow)
 
   this._initPreview();
 }
-
-exports.MarkupView = MarkupView;
 
 MarkupView.prototype = {
   _selectedContainer: null,
@@ -1524,6 +1526,7 @@ function whitespaceTextFilter(aNode)
     }
 }
 
-loader.lazyGetter(MarkupView.prototype, "strings", () => Services.strings.createBundle(
-  "chrome://browser/locale/devtools/inspector.properties"
-));
+XPCOMUtils.defineLazyGetter(MarkupView.prototype, "strings", function () {
+  return Services.strings.createBundle(
+          "chrome://browser/locale/devtools/inspector.properties");
+});

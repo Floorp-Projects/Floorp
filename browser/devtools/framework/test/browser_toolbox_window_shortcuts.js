@@ -1,7 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let Toolbox = devtools.Toolbox;
+let temp = {};
+Cu.import("resource:///modules/devtools/Toolbox.jsm", temp);
+let Toolbox = temp.Toolbox;
+temp = null;
 
 let toolbox, toolIDs, idIndex;
 
