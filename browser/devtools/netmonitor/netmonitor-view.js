@@ -260,6 +260,7 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
     dumpn("Initializing the RequestsMenuView");
 
     this.node = new SideMenuWidget($("#requests-menu-contents"), false);
+    this.node.maintainSelectionVisible = false;
 
     this.node.addEventListener("mousedown", this._onMouseDown, false);
     this.node.addEventListener("select", this._onSelect, false);

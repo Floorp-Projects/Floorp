@@ -64,6 +64,12 @@ SideMenuWidget.prototype = {
   get window() this.document.defaultView,
 
   /**
+   * Specifies if this container should try to keep the selected item visible.
+   * (For example, when new items are added the selection is brought into view).
+   */
+  maintainSelectionVisible: true,
+
+  /**
    * Specifies if groups in this container should be sorted alphabetically.
    */
   sortedGroups: true,
@@ -84,7 +90,9 @@ SideMenuWidget.prototype = {
    *         The element associated with the displayed item.
    */
   insertItemAt: function SMW_insertItemAt(aIndex, aContents, aTooltip = "", aGroup = "") {
-    this.ensureSelectionIsVisible(true, true); // Don't worry, it's delayed.
+    if (this.maintainSelectionVisible) {
+      this.ensureSelectionIsVisible(true, true); // Don't worry, it's delayed.
+    }
 
     let group = this._getGroupForName(aGroup);
     return group.insertItemAt(aIndex, aContents, aTooltip, this._showArrows);
