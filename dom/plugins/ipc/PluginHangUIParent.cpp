@@ -68,12 +68,12 @@ private:
 namespace mozilla {
 namespace plugins {
 
-const DWORD PluginHangUIParent::kTimeout = 30000U;
-
 PluginHangUIParent::PluginHangUIParent(PluginModuleParent* aModule,
-                                       const int32_t aHangUITimeoutPref)
+                                       const int32_t aHangUITimeoutPref,
+                                       const int32_t aChildTimeoutPref)
   : mModule(aModule),
     mTimeoutPrefMs(static_cast<uint32_t>(aHangUITimeoutPref) * 1000U),
+    mIPCTimeoutMs(static_cast<uint32_t>(aChildTimeoutPref) * 1000U),
     mMainThreadMessageLoop(MessageLoop::current()),
     mIsShowing(false),
     mLastUserResponse(0),
@@ -129,7 +129,7 @@ PluginHangUIParent::Init(const nsString& aPluginName)
   }
 
   nsresult rv;
-  rv = mMiniShm.Init(this, ::IsDebuggerPresent() ? INFINITE : kTimeout);
+  rv = mMiniShm.Init(this, ::IsDebuggerPresent() ? INFINITE : mIPCTimeoutMs);
   NS_ENSURE_SUCCESS(rv, false);
   nsCOMPtr<nsIProperties>
     directoryService(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
@@ -210,6 +210,10 @@ PluginHangUIParent::Init(const nsString& aPluginName)
     commandLine.AppendLooseValue(L"-");
   }
 
+  nsAutoString ipcTimeoutStr;
+  ipcTimeoutStr.AppendInt(mIPCTimeoutMs);
+  commandLine.AppendLooseValue(ipcTimeoutStr.get());
+
   std::wstring ipcCookie;
   rv = mMiniShm.GetCookie(ipcCookie);
   if (NS_FAILED(rv)) {
@@ -245,7 +249,7 @@ PluginHangUIParent::Init(const nsString& aPluginName)
                                   INFINITE,
                                   WT_EXECUTEDEFAULT | WT_EXECUTEONLYONCE);
     ::WaitForSingleObject(mShowEvent, ::IsDebuggerPresent() ? INFINITE
-                                                            : kTimeout);
+                                                            : mIPCTimeoutMs);
     // Setting this to true even if we time out on mShowEvent. This timeout 
     // typically occurs when the machine is thrashing so badly that 
     // plugin-hang-ui.exe is taking a while to start. If we didn't set 
@@ -269,7 +273,6 @@ VOID CALLBACK PluginHangUIParent::SOnHangUIProcessExit(PVOID aContext,
     // If plugin-hang-ui.exe was unexpectedly terminated, we need to re-enable.
     ::EnableWindow(object->mMainWindowHandle, TRUE);
   }
-  object->mMiniShm.CleanUp();
 }
 
 bool
