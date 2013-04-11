@@ -3,37 +3,47 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsDOMGamepad.h"
-#include "nsAutoPtr.h"
+#include "nsDOMClassInfoID.h"
+#include "nsIClassInfo.h"
+#include "nsIXPCScriptable.h"
 #include "nsTArray.h"
 #include "nsContentUtils.h"
 #include "nsVariant.h"
-#include "mozilla/dom/GamepadBinding.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+DOMCI_DATA(Gamepad, nsDOMGamepad)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMGamepad)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMGamepad)
+NS_IMPL_ADDREF(nsDOMGamepad)
+NS_IMPL_RELEASE(nsDOMGamepad)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMGamepad)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+NS_INTERFACE_MAP_BEGIN(nsDOMGamepad)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsIDOMGamepad)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Gamepad)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(nsDOMGamepad, mParent)
-
-nsDOMGamepad::nsDOMGamepad(nsISupports* aParent,
-                           const nsAString& aID, uint32_t aIndex,
+nsDOMGamepad::nsDOMGamepad(const nsAString& aID, uint32_t aIndex,
                            uint32_t aNumButtons, uint32_t aNumAxes)
-  : mParent(aParent),
-    mID(aID),
+  : mID(aID),
     mIndex(aIndex),
     mConnected(true)
 {
-  SetIsDOMBinding();
   mButtons.InsertElementsAt(0, aNumButtons, 0);
   mAxes.InsertElementsAt(0, aNumAxes, 0.0f);
+}
+
+/* readonly attribute DOMString id; */
+NS_IMETHODIMP
+nsDOMGamepad::GetId(nsAString& aID)
+{
+  aID = mID;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMGamepad::GetIndex(uint32_t* aIndex)
+{
+  *aIndex = mIndex;
+  return NS_OK;
 }
 
 void
@@ -62,7 +72,16 @@ nsDOMGamepad::SetAxis(uint32_t aAxis, double aValue)
   mAxes[aAxis] = aValue;
 }
 
-nsresult
+/* readonly attribute boolean connected; */
+NS_IMETHODIMP
+nsDOMGamepad::GetConnected(bool* aConnected)
+{
+  *aConnected = mConnected;
+  return NS_OK;
+}
+
+/* readonly attribute nsIVariant buttons; */
+NS_IMETHODIMP
 nsDOMGamepad::GetButtons(nsIVariant** aButtons)
 {
   nsRefPtr<nsVariant> out = new nsVariant();
@@ -93,7 +112,8 @@ nsDOMGamepad::GetButtons(nsIVariant** aButtons)
   return NS_OK;
 }
 
-nsresult
+/* readonly attribute nsIVariant axes; */
+NS_IMETHODIMP
 nsDOMGamepad::GetAxes(nsIVariant** aAxes)
 {
   nsRefPtr<nsVariant> out = new nsVariant();
@@ -142,16 +162,10 @@ nsDOMGamepad::SyncState(nsDOMGamepad* aOther)
 }
 
 already_AddRefed<nsDOMGamepad>
-nsDOMGamepad::Clone(nsISupports* aParent)
+nsDOMGamepad::Clone()
 {
   nsRefPtr<nsDOMGamepad> out =
-    new nsDOMGamepad(aParent, mID, mIndex, mButtons.Length(), mAxes.Length());
+    new nsDOMGamepad(mID, mIndex, mButtons.Length(), mAxes.Length());
   out->SyncState(this);
   return out.forget();
-}
-
-/* virtual */ JSObject*
-nsDOMGamepad::WrapObject(JSContext* aCx, JSObject* aScope)
-{
-  return GamepadBinding::Wrap(aCx, aScope, this);
 }
