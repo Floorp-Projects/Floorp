@@ -1940,7 +1940,7 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
 
         if self.descriptor.nativeOwnership == 'nsisupports':
             assertISupportsInheritance = (
-                '  MOZ_ASSERT(reinterpret_cast<nsWrapperCache*>(aObject) != aCache,\n'
+                '  MOZ_ASSERT(reinterpret_cast<void*>(aObject) != aCache,\n'
                 '             "nsISupports must be on our primary inheritance chain");\n')
         else:
             assertISupportsInheritance = ""
