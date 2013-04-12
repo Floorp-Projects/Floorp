@@ -638,6 +638,9 @@ DebugEpilogue(JSContext *cx, BaselineFrame *frame, JSBool ok)
     if (frame->isNonEvalFunctionFrame()) {
         JS_ASSERT_IF(ok, frame->hasReturnValue());
         DebugScopes::onPopCall(frame, cx);
+    } else if (frame->isStrictEvalFrame()) {
+        JS_ASSERT_IF(frame->hasCallObj(), frame->scopeChain()->asCall().isForEval());
+        DebugScopes::onPopStrictEvalScope(frame);
     }
 
     if (!ok) {

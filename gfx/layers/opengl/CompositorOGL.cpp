@@ -640,13 +640,6 @@ CompositorOGL::SetLayerProgramProjectionMatrix(const gfx3DMatrix& aMatrix)
   }
 }
 
-void
-CompositorOGL::FallbackTextureInfo(TextureInfo& aId)
-{
-  // Try again without direct texturing enabled
-  aId.mTextureHostFlags &= ~TEXTURE_HOST_DIRECT;
-}
-
 TemporaryRef<CompositingRenderTarget>
 CompositorOGL::CreateRenderTarget(const IntRect &aRect, SurfaceInitMode aInit)
 {

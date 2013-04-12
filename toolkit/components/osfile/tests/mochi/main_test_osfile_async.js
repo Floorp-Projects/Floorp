@@ -930,5 +930,10 @@ let test_duration = maketest("duration", function duration(test) {
     yield OS.File.writeAtomic(pathDest, contents, writeAtomicOptions);
     test.ok(copyOptions.outExecutionDuration >= backupDuration);
     OS.File.remove(pathDest);
+
+    // Testing an operation that doesn't take arguments at all
+    let file = yield OS.File.open(pathSource);
+    yield file.stat();
+    yield file.close();
   });
 });

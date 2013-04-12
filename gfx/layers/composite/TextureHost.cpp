@@ -45,7 +45,6 @@ TextureHost::TextureHost()
   : mFlags(0)
   , mBuffer(nullptr)
   , mFormat(gfx::FORMAT_UNKNOWN)
-  , mTextureParent(nullptr)
   , mDeAllocator(nullptr)
 {
   MOZ_COUNT_CTOR(TextureHost);
