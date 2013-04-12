@@ -23,6 +23,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id={674720}
 
 // this shouldn't be necessary when bug 792594 is fixed
 if (!SpecialPowers.getBoolPref("dom.mozContacts.enabled")) {
+  ok(!("mozContacts" in navigator), "navigator.mozContacts is not exposed");
+  ok(!("mozContact" in window), "mozContact is not exposed");
   var comp = SpecialPowers.wrap(SpecialPowers.Components);
   comp.utils.import("resource://gre/modules/ContactService.jsm");
   comp.utils.import("resource://gre/modules/PermissionPromptHelper.jsm");
@@ -243,6 +245,7 @@ var index = 0;
 
 var mozContacts = window.navigator.mozContacts;
 ok(mozContacts, "mozContacts exists");
+ok("mozContact" in window, "mozContact exists");
 var steps = [
   function () {
     ok(true, "Deleting database");
