@@ -719,8 +719,10 @@ ShadowLayerForwarder::CreatedSingleBuffer(CompositableClient* aCompositable,
 {
   MOZ_ASSERT(aDescriptor.type() != SurfaceDescriptor::T__None &&
              aDescriptor.type() != SurfaceDescriptor::Tnull_t);
-  mTxn->AddEdit(OpCreatedSingleBuffer(nullptr, aCompositable->GetIPDLActor(),
-                                      aDescriptor, aTextureInfo));
+  mTxn->AddEdit(OpCreatedTexture(nullptr, aCompositable->GetIPDLActor(),
+                                 TextureFront,
+                                 aDescriptor,
+                                 aTextureInfo));
 }
 
 void
@@ -733,9 +735,14 @@ ShadowLayerForwarder::CreatedDoubleBuffer(CompositableClient* aCompositable,
              aBackDescriptor.type() != SurfaceDescriptor::T__None &&
              aFrontDescriptor.type() != SurfaceDescriptor::Tnull_t &&
              aBackDescriptor.type() != SurfaceDescriptor::Tnull_t);
-  mTxn->AddEdit(OpCreatedDoubleBuffer(nullptr, aCompositable->GetIPDLActor(),
-                                      aFrontDescriptor, aBackDescriptor,
-                                      aTextureInfo));
+  mTxn->AddEdit(OpCreatedTexture(nullptr, aCompositable->GetIPDLActor(),
+                                 TextureFront,
+                                 aFrontDescriptor,
+                                 aTextureInfo));
+  mTxn->AddEdit(OpCreatedTexture(nullptr, aCompositable->GetIPDLActor(),
+                                 TextureBack,
+                                 aBackDescriptor,
+                                 aTextureInfo));
 }
 
 void
