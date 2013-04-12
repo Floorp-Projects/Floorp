@@ -181,7 +181,7 @@ BasicTiledLayerBuffer::ValidateTileInternal(BasicTiledLayerTile aTile,
 {
   if (aTile.IsPlaceholderTile()) {
     RefPtr<TextureClient> textureClient =
-      new TextureClientTile(mManager, BUFFER_TILED);
+      new TextureClientTile(mManager, TextureInfo(BUFFER_TILED));
     aTile.mTextureClient = static_cast<TextureClientTile*>(textureClient.get());
   }
   aTile.mTextureClient->EnsureAllocated(gfx::IntSize(GetTileLength(), GetTileLength()), GetContentType());

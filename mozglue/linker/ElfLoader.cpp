@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <string>
 #include <cstring>
 #include <cstdlib>
 #include <cstdio>
@@ -130,6 +131,34 @@ __wrap_dl_iterate_phdr(dl_phdr_cb callback, void *data)
   return 0;
 }
 
+/**
+ * faulty.lib public API
+ */
+
+MFBT_API size_t
+__dl_get_mappable_length(void *handle) {
+  if (!handle)
+    return 0;
+  return reinterpret_cast<LibHandle *>(handle)->GetMappableLength();
+}
+
+MFBT_API void *
+__dl_mmap(void *handle, void *addr, size_t length, off_t offset)
+{
+  if (!handle)
+    return NULL;
+  return reinterpret_cast<LibHandle *>(handle)->MappableMMap(addr, length,
+                                                             offset);
+}
+
+MFBT_API void
+__dl_munmap(void *handle, void *addr, size_t length)
+{
+  if (!handle)
+    return;
+  return reinterpret_cast<LibHandle *>(handle)->MappableMUnmap(addr, length);
+}
+
 namespace {
 
 /**
@@ -152,12 +181,41 @@ LeafName(const char *path)
 LibHandle::~LibHandle()
 {
   free(path);
+  if (mappable->GetKind() != Mappable::MAPPABLE_EXTRACT_FILE)
+    delete mappable;
 }
 
 const char *
 LibHandle::GetName() const
 {
   return path ? LeafName(path) : NULL;
+}
+
+size_t
+LibHandle::GetMappableLength() const
+{
+  MOZ_ASSERT(mappable != NULL, "GetMappableLength needs to be called first,"
+                               " and only once");
+  mappable = GetMappable();
+  if (!mappable)
+    return 0;
+  return mappable->GetLength();
+}
+
+void *
+LibHandle::MappableMMap(void *addr, size_t length, off_t offset) const
+{
+  MOZ_ASSERT(mappable == NULL, "MappableMMap must be called after"
+                               " GetMappableLength");
+  return mappable->mmap(addr, length, PROT_READ, MAP_PRIVATE, offset);
+}
+
+void
+LibHandle::MappableMUnmap(void *addr, size_t length) const
+{
+  MOZ_ASSERT(mappable == NULL, "MappableMUnmap must be called after"
+                               " MappableMMap and GetMappableLength");
+  mappable->munmap(addr, length);
 }
 
 /**
@@ -201,6 +259,26 @@ SystemElf::GetSymbolPtr(const char *symbol) const
   debug("dlsym(%p [\"%s\"], \"%s\") = %p", dlhandle, GetPath(), symbol, sym);
   ElfLoader::Singleton.lastError = dlerror();
   return sym;
+}
+
+Mappable *
+SystemElf::GetMappable() const
+{
+  const char *path = GetPath();
+  if (!path)
+    return NULL;
+#ifdef ANDROID
+  /* On Android, if we don't have the full path, try in /system/lib */
+  const char *name = LeafName(path);
+  std::string systemPath;
+  if (name == path) {
+    systemPath = "/system/lib/";
+    systemPath += path;
+    path = systemPath.c_str();
+  }
+#endif
+
+  return MappableFile::Create(path);
 }
 
 /**
@@ -253,38 +331,7 @@ ElfLoader::Load(const char *path, int flags, LibHandle *parent)
     path = abs_path;
   }
 
-  /* Create a mappable object for the given path. Paths in the form
-   *   /foo/bar/baz/archive!/directory/lib.so
-   * try to load the directory/lib.so in /foo/bar/baz/archive, provided
-   * that file is a Zip archive. */
-  Mappable *mappable = NULL;
-  RefPtr<Zip> zip;
-  const char *subpath;
-  if ((subpath = strchr(path, '!'))) {
-    char *zip_path = strndup(path, subpath - path);
-    while (*(++subpath) == '/') { }
-    zip = ZipCollection::GetZip(zip_path);
-    Zip::Stream s;
-    if (zip && zip->GetStream(subpath, &s)) {
-      /* When the MOZ_LINKER_EXTRACT environment variable is set to "1",
-       * compressed libraries are going to be (temporarily) extracted as
-       * files, in the directory pointed by the MOZ_LINKER_CACHE
-       * environment variable. */
-      const char *extract = getenv("MOZ_LINKER_EXTRACT");
-      if (extract && !strncmp(extract, "1", 2 /* Including '\0' */))
-        mappable = MappableExtractFile::Create(name, zip, &s);
-      if (!mappable) {
-        if (s.GetType() == Zip::Stream::DEFLATE) {
-          mappable = MappableDeflate::Create(name, zip, &s);
-        } else if (s.GetType() == Zip::Stream::STORE) {
-          mappable = MappableSeekableZStream::Create(name, zip, &s);
-        }
-      }
-    }
-  }
-  /* If we couldn't load above, try with a MappableFile */
-  if (!mappable && !zip)
-    mappable = MappableFile::Create(path);
+  Mappable *mappable = GetMappableFromPath(path);
 
   /* Try loading with the custom linker if we have a Mappable */
   if (mappable)
@@ -316,6 +363,42 @@ ElfLoader::GetHandleByPtr(void *addr)
       return *it;
   }
   return NULL;
+}
+
+Mappable *
+ElfLoader::GetMappableFromPath(const char *path)
+{
+  const char *name = LeafName(path);
+  Mappable *mappable = NULL;
+  RefPtr<Zip> zip;
+  const char *subpath;
+  if ((subpath = strchr(path, '!'))) {
+    char *zip_path = strndup(path, subpath - path);
+    while (*(++subpath) == '/') { }
+    zip = ZipCollection::GetZip(zip_path);
+    Zip::Stream s;
+    if (zip && zip->GetStream(subpath, &s)) {
+      /* When the MOZ_LINKER_EXTRACT environment variable is set to "1",
+       * compressed libraries are going to be (temporarily) extracted as
+       * files, in the directory pointed by the MOZ_LINKER_CACHE
+       * environment variable. */
+      const char *extract = getenv("MOZ_LINKER_EXTRACT");
+      if (extract && !strncmp(extract, "1", 2 /* Including '\0' */))
+        mappable = MappableExtractFile::Create(name, zip, &s);
+      if (!mappable) {
+        if (s.GetType() == Zip::Stream::DEFLATE) {
+          mappable = MappableDeflate::Create(name, zip, &s);
+        } else if (s.GetType() == Zip::Stream::STORE) {
+          mappable = MappableSeekableZStream::Create(name, zip, &s);
+        }
+      }
+    }
+  }
+  /* If we couldn't load above, try with a MappableFile */
+  if (!mappable && !zip)
+    mappable = MappableFile::Create(path);
+
+  return mappable;
 }
 
 void

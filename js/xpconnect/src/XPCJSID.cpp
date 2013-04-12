@@ -494,7 +494,7 @@ nsJSIID::HasInstance(nsIXPConnectWrappedNative *wrapper,
 
     if (!JSVAL_IS_PRIMITIVE(val)) {
         // we have a JSObject
-        JSObject* obj = JSVAL_TO_OBJECT(val);
+        JS::RootedObject obj(cx, JSVAL_TO_OBJECT(val));
 
         NS_ASSERTION(obj, "when is an object not an object?");
 

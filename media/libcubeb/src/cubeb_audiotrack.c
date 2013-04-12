@@ -48,8 +48,12 @@ void audiotrack_destroy(cubeb * context);
 void audiotrack_stream_destroy(cubeb_stream * stream);
 
 struct AudioTrack {
-               /* only available on ICS and later. */
+               /* only available on ICS and later. The second int paramter is in fact of type audio_stream_type_t. */
   /* static */ status_t (*get_min_frame_count)(int* frame_count, int stream_type, uint32_t rate);
+              /* if we have a recent ctor, but can't find the above symbol, we
+               * can get the minimum frame count with this signature, and we are
+               * running gingerbread. */
+  /* static */ status_t (*get_min_frame_count_gingerbread)(int* frame_count, int stream_type, uint32_t rate);
                /* if this symbol is not availble, and the next one is, we know
                 * we are on a Froyo (Android 2.2) device. */
                void* (*ctor)(void* instance, int, unsigned int, int, int, int, unsigned int, void (*)(int, void*, void*), void*, int, int);
@@ -139,6 +143,14 @@ audiotrack_version_is_froyo(cubeb * ctx)
   return ctx->klass.ctor_froyo != NULL;
 }
 
+/* We are running on gingerbread if we found the gingerbread signature for
+ * getMinFrameCount */
+static int
+audiotrack_version_is_gingerbread(cubeb * ctx)
+{
+  return ctx->klass.get_min_frame_count_gingerbread != NULL;
+}
+
 int
 audiotrack_get_min_frame_count(cubeb * ctx, cubeb_stream_params * params, int * min_frame_count)
 {
@@ -173,7 +185,11 @@ audiotrack_get_min_frame_count(cubeb * ctx, cubeb_stream_params * params, int * 
     return CUBEB_OK;
   }
   /* Recent Android have a getMinFrameCount method. */
-  status = ctx->klass.get_min_frame_count(min_frame_count, params->stream_type, params->rate);
+  if (!audiotrack_version_is_gingerbread(ctx)) {
+    status = ctx->klass.get_min_frame_count(min_frame_count, params->stream_type, params->rate);
+  } else {
+    status = ctx->klass.get_min_frame_count_gingerbread(min_frame_count, params->stream_type, params->rate);
+  }
   if (status != 0) {
     ALOG("error getting the min frame count");
     return CUBEB_ERROR;
@@ -215,13 +231,17 @@ audiotrack_init(cubeb ** context, char const * context_name)
   DLSYM_DLERROR("_ZNK7android10AudioTrack7latencyEv", ctx->klass.latency, ctx->library);
   DLSYM_DLERROR("_ZNK7android10AudioTrack9initCheckEv", ctx->klass.check, ctx->library);
 
-  /* |getMinFrameCount| is not available on Froyo. */
+  /* |getMinFrameCount| is not available on Froyo, and is available on
+   * gingerbread and ICS with a different signature. */
   if (audiotrack_version_is_froyo(ctx)) {
     DLSYM_DLERROR("_ZN7android11AudioSystem19getOutputFrameCountEPii", ctx->klass.get_output_frame_count, ctx->library);
     DLSYM_DLERROR("_ZN7android11AudioSystem16getOutputLatencyEPji", ctx->klass.get_output_latency, ctx->library);
     DLSYM_DLERROR("_ZN7android11AudioSystem21getOutputSamplingRateEPii", ctx->klass.get_output_samplingrate, ctx->library);
   } else {
     DLSYM_DLERROR("_ZN7android10AudioTrack16getMinFrameCountEPi19audio_stream_type_tj", ctx->klass.get_min_frame_count, ctx->library);
+    if (!ctx->klass.get_min_frame_count) {
+      DLSYM_DLERROR("_ZN7android10AudioTrack16getMinFrameCountEPiij", ctx->klass.get_min_frame_count_gingerbread, ctx->library);
+    }
   }
 
   DLSYM_DLERROR("_ZN7android10AudioTrack5startEv", ctx->klass.start, ctx->library);
@@ -235,7 +255,8 @@ audiotrack_init(cubeb ** context, char const * context_name)
      c->dtor && c->latency && c->check &&
      /* at least one way to get the minimum frame count to request. */
      ((c->get_output_frame_count && c->get_output_latency && c->get_output_samplingrate) ||
-      c->get_min_frame_count) &&
+      c->get_min_frame_count ||
+      c->get_min_frame_count_gingerbread) &&
      c->start && c->pause && c->get_position && c->set_marker_position)) {
     ALOG("Could not find all the symbols we need.");
     audiotrack_destroy(ctx);
@@ -300,8 +321,9 @@ audiotrack_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_
   (*(uint32_t*)((intptr_t)stm->instance + SIZE_AUDIOTRACK_INSTANCE - 4)) = 0xbaadbaad;
   assert(stm->instance && "cubeb: EOM");
 
-  if (audiotrack_version_is_froyo(ctx)) {
-    channels = stm->params.channels == 2 ? AUDIO_CHANNEL_OUT_STEREO_Froyo : AUDIO_CHANNEL_OUT_MONO_Froyo;
+  /* gingerbread uses old channel layout enum */
+  if (audiotrack_version_is_froyo(ctx) || audiotrack_version_is_gingerbread(ctx)) {
+    channels = stm->params.channels == 2 ? AUDIO_CHANNEL_OUT_STEREO_Legacy : AUDIO_CHANNEL_OUT_MONO_Legacy;
   } else {
     channels = stm->params.channels == 2 ? AUDIO_CHANNEL_OUT_STEREO_ICS : AUDIO_CHANNEL_OUT_MONO_ICS;
   }

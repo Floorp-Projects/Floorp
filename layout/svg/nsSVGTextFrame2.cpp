@@ -2618,9 +2618,20 @@ private:
   bool SetFillColor();
 
   /**
-   * Fills and strokes a piece of text geometry.
+   * Fills and strokes a piece of text geometry, using group opacity
+   * if the selection style requires it.
    */
-  void FillAndStroke();
+  void FillAndStrokeGeometry();
+
+  /**
+   * Fills a piece of text geometry.
+   */
+  void FillGeometry();
+
+  /**
+   * Strokes a piece of text geometry.
+   */
+  void StrokeGeometry();
 
   gfxContext* gfx;
   uint16_t mRenderMode;
@@ -2731,7 +2742,7 @@ SVGTextDrawPathCallbacks::NotifySelectionDecorationLinePathEmitted()
     return;
   }
 
-  FillAndStroke();
+  FillAndStrokeGeometry();
   gfx->Restore();
 }
 
@@ -2778,7 +2789,7 @@ SVGTextDrawPathCallbacks::HandleTextGeometry()
     gfxContextMatrixAutoSaveRestore saveMatrix(gfx);
     gfx->SetMatrix(mCanvasTM);
 
-    FillAndStroke();
+    FillAndStrokeGeometry();
   }
 }
 
@@ -2799,7 +2810,7 @@ SVGTextDrawPathCallbacks::SetFillColor()
 }
 
 void
-SVGTextDrawPathCallbacks::FillAndStroke()
+SVGTextDrawPathCallbacks::FillAndStrokeGeometry()
 {
   bool pushedGroup = false;
   if (mColor == NS_40PERCENT_FOREGROUND_COLOR) {
@@ -2807,21 +2818,49 @@ SVGTextDrawPathCallbacks::FillAndStroke()
     gfx->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
   }
 
-  if (SetFillColor()) {
-    gfx->Fill();
-  }
-
-  if (mColor == NS_SAME_AS_FOREGROUND_COLOR ||
-      mColor == NS_40PERCENT_FOREGROUND_COLOR) {
-    // Don't paint the stroke when we are filling with a selection color.
-    if (nsSVGUtils::SetupCairoStroke(mFrame, gfx)) {
-      gfx->Stroke();
+  uint32_t paintOrder = mFrame->StyleSVG()->mPaintOrder;
+  if (paintOrder == NS_STYLE_PAINT_ORDER_NORMAL) {
+    FillGeometry();
+    StrokeGeometry();
+  } else {
+    while (paintOrder) {
+      uint32_t component =
+        paintOrder & ((1 << NS_STYLE_PAINT_ORDER_BITWIDTH) - 1);
+      switch (component) {
+        case NS_STYLE_PAINT_ORDER_FILL:
+          FillGeometry();
+          break;
+        case NS_STYLE_PAINT_ORDER_STROKE:
+          StrokeGeometry();
+          break;
+      }
+      paintOrder >>= NS_STYLE_PAINT_ORDER_BITWIDTH;
     }
   }
 
   if (pushedGroup) {
     gfx->PopGroupToSource();
     gfx->Paint(0.4);
+  }
+}
+
+void
+SVGTextDrawPathCallbacks::FillGeometry()
+{
+  if (SetFillColor()) {
+    gfx->Fill();
+  }
+}
+
+void
+SVGTextDrawPathCallbacks::StrokeGeometry()
+{
+  if (mColor == NS_SAME_AS_FOREGROUND_COLOR ||
+      mColor == NS_40PERCENT_FOREGROUND_COLOR) {
+    // Don't paint the stroke when we are filling with a selection color.
+    if (nsSVGUtils::SetupCairoStroke(mFrame, gfx)) {
+      gfx->Stroke();
+    }
   }
 }
 

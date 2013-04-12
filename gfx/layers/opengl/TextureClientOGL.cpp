@@ -12,8 +12,8 @@ namespace mozilla {
 namespace layers {
 
 TextureClientSharedOGL::TextureClientSharedOGL(CompositableForwarder* aForwarder,
-                                               CompositableType aCompositableType)
-  : TextureClient(aForwarder, aCompositableType)
+                                               const TextureInfo& aTextureInfo)
+  : TextureClient(aForwarder, aTextureInfo)
   , mGL(nullptr)
 {
 }
