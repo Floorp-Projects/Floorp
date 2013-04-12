@@ -44,7 +44,7 @@ struct EnumEntry {
   size_t length;
 };
 
-class NS_STACK_CLASS GlobalObject
+class MOZ_STACK_CLASS GlobalObject
 {
 public:
   GlobalObject(JSContext* aCx, JSObject* aObject);
@@ -65,7 +65,7 @@ private:
   nsCOMPtr<nsISupports> mGlobalObjectRef;
 };
 
-class NS_STACK_CLASS WorkerGlobalObject
+class MOZ_STACK_CLASS WorkerGlobalObject
 {
 public:
   WorkerGlobalObject(JSContext* aCx, JSObject* aObject);
@@ -111,7 +111,7 @@ private:
  * empty string.  If HasStringBuffer() returns false, call AsAString() and get
  * the value from that.
  */
-class NS_STACK_CLASS DOMString {
+class MOZ_STACK_CLASS DOMString {
 public:
   DOMString()
     : mStringBuffer(nullptr)
