@@ -2668,7 +2668,7 @@ static bool IsInBounds(const gfxSkipCharsIterator& aStart, int32_t aContentLengt
 }
 #endif
 
-class NS_STACK_CLASS PropertyProvider : public gfxTextRun::PropertyProvider {
+class MOZ_STACK_CLASS PropertyProvider : public gfxTextRun::PropertyProvider {
 public:
   /**
    * Use this constructor for reflow, when we don't know what text is
@@ -6566,7 +6566,7 @@ nsTextFrame::PeekOffsetNoAmount(bool aForward, int32_t* aOffset)
  * is interpreted according to aDirection, so if aDirection is -1, "before"
  * means actually *after* the cluster content.)
  */
-class NS_STACK_CLASS ClusterIterator {
+class MOZ_STACK_CLASS ClusterIterator {
 public:
   ClusterIterator(nsTextFrame* aTextFrame, int32_t aPosition, int32_t aDirection,
                   nsString& aContext);
@@ -7624,7 +7624,7 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
 /**
  * Notifies accessibility about text reflow. Used by nsTextFrame::ReflowText.
  */
-class NS_STACK_CLASS ReflowTextA11yNotifier
+class MOZ_STACK_CLASS ReflowTextA11yNotifier
 {
 public:
   ReflowTextA11yNotifier(nsPresContext* aPresContext, nsIContent* aContent) :

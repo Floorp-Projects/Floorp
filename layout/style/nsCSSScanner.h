@@ -99,7 +99,7 @@ enum nsCSSTokenType {
 // meaningful; comments above describe which other fields are
 // meaningful for which token types.
 struct nsCSSToken {
-  nsAutoString    mIdent NS_OKONHEAP;
+  nsAutoString    mIdent;
   float           mNumber;
   int32_t         mInteger;
   int32_t         mInteger2;
