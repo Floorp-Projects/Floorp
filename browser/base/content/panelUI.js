@@ -38,27 +38,6 @@ const PanelUI = {
             this.viewStack.getAttribute("view") == "subview");
   },
 
-  /**
-   * If true, puts us into subview mode, which slides the subview deck over
-   * and adjusts the height of the panel accordingly.
-   *
-   * @param aVal
-   *        True if we should be in subview mode.
-   */
-  set _showingSubView(aVal) {
-    if (aVal) {
-      let oldHeight = this.mainView.clientHeight;
-      this.viewStack.setAttribute("view", "subview");
-      this.mainViewSpring.style.height = this.subViews.scrollHeight - oldHeight + "px";
-      this.container.style.height = this.subViews.scrollHeight + "px";
-    } else {
-      this.viewStack.setAttribute("view", "main");
-      this._syncContainerWithMainView();
-    }
-
-    return aVal;
-  },
-
   init: function() {
     for (let [k, v] of Iterator(this.kElements)) {
       // Need to do fresh let-bindings per iteration
@@ -76,6 +55,12 @@ const PanelUI = {
 
     this.clickCapturer.addEventListener("click", this._onCapturerClick,
                                         true);
+
+    // Get a MutationObserver ready to react to subview size changes. We
+    // only attach this MutationObserver when a subview is being displayed.
+    this._subViewObserver = new MutationObserver(function(aMutations) {
+      this._syncContainerWithSubView();
+    }.bind(this));
   },
 
   uninit: function() {
@@ -164,14 +149,20 @@ const PanelUI = {
   showMainView: function() {
     // Are we showing a subview? If so, fire the ViewHiding event on it.
     if (this._showingSubView) {
-      let viewNode = this.subViews.selectedPanel;
+      let viewNode = this._currentSubView;
       let evt = document.createEvent("CustomEvent");
       evt.initCustomEvent("ViewHiding", true, true, viewNode);
       viewNode.dispatchEvent(evt);
+
+      viewNode.removeAttribute("current");
+      this._currentSubView = null;
+      this._subViewObserver.disconnect();
     }
 
+    this.viewStack.setAttribute("view", "main");
+    this._syncContainerWithMainView();
+
     this._shiftMainView();
-    this._showingSubView = false;
   },
 
   /**
@@ -191,13 +182,19 @@ const PanelUI = {
       return;
     }
 
+    let oldHeight = this.mainView.clientHeight;
+    viewNode.setAttribute("current", true);
+    this._currentSubView = viewNode;
+
     // Emit the ViewShowing event so that the widget definition has a chance
     // to lazily populate the subview with things.
     let evt = document.createEvent("CustomEvent");
     evt.initCustomEvent("ViewShowing", true, true, viewNode);
     viewNode.dispatchEvent(evt);
 
-    this.subViews.selectedPanel = viewNode;
+    this.viewStack.setAttribute("view", "subview");
+    this.mainViewSpring.style.height = this.subViews.scrollHeight - oldHeight + "px";
+    this.container.style.height = this.subViews.scrollHeight + "px";
 
     // Now we have to transition to transition the panel. There are a few parts
     // to this:
@@ -212,7 +209,12 @@ const PanelUI = {
     // All three of these actions make use of CSS transformations, so they
     // should all occur simultaneously.
     this._shiftMainView(aAnchor);
-    this._showingSubView = true;
+    this._subViewObserver.observe(viewNode, {
+      attributes: true,
+      characterData: true,
+      childList: true,
+      subtree: true
+    });
   },
 
   /**
@@ -224,6 +226,18 @@ const PanelUI = {
     let springHeight = this.mainViewSpring.getBoundingClientRect().height;
     this.container.style.height = (this.mainView.scrollHeight - springHeight) + "px";
     this.mainViewSpring.style.height = "";
+  },
+
+  /**
+   * Ensures that the container has the same height as the subview holder.
+   * This is usually done when switching to a subview, or if a subview changes
+   * in size.
+   */
+  _syncContainerWithSubView: function() {
+    let springHeight = this.mainViewSpring.getBoundingClientRect().height;
+    let mainViewHeight = this.mainView.clientHeight - springHeight;
+    this.container.style.height = this.subViews.scrollHeight + "px";
+    this.mainViewSpring.style.height = (this.subViews.scrollHeight - mainViewHeight) + "px";
   },
 
   /**

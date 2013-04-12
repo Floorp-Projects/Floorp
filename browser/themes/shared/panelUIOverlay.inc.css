@@ -50,7 +50,8 @@
   overflow: hidden;
 }
 
-#PanelUI-popup[panelopen="true"] > #PanelUI-container {
+#PanelUI-popup[panelopen="true"] > #PanelUI-container,
+#PanelUI-mainView-spring {
   transition: height 150ms;
 }
 
@@ -71,9 +72,8 @@
   min-width: @menuPanelWidth@;
 }
 
-#PanelUI-mainView-springy {
+#PanelUI-mainView-spring {
   height: 0;
-  transition: height 150ms;
 }
 
 #PanelUI-subViews {
@@ -86,8 +86,16 @@
   transition: transform 150ms;
 }
 
+#PanelUI-subViews > .PanelUI-subView:not([current]) {
+  display: none;
+}
+
 #PanelUI-viewStack[view="subview"] > #PanelUI-subViews {
   transform: translateX(0);
+}
+
+#PanelUI-viewStack:not([view="subview"]) > #PanelUI-subViews {
+  display: none;
 }
 
 #PanelUI-contents[type="list"] > toolbarbutton {
