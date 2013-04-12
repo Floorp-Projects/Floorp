@@ -302,6 +302,18 @@ ICStub::trace(JSTracer *trc)
         MarkShape(trc, &propStub->holderShape(), "baseline-getpropnativeproto-stub-holdershape");
         break;
       }
+      case ICStub::GetProp_CallListBaseNative: {
+        ICGetProp_CallListBaseNative *propStub = toGetProp_CallListBaseNative();
+        MarkShape(trc, &propStub->shape(), "baseline-getproplistbasenative-stub-shape");
+        if (propStub->expandoShape()) {
+            MarkShape(trc, &propStub->expandoShape(),
+                      "baseline-getproplistbasenative-stub-expandoshape");
+        }
+        MarkObject(trc, &propStub->holder(), "baseline-getproplistbasenative-stub-holder");
+        MarkShape(trc, &propStub->holderShape(), "baseline-getproplistbasenative-stub-holdershape");
+        MarkObject(trc, &propStub->getter(), "baseline-getproplistbasenative-stub-getter");
+        break;
+      }
       case ICStub::GetProp_CallScripted: {
         ICGetProp_CallScripted *callStub = toGetProp_CallScripted();
         MarkShape(trc, &callStub->shape(), "baseline-getpropcallscripted-stub-shape");
@@ -595,8 +607,8 @@ ICStubCompiler::guardProfilingEnabled(MacroAssembler &masm, Register scratch, La
     // This should only be called from the following stubs.
     JS_ASSERT(kind == ICStub::Call_Scripted      || kind == ICStub::Call_AnyScripted     ||
               kind == ICStub::Call_Native        || kind == ICStub::GetProp_CallScripted ||
-              kind == ICStub::GetProp_CallNative || kind == ICStub::SetProp_CallScripted ||
-              kind == ICStub::SetProp_CallNative);
+              kind == ICStub::GetProp_CallNative || kind == ICStub::GetProp_CallListBaseNative ||
+              kind == ICStub::SetProp_CallScripted || kind == ICStub::SetProp_CallNative);
 
     // Guard on bit in frame that indicates if the SPS frame was pushed in the first
     // place.  This code is expected to be called from within a stub that has already
@@ -2996,57 +3008,171 @@ static void GetFixedOrDynamicSlotOffset(HandleObject obj, uint32_t slot,
                        : obj->dynamicSlotIndex(slot) * sizeof(Value);
 }
 
+static bool
+IsCacheableListBase(JSObject *obj)
+{
+    if (!obj->isProxy())
+        return false;
+
+    BaseProxyHandler *handler = GetProxyHandler(obj);
+
+    if (handler->family() != GetListBaseHandlerFamily())
+        return false;
+
+    if (obj->numFixedSlots() <= GetListBaseExpandoSlot())
+        return false;
+
+    return true;
+}
+
+static JSObject *
+GetListBaseProto(JSObject *obj)
+{
+    JS_ASSERT(IsCacheableListBase(obj));
+    return obj->getTaggedProto().toObjectOrNull();
+}
+
+static void
+GenerateListBaseChecks(JSContext *cx, MacroAssembler &masm, Register object,
+                       Address checkProxyHandlerAddr,
+                       Address checkExpandoShapeAddr,
+                       Register scratch,
+                       GeneralRegisterSet &listBaseRegSet,
+                       Label *checkFailed)
+{
+    // Guard the following:
+    //      1. The object is a ListBase.
+    //      2. The object does not have expando properties, or has an expando
+    //          which is known to not have the desired property.
+    Address handlerAddr(object, JSObject::getFixedSlotOffset(JSSLOT_PROXY_HANDLER));
+    Address expandoAddr(object, JSObject::getFixedSlotOffset(GetListBaseExpandoSlot()));
+
+    // Check that object is a ListBase.
+    masm.loadPtr(checkProxyHandlerAddr, scratch);
+    masm.branchPrivatePtr(Assembler::NotEqual, handlerAddr, scratch, checkFailed);
+
+    // For the remaining code, we need to reserve some registers to load a value.
+    // This is ugly, but unvaoidable.
+    ValueOperand tempVal = listBaseRegSet.takeAnyValue();
+    masm.pushValue(tempVal);
+
+    Label failListBaseCheck;
+    Label listBaseOk;
+
+    masm.loadValue(expandoAddr, tempVal);
+
+    // If the incoming object does not have an expando object then we're sure we're not
+    // shadowing.
+    masm.branchTestUndefined(Assembler::Equal, tempVal, &listBaseOk);
+
+    // The reference object used to generate this check may not have had an
+    // expando object at all, in which case the presence of a non-undefined
+    // expando value in the incoming object is automatically a failure.
+    masm.loadPtr(checkExpandoShapeAddr, scratch);
+    masm.branchPtr(Assembler::Equal, scratch, ImmWord((void*)NULL), &failListBaseCheck);
+
+    // Otherwise, ensure that the incoming object has an object for its expando value and that
+    // the shape matches.
+    masm.branchTestObject(Assembler::NotEqual, tempVal, &failListBaseCheck);
+    Register objReg = masm.extractObject(tempVal, tempVal.scratchReg());
+    masm.branchTestObjShape(Assembler::Equal, objReg, scratch, &listBaseOk);
+
+    // Failure case: restore the tempVal registers and jump to failures.
+    masm.bind(&failListBaseCheck);
+    masm.popValue(tempVal);
+    masm.jump(checkFailed);
+
+    // Success case: restore the tempval and proceed.
+    masm.bind(&listBaseOk);
+    masm.popValue(tempVal);
+}
+
 // Look up a property's shape on an object, being careful never to do any effectful
 // operations.  This procedure not yielding a shape should not be taken as a lack of
 // existence of the property on the object.
 static bool
 EffectlesslyLookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
-                           MutableHandleObject holder, MutableHandleShape shape)
+                           MutableHandleObject holder, MutableHandleShape shape,
+                           bool *checkListBase=NULL)
 {
-    if (obj->hasIdempotentProtoChain()) {
-        if (!JSObject::lookupProperty(cx, obj, name, holder, shape))
+    shape.set(NULL);
+    holder.set(NULL);
+
+    bool isListBase = false;
+    if (checkListBase)
+        *checkListBase = false;
+
+    // Check for list base if asked to.
+    RootedObject checkObj(cx, obj);
+    if (checkListBase && IsCacheableListBase(obj)) {
+        *checkListBase = isListBase = true;
+        if (obj->hasUncacheableProto())
+            return true;
+
+        // Expando objects just hold any extra properties the object has been given by a script,
+        // and have no prototype or anything else that will complicate property lookups on them.
+        Value expandoVal = obj->getFixedSlot(GetListBaseExpandoSlot());
+
+        JS_ASSERT_IF(expandoVal.isObject(),
+                     expandoVal.toObject().isNative() && !expandoVal.toObject().getProto());
+
+        if (expandoVal.isObject() && expandoVal.toObject().nativeContains(cx, name))
+            return true;
+
+        checkObj = GetListBaseProto(obj);
+    }
+
+    if (!isListBase && !obj->isNative())
+        return true;
+
+    if (checkObj->hasIdempotentProtoChain()) {
+        if (!JSObject::lookupProperty(cx, checkObj, name, holder, shape))
             return false;
-    } else if (obj->isNative()) {
-        shape.set(obj->nativeLookup(cx, NameToId(name)));
+    } else if (checkObj->isNative()) {
+        shape.set(checkObj->nativeLookup(cx, NameToId(name)));
         if (shape)
-            holder.set(obj);
-    } else {
-        shape.set(NULL);
-        holder.set(NULL);
+            holder.set(checkObj);
     }
     return true;
 }
 
 static bool
-IsCacheableProtoChain(JSObject *obj, JSObject *holder)
+IsCacheableProtoChain(JSObject *obj, JSObject *holder, bool isListBase=false)
 {
-    JS_ASSERT(obj->isNative());
+    JS_ASSERT_IF(isListBase, IsCacheableListBase(obj));
+    JS_ASSERT_IF(!isListBase, obj->isNative());
 
     // Don't handle objects which require a prototype guard. This should
     // be uncommon so handling it is likely not worth the complexity.
     if (obj->hasUncacheableProto())
         return false;
 
-    while (obj != holder) {
+    JSObject *cur = obj;
+    while (cur != holder) {
         // We cannot assume that we find the holder object on the prototype
         // chain and must check for null proto. The prototype chain can be
         // altered during the lookupProperty call.
-        JSObject *proto = obj->getProto();
+        JSObject *proto;
+        if (isListBase && cur == obj)
+            proto = cur->getTaggedProto().toObjectOrNull();
+        else
+            proto = cur->getProto();
+
         if (!proto || !proto->isNative())
             return false;
 
         if (proto->hasUncacheableProto())
             return false;
 
-        obj = proto;
+        cur = proto;
     }
     return true;
 }
 
 static bool
-IsCacheableGetPropReadSlot(JSObject *obj, JSObject *holder, Shape *shape)
+IsCacheableGetPropReadSlot(JSObject *obj, JSObject *holder, Shape *shape, bool isListBase=false)
 {
-    if (!shape || !IsCacheableProtoChain(obj, holder))
+    if (!shape || !IsCacheableProtoChain(obj, holder, isListBase))
         return false;
 
     if (!shape->hasSlot() || !shape->hasDefaultGetter())
@@ -3056,7 +3182,8 @@ IsCacheableGetPropReadSlot(JSObject *obj, JSObject *holder, Shape *shape)
 }
 
 static bool
-IsCacheableGetPropCall(JSObject *obj, JSObject *holder, Shape *shape, bool *isScripted)
+IsCacheableGetPropCall(JSObject *obj, JSObject *holder, Shape *shape, bool *isScripted,
+                       bool isListBase=false)
 {
     JS_ASSERT(isScripted);
 
@@ -3064,7 +3191,7 @@ IsCacheableGetPropCall(JSObject *obj, JSObject *holder, Shape *shape, bool *isSc
     if (obj == holder)
         return false;
 
-    if (!shape || !IsCacheableProtoChain(obj, holder))
+    if (!shape || !IsCacheableProtoChain(obj, holder, isListBase))
         return false;
 
     if (shape->hasSlot() || shape->hasDefaultGetter())
@@ -4766,16 +4893,18 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
         return true;
 
     RootedObject obj(cx, &val.toObject());
-    if (!obj->isNative())
-        return true;
 
+    bool isListBase;
     RootedShape shape(cx);
     RootedObject holder(cx);
-    if (!EffectlesslyLookupProperty(cx, obj, name, &holder, &shape))
+    if (!EffectlesslyLookupProperty(cx, obj, name, &holder, &shape, &isListBase))
         return false;
 
+    if (!isListBase && !obj->isNative())
+        return true;
+
     ICStub *monitorStub = stub->fallbackMonitorStub()->firstMonitorStub();
-    if (IsCacheableGetPropReadSlot(obj, holder, shape)) {
+    if (!isListBase && IsCacheableGetPropReadSlot(obj, holder, shape)) {
         bool isFixedSlot;
         uint32_t offset;
         GetFixedOrDynamicSlotOffset(holder, shape->slot(), &isFixedSlot, &offset);
@@ -4783,7 +4912,8 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
         ICStub::Kind kind = (obj == holder) ? ICStub::GetProp_Native
                                             : ICStub::GetProp_NativePrototype;
 
-        IonSpew(IonSpew_BaselineIC, "  Generating GetProp(Native %s) stub",
+        IonSpew(IonSpew_BaselineIC, "  Generating GetProp(%s %s%s) stub",
+                    isListBase ? "ListBase" : "Native",
                     (obj == holder) ? "direct" : "prototype");
         ICGetPropNativeCompiler compiler(cx, kind, monitorStub, obj, holder, isFixedSlot, offset);
         ICStub *newStub = compiler.getStub(compiler.getStubSpace(script));
@@ -4796,10 +4926,10 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
     }
 
     bool isScripted = false;
-    bool cacheableCall = IsCacheableGetPropCall(obj, holder, shape, &isScripted);
+    bool cacheableCall = IsCacheableGetPropCall(obj, holder, shape, &isScripted, isListBase);
 
     // Try handling scripted getters.
-    if (cacheableCall && isScripted) {
+    if (cacheableCall && isScripted && !isListBase) {
         RootedFunction callee(cx, shape->getterObject()->toFunction());
         JS_ASSERT(obj != holder);
         JS_ASSERT(callee->hasScript());
@@ -4824,15 +4954,25 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
         JS_ASSERT(obj != holder);
         JS_ASSERT(callee->isNative());
 
-        IonSpew(IonSpew_BaselineIC, "  Generating GetProp(NativeObj/NativeGetter %p) stub",
-                    callee->native());
+        ICStub *newStub = NULL;
+        if (isListBase) {
+            IonSpew(IonSpew_BaselineIC, "  Generating GetProp(ListBaseObj/NativeGetter %p) stub",
+                        callee->native());
 
-        ICGetProp_CallNative::Compiler compiler(cx, monitorStub, obj, holder, callee,
-                                                pc - script->code);
-        ICStub *newStub = compiler.getStub(compiler.getStubSpace(script));
+            ICGetProp_CallListBaseNative::Compiler compiler(cx, monitorStub, obj, holder, callee,
+                                                            pc - script->code);
+            newStub = compiler.getStub(compiler.getStubSpace(script));
+
+        } else {
+            IonSpew(IonSpew_BaselineIC, "  Generating GetProp(NativeObj/NativeGetter %p) stub",
+                        callee->native());
+
+            ICGetProp_CallNative::Compiler compiler(cx, monitorStub, obj, holder, callee,
+                                                    pc - script->code);
+            newStub = compiler.getStub(compiler.getStubSpace(script));
+        }
         if (!newStub)
             return false;
-
         stub->addNewStub(newStub);
         *attached = true;
         return true;
@@ -5317,6 +5457,98 @@ ICGetProp_CallNative::Compiler::generateStubCode(MacroAssembler &masm)
 
         // Update profiling entry before leaving function.
         masm.load32(Address(BaselineStubReg, ICGetProp_CallNative::offsetOfPCOffset()), pcIdx);
+        masm.spsUpdatePCIdx(&cx->runtime->spsProfiler, pcIdx, scratch);
+
+        masm.bind(&skipProfilerUpdate);
+        regs.add(scratch);
+        regs.add(pcIdx);
+    }
+    if (!callVM(DoCallNativeGetterInfo, masm))
+        return false;
+    leaveStubFrame(masm);
+
+    // Enter type monitor IC to type-check result.
+    EmitEnterTypeMonitorIC(masm);
+
+    // Failure case - jump to next stub
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
+}
+
+bool
+ICGetProp_CallListBaseNative::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+    GeneralRegisterSet regs(availableGeneralRegs(1));
+    Register scratch;
+    if (regs.has(BaselineTailCallReg)) {
+        regs.take(BaselineTailCallReg);
+        scratch = regs.takeAny();
+        regs.add(BaselineTailCallReg);
+    } else {
+        scratch = regs.takeAny();
+    }
+
+    // Guard input is an object.
+    masm.branchTestObject(Assembler::NotEqual, R0, &failure);
+
+    // Unbox.
+    Register objReg = masm.extractObject(R0, ExtractTemp0);
+
+    // Shape guard.
+    masm.loadPtr(Address(BaselineStubReg, ICGetProp_CallListBaseNative::offsetOfShape()), scratch);
+    masm.branchTestObjShape(Assembler::NotEqual, objReg, scratch, &failure);
+
+    // Guard for ListObject.
+    {
+        GeneralRegisterSet listBaseRegSet(GeneralRegisterSet::All());
+        listBaseRegSet.take(BaselineStubReg);
+        listBaseRegSet.take(objReg);
+        listBaseRegSet.take(scratch);
+        GenerateListBaseChecks(
+                cx, masm, objReg,
+                Address(BaselineStubReg, ICGetProp_CallListBaseNative::offsetOfProxyHandler()),
+                Address(BaselineStubReg, ICGetProp_CallListBaseNative::offsetOfExpandoShape()),
+                scratch,
+                listBaseRegSet,
+                &failure);
+    }
+
+    Register holderReg = regs.takeAny();
+    masm.loadPtr(Address(BaselineStubReg, ICGetProp_CallListBaseNative::offsetOfHolder()),
+                 holderReg);
+    masm.loadPtr(Address(BaselineStubReg, ICGetProp_CallListBaseNative::offsetOfHolderShape()),
+                 scratch);
+    masm.branchTestObjShape(Assembler::NotEqual, holderReg, scratch, &failure);
+    regs.add(holderReg);
+
+    // Push a stub frame so that we can perform a non-tail call.
+    enterStubFrame(masm, scratch);
+
+    // Load callee function.
+    Register callee = regs.takeAny();
+    masm.loadPtr(Address(BaselineStubReg, ICGetProp_CallListBaseNative::offsetOfGetter()), callee);
+
+    // Push args for vm call.
+    masm.push(objReg);
+    masm.push(callee);
+
+    // Don't have to preserve R0 anymore.
+    regs.add(R0);
+
+    // If needed, update SPS Profiler frame entry.
+    {
+        Label skipProfilerUpdate;
+        Register scratch = regs.takeAny();
+        Register pcIdx = regs.takeAny();
+
+        // Check if profiling is enabled.
+        guardProfilingEnabled(masm, scratch, &skipProfilerUpdate);
+
+        // Update profiling entry before leaving function.
+        masm.load32(Address(BaselineStubReg, ICGetProp_CallListBaseNative::offsetOfPCOffset()),
+                    pcIdx);
         masm.spsUpdatePCIdx(&cx->runtime->spsProfiler, pcIdx, scratch);
 
         masm.bind(&skipProfilerUpdate);

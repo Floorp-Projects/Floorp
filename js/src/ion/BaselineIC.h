@@ -12,6 +12,7 @@
 #include "jscompartment.h"
 #include "jsgcinlines.h"
 #include "jsopcode.h"
+#include "jsproxy.h"
 #include "BaselineJIT.h"
 #include "BaselineRegisters.h"
 
@@ -363,6 +364,7 @@ class ICEntry
     _(GetProp_NativePrototype)  \
     _(GetProp_CallScripted)     \
     _(GetProp_CallNative)       \
+    _(GetProp_CallListBaseNative)\
                                 \
     _(SetProp_Fallback)         \
     _(SetProp_Native)           \
@@ -724,6 +726,7 @@ class ICStub
           case UseCount_Fallback:
           case GetProp_CallScripted:
           case GetProp_CallNative:
+          case GetProp_CallListBaseNative:
           case SetProp_CallScripted:
           case SetProp_CallNative:
             return true;
@@ -3933,6 +3936,7 @@ class ICGetProp_NativePrototype : public ICGetPropNativeStub
 {
     friend class ICStubSpace;
 
+  protected:
     // Holder and its shape.
     HeapPtrObject holder_;
     HeapPtrShape holderShape_;
@@ -3970,6 +3974,7 @@ class ICGetProp_NativePrototype : public ICGetPropNativeStub
         return offsetof(ICGetProp_NativePrototype, holderShape_);
     }
 };
+
 
 // Compiler for GetProp_Native and GetProp_NativePrototype stubs.
 class ICGetPropNativeCompiler : public ICStubCompiler
@@ -4187,6 +4192,138 @@ class ICGetProp_CallNative : public ICGetPropCallGetter
             RootedShape holderShape(cx, holder_->lastProperty());
             return ICGetProp_CallNative::New(space, getStubCode(), firstMonitorStub_, shape,
                                                holder_, holderShape, getter_, pcOffset_);
+        }
+    };
+};
+
+class ICGetProp_CallListBaseNative : public ICMonitoredStub
+{
+  friend class ICStubSpace;
+  protected:
+    // Shape of the ListBase proxy
+    HeapPtrShape shape_;
+
+    // Proxy handler to check against.
+    BaseProxyHandler *proxyHandler_;
+
+    // Object shape of expected expando object. (NULL if no expando object should be there)
+    HeapPtrShape expandoShape_;
+
+    // Holder and its shape.
+    HeapPtrObject holder_;
+    HeapPtrShape holderShape_;
+
+    // Function to call.
+    HeapPtrFunction getter_;
+
+    // PC offset of call
+    uint32_t pcOffset_;
+
+    ICGetProp_CallListBaseNative(IonCode *stubCode, ICStub *firstMonitorStub,
+                       HandleShape shape, BaseProxyHandler *proxyHandler,
+                       HandleShape expandoShape, HandleObject holder, HandleShape holderShape,
+                       HandleFunction getter, uint32_t pcOffset)
+      : ICMonitoredStub(GetProp_CallListBaseNative, stubCode, firstMonitorStub),
+        shape_(shape),
+        proxyHandler_(proxyHandler),
+        expandoShape_(expandoShape),
+        holder_(holder),
+        holderShape_(holderShape),
+        getter_(getter),
+        pcOffset_(pcOffset)
+    { }
+
+  public:
+    static inline ICGetProp_CallListBaseNative *New(
+            ICStubSpace *space, IonCode *code, ICStub *firstMonitorStub,
+            HandleShape shape, BaseProxyHandler *proxyHandler,
+            HandleShape expandoShape, HandleObject holder, HandleShape holderShape,
+            HandleFunction getter, uint32_t pcOffset)
+    {
+        if (!code)
+            return NULL;
+        return space->allocate<ICGetProp_CallListBaseNative>(code, firstMonitorStub, shape,
+                                                   proxyHandler, expandoShape, holder,
+                                                   holderShape, getter, pcOffset);
+    }
+
+    HeapPtrShape &shape() {
+        return shape_;
+    }
+    HeapPtrShape &expandoShape() {
+        return expandoShape_;
+    }
+    HeapPtrObject &holder() {
+        return holder_;
+    }
+    HeapPtrShape &holderShape() {
+        return holderShape_;
+    }
+    HeapPtrFunction &getter() {
+        return getter_;
+    }
+    uint32_t pcOffset() const {
+        return pcOffset_;
+    }
+
+    static size_t offsetOfShape() {
+        return offsetof(ICGetProp_CallListBaseNative, shape_);
+    }
+    static size_t offsetOfProxyHandler() {
+        return offsetof(ICGetProp_CallListBaseNative, proxyHandler_);
+    }
+    static size_t offsetOfExpandoShape() {
+        return offsetof(ICGetProp_CallListBaseNative, expandoShape_);
+    }
+    static size_t offsetOfHolder() {
+        return offsetof(ICGetProp_CallListBaseNative, holder_);
+    }
+    static size_t offsetOfHolderShape() {
+        return offsetof(ICGetProp_CallListBaseNative, holderShape_);
+    }
+    static size_t offsetOfGetter() {
+        return offsetof(ICGetProp_CallListBaseNative, getter_);
+    }
+    static size_t offsetOfPCOffset() {
+        return offsetof(ICGetProp_CallListBaseNative, pcOffset_);
+    }
+
+    class Compiler : public ICStubCompiler {
+      protected:
+        ICStub *firstMonitorStub_;
+        RootedObject obj_;
+        RootedObject holder_;
+        RootedFunction getter_;
+        uint32_t pcOffset_;
+
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx, ICStub *firstMonitorStub, HandleObject obj,
+                 HandleObject holder, HandleFunction getter, uint32_t pcOffset)
+          : ICStubCompiler(cx, ICStub::GetProp_CallListBaseNative),
+            firstMonitorStub_(firstMonitorStub),
+            obj_(cx, obj),
+            holder_(cx, holder),
+            getter_(cx, getter),
+            pcOffset_(pcOffset)
+        {
+            JS_ASSERT(obj_->isProxy());
+            JS_ASSERT(GetProxyHandler(obj_)->family() == GetListBaseHandlerFamily());
+        }
+
+        ICStub *getStub(ICStubSpace *space) {
+            RootedShape shape(cx, obj_->lastProperty());
+            RootedShape holderShape(cx, holder_->lastProperty());
+
+            Value expandoVal = obj_->getFixedSlot(GetListBaseExpandoSlot());
+            RootedShape expandoShape(cx, NULL);
+            if (expandoVal.isObject())
+                expandoShape = expandoVal.toObject().lastProperty();
+
+            return ICGetProp_CallListBaseNative::New(
+                        space, getStubCode(), firstMonitorStub_, shape, GetProxyHandler(obj_),
+                        expandoShape, holder_, holderShape, getter_, pcOffset_);
         }
     };
 };
