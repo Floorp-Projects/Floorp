@@ -1835,7 +1835,7 @@ nsXPCComponents_Exception::Construct(nsIXPConnectWrappedNative *wrapper, JSConte
     return CallOrConstruct(wrapper, cx, obj, argc, argv, vp, _retval);
 }
 
-struct NS_STACK_CLASS ExceptionArgParser
+struct MOZ_STACK_CLASS ExceptionArgParser
 {
     ExceptionArgParser(JSContext *context,
                        nsXPConnect *xpconnect)
@@ -2748,7 +2748,7 @@ nsXPCComponents_Utils::LookupMethod(const JS::Value& object,
     // If |obj| is a security wrapper, try to unwrap it. If this fails, we
     // don't have full acccess to the object, in which case we throw.
     // Otherwise, enter a compartment, since we may have just unwrapped a CCW.
-    obj = js::UnwrapObjectChecked(obj);
+    obj = js::CheckedUnwrap(obj);
     if (!obj) {
         JS_ReportError(cx, "Permission denied to unwrap object");
         return NS_ERROR_XPC_BAD_CONVERT_JS;
@@ -3351,7 +3351,7 @@ xpc_CreateSandboxObject(JSContext *cx, jsval *vp, nsISupports *prinOrSop, Sandbo
     }
 
     JS::ZoneSpecifier zoneSpec = options.sameZoneAs
-                                 ? JS::SameZoneAs(js::UnwrapObject(options.sameZoneAs))
+                                 ? JS::SameZoneAs(js::UncheckedUnwrap(options.sameZoneAs))
                                  : JS::SystemZone;
     RootedObject sandbox(cx, xpc::CreateGlobalObject(cx, &SandboxClass, principal, zoneSpec));
     if (!sandbox)
@@ -3387,7 +3387,7 @@ xpc_CreateSandboxObject(JSContext *cx, jsval *vp, nsISupports *prinOrSop, Sandbo
             }
 
             // Now check what sort of thing we've got in |proto|
-            JSObject *unwrappedProto = js::UnwrapObject(options.proto, false);
+            JSObject *unwrappedProto = js::UncheckedUnwrap(options.proto, false);
             js::Class *unwrappedClass = js::GetObjectClass(unwrappedProto);
             if (IS_WRAPPER_CLASS(unwrappedClass) ||
                 mozilla::dom::IsDOMClass(Jsvalify(unwrappedClass))) {
@@ -3956,7 +3956,7 @@ xpc_EvalInSandbox(JSContext *cx, HandleObject sandboxArg, const nsAString& sourc
     rval.set(UndefinedValue());
 
     bool waiveXray = xpc::WrapperFactory::HasWaiveXrayFlag(sandboxArg);
-    RootedObject sandbox(cx, js::UnwrapObjectChecked(sandboxArg));
+    RootedObject sandbox(cx, js::CheckedUnwrap(sandboxArg));
     if (!sandbox || js::GetObjectJSClass(sandbox) != &SandboxClass) {
         return NS_ERROR_INVALID_ARG;
     }
@@ -4216,7 +4216,7 @@ nsXPCComponents_Utils::GetGlobalForObject(const JS::Value& object,
   // parent, enter the compartment for the duration of the call, and wrap the
   // result.
   JS::Rooted<JSObject*> obj(cx, JSVAL_TO_OBJECT(object));
-  obj = js::UnwrapObject(obj);
+  obj = js::UncheckedUnwrap(obj);
   {
     JSAutoCompartment ac(cx, obj);
     obj = JS_GetGlobalForObject(cx, obj);
@@ -4242,7 +4242,7 @@ nsXPCComponents_Utils::CreateObjectIn(const Value &vobj, JSContext *cx, Value *r
     if (vobj.isPrimitive())
         return NS_ERROR_XPC_BAD_CONVERT_JS;
 
-    RootedObject scope(cx, js::UnwrapObject(&vobj.toObject()));
+    RootedObject scope(cx, js::UncheckedUnwrap(&vobj.toObject()));
     RootedObject obj(cx);
     {
         JSAutoCompartment ac(cx, scope);
@@ -4269,7 +4269,7 @@ nsXPCComponents_Utils::CreateArrayIn(const Value &vobj, JSContext *cx, Value *rv
     if (vobj.isPrimitive())
         return NS_ERROR_XPC_BAD_CONVERT_JS;
 
-    RootedObject scope(cx, js::UnwrapObject(&vobj.toObject()));
+    RootedObject scope(cx, js::UncheckedUnwrap(&vobj.toObject()));
     RootedObject obj(cx);
     {
         JSAutoCompartment ac(cx, scope);
@@ -4296,7 +4296,7 @@ nsXPCComponents_Utils::CreateDateIn(const Value &vobj, int64_t msec,JSContext *c
     if (JSVAL_IS_PRIMITIVE(vobj))
         return NS_ERROR_XPC_BAD_CONVERT_JS;
 
-    JSObject *scope = js::UnwrapObject(JSVAL_TO_OBJECT(vobj));
+    JSObject *scope = js::UncheckedUnwrap(JSVAL_TO_OBJECT(vobj));
     JSObject *obj;
     {
         JSAutoCompartment ac(cx, scope);
@@ -4352,8 +4352,7 @@ nsXPCComponents_Utils::MakeObjectPropsNormal(const Value &vobj, JSContext *cx)
     if (vobj.isPrimitive())
         return NS_ERROR_XPC_BAD_CONVERT_JS;
 
-    RootedObject obj(cx, js::UnwrapObject(&vobj.toObject()));
-
+    RootedObject obj(cx, js::UncheckedUnwrap(&vobj.toObject()));
     JSAutoCompartment ac(cx, obj);
     JS::AutoIdArray ida(cx, JS_Enumerate(cx, obj));
     if (!ida)
@@ -4400,7 +4399,7 @@ nsXPCComponents_Utils::RecomputeWrappers(const jsval &vobj, JSContext *cx)
 {
     // Determine the compartment of the given object, if any.
     JSCompartment *c = vobj.isObject()
-                       ? js::GetObjectCompartment(js::UnwrapObject(&vobj.toObject()))
+                       ? js::GetObjectCompartment(js::UncheckedUnwrap(&vobj.toObject()))
                        : NULL;
 
     // If no compartment was given, recompute all.
@@ -4420,7 +4419,7 @@ nsXPCComponents_Utils::SetWantXrays(const jsval &vscope, JSContext *cx)
 {
     if (!vscope.isObject())
         return NS_ERROR_INVALID_ARG;
-    JSObject *scopeObj = js::UnwrapObject(&vscope.toObject());
+    JSObject *scopeObj = js::UncheckedUnwrap(&vscope.toObject());
     JSCompartment *compartment = js::GetObjectCompartment(scopeObj);
     EnsureCompartmentPrivate(scopeObj)->wantXrays = true;
     bool ok = js::RecomputeWrappers(cx, js::SingleCompartment(compartment),
@@ -4436,7 +4435,7 @@ nsXPCComponents_Utils::GetComponentsForScope(const jsval &vscope, JSContext *cx,
 {
     if (!vscope.isObject())
         return NS_ERROR_INVALID_ARG;
-    JSObject *scopeObj = js::UnwrapObject(&vscope.toObject());
+    JSObject *scopeObj = js::UncheckedUnwrap(&vscope.toObject());
     XPCWrappedNativeScope *scope = GetObjectScope(scopeObj);
     XPCCallContext ccx(NATIVE_CALLER, cx);
     JSObject *components = scope->GetComponentsJSObject(ccx);
@@ -4456,7 +4455,7 @@ nsXPCComponents_Utils::Dispatch(const jsval &runnable_, const jsval &scope,
     Maybe<JSAutoCompartment> ac;
     RootedValue runnable(cx, runnable_);
     if (scope.isObject()) {
-        JSObject *scopeObj = js::UnwrapObject(&scope.toObject());
+        JSObject *scopeObj = js::UncheckedUnwrap(&scope.toObject());
         if (!scopeObj)
             return NS_ERROR_FAILURE;
         ac.construct(cx, scopeObj);
@@ -4570,7 +4569,7 @@ nsXPCComponents_Utils::NukeSandbox(const JS::Value &obj, JSContext *cx)
     NS_ENSURE_TRUE(obj.isObject(), NS_ERROR_INVALID_ARG);
     JSObject *wrapper = &obj.toObject();
     NS_ENSURE_TRUE(IsWrapper(wrapper), NS_ERROR_INVALID_ARG);
-    JSObject *sb = UnwrapObject(wrapper);
+    JSObject *sb = UncheckedUnwrap(wrapper);
     NS_ENSURE_TRUE(GetObjectJSClass(sb) == &SandboxClass, NS_ERROR_INVALID_ARG);
     NukeCrossCompartmentWrappers(cx, AllCompartments(),
                                  SingleCompartment(GetObjectCompartment(sb)),

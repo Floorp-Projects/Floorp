@@ -1027,3 +1027,11 @@ PK11_SignWithSymKey;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.15 { 	# NSS 3.15 release
+;+    global:
+CERT_EncodeNameConstraintsExtension;
+PK11_Decrypt;
+PK11_Encrypt;
+;+    local:
+;+       *;
+;+};

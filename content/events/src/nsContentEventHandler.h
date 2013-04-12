@@ -30,7 +30,7 @@ struct nsRect;
  *   This class answers to NS_QUERY_* events from actual contents.
  */
 
-class NS_STACK_CLASS nsContentEventHandler {
+class MOZ_STACK_CLASS nsContentEventHandler {
 public:
   nsContentEventHandler(nsPresContext *aPresContext);
 

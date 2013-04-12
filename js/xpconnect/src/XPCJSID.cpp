@@ -457,7 +457,7 @@ nsJSIID::Enumerate(nsIXPConnectWrappedNative *wrapper,
  *     system principal. The success of an instanceof check should not depend
  *     on which compartment an object comes from. At the same time, we want to
  *     make sure we don't unwrap important security wrappers.
- *     UnwrapObjectChecked does the right thing here.
+ *     CheckedUnwrap does the right thing here.
  *
  * 2 - Prototype chains. Suppose someone creates a vanilla JS object |a| and
  *     sets its __proto__ to some WN |b|. If |b instanceof nsIFoo| returns true,
@@ -475,7 +475,7 @@ FindObjectForHasInstance(JSContext *cx, JSObject *obj)
     while (obj && !IS_WRAPPER_CLASS(js::GetObjectClass(obj)) && !IsDOMObject(obj))
     {
         if (js::IsWrapper(obj))
-            obj = js::UnwrapObjectChecked(obj, /* stopAtOuter = */ false);
+            obj = js::CheckedUnwrap(obj, /* stopAtOuter = */ false);
         else if (!js::GetObjectProto(cx, obj, &obj))
             return nullptr;
     }
@@ -909,7 +909,7 @@ xpc_JSObjectToID(JSContext *cx, JSObject* obj)
 
     // NOTE: this call does NOT addref
     XPCWrappedNative* wrapper = nullptr;
-    obj = js::UnwrapObjectChecked(obj);
+    obj = js::CheckedUnwrap(obj);
     if (obj && IS_WN_WRAPPER(obj))
         wrapper = XPCWrappedNative::Get(obj);
     if (wrapper &&
@@ -927,7 +927,7 @@ xpc_JSObjectIsID(JSContext *cx, JSObject* obj)
     NS_ASSERTION(cx && obj, "bad param");
     // NOTE: this call does NOT addref
     XPCWrappedNative* wrapper = nullptr;
-    obj = js::UnwrapObjectChecked(obj);
+    obj = js::CheckedUnwrap(obj);
     if (obj && IS_WN_WRAPPER(obj))
         wrapper = XPCWrappedNative::Get(obj);
     return wrapper &&

@@ -4,8 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* See NOTES ON UMRs, Unititialized Memory Reads, below. */
-
 #ifdef FREEBL_NO_DEPEND
 #include "stubs.h"
 #endif
@@ -18,7 +16,7 @@
 
 /* Architecture-dependent defines */
 
-#if defined(SOLARIS) || defined(HPUX) || defined(i386) || defined(IRIX) || \
+#if defined(SOLARIS) || defined(HPUX) || defined(NSS_X86) || \
     defined(_WIN64)
 /* Convert the byte-stream to a word-stream */
 #define CONVERT_TO_WORDS
@@ -119,7 +117,7 @@ RC4_InitContext(RC4Context *cx, const unsigned char *key, unsigned int len,
 	        const unsigned char * unused1, int unused2, 
 		unsigned int unused3, unsigned int unused4)
 {
-	int i;
+	unsigned int i;
 	PRUint8 j, tmp;
 	PRUint8 K[256];
 	PRUint8 *L;
@@ -127,7 +125,7 @@ RC4_InitContext(RC4Context *cx, const unsigned char *key, unsigned int len,
 	/* verify the key length. */
 	PORT_Assert(len > 0 && len < ARCFOUR_STATE_SIZE);
 	if (len == 0 || len >= ARCFOUR_STATE_SIZE) {
-		PORT_SetError(SEC_ERROR_INVALID_ARGS);
+		PORT_SetError(SEC_ERROR_BAD_KEY);
 		return SECFailure;
 	}
 	if (cx == NULL) {
@@ -215,7 +213,7 @@ rc4_no_opt(RC4Context *cx, unsigned char *output,
 	unsigned int index;
 	PORT_Assert(maxOutputLen >= inputLen);
 	if (maxOutputLen < inputLen) {
-		PORT_SetError(SEC_ERROR_INVALID_ARGS);
+		PORT_SetError(SEC_ERROR_OUTPUT_LEN);
 		return SECFailure;
 	}
 	for (index=0; index < inputLen; index++) {
@@ -248,7 +246,7 @@ rc4_unrolled(RC4Context *cx, unsigned char *output,
 	int index;
 	PORT_Assert(maxOutputLen >= inputLen);
 	if (maxOutputLen < inputLen) {
-		PORT_SetError(SEC_ERROR_INVALID_ARGS);
+		PORT_SetError(SEC_ERROR_OUTPUT_LEN);
 		return SECFailure;
 	}
 	for (index = inputLen / 8; index-- > 0; input += 8, output += 8) {
@@ -349,40 +347,26 @@ rc4_unrolled(RC4Context *cx, unsigned char *output,
 #define LSH <<
 #endif
 
+#ifdef IS_LITTLE_ENDIAN
+#define LEFTMOST_BYTE_SHIFT 0
+#define NEXT_BYTE_SHIFT(shift) shift + 8
+#else
+#define LEFTMOST_BYTE_SHIFT 8*(WORDSIZE - 1)
+#define NEXT_BYTE_SHIFT(shift) shift - 8
+#endif
+
 #ifdef CONVERT_TO_WORDS
-/* NOTE about UMRs, Uninitialized Memory Reads.
- *
- * This code reads all input data a WORD at a time, rather than byte at 
- * a time, and writes all output data a WORD at a time.  Shifting and 
- * masking is used to remove unwanted data and realign bytes when 
- * needed.  The first and last words of output are read, modified, and
- * written when needed to preserve any unchanged bytes.  This is a huge
- * win on machines with high memory latency.  
- *
- * However, when the input and output buffers do not begin and end on WORD 
- * boundaries, and the WORDS in memory that contain the first and last 
- * bytes of those buffers contain uninitialized data, then this code will 
- * read those uninitialized bytes, causing a UMR error to be reported by 
- * some tools.  
- *
- * These UMRs are NOT a problem, NOT errors, and do NOT need to be "fixed".
- * 
- * All the words read and written contain at least one byte that is 
- * part of the input data or output data.  No words are read or written
- * that do not contain data that is part of the buffer.  Therefore, 
- * these UMRs cannot cause page faults or other problems unless the 
- * buffers have been assigned to improper addresses that would cause
- * page faults with or without UMRs.  
- */
 static SECStatus 
 rc4_wordconv(RC4Context *cx, unsigned char *output,
              unsigned int *outputLen, unsigned int maxOutputLen,
              const unsigned char *input, unsigned int inputLen)
 {
-	ptrdiff_t inOffset = (ptrdiff_t)input % WORDSIZE;
-	ptrdiff_t outOffset = (ptrdiff_t)output % WORDSIZE;
-	register WORD streamWord, mask;
-	register WORD *pInWord, *pOutWord;
+	PR_STATIC_ASSERT(sizeof(PRUword) == sizeof(ptrdiff_t));
+	unsigned int inOffset = (PRUword)input % WORDSIZE;
+	unsigned int outOffset = (PRUword)output % WORDSIZE;
+	register WORD streamWord;
+	register const WORD *pInWord;
+	register WORD *pOutWord;
 	register WORD inWord, nextInWord;
 	PRUint8 t;
 	register Stype tmpSi, tmpSj;
@@ -390,11 +374,13 @@ rc4_wordconv(RC4Context *cx, unsigned char *output,
 	register PRUint8 tmpj = cx->j;
 	unsigned int byteCount;
 	unsigned int bufShift, invBufShift;
-	int i;
+	unsigned int i;
+	const unsigned char *finalIn;
+	unsigned char *finalOut;
 
 	PORT_Assert(maxOutputLen >= inputLen);
 	if (maxOutputLen < inputLen) {
-		PORT_SetError(SEC_ERROR_INVALID_ARGS);
+		PORT_SetError(SEC_ERROR_OUTPUT_LEN);
 		return SECFailure;
 	}
 	if (inputLen < 2*WORDSIZE) {
@@ -402,7 +388,8 @@ rc4_wordconv(RC4Context *cx, unsigned char *output,
 		return rc4_no_opt(cx, output, outputLen, maxOutputLen, input, inputLen);
 	}
 	*outputLen = inputLen;
-	pInWord = (WORD *)(input - inOffset);
+	pInWord = (const WORD *)(input - inOffset);
+	pOutWord = (WORD *)(output - outOffset);
 	if (inOffset < outOffset) {
 		bufShift = 8*(outOffset - inOffset);
 		invBufShift = 8*WORDSIZE - bufShift;
@@ -419,52 +406,42 @@ rc4_wordconv(RC4Context *cx, unsigned char *output,
 	/* least one partial word of input should ALWAYS be loaded.      */
 	/*****************************************************************/
 	if (outOffset) {
-		/* Generate input and stream words aligned relative to the
-		 * partial output buffer.
-		 */
 		byteCount = WORDSIZE - outOffset; 
-		pOutWord = (WORD *)(output - outOffset);
-		mask = streamWord = 0;
-#ifdef IS_LITTLE_ENDIAN
-		for (i = WORDSIZE - byteCount; i < WORDSIZE; i++) {
-#else
-		for (i = byteCount - 1; i >= 0; --i) {
-#endif
+		for (i = 0; i < byteCount; i++) {
 			ARCFOUR_NEXT_BYTE();
-			streamWord |= (WORD)(cx->S[t]) << 8*i;
-			mask |= MASK1BYTE << 8*i;
-		} /* } */
-		inWord = *pInWord++; /* UMR? see comments above. */
+			output[i] = cx->S[t] ^ input[i];
+		}
+		/* Consumed byteCount bytes of input */
+		inputLen -= byteCount;
+		pInWord++;
+
+		/* move to next word of output */
+		pOutWord++;
+
 		/* If buffers are relatively misaligned, shift the bytes in inWord
 		 * to be aligned to the output buffer.
 		 */
-		nextInWord = 0;
 		if (inOffset < outOffset) {
-			/* Have more bytes than needed, shift remainder into nextInWord */
-			nextInWord = inWord LSH 8*(inOffset + byteCount);
-			inWord = inWord RSH bufShift;
-		} else if (inOffset > outOffset) {
-			/* Didn't get enough bytes from current input word, load another
-			 * word and then shift remainder into nextInWord.
+			/* The first input word (which may be partial) has more bytes
+			 * than needed.  Copy the remainder to inWord.
 			 */
-			nextInWord = *pInWord++;
-			inWord = (inWord LSH invBufShift) | 
-			         (nextInWord RSH bufShift);
-			nextInWord = nextInWord LSH invBufShift;
+			unsigned int shift = LEFTMOST_BYTE_SHIFT;
+			inWord = 0;
+			for (i = 0; i < outOffset - inOffset; i++) {
+				inWord |= (WORD)input[byteCount + i] << shift;
+				shift = NEXT_BYTE_SHIFT(shift);
+			}
+		} else if (inOffset > outOffset) {
+			/* Consumed some bytes in the second input word.  Copy the
+			 * remainder to inWord.
+			 */
+			inWord = *pInWord++;
+			inWord = inWord LSH invBufShift;
+		} else {
+			inWord = 0;
 		}
-		/* Store output of first partial word */
-		*pOutWord = (*pOutWord & ~mask) | ((inWord ^ streamWord) & mask);
-		/* UMR?  See comments above. */
-
-		/* Consumed byteCount bytes of input */
-		inputLen -= byteCount;
-		/* move to next word of output */
-		pOutWord++;
-		/* inWord has been consumed, but there may be bytes in nextInWord */
-		inWord = nextInWord;
 	} else {
 		/* output is word-aligned */
-		pOutWord = (WORD *)output;
 		if (inOffset) {
 			/* Input is not word-aligned.  The first word load of input 
 			 * will not produce a full word of input bytes, so one word
@@ -474,8 +451,13 @@ rc4_wordconv(RC4Context *cx, unsigned char *output,
 			 * loop must execute at least once because the input must
 			 * be at least two words.
 			 */
-			inWord = *pInWord++; /* UMR? see comments above. */
-			inWord = inWord LSH invBufShift;
+			unsigned int shift = LEFTMOST_BYTE_SHIFT;
+			inWord = 0;
+			for (i = 0; i < WORDSIZE - inOffset; i++) {
+				inWord |= (WORD)input[i] << shift;
+				shift = NEXT_BYTE_SHIFT(shift);
+			}
+			pInWord++;
 		} else {
 			/* Input is word-aligned.  The first word load of input 
 			 * will produce a full word of input bytes, so nothing
@@ -510,12 +492,7 @@ rc4_wordconv(RC4Context *cx, unsigned char *output,
 			cx->j = tmpj;
 			return SECSuccess;
 		}
-		/* If the amount of remaining input is greater than the amount
-		 * bytes pulled from the current input word, need to do another
-		 * word load.  What's left in inWord will be consumed in step 3.
-		 */
-		if (inputLen > WORDSIZE - inOffset)
-			inWord |= *pInWord RSH bufShift; /* UMR?  See above. */
+		finalIn = (const unsigned char *)pInWord - WORDSIZE + inOffset;
 	} else {
 		for (; inputLen >= WORDSIZE; inputLen -= WORDSIZE) {
 			inWord = *pInWord++;
@@ -527,31 +504,18 @@ rc4_wordconv(RC4Context *cx, unsigned char *output,
 			cx->i = tmpi;
 			cx->j = tmpj;
 			return SECSuccess;
-		} else {
-			/* A partial input word remains at the tail.  Load it. 
-			 * The relevant bytes will be consumed in step 3.
-			 */
-			inWord = *pInWord; /* UMR?  See comments above */
 		}
+		finalIn = (const unsigned char *)pInWord;
 	}
 	/*****************************************************************/
 	/* Step 3:                                                       */
-	/* A partial word of input remains, and it is already loaded     */
-	/* into nextInWord.  Shift appropriately and consume the bytes   */
-	/* used in the partial word.                                     */
+	/* Do the remaining partial word of input one byte at a time.    */
 	/*****************************************************************/
-	mask = streamWord = 0;
-#ifdef IS_LITTLE_ENDIAN
-	for (i = 0; i < inputLen; ++i) {
-#else
-	for (i = WORDSIZE - 1; i >= WORDSIZE - inputLen; --i) {
-#endif
+	finalOut = (unsigned char *)pOutWord;
+	for (i = 0; i < inputLen; i++) {
 		ARCFOUR_NEXT_BYTE();
-		streamWord |= (WORD)(cx->S[t]) << 8*i;
-		mask |= MASK1BYTE << 8*i;
-	} /* } */
-	/* UMR?  See comments above. */
-	*pOutWord = (*pOutWord & ~mask) | ((inWord ^ streamWord) & mask);
+		finalOut[i] = cx->S[t] ^ finalIn[i];
+	}
 	cx->i = tmpi;
 	cx->j = tmpj;
 	return SECSuccess;
@@ -566,7 +530,7 @@ RC4_Encrypt(RC4Context *cx, unsigned char *output,
 {
 	PORT_Assert(maxOutputLen >= inputLen);
 	if (maxOutputLen < inputLen) {
-		PORT_SetError(SEC_ERROR_INVALID_ARGS);
+		PORT_SetError(SEC_ERROR_OUTPUT_LEN);
 		return SECFailure;
 	}
 #if defined(NSS_BEVAND_ARCFOUR)
@@ -588,7 +552,7 @@ SECStatus RC4_Decrypt(RC4Context *cx, unsigned char *output,
 {
 	PORT_Assert(maxOutputLen >= inputLen);
 	if (maxOutputLen < inputLen) {
-		PORT_SetError(SEC_ERROR_INVALID_ARGS);
+		PORT_SetError(SEC_ERROR_OUTPUT_LEN);
 		return SECFailure;
 	}
 	/* decrypt and encrypt are same operation. */

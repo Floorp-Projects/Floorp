@@ -66,7 +66,7 @@ public:
   // ThrowJSException() must call MightThrowJSException() even if no exception
   // is being thrown.  Code that would call ReportJSException as needed must
   // first call WouldReportJSException even if this ErrorResult has not failed.
-  void ThrowJSException(JSContext* cx, JS::Value exn);
+  void ThrowJSException(JSContext* cx, JS::Handle<JS::Value> exn);
   void ReportJSException(JSContext* cx);
   bool IsJSException() const { return ErrorCode() == NS_ERROR_DOM_JS_EXCEPTION; }
   void MOZ_ALWAYS_INLINE MightThrowJSException()

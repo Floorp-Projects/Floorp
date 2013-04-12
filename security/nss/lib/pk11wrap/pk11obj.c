@@ -685,6 +685,8 @@ PK11_Verify(SECKEYPublicKey *key, const SECItem *sig, const SECItem *hash,
 	    if (key->u.dsa.params.prime.data[0] == 0) {
 		length --;
 	    }
+	    /* convert keysize to bits for slot lookup */
+	    length *= 8;
 	}
 	slot = PK11_GetBestSlotWithAttributes(mech.mechanism,
 						CKF_VERIFY,length,wincx);
@@ -815,6 +817,93 @@ PK11_SignWithSymKey(PK11SymKey *symKey, CK_MECHANISM_TYPE mechanism,
     if (haslock) PK11_ExitSlotMonitor(slot);
     pk11_CloseSession(slot,session,owner);
     sig->len = len;
+    if (crv != CKR_OK) {
+	PORT_SetError( PK11_MapError(crv) );
+	return SECFailure;
+    }
+    return SECSuccess;
+}
+
+SECStatus
+PK11_Decrypt(PK11SymKey *symKey,
+             CK_MECHANISM_TYPE mechanism, SECItem *param,
+             unsigned char *out, unsigned int *outLen,
+             unsigned int maxLen,
+             const unsigned char *enc, unsigned encLen)
+{
+    PK11SlotInfo *slot = symKey->slot;
+    CK_MECHANISM mech = {0, NULL, 0 };
+    CK_ULONG len = maxLen;
+    PRBool owner = PR_TRUE;
+    CK_SESSION_HANDLE session;
+    PRBool haslock = PR_FALSE;
+    CK_RV crv;
+
+    mech.mechanism = mechanism;
+    if (param) {
+	mech.pParameter = param->data;
+	mech.ulParameterLen = param->len;
+    }
+
+    session = pk11_GetNewSession(slot, &owner);
+    haslock = (!owner || !slot->isThreadSafe);
+    if (haslock) PK11_EnterSlotMonitor(slot);
+    crv = PK11_GETTAB(slot)->C_DecryptInit(session, &mech, symKey->objectID);
+    if (crv != CKR_OK) {
+	if (haslock) PK11_ExitSlotMonitor(slot);
+	pk11_CloseSession(slot, session, owner);
+	PORT_SetError( PK11_MapError(crv) );
+	return SECFailure;
+    }
+
+    crv = PK11_GETTAB(slot)->C_Decrypt(session, (unsigned char *)enc, encLen,
+                                       out, &len);
+    if (haslock) PK11_ExitSlotMonitor(slot);
+    pk11_CloseSession(slot, session, owner);
+    *outLen = len;
+    if (crv != CKR_OK) {
+	PORT_SetError( PK11_MapError(crv) );
+	return SECFailure;
+    }
+    return SECSuccess;
+}
+
+SECStatus
+PK11_Encrypt(PK11SymKey *symKey,
+             CK_MECHANISM_TYPE mechanism, SECItem *param,
+             unsigned char *out, unsigned int *outLen,
+             unsigned int maxLen,
+             const unsigned char *data, unsigned int dataLen)
+{
+    PK11SlotInfo *slot = symKey->slot;
+    CK_MECHANISM mech = {0, NULL, 0 };
+    CK_ULONG len = maxLen;
+    PRBool owner = PR_TRUE;
+    CK_SESSION_HANDLE session;
+    PRBool haslock = PR_FALSE;
+    CK_RV crv;
+
+    mech.mechanism = mechanism;
+    if (param) {
+	mech.pParameter = param->data;
+	mech.ulParameterLen = param->len;
+    }
+
+    session = pk11_GetNewSession(slot, &owner);
+    haslock = (!owner || !slot->isThreadSafe);
+    if (haslock) PK11_EnterSlotMonitor(slot);
+    crv = PK11_GETTAB(slot)->C_EncryptInit(session, &mech, symKey->objectID);
+    if (crv != CKR_OK) {
+	if (haslock) PK11_ExitSlotMonitor(slot);
+	pk11_CloseSession(slot,session,owner);
+	PORT_SetError( PK11_MapError(crv) );
+	return SECFailure;
+    }
+    crv = PK11_GETTAB(slot)->C_Encrypt(session, (unsigned char *)data,
+                                       dataLen, out, &len);
+    if (haslock) PK11_ExitSlotMonitor(slot);
+    pk11_CloseSession(slot,session,owner);
+    *outLen = len;
     if (crv != CKR_OK) {
 	PORT_SetError( PK11_MapError(crv) );
 	return SECFailure;

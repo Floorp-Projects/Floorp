@@ -5,7 +5,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.14 2012/12/12 19:25:36 wtc%google.com Exp $
+ * $Id$
  */
 #include "lowkeyti.h"
 #include "pcert.h"

@@ -11,7 +11,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # 
-# $Id: timetest,v 1.10 2012/04/25 14:49:50 gerv%gerv.net Exp $
+# $Id$
 #
 
 # Avoid using built-in shell echoes

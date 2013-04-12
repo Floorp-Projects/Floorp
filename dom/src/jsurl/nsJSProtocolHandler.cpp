@@ -294,7 +294,7 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
         JSObject *sandboxObj;
         rv = sandbox->GetJSObject(&sandboxObj);
         NS_ENSURE_SUCCESS(rv, rv);
-        sandboxObj = js::UnwrapObject(sandboxObj);
+        sandboxObj = js::UncheckedUnwrap(sandboxObj);
         JSAutoCompartment ac(cx, sandboxObj);
 
         // Push our JSContext on the context stack so the JS_ValueToString call (and

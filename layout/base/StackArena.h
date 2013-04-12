@@ -63,7 +63,7 @@ private:
  *
  * The allocations cannot be for more than 4044 bytes.
  */
-class NS_STACK_CLASS AutoStackArena {
+class MOZ_STACK_CLASS AutoStackArena {
 public:
   AutoStackArena() : mOwnsStackArena(false) {
     if (!gStackArena) {

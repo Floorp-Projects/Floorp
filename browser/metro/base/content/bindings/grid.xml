@@ -322,15 +322,15 @@
       <field name="_itemHeightRenderThreshold">10</field>
 
       <method name="arrangeItems">
-        <parameter name="aNumRows"/>
-        <parameter name="aNumColumns"/>
         <body>
           <![CDATA[
-            if (this.itemCount <= 0)
+            if (this.itemCount <= 0) {
               return;
+            }
             let item = this.getItemAtIndex(0);
-            if (item == null)
+            if (item == null) {
               return;
+            }
             let gridItemRect = item.getBoundingClientRect();
 
             // cap the number of times we reschedule calling arrangeItems
@@ -373,24 +373,25 @@
               container = this.parentNode.getBoundingClientRect();
 
             // If we don't have valid dimensions we can't arrange yet
-            if (!container.height || !gridItemRect.height)
+            if (!container.height || !gridItemRect.height) {
               return;
+            }
 
             // We favor overflowing horizontally, not vertically
             let maxRowCount = Math.floor(container.height / gridItemRect.height) - 1;
 
-            if (aNumRows) {
-              this._rowCount = aNumRows;
-            } else {
+            this._rowCount = this.getAttribute("rows");
+            this._columnCount = this.getAttribute("columns");
+
+            if (!this._rowCount) {
               this._rowCount = Math.min(this.itemCount, maxRowCount);
             }
-            if (aNumColumns) {
-              this._columnCount = aNumColumns;
-            } else {
+            if (!this._columnCount){
               this._columnCount = Math.ceil(this.itemCount / this._rowCount);
             }
 
             this._grid.style.width = (this._columnCount * gridItemRect.width) + "px";
+
           ]]>
         </body>
       </method>

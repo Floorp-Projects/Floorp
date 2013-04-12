@@ -553,7 +553,9 @@ abstract public class BrowserApp extends GeckoApp
                         } else {
                             // Immediately show the toolbar when disabling the dynamic
                             // toolbar.
-                            mAboutHomeContent.setPadding(0, 0, 0, 0);
+                            if (mAboutHomeContent != null) {
+                                mAboutHomeContent.setPadding(0, 0, 0, 0);
+                            }
                             mBrowserToolbar.cancelVisibilityAnimation();
                             mBrowserToolbar.getLayout().scrollTo(0, 0);
                         }

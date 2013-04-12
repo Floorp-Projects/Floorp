@@ -1,0 +1,37 @@
+#!/bin/sh
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+mkdir tmp
+cd tmp
+dd if=/dev/urandom bs=512 count=1 of=noise
+echo "" > pwfile
+
+certutil -d . -N -f pwfile
+
+certutil -S -z noise -g 1024 -d . -n ca -s "CN=NSS Test CA,O=BOGUS NSS,L=Mountain View,ST=California,C=US" -t C,C,C -x -m 1 -w -1 -v 600 -1 -2 -5 <<CERTSCRIPT
+5
+6
+9
+n
+y
+
+n
+5
+6
+7
+9
+n
+CERTSCRIPT
+
+certutil -S -z noise -g 1024 -d . -n u50 -s "CN=TestUser50,E=TestUser50@bogus.com,O=BOGUS NSS,L=Mountain View,ST=California,C=US" -t ,, -c ca -m 50 -v 598
+
+certutil -S -z noise -g 1024 -d . -n u51 -s "CN=TestUser51,E=TestUser51@bogus.com,O=BOGUS NSS,L=Mountain View,ST=California,C=US" -t ,, -c ca -m 51 -v 598
+
+certutil -d . -L -n ca -r > TestCA.ca.cert
+certutil -d . -L -n u50 -r > TestUser50.cert
+certutil -d . -L -n u51 -r > TestUser51.cert
+
+echo "Created multiple files in subdirectory tmp: TestCA.ca.cert TestUser50.cert TestUser51.cert"

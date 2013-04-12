@@ -4,7 +4,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: blapi.h,v 1.51 2013/02/14 21:20:46 wtc%google.com Exp $ */
+/* $Id$ */
 
 #ifndef _BLAPI_H_
 #define _BLAPI_H_

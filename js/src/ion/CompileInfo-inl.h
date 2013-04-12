@@ -14,12 +14,6 @@
 using namespace js;
 using namespace ion;
 
-const char *
-CompileInfo::filename() const
-{
-    return script_->filename();
-}
-
 JSAtom *
 CompileInfo::getAtom(jsbytecode *pc) const
 {

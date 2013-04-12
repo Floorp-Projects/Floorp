@@ -5,7 +5,7 @@
 
 PKIX_DEPTH = .
 PLAT_DEPTH = $(PKIX_DEPTH)/..
-CORE_DEPTH = $(PKIX_DEPTH)/../../..
+CORE_DEPTH = $(PKIX_DEPTH)/../..
 
 DIRS =  testutil  pkix_pl  pkix  sample_apps  perf  pkixutil \
 	$(NULL)

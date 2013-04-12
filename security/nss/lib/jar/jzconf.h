@@ -3,7 +3,7 @@
  * For conditions of distribution and use, see copyright notice in zlib.h 
  */
 /* This file was modified since it was taken from the zlib distribution */
-/* $Id: jzconf.h,v 1.2 2009/04/28 04:25:03 nelson%bolyard.com Exp $ */
+/* $Id$ */
 
 #ifndef _ZCONF_H
 #define _ZCONF_H

@@ -212,6 +212,6 @@ bits    multiply    square  ad  percent time/mult   time/square
  # License, v. 2.0. If a copy of the MPL was not distributed with this
  # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-$Id: timing.txt,v 1.3 2012/04/25 14:49:52 gerv%gerv.net Exp $
+$Id$
 
 

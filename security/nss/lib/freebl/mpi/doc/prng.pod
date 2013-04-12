@@ -37,5 +37,5 @@ values.
  Copyright (C) 1998 Michael J. Fromberger, All Rights Reserved
  Thayer School of Engineering, Dartmouth College, Hanover, NH  USA
 
- $Date: 2000/07/14 00:44:36 $
+ $Date$
 

@@ -168,6 +168,7 @@ CERT_DecodeCertPackage(char *certbuf,
      * reference in the code below:
      * 0x30 0x84 l1 l2 l3 l4  +
      *                       tag 9 o1 o2 o3 o4 o5 o6 o7 o8 o9
+     * where 9 is the longest length of the expected oids we are testing.
      *   6 + 11 = 17. 17 bytes is clearly too small to code any kind of
      *  certificate (a 128 bit ECC certificate contains at least an 8 byte
      * key and a 16 byte signature, plus coding overhead). Typically a cert
@@ -258,9 +259,11 @@ CERT_DecodeCertPackage(char *certbuf,
 	    
 	    switch ( oiddata->offset ) {
 	      case SEC_OID_PKCS7_SIGNED_DATA:
+		/* oid: 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x02 */
 		return(SEC_ReadPKCS7Certs(&certitem, f, arg));
 		break;
 	      case SEC_OID_NS_TYPE_CERT_SEQUENCE:
+		/* oid: 0x60, 0x86, 0x48, 0x01, 0x86, 0xf8, 0x42, 0x02, 0x05 */
 		return(SEC_ReadCertSequence(&certitem, f, arg));
 		break;
 	      default:
