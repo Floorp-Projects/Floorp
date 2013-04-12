@@ -186,6 +186,8 @@ IonBuilder::getPolyCallTargets(types::StackTypeSet *calleeTypes,
             targets.clear();
             return true;
         }
+        if (obj->toFunction()->isInterpreted() && !obj->toFunction()->getOrCreateScript(cx))
+            return false;
         if (!targets.append(obj))
             return false;
     }
@@ -323,9 +325,11 @@ IonBuilder::analyzeNewLoopTypes(MBasicBlock *entry, jsbytecode *start, jsbytecod
             uint32_t slot = (*last == JSOP_GETLOCAL)
                             ? info().localSlot(GET_SLOTNO(last))
                             : info().argSlot(GET_SLOTNO(last));
-            MPhi *otherPhi = entry->getSlot(slot)->toPhi();
-            if (otherPhi->hasBackedgeType())
-                phi->addBackedgeType(otherPhi->type(), otherPhi->resultTypeSet());
+            if (slot < info().firstStackSlot()) {
+                MPhi *otherPhi = entry->getSlot(slot)->toPhi();
+                if (otherPhi->hasBackedgeType())
+                    phi->addBackedgeType(otherPhi->type(), otherPhi->resultTypeSet());
+            }
         } else {
             MIRType type = MIRType_None;
             switch (*last) {
@@ -5184,7 +5188,7 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopEntry)
             MergeTypes(&existingType, &existingTypeSet, type, typeSet);
         }
 
-        if (existingTypeSet) {
+        if (existingTypeSet && !existingTypeSet->unknown()) {
             MInstruction *barrier = MTypeBarrier::New(def, existingTypeSet);
             osrBlock->add(barrier);
             osrBlock->rewriteSlot(i, barrier);
@@ -5353,6 +5357,9 @@ TestSingletonProperty(JSContext *cx, HandleObject obj, JSObject *singleton,
     // Deletion causes type properties to be explicitly marked with undefined.
 
     *isKnownConstant = false;
+
+    if (id != types::IdToTypeId(id))
+        return true;
 
     if (!CanEffectlesslyCallLookupGenericOnObject(obj))
         return true;
