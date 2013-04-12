@@ -26,6 +26,9 @@ addLoadEvent(function() {
 
   var delay = context.createDelay();
 
+  var delay2 = context.createDelayNode();
+  isnot(delay, delay2, "createDelayNode should create a different delay node");
+
   source.buffer = buffer;
 
   source.connect(delay);
