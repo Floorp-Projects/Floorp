@@ -3813,7 +3813,7 @@ public:
      * @param errorReporter the error reporter callback function to set
      */
 
-    bool StartEvaluating(JSObject *scope, JSErrorReporter errorReporter = nullptr);
+    bool StartEvaluating(JS::HandleObject scope, JSErrorReporter errorReporter = nullptr);
 
     /**
      * Does the post script evaluation and resets the error reporter
