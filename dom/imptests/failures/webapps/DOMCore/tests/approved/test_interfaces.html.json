@@ -47,7 +47,6 @@
   "CustomEvent interface: calling initCustomEvent(DOMString,boolean,boolean,any) on new CustomEvent(\"foo\") with too few arguments must throw TypeError": true,
   "Event interface: new CustomEvent(\"foo\") must have own property \"isTrusted\"": true,
   "Event interface: new CustomEvent(\"foo\") must inherit property \"timeStamp\" with the proper type (15)": true,
-  "Event interface: calling initEvent(DOMString,boolean,boolean) on new CustomEvent(\"foo\") with too few arguments must throw TypeError": true,
   "MutationObserver interface: operation observe(Node,MutationObserverInit)": true,
   "Document interface: attribute children": true,
   "Document interface: attribute firstElementChild": true,
