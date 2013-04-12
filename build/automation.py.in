@@ -1162,8 +1162,8 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
         self.killAndGetStack(processPID, utilityPath, debuggerInfo)
     return foundZombie
 
-  def checkForCrashes(self, profileDir, symbolsPath):
-    return mozcrash.check_for_crashes(os.path.join(profileDir, "minidumps"), symbolsPath, test_name=self.lastTestSeen)
+  def checkForCrashes(self, minidumpDir, symbolsPath):
+    return mozcrash.check_for_crashes(minidumpDir, symbolsPath, test_name=self.lastTestSeen)
 
   def runApp(self, testURL, env, app, profileDir, extraArgs,
              runSSLTunnel = False, utilityPath = None,
@@ -1237,7 +1237,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
     # Do a final check for zombie child processes.
     zombieProcesses = self.checkForZombies(processLog, utilityPath, debuggerInfo)
 
-    crashed = self.checkForCrashes(profileDir, symbolsPath)
+    crashed = self.checkForCrashes(os.path.join(profileDir, "minidumps"), symbolsPath)
 
     if crashed or zombieProcesses:
       status = 1
