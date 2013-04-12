@@ -14,7 +14,9 @@
 #include "Mappable.h"
 #include "Logging.h"
 
-#if defined(ANDROID) && ANDROID_VERSION < 8
+#if defined(ANDROID)
+#include <android/api-level.h>
+#if __ANDROID_API__ < 8
 /* Android API < 8 doesn't provide sigaltstack */
 #include <sys/syscall.h>
 
@@ -25,7 +27,8 @@ inline int sigaltstack(const stack_t *ss, stack_t *oss) {
 }
 
 } /* extern "C" */
-#endif
+#endif /* __ANDROID_API__ */
+#endif /* ANDROID */
 
 using namespace mozilla;
 
