@@ -10,7 +10,7 @@ relativesrcdir := @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES := \
-  test_document.getElementsByName-newelements.html.json \
+  test_doc.gEBN-newelements.html.json \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
