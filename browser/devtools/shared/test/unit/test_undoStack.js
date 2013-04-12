@@ -13,7 +13,7 @@ let loader = new Loader.Loader({
   },
   globals: {},
 });
-let require = loader.Require(loader, { id: "undo-test" })
+let require = Loader.Require(loader, { id: "undo-test" })
 
 let {UndoStack} = require("devtools/shared/undo");
 
