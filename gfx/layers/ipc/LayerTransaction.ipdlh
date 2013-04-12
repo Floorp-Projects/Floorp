@@ -241,15 +241,10 @@ struct OpPaintTiledLayerBuffer {
   uintptr_t tiledLayerBuffer;
 };
 
-struct OpCreatedSingleBuffer {
+struct OpCreatedTexture {
   PCompositable compositable;
+  uint32_t textureId;
   SurfaceDescriptor descriptor;
-  TextureInfo textureInfo;
-};
-struct OpCreatedDoubleBuffer {
-  PCompositable compositable;
-  SurfaceDescriptor frontDescriptor;
-  SurfaceDescriptor backDescriptor;
   TextureInfo textureInfo;
 };
 
@@ -277,8 +272,7 @@ struct OpUpdatePictureRect {
 union CompositableOperation {
   OpUpdatePictureRect;
 
-  OpCreatedSingleBuffer;
-  OpCreatedDoubleBuffer;
+  OpCreatedTexture;
   OpDestroyThebesBuffer;
 
   OpPaintTexture;
