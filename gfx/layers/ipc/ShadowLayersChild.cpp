@@ -75,5 +75,13 @@ ShadowLayersChild::DeallocPCompositable(PCompositableChild* actor)
   return true;
 }
 
+void
+ShadowLayersChild::ActorDestroy(ActorDestroyReason why)
+{
+  if (why == AbnormalShutdown) {
+    NS_RUNTIMEABORT("ActorDestroy by IPC channel failure at ShadowLayersChild");
+  }
+}
+
 }  // namespace layers
 }  // namespace mozilla
