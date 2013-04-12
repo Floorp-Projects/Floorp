@@ -3672,7 +3672,8 @@ Version 1.5.6 [November 3, 2011]
   No changes.
 
 Version 1.5.7beta01 [November 4, 2011]
-  Added support for ARM processor (Mans Rullgard)
+  Added support for ARM processor, when decoding all PNG up-filtered rows
+    and any other-filtered rows with 3 or 4 bytes per pixel (Mans Rullgard).
   Fixed bug in pngvalid on early allocation failure; fixed type cast in
     pngmem.c; pngvalid would attempt to call png_error() if the allocation
     of a png_struct or png_info failed. This would probably have led to a
@@ -3983,11 +3984,90 @@ Version 1.5.14rc03 [January 18, 2013]
 Version 1.5.14 [January 24, 2013]
   Removed an obsolete line from the manual.
 
-  ===========================================================================
-                       NOTICE November 17, 2012:
-     The location of the git repository at SourceForge has changed.
-               Visit http://libpng.sf.net/ for details.
-  ===========================================================================
+Version 1.5.15beta01 [February 4, 2013]
+  Enabled renaming of the extern (but not DLL exported) ARM filter functions.
+    Also enabled inclusion of pngpriv.h in non-C files by preventing C/C++
+    specific definitions if PNG_VERSION_INFO_ONLY is defined.
+  Added png_get_palette_max() function.
+
+Version 1.5.15beta02 [February 5, 2013]
+  Made a probably general fix for the preprocessing used to generate source
+    files. This change might make the check for a special C preprocessor
+    unnecessary, and it also eliminates the requirement for sed in the
+    configure build process.
+  Fix typo in Makefile.am, fix scripts/pnglibconf.mak and makefile.std
+  Rebuilt Makefile.in, configure, etc., with autoconf-2.69 and automake-1.13
+  Fix 'setting' handling in options.awk and fixed palette_max API
+
+Version 1.5.15beta03 [February 7, 2013]
+  Remove SUN OS cc -E workround - no longer required
+  Turn serial tests back on (recently turned off by autotools upgrade).
+
+Version 1.5.15beta04 [February 15, 2013]
+  Enclosed the new png_get_palette_max in #ifdef PNG_GET_PALETTE_MAX_SUPPORTED
+    block, and revised pnglibconf.h and pnglibconf.h.prebuilt accordingly.
+
+Version 1.5.15beta05 [February 17, 2013]
+  Use approved/supported Android method to check for NEON, use Linux/POSIX
+    1003.1 API to check /proc/self/auxv avoiding buffer allocation and other
+    library calls.
+  Fixed a race condition in the creation of the build 'scripts' directory
+    while building with a parallel make.
+  Use parentheses more consistently in "#if defined(MACRO)" tests.
+
+Version 1.5.15beta06 [February 22, 2013]
+  Fixed PNG_ALIGN(ED)_MEMORY and add ability to turn off ARM_NEON
+    runtime checks
+  Updated the INSTALL document.
+
+Version 1.5.15beta07 [February 27, 2013]
+  Revised INSTALL to recommend using CPPFLAGS instead of INCLUDES.
+  Revised scripts/makefile.freebsd to respect ZLIBLIB and ZLIBINC.
+  Revised scripts/dfn.awk to work with the buggy MSYS awk that has trouble
+    with CRLF line endings.
+
+Version 1.5.15beta08 [March 5, 2013]
+  Avoid a possible memory leak in contrib/gregbook/readpng.c
+  Made the _SUPPORTED macro definitions consistent. The change made in
+    libpng15 to #define *_SUPPORTED 1, to match the use of -D*_SUPPORTED
+    (which means -D*_SUPPORTED=1) and avoid compiler warnings from GCC was made
+    inconsistently and causes problems as a result, also some additions in
+    pnglibconf.h.prebuilt were inconsistent (omitting the 1). This changes 1.5
+    back to the scheme used both before (1.4) and after (1.6). This might cause
+    some build scripts to issue warnings, and might, in the extreme, cause some
+    applications to fail (but they would fail anyway against 1.6).  It seems
+    safer to go for consistency, given the change in 1.6, not correctness here,
+    particularly as 'make check' currently warns anyway on the symbols.dfn check
+    because of the inconsistencies.
+  Corrected Android builds and corrected libpng.vers with symbol
+    prefixing This adds an API to set optimization options externally,
+    providing an alternative and general solution for the non-portable
+    run-time tests used by the ARM Neon code.  It also makes those tests
+    compile and link on Android.
+  The order of settings vs options in pnglibconf.h is reversed to allow
+    settings to depend on options and options can now set (or override) the
+    defaults for settings.
+
+Version 1.5.15beta09 [March 13, 2013]
+  Fixed CMakelists.txt to allow building a single variant of the library
+    (Claudio Bley):
+  Introduced a PNG_LIB_TARGETS variable that lists all activated library
+    targets.  It is an error if this variable ends up empty, ie. you have
+    to build at least one library variant.
+  Made the *_COPY targets only depend on library targets actually being build.
+  Use PNG_LIB_TARGETS to unify a code path.
+  Changed the CREATE_SYMLINK macro to expect the full path to a file as the
+    first argument. When symlinking the filename component of that path is
+    determined and used as the link target.
+  Use copy_if_different in the CREATE_SYMLINK macro.
+  Eliminated two warnings from the Intel C compiler. The warnings are
+    technically valid, although a reasonable treatment of division would
+    show it to be incorrect.
+
+Version 1.5.15rc01 [March 21, 2013]
+  No changes.
+
+Version 1.5.15 [March 28, 2013]
 
 Send comments/corrections/commendations to png-mng-implement at lists.sf.net
 (subscription required; visit
