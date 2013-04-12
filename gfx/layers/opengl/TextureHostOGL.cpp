@@ -440,19 +440,22 @@ YCbCrTextureHostOGL::UpdateImpl(const SurfaceDescriptor& aImage,
   gfxIntSize gfxCbCrSize = shmemImage.GetCbCrSize();
 
   if (!mYTexture->mTexImage || mYTexture->mTexImage->GetSize() != gfxSize) {
-    mYTexture->mTexImage = mGL->CreateTextureImage(gfxSize,
+    mYTexture->mTexImage = CreateBasicTextureImage(mGL,
+                                                   gfxSize,
                                                    gfxASurface::CONTENT_ALPHA,
                                                    WrapMode(mGL, mFlags & AllowRepeat),
                                                    FlagsToGLFlags(mFlags));
   }
   if (!mCbTexture->mTexImage || mCbTexture->mTexImage->GetSize() != gfxCbCrSize) {
-    mCbTexture->mTexImage = mGL->CreateTextureImage(gfxCbCrSize,
+    mCbTexture->mTexImage = CreateBasicTextureImage(mGL,
+                                                    gfxCbCrSize,
                                                     gfxASurface::CONTENT_ALPHA,
                                                     WrapMode(mGL, mFlags & AllowRepeat),
                                                     FlagsToGLFlags(mFlags));
   }
-  if (!mCrTexture->mTexImage || mCrTexture->mTexImage->GetSize() != gfxSize) {
-    mCrTexture->mTexImage = mGL->CreateTextureImage(gfxCbCrSize,
+  if (!mCrTexture->mTexImage || mCrTexture->mTexImage->GetSize() != gfxCbCrSize) {
+    mCrTexture->mTexImage = CreateBasicTextureImage(mGL,
+                                                    gfxCbCrSize,
                                                     gfxASurface::CONTENT_ALPHA,
                                                     WrapMode(mGL, mFlags & AllowRepeat),
                                                     FlagsToGLFlags(mFlags));
