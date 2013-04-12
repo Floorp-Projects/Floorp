@@ -329,6 +329,12 @@ webidl_files += \
   $(NULL)
 endif
 
+ifdef MOZ_GAMEPAD
+webidl_files += \
+  Gamepad.webidl \
+  $(NULL)
+endif
+
 ifdef ENABLE_TESTS
 test_webidl_files := \
   TestCodeGen.webidl \

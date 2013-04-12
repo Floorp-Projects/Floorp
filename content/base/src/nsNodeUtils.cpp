@@ -258,7 +258,7 @@ nsNodeUtils::LastRelease(nsINode* aNode)
   delete aNode;
 }
 
-struct NS_STACK_CLASS nsHandlerData
+struct MOZ_STACK_CLASS nsHandlerData
 {
   uint16_t mOperation;
   nsCOMPtr<nsIDOMNode> mSource;

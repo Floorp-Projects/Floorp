@@ -3087,7 +3087,7 @@ nsObjectLoadingContent::TeardownProtoChain()
     }
     // Unwrap while checking the jsclass - if the prototype is a wrapper for
     // an NP object, that counts too.
-    if (JS_GetClass(js::UnwrapObject(proto)) == &sNPObjectJSWrapperClass) {
+    if (JS_GetClass(js::UncheckedUnwrap(proto)) == &sNPObjectJSWrapperClass) {
       // We found an NPObject on the proto chain, get its prototype...
       if (!::JS_GetPrototype(cx, proto, &proto)) {
         return;

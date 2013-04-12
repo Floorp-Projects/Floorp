@@ -418,7 +418,7 @@ TransactionThreadPool::AbortTransactionsForDatabase(IDBDatabase* aDatabase)
   }
 }
 
-struct NS_STACK_CLASS TransactionSearchInfo
+struct MOZ_STACK_CLASS TransactionSearchInfo
 {
   TransactionSearchInfo(nsIOfflineStorage* aDatabase)
     : db(aDatabase), found(false)

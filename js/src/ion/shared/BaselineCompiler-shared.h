@@ -113,6 +113,33 @@ class BaselineCompilerShared
         }
     }
 
+    bool addPCMappingEntry(uint32_t nativeOffset, PCMappingSlotInfo slotInfo, bool addIndexEntry) {
+
+        // Don't add multiple entries for a single pc.
+        size_t nentries = pcMappingEntries_.length();
+        if (nentries > 0 && pcMappingEntries_[nentries - 1].pcOffset == unsigned(pc - script->code))
+            return true;
+
+        PCMappingEntry entry;
+        entry.pcOffset = pc - script->code;
+        entry.nativeOffset = nativeOffset;
+        entry.slotInfo = slotInfo;
+        entry.addIndexEntry = addIndexEntry;
+
+        IonSpew(IonSpew_BaselineOp, "PCMapping (%s:%u): %u => %u (%u:%u:%u)!",
+                        script->filename(), script->lineno,
+                        entry.pcOffset, entry.nativeOffset,
+                        (entry.slotInfo.toByte() & 0x3),
+                        ((entry.slotInfo.toByte() >> 2) & 0x3),
+                        ((entry.slotInfo.toByte() >> 4) & 0x3));
+
+        return pcMappingEntries_.append(entry);
+    }
+
+    bool addPCMappingEntry(bool addIndexEntry) {
+        return addPCMappingEntry(masm.currentOffset(), getStackTopSlotInfo(), addIndexEntry);
+    }
+
     template <typename T>
     void pushArg(const T& t) {
         masm.Push(t);

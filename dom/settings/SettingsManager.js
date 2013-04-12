@@ -379,10 +379,6 @@ SettingsManager.prototype = {
   },
 
   init: function(aWindow) {
-    // Set navigator.mozSettings to null.
-    if (!Services.prefs.getBoolPref("dom.mozSettings.enabled"))
-      return null;
-
     cpmm.addMessageListener("Settings:Change:Return:OK", this);
     this._window = aWindow;
     Services.obs.addObserver(this, "inner-window-destroyed", false);

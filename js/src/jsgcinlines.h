@@ -513,6 +513,35 @@ NewGCThing(JSContext *cx, AllocKind kind, size_t thingSize, InitialHeap heap)
     return t;
 }
 
+/*
+ * Instances of this class set the |JSRuntime::suppressGC| flag for the duration
+ * that they are live. Use of this class is highly discouraged. Please carefully
+ * read the comment in jscntxt.h above |suppressGC| and take all appropriate
+ * precautions before instantiating this class.
+ */
+class AutoSuppressGC
+{
+    int32_t &suppressGC_;
+
+  public:
+    AutoSuppressGC(JSContext *cx)
+      : suppressGC_(cx->runtime->mainThread.suppressGC)
+    {
+        suppressGC_++;
+    }
+
+    AutoSuppressGC(JSCompartment *comp)
+      : suppressGC_(comp->rt->mainThread.suppressGC)
+    {
+        suppressGC_++;
+    }
+
+    ~AutoSuppressGC()
+    {
+        suppressGC_--;
+    }
+};
+
 } /* namespace gc */
 } /* namespace js */
 

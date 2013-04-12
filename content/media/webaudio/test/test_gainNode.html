@@ -25,6 +25,9 @@ addLoadEvent(function() {
 
   var gain = context.createGain();
 
+  var gain2 = context.createGainNode();
+  isnot(gain, gain2, "createGainNode should create a different gain node");
+
   source.buffer = buffer;
 
   source.connect(gain);

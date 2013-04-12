@@ -20,7 +20,7 @@
 
 class nsIURI;
 
-class NS_STACK_CLASS nsJSONWriter
+class MOZ_STACK_CLASS nsJSONWriter
 {
 public:
   nsJSONWriter();

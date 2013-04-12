@@ -1,0 +1,251 @@
+'\" t
+.\"     Title: CMSUTIL
+.\"    Author: [see the "Authors" section]
+.\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
+.\"      Date: 15 February 2013
+.\"    Manual: NSS Security Tools
+.\"    Source: nss-tools
+.\"  Language: English
+.\"
+.TH "CMSUTIL" "1" "15 February 2013" "nss-tools" "NSS Security Tools"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+cmsutil \- Performs basic cryptograpic operations, such as encryption and decryption, on Cryptographic Message Syntax (CMS) messages\&.
+.SH "SYNOPSIS"
+.HP \w'\fBcmsutil\fR\ 'u
+\fBcmsutil\fR [\fIoptions\fR] [[\fIarguments\fR]]
+.SH "STATUS"
+.PP
+This documentation is still work in progress\&. Please contribute to the initial review in
+\m[blue]\fBMozilla NSS bug 836477\fR\m[]\&\s-2\u[1]\d\s+2
+.SH "DESCRIPTION"
+.PP
+The
+\fBcmsutil\fR
+command\-line uses the S/MIME Toolkit to perform basic operations, such as encryption and decryption, on Cryptographic Message Syntax (CMS) messages\&.
+.PP
+To run cmsutil, type the command cmsutil option [arguments] where option and arguments are combinations of the options and arguments listed in the following section\&. Each command takes one option\&. Each option may take zero or more arguments\&. To see a usage string, issue the command without options\&.
+.SH "OPTIONS AND ARGUMENTS"
+.PP
+.PP
+\fBOptions\fR
+.PP
+Options specify an action\&. Option arguments modify an action\&. The options and arguments for the cmsutil command are defined as follows:
+.PP
+\-D
+.RS 4
+Decode a message\&.
+.RE
+.PP
+\-C
+.RS 4
+Encrypt a message\&.
+.RE
+.PP
+\-E
+.RS 4
+Envelope a message\&.
+.RE
+.PP
+\-O
+.RS 4
+Create a certificates\-only message\&.
+.RE
+.PP
+\-S
+.RS 4
+Sign a message\&.
+.RE
+.PP
+\fBArguments\fR
+.PP
+Option arguments modify an action and are lowercase\&.
+.PP
+\-c content
+.RS 4
+Use this detached content (decode only)\&.
+.RE
+.PP
+\-d dbdir
+.RS 4
+Specify the key/certificate database directory (default is "\&.")
+.RE
+.PP
+\-e envfile
+.RS 4
+Specify a file containing an enveloped message for a set of recipients to which you would like to send an encrypted message\&. If this is the first encrypted message for that set of recipients, a new enveloped message will be created that you can then use for future messages (encrypt only)\&.
+.RE
+.PP
+\-G
+.RS 4
+Include a signing time attribute (sign only)\&.
+.RE
+.PP
+\-h num
+.RS 4
+Generate email headers with info about CMS message (decode only)\&.
+.RE
+.PP
+\-i infile
+.RS 4
+Use infile as a source of data (default is stdin)\&.
+.RE
+.PP
+\-N nickname
+.RS 4
+Specify nickname of certificate to sign with (sign only)\&.
+.RE
+.PP
+\-n
+.RS 4
+Suppress output of contents (decode only)\&.
+.RE
+.PP
+\-o outfile
+.RS 4
+Use outfile as a destination of data (default is stdout)\&.
+.RE
+.PP
+\-P
+.RS 4
+Include an S/MIME capabilities attribute\&.
+.RE
+.PP
+\-p password
+.RS 4
+Use password as key database password\&.
+.RE
+.PP
+\-r recipient1,recipient2, \&.\&.\&.
+.RS 4
+Specify list of recipients (email addresses) for an encrypted or enveloped message\&. For certificates\-only message, list of certificates to send\&.
+.RE
+.PP
+\-T
+.RS 4
+Suppress content in CMS message (sign only)\&.
+.RE
+.PP
+\-u certusage
+.RS 4
+Set type of cert usage (default is certUsageEmailSigner)\&.
+.RE
+.PP
+\-Y ekprefnick
+.RS 4
+Specify an encryption key preference by nickname\&.
+.RE
+.SH "USAGE"
+.PP
+Encrypt Example
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+cmsutil \-C [\-i infile] [\-o outfile] [\-d dbdir] [\-p password] \-r "recipient1,recipient2, \&. \&. \&." \-e envfile
+      
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Decode Example
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+cmsutil \-D [\-i infile] [\-o outfile] [\-d dbdir] [\-p password] [\-c content] [\-n] [\-h num]
+      
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Envelope Example
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+cmsutil \-E [\-i infile] [\-o outfile] [\-d dbdir] [\-p password] \-r "recipient1,recipient2, \&.\&.\&."
+      
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Certificate\-only Example
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+cmsutil \-O [\-i infile] [\-o outfile] [\-d dbdir] [\-p password] \-r "cert1,cert2, \&. \&. \&."
+      
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Sign Message Example
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+cmsutil \-S [\-i infile] [\-o outfile] [\-d dbdir] [\-p password] \-N nickname[\-TGP] [\-Y ekprefnick]
+      
+.fi
+.if n \{\
+.RE
+.\}
+.SH "SEE ALSO"
+.PP
+certutil(1)
+.SH "SEE ALSO"
+.PP
+.PP
+.PP
+.PP
+.SH "ADDITIONAL RESOURCES"
+.PP
+For information about NSS and other tools related to NSS (like JSS), check out the NSS project wiki at
+\m[blue]\fBhttp://www\&.mozilla\&.org/projects/security/pki/nss/\fR\m[]\&. The NSS site relates directly to NSS code changes and releases\&.
+.PP
+Mailing lists: https://lists\&.mozilla\&.org/listinfo/dev\-tech\-crypto
+.PP
+IRC: Freenode at #dogtag\-pki
+.SH "AUTHORS"
+.PP
+The NSS tools were written and maintained by developers with Netscape, Red Hat, and Sun\&.
+.PP
+Authors: Elio Maldonado <emaldona@redhat\&.com>, Deon Lackey <dlackey@redhat\&.com>\&.
+.SH "LICENSE"
+.PP
+Licensed under the Mozilla Public License, version 1\&.1, and/or the GNU General Public License, version 2 or later, and/or the GNU Lesser General Public License, version 2\&.1 or later\&.
+.SH "NOTES"
+.IP " 1." 4
+Mozilla NSS bug 836477
+.RS 4
+\%https://bugzilla.mozilla.org/show_bug.cgi?id=836477
+.RE

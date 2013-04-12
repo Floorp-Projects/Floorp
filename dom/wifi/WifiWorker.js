@@ -44,11 +44,12 @@ var WifiManager = (function() {
     Cu.import("resource://gre/modules/systemlibs.js");
     return {
       sdkVersion: parseInt(libcutils.property_get("ro.build.version.sdk"), 10),
+      unloadDriverEnabled: libcutils.property_get("ro.moz.wifi.unloaddriver") === "1",
       schedScanRecovery: libcutils.property_get("ro.moz.wifi.sched_scan_recover") === "false" ? false : true
     };
   }
 
-  let {sdkVersion, schedScanRecovery} = getStartupPrefs();
+  let {sdkVersion, unloadDriverEnabled, schedScanRecovery} = getStartupPrefs();
 
   var controlWorker = new ChromeWorker(WIFIWORKER_WORKER);
   var eventWorker = new ChromeWorker(WIFIWORKER_WORKER);
@@ -132,12 +133,14 @@ var WifiManager = (function() {
   }
 
   function unloadDriver(callback) {
-    // Unloading drivers is generally unnecessary and
-    // can trigger bugs in some drivers.
-    // On properly written drivers, bringing the interface
-    // down powers down the interface.
-    callback(0);
-    return;
+    if (!unloadDriverEnabled) {
+      // Unloading drivers is generally unnecessary and
+      // can trigger bugs in some drivers.
+      // On properly written drivers, bringing the interface
+      // down powers down the interface.
+      callback(0);
+      return;
+    }
 
     voidControlMessage("unload_driver", function(status) {
       driverLoaded = (status < 0);

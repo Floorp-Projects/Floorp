@@ -261,7 +261,7 @@ MetroAppShell::Observe(nsISupports *subject, const char *topic,
     NS_ENSURE_ARG_POINTER(topic);
     if (!strcmp(topic, "dl-start")) {
       if (mPowerRequestCount++ == 0) {
-        Log(L"Download started - Disallowing suspend");
+        Log("Download started - Disallowing suspend");
         REASON_CONTEXT context;
         context.Version = POWER_REQUEST_CONTEXT_VERSION;
         context.Flags = POWER_REQUEST_CONTEXT_SIMPLE_STRING;
@@ -274,7 +274,7 @@ MetroAppShell::Observe(nsISupports *subject, const char *topic,
                !strcmp(topic, "dl-cancel") ||
                !strcmp(topic, "dl-failed")) {
       if (--mPowerRequestCount == 0 && mPowerRequest) {
-        Log(L"All downloads ended - Allowing suspend");
+        Log("All downloads ended - Allowing suspend");
         PowerClearRequestDyn(mPowerRequest, PowerRequestExecutionRequired); 
         mPowerRequest.reset();
       }

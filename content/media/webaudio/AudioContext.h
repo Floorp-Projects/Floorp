@@ -106,8 +106,20 @@ public:
   already_AddRefed<GainNode>
   CreateGain();
 
+  already_AddRefed<GainNode>
+  CreateGainNode()
+  {
+    return CreateGain();
+  }
+
   already_AddRefed<DelayNode>
   CreateDelay(double aMaxDelayTime, ErrorResult& aRv);
+
+  already_AddRefed<DelayNode>
+  CreateDelayNode(double aMaxDelayTime, ErrorResult& aRv)
+  {
+    return CreateDelay(aMaxDelayTime, aRv);
+  }
 
   already_AddRefed<PannerNode>
   CreatePanner();

@@ -156,7 +156,7 @@ public class SiteIdentityPopup extends PopupWindow {
 
         int offset = 0;
         if (HardwareUtils.isTablet()) {
-            int popupWidth = mResources.getDimensionPixelSize(R.dimen.popup_width);
+            int popupWidth = mResources.getDimensionPixelSize(R.dimen.doorhanger_width);
             offset = 0 - popupWidth + arrowWidth*3/2 + v.getWidth()/2;
         }
 

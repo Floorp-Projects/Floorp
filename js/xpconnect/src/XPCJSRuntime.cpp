@@ -3030,7 +3030,7 @@ XPCJSRuntime::GetJunkScope()
 
         NS_ENSURE_SUCCESS(rv, nullptr);
 
-        mJunkScope = js::UnwrapObject(&v.toObject());
+        mJunkScope = js::UncheckedUnwrap(&v.toObject());
         JS_AddNamedObjectRoot(cx, &mJunkScope, "XPConnect Junk Compartment");
     }
     return mJunkScope;

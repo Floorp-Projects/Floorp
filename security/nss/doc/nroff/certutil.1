@@ -1,0 +1,1859 @@
+'\" t
+.\"     Title: CERTUTIL
+.\"    Author: [see the "Authors" section]
+.\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
+.\"      Date: 15 February 2013
+.\"    Manual: NSS Security Tools
+.\"    Source: nss-tools
+.\"  Language: English
+.\"
+.TH "CERTUTIL" "1" "15 February 2013" "nss-tools" "NSS Security Tools"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+certutil \- Manage keys and certificate in the the NSS database\&.
+.SH "SYNOPSIS"
+.HP \w'\fBcertutil\fR\ 'u
+\fBcertutil\fR [\fIoptions\fR] [[\fIarguments\fR]]
+.SH "STATUS"
+.PP
+This documentation is still work in progress\&. Please contribute to the initial review in
+\m[blue]\fBMozilla NSS bug 836477\fR\m[]\&\s-2\u[1]\d\s+2
+.SH "DESCRIPTION"
+.PP
+The Certificate Database Tool,
+\fBcertutil\fR, is a command\-line utility that manages certs and keys in both NSS databases and other NSS tokens (such as smart cards)\&. It can specifically list, generate, modify, or delete certificates within the database, create or change the password, generate new public and private key pairs, display the contents of the key database, or delete key pairs within the key database\&.
+.PP
+The key and certificate management process generally includes certificate issuance once keys and certificates have been created in the key database\&. This document discusses certificate and key database management\&. For information security module database management, see the
+\fBmodutil\fR
+manpage\&.
+.SH "OPTIONS AND ARGUMENTS"
+.PP
+Running
+\fBcertutil\fR
+always requires one and only one option to specify the type of certificate operation\&. Each option may take arguments, anywhere from none to multiple arguments\&. Run the command option and
+\fB\-H\fR
+to see the arguments available for each command option\&.
+.PP
+\fBCommand Options\fR
+.PP
+Command options are typically upper case\&.
+.PP
+\-A
+.RS 4
+Add an existing certificate to a certificate database\&. The certificate database should already exist; if one is not present, this command option will initialize one by default\&.
+.RE
+.PP
+\-B
+.RS 4
+Run a series of commands from the specified batch file\&. This requires the
+\fB\-i\fR
+argument\&.
+.RE
+.PP
+\-C
+.RS 4
+Create a new binary certificate file from a binary certificate request file\&. Use the
+\fB\-i\fR
+argument to specify the certificate request file\&. If this argument is not used,
+\fBcertutil\fR
+prompts for a filename\&.
+.RE
+.PP
+\-D
+.RS 4
+Delete a certificate from the certificate database\&.
+.RE
+.PP
+\-E
+.RS 4
+Add an email certificate to the certificate database\&.
+.RE
+.PP
+\-F
+.RS 4
+Delete a private key from a key database\&. Specify the key to delete with the \-n argument\&. Specify the database from which to delete the key with the
+\fB\-d\fR
+argument\&. Use the
+\fB\-k\fR
+argument to specify explicitly whether to delete a DSA, RSA, or ECC key\&. If you don\*(Aqt use the
+\fB\-k\fR
+argument, the option looks for an RSA key matching the specified nickname\&.
+.sp
+When you delete keys, be sure to also remove any certificates associated with those keys from the certificate database, by using \-D\&. Some smart cards do not let you remove a public key you have generated\&. In such a case, only the private key is deleted from the key pair\&. You can display the public key with the command certutil \-K \-h tokenname\&.
+.RE
+.PP
+\-G
+.RS 4
+Generate a new public and private key pair within a key database\&. The key database should already exist; if one is not present, this option will initialize one by default\&. Some smart cards can store only one key pair\&. If you create a new key pair for such a card, the previous pair is overwritten\&.
+.RE
+.PP
+\-H
+.RS 4
+Display a list of the command options and arguments used by the Certificate Database Tool\&.
+.RE
+.PP
+\-K
+.RS 4
+List the key ID of keys in the key database\&. A key ID is the modulus of the RSA key or the publicValue of the DSA key\&. IDs are displayed in hexadecimal ("0x" is not shown)\&.
+.RE
+.PP
+\-L
+.RS 4
+List all the certificates, or display information about a named certificate, in a certificate database\&. Use the \-h tokenname argument to specify the certificate database on a particular hardware or software token\&.
+.RE
+.PP
+\-M
+.RS 4
+Modify a certificate\*(Aqs trust attributes using the values of the \-t argument\&.
+.RE
+.PP
+\-N
+.RS 4
+Create new certificate and key databases\&.
+.RE
+.PP
+\-O
+.RS 4
+Print the certificate chain\&.
+.RE
+.PP
+\-R
+.RS 4
+Create a certificate request file that can be submitted to a Certificate Authority (CA) for processing into a finished certificate\&. Output defaults to standard out unless you use \-o output\-file argument\&. Use the \-a argument to specify ASCII output\&.
+.RE
+.PP
+\-S
+.RS 4
+Create an individual certificate and add it to a certificate database\&.
+.RE
+.PP
+\-T
+.RS 4
+Reset the key database or token\&.
+.RE
+.PP
+\-U
+.RS 4
+List all available modules or print a single named module\&.
+.RE
+.PP
+\-V
+.RS 4
+Check the validity of a certificate and its attributes\&.
+.RE
+.PP
+\-W
+.RS 4
+Change the password to a key database\&.
+.RE
+.PP
+\-\-merge
+.RS 4
+Merge a source database into the target database\&. This is used to merge legacy NSS databases (cert8\&.db
+and
+key3\&.db) into the newer SQLite databases (cert9\&.db
+and
+key4\&.db)\&.
+.RE
+.PP
+\-\-upgrade\-merge
+.RS 4
+Upgrade an old database and merge it into a new database\&. This is used to migrate legacy NSS databases (cert8\&.db
+and
+key3\&.db) into the newer SQLite databases (cert9\&.db
+and
+key4\&.db)\&.
+.RE
+.PP
+\fBArguments\fR
+.PP
+Arguments modify a command option and are usually lower case, numbers, or symbols\&.
+.PP
+\-a
+.RS 4
+Use ASCII format or allow the use of ASCII format for input or output\&. This formatting follows RFC 1113\&. For certificate requests, ASCII output defaults to standard output unless redirected\&.
+.RE
+.PP
+\-b validity\-time
+.RS 4
+Specify a time at which a certificate is required to be valid\&. Use when checking certificate validity with the
+\fB\-V\fR
+option\&. The format of the
+\fIvalidity\-time\fR
+argument is
+\fIYYMMDDHHMMSS[+HHMM|\-HHMM|Z]\fR, which allows offsets to be set relative to the validity end time\&. Specifying seconds (\fISS\fR) is optional\&. When specifying an explicit time, use a Z at the end of the term,
+\fIYYMMDDHHMMSSZ\fR, to close it\&. When specifying an offset time, use
+\fIYYMMDDHHMMSS+HHMM\fR
+or
+\fIYYMMDDHHMMSS\-HHMM\fR
+for adding or subtracting time, respectively\&.
+.sp
+If this option is not used, the validity check defaults to the current system time\&.
+.RE
+.PP
+\-c issuer
+.RS 4
+Identify the certificate of the CA from which a new certificate will derive its authenticity\&. Use the exact nickname or alias of the CA certificate, or use the CA\*(Aqs email address\&. Bracket the issuer string with quotation marks if it contains spaces\&.
+.RE
+.PP
+\-d [prefix]directory
+.RS 4
+Specify the database directory containing the certificate and key database files\&.
+.sp
+\fBcertutil\fR
+supports two types of databases: the legacy security databases (cert8\&.db,
+key3\&.db, and
+secmod\&.db) and new SQLite databases (cert9\&.db,
+key4\&.db, and
+pkcs11\&.txt)\&. If the prefix
+\fBsql:\fR
+is not used, then the tool assumes that the given databases are in the old format\&.
+.sp
+NSS recognizes the following prefixes:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBsql: explicitly requests the newer database\fR
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBdbm: explicitly requests the older database\fR
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBextern: explicitly reserved for future use\fR
+.RE
+.RE
+.PP
+\-e
+.RS 4
+Check a certificate\*(Aqs signature during the process of validating a certificate\&.
+.RE
+.PP
+\-f password\-file
+.RS 4
+Specify a file that will automatically supply the password to include in a certificate or to access a certificate database\&. This is a plain\-text file containing one password\&. Be sure to prevent unauthorized access to this file\&.
+.RE
+.PP
+\-g keysize
+.RS 4
+Set a key size to use when generating new public and private key pairs\&. The minimum is 512 bits and the maximum is 8192 bits\&. The default is 1024 bits\&. Any size between the minimum and maximum is allowed\&.
+.RE
+.PP
+\-h tokenname
+.RS 4
+Specify the name of a token to use or act on\&. Unless specified otherwise the default token is an internal slot\&.
+.RE
+.PP
+\-i input_file
+.RS 4
+Pass an input file to the command\&. Depending on the command option, an input file can be a specific certificate, a certificate request file, or a batch file of commands\&.
+.RE
+.PP
+\-k rsa|dsa|ec|all
+.RS 4
+Specify the type of a key\&. The valid options are RSA, DSA, ECC, or all\&. The default value is rsa\&. Specifying the type of key can avoid mistakes caused by duplicate nicknames\&.
+.RE
+.PP
+\-k key\-type\-or\-id
+.RS 4
+Specify the type or specific ID of a key\&.
+.sp
+The valid key type options are RSA, DSA, ECC, or all\&. The default value is rsa\&. Specifying the type of key can avoid mistakes caused by duplicate nicknames\&. Giving a key type generates a new key pair; giving the ID of an existing key reuses that key pair (which is required to renew certificates)\&.
+.sp
+The valid key type options are RSA, DSA, ECC, or all\&. The default value is rsa\&. Specifying the type of key can avoid mistakes caused by duplicate nicknames\&. Giving a key type generates a new key pair; giving the ID of an existing key reuses that key pair (which is required to renew certificates)\&.
+.RE
+.PP
+\-l
+.RS 4
+Display detailed information when validating a certificate with the \-V option\&.
+.RE
+.PP
+\-m serial\-number
+.RS 4
+Assign a unique serial number to a certificate being created\&. This operation should be performed by a CA\&. If no serial number is provided a default serial number is made from the current time\&. Serial numbers are limited to integers
+.RE
+.PP
+\-n nickname
+.RS 4
+Specify the nickname of a certificate or key to list, create, add to a database, modify, or validate\&. Bracket the nickname string with quotation marks if it contains spaces\&.
+.RE
+.PP
+\-o output\-file
+.RS 4
+Specify the output file name for new certificates or binary certificate requests\&. Bracket the output\-file string with quotation marks if it contains spaces\&. If this argument is not used the output destination defaults to standard output\&.
+.RE
+.PP
+\-P dbPrefix
+.RS 4
+Specify the prefix used on the certificate and key database file\&. This argument is provided to support legacy servers\&. Most applications do not use a database prefix\&.
+.RE
+.PP
+\-p phone
+.RS 4
+Specify a contact telephone number to include in new certificates or certificate requests\&. Bracket this string with quotation marks if it contains spaces\&.
+.RE
+.PP
+\-q pqgfile or curve\-name
+.RS 4
+Read an alternate PQG value from the specified file when generating DSA key pairs\&. If this argument is not used,
+\fBcertutil\fR
+generates its own PQG value\&. PQG files are created with a separate DSA utility\&.
+.sp
+Elliptic curve name is one of the ones from SUITE B: nistp256, nistp384, nistp521
+.sp
+If NSS has been compiled with support curves outside of SUITE B: sect163k1, nistk163, sect163r1, sect163r2, nistb163, sect193r1, sect193r2, sect233k1, nistk233, sect233r1, nistb233, sect239k1, sect283k1, nistk283, sect283r1, nistb283, sect409k1, nistk409, sect409r1, nistb409, sect571k1, nistk571, sect571r1, nistb571, secp160k1, secp160r1, secp160r2, secp192k1, secp192r1, nistp192, secp224k1, secp224r1, nistp224, secp256k1, secp256r1, secp384r1, secp521r1, prime192v1, prime192v2, prime192v3, prime239v1, prime239v2, prime239v3, c2pnb163v1, c2pnb163v2, c2pnb163v3, c2pnb176v1, c2tnb191v1, c2tnb191v2, c2tnb191v3, c2pnb208w1, c2tnb239v1, c2tnb239v2, c2tnb239v3, c2pnb272w1, c2pnb304w1, c2tnb359w1, c2pnb368w1, c2tnb431r1, secp112r1, secp112r2, secp128r1, secp128r2, sect113r1, sect113r2 sect131r1, sect131r2
+.RE
+.PP
+\-r
+.RS 4
+Display a certificate\*(Aqs binary DER encoding when listing information about that certificate with the \-L option\&.
+.RE
+.PP
+\-s subject
+.RS 4
+Identify a particular certificate owner for new certificates or certificate requests\&. Bracket this string with quotation marks if it contains spaces\&. The subject identification format follows RFC #1485\&.
+.RE
+.PP
+\-t trustargs
+.RS 4
+Specify the trust attributes to modify in an existing certificate or to apply to a certificate when creating it or adding it to a database\&. There are three available trust categories for each certificate, expressed in the order
+\fISSL, email, object signing\fR
+for each trust setting\&. In each category position, use none, any, or all of the attribute codes:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+
+\fBp\fR
+\- Valid peer
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+
+\fBP\fR
+\- Trusted peer (implies p)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+
+\fBc\fR
+\- Valid CA
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+
+\fBT\fR
+\- Trusted CA (implies c)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+
+\fBC\fR
+\- rusted CA for client authentication (ssl server only)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+
+\fBu\fR
+\- user
+.RE
+.sp
+The attribute codes for the categories are separated by commas, and the entire set of attributes enclosed by quotation marks\&. For example:
+.sp
+\fB\-t "TCu,Cu,Tuw"\fR
+.sp
+Use the \-L option to see a list of the current certificates and trust attributes in a certificate database\&.
+.RE
+.PP
+\-u certusage
+.RS 4
+Specify a usage context to apply when validating a certificate with the \-V option\&.
+.sp
+The contexts are the following:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBC\fR
+(as an SSL client)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBV\fR
+(as an SSL server)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBS\fR
+(as an email signer)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBR\fR
+(as an email recipient)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBO\fR
+(as an OCSP status responder)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBJ\fR
+(as an object signer)
+.RE
+.RE
+.PP
+\-v valid\-months
+.RS 4
+Set the number of months a new certificate will be valid\&. The validity period begins at the current system time unless an offset is added or subtracted with the
+\fB\-w\fR
+option\&. If this argument is not used, the default validity period is three months\&.
+.RE
+.PP
+\-w offset\-months
+.RS 4
+Set an offset from the current system time, in months, for the beginning of a certificate\*(Aqs validity period\&. Use when creating the certificate or adding it to a database\&. Express the offset in integers, using a minus sign (\-) to indicate a negative offset\&. If this argument is not used, the validity period begins at the current system time\&. The length of the validity period is set with the \-v argument\&.
+.RE
+.PP
+\-X
+.RS 4
+Force the key and certificate database to open in read\-write mode\&. This is used with the
+\fB\-U\fR
+and
+\fB\-L\fR
+command options\&.
+.RE
+.PP
+\-x
+.RS 4
+Use
+\fBcertutil\fR
+to generate the signature for a certificate being created or added to a database, rather than obtaining a signature from a separate CA\&.
+.RE
+.PP
+\-y exp
+.RS 4
+Set an alternate exponent value to use in generating a new RSA public key for the database, instead of the default value of 65537\&. The available alternate values are 3 and 17\&.
+.RE
+.PP
+\-z noise\-file
+.RS 4
+Read a seed value from the specified file to generate a new private and public key pair\&. This argument makes it possible to use hardware\-generated seed values or manually create a value from the keyboard\&. The minimum file size is 20 bytes\&.
+.RE
+.PP
+\-0 SSO_password
+.RS 4
+Set a site security officer password on a token\&.
+.RE
+.PP
+\-1 | \-\-keyUsage keyword,keyword
+.RS 4
+Set a Netscape Certificate Type Extension in the certificate\&. There are several available keywords:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+digital signature
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+nonRepudiation
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+keyEncipherment
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+dataEncipherment
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+keyAgreement
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+certSigning
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+crlSigning
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+critical
+.RE
+.RE
+.PP
+\-2
+.RS 4
+Add a basic constraint extension to a certificate that is being created or added to a database\&. This extension supports the certificate chain verification process\&.
+\fBcertutil\fR
+prompts for the certificate constraint extension to select\&.
+.sp
+X\&.509 certificate extensions are described in RFC 5280\&.
+.RE
+.PP
+\-3
+.RS 4
+Add an authority key ID extension to a certificate that is being created or added to a database\&. This extension supports the identification of a particular certificate, from among multiple certificates associated with one subject name, as the correct issuer of a certificate\&. The Certificate Database Tool will prompt you to select the authority key ID extension\&.
+.sp
+X\&.509 certificate extensions are described in RFC 5280\&.
+.RE
+.PP
+\-4
+.RS 4
+Add a CRL distribution point extension to a certificate that is being created or added to a database\&. This extension identifies the URL of a certificate\*(Aqs associated certificate revocation list (CRL)\&.
+\fBcertutil\fR
+prompts for the URL\&.
+.sp
+X\&.509 certificate extensions are described in RFC 5280\&.
+.RE
+.PP
+\-5 | \-\-nsCertType keyword,keyword
+.RS 4
+Add a Netscape certificate type extension to a certificate that is being created or added to the database\&. There are several available keywords:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+sslClient
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+sslServer
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+smime
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+objectSigning
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+sslCA
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+smimeCA
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+objectSigningCA
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+critical
+.RE
+.sp
+X\&.509 certificate extensions are described in RFC 5280\&.
+.RE
+.PP
+\-6 | \-\-extKeyUsage keyword,keyword
+.RS 4
+Add an extended key usage extension to a certificate that is being created or added to the database\&. Several keywords are available:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+serverAuth
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+clientAuth
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+codeSigning
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+emailProtection
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+timeStamp
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+ocspResponder
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+stepUp
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+msTrustListSign
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+critical
+.RE
+.sp
+X\&.509 certificate extensions are described in RFC 5280\&.
+.RE
+.PP
+\-7 emailAddrs
+.RS 4
+Add a comma\-separated list of email addresses to the subject alternative name extension of a certificate or certificate request that is being created or added to the database\&. Subject alternative name extensions are described in Section 4\&.2\&.1\&.7 of RFC 3280\&.
+.RE
+.PP
+\-8 dns\-names
+.RS 4
+Add a comma\-separated list of DNS names to the subject alternative name extension of a certificate or certificate request that is being created or added to the database\&. Subject alternative name extensions are described in Section 4\&.2\&.1\&.7 of RFC 3280\&.
+.RE
+.PP
+\-\-extAIA
+.RS 4
+Add the Authority Information Access extension to the certificate\&. X\&.509 certificate extensions are described in RFC 5280\&.
+.RE
+.PP
+\-\-extSIA
+.RS 4
+Add the Subject Information Access extension to the certificate\&. X\&.509 certificate extensions are described in RFC 5280\&.
+.RE
+.PP
+\-\-extCP
+.RS 4
+Add the Certificate Policies extension to the certificate\&. X\&.509 certificate extensions are described in RFC 5280\&.
+.RE
+.PP
+\-\-extPM
+.RS 4
+Add the Policy Mappings extension to the certificate\&. X\&.509 certificate extensions are described in RFC 5280\&.
+.RE
+.PP
+\-\-extPC
+.RS 4
+Add the Policy Constraints extension to the certificate\&. X\&.509 certificate extensions are described in RFC 5280\&.
+.RE
+.PP
+\-\-extIA
+.RS 4
+Add the Inhibit Any Policy Access extension to the certificate\&. X\&.509 certificate extensions are described in RFC 5280\&.
+.RE
+.PP
+\-\-extSKID
+.RS 4
+Add the Subject Key ID extension to the certificate\&. X\&.509 certificate extensions are described in RFC 5280\&.
+.RE
+.PP
+\-\-source\-dir certdir
+.RS 4
+Identify the certificate database directory to upgrade\&.
+.RE
+.PP
+\-\-source\-prefix certdir
+.RS 4
+Give the prefix of the certificate and key databases to upgrade\&.
+.RE
+.PP
+\-\-upgrade\-id uniqueID
+.RS 4
+Give the unique ID of the database to upgrade\&.
+.RE
+.PP
+\-\-upgrade\-token\-name name
+.RS 4
+Set the name of the token to use while it is being upgraded\&.
+.RE
+.PP
+\-@ pwfile
+.RS 4
+Give the name of a password file to use for the database being upgraded\&.
+.RE
+.SH "USAGE AND EXAMPLES"
+.PP
+Most of the command options in the examples listed here have more arguments available\&. The arguments included in these examples are the most common ones or are used to illustrate a specific scenario\&. Use the
+\fB\-H\fR
+option to show the complete list of arguments for each command option\&.
+.PP
+\fBCreating New Security Databases\fR
+.PP
+Certificates, keys, and security modules related to managing certificates are stored in three related databases:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+cert8\&.db or cert9\&.db
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+key3\&.db or key4\&.db
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+secmod\&.db or pkcs11\&.txt
+.RE
+.PP
+These databases must be created before certificates or keys can be generated\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+certutil \-N \-d [sql:]directory
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+\fBCreating a Certificate Request\fR
+.PP
+A certificate request contains most or all of the information that is used to generate the final certificate\&. This request is submitted separately to a certificate authority and is then approved by some mechanism (automatically or by human review)\&. Once the request is approved, then the certificate is generated\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ certutil \-R \-k key\-type\-or\-id [\-q pqgfile|curve\-name] \-g key\-size \-s subject [\-h tokenname] \-d [sql:]directory [\-p phone] [\-o output\-file] [\-a]
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+The
+\fB\-R\fR
+command options requires four arguments:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+
+\fB\-k\fR
+to specify either the key type to generate or, when renewing a certificate, the existing key pair to use
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+
+\fB\-g\fR
+to set the keysize of the key to generate
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+
+\fB\-s\fR
+to set the subject name of the certificate
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+
+\fB\-d\fR
+to give the security database directory
+.RE
+.PP
+The new certificate request can be output in ASCII format (\fB\-a\fR) or can be written to a specified file (\fB\-o\fR)\&.
+.PP
+For example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ certutil \-R \-k ec \-q nistb409 \-g 512 \-s "CN=John Smith,O=Example Corp,L=Mountain View,ST=California,C=US" \-d sql:/home/my/sharednssdb \-p 650\-555\-0123 \-a \-o cert\&.cer
+
+Generating key\&.  This may take a few moments\&.\&.\&.
+
+
+Certificate request generated by Netscape 
+Phone: 650\-555\-0123
+Common Name: John Smith
+Email: (not ed)
+Organization: Example Corp
+State: California
+Country: US
+
+\-\-\-\-\-BEGIN NEW CERTIFICATE REQUEST\-\-\-\-\-
+MIIBIDCBywIBADBmMQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEW
+MBQGA1UEBxMNTW91bnRhaW4gVmlldzEVMBMGA1UEChMMRXhhbXBsZSBDb3JwMRMw
+EQYDVQQDEwpKb2huIFNtaXRoMFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAMVUpDOZ
+KmHnOx7reP8Cc0Lk+fFWEuYIDX9W5K/BioQOKvEjXyQZhit9aThzBVMoSf1Y1S8J
+CzdUbCg1+IbnXaECAwEAAaAAMA0GCSqGSIb3DQEBBQUAA0EAryqZvpYrUtQ486Ny
+qmtyQNjIi1F8c1Z+TL4uFYlMg8z6LG/J/u1E5t1QqB5e9Q4+BhRbrQjRR1JZx3tB
+1hP9Gg==
+\-\-\-\-\-END NEW CERTIFICATE REQUEST\-\-\-\-\-
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+\fBCreating a Certificate\fR
+.PP
+A valid certificate must be issued by a trusted CA\&. This can be done by specifying a CA certificate (\fB\-c\fR) that is stored in the certificate database\&. If a CA key pair is not available, you can create a self\-signed certificate using the
+\fB\-x\fR
+argument with the
+\fB\-S\fR
+command option\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ certutil \-S \-k rsa|dsa|ec \-n certname \-s subject [\-c issuer |\-x] \-t trustargs \-d [sql:]directory [\-m serial\-number] [\-v valid\-months] [\-w offset\-months] [\-p phone] [\-1] [\-2] [\-3] [\-4] [\-5 keyword] [\-6 keyword] [\-7 emailAddress] [\-8 dns\-names] [\-\-extAIA] [\-\-extSIA] [\-\-extCP] [\-\-extPM] [\-\-extPC] [\-\-extIA] [\-\-extSKID]
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+The series of numbers and
+\fB\-\-ext*\fR
+options set certificate extensions that can be added to the certificate when it is generated by the CA\&.
+.PP
+For example, this creates a self\-signed certificate:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ certutil \-S \-s "CN=Example CA" \-n my\-ca\-cert \-x \-t "C,C,C" \-1 \-2 \-5 \-m 3650
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+From there, new certificates can reference the self\-signed certificate:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ certutil \-S \-s "CN=My Server Cert" \-n my\-server\-cert \-c "my\-ca\-cert" \-t "u,u,u" \-1 \-5 \-6 \-8 \-m 730
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+\fBGenerating a Certificate from a Certificate Request\fR
+.PP
+When a certificate request is created, a certificate can be generated by using the request and then referencing a certificate authority signing certificate (the
+\fIissuer\fR
+specified in the
+\fB\-c\fR
+argument)\&. The issuing certificate must be in the certificate database in the specified directory\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+certutil \-C \-c issuer \-i cert\-request\-file \-o output\-file [\-m serial\-number] [\-v valid\-months] [\-w offset\-months] \-d [sql:]directory [\-1] [\-2] [\-3] [\-4] [\-5 keyword] [\-6 keyword] [\-7 emailAddress] [\-8 dns\-names]
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+For example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ certutil \-C \-c "my\-ca\-cert" \-i /home/certs/cert\&.req \-o cert\&.cer \-m 010 \-v 12 \-w 1 \-d sql:/home/my/sharednssdb \-1 nonRepudiation,dataEncipherment \-5 sslClient \-6 clientAuth \-7 jsmith@example\&.com
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+\fBGenerating Key Pairs\fR
+.PP
+Key pairs are generated automatically with a certificate request or certificate, but they can also be generated independently using the
+\fB\-G\fR
+command option\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+certutil \-G \-d [sql:]directory | \-h tokenname \-k key\-type \-g key\-size [\-y exponent\-value] \-q pqgfile|curve\-name
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+For example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ certutil \-G \-h lunasa \-k ec \-g 256 \-q sect193r2
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+\fBListing Certificates\fR
+.PP
+The
+\fB\-L\fR
+command option lists all of the certificates listed in the certificate database\&. The path to the directory (\fB\-d\fR) is required\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ certutil \-L \-d sql:/home/my/sharednssdb
+
+Certificate Nickname                                         Trust Attributes
+                                                             SSL,S/MIME,JAR/XPI
+
+CA Administrator of Instance pki\-ca1\*(Aqs Example Domain ID     u,u,u
+TPS Administrator\*(Aqs Example Domain ID                        u,u,u
+Google Internet Authority                                    ,,   
+Certificate Authority \- Example Domain                       CT,C,C
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Using additional arguments with
+\fB\-L\fR
+can return and print the information for a single, specific certificate\&. For example, the
+\fB\-n\fR
+argument passes the certificate name, while the
+\fB\-a\fR
+argument prints the certificate in ASCII format:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ certutil \-L \-d sql:/home/my/sharednssdb \-a \-n "Certificate Authority \- Example Domain"
+
+\-\-\-\-\-BEGIN CERTIFICATE\-\-\-\-\-
+MIIDmTCCAoGgAwIBAgIBATANBgkqhkiG9w0BAQUFADA5MRcwFQYDVQQKEw5FeGFt
+cGxlIERvbWFpbjEeMBwGA1UEAxMVQ2VydGlmaWNhdGUgQXV0aG9yaXR5MB4XDTEw
+MDQyOTIxNTY1OFoXDTEyMDQxODIxNTY1OFowOTEXMBUGA1UEChMORXhhbXBsZSBE
+b21haW4xHjAcBgNVBAMTFUNlcnRpZmljYXRlIEF1dGhvcml0eTCCASIwDQYJKoZI
+hvcNAQEBBQADggEPADCCAQoCggEBAO/bqUli2KwqXFKmMMG93KN1SANzNTXA/Vlf
+Tmrih3hQgjvR1ktIY9aG6cB7DSKWmtHp/+p4PUCMqL4ZrSGt901qxkePyZ2dYmM2
+RnelK+SEUIPiUtoZaDhNdiYsE/yuDE8vQWj0vHCVL0w72qFUcSQ/WZT7FCrnUIUI
+udeWnoPSUn70gLhcj/lvxl7K9BHyD4Sq5CzktwYtFWLiiwV+ZY/Fl6JgbGaQyQB2
+bP4iRMfloGqsxGuB1evWVDF1haGpFDSPgMnEPSLg3/3dXn+HDJbZ29EU8/xKzQEb
+3V0AHKbu80zGllLEt2Zx/WDIrgJEN9yMfgKFpcmL+BvIRsmh0VsCAwEAAaOBqzCB
+qDAfBgNVHSMEGDAWgBQATgxHQyRUfKIZtdp55bZlFr+tFzAPBgNVHRMBAf8EBTAD
+AQH/MA4GA1UdDwEB/wQEAwIBxjAdBgNVHQ4EFgQUAE4MR0MkVHyiGbXaeeW2ZRa/
+rRcwRQYIKwYBBQUHAQEEOTA3MDUGCCsGAQUFBzABhilodHRwOi8vbG9jYWxob3N0
+LmxvY2FsZG9tYWluOjkxODAvY2Evb2NzcDANBgkqhkiG9w0BAQUFAAOCAQEAi8Gk
+L3XO43u7/TDOeEsWPmq+jZsDZ3GZ85Ajt3KROLWeKVZZZa2E2Hnsvf2uXbk5amKe
+lRxdSeRH9g85pv4KY7Z8xZ71NrI3+K3uwmnqkc6t0hhYb1mw/gx8OAAoluQx3biX
+JBDxjI73Cf7XUopplHBjjiwyGIJUO8BEZJ5L+TF4P38MJz1snLtzZpEAX5bl0U76
+bfu/tZFWBbE8YAWYtkCtMcalBPj6jn2WD3M01kGozW4mmbvsj1cRB9HnsGsqyHCu
+U0ujlL1H/RWcjn607+CTeKH9jLMUqCIqPJNOa+kq/6F7NhNRRiuzASIbZc30BZ5a
+nI7q5n1USM3eWQlVXw==
+\-\-\-\-\-END CERTIFICATE\-\-\-\-\-
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+\fBListing Keys\fR
+.PP
+Keys are the original material used to encrypt certificate data\&. The keys generated for certificates are stored separately, in the key database\&.
+.PP
+To list all keys in the database, use the
+\fB\-K\fR
+command option and the (required)
+\fB\-d\fR
+argument to give the path to the directory\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ certutil \-K \-d sql:/home/my/sharednssdb
+certutil: Checking token "NSS Certificate DB" in slot "NSS User Private Key and Certificate Services                  "
+< 0> rsa      455a6673bde9375c2887ec8bf8016b3f9f35861d   Thawte Freemail Member\*(Aqs Thawte Consulting (Pty) Ltd\&. ID
+< 1> rsa      40defeeb522ade11090eacebaaf1196a172127df   Example Domain Administrator Cert
+< 2> rsa      1d0b06f44f6c03842f7d4f4a1dc78b3bcd1b85a5   John Smith user cert
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+There are ways to narrow the keys listed in the search results:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+To return a specific key, use the
+\fB\-n\fR
+\fIname\fR
+argument with the name of the key\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+If there are multiple security devices loaded, then the
+\fB\-h\fR
+\fItokenname\fR
+argument can search a specific token or all tokens\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+If there are multiple key types available, then the
+\fB\-k\fR
+\fIkey\-type\fR
+argument can search a specific type of key, like RSA, DSA, or ECC\&.
+.RE
+.PP
+\fBListing Security Modules\fR
+.PP
+The devices that can be used to store certificates \-\- both internal databases and external devices like smart cards \-\- are recognized and used by loading security modules\&. The
+\fB\-U\fR
+command option lists all of the security modules listed in the
+secmod\&.db
+database\&. The path to the directory (\fB\-d\fR) is required\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ certutil \-U \-d sql:/home/my/sharednssdb
+
+    slot: NSS User Private Key and Certificate Services                  
+   token: NSS Certificate DB
+
+    slot: NSS Internal Cryptographic Services                            
+   token: NSS Generic Crypto Services
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+\fBAdding Certificates to the Database\fR
+.PP
+Existing certificates or certificate requests can be added manually to the certificate database, even if they were generated elsewhere\&. This uses the
+\fB\-A\fR
+command option\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+certutil \-A \-n certname \-t trustargs \-d [sql:]directory [\-a] [\-i input\-file]
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+For example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ certutil \-A \-n "CN=My SSL Certificate" \-t "u,u,u" \-d sql:/home/my/sharednssdb \-i /home/example\-certs/cert\&.cer
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+A related command option,
+\fB\-E\fR, is used specifically to add email certificates to the certificate database\&. The
+\fB\-E\fR
+command has the same arguments as the
+\fB\-A\fR
+command\&. The trust arguments for certificates have the format
+\fISSL,S/MIME,Code\-signing\fR, so the middle trust settings relate most to email certificates (though the others can be set)\&. For example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ certutil \-E \-n "CN=John Smith Email Cert" \-t ",Pu," \-d sql:/home/my/sharednssdb \-i /home/example\-certs/email\&.cer
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+\fBDeleting Certificates to the Database\fR
+.PP
+Certificates can be deleted from a database using the
+\fB\-D\fR
+option\&. The only required options are to give the security database directory and to identify the certificate nickname\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+certutil \-D \-d [sql:]directory \-n "nickname"
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+For example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ certutil \-D \-d sql:/home/my/sharednssdb \-n "my\-ssl\-cert"
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+\fBValidating Certificates\fR
+.PP
+A certificate contains an expiration date in itself, and expired certificates are easily rejected\&. However, certificates can also be revoked before they hit their expiration date\&. Checking whether a certificate has been revoked requires validating the certificate\&. Validation can also be used to ensure that the certificate is only used for the purposes it was initially issued for\&. Validation is carried out by the
+\fB\-V\fR
+command option\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+certutil \-V \-n certificate\-name [\-b time] [\-e] [\-u cert\-usage] \-d [sql:]directory
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+For example, to validate an email certificate:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ certutil \-V \-n "John Smith\*(Aqs Email Cert" \-e \-u S,R \-d sql:/home/my/sharednssdb
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+\fBModifying Certificate Trust Settings\fR
+.PP
+The trust settings (which relate to the operations that a certificate is allowed to be used for) can be changed after a certificate is created or added to the database\&. This is especially useful for CA certificates, but it can be performed for any type of certificate\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+certutil \-M \-n certificate\-name \-t trust\-args \-d [sql:]directory
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+For example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ certutil \-M \-n "My CA Certificate" \-d sql:/home/my/sharednssdb \-t "CTu,CTu,CTu"
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+\fBPrinting the Certificate Chain\fR
+.PP
+Certificates can be issued in
+\fIchains\fR
+because every certificate authority itself has a certificate; when a CA issues a certificate, it essentially stamps that certificate with its own fingerprint\&. The
+\fB\-O\fR
+prints the full chain of a certificate, going from the initial CA (the root CA) through ever intermediary CA to the actual certificate\&. For example, for an email certificate with two CAs in the chain:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ certutil \-d sql:/home/my/sharednssdb \-O \-n "jsmith@example\&.com"
+"Builtin Object Token:Thawte Personal Freemail CA" [E=personal\-freemail@thawte\&.com,CN=Thawte Personal Freemail CA,OU=Certification Services Division,O=Thawte Consulting,L=Cape Town,ST=Western Cape,C=ZA]
+
+  "Thawte Personal Freemail Issuing CA \- Thawte Consulting" [CN=Thawte Personal Freemail Issuing CA,O=Thawte Consulting (Pty) Ltd\&.,C=ZA]
+
+    "(null)" [E=jsmith@example\&.com,CN=Thawte Freemail Member]
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+\fBResetting a Token\fR
+.PP
+The device which stores certificates \-\- both external hardware devices and internal software databases \-\- can be blanked and reused\&. This operation is performed on the device which stores the data, not directly on the security databases, so the location must be referenced through the token name (\fB\-h\fR) as well as any directory path\&. If there is no external token used, the default value is internal\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+certutil \-T \-d [sql:]directory \-h token\-name \-0 security\-officer\-password
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Many networks have dedicated personnel who handle changes to security tokens (the security officer)\&. This person must supply the password to access the specified token\&. For example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ certutil \-T \-d sql:/home/my/sharednssdb \-h nethsm \-0 secret
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+\fBUpgrading or Merging the Security Databases\fR
+.PP
+Many networks or applications may be using older BerkeleyDB versions of the certificate database (cert8\&.db)\&. Databases can be upgraded to the new SQLite version of the database (cert9\&.db) using the
+\fB\-\-upgrade\-merge\fR
+command option or existing databases can be merged with the new
+cert9\&.db
+databases using the
+\fB\-\-\-merge\fR
+command\&.
+.PP
+The
+\fB\-\-upgrade\-merge\fR
+command must give information about the original database and then use the standard arguments (like
+\fB\-d\fR) to give the information about the new databases\&. The command also requires information that the tool uses for the process to upgrade and write over the original database\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+certutil \-\-upgrade\-merge \-d [sql:]directory [\-P dbprefix] \-\-source\-dir directory \-\-source\-prefix dbprefix \-\-upgrade\-id id \-\-upgrade\-token\-name name [\-@ password\-file]
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+For example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ certutil \-\-upgrade\-merge \-d sql:/home/my/sharednssdb \-\-source\-dir /opt/my\-app/alias/ \-\-source\-prefix serverapp\- \-\-upgrade\-id 1 \-\-upgrade\-token\-name internal
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+The
+\fB\-\-merge\fR
+command only requires information about the location of the original database; since it doesn\*(Aqt change the format of the database, it can write over information without performing interim step\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+certutil \-\-merge \-d [sql:]directory [\-P dbprefix] \-\-source\-dir directory \-\-source\-prefix dbprefix [\-@ password\-file]
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+For example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ certutil \-\-merge \-d sql:/home/my/sharednssdb \-\-source\-dir /opt/my\-app/alias/ \-\-source\-prefix serverapp\-
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+\fBRunning certutil Commands from a Batch File\fR
+.PP
+A series of commands can be run sequentially from a text file with the
+\fB\-B\fR
+command option\&. The only argument for this specifies the input file\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ certutil \-B \-i /path/to/batch\-file
+.fi
+.if n \{\
+.RE
+.\}
+.SH "NSS DATABASE TYPES"
+.PP
+NSS originally used BerkeleyDB databases to store security information\&. The last versions of these
+\fIlegacy\fR
+databases are:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+cert8\&.db for certificates
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+key3\&.db for keys
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+secmod\&.db for PKCS #11 module information
+.RE
+.PP
+BerkeleyDB has performance limitations, though, which prevent it from being easily used by multiple applications simultaneously\&. NSS has some flexibility that allows applications to use their own, independent database engine while keeping a shared database and working around the access issues\&. Still, NSS requires more flexibility to provide a truly shared security database\&.
+.PP
+In 2009, NSS introduced a new set of databases that are SQLite databases rather than BerkleyDB\&. These new databases provide more accessibility and performance:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+cert9\&.db for certificates
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+key4\&.db for keys
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+pkcs11\&.txt, which is listing of all of the PKCS #11 modules contained in a new subdirectory in the security databases directory
+.RE
+.PP
+Because the SQLite databases are designed to be shared, these are the
+\fIshared\fR
+database type\&. The shared database type is preferred; the legacy format is included for backward compatibility\&.
+.PP
+By default, the tools (\fBcertutil\fR,
+\fBpk12util\fR,
+\fBmodutil\fR) assume that the given security databases follow the more common legacy type\&. Using the SQLite databases must be manually specified by using the
+\fBsql:\fR
+prefix with the given security directory\&. For example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ certutil \-L \-d sql:/home/my/sharednssdb
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+To set the shared database type as the default type for the tools, set the
+\fBNSS_DEFAULT_DB_TYPE\fR
+environment variable to
+\fBsql\fR:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+export NSS_DEFAULT_DB_TYPE="sql"
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+This line can be set added to the
+~/\&.bashrc
+file to make the change permanent\&.
+.PP
+Most applications do not use the shared database by default, but they can be configured to use them\&. For example, this how\-to article covers how to configure Firefox and Thunderbird to use the new shared NSS databases:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+https://wiki\&.mozilla\&.org/NSS_Shared_DB_Howto
+.RE
+.PP
+For an engineering draft on the changes in the shared NSS databases, see the NSS project wiki:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+https://wiki\&.mozilla\&.org/NSS_Shared_DB
+.RE
+.SH "SEE ALSO"
+.PP
+pk12util (1)
+.PP
+modutil (1)
+.PP
+\fBcertutil\fR
+has arguments or operations that use features defined in several IETF RFCs\&.
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+http://tools\&.ietf\&.org/html/rfc5280
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+http://tools\&.ietf\&.org/html/rfc1113
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+http://tools\&.ietf\&.org/html/rfc1485
+.RE
+.PP
+The NSS wiki has information on the new database design and how to configure applications to use it\&.
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+https://wiki\&.mozilla\&.org/NSS_Shared_DB_Howto
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+https://wiki\&.mozilla\&.org/NSS_Shared_DB
+.RE
+.SH "ADDITIONAL RESOURCES"
+.PP
+For information about NSS and other tools related to NSS (like JSS), check out the NSS project wiki at
+\m[blue]\fBhttp://www\&.mozilla\&.org/projects/security/pki/nss/\fR\m[]\&. The NSS site relates directly to NSS code changes and releases\&.
+.PP
+Mailing lists: https://lists\&.mozilla\&.org/listinfo/dev\-tech\-crypto
+.PP
+IRC: Freenode at #dogtag\-pki
+.SH "AUTHORS"
+.PP
+The NSS tools were written and maintained by developers with Netscape, Red Hat, and Sun\&.
+.PP
+Authors: Elio Maldonado <emaldona@redhat\&.com>, Deon Lackey <dlackey@redhat\&.com>\&.
+.SH "LICENSE"
+.PP
+Licensed under the Mozilla Public License, version 1\&.1, and/or the GNU General Public License, version 2 or later, and/or the GNU Lesser General Public License, version 2\&.1 or later\&.
+.SH "NOTES"
+.IP " 1." 4
+Mozilla NSS bug 836477
+.RS 4
+\%https://bugzilla.mozilla.org/show_bug.cgi?id=836477
+.RE

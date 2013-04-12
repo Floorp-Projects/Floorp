@@ -169,7 +169,7 @@ void Mark(uint32_t aType, void * aItem,
 //
 //    do_something_taking_a_long_time();
 // }
-class NS_STACK_CLASS AutoEventTracer
+class MOZ_STACK_CLASS AutoEventTracer
 {
 public:
   AutoEventTracer(void * aInstance, 

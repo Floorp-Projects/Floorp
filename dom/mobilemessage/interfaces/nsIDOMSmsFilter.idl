@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, builtinclass, uuid(ce055c33-553d-4b0e-9bd8-91d93a057c90)]
+[scriptable, builtinclass, uuid(17890b60-0367-45c6-9729-62e5bf349b2b)]
 interface nsIDOMMozSmsFilter : nsISupports
 {
   // A date that can return null.
@@ -26,4 +26,8 @@ interface nsIDOMMozSmsFilter : nsISupports
   // A read flag that can be a boolean or undefined.
   [implicit_jscontext]
   attribute jsval read;
+
+  // A thread id that can be a numeric value or undefined.
+  [implicit_jscontext]
+  attribute jsval threadId;
 };

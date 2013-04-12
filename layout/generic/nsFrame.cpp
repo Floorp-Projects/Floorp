@@ -3095,7 +3095,7 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsPresContext* aPresContext,
                            parentContent, aEvent, aEventStatus);
 }
 
-struct NS_STACK_CLASS FrameContentRange {
+struct MOZ_STACK_CLASS FrameContentRange {
   FrameContentRange(nsIContent* aContent, int32_t aStart, int32_t aEnd) :
     content(aContent), start(aStart), end(aEnd) { }
   nsCOMPtr<nsIContent> content;

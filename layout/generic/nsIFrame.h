@@ -1322,7 +1322,7 @@ public:
   // Note that the primary offset can be after the secondary offset; for places
   // that need the beginning and end of the object, the StartOffset and 
   // EndOffset helpers can be used.
-  struct NS_STACK_CLASS ContentOffsets {
+  struct MOZ_STACK_CLASS ContentOffsets {
     nsCOMPtr<nsIContent> content;
     bool IsNull() { return !content; }
     int32_t offset;
@@ -1360,7 +1360,7 @@ public:
    * loaded image that should be preferred. If it is not possible to use it, or
    * if it is null, mCursor should be used.
    */
-  struct NS_STACK_CLASS Cursor {
+  struct MOZ_STACK_CLASS Cursor {
     nsCOMPtr<imgIContainer> mContainer;
     int32_t                 mCursor;
     bool                    mHaveHotspot;

@@ -577,14 +577,14 @@ ContactDB.prototype = {
 
         do {
           while (xIndex < sortBy.length && !x) {
-            x = a.properties[sortBy[xIndex]] ? a.properties[sortBy[xIndex]][0].toLowerCase() : null;
+            x = a.properties[sortBy[xIndex]] && a.properties[sortBy[xIndex]][0] ? a.properties[sortBy[xIndex]][0].toLowerCase() : null;
             xIndex++;
           }
           if (!x) {
-            return sortOrder == 'ascending' ? 1 : -1;
+            return sortOrder == 'descending' ? 1 : -1;
           }
           while (yIndex < sortBy.length && !y) {
-            y = b.properties[sortBy[yIndex]] ? b.properties[sortBy[yIndex]][0].toLowerCase() : null;
+            y = b.properties[sortBy[yIndex]] && b.properties[sortBy[yIndex]][0] ? b.properties[sortBy[yIndex]][0].toLowerCase() : null;
             yIndex++;
           }
           if (!y) {

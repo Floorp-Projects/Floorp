@@ -2284,7 +2284,7 @@ Clone(JSContext *cx, unsigned argc, jsval *vp)
         RootedObject obj(cx, JSVAL_IS_PRIMITIVE(args[0]) ? NULL : &args[0].toObject());
 
         if (obj && IsCrossCompartmentWrapper(obj)) {
-            obj = UnwrapObject(obj);
+            obj = UncheckedUnwrap(obj);
             ac.construct(cx, obj);
             args[0] = ObjectValue(*obj);
         }
@@ -2520,7 +2520,7 @@ EvalInContext(JSContext *cx, unsigned argc, jsval *vp)
     {
         Maybe<JSAutoCompartment> ac;
         unsigned flags;
-        JSObject *unwrapped = UnwrapObject(sobj, true, &flags);
+        JSObject *unwrapped = UncheckedUnwrap(sobj, true, &flags);
         if (flags & Wrapper::CROSS_COMPARTMENT) {
             sobj = unwrapped;
             ac.construct(cx, sobj);
@@ -3460,7 +3460,7 @@ NewGlobal(JSContext *cx, unsigned argc, jsval *vp)
 {
     JSObject *sameZoneAs = NULL;
     if (argc == 1 && JS_ARGV(cx, vp)[0].isObject())
-        sameZoneAs = UnwrapObject(&JS_ARGV(cx, vp)[0].toObject());
+        sameZoneAs = UncheckedUnwrap(&JS_ARGV(cx, vp)[0].toObject());
 
     RootedObject global(cx, NewGlobalObject(cx, sameZoneAs));
     if (!global)

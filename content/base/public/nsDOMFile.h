@@ -490,7 +490,7 @@ private:
   nsISupports *mParent;
 };
 
-class NS_STACK_CLASS nsDOMFileInternalUrlHolder {
+class MOZ_STACK_CLASS nsDOMFileInternalUrlHolder {
 public:
   nsDOMFileInternalUrlHolder(nsIDOMBlob* aFile, nsIPrincipal* aPrincipal
                              MOZ_GUARD_OBJECT_NOTIFIER_PARAM);

@@ -1398,7 +1398,7 @@ XPCWrappedNative::SystemIsBeingShutDown()
 /***************************************************************************/
 
 // Dynamically ensure that two objects don't end up with the same private.
-class AutoClonePrivateGuard NS_STACK_CLASS {
+class MOZ_STACK_CLASS AutoClonePrivateGuard {
 public:
     AutoClonePrivateGuard(JSObject *aOld, JSObject *aNew)
         : mOldReflector(aOld), mNewReflector(aNew)
@@ -1685,7 +1685,7 @@ RescueOrphans(XPCCallContext& ccx, JSObject* obj)
     JSObject *parentObj = js::GetObjectParent(obj);
     if (!parentObj)
         return NS_OK; // Global object. We're done.
-    parentObj = js::UnwrapObject(parentObj, /* stopAtOuter = */ false);
+    parentObj = js::UncheckedUnwrap(parentObj, /* stopAtOuter = */ false);
 
     // PreCreate may touch dead compartments.
     js::AutoMaybeTouchDeadZones agc(parentObj);
@@ -1730,7 +1730,7 @@ RescueOrphans(XPCCallContext& ccx, JSObject* obj)
 
     // We've been orphaned. Find where our parent went, and follow it.
     if (isWN) {
-        JSObject *realParent = js::UnwrapObject(parentObj);
+        JSObject *realParent = js::UncheckedUnwrap(parentObj);
         XPCWrappedNative *wn =
             static_cast<XPCWrappedNative*>(js::GetObjectPrivate(obj));
         return wn->ReparentWrapperIfFound(ccx, GetObjectScope(parentObj),
@@ -2200,7 +2200,7 @@ public:
 };
 
 // static
-NS_SUPPRESS_STACK_CHECK JSBool
+JSBool
 XPCWrappedNative::CallMethod(XPCCallContext& ccx,
                              CallMode mode /*= CALL_METHOD */)
 {

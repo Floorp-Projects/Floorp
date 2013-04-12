@@ -8,6 +8,6 @@
  * NOTE - The interfaces formerly in this header were private and are now all
  *        obsolete.
  *
- * $Id: nsslocks.h,v 1.6 2012/04/25 14:50:16 gerv%gerv.net Exp $
+ * $Id$
  */
 

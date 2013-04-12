@@ -359,7 +359,7 @@ static inline void xpc_NotifyAll(XPCLock* lock)
 // Note that xpconnect only makes *one* monitor and *mostly* holds it locked
 // only through very small critical sections.
 
-class NS_STACK_CLASS XPCAutoLock {
+class MOZ_STACK_CLASS XPCAutoLock {
 public:
 
     static XPCLock* NewLock(const char* name)
@@ -404,7 +404,7 @@ private:
 
 /************************************************/
 
-class NS_STACK_CLASS XPCAutoUnlock {
+class MOZ_STACK_CLASS XPCAutoUnlock {
 public:
     XPCAutoUnlock(XPCLock* lock MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
         : mLock(lock)
@@ -2293,7 +2293,7 @@ private:
 // it abstracts out the scriptable interface pointer and the flags. After
 // creation these are factored differently using XPCNativeScriptableInfo.
 
-class NS_STACK_CLASS XPCNativeScriptableCreateInfo
+class MOZ_STACK_CLASS XPCNativeScriptableCreateInfo
 {
 public:
 
@@ -2775,7 +2775,7 @@ public:
     static XPCWrappedNative*
     GetAndMorphWrappedNativeOfJSObject(JSContext* cx, JSObject* obj)
     {
-        obj = js::UnwrapObjectChecked(obj, /* stopAtOuter = */ false);
+        obj = js::CheckedUnwrap(obj, /* stopAtOuter = */ false);
         if (!obj)
             return nullptr;
         if (!IS_WRAPPER_CLASS(js::GetObjectClass(obj)))
@@ -3792,7 +3792,7 @@ private:
  * Handles pre/post script processing and the setting/resetting the error
  * reporter
  */
-class NS_STACK_CLASS AutoScriptEvaluate
+class MOZ_STACK_CLASS AutoScriptEvaluate
 {
 public:
     /**
@@ -3832,7 +3832,7 @@ private:
 };
 
 /***************************************************************************/
-class NS_STACK_CLASS AutoResolveName
+class MOZ_STACK_CLASS AutoResolveName
 {
 public:
     AutoResolveName(XPCCallContext& ccx, jsid name
