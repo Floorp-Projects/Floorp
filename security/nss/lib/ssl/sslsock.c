@@ -6,7 +6,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: sslsock.c,v 1.99 2012/12/20 20:29:36 bsmith%mozilla.com Exp $ */
+/* $Id$ */
 #include "seccomon.h"
 #include "cert.h"
 #include "keyhi.h"
@@ -153,7 +153,8 @@ static sslOptions ssl_defaults = {
     2,          /* enableRenegotiation (default: requires extension) */
     PR_FALSE,   /* requireSafeNegotiation */
     PR_FALSE,   /* enableFalseStart   */
-    PR_TRUE     /* cbcRandomIV        */
+    PR_TRUE,    /* cbcRandomIV        */
+    PR_FALSE    /* enableOCSPStapling */
 };
 
 /*
@@ -326,6 +327,8 @@ ssl_DupSocket(sslSocket *os)
 		                  ssl3_GetKeyPairRef(os->stepDownKeyPair);
 	    ss->ephemeralECDHKeyPair = !os->ephemeralECDHKeyPair ? NULL :
 		                  ssl3_GetKeyPairRef(os->ephemeralECDHKeyPair);
+	    ss->certStatusArray = !os->certStatusArray ? NULL :
+				  SECITEM_DupArray(NULL, os->certStatusArray);
 /*
  * XXX the preceding CERT_ and SECKEY_ functions can fail and return NULL.
  * XXX We should detect this, and not just march on with NULL pointers.
@@ -436,6 +439,10 @@ ssl_DestroySocketContents(sslSocket *ss)
     if (ss->ephemeralECDHKeyPair) {
 	ssl3_FreeKeyPair(ss->ephemeralECDHKeyPair);
 	ss->ephemeralECDHKeyPair = NULL;
+    }
+    if (ss->certStatusArray) {
+	SECITEM_FreeArray(ss->certStatusArray, PR_TRUE);
+	ss->certStatusArray = NULL;
     }
     SECITEM_FreeItem(&ss->opt.nextProtoNego, PR_FALSE);
     PORT_Assert(!ss->xtnData.sniNameArr);
@@ -827,6 +834,10 @@ SSL_OptionSet(PRFileDesc *fd, PRInt32 which, PRBool on)
 	ss->opt.cbcRandomIV = on;
 	break;
 
+      case SSL_ENABLE_OCSP_STAPLING:
+       ss->opt.enableOCSPStapling = on;
+       break;
+
       default:
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	rv = SECFailure;
@@ -896,6 +907,7 @@ SSL_OptionGet(PRFileDesc *fd, PRInt32 which, PRBool *pOn)
                                   on = ss->opt.requireSafeNegotiation; break;
     case SSL_ENABLE_FALSE_START:  on = ss->opt.enableFalseStart;   break;
     case SSL_CBC_RANDOM_IV:       on = ss->opt.cbcRandomIV;        break;
+    case SSL_ENABLE_OCSP_STAPLING: on = ss->opt.enableOCSPStapling; break;
 
     default:
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -954,6 +966,9 @@ SSL_OptionGetDefault(PRInt32 which, PRBool *pOn)
 				  break;
     case SSL_ENABLE_FALSE_START:  on = ssl_defaults.enableFalseStart;   break;
     case SSL_CBC_RANDOM_IV:       on = ssl_defaults.cbcRandomIV;        break;
+    case SSL_ENABLE_OCSP_STAPLING:
+       on = ssl_defaults.enableOCSPStapling;
+       break;
 
     default:
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -1116,6 +1131,10 @@ SSL_OptionSetDefault(PRInt32 which, PRBool on)
       case SSL_CBC_RANDOM_IV:
 	ssl_defaults.cbcRandomIV = on;
 	break;
+
+      case SSL_ENABLE_OCSP_STAPLING:
+       ssl_defaults.enableOCSPStapling = on;
+       break;
 
       default:
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -1675,6 +1694,13 @@ SSL_ReconfigFD(PRFileDesc *model, PRFileDesc *fd)
         ss->ephemeralECDHKeyPair =
             ssl3_GetKeyPairRef(sm->ephemeralECDHKeyPair);
     }
+    if (sm->certStatusArray) {
+	if (ss->certStatusArray) {
+	    SECITEM_FreeArray(ss->certStatusArray, PR_TRUE);
+	    ss->certStatusArray = NULL;
+	}
+	ss->certStatusArray = SECITEM_DupArray(NULL, sm->certStatusArray);
+    }
     /* copy trust anchor names */
     if (sm->ssl3.ca_list) {
         if (ss->ssl3.ca_list) {
@@ -1851,6 +1877,25 @@ SSL_VersionRangeSet(PRFileDesc *fd, const SSLVersionRange *vrange)
     ssl_Release1stHandshakeLock(ss);
 
     return SECSuccess;
+}
+
+const SECItemArray *
+SSL_PeerStapledOCSPResponses(PRFileDesc *fd)
+{
+    sslSocket *ss = ssl_FindSocket(fd);
+
+    if (!ss) {
+       SSL_DBG(("%d: SSL[%d]: bad socket in SSL_PeerStapledOCSPResponses",
+                SSL_GETPID(), fd));
+       return NULL;
+    }
+
+    if (!ss->sec.ci.sid) {
+       PORT_SetError(SEC_ERROR_NOT_INITIALIZED);
+       return NULL;
+    }
+    
+    return &ss->sec.ci.sid->peerCertStatus;
 }
 
 /************************************************************************/
@@ -2191,13 +2236,41 @@ ssl_GetSockName(PRFileDesc *fd, PRNetAddr *name)
 }
 
 SECStatus
+SSL_SetStapledOCSPResponses(PRFileDesc *fd, SECItemArray *responses,
+			    PRBool takeOwnership)
+{
+    sslSocket *ss;
+
+    ss = ssl_FindSocket(fd);
+    if (!ss) {
+	SSL_DBG(("%d: SSL[%d]: bad socket in SSL_SetStapledOCSPResponses",
+		 SSL_GETPID(), fd));
+	return SECFailure;
+    }
+
+    if (ss->certStatusArray) {
+        SECITEM_FreeArray(ss->certStatusArray, PR_TRUE);
+        ss->certStatusArray = NULL;
+    }
+    if (responses) {
+	if (takeOwnership) {
+	    ss->certStatusArray = responses;
+	}
+	else {
+	    ss->certStatusArray = SECITEM_DupArray(NULL, responses);
+	}
+    }
+    return (ss->certStatusArray || !responses) ? SECSuccess : SECFailure;
+}
+
+SECStatus
 SSL_SetSockPeerID(PRFileDesc *fd, const char *peerID)
 {
     sslSocket *ss;
 
     ss = ssl_FindSocket(fd);
     if (!ss) {
-	SSL_DBG(("%d: SSL[%d]: bad socket in SSL_SetCacheIndex",
+	SSL_DBG(("%d: SSL[%d]: bad socket in SSL_SetSockPeerID",
 		 SSL_GETPID(), fd));
 	return SECFailure;
     }
@@ -2890,6 +2963,7 @@ ssl_NewSocket(PRBool makeLocks, SSLProtocolVariant protocolVariant)
 	}
 	ss->stepDownKeyPair    = NULL;
 	ss->dbHandle           = CERT_GetDefaultCertDB();
+	ss->certStatusArray    = NULL;
 
 	/* Provide default implementation of hooks */
 	ss->authCertificate    = SSL_AuthCertificate;
@@ -2900,6 +2974,7 @@ ssl_NewSocket(PRBool makeLocks, SSLProtocolVariant protocolVariant)
 	ss->handleBadCert      = NULL;
 	ss->badCertArg         = NULL;
 	ss->pkcs11PinArg       = NULL;
+	ss->ephemeralECDHKeyPair = NULL;
 
 	ssl_ChooseOps(ss);
 	ssl2_InitSocketPolicy(ss);

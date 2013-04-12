@@ -193,7 +193,7 @@ void profiler_unlock()
 
 namespace mozilla {
 
-class NS_STACK_CLASS SamplerStackFrameRAII {
+class MOZ_STACK_CLASS SamplerStackFrameRAII {
 public:
   // we only copy the strings at save time, so to take multiple parameters we'd need to copy them then.
   SamplerStackFrameRAII(const char *aInfo, uint32_t line) {
@@ -207,7 +207,7 @@ private:
 };
 
 static const int SAMPLER_MAX_STRING = 128;
-class NS_STACK_CLASS SamplerStackFramePrintfRAII {
+class MOZ_STACK_CLASS SamplerStackFramePrintfRAII {
 public:
   // we only copy the strings at save time, so to take multiple parameters we'd need to copy them then.
   SamplerStackFramePrintfRAII(const char *aDefault, uint32_t line, const char *aFormat, ...) {

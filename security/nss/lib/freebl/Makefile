@@ -284,7 +284,6 @@ ifeq ($(CPU_ARCH),sparc)
         HAVE_ABI64_INT = 1
         HAVE_ABI64_FPU = 1
     else
-        HAVE_ABI32_INT32 = 1
         HAVE_ABI32_FPU = 1
         HAVE_ABI32_INT64 = 1
     endif
@@ -292,9 +291,6 @@ ifeq ($(CPU_ARCH),sparc)
     SOLARIS_AS = /usr/ccs/bin/as
     #### set arch, asm, c flags
     ifdef NS_USE_GCC
-	ifdef USE_ABI32_INT32
-	    # default ARCHFLAG=-mcpu=v8 set by coreconf/sunOS5.mk
-	endif
 	ifdef USE_ABI32_INT64
 	    ARCHFLAG=-mcpu=v9 -Wa,-xarch=v8plus
 	    SOLARIS_AS_FLAGS = -xarch=v8plus -K PIC
@@ -326,9 +322,6 @@ ifeq ($(CPU_ARCH),sparc)
 	    # if -xchip=ultra3 is used (Bugzilla bug 333925).  So we revert
 	    # to what we used in NSS 3.10.
 	    FPU_TARGET_OPTIMIZER = -xchip=ultra2
-	endif
-	ifdef USE_ABI32_INT32
-	    #ARCHFLAG=-xarch=v8 set in coreconf/sunOS5.mk
 	endif
 	ifdef USE_ABI32_INT64
 	    # this builds for Sparc v8+a ABI32_FPU architecture, 64-bit registers, 
@@ -385,12 +378,6 @@ ifeq ($(CPU_ARCH),sparc)
     endif # NS_USE_GCC
 
     ### set flags for both GCC and Sun cc
-    ifdef USE_ABI32_INT32
-	# this builds for Sparc v8 pure 32-bit architecture
-	DEFINES += -DMP_USE_UINT_DIGIT -DMP_ASSEMBLY_MULTIPLY
-	ASFILES  = mpv_sparcv8x.s
-	DEFINES += -DSHA_NO_LONG_LONG # avoid 64-bit arithmetic in SHA512
-    endif
     ifdef USE_ABI32_INT64
 	# this builds for Sparc v8+a ABI32_FPU architecture, 64-bit registers, 
 	# 32-bit ABI, it uses 64-bit words, integer arithmetic, no FPU

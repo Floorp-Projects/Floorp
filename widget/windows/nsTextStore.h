@@ -492,7 +492,7 @@ protected:
   // When On*Composition() is called without document lock, we need to flush
   // the recorded actions at quitting the method.
   // AutoPendingActionAndContentFlusher class is usedful for it.  
-  class NS_STACK_CLASS AutoPendingActionAndContentFlusher MOZ_FINAL
+  class MOZ_STACK_CLASS AutoPendingActionAndContentFlusher MOZ_FINAL
   {
   public:
     AutoPendingActionAndContentFlusher(nsTextStore* aTextStore)

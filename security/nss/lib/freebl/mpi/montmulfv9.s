@@ -105,7 +105,7 @@ TwoToMinus32:
 !   30		      ! * may use your version of this file under either the MPL or the
 !   31		      ! * GPL.
 !   32		      ! *
-!   33		      ! *  $Id: montmulfv9.s,v 1.6 2012/04/25 14:49:50 gerv%gerv.net Exp $
+!   33		      ! *  $Id$
 !   34		      ! */
 !   36		      !#define RF_INLINE_MACROS
 !   38		      !static const double TwoTo16=65536.0;

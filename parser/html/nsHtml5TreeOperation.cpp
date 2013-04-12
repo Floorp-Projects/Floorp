@@ -49,7 +49,7 @@ static NS_DEFINE_CID(kFormProcessorCID, NS_FORMPROCESSOR_CID);
  * Helper class that opens a notification batch if the current doc
  * is different from the executor doc.
  */
-class NS_STACK_CLASS nsHtml5OtherDocUpdate {
+class MOZ_STACK_CLASS nsHtml5OtherDocUpdate {
   public:
     nsHtml5OtherDocUpdate(nsIDocument* aCurrentDoc, nsIDocument* aExecutorDoc)
     {

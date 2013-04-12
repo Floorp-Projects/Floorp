@@ -218,7 +218,7 @@ CERT_EncodeNameConstraintsExtension(PRArenaPool          *arena,
 
 CERTNameConstraints *
 CERT_DecodeNameConstraintsExtension(PRArenaPool          *arena,
-				    SECItem              *encodedConstraints)
+				    const SECItem        *encodedConstraints)
 {
     return cert_DecodeNameConstraints(arena, encodedConstraints);
 }

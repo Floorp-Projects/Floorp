@@ -5,7 +5,7 @@
 /*
  * cmsutil -- A command to work with CMS data
  *
- * $Id: cmsutil.c,v 1.55 2012/03/20 14:47:20 gerv%gerv.net Exp $
+ * $Id$
  */
 
 #include "nspr.h"

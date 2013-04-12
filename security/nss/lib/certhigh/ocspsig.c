@@ -355,6 +355,8 @@ CERT_CreateOCSPSingleResponseRevoked(
     return ocsp_CreateSingleResponse(arena, id, cs, thisUpdate, nextUpdate);
 }
 
+/* responderCert == 0 means:
+ * create a response with an invalid signature (for testing purposes) */
 SECItem*
 CERT_CreateEncodedOCSPSuccessResponse(
     PLArenaPool *arena,
@@ -377,7 +379,7 @@ CERT_CreateEncodedOCSPSuccessResponse(
     SECKEYPrivateKey *privKey = NULL;
     SECItem *result = NULL;
   
-    if (!arena || !responderCert || !responses) {
+    if (!arena || !responses) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return NULL;
     }
@@ -414,58 +416,106 @@ CERT_CreateEncodedOCSPSuccessResponse(
     if (DER_TimeToGeneralizedTimeArena(tmpArena, &rd->producedAt, producedAt)
             != SECSuccess)
         goto done;
-    rid->responderIDType = responderIDType;
-    if (responderIDType == ocspResponderID_byName) {
-        responderIDTemplate = ocsp_ResponderIDByNameTemplate;
-        if (CERT_CopyName(tmpArena, &rid->responderIDValue.name,
-                           &responderCert->subject) != SECSuccess)
-            goto done;
+
+    if (!responderCert) {
+	/* use invalid signature for testing purposes */
+	unsigned char dummyChar = 'd';
+	SECItem dummy;
+
+	dummy.len = 1;
+	dummy.data = &dummyChar;
+
+	/* it's easier to produdce a keyHash out of nowhere,
+	 * than to produce an encoded subject,
+	 * so for our dummy response we always use byKey
+	 */
+	
+	rid->responderIDType = ocspResponderID_byKey;
+	if (!ocsp_DigestValue(tmpArena, SEC_OID_SHA1, &rid->responderIDValue.keyHash,
+			      &dummy))
+	    goto done;
+
+	if (!SEC_ASN1EncodeItem(tmpArena, &rd->derResponderID, rid,
+				ocsp_ResponderIDByKeyTemplate))
+	    goto done;
+
+	br->tbsResponseData = rd;
+
+	if (!SEC_ASN1EncodeItem(tmpArena, &br->tbsResponseDataDER, br->tbsResponseData,
+				ocsp_myResponseDataTemplate))
+	    goto done;
+
+	br->responseSignature.derCerts = PORT_ArenaNewArray(tmpArena, SECItem*, 1);
+	if (!br->responseSignature.derCerts)
+	    goto done;
+	br->responseSignature.derCerts[0] = NULL;
+
+	algID = SEC_GetSignatureAlgorithmOidTag(rsaKey, SEC_OID_SHA1);
+	if (algID == SEC_OID_UNKNOWN)
+	    goto done;
+
+	/* match the regular signature code, which doesn't use the arena */
+	if (!SECITEM_AllocItem(NULL, &br->responseSignature.signature, 1))
+	    goto done;
+	PORT_Memcpy(br->responseSignature.signature.data, &dummyChar, 1);
+
+	/* convert len-in-bytes to len-in-bits */
+	br->responseSignature.signature.len = br->responseSignature.signature.len << 3;
     }
     else {
-        responderIDTemplate = ocsp_ResponderIDByKeyTemplate;
-        if (!CERT_GetSPKIDigest(tmpArena, responderCert, SEC_OID_SHA1,
-                                      &rid->responderIDValue.keyHash))
-            goto done;
+	rid->responderIDType = responderIDType;
+	if (responderIDType == ocspResponderID_byName) {
+	    responderIDTemplate = ocsp_ResponderIDByNameTemplate;
+	    if (CERT_CopyName(tmpArena, &rid->responderIDValue.name,
+			    &responderCert->subject) != SECSuccess)
+		goto done;
+	}
+	else {
+	    responderIDTemplate = ocsp_ResponderIDByKeyTemplate;
+	    if (!CERT_GetSPKIDigest(tmpArena, responderCert, SEC_OID_SHA1,
+					&rid->responderIDValue.keyHash))
+		goto done;
+	}
+
+	if (!SEC_ASN1EncodeItem(tmpArena, &rd->derResponderID, rid,
+		responderIDTemplate))
+	    goto done;
+
+	br->tbsResponseData = rd;
+
+	if (!SEC_ASN1EncodeItem(tmpArena, &br->tbsResponseDataDER, br->tbsResponseData,
+		ocsp_myResponseDataTemplate))
+	    goto done;
+
+	br->responseSignature.derCerts = PORT_ArenaNewArray(tmpArena, SECItem*, 1);
+	if (!br->responseSignature.derCerts)
+	    goto done;
+	br->responseSignature.derCerts[0] = NULL;
+
+	privKey = PK11_FindKeyByAnyCert(responderCert, wincx);
+	if (!privKey)
+	    goto done;
+
+	algID = SEC_GetSignatureAlgorithmOidTag(privKey->keyType, SEC_OID_SHA1);
+	if (algID == SEC_OID_UNKNOWN)
+	    goto done;
+
+	if (SEC_SignData(&br->responseSignature.signature,
+			    br->tbsResponseDataDER.data, br->tbsResponseDataDER.len,
+			    privKey, algID)
+		!= SECSuccess)
+	    goto done;
+
+	/* convert len-in-bytes to len-in-bits */
+	br->responseSignature.signature.len = br->responseSignature.signature.len << 3;
+
+	/* br->responseSignature.signature wasn't allocated from arena,
+	* we must free it when done. */
     }
 
-    if (!SEC_ASN1EncodeItem(tmpArena, &rd->derResponderID, rid,
-            responderIDTemplate))
-        goto done;
-
-    br->tbsResponseData = rd;
-    
-    if (!SEC_ASN1EncodeItem(tmpArena, &br->tbsResponseDataDER, br->tbsResponseData,
-            ocsp_myResponseDataTemplate))
-        goto done;
-
-    br->responseSignature.derCerts = PORT_ArenaNewArray(tmpArena, SECItem*, 1);
-    if (!br->responseSignature.derCerts)
-        goto done;
-    br->responseSignature.derCerts[0] = NULL;
-
-    privKey = PK11_FindKeyByAnyCert(responderCert, wincx);
-    if (!privKey)
-        goto done;
-
-    algID = SEC_GetSignatureAlgorithmOidTag(privKey->keyType, SEC_OID_SHA1);
-    if (algID == SEC_OID_UNKNOWN)
-        goto done;
-
-    if (SEC_SignData(&br->responseSignature.signature,
-                        br->tbsResponseDataDER.data, br->tbsResponseDataDER.len,
-                        privKey, algID)
-            != SECSuccess)
-        goto done;
-
-    /* convert len-in-bytes to len-in-bits */
-    br->responseSignature.signature.len = br->responseSignature.signature.len << 3;
-
-    /* br->responseSignature.signature wasn't allocated from arena,
-     * we must free it when done. */
-
     if (SECOID_SetAlgorithmID(tmpArena, &br->responseSignature.signatureAlgorithm, algID, 0)
-            != SECSuccess)
-        goto done;
+	    != SECSuccess)
+	goto done;
 
     if (!SEC_ASN1EncodeItem(tmpArena, &rb->response, br,
                             ocsp_EncodeBasicOCSPResponseTemplate))

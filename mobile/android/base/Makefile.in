@@ -384,11 +384,9 @@ RES_LAYOUT = \
   res/layout/autocomplete_list_item.xml \
   res/layout/awesomebar.xml \
   res/layout/awesomebar_actionbar.xml \
-  res/layout/awesomebar_expandable_list.xml \
   res/layout/awesomebar_folder_row.xml \
   res/layout/awesomebar_header_row.xml \
   res/layout/awesomebar_allpages_list.xml \
-  res/layout/awesomebar_list.xml \
   res/layout/awesomebar_row.xml \
   res/layout/awesomebar_search.xml \
   res/layout/awesomebar_suggestion_row.xml \
@@ -449,8 +447,6 @@ RES_LAYOUT_LAND_V14 = \
 RES_LAYOUT_LARGE_V11 = \
   res/layout-large-v11/awesomebar_search.xml \
   res/layout-large-v11/browser_toolbar_menu.xml \
-  res/layout-large-v11/doorhangerpopup.xml \
-  res/layout-large-v11/site_identity_popup.xml \
   $(NULL)
 
 RES_LAYOUT_LARGE_LAND_V11 = \
@@ -501,6 +497,7 @@ RES_VALUES_LARGE_V11 = \
   res/values-large-v11/dimens.xml \
   res/values-large-v11/layout.xml \
   res/values-large-v11/styles.xml \
+  res/values-large-v11/themes.xml \
   $(NULL)
 
 RES_VALUES_LARGE_LAND_V11 = \
@@ -976,7 +973,13 @@ RES_COLOR = \
   res/color/awesome_bar_title.xml \
   res/color/awesome_bar_title_hint.xml \
   res/color/menu_item_title.xml \
+  res/color/primary_text.xml \
+  res/color/primary_text_inverse.xml \
+  res/color/secondary_text.xml \
+  res/color/secondary_text_inverse.xml \
   res/color/select_item_multichoice.xml \
+  res/color/tertiary_text.xml \
+  res/color/tertiary_text_inverse.xml \
   $(NULL)
 
 RES_MENU = \

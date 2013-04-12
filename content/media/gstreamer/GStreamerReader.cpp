@@ -551,7 +551,7 @@ bool GStreamerReader::DecodeVideoFrame(bool &aKeyFrameSkip,
         GST_BUFFER_SIZE(buffer), nullptr, &tmp, image);
 
     /* copy */
-    gst_buffer_copy_metadata(tmp, buffer, GST_BUFFER_COPY_ALL);
+    gst_buffer_copy_metadata(tmp, buffer, (GstBufferCopyFlags)GST_BUFFER_COPY_ALL);
     memcpy(GST_BUFFER_DATA(tmp), GST_BUFFER_DATA(buffer),
         GST_BUFFER_SIZE(tmp));
     gst_buffer_unref(buffer);

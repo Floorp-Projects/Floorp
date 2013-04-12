@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: drbg.c,v 1.12 2012/12/12 19:22:39 wtc%google.com Exp $ */
+/* $Id$ */
 
 #ifdef FREEBL_NO_DEPEND
 #include "stubs.h"

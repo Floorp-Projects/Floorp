@@ -42,10 +42,12 @@ extern void SECU_Indent(FILE *out, int level);
 extern void SECU_Newline(FILE *out);
 
 /* Print integer value and hex */
-extern void SECU_PrintInteger(FILE *out, SECItem *i, char *m, int level);
+extern void SECU_PrintInteger(FILE *out, const SECItem *i, const char *m,
+                              int level);
 
 /* Print SECItem as hex */
-extern void SECU_PrintAsHex(FILE *out, SECItem *i, const char *m, int level);
+extern void SECU_PrintAsHex(FILE *out, const SECItem *i, const char *m,
+                            int level);
 
 /* dump a buffer in hex and ASCII */
 extern void SECU_PrintBuf(FILE *out, const char *msg, const void *vp, int len);
@@ -62,8 +64,9 @@ extern SECStatus SECU_PKCS11Init(PRBool readOnly);
 extern int SECU_PrintSignedData(FILE *out, SECItem *der, const char *m, 
                                 int level, SECU_PPFunc inner);
 
-extern void SECU_PrintString(FILE *out, SECItem *si, char *m, int level);
-extern void SECU_PrintAny(FILE *out, SECItem *i, char *m, int level);
+extern void SECU_PrintString(FILE *out, const SECItem *si, const char *m,
+                             int level);
+extern void SECU_PrintAny(FILE *out, const SECItem *i, const char *m, int level);
 
 extern void SECU_PrintPRandOSError(char *progName);
 

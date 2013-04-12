@@ -1006,7 +1006,7 @@ PrintSyntax(char *progName)
         "\t\t [-p phone] [-1] [-2] [-3] [-4] [-5] [-6] [-7 emailAddrs]\n"
         "\t\t [-8 DNS-names]\n"
         "\t\t [--extAIA] [--extSIA] [--extCP] [--extPM] [--extPC] [--extIA]\n"
-        "\t\t [--extSKID]\n", progName);
+        "\t\t [--extSKID] [--extNC]\n", progName);
     FPS "\t%s -U [-X] [-d certdir] [-P dbprefix]\n", progName);
     exit(1);
 }
@@ -1595,6 +1595,8 @@ static void luS(enum usage_level ul, const char *command)
         "   --extIA ");
     FPS "%-20s Create a subject key ID extension\n",
         "   --extSKID ");
+    FPS "%-20s Create a name constraints extension\n",
+        "   --extNC ");
     FPS "\n");
 }
 
@@ -2042,6 +2044,7 @@ enum certutilOpts {
     opt_AddPolicyMapExt,
     opt_AddPolicyConstrExt,
     opt_AddInhibAnyExt,
+    opt_AddNameConstraintsExt,
     opt_AddSubjectKeyIDExt,
     opt_AddCmdKeyUsageExt,
     opt_AddCmdNSCertTypeExt,
@@ -2133,6 +2136,7 @@ secuCommandFlag options_init[] =
 	{ /* opt_AddPolicyMapExt     */  0,   PR_FALSE, 0, PR_FALSE, "extPM" },
 	{ /* opt_AddPolicyConstrExt  */  0,   PR_FALSE, 0, PR_FALSE, "extPC" },
 	{ /* opt_AddInhibAnyExt      */  0,   PR_FALSE, 0, PR_FALSE, "extIA" },
+	{ /* opt_AddNameConstraintsExt*/ 0,   PR_FALSE, 0, PR_FALSE, "extNC" },
 	{ /* opt_AddSubjectKeyIDExt  */  0,   PR_FALSE, 0, PR_FALSE, 
 						   "extSKID" },
 	{ /* opt_AddCmdKeyUsageExt   */  0,   PR_TRUE,  0, PR_FALSE,
@@ -2944,6 +2948,8 @@ merge_fail:
         }
         certutil_extns[ext_basicConstraint].activated =
 				certutil.options[opt_AddBasicConstraintExt].activated;
+        certutil_extns[ext_nameConstraints].activated =
+                                certutil.options[opt_AddNameConstraintsExt].activated;
         certutil_extns[ext_authorityKeyID].activated =
 				certutil.options[opt_AddAuthorityKeyIDExt].activated;
         certutil_extns[ext_subjectKeyID].activated =

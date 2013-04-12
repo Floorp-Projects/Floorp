@@ -97,7 +97,7 @@ function check(o1, o2) {
 var req, req2, req3, req4, req5, req6;
 var index = 0;
 
-var mozSettings = window.navigator.mozSettings;
+var mozSettings;
 
 var steps = [
   function () {
@@ -784,6 +784,7 @@ function next() {
 
 function permissionTest() {
   if (gSettingsEnabled) {
+    mozSettings = window.navigator.mozSettings;
     next();
   } else {
     is(mozSettings, null, "mozSettings is null when not enabled.");

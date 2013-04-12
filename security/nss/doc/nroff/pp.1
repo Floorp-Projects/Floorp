@@ -1,0 +1,98 @@
+'\" t
+.\"     Title: PP
+.\"    Author: [see the "Authors" section]
+.\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
+.\"      Date: 15 February 2013
+.\"    Manual: NSS Security Tools
+.\"    Source: nss-tools
+.\"  Language: English
+.\"
+.TH "PP" "1" "15 February 2013" "nss-tools" "NSS Security Tools"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+pp \- Prints certificates, keys, crls, and pkcs7 files
+.SH "SYNOPSIS"
+.HP \w'\fBpp\ \-t\ type\ [\-a]\ [\-i\ input]\ [\-o\ output]\fR\ 'u
+\fBpp \-t type [\-a] [\-i input] [\-o output]\fR
+.SH "STATUS"
+.PP
+This documentation is still work in progress\&. Please contribute to the initial review in
+\m[blue]\fBMozilla NSS bug 836477\fR\m[]\&\s-2\u[1]\d\s+2
+.SH "DESCRIPTION"
+.PP
+\fBpp \fRpretty\-prints private and public key, certificate, certificate\-request, pkcs7 or crl files
+.SH "OPTIONS"
+.PP
+\fB\-t \fR \fItype\fR
+.RS 4
+specify the input, one of {private\-key | public\-key | certificate | certificate\-request | pkcs7 | crl}
+.sp
+.RE
+.PP
+\fB\-a \fR
+.RS 4
+Input is in ascii encoded form (RFC1113)
+.RE
+.PP
+\fB\-i \fR \fIinputfile\fR
+.RS 4
+Define an input file to use (default is stdin)
+.RE
+.PP
+\fB\-u \fR \fIoutputfile\fR
+.RS 4
+Define an output file to use (default is stdout)
+.RE
+.SH "ADDITIONAL RESOURCES"
+.PP
+NSS is maintained in conjunction with PKI and security\-related projects through Mozilla dn Fedora\&. The most closely\-related project is Dogtag PKI, with a project wiki at
+\m[blue]\fBPKI Wiki\fR\m[]\&\s-2\u[2]\d\s+2\&.
+.PP
+For information specifically about NSS, the NSS project wiki is located at
+\m[blue]\fBMozilla NSS site\fR\m[]\&\s-2\u[3]\d\s+2\&. The NSS site relates directly to NSS code changes and releases\&.
+.PP
+Mailing lists: pki\-devel@redhat\&.com and pki\-users@redhat\&.com
+.PP
+IRC: Freenode at #dogtag\-pki
+.SH "AUTHORS"
+.PP
+The NSS tools were written and maintained by developers with Netscape, Red Hat, and Sun\&.
+.PP
+Authors: Elio Maldonado <emaldona@redhat\&.com>, Deon Lackey <dlackey@redhat\&.com>\&.
+.SH "LICENSE"
+.PP
+Licensed under the Mozilla Public License, version 1\&.1, and/or the GNU General Public License, version 2 or later, and/or the GNU Lesser General Public License, version 2\&.1 or later\&.
+.SH "NOTES"
+.IP " 1." 4
+Mozilla NSS bug 836477
+.RS 4
+\%https://bugzilla.mozilla.org/show_bug.cgi?id=836477
+.RE
+.IP " 2." 4
+PKI Wiki
+.RS 4
+\%http://pki.fedoraproject.org/wiki/
+.RE
+.IP " 3." 4
+Mozilla NSS site
+.RS 4
+\%http://www.mozilla.org/projects/security/pki/nss/
+.RE

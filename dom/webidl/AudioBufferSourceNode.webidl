@@ -36,3 +36,21 @@ interface AudioBufferSourceNode : AudioNode {
     [Throws]
     void stop(optional double when = 0);
 };
+
+/*
+ * The origin of this IDL file is
+ * https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html#AlternateNames
+ */
+[PrefControlled]
+partial interface AudioBufferSourceNode {
+    // Same as start()
+    [Throws]
+    void noteOn(double when);
+    [Throws]
+    void noteGrainOn(double when, double grainOffset, double grainDuration);
+    
+    [Throws]
+    // Same as stop()
+    void noteOff(double when);
+};
+

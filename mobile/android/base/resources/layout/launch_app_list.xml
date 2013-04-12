@@ -4,6 +4,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              style="@style/Screen"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"
               android:padding="3dip"
               android:windowIsFloating="true"/>

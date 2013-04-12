@@ -58,17 +58,20 @@ struct MmsMessageData
   MmsAttachmentData[] attachments;
 };
 
-union MobileMessageData {
+union MobileMessageData
+{
   MmsMessageData;
   SmsMessageData;
 };
 
-struct SmsFilterData {
+struct SmsFilterData
+{
   uint64_t      startDate;
   uint64_t      endDate;
   nsString[]    numbers;
   DeliveryState delivery;
   ReadState     read;
+  uint64_t      threadId;
 };
 
 struct ThreadData

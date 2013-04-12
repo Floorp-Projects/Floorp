@@ -1171,7 +1171,7 @@ nsNPAPIPluginInstance::IsWindowless(bool* isWindowless)
   return NS_OK;
 }
 
-class NS_STACK_CLASS AutoPluginLibraryCall
+class MOZ_STACK_CLASS AutoPluginLibraryCall
 {
 public:
   AutoPluginLibraryCall(nsNPAPIPluginInstance* aThis)

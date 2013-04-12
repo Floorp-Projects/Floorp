@@ -787,7 +787,7 @@ NS_IMETHODIMP nsContentTreeOwner::SetTitle(const PRUnichar* aTitle)
   return mXULWindow->SetTitle(title.get());
 }
 
-NS_STACK_CLASS class NullJSContextPusher {
+class MOZ_STACK_CLASS NullJSContextPusher {
 public:
   NullJSContextPusher() {
     mService = do_GetService(sJSStackContractID);

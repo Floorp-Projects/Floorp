@@ -146,17 +146,17 @@ audiotrack_get_min_frame_count(cubeb * ctx, cubeb_stream_params * params, int * 
   /* Recent Android have a getMinFrameCount method. On Froyo, we have to compute it by hand. */
   if (audiotrack_version_is_froyo(ctx)) {
     int samplerate, frame_count, latency, min_buffer_count;
-    status = ctx->klass.get_output_frame_count(&frame_count, AUDIO_STREAM_TYPE_MUSIC);
+    status = ctx->klass.get_output_frame_count(&frame_count, params->stream_type);
     if (status) {
       ALOG("error getting the output frame count.");
       return CUBEB_ERROR;
     }
-    status = ctx->klass.get_output_latency((uint32_t*)&latency, AUDIO_STREAM_TYPE_MUSIC);
+    status = ctx->klass.get_output_latency((uint32_t*)&latency, params->stream_type);
     if (status) {
       ALOG("error getting the output frame count.");
       return CUBEB_ERROR;
     }
-    status = ctx->klass.get_output_samplingrate(&samplerate, AUDIO_STREAM_TYPE_MUSIC);
+    status = ctx->klass.get_output_samplingrate(&samplerate, params->stream_type);
     if (status) {
       ALOG("error getting the output frame count.");
       return CUBEB_ERROR;
@@ -173,7 +173,7 @@ audiotrack_get_min_frame_count(cubeb * ctx, cubeb_stream_params * params, int * 
     return CUBEB_OK;
   }
   /* Recent Android have a getMinFrameCount method. */
-  status = ctx->klass.get_min_frame_count(min_frame_count, AUDIO_STREAM_TYPE_MUSIC, params->rate);
+  status = ctx->klass.get_min_frame_count(min_frame_count, params->stream_type, params->rate);
   if (status != 0) {
     ALOG("error getting the min frame count");
     return CUBEB_ERROR;
@@ -308,7 +308,7 @@ audiotrack_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_
 
   if (audiotrack_version_is_froyo(ctx)) {
     ctx->klass.ctor_froyo(stm->instance,
-                          AUDIO_STREAM_TYPE_MUSIC,
+                          stm->params.stream_type,
                           stm->params.rate,
                           AUDIO_FORMAT_PCM_16_BIT,
                           channels,
@@ -319,7 +319,7 @@ audiotrack_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_
                           0);
   } else {
     ctx->klass.ctor(stm->instance,
-                    AUDIO_STREAM_TYPE_MUSIC,
+                    stm->params.stream_type,
                     stm->params.rate,
                     AUDIO_FORMAT_PCM_16_BIT,
                     channels,

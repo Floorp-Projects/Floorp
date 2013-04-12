@@ -58,7 +58,7 @@ enum EWordMovementType { eStartWord, eEndWord, eDefaultBehavior };
  *  that are passed to nsFrame::PeekOffset(). See below for the description of
  *  individual arguments.
  */
-struct NS_STACK_CLASS nsPeekOffsetStruct
+struct MOZ_STACK_CLASS nsPeekOffsetStruct
 {
   nsPeekOffsetStruct(nsSelectionAmount aAmount,
                      nsDirection aDirection,

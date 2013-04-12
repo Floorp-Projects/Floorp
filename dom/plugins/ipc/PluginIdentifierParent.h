@@ -34,7 +34,7 @@ public:
   /**
    * Holds a perhaps-temporary identifier for the current stack frame.
    */
-  class NS_STACK_CLASS StackIdentifier
+  class MOZ_STACK_CLASS StackIdentifier
   {
   public:
     StackIdentifier(PluginInstanceParent* inst, NPIdentifier aIdentifier);

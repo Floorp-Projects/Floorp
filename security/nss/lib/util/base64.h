@@ -6,7 +6,7 @@
  * base64.h - prototypes for base64 encoding/decoding
  * Note: These functions are deprecated; see nssb64.h for new routines.
  *
- * $Id: base64.h,v 1.5 2012/11/27 22:48:09 bsmith%mozilla.com Exp $
+ * $Id$
  */
 #ifndef _BASE64_H_
 #define _BASE64_H_

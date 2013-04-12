@@ -15,7 +15,8 @@ import tarfile
 import subprocess
 import platform
 import sys
-import simplejson
+import json
+import collections
 
 def check_run(args):
     r = subprocess.call(args)
@@ -74,26 +75,16 @@ def build_one_stage(env, stage_dir, is_stage_one):
     with_env(env, f)
 
 def build_tooltool_manifest():
-    def key_sort(item):
-        item = item[0]
-        if item == 'size':
-            return 0
-        if item == 'digest':
-            return 1
-        if item == 'algorithm':
-            return 3
-        return 4
-
     basedir = os.path.split(os.path.realpath(sys.argv[0]))[0]
     tooltool = basedir + '/tooltool.py'
     setup = basedir + '/setup.sh'
     manifest = 'clang.manifest'
     check_run(['python', tooltool, '-m', manifest, 'add',
                setup, 'clang.tar.bz2'])
-    data = simplejson.load(file(manifest))
+    data = json.load(file(manifest), object_pairs_hook=collections.OrderedDict)
     data = [{'clang_version' : 'r%s' % llvm_revision }] + data
     out = file(manifest,'w')
-    simplejson.dump(data, out, indent=0, item_sort_key=key_sort)
+    json.dump(data, out, indent=0)
     out.write('\n')
 
     assert data[2]['filename'] == 'clang.tar.bz2'

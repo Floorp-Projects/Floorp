@@ -78,7 +78,7 @@ PrintChoicesAndGetAnswer(char* str, char* rBuff, int rSize)
 }
 
 static CERTGeneralName *
-GetGeneralName (PRArenaPool *arena)
+GetGeneralName(PRArenaPool *arena, CERTGeneralName *useExistingName, PRBool onlyOne)
 {
     CERTGeneralName *namesList = NULL;
     CERTGeneralName *current;
@@ -124,8 +124,12 @@ GetGeneralName (PRArenaPool *arena)
 	    break;
 	
 	if (namesList == NULL) {
-	    namesList = current = tail =
-		PORT_ArenaZNew(arena, CERTGeneralName);
+            if (useExistingName) {
+                namesList = current = tail = useExistingName;
+            } else {
+                namesList = current = tail =
+                    PORT_ArenaZNew(arena, CERTGeneralName);
+            }
 	} else {
 	    current = PORT_ArenaZNew(arena, CERTGeneralName);
 	}
@@ -200,13 +204,19 @@ GetGeneralName (PRArenaPool *arena)
         tail->l.next = &(current->l);
         tail = current;
         
-    }while (1);
+    }while (!onlyOne);
 
     if (rv != SECSuccess) {
         PORT_ArenaRelease (arena, mark);
         namesList = NULL;
     }
     return (namesList);
+}
+
+static CERTGeneralName *
+CreateGeneralName(PRArenaPool *arena)
+{
+  return GetGeneralName(arena, NULL, PR_FALSE);
 }
 
 static SECStatus 
@@ -772,6 +782,100 @@ AddBasicConstraint(void *extHandle)
 }
 
 static SECStatus 
+AddNameConstraints(void *extHandle)
+{
+    PRArenaPool              *arena = NULL;
+    CERTNameConstraints      *constraints = NULL;
+
+    CERTNameConstraint       *current = NULL;
+    CERTNameConstraint       *last_permited = NULL;
+    CERTNameConstraint       *last_excluded = NULL;
+    SECStatus                rv = SECSuccess;
+
+    char buffer[512];
+    int intValue = 0;
+
+    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    if (arena) {
+      constraints = PORT_ArenaZNew(arena, CERTNameConstraints);
+    }
+
+    if (!arena || ! constraints) {
+        SECU_PrintError(progName, "out of memory");
+        return SECFailure;
+    }
+
+    constraints->permited = constraints->excluded = NULL;
+
+    do {
+        current = PORT_ArenaZNew(arena, CERTNameConstraint);
+        if (!current) {
+            GEN_BREAK(SECFailure);
+        }
+
+        (void) SEC_ASN1EncodeInteger(arena, &current->min, 0);
+
+        if (!GetGeneralName(arena, &current->name, PR_TRUE)) {
+            GEN_BREAK(SECFailure);
+        }
+
+        PrintChoicesAndGetAnswer("Type of Name Constraint?\n"
+            "\t1 - permitted\n\t2 - excluded\n\tAny"
+            "other number to finish\n\tChoice",
+            buffer, sizeof(buffer));
+        intValue = PORT_Atoi(buffer);
+        switch (intValue) {
+        case 1:
+            if (constraints->permited == NULL) {
+                constraints->permited = last_permited = current;
+            }
+            last_permited->l.next = &(current->l);
+            current->l.prev = &(last_permited->l);
+            last_permited = current;
+            break;
+        case 2:
+            if (constraints->excluded == NULL) {
+                constraints->excluded = last_excluded = current;
+            }
+            last_excluded->l.next = &(current->l);
+            current->l.prev = &(last_excluded->l);
+            last_excluded = current;
+            break;
+        }
+        
+        PR_snprintf(buffer, sizeof(buffer), "Add another entry to the"
+                    " Name Constraint Extension [y/N]");
+
+        if (GetYesNo (buffer) == 0) {
+            break;
+        }
+
+    } while (1);
+
+    if (rv == SECSuccess) {
+        int oidIdent = SEC_OID_X509_NAME_CONSTRAINTS;
+
+        PRBool yesNoAns = GetYesNo("Is this a critical extension [y/N]?");
+
+        if (constraints->permited != NULL) {
+            last_permited->l.next = &(constraints->permited->l);
+            constraints->permited->l.prev = &(last_permited->l);
+        }
+        if (constraints->excluded != NULL) {
+            last_excluded->l.next = &(constraints->excluded->l);
+            constraints->excluded->l.prev = &(last_excluded->l);
+        }
+
+        rv = SECU_EncodeAndAddExtensionValue(arena, extHandle, constraints,
+                 yesNoAns, oidIdent,
+                 (EXTEN_EXT_VALUE_ENCODER)CERT_EncodeNameConstraintsExtension);
+    }
+    if (arena)
+        PORT_FreeArena(arena, PR_FALSE);
+    return (rv);
+}
+
+static SECStatus 
 AddAuthKeyID (void *extHandle)
 {
     CERTAuthKeyID *authKeyID = NULL;    
@@ -801,7 +905,7 @@ AddAuthKeyID (void *extHandle)
 
         SECU_SECItemHexStringToBinary(&authKeyID->keyID);
 
-        authKeyID->authCertIssuer = GetGeneralName (arena);
+        authKeyID->authCertIssuer = CreateGeneralName (arena);
         if (authKeyID->authCertIssuer == NULL && 
             SECFailure == PORT_GetError ())
             break;
@@ -895,7 +999,7 @@ AddCrlDistPoint(void *extHandle)
         switch (intValue) {
         case generalName:
             current->distPointType = intValue;
-            current->distPoint.fullName = GetGeneralName (arena);
+            current->distPoint.fullName = CreateGeneralName (arena);
             rv = PORT_GetError();
             break;
 
@@ -952,7 +1056,7 @@ AddCrlDistPoint(void *extHandle)
             current->reasons.len = 1;
         }
         puts ("Enter value for the CRL Issuer name:\n");
-        current->crlIssuer = GetGeneralName (arena);
+        current->crlIssuer = CreateGeneralName (arena);
         if (current->crlIssuer == NULL && (rv = PORT_GetError()) == SECFailure)
             break;
 
@@ -1588,7 +1692,7 @@ AddInfoAccess(void *extHandle, PRBool addSIAExt, PRBool isCACert)
             GEN_BREAK (SECFailure);
         }
 
-        current->location = GetGeneralName(arena);
+        current->location = CreateGeneralName(arena);
         if (!current->location) {
             GEN_BREAK(SECFailure);
         }
@@ -1675,6 +1779,15 @@ AddExtensions(void *extHandle, const char *emailAddrs, const char *dnsNames,
 		errstring = "BasicConstraint";
                 break;
 	    }
+        }
+
+        /* Add name constraints extension */
+        if (extList[ext_nameConstraints].activated) {
+            rv = AddNameConstraints(extHandle);
+            if (rv) {
+                errstring = "NameConstraints";
+                break;
+            }
         }
 
         if (extList[ext_authorityKeyID].activated) {

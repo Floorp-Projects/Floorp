@@ -59,9 +59,8 @@ loader.loadSubScript("chrome://specialpowers/content/SpecialPowersObserver.js", 
 let specialPowersObserver = new specialpowers.SpecialPowersObserver();
 specialPowersObserver.init();
 
-let fl = container.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
-fl.activateRemoteFrame();
-let mm = fl.messageManager;
+let mm = container.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader.messageManager;
+container.focus();
 mm.addMessageListener("SPPrefService", specialPowersObserver);
 mm.addMessageListener("SPProcessCrashService", specialPowersObserver);
 mm.addMessageListener("SPPingService", specialPowersObserver);
@@ -85,8 +84,27 @@ const CHILD_LOGGER_SCRIPT = "chrome://specialpowers/content/MozillaLogger.js";
 
 let homescreen = document.getElementById('homescreen');
 let container = homescreen.contentWindow.document.getElementById('test-container');
-container.setAttribute('mozapp', 'http://mochi.test:8888/manifest.webapp');
 
+function openWindow(aEvent) {
+  var popupIframe = aEvent.detail.frameElement;
+  popupIframe.setAttribute('style', 'position: absolute; left: 0; top: 300px; background: white; ');
+
+  popupIframe.addEventListener('mozbrowserclose', function(e) {
+    container.parentNode.removeChild(popupIframe);
+    container.focus();
+  });
+
+  // yes, the popup can call window.open too!
+  popupIframe.addEventListener('mozbrowseropenwindow', openWindow);
+
+  popupIframe.addEventListener('mozbrowserloadstart', function(e) {
+    popupIframe.focus();
+  });
+
+  container.parentNode.appendChild(popupIframe);
+}
+
+container.addEventListener('mozbrowseropenwindow', openWindow);
 %s
 
 container.src = '%s';
@@ -112,11 +130,18 @@ container.src = '%s';
         for pref in prefs:
             prefs[pref] = Preferences.cast(prefs[pref])
 
-        self.profile = Profile(addons=self.getExtensionsToInstall(options),
-                               apps=self.webapps,
-                               locations=self.locations,
-                               preferences=prefs,
-                               proxy={"remote": options.webServer})
+        kwargs = {
+            'addons': self.getExtensionsToInstall(options),
+            'apps': self.webapps,
+            'locations': self.locations,
+            'preferences': prefs,
+            'proxy': {"remote": options.webServer}
+        }
+
+        if options.profile:
+            self.profile = Profile.clone(options.profile, **kwargs)
+        else:
+            self.profile = Profile(**kwargs)
 
         options.profilePath = self.profile.profile
         # TODO bug 839108 - mozprofile should probably handle this

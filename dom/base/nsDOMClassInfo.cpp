@@ -218,9 +218,6 @@
 #include "nsIControllers.h"
 #include "nsISelection.h"
 #include "nsIBoxObject.h"
-#ifdef MOZ_GAMEPAD
-#include "nsIDOMGamepad.h"
-#endif
 #ifdef MOZ_XUL
 #include "nsITreeSelection.h"
 #include "nsITreeContentView.h"
@@ -972,11 +969,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            ARRAY_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(TouchEvent, nsEventSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
-#ifdef MOZ_GAMEPAD
-  NS_DEFINE_CLASSINFO_DATA(Gamepad, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-#endif
 
   NS_DEFINE_CLASSINFO_DATA(MozCSSKeyframeRule, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -2473,12 +2465,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMTouchEvent)
     DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
-
-#ifdef MOZ_GAMEPAD
-  DOM_CLASSINFO_MAP_BEGIN(Gamepad, nsIDOMGamepad)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMGamepad)
-  DOM_CLASSINFO_MAP_END
-#endif
 
   DOM_CLASSINFO_MAP_BEGIN(MozCSSKeyframeRule, nsIDOMMozCSSKeyframeRule)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozCSSKeyframeRule)
@@ -4197,7 +4183,7 @@ nsDOMConstructor::HasInstance(nsIXPConnectWrappedNative *wrapper,
   NS_ASSERTION(dom_obj, "nsDOMConstructor::HasInstance couldn't get object");
 
   // This might not be the right object, if there are wrappers. Unwrap if we can.
-  JSObject *wrapped_obj = js::UnwrapObjectChecked(dom_obj, /* stopAtOuter = */ false);
+  JSObject *wrapped_obj = js::CheckedUnwrap(dom_obj, /* stopAtOuter = */ false);
   if (wrapped_obj)
       dom_obj = wrapped_obj;
 
@@ -4712,7 +4698,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
       JSObject* global;
       bool defineOnXray = ObjectIsNativeWrapper(cx, obj);
       if (defineOnXray) {
-        global = js::UnwrapObjectChecked(obj, /* stopAtOuter = */ false);
+        global = js::CheckedUnwrap(obj, /* stopAtOuter = */ false);
         if (!global) {
           return NS_ERROR_DOM_SECURITY_ERR;
         }
@@ -4960,7 +4946,7 @@ static nsresult
 LocationSetterGuts(JSContext *cx, JSObject *obj, jsval *vp)
 {
   // This function duplicates some of the logic in XPC_WN_HelperSetProperty
-  obj = js::UnwrapObjectChecked(obj, /* stopAtOuter = */ false);
+  obj = js::CheckedUnwrap(obj, /* stopAtOuter = */ false);
   if (!IS_WN_WRAPPER(obj))
       return NS_ERROR_XPC_BAD_CONVERT_JS;
   XPCWrappedNative *wrapper = XPCWrappedNative::Get(obj);

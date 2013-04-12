@@ -51,20 +51,19 @@ CreateTextureHostOGL(SurfaceDescriptorType aDescriptorType,
 }
 
 static void
-MakeTextureIfNeeded(gl::GLContext* gl, GLenum aTarget, GLuint& aTexture)
+MakeTextureIfNeeded(gl::GLContext* gl, GLuint& aTexture)
 {
   if (aTexture != 0)
     return;
 
   gl->fGenTextures(1, &aTexture);
 
-  gl->fActiveTexture(LOCAL_GL_TEXTURE0);
-  gl->fBindTexture(aTarget, aTexture);
+  gl->fBindTexture(LOCAL_GL_TEXTURE_2D, aTexture);
 
-  gl->fTexParameteri(aTarget, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
-  gl->fTexParameteri(aTarget, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
-  gl->fTexParameteri(aTarget, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
-  gl->fTexParameteri(aTarget, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
+  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
+  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
+  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
+  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
 }
 
 static gl::TextureImage::Flags
@@ -251,21 +250,27 @@ SharedTextureHostOGL::SwapTexturesImpl(const SurfaceDescriptor& aImage,
   if (texture.inverted()) {
     mFlags |= NeedsYFlip;
   }
+
+  if (mSharedHandle && mSharedHandle != newHandle) {
+    mGL->ReleaseSharedHandle(mShareType, mSharedHandle);
+  }
+
   mShareType = texture.shareType();
   mSharedHandle = newHandle;
 
   GLContext::SharedHandleDetails handleDetails;
-  if (mGL->GetSharedHandleDetails(mShareType, mSharedHandle, handleDetails)) {
+  if (mSharedHandle && mGL->GetSharedHandleDetails(mShareType, mSharedHandle, handleDetails)) {
     mTextureTarget = handleDetails.mTarget;
     mShaderProgram = handleDetails.mProgramType;
     mFormat = FormatFromShaderType(mShaderProgram);
+    mTextureTransform = handleDetails.mTextureTransform;
   }
 }
 
 bool
 SharedTextureHostOGL::Lock()
 {
-  MakeTextureIfNeeded(mGL, mTextureTarget, mTextureHandle);
+  MakeTextureIfNeeded(mGL, mTextureHandle);
 
   mGL->fActiveTexture(LOCAL_GL_TEXTURE0);
   mGL->fBindTexture(mTextureTarget, mTextureHandle);
@@ -435,19 +440,22 @@ YCbCrTextureHostOGL::UpdateImpl(const SurfaceDescriptor& aImage,
   gfxIntSize gfxCbCrSize = shmemImage.GetCbCrSize();
 
   if (!mYTexture->mTexImage || mYTexture->mTexImage->GetSize() != gfxSize) {
-    mYTexture->mTexImage = mGL->CreateTextureImage(gfxSize,
+    mYTexture->mTexImage = CreateBasicTextureImage(mGL,
+                                                   gfxSize,
                                                    gfxASurface::CONTENT_ALPHA,
                                                    WrapMode(mGL, mFlags & AllowRepeat),
                                                    FlagsToGLFlags(mFlags));
   }
   if (!mCbTexture->mTexImage || mCbTexture->mTexImage->GetSize() != gfxCbCrSize) {
-    mCbTexture->mTexImage = mGL->CreateTextureImage(gfxCbCrSize,
+    mCbTexture->mTexImage = CreateBasicTextureImage(mGL,
+                                                    gfxCbCrSize,
                                                     gfxASurface::CONTENT_ALPHA,
                                                     WrapMode(mGL, mFlags & AllowRepeat),
                                                     FlagsToGLFlags(mFlags));
   }
-  if (!mCrTexture->mTexImage || mCrTexture->mTexImage->GetSize() != gfxSize) {
-    mCrTexture->mTexImage = mGL->CreateTextureImage(gfxCbCrSize,
+  if (!mCrTexture->mTexImage || mCrTexture->mTexImage->GetSize() != gfxCbCrSize) {
+    mCrTexture->mTexImage = CreateBasicTextureImage(mGL,
+                                                    gfxCbCrSize,
                                                     gfxASurface::CONTENT_ALPHA,
                                                     WrapMode(mGL, mFlags & AllowRepeat),
                                                     FlagsToGLFlags(mFlags));
@@ -645,6 +653,12 @@ void GrallocTextureHostOGL::BindTexture(GLenum aTextureUnit)
   mGL->fActiveTexture(aTextureUnit);
   mGL->fBindTexture(LOCAL_GL_TEXTURE_2D, mGLTexture);
   mGL->fActiveTexture(LOCAL_GL_TEXTURE0);
+}
+
+bool
+GrallocTextureHostOGL::IsValid() const
+{
+  return !!mGraphicBuffer.get();
 }
 
 GrallocTextureHostOGL::~GrallocTextureHostOGL()
