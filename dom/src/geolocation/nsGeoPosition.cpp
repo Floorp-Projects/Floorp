@@ -6,6 +6,10 @@
 #include "nsGeoPosition.h"
 #include "nsDOMClassInfoID.h"
 #include "nsIClassInfo.h"
+#include "nsContentUtils.h"
+
+#include "mozilla/dom/PositionBinding.h"
+#include "mozilla/dom/CoordinatesBinding.h"
 
 ////////////////////////////////////////////////////
 // nsGeoPositionCoords
@@ -146,3 +150,124 @@ nsGeoPosition::GetCoords(nsIDOMGeoPositionCoords * *aCoords)
   NS_IF_ADDREF(*aCoords = mCoords);
   return NS_OK;
 }
+
+namespace mozilla {
+namespace dom {
+
+
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_2(Position, mParent, mCoordinates)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(Position)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(Position)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Position)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+Position::Position(nsISupports* aParent, nsIDOMGeoPosition* aGeoPosition)
+  : mParent(aParent)
+  , mGeoPosition(aGeoPosition)
+{
+  SetIsDOMBinding();
+}
+
+Position::~Position()
+{
+}
+
+nsISupports*
+Position::GetParentObject() const
+{
+  return mParent;
+}
+
+JSObject*
+Position::WrapObject(JSContext* aCx, JSObject* aScope)
+{
+  return PositionBinding::Wrap(aCx, aScope, this);
+}
+
+Coordinates*
+Position::Coords()
+{
+  if (!mCoordinates) {
+    nsCOMPtr<nsIDOMGeoPositionCoords> coords;
+    mGeoPosition->GetCoords(getter_AddRefs(coords));
+    MOZ_ASSERT(coords, "coords should not be null");
+
+    mCoordinates = new Coordinates(this, coords);
+  }
+
+  return mCoordinates;
+}
+
+uint64_t
+Position::Timestamp() const
+{
+  uint64_t rv;
+
+  mGeoPosition->GetTimestamp(&rv);
+  return rv;
+}
+
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(Coordinates, mPosition)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(Coordinates)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(Coordinates)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Coordinates)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+Coordinates::Coordinates(Position* aPosition, nsIDOMGeoPositionCoords* aCoords)
+  : mPosition(aPosition)
+  , mCoords(aCoords)
+{
+  SetIsDOMBinding();
+}
+
+Coordinates::~Coordinates()
+{
+}
+
+Position*
+Coordinates::GetParentObject() const
+{
+  return mPosition;
+}
+
+JSObject*
+Coordinates::WrapObject(JSContext* aCx, JSObject* aScope)
+{
+  return CoordinatesBinding::Wrap(aCx, aScope, this);
+}
+
+#define GENERATE_COORDS_WRAPPED_GETTER(name) \
+double                                       \
+Coordinates::name() const                    \
+{                                            \
+  double rv;                                 \
+  mCoords->Get##name(&rv);                   \
+  return rv;                                 \
+}
+
+#define GENERATE_COORDS_WRAPPED_GETTER_NULLABLE(name) \
+Nullable<double>                                      \
+Coordinates::Get##name() const                        \
+{                                                     \
+  double rv;                                          \
+  mCoords->Get##name(&rv);                            \
+  return Nullable<double>(rv);                        \
+}
+
+GENERATE_COORDS_WRAPPED_GETTER(Latitude)
+GENERATE_COORDS_WRAPPED_GETTER(Longitude)
+GENERATE_COORDS_WRAPPED_GETTER_NULLABLE(Altitude)
+GENERATE_COORDS_WRAPPED_GETTER(Accuracy)
+GENERATE_COORDS_WRAPPED_GETTER_NULLABLE(AltitudeAccuracy)
+GENERATE_COORDS_WRAPPED_GETTER_NULLABLE(Heading)
+GENERATE_COORDS_WRAPPED_GETTER_NULLABLE(Speed)
+
+#undef GENERATE_COORDS_WRAPPED_GETTER
+#undef GENERATE_COORDS_WRAPPED_GETTER_NULLABLE
+
+} // namespace dom
+} // namespace mozilla
