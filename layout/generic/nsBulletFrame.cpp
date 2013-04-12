@@ -119,17 +119,25 @@ nsBulletFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
         newURI->Equals(oldURI, &same);
         if (same) {
           needNewRequest = false;
-        } else {
-          nsLayoutUtils::DeregisterImageRequest(PresContext(), mImageRequest,
-                                                &mRequestRegistered);
-          mImageRequest->CancelAndForgetObserver(NS_ERROR_FAILURE);
-          mImageRequest = nullptr;
         }
       }
     }
 
     if (needNewRequest) {
+      nsRefPtr<imgRequestProxy> oldRequest = mImageRequest;
       newRequest->Clone(mListener, getter_AddRefs(mImageRequest));
+
+      // Deregister the old request. We wait until after Clone is done in case
+      // the old request and the new request are the same underlying image
+      // accessed via different URLs.
+      if (oldRequest) {
+        nsLayoutUtils::DeregisterImageRequest(PresContext(), oldRequest,
+                                              &mRequestRegistered);
+        oldRequest->CancelAndForgetObserver(NS_ERROR_FAILURE);
+        oldRequest = nullptr;
+      }
+
+      // Register the new request.
       if (mImageRequest) {
         nsLayoutUtils::RegisterImageRequestIfAnimated(PresContext(),
                                                       mImageRequest,
