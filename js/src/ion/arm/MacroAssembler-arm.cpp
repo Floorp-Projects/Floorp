@@ -1282,7 +1282,7 @@ MacroAssemblerARM::ma_vimm(double value, FloatRegister dest, Condition cc)
 {
     union DoublePun {
         struct {
-#if defined(IS_LITTLE_ENDIAN) && !defined(FPU_IS_ARM_FPA)
+#if defined(IS_LITTLE_ENDIAN)
             uint32_t lo, hi;
 #else
             uint32_t hi, lo;
