@@ -27,7 +27,6 @@ EXTRA_COMPONENTS = \
         PromptService.js \
         ContentDispatchChooser.js \
         AddonUpdateService.js \
-        FormAutoComplete.js \
         LoginManagerPrompter.js \
         BlocklistPrompt.js \
         NSSDialogService.js \
