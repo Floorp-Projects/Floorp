@@ -468,7 +468,7 @@ CompositorParent::SetTransformation(float aScale, nsIntPoint aScrollOffset)
  * to the layer tree, if found.  On exiting scope, detaches all
  * resolved referents.
  */
-class NS_STACK_CLASS AutoResolveRefLayers {
+class MOZ_STACK_CLASS AutoResolveRefLayers {
 public:
   /**
    * |aRoot| must remain valid in the scope of this, which should be
