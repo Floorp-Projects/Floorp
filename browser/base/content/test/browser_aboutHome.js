@@ -294,6 +294,11 @@ function promiseNewTabLoadEvent(aUrl, aEventType="load")
   let tab = gBrowser.selectedTab = gBrowser.addTab(aUrl);
   info("Wait tab event: " + aEventType);
   tab.linkedBrowser.addEventListener(aEventType, function load(event) {
+    if (event.originalTarget != tab.linkedBrowser.contentDocument ||
+        event.target.location.href == "about:blank") {
+      info("skipping spurious load event");
+      return;
+    }
     tab.linkedBrowser.removeEventListener(aEventType, load, true);
     info("Tab event received: " + aEventType);
     deferred.resolve(tab);
