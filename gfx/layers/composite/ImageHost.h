@@ -24,8 +24,8 @@ public:
   TextureHost* GetTextureHost() MOZ_OVERRIDE { return nullptr; }
 
 protected:
-  ImageHost(Compositor* aCompositor)
-  : CompositableHost(aCompositor)
+  ImageHost(const TextureInfo& aTextureInfo, Compositor* aCompositor)
+  : CompositableHost(aTextureInfo, aCompositor)
   {
     MOZ_COUNT_CTOR(ImageHost);
   }
@@ -40,17 +40,18 @@ protected:
 class ImageHostSingle : public ImageHost
 {
 public:
-  ImageHostSingle(Compositor* aCompositor, CompositableType aType)
-    : ImageHost(aCompositor)
+  ImageHostSingle(const TextureInfo& aTextureInfo, Compositor* aCompositor)
+    : ImageHost(aTextureInfo, aCompositor)
     , mTextureHost(nullptr)
-    , mType(aType)
     , mHasPictureRect(false)
   {}
 
-  virtual CompositableType GetType() { return mType; }
+  virtual CompositableType GetType() { return mTextureInfo.mCompositableType; }
 
-  virtual void AddTextureHost(TextureHost* aTextureHost,
-                              ISurfaceAllocator* aAllocator = nullptr) MOZ_OVERRIDE;
+  virtual bool EnsureTextureHost(TextureIdentifier aTextureId,
+                                 const SurfaceDescriptor& aSurface,
+                                 ISurfaceAllocator* aAllocator,
+                                 const TextureInfo& aTextureInfo) MOZ_OVERRIDE;
 
   TextureHost* GetTextureHost() MOZ_OVERRIDE { return mTextureHost; }
 
@@ -89,7 +90,6 @@ public:
 protected:
   RefPtr<TextureHost> mTextureHost;
   nsIntRect mPictureRect;
-  CompositableType mType;
   bool mHasPictureRect;
 };
 
@@ -99,15 +99,18 @@ protected:
 class ImageHostBuffered : public ImageHostSingle
 {
 public:
-  ImageHostBuffered(Compositor* aCompositor, CompositableType aType)
-    : ImageHostSingle(aCompositor, aType)
+  ImageHostBuffered(const TextureInfo& aTextureInfo, Compositor* aCompositor)
+    : ImageHostSingle(aTextureInfo, aCompositor)
   {}
 
   virtual bool Update(const SurfaceDescriptor& aImage,
                       SurfaceDescriptor* aResult = nullptr) MOZ_OVERRIDE;
 
-  virtual void AddTextureHost(TextureHost* aTextureHost,
-                              ISurfaceAllocator* aAllocator = nullptr) MOZ_OVERRIDE;
+  virtual bool EnsureTextureHost(TextureIdentifier aTextureId,
+                                 const SurfaceDescriptor& aSurface,
+                                 ISurfaceAllocator* aAllocator,
+                                 const TextureInfo& aTextureInfo) MOZ_OVERRIDE;
+
 };
 
 }
