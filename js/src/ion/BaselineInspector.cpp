@@ -58,3 +58,33 @@ BaselineInspector::maybeMonomorphicShapeForPropertyOp(jsbytecode *pc)
 
     return NULL;
 }
+
+MIRType
+BaselineInspector::expectedResultType(jsbytecode *pc)
+{
+    // Look at the IC entries for this op to guess what type it will produce,
+    // returning MIRType_None otherwise.
+    const ICEntry &entry = icEntryFromPC(pc);
+
+    ICStub *stub = entry.firstStub();
+    ICStub *next = stub->next();
+
+    if (!next || !next->isFallback())
+        return MIRType_None;
+
+    switch (stub->kind()) {
+      case ICStub::BinaryArith_Int32:
+      case ICStub::BinaryArith_BooleanWithInt32:
+      case ICStub::UnaryArith_Int32:
+        return MIRType_Int32;
+      case ICStub::BinaryArith_Double:
+      case ICStub::BinaryArith_DoubleWithInt32:
+      case ICStub::UnaryArith_Double:
+        return MIRType_Double;
+      case ICStub::BinaryArith_StringConcat:
+      case ICStub::BinaryArith_StringObjectConcat:
+        return MIRType_String;
+      default:
+        return MIRType_None;
+    }
+}

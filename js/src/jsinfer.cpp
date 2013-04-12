@@ -326,6 +326,25 @@ types::TypeFailure(JSContext *cx, const char *fmt, ...)
 // TypeSet
 /////////////////////////////////////////////////////////////////////
 
+TypeSet::TypeSet(Type type)
+  : flags(0), objectSet(NULL), constraintList(NULL)
+{
+    if (type.isUnknown()) {
+        flags |= TYPE_FLAG_BASE_MASK;
+    } else if (type.isPrimitive()) {
+        flags = PrimitiveTypeFlag(type.primitive());
+        if (flags == TYPE_FLAG_DOUBLE)
+            flags |= TYPE_FLAG_INT32;
+    } else if (type.isAnyObject()) {
+        flags |= TYPE_FLAG_ANYOBJECT;
+    } else  if (type.isTypeObject() && type.typeObject()->unknownProperties()) {
+        flags |= TYPE_FLAG_ANYOBJECT;
+    } else {
+        setBaseObjectCount(1);
+        objectSet = reinterpret_cast<TypeObjectKey**>(type.objectKey());
+    }
+}
+
 bool
 TypeSet::isSubset(TypeSet *other)
 {
@@ -539,7 +558,7 @@ StackTypeSet::make(JSContext *cx, const char *name)
     return res;
 }
 
-const StackTypeSet *
+StackTypeSet *
 TypeSet::clone(LifoAlloc *alloc) const
 {
     unsigned objectCount = baseObjectCount();
@@ -559,6 +578,55 @@ TypeSet::clone(LifoAlloc *alloc) const
 
     res->flags = this->flags;
     res->objectSet = capacity ? newSet : this->objectSet;
+
+    return res;
+}
+
+bool
+TypeSet::addObject(TypeObjectKey *key, LifoAlloc *alloc)
+{
+    JS_ASSERT(!constraintList);
+
+    uint32_t objectCount = baseObjectCount();
+    TypeObjectKey **pentry = HashSetInsert<TypeObjectKey *,TypeObjectKey,TypeObjectKey>
+                                 (*alloc, objectSet, objectCount, key);
+    if (!pentry)
+        return false;
+    if (*pentry)
+        return true;
+    *pentry = key;
+
+    setBaseObjectCount(objectCount);
+
+    if (objectCount == TYPE_FLAG_OBJECT_COUNT_LIMIT) {
+        flags |= TYPE_FLAG_ANYOBJECT;
+        clearObjects();
+    }
+
+    return true;
+}
+
+/* static */ StackTypeSet *
+TypeSet::unionSets(TypeSet *a, TypeSet *b, LifoAlloc *alloc)
+{
+    StackTypeSet *res = alloc->new_<StackTypeSet>();
+    if (!res)
+        return NULL;
+
+    res->flags = a->baseFlags() | b->baseFlags();
+
+    if (!res->unknownObject()) {
+        for (size_t i = 0; i < a->getObjectCount() && !res->unknownObject(); i++) {
+            TypeObjectKey *key = a->getObject(i);
+            if (key && !res->addObject(key, alloc))
+                return NULL;
+        }
+        for (size_t i = 0; i < b->getObjectCount() && !res->unknownObject(); i++) {
+            TypeObjectKey *key = b->getObject(i);
+            if (key && !res->addObject(key, alloc))
+                return NULL;
+        }
+    }
 
     return res;
 }
@@ -1785,6 +1853,18 @@ HeapTypeSet::getKnownTypeTag(JSContext *cx)
     JS_ASSERT_IF(empty, type == JSVAL_TYPE_UNKNOWN);
 
     return type;
+}
+
+bool
+StackTypeSet::mightBeType(JSValueType type)
+{
+    if (unknown())
+        return true;
+
+    if (type == JSVAL_TYPE_OBJECT)
+        return unknownObject() || baseObjectCount() != 0;
+
+    return baseFlags() & PrimitiveTypeFlag(type);
 }
 
 /* Constraint which triggers recompilation if an object acquires particular flags. */
@@ -6003,48 +6083,6 @@ JSFunction::setTypeForScriptedFunction(JSContext *cx, HandleFunction fun, bool s
     return true;
 }
 
-#ifdef DEBUG
-
-/* static */ void
-TypeScript::CheckBytecode(JSContext *cx, HandleScript script, jsbytecode *pc, const js::Value *sp)
-{
-    AutoEnterAnalysis enter(cx);
-
-    if (js_CodeSpec[*pc].format & JOF_DECOMPOSE)
-        return;
-
-    if (!script->hasAnalysis() || !script->analysis()->ranInference())
-        return;
-    ScriptAnalysis *analysis = script->analysis();
-
-    int defCount = GetDefCount(script, pc - script->code);
-
-    for (int i = 0; i < defCount; i++) {
-        const js::Value &val = sp[-defCount + i];
-        TypeSet *types = analysis->pushedTypes(pc, i);
-        if (IgnorePushed(pc, i))
-            continue;
-
-        /*
-         * Ignore undefined values, these may have been inserted by Ion to
-         * substitute for dead values.
-         */
-        if (val.isUndefined())
-            continue;
-
-        Type type = GetValueType(cx, val);
-
-        if (!types->hasType(type)) {
-            /* Display fine-grained debug information first */
-            fprintf(stderr, "Missing type at #%u:%05u pushed %u: %s\n",
-                    script->id(), unsigned(pc - script->code), i, TypeString(type));
-            TypeFailure(cx, "Missing type pushed %u: %s", i, TypeString(type));
-        }
-    }
-}
-
-#endif
-
 /////////////////////////////////////////////////////////////////////
 // JSObject
 /////////////////////////////////////////////////////////////////////
@@ -6760,7 +6798,7 @@ TypeScript::destroy()
 }
 
 /* static */ void
-TypeScript::AddFreezeConstraints(JSContext *cx, HandleScript script)
+TypeScript::AddFreezeConstraints(JSContext *cx, JSScript *script)
 {
     /*
      * Adding freeze constraints to a script ensures that code for the script

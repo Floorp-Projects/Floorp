@@ -165,6 +165,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitCallGetProperty(LCallGetProperty *lir);
     bool visitCallGetElement(LCallGetElement *lir);
     bool visitCallSetElement(LCallSetElement *lir);
+    bool visitCallInitElementArray(LCallInitElementArray *lir);
     bool visitThrow(LThrow *lir);
     bool visitTypeOfV(LTypeOfV *lir);
     bool visitOutOfLineTypeOfV(OutOfLineTypeOfV *ool);
