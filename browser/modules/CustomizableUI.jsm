@@ -11,6 +11,8 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm");
 
 const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
@@ -107,16 +109,75 @@ XPCOMUtils.defineLazyGetter(this, "gBuiltInWidgets", function() {
       "48": "chrome://branding/content/icon48.png"
     }
   }, {
-    id: "share-page-5",
-    name: "Share 5",
-    shortcut: "Ctrl+Alt+S",
-    description: "Share this page",
+    id: "history-panelmenu",
+    type: "view",
+    viewId: "PanelUI-history",
+    name: "History...",
+    description: "History repeats itself!",
     defaultArea: CustomizableUI.AREA_PANEL,
     allowedAreas: [CustomizableUI.AREA_PANEL],
     icons: {
       "16": "chrome://branding/content/icon16.png",
       "32": "chrome://branding/content/icon48.png",
       "48": "chrome://branding/content/icon48.png"
+    },
+    onViewShowing: function(aEvent) {
+      // Populate our list of history
+      const kMaxResults = 10;
+      let doc = aEvent.detail.ownerDocument;
+
+      let options = PlacesUtils.history.getNewQueryOptions();
+      options.excludeQueries = true;
+      options.includeHidden = false;
+      options.resultType = options.RESULTS_AS_URI;
+      options.queryType = options.QUERY_TYPE_HISTORY;
+      options.sortingMode = options.SORT_BY_DATE_DESCENDING;
+      options.maxResults = kMaxResults;
+      let query = PlacesUtils.history.getNewQuery();
+
+      let items = doc.getElementById("PanelUI-historyItems");
+      // Clear previous history items.
+      while (items.firstChild) {
+        items.removeChild(items.firstChild);
+      }
+
+      PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
+                         .asyncExecuteLegacyQueries([query], 1, options, {
+        handleResult: function (aResultSet) {
+          let fragment = doc.createDocumentFragment();
+          for (let row, i = 0; (row = aResultSet.getNextRow()); i++) {
+            try {
+              let uri = row.getResultByIndex(1);
+              let title = row.getResultByIndex(2);
+              let icon = row.getResultByIndex(6);
+
+              let item = doc.createElementNS(kNSXUL, "toolbarbutton");
+              item.setAttribute("label", title || uri);
+              item.addEventListener("click", function(aEvent) {
+                if (aEvent.button == 0) {
+                  doc.defaultView.openUILink(uri, aEvent);
+                  doc.defaultView.PanelUI.hide();
+                }
+              });
+              if (icon)
+                item.setAttribute("image", "moz-anno:favicon:" + icon);
+              fragment.appendChild(item);
+            } catch (e) {
+              Cu.reportError("Error while showing history subview: " + e);
+            }
+          }
+          items.appendChild(fragment);
+        },
+        handleError: function (aError) {
+          LOG("History view tried to show but had an error: " + aError);
+        },
+        handleCompletion: function (aReason) {
+          LOG("History view is being shown!");
+        },
+      });
+    },
+    onViewHiding: function(aEvent) {
+      LOG("History view is being hidden!");
     }
   }];
 });
@@ -175,7 +236,7 @@ let gDefaultPlacements = new Map([
     "print-button",
     "history-button",
     "fullscreen-button",
-    "share-page-5",
+    "history-panelmenu",
     "bookmarks-panelmenu",
   ]]
 ]);
