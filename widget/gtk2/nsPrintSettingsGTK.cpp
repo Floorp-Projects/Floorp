@@ -738,3 +738,38 @@ nsPrintSettingsGTK::GetPageRanges(nsTArray<int32_t> &aPages)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsPrintSettingsGTK::GetResolution(int32_t *aResolution)
+{
+  if (!gtk_print_settings_has_key(mPrintSettings, GTK_PRINT_SETTINGS_RESOLUTION))
+    return NS_ERROR_FAILURE;
+  *aResolution = gtk_print_settings_get_resolution(mPrintSettings);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPrintSettingsGTK::SetResolution(int32_t aResolution)
+{
+  gtk_print_settings_set_resolution(mPrintSettings, aResolution);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPrintSettingsGTK::GetDuplex(int32_t *aDuplex)
+{
+  if (!gtk_print_settings_has_key(mPrintSettings, GTK_PRINT_SETTINGS_DUPLEX))
+    return NS_ERROR_FAILURE;
+  *aDuplex = gtk_print_settings_get_duplex(mPrintSettings);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPrintSettingsGTK::SetDuplex(int32_t aDuplex)
+{
+  MOZ_ASSERT(aDuplex >= GTK_PRINT_DUPLEX_SIMPLEX &&
+             aDuplex <= GTK_PRINT_DUPLEX_VERTICAL,
+             "value is out of bounds for GtkPrintDuplex enum");
+  gtk_print_settings_set_duplex(mPrintSettings, static_cast<GtkPrintDuplex>(aDuplex));
+  return NS_OK;
+}
+

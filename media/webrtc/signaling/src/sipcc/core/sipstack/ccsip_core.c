@@ -1268,7 +1268,7 @@ sip_redirect (ccsipCCB_t *ccb, sipMessage_t *response, uint16_t status_code)
                 } else {
                     CCSIP_DEBUG_ERROR(DEB_L_C_F_PREFIX"No memory left;"
                                       "Ignoring CC-Diversion header #%d %d\n",
-                                      ccb->dn_line, ccb->gsm_id, fname,
+                                      DEB_L_C_F_PREFIX_ARGS(SIP_CALL_STATUS, ccb->dn_line, ccb->gsm_id, fname),
                                       ccb->index, i + 1);
                 }
             }
@@ -2951,7 +2951,8 @@ ccsip_handle_idle_ev_sip_invite (ccsipCCB_t *ccb, sipSMEvent_t *event)
         } else {
             CCSIP_DEBUG_ERROR(DEB_L_C_F_PREFIX "No memory left; %d"
                               "Can not create CC-Diversion header for CFWDAll\n",
-                              ccb->dn_line, ccb->gsm_id, fname, ccb->index);
+                              DEB_L_C_F_PREFIX_ARGS(SIP_TIMER, ccb->dn_line, ccb->gsm_id, fname),
+                              ccb->index);
         }
         sipSPISendInviteResponse302(ccb);
         ccb->wait_for_ack = TRUE;
@@ -6261,7 +6262,7 @@ sip_sm_process_event (sipSMEvent_t *pEvent)
 
     if ((event_handler = get_handler_index(ccb->state, pEvent->type))
             != H_INVALID_EVENT) {
-        CCSIP_DEBUG_STATE(DEB_L_C_F_PREFIX"Processing SM event: %d: --0x%08lx--%21s: %s <- %s\n",
+        CCSIP_DEBUG_STATE(DEB_L_C_F_PREFIX"Processing SM event: %d: --%p--%21s: %s <- %s\n",
                           DEB_L_C_F_PREFIX_ARGS(SIP_EVT, ccb->dn_line, ccb->gsm_id, fname),
 						  ccb->index, EVENT_ACTION_SM(event_handler),
                           "", sip_util_state2string(ccb->state),
@@ -6429,10 +6430,10 @@ sip_sm_process_cc_event (cprBuffer_t buf)
     event_handler = get_handler_index(sip_sm_event.ccb->state, sip_sm_event.type);
     if (event_handler != H_INVALID_EVENT) {
 
-        DEF_DEBUG(DEB_L_C_F_PREFIX"Processing CC event: %-6d: SM: %s <- %s\n",
+        DEF_DEBUG(DEB_L_C_F_PREFIX"Processing CC event: %p: SM: %s <- %s\n",
                         DEB_L_C_F_PREFIX_ARGS(SIP_EVT, sip_sm_event.ccb->dn_line,
                         sip_sm_event.ccb->gsm_id, fname),
-                        (long)buf,
+                        buf,
                         sip_util_state2string(sip_sm_event.ccb->state),
                         sip_util_event2string(sip_sm_event.type));
 
@@ -7471,7 +7472,7 @@ sip_sm_get_ccb_by_ccm_id_and_index (int ccmid, line_t idx)
              * that standby cucm has sent. Should not do much harm.
              */
             DEF_DEBUG(DEB_F_PREFIX"ccb index has moved or cfg_table not initialized for the cucm=%s. "
-                "index=%d ccb=%d. Throwing away the msg.\n",DEB_F_PREFIX_ARGS(SIP_BRANCH, fname),
+                "index=%d ccb=%p. Throwing away the msg.\n",DEB_F_PREFIX_ARGS(SIP_BRANCH, fname),
                 CCM_ID_PRINT(ccm_id), idx, ccb);
             ccb = NULL;
         }
@@ -7672,7 +7673,7 @@ sip_sm_ccb_match_branch_cseq (ccsipCCB_t *ccb,
         } else {
             CCSIP_DEBUG_ERROR(SIP_L_C_F_PREFIX"Mismatched CSeq or"
                               " Via's branch parameter in response:"
-                              "ccb=0x%x,%d, cseq(trx,msg)=(%d,%d),"
+                              "ccb=%p,%d, cseq(trx,msg)=(%d,%d),"
                               "branch(trx,msg)=(%s,%s)\n",
                                ccb->dn_line, ccb->gsm_id, fname, ccb,
                                ccb->index, trx->cseq_number, sipCseq->number,
@@ -9160,7 +9161,7 @@ sip_sm_request_check_and_store (ccsipCCB_t *ccb, sipMessage_t *request,
             if ((size_t) content_length != strlen(request->raw_body)) {
                 CCSIP_DEBUG_ERROR(SIP_F_PREFIX"\n Mismatched Content length and "
                                   "Actual message body length:content length=%d\n"
-                                  "and message as %s\n and strlen of messagebody = %d\n",
+                                  "and message as %s\n and strlen of messagebody = %lu\n",
                                   fname, content_length, request->raw_body,
                                   strlen(request->raw_body));
                 *request_check_reason_code = SIP_WARN_MISC;
@@ -10060,7 +10061,7 @@ void ccsip_handle_sentinvite_midcall_ev_sip_2xx (ccsipCCB_t *ccb,
              * Other features are not expected.
              */
             CCSIP_DEBUG_ERROR(DEB_L_C_F_PREFIX"%d: unexpected feature %d\n",
-                              ccb->dn_line, ccb->gsm_id, fname,
+                              DEB_L_C_F_PREFIX_ARGS(SIP_CALL_STATUS, ccb->dn_line, ccb->gsm_id, fname),
                               ccb->index, ccb->featuretype);
             sip_cc_feature_ack(ccb->gsm_id, ccb->dn_line, ccb->featuretype,
                                NULL, CC_CAUSE_ERROR);

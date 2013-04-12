@@ -896,7 +896,7 @@ SIPTaskProcessListEvent (uint32_t cmd, void *msg, void *pUsr, uint16_t len)
 
     default:
         cpr_free(msg);
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Unknown message\n, fname");
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Unknown message", fname);
         break;
     }
     return;

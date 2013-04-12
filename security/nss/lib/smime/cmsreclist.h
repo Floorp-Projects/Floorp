@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * $Id: cmsreclist.h,v 1.5 2012/04/25 14:50:09 gerv%gerv.net Exp $
+ * $Id$
  */
 
 #ifndef _CMSRECLIST_H

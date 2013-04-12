@@ -118,7 +118,7 @@ cc_return_t cc_invokeFeatureSDPMode(cc_call_handle_t call_handle,
     callFeature.featData.ccData.level = level;
     callFeature.featData.ccData.constraints = constraints;
 
-    CCAPP_DEBUG(DEB_F_PREFIX"cc_invokeFeatureSDPMode:sid=%d, line=%d, cid=%d, fid=%d, video_pref=%s data=%s\n",
+    CCAPP_DEBUG(DEB_F_PREFIX"cc_invokeFeatureSDPMode:sid=%d, line=%d, cid=%d, fid=%d, data=%s\n",
                         DEB_F_PREFIX_ARGS("cc_call_feature", "cc_invokeFeatureSDPMode"),
                         callFeature.session_id,
                         GET_LINE_ID(call_handle),

@@ -44,6 +44,7 @@
 #include "gfxFontTest.h"
 
 #include "harfbuzz/hb.h"
+#include "harfbuzz/hb-ot.h"
 
 #include "nsCRT.h"
 #include "GeckoProfiler.h"
@@ -1452,6 +1453,7 @@ gfxFont::gfxFont(gfxFontEntry *aFontEntry, const gfxFontStyle *aFontStyle,
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
     ++gFontCount;
 #endif
+    mKerningSet = HasFeatureSet(HB_TAG('k','e','r','n'), mKerningEnabled);
 }
 
 gfxFont::~gfxFont()
@@ -1490,6 +1492,299 @@ gfxFont::GetFontTable(uint32_t aTag) {
 
     return mFontEntry->ShareFontTableAndGetBlob(aTag,
                                                 haveTable ? &buffer : nullptr);
+}
+
+static hb_blob_t *
+HBGetTable(hb_face_t *face, hb_tag_t aTag, void *aUserData)
+{
+    gfxFont* font = static_cast<gfxFont*>(aUserData);
+    return font->GetFontTable(aTag);
+}
+
+static bool
+HasLookupRuleWithGlyphByScript(hb_face_t *aFace, hb_tag_t aTableTag,
+                               hb_tag_t aScript, uint16_t aGlyph)
+{
+    hb_set_t *lookups = hb_set_create();
+    hb_set_t *glyphs = hb_set_create();
+    hb_tag_t scripts[2] = {0};
+    scripts[0] = aScript;
+
+    bool result = false;
+    hb_ot_layout_collect_lookups(aFace, aTableTag, scripts, nullptr, nullptr,
+                                 lookups);
+
+    hb_codepoint_t index = -1;
+    while (hb_set_next(lookups, &index)) {
+        hb_ot_layout_lookup_collect_glyphs(aFace, aTableTag, index,
+                                           glyphs, glyphs, glyphs,
+                                           glyphs);
+        if (hb_set_has(glyphs, aGlyph)) {
+            result = true;
+            break;
+        }
+    }
+
+    hb_set_destroy(glyphs);
+    hb_set_destroy(lookups);
+
+    return result;
+}
+
+static void
+CollectLookupsByFeature(hb_face_t *aFace, hb_tag_t aTableTag,
+                        uint32_t aFeatureIndex, hb_set_t *aLookups)
+{
+    uint32_t lookups[32];
+    uint32_t i, len, offset;
+
+    offset = 0;
+    do {
+        len = ArrayLength(lookups);
+        hb_ot_layout_feature_get_lookups(aFace, aTableTag, aFeatureIndex,
+                                         offset, &len, lookups);
+        for (i = 0; i < len; i++) {
+            hb_set_add(aLookups, lookups[i]);
+        }
+        offset += len;
+    } while (len == ArrayLength(lookups));
+}
+
+static void
+CollectLookupsByLanguage(hb_face_t *aFace, hb_tag_t aTableTag,
+                         hb_tag_t aExcludeFeature,
+                         hb_set_t *aLookups, hb_set_t *aExcludedFeatureLookups,
+                         uint32_t aScriptIndex, uint32_t aLangIndex)
+{
+    uint32_t reqFeatureIndex;
+    if (hb_ot_layout_language_get_required_feature_index(aFace, aTableTag,
+                                                         aScriptIndex,
+                                                         aLangIndex,
+                                                         &reqFeatureIndex)) {
+        CollectLookupsByFeature(aFace, aTableTag, reqFeatureIndex, aLookups);
+    }
+
+    uint32_t featureIndexes[32];
+    uint32_t i, len, offset;
+
+    offset = 0;
+    do {
+        len = ArrayLength(featureIndexes);
+        hb_ot_layout_language_get_feature_indexes(aFace, aTableTag,
+                                                  aScriptIndex, aLangIndex,
+                                                  offset, &len, featureIndexes);
+
+        for (i = 0; i < len; i++) {
+            uint32_t featureIndex = featureIndexes[i];
+
+            // get the feature tag
+            hb_tag_t featureTag;
+            uint32_t tagLen = 1;
+            hb_ot_layout_language_get_feature_tags(aFace, aTableTag,
+                                                   aScriptIndex, aLangIndex,
+                                                   offset + i, &tagLen,
+                                                   &featureTag);
+
+            // collect lookups
+            hb_set_t *lookups = featureTag == aExcludeFeature ?
+                                    aExcludedFeatureLookups : aLookups;
+            CollectLookupsByFeature(aFace, aTableTag, featureIndex, lookups);
+        }
+        offset += len;
+    } while (len == ArrayLength(featureIndexes));
+}
+
+static void
+HasLookupRuleWithGlyph(hb_face_t *aFace, hb_tag_t aTableTag, bool& aHasGlyph,
+                       hb_tag_t aExcludeFeature, bool& aHasGlyphExcluded,
+                       uint16_t aGlyph)
+{
+    // iterate over the scripts in the font
+    uint32_t numScripts, numLangs, script, lang;
+    hb_set_t *lookups = hb_set_create();
+    hb_set_t *excludedFeatureLookups = hb_set_create();
+
+    numScripts = hb_ot_layout_table_get_script_tags(aFace, aTableTag, 0,
+                                                    nullptr, nullptr);
+
+    for (script = 0; script < numScripts; script++) {
+        // default lang
+        CollectLookupsByLanguage(aFace, aTableTag, aExcludeFeature,
+                                 lookups, excludedFeatureLookups,
+                                 script, HB_OT_LAYOUT_DEFAULT_LANGUAGE_INDEX);
+
+        // iterate over langs
+        numLangs = hb_ot_layout_script_get_language_tags(aFace, HB_OT_TAG_GPOS,
+                                                         script, 0,
+                                                         nullptr, nullptr);
+        for (lang = 0; lang < numLangs; lang++) {
+            CollectLookupsByLanguage(aFace, aTableTag, aExcludeFeature,
+                                     lookups, excludedFeatureLookups,
+                                     script, lang);
+        }
+    }
+
+    // look for the glyph among non-excluded lookups
+    hb_set_t *glyphs = hb_set_create();
+    hb_codepoint_t index = -1;
+    while (hb_set_next(lookups, &index)) {
+        hb_ot_layout_lookup_collect_glyphs(aFace, aTableTag, index,
+                                           glyphs, glyphs, glyphs,
+                                           glyphs);
+        if (hb_set_has(glyphs, aGlyph)) {
+            aHasGlyph = true;
+            break;
+        }
+    }
+
+    // look for the glyph among excluded lookups
+    hb_set_clear(glyphs);
+    index = -1;
+    while (hb_set_next(excludedFeatureLookups, &index)) {
+        hb_ot_layout_lookup_collect_glyphs(aFace, aTableTag, index,
+                                           glyphs, glyphs, glyphs,
+                                           glyphs);
+        if (hb_set_has(glyphs, aGlyph)) {
+            aHasGlyphExcluded = true;
+            break;
+        }
+    }
+
+    hb_set_destroy(glyphs);
+    hb_set_destroy(excludedFeatureLookups);
+    hb_set_destroy(lookups);
+}
+
+nsDataHashtable<nsUint32HashKey, int32_t> gfxFont::sScriptTagToCode;
+
+void
+gfxFont::CheckForFeaturesInvolvingSpace()
+{
+    mFontEntry->mHasSpaceFeaturesInitialized = true;
+
+    bool result = false;
+
+    hb_face_t *face = hb_face_create_for_tables(HBGetTable, this, nullptr);
+
+    uint32_t i, len, offset;
+    uint32_t spaceGlyph = GetSpaceGlyph();
+    int32_t s;
+
+    mFontEntry->mHasSpaceFeaturesSubDefault = false;
+
+    // GSUB lookups - examine per script
+    if (hb_ot_layout_has_substitution(face)) {
+
+        // set up the script ==> code hashtable if needed
+        if (!sScriptTagToCode.IsInitialized()) {
+            sScriptTagToCode.Init(MOZ_NUM_SCRIPT_CODES);
+            for (s = MOZ_SCRIPT_ARABIC; s < MOZ_NUM_SCRIPT_CODES; s++) {
+                hb_script_t scriptTag = hb_script_t(GetScriptTagForCode(s));
+                hb_tag_t s1, s2;
+                hb_ot_tags_from_script(scriptTag, &s1, &s2);
+                sScriptTagToCode.Put(s1, s);
+                if (s2 != HB_OT_TAG_DEFAULT_SCRIPT) {
+                    sScriptTagToCode.Put(s2, s);
+                }
+            }
+        }
+
+        // iterate over the scripts in the font
+        hb_tag_t scriptTags[8];
+
+        offset = 0;
+        do {
+            len = ArrayLength(scriptTags);
+            hb_ot_layout_table_get_script_tags(face, HB_OT_TAG_GSUB, offset,
+                                               &len, scriptTags);
+            for (i = 0; i < len; i++) {
+                if (HasLookupRuleWithGlyphByScript(face, HB_OT_TAG_GSUB,
+                                                   scriptTags[i], spaceGlyph))
+                {
+                    result = true;
+                    if (scriptTags[i] == HB_TAG('D','F','L','T')) {
+                        mFontEntry->mHasSpaceFeaturesSubDefault = true;
+                    }
+                    if (sScriptTagToCode.Get(scriptTags[i], &s)) {
+                        uint32_t index = s >> 5;
+                        uint32_t bit = s & 0x1f;
+                        mFontEntry->mHasSpaceFeaturesSub[index] |= (1 << bit);
+                    }
+                }
+            }
+            offset += len;
+        } while (len == ArrayLength(scriptTags));
+    }
+
+    // GPOS lookups - distinguish kerning from non-kerning features
+    mFontEntry->mHasSpaceFeaturesKerning = false;
+    mFontEntry->mHasSpaceFeaturesNonKerning = false;
+
+    if (hb_ot_layout_has_positioning(face)) {
+        bool hasKerning = false, hasNonKerning = false;
+        HasLookupRuleWithGlyph(face, HB_OT_TAG_GPOS, hasNonKerning,
+                               HB_TAG('k','e','r','n'), hasKerning, spaceGlyph);
+        if (hasKerning || hasNonKerning) {
+            result = true;
+        }
+        mFontEntry->mHasSpaceFeaturesKerning = hasKerning;
+        mFontEntry->mHasSpaceFeaturesNonKerning = hasNonKerning;
+    }
+
+    hb_face_destroy(face);
+    mFontEntry->mHasSpaceFeatures = result;
+
+#ifdef DEBUG_SPACE_LOOKUPS
+    printf("font: %s - subst: %8.8x %8.8x %8.8x %8.8x "
+           "default: %s kerning: %s non-kerning: %s\n",
+           NS_ConvertUTF16toUTF8(mFontEntry->Name()).get(),
+           mFontEntry->mHasSpaceFeaturesSub[0],
+           mFontEntry->mHasSpaceFeaturesSub[1],
+           mFontEntry->mHasSpaceFeaturesSub[2],
+           mFontEntry->mHasSpaceFeaturesSub[3],
+           (mFontEntry->mHasSpaceFeaturesSubDefault ? "true" : "false"),
+           (mFontEntry->mHasSpaceFeaturesKerning ? "true" : "false"),
+           (mFontEntry->mHasSpaceFeaturesNonKerning ? "true" : "false")
+    );
+#endif
+}
+
+bool
+gfxFont::HasFeatureSet(uint32_t aFeature, bool& aFeatureOn)
+{
+    aFeatureOn = false;
+
+    if (mStyle.featureSettings.IsEmpty() &&
+        GetFontEntry()->mFeatureSettings.IsEmpty()) {
+        return false;
+    }
+
+    // add feature values from font
+    bool featureSet = false;
+    uint32_t i, count;
+
+    nsTArray<gfxFontFeature>& fontFeatures = GetFontEntry()->mFeatureSettings;
+    count = fontFeatures.Length();
+    for (i = 0; i < count; i++) {
+        const gfxFontFeature& feature = fontFeatures.ElementAt(i);
+        if (feature.mTag == aFeature) {
+            featureSet = true;
+            aFeatureOn = (feature.mValue != 0);
+        }
+    }
+
+    // add feature values from style rules
+    nsTArray<gfxFontFeature>& styleFeatures = mStyle.featureSettings;
+    count = styleFeatures.Length();
+    for (i = 0; i < count; i++) {
+        const gfxFontFeature& feature = styleFeatures.ElementAt(i);
+        if (feature.mTag == aFeature) {
+            featureSet = true;
+            aFeatureOn = (feature.mValue != 0);
+        }
+    }
+
+    return featureSet;
 }
 
 /**
@@ -2710,12 +3005,18 @@ gfxFont::SplitAndInitTextRun(gfxContext *aContext,
         return true;
     }
 
+    if (BypassShapedWordCache(aRunScript)) {
+        return ShapeTextWithoutWordCache(aContext, aString + aRunStart,
+                                         aRunStart, aRunLength, aRunScript,
+                                         aTextRun);
+    }
+
     InitWordCache();
 
     // the only flags we care about for ShapedWord construction/caching
-    uint32_t flags = aTextRun->GetFlags() &
-        (gfxTextRunFactory::TEXT_IS_RTL |
-         gfxTextRunFactory::TEXT_DISABLE_OPTIONAL_LIGATURES);
+    uint32_t flags = aTextRun->GetFlags();
+    flags &= (gfxTextRunFactory::TEXT_IS_RTL |
+              gfxTextRunFactory::TEXT_DISABLE_OPTIONAL_LIGATURES);
     if (sizeof(T) == sizeof(uint8_t)) {
         flags |= gfxTextRunFactory::TEXT_IS_8BIT;
     }

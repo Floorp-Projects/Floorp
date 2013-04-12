@@ -25,7 +25,7 @@ class Loader;
 
 // If CSS_REPORT_PARSE_ERRORS is not defined, all of this class's
 // methods become inline stubs.
-class NS_STACK_CLASS ErrorReporter {
+class MOZ_STACK_CLASS ErrorReporter {
 public:
   ErrorReporter(const nsCSSScanner &aScanner,
                 const nsCSSStyleSheet *aSheet,

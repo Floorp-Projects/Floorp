@@ -1392,7 +1392,7 @@ nsRange::SelectNodeContents(nsINode& aNode, ErrorResult& aRv)
 // start/end points in the future, we can switchover relatively
 // easy.
 
-class NS_STACK_CLASS RangeSubtreeIterator
+class MOZ_STACK_CLASS RangeSubtreeIterator
 {
 private:
 
@@ -1796,9 +1796,7 @@ nsRange::CutContents(dom::DocumentFragment** aFragment)
   // If aFragment isn't null, create a temporary fragment to hold our return.
   nsRefPtr<dom::DocumentFragment> retval;
   if (aFragment) {
-    ErrorResult error;
-    retval = NS_NewDocumentFragment(doc->NodeInfoManager(), error);
-    NS_ENSURE_SUCCESS(error.ErrorCode(), error.ErrorCode());
+    retval = new dom::DocumentFragment(doc->NodeInfoManager());
   }
   nsCOMPtr<nsIDOMNode> commonCloneAncestor = retval.get();
 
@@ -2239,10 +2237,7 @@ nsRange::CloneContents(ErrorResult& aRv)
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(document));
 
   nsRefPtr<dom::DocumentFragment> clonedFrag =
-    NS_NewDocumentFragment(doc->NodeInfoManager(), aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
+    new dom::DocumentFragment(doc->NodeInfoManager());
 
   nsCOMPtr<nsIDOMNode> commonCloneAncestor = clonedFrag.get();
   if (!commonCloneAncestor) {

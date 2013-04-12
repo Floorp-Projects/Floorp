@@ -5,7 +5,7 @@
 /*
  * Support for various policy related extensions
  *
- * $Id: polcyxtn.c,v 1.14 2012/04/25 14:49:27 gerv%gerv.net Exp $
+ * $Id$
  */
 
 #include "seccomon.h"
@@ -148,7 +148,7 @@ breakLines(char *string)
 }
 
 CERTCertificatePolicies *
-CERT_DecodeCertificatePoliciesExtension(SECItem *extnValue)
+CERT_DecodeCertificatePoliciesExtension(const SECItem *extnValue)
 {
     PRArenaPool *arena = NULL;
     SECStatus rv;
@@ -281,7 +281,7 @@ CERT_DestroyPolicyMappingsExtension(CERTCertificatePolicyMappings *mappings)
 SECStatus
 CERT_DecodePolicyConstraintsExtension
                              (CERTCertificatePolicyConstraints *decodedValue,
-                              SECItem *encodedValue)
+                              const SECItem *encodedValue)
 {
     CERTCertificatePolicyConstraints decodeContext;
     PRArenaPool *arena = NULL;
@@ -604,7 +604,7 @@ const SEC_ASN1Template CERT_OidSeqTemplate[] = {
 };
 
 CERTOidSequence *
-CERT_DecodeOidSequence(SECItem *seqItem)
+CERT_DecodeOidSequence(const SECItem *seqItem)
 {
     PRArenaPool *arena = NULL;
     SECStatus rv;

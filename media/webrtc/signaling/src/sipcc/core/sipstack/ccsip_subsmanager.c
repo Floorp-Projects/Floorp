@@ -371,7 +371,7 @@ handle_pending_requests (sipSCB_t *scbp)
 static void
 ccsip_api_subscribe_result (ccsip_sub_not_data_t * msg_data)
 {
-    CCSIP_DEBUG_TASK(DEB_F_PREFIX"Received Subscribe Response: request_id=%d, sub_id=%x\n",
+    CCSIP_DEBUG_TASK(DEB_F_PREFIX"Received Subscribe Response: request_id=%ld, sub_id=%x",
                      DEB_F_PREFIX_ARGS(SIP_SUB_RESP, "ccsip_api_subscribe_result"),
                      msg_data->request_id, msg_data->sub_id);
     if (msg_data->u.subs_result_data.status_code == REQUEST_TIMEOUT) {
@@ -424,7 +424,7 @@ ccsip_api_notify_ind (ccsip_sub_not_data_t *msg)
     static const char *fname = "ccsip_api_notify_ind";
     sipspi_msg_t not_resp;
 
-    CCSIP_DEBUG_TASK(DEB_F_PREFIX"Received Notify, request_id=%d, sub_id=%x\n",DEB_F_PREFIX_ARGS(SIP_SUB_RESP, fname),
+    CCSIP_DEBUG_TASK(DEB_F_PREFIX"Received Notify, request_id=%ld, sub_id=%x",DEB_F_PREFIX_ARGS(SIP_SUB_RESP, fname),
                      msg->request_id, msg->sub_id);
 
     // Check out what's there in the notify indication
@@ -1165,7 +1165,7 @@ allocate_scb (int *scb_index)
              */
             subsManagerSCBS[i].sub_id = new_sub_id(i);
             CCSIP_DEBUG_TASK("allocate_scb scb_index: %d, currentScbsAllocated: %d, "
-                    "maxScbsAllocated: %d, sub_id: %x\n", scb_index,
+                    "maxScbsAllocated: %d, sub_id: %x", *scb_index,
                     currentScbsAllocated, maxScbsAllocated, subsManagerSCBS[i].sub_id);
 
             /*
@@ -2245,8 +2245,8 @@ subsmanager_handle_ev_app_subscription_terminated (cprBuffer_t buf)
         scbp = find_scb_by_sub_id(subs_term->sub_id, &scb_index);
     }
     if (scbp == NULL) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"no SCB for sub_id=%x or request id %d"
-                          " and eventPackage %d found\n", fname,
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"no SCB for sub_id=%x or request id %ld"
+                          " and eventPackage %d found", fname,
                           subs_term->sub_id, subs_term->request_id,
                           subs_term->eventPackage);
         return SIP_ERROR;
@@ -2674,9 +2674,9 @@ subsmanager_handle_ev_sip_subscribe (sipMessage_t *pSipMessage,
     if (pSipMessage->raw_body) {
         if (content_length != strlen(pSipMessage->raw_body)) {
             CCSIP_DEBUG_ERROR(SIP_F_PREFIX"\n Mismatched Content length and \
-                             Actual message body length:content length=%d \
+                             Actual message body length:content length=%u \
                              \n and message as %s \
-                             \n and strlenof messagebody = %d\n", fname,
+                             \n and strlenof messagebody = %lu", fname,
                              content_length, pSipMessage->raw_body,
                              strlen(pSipMessage->raw_body));
             if (sipSPISendErrorResponse(pSipMessage, SIP_CLI_ERR_BAD_REQ,
@@ -2996,8 +2996,8 @@ subsmanager_handle_ev_sip_subscribe (sipMessage_t *pSipMessage,
         // if any has been given to us
         if (scbp->min_expires != 0) {
             if (expiry_time < scbp->min_expires && expiry_time < 3600) {
-                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Too small expiry time: %d; "
-                                  "Min acceptable: %d.\n", fname,
+                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Too small expiry time: %lu; "
+                                  "Min acceptable: %lu.", fname,
                                   expiry_time, scbp->min_expires);
 
                 if (sipSPISendErrorResponse(pSipMessage,
@@ -3017,8 +3017,8 @@ subsmanager_handle_ev_sip_subscribe (sipMessage_t *pSipMessage,
         }
         if (scbp->max_expires != 0) {
             if (expiry_time > scbp->max_expires) {
-                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Too large expiry time: %d; "
-                                  "Max acceptable: %d.\n", fname,
+                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Too large expiry time: %lu; "
+                                  "Max acceptable: %lu.", fname,
                                   expiry_time, scbp->max_expires);
                 // There doesn't seem to be any particular error code for
                 // maximum expiry time so just return the generic error
@@ -5259,7 +5259,7 @@ show_scbs_inuse ()
         debugif_printf("SCB# %d, State = %d sub_id=%x\n", i, scbp->smState,
                        scbp->sub_id);
         debugif_printf("SCB# %d, pendingClean=%d, internal=%d, eventPackage=%d, "
-                       "norefersub=%d, subscriptionState=%d, expires=%d\n", i,
+                       "norefersub=%d, subscriptionState=%d, expires=%ld", i,
                        scbp->pendingClean, scbp->internal, scbp->hb.event_type,
                        scbp->norefersub, scbp->subscription_state, scbp->hb.expires);
         debugif_printf("-----------------------------\n");

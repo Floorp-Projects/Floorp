@@ -5,7 +5,7 @@
 /*
  * PKCS7 encoding.
  *
- * $Id: p7encode.c,v 1.15 2012/04/25 14:50:06 gerv%gerv.net Exp $
+ * $Id$
  */
 
 #include "p7local.h"

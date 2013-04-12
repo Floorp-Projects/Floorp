@@ -5,7 +5,7 @@
 /*
  * CMS message methods.
  *
- * $Id: cmsmessage.c,v 1.8 2012/04/25 14:50:08 gerv%gerv.net Exp $
+ * $Id$
  */
 
 #include "cmslocal.h"

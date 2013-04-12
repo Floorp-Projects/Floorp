@@ -509,7 +509,7 @@ sip_transport_setup_cc_conn (line_t dn, CCM_ID ccm_id)
                 (CCM_Config_Table[dn - 1][ccm_id]->ti_common.conn_type == CONN_TLS)) {
                 uint32_t port = 0;
 
-                CCSIP_DEBUG_TASK(DEB_F_PREFIX"server_ipaddr %d \n", DEB_F_PREFIX_ARGS(SIP_TRANS, fname), server_ipaddr);
+                CCSIP_DEBUG_TASK(DEB_F_PREFIX"server_ipaddr %p", DEB_F_PREFIX_ARGS(SIP_TRANS, fname), &server_ipaddr);
                 sip_msg.createConnMsg.addr = server_ipaddr;
                 config_get_value(ccm_config_id_port[ccm_id], &port,
                                  sizeof(port));
@@ -2132,7 +2132,7 @@ sipTransportClearServerHandle (cpr_ip_addr_t *ipaddr, uint16_t port, int connid)
     ti_common_t *ti_common;
     CCM_ID cc_index;
 
-    CCSIP_DEBUG_TASK(DEB_F_PREFIX"addr 0x%x port %d connid %d\n",
+    CCSIP_DEBUG_TASK(DEB_F_PREFIX"addr %p port %d connid %d",
                      DEB_F_PREFIX_ARGS(SIP_TRANS, "sipTransportClearServerHandle"), ipaddr, port, connid);
     for (cc_index = PRIMARY_CCM; cc_index < MAX_CCM; cc_index++) {
         ti_common = &CCM_Device_Specific_Config_Table[cc_index].ti_common;

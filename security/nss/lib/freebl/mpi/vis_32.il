@@ -2,7 +2,7 @@
 ! This Source Code Form is subject to the terms of the Mozilla Public
 ! License, v. 2.0. If a copy of the MPL was not distributed with this
 ! file, You can obtain one at http://mozilla.org/MPL/2.0/.
-! $Id: vis_32.il,v 1.4 2012/04/25 14:49:50 gerv%gerv.net Exp $
+! $Id$
 
 ! The interface to the VIS instructions as declared below (and in the VIS
 ! User's Manual) will not change, but the macro implementation might change

@@ -258,7 +258,7 @@ nsNodeUtils::LastRelease(nsINode* aNode)
   delete aNode;
 }
 
-struct NS_STACK_CLASS nsHandlerData
+struct MOZ_STACK_CLASS nsHandlerData
 {
   uint16_t mOperation;
   nsCOMPtr<nsIDOMNode> mSource;
@@ -433,7 +433,6 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
                                                nodeInfo->NamespaceID(),
                                                nodeInfo->NodeType(),
                                                nodeInfo->GetExtraName());
-    NS_ENSURE_TRUE(newNodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
     nodeInfo = newNodeInfo;
   }

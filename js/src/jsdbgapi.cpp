@@ -923,13 +923,13 @@ JS_DumpCompartmentPCCounts(JSContext *cx)
 JS_PUBLIC_API(JSObject *)
 JS_UnwrapObject(JSObject *obj)
 {
-    return UnwrapObject(obj);
+    return UncheckedUnwrap(obj);
 }
 
 JS_PUBLIC_API(JSObject *)
 JS_UnwrapObjectAndInnerize(JSObject *obj)
 {
-    return UnwrapObject(obj, /* stopAtOuter = */ false);
+    return UncheckedUnwrap(obj, /* stopAtOuter = */ false);
 }
 
 JS_FRIEND_API(JSBool)

@@ -17,17 +17,14 @@
 #include <windows.foundation.h>
 #include <windows.ui.viewmanagement.h>
 
-void Log(const wchar_t *fmt, ...);
+void Log(const char *fmt, ...);
+void LogW(const wchar_t *fmt, ...);
 
-#define WIDEN2(x) L ## x
-#define WIDEN(x) WIDEN2(x)
-#define __WFUNCTION__ WIDEN(__FUNCTION__)
-
-#define LogFunction() Log(__WFUNCTION__)
-#define LogThread() Log(L"%s: IsMainThread:%d ThreadId:%X", __WFUNCTION__, NS_IsMainThread(), GetCurrentThreadId())
-#define LogThis() Log(L"[%X] %s", this, __WFUNCTION__)
-#define LogException(e) Log(L"%s Exception:%s", __WFUNCTION__, e->ToString()->Data())
-#define LogHRESULT(hr) Log(L"%s hr=%X", __WFUNCTION__, hr)
+#define LogFunction() Log(__FUNCTION__)
+#define LogThread() Log("%s: IsMainThread:%d ThreadId:%X", __FUNCTION__, NS_IsMainThread(), GetCurrentThreadId())
+#define LogThis() Log("[%X] %s", this, __FUNCTION__)
+#define LogException(e) Log("%s Exception:%s", __FUNCTION__, e->ToString()->Data())
+#define LogHRESULT(hr) Log("%s hr=%X", __FUNCTION__, hr)
 
 // HRESULT checkers, these warn on failure in debug builds
 #ifdef DEBUG

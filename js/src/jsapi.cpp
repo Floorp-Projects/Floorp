@@ -686,6 +686,24 @@ JS_FRIEND_API(bool) JS::isGCEnabled() { return true; }
 
 static const JSSecurityCallbacks NullSecurityCallbacks = { };
 
+static bool
+JitSupportsFloatingPoint()
+{
+#if defined(JS_METHODJIT) || defined(JS_ION)
+    if (!JSC::MacroAssembler().supportsFloatingPoint())
+        return false;
+
+#if defined(JS_ION) && WTF_ARM_ARCH_VERSION == 6
+    if (!js::ion::hasVFP())
+        return false;
+#endif
+
+    return true;
+#else
+    return false;
+#endif
+}
+
 PerThreadData::PerThreadData(JSRuntime *runtime)
   : PerThreadDataFriendFields(),
     runtime_(runtime),
@@ -893,6 +911,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     noGCOrAllocationCheck(0),
 #endif
     jitHardening(false),
+    jitSupportsFloatingPoint(false),
     ionPcScriptCache(NULL),
     threadPool(this),
     ctypesActivityCallback(NULL),
@@ -990,6 +1009,8 @@ JSRuntime::init(uint32_t maxbytes)
         return false;
 
     nativeStackBase = GetNativeStackBase();
+
+    jitSupportsFloatingPoint = JitSupportsFloatingPoint();
     return true;
 }
 

@@ -71,7 +71,6 @@ XPCWrappedNativeProto::Init(XPCCallContext& ccx,
 
     js::Class* jsclazz;
 
-
     if (mScriptableInfo) {
         const XPCNativeScriptableFlags& flags(mScriptableInfo->GetFlags());
 
@@ -88,11 +87,10 @@ XPCWrappedNativeProto::Init(XPCCallContext& ccx,
         jsclazz = &XPC_WN_NoMods_NoCall_Proto_JSClass;
     }
 
-    JSObject *parent = mScope->GetGlobalJSObject();
-
+    JS::RootedObject parent(ccx, mScope->GetGlobalJSObject());
+    JS::RootedObject proto(ccx, JS_GetObjectPrototype(ccx, parent));
     mJSProtoObject = JS_NewObjectWithUniqueType(ccx, js::Jsvalify(jsclazz),
-                                                JS_GetObjectPrototype(ccx, parent),
-                                                parent);
+                                                proto, parent);
 
     bool success = !!mJSProtoObject;
     if (success) {

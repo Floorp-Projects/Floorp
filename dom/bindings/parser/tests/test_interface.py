@@ -317,3 +317,17 @@ def WebIDLTest(parser, harness):
                "Should not allow a name collision between interface "
                "and other object")
 
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            [SomeRandomAnnotation]
+            interface A {
+                readonly attribute boolean y;
+            };
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+    harness.ok(threw,
+               "Should not allow unknown extended attributes on interfaces")

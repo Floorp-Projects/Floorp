@@ -8,7 +8,7 @@
 #include "nscore.h"
 #include "nsHtml5OwningUTF16Buffer.h"
 
-class NS_STACK_CLASS nsHtml5DependentUTF16Buffer : public nsHtml5UTF16Buffer
+class MOZ_STACK_CLASS nsHtml5DependentUTF16Buffer : public nsHtml5UTF16Buffer
 {
   public:
     /**

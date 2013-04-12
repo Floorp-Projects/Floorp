@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: rijndael.h,v 1.13 2012/09/28 22:46:32 rrelyea%redhat.com Exp $ */
+/* $Id$ */
 
 #ifndef _RIJNDAEL_H_
 #define _RIJNDAEL_H_ 1

@@ -269,9 +269,18 @@ ISurfaceAllocator::PlatformDestroySharedSurface(SurfaceDescriptor* aSurface)
     return false;
   }
 
+  // we should have either a bufferParent or bufferChild
+  // depending on whether we're on the parent or child side.
   PGrallocBufferParent* gbp =
     aSurface->get_SurfaceDescriptorGralloc().bufferParent();
-  unused << PGrallocBufferParent::Send__delete__(gbp);
+  if (gbp) {
+    unused << PGrallocBufferParent::Send__delete__(gbp);
+  } else {
+    PGrallocBufferChild* gbc =
+      aSurface->get_SurfaceDescriptorGralloc().bufferChild();
+    unused << PGrallocBufferChild::Send__delete__(gbc);
+  }
+
   *aSurface = SurfaceDescriptor();
   return true;
 }
@@ -320,7 +329,11 @@ ISurfaceAllocator::PlatformAllocSurfaceDescriptor(const gfxIntSize& aSize,
   // no need to check |aCaps & MAP_AS_IMAGE_SURFACE|.
   MaybeMagicGrallocBufferHandle handle;
   PGrallocBufferChild* gc = AllocGrallocBuffer(aSize, aContent, &handle);
-  if (handle.Tnull_t == handle.type()) {
+  if (!gc) {
+    NS_ERROR("GrallocBufferConstructor failed by returned null");
+    return false;
+  } else if (handle.Tnull_t == handle.type()) {
+    NS_ERROR("GrallocBufferConstructor failed by returning handle with type Tnull_t");
     PGrallocBufferChild::Send__delete__(gc);
     return false;
   }

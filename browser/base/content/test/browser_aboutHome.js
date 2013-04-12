@@ -9,14 +9,14 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
 XPCOMUtils.defineLazyModuleGetter(this, "AboutHomeUtils",
   "resource:///modules/AboutHomeUtils.jsm");
 
+let gRightsVersion = Services.prefs.getIntPref("browser.rights.version");
+
 registerCleanupFunction(function() {
   // Ensure we don't pollute prefs for next tests.
-  try {
-    Services.prefs.clearUserPref("network.cookies.cookieBehavior");
-  } catch (ex) {}
-  try {
-    Services.prefs.clearUserPref("network.cookie.lifetimePolicy");
-  } catch (ex) {}
+  Services.prefs.clearUserPref("network.cookies.cookieBehavior");
+  Services.prefs.clearUserPref("network.cookie.lifetimePolicy");
+  Services.prefs.clearUserPref("browser.rights.override");
+  Services.prefs.clearUserPref("browser.rights." + gRightsVersion + ".shown");
 });
 
 let gTests = [
@@ -200,6 +200,50 @@ let gTests = [
   }
 },
 
+{
+  desc: "Check if the 'Know Your Rights default snippet is shown when 'browser.rights.override' pref is set",
+  beforeRun: function ()
+  {
+    Services.prefs.setBoolPref("browser.rights.override", false);
+  },
+  setup: function () { },
+  run: function (aSnippetsMap)
+  {
+    let doc = gBrowser.selectedTab.linkedBrowser.contentDocument;
+    let showRights = AboutHomeUtils.showKnowYourRights;
+
+    ok(showRights, "AboutHomeUtils.showKnowYourRights should be TRUE");
+
+    let snippetsElt = doc.getElementById("snippets");
+    ok(snippetsElt, "Found snippets element");
+    is(snippetsElt.getElementsByTagName("a")[0].href, "about:rights", "Snippet link is present.");
+
+    Services.prefs.clearUserPref("browser.rights.override");
+  }
+},
+
+{
+  desc: "Check if the 'Know Your Rights default snippet is NOT shown when 'browser.rights.override' pref is NOT set",
+  beforeRun: function ()
+  {
+    Services.prefs.setBoolPref("browser.rights.override", true);
+  },
+  setup: function () { },
+  run: function (aSnippetsMap)
+  {
+    let doc = gBrowser.selectedTab.linkedBrowser.contentDocument;
+    let rightsData = AboutHomeUtils.knowYourRightsData;
+    
+    ok(!rightsData, "AboutHomeUtils.knowYourRightsData should be FALSE");
+
+    let snippetsElt = doc.getElementById("snippets");
+    ok(snippetsElt, "Found snippets element");
+    ok(snippetsElt.getElementsByTagName("a")[0].href != "about:rights", "Snippet link should not point to about:rights.");
+
+    Services.prefs.clearUserPref("browser.rights.override");
+  }
+}
+
 ];
 
 function test()
@@ -209,6 +253,9 @@ function test()
   Task.spawn(function () {
     for (let test of gTests) {
       info(test.desc);
+
+      if (test.beforeRun)
+        yield test.beforeRun();
 
       let tab = yield promiseNewTabLoadEvent("about:home", "DOMContentLoaded");
 

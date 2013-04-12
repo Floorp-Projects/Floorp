@@ -50,7 +50,7 @@ JSObject *
 WrapperFactory::GetXrayWaiver(JSObject *obj)
 {
     // Object should come fully unwrapped but outerized.
-    MOZ_ASSERT(obj == UnwrapObject(obj));
+    MOZ_ASSERT(obj == UncheckedUnwrap(obj));
     MOZ_ASSERT(!js::GetObjectClass(obj)->ext.outerObject);
     XPCWrappedNativeScope *scope = GetObjectScope(obj);
     MOZ_ASSERT(scope);
@@ -100,7 +100,7 @@ WrapperFactory::CreateXrayWaiver(JSContext *cx, JSObject *obj)
 JSObject *
 WrapperFactory::WaiveXray(JSContext *cx, JSObject *obj)
 {
-    obj = UnwrapObject(obj);
+    obj = UncheckedUnwrap(obj);
     MOZ_ASSERT(!js::IsInnerObject(obj));
 
     JSObject *waiver = GetXrayWaiver(obj);
@@ -134,7 +134,7 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *obj
         NS_ENSURE_TRUE(obj, nullptr);
         // The outerization hook wraps, which means that we can end up with a
         // CCW here if |obj| was a navigated-away-from inner. Strip any CCWs.
-        obj = js::UnwrapObject(obj);
+        obj = js::UncheckedUnwrap(obj);
         MOZ_ASSERT(js::IsOuterObject(obj));
     }
 
@@ -524,7 +524,7 @@ WrapperFactory::WrapForSameCompartment(JSContext *cx, JSObject *obj)
 
     // The WN knows what to do.
     JSObject *wrapper = wn->GetSameCompartmentSecurityWrapper(cx);
-    MOZ_ASSERT_IF(wrapper != obj && IsComponentsObject(js::UnwrapObject(obj)),
+    MOZ_ASSERT_IF(wrapper != obj && IsComponentsObject(js::UncheckedUnwrap(obj)),
                   !Wrapper::wrapperHandler(wrapper)->isSafeToUnwrap());
     return wrapper;
 }
@@ -539,7 +539,7 @@ WrapperFactory::WaiveXrayAndWrap(JSContext *cx, jsval *vp)
     if (JSVAL_IS_PRIMITIVE(*vp))
         return JS_WrapValue(cx, vp);
 
-    JSObject *obj = js::UnwrapObject(JSVAL_TO_OBJECT(*vp));
+    JSObject *obj = js::UncheckedUnwrap(JSVAL_TO_OBJECT(*vp));
     MOZ_ASSERT(!js::IsInnerObject(obj));
     if (js::IsObjectInContextCompartment(obj, cx)) {
         *vp = OBJECT_TO_JSVAL(obj);

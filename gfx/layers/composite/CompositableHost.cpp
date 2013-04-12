@@ -82,6 +82,13 @@ CompositableParent::DeallocPTexture(PTextureParent* aActor)
   return true;
 }
 
+void
+CompositableParent::ActorDestroy(ActorDestroyReason why)
+{
+  if (mHost) {
+    mHost->Detach();
+  }
+}
 
 CompositableParent::CompositableParent(CompositableParentManager* aMgr,
                                        CompositableType aType,

@@ -4,7 +4,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: sslcon.c,v 1.52 2012/07/17 14:43:11 kaie%kuix.de Exp $ */
+/* $Id$ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -3102,7 +3102,7 @@ ssl2_BeginClientHandshake(sslSocket *ss)
 
 	return rv;
     }
-#if defined(NSS_ENABLE_ECC) && !defined(NSS_ECC_MORE_THAN_SUITE_B)
+#if defined(NSS_ENABLE_ECC)
     /* ensure we don't neogtiate ECC cipher suites with SSL2 hello */
     ssl3_DisableECCSuites(ss, NULL); /* disable all ECC suites */
     if (ss->cipherSpecs != NULL) {

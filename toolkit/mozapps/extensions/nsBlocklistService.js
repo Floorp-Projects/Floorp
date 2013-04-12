@@ -959,7 +959,7 @@ Blocklist.prototype = {
 
         if (plugin.blocklisted) {
           if (state == Ci.nsIBlocklistService.STATE_SOFTBLOCKED)
-            plugin.disabled = true;
+            plugin.enabledState = Ci.nsIPluginTag.STATE_DISABLED;
         }
         else if (!plugin.disabled && state != Ci.nsIBlocklistService.STATE_NOT_BLOCKED) {
           if (state == Ci.nsIBlocklistService.STATE_OUTDATED) {
@@ -1015,7 +1015,7 @@ Blocklist.prototype = {
             continue;
 
           if (addon.item instanceof Ci.nsIPluginTag)
-            addon.item.disabled = true;
+            addon.item.enabledState = Ci.nsIPluginTag.STATE_DISABLED;
           else
             addon.item.softDisabled = true;
         }

@@ -5,7 +5,7 @@
 /*
  * CMS signedData methods.
  *
- * $Id: cmssigdata.c,v 1.33 2012/04/25 14:50:09 gerv%gerv.net Exp $
+ * $Id$
  */
 
 #include "cmslocal.h"

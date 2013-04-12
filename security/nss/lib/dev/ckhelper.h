@@ -12,7 +12,7 @@
 #define CKHELPER_H
 
 #ifdef DEBUG
-static const char CKHELPER_CVS_ID[] = "@(#) $RCSfile: ckhelper.h,v $ $Revision: 1.21 $ $Date: 2012/04/25 14:49:42 $";
+static const char CKHELPER_CVS_ID[] = "@(#) $RCSfile$ $Revision$ $Date$";
 #endif /* DEBUG */
 
 PR_BEGIN_EXTERN_C

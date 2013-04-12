@@ -6,7 +6,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: sslproto.h,v 1.20 2012/06/07 02:06:19 wtc%google.com Exp $ */
+/* $Id$ */
 
 #ifndef __sslproto_h_
 #define __sslproto_h_

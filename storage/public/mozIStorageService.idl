@@ -15,6 +15,9 @@ interface nsIFileURL;
  * to either a well-known profile database or to a specific database file.
  *
  * This is the only way to open a database connection.
+ *
+ * @note The first reference to mozIStorageService must be made on the main
+ * thread.
  */
 [scriptable, uuid(12bfad34-cca3-40fb-8736-d8bf9db61a27)]
 interface mozIStorageService : nsISupports {

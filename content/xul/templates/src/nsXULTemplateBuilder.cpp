@@ -1544,7 +1544,7 @@ nsXULTemplateBuilder::ParseAttribute(const nsAString& aAttributeValue,
 }
 
 
-struct NS_STACK_CLASS SubstituteTextClosure {
+struct MOZ_STACK_CLASS SubstituteTextClosure {
     SubstituteTextClosure(nsIXULTemplateResult* aResult, nsAString& aString)
         : result(aResult), str(aString) {}
 

@@ -2661,7 +2661,7 @@ ccsip_register_all_lines (void)
          * Assume CSPS since only those two for now.
          */
         if (util_check_if_ip_valid(&(ccb->dest_sip_addr))) {
-            CCSIP_DEBUG_REG_STATE(DEB_L_C_F_PREFIX"%d, 0x%x\n",
+            CCSIP_DEBUG_REG_STATE(DEB_L_C_F_PREFIX"%d, %p",
                                   DEB_L_C_F_PREFIX_ARGS(SIP_REG, ccb->index, ccb->dn_line, fname),
                                   ndx, ccb);
 
@@ -2699,7 +2699,7 @@ ccsip_register_all_lines (void)
                 continue;
             }
 
-            CCSIP_DEBUG_REG_STATE(DEB_L_C_F_PREFIX"%d, 0x%x\n",
+            CCSIP_DEBUG_REG_STATE(DEB_L_C_F_PREFIX"%d, %p",
                                   DEB_L_C_F_PREFIX_ARGS(SIP_REG, ccb->index, ccb->dn_line, fname),
                                   ndx, ccb);
 
@@ -2877,7 +2877,7 @@ ccsip_backup_register_commit (void)
     sip_sm_call_cleanup(ccb);
 
     if (util_check_if_ip_valid(&(ccb->dest_sip_addr))) {
-        CCSIP_DEBUG_REG_STATE(DEB_L_C_F_PREFIX"%d, 0x%x\n",
+        CCSIP_DEBUG_REG_STATE(DEB_L_C_F_PREFIX"%d, %p",
                               DEB_L_C_F_PREFIX_ARGS(SIP_REG, ccb->index, ccb->dn_line, fname),
                               ndx, ccb);
         ccb->reg.addr = ccb->dest_sip_addr;

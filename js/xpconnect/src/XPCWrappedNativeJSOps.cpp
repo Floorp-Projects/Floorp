@@ -850,7 +850,7 @@ XPC_WN_MaybeResolvingStrictPropertyStub(JSContext *cx, JSHandleObject obj, JSHan
 #define PRE_HELPER_STUB                                                       \
     XPCWrappedNative* wrapper;                                                \
     nsIXPCScriptable* si;                                                     \
-    JSObject *unwrapped = js::UnwrapObjectChecked(obj, false);                \
+    JSObject *unwrapped = js::CheckedUnwrap(obj, false);                \
     if (!unwrapped) {                                                         \
         JS_ReportError(cx, "Permission denied to operate on object.");        \
         return false;                                                         \
@@ -1206,7 +1206,7 @@ XPC_WN_JSOp_Enumerate(JSContext *cx, JSHandleObject obj, JSIterateOp enum_op,
 
 namespace {
 
-NS_STACK_CLASS class AutoPopJSContext
+class MOZ_STACK_CLASS AutoPopJSContext
 {
 public:
   AutoPopJSContext(XPCJSContextStack *stack)

@@ -260,7 +260,7 @@
             <scrollbox id="start-scrollbox" orient="horizontal" flex="1">
             <vbox id="start-topsites" class="meta-section">
               <label class="meta-section-title" value="&startTopSitesHeader.label;"/>
-              <richgrid id="start-topsites-grid" seltype="multiple" flex="1"/>
+              <richgrid id="start-topsites-grid" rows="3" columns="3" seltype="multiple" flex="1"/>
             </vbox>
             <vbox id="start-bookmarks" class="meta-section">
               <label class="meta-section-title" value="&startBookmarksHeader.label;"
@@ -283,7 +283,7 @@
             <scrollbox id="snapped-scrollbox" orient="vertical" flex="1">
               <vbox id="snapped-topsites">
                 <label class="meta-section-title" value="&startTopSitesHeader.label;"/>
-                <!--  TODO bug 835999 -->
+                <richgrid id="snapped-topsites-grid" rows="8" columns="1" flex="1"/>
               </vbox>
               <label class="meta-section-title" value="&startBookmarksHeader.label;"
                 onclick="PanelUI.show('bookmarks-container');"/>
