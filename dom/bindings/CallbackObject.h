@@ -134,7 +134,7 @@ protected:
 
   JSObject* mCallback;
 
-  class NS_STACK_CLASS CallSetup
+  class MOZ_STACK_CLASS CallSetup
   {
     /**
      * A class that performs whatever setup we need to safely make a
