@@ -50,12 +50,13 @@ public:
 // These were hardcoded into android
 enum BluetoothReservedChannels {
   CHANNEL_DIALUP_NETWORK = 1,
-  CHANNEL_HANDSFREE_AG = 10,
-  CHANNEL_HEADSET_AG = 11,
-  CHANNEL_OPUSH = 12,
-  CHANNEL_SIM_ACCESS = 15,
-  CHANNEL_PBAP_PSE = 19,
-  CHANNEL_FTP = 20,
+  CHANNEL_HANDSFREE_AG   = 10,
+  CHANNEL_HEADSET_AG     = 11,
+  CHANNEL_OPUSH          = 12,
+  CHANNEL_SIM_ACCESS     = 15,
+  CHANNEL_PBAP_PSE       = 19,
+  CHANNEL_FTP            = 20,
+  CHANNEL_OPUSH_L2CAP    = 5255
 };
 
 END_BLUETOOTH_NAMESPACE
