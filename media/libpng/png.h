@@ -1,7 +1,7 @@
 
 /* png.h - header file for PNG reference library
  *
- * libpng version 1.5.14 - January 24, 2013
+ * libpng version 1.5.15 - March 28, 2013
  * Copyright (c) 1998-2013 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -11,7 +11,7 @@
  * Authors and maintainers:
  *   libpng versions 0.71, May 1995, through 0.88, January 1996: Guy Schalnat
  *   libpng versions 0.89c, June 1996, through 0.96, May 1997: Andreas Dilger
- *   libpng versions 0.97, January 1998, through 1.5.14 - January 24, 2013: Glenn
+ *   libpng versions 0.97, January 1998, through 1.5.15 - March 28, 2013: Glenn
  *   See also "Contributing Authors", below.
  *
  * Note about libpng version numbers:
@@ -184,6 +184,9 @@
  *    1.5.14beta01-08         15    10514  15.so.15.14[.0]
  *    1.5.14rc01-03           15    10514  15.so.15.14[.0]
  *    1.5.14                  15    10514  15.so.15.14[.0]
+ *    1.5.15beta01-10         15    10515  15.so.15.15[.0]
+ *    1.5.15rc01              15    10515  15.so.15.15[.0]
+ *    1.5.15                  15    10515  15.so.15.15[.0]
  *
  *   Henceforth the source version will match the shared-library major
  *   and minor numbers; the shared-library major version number will be
@@ -215,7 +218,7 @@
  *
  * This code is released under the libpng license.
  *
- * libpng versions 1.2.6, August 15, 2004, through 1.5.14, January 24, 2013, are
+ * libpng versions 1.2.6, August 15, 2004, through 1.5.15, March 28, 2013, are
  * Copyright (c) 2004, 2006-2013 Glenn Randers-Pehrson, and are
  * distributed according to the same disclaimer and license as libpng-1.2.5
  * with the following individual added to the list of Contributing Authors:
@@ -327,13 +330,13 @@
  * Y2K compliance in libpng:
  * =========================
  *
- *    January 24, 2013
+ *    March 28, 2013
  *
  *    Since the PNG Development group is an ad-hoc body, we can't make
  *    an official declaration.
  *
  *    This is your unofficial assurance that libpng from version 0.71 and
- *    upward through 1.5.14 are Y2K compliant.  It is my belief that
+ *    upward through 1.5.15 are Y2K compliant.  It is my belief that
  *    earlier versions were also Y2K compliant.
  *
  *    Libpng only has two year fields.  One is a 2-byte unsigned integer
@@ -392,9 +395,9 @@
  */
 
 /* Version information for png.h - this should match the version in png.c */
-#define PNG_LIBPNG_VER_STRING "1.5.14"
+#define PNG_LIBPNG_VER_STRING "1.5.15"
 #define PNG_HEADER_VERSION_STRING \
-     " libpng version 1.5.14 - January 24, 2013\n"
+     " libpng version 1.5.15 - March 28, 2013\n"
 
 #define PNG_LIBPNG_VER_SONUM   15
 #define PNG_LIBPNG_VER_DLLNUM  15
@@ -402,7 +405,7 @@
 /* These should match the first 3 components of PNG_LIBPNG_VER_STRING: */
 #define PNG_LIBPNG_VER_MAJOR   1
 #define PNG_LIBPNG_VER_MINOR   5
-#define PNG_LIBPNG_VER_RELEASE 14
+#define PNG_LIBPNG_VER_RELEASE 15
 
 /* This should match the numeric part of the final component of
  * PNG_LIBPNG_VER_STRING, omitting any leading zero:
@@ -433,7 +436,7 @@
  * version 1.0.0 was mis-numbered 100 instead of 10000).  From
  * version 1.0.1 it's    xxyyzz, where x=major, y=minor, z=release
  */
-#define PNG_LIBPNG_VER 10514 /* 1.5.14 */
+#define PNG_LIBPNG_VER 10515 /* 1.5.15 */
 
 #ifndef MOZPNGCONF_H
 #   include "mozpngconf.h"
@@ -460,7 +463,7 @@
 
 /* Machine specific configuration. */
 #  include "pngconf.h"
-#endif
+#endif /* PNG_VERSION_INFO_ONLY */
 
 /*
  * Added at libpng-1.2.8
@@ -546,21 +549,10 @@ extern "C" {
  * See pngconf.h for base types that vary by machine/system
  */
 
-#ifdef PNG_APNG_SUPPORTED
-/* dispose_op flags from inside fcTL */
-#define PNG_DISPOSE_OP_NONE        0x00
-#define PNG_DISPOSE_OP_BACKGROUND  0x01
-#define PNG_DISPOSE_OP_PREVIOUS    0x02
-
-/* blend_op flags from inside fcTL */
-#define PNG_BLEND_OP_SOURCE        0x00
-#define PNG_BLEND_OP_OVER          0x01
-#endif /* PNG_APNG_SUPPORTED */
-
 /* This triggers a compiler error in png.c, if png.c and png.h
  * do not agree upon the version number.
  */
-typedef char* png_libpng_version_1_5_14;
+typedef char* png_libpng_version_1_5_15;
 
 /* Three color definitions.  The order of the red, green, and blue, (and the
  * exact size) is not important, although the size of the fields need to
@@ -2663,80 +2655,135 @@ PNG_EXPORT(207, void, png_save_uint_16, (png_bytep buf, unsigned int i));
       : (png_int_32)png_get_uint_32(buf)))
 #endif
 
-#if defined(PNG_READ_CHECK_FOR_INVALID_INDEX_SUPPORTED) || \
-    defined(PNG_WRITE_CHECK_FOR_INVALID_INDEX_SUPPORTED)
+#ifdef PNG_CHECK_FOR_INVALID_INDEX_SUPPORTED
 PNG_EXPORT(234, void, png_set_check_for_invalid_index, (png_structp png_ptr,
     int allowed));
-#endif
+#  ifdef PNG_GET_PALETTE_MAX_SUPPORTED
+PNG_EXPORT(235, int, png_get_palette_max, (png_const_structp png_ptr,
+    png_const_infop info_ptr));
+#  endif
+#endif /* CHECK_FOR_INVALID_INDEX */
 
 #ifdef PNG_APNG_SUPPORTED
-PNG_EXPORT(235, png_uint_32, png_get_acTL, (png_structp png_ptr,
+/* dispose_op flags from inside fcTL */
+#define PNG_DISPOSE_OP_NONE        0x00
+#define PNG_DISPOSE_OP_BACKGROUND  0x01
+#define PNG_DISPOSE_OP_PREVIOUS    0x02
+
+/* blend_op flags from inside fcTL */
+#define PNG_BLEND_OP_SOURCE        0x00
+#define PNG_BLEND_OP_OVER          0x01
+#endif /* PNG_APNG_SUPPORTED */
+
+#ifdef PNG_APNG_SUPPORTED
+PNG_EXPORT(237, png_uint_32, png_get_acTL, (png_structp png_ptr,
    png_infop info_ptr, png_uint_32 *num_frames, png_uint_32 *num_plays));
 
-PNG_EXPORT(236, png_uint_32, png_set_acTL, (png_structp png_ptr,
+PNG_EXPORT(238, png_uint_32, png_set_acTL, (png_structp png_ptr,
    png_infop info_ptr, png_uint_32 num_frames, png_uint_32 num_plays));
 
-PNG_EXPORT(237, png_uint_32, png_get_num_frames, (png_structp png_ptr,
+PNG_EXPORT(239, png_uint_32, png_get_num_frames, (png_structp png_ptr,
    png_infop info_ptr));
 
-PNG_EXPORT(238, png_uint_32, png_get_num_plays, (png_structp png_ptr,
+PNG_EXPORT(240, png_uint_32, png_get_num_plays, (png_structp png_ptr,
    png_infop info_ptr));
 
-PNG_EXPORT(239, png_uint_32, png_get_next_frame_fcTL,
+PNG_EXPORT(241, png_uint_32, png_get_next_frame_fcTL,
    (png_structp png_ptr, png_infop info_ptr, png_uint_32 *width,
    png_uint_32 *height, png_uint_32 *x_offset, png_uint_32 *y_offset,
    png_uint_16 *delay_num, png_uint_16 *delay_den, png_byte *dispose_op,
    png_byte *blend_op));
 
-PNG_EXPORT(240, png_uint_32, png_set_next_frame_fcTL,
+PNG_EXPORT(242, png_uint_32, png_set_next_frame_fcTL,
    (png_structp png_ptr, png_infop info_ptr, png_uint_32 width,
    png_uint_32 height, png_uint_32 x_offset, png_uint_32 y_offset,
    png_uint_16 delay_num, png_uint_16 delay_den, png_byte dispose_op,
    png_byte blend_op));
 
-PNG_EXPORT(241, png_uint_32, png_get_next_frame_width,
+PNG_EXPORT(243, png_uint_32, png_get_next_frame_width,
    (png_structp png_ptr, png_infop info_ptr));
-PNG_EXPORT(242, png_uint_32, png_get_next_frame_height,
+PNG_EXPORT(244, png_uint_32, png_get_next_frame_height,
    (png_structp png_ptr, png_infop info_ptr));
-PNG_EXPORT(243, png_uint_32, png_get_next_frame_x_offset,
+PNG_EXPORT(245, png_uint_32, png_get_next_frame_x_offset,
    (png_structp png_ptr, png_infop info_ptr));
-PNG_EXPORT(244, png_uint_32, png_get_next_frame_y_offset,
+PNG_EXPORT(246, png_uint_32, png_get_next_frame_y_offset,
    (png_structp png_ptr, png_infop info_ptr));
-PNG_EXPORT(245, png_uint_16, png_get_next_frame_delay_num,
+PNG_EXPORT(247, png_uint_16, png_get_next_frame_delay_num,
    (png_structp png_ptr, png_infop info_ptr));
-PNG_EXPORT(246, png_uint_16, png_get_next_frame_delay_den,
+PNG_EXPORT(248, png_uint_16, png_get_next_frame_delay_den,
    (png_structp png_ptr, png_infop info_ptr));
-PNG_EXPORT(247, png_byte, png_get_next_frame_dispose_op,
+PNG_EXPORT(249, png_byte, png_get_next_frame_dispose_op,
    (png_structp png_ptr, png_infop info_ptr));
-PNG_EXPORT(248, png_byte, png_get_next_frame_blend_op,
+PNG_EXPORT(250, png_byte, png_get_next_frame_blend_op,
    (png_structp png_ptr, png_infop info_ptr));
-PNG_EXPORT(249, png_byte, png_get_first_frame_is_hidden,
+PNG_EXPORT(251, png_byte, png_get_first_frame_is_hidden,
    (png_structp png_ptr, png_infop info_ptr));
-PNG_EXPORT(250, png_uint_32, png_set_first_frame_is_hidden,
+PNG_EXPORT(252, png_uint_32, png_set_first_frame_is_hidden,
    (png_structp png_ptr, png_infop info_ptr, png_byte is_hidden));
 
 #ifdef PNG_READ_APNG_SUPPORTED
-PNG_EXPORT(251, void, png_read_frame_head, (png_structp png_ptr,
+PNG_EXPORT(253, void, png_read_frame_head, (png_structp png_ptr,
    png_infop info_ptr));
 #ifdef PNG_PROGRESSIVE_READ_SUPPORTED
-PNG_EXPORT(252, void, png_set_progressive_frame_fn, (png_structp png_ptr,
+PNG_EXPORT(254, void, png_set_progressive_frame_fn, (png_structp png_ptr,
    png_progressive_frame_ptr frame_info_fn,
    png_progressive_frame_ptr frame_end_fn));
 #endif /* PNG_PROGRESSIVE_READ_SUPPORTED */
 #endif /* PNG_READ_APNG_SUPPORTED */
 
 #ifdef PNG_WRITE_APNG_SUPPORTED
-PNG_EXPORT(253, void, png_write_frame_head, (png_structp png_ptr,
+PNG_EXPORT(255, void, png_write_frame_head, (png_structp png_ptr,
    png_infop info_ptr, png_bytepp row_pointers,
    png_uint_32 width, png_uint_32 height,
    png_uint_32 x_offset, png_uint_32 y_offset,
    png_uint_16 delay_num, png_uint_16 delay_den, png_byte dispose_op,
    png_byte blend_op));
 
-PNG_EXPORT(254, void, png_write_frame_tail, (png_structp png_ptr,
+PNG_EXPORT(256, void, png_write_frame_tail, (png_structp png_ptr,
    png_infop info_ptr));
 #endif /* PNG_WRITE_APNG_SUPPORTED */
 #endif /* PNG_APNG_SUPPORTED */
+
+/*******************************************************************************
+ *  IMPLEMENTATION OPTIONS
+ *******************************************************************************
+ *
+ * Support for arbitrary implementation-specific optimizations.  The API allows
+ * particular options to be turned on or off.  'Option' is the number of the
+ * option and 'onoff' is 0 (off) or non-0 (on).  The value returned is given
+ * by the PNG_OPTION_ defines below.
+ *
+ * HARDWARE: normally hardware capabilites, such as the Intel SSE instructions,
+ *           are detected at run time, however sometimes it may be impossible
+ *           to do this in user mode, in which case it is necessary to discover
+ *           the capabilities in an OS specific way.  Such capabilities are
+ *           listed here when libpng has support for them and must be turned
+ *           ON by the application if present.
+ *
+ * SOFTWARE: sometimes software optimizations actually result in performance
+ *           decrease on some architectures or systems, or with some sets of
+ *           PNG images.  'Software' options allow such optimizations to be
+ *           selected at run time.
+ */
+#ifdef PNG_SET_OPTION_SUPPORTED
+#ifdef PNG_ARM_NEON_API_SUPPORTED
+#  define PNG_ARM_NEON   0 /* HARDWARE: ARM Neon SIMD instructions supported */
+#endif
+#define PNG_OPTION_NEXT  2 /* Next option - numbers must be even */
+
+/* Return values: NOTE: there are four values and 'off' is *not* zero */
+#define PNG_OPTION_UNSET   0 /* Unset - defaults to off */
+#define PNG_OPTION_INVALID 1 /* Option number out of range */
+#define PNG_OPTION_OFF     2
+#define PNG_OPTION_ON      3
+
+PNG_EXPORT(236, int, png_set_option, (png_structp png_ptr, int option,
+   int onoff));
+#endif
+
+/*******************************************************************************
+ *  END OF HARDWARE OPTIONS
+ ******************************************************************************/
 
 /* Maintainer: Put new public prototypes here ^, in libpng.3, and project
  * defs
@@ -2747,11 +2794,11 @@ PNG_EXPORT(254, void, png_write_frame_tail, (png_structp png_ptr,
  * scripts/symbols.def as well.
  */
 #ifdef PNG_EXPORT_LAST_ORDINAL
-#ifdef PNG_APNG_SUPPORTED
-  PNG_EXPORT_LAST_ORDINAL(254);
-#else
-  PNG_EXPORT_LAST_ORDINAL(234);
-#endif /* PNG_APNG_SUPPORTED */
+#  ifdef PNG_APNG_SUPPORTED
+  PNG_EXPORT_LAST_ORDINAL(256);
+#  else
+  PNG_EXPORT_LAST_ORDINAL(236);
+#  endif /* PNG_APNG_SUPPORTED */
 #endif
 
 #ifdef __cplusplus
