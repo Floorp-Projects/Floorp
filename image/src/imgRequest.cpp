@@ -691,10 +691,6 @@ imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt,
     uint32_t out;
     inStr->ReadSegments(sniff_mimetype_callback, &closure, count, &out);
 
-#ifdef DEBUG
-    /* NS_WARNING if the content type from the channel isn't the same if the sniffing */
-#endif
-
     nsCOMPtr<nsIChannel> chan(do_QueryInterface(aRequest));
     if (newType.IsEmpty()) {
       LOG_SCOPE(GetImgLog(), "imgRequest::OnDataAvailable |sniffing of mimetype failed|");
