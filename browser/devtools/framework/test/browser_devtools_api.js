@@ -7,8 +7,10 @@ const Cu = Components.utils;
 const toolId = "test-tool";
 
 let tempScope = {};
-Cu.import("resource:///modules/devtools/shared/event-emitter.js", tempScope);
+Cu.import("resource:///modules/devtools/EventEmitter.jsm", tempScope);
 let EventEmitter = tempScope.EventEmitter;
+Cu.import("resource:///modules/devtools/Target.jsm", tempScope);
+let TargetFactory = tempScope.TargetFactory;
 
 function test() {
   addTab("about:blank", function(aBrowser, aTab) {

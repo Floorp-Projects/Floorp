@@ -20,7 +20,7 @@ function test() {
   let inspector;
   let {
     getInplaceEditorForSpan: inplaceEditor
-  } = devtools.require("devtools/shared/inplace-editor");
+  } = Cu.import("resource:///modules/devtools/InplaceEditor.jsm", {});
 
   waitForExplicitFinish();
 

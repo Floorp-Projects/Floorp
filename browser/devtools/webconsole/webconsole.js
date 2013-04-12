@@ -37,11 +37,11 @@ XPCOMUtils.defineLazyModuleGetter(this, "Promise",
 XPCOMUtils.defineLazyModuleGetter(this, "VariablesView",
                                   "resource:///modules/devtools/VariablesView.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
-                                  "resource:///modules/devtools/shared/event-emitter.js");
+XPCOMUtils.defineLazyModuleGetter(this, "ToolSidebar",
+                                  "resource:///modules/devtools/Sidebar.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "devtools",
-                                  "resource:///modules/devtools/gDevTools.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
+                                  "resource:///modules/devtools/EventEmitter.jsm");
 
 const STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
 let l10n = new WebConsoleUtils.l10n(STRINGS_URI);
@@ -3006,14 +3006,13 @@ JSTerm.prototype = {
   /**
    * Create the Web Console sidebar.
    *
-   * @see devtools/framework/sidebar.js
+   * @see Sidebar.jsm
    * @private
    */
   _createSidebar: function JST__createSidebar()
   {
     if (!this.sidebar) {
       let tabbox = this.hud.document.querySelector("#webconsole-sidebar");
-      let ToolSidebar = devtools.require("devtools/framework/sidebar").ToolSidebar;
       this.sidebar = new ToolSidebar(tabbox, this);
     }
     this.sidebar.show();
