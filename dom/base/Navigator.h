@@ -36,7 +36,7 @@ class nsIDOMMozConnection;
 
 namespace mozilla {
 namespace dom {
-class nsGeolocation;
+class Geolocation;
 }
 }
 
@@ -197,7 +197,7 @@ private:
 
   nsRefPtr<nsMimeTypeArray> mMimeTypes;
   nsRefPtr<nsPluginArray> mPlugins;
-  nsRefPtr<nsGeolocation> mGeolocation;
+  nsRefPtr<Geolocation> mGeolocation;
   nsRefPtr<DesktopNotificationCenter> mNotification;
   nsRefPtr<battery::BatteryManager> mBatteryManager;
   nsRefPtr<power::PowerManager> mPowerManager;
