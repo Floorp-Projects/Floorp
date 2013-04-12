@@ -231,8 +231,6 @@ class BaselineCompiler : public BaselineCompilerSpecific
 
     bool emitEnterBlock();
 
-    bool addPCMappingEntry(bool addIndexEntry);
-
     Address getScopeCoordinateAddress(Register reg);
 };
 
