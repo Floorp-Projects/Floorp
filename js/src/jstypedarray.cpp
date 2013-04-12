@@ -379,11 +379,6 @@ ArrayBufferObject::prepareForAsmJS(JSContext *cx, Handle<ArrayBufferObject*> buf
     }
 # endif
 
-    // We don't include the PageSize at the front so that when we sum the
-    // individual asm.js arrays for all the compartments in the runtime, they
-    // match this number.
-    buffer->runtime()->sizeOfNonHeapAsmJSArrays_ += buffer->byteLength();
-
     // Copy over the current contents of the typed array.
     uint8_t *data = reinterpret_cast<uint8_t*>(p) + PageSize;
     memcpy(data, buffer->dataPointer(), buffer->byteLength());
@@ -406,8 +401,6 @@ ArrayBufferObject::releaseAsmJSArrayBuffer(FreeOp *fop, RawObject obj)
 {
     ArrayBufferObject &buffer = obj->asArrayBuffer();
     JS_ASSERT(buffer.isAsmJSArrayBuffer());
-
-    buffer.runtime()->sizeOfNonHeapAsmJSArrays_ -= buffer.byteLength();
 
     uint8_t *p = buffer.dataPointer() - PageSize ;
     JS_ASSERT(uintptr_t(p) % PageSize == 0);

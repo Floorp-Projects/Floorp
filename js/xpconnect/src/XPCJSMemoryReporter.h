@@ -26,8 +26,6 @@ public:
                                    WindowPaths *topWindowPaths,
                                    nsIMemoryMultiReporterCallback *cb,
                                    nsISupports *closure);
-
-    static nsresult GetExplicitNonHeap(int64_t *n);
 };
 
 }

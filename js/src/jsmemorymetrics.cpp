@@ -375,29 +375,6 @@ JS::CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats, ObjectPrivateVisit
     return true;
 }
 
-JS_PUBLIC_API(int64_t)
-JS::GetExplicitNonHeapForRuntime(JSRuntime *rt, JSMallocSizeOfFun mallocSizeOf)
-{
-    // explicit/*/gc-heap/*
-    size_t n = size_t(JS_GetGCParameter(rt, JSGC_TOTAL_CHUNKS)) * gc::ChunkSize;
-
-    // Subtract decommitted arenas, which aren't included in "explicit".
-    size_t decommittedArenas = 0;
-    IterateChunks(rt, &decommittedArenas, DecommittedArenasChunkCallback);
-    n -= decommittedArenas;
-
-    // explicit/*/objects-extra/elements/asm.js (64-bit platforms only)
-    n += rt->sizeOfNonHeapAsmJSArrays_;
-
-    // explicit/runtime/mjit-code
-    // explicit/runtime/regexp-code
-    // explicit/runtime/stack-committed
-    // explicit/runtime/unused-code-memory
-    n += rt->sizeOfExplicitNonHeap();
-
-    return int64_t(n);
-}
-
 JS_PUBLIC_API(size_t)
 JS::SystemCompartmentCount(JSRuntime *rt)
 {
