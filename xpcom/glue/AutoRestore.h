@@ -8,8 +8,8 @@
 #ifndef mozilla_AutoRestore_h_
 #define mozilla_AutoRestore_h_
 
+#include "mozilla/Attributes.h" // MOZ_STACK_CLASS
 #include "mozilla/GuardObjects.h"
-#include "nscore.h" // NS_STACK_CLASS
 
 namespace mozilla {
 
@@ -26,7 +26,7 @@ namespace mozilla {
    *   }
    */
   template <class T>
-  class NS_STACK_CLASS AutoRestore
+  class MOZ_STACK_CLASS AutoRestore
   {
   private:
     T& mLocation;

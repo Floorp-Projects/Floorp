@@ -329,7 +329,7 @@ protected:
 
 class nsCycleCollectionTraversalCallback;
 
-struct NS_STACK_CLASS nsBaseHashtableCCTraversalData
+struct MOZ_STACK_CLASS nsBaseHashtableCCTraversalData
 {
   nsBaseHashtableCCTraversalData(nsCycleCollectionTraversalCallback& aCallback,
                                  const char* aName,
