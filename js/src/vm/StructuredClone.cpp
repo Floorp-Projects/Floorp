@@ -693,6 +693,8 @@ JSStructuredCloneWriter::reportErrorTransferable()
 {
     if (callbacks && callbacks->reportError)
         return callbacks->reportError(context(), JS_SCERR_TRANSFERABLE);
+    else
+        JS_ReportErrorNumber(context(), js_GetErrorMessage, NULL, JSMSG_SC_NOT_TRANSFERABLE);
 }
 
 bool
