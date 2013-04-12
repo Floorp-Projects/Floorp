@@ -446,6 +446,13 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         branchPtr(cond, lhs, ImmWord(ptr.value >> 1), label);
     }
 
+    void branchPrivatePtr(Condition cond, Address lhs, Register ptr, Label *label) {
+        if (ptr != ScratchReg)
+            movePtr(ptr, ScratchReg);
+        rshiftPtr(Imm32(1), ScratchReg);
+        branchPtr(cond, lhs, ScratchReg, label);
+    }
+
     template <typename T, typename S>
     void branchPtr(Condition cond, T lhs, S ptr, Label *label) {
         cmpPtr(Operand(lhs), ptr);
