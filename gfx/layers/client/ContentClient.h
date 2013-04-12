@@ -226,7 +226,7 @@ protected:
   RefPtr<TextureClient> mTextureClient;
   // keep a record of texture clients we have created and need to keep
   // around, then unlock when we are done painting
-  nsTArray<RefPtr<TextureClient>> mOldTextures;
+  nsTArray<RefPtr<TextureClient> > mOldTextures;
 
   TextureInfo mTextureInfo;
   bool mIsNewBuffer;
