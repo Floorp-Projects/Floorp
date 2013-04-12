@@ -323,6 +323,8 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 <!ENTITY appMenuSafeMode.accesskey "R">
 <!ENTITY appMenuBack.label "Back">
 <!ENTITY appMenuBookmarks.label "Bookmarks">
+<!ENTITY appMenuHistory.label "History">
+<!ENTITY appMenuHistoryMore.label "More…">
 
 <!ENTITY openCmd.commandkey           "l">
 <!ENTITY urlbar.placeholder2          "Search or enter address">

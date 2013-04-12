@@ -75,7 +75,15 @@
             <toolbarbutton label="&showAllBookmarks2.label;"/>
             <spacer flex="1"/>
           </vbox>
-          <vbox id="PanelUI-bookmarks-tall-maker" />
+          <vbox id="PanelUI-bookmarks-tall-maker"/>
+        </vbox>
+        <vbox id="PanelUI-history" flex="1">
+          <label value="&appMenuHistory.label;"/>
+          <vbox id="PanelUI-historyItems"/>
+          <label value="&appMenuHistoryMore.label;"
+                 id="PanelUI-historyMore"
+                 class="text-link"
+                 onclick="PlacesCommandHook.showPlacesOrganizer('History'); PanelUI.hide();"/>
         </vbox>
       </box>
     </stack>

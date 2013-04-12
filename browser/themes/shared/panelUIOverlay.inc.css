@@ -226,3 +226,7 @@
   text-shadow: none;
   transition: none;
 }
+
+#PanelUI-historyItems > toolbarbutton {
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
+}
