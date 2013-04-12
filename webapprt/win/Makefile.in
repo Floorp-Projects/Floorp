@@ -69,12 +69,12 @@ endif
 # Uninstaller
 ifdef LOCALE_MERGEDIR
 PPL_LOCALE_ARGS = \
-  --l10n-dir=$(LOCALE_MERGEDIR)/browser/webapp-uninstaller \
-  --l10n-dir=$(call EXPAND_LOCALE_SRCDIR,browser/locales)/webapp-uninstaller \
-  --l10n-dir=$(topsrcdir)/browser/locales/en-US/webapp-uninstaller \
+  --l10n-dir=$(LOCALE_MERGEDIR)/webapprt/webapp-uninstaller \
+  --l10n-dir=$(call EXPAND_LOCALE_SRCDIR,webapprt/locales)/webapp-uninstaller \
+  --l10n-dir=$(topsrcdir)/webapprt/locales/en-US/webapp-uninstaller \
   $(NULL)
 else
-PPL_LOCALE_ARGS=$(call EXPAND_LOCALE_SRCDIR,browser/locales)/webapp-uninstaller
+PPL_LOCALE_ARGS=$(call EXPAND_LOCALE_SRCDIR,webapprt/locales)/webapp-uninstaller
 endif
 
 libs::
@@ -93,6 +93,8 @@ libs::
 	$(MAKE) webapp_uninstaller
 
 GARBAGE_DIRS += instgen
+
+PROGRAMS_DEST = $(DIST)/bin
 
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/makensis.mk
