@@ -3326,12 +3326,114 @@ struct JSPropertyDescriptor {
     unsigned           shortid;
     JSPropertyOp       getter;
     JSStrictPropertyOp setter;
-    jsval              value;
+    JS::Value          value;
 
     JSPropertyDescriptor() : obj(NULL), attrs(0), shortid(0), getter(NULL),
                              setter(NULL), value(JSVAL_VOID)
     {}
+
+    void trace(JSTracer *trc);
 };
+
+namespace JS {
+
+template <typename Outer>
+class PropertyDescriptorOperations
+{
+    const JSPropertyDescriptor * desc() const { return static_cast<const Outer*>(this)->extract(); }
+    JSPropertyDescriptor * desc() { return static_cast<Outer*>(this)->extract(); }
+
+  public:
+    bool isEnumerable() const { return desc()->attrs & JSPROP_ENUMERATE; }
+    bool isReadonly() const { return desc()->attrs & JSPROP_READONLY; }
+    bool isPermanent() const { return desc()->attrs & JSPROP_PERMANENT; }
+    bool hasNativeAccessors() const { return desc()->attrs & JSPROP_NATIVE_ACCESSORS; }
+    bool hasGetterObject() const { return desc()->attrs & JSPROP_GETTER; }
+    bool hasSetterObject() const { return desc()->attrs & JSPROP_SETTER; }
+    bool isShared() const { return desc()->attrs & JSPROP_SHARED; }
+    bool isIndex() const { return desc()->attrs & JSPROP_INDEX; }
+    bool hasShortId() const { return desc()->attrs & JSPROP_SHORTID; }
+    bool hasAttributes(unsigned attrs) const { return desc()->attrs & attrs; }
+
+    JS::MutableHandleObject object() { return JS::MutableHandleObject::fromMarkedLocation(&desc()->obj); }
+    unsigned attributes() const { return desc()->attrs; }
+    unsigned shortid() const {
+        MOZ_ASSERT(hasShortId());
+        return desc()->shortid;
+    }
+    JSPropertyOp getter() const { MOZ_ASSERT(!hasGetterObject()); return desc()->getter; }
+    JSStrictPropertyOp setter() const { MOZ_ASSERT(!hasSetterObject()); return desc()->setter; }
+    JS::HandleObject getterObject() const {
+        MOZ_ASSERT(hasGetterObject());
+        return JS::HandleObject::fromMarkedLocation(reinterpret_cast<JSObject *const *>(&desc()->getter));
+    }
+    JS::HandleObject setterObject() const {
+        MOZ_ASSERT(hasSetterObject());
+        return JS::HandleObject::fromMarkedLocation(reinterpret_cast<JSObject *const *>(&desc()->setter));
+    }
+    JS::MutableHandleValue value() { return JS::MutableHandleValue::fromMarkedLocation(&desc()->value); }
+
+    void setAttributes(unsigned attrs) { desc()->attrs = attrs; }
+    void setShortId(unsigned id) { desc()->shortid = id; }
+    void setGetter(JSPropertyOp op) { desc()->getter = op; }
+    void setSetter(JSStrictPropertyOp op) { desc()->setter = op; }
+    void setGetterObject(JSObject *obj) { desc()->getter = reinterpret_cast<JSPropertyOp>(obj); }
+    void setSetterObject(JSObject *obj) { desc()->setter = reinterpret_cast<JSStrictPropertyOp>(obj); }
+};
+
+} /* namespace JS */
+
+namespace js {
+
+template <>
+struct RootMethods<JSPropertyDescriptor> {
+    static JSPropertyDescriptor initial() { return JSPropertyDescriptor(); }
+    static ThingRootKind kind() { return THING_ROOT_PROPERTY_DESCRIPTOR; }
+    static bool poisoned(const JSPropertyDescriptor &desc) {
+        return (desc.obj && JS::IsPoisonedPtr(desc.obj)) ||
+               (desc.attrs & JSPROP_GETTER && desc.getter && JS::IsPoisonedPtr(desc.getter)) ||
+               (desc.attrs & JSPROP_SETTER && desc.setter && JS::IsPoisonedPtr(desc.setter)) ||
+               (desc.value.isGCThing() && JS::IsPoisonedPtr(desc.value.toGCThing()));
+    }
+};
+
+template <>
+class RootedBase<JSPropertyDescriptor>
+  : public JS::PropertyDescriptorOperations<JS::Rooted<JSPropertyDescriptor> >
+{
+    friend class JS::PropertyDescriptorOperations<JS::Rooted<JSPropertyDescriptor> >;
+    const JSPropertyDescriptor *extract() const {
+        return static_cast<const JS::Rooted<JSPropertyDescriptor>*>(this)->address();
+    }
+    JSPropertyDescriptor *extract() {
+        return static_cast<JS::Rooted<JSPropertyDescriptor>*>(this)->address();
+    }
+};
+
+template <>
+class HandleBase<JSPropertyDescriptor>
+  : public JS::PropertyDescriptorOperations<JS::Handle<JSPropertyDescriptor> >
+{
+    friend class JS::PropertyDescriptorOperations<JS::Rooted<JSPropertyDescriptor> >;
+    const JSPropertyDescriptor *extract() const {
+        return static_cast<const JS::Handle<JSPropertyDescriptor>*>(this)->address();
+    }
+};
+
+template <>
+class MutableHandleBase<JSPropertyDescriptor>
+  : public JS::PropertyDescriptorOperations<JS::MutableHandle<JSPropertyDescriptor> >
+{
+    friend class JS::PropertyDescriptorOperations<JS::Rooted<JSPropertyDescriptor> >;
+    const JSPropertyDescriptor *extract() const {
+        return static_cast<const JS::MutableHandle<JSPropertyDescriptor>*>(this)->address();
+    }
+    JSPropertyDescriptor *extract() {
+        return static_cast<JS::MutableHandle<JSPropertyDescriptor>*>(this)->address();
+    }
+};
+
+} /* namespace js */
 
 /*
  * Like JS_GetPropertyAttrsGetterAndSetterById but will return a property on
