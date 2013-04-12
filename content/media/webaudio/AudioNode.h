@@ -7,7 +7,7 @@
 #ifndef AudioNode_h_
 #define AudioNode_h_
 
-#include "nsWrapperCache.h"
+#include "nsDOMEventTargetHelper.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Attributes.h"
 #include "EnableWebAudioCheck.h"
@@ -70,8 +70,7 @@ private:
  * and outputs, allowing nodes to be immediately disconnected. This
  * disconnection is done internally, invisible to DOM users.
  */
-class AudioNode : public nsISupports,
-                  public nsWrapperCache,
+class AudioNode : public nsDOMEventTargetHelper,
                   public EnableWebAudioCheck
 {
 public:
@@ -97,7 +96,8 @@ public:
   }
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(AudioNode)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(AudioNode,
+                                           nsDOMEventTargetHelper)
 
   virtual AudioBufferSourceNode* AsAudioBufferSourceNode() {
     return nullptr;

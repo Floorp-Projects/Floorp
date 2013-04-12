@@ -25,6 +25,7 @@ addLoadEvent(function() {
   is(destination.context, context, "Destination node has proper context");
   is(destination.numberOfInputs, 1, "Destination node has 1 inputs");
   is(destination.numberOfOutputs, 0, "Destination node has 0 outputs");
+  ok(destination instanceof EventTarget, "AudioNodes must be EventTargets");
 
   testWith(context, buffer, destination, function(source) {
     source.start(0);
