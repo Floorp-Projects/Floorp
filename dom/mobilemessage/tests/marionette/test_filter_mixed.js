@@ -92,25 +92,32 @@ function deleteAllMessages(next) {
   });
 }
 
+function checkSenderOrReceiver(message, number) {
+  return message.sender == number ||
+         message.sender == ("+1" + number) ||
+         message.receiver == number ||
+         message.receiver == ("+1" + number);
+}
+
 tasks.push(deleteAllMessages);
 
 /**
  * Populate MobileMessageDB with messages to being tests. We'll have NUM_THREADS
  * sent and received messages, and NUM_THREADS/2 unread received messages.
  *
- *   send    to   "0"
- *   receive from "0", count = 1
+ *   send    to   "+15555315550"
+ *   receive from "5555315550", count = 1
  *   mark         received as read
  *
- *   send    to   "1"
- *   receive from "1", count = 2
+ *   send    to   "+15555315551"
+ *   receive from "5555315551", count = 2
  *
- *   send    to   "2"
- *   receive from "2", count = 3
+ *   send    to   "+15555315552"
+ *   receive from "5555315552", count = 3
  *   mark         received as read
  *   ...
- *   send    to   "9"
- *   receive from "9", count = 10
+ *   send    to   "+15555315559"
+ *   receive from "5555315559", count = 10
  */
 tasks.push(function populateMessages() {
   let count = 0;
@@ -119,7 +126,7 @@ tasks.push(function populateMessages() {
     let request = sms.send("+1555531555" + iter, "Nice to meet you");
     request.onsuccess = function onRequestSuccess(event) {
       sms.addEventListener("received", onReceived);
-      sendSmsToEmulator("555541555" + iter, "Nice to meet you, too");
+      sendSmsToEmulator("555531555" + iter, "Nice to meet you, too");
     }
     request.onerror = function onRequestError(event) {
       tasks.finish();
@@ -152,20 +159,22 @@ tasks.push(function populateMessages() {
   sendMessage(count);
 });
 
+let INVALID_NUMBER = "12345";
+let INVALID_NUMBER2 = "6789";
+
 tasks.push(function testDeliveryAndNumber() {
-  log("Checking delivery == sent && number == 0");
+  log("Checking delivery == sent && number == 5555315550");
   let filter = new MozSmsFilter();
   filter.delivery = "sent";
-  filter.numbers = ["+15555315550"];
+  filter.numbers = ["5555315550"];
   getAllMessages(function (messages) {
     // Only { delivery: "sent", receiver: "+15555315550", read: true }
     is(messages.length, 1, "message count");
     for (let i = 0; i < messages.length; i++) {
       let message = messages[i];
       is(message.delivery, filter.delivery, "message delivery");
-      if (!((message.sender == filter.numbers[0])
-            || (message.receiver == filter.numbers[0]))) {
-        ok(false, "message sendor or receiver number");
+      if (!checkSenderOrReceiver(message, filter.numbers[0])) {
+        ok(false, "message sender or receiver number");
       }
     }
 
@@ -181,10 +190,10 @@ tasks.push(function testDeliveryAndNumber() {
 });
 
 tasks.push(function testDeliveryAndNumberNotFound() {
-  log("Checking delivery == sent && number == 12345");
+  log("Checking delivery == sent && number == INVALID_NUMBER");
   let filter = new MozSmsFilter();
   filter.delivery = "sent";
-  filter.numbers = ["12345"];
+  filter.numbers = [INVALID_NUMBER];
   getAllMessages(function (messages) {
     is(messages.length, 0, "message count");
 
@@ -198,11 +207,11 @@ tasks.push(function testDeliveryAndRead() {
   filter.delivery = "received";
   filter.read = true;
   getAllMessages(function (messages) {
-    // { delivery: "received", sender: "5555415550", read: true },
-    // { delivery: "received", sender: "5555415552", read: true },
-    // { delivery: "received", sender: "5555415554", read: true },
-    // { delivery: "received", sender: "5555415556", read: true }, and
-    // { delivery: "received", sender: "5555415558", read: true },
+    // { delivery: "received", sender: "5555315550", read: true },
+    // { delivery: "received", sender: "5555315552", read: true },
+    // { delivery: "received", sender: "5555315554", read: true },
+    // { delivery: "received", sender: "5555315556", read: true },
+    // { delivery: "received", sender: "5555315558", read: true },
     is(messages.length, NUM_THREADS / 2, "message count");
     for (let i = 0; i < messages.length; i++) {
       let message = messages[i];
@@ -234,18 +243,18 @@ tasks.push(function testDeliveryAndReadNotFound() {
 });
 
 tasks.push(function testNumberAndRead() {
-  log("Checking number == 0 && read == true");
+  log("Checking number == 5555315550 && read == true");
   let filter = new MozSmsFilter();
-  filter.numbers = ["5555415550"];
+  filter.numbers = ["5555315550"];
   filter.read = true;
   getAllMessages(function (messages) {
-    // { delivery: "received", sender: "5555415550", read: true }
-    is(messages.length, 1, "message count");
+    // { delivery: "sent",     receiver: "+15555315550", read: true }
+    // { delivery: "received", sender: "5555315550",     read: true }
+    is(messages.length, 2, "message count");
     for (let i = 0; i < messages.length; i++) {
       let message = messages[i];
-      if (!((message.sender == filter.numbers[0])
-            || (message.receiver == filter.numbers[0]))) {
-        ok(false, "message sendor or receiver number");
+      if (!checkSenderOrReceiver(message, filter.numbers[0])) {
+        ok(false, "message sender or receiver number");
       }
       is(message.read, filter.read, "message read");
     }
@@ -262,9 +271,9 @@ tasks.push(function testNumberAndRead() {
 });
 
 tasks.push(function testNumberAndReadNotFound() {
-  log("Checking number == 12345 && read == true");
+  log("Checking number == INVALID_NUMBER && read == true");
   let filter = new MozSmsFilter();
-  filter.numbers = ["12345"];
+  filter.numbers = [INVALID_NUMBER];
   filter.read = true;
   getAllMessages(function (messages) {
     is(messages.length, 0, "message count");
@@ -274,20 +283,20 @@ tasks.push(function testNumberAndReadNotFound() {
 });
 
 tasks.push(function testMultipleNumbers() {
-  log("Checking number == 0 || number == 1");
+  log("Checking number == 5555315550 || number == 5555315551");
   let filter = new MozSmsFilter();
-  filter.numbers = ["5555415550", "5555415551"];
+  filter.numbers = ["5555315550", "5555315551"];
   getAllMessages(function (messages) {
-    // { delivery: "received", sender: "5555415550", read: true }
-    // { delivery: "received", sender: "5555415551", read: false }
-    is(messages.length, 2, "message count");
+    // { delivery: "sent",     receiver: "+15555315550", read: true }
+    // { delivery: "received", sender: "5555315550",     read: true }
+    // { delivery: "sent",     receiver: "+15555315551", read: true }
+    // { delivery: "received", sender: "5555315551",     read: false }
+    is(messages.length, 4, "message count");
     for (let i = 0; i < messages.length; i++) {
       let message = messages[i];
-      if (!((message.sender == filter.numbers[0])
-            || (message.receiver == filter.numbers[0])
-            || (message.sender == filter.numbers[1])
-            || (message.receiver == filter.numbers[1]))) {
-        ok(false, "message sendor or receiver number");
+      if (!(checkSenderOrReceiver(message, filter.numbers[0]) ||
+            checkSenderOrReceiver(message, filter.numbers[1]))) {
+        ok(false, "message sender or receiver number");
       }
     }
 
@@ -296,9 +305,9 @@ tasks.push(function testMultipleNumbers() {
 });
 
 tasks.push(function testMultipleNumbersNotFound() {
-  log("Checking number == 12345 || number == 6789");
+  log("Checking number == INVALID_NUMBER || number == INVALID_NUMBER2");
   let filter = new MozSmsFilter();
-  filter.numbers = ["12345", "6789"];
+  filter.numbers = [INVALID_NUMBER, INVALID_NUMBER2];
   getAllMessages(function (messages) {
     is(messages.length, 0, "message count");
 
@@ -307,10 +316,10 @@ tasks.push(function testMultipleNumbersNotFound() {
 });
 
 tasks.push(function testDeliveryAndMultipleNumbers() {
-  log("Checking delivery == sent && (number == 0 || number == 1)");
+  log("Checking delivery == sent && (number == 5555315550 || number == 5555315551)");
   let filter = new MozSmsFilter();
   filter.delivery = "sent";
-  filter.numbers = ["+15555315550", "+15555315551"];
+  filter.numbers = ["5555315550", "5555315551"];
   getAllMessages(function (messages) {
     // { delivery: "sent", receiver: "+15555315550", read: true }
     // { delivery: "sent", receiver: "+15555315551", read: true }
@@ -318,11 +327,9 @@ tasks.push(function testDeliveryAndMultipleNumbers() {
     for (let i = 0; i < messages.length; i++) {
       let message = messages[i];
       is(message.delivery, filter.delivery, "message delivery");
-      if (!((message.sender == filter.numbers[0])
-            || (message.receiver == filter.numbers[0])
-            || (message.sender == filter.numbers[1])
-            || (message.receiver == filter.numbers[1]))) {
-        ok(false, "message sendor or receiver number");
+      if (!(checkSenderOrReceiver(message, filter.numbers[0]) ||
+            checkSenderOrReceiver(message, filter.numbers[1]))) {
+        ok(false, "message sender or receiver number");
       }
     }
 
@@ -331,22 +338,21 @@ tasks.push(function testDeliveryAndMultipleNumbers() {
 });
 
 tasks.push(function testMultipleNumbersAndRead() {
-  log("Checking (number == 0 || number == 1) && read == true");
+  log("Checking (number == 5555315550 || number == 5555315551) && read == true");
   let filter = new MozSmsFilter();
-  filter.numbers = ["+15555315550", "5555415550"];
+  filter.numbers = ["5555315550", "5555315551"];
   filter.read = true;
   getAllMessages(function (messages) {
-    // { delivery: "sent", receiver: "+15555315550", read: true }
-    // { delivery: "received", sender: "5555415550", read: true }
-    is(messages.length, 2, "message count");
+    // { delivery: "sent",     receiver: "+15555315550", read: true }
+    // { delivery: "received", sender: "5555315550",     read: true }
+    // { delivery: "sent",     receiver: "+15555315551", read: true }
+    is(messages.length, 3, "message count");
     for (let i = 0; i < messages.length; i++) {
       let message = messages[i];
       is(message.read, filter.read, "message read");
-      if (!((message.sender == filter.numbers[0])
-            || (message.receiver == filter.numbers[0])
-            || (message.sender == filter.numbers[1])
-            || (message.receiver == filter.numbers[1]))) {
-        ok(false, "message sendor or receiver number");
+      if (!(checkSenderOrReceiver(message, filter.numbers[0]) ||
+            checkSenderOrReceiver(message, filter.numbers[1]))) {
+        ok(false, "message sender or receiver number");
       }
     }
 
@@ -359,13 +365,13 @@ tasks.push(function testNationalNumber() {
   let filter = new MozSmsFilter();
   filter.numbers = ["5555315550"];
   getAllMessages(function (messages) {
-    // { delivery: "sent", receiver: "+15555315550", read: true }
-    is(messages.length, 1, "message count");
+    // { delivery: "sent",     receiver: "+15555315550", read: true }
+    // { delivery: "received", sender: "5555315550",     read: true }
+    is(messages.length, 2, "message count");
     for (let i = 0; i < messages.length; i++) {
       let message = messages[i];
-      if (!((message.sender == "+15555315550")
-            || (message.receiver == "+15555315550"))) {
-        ok(false, "message sendor or receiver number");
+      if (!checkSenderOrReceiver(message, filter.numbers[0])) {
+        ok(false, "message sender or receiver number");
       }
     }
 
@@ -374,17 +380,17 @@ tasks.push(function testNationalNumber() {
 });
 
 tasks.push(function testInternationalNumber() {
-  log("Checking number = +15555415550");
+  log("Checking number = +15555315550");
   let filter = new MozSmsFilter();
-  filter.numbers = ["+15555415550"];
+  filter.numbers = ["+15555315550"];
   getAllMessages(function (messages) {
-    // { delivery: "received", sender: "5555415550", read: true }
-    is(messages.length, 1, "message count");
+    // { delivery: "sent",     receiver: "+15555315550", read: true }
+    // { delivery: "received", sender: "5555315550",     read: true }
+    is(messages.length, 2, "message count");
     for (let i = 0; i < messages.length; i++) {
       let message = messages[i];
-      if (!((message.sender == "5555415550")
-            || (message.receiver == "5555415550"))) {
-        ok(false, "message sendor or receiver number");
+      if (!checkSenderOrReceiver(message, "5555315550")) {
+        ok(false, "message sender or receiver number");
       }
     }
 
