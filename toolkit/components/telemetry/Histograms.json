@@ -180,6 +180,10 @@
     "kind": "boolean",
     "description": "Successful telemetry submission"
   },
+  "XUL_CACHE_DISABLED": {
+    "kind": "flag",
+    "description": "XUL cache was disabled"
+  },
   "MEMORY_RESIDENT": {
     "kind": "exponential",
     "low": "32 * 1024",
