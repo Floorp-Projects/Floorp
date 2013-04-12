@@ -5,7 +5,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.91 2012/09/28 16:05:02 wtc%google.com Exp $
+ * $Id$
  */
 
 #ifndef _CERT_H_
@@ -110,7 +110,8 @@ extern CERTName *CERT_CreateName(CERTRDN *rdn, ...);
 ** "dest" before allocation is done (use CERT_DestroyName(dest, PR_FALSE) to
 ** do that).
 */
-extern SECStatus CERT_CopyName(PLArenaPool *arena, CERTName *dest, CERTName *src);
+extern SECStatus CERT_CopyName(PLArenaPool *arena, CERTName *dest,
+                               const CERTName *src);
 
 /*
 ** Destroy a Name object.
@@ -392,7 +393,8 @@ extern CERTCertNicknames *
 ** Check the hostname to make sure that it matches the shexp that
 ** is given in the common name of the certificate.
 */
-extern SECStatus CERT_VerifyCertName(CERTCertificate *cert, const char *hostname);
+extern SECStatus CERT_VerifyCertName(const CERTCertificate *cert,
+                                     const char *hostname);
 
 /*
 ** Add a domain name to the list of names that the user has explicitly
@@ -592,7 +594,7 @@ CERT_FindCertIssuer(CERTCertificate *cert, PRTime validTime, SECCertUsage usage)
 **	"allowOverride" if true then check to see if the invalidity has
 **		been overridden by the user.
 */
-extern SECCertTimeValidity CERT_CheckCertValidTimes(CERTCertificate *cert,
+extern SECCertTimeValidity CERT_CheckCertValidTimes(const CERTCertificate *cert,
 						    PRTime t,
 						    PRBool allowOverride);
 
@@ -613,7 +615,8 @@ extern SECStatus CERT_CertTimesValid(CERTCertificate *cert);
 **	"notAfter" is the end of the validity period
 */
 extern SECStatus
-CERT_GetCertTimes (CERTCertificate *c, PRTime *notBefore, PRTime *notAfter);
+CERT_GetCertTimes (const CERTCertificate *c, PRTime *notBefore,
+		   PRTime *notAfter);
 
 /*
 ** Extract the issuer and serial number from a certificate
@@ -642,7 +645,7 @@ CERT_VerifySignedDataWithPublicKeyInfo(CERTSignedData *sd,
 ** verify the signature of a signed data object with a SECKEYPublicKey.
 */
 extern SECStatus
-CERT_VerifySignedDataWithPublicKey(CERTSignedData *sd,
+CERT_VerifySignedDataWithPublicKey(const CERTSignedData *sd,
                                    SECKEYPublicKey *pubKey, void *wincx);
 
 /*
@@ -755,7 +758,7 @@ extern SECItem *CERT_DecodeAVAValue(const SECItem *derAVAValue);
 
 extern char *CERT_GetCertificateEmailAddress(CERTCertificate *cert);
 
-extern char *CERT_GetCertEmailAddress(CERTName *name);
+extern char *CERT_GetCertEmailAddress(const CERTName *name);
 
 extern const char * CERT_GetFirstEmailAddress(CERTCertificate * cert);
 
@@ -763,25 +766,26 @@ extern const char * CERT_GetNextEmailAddress(CERTCertificate * cert,
                                              const char * prev);
 
 /* The return value must be freed with PORT_Free. */
-extern char *CERT_GetCommonName(CERTName *name);
+extern char *CERT_GetCommonName(const CERTName *name);
 
-extern char *CERT_GetCountryName(CERTName *name);
+extern char *CERT_GetCountryName(const CERTName *name);
 
-extern char *CERT_GetLocalityName(CERTName *name);
+extern char *CERT_GetLocalityName(const CERTName *name);
 
-extern char *CERT_GetStateName(CERTName *name);
+extern char *CERT_GetStateName(const CERTName *name);
 
-extern char *CERT_GetOrgName(CERTName *name);
+extern char *CERT_GetOrgName(const CERTName *name);
 
-extern char *CERT_GetOrgUnitName(CERTName *name);
+extern char *CERT_GetOrgUnitName(const CERTName *name);
 
-extern char *CERT_GetDomainComponentName(CERTName *name);
+extern char *CERT_GetDomainComponentName(const CERTName *name);
 
-extern char *CERT_GetCertUid(CERTName *name);
+extern char *CERT_GetCertUid(const CERTName *name);
 
 /* manipulate the trust parameters of a certificate */
 
-extern SECStatus CERT_GetCertTrust(CERTCertificate *cert, CERTCertTrust *trust);
+extern SECStatus CERT_GetCertTrust(const CERTCertificate *cert,
+                                   CERTCertTrust *trust);
 
 extern SECStatus
 CERT_ChangeCertTrust (CERTCertDBHandle *handle, CERTCertificate *cert,
@@ -888,7 +892,7 @@ extern SECStatus CERT_EncodeCRLDistributionPoints
 **	encodedValue - value to decoded
 */
 extern SECStatus CERT_DecodeBasicConstraintValue
-   (CERTBasicConstraints *value, SECItem *encodedValue);
+   (CERTBasicConstraints *value, const SECItem *encodedValue);
 
 /* Decodes a DER encoded authorityKeyIdentifier extension value into a
 ** readable format.
@@ -897,8 +901,7 @@ extern SECStatus CERT_DecodeBasicConstraintValue
 **	Returns a CERTAuthKeyID structure which contains the decoded value
 */
 extern CERTAuthKeyID *CERT_DecodeAuthKeyID 
-			(PLArenaPool *arena, SECItem *encodedValue);
-
+			(PLArenaPool *arena, const SECItem *encodedValue);
 
 /* Decodes a DER encoded crlDistributionPoints extension value into a 
 ** readable format.
@@ -916,7 +919,7 @@ extern void *CERT_GetGeneralNameByType
 
 
 extern CERTOidSequence *
-CERT_DecodeOidSequence(SECItem *seqItem);
+CERT_DecodeOidSequence(const SECItem *seqItem);
 
 
 
@@ -928,7 +931,7 @@ CERT_DecodeOidSequence(SECItem *seqItem);
  ***************************************************************************/
 
 extern SECStatus CERT_FindCertExtension
-   (CERTCertificate *cert, int tag, SECItem *value);
+   (const CERTCertificate *cert, int tag, SECItem *value);
 
 extern SECStatus CERT_FindNSCertTypeExtension
    (CERTCertificate *cert, SECItem *value);
@@ -1029,7 +1032,8 @@ extern SECStatus CERT_FindCRLEntryReasonExten (CERTCrlEntry *crlEntry,
 
 extern void CERT_FreeNicknames(CERTCertNicknames *nicknames);
 
-extern PRBool CERT_CompareCerts(CERTCertificate *c1, CERTCertificate *c2);
+extern PRBool CERT_CompareCerts(const CERTCertificate *c1,
+                                const CERTCertificate *c2);
 
 extern PRBool CERT_CompareCertsForRedirection(CERTCertificate *c1,
 							 CERTCertificate *c2);
@@ -1140,7 +1144,7 @@ SECStatus
 CERT_AddNewCerts(CERTCertDBHandle *handle);
 
 CERTCertificatePolicies *
-CERT_DecodeCertificatePoliciesExtension(SECItem *extnValue);
+CERT_DecodeCertificatePoliciesExtension(const SECItem *extnValue);
 
 void
 CERT_DestroyCertificatePoliciesExtension(CERTCertificatePolicies *policies);
@@ -1153,7 +1157,8 @@ CERT_DestroyPolicyMappingsExtension(CERTCertificatePolicyMappings *mappings);
 
 SECStatus
 CERT_DecodePolicyConstraintsExtension(
-    CERTCertificatePolicyConstraints *decodedValue, SECItem *encodedValue);
+    CERTCertificatePolicyConstraints *decodedValue,
+    const SECItem *encodedValue);
 
 SECStatus CERT_DecodeInhibitAnyExtension
     (CERTCertificateInhibitAny *decodedValue, SECItem *extnValue);
@@ -1166,7 +1171,7 @@ CERT_DecodeAltNameExtension(PLArenaPool *reqArena, SECItem *EncodedAltName);
 
 extern CERTNameConstraints *
 CERT_DecodeNameConstraintsExtension(PLArenaPool *arena, 
-                                    SECItem *encodedConstraints);
+                                    const SECItem *encodedConstraints);
 
 /* returns addr of a NULL termainated array of pointers to CERTAuthInfoAccess */
 extern CERTAuthInfoAccess **
@@ -1258,7 +1263,8 @@ CERTGeneralName *
 CERT_GetCertificateNames(CERTCertificate *cert, PLArenaPool *arena);
 
 CERTGeneralName *
-CERT_GetConstrainedCertificateNames(CERTCertificate *cert, PLArenaPool *arena,
+CERT_GetConstrainedCertificateNames(const CERTCertificate *cert,
+                                    PLArenaPool *arena,
                                     PRBool includeSubjectCommonName);
 
 /*
@@ -1268,7 +1274,8 @@ CERT_GetConstrainedCertificateNames(CERTCertificate *cert, PLArenaPool *arena,
  */
 CERTCertList *
 CERT_CreateSubjectCertList(CERTCertList *certList, CERTCertDBHandle *handle,
-			   SECItem *name, PRTime sorttime, PRBool validOnly);
+			   const SECItem *name, PRTime sorttime,
+			   PRBool validOnly);
 
 /*
  * remove certs from a list that don't have keyUsage and certType
@@ -1478,13 +1485,13 @@ CERT_UnlockCertRefCount(CERTCertificate *cert);
  * that turns out to be necessary.
  */
 void
-CERT_LockCertTrust(CERTCertificate *cert);
+CERT_LockCertTrust(const CERTCertificate *cert);
 
 /*
  * Free the cert trust lock
  */
 void
-CERT_UnlockCertTrust(CERTCertificate *cert);
+CERT_UnlockCertTrust(const CERTCertificate *cert);
 
 /*
  * Digest the cert's subject public key using the specified algorithm.
@@ -1525,8 +1532,8 @@ CERT_CopyNameConstraint(PLArenaPool         *arena,
  */
 extern SECStatus
 CERT_CheckNameSpace(PLArenaPool          *arena,
-		    CERTNameConstraints  *constraints,
-		    CERTGeneralName      *currentName);
+		    const CERTNameConstraints *constraints,
+		    const CERTGeneralName *currentName);
 
 /*
  * Extract and allocate the name constraints extension from the CA cert.

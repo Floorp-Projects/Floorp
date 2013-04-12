@@ -3,7 +3,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: tlsprfalg.c,v 1.9 2012/06/26 22:27:29 rrelyea%redhat.com Exp $ */
+/* $Id$ */
 
 #ifdef FREEBL_NO_DEPEND
 #include "stubs.h"

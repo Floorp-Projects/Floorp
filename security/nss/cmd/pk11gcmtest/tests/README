@@ -1,0 +1,14 @@
+The GCM test vectors in this directory were downloaded from the NIST
+Cryptographic Algorithm Validation Program (CAVP) website
+(http://csrc.nist.gov/groups/STM/cavp/) on Mar 29, 2013 using the URL
+http://csrc.nist.gov/groups/STM/cavp/documents/mac/gcmtestvectors.zip.
+
+The original test files are about 3 MB each, which are too big to
+include in the NSS source tree.  I observed the following patterns in
+the test vectors:
+1. Taglen changes in a cycle of 7: 128, 120, 112, 104, 96, 64, 32.
+2. Then, AADlen changes in a cycle of 5: 0, 128, 160, 384, 720.
+
+To reduce the number of test vectors, I kept Taglen = 128, 96 from
+each cycle of 7, and kept AADlen = 0, 720, 160 from each two cycles
+of 10.

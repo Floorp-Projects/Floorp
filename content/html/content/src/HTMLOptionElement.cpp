@@ -27,6 +27,7 @@
 #include "nsEventStates.h"
 #include "nsContentCreatorFunctions.h"
 #include "mozAutoDocUpdate.h"
+#include "nsTextNode.h"
 
 /**
  * Implementation of &lt;option&gt;
@@ -50,7 +51,6 @@ NS_NewHTMLOptionElement(already_AddRefed<nsINodeInfo> aNodeInfo,
     nodeInfo = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::option, nullptr,
                                                    kNameSpaceID_XHTML,
                                                    nsIDOMNode::ELEMENT_NODE);
-    NS_ENSURE_TRUE(nodeInfo, nullptr);
   }
 
   return new mozilla::dom::HTMLOptionElement(nodeInfo.forget());
@@ -380,21 +380,13 @@ HTMLOptionElement::Option(const GlobalObject& aGlobal,
     doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::option, nullptr,
                                         kNameSpaceID_XHTML,
                                         nsIDOMNode::ELEMENT_NODE);
-  if (!nodeInfo) {
-    aError.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
 
   nsRefPtr<HTMLOptionElement> option = new HTMLOptionElement(nodeInfo.forget());
 
   if (aText.WasPassed()) {
     // Create a new text node and append it to the option
-    nsCOMPtr<nsIContent> textContent;
-    aError = NS_NewTextNode(getter_AddRefs(textContent),
-                            option->NodeInfo()->NodeInfoManager());
-    if (aError.Failed()) {
-      return nullptr;
-    }
+    nsRefPtr<nsTextNode> textContent =
+      new nsTextNode(option->NodeInfo()->NodeInfoManager());
 
     textContent->SetText(aText.Value(), false);
 

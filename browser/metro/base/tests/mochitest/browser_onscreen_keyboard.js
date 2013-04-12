@@ -31,23 +31,29 @@ gTests.push({
     let doc = tab.browser.contentDocument;
     let text = doc.getElementById("text")
     let rect0 = text.getBoundingClientRect();
-    text.focus();
+    let rect0browserY = Math.floor(tab.browser.ptClientToBrowser(rect0.left, rect0.top).y);
+
+    // Simulate touch
+    SelectionHelperUI.attachToCaret(tab.browser, rect0.left + 5, rect0.top + 5);
 
     // "Show" the keyboard.
     MetroUtils.keyboardHeight = 100;
     MetroUtils.keyboardVisible = true;
     Services.obs.notifyObservers(null, "metro_softkeyboard_shown", null);
 
+    let event = yield waitForEvent(window, "MozDeckOffsetChanged");
+    is(event.detail, 100, "deck offset by keyboard height");
+
     let rect1 = text.getBoundingClientRect();
-    is(rect1.top, rect0.top - 100, "text field moves up by 100px");
+    let rect1browserY = Math.floor(tab.browser.ptClientToBrowser(rect1.left, rect1.top).y);
+    is(rect1browserY, rect0browserY + 100, "text field moves up by 100px");
 
     // "Hide" the keyboard.
     MetroUtils.keyboardHeight = 0;
     MetroUtils.keyboardVisible = false;
     Services.obs.notifyObservers(null, "metro_softkeyboard_hidden", null);
 
-    let rect2 = text.getBoundingClientRect();
-    is(rect2.top, rect0.top, "text field moves back to the original position");
+    yield waitForEvent(window, "MozDeckOffsetChanged");
 
     finish();
   }

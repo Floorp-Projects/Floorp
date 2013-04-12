@@ -19,7 +19,7 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
                                JSObject* obj    /* = nullptr    */,
                                JSObject* funobj /* = nullptr    */,
                                jsid name        /* = JSID_VOID */,
-                               unsigned argc       /* = NO_ARGS   */,
+                               unsigned argc    /* = NO_ARGS   */,
                                jsval *argv      /* = nullptr    */,
                                jsval *rval      /* = nullptr    */)
     :   mState(INIT_FAILED),
@@ -29,9 +29,11 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
         mContextPopRequired(false),
         mDestroyJSContextInDestructor(false),
         mCallerLanguage(callerLanguage),
-        mFlattenedJSObject(nullptr),
+        mScopeForNewJSObjects(xpc_GetSafeJSContext()),
+        mFlattenedJSObject(xpc_GetSafeJSContext()),
         mWrapper(nullptr),
-        mTearOff(nullptr)
+        mTearOff(nullptr),
+        mName(xpc_GetSafeJSContext())
 {
     Init(callerLanguage, callerLanguage == NATIVE_CALLER, obj, funobj,
          INIT_SHOULD_LOOKUP_WRAPPER, name, argc, argv, rval);
@@ -51,9 +53,11 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
         mContextPopRequired(false),
         mDestroyJSContextInDestructor(false),
         mCallerLanguage(callerLanguage),
-        mFlattenedJSObject(flattenedJSObject),
+        mScopeForNewJSObjects(xpc_GetSafeJSContext()),
+        mFlattenedJSObject(xpc_GetSafeJSContext(), flattenedJSObject),
         mWrapper(wrapper),
-        mTearOff(tearOff)
+        mTearOff(tearOff),
+        mName(xpc_GetSafeJSContext())
 {
     Init(callerLanguage, callBeginRequest, obj, nullptr,
          WRAPPER_PASSED_TO_CONSTRUCTOR, JSID_VOID, NO_ARGS,
@@ -148,7 +152,7 @@ XPCCallContext::Init(XPCContext::LangType callerLanguage,
     if (wrapperInitOptions == INIT_SHOULD_LOOKUP_WRAPPER) {
         // If the object is a security wrapper, GetWrappedNativeOfJSObject can't
         // handle it. Do special handling here to make cross-origin Xrays work.
-        JSObject *unwrapped = js::UnwrapObjectChecked(obj, /* stopAtOuter = */ false);
+        JSObject *unwrapped = js::CheckedUnwrap(obj, /* stopAtOuter = */ false);
         if (!unwrapped) {
             mWrapper = UnwrapThisIfAllowed(obj, funobj, argc);
             if (!mWrapper) {
@@ -459,7 +463,7 @@ XPCCallContext::UnwrapThisIfAllowed(JSObject *object, JSObject *fun, unsigned ar
 {
     JS::Rooted<JSObject *> obj(mJSContext, object);
     // We should only get here for objects that aren't safe to unwrap.
-    MOZ_ASSERT(!js::UnwrapObjectChecked(obj));
+    MOZ_ASSERT(!js::CheckedUnwrap(obj));
     MOZ_ASSERT(js::IsObjectInContextCompartment(obj, mJSContext));
 
     // We can't do anything here without a function.
@@ -478,7 +482,7 @@ XPCCallContext::UnwrapThisIfAllowed(JSObject *object, JSObject *fun, unsigned ar
     // First, get the XPCWN out of the underlying object. We should have a wrapper
     // here, potentially an outer window proxy, and then an XPCWN.
     MOZ_ASSERT(js::IsWrapper(obj));
-    JSObject *unwrapped = js::UnwrapObject(obj, /* stopAtOuter = */ false);
+    JSObject *unwrapped = js::UncheckedUnwrap(obj, /* stopAtOuter = */ false);
     MOZ_ASSERT(unwrapped == JS_ObjectToInnerObject(mJSContext, js::Wrapper::wrappedObject(obj)));
 
     // Make sure we have an XPCWN, and grab it.

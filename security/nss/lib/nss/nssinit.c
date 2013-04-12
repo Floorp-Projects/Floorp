@@ -4,16 +4,14 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: nssinit.c,v 1.120 2012/11/17 01:45:33 wtc%google.com Exp $ */
+/* $Id$ */
 
 #include <ctype.h>
 #include <string.h>
 #include "seccomon.h"
-#include "prerror.h"
 #include "prinit.h"
 #include "prprf.h"
 #include "prmem.h"
-#include "prtypes.h"
 #include "cert.h"
 #include "key.h"
 #include "secmod.h"

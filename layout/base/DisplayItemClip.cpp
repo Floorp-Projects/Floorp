@@ -385,7 +385,7 @@ DisplayItemClip::Shutdown()
   gNoClip = nullptr;
 }
 
-#ifdef DEBUG
+#ifdef MOZ_DUMP_PAINTING
 nsCString
 DisplayItemClip::ToString() const
 {

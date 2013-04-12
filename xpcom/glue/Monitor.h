@@ -83,7 +83,7 @@ private:
  * The monitor must be unlocked when instances of this class are
  * created.
  */
-class NS_COM_GLUE NS_STACK_CLASS MonitorAutoLock
+class NS_COM_GLUE MOZ_STACK_CLASS MonitorAutoLock
 {
 public:
     MonitorAutoLock(Monitor& aMonitor) :
@@ -129,7 +129,7 @@ private:
  * The monitor must be locked by the current thread when instances of
  * this class are created.
  */
-class NS_COM_GLUE NS_STACK_CLASS MonitorAutoUnlock
+class NS_COM_GLUE MOZ_STACK_CLASS MonitorAutoUnlock
 {
 public:
     MonitorAutoUnlock(Monitor& aMonitor) :

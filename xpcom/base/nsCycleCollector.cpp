@@ -1603,16 +1603,18 @@ private:
 
         // Get the log directory either from $MOZ_CC_LOG_DIRECTORY or from
         // the fallback directories in OpenTempFile.
-        nsCOMPtr<nsIFile> logFile;
+        nsIFile* logFile = nullptr;
         if (char* env = PR_GetEnv("MOZ_CC_LOG_DIRECTORY")) {
             NS_NewNativeLocalFile(nsCString(env), /* followLinks = */ true,
-                                  getter_AddRefs(logFile));
+                                  &logFile);
         }
-        nsresult rv = nsMemoryInfoDumper::OpenTempFile(filename,
-                                                       getter_AddRefs(logFile));
-        NS_ENSURE_SUCCESS(rv, nullptr);
+        nsresult rv = nsMemoryInfoDumper::OpenTempFile(filename, &logFile);
+        if (NS_FAILED(rv)) {
+          NS_IF_RELEASE(logFile);
+          return nullptr;
+        }
 
-        return logFile.forget();
+        return logFile;
     }
 
     FILE *mStream;

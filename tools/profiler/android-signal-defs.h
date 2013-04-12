@@ -6,10 +6,12 @@
 // Android runs a fairly new Linux kernel, so signal info is there,
 // but the C library doesn't have the structs defined.
 
+#include <android/api-level.h>
+
 // All NDK platform versions have asm/sigcontext.h for ARM
 // Only NDK >= 6, platform >= 9 have asm/sigcontext.h for x86
 // Only NDK >= 8, platform >= 9 have asm/sigcontext.h for MIPS
-#if defined(__arm__) || defined(__thumb__) || ANDROID_VERSION >= 9
+#if defined(__arm__) || defined(__thumb__) || __ANDROID_API__ >= 9
 #include <asm/sigcontext.h>
 #else
 #error use newer NDK or newer platform version (e.g. --with-android-version=9)

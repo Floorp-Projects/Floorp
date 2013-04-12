@@ -11,7 +11,7 @@
 #include "nsIXULAppInfo.h"
 #include "nsPluginArray.h"
 #include "nsMimeTypeArray.h"
-#include "nsDesktopNotification.h"
+#include "mozilla/dom/DesktopNotification.h"
 #include "nsGeolocation.h"
 #include "nsIHttpProtocolHandler.h"
 #include "nsICachingChannel.h"
@@ -38,7 +38,6 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
 #include "Connection.h"
-#include "nsIObserverService.h"
 #ifdef MOZ_B2G_RIL
 #include "MobileConnection.h"
 #include "mozilla/dom/CellBroadcast.h"
@@ -104,10 +103,6 @@ Navigator::Navigator(nsPIDOMWindow* aWindow)
 {
   NS_ASSERTION(aWindow->IsInnerWindow(),
                "Navigator must get an inner window!");
-  nsCOMPtr<nsIObserverService> obsService =
-    mozilla::services::GetObserverService();
-  if (obsService)
-    obsService->AddObserver(this, "plugin-info-updated", false);
 }
 
 Navigator::~Navigator()
@@ -125,7 +120,6 @@ NS_INTERFACE_MAP_BEGIN(Navigator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorDesktopNotification)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozNavigatorSms)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozNavigatorMobileMessage)
-  NS_INTERFACE_MAP_ENTRY(nsIObserver)
 #ifdef MOZ_MEDIA_NAVIGATOR
   NS_INTERFACE_MAP_ENTRY(nsINavigatorUserMedia)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorUserMedia)
@@ -160,12 +154,6 @@ void
 Navigator::Invalidate()
 {
   mWindow = nullptr;
-
-  nsCOMPtr<nsIObserverService> obsService =
-    mozilla::services::GetObserverService();
-  if (obsService) {
-    obsService->RemoveObserver(this, "plugin-info-updated");
-  }
 
   if (mPlugins) {
     mPlugins->Invalidate();
@@ -266,20 +254,6 @@ Navigator::GetWindow()
   nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mWindow));
 
   return win;
-}
-
-//*****************************************************************************
-//    Navigator::nsIObserver
-//*****************************************************************************
-
-NS_IMETHODIMP
-Navigator::Observe(nsISupports *aSubject, const char *aTopic,
-                   const PRUnichar *aData) {
-  if (!nsCRT::strcmp(aTopic, "plugin-info-updated") && mPlugins) {
-    mPlugins->Refresh(false);
-  }
-
-  return NS_OK;
 }
 
 //*****************************************************************************
@@ -479,6 +453,7 @@ Navigator::GetPlugins(nsIDOMPluginArray** aPlugins)
     nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mWindow));
 
     mPlugins = new nsPluginArray(this, win ? win->GetDocShell() : nullptr);
+    mPlugins->Init();
   }
 
   NS_ADDREF(*aPlugins = mPlugins);
@@ -1161,7 +1136,7 @@ Navigator::MozGetUserMediaDevices(nsIGetUserMediaDevicesSuccessCallback* aOnSucc
 //    Navigator::nsIDOMNavigatorDesktopNotification
 //*****************************************************************************
 
-NS_IMETHODIMP Navigator::GetMozNotification(nsIDOMDesktopNotificationCenter** aRetVal)
+NS_IMETHODIMP Navigator::GetMozNotification(nsISupports** aRetVal)
 {
   NS_ENSURE_ARG_POINTER(aRetVal);
   *aRetVal = nullptr;
@@ -1174,7 +1149,7 @@ NS_IMETHODIMP Navigator::GetMozNotification(nsIDOMDesktopNotificationCenter** aR
   nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mWindow));
   NS_ENSURE_TRUE(win && win->GetDocShell(), NS_ERROR_FAILURE);
 
-  mNotification = new nsDesktopNotificationCenter(win);
+  mNotification = new DesktopNotificationCenter(win);
 
   NS_ADDREF(*aRetVal = mNotification);
   return NS_OK;
@@ -1559,7 +1534,7 @@ Navigator::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
   // TODO: add SizeOfIncludingThis() to nsMimeTypeArray, bug 674113.
   // TODO: add SizeOfIncludingThis() to nsPluginArray, bug 674114.
   // TODO: add SizeOfIncludingThis() to nsGeolocation, bug 674115.
-  // TODO: add SizeOfIncludingThis() to nsDesktopNotificationCenter, bug 674116.
+  // TODO: add SizeOfIncludingThis() to DesktopNotificationCenter, bug 674116.
 
   return n;
 }

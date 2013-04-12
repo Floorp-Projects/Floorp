@@ -5,7 +5,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.73 2012/04/25 14:49:26 gerv%gerv.net Exp $
+ * $Id$
  */
  
 #include "cert.h"
@@ -1695,7 +1695,7 @@ static SECStatus DPCache_FetchFromTokens(CRLDPCache* cache, PRTime vfdate,
     return rv;
 }
 
-static SECStatus CachedCrl_GetEntry(CachedCrl* crl, SECItem* sn,
+static SECStatus CachedCrl_GetEntry(CachedCrl* crl, const SECItem* sn,
                                     CERTCrlEntry** returned)
 {
     CERTCrlEntry* acrlEntry;
@@ -1722,7 +1722,7 @@ static SECStatus CachedCrl_GetEntry(CachedCrl* crl, SECItem* sn,
 }
 
 /* check if a particular SN is in the CRL cache and return its entry */
-dpcacheStatus DPCache_Lookup(CRLDPCache* cache, SECItem* sn,
+dpcacheStatus DPCache_Lookup(CRLDPCache* cache, const SECItem* sn,
                          CERTCrlEntry** returned)
 {
     SECStatus rv;
@@ -2631,7 +2631,7 @@ cert_CheckCertRevocationStatus(CERTCertificate* cert, CERTCertificate* issuer,
         *revReason = reason;
     }
 
-    if (t && SECSuccess != CERT_CheckCertValidTimes(issuer, t, PR_FALSE))
+    if (t && secCertTimeValid != CERT_CheckCertValidTimes(issuer, t, PR_FALSE))
     {
         /* we won't be able to check the CRL's signature if the issuer cert
            is expired as of the time we are verifying. This may cause a valid

@@ -833,6 +833,10 @@ PK11_GetSlotList(CK_MECHANISM_TYPE type)
     case CKM_CAMELLIA_ECB:
 	return &pk11_camelliaSlotList;
     case CKM_AES_CBC:
+    case CKM_AES_CCM:
+    case CKM_AES_CTR:
+    case CKM_AES_CTS:
+    case CKM_AES_GCM:
     case CKM_AES_ECB:
 	return &pk11_aesSlotList;
     case CKM_DES_CBC:
@@ -880,6 +884,7 @@ PK11_GetSlotList(CK_MECHANISM_TYPE type)
 	return &pk11_sslSlotList;
     case CKM_TLS_MASTER_KEY_DERIVE:
     case CKM_TLS_KEY_AND_MAC_DERIVE:
+    case CKM_NSS_TLS_KEY_AND_MAC_DERIVE_SHA256:
 	return &pk11_tlsSlotList;
     case CKM_IDEA_CBC:
     case CKM_IDEA_ECB:

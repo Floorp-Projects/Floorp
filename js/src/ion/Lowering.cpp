@@ -2145,7 +2145,7 @@ LIRGenerator::visitGetPropertyCache(MGetPropertyCache *ins)
         return assignSafepoint(lir, ins);
     }
 
-    LGetPropertyCacheT *lir = new LGetPropertyCacheT(useRegister(ins->object()));
+    LGetPropertyCacheT *lir = newLGetPropertyCacheT(ins);
     if (!define(lir, ins))
         return false;
     return assignSafepoint(lir, ins);
@@ -2769,4 +2769,3 @@ LIRGenerator::generate()
     JS_ASSERT(prepareCallStack_.empty());
     return true;
 }
-

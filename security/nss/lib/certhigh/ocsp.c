@@ -6,7 +6,7 @@
  * Implementation of OCSP services, for both client and server.
  * (XXX, really, mostly just for client right now, but intended to do both.)
  *
- * $Id: ocsp.c,v 1.77 2013/01/23 23:05:50 kaie%kuix.de Exp $
+ * $Id$
  */
 
 #include "prerror.h"
@@ -124,9 +124,9 @@ ocsp_CacheEncodedOCSPResponse(CERTCertDBHandle *handle,
 			      CERTCertificate *cert,
 			      int64 time,
 			      void *pwArg,
-			      SECItem *encodedResponse,
+			      const SECItem *encodedResponse,
+			      PRBool cacheInvalid,
 			      PRBool *certIDWasConsumed,
-			      PRBool cacheNegative,
 			      SECStatus *rv_ocsp);
 
 static SECStatus
@@ -139,6 +139,9 @@ ocsp_GetVerifiedSingleResponseForCertID(CERTCertDBHandle *handle,
 
 static SECStatus
 ocsp_CertRevokedAfter(ocspRevokedInfo *revokedInfo, int64 time);
+
+static CERTOCSPCertID *
+cert_DupOCSPCertID(CERTOCSPCertID *src);
 
 #ifndef DEBUG
 #define OCSP_TRACE(msg)
@@ -766,6 +769,9 @@ ocsp_IsCacheItemFresh(OCSPCacheItem *cacheItem)
 /*
  * Status in *certIDWasConsumed will always be correct, regardless of 
  * return value.
+ * If the caller is unable to transfer ownership of certID,
+ * then the caller must set certIDWasConsumed to NULL,
+ * and this function will potentially duplicate the certID object.
  */
 static SECStatus
 ocsp_CreateOrUpdateCacheEntry(OCSPCacheData *cache, 
@@ -777,10 +783,7 @@ ocsp_CreateOrUpdateCacheEntry(OCSPCacheData *cache,
     OCSPCacheItem *cacheItem;
     OCSP_TRACE(("OCSP ocsp_CreateOrUpdateCacheEntry\n"));
   
-    if (!certIDWasConsumed) {
-        PORT_SetError(SEC_ERROR_INVALID_ARGS);
-        return SECFailure;
-    }
+    if (certIDWasConsumed)
     *certIDWasConsumed = PR_FALSE;
   
     PR_EnterMonitor(OCSP_Global.monitor);
@@ -788,23 +791,47 @@ ocsp_CreateOrUpdateCacheEntry(OCSPCacheData *cache,
   
     cacheItem = ocsp_FindCacheEntry(cache, certID);
     if (!cacheItem) {
-        rv = ocsp_CreateCacheItemAndConsumeCertID(cache, certID, 
+        CERTOCSPCertID *myCertID;
+        if (certIDWasConsumed) {
+            myCertID = certID;
+            *certIDWasConsumed = PR_TRUE;
+        } else {
+            myCertID = cert_DupOCSPCertID(certID);
+            if (!myCertID) {
+                PR_ExitMonitor(OCSP_Global.monitor);
+                PORT_SetError(PR_OUT_OF_MEMORY_ERROR);
+                return SECFailure;
+            }
+        }
+
+        rv = ocsp_CreateCacheItemAndConsumeCertID(cache, myCertID,
                                                   &cacheItem);
         if (rv != SECSuccess) {
             PR_ExitMonitor(OCSP_Global.monitor);
             return rv;
         }
-        *certIDWasConsumed = PR_TRUE;
     }
     if (single) {
-        rv = ocsp_SetCacheItemResponse(cacheItem, single);
-        if (rv != SECSuccess) {
-            ocsp_RemoveCacheItem(cache, cacheItem);
-            PR_ExitMonitor(OCSP_Global.monitor);
-            return rv;
+        PRTime thisUpdate;
+        rv = DER_GeneralizedTimeToTime(&thisUpdate, &single->thisUpdate);
+
+        if (!cacheItem->haveThisUpdate ||
+            (rv == SECSuccess && cacheItem->thisUpdate < thisUpdate)) {
+            rv = ocsp_SetCacheItemResponse(cacheItem, single);
+            if (rv != SECSuccess) {
+                ocsp_RemoveCacheItem(cache, cacheItem);
+                PR_ExitMonitor(OCSP_Global.monitor);
+                return rv;
+            }
+        } else {
+            OCSP_TRACE(("Not caching response because the response is not newer than the cache"));
         }
     } else {
         cacheItem->missingResponseError = PORT_GetError();
+        if (cacheItem->certStatusArena) {
+            PORT_FreeArena(cacheItem->certStatusArena, PR_FALSE);
+            cacheItem->certStatusArena = NULL;
+        }
     }
     ocsp_FreshenCacheItemNextFetchAttemptTime(cacheItem);
     ocsp_CheckCacheSize(cache);
@@ -1545,7 +1572,7 @@ CERT_DestroyOCSPCertID(CERTOCSPCertID* certID)
  * results in a NULL being returned (and an appropriate error set).
  */
 
-static SECItem *
+SECItem *
 ocsp_DigestValue(PRArenaPool *arena, SECOidTag digestAlg, 
                  SECItem *fill, const SECItem *src)
 {
@@ -1750,6 +1777,54 @@ CERT_CreateOCSPCertID(CERTCertificate *cert, int64 time)
     }
     certID->poolp = arena;
     return certID;
+}
+
+static CERTOCSPCertID *
+cert_DupOCSPCertID(CERTOCSPCertID *src)
+{
+    CERTOCSPCertID *dest;
+    PRArenaPool *arena = NULL;
+
+    if (!src) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return NULL;
+    }
+
+    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    if (!arena)
+        goto loser;
+
+    dest = PORT_ArenaZNew(arena, CERTOCSPCertID);
+      if (!dest)
+        goto loser;
+
+#define DUPHELP(element) \
+    if (src->element.data) {  \
+        if (SECITEM_CopyItem(arena, &dest->element, &src->element) \
+            != SECSuccess) \
+            goto loser;     \
+    }
+
+    DUPHELP(hashAlgorithm.algorithm)
+    DUPHELP(hashAlgorithm.parameters)
+    DUPHELP(issuerNameHash)
+    DUPHELP(issuerKeyHash)
+    DUPHELP(serialNumber)
+    DUPHELP(issuerSHA1NameHash)
+    DUPHELP(issuerMD5NameHash)
+    DUPHELP(issuerMD2NameHash)
+    DUPHELP(issuerSHA1KeyHash)
+    DUPHELP(issuerMD5KeyHash)
+    DUPHELP(issuerMD2KeyHash)
+
+    dest->poolp = arena;
+    return dest;
+
+loser:
+    if (arena)
+        PORT_FreeArena(arena, PR_FALSE);
+    PORT_SetError(PR_OUT_OF_MEMORY_ERROR);
+    return NULL;
 }
 
 /*
@@ -2535,7 +2610,7 @@ ocsp_DecodeResponseBytes(PRArenaPool *arena, ocspResponseBytes *rbytes)
  *   or a low-level or internal error occurred).
  */
 CERTOCSPResponse *
-CERT_DecodeOCSPResponse(SECItem *src)
+CERT_DecodeOCSPResponse(const SECItem *src)
 {
     PRArenaPool *arena = NULL;
     CERTOCSPResponse *response = NULL;
@@ -4817,15 +4892,58 @@ SECStatus
 CERT_CacheOCSPResponseFromSideChannel(CERTCertDBHandle *handle,
 				      CERTCertificate *cert,
 				      int64 time,
-				      SECItem *encodedResponse,
+				      const SECItem *encodedResponse,
 				      void *pwArg)
 {
-    CERTOCSPCertID *certID;
+    CERTOCSPCertID *certID = NULL;
     PRBool certIDWasConsumed = PR_FALSE;
     SECStatus rv = SECFailure;
     SECStatus rvOcsp;
     SECErrorCodes dummy_error_code; /* we ignore this */
 
+    /* The OCSP cache can be in three states regarding this certificate:
+     *    + Good (cached, timely, 'good' response, or revoked in the future)
+     *    + Revoked (cached, timely, but doesn't fit in the last category)
+     *    + Miss (no knowledge)
+     *
+     * Likewise, the side-channel information can be
+     *    + Good (timely, 'good' response, or revoked in the future)
+     *    + Revoked (timely, but doesn't fit in the last category)
+     *    + Invalid (bad syntax, bad signature, not timely etc)
+     *
+     * The common case is that the cache result is Good and so is the
+     * side-channel information. We want to save processing time in this case
+     * so we say that any time we see a Good result from the cache we return
+     * early.
+     *
+     *                       Cache result
+     *      | Good             Revoked               Miss
+     *   ---+--------------------------------------------
+     *    G |  noop           Cache more           Cache it
+     * S    |                 recent result
+     * i    |
+     * d    |
+     * e    |
+     *    R |  noop           Cache more           Cache it
+     * C    |                 recent result
+     * h    |
+     * a    |
+     * n    |
+     * n  I |  noop           Noop                  Noop
+     * e    |
+     * l    |
+     *
+     * When we fetch from the network we might choose to cache a negative
+     * result when the response is invalid. This saves us hammering, uselessly,
+     * at a broken responder. However, side channels are commonly attacker
+     * controlled and so we must not cache a negative result for an Invalid
+     * side channel.
+     */
+
+    if (!cert) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
     certID = CERT_CreateOCSPCertID(cert, time);
     if (!certID)
         return SECFailure;
@@ -4833,22 +4951,18 @@ CERT_CacheOCSPResponseFromSideChannel(CERTCertDBHandle *handle,
         certID, time, PR_FALSE, /* ignoreGlobalOcspFailureSetting */
         &rvOcsp, &dummy_error_code);
     if (rv == SECSuccess && rvOcsp == SECSuccess) {
-	/* The cached value is good. We don't want to waste time validating
-	 * this OCSP response. */
+        /* The cached value is good. We don't want to waste time validating
+         * this OCSP response. This is the first column in the table above. */
         CERT_DestroyOCSPCertID(certID);
         return rv;
     }
 
-    /* Since the OCSP response came from a side channel it is attacker
-     * controlled. The attacker can have chosen any valid OCSP response,
-     * including responses from the past. In this case,
-     * ocsp_GetVerifiedSingleResponseForCertID will fail. If we recorded a
-     * negative cache entry in this case, then the attacker would have
-     * 'poisoned' our cache (denial of service), so we don't record negative
-     * results. */
-    rv = ocsp_CacheEncodedOCSPResponse(handle, certID, cert, time, pwArg,
-                                       encodedResponse, &certIDWasConsumed,
-                                       PR_FALSE /* don't cache failures */,
+    /* The logic for caching the more recent response is handled in
+     * ocsp_CreateOrUpdateCacheEntry, which is called by this function. */
+    rv = ocsp_CacheEncodedOCSPResponse(handle, certID, cert, time,
+                                       pwArg, encodedResponse,
+                                       PR_FALSE /* don't cache if invalid */,
+                                       &certIDWasConsumed,
                                        &rvOcsp);
     if (!certIDWasConsumed) {
         CERT_DestroyOCSPCertID(certID);
@@ -4936,8 +5050,9 @@ ocsp_GetOCSPStatusFromNetwork(CERTCertDBHandle *handle,
     }
 
     rv = ocsp_CacheEncodedOCSPResponse(handle, certID, cert, time, pwArg,
-	                               encodedResponse, certIDWasConsumed,
-	                               PR_TRUE /* cache failures */, rv_ocsp);
+                                       encodedResponse,
+                                       PR_TRUE /* cache if invalid */,
+                                       certIDWasConsumed, rv_ocsp);
 
 loser:
     if (request != NULL)
@@ -4975,6 +5090,9 @@ loser:
  *     the opaque argument to the password prompting function.
  *   SECItem *encodedResponse
  *     the DER encoded bytes of the OCSP response
+ *   PRBool cacheInvalid
+ *     If true then invalid responses will cause a negative cache entry to be
+ *     created. (Invalid means bad syntax, bad signature etc)
  *   PRBool *certIDWasConsumed
  *     (output) on return, this is true iff |certID| was consumed by this
  *     function.
@@ -4990,9 +5108,9 @@ ocsp_CacheEncodedOCSPResponse(CERTCertDBHandle *handle,
 			      CERTCertificate *cert,
 			      int64 time,
 			      void *pwArg,
-			      SECItem *encodedResponse,
+			      const SECItem *encodedResponse,
+                              PRBool cacheInvalid,
 			      PRBool *certIDWasConsumed,
-			      PRBool cacheNegative,
 			      SECStatus *rv_ocsp)
 {
     CERTOCSPResponse *response = NULL;
@@ -5051,7 +5169,8 @@ ocsp_CacheEncodedOCSPResponse(CERTCertDBHandle *handle,
     *rv_ocsp = ocsp_SingleResponseCertHasGoodStatus(single, time);
 
 loser:
-    if (cacheNegative || *rv_ocsp == SECSuccess) {
+    /* If single == NULL here then the response was invalid. */
+    if (single != NULL || cacheInvalid) {
 	PR_EnterMonitor(OCSP_Global.monitor);
 	if (OCSP_Global.maxCacheEntries >= 0) {
 	    /* single == NULL means: remember response failure */

@@ -32,8 +32,17 @@ function checkResults(xhr)
   return true;
 }
 
+var httpServersClosed = 0;
+function finishIfDone()
+{
+  if (++httpServersClosed == 2)
+    do_test_finished();
+}
+
 function run_test()
 {
+  do_test_pending();
+
   httpserver.registerPathHandler(testpath, serverHandler);
   httpserver.start(4444);
 
@@ -45,14 +54,6 @@ function run_test()
   var res = cu.evalInSandbox('var sync = createXHR("4444/simple"); sync.send(null); sync', sb);
   checkResults(res);
 
-  // Test async XHR sending
-  var async = cu.evalInSandbox('var async = createXHR("4444/simple", true); async', sb);
-  async.addEventListener("readystatechange", function(event) {
-    if (checkResults(async))
-      httpserver.stop(do_test_finished);
-  }, false);
-  async.send(null);
-
   // negative test sync XHR sending (to ensure that the xhr do not have chrome caps, see bug 779821)
   try {
     cu.evalInSandbox('var createXHR = ' + createXHR.toString(), sb);
@@ -61,8 +62,28 @@ function run_test()
   } catch (e) {
     do_check_true(true);
   }
+
+  httpserver2.stop(finishIfDone);
+
+  // Test async XHR sending
+  sb.finish = function(){
+    httpserver.stop(finishIfDone);
+  }
+
+  sb.checkResults = checkResults;
   
-  do_test_pending();
+  sb.do_check_eq = do_check_eq;
+
+  function changeListener(event) {
+    if (checkResults(async))
+      finish();
+  }
+
+  var async = cu.evalInSandbox('var async = createXHR("4444/simple", true);' +
+                               'async.addEventListener("readystatechange", ' +
+                                                       changeListener.toString() + ', false);' +
+                               'async', sb);
+  async.send(null);
 }
 
 function serverHandler(metadata, response)

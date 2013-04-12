@@ -4,7 +4,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: secsign.c,v 1.29 2012/06/25 21:48:39 rrelyea%redhat.com Exp $ */
+/* $Id$ */
 
 #include <stdio.h>
 #include "cryptohi.h"
@@ -54,13 +54,6 @@ SGN_NewContext(SECOidTag alg, SECKEYPrivateKey *key)
 	PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
 	return 0;
     }
-
-#ifndef NSS_ECC_MORE_THAN_SUITE_B
-    if (key->keyType == ecKey) {
-	PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
-	return 0;
-    }
-#endif
 
     cx = (SGNContext*) PORT_ZAlloc(sizeof(SGNContext));
     if (cx) {

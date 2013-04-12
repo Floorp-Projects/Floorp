@@ -2493,8 +2493,20 @@ Parser<FullParseHandler>::bindVarOrConst(JSContext *cx, BindData<FullParseHandle
 
     if (stmt && stmt->type == STMT_WITH) {
         pn->pn_dflags |= PND_DEOPTIMIZED;
-        if (pc->sc->isFunctionBox())
-            pc->sc->asFunctionBox()->setMightAliasLocals();
+        if (pc->sc->isFunctionBox()) {
+            FunctionBox *funbox = pc->sc->asFunctionBox();
+            funbox->setMightAliasLocals();
+
+            /*
+             * This definition isn't being added to the parse context's
+             * declarations, so make sure to indicate the need to deoptimize
+             * the script's arguments object.
+             */
+            if (name == cx->names().arguments) {
+                funbox->setArgumentsHasLocalBinding();
+                funbox->setDefinitelyNeedsArgsObj();
+            }
+        }
         return true;
     }
 

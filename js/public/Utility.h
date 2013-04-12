@@ -508,6 +508,17 @@ js_delete(T *p)
     }
 }
 
+template<class T>
+static JS_ALWAYS_INLINE void
+js_delete_poison(T *p)
+{
+    if (p) {
+        p->~T();
+        memset(p, 0x3B, sizeof(T));
+        js_free(p);
+    }
+}
+
 template <class T>
 static JS_ALWAYS_INLINE T *
 js_pod_malloc()

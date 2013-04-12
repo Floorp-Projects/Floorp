@@ -5,7 +5,7 @@
 /*
  * Test program for SDR (Secret Decoder Ring) functions.
  *
- * $Id: pwdecrypt.c,v 1.9 2012/12/12 19:25:36 wtc%google.com Exp $
+ * $Id$
  */
 
 #include "nspr.h"

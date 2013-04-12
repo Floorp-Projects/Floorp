@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifdef DEBUG
-static const char NSSCKAPI_CVS_ID[] = "@(#) $RCSfile: nssck.api,v $ $Revision: 1.8 $ $Date: 2012/04/25 14:49:28 $ ; @(#) $RCSfile: nssck.api,v $ $Revision: 1.8 $ $Date: 2012/04/25 14:49:28 $";
+static const char NSSCKAPI_CVS_ID[] = "@(#) $RCSfile$ $Revision$ $Date$ ; @(#) $RCSfile$ $Revision$ $Date$";
 #endif /* DEBUG */
 
 /*

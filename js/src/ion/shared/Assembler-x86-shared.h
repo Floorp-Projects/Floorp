@@ -278,9 +278,11 @@ class AssemblerX86Shared
     }
 
     void movsd(const FloatRegister &src, const FloatRegister &dest) {
+        JS_ASSERT(HasSSE2());
         masm.movsd_rr(src.code(), dest.code());
     }
     void movsd(const Operand &src, const FloatRegister &dest) {
+        JS_ASSERT(HasSSE2());
         switch (src.kind()) {
           case Operand::FPREG:
             masm.movsd_rr(src.fpu(), dest.code());
@@ -296,6 +298,7 @@ class AssemblerX86Shared
         }
     }
     void movsd(const FloatRegister &src, const Operand &dest) {
+        JS_ASSERT(HasSSE2());
         switch (dest.kind()) {
           case Operand::FPREG:
             masm.movsd_rr(src.code(), dest.fpu());
@@ -311,6 +314,7 @@ class AssemblerX86Shared
         }
     }
     void movss(const Operand &src, const FloatRegister &dest) {
+        JS_ASSERT(HasSSE2());
         switch (src.kind()) {
           case Operand::REG_DISP:
             masm.movss_mr(src.disp(), src.base(), dest.code());
@@ -323,6 +327,7 @@ class AssemblerX86Shared
         }
     }
     void movss(const FloatRegister &src, const Operand &dest) {
+        JS_ASSERT(HasSSE2());
         switch (dest.kind()) {
           case Operand::REG_DISP:
             masm.movss_rm(src.code(), dest.disp(), dest.base());
@@ -335,6 +340,7 @@ class AssemblerX86Shared
         }
     }
     void movdqa(const Operand &src, const FloatRegister &dest) {
+        JS_ASSERT(HasSSE2());
         switch (src.kind()) {
           case Operand::REG_DISP:
             masm.movdqa_mr(src.disp(), src.base(), dest.code());
@@ -347,6 +353,7 @@ class AssemblerX86Shared
         }
     }
     void movdqa(const FloatRegister &src, const Operand &dest) {
+        JS_ASSERT(HasSSE2());
         switch (dest.kind()) {
           case Operand::REG_DISP:
             masm.movdqa_rm(src.code(), dest.disp(), dest.base());
@@ -359,9 +366,11 @@ class AssemblerX86Shared
         }
     }
     void cvtss2sd(const FloatRegister &src, const FloatRegister &dest) {
+        JS_ASSERT(HasSSE2());
         masm.cvtss2sd_rr(src.code(), dest.code());
     }
     void cvtsd2ss(const FloatRegister &src, const FloatRegister &dest) {
+        JS_ASSERT(HasSSE2());
         masm.cvtsd2ss_rr(src.code(), dest.code());
     }
     void movzbl(const Operand &src, const Register &dest) {
@@ -655,6 +664,9 @@ class AssemblerX86Shared
         masm.int3();
     }
 
+    static bool HasSSE2() {
+        return JSC::MacroAssembler::getSSEState() >= JSC::MacroAssembler::HasSSE2;
+    }
     static bool HasSSE41() {
         return JSC::MacroAssembler::getSSEState() >= JSC::MacroAssembler::HasSSE4_1;
     }
@@ -1052,12 +1064,15 @@ class AssemblerX86Shared
     }
 
     void unpcklps(const FloatRegister &src, const FloatRegister &dest) {
+        JS_ASSERT(HasSSE2());
         masm.unpcklps_rr(src.code(), dest.code());
     }
     void pinsrd(const Register &src, const FloatRegister &dest) {
+        JS_ASSERT(HasSSE2());
         masm.pinsrd_rr(src.code(), dest.code());
     }
     void pinsrd(const Operand &src, const FloatRegister &dest) {
+        JS_ASSERT(HasSSE2());
         switch (src.kind()) {
           case Operand::REG:
             masm.pinsrd_rr(src.reg(), dest.code());
@@ -1070,16 +1085,20 @@ class AssemblerX86Shared
         }
     }
     void psrldq(Imm32 shift, const FloatRegister &dest) {
+        JS_ASSERT(HasSSE2());
         masm.psrldq_rr(dest.code(), shift.value);
     }
     void psllq(Imm32 shift, const FloatRegister &dest) {
+        JS_ASSERT(HasSSE2());
         masm.psllq_rr(dest.code(), shift.value);
     }
     void psrlq(Imm32 shift, const FloatRegister &dest) {
+        JS_ASSERT(HasSSE2());
         masm.psrlq_rr(dest.code(), shift.value);
     }
 
     void cvtsi2sd(const Operand &src, const FloatRegister &dest) {
+        JS_ASSERT(HasSSE2());
         switch (src.kind()) {
           case Operand::REG:
             masm.cvtsi2sd_rr(src.reg(), dest.code());
@@ -1095,12 +1114,15 @@ class AssemblerX86Shared
         }
     }
     void cvttsd2si(const FloatRegister &src, const Register &dest) {
+        JS_ASSERT(HasSSE2());
         masm.cvttsd2si_rr(src.code(), dest.code());
     }
     void cvtsi2sd(const Register &src, const FloatRegister &dest) {
+        JS_ASSERT(HasSSE2());
         masm.cvtsi2sd_rr(src.code(), dest.code());
     }
     void movmskpd(const FloatRegister &src, const Register &dest) {
+        JS_ASSERT(HasSSE2());
         masm.movmskpd_rr(src.code(), dest.code());
     }
     void ptest(const FloatRegister &lhs, const FloatRegister &rhs) {
@@ -1108,21 +1130,27 @@ class AssemblerX86Shared
         masm.ptest_rr(rhs.code(), lhs.code());
     }
     void ucomisd(const FloatRegister &lhs, const FloatRegister &rhs) {
+        JS_ASSERT(HasSSE2());
         masm.ucomisd_rr(rhs.code(), lhs.code());
     }
     void pcmpeqw(const FloatRegister &lhs, const FloatRegister &rhs) {
+        JS_ASSERT(HasSSE2());
         masm.pcmpeqw_rr(rhs.code(), lhs.code());
     }    
     void movd(const Register &src, const FloatRegister &dest) {
+        JS_ASSERT(HasSSE2());
         masm.movd_rr(src.code(), dest.code());
     }
     void movd(const FloatRegister &src, const Register &dest) {
+        JS_ASSERT(HasSSE2());
         masm.movd_rr(src.code(), dest.code());
     }
     void addsd(const FloatRegister &src, const FloatRegister &dest) {
+        JS_ASSERT(HasSSE2());
         masm.addsd_rr(src.code(), dest.code());
     }
     void addsd(const Operand &src, const FloatRegister &dest) {
+        JS_ASSERT(HasSSE2());
         switch (src.kind()) {
           case Operand::FPREG:
             masm.addsd_rr(src.fpu(), dest.code());
@@ -1140,9 +1168,11 @@ class AssemblerX86Shared
         }
     }
     void subsd(const FloatRegister &src, const FloatRegister &dest) {
+        JS_ASSERT(HasSSE2());
         masm.subsd_rr(src.code(), dest.code());
     }
     void subsd(const Operand &src, const FloatRegister &dest) {
+        JS_ASSERT(HasSSE2());
         switch (src.kind()) {
           case Operand::FPREG:
             masm.subsd_rr(src.fpu(), dest.code());
@@ -1155,9 +1185,11 @@ class AssemblerX86Shared
         }
     }
     void mulsd(const FloatRegister &src, const FloatRegister &dest) {
+        JS_ASSERT(HasSSE2());
         masm.mulsd_rr(src.code(), dest.code());
     }
     void mulsd(const Operand &src, const FloatRegister &dest) {
+        JS_ASSERT(HasSSE2());
         switch (src.kind()) {
           case Operand::FPREG:
             masm.mulsd_rr(src.fpu(), dest.code());
@@ -1170,9 +1202,11 @@ class AssemblerX86Shared
         }
     }
     void divsd(const FloatRegister &src, const FloatRegister &dest) {
+        JS_ASSERT(HasSSE2());
         masm.divsd_rr(src.code(), dest.code());
     }
     void divsd(const Operand &src, const FloatRegister &dest) {
+        JS_ASSERT(HasSSE2());
         switch (src.kind()) {
           case Operand::FPREG:
             masm.divsd_rr(src.fpu(), dest.code());
@@ -1185,20 +1219,25 @@ class AssemblerX86Shared
         }
     }
     void xorpd(const FloatRegister &src, const FloatRegister &dest) {
+        JS_ASSERT(HasSSE2());
         masm.xorpd_rr(src.code(), dest.code());
     }
     void orpd(const FloatRegister &src, const FloatRegister &dest) {
+        JS_ASSERT(HasSSE2());
         masm.orpd_rr(src.code(), dest.code());
     }
     void andpd(const FloatRegister &src, const FloatRegister &dest) {
+        JS_ASSERT(HasSSE2());
         masm.andpd_rr(src.code(), dest.code());
     }
     void sqrtsd(const FloatRegister &src, const FloatRegister &dest) {
+        JS_ASSERT(HasSSE2());
         masm.sqrtsd_rr(src.code(), dest.code());
     }
     void roundsd(const FloatRegister &src, const FloatRegister &dest,
                  JSC::X86Assembler::RoundingMode mode)
     {
+        JS_ASSERT(HasSSE41());
         masm.roundsd_rr(src.code(), dest.code(), mode);
     }
     void fstp(const Operand &src) {

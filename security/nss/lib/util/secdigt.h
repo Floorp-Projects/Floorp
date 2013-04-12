@@ -4,7 +4,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: secdigt.h,v 1.5 2012/04/25 14:50:16 gerv%gerv.net Exp $ */
+/* $Id$ */
 
 #ifndef _SECDIGT_H_
 #define _SECDIGT_H_

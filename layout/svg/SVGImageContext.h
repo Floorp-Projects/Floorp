@@ -13,7 +13,7 @@ namespace mozilla {
 // SVG image-specific rendering context. For imgIContainer::Draw.
 // Used to pass information about overridden attributes from an SVG <image>
 // element to the image's internal SVG document when it's drawn.
-class NS_STACK_CLASS SVGImageContext
+class MOZ_STACK_CLASS SVGImageContext
 {
 public:
   SVGImageContext(SVGPreserveAspectRatio aPreserveAspectRatio)

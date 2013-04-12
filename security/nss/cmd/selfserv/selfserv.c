@@ -40,6 +40,7 @@
 #include "sslproto.h"
 #include "cert.h"
 #include "certt.h"
+#include "ocsp.h"
 
 #ifndef PORT_Sprintf
 #define PORT_Sprintf sprintf
@@ -77,6 +78,21 @@ static PRUint32 loggerOps;
 static PRUint32 loggerBytes;
 static PRUint32 loggerBytesTCP;
 static PRUint32 bulkSentChunks;
+static enum ocspStaplingModeEnum {
+    osm_disabled,  /* server doesn't support stapling */
+    osm_good,      /* supply a signed good status */
+    osm_revoked,   /* supply a signed revoked status */
+    osm_unknown,   /* supply a signed unknown status */
+    osm_failure,   /* supply a unsigned failure status, "try later" */
+    osm_badsig,    /* supply a good status response with a bad signature */
+    osm_corrupted, /* supply a corrupted data block as the status */
+    osm_random,    /* use a random response for each connection */
+    osm_ocsp       /* retrieve ocsp status from external ocsp server,
+		      use empty status if server is unavailable */
+} ocspStaplingMode = osm_disabled;
+typedef enum ocspStaplingModeEnum ocspStaplingModeType;
+static char *ocspStaplingCA = NULL;
+CERTCertificate * certForStatusWeakReference = NULL;
 
 const int ssl2CipherSuites[] = {
     SSL_EN_RC4_128_WITH_MD5,			/* A */
@@ -143,6 +159,7 @@ PrintUsageHeader(const char *progName)
 "         [-t threads] [-i pid_file] [-c ciphers] [-Y] [-d dbdir] [-g numblocks]\n"
 "         [-f password_file] [-L [seconds]] [-M maxProcs] [-P dbprefix]\n"
 "         [-V [min-version]:[max-version]] [-a sni_name]\n"
+"         [ T <good|revoked|unknown|badsig|corrupted|none|ocsp>] [-A ca]\n"
 #ifdef NSS_ENABLE_ECC
 "         [-C SSLCacheEntries] [-e ec_nickname]\n"
 #else
@@ -189,6 +206,16 @@ PrintParameterUsage()
 "-j means measure TCP throughput (for use with -g option)\n"
 "-C SSLCacheEntries sets the maximum number of entries in the SSL\n" 
 "    session cache\n"
+"-T <mode> enable OCSP stapling. Possible modes:\n"
+"   none: don't send cert status (default)\n"
+"   good, revoked, unknown: Include locally signed response. Requires: -A\n"
+"   failure: return a failure response (try later, unsigned)\n"
+"   badsig: use a good status but with an invalid signature\n"
+"   corrupted: stapled cert status is an invalid block of data\n"
+"   random: each connection uses a random status from this list:\n"
+"           good, revoked, unknown, failure, badsig, corrupted\n"
+"   ocsp: fetch from external OCSP server using AIA, or none\n"
+"-A <ca> Nickname of a CA used to sign a stapled cert status\n"
 "-c Restrict ciphers\n"
 "-Y prints cipher values allowed for parameter -c and exits\n"
     , stderr);
@@ -327,9 +354,12 @@ mySSLAuthCertificate(void *arg, PRFileDesc *fd, PRBool checkSig,
     CERTCertificate *    peerCert;
 
     peerCert = SSL_PeerCertificate(fd);
-
-    PRINTF("selfserv: Subject: %s\nselfserv: Issuer : %s\n",
-           peerCert->subjectName, peerCert->issuerName);
+    
+    if (peerCert) {
+        PRINTF("selfserv: Subject: %s\nselfserv: Issuer : %s\n",
+               peerCert->subjectName, peerCert->issuerName);
+        CERT_DestroyCertificate(peerCert);
+    }
 
     rv = SSL_AuthCertificate(arg, fd, checkSig, isServer);
 
@@ -340,7 +370,6 @@ mySSLAuthCertificate(void *arg, PRFileDesc *fd, PRBool checkSig,
 	FPRINTF(stderr, "selfserv: -- SSL3: Certificate Invalid, err %d.\n%s\n", 
                 err, SECU_Strerror(err));
     }
-    CERT_DestroyCertificate(peerCert);
     FLUSH;
     return rv;  
 }
@@ -446,7 +475,7 @@ mySSLSNISocketConfig(PRFileDesc *fd, const SECItem *sniNameArr,
     PRInt32        i = 0;
     const SECItem *current = sniNameArr;
     const char    **nameArr = (const char**)arg;
-    const secuPWData *pwdata;
+    secuPWData *pwdata;
     CERTCertificate *    cert = NULL;
     SECKEYPrivateKey *   privKey = NULL;
 
@@ -1036,6 +1065,130 @@ void stop_server()
     PZ_TraceFlush();
 }
 
+SECItemArray *
+makeTryLaterOCSPResponse(PRArenaPool *arena)
+{
+    SECItemArray *result = NULL;
+    SECItem *ocspResponse = NULL;
+
+    ocspResponse = CERT_CreateEncodedOCSPErrorResponse(arena,
+					SEC_ERROR_OCSP_TRY_SERVER_LATER);
+    if (!ocspResponse)
+	errExit("cannot created ocspResponse");
+
+    result = SECITEM_AllocArray(arena, NULL, 1);
+    if (!result)
+	errExit("cannot allocate multiOcspResponses");
+
+    result->items[0].data = ocspResponse->data;
+    result->items[0].len = ocspResponse->len;
+
+    return result;
+}
+
+SECItemArray *
+makeCorruptedOCSPResponse(PRArenaPool *arena)
+{
+    SECItemArray *result = NULL;
+    SECItem *ocspResponse = NULL;
+
+    ocspResponse = SECITEM_AllocItem(arena, NULL, 1);
+    if (!ocspResponse)
+	errExit("cannot created ocspResponse");
+
+    result = SECITEM_AllocArray(arena, NULL, 1);
+    if (!result)
+	errExit("cannot allocate multiOcspResponses");
+
+    result->items[0].data = ocspResponse->data;
+    result->items[0].len = ocspResponse->len;
+
+    return result;
+}
+
+SECItemArray *
+makeSignedOCSPResponse(PRArenaPool *arena, ocspStaplingModeType osm,
+		       PRFileDesc *model_sock, CERTCertificate *cert)
+{
+    SECItemArray *result = NULL;
+    SECItem *ocspResponse = NULL;
+    CERTOCSPSingleResponse **singleResponses;
+    CERTOCSPSingleResponse *sr;
+    CERTOCSPCertID *cid = NULL;
+    CERTCertificate *ca;
+    PRTime now = PR_Now();
+    PRTime nextUpdate;
+    secuPWData *pwdata;
+
+    PORT_Assert(model_sock != NULL && cert != NULL);
+
+    ca = CERT_FindCertByNickname(CERT_GetDefaultCertDB(), ocspStaplingCA);
+    if (!ca)
+	errExit("cannot find CA");
+
+    cid = CERT_CreateOCSPCertID(cert, now);
+    if (!cid)
+	errExit("cannot created cid");
+
+    nextUpdate = now + 60*60*24 * PR_USEC_PER_SEC; /* plus 1 day */
+
+    switch (osm) {
+	case osm_good:
+	case osm_badsig:
+	    sr = CERT_CreateOCSPSingleResponseGood(arena, cid, now,
+						   &nextUpdate);
+	    break;
+	case osm_unknown:
+	    sr = CERT_CreateOCSPSingleResponseUnknown(arena, cid, now,
+						      &nextUpdate);
+	    break;
+	case osm_revoked:
+	    sr = CERT_CreateOCSPSingleResponseRevoked(arena, cid, now,
+		&nextUpdate,
+		now - 60*60*24 * PR_USEC_PER_SEC, /* minus 1 day */
+		NULL);
+	    break;
+	default:
+	    PORT_Assert(0);
+	    break;
+    }
+
+    if (!sr)
+	errExit("cannot create sr");
+
+    /* meaning of value 2: one entry + one end marker */
+    singleResponses = PORT_ArenaNewArray(arena, CERTOCSPSingleResponse*, 2);
+    if (singleResponses == NULL)
+	errExit("cannot allocate singleResponses");
+
+    singleResponses[0] = sr;
+    singleResponses[1] = NULL;
+
+    pwdata = SSL_RevealPinArg(model_sock);
+
+    ocspResponse = CERT_CreateEncodedOCSPSuccessResponse(arena,
+			(osm == osm_badsig) ? NULL : ca,
+			ocspResponderID_byName, now, singleResponses,
+			&pwdata);
+    if (!ocspResponse)
+	errExit("cannot created ocspResponse");
+
+    CERT_DestroyCertificate(ca);
+    ca = NULL;
+
+    result = SECITEM_AllocArray(arena, NULL, 1);
+    if (!result)
+	errExit("cannot allocate multiOcspResponses");
+
+    result->items[0].data = ocspResponse->data;
+    result->items[0].len = ocspResponse->len;
+
+    CERT_DestroyOCSPCertID(cid);
+    cid = NULL;
+
+    return result;
+}
+
 int
 handle_connection( 
     PRFileDesc *tcp_sock,
@@ -1063,6 +1216,8 @@ handle_connection(
     char               fileName[513];
     char               proto[128];
     PRDescIdentity     aboveLayer = PR_INVALID_IO_LAYER;
+    PRArenaPool *arena = NULL;
+    ocspStaplingModeType osm;
 
     pBuf   = buf;
     bufRem = sizeof buf;
@@ -1088,6 +1243,58 @@ handle_connection(
     } else {
 	ssl_sock = tcp_sock;
     }
+
+    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    if (!arena)
+	errExit("cannot allocate arena");
+
+    osm = ocspStaplingMode;
+    if (osm == osm_random) {
+	/* 6 different responses */
+	int r = rand() % 6;
+	switch (r) {
+	    case 0: osm = osm_good; break;
+	    case 1: osm = osm_revoked; break;
+	    case 2: osm = osm_unknown; break;
+	    case 3: osm = osm_badsig; break;
+	    case 4: osm = osm_corrupted; break;
+	    case 5: osm = osm_failure; break;
+	    default: PORT_Assert(0); break;
+	}
+    }
+    if (osm != osm_disabled) {
+	SECItemArray *multiOcspResponses = NULL;
+	switch (osm) {
+	    case osm_good:
+	    case osm_revoked:
+	    case osm_unknown:
+	    case osm_badsig:
+		multiOcspResponses =
+		    makeSignedOCSPResponse(arena, osm, ssl_sock,
+					   certForStatusWeakReference);
+		break;
+	    case osm_corrupted:
+		multiOcspResponses = makeCorruptedOCSPResponse(arena);
+		break;
+	    case osm_failure:
+		multiOcspResponses = makeTryLaterOCSPResponse(arena);
+		break;
+	    case osm_ocsp:
+		errExit("stapling mode \"ocsp\" not implemented");
+		break;
+		break;
+	    default:
+		break;
+	}
+
+	if (multiOcspResponses) {
+	    SSL_SetStapledOCSPResponses(ssl_sock, multiOcspResponses,
+					PR_FALSE /* no ownership transfer */);
+	}
+    }
+
+    PORT_FreeArena(arena, PR_FALSE);
+    arena = NULL;
 
     if (loggingLayer) {
         /* find the layer where our new layer is to be pushed */
@@ -1703,6 +1910,9 @@ server_main(
 
     for (kea = kt_rsa; kea < kt_kea_size; kea++) {
 	if (cert[kea] != NULL) {
+	    if (!certForStatusWeakReference)
+		certForStatusWeakReference = cert[kea];
+
 	    secStatus = SSL_ConfigSecureServer(model_sock, 
 	    		cert[kea], privKey[kea], kea);
 	    if (secStatus != SECSuccess)
@@ -1887,6 +2097,43 @@ beAGoodParent(int argc, char **argv, int maxProcs, PRFileDesc * listen_sock)
 	exit(9); \
     } 
 
+SECStatus enableOCSPStapling(const char* mode)
+{
+    if (!strcmp(mode, "good")) {
+	ocspStaplingMode = osm_good;
+	return SECSuccess;
+    }
+    if (!strcmp(mode, "unknown")) {
+	ocspStaplingMode = osm_unknown;
+	return SECSuccess;
+    }
+    if (!strcmp(mode, "revoked")) {
+	ocspStaplingMode = osm_revoked;
+	return SECSuccess;
+    }
+    if (!strcmp(mode, "badsig")) {
+	ocspStaplingMode = osm_badsig;
+	return SECSuccess;
+    }
+    if (!strcmp(mode, "corrupted")) {
+	ocspStaplingMode = osm_corrupted;
+	return SECSuccess;
+    }
+    if (!strcmp(mode, "failure")) {
+	ocspStaplingMode = osm_failure;
+	return SECSuccess;
+    }
+    if (!strcmp(mode, "random")) {
+	ocspStaplingMode = osm_random;
+	return SECSuccess;
+    }
+    if (!strcmp(mode, "ocsp")) {
+	ocspStaplingMode = osm_ocsp;
+	return SECSuccess;
+    }
+    return SECFailure;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1938,11 +2185,13 @@ main(int argc, char **argv)
     ** numbers, then capital letters, then lower case, alphabetical. 
     */
     optstate = PL_CreateOptState(argc, argv, 
-        "2:BC:DEL:M:NP:RV:Ya:bc:d:e:f:g:hi:jk:lmn:op:qrst:uvw:xyz");
+        "2:A:BC:DEL:M:NP:RT:V:Ya:bc:d:e:f:g:hi:jk:lmn:op:qrst:uvw:xyz");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	++optionsFound;
 	switch(optstate->option) {
 	case '2': fileName = optstate->value; break;
+
+	case 'A': ocspStaplingCA = PORT_Strdup(optstate->value); break;
 
 	case 'B': bypassPKCS11 = PR_TRUE; break;
 
@@ -1950,6 +2199,8 @@ main(int argc, char **argv)
 
 	case 'D': noDelay = PR_TRUE; break;
 	case 'E': disableStepDown = PR_TRUE; break;
+
+	case 'I': /* reserved for OCSP multi-stapling */ break;
 
         case 'L':
             logStats = PR_TRUE;
@@ -1970,6 +2221,14 @@ main(int argc, char **argv)
 	case 'N': NoReuse = PR_TRUE; break;
 
 	case 'R': disableRollBack = PR_TRUE; break;
+
+	case 'T':
+	    if (enableOCSPStapling(optstate->value) != SECSuccess) {
+		fprintf(stderr, "Invalid OCSP stapling mode.\n");
+		fprintf(stderr, "Run '%s -h' for usage information.\n", progName);
+		exit(53);
+	    }
+	    break;
 
         case 'V': if (SECU_ParseSSLVersionRangeString(optstate->value,
                           enabledVersions, enableSSL2,
@@ -2076,7 +2335,21 @@ main(int argc, char **argv)
     if (!optionsFound) {
 	Usage(progName);
 	exit(51);
-    } 
+    }
+    switch (ocspStaplingMode) {
+	case osm_good:
+	case osm_revoked:
+	case osm_unknown:
+	case osm_random:
+	    if (!ocspStaplingCA) {
+		fprintf(stderr, "Selected stapling response requires the -A parameter.\n");
+		fprintf(stderr, "Run '%s -h' for usage information.\n", progName);
+		exit(52);
+	    }
+	    break;
+	default:
+	    break;
+    }
 
     /* The -b (bindOnly) option is only used by the ssl.sh test
      * script on Linux to determine whether a previous selfserv

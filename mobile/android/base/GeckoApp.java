@@ -2232,19 +2232,22 @@ abstract public class GeckoApp
         intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
         intent.putExtra(AwesomeBar.TARGET_KEY, aTarget.name());
 
-        // if we were passed in a url, show it
+        // If we were passed in a URL, show it.
         if (aUrl != null && !TextUtils.isEmpty(aUrl)) {
             intent.putExtra(AwesomeBar.CURRENT_URL_KEY, aUrl);
         } else if (aTarget == AwesomeBar.Target.CURRENT_TAB) {
-            // otherwise, if we're editing the current tab, show its url
+            // Otherwise, if we're editing the current tab, show its URL.
             Tab tab = Tabs.getInstance().getSelectedTab();
             if (tab != null) {
-
-                aUrl = tab.getURL();
+                // Check to see if there's a user-entered search term, which we save
+                // whenever the user performs a search.
+                aUrl = tab.getUserSearch();
+                if (TextUtils.isEmpty(aUrl)) {
+                    aUrl = tab.getURL();
+                }
                 if (aUrl != null) {
                     intent.putExtra(AwesomeBar.CURRENT_URL_KEY, aUrl);
                 }
-
             }
         }
 

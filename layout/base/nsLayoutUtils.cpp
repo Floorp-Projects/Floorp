@@ -2971,17 +2971,16 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
 }
 
 /* static */ nscoord
-nsLayoutUtils::ComputeWidthDependentValue(
-                 nscoord              aContainingBlockWidth,
-                 const nsStyleCoord&  aCoord)
+nsLayoutUtils::ComputeCBDependentValue(nscoord aPercentBasis,
+                                       const nsStyleCoord& aCoord)
 {
-  NS_WARN_IF_FALSE(aContainingBlockWidth != NS_UNCONSTRAINEDSIZE,
-                   "have unconstrained width; this should only result from "
-                   "very large sizes, not attempts at intrinsic width "
-                   "calculation");
+  NS_WARN_IF_FALSE(aPercentBasis != NS_UNCONSTRAINEDSIZE,
+                   "have unconstrained width or height; this should only "
+                   "result from very large sizes, not attempts at intrinsic "
+                   "size calculation");
 
   if (aCoord.IsCoordPercentCalcUnit()) {
-    return nsRuleNode::ComputeCoordPercentCalc(aCoord, aContainingBlockWidth);
+    return nsRuleNode::ComputeCoordPercentCalc(aCoord, aPercentBasis);
   }
   NS_ASSERTION(aCoord.GetUnit() == eStyleUnit_None ||
                aCoord.GetUnit() == eStyleUnit_Auto,

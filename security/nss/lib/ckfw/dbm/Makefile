@@ -2,7 +2,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.4 $ $Date: 2012/04/25 14:49:30 $"
+MAKEFILE_CVS_ID = "@(#) $RCSfile$ $Revision$ $Date$"
 
 include manifest.mn
 include config.mk

@@ -501,7 +501,7 @@ private:
  * of the created object.  You can only use this low priority IO setting within
  * the context of the current thread.
  */
-class NS_STACK_CLASS nsAutoLowPriorityIO
+class MOZ_STACK_CLASS nsAutoLowPriorityIO
 {
 public:
   nsAutoLowPriorityIO();

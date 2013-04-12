@@ -95,7 +95,7 @@ ifeq ($(CROSS_COMPILE),1)
 	echo 'echo "signing"'                               >> $(RTSH)
 # work around a bug in Android ash that has a corrupted work directory after login
 	echo 'cd $${HOME}/nsstest'                          >> $(RTSH)
-	echo 'cd security/nss/cmd/shlibsign'                >> $(RTSH)
+	echo 'cd nss/cmd/shlibsign'                         >> $(RTSH)
 	echo '$(TEST_SHELL) ./sign.sh $${DIST}/$${OBJDIR}/ $${DIST}/$${OBJDIR}/bin $${OS_TARGET} $${NSPR_LIB_DIR} $${NSPR_LIB_DIR}$${DLL_PREFIX}freebl3.$${DLL_SUFFIX}'  >> $(RTSH)
 	echo '$(TEST_SHELL) ./sign.sh $${DIST}/$${OBJDIR}/ $${DIST}/$${OBJDIR}/bin $${OS_TARGET} $${NSPR_LIB_DIR} $${NSPR_LIB_DIR}$${DLL_PREFIX}softokn3.$${DLL_SUFFIX}' >> $(RTSH)
 	echo '$(TEST_SHELL) ./sign.sh $${DIST}/$${OBJDIR}/ $${DIST}/$${OBJDIR}/bin $${OS_TARGET} $${NSPR_LIB_DIR} $${NSPR_LIB_DIR}$${DLL_PREFIX}nssdbm3.$${DLL_SUFFIX}'  >> $(RTSH)
@@ -104,16 +104,16 @@ ifneq ($(OS_TARGET),Android)
 	echo 'export -n DIST'                          >> $(RTSH)
 	echo 'export -n NSPR_LIB_DIR'                  >> $(RTSH)
 endif
-	echo 'cd ../../../../'                         >> $(RTSH)
+	echo 'cd ../../../'                            >> $(RTSH)
 endif
 	echo 'rm -rf tests_results'                    >> $(RTSH)
 	echo 'echo "running tests"'                    >> $(RTSH)
-	echo 'cd security/nss/tests'                   >> $(RTSH)
+	echo 'cd nss/tests'                            >> $(RTSH)
 	# We require progress indication on stdout while running the tests (to avoid timeouts).
 	set -o pipefail
-	echo '$(TEST_SHELL) ./all.sh | tee ../../../logfile 2>&1 |grep ": #"'       >> $(RTSH)
+	echo '$(TEST_SHELL) ./all.sh | tee ../../logfile 2>&1 |grep ": #"'          >> $(RTSH)
 	RETVAL=$?
-	echo 'cd ../../../'                            >> $(RTSH)
+	echo 'cd ../../'                               >> $(RTSH)
 	# dump test summary from end of logfile
 	echo 'echo "=========="; tail -100 logfile'    >> $(RTSH)
 	echo 'tar czf tests_results.tgz tests_results'                              >> $(RTSH)
@@ -122,7 +122,7 @@ endif
 	echo 'echo exit status: $${RETVAL}'                                         >> $(RTSH)
 	echo 'exit $${RETVAL}'                                                      >> $(RTSH)
 	rm -f $(TESTPACKAGE)
-	(cd $(DIST)/../.. ; tar czhf dist/$(TESTPACKAGE) runtests.sh dist/$(OBJDIR_NAME) dist/public security/nss/tests security/nss/cmd/bltest/tests security/nss/cmd/shlibsign; echo "created "`pwd`"/dist/$(TESTPACKAGE)" )
+	(cd $(DIST)/../.. ; tar czhf dist/$(TESTPACKAGE) runtests.sh dist/$(OBJDIR_NAME) dist/public nss/tests nss/cmd/bltest/tests nss/cmd/pk11gcmtest/tests nss/cmd/shlibsign; echo "created "`pwd`"/dist/$(TESTPACKAGE)" )
 
 android_run_tests:
 	ssh -p $(ANDROID_PORT) -o CheckHostIP=no $(ANDROID_ADDR)  'pwd; cd; pwd; cd nsstest; export PATH=$$HOME/bin:$$PATH ; $(TEST_SHELL) runtests.sh'

@@ -6,7 +6,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-#ident	"$Id: Makefile,v 1.7 2012/03/20 14:47:25 gerv%gerv.net Exp $"
+#ident	"$Id$"
 #
 
 CORE_DEPTH = ../../..

@@ -26,7 +26,7 @@
 
 #include "secoid.h"
 
-extern long DER_GetInteger(SECItem *src);
+extern long DER_GetInteger(const SECItem *src);
 
 static PRBool wrapEnabled = PR_TRUE;
 
@@ -231,7 +231,7 @@ void SECU_Newline(FILE *out)
 }
 
 void
-SECU_PrintAsHex(FILE *out, SECItem *data, const char *m, int level)
+SECU_PrintAsHex(FILE *out, const SECItem *data, const char *m, int level)
 {
     unsigned i;
     int column;
@@ -377,7 +377,7 @@ SECU_PrintBuf(FILE *out, const char *msg, const void *vp, int len)
 ** call SECU_PrintEncodedInteger();
 */
 void
-SECU_PrintInteger(FILE *out, SECItem *i, char *m, int level)
+SECU_PrintInteger(FILE *out, const SECItem *i, const char *m, int level)
 {
     int iv;
 

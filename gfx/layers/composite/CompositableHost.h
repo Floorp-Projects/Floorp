@@ -160,6 +160,8 @@ public:
   PTextureParent* AllocPTexture(const TextureInfo& aInfo) MOZ_OVERRIDE;
   bool DeallocPTexture(PTextureParent* aActor) MOZ_OVERRIDE;
 
+  virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
+
   CompositableHost* GetCompositableHost() const
   {
     return mHost;

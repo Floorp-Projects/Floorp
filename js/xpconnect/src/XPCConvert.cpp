@@ -1031,7 +1031,7 @@ XPCConvert::JSObject2NativeInterface(JSContext* cx,
         // If we're looking at a security wrapper, see now if we're allowed to
         // pass it to C++. If we are, then fall through to the code below. If
         // we aren't, throw an exception eagerly.
-        JSObject* inner = js::UnwrapObjectChecked(src, /* stopAtOuter = */ false);
+        JSObject* inner = js::CheckedUnwrap(src, /* stopAtOuter = */ false);
 
         // Hack - For historical reasons, wrapped chrome JS objects have been
         // passable as native interfaces. We'd like to fix this, but it
@@ -1039,7 +1039,7 @@ XPCConvert::JSObject2NativeInterface(JSContext* cx,
         // COWs. This needs to happen, but for now just preserve the old
         // behavior.
         if (!inner && MOZ_UNLIKELY(xpc::WrapperFactory::IsCOW(src)))
-            inner = js::UnwrapObject(src);
+            inner = js::UncheckedUnwrap(src);
         if (!inner) {
             if (pErr)
                 *pErr = NS_ERROR_XPC_SECURITY_MANAGER_VETO;
@@ -1176,7 +1176,7 @@ XPCConvert::JSValToXPCException(XPCCallContext& ccx,
         }
 
         // is this really a native xpcom object with a wrapper?
-        JSObject *unwrapped = js::UnwrapObjectChecked(obj, /* stopAtOuter = */ false);
+        JSObject *unwrapped = js::CheckedUnwrap(obj, /* stopAtOuter = */ false);
         if (!unwrapped)
             return NS_ERROR_XPC_SECURITY_MANAGER_VETO;
         XPCWrappedNative* wrapper = IS_WN_WRAPPER(unwrapped) ? XPCWrappedNative::Get(unwrapped)

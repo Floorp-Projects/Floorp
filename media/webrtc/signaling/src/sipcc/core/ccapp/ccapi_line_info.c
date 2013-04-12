@@ -201,7 +201,7 @@ cc_uint32_t CCAPI_lineInfo_getMWIStatus(cc_lineinfo_ref_t line)
    CCAPP_DEBUG(DEB_F_PREFIX"Entering\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
 
    if ( info != NULL ) {
-       CCAPP_DEBUG(DEB_F_PREFIX"returned %d, status %d\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->mwi, info->mwi.status);
+       CCAPP_DEBUG(DEB_F_PREFIX"returned status %d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->mwi.status);
        return info->mwi.status;
    }
    return 0;
@@ -220,7 +220,7 @@ cc_uint32_t CCAPI_lineInfo_getMWIType(cc_lineinfo_ref_t line)
    CCAPP_DEBUG(DEB_F_PREFIX"Entering\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
 
    if ( info != NULL ) {
-       CCAPP_DEBUG(DEB_F_PREFIX"returned %d, type %d\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->mwi, info->mwi.type);
+       CCAPP_DEBUG(DEB_F_PREFIX"returned type %d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->mwi.type);
        return info->mwi.type;
    }
    return 0;
@@ -239,7 +239,7 @@ cc_uint32_t CCAPI_lineInfo_getMWINewMsgCount(cc_lineinfo_ref_t line)
    CCAPP_DEBUG(DEB_F_PREFIX"Entering\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
 
    if ( info != NULL ) {
-       CCAPP_DEBUG(DEB_F_PREFIX"returned %d, new count %d\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->mwi, info->mwi.new_count);
+       CCAPP_DEBUG(DEB_F_PREFIX"returned new count %d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->mwi.new_count);
        return info->mwi.new_count;
    }
    return 0;
@@ -257,7 +257,7 @@ cc_uint32_t CCAPI_lineInfo_getMWIOldMsgCount(cc_lineinfo_ref_t line)
    CCAPP_DEBUG(DEB_F_PREFIX"Entering\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
 
    if ( info != NULL ) {
-       CCAPP_DEBUG(DEB_F_PREFIX"returned %d, old_count %d\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->mwi, info->mwi.old_count);
+       CCAPP_DEBUG(DEB_F_PREFIX"returned old_count %d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->mwi.old_count);
        return info->mwi.old_count;
    }
    return 0;
@@ -276,7 +276,7 @@ cc_uint32_t CCAPI_lineInfo_getMWIPrioNewMsgCount(cc_lineinfo_ref_t line)
    CCAPP_DEBUG(DEB_F_PREFIX"Entering\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
 
    if ( info != NULL ) {
-       CCAPP_DEBUG(DEB_F_PREFIX"returned %d , pri_new count %d\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->mwi, info->mwi.pri_new_count);
+       CCAPP_DEBUG(DEB_F_PREFIX"returned pri_new count %d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->mwi.pri_new_count);
        return info->mwi.pri_new_count;
    }
    return 0;
@@ -294,7 +294,7 @@ cc_uint32_t CCAPI_lineInfo_getMWIPrioOldMsgCount(cc_lineinfo_ref_t line)
    CCAPP_DEBUG(DEB_F_PREFIX"Entering\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
 
    if ( info != NULL ) {
-       CCAPP_DEBUG(DEB_F_PREFIX"returned %d, pri old_count %d\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->mwi, info->mwi.pri_old_count);
+       CCAPP_DEBUG(DEB_F_PREFIX"returned pri old_count %d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->mwi.pri_old_count);
        return info->mwi.pri_old_count;
    }
    return 0;

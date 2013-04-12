@@ -2264,7 +2264,7 @@ CanvasRenderingContext2D::MeasureText(const nsAString& rawText,
 /**
  * Used for nsBidiPresUtils::ProcessText
  */
-struct NS_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcessor
+struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcessor
 {
   typedef CanvasRenderingContext2D::ContextState ContextState;
 

@@ -24,6 +24,9 @@ class GStreamerFormatHelper {
     bool CanHandleMediaType(const nsACString& aMIMEType,
                             const nsAString* aCodecs);
 
+    bool CanHandleContainerCaps(GstCaps* aCaps);
+    bool CanHandleCodecCaps(GstCaps* aCaps);
+
    static void Shutdown();
 
   private:
@@ -36,11 +39,15 @@ class GStreamerFormatHelper {
 
     static GStreamerFormatHelper* gInstance;
 
-    /* table to convert from container MIME types to GStreamer elements */
+    /* table to convert from container MIME types to GStreamer caps */
     static char const *const mContainers[6][2];
 
-    /* table to convert from codec MIME types to GStreamer elements */
+    /* table to convert from codec MIME types to GStreamer caps */
     static char const *const mCodecs[9][2];
+
+    /* whitelist of supported container/codec gst caps */
+    GstCaps* mSupportedContainerCaps;
+    GstCaps* mSupportedCodecCaps;
 
     /* list of GStreamer element factories
      * Element factories are the basic types retrieved from the GStreamer

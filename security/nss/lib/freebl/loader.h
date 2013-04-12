@@ -4,7 +4,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: loader.h,v 1.39 2013/02/05 18:10:42 wtc%google.com Exp $ */
+/* $Id$ */
 
 #ifndef _LOADER_H_
 #define _LOADER_H_ 1

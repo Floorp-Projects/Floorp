@@ -183,7 +183,7 @@ run_cycle_upgrade_db()
     init_directories
 
     if [ -r "${OLDHOSTDIR}/cert.log" ]; then
-        DIRS="alicedir bobdir CA cert_extensions client clientCA dave eccurves eve ext_client ext_server fips SDR server serverCA tools/copydir cert.log cert.done tests.*"
+        DIRS="alicedir bobdir CA cert_extensions client clientCA dave eccurves eve ext_client ext_server fips SDR server serverCA stapling tools/copydir cert.log cert.done tests.*"
         for i in $DIRS
         do
             cp -r ${OLDHOSTDIR}/${i} ${HOSTDIR} #2> /dev/null
@@ -281,7 +281,7 @@ ALL_TESTS=${TESTS}
 nss_ssl_tests="crl bypass_normal normal_bypass fips_normal normal_fips iopr"
 NSS_SSL_TESTS="${NSS_SSL_TESTS:-$nss_ssl_tests}"
 
-nss_ssl_run="cov auth stress"
+nss_ssl_run="cov auth stapling stress"
 NSS_SSL_RUN="${NSS_SSL_RUN:-$nss_ssl_run}"
 
 SCRIPTNAME=all.sh

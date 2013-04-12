@@ -5,7 +5,7 @@
 /*
  * RSA key generation, public key op, private key op.
  *
- * $Id: rsa.c,v 1.44 2012/04/25 14:49:43 gerv%gerv.net Exp $
+ * $Id$
  */
 #ifdef FREEBL_NO_DEPEND
 #include "stubs.h"

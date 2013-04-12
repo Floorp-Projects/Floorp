@@ -24,7 +24,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            style="GeckoList.ListItem"
+            style="Widget.ListItem"
             android:gravity="center_vertical|left"
             android:singleLine="true"
             android:ellipsize="marquee"/>
@@ -34,7 +34,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceSmall"
-            style="GeckoList.ListItem"
+            style="Widget.ListItem"
             android:gravity="center_vertical|left"
             android:singleLine="true"
             android:ellipsize="marquee"/>

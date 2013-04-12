@@ -365,8 +365,8 @@ sip_tcp_purge_entry (sipSPIConnId_t connid)
     (void) sip_tcp_detach_socket(entry->fd);
     (void) sipSocketClose(entry->fd, secure);
     CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Socket fd: %d closed for connid %ld with "
-                        "address: %i, remote port: %u\n",
-                        DEB_F_PREFIX_ARGS(SIP_TCP_MSG, fname), entry->fd, connid, entry->ipaddr, entry->port);
+                        "address: %p, remote port: %u\n",
+                        DEB_F_PREFIX_ARGS(SIP_TCP_MSG, fname), entry->fd, connid, &entry->ipaddr, entry->port);
 
     entry->fd = -1;  /* Free the connection table entry in the BEGINNING ! */
     sipTcpFlushRetrySendQueue(entry);
@@ -855,7 +855,7 @@ sip_tcp_read_socket (cpr_socket_t this_fd)
              */
             if ((nbytes + offset) > (MAX_PAYLOAD_SIZE + 1)) {
 
-                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Total SIP message size of %d "
+                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Total SIP message size of %lu "
                                   "bytes exceeds maximum of %d bytes",
                                   fname, (nbytes + offset),
                                   (MAX_PAYLOAD_SIZE + 1));
