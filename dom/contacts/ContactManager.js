@@ -4,7 +4,7 @@
 
 "use strict";
 
-const DEBUG = false;
+let DEBUG = false;
 function debug(s) { dump("-*- ContactManager: " + s + "\n"); }
 
 const Cc = Components.classes;
@@ -637,6 +637,7 @@ ContactManager.prototype = {
   },
 
   find: function(aOptions) {
+    DEBUG = false;
     if (DEBUG) debug("find! " + JSON.stringify(aOptions));
     let request = this.createRequest();
     let options = { findOptions: aOptions };
@@ -701,6 +702,7 @@ ContactManager.prototype = {
   },
 
   clear: function() {
+    DEBUG = true;
     if (DEBUG) debug("clear");
     let request;
     request = this.createRequest();
