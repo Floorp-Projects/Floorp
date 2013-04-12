@@ -47,6 +47,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "Promise",
 XPCOMUtils.defineLazyModuleGetter(this, "Deprecated",
                                   "resource://gre/modules/Deprecated.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "BookmarkJSONUtils",
+                                  "resource://gre/modules/BookmarkJSONUtils.jsm");
+
 // The minimum amount of transactions before starting a batch. Usually we do
 // do incremental updates, a batch will cause views to completely
 // refresh instead.
@@ -1719,7 +1722,10 @@ this.PlacesUtils = {
    * @see backups.saveBookmarksToJSONFile(aFile)
    */
   backupBookmarksToFile: function PU_backupBookmarksToFile(aFile) {
-    this.backups.saveBookmarksToJSONFile(aFile);
+    Deprecated.warning(
+      "backupBookmarksToFile is deprecated and will be removed in a future version",
+      "https://bugzilla.mozilla.org/show_bug.cgi?id=852041");
+    return this.backups.saveBookmarksToJSONFile(aFile);
   },
 
   /**
@@ -1730,7 +1736,7 @@ this.PlacesUtils = {
    */
   archiveBookmarksFile:
   function PU_archiveBookmarksFile(aMaxBackups, aForceBackup) {
-    this.backups.create(aMaxBackups, aForceBackup);
+    return this.backups.create(aMaxBackups, aForceBackup);
   },
 
   /**
@@ -1854,83 +1860,45 @@ this.PlacesUtils = {
      *
      * @param aFile
      *        nsIFile where to save JSON backup.
+     *
+     * @return {Promise}
      */
     saveBookmarksToJSONFile:
     function PU_B_saveBookmarksToFile(aFile) {
-      if (!aFile.exists())
-        aFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
-      if (!aFile.exists() || !aFile.isWritable()) {
-        Cu.reportError("Unable to create bookmarks backup file: " + aFile.leafName);
-        return;
-      }
+      return Task.spawn(function() {
+        if (!aFile.exists())
+          aFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
+        if (!aFile.exists() || !aFile.isWritable()) {
+          throw new Error("Unable to create bookmarks backup file: " + aFile.leafName);
+        }
 
-      this._writeBackupFile(aFile);
+        yield BookmarkJSONUtils.exportToFile(aFile);
 
-      if (aFile.parent.equals(this.folder)) {
-        // Update internal cache.
-        this.entries.push(aFile);
-      }
-      else {
-        // If we are saving to a folder different than our backups folder, then
-        // we also want to copy this new backup to it.
-        // This way we ensure the latest valid backup is the same saved by the
-        // user.  See bug 424389.
-        var latestBackup = this.getMostRecent("json");
-        if (!latestBackup || latestBackup != aFile) {
-          let name = this.getFilenameForDate();
-          let file = this.folder.clone();
-          file.append(name);
-          if (file.exists())
-            file.remove(false);
-          else {
-            // Update internal cache if we are not replacing an existing
-            // backup file.
-            this.entries.push(file);
+        if (aFile.parent.equals(this.folder)) {
+          // Update internal cache.
+          this.entries.push(aFile);
+        }
+        else {
+          // If we are saving to a folder different than our backups folder, then
+          // we also want to copy this new backup to it.
+          // This way we ensure the latest valid backup is the same saved by the
+          // user.  See bug 424389.
+          var latestBackup = this.getMostRecent("json");
+          if (!latestBackup || latestBackup != aFile) {
+            let name = this.getFilenameForDate();
+            let file = this.folder.clone();
+            file.append(name);
+            if (file.exists())
+              file.remove(false);
+            else {
+              // Update internal cache if we are not replacing an existing
+              // backup file.
+              this.entries.push(file);
+            }
+            aFile.copyTo(this.folder, name);
           }
-          aFile.copyTo(this.folder, name);
         }
-      }
-    },
-
-    _writeBackupFile:
-    function PU_B__writeBackupFile(aFile) {
-      // Init stream.
-      let stream = Cc["@mozilla.org/network/file-output-stream;1"].
-                   createInstance(Ci.nsIFileOutputStream);
-      stream.init(aFile, 0x02 | 0x08 | 0x20, 0600, 0);
-
-      // UTF-8 converter stream.
-      let converter = Cc["@mozilla.org/intl/converter-output-stream;1"].
-                   createInstance(Ci.nsIConverterOutputStream);
-      converter.init(stream, "UTF-8", 0, 0x0000);
-
-      // Weep over stream interface variance.
-      let streamProxy = {
-        converter: converter,
-        write: function(aData, aLen) {
-          this.converter.writeString(aData);
-        }
-      };
-
-      // Get list of itemIds that must be excluded from the backup.
-      let excludeItems =
-        PlacesUtils.annotations.getItemsWithAnnotation(PlacesUtils.EXCLUDE_FROM_BACKUP_ANNO);
-
-      // Query the Places root.
-      let options = PlacesUtils.history.getNewQueryOptions();
-      options.expandQueries = false;
-      let query = PlacesUtils.history.getNewQuery();
-      query.setFolders([PlacesUtils.placesRootId], 1);
-      let root = PlacesUtils.history.executeQuery(query, options).root;
-      root.containerOpen = true;
-      // Serialize to JSON and write to stream.
-      PlacesUtils.serializeNodeAsJSONToOutputStream(root, streamProxy,
-                                                    false, false, excludeItems);
-      root.containerOpen = false;
-
-      // Close converter and stream.
-      converter.close();
-      stream.close();
+      }.bind(this));
     },
 
     /**
@@ -1947,51 +1915,54 @@ this.PlacesUtils = {
      * @param [optional] bool aForceBackup
      *                        Forces creating a backup even if one was already
      *                        created that day (overwrites).
+     *
+     * @return {Promise}
      */
     create:
     function PU_B_create(aMaxBackups, aForceBackup) {
-      // Construct the new leafname.
-      let newBackupFilename = this.getFilenameForDate();
-      let mostRecentBackupFile = this.getMostRecent();
+      return Task.spawn(function() {
+        // Construct the new leafname.
+        let newBackupFilename = this.getFilenameForDate();
+        let mostRecentBackupFile = this.getMostRecent();
 
-      if (!aForceBackup) {
-        let numberOfBackupsToDelete = 0;
-        if (aMaxBackups !== undefined && aMaxBackups > -1)
-          numberOfBackupsToDelete = this.entries.length - aMaxBackups;
+        if (!aForceBackup) {
+          let numberOfBackupsToDelete = 0;
+          if (aMaxBackups !== undefined && aMaxBackups > -1)
+            numberOfBackupsToDelete = this.entries.length - aMaxBackups;
 
-        if (numberOfBackupsToDelete > 0) {
-          // If we don't have today's backup, remove one more so that
-          // the total backups after this operation does not exceed the
-          // number specified in the pref.
-          if (!mostRecentBackupFile ||
-              mostRecentBackupFile.leafName != newBackupFilename)
-            numberOfBackupsToDelete++;
+          if (numberOfBackupsToDelete > 0) {
+            // If we don't have today's backup, remove one more so that
+            // the total backups after this operation does not exceed the
+            // number specified in the pref.
+            if (!mostRecentBackupFile ||
+                mostRecentBackupFile.leafName != newBackupFilename)
+              numberOfBackupsToDelete++;
 
-          while (numberOfBackupsToDelete--) {
-            let oldestBackup = this.entries.pop();
-            oldestBackup.remove(false);
+            while (numberOfBackupsToDelete--) {
+              let oldestBackup = this.entries.pop();
+              oldestBackup.remove(false);
+            }
           }
+
+          // Do nothing if we already have this backup or we don't want backups.
+          if (aMaxBackups === 0 ||
+              (mostRecentBackupFile &&
+               mostRecentBackupFile.leafName == newBackupFilename))
+            return;
         }
 
-        // Do nothing if we already have this backup or we don't want backups.
-        if (aMaxBackups === 0 ||
-            (mostRecentBackupFile &&
-             mostRecentBackupFile.leafName == newBackupFilename))
+        let newBackupFile = this.folder.clone();
+        newBackupFile.append(newBackupFilename);
+
+        if (aForceBackup && newBackupFile.exists())
+          newBackupFile.remove(false);
+
+        if (newBackupFile.exists())
           return;
-      }
 
-      let newBackupFile = this.folder.clone();
-      newBackupFile.append(newBackupFilename);
-
-      if (aForceBackup && newBackupFile.exists())
-        newBackupFile.remove(false);
-
-      if (newBackupFile.exists())
-        return;
-
-      this.saveBookmarksToJSONFile(newBackupFile);
+        yield this.saveBookmarksToJSONFile(newBackupFile);
+      }.bind(this));
     }
-
   },
 
   /**

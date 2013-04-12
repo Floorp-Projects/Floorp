@@ -11,7 +11,7 @@
 #include "nsIXULAppInfo.h"
 #include "nsPluginArray.h"
 #include "nsMimeTypeArray.h"
-#include "nsDesktopNotification.h"
+#include "mozilla/dom/DesktopNotification.h"
 #include "nsGeolocation.h"
 #include "nsIHttpProtocolHandler.h"
 #include "nsICachingChannel.h"
@@ -1161,7 +1161,7 @@ Navigator::MozGetUserMediaDevices(nsIGetUserMediaDevicesSuccessCallback* aOnSucc
 //    Navigator::nsIDOMNavigatorDesktopNotification
 //*****************************************************************************
 
-NS_IMETHODIMP Navigator::GetMozNotification(nsIDOMDesktopNotificationCenter** aRetVal)
+NS_IMETHODIMP Navigator::GetMozNotification(nsISupports** aRetVal)
 {
   NS_ENSURE_ARG_POINTER(aRetVal);
   *aRetVal = nullptr;
@@ -1174,7 +1174,7 @@ NS_IMETHODIMP Navigator::GetMozNotification(nsIDOMDesktopNotificationCenter** aR
   nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mWindow));
   NS_ENSURE_TRUE(win && win->GetDocShell(), NS_ERROR_FAILURE);
 
-  mNotification = new nsDesktopNotificationCenter(win);
+  mNotification = new DesktopNotificationCenter(win);
 
   NS_ADDREF(*aRetVal = mNotification);
   return NS_OK;
@@ -1559,7 +1559,7 @@ Navigator::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
   // TODO: add SizeOfIncludingThis() to nsMimeTypeArray, bug 674113.
   // TODO: add SizeOfIncludingThis() to nsPluginArray, bug 674114.
   // TODO: add SizeOfIncludingThis() to nsGeolocation, bug 674115.
-  // TODO: add SizeOfIncludingThis() to nsDesktopNotificationCenter, bug 674116.
+  // TODO: add SizeOfIncludingThis() to DesktopNotificationCenter, bug 674116.
 
   return n;
 }

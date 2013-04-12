@@ -83,6 +83,36 @@ js::ObjectImpl::nativeContains(JSContext *cx, Shape *shape)
     return nativeLookup(cx, shape->propid()) == shape;
 }
 
+inline js::Shape *
+js::ObjectImpl::nativeLookupPure(PropertyId pid)
+{
+    return nativeLookupPure(pid.asId());
+}
+
+inline js::Shape *
+js::ObjectImpl::nativeLookupPure(PropertyName *name)
+{
+    return nativeLookupPure(NameToId(name));
+}
+
+inline bool
+js::ObjectImpl::nativeContainsPure(jsid id)
+{
+    return nativeLookupPure(id) != NULL;
+}
+
+inline bool
+js::ObjectImpl::nativeContainsPure(PropertyName *name)
+{
+    return nativeContainsPure(NameToId(name));
+}
+
+inline bool
+js::ObjectImpl::nativeContainsPure(Shape *shape)
+{
+    return nativeLookupPure(shape->propid()) == shape;
+}
+
 inline bool
 js::ObjectImpl::isExtensible() const
 {

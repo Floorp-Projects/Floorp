@@ -60,7 +60,6 @@ gTests.push({
     let promise = waitForEvent(document, "popupshown");
     sendContextMenuClickToElement(win, span, 85, 10);
     yield promise;
-    ok(promise && !(promise instanceof Error), "promise error");
 
     // should be visible
     ok(ContextMenuUI._menuPopup._visible, "is visible");
@@ -74,7 +73,6 @@ gTests.push({
     EventUtils.synthesizeMouse(menuItem, 10, 10, {}, win);
 
     yield promise;
-    ok(promise && !(promise instanceof Error), "promise error");
 
     // The wait is needed to give time to populate the clipboard.
     let string = "";
@@ -95,7 +93,6 @@ gTests.push({
     promise = waitForEvent(document, "popupshown");
     sendContextMenuClickToElement(win, link, 40, 10);
     yield promise;
-    ok(promise && !(promise instanceof Error), "promise error");
 
     // should be visible
     ok(ContextMenuUI._menuPopup._visible, "is visible");
@@ -109,7 +106,6 @@ gTests.push({
     promise = waitForEvent(document, "popuphidden");
     ContextMenuUI.hide();
     yield promise;
-    ok(promise && !(promise instanceof Error), "promise error");
     win.getSelection().removeAllRanges();
 
     ////////////////////////////////////////////////////////////
@@ -119,7 +115,6 @@ gTests.push({
     promise = waitForEvent(document, "popupshown");
     sendContextMenuClickToElement(win, link, 40, 10);
     yield promise;
-    ok(promise && !(promise instanceof Error), "promise error");
 
     // should be visible
     ok(ContextMenuUI._menuPopup._visible, "is visible");
@@ -132,7 +127,6 @@ gTests.push({
     promise = waitForEvent(document, "popuphidden");
     ContextMenuUI.hide();
     yield promise;
-    ok(promise && !(promise instanceof Error), "promise error");
 
     ////////////////////////////////////////////////////////////
     // context in input with no selection, no data on clipboard
@@ -143,7 +137,6 @@ gTests.push({
     promise = waitForEvent(document, "popupshown");
     sendContextMenuClickToElement(win, input, 20, 10);
     yield promise;
-    ok(promise && !(promise instanceof Error), "promise error");
 
     // should be visible
     ok(ContextMenuUI._menuPopup._visible, "is visible");
@@ -158,7 +151,6 @@ gTests.push({
     promise = waitForEvent(document, "popuphidden");
     ContextMenuUI.hide();
     yield promise;
-    ok(promise && !(promise instanceof Error), "promise error");
 
     ////////////////////////////////////////////////////////////
     // context in input with selection copied to clipboard
@@ -169,7 +161,6 @@ gTests.push({
     promise = waitForEvent(document, "popupshown");
     sendContextMenuClickToElement(win, input, 20, 10);
     yield promise;
-    ok(promise && !(promise instanceof Error), "promise error");
 
     // should be visible
     ok(ContextMenuUI._menuPopup._visible, "is visible");
@@ -182,9 +173,14 @@ gTests.push({
     EventUtils.synthesizeMouse(menuItem, 10, 10, {}, win);
 
     yield popupPromise;
-    ok(popupPromise && !(popupPromise instanceof Error), "promise error");
 
-    let string = SpecialPowers.getClipboardData("text/unicode");
+    // The wait is needed to give time to populate the clipboard.
+    let string = "";
+    yield waitForCondition(function () {
+      string = SpecialPowers.getClipboardData("text/unicode");
+      return string === "hello";
+    });
+
     ok(string === "hello", "copied selected text");
 
     emptyClipboard();
@@ -197,7 +193,6 @@ gTests.push({
     promise = waitForEvent(document, "popupshown");
     sendContextMenuClickToElement(win, input, 20, 10);
     yield promise;
-    ok(promise && !(promise instanceof Error), "promise error");
 
     // should be visible
     ok(ContextMenuUI._menuPopup._visible, "is visible");
@@ -209,7 +204,6 @@ gTests.push({
     promise = waitForEvent(document, "popuphidden");
     ContextMenuUI.hide();
     yield promise;
-    ok(promise && !(promise instanceof Error), "promise error");
 
     ////////////////////////////////////////////////////////////
     // context in input with no selection, data on clipboard
@@ -220,7 +214,6 @@ gTests.push({
     promise = waitForEvent(document, "popupshown");
     sendContextMenuClickToElement(win, input, 20, 10);
     yield promise;
-    ok(promise && !(promise instanceof Error), "promise error");
 
     // should be visible
     ok(ContextMenuUI._menuPopup._visible, "is visible");
@@ -228,14 +221,11 @@ gTests.push({
     // selected text context:
     checkContextUIMenuItemVisibility(["context-cut",
                                       "context-copy",
-                                      "context-paste",
-                                      "context-select",
-                                      "context-select-all"]);
+                                      "context-paste"]);
 
     promise = waitForEvent(document, "popuphidden");
     ContextMenuUI.hide();
     yield promise;
-    ok(promise && !(promise instanceof Error), "promise error");
 
     ////////////////////////////////////////////////////////////
     // context in input with selection cut to clipboard
@@ -248,7 +238,6 @@ gTests.push({
     promise = waitForEvent(document, "popupshown");
     sendContextMenuClickToElement(win, input, 20, 10);
     yield promise;
-    ok(promise && !(promise instanceof Error), "promise error");
 
     // should be visible
     ok(ContextMenuUI._menuPopup._visible, "is visible");
@@ -261,9 +250,14 @@ gTests.push({
     EventUtils.synthesizeMouse(menuItem, 10, 10, {}, win);
 
     yield popupPromise;
-    ok(popupPromise && !(popupPromise instanceof Error), "promise error");
 
-    let string = SpecialPowers.getClipboardData("text/unicode");
+    // The wait is needed to give time to populate the clipboard.
+    let string = "";
+    yield waitForCondition(function () {
+      string = SpecialPowers.getClipboardData("text/unicode");
+      return string === "hello";
+    });
+
     let inputValue = input.value;
     ok(string === "hello", "cut selected text in clipboard");
     ok(inputValue === ", I'm sorry but I must be going.", "cut selected text from input value");
@@ -280,7 +274,6 @@ gTests.push({
     promise = waitForEvent(document, "popupshown");
     sendContextMenuClickToElement(win, input, 20, 10);
     yield promise;
-    ok(promise && !(promise instanceof Error), "promise error");
 
     // should be visible
     ok(ContextMenuUI._menuPopup._visible, "is visible");
@@ -291,7 +284,6 @@ gTests.push({
     promise = waitForEvent(document, "popuphidden");
     ContextMenuUI.hide();
     yield promise;
-    ok(promise && !(promise instanceof Error), "promise error");
 
     ////////////////////////////////////////////////////////////
     // context in empty input, no data on clipboard (??)
@@ -304,7 +296,6 @@ gTests.push({
     promise = waitForEvent(Elements.tray, "transitionend");
     sendContextMenuClickToElement(win, input, 20, 10);
     yield promise;
-    ok(promise && !(promise instanceof Error), "promise error");
 
     // should *not* be visible
     ok(!ContextMenuUI._menuPopup._visible, "is visible");
@@ -346,12 +337,15 @@ gTests.push({
     let promise = waitForEvent(document, "popupshown");
     sendContextMenuClick(225, 310);
     yield promise;
-    ok(promise && !(promise instanceof Error), "promise error");
 
     // should be visible and at a specific position
     ok(ContextMenuUI._menuPopup._visible, "is visible");
-    is(ContextMenuUI._panel.left, 97.5, "left");
-    is(ContextMenuUI._panel.top, 227, "top");
+
+    let notificationBox = Browser.getNotificationBox();
+    let notification = notificationBox.getNotificationWithValue("popup-blocked");
+    let notificationHeight = notification.boxObject.height;
+
+    checkContextMenuPositionRange(ContextMenuUI._panel, 65, 80, notificationHeight +  155, notificationHeight + 180);
 
     ContextMenuUI._menuPopup.hide();
 
@@ -385,7 +379,6 @@ gTests.push({
     let promise = waitForEvent(document, "popupshown");
     sendContextMenuClickToWindow(win, 10, 10);
     yield promise;
-    ok(promise && !(promise instanceof Error), "promise error");
 
     purgeEventQueue();
 
@@ -421,9 +414,7 @@ gTests.push({
     let popupPromise = waitForEvent(document, "popuphidden");
     EventUtils.synthesizeMouse(menuItem, 10, 10, {}, win);
     yield popupPromise;
-    ok(popupPromise && !(popupPromise instanceof Error), "promise error");
     yield downloadPromise;
-    ok(downloadPromise && !(downloadPromise instanceof Error), "promise error");
 
     purgeEventQueue();
 
@@ -435,7 +426,6 @@ gTests.push({
     let promise = waitForEvent(document, "popupshown");
     sendContextMenuClickToWindow(win, 20, 20);
     yield promise;
-    ok(promise && !(promise instanceof Error), "promise error");
     ok(ContextMenuUI._menuPopup._visible, "is visible");
 
     menuItem = document.getElementById("context-copy-image");
@@ -444,7 +434,6 @@ gTests.push({
     popupPromise = waitForEvent(document, "popuphidden");
     EventUtils.synthesizeMouse(menuItem, 10, 10, {}, win);
     yield popupPromise;
-    ok(popupPromise && !(popupPromise instanceof Error), "promise error");
 
     purgeEventQueue();
 
@@ -458,7 +447,6 @@ gTests.push({
     promise = waitForEvent(document, "popupshown");
     sendContextMenuClickToWindow(win, 30, 30);
     yield promise;
-    ok(promise && !(promise instanceof Error), "promise error");
     ok(ContextMenuUI._menuPopup._visible, "is visible");
 
     menuItem = document.getElementById("context-copy-image-loc");
@@ -467,7 +455,6 @@ gTests.push({
     popupPromise = waitForEvent(document, "popuphidden");
     EventUtils.synthesizeMouse(menuItem, 10, 10, {}, win);
     yield popupPromise;
-    ok(popupPromise && !(popupPromise instanceof Error), "promise error");
 
     purgeEventQueue();
 
@@ -484,7 +471,8 @@ gTests.push({
     let strLength = new Object();
     xfer.getTransferData("text/unicode", str, strLength);
     str = str.value.QueryInterface(Components.interfaces.nsISupportsString);
-    ok(str == "chrome://mochitests/content/metro/res/image01.png", "url copied");
+
+    ok(str == chromeRoot + "res/image01.png", "url copied");
 
     ////////////////////////////////////////////////////////////
     // Open image in new tab
@@ -492,7 +480,6 @@ gTests.push({
     promise = waitForEvent(document, "popupshown");
     sendContextMenuClickToWindow(win, 40, 40);
     yield promise;
-    ok(promise && !(promise instanceof Error), "promise error");
     ok(ContextMenuUI._menuPopup._visible, "is visible");
 
     menuItem = document.getElementById("context-open-image-tab");
@@ -503,8 +490,6 @@ gTests.push({
     EventUtils.synthesizeMouse(menuItem, 10, 10, {}, win);
     yield popupPromise;
     let event = yield tabPromise;
-    ok(popupPromise && !(popupPromise instanceof Error), "promise error");
-    ok(tabPromise && !(tabPromise instanceof Error), "promise error");
 
     purgeEventQueue();
 
@@ -538,88 +523,75 @@ gTests.push({
     let promise = waitForEvent(document, "popupshown");
     sendContextMenuClickToElement(frame1.contentDocument.defaultView, link1, 85, 10);
     yield promise;
-    ok(promise && !(promise instanceof Error), "promise error");
 
     // should be visible
     ok(ContextMenuUI._menuPopup._visible, "is visible");
 
-    checkContextMenuPositionRange(ContextMenuUI._panel, 290, 300, 160, 175);
+    checkContextMenuPositionRange(ContextMenuUI._panel, 265, 280, 175, 190);
 
     promise = waitForEvent(document, "popuphidden");
     ContextMenuUI.hide();
     yield promise;
-    ok(promise && !(promise instanceof Error), "promise error");
 
     frame1.contentDocument.defaultView.scrollBy(0, 200);
 
     promise = waitForEvent(document, "popupshown");
     sendContextMenuClickToElement(frame1.contentDocument.defaultView, link1, 85, 10);
     yield promise;
-    ok(promise && !(promise instanceof Error), "promise error");
 
     // should be visible
     ok(ContextMenuUI._menuPopup._visible, "is visible");
 
-    checkContextMenuPositionRange(ContextMenuUI._panel, 290, 300, 85, 90);
+    checkContextMenuPositionRange(ContextMenuUI._panel, 265, 280, 95, 110);
 
     promise = waitForEvent(document, "popuphidden");
     ContextMenuUI.hide();
     yield promise;
-    ok(promise && !(promise instanceof Error), "promise error");
 
     let rlink1 = win.document.getElementById("rlink1");
 
     promise = waitForEvent(document, "popupshown");
     sendContextMenuClickToElement(win, rlink1, 40, 10);
     yield promise;
-    ok(promise && !(promise instanceof Error), "promise error");
 
     // should be visible
     ok(ContextMenuUI._menuPopup._visible, "is visible");
 
-    checkContextMenuPositionRange(ContextMenuUI._panel, 640, 650, 540, 555);
+    checkContextMenuPositionRange(ContextMenuUI._panel, 295, 310, 540, 555);
 
     promise = waitForEvent(document, "popuphidden");
     ContextMenuUI.hide();
     yield promise;
-    ok(promise && !(promise instanceof Error), "promise error");
 
     win.scrollBy(0, 200);
 
     promise = waitForEvent(document, "popupshown");
     sendContextMenuClickToElement(win, rlink1, 40, 10);
     yield promise;
-    ok(promise && !(promise instanceof Error), "promise error");
 
     // should be visible
     ok(ContextMenuUI._menuPopup._visible, "is visible");
 
-    checkContextMenuPositionRange(ContextMenuUI._panel, 640, 650, 340, 355);
+    checkContextMenuPositionRange(ContextMenuUI._panel, 295, 310, 340, 355);
 
     promise = waitForEvent(document, "popuphidden");
     ContextMenuUI.hide();
     yield promise;
-    ok(promise && !(promise instanceof Error), "promise error");
 
     let link2 = frame1.contentDocument.getElementById("link2");
 
     promise = waitForEvent(document, "popupshown");
     sendContextMenuClickToElement(frame1.contentDocument.defaultView, link2, 85, 10);
     yield promise;
-    ok(promise && !(promise instanceof Error), "promise error");
 
     // should be visible
     ok(ContextMenuUI._menuPopup._visible, "is visible");
 
-    info(ContextMenuUI._panel.left);
-    info(ContextMenuUI._panel.top);
-
-    checkContextMenuPositionRange(ContextMenuUI._panel, 290, 300, 75, 85);
+    checkContextMenuPositionRange(ContextMenuUI._panel, 265, 280, 110, 125);
 
     promise = waitForEvent(document, "popuphidden");
     ContextMenuUI.hide();
     yield promise;
-    ok(promise && !(promise instanceof Error), "promise error");
   }
 });
 

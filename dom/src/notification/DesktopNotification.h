@@ -2,18 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsDesktopNotification_h
-#define nsDesktopNotification_h
+#ifndef mozilla_dom_DesktopNotification_h
+#define mozilla_dom_DesktopNotification_h
 
 #include "PCOMContentPermissionRequestChild.h"
 
-#include "nsDOMClassInfoID.h"
 #include "nsIPrincipal.h"
 #include "nsIJSContextStack.h"
 
 #include "nsIAlertsService.h"
 
-#include "nsIDOMDesktopNotification.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIContentPermissionPrompt.h"
 
@@ -28,30 +26,39 @@
 #include "nsIDOMEvent.h"
 #include "nsIDocument.h"
 
+#include "mozilla/Attributes.h"
+#include "mozilla/ErrorResult.h"
+#include "nsWrapperCache.h"
+
+
+namespace mozilla {
+namespace dom {
+
 class AlertServiceObserver;
+class DesktopNotification;
 
 /*
- * nsDesktopNotificationCenter
- * Object hangs off of the navigator object and hands out nsDOMDesktopNotification objects
+ * DesktopNotificationCenter
+ * Object hangs off of the navigator object and hands out DesktopNotification objects
  */
-class nsDesktopNotificationCenter : public nsIDOMDesktopNotificationCenter
+class DesktopNotificationCenter MOZ_FINAL : public nsISupports,
+                                            public nsWrapperCache
 {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMDESKTOPNOTIFICATIONCENTER
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DesktopNotificationCenter)
 
-  nsDesktopNotificationCenter(nsPIDOMWindow *aWindow)
+  DesktopNotificationCenter(nsPIDOMWindow *aWindow)
   {
     mOwner = aWindow;
 
     // Grab the uri of the document
-    nsCOMPtr<nsIDOMDocument> domdoc;
-    mOwner->GetDocument(getter_AddRefs(domdoc));
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
-    mPrincipal = doc->NodePrincipal();
+    mPrincipal = mOwner->GetDoc()->NodePrincipal();
+
+    SetIsDOMBinding();
   }
 
-  virtual ~nsDesktopNotificationCenter()
+  virtual ~DesktopNotificationCenter()
   {
   }
 
@@ -59,28 +66,37 @@ public:
     mOwner = nullptr;
   }
 
+  nsPIDOMWindow* GetParentObject() const
+  {
+    return mOwner;
+  }
+
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
+
+  already_AddRefed<DesktopNotification>
+  CreateNotification(const nsAString& title,
+                     const nsAString& description,
+                     const nsAString& iconURL);
+
 private:
   nsCOMPtr<nsPIDOMWindow> mOwner;
   nsCOMPtr<nsIPrincipal> mPrincipal;
 };
 
 
-class nsDOMDesktopNotification : public nsDOMEventTargetHelper,
-                                 public nsIDOMDesktopNotification
+class DesktopNotification MOZ_FINAL : public nsDOMEventTargetHelper
 {
-  friend class nsDesktopNotificationRequest;
+  friend class DesktopNotificationRequest;
 
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMDESKTOPNOTIFICATION
 
-  nsDOMDesktopNotification(const nsAString & title,
-                           const nsAString & description,
-                           const nsAString & iconURL,
-                           nsPIDOMWindow *aWindow,
-                           nsIPrincipal* principal);
+  DesktopNotification(const nsAString& aTitle,
+                      const nsAString& aDescription,
+                      const nsAString& aIconURL,
+                      nsPIDOMWindow *aWindow,
+                      nsIPrincipal* principal);
 
-  virtual ~nsDOMDesktopNotification();
+  virtual ~DesktopNotification();
 
   void Init();
 
@@ -99,6 +115,20 @@ public:
 
   void HandleAlertServiceNotification(const char *aTopic);
 
+  // WebIDL
+
+  nsPIDOMWindow* GetParentObject() const
+  {
+    return GetOwner();
+  }
+
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
+
+  void Show(ErrorResult& aRv);
+
+  IMPL_EVENT_HANDLER(click)
+  IMPL_EVENT_HANDLER(close)
+
 protected:
 
   nsString mTitle;
@@ -116,16 +146,16 @@ protected:
 /*
  * Simple Request
  */
-class nsDesktopNotificationRequest : public nsIContentPermissionRequest,
-                                     public nsRunnable, 
-                                     public PCOMContentPermissionRequestChild
+class DesktopNotificationRequest : public nsIContentPermissionRequest,
+                                   public nsRunnable,
+                                   public PCOMContentPermissionRequestChild
 
 {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICONTENTPERMISSIONREQUEST
 
-  nsDesktopNotificationRequest(nsDOMDesktopNotification* notification)
+  DesktopNotificationRequest(DesktopNotification* notification)
     : mDesktopNotification(notification) {}
 
   NS_IMETHOD Run()
@@ -138,7 +168,7 @@ class nsDesktopNotificationRequest : public nsIContentPermissionRequest,
     return NS_OK;
   }
 
-  ~nsDesktopNotificationRequest()
+  ~DesktopNotificationRequest()
   {
   }
 
@@ -152,17 +182,17 @@ class nsDesktopNotificationRequest : public nsIContentPermissionRequest,
  }
  void IPDLRelease() { Release(); }
 
-  nsRefPtr<nsDOMDesktopNotification> mDesktopNotification;
+  nsRefPtr<DesktopNotification> mDesktopNotification;
 };
 
 class AlertServiceObserver: public nsIObserver
 {
  public:
   NS_DECL_ISUPPORTS
-    
-    AlertServiceObserver(nsDOMDesktopNotification* notification)
+
+    AlertServiceObserver(DesktopNotification* notification)
     : mNotification(notification) {}
-  
+
   virtual ~AlertServiceObserver() {}
 
   void Disconnect() { mNotification = nullptr; }
@@ -185,7 +215,10 @@ class AlertServiceObserver: public nsIObserver
   };
 
  private:
-  nsDOMDesktopNotification* mNotification;
+  DesktopNotification* mNotification;
 };
 
-#endif /* nsDesktopNotification_h */
+} // namespace dom
+} // namespace mozilla
+
+#endif /* mozilla_dom_DesktopNotification_h */

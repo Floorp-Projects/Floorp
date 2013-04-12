@@ -197,6 +197,10 @@ struct ForkJoinSlice
     // Be wary, the runtime is shared between all threads!
     JSRuntime *runtime();
 
+    // Acquire and release the JSContext from the runtime.
+    JSContext *acquireContext();
+    void releaseContext();
+
     // Check the current state of parallel execution.
     static inline ForkJoinSlice *Current();
 
@@ -233,6 +237,32 @@ struct ForkJoinOp
     //
     // Returns true on success, false to halt parallel execution.
     virtual bool parallel(ForkJoinSlice &slice) = 0;
+};
+
+// Locks a JSContext for its scope.
+class LockedJSContext
+{
+    ForkJoinSlice *slice_;
+    JSContext *cx_;
+
+  public:
+    LockedJSContext(ForkJoinSlice *slice)
+      : slice_(slice),
+#if defined(JS_THREADSAFE) && defined(JS_ION)
+        cx_(slice->acquireContext())
+#else
+        cx_(NULL)
+#endif
+    { }
+
+    ~LockedJSContext() {
+#if defined(JS_THREADSAFE) && defined(JS_ION)
+        slice_->releaseContext();
+#endif
+    }
+
+    operator JSContext *() { return cx_; }
+    JSContext *operator->() { return cx_; }
 };
 
 static inline bool

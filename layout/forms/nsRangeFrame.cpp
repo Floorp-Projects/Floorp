@@ -53,6 +53,34 @@ NS_QUERYFRAME_HEAD(nsRangeFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 void
+nsRangeFrame::Init(nsIContent* aContent,
+                   nsIFrame*   aParent,
+                   nsIFrame*   aPrevInFlow)
+{
+  // B2G's AsyncPanZoomController::ReceiveInputEvent handles touch events
+  // without checking whether the out-of-process document that it controls
+  // will handle them, unless it has been told that the document might do so.
+  // This is for perf reasons, otherwise it has to wait for the event to be
+  // round-tripped to the other process and back, delaying panning, etc.
+  // We must call SetHasTouchEventListeners() in order to get APZC to wait
+  // until the event has been round-tripped and check whether it has been
+  // handled, otherwise B2G will end up panning the document when the user
+  // tries to drag our thumb.
+  //
+  nsIPresShell* presShell = PresContext()->GetPresShell();
+  if (presShell) {
+    nsIDocument* document = presShell->GetDocument();
+    if (document) {
+      nsPIDOMWindow* innerWin = document->GetInnerWindow();
+      if (innerWin) {
+        innerWin->SetHasTouchEventListeners();
+      }
+    }
+  }
+  return nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
+}
+
+void
 nsRangeFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   NS_ASSERTION(!GetPrevContinuation() && !GetNextContinuation(),

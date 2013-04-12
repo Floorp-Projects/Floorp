@@ -23,6 +23,9 @@
 #include "Layers.h"
 #include "BasicLayers.h"
 #include "Windows.Graphics.Display.h"
+#ifdef MOZ_CRASHREPORTER
+#include "nsExceptionHandler.h"
+#endif
 
 using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
@@ -822,6 +825,8 @@ MetroWidget::GetLayerManager(PLayersChild* aShadowManager,
     }
   }
 
+  HRESULT hr = S_OK;
+
   // Create a layer manager: try to use an async compositor first, if enabled.
   // Otherwise fall back on the main thread d3d manager.
   if (!mLayerManager) {
@@ -831,13 +836,12 @@ MetroWidget::GetLayerManager(PLayersChild* aShadowManager,
     } else if (ShouldUseMainThreadD3D10Manager()) {
       nsRefPtr<mozilla::layers::LayerManagerD3D10> layerManager =
         new mozilla::layers::LayerManagerD3D10(this);
-      if (layerManager->Initialize(true)) {
+      if (layerManager->Initialize(true, &hr)) {
         mLayerManager = layerManager;
       }
     } else if (ShouldUseBasicManager()) {
       mLayerManager = CreateBasicLayerManager();
     }
-
     // Either we're not ready to initialize yet due to a missing view pointer,
     // or something has gone wrong.
     if (!mLayerManager) {
@@ -846,6 +850,16 @@ MetroWidget::GetLayerManager(PLayersChild* aShadowManager,
         mLayerManager = new BasicShadowLayerManager(this);
         mTempBasicLayerInUse = true;
       } else {
+#ifdef MOZ_CRASHREPORTER
+        if (FAILED(hr)) {
+          char errorBuf[10];
+          errorBuf[0] = '\0';
+          _snprintf_s(errorBuf, sizeof(errorBuf), _TRUNCATE, "%X", hr);
+          CrashReporter::
+            AnnotateCrashReport(NS_LITERAL_CSTRING("HRESULT"),
+                                nsDependentCString(errorBuf));
+        }
+#endif
         NS_RUNTIMEABORT("Couldn't create layer manager");
       }
     }

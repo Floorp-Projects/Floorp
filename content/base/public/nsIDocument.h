@@ -1951,11 +1951,10 @@ public:
                                             const nsAString& aQualifiedName,
                                             mozilla::ErrorResult& rv);
   already_AddRefed<mozilla::dom::DocumentFragment>
-    CreateDocumentFragment(mozilla::ErrorResult& rv) const;
-  already_AddRefed<nsTextNode> CreateTextNode(const nsAString& aData,
-                                              mozilla::ErrorResult& rv) const;
+    CreateDocumentFragment() const;
+  already_AddRefed<nsTextNode> CreateTextNode(const nsAString& aData) const;
   already_AddRefed<mozilla::dom::Comment>
-    CreateComment(const nsAString& aData, mozilla::ErrorResult& rv) const;
+    CreateComment(const nsAString& aData) const;
   already_AddRefed<mozilla::dom::ProcessingInstruction>
     CreateProcessingInstruction(const nsAString& target, const nsAString& data,
                                 mozilla::ErrorResult& rv) const;
@@ -2493,14 +2492,6 @@ NS_NewImageDocument(nsIDocument** aInstancePtrResult);
 
 nsresult
 NS_NewVideoDocument(nsIDocument** aInstancePtrResult);
-
-already_AddRefed<mozilla::dom::DocumentFragment>
-NS_NewDocumentFragment(nsNodeInfoManager* aNodeInfoManager,
-                       mozilla::ErrorResult& aRv);
-
-nsresult
-NS_NewDocumentFragment(nsIDOMDocumentFragment** aInstancePtrResult,
-                       nsNodeInfoManager *aNodeInfoManager);
 
 // Note: it's the caller's responsibility to create or get aPrincipal as needed
 // -- this method will not attempt to get a principal based on aDocumentURI.

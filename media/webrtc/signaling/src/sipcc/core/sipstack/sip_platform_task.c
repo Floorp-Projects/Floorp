@@ -446,7 +446,7 @@ static void sip_process_int_msg (void)
                   sizeof(response), 0,
                   (cpr_sockaddr_t *)&sip_clnt_sock_addr,
                   cpr_sun_len(sip_clnt_sock_addr)) < 0) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"%d sending IPC\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"sending IPC", fname);
     }
 }
 

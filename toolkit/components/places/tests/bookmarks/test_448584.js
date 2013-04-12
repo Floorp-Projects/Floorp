@@ -67,6 +67,8 @@ var invalidURITest = {
 tests.push(invalidURITest);
 
 function run_test() {
+  do_test_pending();
+
   do_check_eq(typeof PlacesUtils, "object");
 
   // make json file
@@ -95,26 +97,30 @@ function run_test() {
     }
   });
 
-  // export json to file
-  try {
-    PlacesUtils.backups.saveBookmarksToJSONFile(jsonFile);
-  } catch(ex) { do_throw("couldn't export to file: " + ex); }
+  Task.spawn(function() {
+    // export json to file
+    try {
+      yield BookmarkJSONUtils.exportToFile(jsonFile);
+    } catch(ex) { do_throw("couldn't export to file: " + ex); }
 
-  // clean
-  tests.forEach(function(aTest) {
-    aTest.clean();
+    // clean
+    tests.forEach(function(aTest) {
+      aTest.clean();
+    });
+
+    // restore json file
+    try {
+      PlacesUtils.restoreBookmarksFromJSONFile(jsonFile);
+    } catch(ex) { do_throw("couldn't import the exported file: " + ex); }
+
+    // validate
+    tests.forEach(function(aTest) {
+      aTest.validate(1);
+    });
+
+    // clean up
+    jsonFile.remove(false);
+
+    do_test_finished();
   });
-
-  // restore json file
-  try {
-    PlacesUtils.restoreBookmarksFromJSONFile(jsonFile);
-  } catch(ex) { do_throw("couldn't import the exported file: " + ex); }
-
-  // validate
-  tests.forEach(function(aTest) {
-    aTest.validate(1);
-  });
-
-  // clean up
-  jsonFile.remove(false);
 }

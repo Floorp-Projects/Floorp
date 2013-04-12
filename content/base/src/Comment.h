@@ -15,14 +15,27 @@ namespace dom {
 class Comment : public nsGenericDOMDataNode,
                 public nsIDOMComment
 {
-public:
-  Comment(already_AddRefed<nsINodeInfo> aNodeInfo)
-    : nsGenericDOMDataNode(aNodeInfo)
+private:
+  void Init()
   {
     NS_ABORT_IF_FALSE(mNodeInfo->NodeType() == nsIDOMNode::COMMENT_NODE,
                       "Bad NodeType in aNodeInfo");
     SetIsDOMBinding();
   }
+
+public:
+  Comment(already_AddRefed<nsINodeInfo> aNodeInfo)
+    : nsGenericDOMDataNode(aNodeInfo)
+  {
+    Init();
+  }
+
+  Comment(nsNodeInfoManager* aNodeInfoManager)
+    : nsGenericDOMDataNode(aNodeInfoManager->GetCommentNodeInfo())
+  {
+    Init();
+  }
+
   virtual ~Comment();
 
   // nsISupports

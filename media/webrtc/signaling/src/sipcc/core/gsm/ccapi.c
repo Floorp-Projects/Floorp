@@ -104,7 +104,7 @@ cc_get_msg_buf (int min_size)
     /* Clean out the data region of the message */
     memset(buf, 0, min_size);
 
-    CC_DEBUG(DEB_F_PREFIX "Msg id = 0x%0x\n", DEB_F_PREFIX_ARGS(CC_API, __FUNCTION__), buf);
+    CC_DEBUG(DEB_F_PREFIX "Msg id = %p", DEB_F_PREFIX_ARGS(CC_API, __FUNCTION__), buf);
 
     return buf;
 }

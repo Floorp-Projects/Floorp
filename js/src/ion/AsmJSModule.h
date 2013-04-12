@@ -334,7 +334,7 @@ class AsmJSModule
     PostLinkFailureInfo                   postLinkFailureInfo_;
 
   public:
-    AsmJSModule(JSContext *cx)
+    explicit AsmJSModule(JSContext *cx)
       : numGlobalVars_(0),
         numFFIs_(0),
         numFuncPtrTableElems_(0),

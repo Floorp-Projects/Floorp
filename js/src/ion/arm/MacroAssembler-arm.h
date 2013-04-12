@@ -575,8 +575,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     }
 
     CodeOffsetLabel pushWithPatch(ImmWord imm) {
-        CodeOffsetLabel label = currentOffset();
-        ma_movPatchable(Imm32(imm.value), ScratchRegister, Always, hasMOVWT() ? L_MOVWT : L_LDR);
+        CodeOffsetLabel label = movWithPatch(imm, ScratchRegister);
         ma_push(ScratchRegister);
         return label;
     }
@@ -972,7 +971,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     }
 
     void linkExitFrame();
-    void handleException();
+    void linkParallelExitFrame(const Register &pt);
+    void handleFailureWithHandler(void *handler);
 
     /////////////////////////////////////////////////////////////////
     // Common interface.

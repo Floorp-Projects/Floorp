@@ -804,7 +804,7 @@ sip_platform_reg_all_fail_timer_start (uint32_t msec)
         return SIP_ERROR;
     }
     CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX
-        "Timer started for %lu msecs\n", DEB_F_PREFIX_ARGS(SIP_TIMER, fname), msec);
+        "Timer started for %u msecs", DEB_F_PREFIX_ARGS(SIP_TIMER, fname), msec);
     return SIP_OK;
 }
 
@@ -849,7 +849,7 @@ sip_platform_standby_keepalive_timer_start (uint32_t msec)
         return SIP_ERROR;
     }
     CCSIP_DEBUG_STATE(DEB_F_PREFIX
-        "Timer started for %lu msecs\n", DEB_F_PREFIX_ARGS(SIP_TIMER, fname), msec);
+        "Timer started for %u msecs", DEB_F_PREFIX_ARGS(SIP_TIMER, fname), msec);
     return SIP_OK;
 }
 
@@ -882,7 +882,7 @@ sip_platform_unregistration_timer_start (uint32_t msec, boolean external)
         return SIP_ERROR;
     }
     CCSIP_DEBUG_STATE(DEB_F_PREFIX
-        "Timer started for %lu msecs\n", DEB_F_PREFIX_ARGS(SIP_TIMER, fname), msec);
+        "Timer started for %u msecs", DEB_F_PREFIX_ARGS(SIP_TIMER, fname), msec);
     return SIP_OK;
 }
 
@@ -920,7 +920,7 @@ sip_platform_notify_timer_start (uint32_t msec)
         return SIP_ERROR;
     }
     CCSIP_DEBUG_STATE(DEB_F_PREFIX
-        "Timer started for %lu msecs\n", DEB_F_PREFIX_ARGS(SIP_TIMER, fname), msec);
+        "Timer started for %u msecs", DEB_F_PREFIX_ARGS(SIP_TIMER, fname), msec);
     return SIP_OK;
 }
 
@@ -962,7 +962,7 @@ sip_platform_pass_through_timer_start (uint32_t sec)
 		return SIP_ERROR;
 	}
 
-	CCSIP_DEBUG_REG_STATE("%s: Regmgr Pass Through Timer started for %lu secs\n", fname, sec);
+	CCSIP_DEBUG_REG_STATE("%s: Regmgr Pass Through Timer started for %u secs", fname, sec);
 	return SIP_OK;
 }
 
