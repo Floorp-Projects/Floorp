@@ -6,8 +6,8 @@ def test(mod, path, entity = None):
   import re
   # ignore anything but Firefox
   if mod not in ("netwerk", "dom", "toolkit", "security/manager",
-                 "browser", "browser/metro", "extensions/reporter",
-                 "extensions/spellcheck",
+                 "browser", "browser/metro", "webapprt",
+                 "extensions/reporter", "extensions/spellcheck",
                  "other-licenses/branding/firefox",
                  "browser/branding/official",
                  "services/sync"):
