@@ -30,6 +30,7 @@ CompositorChild::~CompositorChild()
 void
 CompositorChild::Destroy()
 {
+  mLayerManager->Destroy();
   mLayerManager = NULL;
   while (size_t len = ManagedPLayersChild().Length()) {
     ShadowLayersChild* layers =

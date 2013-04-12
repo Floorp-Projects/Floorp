@@ -5693,9 +5693,10 @@ HTMLInputElement::IsValidEmailAddress(const nsAString& aValue)
     NS_ERROR("nsIIDNService isn't present!");
   }
 
-  // If the email address is empty, begins with a '@' or ends with a '.',
-  // we know it's invalid.
-  if (length == 0 || value[0] == '@' || value[length-1] == '.') {
+  // If the email address is empty, begins with an '@'
+  // or ends with a '.' or '-', we know it's invalid.
+  if (length == 0 || value[0] == '@' || value[length-1] == '.' ||
+      value[length-1] == '-') {
     return false;
   }
 
@@ -5713,14 +5714,13 @@ HTMLInputElement::IsValidEmailAddress(const nsAString& aValue)
     }
   }
 
-  // There is no domain name (or it's one-character long),
-  // that's not a valid email address.
+  // If there is no domain name, that's not a valid email address.
   if (++i >= length) {
     return false;
   }
 
-  // The domain name can't begin with a dot.
-  if (value[i] == '.') {
+  // The domain name can't begin with a dot or a dash.
+  if (value[i] == '.' || value[i] == '-') {
     return false;
   }
 
@@ -5729,7 +5729,12 @@ HTMLInputElement::IsValidEmailAddress(const nsAString& aValue)
     PRUnichar c = value[i];
 
     if (c == '.') {
-      // A dot can't follow a dot.
+      // A dot can't follow a dot or a dash.
+      if (value[i-1] == '.' || value[i-1] == '-') {
+        return false;
+      }
+    } else if (c == '-'){
+      // A dash can't follow a dot.
       if (value[i-1] == '.') {
         return false;
       }
