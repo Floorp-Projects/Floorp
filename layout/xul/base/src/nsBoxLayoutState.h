@@ -24,7 +24,7 @@ struct nsHTMLReflowState;
 class nsString;
 class nsHTMLReflowCommand;
 
-class NS_STACK_CLASS nsBoxLayoutState
+class MOZ_STACK_CLASS nsBoxLayoutState
 {
 public:
   nsBoxLayoutState(nsPresContext* aPresContext,
