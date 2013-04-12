@@ -38,7 +38,7 @@ if (this.Components) {
        }
        // If |outExecutionDuration| option was supplied, start measuring the
        // duration of the operation.
-       if (typeof options === "object" && "outExecutionDuration" in options) {
+       if (options && typeof options === "object" && "outExecutionDuration" in options) {
          start = Date.now();
        }
 
