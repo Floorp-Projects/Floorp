@@ -1068,7 +1068,7 @@ NS_IMETHODIMP Navigator::GetGeolocation(nsIDOMGeoGeolocation** _retval)
     return NS_ERROR_FAILURE;
   }
 
-  mGeolocation = new nsGeolocation();
+  mGeolocation = new Geolocation();
   if (!mGeolocation) {
     return NS_ERROR_FAILURE;
   }
@@ -1533,7 +1533,7 @@ Navigator::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
 
   // TODO: add SizeOfIncludingThis() to nsMimeTypeArray, bug 674113.
   // TODO: add SizeOfIncludingThis() to nsPluginArray, bug 674114.
-  // TODO: add SizeOfIncludingThis() to nsGeolocation, bug 674115.
+  // TODO: add SizeOfIncludingThis() to Geolocation, bug 674115.
   // TODO: add SizeOfIncludingThis() to DesktopNotificationCenter, bug 674116.
 
   return n;

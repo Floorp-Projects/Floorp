@@ -647,7 +647,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMScriptObjectFactory)
 #define NS_GEOLOCATION_CID \
   { 0x1E1C3FF, 0x94A, 0xD048, { 0x44, 0xB4, 0x62, 0xD2, 0x9C, 0x7B, 0x4F, 0x39 } }
 
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGeolocation, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(Geolocation, Init)
 
 #define NS_GEOLOCATION_SERVICE_CID \
   { 0x404d02a, 0x1CA, 0xAAAB, { 0x47, 0x62, 0x94, 0x4b, 0x1b, 0xf2, 0xf7, 0xb5 } }
@@ -1086,7 +1086,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_EDITINGCOMMANDTABLE_CID, false, NULL, nsEditingCommandTableConstructor },
   { &kNS_TEXTSERVICESDOCUMENT_CID, false, NULL, nsTextServicesDocumentConstructor },
   { &kNS_GEOLOCATION_SERVICE_CID, false, NULL, nsGeolocationServiceConstructor },
-  { &kNS_GEOLOCATION_CID, false, NULL, nsGeolocationConstructor },
+  { &kNS_GEOLOCATION_CID, false, NULL, GeolocationConstructor },
   { &kNS_AUDIOCHANNEL_SERVICE_CID, false, NULL, AudioChannelServiceConstructor },
   { &kNS_FOCUSMANAGER_CID, false, NULL, CreateFocusManager },
 #ifdef MOZ_WEBSPEECH
