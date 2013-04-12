@@ -3,6 +3,7 @@
 <head>
   <title>Test whether we can create an AudioContext interface</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -25,6 +26,55 @@ addLoadEvent(function() {
   is(destination.numberOfInputs, 1, "Destination node has 1 inputs");
   is(destination.numberOfOutputs, 0, "Destination node has 0 outputs");
 
+  testWith(context, buffer, destination, function(source) {
+    source.start(0);
+  }, function(source) {
+    source.stop();
+  }, function() {
+    testWith(context, buffer, destination, function(source) {
+      source.start(0, 1);
+    }, function(source) {
+      expectTypeError(function() {
+        source.noteOff();
+      });
+      source.noteOff(0);
+    }, function() {
+      testWith(context, buffer, destination, function(source) {
+        source.start(0, 1, 0.5);
+      }, function(source) {
+        source.stop(0);
+      }, function() {
+        testWith(context, buffer, destination, function(source) {
+          source.noteOn(0);
+        }, function(source) {
+          source.noteOff(0);
+        }, function() {
+          testWith(context, buffer, destination, function(source) {
+            source.noteGrainOn(0, 1, 0.5);
+          }, function(source) {
+            source.stop();
+          }, function() {
+            SpecialPowers.clearUserPref("media.webaudio.enabled");
+            SimpleTest.finish();
+          });
+        });
+      });
+    });
+  });
+});
+
+function testWith(context, buffer, destination, start, stop, callback)
+{
+  var source = createNode(context, buffer, destination);
+  start(source);
+  SimpleTest.executeSoon(function() {
+    stop(source);
+    callback();
+    source.disconnect();
+  });
+}
+
+function createNode(context, buffer, destination) {
   var source = context.createBufferSource();
   is(source.context, context, "Source node has proper context");
   is(source.numberOfInputs, 0, "Source node has 0 inputs");
@@ -44,15 +94,8 @@ addLoadEvent(function() {
   is(destination.numberOfInputs, 1, "Destination node has 0 inputs");
   is(destination.numberOfOutputs, 0, "Destination node has 0 outputs");
 
-  source.start(0);
-  SimpleTest.executeSoon(function() {
-    source.stop(0);
-    source.disconnect();
-
-    SpecialPowers.clearUserPref("media.webaudio.enabled");
-    SimpleTest.finish();
-  });
-});
+  return source;
+}
 
 </script>
 </pre>
