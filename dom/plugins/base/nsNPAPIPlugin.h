@@ -362,7 +362,7 @@ OnShutdown();
  * within a lexical scope, locks and unlocks the mutex used to
  * serialize modifications to plugin async callback state.
  */
-struct NS_STACK_CLASS AsyncCallbackAutoLock
+struct MOZ_STACK_CLASS AsyncCallbackAutoLock
 {
   AsyncCallbackAutoLock();
   ~AsyncCallbackAutoLock();
@@ -389,8 +389,8 @@ protected:
 // separate objects on the stack since we always want a
 // PluginDestructionGuard where we use an NPPAutoPusher.
 
-class NPPAutoPusher : public NPPStack,
-                      protected PluginDestructionGuard
+class MOZ_STACK_CLASS NPPAutoPusher : public NPPStack,
+                                      protected PluginDestructionGuard
 {
 public:
   NPPAutoPusher(NPP npp)
