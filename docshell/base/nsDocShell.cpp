@@ -7813,6 +7813,22 @@ nsDocShell::RestoreFromHistory()
 
     nsCOMPtr<nsIPresShell> shell = GetPresShell();
 
+    // We may be displayed on a different monitor (or in a different
+    // HiDPI mode) than when we got into the history list.  So we need
+    // to check if this has happened. See bug 838239.
+
+    // Because the prescontext normally handles resolution changes via
+    // a runnable (see nsPresContext::UIResolutionChanged), its device
+    // context won't be -immediately- updated as a result of calling
+    // shell->BackingScaleFactorChanged().
+
+    // But we depend on that device context when adjusting the view size
+    // via mContentViewer->SetBounds(newBounds) below. So we need to
+    // explicitly tell it to check for changed resolution here.
+    if (shell && shell->GetPresContext()->DeviceContext()->CheckDPIChange()) {
+        shell->BackingScaleFactorChanged();
+    }
+
     nsViewManager *newVM = shell ? shell->GetViewManager() : nullptr;
     nsView *newRootView = newVM ? newVM->GetRootView() : nullptr;
 
