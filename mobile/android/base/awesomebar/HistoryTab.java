@@ -70,7 +70,7 @@ public class HistoryTab extends AwesomeBarTab {
     @Override
     public ListView getView() {
         if (mView == null) {
-            mView = LayoutInflater.from(mContext).inflate(R.layout.awesomebar_expandable_list, null);
+            mView = new ExpandableListView(mContext, null);
             ((Activity)mContext).registerForContextMenu(mView);
             mView.setTag(TAG);
 

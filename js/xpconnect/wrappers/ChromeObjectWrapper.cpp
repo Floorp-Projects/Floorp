@@ -31,7 +31,7 @@ static bool
 PropIsFromStandardPrototype(JSContext *cx, JSPropertyDescriptor *desc)
 {
     MOZ_ASSERT(desc->obj);
-    JSObject *unwrapped = js::UnwrapObject(desc->obj);
+    JSObject *unwrapped = js::UncheckedUnwrap(desc->obj);
     JSAutoCompartment ac(cx, unwrapped);
     return JS_IdentifyClassPrototype(cx, unwrapped) != JSProto_Null;
 }

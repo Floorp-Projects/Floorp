@@ -45,12 +45,9 @@ DOMCI_CLASS(DeviceRotationRate)
 DOMCI_CLASS(HTMLDocument)
 
 // HTML element classes
-DOMCI_CLASS(HTMLAppletElement)
-DOMCI_CLASS(HTMLEmbedElement)
 DOMCI_CLASS(HTMLFormElement)
 DOMCI_CLASS(HTMLIFrameElement)
 DOMCI_CLASS(HTMLInputElement)
-DOMCI_CLASS(HTMLObjectElement)
 DOMCI_CLASS(HTMLSelectElement)
 DOMCI_CLASS(ValidityState)
 
@@ -225,9 +222,6 @@ DOMCI_CLASS(ContentFrameMessageManager)
 DOMCI_CLASS(ChromeMessageBroadcaster)
 DOMCI_CLASS(ChromeMessageSender)
 
-DOMCI_CLASS(DesktopNotification)
-DOMCI_CLASS(DesktopNotificationCenter)
-
 DOMCI_CLASS(IDBFileHandle)
 DOMCI_CLASS(IDBRequest)
 DOMCI_CLASS(IDBDatabase)
@@ -243,10 +237,6 @@ DOMCI_CLASS(IDBOpenDBRequest)
 DOMCI_CLASS(Touch)
 DOMCI_CLASS(TouchList)
 DOMCI_CLASS(TouchEvent)
-
-#ifdef MOZ_GAMEPAD
-DOMCI_CLASS(Gamepad)
-#endif
 
 DOMCI_CLASS(MozCSSKeyframeRule)
 DOMCI_CLASS(MozCSSKeyframesRule)

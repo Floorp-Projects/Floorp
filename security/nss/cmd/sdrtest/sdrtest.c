@@ -5,7 +5,7 @@
 /*
  * Test program for SDR (Secret Decoder Ring) functions.
  *
- * $Id: sdrtest.c,v 1.17 2012/03/20 14:47:17 gerv%gerv.net Exp $
+ * $Id$
  */
 
 #include "nspr.h"

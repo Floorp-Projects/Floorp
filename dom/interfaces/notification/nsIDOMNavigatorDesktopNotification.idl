@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "domstubs.idl"
-interface nsIDOMDesktopNotificationCenter;
 
 /**
  * Property that extends the navigator object.
@@ -11,5 +10,6 @@ interface nsIDOMDesktopNotificationCenter;
 [scriptable, uuid(EC2E6E4F-2F65-439C-B6C6-27E89B03B348)]
 interface nsIDOMNavigatorDesktopNotification : nsISupports
 {
-  readonly attribute nsIDOMDesktopNotificationCenter mozNotification;
+  /* DesktopNotificationCenter */
+  readonly attribute nsISupports mozNotification;
 };

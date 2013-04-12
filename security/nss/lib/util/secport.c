@@ -9,7 +9,7 @@
  * 
  * NOTE - These are not public interfaces
  *
- * $Id: secport.c,v 1.31 2012/11/14 01:14:12 wtc%google.com Exp $
+ * $Id$
  */
 
 #include "seccomon.h"

@@ -31,6 +31,8 @@
   width: 5.6em;
   height: 6.7em;
   font-size: .8em;
+  background-color: transparent;
+  border: none;
 }
 
 .app img {

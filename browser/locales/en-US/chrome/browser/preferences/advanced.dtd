@@ -115,14 +115,7 @@
 <!ENTITY offlineAppsListRemove.accesskey "R">
 <!ENTITY offlineAppRemove.confirm        "Remove offline data">
 
-<!ENTITY encryptionTab.label             "Encryption">
-
-<!ENTITY protocols.label                 "Protocols">
-<!ENTITY useSSL3.label                   "Use SSL 3.0">
-<!ENTITY useSSL3.accesskey               "3">
-<!ENTITY useTLS1.label                   "Use TLS 1.0">
-<!ENTITY useTLS1.accesskey               "1">
-<!ENTITY certificates.label              "Certificates">
+<!ENTITY certificateTab.label            "Certificates">
 <!ENTITY certSelection.description       "When a server requests my personal certificate:">
 <!ENTITY certs.auto                      "Select one automatically">
 <!ENTITY certs.auto.accesskey            "l">

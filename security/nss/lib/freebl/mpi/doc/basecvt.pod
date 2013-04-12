@@ -64,4 +64,4 @@ by B<basecvt>, and so is not configurable at runtime.
  Michael J. Fromberger <sting@linguist.dartmouth.edu>
  Thayer School of Engineering, Hanover, New Hampshire, USA
 
- $Date: 2012/04/25 14:49:52 $
+ $Date$

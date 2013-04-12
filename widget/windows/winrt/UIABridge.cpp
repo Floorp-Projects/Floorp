@@ -144,9 +144,9 @@ DumpChildInfo(nsCOMPtr<nsIAccessible>& aChild)
   }
   nsString str;
   aChild->GetName(str);
-  Log(L"name: %s", str.BeginReading());
+  Log("name: %ls", str.BeginReading());
   aChild->GetDescription(str);
-  Log(L"description: %s", str.BeginReading());
+  Log("description: %ls", str.BeginReading());
 #endif
 }
 
@@ -154,7 +154,7 @@ static bool
 ChildHasFocus(nsCOMPtr<nsIAccessible>& aChild)
 {
   Accessible* access = (Accessible*)aChild.get();
-  Log(L"Focus element flags: %d %d %d",
+  Log("Focus element flags: %d %d %d",
     ((access->NativeState() & mozilla::a11y::states::EDITABLE) > 0),
     ((access->NativeState() & mozilla::a11y::states::FOCUSABLE) > 0),
     ((access->NativeState() & mozilla::a11y::states::READONLY) > 0));
@@ -361,7 +361,7 @@ HRESULT
 UIABridge::GetPatternProvider(PATTERNID patternId, IUnknown **ppRetVal)
 {
   LogFunction();
-  Log(L"UIABridge::GetPatternProvider=%d", patternId);
+  Log("UIABridge::GetPatternProvider=%d", patternId);
 
   // The root window doesn't support any specific pattern
   *ppRetVal = nullptr;
@@ -380,7 +380,7 @@ UIABridge::GetPropertyValue(PROPERTYID idProp, VARIANT * pRetVal)
     return S_OK;
   }
 
-  Log(L"UIABridge::GetPropertyValue: idProp=%d", idProp);
+  Log("UIABridge::GetPropertyValue: idProp=%d", idProp);
 
   if (!Connected()) {
     return E_FAIL;
@@ -424,7 +424,7 @@ UIABridge::GetPropertyValue(PROPERTYID idProp, VARIANT * pRetVal)
     break;
 
     default:
-      Log(L"UIABridge: Unhandled property");
+      Log("UIABridge: Unhandled property");
       break;
   }
   return S_OK;
@@ -561,7 +561,7 @@ HRESULT
 UIATextElement::GetPatternProvider(PATTERNID patternId, IUnknown **ppRetVal)
 {
   LogFunction();
-  Log(L"UIATextElement::GetPatternProvider=%d", patternId);
+  Log("UIATextElement::GetPatternProvider=%d", patternId);
   
   // UIA_ValuePatternId - 10002
   // UIA_TextPatternId  - 10014
@@ -569,12 +569,12 @@ UIATextElement::GetPatternProvider(PATTERNID patternId, IUnknown **ppRetVal)
 
   *ppRetVal = nullptr;
   if (patternId == UIA_TextPatternId) {
-    Log(L"** TextPattern requested from element.");
+    Log("** TextPattern requested from element.");
     *ppRetVal = static_cast<ITextProvider*>(this);
     AddRef();
     return S_OK;
   } else if (patternId == UIA_ValuePatternId) {
-    Log(L"** ValuePattern requested from element.");
+    Log("** ValuePattern requested from element.");
     *ppRetVal = static_cast<IValueProvider*>(this);
     AddRef();
     return S_OK;
@@ -594,7 +594,7 @@ UIATextElement::GetPropertyValue(PROPERTYID idProp, VARIANT * pRetVal)
     return S_OK;
   }
 
-  Log(L"UIATextElement::GetPropertyValue: idProp=%d", idProp);
+  Log("UIATextElement::GetPropertyValue: idProp=%d", idProp);
 
   switch (idProp) {
     case UIA_AutomationIdPropertyId:
@@ -647,7 +647,7 @@ UIATextElement::GetPropertyValue(PROPERTYID idProp, VARIANT * pRetVal)
       break;
 
     default:
-      Log(L"UIATextElement: Unhandled property");
+      Log("UIATextElement: Unhandled property");
       break;
   }
   return S_OK;

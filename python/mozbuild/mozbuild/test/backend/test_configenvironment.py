@@ -30,7 +30,8 @@ class TestEnvironment(unittest.TestCase):
                               ('abc', 'def'), ('extra', 'foobar') ],
                   non_global_defines = ['extra', 'ignore'],
                   substs = [ ('FOO', 'bar'), ('ABC', 'def'),
-                             ('bar', 'baz qux'), ('zzz', '"abc def"') ])
+                             ('bar', 'baz qux'), ('zzz', '"abc def"'),
+                             ('qux', '') ])
         # non_global_defines should be filtered out in ACDEFINES and
         # ALLDEFINES.
         # Original order of the defines need to be respected in ACDEFINES

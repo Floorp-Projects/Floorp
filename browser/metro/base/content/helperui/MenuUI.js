@@ -37,7 +37,6 @@ var AutofillMenuUI = {
 
   _positionOptions: function _positionOptions() {
     return {
-      forcePosition: true,
       bottomAligned: false,
       leftAligned: true,
       xPos: this._anchorRect.x,
@@ -77,7 +76,6 @@ var ContextMenuUI = {
   _popupState: null,
   __menuPopup: null,
   _defaultPositionOptions: {
-    forcePosition: true,
     bottomAligned: true,
     rightAligned: false,
     centerHorizontally: true,
@@ -242,9 +240,7 @@ var MenuControlUI = {
     let position = this._currentControl.menupopup.position || "after_start";
     let rect = this._currentControl.getBoundingClientRect();
 
-    let options = {
-      forcePosition: true
-    };
+    let options = {};
 
     // TODO: Detect text direction and flip for RTL.
 
@@ -361,7 +357,7 @@ MenuPopup.prototype = {
       document.dispatchEvent(event);
     });
 
-    let popupFrom = (aPositionOptions.forcePosition && !aPositionOptions.bottomAligned) ? "above" : "below";
+    let popupFrom = !aPositionOptions.bottomAligned ? "above" : "below";
     this._panel.setAttribute("showingfrom", popupFrom);
 
     // Ensure the panel actually gets shifted before getting animated
@@ -417,48 +413,14 @@ MenuPopup.prototype = {
       this._commands.setAttribute("left-hand", leftHand);
     }
 
-    if (aPositionOptions.forcePosition) {
-      if (aPositionOptions.rightAligned)
-        aX -= width;
+    if (aPositionOptions.rightAligned)
+      aX -= width;
 
-      if (aPositionOptions.bottomAligned)
-        aY -= height;
+    if (aPositionOptions.bottomAligned)
+      aY -= height;
 
-      if (aPositionOptions.centerHorizontally)
-        aX -= halfWidth;
-    } else {
-      let hLeft = (aX - halfWidth - width - kPositionPadding) > kPositionPadding;
-      let hRight = (aX + width + kPositionPadding) < screenWidth;
-      let hCenter = (aX - halfWidth - kPositionPadding) > kPositionPadding;
-
-      let vTop = (aY - height - kPositionPadding) > kPositionPadding;
-      let vCenter = (aY - halfHeight - kPositionPadding) > kPositionPadding &&
-                    aY + halfHeight < screenHeight;
-      let vBottom = (aY + height + kPositionPadding) < screenHeight;
-
-      if (leftHand && hLeft && vCenter) {
-        dump('leftHand && hLeft && vCenter\n');
-        aX -= (width + halfWidth);
-        aY -= halfHeight; 
-      } else if (!leftHand && hRight && vCenter) {
-        dump('!leftHand && hRight && vCenter\n');
-        aX += kPositionPadding;
-        aY -= halfHeight; 
-      } else if (vBottom && hCenter) {
-        dump('vBottom && hCenter\n');
-        aX -= halfWidth;
-      } else if (vTop && hCenter) {
-        dump('vTop && hCenter\n');
-        aX -= halfWidth;
-        aY -= height;
-      } else if (hCenter && vCenter) {
-        dump('hCenter && vCenter\n');
-        aX -= halfWidth;
-        aY -= halfHeight;
-      } else {
-        dump('None, left hand: ' + leftHand + '!\n');
-      }
-    }
+    if (aPositionOptions.centerHorizontally)
+      aX -= halfWidth;
 
     if (aX < 0) {
       aX = 0;

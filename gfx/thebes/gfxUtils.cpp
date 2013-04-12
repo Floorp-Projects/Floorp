@@ -264,7 +264,7 @@ CreateSamplingRestrictedDrawable(gfxDrawable* aDrawable,
 
 // working around cairo/pixman bug (bug 364968)
 // Our device-space-to-image-space transform may not be acceptable to pixman.
-struct NS_STACK_CLASS AutoCairoPixmanBugWorkaround
+struct MOZ_STACK_CLASS AutoCairoPixmanBugWorkaround
 {
     AutoCairoPixmanBugWorkaround(gfxContext*      aContext,
                                  const gfxMatrix& aDeviceSpaceToImageSpace,

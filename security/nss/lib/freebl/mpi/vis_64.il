@@ -2,7 +2,7 @@
 ! This Source Code Form is subject to the terms of the Mozilla Public
 ! License, v. 2.0. If a copy of the MPL was not distributed with this
 ! file, You can obtain one at http://mozilla.org/MPL/2.0/.
-! $Id: vis_64.il,v 1.4 2012/04/25 14:49:50 gerv%gerv.net Exp $
+! $Id$
 
 ! This file is to be used in place of vis.il in 64-bit builds.
 

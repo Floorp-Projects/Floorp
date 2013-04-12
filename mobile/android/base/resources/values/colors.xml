@@ -32,6 +32,33 @@
   <!-- highlight-focused on private nav button: 10% white over background_private -->
   <color name="highlight_nav_focused_pb">#FF3F423F</color>
 
+  <!--
+      Application theme colors
+  -->
+  <!-- Default colors -->
+  <color name="text_color_primary">#222222</color>
+  <color name="text_color_secondary">#666666</color>
+  <color name="text_color_tertiary">#9198A1</color>
+
+  <!-- Default inverse colors -->
+  <color name="text_color_primary_inverse">#FFFFFF</color>
+  <color name="text_color_secondary_inverse">#DDDDDD</color>
+  <color name="text_color_tertiary_inverse">#A4A7A9</color>
+
+  <!-- Disabled colors -->
+  <color name="text_color_primary_disable_only">#999999</color>
+
+  <!-- Hint colors -->
+  <color name="text_color_hint">#666666</color>
+  <color name="text_color_hint_inverse">#7F828A</color>
+
+  <!-- Highlight colors -->
+  <color name="text_color_highlight">#FF9500</color>
+  <color name="text_color_highlight_inverse">#D06BFF</color>
+
+  <!-- Link colors -->
+  <color name="text_color_link">#22629E</color>
+
   <color name="autocomplete_listitem_text">#000000</color>
   <color name="splash_background">#000000</color>
   <color name="splash_msgfont">#ffffff</color>

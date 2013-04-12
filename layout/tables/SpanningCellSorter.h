@@ -20,7 +20,7 @@ class nsIPresShell;
  * from lowest number of columns spanned to highest.  It does not use a
  * stable sort (in fact, it currently reverses).
  */
-class NS_STACK_CLASS SpanningCellSorter {
+class MOZ_STACK_CLASS SpanningCellSorter {
 public:
     SpanningCellSorter();
     ~SpanningCellSorter();

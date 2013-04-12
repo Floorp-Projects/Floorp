@@ -37,8 +37,6 @@ typedef std::vector<WinInfo> WinInfoVec;
 
 PluginHangUIChild* PluginHangUIChild::sSelf = nullptr;
 const int PluginHangUIChild::kExpectedMinimumArgc = 10;
-const DWORD PluginHangUIChild::kProcessTimeout = 1200000U;
-const DWORD PluginHangUIChild::kShmTimeout = 5000U;
 
 PluginHangUIChild::PluginHangUIChild()
   : mResponseBits(0),
@@ -46,7 +44,8 @@ PluginHangUIChild::PluginHangUIChild()
     mDlgHandle(NULL),
     mMainThread(NULL),
     mParentProcess(NULL),
-    mRegWaitProcess(NULL)
+    mRegWaitProcess(NULL),
+    mIPCTimeoutMs(0)
 {
 }
 
@@ -98,10 +97,15 @@ PluginHangUIChild::Init(int aArgc, wchar_t* aArgv[])
       FreeLibrary(shell32);
     }
   }
+  std::wistringstream issTimeout(aArgv[++i]);
+  issTimeout >> mIPCTimeoutMs;
+  if (!issTimeout) {
+    return false;
+  }
 
   nsresult rv = mMiniShm.Init(this,
                               std::wstring(aArgv[++i]),
-                              IsDebuggerPresent() ? INFINITE : kShmTimeout);
+                              IsDebuggerPresent() ? INFINITE : mIPCTimeoutMs);
   if (NS_FAILED(rv)) {
     return false;
   }
@@ -374,7 +378,7 @@ PluginHangUIChild::WaitForDismissal()
     return false;
   }
   DWORD waitResult = WaitForSingleObjectEx(mParentProcess,
-                                           kProcessTimeout,
+                                           mIPCTimeoutMs,
                                            TRUE);
   return waitResult == WAIT_OBJECT_0 ||
          waitResult == WAIT_IO_COMPLETION;

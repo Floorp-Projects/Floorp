@@ -31,6 +31,8 @@ LIBS = $(DEPTH)/$(LIB_PREFIX)js_static.$(LIB_SUFFIX) $(NSPR_LIBS) $(MOZ_ZLIB_LIB
 
 LOCAL_INCLUDES += -I$(topsrcdir) -I..
 
+EXTRA_LIBS += $(MOZ_FFI_LIBS)
+
 # Place a GDB Python auto-load file next to the gdb-tests executable, both
 # in the build directory and in the dist/bin directory.
 PP_TARGETS += GDB_AUTOLOAD

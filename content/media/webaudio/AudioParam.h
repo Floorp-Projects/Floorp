@@ -88,6 +88,10 @@ public:
     AudioParamTimeline::SetTargetAtTime(aTarget, aStartTime, aTimeConstant, aRv);
     mCallback(mNode);
   }
+  void SetTargetValueAtTime(float aTarget, double aStartTime, double aTimeConstant, ErrorResult& aRv)
+  {
+    SetTargetAtTime(aTarget, aStartTime, aTimeConstant, aRv);
+  }
   void CancelScheduledValues(double aStartTime)
   {
     AudioParamTimeline::CancelScheduledValues(aStartTime);

@@ -31,7 +31,7 @@ cert_EncodeNameConstraints(CERTNameConstraints *constraints, PRArenaPool *arena,
 			   SECItem *dest);
 
 extern CERTNameConstraints *
-cert_DecodeNameConstraints(PRArenaPool *arena, SECItem *encodedConstraints);
+cert_DecodeNameConstraints(PRArenaPool *arena, const SECItem *encodedConstraints);
 
 extern CERTGeneralName *
 cert_CombineNamesLists(CERTGeneralName *list1, CERTGeneralName *list2);

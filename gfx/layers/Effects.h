@@ -39,7 +39,6 @@ enum EffectTypes
   EFFECT_RGBX,
   EFFECT_BGRA,
   EFFECT_RGBA,
-  EFFECT_RGBA_EXTERNAL,
   EFFECT_YCBCR,
   EFFECT_COMPONENT_ALPHA,
   EFFECT_SOLID_COLOR,
@@ -174,23 +173,6 @@ struct EffectRGBA : public TexturedEffect
 #ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char* Name() { return "EffectRGBA"; }
 #endif
-};
-
-struct EffectRGBAExternal : public TexturedEffect
-{
-  EffectRGBAExternal(TextureSource *aRGBATexture,
-                     const gfx::Matrix4x4 &aTextureTransform,
-                     bool aPremultiplied,
-                     gfx::Filter aFilter)
-    : TexturedEffect(EFFECT_RGBA_EXTERNAL, aRGBATexture, aPremultiplied, aFilter)
-    , mTextureTransform(aTextureTransform)
-  {}
-
-#ifdef MOZ_LAYERS_HAVE_LOG
-  virtual const char* Name() { return "EffectRGBAExternal"; }
-#endif
-
-  gfx::Matrix4x4 mTextureTransform;
 };
 
 struct EffectYCbCr : public TexturedEffect

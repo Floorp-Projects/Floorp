@@ -67,7 +67,7 @@ public:
 
 #ifdef OS_WIN
 public:
-    struct NS_STACK_CLASS SyncStackFrame
+    struct MOZ_STACK_CLASS SyncStackFrame
     {
         SyncStackFrame(SyncChannel* channel, bool rpc);
         ~SyncStackFrame();

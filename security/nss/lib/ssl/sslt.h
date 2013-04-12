@@ -4,7 +4,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: sslt.h,v 1.23 2012/06/07 02:06:19 wtc%google.com Exp $ */
+/* $Id$ */
 
 #ifndef __sslt_h_
 #define __sslt_h_
@@ -175,6 +175,7 @@ typedef enum {
 /* Update SSL_MAX_EXTENSIONS whenever a new extension type is added. */
 typedef enum {
     ssl_server_name_xtn              = 0,
+    ssl_cert_status_xtn              = 5,
 #ifdef NSS_ENABLE_ECC
     ssl_elliptic_curves_xtn          = 10,
     ssl_ec_point_formats_xtn         = 11,
@@ -185,6 +186,6 @@ typedef enum {
     ssl_renegotiation_info_xtn       = 0xff01	/* experimental number */
 } SSLExtensionType;
 
-#define SSL_MAX_EXTENSIONS             7
+#define SSL_MAX_EXTENSIONS             8
 
 #endif /* __sslt_h_ */

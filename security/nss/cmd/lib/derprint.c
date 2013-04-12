@@ -15,7 +15,7 @@ extern int fflush(FILE *stream);
 static int prettyColumn = 0;
 
 static int
-getInteger256(unsigned char *data, unsigned int nb)
+getInteger256(const unsigned char *data, unsigned int nb)
 {
     int val;
 
@@ -100,7 +100,7 @@ prettyPrintByte(FILE *out, unsigned char item, unsigned int level)
 }
 
 static int
-prettyPrintLeaf(FILE *out, unsigned char *data,
+prettyPrintLeaf(FILE *out, const unsigned char *data,
 		unsigned int len, unsigned int lv)
 {
     unsigned int i;
@@ -115,7 +115,7 @@ prettyPrintLeaf(FILE *out, unsigned char *data,
 }
 
 static int
-prettyPrintStringStart(FILE *out, unsigned char *str,
+prettyPrintStringStart(FILE *out, const unsigned char *str,
 		       unsigned int len, unsigned int level)
 {
 #define BUF_SIZE 100
@@ -147,7 +147,7 @@ prettyPrintStringStart(FILE *out, unsigned char *str,
 }
 
 static int
-prettyPrintString(FILE *out, unsigned char *str,
+prettyPrintString(FILE *out, const unsigned char *str,
 		  unsigned int len, unsigned int level, PRBool raw)
 {
     int rv;
@@ -170,7 +170,7 @@ prettyPrintString(FILE *out, unsigned char *str,
 }
 
 static int
-prettyPrintTime(FILE *out, unsigned char *str,
+prettyPrintTime(FILE *out, const unsigned char *str,
 		unsigned int len, unsigned int level, PRBool raw, PRBool utc)
 {
     SECItem time_item;
@@ -180,7 +180,7 @@ prettyPrintTime(FILE *out, unsigned char *str,
     if (rv < 0)
 	return rv;
 
-    time_item.data = str;
+    time_item.data = (unsigned char *)str;
     time_item.len = len;
 
     rv = fprintf(out, " (");
@@ -214,7 +214,7 @@ prettyPrintTime(FILE *out, unsigned char *str,
 }
 
 static int
-prettyPrintObjectID(FILE *out, unsigned char *data,
+prettyPrintObjectID(FILE *out, const unsigned char *data,
 		    unsigned int len, unsigned int level, PRBool raw)
 {
     SECOidData *oiddata;
@@ -260,7 +260,7 @@ prettyPrintObjectID(FILE *out, unsigned char *data,
     /*
      * Now try to look it up and print a symbolic version.
      */
-    oiditem.data = data;
+    oiditem.data = (unsigned char *)data;
     oiditem.len = len;
     oiddata = SECOID_FindOID(&oiditem);
     if (oiddata != NULL) {
@@ -338,7 +338,7 @@ static char *prettyTagType [32] = {
 };
 
 static int
-prettyPrintTag(FILE *out, unsigned char *src, unsigned char *end,
+prettyPrintTag(FILE *out, const unsigned char *src, const unsigned char *end,
 	       unsigned char *codep, unsigned int level, PRBool raw)
 {
     int rv;
@@ -402,7 +402,7 @@ prettyPrintTag(FILE *out, unsigned char *src, unsigned char *end,
 }
 
 static int
-prettyPrintLength(FILE *out, unsigned char *data, unsigned char *end,
+prettyPrintLength(FILE *out, const unsigned char *data, const unsigned char *end,
 		  int *lenp, PRBool *indefinitep, unsigned int lv, PRBool raw)
 {
     unsigned char lbyte;
@@ -480,12 +480,12 @@ prettyPrintLength(FILE *out, unsigned char *data, unsigned char *end,
 }
 
 static int
-prettyPrintItem(FILE *out, unsigned char *data, unsigned char *end,
+prettyPrintItem(FILE *out, const unsigned char *data, const unsigned char *end,
 		unsigned int lv, PRBool raw)
 {
     int slen;
     int lenLen;
-    unsigned char *orig = data;
+    const unsigned char *orig = data;
     int rv;
 
     while (data < end) {
@@ -577,7 +577,7 @@ prettyPrintItem(FILE *out, unsigned char *data, unsigned char *end,
 }
 
 SECStatus
-DER_PrettyPrint(FILE *out, SECItem *it, PRBool raw)
+DER_PrettyPrint(FILE *out, const SECItem *it, PRBool raw)
 {
     int rv;
 

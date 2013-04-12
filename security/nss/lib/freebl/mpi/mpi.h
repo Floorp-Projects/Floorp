@@ -6,7 +6,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: mpi.h,v 1.26 2012/11/14 01:14:11 wtc%google.com Exp $ */
+/* $Id$ */
 
 #ifndef _H_MPI_
 #define _H_MPI_

@@ -273,10 +273,6 @@ function setupSearchEngine()
   if (searchEngineInfo && searchEngineInfo.image) {
     logoElt.parentNode.hidden = false;
     logoElt.src = searchEngineInfo.image;
-#ifdef XP_MACOSX
-    if (searchEngineInfo.imageHD && !window.matchMedia("(max-resolution: 1dppx)").matches)
-      logoElt.src = searchEngineInfo.imageHD;
-#endif
     logoElt.alt = searchEngineName;
     searchText.placeholder = "";
   }
@@ -347,6 +343,19 @@ function loadSnippets()
 let _snippetsShown = false;
 function showSnippets()
 {
+  let snippetsElt = document.getElementById("snippets");
+
+  // Show about:rights notification, if needed.
+  let showRights = document.documentElement.getAttribute("showKnowYourRights");
+  if (showRights) {
+    let rightsElt = document.getElementById("rightsSnippet");
+    let anchor = rightsElt.getElementsByTagName("a")[0];
+    anchor.href = "about:rights";
+    snippetsElt.appendChild(rightsElt);
+    rightsElt.removeAttribute("hidden");
+    return;
+  }
+
   if (!gSnippetsMap)
     throw new Error("Snippets map has not properly been initialized");
   if (_snippetsShown) {
@@ -357,7 +366,6 @@ function showSnippets()
   }
   _snippetsShown = true;
 
-  let snippetsElt = document.getElementById("snippets");
   let snippets = gSnippetsMap.get("snippets");
   // If there are remotely fetched snippets, try to to show them.
   if (snippets) {

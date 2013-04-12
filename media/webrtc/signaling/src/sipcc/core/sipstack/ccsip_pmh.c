@@ -4701,7 +4701,7 @@ sippmh_parse_supported_require (const char *header, char **punsupported_tokens)
     size = strlen(header) + 1;
     temp_header = (char *) cpr_malloc(size);
     if (temp_header == NULL) {
-        CCSIP_DEBUG_ERROR("%s: malloc failed for strlen(header)=%d\n", fname,
+        CCSIP_DEBUG_ERROR("%s: malloc failed for strlen(header)=%lu", fname,
                           strlen(header));
         return tags;
     }

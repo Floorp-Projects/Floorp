@@ -5,7 +5,7 @@
 /*
  * p7content -- A command to display pkcs7 content.
  *
- * $Id: p7content.c,v 1.13 2012/03/20 14:47:11 gerv%gerv.net Exp $
+ * $Id$
  */
 
 #include "nspr.h"
