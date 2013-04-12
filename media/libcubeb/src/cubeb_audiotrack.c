@@ -186,9 +186,9 @@ audiotrack_get_min_frame_count(cubeb * ctx, cubeb_stream_params * params, int * 
   }
   /* Recent Android have a getMinFrameCount method. */
   if (!audiotrack_version_is_gingerbread(ctx)) {
-    status = ctx->klass.get_min_frame_count(min_frame_count, param->stream_type, params->rate);
+    status = ctx->klass.get_min_frame_count(min_frame_count, params->stream_type, params->rate);
   } else {
-    status = ctx->klass.get_min_frame_count_gingerbread(min_frame_count, param->stream_type, params->rate);
+    status = ctx->klass.get_min_frame_count_gingerbread(min_frame_count, params->stream_type, params->rate);
   }
   if (status != 0) {
     ALOG("error getting the min frame count");
