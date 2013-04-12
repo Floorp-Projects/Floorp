@@ -2633,10 +2633,6 @@ SearchService.prototype = {
     return this.__sortedEngines;
   },
 
-  // Whether or not we need to write the order of engines on shutdown. This
-  // needs to happen anytime _sortedEngines is modified after initial startup. 
-  _needToSetOrderPrefs: false,
-
   _buildCache: function SRCH_SVC__buildCache() {
     if (!getBoolPref(BROWSER_SEARCH_PREF + "cache.enabled", true))
       return;
@@ -2867,7 +2863,7 @@ SearchService.prototype = {
       // will be built once we need it.
       if (this.__sortedEngines) {
         this.__sortedEngines.push(aEngine);
-        this._needToSetOrderPrefs = true;
+        this._saveSortedEngineList();
       }
       notifyAction(aEngine, SEARCH_ENGINE_ADDED);
     }
@@ -3054,12 +3050,7 @@ SearchService.prototype = {
   },
 
   _saveSortedEngineList: function SRCH_SVC_saveSortedEngineList() {
-    // We only need to write the prefs. if something has changed.
     LOG("SRCH_SVC_saveSortedEngineList: starting");
-    if (!this._needToSetOrderPrefs)
-      return;
-
-    LOG("SRCH_SVC_saveSortedEngineList: something to do");
 
     // Set the useDB pref to indicate that from now on we should use the order
     // information stored in the database.
@@ -3091,29 +3082,34 @@ SearchService.prototype = {
     // prefs.
     if (getBoolPref(BROWSER_SEARCH_PREF + "useDBForOrder", false)) {
       LOG("_buildSortedEngineList: using db for order");
+
+      // Flag to keep track of whether or not we need to call _saveSortedEngineList. 
+      let needToSaveEngineList = false;
+
       for each (engine in this._engines) {
         var orderNumber = engineMetadataService.getAttr(engine, "order");
 
         // Since the DB isn't regularly cleared, and engine files may disappear
         // without us knowing, we may already have an engine in this slot. If
         // that happens, we just skip it - it will be added later on as an
-        // unsorted engine. This problem will sort itself out when we call
-        // _saveSortedEngineList at shutdown.
+        // unsorted engine.
         if (orderNumber && !this.__sortedEngines[orderNumber-1]) {
           this.__sortedEngines[orderNumber-1] = engine;
           addedEngines[engine.name] = engine;
         } else {
-          // We need to call _saveSortedEngines so this gets sorted out.
-          this._needToSetOrderPrefs = true;
+          // We need to call _saveSortedEngineList so this gets sorted out.
+          needToSaveEngineList = true;
         }
       }
 
       // Filter out any nulls for engines that may have been removed
       var filteredEngines = this.__sortedEngines.filter(function(a) { return !!a; });
       if (this.__sortedEngines.length != filteredEngines.length)
-        this._needToSetOrderPrefs = true;
+        needToSaveEngineList = true;
       this.__sortedEngines = filteredEngines;
 
+      if (needToSaveEngineList)
+        this._saveSortedEngineList();
     } else {
       // The DB isn't being used, so just read the engine order from the prefs
       var i = 0;
@@ -3509,7 +3505,7 @@ SearchService.prototype = {
       notifyAction(engineToRemove, SEARCH_ENGINE_REMOVED);
 
       // Since we removed an engine, we need to update the preferences.
-      this._needToSetOrderPrefs = true;
+      this._saveSortedEngineList();
     }
   },
 
@@ -3560,7 +3556,7 @@ SearchService.prototype = {
     notifyAction(engine, SEARCH_ENGINE_CHANGED);
 
     // Since we moved an engine, we need to update the preferences.
-    this._needToSetOrderPrefs = true;
+    this._saveSortedEngineList();
   },
 
   restoreDefaultEngines: function SRCH_SVC_resetDefaultEngines() {
@@ -3668,7 +3664,6 @@ SearchService.prototype = {
 
       case QUIT_APPLICATION_TOPIC:
         this._removeObservers();
-        this._saveSortedEngineList();
         if (this._batchTimer) {
           // Flush to disk immediately
           this._batchTimer.cancel();
