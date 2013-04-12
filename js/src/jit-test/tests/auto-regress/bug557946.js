@@ -1,7 +1,7 @@
 // Binary: cache/js-dbg-64-6f1a38b94754-linux
 // Flags: -j
 //
-/* vim: set ts=4 sw=4 tw=99 et: */
+/* vim: set ts=8 sts=4 et sw=4 tw=99: */
 
 var x = 0;
 var y = 0;

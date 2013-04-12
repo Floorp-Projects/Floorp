@@ -1,4 +1,4 @@
-// vim: set ts=4 sw=4 tw=99 et:
+// vim: set ts=8 sts=4 et sw=4 tw=99:
 function randomFloat () {
     // note that in fuzz-testing, this can used as the size of a buffer to allocate.
     // so it shouldn't return astronomic values. The maximum value 10000000 is already quite big.
