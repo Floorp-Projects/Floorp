@@ -72,6 +72,7 @@ webidl_files = \
   FormData.webidl \
   Function.webidl \
   GainNode.webidl \
+  Geolocation.webidl \
   HTMLAnchorElement.webidl \
   HTMLAppletElement.webidl \
   HTMLAreaElement.webidl \

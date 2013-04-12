@@ -84,7 +84,6 @@
 #include "StructuredCloneUtils.h"
 #include "TabParent.h"
 #include "URIUtils.h"
-#include "nsGeolocation.h"
 
 #ifdef ANDROID
 # include "gfxAndroidPlatform.h"
@@ -2370,7 +2369,7 @@ ContentParent::RecvFilePathUpdateNotify(const nsString& aType, const nsString& a
 static int32_t
 AddGeolocationListener(nsIDOMGeoPositionCallback* watcher, bool highAccuracy)
 {
-  nsCOMPtr<nsIGeolocation> geo = do_GetService("@mozilla.org/geolocation;1");
+  nsCOMPtr<nsIDOMGeoGeolocation> geo = do_GetService("@mozilla.org/geolocation;1");
   if (!geo) {
     return -1;
   }

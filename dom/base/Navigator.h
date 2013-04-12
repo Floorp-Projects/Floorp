@@ -31,9 +31,14 @@
 
 class nsPluginArray;
 class nsMimeTypeArray;
-class nsGeolocation;
 class nsPIDOMWindow;
 class nsIDOMMozConnection;
+
+namespace mozilla {
+namespace dom {
+class nsGeolocation;
+}
+}
 
 #ifdef MOZ_MEDIA_NAVIGATOR
 #include "nsIDOMNavigatorUserMedia.h"
