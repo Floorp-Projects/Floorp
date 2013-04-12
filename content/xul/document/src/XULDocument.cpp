@@ -1520,25 +1520,6 @@ XULDocument::GetHeight(ErrorResult& aRv)
     return height;
 }
 
-nsIGlobalObject*
-GetScopeObjectOfNode(nsIDOMNode* node)
-{
-    // Window root occasionally keeps alive a node of a document whose
-    // window is already dead. If in this brief period someone calls
-    // GetPopupNode and we return that node, nsNodeSH::PreCreate will throw,
-    // because it will not know which scope this node belongs to. Returning
-    // an orphan node like that to JS would be a bug anyway, so to avoid
-    // this, let's do the same check as nsNodeSH::PreCreate does to
-    // determine the scope and if it fails let's just return null in
-    // XULDocument::GetPopupNode.
-    nsIDocument* doc = nullptr;
-    for (nsCOMPtr<nsINode> inode = do_QueryInterface(node);
-         !doc && inode; inode = inode->GetParent()) {
-        doc = inode->OwnerDoc();
-    }
-    return doc ? doc->GetScopeObject() : nullptr;
-}
-
 //----------------------------------------------------------------------
 //
 // nsIDOMXULDocument interface
@@ -1561,10 +1542,8 @@ XULDocument::GetPopupNode(nsIDOMNode** aNode)
         }
     }
 
-    if (node && nsContentUtils::CanCallerAccess(node)
-        && GetScopeObjectOfNode(node)) {
-        node.swap(*aNode);
-    }
+    if (node && nsContentUtils::CanCallerAccess(node))
+      node.swap(*aNode);
 
     return NS_OK;
 }

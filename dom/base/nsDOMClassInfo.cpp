@@ -5707,6 +5707,18 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
   // See http://bugzilla.mozilla.org/show_bug.cgi?id=227417
   nsIDocument* doc = node->OwnerDoc();
 
+  // If we have a document, make sure one of these is true
+  // (1) it has a script handling object,
+  // (2) has had one, or has been marked to have had one,
+  // (3) we are running a privileged script.
+  // Event handling is possible only if (1). If (2) event handling is prevented.
+  // If document has never had a script handling object,
+  // untrusted scripts (3) shouldn't touch it!
+  bool hasHadScriptHandlingObject = false;
+  NS_ENSURE_STATE(doc->GetScriptHandlingObject(hasHadScriptHandlingObject) ||
+                  hasHadScriptHandlingObject ||
+                  nsContentUtils::IsCallerChrome());
+
   nsINode *native_parent;
 
   bool nodeIsElement = node->IsElement();
@@ -5755,14 +5767,26 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
     }
   } else {
     // We're called for a document object; set the parent to be the
-    // document's global object
+    // document's global object, if there is one
 
-    // Document should know its global but if the owner window of the
-    // document is already dead at this point, then just throw.
-    nsIGlobalObject* scope = doc->GetScopeObject();
-    NS_ENSURE_TRUE(scope, NS_ERROR_UNEXPECTED);
+    // Get the scope object from the document.
+    nsISupports *scope = doc->GetScopeObject();
 
-    *parentObj = scope->GetGlobalJSObject();
+    if (scope) {
+        jsval v;
+        nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+        nsresult rv = WrapNative(cx, globalObj, scope, false, &v,
+                                 getter_AddRefs(holder));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        holder->GetJSObject(parentObj);
+    }
+    else {
+      // No global object reachable from this document, use the
+      // global object that was passed to this method.
+
+      *parentObj = globalObj;
+    }
 
     // No slim wrappers for a document's scope object.
     return node->ChromeOnlyAccess() ?
