@@ -379,6 +379,7 @@
 	"dom/tests/mochitest/general/test_interfaces.html":"",
 	"dom/tests/mochitest/geolocation/test_allowCurrent.html":"",
 	"dom/tests/mochitest/geolocation/test_allowWatch.html":"",
+	"dom/tests/mochitest/geolocation/test_cachedPosition.html":"",
 	"dom/tests/mochitest/geolocation/test_cancelCurrent.html":"",
 	"dom/tests/mochitest/geolocation/test_cancelWatch.html":"",
 	"dom/tests/mochitest/geolocation/test_clearWatch.html":"",
