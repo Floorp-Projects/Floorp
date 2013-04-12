@@ -36,6 +36,7 @@ webidl_files = \
   CommandEvent.webidl \
   Comment.webidl \
   CompositionEvent.webidl \
+  Coordinates.webidl \
   CSS.webidl \
   CSSPrimitiveValue.webidl \
   CSSStyleDeclaration.webidl \
@@ -163,6 +164,7 @@ webidl_files = \
   Performance.webidl \
   PerformanceNavigation.webidl \
   PerformanceTiming.webidl \
+  Position.webidl \
   ProcessingInstruction.webidl \
   Range.webidl \
   Rect.webidl \
