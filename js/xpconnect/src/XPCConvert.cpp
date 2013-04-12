@@ -829,7 +829,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
     nsWrapperCache *cache = aHelper.GetWrapperCache();
 
     bool tryConstructSlimWrapper = false;
-    JSObject *flat;
+    JS::RootedObject flat(cx);
     if (cache) {
         flat = cache->GetWrapper();
         if (cache->IsDOMBinding()) {
@@ -845,7 +845,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
             }
 
             if (flat) {
-                if (allowNativeWrapper && !JS_WrapObject(ccx, &flat))
+                if (allowNativeWrapper && !JS_WrapObject(ccx, flat.address()))
                     return false;
 
                 return CreateHolderIfNeeded(ccx, flat, d, dest);
@@ -975,7 +975,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
     // The call to wrap here handles both cross-compartment and same-compartment
     // security wrappers.
     JSObject *original = flat;
-    if (!JS_WrapObject(ccx, &flat))
+    if (!JS_WrapObject(ccx, flat.address()))
         return false;
 
     *d = OBJECT_TO_JSVAL(flat);

@@ -63,7 +63,7 @@ ShadowLayersChild::DeallocPLayer(PLayerChild* actor)
 }
 
 PCompositableChild*
-ShadowLayersChild::AllocPCompositable(const CompositableType& aType)
+ShadowLayersChild::AllocPCompositable(const TextureInfo& aInfo)
 {
   return new CompositableChild();
 }

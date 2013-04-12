@@ -86,7 +86,7 @@ protected:
   virtual PLayerParent* AllocPLayer() MOZ_OVERRIDE;
   virtual bool DeallocPLayer(PLayerParent* actor) MOZ_OVERRIDE;
 
-  virtual PCompositableParent* AllocPCompositable(const CompositableType& aType) MOZ_OVERRIDE;
+  virtual PCompositableParent* AllocPCompositable(const TextureInfo& aInfo) MOZ_OVERRIDE;
   virtual bool DeallocPCompositable(PCompositableParent* actor) MOZ_OVERRIDE;
   
   void Attach(ShadowLayerParent* aLayerParent, CompositableParent* aCompositable);

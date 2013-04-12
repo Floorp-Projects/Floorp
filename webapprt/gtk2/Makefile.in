@@ -32,6 +32,8 @@ LIBS = \
 
 NSDISTMODE = copy
 
+PROGRAMS_DEST = $(DIST)/bin
+
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS += \
