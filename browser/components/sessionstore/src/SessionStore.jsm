@@ -3660,6 +3660,7 @@ let SessionStoreInternal = {
       }
     }
 
+#ifndef XP_MACOSX
     // Don't save invalid states.
     // Looks like we currently have private windows, only.
     if (oState.windows.length == 0) {
@@ -3667,6 +3668,7 @@ let SessionStoreInternal = {
       TelemetryStopwatch.cancel("FX_SESSION_RESTORE_COLLECT_DATA_LONGEST_OP_MS");
       return;
     }
+#endif
 
     for (let i = oState._closedWindows.length - 1; i >= 0; i--) {
       if (oState._closedWindows[i].isPrivate) {
