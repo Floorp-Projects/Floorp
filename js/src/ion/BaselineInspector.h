@@ -95,6 +95,8 @@ class BaselineInspector
     SetElemICInspector setElemICInspector(jsbytecode *pc) {
         return makeICInspector<SetElemICInspector>(pc, ICStub::SetElem_Fallback);
     }
+
+    MIRType expectedResultType(jsbytecode *pc);
 };
 
 } // namespace ion

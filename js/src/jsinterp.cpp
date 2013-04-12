@@ -1013,19 +1013,6 @@ js::IteratorNext(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
     return js_IteratorNext(cx, iterobj, rval);
 }
 
-/*
- * For bytecodes which push values and then fall through, make sure the
- * types of the pushed values are consistent with type inference information.
- */
-static inline void
-TypeCheckNextBytecode(JSContext *cx, HandleScript script, unsigned n, const FrameRegs &regs)
-{
-#ifdef DEBUG
-    if (cx->typeInferenceEnabled() && n == GetBytecodeLength(regs.pc))
-        TypeScript::CheckBytecode(cx, script, regs.pc, regs.sp);
-#endif
-}
-
 JS_NEVER_INLINE InterpretStatus
 js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode, bool useNewType)
 {
@@ -1248,7 +1235,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode, bool
         JS_ASSERT(js_CodeSpec[op].length == 1);
         len = 1;
       advance_pc:
-        TypeCheckNextBytecode(cx, script, len, regs);
         js::gc::MaybeVerifyBarriers(cx);
         regs.pc += len;
         op = (JSOp) *regs.pc;
@@ -3696,6 +3682,12 @@ js::SetObjectElement(JSContext *cx, HandleObject obj, HandleValue index, HandleV
     if (!ValueToId<CanGC>(cx, index, &id))
         return false;
     return SetObjectElementOperation(cx, obj, id, value, strict, script, pc);
+}
+
+bool
+js::InitElementArray(JSContext *cx, jsbytecode *pc, HandleObject obj, uint32_t index, HandleValue value)
+{
+    return InitArrayElemOperation(cx, pc, obj, index, value);
 }
 
 bool

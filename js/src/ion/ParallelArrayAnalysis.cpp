@@ -220,6 +220,7 @@ class ParallelArrayVisitor : public MInstructionVisitor
     UNSAFE_OP(CallsiteCloneCache)
     UNSAFE_OP(CallGetElement)
     UNSAFE_OP(CallSetElement)
+    UNSAFE_OP(CallInitElementArray)
     UNSAFE_OP(CallSetProperty)
     UNSAFE_OP(DeleteProperty)
     UNSAFE_OP(SetPropertyCache)
@@ -771,8 +772,6 @@ GetPossibleCallees(JSContext *cx, HandleScript script, jsbytecode *pc,
 bool
 ParallelArrayVisitor::visitCall(MCall *ins)
 {
-    JS_ASSERT(ins->getSingleTarget() || ins->calleeTypes());
-
     // DOM? Scary.
     if (ins->isDOMFunction()) {
         SpewMIR(ins, "call to dom function");
@@ -794,9 +793,12 @@ ParallelArrayVisitor::visitCall(MCall *ins)
         return markUnsafe();
     }
 
+    types::StackTypeSet *calleeTypes = ins->getFunction()->resultTypeSet();
+    JS_ASSERT(calleeTypes);
+
     RootedScript script(cx_, ins->block()->info().script());
     return GetPossibleCallees(cx_, script, ins->resumePoint()->pc(),
-                              ins->calleeTypes(), graph_);
+                              calleeTypes, graph_);
 }
 
 /////////////////////////////////////////////////////////////////////////////
