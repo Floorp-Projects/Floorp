@@ -1137,14 +1137,6 @@ gfxFontCache::MemoryReporter::CollectReports
     return NS_OK;
 }
 
-NS_IMETHODIMP
-gfxFontCache::MemoryReporter::GetExplicitNonHeap(int64_t* aAmount)
-{
-    // This reporter only measures heap memory.
-    *aAmount = 0;
-    return NS_OK;
-}
-
 // Observer for the memory-pressure notification, to trigger
 // flushing of the shaped-word caches
 class MemoryPressureObserver MOZ_FINAL : public nsIObserver,
