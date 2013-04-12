@@ -10,6 +10,8 @@
 
 #include "mozilla/FloatingPoint.h"
 
+#include "jscpucfg.h"
+
 #include <math.h>
 
 /* A NaN whose bit pattern conforms to JS::Value's bit pattern restrictions. */
