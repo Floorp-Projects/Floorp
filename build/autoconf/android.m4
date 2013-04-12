@@ -109,6 +109,8 @@ case "$target" in
         NSPR_CONFIGURE_ARGS="$NSPR_CONFIGURE_ARGS --with-android-toolchain=$android_toolchain"
     fi
 
+    NSPR_CONFIGURE_ARGS="$NSPR_CONFIGURE_ARGS --with-android-version=$android_version"
+
     if test -z "$android_platform" ; then
         AC_MSG_CHECKING([for android platform directory])
 
@@ -184,11 +186,8 @@ case "$target" in
     ANDROID_NDK="${android_ndk}"
     ANDROID_TOOLCHAIN="${android_toolchain}"
     ANDROID_PLATFORM="${android_platform}"
-    ANDROID_VERSION="${android_version}"
 
     AC_DEFINE(ANDROID)
-    AC_DEFINE_UNQUOTED(ANDROID_VERSION, $android_version)
-    AC_SUBST(ANDROID_VERSION)
     CROSS_COMPILE=1
     AC_SUBST(ANDROID_NDK)
     AC_SUBST(ANDROID_TOOLCHAIN)
