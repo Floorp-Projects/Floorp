@@ -36,23 +36,24 @@ CanvasClient::CreateCanvasClient(LayersBackend aParentBackend,
 }
 
 void
-CanvasClient::SetBuffer(const TextureIdentifier& aTextureIdentifier,
-                        const SurfaceDescriptor& aBuffer)
+CanvasClient::Updated()
 {
-  mTextureClient->SetDescriptor(aBuffer);
+  mForwarder->UpdateTexture(this, 1, mTextureClient->GetDescriptor());
 }
+
 
 CanvasClient2D::CanvasClient2D(CompositableForwarder* aFwd,
                                TextureFlags aFlags)
 : CanvasClient(aFwd, aFlags)
 {
+  mTextureInfo.mCompositableType = BUFFER_IMAGE_SINGLE;
 }
 
 void
 CanvasClient2D::Update(gfx::IntSize aSize, BasicCanvasLayer* aLayer)
 {
   if (!mTextureClient) {
-    mTextureClient = CreateTextureClient(TEXTURE_SHMEM, mFlags);
+    mTextureClient = CreateTextureClient(TEXTURE_SHMEM);
   }
 
   bool isOpaque = (aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE);
@@ -70,13 +71,14 @@ CanvasClientWebGL::CanvasClientWebGL(CompositableForwarder* aFwd,
                                      TextureFlags aFlags)
 : CanvasClient(aFwd, aFlags)
 {
+  mTextureInfo.mCompositableType = BUFFER_IMAGE_BUFFERED;
 }
 
 void
 CanvasClientWebGL::Update(gfx::IntSize aSize, BasicCanvasLayer* aLayer)
 {
   if (!mTextureClient) {
-    mTextureClient = CreateTextureClient(TEXTURE_STREAM_GL, mFlags);
+    mTextureClient = CreateTextureClient(TEXTURE_STREAM_GL);
   }
 
   NS_ASSERTION(aLayer->mGLContext, "CanvasClientWebGL should only be used with GL canvases");

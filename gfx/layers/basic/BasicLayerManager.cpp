@@ -8,7 +8,6 @@
 #include "mozilla/layers/PLayerChild.h"
 #include "mozilla/layers/PLayersChild.h"
 #include "mozilla/layers/PLayersParent.h"
-#include "mozilla/layers/TextureChild.h"
 
 #include "gfxSharedImageSurface.h"
 #include "gfxImageSurface.h"
@@ -1244,13 +1243,12 @@ BasicShadowLayerManager::ForwardTransaction()
 
         const OpTextureSwap& ots = reply.get_OpTextureSwap();
 
-        PTextureChild* textureChild = ots.textureChild();
-        MOZ_ASSERT(textureChild);
+        CompositableChild* compositableChild =
+          static_cast<CompositableChild*>(ots.compositableChild());
+        MOZ_ASSERT(compositableChild);
 
-        TextureClient* texClient =
-          static_cast<TextureChild*>(textureChild)->GetTextureClient();
-
-        texClient->SetDescriptorFromReply(ots.image());
+        compositableChild->GetCompositableClient()
+          ->SetDescriptorFromReply(ots.textureId(), ots.image());
         break;
       }
 
