@@ -62,18 +62,6 @@ members = [
     'nsIDOMMozNamedAttrMap.length',
     'nsIDOMDOMStringList.*',
 
-    'nsIDOMEvent.type',
-    'nsIDOMEvent.target',
-    'nsIDOMEvent.currentTarget',
-    'nsIDOMEvent.eventPhase',
-    'nsIDOMEvent.bubbles',
-    'nsIDOMEvent.cancelable',
-    'nsIDOMEvent.timeStamp',
-    'nsIDOMEvent.stopPropagation',
-    'nsIDOMEvent.preventDefault',
-    'nsIDOMEvent.initEvent',
-    'nsIDOMEvent.defaultPrevented',
-    'nsIDOMEvent.stopImmediatePropagation',
     'nsIDOMKeyEvent.*',
     'nsIDOMDragEvent.*',
     'nsIDOMNotifyPaintEvent.*',
@@ -207,6 +195,9 @@ customIncludes = [
     'nsPerformance.h',
     'mozilla/dom/HTMLDocumentBinding.h',
     'mozilla/dom/EventTargetBinding.h',
+    'mozilla/dom/EventBinding.h',
+    'mozilla/dom/MouseEventBinding.h',
+    'mozilla/dom/UIEventBinding.h',
     ]
 
 customReturnInterfaces = [
@@ -256,4 +247,7 @@ newBindingProperties = {
     'nsIDOMDocument': 'mozilla::dom::DocumentBinding::sNativePropertyHooks.mNativeProperties.regular',
     'nsIDOMHTMLDocument': 'mozilla::dom::HTMLDocumentBinding::sNativePropertyHooks.mNativeProperties.regular',
     'nsIDOMEventTarget': 'mozilla::dom::EventTargetBinding::sNativePropertyHooks.mNativeProperties.regular',
+    'nsIDOMEvent': 'mozilla::dom::EventBinding::sNativePropertyHooks.mNativeProperties.regular',
+    'nsIDOMMouseEvent': 'mozilla::dom::MouseEventBinding::sNativePropertyHooks.mNativeProperties.regular',
+    'nsIDOMUIEvent': 'mozilla::dom::UIEventBinding::sNativePropertyHooks.mNativeProperties.regular',
     }
