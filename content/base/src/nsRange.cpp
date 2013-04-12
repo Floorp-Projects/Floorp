@@ -1392,7 +1392,7 @@ nsRange::SelectNodeContents(nsINode& aNode, ErrorResult& aRv)
 // start/end points in the future, we can switchover relatively
 // easy.
 
-class NS_STACK_CLASS RangeSubtreeIterator
+class MOZ_STACK_CLASS RangeSubtreeIterator
 {
 private:
 

@@ -1153,7 +1153,7 @@ nsSVGElement::ClassName()
 
 namespace {
 
-class MappedAttrParser {
+class MOZ_STACK_CLASS MappedAttrParser {
 public:
   MappedAttrParser(css::Loader* aLoader,
                    nsIURI* aDocURI,
