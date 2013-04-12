@@ -58,12 +58,13 @@ const RWX_OWNER = 0700;
 //   * MEMORY_JS_GC_HEAP, and
 //   * MEMORY_JS_COMPARTMENTS_SYSTEM.
 //
+// We used to measure "explicit" too, but it could cause hangs, and the data
+// was always really noisy anyway.  See bug 859657.
 const MEM_HISTOGRAMS = {
   "js-gc-heap": "MEMORY_JS_GC_HEAP",
   "js-compartments/system": "MEMORY_JS_COMPARTMENTS_SYSTEM",
   "js-compartments/user": "MEMORY_JS_COMPARTMENTS_USER",
   "js-main-runtime-temporary-peak": "MEMORY_JS_MAIN_RUNTIME_TEMPORARY_PEAK",
-  "explicit": "MEMORY_EXPLICIT",
   "resident-fast": "MEMORY_RESIDENT",
   "vsize": "MEMORY_VSIZE",
   "storage-sqlite": "MEMORY_STORAGE_SQLITE",
