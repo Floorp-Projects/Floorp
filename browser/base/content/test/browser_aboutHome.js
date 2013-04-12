@@ -273,7 +273,8 @@ function test()
       info("Cleanup");
       gBrowser.removeCurrentTab();
     }
-
+  }).then(finish, ex => {
+    ok(false, "Unexpected Exception: " + ex);
     finish();
   });
 }
