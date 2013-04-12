@@ -30,14 +30,23 @@ using namespace mozilla;
 
 #if defined(DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
 
+template <typename T>
+bool
+CheckNonAddressThing(uintptr_t *w, T *t)
+{
+    return w >= (uintptr_t*)t && w < (uintptr_t*)(t + 1);
+}
+
 JS_ALWAYS_INLINE bool
 CheckStackRootThing(uintptr_t *w, void *address, ThingRootKind kind)
 {
-    if (kind != THING_ROOT_BINDINGS)
-        return address == static_cast<void*>(w);
+    if (kind == THING_ROOT_BINDINGS)
+        return CheckNonAddressThing(w, static_cast<Bindings*>(address));
 
-    Bindings *bp = static_cast<Bindings*>(address);
-    return w >= (uintptr_t*)bp && w < (uintptr_t*)(bp + 1);
+    if (kind == THING_ROOT_PROPERTY_DESCRIPTOR)
+        return CheckNonAddressThing(w, static_cast<PropertyDescriptor*>(address));
+
+    return address == static_cast<void*>(w);
 }
 
 struct Rooter {
