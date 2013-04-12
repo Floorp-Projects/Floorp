@@ -42,13 +42,7 @@ XPCOMUtils.defineLazyGetter(this, "gBuiltInWidgets", function() {
     // viewId.
     // XXXmconley: Is this too magical?
     onViewShowing: function(aEvent) {
-      // Populate our list of bookmarks
-      // Right now, I just jam in a tall vbox to simulate making the view
-      // tall before switching to it.
       LOG("Bookmark view is being shown!");
-      let doc = aEvent.detail.ownerDocument;
-      let vbox = doc.getElementById("PanelUI-bookmarks-tall-maker");
-      vbox.style.height = "500px";
     },
     onViewHiding: function(aEvent) {
       LOG("Bookmark view is being hidden!");

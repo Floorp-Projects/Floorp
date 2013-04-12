@@ -61,8 +61,13 @@
       <box id="PanelUI-clickCapturer">
       </box>
 
-      <deck id="PanelUI-subViews" flex="1">
-        <vbox id="PanelUI-bookmarks" flex="1">
+      <!-- We manually set display: none (via a CSS attribute selector) on the
+           subviews that are not being displayed. We're using this over a deck
+           because a deck assumes the size of its largest child, regardless of
+           whether or not it is shown. That's not good for our case, since we
+           want to allow each subview to be uniquely sized. -->
+      <box id="PanelUI-subViews">
+        <vbox id="PanelUI-bookmarks" class="PanelUI-subView" flex="1">
           <label value="&appMenuBookmarks.label;"/>
           <vbox flex="1">
             <toolbarbutton label="&bookmarkThisPageCmd.label;"/>
@@ -72,7 +77,7 @@
           </vbox>
           <vbox id="PanelUI-bookmarks-tall-maker" />
         </vbox>
-      </deck>
+      </box>
     </stack>
   </box>
 </panel>
