@@ -97,6 +97,8 @@ public:
 
   uint64_t Timestamp() const;
 
+  nsIDOMGeoPosition* GetWrappedGeoPosition() { return mGeoPosition; }
+
 private:
   nsRefPtr<Coordinates> mCoordinates;
   nsCOMPtr<nsISupports> mParent;
