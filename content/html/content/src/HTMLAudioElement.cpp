@@ -56,7 +56,9 @@ HTMLAudioElement::~HTMLAudioElement()
 
 
 already_AddRefed<HTMLAudioElement>
-HTMLAudioElement::Audio(const GlobalObject& aGlobal, ErrorResult& aRv)
+HTMLAudioElement::Audio(const GlobalObject& aGlobal,
+                        const Optional<nsAString>& aSrc,
+                        ErrorResult& aRv)
 {
   nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aGlobal.Get());
   nsIDocument* doc;
@@ -76,15 +78,8 @@ HTMLAudioElement::Audio(const GlobalObject& aGlobal, ErrorResult& aRv)
     return nullptr;
   }
 
-  return audio.forget();
-}
-
-already_AddRefed<HTMLAudioElement>
-HTMLAudioElement::Audio(const GlobalObject& aGlobal, const nsAString& aSrc, ErrorResult& aRv)
-{
-  nsRefPtr<HTMLAudioElement> audio = Audio(aGlobal, aRv);
-  if (audio) {
-    aRv = audio->SetSrc(aSrc);
+  if (aSrc.WasPassed()) {
+    aRv = audio->SetSrc(aSrc.Value());
   }
 
   return audio.forget();
