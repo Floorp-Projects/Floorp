@@ -75,9 +75,24 @@ case "$target" in
             mipsel)
                 target_name=mipsel-linux-android-$version
                 ;;
+            *)
+                AC_MSG_ERROR([target cpu is not supported])
+                ;;
             esac
-            android_toolchain="$android_ndk"/toolchains/$target_name/prebuilt/$kernel_name-x86
-
+            case "$host_cpu" in
+            i*86)
+                android_toolchain="$android_ndk"/toolchains/$target_name/prebuilt/$kernel_name-x86
+                ;;
+            x86_64)
+                android_toolchain="$android_ndk"/toolchains/$target_name/prebuilt/$kernel_name-x86_64
+                if ! test -d "$android_toolchain" ; then
+                    android_toolchain="$android_ndk"/toolchains/$target_name/prebuilt/$kernel_name-x86
+                fi
+                ;;
+            *)
+                AC_MSG_ERROR([No known toolchain for your host cpu])
+                ;;
+            esac
             if test -d "$android_toolchain" ; then
                 android_gnu_compiler_version=$version
                 break
@@ -91,6 +106,7 @@ case "$target" in
         else
             AC_MSG_RESULT([$android_toolchain])
         fi
+        NSPR_CONFIGURE_ARGS="$NSPR_CONFIGURE_ARGS --with-android-toolchain=$android_toolchain"
     fi
 
     if test -z "$android_platform" ; then
@@ -115,6 +131,7 @@ case "$target" in
         else
             AC_MSG_ERROR([not found. You have to specify --with-android-platform=/path/to/ndk/platform.])
         fi
+        NSPR_CONFIGURE_ARGS="$NSPR_CONFIGURE_ARGS --with-android-platform=$android_platform"
     fi
 
     dnl Old NDK support. If minimum requirement is changed to NDK r8b,

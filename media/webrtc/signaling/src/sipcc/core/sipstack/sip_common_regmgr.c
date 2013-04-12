@@ -2653,7 +2653,7 @@ sip_regmgr_register_lines (boolean prime_only, boolean skip_prime)
         if (sip_config_check_line((line_t) (ndx - TEL_CCB_END))) {
             ccb = sip_sm_get_ccb_by_index(ndx);
             if (ccb) {
-                CCSIP_DEBUG_REG_STATE(DEB_L_C_F_PREFIX"%d, 0x%x\n",
+                CCSIP_DEBUG_REG_STATE(DEB_L_C_F_PREFIX"%d, %p",
                                       DEB_L_C_F_PREFIX_ARGS(SIP_REG, ccb->index, ccb->dn_line, fname),
                                       ndx, ccb);
 
@@ -3395,7 +3395,7 @@ void regmgr_handle_register_update(line_t last_available_line)
                  line_ccb = sip_sm_get_ccb_by_index(line_index);
                  if (line_ccb) {
                     if (sip_config_check_line(line_ccb->dn_line)) {
-                        CCSIP_DEBUG_REG_STATE(DEB_L_C_F_PREFIX"%d: 0x%x\n",
+                        CCSIP_DEBUG_REG_STATE(DEB_L_C_F_PREFIX"%d: %p",
                                               DEB_L_C_F_PREFIX_ARGS(SIP_CONFIG, line_ccb->index, line_ccb->dn_line, fname),
                                               line_index, line_ccb);
                    }
@@ -3413,7 +3413,7 @@ void regmgr_handle_register_update(line_t last_available_line)
                  line_ccb = sip_sm_get_ccb_by_index(line_index);
                  if (line_ccb) {
                     if (sip_config_check_line(line_ccb->dn_line)) {
-                        CCSIP_DEBUG_REG_STATE(DEB_L_C_F_PREFIX"%d: 0x%x\n",
+                        CCSIP_DEBUG_REG_STATE(DEB_L_C_F_PREFIX"%d: %p",
                                               DEB_L_C_F_PREFIX_ARGS(SIP_CONFIG, line_ccb->index, line_ccb->dn_line, fname),
                                               line_index, line_ccb);
 

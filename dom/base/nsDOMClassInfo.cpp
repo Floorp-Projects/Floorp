@@ -119,12 +119,6 @@
 // HTMLSelectElement helper includes
 #include "nsIDOMHTMLSelectElement.h"
 
-// HTMLEmbed/ObjectElement helper includes
-#include "nsNPAPIPluginInstance.h"
-#include "nsIObjectFrame.h"
-#include "nsObjectLoadingContent.h"
-#include "nsIPluginHost.h"
-
 #include "nsIDOMHTMLOptionElement.h"
 
 // Event related includes
@@ -192,12 +186,9 @@
 #include "nsIDOMElementCSSInlineStyle.h"
 #include "nsIDOMLinkStyle.h"
 #include "nsIDOMHTMLDocument.h"
-#include "nsIDOMHTMLAppletElement.h"
 #include "nsIDOMHTMLCanvasElement.h"
-#include "nsIDOMHTMLEmbedElement.h"
 #include "nsIDOMHTMLIFrameElement.h"
 #include "nsIDOMHTMLInputElement.h"
-#include "nsIDOMHTMLObjectElement.h"
 #include "nsIDOMCSSCharsetRule.h"
 #include "nsIDOMCSSImportRule.h"
 #include "nsIDOMCSSMediaRule.h"
@@ -284,7 +275,6 @@
 #include "nsDOMFile.h"
 #include "nsDOMFileReader.h"
 
-#include "nsIDOMDesktopNotification.h"
 #include "nsIDOMNavigatorDesktopNotification.h"
 #include "nsIDOMNavigatorDeviceStorage.h"
 #include "nsIDOMNavigatorGeolocation.h"
@@ -418,14 +408,6 @@ static const char kDOMStringBundleURL[] =
 #define ELEMENT_SCRIPTABLE_FLAGS                                              \
   ((NODE_SCRIPTABLE_FLAGS & ~nsIXPCScriptable::CLASSINFO_INTERFACES_ONLY) |   \
    nsIXPCScriptable::WANT_POSTCREATE)
-
-#define EXTERNAL_OBJ_SCRIPTABLE_FLAGS                                         \
-  ((ELEMENT_SCRIPTABLE_FLAGS &                                                \
-    ~nsIXPCScriptable::USE_JSSTUB_FOR_SETPROPERTY) |                          \
-   nsIXPCScriptable::WANT_POSTCREATE |                                        \
-   nsIXPCScriptable::WANT_GETPROPERTY |                                       \
-   nsIXPCScriptable::WANT_SETPROPERTY |                                       \
-   nsIXPCScriptable::WANT_CALL)
 
 #define DOCUMENT_SCRIPTABLE_FLAGS                                             \
   (NODE_SCRIPTABLE_FLAGS |                                                    \
@@ -657,10 +639,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOCUMENT_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_GETPROPERTY)
   // HTML element classes
-  NS_DEFINE_CLASSINFO_DATA(HTMLAppletElement, nsHTMLPluginObjElementSH,
-                           EXTERNAL_OBJ_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(HTMLEmbedElement, nsHTMLPluginObjElementSH,
-                           EXTERNAL_OBJ_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLFormElement, nsHTMLFormElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_GETPROPERTY |
@@ -669,8 +647,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLInputElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(HTMLObjectElement, nsHTMLPluginObjElementSH,
-                           EXTERNAL_OBJ_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLSelectElement, nsHTMLSelectElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_SETPROPERTY |
@@ -966,11 +942,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                                        DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CHROME_ONLY_CLASSINFO_DATA(ChromeMessageSender, nsDOMGenericSH,
                                        DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
-  NS_DEFINE_CLASSINFO_DATA(DesktopNotification, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(DesktopNotificationCenter, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA_WITH_NAME(IDBFileHandle, FileHandle, nsEventTargetSH,
                            EVENTTARGET_SCRIPTABLE_FLAGS)
@@ -1956,17 +1927,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_DOCUMENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(HTMLAppletElement, nsIDOMHTMLAppletElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLAppletElement)
-    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(HTMLEmbedElement, nsIDOMHTMLEmbedElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLEmbedElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMGetSVGDocument)
-    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(HTMLFormElement, nsIDOMHTMLFormElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLFormElement)
     DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
@@ -1981,12 +1941,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(HTMLInputElement, nsIDOMHTMLInputElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLInputElement)
-    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(HTMLObjectElement, nsIDOMHTMLObjectElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLObjectElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMGetSVGDocument)
     DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
@@ -2450,14 +2404,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIFrameScriptLoader)
     DOM_CLASSINFO_MAP_ENTRY(nsIMessageListenerManager)
     DOM_CLASSINFO_MAP_ENTRY(nsIMessageSender)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(DesktopNotification, nsIDOMDesktopNotification)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDesktopNotification)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(DesktopNotificationCenter, nsIDOMDesktopNotificationCenter)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDesktopNotificationCenter)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(IDBFileHandle, nsIDOMFileHandle)
@@ -5775,18 +5721,6 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
   // See http://bugzilla.mozilla.org/show_bug.cgi?id=227417
   nsIDocument* doc = node->OwnerDoc();
 
-  // If we have a document, make sure one of these is true
-  // (1) it has a script handling object,
-  // (2) has had one, or has been marked to have had one,
-  // (3) we are running a privileged script.
-  // Event handling is possible only if (1). If (2) event handling is prevented.
-  // If document has never had a script handling object,
-  // untrusted scripts (3) shouldn't touch it!
-  bool hasHadScriptHandlingObject = false;
-  NS_ENSURE_STATE(doc->GetScriptHandlingObject(hasHadScriptHandlingObject) ||
-                  hasHadScriptHandlingObject ||
-                  nsContentUtils::IsCallerChrome());
-
   nsINode *native_parent;
 
   bool nodeIsElement = node->IsElement();
@@ -5835,26 +5769,14 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
     }
   } else {
     // We're called for a document object; set the parent to be the
-    // document's global object, if there is one
+    // document's global object
 
-    // Get the scope object from the document.
-    nsISupports *scope = doc->GetScopeObject();
+    // Document should know its global but if the owner window of the
+    // document is already dead at this point, then just throw.
+    nsIGlobalObject* scope = doc->GetScopeObject();
+    NS_ENSURE_TRUE(scope, NS_ERROR_UNEXPECTED);
 
-    if (scope) {
-        jsval v;
-        nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-        nsresult rv = WrapNative(cx, globalObj, scope, false, &v,
-                                 getter_AddRefs(holder));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        holder->GetJSObject(parentObj);
-    }
-    else {
-      // No global object reachable from this document, use the
-      // global object that was passed to this method.
-
-      *parentObj = globalObj;
-    }
+    *parentObj = scope->GetGlobalJSObject();
 
     // No slim wrappers for a document's scope object.
     return node->ChromeOnlyAccess() ?
@@ -6391,10 +6313,11 @@ nsISupports*
 nsNamedNodeMapSH::GetItemAt(nsISupports *aNative, uint32_t aIndex,
                             nsWrapperCache **aCache, nsresult *aResult)
 {
+  *aResult = NS_OK;
   nsDOMAttributeMap* map = nsDOMAttributeMap::FromSupports(aNative);
 
   nsINode *attr;
-  *aCache = attr = map->GetItemAt(aIndex, aResult);
+  *aCache = attr = map->GetItemAt(aIndex);
   return attr;
 }
 
@@ -7384,405 +7307,6 @@ nsHTMLSelectElementSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
   }
 
   return NS_OK;
-}
-
-
-// HTMLObject/EmbedElement helper
-// Keep in mind that it is OK for this to fail to return an instance. Don't return a
-// failure result unless something truly exceptional has happened.
-// static
-nsresult
-nsHTMLPluginObjElementSH::GetPluginInstanceIfSafe(nsIXPConnectWrappedNative *wrapper,
-                                                  JSObject *obj,
-                                                  JSContext *cx,
-                                                  nsNPAPIPluginInstance **_result)
-{
-  *_result = nullptr;
-
-  nsCOMPtr<nsIContent> content;
-  if (wrapper) {
-    content = do_QueryWrappedNative(wrapper, obj);
-  } else {
-    nsISupports* supports;
-    if (XPCConvert::GetISupportsFromJSObject(obj, &supports)) {
-      content = do_QueryInterface(supports);
-    }
-  }
-  NS_ENSURE_TRUE(content, NS_ERROR_UNEXPECTED);
-
-  nsCOMPtr<nsIObjectLoadingContent> objlc(do_QueryInterface(content));
-  NS_ASSERTION(objlc, "Object nodes must implement nsIObjectLoadingContent");
-
-  // The below methods pull the cx off the stack, so make sure they match.
-  //
-  // NB: Sometimes there's a null cx on the stack, in which case |cx| is the
-  // safe JS context. But in that case, IsCallerChrome() will return true,
-  // so the ensuing expression is short-circuited.
-  MOZ_ASSERT_IF(nsContentUtils::GetCurrentJSContext(),
-                cx == nsContentUtils::GetCurrentJSContext());
-
-  bool callerIsContentJS = (!nsContentUtils::IsCallerChrome() &&
-                            !nsContentUtils::IsCallerXBL() &&
-                            js::IsContextRunningJS(cx));
-  return objlc->ScriptRequestPluginInstance(callerIsContentJS,
-                                            _result);
-}
-
-nsHTMLPluginObjElementSH::SetupProtoChainRunner::SetupProtoChainRunner(
-    nsIXPConnectWrappedNative* aWrapper,
-    nsIScriptContext* aScriptContext,
-    nsObjectLoadingContent* aContent)
-  : mWrapper(aWrapper)
-  , mContext(aScriptContext)
-  , mContent(aContent)
-{
-}
-
-NS_IMETHODIMP
-nsHTMLPluginObjElementSH::SetupProtoChainRunner::Run()
-{
-  nsCxPusher pusher;
-  JSContext* cx = mContext ? mContext->GetNativeContext()
-                           : nsContentUtils::GetSafeJSContext();
-  pusher.Push(cx);
-
-  JSObject* obj = nullptr;
-  JSObject* canonicalProto = nullptr;
-  if (mWrapper) {
-    mWrapper->GetJSObject(&obj);
-    NS_ASSERTION(obj, "Should never be null");
-  } else {
-    MOZ_ASSERT(mContent, "Must have mContent if no mWrapper");
-    nsCOMPtr<nsIContent> content;
-    CallQueryInterface(mContent.get(), getter_AddRefs(content));
-    obj = content->GetWrapper();
-    if (!obj) {
-      // No need to set up our proto chain if we don't even have an object
-      return NS_OK;
-    }
-    JSAutoCompartment ac(cx, obj);
-    canonicalProto = static_cast<nsObjectLoadingContent*>(mContent.get())->
-      GetCanonicalPrototype(cx, JS_GetGlobalForObject(cx, obj));
-  }
-  nsHTMLPluginObjElementSH::SetupProtoChain(cx, obj, mWrapper, canonicalProto);
-  return NS_OK;
-}
-
-NS_IMPL_ISUPPORTS1(nsHTMLPluginObjElementSH::SetupProtoChainRunner, nsIRunnable)
-
-// static
-nsresult
-nsHTMLPluginObjElementSH::SetupProtoChain(JSContext *cx,
-                                          JSObject *obj,
-                                          nsIXPConnectWrappedNative *wrapper,
-                                          JSObject* aCanonicalPrototype)
-{
-  NS_ASSERTION(nsContentUtils::IsSafeToRunScript(),
-               "Shouldn't have gotten in here");
-  MOZ_ASSERT(cx == nsContentUtils::GetCurrentJSContext());
-
-  JSAutoRequest ar(cx);
-  JSAutoCompartment ac(cx, obj);
-
-  nsRefPtr<nsNPAPIPluginInstance> pi;
-  nsresult rv = GetPluginInstanceIfSafe(wrapper, obj, cx, getter_AddRefs(pi));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!pi) {
-    // No plugin around for this object.
-
-    return NS_OK;
-  }
-
-  JSObject *pi_obj = nullptr; // XPConnect-wrapped peer object, when we get it.
-  JSObject *pi_proto = nullptr; // 'pi.__proto__'
-
-  rv = GetPluginJSObject(cx, obj, pi, &pi_obj, &pi_proto);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!pi_obj) {
-    // Didn't get a plugin instance JSObject, nothing we can do then.
-    return NS_OK;
-  }
-
-  // If we got an xpconnect-wrapped plugin object, set obj's
-  // prototype's prototype to the scriptable plugin.
-
-  JSObject *my_proto = nullptr;
-
-  if (wrapper) {
-    // Get 'this.__proto__'
-    rv = wrapper->GetJSObjectPrototype(&my_proto);
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    my_proto = aCanonicalPrototype;
-  }
-  MOZ_ASSERT(my_proto);
-
-  // Set 'this.__proto__' to pi
-  if (!::JS_SetPrototype(cx, obj, pi_obj)) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  if (pi_proto && JS_GetClass(pi_proto) != sObjectClass) {
-    // The plugin wrapper has a proto that's not Object.prototype, set
-    // 'pi.__proto__.__proto__' to the original 'this.__proto__'
-    if (pi_proto != my_proto && !::JS_SetPrototype(cx, pi_proto, my_proto)) {
-      return NS_ERROR_UNEXPECTED;
-    }
-  } else {
-    // 'pi' didn't have a prototype, or pi's proto was
-    // 'Object.prototype' (i.e. pi is an NPRuntime wrapped JS object)
-    // set 'pi.__proto__' to the original 'this.__proto__'
-    if (!::JS_SetPrototype(cx, pi_obj, my_proto)) {
-      return NS_ERROR_UNEXPECTED;
-    }
-  }
-
-  // Before this proto dance the objects involved looked like this:
-  //
-  // this.__proto__.__proto__
-  //   ^      ^         ^
-  //   |      |         |__ Object.prototype
-  //   |      |
-  //   |      |__ xpc embed wrapper proto (shared)
-  //   |
-  //   |__ xpc wrapped native embed node
-  //
-  // pi.__proto__
-  // ^      ^
-  // |      |__ Object.prototype
-  // |
-  // |__ Plugin NPRuntime JS object wrapper
-  //
-  // Now, after the above prototype setup the prototype chain should
-  // look like this:
-  //
-  // this.__proto__.__proto__.__proto__
-  //   ^      ^         ^         ^
-  //   |      |         |         |__ Object.prototype
-  //   |      |         |
-  //   |      |         |__ xpc embed wrapper proto (shared)
-  //   |      |
-  //   |      |__ Plugin NPRuntime JS object wrapper
-  //   |
-  //   |__ xpc wrapped native embed node
-  //
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLPluginObjElementSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
-                                    JSObject *globalObj, JSObject **parentObj)
-{
-  nsresult rv = nsElementSH::PreCreate(nativeObj, cx, globalObj, parentObj);
-
-  // For now we don't support slim wrappers for plugins.
-  return rv == NS_SUCCESS_ALLOW_SLIM_WRAPPERS ? NS_OK : rv;
-}
-
-NS_IMETHODIMP
-nsHTMLPluginObjElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper,
-                                     JSContext *cx, JSObject *obj)
-{
-  if (nsContentUtils::IsSafeToRunScript()) {
-#ifdef DEBUG
-    nsresult rv =
-#endif
-      SetupProtoChain(cx, obj, wrapper);
-
-    // If SetupProtoChain failed then we're in real trouble. We're about to fail
-    // PostCreate but it's more than likely that we handed our (now invalid)
-    // wrapper to someone already. Bug 429442 is an example of the kind of crash
-    // that can result from such a situation. We'll return NS_OK for the time
-    // being and hope for the best.
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "SetupProtoChain failed!");
-  }
-  else {
-    // This may be null if the JS context is not a DOM context. That's ok, we'll
-    // use the safe context from XPConnect in the runnable.
-    nsCOMPtr<nsIScriptContext> scriptContext = GetScriptContextFromJSContext(cx);
-
-    nsRefPtr<SetupProtoChainRunner> runner =
-      new SetupProtoChainRunner(wrapper, scriptContext, nullptr);
-    nsContentUtils::AddScriptRunner(runner);
-  }
-
-  return nsElementSH::PostCreate(wrapper, cx, obj);
-}
-
-NS_IMETHODIMP
-nsHTMLPluginObjElementSH::PostTransplant(nsIXPConnectWrappedNative *wrapper,
-                                         JSContext *cx, JSObject *obj)
-{
-  // Call through to PostCreate to do the prototype setup all over again. We
-  // may reuse the same prototype, in which case our prototype will be a wrapped
-  // version of the original.
-  nsresult rv = PostCreate(wrapper, cx, obj);
-  if (NS_FAILED(rv)) {
-      NS_WARNING("Calling PostCreate during PostTransplant for plugin element failed.");
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLPluginObjElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
-                                      JSContext *cx, JSObject *obj, jsid id,
-                                      jsval *vp, bool *_retval)
-{
-  JSAutoRequest ar(cx);
-
-  JSObject *pi_obj;
-  if (!::JS_GetPrototype(cx, obj, &pi_obj)) {
-    return NS_ERROR_UNEXPECTED;
-  }
-  if (MOZ_UNLIKELY(!pi_obj)) {
-    return NS_OK;
-  }
-
-  JSBool found = false;
-
-  if (!ObjectIsNativeWrapper(cx, obj)) {
-    *_retval = ::JS_HasPropertyById(cx, pi_obj, id, &found);
-    if (!*_retval) {
-      return NS_ERROR_UNEXPECTED;
-    }
-  }
-
-  if (found) {
-    *_retval = ::JS_GetPropertyById(cx, pi_obj, id, vp);
-    return *_retval ? NS_SUCCESS_I_DID_SOMETHING : NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLPluginObjElementSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
-                                      JSContext *cx, JSObject *obj, jsid id,
-                                      jsval *vp, bool *_retval)
-{
-  JSAutoRequest ar(cx);
-
-  JSObject *pi_obj;
-  if (!::JS_GetPrototype(cx, obj, &pi_obj)) {
-    return NS_ERROR_UNEXPECTED;
-  }
-  if (MOZ_UNLIKELY(!pi_obj)) {
-    return NS_OK;
-  }
-
-  JSBool found = false;
-
-  if (!ObjectIsNativeWrapper(cx, obj)) {
-    *_retval = ::JS_HasPropertyById(cx, pi_obj, id, &found);
-    if (!*_retval) {
-      return NS_ERROR_UNEXPECTED;
-    }
-  }
-
-  if (found) {
-    *_retval = ::JS_SetPropertyById(cx, pi_obj, id, vp);
-    return *_retval ? NS_SUCCESS_I_DID_SOMETHING : NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLPluginObjElementSH::Call(nsIXPConnectWrappedNative *wrapper,
-                               JSContext *cx, JSObject *obj, uint32_t argc,
-                               jsval *argv, jsval *vp, bool *_retval)
-{
-  // XPConnect passes us the XPConnect wrapper JSObject as obj, and
-  // not the 'this' parameter that the JS engine passes in. Pass in
-  // the real this parameter from JS (argv[-1]) here.
-  return DoCall(wrapper, cx, obj, argc, argv, vp, argv[-1], _retval);
-}
-
-nsresult
-nsHTMLPluginObjElementSH::DoCall(nsIXPConnectWrappedNative *wrapper,
-                                 JSContext *cx, JSObject *obj, uint32_t argc,
-                                 jsval *argv, jsval *vp, jsval thisVal,
-                                 bool *_retval)
-{
-  nsRefPtr<nsNPAPIPluginInstance> pi;
-  nsresult rv = GetPluginInstanceIfSafe(wrapper, obj, cx, getter_AddRefs(pi));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // If obj is a native wrapper, or if there's no plugin around for
-  // this object, throw.
-  if (ObjectIsNativeWrapper(cx, obj) || !pi) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  JSObject *pi_obj = nullptr;
-  JSObject *pi_proto = nullptr;
-
-  rv = GetPluginJSObject(cx, obj, pi, &pi_obj, &pi_proto);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!pi) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  // XPConnect passes us the XPConnect wrapper JSObject as obj, and
-  // not the 'this' parameter that the JS engine passes in. Pass in
-  // the real this parameter from JS (argv[-1]) here.
-  JSAutoRequest ar(cx);
-  *_retval = ::JS::Call(cx, thisVal, pi_obj, argc, argv, vp);
-  if (*_retval) {
-    Telemetry::Accumulate(Telemetry::PLUGIN_CALLED_DIRECTLY, true);
-  }
-
-  return NS_OK;
-}
-
-
-nsresult
-nsHTMLPluginObjElementSH::GetPluginJSObject(JSContext *cx, JSObject *obj,
-                                            nsNPAPIPluginInstance *plugin_inst,
-                                            JSObject **plugin_obj,
-                                            JSObject **plugin_proto)
-{
-  *plugin_obj = nullptr;
-  *plugin_proto = nullptr;
-
-  JSAutoRequest ar(cx);
-
-  // NB: We need an AutoEnterCompartment because we can be called from
-  // nsObjectFrame when the plugin loads after the JS object for our content
-  // node has been created.
-  JSAutoCompartment ac(cx, obj);
-
-  if (plugin_inst) {
-    plugin_inst->GetJSObject(cx, plugin_obj);
-    if (*plugin_obj) {
-      if (!::JS_GetPrototype(cx, *plugin_obj, plugin_proto)) {
-        return NS_ERROR_UNEXPECTED;
-      }
-    }
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLPluginObjElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
-                                     JSContext *cx, JSObject *obj, jsid id,
-                                     uint32_t flags, JSObject **objp,
-                                     bool *_retval)
-{
-  // Make sure the plugin instance is loaded and instantiated, if
-  // possible.
-
-  nsRefPtr<nsNPAPIPluginInstance> pi;
-  nsresult rv = GetPluginInstanceIfSafe(wrapper, obj, cx, getter_AddRefs(pi));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return nsElementSH::NewResolve(wrapper, cx, obj, id, flags, objp,
-                                 _retval);
 }
 
 // Plugin helper

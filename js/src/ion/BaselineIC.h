@@ -10,7 +10,7 @@
 
 #include "jscntxt.h"
 #include "jscompartment.h"
-#include "jsgcinlines.h"
+#include "jsgc.h"
 #include "jsopcode.h"
 #include "BaselineJIT.h"
 #include "BaselineRegisters.h"
@@ -1138,11 +1138,7 @@ class ICProfiler_PushFunction : public ICStub
     const char *str_;
     HeapPtrScript script_;
 
-    ICProfiler_PushFunction(IonCode *stubCode, const char *str, HandleScript script)
-      : ICStub(ICStub::Profiler_PushFunction, stubCode),
-        str_(str),
-        script_(script)
-    { }
+    ICProfiler_PushFunction(IonCode *stubCode, const char *str, HandleScript script);
 
   public:
     static inline ICProfiler_PushFunction *New(ICStubSpace *space, IonCode *code,
@@ -1488,10 +1484,7 @@ class ICTypeMonitor_SingleObject : public ICStub
 
     HeapPtrObject obj_;
 
-    ICTypeMonitor_SingleObject(IonCode *stubCode, HandleObject obj)
-      : ICStub(TypeMonitor_SingleObject, stubCode),
-        obj_(obj)
-    { }
+    ICTypeMonitor_SingleObject(IonCode *stubCode, HandleObject obj);
 
   public:
     static inline ICTypeMonitor_SingleObject *New(
@@ -1533,10 +1526,7 @@ class ICTypeMonitor_TypeObject : public ICStub
 
     HeapPtrTypeObject type_;
 
-    ICTypeMonitor_TypeObject(IonCode *stubCode, HandleTypeObject type)
-      : ICStub(TypeMonitor_TypeObject, stubCode),
-        type_(type)
-    { }
+    ICTypeMonitor_TypeObject(IonCode *stubCode, HandleTypeObject type);
 
   public:
     static inline ICTypeMonitor_TypeObject *New(
@@ -1657,10 +1647,7 @@ class ICTypeUpdate_SingleObject : public ICStub
 
     HeapPtrObject obj_;
 
-    ICTypeUpdate_SingleObject(IonCode *stubCode, HandleObject obj)
-      : ICStub(TypeUpdate_SingleObject, stubCode),
-        obj_(obj)
-    { }
+    ICTypeUpdate_SingleObject(IonCode *stubCode, HandleObject obj);
 
   public:
     static inline ICTypeUpdate_SingleObject *New(ICStubSpace *space, IonCode *code,
@@ -1703,10 +1690,7 @@ class ICTypeUpdate_TypeObject : public ICStub
 
     HeapPtrTypeObject type_;
 
-    ICTypeUpdate_TypeObject(IonCode *stubCode, HandleTypeObject type)
-      : ICStub(TypeUpdate_TypeObject, stubCode),
-        type_(type)
-    { }
+    ICTypeUpdate_TypeObject(IonCode *stubCode, HandleTypeObject type);
 
   public:
     static inline ICTypeUpdate_TypeObject *New(ICStubSpace *space, IonCode *code,
@@ -2785,14 +2769,9 @@ class ICGetElemNativeStub : public ICMonitoredStub
   protected:
     ICGetElemNativeStub(ICStub::Kind kind, IonCode *stubCode, ICStub *firstMonitorStub,
                         HandleShape shape, HandleValue idval,
-                        bool isFixedSlot, uint32_t offset)
-      : ICMonitoredStub(kind, stubCode, firstMonitorStub),
-        shape_(shape),
-        idval_(idval),
-        offset_(offset)
-    {
-        extra_ = isFixedSlot;
-    }
+                        bool isFixedSlot, uint32_t offset);
+
+    ~ICGetElemNativeStub();
 
   public:
     HeapPtrShape &shape() {
@@ -2853,12 +2832,7 @@ class ICGetElem_NativePrototype : public ICGetElemNativeStub
     ICGetElem_NativePrototype(IonCode *stubCode, ICStub *firstMonitorStub,
                               HandleShape shape, HandleValue idval,
                               bool isFixedSlot, uint32_t offset,
-                              HandleObject holder, HandleShape holderShape)
-      : ICGetElemNativeStub(ICStub::GetElem_NativePrototype, stubCode, firstMonitorStub, shape,
-                            idval, isFixedSlot, offset),
-        holder_(holder),
-        holderShape_(holderShape)
-    {}
+                              HandleObject holder, HandleShape holderShape);
 
   public:
     static inline ICGetElem_NativePrototype *New(ICStubSpace *space, IonCode *code,
@@ -2969,10 +2943,7 @@ class ICGetElem_Dense : public ICMonitoredStub
 
     HeapPtrShape shape_;
 
-    ICGetElem_Dense(IonCode *stubCode, ICStub *firstMonitorStub, HandleShape shape)
-      : ICMonitoredStub(GetElem_Dense, stubCode, firstMonitorStub),
-        shape_(shape)
-    {}
+    ICGetElem_Dense(IonCode *stubCode, ICStub *firstMonitorStub, HandleShape shape);
 
   public:
     static inline ICGetElem_Dense *New(ICStubSpace *space, IonCode *code,
@@ -3018,13 +2989,7 @@ class ICGetElem_TypedArray : public ICStub
   protected: // Protected to silence Clang warning.
     HeapPtrShape shape_;
 
-    ICGetElem_TypedArray(IonCode *stubCode, HandleShape shape, uint32_t type)
-      : ICStub(GetElem_TypedArray, stubCode),
-        shape_(shape)
-    {
-        extra_ = uint16_t(type);
-        JS_ASSERT(extra_ == type);
-    }
+    ICGetElem_TypedArray(IonCode *stubCode, HandleShape shape, uint32_t type);
 
   public:
     static inline ICGetElem_TypedArray *New(ICStubSpace *space, IonCode *code,
@@ -3111,11 +3076,7 @@ class ICSetElem_Dense : public ICUpdatedStub
     HeapPtrShape shape_;
     HeapPtrTypeObject type_;
 
-    ICSetElem_Dense(IonCode *stubCode, HandleShape shape, HandleTypeObject type)
-      : ICUpdatedStub(SetElem_Dense, stubCode),
-        shape_(shape),
-        type_(type)
-    {}
+    ICSetElem_Dense(IonCode *stubCode, HandleShape shape, HandleTypeObject type);
 
   public:
     static inline ICSetElem_Dense *New(ICStubSpace *space, IonCode *code, HandleShape shape,
@@ -3177,13 +3138,7 @@ class ICSetElem_DenseAdd : public ICUpdatedStub
   protected:
     HeapPtrTypeObject type_;
 
-    ICSetElem_DenseAdd(IonCode *stubCode, types::TypeObject *type, size_t protoChainDepth)
-      : ICUpdatedStub(SetElem_DenseAdd, stubCode),
-        type_(type)
-    {
-        JS_ASSERT(protoChainDepth <= MAX_PROTO_CHAIN_DEPTH);
-        extra_ = protoChainDepth;
-    }
+    ICSetElem_DenseAdd(IonCode *stubCode, types::TypeObject *type, size_t protoChainDepth);
 
   public:
     static size_t offsetOfType() {
@@ -3268,10 +3223,7 @@ class ICSetElemDenseAddCompiler : public ICStubCompiler {
     {}
 
     template <size_t ProtoChainDepth>
-    ICUpdatedStub *getStubSpecific(ICStubSpace *space, const AutoShapeVector *shapes) {
-        return ICSetElem_DenseAddImpl<ProtoChainDepth>::New(space, getStubCode(), obj_->getType(cx),
-                                                            shapes);
-    }
+    ICUpdatedStub *getStubSpecific(ICStubSpace *space, const AutoShapeVector *shapes);
 
     ICUpdatedStub *getStub(ICStubSpace *space);
 };
@@ -3284,14 +3236,7 @@ class ICSetElem_TypedArray : public ICStub
     HeapPtrShape shape_;
 
     ICSetElem_TypedArray(IonCode *stubCode, HandleShape shape, uint32_t type,
-                         bool expectOutOfBounds)
-      : ICStub(SetElem_TypedArray, stubCode),
-        shape_(shape)
-    {
-        extra_ = uint8_t(type);
-        JS_ASSERT(extra_ == type);
-        extra_ |= (static_cast<uint16_t>(expectOutOfBounds) << 8);
-    }
+                         bool expectOutOfBounds);
 
   public:
     static inline ICSetElem_TypedArray *New(ICStubSpace *space, IonCode *code,
@@ -3428,11 +3373,7 @@ class ICGetName_Global : public ICMonitoredStub
     HeapPtrShape shape_;
     uint32_t slot_;
 
-    ICGetName_Global(IonCode *stubCode, ICStub *firstMonitorStub, HandleShape shape, uint32_t slot)
-      : ICMonitoredStub(GetName_Global, stubCode, firstMonitorStub),
-        shape_(shape),
-        slot_(slot)
-    {}
+    ICGetName_Global(IonCode *stubCode, ICStub *firstMonitorStub, HandleShape shape, uint32_t slot);
 
   public:
     static inline ICGetName_Global *New(ICStubSpace *space, IonCode *code, ICStub *firstMonitorStub,
@@ -3490,15 +3431,7 @@ class ICGetName_Scope : public ICMonitoredStub
     uint32_t offset_;
 
     ICGetName_Scope(IonCode *stubCode, ICStub *firstMonitorStub,
-                    AutoShapeVector *shapes, uint32_t offset)
-      : ICMonitoredStub(GetStubKind(), stubCode, firstMonitorStub),
-        offset_(offset)
-    {
-        JS_STATIC_ASSERT(NumHops <= MAX_HOPS);
-        JS_ASSERT(shapes->length() == NumHops + 1);
-        for (size_t i = 0; i < NumHops + 1; i++)
-            shapes_[i].init((*shapes)[i]);
-    }
+                    AutoShapeVector *shapes, uint32_t offset);
 
     static Kind GetStubKind() {
         return (Kind) (GetName_Scope0 + NumHops);
@@ -3632,10 +3565,8 @@ class ICGetIntrinsic_Constant : public ICStub
 
     HeapValue value_;
 
-    ICGetIntrinsic_Constant(IonCode *stubCode, HandleValue value)
-      : ICStub(GetIntrinsic_Constant, stubCode),
-        value_(value)
-    {}
+    ICGetIntrinsic_Constant(IonCode *stubCode, HandleValue value);
+    ~ICGetIntrinsic_Constant();
 
   public:
     static inline ICGetIntrinsic_Constant *New(ICStubSpace *space, IonCode *code,
@@ -3786,11 +3717,7 @@ class ICGetProp_String : public ICMonitoredStub
     uint32_t offset_;
 
     ICGetProp_String(IonCode *stubCode, ICStub *firstMonitorStub,
-                     HandleShape stringProtoShape, uint32_t offset)
-      : ICMonitoredStub(GetProp_String, stubCode, firstMonitorStub),
-        stringProtoShape_(stringProtoShape),
-        offset_(offset)
-    {}
+                     HandleShape stringProtoShape, uint32_t offset);
 
   public:
     static inline ICGetProp_String *New(ICStubSpace *space, IonCode *code, ICStub *firstMonitorStub,
@@ -3884,11 +3811,7 @@ class ICGetPropNativeStub : public ICMonitoredStub
 
   protected:
     ICGetPropNativeStub(ICStub::Kind kind, IonCode *stubCode, ICStub *firstMonitorStub,
-                        HandleShape shape, uint32_t offset)
-      : ICMonitoredStub(kind, stubCode, firstMonitorStub),
-        shape_(shape),
-        offset_(offset)
-    {}
+                        HandleShape shape, uint32_t offset);
 
   public:
     HeapPtrShape &shape() {
@@ -3938,11 +3861,7 @@ class ICGetProp_NativePrototype : public ICGetPropNativeStub
     HeapPtrShape holderShape_;
 
     ICGetProp_NativePrototype(IonCode *stubCode, ICStub *firstMonitorStub, HandleShape shape,
-                              uint32_t offset, HandleObject holder, HandleShape holderShape)
-      : ICGetPropNativeStub(GetProp_NativePrototype, stubCode, firstMonitorStub, shape, offset),
-        holder_(holder),
-        holderShape_(holderShape)
-    {}
+                              uint32_t offset, HandleObject holder, HandleShape holderShape);
 
   public:
     static inline ICGetProp_NativePrototype *New(ICStubSpace *space, IonCode *code,
@@ -4035,16 +3954,7 @@ class ICGetPropCallGetter : public ICMonitoredStub
 
     ICGetPropCallGetter(Kind kind, IonCode *stubCode, ICStub *firstMonitorStub,
                          HandleShape shape, HandleObject holder, HandleShape holderShape,
-                         HandleFunction getter, uint32_t pcOffset)
-      : ICMonitoredStub(kind, stubCode, firstMonitorStub),
-        shape_(shape),
-        holder_(holder),
-        holderShape_(holderShape),
-        getter_(getter),
-        pcOffset_(pcOffset)
-    {
-        JS_ASSERT(kind == ICStub::GetProp_CallScripted || kind == ICStub::GetProp_CallNative);
-    }
+                         HandleFunction getter, uint32_t pcOffset);
 
   public:
     HeapPtrShape &shape() {
@@ -4247,12 +4157,7 @@ class ICSetProp_Native : public ICUpdatedStub
     HeapPtrShape shape_;
     uint32_t offset_;
 
-    ICSetProp_Native(IonCode *stubCode, HandleTypeObject type, HandleShape shape, uint32_t offset)
-      : ICUpdatedStub(SetProp_Native, stubCode),
-        type_(type),
-        shape_(shape),
-        offset_(offset)
-    {}
+    ICSetProp_Native(IonCode *stubCode, HandleTypeObject type, HandleShape shape, uint32_t offset);
 
   public:
     static inline ICSetProp_Native *New(ICStubSpace *space, IonCode *code, HandleTypeObject type,
@@ -4298,14 +4203,7 @@ class ICSetProp_Native : public ICUpdatedStub
             offset_(offset)
         {}
 
-        ICUpdatedStub *getStub(ICStubSpace *space) {
-            RootedTypeObject type(cx, obj_->getType(cx));
-            RootedShape shape(cx, obj_->lastProperty());
-            ICUpdatedStub *stub = ICSetProp_Native::New(space, getStubCode(), type, shape, offset_);
-            if (!stub || !stub->initUpdatingChain(cx, space))
-                return NULL;
-            return stub;
-        }
+        ICUpdatedStub *getStub(ICStubSpace *space);
     };
 };
 
@@ -4323,15 +4221,7 @@ class ICSetProp_NativeAdd : public ICUpdatedStub
     uint32_t offset_;
 
     ICSetProp_NativeAdd(IonCode *stubCode, HandleTypeObject type, size_t protoChainDepth,
-                        HandleShape newShape, uint32_t offset)
-      : ICUpdatedStub(SetProp_NativeAdd, stubCode),
-        type_(type),
-        newShape_(newShape),
-        offset_(offset)
-    {
-        JS_ASSERT(protoChainDepth <= MAX_PROTO_CHAIN_DEPTH);
-        extra_ = protoChainDepth;
-    }
+                        HandleShape newShape, uint32_t offset);
 
   public:
     size_t protoChainDepth() const {
@@ -4371,13 +4261,7 @@ class ICSetProp_NativeAddImpl : public ICSetProp_NativeAdd
 
     ICSetProp_NativeAddImpl(IonCode *stubCode, HandleTypeObject type,
                             const AutoShapeVector *shapes,
-                            HandleShape newShape, uint32_t offset)
-      : ICSetProp_NativeAdd(stubCode, type, ProtoChainDepth, newShape, offset)
-    {
-        JS_ASSERT(shapes->length() == NumShapes);
-        for (size_t i = 0; i < NumShapes; i++)
-            shapes_[i].init((*shapes)[i]);
-    }
+                            HandleShape newShape, uint32_t offset);
 
   public:
     static inline ICSetProp_NativeAddImpl *New(
@@ -4417,16 +4301,7 @@ class ICSetPropNativeAddCompiler : public ICStubCompiler {
 
   public:
     ICSetPropNativeAddCompiler(JSContext *cx, HandleObject obj, HandleShape oldShape,
-                               size_t protoChainDepth, bool isFixedSlot, uint32_t offset)
-      : ICStubCompiler(cx, ICStub::SetProp_NativeAdd),
-        obj_(cx, obj),
-        oldShape_(cx, oldShape),
-        protoChainDepth_(protoChainDepth),
-        isFixedSlot_(isFixedSlot),
-        offset_(offset)
-    {
-        JS_ASSERT(protoChainDepth_ <= ICSetProp_NativeAdd::MAX_PROTO_CHAIN_DEPTH);
-    }
+                               size_t protoChainDepth, bool isFixedSlot, uint32_t offset);
 
     template <size_t ProtoChainDepth>
     ICUpdatedStub *getStubSpecific(ICStubSpace *space, const AutoShapeVector *shapes)
@@ -4461,16 +4336,7 @@ class ICSetPropCallSetter : public ICStub
     uint32_t pcOffset_;
 
     ICSetPropCallSetter(Kind kind, IonCode *stubCode, HandleShape shape, HandleObject holder,
-                        HandleShape holderShape, HandleFunction setter, uint32_t pcOffset)
-      : ICStub(kind, stubCode),
-        shape_(shape),
-        holder_(holder),
-        holderShape_(holderShape),
-        setter_(setter),
-        pcOffset_(pcOffset)
-    {
-        JS_ASSERT(kind == ICStub::SetProp_CallScripted || kind == ICStub::SetProp_CallNative);
-    }
+                        HandleShape holderShape, HandleFunction setter, uint32_t pcOffset);
 
   public:
     HeapPtrShape &shape() {
@@ -4706,11 +4572,7 @@ class ICCall_Scripted : public ICMonitoredStub
     uint32_t pcOffset_;
 
     ICCall_Scripted(IonCode *stubCode, ICStub *firstMonitorStub, HandleScript calleeScript,
-                    uint32_t pcOffset)
-      : ICMonitoredStub(ICStub::Call_Scripted, stubCode, firstMonitorStub),
-        calleeScript_(calleeScript),
-        pcOffset_(pcOffset)
-    { }
+                    uint32_t pcOffset);
 
   public:
     static inline ICCall_Scripted *New(
@@ -4810,11 +4672,7 @@ class ICCall_Native : public ICMonitoredStub
     uint32_t pcOffset_;
 
     ICCall_Native(IonCode *stubCode, ICStub *firstMonitorStub, HandleFunction callee,
-                  uint32_t pcOffset)
-      : ICMonitoredStub(ICStub::Call_Native, stubCode, firstMonitorStub),
-        callee_(callee),
-        pcOffset_(pcOffset)
-    { }
+                  uint32_t pcOffset);
 
   public:
     static inline ICCall_Native *New(ICStubSpace *space, IonCode *code, ICStub *firstMonitorStub,

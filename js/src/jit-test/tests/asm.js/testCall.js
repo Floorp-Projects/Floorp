@@ -46,4 +46,4 @@ var rec = asmLink(asmCompile(USE_ASM+"function rec(i) { i=i|0; if (!i) return 0;
 assertEq(rec(100), 100);
 assertEq(rec(1000), 1000);
 assertThrowsInstanceOf(function() rec(100000000000), InternalError);
-assertEq(rec(10000), 10000);
+assertEq(rec(2000), 2000);

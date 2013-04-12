@@ -461,7 +461,7 @@ static short vcmRxAllocICE_m(cc_mcapid_t mcap_id,
   }
 
   std::vector<std::string> candidates = stream->GetCandidates();
-  CSFLogDebug( logTag, "%s: Got %d candidates", __FUNCTION__, candidates.size());
+  CSFLogDebug( logTag, "%s: Got %lu candidates", __FUNCTION__, candidates.size());
 
   std::string default_addr;
   int default_port;
@@ -2765,7 +2765,7 @@ vcmCreateTransportFlow(sipcc::PeerConnectionImpl *pc, int level, bool rtcp,
  * This function should only be called on the main thread.
  *
  */
-static void vcmOnSdpParseError_m(nsAutoPtr<std::string> peerconnection, 
+static void vcmOnSdpParseError_m(nsAutoPtr<std::string> peerconnection,
                                  nsAutoPtr<std::string> message) {
 
   sipcc::PeerConnectionWrapper pc(peerconnection->c_str());

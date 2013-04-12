@@ -15,9 +15,8 @@
 #include "UnreachableCodeElimination.h"
 #include "IonAnalysis.h"
 
-#include "vm/ParallelDo.h"
-
 #include "vm/Stack.h"
+#include "vm/ParallelDo.h"
 
 namespace js {
 namespace ion {
@@ -94,15 +93,11 @@ class ParallelArrayVisitor : public MInstructionVisitor
     }
 
   public:
-    AutoObjectVector callTargets;
-
-    ParallelArrayVisitor(JSContext *cx,
-                         MIRGraph &graph)
+    ParallelArrayVisitor(JSContext *cx, MIRGraph &graph)
       : cx_(cx),
         graph_(graph),
         unsafe_(false),
-        parSlice_(NULL),
-        callTargets(cx)
+        parSlice_(NULL)
     { }
 
     void clearUnsafe() { unsafe_ = false; }
@@ -193,7 +188,7 @@ class ParallelArrayVisitor : public MInstructionVisitor
     SAFE_OP(FunctionEnvironment) // just a load of func env ptr
     SAFE_OP(TypeBarrier) // causes a bailout if the type is not found: a-ok with us
     SAFE_OP(MonitorTypes) // causes a bailout if the type is not found: a-ok with us
-    UNSAFE_OP(GetPropertyCache)
+    SAFE_OP(GetPropertyCache)
     UNSAFE_OP(GetElementCache)
     UNSAFE_OP(BindNameCache)
     SAFE_OP(GuardShape)
@@ -289,33 +284,28 @@ class ParallelArrayVisitor : public MInstructionVisitor
 };
 
 bool
-ParallelCompileContext::appendToWorklist(HandleFunction fun)
+ParallelCompileContext::appendToWorklist(HandleScript script)
 {
-    JS_ASSERT(fun);
-
-    if (!fun->isInterpreted())
-        return true;
-
-    RootedScript script(cx_, fun->nonLazyScript());
+    JS_ASSERT(script);
 
     // Skip if we're disabled.
     if (!script->canParallelIonCompile()) {
         Spew(SpewCompile, "Skipping %p:%s:%u, canParallelIonCompile() is false",
-             fun.get(), script->filename(), script->lineno);
+             script.get(), script->filename(), script->lineno);
         return true;
     }
 
     // Skip if we're compiling off thread.
     if (script->isParallelIonCompilingOffThread()) {
         Spew(SpewCompile, "Skipping %p:%s:%u, off-main-thread compilation in progress",
-             fun.get(), script->filename(), script->lineno);
+             script.get(), script->filename(), script->lineno);
         return true;
     }
 
     // Skip if the code is expected to result in a bailout.
     if (script->hasParallelIonScript() && script->parallelIonScript()->bailoutExpected()) {
         Spew(SpewCompile, "Skipping %p:%s:%u, bailout expected",
-             fun.get(), script->filename(), script->lineno);
+             script.get(), script->filename(), script->lineno);
         return true;
     }
 
@@ -324,13 +314,13 @@ ParallelCompileContext::appendToWorklist(HandleFunction fun)
     // this threshold is usually very low (1).
     if (script->getUseCount() < js_IonOptions.usesBeforeCompileParallel) {
         Spew(SpewCompile, "Skipping %p:%s:%u, use count %u < %u",
-             fun.get(), script->filename(), script->lineno,
+             script.get(), script->filename(), script->lineno,
              script->getUseCount(), js_IonOptions.usesBeforeCompileParallel);
         return true;
     }
 
     for (uint32_t i = 0; i < worklist_.length(); i++) {
-        if (worklist_[i]->toFunction() == fun)
+        if (worklist_[i] == script)
             return true;
     }
 
@@ -338,7 +328,7 @@ ParallelCompileContext::appendToWorklist(HandleFunction fun)
     // even if they're already compiled. This is so that we can return
     // Method_Compiled and not Method_Skipped if we have a worklist full of
     // already-compiled functions.
-    return worklist_.append(fun);
+    return worklist_.append(script);
 }
 
 bool
@@ -376,8 +366,10 @@ ParallelCompileContext::analyzeAndGrowWorklist(MIRGenerator *mir, MIRGraph &grap
                 // prove unsafe.
                 instr = *ins++;
 
-                if (!instr->accept(&visitor))
+                if (!instr->accept(&visitor)) {
+                    SpewMIR(instr, "Unaccepted");
                     return false;
+                }
             }
 
             if (!visitor.unsafe()) {
@@ -409,10 +401,10 @@ ParallelCompileContext::analyzeAndGrowWorklist(MIRGenerator *mir, MIRGraph &grap
     }
 
     // Append newly discovered outgoing callgraph edges to the worklist.
-    RootedFunction target(cx_);
-    for (uint32_t i = 0; i < visitor.callTargets.length(); i++) {
-        target = visitor.callTargets[i]->toFunction();
-        appendToWorklist(target);
+    RootedScript scriptRoot(cx_);
+    for (uint32_t i = 0; i < graph.numCallTargets(); i++) {
+        scriptRoot = graph.callTargets()[i];
+        appendToWorklist(scriptRoot);
     }
 
     Spew(SpewCompile, "Safe");
@@ -729,12 +721,12 @@ ParallelArrayVisitor::insertWriteGuard(MInstruction *writeInstruction,
 // Calls
 //
 // We only support calls to interpreted functions that that have already been
-// Ion compiled. If a function has no IonScript, we bail out. The compilation
-// is done during warmup of the parallel kernel, see js::RunScript.
+// Ion compiled. If a function has no IonScript, we bail out. The transitive
+// compilation is done by asking TI for all possible callees at callsites.
 
 static bool
 GetPossibleCallees(JSContext *cx, HandleScript script, jsbytecode *pc,
-                   types::StackTypeSet *calleeTypes, AutoObjectVector &targets)
+                   types::StackTypeSet *calleeTypes, MIRGraph &graph)
 {
     JS_ASSERT(calleeTypes);
 
@@ -760,13 +752,16 @@ GetPossibleCallees(JSContext *cx, HandleScript script, jsbytecode *pc,
                 continue;
         }
 
-        if (fun->isInterpreted() && fun->nonLazyScript()->shouldCloneAtCallsite) {
+        if (!fun->isInterpreted())
+            continue;
+
+        if (fun->nonLazyScript()->shouldCloneAtCallsite) {
             fun = CloneFunctionAtCallsite(cx, fun, script, pc);
             if (!fun)
                 return false;
         }
 
-        if (!targets.append(fun))
+        if (!graph.addCallTarget(fun->nonLazyScript()))
             return false;
     }
 
@@ -791,7 +786,7 @@ ParallelArrayVisitor::visitCall(MCall *ins)
             SpewMIR(ins, "call to native function");
             return markUnsafe();
         }
-        return callTargets.append(target);
+        return graph_.addCallTarget(target->nonLazyScript());
     }
 
     if (ins->isConstructing()) {
@@ -801,7 +796,7 @@ ParallelArrayVisitor::visitCall(MCall *ins)
 
     RootedScript script(cx_, ins->block()->info().script());
     return GetPossibleCallees(cx_, script, ins->resumePoint()->pc(),
-                              ins->calleeTypes(), callTargets);
+                              ins->calleeTypes(), graph_);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -865,4 +860,3 @@ ParallelArrayVisitor::visitThrow(MThrow *thr)
 
 }
 }
-

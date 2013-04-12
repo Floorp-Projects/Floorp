@@ -20,100 +20,97 @@ function test() {
 
 function consoleOpened(hud) {
   // Check that css warnings are not coalesced if they come from different lines.
-  waitForSuccess({
-    name: "css warnings displayed",
-    validatorFn: function()
-    {
-      return hud.outputNode.querySelectorAll(".webconsole-msg-cssparser")
-             .length == 2;
-    },
-    successFn: testCSSRepeats.bind(null, hud),
-    failureFn: finishTest,
-  });
-}
+  info("waiting for 2 css warnings");
 
-function repeatCountForNode(aNode) {
-  return aNode.querySelector(".webconsole-msg-repeat").getAttribute("value");
+  waitForMessages({
+    webconsole: hud,
+    messages: [{
+      name: "two css warnings",
+      category: CATEGORY_CSS,
+      count: 2,
+      repeats: 1,
+    }],
+  }).then(testCSSRepeats.bind(null, hud));
 }
 
 function testCSSRepeats(hud) {
-  let msgs = hud.outputNode.querySelectorAll(".webconsole-msg-cssparser");
-  is(repeatCountForNode(msgs[0]), 1, "no repeats for the first css warning");
-  is(repeatCountForNode(msgs[1]), 1, "no repeats for the second css warning");
-
   browser.addEventListener("load", function onLoad() {
     browser.removeEventListener("load", onLoad, true);
-    testAfterReload(hud);
+
+    info("wait for repeats after page reload");
+
+    waitForMessages({
+      webconsole: hud,
+      messages: [{
+        name: "two css warnings, repeated twice",
+        category: CATEGORY_CSS,
+        repeats: 2,
+        count: 2,
+      }],
+    }).then(testCSSRepeatsAfterReload.bind(null, hud));
   }, true);
   content.location.reload();
 }
 
-function testAfterReload(hud) {
-  let repeats;
-  waitForSuccess({
-    name: "message repeats increased",
-    validatorFn: () => {
-      repeats = hud.outputNode.querySelectorAll(".webconsole-msg-cssparser " +
-                                                ".webconsole-msg-repeat");
-      return repeats.length == 2 &&
-             repeats[0].getAttribute("value") == 2 &&
-             repeats[1].getAttribute("value") == 2;
-    },
-    successFn: testCSSRepeatsAfterReload.bind(null, hud),
-    failureFn: () => {
-      let repeats0 = repeats[0] ? repeats[0].getAttribute("value") : "undefined";
-      let repeats1 = repeats[1] ? repeats[1].getAttribute("value") : "undefined";
-      info("repeats.length " + repeats.length);
-      info("repeats[0] value " + repeats0);
-      info("repeats[1] value " + repeats1);
-      finishTest();
-    },
-  });
-}
-
 function testCSSRepeatsAfterReload(hud) {
-  let msgs = hud.outputNode.querySelectorAll(".webconsole-msg-cssparser");
-  is(msgs.length, 2, "two css warnings after reload");
-  is(repeatCountForNode(msgs[0]), 2, "two repeats for the first css warning");
-  is(repeatCountForNode(msgs[1]), 2, "two repeats for the second css warning");
-
-  hud.jsterm.clearOutput();
+  hud.jsterm.clearOutput(true);
   content.wrappedJSObject.testConsole();
 
-  waitForSuccess({
-    name: "console API messages displayed",
-    validatorFn: function()
-    {
-      return hud.outputNode.querySelectorAll(".webconsole-msg-console")
-             .length == 3;
-    },
-    successFn: testConsoleRepeats.bind(null, hud),
-    failureFn: finishTest,
-  });
+  info("wait for repeats with the console API");
+
+  waitForMessages({
+    webconsole: hud,
+    messages: [
+      {
+        name: "console.log 'foo repeat' repeated twice",
+        category: CATEGORY_WEBDEV,
+        severity: SEVERITY_LOG,
+        repeats: 2,
+      },
+      {
+        name: "console.log 'foo repeat' repeated once",
+        category: CATEGORY_WEBDEV,
+        severity: SEVERITY_LOG,
+        repeats: 1,
+      },
+      {
+        name: "console.error 'foo repeat' repeated once",
+        category: CATEGORY_WEBDEV,
+        severity: SEVERITY_ERROR,
+        repeats: 1,
+      },
+    ],
+  }).then(testConsoleRepeats.bind(null, hud));
 }
 
 function testConsoleRepeats(hud) {
-  let msgs = hud.outputNode.querySelectorAll(".webconsole-msg-console");
-  is(repeatCountForNode(msgs[0]), 2, "repeats for the first console message");
-  is(repeatCountForNode(msgs[1]), 1,
-     "no repeats for the second console log message");
-  is(repeatCountForNode(msgs[2]), 1, "no repeats for the console.error message");
-
-  hud.jsterm.clearOutput();
+  hud.jsterm.clearOutput(true);
   hud.jsterm.execute("undefined");
   content.console.log("undefined");
 
-  waitForSuccess({
-    name: "messages displayed",
-    validatorFn: function()
-    {
-      return hud.outputNode.querySelector(".webconsole-msg-console");
-    },
-    successFn: function() {
-      is(hud.outputNode.childNodes.length, 3,
-         "correct number of messages displayed");
-      executeSoon(finishTest);
-    },
-    failureFn: finishTest,
-  });
+  info("make sure console API messages are not coalesced with jsterm output");
+
+  waitForMessages({
+    webconsole: hud,
+    messages: [
+      {
+        name: "'undefined' jsterm input message",
+        text: "undefined",
+        category: CATEGORY_INPUT,
+        repeats: 1,
+      },
+      {
+        name: "'undefined' jsterm output message",
+        text: "undefined",
+        category: CATEGORY_OUTPUT,
+        repeats: 1,
+      },
+      {
+        name: "'undefined' console.log message",
+        text: "undefined",
+        category: CATEGORY_WEBDEV,
+        repeats: 1,
+      },
+    ],
+  }).then(finishTest);
 }

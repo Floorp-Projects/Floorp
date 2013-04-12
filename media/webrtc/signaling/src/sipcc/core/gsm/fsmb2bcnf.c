@@ -1186,7 +1186,7 @@ fsmb2bcnf_show_cmd (cc_int32_t argc, const char *argv[])
          "\n");
 
     FSM_FOR_ALL_CBS(ccb, fsmb2bcnf_ccbs, FSMCNF_MAX_CCBS) {
-        debugif_printf("%-2d  %-6d  0x%08p  %-11d  %-11d  %-6d  %-7d\n",
+        debugif_printf("%-2d  %-6d  %p  %-11d  %-11d  %-6d  %-7d\n",
                        i++, ccb->cnf_id, ccb, ccb->cnf_call_id,
                        ccb->cns_call_id, ccb->active, ccb->bridged);
     }

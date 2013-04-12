@@ -71,7 +71,7 @@ function start_test(plugin) {
 }
 
 function finish_test(plugin) {
-  plugin.disabled = false;
+  plugin.enabledState = Components.interfaces.nsIPluginTag.STATE_ENABLED;
   plugin.blocklisted = false;
   var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                         .getService(Components.interfaces.nsIPrefBranch);
@@ -127,7 +127,7 @@ function test_normal(plugin) {
   is(gDisabled.length, 0, "Should not have been any disabled plugins");
   is(gBlocked.length, 0, "Should not have been any blocked plugins");
   test_style("solid");
-  plugin.disabled = true;
+  plugin.enabledState = Components.interfaces.nsIPluginTag.STATE_DISABLED;
   load_frame(test_disabled, "file_bug391728");
 }
 
@@ -138,7 +138,7 @@ function test_disabled(plugin) {
   is(gBlocked.length, 0, "Should not have been any blocked plugins");
   test_style("dotted");
   ok(plugin.disabled, "Plugin lost its disabled status");
-  plugin.disabled = false;
+  plugin.enabledState = Components.interfaces.nsIPluginTag.STATE_ENABLED;
   plugin.blocklisted = true;
   load_frame(test_blocked, "file_bug391728");
 }

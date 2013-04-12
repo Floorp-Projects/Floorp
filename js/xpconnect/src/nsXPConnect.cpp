@@ -931,23 +931,24 @@ nsXPConnect::InitClasses(JSContext * aJSContext, JSObject * aGlobalJSObj)
 {
     NS_ASSERTION(aJSContext, "bad param");
     NS_ASSERTION(aGlobalJSObj, "bad param");
+    JS::RootedObject globalJSObj(aJSContext, aGlobalJSObj);
 
     // Nest frame chain save/restore in request created by XPCCallContext.
     XPCCallContext ccx(NATIVE_CALLER, aJSContext);
     if (!ccx.IsValid())
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
-    JSAutoCompartment ac(ccx, aGlobalJSObj);
+    JSAutoCompartment ac(ccx, globalJSObj);
 
     XPCWrappedNativeScope* scope =
-        XPCWrappedNativeScope::GetNewOrUsed(ccx, aGlobalJSObj);
+        XPCWrappedNativeScope::GetNewOrUsed(ccx, globalJSObj);
 
     if (!scope)
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
     scope->RemoveWrappedNativeProtos();
 
-    if (!XPCNativeWrapper::AttachNewConstructorObject(ccx, aGlobalJSObj))
+    if (!XPCNativeWrapper::AttachNewConstructorObject(ccx, globalJSObj))
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
     return NS_OK;
@@ -1037,7 +1038,8 @@ CreateGlobalObject(JSContext *cx, JSClass *clasp, nsIPrincipal *principal,
     NS_ABORT_IF_FALSE(NS_IsMainThread(), "using a principal off the main thread?");
     MOZ_ASSERT(principal);
 
-    JSObject *global = JS_NewGlobalObject(cx, clasp, nsJSPrincipals::get(principal), zoneSpec);
+    JS::RootedObject global(cx,
+                            JS_NewGlobalObject(cx, clasp, nsJSPrincipals::get(principal), zoneSpec));
     if (!global)
         return nullptr;
     JSAutoCompartment ac(cx, global);
@@ -1641,7 +1643,7 @@ nsXPConnect::CreateSandbox(JSContext *cx, nsIPrincipal *principal,
     jsval rval = JSVAL_VOID;
     AUTO_MARK_JSVAL(ccx, &rval);
 
-    SandboxOptions options;
+    SandboxOptions options(cx);
     nsresult rv = xpc_CreateSandboxObject(cx, &rval, principal, options);
     NS_ASSERTION(NS_FAILED(rv) || !JSVAL_IS_PRIMITIVE(rval),
                  "Bad return value from xpc_CreateSandboxObject()!");
@@ -1658,14 +1660,20 @@ nsXPConnect::CreateSandbox(JSContext *cx, nsIPrincipal *principal,
 
 NS_IMETHODIMP
 nsXPConnect::EvalInSandboxObject(const nsAString& source, const char *filename,
-                                 JSContext *cx, JSObject *sandbox,
-                                 bool returnStringOnly, jsval *rval)
+                                 JSContext *cx, JSObject *sandboxArg,
+                                 bool returnStringOnly, JS::Value *rvalArg)
 {
-    if (!sandbox)
+    if (!sandboxArg)
         return NS_ERROR_INVALID_ARG;
 
-    return xpc_EvalInSandbox(cx, sandbox, source, filename ? filename : "x-bogus://XPConnect/Sandbox",
-                             1, JSVERSION_DEFAULT, returnStringOnly, rval);
+    JS::RootedObject sandbox(cx, sandboxArg);
+    JS::RootedValue rval(cx);
+    nsresult rv = xpc_EvalInSandbox(cx, sandbox, source, filename ? filename :
+                                    "x-bogus://XPConnect/Sandbox", 1, JSVERSION_DEFAULT,
+                                    returnStringOnly, &rval);
+    NS_ENSURE_SUCCESS(rv, rv);
+    *rvalArg = rval;
+    return NS_OK;
 }
 
 /* nsIXPConnectJSObjectHolder getWrappedNativePrototype (in JSContextPtr aJSContext, in JSObjectPtr aScope, in nsIClassInfo aClassInfo); */

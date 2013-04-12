@@ -199,6 +199,8 @@ function WebConsoleFrame(aWebConsoleOwner)
 
   this._outputTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   this._outputTimerInitialized = false;
+
+  EventEmitter.decorate(this);
 }
 
 WebConsoleFrame.prototype = {
@@ -879,14 +881,15 @@ WebConsoleFrame.prototype = {
    * @private
    * @param nsIDOMNode aNode
    *        The message node to be filtered or not.
-   * @returns boolean
-   *          True if the message is filtered, false otherwise.
+   * @returns nsIDOMNode|null
+   *          Returns the duplicate node if the message was filtered, null
+   *          otherwise.
    */
   _filterRepeatedMessage: function WCF__filterRepeatedMessage(aNode)
   {
     let repeatNode = aNode.getElementsByClassName("webconsole-msg-repeat")[0];
     if (!repeatNode) {
-      return false;
+      return null;
     }
 
     let uid = repeatNode._uid;
@@ -905,7 +908,7 @@ WebConsoleFrame.prototype = {
               aNode.classList.contains("webconsole-msg-error"))) {
       let lastMessage = this.outputNode.lastChild;
       if (!lastMessage) {
-        return false;
+        return null;
       }
 
       let lastRepeatNode = lastMessage
@@ -917,10 +920,10 @@ WebConsoleFrame.prototype = {
 
     if (dupeNode) {
       this.mergeFilteredMessageNode(dupeNode, aNode);
-      return true;
+      return dupeNode;
     }
 
-    return false;
+    return null;
   },
 
   /**
@@ -1692,10 +1695,14 @@ WebConsoleFrame.prototype = {
     let hudIdSupportsString = WebConsoleUtils.supportsString(this.hudId);
 
     // Output the current batch of messages.
+    let newOrUpdatedNodes = new Set();
     for (let item of batch) {
-      let node = this._outputMessageFromQueue(hudIdSupportsString, item);
-      if (node) {
-        lastVisibleNode = node;
+      let result = this._outputMessageFromQueue(hudIdSupportsString, item);
+      if (result) {
+        newOrUpdatedNodes.add(result.isRepeated || result.node);
+        if (result.visible && result.node == this.outputNode.lastChild) {
+          lastVisibleNode = result.node;
+        }
       }
     }
 
@@ -1736,6 +1743,8 @@ WebConsoleFrame.prototype = {
       scrollBox.scrollTop -= oldScrollHeight - scrollBox.scrollHeight;
     }
 
+    this.emit("messages-added", newOrUpdatedNodes);
+
     // If the queue is not empty, schedule another flush.
     if (this._outputQueue.length > 0) {
       this._initOutputTimer();
@@ -1772,9 +1781,12 @@ WebConsoleFrame.prototype = {
    *        The HUD ID as an nsISupportsString.
    * @param array aItem
    *        An item from the output queue - this item represents a message.
-   * @return nsIDOMElement|undefined
-   *         The DOM element of the message if the message is visible, undefined
-   *         otherwise.
+   * @return object
+   *         An object that holds the following properties:
+   *         - node: the DOM element of the message.
+   *         - isRepeated: the DOM element of the original message, if this is
+   *         a repeated message, otherwise null.
+   *         - visible: boolean that tells if the message is visible.
    */
   _outputMessageFromQueue:
   function WCF__outputMessageFromQueue(aHudIdSupportsString, aItem)
@@ -1785,7 +1797,7 @@ WebConsoleFrame.prototype = {
                methodOrNode.apply(this, args || []) :
                methodOrNode;
     if (!node) {
-      return;
+      return null;
     }
 
     let afterNode = node._outputAfterNode;
@@ -1797,14 +1809,16 @@ WebConsoleFrame.prototype = {
 
     let isRepeated = this._filterRepeatedMessage(node);
 
-    let lastVisible = !isRepeated && !isFiltered;
+    let visible = !isRepeated && !isFiltered;
     if (!isRepeated) {
       this.outputNode.insertBefore(node,
                                    afterNode ? afterNode.nextSibling : null);
       this._pruneCategoriesQueue[node.category] = true;
-      if (afterNode) {
-        lastVisible = this.outputNode.lastChild == node;
-      }
+
+      let nodeID = node.getAttribute("id");
+      Services.obs.notifyObservers(aHudIdSupportsString,
+                                   "web-console-message-created", nodeID);
+
     }
 
     if (node._onOutput) {
@@ -1812,11 +1826,11 @@ WebConsoleFrame.prototype = {
       delete node._onOutput;
     }
 
-    let nodeID = node.getAttribute("id");
-    Services.obs.notifyObservers(aHudIdSupportsString,
-                                 "web-console-message-created", nodeID);
-
-    return lastVisible ? node : null;
+    return {
+      visible: visible,
+      node: node,
+      isRepeated: isRepeated,
+    };
   },
 
   /**

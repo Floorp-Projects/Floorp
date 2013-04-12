@@ -15,7 +15,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task", "resource://gre/modules/Task.jsm
 const serverRoot = "http://example.com/browser/metro/";
 const baseURI = "http://mochi.test:8888/browser/metro/";
 const chromeRoot = getRootDirectory(gTestPath);
-const kDefaultWait = 10000;
+const kDefaultWait = 2000;
 const kDefaultInterval = 50;
 
 /*=============================================================================
@@ -237,7 +237,7 @@ function waitForCondition(aCondition, aTimeoutMs, aIntervalMs) {
     try {
       condition = aCondition();
     } catch (e) {
-      deferred.reject( new Error("Got exception while attempting to test conditino: " + e) );
+      deferred.reject( new Error("Got exception while attempting to test condition: " + e) );
       return;
     }
 
@@ -475,14 +475,19 @@ function runTests() {
   Task.spawn(function() {
     while((gCurrentTest = gTests.shift())){
       info(gCurrentTest.desc);
-      if ('function' == typeof gCurrentTest.setUp) {
-        yield Task.spawn(gCurrentTest.setUp.bind(gCurrentTest));
+      try {
+        if ('function' == typeof gCurrentTest.setUp) {
+          yield Task.spawn(gCurrentTest.setUp.bind(gCurrentTest));
+        }
+        yield Task.spawn(gCurrentTest.run.bind(gCurrentTest));
+        if ('function' == typeof gCurrentTest.tearDown) {
+          yield Task.spawn(gCurrentTest.tearDown.bind(gCurrentTest));
+        }
+      } catch (ex) {
+        ok(false, "runTests: Task failed - " + ex);
+      } finally {
+        info("END "+gCurrentTest.desc);
       }
-      yield Task.spawn(gCurrentTest.run.bind(gCurrentTest));
-      if ('function' == typeof gCurrentTest.tearDown) {
-        yield Task.spawn(gCurrentTest.tearDown.bind(gCurrentTest));
-      }
-      info("END "+gCurrentTest.desc);
     }
     finish();
   });

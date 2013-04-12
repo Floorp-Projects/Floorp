@@ -1151,7 +1151,7 @@ pres_process_msg_from_msgq (uint32_t cmd, void *msg_p)
     static const char fname[] = "pres_process_msg_from_msgq";
     pres_req_msg *pres_req_p;
 
-    BLF_DEBUG(DEB_F_PREFIX"Entering (cmd=%d, msg_p=0x%X)\n",
+    BLF_DEBUG(DEB_F_PREFIX"Entering (cmd=%d, msg_p=%p)",
               DEB_F_PREFIX_ARGS(BLF, fname), cmd, msg_p);
 
     switch (cmd) {

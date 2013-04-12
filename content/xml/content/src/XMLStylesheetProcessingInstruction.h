@@ -21,6 +21,17 @@ public:
     : ProcessingInstruction(aNodeInfo, aData)
   {
   }
+
+  XMLStylesheetProcessingInstruction(nsNodeInfoManager* aNodeInfoManager,
+                                     const nsAString& aData)
+    : ProcessingInstruction(aNodeInfoManager->GetNodeInfo(
+                                       nsGkAtoms::processingInstructionTagName,
+                                       nullptr, kNameSpaceID_None,
+                                       nsIDOMNode::PROCESSING_INSTRUCTION_NODE,
+                                       nsGkAtoms::xml_stylesheet), aData)
+  {
+  }
+
   virtual ~XMLStylesheetProcessingInstruction();
 
   virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope) MOZ_OVERRIDE;

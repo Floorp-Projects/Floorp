@@ -30,7 +30,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
-import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.util.UUID;
@@ -55,8 +54,8 @@ public final class ANRReporter extends BroadcastReceiver
     // for the ping file, it lossily converts utf-16 to ascii. therefore,
     // we have to treat characters in the traces file as ascii rather than
     // say utf-8. otherwise, we will get a wrong checksum
-    private static final Charset TRACES_CHARSET = Charset.forName("us-ascii");
-    private static final Charset PING_CHARSET = Charset.forName("us-ascii");
+    private static final String TRACES_CHARSET = "us-ascii";
+    private static final String PING_CHARSET = "us-ascii";
 
     private static final ANRReporter sInstance = new ANRReporter();
     private static int sRegisteredCount;
@@ -222,6 +221,12 @@ public final class ANRReporter extends BroadcastReceiver
                     String line = traces.readLine();
                     if (DEBUG) {
                         Log.d(LOGTAG, "identifying line: " + String.valueOf(line));
+                    }
+                    if (line == null) {
+                        if (DEBUG) {
+                            Log.d(LOGTAG, "reached end of traces file");
+                        }
+                        return false;
                     }
                     if (pkgPattern.matcher(line).find()) {
                         // traces.txt file contains our package
