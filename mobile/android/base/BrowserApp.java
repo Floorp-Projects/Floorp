@@ -104,6 +104,8 @@ abstract public class BrowserApp extends GeckoApp
 
     private FindInPageBar mFindInPageBar;
 
+    private boolean mAccessibilityEnabled = false;
+
     // We'll ask for feedback after the user launches the app this many times.
     private static final int FEEDBACK_LAUNCH_COUNT = 15;
 
@@ -154,7 +156,7 @@ abstract public class BrowserApp extends GeckoApp
                     if ("about:home".equals(tab.getURL())) {
                         showAboutHome();
 
-                        if (mDynamicToolbarEnabled) {
+                        if (isDynamicToolbarEnabled()) {
                             // Show the toolbar.
                             mBrowserToolbar.animateVisibility(true);
                         }
@@ -183,7 +185,7 @@ abstract public class BrowserApp extends GeckoApp
                 if (Tabs.getInstance().isSelectedTab(tab)) {
                     invalidateOptionsMenu();
 
-                    if (mDynamicToolbarEnabled) {
+                    if (isDynamicToolbarEnabled()) {
                         // Show the toolbar.
                         mBrowserToolbar.animateVisibility(true);
                     }
@@ -220,7 +222,7 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     public boolean onInterceptTouchEvent(View view, MotionEvent event) {
-        if (!mDynamicToolbarEnabled || mToolbarPinned) {
+        if (!isDynamicToolbarEnabled() || mToolbarPinned) {
             return super.onInterceptTouchEvent(view, event);
         }
 
@@ -360,7 +362,7 @@ abstract public class BrowserApp extends GeckoApp
                 case KeyEvent.KEYCODE_BUTTON_Y:
                     // Toggle/focus the address bar on gamepad-y button.
                     if (mBrowserToolbar.isVisible()) {
-                        if (mDynamicToolbarEnabled &&
+                        if (isDynamicToolbarEnabled() &&
                             Boolean.FALSE.equals(mAboutHomeShowing)) {
                             mBrowserToolbar.animateVisibility(false);
                             mLayerView.requestFocus();
@@ -548,21 +550,11 @@ abstract public class BrowserApp extends GeckoApp
                 ThreadUtils.postToUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        if (mDynamicToolbarEnabled) {
-                            setToolbarMargin(0);
-                        } else {
-                            // Immediately show the toolbar when disabling the dynamic
-                            // toolbar.
-                            if (mAboutHomeContent != null) {
-                                mAboutHomeContent.setPadding(0, 0, 0, 0);
-                            }
-                            mBrowserToolbar.cancelVisibilityAnimation();
-                            mBrowserToolbar.getLayout().scrollTo(0, 0);
+                        // If accessibility is enabled, the dynamic toolbar is
+                        // forced to be off.
+                        if (!mAccessibilityEnabled) {
+                            setDynamicToolbarEnabled(mDynamicToolbarEnabled);
                         }
-
-                        // Refresh the margins to reset the padding on the spacer and
-                        // make sure that Gecko is in sync.
-                        ((BrowserToolbarLayout)mBrowserToolbar.getLayout()).refreshMargins();
                     }
                 });
             }
@@ -574,6 +566,42 @@ abstract public class BrowserApp extends GeckoApp
                 return true;
             }
         });
+    }
+
+    private void setDynamicToolbarEnabled(boolean enabled) {
+        if (enabled) {
+            setToolbarMargin(0);
+        } else {
+            // Immediately show the toolbar when disabling the dynamic
+            // toolbar.
+            if (mAboutHomeContent != null) {
+                mAboutHomeContent.setPadding(0, 0, 0, 0);
+            }
+            mBrowserToolbar.cancelVisibilityAnimation();
+            mBrowserToolbar.getLayout().scrollTo(0, 0);
+        }
+
+        // Refresh the margins to reset the padding on the spacer and
+        // make sure that Gecko is in sync.
+        ((BrowserToolbarLayout)mBrowserToolbar.getLayout()).refreshMargins();
+    }
+
+    private boolean isDynamicToolbarEnabled() {
+        return mDynamicToolbarEnabled && !mAccessibilityEnabled;
+    }
+
+    @Override
+    public void setAccessibilityEnabled(boolean enabled) {
+        if (mAccessibilityEnabled == enabled) {
+            return;
+        }
+
+        // Disable the dynamic toolbar when accessibility features are enabled,
+        // and re-read the preference when they're disabled.
+        mAccessibilityEnabled = enabled;
+        if (mDynamicToolbarEnabled) {
+            setDynamicToolbarEnabled(!enabled);
+        }
     }
 
     @Override
@@ -670,11 +698,11 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     public void setToolbarHeight(int aHeight, int aVisibleHeight) {
-        if (!mDynamicToolbarEnabled || Boolean.TRUE.equals(mAboutHomeShowing)) {
+        if (!isDynamicToolbarEnabled() || Boolean.TRUE.equals(mAboutHomeShowing)) {
             // Use aVisibleHeight here so that when the dynamic toolbar is
             // enabled, the padding will animate with the toolbar becoming
             // visible.
-            if (mDynamicToolbarEnabled) {
+            if (isDynamicToolbarEnabled()) {
                 // When the dynamic toolbar is enabled, set the padding on the
                 // about:home widget directly - this is to avoid resizing the
                 // LayerView, which can cause visible artifacts.
@@ -1457,7 +1485,7 @@ abstract public class BrowserApp extends GeckoApp
         if (!mBrowserToolbar.openOptionsMenu())
             super.openOptionsMenu();
 
-        if (mDynamicToolbarEnabled)
+        if (isDynamicToolbarEnabled())
             mBrowserToolbar.animateVisibility(true);
     }
 
