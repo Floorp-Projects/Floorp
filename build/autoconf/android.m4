@@ -26,12 +26,17 @@ MOZ_ARG_ENABLE_BOOL(android-libstdcxx,
     MOZ_ANDROID_LIBSTDCXX=1,
     MOZ_ANDROID_LIBSTDCXX= )
 
-android_version=9
+define([MIN_ANDROID_VERSION], [9])
+android_version=MIN_ANDROID_VERSION
 
 MOZ_ARG_WITH_STRING(android-version,
 [  --with-android-version=VER
-                          android platform version, default 9],
+                          android platform version, default] MIN_ANDROID_VERSION,
     android_version=$withval)
+
+if test $android_version -lt MIN_ANDROID_VERSION ; then
+    AC_MSG_ERROR([--with-android-version must be at least MIN_ANDROID_VERSION.])
+fi
 
 MOZ_ARG_WITH_STRING(android-platform,
 [  --with-android-platform=DIR
