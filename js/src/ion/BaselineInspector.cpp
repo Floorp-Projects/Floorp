@@ -64,6 +64,10 @@ BaselineInspector::expectedResultType(jsbytecode *pc)
 {
     // Look at the IC entries for this op to guess what type it will produce,
     // returning MIRType_None otherwise.
+
+    if (!hasBaselineScript())
+        return MIRType_None;
+
     const ICEntry &entry = icEntryFromPC(pc);
 
     ICStub *stub = entry.firstStub();

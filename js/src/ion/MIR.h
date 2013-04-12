@@ -6565,6 +6565,7 @@ class MTypeBarrier
     MTypeBarrier(MDefinition *def, types::StackTypeSet *types, BailoutKind bailoutKind)
       : MUnaryInstruction(def)
     {
+        JS_ASSERT(!types->unknown());
         setResultType(MIRType_Value);
         setResultTypeSet(types);
         setGuard();
