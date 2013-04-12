@@ -1835,7 +1835,7 @@ nsXPCComponents_Exception::Construct(nsIXPConnectWrappedNative *wrapper, JSConte
     return CallOrConstruct(wrapper, cx, obj, argc, argv, vp, _retval);
 }
 
-struct NS_STACK_CLASS ExceptionArgParser
+struct MOZ_STACK_CLASS ExceptionArgParser
 {
     ExceptionArgParser(JSContext *context,
                        nsXPConnect *xpconnect)
