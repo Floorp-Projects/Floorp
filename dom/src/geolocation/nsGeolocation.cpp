@@ -530,6 +530,13 @@ nsGeolocationRequest::SendLocation(nsIDOMGeoPosition* aPosition)
     return;
   }
 
+  nsCOMPtr<nsIDOMGeoPositionCoords> coords;
+  aPosition->GetCoords(getter_AddRefs(coords));
+  if (!coords) {
+    NotifyError(nsIDOMGeoPositionError::POSITION_UNAVAILABLE);
+    return;
+  }
+
   // Ensure that the proper context is on the stack (bug 452762)
   nsCOMPtr<nsIJSContextStack> stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1"));
   if (!stack || NS_FAILED(stack->Push(nullptr))) {
