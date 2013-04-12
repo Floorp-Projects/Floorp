@@ -1398,7 +1398,7 @@ XPCWrappedNative::SystemIsBeingShutDown()
 /***************************************************************************/
 
 // Dynamically ensure that two objects don't end up with the same private.
-class AutoClonePrivateGuard NS_STACK_CLASS {
+class MOZ_STACK_CLASS AutoClonePrivateGuard {
 public:
     AutoClonePrivateGuard(JSObject *aOld, JSObject *aNew)
         : mOldReflector(aOld), mNewReflector(aNew)
@@ -2200,7 +2200,7 @@ public:
 };
 
 // static
-NS_SUPPRESS_STACK_CHECK JSBool
+JSBool
 XPCWrappedNative::CallMethod(XPCCallContext& ccx,
                              CallMode mode /*= CALL_METHOD */)
 {

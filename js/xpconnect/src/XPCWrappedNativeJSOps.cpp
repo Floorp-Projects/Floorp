@@ -1206,7 +1206,7 @@ XPC_WN_JSOp_Enumerate(JSContext *cx, JSHandleObject obj, JSIterateOp enum_op,
 
 namespace {
 
-NS_STACK_CLASS class AutoPopJSContext
+class MOZ_STACK_CLASS AutoPopJSContext
 {
 public:
   AutoPopJSContext(XPCJSContextStack *stack)
