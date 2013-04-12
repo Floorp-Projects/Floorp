@@ -4,7 +4,7 @@
 
 "use strict";
 
-const DEBUG = false;
+let DEBUG = false;
 function debug(s) { dump("-*- Fallback ContactService component: " + s + "\n"); }
 
 const Cu = Components.utils;
@@ -90,6 +90,7 @@ let ContactService = {
 
     switch (aMessage.name) {
       case "Contacts:Find":
+        DEBUG = false;
         if (!this.assertPermission(aMessage, "contacts-read")) {
           return null;
         }
@@ -150,6 +151,7 @@ let ContactService = {
         );
         break;
       case "Contacts:Clear":
+        DEBUG = true;
         if (!this.assertPermission(aMessage, "contacts-write")) {
           return null;
         }

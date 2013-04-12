@@ -61,7 +61,7 @@ WrapperFactory::GetXrayWaiver(JSObject *obj)
 }
 
 JSObject *
-WrapperFactory::CreateXrayWaiver(JSContext *cx, JSObject *obj)
+WrapperFactory::CreateXrayWaiver(JSContext *cx, HandleObject obj)
 {
     // The caller is required to have already done a lookup.
     // NB: This implictly performs the assertions of GetXrayWaiver.
@@ -98,8 +98,9 @@ WrapperFactory::CreateXrayWaiver(JSContext *cx, JSObject *obj)
 }
 
 JSObject *
-WrapperFactory::WaiveXray(JSContext *cx, JSObject *obj)
+WrapperFactory::WaiveXray(JSContext *cx, JSObject *objArg)
 {
+    RootedObject obj(cx, objArg);
     obj = UncheckedUnwrap(obj);
     MOZ_ASSERT(!js::IsInnerObject(obj));
 
@@ -114,7 +115,7 @@ WrapperFactory::WaiveXray(JSContext *cx, JSObject *obj)
 // expects |cx->compartment != obj->compartment()|. The returned object will
 // be in the same compartment as |obj|.
 JSObject *
-WrapperFactory::DoubleWrap(JSContext *cx, JSObject *obj, unsigned flags)
+WrapperFactory::DoubleWrap(JSContext *cx, HandleObject obj, unsigned flags)
 {
     if (flags & WrapperFactory::WAIVE_XRAY_WRAPPER_FLAG) {
         JSAutoCompartment ac(cx, obj);
@@ -124,8 +125,9 @@ WrapperFactory::DoubleWrap(JSContext *cx, JSObject *obj, unsigned flags)
 }
 
 JSObject *
-WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *obj, unsigned flags)
+WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *objArg, unsigned flags)
 {
+    RootedObject obj(cx, objArg);
     // Outerize any raw inner objects at the entry point here, so that we don't
     // have to worry about them for the rest of the wrapping code.
     if (js::IsInnerObject(obj)) {
@@ -175,7 +177,7 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *obj
             // being accessed across compartments. We would really prefer to
             // replace the above code with a test that says "do you only have one
             // wrapper?"
-            JSObject *originalScope = scope;
+            RootedObject originalScope(cx, scope);
             nsresult rv = wn->GetScriptableInfo()->GetCallback()->
                 PreCreate(wn->Native(), cx, scope, &scope);
             NS_ENSURE_SUCCESS(rv, DoubleWrap(cx, obj, flags));
@@ -187,7 +189,7 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *obj
             if (js::GetObjectCompartment(originalScope) != js::GetObjectCompartment(scope))
                 return DoubleWrap(cx, obj, flags);
 
-            JSObject *currentScope = JS_GetGlobalForObject(cx, obj);
+            RootedObject currentScope(cx, JS_GetGlobalForObject(cx, obj));
             if (MOZ_UNLIKELY(scope != currentScope)) {
                 // The wrapper claims it wants to be in the new scope, but
                 // currently has a reflection that lives in the old scope. This
@@ -209,9 +211,9 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *obj
                 // the case, then PreCreate will return the scope we pass to it
                 // (the old scope). If (2) is the case, PreCreate will return the
                 // scope of the document (the new scope).
-                JSObject *probe;
+                RootedObject probe(cx);
                 rv = wn->GetScriptableInfo()->GetCallback()->
-                    PreCreate(wn->Native(), cx, currentScope, &probe);
+                    PreCreate(wn->Native(), cx, currentScope, probe.address());
 
                 // Check for case (2).
                 if (probe != currentScope) {
@@ -249,11 +251,11 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *obj
 
     // This public WrapNativeToJSVal API enters the compartment of 'scope'
     // so we don't have to.
-    jsval v;
+    RootedValue v(cx);
     nsresult rv =
         nsXPConnect::FastGetXPConnect()->WrapNativeToJSVal(cx, scope, wn->Native(), nullptr,
                                                            &NS_GET_IID(nsISupports), false,
-                                                           &v, getter_AddRefs(holder));
+                                                           v.address(), getter_AddRefs(holder));
     if (NS_SUCCEEDED(rv)) {
         obj = JSVAL_TO_OBJECT(v);
         NS_ASSERTION(IS_WN_WRAPPER(obj), "bad object");
@@ -369,7 +371,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *existing, JSObject *obj,
 
     // By default we use the wrapped proto of the underlying object as the
     // prototype for our wrapper, but we may select something different below.
-    JSObject *proxyProto = wrappedProto;
+    RootedObject proxyProto(cx, wrappedProto);
 
     Wrapper *wrapper;
     CompartmentPrivate *targetdata = EnsureCompartmentPrivate(target);
@@ -458,8 +460,8 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *existing, JSObject *obj,
         JSProtoKey key = JSProto_Null;
         {
             JSAutoCompartment ac(cx, obj);
-            JSObject *unwrappedProto;
-            if (!js::GetObjectProto(cx, obj, &unwrappedProto))
+            RootedObject unwrappedProto(cx);
+            if (!js::GetObjectProto(cx, obj, unwrappedProto.address()))
                 return NULL;
             if (unwrappedProto && IsCrossCompartmentWrapper(unwrappedProto))
                 unwrappedProto = Wrapper::wrappedObject(unwrappedProto);
@@ -469,8 +471,8 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *existing, JSObject *obj,
             }
         }
         if (key != JSProto_Null) {
-            JSObject *homeProto;
-            if (!JS_GetClassPrototype(cx, key, &homeProto))
+            RootedObject homeProto(cx);
+            if (!JS_GetClassPrototype(cx, key, homeProto.address()))
                 return NULL;
             MOZ_ASSERT(homeProto);
             proxyProto = homeProto;
@@ -523,7 +525,7 @@ WrapperFactory::WrapForSameCompartment(JSContext *cx, JSObject *obj)
     MOZ_ASSERT(wn, "Trying to wrap a dead WN!");
 
     // The WN knows what to do.
-    JSObject *wrapper = wn->GetSameCompartmentSecurityWrapper(cx);
+    RootedObject wrapper(cx, wn->GetSameCompartmentSecurityWrapper(cx));
     MOZ_ASSERT_IF(wrapper != obj && IsComponentsObject(js::UncheckedUnwrap(obj)),
                   !Wrapper::wrapperHandler(wrapper)->isSafeToUnwrap());
     return wrapper;
@@ -555,10 +557,11 @@ WrapperFactory::WaiveXrayAndWrap(JSContext *cx, jsval *vp)
 }
 
 JSObject *
-WrapperFactory::WrapSOWObject(JSContext *cx, JSObject *obj)
+WrapperFactory::WrapSOWObject(JSContext *cx, JSObject *objArg)
 {
-    JSObject *proto;
-    if (!JS_GetPrototype(cx, obj, &proto))
+    RootedObject obj(cx, objArg);
+    RootedObject proto(cx);
+    if (!JS_GetPrototype(cx, obj, proto.address()))
         return NULL;
     JSObject *wrapperObj =
         Wrapper::New(cx, obj, proto, JS_GetGlobalForObject(cx, obj),
@@ -575,10 +578,10 @@ WrapperFactory::IsComponentsObject(JSObject *obj)
 }
 
 JSObject *
-WrapperFactory::WrapComponentsObject(JSContext *cx, JSObject *obj)
+WrapperFactory::WrapComponentsObject(JSContext *cx, HandleObject obj)
 {
-    JSObject *proto;
-    if (!JS_GetPrototype(cx, obj, &proto))
+    RootedObject proto(cx);
+    if (!JS_GetPrototype(cx, obj, proto.address()))
         return NULL;
     JSObject *wrapperObj =
         Wrapper::New(cx, obj, proto, JS_GetGlobalForObject(cx, obj),
@@ -626,7 +629,7 @@ WrapperFactory::XrayWrapperNotShadowing(JSObject *wrapper, jsid id)
  */
 
 static bool
-FixWaiverAfterTransplant(JSContext *cx, JSObject *oldWaiver, JSObject *newobj)
+FixWaiverAfterTransplant(JSContext *cx, HandleObject oldWaiver, HandleObject newobj)
 {
     MOZ_ASSERT(Wrapper::wrapperHandler(oldWaiver) == &XrayWaiver);
     MOZ_ASSERT(!js::IsCrossCompartmentWrapper(newobj));
@@ -657,8 +660,8 @@ FixWaiverAfterTransplant(JSContext *cx, JSObject *oldWaiver, JSObject *newobj)
 JSObject *
 TransplantObject(JSContext *cx, JSObject *origobj, JSObject *target)
 {
-    JSObject *oldWaiver = WrapperFactory::GetXrayWaiver(origobj);
-    JSObject *newIdentity = JS_TransplantObject(cx, origobj, target);
+    RootedObject oldWaiver(cx, WrapperFactory::GetXrayWaiver(origobj));
+    RootedObject newIdentity(cx, JS_TransplantObject(cx, origobj, target));
     if (!newIdentity || !oldWaiver)
        return newIdentity;
 
@@ -672,14 +675,14 @@ TransplantObjectWithWrapper(JSContext *cx,
                             JSObject *origobj, JSObject *origwrapper,
                             JSObject *targetobj, JSObject *targetwrapper)
 {
-    JSObject *oldWaiver = WrapperFactory::GetXrayWaiver(origobj);
-    JSObject *newSameCompartmentWrapper =
+    RootedObject oldWaiver(cx, WrapperFactory::GetXrayWaiver(origobj));
+    RootedObject newSameCompartmentWrapper(cx,
       js_TransplantObjectWithWrapper(cx, origobj, origwrapper, targetobj,
-                                     targetwrapper);
+                                     targetwrapper));
     if (!newSameCompartmentWrapper || !oldWaiver)
         return newSameCompartmentWrapper;
 
-    JSObject *newIdentity = Wrapper::wrappedObject(newSameCompartmentWrapper);
+    RootedObject newIdentity(cx, Wrapper::wrappedObject(newSameCompartmentWrapper));
     MOZ_ASSERT(js::IsWrapper(newIdentity));
     if (!FixWaiverAfterTransplant(cx, oldWaiver, newIdentity))
         return NULL;
