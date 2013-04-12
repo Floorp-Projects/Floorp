@@ -113,6 +113,10 @@ body[dir="ltr"] .icon {
   color: #b5b5b5;
 }
 
+.buttons > button[hidden="true"] {
+  display: none;
+}
+
 .buttons:first-child {
   -moz-border-start-color: transparent;
 }
