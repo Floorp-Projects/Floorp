@@ -13,18 +13,19 @@ class TestClick(MarionetteTestCase):
         link.click()
         self.assertEqual("Clicked", self.marionette.execute_script("return document.getElementById('mozLink').innerHTML;"))
 
-    def testClickingALinkMadeUpOfNumbersIsHandledCorrectly(self):
-        test_html = self.marionette.absolute_url("clicks.html")
-        self.marionette.navigate(test_html)
-        self.marionette.find_element("link text", "333333").click()
-        count = 0
-        while len(self.marionette.find_elements("id", "username")) == 0:
-            count += 1
-            time.sleep(1)
-            if count == 30:
-                self.fail("Element id=username not found after 30 seconds")
+    # disabled due to bug 860104
+    #def testClickingALinkMadeUpOfNumbersIsHandledCorrectly(self):
+    #    test_html = self.marionette.absolute_url("clicks.html")
+    #    self.marionette.navigate(test_html)
+    #    self.marionette.find_element("link text", "333333").click()
+    #    count = 0
+    #    while len(self.marionette.find_elements("id", "username")) == 0:
+    #        count += 1
+    #        time.sleep(1)
+    #        if count == 30:
+    #            self.fail("Element id=username not found after 30 seconds")
 
-        self.assertEqual(self.marionette.title, "XHTML Test Page")
+    #    self.assertEqual(self.marionette.title, "XHTML Test Page")
 
 class TestClickChrome(MarionetteTestCase):
     def setUp(self):
