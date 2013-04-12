@@ -35,7 +35,7 @@ namespace mozilla {
  *
  * MUCH PREFERRED to bare calls to ReentrantMonitor.Exit and Enter.
  */ 
-class NS_STACK_CLASS ReentrantMonitorAutoExit
+class MOZ_STACK_CLASS ReentrantMonitorAutoExit
 {
 public:
     /**
@@ -77,7 +77,7 @@ private:
  * E.g. Used to allow unmonitored read access on the decode thread,
  * and monitored access on all other threads.
  */
-class NS_STACK_CLASS ReentrantMonitorConditionallyEnter
+class MOZ_STACK_CLASS ReentrantMonitorConditionallyEnter
 {
 public:
   ReentrantMonitorConditionallyEnter(bool aEnter,
