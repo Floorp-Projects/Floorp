@@ -6,7 +6,7 @@
 
 this.EXPORTED_SYMBOLS = ['ContactDB'];
 
-const DEBUG = false;
+let DEBUG = false;
 function debug(s) { dump("-*- ContactDB component: " + s + "\n"); }
 
 const Cu = Components.utils;
@@ -461,6 +461,7 @@ ContactDB.prototype = {
   },
 
   clear: function clear(aSuccessCb, aErrorCb) {
+    DEBUG = true;
     this.newTxn("readwrite", STORE_NAME, function (txn, store) {
       if (DEBUG) debug("Going to clear all!");
       store.clear();
@@ -618,6 +619,7 @@ ContactDB.prototype = {
    *        - count
    */
   find: function find(aSuccessCb, aFailureCb, aOptions) {
+    DEBUG = false;
     if (DEBUG) debug("ContactDB:find val:" + aOptions.filterValue + " by: " + aOptions.filterBy + " op: " + aOptions.filterOp);
     let self = this;
     this.newTxn("readonly", STORE_NAME, function (txn, store) {

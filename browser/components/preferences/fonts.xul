@@ -227,6 +227,18 @@
               <menuitem value="20" label="20"/>
               <menuitem value="22" label="22"/>
               <menuitem value="24" label="24"/>
+              <menuitem value="26" label="26"/>
+              <menuitem value="28" label="28"/>
+              <menuitem value="30" label="30"/>
+              <menuitem value="32" label="32"/>
+              <menuitem value="34" label="34"/>
+              <menuitem value="36" label="36"/>
+              <menuitem value="40" label="40"/>
+              <menuitem value="44" label="44"/>
+              <menuitem value="48" label="48"/>
+              <menuitem value="56" label="56"/>
+              <menuitem value="64" label="64"/>
+              <menuitem value="72" label="72"/>
             </menupopup>
           </menulist>
         </hbox>

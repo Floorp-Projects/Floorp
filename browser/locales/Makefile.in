@@ -151,6 +151,9 @@ libs-%:
 	$(NSINSTALL) -D $(DIST)/install
 	@$(MAKE) -C ../../toolkit/locales libs-$*
 	@$(MAKE) -C ../../services/sync/locales AB_CD=$* XPI_NAME=locale-$*
+ifdef MOZ_WEBAPP_RUNTIME
+	@$(MAKE) -C ../../webapprt/locales AB_CD=$* XPI_NAME=locale-$*
+endif
 	@$(MAKE) -C ../../extensions/spellcheck/locales AB_CD=$* XPI_NAME=locale-$*
 	@$(MAKE) -C ../../intl/locales AB_CD=$* XPI_NAME=locale-$*
 	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=$(PREF_DIR)

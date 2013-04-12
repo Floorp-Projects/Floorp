@@ -38,7 +38,7 @@ protected:
   virtual PLayerChild* AllocPLayer() MOZ_OVERRIDE;
   virtual bool DeallocPLayer(PLayerChild* actor) MOZ_OVERRIDE;
 
-  virtual PCompositableChild* AllocPCompositable(const CompositableType& aType) MOZ_OVERRIDE;
+  virtual PCompositableChild* AllocPCompositable(const TextureInfo& aInfo) MOZ_OVERRIDE;
   virtual bool DeallocPCompositable(PCompositableChild* actor) MOZ_OVERRIDE;
 };
 

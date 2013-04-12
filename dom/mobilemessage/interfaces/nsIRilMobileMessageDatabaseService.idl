@@ -24,7 +24,7 @@ interface nsIRilMobileMessageDatabaseRecordCallback : nsISupports
   void notify(in nsresult aRv, in jsval aMessageRecord);
 };
 
-[scriptable, uuid(8f49216f-bc0c-420e-b77e-7f1cbdcd245f)]
+[scriptable, uuid(0ead3154-542d-4e2c-a624-9e3cec504758)]
 interface nsIRilMobileMessageDatabaseService : nsIMobileMessageDatabaseService
 {
   /**
@@ -40,6 +40,7 @@ interface nsIRilMobileMessageDatabaseService : nsIMobileMessageDatabaseService
    *     - |delivery| DOMString: the delivery state of received message
    *     - |deliveryStatus| DOMString Array: the delivery status of received message
    *     - |receivers| DOMString Array: the phone numbers of receivers
+   *     - |transactionId| DOMString: the transaction ID from MMS pdu header.
    *
    * Note: |deliveryStatus| should only contain single string to specify
    *       the delivery status of MMS message for the phone owner self.
@@ -82,4 +83,12 @@ interface nsIRilMobileMessageDatabaseService : nsIMobileMessageDatabaseService
    */
   void getMessageRecordById(in long aMessageId,
                             in nsIRilMobileMessageDatabaseRecordCallback aCallback);
+
+  /**
+   * |aTransactionId| DOMString: the transaction ID of MMS pdu.
+   * |aCallback| nsIRilMobileMessageDatabaseCallback: a callback which takes
+   *   result flag and message record as parameters.
+   */
+  void getMessageRecordByTransactionId(in DOMString aTransactionId,
+                                       in nsIRilMobileMessageDatabaseRecordCallback aCallback);
 };

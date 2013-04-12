@@ -157,7 +157,7 @@ TextureImageTextureHostOGL::UpdateImpl(const SurfaceDescriptor& aImage,
                                        nsIntRegion* aRegion)
 {
   if (!mGL) {
-    NS_WARNING("trying to update TextureImageTextureHostOGL without a compositor ?");
+    NS_WARNING("trying to update TextureImageTextureHostOGL without a compositor?");
     return;
   }
   AutoOpenSurface surf(OPEN_READ_ONLY, aImage);

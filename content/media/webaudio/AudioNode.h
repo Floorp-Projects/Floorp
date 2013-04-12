@@ -80,6 +80,10 @@ public:
     UpdateOutputEnded();
   }
 
+  virtual AudioBufferSourceNode* AsAudioBufferSourceNode() {
+    return nullptr;
+  }
+
   AudioContext* GetParentObject() const
   {
     return mContext;
@@ -133,6 +137,11 @@ public:
     if (!aCanProduceOwnOutput) {
       UpdateOutputEnded();
     }
+  }
+
+  const nsTArray<InputNode>& InputNodes() const
+  {
+    return mInputNodes;
   }
 
 protected:
