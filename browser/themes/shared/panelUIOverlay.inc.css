@@ -94,10 +94,6 @@
   transform: translateX(0);
 }
 
-#PanelUI-viewStack:not([view="subview"]) > #PanelUI-subViews {
-  display: none;
-}
-
 #PanelUI-contents[type="list"] > toolbarbutton {
   -moz-box-orient: horizontal;
 }
