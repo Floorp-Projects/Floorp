@@ -171,6 +171,9 @@ const FILTER_PREFS_PREFIX = "devtools.webconsole.filter.";
 // The minimum font size.
 const MIN_FONT_SIZE = 10;
 
+// The maximum length of strings to be displayed by the Web Console.
+const MAX_LONG_STRING_LENGTH = 200000;
+
 const PREF_CONNECTION_TIMEOUT = "devtools.debugger.remote-timeout";
 
 /**
@@ -1319,13 +1322,23 @@ WebConsoleFrame.prototype = {
   },
 
   /**
-   * Inform user that the Web Console API has been replaced by a script
+   * Inform user that the window.console API has been replaced by a script
    * in a content page.
    */
   logWarningAboutReplacedAPI: function WCF_logWarningAboutReplacedAPI()
   {
     let node = this.createMessageNode(CATEGORY_JS, SEVERITY_WARNING,
                                       l10n.getStr("ConsoleAPIDisabled"));
+    this.outputMessage(CATEGORY_JS, node);
+  },
+
+  /**
+   * Inform user that the string he tries to view is too long.
+   */
+  logWarningAboutStringTooLong: function WCF_logWarningAboutStringTooLong()
+  {
+    let node = this.createMessageNode(CATEGORY_JS, SEVERITY_WARNING,
+                                      l10n.getStr("longStringTooLong"));
     this.outputMessage(CATEGORY_JS, node);
   },
 
@@ -1695,11 +1708,17 @@ WebConsoleFrame.prototype = {
     let hudIdSupportsString = WebConsoleUtils.supportsString(this.hudId);
 
     // Output the current batch of messages.
-    let newOrUpdatedNodes = new Set();
+    let newMessages = new Set();
+    let updatedMessages = new Set();
     for (let item of batch) {
       let result = this._outputMessageFromQueue(hudIdSupportsString, item);
       if (result) {
-        newOrUpdatedNodes.add(result.isRepeated || result.node);
+        if (result.isRepeated) {
+          updatedMessages.add(result.isRepeated);
+        }
+        else {
+          newMessages.add(result.node);
+        }
         if (result.visible && result.node == this.outputNode.lastChild) {
           lastVisibleNode = result.node;
         }
@@ -1743,7 +1762,12 @@ WebConsoleFrame.prototype = {
       scrollBox.scrollTop -= oldScrollHeight - scrollBox.scrollHeight;
     }
 
-    this.emit("messages-added", newOrUpdatedNodes);
+    if (newMessages.size) {
+      this.emit("messages-added", newMessages);
+    }
+    if (updatedMessages.size) {
+      this.emit("messages-updated", updatedMessages);
+    }
 
     // If the queue is not empty, schedule another flush.
     if (this._outputQueue.length > 0) {
@@ -2255,7 +2279,8 @@ WebConsoleFrame.prototype = {
     }
 
     let longString = this.webConsoleClient.longString(aActor);
-    longString.substring(longString.initial.length, longString.length,
+    let toIndex = Math.min(longString.length, MAX_LONG_STRING_LENGTH);
+    longString.substring(longString.initial.length, toIndex,
       function WCF__onSubstring(aResponse) {
         if (aResponse.error) {
           Cu.reportError("WCF__longStringClick substring failure: " +
@@ -2271,7 +2296,13 @@ WebConsoleFrame.prototype = {
             aMessage.category == CATEGORY_OUTPUT) {
           aMessage.clipboardText = aMessage.textContent;
         }
-      });
+
+        this.emit("messages-updated", new Set([aMessage]));
+
+        if (toIndex != longString.length) {
+          this.logWarningAboutStringTooLong();
+        }
+      }.bind(this));
   },
 
   /**
@@ -2631,13 +2662,6 @@ JSTerm.prototype = {
   sidebar: null,
 
   /**
-   * The Web Console splitter between output and the sidebar.
-   * @private
-   * @type nsIDOMElement
-   */
-  _splitter: null,
-
-  /**
    * The Variables View instance shown in the sidebar.
    * @private
    * @type object
@@ -2720,8 +2744,6 @@ JSTerm.prototype = {
     this.inputNode.addEventListener("keypress", this._keyPress, false);
     this.inputNode.addEventListener("input", this._inputEventHandler, false);
     this.inputNode.addEventListener("keyup", this._inputEventHandler, false);
-
-    this._splitter = doc.querySelector(".devtools-side-splitter");
 
     this.lastInputValue && this.setInputValue(this.lastInputValue);
   },
@@ -3039,7 +3061,6 @@ JSTerm.prototype = {
       this.sidebar = new ToolSidebar(tabbox, this);
     }
     this.sidebar.show();
-    this._splitter.setAttribute("state", "open");
   },
 
   /**
@@ -3477,7 +3498,8 @@ JSTerm.prototype = {
     }
 
     let client = this.webConsoleClient.longString(grip);
-    client.substring(grip.initial.length, grip.length, (aResponse) => {
+    let toIndex = Math.min(grip.length, MAX_LONG_STRING_LENGTH);
+    client.substring(grip.initial.length, toIndex, (aResponse) => {
       if (aResponse.error) {
         Cu.reportError("JST__fetchVarLongString substring failure: " +
                        aResponse.error + ": " + aResponse.message);
@@ -3488,6 +3510,10 @@ JSTerm.prototype = {
       aVar.setGrip(grip.initial + aResponse.substring);
       aVar.hideArrow();
       aVar._retrieved = true;
+
+      if (toIndex != grip.length) {
+        this.hud.logWarningAboutStringTooLong();
+      }
     });
   },
 

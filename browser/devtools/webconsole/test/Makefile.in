@@ -120,6 +120,7 @@ MOCHITEST_BROWSER_FILES = \
 	browser_console_variables_view.js \
 	browser_console_variables_view_while_debugging.js \
 	browser_console.js \
+	browser_longstring_hang.js \
 	head.js \
 	$(NULL)
 
@@ -221,6 +222,7 @@ MOCHITEST_BROWSER_FILES += \
 	test-bug-821877-csperrors.html \
 	test-bug-821877-csperrors.html^headers^ \
 	test-eval-in-stackframe.html \
+	test-bug-859170-longstring-hang.html \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

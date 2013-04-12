@@ -466,6 +466,43 @@ NetworkEventsHandler.prototype = {
       eventTimings: aResponse
     });
     window.emit("NetMonitor:NetworkEventUpdated:EventTimings");
+  },
+
+  /**
+   * Fetches the full text of a LongString.
+   *
+   * @param object | string aStringGrip
+   *        The long string grip containing the corresponding actor.
+   *        If you pass in a plain string (by accident or because you're lazy),
+   *        then a promise of the same string is simply returned.
+   * @return object Promise
+   *         A promise that is resolved when the full string contents
+   *         are available, or rejected if something goes wrong.
+   */
+  getString: function NEH_getString(aStringGrip) {
+    // Make sure this is a long string.
+    if (typeof aStringGrip != "object" || aStringGrip.type != "longString") {
+      return Promise.resolve(aStringGrip); // Go home string, you're drunk.
+    }
+    // Fetch the long string only once.
+    if (aStringGrip._fullText) {
+      return aStringGrip._fullText.promise;
+    }
+
+    let deferred = aStringGrip._fullText = Promise.defer();
+    let { actor, initial, length } = aStringGrip;
+    let longStringClient = this.webConsoleClient.longString(aStringGrip);
+
+    longStringClient.substring(initial.length, length, (aResponse) => {
+      if (aResponse.error) {
+        Cu.reportError(aResponse.error + ": " + aResponse.message);
+        deferred.reject(aResponse);
+        return;
+      }
+      deferred.resolve(initial + aResponse.substring);
+    });
+
+    return deferred.promise;
   }
 };
 
@@ -497,7 +534,10 @@ NetMonitorController.NetworkEventsHandler = new NetworkEventsHandler();
  */
 Object.defineProperties(window, {
   "create": {
-    get: function() ViewHelpers.create,
+    get: function() ViewHelpers.create
+  },
+  "gNetwork": {
+    get: function() NetMonitorController.NetworkEventsHandler
   }
 });
 
