@@ -2268,7 +2268,7 @@ typedef nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace>
   nsContentUtils::DropJSObjects(NS_CYCLE_COLLECTION_UPCAST(obj, clazz))
 
 
-class NS_STACK_CLASS nsCxPusher
+class MOZ_STACK_CLASS nsCxPusher
 {
 public:
   nsCxPusher();
@@ -2302,7 +2302,7 @@ private:
 #endif
 };
 
-class NS_STACK_CLASS nsAutoScriptBlocker {
+class MOZ_STACK_CLASS nsAutoScriptBlocker {
 public:
   nsAutoScriptBlocker(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM) {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
@@ -2315,7 +2315,7 @@ private:
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-class NS_STACK_CLASS nsAutoScriptBlockerSuppressNodeRemoved :
+class MOZ_STACK_CLASS nsAutoScriptBlockerSuppressNodeRemoved :
                           public nsAutoScriptBlocker {
 public:
   nsAutoScriptBlockerSuppressNodeRemoved() {
@@ -2330,7 +2330,7 @@ public:
   }
 };
 
-class NS_STACK_CLASS nsAutoMicroTask
+class MOZ_STACK_CLASS nsAutoMicroTask
 {
 public:
   nsAutoMicroTask()
@@ -2350,7 +2350,7 @@ namespace mozilla {
  * passed as a parameter. AutoJSContext will take care of finding the most
  * appropriate JS context and release it when leaving the stack.
  */
-class NS_STACK_CLASS AutoJSContext {
+class MOZ_STACK_CLASS AutoJSContext {
 public:
   AutoJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
   operator JSContext*();
@@ -2373,7 +2373,7 @@ private:
  * SafeAutoJSContext is similar to AutoJSContext but will only return the safe
  * JS context. That means it will never call ::GetCurrentJSContext().
  */
-class NS_STACK_CLASS SafeAutoJSContext : public AutoJSContext {
+class MOZ_STACK_CLASS SafeAutoJSContext : public AutoJSContext {
 public:
   SafeAutoJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
 };
@@ -2392,7 +2392,7 @@ public:
  * NB: This will not push a null cx even if aCx is null. Make sure you know what
  * you're doing.
  */
-class NS_STACK_CLASS AutoPushJSContext {
+class MOZ_STACK_CLASS AutoPushJSContext {
   nsCxPusher mPusher;
   JSContext* mCx;
 
