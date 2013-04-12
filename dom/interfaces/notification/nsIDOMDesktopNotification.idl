@@ -4,27 +4,7 @@
 
 #include "domstubs.idl"
 
-interface nsIDOMEventListener;
-interface nsIDOMDesktopNotification;
 interface nsIObserver;
-
-[scriptable, uuid(CCEA6185-0A3D-45AB-9058-1004DD4B8C50)]
-interface nsIDOMDesktopNotificationCenter : nsISupports
-{
-  nsIDOMDesktopNotification createNotification(in DOMString title,
-                                               in DOMString description,
-                                               [optional] in DOMString iconURL);
-};
-
-
-[scriptable, uuid(77bc6adc-77d6-4b29-9844-7eaac25e995d)]
-interface nsIDOMDesktopNotification : nsISupports
-{
-  void show();
-
-  [implicit_jscontext] attribute jsval onclick;
-  [implicit_jscontext] attribute jsval onclose;
-};
 
 // Notification service that also provides the manifest URL
 [scriptable, uuid(7fb4f0f9-ff5b-4620-8e1b-d82d723605af)]

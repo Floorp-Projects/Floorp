@@ -24,7 +24,7 @@ public:
   static bool IsBody(nsIDOMNode* aNode);
   static bool IsBreak(nsIDOMNode* aNode);
   static bool IsMozBR(nsIDOMNode* aNode);
-  static bool IsMozBR(mozilla::dom::Element* aNode);
+  static bool IsMozBR(nsINode* aNode);
   static bool HasMozAttr(nsIDOMNode* aNode);
 };
 

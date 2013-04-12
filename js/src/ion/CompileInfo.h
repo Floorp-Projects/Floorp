@@ -80,9 +80,8 @@ class CompileInfo
         return script_->code + script_->length;
     }
 
-    const char *filename() const {
-        return script_->filename();
-    }
+    inline const char *filename() const;
+
     unsigned lineno() const {
         return script_->lineno;
     }

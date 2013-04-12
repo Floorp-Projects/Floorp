@@ -890,12 +890,6 @@ SDK_BINARY = js-config
 install:: $(INSTALLED_HEADERS)
 	$(SYSINSTALL) $^ $(DESTDIR)$(includedir)/$(MODULE)
 
-install:: $(EXPORTS_ds)
-	$(SYSINSTALL) $^ $(DESTDIR)$(includedir)/$(MODULE)/ds
-
-install:: $(EXPORTS_gc)
-	$(SYSINSTALL) $^ $(DESTDIR)$(includedir)/$(MODULE)/gc
-
 install:: $(EXPORTS_js)
 	$(SYSINSTALL) $^ $(DESTDIR)$(includedir)/$(MODULE)/js
 

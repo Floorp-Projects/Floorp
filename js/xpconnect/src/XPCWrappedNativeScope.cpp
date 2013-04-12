@@ -85,7 +85,7 @@ XPCWrappedNativeScope* XPCWrappedNativeScope::gDyingScopes = nullptr;
 
 // static
 XPCWrappedNativeScope*
-XPCWrappedNativeScope::GetNewOrUsed(JSContext *cx, JSObject* aGlobal)
+XPCWrappedNativeScope::GetNewOrUsed(JSContext *cx, JS::HandleObject aGlobal)
 {
     XPCWrappedNativeScope* scope = GetObjectScope(aGlobal);
     if (!scope) {
@@ -118,7 +118,7 @@ RemoteXULForbidsXBLScope(nsIPrincipal *aPrincipal)
 }
 
 XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext *cx,
-                                             JSObject* aGlobal)
+                                             JS::HandleObject aGlobal)
       : mWrappedNativeMap(Native2WrappedNativeMap::newMap(XPC_NATIVE_MAP_SIZE)),
         mWrappedNativeProtoMap(ClassInfo2WrappedNativeProtoMap::newMap(XPC_NATIVE_PROTO_MAP_SIZE)),
         mMainThreadWrappedNativeProtoMap(ClassInfo2WrappedNativeProtoMap::newMap(XPC_NATIVE_PROTO_MAP_SIZE)),
@@ -207,8 +207,8 @@ XPCWrappedNativeScope::GetComponentsJSObject(XPCCallContext& ccx)
 
     // The call to wrap() here is necessary even though the object is same-
     // compartment, because it applies our security wrapper.
-    JSObject *obj = wrapper->GetFlatJSObject();
-    if (!JS_WrapObject(ccx, &obj))
+    JS::RootedObject obj(ccx, wrapper->GetFlatJSObject());
+    if (!JS_WrapObject(ccx, obj.address()))
         return nullptr;
     return obj;
 }
@@ -216,7 +216,7 @@ XPCWrappedNativeScope::GetComponentsJSObject(XPCCallContext& ccx)
 JSObject*
 XPCWrappedNativeScope::EnsureXBLScope(JSContext *cx)
 {
-    JSObject *global = GetGlobalJSObject();
+    JS::RootedObject global(cx, GetGlobalJSObject());
     MOZ_ASSERT(js::IsObjectInContextCompartment(global, cx));
     MOZ_ASSERT(!mIsXBLScope);
     MOZ_ASSERT(strcmp(js::GetObjectClass(global)->name,
@@ -238,7 +238,7 @@ XPCWrappedNativeScope::EnsureXBLScope(JSContext *cx)
     // However, wantXrays lives a secret double life, and one of its other
     // hobbies is to waive Xray on the returned sandbox when set to false.
     // So make sure to keep this set to true, here.
-    SandboxOptions options;
+    SandboxOptions options(cx);
     options.wantXrays = true;
     options.wantComponents = true;
     options.wantXHRConstructor = false;
@@ -255,8 +255,8 @@ XPCWrappedNativeScope::EnsureXBLScope(JSContext *cx)
 
     // Create the sandbox.
     JSAutoRequest ar(cx);
-    JS::Value v = JS::UndefinedValue();
-    nsresult rv = xpc_CreateSandboxObject(cx, &v, ep, options);
+    JS::RootedValue v(cx, JS::UndefinedValue());
+    nsresult rv = xpc_CreateSandboxObject(cx, v.address(), ep, options);
     NS_ENSURE_SUCCESS(rv, nullptr);
     mXBLScope = &v.toObject();
 
@@ -268,8 +268,9 @@ XPCWrappedNativeScope::EnsureXBLScope(JSContext *cx)
 }
 
 namespace xpc {
-JSObject *GetXBLScope(JSContext *cx, JSObject *contentScope)
+JSObject *GetXBLScope(JSContext *cx, JSObject *contentScope_)
 {
+    JS::RootedObject contentScope(cx, contentScope_);
     JSAutoCompartment ac(cx, contentScope);
     JSObject *scope = EnsureCompartmentPrivate(contentScope)->scope->EnsureXBLScope(cx);
     NS_ENSURE_TRUE(scope, nullptr); // See bug 858642.

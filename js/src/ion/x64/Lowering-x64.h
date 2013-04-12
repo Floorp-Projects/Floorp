@@ -37,6 +37,8 @@ class LIRGeneratorX64 : public LIRGeneratorX86Shared
                      MDefinition *rhs);
     bool lowerForFPU(LMathD *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs);
 
+    LGetPropertyCacheT *newLGetPropertyCacheT(MGetPropertyCache *ins);
+
   public:
     bool visitBox(MBox *box);
     bool visitUnbox(MUnbox *unbox);
@@ -54,4 +56,3 @@ typedef LIRGeneratorX64 LIRGeneratorSpecific;
 } // namespace js
 
 #endif // jsion_ion_lowering_x64_h__
-

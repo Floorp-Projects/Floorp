@@ -228,7 +228,7 @@ XPCThrower::ThrowExceptionObject(JSContext* cx, nsIException* e)
     JSBool success = false;
     if (e) {
         nsCOMPtr<nsIXPCException> xpcEx;
-        jsval thrown;
+        JS::RootedValue thrown(cx);
         nsXPConnect* xpc;
 
         // If we stored the original thrown JS value in the exception
@@ -236,13 +236,13 @@ XPCThrower::ThrowExceptionObject(JSContext* cx, nsIException* e)
         // context (i.e., not chrome), rethrow the original value.
         if (!IsCallerChrome(cx) &&
             (xpcEx = do_QueryInterface(e)) &&
-            NS_SUCCEEDED(xpcEx->StealJSVal(&thrown))) {
-            if (!JS_WrapValue(cx, &thrown))
+            NS_SUCCEEDED(xpcEx->StealJSVal(thrown.address()))) {
+            if (!JS_WrapValue(cx, thrown.address()))
                 return false;
             JS_SetPendingException(cx, thrown);
             success = true;
         } else if ((xpc = nsXPConnect::GetXPConnect())) {
-            JSObject* glob = JS_GetGlobalForScopeChain(cx);
+            JS::RootedObject glob(cx, JS_GetGlobalForScopeChain(cx));
             if (!glob)
                 return false;
 
@@ -251,8 +251,8 @@ XPCThrower::ThrowExceptionObject(JSContext* cx, nsIException* e)
                                           NS_GET_IID(nsIException),
                                           getter_AddRefs(holder));
             if (NS_SUCCEEDED(rv) && holder) {
-                JSObject* obj;
-                if (NS_SUCCEEDED(holder->GetJSObject(&obj))) {
+                JS::RootedObject obj(cx);
+                if (NS_SUCCEEDED(holder->GetJSObject(obj.address()))) {
                     JS_SetPendingException(cx, OBJECT_TO_JSVAL(obj));
                     success = true;
                 }

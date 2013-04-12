@@ -124,13 +124,19 @@ class TransportTestPeer : public sigslot::has_slots<> {
     usrsctp_deregister_address(static_cast<void *>(this));
 
     test_utils->sts_target()->Dispatch(WrapRunnable(this,
-                                                   &TransportTestPeer::DisconnectInt),
+                                                   &TransportTestPeer::Disconnect_s),
                                       NS_DISPATCH_SYNC);
 
     std::cerr << "~TransportTestPeer() completed" << std::endl;
   }
 
   void ConnectSocket(TransportTestPeer *peer) {
+    test_utils->sts_target()->Dispatch(WrapRunnable(
+        this, &TransportTestPeer::ConnectSocket_s, peer),
+                                       NS_DISPATCH_SYNC);
+  }
+
+  void ConnectSocket_s(TransportTestPeer *peer) {
     loopback_->Connect(peer->loopback_);
 
     ASSERT_EQ((nsresult)NS_OK, flow_->PushLayer(loopback_));
@@ -150,7 +156,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
     ASSERT_GE(0, r);
   }
 
-  void DisconnectInt() {
+  void Disconnect_s() {
     if (flow_) {
       flow_ = nullptr;
     }
@@ -191,8 +197,28 @@ class TransportTestPeer : public sigslot::has_slots<> {
   int received() const { return received_; }
   bool connected() const { return connected_; }
 
+  static TransportResult SendPacket_s(const unsigned char* data, size_t len,
+                                      const mozilla::RefPtr<TransportFlow>& flow) {
+    TransportResult res = flow->SendPacket(data, len);
+    delete data; // we always allocate
+    return res;
+  }
+
   TransportResult SendPacket(const unsigned char* data, size_t len) {
-    return flow_->SendPacket(data, len);
+    unsigned char *buffer = new unsigned char[len];
+    memcpy(buffer, data, len);
+
+    // Uses DISPATCH_NORMAL to avoid possible deadlocks when we're called
+    // from MainThread especially during shutdown (same as DataChannels).
+    // RUN_ON_THREAD short-circuits if already on the STS thread, which is
+    // normal for most transfers outside of connect() and close().  Passes
+    // a refptr to flow_ to avoid any async deletion issues (since we can't
+    // make 'this' into a refptr as it isn't refcounted)
+    RUN_ON_THREAD(test_utils->sts_target(), WrapRunnableNM(
+        &TransportTestPeer::SendPacket_s, buffer, len, flow_),
+                  NS_DISPATCH_NORMAL);
+
+    return 0;
   }
 
   void PacketReceived(TransportFlow * flow, const unsigned char* data,

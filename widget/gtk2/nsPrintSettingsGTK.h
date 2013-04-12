@@ -113,6 +113,12 @@ public:
 
   NS_IMETHOD GetPageRanges(nsTArray<int32_t> &aPages);
 
+  NS_IMETHOD GetResolution(int32_t *aResolution);
+  NS_IMETHOD SetResolution(int32_t aResolution);
+
+  NS_IMETHOD GetDuplex(int32_t *aDuplex);
+  NS_IMETHOD SetDuplex(int32_t aDuplex);
+
 protected:
   nsPrintSettingsGTK(const nsPrintSettingsGTK& src);
   nsPrintSettingsGTK& operator=(const nsPrintSettingsGTK& rhs);

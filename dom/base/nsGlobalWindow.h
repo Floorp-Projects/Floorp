@@ -1206,7 +1206,7 @@ protected:
   friend class nsDOMScriptableHelper;
   friend class nsDOMWindowUtils;
   friend class PostMessageEvent;
-  friend class nsDOMDesktopNotification;
+  friend class DesktopNotification;
 
   static WindowByIdTable* sWindowsById;
   static bool sWarnedAboutWindowInternal;

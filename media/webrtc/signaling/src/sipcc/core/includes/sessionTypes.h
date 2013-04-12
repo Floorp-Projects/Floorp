@@ -56,7 +56,8 @@ typedef struct {
   int          inst;
   line_t       line_id;
   int          cause;
-  string_t 	   sdp;
+  string_t     reason_text;
+  string_t     sdp;
   unsigned int media_stream_id;
   unsigned int media_stream_track_id;
 } cc_call_state_data_t;

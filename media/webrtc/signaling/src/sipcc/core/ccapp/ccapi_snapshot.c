@@ -423,7 +423,7 @@ void ccsnap_gen_lineEvent(ccapi_line_event_e event, cc_lineid_t handle){
             CCAPP_DEBUG(DEB_F_PREFIX"data->reg_state=%d \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), line_info->reg_state);
             CCAPP_DEBUG(DEB_F_PREFIX"data->isCFWD=%d \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), line_info->isCFWD);
             CCAPP_DEBUG(DEB_F_PREFIX"data->isLocalCFWD=%d \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), line_info->isLocalCFWD);
-            CCAPP_DEBUG(DEB_F_PREFIX"data->mwi=%d \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), line_info->mwi);
+            CCAPP_DEBUG(DEB_F_PREFIX"data->mwi=%d \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), line_info->mwi.status);
             CCAPP_DEBUG(DEB_F_PREFIX"data->name=%s \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), line_info->name);
             CCAPP_DEBUG(DEB_F_PREFIX"data->dn=%s \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), line_info->dn);
             CCAPP_DEBUG(DEB_F_PREFIX"data->cfwd_dest=%s \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), line_info->cfwd_dest);

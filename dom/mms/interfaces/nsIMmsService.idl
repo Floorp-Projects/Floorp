@@ -7,7 +7,9 @@ interface nsIMobileMessageCallback;
 interface nsIDOMBlob;
 
 %{C++
-#define RIL_MMSSERVICE_CONTRACTID "@mozilla.org/mms/rilmmsservice;1"
+#define MMS_SERVICE_CID { 0x06d9124b, 0x80e0, 0x40ed, \
+  { 0x98, 0x71, 0x4d, 0x23, 0x4a, 0x0f, 0xd4, 0x31 } }
+#define MMS_SERVICE_CONTRACTID "@mozilla.org/mms/mmsservice;1"
 %}
 
 [scriptable, uuid(e5ef630a-eab7-425a-ac42-650ef5c4fcef)]

@@ -1080,31 +1080,31 @@ session_data_t * getDeepCopyOfSessionData(session_data_t *data)
 void cleanSessionData(session_data_t *data)
 {
    if ( data != NULL ) {
-	strlib_free(data->clg_name);
+        strlib_free(data->clg_name);
         data->clg_name = strlib_empty();
-	strlib_free(data->clg_number);
+        strlib_free(data->clg_number);
         data->clg_number = strlib_empty();
-	strlib_free(data->alt_number);
+        strlib_free(data->alt_number);
         data->alt_number = strlib_empty();
-	strlib_free(data->cld_name);
+        strlib_free(data->cld_name);
         data->cld_name = strlib_empty();
-	strlib_free(data->cld_number);
+        strlib_free(data->cld_number);
         data->cld_number = strlib_empty();
-	strlib_free(data->orig_called_name);
+        strlib_free(data->orig_called_name);
         data->orig_called_name = strlib_empty();
-	strlib_free(data->orig_called_number);
+        strlib_free(data->orig_called_number);
         data->orig_called_number = strlib_empty();
-	strlib_free(data->last_redir_name);
+        strlib_free(data->last_redir_name);
         data->last_redir_name = strlib_empty();
-	strlib_free(data->last_redir_number);
+        strlib_free(data->last_redir_number);
         data->last_redir_number = strlib_empty();
-	strlib_free(data->plcd_name);
+        strlib_free(data->plcd_name);
         data->plcd_name = strlib_empty();
-	strlib_free(data->plcd_number);
+        strlib_free(data->plcd_number);
         data->plcd_number = strlib_empty();
-	strlib_free(data->status);
+        strlib_free(data->status);
         data->status = strlib_empty();
-	strlib_free(data->sdp);
+        strlib_free(data->sdp);
         data->sdp = strlib_empty();
         calllogger_free_call_log(&data->call_log);
     }
@@ -1461,6 +1461,8 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
                     state_data.media_stream_track_id;
                 data->media_stream_id = sessUpd->update.ccSessionUpd.data.
                     state_data.media_stream_id;
+                data->status =
+                  sessUpd->update.ccSessionUpd.data.state_data.reason_text;
                 break;
             default:
                 break;
@@ -1872,7 +1874,7 @@ static void freeRcvdInfo(session_rcvd_info_t *rcvdInfo)
 
 void dump_msg(char * name, unsigned int *msg, int len, unsigned int cmd) {
 int i,j;
-  CCAPP_DEBUG(DEB_F_PREFIX"\n%s %x %d cmd=%d\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "dump_msg"), name, msg, len, cmd);
+  CCAPP_DEBUG(DEB_F_PREFIX"%s %p %d cmd=%d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "dump_msg"), name, msg, len, cmd);
   for ( j=0;j<10;j++) {
     for(i=0;i<16;i++) {
       CCAPP_DEBUG(DEB_F_PREFIX"%08X ", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "dump_msg"), msg[i+j]);
@@ -2041,7 +2043,7 @@ void ccp_handler(void* msg, int type) {
 
         length = strlen((const char*)rcvdInfo->info.generic_raw.message_body);
         if (data != NULL) {
-            CCAPP_DEBUG(DEB_F_PREFIX"rcvdInfo: addr=%x length=%d, xml=%s\n",
+            CCAPP_DEBUG(DEB_F_PREFIX"rcvdInfo: addr=%p length=%d, xml=%s",
                     DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONFPARSE"),
                     &data->call_conference, length, rcvdInfo->info.generic_raw.message_body);
 

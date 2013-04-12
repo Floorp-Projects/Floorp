@@ -1662,6 +1662,9 @@ DoCompareFallback(JSContext *cx, BaselineFrame *frame, ICCompare_Fallback *stub,
         return true;
     }
 
+    if (!cx->runtime->jitSupportsFloatingPoint && (lhs.isNumber() || rhs.isNumber()))
+        return true;
+
     if (lhs.isNumber() && rhs.isNumber()) {
         IonSpew(IonSpew_BaselineIC, "  Generating %s(Number, Number) stub", js_CodeName[op]);
 
@@ -2070,7 +2073,7 @@ DoToBoolFallback(JSContext *cx, BaselineFrame *frame, ICToBool_Fallback *stub, H
         return true;
     }
 
-    if (arg.isDouble()) {
+    if (arg.isDouble() && cx->runtime->jitSupportsFloatingPoint) {
         IonSpew(IonSpew_BaselineIC, "  Generating ToBool(Double) stub.");
         ICToBool_Double::Compiler compiler(cx);
         ICStub *doubleStub = compiler.getStub(compiler.getStubSpace(script));
@@ -2456,6 +2459,9 @@ DoBinaryArithFallback(JSContext *cx, BaselineFrame *frame, ICBinaryArith_Fallbac
     JS_ASSERT(ret.isNumber());
 
     if (lhs.isDouble() || rhs.isDouble() || ret.isDouble()) {
+        if (!cx->runtime->jitSupportsFloatingPoint)
+            return true;
+
         switch (op) {
           case JSOP_ADD:
           case JSOP_SUB:
@@ -2912,7 +2918,10 @@ DoUnaryArithFallback(JSContext *cx, BaselineFrame *frame, ICUnaryArith_Fallback 
         return true;
     }
 
-    if (val.isNumber() && res.isNumber() && op == JSOP_NEG) {
+    if (val.isNumber() && res.isNumber() &&
+        op == JSOP_NEG &&
+        cx->runtime->jitSupportsFloatingPoint)
+    {
         IonSpew(IonSpew_BaselineIC, "  Generating %s(Number => Number) stub", js_CodeName[op]);
         // Unlink int32 stubs, the double stub handles both cases and TI specializes for both.
         stub->unlinkStubsWithKind(cx, ICStub::UnaryArith_Int32);
@@ -3256,6 +3265,15 @@ static bool TryAttachNativeGetElemStub(JSContext *cx, HandleScript script,
 }
 
 static bool
+TypedArrayRequiresFloatingPoint(JSObject *obj)
+{
+    uint32_t type = TypedArray::type(obj);
+    return (type == TypedArray::TYPE_UINT32 ||
+            type == TypedArray::TYPE_FLOAT32 ||
+            type == TypedArray::TYPE_FLOAT64);
+}
+
+static bool
 TryAttachGetElemStub(JSContext *cx, HandleScript script, ICGetElem_Fallback *stub,
                      HandleValue lhs, HandleValue rhs, HandleValue res)
 {
@@ -3303,6 +3321,9 @@ TryAttachGetElemStub(JSContext *cx, HandleScript script, ICGetElem_Fallback *stu
     if (obj->isTypedArray() && rhs.isInt32() && res.isNumber() &&
         !TypedArrayGetElemStubExists(stub, obj))
     {
+        if (!cx->runtime->jitSupportsFloatingPoint && TypedArrayRequiresFloatingPoint(obj))
+            return true;
+
         IonSpew(IonSpew_BaselineIC, "  Generating GetElem(TypedArray[Int32]) stub");
         ICGetElem_TypedArray::Compiler compiler(cx, obj->lastProperty(), TypedArray::type(obj));
         ICStub *typedArrayStub = compiler.getStub(compiler.getStubSpace(script));
@@ -3828,6 +3849,9 @@ DoSetElemFallback(JSContext *cx, BaselineFrame *frame, ICSetElem_Fallback *stub,
     }
 
     if (obj->isTypedArray() && index.isInt32() && rhs.isNumber()) {
+        if (!cx->runtime->jitSupportsFloatingPoint && TypedArrayRequiresFloatingPoint(obj))
+            return true;
+
         uint32_t len = TypedArray::length(obj);
         int32_t idx = index.toInt32();
         bool expectOutOfBounds = (idx < 0) || (static_cast<uint32_t>(idx) >= len);
@@ -3980,9 +4004,14 @@ ICSetElem_Dense::Compiler::generateStubCode(MacroAssembler &masm)
     masm.storeValue(R0, element);
     EmitReturnFromIC(masm);
 
-    // Convert to double and jump back.
+    // Convert to double and jump back. Note that double arrays are only
+    // created by IonMonkey, so if we have no floating-point support
+    // Ion is disabled and there should be no double arrays.
     masm.bind(&convertDoubles);
-    masm.convertInt32ValueToDouble(valueAddr, R0.scratchReg(), &convertDoublesDone);
+    if (cx->runtime->jitSupportsFloatingPoint)
+        masm.convertInt32ValueToDouble(valueAddr, R0.scratchReg(), &convertDoublesDone);
+    else
+        masm.breakpoint();
     masm.jump(&convertDoublesDone);
 
     // Failure case - fail but first unstow R0 and R1
@@ -4143,9 +4172,14 @@ ICSetElemDenseAddCompiler::generateStubCode(MacroAssembler &masm)
     masm.storeValue(R0, element);
     EmitReturnFromIC(masm);
 
-    // Convert to double and jump back.
+    // Convert to double and jump back. Note that double arrays are only
+    // created by IonMonkey, so if we have no floating-point support
+    // Ion is disabled and there should be no double arrays.
     masm.bind(&convertDoubles);
-    masm.convertInt32ValueToDouble(valueAddr, R0.scratchReg(), &convertDoublesDone);
+    if (cx->runtime->jitSupportsFloatingPoint)
+        masm.convertInt32ValueToDouble(valueAddr, R0.scratchReg(), &convertDoublesDone);
+    else
+        masm.breakpoint();
     masm.jump(&convertDoublesDone);
 
     // Failure case - fail but first unstow R0 and R1
@@ -4218,10 +4252,14 @@ ICSetElem_TypedArray::Compiler::generateStubCode(MacroAssembler &masm)
         // If the value is a double, clamp to uint8 and jump back.
         // Else, jump to failure.
         masm.bind(&notInt32);
-        masm.branchTestDouble(Assembler::NotEqual, value, &failure);
-        masm.unboxDouble(value, FloatReg0);
-        masm.clampDoubleToUint8(FloatReg0, secondScratch);
-        masm.jump(&clamped);
+        if (cx->runtime->jitSupportsFloatingPoint) {
+            masm.branchTestDouble(Assembler::NotEqual, value, &failure);
+            masm.unboxDouble(value, FloatReg0);
+            masm.clampDoubleToUint8(FloatReg0, secondScratch);
+            masm.jump(&clamped);
+        } else {
+            masm.jump(&failure);
+        }
     } else {
         Label notInt32;
         masm.branchTestInt32(Assembler::NotEqual, value, &notInt32);
@@ -4236,10 +4274,14 @@ ICSetElem_TypedArray::Compiler::generateStubCode(MacroAssembler &masm)
         // Else, jump to failure.
         Label failureRestoreRegs;
         masm.bind(&notInt32);
-        masm.branchTestDouble(Assembler::NotEqual, value, &failure);
-        masm.unboxDouble(value, FloatReg0);
-        masm.branchTruncateDouble(FloatReg0, secondScratch, &failureRestoreRegs);
-        masm.jump(&isInt32);
+        if (cx->runtime->jitSupportsFloatingPoint) {
+            masm.branchTestDouble(Assembler::NotEqual, value, &failure);
+            masm.unboxDouble(value, FloatReg0);
+            masm.branchTruncateDouble(FloatReg0, secondScratch, &failureRestoreRegs);
+            masm.jump(&isInt32);
+        } else {
+            masm.jump(&failure);
+        }
 
         // Writing to secondScratch may have clobbered R0 or R1, restore them
         // first.
@@ -6511,6 +6553,18 @@ ICCall_Native::Compiler::generateStubCode(MacroAssembler &masm)
     return true;
 }
 
+static JSBool
+DoubleValueToInt32ForSwitch(Value *v)
+{
+    double d = v->toDouble();
+    int32_t truncated = int32_t(d);
+    if (d != double(truncated))
+        return false;
+
+    v->setInt32(truncated);
+    return true;
+}
+
 bool
 ICTableSwitch::Compiler::generateStubCode(MacroAssembler &masm)
 {
@@ -6537,10 +6591,27 @@ ICTableSwitch::Compiler::generateStubCode(MacroAssembler &masm)
     masm.bind(&notInt32);
 
     masm.branchTestDouble(Assembler::NotEqual, R0, &outOfRange);
-    masm.unboxDouble(R0, FloatReg0);
+    if (cx->runtime->jitSupportsFloatingPoint) {
+        masm.unboxDouble(R0, FloatReg0);
 
-    // N.B. -0 === 0, so convert -0 to a 0 int32.
-    masm.convertDoubleToInt32(FloatReg0, key, &outOfRange, /* negativeZeroCheck = */ false);
+        // N.B. -0 === 0, so convert -0 to a 0 int32.
+        masm.convertDoubleToInt32(FloatReg0, key, &outOfRange, /* negativeZeroCheck = */ false);
+    } else {
+        // Pass pointer to double value.
+        masm.pushValue(R0);
+        masm.movePtr(StackPointer, R0.scratchReg());
+
+        masm.setupUnalignedABICall(1, scratch);
+        masm.passABIArg(R0.scratchReg());
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, DoubleValueToInt32ForSwitch));
+
+        // If the function returns |true|, the value has been converted to
+        // int32.
+        masm.mov(ReturnReg, scratch);
+        masm.popValue(R0);
+        masm.branchTest32(Assembler::Zero, scratch, scratch, &outOfRange);
+        masm.unboxInt32(R0, key);
+    }
     masm.jump(&isInt32);
 
     masm.bind(&outOfRange);
@@ -6947,6 +7018,253 @@ ICTypeOf_Typed::Compiler::generateStubCode(MacroAssembler &masm)
     EmitStubGuardFailure(masm);
     return true;
 }
+
+ICProfiler_PushFunction::ICProfiler_PushFunction(IonCode *stubCode, const char *str,
+                                                 HandleScript script)
+  : ICStub(ICStub::Profiler_PushFunction, stubCode),
+    str_(str),
+    script_(script)
+{ }
+
+ICTypeMonitor_SingleObject::ICTypeMonitor_SingleObject(IonCode *stubCode, HandleObject obj)
+  : ICStub(TypeMonitor_SingleObject, stubCode),
+    obj_(obj)
+{ }
+
+ICTypeMonitor_TypeObject::ICTypeMonitor_TypeObject(IonCode *stubCode, HandleTypeObject type)
+  : ICStub(TypeMonitor_TypeObject, stubCode),
+    type_(type)
+{ }
+
+ICTypeUpdate_SingleObject::ICTypeUpdate_SingleObject(IonCode *stubCode, HandleObject obj)
+  : ICStub(TypeUpdate_SingleObject, stubCode),
+    obj_(obj)
+{ }
+
+ICTypeUpdate_TypeObject::ICTypeUpdate_TypeObject(IonCode *stubCode, HandleTypeObject type)
+  : ICStub(TypeUpdate_TypeObject, stubCode),
+    type_(type)
+{ }
+
+ICGetElemNativeStub::ICGetElemNativeStub(ICStub::Kind kind, IonCode *stubCode,
+                                         ICStub *firstMonitorStub,
+                                         HandleShape shape, HandleValue idval,
+                                         bool isFixedSlot, uint32_t offset)
+  : ICMonitoredStub(kind, stubCode, firstMonitorStub),
+    shape_(shape),
+    idval_(idval),
+    offset_(offset)
+{
+    extra_ = isFixedSlot;
+}
+
+ICGetElemNativeStub::~ICGetElemNativeStub()
+{ }
+
+ICGetElem_NativePrototype::ICGetElem_NativePrototype(IonCode *stubCode, ICStub *firstMonitorStub,
+                                                     HandleShape shape, HandleValue idval,
+                                                     bool isFixedSlot, uint32_t offset,
+                                                     HandleObject holder, HandleShape holderShape)
+  : ICGetElemNativeStub(ICStub::GetElem_NativePrototype, stubCode, firstMonitorStub, shape,
+                        idval, isFixedSlot, offset),
+    holder_(holder),
+    holderShape_(holderShape)
+{ }
+
+ICGetElem_Dense::ICGetElem_Dense(IonCode *stubCode, ICStub *firstMonitorStub, HandleShape shape)
+    : ICMonitoredStub(GetElem_Dense, stubCode, firstMonitorStub),
+      shape_(shape)
+{ }
+
+ICGetElem_TypedArray::ICGetElem_TypedArray(IonCode *stubCode, HandleShape shape, uint32_t type)
+  : ICStub(GetElem_TypedArray, stubCode),
+    shape_(shape)
+{
+    extra_ = uint16_t(type);
+    JS_ASSERT(extra_ == type);
+}
+
+ICSetElem_Dense::ICSetElem_Dense(IonCode *stubCode, HandleShape shape, HandleTypeObject type)
+  : ICUpdatedStub(SetElem_Dense, stubCode),
+    shape_(shape),
+    type_(type)
+{ }
+
+ICSetElem_DenseAdd::ICSetElem_DenseAdd(IonCode *stubCode, types::TypeObject *type,
+                                       size_t protoChainDepth)
+  : ICUpdatedStub(SetElem_DenseAdd, stubCode),
+    type_(type)
+{
+    JS_ASSERT(protoChainDepth <= MAX_PROTO_CHAIN_DEPTH);
+    extra_ = protoChainDepth;
+}
+
+template <size_t ProtoChainDepth>
+ICUpdatedStub *
+ICSetElemDenseAddCompiler::getStubSpecific(ICStubSpace *space, const AutoShapeVector *shapes)
+{
+    return ICSetElem_DenseAddImpl<ProtoChainDepth>::New(space, getStubCode(), obj_->getType(cx),
+                                                        shapes);
+}
+
+ICSetElem_TypedArray::ICSetElem_TypedArray(IonCode *stubCode, HandleShape shape, uint32_t type,
+                                           bool expectOutOfBounds)
+  : ICStub(SetElem_TypedArray, stubCode),
+    shape_(shape)
+{
+    extra_ = uint8_t(type);
+    JS_ASSERT(extra_ == type);
+    extra_ |= (static_cast<uint16_t>(expectOutOfBounds) << 8);
+}
+
+ICGetName_Global::ICGetName_Global(IonCode *stubCode, ICStub *firstMonitorStub, HandleShape shape,
+                                   uint32_t slot)
+  : ICMonitoredStub(GetName_Global, stubCode, firstMonitorStub),
+    shape_(shape),
+    slot_(slot)
+{ }
+
+template <size_t NumHops>
+ICGetName_Scope<NumHops>::ICGetName_Scope(IonCode *stubCode, ICStub *firstMonitorStub,
+                                          AutoShapeVector *shapes, uint32_t offset)
+  : ICMonitoredStub(GetStubKind(), stubCode, firstMonitorStub),
+    offset_(offset)
+{
+    JS_STATIC_ASSERT(NumHops <= MAX_HOPS);
+    JS_ASSERT(shapes->length() == NumHops + 1);
+    for (size_t i = 0; i < NumHops + 1; i++)
+        shapes_[i].init((*shapes)[i]);
+}
+
+ICGetIntrinsic_Constant::ICGetIntrinsic_Constant(IonCode *stubCode, HandleValue value)
+  : ICStub(GetIntrinsic_Constant, stubCode),
+    value_(value)
+{ }
+
+ICGetIntrinsic_Constant::~ICGetIntrinsic_Constant()
+{ }
+
+ICGetProp_String::ICGetProp_String(IonCode *stubCode, ICStub *firstMonitorStub,
+                                   HandleShape stringProtoShape, uint32_t offset)
+  : ICMonitoredStub(GetProp_String, stubCode, firstMonitorStub),
+    stringProtoShape_(stringProtoShape),
+    offset_(offset)
+{ }
+
+ICGetPropNativeStub::ICGetPropNativeStub(ICStub::Kind kind, IonCode *stubCode,
+                                         ICStub *firstMonitorStub,
+                                         HandleShape shape, uint32_t offset)
+  : ICMonitoredStub(kind, stubCode, firstMonitorStub),
+    shape_(shape),
+    offset_(offset)
+{ }
+
+ICGetProp_NativePrototype::ICGetProp_NativePrototype(IonCode *stubCode, ICStub *firstMonitorStub,
+                                                     HandleShape shape, uint32_t offset,
+                                                     HandleObject holder, HandleShape holderShape)
+  : ICGetPropNativeStub(GetProp_NativePrototype, stubCode, firstMonitorStub, shape, offset),
+    holder_(holder),
+    holderShape_(holderShape)
+{ }
+
+ICGetPropCallGetter::ICGetPropCallGetter(Kind kind, IonCode *stubCode, ICStub *firstMonitorStub,
+                                         HandleShape shape, HandleObject holder,
+                                         HandleShape holderShape,
+                                         HandleFunction getter, uint32_t pcOffset)
+  : ICMonitoredStub(kind, stubCode, firstMonitorStub),
+    shape_(shape),
+    holder_(holder),
+    holderShape_(holderShape),
+    getter_(getter),
+    pcOffset_(pcOffset)
+{
+    JS_ASSERT(kind == ICStub::GetProp_CallScripted || kind == ICStub::GetProp_CallNative);
+}
+
+ICSetProp_Native::ICSetProp_Native(IonCode *stubCode, HandleTypeObject type, HandleShape shape,
+                                   uint32_t offset)
+  : ICUpdatedStub(SetProp_Native, stubCode),
+    type_(type),
+    shape_(shape),
+    offset_(offset)
+{ }
+
+ICUpdatedStub *
+ICSetProp_Native::Compiler::getStub(ICStubSpace *space)
+{
+    RootedTypeObject type(cx, obj_->getType(cx));
+    RootedShape shape(cx, obj_->lastProperty());
+    ICUpdatedStub *stub = ICSetProp_Native::New(space, getStubCode(), type, shape, offset_);
+    if (!stub || !stub->initUpdatingChain(cx, space))
+        return NULL;
+    return stub;
+}
+
+ICSetProp_NativeAdd::ICSetProp_NativeAdd(IonCode *stubCode, HandleTypeObject type,
+                                         size_t protoChainDepth,
+                                         HandleShape newShape, uint32_t offset)
+  : ICUpdatedStub(SetProp_NativeAdd, stubCode),
+    type_(type),
+    newShape_(newShape),
+    offset_(offset)
+{
+    JS_ASSERT(protoChainDepth <= MAX_PROTO_CHAIN_DEPTH);
+    extra_ = protoChainDepth;
+}
+
+template <size_t ProtoChainDepth>
+ICSetProp_NativeAddImpl<ProtoChainDepth>::ICSetProp_NativeAddImpl(IonCode *stubCode,
+                                                                  HandleTypeObject type,
+                                                                  const AutoShapeVector *shapes,
+                                                                  HandleShape newShape,
+                                                                  uint32_t offset)
+  : ICSetProp_NativeAdd(stubCode, type, ProtoChainDepth, newShape, offset)
+{
+    JS_ASSERT(shapes->length() == NumShapes);
+    for (size_t i = 0; i < NumShapes; i++)
+        shapes_[i].init((*shapes)[i]);
+}
+
+ICSetPropNativeAddCompiler::ICSetPropNativeAddCompiler(JSContext *cx, HandleObject obj,
+                                                       HandleShape oldShape,
+                                                       size_t protoChainDepth, bool isFixedSlot,
+                                                       uint32_t offset)
+  : ICStubCompiler(cx, ICStub::SetProp_NativeAdd),
+    obj_(cx, obj),
+    oldShape_(cx, oldShape),
+    protoChainDepth_(protoChainDepth),
+    isFixedSlot_(isFixedSlot),
+    offset_(offset)
+{
+    JS_ASSERT(protoChainDepth_ <= ICSetProp_NativeAdd::MAX_PROTO_CHAIN_DEPTH);
+}
+
+ICSetPropCallSetter::ICSetPropCallSetter(Kind kind, IonCode *stubCode, HandleShape shape,
+                                         HandleObject holder, HandleShape holderShape,
+                                         HandleFunction setter, uint32_t pcOffset)
+  : ICStub(kind, stubCode),
+    shape_(shape),
+    holder_(holder),
+    holderShape_(holderShape),
+    setter_(setter),
+    pcOffset_(pcOffset)
+{
+    JS_ASSERT(kind == ICStub::SetProp_CallScripted || kind == ICStub::SetProp_CallNative);
+}
+
+ICCall_Scripted::ICCall_Scripted(IonCode *stubCode, ICStub *firstMonitorStub,
+                                 HandleScript calleeScript, uint32_t pcOffset)
+  : ICMonitoredStub(ICStub::Call_Scripted, stubCode, firstMonitorStub),
+    calleeScript_(calleeScript),
+    pcOffset_(pcOffset)
+{ }
+
+ICCall_Native::ICCall_Native(IonCode *stubCode, ICStub *firstMonitorStub, HandleFunction callee,
+                             uint32_t pcOffset)
+  : ICMonitoredStub(ICStub::Call_Native, stubCode, firstMonitorStub),
+    callee_(callee),
+    pcOffset_(pcOffset)
+{ }
 
 } // namespace ion
 } // namespace js
