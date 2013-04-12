@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sts=4 et sw=4 tw=99:
+/* vim: set ts=4 sw=4 tw=99 et:
  *
  * Copyright (C) 2009 Apple Inc. All rights reserved.
  *
