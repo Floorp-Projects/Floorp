@@ -337,15 +337,8 @@ void imgRequest::SetIsInCache(bool incache)
 
 void imgRequest::UpdateCacheEntrySize()
 {
-  if (mCacheEntry) {
+  if (mCacheEntry)
     mCacheEntry->SetDataSize(mImage->SizeOfData());
-
-#ifdef DEBUG_joe
-    nsAutoCString url;
-    mURI->GetSpec(url);
-    printf("CACHEPUT: %d %s %d\n", time(NULL), url.get(), imageSize);
-#endif
-  }
 }
 
 void imgRequest::SetCacheValidation(imgCacheEntry* aCacheEntry, nsIRequest* aRequest)
