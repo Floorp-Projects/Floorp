@@ -178,6 +178,7 @@
     _(CallsiteCloneCache)           \
     _(CallGetElement)               \
     _(CallSetElement)               \
+    _(CallInitElementArray)         \
     _(CallSetProperty)              \
     _(CallDeleteProperty)           \
     _(SetPropertyCacheV)            \
