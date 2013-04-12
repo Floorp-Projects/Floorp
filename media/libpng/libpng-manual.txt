@@ -1,9 +1,9 @@
 Libpng-manual.txt - A description on how to use and modify libpng
 
- libpng version 1.5.14 - January 24, 2013
+ libpng version 1.5.15 - March 28, 2013
  Updated and distributed by Glenn Randers-Pehrson
  <glennrp at users.sourceforge.net>
- Copyright (c) 1998-2012 Glenn Randers-Pehrson
+ Copyright (c) 1998-2013 Glenn Randers-Pehrson
 
  This document is released under the libpng license.
  For conditions of distribution and use, see the disclaimer
@@ -11,9 +11,9 @@ Libpng-manual.txt - A description on how to use and modify libpng
 
  Based on:
 
- libpng versions 0.97, January 1998, through 1.5.14 - January 24, 2013
+ libpng versions 0.97, January 1998, through 1.5.15 - March 28, 2013
  Updated and distributed by Glenn Randers-Pehrson
- Copyright (c) 1998-2012 Glenn Randers-Pehrson
+ Copyright (c) 1998-2013 Glenn Randers-Pehrson
 
  libpng 1.0 beta 6  version 0.96 May 28, 1997
  Updated and distributed by Andreas Dilger
@@ -48,7 +48,7 @@ of reducing the amount of time and effort it takes to support the PNG
 file format in application programs.
 
 The PNG specification (second edition), November 2003, is available as
-a W3C Recommendation and as an ISO Standard (ISO/IEC 15948:2003 (E)) at
+a W3C Recommendation and as an ISO Standard (ISO/IEC 15948:2004 (E)) at
 <http://www.w3.org/TR/2003/REC-PNG-20031110/
 The W3C and ISO documents have identical technical content.
 
@@ -509,8 +509,7 @@ you can retrieve with
 
 If you call the png_set_read_user_chunk_fn() function, then all unknown
 chunks will be saved when read, in case your callback function will need
-one or more of them.  This behavior can be changed with the
-png_set_keep_unknown_chunks() function, described below.
+one or more of them.
 
 At this point, you can set up a callback function that will be
 called after each row has been read, which you can use to control
@@ -604,14 +603,18 @@ callback function:
 
     #if defined(PNG_UNKNOWN_CHUNKS_SUPPORTED)
       /* ignore all unknown chunks: */
+    #  if PNG_LIBPNG_VER < 10700
+      png_set_keep_unknown_chunks(read_ptr, 2, NULL, 0);
+    #  else
       png_set_keep_unknown_chunks(read_ptr, 1, NULL, 0);
+    #  endif
 
       /* except for vpAg: */
       png_set_keep_unknown_chunks(read_ptr, 2, vpAg, 1);
 
       /* also ignore unused known chunks: */
       png_set_keep_unknown_chunks(read_ptr, 1, unused_chunks,
-         (int)sizeof(unused_chunks)/5);
+         (int)png_sizeof(unused_chunks)/5);
     #endif
 
 User limits
@@ -4161,6 +4164,18 @@ This is enabled by default but can be disabled in each png_ptr with
                  0: disable
                  1: enable
 
+Retrieving the maximum palette index found was added at libpng-1.5.15.
+This statement must appear after png_read_png() or png_read_image() while
+reading, and after png_write_png() or png_write_image() while writing.
+
+   int max_palette = png_get_palette_max(png_ptr, info_ptr);
+
+This will return the maximum palette index found in the image, or "-1" if
+the palette was not checked, or "0" if no palette was found.  Note that this
+does not account for any palette index used by ancillary chunks such as the
+bKGD chunk; you must check those separately to determine the maximum
+palette index actually used.
+
 A. Changes that affect users of libpng
 
 There are no substantial API changes between the non-deprecated parts of
@@ -4578,7 +4593,7 @@ pngtest) appear in
 pngpriv.h
 above the comment that says
 
-  /* Maintainer: Put new private prototypes here ^ and in libpngpf.3 */
+  /* Maintainer: Put new private prototypes here ^ */
 
 To avoid polluting the global namespace, the names of all exported
 functions and variables begin with "png_", and all publicly visible C
@@ -4595,8 +4610,9 @@ left parenthesis that follows it:
     for (i = 2; i > 0; --i)
        y[i] = a(x) + (int)b;
 
-We prefer #ifdef and #ifndef to #if defined() and if !defined()
-when there is only one macro being tested.
+We prefer #ifdef and #ifndef to #if defined() and #if !defined()
+when there is only one macro being tested.  We always use parentheses
+with "defined".
 
 We prefer to express integers that are used as bit masks in hex format,
 with an even number of lower-case hex digits (e.g., 0x00, 0xff, 0x0100).
@@ -4609,13 +4625,13 @@ Other rules can be inferred by inspecting the libpng source.
 
 XIV. Y2K Compliance in libpng
 
-January 24, 2013
+March 28, 2013
 
 Since the PNG Development group is an ad-hoc body, we can't make
 an official declaration.
 
 This is your unofficial assurance that libpng from version 0.71 and
-upward through 1.5.14 are Y2K compliant.  It is my belief that earlier
+upward through 1.5.15 are Y2K compliant.  It is my belief that earlier
 versions were also Y2K compliant.
 
 Libpng only has two year fields.  One is a 2-byte unsigned integer that

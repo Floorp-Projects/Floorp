@@ -1,8 +1,8 @@
 
 /* pngget.c - retrieval of values from info struct
  *
- * Last changed in libpng 1.5.14 [January 24, 2013]
- * Copyright (c) 1998-2011 Glenn Randers-Pehrson
+ * Last changed in libpng 1.5.15 [March 28, 2013]
+ * Copyright (c) 1998-2013 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -1126,6 +1126,19 @@ png_get_io_chunk_name (png_structp png_ptr)
    return png_ptr->io_chunk_string;
 }
 #endif /* ?PNG_IO_STATE_SUPPORTED */
+
+#ifdef PNG_CHECK_FOR_INVALID_INDEX_SUPPORTED
+#  ifdef PNG_GET_PALETTE_MAX_SUPPORTED
+int PNGAPI
+png_get_palette_max(png_const_structp png_ptr, png_const_infop info_ptr)
+{
+   if (png_ptr != NULL && info_ptr != NULL)
+      return png_ptr->num_palette_max;
+
+   return (-1);
+}
+#  endif
+#endif
 
 #ifdef PNG_APNG_SUPPORTED
 png_uint_32 PNGAPI

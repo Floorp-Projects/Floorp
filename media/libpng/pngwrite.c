@@ -1,7 +1,7 @@
 
 /* pngwrite.c - general routines to write a PNG file
  *
- * Last changed in libpng 1.5.14 [January 24, 2013]
+ * Last changed in libpng 1.5.15 [March 28, 2013]
  * Copyright (c) 1998-2013 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -314,6 +314,7 @@ png_write_end(png_structp png_ptr, png_infop info_ptr)
       png_benign_error(png_ptr, "Wrote palette index exceeding num_palette");
 #endif
 
+    /* See if user wants us to write information chunks */
 #ifdef PNG_WRITE_APNG_SUPPORTED
    if (png_ptr->num_frames_written != png_ptr->num_frames_to_write)
       png_error(png_ptr, "Not enough frames written");
@@ -465,7 +466,9 @@ png_create_write_struct,(png_const_charp user_png_ver, png_voidp error_ptr,
 }
 
 /* Alternate initialize png_ptr structure, and allocate any memory needed */
+#ifdef PNG_WRITE_WEIGHTED_FILTER_SUPPORTED
 static void png_reset_filter_heuristics(png_structp png_ptr); /* forward decl */
+#endif
 
 PNG_FUNCTION(png_structp,PNGAPI
 png_create_write_struct_2,(png_const_charp user_png_ver, png_voidp error_ptr,
