@@ -128,7 +128,7 @@ private:
  * Automatically acquires the mutex when it enters scope, and releases it when
  * it leaves scope.
  */
-class NS_STACK_CLASS SQLiteMutexAutoLock
+class MOZ_STACK_CLASS SQLiteMutexAutoLock
 {
 public:
   SQLiteMutexAutoLock(SQLiteMutex &aMutex)
@@ -150,7 +150,7 @@ private:
  * Automatically releases the mutex when it enters scope, and acquires it when
  * it leaves scope.
  */
-class NS_STACK_CLASS SQLiteMutexAutoUnlock
+class MOZ_STACK_CLASS SQLiteMutexAutoUnlock
 {
 public:
   SQLiteMutexAutoUnlock(SQLiteMutex &aMutex)
