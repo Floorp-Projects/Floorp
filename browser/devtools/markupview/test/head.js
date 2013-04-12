@@ -4,8 +4,11 @@
 
 const Cu = Components.utils;
 
-let {devtools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
-let TargetFactory = devtools.TargetFactory;
+let TargetFactory = (function() {
+  let tempScope = {};
+  Components.utils.import("resource:///modules/devtools/Target.jsm", tempScope);
+  return tempScope.TargetFactory;
+})();
 
 // Clear preferences that may be set during the course of tests.
 function clearUserPrefs()

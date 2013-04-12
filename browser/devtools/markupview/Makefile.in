@@ -11,6 +11,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 libs::
-	$(NSINSTALL) $(srcdir)/*.js $(FINAL_TARGET)/modules/devtools/markupview
+	$(NSINSTALL) $(srcdir)/*.jsm $(FINAL_TARGET)/modules/devtools
 
 include $(topsrcdir)/config/rules.mk

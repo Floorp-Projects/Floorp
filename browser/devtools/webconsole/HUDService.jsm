@@ -16,8 +16,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "gDevTools",
     "resource:///modules/devtools/gDevTools.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "devtools",
-    "resource:///modules/devtools/gDevTools.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
+    "resource:///modules/devtools/Target.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
     "resource://gre/modules/Services.jsm");
@@ -30,6 +30,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "DebuggerClient",
 
 XPCOMUtils.defineLazyModuleGetter(this, "WebConsoleUtils",
     "resource://gre/modules/devtools/WebConsoleUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "webConsoleDefinition",
+    "resource:///modules/devtools/ToolDefinitions.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
     "resource://gre/modules/commonjs/sdk/core/promise.js");
@@ -81,7 +84,7 @@ HUD_SERVICE.prototype =
   /**
    * Open a Web Console for the given target.
    *
-   * @see devtools/framework/target.js for details about targets.
+   * @see devtools/framework/Target.jsm for details about targets.
    *
    * @param object aTarget
    *        The target that the web console will connect to.
@@ -606,7 +609,7 @@ var HeadsUpDisplayUICommands = {
   toggleHUD: function UIC_toggleHUD()
   {
     let window = HUDService.currentContext();
-    let target = devtools.TargetFactory.forTab(window.gBrowser.selectedTab);
+    let target = TargetFactory.forTab(window.gBrowser.selectedTab);
     let toolbox = gDevTools.getToolbox(target);
 
     return toolbox && toolbox.currentToolId == "webconsole" ?
@@ -624,10 +627,10 @@ var HeadsUpDisplayUICommands = {
   getOpenHUD: function UIC_getOpenHUD()
   {
     let tab = HUDService.currentContext().gBrowser.selectedTab;
-    if (!tab || !devtools.TargetFactory.isKnownTab(tab)) {
+    if (!tab || !TargetFactory.isKnownTab(tab)) {
       return null;
     }
-    let target = devtools.TargetFactory.forTab(tab);
+    let target = TargetFactory.forTab(tab);
     let toolbox = gDevTools.getToolbox(target);
     let panel = toolbox ? toolbox.getPanel("webconsole") : null;
     return panel ? panel.hud : null;
@@ -676,7 +679,7 @@ var HeadsUpDisplayUICommands = {
         chrome: true,
       };
 
-      return devtools.TargetFactory.forRemoteTab(options);
+      return TargetFactory.forRemoteTab(options);
     }
 
     function openWindow(aTarget)
@@ -685,7 +688,7 @@ var HeadsUpDisplayUICommands = {
 
       let deferred = Promise.defer();
 
-      let win = Services.ww.openWindow(null, devtools.Tools.webConsole.url, "_blank",
+      let win = Services.ww.openWindow(null, webConsoleDefinition.url, "_blank",
                                        BROWSER_CONSOLE_WINDOW_FEATURES, null);
       win.addEventListener("load", function onLoad() {
         win.removeEventListener("load", onLoad);
@@ -712,4 +715,3 @@ var HeadsUpDisplayUICommands = {
 };
 
 const HUDService = new HUD_SERVICE();
-
