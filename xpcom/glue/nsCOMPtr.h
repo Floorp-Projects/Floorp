@@ -247,7 +247,7 @@ class nsCOMPtr_helper
 
 class
   NS_COM_GLUE
-  NS_STACK_CLASS
+  MOZ_STACK_CLASS
 nsQueryInterface MOZ_FINAL
   {
     public:

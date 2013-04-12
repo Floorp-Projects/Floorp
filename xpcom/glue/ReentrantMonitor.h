@@ -165,7 +165,7 @@ private:
  *
  * MUCH PREFERRED to bare calls to ReentrantMonitor.Enter and Exit.
  */ 
-class NS_COM_GLUE NS_STACK_CLASS ReentrantMonitorAutoEnter
+class NS_COM_GLUE MOZ_STACK_CLASS ReentrantMonitorAutoEnter
 {
 public:
     /**
