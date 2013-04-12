@@ -39,8 +39,6 @@ public:
     return TextureFactoryIdentifier(LAYERS_OPENGL, GetMaxTextureSize());
   }
 
-  virtual void FallbackTextureInfo(TextureInfo& aId) MOZ_OVERRIDE;
-
   virtual TemporaryRef<CompositingRenderTarget> 
   CreateRenderTarget(const gfx::IntRect &aRect, SurfaceInitMode aInit) MOZ_OVERRIDE;
 

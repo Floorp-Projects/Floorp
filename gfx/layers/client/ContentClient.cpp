@@ -74,7 +74,6 @@ ContentClientRemote::DestroyBuffers()
   }
 
   MOZ_ASSERT(mTextureClient->GetAccessMode() == TextureClient::ACCESS_READ_WRITE);
-  // dont't call m*mTextureClient->Destroyed();
   mTextureClient = nullptr;
 
   DestroyFrontBuffer();
@@ -119,15 +118,15 @@ ContentClientRemote::CreateDTBuffer(ContentType aType,
     mOldTextures.AppendElement(mTextureClient);
     DestroyBuffers();
   }
-  mTextureClient = CreateTextureClient(TEXTURE_CONTENT, aFlags | HostRelease);
+  mTextureInfo.mTextureFlags = aFlags | HostRelease;
+  mTextureClient = CreateTextureClient(TEXTURE_CONTENT);
 
   mContentType = aType;
   mSize = gfx::IntSize(aRect.width, aRect.height);
   mTextureClient->EnsureAllocated(mSize, mContentType);
-  // note that LockSurfaceDescriptor doesn't actually lock anything
-  MOZ_ASSERT(IsSurfaceDescriptorValid(*mTextureClient->LockSurfaceDescriptor()));
+  MOZ_ASSERT(IsSurfaceDescriptorValid(*mTextureClient->GetDescriptor()));
 
-  CreateFrontBufferAndNotify(aRect, aFlags | HostRelease);
+  CreateFrontBufferAndNotify(aRect);
 
   RefPtr<DrawTarget> ret = mTextureClient->LockDrawTarget();
   return ret.forget();
@@ -147,15 +146,15 @@ ContentClientRemote::CreateBuffer(ContentType aType,
     mOldTextures.AppendElement(mTextureClient);
     DestroyBuffers();
   }
-  mTextureClient = CreateTextureClient(TEXTURE_CONTENT, aFlags | HostRelease);
+  mTextureInfo.mTextureFlags = aFlags | HostRelease;
+  mTextureClient = CreateTextureClient(TEXTURE_CONTENT);
 
   mContentType = aType;
   mSize = gfx::IntSize(aRect.width, aRect.height);
   mTextureClient->EnsureAllocated(mSize, mContentType);
-  // note that LockSurfaceDescriptor doesn't actually lock anything
-  MOZ_ASSERT(IsSurfaceDescriptorValid(*mTextureClient->LockSurfaceDescriptor()));
+  MOZ_ASSERT(IsSurfaceDescriptorValid(*mTextureClient->GetDescriptor()));
 
-  CreateFrontBufferAndNotify(aRect, aFlags | HostRelease);
+  CreateFrontBufferAndNotify(aRect);
 
   nsRefPtr<gfxASurface> ret = mTextureClient->LockSurface();
   return ret.forget();
@@ -197,7 +196,6 @@ ContentClientRemote::Updated(const nsIntRegion& aRegionToDraw,
                                                aVisibleRegion,
                                                aDidSelfCopy);
 
-  // don't call m*Client->Updated*()
   MOZ_ASSERT(mTextureClient);
   mTextureClient->SetAccessMode(TextureClient::ACCESS_NONE);
   LockFrontBuffer();
@@ -242,16 +240,18 @@ ContentClientDoubleBuffered::~ContentClientDoubleBuffered()
 }
 
 void
-ContentClientDoubleBuffered::CreateFrontBufferAndNotify(const nsIntRect& aBufferRect,
-                                                        uint32_t aFlags)
+ContentClientDoubleBuffered::CreateFrontBufferAndNotify(const nsIntRect& aBufferRect)
 {
-  mFrontClient = CreateTextureClient(TEXTURE_CONTENT, aFlags);
+  mFrontClient = CreateTextureClient(TEXTURE_CONTENT);
   mFrontClient->EnsureAllocated(mSize, mContentType);
 
   mFrontBufferRect = aBufferRect;
   mFrontBufferRotation = nsIntPoint();
 
-  mForwarder->CreatedDoubleBuffer(this, mFrontClient, mTextureClient);
+  mForwarder->CreatedDoubleBuffer(this,
+                                  *mFrontClient->GetDescriptor(),
+                                  *mTextureClient->GetDescriptor(),
+                                  mTextureInfo);
 }
 
 void
@@ -260,7 +260,6 @@ ContentClientDoubleBuffered::DestroyFrontBuffer()
   MOZ_ASSERT(mFrontClient);
   MOZ_ASSERT(mFrontClient->GetAccessMode() != TextureClient::ACCESS_NONE);
 
-  // dont't call mFrontClient->Destroyed();
   mFrontClient = nullptr;
 }
 
@@ -415,10 +414,11 @@ ContentClientSingleBuffered::~ContentClientSingleBuffered()
 }
 
 void
-ContentClientSingleBuffered::CreateFrontBufferAndNotify(const nsIntRect& aBufferRect,
-                                                        uint32_t aFlags)
+ContentClientSingleBuffered::CreateFrontBufferAndNotify(const nsIntRect& aBufferRect)
 {
-  mForwarder->CreatedSingleBuffer(this, mTextureClient);
+  mForwarder->CreatedSingleBuffer(this,
+                                  *mTextureClient->GetDescriptor(),
+                                  mTextureInfo);
 }
 
 void

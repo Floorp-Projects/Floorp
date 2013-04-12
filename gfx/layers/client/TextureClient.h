@@ -82,9 +82,7 @@ public:
   virtual gfxASurface* LockSurface() { return nullptr; }
   virtual gfx::DrawTarget* LockDrawTarget() { return nullptr; }
 
-  // note that this is often used simply as a getter for mDescriptor, not to
-  // lock anything, that is probably bad.
-  virtual SurfaceDescriptor* LockSurfaceDescriptor() { return &mDescriptor; }
+  virtual SurfaceDescriptor* LockSurfaceDescriptor() { return GetDescriptor(); }
   virtual void ReleaseResources() {}
   /**
    * This unlocks the current DrawableTexture and allows the host to composite
@@ -105,26 +103,14 @@ public:
    */
   virtual void SetDescriptorFromReply(const SurfaceDescriptor& aDescriptor)
   {
-    // default implem
+    // default implementation
     SetDescriptor(aDescriptor);
   }
   virtual void SetDescriptor(const SurfaceDescriptor& aDescriptor)
   {
     mDescriptor = aDescriptor;
   }
-
-  /**
-   * Adds this TextureClient's data to the current layer transaction.
-   * Gives up ownership of any shared resource.
-   */
-  virtual void Updated();
-  virtual void Destroyed();
-
-  void SetIPDLActor(PTextureChild* aTextureChild);
-  PTextureChild* GetIPDLActor() const
-  {
-    return mTextureChild;
-  }
+  SurfaceDescriptor* GetDescriptor() { return &mDescriptor; }
 
   CompositableForwarder* GetForwarder() const
   {
@@ -157,21 +143,20 @@ public:
 
 protected:
   TextureClient(CompositableForwarder* aForwarder,
-                CompositableType aCompositableType);
+                const TextureInfo& aTextureInfo);
 
   CompositableForwarder* mForwarder;
   // So far all TextureClients use a SurfaceDescriptor, so it makes sense to
   // keep the reference here.
   SurfaceDescriptor mDescriptor;
   TextureInfo mTextureInfo;
-  PTextureChild* mTextureChild;
   AccessMode mAccessMode;
 };
 
 class TextureClientShmem : public TextureClient
 {
 public:
-  TextureClientShmem(CompositableForwarder* aForwarder, CompositableType aCompositableType);
+  TextureClientShmem(CompositableForwarder* aForwarder, const TextureInfo& aTextureInfo);
   ~TextureClientShmem() { ReleaseResources(); }
 
   virtual bool SupportsType(TextureClientType aType) MOZ_OVERRIDE
@@ -201,8 +186,8 @@ private:
 class TextureClientShmemYCbCr : public TextureClient
 {
 public:
-  TextureClientShmemYCbCr(CompositableForwarder* aForwarder, CompositableType aCompositableType)
-    : TextureClient(aForwarder, aCompositableType)
+  TextureClientShmemYCbCr(CompositableForwarder* aForwarder, const TextureInfo& aTextureInfo)
+    : TextureClient(aForwarder, aTextureInfo)
   { }
   ~TextureClientShmemYCbCr() { ReleaseResources(); }
 
@@ -219,7 +204,7 @@ class TextureClientTile : public TextureClient
 public:
   TextureClientTile(const TextureClientTile& aOther);
   TextureClientTile(CompositableForwarder* aForwarder,
-                    CompositableType aCompositableType);
+                    const TextureInfo& aTextureInfo);
   ~TextureClientTile();
 
   virtual void EnsureAllocated(gfx::IntSize aSize,

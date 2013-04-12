@@ -75,7 +75,6 @@ enum TextureHostFlags
   TEXTURE_HOST_DEFAULT = 0,       // The default texture host for the given
                                   // SurfaceDescriptor
   TEXTURE_HOST_TILED = 1 << 0,    // A texture host that supports tiling
-  TEXTURE_HOST_DIRECT = 1 << 1    // Direct texturing
 };
 
 /**
@@ -96,6 +95,14 @@ struct TextureFactoryIdentifier
 };
 
 /**
+ * Identify a texture to a compositable. Many textures can have the same id, but
+ * the id is unique for any texture owned by a particular compositable.
+ */
+typedef uint32_t TextureIdentifier;
+const TextureIdentifier TextureFront = 1;
+const TextureIdentifier TextureBack = 2;
+
+/**
  * Information required by the compositor from the content-side for creating or
  * using compositables and textures.
  */
@@ -110,6 +117,19 @@ struct TextureInfo
     , mTextureHostFlags(0)
     , mTextureFlags(0)
   {}
+
+  TextureInfo(CompositableType aType)
+    : mCompositableType(aType)
+    , mTextureHostFlags(0)
+    , mTextureFlags(0)
+  {}
+
+  bool operator==(const TextureInfo& aOther) const
+  {
+    return mCompositableType == aOther.mCompositableType &&
+           mTextureHostFlags == aOther.mTextureHostFlags &&
+           mTextureFlags == aOther.mTextureFlags;
+  }
 };
 
 
