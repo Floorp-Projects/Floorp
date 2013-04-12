@@ -16,6 +16,7 @@
 #include "nsITimer.h"
 #include "nsIObserver.h"
 #include "nsIURI.h"
+#include "nsWrapperCache.h"
 
 #include "nsWeakPtr.h"
 #include "nsCycleCollectionParticipant.h"
@@ -27,6 +28,7 @@
 #include "nsIDOMGeoPositionErrorCallback.h"
 #include "nsIDOMNavigatorGeolocation.h"
 #include "nsIGeolocation.h"
+#include "mozilla/dom/PositionErrorBinding.h"
 
 #include "nsPIDOMWindow.h"
 
@@ -252,5 +254,41 @@ private:
 
   nsTArray<PendingRequest> mPendingRequests;
 };
+
+namespace mozilla {
+namespace dom {
+
+class PositionError MOZ_FINAL : public nsIDOMGeoPositionError,
+                                public nsWrapperCache
+{
+public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(PositionError)
+
+  NS_DECL_NSIDOMGEOPOSITIONERROR
+
+  PositionError(nsGeolocation* aParent, int16_t aCode);
+
+  nsGeolocation* GetParentObject() const;
+
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
+
+  int16_t Code() const {
+    return mCode;
+  }
+
+  void GetMessage(nsString& aRetVal) const {
+    aRetVal.Truncate();
+  }
+
+  void NotifyCallback(nsIDOMGeoPositionErrorCallback* callback);
+private:
+  ~PositionError();
+  int16_t mCode;
+  nsRefPtr<nsGeolocation> mParent;
+};
+
+}
+}
 
 #endif /* nsGeoLocation_h */

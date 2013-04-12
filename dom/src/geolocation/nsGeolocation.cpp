@@ -215,52 +215,54 @@ private:
 };
 
 ////////////////////////////////////////////////////
-// nsDOMGeoPositionError
+// PositionError
 ////////////////////////////////////////////////////
 
-class nsDOMGeoPositionError MOZ_FINAL : public nsIDOMGeoPositionError
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMGEOPOSITIONERROR
+DOMCI_DATA(GeoPositionError, PositionError)
 
-  nsDOMGeoPositionError(int16_t aCode);
-  void NotifyCallback(nsIDOMGeoPositionErrorCallback* callback);
-
-private:
-  ~nsDOMGeoPositionError();
-  int16_t mCode;
-};
-
-DOMCI_DATA(GeoPositionError, nsDOMGeoPositionError)
-
-NS_INTERFACE_MAP_BEGIN(nsDOMGeoPositionError)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PositionError)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMGeoPositionError)
   NS_INTERFACE_MAP_ENTRY(nsIDOMGeoPositionError)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(GeoPositionError)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_THREADSAFE_ADDREF(nsDOMGeoPositionError)
-NS_IMPL_THREADSAFE_RELEASE(nsDOMGeoPositionError)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(PositionError, mParent)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(PositionError)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(PositionError)
 
-nsDOMGeoPositionError::nsDOMGeoPositionError(int16_t aCode)
+PositionError::PositionError(nsGeolocation* aParent, int16_t aCode)
   : mCode(aCode)
+  , mParent(aParent)
 {
+  SetIsDOMBinding();
 }
 
-nsDOMGeoPositionError::~nsDOMGeoPositionError(){}
+PositionError::~PositionError(){}
 
 
 NS_IMETHODIMP
-nsDOMGeoPositionError::GetCode(int16_t *aCode)
+PositionError::GetCode(int16_t *aCode)
 {
   NS_ENSURE_ARG_POINTER(aCode);
-  *aCode = mCode;
+  *aCode = Code();
   return NS_OK;
 }
 
+nsGeolocation*
+PositionError::GetParentObject() const
+{
+  return mParent;
+}
+
+JSObject*
+PositionError::WrapObject(JSContext* aCx, JSObject* aScope)
+{
+  return PositionErrorBinding::Wrap(aCx, aScope, this);
+}
+
 void
-nsDOMGeoPositionError::NotifyCallback(nsIDOMGeoPositionErrorCallback* aCallback)
+PositionError::NotifyCallback(nsIDOMGeoPositionErrorCallback* aCallback)
 {
   if (!aCallback) {
     return;
@@ -337,7 +339,9 @@ NS_IMPL_CYCLE_COLLECTION_3(nsGeolocationRequest, mCallback, mErrorCallback, mLoc
 void
 nsGeolocationRequest::NotifyError(int16_t errorCode)
 {
-  nsRefPtr<nsDOMGeoPositionError> positionError = new nsDOMGeoPositionError(errorCode);
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsRefPtr<PositionError> positionError = new PositionError(mLocator, errorCode);
   if (!positionError) {
     return;
   }

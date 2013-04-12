@@ -165,6 +165,7 @@ webidl_files = \
   PerformanceNavigation.webidl \
   PerformanceTiming.webidl \
   Position.webidl \
+  PositionError.webidl \
   ProcessingInstruction.webidl \
   Range.webidl \
   Rect.webidl \
