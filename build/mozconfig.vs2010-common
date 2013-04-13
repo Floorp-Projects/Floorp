@@ -6,3 +6,6 @@ mk_export_correct_style() {
     mk_add_options "export $1=$(eval echo \$$1)"
   fi
 }
+
+# Enable ECMAScript Internationalization API
+ac_add_options --enable-intl-api
