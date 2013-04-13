@@ -1489,6 +1489,11 @@ NS_IMETHOD GetChildElementCount(uint32_t* aChildElementCount) MOZ_FINAL       \
   *aChildElementCount = Element::ChildElementCount();                         \
   return NS_OK;                                                               \
 }                                                                             \
+NS_IMETHOD MozRemove() MOZ_FINAL                                              \
+{                                                                             \
+  nsINode::Remove();                                                          \
+  return NS_OK;                                                               \
+}                                                                             \
 NS_IMETHOD GetOnmouseenter(JSContext* cx, JS::Value* aOnmouseenter) MOZ_FINAL \
 {                                                                             \
   return Element::GetOnmouseenter(cx, aOnmouseenter);                         \

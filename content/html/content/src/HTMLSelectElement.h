@@ -238,6 +238,8 @@ public:
   using nsIConstraintValidation::CheckValidity;
   // nsIConstraintValidation::SetCustomValidity() is fine.
 
+  using nsINode::Remove;
+
 
   // nsINode
   virtual JSObject*

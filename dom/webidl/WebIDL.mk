@@ -30,6 +30,7 @@ webidl_files = \
   CDATASection.webidl \
   CFStateChangeEvent.webidl \
   CharacterData.webidl \
+  ChildNode.webidl \
   ClientRect.webidl \
   ClientRectList.webidl \
   ClipboardEvent.webidl \
