@@ -1,0 +1,5 @@
+{
+  "select.options.remove(n) should work": true,
+  "remove() should work on select elements.": true,
+  "Element#remove() should work on select elements.": true
+}
