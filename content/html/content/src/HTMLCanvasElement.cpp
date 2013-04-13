@@ -4,46 +4,38 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/HTMLCanvasElement.h"
-#include "nsAttrValueInlines.h"
 
+#include "BasicLayers.h"
+#include "imgIEncoder.h"
+#include "jsapi.h"
+#include "jsfriendapi.h"
 #include "mozilla/Base64.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/dom/CanvasRenderingContext2D.h"
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
-#include "nsNetUtil.h"
-#include "nsDOMFile.h"
-
-#include "mozilla/dom/CanvasRenderingContext2D.h"
-#include "nsIScriptSecurityManager.h"
-#include "nsIXPConnect.h"
-#include "jsapi.h"
-#include "jsfriendapi.h"
+#include "nsAsyncDOMEvent.h"
+#include "nsAttrValueInlines.h"
 #include "nsContentUtils.h"
+#include "nsDisplayList.h"
+#include "nsDOMFile.h"
+#include "nsFrameManager.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsITimer.h"
+#include "nsIWritablePropertyBag2.h"
+#include "nsIXPConnect.h"
 #include "nsJSUtils.h"
 #include "nsMathUtils.h"
+#include "nsNetUtil.h"
 #include "nsStreamUtils.h"
-
-#include "nsFrameManager.h"
-#include "nsDisplayList.h"
-#include "BasicLayers.h"
-#include "imgIEncoder.h"
-#include "nsITimer.h"
-#include "nsAsyncDOMEvent.h"
-
-#include "nsIWritablePropertyBag2.h"
 
 #define DEFAULT_CANVAS_WIDTH 300
 #define DEFAULT_CANVAS_HEIGHT 150
 
 using namespace mozilla::layers;
 
-nsGenericHTMLElement*
-NS_NewHTMLCanvasElement(already_AddRefed<nsINodeInfo> aNodeInfo,
-                        mozilla::dom::FromParser aFromParser)
-{
-  return new mozilla::dom::HTMLCanvasElement(aNodeInfo);
-}
+NS_IMPL_NS_NEW_HTML_ELEMENT(Canvas)
 
 namespace {
 
@@ -151,7 +143,7 @@ NS_IMPL_CYCLE_COLLECTION_3(HTMLCanvasPrintState, mCanvas, mContext, mCallback)
 // ---------------------------------------------------------------------------
 
 HTMLCanvasElement::HTMLCanvasElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo), 
+  : nsGenericHTMLElement(aNodeInfo),
     mWriteOnly(false)
 {
 }
@@ -161,21 +153,9 @@ HTMLCanvasElement::~HTMLCanvasElement()
   ResetPrintCallback();
 }
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLCanvasElement,
-                                                  nsGenericHTMLElement)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCurrentContext)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPrintCallback)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPrintState)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOriginalCanvas)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLCanvasElement,
-                                                nsGenericHTMLElement)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCurrentContext)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPrintCallback)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPrintState)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOriginalCanvas)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED_4(HTMLCanvasElement, nsGenericHTMLElement,
+                                     mCurrentContext, mPrintCallback,
+                                     mPrintState, mOriginalCanvas)
 
 NS_IMPL_ADDREF_INHERITED(HTMLCanvasElement, Element)
 NS_IMPL_RELEASE_INHERITED(HTMLCanvasElement, Element)
@@ -530,11 +510,11 @@ HTMLCanvasElement::ToDataURLImpl(const nsAString& aMimeType,
   if (params.Length() == 0) {
     NS_NAMED_LITERAL_STRING(mozParseOptions, "-moz-parse-options:");
     nsAutoString paramString;
-    if (NS_SUCCEEDED(aEncoderOptions->GetAsAString(paramString)) && 
+    if (NS_SUCCEEDED(aEncoderOptions->GetAsAString(paramString)) &&
         StringBeginsWith(paramString, mozParseOptions)) {
-      nsDependentSubstring parseOptions = Substring(paramString, 
-                                                    mozParseOptions.Length(), 
-                                                    paramString.Length() - 
+      nsDependentSubstring parseOptions = Substring(paramString,
+                                                    mozParseOptions.Length(),
+                                                    paramString.Length() -
                                                     mozParseOptions.Length());
       params.Append(parseOptions);
       usingCustomParseOptions = true;
@@ -544,7 +524,7 @@ HTMLCanvasElement::ToDataURLImpl(const nsAString& aMimeType,
   nsCOMPtr<nsIInputStream> stream;
   rv = ExtractData(type, params, getter_AddRefs(stream), fallbackToPNG);
 
-  // If there are unrecognized custom parse options, we should fall back to 
+  // If there are unrecognized custom parse options, we should fall back to
   // the default values for the encoder without any options at all.
   if (rv == NS_ERROR_INVALID_ARG && usingCustomParseOptions) {
     fallbackToPNG = false;
