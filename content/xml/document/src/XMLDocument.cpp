@@ -215,8 +215,6 @@ NS_NewXBLDocument(nsIDOMDocument** aInstancePtrResult,
   return NS_OK;
 }
 
-DOMCI_NODE_DATA(XMLDocument, XMLDocument)
-
 namespace mozilla {
 namespace dom {
 
@@ -242,7 +240,6 @@ NS_INTERFACE_TABLE_HEAD(XMLDocument)
     NS_INTERFACE_TABLE_ENTRY(XMLDocument, nsIDOMXMLDocument)
   NS_OFFSET_AND_INTERFACE_TABLE_END
   NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(XMLDocument)
 NS_INTERFACE_MAP_END_INHERITING(nsDocument)
 
 

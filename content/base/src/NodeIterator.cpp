@@ -15,12 +15,9 @@
 
 #include "nsIContent.h"
 #include "nsIDocument.h"
-#include "nsDOMClassInfoID.h"
 #include "nsContentUtils.h"
 #include "nsCOMPtr.h"
 #include "mozilla/dom/NodeIteratorBinding.h"
-
-DOMCI_DATA(NodeIterator, mozilla::dom::NodeIterator)
 
 namespace mozilla {
 namespace dom {
@@ -175,7 +172,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(NodeIterator)
     NS_INTERFACE_MAP_ENTRY(nsIDOMNodeIterator)
     NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMNodeIterator)
-    NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(NodeIterator)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(NodeIterator)
