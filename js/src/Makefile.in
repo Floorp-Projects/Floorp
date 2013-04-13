@@ -599,13 +599,53 @@ distclean clean::
 endif
 endif
 
+
+#############################################
+# BEGIN ECMAScript Internationalization API
+#
+
 # ICU headers need to be available whether we build with the complete
 # Internationalization API or not - ICU stubs rely on them.
 
 LOCAL_INCLUDES += \
-    -I$(topsrcdir)/../../intl/icu/source/common \
-    -I$(topsrcdir)/../../intl/icu/source/i18n \
-    $(NULL)
+  -I$(topsrcdir)/../../intl/icu/source/common \
+  -I$(topsrcdir)/../../intl/icu/source/i18n \
+  $(NULL)
+
+ifdef ENABLE_INTL_API
+
+ifeq ($(OS_ARCH),WINNT)
+  # Parallel gmake is buggy on Windows
+  ICU_GMAKE_OPTIONS="-j1"
+  # Library names: On Windows, ICU uses modified library names for static
+  # and debug libraries.
+  ifdef MOZ_DEBUG
+    ICU_LIB_SUFFIX=d
+  endif
+  ICU_LIB_RENAME = $(foreach libname,$(ICU_LIB_NAMES),\
+                     cp -p intl/icu/lib/s$(libname)$(ICU_LIB_SUFFIX).lib intl/icu/lib/$(libname).lib;)
+endif
+
+# - Build ICU as part of the "export" target, so things get built
+#   in the right order.
+# - ICU requires GNU make according to its readme.html. pymake can't be used
+#   because it doesn't support order only dependencies.
+# - Force ICU to use the standard suffix for object files because expandlibs
+#   will discard all files with a non-standard suffix (bug 857450).
+# - Options for genrb: -k strict parsing; -R omit collation tailoring rules.
+export::
+	$(GMAKE) $(ICU_GMAKE_OPTIONS) -C intl/icu STATIC_O=$(OBJ_SUFFIX) GENRBOPTS='-k -R'
+	$(ICU_LIB_RENAME)
+
+distclean clean::
+	$(call SUBMAKE,$@,intl/icu)
+
+endif
+
+#
+# END ECMAScript Internationalization API
+#############################################
+
 
 # The "find any vanilla new/new[] calls" script is tailored to Linux, so
 # only run it there.  That should be enough to catch any such calls that
@@ -733,6 +773,8 @@ EXTRA_LIBS += $(MOZ_ZLIB_LIBS)
 ifneq (,$(MOZ_ZLIB_LIBS)$(MOZ_GLUE_LDFLAGS))
 DEFINES += -DUSE_ZLIB
 endif
+
+SHARED_LIBRARY_LIBS += $(ICU_LIBS)
 
 # Prevent floating point errors caused by VC++ optimizations
 ifdef _MSC_VER
@@ -1038,4 +1080,3 @@ endif
 #
 # END kludges for the Nitro assembler
 ###############################################
-
