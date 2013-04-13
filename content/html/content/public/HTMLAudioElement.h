@@ -7,8 +7,8 @@
 #define mozilla_dom_HTMLAudioElement_h
 
 #include "nsIDOMHTMLAudioElement.h"
-#include "nsIJSNativeInitializer.h"
 #include "mozilla/dom/HTMLMediaElement.h"
+#include "mozilla/dom/TypedArray.h"
 
 typedef uint16_t nsMediaNetworkState;
 typedef uint16_t nsMediaReadyState;
@@ -39,9 +39,6 @@ public:
   using HTMLMediaElement::GetPaused;
   NS_FORWARD_NSIDOMHTMLMEDIAELEMENT(HTMLMediaElement::)
 
-  // nsIDOMHTMLAudioElement
-  NS_DECL_NSIDOMHTMLAUDIOELEMENT
-
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual nsresult SetAcceptHeader(nsIHttpChannel* aChannel);
 
@@ -57,7 +54,16 @@ public:
 
   void MozSetup(uint32_t aChannels, uint32_t aRate, ErrorResult& aRv);
 
-  uint32_t MozWriteAudio(JSContext* aCx, JS::Value aData, ErrorResult& aRv);
+  uint32_t MozWriteAudio(const Float32Array& aData, ErrorResult& aRv)
+  {
+    return MozWriteAudio(aData.Data(), aData.Length(), aRv);
+  }
+  uint32_t MozWriteAudio(const Sequence<float>& aData, ErrorResult& aRv)
+  {
+    return MozWriteAudio(aData.Elements(), aData.Length(), aRv);
+  }
+  uint32_t MozWriteAudio(const float* aData, uint32_t aLength,
+                         ErrorResult& aRv);
 
   uint64_t MozCurrentSampleOffset(ErrorResult& aRv);
 
