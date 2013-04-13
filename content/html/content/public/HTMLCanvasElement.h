@@ -163,8 +163,9 @@ protected:
                        const nsAString& aOptions,
                        nsIInputStream** aStream,
                        bool& aFellBackToPNG);
-  nsresult ToDataURLImpl(const nsAString& aMimeType,
-                         nsIVariant* aEncoderOptions,
+  nsresult ToDataURLImpl(JSContext* aCx,
+                         const nsAString& aMimeType,
+                         const JS::Value& aEncoderOptions,
                          nsAString& aDataURL);
   nsresult MozGetAsFileImpl(const nsAString& aName,
                             const nsAString& aType,

@@ -46,7 +46,7 @@ interface nsIFileCallback : nsISupports {
   void receive(in nsIDOMBlob file);
 };
 
-[scriptable, uuid(83d84fe5-cd02-41ff-ac86-668775627d82)]
+[scriptable, uuid(ba777030-783e-43b6-b85d-0670da81acb8)]
 interface nsIDOMHTMLCanvasElement : nsIDOMHTMLElement
 {
   attribute unsigned long width;
@@ -61,8 +61,9 @@ interface nsIDOMHTMLCanvasElement : nsIDOMHTMLElement
   //  toDataURL();              -- defaults to image/png
   //  toDataURL(type);          -- uses given type
   //  toDataURL(type, params);  -- uses given type, and any valid parameters
+  [implicit_jscontext]
   DOMString toDataURL([optional] in DOMString type,
-                      [optional] in nsIVariant params);
+                      [optional] in jsval params);
 
   // Valid calls are
   // mozGetAsFile(name);              -- defaults to image/png
