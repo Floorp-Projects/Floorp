@@ -30,9 +30,6 @@
 #include "nsNetUtil.h"
 #include "nsStreamUtils.h"
 
-#define DEFAULT_CANVAS_WIDTH 300
-#define DEFAULT_CANVAS_HEIGHT 150
-
 using namespace mozilla::layers;
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Canvas)
@@ -386,14 +383,19 @@ HTMLCanvasElement::SetMozPrintCallback(nsIPrintCallback *aCallback)
   return NS_OK;
 }
 
+nsIPrintCallback*
+HTMLCanvasElement::GetMozPrintCallback() const
+{
+  if (mOriginalCanvas) {
+    return mOriginalCanvas->GetMozPrintCallback();
+  }
+  return mPrintCallback;
+}
+
 NS_IMETHODIMP
 HTMLCanvasElement::GetMozPrintCallback(nsIPrintCallback** aCallback)
 {
-  if (mOriginalCanvas) {
-    mOriginalCanvas->GetMozPrintCallback(aCallback);
-    return NS_OK;
-  }
-  NS_IF_ADDREF(*aCallback = mPrintCallback);
+  NS_IF_ADDREF(*aCallback = GetMozPrintCallback());
   return NS_OK;
 }
 
@@ -593,6 +595,16 @@ HTMLCanvasElement::ToBlob(nsIFileCallback* aCallback,
 
   nsRefPtr<ToBlobRunnable> runnable = new ToBlobRunnable(aCallback, blob);
   return NS_DispatchToCurrentThread(runnable);
+}
+
+already_AddRefed<nsIDOMFile>
+HTMLCanvasElement::MozGetAsFile(const nsAString& aName,
+                                const nsAString& aType,
+                                ErrorResult& aRv)
+{
+  nsCOMPtr<nsIDOMFile> file;
+  aRv = MozGetAsFile(aName, aType, getter_AddRefs(file));
+  return file.forget();
 }
 
 NS_IMETHODIMP
