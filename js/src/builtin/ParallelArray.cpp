@@ -155,7 +155,7 @@ ParallelArrayObject::constructHelper(JSContext *cx, MutableHandleFunction ctor, 
                 types::TypeScript::InitObject(cx, script, pc, JSProto_ParallelArray);
             if (!paTypeObject)
                 return false;
-            if (paTypeObject->getPropertyCount() == 0) {
+            if (paTypeObject->getPropertyCount() == 0 && !paTypeObject->unknownProperties()) {
                 if (!paTypeObject->addDefiniteProperties(cx, result))
                     return false;
 
