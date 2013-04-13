@@ -20,6 +20,9 @@
 #define NS_PROGRESS_EVENT_INTERVAL 50
 
 namespace mozilla {
+
+class ErrorResult;
+
 namespace dom {
 
 extern const uint64_t kUnknownSize;
@@ -36,9 +39,15 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // Common methods
-  NS_METHOD Abort();
-  NS_METHOD GetReadyState(uint16_t* aReadyState);
-  NS_METHOD GetError(nsIDOMDOMError** aError);
+  void Abort(ErrorResult& aRv);
+  uint16_t ReadyState() const
+  {
+    return mReadyState;
+  }
+  nsIDOMDOMError* GetError() const
+  {
+    return mError;
+  }
 
   NS_METHOD GetOnabort(JSContext* aCx, JS::Value* aValue);
   NS_METHOD SetOnabort(JSContext* aCx, const JS::Value& aValue);
@@ -46,6 +55,10 @@ public:
   NS_METHOD SetOnerror(JSContext* aCx, const JS::Value& aValue);
   NS_METHOD GetOnprogress(JSContext* aCx, JS::Value* aValue);
   NS_METHOD SetOnprogress(JSContext* aCx, const JS::Value& aValue);
+
+  IMPL_EVENT_HANDLER(abort)
+  IMPL_EVENT_HANDLER(error)
+  IMPL_EVENT_HANDLER(progress)
 
   NS_DECL_NSITIMERCALLBACK
 
@@ -58,7 +71,7 @@ public:
 
 protected:
   // Implemented by the derived class to do whatever it needs to do for abort
-  NS_IMETHOD DoAbort(nsAString& aEvent) = 0;
+  virtual void DoAbort(nsAString& aEvent) = 0;
   // for onStartRequest (this has a default impl since FileReader doesn't need
   // special handling
   NS_IMETHOD DoOnStartRequest(nsIRequest *aRequest, nsISupports *aContext);

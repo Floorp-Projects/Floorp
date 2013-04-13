@@ -217,12 +217,13 @@ FileIOObject::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-FileIOObject::Abort()
+void
+FileIOObject::Abort(ErrorResult& aRv)
 {
   if (mReadyState != 1) {
     // XXX The spec doesn't say this
-    return NS_ERROR_DOM_FILE_ABORT_ERR;
+    aRv.Throw(NS_ERROR_DOM_FILE_ABORT_ERR);
+    return;
   }
 
   ClearProgressEventTimer();
@@ -233,27 +234,11 @@ FileIOObject::Abort()
   mError = DOMError::CreateWithName(NS_LITERAL_STRING("AbortError"));
 
   nsString finalEvent;
-  nsresult rv = DoAbort(finalEvent);
+  DoAbort(finalEvent);
 
   // Dispatch the events
   DispatchProgressEvent(NS_LITERAL_STRING(ABORT_STR));
   DispatchProgressEvent(finalEvent);
-
-  return rv;
-}
-
-NS_IMETHODIMP
-FileIOObject::GetReadyState(uint16_t *aReadyState)
-{
-  *aReadyState = mReadyState;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-FileIOObject::GetError(nsIDOMDOMError** aError)
-{
-  NS_IF_ADDREF(*aError = mError);
-  return NS_OK;
 }
 
 } // namespace dom
