@@ -158,7 +158,6 @@ DOMCI_CLASS(OfflineResourceList)
 
 DOMCI_CLASS(Blob)
 DOMCI_CLASS(File)
-DOMCI_CLASS(FileReader)
 
 // DOM modal content window class, almost identical to Window
 DOMCI_CLASS(ModalContentWindow)
