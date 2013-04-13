@@ -272,7 +272,8 @@ typedef NSInteger NSEventGestureAxis;
 
 #ifdef __LP64__
   // Support for fluid swipe tracking.
-  void (^mCancelSwipeAnimation)();
+  BOOL* mCancelSwipeAnimation;
+  PRUint32 mCurrentSwipeDir;
 #endif
 
   // Whether this uses off-main-thread compositing.
@@ -340,7 +341,8 @@ typedef NSInteger NSEventGestureAxis;
 // Support for fluid swipe tracking.
 #ifdef __LP64__
 - (void)maybeTrackScrollEventAsSwipe:(NSEvent *)anEvent
-                      scrollOverflow:(double)overflow;
+                     scrollOverflowX:(double)overflowX
+                     scrollOverflowY:(double)overflowY;
 #endif
 
 - (void)setUsingOMTCompositor:(BOOL)aUseOMTC;
