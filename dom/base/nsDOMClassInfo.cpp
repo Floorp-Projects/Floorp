@@ -61,7 +61,6 @@
 #include "nsIAttribute.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMXMLDocument.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMEventListener.h"
@@ -112,9 +111,6 @@
 #include "nsIFormControl.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsHTMLDocument.h"
-
-// Constraint Validation API helper includes
-#include "nsIDOMValidityState.h"
 
 // Event related includes
 #include "nsEventListenerManager.h"
@@ -181,9 +177,6 @@
 #include "nsIDOMElementCSSInlineStyle.h"
 #include "nsIDOMLinkStyle.h"
 #include "nsIDOMHTMLDocument.h"
-#include "nsIDOMHTMLCanvasElement.h"
-#include "nsIDOMHTMLIFrameElement.h"
-#include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMCSSCharsetRule.h"
 #include "nsIDOMCSSImportRule.h"
 #include "nsIDOMCSSMediaRule.h"
@@ -199,10 +192,6 @@
 #include "GeneratedEvents.h"
 #undef MOZ_GENERATED_EVENTS_INCLUDES
 #include "nsIDOMDeviceMotionEvent.h"
-#include "nsIDOMRange.h"
-#include "nsIDOMNodeIterator.h"
-#include "nsIDOMTreeWalker.h"
-#include "nsIDOMXULDocument.h"
 #include "nsIDOMXULCommandDispatcher.h"
 #ifndef MOZ_DISABLE_CRYPTOLEGACY
 #include "nsIDOMCRMFObject.h"
@@ -226,14 +215,12 @@
 #include "nsIDOMXPathResult.h"
 #include "nsIDOMMozBrowserFrame.h"
 
-#include "nsIDOMGetSVGDocument.h"
 #include "nsIDOMSVGAnimatedEnum.h"
 #include "nsIDOMSVGAnimatedInteger.h"
 #include "nsIDOMSVGAnimatedNumber.h"
 #include "nsIDOMSVGAnimatedRect.h"
 #include "nsIDOMSVGAnimatedString.h"
 #include "nsIDOMTimeEvent.h"
-#include "nsIDOMSVGDocument.h"
 #include "nsIDOMSVGLength.h"
 #include "nsIDOMSVGNumber.h"
 #include "nsIDOMSVGRect.h"
@@ -344,8 +331,6 @@ using mozilla::dom::workers::ResolveWorkerClasses;
 #include "DOMCameraControl.h"
 #include "DOMCameraCapabilities.h"
 #include "DOMError.h"
-#include "DOMRequest.h"
-#include "DOMCursor.h"
 #include "nsIOpenWindowEventDetail.h"
 #include "nsIAsyncScrollEventDetail.h"
 #include "nsIDOMGlobalObjectConstructor.h"
@@ -575,8 +560,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE)
 
   // Core classes
-  NS_DEFINE_CLASSINFO_DATA(XMLDocument, nsDocumentSH,
-                           DOCUMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(DOMException, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(Element, nsElementSH,
@@ -633,14 +616,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            ELEMENT_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_GETPROPERTY |
                            nsIXPCScriptable::WANT_NEWENUMERATE)
-  NS_DEFINE_CLASSINFO_DATA(HTMLIFrameElement, nsElementSH,
-                           ELEMENT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(HTMLInputElement, nsElementSH,
-                           ELEMENT_SCRIPTABLE_FLAGS)
-
-  // Constraint Validation API classes
-  NS_DEFINE_CLASSINFO_DATA(ValidityState, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   // CSS classes
   NS_DEFINE_CLASSINFO_DATA(CSSStyleRule, nsDOMGenericSH,
@@ -664,16 +639,11 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(CSSStyleSheet, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
-  // Range classes
-  NS_DEFINE_CLASSINFO_DATA(Range, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(Selection, nsDOMGenericSH,
                            DEFAULT_SCRIPTABLE_FLAGS)
 
   // XUL classes
 #ifdef MOZ_XUL
-  NS_DEFINE_CLASSINFO_DATA(XULDocument, nsDocumentSH,
-                           DOCUMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(XULCommandDispatcher, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 #endif
@@ -696,13 +666,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(Crypto, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
-  // DOM Traversal classes
-  NS_DEFINE_CLASSINFO_DATA(TreeWalker, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
-  // We are now trying to preserve binary compat in classinfo.  No
-  // more putting things in those categories up there.  New entries
-  // are to be added to the end of the list
   NS_DEFINE_CLASSINFO_DATA(CSSRect, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
@@ -741,10 +704,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(BeforeUnloadEvent, nsEventSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
-  // SVG document
-  NS_DEFINE_CLASSINFO_DATA(SVGDocument, nsDocumentSH,
-                           DOCUMENT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(TimeEvent, nsEventSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -892,10 +851,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(CSSFontFaceRule, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
-  // DOM Traversal NodeIterator class
-  NS_DEFINE_CLASSINFO_DATA(NodeIterator, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
   // data transfer for drag and drop
   NS_DEFINE_CLASSINFO_DATA(DataTransfer, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -1002,12 +957,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(DOMError, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
-  NS_DEFINE_CLASSINFO_DATA(DOMRequest, nsEventTargetSH,
-                           EVENTTARGET_SCRIPTABLE_FLAGS)
-
-  NS_DEFINE_CLASSINFO_DATA(DOMCursor, nsEventTargetSH,
-                           EVENTTARGET_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(OpenWindowEventDetail, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -1791,12 +1740,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMConstructor)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(XMLDocument, nsIDOMXMLDocument)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocument)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMXMLDocument)
-    DOM_CLASSINFO_DOCUMENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(DOMException, nsIDOMDOMException)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMException)
     DOM_CLASSINFO_MAP_ENTRY(nsIException)
@@ -1907,22 +1850,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(HTMLIFrameElement, nsIDOMHTMLIFrameElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLIFrameElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMGetSVGDocument)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozBrowserFrame)
-    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(HTMLInputElement, nsIDOMHTMLInputElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLInputElement)
-    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(ValidityState, nsIDOMValidityState)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMValidityState)
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(CSSStyleRule, nsIDOMCSSStyleRule)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSStyleRule)
   DOM_CLASSINFO_MAP_END
@@ -1967,29 +1894,11 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMRect)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(Range, nsIDOMRange)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMRange)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(NodeIterator, nsIDOMNodeIterator)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeIterator)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(TreeWalker, nsIDOMTreeWalker)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMTreeWalker)
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(Selection, nsISelection)
     DOM_CLASSINFO_MAP_ENTRY(nsISelection)
   DOM_CLASSINFO_MAP_END
 
 #ifdef MOZ_XUL
-  DOM_CLASSINFO_MAP_BEGIN(XULDocument, nsIDOMXULDocument)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocument)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMXULDocument)
-    DOM_CLASSINFO_DOCUMENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(XULCommandDispatcher, nsIDOMXULCommandDispatcher)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMXULCommandDispatcher)
   DOM_CLASSINFO_MAP_END
@@ -2078,14 +1987,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_END
 
   // The SVG document
-
-  DOM_CLASSINFO_MAP_BEGIN(SVGDocument, nsIDOMSVGDocument)
-    // Order is significant.  nsIDOMDocument.title shadows
-    // nsIDOMSVGDocument.title, which is readonly.
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocument)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGDocument)
-    DOM_CLASSINFO_DOCUMENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(TimeEvent, nsIDOMTimeEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMTimeEvent)
@@ -2523,17 +2424,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(DOMError, nsIDOMDOMError)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMError)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(DOMRequest, nsIDOMDOMRequest)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMRequest)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(DOMCursor, nsIDOMDOMCursor)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMCursor)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMRequest)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(OpenWindowEventDetail, nsIOpenWindowEventDetail)

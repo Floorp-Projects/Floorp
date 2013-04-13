@@ -183,8 +183,6 @@ public:
 
     NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(XULDocument, XMLDocument)
 
-    virtual nsXPCClassInfo* GetClassInfo();
-
     void TraceProtos(JSTracer* aTrc, uint32_t aGCNumber);
 
     // WebIDL API
