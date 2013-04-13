@@ -236,8 +236,7 @@ HTMLCanvasElement::DispatchPrintCallback(nsITimerCallback* aCallback)
   if (!mCurrentContext) {
     nsresult rv;
     nsCOMPtr<nsISupports> context;
-    rv = GetContext(NS_LITERAL_STRING("2d"), JSVAL_VOID,
-                    getter_AddRefs(context));
+    rv = GetContext(NS_LITERAL_STRING("2d"), getter_AddRefs(context));
     NS_ENSURE_SUCCESS(rv, rv);
   }
   mPrintState = new HTMLCanvasPrintState(this, mCurrentContext, aCallback);
@@ -286,14 +285,13 @@ HTMLCanvasElement::CopyInnerTo(Element* aDest)
   NS_ENSURE_SUCCESS(rv, rv);
   if (aDest->OwnerDoc()->IsStaticDocument()) {
     HTMLCanvasElement* dest = static_cast<HTMLCanvasElement*>(aDest);
-    HTMLCanvasElement* self = const_cast<HTMLCanvasElement*>(this);
-    dest->mOriginalCanvas = self;
+    dest->mOriginalCanvas = this;
 
     nsCOMPtr<nsISupports> cxt;
-    dest->GetContext(NS_LITERAL_STRING("2d"), JSVAL_VOID, getter_AddRefs(cxt));
+    dest->GetContext(NS_LITERAL_STRING("2d"), getter_AddRefs(cxt));
     nsRefPtr<CanvasRenderingContext2D> context2d =
       static_cast<CanvasRenderingContext2D*>(cxt.get());
-    if (context2d && !self->mPrintCallback) {
+    if (context2d && !mPrintCallback) {
       HTMLImageOrCanvasOrVideoElement element;
       element.SetAsHTMLCanvasElement() = this;
       ErrorResult err;
@@ -702,11 +700,21 @@ HTMLCanvasElement::GetContextHelper(const nsAString& aContextId,
   return NS_OK;
 }
 
+nsresult
+HTMLCanvasElement::GetContext(const nsAString& aContextId,
+                              nsISupports** aContext)
+{
+  return GetContext(aContextId, JS::UndefinedValue(), nullptr, aContext);
+}
+
 NS_IMETHODIMP
 HTMLCanvasElement::GetContext(const nsAString& aContextId,
                               const JS::Value& aContextOptions,
+                              JSContext* aCx,
                               nsISupports **aContext)
 {
+  MOZ_ASSERT_IF(!aCx, aContextOptions.isUndefined());
+
   nsresult rv;
 
   if (mCurrentContextId.IsEmpty()) {
@@ -731,23 +739,22 @@ HTMLCanvasElement::GetContext(const nsAString& aContextId,
 
     nsCOMPtr<nsIWritablePropertyBag2> contextProps;
     if (aContextOptions.isObject()) {
-      JSContext* cx = nsContentUtils::GetCurrentJSContext();
-
+      MOZ_ASSERT(aCx);
       contextProps = do_CreateInstance("@mozilla.org/hash-property-bag;1");
 
       JSObject& opts = aContextOptions.toObject();
-      JS::AutoIdArray props(cx, JS_Enumerate(cx, &opts));
+      JS::AutoIdArray props(aCx, JS_Enumerate(aCx, &opts));
       for (size_t i = 0; !!props && i < props.length(); ++i) {
         jsid propid = props[i];
         JS::Value propname, propval;
-        if (!JS_IdToValue(cx, propid, &propname) ||
-            !JS_GetPropertyById(cx, &opts, propid, &propval)) {
+        if (!JS_IdToValue(aCx, propid, &propname) ||
+            !JS_GetPropertyById(aCx, &opts, propid, &propval)) {
           return NS_ERROR_FAILURE;
         }
 
-        JSString *propnameString = JS_ValueToString(cx, propname);
+        JSString *propnameString = JS_ValueToString(aCx, propname);
         nsDependentJSString pstr;
-        if (!propnameString || !pstr.init(cx, propnameString)) {
+        if (!propnameString || !pstr.init(aCx, propnameString)) {
           mCurrentContext = nullptr;
           return NS_ERROR_FAILURE;
         }
@@ -759,9 +766,9 @@ HTMLCanvasElement::GetContext(const nsAString& aContextId,
         } else if (JSVAL_IS_DOUBLE(propval)) {
           contextProps->SetPropertyAsDouble(pstr, JSVAL_TO_DOUBLE(propval));
         } else if (JSVAL_IS_STRING(propval)) {
-          JSString *propvalString = JS_ValueToString(cx, propval);
+          JSString *propvalString = JS_ValueToString(aCx, propval);
           nsDependentJSString vstr;
-          if (!propvalString || !vstr.init(cx, propvalString)) {
+          if (!propvalString || !vstr.init(aCx, propvalString)) {
             mCurrentContext = nullptr;
             return NS_ERROR_FAILURE;
           }

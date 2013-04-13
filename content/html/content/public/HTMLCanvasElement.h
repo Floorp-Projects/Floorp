@@ -152,6 +152,8 @@ public:
   // take a snapshot of the canvas that needs to be "live" (e.g. -moz-element).
   void MarkContextClean();
 
+  nsresult GetContext(const nsAString& aContextId, nsISupports** aContext);
+
   virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
