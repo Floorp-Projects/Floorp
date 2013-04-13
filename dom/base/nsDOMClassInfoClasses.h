@@ -48,7 +48,6 @@ DOMCI_CLASS(HTMLDocument)
 DOMCI_CLASS(HTMLFormElement)
 DOMCI_CLASS(HTMLIFrameElement)
 DOMCI_CLASS(HTMLInputElement)
-DOMCI_CLASS(HTMLSelectElement)
 DOMCI_CLASS(ValidityState)
 
 // CSS classes

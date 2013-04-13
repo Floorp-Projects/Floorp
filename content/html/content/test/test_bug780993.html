@@ -12,7 +12,7 @@ test(function() {
   assert_equals(select[0], option);
   select[0] = null;
   assert_equals(option.parentNode, null);
-  assert_equals(select[0], null);
+  assert_equals(select[0], undefined);
 }, "Should be able to set select[n] to null.");
 test(function() {
   var select = document.createElement("select");

@@ -9,6 +9,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLOptGroupElement.h"
 #include "mozilla/dom/HTMLOptionElement.h"
+#include "mozilla/dom/HTMLSelectElementBinding.h"
 #include "mozilla/Util.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsError.h"
@@ -35,7 +36,6 @@
 #include "nsTextNode.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Select)
-DOMCI_NODE_DATA(HTMLSelectElement, mozilla::dom::HTMLSelectElement)
 
 namespace mozilla {
 namespace dom {
@@ -124,6 +124,8 @@ HTMLSelectElement::HTMLSelectElement(already_AddRefed<nsINodeInfo> aNodeInfo,
   AddStatesSilently(NS_EVENT_STATE_ENABLED |
                     NS_EVENT_STATE_OPTIONAL |
                     NS_EVENT_STATE_VALID);
+
+  SetIsDOMBinding();
 }
 
 HTMLSelectElement::~HTMLSelectElement()
@@ -154,7 +156,7 @@ NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLSelectElement)
                                    nsIConstraintValidation)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLSelectElement,
                                                nsGenericHTMLFormElement)
-NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLSelectElement)
+NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
 // nsIDOMHTMLSelectElement
@@ -1959,6 +1961,12 @@ HTMLSelectElement::SetSelectionChanged(bool aValue, bool aNotify)
   if (mSelectionHasChanged != previousSelectionChangedValue) {
     UpdateState(aNotify);
   }
+}
+
+JSObject*
+HTMLSelectElement::WrapNode(JSContext* aCx, JSObject* aScope)
+{
+  return HTMLSelectElementBinding::Wrap(aCx, aScope, this);
 }
 
 } // namespace dom
