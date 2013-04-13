@@ -1019,7 +1019,7 @@ class CGClassConstructor(CGAbstractStaticMethod):
 
     def generate_code(self):
         preamble = """
-  JSObject* obj = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
+  JS::Rooted<JSObject*> obj(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)));
 """
         name = self._ctor.identifier.name
         nativeName = MakeNativeName(self.descriptor.binaryNames.get(name, name))
@@ -2423,8 +2423,8 @@ if (!arr.SetCapacity(length)) {
 %s
 }
 for (uint32_t i = 0; i < length; ++i) {
-  jsval temp;
-  if (!JS_GetElement(cx, seq, i, &temp)) {
+  JS::Rooted<JS::Value> temp(cx);
+  if (!JS_GetElement(cx, seq, i, temp.address())) {
 %s
   }
   %s& slot = *arr.AppendElement();
@@ -2441,7 +2441,7 @@ for (uint32_t i = 0; i < length; ++i) {
                 string.Template(elementTemplate).substitute(
                     {
                         "val" : "temp",
-                        "valPtr": "&temp",
+                        "valPtr": "temp.address()",
                         "declName" : "slot",
                         # We only need holderName here to handle isExternal()
                         # interfaces, which use an internal holder for the
@@ -6816,7 +6816,7 @@ class CGDictionary(CGThing):
         return (string.Template(
                 "struct ${selfName} ${inheritance}{\n"
                 "  ${selfName}() {}\n"
-                "  bool Init(JSContext* cx, JSObject* scopeObj, const JS::Value& val);\n"
+                "  bool Init(JSContext* cx, JS::Handle<JSObject*> scopeObj, const JS::Value& val);\n"
                 "  bool ToObject(JSContext* cx, JSObject* parentObject, JS::Value *vp);\n"
                 "\n" +
                 ("  bool Init(const nsAString& aJSON)\n"
@@ -6826,7 +6826,7 @@ class CGDictionary(CGThing):
                  "    Maybe< JS::Rooted<JS::Value> > json;\n"
                  "    JSContext* cx = ParseJSON(aJSON, ar, ac, json);\n"
                  "    NS_ENSURE_TRUE(cx, false);\n"
-                 "    return Init(cx, nullptr, json.ref());\n"
+                 "    return Init(cx, JS::NullPtr(), json.ref());\n"
                  "  }\n" if not self.workers else "") +
                 "\n" +
                 "\n".join(memberDecls) + "\n"
@@ -6843,7 +6843,7 @@ class CGDictionary(CGThing):
                 "struct ${selfName}Initializer : public ${selfName} {\n"
                 "  ${selfName}Initializer() {\n"
                 "    // Safe to pass a null context if we pass a null value\n"
-                "    Init(nullptr, nullptr, JS::NullValue());\n"
+                "    Init(nullptr, JS::NullPtr(), JS::NullValue());\n"
                 "  }\n"
                 "};").substitute( { "selfName": self.makeClassName(d),
                                     "inheritance": inheritance }))
@@ -6900,7 +6900,7 @@ class CGDictionary(CGThing):
              "}\n"
              "\n" if self.needToInitIds else "") +
             "bool\n"
-            "${selfName}::Init(JSContext* cx, JSObject* scopeObj, const JS::Value& val)\n"
+            "${selfName}::Init(JSContext* cx, JS::Handle<JSObject*> scopeObj, const JS::Value& val)\n"
             "{\n"
             "  // Passing a null JSContext is OK only if we're initing from null,\n"
             "  // Since in that case we will not have to do any property gets\n"
@@ -6911,7 +6911,7 @@ class CGDictionary(CGThing):
              "  }\n" if self.needToInitIds else "") +
             "${initParent}" +
             ("  JSBool found;\n"
-             "  JS::Value temp;\n"
+             "  JS::Rooted<JS::Value> temp(cx);\n"
              "  bool isNull = val.isNullOrUndefined();\n" if len(memberInits) > 0 else "") +
             "  if (!IsConvertibleToDictionary(cx, val)) {\n"
             "    return ThrowErrorMessage(cx, MSG_NOT_DICTIONARY);\n"
@@ -6973,7 +6973,7 @@ class CGDictionary(CGThing):
         (member, (templateBody, declType,
                   holderType, dealWithOptional)) = memberInfo
         replacements = { "val": "temp",
-                         "valPtr": "&temp",
+                         "valPtr": "temp.address()",
                          "declName": self.makeMemberName(member.identifier.name),
                          # We need a holder name for external interfaces, but
                          # it's scoped down to the conversion so we can just use
@@ -6992,13 +6992,13 @@ class CGDictionary(CGThing):
             propName = member.identifier.name
             propCheck = ('JS_HasProperty(cx, &val.toObject(), "%s", &found)' %
                          propName)
-            propGet = ('JS_GetProperty(cx, &val.toObject(), "%s", &temp)' %
+            propGet = ('JS_GetProperty(cx, &val.toObject(), "%s", temp.address())' %
                        propName)
         else:
             propId = self.makeIdName(member.identifier.name);
             propCheck = ("JS_HasPropertyById(cx, &val.toObject(), %s, &found)" %
                          propId)
-            propGet = ("JS_GetPropertyById(cx, &val.toObject(), %s, &temp)" %
+            propGet = ("JS_GetPropertyById(cx, &val.toObject(), %s, temp.address())" %
                        propId)
 
         conversionReplacements = {
