@@ -14,6 +14,7 @@ DIRS += [
     'failures/html/html/obsolete/implreq/oeaaa',
     'failures/html/html/semantics/forms/the-form-element',
     'failures/html/html/semantics/forms/the-option-element',
+    'failures/html/html/semantics/forms/the-select-element',
     'failures/html/html/semantics/scripting-1/the-script-element',
     'failures/html/html/semantics/tabular-data/the-table-element',
     'failures/html/html/webappapis/atob',
