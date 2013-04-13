@@ -13,7 +13,7 @@
  * http://www.whatwg.org/specs/web-apps/current-work/#the-embed-element
  */
 
-[scriptable, uuid(ca0de9c2-e230-4acb-aa6d-65fc0283bf06)]
+[scriptable, uuid(749531cf-af23-4ba7-97ae-2a0a200f833b)]
 interface nsIDOMHTMLEmbedElement : nsIDOMHTMLElement
 {
            attribute DOMString        align;

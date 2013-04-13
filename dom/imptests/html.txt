@@ -9,6 +9,7 @@ html/obsolete/implreq/oeaaa
 html/semantics/document-metadata/the-title-element
 html/semantics/forms/the-form-element
 html/semantics/forms/the-option-element
+html/semantics/forms/the-select-element
 html/semantics/scripting-1/the-script-element
 html/semantics/tabular-data/the-table-element
 html/semantics/text-level-semantics/the-time-element

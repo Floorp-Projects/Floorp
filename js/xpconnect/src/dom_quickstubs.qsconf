@@ -82,22 +82,6 @@ members = [
     'nsIDOMHTMLFormElement.length',
     'nsIDOMHTMLFormElement.target',
     'nsIDOMHTMLFormElement.action',
-    'nsIDOMHTMLSelectElement.name',
-    'nsIDOMHTMLSelectElement.form',
-    'nsIDOMHTMLSelectElement.add',
-    'nsIDOMHTMLSelectElement.value',
-    'nsIDOMHTMLSelectElement.disabled',
-    'nsIDOMHTMLSelectElement.length',
-    'nsIDOMHTMLSelectElement.remove',
-    'nsIDOMHTMLSelectElement.selectedIndex',
-    'nsIDOMHTMLSelectElement.item',
-    'nsIDOMHTMLSelectElement.type',
-    'nsIDOMHTMLSelectElement.options',
-    'nsIDOMHTMLSelectElement.size',
-    'nsIDOMHTMLCanvasElement.width',
-    'nsIDOMHTMLCanvasElement.height',
-    'nsIDOMHTMLCanvasElement.getContext',
-    'nsIDOMHTMLCanvasElement.toDataURL',
 
     # dom/interfaces/storage
     'nsIDOMToString.toString',
@@ -130,9 +114,6 @@ members = [
     'nsIBoxObject.width',
     'nsIBoxObject.height',
 
-    # FileReader
-    'nsIDOMFileReader.*',
-    
     # Audio
     'nsIDOMNotifyAudioAvailableEvent.frameBuffer',
     'nsIDOMNotifyAudioAvailableEvent.time',

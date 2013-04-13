@@ -9,6 +9,7 @@
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIConstraintValidation.h"
 
+#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/HTMLOptionsCollection.h"
 #include "mozilla/ErrorResult.h"
 #include "nsCheapSets.h"
@@ -160,18 +161,7 @@ public:
   {
     SetHTMLBoolAttr(nsGkAtoms::multiple, aVal, aRv);
   }
-  uint32_t Size()
-  {
-    return GetUnsignedIntAttr(nsGkAtoms::size, 0);
-  }
-  void SetSize(uint32_t aSize, ErrorResult& aRv)
-  {
-    SetUnsignedIntAttr(nsGkAtoms::size, aSize, aRv);
-  }
-  void GetName(nsString& aName, ErrorResult& aRv) const
-  {
-    GetHTMLAttr(nsGkAtoms::name, aName);
-  }
+  // Uses XPCOM GetName.
   void SetName(const nsAString& aName, ErrorResult& aRv)
   {
     SetHTMLAttr(nsGkAtoms::name, aName, aRv);
@@ -184,14 +174,52 @@ public:
   {
     SetHTMLBoolAttr(nsGkAtoms::required, aVal, aRv);
   }
+  uint32_t Size() const
+  {
+    return GetUnsignedIntAttr(nsGkAtoms::size, 0);
+  }
+  void SetSize(uint32_t aSize, ErrorResult& aRv)
+  {
+    SetUnsignedIntAttr(nsGkAtoms::size, aSize, aRv);
+  }
+
+  // Uses XPCOM GetType.
+
   HTMLOptionsCollection* Options() const
   {
     return mOptions;
   }
-  void Remove(int32_t aIdx, ErrorResult& aRv)
+  uint32_t Length() const
   {
-    aRv = Remove(aIdx);
+    return mOptions->Length();
   }
+  void SetLength(uint32_t aLength, ErrorResult& aRv)
+  {
+    aRv = SetLength(aLength);
+  }
+  Element* IndexedGetter(uint32_t aIdx, bool& aFound) const
+  {
+    return mOptions->IndexedGetter(aIdx, aFound);
+  }
+  HTMLOptionElement* Item(uint32_t aIdx) const
+  {
+    return mOptions->ItemAsOption(aIdx);
+  }
+  JSObject* NamedItem(JSContext* aCx, const nsAString& aName,
+                      ErrorResult& aRv) const
+  {
+    return mOptions->NamedItem(aCx, aName, aRv);
+  }
+  void Add(const HTMLOptionElementOrHTMLOptGroupElement& aElement,
+           const Nullable<HTMLElementOrLong>& aBefore,
+           ErrorResult& aRv);
+  // Uses XPCOM Remove.
+  void IndexedSetter(uint32_t aIndex, HTMLOptionElement* aOption,
+                     ErrorResult& aRv)
+  {
+    mOptions->IndexedSetter(aIndex, aOption, aRv);
+  }
+
   int32_t SelectedIndex() const
   {
     return mSelectedIndex;
@@ -200,14 +228,22 @@ public:
   {
     aRv = SetSelectedIndexInternal(aIdx, true);
   }
-  Element* IndexedGetter(uint32_t aIdx, bool& aFound) const
-  {
-    return mOptions->IndexedGetter(aIdx, aFound);
-  }
-  uint32_t Length() const
-  {
-    return mOptions->Length();
-  }
+  void GetValue(DOMString& aValue);
+  // Uses XPCOM SetValue.
+
+  // nsIConstraintValidation::WillValidate is fine.
+  // nsIConstraintValidation::Validity() is fine.
+  // nsIConstraintValidation::GetValidationMessage() is fine.
+  // nsIConstraintValidation::CheckValidity() is fine.
+  using nsIConstraintValidation::CheckValidity;
+  // nsIConstraintValidation::SetCustomValidity() is fine.
+
+  using nsINode::Remove;
+
+
+  // nsINode
+  virtual JSObject*
+  WrapNode(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 
   // nsIContent
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
@@ -342,13 +378,6 @@ public:
   {
     return mOptions;
   }
-
-  static HTMLSelectElement* FromSupports(nsISupports* aSupports)
-  {
-    return static_cast<HTMLSelectElement*>(static_cast<nsINode*>(aSupports));
-  }
-
-  virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
