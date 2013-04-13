@@ -819,6 +819,7 @@ nsFrameLoader::Show(int32_t marginWidth, int32_t marginHeight,
   // "Create"...
   baseWindow->Create();
   baseWindow->SetVisibility(true);
+  NS_ENSURE_TRUE(mDocShell, false);
 
   // Trigger editor re-initialization if midas is turned on in the
   // sub-document. This shouldn't be necessary, but given the way our
