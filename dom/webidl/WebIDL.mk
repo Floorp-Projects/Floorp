@@ -67,6 +67,7 @@ webidl_files = \
   File.webidl \
   FileHandle.webidl \
   FileList.webidl \
+  FileReader.webidl \
   FileReaderSync.webidl \
   FileRequest.webidl \
   FormData.webidl \
