@@ -94,10 +94,6 @@ members = [
     'nsIDOMHTMLFormElement.length',
     'nsIDOMHTMLFormElement.target',
     'nsIDOMHTMLFormElement.action',
-    'nsIDOMHTMLCanvasElement.width',
-    'nsIDOMHTMLCanvasElement.height',
-    'nsIDOMHTMLCanvasElement.getContext',
-    'nsIDOMHTMLCanvasElement.toDataURL',
 
     # dom/interfaces/storage
     'nsIDOMToString.toString',
