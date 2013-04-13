@@ -143,6 +143,15 @@ MozKeyboard.prototype = {
     return this._focusHandler;
   },
 
+  replaceSurroundingText: function mozKeyboardReplaceSurroundingText(
+    text, beforeLength, afterLength) {
+    cpmm.sendAsyncMessage('Keyboard:ReplaceSurroundingText', {
+      'text': text || '',
+      'beforeLength': (typeof beforeLength === 'number' ? beforeLength : 0),
+      'afterLength': (typeof afterLength === 'number' ? afterLength: 0)
+    });
+  },
+
   receiveMessage: function mozKeyboardReceiveMessage(msg) {
     if (msg.name == "Keyboard:FocusChange") {
        let msgJson = msg.json;
