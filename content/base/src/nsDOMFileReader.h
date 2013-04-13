@@ -30,9 +30,9 @@
 class nsDOMFileReader : public mozilla::dom::FileIOObject,
                         public nsIDOMFileReader,
                         public nsIInterfaceRequestor,
-                        public nsSupportsWeakReference,
-                        public nsIJSNativeInitializer
+                        public nsSupportsWeakReference
 {
+  typedef mozilla::ErrorResult ErrorResult;
 public:
   nsDOMFileReader();
   virtual ~nsDOMFileReader();
@@ -46,18 +46,64 @@ public:
   // nsIInterfaceRequestor 
   NS_DECL_NSIINTERFACEREQUESTOR
 
-  // nsIJSNativeInitializer
-  NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* cx, JSObject* obj,
-                        uint32_t argc, JS::Value* argv);
-
   // FileIOObject overrides
-  NS_IMETHOD DoAbort(nsAString& aEvent);
+  virtual void DoAbort(nsAString& aEvent) MOZ_OVERRIDE;
   NS_IMETHOD DoOnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
                              nsresult aStatus, nsAString& aSuccessEvent,
                              nsAString& aTerminationEvent);
   NS_IMETHOD DoOnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
                                nsIInputStream* aInputStream, uint64_t aOffset,
                                uint32_t aCount);
+
+  nsPIDOMWindow* GetParentObject() const
+  {
+    return GetOwner();
+  }
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
+
+  // WebIDL
+  static already_AddRefed<nsDOMFileReader>
+  Constructor(const mozilla::dom::GlobalObject& aGlobal, ErrorResult& aRv);
+  void ReadAsArrayBuffer(JSContext* aCx, nsIDOMBlob* aBlob, ErrorResult& aRv)
+  {
+    MOZ_ASSERT(aBlob);
+    ReadFileContent(aCx, aBlob, EmptyString(), FILE_AS_ARRAYBUFFER, aRv);
+  }
+  void ReadAsText(nsIDOMBlob* aBlob, const nsAString& aLabel, ErrorResult& aRv)
+  {
+    MOZ_ASSERT(aBlob);
+    ReadFileContent(nullptr, aBlob, aLabel, FILE_AS_TEXT, aRv);
+  }
+  void ReadAsDataURL(nsIDOMBlob* aBlob, ErrorResult& aRv)
+  {
+    MOZ_ASSERT(aBlob);
+    ReadFileContent(nullptr, aBlob, EmptyString(), FILE_AS_DATAURL, aRv);
+  }
+
+  using FileIOObject::Abort;
+
+  // Inherited ReadyState().
+
+  JS::Value GetResult(JSContext* aCx, ErrorResult& aRv);
+
+  using FileIOObject::GetError;
+
+  IMPL_EVENT_HANDLER(loadstart)
+  using FileIOObject::GetOnprogress;
+  using FileIOObject::SetOnprogress;
+  IMPL_EVENT_HANDLER(load)
+  using FileIOObject::GetOnabort;
+  using FileIOObject::SetOnabort;
+  using FileIOObject::GetOnerror;
+  using FileIOObject::SetOnerror;
+  IMPL_EVENT_HANDLER(loadend)
+
+  void ReadAsBinaryString(nsIDOMBlob* aBlob, ErrorResult& aRv)
+  {
+    MOZ_ASSERT(aBlob);
+    ReadFileContent(nullptr, aBlob, EmptyString(), FILE_AS_BINARY, aRv);
+  }
+
 
   nsresult Init();
 
@@ -73,7 +119,9 @@ protected:
     FILE_AS_DATAURL
   };
 
-  nsresult ReadFileContent(JSContext* aCx, nsIDOMBlob *aFile, const nsAString &aCharset, eDataFormat aDataFormat); 
+  void ReadFileContent(JSContext* aCx, nsIDOMBlob* aBlob,
+                       const nsAString &aCharset, eDataFormat aDataFormat,
+                       ErrorResult& aRv);
   nsresult GetAsText(const nsACString &aCharset,
                      const char *aFileData, uint32_t aDataLen, nsAString &aResult);
   nsresult GetAsDataURL(nsIDOMBlob *aFile, const char *aFileData, uint32_t aDataLen, nsAString &aResult); 

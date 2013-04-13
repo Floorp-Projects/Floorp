@@ -15,7 +15,7 @@ interface nsIDOMMozNamedAttrMap;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#interface-element
  */
 
-[scriptable, uuid(ccc2bbbc-5b44-4b01-b718-dd51f339fef8)]
+[scriptable, uuid(43d985da-b7ee-4d1f-a26f-348ccd9506f3)]
 interface nsIDOMElement : nsIDOMNode
 {
   readonly attribute DOMString        tagName;
@@ -76,6 +76,9 @@ interface nsIDOMElement : nsIDOMNode
    * Returns the number of child nodes that are nsIDOMElements.
    */
   readonly attribute unsigned long childElementCount;
+
+  [binaryname(MozRemove)]
+  void remove();
 
 
   // HTML

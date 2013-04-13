@@ -194,8 +194,6 @@ nsRefMapEntry::RemoveElement(Element* aElement)
 // ctors & dtors
 //
 
-DOMCI_NODE_DATA(XULDocument, XULDocument)
-
 namespace mozilla {
 namespace dom {
 
@@ -366,7 +364,6 @@ NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(XULDocument)
       NS_INTERFACE_TABLE_ENTRY(XULDocument, nsICSSLoaderObserver)
     NS_OFFSET_AND_INTERFACE_TABLE_END
     NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
-    NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(XULDocument)
 NS_INTERFACE_MAP_END_INHERITING(XMLDocument)
 
 
