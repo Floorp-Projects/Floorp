@@ -10,11 +10,8 @@ relativesrcdir := @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES := \
-  test_CharacterData-remove.html.json \
   test_Document-createElementNS.html.json \
   test_Document-getElementsByTagName.html.json \
-  test_DocumentType-remove.html.json \
-  test_Element-remove.html.json \
   test_Node-isEqualNode.xhtml.json \
   test_attributes.html.json \
   test_case.html.json \
