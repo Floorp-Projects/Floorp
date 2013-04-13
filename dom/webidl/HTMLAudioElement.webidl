@@ -18,15 +18,17 @@ interface HTMLAudioElement : HTMLMediaElement {};
 partial interface HTMLAudioElement
 {
   // Setup the audio stream for writing
-  [Throws]
+  [Pref="media.audio_data.enabled", Throws]
   void mozSetup(unsigned long channels, unsigned long rate);
 
   // Write audio to the audio stream
-  [Throws]
-  unsigned long mozWriteAudio(any data);
+  [Pref="media.audio_data.enabled", Throws]
+  unsigned long mozWriteAudio(Float32Array data);
+  [Pref="media.audio_data.enabled", Throws]
+  unsigned long mozWriteAudio(sequence<unrestricted float> data);
 
   // Get the current offset (measured in samples since the start) of the audio
   // stream created using mozWriteAudio().
-  [Throws]
+  [Pref="media.audio_data.enabled", Throws]
   unsigned long long mozCurrentSampleOffset();
 };
