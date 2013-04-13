@@ -178,7 +178,7 @@ protected:
   nsCOMPtr<nsIPrintCallback> mPrintCallback;
   nsCOMPtr<nsICanvasRenderingContextInternal> mCurrentContext;
   nsCOMPtr<HTMLCanvasPrintState> mPrintState;
-  
+
 public:
   // Record whether this canvas should be write-only or not.
   // We set this when script paints an image from a different origin.
@@ -196,12 +196,6 @@ public:
 
   HTMLCanvasElement* GetOriginalCanvas();
 };
-
-inline nsISupports*
-GetISupports(HTMLCanvasElement* p)
-{
-  return static_cast<Element*>(p);
-}
 
 } // namespace dom
 } // namespace mozilla
