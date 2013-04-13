@@ -590,7 +590,7 @@ Parser<ParseHandler>::parse(JSObject *chain)
      *   protected from the GC by a root or a stack frame reference.
      */
     GlobalSharedContext globalsc(context, chain, StrictModeFromContext(context));
-    ParseContext<ParseHandler> globalpc(this, &globalsc, /* staticLevel = */ 0, /* bodyid = */ 0);
+    ParseContext<ParseHandler> globalpc(this, NULL, &globalsc, /* staticLevel = */ 0, /* bodyid = */ 0);
     if (!globalpc.init())
         return null();
 
@@ -840,7 +840,7 @@ Parser<FullParseHandler>::standaloneFunctionBody(HandleFunction fun, const AutoN
         return null();
     handler.setFunctionBox(fn, *funbox);
 
-    ParseContext<FullParseHandler> funpc(this, *funbox, /* staticLevel = */ 0, /* bodyid = */ 0);
+    ParseContext<FullParseHandler> funpc(this, pc, *funbox, /* staticLevel = */ 0, /* bodyid = */ 0);
     if (!funpc.init())
         return null();
 
@@ -1200,7 +1200,7 @@ struct BindData
 
 template <typename ParseHandler>
 JSFunction *
-Parser<ParseHandler>::newFunction(ParseContext<ParseHandler> *pc, HandleAtom atom,
+Parser<ParseHandler>::newFunction(GenericParseContext *pc, HandleAtom atom,
                                   FunctionSyntaxKind kind)
 {
     JS_ASSERT_IF(kind == Statement, atom != NULL);
@@ -1279,28 +1279,27 @@ DeoptimizeUsesWithin(Definition *dn, const TokenPos &pos)
 template <>
 bool
 Parser<FullParseHandler>::leaveFunction(ParseNode *fn, HandlePropertyName funName,
+                                        ParseContext<FullParseHandler> *outerpc,
                                         FunctionSyntaxKind kind)
 {
-    ParseContext<FullParseHandler> *funpc = pc;
-    ParseContext<FullParseHandler> *pc = funpc->parent;
-    pc->blockidGen = funpc->blockidGen;
+    outerpc->blockidGen = pc->blockidGen;
 
     FunctionBox *funbox = fn->pn_funbox;
-    JS_ASSERT(funbox == funpc->sc->asFunctionBox());
+    JS_ASSERT(funbox == pc->sc->asFunctionBox());
 
-    if (!pc->topStmt || pc->topStmt->type == STMT_BLOCK)
+    if (!outerpc->topStmt || outerpc->topStmt->type == STMT_BLOCK)
         fn->pn_dflags |= PND_BLOCKCHILD;
 
-    /* Propagate unresolved lexical names up to pc->lexdeps. */
-    if (funpc->lexdeps->count()) {
-        for (AtomDefnRange r = funpc->lexdeps->all(); !r.empty(); r.popFront()) {
+    /* Propagate unresolved lexical names up to outerpc->lexdeps. */
+    if (pc->lexdeps->count()) {
+        for (AtomDefnRange r = pc->lexdeps->all(); !r.empty(); r.popFront()) {
             JSAtom *atom = r.front().key();
             Definition *dn = r.front().value();
             JS_ASSERT(dn->isPlaceholder());
 
             if (atom == funName && kind == Expression) {
                 dn->setOp(JSOP_CALLEE);
-                if (!dn->pn_cookie.set(context, funpc->staticLevel,
+                if (!dn->pn_cookie.set(context, pc->staticLevel,
                                        UpvarCookie::CALLEE_SLOT))
                     return false;
                 dn->pn_dflags |= PND_BOUND;
@@ -1330,18 +1329,18 @@ Parser<FullParseHandler>::leaveFunction(ParseNode *fn, HandlePropertyName funNam
             if (!dn->dn_uses)
                 continue;
 
-            Definition *outer_dn = pc->decls().lookupFirst(atom);
+            Definition *outer_dn = outerpc->decls().lookupFirst(atom);
 
             /*
              * Make sure to deoptimize lexical dependencies that are polluted
              * by eval and function statements (which both flag the function as
              * having an extensible scope) or any enclosing 'with'.
              */
-            if (funbox->hasExtensibleScope() || pc->parsingWith)
+            if (funbox->hasExtensibleScope() || outerpc->parsingWith)
                 DeoptimizeUsesWithin(dn, fn->pn_pos);
 
             if (!outer_dn) {
-                AtomDefnAddPtr p = pc->lexdeps->lookupForAdd(atom);
+                AtomDefnAddPtr p = outerpc->lexdeps->lookupForAdd(atom);
                 if (p) {
                     outer_dn = p.value();
                 } else {
@@ -1366,8 +1365,8 @@ Parser<FullParseHandler>::leaveFunction(ParseNode *fn, HandlePropertyName funNam
                      * inherited lexdeps into uses of a new outer definition
                      * allows us to handle both these cases in a natural way.
                      */
-                    outer_dn = MakePlaceholder(dn, &handler, pc);
-                    if (!outer_dn || !pc->lexdeps->add(p, atom, outer_dn))
+                    outer_dn = MakePlaceholder(dn, &handler, outerpc);
+                    if (!outer_dn || !outerpc->lexdeps->add(p, atom, outer_dn))
                         return false;
                 }
             }
@@ -1408,16 +1407,17 @@ Parser<FullParseHandler>::leaveFunction(ParseNode *fn, HandlePropertyName funNam
 
     InternalHandle<Bindings*> bindings =
         InternalHandle<Bindings*>::fromMarkedLocation(&funbox->bindings);
-    if (!funpc->generateFunctionBindings(context, bindings))
+    if (!pc->generateFunctionBindings(context, bindings))
         return false;
 
-    funpc->lexdeps.releaseMap(context);
+    pc->lexdeps.releaseMap(context);
     return true;
 }
 
 template <>
 bool
 Parser<SyntaxParseHandler>::leaveFunction(Node fn, HandlePropertyName funName,
+                                          ParseContext<SyntaxParseHandler> *outerpc,
                                           FunctionSyntaxKind kind)
 {
     pc->lexdeps.releaseMap(context);
@@ -1940,7 +1940,7 @@ Parser<ParseHandler>::functionArgsAndBody(Node pn, HandleFunction fun, HandlePro
         return false;
 
     // Initialize early for possible flags mutation via destructuringExpr.
-    ParseContext<ParseHandler> funpc(this, funbox, outerpc->staticLevel + 1, outerpc->blockidGen);
+    ParseContext<ParseHandler> funpc(this, pc, funbox, outerpc->staticLevel + 1, outerpc->blockidGen);
     if (!funpc.init())
         return false;
 
@@ -2017,7 +2017,7 @@ Parser<ParseHandler>::functionArgsAndBody(Node pn, HandleFunction fun, HandlePro
     if (!finishFunctionDefinition(pn, funbox, prelude, body, outerpc))
         return false;
 
-    return leaveFunction(pn, funName, kind);
+    return leaveFunction(pn, funName, outerpc, kind);
 }
 
 template <>
@@ -2044,7 +2044,7 @@ Parser<FullParseHandler>::moduleDecl()
         return NULL;
     pn->pn_modulebox = modulebox;
 
-    ParseContext<FullParseHandler> modulepc(this, modulebox, pc->staticLevel + 1, pc->blockidGen);
+    ParseContext<FullParseHandler> modulepc(this, pc, modulebox, pc->staticLevel + 1, pc->blockidGen);
     if (!modulepc.init())
         return NULL;
     MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_MODULE);
@@ -5199,13 +5199,16 @@ class CompExprTransplanter
 {
     ParseNode       *root;
     Parser<FullParseHandler> *parser;
+    ParseContext<FullParseHandler> *outerpc;
     bool            genexp;
     unsigned        adjust;
     HashSet<Definition *> visitedImplicitArguments;
 
   public:
-    CompExprTransplanter(ParseNode *pn, Parser<FullParseHandler> *parser, bool ge, unsigned adj)
-      : root(pn), parser(parser), genexp(ge), adjust(adj),
+    CompExprTransplanter(ParseNode *pn, Parser<FullParseHandler> *parser,
+                         ParseContext<FullParseHandler> *outerpc,
+                         bool ge, unsigned adj)
+      : root(pn), parser(parser), outerpc(outerpc), genexp(ge), adjust(adj),
         visitedImplicitArguments(parser->context)
     {}
 
@@ -5471,7 +5474,7 @@ CompExprTransplanter::transplant(ParseNode *pn)
                      * move the existing placeholder node (and all its uses)
                      * from the parent's lexdeps into the generator's lexdeps.
                      */
-                    pc->parent->lexdeps->remove(atom);
+                    outerpc->lexdeps->remove(atom);
                     if (!pc->lexdeps->put(atom, dn))
                         return false;
                 } else if (dn->isImplicitArguments()) {
@@ -5519,6 +5522,7 @@ CompExprTransplanter::transplant(ParseNode *pn)
 template <>
 ParseNode *
 Parser<FullParseHandler>::comprehensionTail(ParseNode *kid, unsigned blockid, bool isGenexp,
+                                            ParseContext<FullParseHandler> *outerpc,
                                             ParseNodeKind kind, JSOp op)
 {
     unsigned adjust;
@@ -5569,7 +5573,7 @@ Parser<FullParseHandler>::comprehensionTail(ParseNode *kid, unsigned blockid, bo
 
     pnp = &pn->pn_expr;
 
-    CompExprTransplanter transplanter(kid, this, kind == PNK_SEMI, adjust);
+    CompExprTransplanter transplanter(kid, this, outerpc, kind == PNK_SEMI, adjust);
     if (!transplanter.init())
         return null();
 
@@ -5764,7 +5768,7 @@ Parser<FullParseHandler>::arrayInitializerComprehensionTail(ParseNode *pn)
     pn->pn_tail = &pn->pn_head;
     *pn->pn_tail = NULL;
 
-    ParseNode *pntop = comprehensionTail(pnexp, pn->pn_blockid, false,
+    ParseNode *pntop = comprehensionTail(pnexp, pn->pn_blockid, false, NULL,
                                          PNK_ARRAYPUSH, JSOP_ARRAYPUSH);
     if (!pntop)
         return false;
@@ -5833,7 +5837,8 @@ Parser<FullParseHandler>::generatorExpr(ParseNode *kid)
         if (!genFunbox)
             return null();
 
-        ParseContext<FullParseHandler> genpc(this, genFunbox, outerpc->staticLevel + 1, outerpc->blockidGen);
+        ParseContext<FullParseHandler> genpc(this, outerpc, genFunbox,
+                                             outerpc->staticLevel + 1, outerpc->blockidGen);
         if (!genpc.init())
             return null();
 
@@ -5852,7 +5857,7 @@ Parser<FullParseHandler>::generatorExpr(ParseNode *kid)
         genfn->pn_funbox = genFunbox;
         genfn->pn_blockid = genpc.bodyid;
 
-        ParseNode *body = comprehensionTail(pn, outerpc->blockid(), true);
+        ParseNode *body = comprehensionTail(pn, outerpc->blockid(), true, outerpc);
         if (!body)
             return null();
         JS_ASSERT(!genfn->pn_body);
@@ -5861,7 +5866,7 @@ Parser<FullParseHandler>::generatorExpr(ParseNode *kid)
         genfn->pn_pos.end = body->pn_pos.end = tokenStream.currentToken().pos.end;
 
         RootedPropertyName funName(context);
-        if (!leaveFunction(genfn, funName))
+        if (!leaveFunction(genfn, funName, outerpc))
             return null();
     }
 
