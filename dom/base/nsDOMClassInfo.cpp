@@ -116,11 +116,6 @@
 // Constraint Validation API helper includes
 #include "nsIDOMValidityState.h"
 
-// HTMLSelectElement helper includes
-#include "nsIDOMHTMLSelectElement.h"
-
-#include "nsIDOMHTMLOptionElement.h"
-
 // Event related includes
 #include "nsEventListenerManager.h"
 #include "nsIDOMEventTarget.h"
@@ -286,7 +281,6 @@
 #include "nsIEventListenerService.h"
 #include "nsIMessageManager.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/HTMLSelectElement.h"
 #include "HTMLLegendElement.h"
 
 #include "DOMSVGStringList.h"
@@ -644,10 +638,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLInputElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(HTMLSelectElement, nsHTMLSelectElementSH,
-                           ELEMENT_SCRIPTABLE_FLAGS |
-                           nsIXPCScriptable::WANT_SETPROPERTY |
-                           nsIXPCScriptable::WANT_GETPROPERTY)
 
   // Constraint Validation API classes
   NS_DEFINE_CLASSINFO_DATA(ValidityState, nsDOMGenericSH,
@@ -1933,11 +1923,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(HTMLInputElement, nsIDOMHTMLInputElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLInputElement)
-    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(HTMLSelectElement, nsIDOMHTMLSelectElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLSelectElement)
     DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
@@ -7214,110 +7199,6 @@ nsHTMLFormElementSH::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
   return NS_OK;
 }
 
-
-// HTMLSelectElement helper
-
-NS_IMETHODIMP
-nsHTMLSelectElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                                  JSObject *obj, jsid id, uint32_t flags,
-                                  JSObject **objp, bool *_retval)
-{
-  int32_t n = GetArrayIndexFromId(cx, id);
-  if (n >= 0) {
-    HTMLSelectElement *s =
-      HTMLSelectElement::FromSupports(GetNative(wrapper, obj));
-
-    HTMLOptionsCollection *options = s->GetOptions();
-    if (options) {
-      nsISupports *node = options->GetElementAt(n);
-      if (node) {
-        *objp = obj;
-        *_retval = JS_DefineElement(cx, obj, uint32_t(n), JSVAL_VOID, nullptr, nullptr,
-                                    JSPROP_ENUMERATE | JSPROP_SHARED);
-
-        return NS_OK;
-      }
-    }
-  }
-
-  return nsElementSH::NewResolve(wrapper, cx, obj, id, flags, objp, _retval);
-}
-
-NS_IMETHODIMP
-nsHTMLSelectElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
-                                   JSContext *cx, JSObject *obj, jsid id,
-                                   jsval *vp, bool *_retval)
-{
-  int32_t n = GetArrayIndexFromId(cx, id);
-
-  nsresult rv = NS_OK;
-  if (n >= 0) {
-    HTMLSelectElement *s =
-      HTMLSelectElement::FromSupports(GetNative(wrapper, obj));
-
-    HTMLOptionsCollection *options = s->GetOptions();
-
-    if (options) {
-      nsISupports *node = options->GetElementAt(n);
-
-      rv = WrapNative(cx, JS_GetGlobalForScopeChain(cx), node,
-                      &NS_GET_IID(nsIDOMNode), true, vp);
-      if (NS_SUCCEEDED(rv)) {
-        rv = NS_SUCCESS_I_DID_SOMETHING;
-      }
-      return rv;
-    }
-  }
-
-  return NS_OK;
-}
-
-// static
-nsresult
-nsHTMLSelectElementSH::SetOption(JSContext *cx, JS::Value *vp, uint32_t aIndex,
-                                 nsIDOMHTMLOptionsCollection *aOptCollection)
-{
-  JSAutoRequest ar(cx);
-
-  // vp must refer to an object
-  if (!vp->isObjectOrNull()) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  nsCOMPtr<nsIDOMHTMLOptionElement> new_option;
-
-  if (JSObject* obj = vp->toObjectOrNull()) {
-    new_option = do_QueryWrapper(cx, obj);
-    if (!new_option) {
-      // Someone is trying to set an option to a non-option object.
-      return NS_ERROR_UNEXPECTED;
-    }
-  }
-
-  return aOptCollection->SetOption(aIndex, new_option);
-}
-
-NS_IMETHODIMP
-nsHTMLSelectElementSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
-                                   JSContext *cx, JSObject *obj, jsid id,
-                                   jsval *vp, bool *_retval)
-{
-  int32_t n = GetArrayIndexFromId(cx, id);
-
-  if (n >= 0) {
-    nsCOMPtr<nsIDOMHTMLSelectElement> select =
-      do_QueryWrappedNative(wrapper, obj);
-    NS_ENSURE_TRUE(select, NS_ERROR_UNEXPECTED);
-
-    nsCOMPtr<nsIDOMHTMLOptionsCollection> options;
-    select->GetOptions(getter_AddRefs(options));
-
-    nsresult rv = SetOption(cx, vp, n, options);
-    return NS_FAILED(rv) ? rv : NS_SUCCESS_I_DID_SOMETHING;
-  }
-
-  return NS_OK;
-}
 
 // Plugin helper
 
