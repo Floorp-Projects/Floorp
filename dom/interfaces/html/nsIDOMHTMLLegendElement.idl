@@ -16,7 +16,7 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(42f1c264-d2b1-4f50-95cf-929ae2ea4c52)]
+[scriptable, uuid(2e4567be-3d91-4df8-bdf9-f3bd96a6cd06)]
 interface nsIDOMHTMLLegendElement : nsIDOMHTMLElement
 {
   readonly attribute nsIDOMHTMLFormElement form;
