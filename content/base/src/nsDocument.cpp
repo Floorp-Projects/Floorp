@@ -5004,7 +5004,7 @@ nsDocument::Register(const nsAString& aName, const JS::Value& aOptions,
     JSAutoCompartment ac(aCx, GetWrapper());
     NS_ENSURE_TRUE(JS_WrapValue(aCx, const_cast<JS::Value*>(&aOptions)),
                    NS_ERROR_UNEXPECTED);
-    NS_ENSURE_TRUE(options.Init(aCx, nullptr, aOptions),
+    NS_ENSURE_TRUE(options.Init(aCx, JS::NullPtr(), aOptions),
                    NS_ERROR_UNEXPECTED);
   }
 
