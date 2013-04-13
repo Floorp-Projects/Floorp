@@ -101,10 +101,14 @@ public:
     aRv = GetContext(aContextId, contextOptions, aCx, getter_AddRefs(context));
     return context.forget();
   }
-  void ToDataURL(const nsAString& aType, nsIVariant* aParams,
-                 nsAString& aDataURL, ErrorResult& aRv)
+  void ToDataURL(JSContext* aCx, const nsAString& aType,
+                 const Optional<JS::Value>& aParams, nsAString& aDataURL,
+                 ErrorResult& aRv)
   {
-    aRv = ToDataURL(aType, aParams, aDataURL);
+    JS::Value params = aParams.WasPassed()
+                     ? aParams.Value()
+                     : JS::UndefinedValue();
+    aRv = ToDataURL(aType, params, aCx, aDataURL);
   }
   void ToBlob(nsIFileCallback* aCallback, const nsAString& aType,
               ErrorResult& aRv)
@@ -224,10 +228,11 @@ public:
 
   nsresult GetContext(const nsAString& aContextId, nsISupports** aContext);
 
-  virtual nsXPCClassInfo* GetClassInfo();
-
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
 protected:
+  virtual JSObject* WrapNode(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
+
   nsIntSize GetWidthHeight();
 
   nsresult UpdateContext(nsIPropertyBag *aNewContextOptions = nullptr);

@@ -131,7 +131,6 @@ DOMCI_CLASS(SVGStringList)
 DOMCI_CLASS(SVGZoomEvent)
 
 // Canvas
-DOMCI_CLASS(HTMLCanvasElement)
 DOMCI_CLASS(CanvasGradient)
 DOMCI_CLASS(CanvasPattern)
 DOMCI_CLASS(TextMetrics)

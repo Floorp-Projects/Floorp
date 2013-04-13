@@ -12,6 +12,7 @@
 #include "mozilla/Base64.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/dom/CanvasRenderingContext2D.h"
+#include "mozilla/dom/HTMLCanvasElementBinding.h"
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
@@ -143,6 +144,7 @@ HTMLCanvasElement::HTMLCanvasElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo),
     mWriteOnly(false)
 {
+  SetIsDOMBinding();
 }
 
 HTMLCanvasElement::~HTMLCanvasElement()
@@ -163,9 +165,15 @@ NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLCanvasElement)
                                    nsICanvasElementExternal)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLCanvasElement,
                                                nsGenericHTMLElement)
-NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLCanvasElement)
+NS_HTML_CONTENT_INTERFACE_MAP_END
 
 NS_IMPL_ELEMENT_CLONE(HTMLCanvasElement)
+
+/* virtual */ JSObject*
+HTMLCanvasElement::WrapNode(JSContext* aCx, JSObject* aScope)
+{
+  return HTMLCanvasElementBinding::Wrap(aCx, aScope, this);
+}
 
 nsIntSize
 HTMLCanvasElement::GetWidthHeight()
@@ -1019,5 +1027,4 @@ HTMLCanvasElement::RenderContextsExternal(gfxContext *aContext, gfxPattern::Grap
 } // namespace dom
 } // namespace mozilla
 
-DOMCI_NODE_DATA(HTMLCanvasElement, mozilla::dom::HTMLCanvasElement)
 DOMCI_DATA(MozCanvasPrintState, mozilla::dom::HTMLCanvasPrintState)
