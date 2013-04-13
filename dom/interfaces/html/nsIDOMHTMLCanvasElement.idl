@@ -46,13 +46,14 @@ interface nsIFileCallback : nsISupports {
   void receive(in nsIDOMBlob file);
 };
 
-[scriptable, uuid(ba777030-783e-43b6-b85d-0670da81acb8)]
+[scriptable, uuid(eb5ea539-f177-4276-bd4c-3b49c2dc9b2f)]
 interface nsIDOMHTMLCanvasElement : nsIDOMHTMLElement
 {
   attribute unsigned long width;
   attribute unsigned long height;
   attribute boolean mozOpaque;
 
+  [implicit_jscontext]
   nsISupports getContext(in DOMString contextId,
                          [optional] in jsval contextOptions);
 
