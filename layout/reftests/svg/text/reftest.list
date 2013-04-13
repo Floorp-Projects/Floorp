@@ -3,6 +3,7 @@ default-preferences pref(svg.text.css-frames.enabled,true)
 == simple.svg simple-ref.html
 == simple-2.svg simple.svg
 == simple-underline.svg simple-underline-ref.html
+== simple-underline-scaled.svg simple-underline-scaled-ref.svg
 == simple-anchor-end-bidi.svg simple-anchor-end-bidi-ref.html
 == simple-anchor-end-rtl.svg simple-anchor-end-rtl-ref.html
 == simple-anchor-end.svg simple-anchor-end-ref.html
