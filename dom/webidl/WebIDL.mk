@@ -81,6 +81,7 @@ webidl_files = \
   HTMLBodyElement.webidl \
   HTMLBRElement.webidl \
   HTMLButtonElement.webidl \
+  HTMLCanvasElement.webidl \
   HTMLCollection.webidl \
   HTMLDataElement.webidl \
   HTMLDataListElement.webidl \
