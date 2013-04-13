@@ -4370,100 +4370,12 @@ if test "$ACCESSIBILITY" -a "$MOZ_ENABLE_GTK2" ; then
     AC_DEFINE_UNQUOTED(ATK_REV_VERSION, $ATK_REV_VERSION)
 fi
 
-
-dnl ========================================================
 dnl ECMAScript Internationalization API Support (uses ICU)
 dnl ========================================================
-
-MOZ_ARG_ENABLE_BOOL(intl-api,
-[  --enable-intl-api       Enable ECMAScript Internationalization API],
-    ENABLE_INTL_API=1 )
-
-dnl Settings for the implementation of the ECMAScript Internationalization API
-if test -n "$ENABLE_INTL_API"; then
-    AC_DEFINE(ENABLE_INTL_API)
-    # We build ICU as a static library.
-    AC_DEFINE(U_STATIC_IMPLEMENTATION)
-
-    case "$OS_TARGET" in
-        WINNT)
-            ICU_LIB_NAMES="icuin icuuc icudt"
-            ;;
-        Darwin|Linux)
-            ICU_LIB_NAMES="icui18n icuuc icudata"
-            ;;
-        *)
-            AC_MSG_ERROR([ECMAScript Internationalization API is not yet supported on this platform])
-    esac
-
-    ICU_LIBS='$(call EXPAND_LIBNAME_PATH,$(ICU_LIB_NAMES),$(DEPTH)/intl/icu/lib)'
-else
-    ICU_LIB_NAMES=
-    ICU_LIBS=
-fi
-
-AC_SUBST(ENABLE_INTL_API)
-AC_SUBST(ICU_LIB_NAMES)
-AC_SUBST(ICU_LIBS)
 
 dnl Source files that use ICU should have control over which parts of the ICU
 dnl namespace they want to use.
 AC_DEFINE(U_USING_ICU_NAMESPACE,0)
-
-
-dnl Settings for ICU
-if test -n "$ENABLE_INTL_API" ; then
-    # Set ICU compile options
-    ICU_CPPFLAGS=""
-    # don't use icu namespace automatically in client code
-    ICU_CPPFLAGS="$ICU_CPPFLAGS -DU_USING_ICU_NAMESPACE=0"
-    # don't include obsolete header files
-    ICU_CPPFLAGS="$ICU_CPPFLAGS -DU_NO_DEFAULT_INCLUDE_UTF_HEADERS=1"
-    # remove chunks of the library that we don't need (yet)
-    ICU_CPPFLAGS="$ICU_CPPFLAGS -DUCONFIG_NO_LEGACY_CONVERSION"
-    ICU_CPPFLAGS="$ICU_CPPFLAGS -DUCONFIG_NO_TRANSLITERATION"
-    ICU_CPPFLAGS="$ICU_CPPFLAGS -DUCONFIG_NO_REGULAR_EXPRESSIONS"
-    ICU_CPPFLAGS="$ICU_CPPFLAGS -DUCONFIG_NO_BREAK_ITERATION"
-
-    # Set OS dependent options for ICU
-    case "$OS_TARGET" in
-        Darwin)
-            ICU_TARGET=MacOSX
-            ;;
-        Linux)
-            ICU_TARGET=Linux
-            ;;
-        WINNT)
-            ICU_TARGET=MSYS/MSVC
-            ;;
-    esac
-
-    # To reduce library size, use static linking
-    ICU_LINK_OPTS="--enable-static --disable-shared"
-    # Force the ICU static libraries to be position independent code
-    ICU_CFLAGS="$DSO_PIC_CFLAGS"
-    ICU_CXXFLAGS="$DSO_PIC_CFLAGS"
-
-    ICU_BUILD_OPTS=""
-    if test -n "$MOZ_DEBUG"; then
-        ICU_BUILD_OPTS="$ICU_BUILD_OPTS --enable-debug"
-    fi
-    if test -z "$MOZ_OPTIMIZE"; then
-        ICU_BUILD_OPTS="$ICU_BUILD_OPTS --disable-release"
-    fi
-
-    abs_srcdir=`(cd $srcdir; pwd)`
-    mkdir -p $_objdir/intl/icu
-    (cd $_objdir/intl/icu; \
-     CFLAGS="$ICU_CFLAGS" CPPFLAGS="$ICU_CPPFLAGS" CXXFLAGS="$ICU_CXXFLAGS" \
-            $(SHELL) $abs_srcdir/../../intl/icu/source/runConfigureICU \
-            $ICU_BUILD_OPTS \
-            $ICU_TARGET \
-            $ICU_LINK_OPTS \
-            --enable-extras=no --enable-icuio=no  --enable-layout=no \
-            --enable-tests=no --enable-samples=no || exit 1
-    ) || exit 1
-fi
 
 
 dnl ========================================================
@@ -4557,3 +4469,4 @@ if test "$JS_HAS_CTYPES" -a -z "$MOZ_NATIVE_FFI"; then
   ac_configure_args="$_SUBDIR_CONFIG_ARGS"
   CONFIG_FILES=$old_config_files
 fi
+
