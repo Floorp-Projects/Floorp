@@ -562,6 +562,7 @@ IonScript::IonScript()
     callTargetEntries_(0),
     refcount_(0),
     recompileInfo_(),
+    osrPcMismatchCounter_(0),
     slowCallCount(0)
 {
 }
@@ -1623,8 +1624,19 @@ ion::CanEnterAtBranch(JSContext *cx, JSScript *script, AbstractFramePtr fp,
         return status;
     }
 
-    if (script->hasIonScript() && script->ionScript()->osrPc() != pc)
+    if (script->ionScript()->osrPc() != pc) {
+        // If we keep failing to enter the script due to an OSR pc mismatch,
+        // invalidate the script to force a recompile.
+        uint32_t count = script->ionScript()->incrOsrPcMismatchCounter();
+
+        if (count > js_IonOptions.osrPcMismatchesBeforeRecompile) {
+            if (!Invalidate(cx, script, SequentialExecution, true))
+                return Method_Error;
+        }
         return Method_Skipped;
+    }
+
+    script->ionScript()->resetOsrPcMismatchCounter();
 
     return Method_Compiled;
 }
