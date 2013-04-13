@@ -342,7 +342,7 @@ HTMLCanvasElement::ParseAttribute(int32_t aNamespaceID,
 
 NS_IMETHODIMP
 HTMLCanvasElement::ToDataURL(const nsAString& aType, nsIVariant* aParams,
-                             uint8_t optional_argc, nsAString& aDataURL)
+                             nsAString& aDataURL)
 {
   // do a trust check if this is a write-only canvas
   if (mWriteOnly && !nsContentUtils::IsCallerChrome()) {
@@ -551,9 +551,7 @@ HTMLCanvasElement::ToDataURLImpl(const nsAString& aMimeType,
 // XXXkhuey the encoding should be off the main thread, but we're lazy.
 NS_IMETHODIMP
 HTMLCanvasElement::ToBlob(nsIFileCallback* aCallback,
-                          const nsAString& aType,
-                          nsIVariant* aParams,
-                          uint8_t optional_argc)
+                          const nsAString& aType)
 {
   // do a trust check if this is a write-only canvas
   if (mWriteOnly && !nsContentUtils::IsCallerChrome()) {
@@ -605,7 +603,6 @@ HTMLCanvasElement::ToBlob(nsIFileCallback* aCallback,
 NS_IMETHODIMP
 HTMLCanvasElement::MozGetAsFile(const nsAString& aName,
                                 const nsAString& aType,
-                                uint8_t optional_argc,
                                 nsIDOMFile** aResult)
 {
   // do a trust check if this is a write-only canvas
