@@ -11,6 +11,7 @@ DIRS += [
     'html/html/semantics/document-metadata/the-title-element',
     'html/html/semantics/forms/the-form-element',
     'html/html/semantics/forms/the-option-element',
+    'html/html/semantics/forms/the-select-element',
     'html/html/semantics/scripting-1/the-script-element',
     'html/html/semantics/tabular-data/the-table-element',
     'html/html/semantics/text-level-semantics/the-time-element',

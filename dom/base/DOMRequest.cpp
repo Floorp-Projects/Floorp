@@ -7,7 +7,6 @@
 #include "DOMRequest.h"
 
 #include "mozilla/Util.h"
-#include "nsDOMClassInfo.h"
 #include "DOMError.h"
 #include "nsEventDispatcher.h"
 #include "nsDOMEvent.h"
@@ -47,8 +46,6 @@ DOMRequest::Init(nsIDOMWindow* aWindow)
                                         window->GetCurrentInnerWindow());
 }
 
-DOMCI_DATA(DOMRequest, DOMRequest)
-
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(DOMRequest,
                                                   nsDOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mError)
@@ -71,7 +68,6 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(DOMRequest)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDOMRequest)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(DOMRequest)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
 NS_IMPL_ADDREF_INHERITED(DOMRequest, nsDOMEventTargetHelper)

@@ -358,18 +358,7 @@ HTMLOptionsCollection::Add(const HTMLOptionOrOptGroupElement& aElement,
                            const Nullable<HTMLElementOrLong>& aBefore,
                            ErrorResult& aError)
 {
-  nsGenericHTMLElement& element =
-    aElement.IsHTMLOptionElement() ?
-    static_cast<nsGenericHTMLElement&>(aElement.GetAsHTMLOptionElement()) :
-    static_cast<nsGenericHTMLElement&>(aElement.GetAsHTMLOptGroupElement());
-
-  if (aBefore.IsNull()) {
-    mSelect->Add(element, (nsGenericHTMLElement*)nullptr, aError);
-  } else if (aBefore.Value().IsHTMLElement()) {
-    mSelect->Add(element, &aBefore.Value().GetAsHTMLElement(), aError);
-  } else {
-    mSelect->Add(element, aBefore.Value().GetAsLong(), aError);
-  }
+  mSelect->Add(aElement, aBefore, aError);
 }
 
 void
