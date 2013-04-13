@@ -88,7 +88,6 @@ function handleDialog(ui, testNum)
   } else {
     synthesizeMouse($("text"), 25, 55, { type: "mousemove" });
     is(window.getSelection().toString(), "", "selection not made");
-    synthesizeMouse(ui.button0, 5, 5, { }, ui.button0.ownerDocument.defaultView);
   }
 
   ok(true, "handleDialog sending mouseclick to dialog...");
