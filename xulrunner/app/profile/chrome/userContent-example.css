@@ -14,13 +14,6 @@
  */
 
 /*
- * example: turn off "blink" element blinking
- *
- * blink { text-decoration: none ! important; }
- *
- */
-
-/*
  * example: give all tables a 2px border
  *
  * table { border: 2px solid; }
