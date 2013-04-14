@@ -600,13 +600,9 @@ RecomputeDirectionality(Element* aElement, bool aNotify)
         dir = parentDir;
       }
     } else {
-      // If there is no parent element, the directionality is the same as the
-      // document direction.
-      Directionality documentDir =
-        aElement->OwnerDoc()->GetDocumentDirectionality();
-      if (documentDir != eDir_NotSet) {
-        dir = documentDir;
-      }
+      // If there is no parent element and no dir attribute, the directionality
+      // is LTR.
+      dir = eDir_LTR;
     }
 
     aElement->SetDirectionality(dir, aNotify);
