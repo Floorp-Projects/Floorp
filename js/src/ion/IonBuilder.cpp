@@ -5636,6 +5636,8 @@ IonBuilder::jsop_getgname(HandlePropertyName name)
         // or non-writable.
         return jsop_getname(name);
     }
+    if (!propertyTypes->hasPropagatedProperty())
+        globalType->getFromPrototypes(cx, id, propertyTypes);
 
     // If the property is permanent, a shape guard isn't necessary.
 
