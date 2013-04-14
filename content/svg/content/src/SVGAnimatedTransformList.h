@@ -69,7 +69,21 @@ public:
 
   void ClearAnimValue(nsSVGElement *aElement);
 
+  /**
+   * Returns true if the corresponding transform attribute is set (or animated)
+   * to a valid value. Unlike HasTransform it will return true for an empty
+   * transform.
+   */
   bool IsExplicitlySet() const;
+
+  /**
+   * Returns true if the corresponding transform attribute is set (or animated)
+   * to a valid value, such that we have at least one transform in our list.
+   * Returns false otherwise (e.g. if the transform attribute is missing or empty
+   * or invalid).
+   */
+  bool HasTransform() const
+    { return (mAnimVal && !mAnimVal->IsEmpty()) || !mBaseVal.IsEmpty(); }
 
   bool IsAnimating() const {
     return !!mAnimVal;
