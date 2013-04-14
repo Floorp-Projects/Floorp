@@ -11,16 +11,6 @@ exports['test:contentURL'] = function(test) {
       value, emitted = 0, changes = 0;
 
   test.assertRaises(
-    function() loader.contentURL = undefined,
-    'The `contentURL` option must be a valid URL.',
-    'Must throw an exception if `contentURL` is not URL.'
-  );
-   test.assertRaises(
-    function() loader.contentURL = null,
-    'The `contentURL` option must be a valid URL.',
-    'Must throw an exception if `contentURL` is not URL.'
-  );
-  test.assertRaises(
     function() loader.contentURL = 4,
     'The `contentURL` option must be a valid URL.',
     'Must throw an exception if `contentURL` is not URL.'

@@ -41,7 +41,10 @@ exports.env = Proxy.create({
   // New environment variables can be defined just by defining properties
   // on this object.
   defineProperty: function(name, { value }) set(name, value),
-  delete: function(name) set(name, null),
+  delete: function(name) {
+    set(name, null);
+    return true;
+  },
 
   // We present all properties as own, there for we just delegate to `hasOwn`.
   has: function(name) this.hasOwn(name),

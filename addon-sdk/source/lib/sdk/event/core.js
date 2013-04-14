@@ -17,6 +17,8 @@ const { ns } = require('../core/namespace');
 
 const event = ns();
 
+const EVENT_TYPE_PATTERN = /^on([A-Z]\w+$)/;
+
 // Utility function to access given event `target` object's event listeners for
 // the specific event `type`. If listeners for this type does not exists they
 // will be created.
@@ -158,3 +160,26 @@ function count(target, type) {
   return observers(target, type).length;
 }
 exports.count = count;
+
+/**
+ * Registers listeners on the given event `target` from the given `listeners`
+ * dictionary. Iterates over the listeners and if property name matches name
+ * pattern `onEventType` and property is a function, then registers it as
+ * an `eventType` listener on `target`.
+ *
+ * @param {Object} target
+ *    The type of event.
+ * @param {Object} listeners
+ *    Dictionary of listeners.
+ */
+function setListeners(target, listeners) {
+  Object.keys(listeners || {}).forEach(function onEach(key) {
+    let match = EVENT_TYPE_PATTERN.exec(key);
+    let type = match && match[1].toLowerCase();
+    let listener = listeners[key];
+
+    if (type && typeof(listener) === 'function')
+      on(target, type, listener);
+  });
+}
+exports.setListeners = setListeners;

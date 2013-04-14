@@ -556,7 +556,7 @@ exports.testAttachToTabsOnly = function(test) {
             openToplevelWindow();
           }
           else {
-            openBrowserIframe(); 
+            openBrowserIframe();
           }
         }, false);
         element.setAttribute('src', 'data:text/html;charset=utf-8,foo');
@@ -751,7 +751,7 @@ exports.testPageModCssList = function(test) {
         "data:text/css;charset=utf-8,div { border: 1px solid black; }",
         "data:text/css;charset=utf-8,div { border: 10px solid black; }",
         // Highlight evaluation order between contentStylesheet & contentStylesheetFile
-        "data:text/cs;charset=utf-8s,div { height: 1000px; }",
+        "data:text/css;charset=utf-8s,div { height: 1000px; }",
         // Highlight precedence between the author and user style sheet
         "data:text/css;charset=utf-8,div { width: 200px; max-width: 640px!important}",
       ],
@@ -779,13 +779,13 @@ exports.testPageModCssList = function(test) {
       test.assertEqual(
         style.width,
         "320px",
-        "PageMod author/user style sheet precedence works"
+        "PageMod add-on author/page author style sheet precedence works"
       );
 
       test.assertEqual(
         style.maxWidth,
-        "640px",
-        "PageMod author/user style sheet precedence with !important works"
+        "480px",
+        "PageMod add-on author/page author style sheet precedence with !important works"
       );
 
       done();

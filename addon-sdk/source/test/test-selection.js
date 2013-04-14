@@ -28,7 +28,7 @@ const { setTimeout } = require("sdk/timers");
 const { Cu } = require("chrome");
 const { merge } = require("sdk/util/object");
 const { isPrivate } = require("sdk/private-browsing");
-
+const events = require("sdk/system/events");
 // General purpose utility functions
 
 /**
@@ -161,10 +161,16 @@ function hideAndShowFrame(window) {
 
   Cu.forceGC();
 
-  setTimeout(function(){
-    iframe.style.display = "";
+  setTimeout(function() {
+    events.on("document-shown", function shown(event) {
+      if (iframe.contentWindow !== event.subject.defaultView)
+        return;
 
-    setTimeout(resolve, 500, window);
+      events.off("document-shown", shown);
+      setTimeout(resolve, 0, window);
+    }, true);
+
+    iframe.style.display = "";
   }, 0)
 
   return promise;
@@ -828,6 +834,8 @@ exports["test Selection Listener on frame"] = function(assert, done) {
 
   selection.once("select", function() {
     assert.equal(selection.text, "fo");
+    close();
+    loader.unload();
     done();
   });
 
@@ -836,8 +844,7 @@ exports["test Selection Listener on frame"] = function(assert, done) {
     then(getFrameWindow).
     then(selectContentFirstDiv).
     then(dispatchSelectionEvent).
-    then(close).
-    then(loader.unload, assert.fail);
+    then(null, assert.fail);
 };
 
 exports["test Textarea onSelect Listener on frame"] = function(assert, done) {
@@ -846,6 +853,8 @@ exports["test Textarea onSelect Listener on frame"] = function(assert, done) {
 
   selection.once("select", function() {
     assert.equal(selection.text, "noodles");
+    close();
+    loader.unload();
     done();
   });
 
@@ -854,8 +863,7 @@ exports["test Textarea onSelect Listener on frame"] = function(assert, done) {
     then(getFrameWindow).
     then(selectTextarea).
     then(dispatchOnSelectEvent).
-    then(close).
-    then(loader.unload, assert.fail);
+    then(null, assert.fail);
 };
 
 

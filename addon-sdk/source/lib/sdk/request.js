@@ -25,6 +25,8 @@ const request = ns();
 // reuse it.
 const { validateOptions, validateSingleOption } = new OptionsValidator({
   url: {
+    // Also converts a URL instance to string, bug 857902
+    map: function (url) url.toString(),
     ok: isValidURI
   },
   headers: {
