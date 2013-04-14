@@ -40,12 +40,16 @@ exports.getDocShell = getDocShell;
  * @params {Boolean} options.allowPlugins
  *    Whether to allow plugin execution. Defaults to `false`.
  */
-function create(document, options) {
+function create(target, options) {
+  target = target instanceof Ci.nsIDOMDocument ? target.documentElement :
+           target instanceof Ci.nsIDOMWindow ? target.document.documentElement :
+           target;
   options = options || {};
   let remote = options.remote || false;
   let namespaceURI = options.namespaceURI || XUL;
   let isXUL = namespaceURI === XUL;
   let nodeName = isXUL && options.browser ? 'browser' : 'iframe';
+  let document = target.ownerDocument;
 
   let frame = document.createElementNS(namespaceURI, nodeName);
   // Type="content" is mandatory to enable stuff here:
@@ -53,7 +57,7 @@ function create(document, options) {
   frame.setAttribute('type', options.type || 'content');
   frame.setAttribute('src', options.uri || 'about:blank');
 
-  document.documentElement.appendChild(frame);
+  target.appendChild(frame);
 
   // Load in separate process if `options.remote` is `true`.
   // http://mxr.mozilla.org/mozilla-central/source/content/base/src/nsFrameLoader.cpp#1347
@@ -79,8 +83,18 @@ function create(document, options) {
     docShell.allowAuth = options.allowAuth || false;
     docShell.allowJavascript = options.allowJavascript || false;
     docShell.allowPlugins = options.allowPlugins || false;
+
+    // Control whether the document can move/resize the window. Requires
+    // recently added platform capability, so we test to avoid exceptions
+    // in cases where capability is not present yet.
+    if ("allowWindowControl" in docShell && "allowWindowControl" in options)
+      docShell.allowWindowControl = !!options.allowWindowControl;
   }
 
   return frame;
 }
 exports.create = create;
+
+function swapFrameLoaders(from, to)
+  from.QueryInterface(Ci.nsIFrameLoaderOwner).swapFrameLoaders(to)
+exports.swapFrameLoaders = swapFrameLoaders;

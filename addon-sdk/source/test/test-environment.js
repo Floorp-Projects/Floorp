@@ -41,8 +41,8 @@ exports['test set'] = function(assert) {
 
 exports['test unset'] = function(assert) {
   env.BLA4 = 'bla';
-  assert.equal(env.BLA4, 'bla', 'BLA4 env varibale is set');
-  delete env.BLA4;
+  assert.equal(env.BLA4, 'bla', 'BLA4 env variable is set');
+  assert.equal(delete env.BLA4, true, 'BLA4 env variable is removed');
   assert.equal(env.BLA4, undefined, 'BLA4 env variable is unset');
   assert.equal('BLA4' in env, false, 'BLA4 env variable no longer exists' );
 };

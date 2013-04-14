@@ -33,6 +33,8 @@ exports.testMatchPatternTestTrue = function(test) {
 
   ok(/.*zilla.*/, "https://bugzilla.redhat.com/show_bug.cgi?id=569753");
   ok(/https:.*zilla.*/, "https://bugzilla.redhat.com/show_bug.cgi?id=569753");
+  ok('*.sample.com', 'http://ex.sample.com/foo.html');
+  ok('*.amp.le.com', 'http://ex.amp.le.com');
 };
 
 exports.testMatchPatternTestFalse = function(test) {
@@ -70,6 +72,14 @@ exports.testMatchPatternTestFalse = function(test) {
   ok(/.*zilla/, "https://bugzilla.redhat.com/show_bug.cgi?id=569753");
   ok(/.*Zilla.*/, "https://bugzilla.redhat.com/show_bug.cgi?id=655464"); // bug 655464
   ok(/https:.*zilla/, "https://bugzilla.redhat.com/show_bug.cgi?id=569753");
+
+  // bug 856913
+  ok('*.ign.com', 'http://www.design.com');
+  ok('*.ign.com', 'http://design.com');
+  ok('*.zilla.com', 'http://bugzilla.mozilla.com');
+  ok('*.zilla.com', 'http://mo-zilla.com');
+  ok('*.amp.le.com', 'http://amp-le.com');
+  ok('*.amp.le.com', 'http://examp.le.com');
 };
 
 exports.testMatchPatternErrors = function(test) {
