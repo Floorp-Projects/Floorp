@@ -3,38 +3,34 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "DOMSVGAnimatedTransformList.h"
+#include "mozilla/dom/SVGAnimatedTransformList.h"
 #include "DOMSVGTransformList.h"
-#include "SVGAnimatedTransformList.h"
+#include "nsSVGAnimatedTransformList.h"
 #include "nsSVGAttrTearoffTable.h"
 #include "mozilla/dom/SVGAnimatedTransformListBinding.h"
 #include "nsContentUtils.h"
 
 namespace mozilla {
+namespace dom {
 
 static
-  nsSVGAttrTearoffTable<SVGAnimatedTransformList,DOMSVGAnimatedTransformList>
+  nsSVGAttrTearoffTable<nsSVGAnimatedTransformList, SVGAnimatedTransformList>
   sSVGAnimatedTransformListTearoffTable;
 
-NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(DOMSVGAnimatedTransformList, mElement)
+NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(SVGAnimatedTransformList, mElement)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMSVGAnimatedTransformList)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMSVGAnimatedTransformList)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGAnimatedTransformList)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(SVGAnimatedTransformList, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(SVGAnimatedTransformList, Release)
 
 JSObject*
-DOMSVGAnimatedTransformList::WrapObject(JSContext* aCx, JSObject* aScope)
+SVGAnimatedTransformList::WrapObject(JSContext* aCx, JSObject* aScope)
 {
-  return mozilla::dom::SVGAnimatedTransformListBinding::Wrap(aCx, aScope, this);
+  return SVGAnimatedTransformListBinding::Wrap(aCx, aScope, this);
 }
 
 //----------------------------------------------------------------------
 already_AddRefed<DOMSVGTransformList>
-DOMSVGAnimatedTransformList::BaseVal()
+SVGAnimatedTransformList::BaseVal()
 {
   if (!mBaseVal) {
     mBaseVal = new DOMSVGTransformList(this, InternalAList().GetBaseValue());
@@ -44,7 +40,7 @@ DOMSVGAnimatedTransformList::BaseVal()
 }
 
 already_AddRefed<DOMSVGTransformList>
-DOMSVGAnimatedTransformList::AnimVal()
+SVGAnimatedTransformList::AnimVal()
 {
   if (!mAnimVal) {
     mAnimVal = new DOMSVGTransformList(this, InternalAList().GetAnimValue());
@@ -53,27 +49,27 @@ DOMSVGAnimatedTransformList::AnimVal()
   return animVal.forget();
 }
 
-/* static */ already_AddRefed<DOMSVGAnimatedTransformList>
-DOMSVGAnimatedTransformList::GetDOMWrapper(SVGAnimatedTransformList *aList,
-                                           nsSVGElement *aElement)
+/* static */ already_AddRefed<SVGAnimatedTransformList>
+SVGAnimatedTransformList::GetDOMWrapper(nsSVGAnimatedTransformList *aList,
+                                        nsSVGElement *aElement)
 {
-  nsRefPtr<DOMSVGAnimatedTransformList> wrapper =
+  nsRefPtr<SVGAnimatedTransformList> wrapper =
     sSVGAnimatedTransformListTearoffTable.GetTearoff(aList);
   if (!wrapper) {
-    wrapper = new DOMSVGAnimatedTransformList(aElement);
+    wrapper = new SVGAnimatedTransformList(aElement);
     sSVGAnimatedTransformListTearoffTable.AddTearoff(aList, wrapper);
   }
   return wrapper.forget();
 }
 
-/* static */ DOMSVGAnimatedTransformList*
-DOMSVGAnimatedTransformList::GetDOMWrapperIfExists(
-  SVGAnimatedTransformList *aList)
+/* static */ SVGAnimatedTransformList*
+SVGAnimatedTransformList::GetDOMWrapperIfExists(
+  nsSVGAnimatedTransformList *aList)
 {
   return sSVGAnimatedTransformListTearoffTable.GetTearoff(aList);
 }
 
-DOMSVGAnimatedTransformList::~DOMSVGAnimatedTransformList()
+SVGAnimatedTransformList::~SVGAnimatedTransformList()
 {
   // Script no longer has any references to us, to our base/animVal objects, or
   // to any of their list items.
@@ -81,7 +77,7 @@ DOMSVGAnimatedTransformList::~DOMSVGAnimatedTransformList()
 }
 
 void
-DOMSVGAnimatedTransformList::InternalBaseValListWillChangeLengthTo(
+SVGAnimatedTransformList::InternalBaseValListWillChangeLengthTo(
   uint32_t aNewLength)
 {
   // When the number of items in our internal counterpart's baseVal changes,
@@ -91,7 +87,7 @@ DOMSVGAnimatedTransformList::InternalBaseValListWillChangeLengthTo(
   // able to access "items" at indexes that are out of bounds (read/write to
   // bad memory)!!
 
-  nsRefPtr<DOMSVGAnimatedTransformList> kungFuDeathGrip;
+  nsRefPtr<SVGAnimatedTransformList> kungFuDeathGrip;
   if (mBaseVal) {
     if (aNewLength < mBaseVal->LengthNoFlush()) {
       // InternalListLengthWillChange might clear last reference to |this|.
@@ -112,7 +108,7 @@ DOMSVGAnimatedTransformList::InternalBaseValListWillChangeLengthTo(
 }
 
 void
-DOMSVGAnimatedTransformList::InternalAnimValListWillChangeLengthTo(
+SVGAnimatedTransformList::InternalAnimValListWillChangeLengthTo(
   uint32_t aNewLength)
 {
   if (mAnimVal) {
@@ -121,21 +117,22 @@ DOMSVGAnimatedTransformList::InternalAnimValListWillChangeLengthTo(
 }
 
 bool
-DOMSVGAnimatedTransformList::IsAnimating() const
+SVGAnimatedTransformList::IsAnimating() const
 {
   return InternalAList().IsAnimating();
 }
 
-SVGAnimatedTransformList&
-DOMSVGAnimatedTransformList::InternalAList()
+nsSVGAnimatedTransformList&
+SVGAnimatedTransformList::InternalAList()
 {
   return *mElement->GetAnimatedTransformList();
 }
 
-const SVGAnimatedTransformList&
-DOMSVGAnimatedTransformList::InternalAList() const
+const nsSVGAnimatedTransformList&
+SVGAnimatedTransformList::InternalAList() const
 {
   return *mElement->GetAnimatedTransformList();
 }
 
+} // namespace dom
 } // namespace mozilla
