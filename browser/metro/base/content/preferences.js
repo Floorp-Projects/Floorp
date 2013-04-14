@@ -12,5 +12,11 @@ var PreferencesPanelView = {
         SanitizeUI.init();
       }
     }, false);
+  },
+  onDNTPreferenceChanged: function onDNTPreferenceChanged() {
+    let dntNoPref = document.getElementById("prefs-dnt-nopref");
+
+    // When "tell sites nothing about my preferences" is selected, disable do not track.
+    Services.prefs.setBoolPref("privacy.donottrackheader.enabled", !dntNoPref.selected);
   }
 };
