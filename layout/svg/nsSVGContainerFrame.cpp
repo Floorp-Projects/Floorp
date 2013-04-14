@@ -179,7 +179,9 @@ nsSVGDisplayContainerFrame::IsSVGTransformed(gfxMatrix *aOwnTransform,
 
   if (mContent->IsSVG()) {
     nsSVGElement *content = static_cast<nsSVGElement*>(mContent);
-    if (content->GetAnimatedTransformList() ||
+    SVGAnimatedTransformList* transformList =
+      content->GetAnimatedTransformList();
+    if ((transformList && transformList->HasTransform()) ||
         content->GetAnimateMotionTransform()) {
       if (aOwnTransform) {
         *aOwnTransform = content->PrependLocalTransformsTo(gfxMatrix(),
