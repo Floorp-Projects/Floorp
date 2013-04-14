@@ -83,6 +83,17 @@ The `url` module provides functionality for the parsing and retrieving of URLs.
   The converted URL as a string.
 </api>
 
+<api name="isValidURI">
+@function
+  Checks the validity of a URI. `isValidURI("http://mozilla.org")` would return `true`, whereas `isValidURI("mozilla.org")` would return `false`.
+
+@param uri {string}
+  The URI, as a string, to be tested.
+
+@returns {boolean}
+  A boolean indicating whether or not the URI is valid.
+</api>
+
 <api name="DataURL">
 @class
 <api name="DataURL">

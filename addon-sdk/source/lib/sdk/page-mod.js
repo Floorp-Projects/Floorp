@@ -26,14 +26,8 @@ const { getTabs, getTabContentWindow, getTabForContentWindow,
         getURI: getTabURI } = require('./tabs/utils');
 const { has, hasAny } = require('./util/array');
 const { ignoreWindow } = require('sdk/private-browsing/utils');
-
-const styleSheetService = Cc["@mozilla.org/content/style-sheet-service;1"].
-                            getService(Ci.nsIStyleSheetService);
-
-const USER_SHEET = styleSheetService.USER_SHEET;
-
-const io = Cc['@mozilla.org/network/io-service;1'].
-              getService(Ci.nsIIOService);
+const { Style } = require("./stylesheet/style");
+const { attach, detach } = require("./content/mod");
 
 // Valid values for `attachTo` option
 const VALID_ATTACHTO_OPTIONS = ['existing', 'top', 'frame'];
@@ -135,28 +129,15 @@ const PageMod = Loader.compose(EventEmitter, {
     else
       rules.add(include);
 
-    let styleRules = "";
-
-    if (contentStyleFile)
-      styleRules = [].concat(contentStyleFile).map(readURISync).join("");
-
-    if (contentStyle)
-      styleRules += [].concat(contentStyle).join("");
-
-    if (styleRules) {
-      this._onRuleUpdate = this._onRuleUpdate.bind(this);
-
-      this._styleRules = styleRules;
-
-      this._registerStyleSheet();
-      rules.on('add', this._onRuleUpdate);
-      rules.on('remove', this._onRuleUpdate);
+    if (contentStyle || contentStyleFile) {
+      this._style = Style({
+        uri: contentStyleFile,
+        source: contentStyle
+      });
     }
 
     this.on('error', this._onUncaughtError = this._onUncaughtError.bind(this));
     pageModManager.add(this._public);
-
-    this._loadingWindows = [];
 
     // `_applyOnExistingDocuments` has to be called after `pageModManager.add()`
     // otherwise its calls to `_onContent` method won't do anything.
@@ -166,19 +147,13 @@ const PageMod = Loader.compose(EventEmitter, {
 
   destroy: function destroy() {
 
-    this._unregisterStyleSheet();
-
-    this.include.removeListener('add', this._onRuleUpdate);
-    this.include.removeListener('remove', this._onRuleUpdate);
+    if (this._style)
+      detach(this._style);
 
     for each (let rule in this.include)
       this.include.remove(rule);
     pageModManager.remove(this._public);
-    this._loadingWindows = [];
-
   },
-
-  _loadingWindows: [],
 
   _applyOnExistingDocuments: function _applyOnExistingDocuments() {
     let mod = this;
@@ -215,6 +190,9 @@ const PageMod = Loader.compose(EventEmitter, {
     // Is a frame document and `frame` is not set, ignore
     if (!isTopDocument && !has(this.attachTo, "frame"))
       return;
+
+    if (this._style)
+      attach(this._style, window);
 
     // Immediatly evaluate content script if the document state is already
     // matching contentScriptWhen expectations
@@ -261,59 +239,6 @@ const PageMod = Loader.compose(EventEmitter, {
   _onUncaughtError: function _onUncaughtError(e) {
     if (this._listeners('error').length == 1)
       console.exception(e);
-  },
-  _onRuleUpdate: function _onRuleUpdate(){
-    this._registerStyleSheet();
-  },
-
-  _registerStyleSheet : function _registerStyleSheet() {
-    let rules = this.include;
-    let styleRules = this._styleRules;
-
-    let documentRules = [];
-
-    this._unregisterStyleSheet();
-
-    for each (let rule in rules) {
-      let pattern = RULES[rule];
-
-      if (!pattern)
-        continue;
-
-      if (pattern.regexp)
-        documentRules.push("regexp(\"" + pattern.regexp.source + "\")");
-      else if (pattern.exactURL)
-        documentRules.push("url(" + pattern.exactURL + ")");
-      else if (pattern.domain)
-        documentRules.push("domain(" + pattern.domain + ")");
-      else if (pattern.urlPrefix)
-        documentRules.push("url-prefix(" + pattern.urlPrefix + ")");
-      else if (pattern.anyWebPage)
-        documentRules.push("regexp(\"^(https?|ftp)://.*?\")");
-    }
-
-    let uri = "data:text/css;charset=utf-8,";
-    if (documentRules.length > 0)
-      uri += encodeURIComponent("@-moz-document " +
-        documentRules.join(",") + " {" + styleRules + "}");
-    else
-      uri += encodeURIComponent(styleRules);
-
-    this._registeredStyleURI = io.newURI(uri, null, null);
-
-    styleSheetService.loadAndRegisterSheet(
-      this._registeredStyleURI,
-      USER_SHEET
-    );
-  },
-
-  _unregisterStyleSheet : function () {
-    let uri = this._registeredStyleURI;
-
-    if (uri  && styleSheetService.sheetRegistered(uri, USER_SHEET))
-      styleSheetService.unregisterSheet(uri, USER_SHEET);
-
-    this._registeredStyleURI = null;
   }
 });
 exports.PageMod = function(options) PageMod(options)

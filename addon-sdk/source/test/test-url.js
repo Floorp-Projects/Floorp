@@ -255,6 +255,12 @@ exports.testIsInvalidURI = function (test) {
   });
 };
 
+exports.testURLFromURL = function(test) {
+  let aURL = url.URL('http://mozilla.org');
+  let bURL = url.URL(aURL);
+  test.assertEqual(aURL.toString(), bURL.toString(), 'Making a URL from a URL works');
+};
+
 function validURIs() {
   return [
   'http://foo.com/blah_blah',

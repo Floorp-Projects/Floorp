@@ -425,7 +425,7 @@ Creates a panel.
     Set to `false` to prevent taking the focus away when the panel is shown.
     Only turn this off if necessary, to prevent accessibility issue.
     Optional, default to `true`.
-  @prop [contentURL] {string}
+  @prop [contentURL] {string,URL}
     The URL of the content to load in the panel.
   @prop [allow] {object}
     An optional object describing permissions for the content.  It should

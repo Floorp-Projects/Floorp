@@ -62,8 +62,8 @@ This constructor creates a request object that can be used to make network
 requests. The constructor takes a single parameter `options` which is used to
 set several properties on the resulting `Request`.
 @param options {object}
-    @prop url {string}
-    This is the url to which the request will be made.
+    @prop [url] {string,url}
+    This is the url to which the request will be made. Can either be a [String](https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/String) or an instance of the SDK's [URL](https://addons.mozilla.org/en-US/developers/docs/sdk/latest/modules/sdk/url.html#URL).
 
     @prop [onComplete] {function}
     This function will be called when the request has received a response (or in
