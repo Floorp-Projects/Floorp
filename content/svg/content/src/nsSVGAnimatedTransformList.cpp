@@ -3,9 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "SVGAnimatedTransformList.h"
-#include "DOMSVGAnimatedTransformList.h"
-
+#include "nsSVGAnimatedTransformList.h"
+#include "mozilla/dom/SVGAnimatedTransformList.h"
 #include "mozilla/dom/SVGAnimationElement.h"
 #include "nsSMILValue.h"
 #include "prdtoa.h"
@@ -15,8 +14,10 @@
 
 namespace mozilla {
 
+using namespace dom;
+
 nsresult
-SVGAnimatedTransformList::SetBaseValueString(const nsAString& aValue)
+nsSVGAnimatedTransformList::SetBaseValueString(const nsAString& aValue)
 {
   SVGTransformList newBaseValue;
   nsresult rv = newBaseValue.SetValueFromString(aValue);
@@ -24,8 +25,8 @@ SVGAnimatedTransformList::SetBaseValueString(const nsAString& aValue)
     return rv;
   }
 
-  DOMSVGAnimatedTransformList *domWrapper =
-    DOMSVGAnimatedTransformList::GetDOMWrapperIfExists(this);
+  SVGAnimatedTransformList *domWrapper =
+    SVGAnimatedTransformList::GetDOMWrapperIfExists(this);
   if (domWrapper) {
     // We must send this notification *before* changing mBaseVal! If the length
     // of our baseVal is being reduced, our baseVal's DOM wrapper list may have
@@ -51,10 +52,10 @@ SVGAnimatedTransformList::SetBaseValueString(const nsAString& aValue)
 }
 
 void
-SVGAnimatedTransformList::ClearBaseValue()
+nsSVGAnimatedTransformList::ClearBaseValue()
 {
-  DOMSVGAnimatedTransformList *domWrapper =
-    DOMSVGAnimatedTransformList::GetDOMWrapperIfExists(this);
+  SVGAnimatedTransformList *domWrapper =
+    SVGAnimatedTransformList::GetDOMWrapperIfExists(this);
   if (domWrapper) {
     // We must send this notification *before* changing mBaseVal! (See above.)
     domWrapper->InternalBaseValListWillChangeLengthTo(0);
@@ -65,17 +66,17 @@ SVGAnimatedTransformList::ClearBaseValue()
 }
 
 nsresult
-SVGAnimatedTransformList::SetAnimValue(const SVGTransformList& aValue,
-                                       nsSVGElement *aElement)
+nsSVGAnimatedTransformList::SetAnimValue(const SVGTransformList& aValue,
+                                         nsSVGElement *aElement)
 {
-  DOMSVGAnimatedTransformList *domWrapper =
-    DOMSVGAnimatedTransformList::GetDOMWrapperIfExists(this);
+  SVGAnimatedTransformList *domWrapper =
+    SVGAnimatedTransformList::GetDOMWrapperIfExists(this);
   if (domWrapper) {
     // A new animation may totally change the number of items in the animVal
     // list, replacing what was essentially a mirror of the baseVal list, or
     // else replacing and overriding an existing animation. When this happens
     // we must try and keep our animVal's DOM wrapper in sync (see the comment
-    // in DOMSVGAnimatedTransformList::InternalBaseValListWillChangeLengthTo).
+    // in SVGAnimatedTransformList::InternalBaseValListWillChangeLengthTo).
     //
     // It's not possible for us to reliably distinguish between calls to this
     // method that are setting a new sample for an existing animation, and
@@ -104,10 +105,10 @@ SVGAnimatedTransformList::SetAnimValue(const SVGTransformList& aValue,
 }
 
 void
-SVGAnimatedTransformList::ClearAnimValue(nsSVGElement *aElement)
+nsSVGAnimatedTransformList::ClearAnimValue(nsSVGElement *aElement)
 {
-  DOMSVGAnimatedTransformList *domWrapper =
-    DOMSVGAnimatedTransformList::GetDOMWrapperIfExists(this);
+  SVGAnimatedTransformList *domWrapper =
+    SVGAnimatedTransformList::GetDOMWrapperIfExists(this);
   if (domWrapper) {
     // When all animation ends, animVal simply mirrors baseVal, which may have
     // a different number of items to the last active animated value. We must
@@ -121,7 +122,7 @@ SVGAnimatedTransformList::ClearAnimValue(nsSVGElement *aElement)
 }
 
 bool
-SVGAnimatedTransformList::IsExplicitlySet() const
+nsSVGAnimatedTransformList::IsExplicitlySet() const
 {
   // Like other methods of this name, we need to know when a transform value has
   // been explicitly set.
@@ -138,13 +139,13 @@ SVGAnimatedTransformList::IsExplicitlySet() const
 }
 
 nsISMILAttr*
-SVGAnimatedTransformList::ToSMILAttr(nsSVGElement* aSVGElement)
+nsSVGAnimatedTransformList::ToSMILAttr(nsSVGElement* aSVGElement)
 {
   return new SMILAnimatedTransformList(this, aSVGElement);
 }
 
 nsresult
-SVGAnimatedTransformList::SMILAnimatedTransformList::ValueFromString(
+nsSVGAnimatedTransformList::SMILAnimatedTransformList::ValueFromString(
   const nsAString& aStr,
   const dom::SVGAnimationElement* aSrcElement,
   nsSMILValue& aValue,
@@ -172,7 +173,7 @@ SVGAnimatedTransformList::SMILAnimatedTransformList::ValueFromString(
 }
 
 void
-SVGAnimatedTransformList::SMILAnimatedTransformList::ParseValue(
+nsSVGAnimatedTransformList::SMILAnimatedTransformList::ParseValue(
   const nsAString& aSpec,
   const nsIAtom* aTransformType,
   nsSMILValue& aResult)
@@ -240,7 +241,7 @@ namespace
 } // end anonymous namespace block
 
 int32_t
-SVGAnimatedTransformList::SMILAnimatedTransformList::ParseParameterList(
+nsSVGAnimatedTransformList::SMILAnimatedTransformList::ParseParameterList(
   const nsAString& aSpec,
   float* aVars,
   int32_t aNVars)
@@ -280,7 +281,7 @@ SVGAnimatedTransformList::SMILAnimatedTransformList::ParseParameterList(
 }
 
 nsSMILValue
-SVGAnimatedTransformList::SMILAnimatedTransformList::GetBaseValue() const
+nsSVGAnimatedTransformList::SMILAnimatedTransformList::GetBaseValue() const
 {
   // To benefit from Return Value Optimization and avoid copy constructor calls
   // due to our use of return-by-value, we must return the exact same object
@@ -294,7 +295,7 @@ SVGAnimatedTransformList::SMILAnimatedTransformList::GetBaseValue() const
 }
 
 nsresult
-SVGAnimatedTransformList::SMILAnimatedTransformList::SetAnimValue(
+nsSVGAnimatedTransformList::SMILAnimatedTransformList::SetAnimValue(
   const nsSMILValue& aNewAnimValue)
 {
   NS_ABORT_IF_FALSE(
@@ -310,7 +311,7 @@ SVGAnimatedTransformList::SMILAnimatedTransformList::SetAnimValue(
 }
 
 void
-SVGAnimatedTransformList::SMILAnimatedTransformList::ClearAnimValue()
+nsSVGAnimatedTransformList::SMILAnimatedTransformList::ClearAnimValue()
 {
   if (mVal->mAnimVal) {
     mVal->ClearAnimValue(mElement);
