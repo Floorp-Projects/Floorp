@@ -7,6 +7,7 @@ package org.mozilla.gecko.gfx;
 
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.ZoomConstraints;
@@ -61,6 +62,12 @@ class JavaPanZoomController
     // Angle from axis within which we stay axis-locked
     private static final double AXIS_LOCK_ANGLE = Math.PI / 6.0; // 30 degrees
 
+    // Axis-lock breakout angle
+    private static final double AXIS_BREAKOUT_ANGLE = Math.PI / 8.0;
+
+    // The distance the user has to pan before we consider breaking out of a locked axis
+    public static final float AXIS_BREAKOUT_THRESHOLD = 1/32f * GeckoAppShell.getDpi();
+
     // The maximum amount we allow you to zoom into a page
     private static final float MAX_ZOOM = 4.0f;
 
@@ -74,24 +81,31 @@ class JavaPanZoomController
     private static final int BOUNCE_ANIMATION_DURATION = 250;
 
     private enum PanZoomState {
-        NOTHING,        /* no touch-start events received */
-        FLING,          /* all touches removed, but we're still scrolling page */
-        TOUCHING,       /* one touch-start event received */
-        PANNING_LOCKED, /* touch-start followed by move (i.e. panning with axis lock) */
-        PANNING,        /* panning without axis lock */
-        PANNING_HOLD,   /* in panning, but not moving.
-                         * similar to TOUCHING but after starting a pan */
-        PANNING_HOLD_LOCKED, /* like PANNING_HOLD, but axis lock still in effect */
-        PINCHING,       /* nth touch-start, where n > 1. this mode allows pan and zoom */
-        ANIMATED_ZOOM,  /* animated zoom to a new rect */
-        BOUNCE,         /* in a bounce animation */
+        NOTHING,                /* no touch-start events received */
+        FLING,                  /* all touches removed, but we're still scrolling page */
+        TOUCHING,               /* one touch-start event received */
+        PANNING_LOCKED_X,       /* touch-start followed by move (i.e. panning with axis lock) X axis */
+        PANNING_LOCKED_Y,       /* as above for Y axis */
+        PANNING,                /* panning without axis lock */
+        PANNING_HOLD,           /* in panning, but not moving.
+                                 * similar to TOUCHING but after starting a pan */
+        PANNING_HOLD_LOCKED_X,  /* like PANNING_HOLD, but axis lock still in effect for X axis */
+        PANNING_HOLD_LOCKED_Y,  /* as above but for Y axis */
+        PINCHING,               /* nth touch-start, where n > 1. this mode allows pan and zoom */
+        ANIMATED_ZOOM,          /* animated zoom to a new rect */
+        BOUNCE,                 /* in a bounce animation */
+        WAITING_LISTENERS,      /* a state halfway between NOTHING and TOUCHING - the user has
+                                   put a finger down, but we don't yet know if a touch listener has
+                                   prevented the default actions yet. we still need to abort animations. */
+        AUTONAV,                /* We are scrolling using an AutonavRunnable animation. This is similar
+                                   to the FLING state except that it must be stopped manually by the code that
+                                   started it, and it's velocity can be updated while it's running. */
+    }
 
-        WAITING_LISTENERS, /* a state halfway between NOTHING and TOUCHING - the user has
-                        put a finger down, but we don't yet know if a touch listener has
-                        prevented the default actions yet. we still need to abort animations. */
-        AUTONAV,        /* We are scrolling using an AutonavRunnable animation. This is similar
-                        to the FLING state except that it must be stopped manually by the code that
-                        started it, and it's velocity can be updated while it's running. */
+    private enum AxisLockMode {
+        STANDARD,       /* Default axis locking mode that doesn't break out until finger release */
+        FREE,           /* No locking at all */
+        STICKY          /* Break out with hysteresis so that it feels as free as possible whilst locking */
     }
 
     private final PanZoomTarget mTarget;
@@ -113,6 +127,8 @@ class JavaPanZoomController
     private PanZoomState mState;
     /* The per-frame zoom delta for the currently-running AUTONAV animation. */
     private float mAutonavZoomDelta;
+    /* The user selected panning mode */
+    private AxisLockMode mMode;
 
     public JavaPanZoomController(PanZoomTarget target, View view, EventDispatcher eventDispatcher) {
         mTarget = target;
@@ -129,6 +145,26 @@ class JavaPanZoomController
         registerEventListener(MESSAGE_ZOOM_RECT);
         registerEventListener(MESSAGE_ZOOM_PAGE);
         registerEventListener(MESSAGE_TOUCH_LISTENER);
+
+        mMode = AxisLockMode.STANDARD;
+
+        PrefsHelper.getPref("ui.scrolling.axis_lock_mode", new PrefsHelper.PrefHandlerBase() {
+            @Override public void prefValue(String pref, String value) {
+                if (value.equals("standard")) {
+                    mMode = AxisLockMode.STANDARD;
+                } else if (value.equals("free")) {
+                    mMode = AxisLockMode.FREE;
+                } else {
+                    mMode = AxisLockMode.STICKY;
+                }
+            }
+
+            @Override
+            public boolean isObserver() {
+                return true;
+            }
+
+        });
 
         Axis.initPrefs();
     }
@@ -383,9 +419,11 @@ class JavaPanZoomController
             return false;
         case TOUCHING:
         case PANNING:
-        case PANNING_LOCKED:
+        case PANNING_LOCKED_X:
+        case PANNING_LOCKED_Y:
         case PANNING_HOLD:
-        case PANNING_HOLD_LOCKED:
+        case PANNING_HOLD_LOCKED_X:
+        case PANNING_HOLD_LOCKED_Y:
         case PINCHING:
             Log.e(LOGTAG, "Received impossible touch down while in " + mState);
             return false;
@@ -420,10 +458,15 @@ class JavaPanZoomController
             track(event);
             return true;
 
-        case PANNING_HOLD_LOCKED:
-            setState(PanZoomState.PANNING_LOCKED);
+        case PANNING_HOLD_LOCKED_X:
+            setState(PanZoomState.PANNING_LOCKED_X);
+            track(event);
+            return true;
+        case PANNING_HOLD_LOCKED_Y:
+            setState(PanZoomState.PANNING_LOCKED_Y);
             // fall through
-        case PANNING_LOCKED:
+        case PANNING_LOCKED_X:
+        case PANNING_LOCKED_Y:
             track(event);
             return true;
 
@@ -466,9 +509,11 @@ class JavaPanZoomController
             return false;
 
         case PANNING:
-        case PANNING_LOCKED:
+        case PANNING_LOCKED_X:
+        case PANNING_LOCKED_Y:
         case PANNING_HOLD:
-        case PANNING_HOLD_LOCKED:
+        case PANNING_HOLD_LOCKED_X:
+        case PANNING_HOLD_LOCKED_Y:
             setState(PanZoomState.FLING);
             fling();
             return true;
@@ -571,15 +616,19 @@ class JavaPanZoomController
         mY.startTouch(y);
         mLastEventTime = time;
 
-        if (!mX.scrollable() || !mY.scrollable()) {
-            setState(PanZoomState.PANNING);
-        } else if (angle < AXIS_LOCK_ANGLE || angle > (Math.PI - AXIS_LOCK_ANGLE)) {
-            mY.setScrollingDisabled(true);
-            setState(PanZoomState.PANNING_LOCKED);
-        } else if (Math.abs(angle - (Math.PI / 2)) < AXIS_LOCK_ANGLE) {
-            mX.setScrollingDisabled(true);
-            setState(PanZoomState.PANNING_LOCKED);
-        } else {
+        if (mMode == AxisLockMode.STANDARD || mMode == AxisLockMode.STICKY) {
+            if (!mX.scrollable() || !mY.scrollable()) {
+                setState(PanZoomState.PANNING);
+            } else if (angle < AXIS_LOCK_ANGLE || angle > (Math.PI - AXIS_LOCK_ANGLE)) {
+                mY.setScrollingDisabled(true);
+                setState(PanZoomState.PANNING_LOCKED_X);
+            } else if (Math.abs(angle - (Math.PI / 2)) < AXIS_LOCK_ANGLE) {
+                mX.setScrollingDisabled(true);
+                setState(PanZoomState.PANNING_LOCKED_Y);
+            } else {
+                setState(PanZoomState.PANNING);
+            }
+        } else if (mMode == AxisLockMode.FREE) {
             setState(PanZoomState.PANNING);
         }
     }
@@ -599,6 +648,29 @@ class JavaPanZoomController
         }
         mLastEventTime = time;
 
+
+        // if we're axis-locked check if the user is trying to scroll away from the lock
+        if (mMode == AxisLockMode.STICKY) {
+            float dx = mX.panDistance(x);
+            float dy = mY.panDistance(y);
+            double angle = Math.atan2(dy, dx); // range [-pi, pi]
+            angle = Math.abs(angle); // range [0, pi]
+
+            if (Math.abs(dx) > AXIS_BREAKOUT_THRESHOLD || Math.abs(dy) > AXIS_BREAKOUT_THRESHOLD) {
+                if (mState == PanZoomState.PANNING_LOCKED_X) {
+                    if (angle > AXIS_BREAKOUT_ANGLE && angle < (Math.PI - AXIS_BREAKOUT_ANGLE)) {
+                        mY.setScrollingDisabled(false);
+                        setState(PanZoomState.PANNING);
+                    }
+                 } else if (mState == PanZoomState.PANNING_LOCKED_Y) {
+                    if (Math.abs(angle - (Math.PI / 2)) > AXIS_BREAKOUT_ANGLE) {
+                        mX.setScrollingDisabled(false);
+                        setState(PanZoomState.PANNING);
+                    }
+                }
+            }
+        }
+
         mX.updateWithTouchAt(x, timeDelta);
         mY.updateWithTouchAt(y, timeDelta);
     }
@@ -617,12 +689,14 @@ class JavaPanZoomController
         if (stopped()) {
             if (mState == PanZoomState.PANNING) {
                 setState(PanZoomState.PANNING_HOLD);
-            } else if (mState == PanZoomState.PANNING_LOCKED) {
-                setState(PanZoomState.PANNING_HOLD_LOCKED);
+            } else if (mState == PanZoomState.PANNING_LOCKED_X) {
+                setState(PanZoomState.PANNING_HOLD_LOCKED_X);
+            } else if (mState == PanZoomState.PANNING_LOCKED_Y) {
+                setState(PanZoomState.PANNING_HOLD_LOCKED_Y);
             } else {
                 // should never happen, but handle anyway for robustness
                 Log.e(LOGTAG, "Impossible case " + mState + " when stopped in track");
-                setState(PanZoomState.PANNING_HOLD_LOCKED);
+                setState(PanZoomState.PANNING_HOLD);
             }
         }
 
