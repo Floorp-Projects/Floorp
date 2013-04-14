@@ -580,14 +580,12 @@ nsXBLService::AttachGlobalKeyHandler(EventTarget* aTarget)
   // the listener already exists, so skip this
   if (contentNode && contentNode->GetProperty(nsGkAtoms::listener))
     return NS_OK;
-    
+
   nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(contentNode));
 
   // Create the key handler
-  nsXBLWindowKeyHandler* handler;
-  NS_NewXBLWindowKeyHandler(elt, piTarget, &handler); // This addRef's
-  if (!handler)
-    return NS_ERROR_FAILURE;
+  nsRefPtr<nsXBLWindowKeyHandler> handler =
+    NS_NewXBLWindowKeyHandler(elt, piTarget);
 
   // listen to these events
   manager->AddEventListenerByType(handler, NS_LITERAL_STRING("keydown"),
@@ -598,12 +596,11 @@ nsXBLService::AttachGlobalKeyHandler(EventTarget* aTarget)
                                   dom::TrustedEventsAtSystemGroupBubble());
 
   if (contentNode)
-    return contentNode->SetProperty(nsGkAtoms::listener, handler,
+    return contentNode->SetProperty(nsGkAtoms::listener, handler.forget().get(),
                                     nsPropertyTable::SupportsDtorFunc, true);
 
-  // release the handler. The reference will be maintained by the event target,
+  // The reference to the handler will be maintained by the event target,
   // and, if there is a content node, the property.
-  NS_RELEASE(handler);
   return NS_OK;
 }
 
