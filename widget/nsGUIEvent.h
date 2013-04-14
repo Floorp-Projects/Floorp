@@ -399,6 +399,9 @@ enum nsEventStructType {
 #define NS_SMIL_END                  (NS_SMIL_TIME_EVENT_START + 1)
 #define NS_SMIL_REPEAT               (NS_SMIL_TIME_EVENT_START + 2)
 
+#define NS_WEBAUDIO_EVENT_START      4350
+#define NS_AUDIO_PROCESS             (NS_WEBAUDIO_EVENT_START)
+
 // script notification events
 #define NS_NOTIFYSCRIPT_START        4500
 #define NS_BEFORE_SCRIPT_EXECUTE     (NS_NOTIFYSCRIPT_START)
