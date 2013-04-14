@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html dir="rtl">
+  <head>
+    <meta charset="utf-8">
+    <title>Test GetDir() for documents</title>
+    <script type="text/javascript">
+function fill() {
+    span = document.getElementById("span0");
+    span.innerHTML = document.dir;
+}
+    </script>
+  </head>
+  <body onLoad="fill()">
+    <div>getDir on document returns "<span id="span0"></span>"</div>
+  </body>
+</html>
