@@ -35,8 +35,12 @@
 <!ENTITY clearPrivateData.logins                                 "Active logins">
 
 <!ENTITY optionsHeader.privacy.passwords.label                   "Remember Passwords">
-<!ENTITY optionsHeader.privacy.doNotTrack.title                  "Tracking">
-<!ENTITY optionsHeader.privacy.doNotTrack.label                  "Tell websites not to track me">
+<!ENTITY doNotTrack.title                                        "Do Not Track">
+<!ENTITY doNotTrack.desc                                         "Tell sites:">
+<!ENTITY doNotTrack.options.trackingNotOkay                      "I do not want to be tracked">
+<!ENTITY doNotTrack.options.noPreference                         "Nothing about my tracking preferences">
+<!ENTITY doNotTrack.options.trackingOkay                         "I want to be tracked">
 
-<!-- ## Sync Flyout Panel ## -->
+
+  <!-- ## Sync Flyout Panel ## -->
 <!-- see sync.dtd -->

@@ -29,7 +29,7 @@ BROWSER_TESTS = \
   browser_context_menu_tests_02.html \
   browser_context_menu_tests_03.html \
   text-block.html \
-  browser_sanitize_ui.js \
+  browser_prefs_ui.js \
   browser_topsites.js \
   browser_tabs.js \
   $(NULL)
