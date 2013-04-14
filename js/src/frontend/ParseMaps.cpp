@@ -5,12 +5,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ParseMaps-inl.h"
 #include "jscntxt.h"
 #include "jscompartment.h"
-#include "FullParseHandler.h"
-#include "SyntaxParseHandler.h"
 
-#include "ParseMaps-inl.h"
 #include "vm/String-inl.h"
 
 using namespace js;
@@ -60,7 +58,7 @@ ParseMapPool::allocateFresh()
 }
 
 DefinitionList::Node *
-DefinitionList::allocNode(JSContext *cx, uintptr_t head, Node *tail)
+DefinitionList::allocNode(JSContext *cx, Definition *head, Node *tail)
 {
     Node *result = cx->tempLifoAlloc().new_<Node>(head, tail);
     if (!result)
@@ -68,17 +66,58 @@ DefinitionList::allocNode(JSContext *cx, uintptr_t head, Node *tail)
     return result;
 }
 
+bool
+DefinitionList::pushFront(JSContext *cx, Definition *val)
+{
+    Node *tail;
+    if (isMultiple()) {
+        tail = firstNode();
+    } else {
+        tail = allocNode(cx, defn(), NULL);
+        if (!tail)
+            return false;
+    }
+
+    Node *node = allocNode(cx, val, tail);
+    if (!node)
+        return false;
+    *this = DefinitionList(node);
+    return true;
+}
+
+bool
+DefinitionList::pushBack(JSContext *cx, Definition *val)
+{
+    Node *last;
+    if (isMultiple()) {
+        last = firstNode();
+        while (last->next)
+            last = last->next;
+    } else {
+        last = allocNode(cx, defn(), NULL);
+        if (!last)
+            return false;
+    }
+
+    Node *node = allocNode(cx, val, NULL);
+    if (!node)
+        return false;
+    last->next = node;
+    if (!isMultiple())
+        *this = DefinitionList(last);
+    return true;
+}
+
 #ifdef DEBUG
-template <typename ParseHandler>
 void
-AtomDecls<ParseHandler>::dump()
+AtomDecls::dump()
 {
     for (AtomDefnListRange r = map->all(); !r.empty(); r.popFront()) {
         fprintf(stderr, "atom: ");
         js_DumpAtom(r.front().key());
         const DefinitionList &dlist = r.front().value();
         for (DefinitionList::Range dr = dlist.all(); !dr.empty(); dr.popFront()) {
-            fprintf(stderr, "    defn: %p\n", (void *) dr.front<ParseHandler>());
+            fprintf(stderr, "    defn: %p\n", (void *) dr.front());
         }
     }
 }
@@ -94,20 +133,19 @@ DumpAtomDefnMap(const AtomDefnMapPtr &map)
     for (AtomDefnRange r = map->all(); !r.empty(); r.popFront()) {
         fprintf(stderr, "atom: ");
         js_DumpAtom(r.front().key());
-        fprintf(stderr, "defn: %p\n", (void *) r.front().value().get<FullParseHandler>());
+        fprintf(stderr, "defn: %p\n", (void *) r.front().value());
     }
 }
 #endif
 
-template <typename ParseHandler>
 bool
-AtomDecls<ParseHandler>::addShadow(JSAtom *atom, typename ParseHandler::DefinitionNode defn)
+AtomDecls::addShadow(JSAtom *atom, Definition *defn)
 {
     AtomDefnListAddPtr p = map->lookupForAdd(atom);
     if (!p)
-        return map->add(p, atom, DefinitionList(ParseHandler::definitionToBits(defn)));
+        return map->add(p, atom, DefinitionList(defn));
 
-    return p.value().pushFront<ParseHandler>(cx, defn);
+    return p.value().pushFront(cx, defn);
 }
 
 void
@@ -133,6 +171,3 @@ frontend::InitAtomMap(JSContext *cx, frontend::AtomIndexMap *indices, HeapPtrAto
         }
     }
 }
-
-template class AtomDecls<FullParseHandler>;
-template class AtomDecls<SyntaxParseHandler>;
