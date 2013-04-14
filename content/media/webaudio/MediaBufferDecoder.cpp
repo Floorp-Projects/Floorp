@@ -591,7 +591,7 @@ WebAudioDecodeJob::FinalizeBufferData()
   MOZ_ASSERT(mOutput);
   MOZ_ASSERT(mChannels == mChannelBuffers.Length());
 
-  AutoPushJSContext cx(GetJSContext());
+  AutoPushJSContext cx(mContext->GetJSContext());
   if (!cx) {
     return false;
   }
@@ -603,20 +603,6 @@ WebAudioDecodeJob::FinalizeBufferData()
   return true;
 }
 
-JSContext*
-WebAudioDecodeJob::GetJSContext() const
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  nsCOMPtr<nsIScriptGlobalObject> scriptGlobal =
-    do_QueryInterface(mContext->GetParentObject());
-  nsIScriptContext* scriptContext = scriptGlobal->GetContext();
-  if (!scriptContext) {
-    return nullptr;
-  }
-  return scriptContext->GetNativeContext();
-}
-
 bool
 WebAudioDecodeJob::AllocateBuffer()
 {
@@ -624,7 +610,7 @@ WebAudioDecodeJob::AllocateBuffer()
   MOZ_ASSERT(NS_IsMainThread());
 
   // First, get a JSContext
-  AutoPushJSContext cx(GetJSContext());
+  AutoPushJSContext cx(mContext->GetJSContext());
   if (!cx) {
     return false;
   }
