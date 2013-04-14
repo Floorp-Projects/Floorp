@@ -2932,11 +2932,6 @@ SandboxImport(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (args.thisv().isPrimitive()) {
-        XPCThrower::Throw(NS_ERROR_UNEXPECTED, cx);
-        return false;
-    }
-
     if (args.length() < 1 || args[0].isPrimitive()) {
         XPCThrower::Throw(NS_ERROR_INVALID_ARG, cx);
         return false;
@@ -2975,7 +2970,14 @@ SandboxImport(JSContext *cx, unsigned argc, Value *vp)
     if (!JS_ValueToId(cx, StringValue(funname), id.address()))
         return false;
 
-    if (!JS_SetPropertyById(cx, &args.thisv().toObject(), id, &args[0]))
+    // We need to resolve the this object, because this function is used
+    // unbound and should still work and act on the original sandbox.
+    RootedObject thisObject(cx, JS_THIS_OBJECT(cx, vp));
+    if (!thisObject) {
+        XPCThrower::Throw(NS_ERROR_UNEXPECTED, cx);
+        return false;
+    }
+    if (!JS_SetPropertyById(cx, thisObject, id, &args[0]))
         return false;
 
     args.rval().setUndefined();
