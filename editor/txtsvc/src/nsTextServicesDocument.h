@@ -39,7 +39,6 @@ private:
   static nsIAtom *sAAtom;
   static nsIAtom *sAddressAtom;
   static nsIAtom *sBigAtom;
-  static nsIAtom *sBlinkAtom;
   static nsIAtom *sBAtom;
   static nsIAtom *sCiteAtom;
   static nsIAtom *sCodeAtom;
