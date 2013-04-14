@@ -1725,7 +1725,7 @@ Line: 1 Col: 80 Unexpected start tag colgroup. Ignored.
 |       <colgroup>
 
 #data
-</strong></b></em></i></u></strike></s></blink></tt></pre></big></small></font></select></h1></h2></h3></h4></h5></h6></body></br></a></img></title></span></style></script></table></th></td></tr></frame></area></link></param></hr></input></col></base></meta></basefont></bgsound></embed></spacer></p></dd></dt></caption></colgroup></tbody></tfoot></thead></address></blockquote></center></dir></div></dl></fieldset></listing></menu></ol></ul></li></nobr></wbr></form></button></marquee></object></html></frameset></head></iframe></image></isindex></noembed></noframes></noscript></optgroup></option></plaintext></textarea>
+</strong></b></em></i></u></strike></s></tt></pre></big></small></font></select></h1></h2></h3></h4></h5></h6></body></br></a></img></title></span></style></script></table></th></td></tr></frame></area></link></param></hr></input></col></base></meta></basefont></bgsound></embed></spacer></p></dd></dt></caption></colgroup></tbody></tfoot></thead></address></blockquote></center></dir></div></dl></fieldset></listing></menu></ol></ul></li></nobr></wbr></form></button></marquee></object></html></frameset></head></iframe></image></isindex></noembed></noframes></noscript></optgroup></option></plaintext></textarea>
 #errors
 Line: 1 Col: 9 Unexpected end tag (strong). Expected DOCTYPE.
 Line: 1 Col: 9 Unexpected end tag (strong) after the (implied) root element.
@@ -1735,82 +1735,81 @@ Line: 1 Col: 22 Unexpected end tag (i) after the (implied) root element.
 Line: 1 Col: 26 Unexpected end tag (u) after the (implied) root element.
 Line: 1 Col: 35 Unexpected end tag (strike) after the (implied) root element.
 Line: 1 Col: 39 Unexpected end tag (s) after the (implied) root element.
-Line: 1 Col: 47 Unexpected end tag (blink) after the (implied) root element.
-Line: 1 Col: 52 Unexpected end tag (tt) after the (implied) root element.
-Line: 1 Col: 58 Unexpected end tag (pre) after the (implied) root element.
-Line: 1 Col: 64 Unexpected end tag (big) after the (implied) root element.
-Line: 1 Col: 72 Unexpected end tag (small) after the (implied) root element.
-Line: 1 Col: 79 Unexpected end tag (font) after the (implied) root element.
-Line: 1 Col: 88 Unexpected end tag (select) after the (implied) root element.
-Line: 1 Col: 93 Unexpected end tag (h1) after the (implied) root element.
-Line: 1 Col: 98 Unexpected end tag (h2) after the (implied) root element.
-Line: 1 Col: 103 Unexpected end tag (h3) after the (implied) root element.
-Line: 1 Col: 108 Unexpected end tag (h4) after the (implied) root element.
-Line: 1 Col: 113 Unexpected end tag (h5) after the (implied) root element.
-Line: 1 Col: 118 Unexpected end tag (h6) after the (implied) root element.
-Line: 1 Col: 125 Unexpected end tag (body) after the (implied) root element.
-Line: 1 Col: 130 Unexpected end tag (br). Treated as br element.
-Line: 1 Col: 134 End tag (a) violates step 1, paragraph 1 of the adoption agency algorithm.
-Line: 1 Col: 140 This element (img) has no end tag.
-Line: 1 Col: 148 Unexpected end tag (title). Ignored.
-Line: 1 Col: 155 Unexpected end tag (span). Ignored.
-Line: 1 Col: 163 Unexpected end tag (style). Ignored.
-Line: 1 Col: 172 Unexpected end tag (script). Ignored.
-Line: 1 Col: 180 Unexpected end tag (table). Ignored.
-Line: 1 Col: 185 Unexpected end tag (th). Ignored.
-Line: 1 Col: 190 Unexpected end tag (td). Ignored.
-Line: 1 Col: 195 Unexpected end tag (tr). Ignored.
-Line: 1 Col: 203 This element (frame) has no end tag.
-Line: 1 Col: 210 This element (area) has no end tag.
-Line: 1 Col: 217 Unexpected end tag (link). Ignored.
-Line: 1 Col: 225 This element (param) has no end tag.
-Line: 1 Col: 230 This element (hr) has no end tag.
-Line: 1 Col: 238 This element (input) has no end tag.
-Line: 1 Col: 244 Unexpected end tag (col). Ignored.
-Line: 1 Col: 251 Unexpected end tag (base). Ignored.
-Line: 1 Col: 258 Unexpected end tag (meta). Ignored.
-Line: 1 Col: 269 This element (basefont) has no end tag.
-Line: 1 Col: 279 This element (bgsound) has no end tag.
-Line: 1 Col: 287 This element (embed) has no end tag.
-Line: 1 Col: 296 This element (spacer) has no end tag.
-Line: 1 Col: 300 Unexpected end tag (p). Ignored.
-Line: 1 Col: 305 End tag (dd) seen too early. Expected other end tag.
-Line: 1 Col: 310 End tag (dt) seen too early. Expected other end tag.
-Line: 1 Col: 320 Unexpected end tag (caption). Ignored.
-Line: 1 Col: 331 Unexpected end tag (colgroup). Ignored.
-Line: 1 Col: 339 Unexpected end tag (tbody). Ignored.
-Line: 1 Col: 347 Unexpected end tag (tfoot). Ignored.
-Line: 1 Col: 355 Unexpected end tag (thead). Ignored.
-Line: 1 Col: 365 End tag (address) seen too early. Expected other end tag.
-Line: 1 Col: 378 End tag (blockquote) seen too early. Expected other end tag.
-Line: 1 Col: 387 End tag (center) seen too early. Expected other end tag.
-Line: 1 Col: 393 Unexpected end tag (dir). Ignored.
-Line: 1 Col: 399 End tag (div) seen too early. Expected other end tag.
-Line: 1 Col: 404 End tag (dl) seen too early. Expected other end tag.
-Line: 1 Col: 415 End tag (fieldset) seen too early. Expected other end tag.
-Line: 1 Col: 425 End tag (listing) seen too early. Expected other end tag.
-Line: 1 Col: 432 End tag (menu) seen too early. Expected other end tag.
-Line: 1 Col: 437 End tag (ol) seen too early. Expected other end tag.
-Line: 1 Col: 442 End tag (ul) seen too early. Expected other end tag.
-Line: 1 Col: 447 End tag (li) seen too early. Expected other end tag.
-Line: 1 Col: 454 End tag (nobr) violates step 1, paragraph 1 of the adoption agency algorithm.
-Line: 1 Col: 460 This element (wbr) has no end tag.
-Line: 1 Col: 476 End tag (button) seen too early. Expected other end tag.
-Line: 1 Col: 486 End tag (marquee) seen too early. Expected other end tag.
-Line: 1 Col: 495 End tag (object) seen too early. Expected other end tag.
-Line: 1 Col: 513 Unexpected end tag (html). Ignored.
-Line: 1 Col: 513 Unexpected end tag (frameset). Ignored.
-Line: 1 Col: 520 Unexpected end tag (head). Ignored.
-Line: 1 Col: 529 Unexpected end tag (iframe). Ignored.
-Line: 1 Col: 537 This element (image) has no end tag.
-Line: 1 Col: 547 This element (isindex) has no end tag.
-Line: 1 Col: 557 Unexpected end tag (noembed). Ignored.
-Line: 1 Col: 568 Unexpected end tag (noframes). Ignored.
-Line: 1 Col: 579 Unexpected end tag (noscript). Ignored.
-Line: 1 Col: 590 Unexpected end tag (optgroup). Ignored.
-Line: 1 Col: 599 Unexpected end tag (option). Ignored.
-Line: 1 Col: 611 Unexpected end tag (plaintext). Ignored.
-Line: 1 Col: 622 Unexpected end tag (textarea). Ignored.
+Line: 1 Col: 47 Unexpected end tag (tt) after the (implied) root element.
+Line: 1 Col: 53 Unexpected end tag (pre) after the (implied) root element.
+Line: 1 Col: 59 Unexpected end tag (big) after the (implied) root element.
+Line: 1 Col: 77 Unexpected end tag (small) after the (implied) root element.
+Line: 1 Col: 74 Unexpected end tag (font) after the (implied) root element.
+Line: 1 Col: 83 Unexpected end tag (select) after the (implied) root element.
+Line: 1 Col: 88 Unexpected end tag (h1) after the (implied) root element.
+Line: 1 Col: 93 Unexpected end tag (h2) after the (implied) root element.
+Line: 1 Col: 98 Unexpected end tag (h3) after the (implied) root element.
+Line: 1 Col: 103 Unexpected end tag (h4) after the (implied) root element.
+Line: 1 Col: 108 Unexpected end tag (h5) after the (implied) root element.
+Line: 1 Col: 113 Unexpected end tag (h6) after the (implied) root element.
+Line: 1 Col: 120 Unexpected end tag (body) after the (implied) root element.
+Line: 1 Col: 125 Unexpected end tag (br). Treated as br element.
+Line: 1 Col: 129 End tag (a) violates step 1, paragraph 1 of the adoption agency algorithm.
+Line: 1 Col: 135 This element (img) has no end tag.
+Line: 1 Col: 143 Unexpected end tag (title). Ignored.
+Line: 1 Col: 150 Unexpected end tag (span). Ignored.
+Line: 1 Col: 158 Unexpected end tag (style). Ignored.
+Line: 1 Col: 167 Unexpected end tag (script). Ignored.
+Line: 1 Col: 175 Unexpected end tag (table). Ignored.
+Line: 1 Col: 180 Unexpected end tag (th). Ignored.
+Line: 1 Col: 185 Unexpected end tag (td). Ignored.
+Line: 1 Col: 190 Unexpected end tag (tr). Ignored.
+Line: 1 Col: 198 This element (frame) has no end tag.
+Line: 1 Col: 205 This element (area) has no end tag.
+Line: 1 Col: 212 Unexpected end tag (link). Ignored.
+Line: 1 Col: 220 This element (param) has no end tag.
+Line: 1 Col: 225 This element (hr) has no end tag.
+Line: 1 Col: 233 This element (input) has no end tag.
+Line: 1 Col: 239 Unexpected end tag (col). Ignored.
+Line: 1 Col: 246 Unexpected end tag (base). Ignored.
+Line: 1 Col: 253 Unexpected end tag (meta). Ignored.
+Line: 1 Col: 264 This element (basefont) has no end tag.
+Line: 1 Col: 274 This element (bgsound) has no end tag.
+Line: 1 Col: 282 This element (embed) has no end tag.
+Line: 1 Col: 291 This element (spacer) has no end tag.
+Line: 1 Col: 295 Unexpected end tag (p). Ignored.
+Line: 1 Col: 300 End tag (dd) seen too early. Expected other end tag.
+Line: 1 Col: 305 End tag (dt) seen too early. Expected other end tag.
+Line: 1 Col: 315 Unexpected end tag (caption). Ignored.
+Line: 1 Col: 326 Unexpected end tag (colgroup). Ignored.
+Line: 1 Col: 334 Unexpected end tag (tbody). Ignored.
+Line: 1 Col: 342 Unexpected end tag (tfoot). Ignored.
+Line: 1 Col: 350 Unexpected end tag (thead). Ignored.
+Line: 1 Col: 360 End tag (address) seen too early. Expected other end tag.
+Line: 1 Col: 373 End tag (blockquote) seen too early. Expected other end tag.
+Line: 1 Col: 382 End tag (center) seen too early. Expected other end tag.
+Line: 1 Col: 388 Unexpected end tag (dir). Ignored.
+Line: 1 Col: 394 End tag (div) seen too early. Expected other end tag.
+Line: 1 Col: 399 End tag (dl) seen too early. Expected other end tag.
+Line: 1 Col: 410 End tag (fieldset) seen too early. Expected other end tag.
+Line: 1 Col: 420 End tag (listing) seen too early. Expected other end tag.
+Line: 1 Col: 427 End tag (menu) seen too early. Expected other end tag.
+Line: 1 Col: 432 End tag (ol) seen too early. Expected other end tag.
+Line: 1 Col: 437 End tag (ul) seen too early. Expected other end tag.
+Line: 1 Col: 442 End tag (li) seen too early. Expected other end tag.
+Line: 1 Col: 449 End tag (nobr) violates step 1, paragraph 1 of the adoption agency algorithm.
+Line: 1 Col: 455 This element (wbr) has no end tag.
+Line: 1 Col: 471 End tag (button) seen too early. Expected other end tag.
+Line: 1 Col: 481 End tag (marquee) seen too early. Expected other end tag.
+Line: 1 Col: 490 End tag (object) seen too early. Expected other end tag.
+Line: 1 Col: 508 Unexpected end tag (html). Ignored.
+Line: 1 Col: 508 Unexpected end tag (frameset). Ignored.
+Line: 1 Col: 515 Unexpected end tag (head). Ignored.
+Line: 1 Col: 524 Unexpected end tag (iframe). Ignored.
+Line: 1 Col: 532 This element (image) has no end tag.
+Line: 1 Col: 542 This element (isindex) has no end tag.
+Line: 1 Col: 552 Unexpected end tag (noembed). Ignored.
+Line: 1 Col: 563 Unexpected end tag (noframes). Ignored.
+Line: 1 Col: 574 Unexpected end tag (noscript). Ignored.
+Line: 1 Col: 585 Unexpected end tag (optgroup). Ignored.
+Line: 1 Col: 594 Unexpected end tag (option). Ignored.
+Line: 1 Col: 606 Unexpected end tag (plaintext). Ignored.
+Line: 1 Col: 617 Unexpected end tag (textarea). Ignored.
 #document
 | <html>
 |   <head>
@@ -1819,7 +1818,7 @@ Line: 1 Col: 622 Unexpected end tag (textarea). Ignored.
 |     <p>
 
 #data
-<table><tr></strong></b></em></i></u></strike></s></blink></tt></pre></big></small></font></select></h1></h2></h3></h4></h5></h6></body></br></a></img></title></span></style></script></table></th></td></tr></frame></area></link></param></hr></input></col></base></meta></basefont></bgsound></embed></spacer></p></dd></dt></caption></colgroup></tbody></tfoot></thead></address></blockquote></center></dir></div></dl></fieldset></listing></menu></ol></ul></li></nobr></wbr></form></button></marquee></object></html></frameset></head></iframe></image></isindex></noembed></noframes></noscript></optgroup></option></plaintext></textarea>
+<table><tr></strong></b></em></i></u></strike></s></tt></pre></big></small></font></select></h1></h2></h3></h4></h5></h6></body></br></a></img></title></span></style></script></table></th></td></tr></frame></area></link></param></hr></input></col></base></meta></basefont></bgsound></embed></spacer></p></dd></dt></caption></colgroup></tbody></tfoot></thead></address></blockquote></center></dir></div></dl></fieldset></listing></menu></ol></ul></li></nobr></wbr></form></button></marquee></object></html></frameset></head></iframe></image></isindex></noembed></noframes></noscript></optgroup></option></plaintext></textarea>
 #errors
 Line: 1 Col: 7 Unexpected start tag (table). Expected DOCTYPE.
 Line: 1 Col: 20 Unexpected end tag (strong) in table context caused voodoo mode.
@@ -1836,101 +1835,99 @@ Line: 1 Col: 46 Unexpected end tag (strike) in table context caused voodoo mode.
 Line: 1 Col: 46 End tag (strike) violates step 1, paragraph 1 of the adoption agency algorithm.
 Line: 1 Col: 50 Unexpected end tag (s) in table context caused voodoo mode.
 Line: 1 Col: 50 End tag (s) violates step 1, paragraph 1 of the adoption agency algorithm.
-Line: 1 Col: 58 Unexpected end tag (blink) in table context caused voodoo mode.
-Line: 1 Col: 58 Unexpected end tag (blink). Ignored.
-Line: 1 Col: 63 Unexpected end tag (tt) in table context caused voodoo mode.
-Line: 1 Col: 63 End tag (tt) violates step 1, paragraph 1 of the adoption agency algorithm.
-Line: 1 Col: 69 Unexpected end tag (pre) in table context caused voodoo mode.
-Line: 1 Col: 69 End tag (pre) seen too early. Expected other end tag.
-Line: 1 Col: 75 Unexpected end tag (big) in table context caused voodoo mode.
-Line: 1 Col: 75 End tag (big) violates step 1, paragraph 1 of the adoption agency algorithm.
-Line: 1 Col: 83 Unexpected end tag (small) in table context caused voodoo mode.
-Line: 1 Col: 83 End tag (small) violates step 1, paragraph 1 of the adoption agency algorithm.
-Line: 1 Col: 90 Unexpected end tag (font) in table context caused voodoo mode.
-Line: 1 Col: 90 End tag (font) violates step 1, paragraph 1 of the adoption agency algorithm.
-Line: 1 Col: 99 Unexpected end tag (select) in table context caused voodoo mode.
-Line: 1 Col: 99 Unexpected end tag (select). Ignored.
-Line: 1 Col: 104 Unexpected end tag (h1) in table context caused voodoo mode.
-Line: 1 Col: 104 End tag (h1) seen too early. Expected other end tag.
-Line: 1 Col: 109 Unexpected end tag (h2) in table context caused voodoo mode.
-Line: 1 Col: 109 End tag (h2) seen too early. Expected other end tag.
-Line: 1 Col: 114 Unexpected end tag (h3) in table context caused voodoo mode.
-Line: 1 Col: 114 End tag (h3) seen too early. Expected other end tag.
-Line: 1 Col: 119 Unexpected end tag (h4) in table context caused voodoo mode.
-Line: 1 Col: 119 End tag (h4) seen too early. Expected other end tag.
-Line: 1 Col: 124 Unexpected end tag (h5) in table context caused voodoo mode.
-Line: 1 Col: 124 End tag (h5) seen too early. Expected other end tag.
-Line: 1 Col: 129 Unexpected end tag (h6) in table context caused voodoo mode.
-Line: 1 Col: 129 End tag (h6) seen too early. Expected other end tag.
-Line: 1 Col: 136 Unexpected end tag (body) in the table row phase. Ignored.
-Line: 1 Col: 141 Unexpected end tag (br) in table context caused voodoo mode.
-Line: 1 Col: 141 Unexpected end tag (br). Treated as br element.
-Line: 1 Col: 145 Unexpected end tag (a) in table context caused voodoo mode.
-Line: 1 Col: 145 End tag (a) violates step 1, paragraph 1 of the adoption agency algorithm.
-Line: 1 Col: 151 Unexpected end tag (img) in table context caused voodoo mode.
-Line: 1 Col: 151 This element (img) has no end tag.
-Line: 1 Col: 159 Unexpected end tag (title) in table context caused voodoo mode.
-Line: 1 Col: 159 Unexpected end tag (title). Ignored.
-Line: 1 Col: 166 Unexpected end tag (span) in table context caused voodoo mode.
-Line: 1 Col: 166 Unexpected end tag (span). Ignored.
-Line: 1 Col: 174 Unexpected end tag (style) in table context caused voodoo mode.
-Line: 1 Col: 174 Unexpected end tag (style). Ignored.
-Line: 1 Col: 183 Unexpected end tag (script) in table context caused voodoo mode.
-Line: 1 Col: 183 Unexpected end tag (script). Ignored.
-Line: 1 Col: 196 Unexpected end tag (th). Ignored.
-Line: 1 Col: 201 Unexpected end tag (td). Ignored.
-Line: 1 Col: 206 Unexpected end tag (tr). Ignored.
-Line: 1 Col: 214 This element (frame) has no end tag.
-Line: 1 Col: 221 This element (area) has no end tag.
-Line: 1 Col: 228 Unexpected end tag (link). Ignored.
-Line: 1 Col: 236 This element (param) has no end tag.
-Line: 1 Col: 241 This element (hr) has no end tag.
-Line: 1 Col: 249 This element (input) has no end tag.
-Line: 1 Col: 255 Unexpected end tag (col). Ignored.
-Line: 1 Col: 262 Unexpected end tag (base). Ignored.
-Line: 1 Col: 269 Unexpected end tag (meta). Ignored.
-Line: 1 Col: 280 This element (basefont) has no end tag.
-Line: 1 Col: 290 This element (bgsound) has no end tag.
-Line: 1 Col: 298 This element (embed) has no end tag.
-Line: 1 Col: 307 This element (spacer) has no end tag.
-Line: 1 Col: 311 Unexpected end tag (p). Ignored.
-Line: 1 Col: 316 End tag (dd) seen too early. Expected other end tag.
-Line: 1 Col: 321 End tag (dt) seen too early. Expected other end tag.
-Line: 1 Col: 331 Unexpected end tag (caption). Ignored.
-Line: 1 Col: 342 Unexpected end tag (colgroup). Ignored.
-Line: 1 Col: 350 Unexpected end tag (tbody). Ignored.
-Line: 1 Col: 358 Unexpected end tag (tfoot). Ignored.
-Line: 1 Col: 366 Unexpected end tag (thead). Ignored.
-Line: 1 Col: 376 End tag (address) seen too early. Expected other end tag.
-Line: 1 Col: 389 End tag (blockquote) seen too early. Expected other end tag.
-Line: 1 Col: 398 End tag (center) seen too early. Expected other end tag.
-Line: 1 Col: 404 Unexpected end tag (dir). Ignored.
-Line: 1 Col: 410 End tag (div) seen too early. Expected other end tag.
-Line: 1 Col: 415 End tag (dl) seen too early. Expected other end tag.
-Line: 1 Col: 426 End tag (fieldset) seen too early. Expected other end tag.
-Line: 1 Col: 436 End tag (listing) seen too early. Expected other end tag.
-Line: 1 Col: 443 End tag (menu) seen too early. Expected other end tag.
-Line: 1 Col: 448 End tag (ol) seen too early. Expected other end tag.
-Line: 1 Col: 453 End tag (ul) seen too early. Expected other end tag.
-Line: 1 Col: 458 End tag (li) seen too early. Expected other end tag.
-Line: 1 Col: 465 End tag (nobr) violates step 1, paragraph 1 of the adoption agency algorithm.
-Line: 1 Col: 471 This element (wbr) has no end tag.
-Line: 1 Col: 487 End tag (button) seen too early. Expected other end tag.
-Line: 1 Col: 497 End tag (marquee) seen too early. Expected other end tag.
-Line: 1 Col: 506 End tag (object) seen too early. Expected other end tag.
-Line: 1 Col: 524 Unexpected end tag (html). Ignored.
-Line: 1 Col: 524 Unexpected end tag (frameset). Ignored.
-Line: 1 Col: 531 Unexpected end tag (head). Ignored.
-Line: 1 Col: 540 Unexpected end tag (iframe). Ignored.
-Line: 1 Col: 548 This element (image) has no end tag.
-Line: 1 Col: 558 This element (isindex) has no end tag.
-Line: 1 Col: 568 Unexpected end tag (noembed). Ignored.
-Line: 1 Col: 579 Unexpected end tag (noframes). Ignored.
-Line: 1 Col: 590 Unexpected end tag (noscript). Ignored.
-Line: 1 Col: 601 Unexpected end tag (optgroup). Ignored.
-Line: 1 Col: 610 Unexpected end tag (option). Ignored.
-Line: 1 Col: 622 Unexpected end tag (plaintext). Ignored.
-Line: 1 Col: 633 Unexpected end tag (textarea). Ignored.
+Line: 1 Col: 58 Unexpected end tag (tt) in table context caused voodoo mode.
+Line: 1 Col: 58 End tag (tt) violates step 1, paragraph 1 of the adoption agency algorithm.
+Line: 1 Col: 64 Unexpected end tag (pre) in table context caused voodoo mode.
+Line: 1 Col: 64 End tag (pre) seen too early. Expected other end tag.
+Line: 1 Col: 70 Unexpected end tag (big) in table context caused voodoo mode.
+Line: 1 Col: 70 End tag (big) violates step 1, paragraph 1 of the adoption agency algorithm.
+Line: 1 Col: 78 Unexpected end tag (small) in table context caused voodoo mode.
+Line: 1 Col: 78 End tag (small) violates step 1, paragraph 1 of the adoption agency algorithm.
+Line: 1 Col: 85 Unexpected end tag (font) in table context caused voodoo mode.
+Line: 1 Col: 85 End tag (font) violates step 1, paragraph 1 of the adoption agency algorithm.
+Line: 1 Col: 94 Unexpected end tag (select) in table context caused voodoo mode.
+Line: 1 Col: 94 Unexpected end tag (select). Ignored.
+Line: 1 Col: 99 Unexpected end tag (h1) in table context caused voodoo mode.
+Line: 1 Col: 99 End tag (h1) seen too early. Expected other end tag.
+Line: 1 Col: 104 Unexpected end tag (h2) in table context caused voodoo mode.
+Line: 1 Col: 104 End tag (h2) seen too early. Expected other end tag.
+Line: 1 Col: 109 Unexpected end tag (h3) in table context caused voodoo mode.
+Line: 1 Col: 109 End tag (h3) seen too early. Expected other end tag.
+Line: 1 Col: 114 Unexpected end tag (h4) in table context caused voodoo mode.
+Line: 1 Col: 114 End tag (h4) seen too early. Expected other end tag.
+Line: 1 Col: 119 Unexpected end tag (h5) in table context caused voodoo mode.
+Line: 1 Col: 119 End tag (h5) seen too early. Expected other end tag.
+Line: 1 Col: 124 Unexpected end tag (h6) in table context caused voodoo mode.
+Line: 1 Col: 124 End tag (h6) seen too early. Expected other end tag.
+Line: 1 Col: 131 Unexpected end tag (body) in the table row phase. Ignored.
+Line: 1 Col: 136 Unexpected end tag (br) in table context caused voodoo mode.
+Line: 1 Col: 136 Unexpected end tag (br). Treated as br element.
+Line: 1 Col: 140 Unexpected end tag (a) in table context caused voodoo mode.
+Line: 1 Col: 140 End tag (a) violates step 1, paragraph 1 of the adoption agency algorithm.
+Line: 1 Col: 146 Unexpected end tag (img) in table context caused voodoo mode.
+Line: 1 Col: 146 This element (img) has no end tag.
+Line: 1 Col: 154 Unexpected end tag (title) in table context caused voodoo mode.
+Line: 1 Col: 154 Unexpected end tag (title). Ignored.
+Line: 1 Col: 161 Unexpected end tag (span) in table context caused voodoo mode.
+Line: 1 Col: 161 Unexpected end tag (span). Ignored.
+Line: 1 Col: 169 Unexpected end tag (style) in table context caused voodoo mode.
+Line: 1 Col: 169 Unexpected end tag (style). Ignored.
+Line: 1 Col: 178 Unexpected end tag (script) in table context caused voodoo mode.
+Line: 1 Col: 178 Unexpected end tag (script). Ignored.
+Line: 1 Col: 191 Unexpected end tag (th). Ignored.
+Line: 1 Col: 196 Unexpected end tag (td). Ignored.
+Line: 1 Col: 201 Unexpected end tag (tr). Ignored.
+Line: 1 Col: 209 This element (frame) has no end tag.
+Line: 1 Col: 216 This element (area) has no end tag.
+Line: 1 Col: 223 Unexpected end tag (link). Ignored.
+Line: 1 Col: 231 This element (param) has no end tag.
+Line: 1 Col: 236 This element (hr) has no end tag.
+Line: 1 Col: 244 This element (input) has no end tag.
+Line: 1 Col: 251 Unexpected end tag (col). Ignored.
+Line: 1 Col: 257 Unexpected end tag (base). Ignored.
+Line: 1 Col: 264 Unexpected end tag (meta). Ignored.
+Line: 1 Col: 275 This element (basefont) has no end tag.
+Line: 1 Col: 285 This element (bgsound) has no end tag.
+Line: 1 Col: 293 This element (embed) has no end tag.
+Line: 1 Col: 302 This element (spacer) has no end tag.
+Line: 1 Col: 306 Unexpected end tag (p). Ignored.
+Line: 1 Col: 311 End tag (dd) seen too early. Expected other end tag.
+Line: 1 Col: 316 End tag (dt) seen too early. Expected other end tag.
+Line: 1 Col: 326 Unexpected end tag (caption). Ignored.
+Line: 1 Col: 337 Unexpected end tag (colgroup). Ignored.
+Line: 1 Col: 345 Unexpected end tag (tbody). Ignored.
+Line: 1 Col: 353 Unexpected end tag (tfoot). Ignored.
+Line: 1 Col: 361 Unexpected end tag (thead). Ignored.
+Line: 1 Col: 371 End tag (address) seen too early. Expected other end tag.
+Line: 1 Col: 384 End tag (blockquote) seen too early. Expected other end tag.
+Line: 1 Col: 393 End tag (center) seen too early. Expected other end tag.
+Line: 1 Col: 399 Unexpected end tag (dir). Ignored.
+Line: 1 Col: 405 End tag (div) seen too early. Expected other end tag.
+Line: 1 Col: 410 End tag (dl) seen too early. Expected other end tag.
+Line: 1 Col: 421 End tag (fieldset) seen too early. Expected other end tag.
+Line: 1 Col: 431 End tag (listing) seen too early. Expected other end tag.
+Line: 1 Col: 438 End tag (menu) seen too early. Expected other end tag.
+Line: 1 Col: 443 End tag (ol) seen too early. Expected other end tag.
+Line: 1 Col: 448 End tag (ul) seen too early. Expected other end tag.
+Line: 1 Col: 453 End tag (li) seen too early. Expected other end tag.
+Line: 1 Col: 460 End tag (nobr) violates step 1, paragraph 1 of the adoption agency algorithm.
+Line: 1 Col: 466 This element (wbr) has no end tag.
+Line: 1 Col: 482 End tag (button) seen too early. Expected other end tag.
+Line: 1 Col: 492 End tag (marquee) seen too early. Expected other end tag.
+Line: 1 Col: 501 End tag (object) seen too early. Expected other end tag.
+Line: 1 Col: 519 Unexpected end tag (html). Ignored.
+Line: 1 Col: 519 Unexpected end tag (frameset). Ignored.
+Line: 1 Col: 526 Unexpected end tag (head). Ignored.
+Line: 1 Col: 535 Unexpected end tag (iframe). Ignored.
+Line: 1 Col: 543 This element (image) has no end tag.
+Line: 1 Col: 553 This element (isindex) has no end tag.
+Line: 1 Col: 563 Unexpected end tag (noembed). Ignored.
+Line: 1 Col: 574 Unexpected end tag (noframes). Ignored.
+Line: 1 Col: 585 Unexpected end tag (noscript). Ignored.
+Line: 1 Col: 596 Unexpected end tag (optgroup). Ignored.
+Line: 1 Col: 605 Unexpected end tag (option). Ignored.
+Line: 1 Col: 617 Unexpected end tag (plaintext). Ignored.
+Line: 1 Col: 628 Unexpected end tag (textarea). Ignored.
 #document
 | <html>
 |   <head>
