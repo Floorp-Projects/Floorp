@@ -461,7 +461,7 @@ Parser<FullParseHandler>::cloneParseTree(ParseNode *opn)
              */
             if (opn->isDefn()) {
                 opn->setDefn(false);
-                handler.linkUseToDef(opn, (Definition *) pn);
+                LinkUseToDef(opn, (Definition *) pn);
             }
         }
         break;
@@ -552,7 +552,7 @@ Parser<FullParseHandler>::cloneLeftHandSide(ParseNode *opn)
             pn->pn_dflags &= ~PND_BOUND;
             pn->setDefn(false);
 
-            handler.linkUseToDef(pn, (Definition *) opn);
+            LinkUseToDef(pn, (Definition *) opn);
         }
     }
     return pn;
