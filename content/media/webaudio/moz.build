@@ -26,11 +26,13 @@ EXPORTS.mozilla.dom += [
     'AudioListener.h',
     'AudioNode.h',
     'AudioParam.h',
+    'AudioProcessingEvent.h',
     'BiquadFilterNode.h',
     'DelayNode.h',
     'DynamicsCompressorNode.h',
     'EnableWebAudioCheck.h',
     'GainNode.h',
     'PannerNode.h',
+    'ScriptProcessorNode.h',
 ]
 

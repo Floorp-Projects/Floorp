@@ -848,6 +848,11 @@ NON_IDL_EVENT(animationiteration,
               EventNameType_None,
               NS_ANIMATION_EVENT)
 
+NON_IDL_EVENT(audioprocess,
+              NS_AUDIO_PROCESS,
+              EventNameType_None,
+              NS_EVENT)
+
 #ifdef DEFINED_FORWARDED_EVENT
 #undef DEFINED_FORWARDED_EVENT
 #undef FORWARDED_EVENT
