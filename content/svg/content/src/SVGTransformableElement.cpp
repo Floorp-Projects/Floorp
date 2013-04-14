@@ -60,7 +60,9 @@ SVGTransformableElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
       return retval; // no change
     }
     if (aModType == nsIDOMMutationEvent::ADDITION ||
-        aModType == nsIDOMMutationEvent::REMOVAL) {
+        aModType == nsIDOMMutationEvent::REMOVAL ||
+        (aModType == nsIDOMMutationEvent::MODIFICATION &&
+         !(mTransforms && mTransforms->HasTransform()))) {
       // Reconstruct the frame tree to handle stacking context changes:
       NS_UpdateHint(retval, nsChangeHint_ReconstructFrame);
     } else {
