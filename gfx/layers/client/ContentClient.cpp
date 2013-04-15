@@ -104,10 +104,10 @@ ContentClientRemote::EndPaint()
   }
 }
 
-TemporaryRef<DrawTarget>
-ContentClientRemote::CreateDTBuffer(ContentType aType,
-                                    const nsIntRect& aRect,
-                                    uint32_t aFlags)
+void
+ContentClientRemote::BuildTextureClient(ContentType aType,
+                                        const nsIntRect& aRect,
+                                        uint32_t aFlags)
 {
   NS_ABORT_IF_FALSE(!mIsNewBuffer,
                     "Bad! Did we create a buffer twice without painting?");
@@ -127,6 +127,14 @@ ContentClientRemote::CreateDTBuffer(ContentType aType,
   MOZ_ASSERT(IsSurfaceDescriptorValid(*mTextureClient->GetDescriptor()));
 
   CreateFrontBufferAndNotify(aRect);
+}
+
+TemporaryRef<DrawTarget>
+ContentClientRemote::CreateDTBuffer(ContentType aType,
+                                    const nsIntRect& aRect,
+                                    uint32_t aFlags)
+{
+  BuildTextureClient(aType, aRect, aFlags);
 
   RefPtr<DrawTarget> ret = mTextureClient->LockDrawTarget();
   return ret.forget();
@@ -137,24 +145,7 @@ ContentClientRemote::CreateBuffer(ContentType aType,
                                   const nsIntRect& aRect,
                                   uint32_t aFlags)
 {
-  NS_ABORT_IF_FALSE(!mIsNewBuffer,
-                    "Bad! Did we create a buffer twice without painting?");
-
-  mIsNewBuffer = true;
-
-  if (mTextureClient) {
-    mOldTextures.AppendElement(mTextureClient);
-    DestroyBuffers();
-  }
-  mTextureInfo.mTextureFlags = aFlags | HostRelease;
-  mTextureClient = CreateTextureClient(TEXTURE_CONTENT);
-
-  mContentType = aType;
-  mSize = gfx::IntSize(aRect.width, aRect.height);
-  mTextureClient->EnsureAllocated(mSize, mContentType);
-  MOZ_ASSERT(IsSurfaceDescriptorValid(*mTextureClient->GetDescriptor()));
-
-  CreateFrontBufferAndNotify(aRect);
+  BuildTextureClient(aType, aRect, aFlags);
 
   nsRefPtr<gfxASurface> ret = mTextureClient->LockSurface();
   return ret.forget();
