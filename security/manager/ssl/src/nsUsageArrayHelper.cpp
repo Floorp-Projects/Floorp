@@ -16,7 +16,6 @@
 #include "secerr.h"
 
 using namespace mozilla;
-using namespace mozilla::psm;
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gPIPNSSLog;
@@ -119,10 +118,8 @@ isFatalError(uint32_t checkResult)
 uint32_t
 nsUsageArrayHelper::check(uint32_t previousCheckResult,
                           const char *suffix,
-                          CertVerifier * certVerifier,
                           SECCertificateUsage aCertUsage,
-                          PRTime time,
-                          CertVerifier::Flags flags,
+                          nsCERTValInParamWrapper * aValInParams,
                           uint32_t &aCounter,
                           PRUnichar **outUsages)
 {
@@ -178,8 +175,13 @@ nsUsageArrayHelper::check(uint32_t previousCheckResult,
     return nsIX509Cert::NOT_VERIFIED_UNKNOWN;
   }
 
-  SECStatus rv = certVerifier->VerifyCert(mCert, aCertUsage,
-                         time, nullptr /*XXX:wincx*/, flags);
+  SECStatus rv;
+  CERTValOutParam cvout[1];
+  cvout[0].type = cert_po_end;
+
+  rv = CERT_PKIXVerifyCert(mCert, aCertUsage,
+                           aValInParams->GetRawPointerForNSS(),
+                           cvout, nullptr);
 
   if (rv == SECSuccess) {
     typestr.Append(suffix);
@@ -296,6 +298,7 @@ if (!nsNSSComponent::globalConstFlagUsePKIXVerification) {
   
   check(suffix, usages & certificateUsageSSLClient, count, outUsages);
   check(suffix, usages & certificateUsageSSLServer, count, outUsages);
+  check(suffix, usages & certificateUsageSSLServerWithStepUp, count, outUsages);
   check(suffix, usages & certificateUsageEmailSigner, count, outUsages);
   check(suffix, usages & certificateUsageEmailRecipient, count, outUsages);
   check(suffix, usages & certificateUsageObjectSigner, count, outUsages);
@@ -320,43 +323,43 @@ if (!nsNSSComponent::globalConstFlagUsePKIXVerification) {
   return NS_OK;
 }
 
-  RefPtr<CertVerifier> certVerifier(GetDefaultCertVerifier());
-  NS_ENSURE_TRUE(certVerifier, NS_ERROR_UNEXPECTED);
-
-  PRTime now = PR_Now();
-  CertVerifier::Flags flags = localOnly ? CertVerifier::FLAG_LOCAL_ONLY : 0;
+  RefPtr<nsCERTValInParamWrapper> params;
+  nsresult rv = localOnly ? nssComponent->GetDefaultCERTValInParamLocalOnly(params)
+                          : nssComponent->GetDefaultCERTValInParam(params);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // The following list of checks must be < max_returned_out_array_size
 
   uint32_t result;
-  result = check(nsIX509Cert::VERIFIED_OK, suffix, certVerifier,
-                 certificateUsageSSLClient, now, flags, count, outUsages);
-  result = check(result, suffix, certVerifier,
-                 certificateUsageSSLServer, now, flags, count, outUsages);
-  result = check(result, suffix, certVerifier,
-                 certificateUsageEmailSigner, now, flags, count, outUsages);
-  result = check(result, suffix, certVerifier,
-                 certificateUsageEmailRecipient, now, flags, count, outUsages);
-  result = check(result, suffix, certVerifier,
-                 certificateUsageObjectSigner, now, flags, count, outUsages);
+  result = check(nsIX509Cert::VERIFIED_OK, suffix, certificateUsageSSLClient,
+                 params, count, outUsages);
+  result = check(result, suffix, certificateUsageSSLServer,
+                 params, count, outUsages);
+  result = check(result, suffix, certificateUsageSSLServerWithStepUp,
+                 params, count, outUsages);
+  result = check(result, suffix, certificateUsageEmailSigner,
+                 params, count, outUsages);
+  result = check(result, suffix, certificateUsageEmailRecipient,
+                 params, count, outUsages);
+  result = check(result, suffix, certificateUsageObjectSigner,
+                 params, count, outUsages);
 #if 0
-  result = check(result, suffix, certVerifier,
-                 certificateUsageProtectedObjectSigner, now, flags, count,
-                 outUsages);
-  result = check(result, suffix, certVerifier,
-                 certificateUsageUserCertImport, now, flags, count, outUsages);
+  result = check(result, suffix, certificateUsageProtectedObjectSigner,
+                 params, count, outUsages);
+  result = check(result, suffix, certificateUsageUserCertImport,
+                 params, count, outUsages);
 #endif
-  result = check(result, suffix, certVerifier,
-                 certificateUsageSSLCA, now, flags, count, outUsages);
+  result = check(result, suffix, certificateUsageSSLCA,
+                 params, count, outUsages);
 #if 0
-  result = check(result, suffix, certVerifier,
-                 certificateUsageVerifyCA, now, flags, count, outUsages);
+  result = check(result, suffix, certificateUsageVerifyCA,
+                 params, count, outUsages);
 #endif
-  result = check(result, suffix, certVerifier,
-                 certificateUsageStatusResponder, now, flags, count, outUsages);
+  result = check(result, suffix, certificateUsageStatusResponder,
+                 params, count, outUsages);
 #if 0
-  result = check(result, suffix, certVerifier,
-                 certificateUsageAnyCA, now, flags, count, outUsages);
+  result = checkPKIX(result, check(suffix, certificateUsageAnyCA,
+                 params, count, outUsages);
 #endif
 
   if (isFatalError(result) || count == 0) {

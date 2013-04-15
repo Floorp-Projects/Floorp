@@ -20,7 +20,7 @@ LIBXUL_LIBRARY	= 1
 CPPSRCS = 				\
 	CryptoTask.cpp \
 	JARSignatureVerification.cpp \
-	CertVerifier.cpp     \
+	nsCERTValInParamWrapper.cpp     \
 	nsNSSCleaner.cpp                \
 	nsCertOverrideService.cpp   \
 	nsRecentBadCerts.cpp \
