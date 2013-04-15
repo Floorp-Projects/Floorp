@@ -8,10 +8,13 @@
 #ifndef nsPresArena_h___
 #define nsPresArena_h___
 
+#include "mozilla/MemoryChecking.h"
+#include "mozilla/StandardInteger.h"
 #include "nscore.h"
 #include "nsQueryFrame.h"
-
-#include "mozilla/StandardInteger.h"
+#include "nsTArray.h"
+#include "nsTHashtable.h"
+#include "plarena.h"
 
 struct nsArenaMemoryStats;
 
@@ -66,8 +69,49 @@ public:
   static uintptr_t GetPoisonValue();
 
 private:
-  struct State;
-  State* mState;
+  void* Allocate(uint32_t aCode, size_t aSize);
+  void Free(uint32_t aCode, void* aPtr);
+
+  // All keys to this hash table fit in 32 bits (see below) so we do not
+  // bother actually hashing them.
+  class FreeList : public PLDHashEntryHdr
+  {
+  public:
+    typedef uint32_t KeyType;
+    nsTArray<void *> mEntries;
+    size_t mEntrySize;
+    size_t mEntriesEverAllocated;
+
+    typedef const void* KeyTypePointer;
+    KeyTypePointer mKey;
+
+    FreeList(KeyTypePointer aKey)
+    : mEntrySize(0), mEntriesEverAllocated(0), mKey(aKey) {}
+    // Default copy constructor and destructor are ok.
+
+    bool KeyEquals(KeyTypePointer const aKey) const
+    { return mKey == aKey; }
+
+    static KeyTypePointer KeyToPointer(KeyType aKey)
+    { return NS_INT32_TO_PTR(aKey); }
+
+    static PLDHashNumber HashKey(KeyTypePointer aKey)
+    { return NS_PTR_TO_INT32(aKey); }
+
+    enum { ALLOW_MEMMOVE = false };
+  };
+
+#if defined(MOZ_HAVE_MEM_CHECKS)
+  static PLDHashOperator UnpoisonFreeList(FreeList* aEntry, void*);
+#endif
+  static PLDHashOperator FreeListEnumerator(FreeList* aEntry, void* aData);
+  static size_t SizeOfFreeListEntryExcludingThis(FreeList* aEntry,
+                                                 nsMallocSizeOfFun aMallocSizeOf,
+                                                 void*);
+  size_t SizeOfIncludingThisFromMalloc(nsMallocSizeOfFun aMallocSizeOf) const;
+
+  nsTHashtable<FreeList> mFreeLists;
+  PLArenaPool mPool;
 };
 
 #endif
