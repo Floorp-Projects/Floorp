@@ -217,12 +217,12 @@ CertVerifier::VerifyCert(CERTCertificate * cert,
 
   if (evPolicy != SEC_OID_UNKNOWN) {
     // EV setup!
-    // This flags are not quite correct, but it is what we have now, so keeping
-    // them identical for bug landing purposes. Should be fixed later!
+    // XXX 859872 The current flags are not quite correct. (use
+    // of ocsp flags for crl preferences).
     uint64_t revMethodFlags =
       CERT_REV_M_TEST_USING_THIS_METHOD
-      | (mOCSPDownloadEnabled ? CERT_REV_M_ALLOW_NETWORK_FETCHING
-                              : CERT_REV_M_FORBID_NETWORK_FETCHING)
+      | ((mOCSPDownloadEnabled && !localOnly) ?
+          CERT_REV_M_ALLOW_NETWORK_FETCHING : CERT_REV_M_FORBID_NETWORK_FETCHING)
       | CERT_REV_M_ALLOW_IMPLICIT_DEFAULT_SOURCE
       | CERT_REV_M_REQUIRE_INFO_ON_MISSING_SOURCE
       | CERT_REV_M_IGNORE_MISSING_FRESH_INFO
@@ -371,6 +371,7 @@ pkix_done:
 
     if (rv == SECSuccess) {
       if (! cvout[validationChainLocation].value.pointer.chain) {
+        PR_SetError(PR_UNKNOWN_ERROR, 0);
         return SECFailure;
       }
       PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("VerifyCert: I have a chain\n"));
@@ -382,8 +383,8 @@ pkix_done:
         if (!CERT_CompareCerts(trustAnchor, cert)) {
           PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("VerifyCert:  adding issuer to tail for display\n"));
           // note: rv is reused to catch errors on cert creation!
-          rv = CERT_AddCertToListTail(*validationChain,
-                                      CERT_DupCertificate(trustAnchor));
+          ScopedCERTCertificate tempCert(CERT_DupCertificate(trustAnchor));
+          rv = CERT_AddCertToListTail(*validationChain, tempCert);
           if (rv != SECSuccess) {
             CERT_DestroyCertList(*validationChain);
             *validationChain = nullptr;
@@ -397,6 +398,7 @@ pkix_done:
       }
     }
   }
+
   return rv;
 }
 
