@@ -419,7 +419,7 @@ TelemetryPing.prototype = {
                      "adapterDriverDate", "adapterDescription2",
                      "adapterVendorID2", "adapterDeviceID2", "adapterRAM2",
                      "adapterDriver2", "adapterDriverVersion2",
-                     "adapterDriverDate2", "isGPU2Active", "D2DEnabled;",
+                     "adapterDriverDate2", "isGPU2Active", "D2DEnabled",
                      "DWriteEnabled", "DWriteVersion"
                     ];
 
