@@ -5165,6 +5165,18 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, HandleFunction fun,
         SSAValue thisv = SSAValue::PushedValue(offset, 0);
         SSAUseChain *uses = analysis->useChain(thisv);
 
+        /*
+         * If offset >= the offset at the top of the pending stack, we either
+         * encountered the end of a compound inline assignment or a 'this' was
+         * immediately popped and used. In either case, handle the use.
+         */
+        if (!pendingPoppedThis.empty() &&
+            offset >= pendingPoppedThis.back()->offset) {
+            lastThisPopped = pendingPoppedThis[0]->offset;
+            if (!AnalyzePoppedThis(cx, &pendingPoppedThis, type, fun, state))
+                return false;
+        }
+
         JS_ASSERT(uses);
         if (uses->next || !uses->popped) {
             /* 'this' value popped in more than one place. */
@@ -5177,18 +5189,6 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, HandleFunction fun,
         if (!poppedCode || !poppedCode->unconditional) {
             entirelyAnalyzed = false;
             break;
-        }
-
-        /*
-         * If offset >= the offset at the top of the pending stack, we either
-         * encountered the end of a compound inline assignment or a 'this' was
-         * immediately popped and used. In either case, handle the use.
-         */
-        if (!pendingPoppedThis.empty() &&
-            offset >= pendingPoppedThis.back()->offset) {
-            lastThisPopped = pendingPoppedThis[0]->offset;
-            if (!AnalyzePoppedThis(cx, &pendingPoppedThis, type, fun, state))
-                return false;
         }
 
         if (!pendingPoppedThis.append(uses)) {

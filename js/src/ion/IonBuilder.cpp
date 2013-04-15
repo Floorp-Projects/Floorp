@@ -2672,7 +2672,7 @@ IonBuilder::processCondSwitchCase(CFGState &state)
         MDefinition *caseOperand = current->pop();
         MDefinition *switchOperand = current->peek(-1);
         MCompare *cmpResult = MCompare::New(switchOperand, caseOperand, JSOP_STRICTEQ);
-        cmpResult->infer(cx);
+        cmpResult->infer(cx, inspector, pc);
         JS_ASSERT(!cmpResult->isEffectful());
         current->add(cmpResult);
         current->end(MTest::New(cmpResult, bodyBlock, caseBlock));
@@ -4776,7 +4776,7 @@ IonBuilder::jsop_compare(JSOp op)
     current->add(ins);
     current->push(ins);
 
-    ins->infer(cx);
+    ins->infer(cx, inspector, pc);
 
     if (ins->isEffectful() && !resumeAfter(ins))
         return false;
@@ -4949,7 +4949,7 @@ IonBuilder::jsop_initprop(HandlePropertyName name)
         return false;
 
     if (!shape || holder != templateObject ||
-        propertyWriteNeedsTypeBarrier(obj, name, &value))
+        propertyWriteNeedsTypeBarrier(&obj, name, &value))
     {
         // JSOP_NEWINIT becomes an MNewObject without preconfigured properties.
         MInitProp *init = MInitProp::New(obj, name, value);
@@ -6074,7 +6074,7 @@ IonBuilder::tryAddWriteBarrier(types::StackTypeSet *objTypes, jsid id, MDefiniti
 
         // This freeze is not required for correctness, but ensures that we
         // will recompile if the property types change and the barrier can
-        // be removed.
+        // potentially be removed.
         property->addFreeze(cx);
 
         if (aggregateProperty) {
@@ -6123,7 +6123,7 @@ IonBuilder::tryAddWriteBarrier(types::StackTypeSet *objTypes, jsid id, MDefiniti
 }
 
 bool
-IonBuilder::propertyWriteNeedsTypeBarrier(MDefinition *obj, PropertyName *name, MDefinition **pvalue)
+IonBuilder::propertyWriteNeedsTypeBarrier(MDefinition **pobj, PropertyName *name, MDefinition **pvalue)
 {
     // If any value being written is not reflected in the type information for
     // objects which obj could represent, a type barrier is needed when writing
@@ -6131,12 +6131,18 @@ IonBuilder::propertyWriteNeedsTypeBarrier(MDefinition *obj, PropertyName *name, 
     // properties that are accounted for by type information, i.e. normal data
     // properties and elements.
 
-    types::StackTypeSet *types = obj->resultTypeSet();
+    types::StackTypeSet *types = (*pobj)->resultTypeSet();
     if (!types || types->unknownObject())
         return true;
 
     jsid id = name ? types::IdToTypeId(NameToId(name)) : JSID_VOID;
 
+    // If all of the objects being written to have property types which already
+    // reflect the value, no barrier at all is needed. Additionally, if all
+    // objects being written to have the same types for the property, and those
+    // types do *not* reflect the value, add a type barrier for the value.
+
+    bool success = true;
     for (size_t i = 0; i < types->getObjectCount(); i++) {
         types::TypeObject *object = types->getTypeObject(i);
         if (!object) {
@@ -6144,20 +6150,62 @@ IonBuilder::propertyWriteNeedsTypeBarrier(MDefinition *obj, PropertyName *name, 
             if (!singleton)
                 continue;
             object = singleton->getType(cx);
-            if (!object)
-                return true;
+            if (!object) {
+                success = false;
+                break;
+            }
         }
 
         if (object->unknownProperties())
             continue;
 
         types::HeapTypeSet *property = object->getProperty(cx, id, false);
-        if (!property)
-            return true;
-        if (!TypeSetIncludes(property, (*pvalue)->type(), (*pvalue)->resultTypeSet()))
-            return !tryAddWriteBarrier(types, id, pvalue);
+        if (!property) {
+            success = false;
+            break;
+        }
+        if (!TypeSetIncludes(property, (*pvalue)->type(), (*pvalue)->resultTypeSet())) {
+            success = tryAddWriteBarrier(types, id, pvalue);
+            break;
+        }
     }
 
+    if (success)
+        return false;
+
+    // If all of the objects except one have property types which reflect the
+    // value, and the remaining object has no types at all for the property,
+    // add a guard that the object does not have that remaining object's type.
+
+    if (types->getObjectCount() <= 1)
+        return true;
+
+    types::TypeObject *excluded = NULL;
+    for (size_t i = 0; i < types->getObjectCount(); i++) {
+        types::TypeObject *object = types->getTypeObject(i);
+        if (!object) {
+            if (types->getSingleObject(i))
+                return true;
+            continue;
+        }
+        if (object->unknownProperties())
+            continue;
+
+        types::HeapTypeSet *property = object->getProperty(cx, id, false);
+        if (!property)
+            return true;
+
+        if (TypeSetIncludes(property, (*pvalue)->type(), (*pvalue)->resultTypeSet()))
+            continue;
+
+        if (!property->empty() || excluded)
+            return true;
+        excluded = object;
+    }
+
+    JS_ASSERT(excluded);
+
+    *pobj = addTypeGuard(*pobj, excluded, /* bailOnEquality = */ true, Bailout_Normal);
     return false;
 }
 
@@ -6452,7 +6500,11 @@ IonBuilder::jsop_setelem()
     MDefinition *index = current->peek(-2);
     MDefinition *object = current->peek(-3);
 
-    if (!propertyWriteNeedsTypeBarrier(object, NULL, &value)) {
+    int arrayType = TypedArray::TYPE_MAX;
+    if (elementAccessIsTypedArray(object, index, &arrayType))
+        return jsop_setelem_typed(arrayType);
+
+    if (!propertyWriteNeedsTypeBarrier(&object, NULL, &value)) {
         if (elementAccessIsDenseNative(object, index)) {
             types::StackTypeSet::DoubleConversion conversion =
                 object->resultTypeSet()->convertDoubleElements(cx);
@@ -6460,10 +6512,6 @@ IonBuilder::jsop_setelem()
                 return jsop_setelem_dense(conversion);
         }
     }
-
-    int arrayType = TypedArray::TYPE_MAX;
-    if (elementAccessIsTypedArray(object, index, &arrayType))
-        return jsop_setelem_typed(arrayType);
 
     if (object->type() == MIRType_Magic)
         return jsop_arguments_setelem();
@@ -6938,7 +6986,7 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::StackTypeSet *types, Handle
 
     // Pass the guard back so it can be an operand.
     if (isGetter) {
-        JS_ASSERT(wrapper->isGuardShape());
+        JS_ASSERT(wrapper->isGuardShapeOrType());
         *guardOut = wrapper;
     }
 
@@ -7516,7 +7564,7 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
         return resumeAfter(call);
     }
 
-    if (propertyWriteNeedsTypeBarrier(obj, name, &value)) {
+    if (propertyWriteNeedsTypeBarrier(&obj, name, &value)) {
         MInstruction *ins = MCallSetProperty::New(obj, value, name, script()->strict);
         current->add(ins);
         current->push(value);
@@ -7956,12 +8004,26 @@ IonBuilder::addBoundsCheck(MDefinition *index, MDefinition *length)
 MInstruction *
 IonBuilder::addShapeGuard(MDefinition *obj, const RawShape shape, BailoutKind bailoutKind)
 {
-    MGuardShape *guard = MGuardShape::New(obj, shape, bailoutKind);
+    MGuardShapeOrType *guard = MGuardShapeOrType::New(obj, shape, NULL, false, bailoutKind);
     current->add(guard);
 
     // If a shape guard failed in the past, don't optimize shape guard.
     if (failedShapeGuard_)
         guard->setNotMovable();
+
+    return guard;
+}
+
+MInstruction *
+IonBuilder::addTypeGuard(MDefinition *obj, types::TypeObject *typeObject,
+                         bool bailOnEquality, BailoutKind bailoutKind)
+{
+    MGuardShapeOrType *guard = MGuardShapeOrType::New(obj, NULL, typeObject,
+                                                      bailOnEquality, bailoutKind);
+    current->add(guard);
+
+    // For now, never move type guards.
+    guard->setNotMovable();
 
     return guard;
 }

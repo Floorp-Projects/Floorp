@@ -311,6 +311,8 @@ class IonBuilder : public MIRGenerator
     MInstruction *addConvertElementsToDoubles(MDefinition *elements);
     MInstruction *addBoundsCheck(MDefinition *index, MDefinition *length);
     MInstruction *addShapeGuard(MDefinition *obj, const RawShape shape, BailoutKind bailoutKind);
+    MInstruction *addTypeGuard(MDefinition *obj, types::TypeObject *typeObject,
+                               bool bailOnEquality, BailoutKind bailoutKind);
 
     JSObject *getNewArrayTemplateObject(uint32_t count);
 
@@ -423,7 +425,7 @@ class IonBuilder : public MIRGenerator
     bool propertyReadNeedsTypeBarrier(MDefinition *obj, PropertyName *name,
                                       types::StackTypeSet *observed);
     bool propertyReadIsIdempotent(MDefinition *obj, PropertyName *name);
-    bool propertyWriteNeedsTypeBarrier(MDefinition *obj, PropertyName *name, MDefinition **pvalue);
+    bool propertyWriteNeedsTypeBarrier(MDefinition **pobj, PropertyName *name, MDefinition **pvalue);
     bool tryAddWriteBarrier(types::StackTypeSet *objTypes, jsid id, MDefinition **pvalue);
 
     // Native inlining helpers.

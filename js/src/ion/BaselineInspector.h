@@ -96,6 +96,9 @@ class BaselineInspector
         return makeICInspector<SetElemICInspector>(pc, ICStub::SetElem_Fallback);
     }
 
+    ICStub::Kind monomorphicStubKind(jsbytecode *pc);
+    bool dimorphicStubKind(jsbytecode *pc, ICStub::Kind *pfirst, ICStub::Kind *psecond);
+
     MIRType expectedResultType(jsbytecode *pc);
 };
 

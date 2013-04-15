@@ -320,8 +320,11 @@ IonBuilder::inlineArrayPush(CallInfo &callInfo)
     if (callInfo.argc() != 1 || callInfo.constructing())
         return InliningStatus_NotInlined;
 
+    MDefinition *obj = callInfo.thisArg();
     MDefinition *value = callInfo.getArg(0);
-    if (propertyWriteNeedsTypeBarrier(callInfo.thisArg(), NULL, &value) || value != callInfo.getArg(0))
+    if (propertyWriteNeedsTypeBarrier(&obj, NULL, &value))
+        return InliningStatus_NotInlined;
+    if (obj != callInfo.thisArg() || value != callInfo.getArg(0))
         return InliningStatus_NotInlined;
 
     if (getInlineReturnType() != MIRType_Int32)
@@ -934,7 +937,7 @@ IonBuilder::inlineUnsafeSetElement(CallInfo &callInfo)
         MDefinition *id = callInfo.getArg(idxi);
         MDefinition *elem = callInfo.getArg(elemi);
 
-        if (propertyWriteNeedsTypeBarrier(obj, NULL, &elem))
+        if (propertyWriteNeedsTypeBarrier(&obj, NULL, &elem))
             return InliningStatus_NotInlined;
 
         int arrayType;
