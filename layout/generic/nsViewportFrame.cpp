@@ -250,18 +250,20 @@ ViewportFrame::Reflow(nsPresContext*           aPresContext,
 
     // If a scroll position clamping scroll-port size has been set, layout
     // fixed position elements to this size instead of the computed size.
-    nscoord width = reflowState.ComputedWidth();
-    nscoord height = reflowState.ComputedHeight();
+    nsRect rect(0, 0, reflowState.ComputedWidth(), reflowState.ComputedHeight());
     if (aPresContext->PresShell()->IsScrollPositionClampingScrollPortSizeSet()) {
       nsSize size = aPresContext->PresShell()->
         GetScrollPositionClampingScrollPortSize();
-      width = size.width;
-      height = size.height;
+      rect.width = size.width;
+      rect.height = size.height;
     }
+
+    // Make sure content document fixed-position margins are respected.
+    rect.Deflate(aPresContext->PresShell()->GetContentDocumentFixedPositionMargins());
 
     // Just reflow all the fixed-pos frames.
     rv = GetAbsoluteContainingBlock()->Reflow(this, aPresContext, reflowState, aStatus,
-                                              width, height,
+                                              rect,
                                               false, true, true, // XXX could be optimized
                                               &aDesiredSize.mOverflowAreas);
   }
