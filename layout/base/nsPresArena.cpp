@@ -250,7 +250,7 @@ nsPresArena::~nsPresArena()
   PL_FinishArenaPool(&mPool);
 }
 
-void*
+NS_HIDDEN_(void*)
 nsPresArena::Allocate(uint32_t aCode, size_t aSize)
 {
   NS_ABORT_IF_FALSE(aSize > 0, "PresArena cannot allocate zero bytes");
@@ -308,7 +308,7 @@ nsPresArena::Allocate(uint32_t aCode, size_t aSize)
   return result;
 }
 
-void
+NS_HIDDEN_(void)
 nsPresArena::Free(uint32_t aCode, void* aPtr)
 {
   // Try to recycle this entry.
@@ -412,42 +412,6 @@ nsPresArena::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
   EnumerateData data = { aArenaStats, 0 };
   mFreeLists.EnumerateEntries(FreeListEnumerator, &data);
   aArenaStats->mOther = mallocSize - data.total;
-}
-
-void*
-nsPresArena::AllocateBySize(size_t aSize)
-{
-  return Allocate(uint32_t(aSize) | uint32_t(NON_OBJECT_MARKER), aSize);
-}
-
-void
-nsPresArena::FreeBySize(size_t aSize, void* aPtr)
-{
-  Free(uint32_t(aSize) | uint32_t(NON_OBJECT_MARKER), aPtr);
-}
-
-void*
-nsPresArena::AllocateByFrameID(nsQueryFrame::FrameIID aID, size_t aSize)
-{
-  return Allocate(aID, aSize);
-}
-
-void
-nsPresArena::FreeByFrameID(nsQueryFrame::FrameIID aID, void* aPtr)
-{
-  Free(aID, aPtr);
-}
-
-void*
-nsPresArena::AllocateByObjectID(ObjectID aID, size_t aSize)
-{
-  return Allocate(aID, aSize);
-}
-
-void
-nsPresArena::FreeByObjectID(ObjectID aID, void* aPtr)
-{
-  Free(aID, aPtr);
 }
 
 /* static */ uintptr_t
