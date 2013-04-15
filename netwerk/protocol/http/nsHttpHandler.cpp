@@ -37,6 +37,8 @@
 #include "nsAlgorithm.h"
 #include "ASpdySession.h"
 #include "mozIApplicationClearPrivateDataParams.h"
+#include "nsICancelable.h"
+#include "EventTokenBucket.h"
 
 #include "nsIXULAppInfo.h"
 
@@ -186,6 +188,10 @@ nsHttpHandler::nsHttpHandler()
     , mSpdyPingTimeout(PR_SecondsToInterval(8))
     , mConnectTimeout(90000)
     , mParallelSpeculativeConnectLimit(6)
+    , mRequestTokenBucketEnabled(false)
+    , mRequestTokenBucketMinParallelism(6)
+    , mRequestTokenBucketHz(100)
+    , mRequestTokenBucketBurst(32)
     , mCritialRequestPrioritization(true)
 {
 #if defined(PR_LOGGING)
@@ -331,7 +337,20 @@ nsHttpHandler::Init()
         mObserverService->AddObserver(this, "webapps-clear-data", true);
     }
 
+    MakeNewRequestTokenBucket();
     return NS_OK;
+}
+
+void
+nsHttpHandler::MakeNewRequestTokenBucket()
+{
+    if (!mConnMgr)
+        return;
+
+    nsRefPtr<mozilla::net::EventTokenBucket> tokenBucket =
+        new mozilla::net::EventTokenBucket(mRequestTokenBucketHz,
+                                           mRequestTokenBucketBurst);
+    mConnMgr->UpdateRequestTokenBucket(tokenBucket);
 }
 
 nsresult
@@ -1197,6 +1216,40 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         }
     }
 
+    if (PREF_CHANGED(HTTP_PREF("pacing.requests.enabled"))) {
+        rv = prefs->GetBoolPref(HTTP_PREF("pacing.requests.enabled"),
+                                &cVar);
+        if (NS_SUCCEEDED(rv))
+            mRequestTokenBucketEnabled = cVar;
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("pacing.requests.min-parallelism"))) {
+        rv = prefs->GetIntPref(HTTP_PREF("pacing.requests.min-parallelism"), &val);
+        if (NS_SUCCEEDED(rv))
+            mRequestTokenBucketMinParallelism = static_cast<uint16_t>(clamped(val, 1, 1024));
+    }
+
+    bool requestTokenBucketUpdated = false;
+    if (PREF_CHANGED(HTTP_PREF("pacing.requests.hz"))) {
+        rv = prefs->GetIntPref(HTTP_PREF("pacing.requests.hz"), &val);
+        if (NS_SUCCEEDED(rv)) {
+            mRequestTokenBucketHz = static_cast<uint32_t>(clamped(val, 1, 10000));
+            requestTokenBucketUpdated = true;
+        }
+    }
+    if (PREF_CHANGED(HTTP_PREF("pacing.requests.burst"))) {
+        rv = prefs->GetIntPref(HTTP_PREF("pacing.requests.burst"), &val);
+        if (NS_SUCCEEDED(rv)) {
+            mRequestTokenBucketBurst = val ? val : 1;
+            requestTokenBucketUpdated = true;
+        }
+    }
+    if (requestTokenBucketUpdated) {
+        mRequestTokenBucket = 
+            new mozilla::net::EventTokenBucket(mRequestTokenBucketHz,
+                                               mRequestTokenBucketBurst);
+    }
+
     //
     // Tracking options
     //
@@ -1269,6 +1322,9 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
                 }
             }
         }
+    }
+    if (requestTokenBucketUpdated) {
+        MakeNewRequestTokenBucket();
     }
 
 #undef PREF_CHANGED
