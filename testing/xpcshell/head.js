@@ -977,28 +977,21 @@ function do_load_child_test_harness()
   if (typeof do_load_child_test_harness.alreadyRun != "undefined")
     return;
   do_load_child_test_harness.alreadyRun = 1;
-  
-  function addQuotes (str)  { 
-    return '"' + str + '"'; 
-  }
-  var quoted_head_files = _HEAD_FILES.map(addQuotes);
-  var quoted_tail_files = _TAIL_FILES.map(addQuotes);
 
   _XPCSHELL_PROCESS = "parent";
 
   let command =
-        "const _HEAD_JS_PATH='" + _HEAD_JS_PATH + "'; "
-      + "const _HTTPD_JS_PATH='" + _HTTPD_JS_PATH + "'; "
-      + "const _HEAD_FILES=[" + quoted_head_files.join() + "];"
-      + "const _TAIL_FILES=[" + quoted_tail_files.join() + "];"
+        "const _HEAD_JS_PATH=" + uneval(_HEAD_JS_PATH) + "; "
+      + "const _HTTPD_JS_PATH=" + uneval(_HTTPD_JS_PATH) + "; "
+      + "const _HEAD_FILES=" + uneval(_HEAD_FILES) + "; "
+      + "const _TAIL_FILES=" + uneval(_TAIL_FILES) + "; "
       + "const _XPCSHELL_PROCESS='child';";
 
   if (this._TESTING_MODULES_DIR) {
-    normalized = this._TESTING_MODULES_DIR.replace('\\', '\\\\', 'g');
-    command += "const _TESTING_MODULES_DIR='" + normalized + "'; ";
+    command += " const _TESTING_MODULES_DIR=" + uneval(_TESTING_MODULES_DIR) + ";";
   }
 
-  command += "load(_HEAD_JS_PATH);";
+  command += " load(_HEAD_JS_PATH);";
 
   sendCommand(command);
 }
