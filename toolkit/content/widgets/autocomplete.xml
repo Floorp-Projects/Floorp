@@ -441,7 +441,7 @@
         <parameter name="aEvent"/>
         <body><![CDATA[
           if (aEvent.target.localName != "textbox")
-            return false; // Let child buttons of autocomplete take input
+            return true; // Let child buttons of autocomplete take input
 
           //XXXpch this is so bogus...
           if (aEvent.defaultPrevented)
