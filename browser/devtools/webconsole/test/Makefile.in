@@ -121,6 +121,7 @@ MOCHITEST_BROWSER_FILES = \
 	browser_console_variables_view_while_debugging.js \
 	browser_console.js \
 	browser_longstring_hang.js \
+	browser_console_consolejsm_output.js \
 	head.js \
 	$(NULL)
 
