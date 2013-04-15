@@ -1,4 +1,4 @@
-// vim: set ts=8 sts=4 et sw=4 tw=99:
+// vim: ts=4 sw=4 tw=99 et:
 
 function A() {
     this.x = 12;
