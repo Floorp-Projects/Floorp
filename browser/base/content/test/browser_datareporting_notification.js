@@ -5,7 +5,7 @@
 function sendNotifyRequest(name) {
   let ns = {};
   Components.utils.import("resource://gre/modules/services/datareporting/policy.jsm", ns);
-  Components.utils.import("resource://services-common/preferences.js", ns);
+  Components.utils.import("resource://gre/modules/Preferences.jsm", ns);
 
   let service = Components.classes["@mozilla.org/datareporting/service;1"]
                                   .getService(Components.interfaces.nsISupports)

@@ -4,9 +4,9 @@
 "use strict";
 
 Cu.import("resource://gre/modules/AddonManager.jsm");
+Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://services-common/async.js");
-Cu.import("resource://services-common/preferences.js");
 Cu.import("resource://services-sync/addonsreconciler.js");
 Cu.import("resource://services-sync/engines/addons.js");
 Cu.import("resource://services-sync/service.js");
