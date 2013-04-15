@@ -215,6 +215,11 @@ protected:
                                        const nsIntRegion& aVisibleRegion,
                                        bool aDidSelfCopy);
 
+  // create and configure mTextureClient
+  void BuildTextureClient(ContentType aType,
+                          const nsIntRect& aRect,
+                          uint32_t aFlags);
+
   // Create the front buffer for the ContentClient/Host pair if necessary
   // and notify the compositor that we have created the buffer(s).
   virtual void CreateFrontBufferAndNotify(const nsIntRect& aBufferRect) = 0;

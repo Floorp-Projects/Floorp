@@ -86,13 +86,11 @@ public:
                   nsPresContext*           aPresContext,
                   const nsHTMLReflowState& aReflowState,
                   nsReflowStatus&          aReflowStatus,
-                  nscoord                  aContainingBlockWidth,
-                  nscoord                  aContainingBlockHeight,
+                  const nsRect&            aContainingBlock,
                   bool                     aConstrainHeight,
                   bool                     aCBWidthChanged,
                   bool                     aCBHeightChanged,
                   nsOverflowAreas*         aOverflowAreas);
-
 
   void DestroyFrames(nsIFrame* aDelegatingFrame,
                      nsIFrame* aDestructRoot);
@@ -122,8 +120,7 @@ protected:
   nsresult ReflowAbsoluteFrame(nsIFrame*                aDelegatingFrame,
                                nsPresContext*           aPresContext,
                                const nsHTMLReflowState& aReflowState,
-                               nscoord                  aContainingBlockWidth,
-                               nscoord                  aContainingBlockHeight,
+                               const nsRect&            aContainingBlockRect,
                                bool                     aConstrainHeight,
                                nsIFrame*                aKidFrame,
                                nsReflowStatus&          aStatus,

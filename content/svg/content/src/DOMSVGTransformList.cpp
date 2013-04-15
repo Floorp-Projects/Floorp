@@ -6,7 +6,7 @@
 #include "DOMSVGTransformList.h"
 #include "mozilla/dom/SVGTransform.h"
 #include "mozilla/dom/SVGMatrix.h"
-#include "SVGAnimatedTransformList.h"
+#include "nsSVGAnimatedTransformList.h"
 #include "nsSVGElement.h"
 #include "nsContentUtils.h"
 #include "mozilla/dom/SVGTransformListBinding.h"
@@ -36,7 +36,7 @@ namespace mozilla {
 using namespace dom;
 
 // We could use NS_IMPL_CYCLE_COLLECTION_1, except that in Unlink() we need to
-// clear our DOMSVGAnimatedTransformList's weak ref to us to be safe. (The other
+// clear our SVGAnimatedTransformList's weak ref to us to be safe. (The other
 // option would be to not unlink and rely on the breaking of the other edges in
 // the cycle, as NS_SVG_VAL_IMPL_CYCLE_COLLECTION does.)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMSVGTransformList)
@@ -116,7 +116,7 @@ DOMSVGTransformList::InternalListLengthWillChange(uint32_t aNewLength)
 SVGTransformList&
 DOMSVGTransformList::InternalList() const
 {
-  SVGAnimatedTransformList *alist = Element()->GetAnimatedTransformList();
+  nsSVGAnimatedTransformList *alist = Element()->GetAnimatedTransformList();
   return IsAnimValList() && alist->mAnimVal ?
     *alist->mAnimVal :
     alist->mBaseVal;

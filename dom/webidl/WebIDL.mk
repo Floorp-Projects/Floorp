@@ -158,6 +158,7 @@ webidl_files = \
   MozActivity.webidl \
   MutationEvent.webidl \
   MutationObserver.webidl \
+  NetDashboard.webidl \
   Node.webidl \
   NodeFilter.webidl \
   NodeIterator.webidl \

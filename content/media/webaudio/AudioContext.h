@@ -19,7 +19,6 @@
 #include "MediaBufferDecoder.h"
 #include "StreamBuffer.h"
 #include "MediaStreamGraph.h"
-#include "nsIDOMWindow.h"
 
 // X11 has a #define for CurrentTime. Unbelievable :-(.
 // See content/media/DOMMediaStream.h for more fun!
@@ -29,7 +28,7 @@
 
 struct JSContext;
 class JSObject;
-class nsIDOMWindow;
+class nsPIDOMWindow;
 
 namespace mozilla {
 
@@ -53,14 +52,14 @@ class PannerNode;
 class AudioContext MOZ_FINAL : public nsWrapperCache,
                                public EnableWebAudioCheck
 {
-  explicit AudioContext(nsIDOMWindow* aParentWindow);
+  explicit AudioContext(nsPIDOMWindow* aParentWindow);
   ~AudioContext();
 
 public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(AudioContext)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(AudioContext)
 
-  nsIDOMWindow* GetParentObject() const
+  nsPIDOMWindow* GetParentObject() const
   {
     return mWindow;
   }
@@ -148,7 +147,7 @@ private:
   friend struct ::mozilla::WebAudioDecodeJob;
 
 private:
-  nsCOMPtr<nsIDOMWindow> mWindow;
+  nsCOMPtr<nsPIDOMWindow> mWindow;
   nsRefPtr<AudioDestinationNode> mDestination;
   nsRefPtr<AudioListener> mListener;
   MediaBufferDecoder mDecoder;
