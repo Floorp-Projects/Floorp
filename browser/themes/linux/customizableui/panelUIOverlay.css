@@ -5,7 +5,7 @@
 %filter substitution
 %define menuPanelWidth 21em
 
-%include ../shared/panelUIOverlay.inc.css
+%include ../../shared/customizableui/panelUIOverlay.inc.css
 
 #PanelUI-cut-btn {
   list-style-image: url("moz-icon://stock/gtk-cut?size=toolbar");
