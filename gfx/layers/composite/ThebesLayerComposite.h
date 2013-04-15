@@ -58,7 +58,7 @@ public:
 
   virtual LayerComposite* AsLayerComposite() MOZ_OVERRIDE { return this; }
 
-  virtual void EnsureBuffer(CompositableType aHostType) MOZ_OVERRIDE;
+  virtual void EnsureBuffer(CompositableType aType) MOZ_OVERRIDE;
 
 #ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char* Name() const MOZ_OVERRIDE { return "ThebesLayerComposite"; }

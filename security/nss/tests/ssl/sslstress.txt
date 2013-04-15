@@ -35,8 +35,7 @@
 #
 # ############################ ECC ciphers ############################
 #
-   ECC      0      -c_:C009  -c_100_-C_:C009_-N_-V_:ssl3  Stress SSL3 ECDHE-ECDSA AES 128 CBC with SHA (no reuse)
-   ECC      0      -c_:C013  -c_1000_-C_:C013_-V_:ssl3    Stress SSL3 ECDHE-RSA   AES 128 CBC with SHA
+   ECC      0      -c_:C009  -V_ssl3:_-c_100_-C_:C009_-N  Stress TLS  ECDHE-ECDSA AES 128 CBC with SHA (no reuse)
    ECC      0      -c_:C004  -V_ssl3:_-c_100_-C_:C004_-N  Stress TLS  ECDH-ECDSA  AES 128 CBC with SHA (no reuse)
    ECC      0      -c_:C00E  -V_ssl3:_-c_100_-C_:C00E_-N  Stress TLS  ECDH-RSA    AES 128 CBC with SHA (no reuse)
    ECC      0      -c_:C013  -V_ssl3:_-c_1000_-C_:C013    Stress TLS  ECDHE-RSA   AES 128 CBC with SHA
@@ -44,9 +43,9 @@
 #
 # add client auth versions here...
 #
-   ECC      0      -r_-r_-c_:C009  -c_10_-C_:C009_-N_-V_:ssl3_-n_TestUser-ec Stress SSL3 ECDHE-ECDSA AES 128 CBC with SHA (no reuse, client auth)
-   ECC      0      -r_-r_-c_:C013  -c_100_-C_:C013_-V_:ssl3_-n_TestUser-ec Stress SSL3 ECDHE-RSA AES 128 CBC with SHA (client auth)
-   ECC      0      -r_-r_-c_:C004  -c_10_-C_:C004_-N_-n_TestUser-ec Stress TLS ECDH-ECDSA AES 128 CBC with SHA (no reuse, client auth)
-   ECC      0      -r_-r_-c_:C00E  -c_10_-C_:C00E_-N_-n_TestUser-ecmixed Stress TLS ECDH-RSA AES 128 CBC with SHA (no reuse, client auth)
-   ECC      0      -r_-r_-c_:C013  -c_100_-C_:C013_-n_TestUser-ec Stress TLS ECDHE-RSA AES 128 CBC with SHA(client auth)
+   ECC      0      -r_-r_-c_:C009  -V_ssl3:_-c_10_-C_:C009_-N_-n_TestUser-ec Stress TLS ECDHE-ECDSA AES 128 CBC with SHA (no reuse, client auth)
+   ECC      0      -r_-r_-c_:C013  -V_ssl3:_-c_100_-C_:C013_-n_TestUser-ec Stress TLS ECDHE-RSA AES 128 CBC with SHA (client auth)
+   ECC      0      -r_-r_-c_:C004  -V_ssl3:_-c_10_-C_:C004_-N_-n_TestUser-ec Stress TLS ECDH-ECDSA AES 128 CBC with SHA (no reuse, client auth)
+   ECC      0      -r_-r_-c_:C00E  -V_ssl3:_-c_10_-C_:C00E_-N_-n_TestUser-ecmixed Stress TLS ECDH-RSA AES 128 CBC with SHA (no reuse, client auth)
+   ECC      0      -r_-r_-c_:C013  -V_ssl3:_-c_100_-C_:C013_-n_TestUser-ec Stress TLS ECDHE-RSA AES 128 CBC with SHA(client auth)
    ECC      0      -r_-r_-c_:C013_-u -V_ssl3:_-c_100_-C_:C013_-n_TestUser-ec_-u Stress TLS ECDHE-RSA AES 128 CBC with SHA(session ticket, client auth)

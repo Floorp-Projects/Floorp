@@ -174,9 +174,6 @@ public class GeckoAppShell
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override
             public void uncaughtException(Thread thread, Throwable e) {
-                Log.e(LOGTAG, ">>> REPORTING UNCAUGHT EXCEPTION FROM THREAD "
-                              + thread.getId() + " (\"" + thread.getName() + "\")", e);
-
                 // If the uncaught exception was rethrown, walk the exception `cause` chain to find
                 // the original exception so Socorro can correctly collate related crash reports.
                 Throwable cause;
@@ -184,15 +181,20 @@ public class GeckoAppShell
                     e = cause;
                 }
 
-                if (e instanceof java.lang.OutOfMemoryError) {
-                    SharedPreferences prefs =
-                        GeckoApp.mAppContext.getSharedPreferences(GeckoApp.PREFS_NAME, 0);
-                    SharedPreferences.Editor editor = prefs.edit();
-                    editor.putBoolean(GeckoApp.PREFS_OOM_EXCEPTION, true);
-                    editor.commit();
-                }
+                try {
+                    Log.e(LOGTAG, ">>> REPORTING UNCAUGHT EXCEPTION FROM THREAD "
+                                  + thread.getId() + " (\"" + thread.getName() + "\")", e);
 
-                reportJavaCrash(getStackTraceString(e));
+                    if (e instanceof OutOfMemoryError) {
+                        SharedPreferences prefs =
+                            GeckoApp.mAppContext.getSharedPreferences(GeckoApp.PREFS_NAME, 0);
+                        SharedPreferences.Editor editor = prefs.edit();
+                        editor.putBoolean(GeckoApp.PREFS_OOM_EXCEPTION, true);
+                        editor.commit();
+                    }
+                } finally {
+                    reportJavaCrash(getStackTraceString(e));
+                }
             }
         });
     }

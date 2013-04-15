@@ -387,7 +387,7 @@ private:
 
 // Helper class to automatically manage temporary changes to an SVG document's
 // state for rendering purposes.
-class NS_STACK_CLASS AutoSVGRenderingState
+class MOZ_STACK_CLASS AutoSVGRenderingState
 {
 public:
   AutoSVGRenderingState(const SVGImageContext* aSVGContext,

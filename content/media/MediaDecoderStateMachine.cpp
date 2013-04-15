@@ -1946,8 +1946,9 @@ void MediaDecoderStateMachine::DecodeSeek()
       if (HasVideo()) {
         VideoData* video = mReader->VideoQueue().PeekFront();
         if (video) {
-          NS_ASSERTION(video->mTime <= seekTime && seekTime <= video->mEndTime,
-                        "Seek target should lie inside the first frame after seek");
+          NS_ASSERTION((video->mTime <= seekTime && seekTime <= video->mEndTime) ||
+                        mReader->VideoQueue().IsFinished(),
+            "Seek target should lie inside the first frame after seek, unless it's the last frame.");
           {
             ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
             RenderVideoFrame(video, TimeStamp::Now());

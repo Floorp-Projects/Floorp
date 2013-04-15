@@ -50,6 +50,7 @@
 #include "nsIDOMDragEvent.h"
 #include "nsContentList.h"
 #include "nsIDOMMutationEvent.h"
+#include "nsTextNode.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -123,14 +124,12 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 
   // Set the browse button text. It's a bit of a pain to do because we want to
   // make sure we are not notifying.
-  nsCOMPtr<nsIContent> textContent;
-  nsresult rv = NS_NewTextNode(getter_AddRefs(textContent),
-                               mBrowse->NodeInfo()->NodeInfoManager());
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsRefPtr<nsTextNode> textContent =
+    new nsTextNode(mBrowse->NodeInfo()->NodeInfoManager());
 
   textContent->SetText(buttonTxt, false);
 
-  rv = mBrowse->AppendChildTo(textContent, false);
+  nsresult rv = mBrowse->AppendChildTo(textContent, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Make sure access key and tab order for the element actually redirect to the

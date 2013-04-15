@@ -10,7 +10,7 @@
 
 namespace mozilla {
 
-class NS_STACK_CLASS PaintTracker
+class MOZ_STACK_CLASS PaintTracker
 {
 public:
   PaintTracker() {

@@ -19,7 +19,7 @@
  * node APIs, since it handles XBL-generated anonymous content as
  * well.
  */
-class NS_STACK_CLASS ChildIterator
+class MOZ_STACK_CLASS ChildIterator
 {
 protected:
   nsIContent* mContent;

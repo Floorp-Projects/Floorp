@@ -165,7 +165,7 @@ nsXBLSpecialDocInfo* nsXBLWindowKeyHandler::sXBLSpecialDocInfo = nullptr;
 uint32_t nsXBLWindowKeyHandler::sRefCnt = 0;
 
 nsXBLWindowKeyHandler::nsXBLWindowKeyHandler(nsIDOMElement* aElement,
-                                             nsIDOMEventTarget* aTarget)
+                                             EventTarget* aTarget)
   : mTarget(aTarget),
     mHandler(nullptr),
     mUserHandler(nullptr)
@@ -234,7 +234,7 @@ BuildHandlerChain(nsIContent* aContent, nsXBLPrototypeHandler** aResult)
 nsresult
 nsXBLWindowKeyHandler::EnsureHandlers(bool *aIsEditor)
 {
-  nsCOMPtr<nsIDOMElement> el = GetElement();
+  nsCOMPtr<Element> el = GetElement();
   NS_ENSURE_STATE(!mWeakPtrForElement || el);
   if (el) {
     // We are actually a XUL <keyset>.
@@ -316,8 +316,8 @@ nsXBLWindowKeyHandler::WalkHandlers(nsIDOMKeyEvent* aKeyEvent, nsIAtom* aEventTy
   bool isEditor;
   nsresult rv = EnsureHandlers(&isEditor);
   NS_ENSURE_SUCCESS(rv, rv);
-  
-  nsCOMPtr<nsIDOMElement> el = GetElement();
+
+  nsCOMPtr<Element> el = GetElement();
   if (!el) {
     if (mUserHandler) {
       WalkHandlersInternal(aKeyEvent, aEventType, mUserHandler);
@@ -500,10 +500,10 @@ nsXBLWindowKeyHandler::WalkHandlersAndExecute(nsIDOMKeyEvent* aKeyEvent,
     // and that it has something to do (oncommand of the <key> or its
     // <command> is non-empty).
     nsCOMPtr<nsIContent> elt = currHandler->GetHandlerElement();
-    nsCOMPtr<nsIDOMElement> commandElt;
+    nsCOMPtr<Element> commandElt;
 
     // See if we're in a XUL doc.
-    nsCOMPtr<nsIDOMElement> el = GetElement();
+    nsCOMPtr<Element> el = GetElement();
     if (el && elt) {
       // We are.  Obtain our command attribute.
       nsAutoString command;
@@ -542,11 +542,11 @@ nsXBLWindowKeyHandler::WalkHandlersAndExecute(nsIDOMKeyEvent* aKeyEvent,
     }
 
     nsCOMPtr<EventTarget> piTarget;
-    nsCOMPtr<nsIDOMElement> element = GetElement();
+    nsCOMPtr<Element> element = GetElement();
     if (element) {
-      piTarget = do_QueryInterface(commandElt);
+      piTarget = commandElt;
     } else {
-      piTarget = do_QueryInterface(mTarget);
+      piTarget = mTarget;
     }
 
     rv = currHandler->ExecuteHandler(piTarget, aKeyEvent);
@@ -558,24 +558,19 @@ nsXBLWindowKeyHandler::WalkHandlersAndExecute(nsIDOMKeyEvent* aKeyEvent,
   return false;
 }
 
-already_AddRefed<nsIDOMElement>
+already_AddRefed<Element>
 nsXBLWindowKeyHandler::GetElement()
 {
-  nsCOMPtr<nsIDOMElement> element = do_QueryReferent(mWeakPtrForElement);
-  nsIDOMElement* el = nullptr;
-  element.swap(el);
-  return el;
+  nsCOMPtr<Element> element = do_QueryReferent(mWeakPtrForElement);
+  return element.forget();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
 
-nsresult
-NS_NewXBLWindowKeyHandler(nsIDOMElement* aElement, nsIDOMEventTarget* aTarget,
-                          nsXBLWindowKeyHandler** aResult)
+already_AddRefed<nsXBLWindowKeyHandler>
+NS_NewXBLWindowKeyHandler(nsIDOMElement* aElement, EventTarget* aTarget)
 {
-  *aResult = new nsXBLWindowKeyHandler(aElement, aTarget);
-  if (!*aResult)
-    return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(*aResult);
-  return NS_OK;
+  nsRefPtr<nsXBLWindowKeyHandler> result =
+    new nsXBLWindowKeyHandler(aElement, aTarget);
+  return result.forget();
 }

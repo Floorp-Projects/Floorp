@@ -133,7 +133,7 @@ protected:
  * Note that this always just resets the statement. If the statement doesn't
  * need resetting, the reset operation is inexpensive.
  */
-class NS_STACK_CLASS mozStorageStatementScoper
+class MOZ_STACK_CLASS mozStorageStatementScoper
 {
 public:
   mozStorageStatementScoper(mozIStorageStatement* aStatement)

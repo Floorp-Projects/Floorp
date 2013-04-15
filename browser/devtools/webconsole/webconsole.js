@@ -171,6 +171,9 @@ const FILTER_PREFS_PREFIX = "devtools.webconsole.filter.";
 // The minimum font size.
 const MIN_FONT_SIZE = 10;
 
+// The maximum length of strings to be displayed by the Web Console.
+const MAX_LONG_STRING_LENGTH = 200000;
+
 const PREF_CONNECTION_TIMEOUT = "devtools.debugger.remote-timeout";
 
 /**
@@ -199,6 +202,8 @@ function WebConsoleFrame(aWebConsoleOwner)
 
   this._outputTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   this._outputTimerInitialized = false;
+
+  EventEmitter.decorate(this);
 }
 
 WebConsoleFrame.prototype = {
@@ -879,14 +884,15 @@ WebConsoleFrame.prototype = {
    * @private
    * @param nsIDOMNode aNode
    *        The message node to be filtered or not.
-   * @returns boolean
-   *          True if the message is filtered, false otherwise.
+   * @returns nsIDOMNode|null
+   *          Returns the duplicate node if the message was filtered, null
+   *          otherwise.
    */
   _filterRepeatedMessage: function WCF__filterRepeatedMessage(aNode)
   {
     let repeatNode = aNode.getElementsByClassName("webconsole-msg-repeat")[0];
     if (!repeatNode) {
-      return false;
+      return null;
     }
 
     let uid = repeatNode._uid;
@@ -905,7 +911,7 @@ WebConsoleFrame.prototype = {
               aNode.classList.contains("webconsole-msg-error"))) {
       let lastMessage = this.outputNode.lastChild;
       if (!lastMessage) {
-        return false;
+        return null;
       }
 
       let lastRepeatNode = lastMessage
@@ -917,10 +923,10 @@ WebConsoleFrame.prototype = {
 
     if (dupeNode) {
       this.mergeFilteredMessageNode(dupeNode, aNode);
-      return true;
+      return dupeNode;
     }
 
-    return false;
+    return null;
   },
 
   /**
@@ -1316,13 +1322,23 @@ WebConsoleFrame.prototype = {
   },
 
   /**
-   * Inform user that the Web Console API has been replaced by a script
+   * Inform user that the window.console API has been replaced by a script
    * in a content page.
    */
   logWarningAboutReplacedAPI: function WCF_logWarningAboutReplacedAPI()
   {
     let node = this.createMessageNode(CATEGORY_JS, SEVERITY_WARNING,
                                       l10n.getStr("ConsoleAPIDisabled"));
+    this.outputMessage(CATEGORY_JS, node);
+  },
+
+  /**
+   * Inform user that the string he tries to view is too long.
+   */
+  logWarningAboutStringTooLong: function WCF_logWarningAboutStringTooLong()
+  {
+    let node = this.createMessageNode(CATEGORY_JS, SEVERITY_WARNING,
+                                      l10n.getStr("longStringTooLong"));
     this.outputMessage(CATEGORY_JS, node);
   },
 
@@ -1692,10 +1708,20 @@ WebConsoleFrame.prototype = {
     let hudIdSupportsString = WebConsoleUtils.supportsString(this.hudId);
 
     // Output the current batch of messages.
+    let newMessages = new Set();
+    let updatedMessages = new Set();
     for (let item of batch) {
-      let node = this._outputMessageFromQueue(hudIdSupportsString, item);
-      if (node) {
-        lastVisibleNode = node;
+      let result = this._outputMessageFromQueue(hudIdSupportsString, item);
+      if (result) {
+        if (result.isRepeated) {
+          updatedMessages.add(result.isRepeated);
+        }
+        else {
+          newMessages.add(result.node);
+        }
+        if (result.visible && result.node == this.outputNode.lastChild) {
+          lastVisibleNode = result.node;
+        }
       }
     }
 
@@ -1736,6 +1762,13 @@ WebConsoleFrame.prototype = {
       scrollBox.scrollTop -= oldScrollHeight - scrollBox.scrollHeight;
     }
 
+    if (newMessages.size) {
+      this.emit("messages-added", newMessages);
+    }
+    if (updatedMessages.size) {
+      this.emit("messages-updated", updatedMessages);
+    }
+
     // If the queue is not empty, schedule another flush.
     if (this._outputQueue.length > 0) {
       this._initOutputTimer();
@@ -1772,9 +1805,12 @@ WebConsoleFrame.prototype = {
    *        The HUD ID as an nsISupportsString.
    * @param array aItem
    *        An item from the output queue - this item represents a message.
-   * @return nsIDOMElement|undefined
-   *         The DOM element of the message if the message is visible, undefined
-   *         otherwise.
+   * @return object
+   *         An object that holds the following properties:
+   *         - node: the DOM element of the message.
+   *         - isRepeated: the DOM element of the original message, if this is
+   *         a repeated message, otherwise null.
+   *         - visible: boolean that tells if the message is visible.
    */
   _outputMessageFromQueue:
   function WCF__outputMessageFromQueue(aHudIdSupportsString, aItem)
@@ -1785,7 +1821,7 @@ WebConsoleFrame.prototype = {
                methodOrNode.apply(this, args || []) :
                methodOrNode;
     if (!node) {
-      return;
+      return null;
     }
 
     let afterNode = node._outputAfterNode;
@@ -1797,14 +1833,16 @@ WebConsoleFrame.prototype = {
 
     let isRepeated = this._filterRepeatedMessage(node);
 
-    let lastVisible = !isRepeated && !isFiltered;
+    let visible = !isRepeated && !isFiltered;
     if (!isRepeated) {
       this.outputNode.insertBefore(node,
                                    afterNode ? afterNode.nextSibling : null);
       this._pruneCategoriesQueue[node.category] = true;
-      if (afterNode) {
-        lastVisible = this.outputNode.lastChild == node;
-      }
+
+      let nodeID = node.getAttribute("id");
+      Services.obs.notifyObservers(aHudIdSupportsString,
+                                   "web-console-message-created", nodeID);
+
     }
 
     if (node._onOutput) {
@@ -1812,11 +1850,11 @@ WebConsoleFrame.prototype = {
       delete node._onOutput;
     }
 
-    let nodeID = node.getAttribute("id");
-    Services.obs.notifyObservers(aHudIdSupportsString,
-                                 "web-console-message-created", nodeID);
-
-    return lastVisible ? node : null;
+    return {
+      visible: visible,
+      node: node,
+      isRepeated: isRepeated,
+    };
   },
 
   /**
@@ -2241,7 +2279,8 @@ WebConsoleFrame.prototype = {
     }
 
     let longString = this.webConsoleClient.longString(aActor);
-    longString.substring(longString.initial.length, longString.length,
+    let toIndex = Math.min(longString.length, MAX_LONG_STRING_LENGTH);
+    longString.substring(longString.initial.length, toIndex,
       function WCF__onSubstring(aResponse) {
         if (aResponse.error) {
           Cu.reportError("WCF__longStringClick substring failure: " +
@@ -2257,7 +2296,13 @@ WebConsoleFrame.prototype = {
             aMessage.category == CATEGORY_OUTPUT) {
           aMessage.clipboardText = aMessage.textContent;
         }
-      });
+
+        this.emit("messages-updated", new Set([aMessage]));
+
+        if (toIndex != longString.length) {
+          this.logWarningAboutStringTooLong();
+        }
+      }.bind(this));
   },
 
   /**
@@ -2617,13 +2662,6 @@ JSTerm.prototype = {
   sidebar: null,
 
   /**
-   * The Web Console splitter between output and the sidebar.
-   * @private
-   * @type nsIDOMElement
-   */
-  _splitter: null,
-
-  /**
    * The Variables View instance shown in the sidebar.
    * @private
    * @type object
@@ -2706,8 +2744,6 @@ JSTerm.prototype = {
     this.inputNode.addEventListener("keypress", this._keyPress, false);
     this.inputNode.addEventListener("input", this._inputEventHandler, false);
     this.inputNode.addEventListener("keyup", this._inputEventHandler, false);
-
-    this._splitter = doc.querySelector(".devtools-side-splitter");
 
     this.lastInputValue && this.setInputValue(this.lastInputValue);
   },
@@ -3025,7 +3061,6 @@ JSTerm.prototype = {
       this.sidebar = new ToolSidebar(tabbox, this);
     }
     this.sidebar.show();
-    this._splitter.setAttribute("state", "open");
   },
 
   /**
@@ -3463,7 +3498,8 @@ JSTerm.prototype = {
     }
 
     let client = this.webConsoleClient.longString(grip);
-    client.substring(grip.initial.length, grip.length, (aResponse) => {
+    let toIndex = Math.min(grip.length, MAX_LONG_STRING_LENGTH);
+    client.substring(grip.initial.length, toIndex, (aResponse) => {
       if (aResponse.error) {
         Cu.reportError("JST__fetchVarLongString substring failure: " +
                        aResponse.error + ": " + aResponse.message);
@@ -3474,6 +3510,10 @@ JSTerm.prototype = {
       aVar.setGrip(grip.initial + aResponse.substring);
       aVar.hideArrow();
       aVar._retrieved = true;
+
+      if (toIndex != grip.length) {
+        this.hud.logWarningAboutStringTooLong();
+      }
     });
   },
 
@@ -4386,7 +4426,6 @@ function WebConsoleConnectionProxy(aWebConsole, aTarget)
   this._onNetworkEventUpdate = this._onNetworkEventUpdate.bind(this);
   this._onFileActivity = this._onFileActivity.bind(this);
   this._onTabNavigated = this._onTabNavigated.bind(this);
-  this._onAttachTab = this._onAttachTab.bind(this);
   this._onAttachConsole = this._onAttachConsole.bind(this);
   this._onCachedMessages = this._onCachedMessages.bind(this);
   this._connectionTimeout = this._connectionTimeout.bind(this);
@@ -4424,12 +4463,6 @@ WebConsoleConnectionProxy.prototype = {
   webConsoleClient: null,
 
   /**
-   * The TabClient instance we use.
-   * @type object
-   */
-  tabClient: null,
-
-  /**
    * Tells if the connection is established.
    * @type boolean
    */
@@ -4452,14 +4485,6 @@ WebConsoleConnectionProxy.prototype = {
    * @type string
    */
   _consoleActor: null,
-
-  /**
-   * The TabActor ID.
-   *
-   * @private
-   * @type string
-   */
-  _tabActor: null,
 
   /**
    * Tells if the window.console object of the remote web page is the native
@@ -4504,17 +4529,15 @@ WebConsoleConnectionProxy.prototype = {
     client.addListener("networkEvent", this._onNetworkEvent);
     client.addListener("networkEventUpdate", this._onNetworkEventUpdate);
     client.addListener("fileActivity", this._onFileActivity);
-    client.addListener("tabNavigated", this._onTabNavigated);
+    this.target.on("will-navigate", this._onTabNavigated);
+    this.target.on("navigate", this._onTabNavigated);
 
+    this._consoleActor = this.target.form.consoleActor;
     if (!this.target.chrome) {
-      // target.form is a TabActor grip
-      this._attachTab(this.target.form);
+      let tab = this.target.form;
+      this.owner.onLocationChange(tab.url, tab.title);
     }
-    else {
-      // target.form is a RootActor grip
-      this._consoleActor = this.target.form.consoleActor;
-      this._attachConsole();
-    }
+    this._attachConsole();
 
     return promise;
   },
@@ -4531,43 +4554,6 @@ WebConsoleConnectionProxy.prototype = {
     };
 
     this._connectDefer.reject(error);
-  },
-
-  /**
-   * Attach to the tab actor.
-   *
-   * @private
-   * @param object aTab
-   *        Grip for the tab to attach to.
-   */
-  _attachTab: function WCCP__attachTab(aTab)
-  {
-    this._consoleActor = aTab.consoleActor;
-    this._tabActor = aTab.actor;
-    this.owner.onLocationChange(aTab.url, aTab.title);
-    this.client.attachTab(this._tabActor, this._onAttachTab);
-  },
-
-  /**
-   * The "attachTab" response handler.
-   *
-   * @private
-   * @param object aResponse
-   *        The JSON response object received from the server.
-   * @param object aTabClient
-   *        The TabClient instance for the attached tab.
-   */
-  _onAttachTab: function WCCP__onAttachTab(aResponse, aTabClient)
-  {
-    if (aResponse.error) {
-      Cu.reportError("attachTab failed: " + aResponse.error + " " +
-                     aResponse.message);
-      this._connectDefer.reject(aResponse);
-      return;
-    }
-
-    this.tabClient = aTabClient;
-    this._attachConsole();
   },
 
   /**
@@ -4739,7 +4725,7 @@ WebConsoleConnectionProxy.prototype = {
    */
   _onTabNavigated: function WCCP__onTabNavigated(aType, aPacket)
   {
-    if (!this.owner || aPacket.from != this._tabActor) {
+    if (!this.owner) {
       return;
     }
 
@@ -4747,7 +4733,7 @@ WebConsoleConnectionProxy.prototype = {
       this.owner.onLocationChange(aPacket.url, aPacket.title);
     }
 
-    if (aPacket.state == "stop" && !aPacket.nativeConsoleAPI) {
+    if (aType == "navigate" && !aPacket.nativeConsoleAPI) {
       this.owner.logWarningAboutReplacedAPI();
     }
   },
@@ -4793,7 +4779,6 @@ WebConsoleConnectionProxy.prototype = {
 
     this.client = null;
     this.webConsoleClient = null;
-    this.tabClient = null;
     this.target = null;
     this.connected = false;
     this.owner = null;

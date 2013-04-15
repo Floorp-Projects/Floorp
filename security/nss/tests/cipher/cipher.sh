@@ -37,9 +37,11 @@ cipher_init()
 
   CIPHERDIR=${HOSTDIR}/cipher
   CIPHERTESTDIR=${QADIR}/../cmd/bltest
+  GCMTESTDIR=${QADIR}/../cmd/pk11gcmtest
   D_CIPHER="Cipher.$version"
 
   CIPHER_TXT=${QADIR}/cipher/cipher.txt
+  GCM_TXT=${QADIR}/cipher/gcm.txt
 
   mkdir -p ${CIPHERDIR}
 
@@ -88,6 +90,23 @@ cipher_main()
   done < ${CIPHER_TXT}
 }
 
+############################## cipher_gcm #############################
+# local shell function to test NSS AES GCM
+########################################################################
+cipher_gcm()
+{
+  while read EXP_RET INPUT_FILE TESTNAME
+  do
+      if [ -n "$EXP_RET" -a "$EXP_RET" != "#" ] ; then
+          TESTNAME=`echo $TESTNAME | sed -e "s/_/ /g"`
+          echo "$SCRIPTNAME: $TESTNAME --------------------------------"
+          echo "pk11gcmtest aes kat gcm $GCMTESTDIR/tests/$INPUT_FILE"
+          ${PROFTOOL} ${BINDIR}/pk11gcmtest aes kat gcm $GCMTESTDIR/tests/$INPUT_FILE
+          html_msg $? $EXP_RET "$TESTNAME"
+      fi
+  done < ${GCM_TXT}
+}
+
 ############################## cipher_cleanup ############################
 # local shell function to finish this script (no exit since it might be
 # sourced)
@@ -103,4 +122,5 @@ cipher_cleanup()
 
 cipher_init
 cipher_main
+cipher_gcm
 cipher_cleanup

@@ -400,3 +400,6 @@ ER3(SSL_ERROR_RX_UNEXPECTED_HELLO_VERIFY_REQUEST, (SSL_ERROR_BASE + 123),
 
 ER3(SSL_ERROR_FEATURE_NOT_SUPPORTED_FOR_VERSION, (SSL_ERROR_BASE + 124),
 "SSL feature not supported for the protocol version.")
+
+ER3(SSL_ERROR_RX_UNEXPECTED_CERT_STATUS,       (SSL_ERROR_BASE + 125),
+"SSL received an unexpected Certificate Status handshake message.")

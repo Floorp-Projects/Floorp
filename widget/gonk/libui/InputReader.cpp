@@ -5608,10 +5608,6 @@ void MultiTouchInputMapper::syncTouch(nsecs_t when, bool* outHavePointerIds) {
         outPointer.tiltX = 0;
         outPointer.tiltY = 0;
 
-        // Mozilla bug 739417
-        if (!outPointer.touchMajor)
-            continue;
-
         outPointer.toolType = inSlot->getToolType();
         if (outPointer.toolType == AMOTION_EVENT_TOOL_TYPE_UNKNOWN) {
             outPointer.toolType = mTouchButtonAccumulator.getToolType();

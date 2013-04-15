@@ -183,7 +183,7 @@ InstallXBLField(JSContext* cx,
 
     // If a separate XBL scope is being used, the callee is not same-compartment
     // with the xbl prototype, and the object is a cross-compartment wrapper.
-    xblProto = js::UnwrapObject(xblProto);
+    xblProto = js::UncheckedUnwrap(xblProto);
     JSAutoCompartment ac2(cx, xblProto);
     JS::Value slotVal = ::JS_GetReservedSlot(xblProto, 0);
     protoBinding = static_cast<nsXBLPrototypeBinding*>(slotVal.toPrivate());
@@ -230,7 +230,7 @@ FieldGetterImpl(JSContext *cx, JS::CallArgs args)
   // wrapper. In this case, we know we want to do an unsafe unwrap, and
   // InstallXBLField knows how to handle cross-compartment pointers.
   bool installed = false;
-  JS::Rooted<JSObject*> callee(cx, js::UnwrapObject(&args.calleev().toObject()));
+  JS::Rooted<JSObject*> callee(cx, js::UncheckedUnwrap(&args.calleev().toObject()));
   JS::Rooted<jsid> id(cx);
   if (!InstallXBLField(cx, callee, thisObj, &id, &installed)) {
     return false;
@@ -299,7 +299,7 @@ FieldSetterImpl(JSContext *cx, JS::CallArgs args)
   // wrapper. In this case, we know we want to do an unsafe unwrap, and
   // InstallXBLField knows how to handle cross-compartment pointers.
   bool installed = false;
-  JS::Rooted<JSObject*> callee(cx, js::UnwrapObject(&args.calleev().toObject()));
+  JS::Rooted<JSObject*> callee(cx, js::UncheckedUnwrap(&args.calleev().toObject()));
   JS::Rooted<jsid> id(cx);
   if (!InstallXBLField(cx, callee, thisObj, &id, &installed)) {
     return false;

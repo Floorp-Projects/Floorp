@@ -13,7 +13,7 @@
  * you.  If that has a problem, then just move out what you need, changing
  * its name as appropriate!
  *
- * $Id: p7local.h,v 1.4 2012/04/25 14:50:06 gerv%gerv.net Exp $
+ * $Id$
  */
 
 #ifndef _P7LOCAL_H_

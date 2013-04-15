@@ -947,11 +947,12 @@ public:
 
   /*
    * Convert nsStyleCoord to nscoord when percentages depend on the
-   * containing block width.
+   * containing block size.
+   * @param aPercentBasis The width or height of the containing block
+   * (whichever the client wants to use for resolving percentages).
    */
-  static nscoord ComputeWidthDependentValue(
-                   nscoord              aContainingBlockWidth,
-                   const nsStyleCoord&  aCoord);
+  static nscoord ComputeCBDependentValue(nscoord aPercentBasis,
+                                         const nsStyleCoord& aCoord);
 
   /*
    * Convert nsStyleCoord to nscoord when percentages depend on the

@@ -42,6 +42,36 @@ class SharedContext;
 
 typedef Vector<Definition *, 16> DeclVector;
 
+struct GenericParseContext
+{
+    // Enclosing function or global context.
+    GenericParseContext *parent;
+
+    // Context shared between parsing and bytecode generation.
+    SharedContext *sc;
+
+    // The following flags are set when a particular code feature is detected
+    // in a function.
+
+    // Function has 'return <expr>;'
+    bool funHasReturnExpr:1;
+
+    // Function has 'return;'
+    bool funHasReturnVoid:1;
+
+    // The following flags are set when parsing enters a particular region of
+    // source code, and cleared when that region is exited.
+
+    // true while parsing init expr of for; exclude 'in'
+    bool parsingForInit:1;
+
+    // true while we are within a with-statement in the current ParseContext
+    // chain (which stops at the top-level or an eval()
+    bool parsingWith:1;
+
+    inline GenericParseContext(GenericParseContext *parent, SharedContext *sc);
+};
+
 /*
  * The struct ParseContext stores information about the current parsing context,
  * which is part of the parser state (see the field Parser::pc). The current
@@ -51,12 +81,10 @@ typedef Vector<Definition *, 16> DeclVector;
  * context in which it encountered the definition.
  */
 template <typename ParseHandler>
-struct ParseContext                 /* tree context for semantic checks */
+struct ParseContext : public GenericParseContext
 {
     typedef StmtInfoPC StmtInfo;
     typedef typename ParseHandler::Node Node;
-
-    SharedContext   *sc;            /* context shared between parsing and bytecode generation */
 
     uint32_t        bodyid;         /* block number of program/function body */
     uint32_t        blockidGen;     /* preincremented block number generator */
@@ -164,28 +192,16 @@ struct ParseContext                 /* tree context for semantic checks */
                                        and holds either |this| or one of
                                        |this|'s descendents */
 
+    // Value for parserPC to restore at the end. Use 'parent' instead for
+    // information about the parse chain, this may be NULL if parent != NULL.
+    ParseContext<ParseHandler> *oldpc;
+
   public:
     OwnedAtomDefnMapPtr lexdeps;    /* unresolved lexical name dependencies */
-
-    ParseContext     *parent;       /* Enclosing function or global context.  */
 
     FuncStmtSet     *funcStmts;     /* Set of (non-top-level) function statements
                                        that will alias any top-level bindings with
                                        the same name. */
-
-    // The following flags are set when a particular code feature is detected
-    // in a function.
-    bool            funHasReturnExpr:1; /* function has 'return <expr>;' */
-    bool            funHasReturnVoid:1; /* function has 'return;' */
-
-    // The following flags are set when parsing enters a particular region of
-    // source code, and cleared when that region is exited.
-    bool            parsingForInit:1;   /* true while parsing init expr of for;
-                                           exclude 'in' */
-    bool            parsingWith:1;  /* true while we are within a
-                                       with-statement in the current
-                                       ParseContext chain (which stops at the
-                                       top-level or an eval() */
 
     // Set when parsing a declaration-like destructuring pattern.  This flag
     // causes PrimaryExpr to create PN_NAME parse nodes for variable references
@@ -202,7 +218,8 @@ struct ParseContext                 /* tree context for semantic checks */
     // strict before.
     bool            funBecameStrict:1;
 
-    inline ParseContext(Parser<ParseHandler> *prs, SharedContext *sc, unsigned staticLevel, uint32_t bodyid);
+    inline ParseContext(Parser<ParseHandler> *prs, GenericParseContext *parent,
+                        SharedContext *sc, unsigned staticLevel, uint32_t bodyid);
     inline ~ParseContext();
 
     inline bool init();
@@ -338,7 +355,7 @@ struct Parser : private AutoGCRooter, public StrictModeGetter
      * Create a new function object given parse context (pc) and a name (which
      * is optional if this is a function expression).
      */
-    JSFunction *newFunction(ParseContext<ParseHandler> *pc, HandleAtom atom, FunctionSyntaxKind kind);
+    JSFunction *newFunction(GenericParseContext *pc, HandleAtom atom, FunctionSyntaxKind kind);
 
     void trace(JSTracer *trc);
 
@@ -438,7 +455,8 @@ struct Parser : private AutoGCRooter, public StrictModeGetter
 
     Node condition();
     Node comprehensionTail(Node kid, unsigned blockid, bool isGenexp,
-                               ParseNodeKind kind = PNK_SEMI, JSOp op = JSOP_NOP);
+                           ParseContext<ParseHandler> *outerpc,
+                           ParseNodeKind kind = PNK_SEMI, JSOp op = JSOP_NOP);
     bool arrayInitializerComprehensionTail(Node pn);
     Node generatorExpr(Node kid);
     bool argumentList(Node listNode);
@@ -510,6 +528,7 @@ struct Parser : private AutoGCRooter, public StrictModeGetter
     bool checkFinalReturn(Node pn);
 
     bool leaveFunction(Node fn, HandlePropertyName funName,
+                       ParseContext<ParseHandler> *outerpc,
                        FunctionSyntaxKind kind = Expression);
 
     friend class CompExprTransplanter;

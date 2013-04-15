@@ -6,10 +6,6 @@
 
 #include "nsIDOMHTMLMediaElement.idl"
 
-%{C++
-#include "jsapi.h"
-%}
-
 /**
  * The nsIDOMHTMLAudioElement interface is the interface to a HTML
  * <audio> element.
@@ -20,17 +16,7 @@
  * @status UNDER_DEVELOPMENT
  */
 
-[scriptable, uuid(8e3fb6a1-490d-4772-90fd-3e3763958b74)]
+[scriptable, uuid(2d6580a3-bb24-4f13-8c49-09e332a50049)]
 interface nsIDOMHTMLAudioElement : nsIDOMHTMLMediaElement
 {
-  // Setup the audio stream for writing
-  void mozSetup(in uint32_t channels, in uint32_t rate);
-
-  // Write audio to the audio stream
-  [implicit_jscontext]
-  unsigned long mozWriteAudio(in jsval data);
-
-  // Get the current offset (measured in samples since the start) of the audio
-  // stream created using mozWriteAudio().
-  unsigned long long mozCurrentSampleOffset();
 };

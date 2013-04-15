@@ -74,6 +74,8 @@ static const char kPrintBGColors[]      = "print_bgcolor";
 static const char kPrintBGImages[]      = "print_bgimages";
 static const char kPrintShrinkToFit[]   = "print_shrink_to_fit";
 static const char kPrintScaling[]       = "print_scaling";
+static const char kPrintResolution[]    = "print_resolution";
+static const char kPrintDuplex[]        = "print_duplex";
 
 static const char kJustLeft[]   = "left";
 static const char kJustCenter[] = "center";
@@ -493,6 +495,20 @@ nsPrintOptions::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
     }
   }
 
+  if (aFlags & nsIPrintSettings::kInitSaveResolution) {
+    if (GETINTPREF(kPrintResolution, &iVal)) {
+      aPS->SetResolution(iVal);
+      DUMP_INT(kReadStr, kPrintResolution, iVal);
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSaveDuplex) {
+    if (GETINTPREF(kPrintDuplex, &iVal)) {
+      aPS->SetDuplex(iVal);
+      DUMP_INT(kReadStr, kPrintDuplex, iVal);
+    }
+  }
+
   // Not Reading In:
   //   Number of Copies
 
@@ -786,6 +802,20 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
     if (NS_SUCCEEDED(aPS->GetScaling(&dbl))) {
       DUMP_DBL(kWriteStr, kPrintScaling, dbl);
       WritePrefDouble(GetPrefName(kPrintScaling, aPrinterName), dbl);
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSaveResolution) {
+    if (NS_SUCCEEDED(aPS->GetResolution(&iVal))) {
+      DUMP_INT(kWriteStr, kPrintResolution, iVal);
+      Preferences::SetInt(GetPrefName(kPrintResolution, aPrinterName), iVal);
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSaveDuplex) {
+    if (NS_SUCCEEDED(aPS->GetDuplex(&iVal))) {
+      DUMP_INT(kWriteStr, kPrintDuplex, iVal);
+      Preferences::SetInt(GetPrefName(kPrintDuplex, aPrinterName), iVal);
     }
   }
 

@@ -6,7 +6,7 @@ MODULE = nss
 
 LIBRARY_NAME = jar
 
-CORE_DEPTH = ../../..
+CORE_DEPTH = ../..
 
 CSRCS =	\
 	jarver.c \

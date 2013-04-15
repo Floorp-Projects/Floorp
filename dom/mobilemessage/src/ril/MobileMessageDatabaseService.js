@@ -21,7 +21,7 @@ const RIL_GETTHREADSCURSOR_CID =
 
 const DEBUG = false;
 const DB_NAME = "sms";
-const DB_VERSION = 8;
+const DB_VERSION = 9;
 const MESSAGE_STORE_NAME = "sms";
 const THREAD_STORE_NAME = "thread";
 const PARTICIPANT_STORE_NAME = "participant";
@@ -30,6 +30,7 @@ const MOST_RECENT_STORE_NAME = "most-recent";
 const DELIVERY_SENDING = "sending";
 const DELIVERY_SENT = "sent";
 const DELIVERY_RECEIVED = "received";
+const DELIVERY_NOT_DOWNLOADED = "not-downloaded";
 
 const DELIVERY_STATUS_NOT_APPLICABLE = "not-applicable";
 const DELIVERY_STATUS_SUCCESS = "success";
@@ -199,6 +200,10 @@ MobileMessageDatabaseService.prototype = {
           case 7:
             if (DEBUG) debug("Upgrade to version 8. Add participant/thread stores.");
             self.upgradeSchema7(db, event.target.transaction);
+            break;
+          case 8:
+            if (DEBUG) debug("Upgrade to version 9. Add transactionId index for incoming MMS.");
+            self.upgradeSchema8(event.target.transaction);
             break;
           default:
             event.target.transaction.abort();
@@ -559,6 +564,39 @@ MobileMessageDatabaseService.prototype = {
     };
   },
 
+  /**
+   * Add transactionId index for MMS.
+   */
+  upgradeSchema8: function upgradeSchema8(transaction) {
+    let messageStore = transaction.objectStore(MESSAGE_STORE_NAME);
+
+    // Delete "transactionId" index.
+    if (messageStore.indexNames.contains("transactionId")) {
+      messageStore.deleteIndex("transactionId");
+    }
+
+    // Create new "transactionId" indexes.
+    messageStore.createIndex("transactionId", "transactionIdIndex", { unique: true });
+
+    // Populate new "transactionIdIndex" attributes.
+    messageStore.openCursor().onsuccess = function(event) {
+      let cursor = event.target.result;
+      if (!cursor) {
+        return;
+      }
+
+      let messageRecord = cursor.value;
+      if ("mms" == messageRecord.type &&
+          (DELIVERY_NOT_DOWNLOADED == messageRecord.delivery ||
+           DELIVERY_RECEIVED == messageRecord.delivery)) {
+        messageRecord.transactionIdIndex =
+          messageRecord.headers["x-mms-transaction-id"];
+        cursor.update(messageRecord);
+      }
+      cursor.continue();
+    };
+  },
+
   createDomMessageFromRecord: function createDomMessageFromRecord(aMessageRecord) {
     if (DEBUG) {
       debug("createDomMessageFromRecord: " + JSON.stringify(aMessageRecord));
@@ -908,6 +946,7 @@ MobileMessageDatabaseService.prototype = {
     if ((aMessage.type != "sms" && aMessage.type != "mms") ||
         (aMessage.type == "sms" && aMessage.messageClass == undefined) ||
         (aMessage.type == "mms" && (aMessage.delivery == undefined ||
+                                    aMessage.transactionId == undefined ||
                                     !Array.isArray(aMessage.deliveryStatus) ||
                                     !Array.isArray(aMessage.receivers))) ||
         aMessage.sender == undefined ||
@@ -949,6 +988,10 @@ MobileMessageDatabaseService.prototype = {
     // threadIdIndex & participantIdsIndex are filled in saveRecord().
     aMessage.readIndex = [FILTER_READ_UNREAD, timestamp];
     aMessage.read = FILTER_READ_UNREAD;
+
+    if (aMessage.type == "mms") {
+      aMessage.transactionIdIndex = aMessage.transactionId;
+    }
 
     if (aMessage.type == "sms") {
       aMessage.delivery = DELIVERY_RECEIVED;
@@ -1120,6 +1163,37 @@ MobileMessageDatabaseService.prototype = {
     });
   },
 
+  getMessageRecordByTransactionId: function getMessageRecordByTransactionId(aTransactionId, aCallback) {
+    if (DEBUG) debug("Retrieving message with transaction ID " + aTransactionId);
+    this.newTxn(READ_ONLY, function (error, txn, messageStore) {
+      if (error) {
+        if (DEBUG) debug(error);
+        aCallback.notify(Ci.nsIMobileMessageCallback.INTERNAL_ERROR, null);
+        return;
+      }
+      let request = messageStore.index("transactionId").get(aTransactionId);
+
+      txn.oncomplete = function oncomplete(event) {
+        if (DEBUG) debug("Transaction " + txn + " completed.");
+        let messageRecord = request.result;
+        if (!messageRecord) {
+          if (DEBUG) debug("Transaction ID " + aTransactionId + " not found");
+          aCallback.notify(Ci.nsIMobileMessageCallback.NOT_FOUND_ERROR, null);
+          return;
+        }
+        aCallback.notify(Ci.nsIMobileMessageCallback.SUCCESS_NO_ERROR, messageRecord);
+      };
+
+      txn.onerror = function onerror(event) {
+        if (DEBUG) {
+          if (event.target)
+            debug("Caught error on transaction", event.target.errorCode);
+        }
+        aCallback.notify(Ci.nsIMobileMessageCallback.INTERNAL_ERROR, null);
+      };
+    });
+  },
+
   getMessageRecordById: function getMessageRecordById(aMessageId, aCallback) {
     if (DEBUG) debug("Retrieving message with ID " + aMessageId);
     this.newTxn(READ_ONLY, function (error, txn, messageStore) {
@@ -1280,6 +1354,7 @@ MobileMessageDatabaseService.prototype = {
             " delivery: " + filter.delivery +
             " numbers: " + filter.numbers +
             " read: " + filter.read +
+            " threadId: " + filter.threadId +
             " reverse: " + reverse);
     }
 
@@ -1491,7 +1566,8 @@ let FilterSearcherHelper = {
     // number/delivery status/read status with an optional date range.
     if (filter.delivery == null &&
         filter.numbers == null &&
-        filter.read == null) {
+        filter.read == null &&
+        filter.threadId == null) {
       // Filtering by date range only.
       if (DEBUG) {
         debug("filter.timestamp " + filter.startDate + ", " + filter.endDate);
@@ -1518,6 +1594,7 @@ let FilterSearcherHelper = {
       if (filter.delivery) num++;
       if (filter.numbers) num++;
       if (filter.read != undefined) num++;
+      if (filter.threadId != undefined) num++;
       single = (num == 1);
     }
 
@@ -1542,6 +1619,16 @@ let FilterSearcherHelper = {
       let read = filter.read ? FILTER_READ_READ : FILTER_READ_UNREAD;
       let range = IDBKeyRange.bound([read, startDate], [read, endDate]);
       this.filterIndex("read", range, direction, txn,
+                       single ? collect : intersectionCollector.newContext());
+    }
+
+    // Retrieve the keys from the 'threadId' index that matches the value of
+    // filter.threadId.
+    if (filter.threadId != undefined) {
+      if (DEBUG) debug("filter.threadId " + filter.threadId);
+      let threadId = filter.threadId;
+      let range = IDBKeyRange.bound([threadId, startDate], [threadId, endDate]);
+      this.filterIndex("threadId", range, direction, txn,
                        single ? collect : intersectionCollector.newContext());
     }
 
@@ -1863,7 +1950,7 @@ UnionResultsCollector.prototype = {
     });
 
     for (let i = 0; i < tres.length; i++) {
-      this.cascadedCollect(txn, tres[i].id, tres[i.timestamp]);
+      this.cascadedCollect(txn, tres[i].id, tres[i].timestamp);
     }
     this.cascadedCollect(txn, COLLECT_ID_END, COLLECT_TIMESTAMP_UNUSED);
 

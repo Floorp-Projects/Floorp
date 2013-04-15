@@ -20,8 +20,4 @@ EXTRA_PP_COMPONENTS = \
 
 EXTRA_JS_MODULES = distribution.js
 
-ifdef MOZILLA_OFFICIAL
-DEFINES += -DOFFICIAL_BUILD=1
-endif
-
 include $(topsrcdir)/config/rules.mk

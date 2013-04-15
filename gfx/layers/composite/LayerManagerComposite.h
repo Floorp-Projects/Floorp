@@ -290,7 +290,7 @@ public:
 
   virtual TiledLayerComposer* AsTiledLayerComposer() { return NULL; }
 
-  virtual void EnsureBuffer(CompositableType aHostType)
+  virtual void EnsureBuffer(CompositableType aType)
   {
     MOZ_ASSERT(false, "Should not be called unless overriden.");
   }

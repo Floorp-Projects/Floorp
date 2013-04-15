@@ -45,8 +45,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptContextPrincipal,
                               NS_ISCRIPTCONTEXTPRINCIPAL_IID)
 
 #define NS_ISCRIPTCONTEXT_IID \
-{ 0x739d69c1, 0x5248, 0x4386, \
-  { 0x82, 0xa6, 0x60, 0x28, 0xf7, 0x7f, 0xb8, 0x9c } }
+{ 0x5eb84406, 0x118f, 0x4eb5, \
+ { 0xab, 0xd5, 0xdd, 0xc9, 0x14, 0xfe, 0xfe, 0xe4 } }
 
 /* This MUST match JSVERSION_DEFAULT.  This version stuff if we don't
    know what language we have is a little silly... */
@@ -122,22 +122,6 @@ public:
    */
   virtual nsresult ExecuteScript(JSScript* aScriptObject,
                                  JSObject* aScopeObject) = 0;
-
-  /**
-   * Call the function object with given args and return its boolean result,
-   * or true if the result isn't boolean.
-   *
-   * @param aTarget the event target
-   * @param aScript an object telling the scope in which to call the compiled
-   *        event handler function.
-   * @param aHandler function object (function and static scope) to invoke.
-   * @param argv array of arguments.  Note each element is assumed to
-   *        be an nsIVariant.
-   * @param rval out parameter returning result
-   **/
-  virtual nsresult CallEventHandler(nsISupports* aTarget,
-                                    JSObject* aScope, JSObject* aHandler,
-                                    nsIArray *argv, nsIVariant **rval) = 0;
 
   /**
    * Bind an already-compiled event handler function to the given

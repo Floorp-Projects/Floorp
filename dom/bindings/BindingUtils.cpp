@@ -121,7 +121,7 @@ ErrorResult::ClearMessage()
 }
 
 void
-ErrorResult::ThrowJSException(JSContext* cx, JS::Value exn)
+ErrorResult::ThrowJSException(JSContext* cx, JS::Handle<JS::Value> exn)
 {
   MOZ_ASSERT(mMightHaveUnreportedJSException,
              "Why didn't you tell us you planned to throw a JS exception?");
@@ -671,7 +671,7 @@ QueryInterface(JSContext* cx, unsigned argc, JS::Value* vp)
   // Get the object. It might be a security wrapper, in which case we do a checked
   // unwrap.
   JSObject* origObj = JSVAL_TO_OBJECT(thisv);
-  JSObject* obj = js::UnwrapObjectChecked(origObj);
+  JSObject* obj = js::CheckedUnwrap(origObj);
   if (!obj) {
       JS_ReportError(cx, "Permission denied to access object");
       return false;
@@ -1249,7 +1249,7 @@ HasPropertyOnPrototype(JSContext* cx, JSObject* proxy, DOMProxyHandler* handler,
 {
   Maybe<JSAutoCompartment> ac;
   if (xpc::WrapperFactory::IsXrayWrapper(proxy)) {
-    proxy = js::UnwrapObject(proxy);
+    proxy = js::UncheckedUnwrap(proxy);
     ac.construct(cx, proxy);
   }
   MOZ_ASSERT(js::IsProxy(proxy) && js::GetProxyHandler(proxy) == handler);
@@ -1307,21 +1307,22 @@ SetXrayExpandoChain(JSObject* obj, JSObject* chain)
 
 JSContext*
 MainThreadDictionaryBase::ParseJSON(const nsAString& aJSON,
-                                    mozilla::Maybe<JSAutoRequest>& aAr,
-                                    mozilla::Maybe<JSAutoCompartment>& aAc,
-                                    JS::Value& aVal)
+                                    Maybe<JSAutoRequest>& aAr,
+                                    Maybe<JSAutoCompartment>& aAc,
+                                    Maybe< JS::Rooted<JS::Value> >& aVal)
 {
   JSContext* cx = nsContentUtils::ThreadJSContextStack()->GetSafeJSContext();
   NS_ENSURE_TRUE(cx, nullptr);
   JSObject* global = JS_GetGlobalObject(cx);
   aAr.construct(cx);
   aAc.construct(cx, global);
+  aVal.construct(cx, JS::UndefinedValue());
   if (aJSON.IsEmpty()) {
     return cx;
   }
   if (!JS_ParseJSON(cx,
                     static_cast<const jschar*>(PromiseFlatString(aJSON).get()),
-                    aJSON.Length(), &aVal)) {
+                    aJSON.Length(), aVal.ref().address())) {
     return nullptr;
   }
   return cx;
@@ -1413,7 +1414,7 @@ NativeToString(JSContext* cx, JSObject* wrapper, JSObject* object, const char* p
 }
 
 // Dynamically ensure that two objects don't end up with the same reserved slot.
-class AutoCloneDOMObjectSlotGuard NS_STACK_CLASS
+class MOZ_STACK_CLASS AutoCloneDOMObjectSlotGuard
 {
 public:
   AutoCloneDOMObjectSlotGuard(JSObject* aOld, JSObject* aNew)
@@ -1591,7 +1592,7 @@ GetGlobalObject(JSContext* aCx, JSObject* aObject,
                 Maybe<JSAutoCompartment>& aAutoCompartment)
 {
   if (js::IsWrapper(aObject)) {
-    aObject = js::UnwrapObjectChecked(aObject, /* stopAtOuter = */ false);
+    aObject = js::CheckedUnwrap(aObject, /* stopAtOuter = */ false);
     if (!aObject) {
       Throw<mainThread>(aCx, NS_ERROR_XPC_SECURITY_MANAGER_VETO);
       return nullptr;
@@ -1640,7 +1641,7 @@ InterfaceHasInstance(JSContext* cx, JSHandleObject obj, JSObject* instance,
   const DOMIfaceAndProtoJSClass* clasp =
     DOMIfaceAndProtoJSClass::FromJSClass(js::GetObjectClass(obj));
 
-  const DOMClass* domClass = GetDOMClass(js::UnwrapObject(instance));
+  const DOMClass* domClass = GetDOMClass(js::UncheckedUnwrap(instance));
 
   MOZ_ASSERT(!domClass || clasp->mPrototypeID != prototypes::id::_ID_Count,
              "Why do we have a hasInstance hook if we don't have a prototype "

@@ -35,6 +35,7 @@ class js::ForkJoinShared : public TaskExecutor, public Monitor
     ForkJoinOp &op_;               // User-defined operations to be perf. in par.
     const uint32_t numSlices_;     // Total number of threads.
     PRCondVar *rendezvousEnd_;     // Cond. var used to signal end of rendezvous.
+    PRLock *cxLock_;               // Locks cx_ for parallel VM calls.
 
     /////////////////////////////////////////////////////////////////////////
     // Per-thread arenas
@@ -128,6 +129,9 @@ class js::ForkJoinShared : public TaskExecutor, public Monitor
     void setAbortFlag(bool fatal);
 
     JSRuntime *runtime() { return cx_->runtime; }
+
+    JSContext *acquireContext() { PR_Lock(cxLock_); return cx_; }
+    void releaseContext() { PR_Unlock(cxLock_); }
 };
 
 class js::AutoRendezvous
@@ -173,6 +177,7 @@ ForkJoinShared::ForkJoinShared(JSContext *cx,
     op_(op),
     numSlices_(numSlices),
     rendezvousEnd_(NULL),
+    cxLock_(NULL),
     allocators_(cx),
     uncompleted_(uncompleted),
     blocked_(0),
@@ -205,6 +210,10 @@ ForkJoinShared::init()
     if (!rendezvousEnd_)
         return false;
 
+    cxLock_ = PR_NewLock();
+    if (!cxLock_)
+        return false;
+
     for (unsigned i = 0; i < numSlices_; i++) {
         Allocator *allocator = cx_->runtime->new_<Allocator>(cx_->zone());
         if (!allocator)
@@ -223,6 +232,8 @@ ForkJoinShared::~ForkJoinShared()
 {
     if (rendezvousEnd_)
         PR_DestroyCondVar(rendezvousEnd_);
+
+    PR_DestroyLock(cxLock_);
 
     while (allocators_.length() > 0)
         js_delete(allocators_.popCopy());
@@ -504,6 +515,18 @@ ForkJoinSlice::runtime()
     return shared->runtime();
 }
 
+JSContext *
+ForkJoinSlice::acquireContext()
+{
+    return shared->acquireContext();
+}
+
+void
+ForkJoinSlice::releaseContext()
+{
+    return shared->releaseContext();
+}
+
 bool
 ForkJoinSlice::check()
 {
@@ -666,4 +689,3 @@ js::ExecuteForkJoinOp(JSContext *cx, ForkJoinOp &op)
 }
 
 #endif // defined(JS_THREADSAFE) && defined(JS_ION)
-

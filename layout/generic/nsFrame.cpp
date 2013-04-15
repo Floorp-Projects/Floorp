@@ -1673,7 +1673,9 @@ WrapPreserve3DListInternal(nsIFrame* aFrame, nsDisplayListBuilder *aBuilder, nsD
     // and then flush this list into aOutput by wrapping the whole lot with a single
     // nsDisplayTransform.
 
-    if (childFrame && (childFrame->GetParent()->Preserves3DChildren() || childFrame == aFrame)) {
+    if (childFrame &&
+        childFrame->GetParent() &&
+        (childFrame->GetParent()->Preserves3DChildren() || childFrame == aFrame)) {
       switch (item->GetType()) {
         case nsDisplayItem::TYPE_TRANSFORM: {
           if (!aTemp->IsEmpty()) {
@@ -3095,7 +3097,7 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsPresContext* aPresContext,
                            parentContent, aEvent, aEventStatus);
 }
 
-struct NS_STACK_CLASS FrameContentRange {
+struct MOZ_STACK_CLASS FrameContentRange {
   FrameContentRange(nsIContent* aContent, int32_t aStart, int32_t aEnd) :
     content(aContent), start(aStart), end(aEnd) { }
   nsCOMPtr<nsIContent> content;
@@ -4114,8 +4116,9 @@ nsFrame::ReflowAbsoluteFrames(nsPresContext*           aPresContext,
     nsContainerFrame* container = do_QueryFrame(this);
     NS_ASSERTION(container, "Abs-pos children only supported on container frames for now");
 
+    nsRect containingBlock(0, 0, containingBlockWidth, containingBlockHeight);
     absoluteContainer->Reflow(container, aPresContext, aReflowState, aStatus,
-                              containingBlockWidth, containingBlockHeight,
+                              containingBlock,
                               aConstrainHeight, true, true, // XXX could be optimized
                               &aDesiredSize.mOverflowAreas);
   }
@@ -4583,7 +4586,14 @@ nsIFrame::AreLayersMarkedActive(nsChangeHint aChangeHint)
 {
   LayerActivity* layerActivity =
     static_cast<LayerActivity*>(Properties().Get(LayerActivityProperty()));
-  return layerActivity && (layerActivity->mChangeHint & aChangeHint);
+  if (layerActivity && (layerActivity->mChangeHint & aChangeHint)) {
+    return true;
+  }
+  if (aChangeHint & nsChangeHint_UpdateTransformLayer &&
+      Preserves3D()) {
+    return GetParent()->AreLayersMarkedActive(nsChangeHint_UpdateTransformLayer);
+  }
+  return false;
 }
 
 /* static */ void
@@ -8303,14 +8313,17 @@ DR_init_constraints_cookie::~DR_init_constraints_cookie()
 DR_init_offsets_cookie::DR_init_offsets_cookie(
                      nsIFrame*                aFrame,
                      nsCSSOffsetState*        aState,
-                     nscoord                  aCBWidth,
+                     nscoord                  aHorizontalPercentBasis,
+                     nscoord                  aVerticalPercentBasis,
                      const nsMargin*          aMargin,
                      const nsMargin*          aPadding)
   : mFrame(aFrame)
   , mState(aState)
 {
   MOZ_COUNT_CTOR(DR_init_offsets_cookie);
-  mValue = nsCSSOffsetState::DisplayInitOffsetsEnter(mFrame, mState, aCBWidth,
+  mValue = nsCSSOffsetState::DisplayInitOffsetsEnter(mFrame, mState,
+                                                     aHorizontalPercentBasis,
+                                                     aVerticalPercentBasis,
                                                      aMargin, aPadding);
 }
 
@@ -9251,7 +9264,8 @@ nsHTMLReflowState::DisplayInitConstraintsExit(nsIFrame* aFrame,
 /* static */ void*
 nsCSSOffsetState::DisplayInitOffsetsEnter(nsIFrame* aFrame,
                                           nsCSSOffsetState* aState,
-                                          nscoord aContainingBlockWidth,
+                                          nscoord aHorizontalPercentBasis,
+                                          nscoord aVerticalPercentBasis,
                                           const nsMargin* aBorder,
                                           const nsMargin* aPadding)
 {
@@ -9266,9 +9280,12 @@ nsCSSOffsetState::DisplayInitOffsetsEnter(nsIFrame* aFrame,
   if (treeNode && treeNode->mDisplay) {
     DR_state->DisplayFrameTypeInfo(aFrame, treeNode->mIndent);
 
-    char width[16];
-    DR_state->PrettyUC(aContainingBlockWidth, width);
-    printf("InitOffsets cbw=%s", width);
+    char horizPctBasisStr[16];
+    char vertPctBasisStr[16];
+    DR_state->PrettyUC(aHorizontalPercentBasis, horizPctBasisStr);
+    DR_state->PrettyUC(aVerticalPercentBasis,   vertPctBasisStr);
+    printf("InitOffsets pct_basis=%s,%s", horizPctBasisStr, vertPctBasisStr);
+
     DR_state->PrintMargin("b", aBorder);
     DR_state->PrintMargin("p", aPadding);
     putchar('\n');

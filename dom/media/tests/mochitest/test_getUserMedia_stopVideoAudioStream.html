@@ -30,8 +30,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=822109
       var streamPlayback = new LocalMediaStreamPlayback(testVideo, stream);
 
       streamPlayback.playMediaWithStreamStop(false, SimpleTest.finish,
-        unexpectedCallbackAndFinish);
-    }, unexpectedCallbackAndFinish);
+        unexpectedCallbackAndFinish(new Error));
+    }, unexpectedCallbackAndFinish(new Error));
   }, true);
 
 </script>

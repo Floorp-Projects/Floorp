@@ -33,8 +33,10 @@
 #include "nss.h"
 #include "cert.h"
 #include "sslproto.h"
+#include "ocsp.h"
+#include "ocspti.h"     /* internals for pretty-printing routines *only* */
 
-#define VERSIONSTRING "$Revision: 1.23 $ ($Date: 2013/01/23 20:53:58 $) $Author: wtc%google.com $"
+#define VERSIONSTRING "$Revision$ ($Date$) $Author$"
 
 
 struct _DataBufferList;
@@ -733,6 +735,236 @@ unsigned int print_hello_extension(unsigned char *  hsdata,
   return pos;
 }
 
+/*
+ * Note this must match (exactly) the enumeration ocspResponseStatus.
+ */
+static char *responseStatusNames[] = {
+    "successful (Response has valid confirmations)",
+    "malformedRequest (Illegal confirmation request)",
+    "internalError (Internal error in issuer)",
+    "tryLater (Try again later)",
+    "unused ((4) is not used)",
+    "sigRequired (Must sign the request)",
+    "unauthorized (Request unauthorized)",
+};
+
+static void
+print_ocsp_cert_id (FILE *out_file, CERTOCSPCertID *cert_id, int level)
+{
+    SECU_Indent (out_file, level);
+    fprintf (out_file, "Cert ID:\n");
+    level++;
+/*
+    SECU_PrintAlgorithmID (out_file, &(cert_id->hashAlgorithm),
+                           "Hash Algorithm", level);
+    SECU_PrintAsHex (out_file, &(cert_id->issuerNameHash),
+                     "Issuer Name Hash", level);
+    SECU_PrintAsHex (out_file, &(cert_id->issuerKeyHash),
+                     "Issuer Key Hash", level);
+*/
+    SECU_PrintInteger (out_file, &(cert_id->serialNumber),
+                       "Serial Number", level);
+    /* XXX lookup the cert; if found, print something nice (nickname?) */
+}
+
+static void
+print_ocsp_version (FILE *out_file, SECItem *version, int level)
+{
+    if (version->len > 0) {
+        SECU_PrintInteger (out_file, version, "Version", level);
+    } else {
+        SECU_Indent (out_file, level);
+        fprintf (out_file, "Version: DEFAULT\n");
+    }
+}
+
+static void
+print_responder_id (FILE *out_file, ocspResponderID *responderID, int level)
+{
+    SECU_Indent (out_file, level);
+    fprintf (out_file, "Responder ID ");
+
+    switch (responderID->responderIDType) {
+      case ocspResponderID_byName:
+        fprintf (out_file, "(byName):\n");
+        SECU_PrintName (out_file, &(responderID->responderIDValue.name),
+                        "Name", level + 1);
+        break;
+      case ocspResponderID_byKey:
+        fprintf (out_file, "(byKey):\n");
+        SECU_PrintAsHex (out_file, &(responderID->responderIDValue.keyHash),
+                         "Key Hash", level + 1);
+        break;
+      default:
+        fprintf (out_file, "Unrecognized Responder ID Type\n");
+        break;
+    }
+}
+
+static void
+print_ocsp_extensions (FILE *out_file, CERTCertExtension **extensions,
+                       char *msg, int level)
+{
+    if (extensions) {
+        SECU_PrintExtensions (out_file, extensions, msg, level);
+    } else {
+        SECU_Indent (out_file, level);
+        fprintf (out_file, "No %s\n", msg);
+    }
+}
+
+static void
+print_revoked_info (FILE *out_file, ocspRevokedInfo *revoked_info, int level)
+{
+    SECU_PrintGeneralizedTime (out_file, &(revoked_info->revocationTime),
+                               "Revocation Time", level);
+
+    if (revoked_info->revocationReason != NULL) {
+        SECU_PrintAsHex (out_file, revoked_info->revocationReason,
+                         "Revocation Reason", level);
+    } else {
+        SECU_Indent (out_file, level);
+        fprintf (out_file, "No Revocation Reason.\n");
+    }
+}
+
+static void
+print_cert_status (FILE *out_file, ocspCertStatus *status, int level)
+{
+    SECU_Indent (out_file, level);
+    fprintf (out_file, "Status: ");
+
+    switch (status->certStatusType) {
+      case ocspCertStatus_good:
+        fprintf (out_file, "Cert is good.\n");
+        break;
+      case ocspCertStatus_revoked:
+        fprintf (out_file, "Cert has been revoked.\n");
+        print_revoked_info (out_file, status->certStatusInfo.revokedInfo,
+                            level + 1);
+        break;
+      case ocspCertStatus_unknown:
+        fprintf (out_file, "Cert is unknown to responder.\n");
+        break;
+      default:
+        fprintf (out_file, "Unrecognized status.\n");
+        break;
+    }
+}
+
+static void
+print_single_response (FILE *out_file, CERTOCSPSingleResponse *single,
+                       int level)
+{
+    print_ocsp_cert_id (out_file, single->certID, level);
+
+    print_cert_status (out_file, single->certStatus, level);
+
+    SECU_PrintGeneralizedTime (out_file, &(single->thisUpdate),
+                               "This Update", level);
+
+    if (single->nextUpdate != NULL) {
+        SECU_PrintGeneralizedTime (out_file, single->nextUpdate,
+                                   "Next Update", level);
+    } else {
+        SECU_Indent (out_file, level);
+        fprintf (out_file, "No Next Update\n");
+    }
+
+    print_ocsp_extensions (out_file, single->singleExtensions,
+                           "Single Response Extensions", level);
+}
+
+static void
+print_response_data (FILE *out_file, ocspResponseData *responseData, int level)
+{
+    SECU_Indent (out_file, level);
+    fprintf (out_file, "Response Data:\n");
+    level++;
+
+    print_ocsp_version (out_file, &(responseData->version), level);
+
+    print_responder_id (out_file, responseData->responderID, level);
+
+    SECU_PrintGeneralizedTime (out_file, &(responseData->producedAt),
+                               "Produced At", level);
+
+    if (responseData->responses != NULL) {
+        int i;
+
+        for (i = 0; responseData->responses[i] != NULL; i++) {
+            SECU_Indent (out_file, level);
+            fprintf (out_file, "Response %d:\n", i);
+            print_single_response (out_file, responseData->responses[i],
+                                   level + 1);
+        }
+    } else {
+        fprintf (out_file, "Response list is empty.\n");
+    }
+
+    print_ocsp_extensions (out_file, responseData->responseExtensions,
+                           "Response Extensions", level);
+}
+
+static void
+print_basic_response (FILE *out_file, ocspBasicOCSPResponse *basic, int level)
+{
+    SECU_Indent (out_file, level);
+    fprintf (out_file, "Basic OCSP Response:\n");
+    level++;
+
+    print_response_data (out_file, basic->tbsResponseData, level);
+}
+
+static void
+print_status_response(SECItem *data)
+{
+    int level = 2;
+    CERTOCSPResponse *response;
+    response = CERT_DecodeOCSPResponse (data);
+    if (!response) {
+        SECU_Indent (stdout, level);
+        fprintf(stdout,"unable to decode certificate_status\n");
+        return;
+    }
+    
+    SECU_Indent (stdout, level);
+    if (response->statusValue >= ocspResponse_min &&
+	response->statusValue <= ocspResponse_max) {
+	fprintf (stdout, "Response Status: %s\n",
+		 responseStatusNames[response->statusValue]);
+    } else {
+	fprintf (stdout,
+		 "Response Status: other (Status value %d out of defined range)\n",
+		 (int)response->statusValue);
+    }
+
+    if (response->statusValue == ocspResponse_successful) {
+        ocspResponseBytes *responseBytes = response->responseBytes;
+        PORT_Assert (responseBytes != NULL);
+
+        level++;
+        SECU_PrintObjectID (stdout, &(responseBytes->responseType),
+                            "Response Type", level);
+        switch (response->responseBytes->responseTypeTag) {
+          case SEC_OID_PKIX_OCSP_BASIC_RESPONSE:
+            print_basic_response (stdout,
+                                  responseBytes->decodedResponse.basic,
+                                  level);
+            break;
+          default:
+            SECU_Indent (stdout, level);
+            fprintf (stdout, "Unknown response syntax\n");
+            break;
+        }
+    } else {
+        SECU_Indent (stdout, level);
+        fprintf (stdout, "Unsuccessful response, no more information.\n");
+    }
+
+    CERT_DestroyOCSPResponse (response);
+}
+
 /* In the case of renegotiation, handshakes that occur in an already MAC'ed 
  * channel, by the time of this call, the caller has already removed the MAC 
  * from input recordLen. The only MAC'ed record that will get here with its 
@@ -791,6 +1023,7 @@ void print_ssl3_handshake(unsigned char *recordBuf,
     case 15: PR_FPUTS("certificate_verify)\n"          ); break;
     case 16: PR_FPUTS("client_key_exchange)\n"         ); break;
     case 20: PR_FPUTS("finished)\n"                    ); break;
+    case 22: PR_FPUTS("certificate_status_request)\n"  ); break;
     default: PR_FPUTS("unknown)\n"                     ); break;
     }
 
@@ -1088,6 +1321,37 @@ void print_ssl3_handshake(unsigned char *recordBuf,
       }
       break;
 
+    case 22: /*certificate_status_request*/
+      {
+        SECItem data;
+        PRFileDesc *ofd;
+        static int  ocspFileNumber;
+        char        ocspFileName[20];
+
+        /* skip 4 bytes with handshake numbers, as in ssl3_HandleCertificateStatus */
+        data.type = siBuffer;
+        data.data = hsdata + 4;
+        data.len = sslh.length - 4;
+        print_status_response(&data);
+
+        PR_snprintf(ocspFileName, sizeof ocspFileName, "ocsp.%03d",
+                    ++ocspFileNumber);
+        ofd = PR_Open(ocspFileName, PR_WRONLY|PR_CREATE_FILE|PR_TRUNCATE, 
+                      0664);
+        if (!ofd) {
+          PR_fprintf(PR_STDOUT,
+                      "               data = { couldn't save file '%s' }\n",
+                      ocspFileName);
+        } else {
+          PR_Write(ofd, data.data, data.len);
+          PR_fprintf(PR_STDOUT,
+                      "               data = { saved in file '%s' }\n",
+                      ocspFileName);
+          PR_Close(ofd);
+        }
+      }
+      break;
+
     default:
       {
 	PR_fprintf(PR_STDOUT,"         UNKNOWN MESSAGE TYPE %d [%d] {\n",
@@ -1137,7 +1401,6 @@ void print_ssl(DataBufferList *s, int length, unsigned char *buffer)
   /* first, create a new buffer object for this piece of data. */
 
   DataBuffer *db;
-  int i,l;
 
   if (s->size == 0 && length > 0 && buffer[0] >= 32 && buffer[0] < 128) {
     /* Not an SSL record, treat entire buffer as plaintext */
@@ -1145,11 +1408,7 @@ void print_ssl(DataBufferList *s, int length, unsigned char *buffer)
     return;
   }
 
-
   check_integrity(s);
-
-  i = 0;
-  l = length;
 
   db = PR_NEW(struct _DataBuffer);
 

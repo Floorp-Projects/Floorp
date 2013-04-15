@@ -326,6 +326,8 @@ class AutoVectorRooter : protected AutoGCRooter
         return vector.append(other.vector);
     }
 
+    bool insert(T *p, const T &val) { return vector.insert(p, val); }
+
     /* For use when space has already been reserved. */
     void infallibleAppend(const T &v) { vector.infallibleAppend(v); }
 
@@ -4402,7 +4404,7 @@ JS_ParseJSONWithReviver(JSContext *cx, const jschar *chars, uint32_t len, jsval 
 /* API for the HTML5 internal structured cloning algorithm. */
 
 /* The maximum supported structured-clone serialization format version. */
-#define JS_STRUCTURED_CLONE_VERSION 1
+#define JS_STRUCTURED_CLONE_VERSION 2
 
 struct JSStructuredCloneCallbacks {
     ReadStructuredCloneOp read;

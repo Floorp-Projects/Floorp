@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=850442
+-->
+<head>
+  <title>Test for getCurrentPosition </title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="geolocation_common.js"></script>
+
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=850442">Mozilla Bug 850442</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+resume_geolocationProvider();
+force_prompt(true);
+
+function done() {
+  reset_prompt();
+  resume_geolocationProvider();
+  SimpleTest.finish();
+}
+
+function errorCallback(err) {
+  ok(false, "error callback should not have been called");
+  done();
+}
+
+function testCachedPosition() {
+  var cached = null;
+  navigator.geolocation.getCurrentPosition(function(pos) {
+    // get cached position
+    cached = pos;
+
+    navigator.geolocation.getCurrentPosition(function(pos) {
+      // force use of cached position, make sure
+      // it's equal to what we have
+      is(pos, cached, "position should be equal to cached position");
+      resume_geolocationProvider();
+
+      navigator.geolocation.getCurrentPosition(function(pos) {
+        // force new position, can't be the one we have
+        isnot(pos, cached, "new position should be different from the cached");
+        done();
+      }, errorCallback, {maximumAge: 0});
+    }, errorCallback, {maximumAge: 21600000});
+  }, errorCallback, {maximumAge: 21600000});
+}
+
+// ensure we have a position in cache,
+// and stop receiving new positions once we do so the
+// cache doesn't change
+var watchID;
+watchID = navigator.geolocation.watchPosition(
+  function(pos) {
+    info("Stopping geolocation provider");
+    stop_geolocationProvider();
+  }, function(err) {
+    is(err.code, err.TIMEOUT, "got TIMEOUT for watchPosition");
+
+    // no new positions in a while,
+    // the cache should be stable now.
+    navigator.geolocation.clearWatch(watchID);
+    testCachedPosition();
+  }, {maximumAge: 0, timeout: 1000}
+);
+
+</script>
+</pre>
+</body>
+</html>
+

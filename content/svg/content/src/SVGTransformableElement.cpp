@@ -3,10 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/dom/SVGAnimatedTransformList.h"
 #include "mozilla/dom/SVGTransformableElement.h"
 #include "mozilla/dom/SVGMatrix.h"
 #include "mozilla/dom/SVGSVGElement.h"
-#include "DOMSVGAnimatedTransformList.h"
 #include "nsContentUtils.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsIFrame.h"
@@ -18,12 +18,12 @@
 namespace mozilla {
 namespace dom {
 
-already_AddRefed<DOMSVGAnimatedTransformList>
+already_AddRefed<SVGAnimatedTransformList>
 SVGTransformableElement::Transform()
 {
   // We're creating a DOM wrapper, so we must tell GetAnimatedTransformList
   // to allocate the SVGAnimatedTransformList if it hasn't already done so:
-  return DOMSVGAnimatedTransformList::GetDOMWrapper(
+  return SVGAnimatedTransformList::GetDOMWrapper(
            GetAnimatedTransformList(DO_ALLOCATE), this).get();
 
 }
@@ -60,7 +60,9 @@ SVGTransformableElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
       return retval; // no change
     }
     if (aModType == nsIDOMMutationEvent::ADDITION ||
-        aModType == nsIDOMMutationEvent::REMOVAL) {
+        aModType == nsIDOMMutationEvent::REMOVAL ||
+        (aModType == nsIDOMMutationEvent::MODIFICATION &&
+         !(mTransforms && mTransforms->HasTransform()))) {
       // Reconstruct the frame tree to handle stacking context changes:
       NS_UpdateHint(retval, nsChangeHint_ReconstructFrame);
     } else {
@@ -134,11 +136,11 @@ SVGTransformableElement::SetAnimateMotionTransform(const gfxMatrix* aMatrix)
   DidAnimateTransformList();
 }
 
-SVGAnimatedTransformList*
+nsSVGAnimatedTransformList*
 SVGTransformableElement::GetAnimatedTransformList(uint32_t aFlags)
 {
   if (!mTransforms && (aFlags & DO_ALLOCATE)) {
-    mTransforms = new SVGAnimatedTransformList();
+    mTransforms = new nsSVGAnimatedTransformList();
   }
   return mTransforms;
 }

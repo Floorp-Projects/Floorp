@@ -11,7 +11,7 @@
  */
 
 [PrefControlled]
-interface AudioNode {
+interface AudioNode : EventTarget {
 
     [Throws]
     void connect(AudioNode destination, optional unsigned long output = 0, optional unsigned long input = 0);

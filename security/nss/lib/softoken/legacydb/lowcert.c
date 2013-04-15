@@ -5,7 +5,7 @@
 /*
  * Certificate handling code
  *
- * $Id: lowcert.c,v 1.7 2012/04/25 14:50:11 gerv%gerv.net Exp $
+ * $Id$
  */
 
 #include "seccomon.h"

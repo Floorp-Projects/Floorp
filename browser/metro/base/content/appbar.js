@@ -112,7 +112,6 @@ var Appbar = {
           string: '',
           xPos: x,
           yPos: y,
-          forcePosition: true,
           leftAligned: true,
           bottomAligned: true
       }

@@ -14,8 +14,6 @@ We'd like to thank our many Jetpack project contributors!  They include:
 * [Heather Arthur](https://github.com/harthur)
 * Dietrich Ayala
 
-<!--end-->
-
 ### B ###
 
 * [Romain B](https://github.com/Niamor)
@@ -27,17 +25,14 @@ We'd like to thank our many Jetpack project contributors!  They include:
 * Daniel Buchner
 * James Burke
 
-<!--end-->
-
 ### C ###
 
 * [Shane Caraveo](https://github.com/mixedpuppy)
 * [Matěj Cepl](https://github.com/mcepl)
 * Marc Chevrier
+* [Timothy Guan-tin Chien](https://github.com/timdream)
 * Hernán Rodriguez Colmeiro
 * [David Creswick](https://github.com/dcrewi)
-
-<!--end-->
 
 ### D ###
 
@@ -46,14 +41,10 @@ We'd like to thank our many Jetpack project contributors!  They include:
 * Connor Dunn
 * dynamis
 
-<!--end-->
-
 ### F ###
 
-* [Matteo Ferretti (ZER0)](https://github.com/ZER0)
+* [Matteo Ferretti](https://github.com/ZER0)
 * fuzzykiller
-
-<!--end-->
 
 ### G ###
 
@@ -65,8 +56,6 @@ We'd like to thank our many Jetpack project contributors!  They include:
 * Jeff Griffiths
 * [David Guo](https://github.com/dglol)
 
-<!--end-->
-
 ### H ###
 
 * Mark Hammond
@@ -74,19 +63,13 @@ We'd like to thank our many Jetpack project contributors!  They include:
 * Lloyd Hilaiel
 * Bobby Holley
 
-<!--end-->
-
 ### I ###
 
 * Shun Ikejima
 
-<!--end-->
-
 ### J ###
 
 * Eric H. Jung
-
-<!--end-->
 
 ### K ###
 
@@ -95,14 +78,10 @@ We'd like to thank our many Jetpack project contributors!  They include:
 * Lajos Koszti
 * [Vladimir Kukushkin](https://github.com/kukushechkin)
 
-<!--end-->
-
 ### L ###
 
 * Edward Lee
 * Gregg Lind
-
-<!--end-->
 
 ### M ###
 
@@ -113,8 +92,6 @@ We'd like to thank our many Jetpack project contributors!  They include:
 * Zandr Milewski
 * Noelle Murata
 
-<!--end-->
-
 ### N ###
 
 * Siavash Askari Nasr
@@ -122,15 +99,11 @@ We'd like to thank our many Jetpack project contributors!  They include:
 * Dương H. Nguyễn
 * Nick Nguyen
 
-<!--end-->
-
 ### O ###
 
 * [ongaeshi](https://github.com/ongaeshi)
 * Paul O’Shannessy
 * Les Orchard
-
-<!--end-->
 
 ### P ###
 
@@ -139,16 +112,13 @@ We'd like to thank our many Jetpack project contributors!  They include:
 * [Alexandre Poirot](https://github.com/ochameau)
 * Nickolay Ponomarev
 
-<!--end-->
-
 ### R ###
 
 * Aza Raskin
 
-<!--end-->
-
 ### S ###
 
+* [Jordan Santell](https://github.com/jsantell)
 * Till Schneidereit
 * Justin Scott
 * Ayan Shah
@@ -160,8 +130,6 @@ We'd like to thank our many Jetpack project contributors!  They include:
 * [J. Ryan Stinnett](https://github.com/jryans)
 * [Mihai Sucan](https://github.com/mihaisucan)
 
-<!--end-->
-
 ### T ###
 
 * taku0
@@ -171,8 +139,6 @@ We'd like to thank our many Jetpack project contributors!  They include:
 * Dave Townsend
 * [Matthias Tylkowski](https://github.com/tylkomat)
 
-<!--end-->
-
 ### V ###
 
 * Peter Van der Beken
@@ -181,8 +147,6 @@ We'd like to thank our many Jetpack project contributors!  They include:
 * [Erik Vold](https://github.com/erikvold)
 * Vladimir Vukicevic
 
-<!--end-->
-
 ### W ###
 
 * Brian Warner
@@ -190,8 +154,6 @@ We'd like to thank our many Jetpack project contributors!  They include:
 * Drew Willcoxon
 * Blake Winton
 * Michal Wojciechowski
-
-<!--end-->
 
 ### Z ###
 

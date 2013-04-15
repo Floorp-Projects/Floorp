@@ -545,9 +545,9 @@ getWrapper(JSContext *cx,
     // * A (possible) outer window
     //
     // If we pass stopAtOuter == false, we can handle all three with one call
-    // to js::UnwrapObjectChecked.
+    // to js::CheckedUnwrap.
     if (js::IsWrapper(obj)) {
-        obj = js::UnwrapObjectChecked(obj, /* stopAtOuter = */ false);
+        obj = js::CheckedUnwrap(obj, /* stopAtOuter = */ false);
 
         // The safe unwrap might have failed if we encountered an object that
         // we're not allowed to unwrap. If it didn't fail though, we should be

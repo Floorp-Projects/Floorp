@@ -679,11 +679,6 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 OS_LIBS += $(call EXPAND_LIBNAME,usp10 oleaut32)
 endif
 
-ifeq ($(OS_ARCH),OpenBSD)
-# Needed by nsAuthGSSAPI
-EXTRA_DSO_LDOPTS += -lkrb5 -lcrypto
-endif
-
 ifdef MOZ_DEBUG
 ifdef ENABLE_TESTS
 DEFINES += -DENABLE_LAYOUTDEBUG

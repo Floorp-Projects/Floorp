@@ -16,7 +16,7 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(c8ce2f75-2bbf-4c30-8627-0ea1a7b2ebf7)]
+[scriptable, uuid(8a1bdf64-19f3-401b-aaea-8c6a5ef1c66f)]
 interface nsIDOMHTMLModElement : nsIDOMHTMLElement
 {
            attribute DOMString        cite;

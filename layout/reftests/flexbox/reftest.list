@@ -190,6 +190,7 @@ fails == flexbox-minSize-vert-1.xhtml  flexbox-minSize-vert-1-ref.xhtml # bug 85
 == flexbox-mbp-horiz-2b.xhtml            flexbox-mbp-horiz-2-ref.xhtml
 == flexbox-mbp-horiz-3.xhtml             flexbox-mbp-horiz-3-ref.xhtml
 == flexbox-mbp-horiz-3-reverse.xhtml     flexbox-mbp-horiz-3-reverse-ref.xhtml
+== flexbox-mbp-horiz-4.xhtml             flexbox-mbp-horiz-4-ref.xhtml
 
 # Tests for flex containers with the "overflow" property set
 == flexbox-overflow-horiz-1.html flexbox-overflow-horiz-1-ref.html

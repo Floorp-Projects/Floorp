@@ -6,6 +6,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
+import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.util.HardwareUtils;
 
 import android.content.Context;
@@ -495,9 +496,12 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
     private boolean canToolbarHide() {
         // Forbid the toolbar from hiding if hiding the toolbar would cause
         // the page to go into overscroll.
-        ImmutableViewportMetrics metrics = GeckoApp.mAppContext.getLayerView().
-            getLayerClient().getViewportMetrics();
-        return (metrics.getPageHeight() >= metrics.getHeight());
+        LayerView layerView = GeckoApp.mAppContext.getLayerView();
+        if (layerView != null) {
+            ImmutableViewportMetrics metrics = layerView.getViewportMetrics();
+            return (metrics.getPageHeight() >= metrics.getHeight());
+        }
+        return false;
     }
 
     public void animateVisibility(boolean show) {

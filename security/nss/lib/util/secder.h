@@ -11,7 +11,7 @@
  * secder.h - public data structures and prototypes for the DER encoding and
  *	      decoding utilities library
  *
- * $Id: secder.h,v 1.17 2012/11/14 01:14:12 wtc%google.com Exp $
+ * $Id$
  */
 
 #include <time.h>
@@ -73,7 +73,7 @@ extern SECStatus DER_SetUInteger(PLArenaPool *arena, SECItem *dst, PRUint32 src)
 ** If "-1" is returned, then the caller should check the error in
 ** XP_GetError() to see if an overflow occurred (SEC_ERROR_BAD_DER).
 */
-extern long DER_GetInteger(SECItem *src);
+extern long DER_GetInteger(const SECItem *src);
 
 /*
 ** Decode a der encoded *unsigned* integer that is stored in "src".

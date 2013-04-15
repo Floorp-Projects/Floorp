@@ -706,10 +706,6 @@ var gAdvancedPane = {
   /*
    * Preferences:
    *
-   * security.enable_ssl3
-   * - true if SSL 3 encryption is enabled, false otherwise
-   * security.enable_tls
-   * - true if TLS encryption is enabled, false otherwise
    * security.default_personal_cert
    * - a string:
    *     "Select Automatically"   select a certificate automatically when a site

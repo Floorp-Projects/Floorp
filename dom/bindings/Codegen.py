@@ -1019,7 +1019,7 @@ class CGClassConstructor(CGAbstractStaticMethod):
 
     def generate_code(self):
         preamble = """
-  JSObject* obj = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
+  JS::Rooted<JSObject*> obj(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)));
 """
         name = self._ctor.identifier.name
         nativeName = MakeNativeName(self.descriptor.binaryNames.get(name, name))
@@ -1111,15 +1111,19 @@ class CGClassHasInstanceHook(CGAbstractStaticMethod):
   // FIXME Limit this to chrome by checking xpc::AccessCheck::isChrome(obj).
   nsISupports* native =
     nsContentUtils::XPConnect()->GetNativeOfWrapper(cx,
-                                                    js::UnwrapObject(instance));
+                                                    js::UncheckedUnwrap(instance));
   nsCOMPtr<nsIDOM%s> qiResult = do_QueryInterface(native);
   *bp = !!qiResult;
   return true;
          """ % self.descriptor.interface.identifier.name
 
         hasInstanceCode = """
-  const DOMClass* domClass = GetDOMClass(js::UnwrapObject(instance));
+  const DOMClass* domClass = GetDOMClass(js::UncheckedUnwrap(instance));
   *bp = false;
+  if (!domClass) {
+    // Not a DOM object, so certainly not an instance of this interface
+    return true;
+  }
   """
         # Sort interaces implementing self by name so we get stable output.
         for iface in sorted(self.descriptor.interface.interfacesImplementingSelf,
@@ -1936,7 +1940,7 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
 
         if self.descriptor.nativeOwnership == 'nsisupports':
             assertISupportsInheritance = (
-                '  MOZ_ASSERT(reinterpret_cast<nsWrapperCache*>(aObject) != aCache,\n'
+                '  MOZ_ASSERT(reinterpret_cast<void*>(aObject) != aCache,\n'
                 '             "nsISupports must be on our primary inheritance chain");\n')
         else:
             assertISupportsInheritance = ""
@@ -2419,8 +2423,8 @@ if (!arr.SetCapacity(length)) {
 %s
 }
 for (uint32_t i = 0; i < length; ++i) {
-  jsval temp;
-  if (!JS_GetElement(cx, seq, i, &temp)) {
+  JS::Rooted<JS::Value> temp(cx);
+  if (!JS_GetElement(cx, seq, i, temp.address())) {
 %s
   }
   %s& slot = *arr.AppendElement();
@@ -2437,7 +2441,7 @@ for (uint32_t i = 0; i < length; ++i) {
                 string.Template(elementTemplate).substitute(
                     {
                         "val" : "temp",
-                        "valPtr": "&temp",
+                        "valPtr": "temp.address()",
                         "declName" : "slot",
                         # We only need holderName here to handle isExternal()
                         # interfaces, which use an internal holder for the
@@ -6086,7 +6090,7 @@ class CGProxyUnwrap(CGAbstractMethod):
         return """  MOZ_ASSERT(js::IsProxy(obj));
   if (js::GetProxyHandler(obj) != DOMProxyHandler::getInstance()) {
     MOZ_ASSERT(xpc::WrapperFactory::IsXrayWrapper(obj));
-    obj = js::UnwrapObject(obj);
+    obj = js::UncheckedUnwrap(obj);
   }
   MOZ_ASSERT(IsProxy(obj));
   return static_cast<%s*>(js::GetProxyPrivate(obj).toPrivate());""" % (self.descriptor.nativeType)
@@ -6812,17 +6816,17 @@ class CGDictionary(CGThing):
         return (string.Template(
                 "struct ${selfName} ${inheritance}{\n"
                 "  ${selfName}() {}\n"
-                "  bool Init(JSContext* cx, JSObject* scopeObj, const JS::Value& val);\n"
+                "  bool Init(JSContext* cx, JS::Handle<JSObject*> scopeObj, const JS::Value& val);\n"
                 "  bool ToObject(JSContext* cx, JSObject* parentObject, JS::Value *vp);\n"
                 "\n" +
                 ("  bool Init(const nsAString& aJSON)\n"
                  "  {\n"
-                 "    mozilla::Maybe<JSAutoRequest> ar;\n"
-                 "    mozilla::Maybe<JSAutoCompartment> ac;\n"
-                 "    jsval json = JSVAL_VOID;\n"
+                 "    Maybe<JSAutoRequest> ar;\n"
+                 "    Maybe<JSAutoCompartment> ac;\n"
+                 "    Maybe< JS::Rooted<JS::Value> > json;\n"
                  "    JSContext* cx = ParseJSON(aJSON, ar, ac, json);\n"
                  "    NS_ENSURE_TRUE(cx, false);\n"
-                 "    return Init(cx, nullptr, json);\n"
+                 "    return Init(cx, JS::NullPtr(), json.ref());\n"
                  "  }\n" if not self.workers else "") +
                 "\n" +
                 "\n".join(memberDecls) + "\n"
@@ -6839,7 +6843,7 @@ class CGDictionary(CGThing):
                 "struct ${selfName}Initializer : public ${selfName} {\n"
                 "  ${selfName}Initializer() {\n"
                 "    // Safe to pass a null context if we pass a null value\n"
-                "    Init(nullptr, nullptr, JS::NullValue());\n"
+                "    Init(nullptr, JS::NullPtr(), JS::NullValue());\n"
                 "  }\n"
                 "};").substitute( { "selfName": self.makeClassName(d),
                                     "inheritance": inheritance }))
@@ -6855,11 +6859,11 @@ class CGDictionary(CGThing):
                               "if (!%s::ToObject(cx, parentObject, vp)) {\n"
                               "  return false;\n"
                               "}\n" % self.makeClassName(d.parent))
-            ensureObject = "JSObject* obj = &vp->toObject();\n"
+            ensureObject = "JS::Rooted<JSObject*> obj(cx, &vp->toObject());\n"
         else:
             initParent = ""
             toObjectParent = ""
-            ensureObject = ("JSObject* obj = JS_NewObject(cx, nullptr, nullptr, nullptr);\n"
+            ensureObject = ("JS::Rooted<JSObject*> obj(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));\n"
                             "if (!obj) {\n"
                             "  return false;\n"
                             "}\n"
@@ -6896,7 +6900,7 @@ class CGDictionary(CGThing):
              "}\n"
              "\n" if self.needToInitIds else "") +
             "bool\n"
-            "${selfName}::Init(JSContext* cx, JSObject* scopeObj, const JS::Value& val)\n"
+            "${selfName}::Init(JSContext* cx, JS::Handle<JSObject*> scopeObj, const JS::Value& val)\n"
             "{\n"
             "  // Passing a null JSContext is OK only if we're initing from null,\n"
             "  // Since in that case we will not have to do any property gets\n"
@@ -6907,7 +6911,7 @@ class CGDictionary(CGThing):
              "  }\n" if self.needToInitIds else "") +
             "${initParent}" +
             ("  JSBool found;\n"
-             "  JS::Value temp;\n"
+             "  JS::Rooted<JS::Value> temp(cx);\n"
              "  bool isNull = val.isNullOrUndefined();\n" if len(memberInits) > 0 else "") +
             "  if (!IsConvertibleToDictionary(cx, val)) {\n"
             "    return ThrowErrorMessage(cx, MSG_NOT_DICTIONARY);\n"
@@ -6969,7 +6973,7 @@ class CGDictionary(CGThing):
         (member, (templateBody, declType,
                   holderType, dealWithOptional)) = memberInfo
         replacements = { "val": "temp",
-                         "valPtr": "&temp",
+                         "valPtr": "temp.address()",
                          "declName": self.makeMemberName(member.identifier.name),
                          # We need a holder name for external interfaces, but
                          # it's scoped down to the conversion so we can just use
@@ -6988,13 +6992,13 @@ class CGDictionary(CGThing):
             propName = member.identifier.name
             propCheck = ('JS_HasProperty(cx, &val.toObject(), "%s", &found)' %
                          propName)
-            propGet = ('JS_GetProperty(cx, &val.toObject(), "%s", &temp)' %
+            propGet = ('JS_GetProperty(cx, &val.toObject(), "%s", temp.address())' %
                        propName)
         else:
             propId = self.makeIdName(member.identifier.name);
             propCheck = ("JS_HasPropertyById(cx, &val.toObject(), %s, &found)" %
                          propId)
-            propGet = ("JS_GetPropertyById(cx, &val.toObject(), %s, &temp)" %
+            propGet = ("JS_GetPropertyById(cx, &val.toObject(), %s, temp.address())" %
                        propId)
 
         conversionReplacements = {

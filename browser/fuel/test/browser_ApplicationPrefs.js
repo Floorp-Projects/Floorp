@@ -4,7 +4,7 @@ var testdata = {
   dummy: "fuel.fuel-test",
   string: "browser.active_color",
   integer: "permissions.default.image",
-  boolean: "browser.blink_allowed"
+  boolean: "browser.underline_anchors"
 };
 
 function test() {
@@ -91,7 +91,7 @@ function test() {
   var val = Application.prefs.getValue(testdata.integer, 0);
   is(val, 1, "Reset existing integer property");
 
-  // PREF: boolean browser.blink_allowed == true
+  // PREF: boolean browser.underline_anchors == true
 
   // test to see if an existing boolean property exists
   ok(Application.prefs.has(testdata.boolean), "Check existing boolean property for existence");

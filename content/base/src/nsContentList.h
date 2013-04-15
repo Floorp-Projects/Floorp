@@ -434,7 +434,7 @@ protected:
  */
 class nsCacheableFuncStringContentList;
 
-class NS_STACK_CLASS nsFuncStringCacheKey {
+class MOZ_STACK_CLASS nsFuncStringCacheKey {
 public:
   nsFuncStringCacheKey(nsINode* aRootNode,
                        nsContentListMatchFunc aFunc,

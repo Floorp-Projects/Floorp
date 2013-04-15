@@ -59,7 +59,7 @@ FrameworkView::SearchActivated(ComPtr<ISearchActivatedEventArgs>& aArgs, bool aS
     return;
 
   unsigned int length;
-  Log(L"SearchActivated text=", data.GetRawBuffer(&length));
+  LogW(L"SearchActivated text=%s", data.GetRawBuffer(&length));
   if (aStartup) {
     mActivationURI = data.GetRawBuffer(&length);
   } else {
@@ -136,7 +136,7 @@ FrameworkView::ProcessLaunchArguments()
     NS_ConvertUTF16toUTF8 arg(argv[i]);
     argvUTF8[i] = new char[arg.Length() + 1];
     strcpy(argvUTF8[i], const_cast<char *>(arg.BeginReading()));
-    Log(L"Launch arg[%d]: '%s'", i, argv[i]);
+    LogW(L"Launch arg[%d]: '%s'", i, argv[i]);
   }
 
   nsresult rv = cmdLine->Init(argc,
@@ -163,7 +163,7 @@ FrameworkView::ProcessActivationArgs(IActivatedEventArgs* aArgs, bool aStartup)
     return;
   ComPtr<IActivatedEventArgs> args(aArgs);
   if (kind == ActivationKind::ActivationKind_Protocol) {
-    Log(L"Activation argument kind: Protocol");
+    Log("Activation argument kind: Protocol");
     ComPtr<IProtocolActivatedEventArgs> protoArgs;
     AssertHRESULT(args.As(&protoArgs));
     ComPtr<IUriRuntimeClass> uri;
@@ -183,17 +183,17 @@ FrameworkView::ProcessActivationArgs(IActivatedEventArgs* aArgs, bool aStartup)
       PerformURILoad(data);
     }
   } else if (kind == ActivationKind::ActivationKind_Search) {
-    Log(L"Activation argument kind: Search");
+    Log("Activation argument kind: Search");
     ComPtr<ISearchActivatedEventArgs> searchArgs;
     args.As(&searchArgs);
     SearchActivated(searchArgs, aStartup);
   } else if (kind == ActivationKind::ActivationKind_File) {
-    Log(L"Activation argument kind: File");
+    Log("Activation argument kind: File");
     ComPtr<IFileActivatedEventArgs> fileArgs;
     args.As(&fileArgs);
     FileActivated(fileArgs, aStartup);
   } else if (kind == ActivationKind::ActivationKind_Launch) {
-    Log(L"Activation argument kind: Launch");
+    Log("Activation argument kind: Launch");
     ComPtr<ILaunchActivatedEventArgs> launchArgs;
     args.As(&launchArgs);
     LaunchActivated(launchArgs, aStartup);
@@ -263,7 +263,7 @@ FrameworkView::PerformURILoad(HString& aURI)
   LogFunction();
 
   unsigned int length;
-  Log(L"PerformURILoad uri=%s", aURI.GetRawBuffer(&length));
+  LogW(L"PerformURILoad uri=%s", aURI.GetRawBuffer(&length));
 
   nsCOMPtr<nsICommandLineRunner> cmdLine =
     (do_CreateInstance("@mozilla.org/toolkit/command-line;1"));
@@ -323,7 +323,7 @@ FrameworkView::PerformURILoadOrSearch(HString& aString)
   LogFunction();
 
   if (WindowsIsStringEmpty(aString.Get())) {
-    Log(L"Emptry string passed to PerformURILoadOrSearch");
+    Log("Emptry string passed to PerformURILoadOrSearch");
     return;
   }
 

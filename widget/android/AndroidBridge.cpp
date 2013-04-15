@@ -58,8 +58,6 @@ class AndroidRefable {
 // This isn't in AndroidBridge.h because including StrongPointer.h there is gross
 static android::sp<AndroidRefable> (*android_SurfaceTexture_getNativeWindow)(JNIEnv* env, jobject surfaceTexture) = nullptr;
 
-/* static */ StaticAutoPtr<nsTArray<nsCOMPtr<nsIMobileMessageCallback> > > AndroidBridge::sSmsRequests;
-
 void
 AndroidBridge::ConstructBridge(JNIEnv *jEnv,
                                jclass jGeckoAppShellClass)
@@ -1773,21 +1771,16 @@ AndroidBridge::QueueSmsRequest(nsIMobileMessageCallback* aRequest, uint32_t* aRe
     MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
     MOZ_ASSERT(aRequest && aRequestIdOut);
 
-    if (!sSmsRequests) {
-        // Probably shutting down.
-        return false;
-    }
-
-    const uint32_t length = sSmsRequests->Length();
+    const uint32_t length = mSmsRequests.Length();
     for (uint32_t i = 0; i < length; i++) {
-        if (!(*sSmsRequests)[i]) {
-            (*sSmsRequests)[i] = aRequest;
+        if (!(mSmsRequests)[i]) {
+            (mSmsRequests)[i] = aRequest;
             *aRequestIdOut = i;
             return true;
         }
     }
 
-    sSmsRequests->AppendElement(aRequest);
+    mSmsRequests.AppendElement(aRequest);
 
     // After AppendElement(), previous `length` points to the new tail element.
     *aRequestIdOut = length;
@@ -1799,17 +1792,12 @@ AndroidBridge::DequeueSmsRequest(uint32_t aRequestId)
 {
     MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
-    if (!sSmsRequests) {
-        // Probably shutting down.
+    MOZ_ASSERT(aRequestId < mSmsRequests.Length());
+    if (aRequestId >= mSmsRequests.Length()) {
         return nullptr;
     }
 
-    MOZ_ASSERT(aRequestId < sSmsRequests->Length());
-    if (aRequestId >= sSmsRequests->Length()) {
-        return nullptr;
-    }
-
-    return (*sSmsRequests)[aRequestId].forget();
+    return mSmsRequests[aRequestId].forget();
 }
 
 void

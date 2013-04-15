@@ -124,7 +124,8 @@ public:
                                  IPeerConnectionObserver* aObserver)
       : mPC(aPC),
         mObserver(aObserver),
-        mCode(static_cast<StatusCode>(aInfo->getStatusCode())),
+        mCode(static_cast<PeerConnectionImpl::Error>(aInfo->getStatusCode())),
+        mReason(aInfo->getStatus()),
         mSdpStr(),
         mCallState(aInfo->getCallState()),
         mStateStr(aInfo->callStateToString(mCallState)) {
@@ -146,6 +147,23 @@ public:
     CSFLogInfo(logTag, "PeerConnectionObserverDispatch processing "
                        "mCallState = %d (%s)", mCallState, mStateStr.c_str());
 
+    if (mCallState == SETLOCALDESCERROR || mCallState == SETREMOTEDESCERROR) {
+      const std::vector<std::string> &errors = mPC->GetSdpParseErrors();
+      std::vector<std::string>::const_iterator i;
+      for (i = errors.begin(); i != errors.end(); ++i) {
+        mReason += " | SDP Parsing Error: " + *i;
+      }
+      if (errors.size()) {
+        mCode = PeerConnectionImpl::kInvalidSessionDescription;
+      }
+      mPC->ClearSdpParseErrorMessages();
+    }
+
+    if (mReason.length()) {
+      CSFLogInfo(logTag, "Message contains error: %d: %s",
+                 mCode, mReason.c_str());
+    }
+
     switch (mCallState) {
       case CREATEOFFER:
         mObserver->OnCreateOfferSuccess(mSdpStr.c_str());
@@ -156,47 +174,39 @@ public:
         break;
 
       case CREATEOFFERERROR:
-        mObserver->OnCreateOfferError(
-          PeerConnectionImpl::kInternalError,
-          "Unspecified Error processing createOffer");
+        mObserver->OnCreateOfferError(mCode, mReason.c_str());
         break;
 
       case CREATEANSWERERROR:
-        mObserver->OnCreateAnswerError(
-          PeerConnectionImpl::kInternalError,
-          "Unspecified Error processing createAnswer");
+        mObserver->OnCreateAnswerError(mCode, mReason.c_str());
         break;
 
       case SETLOCALDESC:
         // TODO: The SDP Parse error list should be copied out and sent up
-        // to the Javascript layer before being cleared here.
+        // to the Javascript layer before being cleared here. Even though
+        // there was not a failure, it is possible that the SDP parse generated
+        // warnings. The WebRTC spec does not currently have a mechanism for
+        // providing non-fatal warnings.
         mPC->ClearSdpParseErrorMessages();
         mObserver->OnSetLocalDescriptionSuccess();
         break;
 
       case SETREMOTEDESC:
         // TODO: The SDP Parse error list should be copied out and sent up
-        // to the Javascript layer before being cleared here.
+        // to the Javascript layer before being cleared here. Even though
+        // there was not a failure, it is possible that the SDP parse generated
+        // warnings. The WebRTC spec does not currently have a mechanism for
+        // providing non-fatal warnings.
         mPC->ClearSdpParseErrorMessages();
         mObserver->OnSetRemoteDescriptionSuccess();
         break;
 
       case SETLOCALDESCERROR:
-        // TODO: The SDP Parse error list should be copied out and sent up
-        // to the Javascript layer before being cleared here.
-        mPC->ClearSdpParseErrorMessages();
-        mObserver->OnSetLocalDescriptionError(
-          PeerConnectionImpl::kInternalError,
-          "Unspecified Error processing setLocalDescription");
+        mObserver->OnSetLocalDescriptionError(mCode, mReason.c_str());
         break;
 
       case SETREMOTEDESCERROR:
-        // TODO: The SDP Parse error list should be copied out and sent up
-        // to the Javascript layer before being cleared here.
-        mPC->ClearSdpParseErrorMessages();
-        mObserver->OnSetRemoteDescriptionError(
-          PeerConnectionImpl::kInternalError,
-          "Unspecified Error processing setRemoteDescription");
+        mObserver->OnSetRemoteDescriptionError(mCode, mReason.c_str());
         break;
 
       case ADDICECANDIDATE:
@@ -204,9 +214,7 @@ public:
         break;
 
       case ADDICECANDIDATEERROR:
-        mObserver->OnAddIceCandidateError(
-          PeerConnectionImpl::kInternalError,
-          "Unspecified Error processing addIceCandidate");
+        mObserver->OnAddIceCandidateError(mCode, mReason.c_str());
         break;
 
       case REMOTESTREAMADD:
@@ -250,7 +258,8 @@ public:
 private:
   nsRefPtr<PeerConnectionImpl> mPC;
   nsCOMPtr<IPeerConnectionObserver> mObserver;
-  StatusCode mCode;
+  PeerConnectionImpl::Error mCode;
+  std::string mReason;
   std::string mSdpStr;
   cc_call_state_t mCallState;
   std::string mStateStr;
@@ -268,7 +277,7 @@ PeerConnectionImpl::PeerConnectionImpl()
   , mWindow(NULL)
   , mIdentity(NULL)
   , mSTSThread(NULL)
-  , mMedia(new PeerConnectionMedia(this))
+  , mMedia(NULL)
   , mNumAudioStreams(0)
   , mNumVideoStreams(0)
   , mHaveDataStream(false) {
@@ -392,7 +401,7 @@ PeerConnectionImpl::ConvertRTCConfiguration(const JS::Value& aSrc,
   }
   JSAutoCompartment ac(aCx, &aSrc.toObject());
   RTCConfiguration config;
-  if (!(config.Init(aCx, nullptr, aSrc) && config.mIceServers.WasPassed())) {
+  if (!(config.Init(aCx, JS::NullPtr(), aSrc) && config.mIceServers.WasPassed())) {
     return NS_ERROR_FAILURE;
   }
   for (uint32_t i = 0; i < config.mIceServers.Value().Length(); i++) {
@@ -516,6 +525,8 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
     CSFLogError(logTag, "%s: Couldn't Create Call Object", __FUNCTION__);
     return NS_ERROR_FAILURE;
   }
+
+  mMedia = new PeerConnectionMedia(this);
 
   // Connect ICE slots.
   mMedia->SignalIceGatheringCompleted.connect(this, &PeerConnectionImpl::IceGatheringCompleted);
@@ -744,7 +755,7 @@ PeerConnectionImpl::NotifyConnection()
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
-  CSFLogDebug(logTag, __FUNCTION__);
+  CSFLogDebug(logTag, "%s", __FUNCTION__);
 
 #ifdef MOZILLA_INTERNAL_API
   nsCOMPtr<IPeerConnectionObserver> pco = do_QueryReferent(mPCObserver);
@@ -763,7 +774,7 @@ PeerConnectionImpl::NotifyClosedConnection()
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
-  CSFLogDebug(logTag, __FUNCTION__);
+  CSFLogDebug(logTag, "%s", __FUNCTION__);
 
 #ifdef MOZILLA_INTERNAL_API
   nsCOMPtr<IPeerConnectionObserver> pco = do_QueryReferent(mPCObserver);
@@ -1207,7 +1218,7 @@ PeerConnectionImpl::CheckApiState(bool assert_ice_ready) const
 NS_IMETHODIMP
 PeerConnectionImpl::Close(bool aIsSynchronous)
 {
-  CSFLogDebug(logTag, __FUNCTION__);
+  CSFLogDebug(logTag, "%s", __FUNCTION__);
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
   return CloseInt(aIsSynchronous);
@@ -1402,7 +1413,7 @@ PeerConnectionImpl::IceStateChange_m(IceState aState)
 {
   PC_AUTO_ENTER_API_CALL(false);
 
-  CSFLogDebug(logTag, __FUNCTION__);
+  CSFLogDebug(logTag, "%s", __FUNCTION__);
 
   mIceState = aState;
 
@@ -1440,6 +1451,11 @@ PeerConnectionImpl::OnSdpParseError(const char *message) {
 void
 PeerConnectionImpl::ClearSdpParseErrorMessages() {
   mSDPParseErrorMessages.clear();
+}
+
+const std::vector<std::string> &
+PeerConnectionImpl::GetSdpParseErrors() {
+  return mSDPParseErrorMessages;
 }
 
 

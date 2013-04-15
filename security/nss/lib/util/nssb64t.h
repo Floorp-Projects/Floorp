@@ -5,7 +5,7 @@
 /*
  * Public data structures for base64 encoding/decoding.
  *
- * $Id: nssb64t.h,v 1.4 2012/04/25 14:50:16 gerv%gerv.net Exp $
+ * $Id$
  */
 #ifndef _NSSB64T_H_
 #define _NSSB64T_H_

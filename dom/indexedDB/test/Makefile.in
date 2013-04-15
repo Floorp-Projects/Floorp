@@ -98,6 +98,7 @@ MOCHITEST_FILES = \
   test_third_party.html \
   test_traffic_jam.html \
   test_transaction_abort.html \
+  test_transaction_abort_hang.html \
   test_transaction_lifetimes.html \
   test_transaction_lifetimes_nested.html \
   test_transaction_ordering.html \

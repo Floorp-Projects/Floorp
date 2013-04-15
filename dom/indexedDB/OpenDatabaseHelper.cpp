@@ -32,11 +32,11 @@ namespace {
 
 // If JS_STRUCTURED_CLONE_VERSION changes then we need to update our major
 // schema version.
-MOZ_STATIC_ASSERT(JS_STRUCTURED_CLONE_VERSION == 1,
+MOZ_STATIC_ASSERT(JS_STRUCTURED_CLONE_VERSION == 2,
                   "Need to update the major schema version.");
 
 // Major schema version. Bump for almost everything.
-const uint32_t kMajorSchemaVersion = 13;
+const uint32_t kMajorSchemaVersion = 14;
 
 // Minor schema version. Should almost always be 0 (maybe bump on release
 // branches if we have to).
@@ -1350,6 +1350,17 @@ UpgradeSchemaFrom12_0To13_0(mozIStorageConnection* aConnection,
   return NS_OK;
 }
 
+nsresult
+UpgradeSchemaFrom13_0To14_0(mozIStorageConnection* aConnection)
+{
+  // The only change between 13 and 14 was a different structured
+  // clone format, but it's backwards-compatible.
+  nsresult rv = aConnection->SetSchemaVersion(MakeSchemaVersion(14, 0));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
 class VersionChangeEventsRunnable;
 
 class SetVersionHelper : public AsyncConnectionHelper,
@@ -1904,7 +1915,7 @@ OpenDatabaseHelper::CreateDatabaseConnection(
     }
     else  {
       // This logic needs to change next time we change the schema!
-      MOZ_STATIC_ASSERT(kSQLiteSchemaVersion == int32_t((13 << 4) + 0),
+      MOZ_STATIC_ASSERT(kSQLiteSchemaVersion == int32_t((14 << 4) + 0),
                         "Need upgrade code from schema version increase.");
 
       while (schemaVersion != kSQLiteSchemaVersion) {
@@ -1935,6 +1946,9 @@ OpenDatabaseHelper::CreateDatabaseConnection(
         }
         else if (schemaVersion == MakeSchemaVersion(12, 0)) {
           rv = UpgradeSchemaFrom12_0To13_0(connection, &vacuumNeeded);
+        }
+        else if (schemaVersion == MakeSchemaVersion(13, 0)) {
+          rv = UpgradeSchemaFrom13_0To14_0(connection);
         }
         else {
           NS_WARNING("Unable to open IndexedDB database, no upgrade path is "

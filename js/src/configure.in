@@ -600,14 +600,7 @@ if test -n "$_WIN32_MSVC"; then
 
     # Common to all MSVC environments:
 
-    # Windows lacks <stdint.h>, but has __int8, and so on.
-    AC_DEFINE(JS_HAVE___INTN)
     AC_DEFINE(HAVE_LOCALECONV)
-
-    # Windows <stddef.h> defines intptr_t and uintptr_t.
-    # VS2005: http://msdn.microsoft.com/en-us/library/323b6b3k(VS.80).aspx
-    # VS2008: http://msdn.microsoft.com/en-us/library/323b6b3k.aspx
-    AC_DEFINE(JS_STDDEF_H_HAS_INTPTR_T)
 fi
 
 fi # COMPILE_ENVIRONMENT
@@ -1481,7 +1474,6 @@ case "$target" in
     if test "$COMPILE_ENVIRONMENT"; then
         MOZ_CHECK_HEADERS(sys/inttypes.h)
     fi
-    AC_DEFINE(JS_SYS_TYPES_H_DEFINES_EXACT_SIZE_TYPES)
     AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
     ;;
 

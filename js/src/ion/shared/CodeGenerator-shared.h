@@ -173,6 +173,7 @@ class CodeGeneratorShared : public LInstructionVisitor
         return index;
     }
 
+  public:
     // This is needed by addCache to update the cache with the jump
     // informations provided by the out-of-line path.
     IonCache *getCache(size_t index) {

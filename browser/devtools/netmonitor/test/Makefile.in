@@ -23,6 +23,8 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_net_content-type.js \
 	browser_net_status-codes.js \
 	browser_net_post-data.js \
+	browser_net_jsonp.js \
+	browser_net_json-long.js \
 	head.js \
 	$(NULL)
 
@@ -33,6 +35,8 @@ MOCHITEST_BROWSER_PAGES = \
 	html_content-type-test-page.html \
 	html_status-codes-test-page.html \
 	html_post-data-test-page.html \
+	html_jsonp-test-page.html \
+	html_json-long-test-page.html \
 	sjs_simple-test-server.sjs \
 	sjs_content-type-test-server.sjs \
 	sjs_status-codes-test-server.sjs \
