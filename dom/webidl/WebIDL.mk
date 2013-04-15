@@ -155,6 +155,7 @@ webidl_files = \
   MediaStream.webidl \
   MessageEvent.webidl \
   MouseEvent.webidl \
+  MouseScrollEvent.webidl \
   MozActivity.webidl \
   MutationEvent.webidl \
   MutationObserver.webidl \
