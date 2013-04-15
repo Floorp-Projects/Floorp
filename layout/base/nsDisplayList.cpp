@@ -1395,10 +1395,16 @@ static void Sort(nsDisplayList* aList, int32_t aCount, nsDisplayList::SortLEQ aC
   }
 }
 
-static nsIContent* FindContentInDocument(nsIContent* aContent, nsIDocument* aDoc) {
-  nsIContent* c = aContent;
+static nsIContent* FindContentInDocument(nsDisplayItem* aItem, nsIDocument* aDoc) {
+  nsIFrame* frame = aItem->GetUnderlyingFrame();
+  nsIContent* c = frame->GetContent();
   for (;;) {
-    nsIDocument* d = c->OwnerDoc();
+    nsIDocument* d;
+    if (c) {
+      d = c->OwnerDoc();
+    } else {
+      d = frame->PresContext()->Document();
+    }
     if (d == aDoc) {
       return c;
     }
@@ -1422,10 +1428,8 @@ static bool IsContentLEQ(nsDisplayItem* aItem1, nsDisplayItem* aItem2,
   // mixed into the same list. Ensure that we're looking at content
   // in commonAncestor's document.
   nsIDocument* commonAncestorDoc = commonAncestor->OwnerDoc();
-  nsIContent* content1 = FindContentInDocument(aItem1->GetUnderlyingFrame()->GetContent(),
-                                               commonAncestorDoc);
-  nsIContent* content2 = FindContentInDocument(aItem2->GetUnderlyingFrame()->GetContent(),
-                                               commonAncestorDoc);
+  nsIContent* content1 = FindContentInDocument(aItem1, commonAncestorDoc);
+  nsIContent* content2 = FindContentInDocument(aItem2, commonAncestorDoc);
   if (!content1 || !content2) {
     NS_ERROR("Document trees are mixed up!");
     // Something weird going on
