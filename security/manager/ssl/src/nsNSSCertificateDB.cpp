@@ -487,20 +487,20 @@ ImportCertsIntoPermanentStorage(const ScopedCERTCertList &certChain, const SECCe
   CERTCertDBHandle *certdb = CERT_GetDefaultCertDB();
   const PRTime now = PR_Now();
 
-  int chainLen = 0;
+  int chainLen=0;
+
   for (CERTCertListNode *chainNode = CERT_LIST_HEAD(certChain);
        !CERT_LIST_END(chainNode, certChain);
        chainNode = CERT_LIST_NEXT(chainNode)) {
     chainLen++;
   }
-
   SECItem **rawArray;
   rawArray = (SECItem **) PORT_Alloc(chainLen * sizeof(SECItem *));
   if (!rawArray) {
     return SECFailure;
   }
 
-  int i = 0;
+  int i=0;
   for (CERTCertListNode *chainNode = CERT_LIST_HEAD(certChain);
        !CERT_LIST_END(chainNode, certChain);
        chainNode = CERT_LIST_NEXT(chainNode), i++) {
@@ -509,7 +509,9 @@ ImportCertsIntoPermanentStorage(const ScopedCERTCertList &certChain, const SECCe
   CERT_ImportCerts(certdb, usage, chainLen,
                    rawArray,  nullptr, true, caOnly, nullptr);
 
-  PORT_Free(rawArray);   
+  PORT_Free(rawArray);
+
+   
   return SECSuccess;
 } 
 
