@@ -15,18 +15,6 @@
 
 struct nsArenaMemoryStats;
 
-// Uncomment this to disable arenas, instead forwarding to
-// malloc for every allocation.
-//#define DEBUG_TRACEMALLOC_PRESARENA 1
-
-// The debugging version of nsPresArena does not free all the memory it
-// allocated when the arena itself is destroyed.
-#ifdef DEBUG_TRACEMALLOC_PRESARENA
-#define PRESARENA_MUST_FREE_DURING_DESTROY true
-#else
-#define PRESARENA_MUST_FREE_DURING_DESTROY false
-#endif
-
 class nsPresArena {
 public:
   nsPresArena();
