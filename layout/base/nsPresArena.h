@@ -23,15 +23,6 @@ public:
   nsPresArena();
   ~nsPresArena();
 
-  // Pool allocation with recycler lists indexed by object size, aSize.
-  NS_HIDDEN_(void*) AllocateBySize(size_t aSize);
-  NS_HIDDEN_(void)  FreeBySize(size_t aSize, void* aPtr);
-
-  // Pool allocation with recycler lists indexed by frame-type ID.
-  // Every aID must always be used with the same object size, aSize.
-  NS_HIDDEN_(void*) AllocateByFrameID(nsQueryFrame::FrameIID aID, size_t aSize);
-  NS_HIDDEN_(void)  FreeByFrameID(nsQueryFrame::FrameIID aID, void* aPtr);
-
   enum ObjectID {
     nsLineBox_id = nsQueryFrame::NON_FRAME_MARKER,
     nsRuleNode_id,
@@ -47,10 +38,37 @@ public:
     NON_OBJECT_MARKER = 0x40000000
   };
 
+  // Pool allocation with recycler lists indexed by object size, aSize.
+  NS_HIDDEN_(void*) AllocateBySize(size_t aSize)
+  {
+    return Allocate(uint32_t(aSize) | uint32_t(NON_OBJECT_MARKER), aSize);
+  }
+  NS_HIDDEN_(void) FreeBySize(size_t aSize, void* aPtr)
+  {
+    Free(uint32_t(aSize) | uint32_t(NON_OBJECT_MARKER), aPtr);
+  }
+
+  // Pool allocation with recycler lists indexed by frame-type ID.
+  // Every aID must always be used with the same object size, aSize.
+  NS_HIDDEN_(void*) AllocateByFrameID(nsQueryFrame::FrameIID aID, size_t aSize)
+  {
+    return Allocate(aID, aSize);
+  }
+  NS_HIDDEN_(void) FreeByFrameID(nsQueryFrame::FrameIID aID, void* aPtr)
+  {
+    Free(aID, aPtr);
+  }
+
   // Pool allocation with recycler lists indexed by object-type ID (see above).
   // Every aID must always be used with the same object size, aSize.
-  NS_HIDDEN_(void*) AllocateByObjectID(ObjectID aID, size_t aSize);
-  NS_HIDDEN_(void)  FreeByObjectID(ObjectID aID, void* aPtr);
+  NS_HIDDEN_(void*) AllocateByObjectID(ObjectID aID, size_t aSize)
+  {
+    return Allocate(aID, aSize);
+  }
+  NS_HIDDEN_(void) FreeByObjectID(ObjectID aID, void* aPtr)
+  {
+    Free(aID, aPtr);
+  }
 
   /**
    * Fill aArenaStats with sizes of interesting objects allocated in
@@ -69,8 +87,8 @@ public:
   static uintptr_t GetPoisonValue();
 
 private:
-  void* Allocate(uint32_t aCode, size_t aSize);
-  void Free(uint32_t aCode, void* aPtr);
+  NS_HIDDEN_(void*) Allocate(uint32_t aCode, size_t aSize);
+  NS_HIDDEN_(void) Free(uint32_t aCode, void* aPtr);
 
   // All keys to this hash table fit in 32 bits (see below) so we do not
   // bother actually hashing them.
