@@ -108,7 +108,6 @@ private:
   static size_t SizeOfFreeListEntryExcludingThis(FreeList* aEntry,
                                                  nsMallocSizeOfFun aMallocSizeOf,
                                                  void*);
-  size_t SizeOfIncludingThisFromMalloc(nsMallocSizeOfFun aMallocSizeOf) const;
 
   nsTHashtable<FreeList> mFreeLists;
   PLArenaPool mPool;
