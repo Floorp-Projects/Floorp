@@ -418,6 +418,8 @@ class IonBuilder : public MIRGenerator
     bool elementAccessIsPacked(MDefinition *obj);
     bool elementAccessHasExtraIndexedProperty(MDefinition *obj);
     MIRType denseNativeElementType(MDefinition *obj);
+    bool propertyReadNeedsTypeBarrier(types::TypeObject *object, PropertyName *name,
+                                      types::StackTypeSet *observed);
     bool propertyReadNeedsTypeBarrier(MDefinition *obj, PropertyName *name,
                                       types::StackTypeSet *observed);
     bool propertyReadIsIdempotent(MDefinition *obj, PropertyName *name);
