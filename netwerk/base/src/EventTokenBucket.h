@@ -119,6 +119,24 @@ private:
   // callbacks on the socket thread in order to maintain low latency of event
   // delivery.
   nsCOMPtr<nsITimer> mTimer;
+
+#ifdef XP_WIN
+  // Windows timers are 15ms granularity by default. When we have active events
+  // that need to be dispatched at 50ms  or less granularity we change the OS
+  // granularity to 1ms. 90 seconds after that need has elapsed we will change it
+  // back
+  const static uint64_t kCostFineGrainThreshold =  50 * kUsecPerMsec;
+
+  void FineGrainTimers(); // get 1ms granularity
+  void NormalTimers(); // reset to default granularity
+  void WantNormalTimers(); // reset after 90 seconds if not needed in interim
+  void FineGrainResetTimerNotify(); // delayed callback to reset
+
+  TimeStamp mLastFineGrainTimerUse;
+  bool mFineGrainTimerInUse;
+  bool mFineGrainResetTimerArmed;
+  nsCOMPtr<nsITimer> mFineGrainResetTimer;
+#endif
 };
 
 } // ::mozilla::net
