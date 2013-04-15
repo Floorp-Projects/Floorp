@@ -5636,15 +5636,11 @@ IonBuilder::jsop_getgname(HandlePropertyName name)
         // or non-writable.
         return jsop_getname(name);
     }
-    if (!propertyTypes->hasPropagatedProperty())
-        globalType->getFromPrototypes(cx, id, propertyTypes);
-
-    // If the property is permanent, a shape guard isn't necessary.
 
     types::StackTypeSet *types = script()->analysis()->bytecodeTypes(pc);
-    bool barrier = !propertyTypes || !propertyTypes->isSubset(types);
-    if (!barrier)
-        propertyTypes->addFreeze(cx);
+    bool barrier = propertyReadNeedsTypeBarrier(globalType, name, types);
+
+    // If the property is permanent, a shape guard isn't necessary.
 
     JSObject *singleton = types->getSingleton();
 
@@ -5945,23 +5941,55 @@ IonBuilder::elementAccessHasExtraIndexedProperty(MDefinition *obj)
 }
 
 bool
-IonBuilder::propertyReadNeedsTypeBarrier(MDefinition *obj, PropertyName *name,
+IonBuilder::propertyReadNeedsTypeBarrier(types::TypeObject *object, PropertyName *name,
                                          types::StackTypeSet *observed)
 {
-    // If any value being read from has types for the property which haven't
+    // If the object being read from has types for the property which haven't
     // been observed at this access site, the read could produce a new type and
     // a barrier is needed. Note that this only covers reads from properties
     // which are accounted for by type information, i.e. native data properties
     // and elements.
 
+    if (object->unknownProperties())
+        return true;
+
+    jsid id = name ? types::IdToTypeId(NameToId(name)) : JSID_VOID;
+
+    types::HeapTypeSet *property = object->getProperty(cx, id, false);
+    if (!property)
+        return true;
+
+    if (!property->hasPropagatedProperty())
+        object->getFromPrototypes(cx, id, property);
+
+    if (!TypeSetIncludes(observed, MIRType_Value, property))
+        return true;
+
+    // Type information for global objects does not reflect the initial
+    // 'undefined' value of variables declared with 'var'. Until the variable
+    // is assigned a value other than undefined, a barrier is required.
+    if (property->empty() && name && object->singleton) {
+        Shape *shape = object->singleton->nativeLookup(cx, name);
+        if (shape && shape->hasDefaultGetter()) {
+            JS_ASSERT(object->singleton->nativeGetSlot(shape->slot()).isUndefined());
+            return true;
+        }
+    }
+
+    property->addFreeze(cx);
+    return false;
+}
+
+bool
+IonBuilder::propertyReadNeedsTypeBarrier(MDefinition *obj, PropertyName *name,
+                                         types::StackTypeSet *observed)
+{
     if (observed->unknown())
         return false;
 
     types::TypeSet *types = obj->resultTypeSet();
     if (!types || types->unknownObject())
         return true;
-
-    jsid id = name ? types::IdToTypeId(NameToId(name)) : JSID_VOID;
 
     for (size_t i = 0; i < types->getObjectCount(); i++) {
         types::TypeObject *object = types->getTypeObject(i);
@@ -5974,20 +6002,8 @@ IonBuilder::propertyReadNeedsTypeBarrier(MDefinition *obj, PropertyName *name,
                 return true;
         }
 
-        if (object->unknownProperties())
+        if (propertyReadNeedsTypeBarrier(object, name, observed))
             return true;
-
-        types::HeapTypeSet *property = object->getProperty(cx, id, false);
-        if (!property)
-            return true;
-
-        if (!property->hasPropagatedProperty())
-            object->getFromPrototypes(cx, id, property);
-
-        if (!TypeSetIncludes(observed, MIRType_Value, property))
-            return true;
-
-        property->addFreeze(cx);
     }
 
     return false;
