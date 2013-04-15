@@ -24,15 +24,10 @@ SimpleTest.expectAssertions(1);
 var windowBlurCount = 0;
 
 function setUserPref(reset) {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  const prefSvcContractID = "@mozilla.org/preferences-service;1";
-  const prefSvcIID = Components.interfaces.nsIPrefService;
-  var prefs = Components.classes[prefSvcContractID].getService(prefSvcIID)
-                                                   .getBranch("browser.link.");
   if (reset) {
-    prefs.clearUserPref("open_newwindow");
+    SpecialPowers.clearUserPref("browser.link.open_newwindow");
   } else {
-    prefs.setIntPref("open_newwindow", 3);
+    SpecialPowers.setIntPref("browser.link.open_newwindow", 3);
   }
 }
 
