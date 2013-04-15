@@ -1127,11 +1127,11 @@ IonFrameIterator::ionScript() const
     switch (GetCalleeTokenTag(calleeToken())) {
       case CalleeToken_Function:
       case CalleeToken_Script:
-		return script()->ionScript();
+        return script()->ionScript();
       case CalleeToken_ParallelFunction:
-		return script()->parallelIonScript();
+        return script()->parallelIonScript();
       default:
-		JS_NOT_REACHED("unknown callee token type");
+        JS_NOT_REACHED("unknown callee token type");
     }
 }
 
