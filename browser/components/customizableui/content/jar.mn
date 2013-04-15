@@ -1,0 +1,19 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+browser.jar:
+  content/browser/customizableui/aboutCustomizing.xhtml
+  content/browser/customizableui/panelUI.js
+  content/browser/customizableui/panelUI.xml
+  content/browser/customizableui/panelUIOverlay.xul
+  content/browser/customizableui/panelUIOverlay.js
+  content/browser/customizableui/toolbar.xml
+
+
+# These overlays should be kept in sync with what pages are in
+# XULBrowserWindow.inContentWhitelist in browser.js
+% overlay about:addons               chrome://browser/content/customizableui/panelUIOverlay.xul
+% overlay about:preferences          chrome://browser/content/customizableui/panelUIOverlay.xul
+% overlay about:permissions          chrome://browser/content/customizableui/panelUIOverlay.xul
+% overlay about:sync-progress        chrome://browser/content/customizableui/panelUIOverlay.xul

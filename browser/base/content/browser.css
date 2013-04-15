@@ -10,7 +10,7 @@ searchbar {
 }
 
 #nav-bar {
-  -moz-binding: url("chrome://browser/content/toolbar.xml#toolbar");
+  -moz-binding: url("chrome://browser/content/customizableui/toolbar.xml#toolbar");
 }
 
 tabbrowser {

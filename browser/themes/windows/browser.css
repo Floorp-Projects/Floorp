@@ -2931,7 +2931,7 @@ chatbox {
 
 /* Customization mode */
 
-%include ../shared/customization.inc.css
+%include ../shared/customizableui/customizeMode.inc.css
 
 /* End customization mode */
 

@@ -5,7 +5,7 @@
 /* Customization mode */
 
 #main-window[customizing] {
-  background-image: url("chrome://browser/skin/customization/customization-mode-background.jpg");
+  background-image: url("chrome://browser/skin/customizableui/customization-mode-background.jpg");
   background-size: 100% 100%;
   background-repeat: no-repeat;
 }
