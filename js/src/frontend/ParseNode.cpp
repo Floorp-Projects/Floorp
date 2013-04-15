@@ -363,7 +363,7 @@ const char *
 Definition::kindString(Kind kind)
 {
     static const char *table[] = {
-        js_var_str, js_const_str, js_let_str, js_function_str, "argument", "unknown"
+        "", js_var_str, js_const_str, js_let_str, js_function_str, "argument", "unknown"
     };
 
     JS_ASSERT(unsigned(kind) <= unsigned(ARG));
@@ -461,7 +461,7 @@ Parser<FullParseHandler>::cloneParseTree(ParseNode *opn)
              */
             if (opn->isDefn()) {
                 opn->setDefn(false);
-                LinkUseToDef(opn, (Definition *) pn);
+                handler.linkUseToDef(opn, (Definition *) pn);
             }
         }
         break;
@@ -552,7 +552,7 @@ Parser<FullParseHandler>::cloneLeftHandSide(ParseNode *opn)
             pn->pn_dflags &= ~PND_BOUND;
             pn->setDefn(false);
 
-            LinkUseToDef(pn, (Definition *) opn);
+            handler.linkUseToDef(pn, (Definition *) opn);
         }
     }
     return pn;
