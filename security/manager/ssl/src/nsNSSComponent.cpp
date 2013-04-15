@@ -2048,13 +2048,9 @@ nsNSSComponent::VerifySignature(const char* aRSABuf, uint32_t aRSABufLen,
                                 GetDecryptKeyCallback, nullptr,
                                 DecryptionAllowedCallback);
 
-  if (!p7_info) {
-    return NS_ERROR_FAILURE;
-  }
-
   // Make sure we call SEC_PKCS7DestroyContentInfo after this point;
   // otherwise we leak data in p7_info
-
+  
   //-- If a plaintext was provided, hash it.
   SECItem digest;
   digest.data = nullptr;

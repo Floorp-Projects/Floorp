@@ -32,6 +32,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsIPrompt.h"
 #include "nsThreadUtils.h"
+#include "ScopedNSSTypes.h"
 #include "nsIObserverService.h"
 #include "nsRecentBadCerts.h"
 #include "SharedSSLState.h"
@@ -479,42 +480,6 @@ nsNSSCertificateDB::ImportCertificates(uint8_t * data, uint32_t length,
   return nsrv;
 }
 
-static 
-SECStatus 
-ImportCertsIntoPermanentStorage(const ScopedCERTCertList &certChain, const SECCertUsage usage,
-                               const PRBool caOnly)
-{
-  CERTCertDBHandle *certdb = CERT_GetDefaultCertDB();
-  const PRTime now = PR_Now();
-
-  int chainLen=0;
-
-  for (CERTCertListNode *chainNode = CERT_LIST_HEAD(certChain);
-       !CERT_LIST_END(chainNode, certChain);
-       chainNode = CERT_LIST_NEXT(chainNode)) {
-    chainLen++;
-  }
-  SECItem **rawArray;
-  rawArray = (SECItem **) PORT_Alloc(chainLen * sizeof(SECItem *));
-  if (!rawArray) {
-    return SECFailure;
-  }
-
-  int i=0;
-  for (CERTCertListNode *chainNode = CERT_LIST_HEAD(certChain);
-       !CERT_LIST_END(chainNode, certChain);
-       chainNode = CERT_LIST_NEXT(chainNode), i++) {
-    rawArray[i] = &chainNode->cert->derCert;
-  }
-  CERT_ImportCerts(certdb, usage, chainLen,
-                   rawArray,  nullptr, true, caOnly, nullptr);
-
-  PORT_Free(rawArray);
-
-   
-  return SECSuccess;
-} 
-
 
 /*
  *  [noscript] void importEmailCertificates(in charPtr data, in unsigned long length,
@@ -597,29 +562,53 @@ nsNSSCertificateDB::ImportEmailCertificate(uint8_t * data, uint32_t length,
        !CERT_LIST_END(node,certList);
        node = CERT_LIST_NEXT(node)) {
 
+    bool alert_and_skip = false;
+
     if (!node->cert) {
       continue;
     }
 
-    CERTCertList *verifyCertChain = nullptr;
-
     SECStatus rv = certVerifier->VerifyCert(node->cert,
                                             certificateUsageEmailRecipient,
-                                            now, ctx, 0, &verifyCertChain);
-
-    ScopedCERTCertList certChain(verifyCertChain);
-
+                                            now, ctx);
     if (rv != SECSuccess) {
+      alert_and_skip = true;
+    }
+
+    ScopedCERTCertificateList certChain;
+
+    if (!alert_and_skip) {
+      certChain = CERT_CertChainFromCert(node->cert, certUsageEmailRecipient,
+                                         false);
+      if (!certChain) {
+        alert_and_skip = true;
+      }
+    }
+
+    if (alert_and_skip) {    
       nsCOMPtr<nsIX509Cert> certToShow = nsNSSCertificate::Create(node->cert);
       DisplayCertificateAlert(ctx, "NotImportingUnverifiedCert", certToShow);
       continue;
     }
-    rv = ImportCertsIntoPermanentStorage(certChain, certUsageEmailRecipient, false);
-    if (rv != SECSuccess) {
-      goto loser;
-    } 
+
+    /*
+     * CertChain returns an array of SECItems, import expects an array of
+     * SECItem pointers. Create the SECItem Pointers from the array of
+     * SECItems.
+     */
+    rawArray = (SECItem **) PORT_Alloc(certChain->len * sizeof(SECItem *));
+    if (!rawArray) {
+      continue;
+    }
+    for (i=0; i < certChain->len; i++) {
+      rawArray[i] = &certChain->certs[i];
+    }
+    CERT_ImportCerts(certdb, certUsageEmailRecipient, certChain->len,
+                            rawArray,  nullptr, true, false, nullptr);
+
     CERT_SaveSMimeProfile(node->cert, nullptr, nullptr);
 
+    PORT_Free(rawArray);
   }
 
 loser:
@@ -768,21 +757,45 @@ nsNSSCertificateDB::ImportValidCACertsInList(CERTCertList *certList, nsIInterfac
        !CERT_LIST_END(node,certList);
        node = CERT_LIST_NEXT(node)) {
 
-    //bool alert_and_skip = false;
-    CERTCertList *verifyCertChain = nullptr;
+    bool alert_and_skip = false;
 
     SECStatus rv = certVerifier->VerifyCert(node->cert, certificateUsageVerifyCA,
-                                            PR_Now(), ctx, 0, &verifyCertChain);
-
-    ScopedCERTCertList certChain(verifyCertChain);
-
+                                            PR_Now(), ctx);
     if (rv != SECSuccess) {
+      alert_and_skip = true;
+    }
+
+    ScopedCERTCertificateList certChain;
+
+    if (!alert_and_skip) {    
+      certChain = CERT_CertChainFromCert(node->cert, certUsageAnyCA, false);
+      if (!certChain) {
+        alert_and_skip = true;
+      }
+    }
+
+    if (alert_and_skip) {    
       nsCOMPtr<nsIX509Cert> certToShow = nsNSSCertificate::Create(node->cert);
       DisplayCertificateAlert(ctx, "NotImportingUnverifiedCert", certToShow);
       continue;
     }
 
-    ImportCertsIntoPermanentStorage(certChain, certUsageAnyCA, true);
+    /*
+     * CertChain returns an array of SECItems, import expects an array of
+     * SECItem pointers. Create the SECItem Pointers from the array of
+     * SECItems.
+     */
+    rawArray = (SECItem **) PORT_Alloc(certChain->len * sizeof(SECItem *));
+    if (!rawArray) {
+      continue;
+    }
+    for (int i=0; i < certChain->len; i++) {
+      rawArray[i] = &certChain->certs[i];
+    }
+    CERT_ImportCerts(CERT_GetDefaultCertDB(), certUsageAnyCA, certChain->len, 
+                            rawArray,  nullptr, true, true, nullptr);
+
+    PORT_Free(rawArray);
   }
   
   return NS_OK;
