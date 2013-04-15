@@ -95,7 +95,6 @@
  */
 
 #include "SSLServerCertVerification.h"
-#include "CertVerifier.h"
 #include "nsIBadCertListener2.h"
 #include "nsICertOverrideService.h"
 #include "nsIStrictTransportSecurityService.h"
@@ -114,6 +113,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIConsoleService.h"
 #include "PSMRunnable.h"
+#include "ScopedNSSTypes.h"
 #include "SharedSSLState.h"
 
 #include "ssl.h"
@@ -131,7 +131,6 @@ namespace {
 
 NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
-NSSCleanupAutoPtrClass(CERTCertificate, CERT_DestroyCertificate)
 NSSCleanupAutoPtrClass_WithParam(PLArenaPool, PORT_FreeArena, FalseParam, false)
 
 // do not use a nsCOMPtr to avoid static initializer/destructor
@@ -468,26 +467,31 @@ CreateCertErrorRunnable(PRErrorCode defaultErrorCodeToReport,
   }
 
   SECStatus srv;
+  nsresult nsrv;
 
-  RefPtr<CertVerifier> certVerifier(GetDefaultCertVerifier());
-  if (!certVerifier) {
-    NS_ERROR("GetDefaultCerVerifier failed");
+  nsCOMPtr<nsINSSComponent> inss = do_GetService(kNSSComponentCID, &nsrv);
+  if (!inss) {
+    NS_ERROR("do_GetService(kNSSComponentCID) failed");
+    PR_SetError(defaultErrorCodeToReport, 0);
+    return nullptr;
+  }
+
+  RefPtr<nsCERTValInParamWrapper> survivingParams;
+  nsrv = inss->GetDefaultCERTValInParam(survivingParams);
+  if (NS_FAILED(nsrv)) {
+    NS_ERROR("GetDefaultCERTValInParam failed");
     PR_SetError(defaultErrorCodeToReport, 0);
     return nullptr;
   }
   
-  PRTime now = PR_Now();
-
-  PLArenaPool *log_arena = nullptr;
+  PLArenaPool *log_arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
   PLArenaPoolCleanerFalseParam log_arena_cleaner(log_arena);
-  CERTVerifyLog * verify_log = nullptr;
-
-  log_arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
   if (!log_arena) {
     NS_ERROR("PORT_NewArena failed");
     return nullptr; // PORT_NewArena set error code
   }
-  verify_log = PORT_ArenaZNew(log_arena, CERTVerifyLog);
+
+  CERTVerifyLog *verify_log = PORT_ArenaZNew(log_arena, CERTVerifyLog);
   if (!verify_log) {
     NS_ERROR("PORT_ArenaZNew failed");
     return nullptr; // PORT_ArenaZNew set error code
@@ -495,8 +499,22 @@ CreateCertErrorRunnable(PRErrorCode defaultErrorCodeToReport,
   CERTVerifyLogContentsCleaner verify_log_cleaner(verify_log);
   verify_log->arena = log_arena;
 
-  srv = certVerifier->VerifyCert(cert, certificateUsageSSLServer, now,
-                                   infoObject, 0, nullptr, nullptr, verify_log);
+  if (!nsNSSComponent::globalConstFlagUsePKIXVerification) {
+    srv = CERT_VerifyCertificate(CERT_GetDefaultCertDB(), cert,
+                                true, certificateUsageSSLServer,
+                                PR_Now(), static_cast<void*>(infoObject),
+                                verify_log, nullptr);
+  }
+  else {
+    CERTValOutParam cvout[2];
+    cvout[0].type = cert_po_errorLog;
+    cvout[0].value.pointer.log = verify_log;
+    cvout[1].type = cert_po_end;
+
+    srv = CERT_PKIXVerifyCert(cert, certificateUsageSSLServer,
+                              survivingParams->GetRawPointerForNSS(),
+                              cvout, static_cast<void*>(infoObject));
+  }
 
   // We ignore the result code of the cert verification.
   // Either it is a failure, which is expected, and we'll process the
@@ -521,44 +539,40 @@ CreateCertErrorRunnable(PRErrorCode defaultErrorCodeToReport,
     errorCodeMismatch = SSL_ERROR_BAD_CERT_DOMAIN;
   }
 
-  if (verify_log) {
-    CERTVerifyLogNode *i_node;
-    for (i_node = verify_log->head; i_node; i_node = i_node->next)
+  CERTVerifyLogNode *i_node;
+  for (i_node = verify_log->head; i_node; i_node = i_node->next)
+  {
+    switch (i_node->error)
     {
-      switch (i_node->error)
-      {
-        case SEC_ERROR_UNKNOWN_ISSUER:
-        case SEC_ERROR_CA_CERT_INVALID:
-        case SEC_ERROR_UNTRUSTED_ISSUER:
-        case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:
-        case SEC_ERROR_UNTRUSTED_CERT:
-        case SEC_ERROR_INADEQUATE_KEY_USAGE:
-        case SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED:
-          // We group all these errors as "cert not trusted"
-          collected_errors |= nsICertOverrideService::ERROR_UNTRUSTED;
-          if (errorCodeTrust == SECSuccess) {
-            errorCodeTrust = i_node->error;
-          }
-          break;
-        case SSL_ERROR_BAD_CERT_DOMAIN:
-          collected_errors |= nsICertOverrideService::ERROR_MISMATCH;
-          if (errorCodeMismatch == SECSuccess) {
-            errorCodeMismatch = i_node->error;
-          }
-          break;
-        case SEC_ERROR_EXPIRED_CERTIFICATE:
-          collected_errors |= nsICertOverrideService::ERROR_TIME;
-          if (errorCodeExpired == SECSuccess) {
-            errorCodeExpired = i_node->error;
-          }
-          break;
-        default:
-          PR_SetError(i_node->error, 0);
-          return nullptr;
-      }
+      case SEC_ERROR_UNKNOWN_ISSUER:
+      case SEC_ERROR_CA_CERT_INVALID:
+      case SEC_ERROR_UNTRUSTED_ISSUER:
+      case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:
+      case SEC_ERROR_UNTRUSTED_CERT:
+      case SEC_ERROR_INADEQUATE_KEY_USAGE:
+      case SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED:
+        // We group all these errors as "cert not trusted"
+        collected_errors |= nsICertOverrideService::ERROR_UNTRUSTED;
+        if (errorCodeTrust == SECSuccess) {
+          errorCodeTrust = i_node->error;
+        }
+        break;
+      case SSL_ERROR_BAD_CERT_DOMAIN:
+        collected_errors |= nsICertOverrideService::ERROR_MISMATCH;
+        if (errorCodeMismatch == SECSuccess) {
+          errorCodeMismatch = i_node->error;
+        }
+        break;
+      case SEC_ERROR_EXPIRED_CERTIFICATE:
+        collected_errors |= nsICertOverrideService::ERROR_TIME;
+        if (errorCodeExpired == SECSuccess) {
+          errorCodeExpired = i_node->error;
+        }
+        break;
+      default:
+        PR_SetError(i_node->error, 0);
+        return nullptr;
     }
-  } else {
-    // XXX set errorCodeTrust, errorCodeMismatch, errorCodeExpired, collected_errors
   }
 
   if (!collected_errors)
@@ -647,21 +661,31 @@ SSLServerCertVerificationJob::SSLServerCertVerificationJob(
 }
 
 SECStatus
-PSM_SSL_PKIX_AuthCertificate(CERTCertificate *peerCert,
-                             nsIInterfaceRequestor * pinarg,
-                             const char * hostname,
-                             CERTCertList **validationChain,
-                             SECOidTag *evOidPolicy)
+PSM_SSL_PKIX_AuthCertificate(CERTCertificate *peerCert, void * pinarg,
+                             const char * hostname)
 {
-    RefPtr<CertVerifier> certVerifier(GetDefaultCertVerifier());
-    if (!certVerifier) {
-      PR_SetError(PR_INVALID_STATE_ERROR, 0);
-      return SECFailure;
+    SECStatus          rv;
+    
+    if (!nsNSSComponent::globalConstFlagUsePKIXVerification) {
+        rv = CERT_VerifyCertNow(CERT_GetDefaultCertDB(), peerCert, true,
+                                certUsageSSLServer, pinarg);
     }
+    else {
+        nsresult nsrv;
+        nsCOMPtr<nsINSSComponent> inss = do_GetService(kNSSComponentCID, &nsrv);
+        if (!inss)
+          return SECFailure;
+        RefPtr<nsCERTValInParamWrapper> survivingParams;
+        if (NS_FAILED(inss->GetDefaultCERTValInParam(survivingParams)))
+          return SECFailure;
 
-    SECStatus rv = certVerifier->VerifyCert(peerCert,
-                                            certificateUsageSSLServer, PR_Now(),
-                                            pinarg, 0, validationChain , evOidPolicy);
+        CERTValOutParam cvout[1];
+        cvout[0].type = cert_po_end;
+
+        rv = CERT_PKIXVerifyCert(peerCert, certificateUsageSSLServer,
+                                survivingParams->GetRawPointerForNSS(),
+                                cvout, pinarg);
+    }
 
     if (rv == SECSuccess) {
         /* cert is OK.  This is the client side of an SSL connection.
@@ -873,12 +897,8 @@ AuthCertificate(TransportSecurityInfo * infoObject, CERTCertificate * cert,
     }
   }
 
-  CERTCertList *verifyCertChain = nullptr;
-  SECOidTag evOidPolicy;
   SECStatus rv = PSM_SSL_PKIX_AuthCertificate(cert, infoObject,
-                                              infoObject->GetHostName(),
-                                              &verifyCertChain,
-                                              &evOidPolicy);
+                                              infoObject->GetHostName());
 
   // We want to remember the CA certs in the temp db, so that the application can find the
   // complete chain at any time it might need it.
@@ -888,12 +908,7 @@ AuthCertificate(TransportSecurityInfo * infoObject, CERTCertificate * cert,
   RefPtr<nsNSSCertificate> nsc;
 
   if (!status || !status->mServerCert) {
-    if( rv == SECSuccess ){
-      nsc = nsNSSCertificate::Create(cert, &evOidPolicy);
-    }
-    else {
-      nsc = nsNSSCertificate::Create(cert);
-    }
+    nsc = nsNSSCertificate::Create(cert);
   }
 
   ScopedCERTCertList certList(CERT_GetCertChainFromCert(cert, PR_Now(),
@@ -922,6 +937,13 @@ AuthCertificate(TransportSecurityInfo * infoObject, CERTCertificate * cert,
   }
 
   if (rv == SECSuccess) {
+    if (nsc) {
+      bool dummyIsEV;
+      nsc->GetIsExtendedValidation(&dummyIsEV); // the nsc object will cache the status
+    }
+    
+    nsCOMPtr<nsINSSComponent> nssComponent;
+
     // We want to avoid storing any intermediate cert information when browsing
     // in private, transient contexts.
     if (!(providerFlags & nsISocketProvider::NO_PERMANENT_STORAGE)) {
