@@ -2961,6 +2961,19 @@ nsDisplayFixedPosition::BuildLayer(nsDisplayListBuilder* aBuilder,
                                            aContainerParameters.mYScale,
                                          NSAppUnitsToFloatPixels(fixedMargins.left, factor) *
                                            aContainerParameters.mXScale);
+
+  // If the frame is auto-positioned on either axis, set the top/left layer
+  // margins to -1, to indicate to the compositor that this layer is
+  // unaffected by fixed margins.
+  if (position->mOffset.GetLeftUnit() == eStyleUnit_Auto &&
+      position->mOffset.GetRightUnit() == eStyleUnit_Auto) {
+    fixedLayerMargins.left = -1;
+  }
+  if (position->mOffset.GetTopUnit() == eStyleUnit_Auto &&
+      position->mOffset.GetBottomUnit() == eStyleUnit_Auto) {
+    fixedLayerMargins.top = -1;
+  }
+
   layer->SetFixedPositionMargins(fixedLayerMargins);
 
   return layer.forget();
