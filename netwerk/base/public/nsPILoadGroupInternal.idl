@@ -1,0 +1,28 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIChannel;
+
+/**
+ * Dumping ground for load group experimental work.
+ * This interface will never be frozen.  If you are
+ * using any feature exposed by this interface, be aware that this interface
+ * will change and you will be broken.  You have been warned.
+ */
+[scriptable, uuid(6ef2f8ac-9584-48f3-957a-0c94fff0c8c7)]
+interface nsPILoadGroupInternal : nsISupports
+{
+
+    /**
+     * Called when the load group has loaded main page and
+     * subresources. (i.e.essentially DOMComplete)
+     *
+     * @param aDefaultChanel
+     *        The request channel for the base apge
+     */
+    void OnEndPageLoad(in nsIChannel aDefaultChannel);
+};
