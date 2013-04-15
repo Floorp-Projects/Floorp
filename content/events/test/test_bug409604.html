@@ -92,15 +92,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=409604
 
   // ui.key.contentAccess must be set to value 5 before running the test.
   function setOrRestoreContentAccess(newValue) {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    const prefSvcContractID = "@mozilla.org/preferences-service;1";
-    const prefSvcIID = Components.interfaces.nsIPrefService;
-    var prefs = Components.classes[prefSvcContractID].getService(prefSvcIID)
-                                                     .getBranch("ui.key.");
     if (!newValue) {
-      prefs.clearUserPref("contentAccess");
+      SpecialPowers.clearUserPref("ui.key.contentAccess");
     } else {
-      prefs.setIntPref("contentAccess", newValue);
+      SpecialPowers.setIntPref("ui.key.contentAccess", newValue);
     }
   }
 
@@ -134,10 +129,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=409604
   }
 
   function pressAccessKey(key) {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    // Send key events.
-    var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-                       getInterface(Components.interfaces.nsIDOMWindowUtils);
+    var utils = SpecialPowers.DOMWindowUtils;
     utils.sendKeyEvent("keydown", key, key, modifier);
     utils.sendKeyEvent("keypress", key, key, modifier);
     utils.sendKeyEvent("keyup", key, key, modifier);
