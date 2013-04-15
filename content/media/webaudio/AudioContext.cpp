@@ -233,13 +233,19 @@ AudioContext::CurrentTime() const
 void
 AudioContext::Suspend()
 {
-  DestinationStream()->ChangeExplicitBlockerCount(1);
+  MediaStream* ds = DestinationStream();
+  if (ds) {
+    ds->ChangeExplicitBlockerCount(1);
+  }
 }
 
 void
 AudioContext::Resume()
 {
-  DestinationStream()->ChangeExplicitBlockerCount(-1);
+  MediaStream* ds = DestinationStream();
+  if (ds) {
+    ds->ChangeExplicitBlockerCount(-1);
+  }
 }
 
 }

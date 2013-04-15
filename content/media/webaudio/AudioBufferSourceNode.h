@@ -50,16 +50,6 @@ public:
     mPannerNode = aPannerNode;
   }
 
-  void JSBindingFinalized()
-  {
-    // If the JS binding goes away on a node which never received a start()
-    // call, then it can no longer produce output.
-    if (!mStartCalled) {
-      SetProduceOwnOutput(false);
-    }
-    AudioNode::JSBindingFinalized();
-  }
-
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(AudioBufferSourceNode, AudioNode)
 
@@ -126,13 +116,14 @@ public:
 
 private:
   static void SendPlaybackRateToStream(AudioNode* aNode);
-  nsRefPtr<AudioBuffer> mBuffer;
   double mLoopStart;
   double mLoopEnd;
-  bool mLoop;
-  bool mStartCalled;
+  nsRefPtr<AudioBuffer> mBuffer;
   nsRefPtr<AudioParam> mPlaybackRate;
   PannerNode* mPannerNode;
+  SelfReference<AudioBufferSourceNode> mPlayingRef; // a reference to self while playing
+  bool mLoop;
+  bool mStartCalled;
 };
 
 }
