@@ -333,16 +333,6 @@ nsPresArena::SizeOfFreeListEntryExcludingThis(
   return aEntry->mEntries.SizeOfExcludingThis(aMallocSizeOf);
 }
 
-size_t
-nsPresArena::SizeOfIncludingThisFromMalloc(nsMallocSizeOfFun aMallocSizeOf) const
-{
-  size_t n = aMallocSizeOf(this);
-  n += PL_SizeOfArenaPoolExcludingPool(&mPool, aMallocSizeOf);
-  n += mFreeLists.SizeOfExcludingThis(SizeOfFreeListEntryExcludingThis,
-                                      aMallocSizeOf);
-  return n;
-}
-
 struct EnumerateData {
   nsArenaMemoryStats* stats;
   size_t total;
@@ -415,7 +405,10 @@ nsPresArena::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
   // slop in the arena itself as well as the size of objects that
   // we've not measured explicitly.
 
-  size_t mallocSize = SizeOfIncludingThisFromMalloc(aMallocSizeOf);
+  size_t mallocSize = PL_SizeOfArenaPoolExcludingPool(&mPool, aMallocSizeOf);
+  mallocSize += mFreeLists.SizeOfExcludingThis(SizeOfFreeListEntryExcludingThis,
+                                               aMallocSizeOf);
+
   EnumerateData data = { aArenaStats, 0 };
   mFreeLists.EnumerateEntries(FreeListEnumerator, &data);
   aArenaStats->mOther = mallocSize - data.total;
