@@ -61,7 +61,7 @@ class FrameChildList {
 /**
  * A class to iterate frame child lists.
  */
-class NS_STACK_CLASS FrameChildListArrayIterator {
+class MOZ_STACK_CLASS FrameChildListArrayIterator {
  public:
   FrameChildListArrayIterator(const nsTArray<FrameChildList>& aLists)
     : mLists(aLists), mCurrentIndex(0) {}
@@ -87,7 +87,7 @@ protected:
 /**
  * A class for retrieving a frame's child lists and iterate them.
  */
-class NS_STACK_CLASS FrameChildListIterator
+class MOZ_STACK_CLASS FrameChildListIterator
   : public FrameChildListArrayIterator {
  public:
   FrameChildListIterator(const nsIFrame* aFrame);

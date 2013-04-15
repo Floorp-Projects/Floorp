@@ -5,7 +5,7 @@
 /*
  * Utility routines to complement the ASN.1 encoding and decoding functions.
  *
- * $Id: secasn1u.c,v 1.6 2012/04/25 14:50:16 gerv%gerv.net Exp $
+ * $Id$
  */
 
 #include "secasn1.h"

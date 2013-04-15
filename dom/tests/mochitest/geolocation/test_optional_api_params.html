@@ -24,87 +24,69 @@ force_prompt(true)
 
 /** Test for Bug 452566 **/
 
-const NOT_ENOUGH_ARGS = 2153185281;
-
 ok(navigator.geolocation, "Should have geolocation");
 
 var exception = null;
 try {
   navigator.geolocation.getCurrentPosition();
-} catch(ex) {
-  if (ex.result == NOT_ENOUGH_ARGS) {
-    exception = ex;
-  }
+} catch(ex if ex instanceof TypeError) {
+  exception = ex;
 }
 ok(exception, "Should have got an exception");
 
 exception = null;
 try {
   navigator.geolocation.getCurrentPosition(function() {});
-} catch(ex) {
-  if (ex.result == NOT_ENOUGH_ARGS) {
-    exception = ex;
-  }
+} catch(ex if ex instanceof TypeError) {
+  exception = ex;
 }
 ok(!exception, exception);
 
 exception = null;
 try {
   navigator.geolocation.getCurrentPosition(function() {}, function() {});
-} catch(ex) {
-  if (ex.result == NOT_ENOUGH_ARGS) {
-    exception = ex;
-  }
+} catch(ex if ex instanceof TypeError) {
+  exception = ex;
 }
 ok(!exception, exception);
 
 exception = null;
 try {
   navigator.geolocation.getCurrentPosition(function() {}, function() {}, {});
-} catch(ex) {
-  if (ex.result == NOT_ENOUGH_ARGS) {
-    exception = ex;
-  }
+} catch(ex if ex instanceof TypeError) {
+  exception = ex;
 }
 ok(!exception, exception);
 
 exception = null;
 try {
   navigator.geolocation.watchPosition();
-} catch(ex) {
-  if (ex.result == NOT_ENOUGH_ARGS) {
-    exception = ex;
-  }
+} catch(ex if ex instanceof TypeError) {
+  exception = ex;
 }
 ok(exception, "Should have got an exception");
 
 exception = null;
 try {
   navigator.geolocation.watchPosition(function() {});
-} catch(ex) {
-  if (ex.result == NOT_ENOUGH_ARGS) {
-    exception = ex;
-  }
+} catch(ex if ex instanceof TypeError) {
+  exception = ex;
 }
 ok(!exception, exception);
 
 exception = null;
 try {
   navigator.geolocation.watchPosition(function() {}, function() {});
-} catch(ex) {
-  if (ex.result == NOT_ENOUGH_ARGS) {
-    exception = ex;
-  }
+} catch(ex if ex instanceof TypeError) {
+  exception = ex;
 }
 ok(!exception, exception);
 
 exception = null;
 try {
   navigator.geolocation.watchPosition(function() {}, function() {}, {});
-} catch(ex) {
-  if (ex.result == NOT_ENOUGH_ARGS) {
-    exception = ex;
-  }
+} catch(ex if ex instanceof TypeError) {
+  exception = ex;
 }
 ok(!exception, exception);
 

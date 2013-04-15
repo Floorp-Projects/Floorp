@@ -56,10 +56,12 @@ public:
    * moves to the compositor.
    */
   virtual void CreatedSingleBuffer(CompositableClient* aCompositable,
-                                   TextureClient* aBuffer) = 0;
+                                   const SurfaceDescriptor& aDescriptor,
+                                   const TextureInfo& aTextureInfo) = 0;
   virtual void CreatedDoubleBuffer(CompositableClient* aCompositable,
-                                   TextureClient* aFront,
-                                   TextureClient* aBack) = 0;
+                                   const SurfaceDescriptor& aFrontDescriptor,
+                                   const SurfaceDescriptor& aBackDescriptor,
+                                   const TextureInfo& aTextureInfo) = 0;
 
   /**
    * Tell the compositor that a Compositable is killing its buffer(s),
@@ -68,15 +70,16 @@ public:
   virtual void DestroyThebesBuffer(CompositableClient* aCompositable) = 0;
 
   /**
-   * Communicate to the compositor that the texture identified by aLayer
-   * and aIdentifier has been updated to aImage.
+   * Communicate to the compositor that the texture identified by aCompositable
+   * and aTextureId has been updated to aImage.
    */
-  virtual void UpdateTexture(TextureClient* aTexture,
-                             const SurfaceDescriptor& aImage) = 0;
+  virtual void UpdateTexture(CompositableClient* aCompositable,
+                             TextureIdentifier aTextureId,
+                             SurfaceDescriptor* aDescriptor) = 0;
 
   /**
-   * Communicate to the compositor that aRegion in the texture identified by aLayer
-   * and aIdentifier has been updated to aThebesBuffer.
+   * Communicate to the compositor that aRegion in the texture identified by
+   * aCompositable and aIdentifier has been updated to aThebesBuffer.
    */
   virtual void UpdateTextureRegion(CompositableClient* aCompositable,
                                    const ThebesBufferData& aThebesBufferData,

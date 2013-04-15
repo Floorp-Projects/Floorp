@@ -115,6 +115,12 @@ struct IonOptions
     // Default: .125
     double usesBeforeInliningFactor;
 
+    // How many times we will try to enter a script via OSR before
+    // invalidating the script.
+    //
+    // Default: 6,000
+    uint32_t osrPcMismatchesBeforeRecompile;
+
     // How many actual arguments are accepted on the C stack.
     //
     // Default: 4,096
@@ -207,6 +213,7 @@ struct IonOptions
         usesBeforeCompile(1000),
         usesBeforeCompileNoJaeger(40),
         usesBeforeInliningFactor(.125),
+        osrPcMismatchesBeforeRecompile(6000),
         maxStackArgs(4096),
         maxInlineDepth(3),
         smallFunctionMaxInlineDepth(10),

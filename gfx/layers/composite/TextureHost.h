@@ -232,19 +232,6 @@ public:
                             mFlags & NeedsYFlip ? LAYER_RENDER_STATE_Y_FLIPPED : 0);
   }
 
-  // IPC
-
-  void SetTextureParent(TextureParent* aParent)
-  {
-    MOZ_ASSERT(!mTextureParent || mTextureParent == aParent);
-    mTextureParent = aParent;
-  }
-
-  TextureParent* GetIPDLActor() const
-  {
-    return mTextureParent;
-  }
-
 #ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char *Name() = 0;
   virtual void PrintInfo(nsACString& aTo, const char* aPrefix);
@@ -306,7 +293,6 @@ protected:
   SurfaceDescriptor* mBuffer;
   gfx::SurfaceFormat mFormat;
 
-  TextureParent* mTextureParent;
   ISurfaceAllocator* mDeAllocator;
 };
 

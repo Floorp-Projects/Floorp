@@ -6,7 +6,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #
-# $Id: Makefile,v 1.28 2012/04/25 14:49:50 gerv%gerv.net Exp $
+# $Id$
 #
 
 ## Define CC to be the C compiler you wish to use.  The GNU cc

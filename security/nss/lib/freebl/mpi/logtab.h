@@ -6,7 +6,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: logtab.h,v 1.6 2012/04/25 14:49:50 gerv%gerv.net Exp $ */
+/* $Id$ */
 
 const float s_logv_2[] = {
    0.000000000f, 0.000000000f, 1.000000000f, 0.630929754f,  /*  0  1  2  3 */

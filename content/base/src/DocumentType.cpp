@@ -132,6 +132,13 @@ DocumentType::GetInternalSubset(nsAString& aInternalSubset)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+DocumentType::MozRemove()
+{
+  Remove();
+  return NS_OK;
+}
+
 nsGenericDOMDataNode*
 DocumentType::CloneDataNode(nsINodeInfo *aNodeInfo, bool aCloneText) const
 {

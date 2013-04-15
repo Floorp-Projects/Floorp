@@ -5,7 +5,7 @@
 /*
  * CMS digesting.
  *
- * $Id: cmsdigest.c,v 1.9 2012/04/25 14:50:08 gerv%gerv.net Exp $
+ * $Id$
  */
 
 #include "cmslocal.h"

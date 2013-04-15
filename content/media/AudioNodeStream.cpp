@@ -177,6 +177,18 @@ AudioNodeStream::EnsureTrack()
   return track;
 }
 
+bool
+AudioNodeStream::AllInputsFinished() const
+{
+  uint32_t inputCount = mInputs.Length();
+  for (uint32_t i = 0; i < inputCount; ++i) {
+    if (!mInputs[i]->GetSource()->IsFinishedOnGraphThread()) {
+      return false;
+    }
+  }
+  return !!inputCount;
+}
+
 AudioChunk*
 AudioNodeStream::ObtainInputBlock(AudioChunk* aTmpChunk)
 {

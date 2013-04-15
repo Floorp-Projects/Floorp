@@ -1040,46 +1040,30 @@ exports.testOnLoadEventWithImage = function(test) {
 exports.testOnPageShowEvent = function (test) {
   test.waitUntilDone();
 
-  let firstUrl = 'about:home';
-  let secondUrl = 'about:newtab';
+  let firstUrl = 'data:text/html;charset=utf-8,First';
+  let secondUrl = 'data:text/html;charset=utf-8,Second';
 
   openBrowserWindow(function(window, browser) {
     let tabs = require('sdk/tabs');
 
-    let wait = 500;
-    let counter = 1;
-    tabs.on('pageshow', function setup(tab, persisted) {
-      if (counter === 1)
+    let counter = 0;
+    tabs.on('pageshow', function onPageShow(tab, persisted) {
+      counter++;
+      if (counter === 1) {
         test.assert(!persisted, 'page should not be cached on initial load');
-
-      if (wait > 5000) {
-        test.fail('Page was not cached after 5s')
-        closeBrowserWindow(window, function() test.done());
+        tab.url = secondUrl;
       }
-
-      if (tab.url === firstUrl) {
-        // If first page has persisted, pass
-        if (persisted) {
-          tabs.removeListener('pageshow', setup);
-          test.pass('pageshow event called on history.back()');
-          closeBrowserWindow(window, function() test.done());
-        }
-        // On the first run, or if the page wasn't cached
-        // the first time due to not waiting long enough,
-        // try again with a longer delay (this is terrible
-        // and ugly)
-        else {
-          counter++;
-          timer.setTimeout(function () {
-            tab.url = secondUrl;
-            wait *= 2;
-          }, wait);
-        }
-      }
-      else {
+      else if (counter === 2) {
+        test.assert(!persisted, 'second test page should not be cached either');
         tab.attach({
           contentScript: 'setTimeout(function () { window.history.back(); }, 0)'
         });
+      }
+      else {
+        test.assert(persisted, 'when we get back to the fist page, it has to' +
+                               'come from cache');
+        tabs.removeListener('pageshow', onPageShow);
+        closeBrowserWindow(window, function() test.done());
       }
     });
 

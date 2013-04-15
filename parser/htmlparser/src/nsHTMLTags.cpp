@@ -49,8 +49,6 @@ static const PRUnichar sHTMLTagUnicodeName_bgsound[] =
   {'b', 'g', 's', 'o', 'u', 'n', 'd', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_big[] =
   {'b', 'i', 'g', '\0'};
-static const PRUnichar sHTMLTagUnicodeName_blink[] =
-  {'b', 'l', 'i', 'n', 'k', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_blockquote[] =
   {'b', 'l', 'o', 'c', 'k', 'q', 'u', 'o', 't', 'e', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_body[] =

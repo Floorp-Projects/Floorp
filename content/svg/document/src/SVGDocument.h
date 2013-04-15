@@ -37,7 +37,6 @@ public:
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_DECL_ISUPPORTS_INHERITED
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-  virtual nsXPCClassInfo* GetClassInfo();
 
   // WebIDL API
   void GetDomain(nsAString& aDomain, ErrorResult& aRv);

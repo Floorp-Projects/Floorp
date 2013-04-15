@@ -88,7 +88,7 @@ SECStatus CERT_EncodeBasicConstraintValue
 }
 
 SECStatus CERT_DecodeBasicConstraintValue
-   (CERTBasicConstraints *value, SECItem *encodedValue)
+   (CERTBasicConstraints *value, const SECItem *encodedValue)
 {
     EncodedContext decodeContext;
     PRArenaPool *our_pool;

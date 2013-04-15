@@ -27,7 +27,7 @@ interface nsIDOMMediaStream;
 #endif
 %}
 
-[scriptable, uuid(55484dc4-7eb3-40ca-ad51-d4870bf1c9a9)]
+[scriptable, uuid(adbb2541-5ab6-41a3-9e16-fca46620b532)]
 interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
 {
   // error state

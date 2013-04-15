@@ -50,4 +50,4 @@ certainly my fault, not bc(1)'s.
  Michael J. Fromberger <sting@linguist.dartmouth.edu>
  Thayer School of Engineering, Hanover, New Hampshire, USA
  
- $Date: 2012/04/25 14:49:52 $
+ $Date$

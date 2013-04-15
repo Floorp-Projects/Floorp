@@ -7,7 +7,6 @@
 #include "DOMRequest.h"
 
 #include "mozilla/Util.h"
-#include "nsDOMClassInfo.h"
 #include "DOMError.h"
 #include "nsEventDispatcher.h"
 #include "nsDOMEvent.h"
@@ -47,8 +46,6 @@ DOMRequest::Init(nsIDOMWindow* aWindow)
                                         window->GetCurrentInnerWindow());
 }
 
-DOMCI_DATA(DOMRequest, DOMRequest)
-
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(DOMRequest,
                                                   nsDOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mError)
@@ -71,7 +68,6 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(DOMRequest)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDOMRequest)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(DOMRequest)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
 NS_IMPL_ADDREF_INHERITED(DOMRequest, nsDOMEventTargetHelper)
@@ -105,7 +101,7 @@ DOMRequest::GetReadyState(nsAString& aReadyState)
 }
 
 NS_IMETHODIMP
-DOMRequest::GetResult(jsval* aResult)
+DOMRequest::GetResult(JS::Value* aResult)
 {
   *aResult = Result();
   return NS_OK;
@@ -119,7 +115,7 @@ DOMRequest::GetError(nsIDOMDOMError** aError)
 }
 
 void
-DOMRequest::FireSuccess(jsval aResult)
+DOMRequest::FireSuccess(JS::Value aResult)
 {
   NS_ASSERTION(!mDone, "mDone shouldn't have been set to true already!");
   NS_ASSERTION(!mError, "mError shouldn't have been set!");
@@ -223,7 +219,7 @@ DOMRequestService::CreateCursor(nsIDOMWindow* aWindow,
 
 NS_IMETHODIMP
 DOMRequestService::FireSuccess(nsIDOMDOMRequest* aRequest,
-                               const jsval& aResult)
+                               const JS::Value& aResult)
 {
   NS_ENSURE_STATE(aRequest);
   static_cast<DOMRequest*>(aRequest)->FireSuccess(aResult);
@@ -245,7 +241,7 @@ class FireSuccessAsyncTask : public nsRunnable
 {
 public:
   FireSuccessAsyncTask(DOMRequest* aRequest,
-                       const jsval& aResult) :
+                       const JS::Value& aResult) :
     mReq(aRequest),
     mResult(aResult)
   {
@@ -280,7 +276,7 @@ public:
   }
 private:
   nsRefPtr<DOMRequest> mReq;
-  jsval mResult;
+  JS::Value mResult;
 };
 
 class FireErrorAsyncTask : public nsRunnable
@@ -306,7 +302,7 @@ private:
 
 NS_IMETHODIMP
 DOMRequestService::FireSuccessAsync(nsIDOMDOMRequest* aRequest,
-                                    const jsval& aResult)
+                                    const JS::Value& aResult)
 {
   NS_ENSURE_STATE(aRequest);
   nsCOMPtr<nsIRunnable> asyncTask =

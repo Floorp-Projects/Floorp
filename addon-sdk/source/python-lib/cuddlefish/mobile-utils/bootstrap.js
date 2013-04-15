@@ -40,7 +40,7 @@ function startup(data, reason) {
   try {
     let QuitObserver = {
       observe: function (aSubject, aTopic, aData) {
-        Services.obs.removeObserver(QuitObserver, "quit-application", false);
+        Services.obs.removeObserver(QuitObserver, "quit-application");
         dump("MU: APPLICATION-QUIT\n");
       }
     };

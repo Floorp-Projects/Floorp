@@ -39,6 +39,8 @@ public:
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
+  // nsWrapperCache
+  using nsWrapperCache::GetWrapperPreserveColor;
   virtual JSObject* WrapObject(JSContext* cx, JSObject* scope) MOZ_OVERRIDE;
 
   // nsIDOMHTMLOptionsCollection interface

@@ -6,7 +6,6 @@
 
 #include "AudioContext.h"
 #include "nsContentUtils.h"
-#include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "mozilla/ErrorResult.h"
 #include "MediaStreamGraph.h"
@@ -33,7 +32,7 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(AudioContext, Release)
 
 static uint8_t gWebAudioOutputKey;
 
-AudioContext::AudioContext(nsIDOMWindow* aWindow)
+AudioContext::AudioContext(nsPIDOMWindow* aWindow)
   : mWindow(aWindow)
   , mDestination(new AudioDestinationNode(this, MediaStreamGraph::GetInstance()))
 {
@@ -71,6 +70,7 @@ AudioContext::CreateBufferSource()
 {
   nsRefPtr<AudioBufferSourceNode> bufferNode =
     new AudioBufferSourceNode(this);
+  mAudioBufferSourceNodes.AppendElement(bufferNode);
   return bufferNode.forget();
 }
 
@@ -128,6 +128,7 @@ already_AddRefed<PannerNode>
 AudioContext::CreatePanner()
 {
   nsRefPtr<PannerNode> pannerNode = new PannerNode(this);
+  mPannerNodes.AppendElement(pannerNode);
   return pannerNode.forget();
 }
 
@@ -187,6 +188,29 @@ AudioContext::RemoveFromDecodeQueue(WebAudioDecodeJob* aDecodeJob)
   mDecodeJobs.RemoveElement(aDecodeJob);
 }
 
+void
+AudioContext::UnregisterAudioBufferSourceNode(AudioBufferSourceNode* aNode)
+{
+  mAudioBufferSourceNodes.RemoveElement(aNode);
+}
+
+void
+AudioContext::UnregisterPannerNode(PannerNode* aNode)
+{
+  mPannerNodes.RemoveElement(aNode);
+}
+
+void
+AudioContext::UpdatePannerSource()
+{
+  for (unsigned i = 0; i < mAudioBufferSourceNodes.Length(); i++) {
+    mAudioBufferSourceNodes[i]->UnregisterPannerNode();
+  }
+  for (unsigned i = 0; i < mPannerNodes.Length(); i++) {
+    mPannerNodes[i]->FindConnectedSources();
+  }
+}
+
 MediaStreamGraph*
 AudioContext::Graph() const
 {
@@ -208,13 +232,19 @@ AudioContext::CurrentTime() const
 void
 AudioContext::Suspend()
 {
-  DestinationStream()->ChangeExplicitBlockerCount(1);
+  MediaStream* ds = DestinationStream();
+  if (ds) {
+    ds->ChangeExplicitBlockerCount(1);
+  }
 }
 
 void
 AudioContext::Resume()
 {
-  DestinationStream()->ChangeExplicitBlockerCount(-1);
+  MediaStream* ds = DestinationStream();
+  if (ds) {
+    ds->ChangeExplicitBlockerCount(-1);
+  }
 }
 
 }

@@ -237,6 +237,10 @@ struct IonScript
     // Identifier of the compilation which produced this code.
     types::RecompileInfo recompileInfo_;
 
+    // Number of times we tried to enter this script via OSR but failed due to
+    // a LOOPENTRY pc other than osrPc_.
+    uint32_t osrPcMismatchCounter_;
+
   private:
     inline uint8_t *bottomBuffer() {
         return reinterpret_cast<uint8_t *>(this);
@@ -461,6 +465,12 @@ struct IonScript
     }
     const types::RecompileInfo& recompileInfo() const {
         return recompileInfo_;
+    }
+    uint32_t incrOsrPcMismatchCounter() {
+        return ++osrPcMismatchCounter_;
+    }
+    void resetOsrPcMismatchCounter() {
+        osrPcMismatchCounter_ = 0;
     }
 };
 

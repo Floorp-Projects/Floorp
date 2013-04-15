@@ -196,6 +196,7 @@
  "dom/tests/mochitest/general/test_windowProperties.html": "",
  "dom/tests/mochitest/geolocation/test_allowCurrent.html": "TIMED_OUT",
  "dom/tests/mochitest/geolocation/test_allowWatch.html": "TIMED_OUT",
+ "dom/tests/mochitest/geolocation/test_cachedPosition.html": "TIMED_OUT",
  "dom/tests/mochitest/geolocation/test_clearWatch.html": "TIMED_OUT",
  "dom/tests/mochitest/geolocation/test_manyCurrentConcurrent.html": "TIMED_OUT",
  "dom/tests/mochitest/geolocation/test_manyCurrentSerial.html": "TIMED_OUT",

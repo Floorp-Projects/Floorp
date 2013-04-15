@@ -835,7 +835,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   } else {
     static_cast<nsTextFrame*>(aFrame)->
       ReflowText(*this, availableSpaceOnLine, psd->mReflowState->rendContext,
-                 psd->mReflowState->mFlags.mBlinks, metrics, aReflowStatus);
+                 metrics, aReflowStatus);
   }
   
   pfd->mJustificationNumSpaces = mTextJustificationNumSpaces;

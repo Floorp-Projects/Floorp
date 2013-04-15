@@ -475,7 +475,7 @@ argumentUnboxingTemplates = {
         "        return JS_FALSE;\n",
 
     '[jsval]':
-        "    jsval ${name} = ${argVal};\n"
+        "    JS::RootedValue ${name}(cx, ${argVal});\n"
     }
 
 # From JSData2Native.
@@ -510,7 +510,12 @@ def writeArgumentUnboxing(f, i, name, type, optional, rvdeclared,
         else:
             val = "JSVAL_NULL"
         argVal = "(%d < argc ? argv[%d] : %s)" % (i, i, val)
-        argPtr = "(%d < argc ? &argv[%d] : NULL)" % (i, i)
+        if typeName == "[jsval]":
+            # This should use the rooted argument,
+            # however we probably won't ever need to support that.
+            argPtr = None
+        else:
+            argPtr = "(%d < argc ? &argv[%d] : NULL)" % (i, i)
     else:
         argVal = "argv[%d]" % i
         argPtr = "&" + argVal
@@ -590,7 +595,7 @@ def writeResultDecl(f, type, varname):
             f.write("    nsString %s;\n" % varname)
             return
         elif name == '[jsval]':
-            f.write("    jsval %s;\n" % varname)
+            f.write("    JS::RootedValue %s(cx);\n" % varname)
             return
     elif t.kind in ('interface', 'forward'):
         f.write("    nsCOMPtr<%s> %s;\n" % (type.name, varname))
@@ -605,7 +610,7 @@ def outParamForm(name, type):
         return '&' + name
     elif type.kind == 'native':
         if getBuiltinOrNativeTypeName(type) == '[jsval]':
-            return '&' + name
+            return name + '.address()'
         elif type.modifier == 'ref':
             return name
         else:
@@ -945,7 +950,7 @@ def writeQuickStub(f, customMethodCalls, stringtable, member, stubName,
             if member.implicit_jscontext:
                 argv.append('cx')
             if member.optional_argc:
-                argv.append('std::min<uint32_t>(argc, %d) - %d' % 
+                argv.append('std::min<uint32_t>(argc, %d) - %d' %
                             (len(member.params), requiredArgs))
             if not isVoidType(member.realtype):
                 argv.append(outParamForm(resultname, member.realtype))

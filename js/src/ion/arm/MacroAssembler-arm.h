@@ -762,6 +762,10 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         branchPtr(cond, lhs, ptr, label);
     }
 
+    void branchPrivatePtr(Condition cond, const Address &lhs, Register ptr, Label *label) {
+        branchPtr(cond, lhs, ptr, label);
+    }
+
     void branchPrivatePtr(Condition cond, Register lhs, ImmWord ptr, Label *label) {
         branchPtr(cond, lhs, ptr, label);
     }

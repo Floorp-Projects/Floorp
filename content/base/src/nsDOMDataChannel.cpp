@@ -222,11 +222,12 @@ NS_IMETHODIMP
 nsDOMDataChannel::GetReadyState(nsAString& aReadyState)
 {
   uint16_t readyState = mDataChannel->GetReadyState();
+  // From the WebRTC spec
   const char * stateName[] = {
-    "Connecting",
-    "Open",
-    "Closing",
-    "Closed"
+    "connecting",
+    "open",
+    "closing",
+    "closed"
   };
   MOZ_ASSERT(/*readyState >= mozilla::DataChannel::CONNECTING && */ // Always true due to datatypes
              readyState <= mozilla::DataChannel::CLOSED);

@@ -3,7 +3,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: tlsprf.c,v 1.7 2012/04/25 14:50:10 gerv%gerv.net Exp $ */
+/* $Id$ */
 
 #include "pkcs11i.h"
 #include "blapi.h"
@@ -23,6 +23,7 @@ typedef struct {
     PRUint32	   cxDataLen;	/* bytes of cxBufPtr containing data.        */
     SECStatus	   cxRv;	/* records failure of void functions.        */
     PRBool	   cxIsFIPS;	/* true if conforming to FIPS 198.           */
+    HASH_HashType  cxHashAlg;	/* hash algorithm to use for TLS 1.2+        */
     unsigned char  cxBuf[512];	/* actual size may be larger than 512.       */
 } TLSPRFContext;
 
@@ -89,7 +90,12 @@ sftk_TLSPRFUpdate(TLSPRFContext *cx,
     sigItem.data = sig;
     sigItem.len  = maxLen;
 
-    rv = TLS_PRF(&secretItem, NULL, &seedItem, &sigItem, cx->cxIsFIPS);
+    if (cx->cxHashAlg != HASH_AlgNULL) {
+	rv = TLS_P_hash(cx->cxHashAlg, &secretItem, NULL, &seedItem, &sigItem,
+			cx->cxIsFIPS);
+    } else {
+	rv = TLS_PRF(&secretItem, NULL, &seedItem, &sigItem, cx->cxIsFIPS);
+    }
     if (rv == SECSuccess && sigLen != NULL)
     	*sigLen = sigItem.len;
     return rv;
@@ -136,7 +142,8 @@ sftk_TLSPRFHashDestroy(TLSPRFContext *cx, PRBool freeit)
 CK_RV
 sftk_TLSPRFInit(SFTKSessionContext *context, 
 		  SFTKObject *        key, 
-		  CK_KEY_TYPE         key_type)
+		  CK_KEY_TYPE         key_type,
+		  HASH_HashType       hash_alg)
 {
     SFTKAttribute * keyVal;
     TLSPRFContext * prf_cx;
@@ -162,6 +169,7 @@ sftk_TLSPRFInit(SFTKSessionContext *context,
     prf_cx->cxRv      = SECSuccess;
     prf_cx->cxIsFIPS  = (key->slot->slotID == FIPS_SLOT_ID);
     prf_cx->cxBufPtr  = prf_cx->cxBuf;
+    prf_cx->cxHashAlg = hash_alg;
     if (keySize)
 	PORT_Memcpy(prf_cx->cxBufPtr, keyVal->attrib.pValue, keySize);
 

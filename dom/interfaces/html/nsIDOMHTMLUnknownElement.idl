@@ -11,7 +11,7 @@
  *
  * @see <http://www.whatwg.org/html/#htmlunknownelement>
  */
-[scriptable, uuid(3f4be98b-c6e5-41b4-bc0d-f659f7d109e0)]
+[scriptable, uuid(aa044a2d-4e9b-4fc5-8ad2-666da9062b36)]
 interface nsIDOMHTMLUnknownElement : nsIDOMHTMLElement
 {
 };

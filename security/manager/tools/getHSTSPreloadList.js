@@ -2,6 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// How to run this file:
+// 1. [obtain firefox source code]
+// 2. [build/obtain firefox binaries]
+// 3. run `[path to]/run-mozilla.sh [path to]/xpcshell \
+//                                  [path to]/getHSTSPreloadlist.js \
+//                                  [absolute path to]/nsSTSPreloadlist.inc'
+
 // <https://developer.mozilla.org/en/XPConnect/xpcshell/HOWTO>
 // <https://bugzilla.mozilla.org/show_bug.cgi?id=546628>
 const Cc = Components.classes;
@@ -23,10 +30,17 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource:///modules/XPCOMUtils.jsm");
 
-const SOURCE = "https://src.chromium.org/viewvc/chrome/trunk/src/net/base/transport_security_state_static.json";
+const SOURCE = "https://src.chromium.org/viewvc/chrome/trunk/src/net/http/transport_security_state_static.json";
 const OUTPUT = "nsSTSPreloadList.inc";
 const ERROR_OUTPUT = "nsSTSPreloadList.errors";
 const MINIMUM_REQUIRED_MAX_AGE = 60 * 60 * 24 * 7 * 18;
+const MAX_CONCURRENT_REQUESTS = 5;
+const MAX_RETRIES = 3;
+const REQUEST_TIMEOUT = 30 * 1000;
+const ERROR_NONE = "no error";
+const ERROR_CONNECTING_TO_HOST = "could not connect to host";
+const ERROR_NO_HSTS_HEADER = "did not receive HSTS header";
+const ERROR_MAX_AGE_TOO_LOW = "max-age too low: ";
 const HEADER = "/* This Source Code Form is subject to the terms of the Mozilla Public\n" +
 " * License, v. 2.0. If a copy of the MPL was not distributed with this\n" +
 " * file, You can obtain one at http://mozilla.org/MPL/2.0/. */\n" +
@@ -85,6 +99,7 @@ function getHosts(rawdata) {
   for (entry of rawdata.entries) {
     if (entry.mode && entry.mode == "force-https") {
       if (entry.name) {
+        entry.retries = MAX_RETRIES;
         hosts.push(entry);
       } else {
         throw "ERROR: entry not formatted correctly: no name found";
@@ -98,33 +113,34 @@ function getHosts(rawdata) {
 var gSTSService = Cc["@mozilla.org/stsservice;1"]
                   .getService(Ci.nsIStrictTransportSecurityService);
 
-function processStsHeader(hostname, header, status) {
+function processStsHeader(host, header, status) {
   var maxAge = { value: 0 };
   var includeSubdomains = { value: false };
-  var error = "no error";
+  var error = ERROR_NONE;
   if (header != null) {
     try {
       var uri = Services.io.newURI("https://" + host.name, null, null);
       gSTSService.processStsHeader(uri, header, 0, maxAge, includeSubdomains);
     }
     catch (e) {
-      dump("ERROR: could not process header '" + header + "' from " + hostname +
-           ": " + e + "\n");
+      dump("ERROR: could not process header '" + header + "' from " +
+           host.name + ": " + e + "\n");
       error = e;
     }
   }
   else {
     if (status == 0) {
-      error = "could not connect to host";
+      error = ERROR_CONNECTING_TO_HOST;
     } else {
-      error = "did not receive HSTS header";
+      error = ERROR_NO_HSTS_HEADER;
     }
   }
 
-  return { hostname: hostname,
+  return { name: host.name,
            maxAge: maxAge.value,
            includeSubdomains: includeSubdomains.value,
-           error: error };
+           error: error,
+           retries: host.retries - 1 };
 }
 
 function RedirectStopper() {};
@@ -148,13 +164,13 @@ function getHSTSStatus(host, resultList) {
   var inResultList = false;
   var uri = "https://" + host.name + "/";
   req.open("GET", uri, true);
-  req.timeout = 60000;
+  req.timeout = REQUEST_TIMEOUT;
   req.channel.notificationCallbacks = new RedirectStopper();
   req.onreadystatechange = function(event) {
     if (!inResultList && req.readyState == 4) {
       inResultList = true;
       var header = req.getResponseHeader("strict-transport-security");
-      resultList.push(processStsHeader(host.name, header, req.status));
+      resultList.push(processStsHeader(host, header, req.status));
     }
   };
 
@@ -167,7 +183,7 @@ function getHSTSStatus(host, resultList) {
 }
 
 function compareHSTSStatus(a, b) {
-  return (a.hostname > b.hostname ? 1 : (a.hostname < b.hostname ? -1 : 0));
+  return (a.name > b.name ? 1 : (a.name < b.name ? -1 : 0));
 }
 
 function writeTo(string, fos) {
@@ -186,7 +202,7 @@ function getExpirationTimeString() {
   return "const PRTime gPreloadListExpirationTime = INT64_C(" + expirationMicros + ");\n";
 }
 
-function output(sortedStatuses) {
+function output(sortedStatuses, currentList) {
   try {
     var file = FileUtils.getFile("CurWorkD", [OUTPUT]);
     var errorFile = FileUtils.getFile("CurWorkD", [ERROR_OUTPUT]);
@@ -196,17 +212,26 @@ function output(sortedStatuses) {
     writeTo(getExpirationTimeString(), fos);
     writeTo(PREFIX, fos);
     for (var status of hstsStatuses) {
+
+      if (status.error == ERROR_CONNECTING_TO_HOST &&
+          status.name in currentList) {
+        dump("INFO: " + status.name + " could not be connected to - using previous status on list\n");
+        writeTo(status.name + ": " + status.error + "\n", eos);
+        status.maxAge = MINIMUM_REQUIRED_MAX_AGE;
+        status.includeSubdomains = currentList[status.name];
+      }
+
       if (status.maxAge >= MINIMUM_REQUIRED_MAX_AGE) {
-        writeTo("  { \"" + status.hostname + "\", " +
+        writeTo("  { \"" + status.name + "\", " +
                  (status.includeSubdomains ? "true" : "false") + " },\n", fos);
-        dump("INFO: " + status.hostname + " ON the preload list\n");
+        dump("INFO: " + status.name + " ON the preload list\n");
       }
       else {
-        dump("INFO: " + status.hostname + " NOT ON the preload list\n");
+        dump("INFO: " + status.name + " NOT ON the preload list\n");
         if (status.maxAge != 0) {
-          status.error = "max-age too low: " + status.maxAge;
+          status.error = ERROR_MAX_AGE_TOO_LOW + status.maxAge;
         }
-        writeTo(status.hostname + ": " + status.error + "\n", eos);
+        writeTo(status.name + ": " + status.error + "\n", eos);
       }
     }
     writeTo(POSTFIX, fos);
@@ -218,42 +243,106 @@ function output(sortedStatuses) {
   }
 }
 
-// The idea is the output list will be the same size as the input list
-// when we've received all responses (or timed out).
+function shouldRetry(response) {
+  return (response.error != ERROR_NO_HSTS_HEADER &&
+          response.error != ERROR_NONE && response.retries > 0);
+}
+
+function getHSTSStatuses(inHosts, outStatuses) {
+  var expectedOutputLength = inHosts.length;
+  var tmpOutput = [];
+  for (var i = 0; i < MAX_CONCURRENT_REQUESTS && inHosts.length > 0; i++) {
+    var host = inHosts.shift();
+    dump("spinning off request to '" + host.name + "' (remaining retries: " +
+         host.retries + ")\n");
+    getHSTSStatus(host, tmpOutput);
+  }
+
+  while (outStatuses.length != expectedOutputLength) {
+    waitForAResponse(tmpOutput);
+    var response = tmpOutput.shift();
+    dump("request to '" + response.name + "' finished\n");
+    if (shouldRetry(response))
+      inHosts.push(response);
+    else
+      outStatuses.push(response);
+
+    if (inHosts.length > 0) {
+      var host = inHosts.shift();
+      dump("spinning off request to '" + host.name + "' (remaining retries: " +
+           host.retries + ")\n");
+      getHSTSStatus(host, tmpOutput);
+    }
+  }
+}
+
 // Since all events are processed on the main thread, and since event
 // handlers are not preemptible, there shouldn't be any concurrency issues.
-function waitForResponses(inputList, outputList) {
+function waitForAResponse(outputList) {
   // From <https://developer.mozilla.org/en/XPConnect/xpcshell/HOWTO>
   var threadManager = Cc["@mozilla.org/thread-manager;1"]
                       .getService(Ci.nsIThreadManager);
   var mainThread = threadManager.currentThread;
-  while (inputList.length != outputList.length) {
+  while (outputList.length == 0) {
     mainThread.processNextEvent(true);
   }
-  while (mainThread.hasPendingEvents()) {
-    mainThread.processNextEvent(true);
+}
+
+function readCurrentList(filename) {
+  var currentHosts = {};
+  var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+  file.initWithPath(filename);
+  var fis = Cc["@mozilla.org/network/file-input-stream;1"]
+              .createInstance(Ci.nsILineInputStream);
+  fis.init(file, -1, -1, Ci.nsIFileInputStream.CLOSE_ON_EOF);
+  var line = {};
+  var entryRegex = /  { "([^"]*)", (true|false) },/;
+  while (fis.readLine(line)) {
+    var match = entryRegex.exec(line.value);
+    if (match) {
+      currentHosts[match[1]] = (match[2] == "true");
+    }
+  }
+  return currentHosts;
+}
+
+function combineLists(newHosts, currentHosts) {
+  for (let currentHost in currentHosts) {
+    let found = false;
+    for (let newHost of newHosts) {
+      if (newHost.name == currentHost) {
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      newHosts.push({ name: currentHost, retries: MAX_RETRIES });
+    }
   }
 }
 
 // ****************************************************************************
 // This is where the action happens:
+if (arguments.length < 1) {
+  throw "Usage: getHSTSPreloadList.js <absolute path to current nsSTSPreloadList.inc>";
+}
+// get the current preload list
+var currentHosts = readCurrentList(arguments[0]);
 // disable the current preload list so it won't interfere with requests we make
 Services.prefs.setBoolPref("network.stricttransportsecurity.preloadlist", false);
 // download and parse the raw json file from the Chromium source
 var rawdata = download();
 // get just the hosts with mode: "force-https"
 var hosts = getHosts(rawdata);
-// spin off a request to each host
+// add hosts in the current list to the new list (avoiding duplicates)
+combineLists(hosts, currentHosts);
+// get the HSTS status of each host
 var hstsStatuses = [];
-for (var host of hosts) {
-  getHSTSStatus(host, hstsStatuses);
-}
-// wait for those responses to come back
-waitForResponses(hosts, hstsStatuses);
+getHSTSStatuses(hosts, hstsStatuses);
 // sort the hosts alphabetically
 hstsStatuses.sort(compareHSTSStatus);
 // write the results to a file (this is where we filter out hosts that we
 // either couldn't connect to, didn't receive an HSTS header from, couldn't
 // parse the header, or had a header with too short a max-age)
-output(hstsStatuses);
+output(hstsStatuses, currentHosts);
 // ****************************************************************************

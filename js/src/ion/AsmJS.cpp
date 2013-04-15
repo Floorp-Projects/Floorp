@@ -4902,7 +4902,9 @@ GenerateEntry(ModuleCompiler &m, const AsmJSModule::ExportedFunction &exportedFu
         masm.storeValue(JSVAL_TYPE_INT32, ReturnReg, Address(argv, 0));
         break;
       case RetType::Double:
+#ifndef JS_CPU_ARM_HARDFP
         masm.ma_vxfer(r0, r1, d0);
+#endif
         masm.canonicalizeDouble(ReturnFloatReg);
         masm.storeDouble(ReturnFloatReg, Address(argv, 0));
         break;

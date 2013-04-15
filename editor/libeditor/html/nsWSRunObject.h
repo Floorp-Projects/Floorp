@@ -135,7 +135,7 @@ inline const WSType operator|(const WSType::Enum& aLeft,
 }
 
 
-class NS_STACK_CLASS nsWSRunObject
+class MOZ_STACK_CLASS nsWSRunObject
 {
   public:
 
@@ -288,7 +288,7 @@ class NS_STACK_CLASS nsWSRunObject
     // always within a textnode that is one of the nodes stored in the list
     // in the wsRunObject.  For convenience, the character at that point is also 
     // stored in the struct.
-    struct NS_STACK_CLASS WSPoint
+    struct MOZ_STACK_CLASS WSPoint
     {
       nsCOMPtr<nsIContent> mTextNode;
       uint32_t mOffset;

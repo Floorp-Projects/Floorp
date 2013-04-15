@@ -259,10 +259,15 @@ ion::CanEnterBaselineJIT(JSContext *cx, JSScript *scriptArg, StackFrame *fp, boo
     if (script->hasBaselineScript())
         return Method_Compiled;
 
-    // Eagerly compile scripts if JSD is enabled, so that we don't have to OSR
-    // and don't have to update the frame pointer stored in JSD's frames list.
-    if (scriptArg->incUseCount() <= js_IonOptions.baselineUsesBeforeCompile && !IsJSDEnabled(cx))
+    // Check script use count. However, always eagerly compile scripts if JSD
+    // is enabled, so that we don't have to OSR and don't have to update the
+    // frame pointer stored in JSD's frames list.
+    if (IsJSDEnabled(cx)) {
+        if (JSOp(*cx->regs().pc) == JSOP_LOOPENTRY) // No OSR.
+            return Method_Skipped;
+    } else if (scriptArg->incUseCount() <= js_IonOptions.baselineUsesBeforeCompile) {
         return Method_Skipped;
+    }
 
     if (script->isCallsiteClone) {
         // Ensure the original function is compiled too, so that bailouts from

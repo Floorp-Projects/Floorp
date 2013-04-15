@@ -3,7 +3,7 @@ dnl This Source Code Form is subject to the terms of the Mozilla Public
 dnl License, v. 2.0. If a copy of the MPL was not distributed with this
 dnl file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-dnl My revision info: "@(#) $RCSfile: configure.in,v $ $Revision: 1.4 $ $Date: 2012/03/20 14:47:45 $"
+dnl My revision info: "@(#) $RCSfile$ $Revision$ $Date$"
 dnl Don't use AC_REVISION; it's broken
 
 AC_INIT(trivial.c)

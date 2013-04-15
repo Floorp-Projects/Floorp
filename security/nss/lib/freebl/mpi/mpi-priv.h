@@ -9,7 +9,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: mpi-priv.h,v 1.25 2012/04/25 14:49:50 gerv%gerv.net Exp $ */
+/* $Id$ */
 #ifndef _MPI_PRIV_H_
 #define _MPI_PRIV_H_ 1
 

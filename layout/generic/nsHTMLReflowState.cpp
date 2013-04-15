@@ -37,10 +37,6 @@
 using namespace mozilla;
 using namespace mozilla::layout;
 
-// Prefs-driven control for |text-decoration: blink|
-static bool sPrefIsLoaded = false;
-static bool sBlinkIsAllowed = true;
-
 enum eNormalLineHeightControl {
   eUninitialized = -1,
   eNoExternalLeading = 0,   // does not include external leading 
@@ -1760,30 +1756,6 @@ nsHTMLReflowState::ComputeContainingBlockRectangle(nsPresContext*          aPres
   }
 }
 
-// Prefs callback to pick up changes
-static int
-PrefsChanged(const char *aPrefName, void *instance)
-{
-  sBlinkIsAllowed =
-    Preferences::GetBool("browser.blink_allowed", sBlinkIsAllowed);
-
-  return 0; /* PREF_OK */
-}
-
-// Check to see if |text-decoration: blink| is allowed.  The first time
-// called, register the callback and then force-load the pref.  After that,
-// just use the cached value.
-static bool BlinkIsAllowed(void)
-{
-  if (!sPrefIsLoaded) {
-    // Set up a listener and check the initial value
-    Preferences::RegisterCallback(PrefsChanged, "browser.blink_allowed");
-    PrefsChanged(nullptr, nullptr);
-    sPrefIsLoaded = true;
-  }
-  return sBlinkIsAllowed;
-}
-
 static eNormalLineHeightControl GetNormalLineHeightCalcControl(void)
 {
   if (sNormalLineHeightControl == eUninitialized) {
@@ -2104,12 +2076,6 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
           )
         CalculateBlockSideMargins(availableWidth, mComputedWidth, aFrameType);
     }
-  }
-  // Check for blinking text and permission to display it
-  mFlags.mBlinks = (parentReflowState && parentReflowState->mFlags.mBlinks);
-  if (!mFlags.mBlinks && BlinkIsAllowed()) {
-    const nsStyleTextReset* st = frame->StyleTextReset();
-    mFlags.mBlinks = (st->mTextBlink != NS_STYLE_TEXT_BLINK_NONE);
   }
 }
 
