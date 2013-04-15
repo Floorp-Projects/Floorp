@@ -27,6 +27,9 @@
 // In milliseconds.
 #define FLUSHING_INTERVAL_MS 5000
 
+// Write Ahead Log's maximum size is 512KB
+#define MAX_WAL_SIZE_BYTES 512 * 1024
+
 namespace mozilla {
 namespace dom {
 
@@ -116,12 +119,6 @@ DOMStorageDBThread::Shutdown()
     mFlushImmediately = true;
     mStopIOThread = true;
     monitor.Notify();
-  }
-
-  mReaderStatements.FinalizeStatements();
-  if (mReaderConnection) {
-    mReaderConnection->Close();
-    mReaderConnection = nullptr;
   }
 
   PR_JoinThread(mThread);
@@ -396,25 +393,21 @@ DOMStorageDBThread::OpenDatabaseConnection()
 {
   nsresult rv;
 
+  MOZ_ASSERT(!NS_IsMainThread());
+
   nsCOMPtr<mozIStorageService> service
       = do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<mozIStorageConnection> connection;
-  rv = service->OpenUnsharedDatabase(mDatabaseFile, getter_AddRefs(connection));
+  rv = service->OpenUnsharedDatabase(mDatabaseFile, getter_AddRefs(mWorkerConnection));
   if (rv == NS_ERROR_FILE_CORRUPTED) {
     // delete the db and try opening again
     rv = mDatabaseFile->Remove(false);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = service->OpenUnsharedDatabase(mDatabaseFile, getter_AddRefs(connection));
+    rv = service->OpenUnsharedDatabase(mDatabaseFile, getter_AddRefs(mWorkerConnection));
   }
   NS_ENSURE_SUCCESS(rv, rv);
-
-  if (NS_IsMainThread()) {
-    connection.swap(mReaderConnection);
-  } else {
-    connection.swap(mWorkerConnection);
-  }
 
   return NS_OK;
 }
@@ -434,6 +427,10 @@ DOMStorageDBThread::InitDatabase()
 
   rv = TryJournalMode();
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // Create a read-only clone
+  (void)mWorkerConnection->Clone(true, getter_AddRefs(mReaderConnection));
+  NS_ENSURE_TRUE(mReaderConnection, NS_ERROR_FAILURE);
 
   mozStorageTransaction transaction(mWorkerConnection, false);
 
@@ -578,7 +575,47 @@ DOMStorageDBThread::TryJournalMode()
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
     mWALModeEnabled = true;
+
+    rv = ConfigureWALBehavior();
+    NS_ENSURE_SUCCESS(rv, rv);
   }
+
+  return NS_OK;
+}
+
+nsresult
+DOMStorageDBThread::ConfigureWALBehavior()
+{
+  // Get the DB's page size
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = mWorkerConnection->CreateStatement(NS_LITERAL_CSTRING(
+    MOZ_STORAGE_UNIQUIFY_QUERY_STR "PRAGMA page_size"
+  ), getter_AddRefs(stmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool hasResult = false;
+  rv = stmt->ExecuteStep(&hasResult);
+  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && hasResult, NS_ERROR_FAILURE);
+
+  int32_t pageSize = 0;
+  rv = stmt->GetInt32(0, &pageSize);
+  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && pageSize > 0, NS_ERROR_UNEXPECTED);
+
+  // Set the threshold for auto-checkpointing the WAL.
+  // We don't want giant logs slowing down reads & shutdown.
+  int32_t thresholdInPages = static_cast<int32_t>(MAX_WAL_SIZE_BYTES / pageSize);
+  nsAutoCString thresholdPragma("PRAGMA wal_autocheckpoint = ");
+  thresholdPragma.AppendInt(thresholdInPages);
+  rv = mWorkerConnection->ExecuteSimpleSQL(thresholdPragma);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Set the maximum WAL log size to reduce footprint on mobile (large empty
+  // WAL files will be truncated)
+  nsAutoCString journalSizePragma("PRAGMA journal_size_limit = ");
+  // bug 600307: mak recommends setting this to 3 times the auto-checkpoint threshold
+  journalSizePragma.AppendInt(MAX_WAL_SIZE_BYTES * 3);
+  rv = mWorkerConnection->ExecuteSimpleSQL(journalSizePragma);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
@@ -586,10 +623,24 @@ DOMStorageDBThread::TryJournalMode()
 nsresult
 DOMStorageDBThread::ShutdownDatabase()
 {
+  // Has to be called on the worker thread.
+  MOZ_ASSERT(!NS_IsMainThread());
+
   nsresult rv = mStatus;
 
+  mDBReady = false;
+
   // Finalize the cached statements.
+  mReaderStatements.FinalizeStatements();
   mWorkerStatements.FinalizeStatements();
+
+  if (mReaderConnection) {
+    // No need to sync access to mReaderConnection since the main thread
+    // is right now joining this thread, unable to execute any events.
+    mReaderConnection->Close();
+    mReaderConnection = nullptr;
+  }
+
   if (mWorkerConnection) {
     rv = mWorkerConnection->Close();
     mWorkerConnection = nullptr;
@@ -744,12 +795,6 @@ DOMStorageDBThread::DBOperation::Perform(DOMStorageDBThread* aThread)
 
     StatementCache* statements;
     if (MOZ_UNLIKELY(NS_IsMainThread())) {
-      if (MOZ_UNLIKELY(!aThread->mReaderConnection)) {
-        // Do lazy main thread connection opening
-        rv = aThread->OpenDatabaseConnection();
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-
       statements = &aThread->mReaderStatements;
     } else {
       statements = &aThread->mWorkerStatements;

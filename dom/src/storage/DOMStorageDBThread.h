@@ -315,6 +315,9 @@ private:
   nsresult SetJournalMode(bool aIsWal);
   nsresult TryJournalMode();
 
+  // Sets the threshold for auto-checkpointing the WAL.
+  nsresult ConfigureWALBehavior();
+
   void SetHigherPriority();
   void SetDefaultPriority();
 
