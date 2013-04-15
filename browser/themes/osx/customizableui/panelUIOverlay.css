@@ -5,7 +5,7 @@
 %filter substitution
 %define menuPanelWidth 26em
 
-%include ../shared/panelUIOverlay.inc.css
+%include ../../shared/customizableui/panelUIOverlay.inc.css
 
 .PanelUI-pageControls toolbarbutton {
   list-style-image: url("chrome://browser/skin/Toolbar.png");
