@@ -4,138 +4,129 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_SVGANIMATEDTRANSFORMLIST_H__
-#define MOZILLA_SVGANIMATEDTRANSFORMLIST_H__
+#ifndef mozilla_dom_SVGAnimatedTransformList_h
+#define mozilla_dom_SVGAnimatedTransformList_h
 
 #include "nsAutoPtr.h"
-#include "nsISMILAttr.h"
-#include "SVGTransformList.h"
-
-class nsIAtom;
-class nsSMILValue;
-class nsSVGElement;
+#include "nsCOMPtr.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsSVGElement.h"
+#include "nsWrapperCache.h"
+#include "mozilla/Attributes.h"
 
 namespace mozilla {
 
+class DOMSVGTransformList;
+class nsSVGAnimatedTransformList;
+
 namespace dom {
-class SVGAnimationElement;
-class SVGTransform;
-}
 
 /**
  * Class SVGAnimatedTransformList
  *
- * This class is very different to the SVG DOM interface of the same name found
- * in the SVG specification. This is a lightweight internal class - see
- * DOMSVGAnimatedTransformList for the heavier DOM class that wraps instances of
- * this class and implements the SVG specification's SVGAnimatedTransformList
- * DOM interface.
+ * This class is used to create the DOM tearoff objects that wrap internal
+ * nsSVGAnimatedTransformList objects.
  *
- * Except where noted otherwise, this class' methods take care of keeping the
- * appropriate DOM wrappers in sync (see the comment in
- * DOMSVGAnimatedTransformList::InternalBaseValListWillChangeTo) so that their
- * consumers don't need to concern themselves with that.
+ * See the architecture comment in DOMSVGAnimatedLengthList.h (that's
+ * LENGTH list). The comment for that class largly applies to this one too
+ * and will go a long way to helping you understand the architecture here.
+ *
+ * This class is strongly intertwined with DOMSVGTransformList and
+ * DOMSVGTransform.
+ * Our DOMSVGTransformList base and anim vals are friends and take care of
+ * nulling out our pointers to them when they die (making our pointers to them
+ * true weak refs).
  */
-class SVGAnimatedTransformList
+class SVGAnimatedTransformList MOZ_FINAL : public nsWrapperCache
 {
-  // friends so that they can get write access to mBaseVal
-  friend class dom::SVGTransform;
-  friend class DOMSVGTransformList;
+  friend class mozilla::DOMSVGTransformList;
 
 public:
-  SVGAnimatedTransformList() : mIsAttrSet(false) { }
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(SVGAnimatedTransformList)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(SVGAnimatedTransformList)
 
   /**
-   * Because it's so important that mBaseVal and its DOMSVGTransformList wrapper
-   * (if any) be kept in sync (see the comment in
-   * DOMSVGAnimatedTransformList::InternalBaseValListWillChangeTo), this method
-   * returns a const reference. Only our friend classes may get mutable
-   * references to mBaseVal.
+   * Factory method to create and return a SVGAnimatedTransformList wrapper
+   * for a given internal nsSVGAnimatedTransformList object. The factory takes
+   * care of caching the object that it returns so that the same object can be
+   * returned for the given nsSVGAnimatedTransformList each time it is requested.
+   * The cached object is only removed from the cache when it is destroyed due
+   * to there being no more references to it or to any of its descendant
+   * objects. If that happens, any subsequent call requesting the DOM wrapper
+   * for the nsSVGAnimatedTransformList will naturally result in a new
+   * SVGAnimatedTransformList being returned.
    */
-  const SVGTransformList& GetBaseValue() const {
-    return mBaseVal;
-  }
-
-  nsresult SetBaseValueString(const nsAString& aValue);
-
-  void ClearBaseValue();
-
-  const SVGTransformList& GetAnimValue() const {
-    return mAnimVal ? *mAnimVal : mBaseVal;
-  }
-
-  nsresult SetAnimValue(const SVGTransformList& aNewAnimValue,
-                        nsSVGElement *aElement);
-
-  void ClearAnimValue(nsSVGElement *aElement);
+  static already_AddRefed<SVGAnimatedTransformList>
+    GetDOMWrapper(nsSVGAnimatedTransformList *aList, nsSVGElement *aElement);
 
   /**
-   * Returns true if the corresponding transform attribute is set (or animated)
-   * to a valid value. Unlike HasTransform it will return true for an empty
-   * transform.
+   * This method returns the SVGAnimatedTransformList wrapper for an internal
+   * nsSVGAnimatedTransformList object if it currently has a wrapper. If it does
+   * not, then nullptr is returned.
    */
-  bool IsExplicitlySet() const;
+  static SVGAnimatedTransformList*
+    GetDOMWrapperIfExists(nsSVGAnimatedTransformList *aList);
 
   /**
-   * Returns true if the corresponding transform attribute is set (or animated)
-   * to a valid value, such that we have at least one transform in our list.
-   * Returns false otherwise (e.g. if the transform attribute is missing or empty
-   * or invalid).
+   * Called by internal code to notify us when we need to sync the length of
+   * our baseVal DOM list with its internal list. This is called just prior to
+   * the length of the internal baseVal list being changed so that any DOM list
+   * items that need to be removed from the DOM list can first get their values
+   * from their internal counterpart.
+   *
+   * The only time this method could fail is on OOM when trying to increase the
+   * length of the DOM list. If that happens then this method simply clears the
+   * list and returns. Callers just proceed as normal, and we simply accept
+   * that the DOM list will be empty (until successfully set to a new value).
    */
-  bool HasTransform() const
-    { return (mAnimVal && !mAnimVal->IsEmpty()) || !mBaseVal.IsEmpty(); }
+  void InternalBaseValListWillChangeLengthTo(uint32_t aNewLength);
+  void InternalAnimValListWillChangeLengthTo(uint32_t aNewLength);
 
-  bool IsAnimating() const {
-    return !!mAnimVal;
-  }
+  /**
+   * Returns true if our attribute is animating (in which case our animVal is
+   * not simply a mirror of our baseVal).
+   */
+  bool IsAnimating() const;
 
-  /// Callers own the returned nsISMILAttr
-  nsISMILAttr* ToSMILAttr(nsSVGElement* aSVGElement);
+  // WebIDL
+  nsSVGElement* GetParentObject() const { return mElement; }
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
+  // These aren't weak refs because mBaseVal and mAnimVal are weak
+  already_AddRefed<DOMSVGTransformList> BaseVal();
+  already_AddRefed<DOMSVGTransformList> AnimVal();
 
 private:
 
-  // mAnimVal is a pointer to allow us to determine if we're being animated or
-  // not. Making it a non-pointer member and using mAnimVal.IsEmpty() to check
-  // if we're animating is not an option, since that would break animation *to*
-  // the empty string (<set to="">).
-
-  SVGTransformList mBaseVal;
-  nsAutoPtr<SVGTransformList> mAnimVal;
-  bool mIsAttrSet;
-
-  struct SMILAnimatedTransformList : public nsISMILAttr
+  /**
+   * Only our static GetDOMWrapper() factory method may create objects of our
+   * type.
+   */
+  explicit SVGAnimatedTransformList(nsSVGElement *aElement)
+    : mBaseVal(nullptr)
+    , mAnimVal(nullptr)
+    , mElement(aElement)
   {
-  public:
-    SMILAnimatedTransformList(SVGAnimatedTransformList* aVal,
-                              nsSVGElement* aSVGElement)
-      : mVal(aVal)
-      , mElement(aSVGElement)
-    {}
+    SetIsDOMBinding();
+  }
 
-    // nsISMILAttr methods
-    virtual nsresult ValueFromString(const nsAString& aStr,
-                                     const dom::SVGAnimationElement* aSrcElement,
-                                     nsSMILValue& aValue,
-                                     bool& aPreventCachingOfSandwich) const;
-    virtual nsSMILValue GetBaseValue() const;
-    virtual void ClearAnimValue();
-    virtual nsresult SetAnimValue(const nsSMILValue& aValue);
+  ~SVGAnimatedTransformList();
 
-  protected:
-    static void ParseValue(const nsAString& aSpec,
-                           const nsIAtom* aTransformType,
-                           nsSMILValue& aResult);
-    static int32_t ParseParameterList(const nsAString& aSpec, float* aVars,
-                                      int32_t aNVars);
+  /// Get a reference to this DOM wrapper object's internal counterpart.
+  nsSVGAnimatedTransformList& InternalAList();
+  const nsSVGAnimatedTransformList& InternalAList() const;
 
-    // These will stay alive because a nsISMILAttr only lives as long
-    // as the Compositing step, and DOM elements don't get a chance to
-    // die during that.
-    SVGAnimatedTransformList* mVal;
-    nsSVGElement* mElement;
-  };
+  // Weak refs to our DOMSVGTransformList baseVal/animVal objects. These objects
+  // are friends and take care of clearing these pointers when they die, making
+  // these true weak references.
+  DOMSVGTransformList *mBaseVal;
+  DOMSVGTransformList *mAnimVal;
+
+  // Strong ref to our element to keep it alive. We hold this not only for
+  // ourself, but also for our base/animVal and all of their items.
+  nsRefPtr<nsSVGElement> mElement;
 };
 
+} // namespace dom
 } // namespace mozilla
 
-#endif // MOZILLA_SVGANIMATEDTRANSFORMLIST_H__
+#endif // mozilla_dom_SVGAnimatedTransformList_h

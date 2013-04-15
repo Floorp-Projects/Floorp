@@ -642,17 +642,24 @@ CompositorParent::TransformFixedLayers(Layer* aLayer,
     // aFixedLayerMargins are the margins we expect to be at at the current
     // time, obtained via SyncViewportInfo, and fixedMargins are the margins
     // that were used during layout.
+    // If top/left of fixedMargins are negative, that indicates that this layer
+    // represents auto-positioned elements, and should not be affected by
+    // fixed margins at all.
     const gfx::Margin& fixedMargins = aLayer->GetFixedPositionMargins();
-    if (anchor.x > 0) {
-      translation.x -= aFixedLayerMargins.right - fixedMargins.right;
-    } else {
-      translation.x += aFixedLayerMargins.left - fixedMargins.left;
+    if (fixedMargins.left >= 0) {
+      if (anchor.x > 0) {
+        translation.x -= aFixedLayerMargins.right - fixedMargins.right;
+      } else {
+        translation.x += aFixedLayerMargins.left - fixedMargins.left;
+      }
     }
 
-    if (anchor.y > 0) {
-      translation.y -= aFixedLayerMargins.bottom - fixedMargins.bottom;
-    } else {
-      translation.y += aFixedLayerMargins.top - fixedMargins.top;
+    if (fixedMargins.top >= 0) {
+      if (anchor.y > 0) {
+        translation.y -= aFixedLayerMargins.bottom - fixedMargins.bottom;
+      } else {
+        translation.y += aFixedLayerMargins.top - fixedMargins.top;
+      }
     }
 
     // The transform already takes the resolution scale into account.  Since we
