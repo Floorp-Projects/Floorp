@@ -13,8 +13,8 @@ this.EXPORTED_SYMBOLS = [
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
+Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://services-common/log4moz.js");
-Cu.import("resource://services-common/preferences.js");
 Cu.import("resource://services-common/rest.js");
 Cu.import("resource://services-common/utils.js");
 
