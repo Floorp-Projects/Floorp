@@ -169,8 +169,9 @@ XPCConvert::NativeData2JS(XPCLazyCallContext& lccx, jsval* d, const void* s,
                 nsID* iid2 = *((nsID**)s);
                 if (!iid2)
                     break;
+                JS::RootedObject scope(cx, lccx.GetScopeForNewJSObjects());
                 JSObject* obj;
-                if (!(obj = xpc_NewIDObject(cx, lccx.GetScopeForNewJSObjects(), *iid2)))
+                if (!(obj = xpc_NewIDObject(cx, scope, *iid2)))
                     return false;
                 *d = OBJECT_TO_JSVAL(obj);
                 break;
