@@ -1438,8 +1438,10 @@ private:
 };
 
 nsresult
-ReparentWrapper(JSContext* aCx, JSObject* aObj)
+ReparentWrapper(JSContext* aCx, JS::HandleObject aObjArg)
 {
+  // aObj is assigned to below, so needs to be re-rooted.
+  JS::RootedObject aObj(aCx, aObjArg);
   const DOMClass* domClass = GetDOMClass(aObj);
 
   JSObject* oldParent = JS_GetParent(aObj);
