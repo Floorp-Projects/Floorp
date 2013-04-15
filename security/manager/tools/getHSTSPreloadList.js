@@ -30,7 +30,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource:///modules/XPCOMUtils.jsm");
 
-const SOURCE = "https://src.chromium.org/viewvc/chrome/trunk/src/net/http/transport_security_state_static.json";
+const SOURCE = "https://src.chromium.org/chrome/trunk/src/net/http/transport_security_state_static.json";
 const OUTPUT = "nsSTSPreloadList.inc";
 const ERROR_OUTPUT = "nsSTSPreloadList.errors";
 const MINIMUM_REQUIRED_MAX_AGE = 60 * 60 * 24 * 7 * 18;
