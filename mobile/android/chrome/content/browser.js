@@ -3567,7 +3567,12 @@ Tab.prototype = {
   },
 
   setBrowserSize: function(aWidth, aHeight) {
+    if (Math.abs(this.browserWidth - aWidth) < 1e-6 && Math.abs(this.browserHeight - aHeight) < 1e-6) {
+      return;
+    }
+
     this.browserWidth = aWidth;
+    this.browserHeight = aHeight;
 
     if (!this.browser.contentWindow)
       return;
