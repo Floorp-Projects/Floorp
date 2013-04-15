@@ -42,10 +42,10 @@ public:
 private:
   ~FMRadio();
 
+  nsCOMPtr<nsIAudioChannelAgent> mAudioChannelAgent;
   hal::SwitchState mHeadphoneState;
   bool mHasInternalAntenna;
   bool mHidden;
-  nsCOMPtr<nsIAudioChannelAgent> mAudioChannelAgent;
 };
 
 } // namespace fm
