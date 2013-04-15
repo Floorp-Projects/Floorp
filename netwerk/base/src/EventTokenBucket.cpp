@@ -9,6 +9,11 @@
 #include "nsNetUtil.h"
 #include "nsSocketTransportService2.h"
 
+#ifdef XP_WIN
+#include <windows.h>
+#include <mmsystem.h>
+#endif
+
 extern PRThread *gSocketThread;
 
 namespace mozilla {
@@ -74,6 +79,10 @@ EventTokenBucket::EventTokenBucket(uint32_t eventsPerSecond,
   , mPaused(false)
   , mStopped(false)
   , mTimerArmed(false)
+#ifdef XP_WIN
+  , mFineGrainTimerInUse(false)
+  , mFineGrainResetTimerArmed(false)
+#endif
 {
   MOZ_COUNT_CTOR(EventTokenBucket);
   mLastUpdate = TimeStamp::Now();
@@ -100,6 +109,14 @@ EventTokenBucket::~EventTokenBucket()
   MOZ_COUNT_DTOR(EventTokenBucket);
   if (mTimer && mTimerArmed)
     mTimer->Cancel();
+
+#ifdef XP_WIN
+  NormalTimers();
+  if (mFineGrainResetTimerArmed) {
+    mFineGrainResetTimerArmed = false;
+    mFineGrainResetTimer->Cancel();
+  }
+#endif
 
   // Complete any queued events to prevent hangs
   while (mEvents.GetSize()) {
@@ -246,6 +263,11 @@ EventTokenBucket::DispatchEvents()
       cancelable->Fire();
     }
   }
+  
+#ifdef XP_WIN
+  if (!mEvents.GetSize())
+    WantNormalTimers();
+#endif
 }
  
 void
@@ -270,6 +292,10 @@ EventTokenBucket::UpdateTimer()
   else if (msecWait > 60000) // maximum wait
     msecWait = 60000;
 
+#ifdef XP_WIN
+  FineGrainTimers();
+#endif
+
   SOCKET_LOG(("EventTokenBucket::UpdateTimer %p for %dms\n",
               this, msecWait));
   nsresult rv = mTimer->InitWithCallback(this, static_cast<uint32_t>(msecWait),
@@ -281,6 +307,14 @@ NS_IMETHODIMP
 EventTokenBucket::Notify(nsITimer *timer)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+
+#ifdef XP_WIN
+  if (timer == mFineGrainResetTimer) {
+    FineGrainResetTimerNotify();
+    return NS_OK;
+  }
+#endif
+
   SOCKET_LOG(("EventTokenBucket::Notify() %p\n", this));
   mTimerArmed = false;
   if (mStopped)
@@ -308,6 +342,91 @@ EventTokenBucket::UpdateCredits()
   SOCKET_LOG(("EventTokenBucket::UpdateCredits %p to %lu (%lu each.. %3.2f)\n",
               this, mCredit, mUnitCost, (double)mCredit / mUnitCost));
 }
+
+#ifdef XP_WIN
+void
+EventTokenBucket::FineGrainTimers()
+{
+  SOCKET_LOG(("EventTokenBucket::FineGrainTimers %p mFineGrainTimerInUse=%d\n",
+              this, mFineGrainTimerInUse));
+
+  mLastFineGrainTimerUse = TimeStamp::Now();
+
+  if (mFineGrainTimerInUse)
+    return;
+
+  if (mUnitCost > kCostFineGrainThreshold)
+    return;
+
+  SOCKET_LOG(("EventTokenBucket::FineGrainTimers %p timeBeginPeriod()\n",
+              this));
+
+  mFineGrainTimerInUse = true;
+  timeBeginPeriod(1);
+}
+
+void
+EventTokenBucket::NormalTimers()
+{
+  if (!mFineGrainTimerInUse)
+    return;
+  mFineGrainTimerInUse = false;
+
+  SOCKET_LOG(("EventTokenBucket::NormalTimers %p timeEndPeriod()\n", this));
+  timeEndPeriod(1);
+}
+
+void
+EventTokenBucket::WantNormalTimers()
+{
+    if (!mFineGrainTimerInUse)
+      return;
+    if (mFineGrainResetTimerArmed)
+      return;
+
+    TimeDuration elapsed(TimeStamp::Now() - mLastFineGrainTimerUse);
+    static const TimeDuration fiveSeconds = TimeDuration::FromSeconds(5);
+
+    if (elapsed >= fiveSeconds) {
+      NormalTimers();
+      return;
+    }
+    
+    if (!mFineGrainResetTimer)
+      mFineGrainResetTimer = do_CreateInstance("@mozilla.org/timer;1");
+
+    // if we can't delay the reset, just do it now
+    if (!mFineGrainResetTimer) {
+      NormalTimers();
+      return;
+    }
+
+    // pad the callback out 100ms to avoid having to round trip this again if the
+    // timer calls back just a tad early.
+    SOCKET_LOG(("EventTokenBucket::WantNormalTimers %p "
+                "Will reset timer granularity after delay", this));
+
+    mFineGrainResetTimer->InitWithCallback(
+      this,
+      static_cast<uint32_t>((fiveSeconds - elapsed).ToMilliseconds()) + 100,
+      nsITimer::TYPE_ONE_SHOT);
+    mFineGrainResetTimerArmed = true;
+}
+
+void
+EventTokenBucket::FineGrainResetTimerNotify()
+{
+  SOCKET_LOG(("EventTokenBucket::FineGrainResetTimerNotify() events = %d\n",
+              this, mEvents.GetSize()));
+  mFineGrainResetTimerArmed = false;
+
+  // If we are currently processing events then wait for the queue to drain
+  // before trying to reset back to normal timers again
+  if (!mEvents.GetSize())
+    WantNormalTimers();
+}
+
+#endif
 
 } // mozilla::net
 } // mozilla
