@@ -28,6 +28,7 @@
 namespace js {
 namespace ion {
 
+class BaselineInspector;
 class ValueNumberData;
 class Range;
 
@@ -1741,7 +1742,7 @@ class MCompare
     bool evaluateConstantOperands(bool *result);
     MDefinition *foldsTo(bool useValueNumbers);
 
-    void infer(JSContext *cx);
+    void infer(JSContext *cx, BaselineInspector *inspector, jsbytecode *pc);
     CompareType compareType() const {
         return compareType_;
     }
@@ -5434,29 +5435,37 @@ class MBindNameCache
     }
 };
 
-// Guard on an object's shape.
-class MGuardShape
+// Guard on an object's shape or type, either inclusively or exclusively.
+class MGuardShapeOrType
   : public MUnaryInstruction,
     public SingleObjectPolicy
 {
     CompilerRootShape shape_;
+    CompilerRoot<types::TypeObject*> typeObject_;
+    bool bailOnEquality_;
     BailoutKind bailoutKind_;
 
-    MGuardShape(MDefinition *obj, RawShape shape, BailoutKind bailoutKind)
+    MGuardShapeOrType(MDefinition *obj, Shape *shape, types::TypeObject *typeObject,
+                      bool bailOnEquality, BailoutKind bailoutKind)
       : MUnaryInstruction(obj),
         shape_(shape),
+        typeObject_(typeObject),
+        bailOnEquality_(bailOnEquality),
         bailoutKind_(bailoutKind)
     {
+        // Exactly one of the shape or type object to guard on must be specified.
+        JS_ASSERT(!!shape != !!typeObject);
         setGuard();
         setMovable();
         setResultType(MIRType_Object);
     }
 
   public:
-    INSTRUCTION_HEADER(GuardShape)
+    INSTRUCTION_HEADER(GuardShapeOrType)
 
-    static MGuardShape *New(MDefinition *obj, RawShape shape, BailoutKind bailoutKind) {
-        return new MGuardShape(obj, shape, bailoutKind);
+    static MGuardShapeOrType *New(MDefinition *obj, Shape *shape, types::TypeObject *typeObject,
+                                  bool bailOnEquality, BailoutKind bailoutKind) {
+        return new MGuardShapeOrType(obj, shape, typeObject, bailOnEquality, bailoutKind);
     }
 
     TypePolicy *typePolicy() {
@@ -5468,15 +5477,25 @@ class MGuardShape
     const RawShape shape() const {
         return shape_;
     }
+    types::TypeObject *typeObject() const {
+        return typeObject_;
+    }
+    bool bailOnEquality() const {
+        return bailOnEquality_;
+    }
     BailoutKind bailoutKind() const {
         return bailoutKind_;
     }
     bool congruentTo(MDefinition * const &ins) const {
-        if (!ins->isGuardShape())
+        if (!ins->isGuardShapeOrType())
             return false;
-        if (shape() != ins->toGuardShape()->shape())
+        if (shape() != ins->toGuardShapeOrType()->shape())
             return false;
-        if (bailoutKind() != ins->toGuardShape()->bailoutKind())
+        if (typeObject() != ins->toGuardShapeOrType()->typeObject())
+            return false;
+        if (bailOnEquality() != ins->toGuardShapeOrType()->bailOnEquality())
+            return false;
+        if (bailoutKind() != ins->toGuardShapeOrType()->bailoutKind())
             return false;
         return congruentIfOperandsEqual(ins);
     }

@@ -5,6 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "BaselineInspector.h"
 #include "IonBuilder.h"
 #include "LICM.h" // For LinearSum
 #include "MIR.h"
@@ -1382,8 +1383,16 @@ MCompare::inputType()
     }
 }
 
+// Whether a baseline stub kind is suitable for a double comparison that
+// converts its operands to doubles.
+static bool
+CanUseDoubleCompare(ICStub::Kind kind)
+{
+    return kind == ICStub::Compare_Double || kind == ICStub::Compare_NumberWithUndefined;
+}
+
 void
-MCompare::infer(JSContext *cx)
+MCompare::infer(JSContext *cx, BaselineInspector *inspector, jsbytecode *pc)
 {
     JS_ASSERT(operandMightEmulateUndefined());
 
@@ -1488,6 +1497,29 @@ MCompare::infer(JSContext *cx)
     if (!relationalEq && CanDoValueBitwiseCmp(cx, getOperand(0), getOperand(1), looseEq)) {
         compareType_ = Compare_Value;
         return;
+    }
+
+    // Type information is not good enough to pick out a particular type of
+    // comparison we can do here. Try to specialize based on any baseline
+    // caches that have been generated for the opcode. These will cause the
+    // instruction's type policy to insert fallible unboxes to the appropriate
+    // input types.
+
+    if (!strictEq) {
+        ICStub::Kind kind = inspector->monomorphicStubKind(pc);
+
+        if (CanUseDoubleCompare(kind)) {
+            compareType_ = Compare_Double;
+            return;
+        }
+
+        ICStub::Kind first, second;
+        if (inspector->dimorphicStubKind(pc, &first, &second)) {
+            if (CanUseDoubleCompare(first) && CanUseDoubleCompare(second)) {
+                compareType_ = Compare_Double;
+                return;
+            }
+        }
     }
 }
 

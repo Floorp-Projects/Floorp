@@ -130,7 +130,7 @@
     _(LoadSlotT)                    \
     _(StoreSlotV)                   \
     _(StoreSlotT)                   \
-    _(GuardShape)                   \
+    _(GuardShapeOrType)             \
     _(GuardClass)                   \
     _(ParWriteGuard)                \
     _(ParDump)                      \

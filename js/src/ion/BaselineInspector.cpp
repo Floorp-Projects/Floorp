@@ -59,14 +59,11 @@ BaselineInspector::maybeMonomorphicShapeForPropertyOp(jsbytecode *pc)
     return NULL;
 }
 
-MIRType
-BaselineInspector::expectedResultType(jsbytecode *pc)
+ICStub::Kind
+BaselineInspector::monomorphicStubKind(jsbytecode *pc)
 {
-    // Look at the IC entries for this op to guess what type it will produce,
-    // returning MIRType_None otherwise.
-
     if (!hasBaselineScript())
-        return MIRType_None;
+        return ICStub::INVALID;
 
     const ICEntry &entry = icEntryFromPC(pc);
 
@@ -74,9 +71,40 @@ BaselineInspector::expectedResultType(jsbytecode *pc)
     ICStub *next = stub->next();
 
     if (!next || !next->isFallback())
-        return MIRType_None;
+        return ICStub::INVALID;
 
-    switch (stub->kind()) {
+    return stub->kind();
+}
+
+bool
+BaselineInspector::dimorphicStubKind(jsbytecode *pc, ICStub::Kind *pfirst, ICStub::Kind *psecond)
+{
+    if (!hasBaselineScript())
+        return false;
+
+    const ICEntry &entry = icEntryFromPC(pc);
+
+    ICStub *stub = entry.firstStub();
+    ICStub *next = stub->next();
+    ICStub *after = next ? next->next() : NULL;
+
+    if (!after || !after->isFallback())
+        return false;
+
+    *pfirst = stub->kind();
+    *psecond = next->kind();
+    return true;
+}
+
+MIRType
+BaselineInspector::expectedResultType(jsbytecode *pc)
+{
+    // Look at the IC entries for this op to guess what type it will produce,
+    // returning MIRType_None otherwise.
+
+    ICStub::Kind kind = monomorphicStubKind(pc);
+
+    switch (kind) {
       case ICStub::BinaryArith_Int32:
       case ICStub::BinaryArith_BooleanWithInt32:
       case ICStub::UnaryArith_Int32:
