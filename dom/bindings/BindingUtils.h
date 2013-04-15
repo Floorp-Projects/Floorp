@@ -1681,7 +1681,7 @@ struct JSBindingFinalized<T, true>
 };
 
 nsresult
-ReparentWrapper(JSContext* aCx, JSObject* aObj);
+ReparentWrapper(JSContext* aCx, JS::HandleObject aObj);
 
 /**
  * Used to implement the hasInstance hook of an interface object.

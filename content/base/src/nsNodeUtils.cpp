@@ -400,7 +400,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
 
   AutoJSContext cx;
   nsresult rv;
-  JSObject *wrapper;
+  JS::RootedObject wrapper(cx);
   bool isDOMBinding;
   if (aReparentScope && (wrapper = aNode->GetWrapper()) &&
       !(isDOMBinding = IsDOMObject(wrapper))) {
