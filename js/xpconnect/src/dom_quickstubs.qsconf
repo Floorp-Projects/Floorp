@@ -72,7 +72,6 @@ members = [
 
     'nsIDOMTouch.*',
     'nsIDOMTouchList.*',
-    'nsIDOMTouchEvent.*',
 
     # dom/interfaces/html
     'nsIDOMHTMLFormElement.elements',
