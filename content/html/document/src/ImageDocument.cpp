@@ -113,8 +113,8 @@ protected:
   nsresult ScrollImageTo(int32_t aX, int32_t aY, bool restoreImage);
 
   float GetRatio() {
-    return std::min((float)mVisibleWidth / mImageWidth,
-                  (float)mVisibleHeight / mImageHeight);
+    return std::min(mVisibleWidth / mImageWidth,
+                    mVisibleHeight / mImageHeight);
   }
 
   void ResetZoomLevel();
@@ -132,8 +132,8 @@ protected:
 
   nsCOMPtr<nsIContent>          mImageContent;
 
-  int32_t                       mVisibleWidth;
-  int32_t                       mVisibleHeight;
+  float                         mVisibleWidth;
+  float                         mVisibleHeight;
   int32_t                       mImageWidth;
   int32_t                       mImageHeight;
 
@@ -728,8 +728,8 @@ ImageDocument::CheckOverflowing(bool changeState)
     nsPresContext *context = shell->GetPresContext();
     nsRect visibleArea = context->GetVisibleArea();
 
-    mVisibleWidth = nsPresContext::AppUnitsToIntCSSPixels(visibleArea.width);
-    mVisibleHeight = nsPresContext::AppUnitsToIntCSSPixels(visibleArea.height);
+    mVisibleWidth = nsPresContext::AppUnitsToFloatCSSPixels(visibleArea.width);
+    mVisibleHeight = nsPresContext::AppUnitsToFloatCSSPixels(visibleArea.height);
   }
 
   bool imageWasOverflowing = mImageIsOverflowing;
