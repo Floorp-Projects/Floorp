@@ -284,6 +284,7 @@ webidl_files = \
   TextDecoder.webidl \
   TextEncoder.webidl \
   TimeRanges.webidl \
+  TouchEvent.webidl \
   TransitionEvent.webidl \
   TreeWalker.webidl \
   UIEvent.webidl \

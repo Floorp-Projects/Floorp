@@ -85,6 +85,7 @@ nsDOMTouchEvent::nsDOMTouchEvent(mozilla::dom::EventTarget* aOwner,
     mEventIsInternal = true;
     mEvent->time = PR_Now();
   }
+  SetIsDOMBinding();
 }
 
 nsDOMTouchEvent::~nsDOMTouchEvent()
@@ -229,28 +230,28 @@ nsDOMTouchEvent::GetChangedTouches(nsIDOMTouchList** aChangedTouches)
 NS_IMETHODIMP
 nsDOMTouchEvent::GetAltKey(bool* aAltKey)
 {
-  *aAltKey = static_cast<nsInputEvent*>(mEvent)->IsAlt();
+  *aAltKey = AltKey();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMTouchEvent::GetMetaKey(bool* aMetaKey)
 {
-  *aMetaKey = static_cast<nsInputEvent*>(mEvent)->IsMeta();
+  *aMetaKey = MetaKey();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMTouchEvent::GetCtrlKey(bool* aCtrlKey)
 {
-  *aCtrlKey = static_cast<nsInputEvent*>(mEvent)->IsControl();
+  *aCtrlKey = CtrlKey();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMTouchEvent::GetShiftKey(bool* aShiftKey)
 {
-  *aShiftKey = static_cast<nsInputEvent*>(mEvent)->IsShift();
+  *aShiftKey = ShiftKey();
   return NS_OK;
 }
 
