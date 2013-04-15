@@ -18,17 +18,16 @@ DisplayListClipState::GetCurrentCombinedClip(nsDisplayListBuilder* aBuilder)
   if (!mClipContentDescendants && !mClipContainingBlockDescendants) {
     return nullptr;
   }
-  void* mem = aBuilder->Allocate(sizeof(DisplayItemClip));
   if (mClipContentDescendants) {
     DisplayItemClip* newClip =
-      new (mem) DisplayItemClip(*mClipContentDescendants);
+      aBuilder->AllocateDisplayItemClip(*mClipContentDescendants);
     if (mClipContainingBlockDescendants) {
       newClip->IntersectWith(*mClipContainingBlockDescendants);
     }
     mCurrentCombinedClip = newClip;
   } else {
     mCurrentCombinedClip =
-      new (mem) DisplayItemClip(*mClipContainingBlockDescendants);
+      aBuilder->AllocateDisplayItemClip(*mClipContainingBlockDescendants);
   }
   return mCurrentCombinedClip;
 }
