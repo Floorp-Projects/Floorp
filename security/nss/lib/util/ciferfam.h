@@ -6,7 +6,7 @@
  * ciferfam.h - cipher familie IDs used for configuring ciphers for export
  *              control
  *
- * $Id: ciferfam.h,v 1.6 2012/04/25 14:50:16 gerv%gerv.net Exp $
+ * $Id$
  */
 
 #ifndef _CIFERFAM_H_

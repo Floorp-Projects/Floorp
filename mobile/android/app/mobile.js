@@ -628,6 +628,9 @@ pref("ui.scrolling.overscroll_snap_limit", -1);
 // The minimum amount of space that must be present for an axis to be considered scrollable,
 // in 1/1000ths of pixels.
 pref("ui.scrolling.min_scrollable_distance", -1);
+// The axis lock mode for panning behaviour - set between standard, free and sticky
+pref("ui.scrolling.axis_lock_mode", "standard");
+
 
 // Enable accessibility mode if platform accessibility is enabled.
 pref("accessibility.accessfu.activate", 2);

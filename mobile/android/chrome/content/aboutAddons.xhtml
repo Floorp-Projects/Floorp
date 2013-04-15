@@ -57,6 +57,7 @@
     <menuitem id="contextmenu-enable" label="&addonAction.enable;" onclick="ContextMenus.enable();"></menuitem>
     <menuitem id="contextmenu-disable" label="&addonAction.disable;" onclick="ContextMenus.disable();"></menuitem>
     <menuitem id="contextmenu-uninstall" label="&addonAction.uninstall;" onclick="ContextMenus.uninstall();"></menuitem>
+    <menuitem id="contextmenu-default" label="&addonAction.setDefault;" onclick="ContextMenus.setDefaultSearch();"></menuitem>
   </menu>
 
   <div id="addons-header" class="header">
@@ -83,6 +84,7 @@
         <button id="disable-btn" class="show-on-enable hide-on-disable hide-on-uninstall" onclick="Addons.disable();">&addonAction.disable;</button>
         <button id="uninstall-btn" class="hide-on-uninstall" onclick="Addons.uninstall();">&addonAction.uninstall;</button>
         <button id="cancel-btn" class="show-on-uninstall" onclick="Addons.cancelUninstall();">&addonAction.undo;</button>
+        <button id="default-btn" class="show-on-enable hide-on-disable hide-on-uninstall" onclick="Addons.setDefaultSearch();">&addonAction.setDefault;</button>
       </div>
       <div class="options-header">&aboutAddons.options;</div>
       <div class="options-box"></div>

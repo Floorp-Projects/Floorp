@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: mfind.c,v $ $Revision: 1.2 $ $Date: 2012/04/25 14:49:40 $";
+static const char CVS_ID[] = "@(#) $RCSfile$ $Revision$ $Date$";
 #endif /* DEBUG */
 
 #ifndef CKMK_H

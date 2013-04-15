@@ -29,7 +29,7 @@ class SVGTransform;
  */
 class SVGTransformList
 {
-  friend class SVGAnimatedTransformList;
+  friend class nsSVGAnimatedTransformList;
   friend class DOMSVGTransformList;
   friend class dom::SVGTransform;
 

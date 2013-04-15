@@ -2,6 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+const Ci = Components.interfaces;
+
 // This verifies that duplicate plugins are coalesced and maintain their ID
 // across restarts.
 
@@ -10,14 +12,16 @@ var PLUGINS = [{
   description: "A duplicate plugin",
   version: "1",
   blocklisted: false,
-  disabled: false,
+  enabledState: Ci.nsIPluginTag.STATE_ENABLED,
+  get disabled() this.enabledState == Ci.nsIPluginTag.STATE_DISABLED,
   filename: "/home/mozilla/.plugins/dupplugin1.so"
 }, {
   name: "Duplicate Plugin 1",
   description: "A duplicate plugin",
   version: "1",
   blocklisted: false,
-  disabled: false,
+  enabledState: Ci.nsIPluginTag.STATE_ENABLED,
+  get disabled() this.enabledState == Ci.nsIPluginTag.STATE_DISABLED,
   filename: "",
   filename: "/usr/lib/plugins/dupplugin1.so"
 }, {
@@ -25,14 +29,16 @@ var PLUGINS = [{
   description: "Another duplicate plugin",
   version: "1",
   blocklisted: false,
-  disabled: false,
+  enabledState: Ci.nsIPluginTag.STATE_ENABLED,
+  get disabled() this.enabledState == Ci.nsIPluginTag.STATE_DISABLED,
   filename: "/home/mozilla/.plugins/dupplugin2.so"
 }, {
   name: "Duplicate Plugin 2",
   description: "Another duplicate plugin",
   version: "1",
   blocklisted: false,
-  disabled: false,
+  enabledState: Ci.nsIPluginTag.STATE_ENABLED,
+  get disabled() this.enabledState == Ci.nsIPluginTag.STATE_DISABLED,
   filename: "",
   filename: "/usr/lib/plugins/dupplugin2.so"
 }, {
@@ -40,14 +46,16 @@ var PLUGINS = [{
   description: "Not a duplicate plugin",
   version: "1",
   blocklisted: false,
-  disabled: false,
+  enabledState: Ci.nsIPluginTag.STATE_ENABLED,
+  get disabled() this.enabledState == Ci.nsIPluginTag.STATE_DISABLED,
   filename: "/home/mozilla/.plugins/dupplugin3.so"
 }, {
   name: "Non-duplicate Plugin", // 4
   description: "Not a duplicate because the descriptions are different",
   version: "1",
   blocklisted: false,
-  disabled: false,
+  enabledState: Ci.nsIPluginTag.STATE_ENABLED,
+  get disabled() this.enabledState == Ci.nsIPluginTag.STATE_DISABLED,
   filename: "",
   filename: "/usr/lib/plugins/dupplugin4.so"
 }, {
@@ -55,7 +63,8 @@ var PLUGINS = [{
   description: "Not a duplicate plugin",
   version: "1",
   blocklisted: false,
-  disabled: false,
+  enabledState: Ci.nsIPluginTag.STATE_ENABLED,
+  get disabled() this.enabledState == Ci.nsIPluginTag.STATE_DISABLED,
   filename: "/home/mozilla/.plugins/dupplugin5.so"
 }];
 

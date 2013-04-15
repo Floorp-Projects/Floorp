@@ -10,11 +10,9 @@ module.metadata = {
   "stability": "stable"
 };
 
-const { on, once, off } = require('./core');
+const { on, once, off, setListeners } = require('./core');
 const { method } = require('../lang/functional');
 const { Class } = require('../core/heritage');
-
-const EVENT_TYPE_PATTERN = /^on([A-Z]\w+$)/;
 
 /**
  * `EventTarget` is an exemplar for creating an objects that can be used to
@@ -27,18 +25,13 @@ const EventTarget = Class({
    * given `options` and registers listeners for the ones that look like an
    * event listeners.
    */
+  /**
+   * Method initializes `this` event source. It goes through properties of a
+   * given `options` and registers listeners for the ones that look like an
+   * event listeners.
+   */
   initialize: function initialize(options) {
-    options = options || {};
-    // Go through each property and registers event listeners for those
-    // that have a name matching following pattern (`onEventType`).
-    Object.keys(options).forEach(function onEach(key) {
-      let match = EVENT_TYPE_PATTERN.exec(key);
-      let type = match && match[1].toLowerCase();
-      let listener = options[key];
-
-      if (type && typeof(listener) === 'function')
-        this.on(type, listener);
-    }, this);
+    setListeners(this, options);
   },
   /**
    * Registers an event `listener` that is called every time events of

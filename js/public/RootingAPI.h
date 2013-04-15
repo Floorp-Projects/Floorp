@@ -49,7 +49,7 @@
  * dangerous-looking actions cannot trigger a GC: js_malloc, cx->malloc_,
  * rt->malloc_, and friends and JS_ReportOutOfMemory.
  *
- * The following family of four classes will exactly root a stack location.
+ * The following family of three classes will exactly root a stack location.
  * Incorrect usage of these classes will result in a compile error in almost
  * all cases. Therefore, it is very hard to be incorrectly rooted if you use
  * these classes exclusively. These classes are all templated on the type T of
@@ -58,7 +58,7 @@
  * - Rooted<T> declares a variable of type T, whose value is always rooted.
  *   Rooted<T> may be automatically coerced to a Handle<T>, below. Rooted<T>
  *   should be used whenever a local variable's value may be held live across a
- *   call which can trigger a GC. This is generally true of
+ *   call which can trigger a GC.
  *
  * - Handle<T> is a const reference to a Rooted<T>. Functions which take GC
  *   things or values as arguments and need to root those arguments should
@@ -90,16 +90,16 @@
  * The following diagram explains the list of supported, implicit type
  * conversions between classes of this family:
  *
- *  RawT -----> Rooted<T> ----> Handle<T>
- *                 |               ^
- *                 |               |
- *                 |               |
- *                 +---> MutableHandle<T>
- *                 (via &)
+ *  Rooted<T> ----> Handle<T>
+ *     |               ^
+ *     |               |
+ *     |               |
+ *     +---> MutableHandle<T>
+ *     (via &)
  *
- * Currently all of these types implicit conversion to RawT. These are present
- * only for the purpose of bootstrapping exact rooting and will be removed in
- * the future (Bug 817164).
+ * Currently, all of these types have an implicit conversion to RawT. These are
+ * present only for the purpose of bootstrapping exact rooting and will be
+ * removed in the future (Bug 817164).
  */
 
 namespace js {

@@ -7,7 +7,9 @@
 
 #include "mozAutoDocUpdate.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/HTMLOptGroupElement.h"
 #include "mozilla/dom/HTMLOptionElement.h"
+#include "mozilla/dom/HTMLSelectElementBinding.h"
 #include "mozilla/Util.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsError.h"
@@ -19,7 +21,6 @@
 #include "nsIComboboxControlFrame.h"
 #include "nsIDocument.h"
 #include "nsIDOMEventTarget.h"
-#include "nsIDOMHTMLOptGroupElement.h"
 #include "nsIFormControlFrame.h"
 #include "nsIForm.h"
 #include "nsIFormProcessor.h"
@@ -32,9 +33,9 @@
 #include "nsRuleData.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStyleConsts.h"
+#include "nsTextNode.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Select)
-DOMCI_NODE_DATA(HTMLSelectElement, mozilla::dom::HTMLSelectElement)
 
 namespace mozilla {
 namespace dom {
@@ -123,6 +124,8 @@ HTMLSelectElement::HTMLSelectElement(already_AddRefed<nsINodeInfo> aNodeInfo,
   AddStatesSilently(NS_EVENT_STATE_ENABLED |
                     NS_EVENT_STATE_OPTIONAL |
                     NS_EVENT_STATE_VALID);
+
+  SetIsDOMBinding();
 }
 
 HTMLSelectElement::~HTMLSelectElement()
@@ -153,7 +156,7 @@ NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLSelectElement)
                                    nsIConstraintValidation)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLSelectElement,
                                                nsGenericHTMLFormElement)
-NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLSelectElement)
+NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
 // nsIDOMHTMLSelectElement
@@ -596,6 +599,25 @@ HTMLSelectElement::GetSelectFrame()
 }
 
 void
+HTMLSelectElement::Add(const HTMLOptionElementOrHTMLOptGroupElement& aElement,
+                       const Nullable<HTMLElementOrLong>& aBefore,
+                       ErrorResult& aRv)
+{
+  nsGenericHTMLElement& element =
+    aElement.IsHTMLOptionElement() ?
+    static_cast<nsGenericHTMLElement&>(aElement.GetAsHTMLOptionElement()) :
+    static_cast<nsGenericHTMLElement&>(aElement.GetAsHTMLOptGroupElement());
+
+  if (aBefore.IsNull()) {
+    Add(element, static_cast<nsGenericHTMLElement*>(nullptr), aRv);
+  } else if (aBefore.Value().IsHTMLElement()) {
+    Add(element, &aBefore.Value().GetAsHTMLElement(), aRv);
+  } else {
+    Add(element, aBefore.Value().GetAsLong(), aRv);
+  }
+}
+
+void
 HTMLSelectElement::Add(nsGenericHTMLElement& aElement,
                        nsGenericHTMLElement* aBefore,
                        ErrorResult& aError)
@@ -745,9 +767,7 @@ HTMLSelectElement::SetLength(uint32_t aLength)
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    nsCOMPtr<nsIContent> text;
-    rv = NS_NewTextNode(getter_AddRefs(text), mNodeInfo->NodeInfoManager());
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsRefPtr<nsTextNode> text = new nsTextNode(mNodeInfo->NodeInfoManager());
 
     rv = element->AppendChildTo(text, false);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -779,7 +799,7 @@ HTMLSelectElement::SetLength(uint32_t aLength)
 NS_IMETHODIMP
 HTMLSelectElement::GetSelectedIndex(int32_t* aValue)
 {
-  *aValue = mSelectedIndex;
+  *aValue = SelectedIndex();
 
   return NS_OK;
 }
@@ -1167,43 +1187,42 @@ HTMLSelectElement::IsOptionDisabled(int32_t aIndex, bool* aIsDisabled)
 NS_IMETHODIMP
 HTMLSelectElement::GetValue(nsAString& aValue)
 {
-  int32_t selectedIndex;
+  DOMString value;
+  GetValue(value);
+  value.ToString(aValue);
+  return NS_OK;
+}
 
-  nsresult rv = GetSelectedIndex(&selectedIndex);
-
-  if (NS_SUCCEEDED(rv) && selectedIndex > -1) {
-    nsCOMPtr<nsIDOMNode> node;
-
-    rv = Item(selectedIndex, getter_AddRefs(node));
-
-    nsCOMPtr<nsIDOMHTMLOptionElement> option = do_QueryInterface(node);
-    if (NS_SUCCEEDED(rv) && option) {
-      return option->GetValue(aValue);
-    }
+void
+HTMLSelectElement::GetValue(DOMString& aValue)
+{
+  int32_t selectedIndex = SelectedIndex();
+  if (selectedIndex < 0) {
+    return;
   }
 
-  aValue.Truncate();
-  return rv;
+  nsRefPtr<HTMLOptionElement> option =
+    Item(static_cast<uint32_t>(selectedIndex));
+
+  if (!option) {
+    return;
+  }
+
+  DebugOnly<nsresult> rv = option->GetValue(aValue);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
 NS_IMETHODIMP
 HTMLSelectElement::SetValue(const nsAString& aValue)
 {
-  uint32_t length;
-  nsresult rv = GetLength(&length);
-  NS_ENSURE_SUCCESS(rv, rv);
+  uint32_t length = Length();
 
   for (uint32_t i = 0; i < length; i++) {
-    nsCOMPtr<nsIDOMNode> node;
-    rv = Item(i, getter_AddRefs(node));
-    if (NS_FAILED(rv) || !node) {
-      continue;
-    }
-
-    nsCOMPtr<nsIDOMHTMLOptionElement> option = do_QueryInterface(node);
+    nsRefPtr<HTMLOptionElement> option = Item(i);
     if (!option) {
       continue;
     }
+
     nsAutoString optionVal;
     option->GetValue(optionVal);
     if (optionVal.Equals(aValue)) {
@@ -1211,7 +1230,7 @@ HTMLSelectElement::SetValue(const nsAString& aValue)
       break;
     }
   }
-  return rv;
+  return NS_OK;
 }
 
 
@@ -1942,6 +1961,12 @@ HTMLSelectElement::SetSelectionChanged(bool aValue, bool aNotify)
   if (mSelectionHasChanged != previousSelectionChangedValue) {
     UpdateState(aNotify);
   }
+}
+
+JSObject*
+HTMLSelectElement::WrapNode(JSContext* aCx, JSObject* aScope)
+{
+  return HTMLSelectElementBinding::Wrap(aCx, aScope, this);
 }
 
 } // namespace dom

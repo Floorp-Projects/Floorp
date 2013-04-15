@@ -68,7 +68,7 @@ function run_test()
     prefs.setBoolPref("geo.wifi.scan", false);
   }
 
-  geolocation = Cc["@mozilla.org/geolocation;1"].createInstance(Ci.nsIDOMGeoGeolocation);
+  geolocation = Cc["@mozilla.org/geolocation;1"].createInstance(Ci.nsISupports);
   geolocation.getCurrentPosition(function() {
     geolocation.getCurrentPosition(function() {
       if (runningInParent) {

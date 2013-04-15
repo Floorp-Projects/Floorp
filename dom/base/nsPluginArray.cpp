@@ -17,6 +17,9 @@
 #include "nsPluginHost.h"
 #include "nsIContentViewer.h"
 #include "nsIDocument.h"
+#include "nsIObserverService.h"
+#include "nsIWeakReference.h"
+#include "mozilla/Services.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -29,6 +32,16 @@ nsPluginArray::nsPluginArray(Navigator* navigator,
     mPluginArray(nullptr),
     mDocShell(do_GetWeakReference(aDocShell))
 {
+}
+
+void
+nsPluginArray::Init()
+{
+  nsCOMPtr<nsIObserverService> obsService =
+    mozilla::services::GetObserverService();
+  if (obsService) {
+    obsService->AddObserver(this, "plugin-info-updated", true);
+  }
 }
 
 nsPluginArray::~nsPluginArray()
@@ -47,6 +60,8 @@ DOMCI_DATA(PluginArray, nsPluginArray)
 NS_INTERFACE_MAP_BEGIN(nsPluginArray)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMPluginArray)
   NS_INTERFACE_MAP_ENTRY(nsIDOMPluginArray)
+  NS_INTERFACE_MAP_ENTRY(nsIObserver)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(PluginArray)
 NS_INTERFACE_MAP_END
 
@@ -166,6 +181,12 @@ nsPluginArray::Invalidate()
 {
   mDocShell = nullptr;
   mNavigator = nullptr;
+
+  nsCOMPtr<nsIObserverService> obsService =
+    mozilla::services::GetObserverService();
+  if (obsService) {
+    obsService->RemoveObserver(this, "plugin-info-updated");
+  }
 }
 
 NS_IMETHODIMP
@@ -256,7 +277,15 @@ nsPluginArray::GetPlugins()
   return rv;
 }
 
-//
+NS_IMETHODIMP
+nsPluginArray::Observe(nsISupports *aSubject, const char *aTopic,
+                       const PRUnichar *aData) {
+  if (!nsCRT::strcmp(aTopic, "plugin-info-updated")) {
+    Refresh(false);
+  }
+
+  return NS_OK;
+}
 
 nsPluginElement::nsPluginElement(nsIDOMPlugin* plugin)
 {

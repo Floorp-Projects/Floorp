@@ -431,7 +431,7 @@ js::DestroyContext(JSContext *cx, DestroyContextMode mode)
         JS::PrepareForFullGC(rt);
         GC(rt, GC_NORMAL, JS::gcreason::DESTROY_CONTEXT);
     }
-    js_delete(cx);
+    js_delete_poison(cx);
 }
 
 bool

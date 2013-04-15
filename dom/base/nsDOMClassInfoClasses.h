@@ -16,7 +16,6 @@ DOMCI_CLASS(DOMPrototype)
 DOMCI_CLASS(DOMConstructor)
 
 // Core classes
-DOMCI_CLASS(XMLDocument)
 DOMCI_CLASS(DOMException)
 DOMCI_CLASS(Element)
 DOMCI_CLASS(Attr)
@@ -45,14 +44,7 @@ DOMCI_CLASS(DeviceRotationRate)
 DOMCI_CLASS(HTMLDocument)
 
 // HTML element classes
-DOMCI_CLASS(HTMLAppletElement)
-DOMCI_CLASS(HTMLEmbedElement)
 DOMCI_CLASS(HTMLFormElement)
-DOMCI_CLASS(HTMLIFrameElement)
-DOMCI_CLASS(HTMLInputElement)
-DOMCI_CLASS(HTMLObjectElement)
-DOMCI_CLASS(HTMLSelectElement)
-DOMCI_CLASS(ValidityState)
 
 // CSS classes
 DOMCI_CLASS(CSSStyleRule)
@@ -67,12 +59,10 @@ DOMCI_CLASS(StyleSheetList)
 DOMCI_CLASS(CSSStyleSheet)
 
 // Range classes
-DOMCI_CLASS(Range)
 DOMCI_CLASS(Selection)
 
 // XUL classes
 #ifdef MOZ_XUL
-DOMCI_CLASS(XULDocument)
 DOMCI_CLASS(XULCommandDispatcher)
 #endif
 DOMCI_CLASS(XULControllers)
@@ -87,9 +77,6 @@ DOMCI_CLASS(TreeContentView)
 DOMCI_CLASS(CRMFObject)
 #endif
 DOMCI_CLASS(Crypto)
-
-// DOM Traversal classes
-DOMCI_CLASS(TreeWalker)
 
 // Rect object used by getComputedStyle
 DOMCI_CLASS(CSSRect)
@@ -117,9 +104,6 @@ DOMCI_CLASS(CSSSupportsRule)
 
 DOMCI_CLASS(BeforeUnloadEvent)
 
-// The SVG document
-DOMCI_CLASS(SVGDocument)
-
 DOMCI_CLASS(TimeEvent)
 
 // other SVG classes
@@ -135,7 +119,6 @@ DOMCI_CLASS(SVGStringList)
 DOMCI_CLASS(SVGZoomEvent)
 
 // Canvas
-DOMCI_CLASS(HTMLCanvasElement)
 DOMCI_CLASS(CanvasGradient)
 DOMCI_CLASS(CanvasPattern)
 DOMCI_CLASS(TextMetrics)
@@ -163,7 +146,6 @@ DOMCI_CLASS(OfflineResourceList)
 
 DOMCI_CLASS(Blob)
 DOMCI_CLASS(File)
-DOMCI_CLASS(FileReader)
 
 // DOM modal content window class, almost identical to Window
 DOMCI_CLASS(ModalContentWindow)
@@ -203,9 +185,6 @@ DOMCI_CLASS(MozCellBroadcast)
 // @font-face in CSS
 DOMCI_CLASS(CSSFontFaceRule)
 
-// DOM Traversal NodeIterator class
-DOMCI_CLASS(NodeIterator)
-
 DOMCI_CLASS(DataTransfer)
 
 DOMCI_CLASS(NotifyPaintEvent)
@@ -225,9 +204,6 @@ DOMCI_CLASS(ContentFrameMessageManager)
 DOMCI_CLASS(ChromeMessageBroadcaster)
 DOMCI_CLASS(ChromeMessageSender)
 
-DOMCI_CLASS(DesktopNotification)
-DOMCI_CLASS(DesktopNotificationCenter)
-
 DOMCI_CLASS(IDBFileHandle)
 DOMCI_CLASS(IDBRequest)
 DOMCI_CLASS(IDBDatabase)
@@ -243,10 +219,6 @@ DOMCI_CLASS(IDBOpenDBRequest)
 DOMCI_CLASS(Touch)
 DOMCI_CLASS(TouchList)
 DOMCI_CLASS(TouchEvent)
-
-#ifdef MOZ_GAMEPAD
-DOMCI_CLASS(Gamepad)
-#endif
 
 DOMCI_CLASS(MozCSSKeyframeRule)
 DOMCI_CLASS(MozCSSKeyframesRule)
@@ -278,8 +250,6 @@ DOMCI_CLASS(CameraControl)
 DOMCI_CLASS(CameraCapabilities)
 
 DOMCI_CLASS(DOMError)
-DOMCI_CLASS(DOMRequest)
-DOMCI_CLASS(DOMCursor)
 DOMCI_CLASS(OpenWindowEventDetail)
 DOMCI_CLASS(AsyncScrollEventDetail)
 

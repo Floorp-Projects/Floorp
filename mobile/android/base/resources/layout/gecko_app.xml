@@ -15,7 +15,9 @@
 
    <view class="org.mozilla.gecko.GeckoApp$MainLayout"
          android:id="@+id/main_layout"
-         style="@style/Screen.Transparent">
+         android:layout_width="fill_parent"
+         android:layout_height="fill_parent"
+         android:background="@android:color/transparent">
 
         <!-- BrowserToolbar will be added dynamically -->
 

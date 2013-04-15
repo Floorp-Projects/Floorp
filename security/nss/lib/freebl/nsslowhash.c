@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: nsslowhash.c,v 1.10 2012/11/21 22:19:22 emaldona%redhat.com Exp $ */
+/* $Id$ */
 
 #ifdef FREEBL_NO_DEPEND
 #include "stubs.h"

@@ -118,6 +118,21 @@ var testFramesLoaded = function() {
   var test12 = frame.contentDocument.getElementById("test");
   is(test12, null, "test allow-from-deny");
 
+  // frames from bug 836132 tests
+  {
+    frame = harness.contentDocument.getElementById("allow-from-allow-1");
+    var theTestResult = frame.contentDocument.getElementById("test");
+    isnot(theTestResult, null, "test afa1 should have been allowed");
+    if(theTestResult) {
+      is(theTestResult.textContent, "allow-from-allow-1", "test allow-from-allow-1");
+    }
+  }
+  for (var i = 1; i<=14; i++) {
+    frame = harness.contentDocument.getElementById("allow-from-deny-" + i);
+    var theTestResult = frame.contentDocument.getElementById("test");
+    is(theTestResult, null, "test allow-from-deny-" + i);
+  }
+
   // call tests to check principal comparison, e.g. a document can open a window
   // to a data: or javascript: document which frames an
   // X-Frame-Options: SAMEORIGIN document and the frame should load

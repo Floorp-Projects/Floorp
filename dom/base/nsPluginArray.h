@@ -12,6 +12,7 @@
 #include "nsIPluginHost.h"
 #include "nsIURL.h"
 #include "nsWeakReference.h"
+#include "nsIObserver.h"
 
 namespace mozilla {
 namespace dom {
@@ -24,6 +25,8 @@ class nsIDocShell;
 // NB: Due to weak references, Navigator has intimate knowledge of our
 // internals.
 class nsPluginArray : public nsIDOMPluginArray
+                    , public nsIObserver
+                    , public nsSupportsWeakReference
 {
 public:
   nsPluginArray(mozilla::dom::Navigator* navigator, nsIDocShell *aDocShell);
@@ -33,6 +36,14 @@ public:
 
   // nsIDOMPluginArray
   NS_DECL_NSIDOMPLUGINARRAY
+  // nsIObserver
+  NS_DECL_NSIOBSERVER
+
+  // nsPluginArray registers itself as an observer with a weak reference.
+  // This can't be done in the constructor, because at that point its
+  // refcount is 0 (and it gets destroyed upon registration). So, Init()
+  // must be called after construction.
+  void Init();
 
   nsresult GetPluginHost(nsIPluginHost** aPluginHost);
 
@@ -53,7 +64,7 @@ public:
     }
 #endif
 
-    return static_cast<nsPluginArray*>(aSupports);
+    return static_cast<nsPluginArray*>(static_cast<nsIDOMPluginArray*>(aSupports));
   }
 
 private:

@@ -26,7 +26,6 @@
 TS_ATOM(sAAtom, "a")
 TS_ATOM(sAddressAtom, "address")
 TS_ATOM(sBigAtom, "big")
-TS_ATOM(sBlinkAtom, "blink")
 TS_ATOM(sBAtom, "b")
 TS_ATOM(sCiteAtom, "cite")
 TS_ATOM(sCodeAtom, "code")

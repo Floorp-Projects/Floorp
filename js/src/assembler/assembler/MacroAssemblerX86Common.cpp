@@ -14,5 +14,9 @@
 using namespace JSC;
 MacroAssemblerX86Common::SSECheckState MacroAssemblerX86Common::s_sseCheckState = NotCheckedSSE;
 
+#ifdef DEBUG
+bool MacroAssemblerX86Common::s_floatingPointDisabled = false;
+#endif
+
 #endif /* WTF_CPU_X86 || WTF_CPU_X86_64 */
 

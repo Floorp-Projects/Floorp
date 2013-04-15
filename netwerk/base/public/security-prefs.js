@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-pref("security.enable_ssl3",             true);
-pref("security.enable_tls",		 true);
+pref("security.tls.version.min", 0);
+pref("security.tls.version.max", 1);
 pref("security.enable_tls_session_tickets", true);
 pref("security.enable_md5_signatures", false);
 

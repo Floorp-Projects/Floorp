@@ -27,10 +27,12 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPLUGINTAG
 
+  // These must match the STATE_* values in nsIPluginTag.idl
   enum PluginState {
     ePluginState_Disabled = 0,
     ePluginState_Clicktoplay = 1,
     ePluginState_Enabled = 2,
+    ePluginState_MaxValue = 3,
   };
 
   nsPluginTag(nsPluginTag* aPluginTag);

@@ -8,7 +8,7 @@
  * encoding/creation side *and* the decoding/decryption side.  Anything
  * else should be static routines in the appropriate file.
  *
- * $Id: p7local.c,v 1.16 2012/04/25 14:50:06 gerv%gerv.net Exp $
+ * $Id$
  */
 
 #include "p7local.h"

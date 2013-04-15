@@ -54,7 +54,7 @@ public:
     // If aOwner is not null, enter the compartment of aOwner's
     // underlying object.
     if (aOwner) {
-      aOwner = js::UnwrapObject(aOwner);
+      aOwner = js::UncheckedUnwrap(aOwner);
       JSAutoCompartment ac(cx, aOwner);
       if (!JS_WrapObject(cx, &aCallback)) {
         *aInited = false;
@@ -134,7 +134,7 @@ protected:
 
   JSObject* mCallback;
 
-  class NS_STACK_CLASS CallSetup
+  class MOZ_STACK_CLASS CallSetup
   {
     /**
      * A class that performs whatever setup we need to safely make a
@@ -282,9 +282,9 @@ public:
     }
 
     JSObject* thisObj =
-      js::UnwrapObject(GetWebIDLCallback()->CallbackPreserveColor());
+      js::UncheckedUnwrap(GetWebIDLCallback()->CallbackPreserveColor());
     JSObject* otherObj =
-      js::UnwrapObject(aOtherCallback->CallbackPreserveColor());
+      js::UncheckedUnwrap(aOtherCallback->CallbackPreserveColor());
     return thisObj == otherObj;
   }
 

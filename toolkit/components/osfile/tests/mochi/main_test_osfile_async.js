@@ -889,7 +889,11 @@ let test_duration = maketest("duration", function duration(test) {
     let pathDest = OS.Path.join(OS.Constants.Path.tmpDir,
       "osfile async test read writeAtomic.tmp");
     let tmpPath = pathDest + ".tmp";
-    let contents = yield OS.File.read(pathSource);
+    let readOptions = {
+      outExecutionDuration: null
+    };
+    let contents = yield OS.File.read(pathSource, undefined, readOptions);
+    testOptions(readOptions);
     // Options structure passed to a OS.File writeAtomic method.
     let writeAtomicOptions = {
       // This field should be first initialized with the actual
@@ -930,5 +934,10 @@ let test_duration = maketest("duration", function duration(test) {
     yield OS.File.writeAtomic(pathDest, contents, writeAtomicOptions);
     test.ok(copyOptions.outExecutionDuration >= backupDuration);
     OS.File.remove(pathDest);
+
+    // Testing an operation that doesn't take arguments at all
+    let file = yield OS.File.open(pathSource);
+    yield file.stat();
+    yield file.close();
   });
 });

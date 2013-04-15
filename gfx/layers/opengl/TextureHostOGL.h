@@ -48,8 +48,10 @@ public:
   virtual gl::ShaderProgramType GetShaderProgram() const {
     MOZ_NOT_REACHED("unhandled shader type");
   }
+  // TODO: Noone's implementing this anymore, should see if we need this.
   virtual GLenum GetTextureTarget() const { return LOCAL_GL_TEXTURE_2D; }
   virtual GLenum GetWrapMode() const = 0;// { return LOCAL_GL_CLAMP_TO_EDGE; } // default
+  virtual gfx3DMatrix GetTextureTransform() const { return gfx3DMatrix(); }
 };
 
 inline gl::ShaderProgramType
@@ -320,7 +322,7 @@ public:
 
   virtual TextureSourceOGL* AsSourceOGL() MOZ_OVERRIDE { return this; }
 
-  bool IsValid() const MOZ_OVERRIDE { return GetFormat() != gfx::FORMAT_UNKNOWN; }
+  bool IsValid() const MOZ_OVERRIDE { return !!mSharedHandle; }
 
   // override from TextureHost, we support both buffered
   // and unbuffered operation.
@@ -343,16 +345,11 @@ public:
     return mSize;
   }
 
-  virtual GLenum GetTextureTarget() const MOZ_OVERRIDE
-  {
-    return mTextureTarget;
-  }
-
   void BindTexture(GLenum activetex) MOZ_OVERRIDE
   {
     MOZ_ASSERT(mGL);
-    mGL->fActiveTexture(activetex);
-    mGL->fBindTexture(mTextureTarget, mTextureHandle);
+    // Lock already bound us!
+    MOZ_ASSERT(activetex == LOCAL_GL_TEXTURE0);
   }
   void ReleaseTexture() {}
   GLuint GetTextureID() { return mTextureHandle; }
@@ -361,6 +358,11 @@ public:
     return (mFormat == gfx::FORMAT_B8G8R8A8) ?
              gfxASurface::CONTENT_COLOR_ALPHA :
              gfxASurface::CONTENT_COLOR;
+  }
+
+  virtual gfx3DMatrix GetTextureTransform() const MOZ_OVERRIDE
+  {
+    return mTextureTransform;
   }
 
 #ifdef MOZ_LAYERS_HAVE_LOG
@@ -378,6 +380,7 @@ protected:
   gl::SharedTextureHandle mSharedHandle;
   gl::ShaderProgramType mShaderProgram;
   gl::GLContext::SharedTextureShareType mShareType;
+  gfx3DMatrix mTextureTransform;
 };
 
 class SurfaceStreamHostOGL : public TextureHost
@@ -582,11 +585,7 @@ public:
     return LOCAL_GL_CLAMP_TO_EDGE;
   }
 
-
-  bool IsValid() const MOZ_OVERRIDE
-  {
-    return !!mGLTexture;
-  }
+  bool IsValid() const MOZ_OVERRIDE;
 
 #ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char* Name() { return "GrallocTextureHostOGL"; }

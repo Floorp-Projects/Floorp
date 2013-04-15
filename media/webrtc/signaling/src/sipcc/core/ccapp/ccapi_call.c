@@ -52,7 +52,7 @@ void CCAPI_Call_retainCallInfo(cc_callinfo_ref_t ref) {
  */
 void CCAPI_Call_releaseCallInfo(cc_callinfo_ref_t ref) {
     if (ref != NULL ) {
-	DEF_DEBUG(DEB_F_PREFIX"ref=0x%x: count=%d",
+	DEF_DEBUG(DEB_F_PREFIX"ref=%p: count=%d",
            DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI_Call_releaseCallInfo"), ref, ref->ref_count);
 	ref->ref_count--;
 	if ( ref->ref_count == 0 ) {
@@ -202,7 +202,7 @@ cc_return_t CCAPI_Call_endConsultativeCall(cc_call_handle_t handle){
     attr != CC_ATTR_XFR_CONSULT &&
     attr != CC_ATTR_LOCAL_CONF_CONSULT &&
     attr != CC_ATTR_LOCAL_XFER_CONSULT) {
-    DEF_DEBUG(DEB_F_PREFIX"This method only calls on a consultative call",
+    DEF_DEBUG(DEB_F_PREFIX"This method only calls on a consultative call, handle %u",
       DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI_Call_endConsultativeCall"), handle);
     return CC_FAILURE;
   }
@@ -349,7 +349,7 @@ cc_return_t CCAPI_Call_sendInfo (cc_call_handle_t handle, cc_string_t infopackag
 cc_return_t CCAPI_Call_setAudioMute (cc_call_handle_t handle, cc_boolean val) {
 	unsigned int session_id = ccpro_get_sessionId_by_callid(GET_CALL_ID(handle));
         session_data_t * sess_data_p = (session_data_t *)findhash(session_id);
-	DEF_DEBUG(DEB_F_PREFIX": val=%d, handle=%d datap=%x",
+	DEF_DEBUG(DEB_F_PREFIX": val=%d, handle=%d datap=%p",
            DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI_Call_setAudioMute"), val, handle, sess_data_p);
 	if ( sess_data_p != NULL ) {
 		sess_data_p->audio_mute = val;
@@ -367,7 +367,7 @@ cc_return_t CCAPI_Call_setAudioMute (cc_call_handle_t handle, cc_boolean val) {
 cc_return_t CCAPI_Call_setVideoMute (cc_call_handle_t handle, cc_boolean val){
 	unsigned int session_id = ccpro_get_sessionId_by_callid(GET_CALL_ID(handle));
         session_data_t * sess_data_p = (session_data_t *)findhash(session_id);
-	DEF_DEBUG(DEB_F_PREFIX": val=%d, handle=%d datap=%x",
+	DEF_DEBUG(DEB_F_PREFIX": val=%d, handle=%d datap=%p",
            DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI_Call_setVideoMute"), val, handle, sess_data_p);
 	if ( sess_data_p != NULL ) {
 		sess_data_p->video_mute = val;

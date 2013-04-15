@@ -29,6 +29,7 @@ NS_IMPL_THREADSAFE_RELEASE(BackstagePass)
 #define XPC_MAP_QUOTED_CLASSNAME   "BackstagePass"
 #define                             XPC_MAP_WANT_NEWRESOLVE
 #define                             XPC_MAP_WANT_FINALIZE
+#define                             XPC_MAP_WANT_PRECREATE
 
 #define XPC_MAP_FLAGS       nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY   |  \
                             nsIXPCScriptable::USE_JSSTUB_FOR_DELPROPERTY   |  \
@@ -108,7 +109,9 @@ NS_IMETHODIMP
 BackstagePass::GetHelperForLanguage(uint32_t language,
                                     nsISupports **retval)
 {
-    *retval = nullptr;
+    nsCOMPtr<nsISupports> supports =
+        do_QueryInterface(static_cast<nsIGlobalObject *>(this));
+    supports.forget(retval);
     return NS_OK;
 }
 
@@ -166,6 +169,22 @@ BackstagePass::Finalize(nsIXPConnectWrappedNative *wrapper, JSFreeOp * fop, JSOb
     nsCOMPtr<nsIGlobalObject> bsp(do_QueryWrappedNative(wrapper));
     MOZ_ASSERT(bsp);
     static_cast<BackstagePass*>(bsp.get())->ForgetGlobalObject();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+BackstagePass::PreCreate(nsISupports *nativeObj, JSContext *cx,
+                         JSObject *globalObj, JSObject **parentObj)
+{
+    // We do the same trick here as for WindowSH. Return the js global
+    // as parent, so XPConenct can find the right scope and the wrapper
+    // that already exists.
+    nsCOMPtr<nsIGlobalObject> global(do_QueryInterface(nativeObj));
+    MOZ_ASSERT(global, "nativeObj not a global object!");
+
+    JSObject *jsglobal = global->GetGlobalJSObject();
+    if (jsglobal)
+        *parentObj = jsglobal;
     return NS_OK;
 }
 

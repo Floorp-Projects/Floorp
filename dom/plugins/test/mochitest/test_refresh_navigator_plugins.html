@@ -41,7 +41,7 @@
       ok(!tagTestPlugin.disabled, "test plugin should not be disabled");
 
       nextTest = testPart2;
-      tagTestPlugin.disabled = true;
+      tagTestPlugin.enabledState = Components.interfaces.nsIPluginTag.STATE_DISABLED;
 
       function testPart2() {
         var navTestPlugin = navigator.plugins.namedItem("Test Plug-in");
@@ -49,7 +49,7 @@
         ok(!navigator.mimeTypes[mimeType.type], "now navigator.mimeTypes should not have an entry for '" + mimeType.type + "'");
 
         nextTest = testPart3;
-        tagTestPlugin.disabled = false;
+        tagTestPlugin.enabledState = Components.interfaces.nsIPluginTag.STATE_ENABLED;
       }
 
       function testPart3() {

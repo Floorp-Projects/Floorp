@@ -67,7 +67,6 @@ class SpecificLayerAttributes;
 class SurfaceDescriptor;
 class Compositor;
 class LayerComposite;
-struct TextureIdentifier;
 struct TextureFactoryIdentifier;
 struct EffectMask;
 
@@ -157,7 +156,12 @@ public:
    * for its widget going away.  After this call, only user data calls
    * are valid on the layer manager.
    */
-  virtual void Destroy() { mDestroyed = true; mUserData.Destroy(); }
+  virtual void Destroy()
+  {
+    mDestroyed = true;
+    mUserData.Destroy();
+    mRoot = nullptr;
+  }
   bool IsDestroyed() { return mDestroyed; }
 
   virtual ShadowLayerForwarder* AsShadowForwarder()
@@ -855,6 +859,9 @@ public:
    * will be mirrored here. This allows for asynchronous animation of the
    * margins by reconciling the difference between this value and a value that
    * is updated more frequently.
+   * If the left or top margins are negative, it means that the elements this
+   * layer represents are auto-positioned, and so fixed position margins should
+   * not have an effect on the corresponding axis.
    */
   void SetFixedPositionMargins(const gfx::Margin& aMargins)
   {

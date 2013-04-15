@@ -15,7 +15,7 @@ SimpleTest.waitForExplicitFinish();
 const Ci = Components.interfaces;
 const Cc = Components.classes;
 
-var geolocation = Cc["@mozilla.org/geolocation;1"].getService(Ci.nsIDOMGeoGeolocation);
+var geolocation = Cc["@mozilla.org/geolocation;1"].getService(Ci.nsISupports);
 geolocation.getCurrentPosition(done, error);
 
 function error(error)

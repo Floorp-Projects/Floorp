@@ -509,10 +509,6 @@ s, strike, del {
   text-decoration: line-through;
 }
 
-blink {
-  text-decoration: blink;
-}
-
 big {
   font-size: larger;
 }

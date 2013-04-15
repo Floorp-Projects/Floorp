@@ -175,7 +175,7 @@ void CCAPI_CallInfo_getConfParticipants (cc_callinfo_ref_t handle, cc_participan
    {
       if (participantIndex >= *count)
       {
-          CCAPP_ERROR(DEB_F_PREFIX"Not Enough Room Provided To List All Participants.  Listed [%d] of [%d]\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONF"), count, nodeCount);
+          CCAPP_ERROR(DEB_F_PREFIX"Not Enough Room Provided To List All Participants.  Listed [%d] of [%d]", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONF"), *count, nodeCount);
           return;
       }
 

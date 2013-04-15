@@ -40,6 +40,7 @@
 #include "mozilla/Base64.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/EncodingUtils.h"
+#include "mozilla/dom/FileReaderBinding.h"
 #include "xpcpublic.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsDOMJSUtils.h"
@@ -48,13 +49,11 @@
 #include "jsfriendapi.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 #define LOAD_STR "load"
 #define LOADSTART_STR "loadstart"
 #define LOADEND_STR "loadend"
-
-using mozilla::dom::EncodingUtils;
-using mozilla::dom::FileIOObject;
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsDOMFileReader,
                                                   FileIOObject)
@@ -75,14 +74,11 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(nsDOMFileReader,
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mResultArrayBuffer)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-DOMCI_DATA(FileReader, nsDOMFileReader)
-
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMFileReader)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsIDOMFileReader)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-  NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(FileReader)
 NS_INTERFACE_MAP_END_INHERITING(FileIOObject)
 
 NS_IMPL_ADDREF_INHERITED(nsDOMFileReader, FileIOObject)
@@ -112,6 +108,7 @@ nsDOMFileReader::nsDOMFileReader()
 {
   nsLayoutStatics::AddRef();
   SetDOMStringToNull(mResult);
+  SetIsDOMBinding();
 }
 
 nsDOMFileReader::~nsDOMFileReader()
@@ -138,25 +135,29 @@ nsDOMFileReader::Init()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDOMFileReader::Initialize(nsISupports* aOwner, JSContext* cx, JSObject* obj,
-                            uint32_t argc, JS::Value *argv)
+/* static */ already_AddRefed<nsDOMFileReader>
+nsDOMFileReader::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
 {
-  nsCOMPtr<nsPIDOMWindow> owner = do_QueryInterface(aOwner);
+  nsRefPtr<nsDOMFileReader> fileReader = new nsDOMFileReader();
+
+  nsCOMPtr<nsPIDOMWindow> owner = do_QueryInterface(aGlobal.Get());
   if (!owner) {
     NS_WARNING("Unexpected nsIJSNativeInitializer owner");
-    return NS_OK;
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
   }
 
-  BindToOwner(owner);
+  fileReader->BindToOwner(owner);
 
   // This object is bound to a |window|,
   // so reset the principal.
-  nsCOMPtr<nsIScriptObjectPrincipal> scriptPrincipal = do_QueryInterface(aOwner);
-  NS_ENSURE_STATE(scriptPrincipal);
-  mPrincipal = scriptPrincipal->GetPrincipal();
-
-  return NS_OK; 
+  nsCOMPtr<nsIScriptObjectPrincipal> scriptPrincipal = do_QueryInterface(owner);
+  if (!scriptPrincipal) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+  fileReader->mPrincipal = scriptPrincipal->GetPrincipal();
+  return fileReader.forget();
 }
 
 // nsIInterfaceRequestor
@@ -172,7 +173,16 @@ nsDOMFileReader::GetInterface(const nsIID & aIID, void **aResult)
 NS_IMETHODIMP
 nsDOMFileReader::GetReadyState(uint16_t *aReadyState)
 {
-  return FileIOObject::GetReadyState(aReadyState);
+  *aReadyState = ReadyState();
+  return NS_OK;
+}
+
+JS::Value
+nsDOMFileReader::GetResult(JSContext* aCx, ErrorResult& aRv)
+{
+  JS::Value result = JS::UndefinedValue();
+  aRv = GetResult(aCx, &result);
+  return result;
 }
 
 NS_IMETHODIMP
@@ -201,41 +211,56 @@ nsDOMFileReader::GetResult(JSContext* aCx, JS::Value* aResult)
 NS_IMETHODIMP
 nsDOMFileReader::GetError(nsIDOMDOMError** aError)
 {
-  return FileIOObject::GetError(aError);
+  NS_IF_ADDREF(*aError = GetError());
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMFileReader::ReadAsArrayBuffer(nsIDOMBlob* aFile, JSContext* aCx)
 {
-  return ReadFileContent(aCx, aFile, EmptyString(), FILE_AS_ARRAYBUFFER);
+  NS_ENSURE_TRUE(aFile, NS_ERROR_NULL_POINTER);
+  ErrorResult rv;
+  ReadAsArrayBuffer(aCx, aFile, rv);
+  return rv.ErrorCode();
 }
 
 NS_IMETHODIMP
 nsDOMFileReader::ReadAsBinaryString(nsIDOMBlob* aFile)
 {
-  return ReadFileContent(nullptr, aFile, EmptyString(), FILE_AS_BINARY);
+  NS_ENSURE_TRUE(aFile, NS_ERROR_NULL_POINTER);
+  ErrorResult rv;
+  ReadAsBinaryString(aFile, rv);
+  return rv.ErrorCode();
 }
 
 NS_IMETHODIMP
 nsDOMFileReader::ReadAsText(nsIDOMBlob* aFile,
                             const nsAString &aCharset)
 {
-  return ReadFileContent(nullptr, aFile, aCharset, FILE_AS_TEXT);
+  NS_ENSURE_TRUE(aFile, NS_ERROR_NULL_POINTER);
+  ErrorResult rv;
+  ReadAsText(aFile, aCharset, rv);
+  return rv.ErrorCode();
 }
 
 NS_IMETHODIMP
 nsDOMFileReader::ReadAsDataURL(nsIDOMBlob* aFile)
 {
-  return ReadFileContent(nullptr, aFile, EmptyString(), FILE_AS_DATAURL);
+  NS_ENSURE_TRUE(aFile, NS_ERROR_NULL_POINTER);
+  ErrorResult rv;
+  ReadAsDataURL(aFile, rv);
+  return rv.ErrorCode();
 }
 
 NS_IMETHODIMP
 nsDOMFileReader::Abort()
 {
-  return FileIOObject::Abort();
+  ErrorResult rv;
+  FileIOObject::Abort(rv);
+  return rv.ErrorCode();
 }
 
-nsresult
+/* virtual */ void
 nsDOMFileReader::DoAbort(nsAString& aEvent)
 {
   // Revert status and result attributes
@@ -255,7 +280,6 @@ nsDOMFileReader::DoAbort(nsAString& aEvent)
 
   // Tell the base class which event to dispatch
   aEvent = NS_LITERAL_STRING(LOADEND_STR);
-  return NS_OK;
 }
 
 static
@@ -375,14 +399,14 @@ nsDOMFileReader::DoOnStopRequest(nsIRequest *aRequest,
 
 // Helper methods
 
-nsresult
+void
 nsDOMFileReader::ReadFileContent(JSContext* aCx,
                                  nsIDOMBlob* aFile,
                                  const nsAString &aCharset,
-                                 eDataFormat aDataFormat)
+                                 eDataFormat aDataFormat,
+                                 ErrorResult& aRv)
 {
-  nsresult rv;
-  NS_ENSURE_TRUE(aFile, NS_ERROR_NULL_POINTER);
+  MOZ_ASSERT(aFile);
 
   //Implicit abort to clear any other activity going on
   Abort();
@@ -405,44 +429,45 @@ nsDOMFileReader::ReadFileContent(JSContext* aCx,
     nsDOMFileInternalUrlHolder urlHolder(mFile, mPrincipal);
 
     nsCOMPtr<nsIURI> uri;
-    rv = NS_NewURI(getter_AddRefs(uri), urlHolder.mUrl);
-    NS_ENSURE_SUCCESS(rv, rv);
+    aRv = NS_NewURI(getter_AddRefs(uri), urlHolder.mUrl);
+    NS_ENSURE_SUCCESS_VOID(aRv.ErrorCode());
 
     nsCOMPtr<nsILoadGroup> loadGroup;
     if (HasOrHasHadOwner()) {
-      NS_ENSURE_STATE(GetOwner());
+      if (!GetOwner()) {
+        aRv.Throw(NS_ERROR_FAILURE);
+        return;
+      }
       nsIDocument* doc = GetOwner()->GetExtantDoc();
       if (doc) {
         loadGroup = doc->GetDocumentLoadGroup();
       }
     }
 
-    rv = NS_NewChannel(getter_AddRefs(mChannel), uri, nullptr, loadGroup,
-                       nullptr, nsIRequest::LOAD_BACKGROUND);
-    NS_ENSURE_SUCCESS(rv, rv);
+    aRv = NS_NewChannel(getter_AddRefs(mChannel), uri, nullptr, loadGroup,
+                        nullptr, nsIRequest::LOAD_BACKGROUND);
+    NS_ENSURE_SUCCESS_VOID(aRv.ErrorCode());
   }
 
   //Obtain the total size of the file before reading
   mTotal = mozilla::dom::kUnknownSize;
   mFile->GetSize(&mTotal);
 
-  rv = mChannel->AsyncOpen(this, nullptr);
-  NS_ENSURE_SUCCESS(rv, rv);
+  aRv = mChannel->AsyncOpen(this, nullptr);
+  NS_ENSURE_SUCCESS_VOID(aRv.ErrorCode());
 
   //FileReader should be in loading state here
   mReadyState = nsIDOMFileReader::LOADING;
   DispatchProgressEvent(NS_LITERAL_STRING(LOADSTART_STR));
-  
+
   if (mDataFormat == FILE_AS_ARRAYBUFFER) {
     RootResultArrayBuffer();
     mResultArrayBuffer = JS_NewArrayBuffer(aCx, mTotal);
     if (!mResultArrayBuffer) {
       NS_WARNING("Failed to create JS array buffer");
-      return NS_ERROR_FAILURE;
+      aRv.Throw(NS_ERROR_FAILURE);
     }
   }
- 
-  return NS_OK;
 }
 
 nsresult
@@ -524,4 +549,10 @@ nsDOMFileReader::ConvertStream(const char *aFileData,
   aResult.SetLength(destLength); //Trim down to the correct size
 
   return rv;
+}
+
+/* virtual */ JSObject*
+nsDOMFileReader::WrapObject(JSContext* aCx, JSObject* aScope)
+{
+  return FileReaderBinding::Wrap(aCx, aScope, this);
 }

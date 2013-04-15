@@ -40,6 +40,11 @@ class HTMLCanvasElement MOZ_FINAL : public nsGenericHTMLElement,
                                     public nsICanvasElementExternal,
                                     public nsIDOMHTMLCanvasElement
 {
+  enum {
+    DEFAULT_CANVAS_WIDTH = 300,
+    DEFAULT_CANVAS_HEIGHT = 150
+  };
+
   typedef layers::CanvasLayer CanvasLayer;
   typedef layers::LayerManager LayerManager;
 
@@ -67,6 +72,75 @@ public:
   // CC
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLCanvasElement,
                                            nsGenericHTMLElement)
+
+  // WebIDL
+  uint32_t Height()
+  {
+    return GetUnsignedIntAttr(nsGkAtoms::height, DEFAULT_CANVAS_HEIGHT);
+  }
+  void SetHeight(uint32_t aHeight, ErrorResult& aRv)
+  {
+    SetUnsignedIntAttr(nsGkAtoms::height, aHeight, aRv);
+  }
+  uint32_t Width()
+  {
+    return GetUnsignedIntAttr(nsGkAtoms::width, DEFAULT_CANVAS_WIDTH);
+  }
+  void SetWidth(uint32_t aWidth, ErrorResult& aRv)
+  {
+    SetUnsignedIntAttr(nsGkAtoms::width, aWidth, aRv);
+  }
+  already_AddRefed<nsISupports>
+  GetContext(JSContext* aCx, const nsAString& aContextId,
+             const Optional<JS::Value>& aContextOptions, ErrorResult& aRv)
+  {
+    JS::Value contextOptions = aContextOptions.WasPassed()
+                             ? aContextOptions.Value()
+                             : JS::UndefinedValue();
+    nsCOMPtr<nsISupports> context;
+    aRv = GetContext(aContextId, contextOptions, aCx, getter_AddRefs(context));
+    return context.forget();
+  }
+  void ToDataURL(JSContext* aCx, const nsAString& aType,
+                 const Optional<JS::Value>& aParams, nsAString& aDataURL,
+                 ErrorResult& aRv)
+  {
+    JS::Value params = aParams.WasPassed()
+                     ? aParams.Value()
+                     : JS::UndefinedValue();
+    aRv = ToDataURL(aType, params, aCx, aDataURL);
+  }
+  void ToBlob(nsIFileCallback* aCallback, const nsAString& aType,
+              ErrorResult& aRv)
+  {
+    aRv = ToBlob(aCallback, aType);
+  }
+
+  bool MozOpaque() const
+  {
+    return GetBoolAttr(nsGkAtoms::moz_opaque);
+  }
+  void SetMozOpaque(bool aValue, ErrorResult& aRv)
+  {
+    SetHTMLBoolAttr(nsGkAtoms::moz_opaque, aValue, aRv);
+  }
+  already_AddRefed<nsIDOMFile> MozGetAsFile(const nsAString& aName,
+                                            const nsAString& aType,
+                                            ErrorResult& aRv);
+  already_AddRefed<nsISupports> MozGetIPCContext(const nsAString& aContextId,
+                                                 ErrorResult& aRv)
+  {
+    nsCOMPtr<nsISupports> context;
+    aRv = MozGetIPCContext(aContextId, getter_AddRefs(context));
+    return context.forget();
+  }
+  void MozFetchAsStream(nsIInputStreamCallback* aCallback,
+                        const nsAString& aType, ErrorResult& aRv)
+  {
+    aRv = MozFetchAsStream(aCallback, aType);
+  }
+  nsIPrintCallback* GetMozPrintCallback() const;
+  // Using XPCOM SetMozPrintCallback.
 
   /**
    * Get the size in pixels of this canvas element
@@ -152,10 +226,13 @@ public:
   // take a snapshot of the canvas that needs to be "live" (e.g. -moz-element).
   void MarkContextClean();
 
-  virtual nsXPCClassInfo* GetClassInfo();
+  nsresult GetContext(const nsAString& aContextId, nsISupports** aContext);
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
 protected:
+  virtual JSObject* WrapNode(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
+
   nsIntSize GetWidthHeight();
 
   nsresult UpdateContext(nsIPropertyBag *aNewContextOptions = nullptr);
@@ -163,8 +240,9 @@ protected:
                        const nsAString& aOptions,
                        nsIInputStream** aStream,
                        bool& aFellBackToPNG);
-  nsresult ToDataURLImpl(const nsAString& aMimeType,
-                         nsIVariant* aEncoderOptions,
+  nsresult ToDataURLImpl(JSContext* aCx,
+                         const nsAString& aMimeType,
+                         const JS::Value& aEncoderOptions,
                          nsAString& aDataURL);
   nsresult MozGetAsFileImpl(const nsAString& aName,
                             const nsAString& aType,
@@ -178,7 +256,7 @@ protected:
   nsCOMPtr<nsIPrintCallback> mPrintCallback;
   nsCOMPtr<nsICanvasRenderingContextInternal> mCurrentContext;
   nsCOMPtr<HTMLCanvasPrintState> mPrintState;
-  
+
 public:
   // Record whether this canvas should be write-only or not.
   // We set this when script paints an image from a different origin.
@@ -196,12 +274,6 @@ public:
 
   HTMLCanvasElement* GetOriginalCanvas();
 };
-
-inline nsISupports*
-GetISupports(HTMLCanvasElement* p)
-{
-  return static_cast<Element*>(p);
-}
 
 } // namespace dom
 } // namespace mozilla

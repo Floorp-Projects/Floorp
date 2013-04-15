@@ -6,12 +6,11 @@
 #include "mpi.h"
 #include "mplogic.h"
 #include "mpi-priv.h"
-#include <stdlib.h>
 
 /* Fast modular reduction for p256 = 2^256 - 2^224 + 2^192+ 2^96 - 1.  a can be r. 
  * Uses algorithm 2.29 from Hankerson, Menezes, Vanstone. Guide to 
  * Elliptic Curve Cryptography. */
-mp_err
+static mp_err
 ec_GFp_nistp256_mod(const mp_int *a, mp_int *r, const GFMethod *meth)
 {
 	mp_err res = MP_OKAY;
@@ -159,10 +158,10 @@ ec_GFp_nistp256_mod(const mp_int *a, mp_int *r, const GFMethod *meth)
 			MP_ADD_CARRY(r0, r8_d,         r0, 0,     carry);
 			MP_ADD_CARRY(r1, 0,            r1, carry, carry);
 			MP_ADD_CARRY(r2, 0,            r2, carry, carry);
-			MP_ADD_CARRY(r3, -r8_d,        r3, carry, carry);
+			MP_ADD_CARRY(r3, 0-r8_d,       r3, carry, carry);
 			MP_ADD_CARRY(r4, MP_DIGIT_MAX, r4, carry, carry);
 			MP_ADD_CARRY(r5, MP_DIGIT_MAX, r5, carry, carry);
-			MP_ADD_CARRY(r6, -(r8_d+1),    r6, carry, carry);
+			MP_ADD_CARRY(r6, 0-(r8_d+1),   r6, carry, carry);
 			MP_ADD_CARRY(r7, (r8_d-1),     r7, carry, carry);
 			r8 = carry;
 		}
@@ -173,12 +172,12 @@ ec_GFp_nistp256_mod(const mp_int *a, mp_int *r, const GFMethod *meth)
 			MP_SUB_BORROW(r0, r8_d,         r0, 0,     carry);
 			MP_SUB_BORROW(r1, 0,            r1, carry, carry);
 			MP_SUB_BORROW(r2, 0,            r2, carry, carry);
-			MP_SUB_BORROW(r3, -r8_d,        r3, carry, carry);
+			MP_SUB_BORROW(r3, 0-r8_d,       r3, carry, carry);
 			MP_SUB_BORROW(r4, MP_DIGIT_MAX, r4, carry, carry);
 			MP_SUB_BORROW(r5, MP_DIGIT_MAX, r5, carry, carry);
-			MP_SUB_BORROW(r6, -(r8_d+1),    r6, carry, carry);
+			MP_SUB_BORROW(r6, 0-(r8_d+1),   r6, carry, carry);
 			MP_SUB_BORROW(r7, (r8_d-1),     r7, carry, carry);
-			r8 = -carry;
+			r8 = 0-carry;
 		}
 		if (a != r) {
 			MP_CHECKOK(s_mp_pad(r,8));
@@ -203,24 +202,7 @@ ec_GFp_nistp256_mod(const mp_int *a, mp_int *r, const GFMethod *meth)
 				  && (r0 == MP_DIGIT_MAX)))))) {
 			MP_CHECKOK(mp_sub(r, &meth->irr, r));
 		}
-#ifdef notdef
-			
 
-		/* smooth the negatives */
-		while (MP_SIGN(r) != MP_ZPOS) {
-			MP_CHECKOK(mp_add(r, &meth->irr, r));
-		}
-		while (MP_USED(r) > 8) {
-			MP_CHECKOK(mp_sub(r, &meth->irr, r));
-		}
-
-		/* final reduction if necessary */
-		if (MP_DIGIT(r,7) >= MP_DIGIT(&meth->irr,7)) {
-		    if (mp_cmp(r,&meth->irr) != MP_LT) {
-			MP_CHECKOK(mp_sub(r, &meth->irr, r));
-		    }
-		}
-#endif
 		s_mp_clamp(r);
 #else
 		switch (a_used) {
@@ -307,7 +289,7 @@ ec_GFp_nistp256_mod(const mp_int *a, mp_int *r, const GFMethod *meth)
 			mp_digit r4_long = r4;
 			mp_digit r4l = (r4_long << 32);
 			MP_ADD_CARRY(r0, r4_long,      r0, 0,     carry);
-			MP_ADD_CARRY(r1, -r4l,         r1, carry, carry);
+			MP_ADD_CARRY(r1, 0-r4l,        r1, carry, carry);
 			MP_ADD_CARRY(r2, MP_DIGIT_MAX, r2, carry, carry);
 			MP_ADD_CARRY(r3, r4l-r4_long-1,r3, carry, carry);
 			r4 = carry;
@@ -318,10 +300,10 @@ ec_GFp_nistp256_mod(const mp_int *a, mp_int *r, const GFMethod *meth)
 			mp_digit r4_long = -r4;
 			mp_digit r4l = (r4_long << 32);
 			MP_SUB_BORROW(r0, r4_long,      r0, 0,     carry);
-			MP_SUB_BORROW(r1, -r4l,         r1, carry, carry);
+			MP_SUB_BORROW(r1, 0-r4l,        r1, carry, carry);
 			MP_SUB_BORROW(r2, MP_DIGIT_MAX, r2, carry, carry);
 			MP_SUB_BORROW(r3, r4l-r4_long-1,r3, carry, carry);
-			r4 = -carry;
+			r4 = 0-carry;
 		}
 
 		if (a != r) {
@@ -355,7 +337,7 @@ ec_GFp_nistp256_mod(const mp_int *a, mp_int *r, const GFMethod *meth)
 /* Compute the square of polynomial a, reduce modulo p256. Store the
  * result in r.  r could be a.  Uses optimized modular reduction for p256. 
  */
-mp_err
+static mp_err
 ec_GFp_nistp256_sqr(const mp_int *a, mp_int *r, const GFMethod *meth)
 {
 	mp_err res = MP_OKAY;
@@ -369,7 +351,7 @@ ec_GFp_nistp256_sqr(const mp_int *a, mp_int *r, const GFMethod *meth)
 /* Compute the product of two polynomials a and b, reduce modulo p256.
  * Store the result in r.  r could be a or b; a could be b.  Uses
  * optimized modular reduction for p256. */
-mp_err
+static mp_err
 ec_GFp_nistp256_mul(const mp_int *a, const mp_int *b, mp_int *r,
 					const GFMethod *meth)
 {

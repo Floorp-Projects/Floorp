@@ -1,0 +1,28 @@
+#! gmake
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+CORE_DEPTH = ../../..
+
+MODULE = dbm
+
+#
+# memmove.c, snprintf.c, and strerror.c are not in CSRCS because
+# the Standard C Library has memmove and strerror and DBM is not
+# using snprintf.
+#
+
+CSRCS = db.c	   \
+	h_bigkey.c \
+	h_func.c   \
+	h_log2.c   \
+	h_page.c   \
+	hash.c	   \
+	hash_buf.c \
+	mktemp.c   \
+	dirent.c   \
+	$(NULL)
+
+LIBRARY_NAME = dbm

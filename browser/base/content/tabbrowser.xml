@@ -4271,7 +4271,7 @@
           this.mOverCloseButton = true;
 
         let tab = event.target;
-        if (tab.selected)
+        if (tab.selected || tab.closing)
           return;
 
         let tabContainer = this.parentNode;
