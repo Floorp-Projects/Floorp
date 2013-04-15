@@ -10,7 +10,7 @@
  * you.  If that has a problem, then just move out what you need, changing
  * its name as appropriate!
  *
- * $Id: cmslocal.h,v 1.9 2012/04/25 14:50:08 gerv%gerv.net Exp $
+ * $Id$
  */
 
 #ifndef _CMSLOCAL_H_

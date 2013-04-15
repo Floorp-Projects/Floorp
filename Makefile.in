@@ -35,6 +35,7 @@ DIST_GARBAGE = config.cache config.log config.status* config-defs.h \
    netwerk/necko-config.h xpcom/xpcom-config.h xpcom/xpcom-private.h \
    $(topsrcdir)/.mozconfig.mk $(topsrcdir)/.mozconfig.out
 
+ifndef MOZ_PROFILE_USE
 default alldep all:: CLOBBER $(topsrcdir)/configure config.status
 	$(RM) -r $(DIST)/sdk
 	$(RM) -r $(DIST)/include
@@ -42,6 +43,7 @@ default alldep all:: CLOBBER $(topsrcdir)/configure config.status
 	$(RM) -r $(DIST)/public
 	$(RM) -r $(DIST)/bin
 	$(RM) -r _tests
+endif
 
 CLOBBER: $(topsrcdir)/CLOBBER
 	@echo "STOP!  The CLOBBER file has changed."

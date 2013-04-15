@@ -25,7 +25,6 @@ function test() {
         HTML_TAG("bdo", "Span")
         HTML_TAG("bgsound", "Span")
         HTML_TAG("big", "Span")
-        HTML_TAG("blink", "Span")
         HTML_TAG("blockquote", "Shared")
         HTML_TAG("body", "Body")
         HTML_TAG("br", "BR")

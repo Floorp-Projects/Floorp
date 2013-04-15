@@ -45,11 +45,11 @@ GetScriptContextPrincipalFromJSContext(JSContext *cx)
   return scx;
 }
 
-// A factory function for turning a jsval argv into an nsIArray
+// A factory function for turning a JS::Value argv into an nsIArray
 // but also supports an effecient way of extracting the original argv.
 // Bug 312003 describes why this must be "void *", but argv will be cast to
-// jsval* and the args are found at:
-//    ((jsval*)aArgv)[0], ..., ((jsval*)aArgv)[aArgc - 1]
+// JS::Value* and the args are found at:
+//    ((JS::Value*)aArgv)[0], ..., ((JS::Value*)aArgv)[aArgc - 1]
 // The resulting object will take a copy of the array, and ensure each
 // element is rooted.
 // Optionally, aArgv may be NULL, in which case the array is allocated and

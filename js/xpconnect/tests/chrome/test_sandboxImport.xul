@@ -31,5 +31,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533596
       is(Components.utils.evalInSandbox("bar()", sandbox), "PASS", "importFunction works");
       Components.utils.evalInSandbox("checkWrapped({})", sandbox);
 
+      var importer = sandbox.importFunction;
+      importer(function() { return "PASS"; }, "bar");
+      is(Components.utils.evalInSandbox("bar()", sandbox), "PASS", "unbound importFunction works");
+      is(typeof this.bar, "undefined", "didn't import into our global");
   ]]></script>
 </window>

@@ -1852,13 +1852,6 @@ nsDocument::Init()
   mRadioGroups.Init();
   mCustomPrototypes.Init();
 
-  // If after creation the owner js global is not set for a document
-  // we use the default compartment for this document, instead of creating
-  // wrapper in some random compartment when the document is exposed to js
-  // via some events.
-  mScopeObject = do_GetWeakReference(xpc::GetNativeForGlobal(xpc::GetJunkScope()));
-  MOZ_ASSERT(mScopeObject);
-
   // Force initialization.
   nsINode::nsSlots* slots = Slots();
 
@@ -2425,17 +2418,14 @@ nsDocument::InitCSP(nsIChannel* aChannel)
   NS_ConvertASCIItoUTF16 cspOldHeaderValue(tCspOldHeaderValue);
   NS_ConvertASCIItoUTF16 cspOldROHeaderValue(tCspOldROHeaderValue);
 
-  // Until we want to turn on our CSP 1.0 spec compliant support
-  // only use the 1.0 spec compliant headers if a pref to do so
-  // is set (this lets us land CSP 1.0 support with tests without
-  // having to turn it on before it's ready). When we turn on
-  // CSP 1.0 in the release, we should remove this pref check.
-  // This pref will never be set by default, it should only
-  // be created/set by the CSP tests.
-  if (!cspHeaderValue.IsEmpty() || !cspROHeaderValue.IsEmpty()) {
-    bool specCompliantEnabled =
-      Preferences::GetBool("security.csp.speccompliant");
+  // Only use the CSP 1.0 spec compliant headers if a pref to do so
+  // is set. This lets us turn on the 1.0 parser per platform. This
+  // pref is also set by the tests for 1.0 spec compliant CSP.
+  bool specCompliantEnabled =
+    Preferences::GetBool("security.csp.speccompliant");
 
+  if ((!cspHeaderValue.IsEmpty() || !cspROHeaderValue.IsEmpty()) &&
+       !specCompliantEnabled) {
     // If spec compliant pref isn't set, pretend we never got
     // these headers.
     if (!specCompliantEnabled) {
@@ -2530,7 +2520,8 @@ nsDocument::InitCSP(nsIChannel* aChannel)
     }
 
     if (appCSP)
-      csp->RefinePolicy(appCSP, chanURI, true);
+      // Use the 1.0 CSP parser for apps if the pref to do so is set.
+      csp->RefinePolicy(appCSP, chanURI, specCompliantEnabled);
   }
 
   // While we are supporting both CSP 1.0 and the x- headers, the 1.0 headers
@@ -5013,7 +5004,7 @@ nsDocument::Register(const nsAString& aName, const JS::Value& aOptions,
     JSAutoCompartment ac(aCx, GetWrapper());
     NS_ENSURE_TRUE(JS_WrapValue(aCx, const_cast<JS::Value*>(&aOptions)),
                    NS_ERROR_UNEXPECTED);
-    NS_ENSURE_TRUE(options.Init(aCx, nullptr, aOptions),
+    NS_ENSURE_TRUE(options.Init(aCx, JS::NullPtr(), aOptions),
                    NS_ERROR_UNEXPECTED);
   }
 

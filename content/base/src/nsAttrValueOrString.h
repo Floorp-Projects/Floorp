@@ -18,7 +18,7 @@
 #include "nsString.h"
 #include "nsAttrValue.h"
 
-class NS_STACK_CLASS nsAttrValueOrString
+class MOZ_STACK_CLASS nsAttrValueOrString
 {
 public:
   nsAttrValueOrString(const nsAString& aValue)

@@ -259,8 +259,8 @@ private:
 
 // IID for the nsINode interface
 #define NS_INODE_IID \
-{ 0xb3ee8053, 0x43b0, 0x44bc, \
-  { 0xa0, 0x97, 0x18, 0x24, 0xd2, 0xac, 0x65, 0xb6 } }
+{ 0x5daa9e95, 0xe49c, 0x4b41, \
+  { 0xb2, 0x02, 0xde, 0xa9, 0xd3, 0x06, 0x21, 0x17 } }
 
 /**
  * An internal interface that abstracts some DOMNode-related parts that both
@@ -1591,6 +1591,11 @@ public:
     parent->RemoveChild(*this, rv);
     return rv.ErrorCode();
   }
+
+  /**
+   * Remove this node from its parent, if any.
+   */
+  void Remove();
 
 protected:
 

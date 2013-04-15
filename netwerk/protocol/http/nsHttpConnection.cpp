@@ -132,7 +132,8 @@ nsHttpConnection::Init(nsHttpConnectionInfo *info,
     nsresult rv = mSocketTransport->SetEventSink(this, nullptr);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mCallbacks = callbacks;
+    // See explanation for non-strictness of this operation in SetSecurityCallbacks.
+    mCallbacks = new nsMainThreadPtrHolder<nsIInterfaceRequestor>(callbacks, false);
     rv = mSocketTransport->SetSecurityCallbacks(this);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1031,7 +1032,11 @@ void
 nsHttpConnection::SetSecurityCallbacks(nsIInterfaceRequestor* aCallbacks)
 {
     MutexAutoLock lock(mCallbacksLock);
-    mCallbacks = aCallbacks;
+    // This is called both on and off the main thread. For JS-implemented
+    // callbacks, we requires that the call happen on the main thread, but
+    // for C++-implemented callbacks we don't care. Use a pointer holder with
+    // strict checking disabled.
+    mCallbacks = new nsMainThreadPtrHolder<nsIInterfaceRequestor>(aCallbacks, false);
 }
 
 nsresult

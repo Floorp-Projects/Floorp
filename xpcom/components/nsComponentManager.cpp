@@ -199,7 +199,7 @@ ArenaStrdup(const char *s, PLArenaPool *arena)
 
 namespace {
 
-class NS_STACK_CLASS MutexLock
+class MOZ_STACK_CLASS MutexLock
 {
 public:
     MutexLock(SafeMutex& aMutex)

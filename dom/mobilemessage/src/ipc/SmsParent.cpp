@@ -534,13 +534,13 @@ SmsRequestParent::NotifyMessageSent(nsISupports *aMessage)
     if (!msg->GetData(parent, data)) {
       return NS_ERROR_FAILURE;
     }
-    return SendReply(MessageReply(ReplyMessageSend(MobileMessageData(data))));
+    return SendReply(ReplyMessageSend(MobileMessageData(data)));
   }
 
   nsCOMPtr<nsIDOMMozSmsMessage> sms = do_QueryInterface(aMessage);
   if (sms) {
     SmsMessage* msg = static_cast<SmsMessage*>(sms.get());
-    return SendReply(MessageReply(ReplyMessageSend(MobileMessageData(msg->GetData()))));
+    return SendReply(ReplyMessageSend(MobileMessageData(msg->GetData())));
   }
 
   return NS_ERROR_FAILURE;
@@ -563,13 +563,13 @@ SmsRequestParent::NotifyMessageGot(nsISupports *aMessage)
     if (!msg->GetData(parent, data)) {
       return NS_ERROR_FAILURE;
     }
-    return SendReply(MessageReply(ReplyGetMessage(MobileMessageData(data))));
+    return SendReply(ReplyGetMessage(MobileMessageData(data)));
   }
 
   nsCOMPtr<nsIDOMMozSmsMessage> sms = do_QueryInterface(aMessage);
   if (sms) {
     SmsMessage* msg = static_cast<SmsMessage*>(sms.get());
-    return SendReply(MessageReply(ReplyGetMessage(MobileMessageData(msg->GetData()))));
+    return SendReply(ReplyGetMessage(MobileMessageData(msg->GetData())));
   }
 
   return NS_ERROR_FAILURE;
@@ -698,10 +698,22 @@ MobileMessageCursorParent::NotifyCursorResult(nsISupports* aResult)
   // error here to avoid sending a message to the dead process.
   NS_ENSURE_TRUE(mContinueCallback, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDOMMozSmsMessage> iMessage = do_QueryInterface(aResult);
-  if (iMessage) {
+  nsCOMPtr<nsIDOMMozSmsMessage> iSms = do_QueryInterface(aResult);
+  if (iSms) {
     SmsMessage* message = static_cast<SmsMessage*>(aResult);
     return SendNotifyResult(MobileMessageCursorData(message->GetData()))
+      ? NS_OK : NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIDOMMozMmsMessage> iMms = do_QueryInterface(aResult);
+  if (iMms) {
+    MmsMessage* message = static_cast<MmsMessage*>(aResult);
+    ContentParent* parent = static_cast<ContentParent*>(Manager()->Manager());
+    MmsMessageData data;
+    if (!message->GetData(parent, data)) {
+      return NS_ERROR_FAILURE;
+    }
+    return SendNotifyResult(MobileMessageCursorData(data))
       ? NS_OK : NS_ERROR_FAILURE;
   }
 

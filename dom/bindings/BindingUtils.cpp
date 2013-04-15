@@ -1414,7 +1414,7 @@ NativeToString(JSContext* cx, JSObject* wrapper, JSObject* object, const char* p
 }
 
 // Dynamically ensure that two objects don't end up with the same reserved slot.
-class AutoCloneDOMObjectSlotGuard NS_STACK_CLASS
+class MOZ_STACK_CLASS AutoCloneDOMObjectSlotGuard
 {
 public:
   AutoCloneDOMObjectSlotGuard(JSObject* aOld, JSObject* aNew)

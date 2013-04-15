@@ -215,8 +215,8 @@ ecgroup_fromNameAndHex(const ECCurveName name,
 
 	/* determine which optimizations (if any) to use */
 	if (params->field == ECField_GFp) {
-#ifdef NSS_ECC_MORE_THAN_SUITE_B
 	    switch (name) {
+#ifdef NSS_ECC_MORE_THAN_SUITE_B
 #ifdef ECL_USE_FP
 		case ECCurve_SECG_PRIME_160R1:
 			group =
@@ -256,12 +256,14 @@ ecgroup_fromNameAndHex(const ECCurveName name,
 			MP_CHECKOK(ec_group_set_gfp224(group, name));
 #endif
 			break;
+#endif /* NSS_ECC_MORE_THAN_SUITE_B */
 		case ECCurve_SECG_PRIME_256R1:
 			group =
 				ECGroup_consGFp(&irr, &curvea, &curveb, &genx, &geny,
 								&order, params->cofactor);
 			if (group == NULL) { res = MP_UNDEF; goto CLEANUP; }
 			MP_CHECKOK(ec_group_set_gfp256(group, name));
+			MP_CHECKOK(ec_group_set_gfp256_32(group, name));
 			break;
 		case ECCurve_SECG_PRIME_521R1:
 			group =
@@ -272,13 +274,12 @@ ecgroup_fromNameAndHex(const ECCurveName name,
 			break;
 		default:
 			/* use generic arithmetic */
-#endif
 			group =
 				ECGroup_consGFp_mont(&irr, &curvea, &curveb, &genx, &geny,
 									 &order, params->cofactor);
 			if (group == NULL) { res = MP_UNDEF; goto CLEANUP; }
-#ifdef NSS_ECC_MORE_THAN_SUITE_B
 		}
+#ifdef NSS_ECC_MORE_THAN_SUITE_B
 	} else if (params->field == ECField_GF2m) {
 		group = ECGroup_consGF2m(&irr, NULL, &curvea, &curveb, &genx, &geny, &order, params->cofactor);
 		if (group == NULL) { res = MP_UNDEF; goto CLEANUP; }

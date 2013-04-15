@@ -6,15 +6,14 @@
 #ifndef SVGTransformableElement_h
 #define SVGTransformableElement_h
 
+#include "nsSVGAnimatedTransformList.h"
 #include "nsSVGElement.h"
 #include "gfxMatrix.h"
-#include "SVGAnimatedTransformList.h"
 
 namespace mozilla {
-class DOMSVGAnimatedTransformList;
-
 namespace dom {
 
+class SVGAnimatedTransformList;
 class SVGGraphicsElement;
 class SVGMatrix;
 class SVGIRect;
@@ -29,7 +28,7 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE = 0;
 
   // WebIDL
-  already_AddRefed<DOMSVGAnimatedTransformList> Transform();
+  already_AddRefed<SVGAnimatedTransformList> Transform();
   nsSVGElement* GetNearestViewportElement();
   nsSVGElement* GetFarthestViewportElement();
   already_AddRefed<SVGIRect> GetBBox(ErrorResult& rv);
@@ -53,7 +52,7 @@ public:
   virtual const gfxMatrix* GetAnimateMotionTransform() const;
   virtual void SetAnimateMotionTransform(const gfxMatrix* aMatrix);
 
-  virtual SVGAnimatedTransformList*
+  virtual nsSVGAnimatedTransformList*
     GetAnimatedTransformList(uint32_t aFlags = 0);
   virtual nsIAtom* GetTransformListAttrName() const {
     return nsGkAtoms::transform;
@@ -64,7 +63,7 @@ public:
 protected:
   // nsSVGElement overrides
 
-  nsAutoPtr<SVGAnimatedTransformList> mTransforms;
+  nsAutoPtr<nsSVGAnimatedTransformList> mTransforms;
 
   // XXX maybe move this to property table, to save space on un-animated elems?
   nsAutoPtr<gfxMatrix> mAnimateMotionTransform;

@@ -8,6 +8,8 @@
 
 #include "xpcprivate.h"
 
+using namespace JS;
+
 /***************************************************************************/
 
 // XPCNativeMember
@@ -30,7 +32,7 @@ XPCNativeMember::GetCallInfo(JSObject* funobj,
 
 JSBool
 XPCNativeMember::NewFunctionObject(XPCCallContext& ccx,
-                                   XPCNativeInterface* iface, JSObject *parent,
+                                   XPCNativeInterface* iface, HandleObject parent,
                                    jsval* pval)
 {
     NS_ASSERTION(!IsConstant(),
@@ -41,7 +43,7 @@ XPCNativeMember::NewFunctionObject(XPCCallContext& ccx,
 
 JSBool
 XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface,
-                         JSObject *parent, jsval *vp)
+                         HandleObject parent, jsval *vp)
 {
     if (IsConstant()) {
         const nsXPTConstant* constant;
@@ -56,9 +58,9 @@ XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface,
         v.type = constant->GetType();
         memcpy(&v.val, &mv.val, sizeof(mv.val));
 
-        jsval resultVal;
+        RootedValue resultVal(ccx);
 
-        if (!XPCConvert::NativeData2JS(ccx, &resultVal, &v.val, v.type,
+        if (!XPCConvert::NativeData2JS(ccx, resultVal.address(), &v.val, v.type,
                                        nullptr, nullptr))
             return false;
 
@@ -230,9 +232,8 @@ XPCNativeInterface::NewInstance(XPCCallContext& ccx,
     uint16_t totalCount;
     uint16_t realTotalCount = 0;
     XPCNativeMember* cur;
-    JSString* str = NULL;
-    jsid name;
-    jsid interfaceName;
+    RootedString str(ccx);
+    RootedId interfaceName(ccx);
 
     // XXX Investigate lazy init? This is a problem given the
     // 'placement new' scheme - we need to at least know how big to make
@@ -290,7 +291,7 @@ XPCNativeInterface::NewInstance(XPCCallContext& ccx,
             failed = true;
             break;
         }
-        name = INTERNED_STRING_TO_JSID(ccx, str);
+        jsid name = INTERNED_STRING_TO_JSID(ccx, str);
 
         if (info->IsSetter()) {
             NS_ASSERTION(realTotalCount,"bad setter");
@@ -327,7 +328,7 @@ XPCNativeInterface::NewInstance(XPCCallContext& ccx,
                 failed = true;
                 break;
             }
-            name = INTERNED_STRING_TO_JSID(ccx, str);
+            jsid name = INTERNED_STRING_TO_JSID(ccx, str);
 
             // XXX need better way to find dups
             //NS_ASSERTION(!LookupMemberByID(name),"duplicate method/constant name");

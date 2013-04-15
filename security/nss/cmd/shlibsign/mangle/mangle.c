@@ -5,7 +5,7 @@
 /*
  * Test program to mangle 1 bit in a binary
  *
- * $Id: mangle.c,v 1.8 2012/03/20 14:47:18 gerv%gerv.net Exp $
+ * $Id$
  */
 
 #include "nspr.h"

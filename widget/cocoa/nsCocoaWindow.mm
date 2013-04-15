@@ -1476,6 +1476,9 @@ GetBackingScaleFactor(NSWindow* aWindow)
   // Workaround: instead of asking the window, we'll find the screen it is on
   // and ask that for *its* backing scale factor.
 
+  // (See bug 853252 and additional comments in windowDidChangeScreen: below
+  // for further complications this causes.)
+
   // First, expand the rect so that it actually has a measurable area,
   // for FindTargetScreenForRect to use.
   if (frame.size.width == 0) {
@@ -2182,6 +2185,30 @@ bool nsCocoaWindow::ShouldFocusPlugin()
 {
   if (!mGeckoWindow)
     return;
+
+  // Because of Cocoa's peculiar treatment of zero-size windows (see comments
+  // at GetBackingScaleFactor() above), we sometimes have a situation where
+  // our concept of backing scale (based on the screen where the zero-sized
+  // window is positioned) differs from Cocoa's idea (always based on the
+  // Retina screen, AFAICT, even when an external non-Retina screen is the
+  // primary display).
+  //
+  // As a result, if the window was created with zero size on an external
+  // display, but then made visible on the (secondary) Retina screen, we
+  // will *not* get a windowDidChangeBackingProperties notification for it.
+  // This leads to an incorrect GetDefaultScale(), and widget coordinate
+  // confusion, as per bug 853252.
+  //
+  // To work around this, we check for a backing scale mismatch when we
+  // receive a windowDidChangeScreen notification, as we will receive this
+  // even if Cocoa was already treating the zero-size window as having
+  // Retina backing scale.
+  NSWindow *window = (NSWindow *)[aNotification object];
+  if ([window respondsToSelector:@selector(backingScaleFactor)]) {
+    if (GetBackingScaleFactor(window) != mGeckoWindow->BackingScaleFactor()) {
+      mGeckoWindow->BackingScaleFactorChanged();
+    }
+  }
 
   mGeckoWindow->ReportMoveEvent();
 }

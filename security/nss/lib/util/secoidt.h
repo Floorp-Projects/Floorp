@@ -10,7 +10,7 @@
 /*
  * secoidt.h - public data structures for ASN.1 OID functions
  *
- * $Id: secoidt.h,v 1.37 2012/12/19 02:10:42 emaldona%redhat.com Exp $
+ * $Id$
  */
 
 #include "secitem.h"

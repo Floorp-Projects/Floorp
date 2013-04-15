@@ -160,7 +160,7 @@ nsHTMLScrollFrame::GetType() const
  All other things being equal, we prefer layouts with fewer scrollbars showing.
 */
 
-struct ScrollReflowState {
+struct MOZ_STACK_CLASS ScrollReflowState {
   const nsHTMLReflowState& mReflowState;
   nsBoxLayoutState mBoxState;
   nsGfxScrollFrameInner::ScrollbarStyles mStyles;

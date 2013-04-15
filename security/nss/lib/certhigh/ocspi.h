@@ -4,7 +4,7 @@
 /*
  * ocspi.h - NSS internal interfaces to OCSP code
  *
- * $Id: ocspi.h,v 1.13 2012/12/12 19:29:40 wtc%google.com Exp $
+ * $Id$
  */
 
 #ifndef _OCSPI_H_
@@ -18,6 +18,10 @@ ocsp_GetResponseData(CERTOCSPResponse *response, SECItem **tbsResponseDataDER);
 
 ocspSignature *
 ocsp_GetResponseSignature(CERTOCSPResponse *response);
+
+SECItem *
+ocsp_DigestValue(PRArenaPool *arena, SECOidTag digestAlg,
+                 SECItem *fill, const SECItem *src);
 
 PRBool
 ocsp_CertIsOCSPDefaultResponder(CERTCertDBHandle *handle, CERTCertificate *cert);

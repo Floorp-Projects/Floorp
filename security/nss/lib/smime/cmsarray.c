@@ -5,7 +5,7 @@
 /*
  * CMS array functions.
  *
- * $Id: cmsarray.c,v 1.6 2012/04/25 14:50:08 gerv%gerv.net Exp $
+ * $Id$
  */
 
 #include "cmslocal.h"

@@ -513,7 +513,7 @@ PeerConnectionWrapper.prototype = {
           self.attachMedia(stream, type, 'local');
 
           _getAllUserMedia(constraintsList, index + 1);
-        }, unexpectedCallbackAndFinish);
+        }, unexpectedCallbackAndFinish(new Error));
       } else {
         onSuccess();
       }
@@ -536,7 +536,7 @@ PeerConnectionWrapper.prototype = {
       info("Got offer: " + JSON.stringify(offer));
       self._last_offer = offer;
       onSuccess(offer);
-    }, unexpectedCallbackAndFinish, this.offerConstraints);
+    }, unexpectedCallbackAndFinish(new Error), this.offerConstraints);
   },
 
   /**
@@ -552,7 +552,7 @@ PeerConnectionWrapper.prototype = {
       info('Got answer for ' + self.label + ': ' + JSON.stringify(answer));
       self._last_answer = answer;
       onSuccess(answer);
-    }, unexpectedCallbackAndFinish);
+    }, unexpectedCallbackAndFinish(new Error));
   },
 
   /**
@@ -569,7 +569,7 @@ PeerConnectionWrapper.prototype = {
     this._pc.setLocalDescription(sdp, function () {
       info("Successfully set the local description for " + self.label);
       onSuccess();
-    }, unexpectedCallbackAndFinish);
+    }, unexpectedCallbackAndFinish(new Error));
   },
 
   /**
@@ -586,7 +586,7 @@ PeerConnectionWrapper.prototype = {
     this._pc.setRemoteDescription(sdp, function () {
       info("Successfully set remote description for " + self.label);
       onSuccess();
-    }, unexpectedCallbackAndFinish);
+    }, unexpectedCallbackAndFinish(new Error));
   },
 
   /**

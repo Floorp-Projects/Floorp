@@ -12,7 +12,6 @@
 #include "mozilla/Monitor.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/layers/CompositableClient.h"
-#include "mozilla/layers/TextureChild.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/ImageClient.h"
@@ -78,13 +77,20 @@ struct AutoEndTransaction {
 };
 
 void
-ImageBridgeChild::UpdateTexture(TextureClient* aTexture,
-                                const SurfaceDescriptor& aImage)
+ImageBridgeChild::UpdateTexture(CompositableClient* aCompositable,
+                                TextureIdentifier aTextureId,
+                                SurfaceDescriptor* aDescriptor)
 {
-  MOZ_ASSERT(aImage.type() != SurfaceDescriptor::T__None, "[debug] STOP");
-  MOZ_ASSERT(aTexture);
-  MOZ_ASSERT(aTexture->GetIPDLActor());
-  mTxn->AddEdit(OpPaintTexture(nullptr, aTexture->GetIPDLActor(), aImage));
+  if (aDescriptor->type() != SurfaceDescriptor::T__None &&
+      aDescriptor->type() != SurfaceDescriptor::Tnull_t) {
+    MOZ_ASSERT(aCompositable);
+    MOZ_ASSERT(aCompositable->GetIPDLActor());
+    mTxn->AddEdit(OpPaintTexture(nullptr, aCompositable->GetIPDLActor(), 1,
+                  SurfaceDescriptor(*aDescriptor)));
+    *aDescriptor = SurfaceDescriptor();
+  } else {
+    NS_WARNING("Trying to send a null SurfaceDescriptor.");
+  }
 }
 
 void
@@ -206,7 +212,7 @@ ImageBridgeChild::Connect(CompositableClient* aCompositable)
   MOZ_ASSERT(aCompositable);
   uint64_t id = 0;
   CompositableChild* child = static_cast<CompositableChild*>(
-    SendPCompositableConstructor(aCompositable->GetType(), &id));
+    SendPCompositableConstructor(aCompositable->GetTextureInfo(), &id));
   MOZ_ASSERT(child);
   child->SetAsyncID(id);
   aCompositable->SetIPDLActor(child);
@@ -215,7 +221,7 @@ ImageBridgeChild::Connect(CompositableClient* aCompositable)
 }
 
 PCompositableChild*
-ImageBridgeChild::AllocPCompositable(const CompositableType& aType, uint64_t* aID)
+ImageBridgeChild::AllocPCompositable(const TextureInfo& aInfo, uint64_t* aID)
 {
   return new CompositableChild();
 }
@@ -336,10 +342,14 @@ ImageBridgeChild::EndTransaction()
     switch (reply.type()) {
     case EditReply::TOpTextureSwap: {
       const OpTextureSwap& ots = reply.get_OpTextureSwap();
-      PTextureChild* textureChild = ots.textureChild();
-      MOZ_ASSERT(textureChild);
-      TextureClient* texClient = static_cast<TextureChild*>(textureChild)->GetTextureClient();
-      texClient->SetDescriptor(ots.image());
+
+      CompositableChild* compositableChild =
+          static_cast<CompositableChild*>(ots.compositableChild());
+
+      MOZ_ASSERT(compositableChild);
+
+      compositableChild->GetCompositableClient()
+        ->SetDescriptorFromReply(ots.textureId(), ots.image());
       break;
     }
     default:
@@ -475,8 +485,7 @@ ImageBridgeChild::CreateImageClientNow(CompositableType aType)
   mCompositorBackend = LAYERS_OPENGL;
 
   RefPtr<ImageClient> client
-    = ImageClient::CreateImageClient(mCompositorBackend,
-                                     aType, this, 0);
+    = ImageClient::CreateImageClient(mCompositorBackend, aType, this, 0);
   MOZ_ASSERT(client, "failed to create ImageClient");
   if (client) {
     client->Connect();

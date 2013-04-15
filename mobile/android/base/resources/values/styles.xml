@@ -406,4 +406,12 @@
 
     <style name="GeckoDialogTitle.SubTitle" />
 
+    <style name="PreferencesListView" parent="@android:style/Widget.ListView">
+        <item name="android:cacheColorHint">@color/background_normal</item>
+    </style>
+
+    <style name="PreferencesExpandableListView" parent="@android:style/Widget.ExpandableListView">
+        <item name="android:cacheColorHint">@color/background_normal</item>
+    </style>
+
 </resources>

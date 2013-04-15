@@ -5,7 +5,7 @@
 /*
  * Public prototypes for base64 encoding/decoding.
  *
- * $Id: nssb64.h,v 1.6 2012/04/25 14:50:16 gerv%gerv.net Exp $
+ * $Id$
  */
 #ifndef _NSSB64_H_
 #define _NSSB64_H_

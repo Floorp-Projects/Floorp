@@ -1137,7 +1137,7 @@ xpc_MorphSlimWrapper(JSContext *cx, nsISupports *tomorph)
     if (!cache)
         return NS_OK;
 
-    JSObject *obj = cache->GetWrapper();
+    JS::RootedObject obj(cx, cache->GetWrapper());
     if (!obj || !IS_SLIM_WRAPPER(obj))
         return NS_OK;
     NS_ENSURE_STATE(MorphSlimWrapper(cx, obj));
@@ -1408,8 +1408,9 @@ nsXPConnect::ReparentWrappedNativeIfFound(JSContext * aJSContext,
     if (!scope || !scope2)
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
+    JS::RootedObject newParent(ccx, aNewParent);
     return XPCWrappedNative::
-        ReparentWrapperIfFound(ccx, scope, scope2, aNewParent,
+        ReparentWrapperIfFound(ccx, scope, scope2, newParent,
                                aCOMObj);
 }
 

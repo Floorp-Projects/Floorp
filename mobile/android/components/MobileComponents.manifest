@@ -78,10 +78,6 @@ component {93c8824c-9b87-45ae-bc90-5b82a1e4d877} AddonUpdateService.js
 contract @mozilla.org/browser/addon-update-service;1 {93c8824c-9b87-45ae-bc90-5b82a1e4d877}
 category update-timer AddonUpdateService @mozilla.org/browser/addon-update-service;1,getService,auto-addon-background-update-timer,extensions.autoupdate.interval,86400
 
-# FormAutoComplete.js
-component {cccd414c-3ec2-4cc5-9dc4-36c87cc3c4fe} FormAutoComplete.js
-contract @mozilla.org/satchel/form-autocomplete;1 {cccd414c-3ec2-4cc5-9dc4-36c87cc3c4fe}
-
 # LoginManagerPrompter.js
 component {97d12931-abe2-11df-94e2-0800200c9a66} LoginManagerPrompter.js
 contract @mozilla.org/login-manager/prompter;1 {97d12931-abe2-11df-94e2-0800200c9a66}

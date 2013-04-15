@@ -12,7 +12,6 @@ XPIDL_SOURCES += [
     'nsIDOMGeoPositionError.idl',
     'nsIDOMGeoPositionErrorCallback.idl',
     'nsIDOMNavigatorGeolocation.idl',
-    'nsIGeolocation.idl',
 ]
 
 XPIDL_MODULE = 'dom_geolocation'

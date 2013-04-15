@@ -7,7 +7,7 @@
  * Encoding Rules).  The routines are found in and used extensively by the
  * security library, but exported for other use.
  *
- * $Id: secasn1.h,v 1.18 2012/04/25 14:50:16 gerv%gerv.net Exp $
+ * $Id$
  */
 
 #ifndef _SECASN1_H_

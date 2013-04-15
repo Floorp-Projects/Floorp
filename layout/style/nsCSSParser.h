@@ -34,7 +34,7 @@ class StyleRule;
 
 // Interface to the css parser.
 
-class NS_STACK_CLASS nsCSSParser {
+class MOZ_STACK_CLASS nsCSSParser {
 public:
   nsCSSParser(mozilla::css::Loader* aLoader = nullptr,
               nsCSSStyleSheet* aSheet = nullptr);

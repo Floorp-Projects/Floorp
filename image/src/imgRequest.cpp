@@ -337,15 +337,8 @@ void imgRequest::SetIsInCache(bool incache)
 
 void imgRequest::UpdateCacheEntrySize()
 {
-  if (mCacheEntry) {
+  if (mCacheEntry)
     mCacheEntry->SetDataSize(mImage->SizeOfData());
-
-#ifdef DEBUG_joe
-    nsAutoCString url;
-    mURI->GetSpec(url);
-    printf("CACHEPUT: %d %s %d\n", time(NULL), url.get(), imageSize);
-#endif
-  }
 }
 
 void imgRequest::SetCacheValidation(imgCacheEntry* aCacheEntry, nsIRequest* aRequest)
@@ -690,10 +683,6 @@ imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt,
      */
     uint32_t out;
     inStr->ReadSegments(sniff_mimetype_callback, &closure, count, &out);
-
-#ifdef DEBUG
-    /* NS_WARNING if the content type from the channel isn't the same if the sniffing */
-#endif
 
     nsCOMPtr<nsIChannel> chan(do_QueryInterface(aRequest));
     if (newType.IsEmpty()) {

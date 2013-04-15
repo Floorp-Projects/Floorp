@@ -188,8 +188,13 @@ var ContextMenuUI = {
       return false;
     }
 
-    let coords =
-      aMessage.target.msgBrowserToClient(aMessage, true);
+    let coords = { x: aMessage.json.xPos, y: aMessage.json.yPos };
+
+    // chrome calls don't need to be translated and as such
+    // don't provide target.
+    if (aMessage.target) {
+      coords = aMessage.target.msgBrowserToClient(aMessage, true);
+    }
     this._menuPopup.show(Util.extend({}, this._defaultPositionOptions, {
       xPos: coords.x,
       yPos: coords.y,

@@ -6,7 +6,7 @@
  * Support for ENcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1e.c,v 1.23 2012/04/25 14:50:16 gerv%gerv.net Exp $
+ * $Id$
  */
 
 #include "secasn1.h"
