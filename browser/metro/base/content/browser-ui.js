@@ -884,6 +884,13 @@ var BrowserUI = {
       return false;
     }
 
+    // Don't capture pages in snapped mode, this produces 2/3 black
+    // thumbs or stretched out ones
+    //   Ci.nsIWinMetroUtils.snapped is inaccessible on
+    //   desktop/nonwindows systems
+    if(Elements.windowState.getAttribute("viewstate") == "snapped") {
+      return false;
+    }
     // There's no point in taking screenshot of loading pages.
     if (aBrowser.docShell.busyFlags != Ci.nsIDocShell.BUSY_FLAGS_NONE) {
       return false;
