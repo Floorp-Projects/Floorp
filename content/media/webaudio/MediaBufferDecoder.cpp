@@ -418,9 +418,9 @@ MediaDecodeTask::Decode()
 {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  mDecoderReader->OnDecodeThreadStart();
-
   mBufferDecoder->BeginDecoding(NS_GetCurrentThread());
+
+  mDecoderReader->OnDecodeThreadStart();
 
   VideoInfo videoInfo;
   nsAutoPtr<MetadataTags> tags;
