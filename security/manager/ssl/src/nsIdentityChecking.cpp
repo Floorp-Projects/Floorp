@@ -1038,7 +1038,7 @@ getRootsForOid(SECOidTag oid_tag)
   return certList;
 }
 
-} } // namespace mozilla::psm
+}}
 
 static bool 
 isApprovedForEV(SECOidTag policyOIDTag, CERTCertificate *rootCert)
@@ -1181,7 +1181,7 @@ SECStatus getFirstEVPolicy(CERTCertificate *cert, SECOidTag &outOidTag)
   return SECFailure;
 }
 
-} } // namespace mozilla::psm
+}}
 
 NS_IMETHODIMP
 nsSSLStatus::GetIsExtendedValidation(bool* aIsEV)

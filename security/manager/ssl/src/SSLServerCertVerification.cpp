@@ -478,14 +478,16 @@ CreateCertErrorRunnable(PRErrorCode defaultErrorCodeToReport,
   
   PRTime now = PR_Now();
 
-  PLArenaPool *log_arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+  PLArenaPool *log_arena = nullptr;
   PLArenaPoolCleanerFalseParam log_arena_cleaner(log_arena);
+  CERTVerifyLog * verify_log = nullptr;
+
+  log_arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
   if (!log_arena) {
     NS_ERROR("PORT_NewArena failed");
     return nullptr; // PORT_NewArena set error code
   }
-
-  CERTVerifyLog * verify_log = PORT_ArenaZNew(log_arena, CERTVerifyLog);
+  verify_log = PORT_ArenaZNew(log_arena, CERTVerifyLog);
   if (!verify_log) {
     NS_ERROR("PORT_ArenaZNew failed");
     return nullptr; // PORT_ArenaZNew set error code
@@ -494,7 +496,7 @@ CreateCertErrorRunnable(PRErrorCode defaultErrorCodeToReport,
   verify_log->arena = log_arena;
 
   srv = certVerifier->VerifyCert(cert, certificateUsageSSLServer, now,
-                                 infoObject, 0, nullptr, nullptr, verify_log);
+                                   infoObject, 0, nullptr, nullptr, verify_log);
 
   // We ignore the result code of the cert verification.
   // Either it is a failure, which is expected, and we'll process the
@@ -519,40 +521,44 @@ CreateCertErrorRunnable(PRErrorCode defaultErrorCodeToReport,
     errorCodeMismatch = SSL_ERROR_BAD_CERT_DOMAIN;
   }
 
-  CERTVerifyLogNode *i_node;
-  for (i_node = verify_log->head; i_node; i_node = i_node->next)
-  {
-    switch (i_node->error)
+  if (verify_log) {
+    CERTVerifyLogNode *i_node;
+    for (i_node = verify_log->head; i_node; i_node = i_node->next)
     {
-      case SEC_ERROR_UNKNOWN_ISSUER:
-      case SEC_ERROR_CA_CERT_INVALID:
-      case SEC_ERROR_UNTRUSTED_ISSUER:
-      case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:
-      case SEC_ERROR_UNTRUSTED_CERT:
-      case SEC_ERROR_INADEQUATE_KEY_USAGE:
-      case SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED:
-        // We group all these errors as "cert not trusted"
-        collected_errors |= nsICertOverrideService::ERROR_UNTRUSTED;
-        if (errorCodeTrust == SECSuccess) {
-          errorCodeTrust = i_node->error;
-        }
-        break;
-      case SSL_ERROR_BAD_CERT_DOMAIN:
-        collected_errors |= nsICertOverrideService::ERROR_MISMATCH;
-        if (errorCodeMismatch == SECSuccess) {
-          errorCodeMismatch = i_node->error;
-        }
-        break;
-      case SEC_ERROR_EXPIRED_CERTIFICATE:
-        collected_errors |= nsICertOverrideService::ERROR_TIME;
-        if (errorCodeExpired == SECSuccess) {
-          errorCodeExpired = i_node->error;
-        }
-        break;
-      default:
-        PR_SetError(i_node->error, 0);
-        return nullptr;
+      switch (i_node->error)
+      {
+        case SEC_ERROR_UNKNOWN_ISSUER:
+        case SEC_ERROR_CA_CERT_INVALID:
+        case SEC_ERROR_UNTRUSTED_ISSUER:
+        case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:
+        case SEC_ERROR_UNTRUSTED_CERT:
+        case SEC_ERROR_INADEQUATE_KEY_USAGE:
+        case SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED:
+          // We group all these errors as "cert not trusted"
+          collected_errors |= nsICertOverrideService::ERROR_UNTRUSTED;
+          if (errorCodeTrust == SECSuccess) {
+            errorCodeTrust = i_node->error;
+          }
+          break;
+        case SSL_ERROR_BAD_CERT_DOMAIN:
+          collected_errors |= nsICertOverrideService::ERROR_MISMATCH;
+          if (errorCodeMismatch == SECSuccess) {
+            errorCodeMismatch = i_node->error;
+          }
+          break;
+        case SEC_ERROR_EXPIRED_CERTIFICATE:
+          collected_errors |= nsICertOverrideService::ERROR_TIME;
+          if (errorCodeExpired == SECSuccess) {
+            errorCodeExpired = i_node->error;
+          }
+          break;
+        default:
+          PR_SetError(i_node->error, 0);
+          return nullptr;
+      }
     }
+  } else {
+    // XXX set errorCodeTrust, errorCodeMismatch, errorCodeExpired, collected_errors
   }
 
   if (!collected_errors)
@@ -890,8 +896,8 @@ AuthCertificate(TransportSecurityInfo * infoObject, CERTCertificate * cert,
     }
   }
 
-  ScopedCERTCertList certList(verifyCertChain);
-
+  ScopedCERTCertList certList(CERT_GetCertChainFromCert(cert, PR_Now(),
+                                                        certUsageSSLCA));
   if (!certList) {
     rv = SECFailure;
   } else {
