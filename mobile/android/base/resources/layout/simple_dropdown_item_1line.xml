@@ -14,9 +14,11 @@
      limitations under the License.
 -->
 
-<CheckedTextView xmlns:android="http://schemas.android.com/apk/res/android"
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@android:id/text1"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    style="?android:attr/dropDownItemStyle"
     android:textAppearance="@style/TextAppearance.Widget.TextView"
-    style="@style/Widget.ListItem"/>
+    android:singleLine="true"
+    android:layout_width="match_parent"
+    android:layout_height="?android:attr/listPreferredItemHeight"
+    android:ellipsize="marquee"/>
