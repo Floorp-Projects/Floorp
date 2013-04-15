@@ -942,6 +942,11 @@ OnSetDirAttr(Element* aElement, const nsAttrValue* aNewValue,
   if (aElement->HasDirAuto()) {
     WalkDescendantsSetDirAuto(aElement, aNotify);
   } else {
+    if (aElement->HasDirAutoSet()) {
+      nsINode* setByNode =
+        static_cast<nsINode*>(aElement->GetProperty(nsGkAtoms::dirAutoSetBy));
+      nsTextNodeDirectionalityMap::RemoveElementFromMap(setByNode, aElement);
+    }
     SetDirectionalityOnDescendants(aElement,
                                    RecomputeDirectionality(aElement, aNotify),
                                    aNotify);
