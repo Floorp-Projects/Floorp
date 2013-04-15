@@ -413,12 +413,11 @@ AudioBufferSourceNode::AudioBufferSourceNode(AudioContext* aContext)
   : AudioNode(aContext)
   , mLoopStart(0.0)
   , mLoopEnd(0.0)
-  , mLoop(false)
-  , mStartCalled(false)
   , mPlaybackRate(new AudioParam(this, SendPlaybackRateToStream, 1.0f))
   , mPannerNode(nullptr)
+  , mLoop(false)
+  , mStartCalled(false)
 {
-  SetProduceOwnOutput(true);
   mStream = aContext->Graph()->CreateAudioNodeStream(
       new AudioBufferSourceNodeEngine(aContext->Destination()),
       MediaStreamGraph::INTERNAL_STREAM);
@@ -503,6 +502,9 @@ AudioBufferSourceNode::Start(JSContext* aCx, double aWhen, double aOffset,
   ns->SetInt32Parameter(AudioBufferSourceNodeEngine::DURATION,
       NS_lround(endOffset*rate) - offsetTicks);
   ns->SetInt32Parameter(AudioBufferSourceNodeEngine::SAMPLE_RATE, rate);
+
+  MOZ_ASSERT(!mPlayingRef, "We can only accept a successful start() call once");
+  mPlayingRef.Take(this);
 }
 
 void
@@ -528,7 +530,9 @@ void
 AudioBufferSourceNode::NotifyMainThreadStateChanged()
 {
   if (mStream->IsFinished()) {
-    SetProduceOwnOutput(false);
+    // Drop the playing reference
+    // Warning: The below line might delete this.
+    mPlayingRef.Drop(this);
   }
 }
 
