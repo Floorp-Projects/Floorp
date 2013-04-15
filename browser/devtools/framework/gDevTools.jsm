@@ -97,20 +97,6 @@ DevTools.prototype = {
     }
   },
 
-  getDefaultTools: function DT_getDefaultTools() {
-    return defaultTools;
-  },
-
-  getAdditionalTools: function DT_getAdditionalTools() {
-    let tools = [];
-    for (let [key, value] of this._tools) {
-      if (defaultTools.indexOf(value) == -1) {
-        tools.push(value);
-      }
-    }
-    return tools;
-  },
-
   /**
    * Allow ToolBoxes to get at the list of tools that they should populate
    * themselves with.
@@ -120,10 +106,6 @@ DevTools.prototype = {
    */
   getToolDefinitionMap: function DT_getToolDefinitionMap() {
     let tools = new Map();
-    let disabledTools = [];
-    try {
-      disabledTools = JSON.parse(Services.prefs.getCharPref("devtools.toolbox.disabledTools"));
-    } catch(ex) {}
 
     for (let [key, value] of this._tools) {
       let enabled;
@@ -134,7 +116,7 @@ DevTools.prototype = {
         enabled = true;
       }
 
-      if (enabled && disabledTools.indexOf(key) == -1) {
+      if (enabled) {
         tools.set(key, value);
       }
     }
