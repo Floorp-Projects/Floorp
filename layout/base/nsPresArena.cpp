@@ -239,8 +239,6 @@ ARENA_POISON_init()
   return PR_SUCCESS;
 }
 
-#ifndef DEBUG_TRACEMALLOC_PRESARENA
-
 // All keys to this hash table fit in 32 bits (see below) so we do not
 // bother actually hashing them.
 
@@ -466,36 +464,6 @@ nsPresArena::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
 {
   mState->SizeOfIncludingThis(aMallocSizeOf, aArenaStats);
 }
-
-#else
-// Stub implementation that forwards everything to malloc and does not
-// poison allocations (it still initializes the poison value though,
-// for external use through GetPoisonValue()).
-
-struct nsPresArena::State
-{
-
-  State()
-  {
-    PR_CallOnce(&ARENA_POISON_guard, ARENA_POISON_init);
-  }
-
-  void* Allocate(uint32_t /* unused */, size_t aSize)
-  {
-    return moz_malloc(aSize);
-  }
-
-  void Free(uint32_t /* unused */, void* aPtr)
-  {
-    moz_free(aPtr);
-  }
-};
-
-void
-nsPresArena::SizeOfExcludingThis(nsMallocSizeOfFun, nsArenaMemoryStats*)
-{}
-
-#endif // DEBUG_TRACEMALLOC_PRESARENA
 
 // Public interface
 nsPresArena::nsPresArena()
