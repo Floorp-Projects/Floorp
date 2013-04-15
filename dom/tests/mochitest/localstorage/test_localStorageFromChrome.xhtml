@@ -14,12 +14,12 @@ function startTest()
     .getService(Components.interfaces.nsIIOService);
   var ssm = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
     .getService(Components.interfaces.nsIScriptSecurityManager);
-  var dsm = Components.classes["@mozilla.org/dom/storagemanager;1"]
+  var dsm = Components.classes["@mozilla.org/dom/localStorage-manager;1"]
     .getService(Components.interfaces.nsIDOMStorageManager);
 
   var uri = ios.newURI(url, "", null);
   var principal = ssm.getNoAppCodebasePrincipal(uri);
-  var storage = dsm.getLocalStorageForPrincipal(principal, "");
+  var storage = dsm.createStorage(principal, "");
   
   storage.setItem("chromekey", "chromevalue");
   

@@ -6,61 +6,37 @@
 
 include protocol PContent;
 
-using mozilla::null_t;
-
 namespace mozilla {
 namespace dom {
 
-struct ItemData
-{
-  nsString value;
-  bool secure;
-};
-
-// A cross-process GetValue result -- either null, or containing the parameters
-// with which to initialize an nsIDOMStorageItem.
-union StorageItem
-{
-  null_t;
-  ItemData;
-};
-
-// This protocol is little more than a thin wrapper around the DOMStorageBase
-// class in nsDOMStorage.h.  The child implementation simply forwards the
-// arguments for any given call to the parent, and returns the result.
+/* This protocol bridges async access to the database thread running on the parent process
+ * and caches running on the child process.
+ */
 sync protocol PStorage
 {
   manager PContent;
 
 parent:
-  __delete__();
+  async __delete__();
 
-  Init(bool useDB, bool sessionOnly, bool isPrivate,
-       nsCString scopeDBKey, nsCString quotaDBKey, uint32_t storageType);
+  sync  Preload(nsCString scope, uint32_t alreadyLoadedCount)
+    returns (nsString[] keys, nsString[] values, nsresult rv);
+
+  async AsyncPreload(nsCString scope, bool priority);
+  async AsyncGetUsage(nsCString scope);
+  async AsyncAddItem(nsCString scope, nsString key, nsString value);
+  async AsyncUpdateItem(nsCString scope, nsString key, nsString value);
+  async AsyncRemoveItem(nsCString scope, nsString key);
+  async AsyncClear(nsCString scope);
+  async AsyncFlush();
   
-  sync GetKeys(bool callerSecure)
-      returns (nsString[] keys);
-  sync GetLength(bool callerSecure, bool sessionOnly)
-      returns (uint32_t length, nsresult rv);
-  sync GetKey(bool callerSecure, bool sessionOnly, uint32_t index)
-      returns (nsString key, nsresult rv);
-  sync GetValue(bool callerSecure, bool sessionOnly, nsString key)
-      returns (StorageItem item, nsresult rv);
-  sync SetValue(bool callerSecure, bool sessionOnly, nsString key, nsString data)
-      returns (nsString oldValue, nsresult rv);
-  sync RemoveValue(bool callerSecure, bool sessionOnly, nsString key)
-      returns (nsString oldValue, nsresult rv);
-  sync Clear(bool callerSecure, bool sessionOnly)
-      returns (int32_t oldCount, nsresult rv);
-
-  sync GetDBValue(nsString key)
-      returns (nsString value, bool secure, nsresult rv);
-  sync SetDBValue(nsString key, nsString value, bool secure)
-      returns (nsresult rv);
-  sync SetSecure(nsString key, bool secure)
-      returns (nsresult rv);
-
-  UpdatePrivateState(bool enabled);
+child:
+  async Observe(nsCString topic, nsCString scopePrefix);
+  async ScopesHavingData(nsCString[] scopes);
+  async LoadItem(nsCString scope, nsString key, nsString value);
+  async LoadDone(nsCString scope, nsresult rv);
+  async LoadUsage(nsCString scope, int64_t usage);
+  async Error(nsresult rv);
 };
 
 }
