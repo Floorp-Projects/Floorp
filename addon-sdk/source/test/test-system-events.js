@@ -191,7 +191,7 @@ exports["test emit to nsIObserverService observers"] = function(assert) {
                "event.subject is notification subject");
   assert.equal(lastData, customData, "event.data is notification data");
 
-  nsIObserverService.removeObserver(nsIObserver, topic, false);
+  nsIObserverService.removeObserver(nsIObserver, topic);
 
   events.emit(topic, { data: "more data" });
 

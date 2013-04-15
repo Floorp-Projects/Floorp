@@ -174,72 +174,73 @@ function LocalMediaStreamPlayback(mediaElement, mediaStream) {
   MediaStreamPlayback.call(this, mediaElement, mediaStream);
 }
 
-// Sets up the inheritance chain from LMSP --> MSP
-LocalMediaStreamPlayback.prototype = new MediaStreamPlayback();
-LocalMediaStreamPlayback.prototype.constructor = LocalMediaStreamPlayback;
-
-/**
- * Starts media with a media stream, runs it until a canplaythrough and
- * timeupdate event fires, and calls stop() on the stream.
- *
- * @param {Boolean} isResume specifies if this media element is being resumed
- *                           from a previous run
- * @param {Function} onSuccess the success callback if the media element
- *                             successfully fires ended on a stop() call
- *                             on the stream
- * @param {Function} onError the error callback if the media element fails
- *                           to fire an ended callback on a stop() call
- *                           on the stream
- */
-LocalMediaStreamPlayback.prototype.playMediaWithStreamStop = function(
-  isResume, onSuccess, onError) {
-  var self = this;
-
-  this.startMedia(isResume, function() {
-    self.stopStreamInMediaPlayback(function() {
-      self.stopMediaElement();
-      onSuccess();
-    }, onError);
-  }, onError);
-}
-
-/**
- * Stops the local media stream while it's currently in playback in
- * a media element.
- *
- * Precondition: The media stream and element should both be actively
- *               being played.
- *
- * @param {Function} onSuccess the success callback if the media element
- *                             fires an ended event from stop() being called
- * @param {Function} onError the error callback if the media element
- *                           fails to fire an ended event from stop() being
- *                           called
- */
-LocalMediaStreamPlayback.prototype.stopStreamInMediaPlayback = function(
-  onSuccess, onError) {
-  var endedFired = false;
-  var self = this;
+LocalMediaStreamPlayback.prototype = Object.create(MediaStreamPlayback.prototype, {
 
   /**
-   * Callback fired when the ended event fires when stop() is called on the
-   * stream.
+   * Starts media with a media stream, runs it until a canplaythrough and
+   * timeupdate event fires, and calls stop() on the stream.
+   *
+   * @param {Boolean} isResume specifies if this media element is being resumed
+   *                           from a previous run
+   * @param {Function} onSuccess the success callback if the media element
+   *                             successfully fires ended on a stop() call
+   *                             on the stream
+   * @param {Function} onError the error callback if the media element fails
+   *                           to fire an ended callback on a stop() call
+   *                           on the stream
    */
-  var endedCallback = function() {
-    endedFired = true;
-    self.mediaElement.removeEventListener('ended', endedCallback, false);
-    ok(true, "ended event successfully fired");
-    onSuccess();
-  };
+  playMediaWithStreamStop : {
+    value: function (isResume, onSuccess, onError) {
+      var self = this;
 
-  this.mediaElement.addEventListener('ended', endedCallback, false);
-  this.mediaStream.stop();
-
-  // If ended doesn't fire in enough time, then we fail the test
-  setTimeout(function() {
-    if (!endedFired) {
-      ok(false, "ended event never fired");
-      onError();
+      this.startMedia(isResume, function() {
+        self.stopStreamInMediaPlayback(function() {
+          self.stopMediaElement();
+          onSuccess();
+        }, onError);
+      }, onError);
     }
-  }, TIMEOUT_LENGTH);
-}
+  },
+
+  /**
+   * Stops the local media stream while it's currently in playback in
+   * a media element.
+   *
+   * Precondition: The media stream and element should both be actively
+   *               being played.
+   *
+   * @param {Function} onSuccess the success callback if the media element
+   *                             fires an ended event from stop() being called
+   * @param {Function} onError the error callback if the media element
+   *                           fails to fire an ended event from stop() being
+   *                           called
+   */
+  stopStreamInMediaPlayback : {
+    value: function (onSuccess, onError) {
+      var endedFired = false;
+      var self = this;
+
+      /**
+       * Callback fired when the ended event fires when stop() is called on the
+       * stream.
+       */
+      var endedCallback = function() {
+        endedFired = true;
+        self.mediaElement.removeEventListener('ended', endedCallback, false);
+        ok(true, "ended event successfully fired");
+        onSuccess();
+      };
+
+      this.mediaElement.addEventListener('ended', endedCallback, false);
+      this.mediaStream.stop();
+
+      // If ended doesn't fire in enough time, then we fail the test
+      setTimeout(function() {
+        if (!endedFired) {
+          ok(false, "ended event never fired");
+          onError();
+        }
+      }, TIMEOUT_LENGTH);
+    }
+  }
+});

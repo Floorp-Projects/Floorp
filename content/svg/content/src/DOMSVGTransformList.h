@@ -7,7 +7,7 @@
 #ifndef MOZILLA_DOMSVGTRANSFORMLIST_H__
 #define MOZILLA_DOMSVGTRANSFORMLIST_H__
 
-#include "DOMSVGAnimatedTransformList.h"
+#include "mozilla/dom/SVGAnimatedTransformList.h"
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDebug.h"
@@ -31,7 +31,7 @@ class SVGTransform;
  * This class is used to create the DOM tearoff objects that wrap internal
  * SVGTransformList objects.
  *
- * See the architecture comment in DOMSVGAnimatedTransformList.h.
+ * See the architecture comment in SVGAnimatedTransformList.h.
  */
 class DOMSVGTransformList MOZ_FINAL : public nsISupports,
                                       public nsWrapperCache
@@ -42,7 +42,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMSVGTransformList)
 
-  DOMSVGTransformList(DOMSVGAnimatedTransformList *aAList,
+  DOMSVGTransformList(dom::SVGAnimatedTransformList *aAList,
                       const SVGTransformList &aInternalList)
     : mAList(aAList)
   {
@@ -160,7 +160,7 @@ private:
   // of clearing our pointer to them when they die.
   FallibleTArray<dom::SVGTransform*> mItems;
 
-  nsRefPtr<DOMSVGAnimatedTransformList> mAList;
+  nsRefPtr<dom::SVGAnimatedTransformList> mAList;
 };
 
 } // namespace mozilla

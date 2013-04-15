@@ -9,7 +9,6 @@
   locale/@AB_CD@/global/about.dtd                       (%chrome/global/about.dtd)
   locale/@AB_CD@/global/aboutAbout.dtd                  (%chrome/global/aboutAbout.dtd)
   locale/@AB_CD@/global/aboutRights.dtd                 (%chrome/global/aboutRights.dtd)
-  locale/@AB_CD@/global/aboutRights.properties          (%chrome/global/aboutRights.properties)
   locale/@AB_CD@/global/aboutSupport.dtd                (%chrome/global/aboutSupport.dtd)
   locale/@AB_CD@/global/aboutSupport.properties         (%chrome/global/aboutSupport.properties)
   locale/@AB_CD@/global/aboutTelemetry.dtd              (%chrome/global/aboutTelemetry.dtd)

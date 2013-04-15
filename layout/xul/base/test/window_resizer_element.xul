@@ -4,6 +4,7 @@
 <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 <script><![CDATA[
 var is = window.opener.SimpleTest.is;
+window.onerror = window.opener.onerror;
 
 const anchorPositions =
   [ "before_start", "before_end", "after_start", "after_end",

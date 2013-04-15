@@ -23,12 +23,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id={674720}
 
 // this shouldn't be necessary when bug 792594 is fixed
 if (!SpecialPowers.getBoolPref("dom.mozContacts.enabled")) {
+  ok(!("mozContacts" in navigator), "navigator.mozContacts is not exposed");
+  ok(!("mozContact" in window), "mozContact is not exposed");
   var comp = SpecialPowers.wrap(SpecialPowers.Components);
   comp.utils.import("resource://gre/modules/ContactService.jsm");
   comp.utils.import("resource://gre/modules/PermissionPromptHelper.jsm");
   SpecialPowers.setBoolPref("dom.mozContacts.enabled", true);
 }
-    
+
 SpecialPowers.addPermission("contacts-write", true, document);
 SpecialPowers.addPermission("contacts-read", true, document);
 SpecialPowers.addPermission("contacts-create", true, document);
@@ -140,8 +142,16 @@ function onFailure() {
 }
 
 function checkStr(str1, str2, msg) {
-  if (str1)
-    ok(typeof str1 == "string" ? [str1] : str1, (typeof str2 == "string") ? [str2] : str2, msg);
+  // comparing /[null(,null)+]/ and undefined should pass
+  function nonNull(e) {
+    return e != null;
+  }
+  if ((Array.isArray(str1) && str1.filter(nonNull).length == 0 && str2 == undefined)
+     ||(Array.isArray(str2) && str2.filter(nonNull).length == 0 && str1 == undefined)) {
+    ok(true, msg);
+  } else if (str1) {
+    is(JSON.stringify(typeof str1 == "string" ? [str1] : str1), JSON.stringify(typeof str2 == "string" ? [str2] : str2), msg);
+  }
 }
 
 function checkAddress(adr1, adr2) {
@@ -228,11 +238,14 @@ function checkContacts(contact1, contact2) {
   }
 }
 
+function tests() {
+
 var req;
 var index = 0;
 
 var mozContacts = window.navigator.mozContacts;
-
+ok(mozContacts, "mozContacts exists");
+ok("mozContact" in window, "mozContact exists");
 var steps = [
   function () {
     ok(true, "Deleting database");
@@ -296,6 +309,7 @@ var steps = [
     mozContacts.oncontactchange = function(event) {
       is(event.contactID, createResult1.id, "Same contactID");
       is(event.reason, "create", "Same reason");
+      next();
     }
 
     req = navigator.mozContacts.save(createResult1);
@@ -303,7 +317,6 @@ var steps = [
       ok(createResult1.id, "The contact now has an ID.");
       sample_id1 = createResult1.id;
       checkContacts(properties1, createResult1);
-      next();
     };
     req.onerror = onFailure;
   },
@@ -1183,7 +1196,7 @@ var steps = [
   function () {
     ok(true, "Adding empty contact");
     createResult1 = new mozContact();
-    createResult1.init({givenName: 5});
+    createResult1.init({givenName: "5"});
     req = navigator.mozContacts.save(createResult1);
     req.onsuccess = function () {
       ok(createResult1.id, "The contact now has an ID.");
@@ -1196,7 +1209,7 @@ var steps = [
     ok(true, "Test category search with equals");
     var options = {filterBy: ["givenName"],
                    filterOp: "contains",
-                   filterValue: 5};
+                   filterValue: "5"};
     req = mozContacts.find(options);
     req.onsuccess = function () {
       is(req.result.length, 1, "1 Entry.");
@@ -1204,6 +1217,61 @@ var steps = [
       next();
     }
     req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Deleting database");
+    req = mozContacts.clear()
+    req.onsuccess = function () {
+      ok(true, "Deleted the database");
+      next();
+    }
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Adding contact with invalid data");
+    var input = document.createElement("input");
+    var obj = {
+        name: [1, 2],
+        familyName: 3,
+        givenName: 4,
+        honorificPrefix: [],
+        honorificSuffix: {foo: "bar"},
+        additionalName: 7,
+        nickname: [8, 9],
+        org: [10, 11],
+        jobTitle: [12, 13],
+        note: 14,
+        category: [15, 16],
+        sex: 17,
+        genderIdentity: 18,
+        email: input,
+        adr: input,
+        tel: input,
+        impp: input,
+        url: input
+    };
+    obj.honorificPrefix.__defineGetter__('0',(function() {
+      var c = 0;
+      return function() {
+        if (c == 0) {
+          c++;
+          return "string";
+        } else {
+          return {foo:"bar"};
+        }
+      }
+    })());
+    createResult1 = new mozContact();
+    createResult1.init(obj);
+    req = mozContacts.save(createResult1);
+    req.onsuccess = function () {
+      checkContacts(createResult1, {
+        honorificPrefix: "string",
+        sex: "17",
+        genderIdentity: "18"
+      });
+      next();
+    };
   },
   function () {
     ok(true, "Deleting database");
@@ -1245,11 +1313,12 @@ function permissionTest() {
   }
 }
 
-var gContactsEnabled = SpecialPowers.getBoolPref("dom.mozContacts.enabled");
-SimpleTest.waitForExplicitFinish();
-addLoadEvent(permissionTest);
+permissionTest();
+};
 
-ok(true, "test passed");
+var gContactsEnabled = SpecialPowers.getBoolPref("dom.mozContacts.enabled");
+addLoadEvent(tests);
+SimpleTest.waitForExplicitFinish();
 </script>
 </pre>
 </body>

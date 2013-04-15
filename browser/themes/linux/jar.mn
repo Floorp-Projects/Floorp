@@ -166,6 +166,7 @@ browser.jar:
   skin/classic/browser/devtools/splitview.css         (devtools/splitview.css)
   skin/classic/browser/devtools/styleeditor.css       (devtools/styleeditor.css)
   skin/classic/browser/devtools/debugger.css          (devtools/debugger.css)
+* skin/classic/browser/devtools/profiler.css          (devtools/profiler.css)
   skin/classic/browser/devtools/netmonitor.css        (devtools/netmonitor.css)
   skin/classic/browser/devtools/magnifying-glass.png  (devtools/magnifying-glass.png)
   skin/classic/browser/devtools/option-icon.png       (devtools/option-icon.png)

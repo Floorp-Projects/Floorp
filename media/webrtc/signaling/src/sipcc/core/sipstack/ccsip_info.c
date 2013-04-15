@@ -679,7 +679,7 @@ ccsip_handle_info_package(ccsipCCB_t *ccb, sipMessage_t *pSipMessage)
         } else {
             /* No Info-Package header, but with body part(s) */
             if (pSipMessage->num_body_parts > 1) {
-                CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Multipart Info Package"
+                CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Multipart Info Package",
                                     DEB_F_PREFIX_ARGS(SIP_INFO_PACKAGE, fname));
             }
 

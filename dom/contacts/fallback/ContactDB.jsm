@@ -6,7 +6,7 @@
 
 this.EXPORTED_SYMBOLS = ['ContactDB'];
 
-const DEBUG = false;
+let DEBUG = false;
 function debug(s) { dump("-*- ContactDB component: " + s + "\n"); }
 
 const Cu = Components.utils;
@@ -461,6 +461,7 @@ ContactDB.prototype = {
   },
 
   clear: function clear(aSuccessCb, aErrorCb) {
+    DEBUG = true;
     this.newTxn("readwrite", STORE_NAME, function (txn, store) {
       if (DEBUG) debug("Going to clear all!");
       store.clear();
@@ -577,14 +578,14 @@ ContactDB.prototype = {
 
         do {
           while (xIndex < sortBy.length && !x) {
-            x = a.properties[sortBy[xIndex]] ? a.properties[sortBy[xIndex]][0].toLowerCase() : null;
+            x = a.properties[sortBy[xIndex]] && a.properties[sortBy[xIndex]][0] ? a.properties[sortBy[xIndex]][0].toLowerCase() : null;
             xIndex++;
           }
           if (!x) {
-            return sortOrder == 'ascending' ? 1 : -1;
+            return sortOrder == 'descending' ? 1 : -1;
           }
           while (yIndex < sortBy.length && !y) {
-            y = b.properties[sortBy[yIndex]] ? b.properties[sortBy[yIndex]][0].toLowerCase() : null;
+            y = b.properties[sortBy[yIndex]] && b.properties[sortBy[yIndex]][0] ? b.properties[sortBy[yIndex]][0].toLowerCase() : null;
             yIndex++;
           }
           if (!y) {
@@ -618,6 +619,7 @@ ContactDB.prototype = {
    *        - count
    */
   find: function find(aSuccessCb, aFailureCb, aOptions) {
+    DEBUG = false;
     if (DEBUG) debug("ContactDB:find val:" + aOptions.filterValue + " by: " + aOptions.filterBy + " op: " + aOptions.filterOp);
     let self = this;
     this.newTxn("readonly", STORE_NAME, function (txn, store) {

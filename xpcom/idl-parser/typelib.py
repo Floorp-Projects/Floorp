@@ -298,3 +298,5 @@ if __name__ == '__main__':
         deps = [dep.replace('\\', '/') for dep in idl.deps]
 
         print >>depfd, "%s: %s" % (options.outfile, " ".join(deps))
+        for dep in deps:
+            print >>depfd, "%s:" % dep

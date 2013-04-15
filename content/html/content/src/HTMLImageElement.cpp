@@ -60,7 +60,6 @@ NS_NewHTMLImageElement(already_AddRefed<nsINodeInfo> aNodeInfo,
     nodeInfo = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::img, nullptr,
                                                    kNameSpaceID_XHTML,
                                                    nsIDOMNode::ELEMENT_NODE);
-    NS_ENSURE_TRUE(nodeInfo, nullptr);
   }
 
   return new mozilla::dom::HTMLImageElement(nodeInfo.forget());
@@ -478,10 +477,6 @@ HTMLImageElement::Image(const GlobalObject& aGlobal,
     doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::img, nullptr,
                                         kNameSpaceID_XHTML,
                                         nsIDOMNode::ELEMENT_NODE);
-  if (!nodeInfo) {
-    aError.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
 
   nsRefPtr<HTMLImageElement> img = new HTMLImageElement(nodeInfo.forget());
 

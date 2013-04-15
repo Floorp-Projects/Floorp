@@ -6409,7 +6409,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
 }
 
 // nsFont::EnumerateFamilies callback for ParseFontDescriptorValue
-struct NS_STACK_CLASS ExtractFirstFamilyData {
+struct MOZ_STACK_CLASS ExtractFirstFamilyData {
   nsAutoString mFamilyName;
   bool mGood;
   ExtractFirstFamilyData() : mFamilyName(), mGood(false) {}

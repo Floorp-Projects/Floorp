@@ -132,26 +132,34 @@ function runTest(aCallback, desktopSupportedOnly) {
         aCallback();
       }
       catch (err) {
-        unexpectedCallbackAndFinish(err);
+        unexpectedCallbackAndFinish(new Error)(err);
       }
     });
   }
 }
 
-
 /**
- * A callback function fired only under unexpected circumstances while
- * running the tests. Kills off the test as well gracefully.
+ * Generates a callback function fired only under unexpected circumstances
+ * while running the tests. The generated function kills off the test as well
+ * gracefully.
  *
- * @param {object} aObj
- *        The object fired back from the callback
+ * @param {Error} error
+ *        A new Error object, generated at the callback site, from which a
+ *        filename and line number can be extracted for diagnostic purposes
  */
-function unexpectedCallbackAndFinish(aObj) {
-  if (aObj && aObj.name && aObj.message) {
-    ok(false, "Unexpected error callback with name = '" + aObj.name +
-              "', message = '" + aObj.message + "'");
-  } else {
-     ok(false, "Unexpected error callback with " + aObj);
+function unexpectedCallbackAndFinish(error) {
+  /**
+   * @param {object} aObj
+   *        The object fired back from the callback
+   */
+  return function(aObj) {
+    var where = error.fileName + ":" + error.lineNumber;
+    if (aObj && aObj.name && aObj.message) {
+      ok(false, "Unexpected error callback from " + where + " with name = '" +
+                aObj.name + "', message = '" + aObj.message + "'");
+    } else {
+      ok(false, "Unexpected error callback from " + where + " with " + aObj);
+    }
+    SimpleTest.finish();
   }
-  SimpleTest.finish();
 }

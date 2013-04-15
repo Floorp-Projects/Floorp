@@ -1558,7 +1558,12 @@ nsProtocolProxyService::Resolve_Internal(nsIURI *uri,
         return NS_OK;
     }
 
-    // proxy info values
+    // If we aren't in manual proxy configuration mode then we don't
+    // want to honor any manual specific prefs that might be still set
+    if (mProxyConfig != PROXYCONFIG_MANUAL)
+        return NS_OK;
+
+    // proxy info values for manual configuration mode
     const char *type = nullptr;
     const nsACString *host = nullptr;
     int32_t port = -1;

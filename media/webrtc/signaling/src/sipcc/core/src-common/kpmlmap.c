@@ -137,7 +137,7 @@ kpml_create_sm_key (kpml_key_t *key_p, line_t line, callid_t call_id,
 {
     static const char fname[] = "kpml_create_sm_key";
 
-    KPML_DEBUG(DEB_L_C_F_PREFIX" timer=0x%0x\n",
+    KPML_DEBUG(DEB_L_C_F_PREFIX" timer=%p",
 			   DEB_L_C_F_PREFIX_ARGS(KPML_INFO, line, call_id, fname), tmr_ptr);
 
     key_p->line = line;
@@ -626,8 +626,8 @@ kpml_inter_digit_timer_event (void **kpml_key_p)
     const char fname[] = "kpml_inter_digit_timer_callback";
     kpml_data_t *kpml_data;
 
-    KPML_DEBUG("%s: kpml_id=%d \n ",
-               fname, (long)*kpml_key_p);
+    KPML_DEBUG("%s: kpml_id=%p",
+               fname, *kpml_key_p);
 
 
     kpml_data = kpml_get_kpml_data_from_kpml_id((long)*kpml_key_p);
@@ -660,7 +660,7 @@ kpml_start_subscription_timer (kpml_data_t * kpml_data, unsigned long duration)
 {
     static const char fname[] = "kpml_start_subscription_timer";
 
-    KPML_DEBUG(DEB_L_C_F_PREFIX"duration=%u\n",
+    KPML_DEBUG(DEB_L_C_F_PREFIX"duration=%lu",
                DEB_L_C_F_PREFIX_ARGS(KPML_INFO, kpml_data->line, kpml_data->call_id, fname), duration);
 
     kpml_data->sub_timer = cprCreateTimer("sub timer",
@@ -716,8 +716,8 @@ kpml_subscription_timer_event (void **kpml_key_p)
     static const char fname[] = "kpml_subscription_timer_event";
     kpml_data_t *kpml_data;
 
-    KPML_DEBUG("%s: kpml_id=%d \n ",
-               fname, (long)*kpml_key_p);
+    KPML_DEBUG("%s: kpml_id=%p",
+               fname, *kpml_key_p);
 
     kpml_data = kpml_get_kpml_data_from_kpml_id((long)*kpml_key_p);
 
@@ -1275,7 +1275,7 @@ kpml_treat_regex (kpml_data_t *kpml_data)
 
     kpml_data->enable_backspace = FALSE;
 
-    KPML_DEBUG(DEB_L_C_F_PREFIX"regex=%u\n",
+    KPML_DEBUG(DEB_L_C_F_PREFIX"regex=%s",
                DEB_L_C_F_PREFIX_ARGS(KPML_INFO, kpml_data->line, kpml_data->call_id, fname),
                kpml_data->regex[indx].regexData);
 
@@ -1374,9 +1374,9 @@ kpml_update_data (kpml_data_t *kpml_data, KPMLRequest *kpml_sub_data)
 
     kpml_data->nopartial = kpml_sub_data->pattern.nopartial;
 
-    KPML_DEBUG(DEB_L_C_F_PREFIX"regex=%u"
-               "persistent=%d int-timer=%u critic-timer=%u, extra-timer=%u"
-               "flush=%d longhold=%d longrepeat=%d nopartial=%d\n",
+    KPML_DEBUG(DEB_L_C_F_PREFIX"regex=%p"
+               "persistent=%d int-timer=%lu critic-timer=%lu, extra-timer=%lu"
+               "flush=%d longhold=%d longrepeat=%d nopartial=%d",
                DEB_L_C_F_PREFIX_ARGS(KPML_INFO, kpml_data->line, kpml_data->call_id, fname),
 			   kpml_data->regex, kpml_data->persistent, kpml_data->inttimeout,
                kpml_data->crittimeout, kpml_data->extratimeout,
@@ -1845,7 +1845,7 @@ kpmlmap_show (void)
     while (kpml_data != NULL) {
 
 
-        KPML_DEBUG(DEB_L_C_F_PREFIX"Pending sub duration=%-8d",
+        KPML_DEBUG(DEB_L_C_F_PREFIX"Pending sub duration=%lu",
                    DEB_L_C_F_PREFIX_ARGS(KPML_INFO, kpml_data->line, kpml_data->call_id, fname),
                    kpml_data->sub_duration);
 

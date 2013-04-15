@@ -28,6 +28,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/scache/StartupCache.h"
 #include "mozilla/scache/StartupCacheUtils.h"
+#include "mozilla/Telemetry.h"
 
 using namespace mozilla;
 using namespace mozilla::scache;
@@ -39,11 +40,24 @@ static const char kXULCachePrefix[] = "xulcache";
 
 //----------------------------------------------------------------------
 
+static void
+UpdategDisableXULCache()
+{
+    // Get the value of "nglayout.debug.disable_xul_cache" preference
+    gDisableXULCache =
+        Preferences::GetBool(kDisableXULCachePref, gDisableXULCache);
+
+    // Sets the flag if the XUL cache is disabled
+    if (gDisableXULCache) {
+        Telemetry::Accumulate(Telemetry::XUL_CACHE_DISABLED, true);
+    }
+    
+}
+
 static int
 DisableXULCacheChangedCallback(const char* aPref, void* aClosure)
 {
-    gDisableXULCache =
-        Preferences::GetBool(kDisableXULCachePref, gDisableXULCache);
+    UpdategDisableXULCache();
 
     // Flush the cache, regardless
     nsXULPrototypeCache* cache = nsXULPrototypeCache::GetInstance();
@@ -86,8 +100,8 @@ nsXULPrototypeCache::GetInstance()
         sInstance->mInputStreamTable.Init();
         sInstance->mOutputStreamTable.Init();
 
-        gDisableXULCache =
-            Preferences::GetBool(kDisableXULCachePref, gDisableXULCache);
+        UpdategDisableXULCache();
+
         Preferences::RegisterCallback(DisableXULCacheChangedCallback,
                                       kDisableXULCachePref);
 
@@ -323,6 +337,9 @@ nsresult
 nsXULPrototypeCache::WritePrototype(nsXULPrototypeDocument* aPrototypeDocument)
 {
     nsresult rv = NS_OK, rv2 = NS_OK;
+
+    if (!StartupCache::GetSingleton())
+        return NS_OK;
 
     nsCOMPtr<nsIURI> protoURI = aPrototypeDocument->GetURI();
 

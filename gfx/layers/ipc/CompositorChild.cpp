@@ -30,6 +30,7 @@ CompositorChild::~CompositorChild()
 void
 CompositorChild::Destroy()
 {
+  mLayerManager->Destroy();
   mLayerManager = NULL;
   while (size_t len = ManagedPLayersChild().Length()) {
     ShadowLayersChild* layers =
@@ -88,6 +89,11 @@ void
 CompositorChild::ActorDestroy(ActorDestroyReason aWhy)
 {
   MOZ_ASSERT(sCompositor == this);
+
+  if (aWhy == AbnormalShutdown) {
+    NS_RUNTIMEABORT("ActorDestroy by IPC channel failure at CompositorChild");
+  }
+
   sCompositor = NULL;
   // We don't want to release the ref to sCompositor here, during
   // cleanup, because that will cause it to be deleted while it's

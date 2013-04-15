@@ -8,7 +8,7 @@
  * secrng.h - public data structures and prototypes for the secure random
  *	      number generator
  *
- * $Id: secrng.h,v 1.7 2012/04/25 14:49:43 gerv%gerv.net Exp $
+ * $Id$
  */
 
 /******************************************/

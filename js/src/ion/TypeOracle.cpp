@@ -18,6 +18,11 @@ using namespace js::ion;
 using namespace js::types;
 using namespace js::analyze;
 
+TypeInferenceOracle::TypeInferenceOracle()
+  : cx(NULL),
+    script_(NULL)
+{}
+
 bool
 TypeInferenceOracle::init(JSContext *cx, JSScript *script, bool inlinedCall)
 {

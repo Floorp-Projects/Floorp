@@ -219,14 +219,6 @@ public:
   virtual void MakeCurrent(MakeCurrentFlags aFlags = 0) = 0;
 
   /**
-   * Modifies the TextureIdentifier in aInfo to a more reliable kind. For use by
-   * when creating texture hosts/clients. If the desired texture cannot be
-   * created, this method allows the compositor to suggest a less desirable, but
-   * more reliable kind of texture.
-   */
-  virtual void FallbackTextureInfo(TextureInfo& aInfo) {}
-
-  /**
    * Creates a Surface that can be used as a rendering target by this
    * compositor.
    */

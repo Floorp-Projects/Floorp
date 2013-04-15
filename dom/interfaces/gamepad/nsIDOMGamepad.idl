@@ -9,31 +9,4 @@ interface nsIVariant;
 [builtinclass, scriptable, uuid(ff13acd9-11da-4817-8f2a-4a5700dfd13e)]
 interface nsIDOMGamepad : nsISupports
 {
-  /**
-   * An identifier, unique per type of device.
-   */
-  readonly attribute DOMString id;
-
-  /**
-   * The game port index for the device. Unique per device
-   * attached to this system.
-   */
-  readonly attribute unsigned long index;
-
-  /**
-   * true if this gamepad is currently connected to the system.
-   */
-  readonly attribute boolean connected;
-
-  /**
-   * The current state of all buttons on the device, an
-   * array of doubles.
-   */
-  readonly attribute nsIVariant buttons;
-
-  /**
-   * The current position of all axes on the device, an
-   * array of doubles.
-   */
-  readonly attribute nsIVariant axes;
 };

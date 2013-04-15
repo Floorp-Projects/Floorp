@@ -67,6 +67,10 @@ public class GeckoAccessibility {
                         }
                     }
 
+                    // Disable the dynamic toolbar when enabling accessibility.
+                    // These features tend not to interact well.
+                    GeckoApp.mAppContext.setAccessibilityEnabled(sEnabled);
+
                     try {
                         ret.put("enabled", sEnabled);
                     } catch (Exception ex) {

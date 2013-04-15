@@ -260,6 +260,7 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
     dumpn("Initializing the RequestsMenuView");
 
     this.node = new SideMenuWidget($("#requests-menu-contents"), false);
+    this.node.maintainSelectionVisible = false;
 
     this.node.addEventListener("mousedown", this._onMouseDown, false);
     this.node.addEventListener("select", this._onSelect, false);
@@ -885,7 +886,7 @@ create({ constructor: NetworkDetailsView, proto: MenuContainer.prototype }, {
 
     for (let header of aResponse.headers) {
       let headerVar = headersScope.addVar(header.name, { null: true }, true);
-      headerVar.setGrip(header.value);
+      gNetwork.getString(header.value).then((aString) => headerVar.setGrip(aString));
     }
   },
 
@@ -928,7 +929,7 @@ create({ constructor: NetworkDetailsView, proto: MenuContainer.prototype }, {
 
     for (let cookie of aResponse.cookies) {
       let cookieVar = cookiesScope.addVar(cookie.name, { null: true }, true);
-      cookieVar.setGrip(cookie.value);
+      gNetwork.getString(cookie.value).then((aString) => cookieVar.setGrip(aString));
 
       // By default the cookie name and value are shown. If this is the only
       // information available, then nothing else is to be displayed.
@@ -960,12 +961,7 @@ create({ constructor: NetworkDetailsView, proto: MenuContainer.prototype }, {
     let uri = Services.io.newURI(aUrl, null, null).QueryInterface(Ci.nsIURL);
     let query = uri.query;
     if (query) {
-      this._addParams(this._paramsQueryString, query.split("&").map((e) =>
-        let (param = e.split("=")) {
-          name: param[0],
-          value: NetworkHelper.convertToUnicode(unescape(param[1]))
-        }
-      ));
+      this._addParams(this._paramsQueryString, query);
     }
   },
 
@@ -984,27 +980,28 @@ create({ constructor: NetworkDetailsView, proto: MenuContainer.prototype }, {
     let contentType = aHeadersResponse.headers.filter(({ name }) => name == "Content-Type")[0];
     let text = aPostResponse.postData.text;
 
-    if (contentType.value.contains("x-www-form-urlencoded")) {
-      this._addParams(this._paramsFormData, text.replace(/^[?&]/, "").split("&").map((e) =>
-        let (param = e.split("=")) {
-          name: param[0],
-          value: NetworkHelper.convertToUnicode(unescape(param[1]))
-        }
-      ));
-    } else {
-      // This is really awkward, but hey, it works. Let's show an empty
-      // scope in the params view and place the source editor containing
-      // the raw post data directly underneath.
-      $("#request-params-box").removeAttribute("flex");
-      let paramsScope = this._params.addScope(this._paramsPostPayload);
-      paramsScope.expanded = true;
-      paramsScope.locked = true;
+    gNetwork.getString(text).then((aString) => {
+      // Handle query strings (poor man's forms, e.g. "?foo=bar&baz=42").
+      if (contentType.value.contains("x-www-form-urlencoded")) {
+        this._addParams(this._paramsFormData, aString);
+      }
+      // Handle actual forms ("multipart/form-data" content type).
+      else {
+        // This is really awkward, but hey, it works. Let's show an empty
+        // scope in the params view and place the source editor containing
+        // the raw post data directly underneath.
+        $("#request-params-box").removeAttribute("flex");
+        let paramsScope = this._params.addScope(this._paramsPostPayload);
+        paramsScope.expanded = true;
+        paramsScope.locked = true;
 
-      $("#request-post-data-textarea-box").hidden = false;
-      NetMonitorView.editor("#request-post-data-textarea").then((aEditor) => {
-        aEditor.setText(text);
-      });
-    }
+        $("#request-post-data-textarea-box").hidden = false;
+        NetMonitorView.editor("#request-post-data-textarea").then((aEditor) => {
+          aEditor.setText(aString);
+        });
+      }
+      window.emit("NetMonitor:ResponsePostParamsAvailable");
+    });
   },
 
   /**
@@ -1012,14 +1009,21 @@ create({ constructor: NetworkDetailsView, proto: MenuContainer.prototype }, {
    *
    * @param string aName
    *        The type of params to populate (get or post).
-   * @param object aParams
-   *        An array containing { name: value } param information tuples.
+   * @param string aParams
+   *        A query string of params (e.g. "?foo=bar&baz=42").
    */
   _addParams: function NVND__addParams(aName, aParams) {
+    // Turn the params string into an array containing { name: value } tuples.
+    let paramsArray = aParams.replace(/^[?&]/, "").split("&").map((e) =>
+      let (param = e.split("=")) {
+        name: NetworkHelper.convertToUnicode(unescape(param[0])),
+        value: NetworkHelper.convertToUnicode(unescape(param[1]))
+      });
+
     let paramsScope = this._params.addScope(aName);
     paramsScope.expanded = true;
 
-    for (let param of aParams) {
+    for (let param of paramsArray) {
       let headerVar = paramsScope.addVar(param.name, { null: true }, true);
       headerVar.setGrip(param.value);
     }
@@ -1038,51 +1042,66 @@ create({ constructor: NetworkDetailsView, proto: MenuContainer.prototype }, {
       return;
     }
     let uri = Services.io.newURI(aUrl, null, null).QueryInterface(Ci.nsIURL);
-    let { mimeType: mime, text, encoding } = aResponse.content;
+    let { mimeType, text, encoding } = aResponse.content;
 
-    if (mime.contains("/json")) {
-      $("#response-content-json-box").hidden = false;
-      let jsonScope = this._json.addScope("JSON");
-      jsonScope.addVar().populate(JSON.parse(text), { expanded: true });
-      jsonScope.expanded = true;
-    }
-    else if (mime.contains("image/")) {
-      $("#response-content-image-box").setAttribute("align", "center");
-      $("#response-content-image-box").setAttribute("pack", "center");
-      $("#response-content-image-box").hidden = false;
-      $("#response-content-image").src = "data:" + mime + ";" + encoding + "," + text;
+    gNetwork.getString(text).then((aString) => {
+      // Handle json.
+      if (mimeType.contains("/json")) {
+        $("#response-content-json-box").hidden = false;
+        let jsonpRegex = /^[a-zA-Z0-9_$]+\(|\)$/g; // JSONP with callback.
+        let sanitizedJSON = aString.replace(jsonpRegex, "");
+        let callbackPadding = aString.match(jsonpRegex);
 
-      // Immediately display additional information about the image:
-      // file name, mime type and encoding.
-      $("#response-content-image-name-value").setAttribute("value", uri.fileName);
-      $("#response-content-image-mime-value").setAttribute("value", mime);
-      $("#response-content-image-encoding-value").setAttribute("value", encoding);
+        let jsonScopeName = callbackPadding
+          ? L10N.getFormatStr("jsonpScopeName", callbackPadding[0].slice(0, -1))
+          : L10N.getStr("jsonScopeName");
 
-      // Wait for the image to load in order to display the width and height.
-      $("#response-content-image").onload = (e) => {
-        // XUL images are majestic so they don't bother storing their dimensions
-        // in width and height attributes like the rest of the folk. Hack around
-        // this by getting the bounding client rect and subtracting the margins.
-        let { width, height } = e.target.getBoundingClientRect();
-        let dimensions = (width - 2) + " x " + (height - 2);
-        $("#response-content-image-dimensions-value").setAttribute("value", dimensions);
-      };
-    }
-    else {
-      $("#response-content-textarea-box").hidden = false;
-      NetMonitorView.editor("#response-content-textarea").then((aEditor) => {
-        aEditor.setMode(SourceEditor.MODES.TEXT);
-        aEditor.setText(typeof text == "string" ? text : text.initial);
+        let jsonScope = this._json.addScope(jsonScopeName);
+        jsonScope.addVar().populate(JSON.parse(sanitizedJSON), { expanded: true });
+        jsonScope.expanded = true;
+      }
+      // Handle images.
+      else if (mimeType.contains("image/")) {
+        $("#response-content-image-box").setAttribute("align", "center");
+        $("#response-content-image-box").setAttribute("pack", "center");
+        $("#response-content-image-box").hidden = false;
+        $("#response-content-image").src =
+          "data:" + mimeType + ";" + encoding + "," + aString;
 
-        // Maybe set a more appropriate mode in the Source Editor if possible.
-        for (let key in CONTENT_MIME_TYPE_MAPPINGS) {
-          if (mime.contains(key)) {
-            aEditor.setMode(CONTENT_MIME_TYPE_MAPPINGS[key]);
-            break;
+        // Immediately display additional information about the image:
+        // file name, mime type and encoding.
+        $("#response-content-image-name-value").setAttribute("value", uri.fileName);
+        $("#response-content-image-mime-value").setAttribute("value", mimeType);
+        $("#response-content-image-encoding-value").setAttribute("value", encoding);
+
+        // Wait for the image to load in order to display the width and height.
+        $("#response-content-image").onload = (e) => {
+          // XUL images are majestic so they don't bother storing their dimensions
+          // in width and height attributes like the rest of the folk. Hack around
+          // this by getting the bounding client rect and subtracting the margins.
+          let { width, height } = e.target.getBoundingClientRect();
+          let dimensions = (width - 2) + " x " + (height - 2);
+          $("#response-content-image-dimensions-value").setAttribute("value", dimensions);
+        };
+      }
+      // Handle anything else.
+      else {
+        $("#response-content-textarea-box").hidden = false;
+        NetMonitorView.editor("#response-content-textarea").then((aEditor) => {
+          aEditor.setMode(SourceEditor.MODES.TEXT);
+          aEditor.setText(aString);
+
+          // Maybe set a more appropriate mode in the Source Editor if possible.
+          for (let key in CONTENT_MIME_TYPE_MAPPINGS) {
+            if (mimeType.contains(key)) {
+              aEditor.setMode(CONTENT_MIME_TYPE_MAPPINGS[key]);
+              break;
+            }
           }
-        }
-      });
-    }
+        });
+      }
+      window.emit("NetMonitor:ResponseBodyAvailable");
+    });
   },
 
   /**

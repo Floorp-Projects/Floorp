@@ -113,7 +113,7 @@ private:
   nsSVGFilterFrame *mFrame;
 };
 
-class NS_STACK_CLASS nsAutoFilterInstance {
+class MOZ_STACK_CLASS nsAutoFilterInstance {
 public:
   nsAutoFilterInstance(nsIFrame *aTarget,
                        nsSVGFilterFrame *aFilterFrame,

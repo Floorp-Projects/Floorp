@@ -81,6 +81,7 @@
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
 #include "mozAutoDocUpdate.h"
+#include "nsTextNode.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1166,10 +1167,8 @@ SinkContext::FlushText(bool* aDidFlush, bool aReleaseLast)
         didFlush = true;
       }
     } else {
-      nsCOMPtr<nsIContent> textContent;
-      rv = NS_NewTextNode(getter_AddRefs(textContent),
-                          mSink->mNodeInfoManager);
-      NS_ENSURE_SUCCESS(rv, rv);
+      nsRefPtr<nsTextNode> textContent =
+        new nsTextNode(mSink->mNodeInfoManager);
 
       mLastTextNode = textContent;
 
@@ -1388,7 +1387,6 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::html, nullptr,
                                            kNameSpaceID_XHTML,
                                            nsIDOMNode::ELEMENT_NODE);
-  NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
   // Make root part
   mRoot = NS_NewHTMLHtmlElement(nodeInfo.forget());
@@ -1405,7 +1403,6 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::head,
                                            nullptr, kNameSpaceID_XHTML,
                                            nsIDOMNode::ELEMENT_NODE);
-  NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
   mHead = NS_NewHTMLHeadElement(nodeInfo.forget());
   if (NS_FAILED(rv)) {

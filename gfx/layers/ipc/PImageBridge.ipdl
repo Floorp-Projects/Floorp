@@ -7,12 +7,11 @@ include LayersSurfaces;
 include LayerTransaction;
 include protocol PGrallocBuffer;
 include protocol PCompositable;
-include protocol PTexture;
 
 include "mozilla/layers/CompositorTypes.h";
 
 using ImageHandle;
-using mozilla::layers::CompositableType;
+using mozilla::layers::TextureInfo;
 
 namespace mozilla {
 namespace layers {
@@ -49,7 +48,7 @@ parent:
   // before sending __delete__.
   sync Stop();
 
-  sync PCompositable(CompositableType aType) returns (uint64_t id);
+  sync PCompositable(TextureInfo aInfo) returns (uint64_t id);
 };
 
 

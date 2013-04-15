@@ -9,9 +9,11 @@
 #include "SmsIPCService.h"
 #ifndef MOZ_B2G_RIL
 #include "MobileMessageDatabaseService.h"
+#include "MmsService.h"
 #endif
 #include "nsServiceManagerUtils.h"
 
+#define RIL_MMSSERVICE_CONTRACTID "@mozilla.org/mms/rilmmsservice;1"
 #define RIL_MOBILE_MESSAGE_DATABASE_SERVICE_CONTRACTID "@mozilla.org/mobilemessage/rilmobilemessagedatabaseservice;1"
 
 namespace mozilla {
@@ -47,6 +49,24 @@ SmsServicesFactory::CreateMobileMessageDatabaseService()
   }
 
   return mobileMessageDBService.forget();
+}
+
+/* static */ already_AddRefed<nsIMmsService>
+SmsServicesFactory::CreateMmsService()
+{
+  nsCOMPtr<nsIMmsService> mmsService;
+
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    mmsService = new SmsIPCService();
+  } else {
+#ifdef MOZ_B2G_RIL
+    mmsService = do_CreateInstance(RIL_MMSSERVICE_CONTRACTID);
+#else
+    mmsService = new MmsService();
+#endif
+  }
+
+  return mmsService.forget();
 }
 
 } // namespace mobilemessage

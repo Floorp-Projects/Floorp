@@ -34,7 +34,7 @@ struct TreeMatchContext;
  * quickly tell that a particular selector is not relevant to a given
  * element.
  */
-class NS_STACK_CLASS AncestorFilter {
+class MOZ_STACK_CLASS AncestorFilter {
   friend struct TreeMatchContext;
  public:
   /* Maintenance of our ancestor state */
@@ -97,7 +97,7 @@ class NS_STACK_CLASS AncestorFilter {
  * ResetForVisitedMatching() and ResetForUnvisitedMatching() as
  * needed.
  */
-struct NS_STACK_CLASS TreeMatchContext {
+struct MOZ_STACK_CLASS TreeMatchContext {
   // Reset this context for matching for the style-if-:visited.
   void ResetForVisitedMatching() {
     NS_PRECONDITION(mForStyling, "Why is this being called?");
@@ -212,7 +212,7 @@ struct NS_STACK_CLASS TreeMatchContext {
   }
 
   /* Helper class for maintaining the ancestor state */
-  class NS_STACK_CLASS AutoAncestorPusher {
+  class MOZ_STACK_CLASS AutoAncestorPusher {
   public:
     AutoAncestorPusher(bool aDoPush,
                        TreeMatchContext &aTreeMatchContext,
@@ -250,7 +250,7 @@ struct NS_STACK_CLASS TreeMatchContext {
    * in cases where we may or may not want to be skipping flex-item
    * style fixup for a particular chunk of code).
    */
-  class NS_STACK_CLASS AutoFlexItemStyleFixupSkipper {
+  class MOZ_STACK_CLASS AutoFlexItemStyleFixupSkipper {
   public:
     AutoFlexItemStyleFixupSkipper(TreeMatchContext& aTreeMatchContext,
                                   bool aSkipFlexItemStyleFixup = true
@@ -369,7 +369,7 @@ struct NS_STACK_CLASS TreeMatchContext {
   }
 };
 
-struct NS_STACK_CLASS RuleProcessorData {
+struct MOZ_STACK_CLASS RuleProcessorData {
   RuleProcessorData(nsPresContext* aPresContext,
                     nsRuleWalker* aRuleWalker)
     : mPresContext(aPresContext),
@@ -384,7 +384,7 @@ struct NS_STACK_CLASS RuleProcessorData {
   mozilla::dom::Element* mScope;
 };
 
-struct NS_STACK_CLASS ElementDependentRuleProcessorData :
+struct MOZ_STACK_CLASS ElementDependentRuleProcessorData :
                           public RuleProcessorData {
   ElementDependentRuleProcessorData(nsPresContext* aPresContext,
                                     mozilla::dom::Element* aElement,
@@ -404,7 +404,7 @@ struct NS_STACK_CLASS ElementDependentRuleProcessorData :
   TreeMatchContext& mTreeMatchContext;
 };
 
-struct NS_STACK_CLASS ElementRuleProcessorData :
+struct MOZ_STACK_CLASS ElementRuleProcessorData :
                           public ElementDependentRuleProcessorData {
   ElementRuleProcessorData(nsPresContext* aPresContext,
                            mozilla::dom::Element* aElement, 
@@ -418,7 +418,7 @@ struct NS_STACK_CLASS ElementRuleProcessorData :
   }
 };
 
-struct NS_STACK_CLASS PseudoElementRuleProcessorData :
+struct MOZ_STACK_CLASS PseudoElementRuleProcessorData :
                           public ElementDependentRuleProcessorData {
   PseudoElementRuleProcessorData(nsPresContext* aPresContext,
                                  mozilla::dom::Element* aParentElement,
@@ -439,7 +439,7 @@ struct NS_STACK_CLASS PseudoElementRuleProcessorData :
   nsCSSPseudoElements::Type mPseudoType;
 };
 
-struct NS_STACK_CLASS AnonBoxRuleProcessorData : public RuleProcessorData {
+struct MOZ_STACK_CLASS AnonBoxRuleProcessorData : public RuleProcessorData {
   AnonBoxRuleProcessorData(nsPresContext* aPresContext,
                            nsIAtom* aPseudoTag,
                            nsRuleWalker* aRuleWalker)
@@ -454,7 +454,7 @@ struct NS_STACK_CLASS AnonBoxRuleProcessorData : public RuleProcessorData {
 };
 
 #ifdef MOZ_XUL
-struct NS_STACK_CLASS XULTreeRuleProcessorData :
+struct MOZ_STACK_CLASS XULTreeRuleProcessorData :
                           public ElementDependentRuleProcessorData {
   XULTreeRuleProcessorData(nsPresContext* aPresContext,
                            mozilla::dom::Element* aParentElement,
@@ -478,7 +478,7 @@ struct NS_STACK_CLASS XULTreeRuleProcessorData :
 };
 #endif
 
-struct NS_STACK_CLASS StateRuleProcessorData :
+struct MOZ_STACK_CLASS StateRuleProcessorData :
                           public ElementDependentRuleProcessorData {
   StateRuleProcessorData(nsPresContext* aPresContext,
                          mozilla::dom::Element* aElement,
@@ -494,7 +494,7 @@ struct NS_STACK_CLASS StateRuleProcessorData :
                                   //  Constants defined in nsEventStates.h .
 };
 
-struct NS_STACK_CLASS AttributeRuleProcessorData :
+struct MOZ_STACK_CLASS AttributeRuleProcessorData :
                           public ElementDependentRuleProcessorData {
   AttributeRuleProcessorData(nsPresContext* aPresContext,
                              mozilla::dom::Element* aElement,

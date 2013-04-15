@@ -648,10 +648,24 @@
                           </targetApplication>
                   </versionRange>
                   </pluginItem>
+      <pluginItem  blockID="p176">
+                  <match name="filename" exp="(NPSWF32\.dll)|(Flash\ Player\.plugin)" />                                    <versionRange  minVersion="10.3" maxVersion="10.3.183.18.999" severity="0" vulnerabilitystatus="1">
+                                <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="17.0.4" maxVersion="17.0.*" />
+                          </targetApplication>
+                  </versionRange>
+                  </pluginItem>
       <pluginItem  blockID="p178">
                   <match name="filename" exp="(NPSWF[0-9_]*\.dll)|(Flash\ Player\.plugin)" />                                    <versionRange  minVersion="11.0" maxVersion="11.2.202.274.9999" severity="0" vulnerabilitystatus="1">
                                 <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
                               <versionRange  minVersion="19.0a1" maxVersion="*" />
+                          </targetApplication>
+                  </versionRange>
+                  </pluginItem>
+      <pluginItem  blockID="p178">
+                  <match name="filename" exp="(NPSWF[0-9_]*\.dll)|(Flash\ Player\.plugin)" />                                    <versionRange  minVersion="11.0" maxVersion="11.2.202.274.9999" severity="0" vulnerabilitystatus="1">
+                                <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="17.0.4" maxVersion="17.0.*" />
                           </targetApplication>
                   </versionRange>
                   </pluginItem>
@@ -751,10 +765,24 @@
                           </targetApplication>
                   </versionRange>
                   </pluginItem>
+      <pluginItem  blockID="p260">
+                  <match name="filename" exp="(NPSWF32\.dll)|(Flash\ Player\.plugin)" />                                    <versionRange  minVersion="0" maxVersion="10.2.9999" severity="0" vulnerabilitystatus="1">
+                                <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="17.0.4" maxVersion="17.0.*" />
+                          </targetApplication>
+                  </versionRange>
+                  </pluginItem>
       <pluginItem  blockID="p290">
                   <match name="filename" exp="(NPSWF32\.dll)|(Flash\ Player\.plugin)" />                                    <versionRange  minVersion="10.3.183.19" maxVersion="10.3.183.66" severity="0" vulnerabilitystatus="1">
                                 <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
                               <versionRange  minVersion="19.0a1" maxVersion="*" />
+                          </targetApplication>
+                  </versionRange>
+                  </pluginItem>
+      <pluginItem  blockID="p290">
+                  <match name="filename" exp="(NPSWF32\.dll)|(Flash\ Player\.plugin)" />                                    <versionRange  minVersion="10.3.183.19" maxVersion="10.3.183.66" severity="0" vulnerabilitystatus="1">
+                                <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="17.0.4" maxVersion="17.0.*" />
                           </targetApplication>
                   </versionRange>
                   </pluginItem>
@@ -814,8 +842,29 @@
                           </targetApplication>
                   </versionRange>
                   </pluginItem>
+      <pluginItem  blockID="p328">
+                  <match name="filename" exp="Silverlight\.plugin" />                                    <versionRange  minVersion="5.1" maxVersion="5.1.20124.9999" severity="0" vulnerabilitystatus="1">
+                                <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="17.0.4" maxVersion="17.0.*" />
+                          </targetApplication>
+                  </versionRange>
+                  </pluginItem>
       <pluginItem  blockID="p330">
             <match name="description" exp="^Shockwave Flash (([1-9]\.[0-9]+)|(10\.([0-2]|(3 r(([0-9][0-9]?)|1(([0-7][0-9])|8[0-2]))))))( |$)" />      <match name="filename" exp="libflashplayer\.so" />                                    <versionRange  severity="0" vulnerabilitystatus="1">
+                                <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="19.0a1" maxVersion="*" />
+                          </targetApplication>
+                  </versionRange>
+                  </pluginItem>
+      <pluginItem  blockID="p330">
+            <match name="description" exp="^Shockwave Flash (([1-9]\.[0-9]+)|(10\.([0-2]|(3 r(([0-9][0-9]?)|1(([0-7][0-9])|8[0-2]))))))( |$)" />      <match name="filename" exp="libflashplayer\.so" />                                    <versionRange  severity="0" vulnerabilitystatus="1">
+                                <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="17.0.4" maxVersion="17.0.*" />
+                          </targetApplication>
+                  </versionRange>
+                  </pluginItem>
+      <pluginItem  blockID="p332">
+            <match name="description" exp="^Shockwave Flash 11.(0|1) r[0-9]{1,3}$" />      <match name="filename" exp="libflashplayer\.so" />                                    <versionRange  severity="0" vulnerabilitystatus="1">
                                 <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
                               <versionRange  minVersion="19.0a1" maxVersion="*" />
                           </targetApplication>
@@ -824,7 +873,7 @@
       <pluginItem  blockID="p332">
             <match name="description" exp="^Shockwave Flash 11.(0|1) r[0-9]{1,3}$" />      <match name="filename" exp="libflashplayer\.so" />                                    <versionRange  severity="0" vulnerabilitystatus="1">
                                 <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="19.0a1" maxVersion="*" />
+                              <versionRange  minVersion="17.0.4" maxVersion="17.0.*" />
                           </targetApplication>
                   </versionRange>
                   </pluginItem>

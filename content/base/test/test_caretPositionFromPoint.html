@@ -21,17 +21,31 @@
       border: 8px solid black;
       width: 600px;
     }
+
+    #dp {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      left: 0px;
+      top: 0px;
+      background-color: orange;
+    }
   </style>
 <script>
+  function displayPoint(aX, aY) {
+    document.getElementById('dp').style['left'] = aX + "px";
+    document.getElementById('dp').style['top'] = aY + "px";
+  }
+
   function convertEmToPx(aEm) {
     // Assumes our base font size is 16px = 12pt = 1.0em.
     var pxPerEm = 16.0 / 1.0;
     return pxPerEm * aEm;
   }
 
-  function checkOffsetsFromPoint(aX, aY, aExpected) {
+  function checkOffsetsFromPoint(aX, aY, aExpected, aElementName='no-name') {
     var cp = document.caretPositionFromPoint(aX, aY);
-    ok(aExpected == cp.offset, 'expected offset at (' + aX + ', ' + aY + '): ' + aExpected + ', got: ' + cp.offset);
+    ok(aExpected == cp.offset, 'expected offset at (' + aX + ', ' + aY + ') [' + aElementName + ']: ' + aExpected + ', got: ' + cp.offset);
   }
 
   function doTesting() {
@@ -39,8 +53,8 @@
     var test1Rect = test1Element.getBoundingClientRect();
 
     // Check the first and last characters of the basic div.
-    checkOffsetsFromPoint(Math.round(test1Rect.left + 1), Math.round(test1Rect.top + 1), 0);
-    checkOffsetsFromPoint(Math.round(test1Rect.left + test1Rect.width - 1), Math.round(test1Rect.top + 1), 13);
+    checkOffsetsFromPoint(Math.round(test1Rect.left + 1), Math.round(test1Rect.top + 1), 0, 'test1');
+    checkOffsetsFromPoint(Math.round(test1Rect.left + test1Rect.width - 1), Math.round(test1Rect.top + 1), 13, 'test1');
 
     // Check a middle character in the second line of the div.
     // To do this, we calculate 7em in from the left of the bounding
@@ -49,20 +63,19 @@
     var pixelsLeft = convertEmToPx(7);
     var test2Element = document.getElementById("test2");
     var test2Rect = test2Element.getBoundingClientRect();
-    checkOffsetsFromPoint(Math.round(test2Rect.left + pixelsLeft + 1), Math.round(test2Rect.top + 1), 7);
+    checkOffsetsFromPoint(Math.round(test2Rect.left + pixelsLeft + 1), Math.round(test2Rect.top + 1), 7, 'test2');
 
     // Check the first and last characters of the textarea.
     var test3Element = document.getElementById('test3');
     var test3Rect = test3Element.getBoundingClientRect();
-    checkOffsetsFromPoint(test3Rect.left + 1, test3Rect.top + 1, 0);
-    // xxxTODO: This test is disabled due to bug 824965.
-    //checkOffsetsFromPoint(Math.round(test3Rect.left + test3Rect.width - 1), Math.round(test3Rect.top + 1), 0);
+    checkOffsetsFromPoint(test3Rect.left + 5, test3Rect.top + 5, 0, 'test3');
+    checkOffsetsFromPoint(Math.round(test3Rect.left + test3Rect.width - 15), Math.round(test3Rect.top + 5), 3, 'test3');
 
     // Check the first and last characters of the input.
     var test4Element = document.getElementById('test4');
     var test4Rect = test4Element.getBoundingClientRect();
-    checkOffsetsFromPoint(test4Rect.left + 1, test4Rect.top + 1, 0);
-    checkOffsetsFromPoint(Math.round(test4Rect.left + convertEmToPx(3)), Math.round(test4Rect.top + 10), 3);
+    checkOffsetsFromPoint(test4Rect.left + 5, test4Rect.top + 5, 0, 'test4');
+    checkOffsetsFromPoint(Math.round(test4Rect.left + test4Rect.width - 10), Math.round(test4Rect.top + 10), 6, 'test4');
 
     // Check to make sure that x or y outside the viewport returns null.
     var nullCp1 = document.caretPositionFromPoint(-10, 0);
@@ -82,9 +95,10 @@
 </script>
 </head>
 <body onload="doTesting();">
+<div id="dp"></div>
 <div id="a" contenteditable><span id="test1">abc, abc, abc</span><br>
 <span id="test2" style="color: blue;">abc, abc, abc</span><br>
-<textarea id="test3">abc</textarea><input id="test4" value="abc"><br><br>
+<textarea id="test3">abc</textarea><input id="test4" value="abcdef"><br><br>
 <marquee>marquee</marquee>
 </div>
 </body>

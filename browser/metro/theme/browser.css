@@ -858,6 +858,11 @@ setting[type="directory"] > .preferences-alignment {
   visibility: collapse;
 }
 
+/*tile content should be on same line in snapped view */
+#snapped-topsites-grid > richgriditem > .richgrid-item-content {
+  -moz-box-orient: horizontal;
+}
+
 /* if snapped, hide the fullscreen awesome screen, if viewstate is anything
  *  other than snapped, hide the snapped awesome screen */
 #start[viewstate="snapped"],
@@ -981,9 +986,9 @@ setting[type="directory"] > .preferences-alignment {
 .overlay-button {
   position: fixed;
   top: 50%;
-  margin-top: -66px;
-  width: 120px;
-  height: 120px;
+  margin-top: -65px;
+  width: 118px;
+  height: 118px;
   background-color: hsla(210,30%,10%,.2);
   background-size: 60px;
   background-repeat: no-repeat;
@@ -998,14 +1003,22 @@ setting[type="directory"] > .preferences-alignment {
 }
 
 #overlay-back {
-  left: -72px;
   background-image: url(chrome://browser/skin/images/overlay-back.png);
-  background-position: right 6px center;
 }
 
 #overlay-plus {
-  right: -72px;
   background-image: url(chrome://browser/skin/images/overlay-plus.png);
+}
+
+#overlay-back:-moz-locale-dir(ltr),
+#overlay-plus:-moz-locale-dir(rtl) {
+  left: -70px;
+  background-position: right 6px center;
+}
+
+#overlay-plus:-moz-locale-dir(ltr),
+#overlay-back:-moz-locale-dir(rtl) {
+  right: -70px;
   background-position: left 6px center;
 }
 
@@ -1013,26 +1026,30 @@ setting[type="directory"] > .preferences-alignment {
   box-shadow: none;
 }
 
-#overlay-back[disabled] {
+#overlay-back[disabled]:-moz-locale-dir(ltr),
+#overlay-plus[disabled]:-moz-locale-dir(rtl) {
   transform: translateX(-60px);
 }
 
-#overlay-plus[disabled] {
+#overlay-plus[disabled]:-moz-locale-dir(ltr),
+#overlay-back[disabled]:-moz-locale-dir(rtl) {
   transform: translateX(60px);
 }
 
 .overlay-button:not([disabled]):hover {
   background-color: hsla(210,30%,10%,.4);
-  background-size: 78px;
+  background-size: 90px;
   border-color: hsla(0,0%,100%,.9);
 }
 
-#overlay-back:not([disabled]):hover {
+#overlay-back:not([disabled]):-moz-locale-dir(ltr):hover,
+#overlay-plus:not([disabled]):-moz-locale-dir(rtl):hover {
   background-position: right 12px center;
   transform: translateX(40px) scale(1.2);
 }
 
-#overlay-plus:not([disabled]):hover {
+#overlay-plus:not([disabled]):-moz-locale-dir(ltr):hover,
+#overlay-back:not([disabled]):-moz-locale-dir(rtl):hover {
   background-position: left 12px center;
   transform: translateX(-40px) scale(1.2);
 }

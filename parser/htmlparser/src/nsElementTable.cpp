@@ -294,15 +294,6 @@ const nsHTMLElement gHTMLElements[] = {
     /*special parents,kids*/            0,0,
   },
   {
-    /*tag*/                             eHTMLTag_blink,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kFontStyle, (kFlowEntity|kSelf), kNone,
-    /*special props, prop-range*/       0, kDefaultPropRange,
-    /*special parents,kids*/            0,0,
-  },
-  {
     /*tag*/                             eHTMLTag_blockquote,
     /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
     /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,
@@ -1808,7 +1799,6 @@ bool nsHTMLElement::IsResidualStyleTag(eHTMLTags aChild) {
     case eHTMLTag_b:
     case eHTMLTag_bdo:     
     case eHTMLTag_big:       
-    case eHTMLTag_blink:
     case eHTMLTag_del:
     case eHTMLTag_em:
     case eHTMLTag_font:    

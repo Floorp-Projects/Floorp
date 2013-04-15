@@ -41,6 +41,7 @@ var ContextMenus = {
       document.getElementById("contextmenu-enable").setAttribute("hidden", "true");
       document.getElementById("contextmenu-disable").setAttribute("hidden", "true");
       document.getElementById("contextmenu-uninstall").setAttribute("hidden", "true");
+      document.getElementById("contextmenu-default").setAttribute("hidden", "true");
       return;
     }
 
@@ -58,6 +59,12 @@ var ContextMenus = {
       document.getElementById("contextmenu-enable").removeAttribute("hidden");
       document.getElementById("contextmenu-disable").setAttribute("hidden", "true");
     }
+
+    if (addon.type == "search") {
+      document.getElementById("contextmenu-default").removeAttribute("hidden");
+    } else {
+      document.getElementById("contextmenu-default").setAttribute("hidden", "true");
+    }
   },
 
   enable: function(event) {
@@ -74,6 +81,11 @@ var ContextMenus = {
     Addons.uninstall(this.target.addon);
     this.target = null;
   },
+
+  setDefaultSearch: function(event) {
+    Addons.setDefaultSearch(this.target.addon);
+    this.target = null;
+  }
 }
 
 function init() {
@@ -316,6 +328,18 @@ var Addons = {
     else
       uninstallBtn.removeAttribute("disabled");
 
+    let defaultButton = document.getElementById("default-btn");
+    if (addon.type == "search") {
+      if (addon.id == Services.search.defaultEngine.name)
+        defaultButton.setAttribute("disabled", "true");
+      else
+        defaultButton.removeAttribute("disabled");
+
+      defaultButton.removeAttribute("hidden");
+    } else {
+      defaultButton.setAttribute("hidden", "true");
+    }
+
     let box = document.querySelector("#addons-details > .addon-item .options-box");
     box.innerHTML = "";
 
@@ -477,6 +501,20 @@ var Addons = {
 
     let listItem = this._getElementForAddon(addon.id);
     listItem.setAttribute("opType", opType);
+  },
+
+  setDefaultSearch: function setDefaultSearch(aAddon) {
+    let addon = aAddon || document.querySelector("#addons-details > .addon-item").addon;
+    if (addon.type != "search")
+      return;
+
+    let engine = Services.search.getEngineByName(addon.id);
+
+    // Move the new default search engine to the top of the search engine list.
+    Services.search.moveEngine(engine, 0);
+    Services.search.defaultEngine = engine;
+
+    document.getElementById("default-btn").setAttribute("disabled", "true");
   },
 
   showRestart: function showRestart() {

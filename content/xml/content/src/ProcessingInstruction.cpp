@@ -7,45 +7,38 @@
 #include "nsUnicharUtils.h"
 #include "mozilla/dom/ProcessingInstruction.h"
 #include "mozilla/dom/ProcessingInstructionBinding.h"
-#include "nsContentCreatorFunctions.h"
+#include "mozilla/dom/XMLStylesheetProcessingInstruction.h"
 #include "nsContentUtils.h"
 
-nsresult
-NS_NewXMLProcessingInstruction(nsIContent** aInstancePtrResult,
-                               nsNodeInfoManager *aNodeInfoManager,
+already_AddRefed<mozilla::dom::ProcessingInstruction>
+NS_NewXMLProcessingInstruction(nsNodeInfoManager *aNodeInfoManager,
                                const nsAString& aTarget,
                                const nsAString& aData)
 {
   using mozilla::dom::ProcessingInstruction;
+  using mozilla::dom::XMLStylesheetProcessingInstruction;
 
   NS_PRECONDITION(aNodeInfoManager, "Missing nodeinfo manager");
 
   nsCOMPtr<nsIAtom> target = do_GetAtom(aTarget);
-  NS_ENSURE_TRUE(target, NS_ERROR_OUT_OF_MEMORY);
+  MOZ_ASSERT(target);
 
   if (target == nsGkAtoms::xml_stylesheet) {
-    return NS_NewXMLStylesheetProcessingInstruction(aInstancePtrResult,
-                                                    aNodeInfoManager, aData);
+    nsRefPtr<XMLStylesheetProcessingInstruction> pi =
+      new XMLStylesheetProcessingInstruction(aNodeInfoManager, aData);
+    return pi.forget();
   }
-
-  *aInstancePtrResult = nullptr;
 
   nsCOMPtr<nsINodeInfo> ni;
   ni = aNodeInfoManager->GetNodeInfo(nsGkAtoms::processingInstructionTagName,
                                      nullptr, kNameSpaceID_None,
                                      nsIDOMNode::PROCESSING_INSTRUCTION_NODE,
                                      target);
-  NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
 
-  ProcessingInstruction *instance =
+  nsRefPtr<ProcessingInstruction> instance =
     new ProcessingInstruction(ni.forget(), aData);
-  if (!instance) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
-  NS_ADDREF(*aInstancePtrResult = instance);
-
-  return NS_OK;
+  return instance.forget();
 }
 
 namespace mozilla {

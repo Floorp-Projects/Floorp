@@ -339,7 +339,7 @@ JS_FRIEND_API(JSBool)
 JS_NondeterministicGetWeakMapKeys(JSContext *cx, JSObject *objArg, JSObject **ret)
 {
     RootedObject obj(cx, objArg);
-    obj = UnwrapObject(obj);
+    obj = UncheckedUnwrap(obj);
     if (!obj || !obj->isWeakMap()) {
         *ret = NULL;
         return true;

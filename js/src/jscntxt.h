@@ -1304,6 +1304,8 @@ struct JSRuntime : private JS::shadow::Runtime,
 
     bool                jitHardening;
 
+    bool                jitSupportsFloatingPoint;
+
     // Used to reset stack limit after a signaled interrupt (i.e. ionStackLimit_ = -1)
     // has been noticed by Ion/Baseline.
     void resetIonStackLimit() {

@@ -560,7 +560,7 @@ void CC_SIPCCService::endAllActiveCalls()
 	{
 		CC_DeviceInfoPtr deviceInfo = device->getDeviceInfo();
 		vector<CC_CallPtr> calls = deviceInfo->getCalls();
-		CSFLogInfo( logTag, "endAllActiveCalls(): %d calls to be ended.", calls.size());
+		CSFLogInfo( logTag, "endAllActiveCalls(): %lu calls to be ended.", calls.size());
 		for(vector<CC_CallPtr>::iterator it = calls.begin(); it != calls.end(); it++)
 		{
 			// For each active call, if it can be ended, do so.
@@ -651,7 +651,7 @@ void CC_SIPCCService::onFeatureEvent(ccapi_device_event_e type, cc_deviceinfo_re
      CC_FeatureInfoPtr infoPtr = CC_SIPCCFeatureInfo::wrap(feature_info).get();
      if (infoPtr  == NULL)
      {
-         CSFLogError( logTag, "Unable to notify call observers for feature info handle (%u), as failed to create CC_FeatureInfoPtr", feature_info);
+         CSFLogError( logTag, "Unable to notify call observers for feature info handle (%p), as failed to create CC_FeatureInfoPtr", feature_info);
          return;
      }
 
@@ -686,7 +686,7 @@ void CC_SIPCCService::onLineEvent(ccapi_line_event_e eventType, cc_lineid_t line
         return;
     }
 
-    CSFLogInfo( logTag, "onLineEvent(%s, %s, [%d|%s]",
+    CSFLogInfo( logTag, "onLineEvent(%s, %s, [%s|%s]",
         line_event_getname(eventType), linePtr->toString().c_str(),
     	infoPtr->getNumber().c_str(), (infoPtr->getRegState() ? "INS" : "OOS"));
     _self->notifyLineEventObservers(eventType, linePtr, infoPtr);
@@ -792,7 +792,7 @@ void CC_SIPCCService::notifyCallEventObservers (ccapi_call_event_e eventType, CC
 // method are not safe except from ccapp_thread.
 void CC_SIPCCService::registerStream(cc_call_handle_t call, int streamId, bool isVideo)
 {
-    CSFLogDebug( logTag, "registerStream for call: %d strId=%s video=%s",
+    CSFLogDebug( logTag, "registerStream for call: %d strId=%d video=%s",
         call, streamId, isVideo ? "TRUE" : "FALSE");
 	// get the object corresponding to the handle
     CC_SIPCCCallPtr callPtr = CC_SIPCCCall::wrap(call);

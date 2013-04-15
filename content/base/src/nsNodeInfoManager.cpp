@@ -85,6 +85,35 @@ nsNodeInfoManager::NodeInfoInnerKeyCompare(const void *key1, const void *key2)
 }
 
 
+static void* PR_CALLBACK
+AllocTable(void* pool, PRSize size)
+{
+  return malloc(size);
+}
+
+static void PR_CALLBACK
+FreeTable(void* pool, void* item)
+{
+  free(item);
+}
+
+static PLHashEntry* PR_CALLBACK
+AllocEntry(void* pool, const void* key)
+{
+  return (PLHashEntry*)malloc(sizeof(PLHashEntry));
+}
+
+static void PR_CALLBACK
+FreeEntry(void* pool, PLHashEntry* he, PRUintn flag)
+{
+  if (flag == HT_FREE_ENTRY) {
+    free(he);
+  }
+}
+
+static PLHashAllocOps allocOps =
+  { AllocTable, FreeTable, AllocEntry, FreeEntry };
+
 nsNodeInfoManager::nsNodeInfoManager()
   : mDocument(nullptr),
     mNonDocumentNodeInfos(0),
@@ -107,7 +136,7 @@ nsNodeInfoManager::nsNodeInfoManager()
 
   mNodeInfoHash = PL_NewHashTable(32, GetNodeInfoInnerHashValue,
                                   NodeInfoInnerKeyCompare,
-                                  PL_CompareValues, nullptr, nullptr);
+                                  PL_CompareValues, &allocOps, nullptr);
 }
 
 
@@ -222,11 +251,10 @@ nsNodeInfoManager::GetNodeInfo(nsIAtom *aName, nsIAtom *aPrefix,
 
   nsRefPtr<nsNodeInfo> newNodeInfo =
     new nsNodeInfo(aName, aPrefix, aNamespaceID, aNodeType, aExtraName, this);
-  NS_ENSURE_TRUE(newNodeInfo, nullptr);
 
   PLHashEntry *he;
   he = PL_HashTableAdd(mNodeInfoHash, &newNodeInfo->mInner, newNodeInfo);
-  NS_ENSURE_TRUE(he, nullptr);
+  MOZ_ASSERT(he, "PL_HashTableAdd() failed");
 
   // Have to do the swap thing, because already_AddRefed<nsNodeInfo>
   // doesn't cast to already_AddRefed<nsINodeInfo>

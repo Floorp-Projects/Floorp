@@ -12,13 +12,14 @@ include protocol PCompositor;
 include protocol PGrallocBuffer;
 include protocol PLayer;
 include protocol PRenderFrame;
-include protocol PTexture;
 
 include "mozilla/WidgetUtils.h";
 include "mozilla/TimeStamp.h";
 include "mozilla/dom/ScreenOrientation.h";
 include "nsCSSProperty.h";
 include "gfxipc/ShadowLayerUtils.h";
+
+using mozilla::layers::TextureInfo;
 
 /**
  * The layers protocol is spoken between thread contexts that manage
@@ -46,7 +47,7 @@ parent:
   sync PGrallocBuffer(gfxIntSize size, gfxContentType content)
     returns (MaybeMagicGrallocBufferHandle handle);
   async PLayer();
-  async PCompositable(CompositableType aType);
+  async PCompositable(TextureInfo aTextureInfo);
 
   // The isFirstPaint flag can be used to indicate that this is the first update
   // for a particular document.

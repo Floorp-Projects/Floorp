@@ -6,7 +6,7 @@
  * Types for encoding/decoding of ASN.1 using BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1t.h,v 1.12 2013/01/08 16:19:09 kaie%kuix.de Exp $
+ * $Id$
  */
 
 #ifndef _SECASN1T_H_

@@ -6,7 +6,7 @@
 # This file is in part derived from a file "pkcs11f.h" made available
 # by RSA Security at ftp://ftp.rsasecurity.com/pub/pkcs/pkcs-11/pkcs11f.h
 
-CVS_ID "@(#) $RCSfile: ck.api,v $ $Revision: 1.4 $ $Date: 2012/04/25 14:49:28 $"
+CVS_ID "@(#) $RCSfile$ $Revision$ $Date$"
 
 # Fields
 #  FUNCTION introduces a Cryptoki function

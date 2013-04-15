@@ -800,7 +800,7 @@ unsolicited_notify_ind_cb (ccsip_sub_not_data_t *msg_data)
     presentity_url = strchr(event_body_p->presence_body.entity, ':');
     if (presentity_url == NULL)
     {
-        BLF_ERROR("MSC:  Error parsing presentity_url", fname);
+        BLF_ERROR("MSC: %s: Error parsing presentity_url", fname);
         return;
     }
 
@@ -960,7 +960,7 @@ static void sub_handler_initialized (void)
         presentity_url = strchr(pending_notify_p->presentity, ':');
         if (presentity_url == NULL)
         {
-            BLF_ERROR("MSC:  Error parsing presentity_url", fname);
+            BLF_ERROR("MSC: %s: Error parsing presentity_url", fname);
             return;
         }
 
@@ -1151,7 +1151,7 @@ pres_process_msg_from_msgq (uint32_t cmd, void *msg_p)
     static const char fname[] = "pres_process_msg_from_msgq";
     pres_req_msg *pres_req_p;
 
-    BLF_DEBUG(DEB_F_PREFIX"Entering (cmd=%d, msg_p=0x%X)\n",
+    BLF_DEBUG(DEB_F_PREFIX"Entering (cmd=%d, msg_p=%p)",
               DEB_F_PREFIX_ARGS(BLF, fname), cmd, msg_p);
 
     switch (cmd) {
