@@ -15,18 +15,16 @@ LIBRARY_NAME   = jsdomstorage_s
 LIBXUL_LIBRARY = 1
 
 CPPSRCS = \
-       nsDOMStorage.cpp \
-       nsDOMStorageBaseDB.cpp \
-       nsDOMStorageDBWrapper.cpp \
-       nsLocalStorageCache.cpp \
-       nsDOMStoragePersistentDB.cpp \
-       nsDOMStorageMemoryDB.cpp \
-       StorageChild.cpp \
-       StorageParent.cpp \
+       DOMStorage.cpp \
+       DOMStorageCache.cpp \
+       DOMStorageDBThread.cpp \
+       DOMStorageObserver.cpp \
+       DOMStorageManager.cpp \
+       DOMStorageIPC.cpp \
        $(NULL)
 
 EXPORTS_NAMESPACES = mozilla/dom
-EXPORTS_mozilla/dom = StorageChild.h StorageParent.h
+EXPORTS_mozilla/dom = DOMStorageIPC.h
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
@@ -36,6 +34,10 @@ LOCAL_INCLUDES = \
 		-I$(topsrcdir)/content/events/src
 
 DEFINES += -D_IMPL_NS_LAYOUT
+
+ifdef ENABLE_TESTS
+DEFINES += -DDOM_STORAGE_TESTS
+endif
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk

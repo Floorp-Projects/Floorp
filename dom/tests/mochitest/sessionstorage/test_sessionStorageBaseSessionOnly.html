@@ -1,32 +1,22 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<title>sessionStorage basic test</title>
+<title>sessionStorage basic test, while in sesison only mode</title>
 
 <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
 <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 
 <script type="text/javascript">
 
-var expectedEvents = [
-  "empty,null,",
-  "empty,,null",
-  "key1,null,value1",
-  "key1,value1,null",
-  "key1,null,value1",
-  "key2,null,value2",
-  "key2,value2,value2-2",
-  "key1,value1,value1-2",
-  "key2,value2-2,null",
-  "null,null,null"
-];
-
-function setup() {
-  sessionStorage.clear();
-  SimpleTest.executeSoon(startTest);
-}
-
 function startTest()
 {
+  var io = SpecialPowers.Cc["@mozilla.org/network/io-service;1"]
+    .getService(SpecialPowers.Ci.nsIIOService);
+  var uri = io.newURI(window.location, "", null);
+  var cp = SpecialPowers.Cc["@mozilla.org/cookie/permission;1"]
+    .getService(SpecialPowers.Ci.nsICookiePermission);
+  cp.setAccess(uri, SpecialPowers.Ci.nsICookiePermission.ACCESS_SESSION);
+
+
   // Initially check the sessionStorage is empty
   is(sessionStorage.length, 0, "The storage is empty [1]");
   is(sessionStorage.key(0), null, "key() should return null for out-of-bounds access");
@@ -43,20 +33,6 @@ function startTest()
   is(typeof sessionStorage.getItem("nonexisting2"), "object", "getItem('nonexisting2') is object");
   is(typeof sessionStorage["nonexisting2"], "undefined", "['nonexisting2'] is undefined");
   is(typeof sessionStorage.nonexisting2, "undefined", "nonexisting2 is undefined");
-
-  var mozStorageChangedReceived = 0;
-  var sessionStorageCopy = sessionStorage;
-
-  function onStorageChanged(e) {
-    if (e.storageArea == sessionStorageCopy) {
-      ok(expectedEvents.length > 0, "Not more then expected events encountered");
-      var receivedEvent = e.key + "," + e.oldValue + "," + e.newValue;
-      is(receivedEvent, expectedEvents.shift(), "Expected event data: " + receivedEvent);
-    }
-  }
-
-  // Listen for MozStorageChanged
-  SpecialPowers.addChromeEventListener("MozStorageChanged", onStorageChanged, false);
 
   // add an empty-value key
   sessionStorage.setItem("empty", "");
@@ -147,6 +123,65 @@ function startTest()
   is(sessionStorage.key(1), null, "key() should return null for out-of-bounds access");
   is(sessionStorage.getItem("key1"), "value1-2");
 
+  // JS property test
+  sessionStorage.testA = "valueA";
+  is(sessionStorage.testA, "valueA");
+  is(sessionStorage["testA"], "valueA");
+  is(sessionStorage.getItem("testA"), "valueA");
+
+  sessionStorage.testA = "valueA2";
+  is(sessionStorage.testA, "valueA2");
+  is(sessionStorage["testA"], "valueA2");
+  is(sessionStorage.getItem("testA"), "valueA2");
+
+  sessionStorage["testB"] = "valueB";
+  is(sessionStorage.testB, "valueB");
+  is(sessionStorage["testB"], "valueB");
+  is(sessionStorage.getItem("testB"), "valueB");
+
+  sessionStorage["testB"] = "valueB2";
+  is(sessionStorage.testB, "valueB2");
+  is(sessionStorage["testB"], "valueB2");
+  is(sessionStorage.getItem("testB"), "valueB2");
+
+  sessionStorage.setItem("testC", "valueC");
+  is(sessionStorage.testC, "valueC");
+  is(sessionStorage["testC"], "valueC");
+  is(sessionStorage.getItem("testC"), "valueC");
+
+  sessionStorage.setItem("testC", "valueC2");
+  is(sessionStorage.testC, "valueC2");
+  is(sessionStorage["testC"], "valueC2");
+  is(sessionStorage.getItem("testC"), "valueC2");
+
+  sessionStorage.setItem("testC", null);
+  is("testC" in sessionStorage, true);
+  is(sessionStorage.getItem("testC"), "null");
+  is(sessionStorage["testC"], "null");
+  is(sessionStorage.testC, "null");
+
+  sessionStorage.removeItem("testC");
+  sessionStorage["testC"] = null;
+  is("testC" in sessionStorage, true);
+  is(sessionStorage.getItem("testC"), "null");
+  is(sessionStorage["testC"], "null");
+  is(sessionStorage.testC, "null");
+
+  sessionStorage.setItem(null, "test");
+  is("null" in sessionStorage, true);
+  is(sessionStorage.getItem("null"), "test");
+  is(sessionStorage.getItem(null), "test");
+  is(sessionStorage["null"], "test");
+  sessionStorage.removeItem(null, "test");
+  // bug 350023
+  todo_is("null" in sessionStorage, false);
+
+  sessionStorage.setItem(null, "test");
+  is("null" in sessionStorage, true);
+  sessionStorage.removeItem("null", "test");
+  // bug 350023
+  todo_is("null" in sessionStorage, false);
+
   // Clear the storage
   sessionStorage.clear();
   is(sessionStorage.length, 0, "The storage is empty [3]");
@@ -160,13 +195,11 @@ function startTest()
   sessionStorage.removeItem("key1"); // Just check there is no exception
   sessionStorage.removeItem("key2"); // Just check there is no exception
 
-  SimpleTest.executeSoon(function () {
-    SpecialPowers.removeChromeEventListener("MozStorageChanged", onStorageChanged, false);
-    is(expectedEvents.length, 0, "received the correct number of events");
 
-    sessionStorage.clear();
-    SimpleTest.finish();
-  });
+  cp.setAccess(uri, SpecialPowers.Ci.nsICookiePermission.ACCESS_DEFAULT);
+
+  sessionStorage.clear();
+  SimpleTest.finish();
 }
 
 SimpleTest.waitForExplicitFinish();
@@ -175,7 +208,7 @@ SimpleTest.waitForExplicitFinish();
 
 </head>
 
-<body onload="setup();">
+<body onload="startTest();">
 
 </body>
 </html>
