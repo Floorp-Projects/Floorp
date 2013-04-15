@@ -2880,7 +2880,7 @@ void
 GlyphMetricsUpdater::Run(nsSVGTextFrame2* aFrame)
 {
   aFrame->mPositioningDirty = true;
-  nsSVGUtils::InvalidateBounds(aFrame, false);
+  nsSVGEffects::InvalidateRenderingObservers(aFrame);
   nsSVGUtils::ScheduleReflowSVG(aFrame);
   aFrame->mGlyphMetricsUpdater = nullptr;
 }

@@ -409,6 +409,11 @@ nsRangeFrame::GetValueAtEventPoint(nsGUIEvent* aEvent)
   nsPoint point =
     nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, absPoint, this);
 
+  if (point == nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE)) {
+    // We don't want to change the current value for this error state.
+    return GetValue();
+  }
+
   nsRect rangeContentRect = GetContentRectRelativeToSelf();
   nsSize thumbSize;
 
@@ -729,7 +734,8 @@ nsRangeFrame::ShouldUseNativeStyle() const
 {
   return (StyleDisplay()->mAppearance == NS_THEME_RANGE) &&
          !PresContext()->HasAuthorSpecifiedRules(const_cast<nsRangeFrame*>(this),
-                                                 STYLES_DISABLING_NATIVE_THEMING) &&
+                                                 (NS_AUTHOR_SPECIFIED_BORDER |
+                                                  NS_AUTHOR_SPECIFIED_BACKGROUND)) &&
          !PresContext()->HasAuthorSpecifiedRules(mTrackDiv->GetPrimaryFrame(),
                                                  STYLES_DISABLING_NATIVE_THEMING) &&
          !PresContext()->HasAuthorSpecifiedRules(mProgressDiv->GetPrimaryFrame(),
