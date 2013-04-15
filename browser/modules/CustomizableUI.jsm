@@ -729,6 +729,10 @@ let CustomizableUIInternal = {
         throw new Error("Could not find the view node with id: " + aWidget.viewId);
       }
 
+      // PanelUI relies on the .PanelUI-subView class to be able to show only
+      // one sub-view at a time.
+      viewNode.classList.add("PanelUI-subView");
+
       for (let eventName of kSubviewEvents) {
         let handler = "on" + eventName;
         if (typeof aWidget[handler] == "function") {
