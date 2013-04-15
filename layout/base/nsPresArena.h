@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+/* arena allocation for the frame tree and closely-related objects */
+
 #ifndef nsPresArena_h___
 #define nsPresArena_h___
 
@@ -29,16 +31,20 @@ public:
     nsStyleContext_id,
     nsFrameList_id,
 
-    // The PresArena implementation uses this bit to distinguish objects
-    // allocated by size from objects allocated by type ID (that is, frames
-    // using AllocateByFrameID and other objects using AllocateByObjectID).
-    // It should not collide with any Object ID (above) or frame ID (in
-    // nsQueryFrame.h).  It is not 0x80000000 to avoid the question of
-    // whether enumeration constants are signed.
+    /**
+     * The PresArena implementation uses this bit to distinguish objects
+     * allocated by size from objects allocated by type ID (that is, frames
+     * using AllocateByFrameID and other objects using AllocateByObjectID).
+     * It should not collide with any Object ID (above) or frame ID (in
+     * nsQueryFrame.h).  It is not 0x80000000 to avoid the question of
+     * whether enumeration constants are signed.
+     */
     NON_OBJECT_MARKER = 0x40000000
   };
 
-  // Pool allocation with recycler lists indexed by object size, aSize.
+  /**
+   * Pool allocation with recycler lists indexed by object size, aSize.
+   */
   NS_HIDDEN_(void*) AllocateBySize(size_t aSize)
   {
     return Allocate(uint32_t(aSize) | uint32_t(NON_OBJECT_MARKER), aSize);
@@ -48,8 +54,10 @@ public:
     Free(uint32_t(aSize) | uint32_t(NON_OBJECT_MARKER), aPtr);
   }
 
-  // Pool allocation with recycler lists indexed by frame-type ID.
-  // Every aID must always be used with the same object size, aSize.
+  /**
+   * Pool allocation with recycler lists indexed by frame-type ID.
+   * Every aID must always be used with the same object size, aSize.
+   */
   NS_HIDDEN_(void*) AllocateByFrameID(nsQueryFrame::FrameIID aID, size_t aSize)
   {
     return Allocate(aID, aSize);
@@ -59,8 +67,10 @@ public:
     Free(aID, aPtr);
   }
 
-  // Pool allocation with recycler lists indexed by object-type ID (see above).
-  // Every aID must always be used with the same object size, aSize.
+  /**
+   * Pool allocation with recycler lists indexed by object-type ID (see above).
+   * Every aID must always be used with the same object size, aSize.
+   */
   NS_HIDDEN_(void*) AllocateByObjectID(ObjectID aID, size_t aSize)
   {
     return Allocate(aID, aSize);
