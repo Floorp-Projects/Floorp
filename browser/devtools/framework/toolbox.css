@@ -13,17 +13,3 @@
 .command-button > .toolbarbutton-text {
   display: none;
 }
-
-#options-panel {
-  overflow-y: auto;
-  display: block;
-}
-
-.options-vertical-pane {
-  display: inline;
-  float: left;
-}
-
-.options-vertical-pane > label {
-  display: block;
-}

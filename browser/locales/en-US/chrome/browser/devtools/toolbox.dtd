@@ -4,19 +4,4 @@
 
 <!ENTITY closeCmd.key  "W">
 
-<!ENTITY toolboxCloseButton.tooltip    "Close Developer Tools">
-<!ENTITY toolboxOptionsButton.tooltip  "Toggle Options Panel">
-<!ENTITY toolboxOptionsButton.key      "O">
-
-<!ENTITY options.context.label         "Advanced settings. (Requires a browser restart)">
-<!ENTITY options.enableChrome.label    "Enable Chrome debugging.">
-<!ENTITY options.enableChrome.tooltip  "Turning this option on will allow you to use various developer tools in browser context.">
-<!ENTITY options.enableRemote.label    "Enable Remote Debugging.">
-<!ENTITY options.enableRemote.tooltip  "Turning this option on will allow the developer tools to debug remote Firefox instance like Firefox OS.">
-
-<!ENTITY options.selectDefaultTools.label     "Default Firefox Developer Tools">
-<!ENTITY options.selectAdditionalTools.label  "Developer Tools installed by add-ons">
-
-<!ENTITY options.selectDevToolsTheme.label   "Choose DevTools theme:">
-<!ENTITY options.darkTheme.label             "Dark Theme">
-<!ENTITY options.lightTheme.label            "Light Theme">
+<!ENTITY toolboxCloseButton.tooltip  "Close Developer Tools">
