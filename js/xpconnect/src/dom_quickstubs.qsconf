@@ -64,7 +64,6 @@ members = [
 
     'nsIDOMKeyEvent.*',
     'nsIDOMDragEvent.*',
-    'nsIDOMNotifyPaintEvent.*',
     'nsIDOMMouseScrollEvent.*',
     'nsIDOMProgressEvent.lengthComputable',
     'nsIDOMProgressEvent.loaded',
