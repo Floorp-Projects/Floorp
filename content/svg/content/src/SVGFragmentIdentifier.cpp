@@ -6,7 +6,7 @@
 #include "SVGFragmentIdentifier.h"
 #include "mozilla/dom/SVGSVGElement.h"
 #include "mozilla/dom/SVGViewElement.h"
-#include "SVGAnimatedTransformList.h"
+#include "nsSVGAnimatedTransformList.h"
 
 using namespace mozilla;
 
@@ -156,7 +156,7 @@ SVGFragmentIdentifier::ProcessSVGViewSpec(const nsAString &aViewSpec,
       }
       preserveAspectRatioFound = true;
     } else if (IsMatchingParameter(token, NS_LITERAL_STRING("transform"))) {
-      SVGAnimatedTransformList transforms;
+      nsSVGAnimatedTransformList transforms;
       if (transformFound ||
           NS_FAILED(transforms.SetBaseValueString(params))) {
         return false;

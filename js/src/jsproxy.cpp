@@ -2659,6 +2659,7 @@ Proxy::hasInstance(JSContext *cx, HandleObject proxy, MutableHandleValue v, bool
 bool
 Proxy::objectClassIs(HandleObject proxy, ESClassValue classValue, JSContext *cx)
 {
+    JS_CHECK_RECURSION(cx, return false);
     return GetProxyHandler(proxy)->objectClassIs(proxy, classValue, cx);
 }
 

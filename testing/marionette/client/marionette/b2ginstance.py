@@ -90,12 +90,19 @@ class B2GInstance(object):
         self.fastboot_path = None if emulator else self.check_fastboot(self.homedir)
         self.update_tools = os.path.join(self.homedir, 'tools', 'update-tools')
         self._dm = devicemanager
+        self._remote_profiles = None
 
     @property
     def dm(self):
         if not self._dm:
             self._dm = DeviceManagerADB(adbPath=self.adb_path)
         return self._dm
+
+    @property
+    def remote_profiles(self):
+        if not self._remote_profiles:
+            self.check_remote_profiles()
+        return self._remote_profiles
 
     def check_file(self, filePath):
         if not os.access(filePath, os.F_OK):
@@ -110,7 +117,7 @@ class B2GInstance(object):
         local_profiles_ini = tempfile.NamedTemporaryFile()
         self.dm.getFile(remote_profiles_ini, local_profiles_ini.name)
         cfg = ConfigParser()
-        cfg.readfp(local_profiles_ini)
+        cfg.read(local_profiles_ini.name)
 
         remote_profiles = []
         for section in cfg.sections():
@@ -119,13 +126,13 @@ class B2GInstance(object):
                     remote_profiles.append(posixpath.join(posixpath.dirname(remote_profiles_ini), cfg.get(section, 'Path')))
                 else:
                     remote_profiles.append(cfg.get(section, 'Path'))
+        self._remote_profiles = remote_profiles
         return remote_profiles
 
     def check_for_crashes(self, symbols_path):
-        remote_dump_dirs = [posixpath.join(p, 'minidumps') for p in self.check_remote_profiles()]
+        remote_dump_dirs = [posixpath.join(p, 'minidumps') for p in self.remote_profiles]
         crashed = False
         for remote_dump_dir in remote_dump_dirs:
-            print "checking for crashes in '%s'" % remote_dump_dir
             local_dump_dir = tempfile.mkdtemp()
             self.dm.getDirectory(remote_dump_dir, local_dump_dir)
             try:

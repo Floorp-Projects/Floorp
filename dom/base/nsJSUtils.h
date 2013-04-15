@@ -112,7 +112,7 @@ public:
       return JS_TRUE;
   }
 
-  JSBool init(JSContext* aContext, const jsval &v)
+  JSBool init(JSContext* aContext, const JS::Value &v)
   {
       return init(aContext, JSVAL_TO_STRING(v));
   }

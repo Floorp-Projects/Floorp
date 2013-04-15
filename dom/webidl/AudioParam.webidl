@@ -38,3 +38,14 @@ interface AudioParam {
 
 };
 
+/*
+ * The origin of this IDL file is
+ * https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html#AlternateNames
+ */
+[PrefControlled]
+partial interface AudioParam {
+    // Same as setTargetAtTime()
+    [Throws]
+    void setTargetValueAtTime(float target, double startTime, double timeConstant);
+};
+

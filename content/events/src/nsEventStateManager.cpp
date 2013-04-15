@@ -2668,6 +2668,12 @@ nsEventStateManager::ComputeScrollTarget(nsIFrame* aTargetFrame,
       nsIScrollableFrame* frameToScroll =
         lastScrollFrame->GetScrollTargetFrame();
       if (frameToScroll) {
+        nsIFrame* activeRootFrame = nsLayoutUtils::GetActiveScrolledRootFor(
+                                      lastScrollFrame, nullptr);
+        if (!nsLayoutUtils::GetCrossDocParentFrame(activeRootFrame)) {
+          // Record the fact that the scroll occurred on the top-level page.
+          aEvent->viewPortIsScrollTargetParent = true;
+        }
         return frameToScroll;
       }
     }
@@ -2733,7 +2739,14 @@ nsEventStateManager::ComputeScrollTarget(nsIFrame* aTargetFrame,
       aTargetFrame->PresContext()->FrameManager()->GetRootFrame());
   aOptions =
     static_cast<ComputeScrollTargetOptions>(aOptions & ~START_FROM_PARENT);
-  return newFrame ? ComputeScrollTarget(newFrame, aEvent, aOptions) : nullptr;
+  if (newFrame) {
+    return ComputeScrollTarget(newFrame, aEvent, aOptions);
+  }
+
+  // Record the fact that the scroll occurred past the bounds of the top-level
+  // page.
+  aEvent->viewPortIsScrollTargetParent = true;
+  return nullptr;
 }
 
 nsSize
@@ -3853,7 +3866,7 @@ nsEventStateManager::SetCursor(int32_t aCursor, imgIContainer* aContainer,
   return NS_OK;
 }
 
-class NS_STACK_CLASS nsESMEventCB : public nsDispatchingCallback
+class MOZ_STACK_CLASS nsESMEventCB : public nsDispatchingCallback
 {
 public:
   nsESMEventCB(nsIContent* aTarget) : mTarget(aTarget) {}

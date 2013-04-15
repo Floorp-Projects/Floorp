@@ -1424,7 +1424,7 @@ CanvasRenderingContext2D::CreatePattern(const HTMLImageOrCanvasOrVideoElement& e
 
   Element* htmlElement;
   if (element.IsHTMLCanvasElement()) {
-    HTMLCanvasElement* canvas = element.GetAsHTMLCanvasElement();
+    HTMLCanvasElement* canvas = &element.GetAsHTMLCanvasElement();
     htmlElement = canvas;
 
     nsIntSize size = canvas->GetSize();
@@ -2264,7 +2264,7 @@ CanvasRenderingContext2D::MeasureText(const nsAString& rawText,
 /**
  * Used for nsBidiPresUtils::ProcessText
  */
-struct NS_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcessor
+struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcessor
 {
   typedef CanvasRenderingContext2D::ContextState ContextState;
 
@@ -2906,7 +2906,7 @@ CanvasRenderingContext2D::DrawImage(const HTMLImageOrCanvasOrVideoElement& image
 
   EnsureTarget();
   if (image.IsHTMLCanvasElement()) {
-    HTMLCanvasElement* canvas = image.GetAsHTMLCanvasElement();
+    HTMLCanvasElement* canvas = &image.GetAsHTMLCanvasElement();
     element = canvas;
     nsIntSize size = canvas->GetSize();
     if (size.width == 0 || size.height == 0) {

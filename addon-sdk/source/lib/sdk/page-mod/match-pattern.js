@@ -96,8 +96,15 @@ MatchPattern.prototype = {
       return true;
     if (this.exactURL && this.exactURL == urlStr)
       return true;
+
+    // Tests the urlStr against domain and check if
+    // wildcard submitted (*.domain.com), it only allows
+    // subdomains (sub.domain.com) or from the root (http://domain.com)
+    // and reject non-matching domains (otherdomain.com)
+    // bug 856913
     if (this.domain && url.host &&
-        url.host.slice(-this.domain.length) == this.domain)
+         (url.host === this.domain ||
+          url.host.slice(-this.domain.length - 1) === "." + this.domain))
       return true;
     if (this.urlPrefix && 0 == urlStr.indexOf(this.urlPrefix))
       return true;

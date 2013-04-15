@@ -5,7 +5,7 @@
 /*
  * Interface to the OCSP implementation.
  *
- * $Id: ocsp.h,v 1.24 2012/12/12 16:03:44 wtc%google.com Exp $
+ * $Id$
  */
 
 #ifndef _OCSP_H_
@@ -300,7 +300,7 @@ CERT_DestroyOCSPRequest(CERTOCSPRequest *request);
  *   or a low-level or internal error occurred).
  */
 extern CERTOCSPResponse *
-CERT_DecodeOCSPResponse(SECItem *src);
+CERT_DecodeOCSPResponse(const SECItem *src);
 
 /*
  * FUNCTION: CERT_DestroyOCSPResponse
@@ -551,7 +551,7 @@ extern SECStatus
 CERT_CacheOCSPResponseFromSideChannel(CERTCertDBHandle *handle,
 				      CERTCertificate *cert,
 				      PRTime time,
-				      SECItem *encodedResponse,
+				      const SECItem *encodedResponse,
 				      void *pwArg);
 
 /*

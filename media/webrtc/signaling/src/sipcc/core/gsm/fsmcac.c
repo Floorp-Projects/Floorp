@@ -89,7 +89,7 @@ fsm_get_new_cac_data (void)
     cac_mem = (cac_data_t *) cpr_malloc(sizeof(cac_data_t));
 
     if (cac_mem == NULL) {
-        CAC_ERROR(CAC_F_PREFIX"No memory for CAC data.\n",
+        CAC_ERROR(DEB_F_PREFIX"No memory for CAC data.\n",
                 DEB_F_PREFIX_ARGS("CAC", fname));
         return (NULL);
     }
@@ -201,7 +201,7 @@ fsm_init_cac_failure_timer(cac_data_t *cac_data, uint32_t timeout)
                        gsm_msgq);
 
     if (cac_data->cac_fail_timer == NULL) {
-        CAC_ERROR(CAC_F_PREFIX"CAC Timer allocation failed.\n",
+        CAC_ERROR(DEB_F_PREFIX"CAC Timer allocation failed.\n",
                                     DEB_F_PREFIX_ARGS("CAC", fname));
         return(FALSE);
     }
@@ -271,7 +271,7 @@ void fsm_cac_init (void)
                             fsm_cac_match_call_id);
 
     if (s_cac_list == NULL) {
-        CAC_ERROR(CAC_F_PREFIX"CAC list creation failed.\n",
+        CAC_ERROR(DEB_F_PREFIX"CAC list creation failed.\n",
                                     DEB_F_PREFIX_ARGS("CAC", fname));
 
     }

@@ -132,7 +132,7 @@ struct CachedOffsetForFrame {
 static RangeData sEmptyData(nullptr);
 
 // Stack-class to turn on/off selection batching for table selection
-class NS_STACK_CLASS nsSelectionBatcher MOZ_FINAL
+class MOZ_STACK_CLASS nsSelectionBatcher MOZ_FINAL
 {
 private:
   nsCOMPtr<nsISelectionPrivate> mSelection;

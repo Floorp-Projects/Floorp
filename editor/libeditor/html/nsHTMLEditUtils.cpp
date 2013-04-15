@@ -59,7 +59,6 @@ nsHTMLEditUtils::IsInlineStyle(nsINode* aNode)
       || (nodeAtom == nsEditProperty::strike)
       || (nodeAtom == nsEditProperty::big)
       || (nodeAtom == nsEditProperty::small)
-      || (nodeAtom == nsEditProperty::blink)
       || (nodeAtom == nsEditProperty::sub)
       || (nodeAtom == nsEditProperty::sup)
       || (nodeAtom == nsEditProperty::font);
@@ -629,7 +628,6 @@ static const nsElementInfo kElements[eHTMLTag_userdefined] = {
   ELEM(bdo, true, true, GROUP_SPECIAL, GROUP_INLINE_ELEMENT),
   ELEM(bgsound, false, false, GROUP_NONE, GROUP_NONE),
   ELEM(big, true, true, GROUP_FONTSTYLE, GROUP_INLINE_ELEMENT),
-  ELEM(blink, false, false, GROUP_NONE, GROUP_NONE),
   ELEM(blockquote, true, true, GROUP_BLOCK, GROUP_FLOW_ELEMENT),
   ELEM(body, true, true, GROUP_TOPLEVEL, GROUP_FLOW_ELEMENT),
   ELEM(br, false, false, GROUP_SPECIAL, GROUP_NONE),

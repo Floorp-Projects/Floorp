@@ -44,9 +44,9 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 # (7) Execute "local" rules. (OPTIONAL).                              #
 #######################################################################
 
-nss_build_all: build_coreconf build_nspr build_dbm all
+nss_build_all: build_coreconf build_nspr all
 
-nss_clean_all: clobber_coreconf clobber_nspr clobber_dbm clobber
+nss_clean_all: clobber_coreconf clobber_nspr clobber
 
 build_coreconf:
 	$(MAKE) -C $(CORE_DEPTH)/coreconf
@@ -54,8 +54,8 @@ build_coreconf:
 clobber_coreconf:
 	$(MAKE) -C $(CORE_DEPTH)/coreconf clobber
 
-NSPR_CONFIG_STATUS = $(CORE_DEPTH)/../nsprpub/$(OBJDIR_NAME)/config.status
-NSPR_CONFIGURE = $(CORE_DEPTH)/../nsprpub/configure
+NSPR_CONFIG_STATUS = $(CORE_DEPTH)/../nspr/$(OBJDIR_NAME)/config.status
+NSPR_CONFIGURE = $(CORE_DEPTH)/../nspr/configure
 
 #
 # Translate coreconf build options to NSPR configure options.
@@ -96,34 +96,30 @@ USEABSPATH="NO"
 endif
 endif
 ifeq ($(USEABSPATH),"YES")
-NSPR_PREFIX = $(shell pwd)/../../dist/$(OBJDIR_NAME)
+NSPR_PREFIX = $(shell pwd)/../dist/$(OBJDIR_NAME)
 else
 NSPR_PREFIX = $$(topsrcdir)/../dist/$(OBJDIR_NAME)
 endif
 
 $(NSPR_CONFIG_STATUS): $(NSPR_CONFIGURE)
-	$(NSINSTALL) -D $(CORE_DEPTH)/../nsprpub/$(OBJDIR_NAME)
-	cd $(CORE_DEPTH)/../nsprpub/$(OBJDIR_NAME) ; \
+	$(NSINSTALL) -D $(CORE_DEPTH)/../nspr/$(OBJDIR_NAME)
+	cd $(CORE_DEPTH)/../nspr/$(OBJDIR_NAME) ; \
 	$(NSPR_COMPILERS) sh ../configure \
 	$(NSPR_CONFIGURE_OPTS) \
 	--with-dist-prefix='$(NSPR_PREFIX)' \
 	--with-dist-includedir='$(NSPR_PREFIX)/include'
 
 build_nspr: $(NSPR_CONFIG_STATUS)
-	$(MAKE) -C $(CORE_DEPTH)/../nsprpub/$(OBJDIR_NAME)
+	$(MAKE) -C $(CORE_DEPTH)/../nspr/$(OBJDIR_NAME)
 
 clobber_nspr: $(NSPR_CONFIG_STATUS)
-	$(MAKE) -C $(CORE_DEPTH)/../nsprpub/$(OBJDIR_NAME) clobber
+	$(MAKE) -C $(CORE_DEPTH)/../nspr/$(OBJDIR_NAME) clobber
 
-build_dbm:
-ifdef NSS_DISABLE_DBM
-	@echo "skipping the build of DBM"
-else
-	$(MAKE) -C $(CORE_DEPTH)/dbm export libs
-endif
+build_docs:
+	$(MAKE) -C $(CORE_DEPTH)/doc
 
-clobber_dbm:
-	$(MAKE) -C $(CORE_DEPTH)/dbm clobber
+clean_docs:
+	$(MAKE) -C $(CORE_DEPTH)/doc clean
 
 moz_import::
 ifeq (,$(filter-out WIN%,$(OS_TARGET)))
@@ -148,7 +144,7 @@ else
 endif
 endif
 
-nss_RelEng_bld: build_coreconf import build_dbm all
+nss_RelEng_bld: build_coreconf import all
 
 package:
 	$(MAKE) -C pkg publish

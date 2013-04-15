@@ -340,3 +340,21 @@ function getFrames(window) {
   }, [])
 }
 exports.getFrames = getFrames;
+
+function getOwnerBrowserWindow(node) {
+  /**
+  Takes DOM node and returns browser window that contains it.
+  **/
+
+  let window = node.ownerDocument.defaultView.top;
+  // If anchored window is browser then it's target browser window.
+  if (isBrowser(window)) return window;
+  // Otherwise iterate over each browser window and find a one that
+  // contains browser for the anchored window document.
+  let document = window.document;
+  let browsers = windows("navigator:browser", { includePrivate: true });
+  return array.find(browsers, function isTargetBrowser(window) {
+    return !!window.gBrowser.getBrowserForDocument(document);
+  });
+}
+exports.getOwnerBrowserWindow = getOwnerBrowserWindow;

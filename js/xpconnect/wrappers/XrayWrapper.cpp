@@ -621,7 +621,7 @@ XPCWrappedNativeXrayTraits::resolveDOMCollectionProperty(JSContext *cx, HandleOb
     XPCWrappedNative *wn = getWN(wrapper);
     if (!wn) {
         // This should NEVER happen, but let's be extra careful here
-        // becaue of the reported crashes (Bug 832091).
+        // because of the reported crashes (Bug 832091).
         XPCThrower::Throw(NS_ERROR_UNEXPECTED, cx);
         return false;
     }

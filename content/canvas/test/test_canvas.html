@@ -21236,10 +21236,12 @@ window.HTMLCanvasElement.prototype = null;
 ok(window.HTMLCanvasElement.prototype, "window.HTMLCanvasElement.prototype");
 delete window.HTMLCanvasElement.prototype;
 ok(window.HTMLCanvasElement.prototype, "window.HTMLCanvasElement.prototype");
+var getContext = window.HTMLCanvasElement.prototype.getContext;
 window.HTMLCanvasElement.prototype.getContext = 1;
 ok(window.HTMLCanvasElement.prototype.getContext === 1, "window.HTMLCanvasElement.prototype.getContext === 1");
 delete window.HTMLCanvasElement.prototype.getContext;
-todo(window.HTMLCanvasElement.prototype.getContext === undefined, "window.HTMLCanvasElement.prototype.getContext === undefined");
+ok(window.HTMLCanvasElement.prototype.getContext === undefined, "window.HTMLCanvasElement.prototype.getContext === undefined");
+window.HTMLCanvasElement.prototype.getContext = getContext;
 
 
 }
@@ -21257,8 +21259,10 @@ function test_type_replace() {
 var canvas = document.getElementById('c680');
 var ctx = canvas.getContext('2d');
 
+var getContext = window.HTMLCanvasElement.prototype.getContext;
 window.HTMLCanvasElement.prototype.getContext = function (name) { return 0; };
 ok(canvas.getContext('2d') === 0, "canvas.getContext('2d') === 0");
+window.HTMLCanvasElement.prototype.getContext = getContext;
 
 
 }

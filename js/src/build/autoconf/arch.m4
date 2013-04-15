@@ -202,6 +202,11 @@ if test "$CPU_ARCH" = "arm"; then
       HAVE_ARM_SIMD=1
   fi
 
+  AC_MSG_CHECKING(ARM version support in compiler)
+  dnl Determine the target ARM architecture (5 for ARMv5, v5T, v5E, etc.; 6 for ARMv6, v6K, etc.)
+  ARM_ARCH=`${CC-cc} ${CFLAGS} -dM -E - < /dev/null | sed -n 's/.*__ARM_ARCH_\([[0-9]]*\).*/\1/p'`
+  AC_MSG_RESULT("$ARM_ARCH")
+
   AC_MSG_CHECKING(for ARM NEON support in compiler)
   # We try to link so that this also fails when
   # building with LTO.
@@ -212,16 +217,23 @@ if test "$CPU_ARCH" = "arm"; then
   if test "$result" = "yes"; then
       AC_DEFINE(HAVE_ARM_NEON)
       HAVE_ARM_NEON=1
+
+      dnl We don't need to build NEON support if we're targetting a non-NEON device.
+      dnl This matches media/webrtc/trunk/webrtc/build/common.gypi.
+      if test -n "$ARM_ARCH"; then
+          if test "$ARM_ARCH" -lt 7; then
+              BUILD_ARM_NEON=0
+          else
+              BUILD_ARM_NEON=1
+          fi
+      fi
   fi
 
-  AC_MSG_CHECKING(ARM version support in compiler)
-  dnl Determine the target ARM architecture (5 for ARMv5, v5T, v5E, etc.; 6 for ARMv6, v6K, etc.)
-  ARM_ARCH=`${CC-cc} ${CFLAGS} -dM -E - < /dev/null | sed -n 's/.*__ARM_ARCH_\([[0-9]]*\).*/\1/p'`
-  AC_MSG_RESULT("$ARM_ARCH")
 fi # CPU_ARCH = arm
 
 AC_SUBST(HAVE_ARM_SIMD)
 AC_SUBST(HAVE_ARM_NEON)
+AC_SUBST(BUILD_ARM_NEON)
 
 if test -n "$MOZ_ARCH"; then
   NSPR_CONFIGURE_ARGS="$NSPR_CONFIGURE_ARGS --with-arch=$MOZ_ARCH"

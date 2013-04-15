@@ -47,7 +47,7 @@ VerifyJar(char *filename)
 	    "\nNOTE -- \"%s\" archive DID NOT PASS crypto verification.\n",
 	     filename);
 	if (status < 0) {
-	    char	*errtext;
+	    const char	*errtext;
 
 	    if (status >= JAR_BASE && status <= JAR_BASE_END) {
 		errtext = JAR_get_error (status);
@@ -278,7 +278,7 @@ JarWho(char *filename)
 	     filename);
 	retval = -1;
 	if (jar->valid < 0 || status != -1) {
-	    char	*errtext;
+	    const char	*errtext;
 
 	    if (status >= JAR_BASE && status <= JAR_BASE_END) {
 		errtext = JAR_get_error (status);

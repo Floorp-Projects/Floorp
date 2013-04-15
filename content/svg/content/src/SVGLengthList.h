@@ -290,7 +290,7 @@ private:
  * could still overflow. In that case the value returned will be
  * numeric_limits<float>::quiet_NaN().
  */
-class NS_STACK_CLASS SVGUserUnitList
+class MOZ_STACK_CLASS SVGUserUnitList
 {
 public:
 

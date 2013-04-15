@@ -227,6 +227,7 @@
 #include "TimeChangeObserver.h"
 #include "nsPISocketTransportService.h"
 #include "mozilla/dom/AudioContext.h"
+#include "mozilla/dom/FunctionBinding.h"
 
 #ifdef MOZ_WEBSPEECH
 #include "mozilla/dom/SpeechSynthesis.h"
@@ -1735,8 +1736,12 @@ nsGlobalWindow::UnmarkGrayTimers()
        timeout;
        timeout = timeout->getNext()) {
     if (timeout->mScriptHandler) {
-      JSObject* o = timeout->mScriptHandler->GetScriptObject();
-      xpc_UnmarkGrayObject(o);
+      Function* f = timeout->mScriptHandler->GetCallback();
+      if (f) {
+        // Callable() already does xpc_UnmarkGrayObject.
+        DebugOnly<JSObject*> o = f->Callable();
+        MOZ_ASSERT(!xpc_IsGrayGCThing(o), "Should have been unmarked");
+      }
     }
   }
 }
@@ -6437,7 +6442,7 @@ nsGlobalWindow::OpenDialog(const nsAString& aUrl, const nsAString& aName,
   NS_ENSURE_SUCCESS(rv, rv);
 
   uint32_t argc;
-  jsval *argv = nullptr;
+  JS::Value *argv = nullptr;
 
   // XXX - need to get this as nsISupports?
   ncc->GetArgc(&argc);
@@ -6620,7 +6625,7 @@ PostMessageReadStructuredClone(JSContext* cx,
     if (JS_ReadBytes(reader, &supports, sizeof(supports))) {
       JSObject* global = JS_GetGlobalForScopeChain(cx);
       if (global) {
-        jsval val;
+        JS::Value val;
         nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
         if (NS_SUCCEEDED(nsContentUtils::WrapNative(cx, global, supports,
                                                     &val,
@@ -6758,7 +6763,7 @@ PostMessageEvent::Run()
   }
 
   // Deserialize the structured clone data
-  jsval messageData;
+  JS::Value messageData;
   {
     JSAutoRequest ar(cx);
     StructuredCloneInfo scInfo;
@@ -6813,9 +6818,9 @@ PostMessageEvent::Run()
 }
 
 NS_IMETHODIMP
-nsGlobalWindow::PostMessageMoz(const jsval& aMessage,
+nsGlobalWindow::PostMessageMoz(const JS::Value& aMessage,
                                const nsAString& aOrigin,
-                               const jsval& aTransfer,
+                               const JS::Value& aTransfer,
                                JSContext* aCx)
 {
   FORWARD_TO_OUTER(PostMessageMoz, (aMessage, aOrigin, aTransfer, aCx),
@@ -6901,7 +6906,7 @@ nsGlobalWindow::PostMessageMoz(const jsval& aMessage,
                          providedOrigin,
                          nsContentUtils::IsCallerChrome());
 
-  // We *must* clone the data here, or the jsval could be modified
+  // We *must* clone the data here, or the JS::Value could be modified
   // by script
   JSAutoStructuredCloneBuffer buffer;
   StructuredCloneInfo scInfo;
@@ -10184,8 +10189,8 @@ nsGlobalWindow::RunTimeoutHandler(nsTimeout* aTimeout,
   }
 
   nsCOMPtr<nsIScriptTimeoutHandler> handler(timeout->mScriptHandler);
-  JSObject* scriptObject = handler->GetScriptObject();
-  if (!scriptObject) {
+  nsRefPtr<Function> callback = handler->GetCallback();
+  if (!callback) {
     // Evaluate the timeout expression.
     const PRUnichar* script = handler->GetHandlerText();
     NS_ASSERTION(script, "timeout has no script nor handler text!");
@@ -10201,18 +10206,14 @@ nsGlobalWindow::RunTimeoutHandler(nsTimeout* aTimeout,
     aScx->EvaluateString(nsDependentString(script), *FastGetGlobalJSObject(),
                          options, /*aCoerceToString = */ false, nullptr);
   } else {
-    nsCOMPtr<nsIVariant> dummy;
+    // Hold strong ref to ourselves while we call the callback.
     nsCOMPtr<nsISupports> me(static_cast<nsIDOMWindow *>(this));
-    aScx->CallEventHandler(me, FastGetGlobalJSObject(),
-                           scriptObject, handler->GetArgv(),
-                           // XXXmarkh - consider allowing CallEventHandler to
-                           // accept nullptr?
-                           getter_AddRefs(dummy));
-
+    ErrorResult ignored;
+    callback->Call(me, handler->GetArgs(), ignored);
   }
 
-  // We ignore any failures from calling EvaluateString() or
-  // CallEventHandler() on the context here since we're in a loop
+  // We ignore any failures from calling EvaluateString() on the context or
+  // Call() on a Function here since we're in a loop
   // where we're likely to be running timeouts whose OS timers
   // didn't fire in time and we don't want to not fire those timers
   // now just because execution of one timer failed. We can't
@@ -11802,13 +11803,13 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
 
 #define EVENT(name_, id_, type_, struct_)                                    \
   NS_IMETHODIMP nsGlobalWindow::GetOn##name_(JSContext *cx,                  \
-                                             jsval *vp) {                    \
+                                             JS::Value *vp) {                \
     EventHandlerNonNull* h = GetOn##name_();                                 \
     vp->setObjectOrNull(h ? h->Callable() : nullptr);                        \
     return NS_OK;                                                            \
   }                                                                          \
   NS_IMETHODIMP nsGlobalWindow::SetOn##name_(JSContext *cx,                  \
-                                             const jsval &v) {               \
+                                             const JS::Value &v) {           \
     JSObject *obj = mJSObject;                                               \
     if (!obj) {                                                              \
       /* Just silently do nothing */                                         \
@@ -11830,7 +11831,7 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
   }
 #define ERROR_EVENT(name_, id_, type_, struct_)                              \
   NS_IMETHODIMP nsGlobalWindow::GetOn##name_(JSContext *cx,                  \
-                                             jsval *vp) {                    \
+                                             JS::Value *vp) {                \
     nsEventListenerManager *elm = GetListenerManager(false);                 \
     if (elm) {                                                               \
       OnErrorEventHandlerNonNull* h = elm->GetOnErrorEventHandler();         \
@@ -11843,7 +11844,7 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
     return NS_OK;                                                            \
   }                                                                          \
   NS_IMETHODIMP nsGlobalWindow::SetOn##name_(JSContext *cx,                  \
-                                             const jsval &v) {               \
+                                             const JS::Value &v) {           \
     nsEventListenerManager *elm = GetListenerManager(true);                  \
     if (!elm) {                                                              \
       return NS_ERROR_OUT_OF_MEMORY;                                         \
@@ -11867,7 +11868,7 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
   }
 #define BEFOREUNLOAD_EVENT(name_, id_, type_, struct_)                       \
   NS_IMETHODIMP nsGlobalWindow::GetOn##name_(JSContext *cx,                  \
-                                             jsval *vp) {                    \
+                                             JS::Value *vp) {                \
     nsEventListenerManager *elm = GetListenerManager(false);                 \
     if (elm) {                                                               \
       BeforeUnloadEventHandlerNonNull* h =                                   \
@@ -11881,7 +11882,7 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
     return NS_OK;                                                            \
   }                                                                          \
   NS_IMETHODIMP nsGlobalWindow::SetOn##name_(JSContext *cx,                  \
-                                             const jsval &v) {               \
+                                             const JS::Value &v) {           \
     nsEventListenerManager *elm = GetListenerManager(true);                  \
     if (!elm) {                                                              \
       return NS_ERROR_OUT_OF_MEMORY;                                         \

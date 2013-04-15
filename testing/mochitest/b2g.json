@@ -379,6 +379,7 @@
 	"dom/tests/mochitest/general/test_interfaces.html":"",
 	"dom/tests/mochitest/geolocation/test_allowCurrent.html":"",
 	"dom/tests/mochitest/geolocation/test_allowWatch.html":"",
+	"dom/tests/mochitest/geolocation/test_cachedPosition.html":"",
 	"dom/tests/mochitest/geolocation/test_cancelCurrent.html":"",
 	"dom/tests/mochitest/geolocation/test_cancelWatch.html":"",
 	"dom/tests/mochitest/geolocation/test_clearWatch.html":"",
@@ -422,6 +423,7 @@
 	"dom/workers/test/test_workersDisabled.html":"",
 	"dom/workers/test/test_xhr_parameters.html":"",
 	"dom/workers/test/test_xhr_system.html":"",
+	"dom/workers/test/test_closeOnGC.html": "Stack scanner keeps things alive",
 
 	"dom/devicestorage/test/test_available.html":"",
 	"dom/devicestorage/test/test_freeSpace.html":"",

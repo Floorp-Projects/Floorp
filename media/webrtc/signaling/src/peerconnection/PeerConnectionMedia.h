@@ -230,12 +230,7 @@ RemoteSourceStreamInfo(already_AddRefed<DOMMediaStream> aMediaStream,
 
 class PeerConnectionMedia : public sigslot::has_slots<> {
  public:
-  PeerConnectionMedia(PeerConnectionImpl *parent)
-      : mParent(parent),
-      mLocalSourceStreamsLock("PeerConnectionMedia.mLocalSourceStreamsLock"),
-      mIceCtx(NULL),
-      mDNSResolver(new mozilla::NrIceResolver()) {}
-
+  PeerConnectionMedia(PeerConnectionImpl *parent);
   ~PeerConnectionMedia() {}
 
   nsresult Init(const std::vector<mozilla::NrIceStunServer>& stun_servers,

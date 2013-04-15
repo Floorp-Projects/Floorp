@@ -31,29 +31,6 @@ var gContentPane = {
     return undefined;
   },
 
-  /**
-   * The exceptions types which may be passed to this._showExceptions().
-   */
-  _exceptionsParams: {
-    popup:   { blockVisible: false, sessionVisible: false, allowVisible: true, 
-               prefilledHost: "", permissionType: "popup" }
-  },
-
-  /**
-   * Displays the exceptions dialog of the given type, where types map onto the
-   * the fields in this._exceptionsParams.
-   */  
-  _showExceptions: function (aPermissionType)
-  {
-    var bundlePreferences = document.getElementById("bundlePreferences");
-    var params = this._exceptionsParams[aPermissionType];
-    params.windowTitle = bundlePreferences.getString(aPermissionType + "permissionstitle");
-    params.introText = bundlePreferences.getString(aPermissionType + "permissionstext");
-
-    openDialog("chrome://browser/content/preferences/permissions.xul", 
-               "Browser:Permissions", "resizable=yes", params);
-  },
-
   // BEGIN UI CODE
 
   /*
@@ -71,7 +48,14 @@ var gContentPane = {
    */
   showPopupExceptions: function ()
   {
-    this._showExceptions("popup");
+    var bundlePreferences = document.getElementById("bundlePreferences");
+    var params = { blockVisible: false, sessionVisible: false, allowVisible: true,
+                   prefilledHost: "", permissionType: "popup" }
+    params.windowTitle = bundlePreferences.getString("popuppermissionstitle");
+    params.introText = bundlePreferences.getString("popuppermissionstext");
+
+    openDialog("chrome://browser/content/preferences/permissions.xul", 
+               "Browser:Permissions", "resizable=yes", params);
   },
 
   // FONTS

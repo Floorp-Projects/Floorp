@@ -277,7 +277,7 @@ PeerConnectionImpl::PeerConnectionImpl()
   , mWindow(NULL)
   , mIdentity(NULL)
   , mSTSThread(NULL)
-  , mMedia(new PeerConnectionMedia(this))
+  , mMedia(NULL)
   , mNumAudioStreams(0)
   , mNumVideoStreams(0)
   , mHaveDataStream(false) {
@@ -401,7 +401,7 @@ PeerConnectionImpl::ConvertRTCConfiguration(const JS::Value& aSrc,
   }
   JSAutoCompartment ac(aCx, &aSrc.toObject());
   RTCConfiguration config;
-  if (!(config.Init(aCx, nullptr, aSrc) && config.mIceServers.WasPassed())) {
+  if (!(config.Init(aCx, JS::NullPtr(), aSrc) && config.mIceServers.WasPassed())) {
     return NS_ERROR_FAILURE;
   }
   for (uint32_t i = 0; i < config.mIceServers.Value().Length(); i++) {
@@ -525,6 +525,8 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
     CSFLogError(logTag, "%s: Couldn't Create Call Object", __FUNCTION__);
     return NS_ERROR_FAILURE;
   }
+
+  mMedia = new PeerConnectionMedia(this);
 
   // Connect ICE slots.
   mMedia->SignalIceGatheringCompleted.connect(this, &PeerConnectionImpl::IceGatheringCompleted);
@@ -753,7 +755,7 @@ PeerConnectionImpl::NotifyConnection()
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
-  CSFLogDebug(logTag, __FUNCTION__);
+  CSFLogDebug(logTag, "%s", __FUNCTION__);
 
 #ifdef MOZILLA_INTERNAL_API
   nsCOMPtr<IPeerConnectionObserver> pco = do_QueryReferent(mPCObserver);
@@ -772,7 +774,7 @@ PeerConnectionImpl::NotifyClosedConnection()
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
-  CSFLogDebug(logTag, __FUNCTION__);
+  CSFLogDebug(logTag, "%s", __FUNCTION__);
 
 #ifdef MOZILLA_INTERNAL_API
   nsCOMPtr<IPeerConnectionObserver> pco = do_QueryReferent(mPCObserver);
@@ -1216,7 +1218,7 @@ PeerConnectionImpl::CheckApiState(bool assert_ice_ready) const
 NS_IMETHODIMP
 PeerConnectionImpl::Close(bool aIsSynchronous)
 {
-  CSFLogDebug(logTag, __FUNCTION__);
+  CSFLogDebug(logTag, "%s", __FUNCTION__);
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
   return CloseInt(aIsSynchronous);
@@ -1411,7 +1413,7 @@ PeerConnectionImpl::IceStateChange_m(IceState aState)
 {
   PC_AUTO_ENTER_API_CALL(false);
 
-  CSFLogDebug(logTag, __FUNCTION__);
+  CSFLogDebug(logTag, "%s", __FUNCTION__);
 
   mIceState = aState;
 

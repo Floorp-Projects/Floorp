@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test AudioParam</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SpecialPowers.setBoolPref("media.webaudio.enabled", true);
+
+var context = new AudioContext();
+var gain = context.createGain().gain;
+
+ok("value" in gain, "The value attr must exist");
+gain.value = 0.5;
+ok("defaultValue" in gain, "The defaultValue attr must exist");
+(function() {
+  "use strict"; // in order to get the readOnly setter to throw
+  expectTypeError(function() {
+    gain.defaultValue = 0.5;
+  });
+})();
+
+gain.setValueAtTime(1, 0.25);
+gain.linearRampToValueAtTime(0.75, 0.5);
+gain.exponentialRampToValueAtTime(0.1, 0.75);
+gain.setTargetAtTime(0.2, 1, 0.5);
+gain.setTargetValueAtTime(0.3, 1.25, 0.5);
+gain.cancelScheduledValues(1.5);
+
+SpecialPowers.clearUserPref("media.webaudio.enabled");
+
+</script>
+</pre>
+</body>
+</html>

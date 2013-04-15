@@ -1014,7 +1014,7 @@ public:
   }
 
   virtual void SetOwner(imgRequest* aOwner) MOZ_OVERRIDE {
-    MOZ_ASSERT_IF(aOwner, "We shouldn't be giving static requests a non-null owner.");
+    MOZ_ASSERT(!aOwner, "We shouldn't be giving static requests a non-null owner.");
   }
 
 private:
