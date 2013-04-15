@@ -20,10 +20,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=583533
 
     /** Test for Bug 583533 **/
 
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-    var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"].
-    getService(Components.interfaces.nsIStringBundleService);
+    var sbs = SpecialPowers.Cc['@mozilla.org/intl/stringbundle;1'].
+       getService(SpecialPowers.Ci.nsIStringBundleService);
     var bundle = sbs.createBundle("chrome://global-platform/locale/platformKeys.properties");
     
     var shiftText = bundle.GetStringFromName("VK_SHIFT");
@@ -32,9 +30,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=583533
     var metaText = bundle.GetStringFromName("VK_META");
     var separatorText = bundle.GetStringFromName("MODIFIER_SEPARATOR");
 
-    var modifier = Components.classes["@mozilla.org/preferences-service;1"]
-                                      .getService(Components.interfaces.nsIPrefBranch)
-                                      .getIntPref("ui.key.contentAccess");
+    var modifier = SpecialPowers.getIntPref("ui.key.contentAccess");
 
     var isShift;
     var isAlt;

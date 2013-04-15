@@ -34,15 +34,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=238987
   // accessibility.tabfocus must be set to value 7 before running test also
   // on a mac.
   function setOrRestoreTabFocus(newValue) {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    const prefSvcContractID = "@mozilla.org/preferences-service;1";
-    const prefSvcIID = Components.interfaces.nsIPrefService;
-    var prefs = Components.classes[prefSvcContractID].getService(prefSvcIID)
-                                                     .getBranch("accessibility.");
     if (!newValue) {
-      prefs.clearUserPref("tabfocus");
+      SpecialPowers.clearUserPref("accessibility.tabfocus");
     } else {
-      prefs.setIntPref("tabfocus", newValue);
+      SpecialPowers.setIntPref("accessibility.tabfocus", newValue);
     }
   }
 
@@ -105,9 +100,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=238987
   }
 
   function tab() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-                       getInterface(Components.interfaces.nsIDOMWindowUtils);
+    var utils = SpecialPowers.DOMWindowUtils;
     // Send tab key events.
     var key = Components.interfaces.nsIDOMKeyEvent.DOM_VK_TAB;
     utils.sendKeyEvent("keydown", key, 0, modifier);

@@ -39,10 +39,7 @@ function getTests() {
 
 function doTest() {
   // Enable context menus
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-              getService(Components.interfaces.nsIPrefBranch);
-  prefs.setBoolPref("ui.click_hold_context_menus", true);
+  SpecialPowers.setBoolPref("ui.click_hold_context_menus", true);
 
   target = document.getElementById("testTarget");
 
@@ -69,26 +66,20 @@ function doCheckDuration() {
   var duration = 50;
 
   // Change click hold delay
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-              getService(Components.interfaces.nsIPrefBranch);
-  prefs.setIntPref("ui.click_hold_context_menus.delay", duration);
+  SpecialPowers.setIntPref("ui.click_hold_context_menus.delay", duration);
 
   synthesizeMouse(target, 0, 0, {type: "mousedown"});
 }
 
 function finishTest() {
   synthesizeKey("VK_ESCAPE", {}, window);
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-              getService(Components.interfaces.nsIPrefBranch);
   try {
-    prefs.clearUserPref("ui.click_hold_context_menus");
+    SpecialPowers.clearUserPref("ui.click_hold_context_menus");
   }
   catch(e) {}
 
   try {
-    prefs.clearUserPref("ui.click_hold_context_menus.delay");
+    SpecialPowers.clearUserPref("ui.click_hold_context_menus.delay");
   }
   catch(e) {}
 
