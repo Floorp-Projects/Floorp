@@ -427,9 +427,6 @@ class JSScript : public js::gc::Cell
 
     // 16-bit fields.
 
-  private:
-    uint16_t        PADDING16;
-
     uint16_t        version;    /* JS version under which script was compiled */
 
   public:
@@ -445,6 +442,11 @@ class JSScript : public js::gc::Cell
     uint16_t        staticLevel;/* static level for display maintenance */
 
     // 8-bit fields.
+  private:
+    uint8_t        maxInlineDepth_; /* script max inline depth (IonMonkey)
+                                       uint8_t(-1): unitialized
+                                       uint8_t(-2): disabled */
+    uint8_t        PADDING8;
 
   public:
     // The kinds of the optional arrays.
@@ -806,6 +808,26 @@ class JSScript : public js::gc::Cell
         if (loopCount > maxLoopCount)
             maxLoopCount = loopCount;
         return maxLoopCount;
+    }
+
+    void setMaxInlineDepth(uint32_t maxInlineDepth) {
+        if (maxInlineDepth >= uint8_t(-2)) {
+            disableInlineDepthCheck();
+            return;
+        }
+        maxInlineDepth_ = maxInlineDepth;
+    }
+
+    uint8_t maxInlineDepth() const {
+        return maxInlineDepth_;
+    }
+
+    void disableInlineDepthCheck() {
+        maxInlineDepth_ = uint8_t(-2);
+    }
+
+    bool isInlineDepthCheckDisabled() {
+        return maxInlineDepth_ == uint8_t(-2);
     }
 
     /*
