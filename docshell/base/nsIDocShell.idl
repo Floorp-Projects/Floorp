@@ -40,7 +40,7 @@ interface nsIWebBrowserPrint;
 interface nsIVariant;
 interface nsIPrivacyTransitionObserver;
 
-[scriptable, builtinclass, uuid(4277354d-5069-4278-935a-5d596ce9bfbf)]
+[scriptable, builtinclass, uuid(2b192c9c-dea4-4696-a445-1bef7bc0db6d)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
@@ -407,6 +407,8 @@ interface nsIDocShell : nsIDocShellTreeItem
   void historyPurged(in long numEntries);
 
   /*
+   * @deprecated, use nsIDocShell.QueryInterface(nsIDOMStorageManager) instead.
+   *
    * Retrieves the WebApps session storage object for the supplied principal.
    *
    * @param principal returns a storage for this principal
@@ -420,25 +422,14 @@ interface nsIDocShell : nsIDocShellTreeItem
                                               in boolean create);
 
   /*
+   * @deprecated, use nsIDocShell.QueryInterface(nsIDOMStorageManager) instead.
+   *
    * Add a WebApps session storage object to the docshell.
    *
    * @param principal the principal the storage object is associated with
    * @param storage the storage object to add
    */
   void addSessionStorage(in nsIPrincipal principal, in nsIDOMStorage storage);
-
-  /**
-   * Clones all session storage objects and attaches them to the given docshell.
-   * Useful when duplicating tabs and their states.
-   *
-   * @param docShell the docshell to clone the sessionstorage objects to
-   */
-  void cloneSessionStoragesTo(in nsIDocShell docShell);
-
-  /**
-   * Removes all WebApps session storage objects attached to the docshell.
-   */
-  void clearSessionStorages();
 
   /**
    * Gets the channel for the currently loaded document, if any. 
