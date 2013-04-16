@@ -15,8 +15,7 @@ import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
-import org.mozilla.gecko.widget.AboutHomeContent;
-import org.mozilla.gecko.widget.TopSitesView;
+import org.mozilla.gecko.widget.AboutHome;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -42,7 +41,6 @@ import android.nfc.NfcEvent;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.ContextMenu.ContextMenuInfo;
 import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -66,7 +64,9 @@ import java.util.Vector;
 abstract public class BrowserApp extends GeckoApp
                                  implements TabsPanel.TabsLayoutChangeListener,
                                             PropertyAnimator.PropertyAnimationListener,
-                                            View.OnKeyListener {
+                                            View.OnKeyListener,
+                                            AboutHome.UriLoadListener,
+                                            AboutHome.LoadCompleteListener {
     private static final String LOGTAG = "GeckoBrowserApp";
 
     private static final String PREF_CHROME_DYNAMICTOOLBAR = "browser.chrome.dynamictoolbar";
@@ -74,8 +74,7 @@ abstract public class BrowserApp extends GeckoApp
     private static final int TABS_ANIMATION_DURATION = 450;
 
     public static BrowserToolbar mBrowserToolbar;
-    private AboutHomeContent mAboutHomeContent;
-    private Boolean mAboutHomeShowing = null;
+    private AboutHome mAboutHome;
     protected Telemetry.Timer mAboutHomeStartupTimer = null;
 
     private static final int ADDON_MENU_OFFSET = 1000;
@@ -362,8 +361,7 @@ abstract public class BrowserApp extends GeckoApp
                 case KeyEvent.KEYCODE_BUTTON_Y:
                     // Toggle/focus the address bar on gamepad-y button.
                     if (mBrowserToolbar.isVisible()) {
-                        if (isDynamicToolbarEnabled() &&
-                            Boolean.FALSE.equals(mAboutHomeShowing)) {
+                        if (isDynamicToolbarEnabled() && !mAboutHome.getUserVisibleHint()) {
                             mBrowserToolbar.animateVisibility(false);
                             mLayerView.requestFocus();
                         } else {
@@ -463,8 +461,8 @@ abstract public class BrowserApp extends GeckoApp
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
-                if (mAboutHomeContent != null)
-                    mAboutHomeContent.setLastTabsVisibility(false);
+                if (mAboutHome != null)
+                    mAboutHome.setLastTabsVisibility(false);
             }
         });
 
@@ -488,16 +486,23 @@ abstract public class BrowserApp extends GeckoApp
                 // put the focus on the layerview and carry on
                 LayerView layerView = mLayerView;
                 if (layerView != null && !layerView.hasFocus() && GamepadUtils.isPanningControl(event)) {
-                    if (Boolean.FALSE.equals(mAboutHomeShowing)) {
+                    if (mAboutHome.getUserVisibleHint()) {
                         layerView.requestFocus();
                     } else {
-                        mAboutHomeContent.requestFocus();
+                        mAboutHome.requestFocus();
                     }
                 }
                 return false;
             }
         });
 
+        // AboutHome will be dynamically attached and detached as
+        // about:home is shown. Adding/removing the fragment is not synchronous,
+        // so we can't use Fragment#isVisible() to determine whether the
+        // about:home is shown. Instead, we use Fragment#getUserVisibleHint()
+        // with the hint we set ourselves.
+        mAboutHome = AboutHome.newInstance();
+        mAboutHome.setUserVisibleHint(false);
 
         mBrowserToolbar = new BrowserToolbar(this);
         mBrowserToolbar.from(actionBar);
@@ -574,9 +579,7 @@ abstract public class BrowserApp extends GeckoApp
         } else {
             // Immediately show the toolbar when disabling the dynamic
             // toolbar.
-            if (mAboutHomeContent != null) {
-                mAboutHomeContent.setPadding(0, 0, 0, 0);
-            }
+            mAboutHome.setPadding(0, 0, 0, 0);
             mBrowserToolbar.cancelVisibilityAnimation();
             mBrowserToolbar.getLayout().scrollTo(0, 0);
         }
@@ -610,8 +613,6 @@ abstract public class BrowserApp extends GeckoApp
             PrefsHelper.removeObserver(mPrefObserverId);
             mPrefObserverId = null;
         }
-        if (mAboutHomeContent != null)
-            mAboutHomeContent.onDestroy();
         if (mBrowserToolbar != null)
             mBrowserToolbar.onDestroy();
 
@@ -633,13 +634,6 @@ abstract public class BrowserApp extends GeckoApp
         }
 
         super.onDestroy();
-    }
-
-    @Override
-    public void onContentChanged() {
-        super.onContentChanged();
-        if (mAboutHomeContent != null)
-            mAboutHomeContent.onActivityContentChanged();
     }
 
     @Override
@@ -698,7 +692,7 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     public void setToolbarHeight(int aHeight, int aVisibleHeight) {
-        if (!isDynamicToolbarEnabled() || Boolean.TRUE.equals(mAboutHomeShowing)) {
+        if (!isDynamicToolbarEnabled() || mAboutHome.getUserVisibleHint()) {
             // Use aVisibleHeight here so that when the dynamic toolbar is
             // enabled, the padding will animate with the toolbar becoming
             // visible.
@@ -706,7 +700,7 @@ abstract public class BrowserApp extends GeckoApp
                 // When the dynamic toolbar is enabled, set the padding on the
                 // about:home widget directly - this is to avoid resizing the
                 // LayerView, which can cause visible artifacts.
-                mAboutHomeContent.setPadding(0, aVisibleHeight, 0, 0);
+                mAboutHome.setPadding(0, aVisibleHeight, 0, 0);
             } else {
                 setToolbarMargin(aVisibleHeight);
             }
@@ -793,9 +787,6 @@ abstract public class BrowserApp extends GeckoApp
         invalidateOptionsMenu();
         updateSideBarState();
         mTabsPanel.refresh();
-
-        if (mAboutHomeContent != null)
-            mAboutHomeContent.refresh();
     }
 
     @Override
@@ -1194,75 +1185,46 @@ abstract public class BrowserApp extends GeckoApp
 
     /* About:home UI */
     void updateAboutHomeTopSites() {
-        if (mAboutHomeContent == null)
-            return;
-
-        mAboutHomeContent.update(EnumSet.of(AboutHomeContent.UpdateFlags.TOP_SITES));
+        mAboutHome.update(EnumSet.of(AboutHome.UpdateFlags.TOP_SITES));
     }
 
     private void showAboutHome() {
-        // Don't create an additional AboutHomeRunnable if about:home
-        // is already visible.
-        if (mAboutHomeShowing != null && mAboutHomeShowing)
+        if (mAboutHome.getUserVisibleHint()) {
             return;
+        }
 
-        mAboutHomeShowing = true;
-        Runnable r = new AboutHomeRunnable(true);
-        ThreadUtils.getUiHandler().postAtFrontOfQueue(r);
+        // We use commitAllowingStateLoss() instead of commit() here to avoid an
+        // IllegalStateException. showAboutHome() and hideAboutHome() are
+        // executed inside of tab's onChange() callback. Since that callback can
+        // be triggered asynchronously from Gecko, it's possible that this
+        // method can be called while Fennec is in the background. If that
+        // happens, using commit() would throw an IllegalStateException since
+        // it can't be used between the Activity's onSaveInstanceState() and
+        // onResume().
+        getSupportFragmentManager().beginTransaction()
+                .add(R.id.gecko_layout, mAboutHome).commitAllowingStateLoss();
+        mAboutHome.setUserVisibleHint(true);
+
+        mBrowserToolbar.setNextFocusDownId(R.id.abouthome_content);
+
+        // Refresh margins to possibly restore the toolbar padding
+        ((BrowserToolbarLayout)mBrowserToolbar.getLayout()).refreshMargins();
     }
 
     private void hideAboutHome() {
-        // If hideAboutHome gets called before showAboutHome, we still need
-        // to create an AboutHomeRunnable to hide the about:home content.
-        if (mAboutHomeShowing != null && !mAboutHomeShowing)
+        if (!mAboutHome.getUserVisibleHint()) {
             return;
+        }
+
+        getSupportFragmentManager().beginTransaction()
+                .remove(mAboutHome).commitAllowingStateLoss();
+        mAboutHome.setUserVisibleHint(false);
 
         mBrowserToolbar.setShadowVisibility(true);
-        mAboutHomeShowing = false;
-        Runnable r = new AboutHomeRunnable(false);
-        ThreadUtils.getUiHandler().postAtFrontOfQueue(r);
-    }
+        mBrowserToolbar.setNextFocusDownId(R.id.layer_view);
 
-    private class AboutHomeRunnable implements Runnable {
-        boolean mShow;
-        AboutHomeRunnable(boolean show) {
-            mShow = show;
-        }
-
-        @Override
-        public void run() {
-            if (mShow) {
-                if (mAboutHomeContent == null) {
-                    mAboutHomeContent = (AboutHomeContent) findViewById(R.id.abouthome_content);
-                    mAboutHomeContent.init();
-                    mAboutHomeContent.update(AboutHomeContent.UpdateFlags.ALL);
-                    mAboutHomeContent.setUriLoadCallback(new AboutHomeContent.UriLoadCallback() {
-                        @Override
-                        public void callback(String url) {
-                            mBrowserToolbar.setProgressVisibility(true);
-                            Tabs.getInstance().loadUrl(url);
-                        }
-                    });
-                    mAboutHomeContent.setLoadCompleteCallback(new AboutHomeContent.VoidCallback() {
-                        @Override
-                        public void callback() {
-                            mAboutHomeStartupTimer.stop();
-                        }
-                    });
-                } else {
-                    mAboutHomeContent.update(EnumSet.of(AboutHomeContent.UpdateFlags.TOP_SITES,
-                                                        AboutHomeContent.UpdateFlags.REMOTE_TABS));
-                }
-                mAboutHomeContent.setVisibility(View.VISIBLE);
-                mBrowserToolbar.setNextFocusDownId(R.id.abouthome_content);
-            } else {
-                findViewById(R.id.abouthome_content).setVisibility(View.GONE);
-                mBrowserToolbar.setNextFocusDownId(R.id.layer_view);
-            }
-
-            // Refresh margins to possibly restore the toolbar padding
-            ((BrowserToolbarLayout)mBrowserToolbar.getLayout()).refreshMargins();
-        }
+        // Refresh margins to possibly restore the toolbar padding
+        ((BrowserToolbarLayout)mBrowserToolbar.getLayout()).refreshMargins();
     }
 
     private class HideTabsTouchListener implements TouchEventInterceptor {
@@ -1577,39 +1539,6 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     @Override
-    public boolean onContextItemSelected(MenuItem item) {
-        ContextMenuInfo info = item.getMenuInfo();
-
-        switch (item.getItemId()) {
-            case R.id.abouthome_open_new_tab:
-                mAboutHomeContent.openNewTab(info);
-                return true;
-
-            case R.id.abouthome_open_private_tab:
-                mAboutHomeContent.openNewPrivateTab(info);
-                return true;
-
-            case R.id.abouthome_topsites_edit:
-                mAboutHomeContent.editSite(info);
-                return true;
-
-            case R.id.abouthome_topsites_unpin:
-                mAboutHomeContent.unpinSite(info, TopSitesView.UnpinFlags.REMOVE_PIN);
-                return true;
-
-            case R.id.abouthome_topsites_pin:
-                mAboutHomeContent.pinSite(info);
-                return true;
-
-            case R.id.abouthome_topsites_remove:
-                mAboutHomeContent.unpinSite(info, TopSitesView.UnpinFlags.REMOVE_HISTORY);
-                return true;
-
-        }
-        return super.onContextItemSelected(item);
-    }
-
-    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.toggle_profiling) {
             GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("ToggleProfiling", null));
@@ -1792,13 +1721,14 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     @Override
-    public void onResume()
-    {
-        super.onResume();
-        if (mAboutHomeContent != null) {
-            mAboutHomeContent.refresh();
-        }
+    public void onAboutHomeUriLoad(String url) {
+        mBrowserToolbar.setProgressVisibility(true);
+        Tabs.getInstance().loadUrl(url);
+    }
 
+    @Override
+    public void onAboutHomeLoadComplete() {
+        mAboutHomeStartupTimer.stop();
     }
 
     @Override
