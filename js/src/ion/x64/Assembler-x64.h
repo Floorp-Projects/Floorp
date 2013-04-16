@@ -510,7 +510,16 @@ class Assembler : public AssemblerX86Shared
     }
 
     void mov(ImmWord word, const Register &dest) {
-        movq(word, dest);
+        // If the word value is in [0,UINT32_MAX], we can use the more compact
+        // movl instruction, which has a 32-bit immediate field which it
+        // zero-extends into the 64-bit register.
+        if (word.value <= UINT32_MAX) {
+            uint32_t value32 = static_cast<uint32_t>(word.value);
+            Imm32 imm32(static_cast<int32_t>(value32));
+            movl(imm32, dest);
+        } else {
+            movq(word, dest);
+        }
     }
     void mov(const Imm32 &imm32, const Register &dest) {
         movl(imm32, dest);
