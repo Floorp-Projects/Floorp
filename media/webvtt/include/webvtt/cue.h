@@ -81,6 +81,7 @@ webvtt_cue_t {
   webvtt_cue_settings settings;
   webvtt_bool snap_to_lines;
   webvtt_string id;
+  webvtt_string body;
 
   /**
     * Parsed cue-text (NULL if has not been parsed)
