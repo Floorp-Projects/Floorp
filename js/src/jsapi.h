@@ -805,7 +805,6 @@ typedef JS::Handle<jsid> JSHandleId;
 
 typedef JS::MutableHandle<JSObject*>   JSMutableHandleObject;
 typedef JS::MutableHandle<JSFunction*> JSMutableHandleFunction;
-typedef JS::MutableHandle<JSScript*>   JSMutableHandleScript;
 typedef JS::MutableHandle<JSString*>   JSMutableHandleString;
 typedef JS::MutableHandle<JS::Value>   JSMutableHandleValue;
 
