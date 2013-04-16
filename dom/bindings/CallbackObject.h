@@ -34,9 +34,15 @@
 namespace mozilla {
 namespace dom {
 
+#define DOM_CALLBACKOBJECT_IID \
+{ 0xbe74c190, 0x6d76, 0x4991, \
+ { 0x84, 0xb9, 0x65, 0x06, 0x99, 0xe6, 0x93, 0x2b } }
+
 class CallbackObject : public nsISupports
 {
 public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(DOM_CALLBACKOBJECT_IID)
+
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(CallbackObject)
 
@@ -370,6 +376,8 @@ private:
 
   uintptr_t mPtrBits;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(CallbackObject, DOM_CALLBACKOBJECT_IID)
 
 template<class T, class U>
 inline void
