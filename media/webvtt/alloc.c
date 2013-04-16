@@ -46,12 +46,14 @@ struct {
 static void *WEBVTT_CALLBACK
 default_alloc( void *unused, webvtt_uint nb )
 {
+  (void)unused;
   return malloc( nb );
 }
 
 static void WEBVTT_CALLBACK
 default_free( void *unused, void *ptr )
 {
+  (void)unused;
   free( ptr );
 }
 
