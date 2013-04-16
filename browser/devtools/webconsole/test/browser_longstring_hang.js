@@ -42,13 +42,10 @@ function test()
 
   function onInitialString(aResults)
   {
-    let msg = [...aResults[0].matched][0];
-    ok(msg, "console.log result message element");
-
-    let clickable = msg.querySelector(".longStringEllipsis");
+    let clickable = aResults[0].longStrings[0];
     ok(clickable, "long string ellipsis is shown");
 
-    scrollToVisible(clickable);
+    scrollOutputToNode(clickable);
 
     executeSoon(() => {
       EventUtils.synthesizeMouse(clickable, 2, 2, {}, hud.iframeWindow);
@@ -72,17 +69,5 @@ function test()
         ],
       }).then(finishTest);
     });
-  }
-
-  function scrollToVisible(aNode)
-  {
-    let richListBoxNode = aNode.parentNode;
-    while (richListBoxNode.tagName != "richlistbox") {
-      richListBoxNode = richListBoxNode.parentNode;
-    }
-
-    let boxObject = richListBoxNode.scrollBoxObject;
-    let nsIScrollBoxObject = boxObject.QueryInterface(Ci.nsIScrollBoxObject);
-    nsIScrollBoxObject.ensureElementIsVisible(aNode);
   }
 }
