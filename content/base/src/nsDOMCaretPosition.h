@@ -8,7 +8,10 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsCOMPtr.h"
 #include "nsINode.h"
+#include "nsRange.h"
 #include "nsWrapperCache.h"
+#include "nsRect.h"
+#include "nsClientRect.h"
 
 /**
  * Implementation of a DOM Caret Position, which is a node and offset within
@@ -46,6 +49,32 @@ public:
    */
   nsINode* GetOffsetNode() const;
 
+  /**
+   * Retrieve the bounding rectangle of this CaretPosition object.
+   *
+   * @returns An nsClientRect representing the bounding rectangle of this
+   *          CaretPosition, if one can be successfully determined, otherwise
+   *          nullptr.
+   */
+  already_AddRefed<nsClientRect> GetClientRect() const;
+
+  /**
+   * Set the anonymous content node that is the actual parent of this
+   * CaretPosition object. In situations where the DOM node for a CaretPosition
+   * actually lies within an anonymous content node (e.g. a textarea), the
+   * actual parent is not set as the offset node. This is used to get the
+   * correct bounding box of a CaretPosition object that lies within a textarea
+   * or input element.
+   *
+   * @param aNode A pointer to an nsINode object that is the actual element
+   *        within which this CaretPosition lies, but is an anonymous content
+   *        node.
+   */
+  void SetAnonymousContentNode(nsINode* aNode)
+  {
+    mAnonymousContentNode = aNode;
+  }
+
   nsISupports* GetParentObject() const
   {
     return GetOffsetNode();
@@ -56,8 +85,10 @@ public:
 
 protected:
   virtual ~nsDOMCaretPosition();
+
   uint32_t mOffset;
   nsCOMPtr<nsINode> mOffsetNode;
+  nsCOMPtr<nsINode> mAnonymousContentNode;
 };
 #endif
 
