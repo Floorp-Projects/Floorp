@@ -11,7 +11,6 @@ import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.LightweightTheme;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract;
-import org.mozilla.gecko.util.ThreadUtils;
 
 import android.app.Activity;
 import android.content.res.Configuration;
@@ -98,14 +97,11 @@ public class AboutHome extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
 
-        // Synchronized with onUpdate(), which runs in a background thread.
-        synchronized (this) {
-            mAboutHomeView = (AboutHomeView) inflater.inflate(R.layout.abouthome_content, container, false);
-            mAddonsSection = (AddonsSection) mAboutHomeView.findViewById(R.id.recommended_addons);
-            mLastTabsSection = (LastTabsSection) mAboutHomeView.findViewById(R.id.last_tabs);
-            mRemoteTabsSection = (RemoteTabsSection) mAboutHomeView.findViewById(R.id.remote_tabs);
-            mTopSitesView = (TopSitesView) mAboutHomeView.findViewById(R.id.top_sites_grid);
-        }
+        mAboutHomeView = (AboutHomeView) inflater.inflate(R.layout.abouthome_content, container, false);
+        mAddonsSection = (AddonsSection) mAboutHomeView.findViewById(R.id.recommended_addons);
+        mLastTabsSection = (LastTabsSection) mAboutHomeView.findViewById(R.id.last_tabs);
+        mRemoteTabsSection = (RemoteTabsSection) mAboutHomeView.findViewById(R.id.remote_tabs);
+        mTopSitesView = (TopSitesView) mAboutHomeView.findViewById(R.id.top_sites_grid);
 
         mAboutHomeView.setLightweightTheme(mLightweightTheme);
         mLightweightTheme.addListener(mAboutHomeView);
@@ -128,8 +124,7 @@ public class AboutHome extends Fragment {
         // Reload the mobile homepage on inbound tab syncs
         // Because the tabs URI is coarse grained, this updates the
         // remote tabs component on *every* tab change
-        // The observer will run on the background thread (see constructor argument)
-        mTabsContentObserver = new ContentObserver(ThreadUtils.getBackgroundHandler()) {
+        mTabsContentObserver = new ContentObserver(null) {
             @Override
             public void onChange(boolean selfChange) {
                 update(EnumSet.of(AboutHome.UpdateFlags.REMOTE_TABS));
@@ -143,15 +138,13 @@ public class AboutHome extends Fragment {
     public void onDestroyView() {
         mLightweightTheme.removeListener(mAboutHomeView);
         getActivity().getContentResolver().unregisterContentObserver(mTabsContentObserver);
+        mTopSitesView.onDestroy();
 
-        synchronized (this) {
-            mTopSitesView.onDestroy();
-            mAboutHomeView = null;
-            mAddonsSection = null;
-            mLastTabsSection = null;
-            mRemoteTabsSection = null;
-            mTopSitesView = null;
-        }
+        mAboutHomeView = null;
+        mAddonsSection = null;
+        mLastTabsSection = null;
+        mRemoteTabsSection = null;
+        mTopSitesView = null;
 
         super.onDestroyView();
     }
@@ -214,35 +207,27 @@ public class AboutHome extends Fragment {
     }
 
     public void update(final EnumSet<UpdateFlags> flags) {
-        ThreadUtils.postToBackgroundThread(new Runnable() {
-            @Override
-            public void run() {
-                synchronized (AboutHome.this) {
-                    if (getView() == null) {
-                        return;
-                    }
+        if (getView() == null) {
+            return;
+        }
 
-                    if (flags.contains(UpdateFlags.TOP_SITES)) {
-                        mTopSitesView.loadTopSites();
-                    }
+        if (flags.contains(UpdateFlags.TOP_SITES)) {
+            mTopSitesView.loadTopSites();
+        }
 
-                    if (flags.contains(UpdateFlags.PREVIOUS_TABS)) {
-                        mLastTabsSection.readLastTabs();
-                    }
+        if (flags.contains(UpdateFlags.PREVIOUS_TABS)) {
+            mLastTabsSection.readLastTabs();
+        }
 
-                    if (flags.contains(UpdateFlags.RECOMMENDED_ADDONS)) {
-                        mAddonsSection.readRecommendedAddons();
-                    }
+        if (flags.contains(UpdateFlags.RECOMMENDED_ADDONS)) {
+            mAddonsSection.readRecommendedAddons();
+        }
 
-                    if (flags.contains(UpdateFlags.REMOTE_TABS)) {
-                        mRemoteTabsSection.loadRemoteTabs();
-                    }
-                }
-            }
-        });
+        if (flags.contains(UpdateFlags.REMOTE_TABS)) {
+            mRemoteTabsSection.loadRemoteTabs();
+        }
     }
 
-    // Must be run on the UI thread
     public void setLastTabsVisibility(boolean visible) {
         if (mAboutHomeView == null) {
             return;
@@ -261,7 +246,6 @@ public class AboutHome extends Fragment {
         }
     }
 
-    // Must be run on the UI thread
     public void setPadding(int left, int top, int right, int bottom) {
         View view = getView();
         if (view != null) {
