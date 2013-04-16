@@ -991,7 +991,6 @@ nsMemoryReporterManager::GetResident(int64_t *aResident)
 #endif
 }
 
-#if defined(DEBUG) && !defined(MOZ_DMD)
 // This is just a wrapper for int64_t that implements nsISupports, so it can be
 // passed to nsIMemoryMultiReporter::CollectReports.
 class Int64Wrapper MOZ_FINAL : public nsISupports {
@@ -1027,7 +1026,6 @@ NS_IMPL_ISUPPORTS1(
   ExplicitNonHeapCountingCallback
 , nsIMemoryMultiReporterCallback
 )
-#endif  // defined(DEBUG) && !defined(MOZ_DMD)
 
 NS_IMETHODIMP
 nsMemoryReporterManager::GetExplicit(int64_t *aExplicit)
