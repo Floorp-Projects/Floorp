@@ -28,6 +28,7 @@ CPPSRCS = \
   nsCacheMetaData.cpp \
   nsCacheService.cpp \
   nsCacheSession.cpp \
+  nsCacheUtils.cpp \
   nsMemoryCacheDevice.cpp \
   nsDiskCacheBinding.cpp \
   nsDiskCacheBlockFile.cpp \

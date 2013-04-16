@@ -13,6 +13,7 @@
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
 #include "nsISupportsPriority.h"
+#include "nsCacheUtils.h"
 #include <time.h>
 
 using namespace mozilla;
@@ -26,20 +27,6 @@ public:
     nsDeleteDir::gInstance->mCondVar.Notify();
     return NS_OK;
   }
-};
-
-class nsDestroyThreadEvent : public nsRunnable {
-public:
-  nsDestroyThreadEvent(nsIThread *thread)
-    : mThread(thread)
-  {}
-  NS_IMETHOD Run()
-  {
-    mThread->Shutdown();
-    return NS_OK;
-  }
-private:
-  nsCOMPtr<nsIThread> mThread;
 };
 
 
@@ -155,7 +142,7 @@ nsDeleteDir::DestroyThread()
     // more work to do, so don't delete thread.
     return;
 
-  NS_DispatchToMainThread(new nsDestroyThreadEvent(mThread));
+  nsShutdownThread::Shutdown(mThread);
   mThread = nullptr;
 }
 
