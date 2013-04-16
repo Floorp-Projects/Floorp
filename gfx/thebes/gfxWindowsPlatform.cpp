@@ -323,15 +323,6 @@ public:
 
         return NS_OK;
     }
-
-    // nsIMemoryMultiReporter abstract method implementation
-    NS_IMETHOD
-    GetExplicitNonHeap(int64_t *aExplicitNonHeap)
-    {
-        // This reporter doesn't do any non-heap measurements.
-        *aExplicitNonHeap = 0;
-        return NS_OK;
-    }
 };
 NS_IMPL_ISUPPORTS1(GPUAdapterMultiReporter, nsIMemoryMultiReporter)
 #endif // ENABLE_GPU_MEM_REPORTER

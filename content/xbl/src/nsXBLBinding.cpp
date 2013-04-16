@@ -101,7 +101,8 @@ nsXBLJSClass::nsXBLJSClass(const nsAFlatCString& aClassName,
     JSCLASS_NEW_RESOLVE |
     // Our one reserved slot holds the relevant nsXBLPrototypeBinding
     JSCLASS_HAS_RESERVED_SLOTS(1);
-  addProperty = delProperty = getProperty = ::JS_PropertyStub;
+  addProperty = getProperty = ::JS_PropertyStub;
+  delProperty = ::JS_DeletePropertyStub;
   setProperty = ::JS_StrictPropertyStub;
   enumerate = XBLEnumerate;
   resolve = JS_ResolveStub;

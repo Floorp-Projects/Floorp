@@ -150,17 +150,6 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD GetExplicitNonHeap(int64_t *n)
-  {
-    size_t n2 = 0;
-    for (uint32_t i = 0; i < mKnownLoaders.Length(); i++) {
-      mKnownLoaders[i]->mChromeCache.EnumerateRead(EntryExplicitNonHeapSize, &n2);
-      mKnownLoaders[i]->mCache.EnumerateRead(EntryExplicitNonHeapSize, &n2);
-    }
-    *n = n2;
-    return NS_OK;
-  }
-
   static int64_t GetImagesContentUsedUncompressed()
   {
     size_t n = 0;
@@ -217,20 +206,6 @@ private:
           image->HeapSizeOfDecodedWithComputedFallback(ImagesMallocSizeOf);
         sizes->mUsedUncompressedNonheap += image->NonHeapSizeOfDecoded();
       }
-    }
-
-    return PL_DHASH_NEXT;
-  }
-
-  static PLDHashOperator EntryExplicitNonHeapSize(const nsACString&,
-                                                  imgCacheEntry *entry,
-                                                  void *userArg)
-  {
-    size_t *n = static_cast<size_t*>(userArg);
-    nsRefPtr<imgRequest> req = entry->GetRequest();
-    Image *image = static_cast<Image*>(req->mImage.get());
-    if (image) {
-      *n += image->NonHeapSizeOfDecoded();
     }
 
     return PL_DHASH_NEXT;

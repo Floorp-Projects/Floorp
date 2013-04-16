@@ -2674,9 +2674,6 @@ RasterImage::WriteToDecoder(const char *aBuffer, uint32_t aCount)
   mDecoder->Write(aBuffer, aCount);
   mInDecoder = false;
 
-  if (!mDecoder)
-    return NS_ERROR_FAILURE;
-
   CONTAINER_ENSURE_SUCCESS(mDecoder->GetDecoderError());
 
   // Keep track of the total number of bytes written over the lifetime of the
@@ -3278,7 +3275,6 @@ RasterImage::IsDecodeFinished()
   // Precondition
   mDecodingMutex.AssertCurrentThreadOwns();
   NS_ABORT_IF_FALSE(mDecoder, "Can't call IsDecodeFinished() without decoder!");
-  MOZ_ASSERT(mDecodeRequest);
 
   // The decode is complete if we got what we wanted.
   if (mDecoder->IsSizeDecode()) {
@@ -3288,11 +3284,12 @@ RasterImage::IsDecodeFinished()
   } else if (mDecoder->GetDecodeDone()) {
     return true;
   }
-  
+
   // If the decoder returned because it needed a new frame and we haven't
   // written to it since then, the decoder may be storing data that it hasn't
   // decoded yet.
-  if (mDecoder->NeedsNewFrame() || mDecodeRequest->mAllocatedNewFrame) {
+  if (mDecoder->NeedsNewFrame() ||
+      (mDecodeRequest && mDecodeRequest->mAllocatedNewFrame)) {
     return false;
   }
 
