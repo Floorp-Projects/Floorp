@@ -1013,7 +1013,7 @@ XPC_WN_Helper_Finalize(js::FreeOp *fop, JSObject *obj)
 
 static JSBool
 XPC_WN_Helper_NewResolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags,
-                         JSMutableHandleObject objp)
+                         MutableHandleObject objp)
 {
     nsresult rv = NS_OK;
     bool retval = true;
