@@ -705,3 +705,7 @@ pref("browser.contentHandlers.types.3.type", "application/vnd.mozilla.maybe.feed
 // Enable Web Audio for Firefox for Android in Nightly and Aurora
 pref("media.webaudio.enabled", true);
 #endif
+
+// This needs more tests and stability fixes first, as well as UI.
+pref("media.navigator.enabled", false);
+pref("media.peerconnection.enabled", false);
