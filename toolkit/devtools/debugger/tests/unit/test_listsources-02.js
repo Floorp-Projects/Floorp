@@ -47,6 +47,6 @@ function test_listing_zero_sources()
                   "Should only send one sources request at most, even though we"
                   + " might have had to send one to determine feature support.");
 
-   finishClient(gClient);
+    finishClient(gClient);
   });
 }
