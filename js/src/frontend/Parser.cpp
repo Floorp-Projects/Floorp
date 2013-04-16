@@ -2793,9 +2793,11 @@ Parser<FullParseHandler>::checkDestructuring(BindData<FullParseHandler> *data,
                  * officially linked to its def or registered in lexdeps. Do
                  * that now.
                  */
-                RootedPropertyName name(context, pn->pn_atom->asPropertyName());
-                if (pair->pn_right == pair->pn_left && !noteNameUse(name, pn))
-                    return false;
+                if (pair->pn_right == pair->pn_left) {
+                    RootedPropertyName name(context, pn->pn_atom->asPropertyName());
+                    if (!noteNameUse(name, pn))
+                        return false;
+                }
                 ok = bindDestructuringLHS(pn);
             }
             if (!ok)
