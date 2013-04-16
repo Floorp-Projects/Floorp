@@ -1852,6 +1852,13 @@ nsDocument::Init()
   mRadioGroups.Init();
   mCustomPrototypes.Init();
 
+  // If after creation the owner js global is not set for a document
+  // we use the default compartment for this document, instead of creating
+  // wrapper in some random compartment when the document is exposed to js
+  // via some events.
+  mScopeObject = do_GetWeakReference(xpc::GetNativeForGlobal(xpc::GetJunkScope()));
+  MOZ_ASSERT(mScopeObject);
+
   // Force initialization.
   nsINode::nsSlots* slots = Slots();
 
