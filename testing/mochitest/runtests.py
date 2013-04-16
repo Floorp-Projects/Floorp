@@ -358,7 +358,7 @@ See <http://mochikit.com/doc/html/MochiKit/Logging.html> for details on the logg
       options.testingModulesDir = os.path.normpath(options.testingModulesDir)
 
       if not os.path.isabs(options.testingModulesDir):
-        options.testingModulesDir = os.path.abspath(testingModulesDir)
+        options.testingModulesDir = os.path.abspath(options.testingModulesDir)
 
       if not os.path.isdir(options.testingModulesDir):
         self.error('--testing-modules-dir not a directory: %s' %
