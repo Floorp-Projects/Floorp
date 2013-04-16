@@ -5,7 +5,6 @@
 
 #include "platform.h"
 #include "ProfileEntry.h"
-#include "mozilla/Mutex.h"
 
 static bool
 hasFeature(const char** aFeatures, uint32_t aFeatureCount, const char* aFeature) {
@@ -26,10 +25,10 @@ class BreakpadSampler;
 
 class TableTicker: public Sampler {
  public:
-  TableTicker(int aInterval, int aEntrySize,
+  TableTicker(int aInterval, int aEntrySize, PseudoStack *aStack,
               const char** aFeatures, uint32_t aFeatureCount)
-    : Sampler(aInterval, true, aEntrySize)
-    , mPrimaryThreadProfile(nullptr)
+    : Sampler(aInterval, true)
+    , mPrimaryThreadProfile(aEntrySize, aStack)
     , mStartTime(TimeStamp::Now())
     , mSaveRequested(false)
   {
@@ -38,54 +37,13 @@ class TableTicker: public Sampler {
     //XXX: It's probably worth splitting the jank profiler out from the regular profiler at some point
     mJankOnly = hasFeature(aFeatures, aFeatureCount, "jank");
     mProfileJS = hasFeature(aFeatures, aFeatureCount, "js");
-    mProfileThreads = hasFeature(aFeatures, aFeatureCount, "threads");
     mAddLeafAddresses = hasFeature(aFeatures, aFeatureCount, "leaf");
-
-    {
-      mozilla::MutexAutoLock lock(*sRegisteredThreadsMutex);
-
-      // Create ThreadProfile for each registered thread
-      for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
-        ThreadInfo* info = sRegisteredThreads->at(i);
-
-        if (!info->IsMainThread() && !mProfileThreads)
-          continue;
-
-        ThreadProfile* profile = new ThreadProfile(info->Name(),
-                                                   aEntrySize,
-                                                   info->Stack(),
-                                                   info->ThreadId(),
-                                                   info->GetPlatformData(),
-                                                   info->IsMainThread());
-        profile->addTag(ProfileEntry('m', "Start"));
-
-        info->SetProfile(profile);
-      }
-
-      SetActiveSampler(this);
-    }
+    mPrimaryThreadProfile.addTag(ProfileEntry('m', "Start"));
   }
 
-  ~TableTicker() {
-    if (IsActive())
-      Stop();
+  ~TableTicker() { if (IsActive()) Stop(); }
 
-    SetActiveSampler(nullptr);
-
-    // Destroy ThreadProfile for all threads
-    {
-      mozilla::MutexAutoLock lock(*sRegisteredThreadsMutex);
-
-      for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
-        ThreadInfo* info = sRegisteredThreads->at(i);
-        ThreadProfile* profile = info->Profile();
-        if (profile) {
-          delete profile;
-          info->SetProfile(nullptr);
-        }
-      }
-    }
-  }
+  virtual void SampleStack(TickSample* sample) {}
 
   // Called within a signal. This function must be reentrant
   virtual void Tick(TickSample* sample);
@@ -100,27 +58,14 @@ class TableTicker: public Sampler {
 
   ThreadProfile* GetPrimaryThreadProfile()
   {
-    if (!mPrimaryThreadProfile) {
-      mozilla::MutexAutoLock lock(*sRegisteredThreadsMutex);
-
-      for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
-        ThreadInfo* info = sRegisteredThreads->at(i);
-        if (info->IsMainThread()) {
-          mPrimaryThreadProfile = info->Profile();
-          break;
-        }
-      }
-    }
-
-    return mPrimaryThreadProfile;
+    return &mPrimaryThreadProfile;
   }
 
   void ToStreamAsJSON(std::ostream& stream);
   virtual JSObject *ToJSObject(JSContext *aCx);
   JSCustomObject *GetMetaJSCustomObject(JSAObjectBuilder& b);
 
-  bool ProfileJS() const { return mProfileJS; }
-  bool ProfileThreads() const { return mProfileThreads; }
+  const bool ProfileJS() { return mProfileJS; }
 
   virtual BreakpadSampler* AsBreakpadSampler() { return nullptr; }
 
@@ -131,21 +76,20 @@ protected:
   void BuildJSObject(JSAObjectBuilder& b, JSCustomObject* profile);
 
   // This represent the application's main thread (SAMPLER_INIT)
-  ThreadProfile* mPrimaryThreadProfile;
+  ThreadProfile mPrimaryThreadProfile;
   TimeStamp mStartTime;
   bool mSaveRequested;
   bool mAddLeafAddresses;
   bool mUseStackWalk;
   bool mJankOnly;
   bool mProfileJS;
-  bool mProfileThreads;
 };
 
 class BreakpadSampler: public TableTicker {
  public:
-  BreakpadSampler(int aInterval, int aEntrySize,
+  BreakpadSampler(int aInterval, int aEntrySize, PseudoStack *aStack,
               const char** aFeatures, uint32_t aFeatureCount)
-    : TableTicker(aInterval, aEntrySize, aFeatures, aFeatureCount)
+    : TableTicker(aInterval, aEntrySize, aStack, aFeatures, aFeatureCount)
   {}
 
   // Called within a signal. This function must be reentrant
