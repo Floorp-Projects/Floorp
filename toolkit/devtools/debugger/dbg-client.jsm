@@ -245,7 +245,7 @@ DebuggerClient.requester = function DC_requester(aPacketSkeleton, { telemetry,
   return function (...args) {
     let histogram, startTime;
     if (telemetry) {
-      let transportType = this._transport instanceof LocalDebuggerTransport
+      let transportType = this._transport.onOutputStreamReady === undefined
         ? "LOCAL_"
         : "REMOTE_";
       let histogramId = "DEVTOOLS_DEBUGGER_RDP_"
@@ -253,7 +253,6 @@ DebuggerClient.requester = function DC_requester(aPacketSkeleton, { telemetry,
       histogram = Services.telemetry.getHistogramById(histogramId);
       startTime = +new Date;
     }
-
     let outgoingPacket = {
       to: aPacketSkeleton.to || this.actor
     };
@@ -831,6 +830,7 @@ function TabClient(aClient, aActor) {
 
 TabClient.prototype = {
   get actor() { return this._actor },
+  get _transport() { return this._client._transport; },
 
   /**
    * Detach the client from the tab actor.
@@ -885,6 +885,7 @@ ThreadClient.prototype = {
   get actor() { return this._actor; },
 
   get compat() { return this._client.compat; },
+  get _transport() { return this._client._transport; },
 
   _assertPaused: function TC_assertPaused(aCommand) {
     if (!this.paused) {
@@ -1410,6 +1411,7 @@ function GripClient(aClient, aGrip)
 
 GripClient.prototype = {
   get actor() { return this._grip.actor },
+  get _transport() { return this._client._transport; },
 
   valid: true,
 
@@ -1500,6 +1502,7 @@ LongStringClient.prototype = {
   get actor() { return this._grip.actor; },
   get length() { return this._grip.length; },
   get initial() { return this._grip.initial; },
+  get _transport() { return this._client._transport; },
 
   valid: true,
 
@@ -1536,6 +1539,8 @@ function SourceClient(aClient, aForm) {
 }
 
 SourceClient.prototype = {
+  get _transport() { return this._client._transport; },
+
   /**
    * Get a long string grip for this SourceClient's source.
    */
@@ -1593,6 +1598,7 @@ BreakpointClient.prototype = {
 
   _actor: null,
   get actor() { return this._actor; },
+  get _transport() { return this._client._transport; },
 
   /**
    * Remove the breakpoint from the server.
