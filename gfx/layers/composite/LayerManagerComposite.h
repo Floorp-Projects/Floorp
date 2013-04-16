@@ -135,7 +135,6 @@ public:
 
   virtual LayersBackend GetBackendType() MOZ_OVERRIDE
   {
-    MOZ_ASSERT(false, "Shouldn't be called for composited layer manager");
     return LAYERS_NONE;
   }
   virtual void GetBackendName(nsAString& name) MOZ_OVERRIDE
