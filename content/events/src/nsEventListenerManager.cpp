@@ -54,6 +54,7 @@
 #include "nsSandboxFlags.h"
 #include "mozilla/dom/time/TimeChangeObserver.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::hal;
 
@@ -159,7 +160,8 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
                             const char* aName,
                             unsigned aFlags)
 {
-  CycleCollectionNoteChild(aCallback, aField.mListener.get(), aName, aFlags);
+  CycleCollectionNoteChild(aCallback, aField.mListener.GetISupports(), aName,
+                           aFlags);
 }
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsEventListenerManager)
@@ -906,7 +908,7 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
 
 nsresult
 nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
-                                           nsIDOMEventListener* aListener,
+                                           const EventListenerHolder& aListener,
                                            nsIDOMEvent* aDOMEvent,
                                            EventTarget* aCurrentTarget,
                                            nsCxPusher* aPusher)
@@ -927,7 +929,14 @@ nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
   if (NS_SUCCEEDED(result)) {
     nsAutoMicroTask mt;
     // nsIDOMEvent::currentTarget is set in nsEventDispatcher.
-    result = aListener->HandleEvent(aDOMEvent);
+    if (aListener.HasWebIDLCallback()) {
+      ErrorResult rv;
+      aListener.GetWebIDLCallback()->
+        HandleEvent(aCurrentTarget, *(aDOMEvent->InternalDOMEvent()), rv);
+      result = rv.ErrorCode();
+    } else {
+      result = aListener.GetXPCOMCallback()->HandleEvent(aDOMEvent);
+    }
   }
 
   return result;
@@ -996,7 +1005,7 @@ nsEventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
             continue;
           }
 
-          nsRefPtr<nsIDOMEventListener> kungFuDeathGrip = ls->mListener;
+          EventListenerHolder kungFuDeathGrip(ls->mListener);
           if (NS_FAILED(HandleEventSubType(ls, ls->mListener, *aDOMEvent,
                                            aCurrentTarget, aPusher))) {
             aEvent->mFlags.mExceptionHasBeenRisen = true;
@@ -1159,8 +1168,11 @@ nsEventListenerManager::GetListenerInfo(nsCOMArray<nsIEventListenerInfo>* aList)
     }
     const nsDependentSubstring& eventType =
       Substring(nsDependentAtomString(ls.mTypeAtom), 2);
+    // EventListenerInfo is defined in XPCOM, so we have to go ahead
+    // and convert to an XPCOM callback here...
     nsRefPtr<nsEventListenerInfo> info =
-      new nsEventListenerInfo(eventType, ls.mListener, ls.mFlags.mCapture,
+      new nsEventListenerInfo(eventType, ls.mListener.ToXPCOMCallback(),
+                              ls.mFlags.mCapture,
                               ls.mFlags.mAllowUntrustedEvents,
                               ls.mFlags.mInSystemGroup);
     NS_ENSURE_TRUE(info, NS_ERROR_OUT_OF_MEMORY);
@@ -1285,7 +1297,10 @@ nsEventListenerManager::MarkForCC()
       }
       xpc_UnmarkGrayObject(jsl->GetEventScope());
     } else if (ls.mListenerType == eWrappedJSListener) {
-      xpc_TryUnmarkWrappedGrayObject(ls.mListener);
+      xpc_TryUnmarkWrappedGrayObject(ls.mListener.GetXPCOMCallback());
+    } else if (ls.mListenerType == eWebIDLListener) {
+      // Callback() unmarks gray
+      ls.mListener.GetWebIDLCallback()->Callback();
     }
   }
   if (mRefCnt.IsPurple()) {
