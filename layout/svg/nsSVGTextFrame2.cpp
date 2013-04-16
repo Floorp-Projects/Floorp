@@ -4673,11 +4673,7 @@ nsSVGTextFrame2::DoGlyphPositioning()
     }
     // Fill in unspecified rotation values.
     if (!mPositions[i].IsAngleSpecified()) {
-      mPositions[i].mAngle = mPositions[i - 1].mAngle;
-      if (mPositions[i].mAngle != 0.0f) {
-        // Any non-zero rotation must begin a run boundary.
-        mPositions[i].mRunBoundary = true;
-      }
+      mPositions[i].mAngle = 0.0f;
     }
   }
 
