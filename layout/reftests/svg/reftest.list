@@ -324,7 +324,6 @@ skip-if(B2G) random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == tspan-rotat
 skip-if(B2G) random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == tspan-rotate-04.svg tspan-rotate-ref.svg # Bug 629718 for random failure on WinXP # bug 773482
 random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == tspan-rotate-05.svg tspan-rotate-ref.svg # Bug 629718 for random failure on WinXP
 skip-if(B2G) random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == tspan-rotate-06.svg tspan-rotate-ref.svg # Bug 629718 for random failure on WinXP # bug 773482
-== tspan-rotate-07.svg tspan-rotate-07-ref.svg
 == tspan-rotate-textPath-01.svg tspan-rotate-textPath-01-ref.svg
 skip-if(B2G) == tspan-xy-01.svg tspan-xy-ref.svg # bug 773482
 skip-if(B2G) == tspan-xy-02.svg tspan-xy-ref.svg # bug 773482
