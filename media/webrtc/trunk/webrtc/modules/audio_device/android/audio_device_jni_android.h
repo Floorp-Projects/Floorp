@@ -24,15 +24,6 @@ namespace webrtc
 {
 class EventWrapper;
 
-const WebRtc_UWord32 N_REC_SAMPLES_PER_SEC = 16000; // Default is 16 kHz
-const WebRtc_UWord32 N_PLAY_SAMPLES_PER_SEC = 16000; // Default is 16 kHz
-
-const WebRtc_UWord32 N_REC_CHANNELS = 1; // default is mono recording
-const WebRtc_UWord32 N_PLAY_CHANNELS = 1; // default is mono playout
-
-const WebRtc_UWord32 REC_BUF_SIZE_IN_SAMPLES = 480; // Handle max 10 ms @ 48 kHz
-
-
 class ThreadWrapper;
 
 class AudioDeviceAndroidJni : public AudioDeviceGeneric {
@@ -158,6 +149,14 @@ class AudioDeviceAndroidJni : public AudioDeviceGeneric {
 
   virtual WebRtc_Word32 SetLoudspeakerStatus(bool enable);
   virtual WebRtc_Word32 GetLoudspeakerStatus(bool& enable) const;
+
+  static const WebRtc_UWord32 N_REC_SAMPLES_PER_SEC = 16000; // Default is 16 kHz
+  static const WebRtc_UWord32 N_PLAY_SAMPLES_PER_SEC = 16000; // Default is 16 kHz
+
+  static const WebRtc_UWord32 N_REC_CHANNELS = 1; // default is mono recording
+  static const WebRtc_UWord32 N_PLAY_CHANNELS = 1; // default is mono playout
+
+  static const WebRtc_UWord32 REC_BUF_SIZE_IN_SAMPLES = 480; // Handle max 10 ms @ 48 kHz
 
  private:
   // Lock
