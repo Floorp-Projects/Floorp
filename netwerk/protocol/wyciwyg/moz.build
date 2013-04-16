@@ -16,3 +16,8 @@ XPIDL_FLAGS += [
 
 MODULE = 'necko'
 
+EXPORTS.mozilla.net += [
+    'WyciwygChannelChild.h',
+    'WyciwygChannelParent.h',
+]
+

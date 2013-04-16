@@ -20,3 +20,25 @@ XPIDL_SOURCES += [
 
 MODULE = 'plugin'
 
+EXPORTS += [
+    'npapi.h',
+    'npfunctions.h',
+    'npruntime.h',
+    'nptypes.h',
+    'nsJSNPRuntime.h',
+    'nsNPAPIPluginInstance.h',
+    'nsPluginDirServiceProvider.h',
+    'nsPluginHost.h',
+    'nsPluginInstanceOwner.h',
+    'nsPluginLogging.h',
+    'nsPluginNativeWindow.h',
+    'nsPluginPlayPreviewInfo.h',
+    'nsPluginTags.h',
+    'nsPluginsCID.h',
+    'nsPluginsDir.h',
+]
+
+EXPORTS.mozilla += [
+    'PluginPRLibrary.h',
+]
+

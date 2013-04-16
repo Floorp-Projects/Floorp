@@ -17,35 +17,6 @@ LIBXUL_LIBRARY = 1
 IS_COMPONENT   = 1
 FAIL_ON_WARNINGS = 1
 
-EXPORTS	= \
-	gfxCore.h \
-	gfxCrashReporterUtils.h \
-	nsColor.h \
-	nsColorNames.h \
-	nsColorNameList.h \
-	nsCoord.h \
-	nsFont.h \
-	nsRect.h \
-	nsRegion.h \
-	nsPoint.h \
-	nsSize.h \
-	nsMargin.h \
-	nsTransform2D.h \
-	nsRenderingContext.h \
-	nsFontMetrics.h \
-	nsDeviceContext.h \
-	nsGfxCIID.h \
-	nsITheme.h \
-	nsThemeConstants.h \
-	nsBoundingMetrics.h \
-	$(NULL)
-
-ifdef MOZ_X11
-EXPORTS_NAMESPACES = mozilla
-
-EXPORTS_mozilla	+= X11Util.h
-endif
-
 CPPSRCS = \
         nsColor.cpp \
         nsFont.cpp \

@@ -27,30 +27,6 @@ FAIL_ON_WARNINGS := 1
 
 include $(topsrcdir)/dom/dom-config.mk
 
-EXPORTS_NAMESPACES = \
-  mozilla/dom \
-  mozilla/dom/mobilemessage \
-  $(NULL)
-
-EXPORTS_mozilla/dom = \
-  SmsManager.h \
-  MobileMessageManager.h \
-  SmsMessage.h \
-  MmsMessage.h \
-  SmsSegmentInfo.h \
-  SmsFilter.h \
-  $(NULL)
-
-EXPORTS_mozilla/dom/mobilemessage = \
-  SmsChild.h \
-  SmsParent.h \
-  MobileMessageService.h \
-  SmsServicesFactory.h \
-  Constants.h \
-  Types.h \
-  MobileMessageCallback.h \
-  $(NULL)
-
 CPPSRCS = \
   MobileMessageCursorCallback.cpp \
   MobileMessageThread.cpp \
@@ -90,11 +66,6 @@ EXTRA_COMPONENTS = \
   ril/MobileMessageDatabaseService.manifest \
   $(NULL)
 else
-EXPORTS_mozilla/dom/mobilemessage += \
-  MobileMessageDatabaseService.h \
-  MmsService.h \
-  $(NULL)
-
 CPPSRCS += \
   MobileMessageDatabaseService.cpp \
   MmsService.cpp \

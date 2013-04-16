@@ -14,12 +14,6 @@ LIBRARY_NAME	= gkcongstreamer_s
 LIBXUL_LIBRARY 	= 1
 
 
-EXPORTS		+= \
-		GStreamerDecoder.h \
-		GStreamerReader.h \
-		GStreamerFormatHelper.h \
-		$(NULL)
-
 CPPSRCS		= \
 		GStreamerReader.cpp \
 		GStreamerDecoder.cpp \

@@ -11,26 +11,4 @@ VPATH       = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 
-EXPORTS = \
-		nsIContentSink.h            \
-		nsITokenizer.h              \
-		nsIHTMLContentSink.h        \
-		nsIFragmentContentSink.h    \
-		nsIParserNode.h             \
-		nsIParser.h                 \
-		nsIDTD.h                    \
-		nsIElementObserver.h        \
-		nsIParserService.h          \
-		nsHTMLTagList.h             \
-		nsHTMLTags.h                \
-		nsHTMLTokens.h              \
-		nsScannerString.h           \
-		nsParserCIID.h              \
-		nsToken.h                   \
-		nsParserConstants.h         \
-		nsParserBase.h             \
-		$(NULL)
-
-EXPORTS   := $(addprefix $(srcdir)/, $(EXPORTS))
-
 include $(topsrcdir)/config/rules.mk

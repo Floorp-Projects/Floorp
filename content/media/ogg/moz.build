@@ -6,3 +6,9 @@
 
 MODULE = 'content'
 
+EXPORTS += [
+    'OggCodecState.h',
+    'OggDecoder.h',
+    'OggReader.h',
+]
+

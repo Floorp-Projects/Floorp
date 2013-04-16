@@ -21,9 +21,6 @@ CSRCS		= \
 		$(NULL)
 endif
 
-EXPORTS         = gtk2xtbin.h 
-
-
 include $(topsrcdir)/config/rules.mk
 
 ifdef MOZ_ENABLE_GTK2

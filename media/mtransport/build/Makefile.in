@@ -24,26 +24,6 @@ ifndef _MSC_VER
 FAIL_ON_WARNINGS = 1
 endif # !_MSC_VER
 
-EXPORTS_NAMESPACES = mtransport
-
-EXPORTS_mtransport = \
-  ../dtlsidentity.h \
-  ../nricectx.h \
-  ../nricemediastream.h \
-  ../nriceresolverfake.h \
-  ../transportflow.h \
-  ../transportlayer.h \
-  ../transportlayerdtls.h \
-  ../transportlayerice.h \
-  ../transportlayerlog.h \
-  ../transportlayerloopback.h \
-  ../transportlayerprsock.h \
-  ../m_cpp_utils.h \
-  ../runnable_utils.h \
-  ../runnable_utils_generated.h \
-  ../sigslot.h \
-  $(NULL)
-
 CPPSRCS = \
 	$(MTRANSPORT_LCPPSRCS) \
 	$(NULL)

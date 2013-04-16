@@ -19,3 +19,35 @@ XPIDL_SOURCES += [
 
 MODULE = 'exthandler'
 
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
+    osdir = 'os2'
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    osdir = 'win'
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    osdir = 'win'
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    osdir = 'android'
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+    osdir = 'gonk'
+else:
+    osdir = 'unix'
+
+EXPORTS += [
+    osdir + '/nsOSHelperAppService.h',
+    'nsExternalHelperAppService.h',
+]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    EXPORTS += [
+        'nsExternalSharingAppService.h',
+        'nsExternalURLHandlerService.h',
+    ]
+
+if CONFIG['MOZ_ENABLE_MEEGOTOUCHSHARE']:
+    EXPORTS += ['nsExternalSharingAppService.h']
+
+EXPORTS.mozilla.dom += [
+    'ExternalHelperAppChild.h',
+    'ExternalHelperAppParent.h',
+]
+

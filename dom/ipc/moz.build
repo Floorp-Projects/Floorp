@@ -9,3 +9,32 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'cocoa':
 
 MODULE = 'dom'
 
+EXPORTS += [
+    'PCOMContentPermissionRequestChild.h',
+    'nsICachedFileDescriptorListener.h',
+]
+
+EXPORTS.mozilla.dom.ipc += [
+    'Blob.h',
+    'ProcessPriorityManager.h',
+    'nsIRemoteBlob.h',
+]
+
+EXPORTS.mozilla.dom += [
+    'ContentChild.h',
+    'ContentParent.h',
+    'ContentProcess.h',
+    'CrashReporterChild.h',
+    'CrashReporterParent.h',
+    'PermissionMessageUtils.h',
+    'StructuredCloneUtils.h',
+    'TabChild.h',
+    'TabContext.h',
+    'TabMessageUtils.h',
+    'TabParent.h',
+]
+
+EXPORTS.mozilla += [
+    'AppProcessChecker.h',
+]
+

@@ -6,3 +6,17 @@
 
 MODULE = 'content'
 
+EXPORTS += [
+    'nsDOMEvent.h',
+    'nsDOMEventTargetHelper.h',
+    'nsDOMGamepad.h',
+    'nsDOMTouchEvent.h',
+    'nsDOMUIEvent.h',
+    'nsEventListenerManager.h',
+    'nsEventStateManager.h',
+]
+
+EXPORTS.mozilla.dom += [
+    'Touch.h',
+]
+

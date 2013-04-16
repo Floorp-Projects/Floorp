@@ -34,48 +34,6 @@ EXTRA_JS_MODULES += \
   ObjectWrapper.jsm \
   $(NULL)
 
-EXPORTS = \
-  nsDOMCID.h \
-  nsDOMClassInfoClasses.h \
-  nsDOMClassInfoID.h \
-  nsDOMJSUtils.h \
-  nsDOMString.h \
-  nsIDOMClassInfo.h \
-  nsIDOMScriptObjectFactory.h \
-  nsIGlobalObject.h \
-  nsIJSEventListener.h \
-  nsIJSNativeInitializer.h \
-  nsIScriptContext.h	\
-  nsIScriptExternalNameSet.h \
-  nsIScriptGlobalObject.h \
-  nsIScriptGlobalObjectOwner.h \
-  nsIScriptNameSpaceManager.h \
-  nsIScriptObjectPrincipal.h \
-  nsIScriptRuntime.h \
-  nsIScriptTimeoutHandler.h \
-  nsJSEnvironment.h \
-  nsJSUtils.h \
-  nsPIDOMWindow.h \
-  nsPIWindowRoot.h \
-  nsFocusManager.h \
-  nsWrapperCache.h \
-  nsWrapperCacheInlines.h \
-  nsContentPermissionHelper.h \
-  nsStructuredCloneContainer.h \
-  nsWindowMemoryReporter.h \
-  Crypto.h \
-  $(NULL)
-
-EXPORTS_NAMESPACES = mozilla/dom
-EXPORTS_mozilla/dom = \
-  DOMError.h \
-  DOMRequest.h \
-  DOMCursor.h \
-  StructuredCloneTags.h \
-  ScreenOrientation.h \
-  URL.h \
-  $(NULL)
-
 CPPSRCS =			\
 	nsBarProps.cpp          \
 	nsDOMException.cpp 	\

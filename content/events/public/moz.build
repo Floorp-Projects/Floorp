@@ -12,3 +12,18 @@ XPIDL_MODULE = 'content_events'
 
 MODULE = 'content'
 
+EXPORTS += [
+    'nsAsyncDOMEvent.h',
+    'nsEventDispatcher.h',
+    'nsEventNameList.h',
+    'nsEventStates.h',
+    'nsIPrivateTextEvent.h',
+    'nsIPrivateTextRange.h',
+    'nsMutationEvent.h',
+    'nsVKList.h',
+]
+
+EXPORTS.mozilla.dom += [
+    'EventTarget.h',
+]
+

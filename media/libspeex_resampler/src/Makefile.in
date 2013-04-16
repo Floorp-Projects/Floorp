@@ -12,8 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME = speex_resampler
 FORCE_STATIC_LIB = 1
 
-EXPORTS_NAMESPACES = speex
-
 # We don't compile the full speex codec, only the resampler.
 DEFINES += -DOUTSIDE_SPEEX
 # Speex wants a random prefix when building in another program, to avoid name
@@ -30,12 +28,6 @@ endif
 
 CSRCS = \
     resample.c \
-    $(NULL)
-
-EXPORTS_speex = \
-    speex_config_types.h \
-    speex_resampler.h \
-    speex_types.h \
     $(NULL)
 
 include $(topsrcdir)/config/rules.mk

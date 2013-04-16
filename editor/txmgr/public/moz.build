@@ -6,3 +6,7 @@
 
 MODULE = 'txmgr'
 
+EXPORTS += [
+    'nsTransactionManagerCID.h',
+]
+

@@ -15,26 +15,6 @@ LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1
 FAIL_ON_WARNINGS := 1
 
-EXPORTS_NAMESPACES = mozilla/net
-
-EXPORTS_mozilla/net = \
-  HttpBaseChannel.h \
-  $(NULL)
-
-EXPORTS_mozilla/net += \
-  HttpChannelParent.h \
-  HttpChannelChild.h  \
-  PHttpChannelParams.h \
-  HttpInfo.h \
-  $(NULL)
-
-EXPORTS = \
-  nsHttpResponseHead.h \
-  nsHttpHeaderArray.h \
-  nsHttp.h \
-  nsHttpAtomList.h \
-  $(NULL)
-
 CPPSRCS = \
   nsHttp.cpp \
   nsHttpHeaderArray.cpp \

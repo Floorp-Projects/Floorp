@@ -20,3 +20,10 @@ XPIDL_FLAGS += [
 
 MODULE = 'dom'
 
+EXPORTS += [
+    'CameraCommon.h',
+    'DOMCameraManager.h',
+    'GonkNativeWindow.h',
+    'GonkNativeWindowClient.h',
+]
+

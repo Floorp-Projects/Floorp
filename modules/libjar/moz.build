@@ -15,3 +15,8 @@ XPIDL_SOURCES += [
 
 MODULE = 'jar'
 
+EXPORTS += [
+    'zipstruct.h',
+    'nsJARURI.h',
+    'nsZipArchive.h',
+]

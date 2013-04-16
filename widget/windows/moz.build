@@ -11,3 +11,13 @@ TEST_DIRS += ['tests']
 
 MODULE = 'widget'
 
+EXPORTS += [
+    'WinUtils.h',
+    'WindowHook.h',
+    'nsdefs.h',
+]
+
+EXPORTS.mozilla.widget += [
+    'AudioSession.h',
+]
+

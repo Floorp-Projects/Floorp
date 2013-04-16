@@ -25,13 +25,6 @@ SDK_HEADERS = \
 	nsUnicharUtils.h \
 	$(NULL)
 
-EXPORTS = \
-	nsBidiUtils.h \
-	nsSpecialCasingData.h \
-	nsUnicodeProperties.h \
-	nsUnicodeScriptCodes.h \
-	$(NULL)
-
 CPPSRCS	= \
 	nsUnicharUtils.cpp \
 	nsBidiUtils.cpp \

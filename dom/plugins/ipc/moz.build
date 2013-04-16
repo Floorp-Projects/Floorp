@@ -9,3 +9,46 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
 
 MODULE = 'dom'
 
+EXPORTS.mozilla += [
+    'PluginLibrary.h',
+]
+
+EXPORTS.mozilla.plugins += [
+    'AStream.h',
+    'BrowserStreamChild.h',
+    'BrowserStreamParent.h',
+    'ChildAsyncCall.h',
+    'ChildTimer.h',
+    'NPEventAndroid.h',
+    'NPEventOSX.h',
+    'NPEventUnix.h',
+    'NPEventWindows.h',
+    'PluginIdentifierChild.h',
+    'PluginIdentifierParent.h',
+    'PluginInstanceChild.h',
+    'PluginInstanceParent.h',
+    'PluginMessageUtils.h',
+    'PluginModuleChild.h',
+    'PluginModuleParent.h',
+    'PluginProcessChild.h',
+    'PluginProcessParent.h',
+    'PluginScriptableObjectChild.h',
+    'PluginScriptableObjectParent.h',
+    'PluginScriptableObjectUtils-inl.h',
+    'PluginScriptableObjectUtils.h',
+    'PluginStreamChild.h',
+    'PluginStreamParent.h',
+    'PluginUtilsOSX.h',
+    'StreamNotifyChild.h',
+    'StreamNotifyParent.h',
+]
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    EXPORTS.mozilla.plugins += [
+        'PluginSurfaceParent.h',
+    ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    EXPORTS.mozilla.plugins += [
+        'PluginInterposeOSX.h',
+    ]
