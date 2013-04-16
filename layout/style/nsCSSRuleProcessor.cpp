@@ -9,17 +9,16 @@
  * matching and cascading
  */
 
-#include "mozilla/Util.h"
+#define PL_ARENA_CONST_ALIGN_MASK 7
+// We want page-sized arenas so there's no fragmentation involved.
+// Including plarena.h must come first to avoid it being included by some
+// header file thereby making PL_ARENA_CONST_ALIGN_MASK ineffective.
+#define NS_CASCADEENUMDATA_ARENA_BLOCK_SIZE (4096)
+#include "plarena.h"
 
 #include "nsCSSRuleProcessor.h"
 #include "nsRuleProcessorData.h"
 #include <algorithm>
-
-#define PL_ARENA_CONST_ALIGN_MASK 7
-// We want page-sized arenas so there's no fragmentation involved.
-#define NS_CASCADEENUMDATA_ARENA_BLOCK_SIZE (4096)
-#include "plarena.h"
-
 #include "nsCRT.h"
 #include "nsIAtom.h"
 #include "pldhash.h"
@@ -60,6 +59,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Likely.h"
+#include "mozilla/Util.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

@@ -18,11 +18,11 @@
 namespace js {
 namespace frontend {
 
-struct Definition;
+class DefinitionSingle;
 class DefinitionList;
 
 typedef InlineMap<JSAtom *, jsatomid, 24> AtomIndexMap;
-typedef InlineMap<JSAtom *, Definition *, 24> AtomDefnMap;
+typedef InlineMap<JSAtom *, DefinitionSingle, 24> AtomDefnMap;
 typedef InlineMap<JSAtom *, DefinitionList, 24> AtomDefnListMap;
 
 /*
@@ -135,15 +135,6 @@ struct AtomThingMapPtr
     Map &operator*() const { return *map_; }
 };
 
-struct AtomDefnMapPtr : public AtomThingMapPtr<AtomDefnMap>
-{
-    JS_ALWAYS_INLINE
-    Definition *lookupDefn(JSAtom *atom) {
-        AtomDefnMap::Ptr p = map_->lookup(atom);
-        return p ? p.value() : NULL;
-    }
-};
-
 typedef AtomThingMapPtr<AtomIndexMap> AtomIndexMapPtr;
 
 /*
@@ -165,8 +156,48 @@ class OwnedAtomThingMapPtr : public AtomThingMapPtrT
     }
 };
 
-typedef OwnedAtomThingMapPtr<AtomDefnMapPtr> OwnedAtomDefnMapPtr;
 typedef OwnedAtomThingMapPtr<AtomIndexMapPtr> OwnedAtomIndexMapPtr;
+
+/*
+ * DefinitionSingle and DefinitionList represent either a single definition
+ * or a list of them. The representation of definitions varies between
+ * parse handlers, being either a Definition* (FullParseHandler) or a
+ * Definition::Kind (SyntaxParseHandler). Methods on the below classes are
+ * templated to distinguish the kind of value wrapped by the class.
+ */
+
+/* Wrapper for a single definition. */
+class DefinitionSingle
+{
+    uintptr_t bits;
+
+  public:
+
+    template <typename ParseHandler>
+    static DefinitionSingle new_(typename ParseHandler::DefinitionNode defn)
+    {
+        DefinitionSingle res;
+        res.bits = ParseHandler::definitionToBits(defn);
+        return res;
+    }
+
+    template <typename ParseHandler>
+    typename ParseHandler::DefinitionNode get() {
+        return ParseHandler::definitionFromBits(bits);
+    }
+};
+
+struct AtomDefnMapPtr : public AtomThingMapPtr<AtomDefnMap>
+{
+    template <typename ParseHandler>
+    JS_ALWAYS_INLINE
+    typename ParseHandler::DefinitionNode lookupDefn(JSAtom *atom) {
+        AtomDefnMap::Ptr p = map_->lookup(atom);
+        return p ? p.value().get<ParseHandler>() : ParseHandler::nullDefinition();
+    }
+};
+
+typedef OwnedAtomThingMapPtr<AtomDefnMapPtr> OwnedAtomDefnMapPtr;
 
 /*
  * A nonempty list containing one or more pointers to Definitions.
@@ -191,22 +222,16 @@ class DefinitionList
     /* A node in a linked list of Definitions. */
     struct Node
     {
-        Definition *defn;
+        uintptr_t bits;
         Node *next;
 
-        Node(Definition *defn, Node *next) : defn(defn), next(next) {}
+        Node(uintptr_t bits, Node *next) : bits(bits), next(next) {}
     };
 
     union {
-        Definition *defn;
-        Node *head;
         uintptr_t bits;
+        Node *head;
     } u;
-
-    Definition *defn() const {
-        JS_ASSERT(!isMultiple());
-        return u.defn;
-    }
 
     Node *firstNode() const {
         JS_ASSERT(isMultiple());
@@ -214,7 +239,7 @@ class DefinitionList
     }
 
     static Node *
-    allocNode(JSContext *cx, Definition *head, Node *tail);
+    allocNode(JSContext *cx, uintptr_t bits, Node *tail);
             
   public:
     class Range
@@ -222,40 +247,41 @@ class DefinitionList
         friend class DefinitionList;
 
         Node *node;
-        Definition *defn;
+        uintptr_t bits;
 
         explicit Range(const DefinitionList &list) {
             if (list.isMultiple()) {
                 node = list.firstNode();
-                defn = node->defn;
+                bits = node->bits;
             } else {
                 node = NULL;
-                defn = list.defn();
+                bits = list.u.bits;
             }
         }
 
       public:
         /* An empty Range. */
-        Range() : node(NULL), defn(NULL) {}
+        Range() : node(NULL), bits(0) {}
 
         void popFront() {
             JS_ASSERT(!empty());
             if (!node) {
-                defn = NULL;
+                bits = 0;
                 return;
             }
             node = node->next;
-            defn = node ? node->defn : NULL;
+            bits = node ? node->bits : 0;
         }
 
-        Definition *front() {
+        template <typename ParseHandler>
+        typename ParseHandler::DefinitionNode front() {
             JS_ASSERT(!empty());
-            return defn;
+            return ParseHandler::definitionFromBits(bits);
         }
 
         bool empty() const {
-            JS_ASSERT_IF(!defn, !node);
-            return !defn;
+            JS_ASSERT_IF(!bits, !node);
+            return !bits;
         }
     };
 
@@ -263,8 +289,8 @@ class DefinitionList
         u.bits = 0;
     }
 
-    explicit DefinitionList(Definition *defn) {
-        u.defn = defn;
+    explicit DefinitionList(uintptr_t bits) {
+        u.bits = bits;
         JS_ASSERT(!isMultiple());
     }
 
@@ -276,8 +302,9 @@ class DefinitionList
 
     bool isMultiple() const { return (u.bits & 0x1) != 0; }
 
-    Definition *front() {
-        return isMultiple() ? firstNode()->defn : defn();
+    template <typename ParseHandler>
+    typename ParseHandler::DefinitionNode front() {
+        return ParseHandler::definitionFromBits(isMultiple() ? firstNode()->bits : u.bits);
     }
 
     /*
@@ -294,7 +321,7 @@ class DefinitionList
         if (next->next)
             *this = DefinitionList(next);
         else
-            *this = DefinitionList(next->defn);
+            *this = DefinitionList(next->bits);
         return true;
     }
 
@@ -303,17 +330,31 @@ class DefinitionList
      *
      * Return true on success. On OOM, report on cx and return false.
      */
-    bool pushFront(JSContext *cx, Definition *val);
+    template <typename ParseHandler>
+    bool pushFront(JSContext *cx, typename ParseHandler::DefinitionNode defn) {
+        Node *tail;
+        if (isMultiple()) {
+            tail = firstNode();
+        } else {
+            tail = allocNode(cx, u.bits, NULL);
+            if (!tail)
+                return false;
+        }
 
-    /* Like pushFront, but add the given val to the end of the list. */
-    bool pushBack(JSContext *cx, Definition *val);
+        Node *node = allocNode(cx, ParseHandler::definitionToBits(defn), tail);
+        if (!node)
+            return false;
+        *this = DefinitionList(node);
+        return true;
+    }
 
     /* Overwrite the first Definition in the list. */
-    void setFront(Definition *val) {
+    template <typename ParseHandler>
+        void setFront(typename ParseHandler::DefinitionNode defn) {
         if (isMultiple())
-            firstNode()->defn = val;
+            firstNode()->bits = ParseHandler::definitionToBits(defn);
         else
-            *this = DefinitionList(val);
+            *this = DefinitionList(ParseHandler::definitionToBits(defn));
     }
 
     Range all() const { return Range(*this); }
@@ -341,8 +382,11 @@ class DefinitionList
  * method addShadow. When we leave the block associated with the let, the method
  * remove is used to unshadow the declaration immediately preceding it.
  */
+template <typename ParseHandler>
 class AtomDecls
 {
+    typedef typename ParseHandler::DefinitionNode DefinitionNode;
+
     /* AtomDeclsIter needs to get at the DefnListMap directly. */
     friend class AtomDeclsIter;
 
@@ -364,21 +408,21 @@ class AtomDecls
     }
 
     /* Return the definition at the head of the chain for |atom|. */
-    inline Definition *lookupFirst(JSAtom *atom) const;
+    inline DefinitionNode lookupFirst(JSAtom *atom) const;
 
     /* Perform a lookup that can iterate over the definitions associated with |atom|. */
     inline DefinitionList::Range lookupMulti(JSAtom *atom) const;
 
     /* Add-or-update a known-unique definition for |atom|. */
-    inline bool addUnique(JSAtom *atom, Definition *defn);
-    bool addShadow(JSAtom *atom, Definition *defn);
+    inline bool addUnique(JSAtom *atom, DefinitionNode defn);
+    bool addShadow(JSAtom *atom, DefinitionNode defn);
 
     /* Updating the definition for an entry that is known to exist is infallible. */
-    void updateFirst(JSAtom *atom, Definition *defn) {
+    void updateFirst(JSAtom *atom, DefinitionNode defn) {
         JS_ASSERT(map);
         AtomDefnListMap::Ptr p = map->lookup(atom);
         JS_ASSERT(p);
-        p.value().setFront(defn);
+        p.value().setFront<ParseHandler>(defn);
     }
 
     /* Remove the node at the head of the chain for |atom|. */
@@ -419,6 +463,9 @@ typedef AtomDefnListMap::Range  AtomDefnListRange;
 } /* namespace js */
 
 namespace mozilla {
+
+template <>
+struct IsPod<js::frontend::DefinitionSingle> : TrueType {};
 
 template <>
 struct IsPod<js::frontend::DefinitionList> : TrueType {};

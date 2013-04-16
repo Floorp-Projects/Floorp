@@ -6,7 +6,7 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://services-common/preferences.js");
+Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 const reporter = Cc["@mozilla.org/datareporting/service;1"]

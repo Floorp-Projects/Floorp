@@ -1099,8 +1099,8 @@ Shape::search(JSContext *cx, Shape *start, jsid id, Shape ***pspp, bool adding)
 }
 
 /*
- * Keep this function in sync with search. It should return false whenever
- * search would transition to a ShapeTable.
+ * Keep this function in sync with search. It neither hashifies the start
+ * shape nor increments linear search count.
  */
 inline Shape *
 Shape::searchNoHashify(Shape *start, jsid id)

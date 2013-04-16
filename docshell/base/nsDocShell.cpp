@@ -94,7 +94,7 @@
 // so we can associate the document URI with the load group.
 // until this point, we have an evil hack:
 #include "nsIHttpChannelInternal.h"  
-
+#include "nsPILoadGroupInternal.h"
 
 // Local Includes
 #include "nsDocShellLoadInfo.h"
@@ -849,8 +849,6 @@ nsDocShell::Init()
     rv = mContentListener->Init();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mStorages.Init();
-
     // We want to hold a strong ref to the loadgroup, so it better hold a weak
     // ref to us...  use an InterfaceRequestorProxy to do this.
     nsCOMPtr<InterfaceRequestorProxy> proxy =
@@ -917,6 +915,7 @@ NS_INTERFACE_MAP_BEGIN(nsDocShell)
     NS_INTERFACE_MAP_ENTRY(nsIWebShellServices)
     NS_INTERFACE_MAP_ENTRY(nsILinkHandler)
     NS_INTERFACE_MAP_ENTRY(nsIClipboardCommands)
+    NS_INTERFACE_MAP_ENTRY(nsIDOMStorageManager)
 NS_INTERFACE_MAP_END_INHERITING(nsDocLoader)
 
 ///*****************************************************************************
@@ -2596,199 +2595,70 @@ nsDocShell::HistoryTransactionRemoved(int32_t aIndex)
     return NS_OK;
 }
 
+nsIDOMStorageManager*
+nsDocShell::TopSessionStorageManager()
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIDocShellTreeItem> topItem;
+    rv = GetSameTypeRootTreeItem(getter_AddRefs(topItem));
+    if (NS_FAILED(rv)) {
+        return nullptr;
+    }
+
+    if (!topItem) {
+        return nullptr;
+    }
+
+    nsDocShell* topDocShell = static_cast<nsDocShell*>(topItem.get());
+    if (topDocShell != this) {
+        return topDocShell->TopSessionStorageManager();
+    }
+
+    if (!mSessionStorageManager) {
+        mSessionStorageManager =
+            do_CreateInstance("@mozilla.org/dom/sessionStorage-manager;1");
+    }
+
+    return mSessionStorageManager;
+}
+
 NS_IMETHODIMP
 nsDocShell::GetSessionStorageForPrincipal(nsIPrincipal* aPrincipal,
                                           const nsAString& aDocumentURI,
                                           bool aCreate,
                                           nsIDOMStorage** aStorage)
 {
-    NS_ENSURE_ARG_POINTER(aStorage);
-    *aStorage = nullptr;
-
-    if (!aPrincipal)
-        return NS_OK;
-
-    nsresult rv;
-
-    nsCOMPtr<nsIDocShellTreeItem> topItem;
-    rv = GetSameTypeRootTreeItem(getter_AddRefs(topItem));
-    if (NS_FAILED(rv))
-        return rv;
-
-    if (!topItem)
-        return NS_ERROR_FAILURE;
-
-    nsDocShell* topDocShell = static_cast<nsDocShell*>(topItem.get());
-    if (topDocShell != this)
-        return topDocShell->GetSessionStorageForPrincipal(aPrincipal,
-                                                          aDocumentURI,
-                                                          aCreate,
-                                                          aStorage);
-
-    nsXPIDLCString origin;
-    rv = aPrincipal->GetOrigin(getter_Copies(origin));
-    if (NS_FAILED(rv))
-        return rv;
-
-    if (origin.IsEmpty())
-        return NS_OK;
-
-    if (!mStorages.Get(origin, aStorage) && aCreate) {
-        nsCOMPtr<nsIDOMStorage> newstorage =
-            do_CreateInstance("@mozilla.org/dom/storage;2");
-        if (!newstorage)
-            return NS_ERROR_OUT_OF_MEMORY;
-
-        nsCOMPtr<nsPIDOMStorage> pistorage = do_QueryInterface(newstorage);
-        if (!pistorage)
-            return NS_ERROR_FAILURE;
-
-        rv = pistorage->InitAsSessionStorage(aPrincipal, aDocumentURI, mInPrivateBrowsing);
-        if (NS_FAILED(rv))
-            return rv;
-
-        mStorages.Put(origin, newstorage);
-
-        newstorage.swap(*aStorage);
-#if defined(PR_LOGGING) && defined(DEBUG)
-        PR_LOG(gDocShellLog, PR_LOG_DEBUG,
-               ("nsDocShell[%p]: created a new sessionStorage %p",
-                this, *aStorage));
-#endif
-    }
-    else if (*aStorage) {
-        nsCOMPtr<nsPIDOMStorage> piStorage = do_QueryInterface(*aStorage);
-        if (piStorage) {
-            nsCOMPtr<nsIPrincipal> storagePrincipal = piStorage->Principal();
-
-            // The origin string used to map items in the hash table is 
-            // an implicit security check. That check is double-confirmed 
-            // by checking the principal a storage was demanded for 
-            // really is the principal for which that storage was originally 
-            // created. Originally, the check was hidden in the CanAccess 
-            // method but it's implementation has changed.
-            bool equals;
-            nsresult rv = aPrincipal->EqualsIgnoringDomain(storagePrincipal, &equals);
-            NS_ASSERTION(NS_SUCCEEDED(rv) && equals,
-                         "GetSessionStorageForPrincipal got a storage "
-                         "that could not be accessed!");
-
-            if (NS_FAILED(rv) || !equals) {
-                NS_RELEASE(*aStorage);
-                return NS_ERROR_DOM_SECURITY_ERR;
-            }
-        }
-
-#if defined(PR_LOGGING) && defined(DEBUG)
-        PR_LOG(gDocShellLog, PR_LOG_DEBUG,
-               ("nsDocShell[%p]: returns existing sessionStorage %p",
-                this, *aStorage));
-#endif
+    nsCOMPtr<nsIDOMStorageManager> manager = TopSessionStorageManager();
+    if (!manager) {
+        return NS_ERROR_UNEXPECTED;
     }
 
     if (aCreate) {
-        // We are asked to create a new storage object. This indicates
-        // that a new windows wants it. At this moment we "fork" the existing
-        // storage object (what it means is described in the paragraph bellow).
-        // We must create a single object per a single window to distinguish
-        // a window originating oparations on the storage object to succesfully
-        // prevent dispatch of a storage event to this same window that ivoked
-        // a change in its storage. We also do this to correctly fill
-        // documentURI property in the storage event.
-        //
-        // The difference between clone and fork is that clone creates
-        // a completelly new and independent storage, but fork only creates
-        // a new object wrapping the storage implementation and data and
-        // the forked storage then behaves completelly the same way as
-        // the storage it has been forked of, all such forked storage objects
-        // shares their state and data and change on one such object affects
-        // all others the same way.
-        nsCOMPtr<nsPIDOMStorage> piStorage = do_QueryInterface(*aStorage);
-        nsCOMPtr<nsIDOMStorage> fork = piStorage->Fork(aDocumentURI);
-#if defined(PR_LOGGING) && defined(DEBUG)
-        PR_LOG(gDocShellLog, PR_LOG_DEBUG,
-               ("nsDocShell[%p]: forked sessionStorage %p to %p",
-                this, *aStorage, fork.get()));
-#endif
-        fork.swap(*aStorage);
+        return manager->CreateStorage(aPrincipal, aDocumentURI,
+                                      mInPrivateBrowsing, aStorage);
     }
 
-    return NS_OK;
+    return manager->GetStorage(aPrincipal, mInPrivateBrowsing, aStorage);
 }
 
 nsresult
 nsDocShell::AddSessionStorage(nsIPrincipal* aPrincipal,
                               nsIDOMStorage* aStorage)
 {
-    NS_ENSURE_ARG_POINTER(aStorage);
-
-    if (!aPrincipal)
-        return NS_OK;
-
-    nsCOMPtr<nsIDocShellTreeItem> topItem;
-    nsresult rv = GetSameTypeRootTreeItem(getter_AddRefs(topItem));
-    if (NS_FAILED(rv))
-        return rv;
-
-    if (topItem) {
-        nsCOMPtr<nsIDocShell> topDocShell = do_QueryInterface(topItem);
-        if (topDocShell == this) {
-            nsXPIDLCString origin;
-            rv = aPrincipal->GetOrigin(getter_Copies(origin));
-            if (NS_FAILED(rv))
-                return rv;
-
-            if (origin.IsEmpty())
-                return NS_ERROR_FAILURE;
-
-            // Do not replace an existing session storage.
-            if (mStorages.GetWeak(origin))
-                return NS_ERROR_NOT_AVAILABLE;
-
-#if defined(PR_LOGGING) && defined(DEBUG)
-            PR_LOG(gDocShellLog, PR_LOG_DEBUG,
-                   ("nsDocShell[%p]: was added a sessionStorage %p",
-                    this, aStorage));
-#endif
-            mStorages.Put(origin, aStorage);
-        }
-        else {
-            return topDocShell->AddSessionStorage(aPrincipal, aStorage);
-        }
-    }
-
-    return NS_OK;
-}
-
-static PLDHashOperator
-CloneSessionStorages(nsCStringHashKey::KeyType aKey, nsIDOMStorage* aStorage,
-                     void* aUserArg)
-{
-    nsIDocShell *docShell = static_cast<nsIDocShell*>(aUserArg);
     nsCOMPtr<nsPIDOMStorage> pistorage = do_QueryInterface(aStorage);
-
-    if (pistorage) {
-        nsCOMPtr<nsIDOMStorage> storage = pistorage->Clone();
-        docShell->AddSessionStorage(pistorage->Principal(), storage);
+    nsIPrincipal* storagePrincipal = pistorage->GetPrincipal();
+    if (storagePrincipal != aPrincipal) {
+        NS_ERROR("Wanting to add a sessionStorage for different principal");
+        return NS_ERROR_DOM_SECURITY_ERR;
     }
 
-    return PL_DHASH_NEXT;
-}
+    nsCOMPtr<nsIDOMStorageManager> manager = TopSessionStorageManager();
+    if (!manager) {
+        return NS_ERROR_UNEXPECTED;
+    }
 
-NS_IMETHODIMP
-nsDocShell::CloneSessionStoragesTo(nsIDocShell* aDocShell)
-{
-    aDocShell->ClearSessionStorages();
-    mStorages.EnumerateRead(CloneSessionStorages, aDocShell);
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::ClearSessionStorages()
-{
-    mStorages.Clear();
-    return NS_OK;
+    return manager->CloneStorage(aStorage);
 }
 
 NS_IMETHODIMP
@@ -6678,10 +6548,15 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
     if (timingChannel) {
         TimeStamp channelCreationTime;
         rv = timingChannel->GetChannelCreation(&channelCreationTime);
-        if (NS_SUCCEEDED(rv) && !channelCreationTime.IsNull())
+        if (NS_SUCCEEDED(rv) && !channelCreationTime.IsNull()) {
             Telemetry::AccumulateTimeDelta(
                 Telemetry::TOTAL_CONTENT_PAGE_LOAD_TIME,
                 channelCreationTime);
+            nsCOMPtr<nsPILoadGroupInternal> internalLoadGroup =
+                do_QueryInterface(mLoadGroup);
+            if (internalLoadGroup)
+                internalLoadGroup->OnEndPageLoad(aChannel);
+        }
     }
 
     // Timing is picked up by the window, we don't need it anymore

@@ -1976,6 +1976,62 @@
     "extended_statistics_ok": true,
     "description": "Time spent in nsDiskCacheStreamIO::Close() on the main thread (ms)"
   },
+  "HTTP_PLT_RATE_PACING_0": {
+    "kind": "exponential",
+    "low": 100,
+    "high": "30000",
+    "n_buckets": 100,
+    "extended_statistics_ok": true,
+    "description": "HTTP: Total page load time (ms) with rate pacing algorithm 0 (burst=32, hz=100, par=6)"
+  },
+  "HTTP_PLT_RATE_PACING_1": {
+    "kind": "exponential",
+    "low": 100,
+    "high": "30000",
+    "n_buckets": 100,
+    "extended_statistics_ok": true,
+    "description": "HTTP: Total page load time (ms) with rate pacing algorithm 1 (burst=16, hz=100, par=6)"
+  },
+  "HTTP_PLT_RATE_PACING_2": {
+    "kind": "exponential",
+    "low": 100,
+    "high": "30000",
+    "n_buckets": 100,
+    "extended_statistics_ok": true,
+    "description": "HTTP: Total page load time (ms) with rate pacing algorithm 2 (burst=32, hz=200, par=6)"
+  },
+  "HTTP_PLT_RATE_PACING_3": {
+    "kind": "exponential",
+    "low": 100,
+    "high": "30000",
+    "n_buckets": 100,
+    "extended_statistics_ok": true,
+    "description": "HTTP: Total page load time (ms) with rate pacing algorithm 3 (burst=32, hz=50, par=6)"
+  },
+  "HTTP_PLT_RATE_PACING_4": {
+    "kind": "exponential",
+    "low": 100,
+    "high": "30000",
+    "n_buckets": 100,
+    "extended_statistics_ok": true,
+    "description": "HTTP: Total page load time (ms) with rate pacing algorithm 4 (burst=32, hz=1, par=8)"
+  },
+  "HTTP_PLT_RATE_PACING_5": {
+    "kind": "exponential",
+    "low": 100,
+    "high": "30000",
+    "n_buckets": 100,
+    "extended_statistics_ok": true,
+    "description": "HTTP: Total page load time (ms) with rate pacing algorithm 5 (burst=32, hz=1, par=16)"
+  },
+  "HTTP_PLT_RATE_PACING_6": {
+    "kind": "exponential",
+    "low": 100,
+    "high": "30000",
+    "n_buckets": 100,
+    "extended_statistics_ok": true,
+    "description": "HTTP: Total page load time (ms) with rate pacing algorithm 6 (burst=1000, hz=1000, par=1000)"
+  },
   "IDLE_NOTIFY_BACK_MS": {
     "kind": "exponential",
     "high": "5000",
@@ -2554,12 +2610,65 @@
     "kind": "boolean",
     "description": "DOM: Ranges that are detached on destruction (bug 702948)"
   },
+  "LOCALDOMSTORAGE_INIT_DATABASE_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "extended_statistics_ok": true,
+    "description": "Time to open the localStorage database (ms)"
+  },
+  "LOCALDOMSTORAGE_SHUTDOWN_DATABASE_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "extended_statistics_ok": true,
+    "description": "Time to flush and close the localStorage database (ms)"
+  },
+  "LOCALDOMSTORAGE_PRELOAD_PENDING_ON_FIRST_ACCESS": {
+    "kind": "boolean",
+    "description": "True when we had to wait for a pending preload on first access to localStorage data, false otherwise"
+  },
   "LOCALDOMSTORAGE_GETALLKEYS_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
     "extended_statistics_ok": true,
     "description": "Time to return a list of all keys in domain's LocalStorage (ms)"
+  },
+  "LOCALDOMSTORAGE_GETALLKEYS_BLOCKING_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "extended_statistics_ok": true,
+    "description": "Time to block before we return a list of all keys in domain's LocalStorage (ms)"
+  },
+  "LOCALDOMSTORAGE_GETKEY_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "extended_statistics_ok": true,
+    "description": "Time to return a key name in domain's LocalStorage (ms)"
+  },
+  "LOCALDOMSTORAGE_GETKEY_BLOCKING_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "extended_statistics_ok": true,
+    "description": "Time to block before we return a key name in domain's LocalStorage (ms)"
+  },
+  "LOCALDOMSTORAGE_GETLENGTH_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "extended_statistics_ok": true,
+    "description": "Time to return number of keys in domain's LocalStorage (ms)"
+  },
+  "LOCALDOMSTORAGE_GETLENGTH_BLOCKING_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "extended_statistics_ok": true,
+    "description": "Time to block before we return number of keys in domain's LocalStorage (ms)"
   },
   "LOCALDOMSTORAGE_GETVALUE_MS": {
     "kind": "exponential",
@@ -2568,12 +2677,26 @@
     "extended_statistics_ok": true,
     "description": "Time to return a value for a key in LocalStorage (ms)"
   },
+  "LOCALDOMSTORAGE_GETVALUE_BLOCKING_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "extended_statistics_ok": true,
+    "description": "Time to block before we return a value for a key in LocalStorage (ms)"
+  },
   "LOCALDOMSTORAGE_SETVALUE_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
     "extended_statistics_ok": true,
     "description": "Time to set a single key's value in LocalStorage (ms)"
+  },
+  "LOCALDOMSTORAGE_SETVALUE_BLOCKING_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "extended_statistics_ok": true,
+    "description": "Time to block before we set a single key's value in LocalStorage (ms)"
   },
   "LOCALDOMSTORAGE_REMOVEKEY_MS": {
     "kind": "exponential",
@@ -2582,33 +2705,40 @@
     "extended_statistics_ok": true,
     "description": "Time to remove a single key from LocalStorage (ms)"
   },
-  "LOCALDOMSTORAGE_REMOVEALL_MS": {
+  "LOCALDOMSTORAGE_REMOVEKEY_BLOCKING_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "extended_statistics_ok": true,
+    "description": "Time to block before we remove a single key from LocalStorage (ms)"
+  },
+  "LOCALDOMSTORAGE_CLEAR_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
     "extended_statistics_ok": true,
     "description": "Time to clear LocalStorage for all domains (ms)"
   },
-  "LOCALDOMSTORAGE_FETCH_DOMAIN_MS": {
+  "LOCALDOMSTORAGE_CLEAR_BLOCKING_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
     "extended_statistics_ok": true,
-    "description": "Time to fetch LocalStorage data for a domain (ms)"
+    "description": "Time to block before we clear LocalStorage for all domains (ms)"
   },
-  "LOCALDOMSTORAGE_FETCH_QUOTA_USE_MS": {
+  "LOCALDOMSTORAGE_UNLOAD_BLOCKING_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
     "extended_statistics_ok": true,
-    "description": "Time to fetch quota use stats for a TLD (ms)"
+    "description": "Time to fetch LocalStorage data before we can clean the cache (ms)"
   },
-  "LOCALDOMSTORAGE_TIMER_FLUSH_MS": {
+  "LOCALDOMSTORAGE_SESSIONONLY_PRELOAD_BLOCKING_MS": {
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
     "extended_statistics_ok": true,
-    "description": "Time to flush dirty entries from the cache (ms)"
+    "description": "Time to fetch LocalStorage data before we can expose them as session only data (ms)"
   },
   "LOCALDOMSTORAGE_KEY_SIZE_BYTES": {
     "kind": "exponential",
