@@ -43,24 +43,24 @@ CompositableHost::AddMaskEffect(EffectChain& aEffects,
 }
 
 /* static */ TemporaryRef<CompositableHost>
-CompositableHost::Create(const TextureInfo& aTextureInfo, Compositor* aCompositor)
+CompositableHost::Create(const TextureInfo& aTextureInfo)
 {
   RefPtr<CompositableHost> result;
   switch (aTextureInfo.mCompositableType) {
   case BUFFER_IMAGE_BUFFERED:
-    result = new ImageHostBuffered(aTextureInfo, aCompositor);
+    result = new ImageHostBuffered(aTextureInfo);
     return result;
   case BUFFER_IMAGE_SINGLE:
-    result = new ImageHostSingle(aTextureInfo, aCompositor);
+    result = new ImageHostSingle(aTextureInfo);
     return result;
   case BUFFER_TILED:
-    result = new TiledContentHost(aTextureInfo, aCompositor);
+    result = new TiledContentHost(aTextureInfo);
     return result;
   case BUFFER_CONTENT:
-    result = new ContentHostSingleBuffered(aTextureInfo, aCompositor);
+    result = new ContentHostSingleBuffered(aTextureInfo);
     return result;
   case BUFFER_CONTENT_DIRECT:
-    result = new ContentHostDoubleBuffered(aTextureInfo, aCompositor);
+    result = new ContentHostDoubleBuffered(aTextureInfo);
     return result;
   default:
     MOZ_NOT_REACHED("Unknown CompositableType");

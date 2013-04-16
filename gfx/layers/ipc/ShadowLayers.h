@@ -50,7 +50,6 @@ class TiledLayerComposer;
 class Transaction;
 class SurfaceDescriptor;
 class CanvasSurface;
-class BasicTiledLayerBuffer;
 class TextureClientShmem;
 class ContentClientRemote;
 class CompositableChild;
@@ -258,8 +257,8 @@ public:
    * and is free to choose it's own internal representation (double buffering,
    * copy on write, tiling).
    */
-  void PaintedTiledLayerBuffer(ShadowableLayer* aThebes,
-                               BasicTiledLayerBuffer* aTiledLayerBuffer);
+  virtual void PaintedTiledLayerBuffer(CompositableClient* aCompositable,
+                                       BasicTiledLayerBuffer* aTiledLayerBuffer) MOZ_OVERRIDE;
 
   /**
    * Notify the compositor that a compositable will be updated asynchronously
