@@ -6,3 +6,7 @@
 
 MODULE = 'skia_npapi'
 
+EXPORTS += [
+    'SkANP.h',
+]
+

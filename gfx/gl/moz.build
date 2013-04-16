@@ -6,3 +6,32 @@
 
 MODULE = 'gl'
 
+EXPORTS += [
+    'ForceDiscreteGPUHelperCGL.h',
+    'GLContext.h',
+    'GLContextProvider.h',
+    'GLContextProviderImpl.h',
+    'GLContextSymbols.h',
+    'GLContextTypes.h',
+    'GLDefs.h',
+    'GLLibraryEGL.h',
+    'GLLibraryLoader.h',
+    'GLScreenBuffer.h',
+    'GLTextureImage.h',
+    'SharedSurface.h',
+    'SharedSurfaceEGL.h',
+    'SharedSurfaceGL.h',
+    'SurfaceFactory.h',
+    'SurfaceStream.h',
+    'SurfaceTypes.h',
+]
+
+if CONFIG['MOZ_X11']:
+    EXPORTS += ['GLXLibrary.h']
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    EXPORTS += [
+        'WGLLibrary.h',
+        'SharedSurfaceANGLE.h',
+    ]
+if CONFIG['MOZ_ENABLE_SKIA_GPU']:
+    EXPORTS += ['GLContextSkia.h']

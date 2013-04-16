@@ -85,33 +85,10 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../docshell/base \
 		$(NULL)
 
-EXPORTS_NAMESPACES = mozilla
-
 SDK_HEADERS =  \
   nsXPCOM.h       \
   nsXPCOMCID.h    \
   $(NULL)
-
-EXPORTS	= \
-  nsXPCOMCIDInternal.h \
-  xrecore.h \
-  nsXULAppAPI.h \
-  nsXREAppData.h \
-  $(NULL)
-
-EXPORTS_mozilla = \
-  XPCOM.h \
-  Services.h \
-  ServiceList.h \
-  Omnijar.h \
-  FileLocation.h \
-  mozPoisonWrite.h \
-  $(NULL)
-
-ifeq ($(OS_ARCH),WINNT)
-EXPORTS_mozilla += perfprobe.h
-endif
-
 
 GARBAGE         += $(XPCOM_GLUE_SRC_LCPPSRCS) $(XPCOM_GLUENS_SRC_LCPPSRCS)
 

@@ -15,7 +15,4 @@ LIBRARY_NAME	= mozz
 
 CSRCS		= $(MODULES_ZLIB_SRC_LCSRCS)
 
-EXPORTS		= zlib.h zconf.h mozzconf.h
-
-
 include $(topsrcdir)/config/rules.mk

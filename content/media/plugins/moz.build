@@ -6,3 +6,10 @@
 
 MODULE = 'content'
 
+EXPORTS += [
+    'MPAPI.h',
+    'MediaPluginDecoder.h',
+    'MediaPluginHost.h',
+    'MediaPluginReader.h',
+]
+

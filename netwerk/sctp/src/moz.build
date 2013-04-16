@@ -8,3 +8,7 @@ XPIDL_MODULE = 'necko_sctp'
 
 MODULE = 'necko'
 
+EXPORTS.mozilla.net += [
+    'usrsctp.h',
+]
+

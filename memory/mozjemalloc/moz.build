@@ -6,3 +6,7 @@
 
 MODULE = 'jemalloc'
 
+EXPORTS += [
+    'jemalloc_types.h',
+]
+

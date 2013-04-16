@@ -150,65 +150,15 @@ CPPSRCS		+= \
 		$(NULL)
 endif
 
-# Changes to internal header files, used externally, massively slow down
-# browser builds.  Don't add new files here unless you know what you're
-# doing!
-INSTALLED_HEADERS = \
-		js-config.h \
-		jscpucfg.h \
-		js.msg \
-		jsalloc.h \
-		jsapi.h \
-		jsclass.h \
-		jsclist.h \
-		jsdbgapi.h \
-		jsdhash.h \
-		jsfriendapi.h \
-		jslock.h \
-		json.h \
-		jsproxy.h \
-		jsprf.h \
-		jsprototypes.h \
-		jsprvtd.h \
-		jspubtd.h \
-		jstypes.h \
-		jsutil.h \
-		jsversion.h \
-		jswrapper.h \
-		$(NULL)
-
 ######################################################
 # BEGIN include exported headers from the JS engine
 #
-#       Ultimately, after cleansing INSTALLED_HEADERS,
+#       Ultimately, after cleansing EXPORTS,
 #       these will be the ONLY headers exported by
 #       the js engine
 #
 VPATH		+= \
 		$(srcdir)/../public \
-		$(NULL)
-
-EXPORTS_NAMESPACES += js
-
-# If you add a header here, add it to js/src/jsapi-tests/testIntTypesABI.cpp so
-# that we ensure we don't over-expose our internal integer typedefs.  Note that
-# LegacyIntTypes.h below is deliberately exempted from this requirement.
-EXPORTS_js = \
-		Anchor.h \
-		CallArgs.h \
-		CharacterEncoding.h \
-		GCAPI.h \
-		HashTable.h \
-		HeapAPI.h \
-		LegacyIntTypes.h \
-		MemoryMetrics.h \
-		PropertyKey.h \
-		RequiredDefines.h \
-		RootingAPI.h \
-		TemplateLib.h \
-		Utility.h \
-		Value.h \
-		Vector.h \
 		$(NULL)
 
 ###############################################
@@ -498,26 +448,17 @@ endif # JS_HAS_CTYPES
 
 LOCAL_INCLUDES += -I$(MFBT_ROOT)/double-conversion
 
-ifdef HAVE_DTRACE
-INSTALLED_HEADERS += \
-		$(CURDIR)/javascript-trace.h \
-		$(NULL)
-endif
-
 # PerfMeasurement is available regardless of low-level support for it;
 # it just doesn't necessarily do anything useful.  There is one
 # implementation source file per supported operating system, plus a stub
 # for unsupported OSes, plus the Javascript wrapper.
 VPATH += $(srcdir)/perf
-INSTALLED_HEADERS += jsperf.h
 CPPSRCS += jsperf.cpp
 ifdef HAVE_LINUX_PERF_EVENT_H
 CPPSRCS += pm_linux.cpp
 else
 CPPSRCS += pm_stub.cpp
 endif
-
-EXPORTS = $(INSTALLED_HEADERS)
 
 DASH_R		= -r
 
@@ -855,7 +796,7 @@ SDK_BINARY = js-config
 #
 #   $(includedir)/
 #      $(MODULE)/
-#        jsapi.h, jspubtd.h, etc. (all of INSTALLED_HEADERS)
+#        jsapi.h, jspubtd.h, etc. (all of EXPORTS)
 #        js/
 #          js/public/* headers (all are public)
 #        ds/
@@ -887,7 +828,7 @@ SDK_BINARY = js-config
 # this is the structure implemented below.
 #
 
-install:: $(INSTALLED_HEADERS)
+install:: $(EXPORTS)
 	$(SYSINSTALL) $^ $(DESTDIR)$(includedir)/$(MODULE)
 
 install:: $(EXPORTS_js)

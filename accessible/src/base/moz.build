@@ -6,3 +6,23 @@
 
 MODULE = 'accessibility'
 
+EXPORTS += [
+    'AccEvent.h',
+    'nsAccessNode.h',
+    'nsAccessibilityService.h',
+]
+
+EXPORTS.mozilla.a11y += [
+    'AccTypes.h',
+    'DocManager.h',
+    'FocusManager.h',
+    'Platform.h',
+    'Role.h',
+    'SelectionManager.h',
+    'States.h',
+]
+
+if CONFIG['MOZ_DEBUG']:
+    EXPORTS.mozilla.a11y += [
+        'Logging.h',
+    ]

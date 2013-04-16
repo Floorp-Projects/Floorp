@@ -13,10 +13,6 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME	= xpwidgets_s
 LIBXUL_LIBRARY  = 1
 
-EXPORTS = \
-		GfxInfoCollector.h \
-		$(NULL)
-
 DEFINES += \
   -D_IMPL_NS_WIDGET \
   $(NULL)

@@ -16,11 +16,6 @@ FAIL_ON_WARNINGS := 1
 
 FORCE_STATIC_LIB = 1
 
-EXPORTS = \
-  nsCacheService.h \
-  nsApplicationCacheService.h \
-  $(NULL)
-
 CPPSRCS = \
   nsCache.cpp \
   nsCacheEntry.cpp \

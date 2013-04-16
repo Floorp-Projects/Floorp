@@ -6,3 +6,10 @@
 
 MODULE = 'content'
 
+EXPORTS += [
+    'MediaEngine.h',
+    'MediaEngineDefault.h',
+]
+
+if CONFIG['MOZ_WEBRTC']:
+    EXPORTS += ['MediaEngineWebRTC.h']

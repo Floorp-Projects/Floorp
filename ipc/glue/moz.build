@@ -6,3 +6,51 @@
 
 MODULE = 'ipc'
 
+EXPORTS += [
+    'nsIIPCSerializableInputStream.h',
+    'nsIIPCSerializableURI.h',
+]
+
+EXPORTS.mozilla.ipc += [
+    'AsyncChannel.h',
+    'BrowserProcessSubThread.h',
+    'CrossProcessMutex.h',
+    'FileDescriptor.h',
+    'FileDescriptorUtils.h',
+    'GeckoChildProcessHost.h',
+    'IOThreadChild.h',
+    'InputStreamUtils.h',
+    'ProcessChild.h',
+    'ProtocolUtils.h',
+    'RPCChannel.h',
+    'ScopedXREEmbed.h',
+    'SharedMemory.h',
+    'SharedMemoryBasic.h',
+    'SharedMemorySysV.h',
+    'Shmem.h',
+    'SyncChannel.h',
+    'Transport.h',
+    'URIUtils.h',
+]
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    EXPORTS.mozilla.ipc += [
+        'Transport_win.h',
+    ]
+else:
+    EXPORTS.mozilla.ipc += [
+        'Transport_posix.h',
+    ]
+
+# Android has its own,
+# almost-but-not-quite-compatible-with-POSIX-or-/dev/shm shared memory
+# impl.
+if CONFIG['OS_TARGET'] == 'Android':
+    EXPORTS.mozilla.ipc += ['SharedMemoryBasic_android.h']
+else:
+    EXPORTS.mozilla.ipc += ['SharedMemoryBasic_chromium.h']
+
+EXPORTS.ipc += [
+    'IPCMessageUtils.h',
+]
+

@@ -35,15 +35,6 @@ ifeq ($(OS_ARCH),SunOS)
 DEFINES += -DHAVE_ALLOCA_H
 endif
 
-EXPORTS_NAMESPACES = opus
-
-EXPORTS_opus = \
-  include/opus.h \
-  include/opus_defines.h \
-  include/opus_types.h \
-  include/opus_multistream.h \
-  $(NULL)
-
 LOCAL_INCLUDES += \
   -I$(srcdir)/include \
   -I$(srcdir)/celt \

@@ -27,3 +27,12 @@
 
 MODULE = 'webvtt'
 
+EXPORTS.webvtt += [
+    'include/webvtt/cue.h',
+    'include/webvtt/error.h',
+    'include/webvtt/node.h',
+    'include/webvtt/parser.h',
+    'include/webvtt/string.h',
+    'include/webvtt/util.h',
+]
+

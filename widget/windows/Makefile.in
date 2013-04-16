@@ -92,10 +92,6 @@ SHARED_LIBRARY_LIBS = \
   ../xpwidgets/$(LIB_PREFIX)xpwidgets_s.$(LIB_SUFFIX) \
   $(NULL)
 
-EXPORTS		= nsdefs.h WindowHook.h WinUtils.h
-EXPORTS_NAMESPACES = mozilla/widget
-EXPORTS_mozilla/widget = AudioSession.h
-
 LOCAL_INCLUDES	= \
 		-I. \
 		-I$(srcdir)/../xpwidgets \

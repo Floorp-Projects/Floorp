@@ -6,3 +6,9 @@
 
 MODULE = 'view'
 
+EXPORTS += [
+    'nsIScrollPositionListener.h',
+    'nsView.h',
+    'nsViewManager.h',
+]
+

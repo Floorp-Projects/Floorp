@@ -41,8 +41,6 @@ CPPSRCS		+= \
 		$(NULL)
 endif
 
-EXPORTS		= nsUCvIBMCID.h
-
 LOCAL_INCLUDES = -I$(srcdir)/../util
 
 include $(topsrcdir)/config/rules.mk

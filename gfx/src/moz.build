@@ -11,3 +11,28 @@ XPIDL_SOURCES += [
 
 MODULE = 'gfx'
 
+EXPORTS += [
+    'gfxCore.h',
+    'gfxCrashReporterUtils.h',
+    'nsBoundingMetrics.h',
+    'nsColor.h',
+    'nsColorNameList.h',
+    'nsColorNames.h',
+    'nsCoord.h',
+    'nsDeviceContext.h',
+    'nsFont.h',
+    'nsFontMetrics.h',
+    'nsGfxCIID.h',
+    'nsITheme.h',
+    'nsMargin.h',
+    'nsPoint.h',
+    'nsRect.h',
+    'nsRegion.h',
+    'nsRenderingContext.h',
+    'nsSize.h',
+    'nsThemeConstants.h',
+    'nsTransform2D.h',
+]
+
+if CONFIG['MOZ_X11']:
+    EXPORTS.mozilla += ['X11Util.h']
