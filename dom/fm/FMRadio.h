@@ -34,7 +34,7 @@ public:
   NS_DECL_NSIFMRADIO
   NS_DECL_NSIAUDIOCHANNELAGENTCALLBACK
 
-  NS_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper::)
+  NS_REALLY_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper)
   FMRadio();
   virtual void Notify(const hal::FMRadioOperationInformation& info);
   virtual void Notify(const hal::SwitchEvent& aEvent);

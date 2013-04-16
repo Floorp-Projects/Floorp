@@ -31,6 +31,12 @@ public:
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(nsDOMEventTargetHelper)
 
   NS_DECL_NSIDOMEVENTTARGET
+  using mozilla::dom::EventTarget::RemoveEventListener;
+  virtual void AddEventListener(const nsAString& aType,
+                                nsIDOMEventListener* aListener,
+                                bool aCapture,
+                                const mozilla::dom::Nullable<bool>& aWantsUntrusted,
+                                mozilla::ErrorResult& aRv) MOZ_OVERRIDE;
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_DOMEVENTTARGETHELPER_IID)
 
@@ -205,6 +211,11 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsDOMEventTargetHelper,
   } \
   virtual JSContext * GetJSContextForEventHandlers(void) { \
     return _to GetJSContextForEventHandlers(); \
-  } 
+  }
+
+#define NS_REALLY_FORWARD_NSIDOMEVENTTARGET(_class) \
+  using _class::AddEventListener;                   \
+  using _class::RemoveEventListener;                \
+  NS_FORWARD_NSIDOMEVENTTARGET(_class::)
 
 #endif // nsDOMEventTargetHelper_h_
