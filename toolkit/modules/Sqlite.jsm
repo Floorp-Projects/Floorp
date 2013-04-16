@@ -689,6 +689,50 @@ OpenedConnection.prototype = Object.freeze({
     return count;
   },
 
+  /**
+   * Helper method to bind parameters of various kinds through
+   * reflection.
+   */
+  _bindParameters: function (statement, params) {
+    if (!params) {
+      return;
+    }
+
+    if (Array.isArray(params)) {
+      // It's an array of separate params.
+      if (params.length && (typeof(params[0]) == "object")) {
+        let paramsArray = statement.newBindingParamsArray();
+        for (let p of params) {
+          let bindings = paramsArray.newBindingParams();
+          for (let [key, value] of Iterator(p)) {
+            bindings.bindByName(key, value);
+          }
+          paramsArray.addParams(bindings);
+        }
+
+        statement.bindParameters(paramsArray);
+        return;
+      }
+
+      // Indexed params.
+      for (let i = 0; i < params.length; i++) {
+        statement.bindByIndex(i, params[i]);
+      }
+      return;
+    }
+
+    // Named params.
+    if (params && typeof(params) == "object") {
+      for (let k in params) {
+        statement.bindByName(k, params[k]);
+      }
+      return;
+    }
+
+    throw new Error("Invalid type for bound parameters. Expected Array or " +
+                    "object. Got: " + params);
+  },
+
   _executeStatement: function (sql, statement, params, onRow) {
     if (statement.state != statement.MOZ_STORAGE_STATEMENT_READY) {
       throw new Error("Statement is not ready for execution.");
@@ -698,18 +742,7 @@ OpenedConnection.prototype = Object.freeze({
       throw new Error("onRow must be a function. Got: " + onRow);
     }
 
-    if (Array.isArray(params)) {
-      for (let i = 0; i < params.length; i++) {
-        statement.bindByIndex(i, params[i]);
-      }
-    } else if (params && typeof(params) == "object") {
-      for (let k in params) {
-        statement.bindByName(k, params[k]);
-      }
-    } else if (params) {
-      throw new Error("Invalid type for bound parameters. Expected Array or " +
-                      "object. Got: " + params);
-    }
+    this._bindParameters(statement, params);
 
     let index = this._statementCounter++;
 
