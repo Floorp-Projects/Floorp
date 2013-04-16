@@ -2836,11 +2836,13 @@ Tab.prototype = {
 
     // Adjust the max line box width to be no more than the viewport width, but
     // only if the reflow-on-zoom preference is enabled.
-    let isZooming = aViewport.zoom != this._zoom;
+    let isZooming = Math.abs(aViewport.zoom - this._zoom) >= 1e-6;
     if (isZooming &&
         BrowserEventHandler.mReflozPref &&
-        BrowserApp.selectedTab._mReflozPoint) {
+        BrowserApp.selectedTab._mReflozPoint &&
+        BrowserApp.selectedTab.probablyNeedRefloz) {
       BrowserApp.selectedTab.performReflowOnZoom(aViewport);
+      BrowserApp.selectedTab.probablyNeedRefloz = false;
     }
 
     let win = this.browser.contentWindow;
@@ -4041,6 +4043,7 @@ var BrowserEventHandler = {
 
        BrowserApp.selectedTab._mReflozPoint = { x: zoomPointX, y: zoomPointY,
          range: BrowserApp.selectedBrowser.contentDocument.caretPositionFromPoint(zoomPointX, zoomPointY) };
+         BrowserApp.selectedTab.probablyNeedRefloz = true;
      }
    },
 
