@@ -47,7 +47,7 @@ public:
   NS_DECL_NSIDOMTELEPHONY
   NS_DECL_NSITELEPHONYLISTENER
 
-  NS_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper::)
+  NS_REALLY_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(
                                                    Telephony,
                                                    nsDOMEventTargetHelper)

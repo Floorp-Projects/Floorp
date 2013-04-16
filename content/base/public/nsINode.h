@@ -805,7 +805,13 @@ public:
    * See nsIDOMEventTarget
    */
   NS_DECL_NSIDOMEVENTTARGET
+  using mozilla::dom::EventTarget::RemoveEventListener;
   using nsIDOMEventTarget::AddEventListener;
+  virtual void AddEventListener(const nsAString& aType,
+                                nsIDOMEventListener* aListener,
+                                bool aUseCapture,
+                                const mozilla::dom::Nullable<bool>& aWantsUntrusted,
+                                mozilla::ErrorResult& aRv) MOZ_OVERRIDE;
   using nsIDOMEventTarget::AddSystemEventListener;
 
   /**
