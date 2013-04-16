@@ -9323,6 +9323,13 @@ nsIDocument::CaretPositionFromPoint(float aX, float aY)
     if (textArea || (input &&
                      NS_SUCCEEDED(input->MozIsTextField(false, &isText)) &&
                      isText)) {
+      // If the anonymous content node has a child, then we need to make sure
+      // that we get the appropriate child, as otherwise the offset may not be
+      // correct when we construct a range for it.
+      nsCOMPtr<nsIContent> firstChild = anonNode->GetFirstChild();
+      if (firstChild) {
+        anonNode = firstChild;
+      }
       offset = nsContentUtils::GetAdjustedOffsetInTextControl(ptFrame, offset);
       node = nonanon;
     } else {
@@ -9332,6 +9339,9 @@ nsIDocument::CaretPositionFromPoint(float aX, float aY)
   }
 
   nsRefPtr<nsDOMCaretPosition> aCaretPos = new nsDOMCaretPosition(node, offset);
+  if (nodeIsAnonymous) {
+    aCaretPos->SetAnonymousContentNode(anonNode);
+  }
   return aCaretPos.forget();
 }
 
