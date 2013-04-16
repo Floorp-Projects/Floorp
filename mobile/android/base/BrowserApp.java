@@ -801,12 +801,7 @@ abstract public class BrowserApp extends GeckoApp
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        String url = null;
-        // Don't update the url in the toolbar if the activity was just launched to pick a site.
-        boolean pickSite = data.getStringExtra(AwesomeBar.TARGET_KEY).equals(AwesomeBar.Target.PICK_SITE.toString());
-        if (resultCode == Activity.RESULT_OK && !pickSite) {
-            url = data.getStringExtra(AwesomeBar.URL_KEY);
-        }
+        String url = resultCode == Activity.RESULT_OK ? data.getStringExtra(AwesomeBar.URL_KEY) : null;
         mBrowserToolbar.fromAwesomeBarSearch(url);
     }
 
