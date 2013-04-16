@@ -2674,9 +2674,6 @@ RasterImage::WriteToDecoder(const char *aBuffer, uint32_t aCount)
   mDecoder->Write(aBuffer, aCount);
   mInDecoder = false;
 
-  if (!mDecoder)
-    return NS_ERROR_FAILURE;
-
   CONTAINER_ENSURE_SUCCESS(mDecoder->GetDecoderError());
 
   // Keep track of the total number of bytes written over the lifetime of the
