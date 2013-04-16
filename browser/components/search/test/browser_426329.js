@@ -1,9 +1,9 @@
 // Instead of loading ChromeUtils.js into the test scope in browser-test.js for all tests,
 // we only need ChromeUtils.js for a few files which is why we are using loadSubScript.
-var chromeUtils = {};
+var ChromeUtils = {};
 this._scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
                      getService(Ci.mozIJSSubScriptLoader);
-this._scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js", chromeUtils);
+this._scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js", ChromeUtils);
 
 function test() {
   waitForExplicitFinish();
@@ -153,7 +153,7 @@ function test() {
     searchBar.addEventListener("popupshowing", stopPopup, true);
     // drop on the search button so that we don't need to worry about the
     // default handlers for textboxes.
-    chromeUtils.synthesizeDrop(searchBar.searchButton, searchBar.searchButton, [[ {type: "text/plain", data: "Some Text" } ]], "copy", window, EventUtils);
+    ChromeUtils.synthesizeDrop(searchBar.searchButton, searchBar.searchButton, [[ {type: "text/plain", data: "Some Text" } ]], "copy", window);
     doOnloadOnce(function(event) {
       is(searchBar.value, "Some Text", "drop text/plain on searchbar");
       testDropInternalText();
@@ -162,7 +162,7 @@ function test() {
 
   function testDropInternalText() {
     init();
-    chromeUtils.synthesizeDrop(searchBar.searchButton, searchBar.searchButton, [[ {type: "text/x-moz-text-internal", data: "More Text" } ]], "copy", window, EventUtils);
+    ChromeUtils.synthesizeDrop(searchBar.searchButton, searchBar.searchButton, [[ {type: "text/x-moz-text-internal", data: "More Text" } ]], "copy", window);
     doOnloadOnce(function(event) {
       is(searchBar.value, "More Text", "drop text/x-moz-text-internal on searchbar");
       testDropLink();
@@ -171,7 +171,7 @@ function test() {
 
   function testDropLink() {
     init();
-    chromeUtils.synthesizeDrop(searchBar.searchButton, searchBar.searchButton, [[ {type: "text/uri-list", data: "http://www.mozilla.org" } ]], "copy", window, EventUtils);
+    ChromeUtils.synthesizeDrop(searchBar.searchButton, searchBar.searchButton, [[ {type: "text/uri-list", data: "http://www.mozilla.org" } ]], "copy", window);
     is(searchBar.value, "More Text", "drop text/uri-list on searchbar");
     SimpleTest.executeSoon(testRightClick);
   }
