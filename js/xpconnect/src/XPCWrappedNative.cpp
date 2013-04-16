@@ -503,7 +503,9 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
 
     RootedObject parent(ccx, Scope->GetGlobalJSObject());
 
-    RootedValue newParentVal(ccx, JSVAL_NULL);
+    jsval newParentVal = JSVAL_NULL;
+    XPCMarkableJSVal newParentVal_markable(&newParentVal);
+    AutoMarkingJSVal newParentVal_automarker(ccx, &newParentVal_markable);
     JSBool needsSOW = false;
     JSBool needsCOW = false;
 
@@ -2439,6 +2441,7 @@ CallMethodHelper::GatherAndConvertResults()
         const nsXPTType& type = paramInfo.GetType();
         nsXPTCVariant* dp = GetDispatchParam(i);
         RootedValue v(mCallContext, NullValue());
+        AUTO_MARK_JSVAL(mCallContext, v.address());
         uint32_t array_count = 0;
         nsXPTType datum_type;
         bool isArray = type.IsArray();

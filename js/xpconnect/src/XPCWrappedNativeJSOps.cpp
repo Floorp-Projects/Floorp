@@ -424,6 +424,9 @@ DefinePropertyIfFound(XPCCallContext& ccx,
     if (!member->NewFunctionObject(ccx, iface, obj, funval.address()))
         return false;
 
+    // protect funobj until it is actually attached
+    AUTO_MARK_JSVAL(ccx, funval);
+
 #ifdef off_DEBUG_jband
     {
         static int cloneCount = 0;
