@@ -329,7 +329,7 @@ JSObject_to_PObjectWrapperParent(JSContext* cx, JSObject* from, PObjectWrapperPa
 ObjectWrapperParent::
 JSObject_from_PObjectWrapperParent(JSContext* cx,
                                    const PObjectWrapperParent* from,
-                                   JSMutableHandleObject to)
+                                   JS::MutableHandleObject to)
 {
     const ObjectWrapperParent* owp =
         static_cast<const ObjectWrapperParent*>(from);
@@ -575,7 +575,7 @@ ObjectWrapperParent::CPOW_NewEnumerate(JSContext *cx, JSHandleObject obj,
 
 /*static*/ JSBool
 ObjectWrapperParent::CPOW_NewResolve(JSContext *cx, JSHandleObject obj, JSHandleId id,
-                                     unsigned flags, JSMutableHandleObject objp)
+                                     unsigned flags, JS::MutableHandleObject objp)
 {
     CPOW_LOG(("Calling CPOW_NewResolve (%s)...",
               JSVAL_TO_CSTR(cx, id)));
