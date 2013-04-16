@@ -6,6 +6,7 @@
 #include "TiledContentHost.h"
 #include "mozilla/layers/Effects.h"
 #include "nsPrintfCString.h"
+#include "ThebesLayerComposite.h"
 
 namespace mozilla {
 using namespace gfx;
@@ -57,6 +58,13 @@ TiledContentHost::~TiledContentHost()
 {
   mMainMemoryTiledBuffer.ReadUnlock();
   mLowPrecisionMainMemoryTiledBuffer.ReadUnlock();
+}
+
+void
+TiledContentHost::Attach(Layer* aLayer, Compositor* aCompositor)
+{
+  CompositableHost::Attach(aLayer, aCompositor);
+  static_cast<ThebesLayerComposite*>(aLayer)->EnsureTiled();
 }
 
 void

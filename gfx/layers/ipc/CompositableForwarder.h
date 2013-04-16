@@ -20,6 +20,7 @@ class TextureFactoryIdentifier;
 class SurfaceDescriptor;
 class ThebesBufferData;
 class TextureClient;
+class BasicTiledLayerBuffer;
 
 /**
  * A transaction is a set of changes that happenned on the content side, that
@@ -68,6 +69,9 @@ public:
    * that is TextureClient/Hosts.
    */
   virtual void DestroyThebesBuffer(CompositableClient* aCompositable) = 0;
+
+  virtual void PaintedTiledLayerBuffer(CompositableClient* aCompositable,
+                                       BasicTiledLayerBuffer* aTiledLayerBuffer) = 0;
 
   /**
    * Communicate to the compositor that the texture identified by aCompositable
