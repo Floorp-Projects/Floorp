@@ -6,3 +6,11 @@
 
 MODULE = 'js'
 
+EXPORTS.mozilla.jsipc += [
+    'CPOWTypes.h',
+    'ContextWrapperChild.h',
+    'ContextWrapperParent.h',
+    'ObjectWrapperChild.h',
+    'ObjectWrapperParent.h',
+]
+

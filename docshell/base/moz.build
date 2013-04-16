@@ -35,3 +35,15 @@ XPIDL_SOURCES += [
 
 MODULE = 'docshell'
 
+EXPORTS += [
+    'SerializedLoadContext.h',
+    'nsDocShellLoadTypes.h',
+    'nsILinkHandler.h',
+    'nsIWebShellServices.h',
+]
+
+EXPORTS.mozilla += [
+    'IHistory.h',
+    'LoadContext.h',
+]
+

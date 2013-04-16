@@ -16,15 +16,6 @@ LIBXUL_LIBRARY = 1
 
 FORCE_STATIC_LIB = 1
 
-EXPORTS = ftpCore.h
-
-EXPORTS_NAMESPACES = mozilla/net
-
-EXPORTS_mozilla/net += \
-  FTPChannelParent.h \
-  FTPChannelChild.h  \
-  $(NULL)
-
 CPPSRCS = \
   nsFtpProtocolHandler.cpp \
   nsFTPChannel.cpp \

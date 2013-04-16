@@ -6,3 +6,7 @@
 
 MODULE = 'xpcwrappers'
 
+EXPORTS += [
+    'WrapperFactory.h',
+]
+

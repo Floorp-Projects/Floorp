@@ -36,10 +36,6 @@ CSRCS		= \
 
 HOST_CSRCS	= $(CSRCS)
 
-EXPORTS		= \
-		bzlib.h \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 # The intermediate (.ii/.s) files for host and target can have the same name...

@@ -22,3 +22,44 @@ XPIDL_FLAGS += [
 
 MODULE = 'dom'
 
+EXPORTS += [
+    'Crypto.h',
+    'nsContentPermissionHelper.h',
+    'nsDOMCID.h',
+    'nsDOMClassInfoClasses.h',
+    'nsDOMClassInfoID.h',
+    'nsDOMJSUtils.h',
+    'nsDOMString.h',
+    'nsFocusManager.h',
+    'nsIDOMClassInfo.h',
+    'nsIDOMScriptObjectFactory.h',
+    'nsIGlobalObject.h',
+    'nsIJSEventListener.h',
+    'nsIJSNativeInitializer.h',
+    'nsIScriptContext.h',
+    'nsIScriptExternalNameSet.h',
+    'nsIScriptGlobalObject.h',
+    'nsIScriptGlobalObjectOwner.h',
+    'nsIScriptNameSpaceManager.h',
+    'nsIScriptObjectPrincipal.h',
+    'nsIScriptRuntime.h',
+    'nsIScriptTimeoutHandler.h',
+    'nsJSEnvironment.h',
+    'nsJSUtils.h',
+    'nsPIDOMWindow.h',
+    'nsPIWindowRoot.h',
+    'nsStructuredCloneContainer.h',
+    'nsWindowMemoryReporter.h',
+    'nsWrapperCache.h',
+    'nsWrapperCacheInlines.h',
+]
+
+EXPORTS.mozilla.dom += [
+    'DOMCursor.h',
+    'DOMError.h',
+    'DOMRequest.h',
+    'ScreenOrientation.h',
+    'StructuredCloneTags.h',
+    'URL.h',
+]
+

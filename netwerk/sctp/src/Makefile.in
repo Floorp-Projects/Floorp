@@ -19,8 +19,6 @@ LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1
 NO_PROFILE_GUIDED_OPTIMIZE = 1 # Don't PGO
 
-EXPORTS_NAMESPACES = mozilla/net
-
 ifeq ($(OS_TARGET),Android)
 CPPSRCS = \
   ifaddrs_android.cpp \
@@ -53,10 +51,6 @@ CSRCS = \
   sctp_usrreq.c \
   sctputil.c \
   sctp6_usrreq.c \
-  $(NULL)
-
-EXPORTS_mozilla/net = \
-  usrsctp.h \
   $(NULL)
 
 LOCAL_INCLUDES = \

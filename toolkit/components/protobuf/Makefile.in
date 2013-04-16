@@ -40,34 +40,6 @@ CPPSRCS = \
 # These exports should only be included by source code automatically generated
 # by the protocol compiler, protoc. The verbose naming is due to directory
 # structure included in the generated code.
-EXPORTS_NAMESPACES = protobuf protobuf/google protobuf/google/protobuf protobuf/google/protobuf/stubs protobuf/google/protobuf/io
-
-EXPORTS_protobuf/google/protobuf = \
-  extension_set.h \
-  generated_message_util.h \
-  message_lite.h \
-  repeated_field.h \
-  wire_format_lite.h \
-  wire_format_lite_inl.h \
-  $(NULL)
-
-EXPORTS_protobuf/google/protobuf/stubs = \
-  common.h \
-  hash.h \
-  map-util.h \
-  once.h \
-  stl_util-inl.h \
-  $(NULL)
-
-EXPORTS_protobuf/google/protobuf/io = \
-  coded_stream.h \
-  coded_stream_inl.h \
-  package_info.h \
-  zero_copy_stream.h \
-  zero_copy_stream_impl.h \
-  zero_copy_stream_impl_lite.h \
-  $(NULL)
-
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 

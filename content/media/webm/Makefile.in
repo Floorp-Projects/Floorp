@@ -14,11 +14,6 @@ LIBRARY_NAME	= gkconwebm_s
 LIBXUL_LIBRARY 	= 1
 
 
-EXPORTS		+= \
-		WebMDecoder.h \
-		WebMReader.h \
-		$(NULL)
-
 CPPSRCS		= \
 		WebMBufferedParser.cpp \
 		WebMDecoder.cpp \

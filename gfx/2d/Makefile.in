@@ -14,26 +14,6 @@ LIBRARY_NAME	= gfx2d
 LIBXUL_LIBRARY	= 1
 EXPORT_LIBRARY	= 1
 
-EXPORTS_NAMESPACES = mozilla/gfx
-EXPORTS_mozilla/gfx	= \
-        2D.h \
-        BasePoint.h \
-        BasePoint3D.h \
-        BasePoint4D.h \
-        BaseMargin.h \
-        BaseRect.h \
-        BaseSize.h \
-        Blur.h \
-        PathHelpers.h \
-        Point.h \
-        Matrix.h \
-        Rect.h \
-        Scale.h \
-        Types.h \
-        Tools.h \
-        UserData.h \
-	$(NULL)
-
 CPPSRCS	= \
         Factory.cpp \
         Rect.cpp \
@@ -70,11 +50,6 @@ CPPSRCS	+= \
 
 CMMSRCS = \
 	   QuartzSupport.mm \
-	   $(NULL)
-
-EXPORTS_mozilla/gfx	+= \
-	   QuartzSupport.h \
-	   MacIOSurface.h \
 	   $(NULL)
 endif
 

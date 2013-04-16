@@ -11,3 +11,7 @@ XPIDL_SOURCES += [
 
 MODULE = 'layout_debug'
 
+EXPORTS += [
+    'nsLayoutDebugCIID.h',
+]
+

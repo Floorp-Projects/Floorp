@@ -4,3 +4,28 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+EXPORTS.mozilla.dom.mobilemessage += [
+    'SmsChild.h',
+    'SmsParent.h',
+    'MobileMessageService.h',
+    'SmsServicesFactory.h',
+    'Constants.h',
+    'Types.h',
+    'MobileMessageCallback.h',
+]
+
+if not CONFIG['MOZ_B2G_RIL']:
+    EXPORTS.mozilla.dom.mobilemessage += [
+        'MobileMessageDatabaseService.h',
+        'MmsService.h',
+    ]
+
+EXPORTS.mozilla.dom += [
+    'SmsManager.h',
+    'MobileMessageManager.h',
+    'SmsMessage.h',
+    'MmsMessage.h',
+    'SmsSegmentInfo.h',
+    'SmsFilter.h',
+]
+

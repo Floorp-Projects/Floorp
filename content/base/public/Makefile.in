@@ -10,52 +10,5 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 
-EXPORTS		= \
-mozFlushType.h \
-nsIContent.h \
-nsIAttribute.h \
-nsIContentIterator.h \
-nsContentPolicyUtils.h \
-nsContentUtils.h \
-nsDocElementCreatedNotificationRunner.h \
-nsIDocument.h \
-nsIDocumentInlines.h \
-nsDeprecatedOperationList.h \
-nsIDocumentObserver.h \
-nsIMutationObserver.h \
-nsINameSpaceManager.h \
-nsINode.h \
-nsINodeInfo.h \
-nsINodeList.h \
-nsIScriptElement.h \
-nsIStyleSheetLinkingElement.h \
-nsIContentSerializer.h \
-nsIXPathEvaluatorInternal.h \
-nsCaseTreatment.h \
-nsContentCID.h \
-nsCopySupport.h \
-nsContentCreatorFunctions.h \
-nsDOMFile.h \
-nsLineBreaker.h \
-nsReferencedElement.h \
-nsTreeSanitizer.h \
-nsViewportInfo.h \
-nsXMLNameSpaceMap.h \
-nsHostObjectProtocolHandler.h \
-$(NULL)
-
-EXPORTS_NAMESPACES = mozilla/dom mozilla
-
-EXPORTS_mozilla/dom = \
-		DirectionalityUtils.h \
-		Element.h \
-		FragmentOrElement.h \
-		FromParser.h \
-		$(NULL)
-
-EXPORTS_mozilla = \
-		CORSMode.h \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

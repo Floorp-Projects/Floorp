@@ -62,46 +62,10 @@ CPPSRCS		+= nsLocalFileUnix.cpp
 endif # windows
 endif # OS2
 
-EXPORTS		= \
-		nsAnonymousTemporaryFile.h \
-		nsAppDirectoryServiceDefs.h \
-		nsDirectoryService.h \
-		nsDirectoryServiceAtomList.h \
-		nsEscape.h \
-		nsLinebreakConverter.h \
-		nsLocalFile.h \
-		nsMultiplexInputStream.h \
-		nsNativeCharsetUtils.h \
-		nsScriptableInputStream.h \
-		nsStorageStream.h \
-		nsStringStream.h \
-		nsStreamUtils.h \
-		nsUnicharInputStream.h \
-		nsWildCard.h \
-		SpecialSystemDirectory.h \
-		$(NULL)
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-EXPORTS		+= nsLocalFileOS2.h
-else
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-EXPORTS		+= nsLocalFileWin.h
-else
-EXPORTS		+= nsLocalFileUnix.h
-endif # windows
-endif # os2
-
-EXPORTS_NAMESPACES = mozilla
-EXPORTS_mozilla = \
-    Base64.h \
-    $(NULL)
-
 SDK_HEADERS =  \
 		nsDirectoryServiceDefs.h \
 		nsDirectoryServiceUtils.h \
 		$(NULL)
-
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1

@@ -15,19 +15,6 @@ LIBRARY_NAME	= neckobase_s
 LIBXUL_LIBRARY  = 1
 FAIL_ON_WARNINGS := 1
 
-EXPORTS = \
-		nsMIMEInputStream.h \
-		nsURLHelper.h \
-		nsFileStreams.h \
-		$(NULL)
-
-EXPORTS_NAMESPACES = mozilla/net
-
-EXPORTS_mozilla/net = \
-		Dashboard.h \
-		DashboardTypes.h \
-		$(NULL)
-
 CPPSRCS		= \
 		BackgroundFileSaver.cpp \
 		nsTransportUtils.cpp \

@@ -32,13 +32,6 @@ DEFINES += -DMOZ_STORAGE_MEMORY
 endif
 endif
 
-EXPORTS_NAMESPACES = mozilla/storage
-
-EXPORTS_mozilla/storage = \
-  Variant.h \
-  Variant_inl.h \
-  $(NULL)
-
 CPPSRCS = \
   mozStorageService.cpp \
   mozStorageConnection.cpp \

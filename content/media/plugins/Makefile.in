@@ -12,13 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME	= gkconmediaplugins_s
 LIBXUL_LIBRARY 	= 1
 
-EXPORTS		+= \
-		MPAPI.h \
-		MediaPluginHost.h \
-		MediaPluginDecoder.h \
-		MediaPluginReader.h \
-		$(NULL)
-
 CPPSRCS		= \
 		MediaPluginHost.cpp \
 		MediaPluginDecoder.cpp \

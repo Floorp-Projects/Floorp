@@ -23,8 +23,6 @@ CPPSRCS		= \
 		nsJohabToUnicode.cpp \
 		$(NULL)
 
-EXPORTS		= nsUCvKOCID.h
-
 LOCAL_INCLUDES = -I$(srcdir)/../util
 
 include $(topsrcdir)/config/rules.mk

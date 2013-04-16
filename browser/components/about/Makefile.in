@@ -14,10 +14,6 @@ LIBRARY_NAME = browserabout_s
 FORCE_STATIC_LIB = 1
 USE_STATIC_LIBS = 1
 
-EXPORTS_NAMESPACES = mozilla/browser
-
-EXPORTS_mozilla/browser = AboutRedirector.h
-
 CPPSRCS = AboutRedirector.cpp
 
 LOCAL_INCLUDES = -I$(srcdir)/../build
