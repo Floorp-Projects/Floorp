@@ -24,16 +24,39 @@ var checkMotion = function(event) {
   window.removeEventListener("devicemotion", checkMotion, true);
 
   is(event.acceleration.x, 1.5);
-  is(event.acceleration.y, 1.5);
-  is(event.acceleration.z, 1.5);
+  is(event.acceleration.y, 2.5);
+  is(event.acceleration.z, 3.5);
 
-  is(event.accelerationIncludingGravity.x, 1.5);
-  is(event.accelerationIncludingGravity.y, 1.5);
-  is(event.accelerationIncludingGravity.z, 1.5);
+  is(event.accelerationIncludingGravity.x, 4.5);
+  is(event.accelerationIncludingGravity.y, 5.5);
+  is(event.accelerationIncludingGravity.z, 6.5);
 
-  is(event.rotationRate.alpha, 1.5);
-  is(event.rotationRate.beta, 1.5);
-  is(event.rotationRate.gamma, 1.5);
+  is(event.rotationRate.alpha, 7.5);
+  is(event.rotationRate.beta, 8.5);
+  is(event.rotationRate.gamma, 9.5);
+
+  var e = document.createEvent("DeviceMotionEvent");
+  e.initDeviceMotionEvent('devicemotion', true, true,
+                              null, null, null, 0);
+  is(e.acceleration, null);
+  is(e.accelerationIncludingGravity, null);
+  is(e.rotationRate, null);
+
+  e.initDeviceMotionEvent('devicemotion', true, true,
+                          {}, {}, {}, 0);
+
+  ok(isNaN(e.acceleration.x));
+  ok(isNaN(e.acceleration.y));
+  ok(isNaN(e.acceleration.z));
+
+  ok(isNaN(e.accelerationIncludingGravity.x));
+  ok(isNaN(e.accelerationIncludingGravity.y));
+  ok(isNaN(e.accelerationIncludingGravity.z));
+
+  ok(isNaN(e.rotationRate.alpha));
+  ok(isNaN(e.rotationRate.beta));
+  ok(isNaN(e.rotationRate.gamma));
+
   SimpleTest.finish();
 };
 
@@ -44,9 +67,9 @@ ok(!!event, "Should have seen DeviceMotionEvent!");
 
 event = document.createEvent("DeviceMotionEvent");
 event.initDeviceMotionEvent('devicemotion', true, true, 
-                            {x:1.5,y:1.5,z:1.5},
-                            {x:1.5,y:1.5,z:1.5},
-                            {alpha:1.5,beta:1.5,gamma:1.5},
+                            {x:1.5,y:2.5,z:3.5},
+                            {x:4.5,y:5.5,z:6.5},
+                            {alpha:7.5,beta:8.5,gamma:9.5},
                             0);
 window.dispatchEvent(event);
 

@@ -46,6 +46,7 @@ webidl_files = \
   CSSValueList.webidl \
   DelayNode.webidl \
   DesktopNotification.webidl \
+  DeviceMotionEvent.webidl \
   Document.webidl \
   DocumentFragment.webidl \
   DocumentType.webidl \
