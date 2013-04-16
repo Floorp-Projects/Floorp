@@ -362,6 +362,13 @@ BluetoothServiceChildProcess::StopInternal()
 }
 
 bool
+BluetoothServiceChildProcess::IsEnabledInternal()
+{
+  MOZ_NOT_REACHED("This should never be called!");
+  return false;
+}
+
+bool
 BluetoothServiceChildProcess::IsConnected(uint16_t aProfileId)
 {
   MOZ_NOT_REACHED("This should never be called!");
