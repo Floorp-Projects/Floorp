@@ -74,6 +74,8 @@ let RILQUIRKS_V5_LEGACY = libcutils.property_get("ro.moz.ril.v5_legacy", "true")
 let RILQUIRKS_REQUEST_USE_DIAL_EMERGENCY_CALL = libcutils.property_get("ro.moz.ril.dial_emergency_call", "false") === "true";
 let RILQUIRKS_MODEM_DEFAULTS_TO_EMERGENCY_MODE = libcutils.property_get("ro.moz.ril.emergency_by_default", "false") === "true";
 let RILQUIRKS_SIM_APP_STATE_EXTRA_FIELDS = libcutils.property_get("ro.moz.ril.simstate_extra_field", "false") === "true";
+// Needed for call-waiting on Peak device
+let RILQUIRKS_EXTRA_UINT32_2ND_CALL = libcutils.property_get("ro.moz.ril.extra_int_2nd_call", "false") == "true";
 
 // Marker object.
 let PENDING_NETWORK_TYPE = {};
@@ -4366,6 +4368,13 @@ RIL[REQUEST_GET_CURRENT_CALLS] = function REQUEST_GET_CURRENT_CALLS(length, opti
   let calls = {};
   for (let i = 0; i < calls_length; i++) {
     let call = {};
+
+    // Extra uint32 field to get correct callIndex and rest of call data for
+    // call waiting feature.
+    if (RILQUIRKS_EXTRA_UINT32_2ND_CALL && i > 0) {
+      Buf.readUint32();
+    }
+
     call.state          = Buf.readUint32(); // CALL_STATE_*
     call.callIndex      = Buf.readUint32(); // GSM index (1-based)
     call.toa            = Buf.readUint32();
