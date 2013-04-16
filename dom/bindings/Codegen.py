@@ -4800,7 +4800,7 @@ class CGNewResolveHook(CGAbstractBindingMethod):
         self._needNewResolve = descriptor.interface.getExtendedAttribute("NeedNewResolve")
         args = [Argument('JSContext*', 'cx'), Argument('JSHandleObject', 'obj_'),
                 Argument('JSHandleId', 'id'), Argument('unsigned', 'flags'),
-                Argument('JSMutableHandleObject', 'objp')]
+                Argument('JS::MutableHandle<JSObject*>', 'objp')]
         # Our "self" is actually the callee in this case, not the thisval.
         CGAbstractBindingMethod.__init__(
             self, descriptor, NEWRESOLVE_HOOK_NAME,

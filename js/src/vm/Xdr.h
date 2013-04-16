@@ -208,7 +208,7 @@ class XDRState {
 
     bool codeChars(jschar *chars, size_t nchars);
 
-    bool codeFunction(JSMutableHandleObject objp);
+    bool codeFunction(JS::MutableHandleObject objp);
     bool codeScript(MutableHandleScript scriptp);
 
     void initScriptPrincipals(JSScript *script) {

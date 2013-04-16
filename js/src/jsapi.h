@@ -803,7 +803,6 @@ typedef JS::Handle<JSString*> JSHandleString;
 typedef JS::Handle<JS::Value> JSHandleValue;
 typedef JS::Handle<jsid> JSHandleId;
 
-typedef JS::MutableHandle<JSObject*>   JSMutableHandleObject;
 typedef JS::MutableHandle<JSFunction*> JSMutableHandleFunction;
 typedef JS::MutableHandle<JSString*>   JSMutableHandleString;
 typedef JS::MutableHandle<JS::Value>   JSMutableHandleValue;
@@ -918,7 +917,7 @@ typedef JSBool
  */
 typedef JSBool
 (* JSNewResolveOp)(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags,
-                   JSMutableHandleObject objp);
+                   JS::MutableHandleObject objp);
 
 /*
  * Convert obj to the given type, returning true with the resulting value in
