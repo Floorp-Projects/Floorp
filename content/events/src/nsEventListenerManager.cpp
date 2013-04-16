@@ -201,7 +201,7 @@ nsEventListenerManager::GetTargetAsInnerWindow() const
 
 void
 nsEventListenerManager::AddEventListenerInternal(
-                          nsIDOMEventListener* aListener,
+                          const EventListenerHolder& aListener,
                           uint32_t aType,
                           nsIAtom* aTypeAtom,
                           const EventListenerFlags& aFlags,
@@ -214,7 +214,9 @@ nsEventListenerManager::AddEventListenerInternal(
     return;
   }
 
-  nsRefPtr<nsIDOMEventListener> kungFuDeathGrip = aListener;
+  // Since there is no public API to call us with an EventListenerHolder, we
+  // know that there's an EventListenerHolder on the stack holding a strong ref
+  // to the listener.
 
   nsListenerStruct* ls;
   uint32_t count = mListeners.Length();
@@ -243,8 +245,11 @@ nsEventListenerManager::AddEventListenerInternal(
   // Detect the type of event listener.
   nsCOMPtr<nsIXPConnectWrappedJS> wjs;
   if (aFlags.mListenerIsJSListener) {
+    MOZ_ASSERT(!aListener.HasWebIDLCallback());
     ls->mListenerType = eJSEventListener;
-  } else if ((wjs = do_QueryInterface(aListener))) {
+  } else if (aListener.HasWebIDLCallback()) {
+    ls->mListenerType = eWebIDLListener;
+  } else if ((wjs = do_QueryInterface(aListener.GetXPCOMCallback()))) {
     ls->mListenerType = eWrappedJSListener;
   } else {
     ls->mListenerType = eNativeListener;
@@ -427,7 +432,7 @@ nsEventListenerManager::DisableDevice(uint32_t aType)
 
 void
 nsEventListenerManager::RemoveEventListenerInternal(
-                          nsIDOMEventListener* aListener, 
+                          const EventListenerHolder& aListener, 
                           uint32_t aType,
                           nsIAtom* aUserType,
                           const EventListenerFlags& aFlags,
@@ -501,7 +506,7 @@ ListenerCanHandle(nsListenerStruct* aLs, nsEvent* aEvent)
 }
 
 void
-nsEventListenerManager::AddEventListenerByType(nsIDOMEventListener *aListener, 
+nsEventListenerManager::AddEventListenerByType(const EventListenerHolder& aListener, 
                                                const nsAString& aType,
                                                const EventListenerFlags& aFlags)
 {
@@ -512,7 +517,7 @@ nsEventListenerManager::AddEventListenerByType(nsIDOMEventListener *aListener,
 
 void
 nsEventListenerManager::RemoveEventListenerByType(
-                          nsIDOMEventListener* aListener,
+                          const EventListenerHolder& aListener,
                           const nsAString& aType,
                           const EventListenerFlags& aFlags)
 {
@@ -565,7 +570,8 @@ nsEventListenerManager::SetEventHandlerInternal(nsIScriptContext *aContext,
                                aHandler, getter_AddRefs(scriptListener));
 
     if (NS_SUCCEEDED(rv)) {
-      AddEventListenerInternal(scriptListener, eventType, aName, flags, true);
+      EventListenerHolder holder(scriptListener);
+      AddEventListenerInternal(holder, eventType, aName, flags, true);
 
       ls = FindEventHandler(eventType, aName);
     }
@@ -1036,7 +1042,7 @@ nsEventListenerManager::Disconnect()
 
 void
 nsEventListenerManager::AddEventListener(const nsAString& aType,
-                                         nsIDOMEventListener* aListener,
+                                         const EventListenerHolder& aListener,
                                          bool aUseCapture,
                                          bool aWantsUntrusted)
 {
@@ -1048,7 +1054,7 @@ nsEventListenerManager::AddEventListener(const nsAString& aType,
 
 void
 nsEventListenerManager::RemoveEventListener(const nsAString& aType, 
-                                            nsIDOMEventListener* aListener, 
+                                            const EventListenerHolder& aListener, 
                                             bool aUseCapture)
 {
   EventListenerFlags flags;
@@ -1066,7 +1072,8 @@ nsEventListenerManager::AddListenerForAllEvents(nsIDOMEventListener* aListener,
   flags.mCapture = aUseCapture;
   flags.mAllowUntrustedEvents = aWantsUntrusted;
   flags.mInSystemGroup = aSystemEventGroup;
-  AddEventListenerInternal(aListener, NS_EVENT_TYPE_ALL, nullptr, flags,
+  EventListenerHolder holder(aListener);
+  AddEventListenerInternal(holder, NS_EVENT_TYPE_ALL, nullptr, flags,
                            false, true);
 }
 
@@ -1078,7 +1085,8 @@ nsEventListenerManager::RemoveListenerForAllEvents(nsIDOMEventListener* aListene
   EventListenerFlags flags;
   flags.mCapture = aUseCapture;
   flags.mInSystemGroup = aSystemEventGroup;
-  RemoveEventListenerInternal(aListener, NS_EVENT_TYPE_ALL, nullptr, flags,
+  EventListenerHolder holder(aListener);
+  RemoveEventListenerInternal(holder, NS_EVENT_TYPE_ALL, nullptr, flags,
                               true);
 }
 
