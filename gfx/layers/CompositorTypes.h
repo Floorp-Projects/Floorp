@@ -74,7 +74,7 @@ enum TextureHostFlags
 {
   TEXTURE_HOST_DEFAULT = 0,       // The default texture host for the given
                                   // SurfaceDescriptor
-  TEXTURE_HOST_TILED = 1 << 0,    // A texture host that supports tiling
+  TEXTURE_HOST_TILED = 1 << 0     // A texture host that supports tiling
 };
 
 /**

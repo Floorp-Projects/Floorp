@@ -389,7 +389,7 @@ LayerManagerComposite::ComputeRenderIntegrityInternal(Layer* aLayer,
     TiledLayerComposer* composer = nullptr;
     LayerComposite* shadow = aLayer->AsLayerComposite();
     if (shadow) {
-      composer = shadow->AsTiledLayerComposer();
+      composer = shadow->GetTiledLayerComposer();
       if (composer) {
         incompleteRegion.Sub(incompleteRegion, composer->GetValidLowPrecisionRegion());
         if (!incompleteRegion.IsEmpty()) {

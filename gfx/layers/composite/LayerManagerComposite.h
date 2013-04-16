@@ -287,12 +287,7 @@ public:
 
   virtual void CleanupResources() = 0;
 
-  virtual TiledLayerComposer* AsTiledLayerComposer() { return NULL; }
-
-  virtual void EnsureBuffer(CompositableType aType)
-  {
-    MOZ_ASSERT(false, "Should not be called unless overriden.");
-  }
+  virtual TiledLayerComposer* GetTiledLayerComposer() { return nullptr; }
 
 protected:
   LayerManagerComposite* mCompositeManager;
