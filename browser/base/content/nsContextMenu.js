@@ -396,7 +396,7 @@ nsContextMenu.prototype = {
     this.showItem("context-media-showcontrols", onMedia && !this.target.controls);
     this.showItem("context-media-hidecontrols", onMedia && this.target.controls);
     this.showItem("context-video-fullscreen", this.onVideo && this.target.ownerDocument.mozFullScreenElement == null);
-    var statsShowing = this.onVideo && this.target.wrappedJSObject.mozMediaStatisticsShowing;
+    var statsShowing = this.onVideo && XPCNativeWrapper.unwrap(this.target).mozMediaStatisticsShowing;
     this.showItem("context-video-showstats", this.onVideo && this.target.controls && !statsShowing);
     this.showItem("context-video-hidestats", this.onVideo && this.target.controls && statsShowing);
 
@@ -1505,14 +1505,10 @@ nsContextMenu.prototype = {
       case "showcontrols":
         media.setAttribute("controls", "true");
         break;
-      case "showstats":
-        var event = document.createEvent("CustomEvent");
-        event.initCustomEvent("media-showStatistics", false, true, true);
-        media.dispatchEvent(event);
-        break;
       case "hidestats":
-        var event = document.createEvent("CustomEvent");
-        event.initCustomEvent("media-showStatistics", false, true, false);
+      case "showstats":
+        var event = media.ownerDocument.createEvent("CustomEvent");
+        event.initCustomEvent("media-showStatistics", false, true, command == "showstats");
         media.dispatchEvent(event);
         break;
     }
