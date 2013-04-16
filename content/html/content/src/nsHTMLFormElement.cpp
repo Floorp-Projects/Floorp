@@ -2199,16 +2199,6 @@ nsFormControlList::FlushPendingNotifications()
   }
 }
 
-static PLDHashOperator
-ControlTraverser(const nsAString& key, nsISupports* control, void* userArg)
-{
-  nsCycleCollectionTraversalCallback *cb = 
-    static_cast<nsCycleCollectionTraversalCallback*>(userArg);
- 
-  cb->NoteXPCOMChild(control);
-  return PL_DHASH_NEXT;
-}
-
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsFormControlList)
   tmp->Clear();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
