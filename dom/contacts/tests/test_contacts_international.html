@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html>
 <!--
-https://bugzilla.mozilla.org/show_bug.cgi?id={815833}
+https://bugzilla.mozilla.org/show_bug.cgi?id=815833
 -->
 <head>
-  <title>Test for Bug {815833} WebContacts</title>
+  <title>Test for Bug 815833 WebContacts</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id={815833}">Mozilla Bug {815833}</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=815833">Mozilla Bug 815833</a>
 <p id="display"></p>
 <div id="content" style="display: none">
 
@@ -28,7 +28,7 @@ if (!SpecialPowers.getBoolPref("dom.mozContacts.enabled")) {
   comp.utils.import("resource://gre/modules/PermissionPromptHelper.jsm");
   SpecialPowers.setBoolPref("dom.mozContacts.enabled", true);
 }
-    
+
 SpecialPowers.addPermission("contacts-write", true, document);
 SpecialPowers.addPermission("contacts-read", true, document);
 SpecialPowers.addPermission("contacts-create", true, document);
@@ -57,6 +57,8 @@ var properties2 = {
   name: "Testname2",
   tel: [{type: ["work"], value: shortNumber, carrier: "testCarrier"}]
 };
+
+function tests() {
 
 var req;
 var index = 0;
@@ -254,9 +256,12 @@ function permissionTest() {
   }
 }
 
+permissionTest();
+}
+
 var gContactsEnabled = SpecialPowers.getBoolPref("dom.mozContacts.enabled");
+addLoadEvent(tests);
 SimpleTest.waitForExplicitFinish();
-addLoadEvent(permissionTest);
 
 ok(true, "test passed");
 </script>
