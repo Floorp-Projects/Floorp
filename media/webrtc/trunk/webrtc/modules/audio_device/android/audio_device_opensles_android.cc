@@ -17,6 +17,7 @@
 #include <sys/syscall.h>
 #include <sys/time.h>
 #include <time.h>
+#include <dlfcn.h>
 
 #include "modules/audio_device/audio_device_utility.h"
 #include "system_wrappers/interface/event_wrapper.h"
@@ -70,7 +71,8 @@ AudioDeviceAndroidOpenSLES::AudioDeviceAndroidOpenSLES(const WebRtc_Word32 id)
       speaker_sampling_rate_(N_PLAY_SAMPLES_PER_SEC * 1000),
       max_speaker_vol_(0),
       min_speaker_vol_(0),
-      loundspeaker_on_(false) {
+      loundspeaker_on_(false),
+      opensles_lib_(0) {
   WEBRTC_OPENSL_TRACE(kTraceMemory, kTraceAudioDevice, id, "%s created",
                       __FUNCTION__);
   memset(rec_buf_, 0, sizeof(rec_buf_));
@@ -115,11 +117,46 @@ WebRtc_Word32 AudioDeviceAndroidOpenSLES::Init() {
   if (is_initialized_)
     return 0;
 
+  /* Try to dynamically open the OpenSLES library */
+  opensles_lib_ = dlopen("libOpenSLES.so", RTLD_LAZY);
+  if (!opensles_lib_) {
+      WEBRTC_OPENSL_TRACE(kTraceError, kTraceAudioDevice, id_,
+                          "  failed to dlopen OpenSLES library");
+      return -1;
+  }
+
+  typedef SLresult (*slCreateEngine_t)(SLObjectItf *,
+                                       SLuint32,
+                                       const SLEngineOption *,
+                                       SLuint32,
+                                       const SLInterfaceID *,
+                                       const SLboolean *);
+  slCreateEngine_t f_slCreateEngine =
+    (slCreateEngine_t)dlsym(opensles_lib_, "slCreateEngine");
+  SL_IID_ENGINE_ = *(SLInterfaceID *)dlsym(opensles_lib_, "SL_IID_ENGINE");
+  SL_IID_BUFFERQUEUE_ = *(SLInterfaceID *)dlsym(opensles_lib_, "SL_IID_BUFFERQUEUE");
+  SL_IID_ANDROIDCONFIGURATION_ = *(SLInterfaceID *)dlsym(opensles_lib_, "SL_IID_ANDROIDCONFIGURATION");
+  SL_IID_PLAY_ = *(SLInterfaceID *)dlsym(opensles_lib_, "SL_IID_PLAY");
+  SL_IID_ANDROIDSIMPLEBUFFERQUEUE_ = *(SLInterfaceID *)dlsym(opensles_lib_, "SL_IID_ANDROIDSIMPLEBUFFERQUEUE");
+  SL_IID_RECORD_ = *(SLInterfaceID *)dlsym(opensles_lib_, "SL_IID_RECORD");
+
+  if (!f_slCreateEngine ||
+      !SL_IID_ENGINE_ ||
+      !SL_IID_BUFFERQUEUE_ ||
+      !SL_IID_ANDROIDCONFIGURATION_ ||
+      !SL_IID_PLAY_ ||
+      !SL_IID_ANDROIDSIMPLEBUFFERQUEUE_ ||
+      !SL_IID_RECORD_) {
+      WEBRTC_OPENSL_TRACE(kTraceError, kTraceAudioDevice, id_,
+                          "  failed to find OpenSLES function");
+      return -1;
+  }
+
   SLEngineOption EngineOption[] = {
     { SL_ENGINEOPTION_THREADSAFE, static_cast<SLuint32>(SL_BOOLEAN_TRUE) },
   };
-  WebRtc_Word32 res = slCreateEngine(&sles_engine_, 1, EngineOption, 0,
-                                     NULL, NULL);
+  WebRtc_Word32 res = f_slCreateEngine(&sles_engine_, 1, EngineOption, 0,
+                                       NULL, NULL);
 
   if (res != SL_RESULT_SUCCESS) {
     WEBRTC_OPENSL_TRACE(kTraceError, kTraceAudioDevice, id_,
@@ -137,7 +174,7 @@ WebRtc_Word32 AudioDeviceAndroidOpenSLES::Init() {
 
   if ((*sles_engine_)->GetInterface(
           sles_engine_,
-          SL_IID_ENGINE,
+          SL_IID_ENGINE_,
           &sles_engine_itf_) != SL_RESULT_SUCCESS) {
     WEBRTC_OPENSL_TRACE(kTraceError, kTraceAudioDevice, id_,
                         "  failed to get SL Engine interface");
@@ -189,6 +226,8 @@ WebRtc_Word32 AudioDeviceAndroidOpenSLES::Terminate() {
     sles_engine_ = NULL;
     sles_engine_itf_ = NULL;
   }
+
+  dlclose(opensles_lib_);
 
   is_initialized_ = false;
   return 0;
@@ -285,7 +324,7 @@ WebRtc_Word32 AudioDeviceAndroidOpenSLES::SetSpeakerVolume(
   if (sles_engine_itf_ == NULL) {
     if ((*sles_engine_)->GetInterface(
             sles_engine_,
-            SL_IID_ENGINE,
+            SL_IID_ENGINE_,
             &sles_engine_itf_) != SL_RESULT_SUCCESS) {
       WEBRTC_OPENSL_TRACE(kTraceError, kTraceAudioDevice, id_,
                           "  failed to GetInterface SL Engine Interface");
@@ -726,7 +765,7 @@ WebRtc_Word32 AudioDeviceAndroidOpenSLES::InitPlayout() {
   locator_outputmix.outputMix = sles_output_mixer_;
 
   SLInterfaceID ids[N_MAX_INTERFACES] = {
-    SL_IID_BUFFERQUEUE, SL_IID_ANDROIDCONFIGURATION };
+    SL_IID_BUFFERQUEUE_, SL_IID_ANDROIDCONFIGURATION_ };
   SLboolean req[N_MAX_INTERFACES] = {
     SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE };
   res = (*sles_engine_itf_)->CreateAudioPlayer(sles_engine_itf_,
@@ -746,7 +785,7 @@ WebRtc_Word32 AudioDeviceAndroidOpenSLES::InitPlayout() {
     return -1;
   }
   res = (*sles_player_)->GetInterface(
-      sles_player_, SL_IID_PLAY,
+      sles_player_, SL_IID_PLAY_,
       static_cast<void*>(&sles_player_itf_));
   if (res != SL_RESULT_SUCCESS) {
     WEBRTC_OPENSL_TRACE(kTraceError, kTraceAudioDevice, id_,
@@ -754,7 +793,7 @@ WebRtc_Word32 AudioDeviceAndroidOpenSLES::InitPlayout() {
     return -1;
   }
   res = (*sles_player_)->GetInterface(
-      sles_player_, SL_IID_BUFFERQUEUE,
+      sles_player_, SL_IID_BUFFERQUEUE_,
       static_cast<void*>(&sles_player_sbq_itf_));
   if (res != SL_RESULT_SUCCESS) {
     WEBRTC_OPENSL_TRACE(kTraceError, kTraceAudioDevice, id_,
@@ -846,7 +885,7 @@ WebRtc_Word32 AudioDeviceAndroidOpenSLES::InitRecording() {
   record_pcm_.endianness = SL_BYTEORDER_LITTLEENDIAN;
 
   const SLInterfaceID id[2] = {
-    SL_IID_ANDROIDSIMPLEBUFFERQUEUE, SL_IID_ANDROIDCONFIGURATION };
+    SL_IID_ANDROIDSIMPLEBUFFERQUEUE_, SL_IID_ANDROIDCONFIGURATION_ };
   const SLboolean req[2] = {
     SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE };
   WebRtc_Word32 res = -1;
@@ -873,7 +912,7 @@ WebRtc_Word32 AudioDeviceAndroidOpenSLES::InitRecording() {
 
   // Get the RECORD interface - it is an implicit interface
   res = (*sles_recorder_)->GetInterface(
-      sles_recorder_, SL_IID_RECORD,
+      sles_recorder_, SL_IID_RECORD_,
       static_cast<void*>(&sles_recorder_itf_));
   if (res != SL_RESULT_SUCCESS) {
     WEBRTC_OPENSL_TRACE(kTraceError, kTraceAudioDevice, id_,
@@ -884,7 +923,7 @@ WebRtc_Word32 AudioDeviceAndroidOpenSLES::InitRecording() {
   // Get the simpleBufferQueue interface
   res = (*sles_recorder_)->GetInterface(
       sles_recorder_,
-      SL_IID_ANDROIDSIMPLEBUFFERQUEUE,
+      SL_IID_ANDROIDSIMPLEBUFFERQUEUE_,
       static_cast<void*>(&sles_recorder_sbq_itf_));
   if (res != SL_RESULT_SUCCESS) {
     WEBRTC_OPENSL_TRACE(kTraceError, kTraceAudioDevice, id_,
