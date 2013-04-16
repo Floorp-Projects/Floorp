@@ -159,6 +159,8 @@ XPCOMUtils.defineLazyGetter(this, "gMmsConnection", function () {
               "available later.");
         this.clearMmsProxySettings();
       }
+      this.connected = gRIL.getDataCallStateByType("mms") ==
+        Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED;
     },
 
     /**
