@@ -481,9 +481,8 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(mozInlineSpellChecker)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(mozInlineSpellChecker)
 
-NS_IMPL_CYCLE_COLLECTION_4(mozInlineSpellChecker,
+NS_IMPL_CYCLE_COLLECTION_3(mozInlineSpellChecker,
                            mSpellCheck,
-                           mTextServicesDocument,
                            mTreeWalker,
                            mCurrentSelectionAnchorNode)
 
@@ -675,16 +674,6 @@ mozInlineSpellChecker::SetEnableRealTimeSpell(bool aEnabled)
       res = spellchecker->InitSpellChecker(editor, false);
       NS_ENSURE_SUCCESS(res, res);
 
-      nsCOMPtr<nsITextServicesDocument> tsDoc = do_CreateInstance("@mozilla.org/textservices/textservicesdocument;1", &res);
-      NS_ENSURE_SUCCESS(res, res);
-
-      res = tsDoc->SetFilter(filter);
-      NS_ENSURE_SUCCESS(res, res);
-
-      res = tsDoc->InitWithEditor(editor);
-      NS_ENSURE_SUCCESS(res, res);
-
-      mTextServicesDocument = tsDoc;
       mSpellCheck = spellchecker;
 
       // spell checking is enabled, register our event listeners to track navigation

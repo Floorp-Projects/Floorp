@@ -410,14 +410,6 @@ nsWindowMemoryReporter::CollectReports(nsIMemoryMultiReporterCallback* aCb,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWindowMemoryReporter::GetExplicitNonHeap(int64_t* aAmount)
-{
-  // This reporter only measures heap memory, so we don't need to report any
-  // bytes for it.  However, the JS multi-reporter needs to be invoked.
-  return xpc::JSMemoryMultiReporter::GetExplicitNonHeap(aAmount);
-}
-
 uint32_t
 nsWindowMemoryReporter::GetGhostTimeout()
 {
@@ -665,14 +657,6 @@ nsWindowMemoryReporter::
 GhostURLsReporter::GetName(nsACString& aName)
 {
   aName.AssignLiteral("ghost-windows");
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWindowMemoryReporter::
-GhostURLsReporter::GetExplicitNonHeap(int64_t* aOut)
-{
-  *aOut = 0;
   return NS_OK;
 }
 

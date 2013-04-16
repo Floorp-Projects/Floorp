@@ -34,6 +34,7 @@
 #include "nsJSEnvironment.h"
 #include "nsXMLHttpRequest.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/XPTInterfaceInfoManager.h"
 #include "nsDOMClassInfoID.h"
 
 using namespace mozilla;
@@ -120,7 +121,7 @@ public:
     virtual ~nsXPCComponents_Interfaces();
 
 private:
-    nsCOMPtr<nsIInterfaceInfoManager> mManager;
+    nsCOMArray<nsIInterfaceInfo> mInterfaces;
 };
 
 /* void getInterfaces (out uint32_t count, [array, size_is (count), retval]
@@ -215,9 +216,9 @@ nsXPCComponents_Interfaces::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
     return NS_ERROR_NOT_AVAILABLE;
 }
 
-nsXPCComponents_Interfaces::nsXPCComponents_Interfaces() :
-    mManager(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID))
+nsXPCComponents_Interfaces::nsXPCComponents_Interfaces()
 {
+    XPTInterfaceInfoManager::GetSingleton()->GetScriptableInterfaces(mInterfaces);
 }
 
 nsXPCComponents_Interfaces::~nsXPCComponents_Interfaces()
@@ -254,64 +255,36 @@ nsXPCComponents_Interfaces::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
                                          uint32_t enum_op, jsval * statep,
                                          jsid * idp, bool *_retval)
 {
-    nsIEnumerator* e;
-
     switch (enum_op) {
         case JSENUMERATE_INIT:
         case JSENUMERATE_INIT_ALL:
         {
-            if (!mManager ||
-                NS_FAILED(mManager->EnumerateInterfaces(&e)) || !e ||
-                NS_FAILED(e->First()))
-
-            {
-                *statep = JSVAL_NULL;
-                return NS_ERROR_UNEXPECTED;
-            }
-
-            *statep = PRIVATE_TO_JSVAL(e);
+            *statep = JSVAL_ZERO;
             if (idp)
-                *idp = INT_TO_JSID(0); // indicate that we don't know the count
+                *idp = INT_TO_JSID(mInterfaces.Length());
             return NS_OK;
         }
         case JSENUMERATE_NEXT:
         {
-            nsCOMPtr<nsISupports> isup;
+            uint32_t idx = JSVAL_TO_INT(*statep);
+            nsIInterfaceInfo* interface = mInterfaces.SafeElementAt(idx);
+            *statep = UINT_TO_JSVAL(idx + 1);
 
-            e = (nsIEnumerator*) JSVAL_TO_PRIVATE(*statep);
+            if (interface) {
+                JSString* idstr;
+                const char* name;
 
-            while (1) {
-                if (static_cast<nsresult>(NS_ENUMERATOR_FALSE) == e->IsDone() &&
-                    NS_SUCCEEDED(e->CurrentItem(getter_AddRefs(isup))) && isup) {
-                    e->Next();
-                    nsCOMPtr<nsIInterfaceInfo> iface(do_QueryInterface(isup));
-                    if (iface) {
-                        JSString* idstr;
-                        const char* name;
-                        bool scriptable;
-
-                        if (NS_SUCCEEDED(iface->IsScriptable(&scriptable)) &&
-                            !scriptable) {
-                            continue;
-                        }
-
-                        if (NS_SUCCEEDED(iface->GetNameShared(&name)) && name &&
-                            nullptr != (idstr = JS_NewStringCopyZ(cx, name)) &&
-                            JS_ValueToId(cx, STRING_TO_JSVAL(idstr), idp)) {
-                            return NS_OK;
-                        }
-                    }
+                if (NS_SUCCEEDED(interface->GetNameShared(&name)) && name &&
+                        nullptr != (idstr = JS_NewStringCopyZ(cx, name)) &&
+                        JS_ValueToId(cx, STRING_TO_JSVAL(idstr), idp)) {
+                    return NS_OK;
                 }
-                // else...
-                break;
             }
-            // FALL THROUGH
+            // fall through
         }
 
         case JSENUMERATE_DESTROY:
         default:
-            e = (nsIEnumerator*) JSVAL_TO_PRIVATE(*statep);
-            NS_IF_RELEASE(e);
             *statep = JSVAL_NULL;
             return NS_OK;
     }
@@ -326,17 +299,16 @@ nsXPCComponents_Interfaces::NewResolve(nsIXPConnectWrappedNative *wrapper,
 {
     RootedObject obj(cx, objArg);
     RootedId id(cx, idArg);
-
-    if (!mManager || !JSID_IS_STRING(id))
-        return NS_OK;
-
     JSAutoByteString name;
     RootedString str(cx, JSID_TO_STRING(id));
 
-    // we only allow interfaces by name here
-    if (name.encodeLatin1(cx, JSID_TO_STRING(id)) && name.ptr()[0] != '{') {
+    if (JSID_IS_STRING(id) && name.encodeLatin1(cx, JSID_TO_STRING(id)) &&
+        name.ptr()[0] != '{')
+    {
+        // we only allow interfaces by name here
         nsCOMPtr<nsIInterfaceInfo> info;
-        mManager->GetInfoForName(name.ptr(), getter_AddRefs(info));
+        XPTInterfaceInfoManager::GetSingleton()->
+            GetInfoForName(name.ptr(), getter_AddRefs(info));
         if (!info)
             return NS_OK;
 
@@ -428,7 +400,7 @@ public:
     virtual ~nsXPCComponents_InterfacesByID();
 
 private:
-    nsCOMPtr<nsIInterfaceInfoManager> mManager;
+    nsCOMArray<nsIInterfaceInfo> mInterfaces;
 };
 
 /***************************************************************************/
@@ -524,9 +496,9 @@ nsXPCComponents_InterfacesByID::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
     return NS_ERROR_NOT_AVAILABLE;
 }
 
-nsXPCComponents_InterfacesByID::nsXPCComponents_InterfacesByID() :
-    mManager(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID))
+nsXPCComponents_InterfacesByID::nsXPCComponents_InterfacesByID()
 {
+    XPTInterfaceInfoManager::GetSingleton()->GetScriptableInterfaces(mInterfaces);
 }
 
 nsXPCComponents_InterfacesByID::~nsXPCComponents_InterfacesByID()
@@ -561,68 +533,38 @@ nsXPCComponents_InterfacesByID::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
                                              uint32_t enum_op, jsval * statep,
                                              jsid * idp, bool *_retval)
 {
-    nsIEnumerator* e;
-
     switch (enum_op) {
         case JSENUMERATE_INIT:
         case JSENUMERATE_INIT_ALL:
         {
-            if (!mManager ||
-                NS_FAILED(mManager->EnumerateInterfaces(&e)) || !e ||
-                NS_FAILED(e->First()))
-
-            {
-                *statep = JSVAL_NULL;
-                return NS_ERROR_UNEXPECTED;
-            }
-
-            *statep = PRIVATE_TO_JSVAL(e);
+            *statep = JSVAL_ZERO;
             if (idp)
-                *idp = INT_TO_JSID(0); // indicate that we don't know the count
+                *idp = INT_TO_JSID(mInterfaces.Length());
             return NS_OK;
         }
         case JSENUMERATE_NEXT:
         {
-            nsCOMPtr<nsISupports> isup;
+            uint32_t idx = JSVAL_TO_INT(*statep);
+            nsIInterfaceInfo* interface = mInterfaces.SafeElementAt(idx);
+            *statep = UINT_TO_JSVAL(idx + 1);
+            if (interface) {
+                nsIID const *iid;
+                char idstr[NSID_LENGTH];
+                JSString* jsstr;
 
-            e = (nsIEnumerator*) JSVAL_TO_PRIVATE(*statep);
-
-            while (1) {
-                if (static_cast<nsresult>(NS_ENUMERATOR_FALSE) == e->IsDone() &&
-                    NS_SUCCEEDED(e->CurrentItem(getter_AddRefs(isup))) && isup) {
-                    e->Next();
-                    nsCOMPtr<nsIInterfaceInfo> iface(do_QueryInterface(isup));
-                    if (iface) {
-                        nsIID const *iid;
-                        char idstr[NSID_LENGTH];
-                        JSString* jsstr;
-                        bool scriptable;
-
-                        if (NS_SUCCEEDED(iface->IsScriptable(&scriptable)) &&
-                            !scriptable) {
-                            continue;
-                        }
-
-                        if (NS_SUCCEEDED(iface->GetIIDShared(&iid))) {
-                            iid->ToProvidedString(idstr);
-                            jsstr = JS_NewStringCopyZ(cx, idstr);
-                            if (jsstr &&
-                                JS_ValueToId(cx, STRING_TO_JSVAL(jsstr), idp)) {
-                                return NS_OK;
-                            }
-                        }
+                if (NS_SUCCEEDED(interface->GetIIDShared(&iid))) {
+                    iid->ToProvidedString(idstr);
+                    jsstr = JS_NewStringCopyZ(cx, idstr);
+                    if (jsstr && JS_ValueToId(cx, STRING_TO_JSVAL(jsstr), idp)) {
+                        return NS_OK;
                     }
                 }
-                // else...
-                break;
             }
             // FALL THROUGH
         }
 
         case JSENUMERATE_DESTROY:
         default:
-            e = (nsIEnumerator*) JSVAL_TO_PRIVATE(*statep);
-            NS_IF_RELEASE(e);
             *statep = JSVAL_NULL;
             return NS_OK;
     }
@@ -639,9 +581,6 @@ nsXPCComponents_InterfacesByID::NewResolve(nsIXPConnectWrappedNative *wrapper,
     RootedId id(cx, idArg);
     RootedString str(cx, JSID_TO_STRING(id));
 
-    if (!mManager || !JSID_IS_STRING(id))
-        return NS_OK;
-
     if (38 != JS_GetStringLength(str))
         return NS_OK;
 
@@ -651,7 +590,8 @@ nsXPCComponents_InterfacesByID::NewResolve(nsIXPConnectWrappedNative *wrapper,
             return NS_OK;
 
         nsCOMPtr<nsIInterfaceInfo> info;
-        mManager->GetInfoForIID(&iid, getter_AddRefs(info));
+        XPTInterfaceInfoManager::GetSingleton()->
+            GetInfoForIID(&iid, getter_AddRefs(info));
         if (!info)
             return NS_OK;
 
@@ -3052,7 +2992,7 @@ sandbox_convert(JSContext *cx, JSHandleObject obj, JSType type, JSMutableHandleV
 static JSClass SandboxClass = {
     "Sandbox",
     XPCONNECT_GLOBAL_FLAGS,
-    JS_PropertyStub,   JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+    JS_PropertyStub,   JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     sandbox_enumerate, sandbox_resolve, sandbox_convert,  sandbox_finalize,
     NULL, NULL, NULL, NULL, TraceXPCGlobal
 };

@@ -210,7 +210,7 @@ ArgumentsObject::createUnexpected(JSContext *cx, AbstractFramePtr frame)
 }
 
 static JSBool
-args_delProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
+args_delProperty(JSContext *cx, HandleObject obj, HandleId id, JSBool *succeeded)
 {
     ArgumentsObject &argsobj = obj->asArguments();
     if (JSID_IS_INT(id)) {
@@ -222,6 +222,7 @@ args_delProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValu
     } else if (JSID_IS_ATOM(id, cx->names().callee)) {
         argsobj.asNormalArguments().clearCallee();
     }
+    *succeeded = true;
     return true;
 }
 
@@ -289,8 +290,8 @@ ArgSetter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, MutableHa
      * of setting it in case the user has changed the prototype to an object
      * that has a setter for this id.
      */
-    RootedValue value(cx);
-    return baseops::DeleteGeneric(cx, obj, id, &value, false) &&
+    JSBool succeeded;
+    return baseops::DeleteGeneric(cx, obj, id, &succeeded) &&
            baseops::DefineGeneric(cx, obj, id, vp, NULL, NULL, attrs);
 }
 
@@ -408,8 +409,8 @@ StrictArgSetter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, Mut
      * args_delProperty to clear the corresponding reserved slot so the GC can
      * collect its value.
      */
-    RootedValue value(cx);
-    return baseops::DeleteGeneric(cx, argsobj, id, &value, strict) &&
+    JSBool succeeded;
+    return baseops::DeleteGeneric(cx, argsobj, id, &succeeded) &&
            baseops::DefineGeneric(cx, argsobj, id, vp, NULL, NULL, attrs);
 }
 

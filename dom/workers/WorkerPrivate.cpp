@@ -1774,8 +1774,7 @@ public:
       MutexAutoLock lock(mMutex);
 
       if (!mWorkerPrivate ||
-          !mWorkerPrivate->BlockAndCollectRuntimeStats(/* aIsQuick = */ false,
-                                                       &rtStats)) {
+          !mWorkerPrivate->BlockAndCollectRuntimeStats(&rtStats)) {
         // Returning NS_OK here will effectively report 0 memory.
         return NS_OK;
       }
@@ -1783,24 +1782,6 @@ public:
 
     return xpc::ReportJSRuntimeExplicitTreeStats(rtStats, mRtPath,
                                                  aCallback, aClosure);
-  }
-
-  NS_IMETHOD
-  GetExplicitNonHeap(int64_t* aAmount)
-  {
-    AssertIsOnMainThread();
-
-    {
-      MutexAutoLock lock(mMutex);
-
-      if (!mWorkerPrivate ||
-          !mWorkerPrivate->BlockAndCollectRuntimeStats(/* aIsQuick = */ true,
-                                                       aAmount)) {
-        *aAmount = 0;
-      }
-    }
-
-    return NS_OK;
   }
 
 private:
@@ -2940,11 +2921,11 @@ WorkerPrivate::ScheduleDeletion(bool aWasPending)
 }
 
 bool
-WorkerPrivate::BlockAndCollectRuntimeStats(bool aIsQuick, void* aData)
+WorkerPrivate::BlockAndCollectRuntimeStats(JS::RuntimeStats* aRtStats)
 {
   AssertIsOnMainThread();
   mMutex.AssertCurrentThreadOwns();
-  NS_ASSERTION(aData, "Null data!");
+  NS_ASSERTION(aRtStats, "Null RuntimeStats!");
 
   NS_ASSERTION(!mMemoryReporterRunning, "How can we get reentered here?!");
 
@@ -2973,16 +2954,7 @@ WorkerPrivate::BlockAndCollectRuntimeStats(bool aIsQuick, void* aData)
   if (mMemoryReporter) {
     // Don't hold the lock while doing the actual report.
     MutexAutoUnlock unlock(mMutex);
-
-    if (aIsQuick) {
-      *static_cast<int64_t*>(aData) =
-        JS::GetExplicitNonHeapForRuntime(rt, JsWorkerMallocSizeOf);
-      succeeded = true;
-    } else {
-      succeeded =
-        JS::CollectRuntimeStats(rt, static_cast<JS::RuntimeStats*>(aData),
-                                nullptr);
-    }
+    succeeded = JS::CollectRuntimeStats(rt, aRtStats, nullptr);
   }
 
   NS_ASSERTION(mMemoryReporterRunning, "This isn't possible!");

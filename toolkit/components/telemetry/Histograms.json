@@ -268,14 +268,6 @@
     "n_buckets": 25,
     "description": "Ratio of committed, unused memory to allocated memory in the heap (percentage)."
   },
-  "MEMORY_EXPLICIT": {
-    "kind": "exponential",
-    "low": 1024,
-    "high": "16 * 1024 * 1024",
-    "n_buckets": 200,
-    "extended_statistics_ok": true,
-    "description": "Explicit memory allocations (KB)"
-  },
   "GHOST_WINDOWS": {
     "kind": "exponential",
     "high": "128",

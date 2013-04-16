@@ -86,7 +86,7 @@ Class js::MathClass = {
     js_Math_str,
     JSCLASS_HAS_CACHED_PROTO(JSProto_Math),
     JS_PropertyStub,         /* addProperty */
-    JS_PropertyStub,         /* delProperty */
+    JS_DeletePropertyStub,   /* delProperty */
     JS_PropertyStub,         /* getProperty */
     JS_StrictPropertyStub,   /* setProperty */
     JS_EnumerateStub,

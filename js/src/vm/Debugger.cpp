@@ -1659,7 +1659,7 @@ Class Debugger::jsclass = {
     "Debugger",
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_DEBUG_COUNT),
-    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+    JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Debugger::finalize,
     NULL,                 /* checkAccess */
     NULL,                 /* call        */
@@ -2696,7 +2696,7 @@ Class DebuggerScript_class = {
     "Script",
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_DEBUGSCRIPT_COUNT),
-    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+    JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, NULL,
     NULL,                 /* checkAccess */
     NULL,                 /* call        */
@@ -3497,7 +3497,7 @@ DebuggerFrame_finalize(FreeOp *fop, RawObject obj)
 
 Class DebuggerFrame_class = {
     "Frame", JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_DEBUGFRAME_COUNT),
-    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+    JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, DebuggerFrame_finalize
 };
 
@@ -3642,7 +3642,7 @@ DebuggerFrame_getOlder(JSContext *cx, unsigned argc, Value *vp)
 
 Class DebuggerArguments_class = {
     "Arguments", JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_DEBUGARGUMENTS_COUNT),
-    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+    JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub
 };
 
@@ -4093,7 +4093,7 @@ Class DebuggerObject_class = {
     "Object",
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_DEBUGOBJECT_COUNT),
-    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+    JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, NULL,
     NULL,                 /* checkAccess */
     NULL,                 /* call        */
@@ -4542,8 +4542,12 @@ DebuggerObject_deleteProperty(JSContext *cx, unsigned argc, Value *vp)
     if (!cx->compartment->wrap(cx, &nameArg))
         return false;
 
+    JSBool succeeded;
     ErrorCopier ec(ac, dbg->toJSObject());
-    return JSObject::deleteByValue(cx, obj, nameArg, args.rval(), false);
+    if (!JSObject::deleteByValue(cx, obj, nameArg, &succeeded))
+        return false;
+    args.rval().setBoolean(succeeded);
+    return true;
 }
 
 enum SealHelperOp { Seal, Freeze, PreventExtensions };
@@ -4881,7 +4885,7 @@ Class DebuggerEnv_class = {
     "Environment",
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_DEBUGENV_COUNT),
-    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+    JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, NULL,
     NULL,                 /* checkAccess */
     NULL,                 /* call        */

@@ -5,6 +5,8 @@
 
 /* Implementation of xptiWorkingSet. */
 
+#include "mozilla/XPTInterfaceInfoManager.h"
+
 #include "xptiprivate.h"
 #include "nsString.h"
 
@@ -13,7 +15,7 @@ using namespace mozilla;
 #define XPTI_STRUCT_ARENA_BLOCK_SIZE    (1024 * 16)
 #define XPTI_HASHTABLE_SIZE             2048
 
-xptiWorkingSet::xptiWorkingSet()
+XPTInterfaceInfoManager::xptiWorkingSet::xptiWorkingSet()
     : mTableReentrantMonitor("xptiWorkingSet::mTableReentrantMonitor")
 {
     MOZ_COUNT_CTOR(xptiWorkingSet);
@@ -33,13 +35,13 @@ xpti_Invalidator(const char* keyname, xptiInterfaceEntry* entry, void* arg)
 }
 
 void 
-xptiWorkingSet::InvalidateInterfaceInfos()
+XPTInterfaceInfoManager::xptiWorkingSet::InvalidateInterfaceInfos()
 {
     ReentrantMonitorAutoEnter monitor(mTableReentrantMonitor);
     mNameTable.EnumerateRead(xpti_Invalidator, NULL);
 }        
 
-xptiWorkingSet::~xptiWorkingSet()
+XPTInterfaceInfoManager::xptiWorkingSet::~xptiWorkingSet()
 {
     MOZ_COUNT_DTOR(xptiWorkingSet);
 

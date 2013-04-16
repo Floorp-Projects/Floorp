@@ -247,5 +247,19 @@ AudioContext::Resume()
   }
 }
 
+JSContext*
+AudioContext::GetJSContext() const
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsCOMPtr<nsIScriptGlobalObject> scriptGlobal =
+    do_QueryInterface(GetParentObject());
+  nsIScriptContext* scriptContext = scriptGlobal->GetContext();
+  if (!scriptContext) {
+    return nullptr;
+  }
+  return scriptContext->GetNativeContext();
+}
+
 }
 }

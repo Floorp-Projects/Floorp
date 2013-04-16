@@ -24,7 +24,7 @@ JSClass addPropertyClass = {
     "AddPropertyTester",
     0,
     addProperty,
-    JS_PropertyStub,         /* delProperty */
+    JS_DeletePropertyStub,   /* delProperty */
     JS_PropertyStub,         /* getProperty */
     JS_StrictPropertyStub,   /* setProperty */
     JS_EnumerateStub,

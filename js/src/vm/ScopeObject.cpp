@@ -260,7 +260,7 @@ JS_PUBLIC_DATA(Class) js::CallClass = {
     "Call",
     JSCLASS_IS_ANONYMOUS | JSCLASS_HAS_RESERVED_SLOTS(CallObject::RESERVED_SLOTS),
     JS_PropertyStub,         /* addProperty */
-    JS_PropertyStub,         /* delProperty */
+    JS_DeletePropertyStub,   /* delProperty */
     JS_PropertyStub,         /* getProperty */
     JS_StrictPropertyStub,   /* setProperty */
     JS_EnumerateStub,
@@ -273,7 +273,7 @@ Class js::DeclEnvClass = {
     JSCLASS_HAS_RESERVED_SLOTS(DeclEnvObject::RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
     JS_PropertyStub,         /* addProperty */
-    JS_PropertyStub,         /* delProperty */
+    JS_DeletePropertyStub,   /* delProperty */
     JS_PropertyStub,         /* getProperty */
     JS_StrictPropertyStub,   /* setProperty */
     JS_EnumerateStub,
@@ -516,26 +516,26 @@ with_SetSpecialAttributes(JSContext *cx, HandleObject obj, HandleSpecialId sid, 
 
 static JSBool
 with_DeleteProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
-                    MutableHandleValue rval, JSBool strict)
+                    JSBool *succeeded)
 {
     RootedObject actual(cx, &obj->asWith().object());
-    return JSObject::deleteProperty(cx, actual, name, rval, strict);
+    return JSObject::deleteProperty(cx, actual, name, succeeded);
 }
 
 static JSBool
 with_DeleteElement(JSContext *cx, HandleObject obj, uint32_t index,
-                   MutableHandleValue rval, JSBool strict)
+                   JSBool *succeeded)
 {
     RootedObject actual(cx, &obj->asWith().object());
-    return JSObject::deleteElement(cx, actual, index, rval, strict);
+    return JSObject::deleteElement(cx, actual, index, succeeded);
 }
 
 static JSBool
 with_DeleteSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
-                   MutableHandleValue rval, JSBool strict)
+                   JSBool *succeeded)
 {
     RootedObject actual(cx, &obj->asWith().object());
-    return JSObject::deleteSpecial(cx, actual, sid, rval, strict);
+    return JSObject::deleteSpecial(cx, actual, sid, succeeded);
 }
 
 static JSBool
@@ -557,7 +557,7 @@ Class js::WithClass = {
     JSCLASS_HAS_RESERVED_SLOTS(WithObject::RESERVED_SLOTS) |
     JSCLASS_IS_ANONYMOUS,
     JS_PropertyStub,         /* addProperty */
-    JS_PropertyStub,         /* delProperty */
+    JS_DeletePropertyStub,   /* delProperty */
     JS_PropertyStub,         /* getProperty */
     JS_StrictPropertyStub,   /* setProperty */
     JS_EnumerateStub,
@@ -715,7 +715,7 @@ Class js::BlockClass = {
     JSCLASS_HAS_RESERVED_SLOTS(BlockObject::RESERVED_SLOTS) |
     JSCLASS_IS_ANONYMOUS,
     JS_PropertyStub,         /* addProperty */
-    JS_PropertyStub,         /* delProperty */
+    JS_DeletePropertyStub,   /* delProperty */
     JS_PropertyStub,         /* getProperty */
     JS_StrictPropertyStub,   /* setProperty */
     JS_EnumerateStub,
