@@ -232,6 +232,9 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
     if (!JS_GetPropertyById(cx, jsobj, funid, fun.address()) || JSVAL_IS_PRIMITIVE(fun))
         return nullptr;
 
+    // protect fun so that we're sure it's alive when we call it
+    AUTO_MARK_JSVAL(cx, fun);
+
     // Ensure that we are asking for a scriptable interface.
     // NB:  It's important for security that this check is here rather
     // than later, since it prevents untrusted objects from implementing
@@ -268,6 +271,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
                          "JS failed without setting an exception!");
 
             RootedValue jsexception(cx, NullValue());
+            AUTO_MARK_JSVAL(cx, jsexception.address());
 
             if (JS_GetPendingException(cx, jsexception.address())) {
                 nsresult rv;
@@ -712,9 +716,12 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
     }
 
     // check if the JSObject claims to implement this interface
-    RootedObject jsobj(ccx, CallQueryInterfaceOnJSObject(ccx, self->GetJSObject(),
-                                                         aIID));
+    JSObject* jsobj = CallQueryInterfaceOnJSObject(ccx, self->GetJSObject(),
+                                                   aIID);
     if (jsobj) {
+        // protect jsobj until it is actually attached
+        AUTO_MARK_JSVAL(ccx, OBJECT_TO_JSVAL(jsobj));
+
         // We can't use XPConvert::JSObject2NativeInterface() here
         // since that can find a XPCWrappedNative directly on the
         // proto chain, and we don't want that here. We need to find
@@ -1284,7 +1291,8 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
         nsXPTType datum_type;
         uint32_t array_count;
         bool isArray = type.IsArray();
-        RootedValue val(cx, NullValue());
+        RootedValue val(cx, JSVAL_NULL);
+        AUTO_MARK_JSVAL(ccx, val.address());
         bool isSizedString = isArray ?
                 false :
                 type.TagPart() == nsXPTType::T_PSTRING_SIZE_IS ||
