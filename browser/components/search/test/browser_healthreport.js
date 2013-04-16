@@ -9,7 +9,7 @@ function test() {
   try {
     let cm = Components.classes["@mozilla.org/categorymanager;1"]
                        .getService(Components.interfaces.nsICategoryManager);
-    cm.getCategoryEntry("healthreport-js-provider", "SearchesProvider");
+    cm.getCategoryEntry("healthreport-js-provider-default", "SearchesProvider");
   } catch (ex) {
     // Health Report disabled, or no SearchesProvider.
     // We need a test or else we'll be marked as failure.
@@ -26,7 +26,7 @@ function test() {
     ok(reporter, "Health Reporter available.");
     reporter.onInit().then(function onInit() {
       let provider = reporter.getProvider("org.mozilla.searches");
-      let m = provider.getMeasurement("counts", 1);
+      let m = provider.getMeasurement("counts", 2);
 
       m.getValues().then(function onData(data) {
         let now = new Date();

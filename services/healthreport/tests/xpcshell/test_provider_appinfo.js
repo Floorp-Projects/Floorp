@@ -170,7 +170,6 @@ add_task(function test_record_telemetry() {
   setTelemetry(true);
   provider = new AppInfoProvider();
   yield provider.init(storage);
-  yield provider.onInit();
   yield provider.collectConstantData();
 
   let m = provider.getMeasurement("appinfo", 2);
@@ -182,7 +181,6 @@ add_task(function test_record_telemetry() {
   setTelemetry(false);
   provider = new AppInfoProvider();
   yield provider.init(storage);
-  yield provider.onInit();
   yield provider.collectConstantData();
 
   m = provider.getMeasurement("appinfo", 2);
@@ -202,7 +200,6 @@ add_task(function test_record_blocklist() {
   Services.prefs.setBoolPref("extensions.blocklist.enabled", true);
   let provider = new AppInfoProvider();
   yield provider.init(storage);
-  yield provider.onInit();
   yield provider.collectConstantData();
 
   let m = provider.getMeasurement("appinfo", 2);
@@ -214,7 +211,6 @@ add_task(function test_record_blocklist() {
   Services.prefs.setBoolPref("extensions.blocklist.enabled", false);
   provider = new AppInfoProvider();
   yield provider.init(storage);
-  yield provider.onInit();
   yield provider.collectConstantData();
 
   m = provider.getMeasurement("appinfo", 2);

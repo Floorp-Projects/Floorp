@@ -189,11 +189,11 @@ AppInfoProvider.prototype = Object.freeze({
     xpcomabi: "XPCOMABI",
   },
 
-  onInit: function () {
-    return Task.spawn(this._onInit.bind(this));
+  postInit: function () {
+    return Task.spawn(this._postInit.bind(this));
   },
 
-  _onInit: function () {
+  _postInit: function () {
     let recordEmptyAppInfo = function () {
       this._setCurrentAppVersion("");
       this._setCurrentPlatformVersion("");
@@ -728,7 +728,7 @@ AddonsProvider.prototype = Object.freeze({
     AddonCountsMeasurement,
   ],
 
-  onInit: function () {
+  postInit: function () {
     let listener = {};
 
     for (let method of this.ADDON_LISTENER_CALLBACKS) {
@@ -1196,7 +1196,7 @@ SearchCountMeasurement2.prototype = Object.freeze({
    * data.
    */
   shouldIncludeField: function (name) {
-    return name.indexOf(".") != -1;
+    return name.contains(".");
   },
 
   /**
@@ -1327,6 +1327,18 @@ this.SearchesProvider.prototype = Object.freeze({
     SearchCountMeasurement1,
     SearchCountMeasurement2,
   ],
+
+  /**
+   * Initialize the search service before our measurements are touched.
+   */
+  preInit: function (storage) {
+    // Initialize search service.
+    let deferred = Promise.defer();
+    Services.search.init(function onInitComplete () {
+      deferred.resolve();
+    });
+    return deferred.promise;
+  },
 
   /**
    * Record that a search occurred.

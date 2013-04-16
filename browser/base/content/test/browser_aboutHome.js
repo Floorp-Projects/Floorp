@@ -114,7 +114,7 @@ let gTests = [
   run: function () {
     try {
       let cm = Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
-      cm.getCategoryEntry("healthreport-js-provider", "SearchesProvider");
+      cm.getCategoryEntry("healthreport-js-provider-default", "SearchesProvider");
     } catch (ex) {
       // Health Report disabled, or no SearchesProvider.
       return Promise.resolve();
@@ -137,15 +137,16 @@ let gTests = [
         let provider = reporter.getProvider("org.mozilla.searches");
         ok(provider, "Searches provider is available.");
 
-        let engineName = doc.documentElement.getAttribute("searchEngineName").toLowerCase();
+        let engineName = doc.documentElement.getAttribute("searchEngineName");
+        let id = Services.search.getEngineByName(engineName).identifier;
 
-        let m = provider.getMeasurement("counts", 1);
+        let m = provider.getMeasurement("counts", 2);
         m.getValues().then(function onValues(data) {
           let now = new Date();
           ok(data.days.hasDay(now), "Have data for today.");
 
           let day = data.days.getDay(now);
-          let field = engineName + ".abouthome";
+          let field = id + ".abouthome";
           ok(day.has(field), "Have data for about home on this engine.");
 
           // Note the search from the previous test.

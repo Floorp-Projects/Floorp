@@ -1,3 +1,4 @@
+#filter substitution
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -25,6 +26,8 @@ pref("datareporting.healthreport.service.loadDelayFirstRunMsec", 60000);
 
 pref("datareporting.healthreport.service.providerCategories",
 #if MOZ_UPDATE_CHANNEL == release
+    "healthreport-js-provider-default"
+#elif MOZ_UPDATE_CHANNEL == default
     "healthreport-js-provider-default"
 #else
     "healthreport-js-provider-default,healthreport-js-provider-@MOZ_UPDATE_CHANNEL@"
