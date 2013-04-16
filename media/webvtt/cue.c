@@ -54,6 +54,7 @@ webvtt_create_cue( webvtt_cue **pcue )
    */
   webvtt_ref( &cue->refs );
   webvtt_init_string( &cue->id );
+  webvtt_init_string( &cue->body );
   cue->from = 0xFFFFFFFFFFFFFFFF;
   cue->until = 0xFFFFFFFFFFFFFFFF;
   cue->snap_to_lines = 1;
@@ -83,6 +84,7 @@ webvtt_release_cue( webvtt_cue **pcue )
     *pcue = 0;
     if( webvtt_deref( &cue->refs ) == 0 ) {
       webvtt_release_string( &cue->id );
+      webvtt_release_string( &cue->body );
       webvtt_release_node( &cue->node_head );
       webvtt_free( cue );
     }
@@ -115,3 +117,9 @@ webvtt_validate_cue( webvtt_cue *cue )
 error:
   return 0;
 }
+
+WEBVTT_INTERN webvtt_bool
+cue_is_incomplete( const webvtt_cue *cue ) {
+  return !cue || ( cue->flags & CUE_HEADER_MASK ) == CUE_HAVE_ID;
+}
+

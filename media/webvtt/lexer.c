@@ -125,7 +125,7 @@
 #define OR
 #define AND
 
-#define OVERFLOW(X) \
+#define IF_OVERFLOW(X) \
   if( self->token_pos >= (sizeof(self->token) - 1 ) ) \
   { \
     RETURN(X) \
@@ -156,7 +156,6 @@ webvtt_lex_word( webvtt_parser self, webvtt_string *str, const webvtt_byte *buff
 {
   webvtt_status status = WEBVTT_SUCCESS;
   webvtt_uint pos = *ppos;
-  int d = 0;
   if( !str ) {
     return WEBVTT_INVALID_PARAM;
   }
@@ -191,6 +190,83 @@ webvtt_lex_word( webvtt_parser self, webvtt_string *str, const webvtt_byte *buff
 _finished:
   *ppos = pos;
   return status;
+}
+
+/**
+ * webvtt_lex_newline
+ *
+ * Get newline sequence in re-entrant fashion. self->tstate must be
+ * L_START or L_NEWLINE0 for this function to behave correctly.
+ */
+WEBVTT_INTERN webvtt_token
+webvtt_lex_newline( webvtt_parser self, const
+  webvtt_byte *buffer, webvtt_uint *pos, webvtt_uint length,
+  webvtt_bool finish )
+{
+  webvtt_uint p = *pos;
+
+  /* Ensure that we've got a valid token-state for this use-case. */
+  DIE_IF( self->tstate != L_START && self->tstate != L_NEWLINE0 );
+
+  while( p < length ) {
+    webvtt_byte c = buffer[ p++ ];
+    self->token[ self->token_pos++ ] = c;
+    self->token[ self->token_pos ] = 0;
+    self->bytes++;
+
+    switch( self->tstate ) {
+      case L_START:
+        if( c == '\n' ) {
+          *pos = p;
+          return NEWLINE;
+        } else if( c == '\r' ) {
+          self->tstate = L_NEWLINE0;
+        } else {
+          goto backup;
+        }
+        break;
+      case L_NEWLINE0:
+        if( c == '\n' ) {
+          *pos = p;
+          self->tstate = L_START;
+          return NEWLINE;
+        } else {
+          goto backup;
+        }
+        break;
+
+      default:
+        /**
+         * This should never happen if the function is called correctly
+         * (EG immediately following a successful call to webvtt_string_getline)
+         */
+       goto backup;
+    }
+  }
+
+  *pos = p;
+  if( finish && ( p >= length ) ) {
+    /* If pos >= length, it's and 'finish' is set, it's an automatic EOL */
+    self->tstate = L_START;
+    return NEWLINE;
+  }
+
+  if( self->tstate == L_NEWLINE0 ) {
+    return UNFINISHED;
+  } else {
+    /* This branch should never occur, if the function is used properly. */
+    *pos = --p;
+    return BADTOKEN;
+  }
+backup:
+  self->token[ --self->token_pos ] = 0;
+  --self->bytes;
+  *pos = --p;
+  if( self->tstate == L_NEWLINE0 ) {
+    self->tstate = L_START;
+    return NEWLINE;
+  }
+  return BADTOKEN;
 }
 
 WEBVTT_INTERN webvtt_token
@@ -269,10 +345,17 @@ webvtt_lex( webvtt_parser self, const webvtt_byte *buffer, webvtt_uint *pos, web
 
         BEGIN_STATE(L_DIGIT0)
           U_DIGIT {
-            OVERFLOW(INTEGER)
+            IF_OVERFLOW(INTEGER)
             SET_STATE(L_DIGIT0)
           }
-          U_COLON { SET_STATE(L_TIMESTAMP1) }
+          U_COLON {
+            /* Don't return a TIMESTAMP if we start with '-' */
+            if( self->token[0] == '-' ) {
+              RETURN(INTEGER);
+            } else {
+              SET_STATE(L_TIMESTAMP1)
+            }
+          }
           U_PERCENT { RETURN(PERCENTAGE) }
         DEFAULT { BACKUP AND RETURN(INTEGER) }
         END_STATE_EX
@@ -283,7 +366,7 @@ webvtt_lex( webvtt_parser self, const webvtt_byte *buffer, webvtt_uint *pos, web
         END_STATE_EX
 
         BEGIN_STATE(L_WHITESPACE)
-          U_SPACE OR U_TAB { OVERFLOW(WHITESPACE) SET_STATE(L_WHITESPACE) }
+          U_SPACE OR U_TAB { IF_OVERFLOW(WHITESPACE) SET_STATE(L_WHITESPACE) }
         DEFAULT { BACKUP RETURN(WHITESPACE) }
         END_STATE_EX
 
@@ -453,37 +536,42 @@ webvtt_lex( webvtt_parser self, const webvtt_byte *buffer, webvtt_uint *pos, web
 
         BEGIN_STATE(L_TIMESTAMP1)
           U_DIGIT {
-          OVERFLOW(BADTOKEN)
+          IF_OVERFLOW(BADTOKEN)
           SET_STATE(L_TIMESTAMP1)
         }
           U_COLON {
-          OVERFLOW(BADTOKEN)
+          IF_OVERFLOW(BADTOKEN)
           SET_STATE(L_TIMESTAMP2)
         }
           U_PERIOD {
-          OVERFLOW(BADTOKEN)
+          IF_OVERFLOW(BADTOKEN)
           SET_STATE(L_TIMESTAMP3)
         }
         END_STATE
 
         BEGIN_STATE(L_TIMESTAMP2)
           U_DIGIT {
-          OVERFLOW(BADTOKEN)
+          IF_OVERFLOW(BADTOKEN)
           SET_STATE(L_TIMESTAMP2)
         }
           U_PERIOD {
-          OVERFLOW(BADTOKEN)
+          IF_OVERFLOW(BADTOKEN)
           SET_STATE(L_TIMESTAMP3)
         }
         END_STATE
 
         BEGIN_STATE(L_TIMESTAMP3)
           U_DIGIT {
-          OVERFLOW(TIMESTAMP)
+          IF_OVERFLOW(TIMESTAMP)
           BREAK
         }
         DEFAULT {
           BACKUP
+		  /* Don't return a TIMESTAMP if we don't have at least one
+		     millisecond */
+          if( !webvtt_isdigit( self->token[ self->token_pos - 1 ] ) ) {
+            RETURN(BADTOKEN);
+          }
           RETURN(TIMESTAMP)
           BREAK
         }
