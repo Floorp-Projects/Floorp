@@ -18,6 +18,7 @@
 #include "nsGUIEvent.h"
 #include "nsIJSEventListener.h"
 #include "mozilla/dom/EventTarget.h"
+#include "mozilla/dom/EventListenerBinding.h"
 
 class nsIDOMEvent;
 class nsIAtom;
@@ -34,6 +35,9 @@ class nsEventListenerManager;
 
 namespace mozilla {
 namespace dom {
+
+typedef CallbackObjectHolder<EventListener, nsIDOMEventListener>
+  EventListenerHolder;
 
 struct EventListenerFlags
 {
@@ -149,12 +153,14 @@ typedef enum
 {
     eNativeListener = 0,
     eJSEventListener,
-    eWrappedJSListener
+    eWrappedJSListener,
+    eWebIDLListener,
+    eListenerTypeCount
 } nsListenerType;
 
 struct nsListenerStruct
 {
-  nsRefPtr<nsIDOMEventListener> mListener;
+  mozilla::dom::EventListenerHolder mListener;
   nsCOMPtr<nsIAtom>             mTypeAtom;
   uint32_t                      mEventType;
   uint8_t                       mListenerType;
@@ -166,13 +172,19 @@ struct nsListenerStruct
 
   nsIJSEventListener* GetJSListener() const {
     return (mListenerType == eJSEventListener) ?
-      static_cast<nsIJSEventListener *>(mListener.get()) : nullptr;
+      static_cast<nsIJSEventListener *>(mListener.GetXPCOMCallback()) : nullptr;
+  }
+
+  nsListenerStruct()
+  {
+    MOZ_ASSERT(sizeof(mListenerType) == 1);
+    MOZ_ASSERT(eListenerTypeCount < 255);
   }
 
   ~nsListenerStruct()
   {
     if ((mListenerType == eJSEventListener) && mListener) {
-      static_cast<nsIJSEventListener*>(mListener.get())->Disconnect();
+      static_cast<nsIJSEventListener*>(mListener.GetXPCOMCallback())->Disconnect();
     }
   }
 
@@ -364,7 +376,7 @@ protected:
                            nsCxPusher* aPusher);
 
   nsresult HandleEventSubType(nsListenerStruct* aListenerStruct,
-                              nsIDOMEventListener* aListener,
+                              const mozilla::dom::EventListenerHolder& aListener,
                               nsIDOMEvent* aDOMEvent,
                               mozilla::dom::EventTarget* aCurrentTarget,
                               nsCxPusher* aPusher);

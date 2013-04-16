@@ -18,7 +18,8 @@
 class nsEventListenerInfo : public nsIEventListenerInfo
 {
 public:
-  nsEventListenerInfo(const nsAString& aType, nsIDOMEventListener* aListener,
+  nsEventListenerInfo(const nsAString& aType,
+                      already_AddRefed<nsIDOMEventListener> aListener,
                       bool aCapturing, bool aAllowsUntrusted,
                       bool aInSystemEventGroup)
   : mType(aType), mListener(aListener), mCapturing(aCapturing),
