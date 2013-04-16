@@ -9,6 +9,4 @@ interface CaretPosition {
    */
   readonly attribute Node? offsetNode;
   readonly attribute unsigned long offset;
-
-  ClientRect getClientRect();
 };
