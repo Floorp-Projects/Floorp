@@ -551,6 +551,8 @@ public class Tab {
         setDocumentURI(message.getString("documentURI"));
         if (message.getBoolean("sameDocument")) {
             // We can get a location change event for the same document with an anchor tag
+            // Notify listeners so that buttons like back or forward will update themselves
+            Tabs.getInstance().notifyListeners(this, Tabs.TabEvents.LOCATION_CHANGE, uri);
             return;
         }
 
