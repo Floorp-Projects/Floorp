@@ -29,7 +29,6 @@
 using namespace xpc;
 using namespace mozilla;
 using namespace mozilla::dom;
-using namespace JS;
 
 //#define STRICT_CHECK_OF_UNICODE
 #ifdef STRICT_CHECK_OF_UNICODE
@@ -170,7 +169,7 @@ XPCConvert::NativeData2JS(XPCLazyCallContext& lccx, jsval* d, const void* s,
                 nsID* iid2 = *((nsID**)s);
                 if (!iid2)
                     break;
-                RootedObject scope(cx, lccx.GetScopeForNewJSObjects());
+                JS::RootedObject scope(cx, lccx.GetScopeForNewJSObjects());
                 JSObject* obj;
                 if (!(obj = xpc_NewIDObject(cx, scope, *iid2)))
                     return false;
@@ -831,7 +830,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
     nsWrapperCache *cache = aHelper.GetWrapperCache();
 
     bool tryConstructSlimWrapper = false;
-    RootedObject flat(cx);
+    JS::RootedObject flat(cx);
     if (cache) {
         flat = cache->GetWrapper();
         if (cache->IsDOMBinding()) {
@@ -1154,7 +1153,7 @@ public:
 
 private:
     JSContext * const mContext;
-    AutoValueRooter tvr;
+    JS::AutoValueRooter tvr;
 };
 
 // static
@@ -1412,26 +1411,29 @@ XPCConvert::NativeArray2JS(XPCLazyCallContext& lccx,
 
     // XXX add support to indicate *which* array element was not convertable
 
-    RootedObject array(cx, JS_NewArrayObject(cx, count, nullptr));
+    JSObject *array = JS_NewArrayObject(cx, count, nullptr);
 
     if (!array)
         return false;
 
+    // root this early
     *d = OBJECT_TO_JSVAL(array);
+    AUTO_MARK_JSVAL(ccx, d);
 
     if (pErr)
         *pErr = NS_ERROR_XPC_BAD_CONVERT_NATIVE;
 
     uint32_t i;
-    RootedValue current(cx, JSVAL_NULL);
+    jsval current = JSVAL_NULL;
+    AUTO_MARK_JSVAL(ccx, &current);
 
-#define POPULATE(_t)                                                                    \
-    PR_BEGIN_MACRO                                                                      \
-        for (i = 0; i < count; i++) {                                                   \
-            if (!NativeData2JS(ccx, current.address(), ((_t*)*s)+i, type, iid, pErr) || \
-                !JS_SetElement(cx, array, i, current.address()))                        \
-                goto failure;                                                           \
-        }                                                                               \
+#define POPULATE(_t)                                                          \
+    PR_BEGIN_MACRO                                                            \
+        for (i = 0; i < count; i++) {                                         \
+            if (!NativeData2JS(ccx, &current, ((_t*)*s)+i, type, iid, pErr) ||\
+                !JS_SetElement(cx, array, i, &current))                       \
+                goto failure;                                                 \
+        }                                                                     \
     PR_END_MACRO
 
     // XXX check IsPtr - esp. to handle array of nsID (as opposed to nsID*)

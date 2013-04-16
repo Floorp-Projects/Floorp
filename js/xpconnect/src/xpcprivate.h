@@ -3857,6 +3857,25 @@ private:
 };
 
 /***************************************************************************/
+class XPCMarkableJSVal
+{
+public:
+    XPCMarkableJSVal(jsval val) : mVal(val), mValPtr(&mVal) {}
+    XPCMarkableJSVal(jsval *pval) : mVal(JSVAL_VOID), mValPtr(pval) {}
+    ~XPCMarkableJSVal() {}
+    void Mark() {}
+    void TraceJS(JSTracer* trc)
+    {
+        JS_CallValueTracer(trc, *mValPtr, "XPCMarkableJSVal");
+    }
+    void AutoTrace(JSTracer* trc) {}
+private:
+    XPCMarkableJSVal(); // not implemented
+    jsval  mVal;
+    jsval* mValPtr;
+};
+
+/***************************************************************************/
 // AutoMarkingPtr is the base class for the various AutoMarking pointer types
 // below. This system allows us to temporarily protect instances of our garbage
 // collected types after they are constructed but before they are safely
@@ -3935,6 +3954,7 @@ typedef TypedAutoMarkingPtr<XPCNativeSet> AutoMarkingNativeSetPtr;
 typedef TypedAutoMarkingPtr<XPCWrappedNative> AutoMarkingWrappedNativePtr;
 typedef TypedAutoMarkingPtr<XPCWrappedNativeTearOff> AutoMarkingWrappedNativeTearOffPtr;
 typedef TypedAutoMarkingPtr<XPCWrappedNativeProto> AutoMarkingWrappedNativeProtoPtr;
+typedef TypedAutoMarkingPtr<XPCMarkableJSVal> AutoMarkingJSVal;
 typedef TypedAutoMarkingPtr<XPCNativeScriptableInfo> AutoMarkingNativeScriptableInfoPtr;
 
 template<class T>
@@ -3986,6 +4006,14 @@ class ArrayAutoMarkingPtr : public AutoMarkingPtr
 };
 
 typedef ArrayAutoMarkingPtr<XPCNativeInterface> AutoMarkingNativeInterfacePtrArrayPtr;
+
+#define AUTO_MARK_JSVAL_HELPER2(tok, line) tok##line
+#define AUTO_MARK_JSVAL_HELPER(tok, line) AUTO_MARK_JSVAL_HELPER2(tok, line)
+
+#define AUTO_MARK_JSVAL(cx, val)                                              \
+    XPCMarkableJSVal AUTO_MARK_JSVAL_HELPER(_val_,__LINE__)(val);             \
+    AutoMarkingJSVal AUTO_MARK_JSVAL_HELPER(_automarker_,__LINE__)            \
+    (cx, &AUTO_MARK_JSVAL_HELPER(_val_,__LINE__))
 
 /***************************************************************************/
 // Allocates a string that grants all access ("AllAccess")
