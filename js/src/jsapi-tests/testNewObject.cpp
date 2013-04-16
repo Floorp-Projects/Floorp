@@ -95,7 +95,7 @@ BEGIN_TEST(testNewObject_1)
     static JSClass cls = {
         "testNewObject_1",
         0,
-        JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+        JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
         JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, NULL,
         NULL, NULL, NULL, constructHook
     };

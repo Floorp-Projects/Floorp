@@ -20,8 +20,8 @@ BEGIN_TEST(testResolveRecursion)
         JSCLASS_NEW_RESOLVE | JSCLASS_HAS_PRIVATE,
 
         JS_PropertyStub,       // add
-        JS_PropertyStub,       // delete
-        JS_PropertyStub,         // get
+        JS_DeletePropertyStub, // delete
+        JS_PropertyStub,       // get
         JS_StrictPropertyStub, // set
         JS_EnumerateStub,
         (JSResolveOp) my_resolve,

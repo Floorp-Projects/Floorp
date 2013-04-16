@@ -422,6 +422,16 @@ CallJSPropertyOpSetter(JSContext *cx, StrictPropertyOp op, HandleObject obj, Han
     return op(cx, obj, id, strict, vp);
 }
 
+static inline bool
+CallJSDeletePropertyOp(JSContext *cx, JSDeletePropertyOp op, HandleObject receiver, HandleId id,
+                       JSBool *succeeded)
+{
+    JS_CHECK_RECURSION(cx, return false);
+
+    assertSameCompartment(cx, receiver, id);
+    return op(cx, receiver, id, succeeded);
+}
+
 inline bool
 CallSetter(JSContext *cx, HandleObject obj, HandleId id, StrictPropertyOp op, unsigned attrs,
            unsigned shortid, JSBool strict, MutableHandleValue vp)

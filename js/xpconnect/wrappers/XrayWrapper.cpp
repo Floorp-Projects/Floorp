@@ -42,7 +42,7 @@ namespace XrayUtils {
 JSClass HolderClass = {
     "NativePropertyHolder",
     JSCLASS_HAS_RESERVED_SLOTS(2),
-    JS_PropertyStub,        JS_PropertyStub, holder_get,      holder_set,
+    JS_PropertyStub,        JS_DeletePropertyStub, holder_get,      holder_set,
     JS_EnumerateStub,       JS_ResolveStub,  JS_ConvertStub
 };
 }
@@ -320,7 +320,7 @@ ExpandoObjectFinalize(JSFreeOp *fop, JSObject *obj)
 JSClass ExpandoObjectClass = {
     "XrayExpandoObject",
     JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_EXPANDO_COUNT),
-    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+    JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, ExpandoObjectFinalize
 };
 

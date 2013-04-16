@@ -15,6 +15,11 @@ EXPORTS		= \
 		xptinfo.h \
 		$(NULL)
 
+EXPORTS_NAMESPACES := mozilla
+EXPORTS_mozilla := \
+  XPTInterfaceInfoManager.h \
+  $(null)
+
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 include $(topsrcdir)/config/rules.mk

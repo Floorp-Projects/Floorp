@@ -1688,7 +1688,6 @@ JSScript::Create(JSContext *cx, HandleObject enclosingScope, bool savedCallerFun
     script->sourceStart = bufStart;
     script->sourceEnd = bufEnd;
     script->userBit = options.userBit;
-    script->maxInlineDepth_ = uint8_t(-1);
 
     return script;
 }
