@@ -310,6 +310,15 @@ class AudioDeviceAndroidOpenSLES: public AudioDeviceGeneric {
   std::queue<WebRtc_Word8*> play_queue_;
   WebRtc_Word8 play_buf_[N_PLAY_QUEUE_BUFFERS][
       N_PLAY_CHANNELS * sizeof(int16_t) * PLAY_BUF_SIZE_IN_SAMPLES];
+
+  // dlopen for OpenSLES
+  void *opensles_lib_;
+  SLInterfaceID SL_IID_ENGINE_;
+  SLInterfaceID SL_IID_BUFFERQUEUE_;
+  SLInterfaceID SL_IID_ANDROIDCONFIGURATION_;
+  SLInterfaceID SL_IID_PLAY_;
+  SLInterfaceID SL_IID_ANDROIDSIMPLEBUFFERQUEUE_;
+  SLInterfaceID SL_IID_RECORD_;
 };
 
 }  // namespace webrtc
