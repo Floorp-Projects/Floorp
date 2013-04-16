@@ -185,7 +185,7 @@ CallbackObject::CallSetup::~CallSetup()
 
 already_AddRefed<nsISupports>
 CallbackObjectHolderBase::ToXPCOMCallback(CallbackObject* aCallback,
-                                          const nsIID& aIID)
+                                          const nsIID& aIID) const
 {
   if (!aCallback) {
     return nullptr;
