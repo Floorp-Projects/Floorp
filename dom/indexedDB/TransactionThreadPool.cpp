@@ -463,7 +463,7 @@ TransactionThreadPool::HasTransactionsForDatabase(IDBDatabase* aDatabase)
 }
 
 bool
-TransactionThreadPool::MaybeFireCallback(DatabasesCompleteCallback& aCallback)
+TransactionThreadPool::MaybeFireCallback(DatabasesCompleteCallback aCallback)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
