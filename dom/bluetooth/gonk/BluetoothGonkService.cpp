@@ -120,7 +120,7 @@ StartStopGonkBluetooth(bool aShouldEnable)
 nsresult
 BluetoothGonkService::StartInternal()
 {
-  NS_ASSERTION(!NS_IsMainThread(), "This should not run on the main thread!");
+  MOZ_ASSERT(!NS_IsMainThread());
 
   nsresult ret;
 
@@ -136,7 +136,7 @@ BluetoothGonkService::StartInternal()
 nsresult
 BluetoothGonkService::StopInternal()
 {
-  NS_ASSERTION(!NS_IsMainThread(), "This should not run on the main thread!");
+  MOZ_ASSERT(!NS_IsMainThread());
 
   nsresult ret;
 
@@ -147,5 +147,18 @@ BluetoothGonkService::StopInternal()
   }
 
   return StartStopGonkBluetooth(false);
+}
+
+bool
+BluetoothGonkService::IsEnabledInternal()
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  if (!EnsureBluetoothInit()) {
+    NS_ERROR("Failed to load bluedroid library.\n");
+    return false;
+  }
+
+  return (sBluedroidFunctions.bt_is_enabled() == 1);
 }
 
