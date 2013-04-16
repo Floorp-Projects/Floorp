@@ -162,7 +162,8 @@ protected:
    * the state machine that controls column balancing.
    */
   ReflowConfig ChooseColumnStrategy(const nsHTMLReflowState& aReflowState,
-                                    bool aForceAuto);
+                                    bool aForceAuto, nscoord aFeasibleHeight,
+                                    nscoord aInfeasibleHeight);
 
   /**
    * Reflow column children. Returns true iff the content that was reflowed
