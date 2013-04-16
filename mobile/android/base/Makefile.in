@@ -209,7 +209,8 @@ FENNEC_JAVA_FILES = \
   gfx/TouchEventHandler.java \
   gfx/ViewTransform.java \
   gfx/VirtualLayer.java \
-  widget/AboutHomeContent.java \
+  widget/AboutHome.java \
+  widget/AboutHomeView.java \
   widget/AboutHomeSection.java \
   widget/AddonsSection.java \
   widget/DateTimePicker.java \

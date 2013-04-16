@@ -40,7 +40,7 @@ public class AddonsSection extends AboutHomeSection {
 
     private Context mContext;
     private BrowserApp mActivity;
-    private AboutHomeContent.UriLoadCallback mUriLoadCallback = null;
+    private AboutHome.UriLoadListener mUriLoadListener;
 
     private static Rect sIconBounds;
     private static TextAppearanceSpan sSubTitleSpan;
@@ -57,14 +57,14 @@ public class AddonsSection extends AboutHomeSection {
         setOnMoreTextClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mUriLoadCallback != null)
-                    mUriLoadCallback.callback("https://addons.mozilla.org/android");
+                if (mUriLoadListener != null)
+                    mUriLoadListener.onAboutHomeUriLoad(mContext.getString(R.string.bookmarkdefaults_url_addons));
             }
         });
     }
 
-    public void setUriLoadCallback(AboutHomeContent.UriLoadCallback uriLoadCallback) {
-        mUriLoadCallback = uriLoadCallback;
+    public void setUriLoadListener(AboutHome.UriLoadListener uriLoadListener) {
+        mUriLoadListener = uriLoadListener;
     }
 
     private String readFromZipFile(String filename) {
@@ -190,8 +190,8 @@ public class AddonsSection extends AboutHomeSection {
                         row.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                if (mUriLoadCallback != null)
-                                    mUriLoadCallback.callback(homepageUrl);
+                                if (mUriLoadListener != null)
+                                    mUriLoadListener.onAboutHomeUriLoad(homepageUrl);
                             }
                         });
                         row.setOnKeyListener(GamepadUtils.getClickDispatcher());

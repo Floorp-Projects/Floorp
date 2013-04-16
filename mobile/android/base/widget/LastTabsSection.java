@@ -31,8 +31,8 @@ public class LastTabsSection extends AboutHomeSection {
         mContext = context;
     }
 
-    public void readLastTabs(GeckoProfile profile) {
-        String jsonString = profile.readSessionFile(true);
+    public void readLastTabs() {
+        String jsonString = GeckoProfile.get(mContext).readSessionFile(true);
         if (jsonString == null) {
             // no previous session data
             return;
