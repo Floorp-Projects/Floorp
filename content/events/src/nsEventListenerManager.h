@@ -219,10 +219,33 @@ public:
   void AddEventListener(const nsAString& aType,
                         nsIDOMEventListener* aListener,
                         bool aUseCapture,
-                        bool aWantsUntrusted);
+                        bool aWantsUntrusted)
+  {
+    mozilla::dom::EventListenerHolder holder(aListener);
+    AddEventListener(aType, holder, aUseCapture, aWantsUntrusted);
+  }
+  void AddEventListener(const nsAString& aType,
+                        mozilla::dom::EventListener* aListener,
+                        bool aUseCapture,
+                        bool aWantsUntrusted)
+  {
+    mozilla::dom::EventListenerHolder holder(aListener);
+    AddEventListener(aType, holder, aUseCapture, aWantsUntrusted);
+  }
   void RemoveEventListener(const nsAString& aType,
                            nsIDOMEventListener* aListener,
-                           bool aUseCapture);
+                           bool aUseCapture)
+  {
+    mozilla::dom::EventListenerHolder holder(aListener);
+    RemoveEventListener(aType, holder, aUseCapture);
+  }
+  void RemoveEventListener(const nsAString& aType,
+                           mozilla::dom::EventListener* aListener,
+                           bool aUseCapture)
+  {
+    mozilla::dom::EventListenerHolder holder(aListener);
+    RemoveEventListener(aType, holder, aUseCapture);
+  }
 
   void AddListenerForAllEvents(nsIDOMEventListener* aListener,
                                bool aUseCapture,
@@ -238,8 +261,22 @@ public:
   */
   void AddEventListenerByType(nsIDOMEventListener *aListener,
                               const nsAString& type,
+                              const mozilla::dom::EventListenerFlags& aFlags)
+  {
+    mozilla::dom::EventListenerHolder holder(aListener);
+    AddEventListenerByType(holder, type, aFlags);
+  }
+  void AddEventListenerByType(const mozilla::dom::EventListenerHolder& aListener,
+                              const nsAString& type,
                               const mozilla::dom::EventListenerFlags& aFlags);
   void RemoveEventListenerByType(nsIDOMEventListener *aListener,
+                                 const nsAString& type,
+                                 const mozilla::dom::EventListenerFlags& aFlags)
+  {
+    mozilla::dom::EventListenerHolder holder(aListener);
+    RemoveEventListenerByType(holder, type, aFlags);
+  }
+  void RemoveEventListenerByType(const mozilla::dom::EventListenerHolder& aListener,
                                  const nsAString& type,
                                  const mozilla::dom::EventListenerFlags& aFlags);
 
@@ -457,15 +494,23 @@ protected:
    */
   const nsEventHandler* GetEventHandlerInternal(nsIAtom* aEventName);
 
+  void AddEventListener(const nsAString& aType,
+                        const mozilla::dom::EventListenerHolder& aListener,
+                        bool aUseCapture,
+                        bool aWantsUntrusted);
+  void RemoveEventListener(const nsAString& aType,
+                           const mozilla::dom::EventListenerHolder& aListener,
+                           bool aUseCapture);
+
   void AddEventListenerInternal(
-         nsIDOMEventListener* aListener,
+         const mozilla::dom::EventListenerHolder& aListener,
          uint32_t aType,
          nsIAtom* aTypeAtom,
          const mozilla::dom::EventListenerFlags& aFlags,
          bool aHandler = false,
          bool aAllEvents = false);
   void RemoveEventListenerInternal(
-         nsIDOMEventListener* aListener,
+         const mozilla::dom::EventListenerHolder& aListener,
          uint32_t aType,
          nsIAtom* aUserType,
          const mozilla::dom::EventListenerFlags& aFlags,
