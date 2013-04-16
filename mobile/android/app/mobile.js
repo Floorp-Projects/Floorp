@@ -653,6 +653,9 @@ pref("reader.margin_size", 5);
 // The default color scheme in reader (light, dark, sepia)
 pref("reader.color_scheme", "light");
 
+// The font type in reader (sans-serif, serif)
+pref("reader.font_type", "sans-serif");
+
 // Used to show a first-launch tip in reader
 pref("reader.has_used_toolbar", false);
 
