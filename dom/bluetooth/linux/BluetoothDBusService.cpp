@@ -82,7 +82,7 @@ static Properties sDeviceProperties[] = {
   {"Class", DBUS_TYPE_UINT32},
   {"UUIDs", DBUS_TYPE_ARRAY},
   {"Paired", DBUS_TYPE_BOOLEAN},
-  {"Connected", DBUS_TYPE_ARRAY},
+  {"Connected", DBUS_TYPE_BOOLEAN},
   {"Trusted", DBUS_TYPE_BOOLEAN},
   {"Blocked", DBUS_TYPE_BOOLEAN},
   {"Alias", DBUS_TYPE_STRING},
@@ -1030,7 +1030,7 @@ GetProperty(DBusMessageIter aIter, Properties* aPropertyTypes,
   DBusMessageIter prop_val, array_val_iter;
   char* property = NULL;
   uint32_t array_type;
-  int i, type;
+  int i, expectedType, receivedType;
 
   if (dbus_message_iter_get_arg_type(&aIter) != DBUS_TYPE_STRING) {
     return false;
@@ -1058,23 +1058,35 @@ GetProperty(DBusMessageIter aIter, Properties* aPropertyTypes,
   *aPropIndex = i;
 
   dbus_message_iter_recurse(&aIter, &prop_val);
-  type = aPropertyTypes[*aPropIndex].type;
+  expectedType = aPropertyTypes[*aPropIndex].type;
+  receivedType = dbus_message_iter_get_arg_type(&prop_val);
 
-  if (dbus_message_iter_get_arg_type(&prop_val) != type) {
+  /**
+   * Bug 857896. Since device property "Connected" could be a boolean value or
+   * an 2-byte array, we need to check the value type here and convert the
+   * first byte into a boolean manually.
+   */
+  bool convert = false;
+  if (propertyName.EqualsLiteral("Connected") &&
+      receivedType == DBUS_TYPE_ARRAY) {
+    convert = true;
+  }
+
+  if ((receivedType != expectedType) && !convert) {
     NS_WARNING("Iterator not type we expect!");
-    nsAutoCString str;
-    str += "Property Name: ;";
-    str += NS_ConvertUTF16toUTF8(propertyName);
-    str += " Property Type Expected: ;";
-    str += type;
-    str += " Property Type Received: ";
-    str += dbus_message_iter_get_arg_type(&prop_val);
+    nsCString str;
+    str.AppendLiteral("Property Name: ");
+    str.Append(NS_ConvertUTF16toUTF8(propertyName));
+    str.AppendLiteral(", Property Type Expected: ");
+    str.AppendInt(expectedType);
+    str.AppendLiteral(", Property Type Received: ");
+    str.AppendInt(receivedType);
     NS_WARNING(str.get());
     return false;
   }
 
   BluetoothValue propertyValue;
-  switch (type) {
+  switch (receivedType) {
     case DBUS_TYPE_STRING:
     case DBUS_TYPE_OBJECT_PATH:
       const char* c;
@@ -1124,6 +1136,14 @@ GetProperty(DBusMessageIter aIter, Properties* aPropertyTypes,
     default:
       NS_NOTREACHED("Cannot find dbus message type!");
   }
+
+  if (convert) {
+    MOZ_ASSERT(propertyValue.type() == BluetoothValue::TArrayOfuint8_t);
+
+    bool b = propertyValue.get_ArrayOfuint8_t()[0];
+    propertyValue = BluetoothValue(b);
+  }
+
   aProperties.AppendElement(BluetoothNamedValue(propertyName, propertyValue));
   return true;
 }
@@ -1187,48 +1207,14 @@ UnpackAdapterPropertiesMessage(DBusMessage* aMsg, DBusError* aErr,
                           ArrayLength(sAdapterProperties));
 }
 
-bool
-ReplaceConnectedType(Properties* sourceProperties,
-                     Properties** destProperties,
-                     int aPropertyTypeLen)
-{
-  if (!IsDeviceConnectedTypeBoolean()) {
-    return false;
-  }
-  *destProperties = (Properties*)malloc(sizeof(Properties) * aPropertyTypeLen);
-  if (*destProperties) {
-    CopyProperties(sourceProperties, *destProperties, aPropertyTypeLen);
-    int index = GetPropertyIndex(*destProperties,
-                                 "Connected",
-                                 aPropertyTypeLen);
-    if (index >= 0) {
-      (*destProperties)[index].type = DBUS_TYPE_BOOLEAN;
-      return true;
-    } else {
-      free(*destProperties);
-    }
-  }
-  return false;
-}
-
 void
 UnpackDevicePropertiesMessage(DBusMessage* aMsg, DBusError* aErr,
                               BluetoothValue& aValue,
                               nsAString& aErrorStr)
 {
-  Properties* props = sDeviceProperties;
-  Properties* newProps;
-  bool replaced = ReplaceConnectedType(sDeviceProperties, &newProps,
-                                       ArrayLength(sDeviceProperties));
-  if (replaced) {
-     props = newProps;
-  }
   UnpackPropertiesMessage(aMsg, aErr, aValue, aErrorStr,
-                          props,
+                          sDeviceProperties,
                           ArrayLength(sDeviceProperties));
-  if (replaced) {
-     free(newProps);
-  }
 }
 
 void
@@ -1400,20 +1386,11 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
 
     if (dbus_message_iter_next(&iter)) {
       Properties* props = sDeviceProperties;
-      Properties* newProps;
-      bool replaced = ReplaceConnectedType(sDeviceProperties, &newProps,
-                                           ArrayLength(sDeviceProperties));
-      if (replaced) {
-        props = newProps;
-      }
       ParseProperties(&iter,
                       v,
                       errorStr,
                       props,
                       ArrayLength(sDeviceProperties));
-      if (replaced) {
-        free(newProps);
-      }
       if (v.type() == BluetoothValue::TArrayOfBluetoothNamedValue)
       {
         // The DBus DeviceFound message actually passes back a key value object
@@ -1511,20 +1488,11 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
   } else if (dbus_message_is_signal(aMsg, DBUS_DEVICE_IFACE,
                                     "PropertyChanged")) {
     Properties* props = sDeviceProperties;
-    Properties* newProps;
-    bool replaced = ReplaceConnectedType(sDeviceProperties, &newProps,
-                                         ArrayLength(sDeviceProperties));
-    if (replaced) {
-      props = newProps;
-    }
     ParsePropertyChange(aMsg,
                         v,
                         errorStr,
                         props,
                         ArrayLength(sDeviceProperties));
-    if (replaced) {
-      free(newProps);
-    }
 
     BluetoothNamedValue& property = v.get_ArrayOfBluetoothNamedValue()[0];
     if (property.name().EqualsLiteral("Paired")) {
@@ -1708,7 +1676,9 @@ BluetoothDBusService::StopInternal()
   // If Bluetooth is turned off while connections exist, in order not to only
   // disconnect with profile connections with low level ACL connections alive,
   // we disconnect ACLs directly instead of closing each socket.
-  DisconnectAllAcls(sAdapterPath);
+  if (!sAdapterPath.IsEmpty()) {
+    DisconnectAllAcls(sAdapterPath);
+  }
 
   if (!mConnection) {
     StopDBus();
@@ -1754,6 +1724,12 @@ BluetoothDBusService::StopInternal()
 
   StopDBus();
   return NS_OK;
+}
+
+bool
+BluetoothDBusService::IsEnabledInternal()
+{
+  return mEnabled;
 }
 
 class DefaultAdapterPropertiesRunnable : public nsRunnable
