@@ -198,10 +198,6 @@ public class AboutHome extends Fragment {
                 mTopSitesView.pinSite(info);
                 return true;
 
-            case R.id.abouthome_topsites_remove:
-                mTopSitesView.unpinSite(info, TopSitesView.UnpinFlags.REMOVE_HISTORY);
-                return true;
-
         }
         return super.onContextItemSelected(item);
     }

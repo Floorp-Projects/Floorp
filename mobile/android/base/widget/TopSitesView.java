@@ -60,8 +60,7 @@ public class TopSitesView extends GridView {
     private static int mNumberOfCols;
 
     public static enum UnpinFlags {
-        REMOVE_PIN,
-        REMOVE_HISTORY
+        REMOVE_PIN
     }
 
     private Context mContext;
@@ -128,7 +127,6 @@ public class TopSitesView extends GridView {
                     menu.findItem(R.id.abouthome_open_private_tab).setVisible(false);
                     menu.findItem(R.id.abouthome_topsites_pin).setVisible(false);
                     menu.findItem(R.id.abouthome_topsites_unpin).setVisible(false);
-                    menu.findItem(R.id.abouthome_topsites_remove).setVisible(false);
                 } else if (holder.isPinned()) {
                     menu.findItem(R.id.abouthome_topsites_pin).setVisible(false);
                 } else {
@@ -550,9 +548,6 @@ public class TopSitesView extends GridView {
             public Void doInBackground(Void... params) {
                 final ContentResolver resolver = mContext.getContentResolver();
                 BrowserDB.unpinSite(resolver, position);
-                if (flags == UnpinFlags.REMOVE_HISTORY) {
-                    BrowserDB.removeHistoryEntry(resolver, url);
-                }
                 return null;
             }
         }).execute();
