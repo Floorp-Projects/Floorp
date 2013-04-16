@@ -42,6 +42,7 @@ pref("extensions.getAddons.getWithPerformance.url", "https://services.addons.moz
 pref("extensions.getAddons.search.browseURL", "https://addons.mozilla.org/%LOCALE%/firefox/search?q=%TERMS%&platform=%OS%&appver=%VERSION%");
 pref("extensions.getAddons.search.url", "https://services.addons.mozilla.org/%LOCALE%/firefox/api/%API_VERSION%/search/%TERMS%/all/%MAX_RESULTS%/%OS%/%VERSION%/%COMPATIBILITY_MODE%?src=firefox");
 pref("extensions.webservice.discoverURL", "https://services.addons.mozilla.org/%LOCALE%/firefox/discovery/pane/%VERSION%/%OS%/%COMPATIBILITY_MODE%");
+pref("extensions.getAddons.recommended.url", "https://services.addons.mozilla.org/%LOCALE%/%APP%/api/%API_VERSION%/list/recommended/all/%MAX_RESULTS%/%OS%/%VERSION%?src=firefox");
 
 // Blocklist preferences
 pref("extensions.blocklist.enabled", true);
@@ -1059,6 +1060,7 @@ pref("devtools.debugger.remote-host", "localhost");
 pref("devtools.debugger.remote-autoconnect", false);
 pref("devtools.debugger.remote-connection-retries", 3);
 pref("devtools.debugger.remote-timeout", 20000);
+pref("devtools.debugger.source-maps-enabled", false);
 
 // The default Debugger UI settings
 pref("devtools.debugger.ui.win-x", 0);
