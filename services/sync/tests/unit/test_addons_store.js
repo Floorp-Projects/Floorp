@@ -3,7 +3,7 @@
 
 "use strict";
 
-Cu.import("resource://services-common/preferences.js");
+Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://services-sync/addonutils.js");
 Cu.import("resource://services-sync/engines/addons.js");
 Cu.import("resource://services-sync/service.js");

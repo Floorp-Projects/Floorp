@@ -7,7 +7,18 @@
 
 <script type="text/javascript">
 
-var MOZ_STORAGE_CHANGED_COUNT = 8;
+var expectedEvents = [
+  "empty,null,",
+  "empty,,null",
+  "key1,null,value1",
+  "key1,value1,null",
+  "key1,null,value1",
+  "key2,null,value2",
+  "key2,value2,value2-2",
+  "key1,value1,value1-2",
+  "key2,value2-2,null",
+  "null,null,null"
+];
 
 function setup() {
   sessionStorage.clear();
@@ -37,8 +48,11 @@ function startTest()
   var sessionStorageCopy = sessionStorage;
 
   function onStorageChanged(e) {
-    if (e.storageArea == sessionStorageCopy)
-      mozStorageChangedReceived++;
+    if (e.storageArea == sessionStorageCopy) {
+      ok(expectedEvents.length > 0, "Not more then expected events encountered");
+      var receivedEvent = e.key + "," + e.oldValue + "," + e.newValue;
+      is(receivedEvent, expectedEvents.shift(), "Expected event data: " + receivedEvent);
+    }
   }
 
   // Listen for MozStorageChanged
@@ -148,8 +162,7 @@ function startTest()
 
   SimpleTest.executeSoon(function () {
     SpecialPowers.removeChromeEventListener("MozStorageChanged", onStorageChanged, false);
-    is(mozStorageChangedReceived, MOZ_STORAGE_CHANGED_COUNT,
-       "received the correct number of events");
+    is(expectedEvents.length, 0, "received the correct number of events");
 
     sessionStorage.clear();
     SimpleTest.finish();

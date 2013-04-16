@@ -12,7 +12,6 @@
 
 #include "jsscript.h"
 
-#include "frontend/ParseMaps.h"
 #include "frontend/TokenStream.h"
 
 namespace js {
@@ -1215,7 +1214,7 @@ struct Definition : public ParseNode
         return pn_cookie.isFree();
     }
 
-    enum Kind { VAR, CONST, LET, ARG, NAMED_LAMBDA, PLACEHOLDER };
+    enum Kind { MISSING = 0, VAR, CONST, LET, ARG, NAMED_LAMBDA, PLACEHOLDER };
 
     bool canHaveInitializer() { return int(kind()) <= int(ARG); }
 
@@ -1296,19 +1295,6 @@ ParseNode::isConstant()
       default:
         return false;
     }
-}
-
-inline void
-LinkUseToDef(ParseNode *pn, Definition *dn)
-{
-    JS_ASSERT(!pn->isUsed());
-    JS_ASSERT(!pn->isDefn());
-    JS_ASSERT(pn != dn->dn_uses);
-    pn->pn_link = dn->dn_uses;
-    dn->dn_uses = pn;
-    dn->pn_dflags |= pn->pn_dflags & PND_USE2DEF_FLAGS;
-    pn->setUsed(true);
-    pn->pn_lexdef = dn;
 }
 
 class ObjectBox {

@@ -18,12 +18,15 @@
 #include "nsPerformance.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsBarProps.h"
-#include "nsDOMStorage.h"
+#include "nsIDOMStorage.h"
+#include "nsIDOMStorageManager.h"
+#include "DOMStorage.h"
 #include "nsDOMOfflineResourceList.h"
 #include "nsError.h"
 #include "nsIIdleService.h"
 #include "nsIPowerManagerService.h"
 #include "nsISizeOfEventTarget.h"
+#include "nsIPermissionManager.h"
 
 #ifdef XP_WIN
 #ifdef GetClassName
@@ -2520,7 +2523,36 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     }
   }
 
+  PreloadLocalStorage();
+
   return NS_OK;
+}
+
+void
+nsGlobalWindow::PreloadLocalStorage()
+{
+  if (!Preferences::GetBool(kStorageEnabled)) {
+    return;
+  }
+
+  if (IsChromeWindow()) {
+    return;
+  }
+
+  nsIPrincipal* principal = GetPrincipal();
+  if (!principal) {
+    return;
+  }
+
+  nsresult rv;
+
+  nsCOMPtr<nsIDOMStorageManager> storageManager =
+    do_GetService("@mozilla.org/dom/localStorage-manager;1", &rv);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  storageManager->PrecacheStorage(principal);
 }
 
 void
@@ -2708,19 +2740,6 @@ nsGlobalWindow::DetachFromDocShell()
 
   MaybeForgiveSpamCount();
   CleanUp(false);
-
-    if (mLocalStorage) {
-      nsCOMPtr<nsIPrivacyTransitionObserver> obs = do_GetInterface(mLocalStorage);
-      if (obs) {
-        mDocShell->AddWeakPrivacyTransitionObserver(obs);
-      }
-    }
-    if (mSessionStorage) {
-      nsCOMPtr<nsIPrivacyTransitionObserver> obs = do_GetInterface(mSessionStorage);
-      if (obs) {
-        mDocShell->AddWeakPrivacyTransitionObserver(obs);
-      }
-    }
 }
 
 void
@@ -8826,7 +8845,7 @@ nsGlobalWindow::GetSessionStorage(nsIDOMStorage ** aSessionStorage)
                    "window %x owned sessionStorage "
                    "that could not be accessed!");
       if (!canAccess) {
-          mSessionStorage = nullptr;
+        mSessionStorage = nullptr;
       }
     }
   }
@@ -8840,7 +8859,7 @@ nsGlobalWindow::GetSessionStorage(nsIDOMStorage ** aSessionStorage)
     }
 
     // If the document has the sandboxed origin flag set
-    // don't allow access to localStorage.
+    // don't allow access to sessionStorage.
     if (!mDoc) {
       return NS_ERROR_FAILURE;
     }
@@ -8849,10 +8868,17 @@ nsGlobalWindow::GetSessionStorage(nsIDOMStorage ** aSessionStorage)
       return NS_ERROR_DOM_SECURITY_ERR;
     }
 
-    nsresult rv = docShell->GetSessionStorageForPrincipal(principal,
-                                                          documentURI,
-                                                          true,
-                                                          getter_AddRefs(mSessionStorage));
+    nsresult rv;
+
+    nsCOMPtr<nsIDOMStorageManager> storageManager = do_QueryInterface(docShell, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(docShell);
+
+    rv = storageManager->CreateStorage(principal,
+                                       documentURI,
+                                       loadContext && loadContext->UsePrivateBrowsing(),
+                                       getter_AddRefs(mSessionStorage));
     NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef PR_LOGGING
@@ -8864,17 +8890,12 @@ nsGlobalWindow::GetSessionStorage(nsIDOMStorage ** aSessionStorage)
     if (!mSessionStorage) {
       return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
     }
-
-    nsCOMPtr<nsIPrivacyTransitionObserver> obs = do_GetInterface(mSessionStorage);
-    if (obs) {
-      docShell->AddWeakPrivacyTransitionObserver(obs);
-    }
   }
 
 #ifdef PR_LOGGING
-    if (PR_LOG_TEST(gDOMLeakPRLog, PR_LOG_DEBUG)) {
-      PR_LogPrint("nsGlobalWindow %p returns %p sessionStorage", this, mSessionStorage.get());
-    }
+  if (PR_LOG_TEST(gDOMLeakPRLog, PR_LOG_DEBUG)) {
+    PR_LogPrint("nsGlobalWindow %p returns %p sessionStorage", this, mSessionStorage.get());
+  }
 #endif
 
   NS_ADDREF(*aSessionStorage = mSessionStorage);
@@ -8898,21 +8919,18 @@ nsGlobalWindow::GetLocalStorage(nsIDOMStorage ** aLocalStorage)
 
     nsresult rv;
 
-    if (!nsDOMStorage::CanUseStorage())
+    if (!DOMStorage::CanUseStorage()) {
       return NS_ERROR_DOM_SECURITY_ERR;
+    }
 
     nsIPrincipal *principal = GetPrincipal();
-    if (!principal)
+    if (!principal) {
       return NS_OK;
+    }
 
     nsCOMPtr<nsIDOMStorageManager> storageManager =
-      do_GetService("@mozilla.org/dom/storagemanager;1", &rv);
+      do_GetService("@mozilla.org/dom/localStorage-manager;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    nsString documentURI;
-    if (mDocument) {
-      mDocument->GetDocumentURI(documentURI);
-    }
 
     // If the document has the sandboxed origin flag set
     // don't allow access to localStorage.
@@ -8920,19 +8938,19 @@ nsGlobalWindow::GetLocalStorage(nsIDOMStorage ** aLocalStorage)
       return NS_ERROR_DOM_SECURITY_ERR;
     }
 
+    nsString documentURI;
+    if (mDocument) {
+      mDocument->GetDocumentURI(documentURI);
+    }
+
     nsIDocShell* docShell = GetDocShell();
     nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(docShell);
 
-    rv = storageManager->GetLocalStorageForPrincipal(principal,
-                                                     documentURI,
-                                                     loadContext && loadContext->UsePrivateBrowsing(),
-                                                     getter_AddRefs(mLocalStorage));
+    rv = storageManager->CreateStorage(principal,
+                                       documentURI,
+                                       loadContext && loadContext->UsePrivateBrowsing(),
+                                       getter_AddRefs(mLocalStorage));
     NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIPrivacyTransitionObserver> obs = do_GetInterface(mLocalStorage);
-    if (obs && docShell) {
-      docShell->AddWeakPrivacyTransitionObserver(obs);
-    }
   }
 
   NS_ADDREF(*aLocalStorage = mLocalStorage);
@@ -9506,8 +9524,13 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
     rv = event->GetStorageArea(getter_AddRefs(changingStorage));
     NS_ENSURE_SUCCESS(rv, rv);
 
+    bool fireMozStorageChanged = false;
+    principal = GetPrincipal();
+    if (!principal) {
+      return NS_OK;
+    }
+
     nsCOMPtr<nsPIDOMStorage> pistorage = do_QueryInterface(changingStorage);
-    nsPIDOMStorage::nsDOMStorageType storageType = pistorage->StorageType();
 
     nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(GetDocShell());
     bool isPrivate = loadContext && loadContext->UsePrivateBrowsing();
@@ -9515,28 +9538,21 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
       return NS_OK;
     }
 
-    bool fireMozStorageChanged = false;
-    principal = GetPrincipal();
-    switch (storageType)
+    switch (pistorage->GetType())
     {
     case nsPIDOMStorage::SessionStorage:
     {
-      nsCOMPtr<nsIDOMStorage> storage = mSessionStorage;
-      if (!storage) {
-        nsIDocShell* docShell = GetDocShell();
-        if (principal && docShell) {
-          // No need to pass documentURI here, it's only needed when we want
-          // to create a new storage, the third paramater would be true
-          docShell->GetSessionStorageForPrincipal(principal,
-                                                  EmptyString(),
-                                                  false,
-                                                  getter_AddRefs(storage));
-        }
+      bool check = false;
+
+      nsCOMPtr<nsIDOMStorageManager> storageManager = do_QueryInterface(GetDocShell());
+      if (storageManager) {
+        rv = storageManager->CheckStorage(principal, changingStorage, &check);
+        NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      if (!pistorage->IsForkOf(storage)) {
-        // This storage event is coming from a different doc shell,
-        // i.e. it is a clone, ignore this event.
+      if (!check) {
+        // This storage event is not coming from our storage or is coming
+        // from a different docshell, i.e. it is a clone, ignore this event.
         return NS_OK;
       }
 
@@ -9549,13 +9565,14 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
       fireMozStorageChanged = SameCOMIdentity(mSessionStorage, changingStorage);
       break;
     }
+
     case nsPIDOMStorage::LocalStorage:
     {
       // Allow event fire only for the same principal storages
       // XXX We have to use EqualsIgnoreDomain after bug 495337 lands
-      nsIPrincipal *storagePrincipal = pistorage->Principal();
-      bool equals;
+      nsIPrincipal* storagePrincipal = pistorage->GetPrincipal();
 
+      bool equals = false;
       rv = storagePrincipal->Equals(principal, &equals);
       NS_ENSURE_SUCCESS(rv, rv);
 

@@ -8,23 +8,89 @@
 interface nsIDOMStorage;
 interface nsIPrincipal;
 
-[scriptable, uuid(b16b207c-d883-43f5-a27e-548e7f2f5c20)]
+/**
+ * General purpose interface that has two implementations, for localStorage
+ * resp. sessionStorage with "@mozilla.org/dom/localStorage-manager;1" resp.
+ * "@mozilla.org/dom/sessionStorage-manager;1" contract IDs.
+ */
+[scriptable, uuid(8096f9ea-fa61-4960-b5d7-fb30ac42c8d8)]
 interface nsIDOMStorageManager : nsISupports
 {
   /**
-   * Return the amount of disk space used by a domain.  Usage is checked
-   * against the domain of the page that set the key (the owner domain), not
-   * the domain of the storage object.
-   *
-   * @param aOwnerDomain The domain to check.
-   * @returns the space usage of the domain, in bytes.
+   * This starts async preloading of a storage cache for scope
+   * defined by the principal.
    */
-  long getUsage(in AString aOwnerDomain);
+  void precacheStorage(in nsIPrincipal aPrincipal);
 
   /**
+   * Returns instance of DOM storage object for given principal.
+   * A new object is always returned and it is ensured there is
+   * a storage for the scope created.
+   *
+   * @param aPrincipal
+   *    Principal to bound storage to.
+   * @param aDocumentURI
+   *    URL of the demanding document, used for DOM storage event only.
+   * @param aPrivate
+   *    Whether the demanding document is running in Private Browsing mode or not.
+   */
+  nsIDOMStorage createStorage(in nsIPrincipal aPrincipal,
+                              in DOMString aDocumentURI,
+                              [optional] in bool aPrivate);
+  /**
+   * Returns instance of DOM storage object for given principal.
+   * If there is no storage managed for the scope, then null is returned and
+   * no object is created.  Otherwise, an object (new) for the existing storage
+   * scope is returned.
+   *
+   * @param aPrincipal
+   *    Principal to bound storage to.
+   * @param aPrivate
+   *    Whether the demanding document is running in Private Browsing mode or not.
+   */
+  nsIDOMStorage getStorage(in nsIPrincipal aPrincipal,
+                           [optional] in bool aPrivate);
+
+  /**
+   * Clones given storage into this storage manager.
+   *
+   * @param aStorageToCloneFrom
+   *    The storage to copy all items from into this manager.  Manager will then
+   *    return a new and independent object that contains snapshot of data from
+   *    the moment this method was called.  Modification to this new object will
+   *    not affect the original storage content we cloned from and vice versa.
+   */
+  void cloneStorage(in nsIDOMStorage aStorageToCloneFrom);
+
+  /**
+   * Returns true if the storage belongs to the given principal and is managed
+   * (i.e. has been created and is cached) by this storage manager.
+   *
+   * @param aPrincipal
+   *    Principal to check the storage against.
+   * @param aStorage
+   *    The storage object to examine.
+   *
+   * @result
+   *    true when the storage object is bound with the principal and is managed
+   *         by this storage manager.
+   *    false otherwise
+   */
+  bool checkStorage(in nsIPrincipal aPrincipal,
+                    in nsIDOMStorage aStorage);
+
+  /**
+   * @deprecated
+   *
    * Returns instance of localStorage object for aURI's origin.
    * This method ensures there is always only a single instance
    * for a single origin.
+   *
+   * Currently just forwards to the createStorage method of this
+   * interface.
+   *
+   * Extension developers are strongly encouraged to use getStorage
+   * or createStorage method instead.
    */
   nsIDOMStorage getLocalStorageForPrincipal(in nsIPrincipal aPrincipal,
                                             in DOMString aDocumentURI,

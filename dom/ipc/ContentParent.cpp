@@ -29,7 +29,7 @@
 #include "mozilla/dom/ExternalHelperAppParent.h"
 #include "mozilla/dom/PMemoryReportRequestParent.h"
 #include "mozilla/dom/power/PowerManagerService.h"
-#include "mozilla/dom/StorageParent.h"
+#include "mozilla/dom/DOMStorageIPC.h"
 #include "mozilla/dom/bluetooth/PBluetoothParent.h"
 #include "mozilla/dom/devicestorage/DeviceStorageRequestParent.h"
 #include "SmsParent.h"
@@ -1969,15 +1969,16 @@ ContentParent::DeallocPSms(PSmsParent* aSms)
 }
 
 PStorageParent*
-ContentParent::AllocPStorage(const StorageConstructData& aData)
+ContentParent::AllocPStorage()
 {
-    return new StorageParent(aData);
+    return new DOMStorageDBParent();
 }
 
 bool
 ContentParent::DeallocPStorage(PStorageParent* aActor)
 {
-    delete aActor;
+    DOMStorageDBParent* child = static_cast<DOMStorageDBParent*>(aActor);
+    child->ReleaseIPDLReference();
     return true;
 }
 

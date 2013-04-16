@@ -73,6 +73,7 @@ public class TopSitesView extends GridView {
 
     private static Drawable sPinDrawable = null;
     private int mThumbnailBackground;
+    private Map<String, Bitmap> mPendingThumbnails;
 
     public TopSitesView(Context context) {
         super(context);
@@ -229,6 +230,17 @@ public class TopSitesView extends GridView {
         });
     }
 
+    @Override
+    protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        super.onLayout(changed, l, t, r, b);
+
+        if (mPendingThumbnails != null) {
+            updateTopSitesThumbnails(mPendingThumbnails);
+            mPendingThumbnails = null;
+        }
+    }
+
+
     private List<String> getTopSitesUrls() {
         List<String> urls = new ArrayList<String>();
 
@@ -248,18 +260,18 @@ public class TopSitesView extends GridView {
         ImageView thumbnailView = (ImageView) view.findViewById(R.id.thumbnail);
 
         if (thumbnail == null) {
+            thumbnailView.setScaleType(ImageView.ScaleType.FIT_CENTER);
             thumbnailView.setImageResource(R.drawable.abouthome_thumbnail_bg);
             thumbnailView.setBackgroundColor(mThumbnailBackground);
-            thumbnailView.setScaleType(ImageView.ScaleType.FIT_CENTER);
         } else {
             try {
+                thumbnailView.setScaleType(ImageView.ScaleType.CENTER_CROP);
                 thumbnailView.setImageBitmap(thumbnail);
                 thumbnailView.setBackgroundColor(0x0);
-                thumbnailView.setScaleType(ImageView.ScaleType.CENTER_CROP);
             } catch (OutOfMemoryError oom) {
                 Log.e(LOGTAG, "Unable to load thumbnail bitmap", oom);
-                thumbnailView.setImageResource(R.drawable.abouthome_thumbnail_bg);
                 thumbnailView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                thumbnailView.setImageResource(R.drawable.abouthome_thumbnail_bg);
             }
         }
     }
@@ -276,14 +288,13 @@ public class TopSitesView extends GridView {
             TopSitesViewHolder holder = (TopSitesViewHolder)view.getTag();
             final String url = holder.getUrl();
             if (TextUtils.isEmpty(url)) {
-                holder.thumbnailView.setImageResource(R.drawable.abouthome_thumbnail_add);
                 holder.thumbnailView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                holder.thumbnailView.setImageResource(R.drawable.abouthome_thumbnail_add);
+                holder.thumbnailView.setBackgroundColor(mThumbnailBackground);
             } else {
                 displayThumbnail(view, thumbnails.get(url));
             }
         }
-
-        invalidate();
     }
 
     public Map<String, Bitmap> getThumbnailsFromCursor(Cursor c) {
@@ -326,7 +337,14 @@ public class TopSitesView extends GridView {
 
             @Override
             public void onPostExecute(Map<String, Bitmap> thumbnails) {
-                updateTopSitesThumbnails(thumbnails);
+                // If we're waiting for a layout to happen, the GridView may be
+                // stale, so store the pending thumbnails here. They will be
+                // shown on the next layout pass.
+                if (isLayoutRequested()) {
+                    mPendingThumbnails = thumbnails;
+                } else {
+                    updateTopSitesThumbnails(thumbnails);
+                }
             }
         }).execute();
     }
@@ -490,9 +508,9 @@ public class TopSitesView extends GridView {
     private void clearThumbnail(TopSitesViewHolder holder) {
         holder.setTitle("");
         holder.setUrl("");
+        holder.thumbnailView.setScaleType(ImageView.ScaleType.FIT_CENTER);
         holder.thumbnailView.setImageResource(R.drawable.abouthome_thumbnail_add);
         holder.thumbnailView.setBackgroundColor(mThumbnailBackground);
-        holder.thumbnailView.setScaleType(ImageView.ScaleType.FIT_CENTER);
         holder.setPinned(false);
     }
 

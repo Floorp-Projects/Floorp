@@ -48,9 +48,8 @@
 #include "nsIWindowProvider.h"
 #include "nsIMutableArray.h"
 #include "nsISupportsArray.h"
-#include "nsIDOMStorageObsolete.h"
 #include "nsIDOMStorage.h"
-#include "nsPIDOMStorage.h"
+#include "nsIDOMStorageManager.h"
 #include "nsIWidget.h"
 #include "nsFocusManager.h"
 #include "nsIPresShell.h"
@@ -1000,17 +999,14 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
     parentDocShell = piWindow->GetDocShell();
 
   if (subjectPrincipal && parentDocShell) {
-    nsCOMPtr<nsIDOMStorage> storage;
-    parentDocShell->GetSessionStorageForPrincipal(subjectPrincipal,
-                                                  EmptyString(), false,
-                                                  getter_AddRefs(storage));
-    nsCOMPtr<nsPIDOMStorage> piStorage =
-      do_QueryInterface(storage);
-    if (piStorage){
-      storage = piStorage->Clone();
-      newDocShell->AddSessionStorage(
-        piStorage->Principal(),
-        storage);
+    nsCOMPtr<nsIDOMStorageManager> parentStorageManager = do_QueryInterface(parentDocShell);
+    nsCOMPtr<nsIDOMStorageManager> newStorageManager = do_QueryInterface(newDocShell);
+
+    if (parentStorageManager && newStorageManager) {
+      nsCOMPtr<nsIDOMStorage> storage;
+      parentStorageManager->GetStorage(subjectPrincipal, isPrivateBrowsingWindow, getter_AddRefs(storage));
+      if (storage)
+        newStorageManager->CloneStorage(storage);
     }
   }
 
