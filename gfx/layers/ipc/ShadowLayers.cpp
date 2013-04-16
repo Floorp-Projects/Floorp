@@ -532,39 +532,6 @@ ShadowLayerForwarder::CloseDescriptor(const SurfaceDescriptor& aDescriptor)
   // There's no "close" needed for Shmem surfaces.
 }
 
-TemporaryRef<ImageClient>
-ShadowLayerForwarder::CreateImageClientFor(const CompositableType& aCompositableType,
-                                           ShadowableLayer* aLayer,
-                                           TextureFlags aFlags)
-{
-  RefPtr<ImageClient> client = ImageClient::CreateImageClient(GetCompositorBackendType(),
-                                                              aCompositableType,
-                                                              this, aFlags);
-  if (aCompositableType == BUFFER_BRIDGE) {
-    static_cast<ImageClientBridge*>(client.get())->SetLayer(aLayer);
-  }
-  return client.forget();
-}
-
-TemporaryRef<CanvasClient>
-ShadowLayerForwarder::CreateCanvasClientFor(const CompositableType& aCompositableType,
-                                            ShadowableLayer* aLayer,
-                                            TextureFlags aFlags)
-{
-  RefPtr<CanvasClient> client = CanvasClient::CreateCanvasClient(GetCompositorBackendType(),
-                                                                 aCompositableType,
-                                                                 this, aFlags);
-  return client.forget();
-}
-
-TemporaryRef<ContentClient>
-ShadowLayerForwarder::CreateContentClientFor(ShadowableLayer* aLayer)
-{
-  RefPtr<ContentClient> client = ContentClient::CreateContentClient(GetCompositorBackendType(),
-                                                                    this);
-  return client.forget();
-}
-
 PLayerChild*
 ShadowLayerForwarder::ConstructShadowFor(ShadowableLayer* aLayer)
 {

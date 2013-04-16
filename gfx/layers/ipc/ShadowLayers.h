@@ -363,17 +363,6 @@ public:
    */
   void SetIsFirstPaint() { mIsFirstPaint = true; }
 
-  /**
-   * Create compositable clients, see comments in CompositingFactory
-   */
-  TemporaryRef<ImageClient> CreateImageClientFor(const CompositableType& aCompositableType,
-                                                 ShadowableLayer* aLayer,
-                                                 TextureFlags aFlags);
-  TemporaryRef<CanvasClient> CreateCanvasClientFor(const CompositableType& aCompositableType,
-                                                   ShadowableLayer* aLayer,
-                                                   TextureFlags aFlags);
-  TemporaryRef<ContentClient> CreateContentClientFor(ShadowableLayer* aLayer);
-
   static void PlatformSyncBeforeUpdate();
 
   static already_AddRefed<gfxASurface>

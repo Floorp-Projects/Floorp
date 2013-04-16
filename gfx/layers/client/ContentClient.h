@@ -64,8 +64,7 @@ public:
    * message will be sent to the compositor to create a corresponding content
    * host.
    */
-  static TemporaryRef<ContentClient> CreateContentClient(LayersBackend aBackendType,
-                                                         CompositableForwarder* aFwd);
+  static TemporaryRef<ContentClient> CreateContentClient(CompositableForwarder* aFwd);
 
   ContentClient(CompositableForwarder* aForwarder)
   : CompositableClient(aForwarder)
