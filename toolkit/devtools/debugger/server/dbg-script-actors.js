@@ -253,6 +253,18 @@ ThreadActor.prototype = {
     };
   },
 
+  onReconfigure: function TA_onReconfigure(aRequest) {
+    if (this.state == "exited") {
+      return { error: "wrongState" };
+    }
+
+    update(this._options, aRequest.options || {});
+    // Clear existing sources, so they can be recreated on next access.
+    this._sources = null;
+
+    return {};
+  },
+
   /**
    * Pause the debuggee, by entering a nested event loop, and return a 'paused'
    * packet to the client.
@@ -1281,6 +1293,7 @@ ThreadActor.prototype = {
 ThreadActor.prototype.requestTypes = {
   "attach": ThreadActor.prototype.onAttach,
   "detach": ThreadActor.prototype.onDetach,
+  "reconfigure": ThreadActor.prototype.onReconfigure,
   "resume": ThreadActor.prototype.onResume,
   "clientEvaluate": ThreadActor.prototype.onClientEvaluate,
   "frames": ThreadActor.prototype.onFrames,
