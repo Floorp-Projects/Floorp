@@ -47,7 +47,8 @@ struct CharPosition
       mUnaddressable(false),
       mClusterOrLigatureGroupMiddle(false),
       mRunBoundary(false),
-      mStartOfChunk(false)
+      mStartOfChunk(false),
+      mAngleImplied(false)
   {
   }
 
@@ -58,7 +59,8 @@ struct CharPosition
       mUnaddressable(false),
       mClusterOrLigatureGroupMiddle(false),
       mRunBoundary(false),
-      mStartOfChunk(false)
+      mStartOfChunk(false),
+      mAngleImplied(false)
   {
   }
 
@@ -101,6 +103,10 @@ struct CharPosition
 
   // an anchored chunk begins here
   bool mStartOfChunk;
+
+  // whether the angle value was implied due to the repetition of the final
+  // value in a rotate="" attribute
+  bool mAngleImplied;
 
 private:
   static gfxFloat UnspecifiedCoord()
