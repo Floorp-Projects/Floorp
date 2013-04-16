@@ -3181,89 +3181,83 @@ pref("print.print_extra_margin", 0); // twips
 
 pref("font.alias-list", "sans,sans-serif,serif,monospace");
 
-// As we ship bundled Open Sans and Charis SIL Compact fonts on Android,
-// but not on B2G/Gonk, we give them separate default font preferences.
+// Gonk and Android ship different sets of fonts
 
 #ifdef MOZ_WIDGET_GONK
 
-// TODO: this block is initially a copy of the ANDROID prefs as they were
-// prior to the switch to Open Sans and Charis SIL Compact (bug 831354).
-// We should review these in the light of what's actually present on the Gonk platform;
-// some entries could probably be cleaned up.
+// TODO: some entries could probably be cleaned up.
 
 // ar
 
 pref("font.name.serif.el", "Droid Serif");
-pref("font.name.sans-serif.el", "Droid Sans");
-pref("font.name.monospace.el", "Droid Sans Mono");
-pref("font.name-list.sans-serif.el", "Roboto, Droid Sans");
+pref("font.name.sans-serif.el", "Roboto");
+pref("font.name.monospace.el", "Source Code Pro");
 
-pref("font.name.serif.he", "Droid Serif");
-pref("font.name.sans-serif.he", "Droid Sans");
-pref("font.name.monospace.he", "Droid Sans Mono");
-pref("font.name-list.sans-serif.he", "Droid Sans Hebrew, Droid Sans");
+pref("font.name.serif.he", "Charis SIL Compact");
+pref("font.name.sans-serif.he", "Feura Sans");
+pref("font.name.monospace.he", "Source Code Pro");
+pref("font.name-list.sans-serif.he", "Droid Sans Hebrew, Feura Sans");
 
-pref("font.name.serif.ja", "Droid Serif");
-pref("font.name.sans-serif.ja", "Droid Sans");
+pref("font.name.serif.ja", "Charis SIL Compact");
+pref("font.name.sans-serif.ja", "Feura Sans");
 pref("font.name.monospace.ja", "MotoyaLMaru");
-pref("font.name-list.sans-serif.ja", "Roboto, Droid Sans, MotoyaLMaru, MotoyaLCedar, Droid Sans Japanese");
-pref("font.name-list.monospace.ja", "MotoyaLMaru, MotoyaLCedar, Droid Sans Mono");
+pref("font.name-list.sans-serif.ja", "Feura Sans, Roboto, MotoyaLMaru, MotoyaLCedar, Droid Sans Japanese");
+pref("font.name-list.monospace.ja", "MotoyaLMaru, MotoyaLCedar, Source Code Pro");
 
-pref("font.name.serif.ko", "Droid Serif");
-pref("font.name.sans-serif.ko", "Droid Sans");
-pref("font.name.monospace.ko", "Droid Sans Mono");
+pref("font.name.serif.ko", "Charis SIL Compact");
+pref("font.name.sans-serif.ko", "Feura Sans");
+pref("font.name.monospace.ko", "Source Code Pro");
 
-pref("font.name.serif.th", "Droid Serif");
-pref("font.name.sans-serif.th", "Droid Sans");
-pref("font.name.monospace.th", "Droid Sans Mono");
-pref("font.name-list.sans-serif.th", "Droid Sans Thai, Droid Sans");
+pref("font.name.serif.th", "Charis SIL Compact");
+pref("font.name.sans-serif.th", "Feura Sans");
+pref("font.name.monospace.th", "Source Code Pro");
+pref("font.name-list.sans-serif.th", "Feura Sans, Droid Sans Thai");
 
-pref("font.name.serif.tr", "Droid Serif");
-pref("font.name.sans-serif.tr", "Droid Sans");
-pref("font.name.monospace.tr", "Droid Sans Mono");
-pref("font.name-list.sans-serif.tr", "Roboto, Droid Sans");
+pref("font.name.serif.tr", "Charis SIL Compact");
+pref("font.name.sans-serif.tr", "Feura Sans");
+pref("font.name.monospace.tr", "Source Code Pro");
+pref("font.name-list.sans-serif.tr", "Feura Sans, Roboto");
 
-pref("font.name.serif.x-baltic", "Droid Serif");
-pref("font.name.sans-serif.x-baltic", "Droid Sans");
-pref("font.name.monospace.x-baltic", "Droid Sans Mono");
-pref("font.name-list.sans-serif.x-baltic", "Roboto, Droid Sans");
+pref("font.name.serif.x-baltic", "Charis SIL Compact");
+pref("font.name.sans-serif.x-baltic", "Feura Sans");
+pref("font.name.monospace.x-baltic", "Source Code Pro");
+pref("font.name-list.sans-serif.x-baltic", "Feura Sans, Roboto");
 
-pref("font.name.serif.x-central-euro", "Droid Serif");
-pref("font.name.sans-serif.x-central-euro", "Droid Sans");
-pref("font.name.monospace.x-central-euro", "Droid Sans Mono");
-pref("font.name-list.sans-serif.x-central-euro", "Roboto, Droid Sans");
+pref("font.name.serif.x-central-euro", "Charis SIL Compact");
+pref("font.name.sans-serif.x-central-euro", "Feura Sans");
+pref("font.name.monospace.x-central-euro", "Source Code Pro");
+pref("font.name-list.sans-serif.x-central-euro", "Feura Sans, Roboto");
 
-pref("font.name.serif.x-cyrillic", "Droid Serif");
-pref("font.name.sans-serif.x-cyrillic", "Droid Sans");
-pref("font.name.monospace.x-cyrillic", "Droid Sans Mono");
-pref("font.name-list.sans-serif.x-cyrillic", "Roboto, Droid Sans");
+pref("font.name.serif.x-cyrillic", "Charis SIL Compact");
+pref("font.name.sans-serif.x-cyrillic", "Roboto");
+pref("font.name.monospace.x-cyrillic", "Source Code Pro");
 
-pref("font.name.serif.x-unicode", "Droid Serif");
-pref("font.name.sans-serif.x-unicode", "Droid Sans");
-pref("font.name.monospace.x-unicode", "Droid Sans Mono");
-pref("font.name-list.sans-serif.x-unicode", "Roboto, Droid Sans");
+pref("font.name.serif.x-unicode", "Charis SIL Compact");
+pref("font.name.sans-serif.x-unicode", "Feura Sans");
+pref("font.name.monospace.x-unicode", "Source Code Pro");
+pref("font.name-list.sans-serif.x-unicode", "Feura Sans, Roboto");
 
-pref("font.name.serif.x-user-def", "Droid Serif");
-pref("font.name.sans-serif.x-user-def", "Droid Sans");
-pref("font.name.monospace.x-user-def", "Droid Sans Mono");
-pref("font.name-list.sans-serif.x-user-def", "Roboto, Droid Sans");
+pref("font.name.serif.x-user-def", "Charis SIL Compact");
+pref("font.name.sans-serif.x-user-def", "Feura Sans");
+pref("font.name.monospace.x-user-def", "Source Code Pro");
+pref("font.name-list.sans-serif.x-user-def", "Feura Sans, Roboto");
 
-pref("font.name.serif.x-western", "Droid Serif");
-pref("font.name.sans-serif.x-western", "Droid Sans");
-pref("font.name.monospace.x-western", "Droid Sans Mono");
-pref("font.name-list.sans-serif.x-western", "Roboto, Droid Sans");
+pref("font.name.serif.x-western", "Charis SIL Compact");
+pref("font.name.sans-serif.x-western", "Feura Sans");
+pref("font.name.monospace.x-western", "Source Code Pro");
+pref("font.name-list.sans-serif.x-western", "Feura Sans, Roboto");
 
-pref("font.name.serif.zh-CN", "Droid Serif");
-pref("font.name.sans-serif.zh-CN", "Droid Sans");
-pref("font.name.monospace.zh-CN", "Droid Sans Mono");
+pref("font.name.serif.zh-CN", "Charis SIL Compact");
+pref("font.name.sans-serif.zh-CN", "Feura Sans");
+pref("font.name.monospace.zh-CN", "Source Code Pro");
 
-pref("font.name.serif.zh-HK", "Droid Serif");
-pref("font.name.sans-serif.zh-HK", "Droid Sans");
-pref("font.name.monospace.zh-HK", "Droid Sans Mono");
+pref("font.name.serif.zh-HK", "Charis SIL Compact");
+pref("font.name.sans-serif.zh-HK", "Feura Sans");
+pref("font.name.monospace.zh-HK", "Source Code Pro");
 
-pref("font.name.serif.zh-TW", "Droid Serif");
-pref("font.name.sans-serif.zh-TW", "Droid Sans");
-pref("font.name.monospace.zh-TW", "Droid Sans Mono");
+pref("font.name.serif.zh-TW", "Charis SIL Compact");
+pref("font.name.sans-serif.zh-TW", "Feura Sans");
+pref("font.name.monospace.zh-TW", "Source Code Pro");
 
 #else
 
