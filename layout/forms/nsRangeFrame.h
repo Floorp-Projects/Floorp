@@ -93,6 +93,14 @@ public:
   double GetMax() const;
   double GetValue() const;
 
+  /** 
+   * Returns the input element's value as a fraction of the difference between
+   * the input's minimum and its maximum (i.e. returns 0.0 when the value is
+   * the same as the minimum, and returns 1.0 when the value is the same as the 
+   * maximum).
+   */  
+  double GetValueAsFractionOfRange();
+
   /**
    * Returns whether the frame and its child should use the native style.
    */
@@ -125,14 +133,6 @@ private:
 
   void DoUpdateRangeProgressFrame(nsIFrame* aProgressFrame,
                                   const nsSize& aRangeSize);
-
-  /**
-   * Returns the input element's value as a fraction of the difference between
-   * the input's minimum and its maximum (i.e. returns 0.0 when the value is
-   * the same as the minimum, and returns 1.0 when the value is the same as the
-   * maximum).
-   */
-  double GetValueAsFractionOfRange();
 
   /**
    * The div used to show the ::-moz-range-track pseudo-element.
