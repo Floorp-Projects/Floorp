@@ -3731,7 +3731,7 @@ private:
 /***************************************************************************/
 
 extern JSObject*
-xpc_NewIDObject(JSContext *cx, JSObject* jsobj, const nsID& aID);
+xpc_NewIDObject(JSContext *cx, JS::HandleObject jsobj, const nsID& aID);
 
 extern const nsID*
 xpc_JSObjectToID(JSContext *cx, JSObject* obj);

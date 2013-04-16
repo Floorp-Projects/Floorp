@@ -21,6 +21,7 @@
 #include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsTArray.h"
+#include "nsIHttpChannelInternal.h"
 #include "mozilla/Telemetry.h"
 
 using namespace mozilla;
@@ -117,6 +118,7 @@ nsLoadGroup::nsLoadGroup(nsISupports* outer)
     , mDefaultLoadIsTimed(false)
     , mTimedRequests(0)
     , mCachedRequests(0)
+    , mTimedNonCachedRequestsUntilOnEndPageLoad(0)
 {
     NS_INIT_AGGREGATED(outer);
 
@@ -155,6 +157,7 @@ nsLoadGroup::~nsLoadGroup()
 NS_IMPL_AGGREGATED(nsLoadGroup)
 NS_INTERFACE_MAP_BEGIN_AGGREGATED(nsLoadGroup)
     NS_INTERFACE_MAP_ENTRY(nsILoadGroup)
+    NS_INTERFACE_MAP_ENTRY(nsPILoadGroupInternal)
     NS_INTERFACE_MAP_ENTRY(nsILoadGroupChild)
     NS_INTERFACE_MAP_ENTRY(nsIRequest)
     NS_INTERFACE_MAP_ENTRY(nsISupportsPriority)
@@ -631,8 +634,12 @@ nsLoadGroup::RemoveRequest(nsIRequest *request, nsISupports* ctxt,
             ++mTimedRequests;
             TimeStamp timeStamp;
             rv = timedChannel->GetCacheReadStart(&timeStamp);
-            if (NS_SUCCEEDED(rv) && !timeStamp.IsNull())
+            if (NS_SUCCEEDED(rv) && !timeStamp.IsNull()) {
                 ++mCachedRequests;
+            }
+            else {
+                mTimedNonCachedRequestsUntilOnEndPageLoad++;
+            }
 
             rv = timedChannel->GetAsyncOpen(&timeStamp);
             if (NS_SUCCEEDED(rv) && !timeStamp.IsNull()) {
@@ -809,6 +816,52 @@ nsLoadGroup::GetRootLoadGroup(nsILoadGroup * *aRootLoadGroup)
 
     // finally just return this
     NS_ADDREF(*aRootLoadGroup = this);
+    return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsPILoadGroupInternal methods:
+
+NS_IMETHODIMP
+nsLoadGroup::OnEndPageLoad(nsIChannel *aDefaultChannel)
+{
+    // On page load of a page with at least 32 resources we want to record
+    // telemetry on which rate pacing algorithm was used to load the page and
+    // the page load time.
+    uint32_t requests = mTimedNonCachedRequestsUntilOnEndPageLoad;
+    mTimedNonCachedRequestsUntilOnEndPageLoad = 0;
+
+    nsCOMPtr<nsITimedChannel> timedChannel =
+        do_QueryInterface(aDefaultChannel);
+    if (!timedChannel)
+        return NS_OK;
+
+    nsCOMPtr<nsIHttpChannelInternal> internalHttpChannel =
+        do_QueryInterface(timedChannel);
+    if (!internalHttpChannel)
+        return NS_OK;
+
+    TimeStamp cacheReadStart;
+    TimeStamp asyncOpen;
+    uint32_t telemetryID;
+    nsresult rv = timedChannel->GetCacheReadStart(&cacheReadStart);
+    if (NS_SUCCEEDED(rv))
+        rv = timedChannel->GetAsyncOpen(&asyncOpen);
+    if (NS_SUCCEEDED(rv))
+        rv = internalHttpChannel->GetPacingTelemetryID(&telemetryID);
+    if (NS_FAILED(rv))
+        return NS_OK;
+
+    // Nothing to do if we don't have a start time or this was
+    // from the cache or we don't know what profile was used
+    if (asyncOpen.IsNull() || !cacheReadStart.IsNull() || !telemetryID)
+        return NS_OK;
+
+    if (requests < 32)
+        return NS_OK;
+
+    Telemetry::AccumulateTimeDelta(static_cast<Telemetry::ID>(telemetryID),
+                                   asyncOpen);
     return NS_OK;
 }
 

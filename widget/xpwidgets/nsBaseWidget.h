@@ -118,6 +118,16 @@ public:
   virtual gfxASurface*    GetThebesSurface();
   NS_IMETHOD              SetModal(bool aModal); 
   NS_IMETHOD              SetWindowClass(const nsAString& xulWinType);
+  // Return whether this widget interprets parameters to Move and Resize APIs
+  // as "global display pixels" rather than "device pixels", and therefore
+  // applies its GetDefaultScale() value to them before using them as mBounds
+  // etc (which are always stored in device pixels).
+  // Note that APIs that -get- the widget's position/size/bounds, rather than
+  // -setting- them (i.e. moving or resizing the widget) will always return
+  // values in the widget's device pixels.
+  bool                    BoundsUseDisplayPixels() const {
+    return mWindowType <= eWindowType_popup;
+  }
   NS_IMETHOD              MoveClient(double aX, double aY);
   NS_IMETHOD              ResizeClient(double aWidth, double aHeight, bool aRepaint);
   NS_IMETHOD              ResizeClient(double aX, double aY, double aWidth, double aHeight, bool aRepaint);

@@ -1047,6 +1047,9 @@ nsPrintOptions::InitPrintSettingsFromPrefs(nsIPrintSettings* aPS,
   nsresult rv = ReadPrefs(aPS, prtName, aFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Do not use printer name in Linux because GTK backend does not support
+  // per printer settings.
+#ifndef MOZ_X11
   // Get the Printer Name from the PrintSettings
   // to use as a prefix for Pref Names
   rv = GetAdjustedPrinterName(aPS, aUsePNP, prtName);
@@ -1061,6 +1064,7 @@ nsPrintOptions::InitPrintSettingsFromPrefs(nsIPrintSettings* aPS,
   rv = ReadPrefs(aPS, prtName, aFlags);
   if (NS_SUCCEEDED(rv))
     aPS->SetIsInitializedFromPrefs(true);
+#endif
 
   return NS_OK;
 }
@@ -1077,9 +1081,13 @@ nsPrintOptions::SavePrintSettingsToPrefs(nsIPrintSettings *aPS,
   NS_ENSURE_ARG_POINTER(aPS);
   nsAutoString prtName;
 
+  // Do not use printer name in Linux because GTK backend does not support
+  // per printer settings.
+#ifndef MOZ_X11
   // Get the printer name from the PrinterSettings for an optional prefix.
   nsresult rv = GetAdjustedPrinterName(aPS, aUsePrinterNamePrefix, prtName);
   NS_ENSURE_SUCCESS(rv, rv);
+#endif
 
   // Write the prefs, with or without a printer name prefix.
   return WritePrefs(aPS, prtName, aFlags);

@@ -48,7 +48,7 @@ class FullParseHandler
         foldConstants(foldConstants)
     {}
 
-    static Definition *null() { return NULL; }
+    static ParseNode *null() { return NULL; }
 
     ParseNode *freeTree(ParseNode *pn) { return allocator.freeTree(pn); }
     void prepareNodeForMutation(ParseNode *pn) { return allocator.prepareNodeForMutation(pn); }
@@ -61,6 +61,16 @@ class FullParseHandler
             return NULL;
         pn->setOp(JSOP_NAME);
         return pn;
+    }
+    Definition *newPlaceholder(ParseNode *pn, ParseContext<FullParseHandler> *pc) {
+        Definition *dn = (Definition *) NameNode::create(PNK_NAME, pn->pn_atom, this, pc);
+        if (!dn)
+            return NULL;
+
+        dn->setOp(JSOP_NOP);
+        dn->setDefn(true);
+        dn->pn_dflags |= PND_PLACEHOLDER;
+        return dn;
     }
     ParseNode *newAtom(ParseNodeKind kind, JSAtom *atom, JSOp op = JSOP_NOP) {
         ParseNode *pn = NullaryNode::create(kind, this);
@@ -168,6 +178,9 @@ class FullParseHandler
     void setFunctionBox(ParseNode *pn, FunctionBox *funbox) {
         pn->pn_funbox = funbox;
     }
+    void addFunctionArgument(ParseNode *pn, ParseNode *argpn) {
+        pn->pn_body->append(argpn);
+    }
     inline ParseNode *newLexicalScope(ObjectBox *blockbox);
     bool isOperationWithoutParens(ParseNode *pn, ParseNodeKind kind) {
         return pn->isKind(kind) && !pn->isInParens();
@@ -192,6 +205,9 @@ class FullParseHandler
         JS_ASSERT(pn->pn_pos.begin <= pn->pn_pos.end);
     }
 
+    void setPosition(ParseNode *pn, const TokenPos &pos) {
+        pn->pn_pos = pos;
+    }
     TokenPos getPosition(ParseNode *pn) {
         return pn->pn_pos;
     }
@@ -254,6 +270,50 @@ class FullParseHandler
     }
 
     inline ParseNode *makeAssignment(ParseNode *pn, ParseNode *rhs);
+
+    static Definition *getDefinitionNode(Definition *dn) {
+        return dn;
+    }
+    static Definition::Kind getDefinitionKind(Definition *dn) {
+        return dn->kind();
+    }
+    void linkUseToDef(ParseNode *pn, Definition *dn)
+    {
+        JS_ASSERT(!pn->isUsed());
+        JS_ASSERT(!pn->isDefn());
+        JS_ASSERT(pn != dn->dn_uses);
+        JS_ASSERT(dn->isDefn());
+        pn->pn_link = dn->dn_uses;
+        dn->dn_uses = pn;
+        dn->pn_dflags |= pn->pn_dflags & PND_USE2DEF_FLAGS;
+        pn->setUsed(true);
+        pn->pn_lexdef = dn;
+    }
+    Definition *resolve(Definition *dn) {
+        return dn->resolve();
+    }
+    void deoptimizeUsesWithin(Definition *dn, const TokenPos &pos)
+    {
+        for (ParseNode *pnu = dn->dn_uses; pnu; pnu = pnu->pn_link) {
+            JS_ASSERT(pnu->isUsed());
+            JS_ASSERT(!pnu->isDefn());
+            if (pnu->pn_pos.begin >= pos.begin && pnu->pn_pos.end <= pos.end)
+                pnu->pn_dflags |= PND_DEOPTIMIZED;
+        }
+    }
+    bool dependencyCovered(ParseNode *pn, unsigned blockid, bool functionScope) {
+        return pn->pn_blockid >= blockid;
+    }
+
+    static uintptr_t definitionToBits(Definition *dn) {
+        return uintptr_t(dn);
+    }
+    static Definition *definitionFromBits(uintptr_t bits) {
+        return (Definition *) bits;
+    }
+    static Definition *nullDefinition() {
+        return NULL;
+    }
 };
 
 inline bool
