@@ -91,6 +91,7 @@ public:
                                                     aWantsUntrusted,
                                                     optional_argc);
   }
+  using nsDOMEventTargetHelper::AddEventListener;
 
   virtual nsIScriptObjectPrincipal* GetObjectPrincipal() { return this; }
   virtual JSContext* GetJSContextForEventHandlers() { return mCx; }
