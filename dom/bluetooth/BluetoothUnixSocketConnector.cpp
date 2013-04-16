@@ -123,7 +123,8 @@ BluetoothUnixSocketConnector::SetUp(int aFd)
   if (mType == BluetoothSocketType::L2CAP ||
       mType == BluetoothSocketType::EL2CAP) {
     struct l2cap_options opts;
-    int optlen = sizeof(opts), err;
+    socklen_t optlen = sizeof(opts);
+    int err;
     err = getsockopt(aFd, SOL_L2CAP, L2CAP_OPTIONS, &opts, &optlen);
     if (!err) {
       /* setting MTU for [E]L2CAP */
