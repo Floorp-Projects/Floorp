@@ -184,7 +184,7 @@ public:
      * When two values are the same, we don't switch on/off bluetooth,
      * but we still do ToggleBtAck task.
      */
-    if (mEnabled == gBluetoothService->IsEnabled()) {
+    if (mEnabled == gBluetoothService->IsEnabledInternal()) {
       NS_WARNING("Bluetooth has already been enabled/disabled before.");
     } else {
       // Switch on/off bluetooth
@@ -529,18 +529,7 @@ nsresult
 BluetoothService::HandleStartupSettingsCheck(bool aEnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
-
-  if (aEnable) {
-    return StartStopBluetooth(true);
-  }
-
-  /*
-   * Since BLUETOOTH_ENABLED_SETTING is false, we don't have to turn on
-   * bluetooth here, and set gToggleInProgress back to false.
-   */
-  gToggleInProgress = false;
-
-  return NS_OK;
+  return StartStopBluetooth(aEnable);
 }
 
 nsresult
