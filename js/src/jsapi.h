@@ -810,8 +810,6 @@ typedef JS::MutableHandle<JSString*>   JSMutableHandleString;
 typedef JS::MutableHandle<JS::Value>   JSMutableHandleValue;
 typedef JS::MutableHandle<jsid>        JSMutableHandleId;
 
-typedef js::RawString   JSRawString;
-
 /* JSClass operation signatures. */
 
 /*
@@ -4392,13 +4390,13 @@ JS_DecodeBytes(JSContext *cx, const char *src, size_t srclen, jschar *dst,
  * returned that you are expected to call JS_free on when done.
  */
 JS_PUBLIC_API(char *)
-JS_EncodeString(JSContext *cx, JSRawString str);
+JS_EncodeString(JSContext *cx, JSString *str);
 
 /*
  * Same behavior as JS_EncodeString(), but encode into UTF-8 string
  */
 JS_PUBLIC_API(char *)
-JS_EncodeStringToUTF8(JSContext *cx, JSRawString str);
+JS_EncodeStringToUTF8(JSContext *cx, JSString *str);
 
 /*
  * Get number of bytes in the string encoding (without accounting for a
