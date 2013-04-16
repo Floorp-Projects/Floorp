@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="head.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript;version=1.8">
+  createHTML({
+    bug: "857765",
+    title: "Throw in PeerConnection callbacks"
+  });
+
+  let error_count = 0;
+  let oldOnError = window.onerror;
+  window.onerror = function (errorMsg, url, lineNumber) {
+    if (errorMsg.indexOf("Expected") == -1) {
+      getFail(new Error)(errorMsg);
+    }
+    error_count += 1;
+    info("onerror " + error_count + ": " + errorMsg);
+    if (error_count == 7) {
+      finish();
+    }
+    return false;
+  }
+
+  let pc0, pc1, pc2;
+
+  runTest(function () {
+    error_count = 0;
+
+    // Test failure callbacks (limited to 1 for now)
+    pc0 = new mozRTCPeerConnection();
+    pc0.createOffer(getFail(new Error), function(err) {
+      pc1 = new mozRTCPeerConnection();
+      pc2 = new mozRTCPeerConnection();
+
+      // Test success callbacks (happy path)
+      navigator.mozGetUserMedia({video:true, fake: true}, function(video1) {
+        pc1.addStream(video1);
+        pc1.createOffer(function(offer) {
+          pc1.setLocalDescription(offer, function() {
+            pc2.setRemoteDescription(offer, function() {
+              pc2.createAnswer(function(answer) {
+                pc2.setLocalDescription(answer, function() {
+                  pc1.setRemoteDescription(answer, function() {
+                    throw new Error("Expected");
+                  }, getFail(new Error));
+                  throw new Error("Expected");
+                }, getFail(new Error));
+                throw new Error("Expected");
+              }, getFail(new Error));
+              throw new Error("Expected");
+            }, getFail(new Error));
+            throw new Error("Expected");
+          }, getFail(new Error));
+          throw new Error("Expected");
+        });
+      }, getFail(new Error));
+      throw new Error("Expected");
+    });
+  }, 1);
+
+  function finish() {
+    window.onerror = oldOnError;
+    ok(error_count == 7, "Seven expected errors verified.");
+    SimpleTest.finish();
+  }
+
+  function getFail(where) {
+    return function (err) {
+      window.onerror = onOldError;
+      unexpectedCallbackAndFinish(where)(err);
+    };
+  }
+</script>
+</pre>
+</body>
+</html>
