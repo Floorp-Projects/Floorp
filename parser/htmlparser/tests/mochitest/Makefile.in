@@ -81,7 +81,7 @@ MOCHITEST_FILES =	parser_datreader.js \
 		file_bug716579-16.xhtml^headers^ \
 		test_bug717180.html \
 		file_bug717180.html \
-		test_xml_mislabeled_nobom.html \
+		test_xml_mislabeled.html \
 		$(NULL)
 
 # Test disabled on mobile. See bug 737020.
