@@ -810,7 +810,6 @@ typedef JS::MutableHandle<JSString*>   JSMutableHandleString;
 typedef JS::MutableHandle<JS::Value>   JSMutableHandleValue;
 typedef JS::MutableHandle<jsid>        JSMutableHandleId;
 
-typedef js::RawObject   JSRawObject;
 typedef js::RawFunction JSRawFunction;
 typedef js::RawScript   JSRawScript;
 typedef js::RawString   JSRawString;
@@ -1002,7 +1001,7 @@ typedef JSBool
  * marking its native structures.
  */
 typedef void
-(* JSTraceOp)(JSTracer *trc, JSRawObject obj);
+(* JSTraceOp)(JSTracer *trc, JSObject *obj);
 
 /*
  * Callback that JSTraceOp implementation can provide to return a string
@@ -1011,8 +1010,8 @@ typedef void
 typedef void
 (* JSTraceNamePrinter)(JSTracer *trc, char *buf, size_t bufsize);
 
-typedef JSRawObject
-(* JSWeakmapKeyDelegateOp)(JSRawObject obj);
+typedef JSObject *
+(* JSWeakmapKeyDelegateOp)(JSObject *obj);
 
 /* Callbacks and their arguments. */
 
@@ -1354,7 +1353,7 @@ JSID_TO_OBJECT(jsid id)
 }
 
 static JS_ALWAYS_INLINE jsid
-OBJECT_TO_JSID(JSRawObject obj)
+OBJECT_TO_JSID(JSObject *obj)
 {
     jsid id;
     JS_ASSERT(obj != NULL);
@@ -2151,14 +2150,14 @@ class JS_PUBLIC_API(JSAutoCompartment)
     JSContext *cx_;
     JSCompartment *oldCompartment_;
   public:
-    JSAutoCompartment(JSContext *cx, JSRawObject target);
+    JSAutoCompartment(JSContext *cx, JSObject *target);
     JSAutoCompartment(JSContext *cx, JSScript *target);
     ~JSAutoCompartment();
 };
 
 /* NB: This API is infallible; a NULL return value does not indicate error. */
 extern JS_PUBLIC_API(JSCompartment *)
-JS_EnterCompartment(JSContext *cx, JSRawObject target);
+JS_EnterCompartment(JSContext *cx, JSObject *target);
 
 extern JS_PUBLIC_API(void)
 JS_LeaveCompartment(JSContext *cx, JSCompartment *oldCompartment);
@@ -2178,7 +2177,7 @@ extern JS_PUBLIC_API(JSObject *)
 JS_GetGlobalObject(JSContext *cx);
 
 extern JS_PUBLIC_API(void)
-JS_SetGlobalObject(JSContext *cx, JSRawObject obj);
+JS_SetGlobalObject(JSContext *cx, JSObject *obj);
 
 /*
  * Initialize standard JS class constructors, prototypes, and any top-level
@@ -2220,7 +2219,7 @@ JS_EnumerateResolvedStandardClasses(JSContext *cx, JSObject *obj,
                                     JSIdArray *ida);
 
 extern JS_PUBLIC_API(JSBool)
-JS_GetClassObject(JSContext *cx, JSRawObject obj, JSProtoKey key, JSObject **objp);
+JS_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key, JSObject **objp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_GetClassPrototype(JSContext *cx, JSProtoKey key, JSObject **objp);
@@ -2233,20 +2232,20 @@ JS_IdentifyClassPrototype(JSContext *cx, JSObject *obj);
  * which |forObj| was created.
  */
 extern JS_PUBLIC_API(JSObject *)
-JS_GetFunctionPrototype(JSContext *cx, JSRawObject forObj);
+JS_GetFunctionPrototype(JSContext *cx, JSObject *forObj);
 
 /*
  * Returns the original value of |Object.prototype| from the global object in
  * which |forObj| was created.
  */
 extern JS_PUBLIC_API(JSObject *)
-JS_GetObjectPrototype(JSContext *cx, JSRawObject forObj);
+JS_GetObjectPrototype(JSContext *cx, JSObject *forObj);
 
 extern JS_PUBLIC_API(JSObject *)
-JS_GetGlobalForObject(JSContext *cx, JSRawObject obj);
+JS_GetGlobalForObject(JSContext *cx, JSObject *obj);
 
 extern JS_PUBLIC_API(JSBool)
-JS_IsGlobalObject(JSRawObject obj);
+JS_IsGlobalObject(JSObject *obj);
 
 /*
  * May return NULL, if |c| never had a global (e.g. the atoms compartment), or
@@ -2310,7 +2309,7 @@ typedef struct JSCTypesCallbacks JSCTypesCallbacks;
  * to call this function again.
  */
 extern JS_PUBLIC_API(void)
-JS_SetCTypesCallbacks(JSRawObject ctypesObj, JSCTypesCallbacks *callbacks);
+JS_SetCTypesCallbacks(JSObject *ctypesObj, JSCTypesCallbacks *callbacks);
 #endif
 
 typedef JSBool
@@ -3125,7 +3124,7 @@ extern JS_PUBLIC_API(JSBool)
 JS_LinkConstructorAndPrototype(JSContext *cx, JSObject *ctor, JSObject *proto);
 
 extern JS_PUBLIC_API(JSClass *)
-JS_GetClass(JSRawObject obj);
+JS_GetClass(JSObject *obj);
 
 extern JS_PUBLIC_API(JSBool)
 JS_InstanceOf(JSContext *cx, JSObject *obj, JSClass *clasp, jsval *argv);
@@ -3134,10 +3133,10 @@ extern JS_PUBLIC_API(JSBool)
 JS_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
 
 extern JS_PUBLIC_API(void *)
-JS_GetPrivate(JSRawObject obj);
+JS_GetPrivate(JSObject *obj);
 
 extern JS_PUBLIC_API(void)
-JS_SetPrivate(JSRawObject obj, void *data);
+JS_SetPrivate(JSObject *obj, void *data);
 
 extern JS_PUBLIC_API(void *)
 JS_GetInstancePrivate(JSContext *cx, JSObject *obj, JSClass *clasp,
@@ -3150,7 +3149,7 @@ extern JS_PUBLIC_API(JSBool)
 JS_SetPrototype(JSContext *cx, JSObject *obj, JSObject *proto);
 
 extern JS_PUBLIC_API(JSObject *)
-JS_GetParent(JSRawObject obj);
+JS_GetParent(JSObject *obj);
 
 extern JS_PUBLIC_API(JSBool)
 JS_SetParent(JSContext *cx, JSObject *obj, JSObject *parent);
@@ -3164,7 +3163,7 @@ JS_GetConstructor(JSContext *cx, JSObject *proto);
  * and true with *idp containing the unique id on success.
  */
 extern JS_PUBLIC_API(JSBool)
-JS_GetObjectId(JSContext *cx, JSRawObject obj, jsid *idp);
+JS_GetObjectId(JSContext *cx, JSObject *obj, jsid *idp);
 
 namespace JS {
 
@@ -3194,13 +3193,13 @@ JS_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent);
 
 /* Queries the [[Extensible]] property of the object. */
 extern JS_PUBLIC_API(JSBool)
-JS_IsExtensible(JSRawObject obj);
+JS_IsExtensible(JSObject *obj);
 
 extern JS_PUBLIC_API(JSBool)
-JS_IsNative(JSRawObject obj);
+JS_IsNative(JSObject *obj);
 
 extern JS_PUBLIC_API(JSRuntime *)
-JS_GetObjectRuntime(JSRawObject obj);
+JS_GetObjectRuntime(JSObject *obj);
 
 /*
  * Unlike JS_NewObject, JS_NewObjectWithGivenProto does not compute a default
@@ -3694,10 +3693,10 @@ JS_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
                jsval *vp, unsigned *attrsp);
 
 extern JS_PUBLIC_API(jsval)
-JS_GetReservedSlot(JSRawObject obj, uint32_t index);
+JS_GetReservedSlot(JSObject *obj, uint32_t index);
 
 extern JS_PUBLIC_API(void)
-JS_SetReservedSlot(JSRawObject obj, uint32_t index, jsval v);
+JS_SetReservedSlot(JSObject *obj, uint32_t index, jsval v);
 
 /************************************************************************/
 
@@ -3818,13 +3817,13 @@ JS_GetFunctionArity(JSFunction *fun);
  * created instances using that constructor that might be passed in as obj).
  */
 extern JS_PUBLIC_API(JSBool)
-JS_ObjectIsFunction(JSContext *cx, JSRawObject obj);
+JS_ObjectIsFunction(JSContext *cx, JSObject *obj);
 
 extern JS_PUBLIC_API(JSBool)
-JS_ObjectIsCallable(JSContext *cx, JSRawObject obj);
+JS_ObjectIsCallable(JSContext *cx, JSObject *obj);
 
 extern JS_PUBLIC_API(JSBool)
-JS_IsNativeFunction(JSRawObject funobj, JSNative call);
+JS_IsNativeFunction(JSObject *funobj, JSNative call);
 
 /* Return whether the given function is a valid constructor. */
 extern JS_PUBLIC_API(JSBool)
@@ -3836,7 +3835,7 @@ JS_IsConstructor(JSFunction *fun);
  * If |callable| is not callable, will throw and return NULL.
  */
 extern JS_PUBLIC_API(JSObject*)
-JS_BindCallable(JSContext *cx, JSObject *callable, JSRawObject newThis);
+JS_BindCallable(JSContext *cx, JSObject *callable, JSObject *newThis);
 
 extern JS_PUBLIC_API(JSBool)
 JS_DefineFunctions(JSContext *cx, JSObject *obj, const JSFunctionSpec *fs);
@@ -3859,7 +3858,7 @@ JS_DefineFunctionById(JSContext *cx, JSObject *obj, jsid id, JSNative call,
  * fail if funobj was lexically nested inside some other function.
  */
 extern JS_PUBLIC_API(JSObject *)
-JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSRawObject parent);
+JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent);
 
 /*
  * Given a buffer, return JS_FALSE if the buffer might become a valid
@@ -4824,7 +4823,7 @@ JS_NewDateObjectMsec(JSContext *cx, double msec);
  * Infallible predicate to test whether obj is a date object.
  */
 extern JS_PUBLIC_API(JSBool)
-JS_ObjectIsDate(JSContext *cx, JSRawObject obj);
+JS_ObjectIsDate(JSContext *cx, JSObject *obj);
 
 /*
  * Clears the cache of calculated local time from each Date object.
@@ -5069,7 +5068,7 @@ extern JS_PUBLIC_API(void *)
 JS_EncodeScript(JSContext *cx, JSScript *script, uint32_t *lengthp);
 
 extern JS_PUBLIC_API(void *)
-JS_EncodeInterpretedFunction(JSContext *cx, JSRawObject funobj, uint32_t *lengthp);
+JS_EncodeInterpretedFunction(JSContext *cx, JSObject *funobj, uint32_t *lengthp);
 
 extern JS_PUBLIC_API(JSScript *)
 JS_DecodeScript(JSContext *cx, const void *data, uint32_t length,
