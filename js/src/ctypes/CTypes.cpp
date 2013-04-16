@@ -1322,7 +1322,7 @@ JS_InitCTypesClass(JSContext* cx, JSObject *globalArg)
 }
 
 JS_PUBLIC_API(void)
-JS_SetCTypesCallbacks(JSRawObject ctypesObj, JSCTypesCallbacks* callbacks)
+JS_SetCTypesCallbacks(JSObject *ctypesObj, JSCTypesCallbacks* callbacks)
 {
   JS_ASSERT(callbacks);
   JS_ASSERT(IsCTypesGlobal(ctypesObj));

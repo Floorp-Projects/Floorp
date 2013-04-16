@@ -1474,7 +1474,7 @@ JS_SetWrapObjectCallbacks(JSRuntime *rt,
 }
 
 JS_PUBLIC_API(JSCompartment *)
-JS_EnterCompartment(JSContext *cx, JSRawObject target)
+JS_EnterCompartment(JSContext *cx, JSObject *target)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -1501,7 +1501,7 @@ JS_LeaveCompartment(JSContext *cx, JSCompartment *oldCompartment)
     cx->leaveCompartment(oldCompartment);
 }
 
-JSAutoCompartment::JSAutoCompartment(JSContext *cx, JSRawObject target)
+JSAutoCompartment::JSAutoCompartment(JSContext *cx, JSObject *target)
   : cx_(cx),
     oldCompartment_(cx->compartment)
 {
@@ -1778,7 +1778,7 @@ JS_GetGlobalObject(JSContext *cx)
 }
 
 JS_PUBLIC_API(void)
-JS_SetGlobalObject(JSContext *cx, JSRawObject obj)
+JS_SetGlobalObject(JSContext *cx, JSObject *obj)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -2187,7 +2187,7 @@ JS_EnumerateResolvedStandardClasses(JSContext *cx, JSObject *objArg, JSIdArray *
 #undef EAGER_ATOM_CLASP
 
 JS_PUBLIC_API(JSBool)
-JS_GetClassObject(JSContext *cx, JSRawObject obj, JSProtoKey key, JSObject **objpArg)
+JS_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key, JSObject **objpArg)
 {
     RootedObject objp(cx, *objpArg);
     AssertHeapIsIdle(cx);
@@ -2223,7 +2223,7 @@ JS_IdentifyClassPrototype(JSContext *cx, JSObject *obj)
 }
 
 JS_PUBLIC_API(JSObject *)
-JS_GetObjectPrototype(JSContext *cx, JSRawObject forObj)
+JS_GetObjectPrototype(JSContext *cx, JSObject *forObj)
 {
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, forObj);
@@ -2231,7 +2231,7 @@ JS_GetObjectPrototype(JSContext *cx, JSRawObject forObj)
 }
 
 JS_PUBLIC_API(JSObject *)
-JS_GetFunctionPrototype(JSContext *cx, JSRawObject forObj)
+JS_GetFunctionPrototype(JSContext *cx, JSObject *forObj)
 {
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, forObj);
@@ -2239,7 +2239,7 @@ JS_GetFunctionPrototype(JSContext *cx, JSRawObject forObj)
 }
 
 JS_PUBLIC_API(JSObject *)
-JS_GetGlobalForObject(JSContext *cx, JSRawObject obj)
+JS_GetGlobalForObject(JSContext *cx, JSObject *obj)
 {
     AssertHeapIsIdle(cx);
     assertSameCompartment(cx, obj);
@@ -2247,7 +2247,7 @@ JS_GetGlobalForObject(JSContext *cx, JSRawObject obj)
 }
 
 extern JS_PUBLIC_API(JSBool)
-JS_IsGlobalObject(JSRawObject obj)
+JS_IsGlobalObject(JSObject *obj)
 {
     return obj->isGlobal();
 }
@@ -3360,7 +3360,7 @@ JS_GetConstructor(JSContext *cx, JSObject *protoArg)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_GetObjectId(JSContext *cx, JSRawObject obj, jsid *idp)
+JS_GetObjectId(JSContext *cx, JSObject *obj, jsid *idp)
 {
     AssertHeapIsIdle(cx);
     assertSameCompartment(cx, obj);
@@ -3494,19 +3494,19 @@ JS_NewObjectForConstructor(JSContext *cx, JSClass *clasp, const jsval *vp)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_IsExtensible(JSRawObject obj)
+JS_IsExtensible(JSObject *obj)
 {
     return obj->isExtensible();
 }
 
 JS_PUBLIC_API(JSBool)
-JS_IsNative(JSRawObject obj)
+JS_IsNative(JSObject *obj)
 {
     return obj->isNative();
 }
 
 JS_PUBLIC_API(JSRuntime *)
-JS_GetObjectRuntime(JSRawObject obj)
+JS_GetObjectRuntime(JSObject *obj)
 {
     return obj->compartment()->rt;
 }
@@ -4867,7 +4867,7 @@ JS_NewFunctionById(JSContext *cx, JSNative native, unsigned nargs, unsigned flag
 }
 
 JS_PUBLIC_API(JSObject *)
-JS_CloneFunctionObject(JSContext *cx, JSObject *funobjArg, JSRawObject parentArg)
+JS_CloneFunctionObject(JSContext *cx, JSObject *funobjArg, JSObject *parentArg)
 {
     RootedObject funobj(cx, funobjArg);
     RootedObject parent(cx, parentArg);
@@ -4947,7 +4947,7 @@ JS_ObjectIsCallable(JSContext *cx, RawObject obj)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_IsNativeFunction(JSRawObject funobj, JSNative call)
+JS_IsNativeFunction(JSObject *funobj, JSNative call)
 {
     if (!funobj->isFunction())
         return false;
@@ -4962,7 +4962,7 @@ JS_IsConstructor(JSFunction *fun)
 }
 
 JS_PUBLIC_API(JSObject*)
-JS_BindCallable(JSContext *cx, JSObject *targetArg, JSRawObject newThis)
+JS_BindCallable(JSContext *cx, JSObject *targetArg, JSObject *newThis)
 {
     RootedObject target(cx, targetArg);
     RootedValue thisArg(cx, ObjectValue(*newThis));
@@ -6716,7 +6716,7 @@ JS_NewDateObjectMsec(JSContext *cx, double msec)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_ObjectIsDate(JSContext *cx, JSRawObject objArg)
+JS_ObjectIsDate(JSContext *cx, JSObject *objArg)
 {
     RootedObject obj(cx, objArg);
     assertSameCompartment(cx, obj);
@@ -7208,7 +7208,7 @@ JS_EncodeScript(JSContext *cx, RawScript scriptArg, uint32_t *lengthp)
 }
 
 JS_PUBLIC_API(void *)
-JS_EncodeInterpretedFunction(JSContext *cx, JSRawObject funobjArg, uint32_t *lengthp)
+JS_EncodeInterpretedFunction(JSContext *cx, JSObject *funobjArg, uint32_t *lengthp)
 {
     XDREncoder encoder(cx);
     RootedObject funobj(cx, funobjArg);

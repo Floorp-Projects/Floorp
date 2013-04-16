@@ -225,7 +225,7 @@ GetPMFromThis(JSContext* cx, jsval* vp)
 namespace JS {
 
 JSObject*
-RegisterPerfMeasurement(JSContext *cx, JSRawObject global)
+RegisterPerfMeasurement(JSContext *cx, JSObject *global)
 {
     RootedObject prototype(cx);
     prototype = JS_InitClass(cx, global, NULL /* parent */,

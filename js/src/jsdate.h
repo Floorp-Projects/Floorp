@@ -49,22 +49,22 @@ js_NewDateObject(JSContext* cx, int year, int mon, int mday,
                  int hour, int min, int sec);
 
 extern JS_FRIEND_API(int)
-js_DateGetYear(JSContext *cx, JSRawObject obj);
+js_DateGetYear(JSContext *cx, JSObject *obj);
 
 extern JS_FRIEND_API(int)
-js_DateGetMonth(JSContext *cx, JSRawObject obj);
+js_DateGetMonth(JSContext *cx, JSObject *obj);
 
 extern JS_FRIEND_API(int)
-js_DateGetDate(JSContext *cx, JSRawObject obj);
+js_DateGetDate(JSContext *cx, JSObject *obj);
 
 extern JS_FRIEND_API(int)
-js_DateGetHours(JSContext *cx, JSRawObject obj);
+js_DateGetHours(JSContext *cx, JSObject *obj);
 
 extern JS_FRIEND_API(int)
-js_DateGetMinutes(JSContext *cx, JSRawObject obj);
+js_DateGetMinutes(JSContext *cx, JSObject *obj);
 
 extern JS_FRIEND_API(int)
-js_DateGetSeconds(JSRawObject obj);
+js_DateGetSeconds(JSObject *obj);
 
 /* Date constructor native. Exposed only so the JIT can know its address. */
 JSBool
