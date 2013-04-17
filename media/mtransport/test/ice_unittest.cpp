@@ -44,6 +44,8 @@ const std::string kDefaultStunServerHostname(
 const std::string kBogusStunServerHostname(
     (char *)"stun-server-nonexistent.invalid");
 const uint16_t kDefaultStunServerPort=3478;
+const std::string kBogusIceCandidate(
+    (char *)"candidate:0 2 UDP 2113601790 192.168.178.20 50769 typ");
 
 std::string g_turn_server;
 std::string g_turn_user;
@@ -310,6 +312,14 @@ class IceTestPeer : public sigslot::has_slots<> {
     candidate_filter_ = filter;
   }
 
+  // Allow us to parse candidates directly on the current thread.
+  void ParseCandidate(size_t i, const std::string& candidate) {
+    std::vector<std::string> attributes;
+
+    attributes.push_back(candidate);
+    streams_[i]->ParseAttributes(attributes);
+  }
+
  private:
   std::string name_;
   nsRefPtr<NrIceCtx> ice_ctx_;
@@ -502,6 +512,13 @@ TEST_F(IceGatherTest, TestGatherTurn) {
   peer_->SetTurnServer(g_turn_server, kDefaultStunServerPort,
                        g_turn_user, g_turn_password);
   Gather();
+}
+
+// Verify that a bogus candidate doesn't cause crashes on the
+// main thread. See bug 856433.
+TEST_F(IceGatherTest, TestBogusCandidate) {
+  Gather();
+  peer_->ParseCandidate(0, kBogusIceCandidate);
 }
 
 TEST_F(IceConnectTest, TestGather) {
