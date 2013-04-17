@@ -729,9 +729,7 @@ static bool
 GetPossibleCallees(JSContext *cx, HandleScript script, jsbytecode *pc,
                    types::StackTypeSet *calleeTypes, MIRGraph &graph)
 {
-    JS_ASSERT(calleeTypes);
-
-    if (calleeTypes->baseFlags() != 0)
+    if (!calleeTypes || calleeTypes->baseFlags() != 0)
         return true;
 
     unsigned objCount = calleeTypes->getObjectCount();
@@ -794,7 +792,6 @@ ParallelArrayVisitor::visitCall(MCall *ins)
     }
 
     types::StackTypeSet *calleeTypes = ins->getFunction()->resultTypeSet();
-    JS_ASSERT(calleeTypes);
 
     RootedScript script(cx_, ins->block()->info().script());
     return GetPossibleCallees(cx_, script, ins->resumePoint()->pc(),
