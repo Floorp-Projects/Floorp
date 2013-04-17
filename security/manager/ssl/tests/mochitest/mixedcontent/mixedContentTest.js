@@ -128,8 +128,8 @@ function finish()
     window.setTimeout(function()
     {
       window.location.assign(navigateToInsecure ?
-        "http://example.com/tests/security/ssl/mixedcontent/backward.html" :
-        "https://example.com/tests/security/ssl/mixedcontent/backward.html");
+        "http://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/backward.html" :
+        "https://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/backward.html");
     }, 0);
   }
   else

@@ -60,7 +60,7 @@ function waitForTrue(fn, onWaitComplete) {
 const kRed = "rgb(255, 0, 0)";
 const kBlue = "rgb(0, 0, 255)";
 
-var testpath = "/tests/toolkit/components/places/tests/mochitest/../bug_461710/";
+var testpath = "/tests/toolkit/components/places/tests/mochitest/bug_461710/";
 var prefix = "http://mochi.test:8888" + testpath;
 var subtests = [
                    "visited_page.html",   // 1
@@ -163,7 +163,7 @@ var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
                     .rootTreeItem
                     .QueryInterface(Ci.nsIInterfaceRequestor)
                     .getInterface(Ci.nsIDOMWindow);
-var contentPage = "http://mochi.test:8888/tests/toolkit/components/places/tests/mochitest/../bug_461710/iframe.html";
+var contentPage = "http://mochi.test:8888/tests/toolkit/components/places/tests/mochitest/bug_461710/iframe.html";
 
 function testOnWindow(aIsPrivate, aCallback) {
   var win = mainWindow.OpenBrowserWindow({private: aIsPrivate});
