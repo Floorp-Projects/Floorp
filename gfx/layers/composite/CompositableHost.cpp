@@ -34,6 +34,12 @@ CompositableHost::AddMaskEffect(EffectChain& aEffects,
                                 bool aIs3D)
 {
   RefPtr<TextureSource> source = GetTextureHost();
+
+  if (!source) {
+    NS_WARNING("Using compositable with no texture host as mask layer");
+    return false;
+  }
+
   RefPtr<EffectMask> effect = new EffectMask(source,
                                              source->GetSize(),
                                              aTransform);
