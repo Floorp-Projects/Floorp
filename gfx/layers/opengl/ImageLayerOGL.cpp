@@ -160,34 +160,6 @@ struct THEBES_API ImageOGLBackendData : public ImageBackendData
   GLTexture mTexture;
 };
 
-#ifdef XP_MACOSX
-void
-AllocateTextureIOSurface(MacIOSurfaceImage *aIOImage, mozilla::gl::GLContext* aGL)
-{
-  nsAutoPtr<ImageOGLBackendData> backendData(
-    new ImageOGLBackendData);
-
-  backendData->mTexture.Allocate(aGL);
-  aGL->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, backendData->mTexture.GetTextureID());
-  aGL->fTexParameteri(LOCAL_GL_TEXTURE_RECTANGLE_ARB,
-                     LOCAL_GL_TEXTURE_MIN_FILTER,
-                     LOCAL_GL_NEAREST);
-  aGL->fTexParameteri(LOCAL_GL_TEXTURE_RECTANGLE_ARB,
-                     LOCAL_GL_TEXTURE_MAG_FILTER,
-                     LOCAL_GL_NEAREST);
-
-  void *nativeCtx = aGL->GetNativeData(GLContext::NativeGLContext);
-
-  aIOImage->GetIOSurface()->CGLTexImageIOSurface2D(nativeCtx,
-                                     LOCAL_GL_RGBA, LOCAL_GL_BGRA,
-                                     LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV, 0);
-
-  aGL->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, 0);
-
-  aIOImage->SetBackendData(LAYERS_OPENGL, backendData.forget());
-}
-#endif
-
 void
 AllocateTextureSharedTexture(SharedTextureImage *aTexImage, mozilla::gl::GLContext* aGL, GLenum aTarget)
 {
@@ -361,46 +333,6 @@ ImageLayerOGL::RenderLayer(int,
     program->LoadMask(GetMaskLayer());
 
     mOGLManager->BindAndDrawQuad(program);
-#ifdef XP_MACOSX
-  } else if (image->GetFormat() == MAC_IO_SURFACE) {
-     MacIOSurfaceImage *ioImage =
-       static_cast<MacIOSurfaceImage*>(image);
-
-     gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
-
-     if (!ioImage->GetBackendData(LAYERS_OPENGL)) {
-       AllocateTextureIOSurface(ioImage, gl());
-     }
-
-     ImageOGLBackendData *data =
-      static_cast<ImageOGLBackendData*>(ioImage->GetBackendData(LAYERS_OPENGL));
-
-     gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
-     gl()->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, data->mTexture.GetTextureID());
-
-     ShaderProgramOGL *program =
-       mOGLManager->GetProgram(gl::RGBARectLayerProgramType, GetMaskLayer());
-
-     program->Activate();
-     if (program->GetTexCoordMultiplierUniformLocation() != -1) {
-       // 2DRect case, get the multiplier right for a sampler2DRect
-       program->SetTexCoordMultiplier(ioImage->GetSize().width, ioImage->GetSize().height);
-     } else {
-       NS_ASSERTION(0, "no rects?");
-     }
-
-     program->SetLayerQuadRect(nsIntRect(0, 0,
-                                         ioImage->GetSize().width,
-                                         ioImage->GetSize().height));
-     program->SetLayerTransform(GetEffectiveTransform());
-     program->SetLayerOpacity(GetEffectiveOpacity());
-     program->SetRenderOffset(aOffset);
-     program->SetTextureUnit(0);
-     program->LoadMask(GetMaskLayer());
-
-     mOGLManager->BindAndDrawQuad(program);
-     gl()->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, 0);
-#endif
   } else if (image->GetFormat() == SHARED_TEXTURE) {
     SharedTextureImage* texImage =
       static_cast<SharedTextureImage*>(image);
