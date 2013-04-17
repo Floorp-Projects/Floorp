@@ -68,12 +68,12 @@
 
   <binding id="autocomplete-popup">
     <content orient="horizontal">
-      <xul:vbox id="results-vbox" class="meta-section viewable-height">
+      <xul:vbox id="results-vbox" class="meta-section viewable-height" flex="1">
         <xul:label class="meta-section-title" value="&autocompleteResultsHeader.label;"/>
         <richgrid id="results-richgrid" anonid="results" seltype="single" flex="1"/>
       </xul:vbox>
 
-      <xul:vbox id="searches-vbox" class="meta-section viewable-height">
+      <xul:vbox id="searches-vbox" class="meta-section viewable-height" flex="1">
         <xul:label class="meta-section-title" value="&autocompleteSearchesHeader.label;"/>
         <richgrid id="searches-richgrid" anonid="searches" seltype="single" flex="1"/>
       </xul:vbox>
