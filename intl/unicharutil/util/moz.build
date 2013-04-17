@@ -8,3 +8,10 @@ DIRS += ['internal']
 
 MODULE = 'unicharutil'
 
+EXPORTS += [
+    'nsBidiUtils.h',
+    'nsSpecialCasingData.h',
+    'nsUnicodeProperties.h',
+    'nsUnicodeScriptCodes.h',
+]
+

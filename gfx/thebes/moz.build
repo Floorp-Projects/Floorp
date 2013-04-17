@@ -6,3 +6,122 @@
 
 MODULE = 'thebes'
 
+EXPORTS += [
+    'RoundedRect.h',
+    'gfx2DGlue.h',
+    'gfx3DMatrix.h',
+    'gfxASurface.h',
+    'gfxAlphaRecovery.h',
+    'gfxBaseSharedMemorySurface.h',
+    'gfxBlur.h',
+    'gfxCachedTempSurface.h',
+    'gfxColor.h',
+    'gfxContext.h',
+    'gfxDrawable.h',
+    'gfxFailure.h',
+    'gfxFont.h',
+    'gfxFontConstants.h',
+    'gfxFontFeatures.h',
+    'gfxFontTest.h',
+    'gfxFontUtils.h',
+    'gfxImageSurface.h',
+    'gfxLineSegment.h',
+    'gfxMatrix.h',
+    'gfxPath.h',
+    'gfxPattern.h',
+    'gfxPlatform.h',
+    'gfxPoint.h',
+    'gfxPoint3D.h',
+    'gfxPointH3D.h',
+    'gfxQuad.h',
+    'gfxQuaternion.h',
+    'gfxRect.h',
+    'gfxReusableSurfaceWrapper.h',
+    'gfxSVGGlyphs.h',
+    'gfxSharedImageSurface.h',
+    'gfxSharedQuartzSurface.h',
+    'gfxSkipChars.h',
+    'gfxTeeSurface.h',
+    'gfxTypes.h',
+    'gfxUserFontSet.h',
+    'gfxUtils.h',
+    'nsSurfaceTexture.h',
+]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    EXPORTS += [
+        'gfxAndroidPlatform.h',
+        'gfxFT2Fonts.h',
+        'gfxFT2FontBase.h',
+        'gfxPDFSurface.h',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+    EXPORTS += [
+        'gfxAndroidPlatform.h',
+        'gfxFT2Fonts.h',
+        'gfxFT2FontBase.h',
+        'gfxPDFSurface.h',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    EXPORTS += [
+        'gfxPlatformMac.h',
+        'gfxQuartzSurface.h',
+        'gfxQuartzImageSurface.h',
+        'gfxQuartzNativeDrawing.h',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk2':
+    EXPORTS += [
+        'gfxFT2FontBase.h',
+        'gfxGdkNativeRenderer.h',
+        'gfxPDFSurface.h',
+        'gfxPSSurface.h',
+        'gfxPlatformGtk.h',
+    ]
+
+    if CONFIG['MOZ_X11']:
+        EXPORTS += [
+            'gfxXlibSurface.h',
+            'gfxXlibNativeRenderer.h',
+        ]
+
+    if CONFIG['MOZ_PANGO']:
+        EXPORTS += ['gfxPangoFonts.h']
+    else:
+        EXPORTS += ['gfxFT2Fonts.h']
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
+    EXPORTS += [
+        'gfxOS2Fonts.h',
+        'gfxOS2Platform.h',
+        'gfxOS2Surface.h',
+        'gfxPDFSurface.h',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
+    EXPORTS += [
+        'gfxFT2FontBase.h',
+        'gfxQPainterSurface.h',
+        'gfxQtNativeRenderer.h',
+        'gfxQtPlatform.h',
+        'gfxPDFSurface.h',
+    ]
+
+    if CONFIG['MOZ_X11']:
+        EXPORTS += [
+            'gfxXlibSurface.h',
+        ]
+
+    if CONFIG['MOZ_PANGO']:
+        EXPORTS += ['gfxPangoFonts.h']
+    else:
+        EXPORTS += ['gfxFT2Fonts.h']
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    EXPORTS += [
+        'gfxPDFSurface.h',
+        'gfxWindowsPlatform.h',
+        'gfxWindowsSurface.h',
+        'gfxWindowsNativeDrawing.h',
+        'gfxDWriteFonts.h',
+        'gfxD2DSurface.h',
+        'gfxGDIFont.h',
+        'gfxGDIFontList.h',
+        'gfxPlatformFontList.h',
+    ]

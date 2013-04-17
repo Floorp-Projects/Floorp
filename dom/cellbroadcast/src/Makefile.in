@@ -16,12 +16,6 @@ FAIL_ON_WARNINGS := 1
 
 include $(topsrcdir)/dom/dom-config.mk
 
-EXPORTS_NAMESPACES = mozilla/dom
-
-EXPORTS_mozilla/dom = \
-  CellBroadcast.h \
-  $(NULL)
-
 CPPSRCS = \
   CellBroadcast.cpp \
   $(NULL)

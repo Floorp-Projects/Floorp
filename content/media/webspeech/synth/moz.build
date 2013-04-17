@@ -14,3 +14,15 @@ XPIDL_SOURCES += [
     'nsISpeechService.idl',
     'nsISynthVoiceRegistry.idl'
     ]
+
+EXPORTS.mozilla.dom += [
+    'EnableSpeechSynthesisCheck.h',
+    'SpeechSynthesis.h',
+    'SpeechSynthesisChild.h',
+    'SpeechSynthesisParent.h',
+    'SpeechSynthesisUtterance.h',
+    'SpeechSynthesisVoice.h',
+    'nsSpeechTask.h',
+    'nsSynthVoiceRegistry.h',
+]
+

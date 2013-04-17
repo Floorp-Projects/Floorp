@@ -12,3 +12,10 @@ XPIDL_MODULE = 'widget_cocoa'
 
 MODULE = 'widget'
 
+EXPORTS += [
+    'mozView.h',
+    'nsChangeObserver.h',
+    'nsCocoaFeatures.h',
+    'nsCocoaUtils.h',
+]
+

@@ -461,8 +461,15 @@
         </hbox>
       </settings>
       <setting pref="signon.rememberSignons" title="&optionsHeader.privacy.passwords.label;" type="bool"/>
-      <settings id="prefs-donottrack" label="&optionsHeader.privacy.doNotTrack.title;">
-        <setting pref="privacy.donottrackheader.enabled" title="&optionsHeader.privacy.doNotTrack.label;" type="bool"/>
+      <settings id="prefs-dnt" label="&doNotTrack.title;">
+        <description>&doNotTrack.desc;</description>
+        <setting id="prefs-dnt-value" pref="privacy.donottrackheader.value" onpreferencechanged="PreferencesPanelView.onDNTPreferenceChanged()" type="radio" >
+          <radiogroup id="prefs-dnt-options">
+            <radio id="prefs-dnt-notrack" label="&doNotTrack.options.trackingNotOkay;" value="1"/>
+            <radio id="prefs-dnt-nopref" label="&doNotTrack.options.noPreference;" value="-1"/>
+            <radio id="prefs-dnt-oktrack" label="&doNotTrack.options.trackingOkay;" value="0"/>
+          </radiogroup>
+        </setting>
       </settings>
     </flyoutpanel>
 

@@ -9,12 +9,4 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORTS_NAMESPACES = ogg
-
-EXPORTS_ogg = \
-  ogg.h \
-  config_types.h \
-  os_types.h \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk

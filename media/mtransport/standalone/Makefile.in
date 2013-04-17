@@ -20,22 +20,6 @@ endif
 
 SRCS_IN_OBJDIR	= 1
 
-EXPORTS_NAMESPACES = mtransport
-
-EXPORTS_mtransport = \
-  ../dtlsidentity.h \
-  ../nricectx.h \
-  ../nricemediastream.h \
-  ../nriceresolverfake.h \
-  ../transportflow.h \
-  ../transportlayer.h \
-  ../transportlayerdtls.h \
-  ../transportlayerice.h \
-  ../transportlayerlog.h \
-  ../transportlayerloopback.h \
-  ../transportlayerprsock.h \
-  $(NULL)
-
 CPPSRCS = \
 	$(MTRANSPORT_LCPPSRCS) \
 	$(NULL)

@@ -6,3 +6,9 @@
 
 MODULE = 'lwbrk'
 
+EXPORTS += [
+    'nsILineBreaker.h',
+    'nsIWordBreaker.h',
+    'nsLWBrkCIID.h',
+]
+

@@ -13,15 +13,6 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME    = xpconnect_s
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
-EXPORTS = \
-		qsObjectHelper.h \
-		xpcObjectHelper.h \
-		xpcpublic.h \
-		XPCJSMemoryReporter.h \
-		GeneratedEvents.h \
-		BackstagePass.h \
-		$(NULL)
-
 CPPSRCS		= \
 		nsScriptError.cpp \
 		nsXPConnect.cpp \

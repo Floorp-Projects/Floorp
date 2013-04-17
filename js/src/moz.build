@@ -24,5 +24,59 @@ TEST_DIRS += ['tests', 'gdb']
 
 MODULE = 'js'
 
-
 CONFIGURE_SUBST_FILES += ['devtools/rootAnalysis/Makefile']
+
+# Changes to internal header files, used externally, massively slow down
+# browser builds.  Don't add new files here unless you know what you're
+# doing!
+EXPORTS += [
+    'js-config.h',
+    'jscpucfg.h',
+    'js.msg',
+    'jsalloc.h',
+    'jsapi.h',
+    'jsclass.h',
+    'jsclist.h',
+    'jsdbgapi.h',
+    'jsdhash.h',
+    'jsfriendapi.h',
+    'jslock.h',
+    'json.h',
+    'jsproxy.h',
+    'jsprf.h',
+    'jsprototypes.h',
+    'jsprvtd.h',
+    'jspubtd.h',
+    'jstypes.h',
+    'jsutil.h',
+    'jsversion.h',
+    'jswrapper.h',
+    'jsperf.h',
+]
+
+if CONFIG['HAVE_DTRACE']:
+    EXPORTS += [
+        '$(CURDIR)/javascript-trace.h',
+    ]
+
+# If you add a header here, add it to js/src/jsapi-tests/testIntTypesABI.cpp so
+# that we ensure we don't over-expose our internal integer typedefs.  Note that
+# LegacyIntTypes.h below is deliberately exempted from this requirement.
+EXPORTS.js += [
+    'Anchor.h',
+    'CallArgs.h',
+    'CharacterEncoding.h',
+    'GCAPI.h',
+    'HashTable.h',
+    'HeapAPI.h',
+    'LegacyIntTypes.h',
+    'MemoryMetrics.h',
+    'PropertyKey.h',
+    'RequiredDefines.h',
+    'RootingAPI.h',
+    'TemplateLib.h',
+    'Utility.h',
+    'Value.h',
+    'Vector.h',
+]
+

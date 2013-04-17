@@ -31,11 +31,6 @@ CSRCS		= \
 		$(HOST_CSRCS) \
 		$(NULL)
 
-EXPORTS		= \
-		mar.h \
-		mar_cmdline.h \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 # The intermediate (.ii/.s) files for host and target can have the same name...

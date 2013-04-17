@@ -72,12 +72,6 @@ endif
 
 SHARED_LIBRARY_LIBS = ../xpwidgets/libxpwidgets_s.a
 
-EXPORTS		= \
-                nsGTKToolkit.h \
-		nsIImageToPixbuf.h \
-		mozcontainer.h \
-		$(NULL)
-
 ifdef NATIVE_THEME_SUPPORT
 CSRCS		+= gtk2drawing.c
 CPPSRCS		+= nsNativeThemeGTK.cpp

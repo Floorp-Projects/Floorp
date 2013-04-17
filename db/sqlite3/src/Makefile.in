@@ -61,10 +61,6 @@ ifeq ($(OS_ARCH),WINNT)
 MODULE_OPTIMIZE_FLAGS = -O2
 endif
 
-EXPORTS = \
-  sqlite3.h \
-  $(NULL)
-
 CSRCS = \
   sqlite3.c \
   $(NULL)

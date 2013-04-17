@@ -16,31 +16,11 @@ FAIL_ON_WARNINGS := 1
 
 include $(topsrcdir)/dom/dom-config.mk
 
-EXPORTS_NAMESPACES = mozilla/dom/quota
-
 CPPSRCS = \
   CheckQuotaHelper.cpp \
   FileStreams.cpp \
   QuotaManager.cpp \
   QuotaObject.cpp \
-  $(NULL)
-
-EXPORTS = \
-  nsIOfflineStorage.h \
-  $(NULL)
-
-EXPORTS_mozilla/dom/quota = \
-  AcquireListener.h \
-  ArrayCluster.h \
-  Client.h \
-  FileStreams.h \
-  OriginOrPatternString.h \
-  QuotaCommon.h \
-  QuotaManager.h \
-  QuotaObject.h \
-  StoragePrivilege.h \
-  UsageRunnable.h \
-  Utilities.h \
   $(NULL)
 
 LOCAL_INCLUDES = \

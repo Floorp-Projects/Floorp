@@ -18,10 +18,6 @@ LIBXUL_LIBRARY	= 1
 FAIL_ON_WARNINGS = 1
 
 
-EXPORTS		= \
-		nsLayoutDebugCIID.h \
-		$(NULL)
-
 CPPSRCS		= \
 		nsDebugFactory.cpp \
 		nsLayoutDebugCLH.cpp \

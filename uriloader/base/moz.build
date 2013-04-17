@@ -18,3 +18,8 @@ XPIDL_SOURCES += [
 
 MODULE = 'uriloader'
 
+EXPORTS += [
+    'nsDocLoader.h',
+    'nsURILoader.h',
+]
+

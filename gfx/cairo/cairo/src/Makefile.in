@@ -96,10 +96,6 @@ ifneq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 CSRCS += cairo-deflate-stream.c
 endif
 
-EXPORTS_NAMESPACES = cairo
-
-EXPORTS_cairo = cairo.h cairo-version.h cairo-features.h cairo-platform.h cairo-deprecated.h cairo-rename.h cairo-tee.h
-
 # cairo-type1-subset.c should be here, but it's only supported on freetype platforms
 
 PSPDF_BASE_CSRCS = \
@@ -116,9 +112,6 @@ PDF_CSRCS = \
 	$(NULL)
 
 PS_CSRCS = cairo-ps-surface.c
-
-PDF_EXPORTS = cairo-pdf.h
-PS_EXPORTS = cairo-ps.h
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 DEFINES += -DDISABLE_SOME_FLOATING_POINT
@@ -138,9 +131,7 @@ else
 DEFINES += -DCAIRO_OMIT_WIN32_PRINTING
 endif
 
-EXPORTS_cairo += cairo-win32.h
 CSRCS   += $(PSPDF_BASE_CSRCS) $(PDF_CSRCS)
-EXPORTS_cairo += $(PDF_EXPORTS)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
@@ -149,42 +140,33 @@ ifdef MOZ_OS2_HIGH_MEMORY
 DEFINES += -DOS2_HIGH_MEMORY
 endif
 CSRCS   += cairo-os2-surface.c
-EXPORTS_cairo += cairo-os2.h cairo-os2-private.h
 CSRCS   += $(PSPDF_BASE_CSRCS) $(PDF_CSRCS)
-EXPORTS_cairo += $(PDF_EXPORTS)
 endif
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 CSRCS   += cairo-quartz-surface.c cairo-quartz-image-surface.c cairo-quartz-font.c
-EXPORTS_cairo += cairo-quartz.h cairo-quartz-image.h
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
 CPPSRCS += cairo-beos-surface.cpp
-EXPORTS_cairo += cairo-beos.h
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 CSRCS   += $(PSPDF_BASE_CSRCS) $(PDF_CSRCS) $(PS_CSRCS)
-EXPORTS_cairo += $(PDF_EXPORTS) $(PS_EXPORTS)
 endif
 
 ifneq (,$(filter android gonk,$(MOZ_WIDGET_TOOLKIT)))
 CSRCS   += $(PSPDF_BASE_CSRCS) $(PDF_CSRCS)
-EXPORTS_cairo += $(PDF_EXPORTS)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
 CPPSRCS += cairo-qt-surface.cpp
 CSRCS   += $(PSPDF_BASE_CSRCS) $(PDF_CSRCS) 
-EXPORTS_cairo += cairo-qt.h
-EXPORTS_cairo += $(PDF_EXPORTS)
 OS_INCLUDES += $(MOZ_QT_CFLAGS)
 endif
 
 ifdef BUILD_CAIRO_SVG
 CSRCS	+= cairo-svg-surface.c
-EXPORTS_cairo += cairo-svg.h
 endif
 
 ifdef MOZ_X11
@@ -192,13 +174,11 @@ CSRCS   += cairo-xlib-surface.c \
 	   cairo-xlib-screen.c \
 	   cairo-xlib-visual.c \
 	   cairo-xlib-display.c
-EXPORTS_cairo += cairo-xlib.h cairo-xlib-xrender.h
 OS_INCLUDES += $(XCFLAGS)
 endif
 
 ifdef MOZ_ENABLE_CAIRO_FT
 CSRCS   += cairo-ft-font.c cairo-type1-subset.c
-EXPORTS_cairo += cairo-ft.h
 OS_INCLUDES += $(CAIRO_FT_CFLAGS)
 endif
 

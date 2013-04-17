@@ -26,8 +26,6 @@ CSRCS 		+= strcpy.c
 VPATH 		+= $(topsrcdir)/mfbt
 CPPSRCS 	+= HashFunctions.cpp
 
-EXPORTS 	= DMD.h
-
 # Disable mozglue.
 WRAP_LDFLAGS 	=
 MOZ_GLUE_LDFLAGS=

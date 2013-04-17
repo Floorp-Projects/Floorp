@@ -21,3 +21,7 @@ XPIDL_FLAGS += [
 
 MODULE = 'dom'
 
+EXPORTS += [
+    'nsPIDOMStorage.h',
+]
+

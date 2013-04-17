@@ -40,29 +40,6 @@ CPPSRCS = \
   XMLHttpRequest.cpp \
   $(NULL)
 
-EXPORTS_NAMESPACES = \
-  mozilla/dom/workers \
-  mozilla/dom/workers/bindings \
-  $(NULL)
-
-# Public stuff.
-EXPORTS_mozilla/dom/workers = Workers.h
-
-# Stuff needed for the bindings, not really public though.
-EXPORTS_mozilla/dom/workers/bindings = \
-  DOMBindingBase.h \
-  EventListenerManager.h \
-  EventTarget.h \
-  FileReaderSync.h \
-  URL.h \
-  TextDecoder.h \
-  TextEncoder.h \
-  WorkerFeature.h \
-  XMLHttpRequestEventTarget.h \
-  XMLHttpRequestUpload.h \
-  XMLHttpRequest.h \
-  $(NULL)
-
 LOCAL_INCLUDES = \
   -I$(topsrcdir)/content/base/src \
   -I$(topsrcdir)/content/events/src \

@@ -66,9 +66,7 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),android)
 OSHELPER += nsMIMEInfoAndroid.cpp
 OSHELPER += nsAndroidHandlerApp.cpp
 OSHELPER += nsExternalSharingAppService.cpp
-EXPORTS += nsExternalSharingAppService.h
 OSHELPER += nsExternalURLHandlerService.cpp
-EXPORTS += nsExternalURLHandlerService.h
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
@@ -84,17 +82,6 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 OSHELPER  += nsMIMEInfoOS2.cpp
 endif
-
-EXPORTS_NAMESPACES = mozilla/dom
-
-EXPORTS_mozilla/dom = \
-    ExternalHelperAppParent.h \
-    ExternalHelperAppChild.h
-
-EXPORTS += \
-		$(OSDIR)/nsOSHelperAppService.h \
-		nsExternalHelperAppService.h \
-		$(NULL)
 
 CPPSRCS	= \
 	nsExternalHelperAppService.cpp	\
@@ -114,7 +101,6 @@ endif
 ifdef MOZ_ENABLE_MEEGOTOUCHSHARE
 OSHELPER  += nsMeegoExternalSharingAppService.cpp
 LOCAL_INCLUDES   += $(MOZ_PLATFORM_MAEMO_CFLAGS)
-EXPORTS += nsExternalSharingAppService.h
 endif
 
 ifeq ($(MOZ_PLATFORM_MAEMO),5)

@@ -6,3 +6,13 @@
 
 MODULE = 'gfxipc'
 
+EXPORTS.mozilla.gfx += [
+    'SharedDIB.h',
+]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    EXPORTS.mozilla.gfx += [
+        'SharedDIBWin.h',
+        'SharedDIBSurface.h',
+    ]
+

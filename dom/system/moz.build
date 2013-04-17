@@ -26,3 +26,16 @@ XPIDL_MODULE = 'dom_system'
 
 MODULE = 'dom'
 
+EXPORTS += [
+    'nsDeviceSensors.h',
+]
+
+if CONFIG['MOZ_GAMEPAD']:
+    EXPORTS.mozilla.dom = [
+        'GamepadService.h',
+    ]
+
+EXPORTS.mozilla += [
+    'OSFileConstants.h',
+]
+

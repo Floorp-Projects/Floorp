@@ -6,3 +6,10 @@
 
 MODULE = 'ycbcr'
 
+EXPORTS += [
+    'chromium_types.h',
+    'ycbcr_to_rgb565.h',
+    'yuv_convert.h',
+    'yuv_row.h',
+]
+
