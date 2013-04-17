@@ -1683,11 +1683,12 @@ pref("layout.word_select.stop_at_punctuation", true);
 // controls caret style and word-delete during text selection
 // 0 = use platform default
 // 1 = caret moves and blinks as when there is no selection; word
-//     delete deselects the selection and then deletes word (Windows default)
+//     delete deselects the selection and then deletes word
 // 2 = caret moves to selection edge and is not visible during selection; 
-//     word delete deletes the selection (Mac default)
+//     word delete deletes the selection (Mac and Linux default)
 // 3 = caret moves and blinks as when there is no selection; word delete
-//     deletes the selection (Unix default)
+//     deletes the selection
+// Windows default is 1 for word delete behavior, the rest as for 2.
 pref("layout.selection.caret_style", 0);
 
 // pref to control whether or not to replace backslashes with Yen signs
