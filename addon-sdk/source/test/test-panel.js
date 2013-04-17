@@ -318,7 +318,7 @@ exports["test Anchor And Arrow"] = function(assert, done) {
       return;
     }
     let { panel, anchor } = queue.shift();
-    panel.show(anchor);
+    panel.show(null, anchor);
   }
 
   let tabs= require("sdk/tabs");
@@ -462,6 +462,7 @@ exports["test Change Content URL"] = function(assert, done) {
     contentURL: "about:blank",
     contentScript: "self.port.emit('ready', document.location.href);"
   });
+
   let count = 0;
   panel.port.on("ready", function (location) {
     count++;
@@ -651,7 +652,7 @@ if (isWindowPBSupported) {
         showTries++;
         panel.show();
         showTries++;
-        panel.show(browserWindow.gBrowser);
+        panel.show(null, browserWindow.gBrowser);
 
         return promise;
       }).
@@ -703,9 +704,9 @@ if (isWindowPBSupported) {
           }
         });
         showTries++;
-        panel.show(window.gBrowser);
+        panel.show(null, window.gBrowser);
         showTries++;
-        panel.show(browserWindow.gBrowser);
+        panel.show(null, browserWindow.gBrowser);
 
         return promise;
       }).
@@ -753,7 +754,7 @@ exports['test Style Applied Only Once'] = function (assert, done) {
       'self.port.on("check",function() { self.port.emit("count", document.getElementsByTagName("style").length); });' +
       'self.port.on("ping", function (count) { self.port.emit("pong", count); });'
   });
-  
+
   panel.port.on('count', function (styleCount) {
     assert.equal(styleCount, 1, 'should only have one style');
     done();
@@ -836,7 +837,7 @@ else if (isGlobalPBSupported) {
         assert.ok(isPrivate(window), 'window is private');
         assert.equal(getWindow(window.gBrowser), window, 'private window elements returns window');
         assert.equal(getWindow(activeWindow.gBrowser), activeWindow, 'active window elements returns window');
-        
+
         pb.once('stop', done);
         pb.deactivate();
       })
