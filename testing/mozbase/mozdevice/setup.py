@@ -4,7 +4,7 @@
 
 from setuptools import setup
 
-PACKAGE_VERSION = '0.21'
+PACKAGE_VERSION = '0.22'
 
 setup(name='mozdevice',
       version=PACKAGE_VERSION,
@@ -19,7 +19,7 @@ setup(name='mozdevice',
       packages=['mozdevice'],
       include_package_data=True,
       zip_safe=False,
-      install_requires=[],
+      install_requires=['mozlog'],
       entry_points="""
       # -*- Entry points: -*-
       [console_scripts]

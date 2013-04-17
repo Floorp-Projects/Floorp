@@ -5,7 +5,7 @@
 import sys
 from setuptools import setup
 
-PACKAGE_VERSION = '0.5'
+PACKAGE_VERSION = '0.7'
 
 # we only support python 2 right now
 assert sys.version_info[0] == 2

@@ -11,211 +11,191 @@ import os
 import posixpath
 import StringIO
 import sys
-import textwrap
 import mozdevice
-from optparse import OptionParser
+import mozlog
+import argparse
 
 class DMCli(object):
 
     def __init__(self):
-        # a value of None for 'max_args' means there is no limit to the number
-        # of arguments.  'min_args' should always have an integer value >= 0.
         self.commands = { 'install': { 'function': self.install,
-                                       'min_args': 1,
-                                       'max_args': 1,
-                                       'help_args': '<file>',
+                                       'args': [ { 'name': 'file', 'nargs': None } ],
                                        'help': 'push this package file to the device and install it' },
-                          'uninstall': { 'function': lambda a: self.dm.uninstallApp(a),
-                                         'min_args': 1,
-                                         'max_args': 1,
-                                         'help_args': '<packagename>',
+                          'uninstall': { 'function': self.uninstall,
+                                         'args': [ { 'name': 'packagename', 'nargs': None } ],
                                          'help': 'uninstall the named app from the device' },
-                          'killapp': { 'function': self.killapp,
-                                       'min_args': 1,
-                                       'max_args': 1,
-                                       'help_args': '<process name>',
-                                       'help': 'kills any processes with a particular name on device' },
+                          'killapp': { 'function': self.kill,
+                                       'args': [ { 'name': 'process_name', 'nargs': '*' } ],
+                                       'help': 'kills any processes with name(s) on device' },
                           'launchapp': { 'function': self.launchapp,
-                                         'min_args': 4,
-                                         'max_args': 4,
-                                         'help_args': '<appname> <activity name> <intent> <URL>',
-                                         'help': 'launches application on device' },
+                                         'args': [ { 'name': 'appname', 'nargs': None },
+                                                   { 'name': 'activity_name',
+                                                     'nargs': None },
+                                                   { 'name': '--intent',
+                                                     'action': 'store',
+                                                     'default': 'android.intent.action.VIEW' },
+                                                   { 'name': '--url',
+                                                     'action': 'store' }
+                                                ],
+                                      'help': 'launches application on device' },
                           'push': { 'function': self.push,
-                                    'min_args': 2,
-                                    'max_args': 2,
-                                    'help_args': '<local> <remote>',
+                                    'args': [ { 'name': 'local_file', 'nargs': None },
+                                              { 'name': 'remote_file', 'nargs': None }
+                                              ],
                                     'help': 'copy file/dir to device' },
                           'pull': { 'function': self.pull,
-                                    'min_args': 1,
-                                    'max_args': 2,
-                                    'help_args': '<local> [remote]',
+                                    'args': [ { 'name': 'local_file', 'nargs': None },
+                                              { 'name': 'remote_file', 'nargs': '?' } ],
                                     'help': 'copy file/dir from device' },
                           'shell': { 'function': self.shell,
-                                     'min_args': 1,
-                                     'max_args': None,
-                                     'help_args': '<command>',
-                                     'help': 'run shell command on device' },
+                                    'args': [ { 'name': 'command', 'nargs': argparse.REMAINDER } ],
+                                    'help': 'run shell command on device' },
                           'info': { 'function': self.getinfo,
-                                    'min_args': 0,
-                                    'max_args': 1,
-                                    'help_args': '[os|id|uptime|systime|screen|memory|processes]',
-                                    'help': 'get information on a specified '
+                                    'args': [ { 'name': 'directive', 'nargs': '?' } ],
+                                    'help': 'get information on specified '
                                     'aspect of the device (if no argument '
                                     'given, print all available information)'
                                     },
                           'ps': { 'function': self.processlist,
-                                    'min_args': 0,
-                                    'max_args': 0,
-                                    'help_args': '',
-                                    'help': 'get information on running processes on device'
+                                  'help': 'get information on running processes on device'
                                 },
                           'logcat' : { 'function': self.logcat,
-                                       'min_args': 0,
-                                       'max_args': 0,
-                                       'help_args': '',
                                        'help': 'get logcat from device'
                                 },
                           'ls': { 'function': self.listfiles,
-                                  'min_args': 1,
-                                  'max_args': 1,
-                                  'help_args': '<remote>',
+                                  'args': [ { 'name': 'remote_dir', 'nargs': None } ],
                                   'help': 'list files on device'
                                 },
-                          'rm': { 'function': lambda f: self.dm.removeFile(f),
-                                    'min_args': 1,
-                                    'max_args': 1,
-                                    'help_args': '<remote>',
-                                    'help': 'remove file from device'
+                          'rm': { 'function': self.removefile,
+                                  'args': [ { 'name': 'remote_file', 'nargs': None } ],
+                                  'help': 'remove file from device'
                                 },
                           'isdir': { 'function': self.isdir,
-                                     'min_args': 1,
-                                     'max_args': 1,
-                                     'help_args': '<remote>',
+                                     'args': [ { 'name': 'remote_dir', 'nargs': None } ],
                                      'help': 'print if remote file is a directory'
                                 },
-                          'mkdir': { 'function': lambda d: self.dm.mkDir(d),
-                                     'min_args': 1,
-                                     'max_args': 1,
-                                     'help_args': '<remote>',
+                          'mkdir': { 'function': self.mkdir,
+                                     'args': [ { 'name': 'remote_dir', 'nargs': None } ],
                                      'help': 'makes a directory on device'
                                 },
-                          'rmdir': { 'function': lambda d: self.dm.removeDir(d),
-                                    'min_args': 1,
-                                    'max_args': 1,
-                                    'help_args': '<remote>',
-                                    'help': 'recursively remove directory from device'
+                          'rmdir': { 'function': self.rmdir,
+                                     'args': [ { 'name': 'remote_dir', 'nargs': None } ],
+                                     'help': 'recursively remove directory from device'
                                 },
-                          'screencap': { 'function': lambda f: self.dm.saveScreenshot(f),
-                                          'min_args': 1,
-                                          'max_args': 1,
-                                          'help_args': '<png file>',
-                                          'help': 'capture screenshot of device in action'
-                                          },
+                          'screencap': { 'function': self.screencap,
+                                         'args': [ { 'name': 'png_file', 'nargs': None } ],
+                                         'help': 'capture screenshot of device in action'
+                                         },
                           'sutver': { 'function': self.sutver,
-                                      'min_args': 0,
-                                      'max_args': 0,
-                                      'help_args': '',
                                       'help': 'SUTAgent\'s product name and version (SUT only)'
                                    },
-
+                          'clearlogcat': { 'function': self.clearlogcat,
+                                           'help': 'clear the logcat'
+                                         },
+                          'reboot': { 'function': self.reboot,
+                                      'help': 'reboot the device'
+                                   },
+                          'isfile': { 'function': self.isfile,
+                                      'args': [ { 'name': 'remote_file', 'nargs': None } ],
+                                      'help': 'check whether a file exists on the device'
+                                   },
+                          'launchfennec': { 'function': self.launchfennec,
+                                            'args': [ { 'name': 'appname', 'nargs': None },
+                                                      { 'name': '--intent', 'action': 'store',
+                                                        'default': 'android.intent.action.VIEW' },
+                                                      { 'name': '--url', 'action': 'store' },
+                                                      { 'name': '--extra-args', 'action': 'store' },
+                                                      { 'name': '--mozenv', 'action': 'store' } ],
+                                            'help': 'launch fennec'
+                                            },
+                          'getip': { 'function': self.getip,
+                                     'args': [ { 'name': 'interface', 'nargs': '*' } ],
+                                     'help': 'get the ip address of the device'
+                                   }
                           }
 
-        usage = "usage: %prog [options] <command> [<args>]\n\ndevice commands:\n"
-        usage += "\n".join([textwrap.fill("%s %s - %s" %
-                                          (cmdname, cmd['help_args'],
-                                           cmd['help']),
-                                          initial_indent="  ",
-                                          subsequent_indent="      ")
-                            for (cmdname, cmd) in 
-                            sorted(self.commands.iteritems())])
-
-        self.parser = OptionParser(usage)
+        self.parser = argparse.ArgumentParser()
         self.add_options(self.parser)
-
+        self.add_commands(self.parser)
 
     def run(self, args=sys.argv[1:]):
-        (self.options, self.args) = self.parser.parse_args(args)
+        args = self.parser.parse_args()
 
-        if len(self.args) < 1:
-            self.parser.error("must specify command")
-
-        if self.options.dmtype == "sut" and not self.options.host and \
-                not self.options.hwid:
+        if args.dmtype == "sut" and not args.host and not args.hwid:
             self.parser.error("Must specify device ip in TEST_DEVICE or "
                               "with --host option with SUT")
 
-        (command_name, command_args) = (self.args[0], self.args[1:])
-        if command_name not in self.commands:
-            self.parser.error("Invalid command. Valid commands: %s" %
-                              " ".join(self.commands.keys()))
+        self.dm = self.getDevice(dmtype=args.dmtype, hwid=args.hwid,
+                                 host=args.host, port=args.port,
+                                 verbose=args.verbose)
 
-        command = self.commands[command_name]
-        if (len(command_args) < command['min_args'] or
-            (command['max_args'] is not None and len(command_args) > 
-             command['max_args'])):
-            self.parser.error("Wrong number of arguments")
-
-        self.dm = self.getDevice(dmtype=self.options.dmtype,
-                                 hwid=self.options.hwid,
-                                 host=self.options.host,
-                                 port=self.options.port)
-        ret = command['function'](*command_args)
+        ret = args.func(args)
         if ret is None:
             ret = 0
 
         sys.exit(ret)
 
     def add_options(self, parser):
-        parser.add_option("-v", "--verbose", action="store_true",
-                          dest="verbose",
-                          help="Verbose output from DeviceManager",
-                          default=False)
-        parser.add_option("--host", action="store",
-                          type="string", dest="host",
-                          help="Device hostname (only if using TCP/IP)",
-                          default=os.environ.get('TEST_DEVICE'))
-        parser.add_option("-p", "--port", action="store",
-                          type="int", dest="port",
-                          help="Custom device port (if using SUTAgent or "
-                          "adb-over-tcp)", default=None)
-        parser.add_option("-m", "--dmtype", action="store",
-                          type="string", dest="dmtype",
-                          help="DeviceManager type (adb or sut, defaults " \
-                              "to adb)", default=os.environ.get('DM_TRANS',
-                                                                'adb'))
-        parser.add_option("-d", "--hwid", action="store",
-                          type="string", dest="hwid",
-                          help="HWID", default=None)
-        parser.add_option("--package-name", action="store",
-                          type="string", dest="packagename",
-                          help="Packagename (if using DeviceManagerADB)",
-                          default=None)
+        parser.add_argument("-v", "--verbose", action="store_true",
+                            help="Verbose output from DeviceManager",
+                            default=False)
+        parser.add_argument("--host", action="store",
+                            help="Device hostname (only if using TCP/IP)",
+                            default=os.environ.get('TEST_DEVICE'))
+        parser.add_argument("-p", "--port", action="store",
+                            type=int,
+                            help="Custom device port (if using SUTAgent or "
+                            "adb-over-tcp)", default=None)
+        parser.add_argument("-m", "--dmtype", action="store",
+                            help="DeviceManager type (adb or sut, defaults " \
+                                "to adb)", default=os.environ.get('DM_TRANS',
+                                                                  'adb'))
+        parser.add_argument("-d", "--hwid", action="store",
+                            help="HWID", default=None)
+        parser.add_argument("--package-name", action="store",
+                            help="Packagename (if using DeviceManagerADB)",
+                            default=None)
 
-    def getDevice(self, dmtype="adb", hwid=None, host=None, port=None):
+    def add_commands(self, parser):
+        subparsers = parser.add_subparsers(title="Commands", metavar="<command>")
+        for (commandname, commandprops) in sorted(self.commands.iteritems()):
+            subparser = subparsers.add_parser(commandname, help=commandprops['help'])
+            if commandprops.get('args'):
+                for arg in commandprops['args']:
+                    subparser.add_argument(arg['name'], nargs=arg.get('nargs'),
+                                           action=arg.get('action'))
+            subparser.set_defaults(func=commandprops['function'])
+
+    def getDevice(self, dmtype="adb", hwid=None, host=None, port=None,
+                  packagename=None, verbose=False):
         '''
         Returns a device with the specified parameters
         '''
-        if self.options.verbose:
-            mozdevice.DroidSUT.debug = 4
+        logLevel = mozlog.ERROR
+        if verbose:
+            logLevel = mozlog.DEBUG
 
         if hwid:
-            return mozdevice.DroidConnectByHWID(hwid)
+            return mozdevice.DroidConnectByHWID(hwid, logLevel=logLevel)
 
         if dmtype == "adb":
             if host and not port:
                 port = 5555
-            return mozdevice.DroidADB(packageName=self.options.packagename,
-                                      host=host, port=port)
+            return mozdevice.DroidADB(packageName=packagename,
+                                      host=host, port=port,
+                                      logLevel=logLevel)
         elif dmtype == "sut":
             if not host:
                 self.parser.error("Must specify host with SUT!")
             if not port:
                 port = 20701
-            return mozdevice.DroidSUT(host=host, port=port)
+            return mozdevice.DroidSUT(host=host, port=port,
+                                      logLevel=logLevel)
         else:
             self.parser.error("Unknown device manager type: %s" % type)
 
-    def push(self, src, dest):
+    def push(self, args):
+        (src, dest) = (args.local_file, args.remote_file)
         if os.path.isdir(src):
             self.dm.pushDir(src, dest)
         else:
@@ -225,7 +205,8 @@ class DMCli(object):
                 dest = posixpath.join(dest, os.path.basename(src))
             self.dm.pushFile(src, dest)
 
-    def pull(self, src, dest=None):
+    def pull(self, args):
+        (src, dest) = (args.local_file, args.remote_file)
         if not self.dm.fileExists(src):
             print 'No such file or directory'
             return
@@ -236,68 +217,105 @@ class DMCli(object):
         else:
             self.dm.getFile(src, dest)
 
-    def install(self, apkfile):
-        basename = os.path.basename(apkfile)
+    def install(self, args):
+        basename = os.path.basename(args.file)
         app_path_on_device = posixpath.join(self.dm.getDeviceRoot(),
                                             basename)
-        self.dm.pushFile(apkfile, app_path_on_device)
+        self.dm.pushFile(args.file, app_path_on_device)
         self.dm.installApp(app_path_on_device)
 
-    def launchapp(self, appname, activity, intent, url):
-        self.dm.launchApplication(appname, activity, intent, url)
+    def uninstall(self, args):
+        self.dm.uninstallApp(args.packagename)
 
-    def killapp(self, *args):
-        for appname in args:
-            self.dm.killProcess(appname)
+    def launchapp(self, args):
+        self.dm.launchApplication(args.appname, args.activity_name,
+                                  args.intent, args.url)
 
-    def shell(self, *args):
+    def kill(self, args):
+        for name in args.process_name:
+            self.dm.killProcess(name)
+
+    def shell(self, args, root=False):
         buf = StringIO.StringIO()
-        self.dm.shell(args, buf)
+        self.dm.shell(args.command, buf, root=root)
         print str(buf.getvalue()[0:-1]).rstrip()
 
-    def getinfo(self, *args):
-        directive=None
-        if args:
-            directive=args[0]
-        info = self.dm.getInfo(directive=directive)
+    def getinfo(self, args):
+        info = self.dm.getInfo(directive=args.directive)
         for (infokey, infoitem) in sorted(info.iteritems()):
             if infokey == "process":
                 pass # skip process list: get that through ps
-            elif not directive and not infoitem:
+            elif not args.directive and not infoitem:
                 print "%s:" % infokey.upper()
-            elif not directive:
+            elif not args.directive:
                 for line in infoitem:
                     print "%s: %s" % (infokey.upper(), line)
             else:
                 print "%s" % "\n".join(infoitem)
 
-    def logcat(self):
+    def logcat(self, args):
         print ''.join(self.dm.getLogcat())
 
-    def processlist(self):
+    def clearlogcat(self, args):
+        self.dm.recordLogcat()
+
+    def reboot(self, args):
+        self.dm.reboot()
+
+    def processlist(self, args):
         pslist = self.dm.getProcessList()
         for ps in pslist:
             print " ".join(str(i) for i in ps)
 
-    def listfiles(self, dir):
-        filelist = self.dm.listFiles(dir)
+    def listfiles(self, args):
+        filelist = self.dm.listFiles(args.remote_dir)
         for file in filelist:
             print file
 
-    def isdir(self, file):
-        if self.dm.dirExists(file):
+    def removefile(self, args):
+        self.dm.removeFile(args.remote_file)
+
+    def isdir(self, args):
+        if self.dm.dirExists(args.remote_dir):
             print "TRUE"
-            return 0
+            return
 
         print "FALSE"
         return errno.ENOTDIR
 
-    def sutver(self):
-        if self.options.dmtype == 'sut':
+    def mkdir(self, args):
+        self.dm.mkDir(args.remote_dir)
+
+    def rmdir(self, args):
+        self.dm.removeDir(args.remote_dir)
+
+    def screencap(self, args):
+        self.dm.saveScreenshot(args.png_file)
+
+    def sutver(self, args):
+        if args.dmtype == 'sut':
             print '%s Version %s' % (self.dm.agentProductName,
                                      self.dm.agentVersion)
         else:
             print 'Must use SUT transport to get SUT version.'
+
+    def isfile(self, args):
+        if self.dm.fileExists(args.remote_file):
+            print "TRUE"
+            return
+        print "FALSE"
+        return errno.ENOENT
+
+    def launchfennec(self, args):
+        self.dm.launchFennec(args.appname, intent=args.intent,
+                             mozEnv=args.mozenv,
+                             extraArgs=args.extra_args, url=args.url)
+
+    def getip(self, args):
+        if args.interface:
+            print(self.dm.getIP(args.interface))
+        else:
+            print(self.dm.getIP())
 
 def cli(args=sys.argv[1:]):
     # process the command line
