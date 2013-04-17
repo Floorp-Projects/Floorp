@@ -348,22 +348,6 @@ ImageLayerOGL::RenderLayer(int,
      MacIOSurfaceImage *ioImage =
        static_cast<MacIOSurfaceImage*>(image);
 
-     if (!mOGLManager->GetThebesLayerCallback()) {
-       // If its an empty transaction we still need to update
-       // the plugin IO Surface and make sure we grab the
-       // new image
-       ioImage->Update(GetContainer());
-       image = nullptr;
-       autoLock.Refresh();
-       image = autoLock.GetImage();
-       gl()->MakeCurrent();
-       ioImage = static_cast<MacIOSurfaceImage*>(image);
-     }
-
-     if (!ioImage) {
-       return;
-     }
-
      gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
 
      if (!ioImage->GetBackendData(LAYERS_OPENGL)) {

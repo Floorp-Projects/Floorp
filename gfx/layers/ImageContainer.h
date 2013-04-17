@@ -806,17 +806,10 @@ public:
   MacIOSurfaceImage()
     : Image(NULL, MAC_IO_SURFACE)
     , mSize(0, 0)
-    , mPluginInstanceOwner(NULL)
-    , mUpdateCallback(NULL)
-    , mDestroyCallback(NULL)
     {}
 
   virtual ~MacIOSurfaceImage()
-  {
-    if (mDestroyCallback) {
-      mDestroyCallback(mPluginInstanceOwner);
-    }
-  }
+  { }
 
  /**
   * This can only be called on the main thread. It may add a reference
@@ -824,24 +817,6 @@ public:
   * The surface must not be modified after this call!!!
   */
   virtual void SetData(const Data& aData);
-
-  /**
-   * Temporary hacks to force plugin drawing during an empty transaction.
-   * This should not be used for anything else, and will be removed
-   * when async plugin rendering is complete.
-   */
-  typedef void (*UpdateSurfaceCallback)(ImageContainer* aContainer, void* aInstanceOwner);
-  virtual void SetUpdateCallback(UpdateSurfaceCallback aCallback, void* aInstanceOwner)
-  {
-    mUpdateCallback = aCallback;
-    mPluginInstanceOwner = aInstanceOwner;
-  }
-
-  typedef void (*DestroyCallback)(void* aInstanceOwner);
-  virtual void SetDestroyCallback(DestroyCallback aCallback)
-  {
-    mDestroyCallback = aCallback;
-  }
 
   virtual gfxIntSize GetSize()
   {
@@ -853,16 +828,11 @@ public:
     return mIOSurface;
   }
 
-  void Update(ImageContainer* aContainer);
-
   virtual already_AddRefed<gfxASurface> GetAsSurface();
 
 private:
   gfxIntSize mSize;
   RefPtr<MacIOSurface> mIOSurface;
-  void* mPluginInstanceOwner;
-  UpdateSurfaceCallback mUpdateCallback;
-  DestroyCallback mDestroyCallback;
 };
 #endif
 
