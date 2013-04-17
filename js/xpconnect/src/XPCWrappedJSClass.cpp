@@ -406,8 +406,8 @@ nsXPCWrappedJSClass::BuildPropertyEnumerator(XPCCallContext& ccx,
             return NS_ERROR_FAILURE;
         }
 
-        jsval jsvalName;
-        if (!JS_IdToValue(cx, idName, &jsvalName))
+        RootedValue jsvalName(cx);
+        if (!JS_IdToValue(cx, idName, jsvalName.address()))
             return NS_ERROR_FAILURE;
 
         JSString* name = JS_ValueToString(cx, jsvalName);

@@ -14,6 +14,7 @@
 #include "mozilla/dom/BindingUtils.h"
 
 using namespace mozilla;
+using namespace JS;
 
 extern const char* xpc_qsStringTable;
 
@@ -99,7 +100,7 @@ PointerHolderClass = {
 };
 
 JSBool
-xpc_qsDefineQuickStubs(JSContext *cx, JSObject *proto, unsigned flags,
+xpc_qsDefineQuickStubs(JSContext *cx, JSObject *protoArg, unsigned flags,
                        uint32_t ifacec, const nsIID **interfaces,
                        uint32_t tableSize, const xpc_qsHashEntry *table,
                        const xpc_qsPropertySpec *propspecs,
@@ -114,6 +115,7 @@ xpc_qsDefineQuickStubs(JSContext *cx, JSObject *proto, unsigned flags,
      * searching the interfaces forward.  Here, definitions toward the
      * front of 'interfaces' overwrite those toward the back.
      */
+    RootedObject proto(cx, protoArg);
     for (uint32_t i = ifacec; i-- != 0;) {
         const nsID &iid = *interfaces[i];
         const xpc_qsHashEntry *entry =
@@ -222,7 +224,7 @@ GetMethodInfo(JSContext *cx, jsval *vp, const char **ifaceNamep, jsid *memberIdp
 
 static bool
 ThrowCallFailed(JSContext *cx, nsresult rv,
-                const char *ifaceName, jsid memberId, const char *memberName)
+                const char *ifaceName, HandleId memberId, const char *memberName)
 {
     /* Only one of memberId or memberName should be given. */
     MOZ_ASSERT(JSID_IS_VOID(memberId) != !memberName);
@@ -273,17 +275,19 @@ ThrowCallFailed(JSContext *cx, nsresult rv,
 
 JSBool
 xpc_qsThrowGetterSetterFailed(JSContext *cx, nsresult rv, JSObject *obj,
-                              jsid memberId)
+                              jsid memberIdArg)
 {
+    RootedId memberId(cx, memberIdArg);
     const char *ifaceName;
     GetMemberInfo(obj, memberId, &ifaceName);
     return ThrowCallFailed(cx, rv, ifaceName, memberId, NULL);
 }
 
 JSBool
-xpc_qsThrowGetterSetterFailed(JSContext *cx, nsresult rv, JSObject *obj,
+xpc_qsThrowGetterSetterFailed(JSContext *cx, nsresult rv, JSObject *objArg,
                               const char* memberName)
 {
+    RootedObject obj(cx, objArg);
     JSString *str = JS_InternString(cx, memberName);
     if (!str) {
         return false;
@@ -304,8 +308,8 @@ JSBool
 xpc_qsThrowMethodFailed(JSContext *cx, nsresult rv, jsval *vp)
 {
     const char *ifaceName;
-    jsid memberId;
-    GetMethodInfo(cx, vp, &ifaceName, &memberId);
+    RootedId memberId(cx);
+    GetMethodInfo(cx, vp, &ifaceName, memberId.address());
     return ThrowCallFailed(cx, rv, ifaceName, memberId, NULL);
 }
 
@@ -321,7 +325,7 @@ xpc_qsThrowMethodFailedWithDetails(JSContext *cx, nsresult rv,
                                    const char *ifaceName,
                                    const char *memberName)
 {
-    return ThrowCallFailed(cx, rv, ifaceName, JSID_VOID, memberName);
+    return ThrowCallFailed(cx, rv, ifaceName, JSID_VOIDHANDLE, memberName);
 }
 
 static void
@@ -386,8 +390,9 @@ xpc_qsThrowBadSetterValue(JSContext *cx, nsresult rv,
 
 void
 xpc_qsThrowBadSetterValue(JSContext *cx, nsresult rv,
-                          JSObject *obj, const char* propName)
+                          JSObject *objArg, const char* propName)
 {
+    RootedObject obj(cx, objArg);
     JSString *str = JS_InternString(cx, propName);
     if (!str) {
         return;
@@ -494,7 +499,7 @@ xpc_qsAUTF8String::xpc_qsAUTF8String(JSContext *cx, jsval v, jsval *pval)
 static nsresult
 getNative(nsISupports *idobj,
           QITableEntry* entries,
-          JSObject *obj,
+          HandleObject obj,
           const nsIID &iid,
           void **ppThis,
           nsISupports **pThisRef,
@@ -527,8 +532,9 @@ getNativeFromWrapper(JSContext *cx,
                      nsISupports **pThisRef,
                      jsval *vp)
 {
+    RootedObject obj(cx, wrapper->GetFlatJSObject());
     return getNative(wrapper->GetIdentityObject(), wrapper->GetOffsets(),
-                     wrapper->GetFlatJSObject(), iid, ppThis, pThisRef, vp);
+                     obj, iid, ppThis, pThisRef, vp);
 }
 
 
@@ -595,7 +601,7 @@ getWrapper(JSContext *cx,
 nsresult
 castNative(JSContext *cx,
            XPCWrappedNative *wrapper,
-           JSObject *cur,
+           JSObject *curArg,
            XPCWrappedNativeTearOff *tearoff,
            const nsIID &iid,
            void **ppThis,
@@ -603,6 +609,7 @@ castNative(JSContext *cx,
            jsval *vp,
            XPCLazyCallContext *lccx)
 {
+    RootedObject cur(cx, curArg);
     if (wrapper) {
         nsresult rv = getNativeFromWrapper(cx,wrapper, iid, ppThis, pThisRef,
                                            vp);
@@ -653,9 +660,9 @@ xpc_qsUnwrapThisFromCcxImpl(XPCCallContext &ccx,
     if (!native)
         return xpc_qsThrow(ccx.GetJSContext(), NS_ERROR_XPC_HAS_BEEN_SHUTDOWN);
 
+    RootedObject obj(ccx, ccx.GetFlattenedJSObject());
     nsresult rv = getNative(native, GetOffsets(native, ccx.GetProto()),
-                            ccx.GetFlattenedJSObject(), iid, ppThis, pThisRef,
-                            vp);
+                            obj, iid, ppThis, pThisRef, vp);
     if (NS_FAILED(rv))
         return xpc_qsThrow(ccx.GetJSContext(), rv);
     return true;
@@ -670,7 +677,7 @@ xpc_qsUnwrapArgImpl(JSContext *cx,
                     jsval *vp)
 {
     nsresult rv;
-    JSObject *src = xpc_qsUnwrapObj(v, ppArgRef, &rv);
+    RootedObject src(cx, xpc_qsUnwrapObj(v, ppArgRef, &rv));
     if (!src) {
         *ppArg = nullptr;
 
