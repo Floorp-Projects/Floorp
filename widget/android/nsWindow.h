@@ -215,8 +215,6 @@ protected:
 private:
     void InitKeyEvent(nsKeyEvent& event, mozilla::AndroidGeckoEvent& key,
                       ANPEvent* pluginEvent);
-    bool DispatchMultitouchEvent(nsTouchEvent &event,
-                             mozilla::AndroidGeckoEvent *ae);
     void DispatchMotionEvent(nsInputEvent &event,
                              mozilla::AndroidGeckoEvent *ae,
                              const nsIntPoint &refPoint);

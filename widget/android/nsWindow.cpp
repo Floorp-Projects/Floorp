@@ -28,7 +28,6 @@ using mozilla::unused;
 
 #include "nsRenderingContext.h"
 #include "nsIDOMSimpleGestureEvent.h"
-#include "mozilla/dom/Touch.h"
 
 #include "nsGkAtoms.h"
 #include "nsWidgetsCID.h"
@@ -1202,31 +1201,18 @@ bool nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)
 
     bool preventDefaultActions = false;
     bool isDownEvent = false;
-    switch (ae->Action() & AndroidMotionEvent::ACTION_MASK) {
-        case AndroidMotionEvent::ACTION_DOWN:
-        case AndroidMotionEvent::ACTION_POINTER_DOWN: {
-            nsTouchEvent event(true, NS_TOUCH_START, this);
-            preventDefaultActions = DispatchMultitouchEvent(event, ae);
-            isDownEvent = true;
-            break;
-        }
-        case AndroidMotionEvent::ACTION_MOVE: {
-            nsTouchEvent event(true, NS_TOUCH_MOVE, this);
-            preventDefaultActions = DispatchMultitouchEvent(event, ae);
-            break;
-        }
-        case AndroidMotionEvent::ACTION_UP:
-        case AndroidMotionEvent::ACTION_POINTER_UP: {
-            nsTouchEvent event(true, NS_TOUCH_END, this);
-            preventDefaultActions = DispatchMultitouchEvent(event, ae);
-            break;
-        }
-        case AndroidMotionEvent::ACTION_OUTSIDE:
-        case AndroidMotionEvent::ACTION_CANCEL: {
-            nsTouchEvent event(true, NS_TOUCH_CANCEL, this);
-            preventDefaultActions = DispatchMultitouchEvent(event, ae);
-            break;
-        }
+
+    nsTouchEvent event = ae->MakeTouchEvent(this);
+    if (event.message != NS_EVENT_NULL) {
+        nsEventStatus status;
+        DispatchEvent(&event, status);
+        // We check mMultipleActionsPrevented because that's what <input type=range>
+        // sets when someone starts dragging the thumb. It doesn't set the status
+        // because it doesn't want to prevent the code that gives the input focus
+        // from running.
+        preventDefaultActions = (status == nsEventStatus_eConsumeNoDefault ||
+                                event.mFlags.mMultipleActionsPrevented);
+        isDownEvent = (event.message == NS_TOUCH_START);
     }
 
     // if the last event we got was a down event, then by now we know for sure whether
@@ -1254,52 +1240,6 @@ bool nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)
     sLastWasDownEvent = isDownEvent;
 
     return preventDefaultActions;
-}
-
-bool
-nsWindow::DispatchMultitouchEvent(nsTouchEvent &event, AndroidGeckoEvent *ae)
-{
-    nsIntPoint offset = WidgetToScreenOffset();
-
-    event.modifiers = 0;
-    event.time = ae->Time();
-    event.InitBasicModifiers(ae->IsCtrlPressed(),
-                             ae->IsAltPressed(),
-                             ae->IsShiftPressed(),
-                             ae->IsMetaPressed());
-
-    int action = ae->Action() & AndroidMotionEvent::ACTION_MASK;
-    if (action == AndroidMotionEvent::ACTION_UP ||
-        action == AndroidMotionEvent::ACTION_POINTER_UP) {
-        event.touches.SetCapacity(1);
-        int pointerIndex = ae->PointerIndex();
-        nsCOMPtr<nsIDOMTouch> t(new Touch(ae->PointIndicies()[pointerIndex],
-                                          ae->Points()[pointerIndex] - offset,
-                                          ae->PointRadii()[pointerIndex],
-                                          ae->Orientations()[pointerIndex],
-                                          ae->Pressures()[pointerIndex]));
-        event.touches.AppendElement(t);
-    } else {
-        int count = ae->Count();
-        event.touches.SetCapacity(count);
-        for (int i = 0; i < count; i++) {
-            nsCOMPtr<nsIDOMTouch> t(new Touch(ae->PointIndicies()[i],
-                                              ae->Points()[i] - offset,
-                                              ae->PointRadii()[i],
-                                              ae->Orientations()[i],
-                                              ae->Pressures()[i]));
-            event.touches.AppendElement(t);
-        }
-    }
-
-    nsEventStatus status;
-    DispatchEvent(&event, status);
-    // We check mMultipleActionsPrevented because that's what <input type=range>
-    // sets when someone starts dragging the thumb. It doesn't set the status
-    // because it doesn't want to prevent the code that gives the input focus
-    // from running.
-    return (status == nsEventStatus_eConsumeNoDefault ||
-            event.mFlags.mMultipleActionsPrevented);
 }
 
 void
