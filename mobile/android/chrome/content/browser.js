@@ -625,6 +625,8 @@ var BrowserApp = {
     aTab.setResolution(aTab._zoom, true);
     this.displayedDocumentChanged();
     this.deck.selectedPanel = aTab.browser;
+    // Focus the browser so that things like selection will be styled correctly.
+    aTab.browser.focus();
   },
 
   get selectedBrowser() {
