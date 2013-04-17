@@ -48,6 +48,16 @@
       gBrowser.loadURI(data);
     }
 
+    function goToStartOfLine(aElement) {
+      if (navigator.platform.indexOf("Mac") >= 0) {
+        synthesizeKey(aElement, true, KeyEvent.DOM_VK_LEFT,
+                      false, false, true);
+      } else {
+        synthesizeKey(aElement, true, KeyEvent.DOM_VK_HOME,
+                      false, false, false);
+      }
+    }
+
     function resetForNextTest(aElement, aText) {
       if (!aText)
         aText = SEARCH_TEXT;
@@ -67,10 +77,7 @@
 
       // Move caret to start of element
       aElement.focus();
-      synthesizeKey(aElement, true, KeyEvent.DOM_VK_UP,
-                    sendCtrl, false, sendMeta);
-      synthesizeKey(aElement, true, KeyEvent.DOM_VK_LEFT,
-                    sendCtrl, false, sendMeta);
+      goToStartOfLine(aElement);
     }
 
     function synthesizeKey(target, isKeyCode, key, ctlKey, shiftKey, metaKey) {

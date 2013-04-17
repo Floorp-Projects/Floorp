@@ -784,13 +784,11 @@ nsFrameSelection::MoveCaret(uint32_t          aKeycode,
     SetDesiredX(desiredX);
   }
 
-  int32_t caretStyle =
-    Preferences::GetInt("layout.selection.caret_style", 0);
-#ifdef XP_MACOSX
+  int32_t caretStyle = Preferences::GetInt("layout.selection.caret_style", 0);
   if (caretStyle == 0) {
-    caretStyle = 2; // put caret at the selection edge in the |aKeycode| direction
+    // Put caret at the selection edge in the |aKeycode| direction.
+    caretStyle = 2;
   }
-#endif
 
   if (!isCollapsed && !aContinueSelection && caretStyle == 2) {
     switch (aKeycode){
