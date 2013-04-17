@@ -15,6 +15,8 @@
     -->
     <style name="Widget.BaseButton" parent="android:style/Widget.Holo.Light.Button"/>
 
+    <style name="Widget.BaseDropDownItem" parent="android:style/Widget.Holo.Light.DropDownItem"/>
+
     <style name="Widget.BaseEditText" parent="android:style/Widget.Holo.Light.EditText"/>
 
     <style name="Widget.BaseListView" parent="android:style/Widget.Holo.ListView"/>

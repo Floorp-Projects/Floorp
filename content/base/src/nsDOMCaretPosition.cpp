@@ -7,7 +7,7 @@
 #include "nsContentUtils.h"
 
 nsDOMCaretPosition::nsDOMCaretPosition(nsINode* aNode, uint32_t aOffset)
-  : mOffset(aOffset), mOffsetNode(aNode)
+  : mOffset(aOffset), mOffsetNode(aNode), mAnonymousContentNode(nullptr)
 {
   SetIsDOMBinding();
 }
@@ -19,6 +19,37 @@ nsDOMCaretPosition::~nsDOMCaretPosition()
 nsINode* nsDOMCaretPosition::GetOffsetNode() const
 {
   return mOffsetNode;
+}
+
+already_AddRefed<nsClientRect>
+nsDOMCaretPosition::GetClientRect() const
+{
+  if (!mOffsetNode) {
+    return nullptr;
+  }
+
+  nsRefPtr<nsClientRect> rect;
+  nsRefPtr<nsRange> domRange;
+  nsCOMPtr<nsINode> node;
+
+  if (mAnonymousContentNode) {
+    node = mAnonymousContentNode;
+  } else {
+    node = mOffsetNode;
+  }
+
+  nsresult creationRv = nsRange::CreateRange(node, mOffset, node,
+                                             mOffset,
+                                             getter_AddRefs<nsRange>(domRange));
+  if (!NS_SUCCEEDED(creationRv)) {
+    return nullptr;
+  }
+
+  NS_ASSERTION(domRange, "unable to retrieve valid dom range from CaretPosition");
+
+  rect = domRange->GetBoundingClientRect();
+
+  return rect.forget();
 }
 
 JSObject*

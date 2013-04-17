@@ -2269,21 +2269,11 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
       if (!rangeFrame) {
         break;
       }
-      int32_t value = rangeFrame->GetValue();
-      int32_t min = rangeFrame->GetMin();
-      int32_t max = rangeFrame->GetMax();
-      if (max < min) {
-        // The spec says that the only valid value is the minimum. For the
-        // purposes of drawing the range, we need to have a max that's greater
-        // than min though (it doesn't really matter what the value is, as long
-        // as the thumb is painted at the min.
-        max = min + 1;
-        value = min;
-      }
-      MOZ_ASSERT(MOZ_DOUBLE_IS_FINITE(value) &&
-                 MOZ_DOUBLE_IS_FINITE(min) &&
-                 MOZ_DOUBLE_IS_FINITE(max) &&
-                 value >= min && value <= max);
+      // DrawScale requires integer min, max and value. This is purely for
+      // drawing, so we normalize to a range 0-1000 here.
+      int32_t value = int32_t(rangeFrame->GetValueAsFractionOfRange() * 1000);
+      int32_t min = 0;
+      int32_t max = 1000;
       bool isVertical = !IsRangeHorizontal(aFrame);
       bool reverseDir =
         isVertical ||
@@ -3031,6 +3021,7 @@ nsNativeThemeCocoa::ThemeDrawsFocusForWidget(nsPresContext* aPresContext, nsIFra
       aWidgetType == NS_THEME_DROPDOWN_TEXTFIELD ||
       aWidgetType == NS_THEME_BUTTON ||
       aWidgetType == NS_THEME_RADIO ||
+      aWidgetType == NS_THEME_RANGE ||
       aWidgetType == NS_THEME_CHECKBOX)
     return true;
 

@@ -6,6 +6,7 @@
 #ifndef nsTreeContentView_h__
 #define nsTreeContentView_h__
 
+#include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsTArray.h"
 #include "nsStubDocumentObserver.h"
@@ -52,13 +53,13 @@ class nsTreeContentView MOZ_FINAL : public nsINativeTreeView,
   protected:
     // Recursive methods which deal with serializing of nested content.
     void Serialize(nsIContent* aContent, int32_t aParentIndex, int32_t* aIndex,
-                   nsTArray<Row*>& aRows);
+                   nsTArray<nsAutoPtr<Row> >& aRows);
 
     void SerializeItem(nsIContent* aContent, int32_t aParentIndex,
-                       int32_t* aIndex, nsTArray<Row*>& aRows);
+                       int32_t* aIndex, nsTArray<nsAutoPtr<Row> >& aRows);
 
     void SerializeSeparator(nsIContent* aContent, int32_t aParentIndex,
-                            int32_t* aIndex, nsTArray<Row*>& aRows);
+                            int32_t* aIndex, nsTArray<nsAutoPtr<Row> >& aRows);
 
     void GetIndexInSubtree(nsIContent* aContainer, nsIContent* aContent, int32_t* aResult);
     
@@ -94,7 +95,7 @@ class nsTreeContentView MOZ_FINAL : public nsINativeTreeView,
     nsCOMPtr<nsIContent>                mRoot;
     nsCOMPtr<nsIContent>                mBody;
     nsIDocument*                        mDocument;      // WEAK
-    nsTArray<Row*>                      mRows;
+    nsTArray<nsAutoPtr<Row> >           mRows;
 };
 
 #endif // nsTreeContentView_h__

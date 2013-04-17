@@ -1396,28 +1396,15 @@ static void Sort(nsDisplayList* aList, int32_t aCount, nsDisplayList::SortLEQ aC
 }
 
 static nsIContent* FindContentInDocument(nsDisplayItem* aItem, nsIDocument* aDoc) {
-  nsIFrame* frame = aItem->GetUnderlyingFrame();
-  nsIContent* c = frame->GetContent();
-  for (;;) {
-    nsIDocument* d;
-    if (c) {
-      d = c->OwnerDoc();
-    } else {
-      d = frame->PresContext()->Document();
+  nsIFrame* f = aItem->GetUnderlyingFrame();
+  while (f) {
+    nsPresContext* pc = f->PresContext();
+    if (pc->Document() == aDoc) {
+      return f->GetContent();
     }
-    if (d == aDoc) {
-      return c;
-    }
-    nsIDocument* parentDoc = d->GetParentDocument();
-    if (!parentDoc) {
-      return nullptr;
-    }
-    c = parentDoc->FindContentForSubDocument(d);
-    if (!c) {
-      NS_ERROR("No content for subdocument?");
-      return nullptr;
-    }
+    f = nsLayoutUtils::GetCrossDocParentFrame(pc->PresShell()->GetRootFrame());
   }
+  return nullptr;
 }
 
 static bool IsContentLEQ(nsDisplayItem* aItem1, nsDisplayItem* aItem2,

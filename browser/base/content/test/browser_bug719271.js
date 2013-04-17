@@ -58,11 +58,19 @@ function testNavigation() {
   Task.spawn(function () {
     yield FullZoomHelper.load(gTab1, TEST_VIDEO);
     FullZoomHelper.zoomTest(gTab1, 1, "Zoom should be 1 when a video was loaded");
+    yield waitForNextTurn(); // trying to fix orange bug 806046
     yield FullZoomHelper.navigate(FullZoomHelper.BACK);
     FullZoomHelper.zoomTest(gTab1, gLevel1, "Zoom should be restored when a page is loaded");
+    yield waitForNextTurn(); // trying to fix orange bug 806046
     yield FullZoomHelper.navigate(FullZoomHelper.FORWARD);
     FullZoomHelper.zoomTest(gTab1, 1, "Zoom should be 1 again when navigating back to a video");
   }).then(finishTest, FullZoomHelper.failAndContinue(finish));
+}
+
+function waitForNextTurn() {
+  let deferred = Promise.defer();
+  setTimeout(function () deferred.resolve(), 0);
+  return deferred.promise;
 }
 
 var finishTestStarted  = false;
