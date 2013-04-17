@@ -546,7 +546,6 @@ class AndroidMotionEvent
 {
 public:
     enum {
-        ACTION_MASK = 0xff,
         ACTION_DOWN = 0,
         ACTION_UP = 1,
         ACTION_MOVE = 2,
@@ -560,8 +559,6 @@ public:
         ACTION_MAGNIFY_START = 11,
         ACTION_MAGNIFY = 12,
         ACTION_MAGNIFY_END = 13,
-        ACTION_POINTER_ID_MASK = 0xff00,
-        ACTION_POINTER_ID_SHIFT = 8,
         EDGE_TOP = 0x00000001,
         EDGE_BOTTOM = 0x00000002,
         EDGE_LEFT = 0x00000004,
