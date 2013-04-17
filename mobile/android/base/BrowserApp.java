@@ -10,6 +10,7 @@ import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.gfx.LayerView;
+import org.mozilla.gecko.gfx.PanZoomController;
 import org.mozilla.gecko.util.FloatUtils;
 import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.HardwareUtils;
@@ -338,9 +339,10 @@ abstract public class BrowserApp extends GeckoApp
                    action == MotionEvent.ACTION_CANCEL) {
             // Animate the toolbar to fully on or off, depending on how much
             // of it is hidden and the current swipe velocity.
+            PanZoomController pzc = mLayerView.getPanZoomController();
+            float yVelocity = (pzc == null ? 0.0f : pzc.getVelocityVector().y);
             mBrowserToolbar.animateVisibilityWithVelocityBias(
-                toolbarY > toolbarHeight / 2 ? false : true,
-                mLayerView.getPanZoomController().getVelocityVector().y);
+                toolbarY > toolbarHeight / 2 ? false : true, yVelocity);
         }
 
         // Update the last recorded position.
