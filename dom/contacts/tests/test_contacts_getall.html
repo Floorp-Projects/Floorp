@@ -59,8 +59,16 @@ function onFailure() {
 }
 
 function checkStr(str1, str2, msg) {
-  if (str1)
-    ok(typeof str1 == "string" ? [str1] : str1, (typeof str2 == "string") ? [str2] : str2, msg);
+  // comparing /[null(,null)+]/ and undefined should pass
+  function nonNull(e) {
+    return e != null;
+  }
+  if ((Array.isArray(str1) && str1.filter(nonNull).length == 0 && str2 == undefined)
+     ||(Array.isArray(str2) && str2.filter(nonNull).length == 0 && str1 == undefined)) {
+    ok(true, msg);
+  } else if (str1) {
+    is(JSON.stringify(typeof str1 == "string" ? [str1] : str1), JSON.stringify(typeof str2 == "string" ? [str2] : str2), msg);
+  }
 }
 
 function checkAddress(adr1, adr2) {
@@ -157,10 +165,11 @@ function clearDatabase() {
   req.onerror = onFailure;
 }
 
-function add20Contacts() {
-  ok(true, "Adding 20 contacts");
-  for (let i=0; i<19; i++) {
+function addContacts() {
+  ok(true, "Adding 40 contacts");
+  for (let i = 0; i < 39; ++i) {
     createResult1 = new mozContact();
+    properties1.familyName[0] = "Testname" + (i < 10 ? "0" + i : i);
     createResult1.init(properties1);
     req = mozContacts.save(createResult1);
     req.onsuccess = function() {
@@ -169,6 +178,7 @@ function add20Contacts() {
     req.onerror = onFailure;
   };
   createResult1 = new mozContact();
+  properties1.familyName[0] = "Testname39";
   createResult1.init(properties1);
   req = mozContacts.save(createResult1);
   req.onsuccess = function() {
@@ -216,19 +226,27 @@ let steps = [
   },
 
   clearDatabase,
-  add20Contacts,
+  addContacts,
 
   function() {
-    ok(true, "Retrieving 20 contacts with getAll");
-    req = mozContacts.getAll({});
+    ok(true, "Retrieving 40 contacts with getAll");
+    req = mozContacts.getAll({
+      sortBy: "familyName",
+      sortOrder: "ascending"
+    });
     let count = 0;
+    let result;
+    let props;
     req.onsuccess = function(event) {
       if (req.result) {
         ok(true, "result is valid");
+        result = req.result;
+        properties1.familyName[0] = "Testname" + (count < 10 ? "0" + count : count);
+        is(result.familyName[0], properties1.familyName[0], "Same familyName");
         count++;
         req.continue();
       } else {
-        is(count, 20, "last contact - 20 contacts returned");
+        is(count, 40, "last contact - 40 contacts returned");
         next();
       }
     };
@@ -253,7 +271,7 @@ let steps = [
         count++;
         req.continue();
       } else {
-        is(count, 19, "last contact - 19 contacts returned");
+        is(count, 39, "last contact - 39 contacts returned");
         next();
       }
     };
@@ -261,7 +279,7 @@ let steps = [
   },
 
   clearDatabase,
-  add20Contacts,
+  addContacts,
 
   function() {
     ok(true, "Test cache consistency when deleting contact during getAll");
@@ -288,7 +306,7 @@ let steps = [
             count++;
             req.continue();
           } else {
-            is(count, 20, "last contact - 20 contacts returned");
+            is(count, 40, "last contact - 40 contacts returned");
             next();
           }
         }
@@ -297,7 +315,7 @@ let steps = [
   },
 
   clearDatabase,
-  add20Contacts,
+  addContacts,
 
   function() {
     ok(true, "Delete the current contact while iterating");
@@ -318,14 +336,14 @@ let steps = [
           req.continue();
         };
       } else {
-        is(count, 20, "returned 20 contacts");
+        is(count, 40, "returned 40 contacts");
         next();
       }
     };
   },
 
   clearDatabase,
-  add20Contacts,
+  addContacts,
 
   function() {
     ok(true, "Iterating through the contact list inside a cursor callback");
@@ -341,7 +359,7 @@ let steps = [
             count2++;
             req2.continue();
           } else {
-            is(count2, 20, "inner cursor returned 20 contacts");
+            is(count2, 40, "inner cursor returned 40 contacts");
             req1.continue();
           }
         };
@@ -350,7 +368,7 @@ let steps = [
           count1++;
           req1.continue();
         } else {
-          is(count1, 20, "outer cursor returned 20 contacts");
+          is(count1, 40, "outer cursor returned 40 contacts");
           next();
         }
       }
@@ -358,7 +376,7 @@ let steps = [
   },
 
   clearDatabase,
-  add20Contacts,
+  addContacts,
 
   function() {
     ok(true, "20 concurrent cursors");
@@ -373,7 +391,7 @@ let steps = [
             count++;
             req.continue();
           } else {
-            is(count, 20, "cursor " + i + " returned 20 contacts");
+            is(count, 40, "cursor " + i + " returned 40 contacts");
             if (++completed == NUM_CURSORS) {
               next();
             }
