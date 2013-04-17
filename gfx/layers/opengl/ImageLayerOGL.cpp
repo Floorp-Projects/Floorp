@@ -17,6 +17,7 @@
 # include "GLXLibrary.h"
 # include "gfxXlibSurface.h"
 #endif
+#include "SharedTextureImage.h"
 
 #ifdef MOZ_WIDGET_ANDROID
 #include "nsSurfaceTexture.h"
@@ -154,7 +155,7 @@ TextureRecycleBin::GetTexture(TextureType aType, const gfxIntSize& aSize,
   mRecycledTextures[aType].RemoveElementAt(last);
 }
 
-struct THEBES_API MacIOSurfaceImageOGLBackendData : public ImageBackendData
+struct THEBES_API ImageOGLBackendData : public ImageBackendData
 {
   GLTexture mTexture;
 };
@@ -163,8 +164,8 @@ struct THEBES_API MacIOSurfaceImageOGLBackendData : public ImageBackendData
 void
 AllocateTextureIOSurface(MacIOSurfaceImage *aIOImage, mozilla::gl::GLContext* aGL)
 {
-  nsAutoPtr<MacIOSurfaceImageOGLBackendData> backendData(
-    new MacIOSurfaceImageOGLBackendData);
+  nsAutoPtr<ImageOGLBackendData> backendData(
+    new ImageOGLBackendData);
 
   backendData->mTexture.Allocate(aGL);
   aGL->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, backendData->mTexture.GetTextureID());
@@ -186,6 +187,23 @@ AllocateTextureIOSurface(MacIOSurfaceImage *aIOImage, mozilla::gl::GLContext* aG
   aIOImage->SetBackendData(LAYERS_OPENGL, backendData.forget());
 }
 #endif
+
+void
+AllocateTextureSharedTexture(SharedTextureImage *aTexImage, mozilla::gl::GLContext* aGL, GLenum aTarget)
+{
+  nsAutoPtr<ImageOGLBackendData> backendData(
+    new ImageOGLBackendData);
+
+  backendData->mTexture.Allocate(aGL);
+
+  aGL->fBindTexture(aTarget, backendData->mTexture.GetTextureID());
+  aGL->fTexParameteri(aTarget, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
+  aGL->fTexParameteri(aTarget, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
+  aGL->fTexParameteri(aTarget, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
+  aGL->fTexParameteri(aTarget, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
+
+  aTexImage->SetBackendData(LAYERS_OPENGL, backendData.forget());
+}
 
 #ifdef MOZ_WIDGET_GONK
 struct THEBES_API GonkIOSurfaceImageOGLBackendData : public ImageBackendData
@@ -354,8 +372,8 @@ ImageLayerOGL::RenderLayer(int,
        AllocateTextureIOSurface(ioImage, gl());
      }
 
-     MacIOSurfaceImageOGLBackendData *data =
-      static_cast<MacIOSurfaceImageOGLBackendData*>(ioImage->GetBackendData(LAYERS_OPENGL));
+     ImageOGLBackendData *data =
+      static_cast<ImageOGLBackendData*>(ioImage->GetBackendData(LAYERS_OPENGL));
 
      gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
      gl()->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, data->mTexture.GetTextureID());
@@ -383,6 +401,49 @@ ImageLayerOGL::RenderLayer(int,
      mOGLManager->BindAndDrawQuad(program);
      gl()->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, 0);
 #endif
+  } else if (image->GetFormat() == SHARED_TEXTURE) {
+    SharedTextureImage* texImage =
+      static_cast<SharedTextureImage*>(image);
+    const SharedTextureImage::Data* data = texImage->GetData();
+    GLContext::SharedHandleDetails handleDetails;
+    if (!gl()->GetSharedHandleDetails(data->mShareType, data->mHandle, handleDetails)) {
+      NS_ERROR("Failed to get shared handle details");
+      return;
+    }
+
+    ShaderProgramOGL* program = mOGLManager->GetProgram(handleDetails.mProgramType, GetMaskLayer());
+
+    program->Activate();
+    if (handleDetails.mProgramType == gl::RGBARectLayerProgramType) {
+      // 2DRect case, get the multiplier right for a sampler2DRect
+      program->SetTexCoordMultiplier(data->mSize.width, data->mSize.height);
+    }
+    program->SetLayerTransform(GetEffectiveTransform());
+    program->SetLayerOpacity(GetEffectiveOpacity());
+    program->SetRenderOffset(aOffset);
+    program->SetTextureUnit(0);
+    program->SetTextureTransform(handleDetails.mTextureTransform);
+    program->LoadMask(GetMaskLayer());
+
+    if (!texImage->GetBackendData(LAYERS_OPENGL)) {
+      AllocateTextureSharedTexture(texImage, gl(), handleDetails.mTarget);
+    }
+
+    ImageOGLBackendData *backendData =
+      static_cast<ImageOGLBackendData*>(texImage->GetBackendData(LAYERS_OPENGL));
+    gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
+    gl()->fBindTexture(handleDetails.mTarget, backendData->mTexture.GetTextureID());
+
+    if (!gl()->AttachSharedHandle(data->mShareType, data->mHandle)) {
+      NS_ERROR("Failed to bind shared texture handle");
+      return;
+    }
+
+    gl()->ApplyFilterToBoundTexture(handleDetails.mTarget, mFilter);
+    program->SetLayerQuadRect(nsIntRect(nsIntPoint(0, 0), data->mSize));
+    mOGLManager->BindAndDrawQuad(program, data->mInverted);
+    gl()->fBindTexture(handleDetails.mTarget, 0);
+    gl()->DetachSharedHandle(data->mShareType, data->mHandle);
 #ifdef MOZ_WIDGET_GONK
   } else if (image->GetFormat() == GONK_IO_SURFACE) {
 
