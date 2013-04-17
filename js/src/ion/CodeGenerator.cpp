@@ -2648,11 +2648,6 @@ CodeGenerator::visitNewStringObject(LNewStringObject *lir)
     return true;
 }
 
-typedef bool(*InitPropFn)(JSContext *cx, HandleObject obj,
-                          HandlePropertyName name, HandleValue value);
-static const VMFunction InitPropInfo =
-    FunctionInfo<InitPropFn>(InitProp);
-
 bool
 CodeGenerator::visitParNew(LParNew *lir)
 {
@@ -2746,6 +2741,28 @@ CodeGenerator::visitParBailout(LParBailout *lir)
     masm.jump(bail);
     return true;
 }
+
+typedef bool(*InitElemFn)(JSContext *cx, HandleObject obj,
+                          HandleValue id, HandleValue value);
+static const VMFunction InitElemInfo =
+    FunctionInfo<InitElemFn>(InitElemOperation);
+
+bool
+CodeGenerator::visitInitElem(LInitElem *lir)
+{
+    Register objReg = ToRegister(lir->getObject());
+
+    pushArg(ToValue(lir, LInitElem::ValueIndex));
+    pushArg(ToValue(lir, LInitElem::IdIndex));
+    pushArg(objReg);
+
+    return callVM(InitElemInfo, lir);
+}
+
+typedef bool(*InitPropFn)(JSContext *cx, HandleObject obj,
+                          HandlePropertyName name, HandleValue value);
+static const VMFunction InitPropInfo =
+    FunctionInfo<InitPropFn>(InitProp);
 
 bool
 CodeGenerator::visitInitProp(LInitProp *lir)
