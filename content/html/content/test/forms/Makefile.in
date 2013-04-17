@@ -18,6 +18,7 @@ MOCHITEST_FILES = \
 		test_input_attributes_reflection.html \
 		test_input_list_attribute.html \
 		test_input_email.html \
+		test_input_range_attr_order.html \
 		test_input_range_key_events.html \
 		test_input_range_mouse_and_touch_events.html \
 		test_input_url.html \
