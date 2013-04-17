@@ -57,9 +57,29 @@ const DELIVERY_STATUS_SUCCESS = "success";
 const DELIVERY_STATUS_PENDING = "pending";
 const DELIVERY_STATUS_ERROR   = "error";
 
+const PREF_SEND_RETRY_COUNT =
+  Services.prefs.getIntPref("dom.mms.sendRetryCount");
 
-const MAX_RETRY_COUNT = Services.prefs.getIntPref("dom.mms.retrievalRetryCount");
-const DELAY_TIME_TO_RETRY = Services.prefs.getIntPref("dom.mms.retrievalRetryInterval");
+const PREF_SEND_RETRY_INTERVAL =
+  Services.prefs.getIntPref("dom.mms.sendRetryInterval");
+
+const PREF_RETRIEVAL_RETRY_COUNT =
+  Services.prefs.getIntPref("dom.mms.retrievalRetryCount");
+
+const PREF_RETRIEVAL_RETRY_INTERVALS = (function () {
+  let intervals =
+    Services.prefs.getCharPref("dom.mms.retrievalRetryIntervals").split(",");
+  for (let i = 0; i < PREF_RETRIEVAL_RETRY_COUNT; ++i) {
+    intervals[i] = parseInt(intervals[i], 10);
+    // If one of the intervals isn't valid (e.g., 0 or NaN),
+    // assign a 10-minute interval to it as a default.
+    if (!intervals[i]) {
+      intervals[i] = 600000;
+    }
+  }
+  intervals.length = PREF_RETRIEVAL_RETRY_COUNT;
+  return intervals;
+})();
 
 XPCOMUtils.defineLazyServiceGetter(this, "gpps",
                                    "@mozilla.org/network/protocol-proxy-service;1",
@@ -608,14 +628,14 @@ RetrieveTransaction.prototype = {
     let that = this;
     this.retrieve((function retryCallback(mmsStatus, msg) {
       if (MMS.MMS_PDU_STATUS_DEFERRED == mmsStatus &&
-          that.retryCount < MAX_RETRY_COUNT) {
-        that.retryCount++;
+          that.retryCount < PREF_RETRIEVAL_RETRY_COUNT) {
         let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
         timer.initWithCallback((function (){
                                  this.retrieve(retryCallback);
                                }).bind(that),
-                               DELAY_TIME_TO_RETRY,
+                               PREF_RETRIEVAL_RETRY_INTERVALS[that.retryCount],
                                Ci.nsITimer.TYPE_ONE_SHOT);
+        that.retryCount++;
         return;
       }
       if (callback) {
@@ -814,12 +834,12 @@ SendTransaction.prototype = {
     let retryCallback = (function (mmsStatus, msg) {
       if ((MMS.MMS_PDU_ERROR_TRANSIENT_FAILURE == mmsStatus ||
             MMS.MMS_PDU_ERROR_PERMANENT_FAILURE == mmsStatus) &&
-          this.retryCount < MAX_RETRY_COUNT) {
+          this.retryCount < PREF_SEND_RETRY_COUNT) {
         this.retryCount++;
 
         let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
         timer.initWithCallback(this.send.bind(this, retryCallback),
-                               DELAY_TIME_TO_RETRY,
+                               PREF_SEND_RETRY_INTERVAL,
                                Ci.nsITimer.TYPE_ONE_SHOT);
         return;
       }
