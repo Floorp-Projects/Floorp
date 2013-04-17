@@ -16,7 +16,7 @@
 
   function runTest()
   {
-    window.location = "https://example.com/tests/security/ssl/mixedcontent/nocontent.sjs";
+    window.location = "https://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/nocontent.sjs";
     window.setTimeout(function() {
       isSecurityState("insecure", "location.href doesn't effect the security state");
       is(document.body.innerHTML, "This is an unsecure page!", "Document has not changed content");
