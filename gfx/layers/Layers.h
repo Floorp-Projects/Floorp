@@ -48,6 +48,7 @@ namespace layers {
 
 class Animation;
 class AnimationData;
+class AsyncPanZoomController;
 class CommonLayerAttributes;
 class Layer;
 class ThebesLayer;
@@ -895,6 +896,11 @@ public:
   gfxPoint GetFixedPositionAnchor() { return mAnchor; }
   const gfx::Margin& GetFixedPositionMargins() { return mMargins; }
   Layer* GetMaskLayer() { return mMaskLayer; }
+
+  // These functions allow attaching an AsyncPanZoomController to this layer,
+  // and can be used anytime.
+  void SetAsyncPanZoomController(AsyncPanZoomController *controller);
+  AsyncPanZoomController* GetAsyncPanZoomController();
 
   // Note that all lengths in animation data are either in CSS pixels or app
   // units and must be converted to device pixels by the compositor.
