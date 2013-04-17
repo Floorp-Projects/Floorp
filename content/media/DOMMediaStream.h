@@ -11,6 +11,7 @@
 #include "nsIPrincipal.h"
 #include "nsWrapperCache.h"
 #include "nsIDOMWindow.h"
+#include "StreamBuffer.h"
 
 class nsXPCClassInfo;
 
@@ -30,6 +31,10 @@ namespace mozilla {
 
 class MediaStream;
 
+namespace dom {
+class MediaStreamTrack;
+}
+
 /**
  * DOM wrapper for MediaStreams.
  */
@@ -37,12 +42,10 @@ class DOMMediaStream : public nsIDOMMediaStream,
                        public nsWrapperCache
 {
   friend class DOMLocalMediaStream;
+  typedef dom::MediaStreamTrack MediaStreamTrack;
 
 public:
-  DOMMediaStream() : mStream(nullptr), mHintContents(0)
-  {
-    SetIsDOMBinding();
-  }
+  DOMMediaStream();
   virtual ~DOMMediaStream();
 
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMMediaStream)
@@ -92,9 +95,17 @@ public:
   static already_AddRefed<DOMMediaStream>
   CreateTrackUnionStream(nsIDOMWindow* aWindow, uint32_t aHintContents = 0);
 
+  // Notifications from StreamListener
+  MediaStreamTrack* CreateDOMTrack(TrackID aTrackID, MediaSegment::Type aType);
+  MediaStreamTrack* GetDOMTrackFor(TrackID aTrackID);
+
 protected:
   void InitSourceStream(nsIDOMWindow* aWindow, uint32_t aHintContents);
   void InitTrackUnionStream(nsIDOMWindow* aWindow, uint32_t aHintContents);
+  void InitStreamCommon(MediaStream* aStream);
+
+  class StreamListener;
+  friend class StreamListener;
 
   // We need this to track our parent object.
   nsCOMPtr<nsIDOMWindow> mWindow;
@@ -105,6 +116,9 @@ protected:
   // Principal identifying who may access the contents of this stream.
   // If null, this stream can be used by anyone because it has no content yet.
   nsCOMPtr<nsIPrincipal> mPrincipal;
+
+  nsAutoTArray<nsRefPtr<MediaStreamTrack>,2> mTracks;
+  nsRefPtr<StreamListener> mListener;
 
   // tells the SDP generator about whether this
   // MediaStream probably has audio and/or video
