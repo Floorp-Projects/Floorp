@@ -508,13 +508,6 @@ OperatorIn(JSContext *cx, HandleValue key, HandleObject obj, JSBool *out)
 }
 
 bool
-OperatorInI(JSContext *cx, uint32_t index, HandleObject obj, JSBool *out)
-{
-    RootedValue key(cx, Int32Value(index));
-    return OperatorIn(cx, key, obj, out);
-}
-
-bool
 GetIntrinsicValue(JSContext *cx, HandlePropertyName name, MutableHandleValue rval)
 {
     return cx->global()->getIntrinsicValue(cx, name, rval);

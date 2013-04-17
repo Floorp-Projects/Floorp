@@ -94,7 +94,6 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitParNewCallObject(MParNewCallObject *ins);
     bool visitParNewDenseArray(MParNewDenseArray *ins);
     bool visitParBailout(MParBailout *ins);
-    bool visitInitElem(MInitElem *ins);
     bool visitInitProp(MInitProp *ins);
     bool visitCheckOverRecursed(MCheckOverRecursed *ins);
     bool visitParCheckOverRecursed(MParCheckOverRecursed *ins);

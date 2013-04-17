@@ -478,26 +478,6 @@ class LParBailout : public LInstructionHelper<0, 0, 0>
     LIR_HEADER(ParBailout);
 };
 
-class LInitElem : public LCallInstructionHelper<0, 1 + 2*BOX_PIECES, 0>
-{
-  public:
-    LIR_HEADER(InitElem)
-
-    LInitElem(const LAllocation &object) {
-        setOperand(0, object);
-    }
-
-    static const size_t IdIndex = 1;
-    static const size_t ValueIndex = 1 + BOX_PIECES;
-
-    const LAllocation *getObject() {
-        return getOperand(0);
-    }
-    MInitElem *mir() const {
-        return mir_->toInitElem();
-    }
-};
-
 // Takes in an Object and a Value.
 class LInitProp : public LCallInstructionHelper<0, 1 + BOX_PIECES, 0>
 {
@@ -2738,18 +2718,15 @@ class LLoadElementV : public LInstructionHelper<BOX_PIECES, 2, 0>
     }
 };
 
-class LInArray : public LInstructionHelper<1, 4, 0>
+class LInArray : public LInstructionHelper<1, 3, 0>
 {
   public:
     LIR_HEADER(InArray)
 
-    LInArray(const LAllocation &elements, const LAllocation &index,
-             const LAllocation &initLength, const LAllocation &object)
-    {
+    LInArray(const LAllocation &elements, const LAllocation &index, const LAllocation &initLength) {
         setOperand(0, elements);
         setOperand(1, index);
         setOperand(2, initLength);
-        setOperand(3, object);
     }
     const MInArray *mir() const {
         return mir_->toInArray();
@@ -2762,9 +2739,6 @@ class LInArray : public LInstructionHelper<1, 4, 0>
     }
     const LAllocation *initLength() {
         return getOperand(2);
-    }
-    const LAllocation *object() {
-        return getOperand(3);
     }
 };
 
