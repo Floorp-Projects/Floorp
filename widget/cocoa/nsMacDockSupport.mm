@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#import <Carbon/Carbon.h>
 #import <Cocoa/Cocoa.h>
 
 #include "nsComponentManagerUtils.h"
@@ -139,32 +138,14 @@ bool nsMacDockSupport::InitProgress()
     mProgressTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
     mAppIcon = [[NSImage imageNamed:@"NSApplicationIcon"] retain];
     mProgressBackground = [mAppIcon copyWithZone:nil];
+    mTheme = new nsNativeThemeCocoa();
 
     NSSize sz = [mProgressBackground size];
-    mProgressDrawInfo.version = 0;
-    mProgressDrawInfo.min = 0;
-    mProgressDrawInfo.value = 0;
-    mProgressDrawInfo.max = PR_INT32_MAX;
-    mProgressDrawInfo.bounds = CGRectMake(sz.width * 1/32, sz.height * 3/32,
-                                          sz.width * 30/32, sz.height * 2/32);
-    mProgressDrawInfo.attributes = kThemeTrackHorizontal;
-    mProgressDrawInfo.enableState = kThemeTrackActive;
-    mProgressDrawInfo.kind = kThemeLargeProgressBar;
-    mProgressDrawInfo.trackInfo.progress.phase = 0;
-
-    // Draw a light background, to visually distinguish the progress.
-    HIRect bounds;
-    HIThemeGetTrackBounds(&mProgressDrawInfo, &bounds);
-    // Margins within track, empirically. FIXME: Don't hardcode?
-    int mleft = 3, mtop = 3, mright = 3, mbot = 1;
-    bounds.origin.x += mleft;
-    bounds.origin.y += mbot;
-    bounds.size.width -= mleft + mright;
-    bounds.size.height -= mtop + mbot;
-
+    mProgressBounds = CGRectMake(sz.width * 1/32, sz.height * 3/32,
+                                 sz.width * 30/32, sz.height * 4/32);
     [mProgressBackground lockFocus];
     [[NSColor whiteColor] set];
-    NSRectFill(NSRectFromCGRect(bounds));
+    NSRectFill(NSRectFromCGRect(mProgressBounds));
     [mProgressBackground unlockFocus];
   }
   return true;
@@ -176,22 +157,14 @@ nsMacDockSupport::RedrawIcon()
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   if (InitProgress()) {
-    // TODO: - Share code with nsNativeThemeCocoa?
-    //       - Implement ERROR and PAUSED states?
+    // TODO: - Implement ERROR and PAUSED states?
     NSImage *icon = [mProgressBackground copyWithZone:nil];
-
     bool isIndeterminate = (mProgressState != STATE_NORMAL);
-    mProgressDrawInfo.value = PR_INT32_MAX * mProgressFraction;
-    mProgressDrawInfo.kind = isIndeterminate ? kThemeLargeIndeterminateBar
-                                             : kThemeLargeProgressBar;
-
-    int stepsPerSecond = isIndeterminate ? 60 : 30;
-    mProgressDrawInfo.trackInfo.progress.phase =
-      uint8_t(PR_IntervalToMilliseconds(PR_IntervalNow()) * stepsPerSecond / 1000);
 
     [icon lockFocus];
     CGContextRef ctx = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
-    HIThemeDrawTrack(&mProgressDrawInfo, NULL, ctx, kHIThemeOrientationNormal);
+    mTheme->DrawProgress(ctx, mProgressBounds, isIndeterminate,
+      true, mProgressFraction, 1.0, NULL);
     [icon unlockFocus];
     [NSApp setApplicationIconImage:icon];
     [icon release];
