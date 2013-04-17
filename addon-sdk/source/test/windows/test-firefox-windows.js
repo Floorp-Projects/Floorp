@@ -356,8 +356,6 @@ exports.testWindowOpenPrivateDefault = function(test) {
     url: 'about:mozilla',
     isPrivate: true,
     onOpen: function(window) {
-      test.assertEqual();
-
       let tab = window.tabs[0];
       tab.once('ready', function() {
         test.assertEqual(tab.url, 'about:mozilla', 'opened correct tab');

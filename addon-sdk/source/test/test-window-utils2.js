@@ -5,7 +5,7 @@
 
 const { Ci } = require('chrome');
 const { open, backgroundify, windows, isBrowser,
-        getXULWindow, getBaseWindow, getMostRecentWindow,
+        getXULWindow, getBaseWindow, getToplevelWindow, getMostRecentWindow,
         getMostRecentBrowserWindow } = require('sdk/window/utils');
 const { close } = require('sdk/window/helpers');
 const windowUtils = require('sdk/deprecated/window-utils');
@@ -26,6 +26,16 @@ exports['test get nsIXULWindow from nsIDomWindow'] = function(assert) {
             'active window is not nsIXULWindow');
   assert.ok(getXULWindow(active) instanceof Ci.nsIXULWindow,
             'base returns nsIXULWindow');
+};
+
+exports['test getToplevelWindow'] = function(assert) {
+  let active = windowUtils.activeBrowserWindow;
+  assert.equal(getToplevelWindow(active), active,
+               'getToplevelWindow of toplevel window returns the same window');
+  assert.equal(getToplevelWindow(active.content), active,
+               'getToplevelWindow of tab window returns the browser window');
+  assert.ok(getToplevelWindow(active) instanceof Ci.nsIDOMWindow,
+            'getToplevelWindow returns nsIDOMWindow');
 };
 
 exports['test top window creation'] = function(assert, done) {
@@ -61,7 +71,10 @@ exports.testBackgroundify = function(assert, done) {
             'backgroundifyied window is in the list of windows');
 
   // Wait for the window unload before ending test
-  close(window).then(done);
+  // backgroundified windows doesn't dispatch domwindowclosed event
+  // so that we have to manually wait for unload event
+  window.onunload = done;
+  window.close();
 };
 
 exports.testIsBrowser = function(assert) {

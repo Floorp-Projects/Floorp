@@ -130,7 +130,7 @@ const WorkerSandbox = EventEmitter.compose({
 
     // Instantiate trusted code in another Sandbox in order to prevent content
     // script from messing with standard classes used by proxy and API code.
-    let apiSandbox = sandbox(window, { wantXrays: true });
+    let apiSandbox = sandbox(window, { wantXrays: true, sameZoneAs: window });
     apiSandbox.console = console;
 
     // Build content proxies only if the document has a non-system principal
@@ -148,7 +148,8 @@ const WorkerSandbox = EventEmitter.compose({
     // have access to all standard globals (window, document, ...)
     let content = this._sandbox = sandbox(window, {
       sandboxPrototype: proto,
-      wantXrays: true
+      wantXrays: true,
+      sameZoneAs: window
     });
     // We have to ensure that window.top and window.parent are the exact same
     // object than window object, i.e. the sandbox global object. But not

@@ -70,7 +70,7 @@ exports.testShowPanelAndWidgetOnPrivateWindow = function(assert, done) {
                 }
               });
             }
-          }).show(window.gBrowser);
+          }).show(null, window.gBrowser);
         },
         onUntrack: function(window) {
           if (window === myPrivateWindow) {
