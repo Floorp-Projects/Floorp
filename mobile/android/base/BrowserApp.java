@@ -73,6 +73,10 @@ abstract public class BrowserApp extends GeckoApp
 
     private static final int TABS_ANIMATION_DURATION = 450;
 
+    private static final int READER_ADD_SUCCESS = 0;
+    private static final int READER_ADD_FAILED = 1;
+    private static final int READER_ADD_DUPLICATE = 2;
+
     public static BrowserToolbar mBrowserToolbar;
     private AboutHome mAboutHome;
     protected Telemetry.Timer mAboutHomeStartupTimer = null;
@@ -431,9 +435,14 @@ abstract public class BrowserApp extends GeckoApp
         return super.onKeyDown(keyCode, event);
     }
 
-    void handleReaderAdded(boolean success, final String title, final String url) {
-        if (!success) {
-            showToast(R.string.reading_list_failed, Toast.LENGTH_SHORT);
+    void handleReaderAdded(int result, final String title, final String url) {
+        if (result != READER_ADD_SUCCESS) {
+            if (result == READER_ADD_FAILED) {
+                showToast(R.string.reading_list_failed, Toast.LENGTH_SHORT);
+            } else if (result == READER_ADD_DUPLICATE) {
+                showToast(R.string.reading_list_duplicate, Toast.LENGTH_SHORT);
+            }
+
             return;
         }
 
@@ -988,10 +997,10 @@ abstract public class BrowserApp extends GeckoApp
                 Telemetry.HistogramAdd("FENNEC_FAVICONS_COUNT", BrowserDB.getCount(getContentResolver(), "favicons"));
                 Telemetry.HistogramAdd("FENNEC_THUMBNAILS_COUNT", BrowserDB.getCount(getContentResolver(), "thumbnails"));
             } else if (event.equals("Reader:Added")) {
-                final boolean success = message.getBoolean("success");
+                final int result = message.getInt("result");
                 final String title = message.getString("title");
                 final String url = message.getString("url");
-                handleReaderAdded(success, title, url);
+                handleReaderAdded(result, title, url);
             } else if (event.equals("Reader:Removed")) {
                 final String url = message.getString("url");
                 handleReaderRemoved(url);
