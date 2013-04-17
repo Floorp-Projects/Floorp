@@ -226,6 +226,8 @@ class Descriptor(DescriptorProvider):
         else:
             if self.workers:
                 headerDefault = "mozilla/dom/workers/bindings/%s.h" % ifaceName
+            elif not self.interface.isExternal() and self.interface.getExtendedAttribute("HeaderFile"):
+                headerDefault = self.interface.getExtendedAttribute("HeaderFile")[0]
             else:
                 headerDefault = self.nativeType
                 headerDefault = headerDefault.replace("::", "/") + ".h"
