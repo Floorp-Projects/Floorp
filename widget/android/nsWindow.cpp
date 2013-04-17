@@ -1128,7 +1128,7 @@ void
 nsWindow::OnMouseEvent(AndroidGeckoEvent *ae)
 {
     uint32_t msg;
-    switch (ae->Action() & AndroidMotionEvent::ACTION_MASK) {
+    switch (ae->Action()) {
 #ifndef MOZ_ONLY_TOUCH_EVENTS
         case AndroidMotionEvent::ACTION_DOWN:
             msg = NS_MOUSE_BUTTON_DOWN;
@@ -1250,7 +1250,7 @@ nsWindow::OnNativeGestureEvent(AndroidGeckoEvent *ae)
   double delta = ae->X();
   int msg = 0;
 
-  switch (ae->Action() & AndroidMotionEvent::ACTION_MASK) {
+  switch (ae->Action()) {
       case AndroidMotionEvent::ACTION_MAGNIFY_START:
           msg = NS_SIMPLE_GESTURE_MAGNIFY_START;
           mStartDist = delta;
