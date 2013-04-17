@@ -20,10 +20,6 @@ struct ID3D10Device;
 struct ID3D10ShaderResourceView;
 #endif
 
-#ifdef XP_MACOSX
-#include "mozilla/gfx/MacIOSurface.h"
-#endif
-
 #ifdef MOZ_WIDGET_GONK
 # include <ui/GraphicBuffer.h>
 #endif
@@ -795,46 +791,6 @@ public:
   nsCountedRef<nsMainThreadSurfaceRef> mSurface;
   gfxIntSize mSize;
 };
-
-#ifdef XP_MACOSX
-class THEBES_API MacIOSurfaceImage : public Image {
-public:
-  struct Data {
-    MacIOSurface* mIOSurface;
-  };
-
-  MacIOSurfaceImage()
-    : Image(NULL, MAC_IO_SURFACE)
-    , mSize(0, 0)
-    {}
-
-  virtual ~MacIOSurfaceImage()
-  { }
-
- /**
-  * This can only be called on the main thread. It may add a reference
-  * to the surface (which will eventually be released on the main thread).
-  * The surface must not be modified after this call!!!
-  */
-  virtual void SetData(const Data& aData);
-
-  virtual gfxIntSize GetSize()
-  {
-    return mSize;
-  }
-
-  MacIOSurface* GetIOSurface()
-  {
-    return mIOSurface;
-  }
-
-  virtual already_AddRefed<gfxASurface> GetAsSurface();
-
-private:
-  gfxIntSize mSize;
-  RefPtr<MacIOSurface> mIOSurface;
-};
-#endif
 
 class RemoteBitmapImage : public Image {
 public:
