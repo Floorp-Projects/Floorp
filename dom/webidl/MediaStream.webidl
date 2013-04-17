@@ -12,8 +12,8 @@
 
 interface MediaStream {
     // readonly attribute DOMString    id;
-    // sequence<MediaStreamTrack> getAudioTracks ();
-    // sequence<MediaStreamTrack> getVideoTracks ();
+    sequence<AudioStreamTrack> getAudioTracks ();
+    sequence<VideoStreamTrack> getVideoTracks ();
     // MediaStreamTrack           getTrackById (DOMString trackId);
     // void                       addTrack (MediaStreamTrack track);
     // void                       removeTrack (MediaStreamTrack track);
