@@ -150,6 +150,10 @@ function sendMessageToJava(aMessage) {
   return getBridge().handleGeckoMessage(JSON.stringify(aMessage));
 }
 
+function fuzzyEquals(a, b) {
+  return (Math.abs(a - b) < 1e-6);
+}
+
 #ifdef MOZ_CRASHREPORTER
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
@@ -2589,7 +2593,7 @@ Tab.prototype = {
   },
 
   getActive: function getActive() {
-      return this.browser.docShellIsActive;
+    return this.browser.docShellIsActive;
   },
 
   setDisplayPort: function(aDisplayPort) {
@@ -2622,7 +2626,7 @@ Tab.prototype = {
         this._drawZoom = resolution;
         cwu.setResolution(resolution, resolution);
       }
-    } else if (Math.abs(resolution - zoom) >= 1e-6) {
+    } else if (!fuzzyEquals(resolution, zoom)) {
       dump("Warning: setDisplayPort resolution did not match zoom for background tab! (" + resolution + " != " + zoom + ")");
     }
 
@@ -2644,12 +2648,11 @@ Tab.prototype = {
       height: (aDisplayPort.bottom - aDisplayPort.top) / resolution
     };
 
-    let epsilon = 0.001;
     if (this._oldDisplayPort == null ||
-        Math.abs(displayPort.x - this._oldDisplayPort.x) > epsilon ||
-        Math.abs(displayPort.y - this._oldDisplayPort.y) > epsilon ||
-        Math.abs(displayPort.width - this._oldDisplayPort.width) > epsilon ||
-        Math.abs(displayPort.height - this._oldDisplayPort.height) > epsilon) {
+        !fuzzyEquals(displayPort.x, this._oldDisplayPort.x) ||
+        !fuzzyEquals(displayPort.y, this._oldDisplayPort.y) ||
+        !fuzzyEquals(displayPort.width, this._oldDisplayPort.width) ||
+        !fuzzyEquals(displayPort.height, this._oldDisplayPort.height)) {
       if (BrowserApp.gUseLowPrecision) {
         // Set the display-port to be 4x the size of the critical display-port,
         // on each dimension, giving us a 0.25x lower precision buffer around the
@@ -2882,7 +2885,7 @@ Tab.prototype = {
 
   setResolution: function(aZoom, aForce) {
     // Set zoom level
-    if (aForce || Math.abs(aZoom - this._zoom) >= 1e-6) {
+    if (aForce || !fuzzyEquals(aZoom, this._zoom)) {
       this._zoom = aZoom;
       if (BrowserApp.selectedTab == this) {
         let cwu = window.top.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
@@ -3577,7 +3580,7 @@ Tab.prototype = {
   },
 
   setBrowserSize: function(aWidth, aHeight) {
-    if (Math.abs(this.browserWidth - aWidth) < 1e-6 && Math.abs(this.browserHeight - aHeight) < 1e-6) {
+    if (fuzzyEquals(this.browserWidth, aWidth) && fuzzyEquals(this.browserHeight, aHeight)) {
       return;
     }
 
@@ -3932,7 +3935,7 @@ var BrowserEventHandler = {
     let dw = (aRect.width - vRect.width);
     let dx = (aRect.x - vRect.x);
 
-    if (Math.abs(aViewport.zoom - maxZoomAllowed) < 1e-6 && overlap.width / aRect.width > 0.9) {
+    if (fuzzyEquals(aViewport.zoom, maxZoomAllowed) && overlap.width / aRect.width > 0.9) {
       // we're already at the max zoom and the block is not spilling off the side of the screen so that even
       // if the block isn't taking up most of the viewport we can't pan/zoom in any more. return true so that we zoom out
       return true;
