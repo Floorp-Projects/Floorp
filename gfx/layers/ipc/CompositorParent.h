@@ -181,10 +181,6 @@ protected:
                                 nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY,
                                 gfx::Margin& aFixedLayerMargins);
   void SetEGLSurfaceSize(int width, int height);
-  // If SetPanZoomControllerForLayerTree is not set, Compositor will use
-  // derived class AsyncPanZoomController transformations.
-  // Compositor will not own AsyncPanZoomController here.
-  virtual AsyncPanZoomController* GetDefaultPanZoomController() { return nullptr; }
 
 private:
   void PauseComposition();
