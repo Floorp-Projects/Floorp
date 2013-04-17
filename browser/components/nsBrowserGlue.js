@@ -32,6 +32,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "BookmarkHTMLUtils",
                                   "resource://gre/modules/BookmarkHTMLUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "BookmarkJSONUtils",
+                                  "resource://gre/modules/BookmarkJSONUtils.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "webappsUI",
                                   "resource:///modules/webappsUI.jsm");
 
@@ -931,7 +934,7 @@ BrowserGlue.prototype = {
         var bookmarksBackupFile = PlacesUtils.backups.getMostRecent("json");
         if (bookmarksBackupFile) {
           // restore from JSON backup
-          PlacesUtils.restoreBookmarksFromJSONFile(bookmarksBackupFile);
+          yield BookmarkJSONUtils.importFromFile(bookmarksBackupFile, true);
           importBookmarks = false;
         }
         else {
@@ -1031,6 +1034,8 @@ BrowserGlue.prototype = {
         this._idleService.addIdleObserver(this, BOOKMARKS_BACKUP_IDLE_TIME);
         this._isIdleObserver = true;
       }
+
+      Services.obs.notifyObservers(null, "places-browser-init-complete", "");
     }.bind(this));
   },
 
