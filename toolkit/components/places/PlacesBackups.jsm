@@ -29,7 +29,7 @@ this.PlacesBackups = {
 
   get folder() {
     let bookmarksBackupDir = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
-    bookmarksBackupDir.append("bookmarkbackups");
+    bookmarksBackupDir.append(this.profileRelativeFolderPath);
     if (!bookmarksBackupDir.exists()) {
       bookmarksBackupDir.create(Ci.nsIFile.DIRECTORY_TYPE, parseInt("0700", 8));
       if (!bookmarksBackupDir.exists())
@@ -38,6 +38,8 @@ this.PlacesBackups = {
     delete this.folder;
     return this.folder = bookmarksBackupDir;
   },
+
+  get profileRelativeFolderPath() "bookmarkbackups",
 
   /**
    * Cache current backups in a sorted (by date DESC) array.

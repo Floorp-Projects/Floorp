@@ -9,6 +9,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "BookmarkJSONUtils",
                                   "resource://gre/modules/BookmarkJSONUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesBackups",
+                                  "resource://gre/modules/PlacesBackups.jsm");
 
 var PlacesOrganizer = {
   _places: null,
@@ -365,13 +367,13 @@ var PlacesOrganizer = {
     while (restorePopup.childNodes.length > 1)
       restorePopup.removeChild(restorePopup.firstChild);
 
-    let backupFiles = PlacesUtils.backups.entries;
+    let backupFiles = PlacesBackups.entries;
     if (backupFiles.length == 0)
       return;
 
     // Populate menu with backups.
     for (let i = 0; i < backupFiles.length; i++) {
-      let backupDate = PlacesUtils.backups.getDateForFile(backupFiles[i]);
+      let backupDate = PlacesBackups.getDateForFile(backupFiles[i]);
       let m = restorePopup.insertBefore(document.createElement("menuitem"),
                                         document.getElementById("restoreFromFile"));
       m.setAttribute("label",
@@ -395,7 +397,7 @@ var PlacesOrganizer = {
    */
   onRestoreMenuItemClick: function PO_onRestoreMenuItemClick(aMenuItem) {
     let backupName = aMenuItem.getAttribute("value");
-    let backupFiles = PlacesUtils.backups.entries;
+    let backupFiles = PlacesBackups.entries;
     for (let i = 0; i < backupFiles.length; i++) {
       if (backupFiles[i].leafName == backupName) {
         this.restoreBookmarksFromFile(backupFiles[i]);
@@ -484,7 +486,7 @@ var PlacesOrganizer = {
             Ci.nsIFilePicker.modeSave);
     fp.appendFilter(PlacesUIUtils.getString("bookmarksRestoreFilterName"),
                     PlacesUIUtils.getString("bookmarksRestoreFilterExtension"));
-    fp.defaultString = PlacesUtils.backups.getFilenameForDate();
+    fp.defaultString = PlacesBackups.getFilenameForDate();
     fp.displayDirectory = backupsDir;
     fp.open(fpCallback);
   },
