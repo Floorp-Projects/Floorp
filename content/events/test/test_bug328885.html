@@ -6,6 +6,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=328885
 <head>
   <title>Test for Bug 328885</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -29,7 +30,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=328885
   }
 
   function clickTest() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     inputelement.addEventListener("DOMSubtreeModified", mutationListener, false);
     inputelement.addEventListener("DOMNodeInserted", mutationListener, false);
     inputelement.addEventListener("DOMNodeRemoved", mutationListener, false);
@@ -39,10 +39,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=328885
     inputelement.addEventListener("DOMCharacterDataModified", mutationListener, false);
     
     inputelement.addEventListener('click', 
-      function(evt) {
-        netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-        ok(evt.originalTarget instanceof HTMLDivElement, "(1) Wrong originalTarget!");
-        ok(evt.originalTarget.parentNode == inputelement, "(2) Wront parent node!");
+      function(event) {
+        var evt = SpecialPowers.wrap(event);
+        ok(SpecialPowers.unwrap(evt.originalTarget) instanceof HTMLDivElement,
+           "(1) Wrong originalTarget!");
+        is(SpecialPowers.unwrap(evt.originalTarget.parentNode), inputelement,
+           "(2) Wront parent node!");
         ok(mutationCount == 0, "(3) No mutations should have happened! [" + mutationCount + "]");
         evt.originalTarget.textContent = "foo";
         ok(mutationCount == 0, "(4) Mutation listener shouldn't have been called! [" + mutationCount + "]");
@@ -51,14 +53,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=328885
         evt.originalTarget.lastChild.data = "bar";
         ok(mutationCount == 0, "(6) Mutation listener shouldn't have been called! [" + mutationCount + "]");
 
-        var r = document.createRange();
+        var r = SpecialPowers.wrap(document.createRange());
         r.selectNodeContents(evt.originalTarget);
         r.deleteContents();
         ok(mutationCount == 0, "(7) Mutation listener shouldn't have been called! [" + mutationCount + "]");
 
         evt.originalTarget.textContent = "foo";
         ok(mutationCount == 0, "(8) Mutation listener shouldn't have been called! [" + mutationCount + "]");
-        r = document.createRange();
+        r = SpecialPowers.wrap(document.createRange());
         r.selectNodeContents(evt.originalTarget);
         r.extractContents();
         ok(mutationCount == 0, "(9) Mutation listener shouldn't have been called! [" + mutationCount + "]");
@@ -111,10 +113,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=328885
         ok(mutationCount == 19, "(20) Mutation listener should have been called! ["+ mutationCount + "]");
       }
     ,false);
-    var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-                       getInterface(Components.interfaces.nsIDOMWindowUtils);
-    utils.sendMouseEvent("mousedown", 5, 5, 0, 1, 0);
-    utils.sendMouseEvent("mouseup", 5, 5, 0, 1, 0);
+    synthesizeMouseAtPoint(5, 5, {}, window);
     SimpleTest.finish();
   }
 

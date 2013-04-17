@@ -290,12 +290,12 @@ ShadowLayerForwarder::RepositionChild(ShadowableLayer* aContainer,
 }
 
 void
-ShadowLayerForwarder::PaintedTiledLayerBuffer(ShadowableLayer* aLayer,
+ShadowLayerForwarder::PaintedTiledLayerBuffer(CompositableClient* aCompositable,
                                               BasicTiledLayerBuffer* aTiledLayerBuffer)
 {
   if (XRE_GetProcessType() != GeckoProcessType_Default)
     NS_RUNTIMEABORT("PaintedTiledLayerBuffer must be made IPC safe (not share pointers)");
-  mTxn->AddNoSwapPaint(OpPaintTiledLayerBuffer(NULL, Shadow(aLayer),
+  mTxn->AddNoSwapPaint(OpPaintTiledLayerBuffer(NULL, aCompositable->GetIPDLActor(),
                                                uintptr_t(aTiledLayerBuffer)));
 }
 
@@ -530,39 +530,6 @@ ShadowLayerForwarder::CloseDescriptor(const SurfaceDescriptor& aDescriptor)
 {
   PlatformCloseDescriptor(aDescriptor);
   // There's no "close" needed for Shmem surfaces.
-}
-
-TemporaryRef<ImageClient>
-ShadowLayerForwarder::CreateImageClientFor(const CompositableType& aCompositableType,
-                                           ShadowableLayer* aLayer,
-                                           TextureFlags aFlags)
-{
-  RefPtr<ImageClient> client = ImageClient::CreateImageClient(GetCompositorBackendType(),
-                                                              aCompositableType,
-                                                              this, aFlags);
-  if (aCompositableType == BUFFER_BRIDGE) {
-    static_cast<ImageClientBridge*>(client.get())->SetLayer(aLayer);
-  }
-  return client.forget();
-}
-
-TemporaryRef<CanvasClient>
-ShadowLayerForwarder::CreateCanvasClientFor(const CompositableType& aCompositableType,
-                                            ShadowableLayer* aLayer,
-                                            TextureFlags aFlags)
-{
-  RefPtr<CanvasClient> client = CanvasClient::CreateCanvasClient(GetCompositorBackendType(),
-                                                                 aCompositableType,
-                                                                 this, aFlags);
-  return client.forget();
-}
-
-TemporaryRef<ContentClient>
-ShadowLayerForwarder::CreateContentClientFor(ShadowableLayer* aLayer)
-{
-  RefPtr<ContentClient> client = ContentClient::CreateContentClient(GetCompositorBackendType(),
-                                                                    this);
-  return client.forget();
 }
 
 PLayerChild*

@@ -54,6 +54,7 @@
 #include "nsSandboxFlags.h"
 #include "mozilla/dom/time/TimeChangeObserver.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::hal;
 
@@ -159,7 +160,8 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
                             const char* aName,
                             unsigned aFlags)
 {
-  CycleCollectionNoteChild(aCallback, aField.mListener.get(), aName, aFlags);
+  CycleCollectionNoteChild(aCallback, aField.mListener.GetISupports(), aName,
+                           aFlags);
 }
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsEventListenerManager)
@@ -199,7 +201,7 @@ nsEventListenerManager::GetTargetAsInnerWindow() const
 
 void
 nsEventListenerManager::AddEventListenerInternal(
-                          nsIDOMEventListener* aListener,
+                          const EventListenerHolder& aListener,
                           uint32_t aType,
                           nsIAtom* aTypeAtom,
                           const EventListenerFlags& aFlags,
@@ -212,7 +214,9 @@ nsEventListenerManager::AddEventListenerInternal(
     return;
   }
 
-  nsRefPtr<nsIDOMEventListener> kungFuDeathGrip = aListener;
+  // Since there is no public API to call us with an EventListenerHolder, we
+  // know that there's an EventListenerHolder on the stack holding a strong ref
+  // to the listener.
 
   nsListenerStruct* ls;
   uint32_t count = mListeners.Length();
@@ -241,8 +245,11 @@ nsEventListenerManager::AddEventListenerInternal(
   // Detect the type of event listener.
   nsCOMPtr<nsIXPConnectWrappedJS> wjs;
   if (aFlags.mListenerIsJSListener) {
+    MOZ_ASSERT(!aListener.HasWebIDLCallback());
     ls->mListenerType = eJSEventListener;
-  } else if ((wjs = do_QueryInterface(aListener))) {
+  } else if (aListener.HasWebIDLCallback()) {
+    ls->mListenerType = eWebIDLListener;
+  } else if ((wjs = do_QueryInterface(aListener.GetXPCOMCallback()))) {
     ls->mListenerType = eWrappedJSListener;
   } else {
     ls->mListenerType = eNativeListener;
@@ -425,7 +432,7 @@ nsEventListenerManager::DisableDevice(uint32_t aType)
 
 void
 nsEventListenerManager::RemoveEventListenerInternal(
-                          nsIDOMEventListener* aListener, 
+                          const EventListenerHolder& aListener, 
                           uint32_t aType,
                           nsIAtom* aUserType,
                           const EventListenerFlags& aFlags,
@@ -499,7 +506,7 @@ ListenerCanHandle(nsListenerStruct* aLs, nsEvent* aEvent)
 }
 
 void
-nsEventListenerManager::AddEventListenerByType(nsIDOMEventListener *aListener, 
+nsEventListenerManager::AddEventListenerByType(const EventListenerHolder& aListener, 
                                                const nsAString& aType,
                                                const EventListenerFlags& aFlags)
 {
@@ -510,7 +517,7 @@ nsEventListenerManager::AddEventListenerByType(nsIDOMEventListener *aListener,
 
 void
 nsEventListenerManager::RemoveEventListenerByType(
-                          nsIDOMEventListener* aListener,
+                          const EventListenerHolder& aListener,
                           const nsAString& aType,
                           const EventListenerFlags& aFlags)
 {
@@ -563,7 +570,8 @@ nsEventListenerManager::SetEventHandlerInternal(nsIScriptContext *aContext,
                                aHandler, getter_AddRefs(scriptListener));
 
     if (NS_SUCCEEDED(rv)) {
-      AddEventListenerInternal(scriptListener, eventType, aName, flags, true);
+      EventListenerHolder holder(scriptListener);
+      AddEventListenerInternal(holder, eventType, aName, flags, true);
 
       ls = FindEventHandler(eventType, aName);
     }
@@ -906,7 +914,7 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
 
 nsresult
 nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
-                                           nsIDOMEventListener* aListener,
+                                           const EventListenerHolder& aListener,
                                            nsIDOMEvent* aDOMEvent,
                                            EventTarget* aCurrentTarget,
                                            nsCxPusher* aPusher)
@@ -927,7 +935,14 @@ nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
   if (NS_SUCCEEDED(result)) {
     nsAutoMicroTask mt;
     // nsIDOMEvent::currentTarget is set in nsEventDispatcher.
-    result = aListener->HandleEvent(aDOMEvent);
+    if (aListener.HasWebIDLCallback()) {
+      ErrorResult rv;
+      aListener.GetWebIDLCallback()->
+        HandleEvent(aCurrentTarget, *(aDOMEvent->InternalDOMEvent()), rv);
+      result = rv.ErrorCode();
+    } else {
+      result = aListener.GetXPCOMCallback()->HandleEvent(aDOMEvent);
+    }
   }
 
   return result;
@@ -996,7 +1011,7 @@ nsEventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
             continue;
           }
 
-          nsRefPtr<nsIDOMEventListener> kungFuDeathGrip = ls->mListener;
+          EventListenerHolder kungFuDeathGrip(ls->mListener);
           if (NS_FAILED(HandleEventSubType(ls, ls->mListener, *aDOMEvent,
                                            aCurrentTarget, aPusher))) {
             aEvent->mFlags.mExceptionHasBeenRisen = true;
@@ -1027,7 +1042,7 @@ nsEventListenerManager::Disconnect()
 
 void
 nsEventListenerManager::AddEventListener(const nsAString& aType,
-                                         nsIDOMEventListener* aListener,
+                                         const EventListenerHolder& aListener,
                                          bool aUseCapture,
                                          bool aWantsUntrusted)
 {
@@ -1039,7 +1054,7 @@ nsEventListenerManager::AddEventListener(const nsAString& aType,
 
 void
 nsEventListenerManager::RemoveEventListener(const nsAString& aType, 
-                                            nsIDOMEventListener* aListener, 
+                                            const EventListenerHolder& aListener, 
                                             bool aUseCapture)
 {
   EventListenerFlags flags;
@@ -1057,7 +1072,8 @@ nsEventListenerManager::AddListenerForAllEvents(nsIDOMEventListener* aListener,
   flags.mCapture = aUseCapture;
   flags.mAllowUntrustedEvents = aWantsUntrusted;
   flags.mInSystemGroup = aSystemEventGroup;
-  AddEventListenerInternal(aListener, NS_EVENT_TYPE_ALL, nullptr, flags,
+  EventListenerHolder holder(aListener);
+  AddEventListenerInternal(holder, NS_EVENT_TYPE_ALL, nullptr, flags,
                            false, true);
 }
 
@@ -1069,7 +1085,8 @@ nsEventListenerManager::RemoveListenerForAllEvents(nsIDOMEventListener* aListene
   EventListenerFlags flags;
   flags.mCapture = aUseCapture;
   flags.mInSystemGroup = aSystemEventGroup;
-  RemoveEventListenerInternal(aListener, NS_EVENT_TYPE_ALL, nullptr, flags,
+  EventListenerHolder holder(aListener);
+  RemoveEventListenerInternal(holder, NS_EVENT_TYPE_ALL, nullptr, flags,
                               true);
 }
 
@@ -1159,8 +1176,11 @@ nsEventListenerManager::GetListenerInfo(nsCOMArray<nsIEventListenerInfo>* aList)
     }
     const nsDependentSubstring& eventType =
       Substring(nsDependentAtomString(ls.mTypeAtom), 2);
+    // EventListenerInfo is defined in XPCOM, so we have to go ahead
+    // and convert to an XPCOM callback here...
     nsRefPtr<nsEventListenerInfo> info =
-      new nsEventListenerInfo(eventType, ls.mListener, ls.mFlags.mCapture,
+      new nsEventListenerInfo(eventType, ls.mListener.ToXPCOMCallback(),
+                              ls.mFlags.mCapture,
                               ls.mFlags.mAllowUntrustedEvents,
                               ls.mFlags.mInSystemGroup);
     NS_ENSURE_TRUE(info, NS_ERROR_OUT_OF_MEMORY);
@@ -1285,7 +1305,10 @@ nsEventListenerManager::MarkForCC()
       }
       xpc_UnmarkGrayObject(jsl->GetEventScope());
     } else if (ls.mListenerType == eWrappedJSListener) {
-      xpc_TryUnmarkWrappedGrayObject(ls.mListener);
+      xpc_TryUnmarkWrappedGrayObject(ls.mListener.GetXPCOMCallback());
+    } else if (ls.mListenerType == eWebIDLListener) {
+      // Callback() unmarks gray
+      ls.mListener.GetWebIDLCallback()->Callback();
     }
   }
   if (mRefCnt.IsPurple()) {

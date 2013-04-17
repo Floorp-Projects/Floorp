@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=4 sw=4 et tw=99:
- *
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -952,6 +951,9 @@ IonBuilder::inspectOpcode(JSOp op)
         RootedObject baseObj(cx, info().getObject(pc));
         return jsop_newobject(baseObj);
       }
+
+      case JSOP_INITELEM:
+        return jsop_initelem();
 
       case JSOP_INITELEM_ARRAY:
         return jsop_initelem_array();
@@ -3089,23 +3091,23 @@ IonBuilder::addTypeBarrier(uint32_t i, CallInfo &callinfo, types::StackTypeSet *
                 // types should remain.
 
                 JSValueType callerType = callerObs->getKnownTypeTag();
-                if (callerType == JSVAL_TYPE_DOUBLE) {
-                    MInstruction *bailType = MToInt32::New(ins);
-                    current->add(bailType);
-                    ins = bailType;
-                } else {
+                if (callerType != JSVAL_TYPE_DOUBLE && ins->type() != MIRType_Double) {
                     // We expect either an Int or a Value, this variant is not
                     // optimized and favor the int variant by filtering out all
                     // other inputs.
                     JS_ASSERT(callerType == JSVAL_TYPE_UNKNOWN);
+                    JS_ASSERT(ins->type() == MIRType_Value);
                     // Bail if the input is not a number.
                     MInstruction *toDouble = MUnbox::New(ins, MIRType_Double, MUnbox::Fallible);
-                    // Bail if the double does not fit in an int.
-                    MInstruction *toInt = MToInt32::New(ins);
                     current->add(toDouble);
-                    current->add(toInt);
-                    ins = toInt;
+                    ins = toDouble;
                 }
+                JS_ASSERT(ins->type() == MIRType_Double ||
+                          ins->type() == MIRType_Value);
+                // Bail if the double does not fit in an int.
+                MInstruction *toInt = MToInt32::New(ins);
+                current->add(toInt);
+                ins = toInt;
 
                 needsBarrier = false;
                 break;
@@ -4778,6 +4780,19 @@ IonBuilder::jsop_newobject(HandleObject baseObj)
     current->push(ins);
 
     return resumeAfter(ins);
+}
+
+bool
+IonBuilder::jsop_initelem()
+{
+    MDefinition *value = current->pop();
+    MDefinition *id = current->pop();
+    MDefinition *obj = current->peek(-1);
+
+    MInitElem *initElem = MInitElem::New(obj, id, value);
+    current->add(initElem);
+
+    return resumeAfter(initElem);
 }
 
 bool
@@ -7395,7 +7410,7 @@ IonBuilder::jsop_in_dense()
     current->add(initLength);
 
     // Check if id < initLength and elem[id] not a hole.
-    MInArray *ins = MInArray::New(elements, id, initLength, needsHoleCheck);
+    MInArray *ins = MInArray::New(elements, id, initLength, obj, needsHoleCheck);
 
     current->add(ins);
     current->push(ins);
