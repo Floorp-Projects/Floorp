@@ -321,6 +321,18 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
             }
         });
 
+        mReader.setOnLongClickListener(new Button.OnLongClickListener() {
+            public boolean onLongClick(View v) {
+                Tab tab = Tabs.getInstance().getSelectedTab();
+                if (tab != null) {
+                    tab.addToReadingList();
+                    return true;
+                }
+
+                return false;
+            }
+        });
+
         mShadow = (ImageView) mLayout.findViewById(R.id.shadow);
 
         mHandler = new Handler();
