@@ -608,6 +608,11 @@ LayerManagerComposite::AddMaskEffect(Layer* aMaskLayer, EffectChain& aEffects, b
     return false;
   }
   LayerComposite* maskLayerComposite = static_cast<LayerComposite*>(aMaskLayer->ImplData());
+  if (!maskLayerComposite->GetCompositableHost()) {
+    NS_WARNING("Mask layer with no compositable host");
+    return false;
+  }
+
   gfx::Matrix4x4 transform;
   ToMatrix4x4(aMaskLayer->GetEffectiveTransform(), transform);
   return maskLayerComposite->GetCompositableHost()->AddMaskEffect(aEffects, transform, aIs3D);
