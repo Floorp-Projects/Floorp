@@ -569,14 +569,6 @@ MacIOSurfaceImage::GetAsSurface()
 
   return imgSurface.forget();
 }
-
-void
-MacIOSurfaceImage::Update(ImageContainer* aContainer)
-{
-  if (mUpdateCallback) {
-    mUpdateCallback(aContainer, mPluginInstanceOwner);
-  }
-}
 #endif
 
 already_AddRefed<gfxASurface>
