@@ -52,7 +52,7 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-SimpleTest.expectAssertions(1);
+SimpleTest.expectAssertions(3);
 
 SimpleTest.waitForExplicitFinish();
 
@@ -94,6 +94,10 @@ function runTests()
                              sharedarea, "mousemove", "setCapture works on areas with multiple images");
   synthesizeMouse(img2, 5, 5, { type: "mouseup" });
 
+  // Bug 862673 - nuke all content so assertions in this test are attributed to
+  // this test rather than the one which happens to follow.
+  var content = document.getElementById("content");
+  content.parentNode.removeChild(content);
   SimpleTest.finish();
 }
 
