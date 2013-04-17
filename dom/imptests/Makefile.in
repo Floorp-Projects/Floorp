@@ -6,7 +6,7 @@ DEPTH = @DEPTH@
 topsrcdir = @top_srcdir@
 srcdir = @srcdir@
 VPATH = @srcdir@
-relativesrcdir = dom/imported-tests
+relativesrcdir = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
