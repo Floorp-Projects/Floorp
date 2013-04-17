@@ -2504,8 +2504,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
 nsresult
 nsPluginInstanceOwner::Destroy()
 {
-  if (mObjectFrame)
-    mObjectFrame->SetInstanceOwner(nullptr);
+  SetFrame(nullptr);
 
 #ifdef XP_MACOSX
   RemoveFromCARefreshTimer();
@@ -3377,7 +3376,7 @@ void nsPluginInstanceOwner::SetFrame(nsObjectFrame *aFrame)
     }
     mObjectFrame->FixupWindow(mObjectFrame->GetContentRectRelativeToSelf().Size());
     mObjectFrame->InvalidateFrame();
-    
+
     nsFocusManager* fm = nsFocusManager::GetFocusManager();
     const nsIContent* content = aFrame->GetContent();
     if (fm && content) {
