@@ -547,6 +547,7 @@ class GrallocTextureHostOGL
 public:
   GrallocTextureHostOGL()
     : mGL(nullptr)
+    , mTextureTarget(0)
     , mGLTexture(0)
     , mEGLImage(0)
   {
@@ -575,6 +576,10 @@ public:
 
   gl::ShaderProgramType GetShaderProgram() const MOZ_OVERRIDE
   {
+    if (mTextureTarget == LOCAL_GL_TEXTURE_EXTERNAL) {
+      return gl::RGBAExternalLayerProgramType;
+    }
+    MOZ_ASSERT(mTextureTarget == LOCAL_GL_TEXTURE_2D);
     return mFormat == gfx::FORMAT_B8G8R8A8 || mFormat == gfx::FORMAT_B8G8R8X8
            ? gl::BGRALayerProgramType
            : gl::RGBALayerProgramType;
@@ -605,6 +610,7 @@ private:
 
   RefPtr<gl::GLContext> mGL;
   android::sp<android::GraphicBuffer> mGraphicBuffer;
+  GLenum mTextureTarget;
   GLuint mGLTexture;
   EGLImage mEGLImage;
 };
