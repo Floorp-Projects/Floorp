@@ -61,6 +61,10 @@ public:
   bool ThemeNeedsComboboxDropmarker();
   virtual Transparency GetWidgetTransparency(nsIFrame* aFrame, uint8_t aWidgetType);
 
+  void DrawProgress(CGContextRef context, const HIRect& inBoxRect,
+                    bool inIsIndeterminate, bool inIsHorizontal,
+                    double inValue, double inMaxValue, nsIFrame* aFrame);
+
 protected:  
 
   nsIntMargin RTLAwareMargin(const nsIntMargin& aMargin, nsIFrame* aFrame);
@@ -72,9 +76,6 @@ protected:
   void DrawFrame(CGContextRef context, HIThemeFrameKind inKind,
                  const HIRect& inBoxRect, bool inReadOnly,
                  nsEventStates inState);
-  void DrawProgress(CGContextRef context, const HIRect& inBoxRect,
-                    bool inIsIndeterminate, bool inIsHorizontal,
-                    double inValue, double inMaxValue, nsIFrame* aFrame);
   void DrawMeter(CGContextRef context, const HIRect& inBoxRect,
                  nsIFrame* aFrame);
   void DrawSegment(CGContextRef cgContext, const HIRect& inBoxRect,
