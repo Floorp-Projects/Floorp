@@ -186,6 +186,20 @@ class MixPolicy : public TypePolicy
     }
 };
 
+// Combine three policies.
+template <class Policy1, class Policy2, class Policy3>
+class Mix3Policy : public TypePolicy
+{
+  public:
+    static bool staticAdjustInputs(MInstruction *ins) {
+        return Policy1::staticAdjustInputs(ins) && Policy2::staticAdjustInputs(ins) &&
+               Policy3::staticAdjustInputs(ins);
+    }
+    virtual bool adjustInputs(MInstruction *ins) {
+        return staticAdjustInputs(ins);
+    }
+};
+
 class CallSetElementPolicy : public SingleObjectPolicy
 {
   public:
