@@ -1243,6 +1243,39 @@ class MInitProp
     }
 };
 
+class MInitElem
+  : public MAryInstruction<3>,
+    public Mix3Policy<ObjectPolicy<0>, BoxPolicy<1>, BoxPolicy<2> >
+{
+    MInitElem(MDefinition *obj, MDefinition *id, MDefinition *value)
+    {
+        setOperand(0, obj);
+        setOperand(1, id);
+        setOperand(2, value);
+        setResultType(MIRType_None);
+    }
+
+  public:
+    INSTRUCTION_HEADER(InitElem)
+
+    static MInitElem *New(MDefinition *obj, MDefinition *id, MDefinition *value) {
+        return new MInitElem(obj, id, value);
+    }
+
+    MDefinition *getObject() const {
+        return getOperand(0);
+    }
+    MDefinition *getId() const {
+        return getOperand(1);
+    }
+    MDefinition *getValue() const {
+        return getOperand(2);
+    }
+    TypePolicy *typePolicy() {
+        return this;
+    }
+};
+
 // Designates the start of call frame construction.
 // Generates code to adjust the stack pointer for the argument vector.
 // Argc is inferred by checking the use chain during lowering.

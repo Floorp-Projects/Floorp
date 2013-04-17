@@ -238,6 +238,18 @@ LIRGenerator::visitParBailout(MParBailout *ins)
 }
 
 bool
+LIRGenerator::visitInitElem(MInitElem *ins)
+{
+    LInitElem *lir = new LInitElem(useRegisterAtStart(ins->getObject()));
+    if (!useBoxAtStart(lir, LInitElem::IdIndex, ins->getId()))
+        return false;
+    if (!useBoxAtStart(lir, LInitElem::ValueIndex, ins->getValue()))
+        return false;
+
+    return add(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitInitProp(MInitProp *ins)
 {
     LInitProp *lir = new LInitProp(useRegisterAtStart(ins->getObject()));

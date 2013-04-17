@@ -952,6 +952,9 @@ IonBuilder::inspectOpcode(JSOp op)
         return jsop_newobject(baseObj);
       }
 
+      case JSOP_INITELEM:
+        return jsop_initelem();
+
       case JSOP_INITELEM_ARRAY:
         return jsop_initelem_array();
 
@@ -4777,6 +4780,19 @@ IonBuilder::jsop_newobject(HandleObject baseObj)
     current->push(ins);
 
     return resumeAfter(ins);
+}
+
+bool
+IonBuilder::jsop_initelem()
+{
+    MDefinition *value = current->pop();
+    MDefinition *id = current->pop();
+    MDefinition *obj = current->peek(-1);
+
+    MInitElem *initElem = MInitElem::New(obj, id, value);
+    current->add(initElem);
+
+    return resumeAfter(initElem);
 }
 
 bool
