@@ -158,6 +158,7 @@
   <string name="reading_list_added">&reading_list_added;</string>
   <string name="reading_list_removed">&reading_list_removed;</string>
   <string name="reading_list_failed">&reading_list_failed;</string>
+  <string name="reading_list_duplicate">&reading_list_duplicate;</string>
   <string name="reader">&reader;</string>
 
   <string name="contextmenu_open_new_tab">&contextmenu_open_new_tab;</string>

@@ -6512,6 +6512,10 @@ let Reader = {
 
   DEBUG: 0,
 
+  READER_ADD_SUCCESS: 0,
+  READER_ADD_FAILED: 1,
+  READER_ADD_DUPLICATE: 2,
+
   // Don't try to parse the page if it has too many elements (for memory and
   // performance reasons)
   MAX_ELEMS_TO_PARSE: 3000,
@@ -6531,26 +6535,36 @@ let Reader = {
         let currentURI = tab.browser.currentURI;
         let url = currentURI.spec;
 
-        let sendResult = function(success, title) {
-          this.log("Reader:Add success=" + success + ", url=" + url + ", title=" + title);
+        let sendResult = function(result, title) {
+          this.log("Reader:Add success=" + result + ", url=" + url + ", title=" + title);
 
           sendMessageToJava({
             type: "Reader:Added",
-            success: success,
+            result: result,
             title: title,
             url: url,
           });
         }.bind(this);
 
-        this.getArticleForTab(aData, currentURI.specIgnoringRef, function (article) {
-          if (!article) {
-            sendResult(false, "");
+        this.getArticleFromCache(currentURI.specIgnoringRef, function (article) {
+          // If the article is already in reading list, bail
+          if (article) {
+            sendResult(this.READER_ADD_DUPLICATE, "");
             return;
           }
 
-          this.storeArticleInCache(article, function(success) {
-            sendResult(success, article.title);
-          });
+          this.getArticleForTab(aData, currentURI.specIgnoringRef, function (article) {
+            if (!article) {
+              sendResult(this.READER_ADD_FAILED, "");
+              return;
+            }
+
+            this.storeArticleInCache(article, function(success) {
+              let result = (success ? this.READER_ADD_SUCCESS :
+                  this.READER_ADD_FAILED);
+              sendResult(result, article.title);
+            }.bind(this));
+          }.bind(this));
         }.bind(this));
         break;
       }
