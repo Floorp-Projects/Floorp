@@ -2718,15 +2718,18 @@ class LLoadElementV : public LInstructionHelper<BOX_PIECES, 2, 0>
     }
 };
 
-class LInArray : public LInstructionHelper<1, 3, 0>
+class LInArray : public LInstructionHelper<1, 4, 0>
 {
   public:
     LIR_HEADER(InArray)
 
-    LInArray(const LAllocation &elements, const LAllocation &index, const LAllocation &initLength) {
+    LInArray(const LAllocation &elements, const LAllocation &index,
+             const LAllocation &initLength, const LAllocation &object)
+    {
         setOperand(0, elements);
         setOperand(1, index);
         setOperand(2, initLength);
+        setOperand(3, object);
     }
     const MInArray *mir() const {
         return mir_->toInArray();
@@ -2739,6 +2742,9 @@ class LInArray : public LInstructionHelper<1, 3, 0>
     }
     const LAllocation *initLength() {
         return getOperand(2);
+    }
+    const LAllocation *object() {
+        return getOperand(3);
     }
 };
 

@@ -521,6 +521,7 @@ bool SPSEnter(JSContext *cx, HandleScript script);
 bool SPSExit(JSContext *cx, HandleScript script);
 
 bool OperatorIn(JSContext *cx, HandleValue key, HandleObject obj, JSBool *out);
+bool OperatorInI(JSContext *cx, uint32_t index, HandleObject obj, JSBool *out);
 
 bool GetIntrinsicValue(JSContext *cx, HandlePropertyName name, MutableHandleValue rval);
 

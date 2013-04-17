@@ -396,6 +396,8 @@ ObjectPolicy<Op>::staticAdjustInputs(MInstruction *ins)
 
 template bool ObjectPolicy<0>::staticAdjustInputs(MInstruction *ins);
 template bool ObjectPolicy<1>::staticAdjustInputs(MInstruction *ins);
+template bool ObjectPolicy<2>::staticAdjustInputs(MInstruction *ins);
+template bool ObjectPolicy<3>::staticAdjustInputs(MInstruction *ins);
 
 bool
 CallPolicy::adjustInputs(MInstruction *ins)
