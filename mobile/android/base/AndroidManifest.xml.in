@@ -146,7 +146,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name="org.mozilla.gecko.WebApp"
+        <activity android:name=".WebApp"
                   android:label="@string/webapp_generic_name"
                   android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize"
                   android:windowSoftInputMode="stateUnspecified|adjustResize"

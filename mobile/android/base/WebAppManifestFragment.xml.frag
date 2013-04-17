@@ -1,4 +1,4 @@
-        <activity android:name="org.mozilla.gecko.WebApps$WebApp@APPNUM@"
+        <activity android:name=".WebApps$WebApp@APPNUM@"
                   android:label="@string/webapp_generic_name"
                   android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize"
                   android:windowSoftInputMode="stateUnspecified|adjustResize"
