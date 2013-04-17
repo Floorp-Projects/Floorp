@@ -98,6 +98,9 @@ class ExpandArgsMore(ExpandArgs):
         if conf.EXPAND_LIBS_LIST_STYLE == "linkerscript":
             content = ['INPUT("%s")\n' % obj for obj in objs]
             ref = tmp
+        elif conf.EXPAND_LIBS_LIST_STYLE == "filelist":
+            content = ["%s\n" % obj for obj in objs]
+            ref = "-Wl,-filelist," + tmp
         elif conf.EXPAND_LIBS_LIST_STYLE == "list":
             content = ["%s\n" % obj for obj in objs]
             ref = "@" + tmp

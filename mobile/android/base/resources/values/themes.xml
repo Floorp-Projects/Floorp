@@ -28,7 +28,6 @@
 
     <style name="GeckoPreferencesBase" parent="GeckoBase">
         <item name="android:windowNoTitle">false</item>
-        <item name="android:windowBackground">@color/background_normal</item>
     </style>
 
     <!--
@@ -91,9 +90,6 @@
         <item name="android:expandableListViewStyle">@style/Widget.ExpandableListView</item>
     </style>
 
-    <style name="Gecko.Preferences" parent="GeckoPreferencesBase">
-        <item name="android:listViewStyle">@style/PreferencesListView</item>
-        <item name="android:expandableListViewStyle">@style/PreferencesExpandableListView</item>
-    </style>
+    <style name="Gecko.Preferences" parent="GeckoPreferencesBase"/>
 
 </resources>

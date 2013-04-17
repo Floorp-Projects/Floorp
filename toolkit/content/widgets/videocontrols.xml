@@ -1029,6 +1029,13 @@
                         this.fullscreenButton.removeAttribute("fullscreened");
                 },
 
+                onFullscreenChange: function () {
+                    if (this.isVideoInFullScreen()) {
+                        this.Utils._hideControlsTimeout = setTimeout(this._hideControlsFn, this.HIDE_CONTROLS_TIMEOUT_MS);
+                    }
+                    this.setFullscreenButtonState();
+                },
+
                 clickToPlayClickHandler : function(e) {
                     if (e.button != 0 || this.hasError())
                         return;
@@ -1423,7 +1430,7 @@
                     }
 
                     addListener(this.videocontrols, "transitionend", this.onTransitionEnd);
-                    addListener(this.video.ownerDocument, "mozfullscreenchange", this.setFullscreenButtonState);
+                    addListener(this.video.ownerDocument, "mozfullscreenchange", this.onFullscreenChange);
                     addListener(this.video, "keypress", this.keyHandler);
 
                     this.log("--- videocontrols initialized ---");
