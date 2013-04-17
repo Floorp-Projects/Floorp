@@ -174,7 +174,7 @@ public:
                                      DataChannelListener *aListener,
                                      nsISupports *aContext,
                                      bool aExternalNegotiated,
-                                     uint16_t aStream);
+                                     uint16_t aStream) NS_WARN_UNUSED_RESULT;
 
   void Close(DataChannel *aChannel);
   // CloseInt() must be called with mLock held
@@ -238,7 +238,7 @@ private:
 
   void DeliverQueuedData(uint16_t stream);
 
-  already_AddRefed<DataChannel> OpenFinish(already_AddRefed<DataChannel> channel);
+  already_AddRefed<DataChannel> OpenFinish(already_AddRefed<DataChannel> channel) NS_WARN_UNUSED_RESULT;
 
   void StartDefer();
   bool SendDeferredMessages();

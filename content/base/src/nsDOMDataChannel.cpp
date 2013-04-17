@@ -62,6 +62,7 @@ public:
     // Don't call us anymore!  Likely isn't an issue (or maybe just less of
     // one) once we block GC until all the (appropriate) onXxxx handlers
     // are dropped. (See WebRTC spec)
+    LOG(("Close()ing %p", mDataChannel.get()));
     mDataChannel->SetListener(nullptr, nullptr);
     mDataChannel->Close();
   }
