@@ -7,6 +7,7 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.util.UiAsyncTask;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -47,17 +48,17 @@ public class GeckoAccessibility {
                     "es.codefactory.android.app.ma.MAAccessibilityService" // Codefactory Mobile Accessibility screen reader
                 }));
 
-    public static void updateAccessibilitySettings () {
-        ThreadUtils.postToBackgroundThread(new Runnable() {
+    public static void updateAccessibilitySettings (final GeckoApp app) {
+        new UiAsyncTask<Void, Void, Void>(ThreadUtils.getBackgroundHandler()) {
                 @Override
-                public void run() {
+                public Void doInBackground(Void... args) {
                     JSONObject ret = new JSONObject();
                     sEnabled = false;
                     AccessibilityManager accessibilityManager =
-                        (AccessibilityManager) GeckoApp.mAppContext.getSystemService(Context.ACCESSIBILITY_SERVICE);
+                        (AccessibilityManager) app.getSystemService(Context.ACCESSIBILITY_SERVICE);
                     if (accessibilityManager.isEnabled()) {
                         ActivityManager activityManager =
-                            (ActivityManager) GeckoApp.mAppContext.getSystemService(Context.ACTIVITY_SERVICE);
+                            (ActivityManager) app.getSystemService(Context.ACTIVITY_SERVICE);
                         List<RunningServiceInfo> runningServices = activityManager.getRunningServices(Integer.MAX_VALUE);
 
                         for (RunningServiceInfo runningServiceInfo : runningServices) {
@@ -67,10 +68,6 @@ public class GeckoAccessibility {
                         }
                     }
 
-                    // Disable the dynamic toolbar when enabling accessibility.
-                    // These features tend not to interact well.
-                    GeckoApp.mAppContext.setAccessibilityEnabled(sEnabled);
-
                     try {
                         ret.put("enabled", sEnabled);
                     } catch (Exception ex) {
@@ -79,8 +76,16 @@ public class GeckoAccessibility {
 
                     GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Accessibility:Settings",
                                                                                    ret.toString()));
+                    return null;
                 }
-            });
+
+                @Override
+                public void onPostExecute(Void args) {
+                    // Disable the dynamic toolbar when enabling accessibility.
+                    // These features tend not to interact well.
+                    app.setAccessibilityEnabled(sEnabled);
+                }
+            }.execute();
     }
 
     private static void populateEventFromJSON (AccessibilityEvent event, JSONObject message) {
