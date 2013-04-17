@@ -267,6 +267,11 @@ pref("browser.search.noCurrentEngine", true);
 pref("browser.search.official", true);
 #endif
 
+// Enable sparse localization by setting a few package locale overrides
+pref("chrome.override_package.global", "browser");
+pref("chrome.override_package.mozapps", "browser");
+pref("chrome.override_package.passwordmgr", "browser");
+
 // enable xul error pages
 pref("browser.xul.error_pages.enabled", true);
 
