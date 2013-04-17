@@ -374,7 +374,7 @@ public class GeckoEvent {
         }
     }
 
-    public void addMotionPoint(int index, int eventIndex, MotionEvent event) {
+    private void addMotionPoint(int index, int eventIndex, MotionEvent event) {
         try {
             PointF geckoPoint = new PointF(event.getX(eventIndex), event.getY(eventIndex));
             geckoPoint = GeckoApp.mAppContext.getLayerView().convertViewPointToLayerPoint(geckoPoint);
