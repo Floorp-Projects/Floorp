@@ -159,6 +159,7 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
       return false;
     }
     mTextureClient->SetDescriptor(desc);
+#ifdef MOZ_WIDGET_GONK
   } else if (image->GetFormat() == GONK_IO_SURFACE) {
     EnsureTextureClient(TEXTURE_SHARED_GL_EXTERNAL);
 
@@ -174,6 +175,7 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
       return false;
     }
     mTextureClient->SetDescriptor(desc);
+#endif
   } else {
     nsRefPtr<gfxASurface> surface = image->GetAsSurface();
     MOZ_ASSERT(surface);
