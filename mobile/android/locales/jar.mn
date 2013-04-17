@@ -28,4 +28,36 @@
   locale/@AB_CD@/browser/prompt.dtd               (%chrome/prompt.dtd)
   locale/@AB_CD@/browser/feedback.dtd             (%chrome/feedback.dtd)
   locale/@AB_CD@/browser/phishing.dtd             (%chrome/phishing.dtd)
+
+# overrides for toolkit l10n, also for en-US
+relativesrcdir toolkit/locales:
+  locale/@AB_CD@/browser/overrides/about.dtd                       (%chrome/global/about.dtd)
+  locale/@AB_CD@/browser/overrides/aboutAbout.dtd                  (%chrome/global/aboutAbout.dtd)
+  locale/@AB_CD@/browser/overrides/aboutRights.dtd                 (%chrome/global/aboutRights.dtd)
+  locale/@AB_CD@/browser/overrides/commonDialogs.properties        (%chrome/global/commonDialogs.properties)
+  locale/@AB_CD@/browser/overrides/handling/handling.properties    (%chrome/mozapps/handling/handling.properties)
+  locale/@AB_CD@/browser/overrides/intl.properties                 (%chrome/global/intl.properties)
+  locale/@AB_CD@/browser/overrides/intl.css                        (%chrome/global/intl.css)
+  locale/@AB_CD@/browser/overrides/passwordmgr.properties          (%chrome/passwordmgr/passwordmgr.properties)
+  locale/@AB_CD@/browser/overrides/search/search.properties        (%chrome/search/search.properties)
+  locale/@AB_CD@/browser/overrides/update/updates.properties       (%chrome/mozapps/update/updates.properties)
+
+% override chrome://global/locale/about.dtd chrome://browser/locale/overrides/about.dtd
+% override chrome://global/locale/aboutAbout.dtd chrome://browser/locale/overrides/aboutAbout.dtd
+% override chrome://global/locale/aboutRights.dtd chrome://browser/locale/overrides/aboutRights.dtd
+% override chrome://global/locale/commonDialogs.properties chrome://browser/locale/overrides/commonDialogs.properties
+% override chrome://mozapps/locale/handling/handling.properties chrome://browser/locale/overrides/handling/handling.properties
+% override chrome://global/locale/intl.properties chrome://browser/locale/overrides/intl.properties
+% override chrome://global/locale/intl.css chrome://browser/locale/overrides/intl.css
+% override chrome://passwordmgr/locale/passwordmgr.properties chrome://browser/locale/overrides/passwordmgr/passwordmgr.properties
+% override chrome://global/locale/search/search.properties chrome://browser/locale/overrides/search/search.properties
+% override chrome://mozapps/locale/update/updates.properties chrome://browser/locale/overrides/update/updates.properties
+
+# overrides for dom l10n, also for en-US
+relativesrcdir dom/locales:
+  locale/@AB_CD@/browser/overrides/charsetTitles.properties    (%chrome/charsetTitles.properties)
+  locale/@AB_CD@/browser/overrides/global.dtd                  (%chrome/global.dtd)
+
+% override chrome://global/locale/charsetTitles.properties chrome://browser/locale/overrides/charsetTitles.properties
+% override chrome://global/locale/global.dtd chrome://browser/locale/overrides/global.dtd
   locale/@AB_CD@/browser/handling.properties      (%chrome/handling.properties)
