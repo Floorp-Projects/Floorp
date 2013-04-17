@@ -859,15 +859,6 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
     }
   }
 
-  if (isNewToplevelWindow) {
-    // Notify observers that the window is open and ready.
-    // The window has not yet started to load a document.
-    nsCOMPtr<nsIObserverService> obsSvc =
-      mozilla::services::GetObserverService();
-    if (obsSvc)
-      obsSvc->NotifyObservers(*_retval, "toplevel-window-ready", nullptr);
-  }
-
   // Now we have to set the right opener principal on the new window.  Note
   // that we have to do this _before_ starting any URI loads, thanks to the
   // sync nature of javascript: loads.  Since this is the only place where we
@@ -934,6 +925,7 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
     }
   }
 
+  nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
   if (uriToLoad && aNavigate) { // get the script principal and pass it to docshell
     JSContextAutoPopper contextGuard;
 
@@ -949,7 +941,6 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
       cx = contextGuard.get();
     }
 
-    nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
     newDocShell->CreateLoadInfo(getter_AddRefs(loadInfo));
     NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
 
@@ -983,7 +974,18 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
         }
       }
     }
+  }
 
+  if (isNewToplevelWindow) {
+    // Notify observers that the window is open and ready.
+    // The window has not yet started to load a document.
+    nsCOMPtr<nsIObserverService> obsSvc =
+      mozilla::services::GetObserverService();
+    if (obsSvc)
+      obsSvc->NotifyObservers(*_retval, "toplevel-window-ready", nullptr);
+  }
+
+  if (uriToLoad && aNavigate) {
     newDocShell->LoadURI(uriToLoad,
                          loadInfo,
                          windowIsNew
