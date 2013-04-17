@@ -875,6 +875,25 @@ setting[type="radio"] > vbox {
   visibility: collapse;
 }
 
+/*Formatting for the limited horizontal space of snapped*/
+#start-autocomplete[viewstate="snapped"] .richgrid-item-content {
+  -moz-box-orient: horizontal;
+}
+
+#start-autocomplete[viewstate="snapped"] {
+  padding-left: 0px;
+  padding-right: 0px;
+}
+
+#start-container[viewstate="snapped"] {
+  padding-left: 0px;
+  padding-right: 0px;
+}
+
+#start-container[viewstate="snapped"] .meta-section {
+  margin: 0px;
+}
+
 /* Browser Content Areas ----------------------------------------------------- */
 
 /* Hide the browser while the start UI is visible */
