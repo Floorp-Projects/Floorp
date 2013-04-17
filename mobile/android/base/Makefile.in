@@ -161,8 +161,8 @@ FENNEC_JAVA_FILES = \
   TouchEventInterceptor.java \
   UpdateServiceHelper.java \
   VideoPlayer.java \
-  WebApp.java \
   WebAppAllocator.java \
+  WebAppImpl.java \
   ZoomConstraints.java \
   db/BrowserContract.java \
   db/BrowserProvider.java \
@@ -261,6 +261,7 @@ FENNEC_PP_JAVA_VIEW_FILES = \
 FENNEC_PP_JAVA_FILES = \
   App.java \
   AppConstants.java \
+  WebApp.java \
   WebApps.java \
   $(NULL)
 

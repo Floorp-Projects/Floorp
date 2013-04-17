@@ -26,8 +26,8 @@ import android.view.Display;
 import java.net.URL;
 import java.io.File;
 
-public class WebApp extends GeckoApp {
-    private static final String LOGTAG = "WebApp";
+public class WebAppImpl extends GeckoApp {
+    private static final String LOGTAG = "GeckoWebAppImpl";
 
     private URL mOrigin;
     private TextView mTitlebarText = null;
