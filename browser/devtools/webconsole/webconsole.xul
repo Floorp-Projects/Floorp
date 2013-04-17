@@ -67,7 +67,7 @@
     </menupopup>
   </popupset>
 
-  <hbox class="hud-outer-wrapper" flex="1">
+  <box class="hud-outer-wrapper devtools-responsive-container" flex="1">
     <vbox class="hud-console-wrapper" flex="1">
       <toolbar class="hud-console-filter-toolbar devtools-toolbar" mode="full">
         <toolbarbutton label="&btnPageNet.label;" type="menu-button"
@@ -145,5 +145,5 @@
       <tabs/>
       <tabpanels flex="1"/>
     </tabbox>
-  </hbox>
+  </box>
 </window>
