@@ -2158,14 +2158,15 @@ class LBinaryV : public LCallInstructionHelper<BOX_PIECES, 2 * BOX_PIECES, 0>
 };
 
 // Adds two string, returning a string.
-class LConcat : public LCallInstructionHelper<1, 2, 0>
+class LConcat : public LInstructionHelper<1, 2, 1>
 {
   public:
     LIR_HEADER(Concat)
 
-    LConcat(const LAllocation &lhs, const LAllocation &rhs) {
+    LConcat(const LAllocation &lhs, const LAllocation &rhs, const LDefinition &temp) {
         setOperand(0, lhs);
         setOperand(1, rhs);
+        setTemp(0, temp);
     }
 
     const LAllocation *lhs() {
@@ -2173,6 +2174,9 @@ class LConcat : public LCallInstructionHelper<1, 2, 0>
     }
     const LAllocation *rhs() {
         return this->getOperand(1);
+    }
+    const LDefinition *temp() {
+        return this->getTemp(0);
     }
 };
 

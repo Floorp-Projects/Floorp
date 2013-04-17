@@ -3470,10 +3470,55 @@ CodeGenerator::visitEmulatesUndefinedAndBranch(LEmulatesUndefinedAndBranch *lir)
 bool
 CodeGenerator::visitConcat(LConcat *lir)
 {
-    pushArg(ToRegister(lir->rhs()));
-    pushArg(ToRegister(lir->lhs()));
-    if (!callVM(ConcatStringsInfo, lir))
+    Register lhs = ToRegister(lir->lhs());
+    Register rhs = ToRegister(lir->rhs());
+
+    Register output = ToRegister(lir->output());
+    Register temp = ToRegister(lir->temp());
+
+    OutOfLineCode *ool = oolCallVM(ConcatStringsInfo, lir, (ArgList(), lhs, rhs),
+                                   StoreRegisterTo(output));
+    if (!ool)
         return false;
+
+    Label done;
+
+    // If lhs is empty, return rhs.
+    Label leftEmpty;
+    masm.loadStringLength(lhs, temp);
+    masm.branchTest32(Assembler::Zero, temp, temp, &leftEmpty);
+
+    // If rhs is empty, return lhs.
+    Label rightEmpty;
+    masm.loadStringLength(rhs, output);
+    masm.branchTest32(Assembler::Zero, output, output, &rightEmpty);
+
+    // Ensure total length <= JSString::MAX_LENGTH.
+    masm.add32(output, temp);
+    masm.branch32(Assembler::Above, temp, Imm32(JSString::MAX_LENGTH), ool->entry());
+
+    // Allocate a new rope.
+    masm.newGCString(output, ool->entry());
+
+    // Store lengthAndFlags.
+    JS_STATIC_ASSERT(JSString::ROPE_FLAGS == 0);
+    masm.lshiftPtr(Imm32(JSString::LENGTH_SHIFT), temp);
+    masm.storePtr(temp, Address(output, JSString::offsetOfLengthAndFlags()));
+
+    // Store left and right nodes.
+    masm.storePtr(lhs, Address(output, JSRope::offsetOfLeft()));
+    masm.storePtr(rhs, Address(output, JSRope::offsetOfRight()));
+    masm.jump(&done);
+
+    masm.bind(&leftEmpty);
+    masm.mov(rhs, output);
+    masm.jump(&done);
+
+    masm.bind(&rightEmpty);
+    masm.mov(lhs, output);
+
+    masm.bind(&done);
+    masm.bind(ool->rejoin());
     return true;
 }
 
