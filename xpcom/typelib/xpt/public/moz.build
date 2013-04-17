@@ -6,3 +6,9 @@
 
 MODULE = 'xpcom'
 
+EXPORTS += [
+    'xpt_arena.h',
+    'xpt_struct.h',
+    'xpt_xdr.h',
+]
+

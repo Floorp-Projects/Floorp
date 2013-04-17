@@ -15,38 +15,6 @@ ifndef _MSC_VER
 FAIL_ON_WARNINGS := 1
 endif # !_MSC_VER
 
-EXPORTS = \
-  AbstractMediaDecoder.h \
-  AudioChannelFormat.h \
-  AudioEventTimeline.h \
-  AudioNodeEngine.h \
-  AudioNodeStream.h \
-  AudioSampleFormat.h \
-  AudioSegment.h \
-  AudioStream.h \
-  BufferMediaResource.h \
-  DecoderTraits.h \
-  DOMMediaStream.h \
-  FileBlockCache.h \
-  MediaDecoderOwner.h \
-  MediaResource.h \
-  MediaSegment.h \
-  MediaStreamGraph.h \
-  AudioAvailableEventManager.h \
-  MediaDecoder.h \
-  MediaDecoderStateMachine.h \
-  MediaDecoderReader.h \
-  MediaCache.h \
-  SharedBuffer.h \
-  StreamBuffer.h \
-  TimeVarying.h \
-  VideoFrameContainer.h \
-  VideoUtils.h \
-  VideoSegment.h \
-  VorbisUtils.h \
-  MediaMetadataManager.h \
-  $(NULL)
-
 CPPSRCS = \
   AudioChannelFormat.cpp \
   AudioNodeEngine.cpp \

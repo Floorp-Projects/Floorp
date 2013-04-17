@@ -34,9 +34,6 @@ endif
 # and leave bare filenames
 CPPSRCS = $(subst $($(_NS)_BASE)/src/,,$(_SOURCES))
 
-EXPORTS_NAMESPACES = graphite2
-EXPORTS_graphite2 = $(_PUBLIC_HEADERS)
-
 FORCE_STATIC_LIB = 1
 FORCE_USE_PIC = 1
 

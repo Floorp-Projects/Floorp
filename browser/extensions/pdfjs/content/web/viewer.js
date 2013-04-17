@@ -922,7 +922,7 @@ var PDFView = {
                   doc.webkitRequestFullScreen;
 
     // Disable fullscreen button if we're in an iframe
-    if (!!window.frameElement)
+    if (window.parent !== window)
       support = false;
 
     Object.defineProperty(this, 'supportsFullScreen', { value: support,
@@ -949,6 +949,16 @@ var PDFView = {
                                                            enumerable: true,
                                                            configurable: true,
                                                            writable: false });
+    return support;
+  },
+
+  get supportsDocumentColors() {
+    var support = true;
+    support = FirefoxCom.requestSync('supportsDocumentColors');
+    Object.defineProperty(this, 'supportsDocumentColors', { value: support,
+                                                            enumerable: true,
+                                                            configurable: true,
+                                                            writable: false });
     return support;
   },
 
@@ -1370,6 +1380,7 @@ var PDFView = {
     PDFJS.Promise.all(promises).then(function() {
       pdfDocument.getOutline().then(function(outline) {
         self.outline = new DocumentOutlineView(outline);
+        document.getElementById('viewOutline').disabled = !outline;
       });
 
       // Make all navigation keys work on document load,
@@ -1979,6 +1990,7 @@ var PageView = function pageView(container, id, scale,
           PDFView.navigateTo(dest);
         return false;
       };
+      link.className = 'internalLink';
     }
     function createElementWithStyle(tagName, item, rect) {
       if (!rect) {
@@ -2231,6 +2243,13 @@ var PageView = function pageView(container, id, scale,
           !PDFView.supportsDocumentFonts) {
         console.error(mozL10n.get('web_fonts_disabled', null,
           'Web fonts are disabled: unable to use embedded PDF fonts.'));
+        PDFView.fallback();
+      }
+      if (self.textLayer && self.textLayer.textDivs &&
+          self.textLayer.textDivs.length > 0 &&
+          !PDFView.supportsDocumentColors) {
+        console.error(mozL10n.get('web_colors_disabled', null,
+          'Web colors are disabled.'));
         PDFView.fallback();
       }
       if (error) {
@@ -2536,8 +2555,16 @@ var ThumbnailView = function thumbnailView(container, id, defaultViewport) {
 
 var DocumentOutlineView = function documentOutlineView(outline) {
   var outlineView = document.getElementById('outlineView');
+  var outlineButton = document.getElementById('viewOutline');
   while (outlineView.firstChild)
     outlineView.removeChild(outlineView.firstChild);
+
+  if (!outline) {
+    if (!outlineView.classList.contains('hidden'))
+      PDFView.switchSidebarView('thumbs');
+
+    return;
+  }
 
   function bindItemLink(domObj, item) {
     domObj.href = PDFView.getDestinationHash(item.dest);
@@ -2547,14 +2574,6 @@ var DocumentOutlineView = function documentOutlineView(outline) {
     };
   }
 
-  if (!outline) {
-    var noOutline = document.createElement('div');
-    noOutline.classList.add('noOutline');
-    noOutline.textContent = mozL10n.get('no_outline', null,
-      'No Outline Available');
-    outlineView.appendChild(noOutline);
-    return;
-  }
 
   var queue = [{parent: outlineView, items: outline}];
   while (queue.length > 0) {
@@ -2643,7 +2662,6 @@ var TextLayerBuilder = function textLayerBuilder(textLayerDiv, pageIdx) {
 
   this.beginLayout = function textLayerBuilderBeginLayout() {
     this.textDivs = [];
-    this.textLayerQueue = [];
     this.renderingDone = false;
   };
 
@@ -3418,9 +3436,9 @@ window.addEventListener('keydown', function keydown(evt) {
 
   // Some shortcuts should not get handled if a control/input element
   // is selected.
-  var curElement = document.activeElement;
-  if (curElement && (curElement.tagName == 'INPUT' ||
-                     curElement.tagName == 'SELECT')) {
+  var curElement = document.activeElement || document.querySelector(':focus');
+  if (curElement && (curElement.tagName.toUpperCase() === 'INPUT' ||
+                     curElement.tagName.toUpperCase() === 'SELECT')) {
     return;
   }
   var controlsElement = document.getElementById('toolbar');

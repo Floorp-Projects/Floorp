@@ -15,39 +15,6 @@ ifndef _MSC_VER
 FAIL_ON_WARNINGS = 1
 endif # !_MSC_VER
 
-EXPORTS		= \
-		nsQueryFrame.h \
-		nsFrameIdList.h \
-		nsFrameList.h \
-		nsCanvasFrame.h \
-		nsHTMLParts.h \
-		nsHTMLReflowMetrics.h \
-		nsHTMLReflowState.h \
-		nsIAnonymousContentCreator.h \
-		nsIFrame.h \
-		nsIFrameUtil.h \
-		nsILineIterator.h \
-		nsIObjectFrame.h \
-		nsIPageSequenceFrame.h \
-		nsIScrollableFrame.h \
-		ScrollbarActivity.h \
-		nsIStatefulFrame.h \
-		nsFrameSelection.h \
-		nsSubDocumentFrame.h \
-		Selection.h \
-		nsObjectFrame.h \
-		$(NULL)
-
-EXPORTS_NAMESPACES = mozilla/layout mozilla
-
-EXPORTS_mozilla/layout = \
-		FrameChildList.h \
-		$(NULL)
-
-EXPORTS_mozilla = \
-		Selection.h \
-		$(NULL)
-
 CPPSRCS		= \
 		FrameChildList.cpp \
 		nsAbsoluteContainingBlock.cpp \

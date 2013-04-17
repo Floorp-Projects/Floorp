@@ -6,3 +6,32 @@
 
 MODULE = 'string'
 
+EXPORTS += [
+    'nsAString.h',
+    'nsAlgorithm.h',
+    'nsCharTraits.h',
+    'nsDependentString.h',
+    'nsDependentSubstring.h',
+    'nsLiteralString.h',
+    'nsPrintfCString.h',
+    'nsPromiseFlatString.h',
+    'nsReadableUtils.h',
+    'nsString.h',
+    'nsStringBuffer.h',
+    'nsStringFwd.h',
+    'nsStringIterator.h',
+    'nsSubstring.h',
+    'nsSubstringTuple.h',
+    'nsTDependentString.h',
+    'nsTDependentSubstring.h',
+    'nsTPromiseFlatString.h',
+    'nsTString.h',
+    'nsTSubstring.h',
+    'nsTSubstringTuple.h',
+    'nsUTF8Utils.h',
+    'nsXPIDLString.h',
+    'string-template-def-char.h',
+    'string-template-def-unichar.h',
+    'string-template-undef.h',
+]
+

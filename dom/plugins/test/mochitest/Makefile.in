@@ -141,6 +141,11 @@ MOCHITEST_CHROME_FILES += \
       test_idle_hang.xul \
       test_busy_hang.xul \
       hang_test.js \
+      test_hangui.xul \
+      hangui_subpage.html \
+      hangui_common.js \
+      hangui_iface.js \
+      dialog_watcher.js \
       $(NULL)
   endif
 endif

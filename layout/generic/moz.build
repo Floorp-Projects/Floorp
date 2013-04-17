@@ -8,3 +8,34 @@ TEST_DIRS += ['test']
 
 MODULE = 'layout'
 
+EXPORTS += [
+    'ScrollbarActivity.h',
+    'Selection.h',
+    'nsCanvasFrame.h',
+    'nsFrameIdList.h',
+    'nsFrameList.h',
+    'nsFrameSelection.h',
+    'nsHTMLParts.h',
+    'nsHTMLReflowMetrics.h',
+    'nsHTMLReflowState.h',
+    'nsIAnonymousContentCreator.h',
+    'nsIFrame.h',
+    'nsIFrameUtil.h',
+    'nsILineIterator.h',
+    'nsIObjectFrame.h',
+    'nsIPageSequenceFrame.h',
+    'nsIScrollableFrame.h',
+    'nsIStatefulFrame.h',
+    'nsObjectFrame.h',
+    'nsQueryFrame.h',
+    'nsSubDocumentFrame.h',
+]
+
+EXPORTS.mozilla += [
+    'Selection.h',
+]
+
+EXPORTS.mozilla.layout += [
+    'FrameChildList.h',
+]
+

@@ -6,3 +6,9 @@
 
 MODULE = 'ipcshell'
 
+EXPORTS.mozilla.ipc += [
+    'TestShellChild.h',
+    'TestShellParent.h',
+    'XPCShellEnvironment.h',
+]
+

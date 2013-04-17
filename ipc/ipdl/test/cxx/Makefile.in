@@ -9,14 +9,6 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORTS_NAMESPACES = mozilla/_ipdltest
-EXPORTS_mozilla/_ipdltest =  \
-  IPDLUnitTests.h  \
-  IPDLUnitTestProcessChild.h  \
-  IPDLUnitTestTypes.h \
-  IPDLUnitTestUtils.h \
-  $(NULL)
-
 LIBRARY_NAME = $(MODULE)_s
 LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1

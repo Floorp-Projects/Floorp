@@ -28,16 +28,6 @@ CPPSRCS += \
   ia2AccessibleValue.cpp \
   $(NULL)
 
-EXPORTS = \
-  ia2AccessibleValue.h \
-  ia2AccessibleAction.h \
-  ia2AccessibleComponent.h \
-  ia2AccessibleEditableText.h \
-  ia2AccessibleHyperlink.h \
-  ia2AccessibleHypertext.h \
-  ia2AccessibleText.h \
-  $(NULL)
-
 # The midl generated code include Windows headers which defines min and max
 # macros which conflicts with std::min/max.  Suppress the macros:
 OS_CXXFLAGS += -DNOMINMAX

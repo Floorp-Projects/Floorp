@@ -39,10 +39,7 @@ gTests.push({
     // Show options flyout
     let promise = waitForEvent(Elements.prefsFlyout, "PopupChanged", 2000);
     Elements.prefsFlyout.show();
-
     yield promise;
-
-    ok(promise && !(promise instanceof Error), "Wait for PopupChanged");
 
     // Make sure it's opened
     yield waitForEvent(Elements.prefsFlyout, "transitionend", 1000);
@@ -93,12 +90,59 @@ gTests.push({
     });
 
     // hide options flyout
-    promise = waitForEvent(Elements.prefsFlyout, "PopupChanged", 2000);
+    let promise = waitForEvent(Elements.prefsFlyout, "PopupChanged", 2000);
     Elements.prefsFlyout.hide();
+    yield promise;
+  }
+});
 
+function checkDNTPrefs(aExpectedEnabled, aExpectedValue) {
+  let currentEnabled = Services.prefs.getBoolPref("privacy.donottrackheader.enabled");
+  let currentValue = Services.prefs.getIntPref("privacy.donottrackheader.value");
+
+  let enabledTestMsg = "testing privacy.donottrackheader.enabled, expected "
+    + aExpectedEnabled + " got " + currentEnabled;
+
+  ok(aExpectedEnabled === currentEnabled, enabledTestMsg);
+
+  let valueTestMsg = "testing privacy.donottrackheader.value, expected "
+    + aExpectedValue + " got " + currentValue;
+
+  ok(aExpectedValue === currentValue, valueTestMsg);
+}
+
+gTests.push({
+  desc: "Test do not track settings",
+  run: function testDNT() {
+    let noTrack = document.getElementById("prefs-dnt-notrack");
+    let noPref = document.getElementById("prefs-dnt-nopref");
+    let okTrack = document.getElementById("prefs-dnt-oktrack");
+
+    // Show options flyout
+    let promise = waitForEvent(Elements.prefsFlyout, "PopupChanged", 2000);
+    Elements.prefsFlyout.show();
     yield promise;
 
-    ok(promise && !(promise instanceof Error), "Wait for PopupChanged");
+    noPref.click();
+    // See https://mxr.mozilla.org/mozilla-central/source/modules/libpref/src/init/all.js?rev=0aab2bb76b45#755
+    // -1 - tell sites nothing about preferences
+    yield waitForCondition(() => Services.prefs.getIntPref("privacy.donottrackheader.value") === -1);
+    checkDNTPrefs(false, -1);
+
+    noTrack.click();
+    // 1 - tell sites tracking is unacceptable
+    yield waitForCondition(() => Services.prefs.getIntPref("privacy.donottrackheader.value") === 1);
+    checkDNTPrefs(true, 1);
+
+    okTrack.click();
+    // 0 - tell sites tracking is acceptable
+    yield waitForCondition(() => Services.prefs.getIntPref("privacy.donottrackheader.value") === 0);
+    checkDNTPrefs(true, 0);
+
+    // hide options flyout
+    let promise = waitForEvent(Elements.prefsFlyout, "PopupChanged", 2000);
+    Elements.prefsFlyout.hide();
+    yield promise;
   }
 });
 

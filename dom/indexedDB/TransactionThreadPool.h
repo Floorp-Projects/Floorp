@@ -173,7 +173,7 @@ protected:
 
   TransactionQueue& GetQueueForTransaction(IDBTransaction* aTransaction);
 
-  bool MaybeFireCallback(DatabasesCompleteCallback& aCallback);
+  bool MaybeFireCallback(DatabasesCompleteCallback aCallback);
 
   nsCOMPtr<nsIThreadPool> mThreadPool;
 

@@ -51,31 +51,6 @@ CPPSRCS = \
   DOMJSProxyHandler.cpp \
   $(NULL)
 
-EXPORTS_NAMESPACES = $(binding_include_path) mozilla
-
-EXPORTS_mozilla = \
-  ErrorResult.h \
-  $(NULL)
-
-EXPORTS_$(binding_include_path) = \
-  BindingDeclarations.h \
-  BindingUtils.h \
-  CallbackFunction.h \
-  CallbackInterface.h \
-  CallbackObject.h \
-  DOMJSClass.h \
-  DOMJSProxyHandler.h \
-  Errors.msg \
-  NonRefcountedDOMObject.h \
-  Nullable.h \
-  PrimitiveConversions.h \
-  PrototypeList.h \
-  RegisterBindings.h \
-  TypedArray.h \
-  UnionConversions.h \
-  UnionTypes.h \
-  $(NULL)
-
 LOCAL_INCLUDES += -I$(topsrcdir)/js/xpconnect/src \
   -I$(topsrcdir)/js/xpconnect/wrappers \
   -I$(topsrcdir)/content/canvas/src \

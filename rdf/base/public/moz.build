@@ -6,3 +6,8 @@
 
 MODULE = 'rdf'
 
+EXPORTS += [
+    'nsIRDFContentSink.h',
+    'rdf.h',
+]
+

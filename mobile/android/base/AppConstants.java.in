@@ -16,6 +16,9 @@ public class AppConstants {
     public static final String MOZ_APP_ID = "@MOZ_APP_ID@";
     public static final String MOZ_APP_NAME = "@MOZ_APP_NAME@";
     public static final String MOZ_APP_VERSION = "@MOZ_APP_VERSION@";
+    // MOZILLA_VERSION is already quoted when it gets substituted in. If we
+    // add additional quotes we end up with ""x.y"", which is a syntax error.
+    public static final String MOZILLA_VERSION = @MOZILLA_VERSION@;
     public static final String MOZ_CHILD_PROCESS_NAME = "@MOZ_CHILD_PROCESS_NAME@";
     public static final String MOZ_UPDATE_CHANNEL = "@MOZ_UPDATE_CHANNEL@";
     public static final String OS_TARGET = "@OS_TARGET@";

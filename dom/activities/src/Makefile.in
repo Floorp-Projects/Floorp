@@ -20,11 +20,6 @@ CPPSRCS = \
   Activity.cpp \
   $(NULL)
 
-EXPORTS_NAMESPACES = mozilla/dom
-EXPORTS_mozilla/dom = \
-  Activity.h \
-  $(NULL)
-
 EXTRA_COMPONENTS = \
   ActivityOptions.js \
   ActivityProxy.js \

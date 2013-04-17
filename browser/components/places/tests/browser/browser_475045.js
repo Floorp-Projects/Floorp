@@ -2,10 +2,10 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 // Instead of loading ChromeUtils.js into the test scope in browser-test.js for all tests,
 // we only need ChromeUtils.js for a few files which is why we are using loadSubScript.
-var chromeUtils = {};
+var ChromeUtils = {};
 this._scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
                      getService(Ci.mozIJSSubScriptLoader);
-this._scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js", chromeUtils);
+this._scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js", ChromeUtils);
 
 function test() {
   // Make sure the bookmarks bar is visible and restore its state on cleanup.
@@ -37,11 +37,11 @@ function test() {
   let simulateDragDrop = function(aEffect, aMimeType) {
     const uriSpec = "http://www.mozilla.org/D1995729-A152-4e30-8329-469B01F30AA7";
     let uri = makeURI(uriSpec);
-    chromeUtils.synthesizeDrop(placesItems.childNodes[0], 
+    ChromeUtils.synthesizeDrop(placesItems.childNodes[0],
                               placesItems, 
                               [[{type: aMimeType, 
                                 data: uriSpec}]], 
-                              aEffect, window, EventUtils);
+                              aEffect, window);
 
     // Verify that the drop produces exactly one bookmark.
     let bookmarkIds = PlacesUtils.bookmarks

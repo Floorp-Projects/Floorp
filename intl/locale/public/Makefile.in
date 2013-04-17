@@ -10,18 +10,5 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORTS		= \
-		nsCollationCID.h \
-		nsDateTimeFormatCID.h \
-		nsIDateTimeFormat.h \
-		nsILanguageAtomService.h \
-		nsPosixLocale.h \
-		nsIOS2Locale.h \
-		nsWin32Locale.h \
-		nsCharsetAlias.h \
-		nsIPlatformCharset.h \
-		nsLocaleCID.h \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

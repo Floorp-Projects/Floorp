@@ -10,22 +10,5 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORTS		= \
-		nsMutationEvent.h \
-		nsIPrivateTextEvent.h \
-		nsIPrivateTextRange.h \
-		nsAsyncDOMEvent.h \
-		nsEventDispatcher.h \
-		nsEventStates.h \
-		nsEventNameList.h \
-		nsVKList.h \
-		$(NULL)
-
-EXPORTS_NAMESPACES = mozilla/dom
-
-EXPORTS_mozilla/dom = \
-  EventTarget.h \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

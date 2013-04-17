@@ -57,15 +57,6 @@ done_gen: ISimpleDOMNode.idl \
 	$(MIDL) $(MIDL_FLAGS) -Oicf $(srcdir)/ISimpleDOMText.idl
 	touch $@
 
-EXPORTS = \
-	ISimpleDOMNode.h \
-	ISimpleDOMNode_i.c \
-	ISimpleDOMDocument.h \
-	ISimpleDOMDocument_i.c \
-	ISimpleDOMText.h \
-	ISimpleDOMText_i.c \
-	$(NULL)
-
 export:: done_gen
 
 # This marshall dll is also registered in the installer
