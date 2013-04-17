@@ -18,11 +18,14 @@ namespace layers {
 
 struct FPSState;
 class CompositingRenderTargetOGL;
+class GLManagerCompositor;
 
 class CompositorOGL : public Compositor
 {
   typedef mozilla::gl::GLContext GLContext;
   typedef mozilla::gl::ShaderProgramType ProgramType;
+  
+  friend class GLManagerCompositor;
 
 public:
   CompositorOGL(nsIWidget *aWidget, int aSurfaceWidth = -1, int aSurfaceHeight = -1,

@@ -59,7 +59,6 @@
   <!-- Link colors -->
   <color name="text_color_link">#22629E</color>
 
-  <color name="autocomplete_listitem_text">#000000</color>
   <color name="splash_background">#000000</color>
   <color name="splash_msgfont">#ffffff</color>
   <color name="splash_urlfont">#000000</color>

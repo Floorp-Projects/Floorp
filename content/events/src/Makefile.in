@@ -15,6 +15,7 @@ LIBXUL_LIBRARY  = 1
 FAIL_ON_WARNINGS = 1
 
 CPPSRCS		= \
+		EventTarget.cpp \
 		nsEventListenerManager.cpp \
 		nsEventStateManager.cpp \
 		nsDOMEvent.cpp \

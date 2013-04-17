@@ -17,10 +17,9 @@ using namespace gfx;
 namespace layers {
 
 /* static */ TemporaryRef<ContentClient>
-ContentClient::CreateContentClient(LayersBackend aParentBackend,
-                                   CompositableForwarder* aForwarder)
+ContentClient::CreateContentClient(CompositableForwarder* aForwarder)
 {
-  if (aParentBackend != LAYERS_OPENGL) {
+  if (aForwarder->GetCompositorBackendType() != LAYERS_OPENGL) {
     return nullptr;
   }
   if (ShadowLayerManager::SupportsDirectTexturing() ||

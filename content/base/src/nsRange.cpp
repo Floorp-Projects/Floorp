@@ -213,6 +213,22 @@ nsRange::~nsRange()
 
 /* static */
 nsresult
+nsRange::CreateRange(nsINode* aStartParent, int32_t aStartOffset,
+                     nsINode* aEndParent, int32_t aEndOffset,
+                     nsRange** aRange)
+{
+  nsCOMPtr<nsIDOMNode> startDomNode = do_QueryInterface(aStartParent);
+  nsCOMPtr<nsIDOMNode> endDomNode = do_QueryInterface(aEndParent);
+
+  nsresult rv = CreateRange(startDomNode, aStartOffset, endDomNode, aEndOffset,
+                            aRange);
+
+  return rv;
+
+}
+
+/* static */
+nsresult
 nsRange::CreateRange(nsIDOMNode* aStartParent, int32_t aStartOffset,
                      nsIDOMNode* aEndParent, int32_t aEndOffset,
                      nsRange** aRange)

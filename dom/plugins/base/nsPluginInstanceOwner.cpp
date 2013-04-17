@@ -149,22 +149,6 @@ nsPluginInstanceOwner::NotifyPaintWaiter(nsDisplayListBuilder* aBuilder)
   }
 }
 
-#ifdef XP_MACOSX
-static void DrawPlugin(ImageContainer* aContainer, void* aPluginInstanceOwner)
-{
-  nsObjectFrame* frame = static_cast<nsPluginInstanceOwner*>(aPluginInstanceOwner)->GetFrame();
-  if (frame) {
-    frame->UpdateImageLayer(gfxRect(0,0,0,0));
-  }
-}
-
-static void OnDestroyImage(void* aPluginInstanceOwner)
-{
-  nsPluginInstanceOwner* owner = static_cast<nsPluginInstanceOwner*>(aPluginInstanceOwner);
-  NS_IF_RELEASE(owner);
-}
-#endif // XP_MACOSX
-
 already_AddRefed<ImageContainer>
 nsPluginInstanceOwner::GetImageContainer()
 {
@@ -206,22 +190,7 @@ nsPluginInstanceOwner::GetImageContainer()
 #endif
 
   mInstance->GetImageContainer(getter_AddRefs(container));
-  if (container) {
-#ifdef XP_MACOSX
-    AutoLockImage autoLock(container);
-    Image* image = autoLock.GetImage();
-    if (image && image->GetFormat() == MAC_IO_SURFACE && mObjectFrame) {
-      // With this drawing model, every call to
-      // nsIPluginInstance::GetImage() creates a new image.
-      MacIOSurfaceImage *oglImage = static_cast<MacIOSurfaceImage*>(image);
-      NS_ADDREF_THIS();
-      oglImage->SetUpdateCallback(&DrawPlugin, this);
-      oglImage->SetDestroyCallback(&OnDestroyImage);
-    }
-#endif
-    return container.forget();
-  }
-  return nullptr;
+  return container.forget();
 }
 
 void
@@ -634,7 +603,6 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(NPRect *invalidRect)
 #if defined(XP_MACOSX) || defined(MOZ_WIDGET_ANDROID)
   // Each time an asynchronously-drawing plugin sends a new surface to display,
   // the image in the ImageContainer is updated and InvalidateRect is called.
-  // MacIOSurfaceImages callbacks are attached here.
   // There are different side effects for (sync) Android plugins.
   nsRefPtr<ImageContainer> container;
   mInstance->GetImageContainer(getter_AddRefs(container));

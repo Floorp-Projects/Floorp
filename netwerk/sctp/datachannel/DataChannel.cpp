@@ -584,6 +584,10 @@ DataChannelConnection::CompleteConnect(TransportFlow *flow, TransportLayer::Stat
 void
 DataChannelConnection::ProcessQueuedOpens()
 {
+  // The nsDeque holds channels with an AddRef applied.  Another reference
+  // (may) be held by the DOMDataChannel, unless it's been GC'd.  No other
+  // references should exist.
+
   // Can't copy nsDeque's.  Move into temp array since any that fail will
   // go back to mPending
   nsDeque temp;
@@ -593,11 +597,15 @@ DataChannelConnection::ProcessQueuedOpens()
   }
 
   nsRefPtr<DataChannel> channel;
+  // All these entries have an AddRef(); make that explicit now via the dont_AddRef()
   while (nullptr != (channel = dont_AddRef(static_cast<DataChannel *>(temp.PopFront())))) {
     if (channel->mFlags & DATA_CHANNEL_FLAGS_FINISH_OPEN) {
       LOG(("Processing queued open for %p (%u)", channel.get(), channel->mStream));
       channel->mFlags &= ~DATA_CHANNEL_FLAGS_FINISH_OPEN;
-      OpenFinish(channel.forget()); // may reset the flag and re-push
+      // OpenFinish returns a reference itself, so we need to take it can Release it
+      channel = OpenFinish(channel.forget()); // may reset the flag and re-push
+    } else {
+      NS_ASSERTION(false, "How did a DataChannel get queued without the FINISH_OPEN flag?");
     }
   }
 
@@ -821,7 +829,7 @@ DataChannelConnection::FindChannelByStream(uint16_t streamOut)
 uint16_t
 DataChannelConnection::FindFreeStream()
 {
-  uint32_t i, limit;
+  uint32_t i, j, limit;
 
   limit = mStreams.Length();
   if (limit > MAX_NUM_STREAMS)
@@ -830,15 +838,16 @@ DataChannelConnection::FindFreeStream()
   for (i = (mAllocateEven ? 0 : 1); i < limit; i += 2) {
     if (!mStreams[i]) {
       // Verify it's not still in the process of closing
-      for (uint32_t j = 0; j < mStreamsResetting.Length(); ++j) {
+      for (j = 0; j < mStreamsResetting.Length(); ++j) {
         if (mStreamsResetting[j] == i) {
-          continue;
+          break;
         }
       }
-      break;
+      if (j = mStreamsResetting.Length())
+        break;
     }
   }
-  if (i == limit) {
+  if (i >= limit) {
     return INVALID_STREAM;
   }
   return i;
@@ -1287,7 +1296,8 @@ DataChannelConnection::HandleMessage(const void *buffer, size_t length, uint32_t
 
   switch (ppid) {
     case DATA_CHANNEL_PPID_CONTROL:
-      NS_ENSURE_TRUE_VOID(length >= sizeof(*req));
+      // structure includes a possibly-unused char label[1] (in a packed structure)
+      NS_ENSURE_TRUE_VOID(length >= sizeof(*req) - 1);
 
       req = static_cast<const struct rtcweb_datachannel_open_request *>(buffer);
       switch (req->msg_type) {
@@ -1859,7 +1869,9 @@ DataChannelConnection::Open(const nsACString& label, const nsACString& protocol,
 already_AddRefed<DataChannel>
 DataChannelConnection::OpenFinish(already_AddRefed<DataChannel> aChannel)
 {
-  nsRefPtr<DataChannel> channel(aChannel);
+  nsRefPtr<DataChannel> channel(aChannel); // takes the reference passed in
+  // Normally 1 reference if called from ::Open(), or 2 if called from
+  // ProcessQueuedOpens() unless the DOMDataChannel was gc'd
   uint16_t stream = channel->mStream;
 
   mLock.AssertCurrentThreadOwns();
@@ -1889,7 +1901,7 @@ DataChannelConnection::OpenFinish(already_AddRefed<DataChannel> aChannel)
     }
     if (stream != INVALID_STREAM) {
       // just allocated (& OPEN), or externally negotiated
-      mStreams[stream] = channel;
+      mStreams[stream] = channel; // holds a reference
       channel->mStream = stream;
     }
 
@@ -1908,6 +1920,7 @@ DataChannelConnection::OpenFinish(already_AddRefed<DataChannel> aChannel)
   } else {
     // OPEN and externally negotiated stream
     mStreams[stream] = channel;
+    mStreams[stream] = channel; // holds a reference
   }
 
 #ifdef TEST_QUEUED_DATA

@@ -8018,6 +8018,34 @@ nsGlobalWindow::AddEventListener(const nsAString& aType,
   return NS_OK;
 }
 
+void
+nsGlobalWindow::AddEventListener(const nsAString& aType,
+                                 nsIDOMEventListener* aListener,
+                                 bool aUseCapture,
+                                 const Nullable<bool>& aWantsUntrusted,
+                                 ErrorResult& aRv)
+{
+  if (IsOuterWindow() && mInnerWindow &&
+      !nsContentUtils::CanCallerAccess(mInnerWindow)) {
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
+  }
+
+  bool wantsUntrusted;
+  if (aWantsUntrusted.IsNull()) {
+    wantsUntrusted = !nsContentUtils::IsChromeDoc(mDoc);
+  } else {
+    wantsUntrusted = aWantsUntrusted.Value();
+  }
+
+  nsEventListenerManager* manager = GetListenerManager(true);
+  if (!manager) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return;
+  }
+  manager->AddEventListener(aType, aListener, aUseCapture, wantsUntrusted);
+}
+
 NS_IMETHODIMP
 nsGlobalWindow::AddSystemEventListener(const nsAString& aType,
                                        nsIDOMEventListener *aListener,
@@ -8435,7 +8463,8 @@ nsGlobalWindow::SetKeyboardIndicators(UIStateChangeType aShowAccelerators,
       oldShouldShowFocusRing != newShouldShowFocusRing &&
       mFocusedNode->IsElement()) {
     // Update mFocusedNode's state.
-    if (newShouldShowFocusRing) {
+    if (newShouldShowFocusRing &&
+        !nsFocusManager::ThemeDisplaysFocusForContent(mFocusedNode.get())) {
       mFocusedNode->AsElement()->AddStates(NS_EVENT_STATE_FOCUSRING);
     } else {
       mFocusedNode->AsElement()->RemoveStates(NS_EVENT_STATE_FOCUSRING);

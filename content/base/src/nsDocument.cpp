@@ -1852,6 +1852,13 @@ nsDocument::Init()
   mRadioGroups.Init();
   mCustomPrototypes.Init();
 
+  // If after creation the owner js global is not set for a document
+  // we use the default compartment for this document, instead of creating
+  // wrapper in some random compartment when the document is exposed to js
+  // via some events.
+  mScopeObject = do_GetWeakReference(xpc::GetNativeForGlobal(xpc::GetJunkScope()));
+  MOZ_ASSERT(mScopeObject);
+
   // Force initialization.
   nsINode::nsSlots* slots = Slots();
 
@@ -3758,7 +3765,7 @@ nsDocument::RemoveStyleSheet(nsIStyleSheet* aSheet)
   nsCOMPtr<nsIStyleSheet> sheet = aSheet; // hold ref so it won't die too soon
 
   if (!mStyleSheets.RemoveObject(aSheet)) {
-    NS_NOTREACHED("stylesheet not found");
+    NS_ASSERTION(mInUnlinkOrDeletion, "stylesheet not found");
     return;
   }
 
@@ -9323,6 +9330,13 @@ nsIDocument::CaretPositionFromPoint(float aX, float aY)
     if (textArea || (input &&
                      NS_SUCCEEDED(input->MozIsTextField(false, &isText)) &&
                      isText)) {
+      // If the anonymous content node has a child, then we need to make sure
+      // that we get the appropriate child, as otherwise the offset may not be
+      // correct when we construct a range for it.
+      nsCOMPtr<nsIContent> firstChild = anonNode->GetFirstChild();
+      if (firstChild) {
+        anonNode = firstChild;
+      }
       offset = nsContentUtils::GetAdjustedOffsetInTextControl(ptFrame, offset);
       node = nonanon;
     } else {
@@ -9332,6 +9346,9 @@ nsIDocument::CaretPositionFromPoint(float aX, float aY)
   }
 
   nsRefPtr<nsDOMCaretPosition> aCaretPos = new nsDOMCaretPosition(node, offset);
+  if (nodeIsAnonymous) {
+    aCaretPos->SetAnonymousContentNode(anonNode);
+  }
   return aCaretPos.forget();
 }
 

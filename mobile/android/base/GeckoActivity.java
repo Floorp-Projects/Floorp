@@ -4,16 +4,16 @@
 
 package org.mozilla.gecko;
 
-import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.support.v4.app.FragmentActivity;
 
 interface GeckoActivityStatus {
     public boolean isGeckoActivityOpened();
     public boolean isFinishing();  // typically from android.app.Activity
 };
 
-public class GeckoActivity extends Activity implements GeckoActivityStatus {
+public class GeckoActivity extends FragmentActivity implements GeckoActivityStatus {
     // has this activity recently started another Gecko activity?
     private boolean mGeckoActivityOpened = false;
 
