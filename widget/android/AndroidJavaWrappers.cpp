@@ -697,8 +697,7 @@ AndroidGeckoEvent::MakeTouchEvent(nsIWidget* widget)
     int startIndex = 0;
     int endIndex = Count();
 
-    int action = Action() & AndroidMotionEvent::ACTION_MASK;
-    switch (action) {
+    switch (Action()) {
         case AndroidMotionEvent::ACTION_DOWN:
         case AndroidMotionEvent::ACTION_POINTER_DOWN: {
             type = NS_TOUCH_START;
