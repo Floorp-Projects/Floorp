@@ -46,13 +46,6 @@ enum ImageFormat {
   CAIRO_SURFACE,
 
   /**
-   * The MAC_IO_SURFACE format creates a MacIOSurfaceImage.
-   *
-   * It wraps an IOSurface object and binds it directly to a GL texture.
-   */
-  MAC_IO_SURFACE,
-
-  /**
    * The GONK_IO_SURFACE format creates a GonkIOSurfaceImage.
    *
    * It wraps an GraphicBuffer object and binds it directly to a GL texture.

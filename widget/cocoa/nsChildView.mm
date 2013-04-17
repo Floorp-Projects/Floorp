@@ -51,8 +51,9 @@
 #include "nsRegion.h"
 #include "Layers.h"
 #include "LayerManagerOGL.h"
-#include "GLTextureImage.h"
 #include "LayerManagerComposite.h"
+#include "GLTextureImage.h"
+#include "mozilla/layers/GLManager.h"
 #include "mozilla/layers/CompositorCocoaWidgetHelper.h"
 #include "mozilla/layers/CompositorOGL.h"
 #ifdef ACCESSIBILITY
@@ -1865,7 +1866,7 @@ nsChildView::DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect)
     return;
   }
 
-  LayerManagerOGL *manager = static_cast<LayerManagerOGL *>(aManager);
+  nsAutoPtr<GLManager> manager(GLManager::CreateGLManager(aManager));
   MaybeDrawResizeIndicator(manager, aRect);
   MaybeDrawRoundedBottomCorners(manager, aRect);
 }
@@ -1904,7 +1905,7 @@ DrawResizer(CGContextRef aCtx)
 }
 
 void
-nsChildView::MaybeDrawResizeIndicator(LayerManagerOGL* aManager, nsIntRect aRect)
+nsChildView::MaybeDrawResizeIndicator(GLManager* aManager, nsIntRect aRect)
 {
   nsIntRect resizeRect;
   if (!ShowsResizeIndicator(&resizeRect) || mFailedResizerImage) {
@@ -1914,9 +1915,9 @@ nsChildView::MaybeDrawResizeIndicator(LayerManagerOGL* aManager, nsIntRect aRect
   if (!mResizerImage) {
     mResizerImage =
       aManager->gl()->CreateTextureImage(nsIntSize(resizeRect.width, resizeRect.height),
-                                        gfxASurface::CONTENT_COLOR_ALPHA,
-                                        LOCAL_GL_CLAMP_TO_EDGE,
-                                        TextureImage::UseNearestFilter);
+                                         gfxASurface::CONTENT_COLOR_ALPHA,
+                                         LOCAL_GL_CLAMP_TO_EDGE,
+                                         TextureImage::UseNearestFilter);
 
     // Creation of texture images can fail.
     if (!mResizerImage)
@@ -1953,7 +1954,7 @@ nsChildView::MaybeDrawResizeIndicator(LayerManagerOGL* aManager, nsIntRect aRect
   TextureImage::ScopedBindTexture texBind(mResizerImage, LOCAL_GL_TEXTURE0);
 
   ShaderProgramOGL *program =
-    aManager->GetProgram(mResizerImage->GetShaderProgramType(), nullptr);
+    aManager->GetProgram(mResizerImage->GetShaderProgramType());
   program->Activate();
   program->SetLayerQuadRect(nsIntRect(bottomX - resizeIndicatorWidth,
                                       bottomY - resizeIndicatorHeight,
@@ -1975,7 +1976,7 @@ DrawTopLeftCornerMask(CGContextRef aCtx, int aRadius)
 }
 
 void
-nsChildView::MaybeDrawRoundedBottomCorners(LayerManagerOGL* aManager, nsIntRect aRect)
+nsChildView::MaybeDrawRoundedBottomCorners(GLManager* aManager, nsIntRect aRect)
 {
   if (![mView isKindOfClass:[ChildView class]] ||
       ![(ChildView*)mView hasRoundedBottomCorners] ||
@@ -2023,7 +2024,7 @@ nsChildView::MaybeDrawRoundedBottomCorners(LayerManagerOGL* aManager, nsIntRect 
   
   TextureImage::ScopedBindTexture texBind(mCornerMaskImage, LOCAL_GL_TEXTURE0);
   
-  ShaderProgramOGL *program = aManager->GetProgram(mCornerMaskImage->GetShaderProgramType(), nullptr);
+  ShaderProgramOGL *program = aManager->GetProgram(mCornerMaskImage->GetShaderProgramType());
   program->Activate();
   program->SetLayerQuadRect(nsIntRect(0, 0, // aRect.x, aRect.y,
                                       devPixelCornerRadius,

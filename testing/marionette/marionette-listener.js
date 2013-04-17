@@ -719,19 +719,11 @@ function coordinates(target, x0, y0, x1, y1) {
  * This function returns if the element is in viewport 
  */
 function elementInViewport(el) {
-  let top = el.offsetTop;
-  let left = el.offsetLeft;
-  let width = el.offsetWidth;
-  let height = el.offsetHeight;
-  while(el.offsetParent) {
-    el = el.offsetParent;
-    top += el.offsetTop;
-    left += el.offsetLeft;
-  }
-  return (top >= curWindow.pageYOffset &&
-          left >= curWindow.pageXOffset &&
-          (top + height) <= (curWindow.pageYOffset + curWindow.innerHeight) &&
-          (left + width) <= (curWindow.pageXOffset + curWindow.innerWidth)
+  let rect = el.getBoundingClientRect();
+  return (rect.top >= curWindow.pageYOffset &&
+          rect.left >= curWindow.pageXOffset &&
+          rect.bottom <= (curWindow.pageYOffset + curWindow.innerHeight) &&
+          rect.right <= (curWindow.pageXOffset + curWindow.innerWidth)
          );
 }
 

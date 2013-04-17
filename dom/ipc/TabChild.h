@@ -113,6 +113,7 @@ public:
     return nsDOMEventTargetHelper::AddEventListener(aType, aListener,
                                                     aUseCapture, false, 2);
   }
+  using nsDOMEventTargetHelper::AddEventListener;
   NS_IMETHOD AddEventListener(const nsAString& aType,
                               nsIDOMEventListener* aListener,
                               bool aUseCapture, bool aWantsUntrusted,

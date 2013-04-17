@@ -147,7 +147,6 @@ static bool getAuthInfo(NPObject* npobj, const NPVariant* args, uint32_t argCoun
 static bool asyncCallbackTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool checkGCRace(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool hangPlugin(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
-static bool stallPlugin(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getClipboardText(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool callOnDestroy(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool reinitWidget(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
@@ -211,7 +210,6 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "asyncCallbackTest",
   "checkGCRace",
   "hang",
-  "stall",
   "getClipboardText",
   "callOnDestroy",
   "reinitWidget",
@@ -276,7 +274,6 @@ static const ScriptableFunction sPluginMethodFunctions[] = {
   asyncCallbackTest,
   checkGCRace,
   hangPlugin,
-  stallPlugin,
   getClipboardText,
   callOnDestroy,
   reinitWidget,
@@ -3314,24 +3311,6 @@ hangPlugin(NPObject* npobj, const NPVariant* args, uint32_t argCount,
   // thus the hang detection/handling didn't work correctly.  The
   // test harness will succeed in calling this function, and the
   // test will fail.
-  return true;
-}
-
-bool
-stallPlugin(NPObject* npobj, const NPVariant* args, uint32_t argCount,
-           NPVariant* result)
-{
-  uint32_t stallTimeSeconds = 0;
-  if ((argCount == 1) && NPVARIANT_IS_INT32(args[0])) {
-    stallTimeSeconds = (uint32_t) NPVARIANT_TO_INT32(args[0]);
-  }
-
-#ifdef XP_WIN
-  Sleep(stallTimeSeconds * 1000U);
-#else
-  sleep(stallTimeSeconds);
-#endif
-
   return true;
 }
 

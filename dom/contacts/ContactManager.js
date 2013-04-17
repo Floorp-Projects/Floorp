@@ -20,9 +20,15 @@ XPCOMUtils.defineLazyGetter(Services, "DOMRequest", function() {
   return Cc["@mozilla.org/dom/dom-request-service;1"].getService(Ci.nsIDOMRequestService);
 });
 
+XPCOMUtils.defineLazyServiceGetter(this, "pm",
+                                   "@mozilla.org/permissionmanager;1",
+                                   "nsIPermissionManager");
+
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
                                    "nsIMessageSender");
+
+const CONTACTS_SENDMORE_MINIMUM = 5;
 
 function stringOrBust(aObj) {
   if (typeof aObj != "string") {
@@ -559,6 +565,15 @@ ContactManager.prototype = {
         access = "unknown";
       }
 
+    // Shortcut for ALLOW_ACTION so we avoid a parent roundtrip
+    let type = "contacts-" + access;
+    let permValue =
+      pm.testExactPermissionFromPrincipal(this._window.document.nodePrincipal, type);
+    if (permValue == Ci.nsIPermissionManager.ALLOW_ACTION) {
+      aAllowCallback();
+      return;
+    }
+
     let requestID = this.getRequestId({
       request: aRequest,
       allow: function() {
@@ -684,6 +699,9 @@ ContactManager.prototype = {
       if (DEBUG) debug("contact in cache");
       let contact = data.cachedContacts.shift();
       this.nextTick(this._fireSuccessOrDone.bind(this, data.cursor, contact));
+      if (data.cachedContacts.length < CONTACTS_SENDMORE_MINIMUM) {
+        cpmm.sendAsyncMessage("Contacts:GetAll:SendNow", { cursorId: aCursorId });
+      }
     } else {
       if (DEBUG) debug("waiting for contact");
       data.waitingForNext = true;
