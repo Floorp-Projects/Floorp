@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  document.documentElement.offsetHeight;
+
+  var x = document.getElementById('x');
+  x.removeChild(x.childNodes[1]);
+
+  document.documentElement.offsetHeight;
+}
+
+</script>
+</head>
+<body onload="boom();">
+
+<div style="-moz-column-count: 2;"><span style="unicode-bidi: -moz-isolate;" id="x"><span style="direction: rtl;"></span> <span style="unicode-bidi: -moz-isolate; white-space: pre;">
+x</span></span></div>
+
+</body>
+</html>
