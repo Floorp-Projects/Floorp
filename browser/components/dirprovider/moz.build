@@ -8,3 +8,7 @@ TEST_DIRS += ['tests']
 
 MODULE = 'browserdir'
 
+EXPORTS.mozilla.browser += [
+    'DirectoryProvider.h',
+]
+

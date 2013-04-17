@@ -10,11 +10,5 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORTS		= \
-		nsView.h \
-		nsViewManager.h \
-		nsIScrollPositionListener.h \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

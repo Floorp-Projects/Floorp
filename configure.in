@@ -5255,15 +5255,7 @@ dnl --enable-webrtc to override.  Can disable for everything in
 dnl the master list above.
 if test -n "$MOZ_WEBRTC"; then
     case "$target" in
-    *-android*|*-linuxandroid*)
-        if test -n "$MOZ_B2G"; then
-            MOZ_WEBRTC=1
-        else
-            dnl Make sure doesn't get matched by *-linux*
-            MOZ_WEBRTC=
-        fi
-        ;;
-    *-linux*|*-mingw*|*-darwin*)
+    *-linux*|*-mingw*|*-darwin*|*-android*|*-linuxandroid*)
         dnl Leave enabled
         ;;
     *)
@@ -5315,21 +5307,6 @@ if test -n "$MOZ_WEBRTC"; then
     MOZ_VP8=1
     MOZ_VP8_ENCODER=1
     MOZ_VP8_ERROR_CONCEALMENT=1
-
-    if test "$MOZ_WIDGET_TOOLKIT" != "gonk"; then
-       dnl OpenSLES is only available in Android 2.3 and later; we'll change this
-       dnl hard dependency to a dynamic load with graceful runtime failure before
-       dnl we make --enable-webrtc on by default in Android (bug 815905)
-       dnl
-       if test "$OS_TARGET" = "Android"; then
-          LDFLAGS="$LDFLAGS -lOpenSLES"
-       fi
-       case "$target" in
-          *-android*|*-linuxandroid*)
-          LDFLAGS="$LDFLAGS -lOpenSLES"
-          ;;
-       esac
-    fi
 
 dnl enable once Signaling lands
     MOZ_WEBRTC_SIGNALING=1

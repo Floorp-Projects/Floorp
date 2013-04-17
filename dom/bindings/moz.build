@@ -6,3 +6,25 @@
 
 MODULE = 'dom'
 
+EXPORTS.mozilla += [
+    'ErrorResult.h',
+]
+
+EXPORTS.mozilla.dom += [
+    'BindingDeclarations.h',
+    'BindingUtils.h',
+    'CallbackFunction.h',
+    'CallbackInterface.h',
+    'CallbackObject.h',
+    'DOMJSClass.h',
+    'DOMJSProxyHandler.h',
+    'Errors.msg',
+    'NonRefcountedDOMObject.h',
+    'Nullable.h',
+    'PrimitiveConversions.h',
+    'PrototypeList.h',
+    'RegisterBindings.h',
+    'TypedArray.h',
+    'UnionConversions.h',
+    'UnionTypes.h',
+]

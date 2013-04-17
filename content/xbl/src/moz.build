@@ -6,3 +6,9 @@
 
 MODULE = 'content'
 
+EXPORTS += [
+    'nsBindingManager.h',
+    'nsXBLBinding.h',
+    'nsXBLService.h',
+]
+

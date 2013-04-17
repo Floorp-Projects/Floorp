@@ -6,3 +6,27 @@
 
 MODULE = 'mozalloc'
 
+EXPORTS.mozilla += [
+    'fallible.h',
+    'mozalloc.h',
+    'mozalloc_abort.h',
+    'mozalloc_macro_wrappers.h',
+    'mozalloc_oom.h',
+    'mozalloc_undef_macro_wrappers.h',
+]
+
+if CONFIG['MOZ_MSVC_STL_WRAP__RAISE'] or CONFIG['MOZ_MSVC_STL_WRAP__Throw']:
+    build_msvc_wrappers = 1
+else:
+    build_msvc_wrappers = 0
+
+if CONFIG['WRAP_STL_INCLUDES']:
+    if CONFIG['GNU_CXX']:
+        EXPORTS.mozilla += ['throw_gcc.h']
+    elif CONFIG['_MSC_VER']:
+        if build_msvc_wrappers:
+            EXPORTS.mozilla += [
+                'msvc_raise_wrappers.h',
+                'msvc_throw_wrapper.h',
+                'throw_msvc.h',
+            ]

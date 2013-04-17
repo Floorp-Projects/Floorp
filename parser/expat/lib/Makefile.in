@@ -17,10 +17,6 @@ CSRCS		= \
 		xmltok.c \
 		$(NULL)
 
-EXPORTS		= \
-		expat.h \
-		expat_external.h
-
 # We want only the static lib, not the shared lib
 FORCE_STATIC_LIB = 1
 

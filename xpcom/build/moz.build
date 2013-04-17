@@ -6,3 +6,21 @@
 
 MODULE = 'xpcom'
 
+EXPORTS += [
+    'nsXPCOMCIDInternal.h',
+    'nsXREAppData.h',
+    'nsXULAppAPI.h',
+    'xrecore.h',
+]
+
+EXPORTS.mozilla += [
+    'FileLocation.h',
+    'Omnijar.h',
+    'ServiceList.h',
+    'Services.h',
+    'XPCOM.h',
+    'mozPoisonWrite.h',
+]
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    EXPORTS.mozilla += ['perfprobe.h']

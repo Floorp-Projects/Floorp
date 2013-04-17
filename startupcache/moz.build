@@ -13,3 +13,8 @@ XPIDL_SOURCES += [
 
 MODULE = 'startupcache'
 
+EXPORTS.mozilla.scache += [
+    'StartupCache.h',
+    'StartupCacheUtils.h',
+]
+

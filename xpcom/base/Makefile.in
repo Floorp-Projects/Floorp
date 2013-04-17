@@ -55,34 +55,6 @@ CSRCS = \
 		nsErrorAssertsC.c \
 		$(NULL)
 
-EXPORTS		= \
-		nsAgg.h \
-		nsAutoRef.h \
-		nsCom.h \
-		nsDebugImpl.h \
-		nsIAllocator.h \
-		nsIID.h \
-		nsISizeOf.h \
-		nsISupportsObsolete.h \
-		nsStackWalk.h \
-		nsTraceRefcntImpl.h \
-		nsWeakPtr.h \
-		nsInterfaceRequestorAgg.h \
-		nsGZFileWriter.h \
-		$(NULL)
-
-EXPORTS_NAMESPACES = mozilla
-
-EXPORTS_mozilla = \
-	MapsMemoryReporter.h \
-	nsMemoryInfoDumper.h \
-	ClearOnShutdown.h \
-	StaticPtr.h \
-	AvailableMemoryTracker.h \
-	StackWalk.h \
-	VisualEventTracer.h \
-	$(NULL)
-
 ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
 CPPSRCS += nsCrashOnException.cpp
 endif
@@ -91,7 +63,6 @@ ifeq ($(OS_ARCH),WINNT)
 
 ifdef MOZ_DEBUG
 CSRCS		+= pure_api.c
-EXPORTS		+= pure.h
 endif
 
 endif #if OS_ARCH == WINNT

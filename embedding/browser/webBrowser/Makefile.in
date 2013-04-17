@@ -15,10 +15,6 @@ LIBXUL_LIBRARY	= 1
 
 
 
-EXPORTS         = \
-                nsCTooltipTextProvider.h \
-                $(NULL)
-
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../../content/base/src \
 		-I$(srcdir)/../../../content/svg/content/src \

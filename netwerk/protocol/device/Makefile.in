@@ -23,13 +23,6 @@ ifeq (android,$(MOZ_WIDGET_TOOLKIT))
 CPPSRCS += AndroidCaptureProvider.cpp \
            CameraStreamImpl.cpp \
            $(NULL)
-
-EXPORTS_NAMESPACES = mozilla/net
-
-EXPORTS_mozilla/net += \
-  CameraStreamImpl.h  \
-  $(NULL)
-
 endif
 
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))

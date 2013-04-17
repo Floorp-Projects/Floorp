@@ -6,3 +6,11 @@
 
 MODULE = 'graphite2'
 
+# This should contain all of the _PUBLIC_HEADERS from files.mk
+EXPORTS.graphite2 += [
+    '../include/graphite2/Font.h',
+    '../include/graphite2/Log.h',
+    '../include/graphite2/Segment.h',
+    '../include/graphite2/Types.h',
+]
+

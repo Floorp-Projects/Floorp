@@ -148,15 +148,6 @@ ifeq (1,$(LIBJPEG_TURBO_X86_ASM))
 	$(NULL)
 endif
 
-EXPORTS	= \
-	jconfig.h \
-	jerror.h \
-	jinclude.h \
-	jmorecfg.h \
-	jpegint.h \
-	jpeglib.h \
-	$(NULL)
-
 # need static lib for some of the libimg componentry to link properly
 FORCE_STATIC_LIB = 1
 

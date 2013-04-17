@@ -10,11 +10,5 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORTS		= \
-		nsILineBreaker.h \
-		nsIWordBreaker.h \
-		nsLWBrkCIID.h \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

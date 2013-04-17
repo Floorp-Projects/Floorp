@@ -88,12 +88,12 @@ nsresult nsUniversalDetector::HandleData(const char* aBuf, uint32_t aLen)
         case '\xFE':
           if ('\xFF' == aBuf[1])
             // FE FF  UTF-16, big endian BOM
-            mDetectedCharset = "UTF-16";
+            mDetectedCharset = "UTF-16BE";
         break;
         case '\xFF':
           if ('\xFE' == aBuf[1])
             // FF FE  UTF-16, little endian BOM
-            mDetectedCharset = "UTF-16";
+            mDetectedCharset = "UTF-16LE";
         break;
       }  // switch
 

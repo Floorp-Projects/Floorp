@@ -6,3 +6,34 @@
 
 MODULE = 'accessibility'
 
+# Please keep this list in sync with the Makefile.in until the rest of that file
+# is ported over.
+midl_interfaces = [
+    'Accessible2',
+    'AccessibleAction',
+    'AccessibleApplication',
+    'AccessibleComponent',
+    'AccessibleEditableText',
+    'AccessibleHyperlink',
+    'AccessibleHypertext',
+    'AccessibleImage',
+    'AccessibleRelation',
+    'AccessibleTable',
+    'AccessibleTable2',
+    'AccessibleTableCell',
+    'AccessibleText',
+    'AccessibleValue',
+]
+
+# Please keep this list in sync with the Makefile.in until the rest of that file
+# is ported over.
+midl_enums = [
+    'AccessibleEventId',
+    'AccessibleRole',
+    'AccessibleStates',
+    'IA2CommonTypes',
+]
+
+EXPORTS += [x + '.h' for x in midl_enums]
+EXPORTS += [x + '.h' for x in midl_interfaces]
+EXPORTS += [x + '_i.c' for x in midl_interfaces]

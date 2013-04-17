@@ -6,3 +6,7 @@
 
 MODULE = 'toolkitcomps'
 
+EXPORTS += [
+    'nsToolkitCompsCID.h',
+]
+

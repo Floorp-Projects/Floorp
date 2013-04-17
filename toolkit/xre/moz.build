@@ -17,3 +17,12 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 
 MODULE = 'xulapp'
 
+if CONFIG['MOZ_INSTRUMENT_EVENT_LOOP']:
+    EXPORTS += ['EventTracer.h']
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    EXPORTS += ['nsWindowsDllInterceptor.h']
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    EXPORTS += ['MacQuirks.h']
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
+    EXPORTS += ['nsQAppInstance.h']

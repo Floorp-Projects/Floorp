@@ -9,13 +9,4 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORTS_NAMESPACES = theora
-
-EXPORTS_theora = \
-		theora.h \
-		theoradec.h \
-		theoraenc.h \
-		codec.h \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk

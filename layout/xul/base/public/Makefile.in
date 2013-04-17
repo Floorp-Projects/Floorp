@@ -11,11 +11,5 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 
-EXPORTS		= \
-		nsPIBoxObject.h \
-		nsIScrollbarMediator.h \
-		nsXULPopupManager.h \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

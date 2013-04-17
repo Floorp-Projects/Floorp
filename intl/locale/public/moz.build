@@ -6,3 +6,16 @@
 
 MODULE = 'locale'
 
+EXPORTS += [
+    'nsCharsetAlias.h',
+    'nsCollationCID.h',
+    'nsDateTimeFormatCID.h',
+    'nsIDateTimeFormat.h',
+    'nsILanguageAtomService.h',
+    'nsIOS2Locale.h',
+    'nsIPlatformCharset.h',
+    'nsLocaleCID.h',
+    'nsPosixLocale.h',
+    'nsWin32Locale.h',
+]
+

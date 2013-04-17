@@ -10,3 +10,27 @@ TEST_TOOL_DIRS += ['compiledtest']
 
 MODULE = 'content'
 
+EXPORTS += [
+    'AudioParamTimeline.h',
+    'MediaBufferDecoder.h',
+    'ThreeDPoint.h',
+    'WebAudioUtils.h',
+]
+
+EXPORTS.mozilla.dom += [
+    'AnalyserNode.h',
+    'AudioBuffer.h',
+    'AudioBufferSourceNode.h',
+    'AudioContext.h',
+    'AudioDestinationNode.h',
+    'AudioListener.h',
+    'AudioNode.h',
+    'AudioParam.h',
+    'BiquadFilterNode.h',
+    'DelayNode.h',
+    'DynamicsCompressorNode.h',
+    'EnableWebAudioCheck.h',
+    'GainNode.h',
+    'PannerNode.h',
+]
+
