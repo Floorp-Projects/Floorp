@@ -418,16 +418,11 @@ MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
 }
 
 void
-MacroAssembler::newGCThing(const Register &result,
-                           JSObject *templateObject, Label *fail)
+MacroAssembler::newGCThing(const Register &result, gc::AllocKind allocKind, Label *fail)
 {
     // Inlined equivalent of js::gc::NewGCThing() without failure case handling.
 
-    gc::AllocKind allocKind = templateObject->tenuredGetAllocKind();
-    JS_ASSERT(allocKind >= gc::FINALIZE_OBJECT0 && allocKind <= gc::FINALIZE_OBJECT_LAST);
-    int thingSize = (int)gc::Arena::thingSize(allocKind);
-
-    JS_ASSERT(!templateObject->hasDynamicElements());
+    int thingSize = int(gc::Arena::thingSize(allocKind));
 
     Zone *zone = GetIonContext()->compartment->zone();
 
@@ -450,6 +445,22 @@ MacroAssembler::newGCThing(const Register &result,
     addPtr(Imm32(thingSize), result);
     storePtr(result, AbsoluteAddress(&list->first));
     subPtr(Imm32(thingSize), result);
+}
+
+void
+MacroAssembler::newGCThing(const Register &result, JSObject *templateObject, Label *fail)
+{
+    gc::AllocKind allocKind = templateObject->tenuredGetAllocKind();
+    JS_ASSERT(allocKind >= gc::FINALIZE_OBJECT0 && allocKind <= gc::FINALIZE_OBJECT_LAST);
+    JS_ASSERT(!templateObject->hasDynamicElements());
+
+    newGCThing(result, allocKind, fail);
+}
+
+void
+MacroAssembler::newGCString(const Register &result, Label *fail)
+{
+    newGCThing(result, js::gc::FINALIZE_STRING, fail);
 }
 
 void

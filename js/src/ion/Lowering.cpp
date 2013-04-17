@@ -1265,9 +1265,10 @@ LIRGenerator::visitConcat(MConcat *ins)
 
     JS_ASSERT(lhs->type() == MIRType_String);
     JS_ASSERT(rhs->type() == MIRType_String);
+    JS_ASSERT(ins->type() == MIRType_String);
 
-    LConcat *lir = new LConcat(useRegisterAtStart(lhs), useRegisterAtStart(rhs));
-    if (!defineReturn(lir, ins))
+    LConcat *lir = new LConcat(useRegister(lhs), useRegister(rhs), temp());
+    if (!define(lir, ins))
         return false;
     return assignSafepoint(lir, ins);
 }
