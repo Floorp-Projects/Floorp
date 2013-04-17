@@ -171,7 +171,6 @@ libs-%: $(libs-preqs)
 # Tailored target to just add the chrome processing for multi-locale builds
 chrome-%:
 	$(display-deps)
-	@$(MAKE) -C $(DEPTH)/toolkit/locales chrome-$*
 	@$(MAKE) -B $(bookmarks) AB_CD=$*
 	@$(MAKE) -B searchplugins AB_CD=$*
 	@$(MAKE) chrome AB_CD=$*
