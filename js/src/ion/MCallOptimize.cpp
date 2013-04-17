@@ -1027,9 +1027,9 @@ IonBuilder::inlineUnsafeSetTypedArrayElement(CallInfo &callInfo,
     // - arr is a typed array
     // - idx < length
 
-    uint32_t arri = base + 1;
-    uint32_t idxi = base + 2;
-    uint32_t elemi = base + 3;
+    uint32_t arri = base + 0;
+    uint32_t idxi = base + 1;
+    uint32_t elemi = base + 2;
 
     MInstruction *elements = getTypedArrayElements(callInfo.getArg(arri));
     current->add(elements);
