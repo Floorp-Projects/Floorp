@@ -3,7 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource:///modules/MigrationUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Task",
+                                  "resource://gre/modules/Task.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "BookmarkJSONUtils",
+                                  "resource://gre/modules/BookmarkJSONUtils.jsm");
 
 var PlacesOrganizer = {
   _places: null,
@@ -441,12 +446,13 @@ var PlacesOrganizer = {
                          PlacesUIUtils.getString("bookmarksRestoreAlert")))
       return;
 
-    try {
-      PlacesUtils.restoreBookmarksFromJSONFile(aFile);
-    }
-    catch(ex) {
-      this._showErrorAlert(PlacesUIUtils.getString("bookmarksRestoreParseError"));
-    }
+    Task.spawn(function() {
+      try {
+        yield BookmarkJSONUtils.importFromFile(aFile, true);
+      } catch(ex) {
+        PlacesOrganizer._showErrorAlert(PlacesUIUtils.getString("bookmarksRestoreParseError"));
+      }
+    });
   },
 
   _showErrorAlert: function PO__showErrorAlert(aMsg) {
