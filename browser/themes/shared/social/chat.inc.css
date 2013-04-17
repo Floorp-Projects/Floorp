@@ -128,15 +128,8 @@ chatbar {
 }
 
 chatbox {
-  height: 285px;
-  width: 260px;
   -moz-margin-start: 4px;
   background-color: white;
   border: 1px solid #ccc;
   border-bottom: none;
-}
-
-chatbox[minimized="true"] {
-  width: 160px;
-  height: 20px;
 }
