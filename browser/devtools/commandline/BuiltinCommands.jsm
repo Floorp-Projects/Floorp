@@ -48,6 +48,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
   gcli.addCommand({
     name: "addon list",
     description: gcli.lookup("addonListDesc"),
+    returnType: "addonsInfo",
     params: [{
       name: 'type',
       type: {
@@ -55,70 +56,78 @@ XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
         data: ["dictionary", "extension", "locale", "plugin", "theme", "all"]
       },
       defaultValue: 'all',
-      description: gcli.lookup("addonListTypeDesc"),
+      description: gcli.lookup("addonListTypeDesc")
     }],
     exec: function(aArgs, context) {
-      function representEnabledAddon(aAddon) {
-        return "<li><![CDATA[" + aAddon.name + "\u2002" + aAddon.version +
-        getAddonStatus(aAddon) + "]]></li>";
+      let deferred = context.defer();
+      function pendingOperations(aAddon) {
+        let allOperations = ["PENDING_ENABLE",
+                             "PENDING_DISABLE",
+                             "PENDING_UNINSTALL",
+                             "PENDING_INSTALL",
+                             "PENDING_UPGRADE"];
+        return allOperations.reduce(function(operations, opName) {
+          return aAddon.pendingOperations & AddonManager[opName] ?
+            operations.concat(opName) :
+            operations;
+        }, []);
+      }
+      let types = aArgs.type === "all" ? null : [aArgs.type];
+      AddonManager.getAddonsByTypes(types, function(addons) {
+        deferred.resolve({
+          addons: addons.map(function(addon) {
+            return {
+              name: addon.name,
+              version: addon.version,
+              isActive: addon.isActive,
+              pendingOperations: pendingOperations(addon)
+            };
+          }),
+          type: aArgs.type
+        });
+      });
+      return deferred.promise;
+    }
+  });
+
+  gcli.addConverter({
+    from: "addonsInfo",
+    to: "view",
+    exec: function(addonsInfo, context) {
+      if (!addonsInfo.addons.length) {
+        return context.createView({
+          html: "<p>${message}</p>",
+          data: { message: gcli.lookup("addonNoneOfType") }
+        });
       }
 
-      function representDisabledAddon(aAddon) {
-        return "<li class=\"gcli-addon-disabled\">" +
-          "<![CDATA[" + aAddon.name + "\u2002" + aAddon.version + aAddon.version +
-          "]]></li>";
+      let headerLookups = {
+        "dictionary": "addonListDictionaryHeading",
+        "extension": "addonListExtensionHeading",
+        "locale": "addonListLocaleHeading",
+        "plugin": "addonListPluginHeading",
+        "theme": "addonListThemeHeading",
+        "all": "addonListAllHeading"
+      };
+      let header = gcli.lookup(headerLookups[addonsInfo.type] ||
+                               "addonListUnknownHeading");
+
+      let operationLookups = {
+        "PENDING_ENABLE": "addonPendingEnable",
+        "PENDING_DISABLE": "addonPendingDisable",
+        "PENDING_UNINSTALL": "addonPendingUninstall",
+        "PENDING_INSTALL": "addonPendingInstall",
+        "PENDING_UPGRADE": "addonPendingUpgrade"
+      };
+      function lookupOperation(opName) {
+        let lookupName = operationLookups[opName];
+        return lookupName ? gcli.lookup(lookupName) : opName;
       }
 
-      function getAddonStatus(aAddon) {
-        let operations = [];
-
-        if (aAddon.pendingOperations & AddonManager.PENDING_ENABLE) {
-          operations.push("PENDING_ENABLE");
-        }
-
-        if (aAddon.pendingOperations & AddonManager.PENDING_DISABLE) {
-          operations.push("PENDING_DISABLE");
-        }
-
-        if (aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL) {
-          operations.push("PENDING_UNINSTALL");
-        }
-
-        if (aAddon.pendingOperations & AddonManager.PENDING_INSTALL) {
-          operations.push("PENDING_INSTALL");
-        }
-
-        if (aAddon.pendingOperations & AddonManager.PENDING_UPGRADE) {
-          operations.push("PENDING_UPGRADE");
-        }
-
-        if (operations.length) {
-          return " (" + operations.join(", ") + ")";
-        }
-        return "";
-      }
-
-      /**
-      * Compares two addons by their name. Used in sorting.
-      */
-      function compareAddonNames(aNameA, aNameB) {
-        return String.localeCompare(aNameA.name, aNameB.name);
-      }
-
-      /**
-      * Resolves the promise which is the scope (this) of this function, filling
-      * it with an HTML representation of the passed add-ons.
-      */
-      function list(aType, aAddons) {
-        if (!aAddons.length) {
-          this.resolve(gcli.lookup("addonNoneOfType"));
-        }
-
-        // Separate the enabled add-ons from the disabled ones.
+      function arrangeAddons(addons) {
         let enabledAddons = [];
         let disabledAddons = [];
-
-        aAddons.forEach(function(aAddon) {
+        addons.forEach(function(aAddon) {
           if (aAddon.isActive) {
             enabledAddons.push(aAddon);
           } else {
@@ -126,47 +135,67 @@ XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
           }
         });
 
-        let header;
-        switch(aType) {
-          case "dictionary":
-            header = gcli.lookup("addonListDictionaryHeading");
-            break;
-          case "extension":
-            header = gcli.lookup("addonListExtensionHeading");
-            break;
-          case "locale":
-            header = gcli.lookup("addonListLocaleHeading");
-            break;
-          case "plugin":
-            header = gcli.lookup("addonListPluginHeading");
-            break;
-          case "theme":
-            header = gcli.lookup("addonListThemeHeading");
-          case "all":
-            header = gcli.lookup("addonListAllHeading");
-            break;
-          default:
-            header = gcli.lookup("addonListUnknownHeading");
+        function compareAddonNames(aNameA, aNameB) {
+          return String.localeCompare(aNameA.name, aNameB.name);
         }
+        enabledAddons.sort(compareAddonNames);
+        disabledAddons.sort(compareAddonNames);
 
-        // Map and sort the add-ons, and create an HTML list.
-        let message = header +
-                      "<ol>" +
-                      enabledAddons.sort(compareAddonNames).map(representEnabledAddon).join("") +
-                      disabledAddons.sort(compareAddonNames).map(representDisabledAddon).join("") +
-                      "</ol>";
-
-        this.resolve(context.createView({ html: message }));
+        return enabledAddons.concat(disabledAddons);
       }
 
-      // Create the promise that will be resolved when the add-on listing has
-      // been finished.
-      let deferred = context.defer();
-      let types = aArgs.type == "all" ? null : [aArgs.type];
-      AddonManager.getAddonsByTypes(types, list.bind(deferred, aArgs.type));
-      return deferred.promise;
+      function isActiveForToggle(addon) {
+        return (addon.isActive && ~~addon.pendingOperations.indexOf("PENDING_DISABLE"));
+      }
+
+      return context.createView({
+        html: addonsListHtml,
+        data: {
+          header: header,
+          addons: arrangeAddons(addonsInfo.addons).map(function(addon) {
+            return {
+              name: addon.name,
+              label: addon.name.replace(/\s/g, "_") +
+                    (addon.version ? "_" + addon.version : ""),
+              status: addon.isActive ? "enabled" : "disabled",
+              version: addon.version,
+              pendingOperations: addon.pendingOperations.length ?
+                (" (" + gcli.lookup("addonPending") + ": "
+                 + addon.pendingOperations.map(lookupOperation).join(", ")
+                 + ")") :
+                "",
+              toggleActionName: isActiveForToggle(addon) ? "disable": "enable",
+              toggleActionMessage: isActiveForToggle(addon) ?
+                gcli.lookup("addonListOutDisable") :
+                gcli.lookup("addonListOutEnable")
+            };
+          }),
+          onclick: createUpdateHandler(context),
+          ondblclick: createExecuteHandler(context)
+        }
+      });
     }
   });
+
+  var addonsListHtml = "" +
+        "<table>" +
+        " <caption>${header}</caption>" +
+        " <tbody>" +
+        "  <tr foreach='addon in ${addons}'" +
+        "      class=\"gcli-addon-${addon.status}\">" +
+        "    <td>${addon.name} ${addon.version}</td>" +
+        "    <td>${addon.pendingOperations}</td>" +
+        "    <td>" +
+        "      <span class='gcli-out-shortcut'" +
+        "            data-command='addon ${addon.toggleActionName} ${addon.label}'" +
+        "       onclick='${onclick}'" +
+        "       ondblclick='${ondblclick}'" +
+        "      >${addon.toggleActionMessage}</span>" +
+        "    </td>" +
+        "  </tr>" +
+        " </tbody>" +
+        "</table>" +
+        "";
 
   // We need a list of addon names for the enable and disable commands. Because
   // getting the name list is async we do not add the commands until we have the
@@ -310,6 +339,57 @@ XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
     module.CmdAddonFlags.addonsLoaded = true;
     Services.obs.notifyObservers(null, "gcli_addon_commands_ready", null);
   });
+
+  /**
+   * Helper to find the 'data-command' attribute and call some action on it.
+   * @see |updateCommand()| and |executeCommand()|
+   */
+  function withCommand(element, action) {
+    var command = element.getAttribute("data-command");
+    if (!command) {
+      command = element.querySelector("*[data-command]")
+        .getAttribute("data-command");
+    }
+
+    if (command) {
+      action(command);
+    }
+    else {
+      console.warn("Missing data-command for " + util.findCssSelector(element));
+    }
+  }
+
+  /**
+   * Create a handler to update the requisition to contain the text held in the
+   * first matching data-command attribute under the currentTarget of the event.
+   * @param context Either a Requisition or an ExecutionContext or another object
+   * that contains an |update()| function that follows a similar contract.
+   */
+  function createUpdateHandler(context) {
+    return function(ev) {
+      withCommand(ev.currentTarget, function(command) {
+        context.update(command);
+      });
+    }
+  }
+
+  /**
+   * Create a handler to execute the text held in the data-command attribute
+   * under the currentTarget of the event.
+   * @param context Either a Requisition or an ExecutionContext or another object
+   * that contains an |update()| function that follows a similar contract.
+   */
+  function createExecuteHandler(context) {
+    return function(ev) {
+      withCommand(ev.currentTarget, function(command) {
+        context.exec({
+          visible: true,
+          typed: command
+        });
+      });
+    }
+  }
+
 }(this));
 
 /* CmdCalllog -------------------------------------------------------------- */
