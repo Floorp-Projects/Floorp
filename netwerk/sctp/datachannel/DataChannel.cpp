@@ -829,7 +829,7 @@ DataChannelConnection::FindChannelByStream(uint16_t streamOut)
 uint16_t
 DataChannelConnection::FindFreeStream()
 {
-  uint32_t i, limit;
+  uint32_t i, j, limit;
 
   limit = mStreams.Length();
   if (limit > MAX_NUM_STREAMS)
@@ -838,15 +838,16 @@ DataChannelConnection::FindFreeStream()
   for (i = (mAllocateEven ? 0 : 1); i < limit; i += 2) {
     if (!mStreams[i]) {
       // Verify it's not still in the process of closing
-      for (uint32_t j = 0; j < mStreamsResetting.Length(); ++j) {
+      for (j = 0; j < mStreamsResetting.Length(); ++j) {
         if (mStreamsResetting[j] == i) {
-          continue;
+          break;
         }
       }
-      break;
+      if (j = mStreamsResetting.Length())
+        break;
     }
   }
-  if (i == limit) {
+  if (i >= limit) {
     return INVALID_STREAM;
   }
   return i;
