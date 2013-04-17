@@ -1,0 +1,62 @@
+<!DOCTYPE html><meta charset=utf-8>
+<title>Test for mislabeled or unlabeled XML entities with U+xxD8</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+<body>
+<script class="testbody">
+'use strict';
+
+SimpleTest.waitForExplicitFinish();
+
+var declaredEncodings = [null, 'utf-8', 'uTf-8', 'UTF-8', 'utf-16', 'uTf-16', 'UTF-16'];
+var actualEncodings = ['utf-8', 'utf-16be', 'utf-16le'];
+var i = 0, j = 0
+testxhr(declaredEncodings[i], actualEncodings[j]);
+
+function testxhr(declaredEncoding, actualEncoding) {
+  // utf-16 XML requres the BOM
+  var bom = actualEncoding.startsWith('utf-16') ? '\uFEFF' : '';
+  var xmlDecl = declaredEncoding ? '<?xml version="1.0" encoding="' + declaredEncoding + '" ?>\n' : '';
+  // The test string need to contain U+xxD8 (bug 860180)
+  var xmlString = bom + xmlDecl + '<test>testハヒフヘホ</test>';
+  var xml = new TextEncoder(actualEncoding).encode(xmlString);
+  var description = declaredEncoding ? ' labeled with ' + declaredEncoding : ' without XML declaration';
+  if (!declaredEncoding || actualEncoding !== declaredEncoding.toLowerCase()) {
+    description += ' but actually encoded with ' + actualEncoding;
+  }
+  var xhr = new XMLHttpRequest();
+  var url = URL.createObjectURL(new Blob([xml], {type: 'text/xml'}));
+  xhr.open('GET', url);
+  xhr.send();
+  xhr.onload = xhr.onerror = function(e) {
+    URL.revokeObjectURL(url);
+    is(e.type, 'load', 'xhr loading should succeed for XML' + description);
+    is(xhr.responseXML.documentElement.textContent, 'testハヒフヘホ',
+       'response should be available for XML' + description);
+    testiframe(description, xml);
+  };
+}
+
+function testiframe(description, xml) {
+  var iframe = document.createElement('iframe');
+  var url = URL.createObjectURL(new Blob([xml], {type: 'text/xml'}))
+  iframe.src = url;
+  iframe.onload = iframe.onerror = function(e) {
+    URL.revokeObjectURL(url);
+    is(e.type, 'load', 'iframe loading should succeed for XML' + description);
+    is(iframe.contentDocument.documentElement.textContent, 'testハヒフヘホ',
+       'iframe content should be available for XML' + description);
+    if (++i >= declaredEncodings.length) {
+      i = 0;
+      if (++j >= actualEncodings.length) {
+        SimpleTest.finish();
+        return;
+      }
+    }
+    testxhr(declaredEncodings[i], actualEncodings[j]);
+  };
+  document.body.appendChild(iframe);
+}
+</script>
+<div id="display"></div>
+</body>

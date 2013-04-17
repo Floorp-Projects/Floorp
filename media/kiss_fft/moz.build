@@ -5,3 +5,8 @@
 
 MODULE = 'kiss_fft'
 
+EXPORTS.kiss_fft += [
+    'kiss_fft.h',
+    'kiss_fftr.h',
+]
+

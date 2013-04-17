@@ -10,3 +10,13 @@ XPIDL_MODULE = 'dom_devicestorage'
 
 MODULE = 'dom'
 
+EXPORTS += [
+    'DeviceStorage.h',
+    'nsDeviceStorage.h',
+]
+
+EXPORTS.mozilla.dom.devicestorage += [
+    'DeviceStorageRequestChild.h',
+    'DeviceStorageRequestParent.h',
+]
+

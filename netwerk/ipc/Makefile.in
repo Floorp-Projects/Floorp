@@ -14,18 +14,6 @@ LIBRARY_NAME = neckoipc_s
 LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1
 EXPORT_LIBRARY = 1
-EXPORTS_NAMESPACES = mozilla/net
-
-EXPORTS_mozilla/net = \
-  NeckoParent.h       \
-  NeckoChild.h        \
-  NeckoCommon.h       \
-  NeckoMessageUtils.h \
-  ChannelEventQueue.h \
-  RemoteOpenFileParent.h \
-  RemoteOpenFileChild.h \
-  $(NULL)
-
 CPPSRCS =               \
   NeckoCommon.cpp       \
   NeckoChild.cpp        \

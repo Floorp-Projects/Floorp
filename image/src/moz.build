@@ -6,3 +6,10 @@
 
 MODULE = 'imglib2'
 
+EXPORTS += [
+    'ImageOps.h',
+    'imgLoader.h',
+    'imgRequest.h',
+    'imgRequestProxy.h',
+]
+

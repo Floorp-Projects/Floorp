@@ -12,42 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME	= html5p_s
 LIBXUL_LIBRARY	= 1
 
-EXPORTS		= \
-		jArray.h \
-		nsAHtml5TreeBuilderState.h \
-		nsHtml5ArrayCopy.h \
-		nsHtml5Atoms.h \
-		nsHtml5AtomList.h \
-		nsHtml5AtomTable.h \
-		nsHtml5ByteReadable.h \
-		nsHtml5DocumentMode.h \
-		nsHtml5HtmlAttributes.h \
-		nsHtml5Macros.h \
-		nsHtml5MetaScanner.h \
-		nsHtml5MetaScannerHSupplement.h \
- 		nsHtml5Module.h \
-		nsHtml5NamedCharacters.h \
-		nsHtml5NamedCharactersAccel.h \
-		nsHtml5Parser.h \
-		nsHtml5PendingNotification.h \
-		nsHtml5Speculation.h \
-		nsHtml5SpeculativeLoad.h \
-		nsHtml5StreamParser.h \
-		nsHtml5SVGLoadDispatcher.h \
-		nsHtml5TreeOperation.h \
-		nsHtml5TreeOpExecutor.h \
-		nsAHtml5TreeOpSink.h \
-		nsHtml5TreeOpStage.h \
-		nsHtml5UTF16Buffer.h \
-		nsHtml5UTF16BufferHSupplement.h \
-		nsHtml5DependentUTF16Buffer.h \
-		nsHtml5OwningUTF16Buffer.h \
-		nsHtml5PlainTextUtils.h \
-		nsHtml5ViewSourceUtils.h \
-		nsHtml5StringParser.h \
-		nsParserUtils.h \
-		$(NULL)
-
 CPPSRCS		= \
 		nsHtml5Atoms.cpp \
 		nsHtml5Atom.cpp \

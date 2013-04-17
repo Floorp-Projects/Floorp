@@ -17,20 +17,6 @@ ifdef MOZ_TOOLKIT_SEARCH
 DEFINES += -DMOZ_TOOLKIT_SEARCH
 endif
 
-EXPORTS = \
-  nsDocShellLoadTypes.h \
-  nsILinkHandler.h \
-  nsIWebShellServices.h \
-  SerializedLoadContext.h \
-  $(NULL)
-
-EXPORTS_NAMESPACES = mozilla
-
-EXPORTS_mozilla = \
-  IHistory.h \
-  LoadContext.h \
-  $(NULL)
-
 CPPSRCS = \
   nsDocShell.cpp \
   nsDocShellLoadInfo.cpp \

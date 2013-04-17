@@ -16,8 +16,6 @@ FAIL_ON_WARNINGS := 1
 
 include $(topsrcdir)/dom/dom-config.mk
 
-EXPORTS_NAMESPACES = mozilla/dom/file
-
 CPPSRCS = \
   AsyncHelper.cpp \
   DOMFileHandle.cpp \
@@ -36,26 +34,6 @@ CPPSRCS = \
   ArchiveZipFile.cpp \
   ArchiveReader.cpp \
   ArchiveRequest.cpp \
-  $(NULL)
-
-EXPORTS = \
-  nsIFileStorage.h \
-  $(NULL)
-
-EXPORTS_mozilla/dom/file = \
-  DOMFileHandle.h \
-  DOMFileRequest.h \
-  File.h \
-  FileCommon.h \
-  FileHandle.h \
-  FileHelper.h \
-  FileService.h \
-  LockedFile.h \
-  ArchiveEvent.h \
-  ArchiveZipEvent.h \
-  ArchiveZipFile.h \
-  ArchiveReader.h \
-  ArchiveRequest.h \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

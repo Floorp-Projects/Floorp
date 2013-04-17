@@ -16,8 +16,6 @@ FAIL_ON_WARNINGS := 1
 
 include $(topsrcdir)/dom/dom-config.mk
 
-EXPORTS_NAMESPACES = mozilla/dom/alarm
-
 EXTRA_COMPONENTS =       \
   AlarmsManager.js       \
   AlarmsManager.manifest \
@@ -26,10 +24,6 @@ EXTRA_COMPONENTS =       \
 EXTRA_JS_MODULES = \
   AlarmDB.jsm      \
   AlarmService.jsm \
-  $(NULL)
-
-EXPORTS_mozilla/dom/alarm = \
-  AlarmHalService.h         \
   $(NULL)
 
 CPPSRCS =             \

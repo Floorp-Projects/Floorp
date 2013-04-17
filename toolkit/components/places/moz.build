@@ -27,5 +27,10 @@ if CONFIG['MOZ_PLACES']:
         'nsPIPlacesHistoryListenersNotifier.idl',
     ]
 
+    EXPORTS.mozilla.places = [
+        'History.h',
+        'Database.h',
+    ]
+
 MODULE = 'places'
 

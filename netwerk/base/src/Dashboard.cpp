@@ -393,7 +393,7 @@ Dashboard::GetDNSCacheEntries()
 
     Sequence<double> &expiration = dict.mExpiration.Value();
     Sequence<nsString> &family = dict.mFamily.Value();
-    Sequence<Sequence<nsString>> &hostaddr = dict.mHostaddr.Value();
+    Sequence<Sequence<nsString> > &hostaddr = dict.mHostaddr.Value();
     Sequence<nsString> &hostname = dict.mHostname.Value();
 
     uint32_t length = mDns.data.Length();

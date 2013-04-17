@@ -28,8 +28,6 @@ CPPSRCS		= \
 		nsTypeInfo.cpp \
 		$(NULL)
 
-EXPORTS         = nsTraceMalloc.h
-
 ifeq ($(OS_ARCH),WINNT)
 CPPSRCS		+= nsDebugHelpWin32.cpp nsWinTraceMalloc.cpp
 endif

@@ -10,10 +10,5 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORTS		= \
-		rdf.h \
-		nsIRDFContentSink.h \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

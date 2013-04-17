@@ -92,7 +92,7 @@ public:
 };
 
 /**
- * gfxSurfaceDrawable
+ * gfxCallbackDrawable
  * A convenience implementation of gfxDrawable for callbacks.
  */
 class THEBES_API gfxCallbackDrawable : public gfxDrawable {

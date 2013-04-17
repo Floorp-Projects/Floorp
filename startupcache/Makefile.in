@@ -21,9 +21,4 @@ CPPSRCS = StartupCache.cpp \
   StartupCacheModule.cpp \
   $(NULL)
 
-EXPORTS_NAMESPACES = mozilla/scache
-EXPORTS_mozilla/scache = StartupCache.h \
-  StartupCacheUtils.h \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk

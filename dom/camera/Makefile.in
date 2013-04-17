@@ -52,13 +52,6 @@ CPPSRCS += \
   $(NULL)
 endif
 
-EXPORTS = \
-  CameraCommon.h \
-  DOMCameraManager.h \
-  GonkNativeWindow.h \
-  GonkNativeWindowClient.h \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 

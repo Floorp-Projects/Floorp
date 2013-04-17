@@ -14,37 +14,8 @@ LIBXUL_LIBRARY   = 1
 EXPORT_LIBRARY   = 1
 FAIL_ON_WARNINGS = 1
 
-EXPORTS	= \
-  ForceDiscreteGPUHelperCGL.h \
-  GLContext.h \
-  GLContextProvider.h \
-  GLContextProviderImpl.h \
-  GLContextSymbols.h \
-  GLContextTypes.h \
-  GLDefs.h \
-  GLLibraryLoader.h \
-  GLLibraryEGL.h \
-  GLScreenBuffer.h \
-  GLTextureImage.h \
-  SharedSurface.h \
-  SharedSurfaceEGL.h \
-  SharedSurfaceGL.h \
-  SurfaceFactory.h \
-  SurfaceStream.h \
-  SurfaceTypes.h \
-  $(NULL)
-
-ifdef MOZ_X11
-EXPORTS += \
-  GLXLibrary.h \
-  $(NULL)
-endif
-
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-EXPORTS	+= \
-  WGLLibrary.h \
-  $(NULL)
 ifdef MOZ_WEBGL
 DEFINES += -DMOZ_WEBGL
 DEFINES += -DMOZ_D3DCOMPILER_DLL=$(MOZ_D3DCOMPILER_DLL)
@@ -121,10 +92,6 @@ endif
 
 # Win32 is a special snowflake, for ANGLE
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-EXPORTS += \
-  SharedSurfaceANGLE.h \
-  $(NULL)
-
 CPPSRCS += \
   GLContextProviderEGL.cpp \
   GLLibraryEGL.cpp \
@@ -138,7 +105,6 @@ endif
 
 ifdef MOZ_ENABLE_SKIA_GPU
 CPPSRCS += GLContextSkia.cpp
-EXPORTS += GLContextSkia.h
 endif
 
 include $(topsrcdir)/config/rules.mk

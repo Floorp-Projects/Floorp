@@ -10,3 +10,7 @@ XPIDL_SOURCES += [
 
 MODULE = 'browsercomps'
 
+EXPORTS += [
+    'nsBrowserComponents.h',
+]
+

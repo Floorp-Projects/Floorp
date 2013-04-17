@@ -14,12 +14,6 @@ LIBXUL_LIBRARY 	= 1
 FAIL_ON_WARNINGS := 1
 
 
-EXPORTS		+= \
-		OggDecoder.h \
-		OggCodecState.h \
-		OggReader.h \
-		$(NULL)
-
 CPPSRCS		= \
 		OggDecoder.cpp \
 		OggCodecState.cpp \

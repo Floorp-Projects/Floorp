@@ -11,7 +11,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORTS		=
 LIBRARY_NAME	= jprof
 EXPORT_LIBRARY	= 1
 FORCE_SHARED_LIB = 1
@@ -22,13 +21,6 @@ MOZ_OPTIMIZE_FLAGS = -fno-omit-frame-pointer
 CPPSRCS		= \
 		libmalloc.cpp \
 		$(NULL)
-
-EXPORTS         = \
-                jprof.h \
-                $(NULL)
-
-EXPORTS         := $(addprefix $(srcdir)/, $(EXPORTS))
-
 
 include $(topsrcdir)/config/rules.mk
 
