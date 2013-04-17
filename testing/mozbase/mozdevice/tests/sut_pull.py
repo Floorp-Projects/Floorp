@@ -1,5 +1,6 @@
 from sut import MockAgent
 import mozdevice
+import mozlog
 import unittest
 import hashlib
 import tempfile
@@ -15,14 +16,14 @@ class PullTest(unittest.TestCase):
 
             # pull file is kind of gross, make sure we can still execute commands after it's done
             remoteName = "/mnt/sdcard/cheeseburgers"
-            mozdevice.DroidSUT.debug = 4
             a = MockAgent(self, commands = [("pull %s" % remoteName,
                                              "%s,%s\n%s" % (remoteName,
                                                             len(cheeseburgers),
                                                             cheeseburgers)),
                                             ("isdir /mnt/sdcard", "TRUE")])
 
-            d = mozdevice.DroidSUT("127.0.0.1", port=a.port)
+            d = mozdevice.DroidSUT("127.0.0.1", port=a.port,
+                                   logLevel=mozlog.DEBUG)
             pulledData = d.pullFile("/mnt/sdcard/cheeseburgers")
             self.assertEqual(pulledData, cheeseburgers)
             d.dirExists('/mnt/sdcard')
@@ -35,7 +36,8 @@ class PullTest(unittest.TestCase):
         a = MockAgent(self, commands = [("pull %s" % remoteName,
                                          "%s,15\n%s" % (remoteName,
                                                         "cheeseburgh"))])
-        d = mozdevice.DroidSUT("127.0.0.1", port=a.port)
+        d = mozdevice.DroidSUT("127.0.0.1", port=a.port,
+                               logLevel=mozlog.DEBUG)
         exceptionThrown = False
         try:
             d.pullFile("/mnt/sdcard/cheeseburgers")

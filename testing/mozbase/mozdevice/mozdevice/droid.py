@@ -100,7 +100,7 @@ class DroidSUT(DeviceManagerSUT, DroidMixin):
         # a different process than the one that started the app. In this case,
         # we need to get back the original user serial number and then pass
         # that to the 'am start' command line
-        if not hasattr(self, 'userSerial'):
+        if not hasattr(self, '_userSerial'):
             infoDict = self.getInfo(directive="sutuserinfo")
             if infoDict.get('sutuserinfo') and \
                     len(infoDict['sutuserinfo']) > 0:
@@ -108,12 +108,14 @@ class DroidSUT(DeviceManagerSUT, DroidMixin):
                # user serial always an integer, see: http://developer.android.com/reference/android/os/UserManager.html#getSerialNumberForUser%28android.os.UserHandle%29
                m = re.match('User Serial:([0-9]+)', userSerialString)
                if m:
-                   self.userSerial = m.group(1)
+                   self._userSerial = m.group(1)
                else:
-                   self.userSerial = None
+                   self._userSerial = None
+            else:
+                self._userSerial = None
 
-        if self.userSerial is not None:
-            return [ "--user", self.userSerial ]
+        if self._userSerial is not None:
+            return [ "--user", self._userSerial ]
 
         return []
 

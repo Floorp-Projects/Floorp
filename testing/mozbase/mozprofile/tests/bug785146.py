@@ -41,7 +41,7 @@ http://127.0.0.1:8888           privileged
         perms_db_filename = os.path.join(self.profile_dir, 'permissions.sqlite')
         perms.write_db(self.locations_file)
 
-        stmt = 'PRAGMA schema_version;'
+        stmt = 'PRAGMA user_version;'
 
         con = sqlite3.connect(perms_db_filename)
         cur = con.cursor()
@@ -49,7 +49,7 @@ http://127.0.0.1:8888           privileged
         entries = cur.fetchall()
 
         schema_version = entries[0][0]
-        self.assertEqual(schema_version, 3)
+        self.assertEqual(schema_version, 2)
 
 if __name__ == '__main__':
     unittest.main()

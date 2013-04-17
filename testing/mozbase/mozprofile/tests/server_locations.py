@@ -70,7 +70,7 @@ http://example.org:80           privileged
         self.compare_location(i.next(), 'https', 'test', '80', ['privileged'])
         self.compare_location(i.next(), 'http', 'example.org', '80',
                               ['privileged'])
-        self.compare_location(i.next(), 'http', 'test1.example.org', '80',
+        self.compare_location(i.next(), 'http', 'test1.example.org', '8888',
                               ['privileged'])
 
         locations.add_host('mozilla.org')
