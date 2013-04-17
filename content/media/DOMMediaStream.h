@@ -33,6 +33,8 @@ class MediaStream;
 
 namespace dom {
 class MediaStreamTrack;
+class AudioStreamTrack;
+class VideoStreamTrack;
 }
 
 /**
@@ -43,6 +45,8 @@ class DOMMediaStream : public nsIDOMMediaStream,
 {
   friend class DOMLocalMediaStream;
   typedef dom::MediaStreamTrack MediaStreamTrack;
+  typedef dom::AudioStreamTrack AudioStreamTrack;
+  typedef dom::VideoStreamTrack VideoStreamTrack;
 
 public:
   DOMMediaStream();
@@ -57,7 +61,11 @@ public:
   }
   virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 
+  // WebIDL
   double CurrentTime();
+  void GetAudioTracks(nsTArray<nsRefPtr<AudioStreamTrack> >& aTracks);
+  void GetVideoTracks(nsTArray<nsRefPtr<VideoStreamTrack> >& aTracks);
+
   MediaStream* GetStream() { return mStream; }
   bool IsFinished();
   /**
