@@ -478,6 +478,26 @@ class LParBailout : public LInstructionHelper<0, 0, 0>
     LIR_HEADER(ParBailout);
 };
 
+class LInitElem : public LCallInstructionHelper<0, 1 + 2*BOX_PIECES, 0>
+{
+  public:
+    LIR_HEADER(InitElem)
+
+    LInitElem(const LAllocation &object) {
+        setOperand(0, object);
+    }
+
+    static const size_t IdIndex = 1;
+    static const size_t ValueIndex = 1 + BOX_PIECES;
+
+    const LAllocation *getObject() {
+        return getOperand(0);
+    }
+    MInitElem *mir() const {
+        return mir_->toInitElem();
+    }
+};
+
 // Takes in an Object and a Value.
 class LInitProp : public LCallInstructionHelper<0, 1 + BOX_PIECES, 0>
 {
