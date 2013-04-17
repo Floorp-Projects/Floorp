@@ -453,11 +453,12 @@ var Browser = {
 
   closeTab: function closeTab(aTab, aOptions) {
     let tab = aTab instanceof XULElement ? this.getTabFromChrome(aTab) : aTab;
-    if (!tab || !this.getNextTab(tab))
+    if (!tab) {
       return;
+    }
 
     if (aOptions && "forceClose" in aOptions && aOptions.forceClose) {
-      this._doCloseTab(aTab);
+      this._doCloseTab(tab);
       return;
     }
 
@@ -469,9 +470,11 @@ var Browser = {
   },
 
   _doCloseTab: function _doCloseTab(aTab) {
+    if (this._tabs.length === 1) {
+      Browser.addTab(this.getHomePage());
+    }
+
     let nextTab = this.getNextTab(aTab);
-    if (!nextTab)
-       return;
 
     // Tabs owned by the closed tab are now orphaned.
     this._tabs.forEach(function(item, index, array) {
@@ -918,16 +921,11 @@ var Browser = {
         break;
 
       case "Browser:CanUnload:Return": {
-        if (!json.permit)
-          return;
-
-        // Allow a little delay to not close the target tab while processing
-        // a message for this particular tab
-        setTimeout(function(self) {
-          let tab = self.getTabForBrowser(browser);
-          self._doCloseTab(tab);
-        }, 0, this);
-        break;
+	if (json.permit) {
+	  let tab = this.getTabForBrowser(browser);
+	  BrowserUI.animateClosingTab(tab);
+	}
+	break;
       }
       case "Browser:ZoomToPoint:Return":
         if (json.zoomTo) {
