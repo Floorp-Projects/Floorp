@@ -2516,7 +2516,7 @@ class xpcObjectHelper;
 extern JSBool ConstructSlimWrapper(XPCCallContext &ccx,
                                    xpcObjectHelper &aHelper,
                                    XPCWrappedNativeScope* xpcScope,
-                                   jsval *rval);
+                                   JS::MutableHandleValue rval);
 extern JSBool MorphSlimWrapper(JSContext *cx, JS::HandleObject obj);
 
 /***********************************************/
@@ -3301,7 +3301,7 @@ public:
                                 const void* s, const nsXPTType& type,
                                 const nsID* iid, nsresult* pErr);
 
-    static JSBool JSData2Native(JSContext* cx, void* d, jsval s,
+    static JSBool JSData2Native(JSContext* cx, void* d, JS::HandleValue s,
                                 const nsXPTType& type,
                                 JSBool useAllocator, const nsID* iid,
                                 nsresult* pErr);
@@ -3349,7 +3349,7 @@ public:
                                                  const nsID* iid,
                                                  nsresult* pErr);
     static JSBool JSObject2NativeInterface(JSContext* cx,
-                                           void** dest, JSObject* src,
+                                           void** dest, JS::HandleObject src,
                                            const nsID* iid,
                                            nsISupports* aOuter,
                                            nsresult* pErr);
