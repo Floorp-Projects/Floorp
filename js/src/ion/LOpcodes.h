@@ -32,7 +32,6 @@
     _(ParNewDenseArray)             \
     _(ParNewCallObject)             \
     _(ParBailout)                   \
-    _(InitElem)                     \
     _(InitProp)                     \
     _(CheckOverRecursed)            \
     _(ParCheckOverRecursed)         \

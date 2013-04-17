@@ -2648,6 +2648,11 @@ CodeGenerator::visitNewStringObject(LNewStringObject *lir)
     return true;
 }
 
+typedef bool(*InitPropFn)(JSContext *cx, HandleObject obj,
+                          HandlePropertyName name, HandleValue value);
+static const VMFunction InitPropInfo =
+    FunctionInfo<InitPropFn>(InitProp);
+
 bool
 CodeGenerator::visitParNew(LParNew *lir)
 {
@@ -2741,28 +2746,6 @@ CodeGenerator::visitParBailout(LParBailout *lir)
     masm.jump(bail);
     return true;
 }
-
-typedef bool(*InitElemFn)(JSContext *cx, HandleObject obj,
-                          HandleValue id, HandleValue value);
-static const VMFunction InitElemInfo =
-    FunctionInfo<InitElemFn>(InitElemOperation);
-
-bool
-CodeGenerator::visitInitElem(LInitElem *lir)
-{
-    Register objReg = ToRegister(lir->getObject());
-
-    pushArg(ToValue(lir, LInitElem::ValueIndex));
-    pushArg(ToValue(lir, LInitElem::IdIndex));
-    pushArg(objReg);
-
-    return callVM(InitElemInfo, lir);
-}
-
-typedef bool(*InitPropFn)(JSContext *cx, HandleObject obj,
-                          HandlePropertyName name, HandleValue value);
-static const VMFunction InitPropInfo =
-    FunctionInfo<InitPropFn>(InitProp);
 
 bool
 CodeGenerator::visitInitProp(LInitProp *lir)
@@ -5578,76 +5561,35 @@ CodeGenerator::visitIn(LIn *ins)
     return callVM(OperatorInInfo, ins);
 }
 
-typedef bool (*OperatorInIFn)(JSContext *, uint32_t, HandleObject, JSBool *);
-static const VMFunction OperatorInIInfo = FunctionInfo<OperatorInIFn>(OperatorInI);
-
 bool
 CodeGenerator::visitInArray(LInArray *lir)
 {
-    const MInArray *mir = lir->mir();
     Register elements = ToRegister(lir->elements());
     Register initLength = ToRegister(lir->initLength());
     Register output = ToRegister(lir->output());
 
     // When the array is not packed we need to do a hole check in addition to the bounds check.
-    Label falseBranch, done, trueBranch;
-
-    OutOfLineCode *ool = NULL;
-    Label* failedInitLength = &falseBranch;
-
+    Label falseBranch, done;
     if (lir->index()->isConstant()) {
-        int32_t index = ToInt32(lir->index());
-
-        JS_ASSERT_IF(index < 0, mir->needsNegativeIntCheck());
-        if (mir->needsNegativeIntCheck()) {
-            ool = oolCallVM(OperatorInIInfo, lir,
-                            (ArgList(), Imm32(index), ToRegister(lir->object())),
-                            StoreRegisterTo(output));
-            failedInitLength = ool->entry();
-        }
-
-        masm.branch32(Assembler::BelowOrEqual, initLength, Imm32(index), failedInitLength);
-        if (mir->needsHoleCheck()) {
-            Address address = Address(elements, index * sizeof(Value));
-            masm.branchTestMagic(Assembler::Equal, address, &falseBranch);
+        masm.branch32(Assembler::BelowOrEqual, initLength, Imm32(ToInt32(lir->index())), &falseBranch);
+        if (lir->mir()->needsHoleCheck()) {
+            masm.branchTestMagic(Assembler::Equal, Address(elements, ToInt32(lir->index()) * sizeof(Value)),
+                                 &falseBranch);
         }
     } else {
-        Label negativeIntCheck;
-        Register index = ToRegister(lir->index());
-
-        if (mir->needsNegativeIntCheck())
-            failedInitLength = &negativeIntCheck;
-
-        masm.branch32(Assembler::BelowOrEqual, initLength, index, failedInitLength);
-        if (mir->needsHoleCheck()) {
-            BaseIndex address = BaseIndex(elements, ToRegister(lir->index()), TimesEight);
-            masm.branchTestMagic(Assembler::Equal, address, &falseBranch);
-        }
-        masm.jump(&trueBranch);
-
-        if (mir->needsNegativeIntCheck()) {
-            masm.bind(&negativeIntCheck);
-            ool = oolCallVM(OperatorInIInfo, lir,
-                            (ArgList(), index, ToRegister(lir->object())),
-                            StoreRegisterTo(output));
-
-            masm.testl(index, index);
-            masm.j(Assembler::Signed, ool->entry());
-            masm.jump(&falseBranch);
+        masm.branch32(Assembler::BelowOrEqual, initLength, ToRegister(lir->index()), &falseBranch);
+        if (lir->mir()->needsHoleCheck()) {
+            masm.branchTestMagic(Assembler::Equal, BaseIndex(elements, ToRegister(lir->index()), TimesEight),
+                                 &falseBranch);
         }
     }
 
-    masm.bind(&trueBranch);
     masm.move32(Imm32(1), output);
     masm.jump(&done);
 
     masm.bind(&falseBranch);
     masm.move32(Imm32(0), output);
     masm.bind(&done);
-
-    if (ool)
-        masm.bind(ool->rejoin());
-
     return true;
 }
 
