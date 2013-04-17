@@ -24,6 +24,7 @@ namespace mozilla {
         class CompositorParent;
         class CompositorChild;
         class LayerManager;
+        class AsyncPanZoomController;
     }
 }
 
@@ -145,6 +146,8 @@ public:
     virtual void DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect);
     virtual void DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect);
 
+    virtual mozilla::layers::CompositorParent* NewCompositorParent(int aSurfaceWidth, int aSurfaceHeight) MOZ_OVERRIDE;
+
     static void SetCompositor(mozilla::layers::LayerManager* aLayerManager,
                               mozilla::layers::CompositorParent* aCompositorParent,
                               mozilla::layers::CompositorChild* aCompositorChild);
@@ -152,6 +155,8 @@ public:
     static void ScheduleResumeComposition(int width, int height);
     static void ForceIsFirstPaint();
     static float ComputeRenderIntegrity();
+    static void SetPanZoomController(mozilla::layers::AsyncPanZoomController* apzc);
+    static mozilla::layers::AsyncPanZoomController* GetPanZoomController();
 
     virtual bool WidgetPaintsBackground();
 
@@ -230,6 +235,7 @@ private:
     static nsRefPtr<mozilla::layers::CompositorParent> sCompositorParent;
     static nsRefPtr<mozilla::layers::CompositorChild> sCompositorChild;
     static bool sCompositorPaused;
+    static nsRefPtr<mozilla::layers::AsyncPanZoomController> sApzc;
 };
 
 #endif /* NSWINDOW_H_ */
