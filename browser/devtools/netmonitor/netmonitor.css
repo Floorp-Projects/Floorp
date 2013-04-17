@@ -6,3 +6,11 @@
 #response-content-image-box {
   overflow: auto;
 }
+
+/* Responsive sidebar */
+@media (max-width: 700px) {
+  #details-pane-toggle,
+  .requests-menu-waterfall {
+    display: none;
+  }
+}
