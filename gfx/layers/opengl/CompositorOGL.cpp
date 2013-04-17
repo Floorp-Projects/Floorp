@@ -311,6 +311,16 @@ CompositorOGL::CleanupResources()
   mGLContext = nullptr;
 }
 
+// Impl of a a helper-runnable's "Run" method, used in Initialize()
+NS_IMETHODIMP
+CompositorOGL::ReadDrawFPSPref::Run()
+{
+  // NOTE: This must match the code in Initialize()'s NS_IsMainThread check.
+  Preferences::AddBoolVarCache(&sDrawFPS, "layers.acceleration.draw-fps");
+  Preferences::AddBoolVarCache(&sFrameCounter, "layers.acceleration.frame-counter");
+  return NS_OK;
+}
+
 bool
 CompositorOGL::Initialize()
 {
@@ -481,19 +491,11 @@ CompositorOGL::Initialize()
   }
 
   if (NS_IsMainThread()) {
+    // NOTE: This must match the code in ReadDrawFPSPref::Run().
     Preferences::AddBoolVarCache(&sDrawFPS, "layers.acceleration.draw-fps");
     Preferences::AddBoolVarCache(&sFrameCounter, "layers.acceleration.frame-counter");
   } else {
     // We have to dispatch an event to the main thread to read the pref.
-    class ReadDrawFPSPref : public nsRunnable {
-    public:
-      NS_IMETHOD Run()
-      {
-        Preferences::AddBoolVarCache(&sDrawFPS, "layers.acceleration.draw-fps");
-        Preferences::AddBoolVarCache(&sFrameCounter, "layers.acceleration.frame-counter");
-        return NS_OK;
-      }
-    };
     NS_DispatchToMainThread(new ReadDrawFPSPref());
   }
 
