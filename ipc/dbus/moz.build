@@ -6,3 +6,9 @@
 
 MODULE = 'ipc'
 
+EXPORTS.mozilla.ipc += [
+    'DBusThread.h',
+    'DBusUtils.h',
+    'RawDBusConnection.h',
+]
+

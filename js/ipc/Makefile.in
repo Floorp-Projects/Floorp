@@ -15,16 +15,6 @@ FORCE_STATIC_LIB = 1
 EXPORT_LIBRARY = 1
 FAIL_ON_WARNINGS = 1
 
-EXPORTS_NAMESPACES = mozilla/jsipc
-
-EXPORTS_mozilla/jsipc = \
-  CPOWTypes.h \
-  ContextWrapperChild.h \
-  ContextWrapperParent.h \
-  ObjectWrapperParent.h \
-  ObjectWrapperChild.h \
-  $(NULL)
-
 CPPSRCS = \
   ObjectWrapperParent.cpp \
   ObjectWrapperChild.cpp \

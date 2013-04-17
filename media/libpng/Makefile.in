@@ -42,8 +42,6 @@ CSRCS		+= \
 DEFINES		+= -DMOZ_PNG_READ \
 		-DMOZ_PNG_WRITE
 
-EXPORTS		= png.h pngconf.h mozpngconf.h
-
 LOCAL_INCLUDES	= -I$(srcdir)
 
 FORCE_STATIC_LIB = 1

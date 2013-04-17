@@ -560,11 +560,11 @@ struct uint8_clamped {
 };
 
 /* Note that we can't use std::numeric_limits here due to uint8_clamped. */
-template<typename T> static inline const bool TypeIsFloatingPoint() { return false; }
+template<typename T> inline const bool TypeIsFloatingPoint() { return false; }
 template<> inline const bool TypeIsFloatingPoint<float>() { return true; }
 template<> inline const bool TypeIsFloatingPoint<double>() { return true; }
 
-template<typename T> static inline const bool TypeIsUnsigned() { return false; }
+template<typename T> inline const bool TypeIsUnsigned() { return false; }
 template<> inline const bool TypeIsUnsigned<uint8_t>() { return true; }
 template<> inline const bool TypeIsUnsigned<uint16_t>() { return true; }
 template<> inline const bool TypeIsUnsigned<uint32_t>() { return true; }

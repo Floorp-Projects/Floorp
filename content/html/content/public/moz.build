@@ -15,3 +15,23 @@ XPIDL_MODULE = 'content_html'
 
 MODULE = 'content'
 
+EXPORTS += [
+    'nsFormSubmission.h',
+    'nsIConstraintValidation.h',
+    'nsIForm.h',
+    'nsIFormControl.h',
+    'nsIFormProcessor.h',
+    'nsIHTMLCollection.h',
+    'nsILink.h',
+    'nsIRadioGroupContainer.h',
+    'nsIRadioVisitor.h',
+    'nsITextControlElement.h',
+]
+
+EXPORTS.mozilla.dom += [
+    'HTMLAudioElement.h',
+    'HTMLCanvasElement.h',
+    'HTMLMediaElement.h',
+    'HTMLVideoElement.h',
+]
+

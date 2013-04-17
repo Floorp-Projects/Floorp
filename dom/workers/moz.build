@@ -8,3 +8,23 @@ TEST_DIRS += ['test']
 
 MODULE = 'dom'
 
+# Public stuff.
+EXPORTS.mozilla.dom.workers += [
+    'Workers.h',
+]
+
+# Stuff needed for the bindings, not really public though.
+EXPORTS.mozilla.dom.workers.bindings += [
+    'DOMBindingBase.h',
+    'EventListenerManager.h',
+    'EventTarget.h',
+    'FileReaderSync.h',
+    'TextDecoder.h',
+    'TextEncoder.h',
+    'URL.h',
+    'WorkerFeature.h',
+    'XMLHttpRequest.h',
+    'XMLHttpRequestEventTarget.h',
+    'XMLHttpRequestUpload.h',
+]
+

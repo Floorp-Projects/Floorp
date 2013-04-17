@@ -10,12 +10,5 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-
-ifdef MOZ_XUL
-EXPORTS		= \
-		nsIXULDocument.h \
-		$(NULL)
-endif
-
 include $(topsrcdir)/config/rules.mk
 

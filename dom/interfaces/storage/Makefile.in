@@ -11,9 +11,5 @@ VPATH          = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 
-EXPORTS =                                      \
-       nsPIDOMStorage.h                        \
-       $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

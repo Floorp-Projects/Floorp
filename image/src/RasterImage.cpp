@@ -1759,6 +1759,13 @@ RasterImage::DoImageDataComplete()
   {
     MutexAutoLock lock(mDecodingMutex);
 
+    // If we're not storing any source data, then there's nothing more we can do
+    // once we've tried decoding for size.
+    if (!StoringSourceData() && mDecoder) {
+      nsresult rv = ShutdownDecoder(eShutdownIntent_Done);
+      CONTAINER_ENSURE_SUCCESS(rv);
+    }
+
     // If DecodeUntilSizeAvailable didn't finish the decode, let the decode worker
     // finish decoding this image.
     if (mDecoder) {
@@ -2596,6 +2603,7 @@ nsresult
 RasterImage::ShutdownDecoder(eShutdownIntent aIntent)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  mDecodingMutex.AssertCurrentThreadOwns();
 
   // Ensure that our intent is valid
   NS_ABORT_IF_FALSE((aIntent >= 0) && (aIntent < eShutdownIntent_AllCount),

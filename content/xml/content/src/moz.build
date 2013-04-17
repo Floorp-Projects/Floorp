@@ -6,3 +6,9 @@
 
 MODULE = 'content'
 
+EXPORTS.mozilla.dom += [
+    'CDATASection.h',
+    'ProcessingInstruction.h',
+    'XMLStylesheetProcessingInstruction.h',
+]
+

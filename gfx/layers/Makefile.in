@@ -28,39 +28,6 @@ ifdef MOZ_DEBUG
 DEFINES += -DD3D_DEBUG_INFO
 endif
 
-EXPORTS = \
-        BasicCanvasLayer.h \
-        BasicImplData.h \
-        BasicLayers.h \
-        BasicLayersImpl.h \
-        BasicTiledThebesLayer.h \
-        BasicThebesLayer.h \
-        CompositableHost.h \
-        LayerManagerComposite.h \
-        Composer2D.h \
-        GonkIOSurfaceImage.h \
-        FrameMetrics.h \
-        CompositorChild.h \
-        CompositorParent.h \
-        ImageContainer.h \
-        ImageLayers.h \
-        ImageLayerOGL.h \
-        ImageHost.h \
-        ImageTypes.h \
-        Layers.h \
-        LayersLogging.h \
-        LayerManagerOGLShaders.h \
-        LayerManagerOGL.h \
-        LayerManagerOGLProgram.h \
-        LayerSorter.h \
-        LayerTreeInvalidation.h \
-        ReadbackLayer.h \
-        ShadowLayersManager.h \
-        SharedTextureImage.h \
-        TexturePoolOGL.h \
-        ShmemYCbCrImage.h \
-        $(NULL)
-
 CPPSRCS = \
         BasicImages.cpp \
         BasicLayerManager.cpp \
@@ -104,11 +71,6 @@ GTEST_CPPSRCS = \
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 ifdef MOZ_ENABLE_D3D9_LAYER
-EXPORTS += \
-        LayerManagerD3D9.h \
-        DeviceManagerD3D9.h \
-        $(NULL)
-
 CPPSRCS += \
         LayerManagerD3D9.cpp \
         ThebesLayerD3D9.cpp \
@@ -121,11 +83,6 @@ CPPSRCS += \
         $(NULL)
 endif
 ifdef MOZ_ENABLE_D3D10_LAYER
-EXPORTS += \
-        LayerManagerD3D10.h \
-        ReadbackManagerD3D10.h \
-        $(NULL)
-
 CPPSRCS += \
         CanvasLayerD3D10.cpp \
         ColorLayerD3D10.cpp \
@@ -138,49 +95,6 @@ CPPSRCS += \
         $(NULL)
 endif
 endif
-
-EXPORTS_NAMESPACES = gfxipc mozilla/layers
-EXPORTS_gfxipc = ShadowLayerUtils.h
-EXPORTS_mozilla/layers =\
-        AsyncPanZoomController.h \
-        Axis.h \
-        CanvasClient.h \
-        CompositableClient.h \
-        CompositableTransactionParent.h \
-        Compositor.h \
-        CompositorOGL.h \
-        CompositorTypes.h \
-        ContentHost.h \
-        CompositingRenderTargetOGL.h \
-        CompositorCocoaWidgetHelper.h \
-        CompositorChild.h \
-        CompositorParent.h \
-        CompositableForwarder.h \
-        ContentClient.h \
-        Effects.h \
-        GeckoContentController.h \
-        GestureEventListener.h \
-        ImageBridgeChild.h \
-        ImageBridgeParent.h \
-        ImageClient.h \
-        ImageHost.h \
-        ISurfaceAllocator.h \
-        LayersTypes.h \
-        ShadowLayers.h \
-        ShadowLayersChild.h \
-        ShadowLayersParent.h \
-        ShadowLayersManager.h \
-        RenderTrace.h \
-        SharedRGBImage.h \
-        SharedPlanarYCbCrImage.h \
-        ShmemYCbCrImage.h \
-        TaskThrottler.h \
-        TextureClient.h \
-        TextureHost.h \
-        TextureClientOGL.h \
-        TextureHostOGL.h \
-        TiledContentClient.h \
-        $(NULL)
 
 CPPSRCS += \
         AsyncPanZoomController.cpp \
@@ -219,14 +133,10 @@ CPPSRCS += \
         $(NULL)
 
 ifdef MOZ_X11 #{
-EXPORTS_mozilla/layers += ShadowLayerUtilsX11.h
 CPPSRCS += ShadowLayerUtilsX11.cpp
 endif #}
 
 ifdef MOZ_ENABLE_D3D10_LAYER
-EXPORTS_mozilla/layers += \
-        ShadowLayerUtilsD3D10.h \
-        $(NULL)
 DEFINES	+= -DMOZ_ENABLE_D3D10_LAYER
 endif
 
@@ -238,7 +148,6 @@ endif
 # libraries, but only Gonk is able to use it reliably because Gecko
 # has full system permissions there.
 ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
-EXPORTS_mozilla/layers += ShadowLayerUtilsGralloc.h
 CPPSRCS += \
         ShadowLayerUtilsGralloc.cpp \
         GrallocImages.cpp \

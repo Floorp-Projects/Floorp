@@ -16,14 +16,6 @@ ifndef _MSC_VER
 FAIL_ON_WARNINGS = 1
 endif # !_MSC_VER
 
-EXPORTS_NAMESPACES = mozilla/dom
-
-EXPORTS_mozilla/dom = \
-	CanvasUtils.h \
-	CanvasRenderingContext2D.h \
-  ImageData.h \
-  $(NULL)
-
 CPPSRCS	= \
 	CanvasImageCache.cpp \
 	CanvasRenderingContext2D.cpp \

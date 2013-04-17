@@ -54,8 +54,6 @@ LOCAL_INCLUDES += -I$(topsrcdir)/security/nss/lib/smime
 LOCAL_INCLUDES += -I$(topsrcdir)/security/nss/lib/freebl/
 LOCAL_INCLUDES += -I$(topsrcdir)/security/nss/lib/ssl
 
-EXPORTS = APKOpen.h
-
 include $(topsrcdir)/config/rules.mk
 
 prcpucfg.h: $(topsrcdir)/nsprpub/pr/include/md/_linux.cfg

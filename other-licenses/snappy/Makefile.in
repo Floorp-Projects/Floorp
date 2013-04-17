@@ -26,12 +26,4 @@ CPPSRCS = \
   snappy-c.cc \
   $(NULL)
 
-EXPORTS_NAMESPACES = snappy
-
-EXPORTS_snappy = \
-  snappy.h \
-  snappy-c.h \
-  snappy-stubs-public.h \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk

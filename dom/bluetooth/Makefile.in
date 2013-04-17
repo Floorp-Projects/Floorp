@@ -23,14 +23,6 @@ include $(topsrcdir)/dom/dom-config.mk
 
 VPATH += $(srcdir)/ipc
 
-EXPORTS_NAMESPACES = \
-  mozilla/dom/bluetooth \
-  mozilla/dom/bluetooth/ipc \
-  $(NULL)
-
-EXPORTS_mozilla/dom/bluetooth = BluetoothCommon.h
-EXPORTS_mozilla/dom/bluetooth/ipc = BluetoothMessageUtils.h
-
 ifneq (,$(MOZ_B2G_BT))
 
 LIBRARY_NAME     = dombluetooth_s

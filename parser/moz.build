@@ -8,3 +8,7 @@ DIRS += ['expat', 'xml', 'htmlparser', 'html']
 
 MODULE = 'parser'
 
+EXPORTS += [
+    'nsCharsetSource.h',
+]
+

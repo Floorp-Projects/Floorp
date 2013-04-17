@@ -4384,7 +4384,7 @@ AC_SUBST(ac_configure_args)
 dnl Spit out some output
 dnl ========================================================
 
-AC_OUTPUT([js-confdefs.h Makefile config/autoconf.mk])
+AC_OUTPUT([js-confdefs.h Makefile config/autoconf.mk config/emptyvars.mk])
 
 # Produce the js-config script at configure time; see the comments for
 # 'js-config' in Makefile.in.

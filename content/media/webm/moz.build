@@ -6,3 +6,8 @@
 
 MODULE = 'content'
 
+EXPORTS += [
+    'WebMDecoder.h',
+    'WebMReader.h',
+]
+

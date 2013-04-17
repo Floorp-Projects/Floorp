@@ -15,41 +15,6 @@ FORCE_STATIC_LIB = 1
 EXPORT_LIBRARY = 1
 FAIL_ON_WARNINGS := 1
 
-EXPORTS = \
-  nsICachedFileDescriptorListener.h \
-  PCOMContentPermissionRequestChild.h \
-  $(NULL)
-
-EXPORTS_NAMESPACES = \
-  mozilla \
-  mozilla/dom \
-  mozilla/dom/ipc \
-  $(NULL)
-
-EXPORTS_mozilla = \
-  AppProcessChecker.h \
-  $(NULL)
-
-EXPORTS_mozilla/dom = \
-  ContentChild.h \
-  ContentParent.h \
-  ContentProcess.h \
-  CrashReporterChild.h \
-  CrashReporterParent.h \
-  PermissionMessageUtils.h \
-  StructuredCloneUtils.h \
-  TabParent.h \
-  TabChild.h \
-  TabContext.h \
-  TabMessageUtils.h \
-  $(NULL)
-
-EXPORTS_mozilla/dom/ipc = \
-  Blob.h \
-  ProcessPriorityManager.h \
-  nsIRemoteBlob.h \
-  $(NULL)
-
 CPPSRCS = \
   AppProcessChecker.cpp \
   Blob.cpp \

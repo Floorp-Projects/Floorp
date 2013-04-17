@@ -6,3 +6,8 @@
 
 MODULE = 'content'
 
+EXPORTS += [
+    'MediaOmxDecoder.h',
+    'MediaOmxReader.h',
+]
+

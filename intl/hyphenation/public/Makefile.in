@@ -9,10 +9,5 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORTS		= \
-		nsHyphenationManager.h \
-		nsHyphenator.h \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

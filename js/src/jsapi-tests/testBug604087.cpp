@@ -43,29 +43,23 @@ wrap(JSContext *cx, JS::HandleObject toWrap, JS::HandleObject target)
 }
 
 static JSObject *
-SameCompartmentWrap(JSContext *cx, JSObject *objArg)
+SameCompartmentWrap(JSContext *cx, JS::HandleObject obj)
 {
-    JS::RootedObject obj(cx, objArg);
     JS_GC(JS_GetRuntime(cx));
     return obj;
 }
 
 static JSObject *
-PreWrap(JSContext *cx, JSObject *scopeArg, JSObject *objArg, unsigned flags)
+PreWrap(JSContext *cx, JS::HandleObject scope, JS::HandleObject obj, unsigned flags)
 {
-    JS::RootedObject scope(cx, scopeArg);
-    JS::RootedObject obj(cx, objArg);
     JS_GC(JS_GetRuntime(cx));
     return obj;
 }
 
 static JSObject *
-Wrap(JSContext *cx, JSObject *existing, JSObject *objArg,
-     JSObject *protoArg, JSObject *parentArg, unsigned flags)
+Wrap(JSContext *cx, JS::HandleObject existing, JS::HandleObject obj,
+     JS::HandleObject proto, JS::HandleObject parent, unsigned flags)
 {
-    JS::RootedObject obj(cx, objArg);
-    JS::RootedObject proto(cx, protoArg);
-    JS::RootedObject parent(cx, parentArg);
     return js::Wrapper::New(cx, obj, proto, parent, &js::CrossCompartmentWrapper::singleton);
 }
 

@@ -6,3 +6,17 @@
 
 MODULE = 'mtransport_s'
 
+EXPORTS.mtransport += [
+    '../dtlsidentity.h',
+    '../nricectx.h',
+    '../nricemediastream.h',
+    '../nriceresolverfake.h',
+    '../transportflow.h',
+    '../transportlayer.h',
+    '../transportlayerdtls.h',
+    '../transportlayerice.h',
+    '../transportlayerlog.h',
+    '../transportlayerloopback.h',
+    '../transportlayerprsock.h',
+]
+

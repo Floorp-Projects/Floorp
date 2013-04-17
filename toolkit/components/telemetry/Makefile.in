@@ -21,14 +21,6 @@ FAIL_ON_WARNINGS = 1
 
 LIBRARY_NAME = telemetry
 
-EXPORTS_NAMESPACES = mozilla
-
-EXPORTS_mozilla = \
-  Telemetry.h \
-  ProcessedStack.h \
-  TelemetryHistogramEnums.h \
-  $(NULL)
-
 EXTRA_PP_COMPONENTS = \
   TelemetryPing.js \
   $(NULL)

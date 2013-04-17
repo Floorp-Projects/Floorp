@@ -31,5 +31,10 @@ echo
 hg stat gfx/graphite2
 
 echo
+echo If gfx/graphite2/src/files.mk has changed, please make corresponding
+echo changes to gfx/graphite2/src/moz.build
+echo
+
+echo
 echo Now use hg commands to create a patch for the mozilla tree.
 echo

@@ -6,3 +6,7 @@
 
 MODULE = 'embedcomponents'
 
+EXPORTS += [
+    'nsIAppStartupNotifier.h',
+]
+
