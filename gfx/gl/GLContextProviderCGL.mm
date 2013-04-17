@@ -414,6 +414,14 @@ GLContextProviderCGL::GetGlobalContext(const ContextFlags)
     return gGlobalContext;
 }
 
+SharedTextureHandle
+GLContextProviderCGL::CreateSharedHandle(GLContext::SharedTextureShareType shareType,
+                                         void* buffer,
+                                         GLContext::SharedTextureBufferType bufferType)
+{
+    return 0;
+}
+
 void
 GLContextProviderCGL::Shutdown()
 {
