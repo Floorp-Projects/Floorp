@@ -16,6 +16,9 @@
 // Y axis scroll distance that will disable this module and cancel selection
 const kDisableOnScrollDistance = 25;
 
+// Drag hysteresis programmed into monocle drag moves
+const kDragHysteresisDistance = 10;
+
 /*
  * Markers
  */
@@ -99,6 +102,8 @@ Marker.prototype = {
   _selectionHelperUI: null,
   _xPos: 0,
   _yPos: 0,
+  _xDrag: 0,
+  _yDrag: 0,
   _tag: "",
   _hPlane: 0,
   _vPlane: 0,
@@ -174,6 +179,8 @@ Marker.prototype = {
   },
 
   dragStart: function dragStart(aX, aY) {
+    this._xDrag = 0;
+    this._yDrag = 0;
     this._selectionHelperUI.markerDragStart(this);
   },
 
@@ -184,7 +191,15 @@ Marker.prototype = {
   moveBy: function moveBy(aDx, aDy, aClientX, aClientY) {
     this._xPos -= aDx;
     this._yPos -= aDy;
-    let direction = (aDx >= 0 && aDy >= 0 ? "start" : "end");
+    this._xDrag -= aDx;
+    this._yDrag -= aDy;
+    // Add a bit of hysteresis to our directional detection so "big fingers"
+    // are detected accurately.
+    let direction = "tbd";
+    if (Math.abs(this._xDrag) > kDragHysteresisDistance ||
+        Math.abs(this._yDrag) > kDragHysteresisDistance) {
+      direction = (this._xDrag <= 0 && this._yDrag <= 0 ? "start" : "end");
+    }
     // We may swap markers in markerDragMove. If markerDragMove
     // returns true keep processing, otherwise get out of here.
     if (this._selectionHelperUI.markerDragMove(this, direction)) {
@@ -973,11 +988,16 @@ var SelectionHelperUI = {
 
   markerDragMove: function markerDragMove(aMarker, aDirection) {
     if (aMarker.tag == "caret") {
-      // We are going to transition from caret browsing mode to selection
-      // mode on drag. So swap the caret monocle for a start or end monocle
-      // depending on the direction of the drag, and start selecting text.
-      this._transitionFromCaretToSelection(aDirection);
-      return false;
+      // If direction is "tbd" the drag monocle hasn't determined which
+      // direction the user is dragging.
+      if (aDirection != "tbd") {
+        // We are going to transition from caret browsing mode to selection
+        // mode on drag. So swap the caret monocle for a start or end monocle
+        // depending on the direction of the drag, and start selecting text.
+        this._transitionFromCaretToSelection(aDirection);
+        return false;
+      }
+      return true;
     }
     let json = this._getMarkerBaseMessage();
     json.change = aMarker.tag;
