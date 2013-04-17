@@ -442,11 +442,6 @@ public:
 #endif
     };
 
-    /**
-     * Create new shared GLContext content handle, must be released by ReleaseSharedHandle.
-     */
-    virtual SharedTextureHandle CreateSharedHandle(SharedTextureShareType shareType)
-    { return 0; }
     /*
      * Create a new shared GLContext content handle, using the passed buffer as a source.
      * Must be released by ReleaseSharedHandle. UpdateSharedHandle will have no effect

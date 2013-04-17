@@ -68,6 +68,16 @@ public:
      */
     static GLContext*
     GetGlobalContext(ContextFlags flags = GLContext::ContextFlagsNone);
+    
+    /*
+     * Create a new shared GLContext content handle, using the passed buffer as a source.
+     * Must be released by ReleaseSharedHandle. UpdateSharedHandle will have no effect
+     * on handles created with this method, as the caller owns the source (the passed buffer)
+     * and is responsible for updating it accordingly.
+     */
+    static SharedTextureHandle CreateSharedHandle(GLContext::SharedTextureShareType shareType,
+                                                  void* buffer,
+                                                  GLContext::SharedTextureBufferType bufferType);
 
     /**
      * Free any resources held by this Context Provider.
