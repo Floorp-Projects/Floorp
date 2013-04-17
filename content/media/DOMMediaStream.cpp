@@ -129,6 +129,28 @@ DOMMediaStream::CurrentTime()
   return mStream ? MediaTimeToSeconds(mStream->GetCurrentTime()) : 0.0;
 }
 
+void
+DOMMediaStream::GetAudioTracks(nsTArray<nsRefPtr<AudioStreamTrack> >& aTracks)
+{
+  for (uint32_t i = 0; i < mTracks.Length(); ++i) {
+    AudioStreamTrack* t = mTracks[i]->AsAudioStreamTrack();
+    if (t) {
+      aTracks.AppendElement(t);
+    }
+  }
+}
+
+void
+DOMMediaStream::GetVideoTracks(nsTArray<nsRefPtr<VideoStreamTrack> >& aTracks)
+{
+  for (uint32_t i = 0; i < mTracks.Length(); ++i) {
+    VideoStreamTrack* t = mTracks[i]->AsVideoStreamTrack();
+    if (t) {
+      aTracks.AppendElement(t);
+    }
+  }
+}
+
 bool
 DOMMediaStream::IsFinished()
 {
