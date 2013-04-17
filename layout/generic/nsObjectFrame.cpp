@@ -308,6 +308,10 @@ nsObjectFrame::DestroyFrom(nsIFrame* aDestructRoot)
   // Tell content owner of the instance to disconnect its frame.
   nsCOMPtr<nsIObjectLoadingContent> objContent(do_QueryInterface(mContent));
   NS_ASSERTION(objContent, "Why not an object loading content?");
+
+  if (mInstanceOwner) {
+    mInstanceOwner->SetFrame(nullptr);
+  }
   objContent->HasNewFrame(nullptr);
 
   if (mBackgroundSink) {
