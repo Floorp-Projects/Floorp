@@ -179,7 +179,7 @@ nsSVGForeignObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
 bool
 nsSVGForeignObjectFrame::IsSVGTransformed(gfxMatrix *aOwnTransform,
-                                         gfxMatrix *aFromParentTransform) const
+                                          gfxMatrix *aFromParentTransform) const
 {
   bool foundTransform = false;
 
@@ -194,7 +194,8 @@ nsSVGForeignObjectFrame::IsSVGTransformed(gfxMatrix *aOwnTransform,
   nsSVGElement *content = static_cast<nsSVGElement*>(mContent);
   nsSVGAnimatedTransformList* transformList =
     content->GetAnimatedTransformList();
-  if (transformList && transformList->HasTransform()) {
+  if ((transformList && transformList->HasTransform()) ||
+      content->GetAnimateMotionTransform()) {
     if (aOwnTransform) {
       *aOwnTransform = content->PrependLocalTransformsTo(gfxMatrix(),
                                   nsSVGElement::eUserSpaceToParent);
