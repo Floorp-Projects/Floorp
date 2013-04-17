@@ -514,7 +514,7 @@ nsWindow::IsEnabled() const
 NS_IMETHODIMP
 nsWindow::Invalidate(const nsIntRect &aRect)
 {
-    AndroidGeckoEvent *event = new AndroidGeckoEvent(AndroidGeckoEvent::DRAW, aRect);
+    AndroidGeckoEvent *event = AndroidGeckoEvent::MakeDrawEvent(aRect);
     nsAppShell::gAppShell->PostEvent(event);
     return NS_OK;
 }
@@ -2038,8 +2038,7 @@ nsWindow::SetInputContext(const InputContext& aContext,
     if (mIMEUpdatingContext) {
         return;
     }
-    AndroidGeckoEvent *event = new AndroidGeckoEvent(
-            AndroidGeckoEvent::IME_EVENT,
+    AndroidGeckoEvent *event = AndroidGeckoEvent::MakeIMEEvent(
             AndroidGeckoEvent::IME_UPDATE_CONTEXT);
     nsAppShell::gAppShell->PostEvent(event);
     mIMEUpdatingContext = true;
@@ -2068,8 +2067,8 @@ nsWindow::PostFlushIMEChanges()
         // Already posted
         return;
     }
-    AndroidGeckoEvent *event = new AndroidGeckoEvent(
-            AndroidGeckoEvent::IME_EVENT, AndroidGeckoEvent::IME_FLUSH_CHANGES);
+    AndroidGeckoEvent *event = AndroidGeckoEvent::MakeIMEEvent(
+            AndroidGeckoEvent::IME_FLUSH_CHANGES);
     nsAppShell::gAppShell->PostEvent(event);
 }
 

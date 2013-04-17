@@ -498,11 +498,9 @@ AndroidGeckoEvent::ReadCharactersExtraField(JNIEnv *jenv)
 }
 
 void
-AndroidGeckoEvent::Init(int aType, nsIntRect const& aRect)
+AndroidGeckoEvent::UnionRect(nsIntRect const& aRect)
 {
-    mType = aType;
-    mAckNeeded = false;
-    mRect = aRect;
+    mRect = aRect.Union(mRect);
 }
 
 uint32_t
@@ -669,14 +667,6 @@ AndroidGeckoEvent::Init(int aType)
 {
     mType = aType;
     mAckNeeded = false;
-}
-
-void
-AndroidGeckoEvent::Init(int aType, int aAction)
-{
-    mType = aType;
-    mAckNeeded = false;
-    mAction = aAction;
 }
 
 void

@@ -269,7 +269,7 @@ nsAppShell::ScheduleNativeEventCallback()
     EVLOG("nsAppShell::ScheduleNativeEventCallback pth: %p thread: %p main: %d", (void*) pthread_self(), (void*) NS_GetCurrentThread(), NS_IsMainThread());
 
     // this is valid to be called from any thread, so do so.
-    PostEvent(new AndroidGeckoEvent(AndroidGeckoEvent::NATIVE_POKE));
+    PostEvent(AndroidGeckoEvent::MakeNativePoke());
 }
 
 bool
@@ -467,7 +467,7 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
     case AndroidGeckoEvent::SIZE_CHANGED: {
         // store the last resize event to dispatch it to new windows with a FORCED_RESIZE event
         if (curEvent != gLastSizeChange) {
-            gLastSizeChange = new AndroidGeckoEvent(curEvent);
+            gLastSizeChange = AndroidGeckoEvent::CopyResizeEvent(curEvent);
         }
         nsWindow::OnGlobalAndroidEvent(curEvent);
         break;
@@ -603,12 +603,12 @@ nsAppShell::PostEvent(AndroidGeckoEvent *ae)
 
         case AndroidGeckoEvent::DRAW:
             if (mQueuedDrawEvent) {
+#if defined(DEBUG) || defined(FORCE_ALOG)
                 // coalesce this new draw event with the one already in the queue
                 const nsIntRect& oldRect = mQueuedDrawEvent->Rect();
                 const nsIntRect& newRect = ae->Rect();
                 nsIntRect combinedRect = oldRect.Union(newRect);
 
-#if defined(DEBUG) || defined(FORCE_ALOG)
                 // XXX We may want to consider using regions instead of rectangles.
                 //     Print an error if we're upload a lot more than we would
                 //     if we handled this as two separate events.
@@ -623,7 +623,7 @@ nsAppShell::PostEvent(AndroidGeckoEvent *ae)
                 // coalesce into the new draw event rather than the queued one because
                 // it is not always safe to move draws earlier in the queue; there may
                 // be events between the two draws that affect scroll position or something.
-                ae->Init(AndroidGeckoEvent::DRAW, combinedRect);
+                ae->UnionRect(mQueuedDrawEvent->Rect());
 
                 EVLOG("nsAppShell: Coalescing previous DRAW event at %p into new DRAW event %p", mQueuedDrawEvent, ae);
                 mEventQueue.RemoveElement(mQueuedDrawEvent);
