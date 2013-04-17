@@ -674,6 +674,12 @@ Toolbox.prototype = {
    *         Id of the tool that was unregistered
    */
   _toolUnregistered: function TBOX_toolUnregistered(event, toolId) {
+    if (this._toolPanels.has(toolId)) {
+      let instance = this._toolPanels.get(toolId);
+      instance.destroy();
+      this._toolPanels.delete(toolId);
+    }
+
     let radio = this.doc.getElementById("toolbox-tab-" + toolId);
     let panel = this.doc.getElementById("toolbox-panel-" + toolId);
 
@@ -703,12 +709,6 @@ Toolbox.prototype = {
       if (key) {
         key.parentNode.removeChild(key);
       }
-    }
-
-    if (this._toolPanels.has(toolId)) {
-      let instance = this._toolPanels.get(toolId);
-      instance.destroy();
-      this._toolPanels.delete(toolId);
     }
   },
 
