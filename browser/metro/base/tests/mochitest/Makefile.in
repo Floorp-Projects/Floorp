@@ -28,6 +28,8 @@ BROWSER_TESTS = \
   browser_prefs_ui.js \
   browser_topsites.js \
   browser_tabs.js \
+  browser_bookmarks.js \
+  browser_history.js \
   $(NULL)
 
 # disabled due to timeouts and lack of plugin support.
