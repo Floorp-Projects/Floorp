@@ -39,7 +39,7 @@ function waitForImportAndSmartBookmarks(aCallback) {
     // Wait for Places init notification.
     Services.obs.addObserver(function(aSubject, aTopic, aData) {
       Services.obs.removeObserver(arguments.callee,
-                                  PlacesUtils.TOPIC_INIT_COMPLETE);
+                                  "places-browser-init-complete");
       do_execute_soon(function () {
         // Ensure preferences status.
         do_check_false(Services.prefs.getBoolPref(PREF_AUTO_EXPORT_HTML));
@@ -58,7 +58,7 @@ function waitForImportAndSmartBookmarks(aCallback) {
 
         run_next_test();
       });
-    }, PlacesUtils.TOPIC_INIT_COMPLETE, false);
+    }, "places-browser-init-complete", false);
   },
 
   function test_import()

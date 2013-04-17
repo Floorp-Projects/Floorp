@@ -47,7 +47,7 @@ public:
 
   virtual Layer* GetLayer() MOZ_OVERRIDE;
 
-  virtual TiledLayerComposer* AsTiledLayerComposer() MOZ_OVERRIDE;
+  virtual TiledLayerComposer* GetTiledLayerComposer() MOZ_OVERRIDE;
 
   virtual void RenderLayer(const nsIntPoint& aOffset,
                            const nsIntRect& aClipRect) MOZ_OVERRIDE;
@@ -58,7 +58,7 @@ public:
 
   virtual LayerComposite* AsLayerComposite() MOZ_OVERRIDE { return this; }
 
-  virtual void EnsureBuffer(CompositableType aType) MOZ_OVERRIDE;
+  void EnsureTiled() { mRequiresTiledProperties = true; }
 
 #ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char* Name() const MOZ_OVERRIDE { return "ThebesLayerComposite"; }

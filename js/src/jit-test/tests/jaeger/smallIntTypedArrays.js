@@ -1,4 +1,4 @@
-// vim: set ts=4 sw=4 tw=99 et:
+// vim: set ts=8 sts=4 et sw=4 tw=99:
 
 function testInt8Array(L) {
     var f = new Int8Array(8);

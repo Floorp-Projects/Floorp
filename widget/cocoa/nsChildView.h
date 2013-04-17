@@ -90,7 +90,7 @@ class TextureImage;
 }
 
 namespace layers {
-class LayerManagerOGL;
+class GLManager;
 }
 }
 
@@ -573,8 +573,8 @@ protected:
     return widget.forget();
   }
 
-  void MaybeDrawResizeIndicator(mozilla::layers::LayerManagerOGL* aManager, nsIntRect aRect);
-  void MaybeDrawRoundedBottomCorners(mozilla::layers::LayerManagerOGL* aManager, nsIntRect aRect);
+  void MaybeDrawResizeIndicator(mozilla::layers::GLManager* aManager, nsIntRect aRect);
+  void MaybeDrawRoundedBottomCorners(mozilla::layers::GLManager* aManager, nsIntRect aRect);
 
   nsIWidget* GetWidgetForListenerEvents();
 

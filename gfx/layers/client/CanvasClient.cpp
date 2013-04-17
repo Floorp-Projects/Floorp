@@ -18,8 +18,7 @@ namespace mozilla {
 namespace layers {
 
 /* static */ TemporaryRef<CanvasClient>
-CanvasClient::CreateCanvasClient(LayersBackend aParentBackend,
-                                 CompositableType aCompositableHostType,
+CanvasClient::CreateCanvasClient(CompositableType aCompositableHostType,
                                  CompositableForwarder* aForwarder,
                                  TextureFlags aFlags)
 {
@@ -27,7 +26,7 @@ CanvasClient::CreateCanvasClient(LayersBackend aParentBackend,
     return new CanvasClient2D(aForwarder, aFlags);
   }
   if (aCompositableHostType == BUFFER_IMAGE_BUFFERED) {
-    if (aParentBackend == LAYERS_OPENGL) {
+    if (aForwarder->GetCompositorBackendType() == LAYERS_OPENGL) {
       return new CanvasClientWebGL(aForwarder, aFlags);
     }
     return new CanvasClient2D(aForwarder, aFlags);

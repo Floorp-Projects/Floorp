@@ -158,6 +158,7 @@
   <string name="reading_list_added">&reading_list_added;</string>
   <string name="reading_list_removed">&reading_list_removed;</string>
   <string name="reading_list_failed">&reading_list_failed;</string>
+  <string name="reading_list_duplicate">&reading_list_duplicate;</string>
   <string name="reader">&reader;</string>
 
   <string name="contextmenu_open_new_tab">&contextmenu_open_new_tab;</string>
@@ -207,7 +208,6 @@
   <string name="abouthome_topsites_edit">&abouthome_topsites_edit;</string>
   <string name="abouthome_topsites_pin">&abouthome_topsites_pin;</string>
   <string name="abouthome_topsites_unpin">&abouthome_topsites_unpin;</string>
-  <string name="abouthome_topsites_remove">&abouthome_topsites_remove;</string>
 
   <string name="filepicker_title">&filepicker_title;</string>
   <string name="filepicker_audio_title">&filepicker_audio_title;</string>

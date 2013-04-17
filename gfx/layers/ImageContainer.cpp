@@ -70,12 +70,6 @@ ImageFactory::CreateImage(const ImageFormat *aFormats,
     img = new SharedTextureImage();
     return img.forget();
   }
-#ifdef XP_MACOSX
-  if (FormatInList(aFormats, aNumFormats, MAC_IO_SURFACE)) {
-    img = new MacIOSurfaceImage();
-    return img.forget();
-  }
-#endif
 #ifdef MOZ_WIDGET_GONK
   if (FormatInList(aFormats, aNumFormats, GONK_IO_SURFACE)) {
     img = new GonkIOSurfaceImage();
@@ -538,46 +532,6 @@ PlanarYCbCrImage::GetAsSurface()
 
   return imageSurface.forget().get();
 }
-
-#ifdef XP_MACOSX
-void
-MacIOSurfaceImage::SetData(const Data& aData)
-{
-  mIOSurface = MacIOSurface::LookupSurface(aData.mIOSurface->GetIOSurfaceID());
-  mSize = gfxIntSize(mIOSurface->GetWidth(), mIOSurface->GetHeight());
-}
-
-already_AddRefed<gfxASurface>
-MacIOSurfaceImage::GetAsSurface()
-{
-  mIOSurface->Lock();
-  size_t bytesPerRow = mIOSurface->GetBytesPerRow();
-  size_t ioWidth = mIOSurface->GetWidth();
-  size_t ioHeight = mIOSurface->GetHeight();
-
-  unsigned char* ioData = (unsigned char*)mIOSurface->GetBaseAddress();
-
-  nsRefPtr<gfxImageSurface> imgSurface =
-    new gfxImageSurface(gfxIntSize(ioWidth, ioHeight), gfxASurface::ImageFormatARGB32);
-
-  for (int i = 0; i < ioHeight; i++) {
-    memcpy(imgSurface->Data() + i * imgSurface->Stride(),
-           ioData + i * bytesPerRow, ioWidth * 4);
-  }
-
-  mIOSurface->Unlock();
-
-  return imgSurface.forget();
-}
-
-void
-MacIOSurfaceImage::Update(ImageContainer* aContainer)
-{
-  if (mUpdateCallback) {
-    mUpdateCallback(aContainer, mPluginInstanceOwner);
-  }
-}
-#endif
 
 already_AddRefed<gfxASurface>
 RemoteBitmapImage::GetAsSurface()

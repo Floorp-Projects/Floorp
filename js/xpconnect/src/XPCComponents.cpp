@@ -2709,15 +2709,15 @@ nsXPCComponents_Utils::LookupMethod(const JS::Value& object,
 
         // Alright, now do the lookup.
         *retval = JSVAL_VOID;
-        JSPropertyDescriptor desc;
-        if (!JS_GetPropertyDescriptorById(cx, xray, methodId, 0, &desc))
+        Rooted<JSPropertyDescriptor> desc(cx);
+        if (!JS_GetPropertyDescriptorById(cx, xray, methodId, 0, desc.address()))
             return NS_ERROR_FAILURE;
 
         // First look for a method value. If that's not there, try a getter,
         // since historically lookupMethod also works for getters.
-        JSObject *methodObj = desc.value.isObject() ? &desc.value.toObject() : NULL;
-        if (!methodObj && (desc.attrs & JSPROP_GETTER))
-            methodObj = JS_FUNC_TO_DATA_PTR(JSObject *, desc.getter);
+        JSObject *methodObj = desc.value().isObject() ? &desc.value().toObject() : NULL;
+        if (!methodObj && desc.hasGetterObject())
+            methodObj = desc.getterObject();
 
         // Callers of this function seem to expect bound methods. Make it happen.
         // Note that this is unnecessary until bug 658909 is fixed.
