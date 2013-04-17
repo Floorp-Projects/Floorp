@@ -185,6 +185,10 @@ let Util = {
             aElement instanceof Ci.nsIDOMHTMLTextAreaElement);
   },
 
+  isMultilineInput: function isMultilineInput(aElement) {
+    return (aElement instanceof Ci.nsIDOMHTMLTextAreaElement);
+  },
+
   isLink: function isLink(aElement) {
     return ((aElement instanceof Ci.nsIDOMHTMLAnchorElement && aElement.href) ||
             (aElement instanceof Ci.nsIDOMHTMLAreaElement && aElement.href) ||
