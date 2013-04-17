@@ -58,7 +58,6 @@
  
     <!-- GeckoPreferences ActionBar -->
     <style name="ActionBar.GeckoPreferences">
-         <item name="android:background">@color/background_normal</item>
          <item name="android:displayOptions">showHome|homeAsUp|showTitle</item>
     </style>
  
