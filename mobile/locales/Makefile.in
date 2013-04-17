@@ -126,10 +126,6 @@ $(search-jar): $(search-jar-preqs)
 	printf "$(foreach plugin,$(SEARCH_PLUGINS),$(subst __PLUGIN_SUBST__,$(plugin), \n locale/$(AB_CD)/browser/searchplugins/__PLUGIN_SUBST__.xml (__PLUGIN_SUBST__.xml)))" >>  $@
 	@echo   >> $@
 
-.PHONY: searchplugins
-searchplugins: $(search-jar-ts)
-	@echo "\nGenerating: $@"
-
 ###################
 search-dir-deps = \
   $(plugin-file) \
@@ -146,7 +142,8 @@ search-preqs =\
   $(GLOBAL_DEPS) \
   $(NULL)
 
-$(search-jar-ts): $(search-preqs)
+.PHONY: searchplugins
+searchplugins: $(search-preqs)
 	$(PYTHON) $(jar-maker) \
           $(QUIET) -j $(FINAL_TARGET)/chrome \
           -s $(topsrcdir)/$(relativesrcdir)/en-US/searchplugins \
