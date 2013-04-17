@@ -12,3 +12,13 @@ XPIDL_MODULE = 'necko_ipc'
 
 MODULE = 'necko'
 
+EXPORTS.mozilla.net += [
+    'ChannelEventQueue.h',
+    'NeckoChild.h',
+    'NeckoCommon.h',
+    'NeckoMessageUtils.h',
+    'NeckoParent.h',
+    'RemoteOpenFileChild.h',
+    'RemoteOpenFileParent.h',
+]
+

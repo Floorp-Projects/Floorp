@@ -64,24 +64,6 @@ CPPSRCS	=                        \
   hb-warning.cc                  \
   $(NULL)
 
-EXPORTS_NAMESPACES = harfbuzz
-
-EXPORTS_harfbuzz = \
-  hb.h             \
-  hb-blob.h        \
-  hb-buffer.h      \
-  hb-common.h      \
-  hb-font.h        \
-  hb-ot.h          \
-  hb-ot-layout.h   \
-  hb-ot-tag.h      \
-  hb-set.h         \
-  hb-shape.h       \
-  hb-shape-plan.h  \
-  hb-unicode.h     \
-  hb-version.h     \
-  $(NULL)
-
 LOCAL_INCLUDES  += -I$(srcdir) 
 
 FORCE_STATIC_LIB = 1

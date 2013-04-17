@@ -18,10 +18,6 @@ EXPORT_LIBRARY = 1
 LIBXUL_LIBRARY	= 1
 
 
-EXPORTS = \
-		  nsDocShellCID.h \
-		  $(NULL)
-
 CPPSRCS		= \
 		nsDocShellModule.cpp		\
 		$(NULL)

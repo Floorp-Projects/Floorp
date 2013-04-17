@@ -8,3 +8,63 @@ CONFIGURE_SUBST_FILES += ['cairo-features.h']
 
 MODULE = 'cairo'
 
+EXPORTS.cairo += [
+    'cairo-deprecated.h',
+    'cairo-features.h',
+    'cairo-platform.h',
+    'cairo-rename.h',
+    'cairo-tee.h',
+    'cairo-version.h',
+    'cairo.h',
+]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    EXPORTS.cairo += [
+        'cairo-win32.h',
+        'cairo-pdf.h',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
+    EXPORTS.cairo += [
+        'cairo-os2.h',
+        'cairo-os2-private.h',
+        'cairo-pdf.h',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    EXPORTS.cairo += [
+        'cairo-quartz.h',
+        'cairo-quartz-image.h',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'beos':
+    EXPORTS.cairo += [
+        'cairo-beos.h',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk2':
+    EXPORTS.cairo += [
+        'cairo-pdf.h',
+        'cairo-ps.h',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gonk'):
+    EXPORTS.cairo += [
+        'cairo-pdf.h',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
+    EXPORTS.cairo += [
+        'cairo-qt.h',
+        'cairo-pdf.h',
+    ]
+
+if CONFIG['BUILD_CAIRO_SVG']:
+    EXPORTS.cairo += [
+        'cairo-svg.h'
+    ]
+
+if CONFIG['MOZ_X11']:
+    EXPORTS.cairo += [
+        'cairo-xlib.h',
+        'cairo-xlib-xrender.h',
+    ]
+
+if CONFIG['MOZ_ENABLE_CAIRO_FT']:
+    EXPORTS.cairo += [
+        'cairo-ft.h',
+    ]

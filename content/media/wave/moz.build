@@ -6,3 +6,8 @@
 
 MODULE = 'content'
 
+EXPORTS += [
+    'WaveDecoder.h',
+    'WaveReader.h',
+]
+

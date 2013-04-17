@@ -17,8 +17,6 @@ MODULE_NAME = mozStorageModule
 LIBXUL_LIBRARY = 1
 
 
-EXPORTS = mozStorageCID.h
-
 CPPSRCS = mozStorageModule.cpp
 
 LOCAL_INCLUDES = \

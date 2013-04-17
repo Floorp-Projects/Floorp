@@ -6,3 +6,14 @@
 
 MODULE = 'pipnss'
 
+EXPORTS += [
+    'CryptoTask.h',
+    'ScopedNSSTypes.h',
+    'nsNSSShutDown.h',
+    'nsRandomGenerator.h',
+]
+
+EXPORTS.mozilla += [
+    'PublicSSL.h',
+]
+

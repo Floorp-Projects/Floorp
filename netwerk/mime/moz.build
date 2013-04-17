@@ -16,3 +16,7 @@ XPIDL_FLAGS += [
 
 MODULE = 'mimetype'
 
+EXPORTS += [
+    'nsMimeTypes.h',
+]
+

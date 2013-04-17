@@ -132,14 +132,10 @@ Wrapper Wrapper::singletonWithPrototype((unsigned)0, true);
 /* Compartments. */
 
 extern JSObject *
-js::TransparentObjectWrapper(JSContext *cx, JSObject *existing, JSObject *objArg,
-                             JSObject *wrappedProtoArg, JSObject *parentArg,
+js::TransparentObjectWrapper(JSContext *cx, HandleObject existing, HandleObject obj,
+                             HandleObject wrappedProto, HandleObject parent,
                              unsigned flags)
 {
-    RootedObject obj(cx, objArg);
-    RootedObject wrappedProto(cx, wrappedProtoArg);
-    RootedObject parent(cx, parentArg);
-
     // Allow wrapping outer window proxies.
     JS_ASSERT(!obj->isWrapper() || obj->getClass()->ext.innerObject);
     return Wrapper::New(cx, obj, wrappedProto, parent, &CrossCompartmentWrapper::singleton);

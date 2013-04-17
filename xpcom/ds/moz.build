@@ -35,8 +35,40 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     XPIDL_SOURCES += [
         'nsIWindowsRegKey.idl',
     ]
+    EXPORTS += ['nsWindowsRegKey.h']
+    EXPORTS.mozilla += ['TimeStamp_windows.h']
 
 XPIDL_MODULE = 'xpcom_ds'
 
 MODULE = 'xpcom'
+
+EXPORTS += [
+    'nsArray.h',
+    'nsAtomService.h',
+    'nsCRT.h',
+    'nsCharSeparatedTokenizer.h',
+    'nsCheapSets.h',
+    'nsCppSharedAllocator.h',
+    'nsExpirationTracker.h',
+    'nsHashPropertyBag.h',
+    'nsHashtable.h',
+    'nsIByteBuffer.h',
+    'nsIUnicharBuffer.h',
+    'nsMathUtils.h',
+    'nsObserverList.h',
+    'nsObserverService.h',
+    'nsStaticAtom.h',
+    'nsStaticNameTable.h',
+    'nsStringEnumerator.h',
+    'nsSupportsArray.h',
+    'nsSupportsPrimitives.h',
+    'nsVariant.h',
+    'nsWhitespaceTokenizer.h',
+]
+
+EXPORTS.mozilla += [
+    'CharTokenizer.h',
+    'StringBuilder.h',
+    'TimeStamp.h',
+]
 

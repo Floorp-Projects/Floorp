@@ -27,15 +27,6 @@ ifndef _MSC_VER
 FAIL_ON_WARNINGS := 1
 endif # !_MSC_VER
 
-EXPORTS_NAMESPACES = \
-  mozilla/dom \
-  $(NULL)
-
-EXPORTS = AudioChannelService.h \
-          AudioChannelServiceChild.h \
-          AudioChannelCommon.h \
-          AudioChannelAgent.h
-
 CPPSRCS += \
   AudioChannelService.cpp \
   AudioChannelServiceChild.cpp \

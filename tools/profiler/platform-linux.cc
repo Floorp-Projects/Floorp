@@ -78,6 +78,47 @@ pid_t gettid()
 static Sampler* sActiveSampler = NULL;
 
 
+#if !defined(ANDROID)
+// Keep track of when any of our threads calls fork(), so we can
+// temporarily disable signal delivery during the fork() call.  Not
+// doing so appears to cause a kind of race, in which signals keep
+// getting delivered to the thread doing fork(), which keeps causing
+// it to fail and be restarted; hence forward progress is delayed a
+// great deal.  A side effect of this is to permanently disable
+// sampling in the child process.  See bug 837390.
+
+// Unfortunately this is only doable on non-Android, since Bionic
+// doesn't have pthread_atfork.
+
+// This records the current state at the time we paused it.
+static bool was_paused = false;
+
+// In the parent, just before the fork, record the pausedness state,
+// and then pause.
+static void paf_prepare(void) {
+  if (sActiveSampler) {
+    was_paused = sActiveSampler->IsPaused();
+    sActiveSampler->SetPaused(true);
+  } else {
+    was_paused = false;
+  }
+}
+
+// In the parent, just after the fork, return pausedness to the
+// pre-fork state.
+static void paf_parent(void) {
+  if (sActiveSampler)
+    sActiveSampler->SetPaused(was_paused);
+}
+
+// Set up the fork handlers.  This is called just once, at the first
+// call to SenderEntry.
+static void* setup_atfork() {
+  pthread_atfork(paf_prepare, paf_parent, NULL);
+  return NULL;
+}
+#endif /* !defined(ANDROID) */
+
 #ifdef ANDROID
 #include "android-signal-defs.h"
 #endif
@@ -202,10 +243,18 @@ class Sampler::PlatformData : public Malloced {
 
 
 static void* SenderEntry(void* arg) {
+# if defined(ANDROID)
+  // pthread_atfork isn't available on Android.
+  void* initialize_atfork = NULL;
+# else
+  // This call is done just once, at the first call to SenderEntry.
+  // It returns NULL.
+  static void* initialize_atfork = setup_atfork();
+# endif
   Sampler::PlatformData* data =
       reinterpret_cast<Sampler::PlatformData*>(arg);
   data->SignalSender();
-  return 0;
+  return initialize_atfork; // which is guaranteed to be NULL
 }
 
 

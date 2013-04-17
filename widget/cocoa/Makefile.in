@@ -18,13 +18,6 @@ LIBXUL_LIBRARY = 1
 
 
 
-EXPORTS = \
-		mozView.h \
-		nsChangeObserver.h \
-		nsCocoaUtils.h \
-		nsCocoaFeatures.h \
-		$(NULL)
-
 CMMSRCS = \
   nsBidiKeyboard.mm \
   nsClipboard.mm \

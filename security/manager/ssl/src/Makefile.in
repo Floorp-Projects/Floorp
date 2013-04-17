@@ -91,18 +91,5 @@ DEFINES += \
   -DDLL_SUFFIX=\"$(DLL_SUFFIX)\" \
   $(NULL)
 
-EXPORTS += \
-  CryptoTask.h \
-  nsNSSShutDown.h \
-  ScopedNSSTypes.h \
-  nsRandomGenerator.h \
-  $(NULL)
-
-EXPORTS_NAMESPACES = mozilla
-
-EXPORTS_mozilla += \
-  PublicSSL.h \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

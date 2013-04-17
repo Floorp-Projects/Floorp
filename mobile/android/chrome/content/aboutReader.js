@@ -69,6 +69,17 @@ let AboutReader = function(doc, win) {
   this._setupSegmentedButton("color-scheme-buttons", colorSchemeOptions, colorScheme, this._setColorScheme.bind(this));
   this._setColorScheme(colorScheme);
 
+  let fontTypeOptions = [
+    { name: gStrings.GetStringFromName("aboutReader.fontTypeSansSerif"),
+      value: "sans-serif"},
+    { name: gStrings.GetStringFromName("aboutReader.fontTypeSerif"),
+      value: "serif"}
+  ];
+
+  let fontType = Services.prefs.getCharPref("reader.font_type");
+  this._setupSegmentedButton("font-type-buttons", fontTypeOptions, fontType, this._setFontType.bind(this));
+  this._setFontType(fontType);
+
   let fontTitle = gStrings.GetStringFromName("aboutReader.textTitle");
   this._setupStepControl("font-size-control", fontTitle, this._onFontSizeChange.bind(this));
   this._fontSize = 0;
@@ -295,6 +306,21 @@ AboutReader.prototype = {
     bodyClasses.add(this._colorScheme);
 
     Services.prefs.setCharPref("reader.color_scheme", this._colorScheme);
+  },
+
+  _setFontType: function Reader_setFontType(newFontType) {
+    if (this._fontType === newFontType)
+      return;
+
+    let bodyClasses = this._doc.body.classList;
+
+    if (this._fontType)
+      bodyClasses.remove(this._fontType);
+
+    this._fontType = newFontType;
+    bodyClasses.add(this._fontType);
+
+    Services.prefs.setCharPref("reader.font_type", this._fontType);
   },
 
   _getToolbarVisibility: function Reader_getToolbarVisibility() {

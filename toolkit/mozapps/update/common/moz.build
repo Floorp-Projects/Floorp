@@ -6,3 +6,16 @@
 
 MODULE = 'libupdatecommon'
 
+EXPORTS += [
+    'readstrings.h',
+    'updatedefines.h',
+    'updatelogging.h',
+]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    EXPORTS += [
+        'updatehelper.h',
+        'updatehelper.cpp',
+        'uachelper.h',
+        'pathhash.h',
+    ]

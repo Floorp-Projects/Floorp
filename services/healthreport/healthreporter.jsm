@@ -569,6 +569,7 @@ AbstractHealthReporter.prototype = Object.freeze({
     }
 
     return Task.spawn(function collectAndObtain() {
+      yield this._storage.setAutoCheckpoint(0);
       yield this._providerManager.ensurePullOnlyProvidersRegistered();
 
       let payload;
@@ -583,6 +584,7 @@ AbstractHealthReporter.prototype = Object.freeze({
                                ex);
       } finally {
         yield this._providerManager.ensurePullOnlyProvidersUnregistered();
+        yield this._storage.setAutoCheckpoint(1);
 
         if (error) {
           throw error;

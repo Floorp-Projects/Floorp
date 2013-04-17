@@ -6,3 +6,7 @@
 
 MODULE = 'ipc'
 
+EXPORTS.mozilla.ipc += [
+    'UnixSocket.h',
+]
+

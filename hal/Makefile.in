@@ -25,16 +25,6 @@ LIBXUL_LIBRARY = 1
 EXPORT_LIBRARY = 1
 FAIL_ON_WARNINGS = 1
 
-EXPORTS_NAMESPACES = mozilla
-EXPORTS_mozilla = \
-  Hal.h \
-  HalImpl.h \
-  HalSandbox.h \
-  HalSensor.h \
-  HalTypes.h \
-  HalWakeLock.h \
-  $(NULL)
-
 CPPSRCS = \
   Hal.cpp \
   SandboxHal.cpp \

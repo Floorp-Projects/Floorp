@@ -6,3 +6,7 @@
 
 MODULE = 'browsercomps'
 
+EXPORTS += [
+    'nsBrowserCompsCID.h',
+]
+

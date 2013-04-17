@@ -11,12 +11,6 @@ EXPORT_LIBRARY = 1
 
 DEFINES += -D_IMPL_NS_GFX
 
-EXPORTS      = chromium_types.h \
-               yuv_convert.h \
-               yuv_row.h \
-               ycbcr_to_rgb565.h \
-               $(NULL)
-
 CPPSRCS = yuv_convert.cpp \
           yuv_row_c.cpp \
           yuv_row_table.cpp \
