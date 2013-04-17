@@ -148,4 +148,14 @@ static inline void profiler_js_operation_callback() {}
 
 #endif
 
+class GeckoProfilerInitRAII {
+public:
+  GeckoProfilerInitRAII() {
+    profiler_init();
+  }
+  ~GeckoProfilerInitRAII() {
+    profiler_shutdown();
+  }
+};
+
 #endif // ifndef SAMPLER_H
