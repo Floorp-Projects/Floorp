@@ -355,6 +355,9 @@ pid_t gettid()
 
 bool Sampler::RegisterCurrentThread(const char* aName, PseudoStack* aPseudoStack, bool aIsMainThread)
 {
+  if (!Sampler::sRegisteredThreadsMutex)
+    return false;
+
   mozilla::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
 
   ThreadInfo* info = new ThreadInfo(aName, gettid(),
@@ -382,6 +385,9 @@ bool Sampler::RegisterCurrentThread(const char* aName, PseudoStack* aPseudoStack
 
 void Sampler::UnregisterCurrentThread()
 {
+  if (!Sampler::sRegisteredThreadsMutex)
+    return;
+
   mozilla::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
 
   int id = gettid();
