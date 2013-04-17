@@ -21,7 +21,7 @@ const RIL_GETTHREADSCURSOR_CID =
 
 const DEBUG = false;
 const DB_NAME = "sms";
-const DB_VERSION = 9;
+const DB_VERSION = 10;
 const MESSAGE_STORE_NAME = "sms";
 const THREAD_STORE_NAME = "thread";
 const PARTICIPANT_STORE_NAME = "participant";
@@ -204,6 +204,10 @@ MobileMessageDatabaseService.prototype = {
           case 8:
             if (DEBUG) debug("Upgrade to version 9. Add transactionId index for incoming MMS.");
             self.upgradeSchema8(event.target.transaction);
+            break;
+          case 9:
+            if (DEBUG) debug("Upgrade to version 10. Upgrade type if it's not existing.");
+            self.upgradeSchema9(event.target.transaction);
             break;
           default:
             event.target.transaction.abort();
@@ -591,6 +595,25 @@ MobileMessageDatabaseService.prototype = {
            DELIVERY_RECEIVED == messageRecord.delivery)) {
         messageRecord.transactionIdIndex =
           messageRecord.headers["x-mms-transaction-id"];
+        cursor.update(messageRecord);
+      }
+      cursor.continue();
+    };
+  },
+
+  upgradeSchema9: function upgradeSchema9(transaction) {
+    let messageStore = transaction.objectStore(MESSAGE_STORE_NAME);
+
+    // Update type attributes.
+    messageStore.openCursor().onsuccess = function(event) {
+      let cursor = event.target.result;
+      if (!cursor) {
+        return;
+      }
+
+      let messageRecord = cursor.value;
+      if (messageRecord.type == undefined) {
+        messageRecord.type = "sms";
         cursor.update(messageRecord);
       }
       cursor.continue();
