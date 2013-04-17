@@ -3088,23 +3088,23 @@ IonBuilder::addTypeBarrier(uint32_t i, CallInfo &callinfo, types::StackTypeSet *
                 // types should remain.
 
                 JSValueType callerType = callerObs->getKnownTypeTag();
-                if (callerType == JSVAL_TYPE_DOUBLE) {
-                    MInstruction *bailType = MToInt32::New(ins);
-                    current->add(bailType);
-                    ins = bailType;
-                } else {
+                if (callerType != JSVAL_TYPE_DOUBLE && ins->type() != MIRType_Double) {
                     // We expect either an Int or a Value, this variant is not
                     // optimized and favor the int variant by filtering out all
                     // other inputs.
                     JS_ASSERT(callerType == JSVAL_TYPE_UNKNOWN);
+                    JS_ASSERT(ins->type() == MIRType_Value);
                     // Bail if the input is not a number.
                     MInstruction *toDouble = MUnbox::New(ins, MIRType_Double, MUnbox::Fallible);
-                    // Bail if the double does not fit in an int.
-                    MInstruction *toInt = MToInt32::New(ins);
                     current->add(toDouble);
-                    current->add(toInt);
-                    ins = toInt;
+                    ins = toDouble;
                 }
+                JS_ASSERT(ins->type() == MIRType_Double ||
+                          ins->type() == MIRType_Value);
+                // Bail if the double does not fit in an int.
+                MInstruction *toInt = MToInt32::New(ins);
+                current->add(toInt);
+                ins = toInt;
 
                 needsBarrier = false;
                 break;
