@@ -640,8 +640,17 @@ toolbarbutton[type="badged"] {
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#toolbarbutton-badged");
 }
 
+/* Note the chatbox 'width' values are duplicated in socialchat.xml */
 chatbox {
   -moz-binding: url("chrome://browser/content/socialchat.xml#chatbox");
+  transition: height 150ms ease-out, width 150ms ease-out;
+  height: 285px;
+  width: 260px; /* CHAT_WIDTH_OPEN in socialchat.xml */
+}
+
+chatbox[minimized="true"] {
+  width: 160px;
+  height: 20px; /* CHAT_WIDTH_MINIMIZED in socialchat.xml */
 }
 
 chatbar {
