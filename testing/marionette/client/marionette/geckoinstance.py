@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import os
+
 from mozprofile import Profile
 from mozrunner import Runner
 
@@ -28,10 +30,13 @@ class GeckoInstance(object):
         else:
             runner_class = CloneRunner
             profile_args["path_from"] = profile_path
-        print "starting runner"
-        self.runner = runner_class.create(binary=self.bin,
-                                         profile_args=profile_args,
-                                         cmdargs=['-no-remote'])
+        self.runner = runner_class.create(
+            binary=self.bin,
+            profile_args=profile_args,
+            cmdargs=['-no-remote'],
+            kp_kwargs={
+                'processOutputLine': [NullOutput()],
+                'logfile': os.path.abspath('gecko.log')})
         self.runner.start()
 
     def close(self):
@@ -49,3 +54,9 @@ apps = {'b2gdesktop': B2GDesktopInstance}
 class CloneRunner(Runner):
 
     profile_class = Profile.clone
+
+
+class NullOutput(object):
+
+    def __call__(self, line):
+        pass

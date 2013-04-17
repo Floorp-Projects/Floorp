@@ -31,8 +31,7 @@ public:
    * message will be sent to the compositor to create a corresponding image
    * host.
    */
-  static TemporaryRef<ImageClient> CreateImageClient(LayersBackend aBackendType,
-                                                     CompositableType aImageHostType,
+  static TemporaryRef<ImageClient> CreateImageClient(CompositableType aImageHostType,
                                                      CompositableForwarder* aFwd,
                                                      TextureFlags aFlags);
 

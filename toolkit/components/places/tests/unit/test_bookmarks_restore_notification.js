@@ -54,7 +54,7 @@ var tests = [
         yield BookmarkJSONUtils.exportToFile(this.file);
         remove_all_bookmarks();
         try {
-          PlacesUtils.restoreBookmarksFromJSONFile(this.file);
+          yield BookmarkJSONUtils.importFromFile(this.file, true);
         }
         catch (e) {
           do_throw("  Restore should not have failed");
@@ -71,12 +71,14 @@ var tests = [
     folderId:   null,
     run:        function () {
       this.file = createFile("bookmarks-test_restoreNotification.json");
-      try {
-        PlacesUtils.restoreBookmarksFromJSONFile(this.file);
-      }
-      catch (e) {
-        do_throw("  Restore should not have failed");
-      }
+      Task.spawn(function() {
+        try {
+          yield BookmarkJSONUtils.importFromFile(this.file, true);
+        }
+        catch (e) {
+          do_throw("  Restore should not have failed" + e);
+        }
+      }.bind(this));
     }
   },
 
@@ -89,11 +91,14 @@ var tests = [
     run:        function () {
       this.file = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
       this.file.append("this file doesn't exist because nobody created it");
-      try {
-        PlacesUtils.restoreBookmarksFromJSONFile(this.file);
-        do_throw("  Restore should have failed");
-      }
-      catch (e) {}
+      Task.spawn(function() {
+        try {
+          yield BookmarkJSONUtils.importFromFile(this.file, true);
+          do_throw("  Restore should have failed");
+        }
+        catch (e) {
+        }
+      }.bind(this));
     }
   },
 

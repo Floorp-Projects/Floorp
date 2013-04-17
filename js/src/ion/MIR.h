@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=4 sw=4 et tw=99:
- *
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -1244,6 +1243,39 @@ class MInitProp
     }
 };
 
+class MInitElem
+  : public MAryInstruction<3>,
+    public Mix3Policy<ObjectPolicy<0>, BoxPolicy<1>, BoxPolicy<2> >
+{
+    MInitElem(MDefinition *obj, MDefinition *id, MDefinition *value)
+    {
+        setOperand(0, obj);
+        setOperand(1, id);
+        setOperand(2, value);
+        setResultType(MIRType_None);
+    }
+
+  public:
+    INSTRUCTION_HEADER(InitElem)
+
+    static MInitElem *New(MDefinition *obj, MDefinition *id, MDefinition *value) {
+        return new MInitElem(obj, id, value);
+    }
+
+    MDefinition *getObject() const {
+        return getOperand(0);
+    }
+    MDefinition *getId() const {
+        return getOperand(1);
+    }
+    MDefinition *getValue() const {
+        return getOperand(2);
+    }
+    TypePolicy *typePolicy() {
+        return this;
+    }
+};
+
 // Designates the start of call frame construction.
 // Generates code to adjust the stack pointer for the argument vector.
 // Argc is inferred by checking the use chain during lowering.
@@ -1652,6 +1684,57 @@ class MTernaryInstruction : public MAryInstruction<3>
         return first->valueNumber() == insFirst->valueNumber() &&
                second->valueNumber() == insSecond->valueNumber() &&
                third->valueNumber() == insThird->valueNumber();
+    }
+};
+
+class MQuaternaryInstruction : public MAryInstruction<4>
+{
+  protected:
+    MQuaternaryInstruction(MDefinition *first, MDefinition *second,
+                           MDefinition *third, MDefinition *fourth)
+    {
+        setOperand(0, first);
+        setOperand(1, second);
+        setOperand(2, third);
+        setOperand(3, fourth);
+    }
+
+  protected:
+    HashNumber valueHash() const
+    {
+        MDefinition *first = getOperand(0);
+        MDefinition *second = getOperand(1);
+        MDefinition *third = getOperand(2);
+        MDefinition *fourth = getOperand(3);
+
+        return op() ^ first->valueNumber() ^ second->valueNumber() ^
+                      third->valueNumber() ^ fourth->valueNumber();
+    }
+
+    bool congruentTo(MDefinition *const &ins) const
+    {
+        if (op() != ins->op())
+            return false;
+
+        if (type() != ins->type())
+            return false;
+
+        if (isEffectful() || ins->isEffectful())
+            return false;
+
+        MDefinition *first = getOperand(0);
+        MDefinition *second = getOperand(1);
+        MDefinition *third = getOperand(2);
+        MDefinition *fourth = getOperand(3);
+        MDefinition *insFirst = ins->getOperand(0);
+        MDefinition *insSecond = ins->getOperand(1);
+        MDefinition *insThird = ins->getOperand(2);
+        MDefinition *insFourth = ins->getOperand(3);
+
+        return first->valueNumber() == insFirst->valueNumber() &&
+               second->valueNumber() == insSecond->valueNumber() &&
+               third->valueNumber() == insThird->valueNumber() &&
+               fourth->valueNumber() == insFourth->valueNumber();
     }
 };
 
@@ -6296,12 +6379,15 @@ class MIn
 
 // Test whether the index is in the array bounds or a hole.
 class MInArray
-  : public MTernaryInstruction
+  : public MQuaternaryInstruction,
+    public ObjectPolicy<3>
 {
     bool needsHoleCheck_;
 
-    MInArray(MDefinition *elements, MDefinition *index, MDefinition *initLength, bool needsHoleCheck)
-      : MTernaryInstruction(elements, index, initLength),
+    MInArray(MDefinition *elements, MDefinition *index,
+             MDefinition *initLength, MDefinition *object,
+             bool needsHoleCheck)
+      : MQuaternaryInstruction(elements, index, initLength, object),
         needsHoleCheck_(needsHoleCheck)
     {
         setResultType(MIRType_Boolean);
@@ -6315,8 +6401,10 @@ class MInArray
     INSTRUCTION_HEADER(InArray)
 
     static MInArray *New(MDefinition *elements, MDefinition *index,
-                         MDefinition *initLength, bool needsHoleCheck) {
-        return new MInArray(elements, index, initLength, needsHoleCheck);
+                         MDefinition *initLength, MDefinition *object,
+                         bool needsHoleCheck)
+    {
+        return new MInArray(elements, index, initLength, object, needsHoleCheck);
     }
 
     MDefinition *elements() const {
@@ -6328,11 +6416,18 @@ class MInArray
     MDefinition *initLength() const {
         return getOperand(2);
     }
+    MDefinition *object() const {
+        return getOperand(3);
+    }
     bool needsHoleCheck() const {
         return needsHoleCheck_;
     }
+    bool needsNegativeIntCheck() const;
     AliasSet getAliasSet() const {
         return AliasSet::Load(AliasSet::Element);
+    }
+    TypePolicy *typePolicy() {
+        return this;
     }
 };
 

@@ -43,6 +43,7 @@ MAKE_TYPEDEF(pa_stream_write);
 MAKE_TYPEDEF(pa_threaded_mainloop_free);
 MAKE_TYPEDEF(pa_threaded_mainloop_get_api);
 MAKE_TYPEDEF(pa_threaded_mainloop_lock);
+MAKE_TYPEDEF(pa_threaded_mainloop_in_thread);
 MAKE_TYPEDEF(pa_threaded_mainloop_new);
 MAKE_TYPEDEF(pa_threaded_mainloop_signal);
 MAKE_TYPEDEF(pa_threaded_mainloop_start);
@@ -296,6 +297,7 @@ pulse_init(cubeb ** context, char const * context_name)
   LOAD(pa_threaded_mainloop_free);
   LOAD(pa_threaded_mainloop_get_api);
   LOAD(pa_threaded_mainloop_lock);
+  LOAD(pa_threaded_mainloop_in_thread);
   LOAD(pa_threaded_mainloop_new);
   LOAD(pa_threaded_mainloop_signal);
   LOAD(pa_threaded_mainloop_start);
@@ -494,13 +496,19 @@ pulse_stream_stop(cubeb_stream * stm)
 static int
 pulse_stream_get_position(cubeb_stream * stm, uint64_t * position)
 {
-  int r;
+  int r, in_thread;
   pa_usec_t r_usec;
   uint64_t bytes;
 
-  WRAP(pa_threaded_mainloop_lock)(stm->context->mainloop);
+  in_thread = WRAP(pa_threaded_mainloop_in_thread)(stm->context->mainloop);
+
+  if (!in_thread) {
+    WRAP(pa_threaded_mainloop_lock)(stm->context->mainloop);
+  }
   r = WRAP(pa_stream_get_time)(stm->stream, &r_usec);
-  WRAP(pa_threaded_mainloop_unlock)(stm->context->mainloop);
+  if (!in_thread) {
+    WRAP(pa_threaded_mainloop_unlock)(stm->context->mainloop);
+  }
 
   if (r != 0) {
     return CUBEB_ERROR;

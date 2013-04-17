@@ -49,7 +49,7 @@ this.BookmarkJSONUtils = Object.freeze({
    */
   importFromFile: function BJU_importFromFile(aFile, aReplace) {
     let importer = new BookmarkImporter();
-    return importer.importFromURL(NetUtil.newURI(aFile).spec, aReplace);
+    return importer.importFromFile(aFile, aReplace);
   },
 
   /**
@@ -70,6 +70,31 @@ this.BookmarkJSONUtils = Object.freeze({
 
 function BookmarkImporter() {}
 BookmarkImporter.prototype = {
+  /**
+   * Import bookmarks from a file.
+   *
+   * @param aFile
+   *        the bookmark file.
+   * @param aReplace
+   *        Boolean if true, replace existing bookmarks, else merge.
+   *
+   * @return {Promise}
+   * @resolves When the new bookmarks have been created.
+   * @rejects JavaScript exception.
+   */
+  importFromFile: function(aFile, aReplace) {
+    if (aFile.exists()) {
+      return this.importFromURL(NetUtil.newURI(aFile).spec, aReplace);
+    }
+
+    notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_BEGIN);
+
+    return Task.spawn(function() {
+      notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_FAILED);
+      throw new Error("File does not exist.");
+    });
+  },
+
   /**
    * Import bookmarks from a url.
    *
@@ -143,104 +168,104 @@ BookmarkImporter.prototype = {
       Services.tm.mainThread.dispatch(function() {
         deferred.resolve(); // Nothing to restore
       }, Ci.nsIThread.DISPATCH_NORMAL);
-    }
+    } else {
+      // Ensure tag folder gets processed last
+      nodes[0].children.sort(function sortRoots(aNode, bNode) {
+        return (aNode.root && aNode.root == "tagsFolder") ? 1 :
+               (bNode.root && bNode.root == "tagsFolder") ? -1 : 0;
+      });
 
-    // Ensure tag folder gets processed last
-    nodes[0].children.sort(function sortRoots(aNode, bNode) {
-      return (aNode.root && aNode.root == "tagsFolder") ? 1 :
-             (bNode.root && bNode.root == "tagsFolder") ? -1 : 0;
-    });
-
-    let batch = {
-      nodes: nodes[0].children,
-      runBatched: function runBatched() {
-        if (aReplace) {
-          // Get roots excluded from the backup, we will not remove them
-          // before restoring.
-          let excludeItems = PlacesUtils.annotations.getItemsWithAnnotation(
-                               PlacesUtils.EXCLUDE_FROM_BACKUP_ANNO);
-          // Delete existing children of the root node, excepting:
-          // 1. special folders: delete the child nodes
-          // 2. tags folder: untag via the tagging api
-          let root = PlacesUtils.getFolderContents(PlacesUtils.placesRootId,
+      let batch = {
+        nodes: nodes[0].children,
+        runBatched: function runBatched() {
+          if (aReplace) {
+            // Get roots excluded from the backup, we will not remove them
+            // before restoring.
+            let excludeItems = PlacesUtils.annotations.getItemsWithAnnotation(
+                                 PlacesUtils.EXCLUDE_FROM_BACKUP_ANNO);
+            // Delete existing children of the root node, excepting:
+            // 1. special folders: delete the child nodes
+            // 2. tags folder: untag via the tagging api
+            let root = PlacesUtils.getFolderContents(PlacesUtils.placesRootId,
                                                    false, false).root;
-          let childIds = [];
-          for (let i = 0; i < root.childCount; i++) {
-            let childId = root.getChild(i).itemId;
-            if (excludeItems.indexOf(childId) == -1 &&
-                childId != PlacesUtils.tagsFolderId) {
-              childIds.push(childId);
-            }
-          }
-          root.containerOpen = false;
-
-          for (let i = 0; i < childIds.length; i++) {
-            let rootItemId = childIds[i];
-            if (PlacesUtils.isRootItem(rootItemId)) {
-              PlacesUtils.bookmarks.removeFolderChildren(rootItemId);
-            } else {
-              PlacesUtils.bookmarks.removeItem(rootItemId);
-            }
-          }
-        }
-
-        let searchIds = [];
-        let folderIdMap = [];
-
-        batch.nodes.forEach(function(node) {
-          if (!node.children || node.children.length == 0)
-            return; // Nothing to restore for this root
-
-          if (node.root) {
-            let container = PlacesUtils.placesRootId; // Default to places root
-            switch (node.root) {
-              case "bookmarksMenuFolder":
-                container = PlacesUtils.bookmarksMenuFolderId;
-                break;
-              case "tagsFolder":
-                container = PlacesUtils.tagsFolderId;
-                break;
-              case "unfiledBookmarksFolder":
-                container = PlacesUtils.unfiledBookmarksFolderId;
-                break;
-              case "toolbarFolder":
-                container = PlacesUtils.toolbarFolderId;
-                break;
-            }
-
-            // Insert the data into the db
-            node.children.forEach(function(child) {
-              let index = child.index;
-              let [folders, searches] =
-                this.importJSONNode(child, container, index, 0);
-              for (let i = 0; i < folders.length; i++) {
-                if (folders[i])
-                  folderIdMap[i] = folders[i];
+            let childIds = [];
+            for (let i = 0; i < root.childCount; i++) {
+              let childId = root.getChild(i).itemId;
+              if (excludeItems.indexOf(childId) == -1 &&
+                  childId != PlacesUtils.tagsFolderId) {
+                childIds.push(childId);
               }
-              searchIds = searchIds.concat(searches);
-            }.bind(this));
-          } else {
-            this.importJSONNode(
-              node, PlacesUtils.placesRootId, node.index, 0);
+            }
+            root.containerOpen = false;
+
+            for (let i = 0; i < childIds.length; i++) {
+              let rootItemId = childIds[i];
+              if (PlacesUtils.isRootItem(rootItemId)) {
+                PlacesUtils.bookmarks.removeFolderChildren(rootItemId);
+              } else {
+                PlacesUtils.bookmarks.removeItem(rootItemId);
+              }
+            }
           }
-        }.bind(this));
 
-        // Fixup imported place: uris that contain folders
-        searchIds.forEach(function(aId) {
-          let oldURI = PlacesUtils.bookmarks.getBookmarkURI(aId);
-          let uri = fixupQuery(oldURI, folderIdMap);
-          if (!uri.equals(oldURI)) {
-            PlacesUtils.bookmarks.changeBookmarkURI(aId, uri);
-          }
-        });
+          let searchIds = [];
+          let folderIdMap = [];
 
-        Services.tm.mainThread.dispatch(function() {
-          deferred.resolve();
-        }, Ci.nsIThread.DISPATCH_NORMAL);
-      }.bind(this)
-    };
+          batch.nodes.forEach(function(node) {
+            if (!node.children || node.children.length == 0)
+              return; // Nothing to restore for this root
 
-    PlacesUtils.bookmarks.runInBatchMode(batch, null);
+            if (node.root) {
+              let container = PlacesUtils.placesRootId; // Default to places root
+              switch (node.root) {
+                case "bookmarksMenuFolder":
+                  container = PlacesUtils.bookmarksMenuFolderId;
+                  break;
+                case "tagsFolder":
+                  container = PlacesUtils.tagsFolderId;
+                  break;
+                case "unfiledBookmarksFolder":
+                  container = PlacesUtils.unfiledBookmarksFolderId;
+                  break;
+                case "toolbarFolder":
+                  container = PlacesUtils.toolbarFolderId;
+                  break;
+              }
+
+              // Insert the data into the db
+              node.children.forEach(function(child) {
+                let index = child.index;
+                let [folders, searches] =
+                  this.importJSONNode(child, container, index, 0);
+                for (let i = 0; i < folders.length; i++) {
+                  if (folders[i])
+                    folderIdMap[i] = folders[i];
+                }
+                searchIds = searchIds.concat(searches);
+              }.bind(this));
+            } else {
+              this.importJSONNode(
+                node, PlacesUtils.placesRootId, node.index, 0);
+            }
+          }.bind(this));
+
+          // Fixup imported place: uris that contain folders
+          searchIds.forEach(function(aId) {
+            let oldURI = PlacesUtils.bookmarks.getBookmarkURI(aId);
+            let uri = fixupQuery(oldURI, folderIdMap);
+            if (!uri.equals(oldURI)) {
+              PlacesUtils.bookmarks.changeBookmarkURI(aId, uri);
+            }
+          });
+
+          Services.tm.mainThread.dispatch(function() {
+            deferred.resolve();
+          }, Ci.nsIThread.DISPATCH_NORMAL);
+        }.bind(this)
+      };
+
+      PlacesUtils.bookmarks.runInBatchMode(batch, null);
+    }
 
     return deferred.promise;
   },
