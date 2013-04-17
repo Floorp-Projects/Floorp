@@ -165,7 +165,7 @@ if (this.Components) {
      let withFile = function withFile(id, f) {
        let file = OpenedFiles.get(id);
        if (file == null) {
-         throw OS.File.Error.closed("accessing file");
+         throw new Error("Could not find File");
        }
        return f.call(file);
      };
@@ -175,7 +175,7 @@ if (this.Components) {
        let file = OpenedDirectoryIterators.get(fd);
        if (file == null) {
          if (!ignoreAbsent) {
-           throw OS.File.Error.closed("accessing directory");
+           throw new Error("Could not find Directory");
          }
          return;
        }
