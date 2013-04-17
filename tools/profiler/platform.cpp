@@ -31,6 +31,7 @@ bool stack_key_initialized;
 TimeStamp   sLastTracerEvent; // is raced on
 int         sFrameNumber = 0;
 int         sLastFrameNumber = 0;
+int         sInitCount = 0; // Each init must have a matched shutdown.
 static bool sIsProfiling = false; // is raced on
 
 /* used to keep track of the last event that we sampled during */
@@ -63,6 +64,11 @@ void Sampler::Shutdown() {
 
   delete sRegisteredThreadsMutex;
   delete sRegisteredThreads;
+
+  // UnregisterThread can be called after shutdown in XPCShell. Thus
+  // we need to point to null to ignore such a call after shutdown.
+  sRegisteredThreadsMutex = nullptr;
+  sRegisteredThreads = nullptr;
 }
 
 ThreadInfo::~ThreadInfo() {
@@ -243,6 +249,8 @@ void read_profiler_env_vars()
 
 void mozilla_sampler_init()
 {
+  sInitCount++;
+
   if (stack_key_initialized)
     return;
 
@@ -306,6 +314,11 @@ void mozilla_sampler_init()
 
 void mozilla_sampler_shutdown()
 {
+  sInitCount--;
+
+  if (sInitCount > 0)
+    return;
+
   // Save the profile on shutdown if requested.
   TableTicker *t = tlsTicker.get();
   if (t) {
