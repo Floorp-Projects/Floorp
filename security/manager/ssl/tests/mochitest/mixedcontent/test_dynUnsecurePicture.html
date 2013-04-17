@@ -18,7 +18,7 @@
   {
     isSecurityState("secure");
     document.getElementById("image1").src =
-      "http://example.com/tests/security/ssl/mixedcontent/moonsurface.jpg";
+      "http://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/moonsurface.jpg";
 
     window.setTimeout(function() {
       isSecurityState("broken", "src='http://...' changed to broken");
@@ -29,7 +29,7 @@
   function afterNavigationTest()
   {
     is(document.getElementById("image1").src,
-      "https://example.com/tests/security/ssl/mixedcontent/moonsurface.jpg",
+      "https://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/moonsurface.jpg",
       "img.src secure again");
     isSecurityState("secure", "security full after navigation");
     finish();
@@ -39,6 +39,6 @@
 </head>
 
 <body>
-  <img id="image1" src="https://example.com/tests/security/ssl/mixedcontent/moonsurface.jpg" />
+  <img id="image1" src="https://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/moonsurface.jpg" />
 </body>
 </html>
