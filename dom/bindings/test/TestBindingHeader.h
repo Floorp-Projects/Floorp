@@ -442,13 +442,13 @@ public:
   void SetAttributeRenamedTo(int8_t);
 
   // Dictionary tests
-  void PassDictionary(const Dict&);
-  void ReceiveDictionary(Dict&);
+  void PassDictionary(JSContext*, const Dict&);
+  void ReceiveDictionary(JSContext*, Dict&);
   void PassOtherDictionary(const GrandparentDict&);
-  void PassSequenceOfDictionaries(const Sequence<Dict>&);
-  void PassDictionaryOrLong(const Dict&);
+  void PassSequenceOfDictionaries(JSContext*, const Sequence<Dict>&);
+  void PassDictionaryOrLong(JSContext*, const Dict&);
   void PassDictionaryOrLong(int32_t);
-  void PassDictContainingDict(const DictContainingDict&);
+  void PassDictContainingDict(JSContext*, const DictContainingDict&);
   void PassDictContainingSequence(const DictContainingSequence&);
   void ReceiveDictContainingSequence(DictContainingSequence&);
 
@@ -468,7 +468,7 @@ public:
   bool Overload1(TestInterface&);
   TestInterface* Overload1(const nsAString&, TestInterface&);
   void Overload2(TestInterface&);
-  void Overload2(const Dict&);
+  void Overload2(JSContext*, const Dict&);
   void Overload2(const nsAString&);
   void Overload3(TestInterface&);
   void Overload3(const TestCallback&);
