@@ -1009,6 +1009,14 @@ public:
   nsRect GetContentRectRelativeToSelf() const;
 
   /**
+   * The area to paint box-shadows around.  The default is the border rect.
+   * (nsFieldSetFrame overrides this).
+   */
+  virtual nsRect VisualBorderRectRelativeToSelf() const {
+    return nsRect(0, 0, mRect.width, mRect.height);
+  }
+
+  /**
    * Get the size, in app units, of the border radii. It returns FALSE iff all
    * returned radii == 0 (so no border radii), TRUE otherwise.
    * For the aRadii indexes, use the NS_CORNER_* constants in nsStyleConsts.h

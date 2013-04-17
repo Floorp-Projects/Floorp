@@ -3,9 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// YY need to pass isMultiple before create called
-
-//#include "nsFormControlFrame.h"
 #include "nsContainerFrame.h"
 #include "nsLegendFrame.h"
 #include "nsIDOMNode.h"
@@ -13,7 +10,6 @@
 #include "nsIDOMHTMLLegendElement.h"
 #include "nsCSSRendering.h"
 #include <algorithm>
-//#include "nsIDOMHTMLCollection.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
 #include "nsISupports.h"
@@ -35,7 +31,7 @@ using namespace mozilla::layout;
 
 class nsLegendFrame;
 
-class nsFieldSetFrame : public nsContainerFrame {
+class nsFieldSetFrame MOZ_FINAL : public nsContainerFrame {
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
@@ -54,6 +50,21 @@ public:
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
                              uint32_t aFlags) MOZ_OVERRIDE;
   virtual nscoord GetBaseline() const;
+
+  /**
+   * The area to paint box-shadows around.  It's the border rect except
+   * when there's a <legend> we offset the y-position to the center of it.
+   */
+  virtual nsRect VisualBorderRectRelativeToSelf() const MOZ_OVERRIDE {
+    nscoord topBorder = StyleBorder()->GetComputedBorderWidth(NS_SIDE_TOP);
+    nsRect r(nsPoint(0,0), GetSize());
+    if (topBorder < mLegendRect.height) {
+      nscoord yoff = (mLegendRect.height - topBorder) / 2;
+      r.y += yoff;
+      r.height -= yoff;
+    }
+    return r;
+  }
 
   NS_IMETHOD Reflow(nsPresContext*           aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -229,20 +240,14 @@ void
 nsFieldSetFrame::PaintBorderBackground(nsRenderingContext& aRenderingContext,
     nsPoint aPt, const nsRect& aDirtyRect, uint32_t aBGFlags)
 {
-  const nsStyleBorder* borderStyle = StyleBorder();
-       
-  nscoord topBorder = borderStyle->GetComputedBorderWidth(NS_SIDE_TOP);
-  nscoord yoff = 0;
-  nsPresContext* presContext = PresContext();
-     
   // if the border is smaller than the legend. Move the border down
   // to be centered on the legend. 
   // FIXME: This means border-radius clamping is incorrect; we should
   // override nsIFrame::GetBorderRadii.
-  if (topBorder < mLegendRect.height)
-    yoff = (mLegendRect.height - topBorder)/2;
-      
-  nsRect rect(aPt.x, aPt.y + yoff, mRect.width, mRect.height - yoff);
+  nsRect rect = VisualBorderRectRelativeToSelf();
+  nscoord yoff = rect.y;
+  rect += aPt;
+  nsPresContext* presContext = PresContext();
 
   nsCSSRendering::PaintBackground(presContext, aRenderingContext, this,
                                   aDirtyRect, rect, aBGFlags);
@@ -251,6 +256,7 @@ nsFieldSetFrame::PaintBorderBackground(nsRenderingContext& aRenderingContext,
                                       this, rect, aDirtyRect);
 
    if (mLegendFrame) {
+     nscoord topBorder = StyleBorder()->GetComputedBorderWidth(NS_SIDE_TOP);
 
     // Use the rect of the legend frame, not mLegendRect, so we draw our
     // border under the legend's left and right margins.

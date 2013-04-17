@@ -1214,7 +1214,8 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
   } else {
     nativeTheme = false;
     nscoord twipsRadii[8];
-    NS_ASSERTION(aFrameArea.Size() == aForFrame->GetSize(), "unexpected size");
+    NS_ASSERTION(aFrameArea.Size() == aForFrame->VisualBorderRectRelativeToSelf().Size(),
+                 "unexpected size");
     hasBorderRadius = aForFrame->GetBorderRadii(twipsRadii);
     if (hasBorderRadius) {
       ComputePixelRadii(twipsRadii, twipsPerPixel, &borderRadii);
