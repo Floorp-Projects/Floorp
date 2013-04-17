@@ -238,18 +238,6 @@ LIRGenerator::visitParBailout(MParBailout *ins)
 }
 
 bool
-LIRGenerator::visitInitElem(MInitElem *ins)
-{
-    LInitElem *lir = new LInitElem(useRegisterAtStart(ins->getObject()));
-    if (!useBoxAtStart(lir, LInitElem::IdIndex, ins->getId()))
-        return false;
-    if (!useBoxAtStart(lir, LInitElem::ValueIndex, ins->getValue()))
-        return false;
-
-    return add(lir, ins) && assignSafepoint(lir, ins);
-}
-
-bool
 LIRGenerator::visitInitProp(MInitProp *ins)
 {
     LInitProp *lir = new LInitProp(useRegisterAtStart(ins->getObject()));
@@ -1831,19 +1819,11 @@ LIRGenerator::visitInArray(MInArray *ins)
     JS_ASSERT(ins->elements()->type() == MIRType_Elements);
     JS_ASSERT(ins->index()->type() == MIRType_Int32);
     JS_ASSERT(ins->initLength()->type() == MIRType_Int32);
-    JS_ASSERT(ins->object()->type() == MIRType_Object);
     JS_ASSERT(ins->type() == MIRType_Boolean);
-
-    LAllocation object;
-    if (ins->needsNegativeIntCheck())
-        object = useRegister(ins->object());
-    else
-        object = LConstantIndex::Bogus();
 
     LInArray *lir = new LInArray(useRegister(ins->elements()),
                                  useRegisterOrConstant(ins->index()),
-                                 useRegister(ins->initLength()),
-                                 object);
+                                 useRegister(ins->initLength()));
     return define(lir, ins) && assignSafepoint(lir, ins);
 }
 

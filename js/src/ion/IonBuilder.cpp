@@ -952,9 +952,6 @@ IonBuilder::inspectOpcode(JSOp op)
         return jsop_newobject(baseObj);
       }
 
-      case JSOP_INITELEM:
-        return jsop_initelem();
-
       case JSOP_INITELEM_ARRAY:
         return jsop_initelem_array();
 
@@ -4783,19 +4780,6 @@ IonBuilder::jsop_newobject(HandleObject baseObj)
 }
 
 bool
-IonBuilder::jsop_initelem()
-{
-    MDefinition *value = current->pop();
-    MDefinition *id = current->pop();
-    MDefinition *obj = current->peek(-1);
-
-    MInitElem *initElem = MInitElem::New(obj, id, value);
-    current->add(initElem);
-
-    return resumeAfter(initElem);
-}
-
-bool
 IonBuilder::jsop_initelem_array()
 {
     MDefinition *value = current->pop();
@@ -7410,7 +7394,7 @@ IonBuilder::jsop_in_dense()
     current->add(initLength);
 
     // Check if id < initLength and elem[id] not a hole.
-    MInArray *ins = MInArray::New(elements, id, initLength, obj, needsHoleCheck);
+    MInArray *ins = MInArray::New(elements, id, initLength, needsHoleCheck);
 
     current->add(ins);
     current->push(ins);
