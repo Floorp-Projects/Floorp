@@ -26,18 +26,6 @@ CPPSRCS	= \
         nsGridCell.cpp \
         $(NULL)
 
-EXPORTS = \
-          nsGridLayout2.h       \
-          nsGridRowLayout.h \
-          nsGridRowLeafLayout.h \
-          nsGridRowLeafFrame.h \
-          nsGridRowGroupLayout.h \
-          nsIGridPart.h \
-          nsGrid.h \
-          nsGridRow.h \
-          nsGridCell.h \
-          $(NULL)
-
 LOCAL_INCLUDES	= \
 		-I$(srcdir) \
 		-I$(srcdir)/../base/src \

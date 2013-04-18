@@ -9,8 +9,11 @@
 #include "nsIDOMNotifyPaintEvent.h"
 #include "nsDOMEvent.h"
 #include "nsPresContext.h"
+#include "mozilla/dom/NotifyPaintEventBinding.h"
 
 class nsPaintRequestList;
+class nsClientRectList;
+class nsClientRect;
 
 class nsDOMNotifyPaintEvent : public nsDOMEvent,
                               public nsIDOMNotifyPaintEvent
@@ -35,8 +38,16 @@ public:
   NS_IMETHOD_(void) Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType);
   NS_IMETHOD_(bool) Deserialize(const IPC::Message* aMsg, void** aIter);
 
-  already_AddRefed<nsPaintRequestList> PaintRequests();
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope)
+  {
+    return mozilla::dom::NotifyPaintEventBinding::Wrap(aCx, aScope, this);
+  }
 
+  already_AddRefed<nsClientRectList> ClientRects();
+
+  already_AddRefed<nsClientRect> BoundingClientRect();
+
+  already_AddRefed<nsPaintRequestList> PaintRequests();
 private:
   nsRegion GetRegion();
 

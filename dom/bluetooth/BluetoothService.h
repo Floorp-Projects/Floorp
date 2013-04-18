@@ -292,7 +292,7 @@ protected:
   virtual nsresult
   StartInternal() = 0;
 
-  /** 
+  /**
    * Platform specific startup functions go here. Usually deals with member
    * variables, so not static. Guaranteed to be called outside of main thread.
    *
@@ -300,6 +300,15 @@ protected:
    */
   virtual nsresult
   StopInternal() = 0;
+
+  /**
+   * Platform specific startup functions go here. Usually deals with member
+   * variables, so not static. Guaranteed to be called outside of main thread.
+   *
+   * @return true if Bluetooth is enabled, false otherwise
+   */
+  virtual bool
+  IsEnabledInternal() = 0;
 
   /**
    * Called when XPCOM first creates this service.

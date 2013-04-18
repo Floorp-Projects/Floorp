@@ -1,6 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=99:
- *
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -194,19 +193,18 @@ JSObject::getPropertyNoGC(JSContext *cx, JSObject *obj, JSObject *receiver,
 }
 
 /* static */ inline bool
-JSObject::deleteProperty(JSContext *cx, js::HandleObject obj,
-                         js::HandlePropertyName name, js::MutableHandleValue rval, bool strict)
+JSObject::deleteProperty(JSContext *cx, js::HandleObject obj, js::HandlePropertyName name,
+                         JSBool *succeeded)
 {
     JS::RootedId id(cx, js::NameToId(name));
     js::types::AddTypePropertyId(cx, obj, id, js::types::Type::UndefinedType());
     js::types::MarkTypePropertyConfigured(cx, obj, id);
     js::DeletePropertyOp op = obj->getOps()->deleteProperty;
-    return (op ? op : js::baseops::DeleteProperty)(cx, obj, name, rval, strict);
+    return (op ? op : js::baseops::DeleteProperty)(cx, obj, name, succeeded);
 }
 
 /* static */ inline bool
-JSObject::deleteElement(JSContext *cx, js::HandleObject obj,
-                        uint32_t index, js::MutableHandleValue rval, bool strict)
+JSObject::deleteElement(JSContext *cx, js::HandleObject obj, uint32_t index, JSBool *succeeded)
 {
     JS::RootedId id(cx);
     if (!js::IndexToId(cx, index, &id))
@@ -214,18 +212,18 @@ JSObject::deleteElement(JSContext *cx, js::HandleObject obj,
     js::types::AddTypePropertyId(cx, obj, id, js::types::Type::UndefinedType());
     js::types::MarkTypePropertyConfigured(cx, obj, id);
     js::DeleteElementOp op = obj->getOps()->deleteElement;
-    return (op ? op : js::baseops::DeleteElement)(cx, obj, index, rval, strict);
+    return (op ? op : js::baseops::DeleteElement)(cx, obj, index, succeeded);
 }
 
 /* static */ inline bool
-JSObject::deleteSpecial(JSContext *cx, js::HandleObject obj,
-                        js::HandleSpecialId sid, js::MutableHandleValue rval, bool strict)
+JSObject::deleteSpecial(JSContext *cx, js::HandleObject obj, js::HandleSpecialId sid,
+                        JSBool *succeeded)
 {
     JS::RootedId id(cx, SPECIALID_TO_JSID(sid));
     js::types::AddTypePropertyId(cx, obj, id, js::types::Type::UndefinedType());
     js::types::MarkTypePropertyConfigured(cx, obj, id);
     js::DeleteSpecialOp op = obj->getOps()->deleteSpecial;
-    return (op ? op : js::baseops::DeleteSpecial)(cx, obj, sid, rval, strict);
+    return (op ? op : js::baseops::DeleteSpecial)(cx, obj, sid, succeeded);
 }
 
 inline void

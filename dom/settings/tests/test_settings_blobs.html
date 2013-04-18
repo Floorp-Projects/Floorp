@@ -43,6 +43,8 @@ function onFailure() {
   }
 }
 
+function tests() {
+
 let mozSettings = window.navigator.mozSettings;
 let req;
 
@@ -154,9 +156,12 @@ function permissionTest() {
   }
 }
 
+permissionTest();
+}
+
 let gSettingsEnabled = SpecialPowers.getBoolPref("dom.mozSettings.enabled");
+addLoadEvent(tests);
 SimpleTest.waitForExplicitFinish();
-addLoadEvent(permissionTest);
 </script>
 </pre>
 </body>

@@ -35,31 +35,6 @@ CPPSRCS := \
   WebAudioUtils.cpp \
   $(NULL)
 
-EXPORTS_NAMESPACES := mozilla/dom
-EXPORTS_mozilla/dom := \
-  AnalyserNode.h \
-  AudioBuffer.h \
-  AudioBufferSourceNode.h \
-  AudioContext.h \
-  AudioDestinationNode.h \
-  AudioListener.h \
-  AudioNode.h \
-  AudioParam.h \
-  BiquadFilterNode.h \
-  DelayNode.h \
-  DynamicsCompressorNode.h \
-  EnableWebAudioCheck.h \
-  GainNode.h \
-  PannerNode.h \
-  $(NULL)
-
-EXPORTS := \
-  AudioParamTimeline.h \
-  MediaBufferDecoder.h \
-  ThreeDPoint.h \
-  WebAudioUtils.h \
-  $(NULL)
-
 FORCE_STATIC_LIB := 1
 
 include $(topsrcdir)/config/rules.mk

@@ -27,8 +27,6 @@ SHARED_LIBRARY_LIBS = \
 		../datasource/src/$(LIB_PREFIX)rdfdatasource_s.$(LIB_SUFFIX) \
 		$(NULL)
 
-EXPORTS		= nsRDFCID.h
-
 include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES	= \

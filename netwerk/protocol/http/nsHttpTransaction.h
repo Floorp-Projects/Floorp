@@ -10,6 +10,7 @@
 #include "nsHttpHeaderArray.h"
 #include "nsAHttpTransaction.h"
 #include "nsAHttpConnection.h"
+#include "EventTokenBucket.h"
 #include "nsCOMPtr.h"
 
 #include "nsIPipe.h"
@@ -37,6 +38,7 @@ class UpdateSecurityCallbacks;
 //-----------------------------------------------------------------------------
 
 class nsHttpTransaction : public nsAHttpTransaction
+                        , public mozilla::net::ATokenBucketEvent
                         , public nsIInputStreamCallback
                         , public nsIOutputStreamCallback
 {
@@ -309,6 +311,32 @@ private:
         // true when ::Set has been called with a response header
         bool                            mSetup;
     } mRestartInProgressVerifier;
+
+// For Rate Pacing via an EventTokenBucket
+public:
+    // called by the connection manager to run this transaction through the
+    // token bucket. If the token bucket admits the transaction immediately it
+    // returns true. The function is called repeatedly until it returns true.
+    bool TryToRunPacedRequest();
+
+    // ATokenBucketEvent pure virtual implementation. Called by the token bucket
+    // when the transaction is ready to run. If this happens asynchrounously to
+    // token bucket submission the transaction just posts an event that causes
+    // the pending transaction queue to be rerun (and TryToRunPacedRequest() to
+    // be run again.
+    void OnTokenBucketAdmitted(); // ATokenBucketEvent
+
+    // CancelPacing() can be used to tell the token bucket to remove this
+    // transaction from the list of pending transactions. This is used when a
+    // transaction is believed to be HTTP/1 (and thus subject to rate pacing)
+    // but later can be dispatched via spdy (not subject to rate pacing).
+    void CancelPacing(nsresult reason);
+
+private:
+    bool mSubmittedRatePacing;
+    bool mPassedRatePacing;
+    bool mSynchronousRatePaceRequest;
+    nsCOMPtr<nsICancelable> mTokenBucketCancel;
 };
 
 #endif // nsHttpTransaction_h__

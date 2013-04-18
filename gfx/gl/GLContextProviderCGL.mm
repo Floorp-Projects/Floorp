@@ -17,6 +17,7 @@
 #include "prenv.h"
 #include "mozilla/Preferences.h"
 #include "GeckoProfiler.h"
+#include "mozilla/gfx/MacIOSurface.h"
 
 using namespace mozilla::gfx;
 
@@ -176,6 +177,39 @@ public:
                             TextureImage::ContentType aContentType,
                             GLContext* aContext,
                             TextureImage::Flags aFlags = TextureImage::NoFlags);
+
+    virtual SharedTextureHandle CreateSharedHandle(SharedTextureShareType shareType,
+                                                   void* buffer,
+                                                   SharedTextureBufferType bufferType)
+    {
+        return GLContextProviderCGL::CreateSharedHandle(shareType, buffer, bufferType);
+    }
+
+    virtual void ReleaseSharedHandle(SharedTextureShareType shareType,
+                                     SharedTextureHandle sharedHandle)
+    {
+        if (sharedHandle) {
+            reinterpret_cast<MacIOSurface*>(sharedHandle)->Release();
+        }
+    }
+
+    virtual bool GetSharedHandleDetails(SharedTextureShareType shareType,
+                                        SharedTextureHandle sharedHandle,
+                                        SharedHandleDetails& details)
+    {
+        details.mTarget = LOCAL_GL_TEXTURE_RECTANGLE_ARB;
+        details.mProgramType = RGBARectLayerProgramType;
+        return true;
+    }
+
+    virtual bool AttachSharedHandle(SharedTextureShareType shareType,
+                                    SharedTextureHandle sharedHandle)
+    {
+        MacIOSurface* surf = reinterpret_cast<MacIOSurface*>(sharedHandle);
+        surf->CGLTexImageIOSurface2D(mContext, LOCAL_GL_RGBA, LOCAL_GL_BGRA,
+                                     LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV, 0);
+        return true;
+    }
 
     NSOpenGLContext *mContext;
     GLuint mTempTextureName;
@@ -412,6 +446,22 @@ GLContextProviderCGL::GetGlobalContext(const ContextFlags)
     }
 
     return gGlobalContext;
+}
+
+SharedTextureHandle
+GLContextProviderCGL::CreateSharedHandle(GLContext::SharedTextureShareType shareType,
+                                         void* buffer,
+                                         GLContext::SharedTextureBufferType bufferType)
+{
+    if (shareType != GLContext::SameProcess ||
+        bufferType != GLContext::IOSurface) {
+        return 0;
+    }
+
+    MacIOSurface* surf = static_cast<MacIOSurface*>(buffer);
+    surf->AddRef();
+
+    return (SharedTextureHandle)surf;
 }
 
 void

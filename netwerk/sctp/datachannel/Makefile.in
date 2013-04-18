@@ -15,15 +15,8 @@ LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1
 NO_PROFILE_GUIDED_OPTIMIZE = 1 # Don't PGO
 
-EXPORTS_NAMESPACES = mozilla/net
-
 CPPSRCS = \
   DataChannel.cpp \
-  $(NULL)
-
-EXPORTS_mozilla/net = \
-  DataChannel.h \
-  DataChannelProtocol.h \
   $(NULL)
 
 LOCAL_INCLUDES = \

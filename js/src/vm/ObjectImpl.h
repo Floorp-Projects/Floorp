@@ -1,9 +1,8 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=78:
- *
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
  * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef ObjectImpl_h___
 #define ObjectImpl_h___
@@ -560,11 +559,11 @@ struct uint8_clamped {
 };
 
 /* Note that we can't use std::numeric_limits here due to uint8_clamped. */
-template<typename T> static inline const bool TypeIsFloatingPoint() { return false; }
+template<typename T> inline const bool TypeIsFloatingPoint() { return false; }
 template<> inline const bool TypeIsFloatingPoint<float>() { return true; }
 template<> inline const bool TypeIsFloatingPoint<double>() { return true; }
 
-template<typename T> static inline const bool TypeIsUnsigned() { return false; }
+template<typename T> inline const bool TypeIsUnsigned() { return false; }
 template<> inline const bool TypeIsUnsigned<uint8_t>() { return true; }
 template<> inline const bool TypeIsUnsigned<uint16_t>() { return true; }
 template<> inline const bool TypeIsUnsigned<uint32_t>() { return true; }

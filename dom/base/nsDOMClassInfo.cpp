@@ -39,7 +39,6 @@
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIXPConnect.h"
-#include "nsIJSContextStack.h"
 #include "nsIXPCSecurityManager.h"
 #include "nsIStringBundle.h"
 #include "nsIConsoleService.h"
@@ -229,7 +228,7 @@
 #include "nsIImageDocument.h"
 
 // Storage includes
-#include "nsDOMStorage.h"
+#include "DOMStorage.h"
 
 // Device Storage
 #include "nsIDOMDeviceStorage.h"
@@ -758,9 +757,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   // since a call to addProperty() is always followed by a call to
   // setProperty(), except in the case when a getter or setter is set
   // for a property. But we don't care about getters or setters here.
-  NS_DEFINE_CLASSINFO_DATA(StorageObsolete, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
   NS_DEFINE_CLASSINFO_DATA(Storage, nsStorage2SH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_NEWRESOLVE |
@@ -769,8 +765,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            nsIXPCScriptable::WANT_DELPROPERTY |
                            nsIXPCScriptable::DONT_ENUM_STATIC_PROPS |
                            nsIXPCScriptable::WANT_NEWENUMERATE)
-  NS_DEFINE_CLASSINFO_DATA(StorageItem, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(XULCommandEvent, nsEventSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -1391,7 +1385,7 @@ NS_INTERFACE_MAP_END
 
 static JSClass sDOMConstructorProtoClass = {
   "DOM Constructor.prototype", 0,
-  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+  JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, nullptr
 };
 
@@ -1645,12 +1639,7 @@ nsDOMClassInfo::Init()
   sSecMan = sm;
   NS_ADDREF(sSecMan);
 
-  nsCOMPtr<nsIThreadJSContextStack> stack =
-    do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  JSContext* cx = stack->GetSafeJSContext();
-  NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
+  SafeAutoJSContext cx;
 
   DOM_CLASSINFO_MAP_BEGIN(Window, nsIDOMWindow)
     DOM_CLASSINFO_WINDOW_MAP_ENTRIES(nsGlobalWindow::HasIndexedDBSupport())
@@ -2069,17 +2058,8 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMXPathResult)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(StorageObsolete, nsIDOMStorageObsolete)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageObsolete)
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(Storage, nsIDOMStorage)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorage)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(StorageItem, nsIDOMStorageItem)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageItem)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMToString)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(XULCommandEvent, nsIDOMXULCommandEvent)
@@ -2695,8 +2675,7 @@ nsDOMClassInfo::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
 NS_IMETHODIMP
 nsDOMClassInfo::DelProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                            JSObject *obj, jsid id, jsval *vp,
-                            bool *_retval)
+                            JSObject *obj, jsid id, bool *_retval)
 {
   NS_WARNING("nsDOMClassInfo::DelProperty Don't call me!");
 
@@ -3190,7 +3169,7 @@ static JSClass sGlobalScopePolluterClass = {
   "Global Scope Polluter",
   JSCLASS_NEW_RESOLVE,
   JS_PropertyStub,
-  JS_PropertyStub,
+  JS_DeletePropertyStub,
   nsWindowSH::GlobalScopePolluterGetProperty,
   JS_StrictPropertyStub,
   JS_EnumerateStub,
@@ -5565,18 +5544,6 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
   // See http://bugzilla.mozilla.org/show_bug.cgi?id=227417
   nsIDocument* doc = node->OwnerDoc();
 
-  // If we have a document, make sure one of these is true
-  // (1) it has a script handling object,
-  // (2) has had one, or has been marked to have had one,
-  // (3) we are running a privileged script.
-  // Event handling is possible only if (1). If (2) event handling is prevented.
-  // If document has never had a script handling object,
-  // untrusted scripts (3) shouldn't touch it!
-  bool hasHadScriptHandlingObject = false;
-  NS_ENSURE_STATE(doc->GetScriptHandlingObject(hasHadScriptHandlingObject) ||
-                  hasHadScriptHandlingObject ||
-                  nsContentUtils::IsCallerChrome());
-
   nsINode *native_parent;
 
   bool nodeIsElement = node->IsElement();
@@ -5625,26 +5592,17 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
     }
   } else {
     // We're called for a document object; set the parent to be the
-    // document's global object, if there is one
+    // document's global object
 
-    // Get the scope object from the document.
-    nsISupports *scope = doc->GetScopeObject();
+    // Document should know its global but if the owner window of the
+    // document is already dead at this point, then just throw.
+    nsIGlobalObject* scope = doc->GetScopeObject();
+    NS_ENSURE_TRUE(scope, NS_ERROR_UNEXPECTED);
 
-    if (scope) {
-        jsval v;
-        nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-        nsresult rv = WrapNative(cx, globalObj, scope, false, &v,
-                                 getter_AddRefs(holder));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        holder->GetJSObject(parentObj);
-    }
-    else {
-      // No global object reachable from this document, use the
-      // global object that was passed to this method.
-
-      *parentObj = globalObj;
-    }
+    *parentObj = scope->GetGlobalJSObject();
+    // Guarding against the case when the native global is still alive
+    // but the JS global is not.
+    NS_ENSURE_TRUE(*parentObj, NS_ERROR_UNEXPECTED);
 
     // No slim wrappers for a document's scope object.
     return node->ChromeOnlyAccess() ?
@@ -6330,7 +6288,7 @@ static JSClass sHTMLDocumentAllClass = {
   JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_NEW_RESOLVE |
   JSCLASS_EMULATES_UNDEFINED | JSCLASS_HAS_RESERVED_SLOTS(1),
   JS_PropertyStub,                                         /* addProperty */
-  JS_PropertyStub,                                         /* delProperty */
+  JS_DeletePropertyStub,                                   /* delProperty */
   nsHTMLDocumentSH::DocumentAllGetProperty,                /* getProperty */
   JS_StrictPropertyStub,                                   /* setProperty */
   JS_EnumerateStub,
@@ -6346,7 +6304,7 @@ static JSClass sHTMLDocumentAllHelperClass = {
   "HTML document.all helper class",
   JSCLASS_NEW_RESOLVE,
   JS_PropertyStub,                                         /* addProperty */
-  JS_PropertyStub,                                         /* delProperty */
+  JS_DeletePropertyStub,                                   /* delProperty */
   nsHTMLDocumentSH::DocumentAllHelperGetProperty,          /* getProperty */
   JS_StrictPropertyStub,                                   /* setProperty */
   JS_EnumerateStub,
@@ -6359,7 +6317,7 @@ static JSClass sHTMLDocumentAllTagsClass = {
   "HTML document.all.tags class",
   JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
   JS_PropertyStub,                                         /* addProperty */
-  JS_PropertyStub,                                         /* delProperty */
+  JS_DeletePropertyStub,                                   /* delProperty */
   JS_PropertyStub,                                         /* getProperty */
   JS_StrictPropertyStub,                                   /* setProperty */
   JS_EnumerateStub,
@@ -7443,7 +7401,7 @@ nsStorage2SH::SetProperty(nsIXPConnectWrappedNative *wrapper,
 NS_IMETHODIMP
 nsStorage2SH::DelProperty(nsIXPConnectWrappedNative *wrapper,
                           JSContext *cx, JSObject *obj, jsid id,
-                          jsval *vp, bool *_retval)
+                          bool *_retval)
 {
   nsCOMPtr<nsIDOMStorage> storage(do_QueryWrappedNative(wrapper));
   NS_ENSURE_TRUE(storage, NS_ERROR_UNEXPECTED);
@@ -7455,11 +7413,12 @@ nsStorage2SH::DelProperty(nsIXPConnectWrappedNative *wrapper,
   NS_ENSURE_TRUE(keyStr.init(cx, key), NS_ERROR_UNEXPECTED);
 
   nsresult rv = storage->RemoveItem(keyStr);
-  if (NS_SUCCEEDED(rv)) {
-    rv = NS_SUCCESS_I_DID_SOMETHING;
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
-  return rv;
+  *_retval = true;
+  return NS_SUCCESS_I_DID_SOMETHING;
 }
 
 

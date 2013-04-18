@@ -790,6 +790,11 @@ setting[type="directory"] > .preferences-alignment {
   -moz-box-align: center;
 }
 
+/* Removes the left side title vbox on radio setting */
+setting[type="radio"] > vbox {
+  display: none;
+}
+
 #prefs-homepage-options, #prefs-homepage-popup {
   min-width: 200px;
 }
@@ -868,6 +873,25 @@ setting[type="directory"] > .preferences-alignment {
 #start[viewstate="snapped"],
 #snapped-start:not([viewstate="snapped"]) {
   visibility: collapse;
+}
+
+/*Formatting for the limited horizontal space of snapped*/
+#start-autocomplete[viewstate="snapped"] .richgrid-item-content {
+  -moz-box-orient: horizontal;
+}
+
+#start-autocomplete[viewstate="snapped"] {
+  padding-left: 0px;
+  padding-right: 0px;
+}
+
+#start-container[viewstate="snapped"] {
+  padding-left: 0px;
+  padding-right: 0px;
+}
+
+#start-container[viewstate="snapped"] .meta-section {
+  margin: 0px;
 }
 
 /* Browser Content Areas ----------------------------------------------------- */

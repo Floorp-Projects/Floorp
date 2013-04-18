@@ -18,3 +18,13 @@ XPIDL_MODULE = 'xpcom_components'
 
 MODULE = 'xpcom'
 
+EXPORTS += [
+    'nsCategoryManagerUtils.h',
+]
+
+EXPORTS.mozilla += [
+    'Module.h',
+    'ModuleLoader.h',
+    'ModuleUtils.h',
+]
+

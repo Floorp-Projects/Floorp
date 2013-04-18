@@ -168,11 +168,11 @@ BluetoothAdapter::BluetoothAdapter(nsPIDOMWindow* aWindow,
 
 BluetoothAdapter::~BluetoothAdapter()
 {
+  Unroot();
   BluetoothService* bs = BluetoothService::Get();
   // We can be null on shutdown, where this might happen
   NS_ENSURE_TRUE_VOID(bs);
   bs->UnregisterBluetoothSignalHandler(NS_LITERAL_STRING(KEY_ADAPTER), this);
-  Unroot();
 }
 
 void

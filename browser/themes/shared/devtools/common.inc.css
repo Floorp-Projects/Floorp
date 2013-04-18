@@ -83,3 +83,31 @@
 .devtools-autocomplete-listbox.light-theme > richlistitem > label {
   color: #666;
 }
+
+/* Responsive container */
+
+.devtools-responsive-container {
+  -moz-box-orient: horizontal;
+}
+
+@media (max-width: 700px) {
+  .devtools-responsive-container {
+    -moz-box-orient: vertical;
+  }
+
+  .devtools-responsive-container > .devtools-side-splitter {
+    border: 0;
+    margin: 0;
+    border-top: 1px solid black;
+    min-height: 3px;
+    height: 3px;
+    margin-bottom: -3px;
+    /* In some edge case the cursor is not changed to n-resize */
+    cursor: n-resize;
+  }
+
+  .devtools-responsive-container > .devtools-sidebar-tabs {
+    min-height: 35vh;
+    max-height: 75vh;
+  }
+}

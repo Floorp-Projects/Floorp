@@ -58,6 +58,43 @@ using namespace gfx;
 
 namespace layers {
 
+
+TiledContentClient::TiledContentClient(BasicTiledThebesLayer* aThebesLayer,
+                                       BasicShadowLayerManager* aManager)
+  : CompositableClient(aManager->AsShadowForwarder())
+  , mTiledBuffer(aThebesLayer, aManager)
+  , mLowPrecisionTiledBuffer(aThebesLayer, aManager)
+{
+  MOZ_COUNT_CTOR(TiledContentClient);
+
+  mLowPrecisionTiledBuffer.SetResolution(gfxPlatform::GetLowPrecisionResolution());
+}
+
+void
+TiledContentClient::LockCopyAndWrite(TiledBufferType aType)
+{
+  // Create a heap copy owned and released by the compositor. This is needed
+  // since we're sending this over an async message and content needs to be
+  // be able to modify the tiled buffer in the next transaction.
+  // TODO: Remove me once Bug 747811 lands.
+  BasicTiledLayerBuffer* buffer = aType == LOW_PRECISION_TILED_BUFFER
+    ? &mLowPrecisionTiledBuffer
+    : &mTiledBuffer;
+
+  BasicTiledLayerBuffer* heapCopy = new BasicTiledLayerBuffer(buffer->DeepCopy());
+  buffer->ReadLock();
+  mForwarder->PaintedTiledLayerBuffer(this, heapCopy);
+  buffer->ClearPaintedRegion();
+}
+
+BasicTiledLayerBuffer::BasicTiledLayerBuffer(BasicTiledThebesLayer* aThebesLayer,
+                                             BasicShadowLayerManager* aManager)
+  : mThebesLayer(aThebesLayer)
+  , mManager(aManager)
+  , mLastPaintOpaque(false)
+{
+}
+
 bool
 BasicTiledLayerBuffer::HasFormatChanged() const
 {
@@ -75,18 +112,6 @@ BasicTiledLayerBuffer::GetContentType() const
   }
 }
 
-void
-BasicTiledLayerBuffer::LockCopyAndWrite()
-{
-  // Create a heap copy owned and released by the compositor. This is needed
-  // since we're sending this over an async message and content needs to be
-  // be able to modify the tiled buffer in the next transaction.
-  // TODO: Remove me once Bug 747811 lands.
-  BasicTiledLayerBuffer *heapCopy = new BasicTiledLayerBuffer(this->DeepCopy());
-  ReadLock();
-  mManager->PaintedTiledLayerBuffer(mManager->Hold(mThebesLayer), heapCopy);
-  ClearPaintedRegion();
-}
 
 void
 BasicTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,

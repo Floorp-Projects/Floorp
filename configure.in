@@ -2484,8 +2484,6 @@ AC_SUBST(MOZ_LINKER)
 if test -n "$MOZ_LINKER"; then
   AC_DEFINE(MOZ_LINKER)
 fi
-AC_SUBST(MOZ_ENABLE_SZIP)
-AC_SUBST(MOZ_SZIP_FLAGS)
 
 dnl Only one oddball right now (QNX), but this gives us flexibility
 dnl if any other platforms need to override this in the future.
@@ -4263,6 +4261,7 @@ MOZ_USE_NATIVE_POPUP_WINDOWS=
 MOZ_ANDROID_HISTORY=
 MOZ_WEBSMS_BACKEND=
 MOZ_ANDROID_WALLPAPER=
+MOZ_ANDROID_BEAM=
 ACCESSIBILITY=1
 MOZ_SYS_MSG=
 MOZ_TIME_MANAGER=
@@ -5147,6 +5146,13 @@ if test -n "$MOZ_ANDROID_WALLPAPER"; then
 fi
 
 dnl ========================================================
+dnl = Enable NFC permission on Android
+dnl ========================================================
+if test -n "$MOZ_ANDROID_BEAM"; then
+    AC_DEFINE(MOZ_ANDROID_BEAM)
+fi
+
+dnl ========================================================
 dnl = Build Personal Security Manager
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(crypto,
@@ -5255,15 +5261,7 @@ dnl --enable-webrtc to override.  Can disable for everything in
 dnl the master list above.
 if test -n "$MOZ_WEBRTC"; then
     case "$target" in
-    *-android*|*-linuxandroid*)
-        if test -n "$MOZ_B2G"; then
-            MOZ_WEBRTC=1
-        else
-            dnl Make sure doesn't get matched by *-linux*
-            MOZ_WEBRTC=
-        fi
-        ;;
-    *-linux*|*-mingw*|*-darwin*)
+    *-linux*|*-mingw*|*-darwin*|*-android*|*-linuxandroid*)
         dnl Leave enabled
         ;;
     *)
@@ -5315,21 +5313,6 @@ if test -n "$MOZ_WEBRTC"; then
     MOZ_VP8=1
     MOZ_VP8_ENCODER=1
     MOZ_VP8_ERROR_CONCEALMENT=1
-
-    if test "$MOZ_WIDGET_TOOLKIT" != "gonk"; then
-       dnl OpenSLES is only available in Android 2.3 and later; we'll change this
-       dnl hard dependency to a dynamic load with graceful runtime failure before
-       dnl we make --enable-webrtc on by default in Android (bug 815905)
-       dnl
-       if test "$OS_TARGET" = "Android"; then
-          LDFLAGS="$LDFLAGS -lOpenSLES"
-       fi
-       case "$target" in
-          *-android*|*-linuxandroid*)
-          LDFLAGS="$LDFLAGS -lOpenSLES"
-          ;;
-       esac
-    fi
 
 dnl enable once Signaling lands
     MOZ_WEBRTC_SIGNALING=1
@@ -8617,6 +8600,7 @@ AC_SUBST(MOZ_METRO)
 AC_SUBST(MOZ_ANDROID_HISTORY)
 AC_SUBST(MOZ_WEBSMS_BACKEND)
 AC_SUBST(MOZ_ANDROID_WALLPAPER)
+AC_SUBST(MOZ_ANDROID_BEAM)
 AC_SUBST(ENABLE_STRIP)
 AC_SUBST(PKG_SKIP_STRIP)
 AC_SUBST(STRIP_FLAGS)
@@ -8929,6 +8913,9 @@ AC_SUBST(LIBJPEG_TURBO_ARM_ASM)
 
 AC_SUBST(MOZ_PACKAGE_JSSHELL)
 AC_SUBST(MOZ_FOLD_LIBS)
+
+AC_SUBST(MOZ_ENABLE_SZIP)
+AC_SUBST(MOZ_SZIP_FLAGS)
 
 AC_MSG_CHECKING([for posix_fallocate])
 AC_TRY_LINK([#define _XOPEN_SOURCE 600

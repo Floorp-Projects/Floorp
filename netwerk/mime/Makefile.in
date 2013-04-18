@@ -16,10 +16,6 @@ LIBXUL_LIBRARY = 1
 
 FORCE_STATIC_LIB = 1
 
-EXPORTS = \
-  nsMimeTypes.h \
-  $(NULL)
-
 CPPSRCS = \
   nsMIMEHeaderParamImpl.cpp \
   $(NULL)

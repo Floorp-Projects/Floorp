@@ -15,6 +15,7 @@ Components.utils.import('resource://test/Utils.jsm');
 define("test/source-map/test-source-map-consumer", ["require", "exports", "module"], function (require, exports, module) {
 
   var SourceMapConsumer = require('source-map/source-map-consumer').SourceMapConsumer;
+  var SourceMapGenerator = require('source-map/source-map-generator').SourceMapGenerator;
 
   exports['test that we can instantiate with a string or an objects'] = function (assert, util) {
     assert.doesNotThrow(function () {
@@ -97,6 +98,10 @@ define("test/source-map/test-source-map-consumer", ["require", "exports", "modul
     map.eachMapping(function (mapping) {
       assert.ok(mapping.generatedLine >= previousLine);
 
+      if (mapping.source) {
+        assert.equal(mapping.source.indexOf(util.testMap.sourceRoot), 0);
+      }
+
       if (mapping.generatedLine === previousLine) {
         assert.ok(mapping.generatedColumn >= previousColumn);
         previousColumn = mapping.generatedColumn;
@@ -142,6 +147,150 @@ define("test/source-map/test-source-map-consumer", ["require", "exports", "modul
     map.eachMapping(function () {
       assert.equal(this, context);
     }, context);
+  };
+
+  exports['test that the `sourcesContent` field has the original sources'] = function (assert, util) {
+    var map = new SourceMapConsumer(util.testMapWithSourcesContent);
+    var sourcesContent = map.sourcesContent;
+
+    assert.equal(sourcesContent[0], ' ONE.foo = function (bar) {\n   return baz(bar);\n };');
+    assert.equal(sourcesContent[1], ' TWO.inc = function (n) {\n   return n + 1;\n };');
+    assert.equal(sourcesContent.length, 2);
+  };
+
+  exports['test that we can get the original sources for the sources'] = function (assert, util) {
+    var map = new SourceMapConsumer(util.testMapWithSourcesContent);
+    var sources = map.sources;
+
+    assert.equal(map.sourceContentFor(sources[0]), ' ONE.foo = function (bar) {\n   return baz(bar);\n };');
+    assert.equal(map.sourceContentFor(sources[1]), ' TWO.inc = function (n) {\n   return n + 1;\n };');
+    assert.equal(map.sourceContentFor("one.js"), ' ONE.foo = function (bar) {\n   return baz(bar);\n };');
+    assert.equal(map.sourceContentFor("two.js"), ' TWO.inc = function (n) {\n   return n + 1;\n };');
+    assert.throws(function () {
+      map.sourceContentFor("");
+    }, Error);
+    assert.throws(function () {
+      map.sourceContentFor("/the/root/three.js");
+    }, Error);
+    assert.throws(function () {
+      map.sourceContentFor("three.js");
+    }, Error);
+  };
+
+  exports['test sourceRoot + generatedPositionFor'] = function (assert, util) {
+    var map = new SourceMapGenerator({
+      sourceRoot: 'foo/bar',
+      file: 'baz.js'
+    });
+    map.addMapping({
+      original: { line: 1, column: 1 },
+      generated: { line: 2, column: 2 },
+      source: 'bang.coffee'
+    });
+    map.addMapping({
+      original: { line: 5, column: 5 },
+      generated: { line: 6, column: 6 },
+      source: 'bang.coffee'
+    });
+    map = new SourceMapConsumer(map.toString());
+
+    // Should handle without sourceRoot.
+    var pos = map.generatedPositionFor({
+      line: 1,
+      column: 1,
+      source: 'bang.coffee'
+    });
+
+    assert.equal(pos.line, 2);
+    assert.equal(pos.column, 2);
+
+    // Should handle with sourceRoot.
+    var pos = map.generatedPositionFor({
+      line: 1,
+      column: 1,
+      source: 'foo/bar/bang.coffee'
+    });
+
+    assert.equal(pos.line, 2);
+    assert.equal(pos.column, 2);
+  };
+
+  exports['test sourceRoot + originalPositionFor'] = function (assert, util) {
+    var map = new SourceMapGenerator({
+      sourceRoot: 'foo/bar',
+      file: 'baz.js'
+    });
+    map.addMapping({
+      original: { line: 1, column: 1 },
+      generated: { line: 2, column: 2 },
+      source: 'bang.coffee'
+    });
+    map = new SourceMapConsumer(map.toString());
+
+    var pos = map.originalPositionFor({
+      line: 2,
+      column: 2,
+    });
+
+    // Should always have the prepended source root
+    assert.equal(pos.source, 'foo/bar/bang.coffee');
+    assert.equal(pos.line, 1);
+    assert.equal(pos.column, 1);
+  };
+
+  exports['test github issue #56'] = function (assert, util) {
+    var map = new SourceMapGenerator({
+      sourceRoot: 'http://',
+      file: 'www.example.com/foo.js'
+    });
+    map.addMapping({
+      original: { line: 1, column: 1 },
+      generated: { line: 2, column: 2 },
+      source: 'www.example.com/original.js'
+    });
+    map = new SourceMapConsumer(map.toString());
+
+    var sources = map.sources;
+    assert.equal(sources.length, 1);
+    assert.equal(sources[0], 'http://www.example.com/original.js');
+  };
+
+  exports['test github issue #43'] = function (assert, util) {
+    var map = new SourceMapGenerator({
+      sourceRoot: 'http://example.com',
+      file: 'foo.js'
+    });
+    map.addMapping({
+      original: { line: 1, column: 1 },
+      generated: { line: 2, column: 2 },
+      source: 'http://cdn.example.com/original.js'
+    });
+    map = new SourceMapConsumer(map.toString());
+
+    var sources = map.sources;
+    assert.equal(sources.length, 1,
+                 'Should only be one source.');
+    assert.equal(sources[0], 'http://cdn.example.com/original.js',
+                 'Should not be joined with the sourceRoot.');
+  };
+
+  exports['test absolute path, but same host sources'] = function (assert, util) {
+    var map = new SourceMapGenerator({
+      sourceRoot: 'http://example.com/foo/bar',
+      file: 'foo.js'
+    });
+    map.addMapping({
+      original: { line: 1, column: 1 },
+      generated: { line: 2, column: 2 },
+      source: '/original.js'
+    });
+    map = new SourceMapConsumer(map.toString());
+
+    var sources = map.sources;
+    assert.equal(sources.length, 1,
+                 'Should only be one source.');
+    assert.equal(sources[0], 'http://example.com/original.js',
+                 'Source should be relative the host of the source root.');
   };
 
 });

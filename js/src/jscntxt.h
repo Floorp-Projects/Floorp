@@ -1,6 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=78:
- *
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -93,6 +92,7 @@ RawFunction CloneFunctionAtCallsite(JSContext *cx, HandleFunction fun,
                                     HandleScript script, jsbytecode *pc);
 
 typedef HashSet<JSObject *> ObjectSet;
+typedef HashSet<Shape *> ShapeSet;
 
 /* Detects cycles when traversing an object graph. */
 class AutoCycleDetector
@@ -1203,8 +1203,6 @@ struct JSRuntime : private JS::shadow::Runtime,
     js::AsmJSMachExceptionHandler asmJSMachExceptionHandler;
 #endif
 
-    size_t              sizeOfNonHeapAsmJSArrays_;
-
 #ifdef JS_THREADSAFE
 # ifdef JS_ION
     js::WorkerThreadState *workerThreadState;
@@ -1404,7 +1402,6 @@ struct JSRuntime : private JS::shadow::Runtime,
     }
 
     void sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, JS::RuntimeSizes *runtime);
-    size_t sizeOfExplicitNonHeap();
 
   private:
 

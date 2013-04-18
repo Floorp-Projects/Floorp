@@ -33,18 +33,6 @@ CPPSRCS := \
   nsSpeechTask.cpp \
   $(NULL)
 
-EXPORTS_NAMESPACES := mozilla/dom
-EXPORTS_mozilla/dom := \
-  EnableSpeechSynthesisCheck.h \
-  SpeechSynthesisUtterance.h \
-  SpeechSynthesisVoice.h \
-  SpeechSynthesis.h \
-  SpeechSynthesisChild.h \
-  SpeechSynthesisParent.h \
-  nsSynthVoiceRegistry.h \
-  nsSpeechTask.h \
-  $(NULL)
-
 FORCE_STATIC_LIB := 1
 
 include $(topsrcdir)/config/config.mk

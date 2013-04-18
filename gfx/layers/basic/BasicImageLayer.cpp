@@ -258,10 +258,15 @@ BasicShadowableImageLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
 
   if (!mImageClient ||
       !mImageClient->UpdateImage(mContainer, GetContentFlags())) {
-    mImageClient = BasicManager()->CreateImageClientFor(GetImageClientType(), this,
-                                                        mForceSingleTile
-                                                          ? ForceSingleTile
-                                                          : 0);
+    mImageClient = ImageClient::CreateImageClient(GetImageClientType(),
+                                                  BasicManager(),
+                                                  mForceSingleTile
+                                                    ? ForceSingleTile
+                                                    : 0);
+    if (GetImageClientType() == BUFFER_BRIDGE) {
+      static_cast<ImageClientBridge*>(mImageClient.get())->SetLayer(this);
+    }
+
     if (!mImageClient) {
       return;
     }

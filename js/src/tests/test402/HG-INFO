@@ -1,0 +1,7 @@
+URL:         http://hg.ecmascript.org/tests/test262
+changeset:   363:4f586032baec
+tag:         tip
+user:        Norbert Lindenberg <ecmascript@lindenbergsoftware.com>
+date:        Sun Mar 24 23:48:59 2013 -0700
+summary:     New tests and test fixes for ECMAScript Internationalization API.
+

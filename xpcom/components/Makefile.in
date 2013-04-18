@@ -14,18 +14,6 @@ LIBRARY_NAME	= xpcomcomponents_s
 LIBXUL_LIBRARY = 1
 MOZILLA_INTERNAL_API = 1
 
-EXPORTS_NAMESPACES = mozilla
-
-EXPORTS	= \
-  nsCategoryManagerUtils.h \
-  $(NULL)
-
-EXPORTS_mozilla = \
-  Module.h \
-  ModuleLoader.h \
-  ModuleUtils.h \
-  $(NULL)
-
 CPPSRCS		= \
 		nsCategoryManager.cpp \
 		nsComponentManager.cpp \

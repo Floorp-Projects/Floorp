@@ -33,3 +33,48 @@ XPIDL_MODULE = 'content_base'
 
 MODULE = 'content'
 
+EXPORTS += [
+    'mozFlushType.h',
+    'nsCaseTreatment.h',
+    'nsContentCID.h',
+    'nsContentCreatorFunctions.h',
+    'nsContentPolicyUtils.h',
+    'nsContentUtils.h',
+    'nsCopySupport.h',
+    'nsDOMFile.h',
+    'nsDeprecatedOperationList.h',
+    'nsDocElementCreatedNotificationRunner.h',
+    'nsHostObjectProtocolHandler.h',
+    'nsIAttribute.h',
+    'nsIContent.h',
+    'nsIContentIterator.h',
+    'nsIContentSerializer.h',
+    'nsIDocument.h',
+    'nsIDocumentInlines.h',
+    'nsIDocumentObserver.h',
+    'nsIMutationObserver.h',
+    'nsINameSpaceManager.h',
+    'nsINode.h',
+    'nsINodeInfo.h',
+    'nsINodeList.h',
+    'nsIScriptElement.h',
+    'nsIStyleSheetLinkingElement.h',
+    'nsIXPathEvaluatorInternal.h',
+    'nsLineBreaker.h',
+    'nsReferencedElement.h',
+    'nsTreeSanitizer.h',
+    'nsViewportInfo.h',
+    'nsXMLNameSpaceMap.h',
+]
+
+EXPORTS.mozilla.dom += [
+    'DirectionalityUtils.h',
+    'Element.h',
+    'FragmentOrElement.h',
+    'FromParser.h',
+]
+
+EXPORTS.mozilla += [
+    'CORSMode.h',
+]
+

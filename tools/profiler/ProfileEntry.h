@@ -6,12 +6,12 @@
 #ifndef MOZ_PROFILE_ENTRY_H
 #define MOZ_PROFILE_ENTRY_H
 
+#include <ostream>
 #include "GeckoProfilerImpl.h"
 #include "JSAObjectBuilder.h"
 #include "platform.h"
 #include "mozilla/Mutex.h"
 
-class ThreadProfile;
 class ThreadProfile;
 
 class ProfileEntry
@@ -56,7 +56,9 @@ typedef void (*IterateTagsCallback)(const ProfileEntry& entry, const char* tagSt
 class ThreadProfile
 {
 public:
-  ThreadProfile(int aEntrySize, PseudoStack *aStack);
+  ThreadProfile(const char* aName, int aEntrySize, PseudoStack *aStack,
+                int aThreadId, PlatformData* aPlatformData,
+                bool aIsMainThread);
   ~ThreadProfile();
   void addTag(ProfileEntry aTag);
   void flush();
@@ -70,6 +72,12 @@ public:
   PseudoStack* GetPseudoStack();
   mozilla::Mutex* GetMutex();
   void BuildJSObject(JSAObjectBuilder& b, JSCustomObject* profile);
+
+  bool IsMainThread() const { return mIsMainThread; }
+  const char* Name() const { return mName; }
+  int ThreadId() const { return mThreadId; }
+
+  PlatformData* GetPlatformData() { return mPlatformData; }
 private:
   // Circular buffer 'Keep One Slot Open' implementation
   // for simplicity
@@ -80,6 +88,10 @@ private:
   int            mEntrySize;
   PseudoStack*   mPseudoStack;
   mozilla::Mutex mMutex;
+  char*          mName;
+  int            mThreadId;
+  bool           mIsMainThread;
+  PlatformData*  mPlatformData;  // Platform specific data.
 };
 
 std::ostream& operator<<(std::ostream& stream, const ThreadProfile& profile);

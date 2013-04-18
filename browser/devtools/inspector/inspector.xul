@@ -63,7 +63,7 @@
     </menupopup>
   </popupset>
 
-  <hbox flex="1">
+  <box flex="1" class="devtools-responsive-container">
     <vbox flex="1">
       <toolbar id="inspector-toolbar"
         class="devtools-toolbar"
@@ -91,5 +91,5 @@
       <tabs/>
       <tabpanels flex="1"/>
     </tabbox>
-  </hbox>
+  </box>
 </window>

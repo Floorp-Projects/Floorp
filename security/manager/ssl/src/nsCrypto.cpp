@@ -34,6 +34,7 @@
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsContentUtils.h"
 #include "nsDOMJSUtils.h"
 #include "nsIXPConnect.h"
 #include "nsIRunnable.h"
@@ -46,7 +47,6 @@
 #include "nsIGenKeypairInfoDlg.h"
 #include "nsIDOMCryptoDialogs.h"
 #include "nsIFormSigningDialog.h"
-#include "nsIJSContextStack.h"
 #include "jsapi.h"
 #include "jsdbgapi.h"
 #include <ctype.h>
@@ -2182,10 +2182,8 @@ nsCryptoRunnable::Run()
   JSAutoCompartment ac(cx, m_args->m_scope);
 
   // make sure the right context is on the stack. must not return w/out popping
-  nsCOMPtr<nsIJSContextStack> stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1"));
-  if (!stack || NS_FAILED(stack->Push(cx))) {
-    return NS_ERROR_FAILURE;
-  }
+  nsCxPusher pusher;
+  pusher.Push(cx);
 
   JSBool ok =
     JS_EvaluateScriptForPrincipals(cx, m_args->m_scope,
@@ -2193,7 +2191,6 @@ nsCryptoRunnable::Run()
                                    m_args->m_jsCallback, 
                                    strlen(m_args->m_jsCallback),
                                    nullptr, 0, nullptr);
-  stack->Pop(nullptr);
   return ok ? NS_OK : NS_ERROR_FAILURE;
 }
 

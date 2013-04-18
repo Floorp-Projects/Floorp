@@ -27,10 +27,6 @@ CPPSRCS		= \
 		nsUConvPropertySearch.cpp \
 		$(NULL)
 
-EXPORTS		= \
-		nsCollation.h \
-		$(NULL)
-
 EXPORT_RESOURCE = \
 		$(srcdir)/langGroups.properties \
 		$(srcdir)/language.properties \

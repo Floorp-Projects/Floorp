@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=4 sw=4 et tw=99:
- *
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -1306,24 +1305,24 @@ void
 ParallelGetPropertyIC::reset()
 {
     DispatchIonCache::reset();
-    if (stubbedObjects_)
-        stubbedObjects_->clear();
+    if (stubbedShapes_)
+        stubbedShapes_->clear();
 }
 
 void
 ParallelGetPropertyIC::destroy()
 {
-    if (stubbedObjects_)
-        js_delete(stubbedObjects_);
+    if (stubbedShapes_)
+        js_delete(stubbedShapes_);
 }
 
 bool
-ParallelGetPropertyIC::initStubbedObjects(JSContext *cx)
+ParallelGetPropertyIC::initStubbedShapes(JSContext *cx)
 {
     JS_ASSERT(isAllocated());
-    if (!stubbedObjects_) {
-        stubbedObjects_ = cx->new_<ObjectSet>(cx);
-        return stubbedObjects_ && stubbedObjects_->init();
+    if (!stubbedShapes_) {
+        stubbedShapes_ = cx->new_<ShapeSet>(cx);
+        return stubbedShapes_ && stubbedShapes_->init();
     }
     return true;
 }
@@ -1425,12 +1424,12 @@ ParallelGetPropertyIC::update(ForkJoinSlice *slice, size_t cacheIndex,
         if (cache.canAttachStub()) {
             // Check if we have already stubbed the current object to avoid
             // attaching a duplicate stub.
-            if (!cache.initStubbedObjects(cx))
+            if (!cache.initStubbedShapes(cx))
                 return TP_FATAL;
-            ObjectSet::AddPtr p = cache.stubbedObjects()->lookupForAdd(obj);
+            ShapeSet::AddPtr p = cache.stubbedShapes()->lookupForAdd(obj->lastProperty());
             if (p)
                 return TP_SUCCESS;
-            if (!cache.stubbedObjects()->add(p, obj))
+            if (!cache.stubbedShapes()->add(p, obj->lastProperty()))
                 return TP_FATAL;
 
             // See note about the stub limit in GetPropertyCache.

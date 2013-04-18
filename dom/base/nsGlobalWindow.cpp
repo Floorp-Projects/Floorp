@@ -18,12 +18,15 @@
 #include "nsPerformance.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsBarProps.h"
-#include "nsDOMStorage.h"
+#include "nsIDOMStorage.h"
+#include "nsIDOMStorageManager.h"
+#include "DOMStorage.h"
 #include "nsDOMOfflineResourceList.h"
 #include "nsError.h"
 #include "nsIIdleService.h"
 #include "nsIPowerManagerService.h"
 #include "nsISizeOfEventTarget.h"
+#include "nsIPermissionManager.h"
 
 #ifdef XP_WIN
 #ifdef GetClassName
@@ -103,7 +106,6 @@
 #include "nsThreadUtils.h"
 #include "nsEventStateManager.h"
 #include "nsIHttpProtocolHandler.h"
-#include "nsIJSContextStack.h"
 #include "nsIJSRuntimeService.h"
 #include "nsILoadContext.h"
 #include "nsIMarkupDocumentViewer.h"
@@ -1421,8 +1423,10 @@ nsGlobalWindow::FreeInnerObjects()
   NotifyDOMWindowDestroyed(this);
 
   // Kill all of the workers for this window.
+  // We push a cx so that exceptions get reported in the right DOM Window.
   nsIScriptContext *scx = GetContextInternal();
-  AutoPushJSContext cx(scx ? scx->GetNativeContext() : nullptr);
+  AutoPushJSContext cx(scx ? scx->GetNativeContext() : nsContentUtils::GetSafeJSContext());
+  JSAutoRequest ar(cx);
   mozilla::dom::workers::CancelWorkersForWindow(cx, this);
 
   // Close all offline storages for this window.
@@ -2520,7 +2524,36 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     }
   }
 
+  PreloadLocalStorage();
+
   return NS_OK;
+}
+
+void
+nsGlobalWindow::PreloadLocalStorage()
+{
+  if (!Preferences::GetBool(kStorageEnabled)) {
+    return;
+  }
+
+  if (IsChromeWindow()) {
+    return;
+  }
+
+  nsIPrincipal* principal = GetPrincipal();
+  if (!principal) {
+    return;
+  }
+
+  nsresult rv;
+
+  nsCOMPtr<nsIDOMStorageManager> storageManager =
+    do_GetService("@mozilla.org/dom/localStorage-manager;1", &rv);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  storageManager->PrecacheStorage(principal);
 }
 
 void
@@ -2708,19 +2741,6 @@ nsGlobalWindow::DetachFromDocShell()
 
   MaybeForgiveSpamCount();
   CleanUp(false);
-
-    if (mLocalStorage) {
-      nsCOMPtr<nsIPrivacyTransitionObserver> obs = do_GetInterface(mLocalStorage);
-      if (obs) {
-        mDocShell->AddWeakPrivacyTransitionObserver(obs);
-      }
-    }
-    if (mSessionStorage) {
-      nsCOMPtr<nsIPrivacyTransitionObserver> obs = do_GetInterface(mSessionStorage);
-      if (obs) {
-        mDocShell->AddWeakPrivacyTransitionObserver(obs);
-      }
-    }
 }
 
 void
@@ -7078,15 +7098,7 @@ nsGlobalWindow::FinalClose()
   // Flag that we were closed.
   mIsClosed = true;
 
-  nsCOMPtr<nsIJSContextStack> stack =
-    do_GetService(sJSStackContractID);
-
-  JSContext *cx = nullptr;
-
-  if (stack) {
-    stack->Peek(&cx);
-  }
-
+  JSContext *cx = nsContentUtils::GetCurrentJSContext();
   if (cx) {
     nsIScriptContext *currentCX = nsJSUtils::GetDynamicScriptContext(cx);
 
@@ -7407,8 +7419,7 @@ public:
       JSObject* obj = currentInner->FastGetGlobalJSObject();
       // We only want to nuke wrappers for the chrome->content case
       if (obj && !js::IsSystemCompartment(js::GetObjectCompartment(obj))) {
-        JSContext* cx =
-          nsContentUtils::ThreadJSContextStack()->GetSafeJSContext();
+        JSContext* cx = nsContentUtils::GetSafeJSContext();
 
         JSAutoRequest ar(cx);
         js::NukeCrossCompartmentWrappers(cx, 
@@ -7999,6 +8010,34 @@ nsGlobalWindow::AddEventListener(const nsAString& aType,
   return NS_OK;
 }
 
+void
+nsGlobalWindow::AddEventListener(const nsAString& aType,
+                                 nsIDOMEventListener* aListener,
+                                 bool aUseCapture,
+                                 const Nullable<bool>& aWantsUntrusted,
+                                 ErrorResult& aRv)
+{
+  if (IsOuterWindow() && mInnerWindow &&
+      !nsContentUtils::CanCallerAccess(mInnerWindow)) {
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
+  }
+
+  bool wantsUntrusted;
+  if (aWantsUntrusted.IsNull()) {
+    wantsUntrusted = !nsContentUtils::IsChromeDoc(mDoc);
+  } else {
+    wantsUntrusted = aWantsUntrusted.Value();
+  }
+
+  nsEventListenerManager* manager = GetListenerManager(true);
+  if (!manager) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return;
+  }
+  manager->AddEventListener(aType, aListener, aUseCapture, wantsUntrusted);
+}
+
 NS_IMETHODIMP
 nsGlobalWindow::AddSystemEventListener(const nsAString& aType,
                                        nsIDOMEventListener *aListener,
@@ -8416,7 +8455,8 @@ nsGlobalWindow::SetKeyboardIndicators(UIStateChangeType aShowAccelerators,
       oldShouldShowFocusRing != newShouldShowFocusRing &&
       mFocusedNode->IsElement()) {
     // Update mFocusedNode's state.
-    if (newShouldShowFocusRing) {
+    if (newShouldShowFocusRing &&
+        !nsFocusManager::ThemeDisplaysFocusForContent(mFocusedNode.get())) {
       mFocusedNode->AsElement()->AddStates(NS_EVENT_STATE_FOCUSRING);
     } else {
       mFocusedNode->AsElement()->RemoveStates(NS_EVENT_STATE_FOCUSRING);
@@ -8826,7 +8866,7 @@ nsGlobalWindow::GetSessionStorage(nsIDOMStorage ** aSessionStorage)
                    "window %x owned sessionStorage "
                    "that could not be accessed!");
       if (!canAccess) {
-          mSessionStorage = nullptr;
+        mSessionStorage = nullptr;
       }
     }
   }
@@ -8840,7 +8880,7 @@ nsGlobalWindow::GetSessionStorage(nsIDOMStorage ** aSessionStorage)
     }
 
     // If the document has the sandboxed origin flag set
-    // don't allow access to localStorage.
+    // don't allow access to sessionStorage.
     if (!mDoc) {
       return NS_ERROR_FAILURE;
     }
@@ -8849,10 +8889,17 @@ nsGlobalWindow::GetSessionStorage(nsIDOMStorage ** aSessionStorage)
       return NS_ERROR_DOM_SECURITY_ERR;
     }
 
-    nsresult rv = docShell->GetSessionStorageForPrincipal(principal,
-                                                          documentURI,
-                                                          true,
-                                                          getter_AddRefs(mSessionStorage));
+    nsresult rv;
+
+    nsCOMPtr<nsIDOMStorageManager> storageManager = do_QueryInterface(docShell, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(docShell);
+
+    rv = storageManager->CreateStorage(principal,
+                                       documentURI,
+                                       loadContext && loadContext->UsePrivateBrowsing(),
+                                       getter_AddRefs(mSessionStorage));
     NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef PR_LOGGING
@@ -8864,17 +8911,12 @@ nsGlobalWindow::GetSessionStorage(nsIDOMStorage ** aSessionStorage)
     if (!mSessionStorage) {
       return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
     }
-
-    nsCOMPtr<nsIPrivacyTransitionObserver> obs = do_GetInterface(mSessionStorage);
-    if (obs) {
-      docShell->AddWeakPrivacyTransitionObserver(obs);
-    }
   }
 
 #ifdef PR_LOGGING
-    if (PR_LOG_TEST(gDOMLeakPRLog, PR_LOG_DEBUG)) {
-      PR_LogPrint("nsGlobalWindow %p returns %p sessionStorage", this, mSessionStorage.get());
-    }
+  if (PR_LOG_TEST(gDOMLeakPRLog, PR_LOG_DEBUG)) {
+    PR_LogPrint("nsGlobalWindow %p returns %p sessionStorage", this, mSessionStorage.get());
+  }
 #endif
 
   NS_ADDREF(*aSessionStorage = mSessionStorage);
@@ -8898,21 +8940,18 @@ nsGlobalWindow::GetLocalStorage(nsIDOMStorage ** aLocalStorage)
 
     nsresult rv;
 
-    if (!nsDOMStorage::CanUseStorage())
+    if (!DOMStorage::CanUseStorage()) {
       return NS_ERROR_DOM_SECURITY_ERR;
+    }
 
     nsIPrincipal *principal = GetPrincipal();
-    if (!principal)
+    if (!principal) {
       return NS_OK;
+    }
 
     nsCOMPtr<nsIDOMStorageManager> storageManager =
-      do_GetService("@mozilla.org/dom/storagemanager;1", &rv);
+      do_GetService("@mozilla.org/dom/localStorage-manager;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    nsString documentURI;
-    if (mDocument) {
-      mDocument->GetDocumentURI(documentURI);
-    }
 
     // If the document has the sandboxed origin flag set
     // don't allow access to localStorage.
@@ -8920,19 +8959,19 @@ nsGlobalWindow::GetLocalStorage(nsIDOMStorage ** aLocalStorage)
       return NS_ERROR_DOM_SECURITY_ERR;
     }
 
+    nsString documentURI;
+    if (mDocument) {
+      mDocument->GetDocumentURI(documentURI);
+    }
+
     nsIDocShell* docShell = GetDocShell();
     nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(docShell);
 
-    rv = storageManager->GetLocalStorageForPrincipal(principal,
-                                                     documentURI,
-                                                     loadContext && loadContext->UsePrivateBrowsing(),
-                                                     getter_AddRefs(mLocalStorage));
+    rv = storageManager->CreateStorage(principal,
+                                       documentURI,
+                                       loadContext && loadContext->UsePrivateBrowsing(),
+                                       getter_AddRefs(mLocalStorage));
     NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIPrivacyTransitionObserver> obs = do_GetInterface(mLocalStorage);
-    if (obs && docShell) {
-      docShell->AddWeakPrivacyTransitionObserver(obs);
-    }
   }
 
   NS_ADDREF(*aLocalStorage = mLocalStorage);
@@ -9506,8 +9545,13 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
     rv = event->GetStorageArea(getter_AddRefs(changingStorage));
     NS_ENSURE_SUCCESS(rv, rv);
 
+    bool fireMozStorageChanged = false;
+    principal = GetPrincipal();
+    if (!principal) {
+      return NS_OK;
+    }
+
     nsCOMPtr<nsPIDOMStorage> pistorage = do_QueryInterface(changingStorage);
-    nsPIDOMStorage::nsDOMStorageType storageType = pistorage->StorageType();
 
     nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(GetDocShell());
     bool isPrivate = loadContext && loadContext->UsePrivateBrowsing();
@@ -9515,28 +9559,21 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
       return NS_OK;
     }
 
-    bool fireMozStorageChanged = false;
-    principal = GetPrincipal();
-    switch (storageType)
+    switch (pistorage->GetType())
     {
     case nsPIDOMStorage::SessionStorage:
     {
-      nsCOMPtr<nsIDOMStorage> storage = mSessionStorage;
-      if (!storage) {
-        nsIDocShell* docShell = GetDocShell();
-        if (principal && docShell) {
-          // No need to pass documentURI here, it's only needed when we want
-          // to create a new storage, the third paramater would be true
-          docShell->GetSessionStorageForPrincipal(principal,
-                                                  EmptyString(),
-                                                  false,
-                                                  getter_AddRefs(storage));
-        }
+      bool check = false;
+
+      nsCOMPtr<nsIDOMStorageManager> storageManager = do_QueryInterface(GetDocShell());
+      if (storageManager) {
+        rv = storageManager->CheckStorage(principal, changingStorage, &check);
+        NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      if (!pistorage->IsForkOf(storage)) {
-        // This storage event is coming from a different doc shell,
-        // i.e. it is a clone, ignore this event.
+      if (!check) {
+        // This storage event is not coming from our storage or is coming
+        // from a different docshell, i.e. it is a clone, ignore this event.
         return NS_OK;
       }
 
@@ -9549,13 +9586,14 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
       fireMozStorageChanged = SameCOMIdentity(mSessionStorage, changingStorage);
       break;
     }
+
     case nsPIDOMStorage::LocalStorage:
     {
       // Allow event fire only for the same principal storages
       // XXX We have to use EqualsIgnoreDomain after bug 495337 lands
-      nsIPrincipal *storagePrincipal = pistorage->Principal();
-      bool equals;
+      nsIPrincipal* storagePrincipal = pistorage->GetPrincipal();
 
+      bool equals = false;
       rv = storagePrincipal->Equals(principal, &equals);
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -9884,27 +9922,22 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
       // up.  We do NOT want this case looking at the JS context on the stack
       // when searching.  Compare comments on
       // nsIDOMWindow::OpenWindow and nsIWindowWatcher::OpenWindow.
-      nsCOMPtr<nsIJSContextStack> stack;
 
+      // Note: Because nsWindowWatcher is so broken, it's actually important
+      // that we don't push a null cx here, because that screws it up when it
+      // tries to compute the caller principal to associate with dialog
+      // arguments. That whole setup just really needs to be rewritten. :-(
+      nsCxPusher pusher;
       if (!aContentModal) {
-        stack = do_GetService(sJSStackContractID);
+        pusher.PushNull();
       }
 
-      if (stack) {
-        rv = stack->Push(nullptr);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
 
       rv = pwwatch->OpenWindow2(this, url.get(), name_ptr, options_ptr,
                                 /* aCalledFromScript = */ false,
                                 aDialog, aNavigate, aExtraArgument,
                                 getter_AddRefs(domReturn));
 
-      if (stack) {
-        JSContext* cx;
-        stack->Pop(&cx);
-        NS_ASSERTION(!cx, "Unexpected JSContext popped!");
-      }
     }
   }
 
@@ -10825,9 +10858,7 @@ nsGlobalWindow::BuildURIfromBase(const char *aURL, nsIURI **aBuiltURI,
     cx = scx->GetNativeContext();
   } else {
     // get the JSContext from the call stack
-    nsCOMPtr<nsIThreadJSContextStack> stack(do_GetService(sJSStackContractID));
-    if (stack)
-      stack->Peek(&cx);
+    cx = nsContentUtils::GetCurrentJSContext();
   }
 
   /* resolve the URI, which could be relative to the calling window
@@ -10989,8 +11020,10 @@ nsGlobalWindow::SuspendTimeouts(uint32_t aIncrease,
     DisableGamepadUpdates();
 
     // Suspend all of the workers for this window.
+  // We push a cx so that exceptions get reported in the right DOM Window.
     nsIScriptContext *scx = GetContextInternal();
-    AutoPushJSContext cx(scx ? scx->GetNativeContext() : nullptr);
+    AutoPushJSContext cx(scx ? scx->GetNativeContext() : nsContentUtils::GetSafeJSContext());
+    JSAutoRequest ar(cx);
     mozilla::dom::workers::SuspendWorkersForWindow(cx, this);
 
     TimeStamp now = TimeStamp::Now();
@@ -11080,8 +11113,10 @@ nsGlobalWindow::ResumeTimeouts(bool aThawChildren)
     }
 
     // Resume all of the workers for this window.
+    // We push a cx so that exceptions get reported in the right DOM Window.
     nsIScriptContext *scx = GetContextInternal();
-    AutoPushJSContext cx(scx ? scx->GetNativeContext() : nullptr);
+    AutoPushJSContext cx(scx ? scx->GetNativeContext() : nsContentUtils::GetSafeJSContext());
+    JSAutoRequest ar(cx);
     mozilla::dom::workers::ResumeWorkersForWindow(cx, this);
 
     // Restore all of the timeouts, using the stored time remaining

@@ -7,7 +7,31 @@
 
 <script type="text/javascript">
 
-var MOZ_STORAGE_CHANGED_COUNT = 21;
+var expectedEvents = [
+  "empty,null,",
+  "empty,,null",
+  "key1,null,value1",
+  "key1,value1,null",
+  "key1,null,value1",
+  "key2,null,value2",
+  "key2,value2,value2-2",
+  "key1,value1,value1-2",
+  "key2,value2-2,null",
+  "testA,null,valueA",
+  "testA,valueA,valueA2",
+  "testB,null,valueB",
+  "testB,valueB,valueB2",
+  "testC,null,valueC",
+  "testC,valueC,valueC2",
+  "testC,valueC2,null",
+  "testC,null,null",
+  "testC,null,null",
+  "null,null,test",
+  "null,test,null",
+  "null,null,test",
+  "null,test,null",
+  "null,null,null"
+];
 
 function startTest()
 {
@@ -28,12 +52,14 @@ function startTest()
   is(typeof localStorage["nonexisting2"], "undefined", "['nonexisting2'] is undefined");
   is(typeof localStorage.nonexisting2, "undefined", "nonexisting2 is undefined");
 
-  var mozStorageChangedReceived = 0;
   var localStorageCopy = localStorage;
 
   function onStorageChanged(e) {
-    if (e.storageArea == localStorageCopy)
-      mozStorageChangedReceived++;
+    if (e.storageArea == localStorageCopy) {
+      ok(expectedEvents.length > 0, "Not more then expected events encountered");
+      var receivedEvent = e.key + "," + e.oldValue + "," + e.newValue;
+      is(receivedEvent, expectedEvents.shift(), "Expected event data: " + receivedEvent);
+    }
   }
 
   // Listen for MozStorageChanged
@@ -204,8 +230,7 @@ function startTest()
 
   SimpleTest.executeSoon(function () {
     SpecialPowers.removeChromeEventListener("MozStorageChanged", onStorageChanged, false);
-    is(mozStorageChangedReceived, MOZ_STORAGE_CHANGED_COUNT,
-       "received the correct number of events");
+    is(expectedEvents.length, 0, "received the correct number of events");
 
     localStorage.clear();
     SimpleTest.finish();

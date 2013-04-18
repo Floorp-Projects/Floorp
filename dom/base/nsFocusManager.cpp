@@ -1018,6 +1018,23 @@ nsFocusManager::FocusPlugin(nsIContent* aContent)
   return NS_OK;
 }
 
+/* static */ bool
+nsFocusManager::ThemeDisplaysFocusForContent(nsIContent* aContent)
+{
+  // We don't want to draw the focusring if the element is themed and
+  // the theme displays an indication of focus for the element.
+  nsIFrame* frame = aContent->GetPrimaryFrame();
+  if (frame) {
+    nsPresContext *presContext = frame->PresContext();
+    const nsStyleDisplay *disp = frame->StyleDisplay();
+    if (frame->IsThemed(disp) &&
+        presContext->GetTheme()->ThemeDrawsFocusForWidget(presContext, frame, disp->mAppearance)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /* static */
 void
 nsFocusManager::NotifyFocusStateChange(nsIContent* aContent,
@@ -1028,7 +1045,9 @@ nsFocusManager::NotifyFocusStateChange(nsIContent* aContent,
     return;
   }
   nsEventStates eventState = NS_EVENT_STATE_FOCUS;
-  if (aWindowShouldShowFocusRing) {
+  if (!aGettingFocus ||
+      (aWindowShouldShowFocusRing &&
+       !ThemeDisplaysFocusForContent(aContent))) {
     eventState |= NS_EVENT_STATE_FOCUSRING;
   }
   if (aGettingFocus) {

@@ -13,10 +13,6 @@ LIBRARY_NAME = kiss_fft
 ifeq (WINNT,$(OS_TARGET))
 VISIBILITY_FLAGS =
 endif
-EXPORTS_NAMESPACES = kiss_fft
-
-EXPORTS_kiss_fft = kiss_fft.h kiss_fftr.h
-
 CSRCS = kiss_fft.c kiss_fftr.c
 
 include $(topsrcdir)/config/rules.mk

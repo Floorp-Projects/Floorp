@@ -173,16 +173,26 @@ void TableTicker::BuildJSObject(JSAObjectBuilder& b, JSCustomObject* profile)
   JSCustomArray *threads = b.CreateArray();
   b.DefineProperty(profile, "threads", threads);
 
-  // For now we only have one thread
   SetPaused(true);
-  ThreadProfile* prof = GetPrimaryThreadProfile();
-  prof->GetMutex()->Lock();
-  JSCustomObject* threadSamples = b.CreateObject();
-  prof->BuildJSObject(b, threadSamples);
-  b.ArrayPush(threads, threadSamples);
-  prof->GetMutex()->Unlock();
+
+  {
+    mozilla::MutexAutoLock lock(*sRegisteredThreadsMutex);
+
+    for (size_t i = 0; i < sRegisteredThreads->size(); i++) {
+      // Thread not being profiled, skip it
+      if (!sRegisteredThreads->at(i)->Profile())
+        continue;
+
+      MutexAutoLock lock(*sRegisteredThreads->at(i)->Profile()->GetMutex());
+
+      JSCustomObject* threadSamples = b.CreateObject();
+      sRegisteredThreads->at(i)->Profile()->BuildJSObject(b, threadSamples);
+      b.ArrayPush(threads, threadSamples);
+    }
+  }
+
   SetPaused(false);
-}
+} 
 
 // END SaveProfileTask et al
 ////////////////////////////////////////////////////////////////////////
@@ -285,7 +295,7 @@ void StackWalkCallback(void* aPC, void* aSP, void* aClosure)
 void TableTicker::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample)
 {
 #ifndef XP_MACOSX
-  uintptr_t thread = GetThreadHandle(platform_data());
+  uintptr_t thread = GetThreadHandle(aSample->threadProfile->GetPlatformData());
   MOZ_ASSERT(thread);
 #endif
   void* pc_array[1000];
@@ -302,7 +312,7 @@ void TableTicker::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample
 
   uint32_t maxFrames = uint32_t(array.size - array.count);
 #ifdef XP_MACOSX
-  pthread_t pt = GetProfiledThread(platform_data());
+  pthread_t pt = GetProfiledThread(aSample->threadProfile->GetPlatformData());
   void *stackEnd = reinterpret_cast<void*>(-1);
   if (pt)
     stackEnd = static_cast<char*>(pthread_get_stackaddr_np(pt));
@@ -383,10 +393,12 @@ void doSampleStackTrace(PseudoStack *aStack, ThreadProfile &aProfile, TickSample
 
 void TableTicker::Tick(TickSample* sample)
 {
+  ThreadProfile& currThreadProfile = *sample->threadProfile;
+
   // Marker(s) come before the sample
-  PseudoStack* stack = mPrimaryThreadProfile.GetPseudoStack();
+  PseudoStack* stack = currThreadProfile.GetPseudoStack();
   for (int i = 0; stack->getMarker(i) != NULL; i++) {
-    addDynamicTag(mPrimaryThreadProfile, 'm', stack->getMarker(i));
+    addDynamicTag(currThreadProfile, 'm', stack->getMarker(i));
   }
   stack->mQueueClearMarker = true;
 
@@ -398,7 +410,7 @@ void TableTicker::Tick(TickSample* sample)
       // XXX: we also probably want to add an entry to the profile to help
       // distinguish which samples are part of the same event. That, or record
       // the event generation in each sample
-      mPrimaryThreadProfile.erase();
+      currThreadProfile.erase();
     }
     sLastSampledEventGeneration = sCurrentEventGeneration;
 
@@ -414,29 +426,29 @@ void TableTicker::Tick(TickSample* sample)
 
 #if defined(USE_BACKTRACE) || defined(USE_NS_STACKWALK)
   if (mUseStackWalk) {
-    doNativeBacktrace(mPrimaryThreadProfile, sample);
+    doNativeBacktrace(currThreadProfile, sample);
   } else {
-    doSampleStackTrace(stack, mPrimaryThreadProfile, mAddLeafAddresses ? sample : nullptr);
+    doSampleStackTrace(stack, currThreadProfile, mAddLeafAddresses ? sample : nullptr);
   }
 #else
-  doSampleStackTrace(stack, mPrimaryThreadProfile, mAddLeafAddresses ? sample : nullptr);
+  doSampleStackTrace(stack, currThreadProfile, mAddLeafAddresses ? sample : nullptr);
 #endif
 
   if (recordSample)
-    mPrimaryThreadProfile.flush();
+    currThreadProfile.flush();
 
-  if (!sLastTracerEvent.IsNull() && sample) {
+  if (!sLastTracerEvent.IsNull() && sample && currThreadProfile.IsMainThread()) {
     TimeDuration delta = sample->timestamp - sLastTracerEvent;
-    mPrimaryThreadProfile.addTag(ProfileEntry('r', delta.ToMilliseconds()));
+    currThreadProfile.addTag(ProfileEntry('r', delta.ToMilliseconds()));
   }
 
   if (sample) {
     TimeDuration delta = sample->timestamp - mStartTime;
-    mPrimaryThreadProfile.addTag(ProfileEntry('t', delta.ToMilliseconds()));
+    currThreadProfile.addTag(ProfileEntry('t', delta.ToMilliseconds()));
   }
 
   if (sLastFrameNumber != sFrameNumber) {
-    mPrimaryThreadProfile.addTag(ProfileEntry('f', sFrameNumber));
+    currThreadProfile.addTag(ProfileEntry('f', sFrameNumber));
     sLastFrameNumber = sFrameNumber;
   }
 }
@@ -460,7 +472,8 @@ void mozilla_sampler_print_location1()
     return;
   }
 
-  ThreadProfile threadProfile(1000, stack);
+  ThreadProfile threadProfile("Temp", PROFILE_DEFAULT_ENTRY, stack,
+                              0, Sampler::AllocPlatformData(0), false);
   doSampleStackTrace(stack, threadProfile, NULL);
 
   threadProfile.flush();

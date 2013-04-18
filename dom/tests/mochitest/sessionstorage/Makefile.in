@@ -17,6 +17,8 @@ MOCHITEST_FILES	= \
     frameNotEqual.html \
     file_http.html \
     file_https.html \
+    test_cookieSession.html \
+    test_sessionStorageBaseSessionOnly.html \
     test_sessionStorageBase.html \
     test_sessionStorageClone.html \
     test_sessionStorageReplace.html \

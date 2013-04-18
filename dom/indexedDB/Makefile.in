@@ -16,8 +16,6 @@ ifndef _MSC_VER
 FAIL_ON_WARNINGS := 1
 endif # !_MSC_VER
 
-EXPORTS_NAMESPACES = mozilla/dom/indexedDB
-
 CPPSRCS = \
   AsyncConnectionHelper.cpp \
   CheckPermissionsHelper.cpp \
@@ -41,28 +39,6 @@ CPPSRCS = \
   KeyPath.cpp \
   OpenDatabaseHelper.cpp \
   TransactionThreadPool.cpp \
-  $(NULL)
-
-EXPORTS_mozilla/dom/indexedDB = \
-  Client.h \
-  DatabaseInfo.h \
-  FileManager.h \
-  FileInfo.h \
-  IDBCursor.h \
-  IDBDatabase.h \
-  IDBEvents.h \
-  IDBFactory.h \
-  IDBFileHandle.h \
-  IDBIndex.h \
-  IDBKeyRange.h \
-  IDBObjectStore.h \
-  IDBRequest.h \
-  IDBTransaction.h \
-  IDBWrapperCache.h \
-  IndexedDatabase.h \
-  IndexedDatabaseManager.h \
-  Key.h \
-  KeyPath.h \
   $(NULL)
 
 LOCAL_INCLUDES = \

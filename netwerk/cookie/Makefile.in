@@ -25,13 +25,6 @@ CPPSRCS = \
 
 XPCSHELL_TESTS += test/unit
 
-EXPORTS_NAMESPACES = mozilla/net
-
-EXPORTS_mozilla/net = \
-		CookieServiceParent.h \
-		CookieServiceChild.h  \
-		$(NULL)
-
 CPPSRCS += \
 		CookieServiceParent.cpp \
 		CookieServiceChild.cpp \

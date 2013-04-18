@@ -6,3 +6,7 @@
 
 MODULE = 'content'
 
+EXPORTS += [
+    'nsIXMLContentSink.h',
+]
+

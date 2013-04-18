@@ -57,7 +57,6 @@ function runTest() {
     winUtils.advanceTimeAndRefresh(1000);
 
     function nextTest() {
-      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
       if (!outstandingTests.length) {
         winUtils.restoreNormalRefresh();
         win.close();
@@ -74,7 +73,6 @@ function runTest() {
       winUtils.advanceTimeAndRefresh(1000); // force scrolling to happen
 
       setTimeout(function () {
-        netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
         if (!ctrlKey) {
           let postfix = isMomentum ? ", even after releasing the touchpad" : "";
           // Normal scroll: scroll
@@ -102,27 +100,20 @@ function runTest() {
 
 function initPrefs()
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var prefSvc = Components.classes["@mozilla.org/preferences-service;1"].
-                  getService(Components.interfaces.nsIPrefBranch);
-  prefSvc.setBoolPref("general.smoothScroll", false);
+  SpecialPowers.setBoolPref("general.smoothScroll", false);
   // Disables the app level scroll acceleration
-  prefSvc.setIntPref("mousewheel.acceleration.start", -1);
-  prefSvc.setBoolPref("mousewheel.system_scroll_override_on_root_content.enabled", false);
+  SpecialPowers.setIntPref("mousewheel.acceleration.start", -1);
+  SpecialPowers.setBoolPref("mousewheel.system_scroll_override_on_root_content.enabled", false);
   // Enable zooming for ctrl-scrolling
-  prefSvc.setIntPref("mousewheel.with_control.action", 3);
+  SpecialPowers.setIntPref("mousewheel.with_control.action", 3);
 }
 
 function clearPrefs()
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var prefSvc = Components.classes["@mozilla.org/preferences-service;1"].
-                  getService(Components.interfaces.nsIPrefBranch);
-
-  prefSvc.clearUserPref("general.smoothScroll");
-  prefSvc.clearUserPref("mousewheel.acceleration.start");
-  prefSvc.clearUserPref("mousewheel.system_scroll_override_on_root_content.enabled");
-  prefSvc.clearUserPref("mousewheel.with_control.action");
+  SpecialPowers.clearUserPref("general.smoothScroll");
+  SpecialPowers.clearUserPref("mousewheel.acceleration.start");
+  SpecialPowers.clearUserPref("mousewheel.system_scroll_override_on_root_content.enabled");
+  SpecialPowers.clearUserPref("mousewheel.with_control.action");
 }
 
 window.onload = function () {

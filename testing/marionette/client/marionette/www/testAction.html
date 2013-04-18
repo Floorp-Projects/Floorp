@@ -22,6 +22,8 @@
   <button id="mozLinkCopy2" style="position:absolute;left:80px;top:455px;" type="button" allowevents=true>Button4</button>
   <!-- "mozLinkCancel" listens for a touchdown and touchcancel -->
   <button id="mozLinkCancel" style="position:absolute;left:0px;top:255px;" type="button" allowevents=true>Button5</button>
+  <!-- "mozMouse" listens for mouse events -->
+  <button id="mozMouse" style="position:absolute;left:0px;top:305px;" type="button" allowevents=true>Button7</button>
   <script type="text/javascript">
     window.ready = true;
     var press = document.getElementById("mozLink");
@@ -29,6 +31,7 @@
     var third = document.getElementById("mozLinkStart");
     var fourth = document.getElementById("mozLinkCopy2");
     var fifth = document.getElementById("mozLinkCancel");
+    var sixth = document.getElementById("mozMouse");
     // touchmove and touchend must be performed on the same element as touchstart
     // here is press for vertical move
     press.addEventListener("touchstart", function(){changePressText("mozLink")}, false);
@@ -49,6 +52,88 @@
     // here is fifth for a cancel
     fifth.addEventListener("touchstart", function(){changePressText("mozLinkCancel")}, false);
     fifth.addEventListener("touchcancel", function(){changeClickText("mozLinkCancel")}, false);
+    // here is sixth for mouse event
+    sixth.addEventListener("touchstart", function(){changeMouseText("TouchStart")}, false);
+    sixth.addEventListener("touchend", function(){changeMouseText("TouchEnd")}, false);
+    sixth.addEventListener("mousemove", function(){changeMouseText("MouseMove")}, false);
+    sixth.addEventListener("mousedown", function(){changeMouseText("MouseDown")}, false);
+    sixth.addEventListener("mouseup", function(){changeMouseText("MouseUp")}, false);
+    sixth.addEventListener("click", function(){changeMouseText("MouseClick")}, false);
+    function changeMouseText(strId) {
+      var mouse = document.getElementById("mozMouse");
+      switch(strId) {
+        case "TouchStart":
+          if (mouse.innerHTML == "MouseClick") {
+            mouse.innerHTML = "TouchStart2";
+          }
+          else if (mouse.innerHTML == "TouchEnd") {
+            mouse.innerHTML = "TouchStart2";
+          }
+          else {
+            mouse.innerHTML = strId;
+          }
+          break;
+        case "TouchEnd":
+          if (mouse.innerHTML == "TouchStart") {
+            mouse.innerHTML = strId;
+          }
+          else if (mouse.innerHTML == "TouchStart2") {
+            mouse.innerHTML = "TouchEnd2";
+          }
+          else {
+            mouse.innerHTML = "Error";
+          }
+          break;
+        case "MouseMove":
+          if (mouse.innerHTML == "TouchEnd") {
+            mouse.innerHTML = strId;
+          }
+          else if (mouse.innerHTML == "TouchEnd2") {
+            mouse.innerHTML = "MouseMove2";
+          }
+          else {
+            mouse.innerHTML = "Error";
+          }
+          break;
+        case "MouseDown":
+          if (mouse.innerHTML == "MouseMove") {
+            mouse.innerHTML = strId;
+          }
+          else if (mouse.innerHTML == "MouseMove2") {
+            mouse.innerHTML = "MouseDown2";
+          }
+          else {
+            mouse.innerHTML = "Error";
+          }
+          break;
+        case "MouseUp":
+          if (mouse.innerHTML == "MouseDown") {
+            mouse.innerHTML = strId;
+          }
+          else if (mouse.innerHTML == "MouseDown2") {
+            mouse.innerHTML = "MouseUp2";
+          }
+          else {
+            mouse.innerHTML = "Error";
+          }
+          break;
+        case "MouseClick":
+          if (mouse.innerHTML == "MouseUp") {
+            mouse.innerHTML = strId;
+          }
+          else if (mouse.innerHTML == "MouseUp2") {
+            mouse.innerHTML = "MouseClick2";
+          }
+          else {
+            mouse.innerHTML = "Error";
+          }
+          break;
+        default:
+          mouse.innerHTML = "Error";
+          break;
+      }
+    }
+
     function changePressText(strId) {
       var press = document.getElementById(strId);
       press.innerHTML = "Start";

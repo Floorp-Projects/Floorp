@@ -10,3 +10,12 @@ XPIDL_SOURCES += [
 
 MODULE = 'hal'
 
+EXPORTS.mozilla += [
+    'Hal.h',
+    'HalImpl.h',
+    'HalSandbox.h',
+    'HalSensor.h',
+    'HalTypes.h',
+    'HalWakeLock.h',
+]
+

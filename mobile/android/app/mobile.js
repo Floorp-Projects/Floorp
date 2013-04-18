@@ -653,6 +653,9 @@ pref("reader.margin_size", 5);
 // The default color scheme in reader (light, dark, sepia)
 pref("reader.color_scheme", "light");
 
+// The font type in reader (sans-serif, serif)
+pref("reader.font_type", "sans-serif");
+
 // Used to show a first-launch tip in reader
 pref("reader.has_used_toolbar", false);
 
@@ -705,3 +708,7 @@ pref("browser.contentHandlers.types.3.type", "application/vnd.mozilla.maybe.feed
 // Enable Web Audio for Firefox for Android in Nightly and Aurora
 pref("media.webaudio.enabled", true);
 #endif
+
+// This needs more tests and stability fixes first, as well as UI.
+pref("media.navigator.enabled", false);
+pref("media.peerconnection.enabled", false);

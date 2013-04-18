@@ -140,6 +140,29 @@ void profiler_unlock()
   return mozilla_sampler_unlock();
 }
 
+static inline
+void profiler_register_thread(const char* name)
+{
+  mozilla_sampler_register_thread(name);
+}
+
+static inline
+void profiler_unregister_thread()
+{
+  mozilla_sampler_unregister_thread();
+}
+
+static inline
+void profiler_js_operation_callback()
+{
+  PseudoStack *stack = tlsPseudoStack.get();
+  if (!stack) {
+    return;
+  }
+
+  stack->jsOperationCallback();
+}
+
 // we want the class and function name but can't easily get that using preprocessor macros
 // __func__ doesn't have the class name and __PRETTY_FUNCTION__ has the parameters
 
@@ -153,6 +176,7 @@ void profiler_unlock()
 #define PROFILER_MAIN_THREAD_LABEL(name_space, info)  MOZ_ASSERT(NS_IsMainThread(), "This can only be called on the main thread"); mozilla::SamplerStackFrameRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, __LINE__)
 #define PROFILER_MAIN_THREAD_LABEL_PRINTF(name_space, info, ...)  MOZ_ASSERT(NS_IsMainThread(), "This can only be called on the main thread"); mozilla::SamplerStackFramePrintfRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, __LINE__, __VA_ARGS__)
 #define PROFILER_MAIN_THREAD_MARKER(info)  MOZ_ASSERT(NS_IsMainThread(), "This can only be called on the main thread"); mozilla_sampler_add_marker(info)
+
 
 /* FIXME/bug 789667: memory constraints wouldn't much of a problem for
  * this small a sample buffer size, except that serializing the

@@ -48,6 +48,7 @@ namespace layers {
 
 class Animation;
 class AnimationData;
+class AsyncPanZoomController;
 class CommonLayerAttributes;
 class Layer;
 class ThebesLayer;
@@ -639,7 +640,12 @@ public:
      * transaction where there is no possibility of redrawing the content, so the
      * implementation should be ready for that.
      */
-    CONTENT_MAY_CHANGE_TRANSFORM = 0x08
+    CONTENT_MAY_CHANGE_TRANSFORM = 0x08,
+    /**
+     * This indicates that the content does not want to be snapped to pixel
+     * boundaries, so the layers code should not do transform snapping.
+     */
+    CONTENT_DISABLE_TRANSFORM_SNAPPING = 0x10
   };
   /**
    * CONSTRUCTION PHASE ONLY
@@ -890,6 +896,11 @@ public:
   gfxPoint GetFixedPositionAnchor() { return mAnchor; }
   const gfx::Margin& GetFixedPositionMargins() { return mMargins; }
   Layer* GetMaskLayer() { return mMaskLayer; }
+
+  // These functions allow attaching an AsyncPanZoomController to this layer,
+  // and can be used anytime.
+  void SetAsyncPanZoomController(AsyncPanZoomController *controller);
+  AsyncPanZoomController* GetAsyncPanZoomController();
 
   // Note that all lengths in animation data are either in CSS pixels or app
   // units and must be converted to device pixels by the compositor.

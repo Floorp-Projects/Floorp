@@ -2431,13 +2431,6 @@ class CycleCollectorMultiReporter MOZ_FINAL : public nsIMemoryMultiReporter
         return NS_OK;
     }
 
-    NS_IMETHOD GetExplicitNonHeap(int64_t* n)
-    {
-        // This reporter does neither "explicit" nor NONHEAP measurements.
-        *n = 0;
-        return NS_OK;
-    }
-
   private:
     NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(MallocSizeOf)
 

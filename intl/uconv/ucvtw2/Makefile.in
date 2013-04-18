@@ -24,7 +24,5 @@ CPPSRCS		= \
 
 LOCAL_INCLUDES	= -I$(srcdir)/../util
 
-EXPORTS		= nsUCvTW2CID.h
-
 include $(topsrcdir)/config/rules.mk
 

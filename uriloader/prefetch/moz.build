@@ -11,3 +11,12 @@ XPIDL_SOURCES += [
 
 MODULE = 'prefetch'
 
+EXPORTS += [
+    'nsCPrefetchService.h',
+]
+
+EXPORTS.mozilla.docshell += [
+    'OfflineCacheUpdateChild.h',
+    'OfflineCacheUpdateParent.h',
+]
+

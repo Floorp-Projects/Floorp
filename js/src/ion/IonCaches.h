@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=4 sw=4 et tw=99:
- *
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -799,14 +798,14 @@ class ParallelGetPropertyIC : public DispatchIonCache
 
     // A set of all objects that are stubbed. Used to detect duplicates in
     // parallel execution.
-    ObjectSet *stubbedObjects_;
+    ShapeSet *stubbedShapes_;
 
    public:
     ParallelGetPropertyIC(Register object, PropertyName *name, TypedOrValueRegister output)
       : object_(object),
         name_(name),
         output_(output),
-        stubbedObjects_(NULL)
+        stubbedShapes_(NULL)
     {
     }
 
@@ -826,10 +825,10 @@ class ParallelGetPropertyIC : public DispatchIonCache
         return output_;
     }
 
-    bool initStubbedObjects(JSContext *cx);
-    ObjectSet *stubbedObjects() const {
-        JS_ASSERT_IF(stubbedObjects_, stubbedObjects_->initialized());
-        return stubbedObjects_;
+    bool initStubbedShapes(JSContext *cx);
+    ShapeSet *stubbedShapes() const {
+        JS_ASSERT_IF(stubbedShapes_, stubbedShapes_->initialized());
+        return stubbedShapes_;
     }
 
     bool canAttachReadSlot(LockedJSContext &cx, JSObject *obj, MutableHandleObject holder,

@@ -6,3 +6,14 @@
 
 MODULE = 'necko'
 
+EXPORTS += [
+    'nsFileStreams.h',
+    'nsMIMEInputStream.h',
+    'nsURLHelper.h',
+]
+
+EXPORTS.mozilla.net += [
+    'Dashboard.h',
+    'DashboardTypes.h',
+]
+

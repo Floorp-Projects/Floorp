@@ -7,7 +7,6 @@ html {
 }
 
 body {
-  font-family: "Open Sans","Droid Sans",sans-serif;
   margin-top: 20px;
   margin-bottom: 20px;
 }
@@ -20,6 +19,14 @@ body {
 .dark {
   background-color: #000000;
   color: #eeeeee;
+}
+
+.sans-serif {
+  font-family: "Open Sans",sans-serif;
+}
+
+.serif {
+  font-family: "Charis SIL",serif;
 }
 
 .message {
@@ -42,7 +49,6 @@ body {
 }
 
 .header > h1 {
-  font-family: "Open Sans","Droid Sans",sans-serif;
   font-weight: 300;
   line-height: 1.1em;
   width: 100%;
@@ -402,6 +408,11 @@ body {
   border-bottom: 1px solid white;
   margin: 0px 0px 10px 0px;
   float: left;
+}
+
+.dropdown-popup > hr:first-of-type {
+  float: none;
+  margin: 0;
 }
 
 .dropdown-popup .button:active {

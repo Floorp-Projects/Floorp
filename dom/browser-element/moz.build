@@ -15,3 +15,12 @@ XPIDL_MODULE = 'dom_browserelement'
 
 MODULE = 'dom'
 
+EXPORTS += [
+    'nsAsyncScrollEventDetail.h',
+    'nsOpenWindowEventDetail.h',
+]
+
+EXPORTS.mozilla += [
+    'BrowserElementParent.h',
+]
+
