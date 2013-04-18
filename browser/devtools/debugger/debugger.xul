@@ -64,6 +64,8 @@
              oncommand="DebuggerView.Options._toggleShowVariablesOnlyEnum()"/>
     <command id="toggleShowVariablesFilterBox"
              oncommand="DebuggerView.Options._toggleShowVariablesFilterBox()"/>
+    <command id="toggleShowOriginalSource"
+             oncommand="DebuggerView.Options._toggleShowOriginalSource()"/>
   </commandset>
 
   <popupset id="debuggerPopupset">
@@ -160,6 +162,11 @@
                 label="&debuggerUI.showVarsFilter;"
                 accesskey="&debuggerUI.showVarsFilter.key;"
                 command="toggleShowVariablesFilterBox"/>
+      <menuitem id="show-original-source"
+                type="checkbox"
+                label="&debuggerUI.showOriginalSource;"
+                accesskey="&debuggerUI.showOriginalSource.key;"
+                command="toggleShowOriginalSource"/>
     </menupopup>
   </popupset>
 

@@ -17,7 +17,7 @@
   <script type="text/javascript" src="netmonitor-controller.js"/>
   <script type="text/javascript" src="netmonitor-view.js"/>
 
-  <hbox id="body" flex="1">
+  <box id="body" flex="1" class="devtools-responsive-container">
     <vbox id="network-table" flex="1">
       <toolbar id="requests-menu-toolbar"
                class="devtools-toolbar"
@@ -262,6 +262,6 @@
         </tabpanel>
       </tabpanels>
     </tabbox>
-  </hbox>
+  </box>
 
 </window>
