@@ -97,8 +97,6 @@ protected:
 protected:
   void GeneratePath(gfxContext *aContext, const gfxMatrix &aTransform);
 
-  gfxPoint GetOwnTransformIfOnlyTranslation() const;
-
 private:
   enum { eRenderFill = 1, eRenderStroke = 2 };
   void Render(nsRenderingContext *aContext, uint32_t aRenderComponents);
