@@ -145,7 +145,7 @@ NS_COM_GLUE void ReadAhead(filedesc_t aFd, const size_t aOffset = 0,
                            const size_t aCount = SIZE_MAX);
 
 
-#if defined(MOZ_WIDGET_GONK) || defined(DEBUG)
+#ifdef MOZ_WIDGET_GONK
 
 /**
  * Read the contents of a file.
@@ -184,7 +184,7 @@ ReadSysFile(
   const char* aFilename,
   bool* aVal);
 
-#endif /* MOZ_WIDGET_GONK || DEBUG */
+#endif /* MOZ_WIDGET_GONK */
 
 } // namespace mozilla
 #endif
