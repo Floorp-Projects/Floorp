@@ -117,10 +117,7 @@ mozilla::fallocate(PRFileDesc *aFD, int64_t aLength)
   return false;
 }
 
-/* Define ReadSysFile() only on GONK to avoid unnecessary lubxul bloat.
-Also define it in debug builds, so that unit tests for it can be written
-and run in non-GONK builds. */
-#if defined(MOZ_WIDGET_GONK) || defined(DEBUG)
+#ifdef MOZ_WIDGET_GONK
 
 #undef TEMP_FAILURE_RETRY
 #define TEMP_FAILURE_RETRY(exp) (__extension__({ \
@@ -191,7 +188,7 @@ mozilla::ReadSysFile(
   return true;
 }
 
-#endif /* MOZ_WIDGET_GONK || DEBUG */
+#endif /* MOZ_WIDGET_GONK */
 
 void
 mozilla::ReadAheadLib(nsIFile* aFile)
