@@ -30,6 +30,8 @@ public:
 
   virtual nsresult StopInternal();
 
+  virtual bool IsEnabledInternal();
+
   virtual nsresult GetDefaultAdapterPathInternal(BluetoothReplyRunnable* aRunnable);
 
   virtual nsresult GetPairedDevicePropertiesInternal(const nsTArray<nsString>& aDeviceAddresses,

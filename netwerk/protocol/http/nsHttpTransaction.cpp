@@ -115,6 +115,9 @@ nsHttpTransaction::nsHttpTransaction()
     , mReportedResponseHeader(false)
     , mForTakeResponseHead(nullptr)
     , mResponseHeadTaken(false)
+    , mSubmittedRatePacing(false)
+    , mPassedRatePacing(false)
+    , mSynchronousRatePaceRequest(false)
 {
     LOG(("Creating nsHttpTransaction @%x\n", this));
     gHttpHandler->GetMaxPipelineObjectSize(&mMaxPipelineObjectSize);
@@ -123,6 +126,11 @@ nsHttpTransaction::nsHttpTransaction()
 nsHttpTransaction::~nsHttpTransaction()
 {
     LOG(("Destroying nsHttpTransaction @%x\n", this));
+
+    if (mTokenBucketCancel) {
+        mTokenBucketCancel->Cancel(NS_ERROR_ABORT);
+        mTokenBucketCancel = nullptr;
+    }
 
     // Force the callbacks to be released right now
     mCallbacks = nullptr;
@@ -686,6 +694,11 @@ nsHttpTransaction::Close(nsresult reason)
     if (mClosed) {
         LOG(("  already closed\n"));
         return;
+    }
+
+    if (mTokenBucketCancel) {
+        mTokenBucketCancel->Cancel(reason);
+        mTokenBucketCancel = nullptr;
     }
 
     if (mActivityDistributor) {
@@ -1613,6 +1626,38 @@ nsHttpTransaction::DeleteSelfOnConsumerThread()
         nsCOMPtr<nsIRunnable> event = new nsDeleteHttpTransaction(this);
         if (NS_FAILED(mConsumerTarget->Dispatch(event, NS_DISPATCH_NORMAL)))
             NS_WARNING("failed to dispatch nsHttpDeleteTransaction event");
+    }
+}
+
+bool
+nsHttpTransaction::TryToRunPacedRequest()
+{
+    if (mSubmittedRatePacing)
+        return mPassedRatePacing;
+
+    mSubmittedRatePacing = true;
+    mSynchronousRatePaceRequest = true;
+    gHttpHandler->SubmitPacedRequest(this, getter_AddRefs(mTokenBucketCancel));
+    mSynchronousRatePaceRequest = false;
+    return mPassedRatePacing;
+}
+
+void
+nsHttpTransaction::OnTokenBucketAdmitted()
+{
+    mPassedRatePacing = true;
+    mTokenBucketCancel = nullptr;
+
+    if (!mSynchronousRatePaceRequest)
+        gHttpHandler->ConnMgr()->ProcessPendingQ(mConnInfo);
+}
+
+void
+nsHttpTransaction::CancelPacing(nsresult reason)
+{
+    if (mTokenBucketCancel) {
+        mTokenBucketCancel->Cancel(reason);
+        mTokenBucketCancel = nullptr;
     }
 }
 

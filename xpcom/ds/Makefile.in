@@ -47,47 +47,8 @@ else
 $(error No TimeStamp implementation on this platform.  Build will not succeed)
 endif
 
-EXPORTS_NAMESPACES = mozilla
-
-EXPORTS_mozilla = \
-  CharTokenizer.h \
-  TimeStamp.h \
-  StringBuilder.h \
-  $(NULL)
-
-ifeq ($(OS_ARCH),WINNT)
-EXPORTS_mozilla += \
-  TimeStamp_windows.h \
-  $(NULL)
-endif
-
-EXPORTS		= \
-		nsArray.h \
-		nsAtomService.h \
-		nsCheapSets.h \
-		nsCppSharedAllocator.h \
-		nsCRT.h \
-		nsExpirationTracker.h \
-		nsHashtable.h \
-		nsIByteBuffer.h \
-		nsIUnicharBuffer.h \
-		nsMathUtils.h \
-		nsObserverList.h \
-		nsObserverService.h \
-		nsStaticNameTable.h \
-		nsStaticAtom.h \
-		nsSupportsArray.h \
-		nsSupportsPrimitives.h \
-		nsVariant.h \
-		nsStringEnumerator.h \
-		nsHashPropertyBag.h \
-		nsWhitespaceTokenizer.h \
-		nsCharSeparatedTokenizer.h \
-		$(NULL)			
-
 ifeq ($(OS_ARCH),WINNT)
 CPPSRCS += nsWindowsRegKey.cpp
-EXPORTS += nsWindowsRegKey.h
 endif
 
 EXTRA_COMPONENTS = \

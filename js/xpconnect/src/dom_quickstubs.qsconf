@@ -64,8 +64,6 @@ members = [
 
     'nsIDOMKeyEvent.*',
     'nsIDOMDragEvent.*',
-    'nsIDOMNotifyPaintEvent.*',
-    'nsIDOMMouseScrollEvent.*',
     'nsIDOMProgressEvent.lengthComputable',
     'nsIDOMProgressEvent.loaded',
     'nsIDOMProgressEvent.total',
@@ -73,7 +71,6 @@ members = [
 
     'nsIDOMTouch.*',
     'nsIDOMTouchList.*',
-    'nsIDOMTouchEvent.*',
 
     # dom/interfaces/html
     'nsIDOMHTMLFormElement.elements',
@@ -91,7 +88,6 @@ members = [
     'nsIDOMStorage.key',
     'nsIDOMStorage.removeItem',
     'nsIDOMStorage.clear',
-    'nsIDOMStorageItem.value',
 
     # dom/interfaces/xpath
     'nsIDOMXPathExpression.evaluate',

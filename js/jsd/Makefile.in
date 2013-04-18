@@ -28,8 +28,6 @@ XPCSHELL_TESTS  = test
 
 # REQUIRES	= java js
 
-EXPORTS		= jsdebug.h
-
 ifdef JS_THREADSAFE
 DEFINES         += -DJS_THREADSAFE
 endif

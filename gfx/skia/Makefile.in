@@ -14,8 +14,6 @@ LIBRARY_NAME	= skia
 LIBXUL_LIBRARY  = 1
 EXPORT_LIBRARY  = 1
 
-EXPORTS_NAMESPACES = skia
-
 DEFINES += -DSK_A32_SHIFT=24 -DSK_R32_SHIFT=16 -DSK_G32_SHIFT=8 -DSK_B32_SHIFT=0
 
 LOCAL_INCLUDES += \
@@ -54,147 +52,6 @@ VPATH += \
 	$(srcdir)/src/utils \
 	$(srcdir)/src/utils/mac \
 	$(srcdir)/src/sfnt \
-	$(NULL)
-
-EXPORTS_skia = \
-	include/core/Sk64.h \
-	include/core/SkAdvancedTypefaceMetrics.h \
-	include/core/SkBitmap.h \
-	include/core/SkBlitRow.h \
-	include/core/SkBounder.h \
-	include/core/SkCanvas.h \
-	include/core/SkChunkAlloc.h \
-	include/core/SkClipStack.h \
-	include/core/SkColor.h \
-	include/core/SkColorFilter.h \
-	include/core/SkColorPriv.h \
-	include/core/SkColorShader.h \
-	include/core/SkColorTable.h \
-	include/core/SkComposeShader.h \
-	include/core/SkData.h \
-	include/core/SkDeque.h \
-	include/core/SkDevice.h \
-	include/core/SkDither.h \
-	include/core/SkDraw.h \
-	include/core/SkDrawFilter.h \
-	include/core/SkDrawLooper.h \
-	include/core/SkEmptyShader.h \
-	include/core/SkEndian.h \
-	include/core/SkFixed.h \
-	include/core/SkFlattenable.h \
-	include/core/SkFloatBits.h \
-	include/core/SkFloatingPoint.h \
-	include/core/SkFontHost.h \
-	include/core/SkGeometry.h \
-	include/core/SkGraphics.h \
-	include/core/SkInstCnt.h \
-	include/core/SkLineClipper.h \
-	include/core/SkMMapStream.h \
-	include/core/SkMallocPixelRef.h \
-	include/core/SkMask.h \
-	include/core/SkMaskFilter.h \
-	include/core/SkMath.h \
-	include/core/SkMatrix.h \
-	include/core/SkMetaData.h \
-	include/core/SkOSFile.h \
-	include/core/SkPackBits.h \
-	include/core/SkPaint.h \
-	include/core/SkPath.h \
-	include/core/SkPathEffect.h \
-	include/core/SkPathMeasure.h \
-	include/core/SkPicture.h \
-	include/core/SkPixelRef.h \
-	include/core/SkPoint.h \
-	include/core/SkPostConfig.h \
-	include/core/SkPreConfig.h \
-	include/core/SkRandom.h \
-	include/core/SkRasterizer.h \
-	include/core/SkReader32.h \
-	include/core/SkRect.h \
-	include/core/SkRefCnt.h \
-	include/core/SkRegion.h \
-	include/core/SkScalar.h \
-	include/core/SkScalarCompare.h \
-	include/core/SkShader.h \
-	include/core/SkSize.h \
-	include/core/SkStream.h \
-	include/core/SkString.h \
-	include/core/SkTArray.h \
-	include/core/SkTDArray.h \
-	include/core/SkTDLinkedList.h \
-	include/core/SkTDStack.h \
-	include/core/SkTDict.h \
-	include/core/SkTLazy.h \
-	include/core/SkTRegistry.h \
-	include/core/SkTScopedPtr.h \
-	include/core/SkTSearch.h \
-	include/core/SkTemplates.h \
-	include/core/SkThread.h \
-	include/core/SkThread_platform.h \
-	include/core/SkTime.h \
-	include/core/SkTrace.h \
-	include/core/SkTypeface.h \
-	include/core/SkTypes.h \
-	include/core/SkUnPreMultiply.h \
-	include/core/SkUnitMapper.h \
-	include/core/SkUtils.h \
-	include/core/SkWeakRefCnt.h \
-	include/core/SkWriter32.h \
-	include/core/SkXfermode.h \
-	include/config/SkUserConfig.h \
-	include/effects/SkDashPathEffect.h \
-	include/effects/SkGradientShader.h \
-	include/effects/SkBlurDrawLooper.h \
-	include/effects/SkBlurMaskFilter.h \
-	include/effects/SkLayerDrawLooper.h \
-	include/effects/SkLayerRasterizer.h \
-	include/effects/SkMorphologyImageFilter.h \
-	include/gpu/GrAARectRenderer.h \
-	include/gpu/GrCacheID.h \
-	include/gpu/GrClipData.h \
-	include/gpu/GrColor.h \
-	include/gpu/GrConfig.h \
-	include/gpu/GrContextFactory.h \
-	include/gpu/GrContext.h \
-	include/gpu/GrCustomStage.h \
-	include/gpu/GrCustomStageUnitTest.h \
-	include/gpu/GrFontScaler.h \
-	include/gpu/GrGlyph.h \
-	include/gpu/GrInstanceCounter.h \
-	include/gpu/GrKey.h \
-	include/gpu/GrMatrix.h \
-	include/gpu/GrNoncopyable.h \
-	include/gpu/GrPaint.h \
-	include/gpu/GrPoint.h \
-	include/gpu/GrProgramStageFactory.h \
-	include/gpu/GrRect.h \
-	include/gpu/GrRefCnt.h \
-	include/gpu/GrRenderTarget.h \
-	include/gpu/GrResource.h \
-	include/gpu/GrSamplerState.h \
-	include/gpu/GrScalar.h \
-	include/gpu/GrSurface.h \
-	include/gpu/GrTextContext.h \
-	include/gpu/GrTextureAccess.h \
-	include/gpu/GrTexture.h \
-	include/gpu/GrTypes.h \
-	include/gpu/GrUserConfig.h \
-	include/gpu/SkGpuCanvas.h \
-	include/gpu/SkGpuDevice.h \
-	include/gpu/SkGr.h \
-	include/gpu/SkGrPixelRef.h \
-	include/gpu/SkGrTexturePixelRef.h \
-	include/gpu/gl/GrGLConfig.h \
-	include/gpu/gl/GrGLFunctions.h \
-	include/gpu/gl/GrGLInterface.h \
-	include/gpu/gl/SkANGLEGLContext.h \
-	include/gpu/gl/SkDebugGLContext.h \
-	include/gpu/gl/SkGLContext.h \
-	include/gpu/gl/SkMesaGLContext.h \
-	include/gpu/gl/SkNativeGLContext.h \
-	include/gpu/gl/SkNullGLContext.h \
-	include/utils/SkDeferredCanvas.h \
-	include/views/SkTextBox.h \
 	$(NULL)
 
 GPU_CPPSRCS = \
@@ -438,9 +295,6 @@ CPPSRCS += \
 endif
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-EXPORTS_skia += \
-	include/ports/SkTypeface_mac.h \
-	$(NULL)
 CPPSRCS += \
 	SkFontHost_mac_coretext.cpp \
 	SkStream_mac.cpp \
@@ -506,10 +360,6 @@ DEFINES += -DSK_USE_POSIX_THREADS=1
 endif
 
 ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
-EXPORTS_skia += \
-	include/config/sk_stdint.h \
-	include/ports/SkTypeface_win.h \
-	$(NULL)
 CPPSRCS += \
 	SkFontHost_win.cpp \
 	SkFontHost_tables.cpp \

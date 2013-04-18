@@ -6,3 +6,7 @@
 
 MODULE = 'chrome'
 
+EXPORTS.mozilla.chrome += [
+    'RegistryMessageUtils.h',
+]
+

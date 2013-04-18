@@ -10,12 +10,5 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORTS		= \
-		nsICaseConversion.h \
-		nsIUGenCategory.h \
-		nsUnicharUtilCIID.h \
-		nsUnicodeNormalizer.h \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

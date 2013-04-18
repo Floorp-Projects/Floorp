@@ -103,14 +103,14 @@ class AddonManager(object):
         """
         Returns a dictionary of details about the addon.
 
-        :param addon_path: path to the addon directory
+        :param addon_path: path to the add-on directory or XPI
 
         Returns::
 
             {'id':      u'rainbow@colors.org', # id of the addon
              'version': u'1.4',                # version of the addon
              'name':    u'Rainbow',            # name of the addon
-             'unpack':  False } # whether to unpack the addon
+             'unpack':  False }                # whether to unpack the addon
         """
 
         # TODO: We don't use the unpack variable yet, but we should: bug 662683
@@ -140,7 +140,15 @@ class AddonManager(object):
                     rc.append(node.data)
             return ''.join(rc).strip()
 
-        doc = minidom.parse(os.path.join(addon_path, 'install.rdf'))
+        if zipfile.is_zipfile(addon_path):
+            compressed_file = zipfile.ZipFile(addon_path, 'r')
+            try:
+                parseable = compressed_file.read('install.rdf')
+                doc = minidom.parseString(parseable)
+            finally:
+                compressed_file.close()
+        else:
+            doc = minidom.parse(os.path.join(addon_path, 'install.rdf'))
 
         # Get the namespaces abbreviations
         em = get_namespace_id(doc, "http://www.mozilla.org/2004/em-rdf#")

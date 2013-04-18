@@ -6,7 +6,6 @@
 
 #include "IDBRequest.h"
 
-#include "nsIJSContextStack.h"
 #include "nsIScriptContext.h"
 
 #include "nsComponentManagerUtils.h"
@@ -178,13 +177,7 @@ IDBRequest::GetJSContext()
   JSContext* cx;
 
   if (GetScriptOwner()) {
-    nsIThreadJSContextStack* cxStack = nsContentUtils::ThreadJSContextStack();
-    NS_ASSERTION(cxStack, "Failed to get thread context stack!");
-
-    cx = cxStack->GetSafeJSContext();
-    NS_ENSURE_TRUE(cx, nullptr);
-
-    return cx;
+    return nsContentUtils::GetSafeJSContext();
   }
 
   nsresult rv;

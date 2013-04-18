@@ -12,7 +12,7 @@
 #include "nsISimpleEnumerator.idl"
 
 /* this is NOT intended to be scriptable */
-[uuid(8B161900-BE2B-11d2-9831-006008962422)]
+[uuid(1d53d8d9-1d92-428f-b5cc-198b55e897d7)]
 interface nsIInterfaceInfoManager : nsISupports
 {
     nsIInterfaceInfo getInfoForIID(in nsIIDPtr iid);
@@ -21,21 +21,9 @@ interface nsIInterfaceInfoManager : nsISupports
     nsIIDPtr getIIDForName(in string name);
     string   getNameForIID(in nsIIDPtr iid);
 
-    nsIEnumerator enumerateInterfaces();
-
     void autoRegisterInterfaces();
 
     nsIEnumerator enumerateInterfacesWhoseNamesStartWith(in string prefix);
-};
-
-[uuid(0ee22850-bc6a-11d5-9134-0010a4e73d9a)]
-interface nsIInterfaceInfoSuperManager : nsIInterfaceInfoManager
-{
-    void addAdditionalManager(in nsIInterfaceInfoManager manager);        
-    void removeAdditionalManager(in nsIInterfaceInfoManager manager);        
-
-    boolean hasAdditionalManagers();
-    nsISimpleEnumerator enumerateAdditionalManagers();
 };
 
 %{C++

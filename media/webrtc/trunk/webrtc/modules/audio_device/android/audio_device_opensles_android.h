@@ -28,36 +28,6 @@ namespace webrtc {
 
 class EventWrapper;
 
-const WebRtc_UWord32 N_MAX_INTERFACES = 3;
-const WebRtc_UWord32 N_MAX_OUTPUT_DEVICES = 6;
-const WebRtc_UWord32 N_MAX_INPUT_DEVICES = 3;
-
-const WebRtc_UWord32 N_REC_SAMPLES_PER_SEC = 16000;  // Default fs
-const WebRtc_UWord32 N_PLAY_SAMPLES_PER_SEC = 16000;  // Default fs
-
-const WebRtc_UWord32 N_REC_CHANNELS = 1;
-const WebRtc_UWord32 N_PLAY_CHANNELS = 1;
-
-const WebRtc_UWord32 REC_BUF_SIZE_IN_SAMPLES = 480;
-const WebRtc_UWord32 PLAY_BUF_SIZE_IN_SAMPLES = 480;
-
-const WebRtc_UWord32 REC_MAX_TEMP_BUF_SIZE_PER_10ms =
-    N_REC_CHANNELS * REC_BUF_SIZE_IN_SAMPLES * sizeof(int16_t);
-
-const WebRtc_UWord32 PLAY_MAX_TEMP_BUF_SIZE_PER_10ms =
-    N_PLAY_CHANNELS * PLAY_BUF_SIZE_IN_SAMPLES * sizeof(int16_t);
-
-// Number of the buffers in playout queue
-const WebRtc_UWord16 N_PLAY_QUEUE_BUFFERS = 8;
-// Number of buffers in recording queue
-// TODO(xian): Reduce the numbers of buffers to improve the latency.
-const WebRtc_UWord16 N_REC_QUEUE_BUFFERS = 16;
-// Some values returned from getMinBufferSize
-// (Nexus S playout  72ms, recording 64ms)
-// (Galaxy,         167ms,           44ms)
-// (Nexus 7,         72ms,           48ms)
-// (Xoom             92ms,           40ms)
-
 class ThreadWrapper;
 
 class AudioDeviceAndroidOpenSLES: public AudioDeviceGeneric {
@@ -211,6 +181,36 @@ class AudioDeviceAndroidOpenSLES: public AudioDeviceGeneric {
   virtual WebRtc_Word32 SetLoudspeakerStatus(bool enable);
   virtual WebRtc_Word32 GetLoudspeakerStatus(bool& enable) const;  // NOLINT
 
+  static const WebRtc_UWord32 N_MAX_INTERFACES = 3;
+  static const WebRtc_UWord32 N_MAX_OUTPUT_DEVICES = 6;
+  static const WebRtc_UWord32 N_MAX_INPUT_DEVICES = 3;
+
+  static const WebRtc_UWord32 N_REC_SAMPLES_PER_SEC = 16000;  // Default fs
+  static const WebRtc_UWord32 N_PLAY_SAMPLES_PER_SEC = 16000;  // Default fs
+
+  static const WebRtc_UWord32 N_REC_CHANNELS = 1;
+  static const WebRtc_UWord32 N_PLAY_CHANNELS = 1;
+
+  static const WebRtc_UWord32 REC_BUF_SIZE_IN_SAMPLES = 480;
+  static const WebRtc_UWord32 PLAY_BUF_SIZE_IN_SAMPLES = 480;
+
+  static const WebRtc_UWord32 REC_MAX_TEMP_BUF_SIZE_PER_10ms =
+      N_REC_CHANNELS * REC_BUF_SIZE_IN_SAMPLES * sizeof(int16_t);
+
+  static const WebRtc_UWord32 PLAY_MAX_TEMP_BUF_SIZE_PER_10ms =
+      N_PLAY_CHANNELS * PLAY_BUF_SIZE_IN_SAMPLES * sizeof(int16_t);
+
+  // Number of the buffers in playout queue
+  static const WebRtc_UWord16 N_PLAY_QUEUE_BUFFERS = 8;
+  // Number of buffers in recording queue
+  // TODO(xian): Reduce the numbers of buffers to improve the latency.
+  static const WebRtc_UWord16 N_REC_QUEUE_BUFFERS = 16;
+  // Some values returned from getMinBufferSize
+  // (Nexus S playout  72ms, recording 64ms)
+  // (Galaxy,         167ms,           44ms)
+  // (Nexus 7,         72ms,           48ms)
+  // (Xoom             92ms,           40ms)
+
  private:
   // Lock
   void Lock() {
@@ -310,6 +310,15 @@ class AudioDeviceAndroidOpenSLES: public AudioDeviceGeneric {
   std::queue<WebRtc_Word8*> play_queue_;
   WebRtc_Word8 play_buf_[N_PLAY_QUEUE_BUFFERS][
       N_PLAY_CHANNELS * sizeof(int16_t) * PLAY_BUF_SIZE_IN_SAMPLES];
+
+  // dlopen for OpenSLES
+  void *opensles_lib_;
+  SLInterfaceID SL_IID_ENGINE_;
+  SLInterfaceID SL_IID_BUFFERQUEUE_;
+  SLInterfaceID SL_IID_ANDROIDCONFIGURATION_;
+  SLInterfaceID SL_IID_PLAY_;
+  SLInterfaceID SL_IID_ANDROIDSIMPLEBUFFERQUEUE_;
+  SLInterfaceID SL_IID_RECORD_;
 };
 
 }  // namespace webrtc

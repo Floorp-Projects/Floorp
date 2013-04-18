@@ -29,7 +29,8 @@ const domPanel = require("./panel/utils");
 const { events } = require("./panel/events");
 const systemEvents = require("./system/events");
 const { filter, pipe } = require("./event/utils");
-const { getNodeView } = require("./view/core");
+const { getNodeView, getActiveView } = require("./view/core");
+const { isNil, isObject } = require("./lang/type");
 
 if (isPrivateBrowsingSupported && isWindowPBSupported)
   throw Error('The panel module cannot be used with per-window private browsing at the moment, see Bug 816257');
@@ -65,11 +66,26 @@ function getAttachEventType(model) {
 let number = { is: ['number', 'undefined', 'null'] };
 let boolean = { is: ['boolean', 'undefined', 'null'] };
 
-let panelContract = contract(merge({
+let rectContract = contract({
+  top: number,
+  right: number,
+  bottom: number,
+  left: number
+});
+
+let rect = {
+  is: ['object', 'undefined', 'null'],
+  map: function(v) isNil(v) || !isObject(v) ? v : rectContract(v)
+}
+
+let displayContract = contract({
   width: number,
   height: number,
   focus: boolean,
-}, loaderContract.rules));
+  position: rect
+});
+
+let panelContract = contract(merge({}, displayContract.rules, loaderContract.rules));
 
 
 function isDisposed(panel) !views.has(panel);
@@ -80,11 +96,11 @@ let views = new WeakMap();
 let workers = new WeakMap();
 
 function viewFor(panel) views.get(panel)
-exports.viewFor = viewFor;
-
 function modelFor(panel) models.get(panel)
 function panelFor(view) panels.get(view)
 function workerFor(panel) workers.get(panel)
+
+getActiveView.define(Panel, viewFor);
 
 // Utility function takes `panel` instance and makes sure it will be
 // automatically hidden as soon as other panel is shown.
@@ -124,9 +140,10 @@ const Panel = Class({
   extends: WorkerHost(workerFor),
   setup: function setup(options) {
     let model = merge({
-      width: 320,
-      height: 240,
+      defaultWidth: 320,
+      defaultHeight: 240,
       focus: true,
+      position: Object.freeze({}),
     }, panelContract(options));
     models.set(this, model);
 
@@ -172,6 +189,9 @@ const Panel = Class({
   /* Public API: Panel.focus */
   get focus() modelFor(this).focus,
 
+  /* Public API: Panel.position */
+  get position() modelFor(this).position,
+
   get contentURL() modelFor(this).contentURL,
   set contentURL(value) {
     let model = modelFor(this);
@@ -183,13 +203,22 @@ const Panel = Class({
   get isShowing() !isDisposed(this) && domPanel.isOpen(viewFor(this)),
 
   /* Public API: Panel.show */
-  show: function show(anchor) {
+  show: function show(options, anchor) {
     let model = modelFor(this);
     let view = viewFor(this);
     let anchorView = getNodeView(anchor);
 
+    options = merge({
+      position: model.position,
+      width: model.width,
+      height: model.height,
+      defaultWidth: model.defaultWidth,
+      defaultHeight: model.defaultHeight,
+      focus: model.focus
+    }, displayContract(options));
+
     if (!isDisposed(this))
-      domPanel.show(view, model.width, model.height, model.focus, anchorView);
+      domPanel.show(view, options, anchorView);
 
     return this;
   },
@@ -207,8 +236,8 @@ const Panel = Class({
     let model = modelFor(this);
     let view = viewFor(this);
     let change = panelContract({
-      width: width || model.width,
-      height: height || model.height
+      width: width || model.width || model.defaultWidth,
+      height: height || model.height || model.defaultHeight
     });
 
     model.width = change.width

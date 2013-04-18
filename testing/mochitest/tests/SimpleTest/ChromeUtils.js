@@ -5,9 +5,12 @@
  * EventUtils.js, but when porting to specialPowers, we didn't want
  * to move unnecessary functions.
  *
- * ChromeUtils.js depends on EventUtils.js being loaded.
- *
  */
+
+const EventUtils = {};
+const scriptLoader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"].
+                   getService(Components.interfaces.mozIJSSubScriptLoader);
+scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
 
 /**
  * Synthesize a query text content event.
@@ -186,13 +189,13 @@ function synthesizeDragStart(element, expectedDragData, aWindow, x, y)
     event.stopPropagation();
   }
   aWindow.addEventListener("dragstart", trapDrag, false);
-  synthesizeMouse(element, x, y, { type: "mousedown" }, aWindow);
+  EventUtils.synthesizeMouse(element, x, y, { type: "mousedown" }, aWindow);
   x += step; y += step;
-  synthesizeMouse(element, x, y, { type: "mousemove" }, aWindow);
+  EventUtils.synthesizeMouse(element, x, y, { type: "mousemove" }, aWindow);
   x += step; y += step;
-  synthesizeMouse(element, x, y, { type: "mousemove" }, aWindow);
+  EventUtils.synthesizeMouse(element, x, y, { type: "mousemove" }, aWindow);
   aWindow.removeEventListener("dragstart", trapDrag, false);
-  synthesizeMouse(element, x, y, { type: "mouseup" }, aWindow);
+  EventUtils.synthesizeMouse(element, x, y, { type: "mouseup" }, aWindow);
   return result;
 }
 
@@ -207,23 +210,17 @@ function synthesizeDragStart(element, expectedDragData, aWindow, x, y)
  *                       [ [ {type: value, data: value}, ...], ... ]
  *  dropEffect - the drop effect to set during the dragstart event, or 'move' if null
  *  aWindow - optional; defaults to the current window object.
- *  eventUtils - optional; allows you to pass in a reference to EventUtils.js. 
- *               If the eventUtils parameter is not passed in, we assume EventUtils.js is 
- *               in the scope. Used by browser-chrome tests.
  *  aDestWindow - optional; defaults to aWindow.
  *                Used when destElement is in a different window than srcElement.
  *
  * Returns the drop effect that was desired.
  */
-function synthesizeDrop(srcElement, destElement, dragData, dropEffect, aWindow, eventUtils, aDestWindow)
+function synthesizeDrop(srcElement, destElement, dragData, dropEffect, aWindow, aDestWindow)
 {
   if (!aWindow)
     aWindow = window;
   if (!aDestWindow)
     aDestWindow = aWindow;
-
-  var synthesizeMouseAtCenter = (eventUtils || window).synthesizeMouseAtCenter;
-  var synthesizeMouse = (eventUtils || window).synthesizeMouse;
 
   var gWindowUtils = aDestWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
                                  getInterface(Components.interfaces.nsIDOMWindowUtils);
@@ -249,23 +246,22 @@ function synthesizeDrop(srcElement, destElement, dragData, dropEffect, aWindow, 
   try {
     // need to use real mouse action
     aWindow.addEventListener("dragstart", trapDrag, true);
-    synthesizeMouseAtCenter(srcElement, { type: "mousedown" }, aWindow);
+    EventUtils.synthesizeMouseAtCenter(srcElement, { type: "mousedown" }, aWindow);
 
     var rect = srcElement.getBoundingClientRect();
     var x = rect.width / 2;
     var y = rect.height / 2;
-    synthesizeMouse(srcElement, x, y, { type: "mousemove" }, aWindow);
-    synthesizeMouse(srcElement, x+10, y+10, { type: "mousemove" }, aWindow);
+    EventUtils.synthesizeMouse(srcElement, x, y, { type: "mousemove" }, aWindow);
+    EventUtils.synthesizeMouse(srcElement, x+10, y+10, { type: "mousemove" }, aWindow);
     aWindow.removeEventListener("dragstart", trapDrag, true);
 
     event = aDestWindow.document.createEvent("DragEvents");
     event.initDragEvent("dragenter", true, true, aDestWindow, 0, 0, 0, 0, 0, false, false, false, false, 0, null, dataTransfer);
     gWindowUtils.dispatchDOMEventViaPresShell(destElement, event, true);
-
     var event = aDestWindow.document.createEvent("DragEvents");
     event.initDragEvent("dragover", true, true, aDestWindow, 0, 0, 0, 0, 0, false, false, false, false, 0, null, dataTransfer);
     if (gWindowUtils.dispatchDOMEventViaPresShell(destElement, event, true)) {
-      synthesizeMouseAtCenter(destElement, { type: "mouseup" }, aDestWindow);
+      EventUtils.synthesizeMouseAtCenter(destElement, { type: "mouseup" }, aDestWindow);
       return "none";
     }
 
@@ -275,7 +271,7 @@ function synthesizeDrop(srcElement, destElement, dragData, dropEffect, aWindow, 
       gWindowUtils.dispatchDOMEventViaPresShell(destElement, event, true);
     }
 
-    synthesizeMouseAtCenter(destElement, { type: "mouseup" }, aDestWindow);
+    EventUtils.synthesizeMouseAtCenter(destElement, { type: "mouseup" }, aDestWindow);
 
     return dataTransfer.dropEffect;
   } finally {

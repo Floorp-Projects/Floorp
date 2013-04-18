@@ -41,7 +41,6 @@
 #include "nsXBLWindowKeyHandler.h"
 #include "nsXBLService.h"
 #include "txMozillaXSLTProcessor.h"
-#include "nsDOMStorage.h"
 #include "nsTreeSanitizer.h"
 #include "nsCellMap.h"
 #include "nsTextFrameTextRunCache.h"
@@ -59,7 +58,7 @@
 #include "nsMathMLAtoms.h"
 #include "nsMathMLOperators.h"
 #include "Navigator.h"
-#include "nsDOMStorageBaseDB.h"
+#include "DOMStorageObserver.h"
 #include "DisplayItemClip.h"
 
 #include "AudioChannelService.h"
@@ -217,9 +216,9 @@ nsLayoutStatics::Initialize()
     return rv;
   }
 
-  rv = nsDOMStorageManager::Initialize();
+  rv = DOMStorageObserver::Init();
   if (NS_FAILED(rv)) {
-    NS_ERROR("Could not initialize nsDOMStorageManager");
+    NS_ERROR("Could not initialize DOMStorageObserver");
     return rv;
   }
 
@@ -272,8 +271,6 @@ nsLayoutStatics::Initialize()
   nsCookieService::AppClearDataObserverInit();
   nsApplicationCacheService::AppClearDataObserverInit();
 
-  nsDOMStorageBaseDB::Init();
-
   InitializeDateCacheCleaner();
 
   return NS_OK;
@@ -290,7 +287,7 @@ nsLayoutStatics::Shutdown()
 #ifdef MOZ_XUL
   nsXULPopupManager::Shutdown();
 #endif
-  nsDOMStorageManager::Shutdown();
+  DOMStorageObserver::Shutdown();
   txMozillaXSLTProcessor::Shutdown();
   Attr::Shutdown();
   nsEventListenerManager::Shutdown();

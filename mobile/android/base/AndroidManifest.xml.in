@@ -44,9 +44,11 @@
     <uses-feature android:name="android.hardware.location.gps" android:required="false"/>
     <uses-feature android:name="android.hardware.touchscreen"/>
 
+#ifdef MOZ_ANDROID_BEAM
     <!-- Android Beam support -->
     <uses-permission android:name="android.permission.NFC"/>
     <uses-feature android:name="android.hardware.nfc"/>
+#endif
 
 #ifdef MOZ_WEBRTC
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
@@ -125,12 +127,14 @@
                 <action android:name="android.intent.action.SEARCH" />
             </intent-filter>
 
+#ifdef MOZ_ANDROID_BEAM
             <intent-filter>
                 <action android:name="android.nfc.action.NDEF_DISCOVERED"/>
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:scheme="http" />
                 <data android:scheme="https" />
             </intent-filter>
+#endif
 
             <meta-data android:name="android.app.searchable"
                        android:resource="@xml/searchable" />
@@ -142,7 +146,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name="org.mozilla.gecko.WebApp"
+        <activity android:name=".WebApp"
                   android:label="@string/webapp_generic_name"
                   android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize"
                   android:windowSoftInputMode="stateUnspecified|adjustResize"

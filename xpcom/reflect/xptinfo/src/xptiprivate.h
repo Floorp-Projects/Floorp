@@ -75,7 +75,6 @@ class xptiInterfaceInfo;
 class xptiInterfaceInfoManager;
 class xptiInterfaceEntry;
 class xptiTypelibGuts;
-class xptiWorkingSet;
 
 extern XPTArena* gXPTIStructArena;
 
@@ -116,45 +115,6 @@ private:
 };
 
 /***************************************************************************/
-
-class xptiWorkingSet
-{
-public:
-    xptiWorkingSet();
-    ~xptiWorkingSet();
-    
-    bool IsValid() const;
-
-    void InvalidateInterfaceInfos();
-    void ClearHashTables();
-
-    // utility methods...
-
-    enum {NOT_FOUND = 0xffffffff};
-
-    // Directory stuff...
-
-    uint32_t GetDirectoryCount();
-    nsresult GetCloneOfDirectoryAt(uint32_t i, nsIFile** dir);
-    nsresult GetDirectoryAt(uint32_t i, nsIFile** dir);
-    bool     FindDirectory(nsIFile* dir, uint32_t* index);
-    bool     FindDirectoryOfFile(nsIFile* file, uint32_t* index);
-    bool     DirectoryAtMatchesPersistentDescriptor(uint32_t i, const char* desc);
-
-private:
-    uint32_t        mFileCount;
-    uint32_t        mMaxFileCount;
-
-public:
-    // XXX make these private with accessors
-    // mTableMonitor must be held across:
-    //  * any read from or write to mIIDTable or mNameTable
-    //  * any writing to the links between an xptiInterfaceEntry
-    //    and its xptiInterfaceInfo (mEntry/mInfo)
-    mozilla::ReentrantMonitor mTableReentrantMonitor;
-    nsDataHashtable<nsIDHashKey, xptiInterfaceEntry*> mIIDTable;
-    nsDataHashtable<nsDepCharHashKey, xptiInterfaceEntry*> mNameTable;
-};
 
 /***************************************************************************/
 
@@ -395,54 +355,5 @@ private:
 };
 
 /***************************************************************************/
-
-class xptiInterfaceInfoManager MOZ_FINAL
-    : public nsIInterfaceInfoSuperManager
-{
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIINTERFACEINFOMANAGER
-    NS_DECL_NSIINTERFACEINFOSUPERMANAGER
-
-    typedef mozilla::ReentrantMonitor ReentrantMonitor;
-    typedef mozilla::Mutex Mutex;
-
-public:
-    // GetSingleton() is infallible
-    static xptiInterfaceInfoManager* GetSingleton();
-    static void FreeInterfaceInfoManager();
-
-    void RegisterBuffer(char *buf, uint32_t length);
-
-    xptiWorkingSet*  GetWorkingSet() {return &mWorkingSet;}
-
-    static Mutex& GetResolveLock(xptiInterfaceInfoManager* self = nullptr) 
-    {
-        self = self ? self : GetSingleton();
-        return self->mResolveLock;
-    }
-
-    xptiInterfaceEntry* GetInterfaceEntryForIID(const nsIID *iid);
-
-    size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf);
-
-    static int64_t GetXPTIWorkingSetSize();
-
-private:
-    xptiInterfaceInfoManager();
-    ~xptiInterfaceInfoManager();
-
-    void RegisterXPTHeader(XPTHeader* aHeader);
-                          
-    // idx is the index of this interface in the XPTHeader
-    void VerifyAndAddEntryIfNew(XPTInterfaceDirectoryEntry* iface,
-                                uint16_t idx,
-                                xptiTypelibGuts* typelib);
-
-private:
-    xptiWorkingSet               mWorkingSet;
-    Mutex                        mResolveLock;
-    Mutex                        mAdditionalManagersLock;
-    nsCOMArray<nsISupports>      mAdditionalManagers;
-};
 
 #endif /* xptiprivate_h___ */

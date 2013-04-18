@@ -594,7 +594,7 @@ skip-if(B2G) == 367247-l-scroll.html 367247-l-auto.html
 == 367612-1e.html 367612-1-ref.html
 == 367612-1f.html 367612-1-ref.html
 != 367612-1g.html 367612-1-ref.html
-random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == 368020-1.html 368020-1-ref.html
+skip-if(B2G) random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == 368020-1.html 368020-1-ref.html
 == 368020-2.html 368020-2-ref.html
 fails == 368020-3.html 368020-3-ref.html # bug 368085
 fails == 368020-4.html 368020-4-ref.html # bug 368085
@@ -1189,7 +1189,7 @@ test-pref(dom.use_xbl_scopes_for_remote_xul,false) != 449149-1b.html about:blank
 == 455171-5.html 455171-5-ref.html
 == 455280-1.xhtml 455280-1-ref.xhtml
 skip-if(B2G) == 455826-1.html 455826-1-ref.html
-fails-if(cocoaWidget) == 456147.xul 456147-ref.html # bug 458047
+skip-if(B2G) fails-if(cocoaWidget) == 456147.xul 456147-ref.html # bug 458047
 skip-if(B2G) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),1,1) == 456219-1a.html 456219-1-ref.html # bug 853273
 skip-if(B2G) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),1,1) == 456219-1b.html 456219-1-ref.html # bug 853273
 skip-if(B2G) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),1,1) == 456219-1c.html 456219-1-ref.html # bug 853273

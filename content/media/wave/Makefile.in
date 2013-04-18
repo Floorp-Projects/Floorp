@@ -14,11 +14,6 @@ LIBRARY_NAME	= gkconwave_s
 LIBXUL_LIBRARY 	= 1
 
 
-EXPORTS		+= \
-		WaveDecoder.h \
-		WaveReader.h \
-		$(NULL)
-
 CPPSRCS		= \
 		WaveDecoder.cpp \
 		WaveReader.cpp \

@@ -18,9 +18,9 @@ const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 #endif
 
 Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
+Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://services-common/log4moz.js");
-Cu.import("resource://services-common/preferences.js");
 Cu.import("resource://services-common/utils.js");
 
 
@@ -556,6 +556,12 @@ Provider.prototype = Object.freeze({
 
     let self = this;
     return Task.spawn(function init() {
+      let pre = self.preInit();
+      if (!pre || typeof(pre.then) != "function") {
+        throw new Error("preInit() does not return a promise.");
+      }
+      yield pre;
+
       for (let measurementType of self.measurementTypes) {
         let measurement = new measurementType();
 
@@ -573,13 +579,11 @@ Provider.prototype = Object.freeze({
                               measurement);
       }
 
-      let promise = self.onInit();
-
-      if (!promise || typeof(promise.then) != "function") {
-        throw new Error("onInit() does not return a promise.");
+      let post = self.postInit();
+      if (!post || typeof(post.then) != "function") {
+        throw new Error("postInit() does not return a promise.");
       }
-
-      yield promise;
+      yield post;
     });
   },
 
@@ -594,7 +598,22 @@ Provider.prototype = Object.freeze({
   },
 
   /**
-   * Hook point for implementations to perform initialization activity.
+   * Hook point for implementations to perform pre-initialization activity.
+   *
+   * This method will be called before measurement registration.
+   *
+   * Implementations should return a promise which is resolved when
+   * initialization activities have completed.
+   */
+  preInit: function () {
+    return CommonUtils.laterTickResolvingPromise();
+  },
+
+  /**
+   * Hook point for implementations to perform post-initialization activity.
+   *
+   * This method will be called after `preInit` and measurement registration,
+   * but before initialization is finished.
    *
    * If a `Provider` instance needs to register observers, etc, it should
    * implement this function.
@@ -602,7 +621,7 @@ Provider.prototype = Object.freeze({
    * Implementations should return a promise which is resolved when
    * initialization activities have completed.
    */
-  onInit: function () {
+  postInit: function () {
     return CommonUtils.laterTickResolvingPromise();
   },
 

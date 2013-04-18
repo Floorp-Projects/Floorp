@@ -43,29 +43,29 @@ NS_IMPL_THREADSAFE_RELEASE(BackstagePass)
 /* bool newResolve (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in jsval id, in uint32_t flags, out JSObjectPtr objp); */
 NS_IMETHODIMP
 BackstagePass::NewResolve(nsIXPConnectWrappedNative *wrapper,
-                          JSContext * cx, JSObject * obj_,
-                          jsid id_, uint32_t flags,
-                          JSObject * *objp_, bool *_retval)
+                          JSContext * cx, JSObject * objArg,
+                          jsid idArg, uint32_t flags,
+                          JSObject * *objpArg, bool *_retval)
 {
-    JS::RootedObject obj(cx, obj_);
-    JS::RootedId id(cx, id_);
+    JS::RootedObject obj(cx, objArg);
+    JS::RootedId id(cx, idArg);
 
     JSBool resolved;
 
     *_retval = !!JS_ResolveStandardClass(cx, obj, id, &resolved);
     if (!*_retval) {
-        *objp_ = nullptr;
+        *objpArg = nullptr;
         return NS_OK;
     }
 
     if (resolved) {
-        *objp_ = obj;
+        *objpArg = obj;
         return NS_OK;
     }
 
-    JS::RootedObject objp(cx, *objp_);
+    JS::RootedObject objp(cx, *objpArg);
     *_retval = !!ResolveWorkerClasses(cx, obj, id, flags, &objp);
-    *objp_ = objp;
+    *objpArg = objp;
     return NS_OK;
 }
 

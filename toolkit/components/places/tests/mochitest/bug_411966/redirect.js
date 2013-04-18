@@ -33,10 +33,10 @@ function uri(URIString) {
   return ios.newURI(URIString, null, null);
 }
 
-var typedURI = uri("http://localhost:8888/tests/toolkit/components/places/tests/bug_411966/TypedPage.htm");
-var clickedLinkURI = uri("http://localhost:8888/tests/toolkit/components/places/tests/bug_411966/ClickedPage.htm");
-var temporaryRedirectURI = uri("http://localhost:8888/tests/toolkit/components/places/tests/bug_411966/TempRedirectPage.htm");
-var permanentRedirectURI = uri("http://localhost:8888/tests/toolkit/components/places/tests/bug_411966/PermRedirectPage.htm");
+var typedURI = uri("http://localhost:8888/tests/toolkit/components/places/tests/mochitest/bug_411966/TypedPage.htm");
+var clickedLinkURI = uri("http://localhost:8888/tests/toolkit/components/places/tests/mochitest/bug_411966/ClickedPage.htm");
+var temporaryRedirectURI = uri("http://localhost:8888/tests/toolkit/components/places/tests/mochitest/bug_411966/TempRedirectPage.htm");
+var permanentRedirectURI = uri("http://localhost:8888/tests/toolkit/components/places/tests/mochitest/bug_411966/PermRedirectPage.htm");
 
 // Stream Listener
 function StreamListener(aChannel, aCallbackFunc) {

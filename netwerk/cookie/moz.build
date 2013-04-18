@@ -17,3 +17,8 @@ XPIDL_MODULE = 'necko_cookie'
 
 MODULE = 'necko'
 
+if CONFIG['NECKO_COOKIES']:
+    EXPORTS.mozilla.net = [
+        'CookieServiceParent.h',
+        'CookieServiceChild.h',
+    ]

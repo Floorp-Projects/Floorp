@@ -23,11 +23,6 @@ CPPSRCS		= \
 		nsUnicodeToJISx0201.cpp \
 		$(NULL)
 
-EXPORTS		= \
-		nsUCVJACID.h \
-		nsUCVJA2CID.h \
-		$(NULL)
-
 #SHARED_LIBRARY_LIBS = $(DIST)/lib/$(LIB_PREFIX)ucvutil_s.$(LIB_SUFFIX)
 
 LOCAL_INCLUDES	= -I$(srcdir)/../util

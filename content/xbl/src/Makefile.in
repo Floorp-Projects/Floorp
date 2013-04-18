@@ -34,12 +34,6 @@ CPPSRCS		= \
     nsXBLSerialize.cpp \
 		$(NULL)
 
-EXPORTS   = \
-  nsBindingManager.h \
-  nsXBLBinding.h \
-  nsXBLService.h \
-  $(NULL)
-
 include $(topsrcdir)/config/config.mk
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

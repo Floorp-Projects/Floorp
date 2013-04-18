@@ -14,12 +14,6 @@ FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
 EXPORT_LIBRARY = 1
 
-EXPORTS_NAMESPACES = mozilla/ipc
-
-EXPORTS_mozilla/ipc = \
-  Ril.h \
-  $(NULL)
-
 CPPSRCS += \
   Ril.cpp \
   $(NULL)

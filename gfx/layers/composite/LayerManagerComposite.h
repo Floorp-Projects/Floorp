@@ -135,7 +135,6 @@ public:
 
   virtual LayersBackend GetBackendType() MOZ_OVERRIDE
   {
-    MOZ_ASSERT(false, "Shouldn't be called for composited layer manager");
     return LAYERS_NONE;
   }
   virtual void GetBackendName(nsAString& name) MOZ_OVERRIDE
@@ -288,12 +287,7 @@ public:
 
   virtual void CleanupResources() = 0;
 
-  virtual TiledLayerComposer* AsTiledLayerComposer() { return NULL; }
-
-  virtual void EnsureBuffer(CompositableType aType)
-  {
-    MOZ_ASSERT(false, "Should not be called unless overriden.");
-  }
+  virtual TiledLayerComposer* GetTiledLayerComposer() { return nullptr; }
 
 protected:
   LayerManagerComposite* mCompositeManager;

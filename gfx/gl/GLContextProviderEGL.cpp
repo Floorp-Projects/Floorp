@@ -441,6 +441,26 @@ public:
     {
         sEGLLibrary.fDestroyImage(EGL_DISPLAY(), image);
     }
+
+    EGLImage GetNullEGLImage() MOZ_OVERRIDE
+    {
+        if (!mNullGraphicBuffer.get()) {
+            mNullGraphicBuffer
+              = new android::GraphicBuffer(
+                  1, 1,
+                  PIXEL_FORMAT_RGB_565,
+                  GRALLOC_USAGE_SW_READ_NEVER | GRALLOC_USAGE_SW_WRITE_NEVER);
+            EGLint attrs[] = {
+                LOCAL_EGL_NONE, LOCAL_EGL_NONE
+            };
+            mNullEGLImage = sEGLLibrary.fCreateImage(EGL_DISPLAY(),
+                                                     EGL_NO_CONTEXT,
+                                                     LOCAL_EGL_NATIVE_BUFFER_ANDROID,
+                                                     mNullGraphicBuffer->getNativeBuffer(),
+                                                     attrs);
+        }
+        return mNullEGLImage;
+    }
 #endif
 
 
@@ -665,7 +685,6 @@ public:
         return sEGLLibrary.HasKHRLockSurface();
     }
 
-    virtual SharedTextureHandle CreateSharedHandle(SharedTextureShareType shareType);
     virtual SharedTextureHandle CreateSharedHandle(SharedTextureShareType shareType,
                                                    void* buffer,
                                                    SharedTextureBufferType bufferType);
@@ -696,6 +715,8 @@ protected:
     bool mShareWithEGLImage;
 #ifdef MOZ_WIDGET_GONK
     nsRefPtr<HwcComposer2D> mHwc;
+    EGLImage mNullEGLImage;
+    android::sp<android::GraphicBuffer> mNullGraphicBuffer;
 #endif
 
     // A dummy texture ID that can be used when we need a texture object whose
@@ -907,31 +928,6 @@ GLContextEGL::UpdateSharedHandle(SharedTextureShareType shareType,
     // in different thread GLContext.  If we have KHR_fence_sync, then
     // we insert a sync object, otherwise we have to do a GuaranteeResolve.
     wrap->MakeSync(this);
-}
-
-SharedTextureHandle
-GLContextEGL::CreateSharedHandle(SharedTextureShareType shareType)
-{
-    if (shareType != SameProcess)
-        return 0;
-
-    if (!mShareWithEGLImage)
-        return 0;
-
-    MakeCurrent();
-    mTemporaryEGLImageTexture = CreateTextureForOffscreen(GetGLFormats(), OffscreenSize());
-
-    EGLTextureWrapper* tex = new EGLTextureWrapper();
-    bool ok = tex->CreateEGLImage(this, mTemporaryEGLImageTexture);
-
-    if (!ok) {
-        NS_ERROR("EGLImage creation for EGLTextureWrapper failed");
-        ReleaseSharedHandle(shareType, (SharedTextureHandle)tex);
-        return 0;
-    }
-
-    // Raw pointer shared across threads
-    return (SharedTextureHandle)tex;
 }
 
 SharedTextureHandle
@@ -2362,6 +2358,14 @@ GLContextProviderEGL::CreateOffscreen(const gfxIntSize& size,
         return nullptr;
 
     return glContext.forget();
+}
+
+SharedTextureHandle
+GLContextProviderEGL::CreateSharedHandle(GLContext::SharedTextureShareType shareType,
+                                         void* buffer,
+                                         GLContext::SharedTextureBufferType bufferType)
+{
+  return 0;
 }
 
 // Don't want a global context on Android as 1) share groups across 2 threads fail on many Tegra drivers (bug 759225)

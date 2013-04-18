@@ -24,7 +24,14 @@ function generatorTest() {
     let browser = gBrowser.selectedBrowser;
     browser.stop(); // stop the about:blank load.
 
-    browser.addEventListener("DOMContentLoaded", nextStep, true);
+    browser.addEventListener("DOMContentLoaded", event => {
+        if (event.originalTarget != browser.contentDocument ||
+            event.target.location.href == "about:blank") {
+            info("skipping spurious load event");
+            return;
+        }
+        nextStep();
+    }, true);
     registerCleanupFunction(function () {
         browser.removeEventListener("DOMContentLoaded", nextStep, true);
         gBrowser.removeCurrentTab();
@@ -66,6 +73,8 @@ function generatorTest() {
 // Bookmark the current page and confirm that the new bookmark has the expected
 // title. (Then delete the bookmark.)
 function checkBookmark(uri, expected_title) {
+    is(gBrowser.selectedBrowser.currentURI.spec, uri,
+       "Trying to bookmark the expected uri");
     PlacesCommandHook.bookmarkCurrentPage(false);
 
     let id = PlacesUtils.getMostRecentBookmarkForURI(PlacesUtils._uri(uri));

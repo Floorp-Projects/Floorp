@@ -6,3 +6,9 @@
 
 MODULE = 'layout'
 
+EXPORTS.mozilla.layout += [
+    'RenderFrameChild.h',
+    'RenderFrameParent.h',
+    'RenderFrameUtils.h',
+]
+

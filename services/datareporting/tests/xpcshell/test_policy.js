@@ -5,7 +5,7 @@
 
 const {utils: Cu} = Components;
 
-Cu.import("resource://services-common/preferences.js");
+Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/services/datareporting/policy.jsm");
 Cu.import("resource://testing-common/services/datareporting/mocks.jsm");
 

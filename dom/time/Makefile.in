@@ -16,19 +16,11 @@ FAIL_ON_WARNINGS := 1
 
 include $(topsrcdir)/dom/dom-config.mk
 
-EXPORTS_NAMESPACES = mozilla/dom/time
-
 CPPSRCS = \
   TimeManager.cpp \
   TimeService.cpp \
   TimeChangeObserver.cpp \
   DateCacheCleaner.cpp \
-  $(NULL)
-
-EXPORTS_mozilla/dom/time = \
-  TimeService.h \
-  TimeChangeObserver.h \
-  DateCacheCleaner.h \
   $(NULL)
 
 include $(topsrcdir)/config/config.mk

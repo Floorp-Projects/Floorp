@@ -6,3 +6,15 @@
 #response-content-image-box {
   overflow: auto;
 }
+
+#timings-summary-blocked {
+  display: none; /* This doesn't work yet. */
+}
+
+/* Responsive sidebar */
+@media (max-width: 700px) {
+  #details-pane-toggle,
+  .requests-menu-waterfall {
+    display: none;
+  }
+}

@@ -404,8 +404,8 @@ VariablesView.prototype = {
       return;
     }
     this._searchboxContainer.parentNode.removeChild(this._searchboxContainer);
-    this._searchboxNode.addEventListener("input", this._onSearchboxInput, false);
-    this._searchboxNode.addEventListener("keypress", this._onSearchboxKeyPress, false);
+    this._searchboxNode.removeEventListener("input", this._onSearchboxInput, false);
+    this._searchboxNode.removeEventListener("keypress", this._onSearchboxKeyPress, false);
 
     this._searchboxContainer = null;
     this._searchboxNode = null;
@@ -1543,7 +1543,9 @@ Scope.prototype = {
    * The click listener for this scope's title.
    */
   _onClick: function S__onClick(e) {
-    if (e.target == this._inputNode) {
+    if (e.target == this._inputNode ||
+        e.target == this._editNode ||
+        e.target == this._deleteNode) {
       return;
     }
     this.toggle();

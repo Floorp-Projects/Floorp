@@ -6,3 +6,9 @@
 
 MODULE = 'content'
 
+EXPORTS += [
+    'RawDecoder.h',
+    'RawReader.h',
+    'RawStructs.h',
+]
+

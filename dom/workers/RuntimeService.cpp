@@ -42,6 +42,8 @@
 #include "OSFileConstants.h"
 #include <algorithm>
 
+#include "GeckoProfiler.h"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -99,7 +101,8 @@ MOZ_STATIC_ASSERT(MAX_WORKERS_PER_DOMAIN >= 1,
     }                                                                          \
                                                                                \
     if (!workers.IsEmpty()) {                                                  \
-      AutoSafeJSContext cx;                                                    \
+      SafeAutoJSContext cx;                                                    \
+      JSAutoRequest ar(cx);                                                    \
       for (uint32_t index = 0; index < workers.Length(); index++) {            \
         workers[index]-> _func (cx, __VA_ARGS__);                              \
       }                                                                        \
@@ -263,6 +266,10 @@ JSBool
 OperationCallback(JSContext* aCx)
 {
   WorkerPrivate* worker = GetWorkerPrivateFromContext(aCx);
+
+  // Now is a good time to turn on profiling if it's pending.
+  profiler_js_operation_callback();
+
   return worker->OperationCallback(aCx);
 }
 
@@ -515,12 +522,18 @@ public:
       return NS_ERROR_FAILURE;
     }
 
+    JSRuntime* rt = JS_GetRuntime(cx);
+
+    profiler_register_thread("WebWorker");
+#ifdef MOZ_ENABLE_PROFILER_SPS
+    if (PseudoStack* stack = mozilla_get_pseudo_stack())
+      stack->sampleRuntime(rt);
+#endif
+
     {
       JSAutoRequest ar(cx);
       workerPrivate->DoRunLoop(cx);
     }
-
-    JSRuntime* rt = JS_GetRuntime(cx);
 
     // XXX Bug 666963 - CTypes can create another JSContext for use with
     // closures, and then it holds that context in a reserved slot on the CType
@@ -540,9 +553,14 @@ public:
       JS_DestroyContext(cx);
     }
 
+#ifdef MOZ_ENABLE_PROFILER_SPS
+    if (PseudoStack* stack = mozilla_get_pseudo_stack())
+      stack->sampleRuntime(nullptr);
+#endif
     JS_DestroyRuntime(rt);
 
     workerPrivate->ScheduleDeletion(false);
+    profiler_unregister_thread();
     return NS_OK;
   }
 };
@@ -1155,7 +1173,8 @@ RuntimeService::Cleanup()
         currentThread = NS_GetCurrentThread();
         NS_ASSERTION(currentThread, "This should never be null!");
 
-        AutoSafeJSContext cx;
+        SafeAutoJSContext cx;
+        JSAutoRequest ar(cx);
 
         for (uint32_t index = 0; index < workers.Length(); index++) {
           if (!workers[index]->Kill(cx)) {
@@ -1284,7 +1303,6 @@ RuntimeService::CancelWorkersForWindow(JSContext* aCx,
   GetWorkersForWindow(aWindow, workers);
 
   if (!workers.IsEmpty()) {
-    AutoSafeJSContext cx(aCx);
     for (uint32_t index = 0; index < workers.Length(); index++) {
       if (!workers[index]->Cancel(aCx)) {
         NS_WARNING("Failed to cancel worker!");
@@ -1303,7 +1321,6 @@ RuntimeService::SuspendWorkersForWindow(JSContext* aCx,
   GetWorkersForWindow(aWindow, workers);
 
   if (!workers.IsEmpty()) {
-    AutoSafeJSContext cx(aCx);
     for (uint32_t index = 0; index < workers.Length(); index++) {
       if (!workers[index]->Suspend(aCx)) {
         NS_WARNING("Failed to cancel worker!");
@@ -1322,7 +1339,6 @@ RuntimeService::ResumeWorkersForWindow(JSContext* aCx,
   GetWorkersForWindow(aWindow, workers);
 
   if (!workers.IsEmpty()) {
-    AutoSafeJSContext cx(aCx);
     for (uint32_t index = 0; index < workers.Length(); index++) {
       if (!workers[index]->Resume(aCx)) {
         NS_WARNING("Failed to cancel worker!");
@@ -1430,64 +1446,4 @@ RuntimeService::Observe(nsISupports* aSubject, const char* aTopic,
 
   NS_NOTREACHED("Unknown observer topic!");
   return NS_OK;
-}
-
-RuntimeService::AutoSafeJSContext::AutoSafeJSContext(JSContext* aCx)
-: mContext(aCx ? aCx : GetSafeContext())
-{
-  AssertIsOnMainThread();
-
-  if (mContext) {
-    nsIThreadJSContextStack* stack = nsContentUtils::ThreadJSContextStack();
-    NS_ASSERTION(stack, "This should never be null!");
-
-    if (NS_FAILED(stack->Push(mContext))) {
-      NS_ERROR("Couldn't push safe JSContext!");
-      mContext = nullptr;
-      return;
-    }
-
-    JS_BeginRequest(mContext);
-  }
-}
-
-RuntimeService::AutoSafeJSContext::~AutoSafeJSContext()
-{
-  AssertIsOnMainThread();
-
-  if (mContext) {
-    JS_ReportPendingException(mContext);
-
-    JS_EndRequest(mContext);
-
-    nsIThreadJSContextStack* stack = nsContentUtils::ThreadJSContextStack();
-    NS_ASSERTION(stack, "This should never be null!");
-
-    JSContext* cx;
-    if (NS_FAILED(stack->Pop(&cx))) {
-      NS_ERROR("Failed to pop safe context!");
-    }
-    if (cx != mContext) {
-      NS_ERROR("Mismatched context!");
-    }
-  }
-}
-
-// static
-JSContext*
-RuntimeService::AutoSafeJSContext::GetSafeContext()
-{
-  AssertIsOnMainThread();
-
-  nsIThreadJSContextStack* stack = nsContentUtils::ThreadJSContextStack();
-  NS_ASSERTION(stack, "This should never be null!");
-
-  JSContext* cx = stack->GetSafeJSContext();
-  if (!cx) {
-    NS_ERROR("Couldn't get safe JSContext!");
-    return nullptr;
-  }
-
-  NS_ASSERTION(!JS_IsExceptionPending(cx), "Already has an exception?!");
-  return cx;
 }

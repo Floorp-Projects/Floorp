@@ -119,7 +119,6 @@
 #include "nsMemory.h"
 #include "nsIXPConnect.h"
 #include "nsIInterfaceInfo.h"
-#include "nsIInterfaceInfoManager.h"
 #include "nsIXPCScriptable.h"
 #include "nsIXPCSecurityManager.h"
 #include "nsIJSRuntimeService.h"
@@ -491,10 +490,6 @@ public:
     void AssertNoObjectsToTrace(void* aPossibleJSHolder);
 #endif
 
-    // Gets addref'd pointer
-    static nsresult GetInterfaceInfoManager(nsIInterfaceInfoSuperManager** iim,
-                                            nsXPConnect* xpc = nullptr);
-
     static JSBool IsISupportsDescendant(nsIInterfaceInfo* info);
 
     nsIXPCSecurityManager* GetDefaultSecurityManager() const
@@ -568,7 +563,6 @@ private:
     static JSBool            gOnceAliveNowDead;
 
     XPCJSRuntime*            mRuntime;
-    nsCOMPtr<nsIInterfaceInfoSuperManager> mInterfaceInfoManager;
     nsIXPCSecurityManager*   mDefaultSecurityManager;
     uint16_t                 mDefaultSecurityManagerFlags;
     JSBool                   mShuttingDown;
@@ -1684,18 +1678,20 @@ public:
     XPCContext *GetContext() { return mContext; }
     void ClearContext() { mContext = nullptr; }
 
-    typedef nsTHashtable<nsPtrHashKey<JSObject> > DOMExpandoMap;
+    typedef js::HashSet<JSObject *,
+                        js::PointerHasher<JSObject *, 3>,
+                        js::SystemAllocPolicy> DOMExpandoSet;
 
     bool RegisterDOMExpandoObject(JSObject *expando) {
-        if (!mDOMExpandoMap) {
-            mDOMExpandoMap = new DOMExpandoMap();
-            mDOMExpandoMap->Init(8);
+        if (!mDOMExpandoSet) {
+            mDOMExpandoSet = new DOMExpandoSet();
+            mDOMExpandoSet->init(8);
         }
-        return mDOMExpandoMap->PutEntry(expando, mozilla::fallible_t());
+        return mDOMExpandoSet->put(expando);
     }
     void RemoveDOMExpandoObject(JSObject *expando) {
-        if (mDOMExpandoMap)
-            mDOMExpandoMap->RemoveEntry(expando);
+        if (mDOMExpandoSet)
+            mDOMExpandoSet->remove(expando);
     }
 
     // Gets the appropriate scope object for XBL in this scope. The context
@@ -1743,7 +1739,7 @@ private:
 
     XPCContext*                      mContext;
 
-    nsAutoPtr<DOMExpandoMap> mDOMExpandoMap;
+    nsAutoPtr<DOMExpandoSet> mDOMExpandoSet;
 
     bool mIsXBLScope;
 
@@ -3731,7 +3727,7 @@ private:
 /***************************************************************************/
 
 extern JSObject*
-xpc_NewIDObject(JSContext *cx, JSObject* jsobj, const nsID& aID);
+xpc_NewIDObject(JSContext *cx, JS::HandleObject jsobj, const nsID& aID);
 
 extern const nsID*
 xpc_JSObjectToID(JSContext *cx, JSObject* obj);

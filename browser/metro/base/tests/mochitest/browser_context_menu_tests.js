@@ -30,7 +30,7 @@ function checkContextMenuPositionRange(aElement, aMinLeft, aMaxLeft, aMinTop, aM
   ok(aElement.left > aMinLeft && aElement.left < aMaxLeft,
     "Left position is " + aElement.left + ", expected between " + aMinLeft + " and " + aMaxLeft);
 
-  ok(aElement.top > aMinTop && aElement.top < aMaxTop, 
+  ok(aElement.top > aMinTop && aElement.top < aMaxTop,
     "Top position is " + aElement.top + ", expected between " + aMinTop + " and " + aMaxTop);
 }
 
@@ -347,7 +347,9 @@ gTests.push({
 
     checkContextMenuPositionRange(ContextMenuUI._panel, 65, 80, notificationHeight +  155, notificationHeight + 180);
 
-    ContextMenuUI._menuPopup.hide();
+    promise = waitForEvent(document, "popuphidden");
+    ContextMenuUI.hide();
+    yield promise;
 
     Browser.closeTab(Browser.selectedTab);
   }
@@ -497,6 +499,7 @@ gTests.push({
     ok(imagetab != null, "tab created");
 
     Browser.closeTab(imagetab);
+    yield waitForEvent(imagetab.chromeTab.parentNode, "TabRemove");
   }
 });
 
@@ -511,7 +514,7 @@ gTests.push({
     // Sometimes the context ui is visible, sometimes it isn't.
     try {
       yield waitForCondition(function () {
-        return ContextUI.isVisible;  
+        return ContextUI.isVisible;
       }, 500, 50);
     } catch (ex) {}
 

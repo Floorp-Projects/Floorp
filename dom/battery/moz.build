@@ -17,3 +17,8 @@ XPIDL_FLAGS += [
     '-I$(topsrcdir)/dom/interfaces/events',
 ]
 
+EXPORTS.mozilla.dom.battery += [
+    'Constants.h',
+    'Types.h',
+]
+

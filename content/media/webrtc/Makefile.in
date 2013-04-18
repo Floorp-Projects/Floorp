@@ -12,20 +12,11 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME = gkconwebrtc_s
 LIBXUL_LIBRARY = 1
 
-EXPORTS	+= \
-  MediaEngine.h \
-  MediaEngineDefault.h \
-  $(NULL)
-
 CPPSRCS	= \
   MediaEngineDefault.cpp \
   $(NULL)
 
 ifdef MOZ_WEBRTC
-EXPORTS += \
-  MediaEngineWebRTC.h \
-  $(NULL)
-
 CPPSRCS += \
   MediaEngineWebRTC.cpp \
   MediaEngineWebRTCVideo.cpp \

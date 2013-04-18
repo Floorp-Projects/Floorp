@@ -1,6 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=99:
- *
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -12,7 +11,6 @@
 
 #include "jsscript.h"
 
-#include "frontend/ParseMaps.h"
 #include "frontend/TokenStream.h"
 
 namespace js {
@@ -1215,7 +1213,7 @@ struct Definition : public ParseNode
         return pn_cookie.isFree();
     }
 
-    enum Kind { VAR, CONST, LET, ARG, NAMED_LAMBDA, PLACEHOLDER };
+    enum Kind { MISSING = 0, VAR, CONST, LET, ARG, NAMED_LAMBDA, PLACEHOLDER };
 
     bool canHaveInitializer() { return int(kind()) <= int(ARG); }
 
@@ -1296,19 +1294,6 @@ ParseNode::isConstant()
       default:
         return false;
     }
-}
-
-inline void
-LinkUseToDef(ParseNode *pn, Definition *dn)
-{
-    JS_ASSERT(!pn->isUsed());
-    JS_ASSERT(!pn->isDefn());
-    JS_ASSERT(pn != dn->dn_uses);
-    pn->pn_link = dn->dn_uses;
-    dn->dn_uses = pn;
-    dn->pn_dflags |= pn->pn_dflags & PND_USE2DEF_FLAGS;
-    pn->setUsed(true);
-    pn->pn_lexdef = dn;
 }
 
 class ObjectBox {

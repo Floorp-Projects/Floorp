@@ -11,11 +11,5 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 
-EXPORTS_NAMESPACES = mozilla
-
-EXPORTS_mozilla = \
-              Preferences.h \
-              $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

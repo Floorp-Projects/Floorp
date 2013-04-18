@@ -8,7 +8,18 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/Metrics.jsm");
 Cu.import("resource://testing-common/services/metrics/mocks.jsm");
 
+const PULL_ONLY_TESTING_CATEGORY = "testing-only-pull-only-providers";
+
 function run_test() {
+  let cm = Cc["@mozilla.org/categorymanager;1"]
+             .getService(Ci.nsICategoryManager);
+  cm.addCategoryEntry(PULL_ONLY_TESTING_CATEGORY, "DummyProvider",
+                      "resource://testing-common/services/metrics/mocks.jsm",
+                      false, true);
+  cm.addCategoryEntry(PULL_ONLY_TESTING_CATEGORY, "DummyConstantProvider",
+                      "resource://testing-common/services/metrics/mocks.jsm",
+                      false, true);
+
   run_next_test();
 };
 
@@ -175,3 +186,85 @@ add_task(function test_collect_daily() {
   yield storage.close();
 });
 
+add_task(function test_pull_only_not_initialized() {
+  let storage = yield Metrics.Storage("pull_only_not_initialized");
+  let manager = new Metrics.ProviderManager(storage);
+  yield manager.registerProvidersFromCategoryManager(PULL_ONLY_TESTING_CATEGORY);
+  do_check_eq(manager.providers.length, 1);
+  do_check_eq(manager.providers[0].name, "DummyProvider");
+  yield storage.close();
+});
+
+add_task(function test_pull_only_registration() {
+  let storage = yield Metrics.Storage("pull_only_registration");
+  let manager = new Metrics.ProviderManager(storage);
+  yield manager.registerProvidersFromCategoryManager(PULL_ONLY_TESTING_CATEGORY);
+  do_check_eq(manager.providers.length, 1);
+
+  // Simple registration and unregistration.
+  yield manager.ensurePullOnlyProvidersRegistered();
+  do_check_eq(manager.providers.length, 2);
+  do_check_neq(manager.getProvider("DummyConstantProvider"), null);
+  yield manager.ensurePullOnlyProvidersUnregistered();
+  do_check_eq(manager.providers.length, 1);
+  do_check_null(manager.getProvider("DummyConstantProvider"));
+
+  // Multiple calls to register work.
+  yield manager.ensurePullOnlyProvidersRegistered();
+  do_check_eq(manager.providers.length, 2);
+  yield manager.ensurePullOnlyProvidersRegistered();
+  do_check_eq(manager.providers.length, 2);
+
+  // Unregister with 2 requests for registration should not unregister.
+  yield manager.ensurePullOnlyProvidersUnregistered();
+  do_check_eq(manager.providers.length, 2);
+
+  // But the 2nd one will.
+  yield manager.ensurePullOnlyProvidersUnregistered();
+  do_check_eq(manager.providers.length, 1);
+
+  yield storage.close();
+});
+
+add_task(function test_pull_only_register_while_registering() {
+  let storage = yield Metrics.Storage("pull_only_register_will_registering");
+  let manager = new Metrics.ProviderManager(storage);
+  yield manager.registerProvidersFromCategoryManager(PULL_ONLY_TESTING_CATEGORY);
+
+  manager.ensurePullOnlyProvidersRegistered();
+  manager.ensurePullOnlyProvidersRegistered();
+  yield manager.ensurePullOnlyProvidersRegistered();
+  do_check_eq(manager.providers.length, 2);
+
+  manager.ensurePullOnlyProvidersUnregistered();
+  manager.ensurePullOnlyProvidersUnregistered();
+  yield manager.ensurePullOnlyProvidersUnregistered();
+  do_check_eq(manager.providers.length, 1);
+
+  yield storage.close();
+});
+
+add_task(function test_pull_only_unregister_while_registering() {
+  let storage = yield Metrics.Storage("pull_only_unregister_while_registering");
+  let manager = new Metrics.ProviderManager(storage);
+  yield manager.registerProvidersFromCategoryManager(PULL_ONLY_TESTING_CATEGORY);
+
+  manager.ensurePullOnlyProvidersRegistered();
+  yield manager.ensurePullOnlyProvidersUnregistered();
+  do_check_eq(manager.providers.length, 1);
+
+  yield storage.close();
+});
+
+add_task(function test_pull_only_register_while_unregistering() {
+  let storage = yield Metrics.Storage("pull_only_register_while_unregistering");
+  let manager = new Metrics.ProviderManager(storage);
+  yield manager.registerProvidersFromCategoryManager(PULL_ONLY_TESTING_CATEGORY);
+
+  yield manager.ensurePullOnlyProvidersRegistered();
+  manager.ensurePullOnlyProvidersUnregistered();
+  yield manager.ensurePullOnlyProvidersRegistered();
+  do_check_eq(manager.providers.length, 2);
+
+  yield storage.close();
+});

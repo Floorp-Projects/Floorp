@@ -1311,12 +1311,11 @@ MainThreadDictionaryBase::ParseJSON(const nsAString& aJSON,
                                     Maybe<JSAutoCompartment>& aAc,
                                     Maybe< JS::Rooted<JS::Value> >& aVal)
 {
-  JSContext* cx = nsContentUtils::ThreadJSContextStack()->GetSafeJSContext();
-  NS_ENSURE_TRUE(cx, nullptr);
+  SafeAutoJSContext cx;
   JSObject* global = JS_GetGlobalObject(cx);
-  aAr.construct(cx);
-  aAc.construct(cx, global);
-  aVal.construct(cx, JS::UndefinedValue());
+  aAr.construct(static_cast<JSContext*>(cx));
+  aAc.construct(static_cast<JSContext*>(cx), global);
+  aVal.construct(static_cast<JSContext*>(cx), JS::UndefinedValue());
   if (aJSON.IsEmpty()) {
     return cx;
   }
@@ -1438,8 +1437,10 @@ private:
 };
 
 nsresult
-ReparentWrapper(JSContext* aCx, JSObject* aObj)
+ReparentWrapper(JSContext* aCx, JS::HandleObject aObjArg)
 {
+  // aObj is assigned to below, so needs to be re-rooted.
+  JS::RootedObject aObj(aCx, aObjArg);
   const DOMClass* domClass = GetDOMClass(aObj);
 
   JSObject* oldParent = JS_GetParent(aObj);

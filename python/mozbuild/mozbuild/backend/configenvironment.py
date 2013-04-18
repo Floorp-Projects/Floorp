@@ -86,13 +86,15 @@ class ConfigEnvironment(object):
       - ALLDEFINES contains the defines in the form #define NAME VALUE, in
         sorted order, for use in config files, for an automatic listing of
         defines.
-    and another additional subst variable from all the other substs:
+    and two other additional subst variables from all the other substs:
       - ALLSUBSTS contains the substs in the form NAME = VALUE, in sorted
         order, for use in autoconf.mk. It includes ACDEFINES, but doesn't
         include ALLDEFINES. Only substs with a VALUE are included, such that
         the resulting file doesn't change when new empty substs are added.
         This results in less invalidation of build dependencies in the case
         of autoconf.mk..
+      - ALLEMPTYSUBSTS contains the substs with an empty value, in the form
+        NAME =.
 
     ConfigEnvironment expects a "top_srcdir" subst to be set with the top
     source directory, in msys format on windows. It is used to derive a
@@ -113,6 +115,8 @@ class ConfigEnvironment(object):
             shell_escape(self.defines[name])) for name in global_defines])
         self.substs['ALLSUBSTS'] = '\n'.join(sorted(['%s = %s' % (name,
             self.substs[name]) for name in self.substs if self.substs[name]]))
+        self.substs['ALLEMPTYSUBSTS'] = '\n'.join(sorted(['%s =' % name
+            for name in self.substs if not self.substs[name]]))
         self.substs['ALLDEFINES'] = '\n'.join(sorted(['#define %s %s' % (name,
             self.defines[name]) for name in global_defines]))
 

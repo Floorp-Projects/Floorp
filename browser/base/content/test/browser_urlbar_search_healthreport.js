@@ -7,7 +7,7 @@ function test() {
   waitForExplicitFinish();
   try {
     let cm = Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
-    cm.getCategoryEntry("healthreport-js-provider", "SearchesProvider");
+    cm.getCategoryEntry("healthreport-js-provider-default", "SearchesProvider");
   } catch (ex) {
     // Health Report disabled, or no SearchesProvider.
     ok(true, "Firefox Health Report is not enabled.");
@@ -23,13 +23,13 @@ function test() {
   reporter.onInit().then(function onInit() {
     let provider = reporter.getProvider("org.mozilla.searches");
     ok(provider, "Searches provider is available.");
-    let m = provider.getMeasurement("counts", 1);
+    let m = provider.getMeasurement("counts", 2);
 
     m.getValues().then(function onData(data) {
       let now = new Date();
       let oldCount = 0;
 
-      // This will need changed if default search engine is not Google.
+      // This will to be need changed if default search engine is not Google.
       let field = "google.urlbar";
 
       if (data.days.hasDay(now)) {

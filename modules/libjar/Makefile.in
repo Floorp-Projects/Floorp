@@ -21,8 +21,6 @@ FAIL_ON_WARNINGS = 1
 
 CPPSRCS		= $(MODULES_LIBJAR_LCPPSRCS)
 
-EXPORTS		= $(MODULES_LIBJAR_LEXPORTS)
-
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk

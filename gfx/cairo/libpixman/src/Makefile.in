@@ -141,8 +141,6 @@ DEFINES += -DUSE_ARM_NEON
 ARM_NEON_CFLAGS = -mfpu=neon
 endif
 
-EXPORTS		= pixman.h pixman-version.h
-
 LOCAL_INCLUDES	+= -I$(srcdir) -I$(srcdir)/../../cairo/src
 
 FORCE_STATIC_LIB = 1

@@ -11,7 +11,7 @@ function test() {
 
     // This is receiving over 80 KB of json and will populate over 6000 items
     // in a variables view instance. Debug builds are slow.
-    requestLongerTimeout(2);
+    requestLongerTimeout(3);
 
     let { document, L10N, SourceEditor, NetMonitorView } = aMonitor.panelWin;
     let { RequestsMenu } = NetMonitorView;
@@ -25,7 +25,7 @@ function test() {
           statusText: "OK",
           type: "json",
           fullMimeType: "text/json; charset=utf-8",
-          size: L10N.getFormatStr("networkMenu.sizeKB", 83.96),
+          size: L10N.getFormatStr("networkMenu.sizeKB", 83.95),
           time: true
         });
 

@@ -32,6 +32,21 @@ function isNull(value) {
 exports.isNull = isNull;
 
 /**
+ * Returns `true` if value is `null` or `undefined`.
+ * It's equivalent to `== null`, but resolve the ambiguity of the writer
+ * intention, makes clear that he's clearly checking both `null` and `undefined`
+ * values, and it's not a typo for `=== null`.
+ */
+function isNil(value) {
+  return value === null || value === undefined;
+}
+exports.isNil = isNil;
+
+function isBoolean(value) {
+  return typeof value === "boolean";
+}
+exports.isBoolean = isBoolean;
+/**
  * Returns `true` if value is a string.
  * @examples
  *    isString("moe"); // true
