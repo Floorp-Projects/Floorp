@@ -16,14 +16,14 @@
   </style>
 
   <!-- TextView Styles -->
-  <style name="SyncTextFrame" parent="@android:style/TextAppearance">
+  <style name="SyncTextFrame" parent="@style/TextAppearance">
     <item name="android:layout_width">fill_parent</item>
     <item name="android:layout_height">fill_parent</item>
     <item name="android:layout_gravity">center</item>
     <item name="android:padding">@dimen/SyncSpace</item>
     <item name="android:orientation">vertical</item>
   </style>
-  <style name="SyncTextItem" parent="@android:style/TextAppearance.Medium">
+  <style name="SyncTextItem" parent="@style/TextAppearance.Medium">
     <item name="android:layout_width">fill_parent</item>
     <item name="android:layout_height">wrap_content</item>
     <item name="android:textSize">15dp</item>
@@ -43,7 +43,7 @@
     <item name="android:textSize">20dp</item>
   </style>
   <!-- EditView Styles -->
-  <style name="SyncEditItem" parent="@android:style/Widget.EditText">
+  <style name="SyncEditItem" parent="@style/Widget.EditText">
     <item name="android:layout_width">fill_parent</item>
     <item name="android:layout_height">wrap_content</item>
     <item name="android:singleLine">true</item>
@@ -66,7 +66,7 @@
 
   <!-- Top title bar: a text view with the Sync icon to the left. -->
   <style name="SyncTop">
-    <item name="android:textAppearance">@android:style/TextAppearance.Large</item>
+    <item name="android:textAppearance">@style/TextAppearance.Large</item>
     <item name="android:layout_width">fill_parent</item>
     <item name="android:layout_height">wrap_content</item>
     <item name="android:gravity">center_vertical|left</item>
@@ -103,14 +103,14 @@
     <item name="android:orientation">vertical</item>
   </style>
 
-  <style name="SyncButton" parent="@android:style/Widget.Button">
+  <style name="SyncButton" parent="@style/Widget.Button">
     <item name="android:layout_width">fill_parent</item>
     <item name="android:layout_height">wrap_content</item>
     <item name="android:layout_weight">1</item>
   </style>
 
   <!-- Text Display Styles -->
-  <style name="SyncPinText" parent="@android:style/Widget.TextView">
+  <style name="SyncPinText" parent="@style/Widget.TextView">
     <item name="android:layout_width">130sp</item>
     <item name="android:layout_height">wrap_content</item>
     <item name="android:layout_gravity">center</item>
