@@ -403,7 +403,7 @@ static inline uint32_t
 VirtualRegisterOfPayload(MDefinition *mir)
 {
     // Type barriers may have box inputs, and pass through their input's vreg.
-    if (mir->isTypeBarrier())
+    while (mir->isTypeBarrier())
         mir = mir->getOperand(0);
     if (mir->isBox()) {
         MDefinition *inner = mir->toBox()->getOperand(0);

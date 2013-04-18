@@ -295,7 +295,7 @@ IonBuilder::inlineArrayPopShift(CallInfo &callInfo, MArrayPopShift::Mode mode)
     bool needsHoleCheck = thisTypes->hasObjectFlags(cx, types::OBJECT_FLAG_NON_PACKED);
     bool maybeUndefined = returnTypes->hasType(types::Type::UndefinedType());
 
-    bool barrier = propertyReadNeedsTypeBarrier(callInfo.thisArg(), NULL, returnTypes);
+    bool barrier = PropertyReadNeedsTypeBarrier(cx, callInfo.thisArg(), NULL, returnTypes);
     if (barrier)
         returnType = MIRType_Value;
 
@@ -322,7 +322,7 @@ IonBuilder::inlineArrayPush(CallInfo &callInfo)
 
     MDefinition *obj = callInfo.thisArg();
     MDefinition *value = callInfo.getArg(0);
-    if (propertyWriteNeedsTypeBarrier(&obj, NULL, &value))
+    if (PropertyWriteNeedsTypeBarrier(cx, current, &obj, NULL, &value))
         return InliningStatus_NotInlined;
     if (obj != callInfo.thisArg() || value != callInfo.getArg(0))
         return InliningStatus_NotInlined;
@@ -937,12 +937,12 @@ IonBuilder::inlineUnsafeSetElement(CallInfo &callInfo)
         MDefinition *id = callInfo.getArg(idxi);
         MDefinition *elem = callInfo.getArg(elemi);
 
-        if (propertyWriteNeedsTypeBarrier(&obj, NULL, &elem))
+        if (PropertyWriteNeedsTypeBarrier(cx, current, &obj, NULL, &elem))
             return InliningStatus_NotInlined;
 
         int arrayType;
-        if (!elementAccessIsDenseNative(obj, id) &&
-            !elementAccessIsTypedArray(obj, id, &arrayType))
+        if (!ElementAccessIsDenseNative(obj, id) &&
+            !ElementAccessIsTypedArray(obj, id, &arrayType))
         {
             return InliningStatus_NotInlined;
         }
@@ -969,14 +969,14 @@ IonBuilder::inlineUnsafeSetElement(CallInfo &callInfo)
         MDefinition *obj = callInfo.getArg(arri);
         MDefinition *id = callInfo.getArg(idxi);
 
-        if (elementAccessIsDenseNative(obj, id)) {
+        if (ElementAccessIsDenseNative(obj, id)) {
             if (!inlineUnsafeSetDenseArrayElement(callInfo, base))
                 return InliningStatus_Error;
             continue;
         }
 
         int arrayType;
-        if (elementAccessIsTypedArray(obj, id, &arrayType)) {
+        if (ElementAccessIsTypedArray(obj, id, &arrayType)) {
             if (!inlineUnsafeSetTypedArrayElement(callInfo, base, arrayType))
                 return InliningStatus_Error;
             continue;
@@ -1323,7 +1323,7 @@ IonBuilder::inlineThrowError(CallInfo &callInfo)
         return InliningStatus_Error;
     current->end(bailout);
 
-    setCurrent(newBlock(pc));
+    setCurrentAndSpecializePhis(newBlock(pc));
     if (!current)
         return InliningStatus_Error;
 

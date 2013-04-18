@@ -3299,7 +3299,7 @@ class MPhi : public MDefinition, public InlineForwardListNode<MPhi>
     static MPhi *New(uint32_t slot);
 
     void setOperand(size_t index, MDefinition *operand) {
-        // Note: after the initial IonBuilder pass, it is OK to rearrange phi
+        // Note: after the initial IonBuilder pass, it is OK to change phi
         // operands such that they do not include the type sets of their
         // operands. This can arise during e.g. value numbering, where
         // definitions producing the same value may have different type sets.
@@ -7427,6 +7427,21 @@ static inline bool isOSRLikeValue (MDefinition *def) {
 }
 
 typedef Vector<MDefinition *, 8, IonAllocPolicy> MDefinitionVector;
+
+// Helper functions used to decide how to build MIR.
+
+bool ElementAccessIsDenseNative(MDefinition *obj, MDefinition *id);
+bool ElementAccessIsTypedArray(MDefinition *obj, MDefinition *id, int *arrayType);
+bool ElementAccessIsPacked(JSContext *cx, MDefinition *obj);
+bool ElementAccessHasExtraIndexedProperty(JSContext *cx, MDefinition *obj);
+MIRType DenseNativeElementType(JSContext *cx, MDefinition *obj);
+bool PropertyReadNeedsTypeBarrier(JSContext *cx, types::TypeObject *object, PropertyName *name,
+                                  types::StackTypeSet *observed);
+bool PropertyReadNeedsTypeBarrier(JSContext *cx, MDefinition *obj, PropertyName *name,
+                                  types::StackTypeSet *observed);
+bool PropertyReadIsIdempotent(JSContext *cx, MDefinition *obj, PropertyName *name);
+bool PropertyWriteNeedsTypeBarrier(JSContext *cx, MBasicBlock *current, MDefinition **pobj,
+                                   PropertyName *name, MDefinition **pvalue);
 
 } // namespace ion
 } // namespace js
