@@ -1016,7 +1016,6 @@ ICProfiler_PushFunction::Compiler::generateStubCode(MacroAssembler &masm)
     masm.spsPushFrame(&cx->runtime->spsProfiler,
                       Address(BaselineStubReg, ICProfiler_PushFunction::offsetOfStr()),
                       Address(BaselineStubReg, ICProfiler_PushFunction::offsetOfScript()),
-                      BaselineFrameReg,
                       scratch,
                       scratch2);
 
