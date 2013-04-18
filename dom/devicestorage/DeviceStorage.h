@@ -20,18 +20,10 @@ public:
   nsCOMPtr<nsIFile> mFile;
   nsString mPath;
   nsString mStorageType;
-  nsString mRootDir;
   bool mEditable;
 
-  // Used when the path will be set later via SetPath.
-  DeviceStorageFile(const nsAString& aStorageType);
-  // Used for non-enumeration purposes.
-  DeviceStorageFile(const nsAString& aStorageType, const nsAString& aPath);
-  // Used for enumerations. When you call Enumerate, you can pass in a directory to enumerate
-  // and the results that are returned are relative to that directory, files related to an
-  // enumeration need to know the "root of the enumeration" directory.
-  DeviceStorageFile(const nsAString& aStorageType, const nsAString& aRootDir, const nsAString& aPath);
-
+  DeviceStorageFile(const nsAString& aStorageType, nsIFile* aFile, const nsAString& aPath);
+  DeviceStorageFile(const nsAString& aStorageType, nsIFile* aFile);
   void SetPath(const nsAString& aPath);
   void SetEditable(bool aEditable);
 
@@ -40,7 +32,6 @@ public:
   // we want to make sure that the names of file can't reach
   // outside of the type of storage the user asked for.
   bool IsSafePath();
-  bool IsSafePath(const nsAString& aPath);
 
   nsresult Remove();
   nsresult Write(nsIInputStream* aInputStream);
@@ -49,13 +40,10 @@ public:
   void collectFilesInternal(nsTArray<nsRefPtr<DeviceStorageFile> > &aFiles, PRTime aSince, nsAString& aRootPath);
 
   static void DirectoryDiskUsage(nsIFile* aFile, uint64_t* aSoFar, const nsAString& aStorageType);
-  static void GetRootDirectoryForType(const nsAString& aType,
-                                      const nsAString& aVolName,
-                                      nsIFile** aFile);
+
 private:
-  void Init(const nsAString& aStorageType);
   void NormalizeFilePath();
-  void AppendRelativePath(const nsAString& aPath);
+  void AppendRelativePath();
 };
 
 /*

@@ -1531,7 +1531,10 @@ ContentParent::Observe(nsISupports* aSubject,
         CopyUTF16toUTF8(aData, creason);
         DeviceStorageFile* file = static_cast<DeviceStorageFile*>(aSubject);
 
-        unused << SendFilePathUpdate(file->mStorageType, file->mPath, creason);
+        nsString path;
+        file->mFile->GetPath(path);
+
+        unused << SendFilePathUpdate(file->mStorageType, path, creason);
     }
 #ifdef MOZ_WIDGET_GONK
     else if(!strcmp(aTopic, NS_VOLUME_STATE_CHANGED)) {
@@ -2346,11 +2349,15 @@ ContentParent::RecvAsyncMessage(const nsString& aMsg,
 }
 
 bool
-ContentParent::RecvFilePathUpdateNotify(const nsString& aType,
-                                        const nsString& aFilePath,
-                                        const nsCString& aReason)
+ContentParent::RecvFilePathUpdateNotify(const nsString& aType, const nsString& aFilePath, const nsCString& aReason)
 {
-    nsRefPtr<DeviceStorageFile> dsf = new DeviceStorageFile(aType, aFilePath);
+    nsCOMPtr<nsIFile> file;
+    nsresult rv = NS_NewLocalFile(aFilePath, false, getter_AddRefs(file));
+    if (NS_FAILED(rv)) {
+        // ignore
+        return true;
+    }
+    nsRefPtr<DeviceStorageFile> dsf = new DeviceStorageFile(aType, file);
 
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (!obs) {
