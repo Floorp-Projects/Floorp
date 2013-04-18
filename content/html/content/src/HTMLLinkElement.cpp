@@ -6,6 +6,7 @@
 #include "mozilla/dom/HTMLLinkElement.h"
 
 #include "mozilla/dom/HTMLLinkElementBinding.h"
+#include "base/compiler_specific.h"
 #include "nsGenericHTMLElement.h"
 #include "nsILink.h"
 #include "nsGkAtoms.h"
@@ -31,7 +32,7 @@ namespace dom {
 
 HTMLLinkElement::HTMLLinkElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo),
-    Link(this)
+    ALLOW_THIS_IN_INITIALIZER_LIST(Link(this))
 {
   SetIsDOMBinding();
 }
