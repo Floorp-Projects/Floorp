@@ -212,9 +212,12 @@ AboutReader.prototype = {
       gChromeWin.Reader.storeArticleInCache(this._article, function(success) {
         dump("Reader:Add (in reader) success=" + success);
 
+        let result = (success ? gChromeWin.Reader.READER_ADD_SUCCESS :
+            gChromeWin.Reader.READER_ADD_FAILED);
+
         gChromeWin.sendMessageToJava({
           type: "Reader:Added",
-          success: success,
+          result: result,
           title: this._article.title,
           url: this._article.url,
         });
