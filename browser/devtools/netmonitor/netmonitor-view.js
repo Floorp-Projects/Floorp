@@ -540,7 +540,8 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
    */
   _createWaterfallView: function NVRM__createWaterfallView(aItem, aTimings) {
     let { target, attachment } = aItem;
-    let sections = ["blocked", "dns", "connect", "send", "wait", "receive"];
+    let sections = ["dns", "connect", "send", "wait", "receive"];
+    // Skipping "blocked" because it doesn't work yet.
 
     let timingsNode = $(".requests-menu-timings", target);
     let startCapNode = $(".requests-menu-timings-cap.start", timingsNode);
