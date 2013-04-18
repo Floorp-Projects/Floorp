@@ -11,7 +11,7 @@
 
 interface imgIRequest;
 
-[scriptable, uuid(7b80eebc-c98e-4461-8bdb-6e3b6e828890)]
+[scriptable, uuid(0A70F5AF-2A78-4B52-9D96-11FF2A091E88)]
 interface nsIImageDocument : nsISupports {
 
   /* Whether the pref for image resizing has been set. */
@@ -23,19 +23,33 @@ interface nsIImageDocument : nsISupports {
   /* Whether the image has been resized to fit visible area. */
   readonly attribute boolean imageIsResized;
 
+  /* Whether the image has been scaled to device-pixel size. */
+  readonly attribute boolean imageIsScaledToDevicePixels;
+
   /* The image request being displayed in the content area */
   readonly attribute imgIRequest imageRequest;
 
   /* Resize the image to fit visible area. */
   void shrinkToFit();
 
-  /* Restore image original size. */
+  /* Restore image original size (1:1 image pixels : CSS px). */
   void restoreImage();
+
+  /* Set image to display at 1:1 image pixel : device-pixel size.
+   * If CSS px == device pixels, this is equivalent to restoreImage().
+   */
+  void scaleToDevicePixels();
 
   /* Restore the image, trying to keep a certain pixel in the same position.
    * The coordinate system is that of the shrunken image.
    */
   void restoreImageTo(in long x, in long y);
+
+  /* Scale to 1:1 device-pixel size, trying to keep a certain pixel
+   * in the same position.
+   * The coordinate system is that of the shrunken image.
+   */
+  void scaleToDevicePixelsTo(in long x, in long y);
 
   /* A helper method for switching between states.
    * The switching logic is as follows. If the image has been resized
