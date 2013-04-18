@@ -218,6 +218,10 @@ GonkCameraHardware::~GonkCameraHardware()
   mCamera.clear();
   mNativeWindow.clear();
 
+  if (mClosing) {
+    return;
+  }
+
   /**
    * Trigger the OnClosed event; the upper layers can't do anything
    * with the hardware layer once they receive this event.

@@ -306,6 +306,57 @@ ContactDB.prototype = {
         db.createObjectStore(SAVED_GETALL_STORE_NAME);
       }
     }
+
+    // Add default contacts
+    if (aOldVersion == 0) {
+      let jsm = {};
+      Cu.import("resource://gre/modules/FileUtils.jsm", jsm);
+      Cu.import("resource://gre/modules/NetUtil.jsm", jsm);
+      // Loading resource://app/defaults/contacts.json doesn't work because
+      // contacts.json is not in the omnijar.
+      // So we look for the app dir instead and go from here...
+      let contactsFile = jsm.FileUtils.getFile("DefRt", ["contacts.json"], false);
+      if (!contactsFile || (contactsFile && !contactsFile.exists())) {
+        // For b2g desktop
+        contactsFile = jsm.FileUtils.getFile("ProfD", ["contacts.json"], false);
+        if (!contactsFile || (contactsFile && !contactsFile.exists())) {
+          return;
+        }
+      }
+
+      let chan = jsm.NetUtil.newChannel(contactsFile);
+      let stream = chan.open();
+      // Obtain a converter to read from a UTF-8 encoded input stream.
+      let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+                      .createInstance(Ci.nsIScriptableUnicodeConverter);
+      converter.charset = "UTF-8";
+      let rawstr = converter.ConvertToUnicode(jsm.NetUtil.readInputStreamToString(
+                                              stream,
+                                              stream.available()) || "");
+      stream.close();
+      let contacts;
+      try {
+        contacts = JSON.parse(rawstr);
+      } catch(e) {
+        if (DEBUG) debug("Error parsing " + contactsFile.path + " : " + e);
+        return;
+      }
+
+      let idService = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
+      objectStore = aTransaction.objectStore(STORE_NAME);
+
+      for (let i = 0; i < contacts.length; i++) {
+        let contact = {};
+        contact.properties = contacts[i];
+        contact.id = idService.generateUUID().toString().replace('-', '', 'g')
+                                                        .replace('{', '')
+                                                        .replace('}', '');
+        contact = this.makeImport(contact);
+        this.updateRecordMetadata(contact);
+        if (DEBUG) debug("import: " + JSON.stringify(contact));
+        objectStore.put(contact);
+      }
+    }
   },
 
   makeImport: function makeImport(aContact) {

@@ -289,6 +289,9 @@ Format("5712234567", "CO", "12234567", "CO", "(1) 2234567", "+57 1 2234567");
 // Dialing 911 in the US. This is not a national number.
 CantParse("911", "US");
 
+// China mobile number with a 0 in it
+Format("15955042864", "CN", "15955042864", "CN", "0159 5504 2864", "+86 159 5504 2864");
+
 // Test normalizing numbers. Only 0-9,#* are valid in a phone number.
 Normalize("+ABC # * , 9 _ 1 _0", "+222#*,910");
 Normalize("ABCDEFGHIJKLMNOPQRSTUVWXYZ", "22233344455566677778889999");
