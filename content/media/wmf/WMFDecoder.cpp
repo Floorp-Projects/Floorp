@@ -21,6 +21,27 @@ MediaDecoderStateMachine* WMFDecoder::CreateStateMachine()
   return new MediaDecoderStateMachine(this, new WMFReader(this));
 }
 
+/* static */
+bool
+WMFDecoder::IsMP3Supported()
+{
+  if (!MediaDecoder::IsWMFEnabled()) {
+    return false;
+  }
+  if (WinUtils::GetWindowsVersion() != WinUtils::WIN7_VERSION) {
+    return true;
+  }
+  // We're on Windows 7. MP3 support is disabled if no service pack
+  // is installed, as it's crashy on Win7 SP0.
+  UINT spMajorVer = 0, spMinorVer = 0;
+  if (!WinUtils::GetWindowsServicePackVersion(spMajorVer, spMinorVer)) {
+    // Um... We can't determine the service pack version... Just block
+    // MP3 as a precaution...
+    return false;
+  }
+  return spMajorVer != 0;
+}
+
 bool
 WMFDecoder::GetSupportedCodecs(const nsACString& aType,
                                char const *const ** aCodecList)
@@ -30,13 +51,15 @@ WMFDecoder::GetSupportedCodecs(const nsACString& aType,
     return false;
 
   // Assume that if LoadDLLs() didn't fail, we can playback the types that
-  // we know should be supported on Windows 7+ using WMF.
+  // we know should be supported by Windows Media Foundation.
   static char const *const mp3AudioCodecs[] = {
     "mp3",
     nullptr
   };
-  if (aType.EqualsASCII("audio/mpeg") ||
-      aType.EqualsASCII("audio/mp3")) {
+  if ((aType.EqualsASCII("audio/mpeg") || aType.EqualsASCII("audio/mp3")) &&
+      IsMP3Supported()) {
+    // Note: We block MP3 playback on Window 7 SP0 since it seems to crash
+    // in some circumstances.
     if (aCodecList) {
       *aCodecList = mp3AudioCodecs;
     }
