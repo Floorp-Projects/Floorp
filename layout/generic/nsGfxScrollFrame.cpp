@@ -1131,8 +1131,9 @@ public:
   typedef mozilla::TimeStamp TimeStamp;
   typedef mozilla::TimeDuration TimeDuration;
 
-  AsyncScroll()
+  AsyncScroll(nsPoint aStartPos)
     : mIsFirstIteration(true)
+    , mStartPos(aStartPos)
     , mCallee(nullptr)
   {}
 
@@ -1143,8 +1144,7 @@ public:
   nsPoint PositionAt(TimeStamp aTime);
   nsSize VelocityAt(TimeStamp aTime); // In nscoords per second
 
-  void InitSmoothScroll(TimeStamp aTime, nsPoint aCurrentPos,
-                        nsSize aCurrentVelocity, nsPoint aDestination,
+  void InitSmoothScroll(TimeStamp aTime, nsPoint aDestination,
                         nsIAtom *aOrigin, const nsRect& aRange);
   void Init(const nsRect& aRange) {
     mRange = aRange;
@@ -1314,7 +1314,6 @@ nsGfxScrollFrameInner::AsyncScroll::InitDuration(nsIAtom *aOrigin) {
     if (mIsFirstIteration) {
       // Starting a new scroll (i.e. not when extending an existing scroll animation),
       //   create imaginary prev timestamps with maximum relevant intervals between them.
-      mIsFirstIteration = false;
 
       // Longest relevant interval (which results in maximum duration)
       TimeDuration maxDelta = TimeDuration::FromMilliseconds(mOriginMaxMS / mIntervalRatio);
@@ -1342,18 +1341,23 @@ nsGfxScrollFrameInner::AsyncScroll::InitDuration(nsIAtom *aOrigin) {
 
 void
 nsGfxScrollFrameInner::AsyncScroll::InitSmoothScroll(TimeStamp aTime,
-                                                     nsPoint aCurrentPos,
-                                                     nsSize aCurrentVelocity,
                                                      nsPoint aDestination,
                                                      nsIAtom *aOrigin,
                                                      const nsRect& aRange) {
+  nsSize currentVelocity(0, 0);
+  if (!mIsFirstIteration) {
+    currentVelocity = VelocityAt(aTime);
+    mStartPos = PositionAt(aTime);
+  }
   mStartTime = aTime;
-  mStartPos = aCurrentPos;
   mDestination = aDestination;
   mRange = aRange;
   InitDuration(aOrigin);
-  InitTimingFunction(mTimingFunctionX, mStartPos.x, aCurrentVelocity.width, aDestination.x);
-  InitTimingFunction(mTimingFunctionY, mStartPos.y, aCurrentVelocity.height, aDestination.y);
+  InitTimingFunction(mTimingFunctionX, mStartPos.x, currentVelocity.width,
+                     aDestination.x);
+  InitTimingFunction(mTimingFunctionY, mStartPos.y, currentVelocity.height,
+                     aDestination.y);
+  mIsFirstIteration = false;
 }
 
 
@@ -1590,18 +1594,11 @@ nsGfxScrollFrameInner::ScrollToWithOrigin(nsPoint aScrollPosition,
   }
 
   TimeStamp now = TimeStamp::Now();
-  nsPoint currentPosition = GetScrollPosition();
-  nsSize currentVelocity(0, 0);
   bool isSmoothScroll = (aMode == nsIScrollableFrame::SMOOTH) &&
                           IsSmoothScrollingEnabled();
 
-  if (mAsyncScroll) {
-    if (mAsyncScroll->mIsSmoothScroll) {
-      currentPosition = mAsyncScroll->PositionAt(now);
-      currentVelocity = mAsyncScroll->VelocityAt(now);
-    }
-  } else {
-    mAsyncScroll = new AsyncScroll;
+  if (!mAsyncScroll) {
+    mAsyncScroll = new AsyncScroll(GetScrollPosition());
     if (!mAsyncScroll->SetRefreshObserver(this)) {
       mAsyncScroll = nullptr;
       // Observer setup failed. Scroll the normal way.
@@ -1616,8 +1613,7 @@ nsGfxScrollFrameInner::ScrollToWithOrigin(nsPoint aScrollPosition,
   mAsyncScroll->mIsSmoothScroll = isSmoothScroll;
 
   if (isSmoothScroll) {
-    mAsyncScroll->InitSmoothScroll(now, currentPosition, currentVelocity,
-                                   mDestination, aOrigin, range);
+    mAsyncScroll->InitSmoothScroll(now, mDestination, aOrigin, range);
   } else {
     mAsyncScroll->Init(range);
   }
