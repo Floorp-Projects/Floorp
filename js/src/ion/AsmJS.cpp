@@ -4446,6 +4446,8 @@ CheckFunctionBodiesSequential(ModuleCompiler &m)
         if (!mirGen)
             return false;
 
+        IonSpewNewFunction(&mirGen->graph(), NullPtr());
+
         if (!OptimizeMIR(mirGen))
             return m.fail("Internal compiler failure (probably out of memory)", func.fn());
 
@@ -4455,6 +4457,8 @@ CheckFunctionBodiesSequential(ModuleCompiler &m)
 
         if (!GenerateAsmJSCode(m, func, *mirGen, *lir))
             return false;
+
+        IonSpewEndFunction();
     }
 
     return true;
