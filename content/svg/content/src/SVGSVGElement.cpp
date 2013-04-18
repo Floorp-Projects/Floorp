@@ -411,9 +411,7 @@ SVGSVGElement::CreateSVGMatrix()
 already_AddRefed<SVGIRect>
 SVGSVGElement::CreateSVGRect()
 {
-  nsRefPtr<SVGRect> rect;
-  NS_NewSVGRect(getter_AddRefs(rect));
-  return rect.forget();
+  return NS_NewSVGRect();
 }
 
 already_AddRefed<SVGTransform>
