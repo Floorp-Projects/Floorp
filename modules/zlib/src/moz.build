@@ -6,3 +6,9 @@
 
 MODULE = 'zlib'
 
+EXPORTS += [
+    'mozzconf.h',
+    'zconf.h',
+    'zlib.h',
+]
+

@@ -18,6 +18,7 @@
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "mozilla/Services.h"
+#include "nsThreadUtils.h"
 
 mozilla::ThreadLocal<PseudoStack *> tlsPseudoStack;
 mozilla::ThreadLocal<TableTicker *> tlsTicker;
@@ -27,21 +28,57 @@ mozilla::ThreadLocal<TableTicker *> tlsTicker;
 // it as the flag itself.
 bool stack_key_initialized;
 
-TimeStamp sLastTracerEvent; // is raced on
-int       sFrameNumber = 0;
-int       sLastFrameNumber = 0;
+TimeStamp   sLastTracerEvent; // is raced on
+int         sFrameNumber = 0;
+int         sLastFrameNumber = 0;
+int         sInitCount = 0; // Each init must have a matched shutdown.
+static bool sIsProfiling = false; // is raced on
 
 /* used to keep track of the last event that we sampled during */
 unsigned int sLastSampledEventGeneration = 0;
 
 /* a counter that's incremented everytime we get responsiveness event
- * note: it might also be worth tracking everytime we go around
+ * note: it might also be worth trackplaing everytime we go around
  * the event loop */
 unsigned int sCurrentEventGeneration = 0;
 /* we don't need to worry about overflow because we only treat the
  * case of them being the same as special. i.e. we only run into
  * a problem if 2^32 events happen between samples that we need
  * to know are associated with different events */
+
+std::vector<ThreadInfo*>* Sampler::sRegisteredThreads = nullptr;
+mozilla::Mutex* Sampler::sRegisteredThreadsMutex = nullptr;
+
+TableTicker* Sampler::sActiveSampler;
+
+void Sampler::Startup() {
+  sRegisteredThreads = new std::vector<ThreadInfo*>();
+  sRegisteredThreadsMutex = new mozilla::Mutex("sRegisteredThreads mutex");
+}
+
+void Sampler::Shutdown() {
+  while (sRegisteredThreads->size() > 0) {
+    delete sRegisteredThreads->back();
+    sRegisteredThreads->pop_back();
+  }
+
+  delete sRegisteredThreadsMutex;
+  delete sRegisteredThreads;
+
+  // UnregisterThread can be called after shutdown in XPCShell. Thus
+  // we need to point to null to ignore such a call after shutdown.
+  sRegisteredThreadsMutex = nullptr;
+  sRegisteredThreads = nullptr;
+}
+
+ThreadInfo::~ThreadInfo() {
+  free(mName);
+
+  if (mProfile)
+    delete mProfile;
+
+  Sampler::FreePlatformData(mPlatformData);
+}
 
 bool sps_version2()
 {
@@ -212,6 +249,8 @@ void read_profiler_env_vars()
 
 void mozilla_sampler_init()
 {
+  sInitCount++;
+
   if (stack_key_initialized)
     return;
 
@@ -222,8 +261,12 @@ void mozilla_sampler_init()
   }
   stack_key_initialized = true;
 
+  Sampler::Startup();
+
   PseudoStack *stack = new PseudoStack();
   tlsPseudoStack.set(stack);
+
+  Sampler::RegisterCurrentThread("Gecko", stack, true);
 
   if (sps_version2()) {
     // Read mode settings from MOZ_PROFILER_MODE and interval
@@ -271,6 +314,11 @@ void mozilla_sampler_init()
 
 void mozilla_sampler_shutdown()
 {
+  sInitCount--;
+
+  if (sInitCount > 0)
+    return;
+
   // Save the profile on shutdown if requested.
   TableTicker *t = tlsTicker.get();
   if (t) {
@@ -294,6 +342,9 @@ void mozilla_sampler_shutdown()
   }
 
   profiler_stop();
+
+  Sampler::Shutdown();
+
   // We can't delete the Stack because we can be between a
   // sampler call_enter/call_exit point.
   // TODO Need to find a safe time to delete Stack
@@ -352,6 +403,7 @@ const char** mozilla_sampler_get_features()
 #endif
     "jank",
     "js",
+    "threads",
     NULL
   };
 
@@ -383,16 +435,29 @@ void mozilla_sampler_start(int aProfileEntries, int aInterval,
   if (sps_version2()) {
     t = new BreakpadSampler(aInterval ? aInterval : PROFILE_DEFAULT_INTERVAL,
                            aProfileEntries ? aProfileEntries : PROFILE_DEFAULT_ENTRY,
-                           stack, aFeatures, aFeatureCount);
+                           aFeatures, aFeatureCount);
   } else {
     t = new TableTicker(aInterval ? aInterval : PROFILE_DEFAULT_INTERVAL,
                         aProfileEntries ? aProfileEntries : PROFILE_DEFAULT_ENTRY,
-                        stack, aFeatures, aFeatureCount);
+                        aFeatures, aFeatureCount);
   }
   tlsTicker.set(t);
   t->Start();
-  if (t->ProfileJS())
-      stack->enableJSSampling();
+  if (t->ProfileJS()) {
+      mozilla::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
+      std::vector<ThreadInfo*> threads = t->GetRegisteredThreads();
+
+      for (uint32_t i = 0; i < threads.size(); i++) {
+        ThreadInfo* info = threads[i];
+        ThreadProfile* thread_profile = info->Profile();
+        if (!thread_profile) {
+          continue;
+        }
+        thread_profile->GetPseudoStack()->enableJSSampling();
+      }
+  }
+
+  sIsProfiling = true;
 
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os)
@@ -420,6 +485,8 @@ void mozilla_sampler_stop()
   if (disableJS)
     stack->disableJSSampling();
 
+  sIsProfiling = false;
+
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os)
     os->NotifyObservers(nullptr, "profiler-stopped", nullptr);
@@ -427,15 +494,7 @@ void mozilla_sampler_stop()
 
 bool mozilla_sampler_is_active()
 {
-  if (!stack_key_initialized)
-    profiler_init();
-
-  TableTicker *t = tlsTicker.get();
-  if (!t) {
-    return false;
-  }
-
-  return t->IsActive();
+  return sIsProfiling;
 }
 
 static double sResponsivenessTimes[100];
@@ -487,6 +546,20 @@ void mozilla_sampler_unlock()
     os->NotifyObservers(nullptr, "profiler-unlocked", nullptr);
 }
 
+bool mozilla_sampler_register_thread(const char* aName)
+{
+  PseudoStack* stack = new PseudoStack();
+  tlsPseudoStack.set(stack);
+
+  return Sampler::RegisterCurrentThread(aName, stack, false);
+}
+
+void mozilla_sampler_unregister_thread()
+{
+  Sampler::UnregisterCurrentThread();
+}
+
 // END externally visible functions
 ////////////////////////////////////////////////////////////////////////
+
 

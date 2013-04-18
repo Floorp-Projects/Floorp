@@ -10,3 +10,8 @@ if CONFIG['MOZ_ANGLE_RENDERER']:
 
 MODULE = 'angle'
 
+EXPORTS.angle += [
+    'include/GLSLANG/ShaderLang.h',
+    'include/KHR/khrplatform.h',
+]
+

@@ -14,3 +14,10 @@ XPIDL_MODULE = 'dom_audiochannel'
 
 MODULE = 'dom'
 
+EXPORTS += [
+    'AudioChannelAgent.h',
+    'AudioChannelCommon.h',
+    'AudioChannelService.h',
+    'AudioChannelServiceChild.h',
+]
+

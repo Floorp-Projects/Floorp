@@ -78,11 +78,6 @@ CPPSRCS	= \
   svg.cc \
   $(NULL)
 
-EXPORTS = \
-  ../include/opentype-sanitiser.h \
-  ../include/ots-memory-stream.h  \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DPACKAGE_VERSION="\"moz\""

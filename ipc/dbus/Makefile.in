@@ -18,14 +18,6 @@ ifdef MOZ_ENABLE_DBUS
 	LOCAL_INCLUDES += $(MOZ_DBUS_CFLAGS)
 endif
 
-EXPORTS_NAMESPACES = mozilla/ipc
-
-EXPORTS_mozilla/ipc = \
-  RawDBusConnection.h \
-  DBusThread.h \
-  DBusUtils.h \
-  $(NULL)
-
 CPPSRCS += \
   RawDBusConnection.cpp \
   DBusThread.cpp \

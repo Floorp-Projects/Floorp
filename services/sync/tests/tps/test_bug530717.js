@@ -23,7 +23,7 @@ var prefs1 = [
   { name: "browser.urlbar.maxRichResults",
     value: 20
   },
-  { name: "browser.tabs.autoHide",
+  { name: "browser.link.open_newwindow",
     value: true
   }
 ];
@@ -35,7 +35,7 @@ var prefs2 = [
   { name: "browser.urlbar.maxRichResults",
     value: 18
   },
-  { name: "browser.tabs.autoHide",
+  { name: "browser.link.open_newwindow",
     value: false
   }
 ];

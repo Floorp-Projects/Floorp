@@ -192,6 +192,15 @@ interface TestInterface {
   [LenientFloat]
   attribute double lenientDoubleAttr;
 
+  void passUnrestricted(optional unrestricted float arg1 = 0,
+                        optional unrestricted float arg2 = Infinity,
+                        optional unrestricted float arg3 = -Infinity,
+                        optional unrestricted float arg4 = NaN,
+                        optional unrestricted double arg5 = 0,
+                        optional unrestricted double arg6 = Infinity,
+                        optional unrestricted double arg7 = -Infinity,
+                        optional unrestricted double arg8 = NaN);
+
   // Castable interface types
   // XXXbz add tests for throwing versions of all the castable interface stuff
   TestInterface receiveSelf();
@@ -589,6 +598,23 @@ dictionary Dict : ParentDict {
   object? anotherObj = null;
   TestCallback? someCallback = null;
   any someAny;
+
+  unrestricted float  urFloat = 0;
+  unrestricted float  urFloat2 = 1.1;
+  unrestricted float  urFloat3 = -1.1;
+  unrestricted float? urFloat4 = null;
+  unrestricted float  infUrFloat = Infinity;
+  unrestricted float  negativeInfUrFloat = -Infinity;
+  unrestricted float  nanUrFloat = NaN;
+
+  unrestricted double  urDouble = 0;
+  unrestricted double  urDouble2 = 1.1;
+  unrestricted double  urDouble3 = -1.1;
+  unrestricted double? urDouble4 = null;
+  unrestricted double  infUrDouble = Infinity;
+  unrestricted double  negativeInfUrDouble = -Infinity;
+  unrestricted double  nanUrDouble = NaN;
+
 };
 
 dictionary ParentDict : GrandparentDict {

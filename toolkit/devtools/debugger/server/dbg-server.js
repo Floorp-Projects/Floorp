@@ -26,6 +26,12 @@ addDebuggerToGlobal(this);
 
 Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
 const { defer, resolve, reject } = Promise;
+let promisedArray = Promise.promised(Array);
+function resolveAll(aPromises) {
+  return promisedArray.apply(null, aPromises);
+};
+
+Cu.import("resource://gre/modules/devtools/SourceMap.jsm");
 
 function dumpn(str) {
   if (wantLogging) {
@@ -600,6 +606,17 @@ DebuggerServerConnection.prototype = {
     return null;
   },
 
+  _unknownError: function DSC__unknownError(aPrefix, aError) {
+    let errorString = safeErrorString(aError);
+    errorString += "\n" + aError.stack;
+    Cu.reportError(errorString);
+    dumpn(errorString);
+    return {
+      error: "unknownError",
+      message: (aPrefix + "': " + errorString)
+    };
+  },
+
   // Transport hooks.
 
   /**
@@ -622,12 +639,9 @@ DebuggerServerConnection.prototype = {
       try {
         instance = new actor();
       } catch (e) {
-        Cu.reportError(e);
-        this.transport.send({
-          error: "unknownError",
-          message: ("error occurred while creating actor '" + actor.name +
-                    "': " + safeErrorString(e))
-        });
+        this.transport.send(this._unknownError(
+          "Error occurred while creating actor '" + actor.name,
+          e));
       }
       instance.parentID = actor.parentID;
       // We want the newly-constructed actor to completely replace the factory
@@ -639,16 +653,14 @@ DebuggerServerConnection.prototype = {
     }
 
     var ret = null;
-
     // Dispatch the request to the actor.
     if (actor.requestTypes && actor.requestTypes[aPacket.type]) {
       try {
         ret = actor.requestTypes[aPacket.type].bind(actor)(aPacket);
       } catch(e) {
-        Cu.reportError(e);
-        ret = { error: "unknownError",
-                message: ("error occurred while processing '" + aPacket.type +
-                          "' request: " + safeErrorString(e)) };
+        this.transport.send(this._unknownError(
+          "error occurred while processing '" + aPacket.type,
+          e));
       }
     } else {
       ret = { error: "unrecognizedPacketType",
@@ -663,12 +675,19 @@ DebuggerServerConnection.prototype = {
       return;
     }
 
-    resolve(ret).then(function(returnPacket) {
-      if (!returnPacket.from) {
-        returnPacket.from = aPacket.to;
-      }
-      this.transport.send(returnPacket);
-    }.bind(this));
+    resolve(ret)
+      .then(null, (e) => {
+        return this._unknownError(
+          "error occurred while processing '" + aPacket.type,
+          e);
+      })
+      .then(function (aResponse) {
+        if (!aResponse.from) {
+          aResponse.from = aPacket.to;
+        }
+        return aResponse;
+      })
+      .then(this.transport.send.bind(this.transport));
   },
 
   /**

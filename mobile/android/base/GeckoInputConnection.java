@@ -199,7 +199,7 @@ class GeckoInputConnection
     private boolean mBatchSelectionChanged;
     private boolean mBatchTextChanged;
     private long mLastRestartInputTime;
-    private final InputConnection mPluginInputConnection;
+    private final InputConnection mKeyInputConnection;
 
     public static GeckoEditableListener create(View targetView,
                                                GeckoEditableClient editable) {
@@ -214,8 +214,8 @@ class GeckoInputConnection
         super(targetView, true);
         mEditableClient = editable;
         mIMEState = IME_STATE_DISABLED;
-        // InputConnection for plugins, which don't have full editors
-        mPluginInputConnection = new BaseInputConnection(targetView, false);
+        // InputConnection that sends keys for plugins, which don't have full editors
+        mKeyInputConnection = new BaseInputConnection(targetView, false);
     }
 
     @Override
@@ -641,12 +641,22 @@ class GeckoInputConnection
             // Since we are using a temporary string as the editable, the selection is at 0
             outAttrs.initialSelStart = 0;
             outAttrs.initialSelEnd = 0;
-            return mPluginInputConnection;
+            return mKeyInputConnection;
         }
         Editable editable = getEditable();
         outAttrs.initialSelStart = Selection.getSelectionStart(editable);
         outAttrs.initialSelEnd = Selection.getSelectionEnd(editable);
         return this;
+    }
+
+    @Override
+    public boolean commitText(CharSequence text, int newCursorPosition) {
+        if (InputMethods.shouldCommitCharAsKey(mCurrentInputMethod) &&
+            text.length() == 1 && newCursorPosition > 0) {
+            // mKeyInputConnection is a BaseInputConnection that commits text as keys;
+            return mKeyInputConnection.commitText(text, newCursorPosition);
+        }
+        return super.commitText(text, newCursorPosition);
     }
 
     @Override

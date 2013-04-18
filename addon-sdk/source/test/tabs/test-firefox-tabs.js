@@ -937,49 +937,37 @@ exports['test ready event on new window tab'] = function(test) {
 };
 
 exports['test unique tab ids'] = function(test) {
-  test.waitUntilDone();
+  var windows = require('sdk/windows').browserWindows;
+  var { all, defer } = require('sdk/core/promise');
 
-  var windows = require('sdk/windows').browserWindows,
-    tabIds = {}, win1, win2;
+  function openWindow() {
+    // console.log('in openWindow');
+    let deferred = defer();
+    let win = windows.open({
+      url: "data:text/html;charset=utf-8,<html>foo</html>",
+    });
 
-  let steps = [
-    function (index) {
-      win1 = windows.open({
-          url: "data:text/html;charset=utf-8,foo",
-          onOpen: function(window) {
-            tabIds['tab1'] = window.tabs.activeTab.id;
-            next(index);
-          }
+    win.on('open', function(window) {
+      test.assert(window.tabs.length);
+      test.assert(window.tabs.activeTab);
+      test.assert(window.tabs.activeTab.id);
+      deferred.resolve({
+        id: window.tabs.activeTab.id,
+        win: win
       });
-    },
-    function (index) {
-      win2 = windows.open({
-          url: "data:text/html;charset=utf-8,foo",
-          onOpen: function(window) {
-            tabIds['tab2'] = window.tabs.activeTab.id;
-            next(index);
-          }
-      });
-    },
-    function (index) {
-      test.assertNotEqual(tabIds.tab1, tabIds.tab2, "Tab ids should be unique.");
-      win1.close();
-      win2.close();
-      test.done();
-    }
-  ];
-
-  function next(index) {
-    if (index === steps.length) {
-      return;
-    }
-    let fn = steps[index];
-    index++
-    fn(index);
+    });
+   
+    return deferred.promise;
   }
 
-  // run!
-  next(0);
+  test.waitUntilDone();
+  var one = openWindow(), two = openWindow();
+  all([one, two]).then(function(results) {
+    test.assertNotEqual(results[0].id, results[1].id, "tab Ids should not be equal.");
+    results[0].win.close();
+    results[1].win.close();
+    test.done();
+  });  
 }
 
 // related to Bug 671305

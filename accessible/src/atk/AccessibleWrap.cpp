@@ -141,6 +141,8 @@ struct MaiAtkObjectClass
 
 static guint mai_atk_object_signals [LAST_SIGNAL] = { 0, };
 
+static void MaybeFireNameChange(AtkObject* aAtkObj, const nsString& aNewName);
+
 G_BEGIN_DECLS
 /* callbacks for MaiAtkObject */
 static void classInitCB(AtkObjectClass *aClass);
@@ -600,14 +602,39 @@ getNameCB(AtkObject* aAtkObj)
   if (!accWrap)
     return nullptr;
 
-  nsAutoString uniName;
-  accWrap->Name(uniName);
+  nsAutoString name;
+  accWrap->Name(name);
 
-  NS_ConvertUTF8toUTF16 objName(aAtkObj->name);
-  if (!uniName.Equals(objName))
-    atk_object_set_name(aAtkObj, NS_ConvertUTF16toUTF8(uniName).get());
+  // XXX Firing an event from here does not seem right
+  MaybeFireNameChange(aAtkObj, name);
 
   return aAtkObj->name;
+}
+
+static void
+MaybeFireNameChange(AtkObject* aAtkObj, const nsString& aNewName)
+{
+  NS_ConvertUTF16toUTF8 newNameUTF8(aNewName);
+  if (aAtkObj->name && newNameUTF8.Equals(aAtkObj->name))
+    return;
+
+  // Below we duplicate the functionality of atk_object_set_name(),
+  // but without calling atk_object_get_name(). Instead of
+  // atk_object_get_name() we directly access aAtkObj->name. This is because
+  // atk_object_get_name() would call getNameCB() which would call
+  // MaybeFireNameChange() (or atk_object_set_name() before this problem was
+  // fixed) and we would get an infinite recursion.
+  // See http://bugzilla.mozilla.org/733712
+
+  // Do not notify for initial name setting.
+  // See bug http://bugzilla.gnome.org/665870
+  bool notify = !!aAtkObj->name;
+
+  free(aAtkObj->name);
+  aAtkObj->name = strdup(newNameUTF8.get());
+
+  if (notify)
+    g_object_notify(G_OBJECT(aAtkObj), "accessible-name");
 }
 
 const gchar *
@@ -617,7 +644,7 @@ getDescriptionCB(AtkObject *aAtkObj)
     if (!accWrap || accWrap->IsDefunct())
         return nullptr;
 
-    /* nsIAccessible is responsible for the non-nullptr description */
+    /* nsIAccessible is responsible for the nonnull description */
     nsAutoString uniDesc;
     accWrap->Description(uniDesc);
 
@@ -975,9 +1002,8 @@ AccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
       {
         nsAutoString newName;
         accessible->Name(newName);
-        NS_ConvertUTF16toUTF8 utf8Name(newName);
-        if (!atkObj->name || !utf8Name.Equals(atkObj->name))
-          atk_object_set_name(atkObj, utf8Name.get());
+
+        MaybeFireNameChange(atkObj, newName);
 
         break;
       }

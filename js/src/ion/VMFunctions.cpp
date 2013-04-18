@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=4 sw=4 et tw=99:
- *
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -509,6 +508,13 @@ OperatorIn(JSContext *cx, HandleValue key, HandleObject obj, JSBool *out)
 }
 
 bool
+OperatorInI(JSContext *cx, uint32_t index, HandleObject obj, JSBool *out)
+{
+    RootedValue key(cx, Int32Value(index));
+    return OperatorIn(cx, key, obj, out);
+}
+
+bool
 GetIntrinsicValue(JSContext *cx, HandlePropertyName name, MutableHandleValue rval)
 {
     return cx->global()->getIntrinsicValue(cx, name, rval);
@@ -525,7 +531,10 @@ CreateThis(JSContext *cx, HandleObject callee, MutableHandleValue rval)
             JSScript *script = fun->getOrCreateScript(cx);
             if (!script || !script->ensureHasTypes(cx))
                 return false;
-            rval.set(ObjectValue(*CreateThisForFunction(cx, callee, false)));
+            JSObject *thisObj = CreateThisForFunction(cx, callee, false);
+            if (!thisObj)
+                return false;
+            rval.set(ObjectValue(*thisObj));
         }
     }
 

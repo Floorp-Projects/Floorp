@@ -76,12 +76,10 @@ protected:
 } // namespace dom
 } // namespace mozilla
 
-nsresult
-NS_NewSVGRect(mozilla::dom::SVGRect** result,
-              float x=0.0f, float y=0.0f,
-              float width=0.0f, float height=0.0f);
+already_AddRefed<mozilla::dom::SVGRect>
+NS_NewSVGRect(float x=0.0f, float y=0.0f, float width=0.0f, float height=0.0f);
 
-nsresult
-NS_NewSVGRect(mozilla::dom::SVGRect** result, const gfxRect& rect);
+already_AddRefed<mozilla::dom::SVGRect>
+NS_NewSVGRect(const gfxRect& rect);
 
 #endif //mozilla_dom_SVGRect_h

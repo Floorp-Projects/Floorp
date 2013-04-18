@@ -26,11 +26,6 @@ CPPSRCS		= \
 		nsTreeUtils.cpp \
 		$(NULL)
 
-EXPORTS		= \
-		nsTreeColFrame.h \
-		nsTreeUtils.h \
-		$(NULL)
-
 LOCAL_INCLUDES	= \
 		-I$(srcdir) \
 		-I$(topsrcdir)/content/events/src \

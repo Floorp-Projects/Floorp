@@ -872,6 +872,12 @@ nsBaseWidget::ComputeShouldAccelerate(bool aDefault)
   return aDefault;
 }
 
+CompositorParent* nsBaseWidget::NewCompositorParent(int aSurfaceWidth,
+                                                    int aSurfaceHeight)
+{
+    return new CompositorParent(this, false, aSurfaceWidth, aSurfaceHeight);
+}
+
 void nsBaseWidget::CreateCompositor()
 {
   nsIntRect rect;
@@ -881,12 +887,7 @@ void nsBaseWidget::CreateCompositor()
 
 void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
 {
-  bool renderToEGLSurface = false;
-#ifdef MOZ_ANDROID_OMTC
-  renderToEGLSurface = true;
-#endif
-  mCompositorParent =
-    new CompositorParent(this, renderToEGLSurface, aWidth, aHeight);
+  mCompositorParent = NewCompositorParent(aWidth, aHeight);
   AsyncChannel *parentChannel = mCompositorParent->GetIPCChannel();
   LayerManager* lm = CreateBasicLayerManager();
   MessageLoop *childMessageLoop = CompositorParent::CompositorLoop();
@@ -1030,8 +1031,13 @@ NS_METHOD nsBaseWidget::SetWindowClass(const nsAString& xulWinType)
 NS_METHOD nsBaseWidget::MoveClient(double aX, double aY)
 {
   nsIntPoint clientOffset(GetClientOffset());
-  aX -= clientOffset.x;
-  aY -= clientOffset.y;
+
+  // GetClientOffset returns device pixels; scale back to display pixels
+  // if that's what this widget uses for the Move/Resize APIs
+  double scale = BoundsUseDisplayPixels() ? 1.0 / GetDefaultScale() : 1.0;
+  aX -= clientOffset.x * scale;
+  aY -= clientOffset.y * scale;
+
   return Move(aX, aY);
 }
 
@@ -1044,8 +1050,12 @@ NS_METHOD nsBaseWidget::ResizeClient(double aWidth,
 
   nsIntRect clientBounds;
   GetClientBounds(clientBounds);
-  aWidth = mBounds.width + (aWidth - clientBounds.width);
-  aHeight = mBounds.height + (aHeight - clientBounds.height);
+
+  // GetClientBounds and mBounds are device pixels; scale back to display pixels
+  // if that's what this widget uses for the Move/Resize APIs
+  double scale = BoundsUseDisplayPixels() ? 1.0 / GetDefaultScale() : 1.0;
+  aWidth = mBounds.width * scale + (aWidth - clientBounds.width * scale);
+  aHeight = mBounds.height * scale + (aHeight - clientBounds.height * scale);
 
   return Resize(aWidth, aHeight, aRepaint);
 }
@@ -1061,12 +1071,14 @@ NS_METHOD nsBaseWidget::ResizeClient(double aX,
 
   nsIntRect clientBounds;
   GetClientBounds(clientBounds);
-  aWidth = mBounds.width + (aWidth - clientBounds.width);
-  aHeight = mBounds.height + (aHeight - clientBounds.height);
+
+  double scale = BoundsUseDisplayPixels() ? 1.0 / GetDefaultScale() : 1.0;
+  aWidth = mBounds.width * scale + (aWidth - clientBounds.width * scale);
+  aHeight = mBounds.height * scale + (aHeight - clientBounds.height * scale);
 
   nsIntPoint clientOffset(GetClientOffset());
-  aX -= clientOffset.x;
-  aY -= clientOffset.y;
+  aX -= clientOffset.x * scale;
+  aY -= clientOffset.y * scale;
 
   return Resize(aX, aY, aWidth, aHeight, aRepaint);
 }
@@ -1430,6 +1442,9 @@ nsBaseWidget::NotifyUIStateChanged(UIStateChangeType aShowAccelerators,
     return;
 
   nsIPresShell* presShell = mWidgetListener->GetPresShell();
+  if (!presShell)
+    return;
+
   nsIDocument* doc = presShell->GetDocument();
   if (doc) {
     nsPIDOMWindow* win = doc->GetWindow();

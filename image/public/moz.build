@@ -19,3 +19,7 @@ XPIDL_SOURCES += [
 
 MODULE = 'imglib2'
 
+EXPORTS += [
+    'ImageLogging.h',
+]
+

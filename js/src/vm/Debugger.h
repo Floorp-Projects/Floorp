@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=99 ft=cpp:
- *
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -388,6 +387,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      */
     static void markCrossCompartmentDebuggerObjectReferents(JSTracer *tracer);
     static bool markAllIteratively(GCMarker *trc);
+    static void markAll(JSTracer *trc);
     static void sweepAll(FreeOp *fop);
     static void detachAllDebuggersFromGlobal(FreeOp *fop, GlobalObject *global,
                                              GlobalObjectSet::Enum *compartmentEnum);
@@ -567,7 +567,8 @@ class Breakpoint {
     Debugger * const debugger;
     BreakpointSite * const site;
   private:
-    js::HeapPtrObject handler;
+    /* |handler| is marked unconditionally during minor GC. */
+    js::EncapsulatedPtrObject handler;
     JSCList debuggerLinks;
     JSCList siteLinks;
 
@@ -578,8 +579,8 @@ class Breakpoint {
     void destroy(FreeOp *fop);
     Breakpoint *nextInDebugger();
     Breakpoint *nextInSite();
-    const HeapPtrObject &getHandler() const { return handler; }
-    HeapPtrObject &getHandlerRef() { return handler; }
+    const EncapsulatedPtrObject &getHandler() const { return handler; }
+    EncapsulatedPtrObject &getHandlerRef() { return handler; }
 };
 
 Breakpoint *

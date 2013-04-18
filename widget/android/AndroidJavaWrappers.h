@@ -15,6 +15,7 @@
 #include "nsString.h"
 #include "nsTArray.h"
 #include "mozilla/gfx/Rect.h"
+#include "mozilla/dom/Touch.h"
 
 //#define FORCE_ALOG 1
 
@@ -545,7 +546,6 @@ class AndroidMotionEvent
 {
 public:
     enum {
-        ACTION_MASK = 0xff,
         ACTION_DOWN = 0,
         ACTION_UP = 1,
         ACTION_MOVE = 2,
@@ -559,8 +559,6 @@ public:
         ACTION_MAGNIFY_START = 11,
         ACTION_MAGNIFY = 12,
         ACTION_MAGNIFY_END = 13,
-        ACTION_POINTER_ID_MASK = 0xff00,
-        ACTION_POINTER_ID_SHIFT = 8,
         EDGE_TOP = 0x00000001,
         EDGE_BOTTOM = 0x00000002,
         EDGE_LEFT = 0x00000004,
@@ -591,30 +589,48 @@ public:
 
 class AndroidGeckoEvent : public WrappedJavaObject
 {
-public:
-    static void InitGeckoEventClass(JNIEnv *jEnv);
-
-    AndroidGeckoEvent(int aType) {
-        Init(aType);
-    }
-    AndroidGeckoEvent(int aType, int aAction) {
-        Init(aType, aAction);
-    }
-    AndroidGeckoEvent(int aType, const nsIntRect &aRect) {
-        Init(aType, aRect);
-    }
-    AndroidGeckoEvent(JNIEnv *jenv, jobject jobj) {
-        Init(jenv, jobj);
-    }
-    AndroidGeckoEvent(AndroidGeckoEvent *aResizeEvent) {
-        Init(aResizeEvent);
+private:
+    AndroidGeckoEvent() {
     }
 
     void Init(JNIEnv *jenv, jobject jobj);
     void Init(int aType);
-    void Init(int aType, int aAction);
-    void Init(int aType, const nsIntRect &aRect);
     void Init(AndroidGeckoEvent *aResizeEvent);
+
+public:
+    static void InitGeckoEventClass(JNIEnv *jEnv);
+
+    static AndroidGeckoEvent* MakeNativePoke() {
+        AndroidGeckoEvent *event = new AndroidGeckoEvent();
+        event->Init(NATIVE_POKE);
+        return event;
+    }
+
+    static AndroidGeckoEvent* MakeIMEEvent(int aAction) {
+        AndroidGeckoEvent *event = new AndroidGeckoEvent();
+        event->Init(IME_EVENT);
+        event->mAction = aAction;
+        return event;
+    }
+
+    static AndroidGeckoEvent* MakeDrawEvent(const nsIntRect& aRect) {
+        AndroidGeckoEvent *event = new AndroidGeckoEvent();
+        event->Init(DRAW);
+        event->mRect = aRect;
+        return event;
+    }
+
+    static AndroidGeckoEvent* MakeFromJavaObject(JNIEnv *jenv, jobject jobj) {
+        AndroidGeckoEvent *event = new AndroidGeckoEvent();
+        event->Init(jenv, jobj);
+        return event;
+    }
+
+    static AndroidGeckoEvent* CopyResizeEvent(AndroidGeckoEvent *aResizeEvent) {
+        AndroidGeckoEvent *event = new AndroidGeckoEvent();
+        event->Init(aResizeEvent);
+        return event;
+    }
 
     int Action() { return mAction; }
     int Type() { return mType; }
@@ -660,6 +676,8 @@ public:
     RefCountedJavaObject* ByteBuffer() { return mByteBuffer; }
     int Width() { return mWidth; }
     int Height() { return mHeight; }
+    nsTouchEvent MakeTouchEvent(nsIWidget* widget);
+    void UnionRect(nsIntRect const& aRect);
 
 protected:
     int mAction;

@@ -13,50 +13,6 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME	= gkconbase_s
 LIBXUL_LIBRARY	= 1
 
-
-EXPORTS		= \
-		nsAtomListUtils.h \
-		nsAttrName.h \
-		nsContentList.h \
-		nsContentListDeclarations.h \
-		nsContentSink.h \
-		nsGkAtomList.h \
-		nsGkAtoms.h \
-		nsNodeInfoManager.h \
-		nsNodeUtils.h \
-		nsPropertyTable.h \
-		nsRange.h \
-		nsScriptLoader.h \
-		nsStubDocumentObserver.h \
-		nsStubMutationObserver.h \
-		nsTextFragment.h \
-		mozAutoDocUpdate.h \
-		nsFrameMessageManager.h \
-		nsAttrAndChildArray.h \
-		nsAttrValue.h \
-		nsAttrValueInlines.h \
-		nsCrossSiteListenerProxy.h \
-		nsDOMAttributeMap.h \
-		nsMappedAttributeElement.h \
-		nsStyledElement.h \
-		nsSandboxFlags.h \
-		$(NULL)
-
-EXPORTS_NAMESPACES = mozilla/dom
-
-EXPORTS_mozilla/dom = \
-  Attr.h \
-  Comment.h \
-  DocumentFragment.h \
-  DocumentType.h \
-  DOMImplementation.h \
-  EventSource.h \
-  Link.h \
-  NodeIterator.h \
-  Text.h \
-  TreeWalker.h \
-  $(NULL)
-
 CPPSRCS		= \
 		Comment.cpp \
 		DirectionalityUtils.cpp \
@@ -148,7 +104,6 @@ CPPSRCS		= \
 		$(NULL)
 
 ifdef MOZ_WEBRTC
-EXPORTS += nsDOMDataChannel.h
 CPPSRCS += nsDOMDataChannel.cpp
 LOCAL_INCLUDES += \
 		-I$(topsrcdir)/netwerk/sctp/datachannel \

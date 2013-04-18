@@ -203,7 +203,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
                 try {
                     String[] listitems = getStringArray(mJSONInput, "values");
                     if (listitems.length > 0) {
-                        ArrayAdapter<String> adapter = new ArrayAdapter<String>(GeckoApp.mAppContext, android.R.layout.simple_dropdown_item_1line, listitems);
+                        ArrayAdapter<String> adapter = new ArrayAdapter<String>(GeckoApp.mAppContext, R.layout.simple_dropdown_item_1line, listitems);
                         spinner.setAdapter(adapter);
                         int selectedIndex = getSafeInt(mJSONInput, "selected");
                         spinner.setSelection(selectedIndex);
@@ -320,7 +320,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
                 if (aMultipleSelection) {
                     resourceId = R.layout.select_dialog_multichoice;
                 } else {
-                    resourceId = android.R.layout.select_dialog_singlechoice;
+                    resourceId = R.layout.select_dialog_singlechoice;
                 }
             }
             PromptListAdapter adapter = new PromptListAdapter(GeckoApp.mAppContext, resourceId, aMenuList);

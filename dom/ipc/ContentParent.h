@@ -285,7 +285,7 @@ private:
     virtual PSmsParent* AllocPSms();
     virtual bool DeallocPSms(PSmsParent*);
 
-    virtual PStorageParent* AllocPStorage(const StorageConstructData& aData);
+    virtual PStorageParent* AllocPStorage();
     virtual bool DeallocPStorage(PStorageParent* aActor);
 
     virtual PBluetoothParent* AllocPBluetooth();

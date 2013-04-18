@@ -13,12 +13,6 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME	= gkconwmf_s
 LIBXUL_LIBRARY 	= 1
 
-EXPORTS		+= \
-		WMFDecoder.h \
-		WMFReader.h \
-		WMF.h \
-		$(NULL)
-
 CPPSRCS		= \
 		WMFByteStream.cpp \
 		WMFDecoder.cpp \

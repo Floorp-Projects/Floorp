@@ -14,9 +14,9 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 #endif
 
+Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-common/log4moz.js");
-Cu.import("resource://services-common/preferences.js");
 Cu.import("resource://services-common/utils.js");
 
 

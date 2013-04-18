@@ -16,14 +16,6 @@ FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
 EXPORT_LIBRARY = 1
 
-EXPORTS_NAMESPACES = mozilla/ipc
-
-EXPORTS_mozilla/ipc = \
-  TestShellChild.h \
-  TestShellParent.h \
-  XPCShellEnvironment.h \
-  $(NULL)
-
 CPPSRCS += \
   TestShellChild.cpp \
   TestShellParent.cpp \

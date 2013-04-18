@@ -22,7 +22,6 @@ VPATH           = \
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORTS         = OrientationObserver.h
 LIBRARY_NAME    = widget_gonk
 EXPORT_LIBRARY  = 1
 IS_COMPONENT    = 1

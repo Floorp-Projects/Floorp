@@ -10,12 +10,4 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORTS		= \
-		nsAXPCNativeCallContext.h \
-		xpc_map_end.h \
-		nsAutoJSValHolder.h \
-		nsTArrayHelpers.h \
-		SandboxPrivate.h \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk

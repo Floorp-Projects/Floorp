@@ -19,11 +19,6 @@ FAIL_ON_WARNINGS := 1
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
-EXPORTS = \
-  ANPKeyCodes.h \
-  android_npapi.h \
-  $(NULL)
-
 CPPSRCS += ANPAudio.cpp    \
            ANPEvent.cpp    \
            ANPMatrix.cpp   \

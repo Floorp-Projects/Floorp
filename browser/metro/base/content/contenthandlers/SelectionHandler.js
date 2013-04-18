@@ -842,13 +842,16 @@ var SelectionHandler = {
 
     let orientation = this._pointOrientationToRect(aClientPoint);
     let result = { speed: 1, trigger: false, start: false, end: false };
+    let ml = Util.isMultilineInput(this._targetElement);
 
-    if (orientation.left || orientation.top) {
+    // This could be improved such that we only select to the beginning of
+    // the line when dragging left but not up.
+    if (orientation.left || (ml && orientation.top)) {
       this._addEditSelection(kSelectionNodeAnchor);
       result.speed = orientation.left + orientation.top;
       result.trigger = true;
       result.end = true;
-    } else if (orientation.right || orientation.bottom) {
+    } else if (orientation.right || (ml && orientation.bottom)) {
       this._addEditSelection(kSelectionNodeFocus);
       result.speed = orientation.right + orientation.bottom;
       result.trigger = true;

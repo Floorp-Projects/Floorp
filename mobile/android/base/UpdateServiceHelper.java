@@ -64,7 +64,7 @@ public class UpdateServiceHelper {
                      AppConstants.MOZ_APP_VERSION         +
                      "/%BUILDID%/Android_"                + AppConstants.MOZ_APP_ABI + pkgSpecial +
                      "/%LOCALE%/"                         + AppConstants.MOZ_UPDATE_CHANNEL +
-                     "/%OS_VERSION%/default/default/"     + AppConstants.MOZ_APP_VERSION +
+                     "/%OS_VERSION%/default/default/"     + AppConstants.MOZILLA_VERSION +
                      "/update.xml";
     }
 

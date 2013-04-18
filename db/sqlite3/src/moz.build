@@ -6,3 +6,7 @@
 
 MODULE = 'sqlite3'
 
+EXPORTS += [
+    'sqlite3.h',
+]
+

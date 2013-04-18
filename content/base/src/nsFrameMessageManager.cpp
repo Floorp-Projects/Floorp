@@ -1010,7 +1010,8 @@ nsFrameScriptExecutor::LoadFrameScriptInternal(const nsAString& aURL)
   }
 
   if (holder) {
-    nsContentUtils::ThreadJSContextStack()->Push(mCx);
+    nsCxPusher pusher;
+    pusher.Push(mCx);
     {
       // Need to scope JSAutoRequest to happen after Push but before Pop,
       // at least for now. See bug 584673.
@@ -1021,9 +1022,6 @@ nsFrameScriptExecutor::LoadFrameScriptInternal(const nsAString& aURL)
         (void) JS_ExecuteScript(mCx, global, holder->mScript, nullptr);
       }
     }
-    JSContext* unused;
-    nsContentUtils::ThreadJSContextStack()->Pop(&unused);
-    return;
   }
 }
 
@@ -1071,7 +1069,8 @@ nsFrameScriptExecutor::TryCacheLoadAndCompileScript(const nsAString& aURL,
   }
 
   if (!dataString.IsEmpty()) {
-    nsContentUtils::ThreadJSContextStack()->Push(mCx);
+    nsCxPusher pusher;
+    pusher.Push(mCx);
     {
       // Need to scope JSAutoRequest to happen after Push but before Pop,
       // at least for now. See bug 584673.
@@ -1104,9 +1103,7 @@ nsFrameScriptExecutor::TryCacheLoadAndCompileScript(const nsAString& aURL,
           }
         }
       }
-    } 
-    JSContext* unused;
-    nsContentUtils::ThreadJSContextStack()->Pop(&unused);
+    }
   }
 }
 

@@ -18,13 +18,6 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME   := gkcondash_s
 LIBXUL_LIBRARY := 1
 
-EXPORTS := \
-  DASHDecoder.h \
-  DASHRepDecoder.h \
-  DASHReader.h \
-  DASHRepReader.h \
-  $(NULL)
-
 CPPSRCS := \
   DASHDecoder.cpp \
   DASHRepDecoder.cpp \

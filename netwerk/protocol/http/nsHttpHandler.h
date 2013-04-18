@@ -35,6 +35,14 @@ class nsHttpTransaction;
 class nsAHttpTransaction;
 class nsIHttpChannel;
 class nsIPrefBranch;
+class nsICancelable;
+
+namespace mozilla {
+namespace net {
+class ATokenBucketEvent;
+class EventTokenBucket;
+}
+}
 
 //-----------------------------------------------------------------------------
 // nsHttpHandler - protocol handler for HTTP and HTTPS
@@ -98,6 +106,12 @@ public:
     uint32_t       ConnectTimeout()  { return mConnectTimeout; }
     uint32_t       ParallelSpeculativeConnectLimit() { return mParallelSpeculativeConnectLimit; }
     bool           CritialRequestPrioritization() { return mCritialRequestPrioritization; }
+
+    bool           UseRequestTokenBucket() { return mRequestTokenBucketEnabled; }
+    uint16_t       RequestTokenBucketMinParallelism();
+    uint32_t       RequestTokenBucketHz();
+    uint32_t       RequestTokenBucketBurst();
+    uint32_t       PacingTelemetryID();
 
     bool           PromptTempRedirect()      { return mPromptTempRedirect; }
 
@@ -408,12 +422,41 @@ private:
     // when starting a new speculative connection.
     uint32_t       mParallelSpeculativeConnectLimit;
 
+    // For Rate Pacing of HTTP/1 requests through a netwerk/base/src/EventTokenBucket
+    // Active requests <= *MinParallelism are not subject to the rate pacing
+    bool           mRequestTokenBucketEnabled;
+    bool           mRequestTokenBucketABTestEnabled;
+    uint32_t       mRequestTokenBucketABTestProfile;
+    uint16_t       mRequestTokenBucketMinParallelism;
+    uint32_t       mRequestTokenBucketHz;  // EventTokenBucket HZ
+    uint32_t       mRequestTokenBucketBurst; // EventTokenBucket Burst
+
     // Whether or not to block requests for non head js/css items (e.g. media)
     // while those elements load.
     bool           mCritialRequestPrioritization;
-};
 
-//-----------------------------------------------------------------------------
+private:
+    // For Rate Pacing Certain Network Events. Only assign this pointer on
+    // socket thread.
+    void MakeNewRequestTokenBucket();
+    nsRefPtr<mozilla::net::EventTokenBucket> mRequestTokenBucket;
+
+public:
+    // Socket thread only
+    nsresult SubmitPacedRequest(mozilla::net::ATokenBucketEvent *event,
+                                nsICancelable **cancel)
+    {
+        if (!mRequestTokenBucket)
+            return NS_ERROR_UNEXPECTED;
+        return mRequestTokenBucket->SubmitEvent(event, cancel);
+    }
+
+    // Socket thread only
+    void SetRequestTokenBucket(mozilla::net::EventTokenBucket *aTokenBucket)
+    {
+        mRequestTokenBucket = aTokenBucket;
+    }
+};
 
 extern nsHttpHandler *gHttpHandler;
 

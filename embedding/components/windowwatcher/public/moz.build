@@ -16,3 +16,7 @@ XPIDL_SOURCES += [
 
 MODULE = 'windowwatcher'
 
+EXPORTS += [
+    'nsPromptUtils.h',
+]
+

@@ -8,3 +8,8 @@ XPIDL_MODULE = 'necko_datachan'
 
 MODULE = 'necko'
 
+EXPORTS.mozilla.net += [
+    'DataChannel.h',
+    'DataChannelProtocol.h',
+]
+

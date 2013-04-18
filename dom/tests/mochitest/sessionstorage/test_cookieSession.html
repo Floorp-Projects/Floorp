@@ -1,0 +1,98 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>cookie per-session only test</title>
+
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script type="text/javascript">
+
+/*
+  Set cookie access to be just per session and store to the sessionStorage.
+  Content stored must prevail only for session of the browser, so it must
+  be accessible in another window we try to access that key in the same
+  storage.
+ */
+
+function startTest()
+{
+  var io = SpecialPowers.Cc["@mozilla.org/network/io-service;1"]
+    .getService(SpecialPowers.Ci.nsIIOService);
+  var uri = io.newURI(window.location, "", null);
+  var cp = SpecialPowers.Cc["@mozilla.org/cookie/permission;1"]
+    .getService(SpecialPowers.Ci.nsICookiePermission);
+
+  // ==================== start of the test ============================
+
+  cp.setAccess(uri, SpecialPowers.Ci.nsICookiePermission.ACCESS_DEFAULT);
+
+  sessionStorage.setItem("persistent1", "persistent value 1");
+  sessionStorage.setItem("persistent2", "persistent value 2");
+
+  cp.setAccess(uri, SpecialPowers.Ci.nsICookiePermission.ACCESS_SESSION);
+
+  sessionStorage.setItem("session only", "session value");
+  is(sessionStorage.getItem("session only"), "session value", "Value present when cookies in session-only mode");
+  is(sessionStorage.getItem("persistent1"), "persistent value 1", "Persistent value present");
+  is(sessionStorage.getItem("persistent2"), "persistent value 2", "Persistent value present");
+
+  sessionStorage.setItem("persistent1", "changed persistent value 1");
+  sessionStorage.removeItem("persistent2");
+
+  is(sessionStorage.getItem("session only"), "session value", "Value present when cookies in session-only mode");
+  is(sessionStorage.getItem("persistent1"), "changed persistent value 1", "Persistent value present");
+  is(sessionStorage.getItem("persistent2"), null, "Persistent value removed");
+
+  // This clear has to delete only changes made in session only mode
+  sessionStorage.clear();
+
+  is(sessionStorage.getItem("session only"), null, "Value not present when cookies in session-only mode after delete");
+  is(sessionStorage.getItem("persistent1"), null, "Persistent value not present in session only after delete");
+  is(sessionStorage.getItem("persistent2"), null, "Persistent value not present in session only after delete");
+
+  sessionStorage.setItem("session only 2", "must be deleted on drop of session-only cookies permissions");
+
+  cp.setAccess(uri, SpecialPowers.Ci.nsICookiePermission.ACCESS_DEFAULT);
+
+  is(sessionStorage.getItem("session only"), null, "No value when cookies are in default mode");
+  is(sessionStorage.getItem("session only 2"), null, "No value when cookies are in default mode");
+  is(sessionStorage.getItem("persistent1"), "persistent value 1", "Persistent value present");
+  is(sessionStorage.getItem("persistent2"), "persistent value 2", "Persistent value present");
+
+  cp.setAccess(uri, SpecialPowers.Ci.nsICookiePermission.ACCESS_SESSION);
+
+  is(sessionStorage.getItem("session only"), null, "Value not present when cookies in session-only mode after delete");
+  is(sessionStorage.getItem("session only 2"), null, "Value not present when cookies in session-only mode after delete");
+  is(sessionStorage.getItem("persistent1"), "persistent value 1", "Persistent value present again");
+  is(sessionStorage.getItem("persistent2"), "persistent value 2", "Persistent value present again");
+
+  cp.setAccess(uri, SpecialPowers.Ci.nsICookiePermission.ACCESS_DEFAULT);
+
+  sessionStorage.clear();
+
+  is(sessionStorage.getItem("session only"), null, "No value when cookies are in default mode");
+  is(sessionStorage.getItem("persistent1"), null, "Persistent value not present after delete");
+  is(sessionStorage.getItem("persistent2"), null, "Persistent value not present after delete");
+
+  cp.setAccess(uri, SpecialPowers.Ci.nsICookiePermission.ACCESS_SESSION);
+
+  is(sessionStorage.getItem("session only"), null, "Value not present when cookies in session-only mode after delete");
+  is(sessionStorage.getItem("session only 2"), null, "No value when cookies are in default mode");
+  is(sessionStorage.getItem("persistent1"), null, "Persistent value not present in session only after delete");
+  is(sessionStorage.getItem("persistent2"), null, "Persistent value not present in session only after delete");
+
+  cp.setAccess(uri, SpecialPowers.Ci.nsICookiePermission.ACCESS_DEFAULT);
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</head>
+
+<body onload="startTest();">
+
+</body>
+</html>

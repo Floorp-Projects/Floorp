@@ -24,7 +24,7 @@ function test() {
           statusText: "Switching Protocols",
           type: "plain",
           fullMimeType: "text/plain; charset=utf-8",
-          size: L10N.getFormatStr("networkMenu.sizeKB", "0.00"),
+          size: L10N.getFormatStr("networkMenu.sizeKB", 0),
           time: true
         });
       verifyRequestItemTarget(requestItems[1] = RequestsMenu.getItemAtIndex(1),
@@ -42,7 +42,7 @@ function test() {
           statusText: "See Other",
           type: "plain",
           fullMimeType: "text/plain; charset=utf-8",
-          size: L10N.getFormatStr("networkMenu.sizeKB", "0.00"),
+          size: L10N.getFormatStr("networkMenu.sizeKB", 0),
           time: true
         });
       verifyRequestItemTarget(requestItems[3] = RequestsMenu.getItemAtIndex(3),

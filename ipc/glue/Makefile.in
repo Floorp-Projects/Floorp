@@ -16,57 +16,6 @@ FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
 EXPORT_LIBRARY = 1
 
-EXPORTS_NAMESPACES = ipc mozilla/ipc
-
-EXPORTS_ipc = IPCMessageUtils.h
-
-EXPORTS_mozilla/ipc = \
-  AsyncChannel.h \
-  BrowserProcessSubThread.h \
-  CrossProcessMutex.h \
-  FileDescriptor.h \
-  FileDescriptorUtils.h \
-  GeckoChildProcessHost.h \
-  InputStreamUtils.h \
-  IOThreadChild.h \
-  ProcessChild.h \
-  ProtocolUtils.h \
-  RPCChannel.h \
-  SharedMemory.h \
-  SharedMemoryBasic.h \
-  SharedMemorySysV.h \
-  Shmem.h \
-  SyncChannel.h \
-  ScopedXREEmbed.h \
-  Transport.h \
-  URIUtils.h \
-  $(NULL)
-
-EXPORTS = \
-  nsIIPCSerializableInputStream.h \
-  nsIIPCSerializableURI.h \
-  $(NULL)
-
-ifeq ($(OS_ARCH),WINNT) #{
-EXPORTS_mozilla/ipc += \
-  Transport_win.h \
-  $(NULL)
-else
-# POSIX
-EXPORTS_mozilla/ipc += \
-  Transport_posix.h \
-  $(NULL)
-endif #}
-
-ifeq ($(OS_TARGET),Android)
-# Android has its own,
-# almost-but-not-quite-compatible-with-POSIX-or-/dev/shm shared memory
-# impl.
-EXPORTS_mozilla/ipc += SharedMemoryBasic_android.h
-else
-EXPORTS_mozilla/ipc += SharedMemoryBasic_chromium.h
-endif #}
-
 CPPSRCS += \
   AsyncChannel.cpp \
   BrowserProcessSubThread.cpp \

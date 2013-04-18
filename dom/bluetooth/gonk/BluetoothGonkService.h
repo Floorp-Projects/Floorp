@@ -35,23 +35,27 @@ BEGIN_BLUETOOTH_NAMESPACE
 class BluetoothGonkService : public BluetoothDBusService
 {
 public:
-  /** 
+  /**
    * Set up variables and start the platform specific connection. Must
-   * be called from main thread.
+   * be called from non-main thread.
    *
-   * @return NS_OK if connection starts successfully, NS_ERROR_FAILURE
-   * otherwise
+   * @return NS_OK if connection starts successfully, NS_ERROR_FAILURE otherwise
    */
   virtual nsresult StartInternal();
 
-  /** 
-   * Stop the platform specific connection. Must be called from main
-   * thread.
+  /**
+   * Stop the platform specific connection. Must be called from non-main thread.
    *
-   * @return NS_OK if connection starts successfully, NS_ERROR_FAILURE
-   * otherwise
+   * @return NS_OK if connection starts successfully, NS_ERROR_FAILURE otherwise
    */
   virtual nsresult StopInternal();
+
+  /**
+   * Get status of Bluetooth. Must be called from non-main thread.
+   *
+   * @return true if Bluetooth is enabled, false otherwise
+   */
+  virtual bool IsEnabledInternal();
 };
 
 END_BLUETOOTH_NAMESPACE

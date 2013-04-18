@@ -8,3 +8,28 @@ TEST_TOOL_DIRS += ['test']
 
 MODULE = 'content'
 
+EXPORTS += [
+    'nsISMILAttr.h',
+    'nsISMILType.h',
+    'nsSMILAnimationController.h',
+    'nsSMILAnimationFunction.h',
+    'nsSMILCSSProperty.h',
+    'nsSMILCompositorTable.h',
+    'nsSMILInstanceTime.h',
+    'nsSMILInterval.h',
+    'nsSMILKeySpline.h',
+    'nsSMILMappedAttribute.h',
+    'nsSMILMilestone.h',
+    'nsSMILNullType.h',
+    'nsSMILRepeatCount.h',
+    'nsSMILSetAnimationFunction.h',
+    'nsSMILTargetIdentifier.h',
+    'nsSMILTimeContainer.h',
+    'nsSMILTimeValue.h',
+    'nsSMILTimeValueSpec.h',
+    'nsSMILTimeValueSpecParams.h',
+    'nsSMILTimedElement.h',
+    'nsSMILTypes.h',
+    'nsSMILValue.h',
+]
+

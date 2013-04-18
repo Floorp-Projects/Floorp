@@ -88,6 +88,18 @@ select {
   margin-bottom: 100%;
 }
 
+:-webkit-full-screen a:not(.internalLink) {
+  display: none;
+}
+
+:-moz-full-screen a:not(.internalLink) {
+  display: none;
+}
+
+:fullscreen a:not(.internalLink) {
+  display: none;
+}
+
 #viewerContainer.presentationControls {
   cursor: default;
 }
@@ -391,12 +403,14 @@ html[dir='ltr'] #toolbarViewerLeft > *,
 html[dir='ltr'] #toolbarViewerMiddle > *,
 html[dir='ltr'] #toolbarViewerRight > *,
 html[dir='ltr'] .findbar > * {
+  position: relative;
   float: left;
 }
 html[dir='rtl'] #toolbarViewerLeft > *,
 html[dir='rtl'] #toolbarViewerMiddle > *,
 html[dir='rtl'] #toolbarViewerRight > *,
 html[dir='rtl'] .findbar > * {
+  position: relative;
   float: right;
 }
 
@@ -747,6 +761,14 @@ html[dir='rtl'] #findPrevious {
 html[dir='rtl'] #findNext {
   margin-left: 3px;
 }
+.toolbarButton::before {
+  /* All matching images have a size of 16x16
+   * (except for the print button: 18x16)
+   * All relevant containers have a size of 32x25 */
+  position: absolute;
+  top: 4px;
+  left: 7px;
+}
 
 html[dir='ltr'] .toolbarButton.findPrevious::before {
   display: inline-block;
@@ -806,6 +828,7 @@ html[dir='rtl'] .toolbarButton.pageDown::before {
 .toolbarButton.print::before {
   display: inline-block;
   content: url(images/toolbarButton-print.png);
+  left: 6px;
 }
 
 .toolbarButton.openFile::before {
@@ -1038,7 +1061,6 @@ html[dir='rtl'] .outlineItem > a {
   color: hsla(0,0%,100%,1);
 }
 
-.noOutline,
 .noResults {
   font-size: 12px;
   color: hsla(0,0%,100%,.8);

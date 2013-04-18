@@ -6,3 +6,13 @@
 
 MODULE = 'memory'
 
+EXPORTS += [
+    'mozmemory.h',
+    'mozmemory_wrap.h',
+]
+
+if CONFIG['MOZ_REPLACE_MALLOC']:
+    EXPORTS += [
+        'replace_malloc.h',
+        'malloc_decls.h',
+    ]

@@ -569,11 +569,16 @@ var BrowserUI = {
         break;
       case "metro_viewstate_changed":
         this._adjustDOMforViewState();
+        let autocomplete = document.getElementById("start-autocomplete");
         if (aData == "snapped") {
           FlyoutPanelsUI.hide();
           // Order matters (need grids to get dimensions, etc), now
           // let snapped grid know to refresh/redraw
           Services.obs.notifyObservers(null, "metro_viewstate_dom_snapped", null);
+          autocomplete.setAttribute("orient", "vertical");
+        }
+        else {
+          autocomplete.setAttribute("orient", "horizontal");
         }
         break;
     }
@@ -884,6 +889,13 @@ var BrowserUI = {
       return false;
     }
 
+    // Don't capture pages in snapped mode, this produces 2/3 black
+    // thumbs or stretched out ones
+    //   Ci.nsIWinMetroUtils.snapped is inaccessible on
+    //   desktop/nonwindows systems
+    if(Elements.windowState.getAttribute("viewstate") == "snapped") {
+      return false;
+    }
     // There's no point in taking screenshot of loading pages.
     if (aBrowser.docShell.busyFlags != Ci.nsIDocShell.BUSY_FLAGS_NONE) {
       return false;

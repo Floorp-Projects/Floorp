@@ -12,6 +12,8 @@
 
     <style name="Widget.BaseButton" parent="android:style/Widget.Button"/>
 
+    <style name="Widget.BaseDropDownItem" parent="android:style/Widget.DropDownItem"/>
+
     <style name="Widget.BaseEditText" parent="android:style/Widget.EditText"/>
 
     <style name="Widget.BaseListLiew" parent="android:style/Widget.ListView"/>
@@ -26,11 +28,19 @@
         <item name="android:textAppearance">@style/TextAppearance.Widget.Button</item>
     </style>
 
+    <style name="Widget.DropDownItem" parent="Widget.BaseDropDownItem">
+        <item name="android:textAppearance">@style/TextAppearance.Widget.DropDownItem</item>
+    </style>
+
     <style name="Widget.EditText" parent="Widget.BaseEditText">
         <item name="android:textAppearance">@style/TextAppearance.Widget.EditText</item>
     </style>
 
     <style name="Widget.TextView" parent="Widget.BaseTextView">
+        <item name="android:textAppearance">@style/TextAppearance.Widget.TextView</item>
+    </style>
+
+    <style name="Widget.TextView.SpinnerItem">
         <item name="android:textAppearance">@style/TextAppearance.Widget.TextView</item>
     </style>
 
@@ -129,6 +139,10 @@
     <style name="TextAppearance.Widget" />
 
     <style name="TextAppearance.Widget.Button" parent="TextAppearance.Small">
+        <item name="android:textColor">@color/primary_text</item>
+    </style>
+
+    <style name="TextAppearance.Widget.DropDownItem">
         <item name="android:textColor">@color/primary_text</item>
     </style>
 
@@ -405,13 +419,5 @@
     </style>
 
     <style name="GeckoDialogTitle.SubTitle" />
-
-    <style name="PreferencesListView" parent="@android:style/Widget.ListView">
-        <item name="android:cacheColorHint">@color/background_normal</item>
-    </style>
-
-    <style name="PreferencesExpandableListView" parent="@android:style/Widget.ExpandableListView">
-        <item name="android:cacheColorHint">@color/background_normal</item>
-    </style>
 
 </resources>

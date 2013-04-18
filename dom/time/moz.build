@@ -14,3 +14,9 @@ XPIDL_MODULE = 'dom_time'
 
 MODULE = 'dom'
 
+EXPORTS.mozilla.dom.time += [
+    'DateCacheCleaner.h',
+    'TimeChangeObserver.h',
+    'TimeService.h',
+]
+

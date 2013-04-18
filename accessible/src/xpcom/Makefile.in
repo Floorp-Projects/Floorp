@@ -13,8 +13,6 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME = accessibility_xpcom_s
 LIBXUL_LIBRARY = 1
 
-EXPORTS := xpcAccEvents.h
-
 CPPSRCS = \
   xpcAccEvents.cpp \
   nsAccessibleRelation.cpp \

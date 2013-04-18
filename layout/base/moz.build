@@ -14,8 +14,50 @@ if not CONFIG['MOZ_XUL']:
     XPIDL_SOURCES += [
         'nsIBoxObject.idl',
     ]
+    EXPORTS    += [
+        'nsPIBoxObject.h',
+    ]
 
 XPIDL_MODULE = 'layout_base'
 
 MODULE = 'layout'
+
+EXPORTS += [
+    'DisplayItemClip.h',
+    'DisplayListClipState.h',
+    'FrameLayerBuilder.h',
+    'FramePropertyTable.h',
+    'StackArena.h',
+    'nsArenaMemoryStats.h',
+    'nsBidi.h',
+    'nsBidiPresUtils.h',
+    'nsCSSFrameConstructor.h',
+    'nsCaret.h',
+    'nsChangeHint.h',
+    'nsCompatibility.h',
+    'nsDisplayItemTypes.h',
+    'nsDisplayItemTypesList.h',
+    'nsDisplayList.h',
+    'nsDisplayListInvalidation.h',
+    'nsFrameManager.h',
+    'nsFrameManagerBase.h',
+    'nsFrameTraversal.h',
+    'nsIFrameTraversal.h',
+    'nsILayoutDebugger.h',
+    'nsILayoutHistoryState.h',
+    'nsIPercentHeightObserver.h',
+    'nsIPresShell.h',
+    'nsIReflowCallback.h',
+    'nsLayoutUtils.h',
+    'nsPresArena.h',
+    'nsPresContext.h',
+    'nsPresState.h',
+    'nsRefreshDriver.h',
+    'nsStyleChangeList.h',
+    'nsStyleConsts.h',
+]
+
+EXPORTS.mozilla += [
+    'PaintTracker.h',
+]
 

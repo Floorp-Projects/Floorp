@@ -398,6 +398,38 @@ Layer::SetAnimations(const AnimationArray& aAnimations)
   Mutated();
 }
 
+static uint8_t sPanZoomUserDataKey;
+struct PanZoomUserData : public LayerUserData {
+  PanZoomUserData(AsyncPanZoomController* aController)
+    : mController(aController)
+  { }
+
+  // We don't keep a strong ref here because PanZoomUserData is only
+  // set transiently, and APZC is thread-safe refcounted so
+  // AddRef/Release is expensive.
+  AsyncPanZoomController* mController;
+};
+
+void
+Layer::SetAsyncPanZoomController(AsyncPanZoomController *controller)
+{
+  if (controller) {
+    SetUserData(&sPanZoomUserDataKey, new PanZoomUserData(controller));
+  } else {
+    RemoveUserData(&sPanZoomUserDataKey);
+  }
+}
+
+AsyncPanZoomController*
+Layer::GetAsyncPanZoomController()
+{
+  LayerUserData* data = GetUserData(&sPanZoomUserDataKey);
+  if (!data) {
+    return nullptr;
+  }
+  return static_cast<PanZoomUserData*>(data)->mController;
+}
+
 void
 Layer::ApplyPendingUpdatesToSubtree()
 {
@@ -453,7 +485,8 @@ Layer::SnapTransformTranslation(const gfx3DMatrix& aTransform,
 
   gfxMatrix matrix2D;
   gfx3DMatrix result;
-  if (mManager->IsSnappingEffectiveTransforms() &&
+  if (!(mContentFlags & CONTENT_DISABLE_TRANSFORM_SNAPPING) &&
+      mManager->IsSnappingEffectiveTransforms() &&
       aTransform.Is2D(&matrix2D) &&
       !matrix2D.HasNonTranslation() &&
       matrix2D.HasNonIntegerTranslation()) {
@@ -485,7 +518,8 @@ Layer::SnapTransform(const gfx3DMatrix& aTransform,
 
   gfxMatrix matrix2D;
   gfx3DMatrix result;
-  if (mManager->IsSnappingEffectiveTransforms() &&
+  if (!(mContentFlags & CONTENT_DISABLE_TRANSFORM_SNAPPING) &&
+      mManager->IsSnappingEffectiveTransforms() &&
       aTransform.Is2D(&matrix2D) &&
       gfxSize(1.0, 1.0) <= aSnapRect.Size() &&
       matrix2D.PreservesAxisAlignedRectangles()) {

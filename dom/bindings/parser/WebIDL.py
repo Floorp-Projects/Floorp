@@ -8,6 +8,7 @@ from ply import lex, yacc
 import re
 import os
 import traceback
+import math
 
 # Machinery
 
@@ -897,7 +898,8 @@ class IDLInterface(IDLObjectWithScope):
             elif (identifier == "PrefControlled" or
                   identifier == "Pref" or
                   identifier == "NeedNewResolve" or
-                  identifier == "JSImplementation"):
+                  identifier == "JSImplementation" or
+                  identifier == "HeaderFile"):
                 # Known attributes that we don't need to do anything with here
                 pass
             else:
@@ -2256,6 +2258,13 @@ class IDLValue(IDLObject):
                                   % (self.value, type.inner.identifier.name),
                                   [location, type.inner.location])
             return self
+        elif self.type.isFloat() and type.isFloat():
+            if (not type.isUnrestricted() and
+                (self.value == float("inf") or self.value == float("-inf") or
+                 math.isnan(self.value))):
+                raise WebIDLError("Trying to convert unrestricted value %s to non-unrestricted"
+                                  % self.value, [location]);
+            return self
         else:
             raise WebIDLError("Cannot coerce type %s to type %s." %
                               (self.type, type), [location])
@@ -3147,6 +3156,11 @@ class Tokenizer(object):
         "OTHER"
         ]
 
+    def t_FLOATLITERAL(self, t):
+        r'(-?(([0-9]+\.[0-9]*|[0-9]*\.[0-9]+)([Ee][+-]?[0-9]+)?|[0-9]+[Ee][+-]?[0-9]+|Infinity))|NaN'
+        t.value = float(t.value)
+        return t
+
     def t_INTEGER(self, t):
         r'-?(0([0-7]+|[Xx][0-9A-Fa-f]+)?|[1-9][0-9]*)'
         try:
@@ -3158,11 +3172,6 @@ class Tokenizer(object):
                                         lineno=self.lexer.lineno,
                                         lexpos=self.lexer.lexpos,
                                         filename=self._filename)])
-        return t
-
-    def t_FLOATLITERAL(self, t):
-        r'-?(([0-9]+\.[0-9]*|[0-9]*\.[0-9]+)([Ee][+-]?[0-9]+)?|[0-9]+[Ee][+-]?[0-9]+)'
-        assert False
         return t
 
     def t_IDENTIFIER(self, t):
@@ -3593,8 +3602,8 @@ class Parser(Tokenizer):
         """
             ConstValue : FLOATLITERAL
         """
-        assert False
-        pass
+        location = self.getLocation(p, 1)
+        p[0] = IDLValue(location, BuiltinTypes[IDLBuiltinType.Types.unrestricted_float], p[1])
 
     def p_ConstValueString(self, p):
         """

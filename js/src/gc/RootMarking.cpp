@@ -1,6 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=78:
- *
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -68,6 +67,7 @@ MarkExactStackRoot(JSTracer *trc, Rooted<void*> *rooter, ThingRootKind kind)
       case THING_ROOT_ID:          MarkIdRoot(trc, (jsid *)addr, "exact-id"); break;
       case THING_ROOT_PROPERTY_ID: MarkIdRoot(trc, &((js::PropertyId *)addr)->asId(), "exact-propertyid"); break;
       case THING_ROOT_BINDINGS:    ((Bindings *)addr)->trace(trc); break;
+      case THING_ROOT_PROPERTY_DESCRIPTOR: ((JSPropertyDescriptor *)addr)->trace(trc); break;
       default: JS_NOT_REACHED("Invalid THING_ROOT kind"); break;
     }
 }
@@ -416,19 +416,7 @@ AutoGCRooter::trace(JSTracer *trc)
 
       case DESCRIPTOR : {
         PropertyDescriptor &desc = *static_cast<AutoPropertyDescriptorRooter *>(this);
-        if (desc.obj)
-            MarkObjectRoot(trc, &desc.obj, "Descriptor::obj");
-        MarkValueRoot(trc, &desc.value, "Descriptor::value");
-        if ((desc.attrs & JSPROP_GETTER) && desc.getter) {
-            JSObject *tmp = JS_FUNC_TO_DATA_PTR(JSObject *, desc.getter);
-            MarkObjectRoot(trc, &tmp, "Descriptor::get");
-            desc.getter = JS_DATA_TO_FUNC_PTR(JSPropertyOp, tmp);
-        }
-        if (desc.attrs & JSPROP_SETTER && desc.setter) {
-            JSObject *tmp = JS_FUNC_TO_DATA_PTR(JSObject *, desc.setter);
-            MarkObjectRoot(trc, &tmp, "Descriptor::set");
-            desc.setter = JS_DATA_TO_FUNC_PTR(JSStrictPropertyOp, tmp);
-        }
+        desc.trace(trc);
         return;
       }
 
@@ -647,6 +635,24 @@ StackShape::AutoRooter::trace(JSTracer *trc)
     if (shape->base)
         MarkBaseShapeRoot(trc, (BaseShape**) &shape->base, "StackShape::AutoRooter base");
     MarkIdRoot(trc, (jsid*) &shape->propid, "StackShape::AutoRooter id");
+}
+
+void
+JSPropertyDescriptor::trace(JSTracer *trc)
+{
+    if (obj)
+        MarkObjectRoot(trc, &obj, "Descriptor::obj");
+    MarkValueRoot(trc, &value, "Descriptor::value");
+    if ((attrs & JSPROP_GETTER) && getter) {
+        JSObject *tmp = JS_FUNC_TO_DATA_PTR(JSObject *, getter);
+        MarkObjectRoot(trc, &tmp, "Descriptor::get");
+        getter = JS_DATA_TO_FUNC_PTR(JSPropertyOp, tmp);
+    }
+    if ((attrs & JSPROP_SETTER) && setter) {
+        JSObject *tmp = JS_FUNC_TO_DATA_PTR(JSObject *, setter);
+        MarkObjectRoot(trc, &tmp, "Descriptor::set");
+        setter = JS_DATA_TO_FUNC_PTR(JSStrictPropertyOp, tmp);
+    }
 }
 
 void

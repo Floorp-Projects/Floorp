@@ -359,6 +359,7 @@ public:
 #ifdef MOZ_WIDGET_GONK
     virtual EGLImage CreateEGLImageForNativeBuffer(void* buffer) = 0;
     virtual void DestroyEGLImage(EGLImage image) = 0;
+    virtual EGLImage GetNullEGLImage() = 0;
 #endif
 
     virtual already_AddRefed<TextureImage>
@@ -440,13 +441,11 @@ public:
 #ifdef MOZ_WIDGET_ANDROID
         , SurfaceTexture
 #endif
+#ifdef XP_MACOSX
+        , IOSurface
+#endif
     };
 
-    /**
-     * Create new shared GLContext content handle, must be released by ReleaseSharedHandle.
-     */
-    virtual SharedTextureHandle CreateSharedHandle(SharedTextureShareType shareType)
-    { return 0; }
     /*
      * Create a new shared GLContext content handle, using the passed buffer as a source.
      * Must be released by ReleaseSharedHandle. UpdateSharedHandle will have no effect

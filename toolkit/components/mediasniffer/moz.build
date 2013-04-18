@@ -8,3 +8,7 @@ TEST_DIRS += ['test']
 
 MODULE = 'mediasniffer'
 
+EXPORTS += [
+    'nsMediaSniffer.h',
+]
+

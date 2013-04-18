@@ -24,7 +24,7 @@
     const nsIWebProgress = Components.interfaces.nsIWebProgress;
     const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
 
-    const kURI = 'http://mochi.test:8888/chrome/dom/plugins/test/plugin_visibility_loader.html';
+    const kURI = 'http://mochi.test:8888/chrome/dom/plugins/test/mochitest/plugin_visibility_loader.html';
 
     function ProgressListener() {
     }

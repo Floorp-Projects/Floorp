@@ -21,3 +21,9 @@ XPIDL_MODULE = 'layout_xul'
 
 MODULE = 'layout'
 
+EXPORTS += [
+    'nsIScrollbarMediator.h',
+    'nsPIBoxObject.h',
+    'nsXULPopupManager.h',
+]
+
