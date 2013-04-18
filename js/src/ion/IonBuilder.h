@@ -25,6 +25,7 @@ class IonBuilder : public MIRGenerator
 {
     enum ControlStatus {
         ControlStatus_Error,
+        ControlStatus_Abort,
         ControlStatus_Ended,        // There is no continuation/join point.
         ControlStatus_Joined,       // Created a join node.
         ControlStatus_Jumped,       // Parsing another branch at the same level.
@@ -311,8 +312,6 @@ class IonBuilder : public MIRGenerator
     MInstruction *addConvertElementsToDoubles(MDefinition *elements);
     MInstruction *addBoundsCheck(MDefinition *index, MDefinition *length);
     MInstruction *addShapeGuard(MDefinition *obj, const RawShape shape, BailoutKind bailoutKind);
-    MInstruction *addTypeGuard(MDefinition *obj, types::TypeObject *typeObject,
-                               bool bailOnEquality, BailoutKind bailoutKind);
 
     JSObject *getNewArrayTemplateObject(uint32_t count);
 
@@ -415,18 +414,6 @@ class IonBuilder : public MIRGenerator
     bool canEnterInlinedFunction(JSFunction *target);
     bool makeInliningDecision(JSFunction *target, CallInfo &callInfo);
     uint32_t selectInliningTargets(AutoObjectVector &targets, CallInfo &callInfo, Vector<bool> &choiceSet);
-    bool elementAccessIsDenseNative(MDefinition *obj, MDefinition *id);
-    bool elementAccessIsTypedArray(MDefinition *obj, MDefinition *id, int *arrayType);
-    bool elementAccessIsPacked(MDefinition *obj);
-    bool elementAccessHasExtraIndexedProperty(MDefinition *obj);
-    MIRType denseNativeElementType(MDefinition *obj);
-    bool propertyReadNeedsTypeBarrier(types::TypeObject *object, PropertyName *name,
-                                      types::StackTypeSet *observed);
-    bool propertyReadNeedsTypeBarrier(MDefinition *obj, PropertyName *name,
-                                      types::StackTypeSet *observed);
-    bool propertyReadIsIdempotent(MDefinition *obj, PropertyName *name);
-    bool propertyWriteNeedsTypeBarrier(MDefinition **pobj, PropertyName *name, MDefinition **pvalue);
-    bool tryAddWriteBarrier(types::StackTypeSet *objTypes, jsid id, MDefinition **pvalue);
 
     // Native inlining helpers.
     types::StackTypeSet *getInlineReturnTypeSet();
@@ -520,10 +507,18 @@ class IonBuilder : public MIRGenerator
 
     types::StackTypeSet *cloneTypeSet(types::StackTypeSet *types);
 
+    // Use one of the below methods for updating the current block, rather than
+    // updating |current| directly. setCurrent() should only be used in cases
+    // where the block cannot have phis whose type needs to be computed.
+
+    void setCurrentAndSpecializePhis(MBasicBlock *block) {
+        if (block)
+            block->specializePhis();
+        setCurrent(block);
+    }
+
     void setCurrent(MBasicBlock *block) {
         current = block;
-        if (current)
-            current->specializePhis();
     }
 
     // A builder is inextricably tied to a particular script.
@@ -573,6 +568,11 @@ class IonBuilder : public MIRGenerator
 
     size_t inliningDepth_;
     Vector<MDefinition *, 0, IonAllocPolicy> inlinedArguments_;
+
+    // Cutoff to disable compilation if excessive time is spent reanalyzing
+    // loop bodies to compute a fixpoint of the types for loop variables.
+    static const size_t MAX_LOOP_RESTARTS = 20;
+    size_t numLoopRestarts_;
 
     // True if script->failedBoundsCheck is set for the current script or
     // an outer script.

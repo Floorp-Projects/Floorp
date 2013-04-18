@@ -4945,11 +4945,7 @@ ScriptAnalysis::analyzeTypes(JSContext *cx)
         result = result->next;
     }
 
-    if (!script_->hasFreezeConstraints) {
-        RootedScript script(cx, script_);
-        TypeScript::AddFreezeConstraints(cx, script);
-        script_->hasFreezeConstraints = true;
-    }
+    TypeScript::AddFreezeConstraints(cx, script_);
 }
 
 bool
@@ -6800,6 +6796,10 @@ TypeScript::destroy()
 /* static */ void
 TypeScript::AddFreezeConstraints(JSContext *cx, JSScript *script)
 {
+    if (script->hasFreezeConstraints)
+        return;
+    script->hasFreezeConstraints = true;
+
     /*
      * Adding freeze constraints to a script ensures that code for the script
      * will be recompiled any time any type set for stack values in the script
