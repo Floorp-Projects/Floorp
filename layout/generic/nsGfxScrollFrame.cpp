@@ -1156,12 +1156,12 @@ public:
 
   TimeStamp mStartTime;
 
-  // mPrevStartTime holds previous 3 timestamps for intervals averaging (to
+  // mPrevEventTime holds previous 3 timestamps for intervals averaging (to
   // reduce duration fluctuations). When AsyncScroll is constructed and no
   // previous timestamps are available (indicated with mIsFirstIteration),
-  // initialize mPrevStartTime using imaginary previous timestamps with maximum
+  // initialize mPrevEventTime using imaginary previous timestamps with maximum
   // relevant intervals between them.
-  TimeStamp mPrevStartTime[3];
+  TimeStamp mPrevEventTime[3];
   bool mIsFirstIteration;
 
   // Cached Preferences values to avoid re-reading them when extending an existing
@@ -1200,7 +1200,7 @@ protected:
                           nscoord aCurrentPos, nscoord aCurrentVelocity,
                           nscoord aDestination);
 
-  void InitDuration(nsIAtom *aOrigin);
+  TimeDuration CalcDurationForEventTime(TimeStamp aTime, nsIAtom *aOrigin);
 
 // The next section is observer/callback management
 // Bodies of WillRefresh and RefreshDriver contain nsGfxScrollFrameInner specific code.
@@ -1266,11 +1266,12 @@ nsGfxScrollFrameInner::AsyncScroll::VelocityAt(TimeStamp aTime) {
 }
 
 /*
- * Calculate/update mDuration, possibly dynamically according to events rate and event origin.
+ * Calculate duration, possibly dynamically according to events rate and event origin.
  * (also maintain previous timestamps - which are only used here).
  */
-void
-nsGfxScrollFrameInner::AsyncScroll::InitDuration(nsIAtom *aOrigin) {
+TimeDuration
+nsGfxScrollFrameInner::
+AsyncScroll::CalcDurationForEventTime(TimeStamp aTime, nsIAtom *aOrigin) {
   if (!aOrigin){
     aOrigin = nsGkAtoms::other;
   }
@@ -1317,17 +1318,17 @@ nsGfxScrollFrameInner::AsyncScroll::InitDuration(nsIAtom *aOrigin) {
 
       // Longest relevant interval (which results in maximum duration)
       TimeDuration maxDelta = TimeDuration::FromMilliseconds(mOriginMaxMS / mIntervalRatio);
-      mPrevStartTime[0] = mStartTime         - maxDelta;
-      mPrevStartTime[1] = mPrevStartTime[0]  - maxDelta;
-      mPrevStartTime[2] = mPrevStartTime[1]  - maxDelta;
+      mPrevEventTime[0] = aTime              - maxDelta;
+      mPrevEventTime[1] = mPrevEventTime[0]  - maxDelta;
+      mPrevEventTime[2] = mPrevEventTime[1]  - maxDelta;
     }
   }
 
   // Average last 3 delta durations (rounding errors up to 2ms are negligible for us)
-  int32_t eventsDeltaMs = (mStartTime - mPrevStartTime[2]).ToMilliseconds() / 3;
-  mPrevStartTime[2] = mPrevStartTime[1];
-  mPrevStartTime[1] = mPrevStartTime[0];
-  mPrevStartTime[0] = mStartTime;
+  int32_t eventsDeltaMs = (aTime - mPrevEventTime[2]).ToMilliseconds() / 3;
+  mPrevEventTime[2] = mPrevEventTime[1];
+  mPrevEventTime[1] = mPrevEventTime[0];
+  mPrevEventTime[0] = aTime;
 
   // Modulate duration according to events rate (quicker events -> shorter durations).
   // The desired effect is to use longer duration when scrolling slowly, such that
@@ -1336,7 +1337,7 @@ nsGfxScrollFrameInner::AsyncScroll::InitDuration(nsIAtom *aOrigin) {
   // intervals using the recent 4 timestamps (now + three prev -> 3 intervals).
   int32_t durationMS = clamped<int32_t>(eventsDeltaMs * mIntervalRatio, mOriginMinMS, mOriginMaxMS);
 
-  mDuration = TimeDuration::FromMilliseconds(durationMS);
+  return TimeDuration::FromMilliseconds(durationMS);
 }
 
 void
@@ -1350,9 +1351,9 @@ nsGfxScrollFrameInner::AsyncScroll::InitSmoothScroll(TimeStamp aTime,
     mStartPos = PositionAt(aTime);
   }
   mStartTime = aTime;
+  mDuration = CalcDurationForEventTime(aTime, aOrigin);
   mDestination = aDestination;
   mRange = aRange;
-  InitDuration(aOrigin);
   InitTimingFunction(mTimingFunctionX, mStartPos.x, currentVelocity.width,
                      aDestination.x);
   InitTimingFunction(mTimingFunctionY, mStartPos.y, currentVelocity.height,
