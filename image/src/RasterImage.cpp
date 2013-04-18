@@ -1669,7 +1669,9 @@ RasterImage::AddSourceData(const char *aBuffer, uint32_t aCount)
   // write the data directly to the decoder. (If we haven't gotten the size,
   // we'll queue up the data and write it out when we do.)
   if (!StoringSourceData() && mHasSize) {
+    mDecoder->SetSynchronous(true);
     rv = WriteToDecoder(aBuffer, aCount);
+    mDecoder->SetSynchronous(false);
     CONTAINER_ENSURE_SUCCESS(rv);
 
     // We're not storing source data, so this data is probably coming straight
