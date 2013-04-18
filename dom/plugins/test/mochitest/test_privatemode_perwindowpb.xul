@@ -8,6 +8,8 @@
   <title>NPAPI Private Mode Tests</title>
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/chrome-harness.js" />
 <body xmlns="http://www.w3.org/1999/xhtml" onload="runTests()">
 <embed id="plugin1" type="application/x-test" width="200" height="200"></embed>
 <embed id="plugin2" type="application/x-test" width="200" height="200"></embed>
@@ -52,7 +54,7 @@ function runTestsCallback() {
                     .rootTreeItem
                     .QueryInterface(Ci.nsIInterfaceRequestor)
                     .getInterface(Ci.nsIDOMWindow);
-  var contentPage = "chrome://mochitests/content/chrome/dom/plugins/test/privatemode_perwindowpb.xul";
+  var contentPage = getRootDirectory(window.location.href) + "privatemode_perwindowpb.xul";
 
   function testOnWindow(aIsPrivate, aCallback) {
     var win = mainWindow.OpenBrowserWindow({private: aIsPrivate});

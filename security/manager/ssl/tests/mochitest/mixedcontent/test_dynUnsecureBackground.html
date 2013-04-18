@@ -18,7 +18,7 @@
   {
     isSecurityState("secure");
     document.body.background =
-      "http://example.com/tests/security/ssl/mixedcontent/moonsurface.jpg";
+      "http://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/moonsurface.jpg";
 
     waitForSecurityState("broken", function() 
     {
@@ -30,7 +30,7 @@
   function afterNavigationTest()
   {
     is(document.body.background,
-      "https://example.com/tests/security/ssl/mixedcontent/moonsurface.jpg",
+      "https://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/moonsurface.jpg",
       "document backround secure again");
     isSecurityState("secure", "secure after re-navigation");
     finish();
@@ -39,6 +39,6 @@
   </script>
 </head>
 
-<body background="https://example.com/tests/security/ssl/mixedcontent/moonsurface.jpg">
+<body background="https://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/moonsurface.jpg">
 </body>
 </html>

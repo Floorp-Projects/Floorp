@@ -9,7 +9,7 @@
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
   <script type="application/javascript"
-          src="http://mochi.test:8888/chrome/dom/plugins/test/hang_test.js" />
+          src="http://mochi.test:8888/chrome/dom/plugins/test/mochitest/hang_test.js" />
   <body xmlns="http://www.w3.org/1999/xhtml" onload="runTests()">
     <embed id="plugin1" type="application/x-test" width="200" height="200"></embed>
   </body>
