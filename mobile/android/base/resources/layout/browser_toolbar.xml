@@ -71,15 +71,22 @@
                         gecko:curveTowards="right"
                         android:background="@drawable/shaped_button"
                         android:gravity="center_vertical"
-                        android:src="@drawable/tabs_level"
                         android:paddingLeft="37dip"
                         android:paddingRight="11dip"/>
 
+    <!-- The TextSwitcher should be shifted 24dp on the left, to avoid
+         the curve. On a 48dp space, centering 24dp image will leave
+         12dp on all sides. However this image has a perception of
+         2 layers. Hence to center this, an additional 4dp is added to the left.
+         The margins will be 40dp on left, 8dp on right, instead of ideal 30dp
+         and 12dp. -->
     <Gecko.TextSwitcher android:id="@+id/tabs_count"
                         style="@style/AddressBar.ImageButton"
-                        android:layout_width="44.5dip"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="5dp"
+                        android:layout_width="24dip"
+                        android:layout_height="24dip"
+                        android:layout_marginLeft="40dip"
+                        android:layout_marginRight="8dip"
+                        android:layout_marginTop="12dip"
                         android:layout_alignRight="@id/tabs"
                         android:gravity="center_horizontal"/>
 
