@@ -907,7 +907,6 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
 
     public void setIsSideBar(boolean isSideBar) {
         Resources resources = mActivity.getResources();
-        mTabs.setImageDrawable(resources.getDrawable(R.drawable.tabs_level));
         mTabs.setBackgroundDrawable(resources.getDrawable(R.drawable.shaped_button));
     }
 
