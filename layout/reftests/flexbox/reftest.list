@@ -126,8 +126,10 @@ fuzzy-if(d2d&&layersGPUAccelerated,24,14) == flexbox-dyn-insertAroundSpan-2.xhtm
 == flexbox-float-2a.xhtml  flexbox-float-2-ref.xhtml
 == flexbox-float-2b.xhtml  flexbox-float-2-ref.xhtml
 
-# Tests for flex items as stacking contexts
+# Tests for flex items as (pseudo) stacking contexts
 == flexbox-items-as-stacking-contexts-1.xhtml flexbox-items-as-stacking-contexts-1-ref.xhtml
+== flexbox-items-as-stacking-contexts-2.html flexbox-items-as-stacking-contexts-2-ref.html
+== flexbox-items-as-stacking-contexts-3.html flexbox-items-as-stacking-contexts-3-ref.html
 
 # Tests for "min-width" and "min-height" on flex items.
 == flexbox-minSize-horiz-1.xhtml flexbox-minSize-horiz-1-ref.xhtml
@@ -161,8 +163,8 @@ fails == flexbox-minSize-vert-1.xhtml  flexbox-minSize-vert-1-ref.xhtml # bug 85
 == flexbox-justify-content-vert-5.xhtml flexbox-justify-content-vert-5-ref.xhtml
 
 # Tests for inline content in a flexbox that gets wrapped in an anonymous block
-== flexbox-inlinecontent-horiz-1a.xhtml flexbox-inlinecontent-horiz-1-ref.xhtml
-== flexbox-inlinecontent-horiz-1b.xhtml flexbox-inlinecontent-horiz-1-ref.xhtml
+fails == flexbox-inlinecontent-horiz-1a.xhtml flexbox-inlinecontent-horiz-1-ref.xhtml # reference case rendering is incorrect; bug 858333
+fails == flexbox-inlinecontent-horiz-1b.xhtml flexbox-inlinecontent-horiz-1-ref.xhtml # reference case rendering is incorrect; bug 858333
 == flexbox-inlinecontent-horiz-2.xhtml  flexbox-inlinecontent-horiz-2-ref.xhtml
 == flexbox-inlinecontent-horiz-3a.xhtml flexbox-inlinecontent-horiz-3-ref.xhtml
 == flexbox-inlinecontent-horiz-3b.xhtml flexbox-inlinecontent-horiz-3-ref.xhtml

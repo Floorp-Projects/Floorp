@@ -1061,7 +1061,7 @@ GetDisplayFlagsForFlexItem(nsIFrame* aFrame)
   if (pos->mZIndex.GetUnit() == eStyleUnit_Integer) {
     return nsIFrame::DISPLAY_CHILD_FORCE_STACKING_CONTEXT;
   }
-  return 0;
+  return nsIFrame::DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT;
 }
 
 void
