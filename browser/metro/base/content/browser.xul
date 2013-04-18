@@ -294,7 +294,7 @@
             </scrollbox>
           </vbox>
           <!-- Autocompletion interface -->
-          <box id="start-autocomplete"/>
+          <box id="start-autocomplete" observes="bcast_windowState"/>
         </hbox>
       </vbox> <!-- end tray -->
 

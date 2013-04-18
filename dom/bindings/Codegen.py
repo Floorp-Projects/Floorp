@@ -1786,6 +1786,9 @@ class CGDefineDOMInterfaceMethod(CGAbstractMethod):
     def definition_body(self):
         if len(self.descriptor.interface.namedConstructors) > 0:
             getConstructor = """  JSObject* interfaceObject = GetConstructorObject(aCx, aGlobal);
+  if (!interfaceObject) {
+    return nullptr;
+  }
   for (unsigned slot = DOM_INTERFACE_SLOTS_BASE; slot < JSCLASS_RESERVED_SLOTS(&InterfaceObjectClass.mBase); ++slot) {
     JSObject* constructor = &js::GetReservedSlot(interfaceObject, slot).toObject();
     if (JS_GetFunctionId(JS_GetObjectFunction(constructor)) == JSID_TO_STRING(id)) {
@@ -3720,11 +3723,17 @@ def typeNeedsCx(type, descriptorProvider, retVal=False):
     if type.isUnion():
         return any(typeNeedsCx(t, descriptorProvider) for t in
                    type.unroll().flatMemberTypes)
+    if type.isDictionary():
+        return dictionaryNeedsCx(type.inner, descriptorProvider)
     if retVal and type.isSpiderMonkeyInterface():
         return True
     if type.isCallback():
         return descriptorProvider.workers
     return type.isAny() or type.isObject()
+
+def dictionaryNeedsCx(dictionary, descriptorProvider):
+    return (any(typeNeedsCx(m.type, descriptorProvider) for m in dictionary.members) or
+        (dictionary.parent and dictionaryNeedsCx(dictionary.parent, descriptorProvider)))
 
 # Returns a tuple consisting of a CGThing containing the type of the return
 # value, or None if there is no need for a return value, and a boolean signaling

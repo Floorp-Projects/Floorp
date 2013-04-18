@@ -1842,7 +1842,8 @@ DataChannelConnection::Open(const nsACString& label, const nsACString& protocol,
     return nullptr;
   }
 
-  if (aStream != INVALID_STREAM && mStreams[aStream]) {
+  // Don't look past currently-negotiated streams
+  if (aStream != INVALID_STREAM && aStream < mStreams.Length() && mStreams[aStream]) {
     LOG(("ERROR: external negotiation of already-open channel %u", aStream));
     // XXX How do we indicate this up to the application?  Probably the
     // caller's job, but we may need to return an error code.
@@ -1873,55 +1874,96 @@ DataChannelConnection::OpenFinish(already_AddRefed<DataChannel> aChannel)
   // Normally 1 reference if called from ::Open(), or 2 if called from
   // ProcessQueuedOpens() unless the DOMDataChannel was gc'd
   uint16_t stream = channel->mStream;
+  bool queue = false;
 
   mLock.AssertCurrentThreadOwns();
 
-  if (stream == INVALID_STREAM || mState != OPEN) {
-    if (mState == OPEN) { // implies INVALID_STREAM
-      // Don't try to find a stream if not open - mAllocateEven isn't set yet
+  // Cases we care about:
+  // Pre-negotiated:
+  //    Not Open:
+  //      Doesn't fit:
+  //         -> change initial ask or renegotiate after open
+  //      -> queue open
+  //    Open:
+  //      Doesn't fit:
+  //         -> RequestMoreStreams && queue
+  //      Does fit:
+  //         -> open
+  // Not negotiated:
+  //    Not Open:
+  //      -> queue open
+  //    Open:
+  //      -> Try to get a stream
+  //      Doesn't fit:
+  //         -> RequestMoreStreams && queue
+  //      Does fit:
+  //         -> open
+  // So the Open cases are basically the same
+  // Not Open cases are simply queue for non-negotiated, and
+  // either change the initial ask or possibly renegotiate after open.
+
+  if (mState == OPEN) {
+    if (stream == INVALID_STREAM) {
       stream = FindFreeStream(); // may be INVALID_STREAM if we need more
-      if (stream == INVALID_STREAM) {
-        if (!RequestMoreStreams()) {
-          channel->mState = CLOSED;
-          if (channel->mFlags & DATA_CHANNEL_FLAGS_FINISH_OPEN) {
-            // We already returned the channel to the app.
-            NS_ERROR("Failed to request more streams");
-            NS_DispatchToMainThread(new DataChannelOnMessageAvailable(
-                                      DataChannelOnMessageAvailable::ON_CHANNEL_CLOSED, this,
-                                      channel));
-            return channel.forget();
-          }
-          // we'll be destroying the channel, but it never really got set up
-          // Alternative would be to RUN_ON_THREAD(channel.forget(),::Destroy,...) and
-          // Dispatch it to ourselves
-          return nullptr;
-        }
+    }
+    if (stream == INVALID_STREAM || stream >= mStreams.Length()) {
+      // RequestMoreStreams() limits to MAX_NUM_STREAMS -- allocate extra streams 
+      // to avoid going back immediately for more if the ask to N, N+1, etc
+      int32_t more_needed = (stream == INVALID_STREAM) ? 16 :
+                            (stream-((int32_t)mStreams.Length())) + 16;
+      if (!RequestMoreStreams(more_needed)) {
+        // Something bad happened... we're done
+        goto request_error_cleanup;
       }
-      // if INVALID here, we need to queue
+      queue = true;
     }
-    if (stream != INVALID_STREAM) {
-      // just allocated (& OPEN), or externally negotiated
-      mStreams[stream] = channel; // holds a reference
-      channel->mStream = stream;
-    }
-
-    LOG(("Finishing open: channel %p, stream = %u", channel.get(), stream));
-
-    if (stream == INVALID_STREAM || mState != OPEN) {
-      // we're going to queue
-
-      LOG(("Queuing channel %p (%u) to finish open", channel.get(), stream));
-      // Also serves to mark we told the app
-      channel->mFlags |= DATA_CHANNEL_FLAGS_FINISH_OPEN;
-      channel->AddRef(); // we need a ref for the nsDeQue and one to return
-      mPending.Push(channel);
-      return channel.forget();
-    } // else OPEN and we selected a stream
   } else {
-    // OPEN and externally negotiated stream
-    mStreams[stream] = channel;
-    mStreams[stream] = channel; // holds a reference
+    // not OPEN
+    if (stream != INVALID_STREAM && stream >= mStreams.Length() &&
+        mState == CLOSED) {
+      // Update number of streams for init message
+      struct sctp_initmsg initmsg;
+      socklen_t len = sizeof(initmsg);
+      int32_t total_needed = stream+16;
+
+      memset(&initmsg, 0, sizeof(initmsg));
+      if (usrsctp_getsockopt(mMasterSocket, IPPROTO_SCTP, SCTP_INITMSG, &initmsg, &len) < 0) {
+        LOG(("*** failed getsockopt SCTP_INITMSG"));
+        goto request_error_cleanup;
+      }
+      LOG(("Setting number of SCTP streams to %u, was %u/%u", total_needed,
+           initmsg.sinit_num_ostreams, initmsg.sinit_max_instreams));
+      initmsg.sinit_num_ostreams  = total_needed;
+      initmsg.sinit_max_instreams = MAX_NUM_STREAMS;
+      if (usrsctp_setsockopt(mMasterSocket, IPPROTO_SCTP, SCTP_INITMSG, &initmsg,
+                             (socklen_t)sizeof(initmsg)) < 0) {
+        LOG(("*** failed setsockopt SCTP_INITMSG, errno %d", errno));
+        goto request_error_cleanup;
+      }
+
+      int32_t old_len = mStreams.Length();
+      mStreams.AppendElements(total_needed - old_len);
+      for (int32_t i = old_len; i < total_needed; ++i) {
+        mStreams[i] = nullptr;
+      }
+    }
+    // else if state is CONNECTING, we'll just re-negotiate when OpenFinish
+    // is called, if needed
+    queue = true;
   }
+  if (queue) {
+    LOG(("Queuing channel %p (%u) to finish open", channel.get(), stream));
+    // Also serves to mark we told the app
+    channel->mFlags |= DATA_CHANNEL_FLAGS_FINISH_OPEN;
+    channel->AddRef(); // we need a ref for the nsDeQue and one to return
+    mPending.Push(channel);
+    return channel.forget();
+  }
+
+  MOZ_ASSERT(stream != INVALID_STREAM);
+  // just allocated (& OPEN), or externally negotiated
+  mStreams[stream] = channel; // holds a reference
+  channel->mStream = stream;
 
 #ifdef TEST_QUEUED_DATA
   // It's painful to write a test for this...
@@ -1970,6 +2012,21 @@ DataChannelConnection::OpenFinish(already_AddRefed<DataChannel> aChannel)
                             channel));
 
   return channel.forget();
+
+request_error_cleanup:
+  channel->mState = CLOSED;
+  if (channel->mFlags & DATA_CHANNEL_FLAGS_FINISH_OPEN) {
+    // We already returned the channel to the app.
+    NS_ERROR("Failed to request more streams");
+    NS_DispatchToMainThread(new DataChannelOnMessageAvailable(
+                              DataChannelOnMessageAvailable::ON_CHANNEL_CLOSED, this,
+                              channel));
+    return channel.forget();
+  }
+  // we'll be destroying the channel, but it never really got set up
+  // Alternative would be to RUN_ON_THREAD(channel.forget(),::Destroy,...) and
+  // Dispatch it to ourselves
+  return nullptr;
 }
 
 int32_t

@@ -791,7 +791,7 @@ abstract public class GeckoApp
             } else if (event.equals("Accessibility:Event")) {
                 GeckoAccessibility.sendAccessibilityEvent(message);
             } else if (event.equals("Accessibility:Ready")) {
-                GeckoAccessibility.updateAccessibilitySettings();
+                GeckoAccessibility.updateAccessibilitySettings(this);
             } else if (event.equals("Shortcut:Remove")) {
                 final String url = message.getString("url");
                 final String origin = message.getString("origin");
@@ -1903,7 +1903,7 @@ abstract public class GeckoApp
         GeckoScreenOrientationListener.getInstance().start();
 
         // User may have enabled/disabled accessibility.
-        GeckoAccessibility.updateAccessibilitySettings();
+        GeckoAccessibility.updateAccessibilitySettings(this);
 
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override

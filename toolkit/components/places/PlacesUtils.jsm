@@ -1163,121 +1163,6 @@ this.PlacesUtils = {
   },
 
   /**
-   * Import bookmarks from a JSON string.
-   * Note: any item annotated with "places/excludeFromBackup" won't be removed
-   *       before executing the restore.
-   * 
-   * @param aString
-   *        JSON string of serialized bookmark data.
-   * @param aReplace
-   *        Boolean if true, replace existing bookmarks, else merge.
-   */
-  restoreBookmarksFromJSONString:
-  function PU_restoreBookmarksFromJSONString(aString, aReplace) {
-    // convert string to JSON
-    var nodes = this.unwrapNodes(aString, this.TYPE_X_MOZ_PLACE_CONTAINER);
-
-    if (nodes.length == 0 || !nodes[0].children ||
-        nodes[0].children.length == 0)
-      return; // nothing to restore
-
-    // ensure tag folder gets processed last
-    nodes[0].children.sort(function sortRoots(aNode, bNode) {
-      return (aNode.root && aNode.root == "tagsFolder") ? 1 :
-              (bNode.root && bNode.root == "tagsFolder") ? -1 : 0;
-    });
-
-    var batch = {
-      nodes: nodes[0].children,
-      runBatched: function restore_runBatched() {
-        if (aReplace) {
-          // Get roots excluded from the backup, we will not remove them
-          // before restoring.
-          var excludeItems = PlacesUtils.annotations.getItemsWithAnnotation(
-            PlacesUtils.EXCLUDE_FROM_BACKUP_ANNO
-          );
-          // delete existing children of the root node, excepting:
-          // 1. special folders: delete the child nodes
-          // 2. tags folder: untag via the tagging api
-          var query = PlacesUtils.history.getNewQuery();
-          query.setFolders([PlacesUtils.placesRootId], 1);
-          var options = PlacesUtils.history.getNewQueryOptions();
-          options.expandQueries = false;
-          var root = PlacesUtils.history.executeQuery(query, options).root;
-          root.containerOpen = true;
-          var childIds = [];
-          for (var i = 0; i < root.childCount; i++) {
-            var childId = root.getChild(i).itemId;
-            if (excludeItems.indexOf(childId) == -1 &&
-                childId != PlacesUtils.tagsFolderId)
-              childIds.push(childId);
-          }
-          root.containerOpen = false;
-
-          for (var i = 0; i < childIds.length; i++) {
-            var rootItemId = childIds[i];
-            if (PlacesUtils.isRootItem(rootItemId))
-              PlacesUtils.bookmarks.removeFolderChildren(rootItemId);
-            else
-              PlacesUtils.bookmarks.removeItem(rootItemId);
-          }
-        }
-
-        var searchIds = [];
-        var folderIdMap = [];
-
-        this.nodes.forEach(function(node) {
-          if (!node.children || node.children.length == 0)
-            return; // nothing to restore for this root
-
-          if (node.root) {
-            var container = this.placesRootId; // default to places root
-            switch (node.root) {
-              case "bookmarksMenuFolder":
-                container = this.bookmarksMenuFolderId;
-                break;
-              case "tagsFolder":
-                container = this.tagsFolderId;
-                break;
-              case "unfiledBookmarksFolder":
-                container = this.unfiledBookmarksFolderId;
-                break;
-              case "toolbarFolder":
-                container = this.toolbarFolderId;
-                break;
-            }
- 
-            // insert the data into the db
-            node.children.forEach(function(child) {
-              var index = child.index;
-              var [folders, searches] = this.importJSONNode(child, container, index, 0);
-              for (var i = 0; i < folders.length; i++) {
-                if (folders[i])
-                  folderIdMap[i] = folders[i];
-              }
-              searchIds = searchIds.concat(searches);
-            }, this);
-          }
-          else {
-            this.importJSONNode(node, this.placesRootId, node.index, 0);
-          }
-        }, PlacesUtils);
-
-        // fixup imported place: uris that contain folders
-        searchIds.forEach(function(aId) {
-          var oldURI = this.bookmarks.getBookmarkURI(aId);
-          var uri = this._fixupQuery(this.bookmarks.getBookmarkURI(aId),
-                                     folderIdMap);
-          if (!uri.equals(oldURI))
-            this.bookmarks.changeBookmarkURI(aId, uri);
-        }, PlacesUtils);
-      }
-    };
-
-    this.bookmarks.runInBatchMode(batch, null);
-  },
-
-  /**
    * Takes a JSON-serialized node and inserts it into the db.
    *
    * @param   aData
@@ -1420,25 +1305,6 @@ this.PlacesUtils = {
     }
 
     return [folderIdMap, searchIds];
-  },
-
-  /**
-   * Replaces imported folder ids with their local counterparts in a place: URI.
-   *
-   * @param   aURI
-   *          A place: URI with folder ids.
-   * @param   aFolderIdMap
-   *          An array mapping old folder id to new folder ids.
-   * @returns the fixed up URI if all matched. If some matched, it returns
-   *          the URI with only the matching folders included. If none matched it
-   *          returns the input URI unchanged.
-   */
-  _fixupQuery: function PU__fixupQuery(aQueryURI, aFolderIdMap) {
-    function convert(str, p1, offset, s) {
-      return "folder=" + aFolderIdMap[p1];
-    }
-    var stringURI = aQueryURI.spec.replace(/folder=([0-9]+)/g, convert);
-    return this._uri(stringURI);
   },
 
   /**
@@ -1654,13 +1520,6 @@ this.PlacesUtils = {
   },
 
   /**
-   * Serialize a JS object to JSON
-   */
-  toJSONString: function PU_toJSONString(aObj) {
-    return JSON.stringify(aObj);
-  },
-
-  /**
    * Restores bookmarks and tags from a JSON file.
    * WARNING: This method *removes* any bookmarks in the collection before
    * restoring from the file.
@@ -1670,50 +1529,11 @@ this.PlacesUtils = {
    */
   restoreBookmarksFromJSONFile:
   function PU_restoreBookmarksFromJSONFile(aFile) {
-    const RESTORE_NSIOBSERVER_DATA = "json";
+    Deprecated.warning(
+      "restoreBookmarksFromJSONFile is deprecated and will be removed in a future version",
+      "https://bugzilla.mozilla.org/show_bug.cgi?id=854388");
 
-    let failed = false;
-    Services.obs.notifyObservers(null,
-                                 this.TOPIC_BOOKMARKS_RESTORE_BEGIN,
-                                 RESTORE_NSIOBSERVER_DATA);
-
-    try {
-      // open file stream
-      var stream = Cc["@mozilla.org/network/file-input-stream;1"].
-                   createInstance(Ci.nsIFileInputStream);
-      stream.init(aFile, 0x01, 0, 0);
-      var converted = Cc["@mozilla.org/intl/converter-input-stream;1"].
-                      createInstance(Ci.nsIConverterInputStream);
-      converted.init(stream, "UTF-8", 8192,
-                     Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
-
-      // read in contents
-      var str = {};
-      var jsonStr = "";
-      while (converted.readString(8192, str) != 0)
-        jsonStr += str.value;
-      converted.close();
-
-      if (jsonStr.length == 0)
-        return; // empty file
-
-      this.restoreBookmarksFromJSONString(jsonStr, true);
-    }
-    catch (exc) {
-      failed = true;
-      Services.obs.notifyObservers(null,
-                                   this.TOPIC_BOOKMARKS_RESTORE_FAILED,
-                                   RESTORE_NSIOBSERVER_DATA);
-      Cu.reportError("Bookmarks JSON restore failed: " + exc);
-      throw exc;
-    }
-    finally {
-      if (!failed) {
-        Services.obs.notifyObservers(null,
-                                     this.TOPIC_BOOKMARKS_RESTORE_SUCCESS,
-                                     RESTORE_NSIOBSERVER_DATA);
-      }
-    }
+    BookmarkJSONUtils.importFromFile(aFile, true);
   },
 
   /**

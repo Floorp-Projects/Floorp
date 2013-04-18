@@ -593,9 +593,22 @@ SurfaceFormatForAndroidPixelFormat(android::PixelFormat aFormat)
     return FORMAT_R5G6B5;
   case android::PIXEL_FORMAT_A_8:
     return FORMAT_A8;
+  case 17: // NV21 YUV format, see http://developer.android.com/reference/android/graphics/ImageFormat.html#NV21
+    return FORMAT_B8G8R8A8; // yup, use FORMAT_B8G8R8A8 even though it's a YUV texture. This is an external texture.
   default:
     MOZ_NOT_REACHED("Unknown Android pixel format");
-    return FORMAT_B8G8R8A8;
+    return FORMAT_UNKNOWN;
+  }
+}
+
+static GLenum
+TextureTargetForAndroidPixelFormat(android::PixelFormat aFormat)
+{
+  switch (aFormat) {
+  case 17: // NV21 YUV format, see http://developer.android.com/reference/android/graphics/ImageFormat.html#NV21
+    return LOCAL_GL_TEXTURE_EXTERNAL;
+  default:
+    return LOCAL_GL_TEXTURE_2D;
   }
 }
 
@@ -615,7 +628,7 @@ GrallocTextureHostOGL::DeleteTextures()
     mGL->MakeCurrent();
     if (mGLTexture) {
       mGL->fDeleteTextures(1, &mGLTexture);
-      mGLTexture= 0;
+      mGLTexture = 0;
     }
     if (mEGLImage) {
       mGL->DestroyEGLImage(mEGLImage);
@@ -641,6 +654,7 @@ GrallocTextureHostOGL::SwapTexturesImpl(const SurfaceDescriptor& aImage,
   const SurfaceDescriptorGralloc& desc = aImage.get_SurfaceDescriptorGralloc();
   mGraphicBuffer = GrallocBufferActor::GetFrom(desc);
   mFormat = SurfaceFormatForAndroidPixelFormat(mGraphicBuffer->getPixelFormat());
+  mTextureTarget = TextureTargetForAndroidPixelFormat(mGraphicBuffer->getPixelFormat());
 
   DeleteTextures();
 }
@@ -651,7 +665,7 @@ void GrallocTextureHostOGL::BindTexture(GLenum aTextureUnit)
 
   mGL->MakeCurrent();
   mGL->fActiveTexture(aTextureUnit);
-  mGL->fBindTexture(LOCAL_GL_TEXTURE_2D, mGLTexture);
+  mGL->fBindTexture(mTextureTarget, mGLTexture);
   mGL->fActiveTexture(LOCAL_GL_TEXTURE0);
 }
 
@@ -688,11 +702,11 @@ GrallocTextureHostOGL::Lock()
     mGL->fGenTextures(1, &mGLTexture);
   }
   mGL->fActiveTexture(LOCAL_GL_TEXTURE0);
-  mGL->fBindTexture(LOCAL_GL_TEXTURE_2D, mGLTexture);
+  mGL->fBindTexture(mTextureTarget, mGLTexture);
   if (!mEGLImage) {
     mEGLImage = mGL->CreateEGLImageForNativeBuffer(mGraphicBuffer->getNativeBuffer());
   }
-  mGL->fEGLImageTargetTexture2D(LOCAL_GL_TEXTURE_2D, mEGLImage);
+  mGL->fEGLImageTargetTexture2D(mTextureTarget, mEGLImage);
   return true;
 }
 
@@ -707,20 +721,11 @@ GrallocTextureHostOGL::Unlock()
    * the GL may place read locks on it. We must ensure that we release them early enough,
    * i.e. before the next time that we will try to acquire a write lock on the same buffer,
    * because read and write locks on gralloc buffers are mutually exclusive.
-   *
-   * Unfortunately there does not seem to exist an EGL function to dissociate a gralloc
-   * buffer from a texture that it was tied to. Failing that, we achieve the same result
-   * by uploading a 1x1 dummy texture image to the same texture, replacing the existing
-   * gralloc buffer attachment.
    */
   mGL->MakeCurrent();
   mGL->fActiveTexture(LOCAL_GL_TEXTURE0);
-  mGL->fBindTexture(LOCAL_GL_TEXTURE_2D, mGLTexture);
-  mGL->fTexImage2D(LOCAL_GL_TEXTURE_2D, 0,
-                   LOCAL_GL_RGBA,
-                   1, 1, 0,
-                   LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE,
-                   nullptr);
+  mGL->fBindTexture(mTextureTarget, mGLTexture);
+  mGL->fEGLImageTargetTexture2D(mTextureTarget, mGL->GetNullEGLImage());
 }
 
 gfx::SurfaceFormat
