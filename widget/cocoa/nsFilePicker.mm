@@ -301,7 +301,7 @@ nsFilePicker::GetLocalFiles(const nsString& inTitle, bool inAllowMultiple, nsCOM
   [thePanel setCanSelectHiddenExtension:YES];
   [thePanel setCanChooseDirectories:NO];
   [thePanel setCanChooseFiles:YES];
-  [thePanel setResolvesAliases:YES];        //this is default - probably doesn't need to be set
+  [thePanel setResolvesAliases:YES]; //this is default - probably doesn't need to be set
   
   // Get filters
   // filters may be null, if we should allow all file types.
@@ -312,18 +312,20 @@ nsFilePicker::GetLocalFiles(const nsString& inTitle, bool inAllowMultiple, nsCOM
   
   // if this is the "Choose application..." dialog, and no other start
   // dir has been set, then use the Applications folder.
-  if (!theDir && filters && [filters count] == 1 && 
-      [(NSString *)[filters objectAtIndex:0] isEqualToString:@"app"]) {
-    theDir = @"/Applications/";
+  if (!theDir) {
+    if (filters && [filters count] == 1 &&
+        [(NSString *)[filters objectAtIndex:0] isEqualToString:@"app"])
+      theDir = @"/Applications/";
+    else
+      theDir = @"";
   }
+
+  [thePanel setDirectoryURL:[[NSURL alloc] initFileURLWithPath:theDir isDirectory:YES]];
 
   int result;
   nsCocoaUtils::PrepareForNativeAppModalDialog();
   if (mFilters.Length() > 1) {
     // [NSURL initWithString:] (below) throws an exception if URLString is nil.
-    if (!theDir) {
-      theDir = @"";
-    }
 
     NSPopUpButtonObserver* observer = [[NSPopUpButtonObserver alloc] init];
 
@@ -339,7 +341,6 @@ nsFilePicker::GetLocalFiles(const nsString& inTitle, bool inAllowMultiple, nsCOM
       selector:@selector(menuChangedItem:)
       name:NSMenuWillSendActionNotification object:nil];
 
-    [thePanel setDirectoryURL:[[NSURL alloc] initWithString:theDir]];
     UpdatePanelFileTypes(thePanel, filters);
     result = [thePanel runModal];
 
@@ -350,7 +351,8 @@ nsFilePicker::GetLocalFiles(const nsString& inTitle, bool inAllowMultiple, nsCOM
     if (!filters) {
       [thePanel setTreatsFilePackagesAsDirectories:YES];
     }
-    result = [thePanel runModalForDirectory:theDir file:nil types:filters];
+    [thePanel setAllowedFileTypes:filters];
+    result = [thePanel runModal];
   }
   nsCocoaUtils::CleanUpAfterNativeAppModalDialog();
   
@@ -409,8 +411,9 @@ nsFilePicker::GetLocalFolder(const nsString& inTitle, nsIFile** outFile)
 
   // set up default directory
   NSString *theDir = PanelDefaultDirectory();
+  [thePanel setDirectoryURL:[[NSURL alloc] initFileURLWithPath:theDir isDirectory:YES]];
   nsCocoaUtils::PrepareForNativeAppModalDialog();
-  int result = [thePanel runModalForDirectory:theDir file:nil types:nil];  
+  int result = [thePanel runModal];
   nsCocoaUtils::CleanUpAfterNativeAppModalDialog();
 
   if (result == NSFileHandlingPanelCancelButton)
@@ -457,10 +460,12 @@ nsFilePicker::PutLocalFile(const nsString& inTitle, const nsString& inDefaultNam
 
   // set up default directory
   NSString *theDir = PanelDefaultDirectory();
+  [thePanel setDirectoryURL:[[NSURL alloc] initFileURLWithPath:theDir isDirectory:YES]];
 
   // load the panel
   nsCocoaUtils::PrepareForNativeAppModalDialog();
-  int result = [thePanel runModalForDirectory:theDir file:defaultFilename];
+  [thePanel setNameFieldStringValue:defaultFilename];
+  int result = [thePanel runModal];
   nsCocoaUtils::CleanUpAfterNativeAppModalDialog();
   if (result == NSFileHandlingPanelCancelButton)
     return retVal;
