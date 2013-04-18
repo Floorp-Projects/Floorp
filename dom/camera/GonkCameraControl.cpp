@@ -905,7 +905,8 @@ nsGonkCameraControl::StartRecordingImpl(StartRecordingTask* aStartRecording)
    */
   nsCOMPtr<nsIFile> filename = aStartRecording->mFolder;
   filename->AppendRelativePath(aStartRecording->mFilename);
-  mVideoFile = new DeviceStorageFile(NS_LITERAL_STRING("videos"), filename);
+  mVideoFile = new DeviceStorageFile(NS_LITERAL_STRING("videos"),
+                                     aStartRecording->mFilename);
 
   nsAutoCString nativeFilename;
   filename->GetNativePath(nativeFilename);
