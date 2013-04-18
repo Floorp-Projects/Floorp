@@ -499,6 +499,12 @@ function start() {
                       .split('\n');
   }
 
+  if (kIsWindows && !kIsWindowsVistaOrHigher) {
+    var testsToSkip = loadTextFileSynchronous('skipped_tests_winxp.txt')
+                      .replace(/\r/g, '') // convert to unix line breaks
+                      .split('\n');
+  }
+
   runTestSuite();
 }
 
