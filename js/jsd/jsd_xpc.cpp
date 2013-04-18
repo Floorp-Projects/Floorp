@@ -30,9 +30,9 @@
 
 /* XXX DOM dependency */
 #include "nsIScriptContext.h"
-#include "nsIJSContextStack.h"
 #include "SandboxPrivate.h"
 #include "nsJSPrincipals.h"
+#include "nsContentUtils.h"
 
 /*
  * defining CAUTIOUS_SCRIPTHOOK makes jsds disable GC while calling out to the
@@ -2037,14 +2037,8 @@ jsdStackFrame::Eval (const nsAString &bytes, const nsACString &fileName,
     estate = JS_SaveExceptionState (cx);
     JS_ClearPendingException (cx);
 
-    nsresult rv;
-    nsCOMPtr<nsIJSContextStack> stack = do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
-    if (NS_SUCCEEDED(rv))
-        rv = stack->Push(cx);
-    if (NS_FAILED(rv)) {
-        JS_RestoreExceptionState (cx, estate);
-        return rv;
-    }
+    nsCxPusher pusher;
+    pusher.Push(cx);
 
     *_rval = JSD_AttemptUCScriptInStackFrame (mCx, mThreadState,
                                               mStackFrameInfo,
@@ -2059,14 +2053,6 @@ jsdStackFrame::Eval (const nsAString &bytes, const nsACString &fileName,
     }
 
     JS_RestoreExceptionState (cx, estate);
-
-#ifdef DEBUG
-    JSContext* poppedCX;
-    rv = stack->Pop(&poppedCX);
-    NS_ASSERTION(NS_SUCCEEDED(rv) && poppedCX == cx, "bad pop");
-#else
-    (void) stack->Pop(nullptr);
-#endif
 
     JSDValue *jsdv = JSD_NewValue (mCx, jv);
     if (!jsdv)
@@ -3021,35 +3007,23 @@ jsdService::EnterNestedEventLoop (jsdINestCallback *callback, uint32_t *_rval)
 {
     // Nesting event queues is a thing of the past.  Now, we just spin the
     // current event loop.
- 
-    nsresult rv;
-    nsCOMPtr<nsIJSContextStack> 
-        stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv));
-    if (NS_FAILED(rv))
-        return rv;
+    nsresult rv = NS_OK;
+    nsCxPusher pusher;
+    pusher.PushNull();
     uint32_t nestLevel = ++mNestedLoopLevel;
-    
     nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
 
-    if (NS_SUCCEEDED(stack->Push(nullptr))) {
-        if (callback) {
-            DoPause(nullptr, true);
-            rv = callback->OnNest();
-            DoUnPause(nullptr, true);
-        }
-        
-        while (NS_SUCCEEDED(rv) && mNestedLoopLevel >= nestLevel) {
-            if (!NS_ProcessNextEvent(thread))
-                rv = NS_ERROR_UNEXPECTED;
-        }
-
-        JSContext* cx;
-        stack->Pop(&cx);
-        NS_ASSERTION(cx == nullptr, "JSContextStack mismatch");
+    if (callback) {
+        DoPause(nullptr, true);
+        rv = callback->OnNest();
+        DoUnPause(nullptr, true);
     }
-    else
-        rv = NS_ERROR_FAILURE;
-    
+
+    while (NS_SUCCEEDED(rv) && mNestedLoopLevel >= nestLevel) {
+        if (!NS_ProcessNextEvent(thread))
+            rv = NS_ERROR_UNEXPECTED;
+    }
+
     NS_ASSERTION (mNestedLoopLevel <= nestLevel,
                   "nested event didn't unwind properly");
     if (mNestedLoopLevel == nestLevel)
