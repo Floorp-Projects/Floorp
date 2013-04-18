@@ -220,10 +220,6 @@ public:
       mStartJSSampling = true;
     }
   }
-  void jsOperationCallback() {
-    if (mStartJSSampling)
-      enableJSSampling();
-  }
   void disableJSSampling() {
     mStartJSSampling = false;
     if (mRuntime)
