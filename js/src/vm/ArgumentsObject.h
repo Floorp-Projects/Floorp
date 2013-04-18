@@ -123,6 +123,8 @@ class ArgumentsObject : public JSObject
      */
     static ArgumentsObject *createUnexpected(JSContext *cx, StackIter &iter);
     static ArgumentsObject *createUnexpected(JSContext *cx, AbstractFramePtr frame);
+    static ArgumentsObject *createForIon(JSContext *cx, ion::IonJSFrameLayout *frame,
+                                         HandleObject scopeChain);
 
     /*
      * Return the initial length of the arguments.  This may differ from the
@@ -202,6 +204,8 @@ class ArgumentsObject : public JSObject
     }
 
     static void MaybeForwardToCallObject(AbstractFramePtr frame, JSObject *obj, ArgumentsData *data);
+    static void MaybeForwardToCallObject(ion::IonJSFrameLayout *frame, HandleObject callObj,
+                                         JSObject *obj, ArgumentsData *data);
 };
 
 class NormalArgumentsObject : public ArgumentsObject

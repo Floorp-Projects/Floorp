@@ -251,10 +251,13 @@ class BaselineFrame
     bool heavyweightFunPrologue(JSContext *cx);
     bool initFunctionScopeObjects(JSContext *cx);
 
-    void initArgsObj(ArgumentsObject &argsobj) {
-        JS_ASSERT(script()->needsArgsObj());
+    void initArgsObjUnchecked(ArgumentsObject &argsobj) {
         flags_ |= HAS_ARGS_OBJ;
         argsObj_ = &argsobj;
+    }
+    void initArgsObj(ArgumentsObject &argsobj) {
+        JS_ASSERT(script()->needsArgsObj());
+        initArgsObjUnchecked(argsobj);
     }
     bool hasArgsObj() const {
         return flags_ & HAS_ARGS_OBJ;
