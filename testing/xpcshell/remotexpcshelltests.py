@@ -155,6 +155,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
                         self.device.pushFile(os.path.join(dir, info.filename), remoteFile)
             finally:
                 shutil.rmtree(dir)
+            return
 
         for file in os.listdir(self.localLib):
             if (file.endswith(".so")):
