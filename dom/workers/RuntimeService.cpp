@@ -99,7 +99,8 @@ MOZ_STATIC_ASSERT(MAX_WORKERS_PER_DOMAIN >= 1,
     }                                                                          \
                                                                                \
     if (!workers.IsEmpty()) {                                                  \
-      AutoSafeJSContext cx;                                                    \
+      SafeAutoJSContext cx;                                                    \
+      JSAutoRequest ar(cx);                                                    \
       for (uint32_t index = 0; index < workers.Length(); index++) {            \
         workers[index]-> _func (cx, __VA_ARGS__);                              \
       }                                                                        \
@@ -1155,7 +1156,8 @@ RuntimeService::Cleanup()
         currentThread = NS_GetCurrentThread();
         NS_ASSERTION(currentThread, "This should never be null!");
 
-        AutoSafeJSContext cx;
+        SafeAutoJSContext cx;
+        JSAutoRequest ar(cx);
 
         for (uint32_t index = 0; index < workers.Length(); index++) {
           if (!workers[index]->Kill(cx)) {
@@ -1427,64 +1429,4 @@ RuntimeService::Observe(nsISupports* aSubject, const char* aTopic,
 
   NS_NOTREACHED("Unknown observer topic!");
   return NS_OK;
-}
-
-RuntimeService::AutoSafeJSContext::AutoSafeJSContext(JSContext* aCx)
-: mContext(aCx ? aCx : GetSafeContext())
-{
-  AssertIsOnMainThread();
-
-  if (mContext) {
-    nsIThreadJSContextStack* stack = nsContentUtils::ThreadJSContextStack();
-    NS_ASSERTION(stack, "This should never be null!");
-
-    if (NS_FAILED(stack->Push(mContext))) {
-      NS_ERROR("Couldn't push safe JSContext!");
-      mContext = nullptr;
-      return;
-    }
-
-    JS_BeginRequest(mContext);
-  }
-}
-
-RuntimeService::AutoSafeJSContext::~AutoSafeJSContext()
-{
-  AssertIsOnMainThread();
-
-  if (mContext) {
-    JS_ReportPendingException(mContext);
-
-    JS_EndRequest(mContext);
-
-    nsIThreadJSContextStack* stack = nsContentUtils::ThreadJSContextStack();
-    NS_ASSERTION(stack, "This should never be null!");
-
-    JSContext* cx;
-    if (NS_FAILED(stack->Pop(&cx))) {
-      NS_ERROR("Failed to pop safe context!");
-    }
-    if (cx != mContext) {
-      NS_ERROR("Mismatched context!");
-    }
-  }
-}
-
-// static
-JSContext*
-RuntimeService::AutoSafeJSContext::GetSafeContext()
-{
-  AssertIsOnMainThread();
-
-  nsIThreadJSContextStack* stack = nsContentUtils::ThreadJSContextStack();
-  NS_ASSERTION(stack, "This should never be null!");
-
-  JSContext* cx = stack->GetSafeJSContext();
-  if (!cx) {
-    NS_ERROR("Couldn't get safe JSContext!");
-    return nullptr;
-  }
-
-  NS_ASSERTION(!JS_IsExceptionPending(cx), "Already has an exception?!");
-  return cx;
 }

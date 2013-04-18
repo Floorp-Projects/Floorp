@@ -77,6 +77,7 @@ using mozilla::MutexAutoLock;
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
 using mozilla::dom::workers::exceptions::ThrowDOMExceptionForNSResult;
+using mozilla::SafeAutoJSContext;
 
 USING_WORKERS_NAMESPACE
 using namespace mozilla::dom::workers::events;
@@ -627,7 +628,8 @@ public:
   {
     AssertIsOnMainThread();
 
-    RuntimeService::AutoSafeJSContext cx;
+    SafeAutoJSContext cx;
+    JSAutoRequest ar(cx);
 
     mFinishedWorker->Finish(cx);
 
@@ -2365,7 +2367,7 @@ WorkerPrivateParent<Derived>::ParentJSContext() const
 
     if (!mScriptContext) {
       NS_ASSERTION(!mParentJSContext, "Shouldn't have a parent context!");
-      return RuntimeService::AutoSafeJSContext::GetSafeContext();
+      return nsContentUtils::GetSafeJSContext();
     }
 
     NS_ASSERTION(mParentJSContext == mScriptContext->GetNativeContext(),
