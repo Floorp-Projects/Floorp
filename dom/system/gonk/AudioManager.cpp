@@ -154,11 +154,17 @@ AudioManager::Observe(nsISupports* aSubject,
                                             AUDIO_POLICY_DEVICE_STATE_AVAILABLE, address);
       AudioSystem::setDeviceConnectionState(AUDIO_DEVICE_IN_BLUETOOTH_SCO_HEADSET,
                                             AUDIO_POLICY_DEVICE_STATE_AVAILABLE, address);
+      SetForceForUse(nsIAudioManager::USE_COMMUNICATION, nsIAudioManager::FORCE_BT_SCO);
     } else {
       AudioSystem::setDeviceConnectionState(AUDIO_DEVICE_OUT_BLUETOOTH_SCO_HEADSET,
                                             AUDIO_POLICY_DEVICE_STATE_UNAVAILABLE, "");
       AudioSystem::setDeviceConnectionState(AUDIO_DEVICE_IN_BLUETOOTH_SCO_HEADSET,
                                             AUDIO_POLICY_DEVICE_STATE_UNAVAILABLE, "");
+      // only force to none if the current force setting is bt_sco
+      int32_t force;
+      GetForceForUse(nsIAudioManager::USE_COMMUNICATION, &force);
+      if (force == nsIAudioManager::FORCE_BT_SCO)
+        SetForceForUse(nsIAudioManager::USE_COMMUNICATION, nsIAudioManager::FORCE_NONE);
     }
 
     return NS_OK;
