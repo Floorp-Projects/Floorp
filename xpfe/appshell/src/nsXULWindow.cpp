@@ -37,7 +37,6 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIIOService.h"
-#include "nsIJSContextStack.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIObserverService.h"
 #include "nsIWindowMediator.h"
@@ -360,16 +359,14 @@ NS_IMETHODIMP nsXULWindow::ShowModal()
   mContinueModalLoop = true;
   EnableParent(false);
 
-  nsCOMPtr<nsIJSContextStack> stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1"));
-  if (stack && NS_SUCCEEDED(stack->Push(nullptr))) {
+  {
+    nsCxPusher pusher;
+    pusher.PushNull();
     nsIThread *thread = NS_GetCurrentThread();
     while (mContinueModalLoop) {
       if (!NS_ProcessNextEvent(thread))
         break;
     }
-    JSContext* cx;
-    stack->Pop(&cx);
-    NS_ASSERTION(cx == nullptr, "JSContextStack mismatch");
   }
 
   mContinueModalLoop = false;
@@ -1815,17 +1812,15 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(int32_t aChromeFlags,
   xulWin->LockUntilChromeLoad();
 
   // Push nullptr onto the JSContext stack before we dispatch a native event.
-  nsCOMPtr<nsIJSContextStack> stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1"));
-  if (stack && NS_SUCCEEDED(stack->Push(nullptr))) {
+  {
+    nsCxPusher pusher;
+    pusher.PushNull();
     nsIThread *thread = NS_GetCurrentThread();
     while (xulWin->IsLocked()) {
       if (!NS_ProcessNextEvent(thread))
         break;
     }
-    JSContext *cx;
-    stack->Pop(&cx);
-    NS_ASSERTION(cx == nullptr, "JSContextStack mismatch");
-  }
+ }
 
   NS_ENSURE_STATE(xulWin->mPrimaryContentShell);
 

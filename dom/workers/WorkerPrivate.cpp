@@ -1600,7 +1600,7 @@ WorkerRunnable::Run()
 {
   JSContext* cx;
   JSObject* targetCompartmentObject;
-  nsIThreadJSContextStack* contextStack = nullptr;
+  nsCxPusher pusher;
 
   nsRefPtr<WorkerPrivate> kungFuDeathGrip;
 
@@ -1616,14 +1616,7 @@ WorkerRunnable::Run()
 
     if (!mWorkerPrivate->GetParent()) {
       AssertIsOnMainThread();
-
-      contextStack = nsContentUtils::ThreadJSContextStack();
-      NS_ASSERTION(contextStack, "This should never be null!");
-
-      if (NS_FAILED(contextStack->Push(cx))) {
-        NS_WARNING("Failed to push context!");
-        contextStack = nullptr;
-      }
+      pusher.Push(cx);
     }
   }
 
@@ -1637,19 +1630,7 @@ WorkerRunnable::Run()
   }
 
   bool result = WorkerRun(cx, mWorkerPrivate);
-
   PostRun(cx, mWorkerPrivate, result);
-
-  if (contextStack) {
-    JSContext* otherCx;
-    if (NS_FAILED(contextStack->Pop(&otherCx))) {
-      NS_WARNING("Failed to pop context!");
-    }
-    else if (otherCx != cx) {
-      NS_WARNING("Popped a different context!");
-    }
-  }
-
   return result ? NS_OK : NS_ERROR_FAILURE;
 }
 
