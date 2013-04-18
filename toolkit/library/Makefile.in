@@ -297,7 +297,7 @@ endif
 STATIC_LIBS += thebes gl ycbcr
 
 ifdef MOZ_ENABLE_GTEST
-COMPONENT_LIBS += gtest
+COMPONENT_LIBS += gtest xpcom_glue_gtest
 endif
 
 ifdef MOZ_ENABLE_PROFILER_SPS
