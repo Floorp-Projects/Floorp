@@ -69,6 +69,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=826058
     yield;
     var app = request.result;
     ok(app, "App is non-null");
+    ok(app.manifest.description == "Updated even faster than Firefox, just to annoy slashdotters.",
+       "Manifest is HTML-sanitized");
 
     // Check the app a few times.
     checkAppState(app, true, 2, continueTest);

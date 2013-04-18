@@ -24,7 +24,7 @@ var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/utf8.webapp";
 
 confirmNextInstall();
 navigator.mozApps.install(url, null).onsuccess = function onInstall() {
-  is(this.result.manifest.name, "TheBOM  ゲゴケ゚セニツ゚ヅヂチ", "manifest.name");
+  is(this.result.manifest.name, "TheBOM ゲゴケ゚セニツ゚ヅヂチ", "manifest.name");
   is(this.result.manifest.description, "This App is THE BOM, yo. ヅヂチ",
      "manifest.description");
 
