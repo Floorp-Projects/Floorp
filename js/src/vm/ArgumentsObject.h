@@ -99,9 +99,11 @@ class ArgumentsObject : public JSObject
     static const uint32_t DATA_SLOT = 1;
     static const uint32_t MAYBE_CALL_SLOT = 2;
 
+  public:
     static const uint32_t LENGTH_OVERRIDDEN_BIT = 0x1;
     static const uint32_t PACKED_BITS_COUNT = 1;
 
+  protected:
     template <typename CopyArgs>
     static ArgumentsObject *create(JSContext *cx, HandleScript script, HandleFunction callee,
                                    unsigned numActuals, CopyArgs &copy);
@@ -203,6 +205,9 @@ class ArgumentsObject : public JSObject
     /* For jit use: */
     static size_t getDataSlotOffset() {
         return getFixedSlotOffset(DATA_SLOT);
+    }
+    static size_t getInitialLengthSlotOffset() {
+        return getFixedSlotOffset(INITIAL_LENGTH_SLOT);
     }
 
     static void MaybeForwardToCallObject(AbstractFramePtr frame, JSObject *obj, ArgumentsData *data);
