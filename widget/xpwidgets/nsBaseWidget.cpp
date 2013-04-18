@@ -1442,6 +1442,9 @@ nsBaseWidget::NotifyUIStateChanged(UIStateChangeType aShowAccelerators,
     return;
 
   nsIPresShell* presShell = mWidgetListener->GetPresShell();
+  if (!presShell)
+    return;
+
   nsIDocument* doc = presShell->GetDocument();
   if (doc) {
     nsPIDOMWindow* win = doc->GetWindow();
