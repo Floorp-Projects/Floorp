@@ -3196,7 +3196,8 @@ nsCxPusher::Pop()
   // pop is the same as it was right after we pushed.
   MOZ_ASSERT_IF(mPushedContext, mCompartmentDepthOnEntry ==
                                 js::GetEnterCompartmentDepth(mPushedContext));
-
+  DebugOnly<JSContext*> stackTop;
+  MOZ_ASSERT(NS_SUCCEEDED(stack->Peek(&stackTop)) && mPushedContext == stackTop);
   stack->Pop(nullptr);
 
   if (!mScriptIsRunning && mScx) {
