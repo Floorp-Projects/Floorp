@@ -701,7 +701,9 @@ js::gc::MarkRuntime(JSTracer *trc, bool useSavedRoots)
             MarkScriptRoot(trc, &vec[i].script, "scriptAndCountsVector");
     }
 
-    if (!IS_GC_MARKING_TRACER(trc) || rt->atomsCompartment->zone()->isCollecting()) {
+    if (!trc->runtime->isHeapMinorCollecting() &&
+        (!IS_GC_MARKING_TRACER(trc) || rt->atomsCompartment->zone()->isCollecting()))
+    {
         MarkAtoms(trc);
 #ifdef JS_ION
         /* Any Ion wrappers survive until the runtime is being torn down. */
