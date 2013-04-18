@@ -120,3 +120,28 @@ BaselineInspector::expectedResultType(jsbytecode *pc)
         return MIRType_None;
     }
 }
+
+// Whether a baseline stub kind is suitable for a double comparison that
+// converts its operands to doubles.
+static bool
+CanUseDoubleCompare(ICStub::Kind kind)
+{
+    return kind == ICStub::Compare_Double || kind == ICStub::Compare_NumberWithUndefined;
+}
+
+MCompare::CompareType
+BaselineInspector::expectedCompareType(jsbytecode *pc)
+{
+    ICStub::Kind kind = monomorphicStubKind(pc);
+
+    if (CanUseDoubleCompare(kind))
+        return MCompare::Compare_Double;
+
+    ICStub::Kind first, second;
+    if (dimorphicStubKind(pc, &first, &second)) {
+        if (CanUseDoubleCompare(first) && CanUseDoubleCompare(second))
+            return MCompare::Compare_Double;
+    }
+
+    return MCompare::Compare_Unknown;
+}
