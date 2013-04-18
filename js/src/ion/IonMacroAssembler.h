@@ -779,7 +779,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     void spsPushFrame(SPSProfiler *p, const Address &str, const Address &script,
-                      Register temp, Register temp2)
+                      Register framePtr, Register temp, Register temp2)
     {
         Label stackFull;
         spsProfileEntryAddress(p, 0, temp, &stackFull);
@@ -790,7 +790,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         loadPtr(script, temp2);
         storePtr(temp2, Address(temp, ProfileEntry::offsetOfScript()));
 
-        storePtr(ImmWord((void*) 0), Address(temp, ProfileEntry::offsetOfStackAddress()));
+        storePtr(framePtr, Address(temp, ProfileEntry::offsetOfStackAddress()));
 
         // Store 0 for PCIdx because that's what interpreter does.
         // (See Probes::enterScript, which calls spsProfiler.enter, which pushes an entry
