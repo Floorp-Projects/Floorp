@@ -18,6 +18,8 @@
 #include "vm/Stack-inl.h"
 #include "vm/ArgumentsObject-inl.h"
 
+#include "ion/IonFrames.h"
+
 using namespace js;
 using namespace js::gc;
 
@@ -45,11 +47,26 @@ CopyStackFrameArguments(const AbstractFramePtr frame, HeapValue *dst)
 }
 
 /* static */ void
-ArgumentsObject::MaybeForwardToCallObject(AbstractFramePtr frame, JSObject *obj, ArgumentsData *data)
+ArgumentsObject::MaybeForwardToCallObject(AbstractFramePtr frame, JSObject *obj,
+                                          ArgumentsData *data)
 {
     RawScript script = frame.script();
     if (frame.fun()->isHeavyweight() && script->argsObjAliasesFormals()) {
         obj->initFixedSlot(MAYBE_CALL_SLOT, ObjectValue(frame.callObj()));
+        for (AliasedFormalIter fi(script); fi; fi++)
+            data->args[fi.frameIndex()] = MagicValue(JS_FORWARD_TO_CALL_OBJECT);
+    }
+}
+
+/* static */ void
+ArgumentsObject::MaybeForwardToCallObject(ion::IonJSFrameLayout *frame, HandleObject callObj,
+                                          JSObject *obj, ArgumentsData *data)
+{
+    RawFunction callee = ion::CalleeTokenToFunction(frame->calleeToken());
+    RawScript script = callee->nonLazyScript();
+    if (callee->isHeavyweight() && script->argsObjAliasesFormals()) {
+        JS_ASSERT(callObj && callObj->isCall());
+        obj->initFixedSlot(MAYBE_CALL_SLOT, ObjectValue(*callObj.get()));
         for (AliasedFormalIter fi(script); fi; fi++)
             data->args[fi.frameIndex()] = MagicValue(JS_FORWARD_TO_CALL_OBJECT);
     }
@@ -73,6 +90,34 @@ struct CopyFrameArgs
      */
     void maybeForwardToCallObject(JSObject *obj, ArgumentsData *data) {
         ArgumentsObject::MaybeForwardToCallObject(frame_, obj, data);
+    }
+};
+
+struct CopyIonJSFrameArgs
+{
+    ion::IonJSFrameLayout *frame_;
+    HandleObject callObj_;
+
+    CopyIonJSFrameArgs(ion::IonJSFrameLayout *frame, HandleObject callObj)
+      : frame_(frame), callObj_(callObj)
+    { }
+
+    void copyArgs(JSContext *, HeapValue *dst) const {
+        unsigned numActuals = frame_->numActualArgs();
+
+        /* Copy all arguments. */
+        Value *src = frame_->argv() + 1;  /* +1 to skip this. */
+        Value *end = src + numActuals;
+        while (src != end)
+            (dst++)->init(*src++);
+    }
+
+    /*
+     * If a call object exists and the arguments object aliases formals, the
+     * call object is the canonical location for formals.
+     */
+    void maybeForwardToCallObject(JSObject *obj, ArgumentsData *data) {
+        ArgumentsObject::MaybeForwardToCallObject(frame_, callObj_, obj, data);
     }
 };
 
@@ -206,6 +251,18 @@ ArgumentsObject::createUnexpected(JSContext *cx, AbstractFramePtr frame)
     RootedFunction callee(cx, frame.callee());
     CopyFrameArgs copy(frame);
     return create(cx, script, callee, frame.numActualArgs(), copy);
+}
+
+ArgumentsObject *
+ArgumentsObject::createForIon(JSContext *cx, ion::IonJSFrameLayout *frame, HandleObject scopeChain)
+{
+    ion::CalleeToken token = frame->calleeToken();
+    JS_ASSERT(ion::CalleeTokenIsFunction(token));
+    RootedScript script(cx, ion::ScriptFromCalleeToken(token));
+    RootedFunction callee(cx, ion::CalleeTokenToFunction(token));
+    RootedObject callObj(cx, scopeChain->isCall() ? scopeChain.get() : NULL);
+    CopyIonJSFrameArgs copy(frame, callObj);
+    return create(cx, script, callee, frame->numActualArgs(), copy);
 }
 
 static JSBool

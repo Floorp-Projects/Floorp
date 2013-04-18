@@ -447,7 +447,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
                 bool invalidate, BaselineStackBuilder &builder,
                 MutableHandleFunction nextCallee, jsbytecode **callPC)
 {
-    uint32_t exprStackSlots = iter.slots() - (script->nfixed + CountArgSlots(fun));
+    uint32_t exprStackSlots = iter.slots() - (script->nfixed + CountArgSlots(script, fun));
 
     builder.resetFramePushed();
 
@@ -508,15 +508,25 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
         flags |= BaselineFrame::HAS_PUSHED_SPS_FRAME;
     }
 
-    // Initialize BaselineFrame::scopeChain
+    // Initialize BaselineFrame's scopeChain and argsObj
     JSObject *scopeChain = NULL;
+    ArgumentsObject *argsObj = NULL;
     BailoutKind bailoutKind = iter.bailoutKind();
     if (bailoutKind == Bailout_ArgumentCheck) {
         // Temporary hack -- skip the (unused) scopeChain, because it could be
         // bogus (we can fail before the scope chain slot is set). Strip the
-        // hasScopeChain flag and we'll check this later to run prologue().
+        // hasScopeChain flag and this will be fixed up later in |FinishBailoutToBaseline|,
+        // which calls |EnsureHasScopeObjects|.
         IonSpew(IonSpew_BaselineBailouts, "      Bailout_ArgumentCheck! (no valid scopeChain)");
         iter.skip();
+
+        // Scripts with |argumentsHasVarBinding| have an extra slot.
+        if (script->argumentsHasVarBinding()) {
+            IonSpew(IonSpew_BaselineBailouts,
+                    "      Bailout_ArgumentCheck for script with argumentsHasVarBinding!"
+                    "Using empty arguments object");
+            iter.skip();
+        }
     } else {
         Value v = iter.read();
         if (v.isObject()) {
@@ -544,9 +554,19 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
                 scopeChain = &(script->global());
             }
         }
+
+        // If script maybe has an arguments object, the second slot will hold it.
+        if (script->argumentsHasVarBinding()) {
+            v = iter.read();
+            JS_ASSERT(v.isObject() || v.isUndefined());
+            if (v.isObject())
+                argsObj = &v.toObject().asArguments();
+        }
     }
     IonSpew(IonSpew_BaselineBailouts, "      ScopeChain=%p", scopeChain);
     blFrame->setScopeChain(scopeChain);
+    if (argsObj)
+        blFrame->initArgsObjUnchecked(*argsObj);
     // Do not need to initialize scratchValue or returnValue fields in BaselineFrame.
 
     // No flags are set.
@@ -566,7 +586,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
         size_t thisvOffset = builder.framePushed() + IonJSFrameLayout::offsetOfThis();
         *builder.valuePointerAtStackOffset(thisvOffset) = thisv;
 
-        JS_ASSERT(iter.slots() >= CountArgSlots(fun));
+        JS_ASSERT(iter.slots() >= CountArgSlots(script, fun));
         IonSpew(IonSpew_BaselineBailouts, "      frame slots %u, nargs %u, nfixed %u",
                 iter.slots(), fun->nargs, script->nfixed);
 
@@ -1190,19 +1210,26 @@ ion::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
 
         if (iter.isBaselineJS()) {
             BaselineFrame *frame = iter.baselineFrame();
-            JS_ASSERT(!frame->hasArgsObj());
 
-            if (frame->script()->needsArgsObj()) {
-                ArgumentsObject *argsobj = ArgumentsObject::createExpected(cx, frame);
-                if (!argsobj)
-                    return false;
+            // If the frame doesn't even have a scope chain set yet, then it's resuming
+            // into the the prologue before the scope chain is initialized.  Any
+            // necessary args object will also be initialized there.
+            if (frame->scopeChain() && frame->script()->needsArgsObj()) {
+                ArgumentsObject *argsObj;
+                if (frame->hasArgsObj()) {
+                    argsObj = &frame->argsObj();
+                } else {
+                    argsObj = ArgumentsObject::createExpected(cx, frame);
+                    if (!argsObj)
+                        return false;
+                }
 
                 // The arguments is a local binding and needsArgsObj does not
                 // check if it is clobbered. Ensure that the local binding
                 // restored during bailout before storing the arguments object
                 // to the slot.
                 RootedScript script(cx, frame->script());
-                SetFrameArgumentsObject(cx, frame, script, argsobj);
+                SetFrameArgumentsObject(cx, frame, script, argsObj);
             }
 
             if (frameno == 0)
