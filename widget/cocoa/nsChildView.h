@@ -103,6 +103,19 @@ class GLManager;
 
 @end
 
+@interface NSView (Undocumented)
+
+// Returns an NSRect that is the bounding box for all an NSView's dirty
+// rectangles (ones that need to be redrawn).  The full list of dirty
+// rectangles can be obtained by calling -[NSView _dirtyRegion] and then
+// calling -[NSRegion getRects:count:] on what it returns.  Both these
+// methods have been present in the same form since at least OS X 10.5.
+// Unlike -[NSView getRectsBeingDrawn:count:], these methods can be called
+// outside a call to -[NSView drawRect:].
+- (NSRect)_dirtyRect;
+
+@end
+
 // Support for pixel scroll deltas, not part of NSEvent.h
 // See http://lists.apple.com/archives/cocoa-dev/2007/Feb/msg00050.html
 @interface NSEvent (DeviceDelta)
@@ -297,6 +310,8 @@ typedef NSInteger NSEventGestureAxis;
 - (void)handleMouseMoved:(NSEvent*)aEvent;
 
 - (void)updateWindowDraggableStateOnMouseMove:(NSEvent*)theEvent;
+
+- (void)maybeDrawInTitlebar;
 
 - (void)drawRect:(NSRect)aRect inTitlebarContext:(CGContextRef)aContext;
 
@@ -531,6 +546,8 @@ public:
   nsCocoaWindow*    GetXULWindowWidget();
 
   NS_IMETHOD        ReparentNativeWidget(nsIWidget* aNewParent);
+
+  CGContextRef      GetCGContextForTitlebarDrawing(NSSize aSize);
 
   virtual void      WillPaint() MOZ_OVERRIDE;
 
