@@ -1284,7 +1284,6 @@ RuntimeService::CancelWorkersForWindow(JSContext* aCx,
   GetWorkersForWindow(aWindow, workers);
 
   if (!workers.IsEmpty()) {
-    AutoSafeJSContext cx(aCx);
     for (uint32_t index = 0; index < workers.Length(); index++) {
       if (!workers[index]->Cancel(aCx)) {
         NS_WARNING("Failed to cancel worker!");
@@ -1303,7 +1302,6 @@ RuntimeService::SuspendWorkersForWindow(JSContext* aCx,
   GetWorkersForWindow(aWindow, workers);
 
   if (!workers.IsEmpty()) {
-    AutoSafeJSContext cx(aCx);
     for (uint32_t index = 0; index < workers.Length(); index++) {
       if (!workers[index]->Suspend(aCx)) {
         NS_WARNING("Failed to cancel worker!");
@@ -1322,7 +1320,6 @@ RuntimeService::ResumeWorkersForWindow(JSContext* aCx,
   GetWorkersForWindow(aWindow, workers);
 
   if (!workers.IsEmpty()) {
-    AutoSafeJSContext cx(aCx);
     for (uint32_t index = 0; index < workers.Length(); index++) {
       if (!workers[index]->Resume(aCx)) {
         NS_WARNING("Failed to cancel worker!");
