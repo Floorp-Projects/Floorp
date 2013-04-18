@@ -1014,22 +1014,24 @@ class ObjectElements
       : flags(0), initializedLength(0), capacity(capacity), length(length)
     {}
 
-    HeapSlot *elements() { return (HeapSlot *)(uintptr_t(this) + sizeof(ObjectElements)); }
+    HeapSlot *elements() {
+        return reinterpret_cast<HeapSlot*>(uintptr_t(this) + sizeof(ObjectElements));
+    }
     static ObjectElements * fromElements(HeapSlot *elems) {
-        return (ObjectElements *)(uintptr_t(elems) - sizeof(ObjectElements));
+        return reinterpret_cast<ObjectElements*>(uintptr_t(elems) - sizeof(ObjectElements));
     }
 
     static int offsetOfFlags() {
-        return (int)offsetof(ObjectElements, flags) - (int)sizeof(ObjectElements);
+        return int(offsetof(ObjectElements, flags)) - int(sizeof(ObjectElements));
     }
     static int offsetOfInitializedLength() {
-        return (int)offsetof(ObjectElements, initializedLength) - (int)sizeof(ObjectElements);
+        return int(offsetof(ObjectElements, initializedLength)) - int(sizeof(ObjectElements));
     }
     static int offsetOfCapacity() {
-        return (int)offsetof(ObjectElements, capacity) - (int)sizeof(ObjectElements);
+        return int(offsetof(ObjectElements, capacity)) - int(sizeof(ObjectElements));
     }
     static int offsetOfLength() {
-        return (int)offsetof(ObjectElements, length) - (int)sizeof(ObjectElements);
+        return int(offsetof(ObjectElements, length)) - int(sizeof(ObjectElements));
     }
 
     static bool ConvertElementsToDoubles(JSContext *cx, uintptr_t elements);
