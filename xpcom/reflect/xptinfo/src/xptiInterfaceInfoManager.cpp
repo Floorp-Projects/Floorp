@@ -268,30 +268,32 @@ XPTInterfaceInfoManager::GetNameForIID(const nsIID * iid, char **_retval)
 static PLDHashOperator
 xpti_ArrayAppender(const char* name, xptiInterfaceEntry* entry, void* arg)
 {
-    nsCOMArray<nsIInterfaceInfo>* array = static_cast<nsCOMArray<nsIInterfaceInfo>*>(arg);
+    nsISupportsArray* array = (nsISupportsArray*) arg;
 
     nsCOMPtr<nsIInterfaceInfo> ii;
-    if (NS_SUCCEEDED(EntryToInfo(entry, getter_AddRefs(ii)))) {
-      bool scriptable = false;
-      ii->IsScriptable(&scriptable);
-      if (scriptable) {
+    if (NS_SUCCEEDED(EntryToInfo(entry, getter_AddRefs(ii))))
         array->AppendElement(ii);
-      }
-    }
     return PL_DHASH_NEXT;
 }
 
 /* nsIEnumerator enumerateInterfaces (); */
-void
-XPTInterfaceInfoManager::GetScriptableInterfaces(nsCOMArray<nsIInterfaceInfo>& aInterfaces)
+NS_IMETHODIMP
+XPTInterfaceInfoManager::EnumerateInterfaces(nsIEnumerator **_retval)
 {
     // I didn't want to incur the size overhead of using nsHashtable just to
     // make building an enumerator easier. So, this code makes a snapshot of 
     // the table using an nsISupportsArray and builds an enumerator for that.
     // We can afford this transient cost.
 
+    nsCOMPtr<nsISupportsArray> array;
+    NS_NewISupportsArray(getter_AddRefs(array));
+    if (!array)
+        return NS_ERROR_UNEXPECTED;
+
     ReentrantMonitorAutoEnter monitor(mWorkingSet.mTableReentrantMonitor);
-    mWorkingSet.mNameTable.EnumerateRead(xpti_ArrayAppender, &aInterfaces);
+    mWorkingSet.mNameTable.EnumerateRead(xpti_ArrayAppender, array);
+
+    return array->Enumerate(_retval);
 }
 
 struct ArrayAndPrefix
