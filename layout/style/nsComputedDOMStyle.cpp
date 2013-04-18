@@ -116,7 +116,8 @@ nsComputedDOMStyle::nsComputedDOMStyle(dom::Element* aElement,
 
     // There aren't any non-CSS2 pseudo-elements with a single ':'
     if (!haveTwoColons &&
-        !nsCSSPseudoElements::IsCSS2PseudoElement(mPseudo)) {
+        (!nsCSSPseudoElements::IsPseudoElement(mPseudo) ||
+         !nsCSSPseudoElements::IsCSS2PseudoElement(mPseudo))) {
       // XXXbz I'd really rather we threw an exception or something, but
       // the DOM spec sucks.
       mPseudo = nullptr;
