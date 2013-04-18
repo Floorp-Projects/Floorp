@@ -30,7 +30,6 @@
 #include "nsIScreen.h"
 #include "nsIScreenManager.h"
 #include "nsIScriptContext.h"
-#include "nsIJSContextStack.h"
 #include "nsIObserverService.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptSecurityManager.h"
@@ -65,8 +64,6 @@
 #endif
 
 using namespace mozilla;
-
-static const char *sJSStackContractID="@mozilla.org/js/xpc/ContextStack;1";
 
 /****************************************************************
  ******************** nsWatcherWindowEntry **********************
@@ -233,60 +230,6 @@ void nsWatcherWindowEnumerator::WindowRemoved(nsWatcherWindowEntry *inInfo) {
   if (mCurrentPosition == inInfo)
     mCurrentPosition = mCurrentPosition != inInfo->mYounger ?
                        inInfo->mYounger : 0;
-}
-
-/****************************************************************
- ********************** JSContextAutoPopper *********************
- ****************************************************************/
-
-class MOZ_STACK_CLASS JSContextAutoPopper {
-public:
-  JSContextAutoPopper();
-  ~JSContextAutoPopper();
-
-  nsresult   Push(JSContext *cx = nullptr);
-  JSContext *get() { return mContext; }
-
-protected:
-  nsCOMPtr<nsIThreadJSContextStack>  mService;
-  JSContext                         *mContext;
-  nsCOMPtr<nsIScriptContext>         mContextKungFuDeathGrip;
-};
-
-JSContextAutoPopper::JSContextAutoPopper() : mContext(nullptr)
-{
-}
-
-JSContextAutoPopper::~JSContextAutoPopper()
-{
-  JSContext *cx;
-  nsresult   rv;
-
-  if(mContext) {
-    rv = mService->Pop(&cx);
-    NS_ASSERTION(NS_SUCCEEDED(rv) && cx == mContext, "JSContext push/pop mismatch");
-  }
-}
-
-nsresult JSContextAutoPopper::Push(JSContext *cx)
-{
-  if (mContext) // only once
-    return NS_ERROR_FAILURE;
-
-  mService = do_GetService(sJSStackContractID);
-  if (mService) {
-    // Get the safe context if we're not provided one.
-    if (!cx) {
-      cx = mService->GetSafeJSContext();
-    }
-
-    // Save cx in mContext to indicate need to pop.
-    if (cx && NS_SUCCEEDED(mService->Push(cx))) {
-      mContext = cx;
-      mContextKungFuDeathGrip = nsJSUtils::GetDynamicScriptContext(cx);
-    }
-  }
-  return mContext ? NS_OK : NS_ERROR_FAILURE;
 }
 
 /****************************************************************
@@ -498,7 +441,7 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
   nsCOMPtr<nsIURI>                uriToLoad;        // from aUrl, if any
   nsCOMPtr<nsIDocShellTreeOwner>  parentTreeOwner;  // from the parent window, if any
   nsCOMPtr<nsIDocShellTreeItem>   newDocShellItem;  // from the new window
-  JSContextAutoPopper             callerContextGuard;
+  nsCxPusher                      callerContextGuard;
 
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = 0;
@@ -927,18 +870,23 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
 
   nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
   if (uriToLoad && aNavigate) { // get the script principal and pass it to docshell
-    JSContextAutoPopper contextGuard;
 
-    cx = GetJSContextFromCallStack();
-
-    // get the security manager
-    if (!cx)
-      cx = GetJSContextFromWindow(aParent);
+    // The historical ordering of attempts here is:
+    // (1) Stack-top cx.
+    // (2) cx associated with aParent.
+    // (3) Safe JSContext.
+    //
+    // We could just use an AutoJSContext here if it weren't for (2), which
+    // is probably nonsensical anyway. But we preserve the old semantics for
+    // now, because this is part of a large patch where we don't want to risk
+    // subtle behavioral modifications.
+    cx = nsContentUtils::GetCurrentJSContext();
+    nsCxPusher pusher;
     if (!cx) {
-      rv = contextGuard.Push();
-      if (NS_FAILED(rv))
-        return rv;
-      cx = contextGuard.get();
+      cx = GetJSContextFromWindow(aParent);
+      if (!cx)
+        cx = nsContentUtils::GetSafeJSContext();
+      pusher.Push(cx);
     }
 
     newDocShell->CreateLoadInfo(getter_AddRefs(loadInfo));
@@ -950,13 +898,9 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
 
     // Set the new window's referrer from the calling context's document:
 
-    // get the calling context off the JS context stack
-    nsCOMPtr<nsIJSContextStack> stack = do_GetService(sJSStackContractID);
-
-    JSContext* ccx = nullptr;
-
     // get its document, if any
-    if (stack && NS_SUCCEEDED(stack->Peek(&ccx)) && ccx) {
+    JSContext* ccx = nsContentUtils::GetCurrentJSContext();
+    if (ccx) {
       nsIScriptGlobalObject *sgo = nsJSUtils::GetDynamicScriptGlobal(ccx);
 
       nsCOMPtr<nsPIDOMWindow> w(do_QueryInterface(sgo));
@@ -1412,7 +1356,7 @@ nsWindowWatcher::URIfromURL(const char *aURL,
   /* build the URI relative to the calling JS Context, if any.
      (note this is the same context used to make the security check
      in nsGlobalWindow.cpp.) */
-  JSContext *cx = GetJSContextFromCallStack();
+  JSContext *cx = nsContentUtils::GetCurrentJSContext();
   if (cx) {
     nsIScriptContext *scriptcx = nsJSUtils::GetDynamicScriptContext(cx);
     if (scriptcx) {
@@ -1774,15 +1718,7 @@ nsWindowWatcher::FindItemWithName(const PRUnichar* aName,
 already_AddRefed<nsIDocShellTreeItem>
 nsWindowWatcher::GetCallerTreeItem(nsIDocShellTreeItem* aParentItem)
 {
-  nsCOMPtr<nsIJSContextStack> stack =
-    do_GetService(sJSStackContractID);
-
-  JSContext *cx = nullptr;
-
-  if (stack) {
-    stack->Peek(&cx);
-  }
-
+  JSContext *cx = nsContentUtils::GetCurrentJSContext();
   nsIDocShellTreeItem* callerItem = nullptr;
 
   if (cx) {
@@ -2158,18 +2094,6 @@ nsWindowWatcher::GetWindowTreeOwner(nsIDOMWindow *inWindow,
   GetWindowTreeItem(inWindow, getter_AddRefs(treeItem));
   if (treeItem)
     treeItem->GetTreeOwner(outTreeOwner);
-}
-
-JSContext *
-nsWindowWatcher::GetJSContextFromCallStack()
-{
-  JSContext *cx = 0;
-
-  nsCOMPtr<nsIThreadJSContextStack> cxStack(do_GetService(sJSStackContractID));
-  if (cxStack)
-    cxStack->Peek(&cx);
-
-  return cx;
 }
 
 JSContext *
