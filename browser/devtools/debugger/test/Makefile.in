@@ -97,6 +97,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_progress-listener-bug.js \
 	browser_dbg_chrome-debugging.js \
 	browser_dbg_source_maps-01.js \
+	browser_dbg_source_maps-02.js \
 	head.js \
 	helpers.js \
 	$(NULL)
