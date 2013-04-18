@@ -28,7 +28,6 @@ using mozilla::unused;
 
 #include "nsRenderingContext.h"
 #include "nsIDOMSimpleGestureEvent.h"
-#include "mozilla/dom/Touch.h"
 
 #include "nsGkAtoms.h"
 #include "nsWidgetsCID.h"
@@ -63,8 +62,10 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsBaseWidget)
 static gfxIntSize gAndroidBounds = gfxIntSize(0, 0);
 static gfxIntSize gAndroidScreenBounds;
 
+#include "mozilla/layers/AsyncPanZoomController.h"
 #include "mozilla/layers/CompositorChild.h"
 #include "mozilla/layers/CompositorParent.h"
+#include "mozilla/layers/ShadowLayersParent.h"
 #include "mozilla/Mutex.h"
 #include "nsThreadUtils.h"
 
@@ -515,7 +516,7 @@ nsWindow::IsEnabled() const
 NS_IMETHODIMP
 nsWindow::Invalidate(const nsIntRect &aRect)
 {
-    AndroidGeckoEvent *event = new AndroidGeckoEvent(AndroidGeckoEvent::DRAW, aRect);
+    AndroidGeckoEvent *event = AndroidGeckoEvent::MakeDrawEvent(aRect);
     nsAppShell::gAppShell->PostEvent(event);
     return NS_OK;
 }
@@ -1129,7 +1130,7 @@ void
 nsWindow::OnMouseEvent(AndroidGeckoEvent *ae)
 {
     uint32_t msg;
-    switch (ae->Action() & AndroidMotionEvent::ACTION_MASK) {
+    switch (ae->Action()) {
 #ifndef MOZ_ONLY_TOUCH_EVENTS
         case AndroidMotionEvent::ACTION_DOWN:
             msg = NS_MOUSE_BUTTON_DOWN;
@@ -1202,31 +1203,18 @@ bool nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)
 
     bool preventDefaultActions = false;
     bool isDownEvent = false;
-    switch (ae->Action() & AndroidMotionEvent::ACTION_MASK) {
-        case AndroidMotionEvent::ACTION_DOWN:
-        case AndroidMotionEvent::ACTION_POINTER_DOWN: {
-            nsTouchEvent event(true, NS_TOUCH_START, this);
-            preventDefaultActions = DispatchMultitouchEvent(event, ae);
-            isDownEvent = true;
-            break;
-        }
-        case AndroidMotionEvent::ACTION_MOVE: {
-            nsTouchEvent event(true, NS_TOUCH_MOVE, this);
-            preventDefaultActions = DispatchMultitouchEvent(event, ae);
-            break;
-        }
-        case AndroidMotionEvent::ACTION_UP:
-        case AndroidMotionEvent::ACTION_POINTER_UP: {
-            nsTouchEvent event(true, NS_TOUCH_END, this);
-            preventDefaultActions = DispatchMultitouchEvent(event, ae);
-            break;
-        }
-        case AndroidMotionEvent::ACTION_OUTSIDE:
-        case AndroidMotionEvent::ACTION_CANCEL: {
-            nsTouchEvent event(true, NS_TOUCH_CANCEL, this);
-            preventDefaultActions = DispatchMultitouchEvent(event, ae);
-            break;
-        }
+
+    nsTouchEvent event = ae->MakeTouchEvent(this);
+    if (event.message != NS_EVENT_NULL) {
+        nsEventStatus status;
+        DispatchEvent(&event, status);
+        // We check mMultipleActionsPrevented because that's what <input type=range>
+        // sets when someone starts dragging the thumb. It doesn't set the status
+        // because it doesn't want to prevent the code that gives the input focus
+        // from running.
+        preventDefaultActions = (status == nsEventStatus_eConsumeNoDefault ||
+                                event.mFlags.mMultipleActionsPrevented);
+        isDownEvent = (event.message == NS_TOUCH_START);
     }
 
     // if the last event we got was a down event, then by now we know for sure whether
@@ -1256,52 +1244,6 @@ bool nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)
     return preventDefaultActions;
 }
 
-bool
-nsWindow::DispatchMultitouchEvent(nsTouchEvent &event, AndroidGeckoEvent *ae)
-{
-    nsIntPoint offset = WidgetToScreenOffset();
-
-    event.modifiers = 0;
-    event.time = ae->Time();
-    event.InitBasicModifiers(ae->IsCtrlPressed(),
-                             ae->IsAltPressed(),
-                             ae->IsShiftPressed(),
-                             ae->IsMetaPressed());
-
-    int action = ae->Action() & AndroidMotionEvent::ACTION_MASK;
-    if (action == AndroidMotionEvent::ACTION_UP ||
-        action == AndroidMotionEvent::ACTION_POINTER_UP) {
-        event.touches.SetCapacity(1);
-        int pointerIndex = ae->PointerIndex();
-        nsCOMPtr<nsIDOMTouch> t(new Touch(ae->PointIndicies()[pointerIndex],
-                                          ae->Points()[pointerIndex] - offset,
-                                          ae->PointRadii()[pointerIndex],
-                                          ae->Orientations()[pointerIndex],
-                                          ae->Pressures()[pointerIndex]));
-        event.touches.AppendElement(t);
-    } else {
-        int count = ae->Count();
-        event.touches.SetCapacity(count);
-        for (int i = 0; i < count; i++) {
-            nsCOMPtr<nsIDOMTouch> t(new Touch(ae->PointIndicies()[i],
-                                              ae->Points()[i] - offset,
-                                              ae->PointRadii()[i],
-                                              ae->Orientations()[i],
-                                              ae->Pressures()[i]));
-            event.touches.AppendElement(t);
-        }
-    }
-
-    nsEventStatus status;
-    DispatchEvent(&event, status);
-    // We check mMultipleActionsPrevented because that's what <input type=range>
-    // sets when someone starts dragging the thumb. It doesn't set the status
-    // because it doesn't want to prevent the code that gives the input focus
-    // from running.
-    return (status == nsEventStatus_eConsumeNoDefault ||
-            event.mFlags.mMultipleActionsPrevented);
-}
-
 void
 nsWindow::OnNativeGestureEvent(AndroidGeckoEvent *ae)
 {
@@ -1310,7 +1252,7 @@ nsWindow::OnNativeGestureEvent(AndroidGeckoEvent *ae)
   double delta = ae->X();
   int msg = 0;
 
-  switch (ae->Action() & AndroidMotionEvent::ACTION_MASK) {
+  switch (ae->Action()) {
       case AndroidMotionEvent::ACTION_MAGNIFY_START:
           msg = NS_SIMPLE_GESTURE_MAGNIFY_START;
           mStartDist = delta;
@@ -2098,8 +2040,7 @@ nsWindow::SetInputContext(const InputContext& aContext,
     if (mIMEUpdatingContext) {
         return;
     }
-    AndroidGeckoEvent *event = new AndroidGeckoEvent(
-            AndroidGeckoEvent::IME_EVENT,
+    AndroidGeckoEvent *event = AndroidGeckoEvent::MakeIMEEvent(
             AndroidGeckoEvent::IME_UPDATE_CONTEXT);
     nsAppShell::gAppShell->PostEvent(event);
     mIMEUpdatingContext = true;
@@ -2128,8 +2069,8 @@ nsWindow::PostFlushIMEChanges()
         // Already posted
         return;
     }
-    AndroidGeckoEvent *event = new AndroidGeckoEvent(
-            AndroidGeckoEvent::IME_EVENT, AndroidGeckoEvent::IME_FLUSH_CHANGES);
+    AndroidGeckoEvent *event = AndroidGeckoEvent::MakeIMEEvent(
+            AndroidGeckoEvent::IME_FLUSH_CHANGES);
     nsAppShell::gAppShell->PostEvent(event);
 }
 
@@ -2302,6 +2243,7 @@ nsRefPtr<mozilla::layers::LayerManager> nsWindow::sLayerManager = 0;
 nsRefPtr<mozilla::layers::CompositorParent> nsWindow::sCompositorParent = 0;
 nsRefPtr<mozilla::layers::CompositorChild> nsWindow::sCompositorChild = 0;
 bool nsWindow::sCompositorPaused = true;
+nsRefPtr<mozilla::layers::AsyncPanZoomController> nsWindow::sApzc = 0;
 
 void
 nsWindow::SetCompositor(mozilla::layers::LayerManager* aLayerManager,
@@ -2376,4 +2318,53 @@ nsWindow::NeedsPaint()
   return nsIWidget::NeedsPaint();
 }
 
+class AndroidCompositorParent : public mozilla::layers::CompositorParent {
+public:
+    AndroidCompositorParent(nsIWidget* aWidget, bool aRenderToEGLSurface,
+                            int aSurfaceWidth, int aSurfaceHeight)
+        : CompositorParent(aWidget, aRenderToEGLSurface, aSurfaceHeight, aSurfaceHeight)
+    {
+        if (nsWindow::GetPanZoomController()) {
+            nsWindow::GetPanZoomController()->SetCompositorParent(this);
+        }
+    }
+
+    virtual void ShadowLayersUpdated(mozilla::layers::ShadowLayersParent* aLayerTree,
+                                     const mozilla::layers::TargetConfig& aTargetConfig,
+                                     bool isFirstPaint) MOZ_OVERRIDE
+    {
+        CompositorParent::ShadowLayersUpdated(aLayerTree, aTargetConfig, isFirstPaint);
+        mozilla::layers::Layer* targetLayer = GetLayerManager()->GetPrimaryScrollableLayer();
+        mozilla::layers::AsyncPanZoomController* controller = nsWindow::GetPanZoomController();
+        if (targetLayer && targetLayer->AsContainerLayer() && controller) {
+            targetLayer->SetAsyncPanZoomController(controller);
+            controller->NotifyLayersUpdated(targetLayer->AsContainerLayer()->GetFrameMetrics(), isFirstPaint);
+        }
+    }
+};
+
+mozilla::layers::CompositorParent*
+nsWindow::NewCompositorParent(int aSurfaceWidth, int aSurfaceHeight)
+{
+    return new AndroidCompositorParent(this, true, aSurfaceWidth, aSurfaceHeight);
+}
+
+void
+nsWindow::SetPanZoomController(mozilla::layers::AsyncPanZoomController* apzc)
+{
+    if (sApzc) {
+        sApzc->SetCompositorParent(nullptr);
+        sApzc = nullptr;
+    }
+    if (apzc) {
+        sApzc = apzc;
+        sApzc->SetCompositorParent(sCompositorParent);
+    }
+}
+
+mozilla::layers::AsyncPanZoomController*
+nsWindow::GetPanZoomController()
+{
+    return sApzc;
+}
 

@@ -336,11 +336,11 @@ public class GeckoEvent {
     }
 
     private void initMotionEvent(MotionEvent m) {
-        mAction = m.getAction();
+        mAction = m.getActionMasked();
         mTime = (System.currentTimeMillis() - SystemClock.elapsedRealtime()) + m.getEventTime();
         mMetaState = m.getMetaState();
 
-        switch (mAction & MotionEvent.ACTION_MASK) {
+        switch (mAction) {
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_POINTER_UP:
@@ -356,7 +356,7 @@ public class GeckoEvent {
                 mOrientations = new float[mCount];
                 mPressures = new float[mCount];
                 mPointRadii = new Point[mCount];
-                mPointerIndex = (mAction & MotionEvent.ACTION_POINTER_INDEX_MASK) >> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
+                mPointerIndex = m.getActionIndex();
                 for (int i = 0; i < mCount; i++) {
                     addMotionPoint(i, i, m);
                 }
@@ -374,7 +374,7 @@ public class GeckoEvent {
         }
     }
 
-    public void addMotionPoint(int index, int eventIndex, MotionEvent event) {
+    private void addMotionPoint(int index, int eventIndex, MotionEvent event) {
         try {
             PointF geckoPoint = new PointF(event.getX(eventIndex), event.getY(eventIndex));
             geckoPoint = GeckoApp.mAppContext.getLayerView().convertViewPointToLayerPoint(geckoPoint);

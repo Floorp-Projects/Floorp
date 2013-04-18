@@ -505,7 +505,8 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
         break;
       }
       case "contentSize": {
-        let size = (aValue / 1024).toFixed(CONTENT_SIZE_DECIMALS);
+        let kb = aValue / 1024;
+        let size = L10N.numberWithDecimals(kb, CONTENT_SIZE_DECIMALS);
         let node = $(".requests-menu-size", aItem.target);
         let text = L10N.getFormatStr("networkMenu.sizeKB", size);
         node.setAttribute("value", text);
@@ -522,7 +523,7 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
       }
       case "totalTime": {
         let node = $(".requests-menu-timings-total", aItem.target);
-        let text = L10N.getFormatStr("networkMenu.totalMS", aValue);
+        let text = L10N.getFormatStr("networkMenu.totalMS", aValue); // integer
         node.setAttribute("value", text);
         node.setAttribute("tooltiptext", text);
         break;
@@ -540,7 +541,8 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
    */
   _createWaterfallView: function NVRM__createWaterfallView(aItem, aTimings) {
     let { target, attachment } = aItem;
-    let sections = ["blocked", "dns", "connect", "send", "wait", "receive"];
+    let sections = ["dns", "connect", "send", "wait", "receive"];
+    // Skipping "blocked" because it doesn't work yet.
 
     let timingsNode = $(".requests-menu-timings", target);
     let startCapNode = $(".requests-menu-timings-cap.start", timingsNode);
@@ -879,9 +881,10 @@ create({ constructor: NetworkDetailsView, proto: MenuContainer.prototype }, {
    *        The message received from the server.
    */
   _addHeaders: function NVND__addHeaders(aName, aResponse) {
-    let kb = (aResponse.headersSize / 1024).toFixed(HEADERS_SIZE_DECIMALS);
-    let size = L10N.getFormatStr("networkMenu.sizeKB", kb);
-    let headersScope = this._headers.addScope(aName + " (" + size + ")");
+    let kb = aResponse.headersSize / 1024;
+    let size = L10N.numberWithDecimals(kb, HEADERS_SIZE_DECIMALS);
+    let text = L10N.getFormatStr("networkMenu.sizeKB", size);
+    let headersScope = this._headers.addScope(aName + " (" + text + ")");
     headersScope.expanded = true;
 
     for (let header of aResponse.headers) {

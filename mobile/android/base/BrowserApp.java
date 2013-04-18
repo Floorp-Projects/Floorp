@@ -10,6 +10,7 @@ import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.gfx.LayerView;
+import org.mozilla.gecko.gfx.PanZoomController;
 import org.mozilla.gecko.util.FloatUtils;
 import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.HardwareUtils;
@@ -338,9 +339,10 @@ abstract public class BrowserApp extends GeckoApp
                    action == MotionEvent.ACTION_CANCEL) {
             // Animate the toolbar to fully on or off, depending on how much
             // of it is hidden and the current swipe velocity.
+            PanZoomController pzc = mLayerView.getPanZoomController();
+            float yVelocity = (pzc == null ? 0.0f : pzc.getVelocityVector().y);
             mBrowserToolbar.animateVisibilityWithVelocityBias(
-                toolbarY > toolbarHeight / 2 ? false : true,
-                mLayerView.getPanZoomController().getVelocityVector().y);
+                toolbarY > toolbarHeight / 2 ? false : true, yVelocity);
         }
 
         // Update the last recorded position.
@@ -536,7 +538,7 @@ abstract public class BrowserApp extends GeckoApp
         Distribution.init(this, getPackageResourcePath());
         JavaAddonManager.getInstance().init(getApplicationContext());
 
-        if (Build.VERSION.SDK_INT >= 14) {
+        if (AppConstants.MOZ_ANDROID_BEAM && Build.VERSION.SDK_INT >= 14) {
             NfcAdapter nfc = NfcAdapter.getDefaultAdapter(this);
             if (nfc != null) {
                 nfc.setNdefPushMessageCallback(new NfcAdapter.CreateNdefMessageCallback() {
@@ -632,7 +634,7 @@ abstract public class BrowserApp extends GeckoApp
         unregisterEventListener("Feedback:MaybeLater");
         unregisterEventListener("Telemetry:Gather");
 
-        if (Build.VERSION.SDK_INT >= 14) {
+        if (AppConstants.MOZ_ANDROID_BEAM && Build.VERSION.SDK_INT >= 14) {
             NfcAdapter nfc = NfcAdapter.getDefaultAdapter(this);
             if (nfc != null) {
                 // null this out even though the docs say it's not needed,
@@ -1664,7 +1666,7 @@ abstract public class BrowserApp extends GeckoApp
 
         String action = intent.getAction();
 
-        if (Build.VERSION.SDK_INT >= 10 && NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
+        if (AppConstants.MOZ_ANDROID_BEAM && Build.VERSION.SDK_INT >= 10 && NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
             String uri = intent.getDataString();
             GeckoAppShell.sendEventToGecko(GeckoEvent.createURILoadEvent(uri));
         }

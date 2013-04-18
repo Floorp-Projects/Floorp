@@ -48,7 +48,7 @@ interface to listen for and log all topic notifications:
         observerService.addObserver(this, this.topic, false);
       },
       unregister: function() {
-        addObserver.removeObserver(this, this.topic);
+        observerService.removeObserver(this, this.topic);
       },
       observe: function observe(subject, topic, data) {
         console.log('star observer:', subject, topic, data);

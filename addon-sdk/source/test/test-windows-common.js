@@ -39,7 +39,7 @@ exports.testWindowTabsObject_alt = function(test) {
       test.assertNotEqual(window.tabs.activeTab, tab, "Correct active tab");
 
       // end test
-      tab.close(test.done());
+      tab.close(test.done.bind(test));
     }
   });
 };

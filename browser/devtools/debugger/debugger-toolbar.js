@@ -187,6 +187,7 @@ function OptionsView() {
   this._toggleShowPanesOnStartup = this._toggleShowPanesOnStartup.bind(this);
   this._toggleShowVariablesOnlyEnum = this._toggleShowVariablesOnlyEnum.bind(this);
   this._toggleShowVariablesFilterBox = this._toggleShowVariablesFilterBox.bind(this);
+  this._toggleShowOriginalSource = this._toggleShowOriginalSource.bind(this);
 }
 
 OptionsView.prototype = {
@@ -201,11 +202,13 @@ OptionsView.prototype = {
     this._showPanesOnStartupItem = document.getElementById("show-panes-on-startup");
     this._showVariablesOnlyEnumItem = document.getElementById("show-vars-only-enum");
     this._showVariablesFilterBoxItem = document.getElementById("show-vars-filter-box");
+    this._showOriginalSourceItem = document.getElementById("show-original-source");
 
     this._pauseOnExceptionsItem.setAttribute("checked", Prefs.pauseOnExceptions);
     this._showPanesOnStartupItem.setAttribute("checked", Prefs.panesVisibleOnStartup);
     this._showVariablesOnlyEnumItem.setAttribute("checked", Prefs.variablesOnlyEnumVisible);
     this._showVariablesFilterBoxItem.setAttribute("checked", Prefs.variablesSearchboxVisible);
+    this._showOriginalSourceItem.setAttribute("checked", Prefs.sourceMapsEnabled);
   },
 
   /**
@@ -262,10 +265,21 @@ OptionsView.prototype = {
       this._showVariablesFilterBoxItem.getAttribute("checked") == "true";
   },
 
+  /**
+   * Listener handling the 'show original source' menuitem command.
+   */
+  _toggleShowOriginalSource: function DVO__toggleShowOriginalSource() {
+    let pref = Prefs.sourceMapsEnabled =
+      this._showOriginalSourceItem.getAttribute("checked") == "true";
+
+    DebuggerController.reconfigureThread(pref);
+  },
+
   _button: null,
   _pauseOnExceptionsItem: null,
   _showPanesOnStartupItem: null,
   _showVariablesOnlyEnumItem: null,
+  _showOriginalSourceItem: null,
   _showVariablesFilterBoxItem: null
 };
 

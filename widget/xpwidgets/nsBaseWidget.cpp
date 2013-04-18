@@ -872,6 +872,12 @@ nsBaseWidget::ComputeShouldAccelerate(bool aDefault)
   return aDefault;
 }
 
+CompositorParent* nsBaseWidget::NewCompositorParent(int aSurfaceWidth,
+                                                    int aSurfaceHeight)
+{
+    return new CompositorParent(this, false, aSurfaceWidth, aSurfaceHeight);
+}
+
 void nsBaseWidget::CreateCompositor()
 {
   nsIntRect rect;
@@ -881,12 +887,7 @@ void nsBaseWidget::CreateCompositor()
 
 void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
 {
-  bool renderToEGLSurface = false;
-#ifdef MOZ_ANDROID_OMTC
-  renderToEGLSurface = true;
-#endif
-  mCompositorParent =
-    new CompositorParent(this, renderToEGLSurface, aWidth, aHeight);
+  mCompositorParent = NewCompositorParent(aWidth, aHeight);
   AsyncChannel *parentChannel = mCompositorParent->GetIPCChannel();
   LayerManager* lm = CreateBasicLayerManager();
   MessageLoop *childMessageLoop = CompositorParent::CompositorLoop();

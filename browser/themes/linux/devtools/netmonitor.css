@@ -297,3 +297,19 @@
 #timings-tabpanel .requests-menu-timings-total {
   transition: transform 0.2s ease-out;
 }
+
+/* Responsive sidebar */
+@media (max-width: 700px) {
+  #details-pane {
+    max-width: none;
+    margin: 0 !important;
+    /* To prevent all the margin hacks to hide the sidebar */
+  }
+
+  .requests-menu-size {
+    border-width: 0px !important;
+    box-shadow: none !important;
+    /* !important are required here because Timeline is not visible and thus
+       the right border and box-shadow of Size column should be hidden */
+  }
+}

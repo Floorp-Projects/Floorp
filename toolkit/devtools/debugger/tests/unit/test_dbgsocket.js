@@ -77,7 +77,7 @@ function test_socket_shutdown()
     },
 
     onClosed: function(aStatus) {
-      do_check_eq(aStatus, Cr.NS_ERROR_CONNECTION_REFUSED);
+      do_check_eq(aStatus, Components.results.NS_ERROR_CONNECTION_REFUSED);
       run_next_test();
     }
   };

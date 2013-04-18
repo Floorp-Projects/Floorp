@@ -2385,7 +2385,7 @@ void
 nsDisplayBoxShadowOuter::Paint(nsDisplayListBuilder* aBuilder,
                                nsRenderingContext* aCtx) {
   nsPoint offset = ToReferenceFrame();
-  nsRect borderRect = nsRect(offset, mFrame->GetSize());
+  nsRect borderRect = mFrame->VisualBorderRectRelativeToSelf() + offset;
   nsPresContext* presContext = mFrame->PresContext();
   nsAutoTArray<nsRect,10> rects;
   ComputeDisjointRectangles(mVisibleRegion, &rects);
