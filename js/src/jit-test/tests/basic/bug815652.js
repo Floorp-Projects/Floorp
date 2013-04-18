@@ -7,4 +7,6 @@ function testScatterConflict() {
     assertEq(a instanceof ParallelArray, true);
   assertEqParallelArray(r, new ParallelArray([4,2,(false),4,5]));
 }
-testScatterConflict();
+if (getBuildConfiguration().parallelJS) {
+  testScatterConflict();
+}
