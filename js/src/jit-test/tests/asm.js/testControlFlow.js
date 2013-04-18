@@ -99,6 +99,10 @@ assertEq(asmLink(asmCompile(USE_ASM + "function f(i) { i=i|0; while(1) { if (i) 
 assertEq(asmLink(asmCompile(USE_ASM + "function f(i) { i=i|0; for(;;) { if (i) { return i|0 } else { return i|0 } i = 1 } return i|0 } return f"))(3), 3);
 assertEq(asmLink(asmCompile(USE_ASM + "function f(i) { i=i|0; do { if (i) { return i|0 } else { return i|0 } i = 1 } while (0); return i|0 } return f"))(3), 3);
 
+assertEq(asmLink(asmCompile(USE_ASM + "function f() {var j=1,i=0; while(j){ if(0) continue; j=i } return j|0 } return f"))(), 0);
+assertEq(asmLink(asmCompile(USE_ASM + "function f() {var j=1,i=0; for(;j;){ if(0) continue; j=i } return j|0 } return f"))(), 0);
+assertEq(asmLink(asmCompile(USE_ASM + "function f() {var j=1,i=0; do{ if(0) continue; j=i } while(j) return j|0 } return f"))(), 0);
+
 assertEq(asmLink(asmCompile(USE_ASM + "function f(i) { i=i|0; for(;;) { return i|0 } return 0 } return f"))(42), 42);
 assertEq(asmLink(asmCompile(USE_ASM + "function f(n) { n=n|0; var i=0,s=0; for(;;i=(i+1)|0) { if (~~i==~~n) return s|0; s=(s+i)|0 } return 0 } return f"))(8), 28);
 
