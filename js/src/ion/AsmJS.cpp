@@ -3496,23 +3496,38 @@ CheckNeg(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type *type)
 }
 
 static bool
+CheckCoerceToInt(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type *type)
+{
+    JS_ASSERT(expr->isKind(PNK_BITNOT));
+    ParseNode *operand = UnaryKid(expr);
+
+    MDefinition *operandDef;
+    Type operandType;
+    if (!CheckExpr(f, operand, Use::ToInt32, &operandDef, &operandType))
+        return false;
+
+    if (operandType.isDoublish()) {
+        *def = f.unary<MTruncateToInt32>(operandDef);
+        *type = Type::Signed;
+        return true;
+    }
+
+    if (!operandType.isIntish())
+        return f.fail("Operand to ~ must be intish or doublish", operand);
+
+    *def = operandDef;
+    *type = Type::Signed;
+    return true;
+}
+
+static bool
 CheckBitNot(FunctionCompiler &f, ParseNode *neg, MDefinition **def, Type *type)
 {
     JS_ASSERT(neg->isKind(PNK_BITNOT));
     ParseNode *operand = UnaryKid(neg);
 
-    if (operand->isKind(PNK_BITNOT)) {
-        MDefinition *operandDef;
-        Type operandType;
-        if (!CheckExpr(f, UnaryKid(operand), Use::NoCoercion, &operandDef, &operandType))
-            return false;
-
-        if (operandType.isDouble()) {
-            *def = f.unary<MTruncateToInt32>(operandDef);
-            *type = Type::Signed;
-            return true;
-        }
-    }
+    if (operand->isKind(PNK_BITNOT))
+        return CheckCoerceToInt(f, operand, def, type);
 
     MDefinition *operandDef;
     Type operandType;
