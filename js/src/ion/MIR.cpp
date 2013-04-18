@@ -678,8 +678,8 @@ MPhi::specializeType()
         // that could come in via loop backedges.
         start = 0;
     } else {
-        setResultType(inputs_[0].producer()->type());
-        setResultTypeSet(inputs_[0].producer()->resultTypeSet());
+        setResultType(getOperand(0)->type());
+        setResultTypeSet(getOperand(0)->resultTypeSet());
         start = 1;
     }
 
@@ -687,7 +687,7 @@ MPhi::specializeType()
     types::StackTypeSet *resultTypeSet = this->resultTypeSet();
 
     for (size_t i = start; i < inputs_.length(); i++) {
-        MDefinition *def = inputs_[i].producer();
+        MDefinition *def = getOperand(i);
         MergeTypes(&resultType, &resultTypeSet, def->type(), def->resultTypeSet());
     }
 
@@ -2224,3 +2224,371 @@ MAsmJSCall::New(Callee callee, const Args &args, MIRType resultType, size_t spIn
     return call;
 }
 
+bool
+ion::ElementAccessIsDenseNative(MDefinition *obj, MDefinition *id)
+{
+    if (obj->mightBeType(MIRType_String))
+        return false;
+
+    if (id->type() != MIRType_Int32 && id->type() != MIRType_Double)
+        return false;
+
+    types::StackTypeSet *types = obj->resultTypeSet();
+    if (!types)
+        return false;
+
+    Class *clasp = types->getKnownClass();
+    return clasp && clasp->isNative();
+}
+
+bool
+ion::ElementAccessIsTypedArray(MDefinition *obj, MDefinition *id, int *arrayType)
+{
+    if (obj->mightBeType(MIRType_String))
+        return false;
+
+    if (id->type() != MIRType_Int32 && id->type() != MIRType_Double)
+        return false;
+
+    types::StackTypeSet *types = obj->resultTypeSet();
+    if (!types)
+        return false;
+
+    *arrayType = types->getTypedArrayType();
+    return *arrayType != TypedArray::TYPE_MAX;
+}
+
+bool
+ion::ElementAccessIsPacked(JSContext *cx, MDefinition *obj)
+{
+    types::StackTypeSet *types = obj->resultTypeSet();
+    return types && !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_PACKED);
+}
+
+bool
+ion::ElementAccessHasExtraIndexedProperty(JSContext *cx, MDefinition *obj)
+{
+    types::StackTypeSet *types = obj->resultTypeSet();
+
+    if (!types || types->hasObjectFlags(cx, types::OBJECT_FLAG_LENGTH_OVERFLOW))
+        return true;
+
+    return types::TypeCanHaveExtraIndexedProperties(cx, types);
+}
+
+MIRType
+ion::DenseNativeElementType(JSContext *cx, MDefinition *obj)
+{
+    types::StackTypeSet *types = obj->resultTypeSet();
+    MIRType elementType = MIRType_None;
+    unsigned count = types->getObjectCount();
+
+    for (unsigned i = 0; i < count; i++) {
+        if (types->getSingleObject(i))
+            return MIRType_None;
+
+        if (types::TypeObject *object = types->getTypeObject(i)) {
+            if (object->unknownProperties())
+                return MIRType_None;
+
+            types::HeapTypeSet *elementTypes = object->getProperty(cx, JSID_VOID, false);
+            if (!elementTypes)
+                return MIRType_None;
+
+            MIRType type = MIRTypeFromValueType(elementTypes->getKnownTypeTag(cx));
+            if (type == MIRType_None)
+                return MIRType_None;
+
+            if (elementType == MIRType_None)
+                elementType = type;
+            else if (elementType != type)
+                return MIRType_None;
+        }
+    }
+
+    return elementType;
+}
+
+bool
+ion::PropertyReadNeedsTypeBarrier(JSContext *cx, types::TypeObject *object, PropertyName *name,
+                                  types::StackTypeSet *observed)
+{
+    // If the object being read from has types for the property which haven't
+    // been observed at this access site, the read could produce a new type and
+    // a barrier is needed. Note that this only covers reads from properties
+    // which are accounted for by type information, i.e. native data properties
+    // and elements.
+
+    if (object->unknownProperties())
+        return true;
+
+    jsid id = name ? types::IdToTypeId(NameToId(name)) : JSID_VOID;
+
+    types::HeapTypeSet *property = object->getProperty(cx, id, false);
+    if (!property)
+        return true;
+
+    if (!property->hasPropagatedProperty())
+        object->getFromPrototypes(cx, id, property);
+
+    if (!TypeSetIncludes(observed, MIRType_Value, property))
+        return true;
+
+    // Type information for global objects does not reflect the initial
+    // 'undefined' value of variables declared with 'var'. Until the variable
+    // is assigned a value other than undefined, a barrier is required.
+    if (property->empty() && name && object->singleton && object->singleton->isNative()) {
+        Shape *shape = object->singleton->nativeLookup(cx, name);
+        if (shape && shape->hasDefaultGetter()) {
+            JS_ASSERT(object->singleton->nativeGetSlot(shape->slot()).isUndefined());
+            return true;
+        }
+    }
+
+    property->addFreeze(cx);
+    return false;
+}
+
+bool
+ion::PropertyReadNeedsTypeBarrier(JSContext *cx, MDefinition *obj, PropertyName *name,
+                                  types::StackTypeSet *observed)
+{
+    if (observed->unknown())
+        return false;
+
+    types::TypeSet *types = obj->resultTypeSet();
+    if (!types || types->unknownObject())
+        return true;
+
+    for (size_t i = 0; i < types->getObjectCount(); i++) {
+        types::TypeObject *object = types->getTypeObject(i);
+        if (!object) {
+            JSObject *singleton = types->getSingleObject(i);
+            if (!singleton)
+                continue;
+            object = singleton->getType(cx);
+            if (!object)
+                return true;
+        }
+
+        if (PropertyReadNeedsTypeBarrier(cx, object, name, observed))
+            return true;
+    }
+
+    return false;
+}
+
+bool
+ion::PropertyReadIsIdempotent(JSContext *cx, MDefinition *obj, PropertyName *name)
+{
+    // Determine if reading a property from obj is likely to be idempotent.
+
+    jsid id = types::IdToTypeId(NameToId(name));
+
+    types::TypeSet *types = obj->resultTypeSet();
+    if (!types || types->unknownObject())
+        return false;
+
+    for (size_t i = 0; i < types->getObjectCount(); i++) {
+        if (types->getSingleObject(i))
+            return false;
+
+        if (types::TypeObject *object = types->getTypeObject(i)) {
+            if (object->unknownProperties())
+                return false;
+
+            // Check if the property has been reconfigured or is a getter.
+            types::HeapTypeSet *property = object->getProperty(cx, id, false);
+            if (!property || property->isOwnProperty(cx, object, true))
+                return false;
+        }
+    }
+
+    return true;
+}
+
+static bool
+TryAddTypeBarrierForWrite(JSContext *cx, MBasicBlock *current, types::StackTypeSet *objTypes,
+                          jsid id, MDefinition **pvalue)
+{
+    // Return whether pvalue was modified to include a type barrier ensuring
+    // that writing the value to objTypes/id will not require changing type
+    // information.
+
+    // All objects in the set must have the same types for id. Otherwise, we
+    // could bail out without subsequently triggering a type change that
+    // invalidates the compiled code.
+    types::HeapTypeSet *aggregateProperty = NULL;
+
+    for (size_t i = 0; i < objTypes->getObjectCount(); i++) {
+        types::TypeObject *object = objTypes->getTypeObject(i);
+        if (!object) {
+            JSObject *singleton = objTypes->getSingleObject(i);
+            if (!singleton)
+                continue;
+            object = singleton->getType(cx);
+            if (!object)
+                return false;
+        }
+
+        if (object->unknownProperties())
+            return false;
+
+        types::HeapTypeSet *property = object->getProperty(cx, id, false);
+        if (!property)
+            return false;
+
+        if (TypeSetIncludes(property, (*pvalue)->type(), (*pvalue)->resultTypeSet()))
+            return false;
+
+        // This freeze is not required for correctness, but ensures that we
+        // will recompile if the property types change and the barrier can
+        // potentially be removed.
+        property->addFreeze(cx);
+
+        if (aggregateProperty) {
+            if (!aggregateProperty->isSubset(property) || !property->isSubset(aggregateProperty))
+                return false;
+        } else {
+            aggregateProperty = property;
+        }
+    }
+
+    JS_ASSERT(aggregateProperty);
+
+    MIRType propertyType = MIRTypeFromValueType(aggregateProperty->getKnownTypeTag(cx));
+    switch (propertyType) {
+      case MIRType_Boolean:
+      case MIRType_Int32:
+      case MIRType_Double:
+      case MIRType_String: {
+        // The property is a particular primitive type, guard by unboxing the
+        // value before the write.
+        if ((*pvalue)->type() != MIRType_Value) {
+            // The value is a different primitive, just do a VM call as it will
+            // always trigger invalidation of the compiled code.
+            JS_ASSERT((*pvalue)->type() != propertyType);
+            return false;
+        }
+        MInstruction *ins = MUnbox::New(*pvalue, propertyType, MUnbox::Fallible);
+        current->add(ins);
+        *pvalue = ins;
+        return true;
+      }
+      default:;
+    }
+
+    if ((*pvalue)->type() != MIRType_Value)
+        return false;
+
+    types::StackTypeSet *types = aggregateProperty->clone(GetIonContext()->temp->lifoAlloc());
+    if (!types)
+        return false;
+
+    MInstruction *ins = MTypeBarrier::New(*pvalue, types, Bailout_Normal);
+    current->add(ins);
+    *pvalue = ins;
+    return true;
+}
+
+static MInstruction *
+AddTypeGuard(MBasicBlock *current, MDefinition *obj, types::TypeObject *typeObject,
+             bool bailOnEquality, BailoutKind bailoutKind)
+{
+    MGuardShapeOrType *guard = MGuardShapeOrType::New(obj, NULL, typeObject,
+                                                      bailOnEquality, bailoutKind);
+    current->add(guard);
+
+    // For now, never move type guards.
+    guard->setNotMovable();
+
+    return guard;
+}
+
+bool
+ion::PropertyWriteNeedsTypeBarrier(JSContext *cx, MBasicBlock *current, MDefinition **pobj,
+                                   PropertyName *name, MDefinition **pvalue)
+{
+    // If any value being written is not reflected in the type information for
+    // objects which obj could represent, a type barrier is needed when writing
+    // the value. As for propertyReadNeedsTypeBarrier, this only applies for
+    // properties that are accounted for by type information, i.e. normal data
+    // properties and elements.
+
+    types::StackTypeSet *types = (*pobj)->resultTypeSet();
+    if (!types || types->unknownObject())
+        return true;
+
+    jsid id = name ? types::IdToTypeId(NameToId(name)) : JSID_VOID;
+
+    // If all of the objects being written to have property types which already
+    // reflect the value, no barrier at all is needed. Additionally, if all
+    // objects being written to have the same types for the property, and those
+    // types do *not* reflect the value, add a type barrier for the value.
+
+    bool success = true;
+    for (size_t i = 0; i < types->getObjectCount(); i++) {
+        types::TypeObject *object = types->getTypeObject(i);
+        if (!object) {
+            JSObject *singleton = types->getSingleObject(i);
+            if (!singleton)
+                continue;
+            object = singleton->getType(cx);
+            if (!object) {
+                success = false;
+                break;
+            }
+        }
+
+        if (object->unknownProperties())
+            continue;
+
+        types::HeapTypeSet *property = object->getProperty(cx, id, false);
+        if (!property) {
+            success = false;
+            break;
+        }
+        if (!TypeSetIncludes(property, (*pvalue)->type(), (*pvalue)->resultTypeSet())) {
+            success = TryAddTypeBarrierForWrite(cx, current, types, id, pvalue);
+            break;
+        }
+    }
+
+    if (success)
+        return false;
+
+    // If all of the objects except one have property types which reflect the
+    // value, and the remaining object has no types at all for the property,
+    // add a guard that the object does not have that remaining object's type.
+
+    if (types->getObjectCount() <= 1)
+        return true;
+
+    types::TypeObject *excluded = NULL;
+    for (size_t i = 0; i < types->getObjectCount(); i++) {
+        types::TypeObject *object = types->getTypeObject(i);
+        if (!object) {
+            if (types->getSingleObject(i))
+                return true;
+            continue;
+        }
+        if (object->unknownProperties())
+            continue;
+
+        types::HeapTypeSet *property = object->getProperty(cx, id, false);
+        if (!property)
+            return true;
+
+        if (TypeSetIncludes(property, (*pvalue)->type(), (*pvalue)->resultTypeSet()))
+            continue;
+
+        if (!property->empty() || excluded)
+            return true;
+        excluded = object;
+    }
+
+    JS_ASSERT(excluded);
+
+    *pobj = AddTypeGuard(current, *pobj, excluded, /* bailOnEquality = */ true, Bailout_Normal);
+    return false;
+}
