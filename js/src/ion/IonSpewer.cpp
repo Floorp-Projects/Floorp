@@ -37,7 +37,7 @@ static const char *ChannelNames[] =
 };
 
 static bool
-FilterContainsLocation(const char *filename, const size_t line = size_t(-1))
+FilterContainsLocation(HandleScript function)
 {
     static const char *filter = getenv("IONFILTER");
 
@@ -45,6 +45,12 @@ FilterContainsLocation(const char *filename, const size_t line = size_t(-1))
     if (!filter || !filter[0])
         return true;
 
+    // Disable asm.js output when filter is set.
+    if (!function)
+        return false;
+
+    const char *filename = function->filename();
+    const size_t line = function->lineno;
     static size_t filelen = strlen(filename);
     const char *index = strstr(filter, filename);
     while (index) {
@@ -133,7 +139,7 @@ IonSpewer::beginFunction(MIRGraph *graph, HandleScript function)
     if (!inited_)
         return;
 
-    if (!FilterContainsLocation(function->filename(), function->lineno)) {
+    if (!FilterContainsLocation(function)) {
         JS_ASSERT(!this->graph);
         // filter out logs during the compilation.
         filteredOutCompilations++;
