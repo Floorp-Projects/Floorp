@@ -55,23 +55,8 @@ DOMBindingBase::_finalize(JSFreeOp* aFop)
 }
 
 JSContext*
-DOMBindingBase::GetJSContextFromContextStack() const
-{
-  AssertIsOnMainThread();
-  MOZ_ASSERT(!mJSContext);
-
-  if (!mContextStack) {
-    mContextStack = nsContentUtils::ThreadJSContextStack();
-    MOZ_ASSERT(mContextStack);
-  }
-
-  JSContext* cx;
-  if (NS_FAILED(mContextStack->Peek(&cx))) {
-    MOZ_NOT_REACHED("This should never fail!");
-  }
-
-  MOZ_ASSERT(cx);
-  return cx;
+DOMBindingBase::GetJSContext() const {
+  return mJSContext ? mJSContext : nsContentUtils::GetCurrentJSContext();
 }
 
 #ifdef DEBUG

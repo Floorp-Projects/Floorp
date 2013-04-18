@@ -16,6 +16,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
 #include "nsDOMJSUtils.h"
+#include "nsContentUtils.h"
 #include "nsIDocument.h"
 #include "nsIJSRuntimeService.h"
 #include "nsIJSContextStack.h"
@@ -1967,22 +1968,7 @@ nsJSNPRuntime::OnPluginDestroy(NPP npp)
 
   // Use the safe JSContext here as we're not always able to find the
   // JSContext associated with the NPP any more.
-
-  nsCOMPtr<nsIThreadJSContextStack> stack =
-    do_GetService("@mozilla.org/js/xpc/ContextStack;1");
-  if (!stack) {
-    NS_ERROR("No context stack available!");
-
-    return;
-  }
-
-  JSContext* cx = stack->GetSafeJSContext();
-  if (!cx) {
-    NS_ERROR("No safe JS context available!");
-
-    return;
-  }
-
+  SafeAutoJSContext cx;
   JSAutoRequest ar(cx);
 
   if (sNPObjWrappers.ops) {

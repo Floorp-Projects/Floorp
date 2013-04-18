@@ -25,7 +25,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsISelectionController.h"
 #include "jsapi.h"
-#include "nsIJSContextStack.h"
 #include "nsIServiceManager.h"
 #include "nsITextControlFrame.h"
 
@@ -472,18 +471,11 @@ HTMLTextFieldAccessible::GetEditor() const
   // nsGenericHTMLElement::GetEditor has a security check.
   // Make sure we're not restricted by the permissions of
   // whatever script is currently running.
-  nsCOMPtr<nsIJSContextStack> stack =
-    do_GetService("@mozilla.org/js/xpc/ContextStack;1");
-  bool pushed = stack && NS_SUCCEEDED(stack->Push(nullptr));
+  nsCxPusher pusher;
+  pusher.PushNull();
 
   nsCOMPtr<nsIEditor> editor;
   editableElt->GetEditor(getter_AddRefs(editor));
-
-  if (pushed) {
-    JSContext* cx;
-    stack->Pop(&cx);
-    NS_ASSERTION(!cx, "context should be null");
-  }
 
   return editor.forget();
 }

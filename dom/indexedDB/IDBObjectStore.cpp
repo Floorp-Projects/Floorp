@@ -9,7 +9,6 @@
 #include "IDBObjectStore.h"
 
 #include "mozilla/dom/ipc/nsIRemoteBlob.h"
-#include "nsIJSContextStack.h"
 #include "nsIOutputStream.h"
 
 #include "jsfriendapi.h"

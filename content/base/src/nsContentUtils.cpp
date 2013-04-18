@@ -3197,10 +3197,7 @@ nsCxPusher::Pop()
   MOZ_ASSERT_IF(mPushedContext, mCompartmentDepthOnEntry ==
                                 js::GetEnterCompartmentDepth(mPushedContext));
 
-  JSContext *unused;
-  stack->Pop(&unused);
-
-  NS_ASSERTION(unused == mPushedContext, "Unexpected context popped");
+  stack->Pop(nullptr);
 
   if (!mScriptIsRunning && mScx) {
     // No JS is running in the context, but executing the event handler might have
