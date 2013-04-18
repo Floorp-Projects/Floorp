@@ -48,7 +48,7 @@ function test() {
           statusText: "OK",
           type: "json",
           fullMimeType: "application/json; charset=utf-8",
-          size: L10N.getFormatStr("networkMenu.sizeKB", 0.03),
+          size: L10N.getFormatStr("networkMenu.sizeKB", 0.02),
           time: true
         });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(4),
@@ -66,7 +66,7 @@ function test() {
           statusText: "OK",
           type: "png",
           fullMimeType: "image/png",
-          size: L10N.getFormatStr("networkMenu.sizeKB", 0.76),
+          size: L10N.getFormatStr("networkMenu.sizeKB", 0.75),
           time: true
         });
 

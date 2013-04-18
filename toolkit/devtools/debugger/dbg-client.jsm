@@ -487,6 +487,23 @@ DebuggerClient.prototype = {
   },
 
   /**
+   * Reconfigure a thread actor.
+   *
+   * @param boolean aUseSourceMaps
+   *        A flag denoting whether to use source maps or not.
+   * @param function aOnResponse
+   *        Called with the response packet.
+   */
+  reconfigureThread: function DC_reconfigureThread(aUseSourceMaps, aOnResponse) {
+    let packet = {
+      to: this.activeThread._actor,
+      type: "reconfigure",
+      options: { useSourceMaps: aUseSourceMaps }
+    };
+    this.request(packet, aOnResponse);
+  },
+
+  /**
    * Release an object actor.
    *
    * @param string aActor

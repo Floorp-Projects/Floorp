@@ -36,6 +36,11 @@
   -moz-user-focus: normal;
 }
 
+.variables-view-scope > .title,
+.variable-or-property > .title {
+  overflow: hidden;
+}
+
 .variables-view-scope[non-header] > .title,
 .variable-or-property[non-header] > .title,
 .variable-or-property[non-match] > .title {

@@ -441,6 +441,26 @@ public:
     {
         sEGLLibrary.fDestroyImage(EGL_DISPLAY(), image);
     }
+
+    EGLImage GetNullEGLImage() MOZ_OVERRIDE
+    {
+        if (!mNullGraphicBuffer.get()) {
+            mNullGraphicBuffer
+              = new android::GraphicBuffer(
+                  1, 1,
+                  PIXEL_FORMAT_RGB_565,
+                  GRALLOC_USAGE_SW_READ_NEVER | GRALLOC_USAGE_SW_WRITE_NEVER);
+            EGLint attrs[] = {
+                LOCAL_EGL_NONE, LOCAL_EGL_NONE
+            };
+            mNullEGLImage = sEGLLibrary.fCreateImage(EGL_DISPLAY(),
+                                                     EGL_NO_CONTEXT,
+                                                     LOCAL_EGL_NATIVE_BUFFER_ANDROID,
+                                                     mNullGraphicBuffer->getNativeBuffer(),
+                                                     attrs);
+        }
+        return mNullEGLImage;
+    }
 #endif
 
 
@@ -695,6 +715,8 @@ protected:
     bool mShareWithEGLImage;
 #ifdef MOZ_WIDGET_GONK
     nsRefPtr<HwcComposer2D> mHwc;
+    EGLImage mNullEGLImage;
+    android::sp<android::GraphicBuffer> mNullGraphicBuffer;
 #endif
 
     // A dummy texture ID that can be used when we need a texture object whose

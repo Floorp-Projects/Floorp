@@ -4,7 +4,8 @@
 'use strict';
 
 const { defer } = require('../core/promise');
-const { open: openWindow, onFocus } = require('./utils');
+const events = require('../system/events');
+const { open: openWindow, onFocus, getToplevelWindow } = require('./utils');
 
 function open(uri, options) {
   return promise(openWindow.apply(null, arguments), 'load');
@@ -12,11 +13,19 @@ function open(uri, options) {
 exports.open = open;
 
 function close(window) {
-  // unload event could happen so fast that it is not resolved
-  // if we listen to unload after calling close()
-  let p = promise(window, 'unload');
+  // We shouldn't wait for unload, as it is dispatched
+  // before the window is actually closed.
+  // `domwindowclosed` is a better match.
+  let deferred = defer();
+  let toplevelWindow = getToplevelWindow(window);
+  events.on("domwindowclosed", function onclose({subject}) {
+    if (subject == toplevelWindow) {
+      events.off("domwindowclosed", onclose);
+      deferred.resolve(window);
+    }
+  }, true);
   window.close();
-  return p;
+  return deferred.promise;
 }
 exports.close = close;
 

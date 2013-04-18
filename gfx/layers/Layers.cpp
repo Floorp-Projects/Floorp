@@ -398,6 +398,38 @@ Layer::SetAnimations(const AnimationArray& aAnimations)
   Mutated();
 }
 
+static uint8_t sPanZoomUserDataKey;
+struct PanZoomUserData : public LayerUserData {
+  PanZoomUserData(AsyncPanZoomController* aController)
+    : mController(aController)
+  { }
+
+  // We don't keep a strong ref here because PanZoomUserData is only
+  // set transiently, and APZC is thread-safe refcounted so
+  // AddRef/Release is expensive.
+  AsyncPanZoomController* mController;
+};
+
+void
+Layer::SetAsyncPanZoomController(AsyncPanZoomController *controller)
+{
+  if (controller) {
+    SetUserData(&sPanZoomUserDataKey, new PanZoomUserData(controller));
+  } else {
+    RemoveUserData(&sPanZoomUserDataKey);
+  }
+}
+
+AsyncPanZoomController*
+Layer::GetAsyncPanZoomController()
+{
+  LayerUserData* data = GetUserData(&sPanZoomUserDataKey);
+  if (!data) {
+    return nullptr;
+  }
+  return static_cast<PanZoomUserData*>(data)->mController;
+}
+
 void
 Layer::ApplyPendingUpdatesToSubtree()
 {
