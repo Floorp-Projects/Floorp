@@ -229,6 +229,15 @@ public:
   double LenientDoubleAttr() const;
   void SetLenientDoubleAttr(double);
 
+  void PassUnrestricted(float arg1,
+                        float arg2,
+                        float arg3,
+                        float arg4,
+                        double arg5,
+                        double arg6,
+                        double arg7,
+                        double arg8);
+
   // Interface types
   already_AddRefed<TestInterface> ReceiveSelf();
   already_AddRefed<TestInterface> ReceiveNullableSelf();
