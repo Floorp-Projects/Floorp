@@ -173,9 +173,7 @@ SVGTransformableElement::GetBBox(ErrorResult& rv)
     return nullptr;
   }
 
-  nsRefPtr<SVGRect> rect;
-  rv = NS_NewSVGRect(getter_AddRefs(rect), nsSVGUtils::GetBBox(frame));
-  return rect.forget();
+  return NS_NewSVGRect(nsSVGUtils::GetBBox(frame));
 }
 
 already_AddRefed<SVGMatrix>
