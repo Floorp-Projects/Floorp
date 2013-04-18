@@ -493,7 +493,7 @@ ThreadActor.prototype = {
       promises.push(promise);
     }
 
-    return resolveAll(promises).then(function () {
+    return all(promises).then(function () {
       return { frames: frames };
     });
   },
@@ -562,7 +562,7 @@ ThreadActor.prototype = {
       let originalLocation = this.sources.getOriginalLocation(aLocation.url,
                                                               aLocation.line);
 
-      return resolveAll([response, originalLocation])
+      return all([response, originalLocation])
         .then(([aResponse, {url, line}]) => {
           if (aResponse.actualLocation) {
             let actualOrigLocation = this.sources.getOriginalLocation(
@@ -692,8 +692,8 @@ ThreadActor.prototype = {
    * Get the script and source lists from the debugger.
    */
   _discoverScriptsAndSources: function TA__discoverScriptsAndSources() {
-    return resolveAll([this._addScript(s)
-                       for (s of this.dbg.findScripts())]);
+    return all([this._addScript(s)
+                for (s of this.dbg.findScripts())]);
   },
 
   onSources: function TA_onSources(aRequest) {
