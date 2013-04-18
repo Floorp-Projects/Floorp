@@ -2311,6 +2311,10 @@ ion::PropertyReadNeedsTypeBarrier(JSContext *cx, types::TypeObject *object, Prop
     if (!property)
         return true;
 
+    // We need to consider possible types for the property both as an 'own'
+    // property on the object and as inherited from any prototype. Type sets
+    // for a property do not, however, reflect inherited types until a
+    // getFromPrototypes() call has been performed.
     if (!property->hasPropagatedProperty())
         object->getFromPrototypes(cx, id, property);
 
