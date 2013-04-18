@@ -156,13 +156,33 @@ nsSVGPathGeometryFrame::IsSVGTransformed(gfxMatrix *aOwnTransform,
     content->GetAnimatedTransformList();
   if ((transformList && transformList->HasTransform()) ||
       content->GetAnimateMotionTransform()) {
-    if (aOwnTransform) {
-      *aOwnTransform = content->PrependLocalTransformsTo(gfxMatrix(),
-                                  nsSVGElement::eUserSpaceToParent);
+    gfxMatrix temp = content->PrependLocalTransformsTo(gfxMatrix(),
+                       nsSVGElement::eUserSpaceToParent);
+    if (temp.HasNonTranslation()) {
+      if (aOwnTransform) {
+        *aOwnTransform = temp;
+      }
+      foundTransform = true;
     }
-    foundTransform = true;
   }
   return foundTransform;
+}
+
+gfxPoint
+nsSVGPathGeometryFrame::GetOwnTransformIfOnlyTranslation() const
+{
+  nsSVGElement *content = static_cast<nsSVGElement*>(mContent);
+  if (!content->GetAnimatedTransformList() &&
+      !content->GetAnimateMotionTransform()) {
+    return gfxPoint();
+  }
+
+  gfxMatrix temp = content->PrependLocalTransformsTo(gfxMatrix(),
+                    nsSVGElement::eUserSpaceToParent);
+  if (temp.HasNonTranslation()) {
+    return gfxPoint();
+  }
+  return temp.GetTranslation();
 }
 
 void
@@ -614,6 +634,8 @@ nsSVGPathGeometryFrame::GeneratePath(gfxContext* aContext,
     aContext->SetLineCap(gfxContext::LINE_CAP_SQUARE);
   }
 
+  gfxContextMatrixAutoSaveRestore save(aContext);
+  aContext->Translate(GetOwnTransformIfOnlyTranslation());
   aContext->NewPath();
   static_cast<nsSVGPathGeometryElement*>(mContent)->ConstructPath(aContext);
 }
