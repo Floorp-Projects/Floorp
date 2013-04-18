@@ -7,7 +7,7 @@ topsrcdir        = @top_srcdir@
 srcdir           = @srcdir@
 VPATH            = @srcdir@
 
-relativesrcdir   = @relativesrcdir@
+relativesrcdir   = dom/permission/tests
 
 include $(DEPTH)/config/autoconf.mk
 
