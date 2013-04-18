@@ -13,7 +13,7 @@ interface nsIDOMMozMobileCellInfo;
 interface nsIDOMMozIccManager;
 interface nsIDOMMozMobileCFInfo;
 
-[scriptable, builtinclass, uuid(2065b3c3-e876-4be1-b373-428ee254a63e)]
+[scriptable, builtinclass, uuid(bde7e16c-ff1f-4c7f-b1cd-480984cbb206)]
 interface nsIDOMMozMobileConnection : nsIDOMEventTarget
 {
   const long ICC_SERVICE_CLASS_VOICE = (1 << 0);
@@ -254,7 +254,7 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    */
   nsIDOMDOMRequest cancelMMI();
 
-   /**
+  /**
    * Configures call forward options.
    *
    * @param CFInfo
@@ -284,6 +284,33 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    * or 'GenericFailure'.
    */
   nsIDOMDOMRequest getCallForwardingOption(in unsigned short reason);
+
+  /**
+   * Configures call waiting options.
+   *
+   * @param enabled
+   *        Value containing the desired call waiting status.
+   *
+   * If successful, the request's onsuccess will be called.
+   *
+   * Otherwise, the request's onerror will be called, and the request's error
+   * will be either 'RadioNotAvailable', 'RequestNotSupported',
+   * 'IllegalSIMorME', or 'GenericFailure'
+   */
+  nsIDOMDOMRequest setCallWaitingOption(in bool enabled);
+
+  /**
+   * Queries current call waiting options.
+   *
+   * If successful, the request's onsuccess will be called, and the request's
+   * result will be a boolean indicating the call waiting status.
+   *
+   *
+   * Otherwise, the request's onerror will be called, and the request's error
+   * will be either 'RadioNotAvailable', 'RequestNotSupported',
+   * or 'GenericFailure'.
+   */
+  nsIDOMDOMRequest getCallWaitingOption();
 
   /**
    * The 'cardstatechange' event is notified when the 'cardState' attribute
