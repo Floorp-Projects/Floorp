@@ -4173,8 +4173,12 @@ pref("wap.UAProf.tagname", "x-wap-profile");
 // automatic-home: Automatic retrieval mode in home network.
 // never: Never retrieval mode.
 pref("dom.mms.retrieval_mode", "manual");
-pref("dom.mms.retrievalRetryCount", 3);
-pref("dom.mms.retrievalRetryInterval", 300000);
+
+pref("dom.mms.sendRetryCount", 3);
+pref("dom.mms.sendRetryInterval", 300000);
+
+pref("dom.mms.retrievalRetryCount", 4);
+pref("dom.mms.retrievalRetryIntervals", "60000,300000,600000,1800000");
 
 // If the user puts a finger down on an element and we think the user
 // might be executing a pan gesture, how long do we wait before
