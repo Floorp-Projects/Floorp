@@ -7,7 +7,7 @@ DEPTH		= @DEPTH@
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-relativesrcdir = @relativesrcdir@
+relativesrcdir = toolkit/components/places/tests/bug_461710
 
 include $(DEPTH)/config/autoconf.mk
 
