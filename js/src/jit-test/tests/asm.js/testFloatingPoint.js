@@ -8,6 +8,7 @@ assertEq(asmLink(asmCompile(USE_ASM + "function f(i,e) { i=i|0;e=+e; return +(+~
 assertEq(asmLink(asmCompile(USE_ASM + "function f(d,i) { d=+d;i=i|0; return +(d + +(i|0)) } return f"))(.1, 1), 1.1);
 assertEq(asmLink(asmCompile(USE_ASM + "function f(d,e) { d=+d;e=+e; return +(d-e) } return f"))(1.1, .8), (1.1-.8));
 assertEq(asmLink(asmCompile(USE_ASM + "function f(d,e) { d=+d;e=+e; return +(d*e) } return f"))(1.1, 2.2), (1.1*2.2));
+assertEq(asmLink(asmCompile(USE_ASM + "function g() { var i=2; return (~~(i=(i+1)|0))|0 } return g"))(), 3);
 
 var f = asmLink(asmCompile(USE_ASM + "function f(d,e) { d=+d;e=+e; return (d<e)|0 } return f"));
 assertEq(f(1.1, 2.2), 1);
@@ -108,6 +109,9 @@ assertEq(f(), -Infinity);
 function ffi(d) { str = String(d) }
 var g = asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'var ffi=imp.ffi; function g() { ffi(+f64[0]) } return g'), this, {ffi:ffi}, buf);
 var h = asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function g() { return +(+f64[0] < 0.0 ? -+f64[0] : +f64[0]) } return g'), this, null, buf)
+
+function ffi1() { return 2.6 }
+assertEq(asmLink(asmCompile('glob', 'imp', USE_ASM + "var ffi1=imp.ffi1; function g() { var i=0,j=0.0; i=~~ffi1(); j=+ffi1(); return +(+(i|0)+j) } return g"), null, {ffi1:ffi1})(), 2+2.6);
 
 // that sounds dangerous!
 var a = [0,1,0xffff0000,0x7fff0000,0xfff80000,0x7ff80000,0xfffc0000,0x7ffc0000,0xffffffff,0x0000ffff,0x00008fff7];

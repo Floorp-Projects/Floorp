@@ -82,6 +82,18 @@ assertEq(f(0x7f),0x7f);
 assertEq(f(0xff),0xff);
 assertEq(f(0x100),0);
 
+var code = asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i,j) {i=i|0;j=+j; f64[i>>3] = j; return (~~f64[i>>3])|0}; return f');
+var f = asmLink(code, this, null, new ArrayBuffer(4096));
+assertEq(f(0, 1.3), 1);
+assertEq(f(4088, 2.5), 2);
+assertEq(f(4096, 3.8), 0);
+
+var code = asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i,j) {i=i|0;j=+j; f64[i>>3] = j; return +f64[i>>3]}; return f');
+var f = asmLink(code, this, null, new ArrayBuffer(4096));
+assertEq(f(0, 1.3), 1.3);
+assertEq(f(4088, 2.5), 2.5);
+assertEq(f(4096, 3.8), NaN);
+
 var i32 = new Int32Array(4096/4);
 i32[0] = 13;
 i32[1] = 0xfffeeee;
