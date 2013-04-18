@@ -28,23 +28,22 @@
 
 #include <windows.h>
 #include <mmsystem.h>
-#include <process.h>
 #include "platform.h"
-#include "TableTicker.h"
-#include "ProfileEntry.h"
+#include <process.h>
 
-class PlatformData : public Malloced {
+
+class Sampler::PlatformData : public Malloced {
  public:
   // Get a handle to the calling thread. This is the thread that we are
   // going to profile. We need to make a copy of the handle because we are
   // going to use it in the sampler thread. Using GetThreadHandle() will
   // not work in this case. We're using OpenThread because DuplicateHandle
   // for some reason doesn't work in Chrome's sandbox.
-  PlatformData(int aThreadId) : profiled_thread_(OpenThread(THREAD_GET_CONTEXT |
+  PlatformData() : profiled_thread_(OpenThread(THREAD_GET_CONTEXT |
                                                THREAD_SUSPEND_RESUME |
                                                THREAD_QUERY_INFORMATION,
                                                false,
-                                               aThreadId)) {}
+                                               GetCurrentThreadId())) {}
 
   ~PlatformData() {
     if (profiled_thread_ != NULL) {
@@ -59,20 +58,8 @@ class PlatformData : public Malloced {
   HANDLE profiled_thread_;
 };
 
-/* static */ PlatformData*
-Sampler::AllocPlatformData(int aThreadId)
-{
-  return new PlatformData(aThreadId);
-}
-
-/* static */ void
-Sampler::FreePlatformData(PlatformData* aData)
-{
-  delete aData;
-}
-
 uintptr_t
-Sampler::GetThreadHandle(PlatformData* aData)
+Sampler::GetThreadHandle(Sampler::PlatformData* aData)
 {
   return (uintptr_t) aData->profiled_thread();
 }
@@ -80,9 +67,9 @@ Sampler::GetThreadHandle(PlatformData* aData)
 class SamplerThread : public Thread {
  public:
   SamplerThread(int interval, Sampler* sampler)
-      : Thread("SamplerThread")
-      , interval_(interval)
-      , sampler_(sampler) {}
+      : Thread("SamplerThread"),
+        interval_(interval),
+        sampler_(sampler) {}
 
   static void StartSampler(Sampler* sampler) {
     if (instance_ == NULL) {
@@ -109,24 +96,8 @@ class SamplerThread : public Thread {
         ::timeBeginPeriod(interval_);
 
     while (sampler_->IsActive()) {
-      {
-        mozilla::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
-        std::vector<ThreadInfo*> threads =
-          sampler_->GetRegisteredThreads();
-        for (uint32_t i = 0; i < threads.size(); i++) {
-          ThreadInfo* info = threads[i];
-
-          // This will be null if we're not interested in profiling this thread.
-          if (!info->Profile())
-            continue;
-
-          ThreadProfile* thread_profile = info->Profile();
-
-          if (!sampler_->IsPaused()) {
-            SampleContext(sampler_, thread_profile);
-          }
-        }
-      }
+      if (!sampler_->IsPaused())
+        SampleContext(sampler_);
       OS::Sleep(interval_);
     }
 
@@ -135,10 +106,8 @@ class SamplerThread : public Thread {
         ::timeEndPeriod(interval_);
   }
 
-  void SampleContext(Sampler* sampler, ThreadProfile* thread_profile) {
-    uintptr_t thread = Sampler::GetThreadHandle(
-                               thread_profile->GetPlatformData());
-    HANDLE profiled_thread = reinterpret_cast<HANDLE>(thread);
+  void SampleContext(Sampler* sampler) {
+    HANDLE profiled_thread = sampler->platform_data()->profiled_thread();
     if (profiled_thread == NULL)
       return;
 
@@ -151,7 +120,6 @@ class SamplerThread : public Thread {
 
     // Grab the timestamp before pausing the thread, to avoid deadlocks.
     sample->timestamp = mozilla::TimeStamp::Now();
-    sample->threadProfile = thread_profile;
 
     static const DWORD kSuspendFailed = static_cast<DWORD>(-1);
     if (SuspendThread(profiled_thread) == kSuspendFailed)
@@ -169,6 +137,7 @@ class SamplerThread : public Thread {
       sample->fp = reinterpret_cast<Address>(context.Ebp);
 #endif
       sample->context = &context;
+      sampler->SampleStack(sample);
       sampler->Tick(sample);
     }
     ResumeThread(profiled_thread);
@@ -186,16 +155,17 @@ class SamplerThread : public Thread {
 SamplerThread* SamplerThread::instance_ = NULL;
 
 
-Sampler::Sampler(int interval, bool profiling, int entrySize)
+Sampler::Sampler(int interval, bool profiling)
     : interval_(interval),
       profiling_(profiling),
       paused_(false),
       active_(false),
-      entrySize_(entrySize) {
+      data_(new PlatformData) {
 }
 
 Sampler::~Sampler() {
   ASSERT(!IsActive());
+  delete data_;
 }
 
 void Sampler::Start() {
@@ -219,11 +189,18 @@ static unsigned int __stdcall ThreadEntry(void* arg) {
   return 0;
 }
 
+class Thread::PlatformData : public Malloced {
+ public:
+  explicit PlatformData(HANDLE thread) : thread_(thread) {}
+  HANDLE thread_;
+  unsigned thread_id_;
+};
+
 // Initialize a Win32 thread object. The thread has an invalid thread
 // handle until it is started.
 Thread::Thread(const char* name)
     : stack_size_(0) {
-  thread_ = kNoThread;
+  data_ = new PlatformData(kNoThread);
   set_name(name);
 }
 
@@ -234,78 +211,30 @@ void Thread::set_name(const char* name) {
 
 // Close our own handle for the thread.
 Thread::~Thread() {
-  if (thread_ != kNoThread) CloseHandle(thread_);
+  if (data_->thread_ != kNoThread) CloseHandle(data_->thread_);
+  delete data_;
 }
 
 // Create a new thread. It is important to use _beginthreadex() instead of
 // the Win32 function CreateThread(), because the CreateThread() does not
 // initialize thread specific structures in the C runtime library.
 void Thread::Start() {
-  thread_ = reinterpret_cast<HANDLE>(
+  data_->thread_ = reinterpret_cast<HANDLE>(
       _beginthreadex(NULL,
                      static_cast<unsigned>(stack_size_),
                      ThreadEntry,
                      this,
                      0,
-                     &thread_id_));
+                     &data_->thread_id_));
 }
 
 // Wait for thread to terminate.
 void Thread::Join() {
-  if (thread_id_ != GetCurrentThreadId()) {
-    WaitForSingleObject(thread_, INFINITE);
+  if (data_->thread_id_ != GetCurrentThreadId()) {
+    WaitForSingleObject(data_->thread_, INFINITE);
   }
 }
 
 void OS::Sleep(int milliseconds) {
   ::Sleep(milliseconds);
-}
-
-bool Sampler::RegisterCurrentThread(const char* aName, PseudoStack* aPseudoStack, bool aIsMainThread)
-{
-  if (!Sampler::sRegisteredThreadsMutex)
-    return false;
-
-  mozilla::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
-
-  ThreadInfo* info = new ThreadInfo(aName, GetCurrentThreadId(),
-    aIsMainThread, aPseudoStack);
-
-  bool profileThread = sActiveSampler &&
-    (aIsMainThread || sActiveSampler->ProfileThreads());
-
-  if (profileThread) {
-    // We need to create the ThreadProfile now
-    info->SetProfile(new ThreadProfile(info->Name(),
-                                       sActiveSampler->EntrySize(),
-                                       info->Stack(),
-                                       GetCurrentThreadId(),
-                                       info->GetPlatformData(),
-                                       aIsMainThread));
-    if (sActiveSampler->ProfileJS()) {
-      info->Profile()->GetPseudoStack()->enableJSSampling();
-    }
-  }
-
-  sRegisteredThreads->push_back(info);
-  return true;
-}
-
-void Sampler::UnregisterCurrentThread()
-{
-  if (!Sampler::sRegisteredThreadsMutex)
-    return;
-
-  mozilla::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
-
-  int id = GetCurrentThreadId();
-
-  for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
-    ThreadInfo* info = sRegisteredThreads->at(i);
-    if (info->ThreadId() == id) {
-      delete info;
-      sRegisteredThreads->erase(sRegisteredThreads->begin() + i);
-      break;
-    }
-  }
 }
