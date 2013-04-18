@@ -83,13 +83,11 @@ BluetoothScoManager::NotifyAudioManager(const nsAString& aAddress)
       NS_WARNING("Failed to notify bluetooth-sco-status-changed observsers!");
       return;
     }
-    am->SetForceForUse(am->USE_COMMUNICATION, am->FORCE_NONE);
   } else {
     if (NS_FAILED(obs->NotifyObservers(nullptr, BLUETOOTH_SCO_STATUS_CHANGED, aAddress.BeginReading()))) {
       NS_WARNING("Failed to notify bluetooth-sco-status-changed observsers!");
       return;
     }
-    am->SetForceForUse(am->USE_COMMUNICATION, am->FORCE_BT_SCO);
   }
 }
 
