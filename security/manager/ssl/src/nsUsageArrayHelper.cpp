@@ -110,6 +110,8 @@ isFatalError(uint32_t checkResult)
 
 } // unnamed namespace
 
+#ifndef NSS_NO_LIBPKIX
+
 // Validates the certificate for the given usage. If the certificate is valid
 // for the given usage, aCounter is incremented, a string description of the
 // usage is appended to outUsages, and nsNSSCertificate::VERIFIED_OK is
@@ -213,6 +215,8 @@ nsUsageArrayHelper::check(uint32_t previousCheckResult,
   return result;
 }
 
+#endif
+
 // Maps the error code to one of the Constants for certificate verification
 // results" in nsIX509Cert.
 void
@@ -266,7 +270,9 @@ nsUsageArrayHelper::GetUsagesArray(const char *suffix,
 
 // TODO: This block will be removed as soon as the switch to libpkix is
 // complete.
+#ifndef NSS_NO_LIBPKIX
 if (!nsNSSComponent::globalConstFlagUsePKIXVerification) {
+#endif
   if (localOnly) {
     nssComponent->SkipOcsp();
   }
@@ -321,6 +327,8 @@ if (!nsNSSComponent::globalConstFlagUsePKIXVerification) {
     *_verified = nsNSSCertificate::VERIFIED_OK;
   }
   return NS_OK;
+
+#ifndef NSS_NO_LIBPKIX
 }
 
   RefPtr<nsCERTValInParamWrapper> params;
@@ -377,4 +385,5 @@ if (!nsNSSComponent::globalConstFlagUsePKIXVerification) {
     *_verified = nsNSSCertificate::VERIFIED_OK;
   }
   return NS_OK;
+#endif
 }
