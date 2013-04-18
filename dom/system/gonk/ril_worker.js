@@ -1382,6 +1382,19 @@ let RIL = {
   },
 
   /**
+   * Query call waiting status.
+   *
+   */
+  queryCallWaiting: function queryCallWaiting(options) {
+    Buf.newParcel(REQUEST_QUERY_CALL_WAITING, options);
+    Buf.writeUint32(1);
+    // As per 3GPP TS 24.083, section 1.6 UE doesn't need to send service
+    // class parameter in call waiting interrogation  to network
+    Buf.writeUint32(ICC_SERVICE_CLASS_NONE);
+    Buf.sendParcel();
+  },
+
+  /**
    * Set call waiting status.
    *
    * @param on
@@ -4733,9 +4746,25 @@ RIL[REQUEST_SET_CALL_FORWARD] =
     }
     this.sendDOMMessage(options);
 };
-RIL[REQUEST_QUERY_CALL_WAITING] = null;
+RIL[REQUEST_QUERY_CALL_WAITING] =
+  function REQUEST_QUERY_CALL_WAITING(length, options) {
+  options.success = options.rilRequestError == 0;
+  if (!options.success) {
+    options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
+    this.sendDOMMessage(options);
+    return;
+  }
+  options.length = Buf.readUint32();
+  options.enabled = ((Buf.readUint32() == 1) &&
+                     ((Buf.readUint32() & ICC_SERVICE_CLASS_VOICE) == 0x01));
+  this.sendDOMMessage(options);
+};
+
 RIL[REQUEST_SET_CALL_WAITING] = function REQUEST_SET_CALL_WAITING(length, options) {
-  options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
+  options.success = options.rilRequestError == 0;
+  if (!options.success) {
+    options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
+  }
   this.sendDOMMessage(options);
 };
 RIL[REQUEST_SMS_ACKNOWLEDGE] = null;

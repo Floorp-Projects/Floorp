@@ -28,9 +28,9 @@ this.PhoneNumber = (function (dataBase) {
   // we will generate a regular expression from the value, with those special
   // characters as prefix/suffix.
   const META_DATA_ENCODING = ["region",
-                              "^internationalPrefix",
+                              "^(?:internationalPrefix)",
                               "nationalPrefix",
-                              "^nationalPrefixForParsing",
+                              "^(?:nationalPrefixForParsing)",
                               "nationalPrefixTransformRule",
                               "nationalPrefixFormattingRule",
                               "^possiblePattern$",
