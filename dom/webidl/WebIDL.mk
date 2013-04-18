@@ -20,7 +20,6 @@ webidl_files = \
   AudioListener.webidl \
   AudioNode.webidl \
   AudioParam.webidl \
-  AudioStreamTrack.webidl \
   Attr.webidl \
   BatteryManager.webidl \
   BeforeUnloadEvent.webidl \
@@ -155,7 +154,6 @@ webidl_files = \
   Location.webidl \
   MediaError.webidl \
   MediaStream.webidl \
-  MediaStreamTrack.webidl \
   MessageEvent.webidl \
   MouseEvent.webidl \
   MouseScrollEvent.webidl \
@@ -300,7 +298,6 @@ webidl_files = \
   UndoManager.webidl \
   URLUtils.webidl \
   USSDReceivedEvent.webidl \
-  VideoStreamTrack.webidl \
   XMLDocument.webidl \
   XMLHttpRequest.webidl \
   XMLHttpRequestEventTarget.webidl \
