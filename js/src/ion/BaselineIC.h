@@ -331,6 +331,7 @@ class ICEntry
     _(GetElem_String)           \
     _(GetElem_Dense)            \
     _(GetElem_TypedArray)       \
+    _(GetElem_Arguments)        \
                                 \
     _(SetElem_Fallback)         \
     _(SetElem_Dense)            \
@@ -364,6 +365,7 @@ class ICEntry
     _(GetProp_CallScripted)     \
     _(GetProp_CallNative)       \
     _(GetProp_CallListBaseNative)\
+    _(GetProp_ArgumentsLength)  \
                                 \
     _(SetProp_Fallback)         \
     _(SetProp_Native)           \
@@ -3034,6 +3036,56 @@ class ICGetElem_TypedArray : public ICStub
     };
 };
 
+class ICGetElem_Arguments : public ICMonitoredStub
+{
+    friend class ICStubSpace;
+  public:
+    enum Which { Normal, Strict, Magic };
+
+  private:
+    ICGetElem_Arguments(IonCode *stubCode, ICStub *firstMonitorStub, Which which)
+      : ICMonitoredStub(ICStub::GetElem_Arguments, stubCode, firstMonitorStub)
+    {
+        extra_ = static_cast<uint16_t>(which);
+    }
+
+  public:
+    static inline ICGetElem_Arguments *New(ICStubSpace *space, IonCode *code,
+                                           ICStub *firstMonitorStub, Which which)
+    {
+        if (!code)
+            return NULL;
+        return space->allocate<ICGetElem_Arguments>(code, firstMonitorStub, which);
+    }
+
+    Which which() const {
+        return static_cast<Which>(extra_);
+    }
+
+    class Compiler : public ICStubCompiler {
+      ICStub *firstMonitorStub_;
+      Which which_;
+
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+        virtual int32_t getKey() const {
+            return static_cast<int32_t>(kind) | (static_cast<int32_t>(which_) << 16);
+        }
+
+      public:
+        Compiler(JSContext *cx, ICStub *firstMonitorStub, Which which)
+          : ICStubCompiler(cx, ICStub::GetElem_Arguments),
+            firstMonitorStub_(firstMonitorStub),
+            which_(which)
+        {}
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICGetElem_Arguments::New(space, getStubCode(), firstMonitorStub_, which_);
+        }
+    };
+};
+
 // SetElem
 //      JSOP_SETELEM
 //      JSOP_INITELEM
@@ -4215,6 +4267,47 @@ class ICGetProp_CallListBaseNative : public ICMonitoredStub
             return ICGetProp_CallListBaseNative::New(
                         space, getStubCode(), firstMonitorStub_, shape, GetProxyHandler(obj_),
                         expandoShape, holder_, holderShape, getter_, pcOffset_);
+        }
+    };
+};
+
+class ICGetProp_ArgumentsLength : public ICStub
+{
+  friend class ICStubSpace;
+  public:
+    enum Which { Normal, Strict, Magic };
+
+  protected:
+    ICGetProp_ArgumentsLength(IonCode *stubCode)
+      : ICStub(ICStub::GetProp_ArgumentsLength, stubCode)
+    { }
+
+  public:
+    static inline ICGetProp_ArgumentsLength *New(ICStubSpace *space, IonCode *code)
+    {
+        if (!code)
+            return NULL;
+        return space->allocate<ICGetProp_ArgumentsLength>(code);
+    }
+
+    class Compiler : public ICStubCompiler {
+      protected:
+        Which which_;
+
+        bool generateStubCode(MacroAssembler &masm);
+
+        virtual int32_t getKey() const {
+            return static_cast<int32_t>(kind) | (static_cast<int32_t>(which_) << 16);
+        }
+
+      public:
+        Compiler(JSContext *cx, Which which)
+          : ICStubCompiler(cx, ICStub::GetProp_ArgumentsLength),
+            which_(which)
+        {}
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICGetProp_ArgumentsLength::New(space, getStubCode());
         }
     };
 };
