@@ -14,7 +14,6 @@
 interface CanvasGradient;
 interface CanvasPattern;
 interface HitRegionOptions;
-interface TextMetrics;
 interface Window;
 
 enum CanvasWindingRule { "nonzero", "evenodd" };
@@ -101,7 +100,7 @@ interface CanvasRenderingContext2D {
   void fillText(DOMString text, double x, double y, optional double maxWidth);
   [Throws, LenientFloat]
   void strokeText(DOMString text, double x, double y, optional double maxWidth);
-  [Throws]
+  [Creator, Throws]
   TextMetrics measureText(DOMString text);
 
   // drawing images
@@ -264,3 +263,29 @@ interface CanvasPathMethods {
   void arc(double x, double y, double radius, double startAngle, double endAngle, optional boolean anticlockwise = false); 
 // NOT IMPLEMENTED  [LenientFloat] void ellipse(double x, double y, double radiusX, double radiusY, double rotation, double startAngle, double endAngle, boolean anticlockwise);
 };
+
+interface TextMetrics {
+
+  // x-direction
+  readonly attribute double width; // advance width
+
+  /*
+   * NOT IMPLEMENTED YET
+
+  readonly attribute double actualBoundingBoxLeft;
+  readonly attribute double actualBoundingBoxRight;
+
+  // y-direction
+  readonly attribute double fontBoundingBoxAscent;
+  readonly attribute double fontBoundingBoxDescent;
+  readonly attribute double actualBoundingBoxAscent;
+  readonly attribute double actualBoundingBoxDescent;
+  readonly attribute double emHeightAscent;
+  readonly attribute double emHeightDescent;
+  readonly attribute double hangingBaseline;
+  readonly attribute double alphabeticBaseline;
+  readonly attribute double ideographicBaseline;
+  */
+
+};
+
