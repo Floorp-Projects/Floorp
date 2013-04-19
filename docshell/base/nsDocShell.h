@@ -751,7 +751,7 @@ protected:
     // For that reasons don't use nsCOMPtr.
 
     nsIDocShellTreeOwner *     mTreeOwner; // Weak Reference
-    nsIDOMEventTarget *        mChromeEventHandler; //Weak Reference
+    mozilla::dom::EventTarget* mChromeEventHandler; //Weak Reference
 
     eCharsetReloadState        mCharsetReloadState;
 
