@@ -145,9 +145,6 @@
   <string name="tabs_normal">&tabs_normal;</string>
   <string name="tabs_private">&tabs_private;</string>
   <string name="tabs_synced">&tabs_synced;</string>
-  <!-- This string only appears in developer builds, which
-       is why it is not localizable. -->
-  <string name="toggle_profiling">Toggle Profiling</string>
 
   <string name="site_settings_title">&site_settings_title2;</string>
   <string name="site_settings_cancel">&site_settings_cancel;</string>

@@ -252,7 +252,6 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Viewport:FixedMarginsChanged", false);
     Services.obs.addObserver(this, "Passwords:Init", false);
     Services.obs.addObserver(this, "FormHistory:Init", false);
-    Services.obs.addObserver(this, "ToggleProfiling", false);
     Services.obs.addObserver(this, "gather-telemetry", false);
     Services.obs.addObserver(this, "keyword-search", false);
 
@@ -1320,17 +1319,6 @@ var BrowserApp = {
       case "sessionstore-state-purge-complete":
         sendMessageToJava({ type: "Session:StatePurged" });
         break;
-
-      case "ToggleProfiling": {
-        let profiler = Cc["@mozilla.org/tools/profiler;1"].
-                       getService(Ci.nsIProfiler);
-        if (profiler.IsActive()) {
-          profiler.StopProfiler();
-        } else {
-          profiler.StartProfiler(100000, 25, ["stackwalk"], 1);
-        }
-        break;
-      }
 
       case "gather-telemetry":
         sendMessageToJava({ type: "Telemetry:Gather" });
