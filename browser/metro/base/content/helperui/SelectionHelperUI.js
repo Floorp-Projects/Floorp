@@ -251,7 +251,6 @@ var SelectionHelperUI = {
   _target: null,
   _movement: { active: false, x:0, y: 0 },
   _activeSelectionRect: null,
-  _selectionHandlerActive: false,
   _selectionMarkIds: [],
   _targetIsEditable: false,
 
@@ -290,8 +289,7 @@ var SelectionHelperUI = {
    * Determines if an edit session is currently active.
    */
   get isActive() {
-    return (this._msgTarget &&
-            this._selectionHandlerActive);
+    return this._msgTarget;
   },
 
   /*
@@ -316,7 +314,6 @@ var SelectionHelperUI = {
     // Send this over to SelectionHandler in content, they'll message us
     // back with information on the current selection. SelectionStart
     // takes client coordinates.
-    this._selectionHandlerActive = false;
     this._sendAsyncMessage("Browser:SelectionStart", {
       xPos: aX,
       yPos: aY
@@ -340,7 +337,6 @@ var SelectionHelperUI = {
     // Send this over to SelectionHandler in content, they'll message us
     // back with information on the current selection. SelectionAttach
     // takes client coordinates.
-    this._selectionHandlerActive = false;
     this._sendAsyncMessage("Browser:SelectionAttach", {
       xPos: aX,
       yPos: aY
@@ -372,7 +368,6 @@ var SelectionHelperUI = {
 
     this._lastPoint = { xPos: aX, yPos: aY };
 
-    this._selectionHandlerActive = false;
     this._sendAsyncMessage("Browser:CaretAttach", {
       xPos: aX,
       yPos: aY
@@ -472,7 +467,6 @@ var SelectionHelperUI = {
     this._selectionMarkIds = [];
     this._msgTarget = null;
     this._activeSelectionRect = null;
-    this._selectionHandlerActive = false;
 
     this.overlay.displayDebugLayer = false;
     this.overlay.enabled = false;
@@ -551,7 +545,6 @@ var SelectionHelperUI = {
     this.closeEditSession(true);
 
     // Reset some of our state
-    this._selectionHandlerActive = false;
     this._activeSelectionRect = null;
 
     // Reset the monocles
@@ -928,15 +921,12 @@ var SelectionHelperUI = {
     let json = aMessage.json;
     switch (aMessage.name) {
       case "Content:SelectionFail":
-        this._selectionHandlerActive = false;
         this._onSelectionFail();
         break;
       case "Content:SelectionRange":
-        this._selectionHandlerActive = true;
         this._onSelectionRangeChange(json);
         break;
       case "Content:SelectionCopied":
-        this._selectionHandlerActive = true;
         this._onSelectionCopied(json);
         break;
       case "Content:SelectionDebugRect":
