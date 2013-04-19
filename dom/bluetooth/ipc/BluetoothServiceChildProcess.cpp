@@ -77,7 +77,7 @@ BluetoothServiceChildProcess::RegisterBluetoothSignalHandler(
                                               const nsAString& aNodeName,
                                               BluetoothSignalObserver* aHandler)
 {
-  if (gBluetoothChild) {
+  if (gBluetoothChild && !IsSignalRegistered(aNodeName)) {
     gBluetoothChild->SendRegisterSignalHandler(nsString(aNodeName));
   }
   BluetoothService::RegisterBluetoothSignalHandler(aNodeName, aHandler);
@@ -88,10 +88,10 @@ BluetoothServiceChildProcess::UnregisterBluetoothSignalHandler(
                                               const nsAString& aNodeName,
                                               BluetoothSignalObserver* aHandler)
 {
-  if (gBluetoothChild) {
+  BluetoothService::UnregisterBluetoothSignalHandler(aNodeName, aHandler);
+  if (gBluetoothChild && !IsSignalRegistered(aNodeName)) {
     gBluetoothChild->SendUnregisterSignalHandler(nsString(aNodeName));
   }
-  BluetoothService::UnregisterBluetoothSignalHandler(aNodeName, aHandler);
 }
 
 nsresult
