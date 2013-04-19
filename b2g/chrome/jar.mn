@@ -19,7 +19,7 @@ chrome.jar:
   content/screen.js                     (content/screen.js)
   content/runapp.js                     (content/runapp.js)
 #endif
-  content/content.css                   (content/content.css)
+* content/content.css                   (content/content.css)
   content/touchcontrols.css             (content/touchcontrols.css)
 
   content/payment.js                    (content/payment.js)
