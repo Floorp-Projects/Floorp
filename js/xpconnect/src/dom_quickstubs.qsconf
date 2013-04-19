@@ -54,7 +54,6 @@ members = [
     #
     # canvas friends
     'nsIDOMCanvasGradient.*',
-    'nsIDOMCanvasPattern.*',
 
     # dom/interfaces/core
     'nsIDOMMozNamedAttrMap.item',
@@ -147,7 +146,6 @@ members = [
 irregularFilenames = {
     # stowaways
     'nsIDOMCanvasGradient': 'nsIDOMCanvasRenderingContext2D',
-    'nsIDOMCanvasPattern': 'nsIDOMCanvasRenderingContext2D',
 
     'nsIDOMBlob': 'nsIDOMFile',
 
@@ -176,7 +174,6 @@ customIncludes = [
     ]
 
 customReturnInterfaces = [
-    'nsIDOMCanvasPattern',
     'nsIDOMCanvasGradient',
     ]
 
