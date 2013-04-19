@@ -6542,6 +6542,10 @@ let Reader = {
     switch(aTopic) {
       case "Reader:Add": {
         let args = JSON.parse(aData);
+        if ('fromAboutReader' in args) {
+          // Ignore adds initiated from aboutReader menu banner
+          break;
+        }
 
         let tabID = null;
         let url, urlWithoutRef;
