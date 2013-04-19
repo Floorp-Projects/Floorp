@@ -102,7 +102,7 @@ HelperBase::~HelperBase()
       NS_WARN_IF_FALSE(mainThread, "Couldn't get the main thread!");
 
       if (mainThread) {
-        NS_ProxyRelease(mainThread, static_cast<nsIDOMEventTarget*>(request));
+        NS_ProxyRelease(mainThread, static_cast<EventTarget*>(request));
       }
     }
   }

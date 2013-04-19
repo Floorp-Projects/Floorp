@@ -24,10 +24,10 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(StkCommandEvent, nsDOMEvent)
 
   static already_AddRefed<StkCommandEvent>
-  Create(mozilla::dom::EventTarget* aOwner, const nsAString& aMessage);
+  Create(EventTarget* aOwner, const nsAString& aMessage);
 
   nsresult
-  Dispatch(nsIDOMEventTarget* aTarget, const nsAString& aEventType)
+  Dispatch(EventTarget* aTarget, const nsAString& aEventType)
   {
     NS_ASSERTION(aTarget, "Null pointer!");
     NS_ASSERTION(!aEventType.IsEmpty(), "Empty event type!");

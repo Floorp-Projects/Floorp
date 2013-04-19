@@ -20,7 +20,6 @@
 #include "nsIDocument.h"
 #include "nsINameSpaceManager.h"
 #include "nsGkAtoms.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIPresShell.h"
 #include "nsImageFrame.h"
 #include "nsCoord.h"

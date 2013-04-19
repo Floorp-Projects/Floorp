@@ -71,7 +71,6 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 #include "nsIDocument.h"
 
 // Focus
-#include "nsIDOMEventTarget.h"
 #include "nsISelectionController.h"
 
 // Misc

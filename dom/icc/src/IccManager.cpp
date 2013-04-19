@@ -181,7 +181,7 @@ IccManager::NotifyStkCommand(const nsAString& aMessage)
   nsRefPtr<StkCommandEvent> event = StkCommandEvent::Create(this, aMessage);
   NS_ASSERTION(event, "This should never fail!");
 
-  return event->Dispatch(ToIDOMEventTarget(), NS_LITERAL_STRING("stkcommand"));
+  return event->Dispatch(this, NS_LITERAL_STRING("stkcommand"));
 }
 
 NS_IMETHODIMP
