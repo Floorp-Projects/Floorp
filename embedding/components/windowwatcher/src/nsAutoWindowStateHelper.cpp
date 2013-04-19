@@ -7,6 +7,7 @@
 
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIDOMEvent.h"
 #include "nsString.h"
 #include "nsGUIEvent.h"

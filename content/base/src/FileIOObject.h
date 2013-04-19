@@ -6,6 +6,7 @@
 #ifndef FileIOObject_h__
 #define FileIOObject_h__
 
+#include "nsIDOMEventTarget.h"
 #include "nsDOMEventTargetHelper.h"
 #include "nsIChannel.h"
 #include "nsIFile.h"

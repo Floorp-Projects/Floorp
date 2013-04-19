@@ -22,6 +22,7 @@ class nsPIDOMWindow;
 #include "nsString.h"
 #include "nsWeakPtr.h"
 #include "nsIDOMEventListener.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIObserver.h"
 #include "nsIStringBundle.h"
 #include "mozilla/Mutex.h"

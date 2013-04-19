@@ -460,7 +460,7 @@ nsDOMEvent::StopImmediatePropagation()
 
 static nsIDocument* GetDocumentForReport(nsEvent* aEvent)
 {
-  EventTarget* target = aEvent->currentTarget;
+  nsIDOMEventTarget* target = aEvent->currentTarget;
   if (nsCOMPtr<nsINode> node = do_QueryInterface(target)) {
     return node->OwnerDoc();
   }

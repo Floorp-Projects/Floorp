@@ -41,16 +41,23 @@ public:
 
   void Notify(const BluetoothSignal& aParam);
 
-  nsISupports*
-  ToISupports()
+  nsIDOMEventTarget*
+  ToIDOMEventTarget() const
   {
-    return static_cast<EventTarget*>(this);
+    return static_cast<nsDOMEventTargetHelper*>(
+      const_cast<BluetoothAdapter*>(this));
+  }
+
+  nsISupports*
+  ToISupports() const
+  {
+    return ToIDOMEventTarget();
   }
 
   void Unroot();
   virtual void SetPropertyByValue(const BluetoothNamedValue& aValue);  
 private:
-
+  
   BluetoothAdapter(nsPIDOMWindow* aOwner, const BluetoothValue& aValue);
   ~BluetoothAdapter();
 

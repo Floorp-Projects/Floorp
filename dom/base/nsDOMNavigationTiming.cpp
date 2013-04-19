@@ -9,6 +9,7 @@
 #include "TimeStamp.h"
 #include "nsContentUtils.h"
 
+#include "nsIDOMEventTarget.h"
 #include "nsIScriptSecurityManager.h"
 
 nsDOMNavigationTiming::nsDOMNavigationTiming()

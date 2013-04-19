@@ -8071,7 +8071,7 @@ nsGlobalWindow::GetListenerManager(bool aCreateIfNotFound)
 
   if (!mListenerManager && aCreateIfNotFound) {
     mListenerManager =
-      new nsEventListenerManager(static_cast<EventTarget*>(this));
+      new nsEventListenerManager(static_cast<nsIDOMEventTarget*>(this));
   }
 
   return mListenerManager;
@@ -8685,7 +8685,7 @@ nsGlobalWindow::DispatchSyncPopState()
 
   domEvent->SetTrusted(true);
 
-  nsCOMPtr<EventTarget> outerWindow =
+  nsCOMPtr<nsIDOMEventTarget> outerWindow =
     do_QueryInterface(GetOuterWindow());
   NS_ENSURE_TRUE(outerWindow, NS_ERROR_UNEXPECTED);
 

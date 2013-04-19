@@ -7,6 +7,7 @@
 
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/HTMLImageElementBinding.h"
+#include "nsIDOMEventTarget.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"

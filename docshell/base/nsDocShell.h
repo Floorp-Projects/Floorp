@@ -70,6 +70,7 @@
 #include "nsISecureBrowserUI.h"
 #include "nsIObserver.h"
 #include "nsDocShellLoadTypes.h"
+#include "nsIDOMEventTarget.h"
 #include "nsILoadContext.h"
 #include "nsIWidget.h"
 #include "nsIWebShellServices.h"
@@ -77,12 +78,6 @@
 #include "nsIClipboardCommands.h"
 #include "nsICommandManager.h"
 #include "nsCRT.h"
-
-namespace mozilla {
-namespace dom {
-class EventTarget;
-}
-}
 
 class nsDocShell;
 class nsDOMNavigationTiming;
@@ -756,7 +751,7 @@ protected:
     // For that reasons don't use nsCOMPtr.
 
     nsIDocShellTreeOwner *     mTreeOwner; // Weak Reference
-    mozilla::dom::EventTarget* mChromeEventHandler; //Weak Reference
+    nsIDOMEventTarget *        mChromeEventHandler; //Weak Reference
 
     eCharsetReloadState        mCharsetReloadState;
 

@@ -18,6 +18,7 @@
 #include "nsIFormControl.h"
 #include "nsIForm.h"
 #include "nsFormSubmission.h"
+#include "nsIDOMEventTarget.h"
 #include "nsAttrValueInlines.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
