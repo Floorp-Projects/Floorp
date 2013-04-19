@@ -11418,6 +11418,15 @@ nsDocShell::EnsureScriptEnvironment()
 
     bool isModalContentWindow = (mItemType == typeContent) &&
         (chromeFlags & nsIWebBrowserChrome::CHROME_MODAL);
+    // There can be various other content docshells associated with the
+    // top-level window, like sidebars. Make sure that we only create an
+    // nsGlobalModalWindow for the primary content shell.
+    if (isModalContentWindow) {
+        nsCOMPtr<nsIDocShellTreeItem> primaryItem;
+        nsresult rv = mTreeOwner->GetPrimaryContentShell(getter_AddRefs(primaryItem));
+        NS_ENSURE_SUCCESS(rv, rv);
+        isModalContentWindow = (primaryItem == this);
+    }
 
     // If our window is modal and we're not opened as chrome, make
     // this window a modal content window.
