@@ -1357,11 +1357,8 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCWrappedNativeScope* aOldScope,
         MOZ_ASSERT(js::GetObjectCompartment(aOldScope->GetGlobalJSObject()) !=
                    js::GetObjectCompartment(aNewScope->GetGlobalJSObject()));
         NS_ASSERTION(aNewParent, "won't be able to find the new parent");
-        NS_ASSERTION(wrapper, "can't transplant slim wrappers");
 
-        if (!wrapper)
-            oldProto = GetSlimWrapperProto(flat);
-        else if (wrapper->HasProto())
+        if (wrapper->HasProto())
             oldProto = wrapper->GetProto();
 
         if (oldProto) {
@@ -1375,8 +1372,6 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCWrappedNativeScope* aOldScope,
                 return NS_ERROR_FAILURE;
             }
         }
-
-        if (wrapper) {
 
             // First, the clone of the reflector, get a copy of its
             // properties and clone its expando chain. The only part that is
@@ -1501,11 +1496,6 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCWrappedNativeScope* aOldScope,
             }
             if (!JS_CopyPropertiesFrom(cx, flat, propertyHolder))
                 MOZ_CRASH();
-        } else {
-            SetSlimWrapperProto(flat, newProto.get());
-            if (!JS_SetPrototype(cx, flat, newProto->GetJSProtoObject()))
-                MOZ_CRASH(); // this is bad, very bad
-        }
 
         // Call the scriptable hook to indicate that we transplanted.
         XPCNativeScriptableInfo* si = wrapper->GetScriptableInfo();
