@@ -1866,6 +1866,7 @@ def CreateBindingJSObject(descriptor, parent):
         create += """  // Make sure the native objects inherit from NonRefcountedDOMObject so that we
   // log their ctor and dtor.
   MustInheritFromNonRefcountedDOMObject(aObject);
+  *aTookOwnership = true;
 """
     return create % parent
 
@@ -2004,6 +2005,8 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
         assert descriptor.interface.hasInterfacePrototypeObject()
         args = [Argument('JSContext*', 'aCx'), Argument('JSObject*', 'aScope'),
                 Argument(descriptor.nativeType + '*', 'aObject')]
+        if descriptor.nativeOwnership == 'owned':
+            args.append(Argument('bool*', 'aTookOwnership'))
         CGAbstractMethod.__init__(self, descriptor, 'Wrap', 'JSObject*', args)
         self.properties = properties
 
@@ -3460,7 +3463,7 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
                "}\n" +
                successCode) % (wrapCall)
         return str
-    
+
     if type is None or type.isVoid():
         return (setValue("JSVAL_VOID"), True)
 
@@ -3542,11 +3545,15 @@ if (!returnArray) {
             failed = None
         elif not descriptor.interface.isExternal() and not descriptor.skipGen:
             if descriptor.wrapperCache:
+                assert descriptor.nativeOwnership != 'owned'
                 wrapMethod = "WrapNewBindingObject"
             else:
                 if not isCreator:
                     raise MethodNotCreatorError(descriptor.interface.identifier.name)
-                wrapMethod = "WrapNewBindingNonWrapperCachedObject"
+                if descriptor.nativeOwnership == 'owned':
+                    wrapMethod = "WrapNewBindingNonWrapperCachedOwnedObject"
+                else:
+                    wrapMethod = "WrapNewBindingNonWrapperCachedObject"
             wrap = "%s(cx, ${obj}, %s, ${jsvalPtr})" % (wrapMethod, result)
             if not descriptor.hasXPConnectImpls:
                 # Can only fail to wrap as a new-binding object
@@ -3779,6 +3786,9 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
             returnType.unroll().inner.identifier.name).nativeType)
         if resultAlreadyAddRefed:
             result = CGTemplatedType("nsRefPtr", result)
+        elif descriptorProvider.getDescriptor(
+            returnType.unroll().inner.identifier.name).nativeOwnership == 'owned':
+            result = CGTemplatedType("nsAutoPtr", result)
         else:
             result = CGWrapper(result, post="*")
         return result, False
