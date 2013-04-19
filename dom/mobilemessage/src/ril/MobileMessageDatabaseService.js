@@ -894,6 +894,7 @@ MobileMessageDatabaseService.prototype = {
           if (threadRecord.lastTimestamp <= timestamp) {
             threadRecord.lastTimestamp = timestamp;
             threadRecord.subject = aMessageRecord.body;
+            threadRecord.lastMessageId = aMessageRecord.id;
             needsUpdate = true;
           }
 
@@ -1260,10 +1261,12 @@ MobileMessageDatabaseService.prototype = {
   },
 
   deleteMessage: function deleteMessage(messageId, aRequest) {
+    if (DEBUG) debug("deleteMessage: message id " + messageId);
     let deleted = false;
     let self = this;
     this.newTxn(READ_WRITE, function (error, txn, stores) {
       if (error) {
+        if (DEBUG) debug("deleteMessage: failed to open transaction");
         aRequest.notifyDeleteMessageFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
         return;
       }
@@ -1290,6 +1293,7 @@ MobileMessageDatabaseService.prototype = {
 
           // First actually delete the message.
           messageStore.delete(messageId).onsuccess = function(event) {
+            if (DEBUG) debug("Message id " + messageId + " deleted");
             deleted = true;
 
             // Then update unread count and most recent message.
@@ -1298,6 +1302,7 @@ MobileMessageDatabaseService.prototype = {
             threadStore.get(threadId).onsuccess = function(event) {
               // This must exist.
               let threadRecord = event.target.result;
+              if (DEBUG) debug("Updating thread record " + JSON.stringify(threadRecord));
 
               if (!messageRecord.read) {
                 threadRecord.unreadCount--;
@@ -2057,15 +2062,15 @@ GetThreadsCursor.prototype = {
   collector: null,
 
   getThreadTxn: function getThreadTxn(threadStore, threadId) {
-    if (DEBUG) debug ("Fetching message " + threadId);
+    if (DEBUG) debug ("Fetching thread " + threadId);
 
     let getRequest = threadStore.get(threadId);
     let self = this;
     getRequest.onsuccess = function onsuccess(event) {
-      if (DEBUG) {
-        debug("notifyCursorResult - threadId: " + threadId);
-      }
       let threadRecord = event.target.result;
+      if (DEBUG) {
+        debug("notifyCursorResult: " + JSON.stringify(threadRecord));
+      }
       let thread =
         gMobileMessageService.createThread(threadRecord.id,
                                            threadRecord.participantAddresses,
