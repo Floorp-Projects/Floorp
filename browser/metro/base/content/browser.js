@@ -442,12 +442,7 @@ var Browser = {
     if (aBringFront)
       this.selectedTab = newTab;
 
-    let getAttention = ("getAttention" in params ? params.getAttention : !aBringFront);
-    let event = document.createEvent("UIEvents");
-    event.initUIEvent("TabOpen", true, false, window, getAttention);
-    newTab.chromeTab.dispatchEvent(event);
-    newTab.browser.messageManager.sendAsyncMessage("Browser:TabOpen");
-
+    this._announceNewTab(newTab, params, aBringFront);
     return newTab;
   },
 
@@ -467,6 +462,18 @@ var Browser = {
 
   savePage: function() {
     ContentAreaUtils.saveDocument(this.selectedBrowser.contentWindow.document);
+  },
+
+  /*
+   * helper for addTab related methods. Fires events related to
+   * new tab creation.
+   */
+  _announceNewTab: function _announceNewTab(aTab, aParams, aBringFront) {
+    let getAttention = ("getAttention" in aParams ? aParams.getAttention : !aBringFront);
+    let event = document.createEvent("UIEvents");
+    event.initUIEvent("TabOpen", true, false, window, getAttention);
+    aTab.chromeTab.dispatchEvent(event);
+    aTab.browser.messageManager.sendAsyncMessage("Browser:TabOpen");
   },
 
   _doCloseTab: function _doCloseTab(aTab) {
@@ -1399,6 +1406,7 @@ function Tab(aURI, aParams) {
   this._loading = false;
   this._chromeTab = null;
   this._metadata = null;
+  this._eventDeferred = null;
 
   this.owner = null;
 
@@ -1432,6 +1440,10 @@ Tab.prototype = {
 
   get metadata() {
     return this._metadata || kDefaultMetadata;
+  },
+
+  get pageShowPromise() {
+    return this._eventDeferred ? this._eventDeferred.promise : null;
   },
 
   /** Update browser styles when the viewport metadata changes. */
@@ -1532,23 +1544,23 @@ Tab.prototype = {
   },
 
   create: function create(aURI, aParams) {
+    this._eventDeferred = Promise.defer();
+
     this._chromeTab = Elements.tabList.addTab();
     this._id = Browser.createTabId();
     let browser = this._createBrowser(aURI, null);
 
-    // Should we fully load the new browser, or wait until later
-    if ("delayLoad" in aParams && aParams.delayLoad)
-      return;
-
-    try {
-      let flags = aParams.flags || Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
-      let postData = ("postData" in aParams && aParams.postData) ? aParams.postData.value : null;
-      let referrerURI = "referrerURI" in aParams ? aParams.referrerURI : null;
-      let charset = "charset" in aParams ? aParams.charset : null;
-      browser.loadURIWithFlags(aURI, flags, referrerURI, charset, postData);
-    } catch(e) {
-      dump("Error: " + e + "\n");
+    let self = this;
+    function onPageShowEvent(aEvent) {
+      browser.removeEventListener("pageshow", onPageShowEvent);
+      if (self._eventDeferred) {
+        self._eventDeferred.resolve(self);
+      }
+      self._eventDeferred = null;
     }
+    browser.addEventListener("pageshow", onPageShowEvent, true);
+
+    this._loadUsingParams(browser, aURI, aParams);
   },
 
   destroy: function destroy() {
@@ -1579,6 +1591,14 @@ Tab.prototype = {
     browser.__SS_data = session.data;
     browser.__SS_extdata = session.extra;
     browser.__SS_restore = true;
+  },
+
+  _loadUsingParams: function _loadUsingParams(aBrowser, aURI, aParams) {
+    let flags = aParams.flags || Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+    let postData = ("postData" in aParams && aParams.postData) ? aParams.postData.value : null;
+    let referrerURI = "referrerURI" in aParams ? aParams.referrerURI : null;
+    let charset = "charset" in aParams ? aParams.charset : null;
+    aBrowser.loadURIWithFlags(aURI, flags, referrerURI, charset, postData);
   },
 
   _createBrowser: function _createBrowser(aURI, aInsertBefore) {
