@@ -89,7 +89,8 @@ function checkTools() {
   for (let tool of toolsPref) {
     prefNodes.push(tool);
   }
-  toggleTools();
+  // Wait for the next turn of the event loop to avoid stack overflow errors.
+  executeSoon(toggleTools);
 }
 
 function toggleTools() {
@@ -113,7 +114,8 @@ function checkUnregistered(event, data) {
     // checking tab on the toolbox
     ok(!doc.getElementById("toolbox-tab-" + data), "Tab removed for " + data);
     index++;
-    toggleTools();
+    // Wait for the next turn of the event loop to avoid stack overflow errors.
+    executeSoon(toggleTools);
     return;
   }
   ok(false, "Something went wrong, " + data + " was not unregistered");
@@ -126,7 +128,8 @@ function checkRegistered(event, data) {
     // checking tab on the toolbox
     ok(doc.getElementById("toolbox-tab-" + data), "Tab added back for " + data);
     index++;
-    toggleTools();
+    // Wait for the next turn of the event loop to avoid stack overflow errors.
+    executeSoon(toggleTools);
     return;
   }
   ok(false, "Something went wrong, " + data + " was not registered back");
