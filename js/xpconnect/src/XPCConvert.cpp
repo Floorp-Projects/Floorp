@@ -838,8 +838,6 @@ XPCConvert::NativeInterface2JSObject(jsval* d,
                 return CreateHolderIfNeeded(flat, d, dest);
             }
         }
-
-        MOZ_ASSERT_IF(flat, !IS_SLIM_WRAPPER_OBJECT(flat));
     } else {
         flat = nullptr;
     }
@@ -875,7 +873,9 @@ XPCConvert::NativeInterface2JSObject(jsval* d,
                                             getter_AddRefs(strongWrapper));
 
         wrapper = strongWrapper;
-    } else if (IS_WN_WRAPPER_OBJECT(flat)) {
+    } else {
+        MOZ_ASSERT(IS_WN_WRAPPER_OBJECT(flat));
+
         wrapper = static_cast<XPCWrappedNative*>(xpc_GetJSPrivate(flat));
 
         // If asked to return the wrapper we'll return a strong reference,

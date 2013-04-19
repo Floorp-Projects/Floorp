@@ -99,10 +99,7 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
     } else {
         js::Class *clasp = js::GetObjectClass(unwrapped);
         if (IS_WRAPPER_CLASS(clasp)) {
-            if (IS_SLIM_WRAPPER_OBJECT(unwrapped))
-                mFlattenedJSObject = unwrapped;
-            else
-                mWrapper = XPCWrappedNative::Get(unwrapped);
+            mWrapper = XPCWrappedNative::Get(unwrapped);
         } else if (IS_TEAROFF_CLASS(clasp)) {
             mTearOff = (XPCWrappedNativeTearOff*)js::GetObjectPrivate(unwrapped);
             mWrapper = XPCWrappedNative::Get(js::GetObjectParent(unwrapped));
@@ -116,8 +113,7 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
         else
             mScriptableInfo = mWrapper->GetScriptableInfo();
     } else {
-        NS_ABORT_IF_FALSE(!mFlattenedJSObject || IS_SLIM_WRAPPER(mFlattenedJSObject),
-                          "should have a slim wrapper");
+        NS_ABORT_IF_FALSE(!mFlattenedJSObject, "What object do we have?");
     }
 
     if (!JSID_IS_VOID(name))

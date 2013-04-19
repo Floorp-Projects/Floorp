@@ -565,14 +565,10 @@ getWrapper(JSContext *cx,
         obj = js::GetObjectParent(obj);
     }
 
-    // If we've got a WN or slim wrapper, store things the way callers expect.
-    // Otherwise, leave things null and return.
-    if (IS_WRAPPER_CLASS(clasp)) {
-        if (IS_WN_WRAPPER_OBJECT(obj))
-            *wrapper = (XPCWrappedNative*) js::GetObjectPrivate(obj);
-        else
-            *cur = obj;
-    }
+    // If we've got a WN, store things the way callers expect. Otherwise, leave
+    // things null and return.
+    if (IS_WRAPPER_CLASS(clasp))
+        *wrapper = XPCWrappedNative::Get(obj);
 
     return NS_OK;
 }
@@ -597,12 +593,8 @@ castNative(JSContext *cx,
     } else if (cur) {
         nsISupports *native;
         if (!(native = mozilla::dom::UnwrapDOMObjectToISupports(cur))) {
-            if (IS_SLIM_WRAPPER(cur)) {
-                native = static_cast<nsISupports*>(xpc_GetJSPrivate(cur));
-            } else {
-                *pThisRef = nullptr;
-                return NS_ERROR_ILLEGAL_VALUE;
-            }
+            *pThisRef = nullptr;
+            return NS_ERROR_ILLEGAL_VALUE;
         }
 
         if (NS_SUCCEEDED(getNative(native, cur, iid, ppThis, pThisRef, vp))) {
@@ -630,9 +622,7 @@ castNativeFromWrapper(JSContext *cx,
 
     if (IS_WRAPPER_CLASS(js::GetObjectClass(obj))) {
         cur = obj;
-        wrapper = IS_WN_WRAPPER_OBJECT(cur) ?
-                  (XPCWrappedNative*)xpc_GetJSPrivate(obj) :
-                  nullptr;
+        wrapper = (XPCWrappedNative*)xpc_GetJSPrivate(obj);
         tearoff = nullptr;
     } else {
         *rv = getWrapper(cx, obj, &wrapper, &cur, &tearoff);
@@ -644,11 +634,6 @@ castNativeFromWrapper(JSContext *cx,
     if (wrapper) {
         native = wrapper->GetIdentityObject();
         cur = wrapper->GetFlatJSObject();
-        if (!native || !HasBitInInterfacesBitmap(cur, interfaceBit)) {
-            native = nullptr;
-        }
-    } else if (cur && IS_SLIM_WRAPPER(cur)) {
-        native = static_cast<nsISupports*>(xpc_GetJSPrivate(cur));
         if (!native || !HasBitInInterfacesBitmap(cur, interfaceBit)) {
             native = nullptr;
         }

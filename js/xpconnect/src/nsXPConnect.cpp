@@ -1246,9 +1246,7 @@ nsXPConnect::GetNativeOfWrapper(JSContext * aJSContext,
         return nullptr;
     }
     if (IS_WRAPPER_CLASS(js::GetObjectClass(aJSObj))) {
-        if (IS_SLIM_WRAPPER_OBJECT(aJSObj))
-            return (nsISupports*)xpc_GetJSPrivate(aJSObj);
-        else if (XPCWrappedNative *wn = XPCWrappedNative::Get(aJSObj))
+        if (XPCWrappedNative *wn = XPCWrappedNative::Get(aJSObj))
             return wn->Native();
         return nullptr;
     }

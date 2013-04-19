@@ -15,13 +15,6 @@
  * additional C++ object involved of type XPCWrappedNative. The XPCWrappedNative
  * holds pointers to the C++ object and the flat JS object.
  *
- * As an optimization, some C++ objects don't have XPCWrappedNatives, although
- * they still have a corresponding flattened JS object. These are called "slim
- * wrappers": all the wrapping information is stored in extra fields of the C++
- * object and the JS object. Slim wrappers are only used for DOM objects. As a
- * deoptimization, slim wrappers can be "morphed" into XPCWrappedNatives if the
- * extra fields of the XPCWrappedNative become necessary.
- *
  * All XPCWrappedNative objects belong to an XPCWrappedNativeScope. These scopes
  * are essentially in 1:1 correspondence with JS global objects. The
  * XPCWrappedNativeScope has a pointer to the JS global object. The parent of a
