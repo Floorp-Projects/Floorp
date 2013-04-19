@@ -13,6 +13,8 @@
  *  padding top: 6
  */
 
+XPCOMUtils.defineLazyModuleGetter(this, "Promise", "resource://gre/modules/commonjs/sdk/core/promise.js");
+
 // Y axis scroll distance that will disable this module and cancel selection
 const kDisableOnScrollDistance = 25;
 
@@ -286,15 +288,86 @@ var SelectionHelperUI = {
   /*
    * isActive (prop)
    *
-   * Determines if an edit session is currently active.
+   * Determines if a selection edit session is currently active.
    */
   get isActive() {
-    return this._msgTarget;
+    return this._msgTarget ? true : false;
+  },
+
+  /*
+   * isSelectionUIVisible (prop)
+   *
+   * Determines if edit session monocles are visible. Useful
+   * in checking if selection handler is setup for tests.
+   */
+  get isSelectionUIVisible() {
+    if (!this._msgTarget || !this._startMark)
+      return false;
+    return this._startMark.visible;
+  },
+
+  /*
+   * isCaretUIVisible (prop)
+   *
+   * Determines if caret browsing monocle is visible. Useful
+   * in checking if selection handler is setup for tests.
+   */
+  get isCaretUIVisible() {
+    if (!this._msgTarget || !this._caretMark)
+      return false;
+    return this._caretMark.visible;
+  },
+
+  /*
+   * hasActiveDrag (prop)
+   *
+   * Determines if a marker is actively being dragged (missing call
+   * to markerDragStop). Useful in checking if selection handler is
+   * setup for tests.
+   */
+  get hasActiveDrag() {
+    if (!this._msgTarget)
+      return false;
+    if ((this._caretMark && this._caretMark.dragging) ||
+        (this._startMark && this._startMark.dragging) ||
+        (this._endMark && this._endMark.dragging))
+      return true;
+    return false;
   },
 
   /*
    * Public apis
    */
+
+  /*
+   * pingSelectionHandler
+   * 
+   * Ping the SelectionHandler and wait for the right response. Insures
+   * all previous messages have been received. Useful in checking if
+   * selection handler is setup for tests.
+   *
+   * @return a promise
+   */
+  pingSelectionHandler: function pingSelectionHandler() {
+    if (!this.isActive)
+      return null;
+
+    if (this._pingCount == undefined) {
+      this._pingCount = 0;
+      this._pingArray = [];
+    }
+
+    this._pingCount++;
+
+    let deferred = Promise.defer();
+    this._pingArray.push({
+      id: this._pingCount,
+      deferred: deferred
+    });
+
+    this._sendAsyncMessage("Browser:SelectionHandlerPing", { id: this._pingCount });
+    return deferred.promise;
+  },
 
   /*
    * openEditSession
@@ -395,11 +468,15 @@ var SelectionHelperUI = {
    * clear any selection. optional, the default is false.
    */
   closeEditSession: function closeEditSession(aClearSelection) {
+    if (!this.isActive) {
+      return;
+    }
+    // This will callback in _selectionHandlerShutdown in
+    // which we will call _shutdown().
     let clearSelection = aClearSelection || false;
     this._sendAsyncMessage("Browser:SelectionClose", {
       clearSelection: clearSelection
     });
-    this._shutdown();
   },
 
   /*
@@ -422,6 +499,8 @@ var SelectionHelperUI = {
     messageManager.addMessageListener("Content:SelectionCopied", this);
     messageManager.addMessageListener("Content:SelectionFail", this);
     messageManager.addMessageListener("Content:SelectionDebugRect", this);
+    messageManager.addMessageListener("Content:HandlerShutdown", this);
+    messageManager.addMessageListener("Content:SelectionHandlerPong", this);
 
     window.addEventListener("keypress", this, true);
     window.addEventListener("click", this, false);
@@ -446,6 +525,8 @@ var SelectionHelperUI = {
     messageManager.removeMessageListener("Content:SelectionCopied", this);
     messageManager.removeMessageListener("Content:SelectionFail", this);
     messageManager.removeMessageListener("Content:SelectionDebugRect", this);
+    messageManager.removeMessageListener("Content:HandlerShutdown", this);
+    messageManager.removeMessageListener("Content:SelectionHandlerPong", this);
 
     window.removeEventListener("keypress", this, true);
     window.removeEventListener("click", this, false);
@@ -801,6 +882,14 @@ var SelectionHelperUI = {
                               aMsg.color, aMsg.fill, aMsg.id);
   },
 
+  _selectionHandlerShutdown: function _selectionHandlerShutdown() {
+    this._shutdown();
+  },
+
+  /*
+   * Message handlers
+   */
+
   _onSelectionCopied: function _onSelectionCopied(json) {
     this.closeEditSession(true);
   },
@@ -843,6 +932,21 @@ var SelectionHelperUI = {
     Util.dumpLn("failed to get a selection.");
     this.closeEditSession();
   },
+
+  /*
+   * _onPong
+   *
+   * Handles the closure of promise we return when we send a ping
+   * to SelectionHandler in pingSelectionHandler. Testing use.
+   */
+  _onPong: function _onPong(aId) {
+    let ping = this._pingArray.pop();
+    if (ping.id != aId) {
+      ping.deferred.reject(
+        new Error("Selection module's pong doesn't match our last ping."));
+    }
+    ping.deferred.resolve();
+   },
 
   /*
    * Events
@@ -895,8 +999,11 @@ var SelectionHelperUI = {
         this._onResize(aEvent);
         break;
 
-      case "ZoomChanged":
       case "URLChanged":
+        this._shutdown();
+        break;
+
+      case "ZoomChanged":
       case "MozPrecisePointer":
         this.closeEditSession(true);
         break;
@@ -931,6 +1038,12 @@ var SelectionHelperUI = {
         break;
       case "Content:SelectionDebugRect":
         this._onDebugRectRequest(json);
+        break;
+      case "Content:HandlerShutdown":
+        this._selectionHandlerShutdown();
+        break;
+      case "Content:SelectionHandlerPong":
+        this._onPong(json.id);
         break;
     }
   },
