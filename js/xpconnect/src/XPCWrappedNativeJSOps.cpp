@@ -593,10 +593,6 @@ XPC_WN_Shared_Enumerate(JSContext *cx, JSHandleObject obj)
 
 /***************************************************************************/
 
-#ifdef DEBUG_slimwrappers
-static uint32_t sFinalizedSlimWrappers;
-#endif
-
 enum WNHelperType {
     WN_NOHELPER,
     WN_HELPER
@@ -613,20 +609,6 @@ WrappedNativeFinalize(js::FreeOp *fop, JSObject *obj, WNHelperType helperType)
     if (!p)
         return;
 
-    if (IS_SLIM_WRAPPER_OBJECT(obj)) {
-        SLIM_LOG(("----- %i finalized slim wrapper (%p, %p)\n",
-                  ++sFinalizedSlimWrappers, obj, p));
-
-        nsWrapperCache* cache;
-        CallQueryInterface(p, &cache);
-        cache->ClearWrapper();
-
-        XPCJSRuntime *rt = nsXPConnect::GetRuntimeInstance();
-        MOZ_ASSERT(rt, "XPCJSRuntime should exist during a GC.");
-        rt->DeferredRelease(p);
-        return;
-    }
-
     XPCWrappedNative* wrapper = static_cast<XPCWrappedNative*>(p);
     if (helperType == WN_HELPER)
         wrapper->GetScriptableCallback()->Finalize(wrapper, js::CastToJSFreeOp(fop), obj);
@@ -637,12 +619,6 @@ static void
 XPC_WN_NoHelper_Finalize(js::FreeOp *fop, JSObject *obj)
 {
     WrappedNativeFinalize(fop, obj, WN_NOHELPER);
-}
-
-static void
-TraceInsideSlimWrapper(JSTracer *trc, JSObject *obj)
-{
-    GetSlimWrapperProto(obj)->TraceSelf(trc);
 }
 
 /*
@@ -662,16 +638,9 @@ MarkWrappedNative(JSTracer *trc, JSObject *obj)
     }
     MOZ_ASSERT(IS_WRAPPER_CLASS(clazz));
 
-    if (IS_WN_WRAPPER_OBJECT(obj)) {
-        XPCWrappedNative *wrapper = XPCWrappedNative::Get(obj);
-        if (wrapper) {
-            if (wrapper->IsValid())
-                wrapper->TraceInside(trc);
-        }
-    } else {
-        MOZ_ASSERT(IS_SLIM_WRAPPER_OBJECT(obj));
-        TraceInsideSlimWrapper(trc, obj);
-    }
+    XPCWrappedNative *wrapper = XPCWrappedNative::Get(obj);
+    if (wrapper && wrapper->IsValid())
+        wrapper->TraceInside(trc);
 }
 
 static void
@@ -1370,9 +1339,6 @@ XPCNativeScriptableShared::PopulateJSClass()
 
     if (mFlags.WantOuterObject())
         mJSClass.base.ext.outerObject = XPC_WN_OuterObject;
-
-    if (!(mFlags & nsIXPCScriptable::WANT_OUTER_OBJECT))
-        mCanBeSlim = true;
 
     mJSClass.base.ext.isWrappedNative = true;
 }
