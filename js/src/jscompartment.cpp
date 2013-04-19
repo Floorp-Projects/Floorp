@@ -488,6 +488,26 @@ JSCompartment::markCrossCompartmentWrappers(JSTracer *trc)
     }
 }
 
+/*
+ * This method marks and keeps live all pointers in the cross compartment
+ * wrapper map. It should be called only for minor GCs, since minor GCs cannot,
+ * by their nature, apply the weak constraint to safely remove items from the
+ * wrapper map.
+ */
+void
+JSCompartment::markAllCrossCompartmentWrappers(JSTracer *trc)
+{
+    for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
+        CrossCompartmentKey key = e.front().key;
+        MarkGCThingRoot(trc, (void **)&key.wrapped, "CrossCompartmentKey::wrapped");
+        if (key.debugger)
+            MarkObjectRoot(trc, &key.debugger, "CrossCompartmentKey::debugger");
+        MarkValueRoot(trc, e.front().value.unsafeGet(), "CrossCompartmentWrapper");
+        if (key.wrapped != e.front().key.wrapped || key.debugger != e.front().key.debugger)
+            e.rekeyFront(key);
+    }
+}
+
 void
 JSCompartment::mark(JSTracer *trc)
 {
@@ -760,6 +780,7 @@ JSCompartment::clearBreakpointsIn(FreeOp *fop, js::Debugger *dbg, JSObject *hand
 void
 JSCompartment::clearTraps(FreeOp *fop)
 {
+    MinorGC(rt, JS::gcreason::EVICT_NURSERY);
     for (gc::CellIter i(zone(), gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
         if (script->compartment() == this && script->hasAnyBreakpointsOrStepMode())

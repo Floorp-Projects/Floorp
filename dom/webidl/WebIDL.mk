@@ -58,6 +58,7 @@ webidl_files = \
   DOMStringMap.webidl \
   DOMTokenList.webidl \
   DOMTransaction.webidl \
+  DragEvent.webidl \
   DummyBinding.webidl \
   DynamicsCompressorNode.webidl \
   Element.webidl \

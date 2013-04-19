@@ -8,6 +8,7 @@
 
 #include "nsIDOMDragEvent.h"
 #include "nsDOMMouseEvent.h"
+#include "mozilla/dom/DragEventBinding.h"
 
 class nsEvent;
 
@@ -24,6 +25,30 @@ public:
   NS_DECL_NSIDOMDRAGEVENT
   
   NS_FORWARD_TO_NSDOMMOUSEEVENT
+
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope)
+  {
+    return mozilla::dom::DragEventBinding::Wrap(aCx, aScope, this);
+  }
+
+  nsIDOMDataTransfer* GetDataTransfer();
+
+  void InitDragEvent(const nsAString& aType,
+                     bool aCanBubble, bool aCancelable,
+                     nsIDOMWindow* aView, int32_t aDetail,
+                     int32_t aScreenX, int32_t aScreenY,
+                     int32_t aClientX, int32_t aClientY, 
+                     bool aCtrlKey, bool aAltKey, bool aShiftKey,
+                     bool aMetaKey, uint16_t aButton,
+                     mozilla::dom::EventTarget* aRelatedTarget,
+                     nsIDOMDataTransfer* aDataTransfer,
+                     mozilla::ErrorResult& aRv)
+  {
+    aRv = InitDragEvent(aType, aCanBubble, aCancelable,
+                        aView, aDetail, aScreenX, aScreenY, aClientX, aClientY,
+                        aCtrlKey, aAltKey, aShiftKey, aMetaKey, aButton,
+                        aRelatedTarget, aDataTransfer);
+  }
 };
 
 nsresult NS_NewDOMDragEvent(nsIDOMEvent** aInstancePtrResult,

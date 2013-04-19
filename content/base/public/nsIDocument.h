@@ -2103,7 +2103,7 @@ public:
   already_AddRefed<nsIDOMTouchList>
     CreateTouchList(const mozilla::dom::Sequence<nsRefPtr<nsIDOMTouch> >& aTouches);
 
-  nsHTMLDocument* AsHTMLDocument();
+  virtual nsHTMLDocument* AsHTMLDocument() { return nullptr; }
 
 private:
   uint64_t mWarnedAbout;

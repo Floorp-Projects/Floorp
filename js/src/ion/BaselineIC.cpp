@@ -3346,6 +3346,18 @@ TypedArrayGetElemStubExists(ICGetElem_Fallback *stub, HandleObject obj)
     return false;
 }
 
+static bool
+ArgumentsGetElemStubExists(ICGetElem_Fallback *stub, ICGetElem_Arguments::Which which)
+{
+    for (ICStubConstIterator iter = stub->beginChainConst(); !iter.atEnd(); iter++) {
+        if (!iter->isGetElem_Arguments())
+            continue;
+        if (iter->toGetElem_Arguments()->which() == which)
+            return true;
+    }
+    return false;
+}
+
 
 static bool TryAttachNativeGetElemStub(JSContext *cx, HandleScript script,
                                        ICGetElem_Fallback *stub, HandleObject obj,
@@ -3417,10 +3429,42 @@ TryAttachGetElemStub(JSContext *cx, HandleScript script, ICGetElem_Fallback *stu
         return true;
     }
 
+    if (lhs.isMagic(JS_OPTIMIZED_ARGUMENTS) && rhs.isInt32() &&
+        !ArgumentsGetElemStubExists(stub, ICGetElem_Arguments::Magic))
+    {
+        IonSpew(IonSpew_BaselineIC, "  Generating GetElem(MagicArgs[Int32]) stub");
+        ICGetElem_Arguments::Compiler compiler(cx, stub->fallbackMonitorStub()->firstMonitorStub(),
+                                               ICGetElem_Arguments::Magic);
+        ICStub *argsStub = compiler.getStub(compiler.getStubSpace(script));
+        if (!argsStub)
+            return false;
+
+        stub->addNewStub(argsStub);
+        return true;
+    }
+
     // Otherwise, GetElem is only optimized on objects.
     if (!lhs.isObject())
         return true;
     RootedObject obj(cx, &lhs.toObject());
+
+    // Check for ArgumentsObj[int] accesses
+    if (obj->isArguments() && rhs.isInt32()) {
+        ICGetElem_Arguments::Which which = ICGetElem_Arguments::Normal;
+        if (obj->isStrictArguments())
+            which = ICGetElem_Arguments::Strict;
+        if (!ArgumentsGetElemStubExists(stub, which)) {
+            IonSpew(IonSpew_BaselineIC, "  Generating GetElem(ArgsObj[Int32]) stub");
+            ICGetElem_Arguments::Compiler compiler(
+                cx, stub->fallbackMonitorStub()->firstMonitorStub(), which);
+            ICStub *argsStub = compiler.getStub(compiler.getStubSpace(script));
+            if (!argsStub)
+                return false;
+
+            stub->addNewStub(argsStub);
+            return true;
+        }
+    }
 
     if (obj->isNative()) {
         // Check for NativeObject[int] dense accesses.
@@ -3738,6 +3782,138 @@ ICGetElem_TypedArray::Compiler::generateStubCode(MacroAssembler &masm)
     EmitReturnFromIC(masm);
 
     // Failure case - jump to next stub
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
+}
+
+//
+// GetEelem_Arguments
+//
+bool
+ICGetElem_Arguments::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+    if (which_ == ICGetElem_Arguments::Magic) {
+        // Ensure that this is a magic arguments value.
+        masm.branchTestMagicValue(Assembler::NotEqual, R0, JS_OPTIMIZED_ARGUMENTS, &failure);
+
+        // Ensure that frame has not loaded different arguments object since.
+        masm.branchTest32(Assembler::NonZero,
+                          Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFlags()),
+                          Imm32(BaselineFrame::HAS_ARGS_OBJ),
+                          &failure);
+
+        // Ensure that index is an integer.
+        masm.branchTestInt32(Assembler::NotEqual, R1, &failure);
+        Register idx = masm.extractInt32(R1, ExtractTemp1);
+
+        GeneralRegisterSet regs(availableGeneralRegs(2));
+        Register scratch = regs.takeAny();
+
+        // Load num actual arguments
+        Address actualArgs(BaselineFrameReg, BaselineFrame::offsetOfNumActualArgs());
+        masm.loadPtr(actualArgs, scratch);
+
+        // Ensure idx < argc
+        masm.branch32(Assembler::AboveOrEqual, idx, scratch, &failure);
+
+        // Load argval
+        JS_ASSERT(sizeof(Value) == 8);
+        masm.movePtr(BaselineFrameReg, scratch);
+        masm.addPtr(Imm32(BaselineFrame::offsetOfArg(0)), scratch);
+        BaseIndex element(scratch, idx, TimesEight);
+        masm.loadValue(element, R0);
+
+        // Enter type monitor IC to type-check result.
+        EmitEnterTypeMonitorIC(masm);
+
+        masm.bind(&failure);
+        EmitStubGuardFailure(masm);
+        return true;
+    }
+
+    JS_ASSERT(which_ == ICGetElem_Arguments::Strict ||
+              which_ == ICGetElem_Arguments::Normal);
+
+    bool isStrict = which_ == ICGetElem_Arguments::Strict;
+    Class *clasp = isStrict ? &StrictArgumentsObjectClass : &NormalArgumentsObjectClass;
+
+    GeneralRegisterSet regs(availableGeneralRegs(2));
+    Register scratchReg = regs.takeAny();
+
+    // Guard on input being an arguments object.
+    masm.branchTestObject(Assembler::NotEqual, R0, &failure);
+    Register objReg = masm.extractObject(R0, ExtractTemp0);
+    masm.branchTestObjClass(Assembler::NotEqual, objReg, scratchReg, clasp, &failure);
+
+    // Guard on index being int32
+    masm.branchTestInt32(Assembler::NotEqual, R1, &failure);
+    Register idxReg = masm.extractInt32(R1, ExtractTemp1);
+
+    // Get initial ArgsObj length value.
+    masm.unboxInt32(Address(objReg, ArgumentsObject::getInitialLengthSlotOffset()), scratchReg);
+
+    // Test if length has been overridden.
+    masm.branchTest32(Assembler::NonZero,
+                      scratchReg,
+                      Imm32(ArgumentsObject::LENGTH_OVERRIDDEN_BIT),
+                      &failure);
+
+    // Length has not been overridden, ensure that R1 is an integer and is <= length.
+    masm.rshiftPtr(Imm32(ArgumentsObject::PACKED_BITS_COUNT), scratchReg);
+    masm.branch32(Assembler::AboveOrEqual, idxReg, scratchReg, &failure);
+
+    // Length check succeeded, now check the correct bit.  We clobber potential type regs
+    // now.  Inputs will have to be reconstructed if we fail after this point, but that's
+    // unlikely.
+    Label failureReconstructInputs;
+    regs = availableGeneralRegs(0);
+    if (regs.has(objReg))
+        regs.take(objReg);
+    if (regs.has(idxReg))
+        regs.take(idxReg);
+    if (regs.has(scratchReg))
+        regs.take(scratchReg);
+    Register argData = regs.takeAny();
+    Register tempReg = regs.takeAny();
+
+    // Load ArgumentsData
+    masm.loadPrivate(Address(objReg, ArgumentsObject::getDataSlotOffset()), argData);
+
+    // Load deletedBits bitArray pointer into scratchReg
+    masm.loadPtr(Address(argData, offsetof(ArgumentsData, deletedBits)), scratchReg);
+
+    // In tempReg, calculate index of word containing bit: (idx >> logBitsPerWord)
+    masm.movePtr(idxReg, tempReg);
+    masm.rshiftPtr(Imm32(JS_BITS_PER_WORD_LOG2), tempReg);
+    masm.loadPtr(BaseIndex(scratchReg, tempReg, ScaleFromElemWidth(sizeof(size_t))), scratchReg);
+
+    // Don't bother testing specific bit, if any bit is set in the word, fail.
+    masm.branchPtr(Assembler::NotEqual, scratchReg, ImmWord((size_t)0), &failureReconstructInputs);
+
+    // Load the value.  use scratchReg and tempReg to form a ValueOperand to load into.
+    masm.addPtr(Imm32(ArgumentsData::offsetOfArgs()), argData);
+    regs.add(scratchReg);
+    regs.add(tempReg);
+    ValueOperand tempVal = regs.takeAnyValue();
+    masm.loadValue(BaseIndex(argData, idxReg, ScaleFromElemWidth(sizeof(Value))), tempVal);
+
+    // Makesure that this is not a FORWARD_TO_CALL_SLOT magic value.
+    masm.branchTestMagic(Assembler::Equal, tempVal, &failureReconstructInputs);
+
+    // Everything checked out, return value.
+    masm.moveValue(tempVal, R0);
+
+    // Type-check result
+    EmitEnterTypeMonitorIC(masm);
+
+    // Failed, but inputs are deconstructed into object and int, and need to be
+    // reconstructed into values.
+    masm.bind(&failureReconstructInputs);
+    masm.tagValue(JSVAL_TYPE_OBJECT, objReg, R0);
+    masm.tagValue(JSVAL_TYPE_INT32, idxReg, R1);
+
     masm.bind(&failure);
     EmitStubGuardFailure(masm);
     return true;
@@ -4849,6 +5025,18 @@ TryAttachLengthStub(JSContext *cx, HandleScript script, ICGetProp_Fallback *stub
         return true;
     }
 
+    if (val.isMagic(JS_OPTIMIZED_ARGUMENTS) && res.isInt32()) {
+        IonSpew(IonSpew_BaselineIC, "  Generating GetProp(MagicArgs.length) stub");
+        ICGetProp_ArgumentsLength::Compiler compiler(cx, ICGetProp_ArgumentsLength::Magic);
+        ICStub *newStub = compiler.getStub(compiler.getStubSpace(script));
+        if (!newStub)
+            return false;
+
+        *attached = true;
+        stub->addNewStub(newStub);
+        return true;
+    }
+
     if (!val.isObject())
         return true;
 
@@ -4869,6 +5057,22 @@ TryAttachLengthStub(JSContext *cx, HandleScript script, ICGetProp_Fallback *stub
         JS_ASSERT(res.isInt32());
         IonSpew(IonSpew_BaselineIC, "  Generating GetProp(TypedArray.length) stub");
         ICGetProp_TypedArrayLength::Compiler compiler(cx);
+        ICStub *newStub = compiler.getStub(compiler.getStubSpace(script));
+        if (!newStub)
+            return false;
+
+        *attached = true;
+        stub->addNewStub(newStub);
+        return true;
+    }
+
+    if (obj->isArguments() && res.isInt32()) {
+        IonSpew(IonSpew_BaselineIC, "  Generating GetProp(ArgsObj.length %s) stub",
+                obj->isStrictArguments() ? "Strict" : "Normal");
+        ICGetProp_ArgumentsLength::Which which = ICGetProp_ArgumentsLength::Normal;
+        if (obj->isStrictArguments())
+            which = ICGetProp_ArgumentsLength::Strict;
+        ICGetProp_ArgumentsLength::Compiler compiler(cx, which);
         ICStub *newStub = compiler.getStub(compiler.getStubSpace(script));
         if (!newStub)
             return false;
@@ -5032,9 +5236,18 @@ DoGetPropFallback(JSContext *cx, BaselineFrame *frame, ICGetProp_Fallback *stub,
     if (op == JSOP_LENGTH && val.isMagic(JS_OPTIMIZED_ARGUMENTS)) {
         // Handle arguments.length access.
         if (IsOptimizedArguments(frame, val.address())) {
-            // TODO: attach optimized stub.
             res.setInt32(frame->numActualArgs());
+
+            // Monitor result
             types::TypeScript::Monitor(cx, script, pc, res);
+            if (!stub->addMonitorStubForValue(cx, script, res))
+                return false;
+
+            bool attached = false;
+            if (!TryAttachLengthStub(cx, script, stub, val, res, &attached))
+                return false;
+            JS_ASSERT(attached);
+
             return true;
         }
     }
@@ -5562,6 +5775,62 @@ ICGetProp_CallListBaseNative::Compiler::generateStubCode(MacroAssembler &masm)
     EmitEnterTypeMonitorIC(masm);
 
     // Failure case - jump to next stub
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
+}
+
+bool
+ICGetProp_ArgumentsLength::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+    if (which_ == ICGetProp_ArgumentsLength::Magic) {
+        // Ensure that this is lazy arguments.
+        masm.branchTestMagicValue(Assembler::NotEqual, R0, JS_OPTIMIZED_ARGUMENTS, &failure);
+
+        // Ensure that frame has not loaded different arguments object since.
+        masm.branchTest32(Assembler::NonZero,
+                          Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFlags()),
+                          Imm32(BaselineFrame::HAS_ARGS_OBJ),
+                          &failure);
+
+        Address actualArgs(BaselineFrameReg, BaselineFrame::offsetOfNumActualArgs());
+        masm.loadPtr(actualArgs, R0.scratchReg());
+        masm.tagValue(JSVAL_TYPE_INT32, R0.scratchReg(), R0);
+        EmitReturnFromIC(masm);
+
+        masm.bind(&failure);
+        EmitStubGuardFailure(masm);
+        return true;
+    }
+    JS_ASSERT(which_ == ICGetProp_ArgumentsLength::Strict ||
+              which_ == ICGetProp_ArgumentsLength::Normal);
+
+    bool isStrict = which_ == ICGetProp_ArgumentsLength::Strict;
+    Class *clasp = isStrict ? &StrictArgumentsObjectClass : &NormalArgumentsObjectClass;
+
+    Register scratchReg = R1.scratchReg();
+
+    // Guard on input being an arguments object.
+    masm.branchTestObject(Assembler::NotEqual, R0, &failure);
+    Register objReg = masm.extractObject(R0, ExtractTemp0);
+    masm.branchTestObjClass(Assembler::NotEqual, objReg, scratchReg, clasp, &failure);
+
+    // Get initial length value.
+    masm.unboxInt32(Address(objReg, ArgumentsObject::getInitialLengthSlotOffset()), scratchReg);
+
+    // Test if length has been overridden.
+    masm.branchTest32(Assembler::NonZero,
+                      scratchReg,
+                      Imm32(ArgumentsObject::LENGTH_OVERRIDDEN_BIT),
+                      &failure);
+
+    // Nope, shift out arguments length and return it.
+    // No need to type monitor because this stub always returns Int32.
+    masm.rshiftPtr(Imm32(ArgumentsObject::PACKED_BITS_COUNT), scratchReg);
+    masm.tagValue(JSVAL_TYPE_INT32, scratchReg, R0);
+    EmitReturnFromIC(masm);
+
     masm.bind(&failure);
     EmitStubGuardFailure(masm);
     return true;
