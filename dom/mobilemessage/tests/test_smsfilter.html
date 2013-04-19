@@ -73,15 +73,15 @@ filter.read = true;
 is(filter.read, true, "Setters and getters should work!");
 filter.read = false;
 is(filter.read, false, "Setters and getters should work!");
-filter.read = undefined;
-is(filter.read, undefined, "undefined should revert the value to default");
-throwingCheck(filter, 'read', [ "foo", 0, [1, 2], function () {}, new Date(), null ]);
+filter.read = null;
+is(filter.read, null, "'null' should revert the value to default");
+throwingCheck(filter, 'read', [ "foo", 0, [1, 2], function () {}, new Date(), undefined ]);
 
 filter.threadId = 1;
 is(filter.threadId, 1, "Setters and getters should work!");
-filter.threadId = undefined;
-is(filter.threadId, undefined, "undefined should revert the value to default");
-throwingCheck(filter, 'threadId', [ "foo", 0, 1.5, [1, 2], function () {}, new Date(), null ]);
+filter.threadId = null;
+is(filter.threadId, null, "'null' should revert the value to default");
+throwingCheck(filter, 'threadId', [ "foo", 0, 1.5, [1, 2], function () {}, new Date(), undefined ]);
 
 </script>
 </pre>
