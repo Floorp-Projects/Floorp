@@ -75,7 +75,8 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
                                              MBasicBlock *pred, jsbytecode *entryPc);
     static MBasicBlock *NewSplitEdge(MIRGraph &graph, CompileInfo &info, MBasicBlock *pred);
     static MBasicBlock *NewParBailout(MIRGraph &graph, CompileInfo &info,
-                                      MBasicBlock *pred, jsbytecode *entryPc);
+                                      MBasicBlock *pred, jsbytecode *entryPc,
+                                      MResumePoint *resumePoint);
 
     bool dominates(MBasicBlock *other);
 
