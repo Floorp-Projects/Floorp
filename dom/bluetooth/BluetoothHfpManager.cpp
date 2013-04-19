@@ -671,6 +671,7 @@ BluetoothHfpManager::ReceiveSocketData(BluetoothSocket* aSocket,
                                        nsAutoPtr<UnixSocketRawData>& aMessage)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aSocket);
 
   nsAutoCString msg((const char*)aMessage->mData.get(), aMessage->mSize);
   msg.StripWhitespace();
@@ -886,23 +887,46 @@ BluetoothHfpManager::ReceiveSocketData(BluetoothSocket* aSocket,
 
     mCCWA = atCommandValues[0].EqualsLiteral("1");
   } else if (msg.Find("AT+CKPD") != -1) {
-    // For Headset Profile (HSP)
-    switch (mCurrentCallArray[mCurrentCallIndex].mState) {
-      case nsITelephonyProvider::CALL_STATE_INCOMING:
-        NotifyDialer(NS_LITERAL_STRING("ATA"));
-        break;
-      case nsITelephonyProvider::CALL_STATE_CONNECTED:
-      case nsITelephonyProvider::CALL_STATE_DIALING:
-      case nsITelephonyProvider::CALL_STATE_ALERTING:
-        NotifyDialer(NS_LITERAL_STRING("CHUP"));
-        break;
-      case nsITelephonyProvider::CALL_STATE_DISCONNECTED:
-        NotifyDialer(NS_LITERAL_STRING("BLDN"));
-        break;
-      default:
-        NS_WARNING("Not handling state changed");
-        break;
+    BluetoothScoManager* sco = BluetoothScoManager::Get();
+    if (!sco) {
+      NS_WARNING("Couldn't get BluetoothScoManager instance");
+      goto respond_with_ok;
     }
+
+    if (!sStopSendingRingFlag) {
+      // Bluetooth HSP spec 4.2.2
+      // There is an incoming call, notify Dialer to pick up the phone call
+      // and SCO will be established after we get the CallStateChanged event
+      // indicating the call is answered successfully.
+      NotifyDialer(NS_LITERAL_STRING("ATA"));
+    } else {
+      if (!sco->IsConnected()) {
+        // Bluetooth HSP spec 4.3
+        // If there's no SCO, set up a SCO link.
+        nsAutoString address;
+        mSocket->GetAddress(address);
+        sco->Connect(address);
+      } else if (!mFirstCKPD) {
+        // Bluetooth HSP spec 4.5
+        // There are two ways to release SCO: sending CHUP to dialer or closing
+        // SCO socket directly. We notify dialer only if there is at least one
+        // active call.
+        if (mCurrentCallArray.Length() > 1) {
+          NotifyDialer(NS_LITERAL_STRING("CHUP"));
+        } else {
+          sco->Disconnect();
+        }
+      } else {
+        // Three conditions have to be matched to come in here:
+        // (1) Not sending RING indicator
+        // (2) A SCO link exists
+        // (3) This is the very first AT+CKPD=200 of this session
+        // It is the case of Figure 4.3, Bluetooth HSP spec. Do nothing.
+        NS_WARNING("AT+CKPD=200: Do nothing");
+      }
+    }
+
+    mFirstCKPD = false;
   } else if (msg.Find("AT+CNUM") != -1) {
     if (!mMsisdn.IsEmpty()) {
       nsAutoCString message("+CNUM: ,\"");
@@ -1372,6 +1396,8 @@ BluetoothHfpManager::OnConnectSuccess(BluetoothSocket* aSocket)
 
     mRunnable.forget();
   }
+
+  mFirstCKPD = true;
 
   // Cache device path for NotifySettings() since we can't get socket address
   // when a headset disconnect with us
