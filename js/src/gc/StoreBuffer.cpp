@@ -104,6 +104,24 @@ StoreBuffer::MonoTypeBuffer<T>::compactNotInSet(NurseryType *nursery)
 
 template <typename T>
 void
+StoreBuffer::MonoTypeBuffer<T>::compactRemoveDuplicates()
+{
+    JS_ASSERT(duplicates.empty());
+
+    T *insert = base;
+    for (T *v = base; v != pos; ++v) {
+        if (!duplicates.has(v->location())) {
+            *insert++ = *v;
+            /* Failure to insert will leave the set with duplicates. Oh well. */
+            duplicates.put(v->location());
+        }
+    }
+    pos = insert;
+    duplicates.clear();
+}
+
+template <typename T>
+void
 StoreBuffer::MonoTypeBuffer<T>::compact()
 {
 #ifdef JS_GC_ZEAL
@@ -112,6 +130,7 @@ StoreBuffer::MonoTypeBuffer<T>::compact()
     else
 #endif
         compactNotInSet(&owner->runtime->gcNursery);
+    compactRemoveDuplicates();
 }
 
 template <typename T>

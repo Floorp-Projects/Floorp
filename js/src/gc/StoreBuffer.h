@@ -143,9 +143,18 @@ class StoreBuffer
          */
         T *highwater;
 
+        /*
+         * This set stores duplicates found when compacting. We create the set
+         * here, rather than local to the algorithm to avoid malloc overhead in
+         * the common case.
+         */
+        EdgeSet duplicates;
+
         MonoTypeBuffer(StoreBuffer *owner)
           : owner(owner), base(NULL), pos(NULL), top(NULL)
-        {}
+        {
+            duplicates.init();
+        }
 
         MonoTypeBuffer &operator=(const MonoTypeBuffer& other) MOZ_DELETE;
 
@@ -160,6 +169,7 @@ class StoreBuffer
         /* Compaction algorithms. */
         template <typename NurseryType>
         void compactNotInSet(NurseryType *nursery);
+        void compactRemoveDuplicates();
 
         /*
          * Attempts to reduce the usage of the buffer by removing unnecessary
