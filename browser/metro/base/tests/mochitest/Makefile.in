@@ -38,6 +38,8 @@ ifndef MOZ_DEBUG
 BROWSER_TESTS += \
   browser_selection_basic.js \
   browser_selection_basic.html \
+  browser_selection_textarea.js \
+  browser_selection_textarea.html \
   $(NULL)
 endif
 
