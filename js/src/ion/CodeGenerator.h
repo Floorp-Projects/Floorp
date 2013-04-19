@@ -33,6 +33,7 @@ class OutOfLineTypeOfV;
 class OutOfLineLoadTypedArray;
 class OutOfLineParNewGCThing;
 class OutOfLineUpdateCache;
+class OutOfLineCallPostWriteBarrier;
 
 class CodeGenerator : public CodeGeneratorSpecific
 {
@@ -87,6 +88,9 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitConvertElementsToDoubles(LConvertElementsToDoubles *lir);
     bool visitTypeBarrier(LTypeBarrier *lir);
     bool visitMonitorTypes(LMonitorTypes *lir);
+    bool visitPostWriteBarrierO(LPostWriteBarrierO *lir);
+    bool visitPostWriteBarrierV(LPostWriteBarrierV *lir);
+    bool visitOutOfLineCallPostWriteBarrier(OutOfLineCallPostWriteBarrier *ool);
     bool visitCallNative(LCallNative *call);
     bool emitCallInvokeFunction(LInstruction *call, Register callereg,
                                 uint32_t argc, uint32_t unusedStack);
