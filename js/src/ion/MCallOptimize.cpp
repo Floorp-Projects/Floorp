@@ -220,7 +220,9 @@ IonBuilder::inlineArray(CallInfo &callInfo)
 
         // Store all values, no need to initialize the length after each as
         // jsop_initelem_array is doing because we do not expect to bailout
-        // because the memory is supposed to be allocated by now.
+        // because the memory is supposed to be allocated by now. There is no
+        // need for a post barrier on these writes, as as the MNewAray will use
+        // the nursery if possible, triggering a minor collection if it can't.
         MConstant *id = NULL;
         for (uint32_t i = 0; i < initLength; i++) {
             id = MConstant::New(Int32Value(i));
@@ -347,6 +349,9 @@ IonBuilder::inlineArrayPush(CallInfo &callInfo)
         value = valueDouble;
     }
 
+    if (NeedsPostBarrier(info(), value))
+        current->add(MPostWriteBarrier::New(callInfo.thisArg(), value));
+
     MArrayPush *ins = MArrayPush::New(callInfo.thisArg(), value);
     current->add(ins);
     current->push(ins);
@@ -449,7 +454,7 @@ IonBuilder::inlineArrayConcat(CallInfo &callInfo)
     }
 
     // Inline the call.
-    RootedObject templateObj(cx, NewDenseEmptyArray(cx, thisType->proto));
+    RootedObject templateObj(cx, NewDenseEmptyArray(cx, thisType->proto, TenuredObject));
     if (!templateObj)
         return InliningStatus_Error;
     templateObj->setType(thisType);
@@ -779,7 +784,7 @@ IonBuilder::inlineStringObject(CallInfo &callInfo)
     callInfo.unwrapArgs();
 
     RootedString emptyString(cx, cx->runtime->emptyString);
-    RootedObject templateObj(cx, StringObject::create(cx, emptyString));
+    RootedObject templateObj(cx, StringObject::create(cx, emptyString, TenuredObject));
     if (!templateObj)
         return InliningStatus_Error;
 

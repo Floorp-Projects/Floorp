@@ -24,8 +24,10 @@ class CompilerRoot : public CompilerRootNode
     CompilerRoot(T ptr)
       : CompilerRootNode(NULL)
     {
-        if (ptr)
+        if (ptr) {
+            JS_ASSERT(!IsInsideNursery(GetIonContext()->compartment->rt, ptr));
             setRoot(ptr);
+        }
     }
 
   public:

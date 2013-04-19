@@ -773,6 +773,8 @@ class CallInfo
 
 bool TypeSetIncludes(types::TypeSet *types, MIRType input, types::TypeSet *inputTypes);
 
+bool NeedsPostBarrier(CompileInfo &info, MDefinition *value);
+
 } // namespace ion
 } // namespace js
 
