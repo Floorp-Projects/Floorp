@@ -4588,6 +4588,19 @@ nsXPCComponents_Utils::IsXrayWrapper(const JS::Value &obj, bool* aRetval)
 }
 
 NS_IMETHODIMP
+nsXPCComponents_Utils::GetClassName(const JS::Value &aObj, bool aUnwrap, JSContext *aCx, char **aRv)
+{
+    if (!aObj.isObject())
+        return NS_ERROR_INVALID_ARG;
+    RootedObject obj(aCx, &aObj.toObject());
+    if (aUnwrap)
+        obj = js::UncheckedUnwrap(obj, /* stopAtOuter = */ false);
+    *aRv = NS_strdup(js::GetObjectClass(obj)->name);
+    NS_ENSURE_TRUE(*aRv, NS_ERROR_OUT_OF_MEMORY);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXPCComponents_Utils::GetDOMClassInfo(const nsAString& aClassName,
                                        nsIClassInfo** aClassInfo)
 {
