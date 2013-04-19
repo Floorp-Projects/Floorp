@@ -2366,13 +2366,18 @@ Object.defineProperty(Debugger.Frame.prototype, "line", {
  * Creates an actor for handling chrome debugging. ChromeDebuggerActor is a
  * thin wrapper over ThreadActor, slightly changing some of its behavior.
  *
+ * @param aConnection object
+ *        The DebuggerServerConnection with which this ChromeDebuggerActor
+ *        is associated. (Currently unused, but required to make this
+ *        constructor usable with addGlobalActor.)
+ *
  * @param aHooks object
  *        An object with preNest and postNest methods for calling when entering
  *        and exiting a nested event loop and also addToParentPool and
  *        removeFromParentPool methods for handling the lifetime of actors that
  *        will outlive the thread, like breakpoints.
  */
-function ChromeDebuggerActor(aHooks)
+function ChromeDebuggerActor(aConnection, aHooks)
 {
   ThreadActor.call(this, aHooks);
 }
