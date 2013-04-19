@@ -26,12 +26,14 @@ public class testFindInPage extends PixelTest {
         Actions.RepeatedEventExpecter paintExpecter = mActions.expectPaint();
         findText("Robocoop", 3); // This will be close enough to existing text to test that search finds just what it should
         PaintedSurface painted = waitForPaint(paintExpecter);
+        paintExpecter.unregisterListener();
         mAsserter.ispixel(painted.getPixelAt(width,height), 255, 0, 0, "Pixel at " + String.valueOf(width) + "," + String.valueOf(height));
 
         // Search that finds matches and therefor pans the page
         paintExpecter = mActions.expectPaint();
         findText("Robocop", 3);
         painted = waitForPaint(paintExpecter);
+        paintExpecter.unregisterListener();
         mAsserter.isnotpixel(painted.getPixelAt(width,height), 255, 0, 0, "Pixel at " + String.valueOf(width) + "," + String.valueOf(height));
     }
 

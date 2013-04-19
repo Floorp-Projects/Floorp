@@ -382,7 +382,7 @@ public:
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) MOZ_OVERRIDE
   {
     *aSnap = true;
-    return nsRect(ToReferenceFrame(), GetUnderlyingFrame()->GetSize());
+    return nsRect(ToReferenceFrame(), Frame()->GetSize());
   }
 
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,

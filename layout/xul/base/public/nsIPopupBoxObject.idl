@@ -10,7 +10,7 @@ interface nsIDOMNode;
 interface nsIDOMEvent;
 interface nsIDOMClientRect;
 
-[scriptable, uuid(ACCEA57B-C3D8-4B6E-9101-90F04EE9DEA0)]
+[scriptable, uuid(DF60BA02-005B-4F61-AB1C-5632D0779DB4)]
 interface nsIPopupBoxObject : nsISupports
 {
   /**
@@ -166,6 +166,11 @@ interface nsIPopupBoxObject : nsISupports
                     in AString position,
                     in long x, in long y,
                     in boolean attributesOverride);
+
+  /** Returns the alignment position where the popup has appeared relative to its
+   *  anchor node or point, accounting for any flipping that occurred.
+   */
+  readonly attribute AString alignmentPosition;
 };
 
 %{C++

@@ -174,6 +174,7 @@ nsresult nsTextToSubURI::convertURItoUnicode(const nsAFlatCString &aCharset,
   rv = charsetConverterManager->GetUnicodeDecoder(aCharset.get(), 
                                                   getter_AddRefs(unicodeDecoder));
   NS_ENSURE_SUCCESS(rv, rv);
+  unicodeDecoder->SetInputErrorBehavior(nsIUnicodeDecoder::kOnError_Signal);
 
   int32_t srcLen = aURI.Length();
   int32_t dstLen;

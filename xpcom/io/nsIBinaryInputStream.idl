@@ -68,6 +68,16 @@ interface nsIBinaryInputStream : nsIInputStream {
      */
     void readByteArray(in uint32_t aLength,
                        [array, size_is(aLength), retval] out uint8_t aBytes);
+
+    /**
+     * Read opaque bytes from the stream, storing the results in an ArrayBuffer.
+     *
+     * @param aLength the number of bytes that must be read
+     *
+     * @throws NS_ERROR_FAILURE if it can't read aLength bytes
+     */
+    [implicit_jscontext]
+    jsval readArrayBuffer(in uint32_t aLength);
 };
 
 %{C++

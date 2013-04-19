@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+  ok = window.opener.ok;
+  is = window.opener.is;
+  SpecialPowers = window.opener.SpecialPowers;
+  function go() {
+    is(SpecialPowers.Cu.getClassName(window, /* aUnwrap = */ true), "ModalContentWindow", "We are modal");
+    var iwin = document.getElementById('ifr').contentWindow;
+    is(SpecialPowers.Cu.getClassName(iwin, /* aUnwrap = */ true), "Window", "Descendant frames should not be modal");
+    window.close();
+  }
+</script>
+</head>
+<body onload="go();">
+<iframe id="ifr"></iframe>
+</body>
+</html>

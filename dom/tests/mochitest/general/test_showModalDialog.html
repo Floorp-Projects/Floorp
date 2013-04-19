@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=862918
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 862918</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  // This will be fixed in bug 860941.
+  SimpleTest.expectAssertions(0, 1);
+
+  /** Test for window.showModalDialog. **/
+  window.showModalDialog('file_showModalDialog.html');
+
+  // Blame mArguments assertion on this test.
+  SpecialPowers.gc();
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=862918">Mozilla Bug 862918</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

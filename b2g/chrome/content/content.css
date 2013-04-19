@@ -282,3 +282,11 @@ label:active,
 textarea:active {
   background-color: rgba(141, 184, 216, 0.5);
 }
+
+#ifdef MOZ_WIDGET_GONK
+/* This binding only provide key shortcuts that we can't use on devices */
+input,
+textarea {
+-moz-binding: none !important;
+}
+#endif

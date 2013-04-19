@@ -205,3 +205,12 @@ LIRGeneratorX64::newLGetPropertyCacheT(MGetPropertyCache *ins)
 {
     return new LGetPropertyCacheT(useRegister(ins->object()), LDefinition::BogusTemp());
 }
+
+bool
+LIRGeneratorX64::lowerTruncateDToInt32(MTruncateToInt32 *ins)
+{
+    MDefinition *opd = ins->input();
+    JS_ASSERT(opd->type() == MIRType_Double);
+
+    return define(new LTruncateDToInt32(useRegister(opd), LDefinition::BogusTemp()), ins);
+}

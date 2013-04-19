@@ -607,6 +607,24 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         cond = testMagic(cond, t);
         j(cond, label);
     }
+    void branchTestMagicValue(Condition cond, const ValueOperand &val, JSWhyMagic why,
+                              Label *label)
+    {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        if (cond == Equal) {
+            // Test for magic
+            Label notmagic;
+            Condition testCond = testMagic(Equal, val);
+            j(InvertCondition(testCond), &notmagic);
+            // Test magic value
+            branch32(NotEqual, val.payloadReg(), Imm32(static_cast<int32_t>(why)), label);
+            bind(&notmagic);
+        } else {
+            Condition testCond = testMagic(NotEqual, val);
+            j(testCond, label);
+            branch32(NotEqual, val.payloadReg(), Imm32(static_cast<int32_t>(why)), label);
+        }
+    }
 
     // Note: this function clobbers the source register.
     void boxDouble(const FloatRegister &src, const ValueOperand &dest) {
@@ -718,6 +736,13 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void loadConstantDouble(double d, const FloatRegister &dest);
     void loadStaticDouble(const double *dp, const FloatRegister &dest) {
         movsd(dp, dest);
+    }
+
+    void branchTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail) {
+        JS_STATIC_ASSERT(INT_MIN == int(0x80000000));
+        cvttsd2si(src, dest);
+        cmpl(dest, Imm32(INT_MIN));
+        j(Assembler::Equal, fail);
     }
 
     Condition testInt32Truthy(bool truthy, const ValueOperand &operand) {
