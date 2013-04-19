@@ -293,10 +293,15 @@ var ccNumbers = {
   ],
 };
 
-function startTest() {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  ok(!fh.hasEntries, "checking for initially empty storage");
+function checkInitialState() {
+  countEntries(null, null,
+    function (num) {
+      ok(!num, "checking for initially empty storage");
+      startTest();
+    });
+}
 
+function startTest() {
   // Fill in values for the various fields. We could just set the <input>'s
   // value attribute, but we don't save default form values (and we want to
   // ensure unsaved values are because of autocomplete=off or whatever).
@@ -369,7 +374,6 @@ function checkSubmit(formNum) {
   ok(true, "form " + formNum + " submitted");
   numSubmittedForms++;
 
-
   // Check for expected storage state.
   switch (formNum) {
     // Test 1-24 should not save anything.
@@ -397,7 +401,12 @@ function checkSubmit(formNum) {
     case 22:
     case 23:
     case 24:
-        ok(!fh.hasEntries, "checking for empty storage");
+      countEntries(null, null,
+        function (num) {
+          ok(!num, "checking for empty storage");
+          submitForm(formNum);
+        });
+        return false;
         break;
     case 100:
         checkForSave("subtest2", "subtestValue", "checking saved subtest value");
@@ -441,19 +450,24 @@ function checkSubmit(formNum) {
         break;
   }
 
+  return submitForm(formNum);
+}
+
+function submitForm(formNum)
+{
   // Forms 13 and 14 would trigger a save-password notification. Temporarily
   // disable pwmgr, then reenable it.
   if (formNum == 12)
-      prefBranch.setBoolPref("signon.rememberSignons", false);
+      SpecialPowers.setBoolPref("signon.rememberSignons", false);
   if (formNum == 14)
-      prefBranch.clearUserPref("signon.rememberSignons");
+      SpecialPowers.clearUserPref("signon.rememberSignons");
 
   // Forms 20 and 21 requires browser.formfill.saveHttpsForms to be false
   if (formNum == 19)
-    prefBranch.setBoolPref("browser.formfill.saveHttpsForms", false);
+    SpecialPowers.setBoolPref("browser.formfill.saveHttpsForms", false);
   // Reset preference now that 20 and 21 are over
   if (formNum == 21)
-    prefBranch.clearUserPref("browser.formfill.saveHttpsForms");
+    SpecialPowers.clearUserPref("browser.formfill.saveHttpsForms");
 
   // End the test now on SeaMonkey.
   if (formNum == 21 && navigator.userAgent.match(/ SeaMonkey\//)) {
@@ -470,11 +484,11 @@ function checkSubmit(formNum) {
   // Form 109 requires browser.formfill.save_https_forms to be true;
   // Form 110 requires it to be false.
   if (formNum == 108)
-    prefBranch.setBoolPref("browser.formfill.saveHttpsForms", true);
+    SpecialPowers.setBoolPref("browser.formfill.saveHttpsForms", true);
   if (formNum == 109)
-    prefBranch.setBoolPref("browser.formfill.saveHttpsForms", false);
+    SpecialPowers.setBoolPref("browser.formfill.saveHttpsForms", false);
   if (formNum == 110)
-    prefBranch.clearUserPref("browser.formfill.saveHttpsForms");
+    SpecialPowers.clearUserPref("browser.formfill.saveHttpsForms");
 
   // End the test at the last form.
   if (formNum == 110) {
@@ -494,8 +508,6 @@ function checkSubmit(formNum) {
   //
   setTimeout(function() {
     checkObserver.waitForChecks(function() {
-      netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
       var nextFormNum = formNum == 24 ? 100 : (formNum + 1);
 
       // Submit the next form. Special cases are Forms 21 and 100, which happen
@@ -514,18 +526,9 @@ function checkSubmit(formNum) {
   return false; // cancel current form submission
 }
 
-netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
-var fh = Components.classes["@mozilla.org/satchel/form-history;1"].
-         getService(Components.interfaces.nsIFormHistory2);
-ok(fh != null, "Got formHistory service");
-
-var prefBranch = Components.classes["@mozilla.org/preferences-service;1"].
-                 getService(Components.interfaces.nsIPrefBranch);
-
 Services.obs.addObserver(checkObserver, "satchel-storage-changed", false);
 
-window.onload = startTest;
+window.onload = checkInitialState;
 
 SimpleTest.waitForExplicitFinish();
 
